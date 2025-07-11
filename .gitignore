@@ -1,0 +1,25 @@
+# VSCode
+.vscode/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# iOS
+**/*/ios
+
+# Android
+**/*/android
+
+#Biome
+.biome/
+biome.json
+
+#Bun
+node_modules/
+
+# OS-specific
+.DS_Store
+Thumbs.db"

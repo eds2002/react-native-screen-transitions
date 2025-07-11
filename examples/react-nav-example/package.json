@@ -1,0 +1,29 @@
+{
+	"name": "react-nav-example",
+	"version": "1.0.0",
+	"main": "index.ts",
+	"scripts": {
+		"start": "expo start",
+		"android": "expo start --android",
+		"ios": "expo start --ios",
+		"web": "expo start --web"
+	},
+	"dependencies": {
+		"@react-navigation/native": "^7.1.14",
+		"expo": "~53.0.17",
+		"expo-status-bar": "~2.2.3",
+		"react": "19.0.0",
+		"react-native": "0.79.5",
+		"react-native-gesture-handler": "~2.24.0",
+		"react-native-reanimated": "~3.17.4",
+		"react-native-safe-area-context": "5.4.0",
+		"react-native-screen-transitions": "workspace:*",
+		"react-native-screens": "~4.11.1"
+	},
+	"devDependencies": {
+		"@babel/core": "^7.25.2",
+		"@types/react": "~19.0.10",
+		"typescript": "~5.8.3"
+	},
+	"private": true
+}

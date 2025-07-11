@@ -1,0 +1,19 @@
+{
+	"private": true,
+	"workspaces": {
+		"packages": [
+			"packages/*",
+			"examples/*"
+		],
+		"catalog": {
+			"typescript": "~5.8.3"
+		}
+	},
+	"scripts": {
+		"build:lib": "bun run --filter screen-transitions build",
+		"dev:lib": "bun run --filter screen-transitions dev",
+		"example:expo": "bun run --filter expo-router-example start",
+		"lint": "bunx @biomejs/biome check ./",
+		"clean": "rm -rf node_modules && rm -rf */node_modules && rm -rf bun.lockb"
+	}
+}
