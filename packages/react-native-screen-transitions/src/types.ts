@@ -49,6 +49,10 @@ export interface RouteState extends TransitionConfig {
 	 * An optional callback that fires when a programmatic animation completes.
 	 */
 	onAnimationFinish?: (finished?: boolean) => void;
+	/**
+	 * The key of the navigator that contains this route.
+	 */
+	navigatorKey?: string;
 }
 
 export interface RouteStateStore {

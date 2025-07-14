@@ -49,4 +49,14 @@ export const RouteStore = {
 			}
 		});
 	},
+	getPreviousRoute: (key: string | undefined): RouteState | null => {
+		if (!key) return null;
+		const index = useRouteStore.getState().routeKeys.indexOf(key);
+
+		return index > -1
+			? useRouteStore.getState().routes[
+					useRouteStore.getState().routeKeys[index - 1]
+				]
+			: null;
+	},
 };

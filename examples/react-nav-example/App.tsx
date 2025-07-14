@@ -5,6 +5,7 @@ import Transition from "react-native-screen-transitions";
 import Custom from "./screens/Custom";
 import { GroupANavigator } from "./screens/group-a/GroupANavigator";
 import { Home } from "./screens/Home";
+import { NestedNavigator } from "./screens/nested/NestedNavigator";
 import { ScreenA } from "./screens/ScreenA";
 import { ScreenB } from "./screens/ScreenB";
 import { ScreenC } from "./screens/ScreenC";
@@ -15,7 +16,7 @@ const RootStack = createNativeStackNavigator({
 	screens: {
 		Home: {
 			screen: Home,
-			options: Transition.defaultScreenOptions(),
+			options: { headerShown: false },
 			listeners: Transition.createConfig,
 		},
 		ScreenA: {
@@ -76,6 +77,15 @@ const RootStack = createNativeStackNavigator({
 			screen: Custom,
 			options: Transition.defaultScreenOptions(),
 			listeners: Transition.createConfig,
+		},
+		Nested: {
+			screen: NestedNavigator,
+			options: Transition.defaultScreenOptions(),
+			listeners: (l) =>
+				Transition.createConfig({
+					...l,
+					...Transition.presets.SlideFromTop(),
+				}),
 		},
 	},
 });

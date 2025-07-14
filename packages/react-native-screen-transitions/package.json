@@ -9,7 +9,6 @@
 		"url": "https://github.com/eds2002/react-native-screen-transitions.git",
 		"directory": "packages/react-native-screen-transitions"
 	},
-
 	"main": "dist/index.js",
 	"module": "dist/index.js",
 	"types": "dist/index.d.ts",
@@ -48,6 +47,8 @@
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.1.1",
+		"@testing-library/react-native": "^13.2.0",
+		"@types/bun": "^1.2.18",
 		"@types/react": "~19.0.10",
 		"tsup": "^8.5.0",
 		"typescript": "catalog:"

@@ -39,10 +39,23 @@ const useAnimationBuilder = () => {
 
 			const currentScreenIndex = current.index;
 			const nextKey = routeKeys[currentScreenIndex + 1];
+			const next = nextKey ? routes[nextKey] : undefined;
+
+			const isSameNavigator = next?.navigatorKey === current.navigatorKey;
+
+			if (!isSameNavigator) {
+				/**
+				 * Without this guard, b (_layout) would instantly run its exit  animation (if declared) once b/index is focused.
+				 */
+				return {
+					currentRoute: current,
+					nextRoute: undefined,
+				};
+			}
 
 			return {
 				currentRoute: current,
-				nextRoute: nextKey ? routes[nextKey] : undefined,
+				nextRoute: next,
 			};
 		}),
 	);

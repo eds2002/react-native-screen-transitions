@@ -77,6 +77,16 @@ export default function RootLayout() {
 					options={Transition.defaultScreenOptions()}
 					listeners={Transition.createConfig}
 				/>
+				<Stack.Screen
+					name="nested"
+					options={Transition.defaultScreenOptions()}
+					listeners={(l) =>
+						Transition.createConfig({
+							...l,
+							...Transition.presets.SlideFromTop(),
+						})
+					}
+				/>
 			</Stack>
 		</GestureHandlerRootView>
 	);
