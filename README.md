@@ -4,11 +4,11 @@
 | iOS | Android |
 |---------|---------|
 |<video src="https://github.com/user-attachments/assets/8a7b8006-f165-4a78-b0f9-c94cddd948b9" width="300" controls></video>|<video src="https://github.com/user-attachments/assets/ddebdaa8-a929-43ab-b857-08a00e142343" width="300" controls></video>|
- 
+
 
 **WIP**: This package is a work-in-progress. It provides customizable screen transition animations for React Native apps, primarily designed for use with `expo-router` and `react-navigation`. It supports gestures, predefined presets, and custom animations, making it easy to add polished transitions to your navigation flows.
 
-This library is inspired by the transition system in `@react-navigation/stack` (not the native stack). If you're familiar with how transitions work there (e.g., using interpolators), you'll find this similar. 
+This library is inspired by the transition system in `@react-navigation/stack` (not the native stack). If you're familiar with how transitions work there (e.g., using interpolators), you'll find this similar.
 
 
 
@@ -334,11 +334,11 @@ export default function B() {
 ### Known Issues and Roadmap
 This is a WIP package, so expect improvements. Current known issues:
 - **Gestures with ScrollViews**: Gestures can be wonky when combined with scrollable content. For example, if a screen defines vertical dismissal gestures and contains a vertical `ScrollView`, the gesture may not trigger reliably (conflicts with scroll handling).
+- **Gestures Dismisall with Nested Navigators**: When using nested navigators with gesture dismissal enabled, dismissing a nested screen via gesture may cause the transparent modal to appear dismissed while remaining open. This affects the visual state but not the actual navigation state.
 - **Web Support**: Not intended or tested for web—focus is on mobile (iOS/Android). Web may have issues with gestures and animations.
-- **Other**: Limited testing in complex nested navigators; potential edge cases with rapid transitions.
 
 
-### Note: 
+### Note:
 
 This package is something I'll work on in my freetime. However, you can see the roadmap I plan on following in the coming future.
 
