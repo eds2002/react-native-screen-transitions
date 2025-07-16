@@ -1,121 +1,178 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-
-import "../__mocks__/reanimated.mock";
 import {
 	createMockNavigation,
-	createMockRoute,
+	createMockScreen,
 	type MockNavigation,
 } from "../__mocks__/navigation.mock";
 import { reactNativeMock } from "../__mocks__/react-native.mock";
-import {
-	mockRemoveRoute,
-	mockRouteStoreImplementation,
-	mockUpdateRoute,
-} from "../__mocks__/store.mock";
-import type { AnimationConfig, Any, BeforeRemoveEvent } from "../types";
+import { reanimatedMock } from "../__mocks__/reanimated.mock";
+import { mockRemoveScreen, mockUpdateScreen } from "../__mocks__/store.mock";
+import type { AnimationConfig, Any } from "../types";
 import { createConfig } from "../utils/create-config";
 
-mock.module("../store/index", () => ({
-	RouteStore: mockRouteStoreImplementation,
-}));
-mock.module("react-native", () => reactNativeMock);
+const mockShouldSkipPreventDefault = mock(() => false);
+const mockHandleScreenDismiss = mock(() => {});
 
-describe("Create config - single routes", () => {
+mock.module("react-native", () => ({
+	...reactNativeMock,
+}));
+
+mock.module("react-native-reanimated", () => ({
+	...reanimatedMock,
+}));
+
+mock.module("@react-navigation/native", () => ({
+	...createMockNavigation(),
+}));
+
+mock.module("../store/index", () => ({
+	ScreenStore: {
+		updateScreen: mockUpdateScreen,
+		removeScreen: mockRemoveScreen,
+		shouldSkipPreventDefault: mockShouldSkipPreventDefault,
+		handleScreenDismiss: mockHandleScreenDismiss,
+	},
+}));
+
+describe("Create config - single screens", () => {
 	let navigation: MockNavigation;
 
 	beforeEach(() => {
-		mockUpdateRoute.mockClear();
-		mockRemoveRoute.mockClear();
+		mockUpdateScreen.mockClear();
+		mockRemoveScreen.mockClear();
+		mockShouldSkipPreventDefault.mockClear();
+		mockShouldSkipPreventDefault.mockReturnValue(false);
+		mockHandleScreenDismiss.mockClear();
 		if (navigation) {
 			navigation._clearMocks();
 		}
 	});
 
 	describe("on 'focus' event", () => {
-		it("should call RouteStore.updateRoute with the correct route data", () => {
+		it("should call ScreenStore.updateScreen with the correct screen data", () => {
 			navigation = createMockNavigation();
-			const route = createMockRoute("Home", "route-1");
+			const screen = createMockScreen("Home", "screen-1");
 			const config = {
 				transitionSpec: {
 					open: { type: "timing" } as AnimationConfig,
 				},
 			};
 
-			const listeners = createConfig({ navigation, route, ...config });
-			listeners.focus?.({ target: "route-1" } as Any);
+			const listeners = createConfig({ navigation, route: screen, ...config });
+			listeners.focus?.({ target: "screen-1" } as Any);
 
-			expect(mockUpdateRoute).toHaveBeenCalledTimes(1);
-			expect(mockUpdateRoute).toHaveBeenCalledWith(
-				"route-1",
+			expect(mockUpdateScreen).toHaveBeenCalledTimes(1);
+			expect(mockUpdateScreen).toHaveBeenCalledWith(
+				"screen-1",
 				expect.objectContaining({
-					id: "route-1",
+					id: "screen-1",
 					name: "Home",
 					status: 1,
 					closing: false,
 					navigatorKey: "nav-1",
+					parentNavigatorKey: undefined,
 					transitionSpec: config.transitionSpec,
+				}),
+			);
+		});
+
+		it("should set parentNavigatorKey when navigation has parent", () => {
+			const parentNavigation = createMockNavigation([], "parent-nav");
+			navigation = createMockNavigation();
+			navigation.getParent = () => parentNavigation as Any;
+
+			const screen = createMockScreen("ChildScreen", "child-1");
+			const listeners = createConfig({ navigation, route: screen });
+			listeners.focus?.({ target: "child-1" } as Any);
+
+			expect(mockUpdateScreen).toHaveBeenCalledWith(
+				"child-1",
+				expect.objectContaining({
+					navigatorKey: "nav-1",
+					parentNavigatorKey: "parent-nav",
 				}),
 			);
 		});
 	});
 
 	describe("on 'beforeRemove' event", () => {
-		it("should start a closing animation when it's NOT the last screen in the stack", () => {
-			navigation = createMockNavigation([
-				{ key: "route-1" },
-				{ key: "route-2" },
-			]);
-			const route = createMockRoute("Profile", "route-2");
-			const listeners = createConfig({ navigation, route });
-			const mockPreventDefault = mock(() => {});
+		it("should remove screen immediately when shouldSkipPreventDefault returns true", () => {
+			navigation = createMockNavigation([{ key: "screen-1" }]);
+			const screen = createMockScreen("Home", "screen-1");
+			mockShouldSkipPreventDefault.mockReturnValue(true);
 
-			const beforeRemoveEvent = {
-				target: "route-2",
-				preventDefault: mockPreventDefault,
+			const listeners = createConfig({ navigation, route: screen });
+			const mockEvent = {
+				target: "screen-1",
+				preventDefault: mock(() => {}),
 				data: { action: { type: "GO_BACK" } },
-			} as unknown as BeforeRemoveEvent;
+			} as Any;
 
-			listeners.beforeRemove?.(beforeRemoveEvent);
+			listeners.beforeRemove?.(mockEvent);
 
-			expect(mockPreventDefault).toHaveBeenCalledTimes(1);
-			expect(mockUpdateRoute).toHaveBeenCalledTimes(1);
-			expect(mockUpdateRoute).toHaveBeenCalledWith(
-				"route-2",
-				expect.objectContaining({
-					status: 0,
-					closing: true,
-				}),
+			expect(mockShouldSkipPreventDefault).toHaveBeenCalledWith(
+				"screen-1",
+				navigation.getState(),
 			);
-			expect(mockRemoveRoute).not.toHaveBeenCalled();
-
-			const payload = mockUpdateRoute.mock.calls[0][1 as Any] as unknown as {
-				onAnimationFinish?: (finished?: boolean) => void;
-			};
-			payload.onAnimationFinish?.(true);
-
-			expect(navigation.dispatch).toHaveBeenCalledTimes(1);
-			expect(mockRemoveRoute).toHaveBeenCalledTimes(1);
-			expect(mockRemoveRoute).toHaveBeenCalledWith("route-2");
+			expect(mockRemoveScreen).toHaveBeenCalledWith("screen-1");
+			expect(mockEvent.preventDefault).not.toHaveBeenCalled();
+			expect(mockUpdateScreen).not.toHaveBeenCalled();
 		});
 
-		it("should remove the route immediately when it IS the last screen in the stack", () => {
-			navigation = createMockNavigation([{ key: "route-1" }]);
-			const route = createMockRoute("Home", "route-1");
-			const listeners = createConfig({ navigation, route });
-			const mockPreventDefault = mock(() => {});
+		it("should prevent default and update screen for closing animation when shouldSkipPreventDefault returns false", () => {
+			navigation = createMockNavigation([
+				{ key: "screen-1" },
+				{ key: "screen-2" },
+			]);
+			const screen = createMockScreen("Home", "screen-1");
+			mockShouldSkipPreventDefault.mockReturnValue(false);
 
-			const beforeRemoveEvent = {
-				target: "route-1",
-				preventDefault: mockPreventDefault,
+			const listeners = createConfig({ navigation, route: screen });
+			const mockEvent = {
+				target: "screen-1",
+				preventDefault: mock(() => {}),
 				data: { action: { type: "GO_BACK" } },
-			} as unknown as BeforeRemoveEvent;
+			} as Any;
 
-			listeners.beforeRemove?.(beforeRemoveEvent);
+			listeners.beforeRemove?.(mockEvent);
 
-			expect(mockPreventDefault).not.toHaveBeenCalled();
-			expect(mockUpdateRoute).not.toHaveBeenCalled();
-			expect(mockRemoveRoute).toHaveBeenCalledTimes(1);
-			expect(mockRemoveRoute).toHaveBeenCalledWith("route-1");
+			expect(mockEvent.preventDefault).toHaveBeenCalled();
+			expect(mockUpdateScreen).toHaveBeenCalledWith("screen-1", {
+				status: 0,
+				closing: true,
+				onAnimationFinish: expect.any(Function),
+			});
+			expect(mockRemoveScreen).not.toHaveBeenCalled();
+		});
+
+		it("should dispatch action and remove screen when animation finishes", () => {
+			navigation = createMockNavigation([
+				{ key: "screen-1" },
+				{ key: "screen-2" },
+			]);
+			const screen = createMockScreen("Home", "screen-1");
+			mockShouldSkipPreventDefault.mockReturnValue(false);
+
+			const listeners = createConfig({ navigation, route: screen });
+			const mockAction = { type: "GO_BACK" };
+			const mockEvent = {
+				target: "screen-1",
+				preventDefault: mock(() => {}),
+				data: { action: mockAction },
+			} as Any;
+
+			listeners.beforeRemove?.(mockEvent);
+
+			// Get the onAnimationFinish callback
+			const updateCall = mockUpdateScreen.mock.calls[0];
+			const onAnimationFinish = (updateCall[1 as Any] as Any)
+				.onAnimationFinish as Any;
+
+			// Simulate animation completion
+			onAnimationFinish(true);
+
+			expect(navigation.dispatch).toHaveBeenCalledWith(mockAction);
+			expect(mockRemoveScreen).toHaveBeenCalledWith("screen-1");
 		});
 	});
 });

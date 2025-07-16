@@ -1,5 +1,5 @@
 import { useNavigation } from "@react-navigation/native";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import type {
 	ComposedGesture,
@@ -7,9 +7,8 @@ import type {
 } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useShallow } from "@/store/utils/use-shallow";
 import { animationValues } from "../animation-engine";
-import { RouteStore } from "../store";
+import { ScreenStore } from "../store";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
@@ -29,35 +28,32 @@ const useAnimationBuilder = () => {
 	const insets = useSafeAreaInsets();
 	const navigation = useNavigation();
 
-	const { currentRoute, nextRoute } = RouteStore.use(
-		useShallow(({ routes, routeKeys }) => {
-			const current = routes[key];
+	const progressFallback = useSharedValue(0);
+	const gestureDraggingFallback = useSharedValue(0);
+	const gestureXFallback = useSharedValue(0);
+	const gestureYFallback = useSharedValue(0);
+	const normalizedGestureXFallback = useSharedValue(0);
+	const normalizedGestureYFallback = useSharedValue(0);
 
-			if (!current) {
-				return { currentRoute: undefined, nextRoute: undefined };
-			}
+	const currentScreen = ScreenStore.use(
+		useCallback((state) => state.screens[key], [key]),
+	);
 
-			const currentScreenIndex = current.index;
-			const nextKey = routeKeys[currentScreenIndex + 1];
-			const next = nextKey ? routes[nextKey] : undefined;
+	const actualNextScreen = ScreenStore.use(
+		useCallback(
+			(state) => {
+				const current = state.screens[key];
+				if (!current) return undefined;
 
-			const isSameNavigator = next?.navigatorKey === current.navigatorKey;
+				const nextKey = state.screenKeys[current.index + 1];
+				const nextScreen = nextKey ? state.screens[nextKey] : undefined;
 
-			if (!isSameNavigator) {
-				/**
-				 * Without this guard, b (_layout) would instantly run its exit  animation (if declared) once b/index is focused.
-				 */
-				return {
-					currentRoute: current,
-					nextRoute: undefined,
-				};
-			}
-
-			return {
-				currentRoute: current,
-				nextRoute: next,
-			};
-		}),
+				const shouldUseNext =
+					nextScreen?.navigatorKey === current?.navigatorKey;
+				return shouldUseNext ? nextScreen : undefined;
+			},
+			[key],
+		),
 	);
 
 	const panGesture = useMemo(
@@ -65,7 +61,7 @@ const useAnimationBuilder = () => {
 			buildGestureDetector({
 				key,
 				progress: animationValues.screenProgress[key],
-				config: currentRoute || {
+				screenState: currentScreen || {
 					id: key,
 					name: key,
 					index: 0,
@@ -74,78 +70,62 @@ const useAnimationBuilder = () => {
 				},
 				width: dimensions.width,
 				height: dimensions.height,
-				goBack: navigation.goBack,
+				handleDismiss: (screenBeingDismissed: string) => {
+					ScreenStore.handleScreenDismiss(screenBeingDismissed, navigation);
+				},
 			}),
-		[key, currentRoute, dimensions.width, dimensions.height, navigation.goBack],
+		[key, currentScreen, dimensions, navigation],
 	);
 
-	// We'll avoid using makeMutable as fallbacks since useSharedValues are automatically garbage collected
-	const progressFallback = useSharedValue(0);
-	const gestureDraggingFallback = useSharedValue(0);
-	const gestureXFallback = useSharedValue(0);
-	const gestureYFallback = useSharedValue(0);
-	const normalizedGestureXFallback = useSharedValue(0);
-	const normalizedGestureYFallback = useSharedValue(0);
+	const getAnimationValuesForScreen = useCallback(
+		(screenId: string) => ({
+			progress: animationValues.screenProgress[screenId] || progressFallback,
+			gesture: {
+				isDragging:
+					animationValues.gestureDragging[screenId] || gestureDraggingFallback,
+				x: animationValues.gestureX[screenId] || gestureXFallback,
+				y: animationValues.gestureY[screenId] || gestureYFallback,
+				normalizedX:
+					animationValues.normalizedGestureX[screenId] ||
+					normalizedGestureXFallback,
+				normalizedY:
+					animationValues.normalizedGestureY[screenId] ||
+					normalizedGestureYFallback,
+			},
+		}),
+		[
+			progressFallback,
+			gestureDraggingFallback,
+			gestureXFallback,
+			gestureYFallback,
+			normalizedGestureXFallback,
+			normalizedGestureYFallback,
+		],
+	);
 
 	return useMemo(() => {
 		return {
-			current: {
-				progress: animationValues.screenProgress[key] || progressFallback,
-				gesture: {
-					isDragging:
-						animationValues.gestureDragging[key] || gestureDraggingFallback,
-					x: animationValues.gestureX[key] || gestureXFallback,
-					y: animationValues.gestureY[key] || gestureYFallback,
-					normalizedX:
-						animationValues.normalizedGestureX[key] ||
-						normalizedGestureXFallback,
-					normalizedY:
-						animationValues.normalizedGestureY[key] ||
-						normalizedGestureYFallback,
-				},
-			},
-			next:
-				nextRoute && animationValues.screenProgress[nextRoute.id]
-					? {
-							progress: animationValues.screenProgress[nextRoute.id],
-							gesture: {
-								isDragging:
-									animationValues.gestureDragging[nextRoute.id] ||
-									gestureDraggingFallback,
-								x: animationValues.gestureX[nextRoute.id] || gestureXFallback,
-								y: animationValues.gestureY[nextRoute.id] || gestureYFallback,
-								normalizedX:
-									animationValues.normalizedGestureX[nextRoute.id] ||
-									normalizedGestureXFallback,
-								normalizedY:
-									animationValues.normalizedGestureY[nextRoute.id] ||
-									normalizedGestureYFallback,
-							},
-						}
-					: undefined,
+			current: getAnimationValuesForScreen(key),
+			next: actualNextScreen
+				? getAnimationValuesForScreen(actualNextScreen.id)
+				: undefined,
 			layouts: { screen: dimensions },
 			insets,
-			closing: currentRoute?.closing || false,
+			closing: currentScreen?.closing || false,
 			screenStyleInterpolator:
-				nextRoute?.screenStyleInterpolator ||
-				currentRoute?.screenStyleInterpolator ||
+				actualNextScreen?.screenStyleInterpolator ||
+				currentScreen?.screenStyleInterpolator ||
 				noopinterpolator,
-
 			gestureDetector: panGesture,
 		};
 	}, [
 		key,
-		currentRoute,
-		nextRoute,
+		currentScreen,
+		actualNextScreen,
 		dimensions,
 		insets,
 		panGesture,
-		progressFallback,
-		gestureDraggingFallback,
-		gestureXFallback,
-		gestureYFallback,
-		normalizedGestureXFallback,
-		normalizedGestureYFallback,
+		getAnimationValuesForScreen,
 	]);
 };
 

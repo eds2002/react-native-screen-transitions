@@ -1,3 +1,4 @@
+import type { PanGesture } from "react-native-gesture-handler";
 import type { TransitionConfig } from "../../types";
 
 interface GestureActivationOptions {
@@ -5,6 +6,7 @@ interface GestureActivationOptions {
 		| TransitionConfig["gestureDirection"]
 		| Array<TransitionConfig["gestureDirection"]>;
 	gestureResponseDistance: number;
+	panGesture: PanGesture;
 }
 
 /**
@@ -12,9 +14,10 @@ interface GestureActivationOptions {
  */
 type OffsetErrorTypeBugFix = [start: number, end: number];
 
-export const createGestureActivationCriteria = ({
+export const applyGestureActivationCriteria = ({
 	gestureDirection,
 	gestureResponseDistance,
+	panGesture,
 }: GestureActivationOptions) => {
 	const directions = Array.isArray(gestureDirection)
 		? gestureDirection
@@ -87,5 +90,20 @@ export const createGestureActivationCriteria = ({
 		result.failOffsetY = [-toleranceY, toleranceY] as OffsetErrorTypeBugFix;
 	}
 
-	return result;
+	if (result?.activeOffsetX) {
+		panGesture.activeOffsetX(result.activeOffsetX);
+	}
+	if (result?.activeOffsetY) {
+		panGesture.activeOffsetY(result.activeOffsetY);
+	}
+	if (result?.failOffsetX) {
+		panGesture.failOffsetX(result.failOffsetX);
+	}
+	if (result?.failOffsetY) {
+		panGesture.failOffsetY(result.failOffsetY);
+	}
+
+	panGesture.enableTrackpadTwoFingerGesture(true);
+
+	return panGesture;
 };

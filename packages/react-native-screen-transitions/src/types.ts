@@ -1,6 +1,7 @@
 import type {
 	EventArg,
 	EventMapBase,
+	NavigationProp,
 	NavigationState,
 	ParamListBase,
 	RouteProp,
@@ -24,17 +25,17 @@ export type ScreenStatus = 0 | 1;
 // 1. CORE STATE & CONFIGURATION TYPES
 // =================================================================
 
-export interface RouteState extends TransitionConfig {
+export interface ScreenState extends TransitionConfig {
 	/**
-	 * The unique key for the route, provided by the navigator.
+	 * The unique key for the screen, provided by the navigator.
 	 */
 	id: string;
 	/**
-	 * The index of the route in the history.
+	 * The index of the screen in the history.
 	 */
 	index: number;
 	/**
-	 * The name of the route, provided by the navigator.
+	 * The name of the screen, provided by the navigator.
 	 */
 	name: string;
 	/**
@@ -50,14 +51,18 @@ export interface RouteState extends TransitionConfig {
 	 */
 	onAnimationFinish?: (finished?: boolean) => void;
 	/**
-	 * The key of the navigator that contains this route.
+	 * The key of the navigator that renders this route.
 	 */
 	navigatorKey?: string;
+	/**
+	 * The key of the parent navigator that renders this navigator.
+	 */
+	parentNavigatorKey?: string;
 }
 
-export interface RouteStateStore {
-	routes: Record<string, RouteState>;
-	routeKeys: string[];
+export interface ScreenStateStore {
+	screens: Record<string, ScreenState>;
+	screenKeys: string[];
 }
 
 export interface TransitionConfig {
@@ -119,7 +124,7 @@ export interface ScreenInterpolationProps {
 	};
 	/** The safe area insets for the screen. */
 	insets: EdgeInsets;
-	/** A flag indicating if the current route is in the process of closing. */
+	/** A flag indicating if the current screen is in the process of closing. */
 	closing: boolean;
 }
 
@@ -213,3 +218,10 @@ export type BeforeRemoveEvent = EventArg<
 >;
 
 export type FocusEvent = EventArg<"focus", false, undefined>;
+
+export type UseNavigation = Omit<
+	NavigationProp<ReactNavigation.RootParamList>,
+	"getState"
+> & {
+	getState(): NavigationState | undefined;
+};

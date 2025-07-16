@@ -1,19 +1,31 @@
 import { mock } from "bun:test";
-import type { Any } from "@/types";
+import type { Any } from "../types";
 
-export const mockUpdateRoute = mock(() => {});
-export const mockRemoveRoute = mock(() => {});
-export let routeSubscriber:
-	| ((currRoutes: Any, prevRoutes: Any) => void)
+export const mockUpdateScreen = mock(() => {});
+export const mockRemoveScreen = mock(() => {});
+export const mockGetState = mock(() => ({
+	screens: {},
+	screenKeys: [],
+}));
+export const mockHandleScreenDismiss = mock(() => {});
+
+export const mockShouldSkipPreventDefault = mock(() => false);
+export let screenSubscriber:
+	| ((currScreens: Any, prevScreens: Any) => void)
 	| null = null;
 
-export const mockRouteStoreImplementation = {
-	updateRoute: mockUpdateRoute,
-	removeRoute: mockRemoveRoute,
+export const mockScreenStoreImplementation = {
+	updateScreen: mockUpdateScreen,
+	removeScreen: mockRemoveScreen,
 	use: {
 		subscribeWithSelector: mock((_: Any, subscriber: Any) => {
-			routeSubscriber = subscriber;
+			screenSubscriber = subscriber;
 			return () => {};
 		}),
+		getState: mockGetState,
+		setState: mock(() => {}),
 	},
+	shouldSkipPreventDefault: mockShouldSkipPreventDefault,
+	handleScreenDismiss: mock(() => {}),
+	getState: () => mockGetState(),
 };

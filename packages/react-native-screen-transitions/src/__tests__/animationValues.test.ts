@@ -1,13 +1,13 @@
 import { beforeAll, beforeEach, describe, expect, mock, test } from "bun:test";
 import {
-	mockRouteStoreImplementation,
-	routeSubscriber,
+	mockScreenStoreImplementation,
+	screenSubscriber,
 } from "../__mocks__/store.mock";
 import type { animationValues as AnimationValuesType } from "../animation-engine";
 import "../__mocks__/reanimated.mock";
 
 mock.module("../store/index", () => ({
-	RouteStore: mockRouteStoreImplementation,
+	ScreenStore: mockScreenStoreImplementation,
 }));
 
 describe("Animation Engine", () => {
@@ -20,23 +20,23 @@ describe("Animation Engine", () => {
 
 	beforeEach(() => {
 		Object.keys(animationValues).forEach((key) => {
-			Object.keys(animationValues[key]).forEach((routeKey) => {
-				delete animationValues[key][routeKey];
+			Object.keys(animationValues[key]).forEach((screenKey) => {
+				delete animationValues[key][screenKey];
 			});
 		});
 	});
 
 	describe("when a new route is added", () => {
 		test("it should create the animation value and immediately animate it to its initial status", () => {
-			expect(routeSubscriber).not.toBeNull();
-			if (!routeSubscriber) return;
+			expect(screenSubscriber).not.toBeNull();
+			if (!screenSubscriber) return;
 
-			const prevRoutes = {};
-			const currRoutes = {
-				route1: { id: "route1", status: 1 },
+			const prevScreens = {};
+			const currScreens = {
+				screen1: { id: "screen1", status: 1 },
 			};
 
-			routeSubscriber(currRoutes, prevRoutes);
+			screenSubscriber(currScreens, prevScreens);
 
 			Object.keys(animationValues.screenProgress).forEach((key) => {
 				expect(animationValues.screenProgress[key]).toBeDefined();
@@ -46,35 +46,35 @@ describe("Animation Engine", () => {
 	});
 	describe("when a route is removed", () => {
 		test("it should delete the animation values for that route", () => {
-			expect(routeSubscriber).not.toBeNull();
-			if (!routeSubscriber) return;
+			expect(screenSubscriber).not.toBeNull();
+			if (!screenSubscriber) return;
 
-			const initialPrevRoutes = {};
-			const initialCurrRoutes = {
-				route1: { id: "route1", status: 1 },
-				route2: { id: "route2", status: 1 },
+			const initialPrevScreens = {};
+			const initialCurrScreens = {
+				screen1: { id: "screen1", status: 1 },
+				screen2: { id: "screen2", status: 1 },
 			};
-			routeSubscriber(initialCurrRoutes, initialPrevRoutes);
+			screenSubscriber(initialCurrScreens, initialPrevScreens);
 
 			// make sure route2 values were actually created.
-			expect(animationValues.screenProgress.route2).toBeDefined();
-			expect(animationValues.gestureX.route2).toBeDefined();
+			expect(animationValues.screenProgress.screen2).toBeDefined();
+			expect(animationValues.gestureX.screen2).toBeDefined();
 
 			// Remove the route
-			const nextPrevRoutes = initialCurrRoutes;
-			const nextCurrRoutes = {
-				route1: { id: "route1", status: 1 },
+			const nextPrevScreens = initialCurrScreens;
+			const nextCurrScreens = {
+				screen1: { id: "screen1", status: 1 },
 			};
-			routeSubscriber(nextCurrRoutes, nextPrevRoutes);
+			screenSubscriber(nextCurrScreens, nextPrevScreens);
 
 			// check that the values for the removed route are gone.
-			expect(animationValues.screenProgress.route2).toBeUndefined();
-			expect(animationValues.gestureX.route2).toBeUndefined();
-			expect(animationValues.gestureY.route2).toBeUndefined();
+			expect(animationValues.screenProgress.screen2).toBeUndefined();
+			expect(animationValues.gestureX.screen2).toBeUndefined();
+			expect(animationValues.gestureY.screen2).toBeUndefined();
 
 			// check that the values for the remaining route are still there.
-			expect(animationValues.screenProgress.route1).toBeDefined();
-			expect(animationValues.gestureX.route1).toBeDefined();
+			expect(animationValues.screenProgress.screen1).toBeDefined();
+			expect(animationValues.gestureX.screen1).toBeDefined();
 		});
 	});
 });

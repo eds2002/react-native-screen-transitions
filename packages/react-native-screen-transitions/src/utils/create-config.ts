@@ -1,5 +1,5 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
-import { RouteStore } from "../store";
+import { ScreenStore } from "../store";
 import type {
 	Any,
 	BeforeRemoveEvent,
@@ -20,45 +20,40 @@ export const createConfig = ({
 }: TransitionEventHandlersProps): TransitionListeners => {
 	return {
 		focus: (e: FocusEvent) => {
+			const parentNavigatorKey = reactNavigation.getParent()?.getState?.()?.key;
 			const navigatorKey = reactNavigation.getState().key;
 
-			RouteStore.updateRoute(e.target, {
+			ScreenStore.updateScreen(e.target, {
 				id: e.target,
 				name: route.name,
 				status: 1,
 				closing: false,
 				navigatorKey,
+				parentNavigatorKey,
 				...config,
 			});
 		},
 		beforeRemove: (e: BeforeRemoveEvent) => {
-			const navigatorState = reactNavigation.getState();
+			const shouldSkipPreventDefault = ScreenStore.shouldSkipPreventDefault(
+				e.target,
+				reactNavigation.getState(),
+			);
 
-			const isLastScreenInStack =
-				navigatorState.routes.length === 1 &&
-				navigatorState.routes[0].key === e.target;
-
-			if (isLastScreenInStack) {
-				/**
-				 * Without this guard, b/index would have a noticeable delay in it's back event. Then we will see the exit animation from b (layout).
-				 *
-				 * Since this is the last screen, we can assume the previous route is the parent. We'll let the parent handle it's exit animation instead.
-				 */
-				RouteStore.removeRoute(e.target);
+			if (shouldSkipPreventDefault) {
+				ScreenStore.removeScreen(e.target);
 				return;
 			}
 
 			e.preventDefault();
-
 			const handleFinish = (finished?: boolean) => {
 				if (!finished) return;
 				if (reactNavigation.canGoBack()) {
 					reactNavigation.dispatch(e.data?.action);
-					RouteStore.removeRoute(e.target);
+					ScreenStore.removeScreen(e.target);
 				}
 			};
 
-			RouteStore.updateRoute(e.target, {
+			ScreenStore.updateScreen(e.target, {
 				status: 0,
 				closing: true,
 				onAnimationFinish: handleFinish,

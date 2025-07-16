@@ -5,9 +5,9 @@ import {
 	type SharedValue,
 } from "react-native-reanimated";
 import { animationValues } from "../../animation-engine";
-import type { GestureDirection, RouteState } from "../../types";
+import type { ScreenState } from "../../types";
 import { animate } from "../animate";
-import { createGestureActivationCriteria } from "./create-gesture-activation-criteria";
+import { applyGestureActivationCriteria } from "./apply-gesture-activation-criteria";
 import { mapGestureToProgress } from "./map-gesture-to-progress";
 
 const GESTURE_VELOCITY_IMPACT = 0.3;
@@ -16,35 +16,19 @@ const DEFAULT_GESTURE_RESPONSE_DISTANCE = 50;
 interface BuildGestureDetectorProps {
 	key: string;
 	progress: SharedValue<number>;
-	config: RouteState;
+	screenState: ScreenState;
 	width: number;
 	height: number;
-	goBack: () => void;
+	handleDismiss: (screenBeingDismissed: string) => void;
 }
-
-export const normalizeGestureTranslation = (
-	translation: number,
-	gestureDirection: GestureDirection,
-) => {
-	"worklet";
-	const isInverted = gestureDirection.includes("inverted");
-
-	const translated = Math.abs(translation) * (isInverted ? -1 : 1);
-
-	if (isInverted) {
-		return Math.min(0, translated);
-	}
-
-	return Math.max(0, translated);
-};
 
 export const buildGestureDetector = ({
 	key,
 	progress,
-	config,
+	screenState,
 	width,
 	height,
-	goBack,
+	handleDismiss,
 }: BuildGestureDetectorProps) => {
 	const _translateX = animationValues.gestureX[key];
 	const _translateY = animationValues.gestureY[key];
@@ -58,7 +42,7 @@ export const buildGestureDetector = ({
 		transitionSpec,
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
 		gestureResponseDistance = DEFAULT_GESTURE_RESPONSE_DISTANCE,
-	} = config;
+	} = screenState;
 
 	const directions = Array.isArray(gestureDirection)
 		? gestureDirection
@@ -174,7 +158,7 @@ export const buildGestureDetector = ({
 			const onFinish = shouldDismiss
 				? (isFinished?: boolean) => {
 						"worklet";
-						if (isFinished) runOnJS(goBack)();
+						if (isFinished) runOnJS(handleDismiss)(screenState.id);
 					}
 				: undefined;
 
@@ -186,26 +170,11 @@ export const buildGestureDetector = ({
 			_normalizedGestureY.value = animate(0, spec);
 		});
 
-	const criteria = createGestureActivationCriteria({
+	applyGestureActivationCriteria({
 		gestureDirection,
 		gestureResponseDistance,
+		panGesture,
 	});
 
-	if (criteria?.activeOffsetX) {
-		panGesture.activeOffsetX(criteria.activeOffsetX);
-	}
-	if (criteria?.activeOffsetY) {
-		panGesture.activeOffsetY(criteria.activeOffsetY);
-	}
-	if (criteria?.failOffsetX) {
-		panGesture.failOffsetX(criteria.failOffsetX);
-	}
-	if (criteria?.failOffsetY) {
-		panGesture.failOffsetY(criteria.failOffsetY);
-	}
-
-	panGesture.enableTrackpadTwoFingerGesture(true);
-	const nativeGesture = Gesture.Native().shouldCancelWhenOutside(false);
-
-	return Gesture.Race(panGesture, nativeGesture);
+	return panGesture;
 };

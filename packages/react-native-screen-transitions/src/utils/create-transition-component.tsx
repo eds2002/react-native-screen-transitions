@@ -6,9 +6,9 @@ import Animated, {
 	type AnimatedProps,
 	useAnimatedStyle,
 } from "react-native-reanimated";
-import type { Any } from "@/types";
 import { _useScreenAnimation } from "../hooks/use-screen-animation";
 import { useSkipFirstFrame } from "../hooks/use-skip-first-frame";
+import type { Any } from "../types";
 
 export function createTransitionComponent<P extends object>(
 	Wrapped: ComponentType<P>,
