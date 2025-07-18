@@ -1,6 +1,6 @@
 import Transition from "react-native-screen-transitions";
 
-export const groups = {
+export const mainExampleGroups = {
 	single: {
 		label: "Individual Screen Transitions",
 		desc: "Examples of different transition animations configured for each screen within a Stack navigator using listeners props.",
@@ -61,5 +61,13 @@ export const groups = {
 				href: "/nested/one" as const,
 			},
 		],
+	},
+};
+
+export const mocksExampleGroups = {
+	single: {
+		label: "Profile Palette",
+		desc: "A profile screen with a palette of colors.",
+		href: "/mocks/palette-profile" as const,
 	},
 };

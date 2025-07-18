@@ -6,10 +6,15 @@ import Transition from "react-native-screen-transitions";
 export default function RootLayout() {
 	return (
 		<GestureHandlerRootView>
-			<Stack>
+			<Stack screenOptions={{}}>
 				<Stack.Screen
 					name="index"
-					options={{ headerShown: false }}
+					options={{
+						headerShown: false,
+						contentStyle: {
+							backgroundColor: "white",
+						},
+					}}
 					listeners={Transition.createConfig}
 				/>
 				<Stack.Screen
@@ -84,6 +89,18 @@ export default function RootLayout() {
 						Transition.createConfig({
 							...l,
 							...Transition.presets.SlideFromTop(),
+						})
+					}
+				/>
+
+				{/* PALETTE PROFILE */}
+				<Stack.Screen
+					name="mocks/palette-profile"
+					options={Transition.defaultScreenOptions()}
+					listeners={(l) =>
+						Transition.createConfig({
+							...l,
+							...Transition.presets.DraggableCard(),
 						})
 					}
 				/>

@@ -22,7 +22,7 @@ const styles = StyleSheet.create({
 	group: {
 		gap: 4,
 		padding: 16,
-		backgroundColor: "#FFF",
+		backgroundColor: "#f3f4f6",
 		width: "100%",
 		borderRadius: 24,
 	},
