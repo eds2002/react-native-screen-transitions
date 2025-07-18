@@ -1,10 +1,5 @@
-import { useNavigation } from "@react-navigation/native";
 import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import type {
-	ComposedGesture,
-	GestureType,
-} from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { animationValues } from "../animation-engine";
@@ -13,12 +8,10 @@ import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 } from "../types";
-import { buildGestureDetector } from "../utils/gesture/build-gesture-detector";
 import { noopinterpolator } from "../utils/noop-interpolator";
 import { useKey } from "./use-key";
 
 interface InternalScreenInterpolationProps extends ScreenInterpolationProps {
-	gestureDetector: GestureType | ComposedGesture;
 	screenStyleInterpolator: ScreenStyleInterpolator;
 }
 
@@ -26,7 +19,6 @@ const useAnimationBuilder = () => {
 	const key = useKey();
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
-	const navigation = useNavigation();
 
 	const progressFallback = useSharedValue(0);
 	const gestureDraggingFallback = useSharedValue(0);
@@ -54,27 +46,6 @@ const useAnimationBuilder = () => {
 			},
 			[key],
 		),
-	);
-
-	const panGesture = useMemo(
-		() =>
-			buildGestureDetector({
-				key,
-				progress: animationValues.screenProgress[key],
-				screenState: currentScreen || {
-					id: key,
-					name: key,
-					index: 0,
-					status: 0,
-					closing: false,
-				},
-				width: dimensions.width,
-				height: dimensions.height,
-				handleDismiss: (screenBeingDismissed: string) => {
-					ScreenStore.handleScreenDismiss(screenBeingDismissed, navigation);
-				},
-			}),
-		[key, currentScreen, dimensions, navigation],
 	);
 
 	const getAnimationValuesForScreen = useCallback(
@@ -116,7 +87,6 @@ const useAnimationBuilder = () => {
 				actualNextScreen?.screenStyleInterpolator ||
 				currentScreen?.screenStyleInterpolator ||
 				noopinterpolator,
-			gestureDetector: panGesture,
 		};
 	}, [
 		key,
@@ -124,7 +94,6 @@ const useAnimationBuilder = () => {
 		actualNextScreen,
 		dimensions,
 		insets,
-		panGesture,
 		getAnimationValuesForScreen,
 	]);
 };
@@ -134,11 +103,8 @@ const _useScreenAnimation = (): InternalScreenInterpolationProps => {
 };
 
 const useScreenAnimation = (): ScreenInterpolationProps => {
-	const {
-		screenStyleInterpolator: _,
-		gestureDetector: __,
-		...animationProps
-	} = useAnimationBuilder();
+	const { screenStyleInterpolator: _, ...animationProps } =
+		useAnimationBuilder();
 
 	return animationProps;
 };

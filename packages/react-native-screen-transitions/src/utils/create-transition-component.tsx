@@ -1,11 +1,11 @@
 import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import { StyleSheet } from "react-native";
-import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	type AnimatedProps,
 	useAnimatedStyle,
 } from "react-native-reanimated";
+import { TransitionGestureHandlerProvider } from "@/components/transition-gesture-handler-provider";
 import { _useScreenAnimation } from "../hooks/use-screen-animation";
 import { useSkipFirstFrame } from "../hooks/use-skip-first-frame";
 import type { Any } from "../types";
@@ -21,11 +21,8 @@ export function createTransitionComponent<P extends object>(
 		(props, ref) => {
 			const { children, style, ...rest } = props as Any;
 
-			const {
-				screenStyleInterpolator,
-				gestureDetector,
-				...screenInterpolationProps
-			} = _useScreenAnimation();
+			const { screenStyleInterpolator, ...screenInterpolationProps } =
+				_useScreenAnimation();
 
 			const screenContainerStyle = useAnimatedStyle(() => {
 				"worklet";
@@ -33,6 +30,7 @@ export function createTransitionComponent<P extends object>(
 					screenStyleInterpolator(screenInterpolationProps).contentStyle || {}
 				);
 			});
+
 			const overlayStyle = useAnimatedStyle(() => {
 				"worklet";
 				return (
@@ -44,7 +42,7 @@ export function createTransitionComponent<P extends object>(
 
 			return (
 				<Animated.View style={[{ flex: 1 }, flickerFixStyle]}>
-					<GestureDetector gesture={gestureDetector}>
+					<TransitionGestureHandlerProvider>
 						<AnimatedComponent
 							{...rest}
 							ref={ref}
@@ -56,7 +54,8 @@ export function createTransitionComponent<P extends object>(
 						>
 							{children}
 						</AnimatedComponent>
-					</GestureDetector>
+					</TransitionGestureHandlerProvider>
+
 					<Animated.View
 						style={[
 							StyleSheet.absoluteFillObject,
