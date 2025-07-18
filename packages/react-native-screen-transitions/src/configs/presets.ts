@@ -116,7 +116,7 @@ export const DraggableCard = (
 ): TransitionConfig => {
 	return {
 		gestureEnabled: true,
-		gestureDirection: ["horizontal", "vertical", "vertical-inverted"],
+		gestureDirection: ["horizontal", "vertical"],
 		screenStyleInterpolator: ({ current, next, layouts: { screen } }) => {
 			"worklet";
 

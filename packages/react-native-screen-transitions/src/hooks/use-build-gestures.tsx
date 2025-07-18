@@ -52,7 +52,6 @@ export const useBuildGestures = ({
 		x: 0,
 		y: 0,
 	});
-	const isPanning = useSharedValue(false);
 
 	const translateX = animationValues.gestureX[key];
 	const translateY = animationValues.gestureY[key];
@@ -95,27 +94,22 @@ export const useBuildGestures = ({
 			const deltaX = touch.x - initialTouch.value.x;
 			const deltaY = touch.y - initialTouch.value.y;
 
-			// Determine swipe direction based on which axis has more movement
 			const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
 			const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
 
-			// Determine specific directions
 			const isSwipingDown = isVerticalSwipe && deltaY > 0;
 			const isSwipingUp = isVerticalSwipe && deltaY < 0;
 			const isSwipingRight = isHorizontalSwipe && deltaX > 0;
 			const isSwipingLeft = isHorizontalSwipe && deltaX < 0;
 
-			// Add minimum movement threshold to avoid accidental triggers
-			const minMovement = 5; // pixels
+			const minMovement = 5;
 			const hasEnoughMovement =
 				Math.abs(deltaX) > minMovement || Math.abs(deltaY) > minMovement;
 
 			if (!hasEnoughMovement) return;
 
-			// Check conditions based on gesture direction and scroll position
 			let shouldActivate = false;
 
-			// Check each configured direction
 			for (const direction of directions) {
 				switch (direction) {
 					case "vertical":
@@ -151,13 +145,12 @@ export const useBuildGestures = ({
 						break;
 
 					case "bidirectional":
-						// For bidirectional, check each swipe direction appropriately
 						if (isSwipingDown) {
-							shouldActivate = scrollProgress.value.y <= 0; // Vertical scrollview constraint
+							shouldActivate = scrollProgress.value.y <= 0;
 						} else if (isSwipingUp) {
-							shouldActivate = scrollProgress.value.y <= 0; // Placeholder
+							shouldActivate = scrollProgress.value.y <= 0;
 						} else if (isSwipingRight || isSwipingLeft) {
-							shouldActivate = true; // No horizontal scrollview constraint
+							shouldActivate = true;
 						}
 						break;
 				}
@@ -165,20 +158,19 @@ export const useBuildGestures = ({
 				if (shouldActivate) break;
 			}
 
-			if (shouldActivate || isPanning.value) {
+			if (shouldActivate || isDragging.value) {
 				manager.activate();
 			} else {
 				manager.fail();
 			}
 		},
-		[initialTouch, directions, scrollProgress, isPanning],
+		[initialTouch, directions, scrollProgress, isDragging],
 	);
 
 	const onStart = useCallback(() => {
 		"worklet";
 		isDragging.value = 1;
-		isPanning.value = true;
-	}, [isDragging, isPanning]);
+	}, [isDragging]);
 
 	const onUpdate = useCallback(
 		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
@@ -308,10 +300,9 @@ export const useBuildGestures = ({
 			translateY.value = animate(0, spec);
 			normalizedGestureX.value = animate(0, spec);
 			normalizedGestureY.value = animate(0, spec);
-			isPanning.value = false;
+			isDragging.value = 0;
 		},
 		[
-			isPanning,
 			dimensions,
 			directions,
 			translateX,
@@ -324,6 +315,7 @@ export const useBuildGestures = ({
 			transitionSpec?.close,
 			transitionSpec?.open,
 			gestureVelocityImpact,
+			isDragging,
 		],
 	);
 
