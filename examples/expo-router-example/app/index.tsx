@@ -5,7 +5,8 @@ import { BottomNav } from "@/components/bottom-nav";
 import MainExample from "@/components/main-example";
 import MocksExample from "@/components/mocks-example";
 
-const TransitionScrollView = Transition.createTransitionComponent(ScrollView);
+const TransitionScrollView =
+	Transition.createTransitionAwareComponent(ScrollView);
 export default function Home() {
 	const [activeSegment, setActiveSegment] = useState(0);
 	return (

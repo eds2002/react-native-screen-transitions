@@ -1,10 +1,11 @@
-import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { Fragment } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { Group } from "../components/group";
 import { mocksExampleGroups } from "../constants";
 
 export default function MocksExample() {
+	const navigation = useNavigation();
 	return (
 		<Fragment>
 			<View style={{ gap: 2, paddingHorizontal: 36 }}>
@@ -19,7 +20,10 @@ export default function MocksExample() {
 					key={key}
 					style={{ width: "100%", gap: 12, paddingHorizontal: 36 }}
 				>
-					<Group key={group.href} onPress={() => router.push(group.href)}>
+					<Group
+						key={group.screen}
+						onPress={() => navigation.navigate(group.screen as never)}
+					>
 						<Text style={styles.link}>{group.label}</Text>
 						<Text style={styles.dimmed}>{group.desc}</Text>
 					</Group>

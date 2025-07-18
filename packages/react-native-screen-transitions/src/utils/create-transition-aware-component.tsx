@@ -10,7 +10,7 @@ import { _useScreenAnimation } from "../hooks/use-screen-animation";
 import { useSkipFirstFrame } from "../hooks/use-skip-first-frame";
 import type { Any } from "../types";
 
-export function createTransitionComponent<P extends object>(
+export function createTransitionAwareComponent<P extends object>(
 	Wrapped: ComponentType<P>,
 ) {
 	const AnimatedComponent = Animated.createAnimatedComponent(Wrapped);

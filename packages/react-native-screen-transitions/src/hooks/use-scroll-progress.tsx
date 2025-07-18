@@ -1,8 +1,10 @@
 import { useCallback } from "react";
+import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import { useGestureContext } from "@/contexts/gesture";
 
 interface ScrollProgressHookProps {
+	onScroll?: (event: NativeSyntheticEvent<NativeScrollEvent>) => void;
 	onContentSizeChange?: (width: number, height: number) => void;
 }
 

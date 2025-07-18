@@ -25,7 +25,7 @@ export const useGestureContext = () => {
 	const context = useContext(GestureContext);
 	if (!context) {
 		throw new Error(
-			"useGestureContext must be used within a GestureContext.Provider",
+			"This component must be used within a Transitional Component.",
 		);
 	}
 	return context;

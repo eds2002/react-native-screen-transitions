@@ -21,19 +21,18 @@ export const TransitionGestureHandlerProvider = ({
 		contentHeight: 0,
 		contentWidth: 0,
 		layoutHeight: 0,
-		layoutWidth: 0, 
+		layoutWidth: 0,
 	});
 	const { panGesture, nativeGesture } = useBuildGestures({
 		scrollProgress,
 	});
-	const value = useMemo(
-		() => ({
+	const value = useMemo(() => {
+		return {
 			panGesture,
 			scrollProgress,
 			nativeGesture,
-		}),
-		[panGesture, scrollProgress, nativeGesture],
-	) satisfies GestureContextType;
+		};
+	}, [panGesture, scrollProgress, nativeGesture]) satisfies GestureContextType;
 
 	return (
 		<GestureContext.Provider value={value}>

@@ -5,6 +5,7 @@ import Transition from "react-native-screen-transitions";
 import Custom from "./screens/Custom";
 import { GroupANavigator } from "./screens/group-a/GroupANavigator";
 import { Home } from "./screens/Home";
+import PaletteProfile from "./screens/mocks/palette-profile";
 import { NestedNavigator } from "./screens/nested/NestedNavigator";
 import { ScreenA } from "./screens/ScreenA";
 import { ScreenB } from "./screens/ScreenB";
@@ -16,7 +17,10 @@ const RootStack = createNativeStackNavigator({
 	screens: {
 		Home: {
 			screen: Home,
-			options: { headerShown: false },
+			options: {
+				headerShown: false,
+				contentStyle: { backgroundColor: "white" },
+			},
 			listeners: Transition.createConfig,
 		},
 		ScreenA: {
@@ -85,6 +89,16 @@ const RootStack = createNativeStackNavigator({
 				Transition.createConfig({
 					...l,
 					...Transition.presets.SlideFromTop(),
+				}),
+		},
+		// Mocks
+		PaletteProfile: {
+			screen: PaletteProfile,
+			options: Transition.defaultScreenOptions(),
+			listeners: (l) =>
+				Transition.createConfig({
+					...l,
+					...Transition.presets.DraggableCard(),
 				}),
 		},
 	},

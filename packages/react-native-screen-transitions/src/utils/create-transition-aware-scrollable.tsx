@@ -5,7 +5,7 @@ import { useGestureContext } from "@/contexts/gesture";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import type { Any } from "@/types";
 
-export function createTransitionScrollable<P extends object>(
+export function createTransitionAwareScrollable<P extends object>(
 	ScrollableComponent: ComponentType<P>,
 ) {
 	const AnimatedScrollableComponent =
@@ -20,17 +20,18 @@ export function createTransitionScrollable<P extends object>(
 		const { nativeGesture } = useGestureContext();
 
 		const { scrollHandler, onContentSizeChange } = useScrollProgress({
+			onScroll: props.onScroll,
 			onContentSizeChange: props.onContentSizeChange,
 		});
 
 		return (
 			<GestureDetector gesture={nativeGesture}>
 				<AnimatedScrollableComponent
+					{...(props as Any)}
 					ref={ref}
 					onScroll={scrollHandler}
 					onContentSizeChange={onContentSizeChange}
-					scrollEventThrottle={16}
-					{...(props as Any)}
+					scrollEventThrottle={props.scrollEventThrottle || 16}
 				/>
 			</GestureDetector>
 		);
