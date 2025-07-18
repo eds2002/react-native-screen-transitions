@@ -323,6 +323,7 @@ export const useBuildGestures = ({
 		() =>
 			Gesture.Pan()
 				.enabled(gestureEnabled)
+				.manualActivation(true)
 				.onTouchesDown(onTouchesDown)
 				.onTouchesMove(onTouchesMove)
 				.onStart(onStart)
