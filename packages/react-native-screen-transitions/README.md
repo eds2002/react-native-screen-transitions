@@ -89,12 +89,23 @@ export default function RootLayout() {
 ### 3. Use transition-aware components in your screens
 
 ```tsx
-// profile.tsx
+// a.tsx
 import Transition from "react-native-screen-transitions";
 
-export default function Profile() {
+export default function A() {
   return (
     <Transition.View> {/* By default has flex: 1 */}
+      {/* Your content */}
+    </Transition.View>
+  );
+}
+
+// b.tsx
+import Transition from "react-native-screen-transitions";
+
+export default function B() {
+  return (
+    <Transition.View>
       {/* Your content */}
     </Transition.View>
   );
@@ -113,8 +124,8 @@ export default function TabLayout() {
   return (
     <Transition.View>
       <Stack>
-        <Stack.Screen name="feed" {...Transition.createScreenConfig()} />
-        <Stack.Screen name="settings" {...Transition.createScreenConfig()} />
+        <Stack.Screen name="nested-a" {...Transition.createScreenConfig()} />
+        <Stack.Screen name="nested-b" {...Transition.createScreenConfig()} />
       </Stack>
     </Transition.View>
   );
@@ -155,6 +166,7 @@ export default function RootLayout() {
               layouts: { screen: { width } },
             }) => {
               "worklet";
+              // Mimics the iOS stack slide animation
               const progress = current.progress.value + (next?.progress.value || 0);
               const translateX = interpolate(
                 progress,
@@ -216,6 +228,54 @@ Alternatively, define animations at the screen level using the `useScreenAnimati
   })}
 />
 ```
+
+```tsx
+// a.tsx (previous screen)
+import { useScreenAnimation } from 'react-native-screen-transitions';
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
+
+export default function A() {
+  const { next, layouts: { screen: { width } } } = useScreenAnimation();
+
+  const animatedStyle = useAnimatedStyle(() => {
+    // Unfocusing animation - screen slides left when next screen enters
+    const translateX = interpolate(next?.progress.value || 0, [0, 1], [0, width * -0.3]);
+    return {
+      transform: [{ translateX }],
+    };
+  });
+
+  return (
+    <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+      {/* Your content */}
+    </Animated.View>
+  );
+}
+
+// b.tsx (entering screen)
+import { useScreenAnimation } from 'react-native-screen-transitions';
+import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
+
+export default function B() {
+  const { current, layouts: { screen: { width } } } = useScreenAnimation();
+
+  const animatedStyle = useAnimatedStyle(() => {
+    // Focusing animation - screen slides in from right
+    const translateX = interpolate(current.progress.value, [0, 1], [width, 0]);
+    return {
+      transform: [{ translateX }],
+    };
+  });
+
+  return (
+    <Animated.View style={[{ flex: 1 }, animatedStyle]}>
+      {/* Your content */}
+    </Animated.View>
+  );
+}
+```
+
+
 
 ## Dismissible Screens with Scrollables
 
