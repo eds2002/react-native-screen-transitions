@@ -1,9 +1,25 @@
 # react-native-screen-transitions
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 | iOS | Android |
-|---------|---------|
-|<video src="https://github.com/user-attachments/assets/8a7b8006-f165-4a78-b0f9-c94cddd948b9" width="300" controls></video>|<video src="https://github.com/user-attachments/assets/ddebdaa8-a929-43ab-b857-08a00e142343" width="300" controls></video>|
+|---|---|
+| <video src="https://github.com/user-attachments/assets/81f39391-80c0-4ce4-b6ff-76de85d2cf03" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/c2b4c6ca-2b0c-4cf4-a164-f7e68cee0c32" width="300" controls></video> |
 
 
 **WIP**: This package is a work-in-progress. It provides customizable screen transition animations for React Native apps, primarily designed for use with `expo-router` and `react-navigation`. It supports gestures, predefined presets, and custom animations, making it easy to add polished transitions to your navigation flows.
