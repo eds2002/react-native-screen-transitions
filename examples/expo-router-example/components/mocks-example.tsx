@@ -1,12 +1,13 @@
 import { router } from "expo-router";
-import { Fragment } from "react";
-import { StyleSheet, Text, View } from "react-native";
+
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { Group } from "../components/group";
 import { mocksExampleGroups } from "../constants";
 
 export default function MocksExample() {
+	const { height } = useWindowDimensions();
 	return (
-		<Fragment>
+		<View style={{ flex: 1, gap: 12, height: height }}>
 			<View style={{ gap: 2, paddingHorizontal: 36 }}>
 				<Text style={{ fontSize: 18, fontWeight: "600" }}>Mock Examples</Text>
 				<Text style={{ fontSize: 13, color: "gray" }}>
@@ -14,6 +15,7 @@ export default function MocksExample() {
 					within a navigator.
 				</Text>
 			</View>
+
 			{Object.entries(mocksExampleGroups).map(([key, group]) => (
 				<View
 					key={key}
@@ -25,7 +27,7 @@ export default function MocksExample() {
 					</Group>
 				</View>
 			))}
-		</Fragment>
+		</View>
 	);
 }
 

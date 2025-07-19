@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { FlatList, StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
 const Header = () => {
@@ -27,16 +27,15 @@ const ProfileSection = () => {
 
 export default function PaletteProfile() {
 	const bluePalette = [
-		"#dbeafe", // Lightest blue
-		"#bfdbfe",
-		"#93c5fd",
-		"#60a5fa",
-		"#3b82f6",
-		"#2563eb",
-		"#1d4ed8",
-		"#1e40af",
-		"#1e3a8a", // Darkest blue
-	];
+		"#023e8a",
+		"#0077b6",
+		"#0096c7",
+		"#00b4d8",
+		"#48cae4",
+		"#90e0ef",
+		"#ade8f4",
+		"#caf0f8",
+	].reverse();
 
 	return (
 		<Transition.View style={styles.container}>
@@ -54,14 +53,27 @@ export default function PaletteProfile() {
 				</View>
 
 				{/* Palette List */}
-				<View style={styles.paletteContainer}>
-					{bluePalette.map((color) => (
+				<FlatList
+					data={bluePalette}
+					numColumns={2}
+					scrollEnabled={false}
+					keyExtractor={(item) => item as string}
+					contentContainerStyle={styles.paletteContainer}
+					columnWrapperStyle={{ gap: 18 }}
+					renderItem={({ item: color }) => (
 						<View
-							key={color}
-							style={[styles.paletteItem, { backgroundColor: color }]}
+							style={[
+								styles.paletteItem,
+								{
+									backgroundColor: color,
+									height: 100,
+									flex: 1,
+									aspectRatio: 1,
+								},
+							]}
 						/>
-					))}
-				</View>
+					)}
+				/>
 			</Transition.ScrollView>
 		</Transition.View>
 	);
@@ -70,24 +82,19 @@ export default function PaletteProfile() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "white",
+		backgroundColor: "#000",
 		paddingTop: 50,
 		borderRadius: 24,
-		shadowColor: "#000",
-		shadowOffset: { width: 0, height: 1 },
-		shadowOpacity: 0.1,
-		shadowRadius: 100,
-		elevation: 2,
 	},
 	header: {
 		paddingVertical: 20,
 		paddingHorizontal: 20,
-		backgroundColor: "white",
+		backgroundColor: "#000",
 	},
 	headerTitle: {
 		fontSize: 18,
 		fontWeight: "600",
-		color: "black", // Blue color
+		color: "white", // Blue color
 	},
 	profileSection: {
 		alignItems: "center",
@@ -97,7 +104,7 @@ const styles = StyleSheet.create({
 		width: 80,
 		height: 80,
 		borderRadius: 40,
-		backgroundColor: "#f3f4f6", // Blue color
+		backgroundColor: "darkgrey", // Blue color
 		alignItems: "center",
 		justifyContent: "center",
 		marginBottom: 16,
@@ -105,16 +112,16 @@ const styles = StyleSheet.create({
 	profileIconText: {
 		fontSize: 32,
 		fontWeight: "bold",
-		color: "black",
+		color: "white",
 	},
 	profileName: {
 		fontSize: 20,
 		fontWeight: "600",
-		color: "black",
+		color: "white",
 	},
 	profileDescription: {
 		fontSize: 14,
-		color: "black",
+		color: "white",
 		fontWeight: "500",
 		textAlign: "center",
 		opacity: 0.6,
@@ -126,14 +133,14 @@ const styles = StyleSheet.create({
 	tabText: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "black", // Blue color
+		color: "white", // Blue color
 	},
 	paletteContainer: {
 		paddingHorizontal: 20,
-		gap: 12,
+		gap: 16,
 	},
 	paletteItem: {
 		height: 60,
-		borderRadius: 24,
+		borderRadius: 36,
 	},
 });

@@ -1,23 +1,27 @@
 import { type ComponentType, forwardRef, memo } from "react";
+import { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useGestureContext } from "@/contexts/gesture";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import type { Any } from "@/types";
+import { createTransitionAwareComponent } from ".";
 
 export function createTransitionAwareScrollable<P extends object>(
 	ScrollableComponent: ComponentType<P>,
 ) {
+	const WithTransitionAwareness = createTransitionAwareComponent(View);
 	const AnimatedScrollableComponent =
 		Animated.createAnimatedComponent(ScrollableComponent);
 
 	type Props = AnimatedProps<P>;
 
-	const Inner = forwardRef<
-		React.ComponentRef<typeof AnimatedScrollableComponent>,
+	const WithScrollAwareness = forwardRef<
+		React.ComponentRef<typeof ScrollableComponent>,
 		Props
 	>((props: Any, ref) => {
-		const { nativeGesture } = useGestureContext();
+		// biome-ignore lint/style/noNonNullAssertion: <Already checked in the parent component>
+		const { nativeGesture } = useGestureContext()!;
 
 		const { scrollHandler, onContentSizeChange } = useScrollProgress({
 			onScroll: props.onScroll,
@@ -37,9 +41,26 @@ export function createTransitionAwareScrollable<P extends object>(
 		);
 	});
 
-	Inner.displayName = `Transition(${ScrollableComponent.displayName || ScrollableComponent.name || "Component"})`;
+	const Wrapped = forwardRef<
+		React.ComponentRef<typeof ScrollableComponent>,
+		Props
+	>((props: Any, ref) => {
+		const context = useGestureContext();
 
-	return memo(Inner) as React.MemoExoticComponent<
+		if (!context) {
+			return (
+				<WithTransitionAwareness>
+					<WithScrollAwareness {...props} ref={ref} />
+				</WithTransitionAwareness>
+			);
+		}
+
+		return <WithScrollAwareness {...props} ref={ref} />;
+	});
+
+	WithScrollAwareness.displayName = `Transition(${ScrollableComponent.displayName || ScrollableComponent.name || "Component"})`;
+
+	return memo(Wrapped) as React.MemoExoticComponent<
 		React.ForwardRefExoticComponent<
 			AnimatedProps<P> &
 				React.RefAttributes<React.ComponentRef<typeof ScrollableComponent>>

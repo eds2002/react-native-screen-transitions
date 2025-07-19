@@ -70,4 +70,14 @@ export const mocksExampleGroups = {
 		desc: "A profile screen with a palette of colors.",
 		href: "/mocks/palette-profile" as const,
 	},
+	gallery: {
+		label: "Gallery Modal",
+		desc: "A gallery modal with a parallax effect.",
+		href: "/mocks/gallery-modal" as const,
+	},
+	deleteWarning: {
+		label: "Delete Warning",
+		desc: "A delete warning screen with a custom transition.",
+		href: "/mocks/delete-warning" as const,
+	},
 };

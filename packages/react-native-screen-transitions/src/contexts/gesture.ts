@@ -23,10 +23,6 @@ export const GestureContext = createContext<GestureContextType | undefined>(
 
 export const useGestureContext = () => {
 	const context = useContext(GestureContext);
-	if (!context) {
-		throw new Error(
-			"This component must be used within a Transitional Component.",
-		);
-	}
+
 	return context;
 };
