@@ -20,8 +20,7 @@ export function createTransitionAwareScrollable<P extends object>(
 		React.ComponentRef<typeof ScrollableComponent>,
 		Props
 	>((props: Any, ref) => {
-		// biome-ignore lint/style/noNonNullAssertion: <Already checked in the parent component>
-		const { nativeGesture } = useGestureContext()!;
+		const { nativeGesture } = useGestureContext();
 
 		const { scrollHandler, onContentSizeChange } = useScrollProgress({
 			onScroll: props.onScroll,
@@ -45,9 +44,9 @@ export function createTransitionAwareScrollable<P extends object>(
 		React.ComponentRef<typeof ScrollableComponent>,
 		Props
 	>((props: Any, ref) => {
-		const context = useGestureContext();
+		const { isPlaceholder } = useGestureContext();
 
-		if (!context) {
+		if (isPlaceholder) {
 			return (
 				<WithTransitionAwareness>
 					<WithScrollAwareness {...props} ref={ref} />

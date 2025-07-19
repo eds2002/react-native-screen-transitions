@@ -10,7 +10,6 @@ interface ScrollProgressHookProps {
 
 export const useScrollProgress = (props: ScrollProgressHookProps) => {
 	const { scrollProgress } = useGestureContext();
-
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
 			scrollProgress.modify((value) => {
