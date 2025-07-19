@@ -108,6 +108,11 @@ export const useBuildGestures = ({
 
 			if (!hasEnoughMovement) return;
 
+			if (isDragging.value) {
+				manager.activate();
+				return;
+			}
+
 			let shouldActivate = false;
 
 			for (const direction of directions) {
@@ -206,15 +211,35 @@ export const useBuildGestures = ({
 				const allowedRight = directions.includes("horizontal");
 				const allowedLeft = directions.includes("horizontal-inverted");
 
-				if (allowedRight || allowedLeft) {
-					const absX = Math.abs(event.translationX);
-					const currentProgress = mapGestureToProgress(absX, dimensions.width);
+				if (allowedRight && event.translationX > 0) {
+					const currentProgress = mapGestureToProgress(
+						event.translationX,
+						dimensions.width,
+					);
 					maxProgress = Math.max(maxProgress, currentProgress);
 				}
 
-				if (allowedUp || allowedDown) {
-					const absY = Math.abs(event.translationY);
-					const currentProgress = mapGestureToProgress(absY, dimensions.height);
+				if (allowedLeft && event.translationX < 0) {
+					const currentProgress = mapGestureToProgress(
+						-event.translationX,
+						dimensions.width,
+					);
+					maxProgress = Math.max(maxProgress, currentProgress);
+				}
+
+				if (allowedDown && event.translationY > 0) {
+					const currentProgress = mapGestureToProgress(
+						event.translationY,
+						dimensions.height,
+					);
+					maxProgress = Math.max(maxProgress, currentProgress);
+				}
+
+				if (allowedUp && event.translationY < 0) {
+					const currentProgress = mapGestureToProgress(
+						-event.translationY,
+						dimensions.height,
+					);
 					maxProgress = Math.max(maxProgress, currentProgress);
 				}
 
