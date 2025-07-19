@@ -37,15 +37,30 @@ bun add react-native-screen-transitions
 npm install react-native-reanimated react-native-gesture-handler
 ```
 
-## Usage
+## Your First Screen Transition
 
-### Integration with expo-router
-In expo-router, you can define transitions in your root layout (`app/_layout.tsx`) using the `listeners` prop on `Stack.Screen`. Wrap your app in `GestureHandlerRootView` for gesture support.
+Getting started with screen transitions is simple. Here's how to add your first animated transition:
+
+### 1. Wrap your app with GestureHandlerRootView
 
 ```tsx
-// app/_layout.tsx
-import { Stack } from "expo-router";
+// app/_layout.tsx (expo-router) or App.tsx (react-navigation)
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Transition from "react-native-screen-transitions";
+
+export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      {/* Your navigation setup */}
+    </GestureHandlerRootView>
+  );
+}
+```
+
+### 2. Add transition configuration to your screens
+
+```tsx
+import { Stack } from "expo-router";
 import Transition from "react-native-screen-transitions";
 
 export default function RootLayout() {
@@ -53,110 +68,64 @@ export default function RootLayout() {
     <GestureHandlerRootView>
       <Stack>
         <Stack.Screen
-          name="index"
-          listeners={Transition.createConfig}
+          name="a"
+          options={{ headerShown: false }}
+          {...Transition.createScreenConfig()}
         />
         <Stack.Screen
-          name="a"
-          options={Transition.defaultScreenOptions()}
-          listeners={(l) =>
-            Transition.createConfig({
-              ...l,
-              ...Transition.presets.SlideFromTop(),
-            })
-          }
+          name="b"
+          {...Transition.createScreenConfig({
+            ...Transition.presets.SlideFromTop(),
+          })}
         />
-        {/* Add more screens with presets */}
       </Stack>
     </GestureHandlerRootView>
   );
 }
 ```
 
-**Note**: `Transition.defaultScreenOptions()` returns the required screen options for animations to work properly. It sets `presentation: "containedTransparentModal"`, `headerShown: false`, and `animation: "none"` to ensure the library can control the transition animations.
+> ⚠️ **Important**: The first screen (like "a" in the example) must include `{...Transition.createScreenConfig()}` for it to be properly controlled by incoming screens.
 
-For grouped routes with layouts (e.g., `app/group-a/_layout.tsx`), wrap the nested `Stack` in `Transition.View` to enable transitions:
+### 3. Use transition-aware components in your screens
 
 ```tsx
-// app/group-a/_layout.tsx
-import { Stack } from "expo-router";
+// profile.tsx
 import Transition from "react-native-screen-transitions";
 
-export default function GroupLayout() {
+export default function Profile() {
+  return (
+    <Transition.View> {/* By default has flex: 1 */}
+      {/* Your content */}
+    </Transition.View>
+  );
+}
+```
+
+### For Nested Navigators
+
+When using nested navigators, wrap the nested Stack in a transition-aware component:
+
+```tsx
+// app/nested/_layout.tsx
+import Transition from "react-native-screen-transitions";
+
+export default function TabLayout() {
   return (
     <Transition.View>
       <Stack>
-        <Stack.Screen name="a" />
-        {/* Nested screens */}
+        <Stack.Screen name="feed" {...Transition.createScreenConfig()} />
+        <Stack.Screen name="settings" {...Transition.createScreenConfig()} />
       </Stack>
     </Transition.View>
   );
 }
 ```
 
-### Integration with react-navigation
-For react-navigation, use `createNativeStackNavigator` and apply transitions via `listeners` and `options`.
+## Advanced Usage
 
-```tsx
-// App.tsx
-import { createStaticNavigation } from "@react-navigation/native";
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import Transition from "react-native-screen-transitions";
-import { Home } from "./screens/Home"; // Your screens
-import { ScreenA } from "./screens/ScreenA";
+### Method 1: Navigator-Level Interpolator (Recommended)
 
-const RootStack = createNativeStackNavigator({
-  screens: {
-    Home: {
-      screen: Home,
-      listeners: Transition.createConfig,
-    },
-    ScreenA: {
-      screen: ScreenA,
-      options: Transition.defaultScreenOptions(),
-      listeners: (l) =>
-        Transition.createConfig({
-          ...l,
-          ...Transition.presets.SlideFromTop(),
-        }),
-    },
-    // Add more screens
-  },
-});
-
-const Navigation = createStaticNavigation(RootStack);
-
-export default function App() {
-  return (
-    <GestureHandlerRootView>
-      <Navigation />
-    </GestureHandlerRootView>
-  );
-}
-```
-
-For nested navigators, wrap them in `Transition.View` similar to expo-router.
-
-### Predefined Presets
-Use these out-of-the-box animations via `Transition.presets`:
-
-- `SlideFromTop()`: Screen slides in from the top.
-- `ZoomIn()`: Screen zooms in from the center.
-- `SlideFromBottom()`: Screen slides in from the bottom.
-- `DraggableCard()`: Interactive card-like drag gesture.
-- `ElasticCard()`: Elastic bounce effect on drag.
-
-Example:
-```tsx
-listeners={(l) => Transition.createConfig({ ...l, ...Transition.presets.DraggableCard() })}
-```
-
-### Defining your own screen animations
-There are two ways to define custom animations: at the navigator level using `screenStyleInterpolator` (recommended for animating both screens simultaneously), or at the screen level using `useScreenAnimation` hook.
-
-#### Method 1: Navigator-Level Interpolator (Recommended)
-Define a `screenStyleInterpolator` at the navigator level to animate both the entering and exiting screens simultaneously. This approach provides the most control.
+Define a `screenStyleInterpolator` at the navigator level to animate both entering and exiting screens simultaneously. This approach is much cleaner.
 
 ```tsx
 // app/_layout.tsx
@@ -171,53 +140,46 @@ export default function RootLayout() {
       <Stack>
         <Stack.Screen
           name="a"
-          listeners={Transition.createConfig} // Add blank config so system knows what to animate
+          {...Transition.createScreenConfig()} // Initialize
         />
         <Stack.Screen
           name="b"
-          options={Transition.defaultScreenOptions()}
-          listeners={(l) =>
-            Transition.createConfig({
-              ...l,
-              gestureDirection: "horizontal",
-              gestureEnabled: true,
-              gestureResponseDistance: 50,
-              gestureVelocityImpact: 0.3,
-              screenStyleInterpolator: ({
-                current,
-                next,
-                layouts: { screen: { width } },
-              }) => {
-                "worklet";
-
-                const progress = current.progress.value + (next?.progress.value || 0);
-
-                const translateX = interpolate(
-                  progress,
-                  [0, 1, 2],
-                  [width, 0, width * -0.3],
-                  "clamp"
-                );
-
-                return {
-                  contentStyle: {
-                    transform: [{ translateX }],
-                  },
-                };
-              },
-              transitionSpec: {
-                open: {
-                  easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-                  duration: 1000,
+          {...Transition.createScreenConfig({
+            gestureDirection: "horizontal",
+            gestureEnabled: true,
+            gestureResponseDistance: 50,
+            gestureVelocityImpact: 0.3,
+            screenStyleInterpolator: ({
+              current,
+              next,
+              layouts: { screen: { width } },
+            }) => {
+              "worklet";
+              const progress = current.progress.value + (next?.progress.value || 0);
+              const translateX = interpolate(
+                progress,
+                [0, 1, 2],
+                [width, 0, width * -0.3],
+                "clamp"
+              );
+              return {
+                contentStyle: {
+                  transform: [{ translateX }],
                 },
-                close: {
-                  damping: 10,
-                  mass: 0.5,
-                  stiffness: 100,
-                },
+              };
+            },
+            transitionSpec: {
+              open: {
+                easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+                duration: 1000,
               },
-            })
-          }
+              close: {
+                damping: 10,
+                mass: 0.5,
+                stiffness: 100,
+              },
+            },
+          })}
         />
       </Stack>
     </GestureHandlerRootView>
@@ -225,131 +187,155 @@ export default function RootLayout() {
 }
 ```
 
-When using `screenStyleInterpolator`, both screens must wrap their content in `Transition.View`:
+When using `screenStyleInterpolator`, both screens must wrap their content in a transition-aware component.
 
-```tsx
-// a.tsx
-import Transition from 'react-native-screen-transitions';
+### Method 2: Screen-Level Animations
 
-export default function A() {
-  return (
-    <Transition.View>
-      {/* Your content */}
-    </Transition.View>
-  );
-}
-
-// b.tsx
-import Transition from 'react-native-screen-transitions';
-
-export default function B() {
-  return (
-    <Transition.View>
-      {/* Your content */}
-    </Transition.View>
-  );
-}
-```
-
-#### Method 2: Screen-Level Animations
-Alternatively, define animations at the screen level using the `useScreenAnimation` hook. This is useful for screen-specific effects or when you don't need to animate both screens.
+Alternatively, define animations at the screen level using the `useScreenAnimation` hook. This is useful for screen-specific effects or when you don't need to animate both screens. You CAN combine this with `screenStyleInterpolator` for more advanced animations, but for this example, we'll leave `screenStyleInterpolator` undefined.
 
 ```tsx
 // app/_layout.tsx
 <Stack.Screen
   name="a"
-  listeners={Transition.createConfig}
+  {...Transition.createScreenConfig()}
 />
 <Stack.Screen
   name="b"
-  options={Transition.defaultScreenOptions()}
-  listeners={(l) =>
-    Transition.createConfig({
-      ...l,
-      transitionSpec: {
-        open: {
-          easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
-          duration: 1000,
-        },
-        close: {
-          damping: 10,
-          mass: 0.5,
-          stiffness: 100,
-        },
+  {...Transition.createScreenConfig({
+    transitionSpec: {
+      open: {
+        easing: Easing.bezier(0.25, 0.1, 0.25, 1.0),
+        duration: 1000,
       },
-    })
-  }
+      close: {
+        damping: 10,
+        mass: 0.5,
+        stiffness: 100,
+      },
+    },
+  })}
 />
 ```
 
+## Dismissible Screens with Scrollables
+
+Screen transitions can be dismissed based on defined gesture directions. Integration with scrollable components is seamless:
+
+### Create Custom Transition-Aware Scrollables
+
+You can use built-in scrollables or create your own
+
 ```tsx
-// a.tsx (previous screen)
-import { useScreenAnimation } from 'react-native-screen-transitions';
-import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
+import { FlashList } from "@shopify/flash-list";
+import { LegendList } from "@legendapp/list";
+import { FlatList, ScrollView } from "react-native";
+import Transition from "react-native-screen-transitions";
 
-export default function A() {
-  const { next, layouts: { screen: { width } } } = useScreenAnimation();
+// Built-in transition-aware scrollables
+const MyScrollView = Transition.ScrollView;
+const MyFlatList = Transition.FlatList;
 
-  const animatedStyle = useAnimatedStyle(() => {
-    // Unfocusing animation - screen slides left when next screen enters
-    const translateX = interpolate(next?.progress.value || 0, [0, 1], [0, width * -0.3]);
-    return {
-      transform: [{ translateX }],
-    };
-  });
-
-  return (
-    <Animated.View style={animatedStyle}>
-      {/* Your content */}
-    </Animated.View>
-  );
-}
-
-// b.tsx (entering screen)
-import { useScreenAnimation } from 'react-native-screen-transitions';
-import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
-
-export default function B() {
-  const { current, layouts: { screen: { width } } } = useScreenAnimation();
-
-  const animatedStyle = useAnimatedStyle(() => {
-    // Focusing animation - screen slides in from right
-    const translateX = interpolate(current.progress.value, [0, 1], [width, 0]);
-    return {
-      transform: [{ translateX }],
-    };
-  });
-
-  return (
-    <Animated.View style={[{ flex: 1 }, animatedStyle]}>
-      {/* Your content */}
-    </Animated.View>
-  );
-}
-
-
+// Create custom transition-aware scrollables
+const TransitionFlashList = Transition.createTransitionAwareScrollable(FlashList);
+const TransitionLegendList = Transition.createTransitionAwareScrollable(LegendList);
 ```
 
+These components now integrate seamlessly with your transition system and provide smart gesture handling.
 
-### Known Issues and Roadmap
-This is a WIP package, so expect improvements. Current known issues:
-- **Gestures with ScrollViews**: Gestures can be wonky when combined with scrollable content. For example, if a screen defines vertical dismissal gestures and contains a vertical `ScrollView`, the gesture may not trigger reliably (conflicts with scroll handling).
-- **Gestures Dismisall with Nested Navigators**: When using nested navigators with gesture dismissal enabled, dismissing a nested screen via gesture may cause the transparent modal to appear dismissed while remaining open. This affects the visual state but not the actual navigation state.
-- **Web Support**: Not intended or tested for web—focus is on mobile (iOS/Android). Web may have issues with gestures and animations.
+### Configure Gesture Directions
+
+```tsx
+<Stack.Screen
+  name="scrollable-screen"
+  {...Transition.createScreenConfig({
+    gestureDirection: ["vertical", "vertical-inverted"],
+    gestureEnabled: true,
+    // ... other config
+  })}
+/>
+```
+
+### Use in Your Screen
+
+```tsx
+// scrollable-screen.tsx
+export default function ScrollableScreen() {
+  return (
+    <Transition.ScrollView>
+      {/* Your scrollable content */}
+    </Transition.ScrollView>
+  );
+}
+```
+
+**Smart Gesture Handling**: The screen will only start the dismissal process when:
+- `vertical`: ScrollView is at the top (scrollY <= 0)
+- `vertical-inverted`: ScrollView is at the bottom (scrollY >= maxScroll)
+- `horizontal`: ScrollView is at the left edge
+- `horizontal-inverted`: ScrollView is at the right edge
+
+This prevents gesture conflicts and provides intuitive user interaction.
+
+## Performance Considerations
+
+This package is designed for optimal performance, but since underlying screens remain active during transitions, following these guidelines will help maintain smooth 60fps animations:
+
+### Screen Optimization
+- **Keep screens lightweight**: Minimize heavy computations and complex layouts in screens that will be animated
+
+### Animation Properties
+Prioritize transform and opacity properties over layout-affecting properties for the smoothest animations:
+
+**✅ Performant properties:**
+- `transform` (translateX, translateY, scale, rotate)
+- `opacity`
+- `backgroundColor` (with caution)
+
+**❌ Avoid when possible:**
+- Layout properties (`width`, `height`, `padding`, `margin`)
+- `borderRadius` on large elements
+- Complex `shadowOffset` or `elevation` changes
+- Frequent `zIndex` modifications
+
+### Easing and Timing Configuration
+
+Choose balanced easing curves to avoid perceived delays:
+
+```tsx
+// ✅ Good - Smooth and responsive
+transitionSpec: {
+  open: {
+    duration: 300,
+    easing: Easing.bezier(0.25, 0.1, 0.25, 1), // iOS-like easing
+  },
+  close: {
+    duration: 250,
+    easing: Easing.out(Easing.quad),
+  },
+}
+
+// ❌ Avoid - Too snappy, may cause perceived delays
+transitionSpec: {
+  close: {
+    duration: 400,
+    easing: Easing.bezierFn(0, 0.98, 0, 1), // Too abrupt
+  },
+}
+```
+
+**Why timing matters**: Screen dismissal callbacks execute when animations complete. Overly snappy configurations can create a perceived delay between gesture end and actual screen dismissal. Find the sweet spot that matches your app's personality while feeling responsive.
 
 
-### Note:
+## Support and Development
 
-This package is something I'll work on in my freetime. However, you can see the roadmap I plan on following in the coming future.
+This package is provided as-is and is developed in my free time. While I strive to maintain and improve it, please understand that:
 
-Roadmap:
-- Fix gesture conflicts with ScrollViews (e.g., better gesture priority handling).
-- Add more presets and customization options.
-- Improve documentation and examples.
-- Potential web support if demand arises.
-- Testing for more edge cases (e.g., modals, tabs).
+- **Updates and bug fixes** may take time to implement
+- **Feature requests** will be considered but may not be prioritized immediately
 
-See the examples in `/examples/expo-router-example` and `/examples/react-nav-example` for full demos.
+I apologize for any inconvenience this may cause. If you encounter issues or have suggestions, please feel free to open an issue on the repository.
+
+
 
 ## License
 MIT

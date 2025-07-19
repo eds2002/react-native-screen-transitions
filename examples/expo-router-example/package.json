@@ -13,6 +13,8 @@
 		"preset": "jest-expo"
 	},
 	"dependencies": {
+		"@legendapp/list": "^1.1.4",
+		"@shopify/flash-list": "1.7.6",
 		"expo": "~53.0.17",
 		"expo-linking": "^7.1.7",
 		"expo-router": "~5.1.3",

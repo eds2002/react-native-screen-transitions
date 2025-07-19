@@ -11,14 +11,12 @@ const TransitionScrollView =
 export default function Home() {
 	const [activeSegment, setActiveSegment] = useState(0);
 	return (
-		<View style={{ backgroundColor: "black", flex: 1 }}>
+		<View style={{ backgroundColor: "white", flex: 1 }}>
 			<TransitionScrollView
 				contentContainerStyle={{
 					paddingVertical: 100,
 					gap: 32,
-					backgroundColor: "white",
 				}}
-				bounces={false}
 			>
 				{activeSegment === 0 ? <MainExample /> : <MocksExample />}
 			</TransitionScrollView>

@@ -8,7 +8,10 @@ export default function DeleteWarning() {
 	const fifthHeight = height / 5;
 	return (
 		<Transition.ScrollView
-			contentContainerStyle={{ height: fifthHeight, marginTop: "auto" }}
+			contentContainerStyle={{
+				height: fifthHeight,
+				marginTop: "auto",
+			}}
 			bounces={false}
 			showsVerticalScrollIndicator={false}
 		>
@@ -21,6 +24,9 @@ export default function DeleteWarning() {
 						justifyContent: "center",
 						alignItems: "center",
 						marginTop: "auto",
+						borderTopLeftRadius: 36,
+						borderTopRightRadius: 36,
+						overflow: "hidden",
 					}}
 				>
 					<View style={{ gap: 12, alignItems: "center", width: "100%" }}>

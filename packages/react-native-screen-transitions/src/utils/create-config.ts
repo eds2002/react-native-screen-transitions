@@ -7,18 +7,12 @@ import type {
 	TransitionConfig,
 	TransitionListeners,
 } from "../types";
-import { defaultScreenOptions } from "./default-screen-options";
 
 export interface TransitionEventHandlersProps extends TransitionConfig {
 	navigation: Any;
 	route: RouteProp<ParamListBase, string>;
 }
 
-/**
- * Create a config for a screen
- *
- * @deprecated Use {@link createScreenConfig} instead
- */
 export const createConfig = ({
 	navigation: reactNavigation,
 	route,
@@ -77,18 +71,7 @@ export const createConfig = ({
 export const createScreenConfig = (
 	config?: Omit<TransitionEventHandlersProps, "navigation" | "route">,
 ) => {
-	const hasCustomOptions =
-		config &&
-		(config.screenStyleInterpolator ||
-			config.gestureEnabled ||
-			config.gestureDirection ||
-			// Add other animation-related config checks
-			Object.keys(config).some(
-				(key) => !["navigation", "route"].includes(key), // Exclude navigation props
-			));
-
 	return {
-		...(hasCustomOptions ? { options: defaultScreenOptions() } : {}),
 		listeners: (l: Any) => createConfig({ ...l, ...(config || {}) }),
 	};
 };
