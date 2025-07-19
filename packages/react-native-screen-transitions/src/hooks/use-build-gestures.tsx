@@ -58,6 +58,7 @@ export const useBuildGestures = ({
 	const normalizedGestureX = animationValues.normalizedGestureX[key];
 	const normalizedGestureY = animationValues.normalizedGestureY[key];
 	const isDragging = animationValues.gestureDragging[key];
+	const isDismissing = animationValues.isDismissing[key];
 	const progress = animationValues.screenProgress[key] || 0;
 
 	const {
@@ -163,19 +164,20 @@ export const useBuildGestures = ({
 				if (shouldActivate) break;
 			}
 
-			if (shouldActivate || isDragging.value) {
+			if ((shouldActivate || isDragging.value) && !isDismissing.value) {
 				manager.activate();
 			} else {
 				manager.fail();
 			}
 		},
-		[initialTouch, directions, scrollProgress, isDragging],
+		[initialTouch, directions, scrollProgress, isDragging, isDismissing],
 	);
 
 	const onStart = useCallback(() => {
 		"worklet";
 		isDragging.value = 1;
-	}, [isDragging]);
+		isDismissing.value = 0;
+	}, [isDragging, isDismissing]);
 
 	const onUpdate = useCallback(
 		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
@@ -265,7 +267,6 @@ export const useBuildGestures = ({
 
 			const { translationX, translationY, velocityX, velocityY } = event;
 
-			let shouldDismiss = false;
 			const dismissThreshold = 0.5;
 
 			if (directions.includes("bidirectional")) {
@@ -276,7 +277,9 @@ export const useBuildGestures = ({
 					translationY + velocityY * gestureVelocityImpact,
 				);
 				const finalDistance = Math.sqrt(finalX ** 2 + finalY ** 2);
-				shouldDismiss = finalDistance > dimensions.width * dismissThreshold;
+				isDismissing.value = Number(
+					finalDistance > dimensions.width * dismissThreshold,
+				);
 			} else {
 				const allowedDown = directions.includes("vertical");
 				const allowedUp = directions.includes("vertical-inverted");
@@ -288,32 +291,34 @@ export const useBuildGestures = ({
 					translationX + velocityX * gestureVelocityImpact >
 						dimensions.width * dismissThreshold
 				) {
-					shouldDismiss = true;
+					isDismissing.value = 1;
 				} else if (
 					allowedLeft &&
 					-translationX - velocityX * gestureVelocityImpact >
 						dimensions.width * dismissThreshold
 				) {
-					shouldDismiss = true;
+					isDismissing.value = 1;
 				} else if (
 					allowedDown &&
 					translationY + velocityY * gestureVelocityImpact >
 						dimensions.height * dismissThreshold
 				) {
-					shouldDismiss = true;
+					isDismissing.value = 1;
 				} else if (
 					allowedUp &&
 					-translationY - velocityY * gestureVelocityImpact >
 						dimensions.height * dismissThreshold
 				) {
-					shouldDismiss = true;
+					isDismissing.value = 1;
 				}
 			}
 
-			const finalProgress = shouldDismiss ? 0 : 1;
-			const spec = shouldDismiss ? transitionSpec?.close : transitionSpec?.open;
+			const finalProgress = isDismissing.value ? 0 : 1;
+			const spec = isDismissing.value
+				? transitionSpec?.close
+				: transitionSpec?.open;
 
-			const onFinish = shouldDismiss
+			const onFinish = isDismissing.value
 				? (isFinished?: boolean) => {
 						"worklet";
 						if (isFinished) runOnJS(handleDismiss)(currentScreen?.id);
@@ -341,6 +346,7 @@ export const useBuildGestures = ({
 			transitionSpec?.open,
 			gestureVelocityImpact,
 			isDragging,
+			isDismissing,
 		],
 	);
 

@@ -63,11 +63,20 @@ export const mainExampleGroups = {
 		],
 	},
 };
-
 export const mocksExampleGroups = {
 	single: {
 		label: "Profile Palette",
 		desc: "A profile screen with a palette of colors.",
 		screen: "PaletteProfile" as const,
+	},
+	gallery: {
+		label: "Gallery Modal",
+		desc: "A gallery modal with a list of images.",
+		screen: "GalleryModal" as const,
+	},
+	delete: {
+		label: "Delete Warning",
+		desc: "A delete warning with a list of items.",
+		screen: "DeleteWarning" as const,
 	},
 };

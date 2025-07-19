@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "#000",
 		paddingTop: 50,
 		borderRadius: 24,
+		overflow: "hidden",
 	},
 	header: {
 		paddingVertical: 20,

@@ -21,6 +21,7 @@ export const animationValues: Record<
 	normalizedGestureX: {},
 	normalizedGestureY: {},
 	gestureDragging: {},
+	isDismissing: {},
 };
 
 const triggerAnimation = (screen: ScreenState) => {

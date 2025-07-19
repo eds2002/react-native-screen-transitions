@@ -26,6 +26,7 @@ const useAnimationBuilder = () => {
 	const gestureYFallback = useSharedValue(0);
 	const normalizedGestureXFallback = useSharedValue(0);
 	const normalizedGestureYFallback = useSharedValue(0);
+	const isDismissingFallback = useSharedValue(0);
 
 	const currentScreen = ScreenStore.use(
 		useCallback((state) => state.screens[key], [key]),
@@ -62,6 +63,8 @@ const useAnimationBuilder = () => {
 				normalizedY:
 					animationValues.normalizedGestureY[screenId] ||
 					normalizedGestureYFallback,
+				isDismissing:
+					animationValues.isDismissing[screenId] || isDismissingFallback,
 			},
 		}),
 		[
@@ -71,6 +74,7 @@ const useAnimationBuilder = () => {
 			gestureYFallback,
 			normalizedGestureXFallback,
 			normalizedGestureYFallback,
+			isDismissingFallback,
 		],
 	);
 

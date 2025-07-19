@@ -1,5 +1,5 @@
-import { Fragment, useState } from "react";
-import { ScrollView } from "react-native";
+import { useState } from "react";
+import { ScrollView, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import { BottomNav } from "../components/bottom-nav";
 import MainExample from "../components/main-example";
@@ -11,12 +11,14 @@ const TransitionScrollView =
 export function Home() {
 	const [activeSegment, setActiveSegment] = useState(0);
 	return (
-		<Fragment>
+		<View style={{ backgroundColor: "black", flex: 1 }}>
 			<TransitionScrollView
 				contentContainerStyle={{
 					paddingVertical: 100,
 					gap: 32,
+					backgroundColor: "white",
 				}}
+				bounces={false}
 			>
 				{activeSegment === 0 ? <MainExample /> : <MocksExample />}
 			</TransitionScrollView>
@@ -24,6 +26,6 @@ export function Home() {
 				activeSegment={activeSegment}
 				setActiveSegment={setActiveSegment}
 			/>
-		</Fragment>
+		</View>
 	);
 }

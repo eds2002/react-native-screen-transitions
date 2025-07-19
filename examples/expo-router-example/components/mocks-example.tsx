@@ -11,8 +11,7 @@ export default function MocksExample() {
 			<View style={{ gap: 2, paddingHorizontal: 36 }}>
 				<Text style={{ fontSize: 18, fontWeight: "600" }}>Mock Examples</Text>
 				<Text style={{ fontSize: 13, color: "gray" }}>
-					Examples of different transition animations configured for each screen
-					within a navigator.
+					Sample screen pages with custom transitions.
 				</Text>
 			</View>
 

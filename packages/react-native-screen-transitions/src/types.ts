@@ -149,6 +149,10 @@ export type GestureValues = {
 	 * The live normalized vertical translation of the gesture (-1 to 1).
 	 */
 	normalizedY: SharedValue<number>;
+	/**
+	 * A flag indicating if the screen is in the process of dismissing.
+	 */
+	isDismissing: SharedValue<number>;
 };
 
 export type ScreenStyleInterpolator = (
