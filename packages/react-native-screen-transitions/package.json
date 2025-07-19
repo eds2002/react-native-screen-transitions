@@ -1,6 +1,6 @@
 {
 	"name": "react-native-screen-transitions",
-	"version": "1.0.3",
+	"version": "1.1.0",
 	"description": "Easy screen transitions for React Native and Expo",
 	"author": "Ed",
 	"license": "MIT",
@@ -27,11 +27,7 @@
 		"expo-router",
 		"reanimated"
 	],
-	"files": [
-		"dist",
-		"README.md",
-		"LICENSE"
-	],
+	"files": ["dist", "README.md", "LICENSE"],
 	"dependencies": {
 		"immer": ">=10.0.0"
 	},
