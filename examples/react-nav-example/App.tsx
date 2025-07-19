@@ -1,12 +1,13 @@
 import { createStaticNavigation } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { Easing, interpolate } from "react-native-reanimated";
+import { Easing, interpolate, interpolateColor } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import Custom from "./screens/Custom";
 import { GroupANavigator } from "./screens/group-a/GroupANavigator";
 import { Home } from "./screens/Home";
 import DeleteWarning from "./screens/mocks/delete-warning";
+import FullscreenNav from "./screens/mocks/fullscreen-nav";
 import GalleryModal from "./screens/mocks/gallery-modal";
 import PaletteProfile from "./screens/mocks/palette-profile";
 import { NestedNavigator } from "./screens/nested/NestedNavigator";
@@ -239,6 +240,27 @@ const RootStack = createNativeStackNavigator({
 						},
 					},
 				}),
+		},
+		FullscreenNav: {
+			screen: FullscreenNav,
+			options: Transition.defaultScreenOptions(),
+			...Transition.createScreenConfig({
+				screenStyleInterpolator: ({ current, next }) => {
+					"worklet";
+
+					const overlay = interpolateColor(
+						current.progress.value,
+						[0, 1],
+						["rgba(0,0,0,0)", "rgba(0,0,0,0.85)"],
+					);
+
+					return {
+						overlayStyle: {
+							backgroundColor: !next ? overlay : "rgba(0,0,0,0)",
+						},
+					};
+				},
+			}),
 		},
 	},
 });

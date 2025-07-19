@@ -131,6 +131,7 @@ export const ParallaxCarousel = () => {
 	return (
 		<Animated.FlatList
 			data={dataWithSpacers}
+			nestedScrollEnabled
 			horizontal
 			showsHorizontalScrollIndicator={false}
 			keyExtractor={(item) => item.key}

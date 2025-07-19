@@ -1,7 +1,7 @@
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
-import { Easing, interpolate } from "react-native-reanimated";
+import { Easing, interpolate, interpolateColor } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 
 export default function RootLayout() {
@@ -218,6 +218,27 @@ export default function RootLayout() {
 								duration: 600,
 								easing: Easing.bezierFn(0.19, 1, 0.22, 1),
 							},
+						},
+					})}
+				/>
+				<Stack.Screen
+					name="mocks/fullscreen-nav"
+					options={Transition.defaultScreenOptions()}
+					{...Transition.createScreenConfig({
+						screenStyleInterpolator: ({ current, next }) => {
+							"worklet";
+
+							const overlay = interpolateColor(
+								current.progress.value,
+								[0, 1],
+								["rgba(0,0,0,0)", "rgba(0,0,0,0.85)"],
+							);
+
+							return {
+								overlayStyle: {
+									backgroundColor: !next ? overlay : "rgba(0,0,0,0)",
+								},
+							};
 						},
 					})}
 				/>

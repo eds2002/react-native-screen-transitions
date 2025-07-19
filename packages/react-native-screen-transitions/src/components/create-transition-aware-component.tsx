@@ -2,8 +2,8 @@ import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
-	type AnimatedProps,
-	useAnimatedStyle,
+  type AnimatedProps,
+  useAnimatedStyle,
 } from "react-native-reanimated";
 import { TransitionGestureHandlerProvider } from "@/components/transition-gesture-handler-provider";
 import { _useScreenAnimation } from "../hooks/use-screen-animation";
@@ -41,8 +41,12 @@ export function createTransitionAwareComponent<P extends object>(
 			const { style: flickerFixStyle } = useSkipFirstFrame();
 
 			return (
-				<Animated.View style={[{ flex: 1 }, flickerFixStyle]}>
-					<TransitionGestureHandlerProvider>
+				<TransitionGestureHandlerProvider>
+					<Animated.View style={[{ flex: 1 }, flickerFixStyle]}>
+						<Animated.View
+							style={[StyleSheet.absoluteFillObject, overlayStyle]}
+							pointerEvents="none"
+						/>
 						<AnimatedComponent
 							{...rest}
 							ref={ref}
@@ -54,17 +58,8 @@ export function createTransitionAwareComponent<P extends object>(
 						>
 							{children}
 						</AnimatedComponent>
-					</TransitionGestureHandlerProvider>
-
-					<Animated.View
-						style={[
-							StyleSheet.absoluteFillObject,
-							overlayStyle,
-							{ zIndex: 10000 },
-						]}
-						pointerEvents="none"
-					/>
-				</Animated.View>
+					</Animated.View>
+				</TransitionGestureHandlerProvider>
 			);
 		},
 	);

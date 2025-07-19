@@ -79,4 +79,9 @@ export const mocksExampleGroups = {
 		desc: "A delete warning with a list of items.",
 		screen: "DeleteWarning" as const,
 	},
+	fullscreen: {
+		label: "Fullscreen Nav",
+		desc: "A fullscreen nav with a list of links.",
+		screen: "FullscreenNav" as const,
+	},
 };

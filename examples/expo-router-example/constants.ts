@@ -80,4 +80,9 @@ export const mocksExampleGroups = {
 		desc: "A delete warning screen with a custom transition.",
 		href: "/mocks/delete-warning" as const,
 	},
+	fullscreen: {
+		label: "Fullscreen Navigation",
+		desc: "A fullscreen navigation with a custom transition.",
+		href: "/mocks/fullscreen-nav" as const,
+	},
 };
