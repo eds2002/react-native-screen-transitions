@@ -5,7 +5,7 @@ import { NestedOne } from "./NestedOne";
 import { NestedTwo } from "./NestedTwo";
 import { SecondNestedNavigator } from "./second-nested/SecondNestedNavigator";
 
-const Stack = createNativeStackNavigator();
+const Stack = Transition.createTransitionableStackNavigator();
 
 export function NestedNavigator() {
 	return (
@@ -14,52 +14,43 @@ export function NestedNavigator() {
 				<Stack.Screen
 					name="NestedOne"
 					component={NestedOne}
-					options={{ headerShown: false }}
-					listeners={Transition.createConfig}
+					options={{ headerShown: false, skipDefaultScreenOptions: true }}
 				/>
 				<Stack.Screen
 					name="NestedTwo"
 					component={NestedTwo}
-					options={Transition.defaultScreenOptions()}
-					listeners={(l) =>
-						Transition.createConfig({
-							...l,
-							screenStyleInterpolator: ({
-								current,
-								next,
-								layouts: {
-									screen: { width },
+					options={{
+						screenStyleInterpolator: ({
+							current,
+							next,
+							layouts: {
+								screen: { width },
+							},
+						}) => {
+							"worklet";
+
+							const progress =
+								current.progress.value + (next?.progress.value ?? 0);
+
+							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+							return {
+								contentStyle: {
+									transform: [{ translateX: x }],
 								},
-							}) => {
-								"worklet";
-
-								const progress =
-									current.progress.value + (next?.progress.value ?? 0);
-
-								const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-								return {
-									contentStyle: {
-										transform: [{ translateX: x }],
-									},
-								};
-							},
-							transitionSpec: {
-								close: Transition.specs.DefaultSpec,
-								open: Transition.specs.DefaultSpec,
-							},
-						})
-					}
+							};
+						},
+						transitionSpec: {
+							close: Transition.specs.DefaultSpec,
+							open: Transition.specs.DefaultSpec,
+						},
+					}}
 				/>
 				<Stack.Screen
 					name="SecondNested"
 					component={SecondNestedNavigator}
-					options={Transition.defaultScreenOptions()}
-					listeners={(l) =>
-						Transition.createConfig({
-							...l,
-							...Transition.presets.SlideFromTop(),
-						})
-					}
+					options={{
+						...Transition.presets.SlideFromTop(),
+					}}
 				/>
 			</Stack.Navigator>
 		</Transition.View>

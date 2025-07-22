@@ -1,0 +1,133 @@
+appId: com.dev.e2e
+---
+- launchApp
+- assertVisible:
+    id: "ROOT"
+
+# === PROGRAMMATIC NAVIGATION TESTS ===
+- tapOn:
+    id: "/1"
+- tapOn:
+    id: "back"
+- assertVisible:
+    id: "ROOT"
+
+- tapOn:
+    id: "/2"
+- tapOn:
+    id: "next"
+- tapOn:
+    id: "back"
+- tapOn:
+    id: "back"
+- assertVisible:
+    id: "ROOT"
+
+# === GESTURE NAVIGATION TESTS ===
+- assertVisible:
+    id: "ROOT"
+
+- tapOn:
+    id: "/gesture-horizontal"
+- swipe:
+    start: "50%, 50%"
+    end: "90%, 50%"
+    duration: 500
+- assertVisible:
+    id: "ROOT"
+
+- tapOn:
+    id: "/gesture-vertical"
+- swipe:
+    start: "50%, 30%"
+    end: "50%, 80%"
+    duration: 500
+- assertVisible:
+    id: "ROOT"
+
+- scrollUntilVisible:
+    element:
+      id: "/gesture-bidirectional"
+    direction: DOWN
+    timeout: 50000
+    speed: 40
+    visibilityPercentage: 100
+    centerElement: true
+- tapOn:
+    id: "/gesture-bidirectional"
+- swipe:
+    start: "30%, 30%"
+    end: "70%, 70%"
+    duration: 500
+
+# === TRANSITION PRESETS TESTS ===
+- assertVisible:
+    id: "ROOT"
+- scrollUntilVisible:
+    element:
+      id: "/preset-slide-top"
+- tapOn:
+    id: "/preset-slide-top"
+- tapOn:
+    id: "back"
+
+- scrollUntilVisible:
+    element:
+      id: "/preset-zoom-in"
+- tapOn:
+    id: "/preset-zoom-in"
+- tapOn:
+    id: "back"
+
+- scrollUntilVisible:
+    element:
+      id: "/preset-elastic-card"
+    direction: DOWN
+    timeout: 50000
+    speed: 40
+    visibilityPercentage: 100
+    centerElement: false
+- tapOn:
+    id: "/preset-elastic-card"
+- swipe:
+    start: "50%, 50%"
+    end: "60%, 40%"
+    duration: 300
+- swipe:
+    start: "50%, 50%"
+    end: "80%, 20%"
+    duration: 500
+
+# === EDGE CASES TESTS ===
+- assertVisible:
+    id: "ROOT"
+
+- scrollUntilVisible:
+    element:
+      id: "/rapid-navigation"
+    direction: DOWN
+- tapOn:
+    id: "/rapid-navigation"
+- tapOn:
+    id: "rapid-push"
+- tapOn:
+    id: "rapid-push"
+- tapOn:
+    id: "rapid-back"
+- tapOn:
+    id: "rapid-back"
+- tapOn:
+    id: "back"
+
+- scrollUntilVisible:
+    element:
+      id: "/animation-interruption"
+    direction: DOWN
+- tapOn:
+    id: "/animation-interruption"
+- tapOn:
+    id: "interrupt-push"
+- tapOn:
+    id: "interrupt-back"
+- tapOn:
+    id: "back"

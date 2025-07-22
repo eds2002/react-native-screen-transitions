@@ -90,6 +90,10 @@ export interface TransitionConfig {
 	 * Distance threshold for gesture recognition throughout the screen.
 	 */
 	gestureResponseDistance?: number;
+	/**
+	 * Skip the default screen options.
+	 */
+	skipDefaultScreenOptions?: boolean;
 }
 
 // =================================================================

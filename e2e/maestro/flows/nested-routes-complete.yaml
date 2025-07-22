@@ -1,0 +1,102 @@
+appId: com.dev.e2e
+---
+- launchApp
+- assertVisible:
+    id: "ROOT"
+
+# Navigate to Nested tab
+- tapOn:
+    id: "nested-tab"
+- assertVisible:
+    id: "ROOT"
+
+# === NESTED ROUTES - PROGRAMMATIC NAVIGATION TESTS ===
+
+# Test Flow 1: nested/a/one -> nested/a/two -> back to nested/a/one
+- tapOn:
+    id: "/nested/a/one"
+- assertVisible:
+    id: "a-one"
+- tapOn: "Go to nested/a/two"
+- assertVisible:
+    id: "back"
+- tapOn:
+    id: "back"
+- assertVisible:
+    id: "a-one"
+
+# Test Flow 2: nested/a/one -> nested/a/b/one -> nested/a/b/two -> back through stack
+- tapOn:
+    id: "next"
+- assertVisible: "Go to nested/a/b/two"
+- tapOn: "Go to nested/a/b/two"
+- assertVisible:
+    id: "back"
+- tapOn:
+    id: "back"
+- assertVisible: "Go to nested/a/b/two"
+- tapOn:
+    id: "back"
+- assertVisible:
+    id: "a-one"
+
+# Navigate back to nested home
+- tapOn:
+    id: "back"
+- assertVisible:
+    id: "ROOT"
+
+# === NESTED ROUTES - GESTURE DISMISSAL TESTS ===
+
+# Test Flow 3: Gesture dismissal from nested/a/two back to ROOT
+- scrollUntilVisible:
+    element:
+      id: "/nested/a/one"
+    direction: DOWN
+    timeout: 10000
+- tapOn:
+    id: "/nested/a/one"
+- assertVisible:
+    id: "a-one"
+- tapOn: "Go to nested/a/two"
+- assertVisible:
+    id: "back"
+
+# Gesture swipe from bottom to top to dismiss nested navigator
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 20%"
+    duration: 800
+- assertVisible:
+    id: "ROOT"
+
+# Test Flow 4: Deep nested gesture dismissal
+- tapOn:
+    id: "/nested/a/one"
+- assertVisible:
+    id: "a-one"
+- tapOn:
+    id: "next"
+- assertVisible: "Go to nested/a/b/two"
+- tapOn: "Go to nested/a/b/two"
+- assertVisible:
+    id: "back"
+
+# Gesture swipe to dismiss from deeply nested route
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 20%"
+    duration: 800
+
+# Should now be back at nested/a/one (parent of the nested navigator)
+- assertVisible:
+    id: "a-one"
+
+# Final navigation back to root
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 20%"
+    duration: 800
+
+- assertVisible:
+    id: "ROOT"

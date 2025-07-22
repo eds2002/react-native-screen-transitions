@@ -1,83 +1,72 @@
-import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
 import { Easing, interpolate, interpolateColor } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { Stack } from "@/layouts/stack";
 
 export default function RootLayout() {
 	return (
 		<GestureHandlerRootView>
-			<Stack screenOptions={{}}>
+			<Stack>
 				<Stack.Screen
 					name="index"
 					options={{
-						headerShown: false,
 						contentStyle: {
 							backgroundColor: "white",
 						},
+						skipDefaultScreenOptions: true,
+						presentation: "card",
+						headerShown: true,
 					}}
-					{...Transition.createScreenConfig()}
 				/>
 				<Stack.Screen
 					name="a"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						...Transition.presets.SlideFromTop(),
-					})}
+					}}
 				/>
 				<Stack.Screen
 					name="b"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						...Transition.presets.ZoomIn(),
-					})}
+					}}
 				/>
 				<Stack.Screen
 					name="c"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						...Transition.presets.SlideFromBottom(),
-					})}
+					}}
 				/>
 				<Stack.Screen
 					name="d"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						...Transition.presets.DraggableCard(),
-					})}
+					}}
 				/>
 				<Stack.Screen
 					name="e"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						...Transition.presets.ElasticCard(),
-					})}
+					}}
 				/>
 				<Stack.Screen
 					name="group-a"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						...Transition.presets.DraggableCard(),
-					})}
+					}}
 				/>
-				<Stack.Screen
-					name="custom"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig()}
-				/>
+				<Stack.Screen name="custom" />
 				<Stack.Screen
 					name="nested"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						...Transition.presets.SlideFromTop(),
-					})}
+					}}
 				/>
 
 				{/* PALETTE PROFILE */}
 				<Stack.Screen
 					name="mocks/palette-profile"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						gestureEnabled: true,
 						gestureDirection: ["horizontal", "vertical"],
 						screenStyleInterpolator: ({
@@ -129,12 +118,11 @@ export default function RootLayout() {
 							open: Transition.specs.DefaultSpec,
 							close: Transition.specs.DefaultSpec,
 						},
-					})}
+					}}
 				/>
 				<Stack.Screen
 					name="mocks/gallery-modal"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						gestureDirection: "vertical",
 						gestureEnabled: true,
 						screenStyleInterpolator: ({ current, next, layouts }) => {
@@ -170,12 +158,11 @@ export default function RootLayout() {
 								easing: Easing.bezierFn(0.19, 1, 0.22, 1),
 							},
 						},
-					})}
+					}}
 				/>
 				<Stack.Screen
 					name="mocks/delete-warning"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						gestureEnabled: true,
 						gestureDirection: "vertical",
 						screenStyleInterpolator: ({ current, next, layouts }) => {
@@ -219,12 +206,11 @@ export default function RootLayout() {
 								easing: Easing.bezierFn(0.19, 1, 0.22, 1),
 							},
 						},
-					})}
+					}}
 				/>
 				<Stack.Screen
 					name="mocks/fullscreen-nav"
-					options={Transition.defaultScreenOptions()}
-					{...Transition.createScreenConfig({
+					options={{
 						screenStyleInterpolator: ({ current, next }) => {
 							"worklet";
 
@@ -240,7 +226,7 @@ export default function RootLayout() {
 								},
 							};
 						},
-					})}
+					}}
 				/>
 			</Stack>
 		</GestureHandlerRootView>

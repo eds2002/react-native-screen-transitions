@@ -1,19 +1,25 @@
 {
-	"private": true,
-	"workspaces": {
-		"packages": [
-			"packages/*",
-			"examples/*"
-		],
-		"catalog": {
-			"typescript": "~5.8.3"
-		}
-	},
-	"scripts": {
-		"build:lib": "bun run --filter screen-transitions build",
-		"dev:lib": "bun run --filter screen-transitions dev",
-		"example:expo": "bun run --filter expo-router-example start",
-		"lint": "bunx @biomejs/biome check ./",
-		"clean": "rm -rf node_modules && rm -rf */node_modules && rm -rf bun.lockb"
-	}
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "examples/*"
+    ],
+    "catalog": {
+      "typescript": "~5.8.3"
+    }
+  },
+  "scripts": {
+    "build:lib": "bun run --filter screen-transitions build",
+    "e2e": "maestro test e2e/maestro/flows",
+    "test": "bun run --filter react-native-screen-transitions test",
+    "dev:lib": "bun run --filter screen-transitions dev",
+    "example:expo": "bun run --filter expo-router-example start",
+    "lint": "bunx @biomejs/biome check ./",
+    "clean": "rm -rf node_modules && rm -rf */node_modules && rm -rf bun.lockb"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.1.2",
+    "@types/bun": "^1.2.19"
+  }
 }

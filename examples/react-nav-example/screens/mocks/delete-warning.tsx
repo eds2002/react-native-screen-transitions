@@ -1,4 +1,3 @@
-import { router } from "expo-router";
 import { Pressable, Text, useWindowDimensions, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
@@ -48,7 +47,7 @@ export default function DeleteWarning() {
 							</Text>
 						</View>
 						<Pressable
-							onPress={() => router.back()}
+							onPress={() => {}}
 							style={{
 								paddingHorizontal: 48,
 								paddingVertical: 12,

@@ -195,7 +195,7 @@ export const ElasticCard = (
 			 * Applies to unfocused screen ( previous screen )
 			 */
 			const overlayColor = interpolateColor(
-				next?.progress.value || 0,
+				current.progress.value,
 				[0, 1],
 				["rgba(0,0,0,0)", "rgba(0,0,0,0.5)"],
 			);
@@ -205,7 +205,7 @@ export const ElasticCard = (
 					transform: [{ scale }, { translateX }, { translateY }],
 				},
 				overlayStyle: {
-					backgroundColor: overlayColor,
+					backgroundColor: !next ? overlayColor : "rgba(0,0,0,0)",
 				},
 			};
 		},

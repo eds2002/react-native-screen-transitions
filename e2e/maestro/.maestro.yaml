@@ -1,0 +1,25 @@
+appId: com.dev.e2e
+
+flows:
+  - flows/single-routes-complete.yaml
+  - flows/nested-routes-complete.yaml
+
+# Configuration for different test environments
+ios:
+  appId: com.dev.e2e
+android:
+  appId: com.dev.e2e
+
+# Test settings
+timeouts:
+  default: 10000
+  gesture: 5000
+  animation: 2000
+
+# Retry settings for flaky tests
+retries: 2
+
+# Screenshot settings for debugging
+screenshots:
+  onFailure: true
+  directory: "screenshots"
