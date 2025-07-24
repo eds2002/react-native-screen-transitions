@@ -1,6 +1,6 @@
-import Transition from "react-native-screen-transitions";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text } from "react-native";
+import Transition from "react-native-screen-transitions";
 
 export default function C() {
 	return (

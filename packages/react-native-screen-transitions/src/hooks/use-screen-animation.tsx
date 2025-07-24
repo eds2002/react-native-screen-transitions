@@ -59,17 +59,34 @@ const useAnimationBuilder = () => {
 		),
 	);
 
-	const getAnimationValuesForScreen = useCallback(
-		(screenId: string) => ({
-			progress: ScreenProgressStore.getAllForScreen(screenId),
-			gesture: GestureStore.getAllForScreen(screenId),
-			bounds: BoundStore.getScreenBounds(screenId),
-		}),
+	const createTransitionUtils = useCallback(
+		(
+			current: ScreenInterpolationProps["current"],
+			next?: ScreenInterpolationProps["next"],
+		) => {
+			"worklet";
+			const progress = current.progress.value + (next?.progress.value ?? 0);
+			const focused = !!current && !next;
+
+			return { progress, focused };
+		},
 		[],
 	);
 
-	return useMemo(() => {
+	const getAnimationValuesForScreen = useCallback((screenId: string) => {
+		const progress = ScreenProgressStore.getAllForScreen(screenId);
+		const gesture = GestureStore.getAllForScreen(screenId);
+		const bounds = BoundStore.getScreenBounds(screenId);
+
 		return {
+			progress,
+			gesture,
+			bounds,
+		};
+	}, []);
+
+	return useMemo(() => {
+		const base = {
 			previous: previousScreen
 				? getAnimationValuesForScreen(previousScreen.id)
 				: undefined,
@@ -85,6 +102,8 @@ const useAnimationBuilder = () => {
 				currentScreen?.screenStyleInterpolator ||
 				noopinterpolator,
 		};
+
+		return base;
 	}, [
 		key,
 		currentScreen,

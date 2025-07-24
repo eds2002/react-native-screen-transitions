@@ -20,9 +20,21 @@ export const BoundStore = {
 		boundID: string,
 		bounds: MeasuredDimensions,
 	) => {
-		boundStore.setState((state) => {
-			state.bounds[screenKey][boundID] = makeMutable(bounds);
-		});
+		boundStore.setState(
+			(state) => {
+				return {
+					...state,
+					bounds: {
+						...state.bounds,
+						[screenKey]: {
+							...state.bounds[screenKey],
+							[boundID]: makeMutable(bounds),
+						},
+					},
+				};
+			},
+			{ raw: true },
+		);
 	},
 	getScreenBounds: (
 		screenKey: string,
@@ -30,8 +42,13 @@ export const BoundStore = {
 		return boundStore.getState().bounds[screenKey];
 	},
 	deleteScreenBounds: (screenKey: string): void => {
-		boundStore.setState((state) => {
-			delete state.bounds[screenKey];
-		});
+		boundStore.setState(
+			(state) => {
+				const newState = { ...state };
+				delete newState.bounds[screenKey];
+				return newState;
+			},
+			{ raw: true },
+		);
 	},
 };
