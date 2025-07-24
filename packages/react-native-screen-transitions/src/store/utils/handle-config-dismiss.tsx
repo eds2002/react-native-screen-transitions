@@ -1,12 +1,12 @@
 import { StackActions } from "@react-navigation/native";
 import type { UseNavigation } from "../../types";
-import { ScreenStore } from "..";
+import { ConfigStore } from "../config-store";
 
-export const handleScreenDismiss = (
+export const handleConfigDismiss = (
 	screenBeingDismissed: string,
 	navigation: UseNavigation,
 ) => {
-	const { screens } = ScreenStore.use.getState();
+	const { screens } = ConfigStore.use.getState();
 	const dismissedScreen = screens[screenBeingDismissed];
 
 	if (!dismissedScreen) {
@@ -19,7 +19,7 @@ export const handleScreenDismiss = (
 	);
 
 	if (childScreens.length > 0) {
-		ScreenStore.updateScreen(dismissedScreen.id, {
+		ConfigStore.updateConfig(dismissedScreen.id, {
 			closing: true,
 		});
 

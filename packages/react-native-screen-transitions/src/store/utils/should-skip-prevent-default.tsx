@@ -1,5 +1,5 @@
 import type { Any } from "../../types";
-import { ScreenStore } from "..";
+import { ConfigStore } from "../config-store";
 
 export const shouldSkipPreventDefault = (
 	key: string | undefined,
@@ -7,7 +7,7 @@ export const shouldSkipPreventDefault = (
 ) => {
 	if (!key) return false;
 
-	const { screens } = ScreenStore.use.getState();
+	const { screens } = ConfigStore.use.getState();
 	const currentScreen = screens[key];
 
 	// We don't want to block the navigation event when the parent navigator holds the screen transition ( prevents delay in the back event )

@@ -1,9 +1,9 @@
 import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import { useSharedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { animationValues } from "../animation-engine";
-import { ScreenStore } from "../store";
+import { GestureStore } from "@/store/gesture-store";
+import { ScreenProgressStore } from "@/store/screen-progress";
+import { ConfigStore } from "../store/config-store";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
@@ -20,19 +20,11 @@ const useAnimationBuilder = () => {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 
-	const progressFallback = useSharedValue(0);
-	const gestureDraggingFallback = useSharedValue(0);
-	const gestureXFallback = useSharedValue(0);
-	const gestureYFallback = useSharedValue(0);
-	const normalizedGestureXFallback = useSharedValue(0);
-	const normalizedGestureYFallback = useSharedValue(0);
-	const isDismissingFallback = useSharedValue(0);
-
-	const currentScreen = ScreenStore.use(
+	const currentScreen = ConfigStore.use(
 		useCallback((state) => state.screens[key], [key]),
 	);
 
-	const actualNextScreen = ScreenStore.use(
+	const actualNextScreen = ConfigStore.use(
 		useCallback(
 			(state) => {
 				const current = state.screens[key];
@@ -51,31 +43,10 @@ const useAnimationBuilder = () => {
 
 	const getAnimationValuesForScreen = useCallback(
 		(screenId: string) => ({
-			progress: animationValues.screenProgress[screenId] || progressFallback,
-			gesture: {
-				isDragging:
-					animationValues.gestureDragging[screenId] || gestureDraggingFallback,
-				x: animationValues.gestureX[screenId] || gestureXFallback,
-				y: animationValues.gestureY[screenId] || gestureYFallback,
-				normalizedX:
-					animationValues.normalizedGestureX[screenId] ||
-					normalizedGestureXFallback,
-				normalizedY:
-					animationValues.normalizedGestureY[screenId] ||
-					normalizedGestureYFallback,
-				isDismissing:
-					animationValues.isDismissing[screenId] || isDismissingFallback,
-			},
+			progress: ScreenProgressStore.getAllForScreen(screenId),
+			gesture: GestureStore.getAllForScreen(screenId),
 		}),
-		[
-			progressFallback,
-			gestureDraggingFallback,
-			gestureXFallback,
-			gestureYFallback,
-			normalizedGestureXFallback,
-			normalizedGestureYFallback,
-			isDismissingFallback,
-		],
+		[],
 	);
 
 	return useMemo(() => {

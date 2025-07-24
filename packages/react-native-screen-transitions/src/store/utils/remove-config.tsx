@@ -1,8 +1,8 @@
-import { ScreenStore } from "..";
+import { ConfigStore } from "../config-store";
 
-export const removeScreen = (key: string | undefined) => {
+export const removeConfig = (key: string | undefined) => {
 	if (!key) return;
-	ScreenStore.use.setState(({ screens, screenKeys }) => {
+	ConfigStore.use.setState(({ screens, screenKeys }) => {
 		delete screens[key];
 
 		const indexToRemove = screenKeys.indexOf(key);

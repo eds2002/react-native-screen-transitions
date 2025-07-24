@@ -1,10 +1,10 @@
 import type { Any } from "../../types";
-import { ScreenStore } from "..";
+import { ConfigStore } from "../config-store";
 
-export const updateScreen = (key: string | undefined, value: Any) => {
+export const updateConfig = (key: string | undefined, value: Any) => {
 	if (!key) return;
 
-	ScreenStore.use.setState(({ screenKeys, screens }) => {
+	ConfigStore.use.setState(({ screenKeys, screens }) => {
 		const currentScreen = screens[key];
 
 		if (currentScreen) {

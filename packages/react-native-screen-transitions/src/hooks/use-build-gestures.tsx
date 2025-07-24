@@ -17,8 +17,9 @@ import {
 } from "react-native-reanimated";
 import { DefaultSpec } from "@/configs/specs";
 import type { ScrollProgress } from "@/contexts/gesture";
-import { animationValues } from "../animation-engine";
-import { ScreenStore } from "../store";
+import { GestureStore } from "@/store/gesture-store";
+import { ScreenProgressStore } from "@/store/screen-progress";
+import { ConfigStore } from "../store/config-store";
 import { animate } from "../utils";
 import { applyGestureActivationCriteria } from "../utils/gesture/apply-gesture-activation-criteria";
 import { mapGestureToProgress } from "../utils/gesture/map-gesture-to-progress";
@@ -39,12 +40,12 @@ export const useBuildGestures = ({
 	const key = useKey();
 	const dimensions = useWindowDimensions();
 	const navigation = useNavigation();
-	const currentScreen = ScreenStore.use(
+	const currentScreen = ConfigStore.use(
 		useCallback((state) => state.screens[key], [key]),
 	);
 	const handleDismiss = useCallback(
 		(screenBeingDismissed: string) => {
-			ScreenStore.handleScreenDismiss(screenBeingDismissed, navigation);
+			ConfigStore.handleConfigDismiss(screenBeingDismissed, navigation);
 		},
 		[navigation],
 	);
@@ -53,13 +54,14 @@ export const useBuildGestures = ({
 		y: 0,
 	});
 
-	const translateX = animationValues.gestureX[key];
-	const translateY = animationValues.gestureY[key];
-	const normalizedGestureX = animationValues.normalizedGestureX[key];
-	const normalizedGestureY = animationValues.normalizedGestureY[key];
-	const isDragging = animationValues.gestureDragging[key];
-	const isDismissing = animationValues.isDismissing[key];
-	const progress = animationValues.screenProgress[key] || 0;
+	const translateX = GestureStore.getMutable(key, "x");
+	const translateY = GestureStore.getMutable(key, "y");
+	const normalizedX = GestureStore.getMutable(key, "normalizedX");
+	const normalizedY = GestureStore.getMutable(key, "normalizedY");
+	const isDragging = GestureStore.getMutable(key, "isDragging");
+	const isDismissing = GestureStore.getMutable(key, "isDismissing");
+
+	const progress = ScreenProgressStore.getMutable(key);
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
@@ -187,13 +189,14 @@ export const useBuildGestures = ({
 
 			translateX.value = event.translationX;
 			translateY.value = event.translationY;
-			normalizedGestureX.value = interpolate(
+
+			normalizedX.value = interpolate(
 				event.translationX,
 				[-dimensions.width, dimensions.width],
 				[-1, 1],
 				"clamp",
 			);
-			normalizedGestureY.value = interpolate(
+			normalizedY.value = interpolate(
 				event.translationY,
 				[-dimensions.height, dimensions.height],
 				[-1, 1],
@@ -255,8 +258,8 @@ export const useBuildGestures = ({
 			directions,
 			translateX,
 			translateY,
-			normalizedGestureX,
-			normalizedGestureY,
+			normalizedX,
+			normalizedY,
 			progress,
 		],
 	);
@@ -328,8 +331,8 @@ export const useBuildGestures = ({
 			progress.value = animate(finalProgress, spec, onFinish);
 			translateX.value = animate(0, spec);
 			translateY.value = animate(0, spec);
-			normalizedGestureX.value = animate(0, spec);
-			normalizedGestureY.value = animate(0, spec);
+			normalizedX.value = animate(0, spec);
+			normalizedY.value = animate(0, spec);
 			isDragging.value = 0;
 		},
 		[
@@ -337,8 +340,8 @@ export const useBuildGestures = ({
 			directions,
 			translateX,
 			translateY,
-			normalizedGestureX,
-			normalizedGestureY,
+			normalizedX,
+			normalizedY,
 			progress,
 			handleDismiss,
 			currentScreen?.id,

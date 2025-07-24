@@ -1,5 +1,5 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
-import { ScreenStore } from "../store";
+import { ConfigStore } from "../store/config-store";
 import type {
 	Any,
 	BeforeRemoveEvent,
@@ -23,7 +23,7 @@ export const createConfig = ({
 			const parentNavigatorKey = reactNavigation.getParent()?.getState?.()?.key;
 			const navigatorKey = reactNavigation.getState().key;
 
-			ScreenStore.updateScreen(e.target, {
+			ConfigStore.updateConfig(e.target, {
 				id: e.target,
 				name: route.name,
 				status: 1,
@@ -34,13 +34,13 @@ export const createConfig = ({
 			});
 		},
 		beforeRemove: (e: BeforeRemoveEvent) => {
-			const shouldSkipPreventDefault = ScreenStore.shouldSkipPreventDefault(
+			const shouldSkipPreventDefault = ConfigStore.shouldSkipPreventDefault(
 				e.target,
 				reactNavigation.getState(),
 			);
 
 			if (shouldSkipPreventDefault) {
-				ScreenStore.removeScreen(e.target);
+				ConfigStore.removeConfig(e.target);
 				return;
 			}
 
@@ -49,11 +49,11 @@ export const createConfig = ({
 				if (!finished) return;
 				if (reactNavigation.canGoBack()) {
 					reactNavigation.dispatch(e.data?.action);
-					ScreenStore.removeScreen(e.target);
+					ConfigStore.removeConfig(e.target);
 				}
 			};
 
-			ScreenStore.updateScreen(e.target, {
+			ConfigStore.updateConfig(e.target, {
 				status: 0,
 				closing: true,
 				onAnimationFinish: handleFinish,

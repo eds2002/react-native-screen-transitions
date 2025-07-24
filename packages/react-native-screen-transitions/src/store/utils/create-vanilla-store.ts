@@ -3,6 +3,7 @@ import { useSyncExternalStore } from "react";
 
 type Listener = () => void;
 type StateUpdater<T> = (draft: Draft<T>) => void;
+type RawStateUpdater<T> = (state: T) => T;
 
 type StoreListener<_, TSelectorOutput> = (
 	selectedState: TSelectorOutput,
@@ -10,7 +11,13 @@ type StoreListener<_, TSelectorOutput> = (
 ) => void;
 
 export interface StoreApi<T> {
-	setState: (updater: StateUpdater<T>) => void;
+	setState(updater: StateUpdater<T>): void;
+	setState(updater: RawStateUpdater<T>, options: { raw: true }): void;
+	setState(updater: StateUpdater<T>, options: { raw: false }): void;
+	setState(
+		updater: StateUpdater<T> | RawStateUpdater<T>,
+		options?: { raw?: boolean },
+	): void;
 	getState: () => T;
 	subscribe: (listener: Listener) => () => void;
 	subscribeWithSelector: <TSelectorOutput>(
@@ -25,14 +32,33 @@ export function createVanillaStore<TState>(initialState: TState) {
 
 	const getState = (): TState => state;
 
-	const setState = (updater: StateUpdater<TState>) => {
-		const nextState = produce(state, updater);
+	function setState(updater: StateUpdater<TState>): void;
+	function setState(
+		updater: RawStateUpdater<TState>,
+		options: { raw: true },
+	): void;
+	function setState(
+		updater: StateUpdater<TState>,
+		options: { raw: false },
+	): void;
+	function setState(
+		updater: StateUpdater<TState> | RawStateUpdater<TState>,
+		options?: {
+			/**
+			 * When dealing with SharedValues, we need to avoid using immer to avoid crashes.
+			 */
+			raw?: boolean;
+		},
+	): void {
+		const nextState = options?.raw
+			? (updater as RawStateUpdater<TState>)(state)
+			: produce(state, updater as StateUpdater<TState>);
 
 		if (nextState !== state) {
 			state = nextState;
 			listeners.forEach((listener) => listener());
 		}
-	};
+	}
 
 	const subscribe = (listener: Listener): (() => void) => {
 		listeners.add(listener);
