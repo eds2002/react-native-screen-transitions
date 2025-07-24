@@ -8,38 +8,42 @@ import { createConfig, createScreenConfig } from "./utils/create-config";
 import { defaultScreenOptions } from "./utils/default-screen-options";
 
 export default {
-  View: createTransitionAwareComponent(View),
-  Pressable: createTransitionAwareComponent(Pressable),
-  ScrollView: createTransitionAwareScrollable(ScrollView),
-  FlatList: createTransitionAwareScrollable(FlatList),
+	View: createTransitionAwareComponent(View),
+	Pressable: createTransitionAwareComponent(Pressable),
+	ScrollView: createTransitionAwareScrollable(ScrollView),
+	FlatList: createTransitionAwareScrollable(FlatList),
+	presets,
+	specs,
+	/**
+	 * Create a transition aware component
+	 */
+	createTransitionAwareComponent,
 
-  defaultScreenOptions,
-  presets,
-  specs,
-  /**
-   * Create a transition aware component
-   */
-  createTransitionAwareComponent,
-  /**
-   * Create a transition aware scrollable component
-   */
-  createTransitionAwareScrollable,
-  /**
-   * Create a transitionable native stack navigator.
-   *
-   */
-  createTransitionableStackNavigator,
-  /**
-   * @deprecated Use {@link createTransitionableStackNavigator} instead.
-   */
-  createConfig,
-  /**
-   * @deprecated Use {@link createTransitionableStackNavigator} instead.
-   */
-  createScreenConfig,
-  /**
-   * @deprecated Use {@link createTransitionableStackNavigator} instead.
-   */
+	/**
+	 * Create a transitionable native stack navigator.
+	 *
+	 */
+	createTransitionableStackNavigator,
+	/**
+	 * Create a transition aware scrollable component
+	 * @deprecated Use {@link createTransitionAwareComponent} instead.
+	 */
+	createTransitionAwareScrollable,
+	/**
+	 * @deprecated Use {@link createTransitionableStackNavigator} instead.
+	 */
+	createConfig,
+	/**
+	 * @deprecated Use {@link createTransitionableStackNavigator} instead.
+	 */
+	createScreenConfig,
+	/**
+	 * @deprecated Use {@link createTransitionableStackNavigator} instead.
+	 */
+	/**
+	 * @deprecated Use the navigator @see {@link createTransitionableStackNavigator}  by default, the navigator will use the default screen options, unless overriden by `skipDefaultScreenOptions`
+	 */
+	defaultScreenOptions,
 };
 export { useScreenAnimation };
 
