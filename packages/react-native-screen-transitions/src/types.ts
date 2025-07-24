@@ -9,6 +9,7 @@ import type {
 } from "@react-navigation/native";
 import type { ScaledSize } from "react-native";
 import type {
+	MeasuredDimensions,
 	SharedValue,
 	StyleProps,
 	WithSpringConfig,
@@ -106,11 +107,23 @@ export interface TransitionConfig {
  */
 export interface ScreenInterpolationProps {
 	/** Values for the screen that is the focus of the transition (e.g., the one opening). */
+	previous:
+		| {
+				/** The programmatic animation progress of the next screen. */
+				progress: SharedValue<number>;
+				/** Live gesture values for the next screen. */
+				gesture: GestureValues;
+				/** The bounds for the screen. */
+				bounds: Record<string, SharedValue<MeasuredDimensions>>;
+		  }
+		| undefined;
 	current: {
 		/** The programmatic animation progress of the screen (a `SharedValue` from 0 to 1). */
 		progress: SharedValue<number>;
 		/** Live gesture values for the screen. */
 		gesture: GestureValues;
+		/** The bounds for the screen. */
+		bounds: Record<string, SharedValue<MeasuredDimensions>>;
 	};
 	/** Values for the screen immediately behind the current one in the screen. */
 	next:
@@ -119,6 +132,8 @@ export interface ScreenInterpolationProps {
 				progress: SharedValue<number>;
 				/** Live gesture values for the next screen. */
 				gesture: GestureValues;
+				/** The bounds for the screen. */
+				bounds: Record<string, SharedValue<MeasuredDimensions>>;
 		  }
 		| undefined;
 	/** Layout measurements for the screen. */
