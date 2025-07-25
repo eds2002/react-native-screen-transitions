@@ -6,7 +6,10 @@ import { ConfigStore } from "@/store/config-store";
 import { GestureStore } from "@/store/gesture-store";
 import { ScreenProgressStore } from "@/store/screen-progress";
 import type { BaseScreenInterpolationProps } from "@/types";
-import type { _BaseScreenInterpolationProps } from "@/types/animation";
+import type {
+	_BaseScreenInterpolationProps,
+	ScreenProgress,
+} from "@/types/animation";
 import { noopinterpolator } from "@/utils/noop-interpolator";
 import { useKey } from "./use-key";
 
@@ -53,17 +56,22 @@ const useAnimationBuilder = () => {
 		),
 	);
 
-	const getAnimationValuesForScreen = useCallback((screenId: string) => {
-		const progress = ScreenProgressStore.getAllForScreen(screenId);
-		const gesture = GestureStore.getAllForScreen(screenId);
-		const bounds = BoundStore.getScreenBounds(screenId);
+	const activeTag = BoundStore.use((state) => state.activeTag);
+	const allBounds = BoundStore.use((state) => state.bounds);
 
-		return {
-			progress,
-			gesture,
-			bounds,
-		};
-	}, []);
+	const getAnimationValuesForScreen = useCallback(
+		(screenId: string) => {
+			const progress = ScreenProgressStore.getAllForScreen(screenId);
+			const gesture = GestureStore.getAllForScreen(screenId);
+
+			return {
+				progress,
+				gesture,
+				bounds: activeTag ? allBounds[screenId]?.[activeTag] : undefined,
+			} satisfies ScreenProgress;
+		},
+		[allBounds, activeTag],
+	);
 
 	return useMemo(() => {
 		const current = getAnimationValuesForScreen(key);
@@ -85,7 +93,7 @@ const useAnimationBuilder = () => {
 				actualNextScreen?.screenStyleInterpolator ||
 				currentScreen?.screenStyleInterpolator ||
 				noopinterpolator,
-		};
+		} satisfies _BaseScreenInterpolationProps;
 	}, [
 		key,
 		currentScreen,

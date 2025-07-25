@@ -17,9 +17,10 @@ export const useSkipFirstFrame = () => {
 	});
 
 	useEffect(() => {
-		requestAnimationFrame(() => {
+		const id = requestAnimationFrame(() => {
 			opacity.value = 1;
 		});
+		return () => cancelAnimationFrame(id);
 	}, [opacity]);
 
 	return { style };

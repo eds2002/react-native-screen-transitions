@@ -1,54 +1,50 @@
-import {
-	type MeasuredDimensions,
-	makeMutable,
-	runOnUI,
-	type SharedValue,
-} from "react-native-reanimated";
+import { type MeasuredDimensions, makeMutable } from "react-native-reanimated";
+import type {
+	BoundKey,
+	BoundsMap,
+	ExtendedMeasuredDimensions,
+} from "@/types/bounds";
 import { createVanillaStore } from "./utils";
 
 type BoundsState = {
-	bounds: Record<string, Record<string, SharedValue<MeasuredDimensions>>>;
+	bounds: Record<string, BoundsMap>;
+	activeTag: BoundKey | null;
 };
 
 export const boundStore = createVanillaStore<BoundsState>({
 	bounds: {},
+	activeTag: null,
 });
 
 export const BoundStore = {
 	use: boundStore,
 	setScreenBounds: (
 		screenKey: string,
-		boundID: string,
-		bounds: MeasuredDimensions,
+		boundKey: BoundKey,
+		baseBounds: MeasuredDimensions,
 	) => {
-		const existingBound = boundStore.getState().bounds[screenKey]?.[boundID];
-		if (existingBound) {
-			runOnUI(() => {
-				"worklet";
-				existingBound.value = bounds;
-			})();
-			return;
-		}
-
 		boundStore.setState(
 			(state) => {
+				const modifiedBounds = {
+					id: boundKey,
+					...baseBounds,
+				} satisfies ExtendedMeasuredDimensions;
 				return {
 					...state,
 					bounds: {
 						...state.bounds,
 						[screenKey]: {
 							...state.bounds[screenKey],
-							[boundID]: makeMutable(bounds),
+							[boundKey]: makeMutable(modifiedBounds),
 						},
 					},
+					activeTag: boundKey,
 				};
 			},
 			{ raw: true },
 		);
 	},
-	getScreenBounds: (
-		screenKey: string,
-	): Record<string, SharedValue<MeasuredDimensions>> => {
+	getScreenBounds: (screenKey: string): BoundsMap => {
 		return boundStore.getState().bounds[screenKey];
 	},
 	deleteScreenBounds: (screenKey: string): void => {

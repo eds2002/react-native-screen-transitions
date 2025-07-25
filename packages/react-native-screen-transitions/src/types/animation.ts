@@ -1,17 +1,17 @@
 import type { ScaledSize } from "react-native";
 import type {
-	MeasuredDimensions,
 	SharedValue,
 	StyleProps,
 	WithSpringConfig,
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
+import type { Bounds } from "./bounds";
 
 export type ScreenProgress = {
 	progress: SharedValue<number>;
 	gesture: GestureValues;
-	bounds: Record<string, SharedValue<MeasuredDimensions>>;
+	bounds?: Bounds;
 };
 
 export interface BaseScreenInterpolationProps {
@@ -49,6 +49,10 @@ export interface ScreenInterpolationProps extends BaseScreenInterpolationProps {
 		 * Combined progress of current and next (0 - 2).
 		 */
 		progress: number;
+		/**
+		 * Interpolate a value between two ranges. This uses the progress value (0-2) to interpolate between the input and output ranges.
+		 */
+		interpolate: (inputRange: number[], outputRange: number[]) => number;
 	};
 }
 

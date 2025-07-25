@@ -1,5 +1,5 @@
 import { FlatList, Pressable, ScrollView, View } from "react-native";
-import { Bounds } from "./components/bounds";
+
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
 import { createTransitionAwareScrollable } from "./components/create-transition-aware-scrollable";
 import { presets, specs } from "./configs";
@@ -13,7 +13,7 @@ export default {
 	Pressable: createTransitionAwareComponent(Pressable),
 	ScrollView: createTransitionAwareScrollable(ScrollView),
 	FlatList: createTransitionAwareScrollable(FlatList),
-	Bounds,
+
 	presets,
 	specs,
 	/**
@@ -47,6 +47,7 @@ export default {
 	 */
 	defaultScreenOptions,
 };
+export { Bounds } from "./components/bounds";
 export { useScreenAnimation };
 
 // Navigator type

@@ -44,7 +44,7 @@ ConfigStore.use.subscribeWithSelector(
 		for (const removedKey of removedKeys) {
 			GestureStore.removeAllForScreen(removedKey);
 			ScreenProgressStore.removeAllForScreen(removedKey);
-			BoundStore.deleteScreenBounds;
+			BoundStore.deleteScreenBounds(removedKey);
 		}
 
 		for (const changedKey of changedKeys) {
