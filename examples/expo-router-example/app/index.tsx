@@ -1,5 +1,6 @@
+import { router } from "expo-router";
 import { useState } from "react";
-import { ScrollView, View } from "react-native";
+import { Button, ScrollView, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import { BottomNav } from "@/components/bottom-nav";
 import MainExample from "@/components/main-example";
@@ -12,6 +13,12 @@ export default function Home() {
 	const [activeSegment, setActiveSegment] = useState(0);
 	return (
 		<View style={{ backgroundColor: "white", flex: 1 }}>
+			<Button
+				title="Test"
+				onPress={() => {
+					router.push("/bounds-example/a");
+				}}
+			/>
 			<TransitionScrollView
 				contentContainerStyle={{
 					paddingVertical: 100,

@@ -1,6 +1,7 @@
 import {
 	type MeasuredDimensions,
 	makeMutable,
+	runOnUI,
 	type SharedValue,
 } from "react-native-reanimated";
 import { createVanillaStore } from "./utils";
@@ -20,6 +21,15 @@ export const BoundStore = {
 		boundID: string,
 		bounds: MeasuredDimensions,
 	) => {
+		const existingBound = boundStore.getState().bounds[screenKey]?.[boundID];
+		if (existingBound) {
+			runOnUI(() => {
+				"worklet";
+				existingBound.value = bounds;
+			})();
+			return;
+		}
+
 		boundStore.setState(
 			(state) => {
 				return {

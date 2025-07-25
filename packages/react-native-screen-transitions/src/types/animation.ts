@@ -92,6 +92,11 @@ export type TransitionInterpolatedStyle = {
 	 * Animated style for a semi-transparent overlay. Styles are only applied when Transition.View is present.
 	 */
 	overlayStyle?: StyleProps;
+
+	/**
+	 * Animated style for the shared bounds.
+	 */
+	boundStyle?: Record<string, StyleProps>;
 };
 
 /**
