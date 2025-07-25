@@ -1,6 +1,6 @@
 import { StackActions } from "@react-navigation/native";
-import type { UseNavigation } from "../../types";
-import { ConfigStore } from "../config-store";
+import { ConfigStore } from "@/store/config-store";
+import type { UseNavigation } from "@/types";
 
 export const handleConfigDismiss = (
 	screenBeingDismissed: string,

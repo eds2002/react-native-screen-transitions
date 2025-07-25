@@ -2,19 +2,13 @@ import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BoundStore } from "@/store/bound-store";
+import { ConfigStore } from "@/store/config-store";
 import { GestureStore } from "@/store/gesture-store";
 import { ScreenProgressStore } from "@/store/screen-progress";
-import { ConfigStore } from "../store/config-store";
-import type {
-	ScreenInterpolationProps,
-	ScreenStyleInterpolator,
-} from "../types";
-import { noopinterpolator } from "../utils/noop-interpolator";
+import type { BaseScreenInterpolationProps } from "@/types";
+import type { _BaseScreenInterpolationProps } from "@/types/animation";
+import { noopinterpolator } from "@/utils/noop-interpolator";
 import { useKey } from "./use-key";
-
-interface InternalScreenInterpolationProps extends ScreenInterpolationProps {
-	screenStyleInterpolator: ScreenStyleInterpolator;
-}
 
 const useAnimationBuilder = () => {
 	const key = useKey();
@@ -59,20 +53,6 @@ const useAnimationBuilder = () => {
 		),
 	);
 
-	const createTransitionUtils = useCallback(
-		(
-			current: ScreenInterpolationProps["current"],
-			next?: ScreenInterpolationProps["next"],
-		) => {
-			"worklet";
-			const progress = current.progress.value + (next?.progress.value ?? 0);
-			const focused = !!current && !next;
-
-			return { progress, focused };
-		},
-		[],
-	);
-
 	const getAnimationValuesForScreen = useCallback((screenId: string) => {
 		const progress = ScreenProgressStore.getAllForScreen(screenId);
 		const gesture = GestureStore.getAllForScreen(screenId);
@@ -86,15 +66,19 @@ const useAnimationBuilder = () => {
 	}, []);
 
 	return useMemo(() => {
-		const base = {
+		const current = getAnimationValuesForScreen(key);
+		const next = actualNextScreen
+			? getAnimationValuesForScreen(actualNextScreen.id)
+			: undefined;
+
+		return {
 			previous: previousScreen
 				? getAnimationValuesForScreen(previousScreen.id)
 				: undefined,
-			current: getAnimationValuesForScreen(key),
-			next: actualNextScreen
-				? getAnimationValuesForScreen(actualNextScreen.id)
-				: undefined,
+			current,
+			next,
 			layouts: { screen: dimensions },
+
 			insets,
 			closing: currentScreen?.closing || false,
 			screenStyleInterpolator:
@@ -102,8 +86,6 @@ const useAnimationBuilder = () => {
 				currentScreen?.screenStyleInterpolator ||
 				noopinterpolator,
 		};
-
-		return base;
 	}, [
 		key,
 		currentScreen,
@@ -115,11 +97,11 @@ const useAnimationBuilder = () => {
 	]);
 };
 
-const _useScreenAnimation = (): InternalScreenInterpolationProps => {
+const _useScreenAnimation = (): _BaseScreenInterpolationProps => {
 	return useAnimationBuilder();
 };
 
-const useScreenAnimation = (): ScreenInterpolationProps => {
+const useScreenAnimation = (): BaseScreenInterpolationProps => {
 	const { screenStyleInterpolator: _, ...animationProps } =
 		useAnimationBuilder();
 

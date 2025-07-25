@@ -3,7 +3,7 @@ import {
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
-import type { TransitionConfig } from "../types";
+import type { TransitionConfig } from "@/types";
 import { DefaultSpec } from "./specs";
 
 export const SlideFromTop = (

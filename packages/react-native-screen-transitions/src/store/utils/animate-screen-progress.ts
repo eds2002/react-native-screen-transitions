@@ -1,7 +1,7 @@
 import { runOnJS } from "react-native-reanimated";
+import { ScreenProgressStore } from "@/store/screen-progress";
 import type { ScreenState } from "@/types";
 import { animate } from "@/utils";
-import { ScreenProgressStore } from "../screen-progress";
 
 export const animateScreenProgress = (screen: ScreenState) => {
 	"worklet";

@@ -71,13 +71,10 @@ export default function RootLayout() {
 						gestureDirection: ["horizontal", "vertical"],
 						screenStyleInterpolator: ({
 							current,
-							next,
 							layouts: { screen },
+							utils: { progress },
 						}) => {
 							"worklet";
-
-							const progress =
-								current.progress.value + (next?.progress.value ?? 0);
 
 							/** Combined */
 							const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.75]);

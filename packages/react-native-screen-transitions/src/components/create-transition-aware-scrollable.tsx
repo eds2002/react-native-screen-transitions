@@ -5,7 +5,7 @@ import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useGestureContext } from "@/contexts/gesture";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import type { Any } from "@/types";
-import { createTransitionAwareComponent } from "../utils";
+import { createTransitionAwareComponent } from "@/utils";
 
 export function createTransitionAwareScrollable<P extends object>(
 	ScrollableComponent: ComponentType<P>,

@@ -1,4 +1,5 @@
-import type { ScreenStateStore } from "../types";
+import type { ScreenStateStore } from "@/types";
+import { BoundStore } from "./bound-store";
 import { GestureStore } from "./gesture-store";
 import { ScreenProgressStore } from "./screen-progress";
 import {
@@ -43,6 +44,7 @@ ConfigStore.use.subscribeWithSelector(
 		for (const removedKey of removedKeys) {
 			GestureStore.removeAllForScreen(removedKey);
 			ScreenProgressStore.removeAllForScreen(removedKey);
+			BoundStore.deleteScreenBounds;
 		}
 
 		for (const changedKey of changedKeys) {

@@ -17,12 +17,12 @@ import {
 } from "react-native-reanimated";
 import { DefaultSpec } from "@/configs/specs";
 import type { ScrollProgress } from "@/contexts/gesture";
+import { ConfigStore } from "@/store/config-store";
 import { GestureStore } from "@/store/gesture-store";
 import { ScreenProgressStore } from "@/store/screen-progress";
-import { ConfigStore } from "../store/config-store";
-import { animate } from "../utils";
-import { applyGestureActivationCriteria } from "../utils/gesture/apply-gesture-activation-criteria";
-import { mapGestureToProgress } from "../utils/gesture/map-gesture-to-progress";
+import { animate } from "@/utils";
+import { applyGestureActivationCriteria } from "@/utils/gesture/apply-gesture-activation-criteria";
+import { mapGestureToProgress } from "@/utils/gesture/map-gesture-to-progress";
 import { useKey } from "./use-key";
 
 const GESTURE_VELOCITY_IMPACT = 0.3;

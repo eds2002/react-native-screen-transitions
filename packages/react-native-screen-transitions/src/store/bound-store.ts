@@ -44,9 +44,8 @@ export const BoundStore = {
 	deleteScreenBounds: (screenKey: string): void => {
 		boundStore.setState(
 			(state) => {
-				const newState = { ...state };
-				delete newState.bounds[screenKey];
-				return newState;
+				delete state.bounds[screenKey];
+				return state;
 			},
 			{ raw: true },
 		);

@@ -8,17 +8,14 @@ import {
 } from "react";
 import { StyleSheet } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-	type AnimatedProps,
-	useAnimatedStyle,
-} from "react-native-reanimated";
+import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { TransitionGestureHandlerProvider } from "@/components/transition-gesture-handler-provider";
 import { useGestureContext } from "@/contexts/gesture";
+import { useAnimatedInterpolatorStyles } from "@/hooks/use-interpolator-styles";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
+import type { Any } from "@/types";
 import { useKey } from "../hooks/use-key";
-import { _useScreenAnimation } from "../hooks/use-screen-animation";
 import { useSkipFirstFrame } from "../hooks/use-skip-first-frame";
-import type { Any } from "../types";
 
 const TransitionNestingContext = createContext<Record<string, number>>({});
 
@@ -39,18 +36,7 @@ const RootWrapper = forwardRef<
 		[screenKey]: (nestingMap[screenKey] || 0) + 1,
 	};
 
-	const { screenStyleInterpolator, ...screenInterpolationProps } =
-		_useScreenAnimation();
-
-	const screenContainerStyle = useAnimatedStyle(() => {
-		"worklet";
-		return screenStyleInterpolator(screenInterpolationProps).contentStyle || {};
-	});
-
-	const overlayStyle = useAnimatedStyle(() => {
-		"worklet";
-		return screenStyleInterpolator(screenInterpolationProps).overlayStyle || {};
-	});
+	const { contentStyle, overlayStyle } = useAnimatedInterpolatorStyles();
 
 	const { style: flickerFixStyle } = useSkipFirstFrame();
 
@@ -62,7 +48,7 @@ const RootWrapper = forwardRef<
 						style={[StyleSheet.absoluteFillObject, overlayStyle]}
 						pointerEvents="none"
 					/>
-					<Animated.View ref={ref} style={[{ flex: 1 }, screenContainerStyle]}>
+					<Animated.View ref={ref} style={[{ flex: 1 }, contentStyle]}>
 						{children}
 					</Animated.View>
 				</Animated.View>
