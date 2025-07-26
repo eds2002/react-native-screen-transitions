@@ -140,16 +140,28 @@ function TransitionableStackNavigator({
 		};
 	}, [screenListeners, screenOptions, screenProcessor.childOptions]);
 
-	const buildingBlocks = {
-		id,
-		initialRouteName,
-		children: screenProcessor.children,
-		layout,
-		screenListeners: screenListenersWithTransitions,
-		screenOptions,
-		screenLayout,
-		UNSTABLE_router,
-	};
+	const buildingBlocks = useMemo(
+		() => ({
+			id,
+			initialRouteName,
+			children: screenProcessor.children,
+			layout,
+			screenListeners: screenListenersWithTransitions,
+			screenOptions,
+			screenLayout,
+			UNSTABLE_router,
+		}),
+		[
+			id,
+			initialRouteName,
+			screenProcessor.children,
+			layout,
+			screenListenersWithTransitions,
+			screenOptions,
+			screenLayout,
+			UNSTABLE_router,
+		],
+	);
 
 	const { state, describe, descriptors, navigation, NavigationContent } =
 		useNavigationBuilder<

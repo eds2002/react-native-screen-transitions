@@ -20,7 +20,8 @@ export default function BoundsExampleLayout() {
 						previous,
 						current,
 						next,
-						utils: { interpolate, isFocused },
+						interpolate,
+						isFocused,
 					}) => {
 						"worklet";
 
@@ -49,7 +50,7 @@ export default function BoundsExampleLayout() {
 								borderRadius: interpolate([0, 1], [24, 12]),
 							};
 
-              // Focused screen animations
+							// Focused screen animations
 							return {
 								boundStyle: {
 									[startBounds.id]: animatedStyle,

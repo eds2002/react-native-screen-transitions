@@ -22,11 +22,9 @@ const buildWithUtils = (
 
 	return {
 		...props,
-		utils: {
-			isFocused,
-			progress,
-			interpolate,
-		},
+		isFocused,
+		progress,
+		interpolate,
 	};
 };
 

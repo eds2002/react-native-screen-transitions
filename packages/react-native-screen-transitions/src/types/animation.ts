@@ -40,20 +40,18 @@ export interface _BaseScreenInterpolationProps
  * Utility functions for the screen.
  */
 export interface ScreenInterpolationProps extends BaseScreenInterpolationProps {
-	utils: {
-		/**
-		 * A flag indicating if the screen is focused.
-		 */
-		isFocused: boolean;
-		/**
-		 * Combined progress of current and next (0 - 2).
-		 */
-		progress: number;
-		/**
-		 * Interpolate a value between two ranges. This uses the progress value (0-2) to interpolate between the input and output ranges.
-		 */
-		interpolate: (inputRange: number[], outputRange: number[]) => number;
-	};
+	/**
+	 * A flag indicating if the screen is focused.
+	 */
+	isFocused: boolean;
+	/**
+	 * Combined progress of current and next (0 - 2).
+	 */
+	progress: number;
+	/**
+	 * Interpolate a value between two ranges. This uses the progress value (0-2) to interpolate between the input and output ranges.
+	 */
+	interpolate: (inputRange: number[], outputRange: number[]) => number;
 }
 
 export type GestureValues = {

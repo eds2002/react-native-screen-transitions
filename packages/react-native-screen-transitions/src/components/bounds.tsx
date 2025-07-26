@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import {
 	type GestureResponderEvent,
 	Pressable,
@@ -71,27 +71,14 @@ export const Bounds = ({
 
 	return (
 		<View>
-			<AnimatedPressable
+			{/* <AnimatedPressable
 				ref={animatedRef}
 				pointerEvents="none"
 				style={[style, { opacity: 0, zIndex: -111 }]}
 				{...props}
-			/>
+			/> */}
 
-			<AnimatedPressable
-				onPress={handlePress}
-				style={[
-					style,
-					boundStyle,
-					{
-						position: "absolute",
-						top: 0,
-						left: 0,
-						opacity: props.testID ? 0 : 1,
-					},
-				]}
-				{...props}
-			/>
+			<AnimatedPressable onPress={onPress} style={[style]} {...props} />
 		</View>
 	);
 };
