@@ -1,6 +1,24 @@
-import { useAnimatedStyle } from "react-native-reanimated";
+import { type StyleProps, useAnimatedStyle } from "react-native-reanimated";
+import type { ScreenInterpolationProps } from "@/types";
 import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
 import { _useScreenAnimation } from "./use-screen-animation";
+
+const applyProperStyles = (
+	styles: StyleProps | undefined,
+	additionalProps: ScreenInterpolationProps,
+) => {
+	"worklet";
+	/**
+	 * Flickers are only seen on incoming screens.
+	 */
+	if (additionalProps.animating.value === 1 && additionalProps.isFocused) {
+		if (!styles || Object.keys(styles).length === 0) {
+			return { opacity: 0 };
+		}
+		return { ...styles, opacity: 1 };
+	}
+	return styles || { opacity: 1 };
+};
 
 export const useInterpolatorStyles = ({
 	styleId,
@@ -39,36 +57,18 @@ export const useInterpolatorStyles = ({
 			return {};
 		}
 
-		const propsWithUtils = additionalInterpolationProps(
+		const additionalProps = additionalInterpolationProps(
 			screenInterpolationProps,
 		);
-		const styles = screenStyleInterpolator(propsWithUtils)[styleId] || {};
 
-		// Only apply flicker logic to current screen, not previous/unfocused
-		const isCurrentScreen = propsWithUtils.isFocused;
-		const isAnimating = propsWithUtils.animating.value === 1;
+		const styles = screenStyleInterpolator(additionalProps)[styleId];
 
-		if (isCurrentScreen && isAnimating) {
-			const hasCustomStyles = Object.keys(styles).length > 0;
-
-			if (hasCustomStyles) {
-				return styles;
-			} else {
-				return { opacity: 0 };
-			}
-		} else {
-			if (Object.keys(styles).length > 0) {
-				return styles;
-			} else {
-				return { opacity: 1 };
-			}
-		}
+		return applyProperStyles(styles, additionalProps);
 	});
 
 	return {
 		contentStyle,
 		overlayStyle,
-
 		styleIdStyle,
 	};
 };

@@ -4,7 +4,6 @@ import {
 	type SharedValue,
 } from "react-native-reanimated";
 import { createVanillaStore } from "./utils/create-vanilla-store";
-import { getFallbackSharedValue } from "./utils/shared-value-fallback";
 
 type GestureKey =
 	| "x"
@@ -16,6 +15,8 @@ type GestureKey =
 	| "isDragging";
 
 type GestureState = Record<GestureKey, Record<string, SharedValue<number>>>;
+
+const mutableFallback = makeMutable(0);
 
 export const gestureStore = createVanillaStore<GestureState>({
 	x: {},
@@ -81,7 +82,7 @@ export const GestureStore = {
 		const record = gestureStore.getState()[key];
 
 		if (!record[screen]) {
-			return getFallbackSharedValue();
+			return mutableFallback;
 		}
 
 		return record[screen];
@@ -97,7 +98,7 @@ export const GestureStore = {
 			(acc, key) => {
 				acc[key] =
 					gestureStore.getState()[key as keyof GestureState][screen] ||
-					getFallbackSharedValue();
+					mutableFallback;
 				return acc;
 			},
 			{} as Record<keyof GestureState, SharedValue<number>>,

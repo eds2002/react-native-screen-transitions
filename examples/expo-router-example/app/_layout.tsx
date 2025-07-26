@@ -55,7 +55,21 @@ export default function RootLayout() {
 						...Transition.presets.DraggableCard(),
 					}}
 				/>
-				<Stack.Screen name="custom" />
+				<Stack.Screen
+					name="custom"
+					options={{
+						transitionSpec: {
+							open: {
+								duration: 1000,
+								easing: Easing.bezierFn(0.19, 1, 0.22, 1),
+							},
+							close: {
+								duration: 1000,
+								easing: Easing.bezierFn(0.19, 1, 0.22, 1),
+							},
+						},
+					}}
+				/>
 				<Stack.Screen
 					name="nested"
 					options={{

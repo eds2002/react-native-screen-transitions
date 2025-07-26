@@ -4,12 +4,14 @@ import {
 	type SharedValue,
 } from "react-native-reanimated";
 import { createVanillaStore } from "./utils/create-vanilla-store";
-import { getFallbackSharedValue } from "./utils/shared-value-fallback";
 
 type ScreenProgressState = {
 	screenProgress: Record<string, SharedValue<number>>;
 	animating: Record<string, SharedValue<number>>;
 };
+
+const animatingFallback = makeMutable(1);
+const screenProgressFallback = makeMutable(0);
 
 export const screenProgressStore = createVanillaStore<ScreenProgressState>({
 	screenProgress: {},
@@ -22,7 +24,7 @@ export const ScreenProgressStore = {
 		screenProgressStore.setState(
 			(state) => {
 				state.screenProgress[screen] = makeMutable(0);
-				state.animating[screen] = makeMutable(0);
+				state.animating[screen] = makeMutable(1);
 
 				return state;
 			},
@@ -52,16 +54,19 @@ export const ScreenProgressStore = {
 		);
 	},
 	getAnimatingStatus: (screen: string): SharedValue<number> => {
-		return (
-			screenProgressStore.getState().animating[screen] ||
-			getFallbackSharedValue()
-		);
+		const record = screenProgressStore.getState().animating[screen];
+
+		if (!record) {
+			return animatingFallback;
+		}
+
+		return record;
 	},
 	getScreenProgress: (screen: string): SharedValue<number> => {
 		const record = screenProgressStore.getState().screenProgress[screen];
 
 		if (!record) {
-			return getFallbackSharedValue();
+			return screenProgressFallback;
 		}
 
 		return record;
