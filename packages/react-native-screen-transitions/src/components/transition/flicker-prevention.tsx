@@ -1,13 +1,15 @@
 import { useEffect } from "react";
+import { Animated } from "react-native";
 import { useAnimatedStyle, useSharedValue } from "react-native-reanimated";
 
+interface FlickerPreventionProps {
+	children: React.ReactNode;
+}
+
 /**
- * This hook helps mitigate a race condition between the JS and UI thread where styles are not applied immediately.
- * By skipping one frame before rendering, it ensures styles are properly applied, removing a flicker effect.
- *
- * Related issue: https://github.com/software-mansion/react-native-reanimated/issues/4446
+ * This is personally not my favorite solution, but for now seems like a bandaid fix to flickers. 
  */
-export const useSkipFirstFrame = () => {
+export const FlickerPrevention = ({ children }: FlickerPreventionProps) => {
 	const opacity = useSharedValue(0);
 	const style = useAnimatedStyle(() => {
 		"worklet";
@@ -23,5 +25,5 @@ export const useSkipFirstFrame = () => {
 		return () => cancelAnimationFrame(id);
 	}, [opacity]);
 
-	return { style };
+	return <Animated.View style={[{ flex: 1 }, style]}>{children}</Animated.View>;
 };

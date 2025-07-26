@@ -29,9 +29,9 @@ const buildWithUtils = (
 };
 
 export const useInterpolatorStyles = ({
-	sharedBoundTag,
+	styleId,
 }: {
-	sharedBoundTag?: string;
+	styleId?: string;
 } = {}) => {
 	const { screenStyleInterpolator, ...screenInterpolationProps } =
 		_useScreenAnimation();
@@ -54,44 +54,41 @@ export const useInterpolatorStyles = ({
 		return screenStyleInterpolator(propsWithUtils).overlayStyle || {};
 	});
 
-	const boundStyle = useAnimatedStyle(() => {
+	const styleIdStyle = useAnimatedStyle(() => {
 		"worklet";
 
-		if (!sharedBoundTag) {
+		if (!styleId) {
 			return {};
 		}
 
 		const propsWithUtils = buildWithUtils(screenInterpolationProps);
-		const animatedStyles =
-			screenStyleInterpolator(propsWithUtils).boundStyle?.[sharedBoundTag];
+		const styles = screenStyleInterpolator(propsWithUtils)[styleId] || {};
 
-		if (animatedStyles && Object.keys(animatedStyles).length > 0) {
-			return animatedStyles;
-		}
+		// Only apply flicker logic to current screen, not previous/unfocused
+		const isCurrentScreen = propsWithUtils.isFocused;
+		const isAnimating = propsWithUtils.animating.value === 1;
 
-		const activeTag =
-			screenInterpolationProps.previous?.activeBoundId ||
-			screenInterpolationProps.current?.activeBoundId;
+		if (isCurrentScreen && isAnimating) {
+			const hasCustomStyles = Object.keys(styles).length > 0;
 
-		// Only hide if this specific tag is the one being transitioned AND it's the incoming element. This helps us avoid flickering
-		if (activeTag === sharedBoundTag) {
-			const isTransitioning =
-				propsWithUtils.progress > 0 && propsWithUtils.progress < 2;
-			const isIncomingElement = propsWithUtils.isFocused;
-
-			if (isTransitioning && isIncomingElement && propsWithUtils.previous) {
-				return {
-					opacity: 0,
-				};
+			if (hasCustomStyles) {
+				return styles;
+			} else {
+				return { opacity: 0 };
+			}
+		} else {
+			if (Object.keys(styles).length > 0) {
+				return styles;
+			} else {
+				return { opacity: 1 };
 			}
 		}
-
-		return {};
 	});
 
 	return {
 		contentStyle,
 		overlayStyle,
-		boundStyle,
+
+		styleIdStyle,
 	};
 };

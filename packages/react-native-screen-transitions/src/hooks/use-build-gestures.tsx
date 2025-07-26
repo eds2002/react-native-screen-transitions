@@ -60,8 +60,7 @@ export const useBuildGestures = ({
 	const normalizedY = GestureStore.getMutable(key, "normalizedY");
 	const isDragging = GestureStore.getMutable(key, "isDragging");
 	const isDismissing = GestureStore.getMutable(key, "isDismissing");
-
-	const progress = ScreenProgressStore.getMutable(key);
+	const progress = ScreenProgressStore.getScreenProgress(key);
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,

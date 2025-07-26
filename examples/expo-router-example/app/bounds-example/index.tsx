@@ -15,77 +15,25 @@ export default function BoundsExampleA() {
 		"shared-9",
 	];
 
-	const renderItem = ({ item, index }: { item: string; index: number }) => {
-		const getCornerRadii = (index: number) => {
-			// 3x3 grid positions:
-			// 0 1 2
-			// 3 4 5
-			// 6 7 8
-
-			const row = Math.floor(index / 3);
-			const col = index % 3;
-
-			// Default radius for edges, smaller for inner edges
-			const outerRadius = 36;
-			const innerRadius = 12;
-
-			let topLeft = innerRadius;
-			let topRight = innerRadius;
-			let bottomLeft = innerRadius;
-			let bottomRight = innerRadius;
-
-			// Top row
-			if (row === 0) {
-				topLeft = outerRadius;
-				topRight = outerRadius;
-			}
-
-			// Bottom row
-			if (row === 2) {
-				bottomLeft = outerRadius;
-				bottomRight = outerRadius;
-			}
-
-			// Left column
-			if (col === 0) {
-				topLeft = outerRadius;
-				bottomLeft = outerRadius;
-			}
-
-			// Right column
-			if (col === 2) {
-				topRight = outerRadius;
-				bottomRight = outerRadius;
-			}
-
-			return {
-				borderTopLeftRadius: 24,
-				borderTopRightRadius: 24,
-				borderBottomLeftRadius: 24,
-				borderBottomRightRadius: 24,
-			};
-		};
-
+	const renderItem = ({ item }: { item: string }) => {
 		return (
-			<Bounds
-				sharedBoundTag={item}
+			<Transition.Pressable
 				onPress={() => {
 					router.push({
 						pathname: "/bounds-example/[id]",
 						params: { id: item },
 					});
 				}}
-			>
-				<View
-					style={{
-						backgroundColor: "#d1d5db",
-						height: 110,
-						width: 110,
-						margin: 5,
-						borderRadius: 24,
-					}}
-				></View>
-			</Bounds>
+				style={{
+					backgroundColor: "#d1d5db",
+					height: 110,
+					width: 110,
+					margin: 5,
+					borderRadius: 24,
+					flex: 0,
+				}}
+				sharedBoundTag={item}
+			/>
 		);
 	};
 
@@ -97,6 +45,7 @@ export default function BoundsExampleA() {
 				alignItems: "center",
 				justifyContent: "center",
 			}}
+			sharedBoundTag="bounds-example"
 		>
 			<FlatList
 				data={data}

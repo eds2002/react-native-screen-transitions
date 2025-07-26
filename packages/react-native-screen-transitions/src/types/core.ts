@@ -1,4 +1,4 @@
-import { AnimatedProps } from "react-native-reanimated";
+import type { AnimatedProps } from "react-native-reanimated";
 import type { ScreenStyleInterpolator, TransitionSpec } from "./animation";
 import type { GestureDirection } from "./gesture";
 
@@ -83,9 +83,9 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 *   [id]: {...},
 	 * }
 	 */
-	id?: string;
+	styleId?: string;
 	/**
 	 * Use this to store the measurements of the component when it is pressed.
 	 */
-	measureOnPress?: (id: string, onPress: () => void) => void;
+	sharedBoundTag?: string;
 };

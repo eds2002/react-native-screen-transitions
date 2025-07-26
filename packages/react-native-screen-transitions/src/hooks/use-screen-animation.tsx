@@ -48,7 +48,7 @@ const useAnimationBuilder = () => {
 
 	const getAnimationValuesForScreen = useCallback(
 		(screenId: string) => {
-			const progress = ScreenProgressStore.getAllForScreen(screenId);
+			const progress = ScreenProgressStore.getScreenProgress(screenId);
 			const gesture = GestureStore.getAllForScreen(screenId);
 
 			return {
@@ -74,9 +74,9 @@ const useAnimationBuilder = () => {
 			current,
 			next,
 			layouts: { screen: dimensions },
-
 			insets,
 			closing: currentScreen?.closing || false,
+			animating: ScreenProgressStore.getAnimatingStatus(key),
 			screenStyleInterpolator:
 				actualNextScreen?.screenStyleInterpolator ||
 				currentScreen?.screenStyleInterpolator ||

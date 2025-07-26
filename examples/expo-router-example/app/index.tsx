@@ -16,7 +16,7 @@ export default function Home() {
 			<Button
 				title="Test"
 				onPress={() => {
-					router.push("/instagram");
+					router.push("/bounds-example");
 				}}
 			/>
 			<TransitionScrollView

@@ -8,10 +8,12 @@ import { getFallbackSharedValue } from "./utils/shared-value-fallback";
 
 type ScreenProgressState = {
 	screenProgress: Record<string, SharedValue<number>>;
+	animating: Record<string, SharedValue<number>>;
 };
 
 export const screenProgressStore = createVanillaStore<ScreenProgressState>({
 	screenProgress: {},
+	animating: {},
 });
 
 export const ScreenProgressStore = {
@@ -19,9 +21,8 @@ export const ScreenProgressStore = {
 	initAllForScreen: (screen: string): void => {
 		screenProgressStore.setState(
 			(state) => {
-				if (!state.screenProgress[screen]) {
-					state.screenProgress[screen] = makeMutable(0);
-				}
+				state.screenProgress[screen] = makeMutable(0);
+				state.animating[screen] = makeMutable(0);
 
 				return state;
 			},
@@ -31,21 +32,32 @@ export const ScreenProgressStore = {
 	removeAllForScreen: (screen: string): void => {
 		screenProgressStore.setState(
 			(state) => {
-				const sharedValue = state.screenProgress[screen];
-				if (sharedValue) {
-					cancelAnimation(sharedValue);
+				if (state.screenProgress[screen]) {
+					cancelAnimation(state.screenProgress[screen]);
+				}
+				if (state.animating[screen]) {
+					cancelAnimation(state.animating[screen]);
 				}
 
-				const { [screen]: _, ...remaining } = state.screenProgress;
+				const { [screen]: _, ...remainingScreenProgress } =
+					state.screenProgress;
+				const { [screen]: __, ...remainingAnimating } = state.animating;
 
 				return {
-					screenProgress: remaining,
+					screenProgress: remainingScreenProgress,
+					animating: remainingAnimating,
 				};
 			},
 			{ raw: true },
 		);
 	},
-	getMutable: (screen: string): SharedValue<number> => {
+	getAnimatingStatus: (screen: string): SharedValue<number> => {
+		return (
+			screenProgressStore.getState().animating[screen] ||
+			getFallbackSharedValue()
+		);
+	},
+	getScreenProgress: (screen: string): SharedValue<number> => {
 		const record = screenProgressStore.getState().screenProgress[screen];
 
 		if (!record) {
@@ -53,11 +65,5 @@ export const ScreenProgressStore = {
 		}
 
 		return record;
-	},
-	getAllForScreen: (screen: string): SharedValue<number> => {
-		return (
-			screenProgressStore.getState().screenProgress[screen] ||
-			getFallbackSharedValue()
-		);
 	},
 };

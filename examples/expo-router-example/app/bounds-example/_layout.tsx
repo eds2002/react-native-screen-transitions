@@ -25,13 +25,13 @@ export default function BoundsExampleLayout() {
 					}) => {
 						"worklet";
 
-						if (
-							isFocused &&
-							previous?.bounds?.value &&
-							current?.bounds?.value
-						) {
-							const startBounds = previous?.bounds?.value;
-							const endBounds = current?.bounds?.value;
+						const previousBounds = previous?.allBounds?.["shared-1"].value;
+						const currentBounds = current?.allBounds?.["shared-1"].value;
+						const nextBounds = next?.allBounds?.["shared-1"].value;
+
+						if (isFocused && previousBounds && currentBounds) {
+							const startBounds = previousBounds;
+							const endBounds = currentBounds;
 							const s = startBounds;
 							const e = endBounds;
 							if (!s || !e) return {};
@@ -41,18 +41,16 @@ export default function BoundsExampleLayout() {
 
 							// Focused screen animations
 							return {
-								boundStyle: {
-									[startBounds.id]: {
-										transform: [
-											{ translateX: interpolate([0, 1], [dx, 0]) },
-											{ translateY: interpolate([0, 1], [dy, 0]) },
-											{ scaleX: interpolate([0, 1], [s.width / e.width, 1]) },
-											{ scaleY: interpolate([0, 1], [s.height / e.height, 1]) },
-										],
-										opacity: interpolate([0, 1], [0, 1]),
-										borderRadius: interpolate([0, 1], [24, 12]),
-										overflow: "hidden",
-									},
+								[startBounds.id]: {
+									transform: [
+										{ translateX: interpolate([0, 1], [dx, 0]) },
+										{ translateY: interpolate([0, 1], [dy, 0]) },
+										{ scaleX: interpolate([0, 1], [s.width / e.width, 1]) },
+										{ scaleY: interpolate([0, 1], [s.height / e.height, 1]) },
+									],
+									opacity: interpolate([0, 1], [0, 1]),
+									borderRadius: interpolate([0, 1], [24, 12]),
+									overflow: "hidden",
 								},
 								overlayStyle: {
 									backgroundColor: "#000",
@@ -60,9 +58,9 @@ export default function BoundsExampleLayout() {
 								},
 							};
 						}
-						if (!isFocused && current?.bounds?.value && next?.bounds?.value) {
-							const startBounds = current?.bounds?.value;
-							const endBounds = next?.bounds?.value;
+						if (!isFocused && currentBounds && nextBounds) {
+							const startBounds = currentBounds;
+							const endBounds = nextBounds;
 							const s = startBounds;
 							const e = endBounds;
 							if (!s || !e) return {};
@@ -81,9 +79,6 @@ export default function BoundsExampleLayout() {
 							};
 
 							return {
-								boundStyle: {
-									[startBounds.id]: animatedStyle,
-								},
 								contentStyle: {
 									transform: [
 										{
@@ -91,6 +86,7 @@ export default function BoundsExampleLayout() {
 										},
 									],
 								},
+								[startBounds.id]: animatedStyle,
 							};
 						}
 

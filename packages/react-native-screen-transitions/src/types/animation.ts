@@ -30,6 +30,10 @@ export interface BaseScreenInterpolationProps {
 	insets: EdgeInsets;
 	/** A flag indicating if the current screen is in the process of closing. */
 	closing: boolean;
+	/**
+	 * A flag indicating if the screen is in the process of animating.
+	 */
+	animating: SharedValue<number>;
 }
 
 export interface _BaseScreenInterpolationProps
@@ -95,11 +99,10 @@ export type TransitionInterpolatedStyle = {
 	 * Animated style for a semi-transparent overlay. Styles are only applied when Transition.View is present.
 	 */
 	overlayStyle?: StyleProps;
-
 	/**
-	 * Animated style for the shared bounds.
+	 * Define your own custom styles by using an id as the key: [id]: StyleProps
 	 */
-	boundStyle?: Record<string, StyleProps>;
+	[id: string]: StyleProps | undefined;
 };
 
 /**

@@ -5,8 +5,8 @@ import {
 	GestureContext,
 	type GestureContextType,
 	type ScrollProgress,
-} from "../contexts/gesture";
-import { useBuildGestures } from "../hooks/use-build-gestures";
+} from "../../contexts/gesture";
+import { useBuildGestures } from "../../hooks/use-build-gestures";
 
 type TransitionGestureHandlerProviderProps = {
 	children: React.ReactNode;
