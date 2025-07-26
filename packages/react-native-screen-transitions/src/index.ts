@@ -11,8 +11,12 @@ import { defaultScreenOptions } from "./utils/default-screen-options";
 export default {
 	View: createTransitionAwareComponent(View),
 	Pressable: createTransitionAwareComponent(Pressable),
-	ScrollView: createTransitionAwareScrollable(ScrollView),
-	FlatList: createTransitionAwareScrollable(FlatList),
+	ScrollView: createTransitionAwareComponent(ScrollView, {
+		isScrollable: true,
+	}),
+	FlatList: createTransitionAwareComponent(FlatList, {
+		isScrollable: true,
+	}),
 
 	presets,
 	specs,

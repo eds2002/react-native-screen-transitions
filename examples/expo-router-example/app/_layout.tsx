@@ -72,7 +72,7 @@ export default function RootLayout() {
 						screenStyleInterpolator: ({
 							current,
 							layouts: { screen },
-							utils: { progress },
+							progress,
 						}) => {
 							"worklet";
 

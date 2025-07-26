@@ -70,8 +70,8 @@ export const useInterpolatorStyles = ({
 		}
 
 		const activeTag =
-			screenInterpolationProps.previous?.bounds?.value?.id ||
-			screenInterpolationProps.current?.bounds?.value?.id;
+			screenInterpolationProps.previous?.activeBoundId ||
+			screenInterpolationProps.current?.activeBoundId;
 
 		// Only hide if this specific tag is the one being transitioned AND it's the incoming element. This helps us avoid flickering
 		if (activeTag === sharedBoundTag) {

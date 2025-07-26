@@ -6,12 +6,13 @@ import type {
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import type { Bounds } from "./bounds";
+import type { BoundKey, BoundsMap } from "./bounds";
 
 export type ScreenProgress = {
 	progress: SharedValue<number>;
 	gesture: GestureValues;
-	bounds?: Bounds;
+	activeBoundId?: BoundKey;
+	allBounds?: BoundsMap;
 };
 
 export interface BaseScreenInterpolationProps {

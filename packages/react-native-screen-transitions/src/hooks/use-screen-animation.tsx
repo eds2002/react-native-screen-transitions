@@ -54,7 +54,8 @@ const useAnimationBuilder = () => {
 			return {
 				progress,
 				gesture,
-				bounds: activeTag ? allBounds[screenId]?.[activeTag] : undefined,
+				activeBoundId: activeTag ?? undefined,
+				allBounds: allBounds[screenId] ?? undefined,
 			} satisfies ScreenProgress;
 		},
 		[allBounds, activeTag],
