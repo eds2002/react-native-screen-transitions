@@ -6,8 +6,8 @@ import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { useGestureContext } from "@/contexts/gesture";
 import { TransitionNestingContext } from "@/contexts/transition-nesting";
 import { useInterpolatorStyles } from "@/hooks/animation/use-interpolator-styles";
+import { useBoundsMeasurement } from "@/hooks/bounds/use-bounds-measurement";
 import { useScrollProgress } from "@/hooks/gestures/use-scroll-progress";
-import { useBoundsMountMeasurement } from "@/hooks/use-bounds-mount-measurement";
 import type { Any, TransitionAwareProps } from "@/types";
 import { useKey } from "../../hooks/use-key";
 import { RootWrapper } from "./transition-root-wrapper";
@@ -62,7 +62,7 @@ export function createTransitionAwareComponent<P extends object>(
 		 * TODO:
 		 * We wouldn't want to measure on mount for all components, this is expensive and for an instagram style transition, not worth it. Eventually we'll intercept the onPress (if available), calculate first, then run the onpress. This is how apple handles shared transitions ( if you notice the delay)
 		 */
-		useBoundsMountMeasurement({
+		useBoundsMeasurement({
 			sharedBoundTag,
 			animatedRef,
 			screenKey,

@@ -8,17 +8,17 @@ import {
 } from "react-native-reanimated";
 import { BoundStore } from "@/store/bound-store";
 
-interface BoundsMountMeasurementHookProps {
+interface BoundsMeasurementHookProps {
 	sharedBoundTag: string;
 	animatedRef: AnimatedRef<View>;
 	screenKey: string;
 }
 
-export const useBoundsMountMeasurement = ({
+export const useBoundsMeasurement = ({
 	sharedBoundTag,
 	animatedRef,
 	screenKey,
-}: BoundsMountMeasurementHookProps) => {
+}: BoundsMeasurementHookProps) => {
 	const calculateBounds = useCallback(() => {
 		runOnUI(() => {
 			const m = measure(animatedRef);
