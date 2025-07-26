@@ -1,3 +1,4 @@
+import { AnimatedProps } from "react-native-reanimated";
 import type { ScreenStyleInterpolator, TransitionSpec } from "./animation";
 import type { GestureDirection } from "./gesture";
 
@@ -73,3 +74,18 @@ export interface TransitionConfig {
 	 */
 	skipDefaultScreenOptions?: boolean;
 }
+
+export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
+	/**
+	 * You can pass styles to this component if you return this id in the screenStyleInterpolator.
+	 * const id = 'masked-view'
+	 * return {
+	 *   [id]: {...},
+	 * }
+	 */
+	id?: string;
+	/**
+	 * Use this to store the measurements of the component when it is pressed.
+	 */
+	measureOnPress?: (id: string, onPress: () => void) => void;
+};

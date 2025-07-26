@@ -13,7 +13,7 @@ import { TransitionGestureHandlerProvider } from "@/components/transition-gestur
 import { useGestureContext } from "@/contexts/gesture";
 import { useInterpolatorStyles } from "@/hooks/use-interpolator-styles";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
-import type { Any } from "@/types";
+import type { Any, TransitionAwareProps } from "@/types";
 import { useKey } from "../hooks/use-key";
 import { useSkipFirstFrame } from "../hooks/use-skip-first-frame";
 
@@ -65,10 +65,10 @@ export function createTransitionAwareComponent<P extends object>(
 
 	const AnimatedComponent = Animated.createAnimatedComponent(Wrapped);
 
-	type Props = AnimatedProps<P>;
 
-	const ScrollableInner = forwardRef<React.ComponentRef<typeof Wrapped>, Props>(
-		(props: Any, ref) => {
+
+	const ScrollableInner = forwardRef<React.ComponentRef<typeof Wrapped>, TransitionAwareProps<P>>(
+  		(props: Any, ref) => {
 			const { nativeGesture } = useGestureContext();
 
 			const { scrollHandler, onContentSizeChange } = useScrollProgress({
@@ -90,7 +90,7 @@ export function createTransitionAwareComponent<P extends object>(
 		},
 	);
 
-	const Inner = forwardRef<React.ComponentRef<typeof AnimatedComponent>, Props>(
+	const Inner = forwardRef<React.ComponentRef<typeof AnimatedComponent>, TransitionAwareProps<P>>(
 		(props, ref) => {
 			const { children, style, ...rest } = props as Any;
 			const screenKey = useKey();
@@ -127,7 +127,7 @@ export function createTransitionAwareComponent<P extends object>(
 
 	return memo(Inner) as React.MemoExoticComponent<
 		React.ForwardRefExoticComponent<
-			AnimatedProps<P> & React.RefAttributes<React.ComponentRef<typeof Wrapped>>
+			TransitionAwareProps<P> & React.RefAttributes<React.ComponentRef<typeof Wrapped>>
 		>
 	>;
 }
