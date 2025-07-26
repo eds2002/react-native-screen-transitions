@@ -223,6 +223,10 @@ export default function RootLayout() {
 								},
 							};
 						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
+						},
 					}}
 				/>
 			</Stack>

@@ -5,13 +5,15 @@ import { BoundStore } from "@/store/bound-store";
 import { ConfigStore } from "@/store/config-store";
 import { GestureStore } from "@/store/gesture-store";
 import { ScreenProgressStore } from "@/store/screen-progress";
+
 import type { BaseScreenInterpolationProps } from "@/types";
 import type {
 	_BaseScreenInterpolationProps,
 	ScreenProgress,
 } from "@/types/animation";
-import { noopinterpolator } from "@/utils/noop-interpolator";
-import { useKey } from "./use-key";
+import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
+import { noopinterpolator } from "@/utils/animation/noop-interpolator";
+import { useKey } from "../use-key";
 
 const useAnimationBuilder = () => {
 	const key = useKey();
@@ -101,7 +103,7 @@ const useScreenAnimation = (): BaseScreenInterpolationProps => {
 	const { screenStyleInterpolator: _, ...animationProps } =
 		useAnimationBuilder();
 
-	return animationProps;
+	return additionalInterpolationProps(animationProps);
 };
 
 export { _useScreenAnimation, useScreenAnimation };

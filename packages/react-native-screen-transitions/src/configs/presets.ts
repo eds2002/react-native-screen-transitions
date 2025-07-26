@@ -163,13 +163,18 @@ export const ElasticCard = (
 	return {
 		gestureEnabled: true,
 		gestureDirection: "bidirectional",
-		screenStyleInterpolator: ({ current, next, layouts: { screen } }) => {
+		screenStyleInterpolator: ({
+			current,
+			next,
+			layouts: { screen },
+			progress,
+		}) => {
 			"worklet";
 
 			/**
 			 * Applies to both screens ( previous and incoming)
 			 */
-			const progress = current.progress.value + (next?.progress.value ?? 0);
+
 			const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.8]);
 
 			/**
@@ -208,6 +213,10 @@ export const ElasticCard = (
 					backgroundColor: !next ? overlayColor : "rgba(0,0,0,0)",
 				},
 			};
+		},
+		transitionSpec: {
+			open: DefaultSpec,
+			close: DefaultSpec,
 		},
 		...config,
 	};

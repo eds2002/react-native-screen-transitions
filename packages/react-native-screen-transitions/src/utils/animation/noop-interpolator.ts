@@ -1,4 +1,4 @@
-import type { TransitionInterpolatedStyle } from "../types";
+import type { TransitionInterpolatedStyle } from "@/types";
 
 export const noopinterpolator = (): TransitionInterpolatedStyle => {
 	"worklet";

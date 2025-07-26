@@ -1,6 +1,6 @@
 import { forwardRef } from "react";
 import Animated from "react-native-reanimated";
-import { useInterpolatorStyles } from "@/hooks/use-interpolator-styles";
+import { useInterpolatorStyles } from "@/hooks/animation/use-interpolator-styles";
 
 interface InterpolatorContentStylesProps {
 	children: React.ReactNode;

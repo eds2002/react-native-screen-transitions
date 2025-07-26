@@ -3,7 +3,7 @@ import { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { useGestureContext } from "@/contexts/gesture";
-import { useScrollProgress } from "@/hooks/use-scroll-progress";
+import { useScrollProgress } from "@/hooks/gestures/use-scroll-progress";
 import type { Any } from "@/types";
 import { createTransitionAwareComponent } from "@/utils";
 

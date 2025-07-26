@@ -26,6 +26,10 @@ export const animateScreenProgress = (screen: ScreenState) => {
 	// Helps avoid delays when no animation config is provided
 	if (!animationConfig) {
 		progressValue.value = targetValue;
+		// Dont forget to call onAnimationFinish when the animation is finished
+		if (targetValue === 0 && onAnimationFinish) {
+			runOnJS(onAnimationFinish)(true);
+		}
 		animating.value = 0;
 		return;
 	}

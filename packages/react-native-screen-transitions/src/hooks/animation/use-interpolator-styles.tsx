@@ -1,32 +1,6 @@
-import {
-	interpolate as reInterpolate,
-	useAnimatedStyle,
-} from "react-native-reanimated";
-import type {
-	BaseScreenInterpolationProps,
-	ScreenInterpolationProps,
-} from "@/types";
+import { useAnimatedStyle } from "react-native-reanimated";
+import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
 import { _useScreenAnimation } from "./use-screen-animation";
-
-const buildWithUtils = (
-	props: BaseScreenInterpolationProps,
-): ScreenInterpolationProps => {
-	"worklet";
-	const isFocused = props.current && !props.next;
-	const progress =
-		props.current.progress.value + (props.next?.progress.value ?? 0);
-	const interpolate = (inputRange: number[], outputRange: number[]) => {
-		"worklet";
-		return reInterpolate(progress, inputRange, outputRange);
-	};
-
-	return {
-		...props,
-		isFocused,
-		progress,
-		interpolate,
-	};
-};
 
 export const useInterpolatorStyles = ({
 	styleId,
@@ -44,13 +18,17 @@ export const useInterpolatorStyles = ({
 
 	const contentStyle = useAnimatedStyle(() => {
 		"worklet";
-		const propsWithUtils = buildWithUtils(screenInterpolationProps);
+		const propsWithUtils = additionalInterpolationProps(
+			screenInterpolationProps,
+		);
 		return screenStyleInterpolator(propsWithUtils).contentStyle || {};
 	});
 
 	const overlayStyle = useAnimatedStyle(() => {
 		"worklet";
-		const propsWithUtils = buildWithUtils(screenInterpolationProps);
+		const propsWithUtils = additionalInterpolationProps(
+			screenInterpolationProps,
+		);
 		return screenStyleInterpolator(propsWithUtils).overlayStyle || {};
 	});
 
@@ -61,7 +39,9 @@ export const useInterpolatorStyles = ({
 			return {};
 		}
 
-		const propsWithUtils = buildWithUtils(screenInterpolationProps);
+		const propsWithUtils = additionalInterpolationProps(
+			screenInterpolationProps,
+		);
 		const styles = screenStyleInterpolator(propsWithUtils)[styleId] || {};
 
 		// Only apply flicker logic to current screen, not previous/unfocused

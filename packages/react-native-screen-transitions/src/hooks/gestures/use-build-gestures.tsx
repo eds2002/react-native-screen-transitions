@@ -23,7 +23,7 @@ import { ScreenProgressStore } from "@/store/screen-progress";
 import { animate } from "@/utils";
 import { applyGestureActivationCriteria } from "@/utils/gesture/apply-gesture-activation-criteria";
 import { mapGestureToProgress } from "@/utils/gesture/map-gesture-to-progress";
-import { useKey } from "./use-key";
+import { useKey } from "../use-key";
 
 const GESTURE_VELOCITY_IMPACT = 0.3;
 const DEFAULT_GESTURE_RESPONSE_DISTANCE = 50;

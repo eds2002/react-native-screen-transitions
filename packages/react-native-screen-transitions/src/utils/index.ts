@@ -1,5 +1,5 @@
 export * from "../components/transition/create-transition-aware-component";
-export * from "./animate";
+export * from "./animation/animate";
+export * from "./animation/noop-interpolator";
 export * from "./create-config";
 export * from "./default-screen-options";
-export * from "./noop-interpolator";

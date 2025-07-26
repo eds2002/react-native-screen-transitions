@@ -18,6 +18,7 @@ export default function Custom() {
 	} = useScreenAnimation();
 
 	const animatedStyle = useAnimatedStyle(() => {
+		console.log("animatedStyle", current.progress.value);
 		return {
 			transform: [
 				{
