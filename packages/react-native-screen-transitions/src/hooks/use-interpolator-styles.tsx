@@ -28,7 +28,7 @@ const buildWithUtils = (
 	};
 };
 
-export const useAnimatedInterpolatorStyles = ({
+export const useInterpolatorStyles = ({
 	sharedBoundTag,
 }: {
 	sharedBoundTag?: string;
@@ -44,26 +44,49 @@ export const useAnimatedInterpolatorStyles = ({
 
 	const contentStyle = useAnimatedStyle(() => {
 		"worklet";
-		const withUtils = buildWithUtils(screenInterpolationProps);
-		return screenStyleInterpolator(withUtils).contentStyle || {};
+		const propsWithUtils = buildWithUtils(screenInterpolationProps);
+		return screenStyleInterpolator(propsWithUtils).contentStyle || {};
 	});
 
 	const overlayStyle = useAnimatedStyle(() => {
 		"worklet";
-		const withUtils = buildWithUtils(screenInterpolationProps);
-		return screenStyleInterpolator(withUtils).overlayStyle || {};
+		const propsWithUtils = buildWithUtils(screenInterpolationProps);
+		return screenStyleInterpolator(propsWithUtils).overlayStyle || {};
 	});
 
 	const boundStyle = useAnimatedStyle(() => {
 		"worklet";
+
 		if (!sharedBoundTag) {
 			return {};
 		}
 
-		const withUtils = buildWithUtils(screenInterpolationProps);
-		return (
-			screenStyleInterpolator(withUtils).boundStyle?.[sharedBoundTag] || {}
-		);
+		const propsWithUtils = buildWithUtils(screenInterpolationProps);
+		const animatedStyles =
+			screenStyleInterpolator(propsWithUtils).boundStyle?.[sharedBoundTag];
+
+		if (animatedStyles && Object.keys(animatedStyles).length > 0) {
+			return animatedStyles;
+		}
+
+		const activeTag =
+			screenInterpolationProps.previous?.bounds?.value?.id ||
+			screenInterpolationProps.current?.bounds?.value?.id;
+
+		// Only hide if this specific tag is the one being transitioned AND it's the incoming element. This helps us avoid flickering
+		if (activeTag === sharedBoundTag) {
+			const isTransitioning =
+				propsWithUtils.progress > 0 && propsWithUtils.progress < 2;
+			const isIncomingElement = propsWithUtils.isFocused;
+
+			if (isTransitioning && isIncomingElement && propsWithUtils.previous) {
+				return {
+					opacity: 0,
+				};
+			}
+		}
+
+		return {};
 	});
 
 	return {

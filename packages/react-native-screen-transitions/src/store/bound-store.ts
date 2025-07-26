@@ -51,6 +51,7 @@ export const BoundStore = {
 		boundStore.setState(
 			(state) => {
 				delete state.bounds[screenKey];
+				state.activeTag = null;
 				return state;
 			},
 			{ raw: true },

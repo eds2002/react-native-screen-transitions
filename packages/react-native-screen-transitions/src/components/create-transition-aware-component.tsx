@@ -11,7 +11,7 @@ import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { type AnimatedProps } from "react-native-reanimated";
 import { TransitionGestureHandlerProvider } from "@/components/transition-gesture-handler-provider";
 import { useGestureContext } from "@/contexts/gesture";
-import { useAnimatedInterpolatorStyles } from "@/hooks/use-interpolator-styles";
+import { useInterpolatorStyles } from "@/hooks/use-interpolator-styles";
 import { useScrollProgress } from "@/hooks/use-scroll-progress";
 import type { Any } from "@/types";
 import { useKey } from "../hooks/use-key";
@@ -36,7 +36,7 @@ const RootWrapper = forwardRef<
 		[screenKey]: (nestingMap[screenKey] || 0) + 1,
 	};
 
-	const { contentStyle, overlayStyle } = useAnimatedInterpolatorStyles();
+	const { overlayStyle, contentStyle } = useInterpolatorStyles();
 
 	const { style: flickerFixStyle } = useSkipFirstFrame();
 

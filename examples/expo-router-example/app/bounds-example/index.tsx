@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { FlatList } from "react-native";
+import { FlatList, View } from "react-native";
 import Transition, { Bounds } from "react-native-screen-transitions";
 
 export default function BoundsExampleA() {
@@ -75,14 +75,17 @@ export default function BoundsExampleA() {
 						params: { id: item },
 					});
 				}}
-				style={{
-					backgroundColor: "#d1d5db",
-					height: 110,
-					width: 110,
-					margin: 5,
-					borderRadius: 24,
-				}}
-			/>
+			>
+				<View
+					style={{
+						backgroundColor: "#d1d5db",
+						height: 110,
+						width: 110,
+						margin: 5,
+						borderRadius: 24,
+					}}
+				></View>
+			</Bounds>
 		);
 	};
 

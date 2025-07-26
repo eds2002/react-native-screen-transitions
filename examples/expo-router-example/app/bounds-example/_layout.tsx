@@ -39,21 +39,20 @@ export default function BoundsExampleLayout() {
 							const dx = s.pageX - e.pageX + (s.width - e.width) / 2;
 							const dy = s.pageY - e.pageY + (s.height - e.height) / 2;
 
-							const animatedStyle = {
-								transform: [
-									{ translateX: interpolate([0, 1], [dx, 0]) },
-									{ translateY: interpolate([0, 1], [dy, 0]) },
-									{ scaleX: interpolate([0, 1], [s.width / e.width, 1]) },
-									{ scaleY: interpolate([0, 1], [s.height / e.height, 1]) },
-								],
-								opacity: interpolate([0, 1], [0, 1]),
-								borderRadius: interpolate([0, 1], [24, 12]),
-							};
-
 							// Focused screen animations
 							return {
 								boundStyle: {
-									[startBounds.id]: animatedStyle,
+									[startBounds.id]: {
+										transform: [
+											{ translateX: interpolate([0, 1], [dx, 0]) },
+											{ translateY: interpolate([0, 1], [dy, 0]) },
+											{ scaleX: interpolate([0, 1], [s.width / e.width, 1]) },
+											{ scaleY: interpolate([0, 1], [s.height / e.height, 1]) },
+										],
+										opacity: interpolate([0, 1], [0, 1]),
+										borderRadius: interpolate([0, 1], [24, 12]),
+										overflow: "hidden",
+									},
 								},
 								overlayStyle: {
 									backgroundColor: "#000",

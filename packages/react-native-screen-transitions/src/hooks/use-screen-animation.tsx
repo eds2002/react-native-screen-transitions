@@ -22,39 +22,26 @@ const useAnimationBuilder = () => {
 	 * NOTE:
 	 * Should previous screens also be wary of their navigators? Next uses logic to see if it should animate or not based on the navigator, current and next will be the only ones used for screen transitions, previous will ideally only be used for bounds? Come back to this
 	 */
-	const previousScreen = ConfigStore.use(
-		useCallback(
-			(state) => {
-				const current = state.screens[key];
-				if (!current) return undefined;
+	const previousScreen = ConfigStore.use((state) => {
+		const current = state.screens[key];
+		if (!current) return undefined;
 
-				const previousKey = state.screenKeys[current.index - 1];
-				return previousKey ? state.screens[previousKey] : undefined;
-			},
-			[key],
-		),
-	);
+		const previousKey = state.screenKeys[current.index - 1];
+		return previousKey ? state.screens[previousKey] : undefined;
+	});
 
-	const currentScreen = ConfigStore.use(
-		useCallback((state) => state.screens[key], [key]),
-	);
+	const currentScreen = ConfigStore.use((state) => state.screens[key]);
 
-	const actualNextScreen = ConfigStore.use(
-		useCallback(
-			(state) => {
-				const current = state.screens[key];
-				if (!current) return undefined;
+	const actualNextScreen = ConfigStore.use((state) => {
+		const current = state.screens[key];
+		if (!current) return undefined;
 
-				const nextKey = state.screenKeys[current.index + 1];
-				const nextScreen = nextKey ? state.screens[nextKey] : undefined;
+		const nextKey = state.screenKeys[current.index + 1];
+		const nextScreen = nextKey ? state.screens[nextKey] : undefined;
 
-				const shouldUseNext =
-					nextScreen?.navigatorKey === current?.navigatorKey;
-				return shouldUseNext ? nextScreen : undefined;
-			},
-			[key],
-		),
-	);
+		const shouldUseNext = nextScreen?.navigatorKey === current?.navigatorKey;
+		return shouldUseNext ? nextScreen : undefined;
+	});
 
 	const activeTag = BoundStore.use((state) => state.activeTag);
 	const allBounds = BoundStore.use((state) => state.bounds);

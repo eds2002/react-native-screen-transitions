@@ -1,10 +1,5 @@
-import { useCallback, useEffect } from "react";
-import {
-	type GestureResponderEvent,
-	Pressable,
-	type PressableProps,
-	View,
-} from "react-native";
+import { type ReactNode, useCallback, useEffect } from "react";
+import { Pressable, type View } from "react-native";
 import Animated, {
 	type MeasuredDimensions,
 	measure,
@@ -12,32 +7,31 @@ import Animated, {
 	runOnUI,
 	useAnimatedRef,
 } from "react-native-reanimated";
-import { useAnimatedInterpolatorStyles } from "@/hooks/use-interpolator-styles";
+import { useInterpolatorStyles } from "@/hooks/use-interpolator-styles";
 import { useKey } from "@/hooks/use-key";
 import { BoundStore } from "@/store/bound-store";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
-export const Bounds = ({
-	sharedBoundTag,
-	onPress,
-	style,
-	...props
-}: { sharedBoundTag: string } & PressableProps) => {
+interface BoundsProps {
+	sharedBoundTag: string;
+	onPress?: () => void;
+	children: ReactNode;
+}
+
+export const Bounds = ({ sharedBoundTag, onPress, children }: BoundsProps) => {
 	const key = useKey();
 	const animatedRef = useAnimatedRef<View>();
 	const { activeTag } = BoundStore.use((state) => state);
 
-	// This logic is sound and can remain as is.
 	const storeAndCallOnPress = useCallback(
-		(event: GestureResponderEvent, m: MeasuredDimensions) => {
+		(m: MeasuredDimensions) => {
 			BoundStore.setScreenBounds(key, sharedBoundTag, m);
-			onPress?.(event);
+			onPress?.();
 		},
 		[key, sharedBoundTag, onPress],
 	);
 
-	// This logic is sound and can remain as is.
 	const measureComponent = useCallback(() => {
 		runOnUI(() => {
 			const m = measure(animatedRef);
@@ -47,38 +41,31 @@ export const Bounds = ({
 		})();
 	}, [animatedRef, key, sharedBoundTag]);
 
-	// This logic is sound and can remain as is.
-	const handlePress = useCallback(
-		(event: GestureResponderEvent) => {
-			runOnUI(() => {
-				const m = measure(animatedRef);
-				if (m) {
-					runOnJS(storeAndCallOnPress)(event, m);
-				}
-			})();
-		},
-		[animatedRef, storeAndCallOnPress],
-	);
+	const handlePress = useCallback(() => {
+		runOnUI(() => {
+			console.log("Measuring", sharedBoundTag);
+			const m = measure(animatedRef);
+			if (m) {
+				runOnJS(storeAndCallOnPress)(m);
+			}
+		})();
+	}, [animatedRef, storeAndCallOnPress, sharedBoundTag]);
 
-	// This logic is sound and can remain as is.
 	useEffect(() => {
 		if (activeTag === sharedBoundTag) {
 			measureComponent();
 		}
 	}, [activeTag, measureComponent, sharedBoundTag]);
 
-	const { boundStyle } = useAnimatedInterpolatorStyles({ sharedBoundTag });
+	const { boundStyle } = useInterpolatorStyles({ sharedBoundTag });
 
 	return (
-		<View>
-			{/* <AnimatedPressable
-				ref={animatedRef}
-				pointerEvents="none"
-				style={[style, { opacity: 0, zIndex: -111 }]}
-				{...props}
-			/> */}
-
-			<AnimatedPressable onPress={onPress} style={[style]} {...props} />
-		</View>
+		<AnimatedPressable
+			ref={animatedRef}
+			onPress={handlePress}
+			style={boundStyle}
+		>
+			{children}
+		</AnimatedPressable>
 	);
 };
