@@ -103,7 +103,6 @@ export function createTransitionAwareComponent<P extends object>(
 			<SharedBoundsFlickerPrevention
 				screenInterpolatorState={screenInterpolatorState}
 				baseInterpolationProps={screenInterpolationProps}
-				screenStyleInterpolator={screenStyleInterpolator}
 				sharedBoundTag={sharedBoundTag}
 				screenKey={currentScreenKey}
 			>

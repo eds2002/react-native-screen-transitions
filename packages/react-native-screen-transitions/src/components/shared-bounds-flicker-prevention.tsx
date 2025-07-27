@@ -24,6 +24,11 @@ export const SharedBoundsFlickerPrevention = ({
 	const preventionStyle = useAnimatedStyle(() => {
 		"worklet";
 
+		// Apply logic only for shared bounds
+		if (!sharedBoundTag) {
+			return { opacity: 1 };
+		}
+
 		const interpolationProps = additionalInterpolationProps(
 			baseInterpolationProps,
 		);
