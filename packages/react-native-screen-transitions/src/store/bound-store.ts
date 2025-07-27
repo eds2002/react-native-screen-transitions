@@ -47,6 +47,9 @@ export const BoundStore = {
 	getScreenBounds: (screenKey: string): BoundsMap => {
 		return boundStore.getState().bounds[screenKey];
 	},
+	getActiveTag: (): BoundKey | null => {
+		return boundStore.getState().activeTag;
+	},
 	deleteScreenBounds: (screenKey: string): void => {
 		boundStore.setState(
 			(state) => {

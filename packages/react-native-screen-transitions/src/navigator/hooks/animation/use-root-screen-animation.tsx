@@ -45,8 +45,10 @@ const useRootAnimationBuilder = () => {
 			return {
 				progress,
 				gesture,
-				activeBoundId: activeTag ?? undefined,
-				allBounds: allBounds[screenId] ?? undefined,
+				bounds: {
+					active: activeTag,
+					all: allBounds[screenId] ?? {},
+				},
 			} satisfies ScreenProgress;
 		},
 		[allBounds, activeTag],

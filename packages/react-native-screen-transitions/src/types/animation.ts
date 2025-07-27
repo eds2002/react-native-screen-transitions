@@ -6,14 +6,16 @@ import type {
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import type { BoundKey, BoundsMap } from "./bounds";
+import type { BoundKey, ExtendedMeasuredDimensions } from "./bounds";
 import type { ScreenInterpolatorState } from "./state";
 
 export type ScreenProgress = {
 	progress: SharedValue<number>;
 	gesture: GestureValues;
-	activeBoundId?: BoundKey;
-	allBounds?: BoundsMap;
+	bounds: {
+		active: BoundKey | null;
+		all: Record<BoundKey, SharedValue<ExtendedMeasuredDimensions>>;
+	};
 };
 
 export interface BaseScreenInterpolationProps {
@@ -59,6 +61,57 @@ export interface ScreenInterpolationProps extends BaseScreenInterpolationProps {
 	 * Interpolate a value between two ranges. This uses the progress value (0-2) to interpolate between the input and output ranges.
 	 */
 	interpolate: (inputRange: number[], outputRange: number[]) => number;
+
+	/**
+	 * Bounds utilities for shared elements.
+	 */
+	bounds: {
+		/**
+		 * Get bounds for a tag from a specific screen.
+		 * Defaults to 'current' if no screen specified.
+		 */
+		get: (
+			tag: BoundKey,
+			screen?: "previous" | "current" | "next",
+		) => ExtendedMeasuredDimensions | undefined;
+
+		/**
+		 * Check if bounds exist for a tag on a screen.
+		 */
+		has: (tag: BoundKey, screen?: "previous" | "current" | "next") => boolean;
+
+		/**
+		 * Get the active bound tag (if any).
+		 */
+		activeTag: BoundKey | null;
+
+		/**
+		 * Calculate delta between start and end bounds for interpolation.
+		 */
+		calculateDelta: (
+			start: ExtendedMeasuredDimensions,
+			end: ExtendedMeasuredDimensions,
+		) => {
+			dx: number;
+			dy: number;
+			scaleX: number;
+			scaleY: number;
+		};
+
+		/**
+		 * Interpolate bounds properties based on progress.
+		 */
+		interpolateBounds: (
+			start: ExtendedMeasuredDimensions,
+			end: ExtendedMeasuredDimensions,
+			progress: number,
+		) => {
+			translateX: number;
+			translateY: number;
+			scaleX: number;
+			scaleY: number;
+		};
+	};
 }
 
 export type GestureValues = {

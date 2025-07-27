@@ -55,5 +55,9 @@ export const SharedBoundsFlickerPrevention = ({
 		return { opacity: 1 };
 	});
 
-	return <Animated.View style={[preventionStyle]}>{children}</Animated.View>;
+	return (
+		<Animated.View style={[preventionStyle]} pointerEvents="box-none">
+			{children}
+		</Animated.View>
+	);
 };

@@ -18,6 +18,7 @@ export default function BoundsExampleA() {
 	const renderItem = ({ item }: { item: string }) => {
 		return (
 			<Transition.Pressable
+				sharedBoundTag={item}
 				onPress={() => {
 					router.push({
 						pathname: "/bounds-example/[id]",
@@ -32,7 +33,6 @@ export default function BoundsExampleA() {
 					borderRadius: 24,
 					flex: 0,
 				}}
-				sharedBoundTag={item}
 			/>
 		);
 	};

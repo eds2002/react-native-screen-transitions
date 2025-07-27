@@ -56,19 +56,17 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof AnimatedComponent>,
 		TransitionAwareProps<P>
 	>((props, ref) => {
-		const { children, style, sharedBoundTag, styleId, ...rest } = props as Any;
+		const { children, style, sharedBoundTag, styleId, onPress, ...rest } =
+			props as Any;
 		const { currentScreenKey } = useScreenKeys();
 
 		const animatedRef = useAnimatedRef<View>();
 
-		/**
-		 * TODO:
-		 * We wouldn't want to measure on mount for all components, this is expensive and for an instagram style transition, not worth it. Eventually we'll intercept the onPress (if available), calculate first, then run the onpress. This is how apple handles shared transitions ( if you notice the delay)
-		 */
-		useBoundsMeasurement({
+		const { interceptedOnPress } = useBoundsMeasurement({
 			sharedBoundTag,
 			animatedRef,
 			screenKey: currentScreenKey,
+			onPress,
 		});
 
 		const {
@@ -108,8 +106,9 @@ export function createTransitionAwareComponent<P extends object>(
 			>
 				<AnimatedComponent
 					{...rest}
-					ref={sharedBoundTag ? animatedRef : ref}
+					ref={animatedRef}
 					style={[styleIdStyle, style]}
+					onPress={interceptedOnPress}
 				>
 					{children}
 				</AnimatedComponent>

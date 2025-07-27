@@ -5,7 +5,6 @@ import {
 	measure,
 	runOnJS,
 	runOnUI,
-	useSharedValue,
 } from "react-native-reanimated";
 import { BoundStore } from "@/store/bound-store";
 
@@ -13,31 +12,44 @@ interface BoundsMeasurementHookProps {
 	sharedBoundTag: string;
 	animatedRef: AnimatedRef<View>;
 	screenKey: string;
+	onPress?: () => void;
 }
 
 export const useBoundsMeasurement = ({
 	sharedBoundTag,
 	animatedRef,
 	screenKey,
+	onPress,
 }: BoundsMeasurementHookProps) => {
-	const isMeasured = useSharedValue(false);
+	const activeTag = BoundStore.getActiveTag();
+	const measurementExists = BoundStore.hasBounds(screenKey, sharedBoundTag);
 
-	const calculateBounds = useCallback(() => {
-		runOnUI(() => {
-			const m = measure(animatedRef);
+	const measureNow = useCallback(() => {
+		return new Promise<void>((resolve) => {
+			runOnUI(() => {
+				const m = measure(animatedRef);
+				if (m) {
+					runOnJS(BoundStore.setScreenBounds)(screenKey, sharedBoundTag, m);
+				}
+				runOnJS(resolve)();
+			})();
+		});
+	}, [animatedRef, screenKey, sharedBoundTag]);
 
-			if (m) {
-				runOnJS(BoundStore.setScreenBounds)(screenKey, sharedBoundTag, m);
-				isMeasured.value = true;
-			}
-		})();
-	}, [animatedRef, isMeasured, screenKey, sharedBoundTag]);
+	const interceptedOnPress = useCallback(async () => {
+		if (sharedBoundTag) {
+			await measureNow();
+		}
+		if (onPress) {
+			onPress();
+		}
+	}, [onPress, measureNow, sharedBoundTag]);
 
 	useEffect(() => {
-		if (sharedBoundTag) {
-			calculateBounds();
+		if (sharedBoundTag && activeTag === sharedBoundTag && !measurementExists) {
+			measureNow();
 		}
-	}, [calculateBounds, sharedBoundTag]);
+	}, [measureNow, sharedBoundTag, activeTag, measurementExists]);
 
-	return { calculateBounds, isMeasured };
+	return { interceptedOnPress };
 };

@@ -17,36 +17,29 @@ export default function BoundsExampleLayout() {
 				options={{
 					title: "B",
 					screenStyleInterpolator: ({
-						previous,
-						current,
-						next,
+						bounds,
+						progress,
 						interpolate,
 						isFocused,
 					}) => {
 						"worklet";
 
-						const previousBounds = previous?.allBounds?.["shared-1"].value;
-						const currentBounds = current?.allBounds?.["shared-1"].value;
-						const nextBounds = next?.allBounds?.["shared-1"].value;
+						if (isFocused && bounds.activeTag) {
+							const start = bounds.get(bounds.activeTag, "previous");
+							const end = bounds.get(bounds.activeTag, "current");
 
-						if (isFocused && previousBounds && currentBounds) {
-							const startBounds = previousBounds;
-							const endBounds = currentBounds;
-							const s = startBounds;
-							const e = endBounds;
-							if (!s || !e) return {};
+							if (!start || !end) return {};
 
-							const dx = s.pageX - e.pageX + (s.width - e.width) / 2;
-							const dy = s.pageY - e.pageY + (s.height - e.height) / 2;
+							const { translateX, translateY, scaleX, scaleY } =
+								bounds.interpolateBounds(start, end, progress);
 
-							// Focused screen animations
 							return {
-								[startBounds.id]: {
+								[start.id]: {
 									transform: [
-										{ translateX: interpolate([0, 1], [dx, 0]) },
-										{ translateY: interpolate([0, 1], [dy, 0]) },
-										{ scaleX: interpolate([0, 1], [s.width / e.width, 1]) },
-										{ scaleY: interpolate([0, 1], [s.height / e.height, 1]) },
+										{ translateX },
+										{ translateY },
+										{ scaleX },
+										{ scaleY },
 									],
 									opacity: interpolate([0, 1], [0, 1]),
 									borderRadius: interpolate([0, 1], [24, 12]),
@@ -58,39 +51,35 @@ export default function BoundsExampleLayout() {
 								},
 							};
 						}
-						if (!isFocused && currentBounds && nextBounds) {
-							const startBounds = currentBounds;
-							const endBounds = nextBounds;
-							const s = startBounds;
-							const e = endBounds;
-							if (!s || !e) return {};
 
-							const dx = e.pageX - s.pageX + (e.width - s.width) / 2;
-							const dy = e.pageY - s.pageY + (e.height - s.height) / 2;
+						if (!bounds.activeTag) return {};
 
-							const animatedStyle = {
+						const start = bounds.get(bounds.activeTag, "current");
+						const end = bounds.get(bounds.activeTag, "next");
+
+						if (!start || !end) return {};
+
+						const { translateX, translateY, scaleX, scaleY } =
+							bounds.interpolateBounds(start, end, progress);
+
+						return {
+							contentStyle: {
 								transform: [
-									{ translateX: interpolate([1, 2], [0, dx]) },
-									{ translateY: interpolate([1, 2], [0, dy]) },
-									{ scaleX: interpolate([1, 2], [1, e.width / s.width]) },
-									{ scaleY: interpolate([1, 2], [1, e.height / s.height]) },
+									{
+										scale: interpolate([1, 2], [1, 0.9]),
+									},
+								],
+							},
+							[start.id]: {
+								transform: [
+									{ translateX },
+									{ translateY },
+									{ scaleX },
+									{ scaleY },
 								],
 								opacity: interpolate([1, 2], [1, 0]),
-							};
-
-							return {
-								contentStyle: {
-									transform: [
-										{
-											scale: interpolate([1, 2], [1, 0.9]),
-										},
-									],
-								},
-								[startBounds.id]: animatedStyle,
-							};
-						}
-
-						return {};
+							},
+						};
 					},
 					transitionSpec: {
 						open: Transition.specs.DefaultSpec,
