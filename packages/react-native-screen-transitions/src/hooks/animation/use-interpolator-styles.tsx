@@ -11,12 +11,13 @@ const applyProperStyles = (
 	/**
 	 * Flickers are only seen on incoming screens.
 	 */
-	if (additionalProps.animating.value === 1 && additionalProps.isFocused) {
-		if (!styles || Object.keys(styles).length === 0) {
-			return { opacity: 0 };
-		}
-		return { ...styles, opacity: 1 };
-	}
+	// if (additionalProps.animating.value === 1 && additionalProps.isFocused) {
+	// 	if (!styles || Object.keys(styles).length === 0) {
+	// 		return { opacity: 0 };
+	// 	}
+	// 	return { ...styles, opacity: 1 };
+	// }
+	// return styles || { opacity: 1 };
 	return styles || { opacity: 1 };
 };
 
@@ -39,7 +40,8 @@ export const useInterpolatorStyles = ({
 		const propsWithUtils = additionalInterpolationProps(
 			screenInterpolationProps,
 		);
-		return screenStyleInterpolator(propsWithUtils).contentStyle || {};
+		const styles = screenStyleInterpolator(propsWithUtils).contentStyle;
+		return applyProperStyles(styles, propsWithUtils);
 	});
 
 	const overlayStyle = useAnimatedStyle(() => {

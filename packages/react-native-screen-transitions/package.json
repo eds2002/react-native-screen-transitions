@@ -1,56 +1,57 @@
 {
-  "name": "react-native-screen-transitions",
-  "version": "1.2.0",
-  "description": "Easy screen transitions for React Native and Expo",
-  "author": "Ed",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/eds2002/react-native-screen-transitions.git",
-    "directory": "packages/react-native-screen-transitions"
-  },
-  "main": "dist/index.js",
-  "module": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "source": "src/index.ts",
-  "scripts": {
-    "build": "tsup",
-    "dev": "tsup --watch",
-    "test": "bun test src/__tests__",
-    "lint": "biome check ./src",
-    "prepublishOnly": "bun run build"
-  },
-  "keywords": [
-    "react-native",
-    "transitions",
-    "animation",
-    "react-navigation",
-    "expo-router",
-    "reanimated"
-  ],
-  "files": [
-    "dist",
-    "README.md",
-    "LICENSE"
-  ],
-  "dependencies": {
-    "immer": ">=10.0.0"
-  },
-  "peerDependencies": {
-    "@types/react": "*",
-    "@types/react-native": "*",
-    "react": "*",
-    "react-native": "*",
-    "react-native-safe-area-context": "*",
-    "react-native-gesture-handler": ">=2.16.1",
-    "react-native-reanimated": ">=3.16.0",
-    "@react-navigation/native": ">=6.0.0",
-    "@react-navigation/native-stack": ">=7.0.0"
-  },
-  "devDependencies": {
-    "@testing-library/react-native": "^13.2.0",
-    "@types/react": "~19.0.10",
-    "tsup": "^8.5.0",
-    "typescript": "catalog:"
-  }
+	"name": "react-native-screen-transitions",
+	"version": "1.2.0",
+	"description": "Easy screen transitions for React Native and Expo",
+	"author": "Ed",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/eds2002/react-native-screen-transitions.git",
+		"directory": "packages/react-native-screen-transitions"
+	},
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"source": "src/index.ts",
+	"scripts": {
+		"build": "tsup",
+		"dev": "tsup --watch",
+		"test": "bun test src/__tests__",
+		"lint": "biome check ./src",
+		"prepublishOnly": "bun run build"
+	},
+	"keywords": [
+		"react-native",
+		"transitions",
+		"animation",
+		"react-navigation",
+		"expo-router",
+		"reanimated"
+	],
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"dependencies": {
+		"immer": ">=10.0.0"
+	},
+	"peerDependencies": {
+		"@types/react": "*",
+		"@types/react-native": "*",
+		"react": "*",
+		"react-native": "*",
+		"react-native-safe-area-context": "*",
+		"react-native-gesture-handler": ">=2.16.1",
+		"react-native-reanimated": ">=3.16.0",
+		"@react-navigation/native": ">=6.0.0",
+		"@react-navigation/native-stack": ">=7.0.0",
+		"@react-navigation/elements": ">=2.0.0"
+	},
+	"devDependencies": {
+		"@testing-library/react-native": "^13.2.0",
+		"@types/react": "~19.0.10",
+		"tsup": "^8.5.0",
+		"typescript": "catalog:"
+	}
 }

@@ -1,16 +1,14 @@
 import type React from "react";
-import { type ComponentType, forwardRef, memo, useContext } from "react";
+import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { useGestureContext } from "@/contexts/gesture";
-import { TransitionNestingContext } from "@/contexts/transition-nesting";
 import { useInterpolatorStyles } from "@/hooks/animation/use-interpolator-styles";
 import { useBoundsMeasurement } from "@/hooks/bounds/use-bounds-measurement";
 import { useScrollProgress } from "@/hooks/gestures/use-scroll-progress";
 import type { Any, TransitionAwareProps } from "@/types";
 import { useKey } from "../../hooks/use-key";
-import { RootWrapper } from "./transition-root-wrapper";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -54,7 +52,6 @@ export function createTransitionAwareComponent<P extends object>(
 	>((props, ref) => {
 		const { children, style, sharedBoundTag, styleId, ...rest } = props as Any;
 		const screenKey = useKey();
-		const nestingMap = useContext(TransitionNestingContext);
 
 		const animatedRef = useAnimatedRef<View>();
 
@@ -72,20 +69,18 @@ export function createTransitionAwareComponent<P extends object>(
 			styleId: styleId || sharedBoundTag,
 		});
 
+		if (isScrollable) {
+			return <ScrollableInner {...(props as Any)} ref={ref} />;
+		}
+
 		return (
-			<RootWrapper screenKey={screenKey} nestingMap={nestingMap}>
-				{isScrollable ? (
-					<ScrollableInner {...(props as Any)} ref={ref} />
-				) : (
-					<AnimatedComponent
-						{...rest}
-						ref={sharedBoundTag ? animatedRef : ref}
-						style={[{ flex: 1 }, style, styleIdStyle]}
-					>
-						{children}
-					</AnimatedComponent>
-				)}
-			</RootWrapper>
+			<AnimatedComponent
+				{...rest}
+				ref={sharedBoundTag ? animatedRef : ref}
+				style={[{ flex: 1 }, style, styleIdStyle]}
+			>
+				{children}
+			</AnimatedComponent>
 		);
 	});
 

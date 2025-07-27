@@ -24,6 +24,7 @@ import type {
 	TransitionStackScreenProps,
 } from "@/types/navigator";
 import { createConfig } from "../utils";
+import { TransitionAwareNativeStackView } from "./components/transition-aware-native-stack-view";
 
 // Necessary screen options to ensure animations run smoothly
 const DEFAULT_SCREEN_OPTIONS = {
@@ -91,54 +92,54 @@ function TransitionableStackNavigator({
 		};
 	}, [children]);
 
-	const screenListenersWithTransitions = useMemo(() => {
-		return (props: {
-			navigation: TransitionStackNavigationProp<ParamListBase>;
-			route: RouteProp<ParamListBase>;
-		}) => {
-			const resolvedNavigatorConfig =
-				typeof screenOptions === "function"
-					? screenOptions({
-							navigation: props.navigation,
-							route: props.route,
-							theme: {} as Any,
-						})
-					: screenOptions;
+	// const screenListenersWithTransitions = useMemo(() => {
+	// 	return (props: {
+	// 		navigation: TransitionStackNavigationProp<ParamListBase>;
+	// 		route: RouteProp<ParamListBase>;
+	// 	}) => {
+	// 		const resolvedNavigatorConfig =
+	// 			typeof screenOptions === "function"
+	// 				? screenOptions({
+	// 						navigation: props.navigation,
+	// 						route: props.route,
+	// 						theme: {} as Any,
+	// 					})
+	// 				: screenOptions;
 
-			const resolvedChildConfig = screenProcessor.childOptions.get(
-				props.route.name,
-			);
+	// 		const resolvedChildConfig = screenProcessor.childOptions.get(
+	// 			props.route.name,
+	// 		);
 
-			const mergedConfig = {
-				...resolvedNavigatorConfig,
-				...resolvedChildConfig, //Child should override navigator config
-			};
+	// 		const mergedConfig = {
+	// 			...resolvedNavigatorConfig,
+	// 			...resolvedChildConfig, //Child should override navigator config
+	// 		};
 
-			const transitionListeners = createConfig({
-				navigation: props.navigation,
-				route: props.route,
-				screenStyleInterpolator: mergedConfig.screenStyleInterpolator,
-				transitionSpec: mergedConfig.transitionSpec,
-				gestureEnabled: mergedConfig.gestureEnabled,
-				gestureDirection: mergedConfig.gestureDirection,
-				gestureResponseDistance:
-					typeof mergedConfig.gestureResponseDistance === "number"
-						? mergedConfig.gestureResponseDistance
-						: undefined,
-				gestureVelocityImpact: mergedConfig.gestureVelocityImpact,
-			});
+	// 		const transitionListeners = createConfig({
+	// 			navigation: props.navigation,
+	// 			route: props.route,
+	// 			screenStyleInterpolator: mergedConfig.screenStyleInterpolator,
+	// 			transitionSpec: mergedConfig.transitionSpec,
+	// 			gestureEnabled: mergedConfig.gestureEnabled,
+	// 			gestureDirection: mergedConfig.gestureDirection,
+	// 			gestureResponseDistance:
+	// 				typeof mergedConfig.gestureResponseDistance === "number"
+	// 					? mergedConfig.gestureResponseDistance
+	// 					: undefined,
+	// 			gestureVelocityImpact: mergedConfig.gestureVelocityImpact,
+	// 		});
 
-			const existingListeners =
-				typeof screenListeners === "function"
-					? screenListeners(props)
-					: screenListeners || {};
+	// 		const existingListeners =
+	// 			typeof screenListeners === "function"
+	// 				? screenListeners(props)
+	// 				: screenListeners || {};
 
-			return {
-				...existingListeners,
-				...transitionListeners,
-			};
-		};
-	}, [screenListeners, screenOptions, screenProcessor.childOptions]);
+	// 		return {
+	// 			...existingListeners,
+	// 			...transitionListeners,
+	// 		};
+	// 	};
+	// }, [screenListeners, screenOptions, screenProcessor.childOptions]);
 
 	const buildingBlocks = useMemo(
 		() => ({
@@ -146,7 +147,7 @@ function TransitionableStackNavigator({
 			initialRouteName,
 			children: screenProcessor.children,
 			layout,
-			screenListeners: screenListenersWithTransitions,
+			screenListeners,
 			screenOptions,
 			screenLayout,
 			UNSTABLE_router,
@@ -156,7 +157,7 @@ function TransitionableStackNavigator({
 			initialRouteName,
 			screenProcessor.children,
 			layout,
-			screenListenersWithTransitions,
+			screenListeners,
 			screenOptions,
 			screenLayout,
 			UNSTABLE_router,
@@ -174,12 +175,13 @@ function TransitionableStackNavigator({
 
 	return (
 		<NavigationContent>
-			<NativeStackView
+			<TransitionAwareNativeStackView
 				{...rest}
 				state={state}
-				navigation={navigation}
-				descriptors={descriptors}
-				describe={describe}
+				navigation={navigation as Any}
+				descriptors={descriptors as Any}
+				describe={describe as Any}
+				screenProcessor={screenProcessor}
 			/>
 		</NavigationContent>
 	);

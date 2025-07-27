@@ -1,4 +1,5 @@
 import type {
+	Descriptor,
 	EventListenerCallback,
 	ParamListBase,
 	RouteProp,
@@ -60,3 +61,13 @@ export interface TransitionStackScreenProps<ParamList extends ParamListBase> {
 	initialParams?: ParamList[keyof ParamList];
 	[key: string]: Any;
 }
+
+export type TransitionStackDescriptor = Descriptor<
+	TransitionStackNavigationOptions,
+	TransitionStackNavigationProp<ParamListBase>,
+	RouteProp<ParamListBase>
+>;
+
+export type TransitionStackDescriptorMap = {
+	[key: string]: TransitionStackDescriptor;
+};

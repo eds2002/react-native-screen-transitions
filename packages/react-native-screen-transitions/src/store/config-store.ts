@@ -1,5 +1,10 @@
-import { StackActions } from "@react-navigation/native";
-import type { Any, ScreenStateStore, UseNavigation } from "@/types";
+import { type ParamListBase, StackActions } from "@react-navigation/native";
+import type {
+	Any,
+	ScreenStateStore,
+	TransitionStackNavigationProp,
+	UseNavigation,
+} from "@/types";
 import { BoundStore } from "./bound-store";
 import { GestureStore } from "./gesture-store";
 import { ScreenProgressStore } from "./screen-progress";
@@ -81,7 +86,7 @@ const removeConfig = (key: string | undefined) => {
 
 const handleConfigDismiss = (
 	screenBeingDismissed: string,
-	navigation: UseNavigation,
+	navigation: TransitionStackNavigationProp<ParamListBase, string, undefined>,
 ) => {
 	const { screens } = useConfigStore.getState();
 	const dismissedScreen = screens[screenBeingDismissed];
