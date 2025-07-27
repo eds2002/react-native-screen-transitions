@@ -5,6 +5,7 @@ import {
 	measure,
 	runOnJS,
 	runOnUI,
+	useSharedValue,
 } from "react-native-reanimated";
 import { BoundStore } from "@/store/bound-store";
 
@@ -19,15 +20,18 @@ export const useBoundsMeasurement = ({
 	animatedRef,
 	screenKey,
 }: BoundsMeasurementHookProps) => {
+	const isMeasured = useSharedValue(false);
+
 	const calculateBounds = useCallback(() => {
 		runOnUI(() => {
 			const m = measure(animatedRef);
 
 			if (m) {
 				runOnJS(BoundStore.setScreenBounds)(screenKey, sharedBoundTag, m);
+				isMeasured.value = true;
 			}
 		})();
-	}, [animatedRef, screenKey, sharedBoundTag]);
+	}, [animatedRef, isMeasured, screenKey, sharedBoundTag]);
 
 	useEffect(() => {
 		if (sharedBoundTag) {
@@ -35,5 +39,5 @@ export const useBoundsMeasurement = ({
 		}
 	}, [calculateBounds, sharedBoundTag]);
 
-	return { calculateBounds };
+	return { calculateBounds, isMeasured };
 };

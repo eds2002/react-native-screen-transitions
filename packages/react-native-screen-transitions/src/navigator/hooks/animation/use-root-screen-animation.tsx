@@ -11,6 +11,7 @@ import type {
 	BaseScreenInterpolationProps,
 	ScreenProgress,
 } from "@/types/animation";
+import { ScreenInterpolatorState } from "@/types/state";
 import { noopinterpolator } from "@/utils/animation/noop-interpolator";
 
 const useRootAnimationBuilder = () => {
@@ -57,6 +58,20 @@ const useRootAnimationBuilder = () => {
 			? getAnimationValuesForScreen(actualNextScreen.id)
 			: undefined;
 
+		const configsLoaded = !!actualNextScreen || !!currentScreen;
+		let interpolatorStatus: ScreenInterpolatorState =
+			ScreenInterpolatorState.UNDETERMINED;
+
+		if (configsLoaded) {
+			const hasInterpolator = !!(
+				actualNextScreen?.screenStyleInterpolator ||
+				currentScreen?.screenStyleInterpolator
+			);
+			interpolatorStatus = hasInterpolator
+				? ScreenInterpolatorState.DEFINED
+				: ScreenInterpolatorState.UNDEFINED;
+		}
+
 		return {
 			previous: previousScreen
 				? getAnimationValuesForScreen(previousScreen.id)
@@ -67,6 +82,7 @@ const useRootAnimationBuilder = () => {
 			insets,
 			closing: currentScreen?.closing || false,
 			animating: ScreenProgressStore.getAnimatingStatus(currentScreenKey),
+			screenInterpolatorState: interpolatorStatus,
 			screenStyleInterpolator:
 				actualNextScreen?.screenStyleInterpolator ||
 				currentScreen?.screenStyleInterpolator ||
@@ -88,8 +104,17 @@ const _useRootScreenAnimation = (): _BaseScreenInterpolationProps => {
 };
 
 const useRootScreenAnimation = (): BaseScreenInterpolationProps => {
-	const { screenStyleInterpolator: _, ...animationProps } =
-		useRootAnimationBuilder();
+	const allProps = useRootAnimationBuilder();
+
+	const animationProps: BaseScreenInterpolationProps = {
+		previous: allProps.previous,
+		current: allProps.current,
+		next: allProps.next,
+		layouts: allProps.layouts,
+		insets: allProps.insets,
+		closing: allProps.closing,
+		animating: allProps.animating,
+	};
 
 	/**
 	 * @note

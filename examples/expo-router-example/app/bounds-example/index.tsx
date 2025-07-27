@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { FlatList, View } from "react-native";
-import Transition, { Bounds } from "react-native-screen-transitions";
+import Transition from "react-native-screen-transitions";
 
 export default function BoundsExampleA() {
 	const data = [
@@ -38,14 +38,13 @@ export default function BoundsExampleA() {
 	};
 
 	return (
-		<Transition.View
+		<View
 			style={{
 				flex: 1,
 
 				alignItems: "center",
 				justifyContent: "center",
 			}}
-			sharedBoundTag="bounds-example"
 		>
 			<FlatList
 				data={data}
@@ -60,6 +59,6 @@ export default function BoundsExampleA() {
 					justifyContent: "center",
 				}}
 			/>
-		</Transition.View>
+		</View>
 	);
 }

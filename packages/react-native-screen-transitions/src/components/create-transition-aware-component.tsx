@@ -2,13 +2,19 @@ import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { useAnimatedRef } from "react-native-reanimated";
-import { useInterpolatorStyles } from "@/hooks/animation/use-interpolator-styles";
+import Animated, {
+	useAnimatedRef,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 import { useBoundsMeasurement } from "@/hooks/bounds/use-bounds-measurement";
 import { useScrollProgress } from "@/hooks/gestures/use-scroll-progress";
 import { useGestureContext } from "@/navigator/contexts/gesture";
 import { useScreenKeys } from "@/navigator/contexts/screen-keys";
+import { _useRootScreenAnimation } from "@/navigator/hooks/animation/use-root-screen-animation";
 import type { Any, TransitionAwareProps } from "@/types";
+import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
+
+import { SharedBoundsFlickerPrevention } from "./shared-bounds-flicker-prevention";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -65,8 +71,28 @@ export function createTransitionAwareComponent<P extends object>(
 			screenKey: currentScreenKey,
 		});
 
-		const { styleIdStyle } = useInterpolatorStyles({
-			styleId: styleId || sharedBoundTag,
+		const {
+			screenStyleInterpolator,
+			screenInterpolatorState,
+			...screenInterpolationProps
+		} = _useRootScreenAnimation();
+
+		const styleIdStyle = useAnimatedStyle(() => {
+			"worklet";
+
+			const id = sharedBoundTag || styleId;
+
+			if (!id) {
+				return {};
+			}
+
+			const additionalProps = additionalInterpolationProps(
+				screenInterpolationProps,
+			);
+
+			const styles = screenStyleInterpolator(additionalProps)[id];
+
+			return styles || {};
 		});
 
 		if (isScrollable) {
@@ -74,13 +100,21 @@ export function createTransitionAwareComponent<P extends object>(
 		}
 
 		return (
-			<AnimatedComponent
-				{...rest}
-				ref={sharedBoundTag ? animatedRef : ref}
-				style={[{ flex: 1 }, style, styleIdStyle]}
+			<SharedBoundsFlickerPrevention
+				screenInterpolatorState={screenInterpolatorState}
+				baseInterpolationProps={screenInterpolationProps}
+				screenStyleInterpolator={screenStyleInterpolator}
+				sharedBoundTag={sharedBoundTag}
+				screenKey={currentScreenKey}
 			>
-				{children}
-			</AnimatedComponent>
+				<AnimatedComponent
+					{...rest}
+					ref={sharedBoundTag ? animatedRef : ref}
+					style={[styleIdStyle, style]}
+				>
+					{children}
+				</AnimatedComponent>
+			</SharedBoundsFlickerPrevention>
 		);
 	});
 

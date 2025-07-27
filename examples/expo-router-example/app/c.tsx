@@ -1,15 +1,14 @@
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text } from "react-native";
-import Transition from "react-native-screen-transitions";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function C() {
 	return (
-		<Transition.View style={styles.container}>
+		<View style={styles.container}>
 			<Text>C</Text>
 			<Pressable onPress={router.back}>
 				<Text>Go back</Text>
 			</Pressable>
-		</Transition.View>
+		</View>
 	);
 }
 

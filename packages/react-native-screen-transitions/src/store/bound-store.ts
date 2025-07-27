@@ -57,4 +57,7 @@ export const BoundStore = {
 			{ raw: true },
 		);
 	},
+	hasBounds: (screenKey: string, boundKey: BoundKey): boolean => {
+		return !!boundStore.getState().bounds[screenKey]?.[boundKey];
+	},
 };

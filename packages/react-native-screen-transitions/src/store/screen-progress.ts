@@ -10,7 +10,7 @@ type ScreenProgressState = {
 	animating: Record<string, SharedValue<number>>;
 };
 
-const animatingFallback = makeMutable(1);
+const animatingFallback = makeMutable(0);
 const screenProgressFallback = makeMutable(0);
 
 export const screenProgressStore = createVanillaStore<ScreenProgressState>({
@@ -24,7 +24,7 @@ export const ScreenProgressStore = {
 		screenProgressStore.setState(
 			(state) => {
 				state.screenProgress[screen] = makeMutable(0);
-				state.animating[screen] = makeMutable(1);
+				state.animating[screen] = makeMutable(0);
 
 				return state;
 			},

@@ -7,6 +7,7 @@ import type {
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import type { BoundKey, BoundsMap } from "./bounds";
+import type { ScreenInterpolatorState } from "./state";
 
 export type ScreenProgress = {
 	progress: SharedValue<number>;
@@ -39,6 +40,7 @@ export interface BaseScreenInterpolationProps {
 export interface _BaseScreenInterpolationProps
 	extends BaseScreenInterpolationProps {
 	screenStyleInterpolator: ScreenStyleInterpolator;
+	screenInterpolatorState: ScreenInterpolatorState;
 }
 
 /**

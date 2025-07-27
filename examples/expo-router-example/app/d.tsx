@@ -14,7 +14,7 @@ const TransitionLegendList = Transition.createTransitionAwareComponent(
 
 export default function D() {
 	return (
-		<Transition.View style={styles.container}>
+		<View style={styles.container}>
 			<TransitionLegendList
 				data={colors}
 				renderItem={({ item }) => (
@@ -23,7 +23,7 @@ export default function D() {
 					/>
 				)}
 			/>
-		</Transition.View>
+		</View>
 	);
 }
 

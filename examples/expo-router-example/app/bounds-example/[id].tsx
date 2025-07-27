@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Text, useWindowDimensions } from "react-native";
+import { Text, useWindowDimensions, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
 export default function BoundsDetailScreen() {
@@ -8,10 +8,11 @@ export default function BoundsDetailScreen() {
 	const { width } = useWindowDimensions();
 
 	return (
-		<Transition.View
+		<View
 			style={{
 				alignItems: "center",
 				justifyContent: "center",
+				flex: 1,
 			}}
 		>
 			<Transition.Pressable
@@ -30,6 +31,6 @@ export default function BoundsDetailScreen() {
 					/examples/[{id}]
 				</Text>
 			</Transition.Pressable>
-		</Transition.View>
+		</View>
 	);
 }

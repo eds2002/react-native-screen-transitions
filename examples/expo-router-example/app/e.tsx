@@ -1,11 +1,10 @@
 import { StyleSheet, View } from "react-native";
-import Transition from "react-native-screen-transitions";
 
 export default function E() {
 	return (
-		<Transition.View style={styles.container}>
+		<View style={styles.container}>
 			<View style={styles.square} />
-		</Transition.View>
+		</View>
 	);
 }
 
