@@ -2,8 +2,13 @@ import type { ParamListBase } from "@react-navigation/native";
 import type React from "react";
 import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { RootGestureHandlerProvider } from "@/components/providers/root-gesture-handler-provider";
-import { _useRootScreenAnimation } from "@/hooks/animation/use-root-screen-animation";
+import { ScreenAnimationContext } from "@/navigator/contexts/screen-animation";
+import { ScreenKeysContext } from "@/navigator/contexts/screen-keys";
+import {
+	_useRootScreenAnimation,
+	useRootScreenAnimation,
+} from "@/navigator/hooks/animation/use-root-screen-animation";
+import { RootGestureHandlerProvider } from "@/navigator/providers/root-gesture-handler-provider";
 import type { TransitionStackNavigationProp } from "@/types";
 import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
 
@@ -16,19 +21,17 @@ interface TransitionAwareRootViewProps {
 	navigation: TransitionStackNavigationProp<ParamListBase, string, undefined>;
 }
 
-export const TransitionAwareRootView = ({
+const TransitionAwareContent = ({
 	children,
-	currentScreenKey,
-	previousScreenKey,
-	nextScreenKey,
 	style,
 	navigation,
-}: TransitionAwareRootViewProps) => {
-	const { screenStyleInterpolator, ...rest } = _useRootScreenAnimation({
-		currentScreenKey,
-		previousScreenKey,
-		nextScreenKey,
-	});
+}: {
+	children: React.ReactNode;
+	style?: StyleProp<ViewStyle>;
+	navigation: TransitionStackNavigationProp<ParamListBase, string, undefined>;
+}) => {
+	const { screenStyleInterpolator, ...rest } = _useRootScreenAnimation();
+	const interpolatedAnimation = useRootScreenAnimation();
 
 	const contentStyle = useAnimatedStyle(() => {
 		"worklet";
@@ -43,18 +46,35 @@ export const TransitionAwareRootView = ({
 	});
 
 	return (
-		<RootGestureHandlerProvider
-			currentScreenKey={currentScreenKey}
-			navigation={navigation}
-		>
-			<Animated.View
-				style={[StyleSheet.absoluteFillObject, overlayStyle]}
-				pointerEvents="none"
-			/>
-			<Animated.View style={[{ flex: 1 }, style, contentStyle]}>
-				{children}
-			</Animated.View>
+		<RootGestureHandlerProvider navigation={navigation}>
+			<ScreenAnimationContext.Provider value={interpolatedAnimation}>
+				<Animated.View
+					style={[StyleSheet.absoluteFillObject, overlayStyle]}
+					pointerEvents="none"
+				/>
+				<Animated.View style={[{ flex: 1 }, style, contentStyle]}>
+					{children}
+				</Animated.View>
+			</ScreenAnimationContext.Provider>
 		</RootGestureHandlerProvider>
+	);
+};
+export const TransitionAwareRootView = ({
+	children,
+	currentScreenKey,
+	previousScreenKey,
+	nextScreenKey,
+	style,
+	navigation,
+}: TransitionAwareRootViewProps) => {
+	return (
+		<ScreenKeysContext.Provider
+			value={{ currentScreenKey, previousScreenKey, nextScreenKey }}
+		>
+			<TransitionAwareContent style={style} navigation={navigation}>
+				{children}
+			</TransitionAwareContent>
+		</ScreenKeysContext.Provider>
 	);
 };
 

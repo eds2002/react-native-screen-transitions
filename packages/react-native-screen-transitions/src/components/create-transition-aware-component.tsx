@@ -3,12 +3,12 @@ import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
-import { useGestureContext } from "@/contexts/gesture";
 import { useInterpolatorStyles } from "@/hooks/animation/use-interpolator-styles";
 import { useBoundsMeasurement } from "@/hooks/bounds/use-bounds-measurement";
 import { useScrollProgress } from "@/hooks/gestures/use-scroll-progress";
+import { useGestureContext } from "@/navigator/contexts/gesture";
+import { useScreenKeys } from "@/navigator/contexts/screen-keys";
 import type { Any, TransitionAwareProps } from "@/types";
-import { useKey } from "../../hooks/use-key";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -51,7 +51,7 @@ export function createTransitionAwareComponent<P extends object>(
 		TransitionAwareProps<P>
 	>((props, ref) => {
 		const { children, style, sharedBoundTag, styleId, ...rest } = props as Any;
-		const screenKey = useKey();
+		const { currentScreenKey } = useScreenKeys();
 
 		const animatedRef = useAnimatedRef<View>();
 
@@ -62,7 +62,7 @@ export function createTransitionAwareComponent<P extends object>(
 		useBoundsMeasurement({
 			sharedBoundTag,
 			animatedRef,
-			screenKey,
+			screenKey: currentScreenKey,
 		});
 
 		const { styleIdStyle } = useInterpolatorStyles({

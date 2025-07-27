@@ -5,8 +5,12 @@ import Transition from "react-native-screen-transitions";
 const { height } = Dimensions.get("window");
 const colors = ["#ff0000", "#00ff00", "#0000ff", "#ff00ff"];
 
-const TransitionLegendList =
-	Transition.createTransitionAwareScrollable(LegendList);
+const TransitionLegendList = Transition.createTransitionAwareComponent(
+	LegendList,
+	{
+		isScrollable: true,
+	},
+);
 
 export default function D() {
 	return (

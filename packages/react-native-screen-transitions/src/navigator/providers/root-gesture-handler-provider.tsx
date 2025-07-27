@@ -1,27 +1,27 @@
-import type { NavigationProp, ParamListBase } from "@react-navigation/native";
+import type { ParamListBase } from "@react-navigation/native";
 import { useMemo } from "react";
 import { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
-import type { Any, TransitionStackNavigationProp } from "@/types";
+import { useScreenKeys } from "@/navigator/contexts/screen-keys";
+import type { TransitionStackNavigationProp } from "@/types";
 import {
 	GestureContext,
 	type GestureContextType,
 	type ScrollProgress,
-} from "../../contexts/gesture";
-import { useBuildRootGestures } from "../../hooks/gestures/use-build-root-gestures";
+} from "../contexts/gesture";
+import { useBuildRootGestures } from "../hooks/gestures/use-build-root-gestures";
 
 type RootGestureHandlerProviderProps = {
 	children: React.ReactNode;
-	currentScreenKey: string;
 	navigation: TransitionStackNavigationProp<ParamListBase, string, undefined>;
 };
 
 export const RootGestureHandlerProvider = ({
 	children,
-	currentScreenKey,
 	navigation,
 }: RootGestureHandlerProviderProps) => {
+	const { currentScreenKey } = useScreenKeys();
 	const scrollProgress = useSharedValue<ScrollProgress>({
 		x: 0,
 		y: 0,

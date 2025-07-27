@@ -1,29 +1,23 @@
 import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useScreenKeys } from "@/navigator/contexts/screen-keys";
 import { BoundStore } from "@/store/bound-store";
 import { ConfigStore } from "@/store/config-store";
 import { GestureStore } from "@/store/gesture-store";
 import { ScreenProgressStore } from "@/store/screen-progress";
 import type {
 	_BaseScreenInterpolationProps,
+	BaseScreenInterpolationProps,
 	ScreenProgress,
 } from "@/types/animation";
 import { noopinterpolator } from "@/utils/animation/noop-interpolator";
 
-interface UseRootScreenAnimationProps {
-	currentScreenKey: string;
-	previousScreenKey?: string;
-	nextScreenKey?: string;
-}
-
-const useRootAnimationBuilder = ({
-	currentScreenKey,
-	previousScreenKey,
-	nextScreenKey,
-}: UseRootScreenAnimationProps) => {
+const useRootAnimationBuilder = () => {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
+	const { currentScreenKey, previousScreenKey, nextScreenKey } =
+		useScreenKeys();
 
 	const previousScreen = ConfigStore.use((state) => {
 		if (!previousScreenKey) return undefined;
@@ -89,10 +83,19 @@ const useRootAnimationBuilder = ({
 	]);
 };
 
-const _useRootScreenAnimation = (
-	props: UseRootScreenAnimationProps,
-): _BaseScreenInterpolationProps => {
-	return useRootAnimationBuilder(props);
+const _useRootScreenAnimation = (): _BaseScreenInterpolationProps => {
+	return useRootAnimationBuilder();
 };
 
-export { _useRootScreenAnimation };
+const useRootScreenAnimation = (): BaseScreenInterpolationProps => {
+	const { screenStyleInterpolator: _, ...animationProps } =
+		useRootAnimationBuilder();
+
+	/**
+	 * @note
+	 * Using additionalInterpolationProps using .value on the js thread, giving us a reanimated warning. We should aim to improve this in the future, but to be fair, i dont think if you're defining animations at the screen level you would need the utils.
+	 */
+	return animationProps;
+};
+
+export { _useRootScreenAnimation, useRootScreenAnimation };

@@ -16,7 +16,7 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { DefaultSpec } from "@/configs/specs";
-import type { ScrollProgress } from "@/contexts/gesture";
+import type { ScrollProgress } from "@/navigator/contexts/gesture";
 import { ConfigStore } from "@/store/config-store";
 import { GestureStore } from "@/store/gesture-store";
 import { ScreenProgressStore } from "@/store/screen-progress";
