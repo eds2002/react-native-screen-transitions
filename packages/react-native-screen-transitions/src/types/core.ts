@@ -73,6 +73,10 @@ export interface TransitionConfig {
 	 * Skip the default screen options.
 	 */
 	skipDefaultScreenOptions?: boolean;
+	/**
+	 * Whether the gesture drives the progress.
+	 */
+	gestureDrivesProgress?: boolean;
 }
 
 export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {

@@ -29,6 +29,7 @@ const GESTURE_VELOCITY_IMPACT = 0.3;
 const DEFAULT_GESTURE_RESPONSE_DISTANCE = 50;
 const DEFAULT_GESTURE_DIRECTION = "horizontal";
 const DEFAULT_GESTURE_ENABLED = false;
+const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
 
 interface BuildRootGesturesHookProps {
 	scrollProgress: SharedValue<ScrollProgress>;
@@ -76,6 +77,7 @@ export const useBuildRootGestures = ({
 		},
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
 		gestureResponseDistance = DEFAULT_GESTURE_RESPONSE_DISTANCE,
+		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
 	} = currentScreen ?? {};
 
 	const directions = Array.isArray(gestureDirection)
@@ -255,7 +257,9 @@ export const useBuildRootGestures = ({
 				gestureProgress = maxProgress;
 			}
 
-			progress.value = 1 - gestureProgress;
+			if (gestureDrivesProgress) {
+				progress.value = 1 - gestureProgress;
+			}
 		},
 		[
 			dimensions,
@@ -265,6 +269,7 @@ export const useBuildRootGestures = ({
 			normalizedX,
 			normalizedY,
 			progress,
+			gestureDrivesProgress,
 		],
 	);
 

@@ -21,10 +21,7 @@ import type { TransitionConfig } from "@/types";
  */
 export interface AwareNativeStackNavigationOptions
 	extends Omit<NativeStackNavigationOptions, keyof TransitionConfig>,
-		TransitionConfig {
-	skipDefaultScreenOptions?: boolean;
-	gestureDrivesProgress?: boolean;
-}
+		TransitionConfig {}
 
 export type AwareRouterOptions = DefaultRouterOptions;
 export type AwareNativeStackActionHelpers = StackActionHelpers<ParamListBase>;

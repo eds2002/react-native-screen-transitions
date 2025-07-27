@@ -1,9 +1,6 @@
 import { type ParamListBase, StackActions } from "@react-navigation/native";
 import type { AwareNavigationProp } from "@/navigator/types";
-import type {
-  Any,
-  ScreenStateStore
-} from "@/types";
+import type { Any, ScreenStateStore } from "@/types";
 import { BoundStore } from "./bound-store";
 import { GestureStore } from "./gesture-store";
 import { ScreenProgressStore } from "./screen-progress";
@@ -110,12 +107,18 @@ const handleConfigDismiss = (
 	}
 };
 
+const getConfig = (key: string) => {
+	const { screens } = useConfigStore.getState();
+	return screens[key];
+};
+
 export const ConfigStore = {
 	use: useConfigStore,
 	updateConfig,
 	removeConfig,
 	handleConfigDismiss,
 	shouldSkipPreventDefault,
+	getConfig,
 };
 
 useConfigStore.subscribeWithSelector(
