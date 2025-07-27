@@ -23,6 +23,7 @@ export interface AwareNativeStackNavigationOptions
 	extends Omit<NativeStackNavigationOptions, keyof TransitionConfig>,
 		TransitionConfig {
 	skipDefaultScreenOptions?: boolean;
+	gestureDrivesProgress?: boolean;
 }
 
 export type AwareRouterOptions = DefaultRouterOptions;

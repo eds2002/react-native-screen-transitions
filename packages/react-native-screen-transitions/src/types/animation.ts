@@ -101,15 +101,17 @@ export interface ScreenInterpolationProps extends BaseScreenInterpolationProps {
 		/**
 		 * Interpolate bounds properties based on progress.
 		 */
-		interpolateBounds: (
+		interpolate: (
+			inputRange: number[],
 			start: ExtendedMeasuredDimensions,
 			end: ExtendedMeasuredDimensions,
-			progress: number,
+			reverse?: boolean,
 		) => {
 			translateX: number;
 			translateY: number;
 			scaleX: number;
 			scaleY: number;
+			transform: StyleProps["transform"];
 		};
 	};
 }

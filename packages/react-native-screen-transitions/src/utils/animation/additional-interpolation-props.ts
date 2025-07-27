@@ -60,19 +60,44 @@ export const additionalInterpolationProps = (
 	};
 
 	const interpolateBounds = (
+		inputRange: number[],
 		start: ExtendedMeasuredDimensions,
 		end: ExtendedMeasuredDimensions,
-		prog: number,
+		reverse: boolean = false,
 	) => {
 		"worklet";
 		const delta = calculateDelta(start, end);
 
-		const translateX = reInterpolate(prog, [0, 1], [delta.dx, 0]);
-		const translateY = reInterpolate(prog, [0, 1], [delta.dy, 0]);
-		const scaleX = reInterpolate(prog, [0, 1], [delta.scaleX, 1]);
-		const scaleY = reInterpolate(prog, [0, 1], [delta.scaleY, 1]);
+		if (reverse) {
+			// For exit: we want to animate FROM the current state TO the target
+			// But delta is calculated as "how to get from start to end"
+			// So we need to NEGATE the delta to go in the opposite direction
+			const translateX = reInterpolate(progress, inputRange, [0, -delta.dx]);
+			const translateY = reInterpolate(progress, inputRange, [0, -delta.dy]);
+			const scaleX = reInterpolate(progress, inputRange, [1, 1 / delta.scaleX]);
+			const scaleY = reInterpolate(progress, inputRange, [1, 1 / delta.scaleY]);
+			const transform = [
+				{ translateX },
+				{ translateY },
+				{ scaleX },
+				{ scaleY },
+			];
 
-		return { translateX, translateY, scaleX, scaleY };
+			return { translateX, translateY, scaleX, scaleY, transform };
+		} else {
+			// For enter: animate FROM delta TO 0 (normal behavior)
+			const translateX = reInterpolate(progress, inputRange, [delta.dx, 0]);
+			const translateY = reInterpolate(progress, inputRange, [delta.dy, 0]);
+			const scaleX = reInterpolate(progress, inputRange, [delta.scaleX, 1]);
+			const scaleY = reInterpolate(progress, inputRange, [delta.scaleY, 1]);
+			const transform = [
+				{ translateX },
+				{ translateY },
+				{ scaleX },
+				{ scaleY },
+			];
+			return { translateX, translateY, scaleX, scaleY, transform };
+		}
 	};
 
 	return {
@@ -85,7 +110,7 @@ export const additionalInterpolationProps = (
 			has: hasBounds,
 			activeTag,
 			calculateDelta,
-			interpolateBounds,
+			interpolate: interpolateBounds,
 		},
 	};
 };

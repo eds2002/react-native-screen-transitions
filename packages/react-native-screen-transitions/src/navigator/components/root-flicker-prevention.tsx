@@ -3,7 +3,7 @@ import type { _BaseScreenInterpolationProps } from "@/types";
 import { ScreenInterpolatorState } from "@/types/state";
 import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
 
-export const FlickerPrevention = ({
+export const RootFlickerPrevention = ({
 	children,
 	screenInterpolatorState,
 	baseInterpolationProps,

@@ -1,4 +1,4 @@
-import { Easing } from "react-native-reanimated";
+import { Easing, interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { Stack } from "@/layouts/stack";
 
@@ -16,11 +16,16 @@ export default function BoundsExampleLayout() {
 				name="[id]"
 				options={{
 					title: "B",
+					gestureEnabled: true,
+					gestureDirection: ["bidirectional"],
+					gestureDrivesProgress: false,
 					screenStyleInterpolator: ({
 						bounds,
-						progress,
-						interpolate,
+						current,
 						isFocused,
+						progress,
+
+						layouts: { screen },
 					}) => {
 						"worklet";
 
@@ -30,24 +35,32 @@ export default function BoundsExampleLayout() {
 
 							if (!start || !end) return {};
 
-							const { translateX, translateY, scaleX, scaleY } =
-								bounds.interpolateBounds(start, end, progress);
+							const { transform } = bounds.interpolate([0, 1], start, end);
 
 							return {
-								[start.id]: {
-									transform: [
-										{ translateX },
-										{ translateY },
-										{ scaleX },
-										{ scaleY },
-									],
-									opacity: interpolate([0, 1], [0, 1]),
-									borderRadius: interpolate([0, 1], [24, 12]),
+								[bounds.activeTag]: {
+									transform,
+									borderTopLeftRadius: interpolate(progress, [0, 1], [100, 50]),
+									borderTopRightRadius: interpolate(
+										progress,
+										[0, 1],
+										[100, 50],
+									),
+									borderBottomLeftRadius: interpolate(
+										progress,
+										[0, 1],
+										[100, 50],
+									),
+									borderBottomRightRadius: interpolate(
+										progress,
+										[0, 1],
+										[100, 50],
+									),
 									overflow: "hidden",
 								},
 								overlayStyle: {
-									backgroundColor: "#000",
-									opacity: interpolate([0, 1], [0, 0.25]),
+									backgroundColor: "#FFF",
+									opacity: interpolate(progress, [0, 1], [0, 0.9]),
 								},
 							};
 						}
@@ -59,26 +72,22 @@ export default function BoundsExampleLayout() {
 
 						if (!start || !end) return {};
 
-						const { translateX, translateY, scaleX, scaleY } =
-							bounds.interpolateBounds(start, end, progress);
+						const { transform } = bounds.interpolate([1, 2], start, end, true);
+
+						const boundsStyle = {
+							transform,
+							opacity: interpolate(progress, [1, 1.5], [1, 0]),
+						};
 
 						return {
 							contentStyle: {
 								transform: [
 									{
-										scale: interpolate([1, 2], [1, 0.9]),
+										scale: interpolate(progress, [1, 2], [1, 0.75]),
 									},
 								],
 							},
-							[start.id]: {
-								transform: [
-									{ translateX },
-									{ translateY },
-									{ scaleX },
-									{ scaleY },
-								],
-								opacity: interpolate([1, 2], [1, 0]),
-							},
+							[bounds.activeTag]: boundsStyle,
 						};
 					},
 					transitionSpec: {
