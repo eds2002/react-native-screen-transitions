@@ -7,60 +7,30 @@ import {
 	Screen,
 	useHeaderHeight,
 } from "@react-navigation/elements";
-import {
-	type ParamListBase,
-	type RouteProp,
-	type StackNavigationState,
-	useLinkBuilder,
-} from "@react-navigation/native";
+import { useLinkBuilder } from "@react-navigation/native";
 import * as React from "react";
 import { Animated, Image, StyleSheet } from "react-native";
-import { TransitionAwareRootView } from "@/navigator/components/transition-aware-root-view";
-import { ConfigStore } from "@/store/config-store";
+import { AwareRootView } from "@/navigator/components/aware-root-view";
+import type { Any } from "@/types";
+import { useScreenLifecycle } from "../hooks/navigator/use-screen-lifecycle";
 import type {
-	Any,
-	TransitionStackDescriptor,
-	TransitionStackDescriptorMap,
-	TransitionStackNavigationOptions,
-	TransitionStackNavigationProp,
-} from "@/types";
-
-type Props = {
-	state: StackNavigationState<ParamListBase>;
-	// This is used for the native implementation of the stack.
-	navigation: TransitionStackNavigationProp<ParamListBase>;
-	descriptors: TransitionStackDescriptorMap;
-	describe: (
-		route: RouteProp<ParamListBase>,
-		placeholder: boolean,
-	) => TransitionStackDescriptor;
-	screenProcessor: {
-		childOptions: Map<string, TransitionStackNavigationOptions>;
-	};
-};
+	AwareNativeStackViewProps,
+	AwareScreenProps,
+	AwareStackDescriptorMap,
+} from "../types";
 
 const TRANSPARENT_PRESENTATIONS = [
 	"transparentModal",
 	"containedTransparentModal",
 ];
 
-const Route = ({
+const AwareScreen = ({
 	state,
 	descriptors,
 	preloadedDescriptors,
 	index,
 	route,
-	screenProcessor,
-}: {
-	state: StackNavigationState<ParamListBase>;
-	descriptors: TransitionStackDescriptorMap;
-	preloadedDescriptors: TransitionStackDescriptorMap;
-	index: number;
-	route: RouteProp<ParamListBase>;
-	screenProcessor: {
-		childOptions: Map<string, TransitionStackNavigationOptions>;
-	};
-}) => {
+}: AwareScreenProps) => {
 	const parentHeaderBack = React.useContext(HeaderBackContext);
 	const isFocused = state.index === index;
 	const previousKey = state.routes[index - 1]?.key;
@@ -87,53 +57,7 @@ const Route = ({
 
 	const canGoBack = headerBack != null;
 
-	React.useEffect(() => {
-		const parentNavigatorKey = navigation.getParent()?.getState?.()?.key;
-		const navigatorKey = navigation.getState().key;
-
-		const presetConfig = screenProcessor.childOptions.get(route.name) || {};
-
-		ConfigStore.updateConfig(route.key, {
-			id: route.key,
-			name: route.name,
-			status: 1,
-			closing: false,
-			navigatorKey,
-			parentNavigatorKey,
-			...presetConfig,
-		});
-	}, [route, navigation, screenProcessor]);
-
-	React.useEffect(() => {
-		const unsubscribe = navigation.addListener("beforeRemove", (e) => {
-			const shouldSkipPreventDefault = ConfigStore.shouldSkipPreventDefault(
-				e.target,
-				navigation.getState(),
-			);
-
-			if (shouldSkipPreventDefault) {
-				ConfigStore.removeConfig(e.target);
-				return;
-			}
-
-			e.preventDefault();
-			const handleFinish = (finished?: boolean) => {
-				if (!finished) return;
-				if (navigation.canGoBack()) {
-					navigation.dispatch(e.data?.action);
-					ConfigStore.removeConfig(e.target);
-				}
-			};
-
-			ConfigStore.updateConfig(e.target, {
-				status: 0,
-				closing: true,
-				onAnimationFinish: handleFinish,
-			});
-		});
-
-		return () => unsubscribe();
-	}, [navigation]);
+	useScreenLifecycle({ route, navigation, options });
 
 	const {
 		header,
@@ -167,7 +91,7 @@ const Route = ({
 						back: headerBack,
 						options: options as Any,
 						route,
-						navigation,
+						navigation: navigation as Any,
 					})
 				) : (
 					<Header
@@ -226,7 +150,7 @@ const Route = ({
 		>
 			<HeaderBackContext.Provider value={headerBack}>
 				<AnimatedHeaderHeightProvider>
-					<TransitionAwareRootView
+					<AwareRootView
 						currentScreenKey={route.key}
 						previousScreenKey={previousKey}
 						nextScreenKey={nextKey}
@@ -234,21 +158,20 @@ const Route = ({
 						navigation={navigation}
 					>
 						{render()}
-					</TransitionAwareRootView>
+					</AwareRootView>
 				</AnimatedHeaderHeightProvider>
 			</HeaderBackContext.Provider>
 		</Screen>
 	);
 };
 
-export function TransitionAwareNativeStackView({
+export function AwareNativeStackView({
 	state,
 	descriptors,
 	describe,
-	screenProcessor,
-}: Props) {
+}: AwareNativeStackViewProps) {
 	const preloadedDescriptors =
-		state.preloadedRoutes.reduce<TransitionStackDescriptorMap>((acc, route) => {
+		state.preloadedRoutes.reduce<AwareStackDescriptorMap>((acc, route) => {
 			acc[route.key] = acc[route.key] || describe(route, true);
 			return acc;
 		}, {});
@@ -257,14 +180,13 @@ export function TransitionAwareNativeStackView({
 		<SafeAreaProviderCompat>
 			{state.routes.concat(state.preloadedRoutes).map((route, i) => {
 				return (
-					<Route
+					<AwareScreen
 						key={route.key}
 						state={state}
 						descriptors={descriptors}
 						preloadedDescriptors={preloadedDescriptors}
 						index={i}
 						route={route}
-						screenProcessor={screenProcessor}
 					/>
 				);
 			})}

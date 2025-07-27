@@ -2,8 +2,6 @@ import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
 import { presets, specs } from "./configs";
 import { createTransitionableStackNavigator } from "./navigator/create-transitionable-stack-navigator";
-import { createConfig, createScreenConfig } from "./utils/create-config";
-import { defaultScreenOptions } from "./utils/default-screen-options";
 
 export default {
 	View: createTransitionAwareComponent(View),
@@ -27,21 +25,6 @@ export default {
 	 *
 	 */
 	createTransitionableStackNavigator,
-	/**
-	 * @deprecated Use {@link createTransitionableStackNavigator} instead.
-	 */
-	createConfig,
-	/**
-	 * @deprecated Use {@link createTransitionableStackNavigator} instead.
-	 */
-	createScreenConfig,
-	/**
-	 * @deprecated Use {@link createTransitionableStackNavigator} instead.
-	 */
-	/**
-	 * @deprecated Use the navigator @see {@link createTransitionableStackNavigator}  by default, the navigator will use the default screen options, unless overriden by `skipDefaultScreenOptions`
-	 */
-	defaultScreenOptions,
 };
 
 export { useScreenAnimation } from "./navigator/contexts/screen-animation";

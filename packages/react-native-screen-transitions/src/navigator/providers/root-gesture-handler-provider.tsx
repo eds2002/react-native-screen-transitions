@@ -4,17 +4,17 @@ import { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { useScreenKeys } from "@/navigator/contexts/screen-keys";
-import type { TransitionStackNavigationProp } from "@/types";
 import {
 	GestureContext,
 	type GestureContextType,
 	type ScrollProgress,
 } from "../contexts/gesture";
 import { useBuildRootGestures } from "../hooks/gestures/use-build-root-gestures";
+import type { AwareNavigationProp } from "../types";
 
 type RootGestureHandlerProviderProps = {
 	children: React.ReactNode;
-	navigation: TransitionStackNavigationProp<ParamListBase, string, undefined>;
+	navigation: AwareNavigationProp<ParamListBase, string, undefined>;
 };
 
 export const RootGestureHandlerProvider = ({

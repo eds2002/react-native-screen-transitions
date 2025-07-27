@@ -1,6 +1,4 @@
-import type { ParamListBase } from "@react-navigation/native";
-import type React from "react";
-import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
+import { StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { ScreenAnimationContext } from "@/navigator/contexts/screen-animation";
 import { ScreenKeysContext } from "@/navigator/contexts/screen-keys";
@@ -9,27 +7,10 @@ import {
 	useRootScreenAnimation,
 } from "@/navigator/hooks/animation/use-root-screen-animation";
 import { RootGestureHandlerProvider } from "@/navigator/providers/root-gesture-handler-provider";
-import type { TransitionStackNavigationProp } from "@/types";
 import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
+import type { AwareContentProps, AwareRootViewProps } from "../types";
 
-interface TransitionAwareRootViewProps {
-	children: React.ReactNode;
-	currentScreenKey: string;
-	previousScreenKey?: string;
-	nextScreenKey?: string;
-	style?: StyleProp<ViewStyle>;
-	navigation: TransitionStackNavigationProp<ParamListBase, string, undefined>;
-}
-
-const TransitionAwareContent = ({
-	children,
-	style,
-	navigation,
-}: {
-	children: React.ReactNode;
-	style?: StyleProp<ViewStyle>;
-	navigation: TransitionStackNavigationProp<ParamListBase, string, undefined>;
-}) => {
+const AwareContent = ({ children, style, navigation }: AwareContentProps) => {
 	const { screenStyleInterpolator, ...rest } = _useRootScreenAnimation();
 	const interpolatedAnimation = useRootScreenAnimation();
 
@@ -59,23 +40,23 @@ const TransitionAwareContent = ({
 		</RootGestureHandlerProvider>
 	);
 };
-export const TransitionAwareRootView = ({
+export const AwareRootView = ({
 	children,
 	currentScreenKey,
 	previousScreenKey,
 	nextScreenKey,
 	style,
 	navigation,
-}: TransitionAwareRootViewProps) => {
+}: AwareRootViewProps) => {
 	return (
 		<ScreenKeysContext.Provider
 			value={{ currentScreenKey, previousScreenKey, nextScreenKey }}
 		>
-			<TransitionAwareContent style={style} navigation={navigation}>
+			<AwareContent style={style} navigation={navigation}>
 				{children}
-			</TransitionAwareContent>
+			</AwareContent>
 		</ScreenKeysContext.Provider>
 	);
 };
 
-TransitionAwareRootView.displayName = "TransitionAwareRootView";
+AwareRootView.displayName = "AwareRootView";

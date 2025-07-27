@@ -2,186 +2,64 @@ import {
 	createNavigatorFactory,
 	type NavigatorTypeBagBase,
 	type ParamListBase,
-	type RouteProp,
-	type StackActionHelpers,
 	type StackNavigationState,
 	StackRouter,
 	type StackRouterOptions,
 	type TypedNavigator,
 	useNavigationBuilder,
 } from "@react-navigation/native";
-import {
-	type NativeStackNavigationOptions,
-	NativeStackView,
-} from "@react-navigation/native-stack";
-import React, { Children, isValidElement, useMemo } from "react";
+import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import type { Any } from "@/types";
+import { AwareNativeStackView } from "./components/aware-native-stack-view";
+import { useModifyChildren } from "./hooks/use-modify-children";
 import type {
-	TransitionStackNavigationEventMap,
-	TransitionStackNavigationOptions,
-	TransitionStackNavigationProp,
-	TransitionStackNavigatorProps,
-	TransitionStackScreenProps,
-} from "@/types/navigator";
-import { createConfig } from "../utils";
-import { TransitionAwareNativeStackView } from "./components/transition-aware-native-stack-view";
-
-// Necessary screen options to ensure animations run smoothly
-const DEFAULT_SCREEN_OPTIONS = {
-	presentation: "containedTransparentModal",
-	headerShown: false,
-	animation: "none",
-	/**
-   * EXPERIMENTAL:
-   When handling forward navigation, this would be the prop we would use to prevent the underlying screen from not being interactable.
-    - pointerEvents: "box-none",
-   */
-} as const;
-
-// Lib handles gestures. Default props to avoid conflicts with navigator
-const CONFLICTING_SCREEN_OPTIONS = {
-	gestureEnabled: false,
-	gestureDirection: "horizontal",
-} as const;
+	AwareNativeStackActionHelpers,
+	AwareNativeStackNavigationEventMap,
+	AwareNativeStackNavigationOptions,
+	AwareNativeStackNavigationState,
+	AwareNativeStackNavigatorProps,
+	AwareNavigationProp,
+} from "./types";
 
 function TransitionableStackNavigator({
 	id,
 	initialRouteName,
-	children,
+	children: baseChildren,
 	layout,
 	screenListeners,
 	screenOptions,
 	screenLayout,
 	UNSTABLE_router,
 	...rest
-}: TransitionStackNavigatorProps) {
-	// 1) Modify the screens first to adjust for our custom screen options, store these options for use later in the screenListeners.
-	const screenProcessor = useMemo(() => {
-		const childOptions = new Map<string, TransitionStackNavigationOptions>();
-
-		const modifiedChildren = Children.toArray(children)
-			.filter(isValidElement<TransitionStackScreenProps<ParamListBase>>)
-			.map((child) => {
-				const resolvedOptions =
-					typeof child.props.options === "function"
-						? child.props.options({
-								route: child.props.route,
-								navigation: child.props.navigation,
-							})
-						: child.props.options || {};
-
-				childOptions.set(child.props.name, resolvedOptions);
-
-				const skipDefaultScreenOptions =
-					resolvedOptions?.skipDefaultScreenOptions === true;
-
-				return React.cloneElement(child, {
-					...child.props,
-
-					options: {
-						...(skipDefaultScreenOptions ? {} : DEFAULT_SCREEN_OPTIONS),
-						...resolvedOptions,
-						...CONFLICTING_SCREEN_OPTIONS,
-					},
-				});
-			});
-
-		return {
-			children: modifiedChildren,
-			childOptions,
-		};
-	}, [children]);
-
-	// const screenListenersWithTransitions = useMemo(() => {
-	// 	return (props: {
-	// 		navigation: TransitionStackNavigationProp<ParamListBase>;
-	// 		route: RouteProp<ParamListBase>;
-	// 	}) => {
-	// 		const resolvedNavigatorConfig =
-	// 			typeof screenOptions === "function"
-	// 				? screenOptions({
-	// 						navigation: props.navigation,
-	// 						route: props.route,
-	// 						theme: {} as Any,
-	// 					})
-	// 				: screenOptions;
-
-	// 		const resolvedChildConfig = screenProcessor.childOptions.get(
-	// 			props.route.name,
-	// 		);
-
-	// 		const mergedConfig = {
-	// 			...resolvedNavigatorConfig,
-	// 			...resolvedChildConfig, //Child should override navigator config
-	// 		};
-
-	// 		const transitionListeners = createConfig({
-	// 			navigation: props.navigation,
-	// 			route: props.route,
-	// 			screenStyleInterpolator: mergedConfig.screenStyleInterpolator,
-	// 			transitionSpec: mergedConfig.transitionSpec,
-	// 			gestureEnabled: mergedConfig.gestureEnabled,
-	// 			gestureDirection: mergedConfig.gestureDirection,
-	// 			gestureResponseDistance:
-	// 				typeof mergedConfig.gestureResponseDistance === "number"
-	// 					? mergedConfig.gestureResponseDistance
-	// 					: undefined,
-	// 			gestureVelocityImpact: mergedConfig.gestureVelocityImpact,
-	// 		});
-
-	// 		const existingListeners =
-	// 			typeof screenListeners === "function"
-	// 				? screenListeners(props)
-	// 				: screenListeners || {};
-
-	// 		return {
-	// 			...existingListeners,
-	// 			...transitionListeners,
-	// 		};
-	// 	};
-	// }, [screenListeners, screenOptions, screenProcessor.childOptions]);
-
-	const buildingBlocks = useMemo(
-		() => ({
-			id,
-			initialRouteName,
-			children: screenProcessor.children,
-			layout,
-			screenListeners,
-			screenOptions,
-			screenLayout,
-			UNSTABLE_router,
-		}),
-		[
-			id,
-			initialRouteName,
-			screenProcessor.children,
-			layout,
-			screenListeners,
-			screenOptions,
-			screenLayout,
-			UNSTABLE_router,
-		],
-	);
+}: AwareNativeStackNavigatorProps) {
+	const { children } = useModifyChildren(baseChildren);
 
 	const { state, describe, descriptors, navigation, NavigationContent } =
 		useNavigationBuilder<
-			StackNavigationState<ParamListBase>,
+			AwareNativeStackNavigationState,
 			StackRouterOptions,
-			StackActionHelpers<ParamListBase>,
+			AwareNativeStackActionHelpers,
 			NativeStackNavigationOptions,
-			TransitionStackNavigationEventMap
-		>(StackRouter, buildingBlocks);
+			AwareNativeStackNavigationEventMap
+		>(StackRouter, {
+			id,
+			initialRouteName,
+			children,
+			layout,
+			screenListeners,
+			screenOptions,
+			screenLayout,
+			UNSTABLE_router,
+		});
 
 	return (
 		<NavigationContent>
-			<TransitionAwareNativeStackView
+			<AwareNativeStackView
 				{...rest}
 				state={state}
 				navigation={navigation as Any}
 				descriptors={descriptors as Any}
 				describe={describe as Any}
-				screenProcessor={screenProcessor}
 			/>
 		</NavigationContent>
 	);
@@ -194,10 +72,10 @@ export function createTransitionableStackNavigator<
 		ParamList: ParamList;
 		NavigatorID: NavigatorID;
 		State: StackNavigationState<ParamList>;
-		ScreenOptions: TransitionStackNavigationOptions;
-		EventMap: TransitionStackNavigationEventMap;
+		ScreenOptions: AwareNativeStackNavigationOptions;
+		EventMap: AwareNativeStackNavigationEventMap;
 		NavigationList: {
-			[RouteName in keyof ParamList]: TransitionStackNavigationProp<
+			[RouteName in keyof ParamList]: AwareNavigationProp<
 				ParamList,
 				RouteName,
 				NavigatorID
@@ -210,12 +88,11 @@ export function createTransitionableStackNavigator<
 }
 
 export type TransitionStackNavigatorTypeBag<
-	ScreenOptions = TransitionStackNavigationOptions,
+	ScreenOptions = AwareNativeStackNavigationOptions,
 	State = StackNavigationState<ParamListBase>,
-	EventMap = TransitionStackNavigationEventMap,
+	EventMap = AwareNativeStackNavigationEventMap,
 > = {
 	ScreenOptions: ScreenOptions;
-
 	State: State;
 	EventMap: EventMap;
 };

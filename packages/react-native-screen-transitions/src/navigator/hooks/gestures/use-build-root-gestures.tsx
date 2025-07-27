@@ -20,10 +20,10 @@ import type { ScrollProgress } from "@/navigator/contexts/gesture";
 import { ConfigStore } from "@/store/config-store";
 import { GestureStore } from "@/store/gesture-store";
 import { ScreenProgressStore } from "@/store/screen-progress";
-import type { TransitionStackNavigationProp } from "@/types";
 import { animate } from "@/utils";
 import { applyGestureActivationCriteria } from "@/utils/gesture/apply-gesture-activation-criteria";
 import { mapGestureToProgress } from "@/utils/gesture/map-gesture-to-progress";
+import type { AwareNavigationProp } from "../../types";
 
 const GESTURE_VELOCITY_IMPACT = 0.3;
 const DEFAULT_GESTURE_RESPONSE_DISTANCE = 50;
@@ -33,7 +33,7 @@ const DEFAULT_GESTURE_ENABLED = false;
 interface BuildRootGesturesHookProps {
 	scrollProgress: SharedValue<ScrollProgress>;
 	currentScreenKey: string;
-	navigation: TransitionStackNavigationProp<ParamListBase, string, undefined>;
+	navigation: AwareNavigationProp<ParamListBase, string, undefined>;
 }
 
 export const useBuildRootGestures = ({

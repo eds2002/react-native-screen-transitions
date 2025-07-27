@@ -1,25 +1,6 @@
-import { type StyleProps, useAnimatedStyle } from "react-native-reanimated";
-import type { ScreenInterpolationProps } from "@/types";
+import { useAnimatedStyle } from "react-native-reanimated";
 import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
 import { _useRootScreenAnimation } from "../../navigator/hooks/animation/use-root-screen-animation";
-
-const applyProperStyles = (
-	styles: StyleProps | undefined,
-	additionalProps: ScreenInterpolationProps,
-) => {
-	"worklet";
-	/**
-	 * Flickers are only seen on incoming screens.
-	 */
-	// if (additionalProps.animating.value === 1 && additionalProps.isFocused) {
-	// 	if (!styles || Object.keys(styles).length === 0) {
-	// 		return { opacity: 0 };
-	// 	}
-	// 	return { ...styles, opacity: 1 };
-	// }
-	// return styles || { opacity: 1 };
-	return styles || { opacity: 1 };
-};
 
 export const useInterpolatorStyles = ({
 	styleId,
@@ -48,7 +29,7 @@ export const useInterpolatorStyles = ({
 
 		const styles = screenStyleInterpolator(additionalProps)[styleId];
 
-		return applyProperStyles(styles, additionalProps);
+		return styles || {};
 	});
 
 	return {
