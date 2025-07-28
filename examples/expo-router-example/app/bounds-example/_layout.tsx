@@ -29,46 +29,42 @@ export default function BoundsExampleLayout() {
 					}) => {
 						"worklet";
 
-						// Calculate consistent gesture offsets for both bounds (applied below)
+						if (!bounds.activeTag) return {};
 
 						const MAX_DRAG_MULTIPLIER = 0.9;
 
-						if (isFocused && bounds.activeTag) {
+						const modWidth = screen.width * MAX_DRAG_MULTIPLIER;
+						const modHeight = screen.height * MAX_DRAG_MULTIPLIER;
+
+						if (isFocused) {
+							const normalizedX = current.gesture.normalizedX.value;
+							const normalizedY = current.gesture.normalizedY.value;
+
 							const gestureX = interpolate(
-								current.gesture.normalizedX.value,
+								normalizedX,
 								[-1, 1],
-								[
-									-screen.width * MAX_DRAG_MULTIPLIER,
-									screen.width * MAX_DRAG_MULTIPLIER,
-								],
+								[-modWidth, modWidth],
 								"clamp",
 							);
-							console.log("Focused gesture:", gestureX);
 
 							const gestureY = interpolate(
-								current.gesture.normalizedY.value,
+								normalizedY,
 								[-1, 1],
-								[
-									-screen.height * MAX_DRAG_MULTIPLIER,
-									screen.height * MAX_DRAG_MULTIPLIER,
-								],
+								[-modHeight, modHeight],
 								"clamp",
 							);
 
-							const start = bounds.get(bounds.activeTag, "previous");
-							const end = bounds.get(bounds.activeTag, "current");
-
-							if (!start || !end) return {};
-
-							const { transform } = bounds.interpolate([0, 1], start, end);
+							const boundsStyle = bounds()
+								.start("previous")
+								.end("current")
+								.x(gestureX)
+								.y(gestureY)
+								.isEntering()
+								.build();
 
 							return {
 								[bounds.activeTag]: {
-									transform: [
-										{ translateX: gestureX },
-										{ translateY: gestureY },
-										...(transform as any),
-									],
+									transform: boundsStyle,
 									borderTopLeftRadius: interpolate(progress, [0, 1], [100, 50]),
 									borderTopRightRadius: interpolate(
 										progress,
@@ -93,63 +89,45 @@ export default function BoundsExampleLayout() {
 								},
 							};
 						}
-						if (!isFocused && next) {
-							const gestureX = interpolate(
-								next?.gesture.normalizedX.value ?? 0,
-								[-1, 1],
-								[
-									-screen.width * MAX_DRAG_MULTIPLIER,
-									screen.width * MAX_DRAG_MULTIPLIER,
-								],
-								"clamp",
-							);
 
-							const gestureY = interpolate(
-								next?.gesture.normalizedY.value ?? 0,
-								[-1, 1],
-								[
-									-screen.height * MAX_DRAG_MULTIPLIER,
-									screen.height * MAX_DRAG_MULTIPLIER,
-								],
-								"clamp",
-							);
+						const nextGestureX = next?.gesture.normalizedX.value ?? 0;
+						const nextGestureY = next?.gesture.normalizedY.value ?? 0;
 
-							if (!bounds.activeTag) return {};
+						const gestureX = interpolate(
+							nextGestureX,
+							[-1, 1],
+							[-modWidth, modWidth],
+							"clamp",
+						);
 
-							const start = bounds.get(bounds.activeTag, "current");
-							const end = bounds.get(bounds.activeTag, "next");
+						const gestureY = interpolate(
+							nextGestureY,
+							[-1, 1],
+							[-modHeight, modHeight],
+							"clamp",
+						);
 
-							if (!start || !end) return {};
+						const boundsStyle = bounds()
+							.start("current")
+							.end("next")
+							.x(gestureX)
+							.y(gestureY)
+							.isExiting()
+							.build();
 
-							const { transform } = bounds.interpolate(
-								[1, 2],
-								start,
-								end,
-								true,
-							);
-
-							const boundsStyle = {
+						return {
+							contentStyle: {
 								transform: [
-									{ translateX: gestureX },
-									{ translateY: gestureY },
-									...(transform as any),
+									{
+										scale: interpolate(progress, [1, 2], [1, 0.95]),
+									},
 								],
+							},
+							[bounds.activeTag]: {
+								transform: boundsStyle,
 								opacity: interpolate(progress, [1, 1.5], [1, 0]),
-							};
-
-							return {
-								contentStyle: {
-									transform: [
-										{
-											scale: interpolate(progress, [1, 2], [1, 0.95]),
-										},
-									],
-								},
-								[bounds.activeTag]: boundsStyle,
-							};
-						}
-
-						return {};
+							},
+						};
 					},
 					transitionSpec: {
 						open: Transition.specs.DefaultSpec,
