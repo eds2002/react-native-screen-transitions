@@ -1,12 +1,12 @@
 import type { ParamListBase } from "@react-navigation/native";
 import { Children, cloneElement, isValidElement, useMemo } from "react";
 import { DEFAULT_SCREEN_OPTIONS } from "@/navigator/constants";
-import type { TransitionStackScreenProps } from "@/types";
+import type { TransitionAwareProps } from "@/types";
 
 export const useModifyChildren = (children: React.ReactNode) => {
 	return useMemo(() => {
 		const modifiedChildren = Children.toArray(children)
-			.filter(isValidElement<TransitionStackScreenProps<ParamListBase>>)
+			.filter(isValidElement<TransitionAwareProps<ParamListBase>>)
 			.map((child) => {
 				const resolvedOptions =
 					typeof child.props.options === "function"

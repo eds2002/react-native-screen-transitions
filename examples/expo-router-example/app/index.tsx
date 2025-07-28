@@ -21,6 +21,12 @@ export default function Home() {
 					router.push("/bounds-example");
 				}}
 			/>
+			<Button
+				title="Instagram"
+				onPress={() => {
+					router.push("/instagram-example");
+				}}
+			/>
 			<TransitionScrollView
 				contentContainerStyle={{
 					paddingVertical: 100,

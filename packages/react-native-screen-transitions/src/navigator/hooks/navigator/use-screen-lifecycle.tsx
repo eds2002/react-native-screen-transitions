@@ -17,11 +17,9 @@ export const useScreenLifecycle = ({
 	navigation,
 	options,
 }: UseScreenLifecycleProps) => {
-	// Initialize the screen
+	const parentNavigatorKey = navigation.getParent()?.getState?.()?.key;
+	const navigatorKey = navigation.getState().key;
 	useEffect(() => {
-		const parentNavigatorKey = navigation.getParent()?.getState?.()?.key;
-		const navigatorKey = navigation.getState().key;
-
 		const presetConfig = options;
 
 		ConfigStore.updateConfig(route.key, {
@@ -33,7 +31,7 @@ export const useScreenLifecycle = ({
 			parentNavigatorKey,
 			...presetConfig,
 		});
-	}, [route, navigation, options]);
+	}, [route, options, parentNavigatorKey, navigatorKey]);
 
 	// Handle the screen before remove
 	useEffect(() => {

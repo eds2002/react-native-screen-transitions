@@ -1,4 +1,7 @@
-import { interpolate as reInterpolate } from "react-native-reanimated";
+import {
+	interpolate as reInterpolate,
+	type StyleProps,
+} from "react-native-reanimated";
 import type {
 	BaseScreenInterpolationProps,
 	ScreenInterpolationProps,
@@ -30,6 +33,8 @@ export const additionalInterpolationProps = (
 		let endScreen: "previous" | "current" | "next" | null = null;
 		let gestureX = 0;
 		let gestureY = 0;
+		let startOpacity = 0;
+		let endOpacity = 0;
 		let isReverse = false;
 
 		const builder = {
@@ -63,9 +68,16 @@ export const additionalInterpolationProps = (
 				gestureY = value;
 				return builder;
 			},
+			opacity: ([start, end]: [number, number]) => {
+				"worklet";
+				startOpacity = start;
+				endOpacity = end;
+				return builder;
+			},
 			build: () => {
 				"worklet";
-				if (!startScreen || !endScreen || !activeTag) return [];
+				if (!startScreen || !endScreen || !activeTag)
+					return {} satisfies StyleProps;
 
 				// Get bounds directly without helpers
 				const start =
@@ -82,7 +94,7 @@ export const additionalInterpolationProps = (
 							? props.current?.bounds?.all?.[activeTag]?.value
 							: props.next?.bounds?.all?.[activeTag]?.value;
 
-				if (!start || !end) return [];
+				if (!start || !end) return {} satisfies StyleProps;
 
 				// Calculate delta directly
 				const dx = start.pageX - end.pageX + (start.width - end.width) / 2;
@@ -92,23 +104,37 @@ export const additionalInterpolationProps = (
 
 				// Build transform based on direction
 				if (isReverse) {
-					return [
-						{ translateX: gestureX },
-						{ translateY: gestureY },
-						{ translateX: reInterpolate(progress, [1, 2], [0, -dx]) },
-						{ translateY: reInterpolate(progress, [1, 2], [0, -dy]) },
-						{ scaleX: reInterpolate(progress, [1, 2], [1, 1 / scaleX]) },
-						{ scaleY: reInterpolate(progress, [1, 2], [1, 1 / scaleY]) },
-					];
+					return {
+						transform: [
+							{ translateX: gestureX },
+							{ translateY: gestureY },
+							{ translateX: reInterpolate(progress, [1, 2], [0, -dx]) },
+							{ translateY: reInterpolate(progress, [1, 2], [0, -dy]) },
+							{ scaleX: reInterpolate(progress, [1, 2], [1, 1 / scaleX]) },
+							{ scaleY: reInterpolate(progress, [1, 2], [1, 1 / scaleY]) },
+						],
+						opacity: reInterpolate(
+							progress,
+							[1, 2],
+							[startOpacity, endOpacity],
+						),
+					} satisfies StyleProps;
 				} else {
-					return [
-						{ translateX: gestureX },
-						{ translateY: gestureY },
-						{ translateX: reInterpolate(progress, [0, 1], [dx, 0]) },
-						{ translateY: reInterpolate(progress, [0, 1], [dy, 0]) },
-						{ scaleX: reInterpolate(progress, [0, 1], [scaleX, 1]) },
-						{ scaleY: reInterpolate(progress, [0, 1], [scaleY, 1]) },
-					];
+					return {
+						transform: [
+							{ translateX: gestureX },
+							{ translateY: gestureY },
+							{ translateX: reInterpolate(progress, [0, 1], [dx, 0]) },
+							{ translateY: reInterpolate(progress, [0, 1], [dy, 0]) },
+							{ scaleX: reInterpolate(progress, [0, 1], [scaleX, 1]) },
+							{ scaleY: reInterpolate(progress, [0, 1], [scaleY, 1]) },
+						],
+						opacity: reInterpolate(
+							progress,
+							[0, 1],
+							[startOpacity, endOpacity],
+						),
+					} satisfies StyleProps;
 				}
 			},
 		};

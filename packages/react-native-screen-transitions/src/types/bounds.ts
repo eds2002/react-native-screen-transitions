@@ -21,5 +21,6 @@ export type BoundsBuilder = {
 	isExiting: () => BoundsBuilder;
 	x: (value: number) => BoundsBuilder;
 	y: (value: number) => BoundsBuilder;
-	build: () => StyleProps["transform"];
+	opacity: ([start, end]: [number, number]) => BoundsBuilder;
+	build: () => StyleProps;
 };

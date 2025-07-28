@@ -3,7 +3,7 @@ import Transition from "react-native-screen-transitions";
 
 export default function AGroupLayout() {
 	return (
-		<Transition.View style={{ borderRadius: 36, overflow: "hidden" }}>
+		<Transition.View style={{ borderRadius: 36, overflow: "hidden", flex: 1 }}>
 			<Stack screenOptions={{ headerShown: false }}>
 				<Stack.Screen name="a" />
 				<Stack.Screen name="b" />

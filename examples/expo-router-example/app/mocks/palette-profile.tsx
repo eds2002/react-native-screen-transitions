@@ -38,7 +38,7 @@ export default function PaletteProfile() {
 	].reverse();
 
 	return (
-		<Transition.View style={styles.container}>
+		<View style={styles.container}>
 			<Header />
 			<Transition.ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
 				{/* Header */}
@@ -75,7 +75,7 @@ export default function PaletteProfile() {
 					)}
 				/>
 			</Transition.ScrollView>
-		</Transition.View>
+		</View>
 	);
 }
 
