@@ -49,4 +49,4 @@ export type { TransitionStackNavigatorTypeBag, TransitionStackNavigationOptions 
 /**
  * Configuration type for screen transitions. Use this to build custom presets.
  */
-export type { TransitionConfig } from "./types";
+export type { TransitionConfig, ScreenInterpolationProps } from "./types";
