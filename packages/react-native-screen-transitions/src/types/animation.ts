@@ -31,7 +31,10 @@ export interface BaseScreenInterpolationProps {
 	/** Layout measurements for the screen. */
 	layouts: {
 		/** The `width` and `height` of the screen container. */
-		screen: ScaledSize;
+		screen: {
+			width: number;
+			height: number;
+		};
 	};
 	/** The safe area insets for the screen. */
 	insets: EdgeInsets;

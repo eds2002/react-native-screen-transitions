@@ -6,7 +6,7 @@
 		"orientation": "portrait",
 		"scheme": "exporouterexample",
 		"userInterfaceStyle": "light",
-		"newArchEnabled": false,
+		"newArchEnabled": true,
 		"splash": {
 			"resizeMode": "contain",
 			"backgroundColor": "#ffffff"

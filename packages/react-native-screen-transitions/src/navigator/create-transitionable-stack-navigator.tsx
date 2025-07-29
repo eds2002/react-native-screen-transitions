@@ -10,7 +10,7 @@ import {
 } from "@react-navigation/native";
 import type { NativeStackNavigationOptions } from "@react-navigation/native-stack";
 import type { Any } from "@/types";
-import { AwareNativeStackView } from "./components/aware-native-stack-view";
+import { AwareNativeStackView } from "./components/aware-native-stack-view.native";
 import { useModifyChildren } from "./hooks/use-modify-children";
 import type {
 	AwareNativeStackActionHelpers,

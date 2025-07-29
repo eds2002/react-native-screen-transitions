@@ -1,36 +1,31 @@
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { useScreenKeys } from "@/navigator/contexts/screen-keys";
+import { _useRootScreenAnimation } from "@/navigator/hooks/animation/use-root-screen-animation";
 import { BoundStore } from "@/store/bound-store";
-import type { _BaseScreenInterpolationProps } from "@/types";
 import { ScreenInterpolatorState } from "@/types/state";
 import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
 
-export const SharedBoundsFlickerPrevention = ({
+export const FlickerPrevention = ({
 	children,
-	screenInterpolatorState,
-	baseInterpolationProps,
-	sharedBoundTag,
-	screenKey,
+	id,
 }: {
 	children: React.ReactNode;
-	screenInterpolatorState: ScreenInterpolatorState;
-	baseInterpolationProps: Omit<
-		_BaseScreenInterpolationProps,
-		"screenStyleInterpolator" | "screenInterpolatorState"
-	>;
-	sharedBoundTag: string;
-	screenKey: string;
+	id: string;
 }) => {
-	const isMeasured = BoundStore.hasBounds(screenKey, sharedBoundTag);
+	const { screenInterpolatorState, ...screenInterpolationProps } =
+		_useRootScreenAnimation();
+	const { currentScreenKey } = useScreenKeys();
+
+	const isMeasured = BoundStore.hasBounds(currentScreenKey, id);
 	const preventionStyle = useAnimatedStyle(() => {
 		"worklet";
 
-		// Apply logic only for shared bounds
-		if (!sharedBoundTag) {
+		if (!id) {
 			return { opacity: 1 };
 		}
 
 		const interpolationProps = additionalInterpolationProps(
-			baseInterpolationProps,
+			screenInterpolationProps,
 		);
 
 		// Already focused screens don't need flicker prevention
@@ -38,8 +33,8 @@ export const SharedBoundsFlickerPrevention = ({
 			return { opacity: 1 };
 		}
 
-		if (screenInterpolatorState === ScreenInterpolatorState.UNDETERMINED) {
-			return { opacity: 0 };
+		if (screenInterpolatorState === ScreenInterpolatorState.UNDEFINED) {
+			return { opacity: 1 };
 		}
 
 		// Safety net: Skip 1 frame if DEFINED, animating, progress 0, or not measured

@@ -59,12 +59,13 @@ export default function BoundsExampleLayout() {
 								.end("current")
 								.x(gestureX)
 								.y(gestureY)
+								.opacity([1, 1])
 								.isEntering()
 								.build();
 
 							return {
 								[bounds.activeTag]: {
-									transform: boundsStyle,
+									...boundsStyle,
 									borderTopLeftRadius: interpolate(progress, [0, 1], [100, 50]),
 									borderTopRightRadius: interpolate(
 										progress,
@@ -124,7 +125,7 @@ export default function BoundsExampleLayout() {
 								],
 							},
 							[bounds.activeTag]: {
-								transform: boundsStyle,
+								...boundsStyle,
 								opacity: interpolate(progress, [1, 1.5], [1, 0]),
 							},
 						};

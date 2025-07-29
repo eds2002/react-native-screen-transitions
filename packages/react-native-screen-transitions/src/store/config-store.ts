@@ -124,14 +124,18 @@ export const ConfigStore = {
 useConfigStore.subscribeWithSelector(
 	(state) => state.screens,
 	(currScreens, prevScreens) => {
-		const currKeys = Object.keys(currScreens);
-		const prevKeys = Object.keys(prevScreens);
+		const currKeys = new Set(Object.keys(currScreens));
+		const prevKeys = new Set(Object.keys(prevScreens));
 
-		const incomingKeys = currKeys.filter((k) => !prevKeys.includes(k));
-		const removedKeys = prevKeys.filter((k) => !currKeys.includes(k));
-		const changedKeys = currKeys.filter(
-			(k) => currScreens[k] !== prevScreens[k],
-		);
+		const incomingKeys = Array.from(currKeys).filter((k) => !prevKeys.has(k));
+		const removedKeys = Array.from(prevKeys).filter((k) => !currKeys.has(k));
+
+		const changedKeys: string[] = [];
+		for (const key of currKeys) {
+			if (currScreens[key] !== prevScreens[key]) {
+				changedKeys.push(key);
+			}
+		}
 
 		for (const incomingKey of incomingKeys) {
 			ScreenProgressStore.initAllForScreen(incomingKey);

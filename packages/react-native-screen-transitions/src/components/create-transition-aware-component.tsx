@@ -2,19 +2,14 @@ import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-	useAnimatedRef,
-	useAnimatedStyle,
-} from "react-native-reanimated";
+import Animated, { useAnimatedRef } from "react-native-reanimated";
+import { useAssociatedStyles } from "@/hooks/animations/use-associated-styles";
 import { useBoundsMeasurement } from "@/hooks/bounds/use-bounds-measurement";
 import { useScrollProgress } from "@/hooks/gestures/use-scroll-progress";
 import { useGestureContext } from "@/navigator/contexts/gesture";
 import { useScreenKeys } from "@/navigator/contexts/screen-keys";
-import { _useRootScreenAnimation } from "@/navigator/hooks/animation/use-root-screen-animation";
 import type { Any, TransitionAwareProps } from "@/types";
-import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
-
-import { SharedBoundsFlickerPrevention } from "./shared-bounds-flicker-prevention";
+import { FlickerPrevention } from "./flicker-prevention";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -69,28 +64,8 @@ export function createTransitionAwareComponent<P extends object>(
 			onPress,
 		});
 
-		const {
-			screenStyleInterpolator,
-			screenInterpolatorState,
-			...screenInterpolationProps
-		} = _useRootScreenAnimation();
-
-		const styleIdStyle = useAnimatedStyle(() => {
-			"worklet";
-
-			const id = sharedBoundTag || styleId;
-
-			if (!id) {
-				return {};
-			}
-
-			const additionalProps = additionalInterpolationProps(
-				screenInterpolationProps,
-			);
-
-			const styles = screenStyleInterpolator(additionalProps)[id];
-
-			return styles || {};
+		const { associatedStyles } = useAssociatedStyles({
+			id: sharedBoundTag || styleId,
 		});
 
 		if (isScrollable) {
@@ -98,21 +73,16 @@ export function createTransitionAwareComponent<P extends object>(
 		}
 
 		return (
-			<SharedBoundsFlickerPrevention
-				screenInterpolatorState={screenInterpolatorState}
-				baseInterpolationProps={screenInterpolationProps}
-				sharedBoundTag={sharedBoundTag}
-				screenKey={currentScreenKey}
-			>
+			<FlickerPrevention id={sharedBoundTag || styleId}>
 				<AnimatedComponent
 					{...rest}
 					ref={animatedRef}
-					style={[styleIdStyle, style]}
+					style={[associatedStyles, style]}
 					onPress={interceptedOnPress}
 				>
 					{children}
 				</AnimatedComponent>
-			</SharedBoundsFlickerPrevention>
+			</FlickerPrevention>
 		);
 	});
 

@@ -5,9 +5,9 @@ export default function One() {
 	return (
 		<View
 			style={{
-				backgroundColor: "#fafaf9",
 				alignItems: "center",
 				justifyContent: "center",
+				backgroundColor: "red",
 				flex: 1,
 			}}
 		>

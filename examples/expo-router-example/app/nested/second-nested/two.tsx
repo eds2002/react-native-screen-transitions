@@ -1,17 +1,16 @@
 import { router } from "expo-router";
-import { Button } from "react-native";
-import Transition from "react-native-screen-transitions";
+import { Button, View } from "react-native";
 
 export default function Two() {
 	return (
-		<Transition.View
+		<View
 			style={{
-				backgroundColor: "#e5e5e5",
 				alignItems: "center",
 				justifyContent: "center",
+				flex: 1,
 			}}
 		>
 			<Button title="Go back" onPress={router.back} />
-		</Transition.View>
+		</View>
 	);
 }

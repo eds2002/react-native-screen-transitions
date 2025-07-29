@@ -1,6 +1,6 @@
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { Pressable, StyleSheet } from "react-native";
 import Animated, {
 	Easing,
 	useAnimatedStyle,
@@ -10,9 +10,7 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Transition, {
-	useScreenAnimation,
-} from "react-native-screen-transitions";
+import { useScreenAnimation } from "react-native-screen-transitions";
 
 const links = [
 	"Home",
@@ -84,7 +82,7 @@ export default function FullscreenNav() {
 	const { top } = useSafeAreaInsets();
 	const router = useRouter();
 	return (
-		<Transition.Pressable
+		<Pressable
 			style={{ flex: 1, padding: 24, gap: 24, paddingTop: top + 48 }}
 			onPress={router.back}
 		>
@@ -93,7 +91,7 @@ export default function FullscreenNav() {
 					{link}
 				</Link>
 			))}
-		</Transition.Pressable>
+		</Pressable>
 	);
 }
 
