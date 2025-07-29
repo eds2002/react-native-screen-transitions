@@ -1,23 +1,16 @@
 import { useCallback, useEffect, useRef } from "react";
+import type { Any } from "@/types";
 
-// A callback that always closes over the latest data but keeps the same
-// identity and will not be called after component unmounts
+export default function useStableCallback<
+	C extends (...args: Array<Any>) => Any,
+>(callback: C) {
+	const callbackRef = useRef(callback);
 
-const useStableCallback = <T extends (...args: Parameters<T>) => ReturnType<T>>(
-	callback: T,
-) => {
-	const callbackRef = useRef<T>(null);
-	const memoCallback = useCallback(
-		(...args: Parameters<T>) => callbackRef?.current?.(...args),
-		[],
-	);
 	useEffect(() => {
 		callbackRef.current = callback;
-		return () => {
-			callbackRef.current = null;
-		};
-	});
-	return memoCallback;
-};
+	}, [callback]);
 
-export default useStableCallback;
+	return useCallback((...args: Parameters<C>) => {
+		return callbackRef.current(...args);
+	}, []);
+}
