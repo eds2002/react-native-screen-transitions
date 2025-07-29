@@ -1,2 +1,6 @@
 1) Bug in disappearing screens on programattic back nav
 2) Globally called bound setting could be leading to state changes. Measuring bounds seems like its really not causing much issues. Its the JS store thats causing these issues......
+
+
+Jul 29:
+Start working on new implementation where our animations fully utilize the UI thread. This makes our life easier in the future, the only one that should be in the js still is the interpolator logic but thats not a big deal. Today we seperated concerns by interpolatorProps and interpolator, making it easier to start converting our vanilla stores to worklet stores instead. : ). I figured since all animations are ran in the ui thread, why isnt the logic as well.

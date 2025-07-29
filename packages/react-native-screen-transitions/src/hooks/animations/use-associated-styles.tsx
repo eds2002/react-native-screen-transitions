@@ -8,8 +8,7 @@ import { additionalInterpolationProps } from "@/utils/animation/additional-inter
  * It is used to get the associated styles for a given styleId.
  */
 export const useAssociatedStyles = ({ id }: { id?: string } = {}) => {
-	const { screenStyleInterpolator, ...screenInterpolationProps } =
-		_useRootScreenAnimation();
+	const { interpolator, interpolatorProps } = _useRootScreenAnimation();
 
 	const associatedStyles = useAnimatedStyle(() => {
 		"worklet";
@@ -18,13 +17,11 @@ export const useAssociatedStyles = ({ id }: { id?: string } = {}) => {
 			return {};
 		}
 
-		const additionalProps = additionalInterpolationProps(
-			screenInterpolationProps,
-		);
+		const props = additionalInterpolationProps(interpolatorProps);
 
-		const styles = screenStyleInterpolator(additionalProps)[id];
+		const styles = interpolator.screenStyleInterpolator(props)[id] || {};
 
-		return styles || {};
+		return styles;
 	});
 
 	return { associatedStyles };

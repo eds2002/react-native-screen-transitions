@@ -1,24 +1,22 @@
 import { memo } from "react";
 import { StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { FlickerGuard } from "@/components/flicker-prevention";
 import { ScreenAnimationContext } from "@/navigator/contexts/screen-animation";
 import { _useRootScreenAnimation } from "@/navigator/hooks/animation/use-root-screen-animation";
 import { RootGestureHandlerProvider } from "@/navigator/providers/root-gesture-handler-provider";
 import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
 import type { AwareContentProps } from "../types";
-import { RootFlickerPrevention } from "./root-flicker-prevention";
 
 export const AwareRootView = memo(
 	({ children, style, navigation }: AwareContentProps) => {
-		const { screenStyleInterpolator, screenInterpolatorState, ...rest } =
-			_useRootScreenAnimation();
+		const { interpolator, interpolatorProps } = _useRootScreenAnimation();
 
 		const contentStyle = useAnimatedStyle(() => {
 			"worklet";
 
-			const interpolationProps = additionalInterpolationProps(rest);
-
-			const styles = screenStyleInterpolator(interpolationProps);
+			const props = additionalInterpolationProps(interpolatorProps);
+			const styles = interpolator.screenStyleInterpolator(props);
 
 			return styles.contentStyle || {};
 		});
@@ -26,19 +24,18 @@ export const AwareRootView = memo(
 		const overlayStyle = useAnimatedStyle(() => {
 			"worklet";
 
-			const interpolationProps = additionalInterpolationProps(rest);
-
-			const styles = screenStyleInterpolator(interpolationProps);
+			const props = additionalInterpolationProps(interpolatorProps);
+			const styles = interpolator.screenStyleInterpolator(props);
 
 			return styles.overlayStyle || {};
 		});
 
 		return (
 			<RootGestureHandlerProvider navigation={navigation}>
-				<ScreenAnimationContext.Provider value={rest}>
-					<RootFlickerPrevention
-						screenInterpolatorState={screenInterpolatorState}
-						baseInterpolationProps={rest}
+				<ScreenAnimationContext.Provider value={interpolatorProps}>
+					<FlickerGuard.Root
+						screenInterpolatorState={interpolator.screenInterpolatorState}
+						interpolatorProps={interpolatorProps}
 					>
 						<Animated.View
 							style={[StyleSheet.absoluteFillObject, overlayStyle]}
@@ -47,7 +44,7 @@ export const AwareRootView = memo(
 						<Animated.View style={[{ flex: 1 }, style, contentStyle]}>
 							{children}
 						</Animated.View>
-					</RootFlickerPrevention>
+					</FlickerGuard.Root>
 				</ScreenAnimationContext.Provider>
 			</RootGestureHandlerProvider>
 		);
