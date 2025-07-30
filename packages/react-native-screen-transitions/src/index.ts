@@ -27,7 +27,7 @@ export default {
 	createTransitionableStackNavigator,
 };
 
-export { useScreenAnimation } from "./navigator/contexts/screen-animation";
+export { useScreenAnimation } from "@/navigator/hooks/animation/use-screen-animation";
 
 // Navigator type
 export type { TransitionStackNavigatorTypeBag } from "./navigator/create-transitionable-stack-navigator";

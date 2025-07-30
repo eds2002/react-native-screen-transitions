@@ -9,7 +9,7 @@ import { useScrollProgress } from "@/hooks/gestures/use-scroll-progress";
 import { useGestureContext } from "@/navigator/contexts/gesture";
 import { useScreenKeys } from "@/navigator/contexts/screen-keys";
 import type { Any, TransitionAwareProps } from "@/types";
-import { FlickerGuard } from "./flicker-prevention";
+import { Flicker } from "./flicker";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -73,7 +73,7 @@ export function createTransitionAwareComponent<P extends object>(
 		}
 
 		return (
-			<FlickerGuard.Screen id={sharedBoundTag || styleId}>
+			<Flicker.Screen id={sharedBoundTag || styleId}>
 				<AnimatedComponent
 					{...rest}
 					ref={animatedRef}
@@ -82,7 +82,7 @@ export function createTransitionAwareComponent<P extends object>(
 				>
 					{children}
 				</AnimatedComponent>
-			</FlickerGuard.Screen>
+			</Flicker.Screen>
 		);
 	});
 

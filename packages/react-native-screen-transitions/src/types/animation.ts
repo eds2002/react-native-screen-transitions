@@ -1,6 +1,4 @@
-import type { ScaledSize } from "react-native";
 import type {
-	DerivedValue,
 	SharedValue,
 	StyleProps,
 	WithSpringConfig,
@@ -47,12 +45,10 @@ export interface BaseScreenInterpolationProps {
 	animating: SharedValue<number>;
 }
 
-export interface _BaseScreenInterpolationProps {
-	interpolatorProps: BaseScreenInterpolationProps;
-	interpolator: {
-		screenStyleInterpolator: ScreenStyleInterpolator;
-		screenInterpolatorState: ScreenInterpolatorState;
-	};
+export interface _BaseScreenInterpolationProps
+	extends BaseScreenInterpolationProps {
+	screenStyleInterpolator: ScreenStyleInterpolator;
+	screenInterpolatorState: ScreenInterpolatorState;
 }
 
 /**

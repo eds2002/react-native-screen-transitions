@@ -9,14 +9,12 @@ import { ScreenProgressStore } from "@/store/screen-progress";
 import type {
 	_BaseScreenInterpolationProps,
 	BaseScreenInterpolationProps,
-	ScreenInterpolationProps,
 	ScreenProgress,
 } from "@/types/animation";
 import { ScreenInterpolatorState } from "@/types/state";
-import { additionalInterpolationProps } from "@/utils/animation/additional-interpolation-props";
 import { noopinterpolator } from "@/utils/animation/noop-interpolator";
 
-const useRootAnimationBuilder = () => {
+const useAnimationBuilder = () => {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 	const { currentScreenKey, previousScreenKey, nextScreenKey } =
@@ -53,42 +51,15 @@ const useRootAnimationBuilder = () => {
 				},
 			} satisfies ScreenProgress;
 		},
-		[activeTag, allBounds],
+		[allBounds, activeTag],
 	);
 
-	const interpolatorProps = useMemo(() => {
-		const previous = previousScreen
-			? getAnimationValuesForScreen(previousScreen.id)
-			: undefined;
+	return useMemo(() => {
 		const current = getAnimationValuesForScreen(currentScreenKey);
 		const next = actualNextScreen
 			? getAnimationValuesForScreen(actualNextScreen.id)
 			: undefined;
 
-		const base = {
-			previous,
-			current,
-			next,
-			layouts: { screen: dimensions },
-			insets,
-			closing: currentScreen?.closing || false,
-			animating: ScreenProgressStore.getAnimatingStatus(currentScreenKey),
-		} satisfies BaseScreenInterpolationProps;
-
-		return additionalInterpolationProps(
-			base,
-		) satisfies ScreenInterpolationProps;
-	}, [
-		actualNextScreen,
-		currentScreen,
-		currentScreenKey,
-		dimensions,
-		getAnimationValuesForScreen,
-		insets,
-		previousScreen,
-	]);
-
-	const interpolator = useMemo(() => {
 		const configsLoaded = !!actualNextScreen || !!currentScreen;
 		let interpolatorStatus: ScreenInterpolatorState =
 			ScreenInterpolatorState.UNDETERMINED;
@@ -104,22 +75,55 @@ const useRootAnimationBuilder = () => {
 		}
 
 		return {
+			previous: previousScreen
+				? getAnimationValuesForScreen(previousScreen.id)
+				: undefined,
+			current,
+			next,
+			layouts: { screen: dimensions },
+			insets,
+			closing: currentScreen?.closing || false,
+			animating: ScreenProgressStore.getAnimatingStatus(currentScreenKey),
 			screenInterpolatorState: interpolatorStatus,
 			screenStyleInterpolator:
 				actualNextScreen?.screenStyleInterpolator ||
 				currentScreen?.screenStyleInterpolator ||
 				noopinterpolator,
-		} satisfies _BaseScreenInterpolationProps["interpolator"];
-	}, [actualNextScreen, currentScreen]);
-
-	return {
-		interpolatorProps,
-		interpolator,
-	} satisfies _BaseScreenInterpolationProps;
+		} satisfies _BaseScreenInterpolationProps;
+	}, [
+		currentScreenKey,
+		currentScreen,
+		actualNextScreen,
+		dimensions,
+		insets,
+		getAnimationValuesForScreen,
+		previousScreen,
+	]);
 };
 
-const _useRootScreenAnimation = (): _BaseScreenInterpolationProps => {
-	return useRootAnimationBuilder();
+const _useScreenAnimation = (): _BaseScreenInterpolationProps => {
+	return useAnimationBuilder();
 };
 
-export { _useRootScreenAnimation };
+const useScreenAnimation = (): BaseScreenInterpolationProps => {
+	const { previous, current, next, layouts, insets, closing, animating } =
+		useAnimationBuilder();
+
+	const animationProps: BaseScreenInterpolationProps = {
+		previous,
+		current,
+		next,
+		layouts,
+		insets,
+		closing,
+		animating,
+	};
+
+	/**
+	 * @note
+	 * Using additionalInterpolationProps using .value on the js thread, giving us a reanimated warning. We should aim to improve this in the future, but to be fair, i dont think if you're defining animations at the screen level you would need the utils.
+	 */
+	return animationProps;
+};
+
+export { _useScreenAnimation, useScreenAnimation };

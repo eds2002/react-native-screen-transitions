@@ -21,7 +21,6 @@ export const useModifyChildren = (children: React.ReactNode) => {
 
 				return cloneElement(child, {
 					...child.props,
-
 					options: {
 						...(skipDefaultScreenOptions ? {} : DEFAULT_SCREEN_OPTIONS),
 						...resolvedOptions,
