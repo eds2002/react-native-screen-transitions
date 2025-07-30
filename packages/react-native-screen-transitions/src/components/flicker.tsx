@@ -1,7 +1,7 @@
 import Animated from "react-native-reanimated";
+import { _useScreenAnimation } from "@/navigator/components/providers/screen-animation-provider";
 import { useScreenKeys } from "@/navigator/contexts/screen-keys";
 import { _useAnimatedStyle } from "@/navigator/hooks/animation/use-animated-style";
-import { _useScreenAnimation } from "@/navigator/hooks/animation/use-screen-animation";
 import { BoundStore } from "@/store/bound-store";
 import { ScreenInterpolatorState } from "@/types/state";
 

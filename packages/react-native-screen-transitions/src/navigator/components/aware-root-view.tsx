@@ -2,10 +2,11 @@ import { memo } from "react";
 import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
 import { Flicker } from "@/components/flicker";
-import { _useScreenAnimation } from "@/navigator/hooks/animation/use-screen-animation";
+
 import { RootGestureHandlerProvider } from "@/navigator/providers/root-gesture-handler-provider";
 import { _useAnimatedStyle } from "../hooks/animation/use-animated-style";
 import type { AwareContentProps } from "../types";
+import { _useScreenAnimation } from "./providers/screen-animation-provider";
 
 export const AwareRootView = memo(
 	({ children, style, navigation }: AwareContentProps) => {

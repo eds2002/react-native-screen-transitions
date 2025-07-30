@@ -1,6 +1,15 @@
-import { useCallback, useMemo } from "react";
+import React, {
+	memo,
+	type PropsWithChildren,
+	useCallback,
+	useMemo,
+} from "react";
 import { useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+	ScreenAnimationContext,
+	useScreenAnimationContext,
+} from "@/navigator/contexts/screen-animation-context";
 import { useScreenKeys } from "@/navigator/contexts/screen-keys";
 import { BoundStore } from "@/store/bound-store";
 import { ConfigStore } from "@/store/config-store";
@@ -14,7 +23,7 @@ import type {
 import { ScreenInterpolatorState } from "@/types/state";
 import { noopinterpolator } from "@/utils/animation/noop-interpolator";
 
-const useAnimationBuilder = () => {
+const useAnimationBuilder = (): _BaseScreenInterpolationProps => {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 	const { currentScreenKey, previousScreenKey, nextScreenKey } =
@@ -101,13 +110,31 @@ const useAnimationBuilder = () => {
 	]);
 };
 
+const ScreenAnimationProvider: React.FC<PropsWithChildren> = memo(
+	({ children }) => {
+		const animationValues = useAnimationBuilder();
+
+		return (
+			<ScreenAnimationContext.Provider value={animationValues}>
+				{children}
+			</ScreenAnimationContext.Provider>
+		);
+	},
+);
+
+/**
+ * Hook to get the full screen animation properties (internal)
+ */
 const _useScreenAnimation = (): _BaseScreenInterpolationProps => {
-	return useAnimationBuilder();
+	return useScreenAnimationContext();
 };
 
+/**
+ * Hook to get the public screen animation properties (public)
+ */
 const useScreenAnimation = (): BaseScreenInterpolationProps => {
 	const { previous, current, next, layouts, insets, closing, animating } =
-		useAnimationBuilder();
+		useScreenAnimationContext();
 
 	const animationProps: BaseScreenInterpolationProps = {
 		previous,
@@ -126,4 +153,4 @@ const useScreenAnimation = (): BaseScreenInterpolationProps => {
 	return animationProps;
 };
 
-export { _useScreenAnimation, useScreenAnimation };
+export { ScreenAnimationProvider, _useScreenAnimation, useScreenAnimation };

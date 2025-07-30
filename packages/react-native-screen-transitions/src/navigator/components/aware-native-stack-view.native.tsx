@@ -47,6 +47,7 @@ import { AnimatedHeaderHeightContext } from "../utils/useAnimatedHeaderHeight";
 import { useDismissedRouteError } from "../utils/useDismissedRouteError";
 import { useInvalidPreventRemoveError } from "../utils/useInvalidPreventRemoveError";
 import { AwareRootView } from "./aware-root-view";
+import { ScreenAnimationProvider } from "./providers/screen-animation-provider";
 import { useHeaderConfigProps } from "./use-header-config-props";
 
 const ANDROID_DEFAULT_HEADER_HEIGHT = 56;
@@ -433,63 +434,65 @@ const SceneView = memo(
 								nextScreenKey: nextDescriptor?.route.key,
 							}}
 						>
-							<AwareRootView navigation={navigation} style={contentStyle}>
-								<AnimatedHeaderHeightContext.Provider
-									value={animatedHeaderHeight}
-								>
-									<HeaderHeightContext.Provider
-										value={
-											headerShown !== false
-												? headerHeight
-												: (parentHeaderHeight ?? 0)
-										}
+							<ScreenAnimationProvider>
+								<AwareRootView navigation={navigation} style={contentStyle}>
+									<AnimatedHeaderHeightContext.Provider
+										value={animatedHeaderHeight}
 									>
-										{headerBackground != null ? (
-											/**
-											 * To show a custom header background, we render it at the top of the screen below the header
-											 * The header also needs to be positioned absolutely (with `translucent` style)
-											 */
-											<View
-												style={[
-													styles.background,
-													headerTransparent ? styles.translucent : null,
-													{ height: headerHeight },
-												]}
-											>
-												{headerBackground()}
-											</View>
-										) : null}
-										{header != null && headerShown !== false ? (
-											<View
-												onLayout={(e) => {
-													const headerHeight = e.nativeEvent.layout.height;
-
-													setHeaderHeight(headerHeight);
-													rawAnimatedHeaderHeight.setValue(headerHeight);
-												}}
-												style={[
-													styles.header,
-													headerTransparent ? styles.absolute : null,
-												]}
-											>
-												{header({
-													back: headerBack,
-													options: options as any,
-													route,
-													navigation: navigation as any,
-												})}
-											</View>
-										) : null}
-										<HeaderShownContext.Provider
-											value={isParentHeaderShown || headerShown !== false}
+										<HeaderHeightContext.Provider
+											value={
+												headerShown !== false
+													? headerHeight
+													: (parentHeaderHeight ?? 0)
+											}
 										>
-											<HeaderBackContext.Provider value={headerBack}>
-												{render()}
-											</HeaderBackContext.Provider>
-										</HeaderShownContext.Provider>
-									</HeaderHeightContext.Provider>
-								</AnimatedHeaderHeightContext.Provider>
-							</AwareRootView>
+											{headerBackground != null ? (
+												/**
+												 * To show a custom header background, we render it at the top of the screen below the header
+												 * The header also needs to be positioned absolutely (with `translucent` style)
+												 */
+												<View
+													style={[
+														styles.background,
+														headerTransparent ? styles.translucent : null,
+														{ height: headerHeight },
+													]}
+												>
+													{headerBackground()}
+												</View>
+											) : null}
+											{header != null && headerShown !== false ? (
+												<View
+													onLayout={(e) => {
+														const headerHeight = e.nativeEvent.layout.height;
+
+														setHeaderHeight(headerHeight);
+														rawAnimatedHeaderHeight.setValue(headerHeight);
+													}}
+													style={[
+														styles.header,
+														headerTransparent ? styles.absolute : null,
+													]}
+												>
+													{header({
+														back: headerBack,
+														options: options as any,
+														route,
+														navigation: navigation as any,
+													})}
+												</View>
+											) : null}
+											<HeaderShownContext.Provider
+												value={isParentHeaderShown || headerShown !== false}
+											>
+												<HeaderBackContext.Provider value={headerBack}>
+													{render()}
+												</HeaderBackContext.Provider>
+											</HeaderShownContext.Provider>
+										</HeaderHeightContext.Provider>
+									</AnimatedHeaderHeightContext.Provider>
+								</AwareRootView>
+							</ScreenAnimationProvider>
 						</ScreenKeysContext.Provider>
 					</ScreenStackItem>
 				</NavigationRouteContext.Provider>

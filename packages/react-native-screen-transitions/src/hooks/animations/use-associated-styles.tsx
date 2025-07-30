@@ -1,5 +1,5 @@
+import { _useScreenAnimation } from "@/navigator/components/providers/screen-animation-provider";
 import { _useAnimatedStyle } from "@/navigator/hooks/animation/use-animated-style";
-import { _useScreenAnimation } from "@/navigator/hooks/animation/use-screen-animation";
 
 /**
  * This hook is used to get the associated styles for a given styleId.
