@@ -1,14 +1,20 @@
 import "react-native-reanimated";
+import type {
+	ParamListBase,
+	StackNavigationState,
+} from "@react-navigation/native";
 import { withLayoutContext } from "expo-router";
-import Transition, {
-	type TransitionStackNavigatorTypeBag,
+import {
+	createNativeStackNavigator,
+	type NativeStackNavigationEventMap,
+	type NativeStackNavigationOptions,
 } from "react-native-screen-transitions";
 
-const TransitionableStack = Transition.createTransitionableStackNavigator();
+const { Navigator } = createNativeStackNavigator();
 
 export const Stack = withLayoutContext<
-	TransitionStackNavigatorTypeBag["ScreenOptions"],
-	typeof TransitionableStack.Navigator,
-	TransitionStackNavigatorTypeBag["State"],
-	TransitionStackNavigatorTypeBag["EventMap"]
->(TransitionableStack.Navigator);
+	NativeStackNavigationOptions,
+	typeof Navigator,
+	StackNavigationState<ParamListBase>,
+	NativeStackNavigationEventMap
+>(Navigator);

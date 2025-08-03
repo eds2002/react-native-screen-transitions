@@ -1,18 +1,4 @@
-import type {
-	MeasuredDimensions,
-	SharedValue,
-	StyleProps,
-} from "react-native-reanimated";
-
-export type BoundKey = string;
-
-export interface ExtendedMeasuredDimensions extends MeasuredDimensions {
-	id: BoundKey;
-}
-
-export type Bounds = SharedValue<ExtendedMeasuredDimensions>;
-export type BoundsMap = Record<BoundKey, Bounds>;
-export type BoundsActive = Record<BoundKey, boolean>;
+import type { StyleProps } from "react-native-reanimated";
 
 export type BoundsBuilder = {
 	start: (screen: "previous" | "current" | "next") => BoundsBuilder;

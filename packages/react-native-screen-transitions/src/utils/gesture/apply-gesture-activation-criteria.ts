@@ -1,10 +1,10 @@
 import type { PanGesture } from "react-native-gesture-handler";
-import type { TransitionConfig } from "../../types";
+import type { ScreenTransitionConfig } from "../../types/navigator";
 
 interface GestureActivationOptions {
 	gestureDirection:
-		| TransitionConfig["gestureDirection"]
-		| Array<TransitionConfig["gestureDirection"]>;
+		| ScreenTransitionConfig["gestureDirection"]
+		| Array<ScreenTransitionConfig["gestureDirection"]>;
 	gestureResponseDistance: number;
 	panGesture: PanGesture;
 }

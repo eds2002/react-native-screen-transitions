@@ -1,8 +1,9 @@
 import { useRouter } from "expo-router";
-import { useEffect } from "react";
+
 import { Pressable, StyleSheet } from "react-native";
 import Animated, {
 	Easing,
+	useAnimatedReaction,
 	useAnimatedStyle,
 	useSharedValue,
 	withDelay,
@@ -31,45 +32,34 @@ const Link = ({
 	const opacity = useSharedValue(0);
 	const y = useSharedValue(50);
 
-	const { closing } = useScreenAnimation();
-
-	const springConfig = {
-		mass: 0.2,
-		stiffness: 26.7,
-		damping: 4.1,
-	};
+	const props = useScreenAnimation();
 
 	const delay = index * 35;
 
-	useEffect(() => {
-		if (closing) {
-			opacity.value = withTiming(0, { easing: Easing.linear });
-			y.value = withDelay(
-				(links.length - 1 - index) * 35,
-				withSpring(50, springConfig),
-			);
-			return;
-		}
+	useAnimatedReaction(
+		() => props.value.current.closing,
+		(isClosing, prev) => {
+			if (isClosing === prev) return;
 
-		opacity.value = withDelay(
-			delay,
-			withTiming(1, {
-				easing: Easing.linear,
-			}),
-		);
-		y.value = withDelay(delay, withSpring(1, springConfig));
-	}, [opacity, closing, y, delay, index]);
+			if (isClosing) {
+				// exit sequence (staggered reverse)
+				opacity.value = withTiming(0, { easing: Easing.linear });
+				y.value = withDelay((links.length - 1 - index) * 35, withSpring(50));
+			} else {
+				// enter sequence (staggered forward)
+				opacity.value = withDelay(
+					delay,
+					withTiming(1, { easing: Easing.linear }),
+				);
+				y.value = withDelay(delay, withSpring(1));
+			}
+		},
+	);
 
-	const animatedStyle = useAnimatedStyle(() => {
-		return {
-			opacity: opacity.value,
-			transform: [
-				{
-					translateY: y.value,
-				},
-			],
-		};
-	});
+	const animatedStyle = useAnimatedStyle(() => ({
+		opacity: opacity.value,
+		transform: [{ translateY: y.value }],
+	}));
 
 	return (
 		<Animated.Text style={[styles.link, animatedStyle]}>

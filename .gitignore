@@ -4,6 +4,7 @@
 # Expo
 .expo/
 dist/
+lib/
 web-build/
 expo-env.d.ts
 

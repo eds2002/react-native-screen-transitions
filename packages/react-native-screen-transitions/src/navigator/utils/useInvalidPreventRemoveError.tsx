@@ -1,10 +1,10 @@
 import { usePreventRemoveContext } from "@react-navigation/native";
 import * as React from "react";
 
-import type { AwareStackDescriptorMap } from "../types";
+import type { NativeStackDescriptorMap } from "../../types/navigator";
 
 export function useInvalidPreventRemoveError(
-	descriptors: AwareStackDescriptorMap,
+	descriptors: NativeStackDescriptorMap,
 ) {
 	const { preventedRoutes } = usePreventRemoveContext();
 	const preventedRouteKey = Object.keys(preventedRoutes)[0];

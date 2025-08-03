@@ -1,4 +1,4 @@
-import type { GestureDirection } from "../../types";
+import type { GestureDirection } from "../../types/gesture";
 
 /**
  * Utility function to normalize gesture translation based on direction.

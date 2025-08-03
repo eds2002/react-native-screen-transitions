@@ -3,13 +3,14 @@ import {
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
-import type { TransitionConfig } from "@/types";
+import type { ScreenTransitionConfig } from "../types/navigator";
 import { DefaultSpec } from "./specs";
 
 export const SlideFromTop = (
-	config: Partial<TransitionConfig> = {},
-): TransitionConfig => {
+	config: Partial<ScreenTransitionConfig> = {},
+): ScreenTransitionConfig => {
 	return {
+		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "vertical-inverted",
 		screenStyleInterpolator: ({
@@ -21,7 +22,7 @@ export const SlideFromTop = (
 		}) => {
 			"worklet";
 
-			const progress = current.progress.value + (next?.progress.value ?? 0);
+			const progress = current.progress + (next?.progress ?? 0);
 
 			const y = interpolate(progress, [0, 1, 2], [-height, 0, height]);
 
@@ -35,19 +36,21 @@ export const SlideFromTop = (
 			open: DefaultSpec,
 			close: DefaultSpec,
 		},
+
 		...config,
 	};
 };
 
 export const ZoomIn = (
-	config: Partial<TransitionConfig> = {},
-): TransitionConfig => {
+	config: Partial<ScreenTransitionConfig> = {},
+): ScreenTransitionConfig => {
 	return {
+		enableTransitions: true,
 		gestureEnabled: false,
 		screenStyleInterpolator: ({ current, next }) => {
 			"worklet";
 
-			const progress = current.progress.value + (next?.progress.value ?? 0);
+			const progress = current.progress + (next?.progress ?? 0);
 
 			const scale = interpolate(
 				progress,
@@ -79,9 +82,10 @@ export const ZoomIn = (
 };
 
 export const SlideFromBottom = (
-	config: Partial<TransitionConfig> = {},
-): TransitionConfig => {
+	config: Partial<ScreenTransitionConfig> = {},
+): ScreenTransitionConfig => {
 	return {
+		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "vertical",
 		screenStyleInterpolator: ({
@@ -93,7 +97,7 @@ export const SlideFromBottom = (
 		}) => {
 			"worklet";
 
-			const progress = current.progress.value + (next?.progress.value ?? 0);
+			const progress = current.progress + (next?.progress ?? 0);
 
 			const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
 
@@ -112,22 +116,23 @@ export const SlideFromBottom = (
 };
 
 export const DraggableCard = (
-	config: Partial<TransitionConfig> = {},
-): TransitionConfig => {
+	config: Partial<ScreenTransitionConfig> = {},
+): ScreenTransitionConfig => {
 	return {
+		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["horizontal", "vertical"],
 		screenStyleInterpolator: ({ current, next, layouts: { screen } }) => {
 			"worklet";
 
-			const progress = current.progress.value + (next?.progress.value ?? 0);
+			const progress = current.progress + (next?.progress ?? 0);
 
 			/** Combined */
 			const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.75]);
 
 			/** Vertical */
 			const translateY = interpolate(
-				current.gesture.normalizedY.value,
+				current.gesture.normalizedY,
 				[-1, 1],
 				[-screen.height * 0.5, screen.height * 0.5],
 				"clamp",
@@ -135,7 +140,7 @@ export const DraggableCard = (
 
 			/** Horizontal */
 			const translateX = interpolate(
-				current.gesture.normalizedX.value,
+				current.gesture.normalizedX,
 				[-1, 1],
 				[-screen.width * 0.5, screen.width * 0.5],
 				"clamp",
@@ -156,11 +161,12 @@ export const DraggableCard = (
 };
 
 export const ElasticCard = (
-	config: Partial<TransitionConfig> & {
+	config: Partial<ScreenTransitionConfig> & {
 		elasticFactor?: number;
 	} = { elasticFactor: 0.5 },
-): TransitionConfig => {
+): ScreenTransitionConfig => {
 	return {
+		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "bidirectional",
 		screenStyleInterpolator: ({
@@ -183,14 +189,14 @@ export const ElasticCard = (
 			const maxElasticityX = screen.width * (config.elasticFactor ?? 0.5);
 			const maxElasticityY = screen.height * (config.elasticFactor ?? 0.5);
 			const translateX = interpolate(
-				current.gesture.normalizedX.value,
+				current.gesture.normalizedX,
 				[-1, 0, 1],
 				[-maxElasticityX, 0, maxElasticityX],
 				"clamp",
 			);
 
 			const translateY = interpolate(
-				current.gesture.normalizedY.value,
+				current.gesture.normalizedY,
 				[-1, 0, 1],
 				[-maxElasticityY, 0, maxElasticityY],
 				"clamp",
@@ -200,7 +206,7 @@ export const ElasticCard = (
 			 * Applies to unfocused screen ( previous screen )
 			 */
 			const overlayColor = interpolateColor(
-				current.progress.value,
+				progress,
 				[0, 1],
 				["rgba(0,0,0,0)", "rgba(0,0,0,0.5)"],
 			);

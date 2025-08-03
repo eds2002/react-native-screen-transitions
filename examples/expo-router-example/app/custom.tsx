@@ -10,18 +10,19 @@ import { useScreenAnimation } from "react-native-screen-transitions";
  * Example of how to define animations at the screen level.
  */
 export default function Custom() {
-	const {
-		current,
-		layouts: {
-			screen: { width },
-		},
-	} = useScreenAnimation();
+	const props = useScreenAnimation();
 
 	const animatedStyle = useAnimatedStyle(() => {
+		const {
+			progress,
+			layouts: {
+				screen: { width },
+			},
+		} = props.value;
 		return {
 			transform: [
 				{
-					translateX: interpolate(current.progress.value, [0, 1], [width, 0]),
+					translateX: interpolate(progress, [0, 1], [width, 0]),
 				},
 			],
 			backgroundColor: "#ccffcc",

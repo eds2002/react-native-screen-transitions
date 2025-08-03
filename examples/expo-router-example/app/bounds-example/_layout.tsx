@@ -8,7 +8,6 @@ export default function BoundsExampleLayout() {
 			<Stack.Screen
 				name="index"
 				options={{
-					skipDefaultScreenOptions: true,
 					headerShown: false,
 				}}
 			/>
@@ -19,26 +18,28 @@ export default function BoundsExampleLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["bidirectional"],
 					gestureDrivesProgress: false,
+					enableTransitions: true,
 					screenStyleInterpolator: ({
 						bounds,
 						current,
-						isFocused,
 						progress,
 						next,
 						layouts: { screen },
+						focused,
+						activeBoundId,
 					}) => {
 						"worklet";
 
-						if (!bounds.activeTag) return {};
+						if (!activeBoundId) return {};
 
 						const MAX_DRAG_MULTIPLIER = 0.9;
 
 						const modWidth = screen.width * MAX_DRAG_MULTIPLIER;
 						const modHeight = screen.height * MAX_DRAG_MULTIPLIER;
 
-						if (isFocused) {
-							const normalizedX = current.gesture.normalizedX.value;
-							const normalizedY = current.gesture.normalizedY.value;
+						if (focused) {
+							const normalizedX = current.gesture.normalizedX;
+							const normalizedY = current.gesture.normalizedY;
 
 							const gestureX = interpolate(
 								normalizedX,
@@ -64,7 +65,7 @@ export default function BoundsExampleLayout() {
 								.build();
 
 							return {
-								[bounds.activeTag]: {
+								[activeBoundId]: {
 									...boundsStyle,
 									borderTopLeftRadius: interpolate(progress, [0, 1], [100, 50]),
 									borderTopRightRadius: interpolate(
@@ -91,8 +92,8 @@ export default function BoundsExampleLayout() {
 							};
 						}
 
-						const nextGestureX = next?.gesture.normalizedX.value ?? 0;
-						const nextGestureY = next?.gesture.normalizedY.value ?? 0;
+						const nextGestureX = next?.gesture.normalizedX ?? 0;
+						const nextGestureY = next?.gesture.normalizedY ?? 0;
 
 						const gestureX = interpolate(
 							nextGestureX,
@@ -124,7 +125,7 @@ export default function BoundsExampleLayout() {
 									},
 								],
 							},
-							[bounds.activeTag]: {
+							[activeBoundId]: {
 								...boundsStyle,
 								opacity: interpolate(progress, [1, 1.5], [1, 0]),
 							},

@@ -1,10 +1,10 @@
 import type { Route } from "@react-navigation/native";
 
-import type { AwareStackDescriptorMap } from "../types";
+import type { NativeStackDescriptorMap } from "../../types/navigator";
 
 export const getModalRouteKeys = (
 	routes: Route<string>[],
-	descriptors: AwareStackDescriptorMap,
+	descriptors: NativeStackDescriptorMap,
 ) =>
 	routes.reduce<string[]>((acc, route) => {
 		const { presentation } = descriptors[route.key]?.options ?? {};

@@ -9,14 +9,12 @@
 		"url": "https://github.com/eds2002/react-native-screen-transitions.git",
 		"directory": "packages/react-native-screen-transitions"
 	},
-	"main": "dist/index.js",
-	"module": "dist/index.js",
-	"types": "dist/index.d.ts",
-	"source": "src/index.ts",
+	"main": "lib/module/index.js",
+	"module": "lib/module/index.js",
+	"types": "lib/typescript/index.d.ts",
+	"react-native": "src/index",
 	"scripts": {
-		"build": "tsup",
-		"dev": "tsup --watch",
-		"test": "bun test src/__tests__",
+		"build": "bob build",
 		"lint": "biome check ./src",
 		"prepublishOnly": "bun run build"
 	},
@@ -29,13 +27,10 @@
 		"reanimated"
 	],
 	"files": [
-		"dist",
+		"lib",
 		"README.md",
 		"LICENSE"
 	],
-	"dependencies": {
-		"immer": ">=10.0.0"
-	},
 	"peerDependencies": {
 		"@types/react": "*",
 		"@types/react-native": "*",
@@ -52,7 +47,22 @@
 	"devDependencies": {
 		"@testing-library/react-native": "^13.2.0",
 		"@types/react": "~19.0.10",
+		"react-native-builder-bob": "0.39.0",
 		"tsup": "^8.5.0",
 		"typescript": "catalog:"
+	},
+	"react-native-builder-bob": {
+		"source": "src",
+		"output": "lib",
+		"targets": [
+			"commonjs",
+			"module",
+			[
+				"typescript",
+				{
+					"project": "tsconfig.build.json"
+				}
+			]
+		]
 	}
 }

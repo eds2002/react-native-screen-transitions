@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef } from "react";
-import type { Any } from "@/types";
+import type { Any } from "../../types/utils";
 
-export default function useStableCallback<
-	C extends (...args: Array<Any>) => Any,
->(callback: C) {
+export default function useStableCallback<C extends (...args: Any[]) => any>(
+	callback: C,
+) {
 	const callbackRef = useRef(callback);
 
 	useEffect(() => {
@@ -11,6 +11,6 @@ export default function useStableCallback<
 	}, [callback]);
 
 	return useCallback((...args: Parameters<C>) => {
-		return callbackRef.current(...args);
+		callbackRef.current(...args);
 	}, []);
 }

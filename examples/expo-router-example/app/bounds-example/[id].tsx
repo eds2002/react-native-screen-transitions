@@ -13,19 +13,27 @@ export default function BoundsDetailScreen() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 
 	const { width } = useWindowDimensions();
-	const {
-		current: { progress },
-	} = useScreenAnimation();
+	const props = useScreenAnimation();
 
 	const animatedStyle = useAnimatedStyle(() => {
 		return {
-			opacity: progress.value,
+			opacity: props.value.current.progress,
 			transform: [
 				{
-					translateY: interpolate(progress.value, [0.25, 1], [50, 0], "clamp"),
+					translateY: interpolate(
+						props.value.current.progress,
+						[0.25, 1],
+						[50, 0],
+						"clamp",
+					),
 				},
 				{
-					scale: interpolate(progress.value, [0.25, 1], [0, 1], "clamp"),
+					scale: interpolate(
+						props.value.current.progress,
+						[0.25, 1],
+						[0, 1],
+						"clamp",
+					),
 				},
 			],
 		};

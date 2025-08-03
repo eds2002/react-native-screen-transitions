@@ -1,5 +1,5 @@
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import "react-native-reanimated";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { Easing, interpolate, interpolateColor } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { Stack } from "@/layouts/stack";
@@ -14,7 +14,6 @@ export default function RootLayout() {
 						contentStyle: {
 							backgroundColor: "white",
 						},
-						skipDefaultScreenOptions: true,
 						presentation: "card",
 						headerShown: true,
 					}}
@@ -58,6 +57,7 @@ export default function RootLayout() {
 				<Stack.Screen
 					name="custom"
 					options={{
+						enableTransitions: true,
 						transitionSpec: {
 							open: {
 								duration: 1000,
@@ -81,6 +81,7 @@ export default function RootLayout() {
 				<Stack.Screen
 					name="mocks/palette-profile"
 					options={{
+						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: ["horizontal", "vertical"],
 						screenStyleInterpolator: ({
@@ -100,7 +101,7 @@ export default function RootLayout() {
 
 							/** Vertical */
 							const translateY = interpolate(
-								current.gesture.normalizedY.value,
+								current.gesture.normalizedY,
 								[-1, 1],
 								[-screen.height * 0.5, screen.height * 0.5],
 								"clamp",
@@ -108,7 +109,7 @@ export default function RootLayout() {
 
 							/** Horizontal */
 							const translateX = interpolate(
-								current.gesture.normalizedX.value,
+								current.gesture.normalizedX,
 								[-1, 1],
 								[-screen.width * 0.5, screen.width * 0.5],
 								"clamp",
@@ -134,18 +135,19 @@ export default function RootLayout() {
 				<Stack.Screen
 					name="mocks/gallery-modal"
 					options={{
+						enableTransitions: true,
 						gestureDirection: "vertical",
 						gestureEnabled: true,
 						screenStyleInterpolator: ({ current, next, layouts }) => {
 							"worklet";
 
 							const unfocusedY = interpolate(
-								next?.progress.value ?? 0,
+								next?.progress ?? 0,
 								[0, 1],
 								[0, -100],
 							);
 							const focusedY = interpolate(
-								current?.progress.value ?? 0,
+								current?.progress ?? 0,
 								[0, 1],
 								[layouts.screen.height, 0],
 							);
@@ -174,23 +176,23 @@ export default function RootLayout() {
 				<Stack.Screen
 					name="mocks/delete-warning"
 					options={{
+						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: "vertical",
 						screenStyleInterpolator: ({ current, next, layouts }) => {
 							"worklet";
 
-							const progress =
-								current.progress.value + (next?.progress.value ?? 0);
+							const progress = current.progress + (next?.progress ?? 0);
 
 							const fifthHeight = layouts.screen.height / 5;
 
 							const unfocusedY = interpolate(
-								next?.progress.value ?? 0,
+								next?.progress ?? 0,
 								[0, 1],
 								[0, -fifthHeight],
 							);
 							const focusedY = interpolate(
-								current?.progress.value ?? 0,
+								current?.progress ?? 0,
 								[0, 1],
 								[fifthHeight, 0],
 							);
@@ -222,11 +224,12 @@ export default function RootLayout() {
 				<Stack.Screen
 					name="mocks/fullscreen-nav"
 					options={{
+						enableTransitions: true,
 						screenStyleInterpolator: ({ current, next }) => {
 							"worklet";
 
 							const overlay = interpolateColor(
-								current.progress.value,
+								current.progress,
 								[0, 1],
 								["rgba(0,0,0,0)", "rgba(0,0,0,0.85)"],
 							);
@@ -241,6 +244,14 @@ export default function RootLayout() {
 							open: Transition.specs.DefaultSpec,
 							close: Transition.specs.DefaultSpec,
 						},
+					}}
+				/>
+				<Stack.Screen
+					name="bounds-example"
+					options={{
+						headerShown: false,
+						nativeGestureEnabled: true,
+						nativeGestureDirection: "horizontal",
 					}}
 				/>
 			</Stack>

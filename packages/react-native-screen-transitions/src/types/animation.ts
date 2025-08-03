@@ -1,32 +1,27 @@
 import type {
-	SharedValue,
+	MeasuredDimensions,
 	StyleProps,
 	WithSpringConfig,
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import type {
-	BoundKey,
-	BoundsBuilder,
-	ExtendedMeasuredDimensions,
-} from "./bounds";
-import type { ScreenInterpolatorState } from "./state";
+import type { BoundsBuilder } from "./bounds";
+import type { GestureValues } from "./gesture";
 
-export type ScreenProgress = {
-	progress: SharedValue<number>;
+export type ScreenTransitionState = {
+	progress: number;
+	closing: number;
+	animating: number;
 	gesture: GestureValues;
-	bounds: {
-		active: BoundKey | null;
-		all: Record<BoundKey, SharedValue<ExtendedMeasuredDimensions>>;
-	};
+	bounds: Record<string, MeasuredDimensions>;
 };
 
-export interface BaseScreenInterpolationProps {
+export interface ScreenInterpolationProps {
 	/** Values for the screen that is the focus of the transition (e.g., the one opening). */
-	previous: ScreenProgress | undefined;
-	current: ScreenProgress;
+	previous: ScreenTransitionState | undefined;
+	current: ScreenTransitionState;
 	/** Values for the screen immediately behind the current one in the screen. */
-	next: ScreenProgress | undefined;
+	next: ScreenTransitionState | undefined;
 	/** Layout measurements for the screen. */
 	layouts: {
 		/** The `width` and `height` of the screen container. */
@@ -37,66 +32,15 @@ export interface BaseScreenInterpolationProps {
 	};
 	/** The safe area insets for the screen. */
 	insets: EdgeInsets;
-	/** A flag indicating if the current screen is in the process of closing. */
-	closing: boolean;
-	/**
-	 * A flag indicating if the screen is in the process of animating.
-	 */
-	animating: SharedValue<number>;
-}
-
-export interface _BaseScreenInterpolationProps
-	extends BaseScreenInterpolationProps {
-	screenStyleInterpolator: ScreenStyleInterpolator;
-	screenInterpolatorState: ScreenInterpolatorState;
-}
-
-/**
- * Utility functions for the screen.
- */
-export interface ScreenInterpolationProps extends BaseScreenInterpolationProps {
-	/**
-	 * A flag indicating if the screen is focused.
-	 */
-	isFocused: boolean;
-	/**
-	 * Combined progress of current and next (0 - 2).
-	 */
+	/** The id of the active bound. */
+	activeBoundId: string | null;
+	/** Whether the screen is focused. */
+	focused: boolean;
+	/** The progress of the screen transitions (0-2). */
 	progress: number;
-	/**
-	 * Interpolate a value between two ranges. This uses the progress value (0-2) to interpolate between the input and output ranges.
-	 */
-	interpolate: (inputRange: number[], outputRange: number[]) => number;
-
-	bounds: (() => BoundsBuilder) & { activeTag: string | null };
+	/** A function that returns a bounds builder for the screen. */
+	bounds: (id?: string) => BoundsBuilder;
 }
-
-export type GestureValues = {
-	/**
-	 * A `SharedValue` indicating if the user's finger is on the screen (0 or 1).
-	 */
-	isDragging: SharedValue<number>;
-	/**
-	 * The live horizontal translation of the gesture.
-	 */
-	x: SharedValue<number>;
-	/**
-	 * The live vertical translation of the gesture.
-	 */
-	y: SharedValue<number>;
-	/**
-	 * The live normalized horizontal translation of the gesture (-1 to 1).
-	 */
-	normalizedX: SharedValue<number>;
-	/**
-	 * The live normalized vertical translation of the gesture (-1 to 1).
-	 */
-	normalizedY: SharedValue<number>;
-	/**
-	 * A flag indicating if the screen is in the process of dismissing.
-	 */
-	isDismissing: SharedValue<number>;
-};
 
 export type ScreenStyleInterpolator = (
 	props: ScreenInterpolationProps,

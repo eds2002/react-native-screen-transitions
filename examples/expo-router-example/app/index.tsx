@@ -1,15 +1,9 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Button, ScrollView, View } from "react-native";
-import Transition from "react-native-screen-transitions";
 import { BottomNav } from "@/components/bottom-nav";
 import MainExample from "@/components/main-example";
 import MocksExample from "@/components/mocks-example";
-
-const TransitionScrollView = Transition.createTransitionAwareComponent(
-	ScrollView,
-	{ isScrollable: true },
-);
 
 export default function Home() {
 	const [activeSegment, setActiveSegment] = useState(0);
@@ -27,14 +21,14 @@ export default function Home() {
 					router.push("/instagram-example");
 				}}
 			/>
-			<TransitionScrollView
+			<ScrollView
 				contentContainerStyle={{
 					paddingVertical: 100,
 					gap: 32,
 				}}
 			>
 				{activeSegment === 0 ? <MainExample /> : <MocksExample />}
-			</TransitionScrollView>
+			</ScrollView>
 			<BottomNav
 				activeSegment={activeSegment}
 				setActiveSegment={setActiveSegment}

@@ -5,7 +5,7 @@ import { Stack } from "@/layouts/stack";
 export default function Layout() {
 	return (
 		<Stack screenOptions={{ headerShown: false }}>
-			<Stack.Screen name="one" />
+			<Stack.Screen name="one" options={{ enableTransitions: true }} />
 			<Stack.Screen
 				name="two"
 				options={{
@@ -18,8 +18,7 @@ export default function Layout() {
 					}) => {
 						"worklet";
 
-						const progress =
-							current.progress.value + (next?.progress.value ?? 0);
+						const progress = current.progress + (next?.progress ?? 0);
 
 						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
 						return {
