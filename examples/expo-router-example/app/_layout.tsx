@@ -14,70 +14,37 @@ export default function RootLayout() {
 						contentStyle: {
 							backgroundColor: "white",
 						},
-						presentation: "card",
-						headerShown: true,
+						headerShown: false,
 					}}
 				/>
 				<Stack.Screen
-					name="a"
+					name="presets"
 					options={{
-						...Transition.presets.SlideFromTop(),
-					}}
-				/>
-				<Stack.Screen
-					name="b"
-					options={{
-						...Transition.presets.ZoomIn(),
-					}}
-				/>
-				<Stack.Screen
-					name="c"
-					options={{
-						...Transition.presets.SlideFromBottom(),
-					}}
-				/>
-				<Stack.Screen
-					name="d"
-					options={{
-						...Transition.presets.DraggableCard(),
-					}}
-				/>
-				<Stack.Screen
-					name="e"
-					options={{
-						...Transition.presets.ElasticCard(),
-					}}
-				/>
-				<Stack.Screen
-					name="group-a"
-					options={{
-						...Transition.presets.DraggableCard(),
-					}}
-				/>
-				<Stack.Screen
-					name="custom"
-					options={{
-						enableTransitions: true,
-						transitionSpec: {
-							open: {
-								duration: 1000,
-								easing: Easing.bezierFn(0.19, 1, 0.22, 1),
-							},
-							close: {
-								duration: 1000,
-								easing: Easing.bezierFn(0.19, 1, 0.22, 1),
-							},
+						contentStyle: {
+							backgroundColor: "white",
 						},
+						headerShown: false,
 					}}
 				/>
 				<Stack.Screen
-					name="nested"
+					name="custom-transitions"
 					options={{
-						...Transition.presets.SlideFromTop(),
+						contentStyle: {
+							backgroundColor: "white",
+						},
+						headerShown: false,
+					}}
+				/>
+				<Stack.Screen
+					name="bounds"
+					options={{
+						contentStyle: {
+							backgroundColor: "white",
+						},
+						headerShown: false,
 					}}
 				/>
 
-				{/* PALETTE PROFILE */}
 				<Stack.Screen
 					name="mocks/palette-profile"
 					options={{
@@ -244,14 +211,6 @@ export default function RootLayout() {
 							open: Transition.specs.DefaultSpec,
 							close: Transition.specs.DefaultSpec,
 						},
-					}}
-				/>
-				<Stack.Screen
-					name="bounds-example"
-					options={{
-						headerShown: false,
-						nativeGestureEnabled: true,
-						nativeGestureDirection: "horizontal",
 					}}
 				/>
 			</Stack>

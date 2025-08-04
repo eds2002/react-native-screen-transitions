@@ -1,12 +1,11 @@
 import { useEffect } from "react";
-import { runOnJS } from "react-native-reanimated";
-import { animate } from "../../../utils/animation/animate";
 import { useKeys } from "../../context/keys";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { Animations } from "../../stores/animations";
 import { Bounds } from "../../stores/bounds";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
+import { runTransition } from "../../utils/animations/run-transition";
 
 interface ScreenLifecycleProps {
 	children: React.ReactNode;
@@ -17,9 +16,7 @@ export const ScreenLifecycleController = ({
 }: ScreenLifecycleProps) => {
 	const { current } = useKeys();
 
-	const progress = Animations.getAnimation(current.route.key, "progress");
-	const animating = Animations.getAnimation(current.route.key, "animating");
-	const closing = Animations.getAnimation(current.route.key, "closing");
+	const animations = Animations.getAll(current.route.key);
 
 	const spec = current.options.transitionSpec;
 
@@ -37,9 +34,13 @@ export const ScreenLifecycleController = ({
 			return;
 		}
 
+		if (!spec) {
+			return;
+		}
+
 		e.preventDefault();
 
-		const onAnimationFinish = (finished: boolean) => {
+		const onFinish = (finished: boolean) => {
 			if (finished) {
 				current.navigation.dispatch(e.data.action);
 				Animations.clear(current.route.key);
@@ -48,26 +49,20 @@ export const ScreenLifecycleController = ({
 			}
 		};
 
-		closing.value = 1;
-		animating.value = 1;
-		progress.value = animate(0, spec?.close, (finished) => {
-			"worklet";
-			if (finished && onAnimationFinish) {
-				animating.value = 0;
-				runOnJS(onAnimationFinish)(finished);
-			}
+		runTransition({
+			target: "close",
+			spec: current.options.transitionSpec,
+			onFinish,
+			animations,
 		});
 	});
 
 	const handleInitialize = useStableCallback(() => {
-		progress.value = animate(
-			1,
-			current.options.transitionSpec?.open,
-			(finished) => {
-				"worklet";
-				animating.value = !finished ? 1 : 0;
-			},
-		);
+		runTransition({
+			target: "open",
+			spec: current.options.transitionSpec,
+			animations,
+		});
 	});
 
 	useEffect(() => {

@@ -22,6 +22,7 @@ import { useKeys } from "../context/keys";
 import { Animations } from "../stores/animations";
 import { Gestures } from "../stores/gestures";
 import { NavigatorDismissState } from "../stores/navigator-dismiss-state";
+import { runTransition } from "../utils/animations/run-transition";
 
 const GESTURE_VELOCITY_IMPACT = 0.3;
 const DEFAULT_GESTURE_RESPONSE_DISTANCE = 50;
@@ -44,10 +45,9 @@ export const useBuildGestures = ({
 		y: 0,
 	});
 
-	const { x, y, normalizedX, normalizedY, isDragging, isDismissing } =
-		Gestures.getRouteGestures(current.route.key);
+	const gestures = Gestures.getRouteGestures(current.route.key);
 
-	const progress = Animations.getAnimation(current.route.key, "progress");
+	const animations = Animations.getAll(current.route.key);
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
@@ -95,7 +95,7 @@ export const useBuildGestures = ({
 
 			if (!hasEnoughMovement) return;
 
-			if (isDragging?.value) {
+			if (gestures.isDragging?.value) {
 				manager.activate();
 				return;
 			}
@@ -150,20 +150,23 @@ export const useBuildGestures = ({
 				if (shouldActivate) break;
 			}
 
-			if ((shouldActivate || isDragging?.value) && !isDismissing?.value) {
+			if (
+				(shouldActivate || gestures.isDragging?.value) &&
+				!gestures.isDismissing?.value
+			) {
 				manager.activate();
 			} else {
 				manager.fail();
 			}
 		},
-		[initialTouch, directions, scrollProgress, isDragging, isDismissing],
+		[initialTouch, directions, scrollProgress, gestures],
 	);
 
 	const onStart = useCallback(() => {
 		"worklet";
-		isDragging.value = 1;
-		isDismissing.value = 0;
-	}, [isDragging, isDismissing]);
+		gestures.isDragging.value = 1;
+		gestures.isDismissing.value = 0;
+	}, [gestures]);
 
 	const onUpdate = useCallback(
 		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
@@ -171,16 +174,16 @@ export const useBuildGestures = ({
 
 			let gestureProgress = 0;
 
-			x.value = event.translationX;
-			y.value = event.translationY;
+			gestures.x.value = event.translationX;
+			gestures.y.value = event.translationY;
 
-			normalizedX.value = interpolate(
+			gestures.normalizedX.value = interpolate(
 				event.translationX,
 				[-dimensions.width, dimensions.width],
 				[-1, 1],
 				"clamp",
 			);
-			normalizedY.value = interpolate(
+			gestures.normalizedY.value = interpolate(
 				event.translationY,
 				[-dimensions.height, dimensions.height],
 				[-1, 1],
@@ -236,19 +239,10 @@ export const useBuildGestures = ({
 			}
 
 			if (gestureDrivesProgress) {
-				progress.value = 1 - gestureProgress;
+				animations.progress.value = 1 - gestureProgress;
 			}
 		},
-		[
-			dimensions,
-			directions,
-			x,
-			y,
-			normalizedX,
-			normalizedY,
-			progress,
-			gestureDrivesProgress,
-		],
+		[dimensions, directions, gestures, animations, gestureDrivesProgress],
 	);
 
 	const setNavigatorDismissal = useCallback(() => {
@@ -279,7 +273,7 @@ export const useBuildGestures = ({
 					translationY + velocityY * gestureVelocityImpact,
 				);
 				const finalDistance = Math.sqrt(finalX ** 2 + finalY ** 2);
-				isDismissing.value = Number(
+				gestures.isDismissing.value = Number(
 					finalDistance > dimensions.width * dismissThreshold,
 				);
 			} else {
@@ -293,64 +287,58 @@ export const useBuildGestures = ({
 					translationX + velocityX * gestureVelocityImpact >
 						dimensions.width * dismissThreshold
 				) {
-					isDismissing.value = 1;
+					gestures.isDismissing.value = 1;
 				} else if (
 					allowedLeft &&
 					-translationX - velocityX * gestureVelocityImpact >
 						dimensions.width * dismissThreshold
 				) {
-					isDismissing.value = 1;
+					gestures.isDismissing.value = 1;
 				} else if (
 					allowedDown &&
 					translationY + velocityY * gestureVelocityImpact >
 						dimensions.height * dismissThreshold
 				) {
-					isDismissing.value = 1;
+					gestures.isDismissing.value = 1;
 				} else if (
 					allowedUp &&
 					-translationY - velocityY * gestureVelocityImpact >
 						dimensions.height * dismissThreshold
 				) {
-					isDismissing.value = 1;
+					gestures.isDismissing.value = 1;
 				}
 			}
 
-			const finalProgress = isDismissing.value ? 0 : 1;
-			const spec = isDismissing.value
-				? transitionSpec?.close
-				: transitionSpec?.open;
-
-			if (isDismissing.value) {
+			if (gestures.isDismissing.value) {
 				runOnJS(setNavigatorDismissal)();
 			}
 
-			progress.value = animate(finalProgress, spec, (finished) => {
-				"worklet";
-				if (finished && isDismissing.value) {
-					runOnJS(handleDismiss)();
-				}
+			runTransition({
+				target: gestures.isDismissing.value ? "close" : "open",
+				spec: transitionSpec,
+				onFinish: gestures.isDismissing.value ? handleDismiss : undefined,
+				animations,
 			});
-			x.value = animate(0, spec);
-			y.value = animate(0, spec);
-			normalizedX.value = animate(0, spec);
-			normalizedY.value = animate(0, spec);
-			isDragging.value = 0;
+
+			const spec = gestures.isDismissing.value
+				? transitionSpec?.close
+				: transitionSpec?.open;
+
+			gestures.x.value = animate(0, spec);
+			gestures.y.value = animate(0, spec);
+			gestures.normalizedX.value = animate(0, spec);
+			gestures.normalizedY.value = animate(0, spec);
+			gestures.isDragging.value = 0;
 		},
 		[
 			dimensions,
 			directions,
-			x,
-			y,
-			normalizedX,
-			normalizedY,
-			progress,
-			transitionSpec?.close,
-			transitionSpec?.open,
+			animations,
+			transitionSpec,
 			gestureVelocityImpact,
-			isDragging,
-			isDismissing,
 			setNavigatorDismissal,
 			handleDismiss,
+			gestures,
 		],
 	);
 

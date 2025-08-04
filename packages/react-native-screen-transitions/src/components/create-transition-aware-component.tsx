@@ -102,9 +102,9 @@ export function createTransitionAwareComponent<P extends object>(
 			if (!sharedBoundTag) return;
 			const m = measure(animatedRef);
 			if (m) {
-				Bounds.setBounds(current.route.key, sharedBoundTag, m);
+				Bounds.setBounds(current.route.key, sharedBoundTag, m, style);
 			}
-		}, [sharedBoundTag, animatedRef, current.route.key]);
+		}, [sharedBoundTag, animatedRef, current.route.key, style]);
 
 		if (isScrollable) {
 			return <ScrollableInner {...(props as Any)} ref={ref} />;
