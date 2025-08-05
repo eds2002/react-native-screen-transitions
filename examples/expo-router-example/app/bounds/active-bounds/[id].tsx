@@ -1,9 +1,10 @@
 import { useLocalSearchParams } from "expo-router";
-import { View } from "react-native";
+import { useWindowDimensions, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
 export default function ActiveBoundsScreen() {
 	const { id } = useLocalSearchParams();
+	const { width } = useWindowDimensions();
 	return (
 		<View
 			style={{
@@ -12,7 +13,14 @@ export default function ActiveBoundsScreen() {
 				justifyContent: "center",
 			}}
 		>
-			<Transition.View styleId={`active-bounds-${id.toString()}`} />
+			<Transition.View
+				sharedBoundTag={`${id}`}
+				style={{
+					backgroundColor: "red",
+					width: width * 0.9,
+					height: width * 0.9,
+				}}
+			/>
 		</View>
 	);
 }

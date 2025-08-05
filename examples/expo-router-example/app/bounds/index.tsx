@@ -30,6 +30,12 @@ const presets: PresetType[] = [
 		href: "/bounds/gesture-assisted" as const,
 		sharedBoundTag: "gesture-bounds",
 	},
+	{
+		title: "Bounds + Style Id",
+		description:
+			"Learn how to animate multiple components on a screen with styleId.",
+		href: "/bounds/style-id" as const,
+	},
 ] as const;
 
 export default function Presets() {

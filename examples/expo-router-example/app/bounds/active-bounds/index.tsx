@@ -32,7 +32,7 @@ export default function PageTransition() {
 							const idx = rowIdx * 3 + colIdx;
 							return (
 								<Transition.Pressable
-									key={`active-bounds-${idx.toString()}`}
+									key={`active-bounds-${idx}`}
 									sharedBoundTag={`active-bounds-${idx}`}
 									style={{
 										flex: 1,
@@ -42,7 +42,12 @@ export default function PageTransition() {
 										justifyContent: "center",
 									}}
 									onPress={() => {
-										router.push(`/bounds/active-bounds/${idx}`);
+										router.push({
+											pathname: `/bounds/active-bounds/[id]`,
+											params: {
+												id: `active-bounds-${idx}`,
+											},
+										});
 									}}
 								>
 									<Text style={{ color: "white", fontWeight: "600" }}>

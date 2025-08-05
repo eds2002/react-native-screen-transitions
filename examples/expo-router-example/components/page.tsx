@@ -21,7 +21,7 @@ interface PageProps {
 	style?: StyleProp<ViewStyle>;
 }
 
-export default function Page({
+function PageComponent({
 	children,
 	title,
 	description,
@@ -57,6 +57,28 @@ export default function Page({
 	);
 }
 
+function Group({
+	children,
+	title,
+	description,
+}: {
+	children?: React.ReactNode;
+	title?: string;
+	description?: string;
+}) {
+	return (
+		<View style={styles.group}>
+			<Text style={styles.titleSmall}>{title}</Text>
+			<Text style={styles.descriptionSmall}>{description}</Text>
+			{children}
+		</View>
+	);
+}
+
+const Page = Object.assign(PageComponent, { Group });
+
+export default Page;
+
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
@@ -74,5 +96,18 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		color: "gray",
 		fontWeight: "500",
+	},
+
+	titleSmall: {
+		fontSize: 20,
+		fontWeight: "600",
+	},
+	descriptionSmall: {
+		fontSize: 12,
+		color: "gray",
+		fontWeight: "500",
+	},
+	group: {
+		gap: 4,
 	},
 });

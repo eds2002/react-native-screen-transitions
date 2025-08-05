@@ -22,53 +22,21 @@ export default function PresetsLayout() {
 					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: "vertical",
-					screenStyleInterpolator: ({
-						progress,
-						focused,
-						bounds,
-						layouts: {
-							screen: { width, height },
-						},
-					}) => {
+					screenStyleInterpolator: ({ progress, focused, bounds }) => {
 						"worklet";
 						if (focused) {
-							const prev = bounds.get("previous", "page-transition");
-
-							const animatedHeight = interpolate(
-								progress,
-								[0, 1],
-								[prev.bounds.height, height],
-								"clamp",
-							);
-							const animatedWidth = interpolate(
-								progress,
-								[0, 1],
-								[prev.bounds.width, width],
-								"clamp",
-							);
-
-							const translateX = interpolate(
-								progress,
-								[0, 1],
-								[prev.bounds.pageX, 0],
-								"clamp",
-							);
-							const translateY = interpolate(
-								progress,
-								[0, 1],
-								[prev.bounds.pageY, 0],
-								"clamp",
-							);
+							const transform = bounds("page-transition")
+								.toFullscreen()
+								.absolute()
+								.toResizeStyle();
 
 							return {
 								contentStyle: {
+									...transform,
 									position: "absolute",
 									top: 0,
 									left: 0,
 									flex: 0,
-									width: animatedWidth,
-									height: animatedHeight,
-									transform: [{ translateX }, { translateY }],
 									overflow: "hidden",
 									opacity: interpolate(progress, [0, 0.05, 1], [0, 1, 1]),
 								},
@@ -98,6 +66,13 @@ export default function PresetsLayout() {
 				name="gesture-assisted"
 				options={{
 					title: "Gesture-Assisted",
+					headerShown: false,
+				}}
+			/>
+			<Stack.Screen
+				name="style-id"
+				options={{
+					title: "Bounds + Style Id",
 					headerShown: false,
 				}}
 			/>

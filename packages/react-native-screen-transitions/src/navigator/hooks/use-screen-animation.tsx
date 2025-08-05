@@ -10,7 +10,7 @@ import { useKeys } from "../context/keys";
 import { Animations } from "../stores/animations";
 import { Bounds } from "../stores/bounds";
 import { type GestureMap, Gestures } from "../stores/gestures";
-import { createBoundsBuilder, getBound } from "../utils/bounds";
+import { buildBoundsAccessor } from "../utils/bounds";
 
 type BuiltState = {
 	progress: SharedValue<number>;
@@ -105,21 +105,14 @@ export function _useScreenAnimation() {
 			const focused = !next;
 			const activeBoundId = Bounds.getActiveBoundId();
 
-			const bounds = Object.assign(
-				(id?: string) =>
-					createBoundsBuilder({
-						id: id ?? activeBoundId,
-						previous,
-						current,
-						next,
-						progress,
-						dimensions,
-					}),
-				{
-					get: (phase: "previous" | "current" | "next", id: string) =>
-						getBound(phase, id, current, previous, next),
-				},
-			);
+			const bounds = buildBoundsAccessor({
+				activeBoundId,
+				current,
+				previous,
+				next,
+				progress,
+				dimensions,
+			});
 
 			return {
 				layouts: { screen: dimensions },

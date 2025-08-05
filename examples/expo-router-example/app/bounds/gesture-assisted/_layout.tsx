@@ -1,4 +1,4 @@
-import { Easing, interpolate, interpolateColor } from "react-native-reanimated";
+import { interpolate, interpolateColor } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { Stack } from "@/layouts/stack";
 
@@ -21,8 +21,6 @@ export default function ActiveBoundsLayout() {
 						progress,
 						focused,
 						activeBoundId,
-						current,
-						layouts,
 						next,
 					}) => {
 						"worklet";
@@ -30,29 +28,21 @@ export default function ActiveBoundsLayout() {
 						if (!activeBoundId) return {};
 
 						if (focused) {
-							const floating = bounds()
-								.start("previous")
-								.end()
-								.x(current.gesture.x)
-								.y(current.gesture.y)
-								.isEntering()
-								.build();
+							const animatingBound = bounds(activeBoundId)
+								.toFullscreen()
+								.withGestures()
+								.toTransformStyle();
 
 							return {
 								[activeBoundId]: {
-									...floating,
-									position: "absolute",
-									top: 0,
-									left: 0,
-									width: layouts.screen.width,
-									height: layouts.screen.height,
+									...animatingBound,
 									flex: 1,
 									backgroundColor: interpolateColor(
 										progress,
 										[0, 1],
-										["blue", "white"],
+										["red", "white"],
 									),
-									opacity: interpolate(progress, [0, 0.95], [0, 1]),
+									opacity: interpolate(progress, [0, 0.99], [0, 1]),
 								},
 								overlayStyle: {
 									backgroundColor: "#000",
@@ -62,12 +52,9 @@ export default function ActiveBoundsLayout() {
 						}
 
 						const boundsStyle = bounds(activeBoundId)
-							.start("current")
-							.end()
-							.x(next?.gesture.x ?? 0)
-							.y(next?.gesture.y ?? 0)
-							.isExiting()
-							.build();
+							.toFullscreen()
+							.withGestures()
+							.toTransformStyle();
 
 						return {
 							contentStyle: {
@@ -79,7 +66,7 @@ export default function ActiveBoundsLayout() {
 							},
 							[activeBoundId]: {
 								...boundsStyle,
-								opacity: interpolate(progress, [1.95, 2], [1, 0]),
+								opacity: interpolate(progress, [1.99, 2], [1, 0]),
 								zIndex: next?.animating === 1 ? 1000 : -1,
 								position: "relative",
 							},
