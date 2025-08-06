@@ -21,6 +21,7 @@ export default function ActiveBoundsLayout() {
 						progress,
 						focused,
 						activeBoundId,
+						current,
 						next,
 					}) => {
 						"worklet";
@@ -30,7 +31,10 @@ export default function ActiveBoundsLayout() {
 						if (focused) {
 							const animatingBound = bounds(activeBoundId)
 								.toFullscreen()
-								.withGestures()
+								.withGestures({
+									x: current.gesture.x,
+									y: current.gesture.y,
+								})
 								.toTransformStyle();
 
 							return {
@@ -53,7 +57,10 @@ export default function ActiveBoundsLayout() {
 
 						const boundsStyle = bounds(activeBoundId)
 							.toFullscreen()
-							.withGestures()
+							.withGestures({
+								x: next?.gesture?.x ?? 0,
+								y: next?.gesture?.y ?? 0,
+							})
 							.toTransformStyle();
 
 						return {

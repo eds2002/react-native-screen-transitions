@@ -4,6 +4,7 @@ import {
 	type AnimatedRef,
 	measure,
 	type StyleProps,
+	useSharedValue,
 } from "react-native-reanimated";
 import { useKeys } from "../../navigator/context/keys";
 import { useScreenAnimation } from "../../navigator/hooks/use-screen-animation";
@@ -18,13 +19,13 @@ interface BoundMeasurerHookProps {
 
 export const useBoundMeasurer = ({
 	sharedBoundTag,
-
 	animatedRef,
 	current,
 	style,
 }: BoundMeasurerHookProps) => {
 	const { previous } = useKeys();
 	const interpolatorProps = useScreenAnimation();
+	const hasAlreadyMeasured = useSharedValue(false);
 
 	const measureAndSet = useCallback(() => {
 		"worklet";
@@ -37,7 +38,7 @@ export const useBoundMeasurer = ({
 
 	const measureOnLayout = useCallback(() => {
 		"worklet";
-		if (!sharedBoundTag) return;
+		if (!sharedBoundTag || hasAlreadyMeasured.value) return;
 
 		const previousRouteKey = previous?.route.key;
 		if (!previousRouteKey) return;
@@ -47,8 +48,15 @@ export const useBoundMeasurer = ({
 
 		if (interpolatorProps.value.current.animating && hasPreviousBoundForTag) {
 			measureAndSet();
+			hasAlreadyMeasured.value = true;
 		}
-	}, [measureAndSet, interpolatorProps, sharedBoundTag, previous?.route.key]);
+	}, [
+		measureAndSet,
+		interpolatorProps,
+		sharedBoundTag,
+		previous?.route.key,
+		hasAlreadyMeasured,
+	]);
 
 	return {
 		measureAndSet,

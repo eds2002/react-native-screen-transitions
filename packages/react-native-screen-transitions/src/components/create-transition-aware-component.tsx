@@ -14,14 +14,13 @@ import { BoundActivator } from "./bounds-activator";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
-	enableTapActivate?: boolean; // default true
 }
 
 export function createTransitionAwareComponent<P extends object>(
 	Wrapped: ComponentType<P>,
 	options: CreateTransitionAwareComponentOptions = {},
 ) {
-	const { isScrollable = false, enableTapActivate = true } = options;
+	const { isScrollable = false } = options;
 
 	const AnimatedComponent = Animated.createAnimatedComponent(Wrapped);
 
@@ -75,11 +74,7 @@ export function createTransitionAwareComponent<P extends object>(
 		}
 
 		return (
-			<BoundActivator
-				sharedBoundTag={sharedBoundTag}
-				enableTap={enableTapActivate}
-				measure={measureAndSet}
-			>
+			<BoundActivator sharedBoundTag={sharedBoundTag} measure={measureAndSet}>
 				<AnimatedComponent
 					{...(rest as Any)}
 					ref={animatedRef}

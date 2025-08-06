@@ -4,14 +4,12 @@ import { Bounds } from "../navigator/stores/bounds";
 
 interface BoundActivatorProps {
 	sharedBoundTag?: string;
-	enableTap?: boolean;
 	children: React.ReactNode;
 	measure: () => void;
 }
 
 export const BoundActivator = ({
 	sharedBoundTag,
-	enableTap = true,
 	children,
 	measure,
 }: BoundActivatorProps) => {
@@ -25,7 +23,7 @@ export const BoundActivator = ({
 		});
 	}, [sharedBoundTag, measure]);
 
-	if (!enableTap || !sharedBoundTag) return children;
+	if (!sharedBoundTag) return children;
 
 	return <GestureDetector gesture={tapGesture}>{children}</GestureDetector>;
 };

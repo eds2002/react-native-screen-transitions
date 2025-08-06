@@ -28,7 +28,7 @@ export default function ActiveBoundsLayout() {
 						if (!activeBoundId) return {};
 
 						if (focused) {
-							const transform = bounds().toResizeStyle();
+							const transform = bounds().relative().toResizeStyle();
 
 							return {
 								[activeBoundId]: {

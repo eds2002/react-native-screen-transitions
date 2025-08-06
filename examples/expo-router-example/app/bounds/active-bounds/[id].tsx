@@ -3,7 +3,7 @@ import { useWindowDimensions, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
 export default function ActiveBoundsScreen() {
-	const { id } = useLocalSearchParams();
+	const { id } = useLocalSearchParams<{ id: string }>();
 	const { width } = useWindowDimensions();
 	return (
 		<View
@@ -14,7 +14,7 @@ export default function ActiveBoundsScreen() {
 			}}
 		>
 			<Transition.View
-				sharedBoundTag={`${id}`}
+				sharedBoundTag={id}
 				style={{
 					backgroundColor: "red",
 					width: width * 0.9,
