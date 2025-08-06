@@ -15,38 +15,77 @@ export default function StyleIdLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: ["vertical"],
-					gestureDrivesProgress: false,
 					enableTransitions: true,
 					screenStyleInterpolator: ({
+						current,
+						layouts: { screen },
 						bounds,
 						progress,
 						focused,
 						activeBoundId,
+						next,
 					}) => {
 						"worklet";
 						if (!activeBoundId) return {};
 
 						if (focused) {
-							const prev = bounds(activeBoundId).toTransformStyle();
+							const prev = bounds(activeBoundId).toContentStyle();
 							const masked = bounds(activeBoundId)
-								.toFullscreen()
 								.absolute()
+								.toFullscreen()
 								.toResizeStyle();
+
+							const x = interpolate(
+								current.gesture.normalizedY,
+								[-1, 1],
+								[-screen.height * 0.25, screen.height * 0.25],
+								"clamp",
+							);
+
+							const y = interpolate(
+								current.gesture.normalizedX,
+								[-1, 1],
+								[-screen.width * 0.25, screen.width * 0.25],
+								"clamp",
+							);
 
 							return {
 								overlayStyle: {
 									backgroundColor: "black",
 									opacity: interpolate(progress, [0, 1], [0, 0.5]),
 								},
-								[activeBoundId]: {
-									...prev,
+								contentStyle: {
+									transform: [{ translateY: x }, { translateX: y }],
 								},
+								"container-view": prev,
 								"masked-view": {
 									...masked,
-									borderRadius: interpolate(progress, [0, 1], [32, 24]),
+									borderRadius: interpolate(progress, [0, 1], [24, 24]),
 								},
 							};
 						}
+
+						const translateY = interpolate(
+							next?.gesture.normalizedY ?? 0,
+							[-1, 1],
+							[-screen.height * 0.25, screen.height * 0.25],
+							"clamp",
+						);
+
+						/** Horizontal */
+						const translateX = interpolate(
+							next?.gesture.normalizedX ?? 0,
+							[-1, 1],
+							[-screen.width * 0.25, screen.width * 0.25],
+							"clamp",
+						);
+
+						const unfocusedBound = bounds()
+							.withGestures({
+								x: translateX,
+								y: translateY,
+							})
+							.toTransformStyle();
 
 						return {
 							contentStyle: {
@@ -56,6 +95,7 @@ export default function StyleIdLayout() {
 									},
 								],
 							},
+							[activeBoundId]: unfocusedBound,
 						};
 					},
 					transitionSpec: {

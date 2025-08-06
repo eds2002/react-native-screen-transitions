@@ -122,10 +122,8 @@ export const DraggableCard = (
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["horizontal", "vertical"],
-		screenStyleInterpolator: ({ current, next, layouts: { screen } }) => {
+		screenStyleInterpolator: ({ current, progress, layouts: { screen } }) => {
 			"worklet";
-
-			const progress = current.progress + (next?.progress ?? 0);
 
 			/** Combined */
 			const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.75]);

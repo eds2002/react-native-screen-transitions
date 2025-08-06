@@ -5,7 +5,7 @@ export type BoundsBuilder = {
 	 * Include gesture offsets (x/y) in the computed transform.
 	 * Useful when the transition should be gesture-driven or partially interactive.
 	 */
-	withGestures: () => BoundsBuilder;
+	withGestures: (options?: { x?: number; y?: number }) => BoundsBuilder;
 
 	/**
 	 * Set the target bounds to the full screen dimensions.
@@ -40,6 +40,11 @@ export type BoundsBuilder = {
 	 * - relative(): translates from dx/dy to 0/0
 	 */
 	toResizeStyle: () => StyleProps;
+	/**
+	 * Build animated content style to animate the element's position/scale/rotation
+	 * between bounds. Honors absolute()/relative() and withGestures().
+	 */
+	toContentStyle: () => StyleProps;
 };
 
 export type BoundEntry = {

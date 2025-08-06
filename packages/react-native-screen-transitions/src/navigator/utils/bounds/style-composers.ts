@@ -1,27 +1,49 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type { BoundsBuilderOptions } from "./_types/builder";
+import type {
+	ContentTransformGeometry,
+	RelativeGeometry,
+} from "./_types/geometry";
 
-export type Params = {
+/**
+ * Common interpolation helper signature used by composers.
+ * It maps from a -> b over the already-determined progress range.
+ */
+export type Interp = (a: number, b: number) => number;
+
+/**
+ * Element-level (relative) params shared by size/transform composers.
+ * - start/end: absolute window bounds of the element in previous/next phases
+ * - geometry: relative deltas and scales between start/end (dx, dy, scaleX, scaleY, ...)
+ * - interp: function to interpolate between numbers using the correct progress range
+ */
+export type ElementComposeParams = {
 	start: MeasuredDimensions;
 	end: MeasuredDimensions;
-
-	dx: number;
-	dy: number;
-	scaleX: number;
-	scaleY: number;
-
-	gestureX: number;
-	gestureY: number;
-
-	entering: boolean;
-
-	interp: (a: number, b: number) => number;
+	geometry: RelativeGeometry;
+	interp: Interp;
+	computeOptions: BoundsBuilderOptions;
 };
 
-export function composeSizeAbsolute(params: Params): StyleProps {
-	"worklet";
-	const { start, end, entering, interp } = params;
+/**
+ * Screen-level content transform params (for aligning destination bound to source).
+ * - start/end: absolute window bounds for the shared id (source/destination)
+ * - geometry: precomputed screen-level tx/ty/sx/sy plus ranges/entering
+ * - interp: function to interpolate between numbers using the correct progress range
+ */
+export type ContentComposeParams = {
+	start: MeasuredDimensions;
+	end: MeasuredDimensions;
+	geometry: ContentTransformGeometry;
+	interp: Interp;
+	computeOptions: BoundsBuilderOptions;
+};
 
-	if (entering) {
+export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
+	"worklet";
+	const { start, end, geometry, interp } = params;
+
+	if (geometry.entering) {
 		return {
 			width: interp(start.width, end.width),
 			height: interp(start.height, end.height),
@@ -39,79 +61,112 @@ export function composeSizeAbsolute(params: Params): StyleProps {
 			{ translateX: interp(end.pageX, start.pageX) },
 			{ translateY: interp(end.pageY, start.pageY) },
 		],
-	} satisfies StyleProps;
+	};
 }
 
-export function composeSizeRelative(params: Params): StyleProps {
+export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 	"worklet";
-	const { start, end, dx, dy, entering, interp } = params;
+	const { start, end, geometry, interp } = params;
 
-	if (entering) {
+	if (geometry.entering) {
 		return {
-			transform: [{ translateX: interp(dx, 0) }, { translateY: interp(dy, 0) }],
+			transform: [
+				{ translateX: interp(geometry.dx, 0) },
+				{ translateY: interp(geometry.dy, 0) },
+			],
 			width: interp(start.width, end.width),
 			height: interp(start.height, end.height),
-		} satisfies StyleProps;
+		};
 	}
 
 	return {
-		transform: [{ translateX: interp(0, -dx) }, { translateY: interp(0, -dy) }],
+		transform: [
+			{ translateX: interp(0, -geometry.dx) },
+			{ translateY: interp(0, -geometry.dy) },
+		],
 		width: interp(end.width, start.width),
 		height: interp(end.height, start.height),
-	} satisfies StyleProps;
+	};
 }
 
-export function composeTransformAbsolute(params: Params): StyleProps {
+export function composeTransformAbsolute(
+	params: ElementComposeParams,
+): StyleProps {
 	"worklet";
-	const { start, end, scaleX, scaleY, entering, interp } = params;
+	const { start, end, geometry, interp } = params;
 
-	if (entering) {
+	if (geometry.entering) {
 		return {
 			transform: [
 				{ translateX: interp(start.pageX, end.pageX) },
 				{ translateY: interp(start.pageY, end.pageY) },
-				{ scaleX: interp(scaleX, 1) },
-				{ scaleY: interp(scaleY, 1) },
+				{ scaleX: interp(geometry.scaleX, 1) },
+				{ scaleY: interp(geometry.scaleY, 1) },
 			],
-		} satisfies StyleProps;
+		};
 	}
 
 	return {
 		transform: [
 			{ translateX: interp(end.pageX, start.pageX) },
 			{ translateY: interp(end.pageY, start.pageY) },
-			{ scaleX: interp(1, 1 / scaleX) },
-			{ scaleY: interp(1, 1 / scaleY) },
+			{ scaleX: interp(1, 1 / geometry.scaleX) },
+			{ scaleY: interp(1, 1 / geometry.scaleY) },
 		],
-	} satisfies StyleProps;
+	};
 }
 
-export function composeTransformRelative(params: Params): StyleProps {
+export function composeTransformRelative(
+	params: ElementComposeParams,
+): StyleProps {
 	"worklet";
-	const { dx, dy, scaleX, scaleY, gestureX, gestureY, entering, interp } =
-		params;
+	const { geometry, computeOptions, interp } = params;
 
-	if (entering) {
+	if (geometry.entering) {
 		return {
 			transform: [
-				{ translateX: gestureX },
-				{ translateY: gestureY },
-				{ translateX: interp(dx, 0) },
-				{ translateY: interp(dy, 0) },
-				{ scaleX: interp(scaleX, 1) },
-				{ scaleY: interp(scaleY, 1) },
+				{ translateX: computeOptions.withGestures?.x ?? 0 },
+				{ translateY: computeOptions.withGestures?.y ?? 0 },
+				{ translateX: interp(geometry.dx, 0) },
+				{ translateY: interp(geometry.dy, 0) },
+				{ scaleX: interp(geometry.scaleX, 1) },
+				{ scaleY: interp(geometry.scaleY, 1) },
 			],
-		} satisfies StyleProps;
+		};
 	}
 
 	return {
 		transform: [
-			{ translateX: gestureX },
-			{ translateY: gestureY },
-			{ translateX: interp(0, -dx) },
-			{ translateY: interp(0, -dy) },
-			{ scaleX: interp(1, 1 / scaleX) },
-			{ scaleY: interp(1, 1 / scaleY) },
+			{ translateX: computeOptions.withGestures?.x ?? 0 },
+			{ translateY: computeOptions.withGestures?.y ?? 0 },
+			{ translateX: interp(0, -geometry.dx) },
+			{ translateY: interp(0, -geometry.dy) },
+			{ scaleX: interp(1, 1 / geometry.scaleX) },
+			{ scaleY: interp(1, 1 / geometry.scaleY) },
 		],
-	} satisfies StyleProps;
+	};
+}
+
+export function composeContentStyle(params: ContentComposeParams): StyleProps {
+	"worklet";
+	const { geometry, interp } = params;
+	const { s, tx, ty, entering } = geometry;
+
+	if (entering) {
+		return {
+			transform: [
+				{ translateX: interp(tx, 0) },
+				{ translateY: interp(ty, 0) },
+				{ scale: interp(s, 1) },
+			],
+		};
+	}
+
+	return {
+		transform: [
+			{ translateX: interp(0, tx) },
+			{ translateY: interp(0, ty) },
+			{ scale: interp(1, s) },
+		],
+	};
 }

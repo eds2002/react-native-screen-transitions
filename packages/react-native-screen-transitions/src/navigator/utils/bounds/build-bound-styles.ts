@@ -2,14 +2,22 @@ import type { ScaledSize } from "react-native";
 import { interpolate, type MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "src/types/animation";
 import type { BoundsBuilder } from "src/types/bounds";
-import type { BoundStyleOptions, BoundsStyleComputeParams } from "./_types";
+import type {
+	BoundsBuilderComputeParams,
+	BoundsBuilderOptions,
+} from "./_types/builder";
 import { FULLSCREEN_DIMENSIONS } from "./constants";
-import { computeGeometry } from "./geometry";
 import {
+	computeContentTransformGeometry,
+	computeRelativeGeometry,
+} from "./geometry";
+import {
+	composeContentStyle,
 	composeSizeAbsolute,
 	composeSizeRelative,
 	composeTransformAbsolute,
 	composeTransformRelative,
+	type ElementComposeParams,
 } from "./style-composers";
 
 type Phase = "previous" | "current" | "next";
@@ -21,7 +29,7 @@ function resolveBounds(props: {
 	next?: ScreenTransitionState;
 	toRect?: Partial<MeasuredDimensions>;
 	dimensions: ScaledSize;
-	computeOptions: BoundStyleOptions;
+	computeOptions: BoundsBuilderOptions;
 }) {
 	"worklet";
 	const entering = !props.next;
@@ -29,7 +37,7 @@ function resolveBounds(props: {
 	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
 
 	const startPhase: Phase = entering ? "previous" : "current";
-	const endPhase: Phase = entering ? "current" : "previous";
+	const endPhase: Phase = entering ? "current" : "next";
 
 	const resolve = (phase?: Phase) => {
 		"worklet";
@@ -62,8 +70,8 @@ const computeBoundStyles = (
 		progress,
 		dimensions,
 		method,
-	}: BoundsStyleComputeParams,
-	computeOptions: BoundStyleOptions = {},
+	}: BoundsBuilderComputeParams,
+	computeOptions: BoundsBuilderOptions = {},
 ) => {
 	"worklet";
 	if (!id) return {};
@@ -79,25 +87,36 @@ const computeBoundStyles = (
 
 	if (!start || !end) return {};
 
-	const { ranges, ...geometry } = computeGeometry(
-		{ start, end, entering },
-		current,
-		next,
-		computeOptions,
-	);
+	const relativeGeometry = computeRelativeGeometry({ start, end, entering });
 
 	const interp = (a: number, b: number) =>
-		interpolate(progress, ranges, [a, b]);
+		interpolate(progress, relativeGeometry.ranges, [a, b]);
 
 	const common = {
 		start,
 		end,
 		interp,
-		...geometry,
-	};
+		geometry: relativeGeometry,
+		computeOptions,
+	} satisfies ElementComposeParams;
 
 	const isSize = method === "size";
 	const isAbs = !!computeOptions.absolute;
+
+	if (method === "content") {
+		const contentGeometry = computeContentTransformGeometry({
+			start,
+			end,
+			entering,
+			dimensions,
+		});
+
+		return composeContentStyle({
+			...common,
+			geometry: contentGeometry,
+			computeOptions,
+		});
+	}
 
 	return isSize
 		? isAbs
@@ -109,12 +128,12 @@ const computeBoundStyles = (
 };
 
 export function buildBoundStyles(
-	params: Omit<BoundsStyleComputeParams, "method">,
+	params: Omit<BoundsBuilderComputeParams, "method">,
 ): BoundsBuilder {
 	"worklet";
 
-	const DEFAULT_OPTIONS: BoundStyleOptions = {
-		withGestures: false,
+	const DEFAULT_OPTIONS: BoundsBuilderOptions = {
+		withGestures: { x: 0, y: 0 },
 		toFullscreen: false,
 		absolute: false,
 		relative: true,
@@ -125,8 +144,8 @@ export function buildBoundStyles(
 	};
 
 	const builder = (): BoundsBuilder => ({
-		withGestures: () => {
-			cfg.options.withGestures = true;
+		withGestures: (options) => {
+			cfg.options.withGestures = options;
 			return builder();
 		},
 		toFullscreen: () => {
@@ -151,6 +170,9 @@ export function buildBoundStyles(
 		},
 		toResizeStyle: () => {
 			return computeBoundStyles({ ...params, method: "size" }, cfg.options);
+		},
+		toContentStyle: () => {
+			return computeBoundStyles({ ...params, method: "content" }, cfg.options);
 		},
 	});
 

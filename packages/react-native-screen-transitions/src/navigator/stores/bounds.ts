@@ -26,9 +26,7 @@ function setBounds(
 		if (!state[screenId]) {
 			state[screenId] = {};
 		}
-		if (!state[screenId][boundId]) {
-			state[screenId][boundId] = { bounds, styles };
-		}
+		state[screenId][boundId] = { bounds, styles };
 
 		return state;
 	});

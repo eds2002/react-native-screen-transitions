@@ -1,55 +1,21 @@
 import type React from "react";
-import {
-	type ComponentType,
-	forwardRef,
-	memo,
-	useCallback,
-	useMemo,
-} from "react";
+import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-	measure,
-	runOnUI,
-	useAnimatedRef,
-} from "react-native-reanimated";
+import { GestureDetector } from "react-native-gesture-handler";
+import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
+import { useBoundMeasurer } from "../hooks/bounds/use-bound-measurer";
 import { useScrollProgress } from "../hooks/gestures/use-scroll-progress";
 import { useGestureContext } from "../navigator/context/gestures";
 import { useKeys } from "../navigator/context/keys";
-import { Bounds } from "../navigator/stores/bounds";
 import type { TransitionAwareProps } from "../types/core";
 import type { Any } from "../types/utils";
+import { BoundActivator } from "./bounds-activator";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
 	enableTapActivate?: boolean; // default true
 }
-
-interface SharedBoundSelectorProps {
-	sharedBoundTag?: string;
-	enableTap?: boolean;
-	children: React.ReactNode;
-}
-
-const SharedBoundSelector = ({
-	sharedBoundTag,
-	enableTap = true,
-	children,
-}: SharedBoundSelectorProps) => {
-	const tapGesture = useMemo(() => {
-		return Gesture.Tap().onEnd((_, success) => {
-			"worklet";
-			if (success && sharedBoundTag) {
-				Bounds.setActiveBoundId(sharedBoundTag);
-			}
-		});
-	}, [sharedBoundTag]);
-
-	if (!enableTap || !sharedBoundTag) return children;
-
-	return <GestureDetector gesture={tapGesture}>{children}</GestureDetector>;
-};
 
 export function createTransitionAwareComponent<P extends object>(
 	Wrapped: ComponentType<P>,
@@ -97,34 +63,33 @@ export function createTransitionAwareComponent<P extends object>(
 			id: sharedBoundTag || styleId,
 		});
 
-		const measureComponent = useCallback(() => {
-			"worklet";
-			if (!sharedBoundTag) return;
-			const m = measure(animatedRef);
-			if (m) {
-				Bounds.setBounds(current.route.key, sharedBoundTag, m, style);
-			}
-		}, [sharedBoundTag, animatedRef, current.route.key, style]);
+		const { measureAndSet, measureOnLayout } = useBoundMeasurer({
+			sharedBoundTag,
+			animatedRef,
+			current,
+			style,
+		});
 
 		if (isScrollable) {
 			return <ScrollableInner {...(props as Any)} ref={ref} />;
 		}
 
 		return (
-			<SharedBoundSelector
+			<BoundActivator
 				sharedBoundTag={sharedBoundTag}
 				enableTap={enableTapActivate}
+				measure={measureAndSet}
 			>
 				<AnimatedComponent
 					{...(rest as Any)}
 					ref={animatedRef}
 					style={[style, associatedStyles]}
 					onPress={onPress}
-					onLayout={runOnUI(measureComponent)}
+					onLayout={runOnUI(measureOnLayout)}
 				>
 					{children}
 				</AnimatedComponent>
-			</SharedBoundSelector>
+			</BoundActivator>
 		);
 	});
 

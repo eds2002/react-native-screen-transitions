@@ -166,12 +166,12 @@ export default function ImageDetail() {
 				<Transition.View styleId={"masked-view"} style={[styles.maskElement]} />
 			}
 		>
-			<Transition.View>
-				<DragHandle />
+			<Transition.View styleId={"container-view"}>
 				<Transition.ScrollView
 					contentContainerStyle={[styles.scrollContent]}
 					style={[styles.scroll, { backgroundColor: "white" }]}
 				>
+					<DragHandle />
 					<ProductHeader />
 					<SharedImage
 						id={id}
