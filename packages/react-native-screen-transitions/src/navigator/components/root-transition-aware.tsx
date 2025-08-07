@@ -33,15 +33,24 @@ export const RootTransitionAware = memo(
 		});
 
 		return (
-			<Animated.View style={[{ flex: 1 }]}>
+			<Animated.View style={styles.container}>
 				<Animated.View
 					style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
 					pointerEvents="none"
 				/>
-				<Animated.View style={[{ flex: 1 }, animatedContentStyle]}>
+				<Animated.View style={[styles.content, animatedContentStyle]}>
 					{children}
 				</Animated.View>
 			</Animated.View>
 		);
 	},
 );
+
+const styles = StyleSheet.create({
+	container: {
+		flex: 1,
+	},
+	content: {
+		flex: 1,
+	},
+});

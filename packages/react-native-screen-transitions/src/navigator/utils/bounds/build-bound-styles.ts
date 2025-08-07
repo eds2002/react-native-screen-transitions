@@ -22,6 +22,13 @@ import {
 
 type Phase = "previous" | "current" | "next";
 
+const DEFAULT_OPTIONS: BoundsBuilderOptions = Object.freeze({
+	withGestures: Object.freeze({ x: 0, y: 0 }),
+	toFullscreen: false,
+	absolute: false,
+	relative: true,
+});
+
 function resolveBounds(props: {
 	id: string;
 	previous?: ScreenTransitionState;
@@ -132,15 +139,8 @@ export function buildBoundStyles(
 ): BoundsBuilder {
 	"worklet";
 
-	const DEFAULT_OPTIONS: BoundsBuilderOptions = {
-		withGestures: { x: 0, y: 0 },
-		toFullscreen: false,
-		absolute: false,
-		relative: true,
-	};
-
 	const cfg = {
-		options: DEFAULT_OPTIONS,
+		options: { ...DEFAULT_OPTIONS },
 	};
 
 	const builder = (): BoundsBuilder => ({

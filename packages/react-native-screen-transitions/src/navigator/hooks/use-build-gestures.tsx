@@ -62,7 +62,18 @@ export const useBuildGestures = ({
 		? gestureDirection
 		: [gestureDirection];
 
-	const nativeGesture = Gesture.Native();
+	const allowed = useMemo(
+		() => ({
+			bidirectional: directions.includes("bidirectional"),
+			vertical: directions.includes("vertical"),
+			verticalInverted: directions.includes("vertical-inverted"),
+			horizontal: directions.includes("horizontal"),
+			horizontalInverted: directions.includes("horizontal-inverted"),
+		}),
+		[directions],
+	);
+
+	const nativeGesture = useMemo(() => Gesture.Native(), []);
 
 	const onTouchesDown = useCallback(
 		(e: GestureTouchEvent) => {
@@ -102,52 +113,32 @@ export const useBuildGestures = ({
 
 			let shouldActivate = false;
 
-			for (const direction of directions) {
-				switch (direction) {
-					case "vertical":
-						if (isSwipingDown) {
-							shouldActivate = scrollProgress.value.y <= 0;
-						}
-						break;
+			if (allowed.vertical && isSwipingDown) {
+				shouldActivate = scrollProgress.value.y <= 0;
+			}
+			if (allowed.verticalInverted && isSwipingUp) {
+				const maxScrollableY =
+					scrollProgress.value.contentHeight -
+					scrollProgress.value.layoutHeight;
 
-					case "vertical-inverted":
-						if (isSwipingUp) {
-							const maxScrollableY =
-								scrollProgress.value.contentHeight -
-								scrollProgress.value.layoutHeight;
-
-							shouldActivate = scrollProgress.value.y >= maxScrollableY;
-						}
-						break;
-
-					case "horizontal":
-						if (isSwipingRight) {
-							shouldActivate = scrollProgress.value.x <= 0;
-						}
-						break;
-
-					case "horizontal-inverted":
-						if (isSwipingLeft) {
-							const maxProgress =
-								scrollProgress.value.contentWidth -
-								scrollProgress.value.layoutWidth;
-
-							shouldActivate = scrollProgress.value.x >= maxProgress;
-						}
-						break;
-
-					case "bidirectional":
-						if (isSwipingDown) {
-							shouldActivate = scrollProgress.value.y <= 0;
-						} else if (isSwipingUp) {
-							shouldActivate = scrollProgress.value.y <= 0;
-						} else if (isSwipingRight || isSwipingLeft) {
-							shouldActivate = true;
-						}
-						break;
+				shouldActivate = scrollProgress.value.y >= maxScrollableY;
+			}
+			if (allowed.horizontal && isSwipingRight) {
+				shouldActivate = scrollProgress.value.x <= 0;
+			}
+			if (allowed.horizontalInverted && isSwipingLeft) {
+				const maxProgress =
+					scrollProgress.value.contentWidth - scrollProgress.value.layoutWidth;
+				shouldActivate = scrollProgress.value.x >= maxProgress;
+			}
+			if (allowed.bidirectional) {
+				if (isSwipingDown) {
+					shouldActivate = scrollProgress.value.y >= 0;
+				} else if (isSwipingUp) {
+					shouldActivate = scrollProgress.value.y <= 0;
+				} else if (isSwipingRight || isSwipingLeft) {
+					shouldActivate = true;
 				}
-
-				if (shouldActivate) break;
 			}
 
 			if (
@@ -159,7 +150,7 @@ export const useBuildGestures = ({
 				manager.fail();
 			}
 		},
-		[initialTouch, directions, scrollProgress, gestures],
+		[initialTouch, scrollProgress, gestures, allowed],
 	);
 
 	const onStart = useCallback(() => {
@@ -190,7 +181,7 @@ export const useBuildGestures = ({
 				"clamp",
 			);
 
-			if (directions.includes("bidirectional")) {
+			if (allowed.bidirectional) {
 				const distance = Math.sqrt(
 					event.translationX ** 2 + event.translationY ** 2,
 				);
@@ -198,10 +189,10 @@ export const useBuildGestures = ({
 			} else {
 				let maxProgress = 0;
 
-				const allowedDown = directions.includes("vertical");
-				const allowedUp = directions.includes("vertical-inverted");
-				const allowedRight = directions.includes("horizontal");
-				const allowedLeft = directions.includes("horizontal-inverted");
+				const allowedDown = allowed.vertical;
+				const allowedUp = allowed.verticalInverted;
+				const allowedRight = allowed.horizontal;
+				const allowedLeft = allowed.horizontalInverted;
 
 				if (allowedRight && event.translationX > 0) {
 					const currentProgress = mapGestureToProgress(
@@ -242,7 +233,7 @@ export const useBuildGestures = ({
 				animations.progress.value = 1 - gestureProgress;
 			}
 		},
-		[dimensions, directions, gestures, animations, gestureDrivesProgress],
+		[dimensions, gestures, animations, gestureDrivesProgress, allowed],
 	);
 
 	const setNavigatorDismissal = useCallback(() => {

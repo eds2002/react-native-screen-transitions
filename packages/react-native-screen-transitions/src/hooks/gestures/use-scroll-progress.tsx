@@ -12,17 +12,17 @@ export const useScrollProgress = (props: ScrollProgressHookProps) => {
 	const { scrollProgress } = useGestureContext();
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
-			scrollProgress.modify((value) => {
+			scrollProgress.modify((v) => {
 				"worklet";
-				return {
-					...value,
-					x: event.contentOffset.x,
-					y: event.contentOffset.y,
-					layoutHeight: event.layoutMeasurement.height,
-					layoutWidth: event.layoutMeasurement.width,
-					contentHeight: event.contentSize.height,
-					contentWidth: event.contentSize.width,
-				};
+
+				v.x = event.contentOffset.x;
+				v.y = event.contentOffset.y;
+				v.layoutHeight = event.layoutMeasurement.height;
+				v.layoutWidth = event.layoutMeasurement.width;
+				v.contentHeight = event.contentSize.height;
+				v.contentWidth = event.contentSize.width;
+
+				return v;
 			});
 		},
 	});
@@ -31,13 +31,11 @@ export const useScrollProgress = (props: ScrollProgressHookProps) => {
 		(width: number, height: number) => {
 			props.onContentSizeChange?.(width, height);
 
-			scrollProgress.modify((value) => {
+			scrollProgress.modify((v) => {
 				"worklet";
-				return {
-					...value,
-					contentWidth: width,
-					contentHeight: height,
-				};
+				v.contentWidth = width;
+				v.contentHeight = height;
+				return v;
 			});
 		},
 		[scrollProgress, props.onContentSizeChange],
