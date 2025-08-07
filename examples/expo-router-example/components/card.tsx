@@ -7,6 +7,7 @@ interface CardProps {
 	title: string;
 	description: string;
 	href: Href;
+	icon?: string;
 }
 
 const TATouchableOpacity =
@@ -47,6 +48,7 @@ Card.Aware = ({
 	description,
 	href,
 	sharedBoundTag,
+	icon,
 }: CardProps & { sharedBoundTag?: string }) => {
 	return (
 		<TATouchableOpacity
@@ -57,7 +59,7 @@ Card.Aware = ({
 		>
 			<View style={styles.content}>
 				<View style={styles.avatar}>
-					<Text style={styles.avatarText}>{title.charAt(0)}</Text>
+					<Text style={styles.avatarText}>{icon ?? title.charAt(0)}</Text>
 				</View>
 				<View style={styles.textContainer}>
 					<Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">

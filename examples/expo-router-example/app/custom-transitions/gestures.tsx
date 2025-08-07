@@ -11,7 +11,7 @@ export default function IosCardHorizontalPreset() {
 			contentContainerStyle={{
 				backgroundColor: "white",
 				flex: 1,
-			}}
+    }}
 			scrollEnabled={false}
 		>
 			<Code showLineNumbers>

@@ -222,6 +222,69 @@ export default function RootLayout() {
 						},
 					}}
 				/>
+				<Stack.Screen
+					name="examples/settings-screen"
+					options={{
+						...Transition.presets.SlideFromTop(),
+						transitionSpec: {
+							open: {
+								duration: 300,
+								easing: Easing.bezierFn(0.6, 1.23, 0.42, 1),
+							},
+							close: {
+								duration: 300,
+								easing: Easing.bezierFn(0.6, 1.23, 0.42, 1),
+							},
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="examples/settings-modal"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: "vertical",
+						screenStyleInterpolator: ({
+							focused,
+							progress,
+							layouts: { screen },
+							insets,
+						}) => {
+							"worklet";
+
+							if (focused) {
+								const y = interpolate(progress, [0, 1], [screen.height, 0]);
+								const overlay = interpolateColor(
+									progress,
+									[0, 1],
+									["rgba(0,0,0,0)", "rgba(0,0,0,0.5)"],
+								);
+								return {
+									overlayStyle: {
+										backgroundColor: overlay,
+									},
+									contentStyle: {
+										transform: [{ translateY: y }],
+
+										backgroundColor: "#fff",
+										margin: 16,
+										marginBottom: insets.bottom,
+										marginTop: "auto",
+										flex: 0.9,
+										borderRadius: 36,
+										overflow: "hidden",
+									},
+								};
+							}
+
+							return {};
+						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
+						},
+					}}
+				/>
 			</Stack>
 		</GestureHandlerRootView>
 	);
