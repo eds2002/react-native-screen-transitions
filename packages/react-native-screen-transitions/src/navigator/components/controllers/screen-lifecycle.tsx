@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { useKeys } from "../../context/keys";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { Animations } from "../../stores/animations";
@@ -42,10 +42,11 @@ export const ScreenLifecycleController = ({
 
 		const onFinish = (finished: boolean) => {
 			if (finished) {
-				current.navigation.dispatch(e.data.action);
 				Animations.clear(current.route.key);
 				Gestures.clear(current.route.key);
 				Bounds.clear(current.route.key);
+				Bounds.clearActive();
+				current.navigation.dispatch(e.data.action);
 			}
 		};
 
@@ -65,9 +66,7 @@ export const ScreenLifecycleController = ({
 		});
 	});
 
-	useEffect(() => {
-		handleInitialize();
-	}, [handleInitialize]);
+	useLayoutEffect(handleInitialize, []);
 
 	useEffect(() => {
 		const unsubscribe = current.navigation.addListener(

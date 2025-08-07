@@ -265,49 +265,18 @@ export const useBuildGestures = ({
 
 			const dismissThreshold = 0.5;
 
-			if (directions.includes("bidirectional")) {
-				const finalX = Math.abs(
-					translationX + velocityX * gestureVelocityImpact,
-				);
-				const finalY = Math.abs(
-					translationY + velocityY * gestureVelocityImpact,
-				);
-				const finalDistance = Math.sqrt(finalX ** 2 + finalY ** 2);
-				gestures.isDismissing.value = Number(
-					finalDistance > dimensions.width * dismissThreshold,
-				);
-			} else {
-				const allowedDown = directions.includes("vertical");
-				const allowedUp = directions.includes("vertical-inverted");
-				const allowedRight = directions.includes("horizontal");
-				const allowedLeft = directions.includes("horizontal-inverted");
+			const finalX = translationX + velocityX * gestureVelocityImpact;
+			const finalY = translationY + velocityY * gestureVelocityImpact;
+			const finalDistance = Math.sqrt(finalX * finalX + finalY * finalY);
 
-				if (
-					allowedRight &&
-					translationX + velocityX * gestureVelocityImpact >
-						dimensions.width * dismissThreshold
-				) {
-					gestures.isDismissing.value = 1;
-				} else if (
-					allowedLeft &&
-					-translationX - velocityX * gestureVelocityImpact >
-						dimensions.width * dismissThreshold
-				) {
-					gestures.isDismissing.value = 1;
-				} else if (
-					allowedDown &&
-					translationY + velocityY * gestureVelocityImpact >
-						dimensions.height * dismissThreshold
-				) {
-					gestures.isDismissing.value = 1;
-				} else if (
-					allowedUp &&
-					-translationY - velocityY * gestureVelocityImpact >
-						dimensions.height * dismissThreshold
-				) {
-					gestures.isDismissing.value = 1;
-				}
-			}
+			const diagonal = Math.sqrt(
+				dimensions.width * dimensions.width +
+					dimensions.height * dimensions.height,
+			);
+
+			gestures.isDismissing.value = Number(
+				finalDistance > diagonal * dismissThreshold,
+			);
 
 			if (gestures.isDismissing.value) {
 				runOnJS(setNavigatorDismissal)();
@@ -332,7 +301,6 @@ export const useBuildGestures = ({
 		},
 		[
 			dimensions,
-			directions,
 			animations,
 			transitionSpec,
 			gestureVelocityImpact,

@@ -56,10 +56,16 @@ function clear(routeKey: ScreenKey) {
 	});
 }
 
+function clearActive() {
+	"worklet";
+	activeBoundId.value = null;
+}
+
 export const Bounds = {
 	setBounds,
 	getBounds,
 	setActiveBoundId,
 	getActiveBoundId,
 	clear,
+	clearActive,
 };

@@ -1,4 +1,5 @@
 import type { Href } from "expo-router";
+import { View } from "react-native";
 import { Card } from "@/components/card";
 import Page from "@/components/page";
 
@@ -27,20 +28,52 @@ const pages: PageType[] = [
 	},
 ] as const;
 
+const nestedPages: PageType[] = [
+	{
+		title: "Nested Transitions",
+		description: "Create deeply nested animations ( not recommended )",
+		href: "/nested/a",
+	},
+];
+
 export default function Home() {
 	return (
 		<Page
-			title="Home"
-			description="Welcome to the expo router example, click on any of the cards below to see the examples."
+			title="Expo Router Example"
+			description="Hey hello, welcome to the expo router example."
 		>
-			{pages.map((page, idx) => (
-				<Card
-					key={idx.toString()}
-					title={page.title}
-					description={page.description}
-					href={page.href}
+			<View>
+				<Page.Group
+					title="1. Screen Transitions"
+					description="Learn how to use / define your own screen transitions."
 				/>
-			))}
+				<View style={{ gap: 24, marginTop: 24 }}>
+					{pages.map((page, idx) => (
+						<Card
+							key={idx.toString()}
+							title={page.title}
+							description={page.description}
+							href={page.href}
+						/>
+					))}
+				</View>
+			</View>
+			<View>
+				<Page.Group
+					title="2. Nested Transitions"
+					description="Create deeply nested animations ( not recommended )"
+				/>
+				<View style={{ gap: 24, marginTop: 24 }}>
+					{nestedPages.map((page, idx) => (
+						<Card
+							key={idx.toString()}
+							title={page.title}
+							description={page.description}
+							href={page.href}
+						/>
+					))}
+				</View>
+			</View>
 		</Page>
 	);
 }

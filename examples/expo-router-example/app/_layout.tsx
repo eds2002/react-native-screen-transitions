@@ -46,6 +46,15 @@ export default function RootLayout() {
 				/>
 
 				<Stack.Screen
+					name="nested"
+					options={{
+						headerShown: false,
+						enableTransitions: true,
+						...Transition.presets.SlideFromTop(),
+					}}
+				/>
+
+				<Stack.Screen
 					name="mocks/palette-profile"
 					options={{
 						enableTransitions: true,
