@@ -1,5 +1,9 @@
 import { useCallback } from "react";
-import type { NativeScrollEvent, NativeSyntheticEvent } from "react-native";
+import type {
+	LayoutChangeEvent,
+	NativeScrollEvent,
+	NativeSyntheticEvent,
+} from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import { useGestureContext } from "../../context/gestures";
 
@@ -14,14 +18,8 @@ export const useScrollProgress = (props: ScrollProgressHookProps) => {
 		onScroll: (event) => {
 			scrollProgress.modify((v) => {
 				"worklet";
-
 				v.x = event.contentOffset.x;
 				v.y = event.contentOffset.y;
-				v.layoutHeight = event.layoutMeasurement.height;
-				v.layoutWidth = event.layoutMeasurement.width;
-				v.contentHeight = event.contentSize.height;
-				v.contentWidth = event.contentSize.width;
-
 				return v;
 			});
 		},
@@ -41,8 +39,22 @@ export const useScrollProgress = (props: ScrollProgressHookProps) => {
 		[scrollProgress, props.onContentSizeChange],
 	);
 
+	const onLayout = useCallback(
+		(event: LayoutChangeEvent) => {
+			const { width, height } = event.nativeEvent.layout;
+			scrollProgress.modify((v) => {
+				"worklet";
+				v.layoutHeight = height;
+				v.layoutWidth = width;
+				return v;
+			});
+		},
+		[scrollProgress],
+	);
+
 	return {
 		scrollHandler,
 		onContentSizeChange,
+		onLayout,
 	};
 };

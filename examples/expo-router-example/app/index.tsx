@@ -155,14 +155,6 @@ const ExamplesComponent = memo(() => {
 });
 
 const DebugComponent = memo(() => {
-	const debug: PageType[] = [
-		{
-			title: "Deeply Nested Scrolls",
-			description: "Can nested scrolls dictate the parent navigator gesture",
-			href: "/debug/deeply-nested-scrolls",
-		},
-	] as const;
-
 	return (
 		<View style={{ gap: 32 }}>
 			<View>
@@ -170,16 +162,6 @@ const DebugComponent = memo(() => {
 					title="Common Issues"
 					description="Debugging examples for common issues."
 				/>
-				<View style={{ gap: 24, marginTop: 24 }}>
-					{debug.map((page, idx) => (
-						<Card
-							key={idx.toString()}
-							title={`${page.title}`}
-							description={page.description}
-							href={page.href}
-						/>
-					))}
-				</View>
 			</View>
 		</View>
 	);
