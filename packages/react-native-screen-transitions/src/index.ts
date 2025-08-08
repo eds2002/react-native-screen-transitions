@@ -20,9 +20,8 @@ export default {
 	createTransitionAwareComponent,
 };
 
-export { createNativeStackNavigator } from "./navigator/components/createNativeStackNavigator";
-
-export { useScreenAnimation } from "./navigator/hooks/use-screen-animation";
+export { useScreenAnimation } from "./hooks/animation/use-screen-animation";
+export { createNativeStackNavigator } from "./integrations/native-stack/navigators/createNativeStackNavigator";
 
 export type {
 	NativeStackHeaderLeftProps,

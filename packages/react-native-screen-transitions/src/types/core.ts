@@ -1,4 +1,5 @@
 import type { AnimatedProps } from "react-native-reanimated";
+import type { TransitionSpec } from "./animation";
 
 export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	/**
@@ -13,4 +14,9 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * Use this to store the measurements of the component when it is pressed.
 	 */
 	sharedBoundTag?: string;
+};
+
+export type TransitionConfig = {
+	open: TransitionSpec;
+	close: TransitionSpec;
 };

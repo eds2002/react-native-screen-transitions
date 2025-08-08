@@ -1,5 +1,5 @@
 import { useAnimatedStyle } from "react-native-reanimated";
-import { _useScreenAnimation } from "../../navigator/hooks/use-screen-animation";
+import { _useScreenAnimation } from "./use-screen-animation";
 
 /**
  * This hook is used to get the associated styles for a given styleId.

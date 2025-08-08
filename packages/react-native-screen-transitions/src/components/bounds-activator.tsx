@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { Bounds } from "../navigator/stores/bounds";
+import { Bounds } from "../stores/bounds";
 
 interface BoundActivatorProps {
 	sharedBoundTag?: string;

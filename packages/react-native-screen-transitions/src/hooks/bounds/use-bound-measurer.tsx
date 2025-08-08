@@ -6,9 +6,9 @@ import {
 	type StyleProps,
 	useSharedValue,
 } from "react-native-reanimated";
-import { useKeys } from "../../navigator/context/keys";
-import { useScreenAnimation } from "../../navigator/hooks/use-screen-animation";
-import { Bounds } from "../../navigator/stores/bounds";
+import { useKeys } from "../../context/keys";
+import { Bounds } from "../../stores/bounds";
+import { useScreenAnimation } from "../animation/use-screen-animation";
 
 interface BoundMeasurerHookProps {
 	sharedBoundTag: string;

@@ -1,4 +1,6 @@
 import type React from "react";
+import { useCallback } from "react";
+
 import {
 	Pressable,
 	StyleSheet,
@@ -7,12 +9,14 @@ import {
 	View,
 } from "react-native";
 import Animated, {
+	type AnimatedRef,
 	interpolate,
 	interpolateColor,
 	type MeasuredDimensions,
 	measure,
 	runOnUI,
 	type SharedValue,
+	scrollTo,
 	useAnimatedReaction,
 	useAnimatedRef,
 	useAnimatedStyle,
@@ -33,18 +37,34 @@ export type TabStripProps = {
 	indicatorHeight?: number;
 };
 
+type TabProps = {
+	tabItemStyle: object;
+	label: string;
+	measurements: SharedValue<Record<string, MeasuredDimensions>>;
+	index: number;
+	scrollRef: AnimatedRef<AnimatedScrollView>;
+	pageWidth: number;
+};
+
 const AnimatedPress = Animated.createAnimatedComponent(Pressable);
 
 const Tab = ({
 	tabItemStyle,
 	label,
 	measurements,
-}: {
-	tabItemStyle: object;
-	label: string;
-	measurements: SharedValue<Record<string, MeasuredDimensions>>;
-}) => {
+	index,
+	scrollRef,
+	pageWidth,
+}: TabProps) => {
 	const ref = useAnimatedRef<View>();
+
+	const onPress = useCallback(() => {
+		runOnUI((r: AnimatedRef<AnimatedScrollView>, i: number, w: number) => {
+			"worklet";
+			scrollTo(r, i * w, 0, true);
+		})(scrollRef, index, pageWidth);
+	}, [scrollRef, index, pageWidth]);
+
 	return (
 		<AnimatedPress
 			ref={ref}
@@ -61,6 +81,7 @@ const Tab = ({
 					}
 				})()
 			}
+			onPress={onPress}
 		>
 			<Text style={[styles.tabLabel]}>{label}</Text>
 		</AnimatedPress>
@@ -135,12 +156,15 @@ export const TabStrip = ({
 	return (
 		<View style={[styles.container, contentContainerStyle]}>
 			<View style={[styles.tabBar, tabBarStyle]}>
-				{tabs.map((key) => (
+				{tabs.map((key, index) => (
 					<Tab
 						key={key}
 						label={key}
 						measurements={measurements}
 						tabItemStyle={tabItemStyle ?? {}}
+						index={index}
+						scrollRef={scrollRef}
+						pageWidth={width}
 					/>
 				))}
 
