@@ -54,8 +54,13 @@ export default function RootLayout() {
 					}}
 				/>
 
+				{/*
+        ==============================
+        EXAMPLES ROUTES
+        ==============================
+        */}
 				<Stack.Screen
-					name="mocks/palette-profile"
+					name="examples/palette-profile"
 					options={{
 						enableTransitions: true,
 						gestureEnabled: true,
@@ -109,7 +114,7 @@ export default function RootLayout() {
 					}}
 				/>
 				<Stack.Screen
-					name="mocks/gallery-modal"
+					name="examples/gallery-modal"
 					options={{
 						enableTransitions: true,
 						gestureDirection: "vertical",
@@ -150,7 +155,7 @@ export default function RootLayout() {
 					}}
 				/>
 				<Stack.Screen
-					name="mocks/delete-warning"
+					name="examples/delete-warning"
 					options={{
 						enableTransitions: true,
 						gestureEnabled: true,
@@ -198,7 +203,7 @@ export default function RootLayout() {
 					}}
 				/>
 				<Stack.Screen
-					name="mocks/fullscreen-nav"
+					name="examples/fullscreen-nav"
 					options={{
 						enableTransitions: true,
 						screenStyleInterpolator: ({ current, next }) => {
@@ -228,11 +233,11 @@ export default function RootLayout() {
 						...Transition.presets.SlideFromTop(),
 						transitionSpec: {
 							open: {
-								duration: 300,
+								duration: 350,
 								easing: Easing.bezierFn(0.6, 1.23, 0.42, 1),
 							},
 							close: {
-								duration: 300,
+								duration: 350,
 								easing: Easing.bezierFn(0.6, 1.23, 0.42, 1),
 							},
 						},
@@ -282,6 +287,190 @@ export default function RootLayout() {
 						transitionSpec: {
 							open: Transition.specs.DefaultSpec,
 							close: Transition.specs.DefaultSpec,
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="examples/x"
+					options={{
+						headerShown: false,
+					}}
+				/>
+				<Stack.Screen
+					name="examples/instagram"
+					options={{
+						headerShown: false,
+					}}
+				/>
+				{/*
+        ==============================
+        E2E ROUTES
+        ==============================
+        */}
+				<Stack.Screen
+					name="e2e/navigation"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: "horizontal",
+						screenStyleInterpolator: ({
+							focused,
+							progress,
+							layouts: {
+								screen: { width },
+							},
+						}) => {
+							"worklet";
+							if (focused) {
+								console.log("focused", progress);
+								return {
+									contentStyle: {
+										transform: [
+											{ translateX: interpolate(progress, [0, 1], [width, 0]) },
+										],
+									},
+								};
+							}
+
+							console.log("progress", progress);
+
+							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+
+							return {
+								contentStyle: {
+									transform: [{ translateX: x }],
+								},
+							};
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="e2e/gestures/all-gesture-directions"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: [
+							"horizontal",
+							"vertical",
+							"horizontal-inverted",
+							"vertical-inverted",
+						],
+						screenStyleInterpolator: ({
+							progress,
+							layouts: {
+								screen: { width },
+							},
+						}) => {
+							"worklet";
+
+							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+
+							return {
+								contentStyle: {
+									transform: [{ translateX: x }],
+								},
+							};
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="e2e/gestures/bi-directional"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: [
+							"horizontal",
+							"vertical",
+							"horizontal-inverted",
+							"vertical-inverted",
+						],
+						screenStyleInterpolator: ({
+							progress,
+							layouts: {
+								screen: { width },
+							},
+						}) => {
+							"worklet";
+
+							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+
+							return {
+								contentStyle: {
+									transform: [{ translateX: x }],
+								},
+							};
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="e2e/gestures/gesture-dismissal"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: ["vertical"],
+						screenStyleInterpolator: ({
+							progress,
+							layouts: {
+								screen: { height },
+							},
+						}) => {
+							"worklet";
+
+							const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
+
+							return {
+								contentStyle: {
+									transform: [{ translateY: y }],
+								},
+							};
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="e2e/gestures-scrollables/vertical"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: ["vertical", "vertical-inverted"],
+						screenStyleInterpolator: ({
+							progress,
+							layouts: {
+								screen: { height },
+							},
+						}) => {
+							"worklet";
+
+							const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
+
+							return {
+								contentStyle: {
+									transform: [{ translateY: y }],
+								},
+							};
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="e2e/gestures-scrollables/horizontal"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: ["horizontal", "horizontal-inverted"],
+						screenStyleInterpolator: ({
+							progress,
+							layouts: {
+								screen: { width },
+							},
+						}) => {
+							"worklet";
+
+							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+
+							return {
+								contentStyle: {
+									transform: [{ translateX: x }],
+								},
+							};
 						},
 					}}
 				/>

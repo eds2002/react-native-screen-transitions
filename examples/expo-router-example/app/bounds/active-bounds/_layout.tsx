@@ -25,29 +25,28 @@ export default function ActiveBoundsLayout() {
 					}) => {
 						"worklet";
 
-						if (!activeBoundId) return {};
-
 						if (focused) {
-							const transform = bounds().relative().toResizeStyle();
+							/**
+							 * We use .relative() here because the bound is constrained by parent components that do not take up the full screen.
+							 * This ensures the animation is relative to its parent container, not the entire screen.
+							 * .transform() (default) - Animates the transform properties (translate, scale, etc.) of the bound, which is generally more performant than animating width/height.
+							 */
+							const focusedBoundStyles = bounds()
+								.relative()
+								.transform()
+								.build();
 
 							return {
-								[activeBoundId]: {
-									...transform,
-									overflow: "hidden",
-									backgroundColor: "red",
-								},
-								overlayStyle: {
-									backgroundColor: "#FFF",
-									opacity: interpolate(progress, [0, 1], [0, 0.5]),
-								},
+								[activeBoundId]: focusedBoundStyles,
 							};
 						}
 
+						const scale = interpolate(progress, [1, 2], [1, 0.95]);
 						return {
 							contentStyle: {
 								transform: [
 									{
-										scale: interpolate(progress, [1, 2], [1, 0.95]),
+										scale,
 									},
 								],
 							},

@@ -32,7 +32,7 @@ export interface ScreenInterpolationProps {
 	/** The safe area insets for the screen. */
 	insets: EdgeInsets;
 	/** The id of the active bound. */
-	activeBoundId: string | null;
+	activeBoundId: string;
 	/** Whether the screen is focused. */
 	focused: boolean;
 	/** The progress of the screen transitions (0-2). */

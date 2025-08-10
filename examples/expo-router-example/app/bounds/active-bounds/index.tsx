@@ -7,7 +7,7 @@ export default function PageTransition() {
 	return (
 		<Page
 			title="Active Bounds"
-			description="Bounds were inspired by instagram page transitions. By tapping on a bound, it will be marked as active."
+			description="Tap on any of the squares to see the active bound animate. Any component with a defined 'sharedBoundTag' will be measured and stored when pressed."
 			contentContainerStyle={{ paddingBottom: 100 }}
 			style={{
 				backgroundColor: "white",

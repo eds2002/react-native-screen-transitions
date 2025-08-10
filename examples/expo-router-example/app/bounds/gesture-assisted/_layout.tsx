@@ -1,4 +1,8 @@
-import { interpolate, interpolateColor } from "react-native-reanimated";
+import {
+	interpolate,
+	interpolateColor,
+	withTiming,
+} from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { Stack } from "@/layouts/stack";
 
@@ -18,64 +22,34 @@ export default function ActiveBoundsLayout() {
 					enableTransitions: true,
 					screenStyleInterpolator: ({
 						bounds,
-						progress,
-						focused,
 						activeBoundId,
 						current,
 						next,
+						focused,
 					}) => {
 						"worklet";
 
 						if (!activeBoundId) return {};
 
-						if (focused) {
-							const animatingBound = bounds(activeBoundId)
-								.toFullscreen()
-								.withGestures({
-									x: current.gesture.x,
-									y: current.gesture.y,
-								})
-								.toTransformStyle();
-
-							return {
-								[activeBoundId]: {
-									...animatingBound,
-									flex: 1,
-									backgroundColor: interpolateColor(
-										progress,
-										[0, 1],
-										["red", "white"],
-									),
-									opacity: interpolate(progress, [0, 0.99], [0, 1]),
-								},
-								overlayStyle: {
-									backgroundColor: "#000",
-									opacity: interpolate(progress, [0, 1], [0, 0.75]),
-								},
-							};
-						}
-
-						const boundsStyle = bounds(activeBoundId)
+						/**
+						 * Bounds are designed to work between unfocused & focused screen. While this approach is okay, it realy just gives off a lazy feel. I would recommend separating the bound animations by the focused prop.
+						 */
+						const animatingBound = bounds(activeBoundId)
 							.toFullscreen()
-							.withGestures({
-								x: next?.gesture?.x ?? 0,
-								y: next?.gesture?.y ?? 0,
+							.gestures({
+								x: focused ? current.gesture.x : next?.gesture.x,
+								y: focused ? current.gesture.y : next?.gesture.y,
 							})
-							.toTransformStyle();
+							.transform()
+							.build();
 
 						return {
-							contentStyle: {
-								transform: [
-									{
-										scale: interpolate(progress, [1, 2], [1, 0.95]),
-									},
-								],
-							},
+							// contentStyle:{...}
+							// overlayStyle:{...}
+
 							[activeBoundId]: {
-								...boundsStyle,
-								opacity: interpolate(progress, [1.99, 2], [1, 0]),
-								zIndex: next?.animating === 1 ? 1000 : -1,
-								position: "relative",
+								...animatingBound,
+								opacity: withTiming(current.gesture.isDragging ? 0.5 : 1),
 							},
 						};
 					},

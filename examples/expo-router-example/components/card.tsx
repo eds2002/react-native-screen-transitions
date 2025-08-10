@@ -25,7 +25,7 @@ export const Card = ({ title, description, href }: CardProps) => {
 					<Text style={styles.avatarText}>{title.charAt(0)}</Text>
 				</View>
 				<View style={styles.textContainer}>
-					<Text style={styles.title} numberOfLines={1} ellipsizeMode="tail">
+					<Text style={styles.title} ellipsizeMode="tail">
 						{title}
 					</Text>
 					<Text style={styles.description}>{description}</Text>
@@ -93,7 +93,7 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		flexDirection: "row",
-		alignItems: "center",
+
 		flex: 1,
 		gap: 12,
 		minWidth: 0,

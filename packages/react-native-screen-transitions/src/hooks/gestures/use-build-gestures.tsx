@@ -254,20 +254,56 @@ export const useBuildGestures = ({
 
 			const { translationX, translationY, velocityX, velocityY } = event;
 
+			// reminder: we should make this into an option
 			const dismissThreshold = 0.5;
 
 			const finalX = translationX + velocityX * gestureVelocityImpact;
 			const finalY = translationY + velocityY * gestureVelocityImpact;
-			const finalDistance = Math.sqrt(finalX * finalX + finalY * finalY);
 
 			const diagonal = Math.sqrt(
 				dimensions.width * dimensions.width +
 					dimensions.height * dimensions.height,
 			);
 
-			gestures.isDismissing.value = Number(
-				finalDistance > diagonal * dismissThreshold,
-			);
+			let shouldDismiss = false;
+
+			const horizontalDistance = Math.abs(finalX);
+			const verticalDistance = Math.abs(finalY);
+			const crossAxisThreshold = diagonal * dismissThreshold * 0.7;
+
+			if (allowed.bidirectional) {
+				// For bidirectional, use the original distance-based logic
+				const finalDistance = Math.sqrt(finalX * finalX + finalY * finalY);
+				shouldDismiss = finalDistance > diagonal * dismissThreshold;
+			} else {
+				// Check primary direction dismissal
+				if (allowed.vertical && finalY > 0) {
+					shouldDismiss = verticalDistance > diagonal * dismissThreshold;
+				} else if (allowed.verticalInverted && finalY < 0) {
+					shouldDismiss = verticalDistance > diagonal * dismissThreshold;
+				} else if (allowed.horizontal && finalX > 0) {
+					shouldDismiss = horizontalDistance > diagonal * dismissThreshold;
+				} else if (allowed.horizontalInverted && finalX < 0) {
+					shouldDismiss = horizontalDistance > diagonal * dismissThreshold;
+				}
+
+				// Allow dismissal on perpendicular axis if movement is significant
+				if (!shouldDismiss) {
+					if (
+						(allowed.vertical || allowed.verticalInverted) &&
+						horizontalDistance > crossAxisThreshold
+					) {
+						shouldDismiss = true;
+					} else if (
+						(allowed.horizontal || allowed.horizontalInverted) &&
+						verticalDistance > crossAxisThreshold
+					) {
+						shouldDismiss = true;
+					}
+				}
+			}
+
+			gestures.isDismissing.value = Number(shouldDismiss);
 
 			if (gestures.isDismissing.value) {
 				runOnJS(setNavigatorDismissal)();
@@ -298,6 +334,7 @@ export const useBuildGestures = ({
 			setNavigatorDismissal,
 			handleDismiss,
 			gestures,
+			allowed,
 		],
 	);
 

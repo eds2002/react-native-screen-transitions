@@ -6,8 +6,8 @@ import Page from "@/components/page";
 export default function PageTransition() {
 	return (
 		<Page
-			title="Gesture-Assisted Transitions"
-			description="Use gestures to drive transition progress while bounds preserve visual continuity between screens."
+			title="Bounds + Gesture"
+			description="You can use gestures alongisde bound animations to create more complex animations when gestures are involved. This method involves syncing gesture values together. Tap on any of the squares to get started."
 			contentContainerStyle={{ paddingBottom: 100 }}
 			style={{
 				backgroundColor: "white",

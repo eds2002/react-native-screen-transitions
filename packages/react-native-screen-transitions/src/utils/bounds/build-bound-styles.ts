@@ -1,12 +1,13 @@
 import type { ScaledSize } from "react-native";
 import { interpolate, type MeasuredDimensions } from "react-native-reanimated";
-import type { ScreenTransitionState } from "src/types/animation";
-import type { BoundsBuilder } from "src/types/bounds";
+import type { ScreenTransitionState } from "../../types/animation";
+import type { BoundsBuilder } from "../../types/bounds";
+import type { ScreenPhase } from "../../types/core";
 import type {
-	BoundsBuilderComputeParams,
+	BoundsBuilderInitParams,
 	BoundsBuilderOptions,
 } from "./_types/builder";
-import { FULLSCREEN_DIMENSIONS } from "./constants";
+import { DEFAULT_BUILDER_OPTIONS, FULLSCREEN_DIMENSIONS } from "./constants";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
@@ -19,15 +20,6 @@ import {
 	composeTransformRelative,
 	type ElementComposeParams,
 } from "./style-composers";
-
-type Phase = "previous" | "current" | "next";
-
-const DEFAULT_OPTIONS: BoundsBuilderOptions = Object.freeze({
-	withGestures: Object.freeze({ x: 0, y: 0 }),
-	toFullscreen: false,
-	absolute: false,
-	relative: true,
-});
 
 function resolveBounds(props: {
 	id: string;
@@ -43,10 +35,10 @@ function resolveBounds(props: {
 
 	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
 
-	const startPhase: Phase = entering ? "previous" : "current";
-	const endPhase: Phase = entering ? "current" : "next";
+	const startPhase: ScreenPhase = entering ? "previous" : "current";
+	const endPhase: ScreenPhase = entering ? "current" : "next";
 
-	const resolve = (phase?: Phase) => {
+	const resolve = (phase?: ScreenPhase) => {
 		"worklet";
 		if (phase === "previous") return props.previous?.bounds?.[props.id]?.bounds;
 		if (phase === "current") return props.current?.bounds?.[props.id]?.bounds;
@@ -76,8 +68,7 @@ const computeBoundStyles = (
 		next,
 		progress,
 		dimensions,
-		method,
-	}: BoundsBuilderComputeParams,
+	}: BoundsBuilderInitParams,
 	computeOptions: BoundsBuilderOptions = {},
 ) => {
 	"worklet";
@@ -99,23 +90,24 @@ const computeBoundStyles = (
 	const interp = (a: number, b: number) =>
 		interpolate(progress, relativeGeometry.ranges, [a, b]);
 
-	const common = {
+	const common: ElementComposeParams = {
 		start,
 		end,
 		interp,
 		geometry: relativeGeometry,
 		computeOptions,
-	} satisfies ElementComposeParams;
+	};
 
-	const isSize = method === "size";
+	const isSize = computeOptions.method === "size";
 	const isAbs = !!computeOptions.absolute;
 
-	if (method === "content") {
+	if (computeOptions.method === "content") {
 		const contentGeometry = computeContentTransformGeometry({
 			start,
 			end,
 			entering,
 			dimensions,
+			contentScaleMode: computeOptions.contentScaleMode ?? "auto",
 		});
 
 		return composeContentStyle({
@@ -135,17 +127,17 @@ const computeBoundStyles = (
 };
 
 export function buildBoundStyles(
-	params: Omit<BoundsBuilderComputeParams, "method">,
+	params: BoundsBuilderInitParams,
 ): BoundsBuilder {
 	"worklet";
 
-	const cfg = {
-		options: { ...DEFAULT_OPTIONS },
+	const cfg: { options: BoundsBuilderOptions } = {
+		options: { ...DEFAULT_BUILDER_OPTIONS },
 	};
 
 	const builder = (): BoundsBuilder => ({
-		withGestures: (options) => {
-			cfg.options.withGestures = options;
+		gestures: (options) => {
+			cfg.options.gestures = options;
 			return builder();
 		},
 		toFullscreen: () => {
@@ -162,17 +154,29 @@ export function buildBoundStyles(
 			cfg.options.absolute = false;
 			return builder();
 		},
-		toTransformStyle: () => {
-			return computeBoundStyles(
-				{ ...params, method: "transform" },
-				cfg.options,
-			);
+		transform: () => {
+			cfg.options.method = "transform";
+			return builder();
 		},
-		toResizeStyle: () => {
-			return computeBoundStyles({ ...params, method: "size" }, cfg.options);
+		size: () => {
+			cfg.options.method = "size";
+			return builder();
 		},
-		toContentStyle: () => {
-			return computeBoundStyles({ ...params, method: "content" }, cfg.options);
+		content: () => {
+			cfg.options.method = "content";
+			return builder();
+		},
+		contentFill: () => {
+			cfg.options.contentScaleMode = "aspectFill";
+			return builder();
+		},
+		contentFit: () => {
+			cfg.options.contentScaleMode = "aspectFit";
+			return builder();
+		},
+
+		build: () => {
+			return computeBoundStyles(params, cfg.options);
 		},
 	});
 

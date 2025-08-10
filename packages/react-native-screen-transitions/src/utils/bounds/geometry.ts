@@ -1,5 +1,6 @@
 import type { ScaledSize } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
+import type { BoundsBuilderOptions } from "./_types/builder";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
@@ -33,23 +34,22 @@ export function computeRelativeGeometry({
 
 	return { dx, dy, scaleX, scaleY, ranges, entering };
 }
-
 /**
  * Computes the transform to apply to the entire destination screen so that
  * its bound (end) matches the source bound (start) at progress start.
  */
-export type ScaleMode = "axis" | "aspectFill" | "aspectFit";
-
 export function computeContentTransformGeometry({
 	start,
 	end,
 	entering,
 	dimensions,
+	contentScaleMode,
 }: {
 	start: MeasuredDimensions;
 	end: MeasuredDimensions;
 	entering: boolean;
 	dimensions: ScaledSize;
+	contentScaleMode: BoundsBuilderOptions["contentScaleMode"];
 }): ContentTransformGeometry {
 	"worklet";
 
@@ -73,7 +73,24 @@ export function computeContentTransformGeometry({
 
 	const sx = safe(start.width) / safe(end.width);
 	const sy = safe(start.height) / safe(end.height);
-	const s = Math.max(sx, sy);
+
+	let s: number;
+
+	if (contentScaleMode === "aspectFit") {
+		s = Math.min(sx, sy);
+	} else if (contentScaleMode === "aspectFill") {
+		s = Math.max(sx, sy);
+	} else {
+		const startAspect = start.width / start.height;
+		const endAspect = end.width / end.height;
+		const aspectDifference = Math.abs(startAspect - endAspect);
+
+		if (aspectDifference < 0.1) {
+			s = Math.max(sx, sy);
+		} else {
+			s = Math.min(sx, sy);
+		}
+	}
 
 	const offsetX = startCenterX - parentCenterX;
 	const offsetY = startCenterY - parentCenterY;

@@ -125,8 +125,8 @@ export function composeTransformRelative(
 	if (geometry.entering) {
 		return {
 			transform: [
-				{ translateX: computeOptions.withGestures?.x ?? 0 },
-				{ translateY: computeOptions.withGestures?.y ?? 0 },
+				{ translateX: computeOptions.gestures?.x ?? 0 },
+				{ translateY: computeOptions.gestures?.y ?? 0 },
 				{ translateX: interp(geometry.dx, 0) },
 				{ translateY: interp(geometry.dy, 0) },
 				{ scaleX: interp(geometry.scaleX, 1) },
@@ -137,8 +137,8 @@ export function composeTransformRelative(
 
 	return {
 		transform: [
-			{ translateX: computeOptions.withGestures?.x ?? 0 },
-			{ translateY: computeOptions.withGestures?.y ?? 0 },
+			{ translateX: computeOptions.gestures?.x ?? 0 },
+			{ translateY: computeOptions.gestures?.y ?? 0 },
 			{ translateX: interp(0, -geometry.dx) },
 			{ translateY: interp(0, -geometry.dy) },
 			{ scaleX: interp(1, 1 / geometry.scaleX) },

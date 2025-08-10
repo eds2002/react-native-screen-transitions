@@ -1,20 +1,35 @@
 import type { ScaledSize } from "react-native";
 import type { ScreenTransitionState } from "../../../types/animation";
+import type { BoundsMethod } from "../../../types/bounds";
 
-export type BoundsBuilderComputeParams = {
+/**
+ * Params passed to the builder initializer. No method required here.
+ */
+export type BoundsBuilderInitParams = {
 	id: string | null;
 	previous?: ScreenTransitionState;
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	progress: number;
 	dimensions: ScaledSize;
-	method: "transform" | "size" | "content";
 };
 
+/**
+ * Params used internally for final computation. Method is required.
+ */
+export type BoundsComputeParams = BoundsBuilderInitParams & {
+	method: BoundsMethod;
+};
+
+/**
+ * Builder options that affect how math is applied.
+ * Method is not an option; it's tracked separately by the builder.
+ */
 export type BoundsBuilderOptions = {
-	withGestures?: { x?: number; y?: number };
+	gestures?: { x?: number; y?: number };
 	toFullscreen?: boolean;
 	absolute?: boolean;
 	relative?: boolean;
-	scaleMode?: "axis" | "aspectFill" | "aspectFit";
+	method?: BoundsMethod;
+	contentScaleMode?: "aspectFill" | "aspectFit" | "auto";
 };

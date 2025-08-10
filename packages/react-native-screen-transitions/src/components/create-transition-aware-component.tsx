@@ -33,6 +33,7 @@ export function createTransitionAwareComponent<P extends object>(
 		const { scrollHandler, onContentSizeChange, onLayout } = useScrollProgress({
 			onScroll: props.onScroll,
 			onContentSizeChange: props.onContentSizeChange,
+			onLayout: props.onLayout, // Add this line to pass through onLayout
 		});
 
 		return (

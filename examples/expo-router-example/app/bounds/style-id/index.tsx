@@ -94,7 +94,7 @@ export default function StyleId() {
 	return (
 		<Page
 			title="Bounds + Style Id"
-			description="Combining bounds animations with styleId is a great way to create super complex animations. "
+			description="Combining bounds animations with styleId is a great way to create super complex animations."
 			contentContainerStyle={{
 				paddingBottom: 150,
 			}}
@@ -102,7 +102,7 @@ export default function StyleId() {
 		>
 			<Page.Group
 				title="Masking"
-				description="Most apps do this technique to transition you from an image to a full screen view. Click on one of the images below to see an example."
+				description="In this example, we'll be using styleId to animate the next screen's mask. This gives us a lot of flexibility to create more complex 'shared' animations."
 			/>
 			<Images />
 		</Page>

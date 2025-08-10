@@ -1,50 +1,74 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 
+/**
+ * Target style computation.
+ * - "transform": translates and scales (scaleX/scaleY), no width/height size
+ * - "size": translates and sizes (width/height), no scaleX/scaleY
+ * - "content": screen-level content transform that aligns the destination screen
+ *   so the target bound matches the source at progress start
+ */
+export type BoundsMethod = "transform" | "size" | "content";
+
 export type BoundsBuilder = {
 	/**
-	 * Include gesture offsets (x/y) in the computed transform.
-	 * Useful when the transition should be gesture-driven or partially interactive.
+	 * Include gesture offsets (x/y) in the computed transform for all methods.
+	 * This syncs the focused screen’s gesture deltas with the previous screen’s bound
+	 * to give the shared look while interacting.
 	 */
-	withGestures: (options?: { x?: number; y?: number }) => BoundsBuilder;
+	gestures: (options?: { x?: number; y?: number }) => BoundsBuilder;
 
 	/**
-	 * Set the target bounds to the full screen dimensions.
-	 * Pairs well with absolute() to compute absolute translation/scale
-	 * or with relative() to compute deltas from the current element.
+	 * Animate to the full screen bounds as the destination.
+	 * Useful when the next screen does not define a bound for the same id.
 	 */
 	toFullscreen: () => BoundsBuilder;
 
 	/**
-	 * Compute styles in absolute (screen) coordinates using raw measurements
-	 * between the start and end bounds. Produces absolute translateX/translateY values.
+	 * Compute using absolute window coordinates (pageX/pageY).
+	 * No relative delta math—good when elements are unconstrained by parent layout.
 	 */
 	absolute: () => BoundsBuilder;
 
 	/**
-	 * Compute styles relative to the start bounds. Produces deltas for translation
-	 * (e.g., move from dx/dy to 0/0) and interpolates width/height accordingly.
+	 * Compute using relative deltas between start/end bounds (dx/dy, scale).
+	 * This makes the math bound-relative; great when elements are within layout constraints.
 	 */
 	relative: () => BoundsBuilder;
 
 	/**
-	 * Build animated transform style to move/scale the element between bounds.
-	 * This uses translateX/translateY (and optionally scaleX/scaleY) without resizing.
-	 * Honors absolute()/relative() and withGestures().
+	 * Select transform method: translate + scaleX/scaleY (no width/height size).
+	 * Note: x/y translation is applied for all methods when applicable.
 	 */
-	toTransformStyle: () => StyleProps;
+	transform: () => BoundsBuilder;
 
 	/**
-	 * Build animated resize style to morph the element's width/height between bounds.
-	 * Also provides translation depending on absolute()/relative():
-	 * - absolute(): translates from start.pageX/Y to end.pageX/Y
-	 * - relative(): translates from dx/dy to 0/0
+	 * Select size method: translate + width/height interpolation (no scaleX/scaleY).
 	 */
-	toResizeStyle: () => StyleProps;
+	size: () => BoundsBuilder;
+
 	/**
-	 * Build animated content style to animate the element's position/scale/rotation
-	 * between bounds. Honors absolute()/relative() and withGestures().
+	 * Select content method: screen-level transform to align destination content
+	 * so its bound matches the source at progress start. This modifies where the
+	 * bound sits within the screen rather than the bound’s own local transform.
 	 */
-	toContentStyle: () => StyleProps;
+	content: () => BoundsBuilder;
+
+	/**
+	 * Select content scale mode: "aspectFill" (fill), "aspectFit" (fit), or "auto" (default).
+	 */
+	contentFill: () => BoundsBuilder;
+
+	/**
+	 * Select content scale mode: "aspectFill" (fill), "aspectFit" (fit), or "auto" (default).
+	 */
+	contentFit: () => BoundsBuilder;
+
+	/**
+	 * Build the final animated style.
+	 * If a method is not explicitly selected via transform/resize/content,
+	 * the provided argument will be used; defaults to "transform".
+	 */
+	build: (method?: BoundsMethod) => StyleProps;
 };
 
 export type BoundEntry = {

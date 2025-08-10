@@ -46,7 +46,7 @@ function Header() {
 						borderRadius: 99,
 					}}
 				>
-					<FontAwesome6 name="xmark" size={16} color="gray" />
+					<FontAwesome6 name="chevron-left" size={16} color="gray" />
 				</Pressable>
 				<Text style={{ fontSize: 17, fontWeight: "600", color: colors.text }}>
 					Composer Settings

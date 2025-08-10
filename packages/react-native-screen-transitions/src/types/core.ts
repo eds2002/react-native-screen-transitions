@@ -20,3 +20,5 @@ export type TransitionConfig = {
 	open: TransitionSpec;
 	close: TransitionSpec;
 };
+
+export type ScreenPhase = "previous" | "current" | "next";

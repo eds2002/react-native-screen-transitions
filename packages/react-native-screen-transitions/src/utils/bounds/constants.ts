@@ -1,5 +1,7 @@
 import type { ScaledSize } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
+import type { Complete } from "src/types/utils";
+import type { BoundsBuilderOptions } from "./_types/builder";
 
 export const FULLSCREEN_DIMENSIONS = (
 	dimensions: ScaledSize,
@@ -14,3 +16,13 @@ export const FULLSCREEN_DIMENSIONS = (
 		height: dimensions.height,
 	};
 };
+
+export const DEFAULT_BUILDER_OPTIONS: Complete<BoundsBuilderOptions> =
+	Object.freeze({
+		gestures: { x: 0, y: 0 },
+		toFullscreen: false,
+		absolute: false,
+		relative: true,
+		method: "transform",
+		contentScaleMode: "auto",
+	});

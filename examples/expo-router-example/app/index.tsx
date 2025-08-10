@@ -11,7 +11,7 @@ type PageType = {
 	href: Href;
 };
 
-const tabs = ["Start", "Examples", "Debug"];
+const tabs = ["Start", "Examples", "E2E"];
 
 const StartComponent = memo(() => {
 	const basics: PageType[] = [
@@ -84,13 +84,33 @@ const ExamplesComponent = memo(() => {
 	const screenTransitions: PageType[] = [
 		{
 			title: "Settings Screen",
-			description: "Inspiration: Family",
+			description: "Slide from top.",
 			href: "/examples/settings-screen/a",
 		},
 		{
 			title: "Settings Modal",
-			description: "Inspiration: Family, Rainbow, Grok",
+			description: "Modal slide from bottom.",
 			href: "/examples/settings-modal/a",
+		},
+		{
+			title: "Delete Warning",
+			description: "Slight slide from bottom.",
+			href: "/examples/delete-warning",
+		},
+		{
+			title: "Fullscreen Nav",
+			description: "Full screen navigation with staggered transitions.",
+			href: "/examples/fullscreen-nav",
+		},
+		{
+			title: "Gallery Modal",
+			description: "Modal slide from bottom.",
+			href: "/examples/gallery-modal",
+		},
+		{
+			title: "Palette Profile",
+			description: "Full screen draggable card.",
+			href: "/examples/palette-profile",
 		},
 	] as const;
 
@@ -99,19 +119,13 @@ const ExamplesComponent = memo(() => {
 			title: "Instagram",
 			description:
 				"Use shared bounds to drive transitions from element positions.",
-			href: "/bounds",
+			href: "/examples/instagram",
 		},
 		{
 			title: "Twitter / X",
 			description:
 				"Use shared bounds to drive transitions from element positions.",
-			href: "/bounds",
-		},
-		{
-			title: "TikTok",
-			description:
-				"Use shared bounds to drive transitions from element positions.",
-			href: "/bounds",
+			href: "/examples/x",
 		},
 	];
 
@@ -154,14 +168,119 @@ const ExamplesComponent = memo(() => {
 	);
 });
 
-const DebugComponent = memo(() => {
+const End2EndComponent = memo(() => {
+	const navigation: PageType[] = [
+		{
+			title: "Push/back navigation",
+			description:
+				"Should animate when using navigation events such as push/back.",
+			href: "/e2e/navigation",
+		},
+	];
+
+	const gestures: PageType[] = [
+		{
+			title: "Gesture directions",
+			description: "Test all gesture directions.",
+			href: "/e2e/gestures/all-gesture-directions",
+		},
+		{
+			title: "Bi-directional gestures",
+			description: "Test bi-directional gesture directions.",
+			href: "/e2e/gestures/bi-directional",
+		},
+		{
+			title: "Gesture dismissal logic (vertical)",
+			description:
+				"Should dismiss on top-to-bottom swipes, extreme left-to-right/right-to-left swipes. Should reset on bottom-to-top swipes.",
+			href: "/e2e/gestures/gesture-dismissal",
+		},
+	] as const;
+
+	const scrollables: PageType[] = [
+		{
+			title: "Scrollable triggers gesture (vertical)",
+			description:
+				"Should trigger gesture on bottom-to-top at base position and top-to-bottom at end position.",
+			href: "/e2e/gestures-scrollables/vertical",
+		},
+		{
+			title: "Scrollable triggers gesture (horizontal)",
+			description:
+				"Should trigger gesture on left-to-right at base position and right-to-left at end position.",
+			href: "/e2e/gestures-scrollables/horizontal",
+		},
+	];
+
+	const bounds: PageType[] = [
+		{
+			title: "Successful bound measurements",
+			description:
+				"Should animate using bounds when bounds are defined and measurements are successful.",
+			href: "/",
+		},
+		{
+			title: "Unsuccessful bound measurements",
+			description:
+				"Should fallback to default bounds when bounds fail to measure.",
+			href: "/",
+		},
+	];
+
 	return (
 		<View style={{ gap: 32 }}>
 			<View>
-				<Page.Group
-					title="Common Issues"
-					description="Debugging examples for common issues."
-				/>
+				<Page.Group title="Navigation" />
+				<View style={{ gap: 24, marginTop: 24 }}>
+					{navigation.map((page, idx) => (
+						<Card
+							key={idx.toString()}
+							title={`${page.title}`}
+							description={page.description}
+							href={page.href}
+						/>
+					))}
+				</View>
+			</View>
+			<View>
+				<Page.Group title="Gestures" />
+				<View style={{ gap: 24, marginTop: 24 }}>
+					{gestures.map((page, idx) => (
+						<Card
+							key={idx.toString()}
+							title={`${page.title}`}
+							description={page.description}
+							href={page.href}
+						/>
+					))}
+				</View>
+			</View>
+			<View>
+				<Page.Group title="Gestures + Scrollables" />
+				<View style={{ gap: 24, marginTop: 24 }}>
+					{scrollables.map((page, idx) => (
+						<Card
+							key={idx.toString()}
+							title={`${page.title}`}
+							description={page.description}
+							href={page.href}
+						/>
+					))}
+				</View>
+			</View>
+
+			<View>
+				<Page.Group title="Bounds" />
+				<View style={{ gap: 24, marginTop: 24 }}>
+					{bounds.map((page, idx) => (
+						<Card
+							key={idx.toString()}
+							title={`${page.title}`}
+							description={page.description}
+							href={page.href}
+						/>
+					))}
+				</View>
 			</View>
 		</View>
 	);
@@ -178,7 +297,7 @@ export default function Home() {
 				colors={{
 					Start: "#60a5fa",
 					Examples: "#84cc16",
-					Debug: "#d1d5db",
+					E2E: "#ec4899",
 				}}
 				renderScene={(tab) => {
 					switch (tab) {
@@ -186,8 +305,8 @@ export default function Home() {
 							return <StartComponent />;
 						case "Examples":
 							return <ExamplesComponent />;
-						case "Debug":
-							return <DebugComponent />;
+						case "E2E":
+							return <End2EndComponent />;
 						default:
 							return null;
 					}

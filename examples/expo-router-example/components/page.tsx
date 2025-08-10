@@ -19,6 +19,7 @@ interface PageProps {
 	contentContainerStyle?: StyleProp<AnimatedStyle<StyleProp<ViewStyle>>>;
 	scrollEnabled?: boolean;
 	style?: StyleProp<ViewStyle>;
+	horizontal?: boolean;
 }
 
 function PageComponent({
@@ -29,6 +30,7 @@ function PageComponent({
 	contentContainerStyle,
 	style,
 	scrollEnabled = true,
+	horizontal = false,
 }: PageProps) {
 	const { top } = useSafeAreaInsets();
 	return (
@@ -45,6 +47,7 @@ function PageComponent({
 				]}
 				showsVerticalScrollIndicator={false}
 				scrollEnabled={scrollEnabled}
+				horizontal={horizontal}
 			>
 				<View style={styles.header}>
 					<Text style={styles.title}>{title}</Text>
@@ -69,7 +72,9 @@ function Group({
 	return (
 		<View style={styles.group}>
 			<Text style={styles.titleSmall}>{title}</Text>
-			<Text style={styles.descriptionSmall}>{description}</Text>
+			{description && (
+				<Text style={styles.descriptionSmall}>{description}</Text>
+			)}
 			{children}
 		</View>
 	);

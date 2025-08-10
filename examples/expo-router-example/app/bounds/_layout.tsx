@@ -25,10 +25,11 @@ export default function PresetsLayout() {
 					screenStyleInterpolator: ({ progress, focused, bounds }) => {
 						"worklet";
 						if (focused) {
-							const transform = bounds("page-transition")
+							const transform = bounds()
 								.toFullscreen()
 								.absolute()
-								.toResizeStyle();
+								.size()
+								.build();
 
 							return {
 								contentStyle: {
