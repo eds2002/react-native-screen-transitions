@@ -1,25 +1,9 @@
 # react-native-screen-transitions
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 | iOS | Android |
 |---|---|
-| <video src="https://github.com/user-attachments/assets/81f39391-80c0-4ce4-b6ff-76de85d2cf03" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/c2b4c6ca-2b0c-4cf4-a164-f7e68cee0c32" width="300" controls></video> |
+| <video src="https://github.com/user-attachments/assets/c0d17b8f-7268-421c-9051-e242f8ddca76" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/3f8d5fb1-96d2-4fe3-860d-62f6fb5a687e" width="300" controls></video> |
 
 
 **WIP**: This package is a work-in-progress. It provides customizable screen transition animations for React Native apps, primarily designed for use with `expo-router` and `react-navigation`. It supports gestures, predefined presets, and custom animations, making it easy to add polished transitions to your navigation flows.
@@ -371,7 +355,7 @@ const heroMetrics = bounds.get('hero', 'current');
 
 Use this when you want explicit control over which bound’s data you animate, regardless of the current screen focus.
 
-### Animating individual components with `styleId`
+## Animating individual components with `styleId`
 
 Use `styleId` to animate a single view inside a screen.
 
