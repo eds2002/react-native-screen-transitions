@@ -1,22 +1,5 @@
 # react-native-screen-transitions
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 | iOS | Android |
 |---|---|
 | <video src="https://github.com/user-attachments/assets/81f39391-80c0-4ce4-b6ff-76de85d2cf03" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/c2b4c6ca-2b0c-4cf4-a164-f7e68cee0c32" width="300" controls></video> |

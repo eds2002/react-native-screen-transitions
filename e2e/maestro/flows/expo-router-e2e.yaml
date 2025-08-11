@@ -165,7 +165,7 @@ appId: com.eds2002.exporouterexample
 - assertVisible: "Item 1"
 - swipe:
     start: "50%, 10%"
-    end: "50%, 100%"
+    end: "50%, 90%"
     duration: 500
 - assertVisible:
     id: "HOME_PAGE"
@@ -177,8 +177,8 @@ appId: com.eds2002.exporouterexample
     direction: DOWN
     speed: 5000
 - swipe:
-    start: "50%, 100%"
-    end: "50%, 0%"
+    start: "50%, 90%"
+    end: "50%, 10%"
     duration: 500
 - assertVisible:
     id: "HOME_PAGE"

@@ -2,11 +2,7 @@ import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-	runOnUI,
-	useAnimatedRef,
-	useDerivedValue,
-} from "react-native-reanimated";
+import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useBoundMeasurer } from "../hooks/bounds/use-bound-measurer";
 import { useScrollProgress } from "../hooks/gestures/use-scroll-progress";
