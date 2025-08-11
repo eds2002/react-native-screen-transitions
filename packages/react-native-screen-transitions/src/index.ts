@@ -11,12 +11,8 @@ export default {
 	FlatList: createTransitionAwareComponent(FlatList, {
 		isScrollable: true,
 	}),
-
 	presets,
 	specs,
-	/**
-	 * Create a transition aware component
-	 */
 	createTransitionAwareComponent,
 };
 

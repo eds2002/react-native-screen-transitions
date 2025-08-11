@@ -1,8 +1,7 @@
 appId: com.dev.e2e
 
 flows:
-  - flows/single-routes-complete.yaml
-  - flows/nested-routes-complete.yaml
+  - flows/expo-router-e2e.yaml
 
 # Configuration for different test environments
 ios:

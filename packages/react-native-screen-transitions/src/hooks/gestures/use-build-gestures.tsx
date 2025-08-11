@@ -14,8 +14,8 @@ import {
 	type SharedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import type { ScrollProgress } from "../../context/gestures";
-import { useKeys } from "../../context/keys";
+import type { ScrollProgress } from "../../providers/gestures";
+import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";

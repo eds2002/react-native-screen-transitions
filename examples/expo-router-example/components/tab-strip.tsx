@@ -82,6 +82,7 @@ const Tab = ({
 				})()
 			}
 			onPress={onPress}
+			testID={`tab-${label}`}
 		>
 			<Text style={[styles.tabLabel]}>{label}</Text>
 		</AnimatedPress>

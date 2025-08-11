@@ -20,6 +20,7 @@ interface PageProps {
 	scrollEnabled?: boolean;
 	style?: StyleProp<ViewStyle>;
 	horizontal?: boolean;
+	testID?: string;
 }
 
 function PageComponent({
@@ -31,6 +32,7 @@ function PageComponent({
 	style,
 	scrollEnabled = true,
 	horizontal = false,
+	testID,
 }: PageProps) {
 	const { top } = useSafeAreaInsets();
 	return (
@@ -48,6 +50,7 @@ function PageComponent({
 				showsVerticalScrollIndicator={false}
 				scrollEnabled={scrollEnabled}
 				horizontal={horizontal}
+				testID={testID}
 			>
 				<View style={styles.header}>
 					<Text style={styles.title}>{title}</Text>

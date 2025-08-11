@@ -9,6 +9,7 @@ type PageType = {
 	title: string;
 	description: string;
 	href: Href;
+	testID?: string;
 };
 
 const tabs = ["Start", "Examples", "E2E"];
@@ -175,6 +176,7 @@ const End2EndComponent = memo(() => {
 			description:
 				"Should animate when using navigation events such as push/back.",
 			href: "/e2e/navigation",
+			testID: "e2e-navigation",
 		},
 	];
 
@@ -183,17 +185,20 @@ const End2EndComponent = memo(() => {
 			title: "Gesture directions",
 			description: "Test all gesture directions.",
 			href: "/e2e/gestures/all-gesture-directions",
+			testID: "e2e-gesture-directions",
 		},
 		{
 			title: "Bi-directional gestures",
 			description: "Test bi-directional gesture directions.",
 			href: "/e2e/gestures/bi-directional",
+			testID: "e2e-bi-directional",
 		},
 		{
 			title: "Gesture dismissal logic (vertical)",
 			description:
 				"Should dismiss on top-to-bottom swipes, extreme left-to-right/right-to-left swipes. Should reset on bottom-to-top swipes.",
 			href: "/e2e/gestures/gesture-dismissal",
+			testID: "e2e-gesture-dismissal",
 		},
 	] as const;
 
@@ -203,27 +208,14 @@ const End2EndComponent = memo(() => {
 			description:
 				"Should trigger gesture on bottom-to-top at base position and top-to-bottom at end position.",
 			href: "/e2e/gestures-scrollables/vertical",
+			testID: "e2e-scrollable-vertical",
 		},
 		{
 			title: "Scrollable triggers gesture (horizontal)",
 			description:
 				"Should trigger gesture on left-to-right at base position and right-to-left at end position.",
 			href: "/e2e/gestures-scrollables/horizontal",
-		},
-	];
-
-	const bounds: PageType[] = [
-		{
-			title: "Successful bound measurements",
-			description:
-				"Should animate using bounds when bounds are defined and measurements are successful.",
-			href: "/",
-		},
-		{
-			title: "Unsuccessful bound measurements",
-			description:
-				"Should fallback to default bounds when bounds fail to measure.",
-			href: "/",
+			testID: "e2e-scrollable-horizontal",
 		},
 	];
 
@@ -238,6 +230,7 @@ const End2EndComponent = memo(() => {
 							title={`${page.title}`}
 							description={page.description}
 							href={page.href}
+							testID={page.testID}
 						/>
 					))}
 				</View>
@@ -251,6 +244,7 @@ const End2EndComponent = memo(() => {
 							title={`${page.title}`}
 							description={page.description}
 							href={page.href}
+							testID={page.testID}
 						/>
 					))}
 				</View>
@@ -264,20 +258,7 @@ const End2EndComponent = memo(() => {
 							title={`${page.title}`}
 							description={page.description}
 							href={page.href}
-						/>
-					))}
-				</View>
-			</View>
-
-			<View>
-				<Page.Group title="Bounds" />
-				<View style={{ gap: 24, marginTop: 24 }}>
-					{bounds.map((page, idx) => (
-						<Card
-							key={idx.toString()}
-							title={`${page.title}`}
-							description={page.description}
-							href={page.href}
+							testID={page.testID}
 						/>
 					))}
 				</View>
@@ -291,6 +272,7 @@ export default function Home() {
 		<Page
 			title="Screen Transitions"
 			description="Build fluid, interruptible transitions with gestures and Reanimated."
+			testID="HOME_PAGE"
 		>
 			<TabStrip
 				tabs={tabs}

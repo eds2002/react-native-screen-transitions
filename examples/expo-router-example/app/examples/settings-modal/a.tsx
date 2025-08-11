@@ -139,7 +139,6 @@ function Topic({ title }: { title: string }) {
 
 export default function A() {
 	const onPress = () => {
-		console.log("onPress");
 		router.push("/examples/settings-modal/b");
 	};
 	return (

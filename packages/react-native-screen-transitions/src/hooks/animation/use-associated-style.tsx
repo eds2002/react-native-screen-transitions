@@ -17,7 +17,11 @@ export const useAssociatedStyles = ({ id }: { id?: string } = {}) => {
 			return {};
 		}
 
-		return screenStyleInterpolator(screenInterpolatorProps.value)[id] || {};
+		return (
+			screenStyleInterpolator(screenInterpolatorProps.value)[id] || {
+				opacity: 1, // <-- This fixes flickering?? We'll have to deep dive this?? wtf
+			}
+		);
 	});
 
 	return { associatedStyles };

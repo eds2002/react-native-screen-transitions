@@ -8,17 +8,19 @@ interface CardProps {
 	description: string;
 	href: Href;
 	icon?: string;
+	testID?: string;
 }
 
 const TATouchableOpacity =
 	Transition.createTransitionAwareComponent(TouchableOpacity);
 
-export const Card = ({ title, description, href }: CardProps) => {
+export const Card = ({ title, description, href, testID }: CardProps) => {
 	return (
 		<TouchableOpacity
 			style={styles.container}
 			activeOpacity={0.8}
 			onPress={() => router.push(href)}
+			testID={testID}
 		>
 			<View style={styles.content}>
 				<View style={styles.avatar}>

@@ -1,7 +1,8 @@
+import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useKeys } from "../../context/keys";
+import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Bounds } from "../../stores/bounds";
 import { type GestureMap, Gestures } from "../../stores/gestures";
@@ -10,6 +11,7 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation";
 import type { BoundEntry } from "../../types/bounds";
+import type { NativeStackDescriptor } from "../../types/navigator";
 import { buildBoundsAccessor } from "../../utils/bounds";
 
 type BuiltState = {
@@ -17,6 +19,7 @@ type BuiltState = {
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	gesture: GestureMap;
+	route: RouteProp<ParamListBase>;
 };
 
 const FALLBACK = Object.freeze({
@@ -32,18 +35,21 @@ const FALLBACK = Object.freeze({
 		isDragging: 0,
 	},
 	bounds: {} as Record<string, BoundEntry>,
+	route: {} as RouteProp<ParamListBase>,
 });
 
 const useBuildScreenTransitionState = (
-	key: string | undefined,
+	descriptor: NativeStackDescriptor | undefined,
 ): BuiltState | undefined => {
+	const key = descriptor?.route.key;
 	if (!key) return undefined;
 	const progress = Animations.getAnimation(key, "progress");
 	const closing = Animations.getAnimation(key, "closing");
 	const animating = Animations.getAnimation(key, "animating");
 	const gesture = Gestures.getRouteGestures(key);
+	const route = descriptor?.route;
 
-	return { progress, closing, animating, gesture };
+	return { progress, closing, animating, gesture, route };
 };
 
 const unwrap = (
@@ -65,6 +71,7 @@ const unwrap = (
 					isDragging: s.gesture.isDragging.value ?? 0,
 				},
 				bounds: Bounds.getBounds(key) ?? {},
+				route: s.route,
 			}
 		: undefined;
 };
@@ -78,16 +85,10 @@ export function _useScreenAnimation() {
 
 	const dimensions = useWindowDimensions();
 
-	const currentAnimation = useBuildScreenTransitionState(
-		currentDescriptor?.route.key,
-	);
+	const currentAnimation = useBuildScreenTransitionState(currentDescriptor);
 
-	const nextAnimation = useBuildScreenTransitionState(
-		nextDescriptor?.route.key,
-	);
-	const prevAnimation = useBuildScreenTransitionState(
-		previousDescriptor?.route.key,
-	);
+	const nextAnimation = useBuildScreenTransitionState(nextDescriptor);
+	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
 
 	const insets = useSafeAreaInsets();
 

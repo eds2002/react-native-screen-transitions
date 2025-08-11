@@ -1,0 +1,184 @@
+appId: com.eds2002.exporouterexample
+---
+
+- launchApp
+
+- assertVisible:
+    id: "tab-E2E"
+- tapOn:
+    id: "tab-E2E"
+
+# ========NAVIGATION=========
+# 1) Push/back navigation
+# ========END NAVIGATION=========
+- scrollUntilVisible:
+    element:
+      id: "e2e-navigation"
+- tapOn:
+    id: "e2e-navigation"
+- assertVisible: "Back"
+- tapOn: "Back"
+- assertVisible: "Screen Transitions"
+
+# ========GESTURES=========
+# 1) All gesture directions (small, slow swipes then LTR dismiss)
+# 2) Bi-directional Gestures (small, slow swipes then LTR dismiss) (similar to 1)
+# 3) Dismissal logic (vertical then horizontal)
+# ========END GESTURES=========
+- scrollUntilVisible:
+    element:
+      id: "e2e-gesture-directions"
+- tapOn:
+    id: "e2e-gesture-directions"
+- assertVisible: "All Gesture Directions"
+
+# Small, slow swipes that should NOT dismiss
+# 1) Left-to-Right (small, slow)
+- swipe:
+    start: "20%, 50%"
+    end: "35%, 50%"
+    duration: 1200
+- assertVisible: "All Gesture Directions"
+
+# 2) Top-to-Bottom (small, slow)
+- swipe:
+    start: "50%, 20%"
+    end: "50%, 35%"
+    duration: 1200
+- assertVisible: "All Gesture Directions"
+
+# 3) Right-to-Left (small, slow)
+- swipe:
+    start: "80%, 50%"
+    end: "65%, 50%"
+    duration: 1200
+- assertVisible: "All Gesture Directions"
+
+# 4) Bottom-to-Top (small, slow)
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 65%"
+    duration: 1200
+- assertVisible: "All Gesture Directions"
+
+# Dismiss with Left-to-Right swipe > 50% width
+- swipe:
+    start: "10%, 50%"
+    end: "70%, 50%"
+    duration: 50
+- assertVisible: "Screen Transitions"
+
+# === Gestures: Bi-directional (small, slow swipes then LTR dismiss) ===
+- scrollUntilVisible:
+    element:
+      id: "e2e-bi-directional"
+- tapOn:
+    id: "e2e-bi-directional"
+- assertVisible: "Bi-directional Gestures"
+
+# Small, slow swipes that should NOT dismiss
+# 1) Left-to-Right (small, slow)
+- swipe:
+    start: "20%, 50%"
+    end: "35%, 50%"
+    duration: 1200
+- assertVisible: "Bi-directional Gestures"
+
+# 2) Top-to-Bottom (small, slow)
+- swipe:
+    start: "50%, 20%"
+    end: "50%, 35%"
+    duration: 1200
+- assertVisible: "Bi-directional Gestures"
+
+# 3) Right-to-Left (small, slow)
+- swipe:
+    start: "80%, 50%"
+    end: "65%, 50%"
+    duration: 1200
+- assertVisible: "Bi-directional Gestures"
+
+# 4) Bottom-to-Top (small, slow)
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 65%"
+    duration: 1200
+- assertVisible: "Bi-directional Gestures"
+
+# Dismiss with Left-to-Right swipe > 50% width
+- swipe:
+    start: "10%, 50%"
+    end: "70%, 50%"
+    duration: 50
+- assertVisible: "Screen Transitions"
+
+# Start of Selection
+# === Gestures: Dismissal logic (vertical then horizontal) ===
+- scrollUntilVisible:
+    element:
+      id: "e2e-gesture-dismissal"
+- tapOn:
+    id: "e2e-gesture-dismissal"
+
+# Initial swipe down should reset (stay on screen)
+- swipe:
+    start: "50%, 20%"
+    end: "50%, 80%"
+    duration: 700
+- assertVisible:
+    id: "e2e-gesture-dismissal"
+
+# ========SCROLLABLES=========
+# 1) Scrollable horizontal - dismiss via L→R at base position or R→L at end position
+# 2) Scrollable vertical - dismiss via B→T at base position or T→B at end position
+# ========END SCROLLABLES=========
+- scrollUntilVisible:
+    element:
+      id: "e2e-scrollable-horizontal"
+- tapOn:
+    id: "e2e-scrollable-horizontal"
+- assertVisible: "Item 1"
+- swipe:
+    start: "10%, 50%"
+    end: "90%, 50%"
+    duration: 100
+- assertVisible:
+    id: "HOME_PAGE"
+- tapOn:
+    id: "e2e-scrollable-horizontal"
+- scrollUntilVisible:
+    element:
+      text: "Item 20"
+    direction: RIGHT
+    speed: 5000
+- swipe:
+    start: "90%, 50%"
+    end: "10%, 50%"
+    duration: 100
+- assertVisible:
+    id: "HOME_PAGE"
+- scrollUntilVisible:
+    element:
+      id: "e2e-scrollable-vertical"
+- tapOn:
+    id: "e2e-scrollable-vertical"
+- assertVisible: "Item 1"
+- swipe:
+    start: "50%, 10%"
+    end: "50%, 100%"
+    duration: 500
+- assertVisible:
+    id: "HOME_PAGE"
+- tapOn:
+    id: "e2e-scrollable-vertical"
+- scrollUntilVisible:
+    element:
+      text: "Item 20"
+    direction: DOWN
+    speed: 5000
+- swipe:
+    start: "50%, 100%"
+    end: "50%, 0%"
+    duration: 500
+- assertVisible:
+    id: "HOME_PAGE"

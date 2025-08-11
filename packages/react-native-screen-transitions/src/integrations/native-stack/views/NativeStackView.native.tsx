@@ -33,9 +33,9 @@ import {
 	ScreenStackItem,
 } from "react-native-screens";
 import { ScreenLifecycleController } from "../../../components/controllers/screen-lifecycle";
-import { ScreenGestureProvider } from "../../../components/providers/gestures-provider";
-import { KeysProvider } from "../../../components/providers/keys-provider";
 import { RootTransitionAware } from "../../../components/root-transition-aware";
+import { ScreenGestureProvider } from "../../../providers/gestures";
+import { KeysProvider } from "../../../providers/keys";
 import type {
 	NativeStackDescriptor,
 	NativeStackDescriptorMap,

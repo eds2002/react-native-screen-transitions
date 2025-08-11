@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import type { ReanimatedScrollEvent } from "react-native-reanimated/lib/typescript/hook/commonTypes";
-import { useGestureContext } from "../../context/gestures";
+import { useGestureContext } from "../../providers/gestures";
 
 interface ScrollProgressHookProps {
 	onScroll?: (event: ReanimatedScrollEvent) => void;

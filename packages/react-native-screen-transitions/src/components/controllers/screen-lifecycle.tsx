@@ -1,10 +1,9 @@
 import { useEffect, useLayoutEffect } from "react";
-import { useKeys } from "../../context/keys";
 import useStableCallback from "../../hooks/use-stable-callback";
+import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
-import { Bounds } from "../../stores/bounds";
-import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
+import { resetStoresForScreen } from "../../stores/utils/reset-stores-for-screen";
 import { runTransition } from "../../utils/animation/run-transition";
 
 interface ScreenLifecycleProps {
@@ -22,29 +21,22 @@ export const ScreenLifecycleController = ({
 		const key = current.navigation.getParent()?.getState().key;
 		const requestedDismissOnNavigator = NavigatorDismissState.get(key);
 
-		const cleanup = () => {
-			Animations.clear(current.route.key);
-			Gestures.clear(current.route.key);
-			Bounds.clear(current.route.key);
-			Bounds.clearActive();
-		};
-
 		// Don't run e.preventDefault when the dismissal was on the local root
 		if (requestedDismissOnNavigator) {
-			cleanup();
+			resetStoresForScreen(current);
 			return;
 		}
 
 		// Don't run e.preventDefault when this is the first screen of the stack
 		if (current.navigation.getState().index === 0) {
-			cleanup();
+			resetStoresForScreen(current);
 			return;
 		}
 
 		e.preventDefault();
 		const onFinish = (finished: boolean) => {
 			if (finished) {
-				cleanup();
+				resetStoresForScreen(current);
 				current.navigation.dispatch(e.data.action);
 			}
 		};

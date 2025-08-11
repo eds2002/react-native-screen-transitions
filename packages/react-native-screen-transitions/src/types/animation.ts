@@ -1,3 +1,4 @@
+import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import type {
 	StyleProps,
 	WithSpringConfig,
@@ -13,6 +14,7 @@ export type ScreenTransitionState = {
 	animating: number;
 	gesture: GestureValues;
 	bounds: Record<string, BoundEntry>;
+	route: RouteProp<ParamListBase>;
 };
 
 export interface ScreenInterpolationProps {

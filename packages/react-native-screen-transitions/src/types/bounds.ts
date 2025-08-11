@@ -1,4 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type { ScreenPhase } from "./core";
 
 /**
  * Target style computation.
@@ -76,4 +77,6 @@ export type BoundEntry = {
 	styles: StyleProps;
 };
 
-export type BoundsAccessor = (id?: string) => BoundsBuilder;
+export type BoundsAccessor = ((id?: string) => BoundsBuilder) & {
+	get: (id?: string, phase?: ScreenPhase) => BoundEntry;
+};

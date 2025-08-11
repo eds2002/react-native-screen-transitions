@@ -60,7 +60,7 @@ export default function RootLayout() {
         ==============================
         */}
 				<Stack.Screen
-					name="examples/palette-profile"
+					name="examples/palette-profile/index"
 					options={{
 						enableTransitions: true,
 						gestureEnabled: true,
@@ -69,6 +69,7 @@ export default function RootLayout() {
 							current,
 							layouts: { screen },
 							progress,
+							focused,
 						}) => {
 							"worklet";
 
@@ -97,6 +98,10 @@ export default function RootLayout() {
 							);
 
 							return {
+								overlayStyle: {
+									backgroundColor: "rgba(0,0,0,0.85)",
+									opacity: focused ? interpolate(progress, [0, 1], [0, 1]) : 0,
+								},
 								contentStyle: {
 									transform: [
 										{ scale },
@@ -104,6 +109,74 @@ export default function RootLayout() {
 										{ translateX },
 									],
 									borderRadius,
+								},
+							};
+						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="examples/palette-profile/[color]"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: ["horizontal", "vertical"],
+						screenStyleInterpolator: ({
+							bounds,
+							activeBoundId,
+							focused,
+							progress,
+						}) => {
+							"worklet";
+
+							const transformBounds = bounds().relative().size().build();
+							const { styles } = bounds.get();
+
+							return {
+								[activeBoundId]: {
+									...transformBounds,
+									...(focused && {
+										borderRadius: interpolate(
+											progress,
+											[0, 1],
+											[(styles.borderRadius as number) ?? 0, 12],
+										),
+									}),
+								},
+								overlayStyle: {
+									backgroundColor: "rgba(0,0,0,0.85)",
+									opacity: focused ? interpolate(progress, [0, 1], [0, 1]) : 0,
+								},
+							};
+						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
+						},
+					}}
+				/>
+				<Stack.Screen
+					name="examples/palette-profile/profile"
+					options={{
+						enableTransitions: true,
+						gestureEnabled: true,
+						gestureDirection: "bidirectional",
+						screenStyleInterpolator: ({ bounds, progress }) => {
+							"worklet";
+
+							const transformBounds = bounds().relative().transform().build();
+
+							return {
+								overlayStyle: {
+									backgroundColor: "rgba(0,0,0,0.85)",
+									opacity: interpolate(progress, [0, 1], [0, 1]),
+								},
+								profile: {
+									...transformBounds,
+									opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
 								},
 							};
 						},
@@ -314,25 +387,12 @@ export default function RootLayout() {
 						gestureEnabled: true,
 						gestureDirection: "horizontal",
 						screenStyleInterpolator: ({
-							focused,
 							progress,
 							layouts: {
 								screen: { width },
 							},
 						}) => {
 							"worklet";
-							if (focused) {
-								console.log("focused", progress);
-								return {
-									contentStyle: {
-										transform: [
-											{ translateX: interpolate(progress, [0, 1], [width, 0]) },
-										],
-									},
-								};
-							}
-
-							console.log("progress", progress);
 
 							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
 
@@ -341,6 +401,10 @@ export default function RootLayout() {
 									transform: [{ translateX: x }],
 								},
 							};
+						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -357,19 +421,43 @@ export default function RootLayout() {
 						],
 						screenStyleInterpolator: ({
 							progress,
+							current,
 							layouts: {
-								screen: { width },
+								screen: { width, height },
 							},
+							focused,
 						}) => {
 							"worklet";
 
-							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+							const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.75]);
+							const gestureX = interpolate(
+								current.gesture.normalizedX,
+								[-1, 0, 1],
+								[-width, 0, width],
+							);
+
+							const y = interpolate(
+								current.gesture.normalizedY,
+								[-1, 0, 1],
+								[-height, 0, height],
+							);
 
 							return {
 								contentStyle: {
-									transform: [{ translateX: x }],
+									transform: [
+										{ scale },
+										{ translateX: gestureX },
+										{ translateY: y },
+									],
+									...(focused && {
+										backgroundColor: "lightblue",
+									}),
 								},
 							};
+						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -386,19 +474,43 @@ export default function RootLayout() {
 						],
 						screenStyleInterpolator: ({
 							progress,
+							current,
 							layouts: {
-								screen: { width },
+								screen: { width, height },
 							},
+							focused,
 						}) => {
 							"worklet";
 
-							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+							const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.75]);
+							const gestureX = interpolate(
+								current.gesture.normalizedX,
+								[-1, 0, 1],
+								[-width, 0, width],
+							);
+
+							const y = interpolate(
+								current.gesture.normalizedY,
+								[-1, 0, 1],
+								[-height, 0, height],
+							);
 
 							return {
 								contentStyle: {
-									transform: [{ translateX: x }],
+									transform: [
+										{ scale },
+										{ translateX: gestureX },
+										{ translateY: y },
+									],
+									...(focused && {
+										backgroundColor: "lightblue",
+									}),
 								},
 							};
+						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -410,19 +522,40 @@ export default function RootLayout() {
 						gestureDirection: ["vertical"],
 						screenStyleInterpolator: ({
 							progress,
+							current,
 							layouts: {
-								screen: { height },
+								screen: { height, width },
 							},
 						}) => {
 							"worklet";
 
 							const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
 
+							const gestureX = interpolate(
+								current.gesture.normalizedX,
+								[-1, 0, 1],
+								[-width, 0, width],
+							);
+
+							const gestureY = interpolate(
+								current.gesture.normalizedY,
+								[-1, 0, 1],
+								[-height, 0, height],
+							);
+
 							return {
 								contentStyle: {
-									transform: [{ translateY: y }],
+									transform: [
+										{ translateY: y },
+										{ translateX: gestureX },
+										{ translateY: gestureY },
+									],
 								},
 							};
+						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -448,6 +581,10 @@ export default function RootLayout() {
 								},
 							};
 						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
+						},
 					}}
 				/>
 				<Stack.Screen
@@ -471,6 +608,10 @@ export default function RootLayout() {
 									transform: [{ translateX: x }],
 								},
 							};
+						},
+						transitionSpec: {
+							open: Transition.specs.DefaultSpec,
+							close: Transition.specs.DefaultSpec,
 						},
 					}}
 				/>

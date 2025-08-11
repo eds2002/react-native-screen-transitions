@@ -6,8 +6,9 @@ import {
 	type StyleProps,
 	useSharedValue,
 } from "react-native-reanimated";
-import { useKeys } from "../../context/keys";
+import { useKeys } from "../../providers/keys";
 import { Bounds } from "../../stores/bounds";
+import { flattenStyle } from "../../utils/bounds/flatten-styles";
 import { useScreenAnimation } from "../animation/use-screen-animation";
 
 interface BoundMeasurerHookProps {
@@ -32,7 +33,12 @@ export const useBoundMeasurer = ({
 		if (!sharedBoundTag) return;
 		const measured = measure(animatedRef);
 		if (measured) {
-			Bounds.setBounds(current.route.key, sharedBoundTag, measured, style);
+			Bounds.setBounds(
+				current.route.key,
+				sharedBoundTag,
+				measured,
+				flattenStyle(style),
+			);
 		}
 	}, [sharedBoundTag, animatedRef, current.route.key, style]);
 
