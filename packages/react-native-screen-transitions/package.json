@@ -9,7 +9,7 @@
 		"url": "https://github.com/eds2002/react-native-screen-transitions.git",
 		"directory": "packages/react-native-screen-transitions"
 	},
-	"main": "lib/module/index.js",
+	"main": "lib/commonjs/index.js",
 	"module": "lib/module/index.js",
 	"types": "lib/typescript/index.d.ts",
 	"react-native": "src/index",
