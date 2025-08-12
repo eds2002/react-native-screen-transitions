@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.1](https://github.com/eds2002/react-native-screen-transitions/compare/react-native-screen-transitions@2.0.0...react-native-screen-transitions@2.0.1) (2025-08-12)
+
+### Bug Fixes
+
+* **package:** correct main/module/types paths for npm build ([015d20d](https://github.com/eds2002/react-native-screen-transitions/commit/015d20d91a2f95efc377c764a2b1d9be12610b6f))
+
 # 2.0.0 (2025-08-11)
 
 ### Bug Fixes
