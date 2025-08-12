@@ -214,10 +214,10 @@ const FlatList = Transition.FlatList;
 
 // Or wrap any list you like
 const TransitionFlashList =
-  Transition.createTransitionAwareScrollable(FlashList, { isScrollable: true });
+  Transition.createTransitionAwareComponent(FlashList, { isScrollable: true });
 
 const TransitionLegendList =
-  Transition.createTransitionAwareScrollable(LegendList, { isScrollable: true} );
+  Transition.createTransitionAwareComponent(LegendList, { isScrollable: true} );
 ```
 
 Enable the gesture on the screen:
