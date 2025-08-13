@@ -12,7 +12,7 @@
 	"main": "lib/commonjs/index.js",
 	"module": "lib/module/index.js",
 	"types": "lib/typescript/index.d.ts",
-	"react-native": "src/index",
+  "react-native": "src/index",
 	"scripts": {
 		"build": "bob build",
 		"lint": "biome check ./src",
