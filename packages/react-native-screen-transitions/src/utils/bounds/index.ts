@@ -1,5 +1,5 @@
 import type { ScaledSize } from "react-native";
-import type { ScreenPhase } from "src/types/core";
+import type { ScreenPhase } from "../../types/core";
 import type { ScreenTransitionState } from "../../types/animation";
 import { buildBoundStyles } from "./build-bound-styles";
 import { getBounds } from "./get-bounds";
