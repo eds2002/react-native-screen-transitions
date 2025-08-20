@@ -36,8 +36,8 @@ jobs:
 
     - name: Configure Git
       run: |
-        git config user.name "screen-transitions-release-bot[bot]"
-        git config user.email "screen-transitions-release-bot[bot]@users.noreply.github.com"
+          git config user.name '${{ steps.app-token.outputs.app-slug }}[bot]'
+          git config user.email '${{ steps.get-user-id.outputs.user-id }}+${{ steps.app-token.outputs.app-slug }}[bot]@users.noreply.github.com'
 
     - name: Version and publish
       env:
