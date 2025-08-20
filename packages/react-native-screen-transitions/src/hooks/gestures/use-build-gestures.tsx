@@ -119,6 +119,9 @@ export const useBuildGestures = ({
 			if (allowed.vertical && isSwipingDown) {
 				shouldActivate = scrollProgress.value.y >= 0;
 			}
+			if (allowed.horizontal && isSwipingRight) {
+				shouldActivate = scrollProgress.value.x <= 0;
+			}
 
 			if (allowed.verticalInverted && isSwipingUp) {
 				const maxScrollableY =
@@ -127,13 +130,11 @@ export const useBuildGestures = ({
 
 				shouldActivate = scrollProgress.value.y >= maxScrollableY;
 			}
-			if (allowed.horizontal && isSwipingRight) {
-				shouldActivate = scrollProgress.value.x <= 0;
-			}
+
 			if (allowed.horizontalInverted && isSwipingLeft) {
-				const maxProgress =
+				const maxScrollableX =
 					scrollProgress.value.contentWidth - scrollProgress.value.layoutWidth;
-				shouldActivate = scrollProgress.value.x >= maxProgress;
+				shouldActivate = scrollProgress.value.x >= maxScrollableX;
 			}
 
 			if (

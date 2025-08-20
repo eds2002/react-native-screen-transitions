@@ -26,7 +26,7 @@
         "expo-linking": "^7.1.7",
         "expo-modules-autolinking": "^2.1.14",
         "expo-modules-core": "^2.5.0",
-        "expo-router": "~5.1.4",
+        "expo-router": "^5.1.4",
         "expo-status-bar": "~2.2.3",
         "react": "19.0.0",
         "react-dom": "19.0.0",
@@ -2347,8 +2347,6 @@
 
     "eslint-scope/estraverse": ["estraverse@4.3.0", "", {}, "sha512-39nnKffWz8xN1BU/2c79n9nB9HDzo0niYUqx6xyqUnyoAnQyyWpOTdZEeiCch8BBu515t4wp9ZmgVfVhn9EBpw=="],
 
-    "expo-router/@react-navigation/native-stack": ["@react-navigation/native-stack@7.3.21", "", { "dependencies": { "@react-navigation/elements": "^2.5.2", "warn-once": "^0.1.1" }, "peerDependencies": { "@react-navigation/native": "^7.1.14", "react": ">= 18.2.0", "react-native": "*", "react-native-safe-area-context": ">= 4.0.0", "react-native-screens": ">= 4.0.0" } }, "sha512-oNNZHzkxILEibesamRKLodfXAaDOUvMBITKXLLeblDxnTAyIB/Kf7CmV+8nwkdAgV04kURTxV0SQI+d8gLUm6g=="],
-
     "expo-router/semver": ["semver@7.6.3", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A=="],
 
     "fast-glob/glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
@@ -2692,8 +2690,6 @@
     "connect/debug/ms": ["ms@2.0.0", "", {}, "sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A=="],
 
     "cosmiconfig/js-yaml/argparse": ["argparse@1.0.10", "", { "dependencies": { "sprintf-js": "~1.0.2" } }, "sha512-o5Roy6tNG4SL/FOkCAN6RzjiakZS25RLYFrcMttJqbdd8BWrnA+fGz57iN5Pb06pvBGvl5gQ0B48dJlslXvoTg=="],
-
-    "expo-router/@react-navigation/native-stack/@react-navigation/elements": ["@react-navigation/elements@2.5.2", "", { "dependencies": { "color": "^4.2.3", "use-latest-callback": "^0.2.4", "use-sync-external-store": "^1.5.0" }, "peerDependencies": { "@react-native-masked-view/masked-view": ">= 0.2.0", "@react-navigation/native": "^7.1.14", "react": ">= 18.2.0", "react-native": "*", "react-native-safe-area-context": ">= 4.0.0" }, "optionalPeers": ["@react-native-masked-view/masked-view"] }, "sha512-aGC3ukF5+lXuiF5bK7bJyRuWCE+Tk4MZ3GoQpAb7u7+m0KmsquliDhj4UCWEUU5kUoCeoRAUvv+1lKcYKf+WTQ=="],
 
     "finalhandler/debug/ms": ["ms@2.0.0", "", {}, "sha512-Tpp60P6IUJDTuOq/5Z8cdskzJujfwqfOTkrwIwj7IRISpnkJnT6SyJ4PCPnGMoFjC9ddhal5KVIYtAt97ix05A=="],
 
