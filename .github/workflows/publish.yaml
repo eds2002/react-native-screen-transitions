@@ -12,11 +12,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    - name: Generate GitHub App Token
+      id: app-token
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ secrets.APP_ID }}
+        private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
     - name: Checkout code
       uses: actions/checkout@v4
       with:
         fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ steps.app-token.outputs.token }}
 
     - uses: oven-sh/setup-bun@v2
       with:
@@ -29,12 +36,12 @@ jobs:
 
     - name: Configure Git
       run: |
-        git config user.name "${{ github.actor }}"
-        git config user.email "${{ github.actor }}@users.noreply.github.com"
+        git config user.name "screen-transitions-release-bot[bot]"
+        git config user.email "screen-transitions-release-bot[bot]@users.noreply.github.com"
 
     - name: Version and publish
       env:
-        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
       run: |
         if [ "${{ github.base_ref }}" = "development" ]; then
           bunx lerna version --conventional-commits --conventional-prerelease --preid beta --yes
