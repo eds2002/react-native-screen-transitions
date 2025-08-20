@@ -11,10 +11,10 @@
 	},
 	"scripts": {
 		"e2e": "maestro test e2e/maestro/flows",
-		"clean": "rm -rf node_modules && rm -rf */node_modules && rm -rf bun.lockb",
-		"build": "lerna run build",
-		"publish": "lerna publish",
-		"release": "bun build && bun publish"
+		"clean": "lerna run clean && rm -rf node_modules && rm -rf bun.lockb",
+		"build": "lerna run prepack",
+		"publish": "lerna publish from-package",
+		"release": "bun run build && bun run publish"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "2.1.2",
