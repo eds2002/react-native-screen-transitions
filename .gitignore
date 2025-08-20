@@ -29,3 +29,6 @@ examples/perf/*
 
 todo
 *.todo
+
+# Lerna
+lerna-debug.log*
