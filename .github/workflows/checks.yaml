@@ -1,0 +1,23 @@
+name: Checks
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+        registries: |
+          https://registry.npmjs.org/
+
+    - name: Install dependencies
+      run: bun install
+
+    - name: Run tests
+      run: bun test

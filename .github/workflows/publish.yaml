@@ -1,0 +1,44 @@
+
+name: Publish
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - development
+      - main
+
+jobs:
+  publish:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+    - uses: oven-sh/setup-bun@v2
+      with:
+        bun-version: latest
+        registries: |
+          https://registry.npmjs.org/
+
+    - name: "Configure Git"
+      run: |
+        git config user.name "${{ github.actor }}"
+        git config user.email "${{ github.actor }}@users.noreply.github.com"
+
+    - name: "Version and publish"
+      env:
+        GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      run: |
+        bun pm adduser --registry https://registry.npmjs.org/ --token $NPM_TOKEN
+
+        # Version and publish
+        if [ "${{ github.base_ref }}" = "development" ]; then
+          bunx lerna version --conventional-commits --conventional-prerelease --preid beta --yes
+        else
+          bunx lerna version --conventional-commits --conventional-graduate --yes
+        fi
+
+        bunx lerna publish from-git --yes --registry https://registry.npmjs.org/
