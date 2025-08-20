@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.4](https://github.com/eds2002/react-native-screen-transitions/compare/react-native-screen-transitions@2.0.3...react-native-screen-transitions@2.0.4) (2025-08-20)
+
+### Bug Fixes
+
+* correct import paths and whitespace issues ([#8](https://github.com/eds2002/react-native-screen-transitions/issues/8)) ([5a3a57e](https://github.com/eds2002/react-native-screen-transitions/commit/5a3a57eb983df3195e648f0a06129ee5743e49f3))
+
 ## [2.0.3](https://github.com/eds2002/react-native-screen-transitions/compare/react-native-screen-transitions@2.0.2...react-native-screen-transitions@2.0.3) (2025-08-13)
 
 **Note:** Version bump only for package react-native-screen-transitions
