@@ -1,20 +1,14 @@
-import {
-	DraggableCard,
-	ElasticCard,
-	SlideFromBottom,
-	SlideFromTop,
-	ZoomIn,
-} from "./presets";
-import { DefaultSpec } from "./specs";
+import { DraggableCard, ElasticCard, SlideFromBottom, SlideFromTop, ZoomIn } from './presets';
+import { DefaultSpec } from './specs';
 
 export const specs = {
-	DefaultSpec,
+  DefaultSpec,
 };
 
 export const presets = {
-	SlideFromTop,
-	ZoomIn,
-	SlideFromBottom,
-	DraggableCard,
-	ElasticCard,
+  SlideFromTop,
+  ZoomIn,
+  SlideFromBottom,
+  DraggableCard,
+  ElasticCard,
 };
