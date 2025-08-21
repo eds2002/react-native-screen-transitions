@@ -50,7 +50,7 @@
 		"@types/react": "~19.0.10",
 		"react-native-builder-bob": "0.39.0",
 		"tsup": "^8.5.0",
-		"typescript": "catalog:"
+		"typescript": "~5.8.3"
 	},
 	"react-native-builder-bob": {
 		"source": "src",
@@ -65,5 +65,6 @@
 				}
 			]
 		]
-	}
+	},
+	"gitHead": "888d4df9936ec0e3b8221bea7cd81115e6301693"
 }
