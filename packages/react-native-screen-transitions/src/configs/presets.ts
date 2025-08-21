@@ -225,3 +225,109 @@ export const ElasticCard = (
 		...config,
 	};
 };
+
+export const SharedMaskedView = (
+	config: Partial<ScreenTransitionConfig> = {},
+): ScreenTransitionConfig => {
+	return {
+		gestureEnabled: true,
+		gestureDirection: ["vertical"],
+		enableTransitions: true,
+		gestureDrivesProgress: false,
+		screenStyleInterpolator: ({
+			current,
+			layouts: { screen },
+			bounds,
+			progress,
+			focused,
+			activeBoundId,
+			next,
+		}) => {
+			"worklet";
+			if (focused) {
+				const prev = bounds(activeBoundId).content().contentFill().build();
+				const masked = bounds(activeBoundId)
+					.absolute()
+					.toFullscreen()
+					.size()
+					.build();
+
+				const x = interpolate(
+					current.gesture.normalizedY,
+					[-1, 1],
+					[-screen.height, screen.height],
+					"clamp",
+				);
+
+				const y = interpolate(
+					current.gesture.normalizedX,
+					[-1, 1],
+					[-screen.width, screen.width],
+					"clamp",
+				);
+
+				return {
+					overlayStyle: {
+						backgroundColor: "black",
+						opacity: interpolate(progress, [0, 1], [0, 0.5]),
+					},
+					contentStyle: {
+						transform: [{ translateY: x }, { translateX: y }],
+					},
+					"root-container-view": prev,
+					"root-masked-view": {
+						...masked,
+						borderRadius: interpolate(progress, [0, 1], [0, 24]),
+					},
+				};
+			}
+
+			const translateY = interpolate(
+				next?.gesture.normalizedY ?? 0,
+				[-1, 1],
+				[-screen.height, screen.height],
+				"clamp",
+			);
+
+			/** Horizontal */
+			const translateX = interpolate(
+				next?.gesture.normalizedX ?? 0,
+				[-1, 1],
+				[-screen.width, screen.width],
+				"clamp",
+			);
+
+			const unfocusedBound = bounds()
+				.gestures({
+					x: translateX,
+					y: translateY,
+				})
+				.transform()
+				.build();
+
+			return {
+				contentStyle: {
+					transform: [
+						{
+							scale: interpolate(progress, [1, 2], [1, 0.9]),
+						},
+					],
+				},
+				[activeBoundId]: unfocusedBound,
+			};
+		},
+		transitionSpec: {
+			open: {
+				mass: 1,
+				stiffness: 200,
+				damping: 21,
+			},
+			close: {
+				mass: 1,
+				stiffness: 200,
+				damping: 21,
+			},
+		},
+		...config,
+	};
+};

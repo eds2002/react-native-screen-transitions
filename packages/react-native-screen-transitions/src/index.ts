@@ -1,5 +1,6 @@
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
+import MaskedView from "./components/integrations/masked-view";
 import { presets, specs } from "./configs";
 
 export default {
@@ -9,6 +10,9 @@ export default {
 		isScrollable: true,
 	}),
 	FlatList: createTransitionAwareComponent(FlatList, {
+		isScrollable: true,
+	}),
+	MaskedView: createTransitionAwareComponent(MaskedView, {
 		isScrollable: true,
 	}),
 	presets,

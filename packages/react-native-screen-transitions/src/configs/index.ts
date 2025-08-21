@@ -1,6 +1,7 @@
 import {
 	DraggableCard,
 	ElasticCard,
+	SharedMaskedView,
 	SlideFromBottom,
 	SlideFromTop,
 	ZoomIn,
@@ -17,4 +18,5 @@ export const presets = {
 	SlideFromBottom,
 	DraggableCard,
 	ElasticCard,
+	SharedMaskedView,
 };

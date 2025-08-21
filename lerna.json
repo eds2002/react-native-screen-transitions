@@ -6,7 +6,7 @@
 	"useWorkspaces": true,
 	"command": {
 		"publish": {
-			"allowBranch": "main",
+    "allowBranch": "main",
 			"conventionalCommits": true,
 			"createRelease": "github",
 			"skipBumpOnlyReleases": true,
