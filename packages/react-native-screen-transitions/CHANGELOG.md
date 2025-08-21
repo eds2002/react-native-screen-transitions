@@ -3,6 +3,12 @@
 All notable changes to this project will be documented in this file.
 See [Conventional Commits](https://conventionalcommits.org) for commit guidelines.
 
+## [2.0.6](https://github.com/eds2002/react-native-screen-transitions/compare/react-native-screen-transitions@2.0.5...react-native-screen-transitions@2.0.6) (2025-08-21)
+
+### Bug Fixes
+
+* https://github.com/eds2002/react-native-screen-transitions/issues/7 ([#14](https://github.com/eds2002/react-native-screen-transitions/issues/14)) ([2b6aaa4](https://github.com/eds2002/react-native-screen-transitions/commit/2b6aaa4ae888c8e2bed6337127ebb7cb09793fc5))
+
 ## [2.0.5](https://github.com/eds2002/react-native-screen-transitions/compare/react-native-screen-transitions@2.0.3...react-native-screen-transitions@2.0.5) (2025-08-20)
 
 ### Bug Fixes
