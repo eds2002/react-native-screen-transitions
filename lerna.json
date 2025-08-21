@@ -1,16 +1,17 @@
 {
 	"$schema": "node_modules/@lerna-lite/cli/schemas/lerna-schema.json",
-	"allowBranch": ["main", "release/*"],
+	"allowBranch": "main",
 	"version": "independent",
 	"npmClient": "bun",
 	"useWorkspaces": true,
 	"command": {
 		"publish": {
-			"allowBranch": ["main", "release/*"],
+			"allowBranch": "main",
 			"conventionalCommits": true,
 			"createRelease": "github",
 			"skipBumpOnlyReleases": true,
-			"message": "chore: publish"
+			"message": "chore: publish",
+			"ignoreChanges": ["**/*.md", "**/example/**"]
 		}
 	}
 }

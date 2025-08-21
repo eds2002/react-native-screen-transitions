@@ -62,15 +62,18 @@ export const useBuildGestures = ({
 		? gestureDirection
 		: [gestureDirection];
 
+	const isBidirectional = directions.includes("bidirectional");
+
 	const allowed = useMemo(
 		() => ({
-			bidirectional: directions.includes("bidirectional"),
-			vertical: directions.includes("vertical"),
-			verticalInverted: directions.includes("vertical-inverted"),
-			horizontal: directions.includes("horizontal"),
-			horizontalInverted: directions.includes("horizontal-inverted"),
+			vertical: directions.includes("vertical") || isBidirectional,
+			verticalInverted:
+				directions.includes("vertical-inverted") || isBidirectional,
+			horizontal: directions.includes("horizontal") || isBidirectional,
+			horizontalInverted:
+				directions.includes("horizontal-inverted") || isBidirectional,
 		}),
-		[directions],
+		[directions, isBidirectional],
 	);
 
 	const nativeGesture = useMemo(() => Gesture.Native(), []);
@@ -114,8 +117,12 @@ export const useBuildGestures = ({
 			let shouldActivate = false;
 
 			if (allowed.vertical && isSwipingDown) {
-				shouldActivate = scrollProgress.value.y <= 0;
+				shouldActivate = scrollProgress.value.y >= 0;
 			}
+			if (allowed.horizontal && isSwipingRight) {
+				shouldActivate = scrollProgress.value.x <= 0;
+			}
+
 			if (allowed.verticalInverted && isSwipingUp) {
 				const maxScrollableY =
 					scrollProgress.value.contentHeight -
@@ -123,22 +130,11 @@ export const useBuildGestures = ({
 
 				shouldActivate = scrollProgress.value.y >= maxScrollableY;
 			}
-			if (allowed.horizontal && isSwipingRight) {
-				shouldActivate = scrollProgress.value.x <= 0;
-			}
+
 			if (allowed.horizontalInverted && isSwipingLeft) {
-				const maxProgress =
+				const maxScrollableX =
 					scrollProgress.value.contentWidth - scrollProgress.value.layoutWidth;
-				shouldActivate = scrollProgress.value.x >= maxProgress;
-			}
-			if (allowed.bidirectional) {
-				if (isSwipingDown) {
-					shouldActivate = scrollProgress.value.y >= 0;
-				} else if (isSwipingUp) {
-					shouldActivate = scrollProgress.value.y <= 0;
-				} else if (isSwipingRight || isSwipingLeft) {
-					shouldActivate = true;
-				}
+				shouldActivate = scrollProgress.value.x >= maxScrollableX;
 			}
 
 			if (
@@ -181,53 +177,46 @@ export const useBuildGestures = ({
 				"clamp",
 			);
 
-			if (allowed.bidirectional) {
-				const distance = Math.sqrt(
-					event.translationX ** 2 + event.translationY ** 2,
+			let maxProgress = 0;
+
+			const allowedDown = allowed.vertical;
+			const allowedUp = allowed.verticalInverted;
+			const allowedRight = allowed.horizontal;
+			const allowedLeft = allowed.horizontalInverted;
+
+			if (allowedRight && event.translationX > 0) {
+				const currentProgress = mapGestureToProgress(
+					event.translationX,
+					dimensions.width,
 				);
-				gestureProgress = mapGestureToProgress(distance, dimensions.width);
-			} else {
-				let maxProgress = 0;
-
-				const allowedDown = allowed.vertical;
-				const allowedUp = allowed.verticalInverted;
-				const allowedRight = allowed.horizontal;
-				const allowedLeft = allowed.horizontalInverted;
-
-				if (allowedRight && event.translationX > 0) {
-					const currentProgress = mapGestureToProgress(
-						event.translationX,
-						dimensions.width,
-					);
-					maxProgress = Math.max(maxProgress, currentProgress);
-				}
-
-				if (allowedLeft && event.translationX < 0) {
-					const currentProgress = mapGestureToProgress(
-						-event.translationX,
-						dimensions.width,
-					);
-					maxProgress = Math.max(maxProgress, currentProgress);
-				}
-
-				if (allowedDown && event.translationY > 0) {
-					const currentProgress = mapGestureToProgress(
-						event.translationY,
-						dimensions.height,
-					);
-					maxProgress = Math.max(maxProgress, currentProgress);
-				}
-
-				if (allowedUp && event.translationY < 0) {
-					const currentProgress = mapGestureToProgress(
-						-event.translationY,
-						dimensions.height,
-					);
-					maxProgress = Math.max(maxProgress, currentProgress);
-				}
-
-				gestureProgress = maxProgress;
+				maxProgress = Math.max(maxProgress, currentProgress);
 			}
+
+			if (allowedLeft && event.translationX < 0) {
+				const currentProgress = mapGestureToProgress(
+					-event.translationX,
+					dimensions.width,
+				);
+				maxProgress = Math.max(maxProgress, currentProgress);
+			}
+
+			if (allowedDown && event.translationY > 0) {
+				const currentProgress = mapGestureToProgress(
+					event.translationY,
+					dimensions.height,
+				);
+				maxProgress = Math.max(maxProgress, currentProgress);
+			}
+
+			if (allowedUp && event.translationY < 0) {
+				const currentProgress = mapGestureToProgress(
+					-event.translationY,
+					dimensions.height,
+				);
+				maxProgress = Math.max(maxProgress, currentProgress);
+			}
+
+			gestureProgress = maxProgress;
 
 			if (gestureDrivesProgress) {
 				animations.progress.value = 1 - gestureProgress;
@@ -271,35 +260,27 @@ export const useBuildGestures = ({
 			const verticalDistance = Math.abs(finalY);
 			const crossAxisThreshold = diagonal * dismissThreshold * 0.7;
 
-			if (allowed.bidirectional) {
-				// For bidirectional, use the original distance-based logic
-				const finalDistance = Math.sqrt(finalX * finalX + finalY * finalY);
-				shouldDismiss = finalDistance > diagonal * dismissThreshold;
-			} else {
-				// Check primary direction dismissal
-				if (allowed.vertical && finalY > 0) {
-					shouldDismiss = verticalDistance > diagonal * dismissThreshold;
-				} else if (allowed.verticalInverted && finalY < 0) {
-					shouldDismiss = verticalDistance > diagonal * dismissThreshold;
-				} else if (allowed.horizontal && finalX > 0) {
-					shouldDismiss = horizontalDistance > diagonal * dismissThreshold;
-				} else if (allowed.horizontalInverted && finalX < 0) {
-					shouldDismiss = horizontalDistance > diagonal * dismissThreshold;
-				}
+			if (allowed.vertical && finalY > 0) {
+				shouldDismiss = verticalDistance > diagonal * dismissThreshold;
+			} else if (allowed.verticalInverted && finalY < 0) {
+				shouldDismiss = verticalDistance > diagonal * dismissThreshold;
+			} else if (allowed.horizontal && finalX > 0) {
+				shouldDismiss = horizontalDistance > diagonal * dismissThreshold;
+			} else if (allowed.horizontalInverted && finalX < 0) {
+				shouldDismiss = horizontalDistance > diagonal * dismissThreshold;
+			}
 
-				// Allow dismissal on perpendicular axis if movement is significant
-				if (!shouldDismiss) {
-					if (
-						(allowed.vertical || allowed.verticalInverted) &&
-						horizontalDistance > crossAxisThreshold
-					) {
-						shouldDismiss = true;
-					} else if (
-						(allowed.horizontal || allowed.horizontalInverted) &&
-						verticalDistance > crossAxisThreshold
-					) {
-						shouldDismiss = true;
-					}
+			if (!shouldDismiss) {
+				if (
+					(allowed.vertical || allowed.verticalInverted) &&
+					horizontalDistance > crossAxisThreshold
+				) {
+					shouldDismiss = true;
+				} else if (
+					(allowed.horizontal || allowed.horizontalInverted) &&
+					verticalDistance > crossAxisThreshold
+				) {
+					shouldDismiss = true;
 				}
 			}
 
