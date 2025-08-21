@@ -32,3 +32,6 @@ todo
 
 # Lerna
 lerna-debug.log*
+
+# NPM
+.npmrc
