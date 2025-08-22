@@ -128,6 +128,12 @@ const ExamplesComponent = memo(() => {
 				"Use shared bounds to drive transitions from element positions.",
 			href: "/examples/x",
 		},
+		{
+			title: "Apple Music",
+			description:
+				"Use shared bounds to drive transitions from element positions.",
+			href: "/examples/apple-music/(tabs)",
+		},
 	];
 
 	return (
