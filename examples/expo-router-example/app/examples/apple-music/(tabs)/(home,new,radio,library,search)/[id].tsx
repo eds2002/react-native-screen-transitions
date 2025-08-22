@@ -1,9 +1,17 @@
-import { Text, View } from "react-native";
+import { router } from "expo-router";
 
-export default function IdScreen() {
+import Transition from "react-native-screen-transitions";
+
+export default function IndexScreen() {
 	return (
-		<View>
-			<Text>Id Screen</Text>
-		</View>
+		<Transition.Pressable
+			sharedBoundTag="test"
+			onPress={router.back}
+			style={{
+				width: 100,
+				height: 100,
+				backgroundColor: "blue",
+			}}
+		/>
 	);
 }

@@ -340,8 +340,8 @@ export const SharedInstagram = (
 			},
 			close: {
 				mass: 1,
-				stiffness: 280,
-				damping: 30,
+				stiffness: 600,
+				damping: 60,
 			},
 		},
 		...config,

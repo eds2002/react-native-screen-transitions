@@ -12,7 +12,7 @@ import type {
 } from "../../types/animation";
 import type { BoundEntry } from "../../types/bounds";
 import type { NativeStackDescriptor } from "../../types/navigator";
-import { buildBoundsAccessor } from "../../utils/bounds";
+import { createBounds } from "../../utils/bounds";
 
 type BuiltState = {
 	progress: SharedValue<number>;
@@ -108,7 +108,7 @@ export function _useScreenAnimation() {
 			const focused = !next;
 			const activeBoundId = Bounds.getActiveBoundId() || "";
 
-			const bounds = buildBoundsAccessor({
+			const bounds = createBounds({
 				activeBoundId,
 				current,
 				previous,

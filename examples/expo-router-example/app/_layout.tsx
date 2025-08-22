@@ -615,6 +615,12 @@ export default function RootLayout() {
 						},
 					}}
 				/>
+				<Stack.Screen
+					name="examples/apple-music/(tabs)"
+					options={{
+						headerShown: false,
+					}}
+				/>
 			</Stack>
 		</GestureHandlerRootView>
 	);

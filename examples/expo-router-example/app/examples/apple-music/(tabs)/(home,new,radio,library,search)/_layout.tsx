@@ -45,7 +45,41 @@ const Layout = ({ segment }: { segment: string }) => {
 	return (
 		<Stack>
 			{rootScreen}
-			<Stack.Screen name="[id]" />
+			<Stack.Screen
+				name="[id]"
+				options={{
+					enableTransitions: true,
+					headerShown: false,
+					gestureEnabled: true,
+					gestureDirection: ["vertical", "horizontal"],
+					gestureDrivesProgress: false,
+					screenStyleInterpolator: ({ bounds, activeBoundId }) => {
+						"worklet";
+
+						const boundStyles = bounds("id").build();
+
+						const test = bounds({
+              
+            });
+
+						return {
+							[activeBoundId]: boundStyles,
+						};
+					},
+					transitionSpec: {
+						open: {
+							mass: 1,
+							stiffness: 280,
+							damping: 30,
+						},
+						close: {
+							mass: 1,
+							stiffness: 280,
+							damping: 30,
+						},
+					},
+				}}
+			/>
 		</Stack>
 	);
 };
