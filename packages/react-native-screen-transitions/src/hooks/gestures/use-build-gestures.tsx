@@ -118,9 +118,11 @@ export const useBuildGestures = ({
 
 			if (allowed.vertical && isSwipingDown) {
 				shouldActivate = scrollProgress.value.y >= 0;
+				gestures.triggerDirection.value = "vertical";
 			}
 			if (allowed.horizontal && isSwipingRight) {
 				shouldActivate = scrollProgress.value.x <= 0;
+				gestures.triggerDirection.value = "horizontal";
 			}
 
 			if (allowed.verticalInverted && isSwipingUp) {
@@ -129,12 +131,14 @@ export const useBuildGestures = ({
 					scrollProgress.value.layoutHeight;
 
 				shouldActivate = scrollProgress.value.y >= maxScrollableY;
+				gestures.triggerDirection.value = "vertical-inverted";
 			}
 
 			if (allowed.horizontalInverted && isSwipingLeft) {
 				const maxScrollableX =
 					scrollProgress.value.contentWidth - scrollProgress.value.layoutWidth;
 				shouldActivate = scrollProgress.value.x >= maxScrollableX;
+				gestures.triggerDirection.value = "horizontal-inverted";
 			}
 
 			if (
@@ -306,6 +310,7 @@ export const useBuildGestures = ({
 			gestures.normalizedX.value = animate(0, spec);
 			gestures.normalizedY.value = animate(0, spec);
 			gestures.isDragging.value = 0;
+			gestures.triggerDirection.value = null;
 		},
 		[
 			dimensions,

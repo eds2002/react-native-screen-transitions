@@ -30,4 +30,8 @@ export type GestureValues = {
 	 * A flag indicating if the screen is in the process of dismissing.
 	 */
 	isDismissing: number;
+	/**
+	 * The direction of the gesture that triggered the transition.
+	 */
+	triggerDirection: GestureDirection | null;
 };

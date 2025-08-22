@@ -3,6 +3,7 @@ import {
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
+
 import type { ScreenTransitionConfig } from "../types/navigator";
 import { DefaultSpec } from "./specs";
 
@@ -226,12 +227,12 @@ export const ElasticCard = (
 	};
 };
 
-export const SharedMaskedView = (
+export const SharedInstagram = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
 		gestureEnabled: true,
-		gestureDirection: ["vertical"],
+		gestureDirection: ["vertical", "horizontal"],
 		enableTransitions: true,
 		gestureDrivesProgress: false,
 		screenStyleInterpolator: ({
@@ -244,27 +245,46 @@ export const SharedMaskedView = (
 			next,
 		}) => {
 			"worklet";
+
+			const x = interpolate(
+				focused
+					? current.gesture.normalizedX
+					: (next?.gesture.normalizedX ?? 0),
+				[-1, 1],
+				[-screen.width * 0.9, screen.width * 0.9],
+				"clamp",
+			);
+
+			const y = interpolate(
+				focused
+					? current.gesture.normalizedY
+					: (next?.gesture.normalizedY ?? 0),
+				[-1, 1],
+				[-screen.height * 0.9, screen.height * 0.9],
+				"clamp",
+			);
+
+			const normX = focused
+				? current.gesture.normalizedX
+				: (next?.gesture.normalizedX ?? 0);
+			const normY = focused
+				? current.gesture.normalizedY
+				: (next?.gesture.normalizedY ?? 0);
+
+			const horizontalScale = interpolate(normX, [0, 1], [1, 0.75], "clamp");
+			const verticalScale = interpolate(normY, [0, 1], [1, 0.75], "clamp");
+
 			if (focused) {
-				const prev = bounds(activeBoundId).content().contentFill().build();
+				const boundMetrics = bounds(activeBoundId)
+					.content()
+					.contentFill()
+					.build();
+
 				const masked = bounds(activeBoundId)
 					.absolute()
 					.toFullscreen()
 					.size()
 					.build();
-
-				const x = interpolate(
-					current.gesture.normalizedY,
-					[-1, 1],
-					[-screen.height, screen.height],
-					"clamp",
-				);
-
-				const y = interpolate(
-					current.gesture.normalizedX,
-					[-1, 1],
-					[-screen.width, screen.width],
-					"clamp",
-				);
 
 				return {
 					overlayStyle: {
@@ -272,9 +292,14 @@ export const SharedMaskedView = (
 						opacity: interpolate(progress, [0, 1], [0, 0.5]),
 					},
 					contentStyle: {
-						transform: [{ translateY: x }, { translateX: y }],
+						transform: [
+							{ translateX: x },
+							{ translateY: y },
+							{ scale: horizontalScale },
+							{ scale: verticalScale },
+						],
 					},
-					"root-container-view": prev,
+					"root-container-view": boundMetrics,
 					"root-masked-view": {
 						...masked,
 						borderRadius: interpolate(progress, [0, 1], [0, 24]),
@@ -282,52 +307,54 @@ export const SharedMaskedView = (
 				};
 			}
 
-			const translateY = interpolate(
-				next?.gesture.normalizedY ?? 0,
-				[-1, 1],
-				[-screen.height, screen.height],
-				"clamp",
-			);
-
-			/** Horizontal */
-			const translateX = interpolate(
-				next?.gesture.normalizedX ?? 0,
-				[-1, 1],
-				[-screen.width, screen.width],
-				"clamp",
-			);
-
-			const unfocusedBound = bounds()
+			const boundMetrics = bounds()
 				.gestures({
-					x: translateX,
-					y: translateY,
+					x,
+					y,
 				})
 				.transform()
 				.build();
 
+			// Combine the bounds transforms with your scaling transforms
+			const combinedTransforms = [
+				...(boundMetrics.transform ?? []),
+				{ scale: horizontalScale },
+				{ scale: verticalScale },
+			] as any;
+
 			return {
 				contentStyle: {
-					transform: [
-						{
-							scale: interpolate(progress, [1, 2], [1, 0.9]),
-						},
-					],
+					pointerEvents: current.gesture.isDismissing ? "none" : "auto",
 				},
-				[activeBoundId]: unfocusedBound,
+				[activeBoundId]: {
+					...boundMetrics,
+					transform: combinedTransforms, // Use the combined transforms
+				},
 			};
 		},
 		transitionSpec: {
 			open: {
 				mass: 1,
-				stiffness: 200,
-				damping: 21,
+				stiffness: 280,
+				damping: 30,
 			},
 			close: {
 				mass: 1,
-				stiffness: 200,
-				damping: 21,
+				stiffness: 280,
+				damping: 30,
 			},
 		},
+		...config,
+	};
+};
+
+export const AppleMusic = (
+	config: Partial<ScreenTransitionConfig> = {},
+): ScreenTransitionConfig => {
+	return {
+		enableTransitions: true,
+		gestureEnabled: true,
+		gestureDirection: ["vertical"],
 		...config,
 	};
 };

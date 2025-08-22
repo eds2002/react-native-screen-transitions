@@ -1,4 +1,5 @@
 import { makeMutable, type SharedValue } from "react-native-reanimated";
+import type { GestureDirection } from "../types/gesture";
 import type { ScreenKey } from "../types/navigator";
 
 export type GestureKey =
@@ -16,6 +17,7 @@ export type GestureMap = {
 	normalizedY: SharedValue<number>;
 	isDismissing: SharedValue<number>;
 	isDragging: SharedValue<number>;
+	triggerDirection: SharedValue<GestureDirection | null>;
 };
 
 const store: Record<ScreenKey, GestureMap> = {};
@@ -30,6 +32,7 @@ function ensure(routeKey: ScreenKey): GestureMap {
 			normalizedY: makeMutable(0),
 			isDismissing: makeMutable(0),
 			isDragging: makeMutable(0),
+			triggerDirection: makeMutable<GestureDirection | null>(null),
 		};
 		store[routeKey] = bag;
 	}

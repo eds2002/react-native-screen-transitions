@@ -33,6 +33,7 @@ const FALLBACK = Object.freeze({
 		normalizedY: 0,
 		isDismissing: 0,
 		isDragging: 0,
+		triggerDirection: null,
 	},
 	bounds: {} as Record<string, BoundEntry>,
 	route: {} as RouteProp<ParamListBase>,
@@ -69,6 +70,7 @@ const unwrap = (
 					normalizedY: s.gesture.normalizedY.value ?? 0,
 					isDismissing: s.gesture.isDismissing.value ?? 0,
 					isDragging: s.gesture.isDragging.value ?? 0,
+					triggerDirection: s.gesture.triggerDirection.value ?? null,
 				},
 				bounds: Bounds.getBounds(key) ?? {},
 				route: s.route,
@@ -93,7 +95,7 @@ export function _useScreenAnimation() {
 	const insets = useSafeAreaInsets();
 
 	const screenInterpolatorProps = useDerivedValue<ScreenInterpolationProps>(
-		() => {
+		(): ScreenInterpolationProps => {
 			"worklet";
 
 			const previous = unwrap(prevAnimation, previousDescriptor?.route.key);
@@ -125,7 +127,7 @@ export function _useScreenAnimation() {
 				activeBoundId,
 				progress,
 				bounds,
-			} satisfies ScreenInterpolationProps;
+			};
 		},
 	);
 
