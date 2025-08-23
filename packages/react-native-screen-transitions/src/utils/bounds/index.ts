@@ -5,18 +5,17 @@ import {
 	type StyleProps,
 } from "react-native-reanimated";
 import type { ScreenTransitionState } from "../../types/animation";
-import type { BoundsBuilder } from "../../types/bounds";
+import type { BoundsAccessor, BoundsBuilder } from "../../types/bounds";
 import type { ScreenPhase } from "../../types/core";
 import type {
 	BoundsBuilderInitParams,
 	BoundsBuilderOptions,
 } from "./_types/builder";
-import { DEFAULT_BUILDER_OPTIONS, FULLSCREEN_DIMENSIONS } from "./constants";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
-} from "./geometry";
-import { getBounds } from "./get-bounds";
+} from "./_utils/geometry";
+import { getBounds } from "./_utils/get-bounds";
 import {
 	composeContentStyle,
 	composeSizeAbsolute,
@@ -24,7 +23,8 @@ import {
 	composeTransformAbsolute,
 	composeTransformRelative,
 	type ElementComposeParams,
-} from "./style-composers";
+} from "./_utils/style-composers";
+import { DEFAULT_BUILDER_OPTIONS, FULLSCREEN_DIMENSIONS } from "./constants";
 
 export interface BuildBoundsAccessorParams {
 	activeBoundId: string | null;
@@ -63,7 +63,10 @@ const resolveBounds = (props: {
 	const start = resolve(startPhase);
 	let end = resolve(endPhase);
 
-	if (props.computeOptions.toFullscreen) {
+	if (
+		props.computeOptions.target === "fullscreen" ||
+		props.computeOptions.toFullscreen
+	) {
 		end = fullscreen;
 	}
 
@@ -99,37 +102,45 @@ const computeBoundStyles = (
 
 	if (!start || !end) return {};
 
-	const relativeGeometry = computeRelativeGeometry({ start, end, entering });
+	const geometry = computeRelativeGeometry({
+		start,
+		end,
+		entering,
+		anchor: computeOptions.anchor,
+		scaleMode: computeOptions.scaleMode,
+	});
 
 	const interp = (a: number, b: number) =>
-		interpolate(progress, relativeGeometry.ranges, [a, b]);
+		interpolate(progress, geometry.ranges, [a, b]);
 
 	const common: ElementComposeParams = {
 		start,
 		end,
 		interp,
-		geometry: relativeGeometry,
+		geometry,
 		computeOptions,
 	};
 
-	const isSize = computeOptions.method === "size";
-	const isAbs = !!computeOptions.absolute;
-
 	if (computeOptions.method === "content") {
-		const contentGeometry = computeContentTransformGeometry({
+		const geometry = computeContentTransformGeometry({
 			start,
 			end,
 			entering,
 			dimensions,
-			contentScaleMode: computeOptions.contentScaleMode ?? "auto",
+			anchor: computeOptions.anchor,
+			scaleMode: computeOptions.scaleMode,
 		});
 
 		return composeContentStyle({
 			...common,
-			geometry: contentGeometry,
+			geometry,
 			computeOptions,
 		});
 	}
+
+	const isSize = computeOptions.method === "size";
+	const isAbs =
+		computeOptions.space === "absolute" || !!computeOptions.absolute;
 
 	return isSize
 		? isAbs
@@ -206,10 +217,10 @@ const createBoundStyles = (
 export const createBounds = ({
 	activeBoundId,
 	...screenAnimationContext
-}: BuildBoundsAccessorParams) => {
+}: BuildBoundsAccessorParams): BoundsAccessor => {
 	"worklet";
 
-	const bounds = (params?: string | BoundsBuilderOptions) => {
+	const bounds: BoundsAccessor = ((params?: string | BoundsBuilderOptions) => {
 		if (typeof params === "object") {
 			return createBoundStyles({
 				id: activeBoundId,
@@ -223,16 +234,14 @@ export const createBounds = ({
 			id,
 			...screenAnimationContext,
 		});
-	};
+	}) as BoundsAccessor;
 
-	const get = (id?: string, phase?: ScreenPhase) =>
+	bounds.get = (id?: string, phase?: ScreenPhase) =>
 		getBounds({
 			id: id ?? activeBoundId,
 			phase,
 			...screenAnimationContext,
 		});
 
-	return Object.assign(bounds, {
-		get,
-	});
+	return bounds;
 };

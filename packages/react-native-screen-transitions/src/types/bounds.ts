@@ -78,8 +78,9 @@ export type BoundEntry = {
 	styles: StyleProps;
 };
 
-export type BoundsAccessor = ((
-	id?: string | BoundsBuilderOptions,
-) => BoundsBuilder | StyleProps) & {
+export type BoundsAccessor = {
+	(id: string): BoundsBuilder;
+	(): BoundsBuilder;
+	(options: BoundsBuilderOptions): StyleProps;
 	get: (id?: string, phase?: ScreenPhase) => BoundEntry;
 };

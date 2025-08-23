@@ -14,22 +14,47 @@ export type BoundsBuilderInitParams = {
 	dimensions: ScaledSize;
 };
 
-/**
- * Params used internally for final computation. Method is required.
- */
-export type BoundsComputeParams = BoundsBuilderInitParams & {
-	method: BoundsMethod;
-};
+export type BoundsAnchor =
+	| "topLeading"
+	| "top"
+	| "topTrailing"
+	| "leading"
+	| "center"
+	| "trailing"
+	| "bottomLeading"
+	| "bottom"
+	| "bottomTrailing";
 
-/**
- * Builder options that affect how math is applied.
- * Method is not an option; it's tracked separately by the builder.
- */
+export type BoundsScaleMode = "match" | "none" | "uniform";
+
+export type BoundsTarget = "bound" | "fullscreen";
+
+export type BoundsSpace = "relative" | "absolute";
+
+export type BoundsComputeParams = BoundsBuilderInitParams;
+
 export type BoundsBuilderOptions = {
-	gestures?: { x?: number; y?: number };
+	/**
+	 * @deprecated Use `content.scaleMode` instead.
+	 */
 	toFullscreen?: boolean;
+	/**
+	 * @deprecated Use `content.anchor` instead.
+	 */
 	absolute?: boolean;
+	/**
+	 * @deprecated Use `content.anchor` instead.
+	 */
 	relative?: boolean;
-	method?: BoundsMethod;
+	/**
+	 * @deprecated Use `scaleMode` instead.
+	 */
 	contentScaleMode?: "aspectFill" | "aspectFit" | "auto";
+
+	method?: BoundsMethod;
+	space?: BoundsSpace;
+	target?: BoundsTarget;
+	gestures?: { x?: number; y?: number };
+	scaleMode?: BoundsScaleMode;
+	anchor?: BoundsAnchor;
 };

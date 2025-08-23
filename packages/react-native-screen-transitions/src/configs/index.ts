@@ -1,4 +1,5 @@
 import {
+	AppleMusic,
 	DraggableCard,
 	ElasticCard,
 	SharedInstagram,
@@ -19,4 +20,5 @@ export const presets = {
 	DraggableCard,
 	ElasticCard,
 	SharedInstagram,
+	AppleMusic,
 };

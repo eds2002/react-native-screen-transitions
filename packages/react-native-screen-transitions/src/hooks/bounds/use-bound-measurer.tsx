@@ -8,7 +8,7 @@ import {
 } from "react-native-reanimated";
 import { useKeys } from "../../providers/keys";
 import { Bounds } from "../../stores/bounds";
-import { flattenStyle } from "../../utils/bounds/flatten-styles";
+import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
 import { useScreenAnimation } from "../animation/use-screen-animation";
 
 interface BoundMeasurerHookProps {

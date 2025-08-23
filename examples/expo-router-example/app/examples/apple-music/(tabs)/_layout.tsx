@@ -6,7 +6,17 @@ const ICON_SIZE = 26;
 
 export default function TabLayout() {
 	return (
-		<Tabs screenOptions={{ tabBarActiveTintColor: "red", headerShown: false }}>
+		<Tabs
+			screenOptions={{
+				tabBarActiveTintColor: "red",
+				headerShown: false,
+
+				tabBarStyle: {
+					shadowColor: "transparent",
+					borderTopColor: "transparent",
+				},
+			}}
+		>
 			<Tabs.Screen
 				name="(home)"
 				options={{

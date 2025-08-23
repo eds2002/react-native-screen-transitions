@@ -2,6 +2,7 @@ import {
 	Extrapolation,
 	interpolate,
 	interpolateColor,
+	type StyleProps,
 } from "react-native-reanimated";
 
 import type { ScreenTransitionConfig } from "../types/navigator";
@@ -354,7 +355,114 @@ export const AppleMusic = (
 	return {
 		enableTransitions: true,
 		gestureEnabled: true,
-		gestureDirection: ["vertical"],
+		gestureDirection: ["vertical", "horizontal"],
+		gestureDrivesProgress: false,
+		screenStyleInterpolator: ({
+			bounds,
+			activeBoundId,
+			focused,
+			progress,
+			layouts: { screen },
+			current,
+			next,
+		}) => {
+			"worklet";
+
+			const normX = focused
+				? current.gesture.normalizedX
+				: (next?.gesture.normalizedX ?? 0);
+			const normY = focused
+				? current.gesture.normalizedY
+				: (next?.gesture.normalizedY ?? 0);
+
+			const horizontalX = interpolate(normX, [0, 1], [0, screen.width * 0.8]);
+			const verticalY = interpolate(normY, [0, 1], [0, screen.height * 0.8]);
+
+			const horizontalScale = interpolate(normX, [0, 1], [1, 0.5], "clamp");
+			const opacity = interpolate(
+				progress,
+				[0, 0.25, 1, 1.5, 2],
+				[0, 1, 1, 1, 0],
+				"clamp",
+			);
+			const verticalScale = interpolate(normY, [0, 1], [1, 0.5], "clamp");
+
+			if (focused) {
+				const boundMetrics = bounds({
+					method: "content",
+					anchor: "top",
+					scaleMode: "uniform",
+				});
+
+				const masked = bounds({
+					space: "absolute",
+					method: "size",
+					target: "fullscreen",
+				});
+
+				return {
+					contentStyle: {
+						transform: [
+							{ scale: horizontalScale },
+							{ scale: verticalScale },
+							{ translateX: horizontalX },
+							{ translateY: verticalY },
+						],
+						opacity,
+						shadowColor: "black",
+						shadowOffset: { width: 25, height: 25 },
+						shadowOpacity: 0.25,
+						shadowRadius: 50,
+						elevation: 10,
+					},
+					"root-container-view": boundMetrics,
+					"root-masked-view": {
+						...masked,
+						borderRadius: interpolate(progress, [0, 1], [0, 24]),
+					},
+				};
+			}
+
+			const boundMetrics = bounds({
+				method: "transform",
+				scaleMode: "none",
+				gestures: {
+					x: horizontalX,
+					y: verticalY,
+				},
+			});
+
+			// Combine the bounds transforms with your scaling transforms
+			const scale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
+			const combinedTransforms = [
+				{ scale: horizontalScale },
+				{ scale: verticalScale },
+				...(boundMetrics.transform ?? []),
+			] as StyleProps["transform"];
+
+			return {
+				[activeBoundId]: {
+					...boundMetrics,
+					transform: combinedTransforms,
+					opacity,
+				},
+				contentStyle: {
+					transform: [{ scale }],
+				},
+			};
+		},
+		transitionSpec: {
+			open: {
+				mass: 1,
+				stiffness: 250,
+				damping: 30,
+			},
+			close: {
+				mass: 1,
+				stiffness: 150,
+				damping: 18,
+			},
+		},
 		...config,
 	};
 };

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import Transition from "react-native-screen-transitions";
 import { Stack } from "@/layouts/stack";
 
 const Layout = ({ segment }: { segment: string }) => {
@@ -8,7 +9,15 @@ const Layout = ({ segment }: { segment: string }) => {
 				return (
 					<Stack.Screen
 						name="index"
-						options={{ title: "Home", headerShown: false }}
+						options={{
+							title: "Home",
+							contentStyle: { backgroundColor: "white" },
+							headerShadowVisible: false,
+							headerLargeTitle: false,
+							headerShown: true,
+							headerBlurEffect: "light",
+							headerTransparent: true,
+						}}
 					/>
 				);
 			case "(new)":
@@ -48,36 +57,7 @@ const Layout = ({ segment }: { segment: string }) => {
 			<Stack.Screen
 				name="[id]"
 				options={{
-					enableTransitions: true,
-					headerShown: false,
-					gestureEnabled: true,
-					gestureDirection: ["vertical", "horizontal"],
-					gestureDrivesProgress: false,
-					screenStyleInterpolator: ({ bounds, activeBoundId }) => {
-						"worklet";
-
-						const boundStyles = bounds("id").build();
-
-						const test = bounds({
-              
-            });
-
-						return {
-							[activeBoundId]: boundStyles,
-						};
-					},
-					transitionSpec: {
-						open: {
-							mass: 1,
-							stiffness: 280,
-							damping: 30,
-						},
-						close: {
-							mass: 1,
-							stiffness: 280,
-							damping: 30,
-						},
-					},
+					...Transition.presets.AppleMusic(),
 				}}
 			/>
 		</Stack>

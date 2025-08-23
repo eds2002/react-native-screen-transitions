@@ -31,10 +31,7 @@ export default function ActiveBoundsLayout() {
 							 * This ensures the animation is relative to its parent container, not the entire screen.
 							 * .transform() (default) - Animates the transform properties (translate, scale, etc.) of the bound, which is generally more performant than animating width/height.
 							 */
-							const focusedBoundStyles = bounds()
-								.relative()
-								.transform()
-								.build();
+							const focusedBoundStyles = bounds({});
 
 							return {
 								[activeBoundId]: focusedBoundStyles,

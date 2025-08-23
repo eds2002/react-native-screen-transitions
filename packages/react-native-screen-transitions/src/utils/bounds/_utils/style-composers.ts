@@ -1,9 +1,9 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import type { BoundsBuilderOptions } from "./_types/builder";
+import type { BoundsBuilderOptions } from "../_types/builder";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
-} from "./_types/geometry";
+} from "../_types/geometry";
 
 /**
  * Common interpolation helper signature used by composers.
