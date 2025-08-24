@@ -123,32 +123,6 @@ const RecentlyPlayedSection = () => {
 	);
 };
 
-const AlbumCard = ({
-	imageUrl,
-	sharedId,
-}: {
-	imageUrl: string;
-	sharedId: string;
-}) => {
-	return (
-		<Transition.Pressable
-			style={{ borderRadius: 8, overflow: "hidden" }}
-			sharedBoundTag={sharedId}
-			onPress={() =>
-				router.push({
-					pathname: "/examples/apple-music/[id]",
-					params: { id: "123", sharedId, url: imageUrl },
-				})
-			}
-		>
-			<Image
-				source={{ uri: imageUrl }}
-				style={{ width: 160, aspectRatio: 1, height: 160 }}
-			/>
-		</Transition.Pressable>
-	);
-};
-
 export default function IndexScreen() {
 	return (
 		<ScrollView

@@ -35,6 +35,8 @@ export interface BuildBoundsAccessorParams {
 	dimensions: ScaledSize;
 }
 
+const EMPTY_STYLE = Object.freeze({});
+
 const resolveBounds = (props: {
 	id: string;
 	previous?: ScreenTransitionState;
@@ -89,7 +91,7 @@ const computeBoundStyles = (
 	computeOptions: BoundsBuilderOptions = {},
 ) => {
 	"worklet";
-	if (!id) return {};
+	if (!id) return EMPTY_STYLE;
 
 	const { start, end, entering } = resolveBounds({
 		id,
@@ -100,7 +102,7 @@ const computeBoundStyles = (
 		dimensions,
 	});
 
-	if (!start || !end) return {};
+	if (!start || !end) return EMPTY_STYLE;
 
 	const geometry = computeRelativeGeometry({
 		start,
@@ -132,7 +134,9 @@ const computeBoundStyles = (
 		});
 
 		return composeContentStyle({
-			...common,
+			start,
+			interp,
+			end,
 			geometry,
 			computeOptions,
 		});
@@ -151,6 +155,9 @@ const computeBoundStyles = (
 			: composeTransformRelative(common);
 };
 
+/**
+ * @deprecated Use `createBounds` instead. We'll avoid using the builder pattern for this type of function.
+ */
 const buildBoundStyles = (params: BoundsBuilderInitParams): BoundsBuilder => {
 	"worklet";
 
@@ -216,7 +223,11 @@ const createBoundStyles = (
 
 export const createBounds = ({
 	activeBoundId,
-	...screenAnimationContext
+	current,
+	previous,
+	next,
+	progress,
+	dimensions,
 }: BuildBoundsAccessorParams): BoundsAccessor => {
 	"worklet";
 
@@ -225,14 +236,22 @@ export const createBounds = ({
 			return createBoundStyles({
 				id: activeBoundId,
 				options: params,
-				...screenAnimationContext,
+				current,
+				previous,
+				next,
+				progress,
+				dimensions,
 			});
 		}
 
 		const id = typeof params === "string" ? params : activeBoundId;
 		return buildBoundStyles({
 			id,
-			...screenAnimationContext,
+			current,
+			previous,
+			next,
+			progress,
+			dimensions,
 		});
 	}) as BoundsAccessor;
 
@@ -240,7 +259,9 @@ export const createBounds = ({
 		getBounds({
 			id: id ?? activeBoundId,
 			phase,
-			...screenAnimationContext,
+			current,
+			previous,
+			next,
 		});
 
 	return bounds;

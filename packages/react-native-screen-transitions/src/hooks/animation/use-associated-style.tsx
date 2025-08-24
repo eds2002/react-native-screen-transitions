@@ -1,6 +1,7 @@
 import { useAnimatedStyle } from "react-native-reanimated";
 import { _useScreenAnimation } from "./use-screen-animation";
 
+const EMPTY_STYLE = Object.freeze({});
 /**
  * This hook is used to get the associated styles for a given styleId.
  * It is used to get the associated styles for a given styleId.
@@ -14,13 +15,11 @@ export const useAssociatedStyles = ({ id }: { id?: string } = {}) => {
 		"worklet";
 
 		if (!id || !screenStyleInterpolator) {
-			return {};
+			return EMPTY_STYLE;
 		}
 
 		return (
-			screenStyleInterpolator(screenInterpolatorProps.value)[id] || {
-				opacity: 1, // <-- This fixes flickering?? We'll have to deep dive this?? wtf
-			}
+			screenStyleInterpolator(screenInterpolatorProps.value)[id] || EMPTY_STYLE
 		);
 	});
 

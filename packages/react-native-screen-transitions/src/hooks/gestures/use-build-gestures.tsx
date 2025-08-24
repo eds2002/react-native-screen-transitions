@@ -29,6 +29,10 @@ const DEFAULT_GESTURE_RESPONSE_DISTANCE = 50;
 const DEFAULT_GESTURE_DIRECTION = "horizontal";
 const DEFAULT_GESTURE_ENABLED = false;
 const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
+const DEFAULT_INITIAL_TOUCH = {
+	x: 0,
+	y: 0,
+};
 
 interface BuildGesturesHookProps {
 	scrollProgress: SharedValue<ScrollProgress>;
@@ -40,10 +44,7 @@ export const useBuildGestures = ({
 	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
 
-	const initialTouch = useSharedValue({
-		x: 0,
-		y: 0,
-	});
+	const initialTouch = useSharedValue(DEFAULT_INITIAL_TOUCH);
 
 	const gestures = Gestures.getRouteGestures(current.route.key);
 

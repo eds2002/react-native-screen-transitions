@@ -1,4 +1,5 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
+import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,7 +13,7 @@ import type {
 } from "../../types/animation";
 import type { BoundEntry } from "../../types/bounds";
 import type { NativeStackDescriptor } from "../../types/navigator";
-import { createBounds } from "../../utils/bounds";
+import { derivations } from "../../utils/animation/derivations";
 
 type BuiltState = {
 	progress: SharedValue<number>;
@@ -22,7 +23,9 @@ type BuiltState = {
 	route: RouteProp<ParamListBase>;
 };
 
-const FALLBACK = Object.freeze({
+const EMPTY_BOUNDS = Object.freeze({}) as Record<string, BoundEntry>;
+
+const FALLBACK: ScreenTransitionState = Object.freeze({
 	progress: 0,
 	closing: 0,
 	animating: 0,
@@ -39,60 +42,62 @@ const FALLBACK = Object.freeze({
 	route: {} as RouteProp<ParamListBase>,
 });
 
-const useBuildScreenTransitionState = (
-	descriptor: NativeStackDescriptor | undefined,
-): BuiltState | undefined => {
-	const key = descriptor?.route.key;
-	if (!key) return undefined;
-	const progress = Animations.getAnimation(key, "progress");
-	const closing = Animations.getAnimation(key, "closing");
-	const animating = Animations.getAnimation(key, "animating");
-	const gesture = Gestures.getRouteGestures(key);
-	const route = descriptor?.route;
-
-	return { progress, closing, animating, gesture, route };
-};
-
 const unwrap = (
 	s: BuiltState | undefined,
 	key: string | undefined,
 ): ScreenTransitionState | undefined => {
 	"worklet";
-	return s && key
-		? {
-				progress: s.progress.value ?? 0,
-				closing: s.closing.value ?? 0,
-				animating: s.animating.value ?? 0,
-				gesture: {
-					x: s.gesture.x.value ?? 0,
-					y: s.gesture.y.value ?? 0,
-					normalizedX: s.gesture.normalizedX.value ?? 0,
-					normalizedY: s.gesture.normalizedY.value ?? 0,
-					isDismissing: s.gesture.isDismissing.value ?? 0,
-					isDragging: s.gesture.isDragging.value ?? 0,
-					triggerDirection: s.gesture.triggerDirection.value ?? null,
-				},
-				bounds: Bounds.getBounds(key) ?? {},
-				route: s.route,
-			}
-		: undefined;
+	if (!s || !key) return undefined;
+
+	return {
+		progress: s.progress.value,
+		closing: s.closing.value,
+		animating: s.animating.value,
+		gesture: {
+			x: s.gesture.x.value,
+			y: s.gesture.y.value,
+			normalizedX: s.gesture.normalizedX.value,
+			normalizedY: s.gesture.normalizedY.value,
+			isDismissing: s.gesture.isDismissing.value,
+			isDragging: s.gesture.isDragging.value,
+			triggerDirection: s.gesture.triggerDirection.value,
+		},
+		bounds: Bounds.getBounds(key) || EMPTY_BOUNDS,
+		route: s.route,
+	};
+};
+
+const useBuildScreenTransitionState = (
+	descriptor: NativeStackDescriptor | undefined,
+): BuiltState | undefined => {
+	const key = descriptor?.route.key;
+
+	return useMemo(() => {
+		if (!key) return undefined;
+
+		return {
+			progress: Animations.getAnimation(key, "progress"),
+			closing: Animations.getAnimation(key, "closing"),
+			animating: Animations.getAnimation(key, "animating"),
+			gesture: Gestures.getRouteGestures(key),
+			route: descriptor.route,
+		};
+	}, [key, descriptor?.route]);
 };
 
 export function _useScreenAnimation() {
+	const dimensions = useWindowDimensions();
+	const insets = useSafeAreaInsets();
+
 	const {
 		current: currentDescriptor,
 		next: nextDescriptor,
 		previous: previousDescriptor,
 	} = useKeys();
 
-	const dimensions = useWindowDimensions();
-
 	const currentAnimation = useBuildScreenTransitionState(currentDescriptor);
-
 	const nextAnimation = useBuildScreenTransitionState(nextDescriptor);
 	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
-
-	const insets = useSafeAreaInsets();
 
 	const screenInterpolatorProps = useDerivedValue<ScreenInterpolationProps>(
 		(): ScreenInterpolationProps => {
@@ -103,17 +108,10 @@ export function _useScreenAnimation() {
 			const current =
 				unwrap(currentAnimation, currentDescriptor?.route.key) ?? FALLBACK;
 
-			const progress = current.progress + (next?.progress ?? 0);
-
-			const focused = !next;
-			const activeBoundId = Bounds.getActiveBoundId() || "";
-
-			const bounds = createBounds({
-				activeBoundId,
+			const { progress, focused, activeBoundId, bounds } = derivations({
 				current,
-				previous,
 				next,
-				progress,
+				previous,
 				dimensions,
 			});
 
@@ -137,6 +135,7 @@ export function _useScreenAnimation() {
 
 	return { screenInterpolatorProps, screenStyleInterpolator };
 }
+
 export function useScreenAnimation() {
 	const { screenInterpolatorProps } = _useScreenAnimation();
 

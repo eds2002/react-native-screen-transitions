@@ -3,8 +3,7 @@ import { FlatList, Image, Text, useWindowDimensions, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
 export default function IndexScreen() {
-	const { id, sharedId, url } = useLocalSearchParams<{
-		id: string;
+	const { sharedId, url } = useLocalSearchParams<{
 		sharedId: string;
 		url: string;
 	}>();
@@ -137,7 +136,7 @@ export default function IndexScreen() {
 						</View>
 					)}
 					scrollEnabled={false}
-					keyExtractor={(item, index) => index.toString()}
+					keyExtractor={(_, index) => index.toString()}
 					style={{ width: "100%" }}
 					contentContainerStyle={{ paddingBottom: 32 }}
 				/>
