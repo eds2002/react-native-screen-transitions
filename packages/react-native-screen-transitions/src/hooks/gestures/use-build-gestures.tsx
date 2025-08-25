@@ -118,7 +118,7 @@ export const useBuildGestures = ({
 			let shouldActivate = false;
 
 			if (allowed.vertical && isSwipingDown) {
-				shouldActivate = scrollProgress.value.y >= 0;
+				shouldActivate = scrollProgress.value.y <= 0;
 				gestures.triggerDirection.value = "vertical";
 			}
 			if (allowed.horizontal && isSwipingRight) {
