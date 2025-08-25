@@ -33,7 +33,7 @@ export default function IndexScreen() {
 					style={{
 						width: CONTAINER_WIDTH,
 						height: CONTAINER_WIDTH,
-						borderRadius: 36,
+						borderRadius: 12,
 						overflow: "hidden",
 						alignSelf: "center",
 					}}

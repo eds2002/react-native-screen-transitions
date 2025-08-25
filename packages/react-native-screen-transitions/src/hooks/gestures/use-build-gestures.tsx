@@ -35,7 +35,7 @@ const DEFAULT_INITIAL_TOUCH = {
 };
 
 interface BuildGesturesHookProps {
-	scrollProgress: SharedValue<ScrollProgress>;
+	scrollProgress: SharedValue<ScrollProgress | null>;
 }
 
 export const useBuildGestures = ({
@@ -118,27 +118,44 @@ export const useBuildGestures = ({
 			let shouldActivate = false;
 
 			if (allowed.vertical && isSwipingDown) {
-				shouldActivate = scrollProgress.value.y <= 0;
+				if (scrollProgress.value?.y) {
+					shouldActivate = scrollProgress.value.y <= 0;
+				} else {
+					shouldActivate = true;
+				}
 				gestures.triggerDirection.value = "vertical";
 			}
 			if (allowed.horizontal && isSwipingRight) {
-				shouldActivate = scrollProgress.value.x <= 0;
+				if (scrollProgress.value) {
+					shouldActivate = scrollProgress.value.x <= 0;
+				} else {
+					shouldActivate = true;
+				}
 				gestures.triggerDirection.value = "horizontal";
 			}
 
 			if (allowed.verticalInverted && isSwipingUp) {
-				const maxScrollableY =
-					scrollProgress.value.contentHeight -
-					scrollProgress.value.layoutHeight;
+				if (scrollProgress.value) {
+					const maxScrollableY =
+						scrollProgress.value.contentHeight -
+						scrollProgress.value.layoutHeight;
 
-				shouldActivate = scrollProgress.value.y >= maxScrollableY;
+					shouldActivate = scrollProgress.value.y >= maxScrollableY;
+				} else {
+					shouldActivate = true;
+				}
 				gestures.triggerDirection.value = "vertical-inverted";
 			}
 
 			if (allowed.horizontalInverted && isSwipingLeft) {
-				const maxScrollableX =
-					scrollProgress.value.contentWidth - scrollProgress.value.layoutWidth;
-				shouldActivate = scrollProgress.value.x >= maxScrollableX;
+				if (scrollProgress.value) {
+					const maxScrollableX =
+						scrollProgress.value.contentWidth -
+						scrollProgress.value.layoutWidth;
+					shouldActivate = scrollProgress.value.x >= maxScrollableX;
+				} else {
+					shouldActivate = true;
+				}
 				gestures.triggerDirection.value = "horizontal-inverted";
 			}
 

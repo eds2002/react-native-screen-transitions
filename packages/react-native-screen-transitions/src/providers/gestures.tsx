@@ -21,14 +21,14 @@ export type ScrollProgress = {
 export interface GestureContextType {
 	panGesture: GestureType;
 	nativeGesture: GestureType;
-	scrollProgress: SharedValue<ScrollProgress>;
+	scrollProgress: SharedValue<ScrollProgress | null>;
 }
 
 type ScreenGestureProviderProps = {
 	children: React.ReactNode;
 };
 
-const DEFAULT_SCROLL_PROGRESS: ScrollProgress = {
+export const DEFAULT_SCROLL_PROGRESS: ScrollProgress = {
 	x: 0,
 	y: 0,
 	contentHeight: 0,
@@ -42,9 +42,7 @@ const GestureContext = createContext<GestureContextType | undefined>(undefined);
 export const ScreenGestureProvider = ({
 	children,
 }: ScreenGestureProviderProps) => {
-	const scrollProgress = useSharedValue<ScrollProgress>(
-		DEFAULT_SCROLL_PROGRESS,
-	);
+	const scrollProgress = useSharedValue<ScrollProgress | null>(null);
 
 	const { panGesture, nativeGesture } = useBuildGestures({
 		scrollProgress,
