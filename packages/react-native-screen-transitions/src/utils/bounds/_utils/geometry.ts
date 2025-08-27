@@ -92,9 +92,7 @@ export function computeRelativeGeometry({
 	const dx = startAnchor.x - endCenter.x - anchorOffsetX * scaleX;
 	const dy = startAnchor.y - endCenter.y - anchorOffsetY * scaleY;
 
-	const ranges: readonly [number, number] = entering ? [0, 1] : [1, 2];
-
-	return { dx, dy, scaleX, scaleY, ranges, entering };
+	return { dx, dy, scaleX, scaleY, entering };
 }
 /**
  * Computes the transform to apply to the entire destination screen so that
@@ -159,13 +157,10 @@ export function computeContentTransformGeometry({
 	const tx = startAnchor.x - scaledEndAnchorX;
 	const ty = startAnchor.y - scaledEndAnchorY;
 
-	const ranges: readonly [number, number] = entering ? [0, 1] : [1, 2];
-
 	return {
 		tx,
 		ty,
 		s,
-		ranges,
 		entering,
 	};
 }

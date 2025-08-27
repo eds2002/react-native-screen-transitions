@@ -12,9 +12,7 @@ export default {
 	FlatList: createTransitionAwareComponent(FlatList, {
 		isScrollable: true,
 	}),
-	MaskedView: createTransitionAwareComponent(MaskedView, {
-		isScrollable: true,
-	}),
+	MaskedView: createTransitionAwareComponent(MaskedView),
 	presets,
 	specs,
 	createTransitionAwareComponent,

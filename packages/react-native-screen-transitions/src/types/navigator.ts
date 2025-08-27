@@ -23,7 +23,7 @@ import type {
 	SearchBarProps,
 } from "react-native-screens";
 import type { ScreenStyleInterpolator, TransitionSpec } from "./animation";
-import type { GestureDirection } from "./gesture";
+import type { GestureActivationArea, GestureDirection } from "./gesture";
 
 export type NativeStackNavigationEventMap = {
 	/**
@@ -168,6 +168,10 @@ export type ScreenTransitionConfig = {
 	 * Whether the gesture drives the progress.
 	 */
 	gestureDrivesProgress?: boolean;
+	/**
+	 * The area of the screen in which the gesture is activated.
+	 */
+	gestureActivationArea?: GestureActivationArea;
 	/**
 	 * Whether to enable transitions. It sets the presentation to containedTransparentModal, animation none, and headerShown to false.
 	 */

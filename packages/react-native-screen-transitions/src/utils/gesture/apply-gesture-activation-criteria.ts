@@ -1,13 +1,22 @@
 import type { PanGesture } from "react-native-gesture-handler";
-import type { ScreenTransitionConfig } from "../../types/navigator";
+
+type Directions = {
+	vertical: boolean;
+	verticalInverted: boolean;
+	horizontal: boolean;
+	horizontalInverted: boolean;
+};
 
 interface GestureActivationOptions {
-	gestureDirection:
-		| ScreenTransitionConfig["gestureDirection"]
-		| Array<ScreenTransitionConfig["gestureDirection"]>;
 	gestureResponseDistance: number;
 	panGesture: PanGesture;
+	directions: Directions;
 }
+
+const GESTURE_FAIL_TOLERANCE_X = 15;
+const GESTURE_FAIL_TOLERANCE_Y = 20;
+const GESTURE_RESPONSE_DISTANCE_HORIZONTAL = 50;
+const GESTURE_RESPONSE_DISTANCE_VERTICAL = 135;
 
 /**
  * rngh requires this type instead a number[]. We're returning a num[] which is still correct, this is just to remove the type error.
@@ -15,15 +24,11 @@ interface GestureActivationOptions {
 type OffsetErrorTypeBugFix = [start: number, end: number];
 
 export const applyGestureActivationCriteria = ({
-	gestureDirection,
 	gestureResponseDistance,
 	panGesture,
+	directions,
 }: GestureActivationOptions) => {
-	const directions = Array.isArray(gestureDirection)
-		? gestureDirection
-		: [gestureDirection];
-
-	if (directions.includes("bidirectional")) {
+	if (Object.values(directions).every(Boolean)) {
 		return {
 			activeOffsetX: [
 				-gestureResponseDistance,
@@ -36,13 +41,11 @@ export const applyGestureActivationCriteria = ({
 		};
 	}
 
-	const allowedDown = directions.includes("vertical");
-	const allowedUp = directions.includes("vertical-inverted");
-	const allowedRight = directions.includes("horizontal");
-	const allowedLeft = directions.includes("horizontal-inverted");
+	const allowedDown = directions.vertical;
+	const allowedUp = directions.verticalInverted;
+	const allowedRight = directions.horizontal;
+	const allowedLeft = directions.horizontalInverted;
 
-	const toleranceX = 15;
-	const toleranceY = 20;
 	const dist = gestureResponseDistance;
 
 	const result: {
@@ -68,7 +71,10 @@ export const applyGestureActivationCriteria = ({
 			result.failOffsetX = dist;
 		}
 	} else {
-		result.failOffsetX = [-toleranceX, toleranceX] as OffsetErrorTypeBugFix;
+		result.failOffsetX = [
+			-GESTURE_FAIL_TOLERANCE_X,
+			GESTURE_FAIL_TOLERANCE_X,
+		] as OffsetErrorTypeBugFix;
 	}
 
 	const hasVertical = allowedUp || allowedDown;
@@ -87,7 +93,10 @@ export const applyGestureActivationCriteria = ({
 			result.failOffsetY = dist;
 		}
 	} else {
-		result.failOffsetY = [-toleranceY, toleranceY] as OffsetErrorTypeBugFix;
+		result.failOffsetY = [
+			-GESTURE_FAIL_TOLERANCE_Y,
+			GESTURE_FAIL_TOLERANCE_Y,
+		] as OffsetErrorTypeBugFix;
 	}
 
 	if (result?.activeOffsetX) {

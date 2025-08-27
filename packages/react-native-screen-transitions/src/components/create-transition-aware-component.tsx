@@ -5,7 +5,7 @@ import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useBoundMeasurer } from "../hooks/bounds/use-bound-measurer";
-import { useScrollProgress } from "../hooks/gestures/use-scroll-progress";
+import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { useGestureContext } from "../providers/gestures";
 import { useKeys } from "../providers/keys";
 import type { TransitionAwareProps } from "../types/core";
@@ -30,7 +30,7 @@ export function createTransitionAwareComponent<P extends object>(
 	>((props: Any, ref) => {
 		const { nativeGesture } = useGestureContext();
 
-		const { scrollHandler, onContentSizeChange, onLayout } = useScrollProgress({
+		const { scrollHandler, onContentSizeChange, onLayout } = useScrollRegistry({
 			onScroll: props.onScroll,
 			onContentSizeChange: props.onContentSizeChange,
 			onLayout: props.onLayout,

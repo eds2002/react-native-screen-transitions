@@ -22,6 +22,7 @@ export interface GestureContextType {
 	panGesture: GestureType;
 	nativeGesture: GestureType;
 	scrollProgress: SharedValue<ScrollProgress | null>;
+	parentContext: GestureContextType | null;
 }
 
 type ScreenGestureProviderProps = {
@@ -42,20 +43,23 @@ const GestureContext = createContext<GestureContextType | undefined>(undefined);
 export const ScreenGestureProvider = ({
 	children,
 }: ScreenGestureProviderProps) => {
+	const parentContext = useContext(GestureContext);
+
 	const scrollProgress = useSharedValue<ScrollProgress | null>(null);
 
 	const { panGesture, nativeGesture } = useBuildGestures({
 		scrollProgress,
 	});
 
-	const value = useMemo(
+	const value: GestureContextType = useMemo(
 		() => ({
 			panGesture,
 			scrollProgress,
 			nativeGesture,
+			parentContext: parentContext || null,
 		}),
-		[panGesture, scrollProgress, nativeGesture],
-	) satisfies GestureContextType;
+		[panGesture, scrollProgress, nativeGesture, parentContext],
+	);
 
 	return (
 		<GestureHandlerRootView>

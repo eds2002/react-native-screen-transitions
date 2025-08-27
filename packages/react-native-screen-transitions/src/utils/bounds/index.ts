@@ -1,9 +1,5 @@
 import type { ScaledSize } from "react-native";
-import {
-	interpolate,
-	type MeasuredDimensions,
-	type StyleProps,
-} from "react-native-reanimated";
+import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { ScreenTransitionState } from "../../types/animation";
 import type { BoundsAccessor, BoundsBuilder } from "../../types/bounds";
 import type { ScreenPhase } from "../../types/core";
@@ -54,16 +50,22 @@ const resolveBounds = (props: {
 	const startPhase: ScreenPhase = entering ? "previous" : "current";
 	const endPhase: ScreenPhase = entering ? "current" : "next";
 
-	const resolve = (phase?: ScreenPhase) => {
+	const getPhaseBounds = (phase?: ScreenPhase) => {
 		"worklet";
-		if (phase === "previous") return props.previous?.bounds?.[props.id]?.bounds;
-		if (phase === "current") return props.current?.bounds?.[props.id]?.bounds;
-		if (phase === "next") return props.next?.bounds?.[props.id]?.bounds;
-		return null;
+		switch (phase) {
+			case "previous":
+				return props.previous?.bounds?.[props.id]?.bounds;
+			case "current":
+				return props.current?.bounds?.[props.id]?.bounds;
+			case "next":
+				return props.next?.bounds?.[props.id]?.bounds;
+			default:
+				return null;
+		}
 	};
 
-	const start = resolve(startPhase);
-	let end = resolve(endPhase);
+	const start = getPhaseBounds(startPhase);
+	let end = getPhaseBounds(endPhase);
 
 	if (
 		props.computeOptions.target === "fullscreen" ||
@@ -104,24 +106,7 @@ const computeBoundStyles = (
 
 	if (!start || !end) return EMPTY_STYLE;
 
-	const geometry = computeRelativeGeometry({
-		start,
-		end,
-		entering,
-		anchor: computeOptions.anchor,
-		scaleMode: computeOptions.scaleMode,
-	});
-
-	const interp = (a: number, b: number) =>
-		interpolate(progress, geometry.ranges, [a, b]);
-
-	const common: ElementComposeParams = {
-		start,
-		end,
-		interp,
-		geometry,
-		computeOptions,
-	};
+	const ranges: readonly [number, number] = entering ? [0, 1] : [1, 2];
 
 	if (computeOptions.method === "content") {
 		const geometry = computeContentTransformGeometry({
@@ -135,12 +120,30 @@ const computeBoundStyles = (
 
 		return composeContentStyle({
 			start,
-			interp,
+			progress,
+			ranges,
 			end,
 			geometry,
 			computeOptions,
 		});
 	}
+
+	const geometry = computeRelativeGeometry({
+		start,
+		end,
+		entering,
+		anchor: computeOptions.anchor,
+		scaleMode: computeOptions.scaleMode,
+	});
+
+	const common: ElementComposeParams = {
+		start,
+		end,
+		progress,
+		ranges,
+		geometry,
+		computeOptions,
+	};
 
 	const isSize = computeOptions.method === "size";
 	const isAbs =
