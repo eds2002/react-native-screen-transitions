@@ -252,7 +252,6 @@ export const SharedInstagram = (
 					: (next?.gesture.normalizedX ?? 0),
 				[-1, 1],
 				[-screen.width * 0.9, screen.width * 0.9],
-				"clamp",
 			);
 
 			const y = interpolate(
@@ -261,7 +260,6 @@ export const SharedInstagram = (
 					: (next?.gesture.normalizedY ?? 0),
 				[-1, 1],
 				[-screen.height * 0.9, screen.height * 0.9],
-				"clamp",
 			);
 
 			const normX = focused
@@ -271,8 +269,8 @@ export const SharedInstagram = (
 				? current.gesture.normalizedY
 				: (next?.gesture.normalizedY ?? 0);
 
-			const horizontalScale = interpolate(normX, [0, 1], [1, 0.75], "clamp");
-			const verticalScale = interpolate(normY, [0, 1], [1, 0.75], "clamp");
+			const horizontalScale = interpolate(normX, [0, 1], [1, 0.75]);
+			const verticalScale = interpolate(normY, [0, 1], [1, 0.75]);
 
 			if (focused) {
 				const boundMetrics = bounds().content().contentFill().build();
@@ -378,8 +376,8 @@ export const AppleMusic = (
 			 */
 			const dragX = interpolate(normX, [0, 1], [0, screen.width * 0.8]);
 			const dragY = interpolate(normY, [0, 1], [0, screen.height * 0.8]);
-			const dragXScale = interpolate(normX, [0, 1], [1, 0.75], "clamp");
-			const dragYScale = interpolate(normY, [0, 1], [1, 0.75], "clamp");
+			const dragXScale = interpolate(normX, [0, 1], [1, 0.75]);
+			const dragYScale = interpolate(normY, [0, 1], [1, 0.75]);
 
 			const boundValues = bounds({
 				method: focused ? "content" : "transform",
@@ -445,7 +443,6 @@ export const AppleMusic = (
 			 * ===============================
 			 */
 
-			// Pre-compose: Apply gesture scaling to bound transforms
 			const scaledBoundTranslateX = (boundValues.translateX || 0) * dragXScale;
 			const scaledBoundTranslateY = (boundValues.translateY || 0) * dragYScale;
 			const scaledBoundScaleX = (boundValues.scaleX || 1) * dragXScale;
@@ -475,13 +472,16 @@ export const AppleMusic = (
 		transitionSpec: {
 			open: {
 				mass: 1,
-				stiffness: 250,
-				damping: 30,
+				stiffness: 200,
+				damping: 20,
+				restSpeedThreshold: 0.02,
+				overshootClamping: true,
 			},
 			close: {
 				mass: 1,
-				stiffness: 150,
-				damping: 18,
+				stiffness: 200,
+				damping: 19,
+				restSpeedThreshold: 0.01,
 			},
 		},
 		...config,
