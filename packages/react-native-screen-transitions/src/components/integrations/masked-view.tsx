@@ -11,8 +11,8 @@ try {
 	// noop
 }
 
-const MASK_STYLE_ID = "root-masked-view";
-const CONTAINER_STYLE_ID = "root-container-view";
+const MASK_STYLE_ID = "_ROOT_MASKED";
+const CONTAINER_STYLE_ID = "_ROOT_CONTAINER";
 
 export default function MaskedView({
 	children,

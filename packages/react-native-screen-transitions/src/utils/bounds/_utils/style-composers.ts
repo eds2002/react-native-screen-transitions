@@ -10,12 +10,6 @@ import type {
 } from "../_types/geometry";
 
 /**
- * Common interpolation helper signature used by composers.
- * It maps from a -> b over the already-determined progress range.
- */
-export type Interp = (a: number, b: number) => number;
-
-/**
  * Element-level (relative) params shared by size/transform composers.
  * - start/end: absolute window bounds of the element in previous/next phases
  * - geometry: relative deltas and scales between start/end (dx, dy, scaleX, scaleY, ...)
@@ -47,51 +41,71 @@ export type ContentComposeParams = {
 
 export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 	"worklet";
-	const { start, end, geometry, progress, ranges } = params;
+	const { start, end, geometry, progress, ranges, computeOptions } = params;
 
-	if (geometry.entering) {
+	const width = geometry.entering
+		? interpolate(progress, ranges, [start.width, end.width])
+		: interpolate(progress, ranges, [end.width, start.width]);
+	const height = geometry.entering
+		? interpolate(progress, ranges, [start.height, end.height])
+		: interpolate(progress, ranges, [end.height, start.height]);
+
+	const translateX = geometry.entering
+		? interpolate(progress, ranges, [start.pageX, end.pageX])
+		: interpolate(progress, ranges, [end.pageX, start.pageX]);
+	const translateY = geometry.entering
+		? interpolate(progress, ranges, [start.pageY, end.pageY])
+		: interpolate(progress, ranges, [end.pageY, start.pageY]);
+
+	if (computeOptions.raw) {
 		return {
-			width: interpolate(progress, ranges, [start.width, end.width]),
-			height: interpolate(progress, ranges, [start.height, end.height]),
-			transform: [
-				{ translateX: interpolate(progress, ranges, [start.pageX, end.pageX]) },
-				{ translateY: interpolate(progress, ranges, [start.pageY, end.pageY]) },
-			],
-		} satisfies StyleProps;
+			width,
+			height,
+			translateX,
+			translateY,
+		};
 	}
 
 	return {
-		width: interpolate(progress, ranges, [end.width, start.width]),
-		height: interpolate(progress, ranges, [end.height, start.height]),
-		transform: [
-			{ translateX: interpolate(progress, ranges, [end.pageX, start.pageX]) },
-			{ translateY: interpolate(progress, ranges, [end.pageY, start.pageY]) },
-		],
+		width,
+		height,
+		transform: [{ translateX }, { translateY }],
 	};
 }
 
 export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 	"worklet";
-	const { start, end, geometry, progress, ranges } = params;
+	const { start, end, geometry, progress, ranges, computeOptions } = params;
 
-	if (geometry.entering) {
+	const translateX = geometry.entering
+		? interpolate(progress, ranges, [geometry.dx, 0])
+		: interpolate(progress, ranges, [0, -geometry.dx]);
+
+	const translateY = geometry.entering
+		? interpolate(progress, ranges, [geometry.dy, 0])
+		: interpolate(progress, ranges, [0, -geometry.dy]);
+
+	const width = geometry.entering
+		? interpolate(progress, ranges, [start.width, end.width])
+		: interpolate(progress, ranges, [end.width, start.width]);
+
+	const height = geometry.entering
+		? interpolate(progress, ranges, [start.height, end.height])
+		: interpolate(progress, ranges, [end.height, start.height]);
+
+	if (computeOptions.raw) {
 		return {
-			transform: [
-				{ translateX: interpolate(progress, ranges, [geometry.dx, 0]) },
-				{ translateY: interpolate(progress, ranges, [geometry.dy, 0]) },
-			],
-			width: interpolate(progress, ranges, [start.width, end.width]),
-			height: interpolate(progress, ranges, [start.height, end.height]),
+			translateX,
+			translateY,
+			width,
+			height,
 		};
 	}
 
 	return {
-		transform: [
-			{ translateX: interpolate(progress, ranges, [0, -geometry.dx]) },
-			{ translateY: interpolate(progress, ranges, [0, -geometry.dy]) },
-		],
-		width: interpolate(progress, ranges, [end.width, start.width]),
-		height: interpolate(progress, ranges, [end.height, start.height]),
+		transform: [{ translateX }, { translateY }],
+		width,
+		height,
 	};
 }
 
@@ -99,26 +113,32 @@ export function composeTransformAbsolute(
 	params: ElementComposeParams,
 ): StyleProps {
 	"worklet";
-	const { start, end, geometry, progress, ranges } = params;
+	const { start, end, geometry, progress, ranges, computeOptions } = params;
 
-	if (geometry.entering) {
+	const translateX = geometry.entering
+		? interpolate(progress, ranges, [start.pageX, end.pageX])
+		: interpolate(progress, ranges, [end.pageX, start.pageX]);
+	const translateY = geometry.entering
+		? interpolate(progress, ranges, [start.pageY, end.pageY])
+		: interpolate(progress, ranges, [end.pageY, start.pageY]);
+	const scaleX = geometry.entering
+		? interpolate(progress, ranges, [geometry.scaleX, 1])
+		: interpolate(progress, ranges, [1, 1 / geometry.scaleX]);
+	const scaleY = geometry.entering
+		? interpolate(progress, ranges, [geometry.scaleY, 1])
+		: interpolate(progress, ranges, [1, 1 / geometry.scaleY]);
+
+	if (computeOptions.raw) {
 		return {
-			transform: [
-				{ translateX: interpolate(progress, ranges, [start.pageX, end.pageX]) },
-				{ translateY: interpolate(progress, ranges, [start.pageY, end.pageY]) },
-				{ scaleX: interpolate(progress, ranges, [geometry.scaleX, 1]) },
-				{ scaleY: interpolate(progress, ranges, [geometry.scaleY, 1]) },
-			],
+			translateX,
+			translateY,
+			scaleX,
+			scaleY,
 		};
 	}
 
 	return {
-		transform: [
-			{ translateX: interpolate(progress, ranges, [end.pageX, start.pageX]) },
-			{ translateY: interpolate(progress, ranges, [end.pageY, start.pageY]) },
-			{ scaleX: interpolate(progress, ranges, [1, 1 / geometry.scaleX]) },
-			{ scaleY: interpolate(progress, ranges, [1, 1 / geometry.scaleY]) },
-		],
+		transform: [{ translateX }, { translateY }, { scaleX }, { scaleY }],
 	};
 }
 
@@ -128,16 +148,25 @@ export function composeTransformRelative(
 	"worklet";
 	const { geometry, computeOptions, progress, ranges } = params;
 
-	if (geometry.entering) {
+	const translateX = geometry.entering
+		? interpolate(progress, ranges, [geometry.dx, 0])
+		: interpolate(progress, ranges, [0, -geometry.dx]);
+	const translateY = geometry.entering
+		? interpolate(progress, ranges, [geometry.dy, 0])
+		: interpolate(progress, ranges, [0, -geometry.dy]);
+	const scaleX = geometry.entering
+		? interpolate(progress, ranges, [geometry.scaleX, 1])
+		: interpolate(progress, ranges, [1, 1 / geometry.scaleX]);
+	const scaleY = geometry.entering
+		? interpolate(progress, ranges, [geometry.scaleY, 1])
+		: interpolate(progress, ranges, [1, 1 / geometry.scaleY]);
+
+	if (computeOptions.raw) {
 		return {
-			transform: [
-				{ translateX: computeOptions.gestures?.x ?? 0 },
-				{ translateY: computeOptions.gestures?.y ?? 0 },
-				{ translateX: interpolate(progress, ranges, [geometry.dx, 0]) },
-				{ translateY: interpolate(progress, ranges, [geometry.dy, 0]) },
-				{ scaleX: interpolate(progress, ranges, [geometry.scaleX, 1]) },
-				{ scaleY: interpolate(progress, ranges, [geometry.scaleY, 1]) },
-			],
+			translateX,
+			translateY,
+			scaleX,
+			scaleY,
 		};
 	}
 
@@ -145,34 +174,43 @@ export function composeTransformRelative(
 		transform: [
 			{ translateX: computeOptions.gestures?.x ?? 0 },
 			{ translateY: computeOptions.gestures?.y ?? 0 },
-			{ translateX: interpolate(progress, ranges, [0, -geometry.dx]) },
-			{ translateY: interpolate(progress, ranges, [0, -geometry.dy]) },
-			{ scaleX: interpolate(progress, ranges, [1, 1 / geometry.scaleX]) },
-			{ scaleY: interpolate(progress, ranges, [1, 1 / geometry.scaleY]) },
+			{ translateX },
+			{ translateY },
+			{ scaleX },
+			{ scaleY },
 		],
 	};
 }
 
 export function composeContentStyle(params: ContentComposeParams): StyleProps {
 	"worklet";
-	const { geometry, progress, ranges } = params;
+	const {
+		geometry,
+		progress,
+		ranges,
+		computeOptions: { raw },
+	} = params;
 	const { s, tx, ty, entering } = geometry;
 
-	if (entering) {
+	const translateX = entering
+		? interpolate(progress, ranges, [tx, 0])
+		: interpolate(progress, ranges, [0, tx]);
+	const translateY = entering
+		? interpolate(progress, ranges, [ty, 0])
+		: interpolate(progress, ranges, [0, ty]);
+	const scale = entering
+		? interpolate(progress, ranges, [s, 1])
+		: interpolate(progress, ranges, [1, s]);
+
+	if (raw) {
 		return {
-			transform: [
-				{ translateX: interpolate(progress, ranges, [tx, 0]) },
-				{ translateY: interpolate(progress, ranges, [ty, 0]) },
-				{ scale: interpolate(progress, ranges, [s, 1]) },
-			],
+			translateX,
+			translateY,
+			scale,
 		};
 	}
 
 	return {
-		transform: [
-			{ translateX: interpolate(progress, ranges, [0, tx]) },
-			{ translateY: interpolate(progress, ranges, [0, ty]) },
-			{ scale: interpolate(progress, ranges, [1, s]) },
-		],
+		transform: [{ translateX }, { translateY }, { scale }],
 	};
 }

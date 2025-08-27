@@ -2,7 +2,6 @@ import {
 	Extrapolation,
 	interpolate,
 	interpolateColor,
-	type StyleProps,
 } from "react-native-reanimated";
 
 import type { ScreenTransitionConfig } from "../types/navigator";
@@ -276,10 +275,7 @@ export const SharedInstagram = (
 			const verticalScale = interpolate(normY, [0, 1], [1, 0.75], "clamp");
 
 			if (focused) {
-				const boundMetrics = bounds(activeBoundId)
-					.content()
-					.contentFill()
-					.build();
+				const boundMetrics = bounds().content().contentFill().build();
 
 				const masked = bounds(activeBoundId)
 					.absolute()
@@ -300,8 +296,8 @@ export const SharedInstagram = (
 							{ scale: verticalScale },
 						],
 					},
-					"root-container-view": boundMetrics,
-					"root-masked-view": {
+					_ROOT_CONTAINER: boundMetrics,
+					_ROOT_MASKED: {
 						...masked,
 						borderRadius: interpolate(progress, [0, 1], [0, 24]),
 					},
@@ -336,8 +332,8 @@ export const SharedInstagram = (
 		transitionSpec: {
 			open: {
 				mass: 1,
-				stiffness: 280,
-				damping: 30,
+				stiffness: 600,
+				damping: 60,
 			},
 			close: {
 				mass: 1,
@@ -375,79 +371,104 @@ export const AppleMusic = (
 				? current.gesture.normalizedY
 				: (next?.gesture.normalizedY ?? 0);
 
-			const horizontalX = interpolate(normX, [0, 1], [0, screen.width * 0.8]);
-			const verticalY = interpolate(normY, [0, 1], [0, screen.height * 0.8]);
+			/**
+			 * ===============================
+			 * Animations for both bounds
+			 * ===============================
+			 */
+			const dragX = interpolate(normX, [0, 1], [0, screen.width * 0.8]);
+			const dragY = interpolate(normY, [0, 1], [0, screen.height * 0.8]);
+			const dragXScale = interpolate(normX, [0, 1], [1, 0.75], "clamp");
+			const dragYScale = interpolate(normY, [0, 1], [1, 0.75], "clamp");
 
-			const horizontalScale = interpolate(normX, [0, 1], [1, 0.5], "clamp");
+			const boundValues = bounds({
+				method: focused ? "content" : "transform",
+				anchor: "top",
+				scaleMode: "uniform",
+				raw: true,
+			});
+
 			const opacity = interpolate(
 				progress,
-				[0, 0.25, 1, 1.5, 2],
+				[0, 0.35, 1, 1.25, 2],
 				[0, 1, 1, 1, 0],
 				"clamp",
 			);
-			const verticalScale = interpolate(normY, [0, 1], [1, 0.5], "clamp");
 
+			/**
+			 * ===============================
+			 * Focused specific animations
+			 * ===============================
+			 */
 			if (focused) {
-				const boundMetrics = bounds({
-					method: "content",
-					anchor: "top",
-					scaleMode: "uniform",
-				});
-
-				const masked = bounds({
+				const maskedValues = bounds({
 					space: "absolute",
 					method: "size",
 					target: "fullscreen",
+					raw: true,
 				});
 
 				return {
 					contentStyle: {
+						pointerEvents: current.animating ? "none" : "auto",
 						transform: [
-							{ scale: horizontalScale },
-							{ scale: verticalScale },
-							{ translateX: horizontalX },
-							{ translateY: verticalY },
+							{ translateX: dragX || 0 },
+							{ translateY: dragY || 0 },
+							{ scale: dragXScale },
+							{ scale: dragYScale },
 						],
 						opacity,
-						shadowColor: "black",
-						shadowOffset: { width: 25, height: 25 },
-						shadowOpacity: 0.25,
-						shadowRadius: 50,
-						elevation: 10,
 					},
-					"root-container-view": boundMetrics,
-					"root-masked-view": {
-						...masked,
+					_ROOT_CONTAINER: {
+						transform: [
+							{ translateX: boundValues.translateX || 0 },
+							{ translateY: boundValues.translateY || 0 },
+							//@ts-expect-error
+							{ scale: boundValues.scale || 1 },
+						],
+					},
+					_ROOT_MASKED: {
+						width: maskedValues.width,
+						height: maskedValues.height,
+						transform: [
+							{ translateX: maskedValues.translateX || 0 },
+							{ translateY: maskedValues.translateY || 0 },
+						],
 						borderRadius: interpolate(progress, [0, 1], [0, 24]),
 					},
 				};
 			}
 
-			const boundMetrics = bounds({
-				method: "transform",
-				scaleMode: "none",
-				gestures: {
-					x: horizontalX,
-					y: verticalY,
-				},
-			});
+			/**
+			 * ===============================
+			 * Unfocused specific animations
+			 * ===============================
+			 */
 
-			// Combine the bounds transforms with your scaling transforms
-			const scale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
-			const combinedTransforms = [
-				{ scale: horizontalScale },
-				{ scale: verticalScale },
-				...(boundMetrics.transform ?? []),
-			] as StyleProps["transform"];
+			// Pre-compose: Apply gesture scaling to bound transforms
+			const scaledBoundTranslateX = (boundValues.translateX || 0) * dragXScale;
+			const scaledBoundTranslateY = (boundValues.translateY || 0) * dragYScale;
+			const scaledBoundScaleX = (boundValues.scaleX || 1) * dragXScale;
+			const scaledBoundScaleY = (boundValues.scaleY || 1) * dragYScale;
+
+			const contentScale = interpolate(progress, [1, 2], [1, 0.9], "clamp");
 
 			return {
 				[activeBoundId]: {
-					...boundMetrics,
-					transform: combinedTransforms,
+					transform: [
+						{ translateX: dragX || 0 },
+						{ translateY: dragY || 0 },
+						{ translateX: scaledBoundTranslateX },
+						{ translateY: scaledBoundTranslateY },
+						{ scale: dragXScale },
+						{ scale: dragYScale },
+						{ scaleX: scaledBoundScaleX },
+						{ scaleY: scaledBoundScaleY },
+					],
 					opacity,
 				},
 				contentStyle: {
-					transform: [{ scale }],
+					transform: [{ scale: contentScale }],
 				},
 			};
 		},
@@ -479,7 +500,6 @@ export const SharedTwitter = (
 			"worklet";
 			if (focused && activeBoundId) {
 				const boundStyles = bounds().transform().build();
-
 				return {
 					[activeBoundId]: {
 						...boundStyles,

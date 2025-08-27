@@ -35,4 +35,5 @@ export const DEFAULT_BUILDER_OPTIONS: Complete<BoundsBuilderOptions> =
 		 */
 		scaleMode: "match",
 		anchor: "center",
+		raw: false,
 	} as const);
