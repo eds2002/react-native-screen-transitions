@@ -26,7 +26,6 @@ import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progres
 
 const GESTURE_VELOCITY_IMPACT = 0.3;
 const GESTURE_ACTIVATION_THRESHOLD = 5;
-const DEFAULT_GESTURE_RESPONSE_DISTANCE = 50;
 const DEFAULT_GESTURE_DIRECTION = "horizontal";
 const DEFAULT_GESTURE_ENABLED = false;
 const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
@@ -54,10 +53,10 @@ export const useBuildGestures = ({
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
 		gestureEnabled = DEFAULT_GESTURE_ENABLED,
-		transitionSpec,
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
-		gestureResponseDistance = DEFAULT_GESTURE_RESPONSE_DISTANCE,
 		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
+		gestureResponseDistance,
+		transitionSpec,
 	} = current.options;
 
 	const directions = useMemo(() => {

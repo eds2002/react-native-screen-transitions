@@ -8,9 +8,16 @@ type Directions = {
 };
 
 interface GestureActivationOptions {
-	gestureResponseDistance: number;
+	gestureResponseDistance: number | undefined;
 	panGesture: PanGesture;
 	directions: Directions;
+}
+
+interface GestureActivationResult {
+	activeOffsetX?: number | [number, number];
+	failOffsetX?: number | OffsetErrorTypeBugFix;
+	activeOffsetY?: number | [number, number];
+	failOffsetY?: number | OffsetErrorTypeBugFix;
 }
 
 const GESTURE_FAIL_TOLERANCE_X = 15;
@@ -27,76 +34,41 @@ export const applyGestureActivationCriteria = ({
 	gestureResponseDistance,
 	panGesture,
 	directions,
-}: GestureActivationOptions) => {
-	if (Object.values(directions).every(Boolean)) {
-		return {
-			activeOffsetX: [
-				-gestureResponseDistance,
-				gestureResponseDistance,
-			] as OffsetErrorTypeBugFix,
-			activeOffsetY: [
-				-gestureResponseDistance,
-				gestureResponseDistance,
-			] as OffsetErrorTypeBugFix,
-		};
-	}
+}: GestureActivationOptions): PanGesture => {
+	const xDist = gestureResponseDistance ?? GESTURE_RESPONSE_DISTANCE_HORIZONTAL;
+	const yDist = gestureResponseDistance ?? GESTURE_RESPONSE_DISTANCE_VERTICAL;
 
 	const allowedDown = directions.vertical;
 	const allowedUp = directions.verticalInverted;
 	const allowedRight = directions.horizontal;
 	const allowedLeft = directions.horizontalInverted;
 
-	const dist = gestureResponseDistance;
-
-	const result: {
-		activeOffsetX?: number | [number, number];
-		failOffsetX?: number | OffsetErrorTypeBugFix;
-		activeOffsetY?: number | [number, number];
-		failOffsetY?: number | OffsetErrorTypeBugFix;
-	} = {};
+	const result: GestureActivationResult = {
+		failOffsetX: [-GESTURE_FAIL_TOLERANCE_X, GESTURE_FAIL_TOLERANCE_X],
+		failOffsetY: [-GESTURE_FAIL_TOLERANCE_Y, GESTURE_FAIL_TOLERANCE_Y],
+	};
 
 	const hasHorizontal = allowedLeft || allowedRight;
+	const hasVertical = allowedUp || allowedDown;
+
 	if (hasHorizontal) {
 		if (allowedLeft && allowedRight) {
-			result.activeOffsetX = [-dist, dist];
+			result.activeOffsetX = [-xDist, xDist];
 		} else if (allowedLeft) {
-			result.activeOffsetX = -dist;
+			result.activeOffsetX = -xDist;
 		} else if (allowedRight) {
-			result.activeOffsetX = dist;
+			result.activeOffsetX = xDist;
 		}
-
-		if (allowedRight && !allowedLeft) {
-			result.failOffsetX = -dist;
-		} else if (allowedLeft && !allowedRight) {
-			result.failOffsetX = dist;
-		}
-	} else {
-		result.failOffsetX = [
-			-GESTURE_FAIL_TOLERANCE_X,
-			GESTURE_FAIL_TOLERANCE_X,
-		] as OffsetErrorTypeBugFix;
 	}
 
-	const hasVertical = allowedUp || allowedDown;
 	if (hasVertical) {
 		if (allowedUp && allowedDown) {
-			result.activeOffsetY = [-dist, dist];
+			result.activeOffsetY = [-yDist, yDist];
 		} else if (allowedUp) {
-			result.activeOffsetY = -dist;
+			result.activeOffsetY = -yDist;
 		} else if (allowedDown) {
-			result.activeOffsetY = dist;
+			result.activeOffsetY = yDist;
 		}
-
-		if (allowedDown && !allowedUp) {
-			result.failOffsetY = -dist;
-		} else if (allowedUp && !allowedDown) {
-			result.failOffsetY = dist;
-		}
-	} else {
-		result.failOffsetY = [
-			-GESTURE_FAIL_TOLERANCE_Y,
-			GESTURE_FAIL_TOLERANCE_Y,
-		] as OffsetErrorTypeBugFix;
 	}
 
 	if (result?.activeOffsetX) {
