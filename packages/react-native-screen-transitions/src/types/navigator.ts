@@ -1,29 +1,29 @@
 import type {
-  DefaultNavigatorOptions,
-  Descriptor,
-  NavigationHelpers,
-  NavigationProp,
-  ParamListBase,
-  Route,
-  RouteProp,
-  StackActionHelpers,
-  StackNavigationState,
-  StackRouterOptions,
-  Theme,
+	DefaultNavigatorOptions,
+	Descriptor,
+	NavigationHelpers,
+	NavigationProp,
+	ParamListBase,
+	Route,
+	RouteProp,
+	StackActionHelpers,
+	StackNavigationState,
+	StackRouterOptions,
+	Theme,
 } from "@react-navigation/native";
 import type {
-  ImageSourcePropType,
-  StyleProp,
-  TextStyle,
-  ViewStyle,
+	ImageSourcePropType,
+	StyleProp,
+	TextStyle,
+	ViewStyle,
 } from "react-native";
 import type {
-  ScreenProps,
-  ScreenStackHeaderConfigProps,
-  SearchBarProps,
+	ScreenProps,
+	ScreenStackHeaderConfigProps,
+	SearchBarProps,
 } from "react-native-screens";
 import type { ScreenStyleInterpolator, TransitionSpec } from "./animation";
-import type { GestureDirection } from "./gesture";
+import type { GestureActivationArea, GestureDirection } from "./gesture";
 
 export type NativeStackNavigationEventMap = {
 	/**
@@ -168,6 +168,10 @@ export type ScreenTransitionConfig = {
 	 * Whether the gesture drives the progress.
 	 */
 	gestureDrivesProgress?: boolean;
+	/**
+	 * The area of the screen where the gesture is activated.
+	 */
+	gestureActivationArea?: GestureActivationArea;
 	/**
 	 * Whether to enable transitions. It sets the presentation to containedTransparentModal, animation none, and headerShown to false.
 	 */

@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import type { ReanimatedScrollEvent } from "react-native-reanimated/lib/typescript/hook/commonTypes";
@@ -13,13 +12,13 @@ interface ScrollProgressHookProps {
 }
 
 export const useScrollRegistry = (props: ScrollProgressHookProps) => {
-	const { scrollProgress, parentContext, nativeGesture } = useGestureContext();
+	const { scrollConfig, parentContext } = useGestureContext();
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
 			props.onScroll?.(event);
 
-			scrollProgress.modify((v: Any) => {
+			scrollConfig.modify((v: Any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -36,8 +35,8 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				return v;
 			});
 
-			if (parentContext?.scrollProgress) {
-				parentContext.scrollProgress.modify((v: Any) => {
+			if (parentContext?.scrollConfig) {
+				parentContext.scrollConfig.modify((v: Any) => {
 					"worklet";
 					if (v === null) {
 						return {
@@ -61,7 +60,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		(width: number, height: number) => {
 			props.onContentSizeChange?.(width, height);
 
-			scrollProgress.modify((v: Any) => {
+			scrollConfig.modify((v: Any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -77,8 +76,8 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				v.contentHeight = height;
 				return v;
 			});
-			if (parentContext?.scrollProgress) {
-				parentContext.scrollProgress.modify((v: Any) => {
+			if (parentContext?.scrollConfig) {
+				parentContext.scrollConfig.modify((v: Any) => {
 					"worklet";
 					if (v === null) {
 						return {
@@ -102,7 +101,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		props.onLayout?.(event);
 		const { width, height } = event.nativeEvent.layout;
 
-		scrollProgress.modify((v: Any) => {
+		scrollConfig.modify((v: Any) => {
 			"worklet";
 			if (v === null) {
 				return {
@@ -118,8 +117,8 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 			v.layoutWidth = width;
 			return v;
 		});
-		if (parentContext?.scrollProgress) {
-			parentContext.scrollProgress.modify((v: Any) => {
+		if (parentContext?.scrollConfig) {
+			parentContext.scrollConfig.modify((v: Any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -137,14 +136,6 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 			});
 		}
 	});
-
-	const registerNativeGesture = useStableCallback(() => {
-		if (parentContext?.panGesture && nativeGesture) {
-			parentContext.panGesture.blocksExternalGesture(nativeGesture);
-		}
-	});
-
-	useEffect(registerNativeGesture);
 
 	return {
 		scrollHandler,

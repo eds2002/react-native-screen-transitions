@@ -29,7 +29,6 @@ export function createTransitionAwareComponent<P extends object>(
 		TransitionAwareProps<P>
 	>((props: Any, ref) => {
 		const { nativeGesture } = useGestureContext();
-
 		const { scrollHandler, onContentSizeChange, onLayout } = useScrollRegistry({
 			onScroll: props.onScroll,
 			onContentSizeChange: props.onContentSizeChange,

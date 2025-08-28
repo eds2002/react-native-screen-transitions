@@ -6,46 +6,12 @@ import Animated, {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { _useScreenAnimation } from "../hooks/animation/use-screen-animation";
-
-interface RootTransitionAwareProps {
-	children: React.ReactNode;
-}
+import { useParentGestureRegistry } from "../hooks/gestures/use-parent-gesture-registry";
 
 const EMPTY_STYLE = Object.freeze({} as StyleProps);
 
-const Overlay = memo(
-	({ animatedOverlayStyle }: { animatedOverlayStyle: StyleProps }) => {
-		return (
-			<Animated.View
-				style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
-				pointerEvents="none"
-			/>
-		);
-	},
-);
-
-const Content = memo(
-	({
-		animatedContentStyle,
-		children,
-	}: {
-		animatedContentStyle: StyleProps;
-		children: React.ReactNode;
-	}) => {
-		return (
-			<Animated.View style={[styles.content, animatedContentStyle]}>
-				{children}
-			</Animated.View>
-		);
-	},
-);
-
-const Container = memo(({ children }: { children: React.ReactNode }) => {
-	return <View style={styles.container}>{children}</View>;
-});
-
 export const RootTransitionAware = memo(
-	({ children }: RootTransitionAwareProps) => {
+	({ children }: { children: React.ReactNode }) => {
 		const { screenInterpolatorProps, screenStyleInterpolator } =
 			_useScreenAnimation();
 
@@ -75,13 +41,17 @@ export const RootTransitionAware = memo(
 			return animatedStyles.value.overlay;
 		});
 
+		useParentGestureRegistry();
 		return (
-			<Container>
-				<Overlay animatedOverlayStyle={animatedOverlayStyle} />
-				<Content animatedContentStyle={animatedContentStyle}>
+			<View style={styles.container}>
+				<Animated.View
+					style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
+					pointerEvents="none"
+				/>
+				<Animated.View style={[styles.content, animatedContentStyle]}>
 					{children}
-				</Content>
-			</Container>
+				</Animated.View>
+			</View>
 		);
 	},
 );

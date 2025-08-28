@@ -1,6 +1,61 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { FlatList, Image, Text, useWindowDimensions, View } from "react-native";
+import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Transition from "react-native-screen-transitions";
+
+const Songs = () => {
+	const renderItem = ({ index }: { index: number }) => {
+		return (
+			<Swipeable
+				renderLeftActions={() => (
+					<View
+						style={{
+							backgroundColor: "#6366f1",
+
+							flex: 1,
+						}}
+					/>
+				)}
+				renderRightActions={() => (
+					<View style={{ backgroundColor: "#f43f5e", flex: 1 }} />
+				)}
+			>
+				<View
+					style={{
+						flexDirection: "row",
+						alignItems: "center",
+						paddingHorizontal: 16,
+						paddingVertical: 12,
+						borderBottomWidth: 0.5,
+						borderBottomColor: "#e5e5e5",
+						backgroundColor: "white",
+						flex: 1,
+					}}
+				>
+					<Text style={{ fontSize: 16, color: "gray", width: 24 }}>
+						{index + 1}
+					</Text>
+					<View style={{ flex: 1, marginLeft: 12 }}>
+						<Text style={{ fontSize: 16, fontWeight: "500" }}>
+							Song {index + 1}
+						</Text>
+					</View>
+					<Text style={{ fontSize: 20, color: "gray" }}>⋯</Text>
+				</View>
+			</Swipeable>
+		);
+	};
+	return (
+		<FlatList
+			data={Array.from({ length: 6 })}
+			renderItem={renderItem}
+			scrollEnabled={false}
+			keyExtractor={(_, index) => index.toString()}
+			style={{ width: "100%" }}
+			contentContainerStyle={{ paddingBottom: 32 }}
+		/>
+	);
+};
 
 export default function IndexScreen() {
 	const { sharedId, url } = useLocalSearchParams<{
@@ -110,36 +165,8 @@ export default function IndexScreen() {
 						quos.
 					</Text>
 				</View>
-				<FlatList
-					data={Array.from({ length: 20 })}
-					renderItem={({ index }) => (
-						<View
-							style={{
-								flexDirection: "row",
-								alignItems: "center",
-								paddingHorizontal: 16,
-								paddingVertical: 12,
-								borderBottomWidth: 0.5,
-								borderBottomColor: "#e5e5e5",
-								flex: 1,
-							}}
-						>
-							<Text style={{ fontSize: 16, color: "gray", width: 24 }}>
-								{index + 1}
-							</Text>
-							<View style={{ flex: 1, marginLeft: 12 }}>
-								<Text style={{ fontSize: 16, fontWeight: "500" }}>
-									Song {index + 1}
-								</Text>
-							</View>
-							<Text style={{ fontSize: 20, color: "gray" }}>⋯</Text>
-						</View>
-					)}
-					scrollEnabled={false}
-					keyExtractor={(_, index) => index.toString()}
-					style={{ width: "100%" }}
-					contentContainerStyle={{ paddingBottom: 32 }}
-				/>
+
+				<Songs />
 			</Transition.ScrollView>
 		</Transition.MaskedView>
 	);

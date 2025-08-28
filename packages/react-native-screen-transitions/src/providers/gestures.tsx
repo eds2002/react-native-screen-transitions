@@ -1,6 +1,9 @@
 import { createContext, useContext, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import type { GestureType } from "react-native-gesture-handler";
+import type {
+	ComposedGesture,
+	GestureType,
+} from "react-native-gesture-handler";
 import {
 	GestureDetector,
 	GestureHandlerRootView,
@@ -9,7 +12,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 
-export type ScrollProgress = {
+export type ScrollConfig = {
 	x: number;
 	y: number;
 	contentHeight: number;
@@ -19,9 +22,9 @@ export type ScrollProgress = {
 };
 
 export interface GestureContextType {
-	panGesture: GestureType;
+	panGesture: ComposedGesture;
 	nativeGesture: GestureType;
-	scrollProgress: SharedValue<ScrollProgress | null>;
+	scrollConfig: SharedValue<ScrollConfig | null>;
 	parentContext: GestureContextType | null;
 }
 
@@ -29,7 +32,7 @@ type ScreenGestureProviderProps = {
 	children: React.ReactNode;
 };
 
-export const DEFAULT_SCROLL_PROGRESS: ScrollProgress = {
+export const DEFAULT_SCROLL_CONFIG: ScrollConfig = {
 	x: 0,
 	y: 0,
 	contentHeight: 0,
@@ -45,20 +48,20 @@ export const ScreenGestureProvider = ({
 }: ScreenGestureProviderProps) => {
 	const parentContext = useContext(GestureContext);
 
-	const scrollProgress = useSharedValue<ScrollProgress | null>(null);
+	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
 	const { panGesture, nativeGesture } = useBuildGestures({
-		scrollProgress,
+		scrollConfig,
 	});
 
 	const value: GestureContextType = useMemo(
 		() => ({
 			panGesture,
-			scrollProgress,
+			scrollConfig,
 			nativeGesture,
 			parentContext: parentContext || null,
 		}),
-		[panGesture, scrollProgress, nativeGesture, parentContext],
+		[panGesture, scrollConfig, nativeGesture, parentContext],
 	);
 
 	return (

@@ -8,6 +8,7 @@ interface RunTransitionProps {
 	spec?: TransitionSpec;
 	onFinish?: (finished: boolean) => void;
 	animations: AnimationMap;
+	velocity?: number;
 }
 
 export const runTransition = ({
@@ -15,6 +16,7 @@ export const runTransition = ({
 	spec,
 	onFinish,
 	animations,
+	velocity,
 }: RunTransitionProps) => {
 	"worklet";
 	const value = target === "open" ? 1 : 0;
@@ -37,7 +39,8 @@ export const runTransition = ({
 	}
 
 	animating.value = 1;
-	progress.value = animate(value, config, (finished) => {
+
+	progress.value = animate(value, { ...config, velocity }, (finished) => {
 		"worklet";
 		if (finished) {
 			animating.value = 0;

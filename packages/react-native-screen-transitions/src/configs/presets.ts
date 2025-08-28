@@ -250,16 +250,16 @@ export const SharedInstagram = (
 				focused
 					? current.gesture.normalizedX
 					: (next?.gesture.normalizedX ?? 0),
-				[-1, 1],
-				[-screen.width * 0.9, screen.width * 0.9],
+				[-1, 0, 1],
+				[-screen.width * 0.7, 0, screen.width * 0.7],
 			);
 
 			const y = interpolate(
 				focused
 					? current.gesture.normalizedY
 					: (next?.gesture.normalizedY ?? 0),
-				[-1, 1],
-				[-screen.height * 0.9, screen.height * 0.9],
+				[-1, 0, 1],
+				[-screen.height * 0.4, 0, screen.height * 0.4],
 			);
 
 			const normX = focused
@@ -269,8 +269,8 @@ export const SharedInstagram = (
 				? current.gesture.normalizedY
 				: (next?.gesture.normalizedY ?? 0);
 
-			const horizontalScale = interpolate(normX, [0, 1], [1, 0.75]);
-			const verticalScale = interpolate(normY, [0, 1], [1, 0.75]);
+			const horizontalScale = interpolate(normX, [0, 1], [1, 0.8]);
+			const verticalScale = interpolate(normY, [0, 1], [1, 0.8]);
 
 			if (focused) {
 				const boundMetrics = bounds().content().contentFill().build();
@@ -329,14 +329,18 @@ export const SharedInstagram = (
 		},
 		transitionSpec: {
 			open: {
-				mass: 1,
-				stiffness: 600,
-				damping: 60,
+				stiffness: 1500,
+				damping: 1000,
+				mass: 3,
+				overshootClamping: true,
+				restSpeedThreshold: 0.02,
 			},
 			close: {
-				mass: 1,
-				stiffness: 600,
-				damping: 60,
+				stiffness: 1500,
+				damping: 1000,
+				mass: 3,
+				overshootClamping: true,
+				restSpeedThreshold: 0.02,
 			},
 		},
 		...config,
@@ -471,17 +475,18 @@ export const AppleMusic = (
 		},
 		transitionSpec: {
 			open: {
-				mass: 1,
-				stiffness: 200,
-				damping: 20,
-				restSpeedThreshold: 0.02,
+				stiffness: 1000,
+				damping: 500,
+				mass: 3,
 				overshootClamping: true,
+				restSpeedThreshold: 0.02,
 			},
 			close: {
-				mass: 1,
-				stiffness: 200,
-				damping: 19,
-				restSpeedThreshold: 0.01,
+				stiffness: 600,
+				damping: 60,
+				mass: 3,
+				overshootClamping: false,
+				restSpeedThreshold: 0.04,
 			},
 		},
 		...config,
