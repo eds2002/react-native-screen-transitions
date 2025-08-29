@@ -237,7 +237,9 @@ export const SharedInstagram = (
 		gestureDrivesProgress: false,
 		screenStyleInterpolator: ({
 			current,
-			layouts: { screen },
+			layouts: {
+				screen: { height, width },
+			},
 			bounds,
 			progress,
 			focused,
@@ -246,22 +248,6 @@ export const SharedInstagram = (
 		}) => {
 			"worklet";
 
-			const x = interpolate(
-				focused
-					? current.gesture.normalizedX
-					: (next?.gesture.normalizedX ?? 0),
-				[-1, 0, 1],
-				[-screen.width * 0.7, 0, screen.width * 0.7],
-			);
-
-			const y = interpolate(
-				focused
-					? current.gesture.normalizedY
-					: (next?.gesture.normalizedY ?? 0),
-				[-1, 0, 1],
-				[-screen.height * 0.4, 0, screen.height * 0.4],
-			);
-
 			const normX = focused
 				? current.gesture.normalizedX
 				: (next?.gesture.normalizedX ?? 0);
@@ -269,17 +255,42 @@ export const SharedInstagram = (
 				? current.gesture.normalizedY
 				: (next?.gesture.normalizedY ?? 0);
 
-			const horizontalScale = interpolate(normX, [0, 1], [1, 0.8]);
-			const verticalScale = interpolate(normY, [0, 1], [1, 0.8]);
+			/**
+			 * ===============================
+			 * Animations for both bounds
+			 * ===============================
+			 */
+			const dragX = interpolate(
+				normX,
+				[-1, 0, 1],
+				[-width * 0.7, 0, width * 0.7],
+			);
+			const dragY = interpolate(
+				normY,
+				[-1, 0, 1],
+				[-height * 0.4, 0, height * 0.4],
+			);
+			const dragXScale = interpolate(normX, [0, 1], [1, 0.8]);
+			const dragYScale = interpolate(normY, [0, 1], [1, 0.8]);
 
+			const boundValues = bounds({
+				method: focused ? "content" : "transform",
+				scaleMode: "uniform",
+				raw: true,
+			});
+
+			/**
+			 * ===============================
+			 * Focused specific animations
+			 * ===============================
+			 */
 			if (focused) {
-				const boundMetrics = bounds().content().contentFill().build();
-
-				const masked = bounds(activeBoundId)
-					.absolute()
-					.toFullscreen()
-					.size()
-					.build();
+				const maskedValues = bounds({
+					space: "absolute",
+					target: "fullscreen",
+					method: "size",
+					raw: true,
+				});
 
 				return {
 					overlayStyle: {
@@ -288,42 +299,47 @@ export const SharedInstagram = (
 					},
 					contentStyle: {
 						transform: [
-							{ translateX: x },
-							{ translateY: y },
-							{ scale: horizontalScale },
-							{ scale: verticalScale },
+							{ translateX: dragX },
+							{ translateY: dragY },
+							{ scale: dragXScale },
+							{ scale: dragYScale },
 						],
 					},
-					_ROOT_CONTAINER: boundMetrics,
+					_ROOT_CONTAINER: {
+						transform: [
+							{ translateX: boundValues.translateX || 0 },
+							{ translateY: boundValues.translateY || 0 },
+							//@ts-expect-error
+							{ scale: boundValues.scale || 1 },
+						],
+					},
 					_ROOT_MASKED: {
-						...masked,
+						width: maskedValues.width,
+						height: maskedValues.height,
+						transform: [
+							{ translateX: maskedValues.translateX || 0 },
+							{ translateY: maskedValues.translateY || 0 },
+						],
 						borderRadius: interpolate(progress, [0, 1], [0, 24]),
 					},
 				};
 			}
-
-			const boundMetrics = bounds()
-				.gestures({
-					x,
-					y,
-				})
-				.transform()
-				.build();
-
-			// Combine the bounds transforms with your scaling transforms
-			const combinedTransforms = [
-				...(boundMetrics.transform ?? []),
-				{ scale: horizontalScale },
-				{ scale: verticalScale },
-			] as any;
 
 			return {
 				contentStyle: {
 					pointerEvents: current.gesture.isDismissing ? "none" : "auto",
 				},
 				[activeBoundId]: {
-					...boundMetrics,
-					transform: combinedTransforms, // Use the combined transforms
+					transform: [
+						{ translateX: dragX || 0 },
+						{ translateY: dragY || 0 },
+						{ translateX: boundValues.translateX || 0 },
+						{ translateY: boundValues.translateY || 0 },
+						{ scaleX: boundValues.scaleX || 1 },
+						{ scaleY: boundValues.scaleY || 1 },
+						{ scale: dragXScale },
+						{ scale: dragYScale },
+					],
 				},
 			};
 		},

@@ -8,9 +8,43 @@ import Transition from "react-native-screen-transitions";
 const CONTAINER_WIDTH = Dimensions.get("window").width * 0.62;
 const CONTAINER_HEIGHT = CONTAINER_WIDTH * 1.3;
 
+export const SONGS = [
+	{
+		id: "1",
+		title: "Song 1",
+		artist: "Artist 1",
+		imageUrl: "https://picsum.photos/id/237/400/400",
+	},
+
+	{
+		id: "2",
+		title: "Song 2",
+		artist: "Artist 2",
+		imageUrl: "https://picsum.photos/id/238/400/400",
+	},
+	{
+		id: "3",
+		title: "Song 3",
+		artist: "Artist 3",
+		imageUrl: "https://picsum.photos/id/239/400/400",
+	},
+	{
+		id: "4",
+		title: "Song 4",
+		artist: "Artist 4",
+		imageUrl: "https://picsum.photos/id/240/400/400",
+	},
+	{
+		id: "5",
+		title: "Song 5",
+		artist: "Artist 5",
+		imageUrl: "https://picsum.photos/id/241/400/400",
+	},
+];
+
 const TopPicksSection = () => {
 	const renderItem = useCallback(({ index }: { index: number }) => {
-		const imageUrl = `https://picsum.photos/id/${237 + index}/400/400`;
+		const imageUrl = SONGS[index].imageUrl;
 		const sharedId = `pick-${index}`;
 		return (
 			<Transition.Pressable
@@ -19,7 +53,7 @@ const TopPicksSection = () => {
 					router.push({
 						pathname: "/examples/apple-music/[id]",
 						params: {
-							id: "123",
+							id: SONGS[index].id,
 							sharedId,
 							url: imageUrl,
 						},
@@ -51,8 +85,12 @@ const TopPicksSection = () => {
 						flex: 1,
 					}}
 				>
-					<Text style={{ fontSize: 16, fontWeight: "600" }}>Song title</Text>
-					<Text style={{ fontSize: 16, color: "gray" }}>Song Artist</Text>
+					<Text style={{ fontSize: 16, fontWeight: "600" }}>
+						{SONGS[index].title}
+					</Text>
+					<Text style={{ fontSize: 16, color: "gray" }}>
+						{SONGS[index].artist}
+					</Text>
 				</View>
 			</Transition.Pressable>
 		);
@@ -64,7 +102,7 @@ const TopPicksSection = () => {
 				Top picks for you
 			</Text>
 			<FlatList
-				data={Array.from({ length: 4 })}
+				data={SONGS}
 				renderItem={renderItem}
 				horizontal
 				contentContainerStyle={{
@@ -79,8 +117,8 @@ const TopPicksSection = () => {
 
 const RecentlyPlayedSection = () => {
 	const renderItem = useCallback(({ index }: { index: number }) => {
-		const imageUrl = `https://picsum.photos/id/${237 + index}/400/400`;
-		const sharedId = `album-${index}`;
+		const imageUrl = SONGS[index].imageUrl;
+		const sharedId = `album-${SONGS[index].id}`;
 		return (
 			<Transition.Pressable
 				style={{ borderRadius: 8, overflow: "hidden" }}
@@ -88,7 +126,7 @@ const RecentlyPlayedSection = () => {
 				onPress={() =>
 					router.push({
 						pathname: "/examples/apple-music/[id]",
-						params: { id: "123", sharedId, url: imageUrl },
+						params: { id: SONGS[index].id, sharedId, url: imageUrl },
 					})
 				}
 			>

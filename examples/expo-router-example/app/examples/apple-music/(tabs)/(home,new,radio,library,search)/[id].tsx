@@ -1,7 +1,54 @@
 import { router, useLocalSearchParams } from "expo-router";
+import { useCallback } from "react";
 import { FlatList, Image, Text, useWindowDimensions, View } from "react-native";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Transition from "react-native-screen-transitions";
+import { SONGS } from "./index";
+
+const OtherSongsSection = ({ otherSongs }: { otherSongs: typeof SONGS }) => {
+	const renderItem = useCallback(
+		({ index }: { index: number }) => {
+			const imageUrl = otherSongs[index].imageUrl;
+			const sharedId = `album-${otherSongs[index].id}`;
+			return (
+				<Transition.Pressable
+					style={{ borderRadius: 8, overflow: "hidden" }}
+					sharedBoundTag={sharedId}
+					onPress={() =>
+						router.push({
+							pathname: "/examples/apple-music/[id]",
+							params: { id: otherSongs[index].id, sharedId, url: imageUrl },
+						})
+					}
+				>
+					<Image
+						source={{ uri: imageUrl }}
+						style={{ width: 160, aspectRatio: 1, height: 160 }}
+					/>
+				</Transition.Pressable>
+			);
+		},
+		[otherSongs],
+	);
+
+	return (
+		<View style={{ overflow: "visible" }}>
+			<Text style={{ fontSize: 20, fontWeight: "bold", paddingHorizontal: 16 }}>
+				Other songs you might like
+			</Text>
+			<FlatList
+				data={otherSongs}
+				renderItem={renderItem}
+				horizontal
+				contentContainerStyle={{
+					padding: 16,
+					gap: 12,
+				}}
+				showsHorizontalScrollIndicator={false}
+			/>
+		</View>
+	);
+};
 
 const Songs = () => {
 	const renderItem = ({ index }: { index: number }) => {
@@ -58,10 +105,13 @@ const Songs = () => {
 };
 
 export default function IndexScreen() {
-	const { sharedId, url } = useLocalSearchParams<{
+	const { sharedId, url, id } = useLocalSearchParams<{
 		sharedId: string;
 		url: string;
+		id: string;
 	}>();
+
+	const otherSongs = SONGS.filter((song) => song.id !== id);
 
 	const { width } = useWindowDimensions();
 	const CONTAINER_WIDTH = width * 0.62;
@@ -80,9 +130,9 @@ export default function IndexScreen() {
 		>
 			<Transition.ScrollView
 				style={{ flex: 1, width: "100%" }}
-				contentContainerStyle={{ paddingBottom: 32 }}
+				contentContainerStyle={{ paddingBottom: 128 }}
 			>
-				<Transition.Pressable
+      <Transition.Pressable
 					sharedBoundTag={sharedId}
 					onPress={router.back}
 					style={{
@@ -167,6 +217,7 @@ export default function IndexScreen() {
 				</View>
 
 				<Songs />
+				<OtherSongsSection otherSongs={otherSongs} />
 			</Transition.ScrollView>
 		</Transition.MaskedView>
 	);
