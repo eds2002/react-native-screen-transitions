@@ -91,19 +91,19 @@ export const buildComposedGestures = ({
 	const edges: Record<string, HitSlop> = {
 		left: {
 			left: 0,
-			width: GESTURE_RESPONSE_DISTANCE_HORIZONTAL,
+			width: gestureResponseDistance ?? GESTURE_RESPONSE_DISTANCE_HORIZONTAL,
 		},
 		right: {
 			right: 0,
-			width: GESTURE_RESPONSE_DISTANCE_HORIZONTAL,
+			width: gestureResponseDistance ?? GESTURE_RESPONSE_DISTANCE_HORIZONTAL,
 		},
 		top: {
 			top: 0,
-			height: GESTURE_RESPONSE_DISTANCE_VERTICAL,
+			height: gestureResponseDistance ?? GESTURE_RESPONSE_DISTANCE_VERTICAL,
 		},
 		bottom: {
 			bottom: 0,
-			height: GESTURE_RESPONSE_DISTANCE_VERTICAL,
+			height: gestureResponseDistance ?? GESTURE_RESPONSE_DISTANCE_VERTICAL,
 		},
 	};
 

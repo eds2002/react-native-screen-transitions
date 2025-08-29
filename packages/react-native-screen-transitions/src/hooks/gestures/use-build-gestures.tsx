@@ -77,7 +77,6 @@ export const useBuildGestures = ({ scrollConfig }: BuildGesturesHookProps) => {
 		};
 	}, [gestureDirection]);
 
-	// utils
 	const setNavigatorDismissal = useStableCallback(() => {
 		const key = current.navigation.getState().key;
 
@@ -90,7 +89,6 @@ export const useBuildGestures = ({ scrollConfig }: BuildGesturesHookProps) => {
 		NavigatorDismissState.remove(key);
 	});
 
-	// core
 	const onTouchesDown = useCallback(
 		(e: GestureTouchEvent) => {
 			"worklet";
@@ -107,27 +105,21 @@ export const useBuildGestures = ({ scrollConfig }: BuildGesturesHookProps) => {
 
 			const touch = e.changedTouches[0];
 
-			const {
-				canProceed,
-				isSwipingDown,
-				isSwipingUp,
-				isSwipingRight,
-				isSwipingLeft,
-			} = checkGestureActivation({
-				initialTouch: initialTouch.value,
-				touch,
-				directions,
-				manager,
-				activationState: gestureActivationState,
-			});
+			const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
+				checkGestureActivation({
+					initialTouch: initialTouch.value,
+					touch,
+					directions,
+					manager,
+					activationState: gestureActivationState,
+				});
 
-			if (!canProceed) {
+			if (gestureActivationState.value === "failed") {
 				return;
 			}
 
 			let shouldActivate = false;
 
-			// Activate if already dragging
 			if (gestures.isDragging?.value) {
 				manager.activate();
 				return;
