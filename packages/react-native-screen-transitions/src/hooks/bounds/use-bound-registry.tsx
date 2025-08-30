@@ -9,6 +9,7 @@ import {
 import { useKeys } from "../../providers/keys";
 import { Bounds } from "../../stores/bounds";
 import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
+import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
 import { useScreenAnimation } from "../animation/use-screen-animation";
 
 interface BoundMeasurerHookProps {
@@ -34,8 +35,12 @@ export const useBoundsRegistry = ({
 		const measured = measure(animatedRef);
 		if (measured) {
 			const key = current.route.key;
-			const styles = flattenStyle(style);
-			Bounds.setBounds(key, sharedBoundTag, measured, styles);
+			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
+				Bounds.setRouteActive(key, sharedBoundTag);
+				return;
+			}
+
+			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
 			Bounds.setRouteActive(key, sharedBoundTag);
 		}
 	}, [sharedBoundTag, animatedRef, current.route.key, style]);
