@@ -1,8 +1,9 @@
 import {
-	AppleMusic,
 	DraggableCard,
 	ElasticCard,
-	SharedInstagram,
+	SharedAppleMusic,
+	SharedIGImage,
+	SharedXImage,
 	SlideFromBottom,
 	SlideFromTop,
 	ZoomIn,
@@ -19,6 +20,7 @@ export const presets = {
 	SlideFromBottom,
 	DraggableCard,
 	ElasticCard,
-	SharedInstagram,
-	AppleMusic,
+	SharedIGImage,
+	SharedAppleMusic,
+	SharedXImage,
 };

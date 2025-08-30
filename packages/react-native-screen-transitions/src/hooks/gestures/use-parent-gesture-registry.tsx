@@ -10,9 +10,7 @@ export const useParentGestureRegistry = () => {
 	const { parentContext, nativeGesture } = useGestureContext();
 	const registerNativeGesture = useStableCallback(() => {
 		if (parentContext?.panGesture && nativeGesture) {
-			parentContext.panGesture
-				.toGestureArray()
-				.forEach((gesture) => gesture.blocksExternalGesture(nativeGesture));
+			parentContext.panGesture.blocksExternalGesture(nativeGesture);
 		}
 	});
 

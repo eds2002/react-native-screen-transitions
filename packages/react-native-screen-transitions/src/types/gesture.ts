@@ -7,7 +7,16 @@ export type GestureDirection =
 
 export type ActivationArea = "edge" | "screen";
 
-export type GestureActivationArea = ActivationArea;
+export type SideActivation = {
+	left?: ActivationArea;
+	right?: ActivationArea;
+	top?: ActivationArea;
+	bottom?: ActivationArea;
+};
+
+export type AxisActivation = ActivationArea | SideActivation;
+
+export type GestureActivationArea = ActivationArea | SideActivation;
 
 export type GestureValues = {
 	/**

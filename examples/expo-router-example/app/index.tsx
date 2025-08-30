@@ -225,6 +225,14 @@ const End2EndComponent = memo(() => {
 		},
 	];
 
+	const bounds: PageType[] = [
+		{
+			title: "Anchor point",
+			description: "Test anchor points",
+			href: "/e2e/bounds/anchor-point",
+		},
+	];
+
 	return (
 		<View style={{ gap: 32 }}>
 			<View>
@@ -259,6 +267,20 @@ const End2EndComponent = memo(() => {
 				<Page.Group title="Gestures + Scrollables" />
 				<View style={{ gap: 24, marginTop: 24 }}>
 					{scrollables.map((page, idx) => (
+						<Card
+							key={idx.toString()}
+							title={`${page.title}`}
+							description={page.description}
+							href={page.href}
+							testID={page.testID}
+						/>
+					))}
+				</View>
+			</View>
+			<View>
+				<Page.Group title="Bounds" />
+				<View style={{ gap: 24, marginTop: 24 }}>
+					{bounds.map((page, idx) => (
 						<Card
 							key={idx.toString()}
 							title={`${page.title}`}

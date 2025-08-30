@@ -182,9 +182,7 @@ export const ElasticCard = (
 
 			const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.8]);
 
-			/**
-			 * Applies to current screen
-			 */
+			// applies to current screen
 			const maxElasticityX = screen.width * (config.elasticFactor ?? 0.5);
 			const maxElasticityY = screen.height * (config.elasticFactor ?? 0.5);
 			const translateX = interpolate(
@@ -201,9 +199,7 @@ export const ElasticCard = (
 				"clamp",
 			);
 
-			/**
-			 * Applies to unfocused screen ( previous screen )
-			 */
+			// applies to unfocused screen ( previous screen )
 			const overlayColor = interpolateColor(
 				progress,
 				[0, 1],
@@ -227,7 +223,7 @@ export const ElasticCard = (
 	};
 };
 
-export const SharedInstagram = (
+export const SharedIGImage = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
@@ -255,11 +251,7 @@ export const SharedInstagram = (
 				? current.gesture.normalizedY
 				: (next?.gesture.normalizedY ?? 0);
 
-			/**
-			 * ===============================
-			 * Animations for both bounds
-			 * ===============================
-			 */
+			// animations for both bounds
 			const dragX = interpolate(
 				normX,
 				[-1, 0, 1],
@@ -279,11 +271,7 @@ export const SharedInstagram = (
 				raw: true,
 			});
 
-			/**
-			 * ===============================
-			 * Focused specific animations
-			 * ===============================
-			 */
+			// focused specific animations
 			if (focused) {
 				const maskedValues = bounds({
 					space: "absolute",
@@ -363,13 +351,17 @@ export const SharedInstagram = (
 	};
 };
 
-export const AppleMusic = (
+export const SharedAppleMusic = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
+		gestureActivationArea: {
+			top: "screen",
+			left: "edge",
+		},
 		gestureDrivesProgress: false,
 		screenStyleInterpolator: ({
 			bounds,
@@ -426,6 +418,28 @@ export const AppleMusic = (
 					raw: true,
 				});
 
+				// Apple Music style drop shadow that increases with drag magnitude
+				const dragMagnitude = Math.max(Math.abs(normX), Math.abs(normY));
+				const shadowOpacity = interpolate(
+					dragMagnitude,
+					[0, 1],
+					[0, 0.25],
+					"clamp",
+				);
+				const shadowRadius = interpolate(
+					dragMagnitude,
+					[0, 1],
+					[0, 24],
+					"clamp",
+				);
+				const shadowOffsetY = interpolate(
+					dragMagnitude,
+					[0, 1],
+					[0, 20],
+					"clamp",
+				);
+				const elevation = interpolate(dragMagnitude, [0, 1], [0, 24], "clamp");
+
 				return {
 					contentStyle: {
 						pointerEvents: current.animating ? "none" : "auto",
@@ -436,6 +450,12 @@ export const AppleMusic = (
 							{ scale: dragYScale },
 						],
 						opacity,
+						// Shadow (iOS) / Elevation (Android)
+						shadowColor: "#000",
+						shadowOpacity,
+						shadowRadius,
+						shadowOffset: { width: 0, height: shadowOffsetY },
+						elevation,
 					},
 					_ROOT_CONTAINER: {
 						transform: [
@@ -509,7 +529,7 @@ export const AppleMusic = (
 	};
 };
 
-export const SharedTwitter = (
+export const SharedXImage = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
@@ -517,34 +537,72 @@ export const SharedTwitter = (
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "vertical-inverted"],
 		gestureDrivesProgress: false,
-		screenStyleInterpolator: ({ focused, activeBoundId, bounds, current }) => {
+		screenStyleInterpolator: ({
+			focused,
+			activeBoundId,
+			bounds,
+			current,
+			layouts: { screen },
+			progress,
+		}) => {
 			"worklet";
-			if (focused && activeBoundId) {
-				const boundStyles = bounds().transform().build();
-				return {
-					[activeBoundId]: {
-						...boundStyles,
-						borderRadius: interpolate(current.progress, [0, 1], [12, 0]),
-						overflow: "hidden",
-					},
-					contentStyle: {
-						transform: [
-							{
-								translateY: current.gesture.y,
-							},
-						],
-					},
-					overlayStyle: {
-						backgroundColor: interpolateColor(
-							current.gesture.normalizedY,
-							[-1, 0, 1],
-							["rgba(0,0,0,0)", "rgba(0,0,0,1)", "rgba(0,0,0,0)"],
-						),
-					},
-				};
-			}
 
-			return {};
+			// twitter doesn't animate the unfocused screen
+			if (!focused) return {};
+
+			const boundValues = bounds({ method: "transform", raw: true });
+
+			// content styles
+			const dragY = interpolate(
+				current.gesture.normalizedY,
+				[-1, 0, 1],
+				[-screen.height, 0, screen.height],
+			);
+
+			// dynamically changes direction based on the drag direction
+			const contentY = interpolate(
+				progress,
+				[0, 1],
+				[dragY >= 0 ? screen.height : -screen.height, 0],
+			);
+
+			const overlayClr = interpolateColor(
+				current.progress - Math.abs(current.gesture.normalizedY),
+				[0, 1],
+				["rgba(0,0,0,0)", "rgba(0,0,0,1)"],
+			);
+
+			const borderRadius = interpolate(current.progress, [0, 1], [12, 0]);
+
+			// bound styles - only enter animation
+			const x = !current.closing ? boundValues.translateX : 0;
+			const y = !current.closing ? boundValues.translateY : 0;
+			const scaleX = !current.closing ? boundValues.scaleX : 1;
+			const scaleY = !current.closing ? boundValues.scaleY : 1;
+
+			return {
+				[activeBoundId]: {
+					transform: [
+						{
+							translateX: x,
+						},
+						{
+							translateY: y,
+						},
+						{ scaleX: scaleX },
+						{ scaleY: scaleY },
+					],
+					borderRadius,
+					overflow: "hidden",
+				},
+				contentStyle: {
+					transform: [{ translateY: contentY }, { translateY: dragY }],
+					pointerEvents: current.animating ? "none" : "auto",
+				},
+				overlayStyle: {
+					backgroundColor: overlayClr,
+				},
+			};
 		},
 		transitionSpec: {
 			open: DefaultSpec,

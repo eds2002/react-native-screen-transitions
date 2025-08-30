@@ -32,6 +32,15 @@ export interface BuildBoundsAccessorParams {
 }
 
 const EMPTY_STYLE = Object.freeze({});
+const EMPTY_STYLE_RAW = Object.freeze({
+	scaleX: 1,
+	scaleY: 1,
+	scale: 1,
+	translateX: 0,
+	translateY: 0,
+	width: 0,
+	height: 0,
+});
 
 const ENTER_RANGE = [0, 1] as const;
 const EXIT_RANGE = [1, 2] as const;
@@ -96,7 +105,12 @@ const computeBoundStyles = (
 	computeOptions: BoundsBuilderOptions = {},
 ) => {
 	"worklet";
-	if (!id) return EMPTY_STYLE;
+	if (!id) {
+		if (computeOptions.raw) {
+			return EMPTY_STYLE_RAW;
+		}
+		return EMPTY_STYLE;
+	}
 
 	const { start, end, entering } = resolveBounds({
 		id,
@@ -107,7 +121,12 @@ const computeBoundStyles = (
 		dimensions,
 	});
 
-	if (!start || !end) return EMPTY_STYLE;
+	if (!start || !end) {
+		if (computeOptions.raw) {
+			return EMPTY_STYLE_RAW;
+		}
+		return EMPTY_STYLE;
+	}
 
 	const ranges: readonly [number, number] = entering ? ENTER_RANGE : EXIT_RANGE;
 

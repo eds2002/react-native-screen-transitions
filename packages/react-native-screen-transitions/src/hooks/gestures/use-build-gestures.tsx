@@ -1,10 +1,12 @@
 import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import type {
-	GestureStateChangeEvent,
-	GestureTouchEvent,
-	GestureUpdateEvent,
-	PanGestureHandlerEventPayload,
+import {
+	Gesture,
+	type GestureStateChangeEvent,
+	type GestureTouchEvent,
+	type GestureType,
+	type GestureUpdateEvent,
+	type PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import {
@@ -20,7 +22,6 @@ import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import type { ActivationArea } from "../../types/gesture";
 import { animate } from "../../utils/animation/animate";
 import { runTransition } from "../../utils/animation/run-transition";
-import { buildComposedGestures } from "../../utils/gesture/build-composed-gestures";
 import { checkGestureActivation } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
@@ -36,7 +37,12 @@ interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
 }
 
-export const useBuildGestures = ({ scrollConfig }: BuildGesturesHookProps) => {
+export const useBuildGestures = ({
+	scrollConfig,
+}: BuildGesturesHookProps): {
+	panGesture: GestureType;
+	nativeGesture: GestureType;
+} => {
 	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
 
@@ -106,11 +112,14 @@ export const useBuildGestures = ({ scrollConfig }: BuildGesturesHookProps) => {
 
 			const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
 				checkGestureActivation({
-					initialTouch: initialTouch.value,
 					touch,
 					directions,
 					manager,
+					dimensions,
+					initialTouch: initialTouch.value,
 					activationState: gestureActivationState,
+					activationArea: gestureActivationArea,
+					responseDistance: gestureResponseDistance,
 				});
 
 			if (gestureActivationState.value === "failed") {
@@ -175,7 +184,16 @@ export const useBuildGestures = ({ scrollConfig }: BuildGesturesHookProps) => {
 				manager.fail();
 			}
 		},
-		[initialTouch, scrollConfig, gestures, directions, gestureActivationState],
+		[
+			initialTouch,
+			scrollConfig,
+			gestures,
+			directions,
+			gestureActivationState,
+			dimensions,
+			gestureActivationArea,
+			gestureResponseDistance,
+		],
 	);
 
 	const onStart = useCallback(() => {
@@ -297,27 +315,21 @@ export const useBuildGestures = ({ scrollConfig }: BuildGesturesHookProps) => {
 		],
 	);
 
-	return useMemo(
-		() =>
-			buildComposedGestures({
-				gestureEnabled,
-				onTouchesDown,
-				onTouchesMove,
-				onStart,
-				onUpdate,
-				onEnd,
-				gestureActivationArea,
-				gestureResponseDistance,
-			}),
-		[
-			gestureEnabled,
-			onTouchesDown,
-			onTouchesMove,
-			onStart,
-			onUpdate,
-			onEnd,
-			gestureActivationArea,
-			gestureResponseDistance,
-		],
-	);
+	return useMemo(() => {
+		const nativeGesture = Gesture.Native();
+		const panGesture = Gesture.Pan()
+			.enabled(gestureEnabled)
+			.manualActivation(true)
+			.onTouchesDown(onTouchesDown)
+			.onTouchesMove(onTouchesMove)
+			.onStart(onStart)
+			.onUpdate(onUpdate)
+			.onEnd(onEnd)
+			.blocksExternalGesture(nativeGesture);
+
+		return {
+			panGesture,
+			nativeGesture,
+		};
+	}, [gestureEnabled, onTouchesDown, onTouchesMove, onStart, onUpdate, onEnd]);
 };

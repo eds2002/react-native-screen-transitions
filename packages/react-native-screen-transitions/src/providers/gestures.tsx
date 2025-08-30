@@ -1,9 +1,6 @@
 import { createContext, useContext, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import type {
-	ComposedGesture,
-	GestureType,
-} from "react-native-gesture-handler";
+import type { GestureType } from "react-native-gesture-handler";
 import { GestureDetector } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
@@ -19,7 +16,7 @@ export type ScrollConfig = {
 };
 
 export interface GestureContextType {
-	panGesture: ComposedGesture;
+	panGesture: GestureType;
 	nativeGesture: GestureType;
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	parentContext: GestureContextType | null;

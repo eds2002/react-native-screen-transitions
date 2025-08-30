@@ -616,6 +616,15 @@ export default function RootLayout() {
 					}}
 				/>
 				<Stack.Screen
+					name="e2e/bounds/anchor-point"
+					options={{
+						contentStyle: {
+							backgroundColor: "white",
+						},
+						headerShown: false,
+					}}
+				/>
+				<Stack.Screen
 					name="examples/apple-music/(tabs)"
 					options={{
 						headerShown: false,
