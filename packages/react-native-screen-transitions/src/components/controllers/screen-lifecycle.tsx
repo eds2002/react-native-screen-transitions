@@ -37,8 +37,12 @@ export const ScreenLifecycleController = ({
 		e.preventDefault();
 		const onFinish = (finished: boolean) => {
 			if (finished) {
-				resetStoresForScreen(current, { clearActive: false });
 				current.navigation.dispatch(e.data.action);
+
+				// we'll ensure the dispatch is complete before resetting stores
+				requestAnimationFrame(() => {
+					resetStoresForScreen(current, { clearActive: false });
+				});
 			}
 		};
 
