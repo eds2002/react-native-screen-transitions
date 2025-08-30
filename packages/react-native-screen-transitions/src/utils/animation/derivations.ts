@@ -22,7 +22,9 @@ export const derivations = ({
 	"worklet";
 	const progress = current.progress + (next?.progress ?? 0);
 	const focused = !next;
-	const activeBoundId = Bounds.getActiveBoundId() || "";
+
+	const activeBoundId = Bounds.getActiveBound(current, next, previous);
+
 	const bounds = createBounds({
 		activeBoundId,
 		current,

@@ -36,6 +36,7 @@ export const useBoundsRegistry = ({
 			const key = current.route.key;
 			const styles = flattenStyle(style);
 			Bounds.setBounds(key, sharedBoundTag, measured, styles);
+			Bounds.setRouteActive(key, sharedBoundTag);
 		}
 	}, [sharedBoundTag, animatedRef, current.route.key, style]);
 

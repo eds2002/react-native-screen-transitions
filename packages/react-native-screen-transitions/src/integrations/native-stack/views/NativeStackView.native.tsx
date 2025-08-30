@@ -473,11 +473,11 @@ const SceneView = ({
 										current={descriptor}
 										next={nextDescriptor}
 									>
-										<ScreenLifecycleController>
-											<ScreenGestureProvider>
+										<ScreenGestureProvider>
+											<ScreenLifecycleController>
 												<RootTransitionAware>{render()}</RootTransitionAware>
-											</ScreenGestureProvider>
-										</ScreenLifecycleController>
+											</ScreenLifecycleController>
+										</ScreenGestureProvider>
 									</KeysProvider>
 								</HeaderBackContext.Provider>
 							</HeaderShownContext.Provider>

@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect } from "react";
+import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
@@ -23,20 +24,20 @@ export const ScreenLifecycleController = ({
 
 		// Don't run e.preventDefault when the dismissal was on the local root
 		if (requestedDismissOnNavigator) {
-			resetStoresForScreen(current);
+			resetStoresForScreen(current, { clearActive: true });
 			return;
 		}
 
 		// Don't run e.preventDefault when this is the first screen of the stack
 		if (current.navigation.getState().index === 0) {
-			resetStoresForScreen(current);
+			resetStoresForScreen(current, { clearActive: true });
 			return;
 		}
 
 		e.preventDefault();
 		const onFinish = (finished: boolean) => {
 			if (finished) {
-				resetStoresForScreen(current);
+				resetStoresForScreen(current, { clearActive: false });
 				current.navigation.dispatch(e.data.action);
 			}
 		};
@@ -57,8 +58,6 @@ export const ScreenLifecycleController = ({
 		});
 	});
 
-	useLayoutEffect(handleInitialize, []);
-
 	useEffect(() => {
 		const unsubscribe = current.navigation.addListener(
 			"beforeRemove",
@@ -67,6 +66,9 @@ export const ScreenLifecycleController = ({
 
 		return unsubscribe;
 	}, [current.navigation, handleBeforeRemove]);
+
+	useLayoutEffect(handleInitialize, []);
+	useParentGestureRegistry();
 
 	return children;
 };

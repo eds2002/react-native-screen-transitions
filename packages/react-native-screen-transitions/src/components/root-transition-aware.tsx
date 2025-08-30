@@ -6,7 +6,6 @@ import Animated, {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { _useScreenAnimation } from "../hooks/animation/use-screen-animation";
-import { useParentGestureRegistry } from "../hooks/gestures/use-parent-gesture-registry";
 
 const EMPTY_STYLE = Object.freeze({} as StyleProps);
 
@@ -41,7 +40,6 @@ export const RootTransitionAware = memo(
 			return animatedStyles.value.overlay;
 		});
 
-		useParentGestureRegistry();
 		return (
 			<View style={styles.container}>
 				<Animated.View
