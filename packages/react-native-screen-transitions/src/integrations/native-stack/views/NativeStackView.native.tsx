@@ -36,6 +36,7 @@ import { ScreenLifecycleController } from "../../../components/controllers/scree
 import { RootTransitionAware } from "../../../components/root-transition-aware";
 import { ScreenGestureProvider } from "../../../providers/gestures";
 import { KeysProvider } from "../../../providers/keys";
+import { TransitionStylesProvider } from "../../../providers/transition-styles";
 import type {
 	NativeStackDescriptor,
 	NativeStackDescriptorMap,
@@ -475,7 +476,9 @@ const SceneView = ({
 									>
 										<ScreenGestureProvider>
 											<ScreenLifecycleController>
-												<RootTransitionAware>{render()}</RootTransitionAware>
+												<TransitionStylesProvider>
+													<RootTransitionAware>{render()}</RootTransitionAware>
+												</TransitionStylesProvider>
 											</ScreenLifecycleController>
 										</ScreenGestureProvider>
 									</KeysProvider>

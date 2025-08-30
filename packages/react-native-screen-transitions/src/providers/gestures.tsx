@@ -4,10 +4,7 @@ import type {
 	ComposedGesture,
 	GestureType,
 } from "react-native-gesture-handler";
-import {
-	GestureDetector,
-	GestureHandlerRootView,
-} from "react-native-gesture-handler";
+import { GestureDetector } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
@@ -65,13 +62,11 @@ export const ScreenGestureProvider = ({
 	);
 
 	return (
-		<GestureHandlerRootView>
-			<GestureContext.Provider value={value}>
-				<GestureDetector gesture={panGesture}>
-					<View style={styles.container}>{children}</View>
-				</GestureDetector>
-			</GestureContext.Provider>
-		</GestureHandlerRootView>
+		<GestureContext.Provider value={value}>
+			<GestureDetector gesture={panGesture}>
+				<View style={styles.container}>{children}</View>
+			</GestureDetector>
+		</GestureContext.Provider>
 	);
 };
 
