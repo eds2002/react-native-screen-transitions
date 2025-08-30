@@ -196,17 +196,13 @@ export const useBuildGestures = ({ scrollConfig }: BuildGesturesHookProps) => {
 
 			gestures.x.value = translationX;
 			gestures.y.value = translationY;
-			gestures.normalizedX.value = interpolate(
-				translationX,
-				[-width, width],
-				[-1, 1],
-				"clamp",
+			gestures.normalizedX.value = Math.max(
+				-1,
+				Math.min(1, translationX / width),
 			);
-			gestures.normalizedY.value = interpolate(
-				translationY,
-				[-height, height],
-				[-1, 1],
-				"clamp",
+			gestures.normalizedY.value = Math.max(
+				-1,
+				Math.min(1, translationY / height),
 			);
 
 			let maxProgress = 0;

@@ -33,6 +33,9 @@ export interface BuildBoundsAccessorParams {
 
 const EMPTY_STYLE = Object.freeze({});
 
+const ENTER_RANGE = [0, 1] as const;
+const EXIT_RANGE = [1, 2] as const;
+
 const resolveBounds = (props: {
 	id: string;
 	previous?: ScreenTransitionState;
@@ -106,7 +109,7 @@ const computeBoundStyles = (
 
 	if (!start || !end) return EMPTY_STYLE;
 
-	const ranges: readonly [number, number] = entering ? [0, 1] : [1, 2];
+	const ranges: readonly [number, number] = entering ? ENTER_RANGE : EXIT_RANGE;
 
 	if (computeOptions.method === "content") {
 		const geometry = computeContentTransformGeometry({
