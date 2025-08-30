@@ -8,7 +8,6 @@ import type {
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import {
-	interpolate,
 	runOnJS,
 	type SharedValue,
 	useSharedValue,

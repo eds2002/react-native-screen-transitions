@@ -72,6 +72,8 @@ export const ScreenLifecycleController = ({
 	}, [current.navigation, handleBeforeRemove]);
 
 	useLayoutEffect(handleInitialize, []);
+
+	// important for t.a scrollviews inside nested navigators.
 	useParentGestureRegistry();
 
 	return children;
