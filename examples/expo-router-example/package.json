@@ -31,12 +31,12 @@
     "react-dom": "19.0.0",
     "react-native": "0.79.5",
     "react-native-gesture-handler": "~2.24.0",
-    "react-native-reanimated": "^4.0.2",
+    "react-native-reanimated": "~4.0.2",
     "react-native-safe-area-context": "5.4.0",
     "react-native-screen-transitions": "workspace:*",
     "react-native-screens": "~4.11.1",
     "react-native-web": "~0.20.0",
-    "react-native-worklets": "^0.4.1",
+    "react-native-worklets": "~0.4.1",
     "reactotron-react-native": "^5.1.14"
   },
   "devDependencies": {
