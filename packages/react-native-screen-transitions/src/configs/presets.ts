@@ -1,11 +1,13 @@
+import { Platform } from "react-native";
 import {
 	Extrapolation,
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
-
 import type { ScreenTransitionConfig } from "../types/navigator";
 import { DefaultSpec } from "./specs";
+
+const platform = Platform.OS;
 
 export const SlideFromTop = (
 	config: Partial<ScreenTransitionConfig> = {},
@@ -440,6 +442,18 @@ export const SharedAppleMusic = (
 				);
 				const elevation = interpolate(dragMagnitude, [0, 1], [0, 24], "clamp");
 
+				const IOSShadowStyle = {
+					shadowColor: "#000",
+					shadowOpacity,
+					shadowRadius,
+					shadowOffset: { width: 0, height: shadowOffsetY },
+				};
+
+				const AndroidShadowStyle = {
+					elevation,
+					shadowColor: "#000",
+				};
+
 				return {
 					contentStyle: {
 						pointerEvents: current.animating ? "none" : "auto",
@@ -450,12 +464,7 @@ export const SharedAppleMusic = (
 							{ scale: dragYScale },
 						],
 						opacity,
-						// Shadow (iOS) / Elevation (Android)
-						shadowColor: "#000",
-						shadowOpacity,
-						shadowRadius,
-						shadowOffset: { width: 0, height: shadowOffsetY },
-						elevation,
+						...(platform === "ios" ? IOSShadowStyle : AndroidShadowStyle),
 					},
 					_ROOT_CONTAINER: {
 						transform: [
@@ -522,7 +531,8 @@ export const SharedAppleMusic = (
 				damping: 60,
 				mass: 3,
 				overshootClamping: false,
-				restSpeedThreshold: 0.04,
+				restSpeedThreshold: 0.02,
+				restDisplacementThreshold: 0.002,
 			},
 		},
 		...config,

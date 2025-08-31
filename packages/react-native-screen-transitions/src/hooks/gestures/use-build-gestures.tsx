@@ -284,10 +284,16 @@ export const useBuildGestures = ({
 			const spec = shouldDismiss ? transitionSpec?.close : transitionSpec?.open;
 
 			gestures.isDismissing.value = Number(shouldDismiss);
-			gestures.x.value = animate(0, spec);
-			gestures.y.value = animate(0, spec);
-			gestures.normalizedX.value = animate(0, spec);
-			gestures.normalizedY.value = animate(0, spec);
+
+			// Provide per-axis velocities so drag return can bounce naturally
+			const vxPx = event.velocityX;
+			const vyPx = event.velocityY;
+			const vxNorm = vxPx / Math.max(1, dimensions.width);
+			const vyNorm = vyPx / Math.max(1, dimensions.height);
+			gestures.x.value = animate(0, { ...spec, velocity: vxPx });
+			gestures.y.value = animate(0, { ...spec, velocity: vyPx });
+			gestures.normalizedX.value = animate(0, { ...spec, velocity: vxNorm });
+			gestures.normalizedY.value = animate(0, { ...spec, velocity: vyNorm });
 			gestures.isDragging.value = 0;
 			gestures.triggerDirection.value = null;
 
@@ -317,6 +323,7 @@ export const useBuildGestures = ({
 
 	return useMemo(() => {
 		const nativeGesture = Gesture.Native();
+
 		const panGesture = Gesture.Pan()
 			.enabled(gestureEnabled)
 			.manualActivation(true)

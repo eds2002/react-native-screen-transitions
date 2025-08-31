@@ -22,7 +22,10 @@ interface DetermineDismissalProps {
 	gestureVelocityImpact: number;
 }
 
-const VELOCITY_SCALE_FACTOR = 0.001;
+// Note: we normalize velocity by the axis dimension to map px/s to progress/s.
+// This produces consistent behavior across devices and enables realistic bounce.
+
+const MAX_PROGRESS_VELOCITY = 3.5; // ~3 progress units/second
 
 const getAxisThreshold = ({
 	translation,
@@ -37,6 +40,23 @@ const getAxisThreshold = ({
 		Math.abs(finalTranslation) > screenSize / 2 &&
 		(velocity !== 0 || translation !== 0)
 	);
+};
+
+const getVelocity = (
+	dimensions: { width: number; height: number },
+	velocityX: number,
+	velocityY: number,
+	dismissAxis: "x" | "y",
+) => {
+	"worklet";
+	const axisSize = dismissAxis === "y" ? dimensions.height : dimensions.width;
+	const axisVelocityPx = dismissAxis === "y" ? velocityY : velocityX;
+	let velocity = axisVelocityPx / Math.max(1, axisSize);
+
+	if (velocity > MAX_PROGRESS_VELOCITY) velocity = MAX_PROGRESS_VELOCITY;
+	if (velocity < -MAX_PROGRESS_VELOCITY) velocity = -MAX_PROGRESS_VELOCITY;
+
+	return velocity;
 };
 
 export const determineDismissal = ({
@@ -100,9 +120,12 @@ export const determineDismissal = ({
 		}
 	}
 
-	// Adjust for 0-1 scale
-	const velocity =
-		(dismissAxis === "y" ? event.velocityY : event.velocityX) *
-		VELOCITY_SCALE_FACTOR;
+	const velocity = getVelocity(
+		dimensions,
+		event.velocityX,
+		event.velocityY,
+		dismissAxis,
+	);
+
 	return { shouldDismiss, velocity };
 };
