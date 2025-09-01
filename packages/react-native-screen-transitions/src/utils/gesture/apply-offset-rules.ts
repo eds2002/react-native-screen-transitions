@@ -255,7 +255,11 @@ export const applyOffsetRules = ({
 		isHorizontalSwipe,
 	} = calculateSwipeDirs(deltaX, deltaY);
 
-	if (gestureOffsetState.value !== GestureOffsetState.PENDING) {
+	// avoid re-running the function if the activation state is already set
+	if (
+		gestureOffsetState.value === GestureOffsetState.PASSED ||
+		gestureOffsetState.value === GestureOffsetState.FAILED
+	) {
 		return {
 			isSwipingDown,
 			isSwipingUp,

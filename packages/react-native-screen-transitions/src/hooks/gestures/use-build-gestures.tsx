@@ -19,10 +19,10 @@ import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
-import type { ActivationArea } from "../../types/gesture";
+import { type ActivationArea, GestureOffsetState } from "../../types/gesture";
 import { animate } from "../../utils/animation/animate";
 import { runTransition } from "../../utils/animation/run-transition";
-import { checkGestureActivation } from "../../utils/gesture/check-gesture-activation";
+import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import useStableCallback from "../use-stable-callback";
@@ -50,9 +50,10 @@ export const useBuildGestures = ({
 		x: 0,
 		y: 0,
 	});
-	const gestureActivationState = useSharedValue<
-		"pending" | "activated" | "failed"
-	>("pending");
+	const gestureOffsetState = useSharedValue<GestureOffsetState>(
+		GestureOffsetState.PENDING,
+	);
+
 	const gestures = Gestures.getRouteGestures(current.route.key);
 	const animations = Animations.getAll(current.route.key);
 
@@ -99,9 +100,9 @@ export const useBuildGestures = ({
 			"worklet";
 			const firstTouch = e.changedTouches[0];
 			initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
-			gestureActivationState.value = "pending";
+			gestureOffsetState.value = GestureOffsetState.PENDING;
 		},
-		[initialTouch, gestureActivationState],
+		[initialTouch, gestureOffsetState],
 	);
 
 	const onTouchesMove = useCallback(
@@ -111,77 +112,69 @@ export const useBuildGestures = ({
 			const touch = e.changedTouches[0];
 
 			const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
-				checkGestureActivation({
+				applyOffsetRules({
 					touch,
 					directions,
 					manager,
 					dimensions,
+					gestureOffsetState,
 					initialTouch: initialTouch.value,
-					activationState: gestureActivationState,
 					activationArea: gestureActivationArea,
 					responseDistance: gestureResponseDistance,
 				});
 
-			if (gestureActivationState.value === "failed") {
+			if (gestureOffsetState.value === GestureOffsetState.FAILED) {
+				manager.fail();
 				return;
 			}
 
-			let shouldActivate = false;
-
+			// Keep pending until thresholds are met; no eager activation.
 			if (gestures.isDragging?.value) {
 				manager.activate();
 				return;
 			}
 
-			const maxScrollableY = scrollConfig.value?.contentHeight
+			const maxScrollY = scrollConfig.value?.contentHeight
 				? scrollConfig.value.contentHeight - scrollConfig.value.layoutHeight
 				: 0;
-			const maxScrollableX = scrollConfig.value?.contentWidth
+
+			const maxScrollX = scrollConfig.value?.contentWidth
 				? scrollConfig.value.contentWidth - scrollConfig.value.layoutWidth
 				: 0;
 
-			if (directions.vertical && isSwipingDown) {
-				if (scrollConfig.value?.y) {
-					shouldActivate = scrollConfig.value.y <= 0;
-				} else {
-					shouldActivate = true;
-				}
-				gestures.triggerDirection.value = "vertical";
-			}
-			if (directions.horizontal && isSwipingRight) {
-				if (scrollConfig.value) {
-					shouldActivate = scrollConfig.value.x <= 0;
-				} else {
-					shouldActivate = true;
-				}
-				gestures.triggerDirection.value = "horizontal";
-			}
+			const recognizedDirection =
+				isSwipingDown || isSwipingUp || isSwipingRight || isSwipingLeft;
 
-			if (directions.verticalInverted && isSwipingUp) {
-				if (scrollConfig.value) {
-					shouldActivate = scrollConfig.value.y >= maxScrollableY;
-				} else {
-					shouldActivate = true;
+			const scrollCfg = scrollConfig.value;
+
+			let shouldActivate = false;
+			if (recognizedDirection) {
+				if (directions.vertical && isSwipingDown) {
+					shouldActivate = scrollCfg ? scrollCfg.y <= 0 : true;
 				}
-				gestures.triggerDirection.value = "vertical-inverted";
+				if (directions.horizontal && isSwipingRight) {
+					shouldActivate = scrollCfg ? scrollCfg.x <= 0 : true;
+				}
+				if (directions.verticalInverted && isSwipingUp) {
+					shouldActivate = scrollCfg ? scrollCfg.y >= maxScrollY : true;
+				}
+				if (directions.horizontalInverted && isSwipingLeft) {
+					shouldActivate = scrollCfg ? scrollCfg.x >= maxScrollX : true;
+				}
 			}
 
-			if (directions.horizontalInverted && isSwipingLeft) {
-				if (scrollConfig.value) {
-					shouldActivate = scrollConfig.value.x >= maxScrollableX;
-				} else {
-					shouldActivate = true;
-				}
-				gestures.triggerDirection.value = "horizontal-inverted";
-			}
-
-			const shouldManagerActivate =
-				shouldActivate || gestures.isDragging?.value;
-
-			if (shouldManagerActivate && !gestures.isDismissing?.value) {
-				manager.activate();
-			} else {
+			if (recognizedDirection && !shouldActivate) {
 				manager.fail();
+				return;
+			}
+
+			if (
+				shouldActivate &&
+				gestureOffsetState.value === GestureOffsetState.PASSED &&
+				!gestures.isDismissing?.value
+			) {
+				manager.activate();
+				return;
 			}
 		},
 		[
@@ -189,7 +182,7 @@ export const useBuildGestures = ({
 			scrollConfig,
 			gestures,
 			directions,
-			gestureActivationState,
+			gestureOffsetState,
 			dimensions,
 			gestureActivationArea,
 			gestureResponseDistance,
@@ -295,7 +288,6 @@ export const useBuildGestures = ({
 			gestures.normalizedX.value = animate(0, { ...spec, velocity: vxNorm });
 			gestures.normalizedY.value = animate(0, { ...spec, velocity: vyNorm });
 			gestures.isDragging.value = 0;
-			gestures.triggerDirection.value = null;
 
 			if (shouldDismiss) {
 				runOnJS(setNavigatorDismissal)();

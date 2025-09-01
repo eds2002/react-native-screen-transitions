@@ -1,6 +1,7 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback } from "react";
 import { FlatList, Image, Text, useWindowDimensions, View } from "react-native";
+import { Pressable } from "react-native-gesture-handler";
 import Swipeable from "react-native-gesture-handler/ReanimatedSwipeable";
 import Transition from "react-native-screen-transitions";
 import { SONGS } from "./index";
@@ -132,7 +133,7 @@ export default function IndexScreen() {
 				style={{ flex: 1, width: "100%" }}
 				contentContainerStyle={{ paddingBottom: 128 }}
 			>
-      <Transition.Pressable
+				<Transition.Pressable
 					sharedBoundTag={sharedId}
 					onPress={router.back}
 					style={{
@@ -169,7 +170,7 @@ export default function IndexScreen() {
 						}}
 					>
 						<View style={{ flexDirection: "row", gap: 8, flex: 1 }}>
-							<View
+							<Pressable
 								style={{
 									backgroundColor: "#e5e5e5",
 									borderRadius: 12,
@@ -184,7 +185,7 @@ export default function IndexScreen() {
 								>
 									Play
 								</Text>
-							</View>
+							</Pressable>
 							<View
 								style={{
 									backgroundColor: "#e5e5e5",

@@ -354,21 +354,17 @@ export const SharedIGImage = (
 };
 
 export const SharedAppleMusic = (
-	config: Partial<ScreenTransitionConfig> = {},
+    config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
-	return {
-		enableTransitions: true,
-		gestureEnabled: true,
-		gestureDirection: ["vertical", "horizontal"],
-		gestureActivationArea: {
-			top: "screen",
-			left: "edge",
-		},
-		gestureDrivesProgress: false,
-		screenStyleInterpolator: ({
-			bounds,
-			activeBoundId,
-			focused,
+    return {
+        enableTransitions: true,
+        gestureEnabled: true,
+        gestureDirection: ["vertical", "horizontal"],
+        gestureDrivesProgress: false,
+        screenStyleInterpolator: ({
+            bounds,
+            activeBoundId,
+            focused,
 			progress,
 			layouts: { screen },
 			current,
