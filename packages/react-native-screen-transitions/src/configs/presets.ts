@@ -295,6 +295,7 @@ export const SharedIGImage = (
 							{ scale: dragYScale },
 						],
 					},
+
 					_ROOT_CONTAINER: {
 						transform: [
 							{ translateX: boundValues.translateX || 0 },
@@ -354,17 +355,17 @@ export const SharedIGImage = (
 };
 
 export const SharedAppleMusic = (
-    config: Partial<ScreenTransitionConfig> = {},
+	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
-    return {
-        enableTransitions: true,
-        gestureEnabled: true,
-        gestureDirection: ["vertical", "horizontal"],
-        gestureDrivesProgress: false,
-        screenStyleInterpolator: ({
-            bounds,
-            activeBoundId,
-            focused,
+	return {
+		enableTransitions: true,
+		gestureEnabled: true,
+		gestureDirection: ["vertical", "horizontal"],
+		gestureDrivesProgress: false,
+		screenStyleInterpolator: ({
+			bounds,
+			activeBoundId,
+			focused,
 			progress,
 			layouts: { screen },
 			current,
@@ -508,6 +509,8 @@ export const SharedAppleMusic = (
 						{ scaleY: scaledBoundScaleY },
 					],
 					opacity,
+					zIndex: current.animating ? 999 : -1,
+					position: "relative",
 				},
 				contentStyle: {
 					transform: [{ scale: contentScale }],

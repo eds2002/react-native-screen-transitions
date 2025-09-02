@@ -17,23 +17,24 @@ export const FULLSCREEN_DIMENSIONS = (
 	};
 };
 
-export const DEFAULT_BUILDER_OPTIONS: Complete<BoundsBuilderOptions> =
-	Object.freeze({
-		gestures: { x: 0, y: 0 },
-		toFullscreen: false,
-		absolute: false,
-		relative: true,
-		method: "transform",
-		contentScaleMode: "auto",
-		space: "relative",
-		target: "bound",
-		/**
-		 * Controls how elements scale during transitions
-		 * - "match": Scale to match destination bounds (default for center anchor)
-		 * - "none": No scaling, maintain original size (default for non-center anchors)
-		 * - "uniform": Scale uniformly (maintain aspect ratio)
-		 */
-		scaleMode: "match",
-		anchor: "center",
-		raw: false,
-	} as const);
+export const DEFAULT_BUILDER_OPTIONS: Complete<
+	Omit<BoundsBuilderOptions, "id">
+> = Object.freeze({
+	gestures: { x: 0, y: 0 },
+	toFullscreen: false,
+	absolute: false,
+	relative: true,
+	method: "transform",
+	contentScaleMode: "auto",
+	space: "relative",
+	target: "bound",
+	/**
+	 * Controls how elements scale during transitions
+	 * - "match": Scale to match destination bounds (default for center anchor)
+	 * - "none": No scaling, maintain original size (default for non-center anchors)
+	 * - "uniform": Scale uniformly (maintain aspect ratio)
+	 */
+	scaleMode: "match",
+	anchor: "center",
+	raw: false,
+} as const);

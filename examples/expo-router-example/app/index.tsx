@@ -231,6 +231,11 @@ const End2EndComponent = memo(() => {
 			description: "Test anchor points",
 			href: "/e2e/bounds/anchor-point",
 		},
+		{
+			title: "Custom bounds",
+			description: "Test custom defined targets",
+			href: "/e2e/bounds/custom-bounds",
+		},
 	];
 
 	return (

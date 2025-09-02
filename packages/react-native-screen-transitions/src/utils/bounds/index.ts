@@ -1,5 +1,5 @@
 import type { ScaledSize } from "react-native";
-import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type { MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "../../types/animation";
 import type { BoundsAccessor, BoundsBuilder } from "../../types/bounds";
 import type { ScreenPhase } from "../../types/core";
@@ -79,11 +79,18 @@ const resolveBounds = (props: {
 	const start = getPhaseBounds(startPhase);
 	let end = getPhaseBounds(endPhase);
 
-	if (
+	const isFullscreen =
 		props.computeOptions.target === "fullscreen" ||
-		props.computeOptions.toFullscreen
-	) {
+		props.computeOptions.toFullscreen;
+
+	if (isFullscreen) {
 		end = fullscreen;
+	}
+
+	const customTarget = props.computeOptions.target;
+
+	if (typeof customTarget === "object") {
+		end = customTarget;
 	}
 
 	return {
@@ -117,7 +124,7 @@ const computeBoundStyles = (
 		previous,
 		current,
 		next,
-		computeOptions: computeOptions,
+		computeOptions,
 		dimensions,
 	});
 
@@ -238,14 +245,6 @@ const buildBoundStyles = (params: BoundsBuilderInitParams): BoundsBuilder => {
 	return builder();
 };
 
-const createBoundStyles = (
-	params: BoundsBuilderInitParams & { options: BoundsBuilderOptions },
-): StyleProps => {
-	"worklet";
-
-	return computeBoundStyles(params, params.options);
-};
-
 export const createBounds = ({
 	activeBoundId,
 	current,
@@ -258,15 +257,19 @@ export const createBounds = ({
 
 	const bounds: BoundsAccessor = ((params?: string | BoundsBuilderOptions) => {
 		if (typeof params === "object") {
-			return createBoundStyles({
-				id: activeBoundId,
-				options: params,
-				current,
-				previous,
-				next,
-				progress,
-				dimensions,
-			});
+			const id = params.id ?? activeBoundId;
+
+			return computeBoundStyles(
+				{
+					id,
+					current,
+					previous,
+					next,
+					progress,
+					dimensions,
+				},
+				params,
+			);
 		}
 
 		const id = typeof params === "string" ? params : activeBoundId;

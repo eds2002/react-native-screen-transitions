@@ -1,5 +1,5 @@
 import type { ScaledSize } from "react-native";
-import type { StyleProps } from "react-native-reanimated";
+import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { ScreenTransitionState } from "../../../types/animation";
 import type { BoundsMethod } from "../../../types/bounds";
 
@@ -28,7 +28,7 @@ export type BoundsAnchor =
 
 export type BoundsScaleMode = "match" | "none" | "uniform";
 
-export type BoundsTarget = "bound" | "fullscreen";
+export type BoundsTarget = "bound" | "fullscreen" | MeasuredDimensions;
 
 export type BoundsSpace = "relative" | "absolute";
 
@@ -99,6 +99,11 @@ export type BoundsBuilderOptions = {
 	 * @deprecated Use `scaleMode` instead.
 	 */
 	contentScaleMode?: "aspectFill" | "aspectFit" | "auto";
+
+	/**
+	 * The ID of the bound to compute bounds for. If not provided, uses the active bound ID.
+	 */
+	id?: string;
 
 	/**
 	 * The method to use to compute the bounds.
