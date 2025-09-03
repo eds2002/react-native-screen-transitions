@@ -223,6 +223,28 @@ const End2EndComponent = memo(() => {
 			href: "/e2e/gestures-scrollables/horizontal",
 			testID: "e2e-scrollable-horizontal",
 		},
+		{
+			title: "Nested Scrollable triggers navigator (vertical)",
+			description:
+				"Should trigger gesture on left-to-right at base position and right-to-left at end position.",
+			href: "/e2e/gestures-scrollables/nested",
+			testID: "e2e-scrollable-nested",
+		},
+	];
+
+	const gestureEdges: PageType[] = [
+		{
+			title: "All edges",
+			description: "Test all edges.",
+			href: "/e2e/gesture-edges/all-edges",
+			testID: "e2e-gesture-edges-all-edges",
+		},
+		{
+			title: "Custom edges",
+			description: "Test custom edges.",
+			href: "/e2e/gesture-edges/custom-edges",
+			testID: "e2e-gesture-edges-custom-edges",
+		},
 	];
 
 	const bounds: PageType[] = [
@@ -230,11 +252,19 @@ const End2EndComponent = memo(() => {
 			title: "Anchor point",
 			description: "Test anchor points",
 			href: "/e2e/bounds/anchor-point",
+			testID: "e2e-bounds-anchor-point",
 		},
 		{
 			title: "Custom bounds",
 			description: "Test custom defined targets",
 			href: "/e2e/bounds/custom-bounds",
+			testID: "e2e-bounds-custom-bounds",
+		},
+		{
+			title: "Longer flow",
+			description: "Test longer flow",
+			href: "/e2e/bounds/longer-flow/a",
+			testID: "e2e-bounds-longer-flow",
 		},
 	];
 
@@ -272,6 +302,20 @@ const End2EndComponent = memo(() => {
 				<Page.Group title="Gestures + Scrollables" />
 				<View style={{ gap: 24, marginTop: 24 }}>
 					{scrollables.map((page, idx) => (
+						<Card
+							key={idx.toString()}
+							title={`${page.title}`}
+							description={page.description}
+							href={page.href}
+							testID={page.testID}
+						/>
+					))}
+				</View>
+			</View>
+			<View>
+				<Page.Group title="Gestures Edges" />
+				<View style={{ gap: 24, marginTop: 24 }}>
+					{gestureEdges.map((page, idx) => (
 						<Card
 							key={idx.toString()}
 							title={`${page.title}`}

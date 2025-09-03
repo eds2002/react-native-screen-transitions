@@ -13,6 +13,7 @@ export default function AnchorPointScreen() {
 		>
 			<Transition.View
 				sharedBoundTag="custom-bounds"
+				testID="custom-bounds"
 				style={{
 					width: 200,
 					height: 200,
@@ -26,6 +27,7 @@ export default function AnchorPointScreen() {
 			<View style={{ flexDirection: "column", gap: 10 }}>
 				<Button
 					title="Custom Bounds"
+					testID="custom-bounds-button"
 					onPress={() => {
 						router.push({
 							pathname: "/e2e/bounds/custom-bounds/[id]",

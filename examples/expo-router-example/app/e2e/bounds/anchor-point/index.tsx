@@ -48,6 +48,7 @@ export default function AnchorPointScreen() {
 				{options.map((option) => (
 					<Button
 						key={option}
+						testID={option}
 						title={option}
 						onPress={() => setAnchorPoint(option)}
 					/>

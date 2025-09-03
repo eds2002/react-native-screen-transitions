@@ -17,6 +17,7 @@ export const Footer = ({ backIcon }: { backIcon?: string }) => {
 				{backIcon && (
 					<TouchableOpacity
 						onPress={() => router.back()}
+						testID="back-icon"
 						style={{
 							width: 60,
 							height: 60,

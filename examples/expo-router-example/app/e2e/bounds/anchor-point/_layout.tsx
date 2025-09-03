@@ -1,5 +1,6 @@
 import { createContext, useContext, useState } from "react";
 import Transition from "react-native-screen-transitions";
+import { Footer } from "@/components/footer";
 import { Stack } from "@/layouts/stack";
 
 type BoundsAnchor =
@@ -61,6 +62,7 @@ export default function AnchorPointLayout() {
 					}}
 				/>
 			</Stack>
+			<Footer backIcon="chevron-left" />
 		</AnchorPointContext.Provider>
 	);
 }

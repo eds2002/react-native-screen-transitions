@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import Transition from "react-native-screen-transitions";
+import { Footer } from "@/components/footer";
 import { Stack } from "@/layouts/stack";
 
 const Layout = ({ segment }: { segment: string }) => {
@@ -52,15 +53,18 @@ const Layout = ({ segment }: { segment: string }) => {
 	}, [segment]);
 
 	return (
-		<Stack>
-			{rootScreen}
-			<Stack.Screen
-				name="[id]"
-				options={{
-					...Transition.presets.SharedAppleMusic(),
-				}}
-			/>
-		</Stack>
+		<>
+			<Stack>
+				{rootScreen}
+				<Stack.Screen
+					name="[id]"
+					options={{
+						...Transition.presets.SharedAppleMusic(),
+					}}
+				/>
+			</Stack>
+			<Footer backIcon="chevron-left" />
+		</>
 	);
 };
 

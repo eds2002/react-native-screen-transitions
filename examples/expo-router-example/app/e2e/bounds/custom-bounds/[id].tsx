@@ -5,6 +5,7 @@ export default function CustomBoundsScreen() {
 	return (
 		<Transition.Pressable
 			sharedBoundTag="custom-bounds"
+			testID="custom-bounds"
 			style={{ width: 100, height: 100, backgroundColor: "red", opacity: 0.5 }}
 			onPress={router.back}
 		/>
