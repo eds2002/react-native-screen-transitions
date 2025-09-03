@@ -1,6 +1,6 @@
 {
 	"name": "react-native-screen-transitions",
-	"version": "2.0.6",
+	"version": "2.1.0",
 	"description": "Easy screen transitions for React Native and Expo",
 	"author": "Ed",
 	"license": "MIT",
