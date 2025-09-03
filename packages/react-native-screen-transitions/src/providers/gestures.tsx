@@ -1,15 +1,12 @@
 import { createContext, useContext, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import type { GestureType } from "react-native-gesture-handler";
-import {
-	GestureDetector,
-	GestureHandlerRootView,
-} from "react-native-gesture-handler";
+import { GestureDetector } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 
-export type ScrollProgress = {
+export type ScrollConfig = {
 	x: number;
 	y: number;
 	contentHeight: number;
@@ -21,14 +18,15 @@ export type ScrollProgress = {
 export interface GestureContextType {
 	panGesture: GestureType;
 	nativeGesture: GestureType;
-	scrollProgress: SharedValue<ScrollProgress>;
+	scrollConfig: SharedValue<ScrollConfig | null>;
+	parentContext: GestureContextType | null;
 }
 
 type ScreenGestureProviderProps = {
 	children: React.ReactNode;
 };
 
-const DEFAULT_SCROLL_PROGRESS: ScrollProgress = {
+export const DEFAULT_SCROLL_CONFIG: ScrollConfig = {
 	x: 0,
 	y: 0,
 	contentHeight: 0,
@@ -42,31 +40,30 @@ const GestureContext = createContext<GestureContextType | undefined>(undefined);
 export const ScreenGestureProvider = ({
 	children,
 }: ScreenGestureProviderProps) => {
-	const scrollProgress = useSharedValue<ScrollProgress>(
-		DEFAULT_SCROLL_PROGRESS,
-	);
+	const parentContext = useContext(GestureContext);
+
+	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
 	const { panGesture, nativeGesture } = useBuildGestures({
-		scrollProgress,
+		scrollConfig,
 	});
 
-	const value = useMemo(
+	const value: GestureContextType = useMemo(
 		() => ({
 			panGesture,
-			scrollProgress,
+			scrollConfig,
 			nativeGesture,
+			parentContext: parentContext || null,
 		}),
-		[panGesture, scrollProgress, nativeGesture],
-	) satisfies GestureContextType;
+		[panGesture, scrollConfig, nativeGesture, parentContext],
+	);
 
 	return (
-		<GestureHandlerRootView>
-			<GestureContext.Provider value={value}>
-				<GestureDetector gesture={panGesture}>
-					<View style={styles.container}>{children}</View>
-				</GestureDetector>
-			</GestureContext.Provider>
-		</GestureHandlerRootView>
+		<GestureContext.Provider value={value}>
+			<GestureDetector gesture={panGesture}>
+				<View style={styles.container}>{children}</View>
+			</GestureDetector>
+		</GestureContext.Provider>
 	);
 };
 

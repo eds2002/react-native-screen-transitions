@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
-} from "../utils/bounds/geometry";
+} from "../utils/bounds/_utils/geometry";
 
 describe("computeRelativeGeometry", () => {
 	it("calculates correct relative geometry when entering", () => {
@@ -29,7 +29,6 @@ describe("computeRelativeGeometry", () => {
 		expect(result.dy).toBe(-180); // center diff Y
 		expect(result.scaleX).toBe(0.5); // width ratio
 		expect(result.scaleY).toBe(0.5); // height ratio
-		expect(result.ranges).toEqual([0, 1]);
 		expect(result.entering).toBe(true);
 	});
 
@@ -39,7 +38,6 @@ describe("computeRelativeGeometry", () => {
 
 		const result = computeRelativeGeometry({ start, end, entering: false });
 
-		expect(result.ranges).toEqual([1, 2]);
 		expect(result.entering).toBe(false);
 	});
 });
@@ -47,7 +45,7 @@ describe("computeRelativeGeometry", () => {
 describe("computeContentTransformGeometry", () => {
 	const dimensions = { width: 375, height: 812, scale: 1, fontScale: 1 };
 
-	it("calculates transform with aspectFit mode", () => {
+	it("uniform chooses min scale when aspect ratio differs significantly", () => {
 		const start = {
 			x: 0,
 			y: 0,
@@ -63,15 +61,15 @@ describe("computeContentTransformGeometry", () => {
 			end,
 			entering: true,
 			dimensions,
-			contentScaleMode: "aspectFit",
+			anchor: "center",
+			scaleMode: "uniform",
 		});
 
 		expect(result.s).toBe(0.5);
 		expect(result.entering).toBe(true);
-		expect(result.ranges).toEqual([0, 1]);
 	});
 
-	it("calculates transform with aspectFill mode", () => {
+	it("calculates transform with match mode (average of sx/sy)", () => {
 		const start = {
 			x: 0,
 			y: 0,
@@ -87,13 +85,16 @@ describe("computeContentTransformGeometry", () => {
 			end,
 			entering: true,
 			dimensions,
-			contentScaleMode: "aspectFill",
+			anchor: "center",
+			// match mode uses the average of sx and sy
+			scaleMode: "match",
 		});
 
-		expect(result.s).toBe(2);
+		// sx = 100/200 = 0.5, sy = 100/50 = 2 -> (0.5 + 2) / 2 = 1.25
+		expect(result.s).toBeCloseTo(1.25, 5);
 	});
 
-	it("handles auto mode based on aspect ratio difference", () => {
+	it("uniform chooses max scale when aspect ratios are similar", () => {
 		const start = { x: 0, y: 0, pageX: 0, pageY: 0, width: 100, height: 100 };
 		const end = { x: 0, y: 0, pageX: 0, pageY: 0, width: 200, height: 195 };
 
@@ -102,7 +103,8 @@ describe("computeContentTransformGeometry", () => {
 			end,
 			entering: true,
 			dimensions,
-			contentScaleMode: "auto",
+			anchor: "center",
+			scaleMode: "uniform",
 		});
 
 		expect(result.s).toBeCloseTo(0.512, 2);
@@ -118,7 +120,8 @@ describe("computeContentTransformGeometry", () => {
 			end,
 			entering: true,
 			dimensions,
-			contentScaleMode: "aspectFit",
+			anchor: "center",
+			scaleMode: "uniform",
 		});
 
 		expect(result.s).toBeDefined();

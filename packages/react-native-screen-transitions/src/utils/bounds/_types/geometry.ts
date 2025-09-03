@@ -1,5 +1,4 @@
 export type GeometryBase = {
-	ranges: readonly [number, number];
 	entering: boolean;
 };
 

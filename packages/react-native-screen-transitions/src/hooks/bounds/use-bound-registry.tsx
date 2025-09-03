@@ -8,7 +8,8 @@ import {
 } from "react-native-reanimated";
 import { useKeys } from "../../providers/keys";
 import { Bounds } from "../../stores/bounds";
-import { flattenStyle } from "../../utils/bounds/flatten-styles";
+import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
+import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
 import { useScreenAnimation } from "../animation/use-screen-animation";
 
 interface BoundMeasurerHookProps {
@@ -18,7 +19,7 @@ interface BoundMeasurerHookProps {
 	style: StyleProps;
 }
 
-export const useBoundMeasurer = ({
+export const useBoundsRegistry = ({
 	sharedBoundTag,
 	animatedRef,
 	current,
@@ -26,46 +27,57 @@ export const useBoundMeasurer = ({
 }: BoundMeasurerHookProps) => {
 	const { previous } = useKeys();
 	const interpolatorProps = useScreenAnimation();
-	const hasAlreadyMeasured = useSharedValue(false);
+	const isMeasured = useSharedValue(false);
 
-	const measureAndSet = useCallback(() => {
+	const measureBounds = useCallback(() => {
 		"worklet";
 		if (!sharedBoundTag) return;
 		const measured = measure(animatedRef);
 		if (measured) {
-			Bounds.setBounds(
-				current.route.key,
-				sharedBoundTag,
-				measured,
-				flattenStyle(style),
-			);
+			const key = current.route.key;
+			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
+				Bounds.setRouteActive(key, sharedBoundTag);
+				return;
+			}
+
+			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
+			Bounds.setRouteActive(key, sharedBoundTag);
 		}
 	}, [sharedBoundTag, animatedRef, current.route.key, style]);
 
-	const measureOnLayout = useCallback(() => {
+	const handleLayout = useCallback(() => {
 		"worklet";
-		if (!sharedBoundTag || hasAlreadyMeasured.value) return;
-
 		const previousRouteKey = previous?.route.key;
-		if (!previousRouteKey) return;
+		if (!sharedBoundTag || isMeasured.value || !previousRouteKey) {
+			return;
+		}
 
 		const previousBounds = Bounds.getBounds(previousRouteKey);
 		const hasPreviousBoundForTag = previousBounds[sharedBoundTag];
 
 		if (interpolatorProps.value.current.animating && hasPreviousBoundForTag) {
-			measureAndSet();
-			hasAlreadyMeasured.value = true;
+			measureBounds();
+			isMeasured.value = true;
 		}
 	}, [
-		measureAndSet,
+		measureBounds,
 		interpolatorProps,
 		sharedBoundTag,
 		previous?.route.key,
-		hasAlreadyMeasured,
+		isMeasured,
 	]);
 
+	const measureOnTouchStart = useCallback(() => {
+		"worklet";
+		if (sharedBoundTag) {
+			Bounds.setActiveBoundId(sharedBoundTag);
+			measure(animatedRef);
+		}
+	}, [sharedBoundTag, animatedRef]);
+
 	return {
-		measureAndSet,
-		measureOnLayout,
+		measureBounds,
+		handleLayout,
+		measureOnTouchStart,
 	};
 };

@@ -1,8 +1,9 @@
 # react-native-screen-transitions
 
+
 | iOS | Android |
 |---|---|
-| <video src="https://github.com/user-attachments/assets/81f39391-80c0-4ce4-b6ff-76de85d2cf03" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/c2b4c6ca-2b0c-4cf4-a164-f7e68cee0c32" width="300" controls></video> |
+| <video src="https://github.com/user-attachments/assets/c0d17b8f-7268-421c-9051-e242f8ddca76" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/3f8d5fb1-96d2-4fe3-860d-62f6fb5a687e" width="300" controls></video> |
 
 
 **WIP**: This package is a work-in-progress. It provides customizable screen transition animations for React Native apps, primarily designed for use with `expo-router` and `react-navigation`. It supports gestures, predefined presets, and custom animations, making it easy to add polished transitions to your navigation flows.
@@ -84,6 +85,7 @@ All the usual native-stack options are available, plus the following extras:
 | `gestureVelocityImpact` | `number` | How much the gesture’s velocity affects dismissal. |
 | `gestureResponseDistance` | `number` | Distance from screen where the gesture is recognized. |
 | `gestureDrivesProgress` | `boolean` | Whether the gesture directly drives the transition progress. |
+| `gestureActivationArea` | `GestureActivationArea` | Where a gesture may start. `'edge' | 'screen'` or per-side `{ left|right|top|bottom: 'edge'|'screen' }`. |
 
 ### Renamed native options (extended stack)
 
@@ -122,7 +124,43 @@ The incoming screen automatically controls the previous screen.
       ...Transition.presets.SlideFromBottom(),
     }}
   />
-</Stack>
+ </Stack>
+```
+
+#### Shared element presets (new)
+
+Ready-made presets for common shared-element patterns. These leverage the bounds API under the hood. Tag your views with `sharedBoundTag` on both screens.
+
+```tsx
+<Stack.Screen name="feed" />
+<Stack.Screen
+  name="post"
+  options={{
+    ...Transition.presets.SharedIGImage(),
+  }}
+/>
+```
+
+Other presets: `SharedAppleMusic()`, `SharedXImage()`.
+
+Note: Masked container required
+
+- For `SharedIGImage` and `SharedAppleMusic`, wrap the next screen with `Transition.MaskedView` as the first element so the preset can animate `_ROOT_CONTAINER` and `_ROOT_MASKED` correctly.
+- Install the mask package:
+  - Expo: `npx expo install @react-native-masked-view/masked-view`
+  - Bare RN: `npm i @react-native-masked-view/masked-view` (then iOS: `cd ios && pod install`)
+- `Transition.MaskedView` lazy-loads the native mask and falls back to a plain `View` if missing, but the mask is required for the full shared effect.
+
+Minimal usage on the destination screen:
+
+```tsx
+export default function PostScreen() {
+  return (
+    <Transition.MaskedView style={{ flex: 1, backgroundColor: 'white' }}>
+      {/* screen content, including the destination bound */}
+    </Transition.MaskedView>
+  );
+}
 ```
 
 ### Navigator-level custom animations
@@ -136,7 +174,7 @@ Instead of presets, you can define a custom transition directly on the screen’
 - `next` – state for the next screen (may be `undefined`).
 - `layouts.screen` – `{ width, height }` of the container.
 - `insets` – `{ top, right, bottom, left }` safe-area insets.
-- `bounds(id)` – helper to compute shared-element transforms (see IntelliSense for chainable methods).
+- `bounds(options)` – compute shared-bound transforms/styles or raw values for a given bound. See "Bounds" below.
 - `activeBoundId`	– id of the active bound.
 - `focused` – state of the current screen
 
@@ -213,10 +251,10 @@ const FlatList = Transition.FlatList;
 
 // Or wrap any list you like
 const TransitionFlashList =
-  Transition.createTransitionAwareScrollable(FlashList, { isScrollable: true });
+  Transition.createTransitionAwareComponent(FlashList, { isScrollable: true });
 
 const TransitionLegendList =
-  Transition.createTransitionAwareScrollable(LegendList, { isScrollable: true} );
+  Transition.createTransitionAwareComponent(LegendList, { isScrollable: true} );
 ```
 
 Enable the gesture on the screen:
@@ -253,108 +291,94 @@ Gesture rules (handled automatically):
 These rules apply **only when the screen contains a scrollable**.
 If no scroll view is present, the gesture can begin from **anywhere on the screen**—not restricted to the edges.
 
+### Gesture activation area
+
+Control where gestures can start using `gestureActivationArea` on the screen options:
+
+```tsx
+// Gesture must start from any screen edge (all sides)
+gestureActivationArea: 'edge'
+
+// Allow vertical drags anywhere, horizontal drags only from the left edge
+gestureDirection: ['vertical', 'horizontal']
+gestureActivationArea: { top: 'screen', left: 'edge' }
+```
+
 ## Bounds (measure-driven screen transitions)
 
-Bounds let you animate **any component** between two screens by measuring its start and end positions.
-They are **not shared elements**—they’re just measurements.
-Tag the component you want to animate with `sharedBoundTag`, then describe how it should move when the screen transition starts.
+Bounds let you animate any component between two screens by measuring its start and end positions. They are not shared elements — just measurements. Tag components with `sharedBoundTag` on both screens, then compute styles using `bounds(options)`.
 
-1. Tag the source component
+1) Tag source and destination
 
 ```tsx
-<Transition.View sharedBoundTag="hero" style={{ width: 100, height: 100 }}>
-  <Image source={uri} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-</Transition.View>
+<Transition.View sharedBoundTag="hero" style={{ width: 100, height: 100 }} />
+// ... next screen
+<Transition.View sharedBoundTag="hero" style={{ width: 200, height: 200 }} />
 ```
 
-2. Tag the destination component (same id)
+2) Drive the animation with the object API
 
 ```tsx
-<Transition.View sharedBoundTag="hero" style={{ width: 200, height: 200 }}>
-  <Image source={uri} style={{ width: '100%', height: '100%' }} resizeMode="cover" />
-</Transition.View>
-```
-
-3. Drive the animation in `screenStyleInterpolator`
-
-```tsx
-screenStyleInterpolator: ({
-  activeBoundId,
-  bounds,
-  focused,
-  current,
-  next,
-}) => {
+screenStyleInterpolator: ({ activeBoundId, bounds }) => {
   "worklet";
 
-  const animatedBoundStyles = bounds()
-    .relative()
-    .transform()
-    .build();
+  const styles = bounds({
+    method: "transform",      // "transform" | "size" | "content"
+    space: "relative",        // "relative" | "absolute"
+    scaleMode: "match",       // "match" | "none" | "uniform"
+    anchor: "center",         // see anchors below
+    // target: "bound" | "fullscreen" | { x, y, width, height, pageX, pageY }
+    // gestures: { x?: number; y?: number }
+  });
 
-  return {
-    [activeBoundId]: animatedBoundStyles,
-  };
-};
+  return { [activeBoundId]: styles };
+}
 ```
 
-That’s it—the bounds helper works alongside focused and unfocused screens.
-For further customization, separate logic by the `focused` prop:
+3) Raw values when you need them
 
 ```tsx
-screenStyleInterpolator: ({
-  activeBoundId,
-  bounds,
-  focused,
-  current,
-  next,
-}) => {
-  "worklet";
-
-
-  if (focused) {
-    const focusedBoundStyles = bounds()
-      .relative()
-      .transform()
-      .build();
-
-    return {
-      [activeBoundId]: focusedBoundStyles,
-    };
-  }
-
-  return {}
-};
+const raw = bounds({ method: "transform", raw: true });
+// { translateX, translateY, scaleX, scaleY }
 ```
 
-
-### Choosing the right modifier
-
-| Modifier | When to use |
-|---|---|
-| `gestures({x,y})` | Sync the bound with live gesture deltas (drag, swipe). |
-| `toFullscreen()` | Destination has no `sharedBoundTag`; animate to full-screen size. |
-| `absolute()` | Element is not constrained by parent layout (uses pageX/pageY). |
-| `relative()` | Element is inside layout constraints (default). |
-| `transform()` | Animate with `translateX/Y` + `scaleX/Y` (default). |
-| `size()` | Animate `translateX/Y` + `width/height` (no scale). |
-| `content()` | Center the container so its bound aligns with the source at progress start. |
-| `contentFill()` / `contentFit()` | Control how the content scales inside the container. |
-| `build()` | Finalize the animated style object. |
-
-### Quick access: `bounds.get()`
-
-Need the raw measurements or styles for a specific bound?
-Call `bounds.get(boundId, phase)` to retrieve the exact dimensions and style object for any bound tag and screen phase (`current`, `next`, or `previous`).
+Or for size/content methods:
 
 ```tsx
-const heroMetrics = bounds.get('hero', 'current');
-// heroMetrics = { bounds: { x, y, width, height, pageX, pageY }, styles: { ... } }
+const toSize = bounds({ method: "size", target: "fullscreen", space: "absolute", raw: true });
+// { width, height, translateX, translateY }
+
+const content = bounds({ method: "content", raw: true });
+// { translateX, translateY, scale }
 ```
 
-Use this when you want explicit control over which bound’s data you animate, regardless of the current screen focus.
+Anchors and scale
 
-### Animating individual components with `styleId`
+- `anchor`: "topLeading" | "top" | "topTrailing" | "leading" | "center" | "trailing" | "bottomLeading" | "bottom" | "bottomTrailing"
+- `scaleMode`: "match" | "none" | "uniform"
+
+Targets and space
+
+- `target`: "bound" (default), "fullscreen", or explicit `{ x, y, width, height, pageX, pageY }`
+- `space`: "relative" (within layout constraints) or "absolute" (window coordinates)
+
+Gestures (sync focused screen deltas)
+
+- `gestures`: `{ x?: number; y?: number }` adds live drag offsets to the computed transforms
+
+Deprecated builder API
+
+- The old chainable builder (`bounds().relative().transform().build()`) is deprecated. Migrate to the object form shown above. The builder remains temporarily for backward compatibility.
+
+Quick access: `bounds.get()`
+
+Use `bounds.get(id?, phase?)` to retrieve raw measurements and the resolved style for any bound in a given phase (`current`, `next`, `previous`).
+
+```tsx
+const { bounds: metrics, styles } = bounds.get('hero', 'current');
+```
+
+## Animating individual components with `styleId`
 
 Use `styleId` to animate a single view inside a screen.
 
@@ -383,7 +407,6 @@ The red square fades in as the screen opens.
 ## Known Issues
 
 - **Delayed Touch Events** – There’s a noticeable delay in touch events, likely caused by the `beforeRemove` listener in the native stack. If this affects your app, please hold off on using this package until a fix is available.
-- **Deeply nested navigators with scrollables** – Behavior is currently unstable. We recommend using programmatic dismissal for deeply nested navigators that contain scrollables, as the gesture-driven dismissal logic needs an overhaul.
 
 
 ## Support and Development

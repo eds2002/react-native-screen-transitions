@@ -49,9 +49,11 @@ export default function StyleIdLayout() {
 							 * Rather than animating the bound itself, we animate the entire screen.
 							 * `bounds(activeBoundId).content()` provides the correct styles for animating `contentStyle` instead of the bound.
 							 */
-							const focusedBoundStyles = bounds(activeBoundId)
-								.content()
-								.build();
+							const focusedBoundStyles = bounds({
+								method: "content",
+								anchor: "top",
+								scaleMode: "uniform",
+							});
 
 							/**
 							 * A little tiny detail is the mask effect, here's why we're using the following modifiers:
@@ -62,11 +64,11 @@ export default function StyleIdLayout() {
 							 *
 							 * .toFullscreen() - We're using styleId to animate the mask, styleId's are not stored in the bounds store.
 							 */
-							const focusMaskStyles = bounds(activeBoundId)
-								.absolute()
-								.toFullscreen()
-								.size()
-								.build();
+							const focusMaskStyles = bounds({
+								space: "absolute",
+								target: "fullscreen",
+								method: "size",
+							});
 
 							return {
 								overlayStyle: {
@@ -91,12 +93,12 @@ export default function StyleIdLayout() {
 						 *
 						 * This syncs the gestures from the next screen onto this screen, giving us that shared look we're chasing.
 						 */
-						const unfocusedBound = bounds()
-							.gestures({
+						const unfocusedBound = bounds({
+							gestures: {
 								x,
 								y,
-							})
-							.build();
+							},
+						});
 
 						return {
 							contentStyle: {

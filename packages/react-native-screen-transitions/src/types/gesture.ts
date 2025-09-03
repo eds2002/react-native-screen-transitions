@@ -5,6 +5,25 @@ export type GestureDirection =
 	| "vertical-inverted"
 	| "bidirectional";
 
+export type ActivationArea = "edge" | "screen";
+
+export type SideActivation = {
+	left?: ActivationArea;
+	right?: ActivationArea;
+	top?: ActivationArea;
+	bottom?: ActivationArea;
+};
+
+export enum GestureOffsetState {
+	PENDING,
+	PASSED,
+	FAILED,
+}
+
+export type AxisActivation = ActivationArea | SideActivation;
+
+export type GestureActivationArea = ActivationArea | SideActivation;
+
 export type GestureValues = {
 	/**
 	 * A `SharedValue` indicating if the user's finger is on the screen (0 or 1).

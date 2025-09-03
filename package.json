@@ -10,7 +10,7 @@
 		}
 	},
 	"scripts": {
-		"e2e": "maestro test e2e/maestro/flows",
+		"e2e": "maestro test e2e/maestro/flows ",
 		"clean": "lerna run clean && rm -rf node_modules && rm -rf bun.lockb",
 		"build": "lerna run prepack",
 		"publish": "lerna publish from-package",

@@ -4,39 +4,45 @@ import {
 	Gesture,
 	type GestureStateChangeEvent,
 	type GestureTouchEvent,
+	type GestureType,
 	type GestureUpdateEvent,
 	type PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import {
-	interpolate,
 	runOnJS,
 	type SharedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import type { ScrollProgress } from "../../providers/gestures";
+import type { ScrollConfig } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
+import { type ActivationArea, GestureOffsetState } from "../../types/gesture";
 import { animate } from "../../utils/animation/animate";
 import { runTransition } from "../../utils/animation/run-transition";
-import { applyGestureActivationCriteria } from "../../utils/gesture/apply-gesture-activation-criteria";
+import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
+import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
+import useStableCallback from "../use-stable-callback";
 
 const GESTURE_VELOCITY_IMPACT = 0.3;
-const DEFAULT_GESTURE_RESPONSE_DISTANCE = 50;
 const DEFAULT_GESTURE_DIRECTION = "horizontal";
 const DEFAULT_GESTURE_ENABLED = false;
 const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
+const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 
 interface BuildGesturesHookProps {
-	scrollProgress: SharedValue<ScrollProgress>;
+	scrollConfig: SharedValue<ScrollConfig | null>;
 }
 
 export const useBuildGestures = ({
-	scrollProgress,
-}: BuildGesturesHookProps) => {
+	scrollConfig,
+}: BuildGesturesHookProps): {
+	panGesture: GestureType;
+	nativeGesture: GestureType;
+} => {
 	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
 
@@ -44,47 +50,59 @@ export const useBuildGestures = ({
 		x: 0,
 		y: 0,
 	});
+	const gestureOffsetState = useSharedValue<GestureOffsetState>(
+		GestureOffsetState.PENDING,
+	);
 
 	const gestures = Gestures.getRouteGestures(current.route.key);
-
 	const animations = Animations.getAll(current.route.key);
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
 		gestureEnabled = DEFAULT_GESTURE_ENABLED,
-		transitionSpec,
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
-		gestureResponseDistance = DEFAULT_GESTURE_RESPONSE_DISTANCE,
 		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
+		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
+		gestureResponseDistance,
+		transitionSpec,
 	} = current.options;
 
-	const directions = Array.isArray(gestureDirection)
-		? gestureDirection
-		: [gestureDirection];
+	const directions = useMemo(() => {
+		const directionsArray = Array.isArray(gestureDirection)
+			? gestureDirection
+			: [gestureDirection];
+		const isBidirectional = directionsArray.includes("bidirectional");
 
-	const isBidirectional = directions.includes("bidirectional");
-
-	const allowed = useMemo(
-		() => ({
-			vertical: directions.includes("vertical") || isBidirectional,
+		return {
+			vertical: directionsArray.includes("vertical") || isBidirectional,
 			verticalInverted:
-				directions.includes("vertical-inverted") || isBidirectional,
-			horizontal: directions.includes("horizontal") || isBidirectional,
+				directionsArray.includes("vertical-inverted") || isBidirectional,
+			horizontal: directionsArray.includes("horizontal") || isBidirectional,
 			horizontalInverted:
-				directions.includes("horizontal-inverted") || isBidirectional,
-		}),
-		[directions, isBidirectional],
-	);
+				directionsArray.includes("horizontal-inverted") || isBidirectional,
+		};
+	}, [gestureDirection]);
 
-	const nativeGesture = useMemo(() => Gesture.Native(), []);
+	const setNavigatorDismissal = useStableCallback(() => {
+		const key = current.navigation.getState().key;
+
+		NavigatorDismissState.set(key, true);
+	});
+
+	const handleDismiss = useStableCallback(() => {
+		const key = current.navigation.getState().key;
+		current.navigation.goBack();
+		NavigatorDismissState.remove(key);
+	});
 
 	const onTouchesDown = useCallback(
 		(e: GestureTouchEvent) => {
 			"worklet";
 			const firstTouch = e.changedTouches[0];
 			initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
+			gestureOffsetState.value = GestureOffsetState.PENDING;
 		},
-		[initialTouch],
+		[initialTouch, gestureOffsetState],
 	);
 
 	const onTouchesMove = useCallback(
@@ -92,61 +110,83 @@ export const useBuildGestures = ({
 			"worklet";
 
 			const touch = e.changedTouches[0];
-			const deltaX = touch.x - initialTouch.value.x;
-			const deltaY = touch.y - initialTouch.value.y;
 
-			const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
-			const isHorizontalSwipe = Math.abs(deltaX) > Math.abs(deltaY);
+			const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
+				applyOffsetRules({
+					touch,
+					directions,
+					manager,
+					dimensions,
+					gestureOffsetState,
+					initialTouch: initialTouch.value,
+					activationArea: gestureActivationArea,
+					responseDistance: gestureResponseDistance,
+				});
 
-			const isSwipingDown = isVerticalSwipe && deltaY > 0;
-			const isSwipingUp = isVerticalSwipe && deltaY < 0;
-			const isSwipingRight = isHorizontalSwipe && deltaX > 0;
-			const isSwipingLeft = isHorizontalSwipe && deltaX < 0;
+			if (gestureOffsetState.value === GestureOffsetState.FAILED) {
+				manager.fail();
+				return;
+			}
 
-			const minMovement = 5;
-			const hasEnoughMovement =
-				Math.abs(deltaX) > minMovement || Math.abs(deltaY) > minMovement;
-
-			if (!hasEnoughMovement) return;
-
+			// Keep pending until thresholds are met; no eager activation.
 			if (gestures.isDragging?.value) {
 				manager.activate();
 				return;
 			}
 
+			const maxScrollY = scrollConfig.value?.contentHeight
+				? scrollConfig.value.contentHeight - scrollConfig.value.layoutHeight
+				: 0;
+
+			const maxScrollX = scrollConfig.value?.contentWidth
+				? scrollConfig.value.contentWidth - scrollConfig.value.layoutWidth
+				: 0;
+
+			const recognizedDirection =
+				isSwipingDown || isSwipingUp || isSwipingRight || isSwipingLeft;
+
+			const scrollCfg = scrollConfig.value;
+
 			let shouldActivate = false;
-
-			if (allowed.vertical && isSwipingDown) {
-				shouldActivate = scrollProgress.value.y >= 0;
+			if (recognizedDirection) {
+				if (directions.vertical && isSwipingDown) {
+					shouldActivate = scrollCfg ? scrollCfg.y <= 0 : true;
+				}
+				if (directions.horizontal && isSwipingRight) {
+					shouldActivate = scrollCfg ? scrollCfg.x <= 0 : true;
+				}
+				if (directions.verticalInverted && isSwipingUp) {
+					shouldActivate = scrollCfg ? scrollCfg.y >= maxScrollY : true;
+				}
+				if (directions.horizontalInverted && isSwipingLeft) {
+					shouldActivate = scrollCfg ? scrollCfg.x >= maxScrollX : true;
+				}
 			}
-			if (allowed.horizontal && isSwipingRight) {
-				shouldActivate = scrollProgress.value.x <= 0;
-			}
 
-			if (allowed.verticalInverted && isSwipingUp) {
-				const maxScrollableY =
-					scrollProgress.value.contentHeight -
-					scrollProgress.value.layoutHeight;
-
-				shouldActivate = scrollProgress.value.y >= maxScrollableY;
-			}
-
-			if (allowed.horizontalInverted && isSwipingLeft) {
-				const maxScrollableX =
-					scrollProgress.value.contentWidth - scrollProgress.value.layoutWidth;
-				shouldActivate = scrollProgress.value.x >= maxScrollableX;
+			if (recognizedDirection && !shouldActivate) {
+				manager.fail();
+				return;
 			}
 
 			if (
-				(shouldActivate || gestures.isDragging?.value) &&
+				shouldActivate &&
+				gestureOffsetState.value === GestureOffsetState.PASSED &&
 				!gestures.isDismissing?.value
 			) {
 				manager.activate();
-			} else {
-				manager.fail();
+				return;
 			}
 		},
-		[initialTouch, scrollProgress, gestures, allowed],
+		[
+			initialTouch,
+			scrollConfig,
+			gestures,
+			directions,
+			gestureOffsetState,
+			dimensions,
+			gestureActivationArea,
+			gestureResponseDistance,
+		],
 	);
 
 	const onStart = useCallback(() => {
@@ -161,32 +201,30 @@ export const useBuildGestures = ({
 
 			let gestureProgress = 0;
 
-			gestures.x.value = event.translationX;
-			gestures.y.value = event.translationY;
+			const { translationX, translationY } = event;
+			const { width, height } = dimensions;
 
-			gestures.normalizedX.value = interpolate(
-				event.translationX,
-				[-dimensions.width, dimensions.width],
-				[-1, 1],
-				"clamp",
+			gestures.x.value = translationX;
+			gestures.y.value = translationY;
+			gestures.normalizedX.value = Math.max(
+				-1,
+				Math.min(1, translationX / width),
 			);
-			gestures.normalizedY.value = interpolate(
-				event.translationY,
-				[-dimensions.height, dimensions.height],
-				[-1, 1],
-				"clamp",
+			gestures.normalizedY.value = Math.max(
+				-1,
+				Math.min(1, translationY / height),
 			);
 
 			let maxProgress = 0;
 
-			const allowedDown = allowed.vertical;
-			const allowedUp = allowed.verticalInverted;
-			const allowedRight = allowed.horizontal;
-			const allowedLeft = allowed.horizontalInverted;
+			const allowedDown = directions.vertical;
+			const allowedUp = directions.verticalInverted;
+			const allowedRight = directions.horizontal;
+			const allowedLeft = directions.horizontalInverted;
 
 			if (allowedRight && event.translationX > 0) {
 				const currentProgress = mapGestureToProgress(
-					event.translationX,
+					translationX,
 					dimensions.width,
 				);
 				maxProgress = Math.max(maxProgress, currentProgress);
@@ -194,7 +232,7 @@ export const useBuildGestures = ({
 
 			if (allowedLeft && event.translationX < 0) {
 				const currentProgress = mapGestureToProgress(
-					-event.translationX,
+					-translationX,
 					dimensions.width,
 				);
 				maxProgress = Math.max(maxProgress, currentProgress);
@@ -202,7 +240,7 @@ export const useBuildGestures = ({
 
 			if (allowedDown && event.translationY > 0) {
 				const currentProgress = mapGestureToProgress(
-					event.translationY,
+					translationY,
 					dimensions.height,
 				);
 				maxProgress = Math.max(maxProgress, currentProgress);
@@ -210,7 +248,7 @@ export const useBuildGestures = ({
 
 			if (allowedUp && event.translationY < 0) {
 				const currentProgress = mapGestureToProgress(
-					-event.translationY,
+					-translationY,
 					dimensions.height,
 				);
 				maxProgress = Math.max(maxProgress, currentProgress);
@@ -222,129 +260,75 @@ export const useBuildGestures = ({
 				animations.progress.value = 1 - gestureProgress;
 			}
 		},
-		[dimensions, gestures, animations, gestureDrivesProgress, allowed],
+		[dimensions, gestures, animations, gestureDrivesProgress, directions],
 	);
-
-	const setNavigatorDismissal = useCallback(() => {
-		const key = current.navigation.getState().key;
-
-		NavigatorDismissState.set(key, true);
-	}, [current]);
-
-	const handleDismiss = useCallback(() => {
-		const key = current.navigation.getState().key;
-		current.navigation.goBack();
-		NavigatorDismissState.remove(key);
-	}, [current]);
 
 	const onEnd = useCallback(
 		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
-			const { translationX, translationY, velocityX, velocityY } = event;
+			const { shouldDismiss, velocity } = determineDismissal({
+				event,
+				directions,
+				dimensions,
+				gestureVelocityImpact,
+			});
 
-			// reminder: we should make this into an option
-			const dismissThreshold = 0.5;
-
-			const finalX = translationX + velocityX * gestureVelocityImpact;
-			const finalY = translationY + velocityY * gestureVelocityImpact;
-
-			const diagonal = Math.sqrt(
-				dimensions.width * dimensions.width +
-					dimensions.height * dimensions.height,
-			);
-
-			let shouldDismiss = false;
-
-			const horizontalDistance = Math.abs(finalX);
-			const verticalDistance = Math.abs(finalY);
-			const crossAxisThreshold = diagonal * dismissThreshold * 0.7;
-
-			if (allowed.vertical && finalY > 0) {
-				shouldDismiss = verticalDistance > diagonal * dismissThreshold;
-			} else if (allowed.verticalInverted && finalY < 0) {
-				shouldDismiss = verticalDistance > diagonal * dismissThreshold;
-			} else if (allowed.horizontal && finalX > 0) {
-				shouldDismiss = horizontalDistance > diagonal * dismissThreshold;
-			} else if (allowed.horizontalInverted && finalX < 0) {
-				shouldDismiss = horizontalDistance > diagonal * dismissThreshold;
-			}
-
-			if (!shouldDismiss) {
-				if (
-					(allowed.vertical || allowed.verticalInverted) &&
-					horizontalDistance > crossAxisThreshold
-				) {
-					shouldDismiss = true;
-				} else if (
-					(allowed.horizontal || allowed.horizontalInverted) &&
-					verticalDistance > crossAxisThreshold
-				) {
-					shouldDismiss = true;
-				}
-			}
+			const spec = shouldDismiss ? transitionSpec?.close : transitionSpec?.open;
 
 			gestures.isDismissing.value = Number(shouldDismiss);
 
-			if (gestures.isDismissing.value) {
+			// Provide per-axis velocities so drag return can bounce naturally
+			const vxPx = event.velocityX;
+			const vyPx = event.velocityY;
+			const vxNorm = vxPx / Math.max(1, dimensions.width);
+			const vyNorm = vyPx / Math.max(1, dimensions.height);
+			gestures.x.value = animate(0, { ...spec, velocity: vxPx });
+			gestures.y.value = animate(0, { ...spec, velocity: vyPx });
+			gestures.normalizedX.value = animate(0, { ...spec, velocity: vxNorm });
+			gestures.normalizedY.value = animate(0, { ...spec, velocity: vyNorm });
+			gestures.isDragging.value = 0;
+
+			if (shouldDismiss) {
 				runOnJS(setNavigatorDismissal)();
 			}
 
 			runTransition({
-				target: gestures.isDismissing.value ? "close" : "open",
+				target: shouldDismiss ? "close" : "open",
+				onFinish: shouldDismiss ? handleDismiss : undefined,
 				spec: transitionSpec,
-				onFinish: gestures.isDismissing.value ? handleDismiss : undefined,
+				velocity,
 				animations,
 			});
-
-			const spec = gestures.isDismissing.value
-				? transitionSpec?.close
-				: transitionSpec?.open;
-
-			gestures.x.value = animate(0, spec);
-			gestures.y.value = animate(0, spec);
-			gestures.normalizedX.value = animate(0, spec);
-			gestures.normalizedY.value = animate(0, spec);
-			gestures.isDragging.value = 0;
 		},
 		[
 			dimensions,
 			animations,
 			transitionSpec,
-			gestureVelocityImpact,
 			setNavigatorDismissal,
 			handleDismiss,
 			gestures,
-			allowed,
+			directions,
+			gestureVelocityImpact,
 		],
 	);
 
-	const panGesture = useMemo(
-		() =>
-			Gesture.Pan()
-				.enabled(gestureEnabled)
-				.manualActivation(true)
-				.onTouchesDown(onTouchesDown)
-				.onTouchesMove(onTouchesMove)
-				.onStart(onStart)
-				.onUpdate(onUpdate)
-				.onEnd(onEnd)
-				.blocksExternalGesture(nativeGesture),
-		[
-			gestureEnabled,
+	return useMemo(() => {
+		const nativeGesture = Gesture.Native();
+
+		const panGesture = Gesture.Pan()
+			.enabled(gestureEnabled)
+			.manualActivation(true)
+			.onTouchesDown(onTouchesDown)
+			.onTouchesMove(onTouchesMove)
+			.onStart(onStart)
+			.onUpdate(onUpdate)
+			.onEnd(onEnd)
+			.blocksExternalGesture(nativeGesture);
+
+		return {
+			panGesture,
 			nativeGesture,
-			onTouchesDown,
-			onTouchesMove,
-			onStart,
-			onUpdate,
-			onEnd,
-		],
-	);
-
-	applyGestureActivationCriteria({
-		gestureDirection,
-		gestureResponseDistance,
-		panGesture,
-	});
-	return { panGesture, nativeGesture };
+		};
+	}, [gestureEnabled, onTouchesDown, onTouchesMove, onStart, onUpdate, onEnd]);
 };

@@ -4,13 +4,13 @@ import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
-import { useBoundMeasurer } from "../hooks/bounds/use-bound-measurer";
-import { useScrollProgress } from "../hooks/gestures/use-scroll-progress";
+import { useBoundsRegistry } from "../hooks/bounds/use-bound-registry";
+import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { useGestureContext } from "../providers/gestures";
 import { useKeys } from "../providers/keys";
 import type { TransitionAwareProps } from "../types/core";
 import type { Any } from "../types/utils";
-import { BoundActivator } from "./bounds-activator";
+import { BoundCapture } from "./bound-capture";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -29,11 +29,10 @@ export function createTransitionAwareComponent<P extends object>(
 		TransitionAwareProps<P>
 	>((props: Any, ref) => {
 		const { nativeGesture } = useGestureContext();
-
-		const { scrollHandler, onContentSizeChange, onLayout } = useScrollProgress({
+		const { scrollHandler, onContentSizeChange, onLayout } = useScrollRegistry({
 			onScroll: props.onScroll,
 			onContentSizeChange: props.onContentSizeChange,
-			onLayout: props.onLayout, // Add this line to pass through onLayout
+			onLayout: props.onLayout,
 		});
 
 		return (
@@ -64,7 +63,7 @@ export function createTransitionAwareComponent<P extends object>(
 			id: sharedBoundTag || styleId,
 		});
 
-		const { measureAndSet, measureOnLayout } = useBoundMeasurer({
+		const { measureBounds, handleLayout } = useBoundsRegistry({
 			sharedBoundTag,
 			animatedRef,
 			current,
@@ -72,21 +71,28 @@ export function createTransitionAwareComponent<P extends object>(
 		});
 
 		if (isScrollable) {
-			return <ScrollableInner {...(props as Any)} ref={ref} />;
+			return (
+				<ScrollableInner
+					{...(props as Any)}
+					ref={ref}
+					measureBounds={measureBounds}
+					handleLayout={handleLayout}
+				/>
+			);
 		}
 
 		return (
-			<BoundActivator sharedBoundTag={sharedBoundTag} measure={measureAndSet}>
+			<BoundCapture sharedBoundTag={sharedBoundTag} measure={measureBounds}>
 				<AnimatedComponent
 					{...(rest as Any)}
 					ref={animatedRef}
 					style={[style, associatedStyles]}
 					onPress={onPress}
-					onLayout={runOnUI(measureOnLayout)}
+					onLayout={runOnUI(handleLayout)}
 				>
 					{children}
 				</AnimatedComponent>
-			</BoundActivator>
+			</BoundCapture>
 		);
 	});
 

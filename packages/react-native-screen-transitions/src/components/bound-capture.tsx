@@ -8,7 +8,7 @@ interface BoundActivatorProps {
 	measure: () => void;
 }
 
-export const BoundActivator = ({
+export const BoundCapture = ({
 	sharedBoundTag,
 	children,
 	measure,

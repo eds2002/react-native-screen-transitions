@@ -1,50 +1,42 @@
 import { memo } from "react";
-import { StyleSheet } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { _useScreenAnimation } from "../hooks/animation/use-screen-animation";
+import { StyleSheet, View } from "react-native";
+import Animated, {
+	type StyleProps,
+	useAnimatedStyle,
+} from "react-native-reanimated";
+import { useTransitionStyles } from "../providers/transition-styles";
 
-interface RootTransitionAwareProps {
+type Props = {
 	children: React.ReactNode;
-}
+};
 
-export const RootTransitionAware = memo(
-	({ children }: RootTransitionAwareProps) => {
-		const { screenInterpolatorProps, screenStyleInterpolator } =
-			_useScreenAnimation();
+const EMPTY_STYLE = Object.freeze({} as StyleProps);
 
-		const animatedContentStyle = useAnimatedStyle(() => {
-			"worklet";
-			if (!screenStyleInterpolator) {
-				return {};
-			}
-			const props = screenInterpolatorProps.value;
-			return screenStyleInterpolator(props).contentStyle || {};
-		});
+export const RootTransitionAware = memo(({ children }: Props) => {
+	const stylesMap = useTransitionStyles();
 
-		const animatedOverlayStyle = useAnimatedStyle(() => {
-			"worklet";
-			if (!screenStyleInterpolator) {
-				return {};
-			}
-			return (
-				screenStyleInterpolator(screenInterpolatorProps.value).overlayStyle ||
-				{}
-			);
-		});
+	const animatedContentStyle = useAnimatedStyle(() => {
+		"worklet";
+		return stylesMap.value.contentStyle || EMPTY_STYLE;
+	});
 
-		return (
-			<Animated.View style={styles.container}>
-				<Animated.View
-					style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
-					pointerEvents="none"
-				/>
-				<Animated.View style={[styles.content, animatedContentStyle]}>
-					{children}
-				</Animated.View>
+	const animatedOverlayStyle = useAnimatedStyle(() => {
+		"worklet";
+		return stylesMap.value.overlayStyle || EMPTY_STYLE;
+	});
+
+	return (
+		<View style={styles.container}>
+			<Animated.View
+				style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
+				pointerEvents="none"
+			/>
+			<Animated.View style={[styles.content, animatedContentStyle]}>
+				{children}
 			</Animated.View>
-		);
-	},
-);
+		</View>
+	);
+});
 
 const styles = StyleSheet.create({
 	container: {
