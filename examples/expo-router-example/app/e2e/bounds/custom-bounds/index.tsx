@@ -21,6 +21,7 @@ export default function AnchorPointScreen() {
 					alignItems: "center",
 					justifyContent: "center",
 				}}
+				measureOnLayout
 			>
 				<Text>Custom Bounds</Text>
 			</Transition.View>
