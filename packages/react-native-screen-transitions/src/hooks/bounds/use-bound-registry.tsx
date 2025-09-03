@@ -48,6 +48,7 @@ export const useBoundsRegistry = ({
 	const handleLayout = useCallback(() => {
 		"worklet";
 		const previousRouteKey = previous?.route.key;
+
 		if (!sharedBoundTag || isMeasured.value || !previousRouteKey) {
 			return;
 		}
@@ -67,17 +68,8 @@ export const useBoundsRegistry = ({
 		isMeasured,
 	]);
 
-	const measureOnTouchStart = useCallback(() => {
-		"worklet";
-		if (sharedBoundTag) {
-			Bounds.setActiveBoundId(sharedBoundTag);
-			measure(animatedRef);
-		}
-	}, [sharedBoundTag, animatedRef]);
-
 	return {
 		measureBounds,
 		handleLayout,
-		measureOnTouchStart,
 	};
 };

@@ -53,8 +53,15 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof AnimatedComponent>,
 		TransitionAwareProps<P>
 	>((props, ref) => {
-		const { children, style, sharedBoundTag, styleId, onPress, ...rest } =
-			props as Any;
+		const {
+			children,
+			style,
+			sharedBoundTag,
+			styleId,
+			onPress,
+			measureOnLayout,
+			...rest
+		} = props as Any;
 
 		const animatedRef = useAnimatedRef<View>();
 		const { current } = useKeys();
@@ -81,6 +88,14 @@ export function createTransitionAwareComponent<P extends object>(
 			);
 		}
 
+		const onLayoutHandler = runOnUI(() => {
+			"worklet";
+			handleLayout();
+			if (measureOnLayout && sharedBoundTag) {
+				measureBounds();
+			}
+		});
+
 		return (
 			<BoundCapture sharedBoundTag={sharedBoundTag} measure={measureBounds}>
 				<AnimatedComponent
@@ -88,7 +103,7 @@ export function createTransitionAwareComponent<P extends object>(
 					ref={animatedRef}
 					style={[style, associatedStyles]}
 					onPress={onPress}
-					onLayout={runOnUI(handleLayout)}
+					onLayout={onLayoutHandler}
 				>
 					{children}
 				</AnimatedComponent>
