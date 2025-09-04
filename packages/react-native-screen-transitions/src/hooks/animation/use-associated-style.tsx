@@ -13,7 +13,7 @@ const EMPTY_STYLE = Object.freeze({});
  * It is used to get the associated styles for a given styleId.
  */
 export const useAssociatedStyles = ({ id }: Props = {}) => {
-	const stylesMap = useTransitionStyles();
+	const { stylesMap } = useTransitionStyles();
 
 	const associatedStyles = useAnimatedStyle(() => {
 		"worklet";
