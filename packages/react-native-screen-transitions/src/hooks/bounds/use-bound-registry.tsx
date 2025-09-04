@@ -7,7 +7,6 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { useKeys } from "../../providers/keys";
-import { useTransitionStyles } from "../../providers/transition-styles";
 import { Bounds } from "../../stores/bounds";
 import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
 import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
@@ -25,7 +24,6 @@ export const useBoundsRegistry = ({
 	current,
 	style,
 }: BoundMeasurerHookProps) => {
-	const { screenInterpolatorProps } = useTransitionStyles();
 	const { previous } = useKeys();
 
 	const isMeasured = useSharedValue(false);
@@ -61,20 +59,11 @@ export const useBoundsRegistry = ({
 		const previousBounds = Bounds.getBounds(previousRouteKey);
 		const hasPreviousBoundForTag = previousBounds[sharedBoundTag];
 
-		if (
-			screenInterpolatorProps.value.current.animating &&
-			hasPreviousBoundForTag
-		) {
+		if (hasPreviousBoundForTag) {
 			measureBounds();
 			isMeasured.value = true;
 		}
-	}, [
-		measureBounds,
-		screenInterpolatorProps,
-		sharedBoundTag,
-		previous?.route.key,
-		isMeasured,
-	]);
+	}, [measureBounds, sharedBoundTag, previous?.route.key, isMeasured]);
 
 	return {
 		measureBounds,

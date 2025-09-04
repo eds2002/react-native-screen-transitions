@@ -1,10 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 import { isWorkletFunction, useDerivedValue } from "react-native-reanimated";
 import { _useScreenAnimation } from "../hooks/animation/use-screen-animation";
-import type {
-	ScreenInterpolationProps,
-	TransitionInterpolatedStyle,
-} from "../types/animation";
+import type { TransitionInterpolatedStyle } from "../types/animation";
 
 type Props = {
 	children: React.ReactNode;
@@ -15,9 +12,6 @@ const EMPTY_MAP = Object.freeze({});
 const TransitionStylesContext = createContext<ReturnType<
 	typeof useMemo<{
 		stylesMap: ReturnType<typeof useDerivedValue<TransitionInterpolatedStyle>>;
-		screenInterpolatorProps: ReturnType<
-			typeof useDerivedValue<ScreenInterpolationProps>
-		>;
 	}>
 > | null>(null);
 
@@ -43,9 +37,8 @@ export function TransitionStylesProvider({ children }: Props) {
 	const value = useMemo(() => {
 		return {
 			stylesMap,
-			screenInterpolatorProps,
 		};
-	}, [stylesMap, screenInterpolatorProps]);
+	}, [stylesMap]);
 
 	return (
 		<TransitionStylesContext.Provider value={value}>

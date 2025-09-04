@@ -8,9 +8,7 @@ type Props = {
 const EMPTY_STYLE = Object.freeze({});
 
 /**
- * This hook is used to get the associated styles for a given styleId.
- * It is used to get the associated styles for a given styleId.
- * It is used to get the associated styles for a given styleId.
+ * This hook is used to get the associated styles for a given styleId / boundTag.
  */
 export const useAssociatedStyles = ({ id }: Props = {}) => {
 	const { stylesMap } = useTransitionStyles();
