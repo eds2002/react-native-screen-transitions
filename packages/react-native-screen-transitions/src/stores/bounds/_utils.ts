@@ -8,20 +8,27 @@ interface ResolveActiveBoundParams {
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	previous?: ScreenTransitionState;
-	requestedId: string | null;
 	getPairCache: GetCache;
 	setPairCache: SetCache;
 	getRouteActive: GetRouteActive;
 }
 
-const hasBound = (s: ScreenTransitionState | undefined, id?: string | null) =>
-	!!id && !!s && !!s.bounds && !!s.bounds[id];
+export function pairKey(fromKey?: string, toKey?: string) {
+	"worklet";
+	return fromKey && toKey ? `${fromKey}|${toKey}` : "";
+}
+
+const hasBound = (s: ScreenTransitionState | undefined, id?: string | null) => {
+	"worklet";
+	return !!id && !!s && !!s.bounds && !!s.bounds[id];
+};
 
 const getRoutePair = (
 	current: ScreenTransitionState,
 	next: ScreenTransitionState | undefined,
 	previous: ScreenTransitionState | undefined,
 ) => {
+	"worklet";
 	const isClosing = !!next;
 	const fromKey = isClosing ? current.route.key : previous?.route.key;
 	const toKey = isClosing ? next?.route.key : current.route.key;
@@ -35,6 +42,7 @@ const resolveFromPairCache = (
 	other: ScreenTransitionState | undefined,
 	getPairCache: GetCache,
 ) => {
+	"worklet";
 	if (fromKey && toKey) {
 		const cached = getPairCache(fromKey, toKey);
 		if (hasBound(other, cached)) return cached as string;
@@ -47,6 +55,7 @@ const resolveFromRequested = (
 	current: ScreenTransitionState,
 	other: ScreenTransitionState | undefined,
 ) => {
+	"worklet";
 	if (hasBound(other, reqId)) return reqId as string;
 	if (hasBound(current, reqId)) return reqId as string;
 	return "";
@@ -58,6 +67,7 @@ const resolveFromInteresection = (
 	fromKey: string | undefined,
 	getRouteActive: GetRouteActive,
 ) => {
+	"worklet";
 	if (!other) return "";
 	const a = Object.keys(current.bounds);
 	const b = Object.keys(other.bounds);
@@ -93,13 +103,15 @@ export function resolveActiveBound({
 	current,
 	next,
 	previous,
-	requestedId,
 	getPairCache,
 	setPairCache,
 	getRouteActive,
 }: ResolveActiveBoundParams) {
+	"worklet";
 	const { fromKey, toKey, other } = getRoutePair(current, next, previous);
 
+	// Resolve requested from per-route most recently used (last active bound by route)
+	const requestedId = fromKey ? getRouteActive(fromKey) : null;
 	const byRequested = resolveFromRequested(requestedId, current, other);
 	if (byRequested) {
 		if (

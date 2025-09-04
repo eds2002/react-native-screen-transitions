@@ -6,7 +6,7 @@ import {
 import type { ScreenTransitionState } from "../../types/animation";
 import type { ScreenKey } from "../../types/navigator";
 import type { Any } from "../../types/utils";
-import { resolveActiveBound } from "./_utils";
+import { pairKey, resolveActiveBound } from "./_utils";
 
 type BoundsDict = Record<
 	string,
@@ -15,13 +15,7 @@ type BoundsDict = Record<
 
 const registry = makeMutable<BoundsDict>({});
 const pairCache = makeMutable<Record<string, string>>({});
-const activeBoundId = makeMutable<string | null>(null);
 const lastActiveByRoute = makeMutable<Record<string, string>>({});
-
-function pairKey(fromKey?: string, toKey?: string) {
-	"worklet";
-	return fromKey && toKey ? `${fromKey}|${toKey}` : "";
-}
 
 function setBounds(
 	screenId: string,
@@ -44,16 +38,6 @@ function setBounds(
 function getBounds(screenId: string) {
 	"worklet";
 	return registry.value[screenId] ?? {};
-}
-
-function setActiveBoundId(boundId: string) {
-	"worklet";
-	activeBoundId.value = boundId;
-}
-
-function getActiveBoundId() {
-	"worklet";
-	return activeBoundId.value;
 }
 
 function setRouteActive(routeKey: string, boundId: string) {
@@ -90,16 +74,29 @@ function getPairCache(fromKey: string, toKey: string) {
 
 function clear(routeKey: ScreenKey) {
 	"worklet";
-	registry.modify((state: Any) => {
+	registry.modify((state) => {
 		"worklet";
 		delete state[routeKey];
 		return state;
 	});
-}
+	lastActiveByRoute.modify((state) => {
+		"worklet";
+		if (state[routeKey]) delete state[routeKey];
+		return state;
+	});
 
-function clearActive() {
-	"worklet";
-	activeBoundId.value = null;
+	pairCache.modify((state) => {
+		"worklet";
+		const keys = Object.keys(state);
+		for (let i = 0; i < keys.length; i++) {
+			const k = keys[i];
+			const [from, to] = k.split("|");
+			if (from === routeKey || to === routeKey) {
+				delete state[k];
+			}
+		}
+		return state;
+	});
 }
 
 function getActiveBound(
@@ -108,12 +105,10 @@ function getActiveBound(
 	previous: ScreenTransitionState | undefined,
 ) {
 	"worklet";
-	const requestedId = activeBoundId.value;
 	return resolveActiveBound({
 		current,
 		next,
 		previous,
-		requestedId,
 		getPairCache,
 		setPairCache,
 		getRouteActive,
@@ -123,11 +118,8 @@ function getActiveBound(
 export const Bounds = {
 	setBounds,
 	getBounds,
-	setActiveBoundId,
-	getActiveBoundId,
 	setRouteActive,
 	getRouteActive,
 	clear,
-	clearActive,
 	getActiveBound,
 };

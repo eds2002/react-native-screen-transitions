@@ -6,8 +6,8 @@ import {
 	type StyleProps,
 	useSharedValue,
 } from "react-native-reanimated";
-import { useTransitionStyles } from "src/providers/transition-styles";
 import { useKeys } from "../../providers/keys";
+import { useTransitionStyles } from "../../providers/transition-styles";
 import { Bounds } from "../../stores/bounds";
 import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
 import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
@@ -37,16 +37,14 @@ export const useBoundsRegistry = ({
 		if (measured) {
 			const key = current.route.key;
 			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
-				// Only update route MRU if this tag is the active request
-				if (Bounds.getActiveBoundId() === sharedBoundTag) {
+				if (Bounds.getRouteActive(key) === sharedBoundTag) {
 					Bounds.setRouteActive(key, sharedBoundTag);
 				}
 				return;
 			}
 
 			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
-			// Only update route MRU if this tag is the active request
-			if (Bounds.getActiveBoundId() === sharedBoundTag) {
+			if (Bounds.getRouteActive(key) === sharedBoundTag) {
 				Bounds.setRouteActive(key, sharedBoundTag);
 			}
 		}

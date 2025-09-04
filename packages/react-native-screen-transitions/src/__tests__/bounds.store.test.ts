@@ -50,8 +50,10 @@ const mockState = (
 };
 
 let cache: Record<string, string>;
+let lastActiveByRoute: Record<string, string>;
 beforeEach(() => {
 	cache = {};
+	lastActiveByRoute = {};
 });
 
 const getPairCache = (from: string, to: string) =>
@@ -59,8 +61,8 @@ const getPairCache = (from: string, to: string) =>
 const setPairCache = (from: string, to: string, id: string) => {
 	cache[`${from}|${to}`] = id;
 };
-
-const getRouteActive = (_routeKey: string) => null;
+const getRouteActive = (routeKey: string) =>
+	lastActiveByRoute[routeKey] ?? null;
 
 describe("Bounds.getActiveBound - requested id priority and acceptance", () => {
 	it("selects requested id when present only on current (opening)", () => {
@@ -69,10 +71,11 @@ describe("Bounds.getActiveBound - requested id priority and acceptance", () => {
 		const current = mockState(A, ["container"]);
 		const previous = mockState(B, ["icon"]);
 
+		// Opening: fromKey is previous.route.key (B)
+		lastActiveByRoute[B] = "container";
 		const active = resolveActiveBound({
 			current,
 			previous,
-			requestedId: "container",
 			getPairCache,
 			setPairCache,
 			getRouteActive,
@@ -88,10 +91,11 @@ describe("Bounds.getActiveBound - requested id priority and acceptance", () => {
 		const current = mockState(A, ["icon"]);
 		const next = mockState(B, ["container"]);
 
+		// Closing: fromKey is current.route.key (A)
+		lastActiveByRoute[A] = "container";
 		const active = resolveActiveBound({
 			current,
 			next,
-			requestedId: "container",
 			getPairCache,
 			setPairCache,
 			getRouteActive,
@@ -102,17 +106,18 @@ describe("Bounds.getActiveBound - requested id priority and acceptance", () => {
 });
 
 describe("Bounds.getActiveBound - hint behavior (guarded writes)", () => {
-	it("writes hint only when both sides have the id", () => {
+	it("writes cache only when both sides have the id", () => {
 		const A = "A-3";
 		const B = "B-3";
 		// Both have the same id measured
 		const current = mockState(A, ["container"]);
 		const previous = mockState(B, ["container"]);
 
+		// Opening: fromKey is previous.route.key (B)
+		lastActiveByRoute[B] = "container";
 		const active = resolveActiveBound({
 			current,
 			previous,
-			requestedId: "container",
 			getPairCache,
 			setPairCache,
 			getRouteActive,
@@ -121,20 +126,21 @@ describe("Bounds.getActiveBound - hint behavior (guarded writes)", () => {
 		expect(getPairCache(B, A)).toBe("container");
 	});
 
-	it("requested id overrides existing hint and updates it when both sides measured", () => {
+	it("requested id overrides existing cache and updates it when both sides measured", () => {
 		const A = "A-4";
 		const B = "B-4";
 		// Both sides have icon and container
-		// Pre-seed a conflicting hint
+		// Pre-seed a conflicting cache
 		setPairCache(B, A, "icon");
 
 		const current = mockState(A, ["icon", "container"]);
 		const previous = mockState(B, ["icon", "container"]);
 
+		// Opening: fromKey is previous.route.key (B)
+		lastActiveByRoute[B] = "container";
 		const active = resolveActiveBound({
 			current,
 			previous,
-			requestedId: "container",
 			getPairCache,
 			setPairCache,
 			getRouteActive,
@@ -145,7 +151,7 @@ describe("Bounds.getActiveBound - hint behavior (guarded writes)", () => {
 });
 
 describe("Bounds.getActiveBound - set intersection and fallbacks", () => {
-	it("falls back to intersection when no request or hint", () => {
+	it("falls back to intersection when no request or cache", () => {
 		const A = "A-5";
 		const B = "B-5";
 		const current = mockState(A, ["alpha", "beta"]);
@@ -154,7 +160,6 @@ describe("Bounds.getActiveBound - set intersection and fallbacks", () => {
 		const active = resolveActiveBound({
 			current,
 			previous,
-			requestedId: null,
 			getPairCache,
 			setPairCache,
 			getRouteActive,
@@ -162,7 +167,7 @@ describe("Bounds.getActiveBound - set intersection and fallbacks", () => {
 		expect(active).toBe("beta");
 	});
 
-	it("when other has a single bound, selects it (no request/hint)", () => {
+	it("when other has a single bound, selects it (no request/cache)", () => {
 		const A = "A-6";
 		const B = "B-6";
 		const current = mockState(A, ["alpha"]);
@@ -171,7 +176,6 @@ describe("Bounds.getActiveBound - set intersection and fallbacks", () => {
 		const active = resolveActiveBound({
 			current,
 			previous,
-			requestedId: null,
 			getPairCache,
 			setPairCache,
 			getRouteActive,

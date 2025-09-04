@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { useKeys } from "../providers/keys";
 import { Bounds } from "../stores/bounds";
 
 interface BoundActivatorProps {
@@ -13,15 +14,17 @@ export const BoundCapture = ({
 	children,
 	measure,
 }: BoundActivatorProps) => {
+	const { current } = useKeys();
+	const routeKey = current.route.key;
 	const tapGesture = useMemo(() => {
 		return Gesture.Tap().onStart(() => {
 			"worklet";
 			if (sharedBoundTag) {
-				Bounds.setActiveBoundId(sharedBoundTag);
+				Bounds.setRouteActive(routeKey, sharedBoundTag);
 				measure();
 			}
 		});
-	}, [sharedBoundTag, measure]);
+	}, [sharedBoundTag, measure, routeKey]);
 
 	if (!sharedBoundTag) return children;
 
