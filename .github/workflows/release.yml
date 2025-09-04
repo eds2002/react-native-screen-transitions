@@ -1,0 +1,39 @@
+name: Release (Changesets)
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  release:
+    name: Version or Publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      packages: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.20
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Build packages
+        run: bun run build
+
+      - name: Version or Publish via Changesets
+        uses: changesets/action@v1
+        with:
+          publish: "bun run changeset:publish"
+          title: "chore: version packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

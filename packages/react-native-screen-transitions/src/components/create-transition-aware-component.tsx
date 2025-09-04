@@ -68,6 +68,7 @@ export function createTransitionAwareComponent<P extends object>(
 
 		const { associatedStyles } = useAssociatedStyles({
 			id: sharedBoundTag || styleId,
+			style,
 		});
 
 		const { measureBounds, handleLayout } = useBoundsRegistry({

@@ -10,7 +10,6 @@ import { useKeys } from "../../providers/keys";
 import { Bounds } from "../../stores/bounds";
 import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
 import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
-import { useScreenAnimation } from "../animation/use-screen-animation";
 
 interface BoundMeasurerHookProps {
 	sharedBoundTag: string;
@@ -26,7 +25,7 @@ export const useBoundsRegistry = ({
 	style,
 }: BoundMeasurerHookProps) => {
 	const { previous } = useKeys();
-	const interpolatorProps = useScreenAnimation();
+
 	const isMeasured = useSharedValue(false);
 
 	const measureBounds = useCallback(() => {
@@ -36,12 +35,16 @@ export const useBoundsRegistry = ({
 		if (measured) {
 			const key = current.route.key;
 			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
-				Bounds.setRouteActive(key, sharedBoundTag);
+				if (Bounds.getRouteActive(key) === sharedBoundTag) {
+					Bounds.setRouteActive(key, sharedBoundTag);
+				}
 				return;
 			}
 
 			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
-			Bounds.setRouteActive(key, sharedBoundTag);
+			if (Bounds.getRouteActive(key) === sharedBoundTag) {
+				Bounds.setRouteActive(key, sharedBoundTag);
+			}
 		}
 	}, [sharedBoundTag, animatedRef, current.route.key, style]);
 
@@ -56,17 +59,11 @@ export const useBoundsRegistry = ({
 		const previousBounds = Bounds.getBounds(previousRouteKey);
 		const hasPreviousBoundForTag = previousBounds[sharedBoundTag];
 
-		if (interpolatorProps.value.current.animating && hasPreviousBoundForTag) {
+		if (hasPreviousBoundForTag) {
 			measureBounds();
 			isMeasured.value = true;
 		}
-	}, [
-		measureBounds,
-		interpolatorProps,
-		sharedBoundTag,
-		previous?.route.key,
-		isMeasured,
-	]);
+	}, [measureBounds, sharedBoundTag, previous?.route.key, isMeasured]);
 
 	return {
 		measureBounds,

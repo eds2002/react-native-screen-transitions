@@ -13,7 +13,7 @@ type Props = {
 const EMPTY_STYLE = Object.freeze({} as StyleProps);
 
 export const RootTransitionAware = memo(({ children }: Props) => {
-	const stylesMap = useTransitionStyles();
+	const { stylesMap } = useTransitionStyles();
 
 	const animatedContentStyle = useAnimatedStyle(() => {
 		"worklet";

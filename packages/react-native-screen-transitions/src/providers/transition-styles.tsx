@@ -10,7 +10,9 @@ type Props = {
 const EMPTY_MAP = Object.freeze({});
 
 const TransitionStylesContext = createContext<ReturnType<
-	typeof useDerivedValue<TransitionInterpolatedStyle>
+	typeof useMemo<{
+		stylesMap: ReturnType<typeof useDerivedValue<TransitionInterpolatedStyle>>;
+	}>
 > | null>(null);
 
 export function TransitionStylesProvider({ children }: Props) {
@@ -32,7 +34,11 @@ export function TransitionStylesProvider({ children }: Props) {
 			: EMPTY_MAP;
 	});
 
-	const value = useMemo(() => stylesMap, [stylesMap]);
+	const value = useMemo(() => {
+		return {
+			stylesMap,
+		};
+	}, [stylesMap]);
 
 	return (
 		<TransitionStylesContext.Provider value={value}>

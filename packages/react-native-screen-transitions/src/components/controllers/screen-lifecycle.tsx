@@ -24,13 +24,13 @@ export const ScreenLifecycleController = ({
 
 		// Don't run e.preventDefault when the dismissal was on the local root
 		if (requestedDismissOnNavigator) {
-			resetStoresForScreen(current, { clearActive: true });
+			resetStoresForScreen(current);
 			return;
 		}
 
 		// Don't run e.preventDefault when this is the first screen of the stack
 		if (current.navigation.getState().index === 0) {
-			resetStoresForScreen(current, { clearActive: true });
+			resetStoresForScreen(current);
 			return;
 		}
 
@@ -41,7 +41,7 @@ export const ScreenLifecycleController = ({
 
 				// we'll ensure the dispatch is complete before resetting stores
 				requestAnimationFrame(() => {
-					resetStoresForScreen(current, { clearActive: false });
+					resetStoresForScreen(current);
 				});
 			}
 		};
