@@ -17,15 +17,12 @@ export const SlideFromTop = (
 		gestureEnabled: true,
 		gestureDirection: "vertical-inverted",
 		screenStyleInterpolator: ({
-			current,
-			next,
+			progress,
 			layouts: {
 				screen: { height },
 			},
 		}) => {
 			"worklet";
-
-			const progress = current.progress + (next?.progress ?? 0);
 
 			const y = interpolate(progress, [0, 1, 2], [-height, 0, height]);
 
@@ -50,10 +47,8 @@ export const ZoomIn = (
 	return {
 		enableTransitions: true,
 		gestureEnabled: false,
-		screenStyleInterpolator: ({ current, next }) => {
+		screenStyleInterpolator: ({ progress }) => {
 			"worklet";
-
-			const progress = current.progress + (next?.progress ?? 0);
 
 			const scale = interpolate(
 				progress,
@@ -92,15 +87,12 @@ export const SlideFromBottom = (
 		gestureEnabled: true,
 		gestureDirection: "vertical",
 		screenStyleInterpolator: ({
-			current,
-			next,
 			layouts: {
 				screen: { height },
 			},
+			progress,
 		}) => {
 			"worklet";
-
-			const progress = current.progress + (next?.progress ?? 0);
 
 			const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
 
@@ -242,16 +234,12 @@ export const SharedIGImage = (
 			progress,
 			focused,
 			activeBoundId,
-			next,
+			active,
 		}) => {
 			"worklet";
 
-			const normX = focused
-				? current.gesture.normalizedX
-				: (next?.gesture.normalizedX ?? 0);
-			const normY = focused
-				? current.gesture.normalizedY
-				: (next?.gesture.normalizedY ?? 0);
+			const normX = active.gesture.normalizedX;
+			const normY = active.gesture.normalizedY;
 
 			// animations for both bounds
 			const dragX = interpolate(
@@ -369,16 +357,12 @@ export const SharedAppleMusic = (
 			progress,
 			layouts: { screen },
 			current,
-			next,
+			active,
 		}) => {
 			"worklet";
 
-			const normX = focused
-				? current.gesture.normalizedX
-				: (next?.gesture.normalizedX ?? 0);
-			const normY = focused
-				? current.gesture.normalizedY
-				: (next?.gesture.normalizedY ?? 0);
+			const normX = active.gesture.normalizedX;
+			const normY = active.gesture.normalizedY;
 
 			/**
 			 * ===============================

@@ -106,7 +106,15 @@ export function _useScreenAnimation() {
 			const current =
 				unwrap(currentAnimation, currentDescriptor?.route.key) ?? FALLBACK;
 
-			const { progress, focused, activeBoundId, bounds } = derivations({
+			const {
+				progress,
+				focused,
+				activeBoundId,
+				bounds,
+				active,
+				isActiveTransitioning,
+				isDismissing,
+			} = derivations({
 				current,
 				next,
 				previous,
@@ -123,6 +131,9 @@ export function _useScreenAnimation() {
 				activeBoundId,
 				progress,
 				bounds,
+				active,
+				isActiveTransitioning,
+				isDismissing,
 			};
 		},
 	);
