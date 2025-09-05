@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.3.0
+
+### Minor Changes
+
+- [#28](https://github.com/eds2002/react-native-screen-transitions/pull/28) [`86995d0`](https://github.com/eds2002/react-native-screen-transitions/commit/86995d034ece0e8e475cb9b6c40ce6eb753f5700) Thanks [@eds2002](https://github.com/eds2002)! - Expose new helper variables for screenStyleInterpolator:active, isActiiveTransitioning, isDismissing.
+
 ## 2.2.1
 
 ### Patch Changes
