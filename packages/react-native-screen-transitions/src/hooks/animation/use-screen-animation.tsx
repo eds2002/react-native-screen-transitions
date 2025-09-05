@@ -127,9 +127,20 @@ export function _useScreenAnimation() {
 		},
 	);
 
-	const screenStyleInterpolator =
-		nextDescriptor?.options.screenStyleInterpolator ||
-		currentDescriptor?.options.screenStyleInterpolator;
+	// Prefer the next descriptor's interpolator only when transitions are enabled on it.
+	// If the next screen doesn't opt-in to transitions, avoid falling back to the current
+	// screen's interpolator to prevent unintended global styles (e.g., scaling previous screens
+	// when presenting non-transitioning modals/sheets).
+	const nextEnabled = nextDescriptor?.options.enableTransitions === true;
+	const currentEnabled = currentDescriptor?.options.enableTransitions === true;
+
+	const screenStyleInterpolator = nextEnabled
+		? nextDescriptor?.options.screenStyleInterpolator
+		: nextDescriptor
+			? undefined
+			: currentEnabled
+				? currentDescriptor?.options.screenStyleInterpolator
+				: undefined;
 
 	return { screenInterpolatorProps, screenStyleInterpolator };
 }
