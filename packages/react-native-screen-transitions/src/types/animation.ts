@@ -41,6 +41,12 @@ export interface ScreenInterpolationProps {
 	progress: number;
 	/** A function that returns a bounds builder for the screen. */
 	bounds: BoundsAccessor;
+	/** The active screen between current and next. */
+	active: ScreenTransitionState;
+	/** Whether the active screen is transitioning. */
+	isActiveTransitioning: boolean;
+	/** Whether the active screen is dismissing. */
+	isDismissing: boolean;
 }
 
 export type ScreenStyleInterpolator = (
