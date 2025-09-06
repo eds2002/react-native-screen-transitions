@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.3.1
+
+### Patch Changes
+
+- [#31](https://github.com/eds2002/react-native-screen-transitions/pull/31) [`2c4e476`](https://github.com/eds2002/react-native-screen-transitions/commit/2c4e4767de5ae6203121db446a06ca1ca5e1556a) Thanks [@eds2002](https://github.com/eds2002)! - Fix screens that don't have transitions enabled affecting previous screens
+
 ## 2.3.0
 
 ### Minor Changes
