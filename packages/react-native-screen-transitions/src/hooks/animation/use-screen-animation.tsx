@@ -131,16 +131,15 @@ export function _useScreenAnimation() {
 	// If the next screen doesn't opt-in to transitions, avoid falling back to the current
 	// screen's interpolator to prevent unintended global styles (e.g., scaling previous screens
 	// when presenting non-transitioning modals/sheets).
-	const nextEnabled = nextDescriptor?.options.enableTransitions === true;
-	const currentEnabled = currentDescriptor?.options.enableTransitions === true;
+	const nextEnabled = nextDescriptor?.options.enableTransitions;
+	const currentEnabled = currentDescriptor?.options.enableTransitions;
 
-	const screenStyleInterpolator = nextEnabled
-		? nextDescriptor?.options.screenStyleInterpolator
-		: nextDescriptor
-			? undefined
-			: currentEnabled
-				? currentDescriptor?.options.screenStyleInterpolator
-				: undefined;
+	const nextInterpolator =
+		nextEnabled && nextDescriptor?.options.screenStyleInterpolator;
+	const currentInterpolator =
+		currentEnabled && currentDescriptor?.options.screenStyleInterpolator;
+
+	const screenStyleInterpolator = nextInterpolator ?? currentInterpolator;
 
 	return { screenInterpolatorProps, screenStyleInterpolator };
 }
