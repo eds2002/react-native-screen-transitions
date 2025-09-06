@@ -32,11 +32,7 @@ import {
 	ScreenStack,
 	ScreenStackItem,
 } from "react-native-screens";
-import { ScreenLifecycleController } from "../../../components/controllers/screen-lifecycle";
-import { RootTransitionAware } from "../../../components/root-transition-aware";
-import { ScreenGestureProvider } from "../../../providers/gestures";
-import { KeysProvider } from "../../../providers/keys";
-import { TransitionStylesProvider } from "../../../providers/transition-styles";
+import { ScreenTransitionTree } from "../../../components/screen-transition-tree";
 import type {
 	NativeStackDescriptor,
 	NativeStackDescriptorMap,
@@ -469,19 +465,13 @@ const SceneView = ({
 								value={isParentHeaderShown || headerShown !== false}
 							>
 								<HeaderBackContext.Provider value={headerBack}>
-									<KeysProvider
+									<ScreenTransitionTree
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
 									>
-										<ScreenGestureProvider>
-											<ScreenLifecycleController>
-												<TransitionStylesProvider>
-													<RootTransitionAware>{render()}</RootTransitionAware>
-												</TransitionStylesProvider>
-											</ScreenLifecycleController>
-										</ScreenGestureProvider>
-									</KeysProvider>
+										{render()}
+									</ScreenTransitionTree>
 								</HeaderBackContext.Provider>
 							</HeaderShownContext.Provider>
 						</HeaderHeightContext.Provider>

@@ -39,10 +39,8 @@ export default function PresetsLayout() {
 									left: 0,
 									flex: 0,
 									overflow: "hidden",
-									opacity: interpolate(progress, [0, 0.05, 1], [0, 1, 1]),
 								},
 								overlayStyle: {
-									opacity: interpolate(progress, [0, 1], [0, 1]),
 									backgroundColor: "rgba(0,0,0,0.5)",
 								},
 							};

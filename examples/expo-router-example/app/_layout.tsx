@@ -717,6 +717,13 @@ export default function RootLayout() {
 					}}
 				/>
 				<Stack.Screen
+					name="e2e/nested"
+					options={{
+						presentation: "modal",
+						headerShown: false,
+					}}
+				/>
+				<Stack.Screen
 					name="examples/apple-music/(tabs)"
 					options={{
 						headerShown: false,

@@ -1,6 +1,6 @@
 import { FontAwesome6 } from "@expo/vector-icons";
 import { type Href, router } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
 interface CardProps {
@@ -11,14 +11,12 @@ interface CardProps {
 	testID?: string;
 }
 
-const TATouchableOpacity =
-	Transition.createTransitionAwareComponent(TouchableOpacity);
+const TAPressable = Transition.createTransitionAwareComponent(Pressable);
 
 export const Card = ({ title, description, href, testID }: CardProps) => {
 	return (
-		<TouchableOpacity
+		<Pressable
 			style={styles.container}
-			activeOpacity={0.8}
 			onPress={() => router.push(href)}
 			testID={testID}
 		>
@@ -41,7 +39,7 @@ export const Card = ({ title, description, href, testID }: CardProps) => {
 					style={styles.chevron}
 				/>
 			</View>
-		</TouchableOpacity>
+		</Pressable>
 	);
 };
 
@@ -53,9 +51,8 @@ Card.Aware = ({
 	icon,
 }: CardProps & { sharedBoundTag?: string }) => {
 	return (
-		<TATouchableOpacity
+		<TAPressable
 			style={styles.container}
-			activeOpacity={0.8}
 			onPress={() => router.push(href)}
 			sharedBoundTag={sharedBoundTag}
 		>
@@ -78,7 +75,7 @@ Card.Aware = ({
 					style={styles.chevron}
 				/>
 			</View>
-		</TATouchableOpacity>
+		</TAPressable>
 	);
 };
 
