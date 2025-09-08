@@ -14,7 +14,7 @@ import { useGestureContext } from "../providers/gestures";
 import { useKeys } from "../providers/keys";
 import type { TransitionAwareProps } from "../types/core";
 import type { Any } from "../types/utils";
-import { BoundCapture } from "./bound-capture";
+// BoundCapture removed in favor of onPress interception inside useBoundsRegistry
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -68,11 +68,12 @@ export function createTransitionAwareComponent<P extends object>(
 			style,
 		});
 
-		const { measureBounds, handleLayout } = useBoundsRegistry({
+		const { measureBounds, handleLayout, handlePress } = useBoundsRegistry({
 			sharedBoundTag,
 			animatedRef,
 			current,
 			style,
+			onPress,
 		});
 
 		const context = useBoundGroup();
@@ -96,19 +97,19 @@ export function createTransitionAwareComponent<P extends object>(
 			);
 		}
 
+		const pressProps = onPress ? ({ onPress: handlePress } as Any) : {};
+
 		return (
 			<BoundGroupProvider>
-				<BoundCapture sharedBoundTag={sharedBoundTag} measure={measureBounds}>
-					<AnimatedComponent
-						{...(rest as Any)}
-						ref={animatedRef}
-						style={[style, associatedStyles]}
-						onPress={onPress}
-						onLayout={handleLayout}
-					>
-						{children}
-					</AnimatedComponent>
-				</BoundCapture>
+				<AnimatedComponent
+					{...(rest as Any)}
+					{...pressProps}
+					ref={animatedRef}
+					style={[style, associatedStyles]}
+					onLayout={handleLayout}
+				>
+					{children}
+				</AnimatedComponent>
 			</BoundGroupProvider>
 		);
 	});
