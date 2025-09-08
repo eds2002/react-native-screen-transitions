@@ -4,8 +4,8 @@ import {
 	type AnimatedRef,
 	measure,
 	type StyleProps,
-	useSharedValue,
 } from "react-native-reanimated";
+import { useBoundGroup } from "../../providers/bound-group";
 import { useKeys } from "../../providers/keys";
 import { Bounds } from "../../stores/bounds";
 import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
@@ -26,7 +26,7 @@ export const useBoundsRegistry = ({
 }: BoundMeasurerHookProps) => {
 	const { previous } = useKeys();
 
-	const isMeasured = useSharedValue(false);
+	const boundGroup = useBoundGroup();
 
 	const measureBounds = useCallback(() => {
 		"worklet";
@@ -34,6 +34,8 @@ export const useBoundsRegistry = ({
 		const measured = measure(animatedRef);
 		if (measured) {
 			const key = current.route.key;
+
+			// Avoid setting bounds if the bounds are already set
 			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
 				if (Bounds.getRouteActive(key) === sharedBoundTag) {
 					Bounds.setRouteActive(key, sharedBoundTag);
@@ -41,18 +43,22 @@ export const useBoundsRegistry = ({
 				return;
 			}
 
+			// Tell children to measure again
+			boundGroup?.broadcast();
+
 			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
+
 			if (Bounds.getRouteActive(key) === sharedBoundTag) {
 				Bounds.setRouteActive(key, sharedBoundTag);
 			}
 		}
-	}, [sharedBoundTag, animatedRef, current.route.key, style]);
+	}, [sharedBoundTag, animatedRef, current.route.key, style, boundGroup]);
 
 	const handleLayout = useCallback(() => {
 		"worklet";
 		const previousRouteKey = previous?.route.key;
 
-		if (!sharedBoundTag || isMeasured.value || !previousRouteKey) {
+		if (!sharedBoundTag || !previousRouteKey) {
 			return;
 		}
 
@@ -61,9 +67,8 @@ export const useBoundsRegistry = ({
 
 		if (hasPreviousBoundForTag) {
 			measureBounds();
-			isMeasured.value = true;
 		}
-	}, [measureBounds, sharedBoundTag, previous?.route.key, isMeasured]);
+	}, [measureBounds, sharedBoundTag, previous?.route.key]);
 
 	return {
 		measureBounds,

@@ -2,10 +2,14 @@ import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
+import Animated, {
+	useAnimatedReaction,
+	useAnimatedRef,
+} from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useBoundsRegistry } from "../hooks/bounds/use-bound-registry";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
+import { BoundGroupProvider, useBoundGroup } from "../providers/bound-group";
 import { useGestureContext } from "../providers/gestures";
 import { useKeys } from "../providers/keys";
 import type { TransitionAwareProps } from "../types/core";
@@ -53,15 +57,8 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof AnimatedComponent>,
 		TransitionAwareProps<P>
 	>((props, ref) => {
-		const {
-			children,
-			style,
-			sharedBoundTag,
-			styleId,
-			onPress,
-			measureOnLayout,
-			...rest
-		} = props as Any;
+		const { children, style, sharedBoundTag, styleId, onPress, ...rest } =
+			props as Any;
 
 		const animatedRef = useAnimatedRef<View>();
 		const { current } = useKeys();
@@ -78,6 +75,16 @@ export function createTransitionAwareComponent<P extends object>(
 			style,
 		});
 
+		const context = useBoundGroup();
+
+		useAnimatedReaction(
+			() => context?.signal.value,
+			() => {
+				"worklet";
+				measureBounds();
+			},
+		);
+
 		if (isScrollable) {
 			return (
 				<ScrollableInner
@@ -89,26 +96,20 @@ export function createTransitionAwareComponent<P extends object>(
 			);
 		}
 
-		const onLayoutHandler = runOnUI(() => {
-			"worklet";
-			handleLayout();
-			if (measureOnLayout && sharedBoundTag) {
-				measureBounds();
-			}
-		});
-
 		return (
-			<BoundCapture sharedBoundTag={sharedBoundTag} measure={measureBounds}>
-				<AnimatedComponent
-					{...(rest as Any)}
-					ref={animatedRef}
-					style={[style, associatedStyles]}
-					onPress={onPress}
-					onLayout={onLayoutHandler}
-				>
-					{children}
-				</AnimatedComponent>
-			</BoundCapture>
+			<BoundGroupProvider>
+				<BoundCapture sharedBoundTag={sharedBoundTag} measure={measureBounds}>
+					<AnimatedComponent
+						{...(rest as Any)}
+						ref={animatedRef}
+						style={[style, associatedStyles]}
+						onPress={onPress}
+						onLayout={handleLayout}
+					>
+						{children}
+					</AnimatedComponent>
+				</BoundCapture>
+			</BoundGroupProvider>
 		);
 	});
 
