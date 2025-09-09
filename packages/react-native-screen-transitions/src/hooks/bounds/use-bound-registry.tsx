@@ -12,6 +12,7 @@ import {
 	runOnJS,
 	runOnUI,
 	type StyleProps,
+	useAnimatedReaction,
 	useSharedValue,
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
@@ -95,53 +96,38 @@ export const useBoundsRegistry = ({
 		}
 	}, [maybeMeasureAndStore, sharedBoundTag, previous?.route.key]);
 
-	const captureActiveOnPress = useCallback(
-		(...args: unknown[]) => {
-			if (!sharedBoundTag) {
-				if (onPress) {
-					onPress(...args);
-				}
-				return;
+	const captureActiveOnPress = useStableCallback((...args: unknown[]) => {
+		if (!sharedBoundTag) {
+			if (onPress) {
+				onPress(...args);
+			}
+			return;
+		}
+
+		runOnUI(() => {
+			"worklet";
+			const measured = measure(animatedRef);
+
+			if (!measured) return;
+
+			Bounds.setRouteActive(current.route.key, sharedBoundTag);
+
+			if (IS_ROOT) {
+				ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
 			}
 
-			runOnUI(() => {
-				"worklet";
-				const measured = measure(animatedRef);
+			Bounds.setBounds(
+				current.route.key,
+				sharedBoundTag,
+				measured,
+				flattenStyle(style),
+			);
 
-				if (!measured) return;
-
-				Bounds.setRouteActive(current.route.key, sharedBoundTag);
-
-				if (IS_ROOT) {
-					ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
-				}
-
-				console.log("measuring and storing bounds");
-				console.log("measured", measured);
-				console.log("sharedBoundTag", sharedBoundTag);
-
-				Bounds.setBounds(
-					current.route.key,
-					sharedBoundTag,
-					measured,
-					flattenStyle(style),
-				);
-
-				if (onPress) {
-					runOnJS(onPress)(...args);
-				}
-			})();
-		},
-		[
-			sharedBoundTag,
-			animatedRef,
-			current.route.key,
-			style,
-			onPress,
-			IS_ROOT,
-			ROOT_SIGNAL,
-		],
-	);
+			if (onPress) {
+				runOnJS(onPress)(...args);
+			}
+		})();
+	});
 
 	const MeasurementSyncProvider = useMemo(() => {
 		if (!IS_ROOT || !sharedBoundTag) {
@@ -155,13 +141,14 @@ export const useBoundsRegistry = ({
 		);
 	}, [IS_ROOT, sharedBoundTag, ROOT_SIGNAL]);
 
-	// useAnimatedReaction(
-	// 	() => ROOT_MEASUREMENT_SIGNAL?.updateSignal.value,
-	// 	() => {
-	// 		"worklet";
-	// 		maybeMeasureAndStore();
-	// 	},
-	// );
+	useAnimatedReaction(
+		() => ROOT_MEASUREMENT_SIGNAL?.updateSignal.value,
+		(current) => {
+			"worklet";
+			if (current === 0 || current === undefined) return; // We don't want to run on the initial amount
+			maybeMeasureAndStore();
+		},
+	);
 
 	return {
 		handleTransitionLayout,
