@@ -56,7 +56,6 @@ export function createTransitionAwareComponent<P extends object>(
 			props as Any;
 
 		const animatedRef = useAnimatedRef<View>();
-		const { current } = useKeys();
 
 		const { associatedStyles } = useAssociatedStyles({
 			id: sharedBoundTag || styleId,
@@ -70,7 +69,6 @@ export function createTransitionAwareComponent<P extends object>(
 		} = useBoundsRegistry({
 			sharedBoundTag,
 			animatedRef,
-			current,
 			style,
 			onPress,
 		});

@@ -37,7 +37,6 @@ export default function List() {
 			<Transition.View
 				style={styles.square}
 				sharedBoundTag={`list-bounds-${item}-icon`}
-				measureOnLayout
 			>
 				<Text style={styles.indexText}>{item}</Text>
 			</Transition.View>

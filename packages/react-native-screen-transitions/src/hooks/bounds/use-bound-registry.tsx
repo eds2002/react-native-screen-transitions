@@ -25,7 +25,7 @@ import useStableCallback from "../use-stable-callback";
 interface BoundMeasurerHookProps {
 	sharedBoundTag?: string;
 	animatedRef: AnimatedRef<View>;
-	current: { route: { key: string } };
+
 	style: StyleProps;
 	onPress?: ((...args: unknown[]) => void) | undefined;
 }
@@ -40,11 +40,10 @@ const MeasurementUpdateContext =
 export const useBoundsRegistry = ({
 	sharedBoundTag,
 	animatedRef,
-	current,
 	style,
 	onPress,
 }: BoundMeasurerHookProps) => {
-	const { previous } = useKeys();
+	const { previous, current } = useKeys();
 
 	const ROOT_MEASUREMENT_SIGNAL = useContext(MeasurementUpdateContext);
 	const ROOT_SIGNAL = useSharedValue(0);
@@ -52,13 +51,17 @@ export const useBoundsRegistry = ({
 
 	const emitUpdate = useCallback(() => {
 		"worklet";
-		if (IS_ROOT) {
-			ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
-		}
+		if (IS_ROOT) ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
 	}, [IS_ROOT, ROOT_SIGNAL]);
 
 	const maybeMeasureAndStore = useCallback(
-		(onPress?: () => void) => {
+		({
+			onPress,
+			skipMarkingActive,
+		}: {
+			onPress?: () => void;
+			skipMarkingActive?: boolean;
+		}) => {
 			"worklet";
 			if (!sharedBoundTag) return;
 
@@ -73,20 +76,21 @@ export const useBoundsRegistry = ({
 
 			const key = current.route.key;
 
-			const isEqual = isBoundsEqual({ measured, key, sharedBoundTag });
-
-			if (isEqual) {
-				Bounds.setRouteActive(key, sharedBoundTag);
+			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
 				emitUpdate();
-
+				if (!skipMarkingActive) {
+					Bounds.setRouteActive(key, sharedBoundTag);
+				}
 				if (onPress) runOnJS(onPress)();
 				return;
 			}
 
-			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
-			Bounds.setRouteActive(key, sharedBoundTag);
-
 			emitUpdate();
+
+			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
+			if (!skipMarkingActive) {
+				Bounds.setRouteActive(key, sharedBoundTag);
+			}
 
 			if (onPress) runOnJS(onPress)();
 		},
@@ -95,13 +99,16 @@ export const useBoundsRegistry = ({
 
 	const handleTransitionLayout = useCallback(() => {
 		"worklet";
-		if (!sharedBoundTag || !previous?.route.key) {
+
+		if (!sharedBoundTag) {
 			return;
 		}
 
-		const prevBounds = Bounds.getBounds(previous?.route.key)?.[sharedBoundTag];
+		const prevKey = previous?.route.key ?? "";
+		const prevBounds = Bounds.getBounds(prevKey)?.[sharedBoundTag];
 
-		if (prevBounds) maybeMeasureAndStore();
+		// Should skip mark active if we are in a transition
+		if (prevBounds) maybeMeasureAndStore({ skipMarkingActive: true });
 	}, [maybeMeasureAndStore, sharedBoundTag, previous?.route.key]);
 
 	const captureActiveOnPress = useStableCallback(() => {
@@ -110,7 +117,8 @@ export const useBoundsRegistry = ({
 			return;
 		}
 
-		runOnUI(maybeMeasureAndStore)(onPress);
+		// In this case, we DO want to mark active
+		runOnUI(maybeMeasureAndStore)({ onPress });
 	});
 
 	const MeasurementSyncProvider = useMemo(() => {
@@ -129,8 +137,12 @@ export const useBoundsRegistry = ({
 		() => ROOT_MEASUREMENT_SIGNAL?.updateSignal.value,
 		(current) => {
 			"worklet";
-			if (current === 0 || current === undefined) return; // We don't want to run on the initial amount
-			maybeMeasureAndStore();
+
+			// We don't want to run on the initial amount)
+			if (current === 0 || current === undefined) return;
+
+			// Children should not have the ability to mark active
+			maybeMeasureAndStore({ skipMarkingActive: true });
 		},
 	);
 
