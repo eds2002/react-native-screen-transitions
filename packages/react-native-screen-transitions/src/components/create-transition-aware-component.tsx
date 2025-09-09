@@ -7,7 +7,6 @@ import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useBoundsRegistry } from "../hooks/bounds/use-bound-registry";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { useGestureContext } from "../providers/gestures";
-import { useKeys } from "../providers/keys";
 import type { TransitionAwareProps } from "../types/core";
 import type { Any } from "../types/utils";
 

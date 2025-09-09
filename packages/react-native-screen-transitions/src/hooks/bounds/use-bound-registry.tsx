@@ -48,6 +48,7 @@ export const useBoundsRegistry = ({
 	const ROOT_MEASUREMENT_SIGNAL = useContext(MeasurementUpdateContext);
 	const ROOT_SIGNAL = useSharedValue(0);
 	const IS_ROOT = !ROOT_MEASUREMENT_SIGNAL;
+	const hasMeasured = useSharedValue(false);
 
 	const emitUpdate = useCallback(() => {
 		"worklet";
@@ -100,16 +101,20 @@ export const useBoundsRegistry = ({
 	const handleTransitionLayout = useCallback(() => {
 		"worklet";
 
-		if (!sharedBoundTag) {
+		const prevKey = previous?.route.key;
+		if (!sharedBoundTag || hasMeasured.value || !prevKey) {
 			return;
 		}
 
-		const prevKey = previous?.route.key ?? "";
 		const prevBounds = Bounds.getBounds(prevKey)?.[sharedBoundTag];
 
-		// Should skip mark active if we are in a transition
-		if (prevBounds) maybeMeasureAndStore({ skipMarkingActive: true });
-	}, [maybeMeasureAndStore, sharedBoundTag, previous?.route.key]);
+		if (prevBounds) {
+			// Should skip mark active if we are in a transition
+			maybeMeasureAndStore({ skipMarkingActive: true });
+			// Should not measure again while in transition
+			hasMeasured.value = true;
+		}
+	}, [maybeMeasureAndStore, sharedBoundTag, previous?.route.key, hasMeasured]);
 
 	const captureActiveOnPress = useStableCallback(() => {
 		if (!sharedBoundTag) {
@@ -147,6 +152,7 @@ export const useBoundsRegistry = ({
 	);
 
 	return {
+		maybeMeasureAndStore,
 		handleTransitionLayout,
 		captureActiveOnPress,
 		MeasurementSyncProvider,
