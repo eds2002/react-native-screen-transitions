@@ -25,7 +25,9 @@ export function TransitionStylesProvider({ children }: Props) {
 		"worklet";
 
 		if (screenStyleInterpolator && !isFunctionWorklet && __DEV__) {
-			console.warn("screenStyleInterpolator is not a worklet function");
+			console.warn(
+				`[react-native-screen-transitions] screenStyleInterpolator is not a worklet function`,
+			);
 			return EMPTY_MAP;
 		}
 

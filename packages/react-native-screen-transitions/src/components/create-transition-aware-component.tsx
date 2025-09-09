@@ -83,6 +83,7 @@ export function createTransitionAwareComponent<P extends object>(
 					style={[style, associatedStyles]}
 					onPress={captureActiveOnPress}
 					onLayout={runOnUI(handleTransitionLayout)}
+					collapsable={!!sharedBoundTag}
 				>
 					{children}
 				</AnimatedComponent>

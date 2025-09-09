@@ -42,15 +42,6 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * </Transition.View>
 	 */
 	sharedBoundTag?: string;
-
-	/**
-	 * Eagerly measure this component on layout and store the result in the
-	 * Bounds registry. Useful for nested shared elements that may not receive
-	 * the press event but still need up-to-date measurements at navigation time.
-	 *
-	 * Only has an effect when used together with `sharedBoundTag`.
-	 */
-	measureOnLayout?: boolean;
 };
 
 export type TransitionConfig = {

@@ -23,7 +23,7 @@ import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
 import useStableCallback from "../use-stable-callback";
 
 interface BoundMeasurerHookProps {
-	sharedBoundTag: string;
+	sharedBoundTag?: string;
 	animatedRef: AnimatedRef<View>;
 	current: { route: { key: string } };
 	style: StyleProps;
@@ -58,23 +58,25 @@ export const useBoundsRegistry = ({
 	}, [IS_ROOT, ROOT_SIGNAL]);
 
 	const maybeMeasureAndStore = useCallback(
-		(onPress?: (...args: unknown[]) => void) => {
+		(onPress?: () => void) => {
 			"worklet";
 			if (!sharedBoundTag) return;
 
 			const measured = measure(animatedRef);
 
-			if (!measured) return;
+			if (!measured) {
+				console.warn(
+					`[react-native-screen-transitions] measure() returned null for sharedBoundTag="${sharedBoundTag}"`,
+				);
+				return;
+			}
 
 			const key = current.route.key;
 
 			const isEqual = isBoundsEqual({ measured, key, sharedBoundTag });
 
 			if (isEqual) {
-				if (Bounds.getRouteActive(key) === sharedBoundTag) {
-					Bounds.setRouteActive(key, sharedBoundTag);
-				}
-
+				Bounds.setRouteActive(key, sharedBoundTag);
 				emitUpdate();
 
 				if (onPress) runOnJS(onPress)();
@@ -82,13 +84,9 @@ export const useBoundsRegistry = ({
 			}
 
 			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
+			Bounds.setRouteActive(key, sharedBoundTag);
 
-			// Tell the children to measure
 			emitUpdate();
-
-			if (Bounds.getRouteActive(key) === sharedBoundTag) {
-				Bounds.setRouteActive(key, sharedBoundTag);
-			}
 
 			if (onPress) runOnJS(onPress)();
 		},
@@ -106,11 +104,9 @@ export const useBoundsRegistry = ({
 		if (prevBounds) maybeMeasureAndStore();
 	}, [maybeMeasureAndStore, sharedBoundTag, previous?.route.key]);
 
-	const captureActiveOnPress = useStableCallback((...args: unknown[]) => {
+	const captureActiveOnPress = useStableCallback(() => {
 		if (!sharedBoundTag) {
-			if (onPress) {
-				onPress(...args);
-			}
+			if (onPress) onPress();
 			return;
 		}
 
