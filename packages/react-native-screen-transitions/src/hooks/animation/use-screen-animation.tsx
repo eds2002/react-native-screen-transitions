@@ -102,7 +102,11 @@ export function _useScreenAnimation() {
 			"worklet";
 
 			const previous = unwrap(prevAnimation, previousDescriptor?.route.key);
-			const next = unwrap(nextAnimation, nextDescriptor?.route.key);
+
+			const next = nextDescriptor?.options?.enableTransitions
+				? unwrap(nextAnimation, nextDescriptor?.route.key)
+				: undefined;
+
 			const current =
 				unwrap(currentAnimation, currentDescriptor?.route.key) ?? FALLBACK;
 
