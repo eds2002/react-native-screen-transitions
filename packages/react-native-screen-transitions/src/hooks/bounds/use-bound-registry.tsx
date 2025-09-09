@@ -10,7 +10,6 @@ import {
 	type AnimatedRef,
 	measure,
 	runOnJS,
-	runOnUI,
 	type StyleProps,
 	useAnimatedReaction,
 	useSharedValue,
@@ -30,9 +29,12 @@ interface BoundMeasurerHookProps {
 	onPress?: ((...args: unknown[]) => void) | undefined;
 }
 
-const MeasurementUpdateContext = createContext<{
+interface MeasurementUpdateContextType {
 	updateSignal: SharedValue<number>;
-} | null>(null);
+}
+
+const MeasurementUpdateContext =
+	createContext<MeasurementUpdateContextType | null>(null);
 
 export const useBoundsRegistry = ({
 	sharedBoundTag,
@@ -47,41 +49,53 @@ export const useBoundsRegistry = ({
 	const ROOT_SIGNAL = useSharedValue(0);
 	const IS_ROOT = !ROOT_MEASUREMENT_SIGNAL;
 
-	const maybeMeasureAndStore = useCallback(() => {
+	const emitUpdate = useCallback(() => {
 		"worklet";
-		if (!sharedBoundTag) return;
-
-		const measured = measure(animatedRef);
-
-		if (!measured) return;
-
-		const key = current.route.key;
-
-		if (isBoundsEqual({ measured, key, sharedBoundTag })) {
-			if (Bounds.getRouteActive(key) === sharedBoundTag) {
-				Bounds.setRouteActive(key, sharedBoundTag);
-			}
-			return;
-		}
-
-		// We want our children to measure again as well.
 		if (IS_ROOT) {
 			ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
 		}
+	}, [IS_ROOT, ROOT_SIGNAL]);
 
-		Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
+	const maybeMeasureAndStore = useCallback(
+		(onPress?: (...args: unknown[]) => void) => {
+			"worklet";
+			if (!sharedBoundTag) return;
 
-		if (Bounds.getRouteActive(key) === sharedBoundTag) {
-			Bounds.setRouteActive(key, sharedBoundTag);
-		}
-	}, [
-		sharedBoundTag,
-		animatedRef,
-		current.route.key,
-		style,
-		IS_ROOT,
-		ROOT_SIGNAL,
-	]);
+			const measured = measure(animatedRef);
+
+			if (!measured) return;
+
+			const key = current.route.key;
+
+			const isEqual = isBoundsEqual({ measured, key, sharedBoundTag });
+
+			if (isEqual) {
+				if (Bounds.getRouteActive(key) === sharedBoundTag) {
+					Bounds.setRouteActive(key, sharedBoundTag);
+				}
+
+				emitUpdate();
+
+				if (onPress) {
+					runOnJS(onPress)();
+				}
+				return;
+			}
+
+			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
+
+			// Tell the children to measure
+			emitUpdate();
+
+			if (Bounds.getRouteActive(key) === sharedBoundTag) {
+				Bounds.setRouteActive(key, sharedBoundTag);
+			}
+			if (onPress) {
+				runOnJS(onPress)();
+			}
+		},
+		[sharedBoundTag, animatedRef, current.route.key, style, emitUpdate],
+	);
 
 	const handleTransitionLayout = useCallback(() => {
 		"worklet";
@@ -89,11 +103,9 @@ export const useBoundsRegistry = ({
 			return;
 		}
 
-		const previousBounds = Bounds.getBounds(previous?.route.key);
+		const prevBounds = Bounds.getBounds(previous?.route.key)?.[sharedBoundTag];
 
-		if (previousBounds) {
-			maybeMeasureAndStore();
-		}
+		if (prevBounds) maybeMeasureAndStore();
 	}, [maybeMeasureAndStore, sharedBoundTag, previous?.route.key]);
 
 	const captureActiveOnPress = useStableCallback((...args: unknown[]) => {
@@ -104,29 +116,7 @@ export const useBoundsRegistry = ({
 			return;
 		}
 
-		runOnUI(() => {
-			"worklet";
-			const measured = measure(animatedRef);
-
-			if (!measured) return;
-
-			Bounds.setRouteActive(current.route.key, sharedBoundTag);
-
-			if (IS_ROOT) {
-				ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
-			}
-
-			Bounds.setBounds(
-				current.route.key,
-				sharedBoundTag,
-				measured,
-				flattenStyle(style),
-			);
-
-			if (onPress) {
-				runOnJS(onPress)(...args);
-			}
-		})();
+		maybeMeasureAndStore(onPress);
 	});
 
 	const MeasurementSyncProvider = useMemo(() => {
