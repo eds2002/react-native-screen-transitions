@@ -13,7 +13,7 @@
 		"preset": "jest-expo"
 	},
 	"dependencies": {
-		"@expo/vector-icons": "^15.0.0",
+		"@expo/vector-icons": "^14.1.0",
 		"@legendapp/list": "^1.1.4",
 		"@react-native-masked-view/masked-view": "^0.3.2",
 		"@react-navigation/native": "^7.1.6",
@@ -31,14 +31,16 @@
 		"react-dom": "19.0.0",
 		"react-native": "0.79.5",
 		"react-native-gesture-handler": "~2.24.0",
-		"react-native-reanimated": "~3.17.5",
+		"react-native-reanimated": "4.1.0",
 		"react-native-safe-area-context": "5.4.0",
 		"react-native-screen-transitions": "workspace:*",
-		"react-native-screens": "~4.11.1"
+		"react-native-screens": "~4.11.1",
+		"react-native-worklets": "^0.5.0"
 	},
 	"devDependencies": {
 		"@babel/core": "^7.28.3",
 		"@types/react": "~19.0.14",
+		"babel-preset-expo": "~13.0.0",
 		"jest": "^29.7.0",
 		"jest-expo": "~53.0.10",
 		"react-test-renderer": "19.0.0",
