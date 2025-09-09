@@ -21,7 +21,7 @@ import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import { type ActivationArea, GestureOffsetState } from "../../types/gesture";
 import { animate } from "../../utils/animation/animate";
-import { runTransition } from "../../utils/animation/run-transition";
+import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
@@ -293,9 +293,9 @@ export const useBuildGestures = ({
 				runOnJS(setNavigatorDismissal)();
 			}
 
-			runTransition({
+			startScreenTransition({
 				target: shouldDismiss ? "close" : "open",
-				onFinish: shouldDismiss ? handleDismiss : undefined,
+				onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
 				spec: transitionSpec,
 				velocity,
 				animations,
