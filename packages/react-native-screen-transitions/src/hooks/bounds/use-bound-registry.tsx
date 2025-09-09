@@ -10,6 +10,7 @@ import {
 	type AnimatedRef,
 	measure,
 	runOnJS,
+	runOnUI,
 	type StyleProps,
 	useAnimatedReaction,
 	useSharedValue,
@@ -76,9 +77,7 @@ export const useBoundsRegistry = ({
 
 				emitUpdate();
 
-				if (onPress) {
-					runOnJS(onPress)();
-				}
+				if (onPress) runOnJS(onPress)();
 				return;
 			}
 
@@ -90,9 +89,8 @@ export const useBoundsRegistry = ({
 			if (Bounds.getRouteActive(key) === sharedBoundTag) {
 				Bounds.setRouteActive(key, sharedBoundTag);
 			}
-			if (onPress) {
-				runOnJS(onPress)();
-			}
+
+			if (onPress) runOnJS(onPress)();
 		},
 		[sharedBoundTag, animatedRef, current.route.key, style, emitUpdate],
 	);
@@ -116,7 +114,7 @@ export const useBoundsRegistry = ({
 			return;
 		}
 
-		maybeMeasureAndStore(onPress);
+		runOnUI(maybeMeasureAndStore)(onPress);
 	});
 
 	const MeasurementSyncProvider = useMemo(() => {
