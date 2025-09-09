@@ -2,19 +2,14 @@ import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-	useAnimatedReaction,
-	useAnimatedRef,
-} from "react-native-reanimated";
+import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useBoundsRegistry } from "../hooks/bounds/use-bound-registry";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
-import { BoundGroupProvider, useBoundGroup } from "../providers/bound-group";
 import { useGestureContext } from "../providers/gestures";
 import { useKeys } from "../providers/keys";
 import type { TransitionAwareProps } from "../types/core";
 import type { Any } from "../types/utils";
-// BoundCapture removed in favor of onPress interception inside useBoundsRegistry
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -68,7 +63,11 @@ export function createTransitionAwareComponent<P extends object>(
 			style,
 		});
 
-		const { measureBounds, handleLayout, handlePress } = useBoundsRegistry({
+		const {
+			handleTransitionLayout,
+			captureActiveOnPress,
+			MeasurementSyncProvider,
+		} = useBoundsRegistry({
 			sharedBoundTag,
 			animatedRef,
 			current,
@@ -76,41 +75,22 @@ export function createTransitionAwareComponent<P extends object>(
 			onPress,
 		});
 
-		const context = useBoundGroup();
-
-		useAnimatedReaction(
-			() => context?.signal.value,
-			() => {
-				"worklet";
-				measureBounds();
-			},
-		);
-
 		if (isScrollable) {
-			return (
-				<ScrollableInner
-					{...(props as Any)}
-					ref={ref}
-					measureBounds={measureBounds}
-					handleLayout={handleLayout}
-				/>
-			);
+			return <ScrollableInner {...(props as Any)} ref={ref} />;
 		}
 
-		const pressProps = onPress ? ({ onPress: handlePress } as Any) : {};
-
 		return (
-			<BoundGroupProvider>
+			<MeasurementSyncProvider>
 				<AnimatedComponent
 					{...(rest as Any)}
-					{...pressProps}
 					ref={animatedRef}
 					style={[style, associatedStyles]}
-					onLayout={handleLayout}
+					onPress={captureActiveOnPress}
+					onLayout={handleTransitionLayout}
 				>
 					{children}
 				</AnimatedComponent>
-			</BoundGroupProvider>
+			</MeasurementSyncProvider>
 		);
 	});
 

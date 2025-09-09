@@ -1,4 +1,10 @@
-import { useCallback } from "react";
+import {
+	createContext,
+	Fragment,
+	useCallback,
+	useContext,
+	useMemo,
+} from "react";
 import type { View } from "react-native";
 import {
 	type AnimatedRef,
@@ -6,12 +12,14 @@ import {
 	runOnJS,
 	runOnUI,
 	type StyleProps,
+	useSharedValue,
 } from "react-native-reanimated";
-import { useBoundGroup } from "../../providers/bound-group";
+import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
 import { useKeys } from "../../providers/keys";
 import { Bounds } from "../../stores/bounds";
 import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
 import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
+import useStableCallback from "../use-stable-callback";
 
 interface BoundMeasurerHookProps {
 	sharedBoundTag: string;
@@ -20,6 +28,10 @@ interface BoundMeasurerHookProps {
 	style: StyleProps;
 	onPress?: ((...args: unknown[]) => void) | undefined;
 }
+
+const MeasurementUpdateContext = createContext<{
+	updateSignal: SharedValue<number>;
+} | null>(null);
 
 export const useBoundsRegistry = ({
 	sharedBoundTag,
@@ -30,83 +42,130 @@ export const useBoundsRegistry = ({
 }: BoundMeasurerHookProps) => {
 	const { previous } = useKeys();
 
-	const boundGroup = useBoundGroup();
+	const ROOT_MEASUREMENT_SIGNAL = useContext(MeasurementUpdateContext);
+	const ROOT_SIGNAL = useSharedValue(0);
+	const IS_ROOT = !ROOT_MEASUREMENT_SIGNAL;
 
-	const measureBounds = useCallback(() => {
+	const maybeMeasureAndStore = useCallback(() => {
 		"worklet";
 		if (!sharedBoundTag) return;
-		const measured = measure(animatedRef);
-		if (measured) {
-			const key = current.route.key;
 
-			// Avoid setting bounds if the bounds are already set
-			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
-				if (Bounds.getRouteActive(key) === sharedBoundTag) {
-					Bounds.setRouteActive(key, sharedBoundTag);
+		const measured = measure(animatedRef);
+
+		if (!measured) return;
+
+		const key = current.route.key;
+
+		if (isBoundsEqual({ measured, key, sharedBoundTag })) {
+			if (Bounds.getRouteActive(key) === sharedBoundTag) {
+				Bounds.setRouteActive(key, sharedBoundTag);
+			}
+			return;
+		}
+
+		// We want our children to measure again as well.
+		if (IS_ROOT) {
+			ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
+		}
+
+		Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
+
+		if (Bounds.getRouteActive(key) === sharedBoundTag) {
+			Bounds.setRouteActive(key, sharedBoundTag);
+		}
+	}, [
+		sharedBoundTag,
+		animatedRef,
+		current.route.key,
+		style,
+		IS_ROOT,
+		ROOT_SIGNAL,
+	]);
+
+	const handleTransitionLayout = useCallback(() => {
+		"worklet";
+		if (!sharedBoundTag || !previous?.route.key) {
+			return;
+		}
+
+		const previousBounds = Bounds.getBounds(previous?.route.key);
+
+		if (previousBounds) {
+			maybeMeasureAndStore();
+		}
+	}, [maybeMeasureAndStore, sharedBoundTag, previous?.route.key]);
+
+	const captureActiveOnPress = useCallback(
+		(...args: unknown[]) => {
+			if (!sharedBoundTag) {
+				if (onPress) {
+					onPress(...args);
 				}
 				return;
 			}
 
-			// Tell children to measure again
-			boundGroup?.broadcast();
-
-			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
-
-			if (Bounds.getRouteActive(key) === sharedBoundTag) {
-				Bounds.setRouteActive(key, sharedBoundTag);
-			}
-		}
-	}, [sharedBoundTag, animatedRef, current.route.key, style, boundGroup]);
-
-	const handleLayout = useCallback(() => {
-		"worklet";
-		const previousRouteKey = previous?.route.key;
-
-		if (!sharedBoundTag || !previousRouteKey) {
-			return;
-		}
-
-		const previousBounds = Bounds.getBounds(previousRouteKey);
-		const hasPreviousBoundForTag = previousBounds[sharedBoundTag];
-
-		if (hasPreviousBoundForTag) {
-			measureBounds();
-		}
-	}, [measureBounds, sharedBoundTag, previous?.route.key]);
-
-	const handlePress = useCallback(
-		(...args: unknown[]) => {
-			// Intercept onPress: measure first, only proceed when successful
-			runOnUI((key: string, id: string) => {
+			runOnUI(() => {
 				"worklet";
-				if (!id) return;
 				const measured = measure(animatedRef);
-				if (measured) {
-					Bounds.setRouteActive(key, id);
-					// Broadcast to children first so they can remeasure before we store
-					// (ordering doesn't affect outcome, but keeps cascade consistent)
-					// Then store this node's bounds
-					boundGroup?.broadcast();
-					Bounds.setBounds(key, id, measured, flattenStyle(style));
-					if (onPress) {
-						runOnJS(onPress)(...args);
-					}
+
+				if (!measured) return;
+
+				Bounds.setRouteActive(current.route.key, sharedBoundTag);
+
+				if (IS_ROOT) {
+					ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
 				}
-			})(current.route.key, sharedBoundTag);
+
+				console.log("measuring and storing bounds");
+				console.log("measured", measured);
+				console.log("sharedBoundTag", sharedBoundTag);
+
+				Bounds.setBounds(
+					current.route.key,
+					sharedBoundTag,
+					measured,
+					flattenStyle(style),
+				);
+
+				if (onPress) {
+					runOnJS(onPress)(...args);
+				}
+			})();
 		},
 		[
+			sharedBoundTag,
 			animatedRef,
 			current.route.key,
-			onPress,
-			sharedBoundTag,
 			style,
-			boundGroup,
+			onPress,
+			IS_ROOT,
+			ROOT_SIGNAL,
 		],
 	);
 
+	const MeasurementSyncProvider = useMemo(() => {
+		if (!IS_ROOT || !sharedBoundTag) {
+			return Fragment;
+		}
+
+		return ({ children }: { children: React.ReactNode }) => (
+			<MeasurementUpdateContext.Provider value={{ updateSignal: ROOT_SIGNAL }}>
+				{children}
+			</MeasurementUpdateContext.Provider>
+		);
+	}, [IS_ROOT, sharedBoundTag, ROOT_SIGNAL]);
+
+	// useAnimatedReaction(
+	// 	() => ROOT_MEASUREMENT_SIGNAL?.updateSignal.value,
+	// 	() => {
+	// 		"worklet";
+	// 		maybeMeasureAndStore();
+	// 	},
+	// );
+
 	return {
-		measureBounds,
-		handleLayout,
-		handlePress,
+		handleTransitionLayout,
+		captureActiveOnPress,
+		MeasurementSyncProvider,
 	};
 };

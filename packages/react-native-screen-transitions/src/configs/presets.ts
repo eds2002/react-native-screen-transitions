@@ -304,6 +304,8 @@ export const SharedIGImage = (
 				};
 			}
 
+			console.log("activeBoundId", activeBoundId);
+			console.log("boundValues", boundValues);
 			return {
 				contentStyle: {
 					pointerEvents: current.gesture.isDismissing ? "none" : "auto",
