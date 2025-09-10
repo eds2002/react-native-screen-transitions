@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.3.2
+
+### Patch Changes
+
+- [#33](https://github.com/eds2002/react-native-screen-transitions/pull/33) [`41b8df6`](https://github.com/eds2002/react-native-screen-transitions/commit/41b8df6269b5025bef0ae9f0fbb87a2d89d0f653) Thanks [@eds2002](https://github.com/eds2002)! - Fixes: onPress shouldn't run when measuremenets failed (sharedBoundTag only), nested sharedBoundTags should be automatically measured alongside the parent, transitioning to non transition enabled screens should not affect the previous screen
+
 ## 2.3.1
 
 ### Patch Changes
