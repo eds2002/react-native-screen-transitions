@@ -1,28 +1,24 @@
 import { memo } from "react";
 import { StyleSheet, View } from "react-native";
-import Animated, {
-	type StyleProps,
-	useAnimatedStyle,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { NO_STYLES } from "../constants";
 import { useTransitionStyles } from "../providers/transition-styles";
 
 type Props = {
 	children: React.ReactNode;
 };
 
-const EMPTY_STYLE = Object.freeze({} as StyleProps);
-
 export const RootTransitionAware = memo(({ children }: Props) => {
 	const { stylesMap } = useTransitionStyles();
 
 	const animatedContentStyle = useAnimatedStyle(() => {
 		"worklet";
-		return stylesMap.value.contentStyle || EMPTY_STYLE;
+		return stylesMap.value.contentStyle || NO_STYLES;
 	});
 
 	const animatedOverlayStyle = useAnimatedStyle(() => {
 		"worklet";
-		return stylesMap.value.overlayStyle || EMPTY_STYLE;
+		return stylesMap.value.overlayStyle || NO_STYLES;
 	});
 
 	return (

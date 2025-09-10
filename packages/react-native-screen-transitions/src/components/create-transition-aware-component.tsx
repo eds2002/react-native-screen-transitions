@@ -7,10 +7,8 @@ import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useBoundsRegistry } from "../hooks/bounds/use-bound-registry";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { useGestureContext } from "../providers/gestures";
-import { useKeys } from "../providers/keys";
 import type { TransitionAwareProps } from "../types/core";
 import type { Any } from "../types/utils";
-import { BoundCapture } from "./bound-capture";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -52,65 +50,52 @@ export function createTransitionAwareComponent<P extends object>(
 	const Inner = forwardRef<
 		React.ComponentRef<typeof AnimatedComponent>,
 		TransitionAwareProps<P>
-	>((props, ref) => {
-		const {
-			children,
-			style,
-			sharedBoundTag,
-			styleId,
-			onPress,
-			measureOnLayout,
-			...rest
-		} = props as Any;
+	>((props, _) => {
+		const { children, style, sharedBoundTag, styleId, onPress, ...rest } =
+			props as Any;
 
 		const animatedRef = useAnimatedRef<View>();
-		const { current } = useKeys();
 
 		const { associatedStyles } = useAssociatedStyles({
 			id: sharedBoundTag || styleId,
 			style,
 		});
 
-		const { measureBounds, handleLayout } = useBoundsRegistry({
+		const {
+			handleTransitionLayout,
+			captureActiveOnPress,
+			MeasurementSyncProvider,
+		} = useBoundsRegistry({
 			sharedBoundTag,
 			animatedRef,
-			current,
 			style,
-		});
-
-		if (isScrollable) {
-			return (
-				<ScrollableInner
-					{...(props as Any)}
-					ref={ref}
-					measureBounds={measureBounds}
-					handleLayout={handleLayout}
-				/>
-			);
-		}
-
-		const onLayoutHandler = runOnUI(() => {
-			"worklet";
-			handleLayout();
-			if (measureOnLayout && sharedBoundTag) {
-				measureBounds();
-			}
+			onPress,
 		});
 
 		return (
-			<BoundCapture sharedBoundTag={sharedBoundTag} measure={measureBounds}>
+			<MeasurementSyncProvider>
 				<AnimatedComponent
 					{...(rest as Any)}
 					ref={animatedRef}
 					style={[style, associatedStyles]}
-					onPress={onPress}
-					onLayout={onLayoutHandler}
+					onPress={captureActiveOnPress}
+					onLayout={runOnUI(handleTransitionLayout)}
+					collapsable={!sharedBoundTag}
 				>
 					{children}
 				</AnimatedComponent>
-			</BoundCapture>
+			</MeasurementSyncProvider>
 		);
 	});
+
+	if (isScrollable) {
+		return memo(ScrollableInner) as React.MemoExoticComponent<
+			React.ForwardRefExoticComponent<
+				TransitionAwareProps<P> &
+					React.RefAttributes<React.ComponentRef<typeof Wrapped>>
+			>
+		>;
+	}
 
 	return memo(Inner) as React.MemoExoticComponent<
 		React.ForwardRefExoticComponent<

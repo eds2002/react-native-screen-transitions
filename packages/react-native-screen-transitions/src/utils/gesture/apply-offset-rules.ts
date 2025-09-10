@@ -2,6 +2,15 @@ import type { ScaledSize } from "react-native";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import type { SharedValue } from "react-native-reanimated";
 import {
+	DEFAULT_ACTIVATION_AREA,
+	DEFAULT_EDGE_DISTANCE_HORIZONTAL,
+	DEFAULT_EDGE_DISTANCE_VERTICAL,
+	GESTURE_ACTIVATION_THRESHOLD_X,
+	GESTURE_ACTIVATION_THRESHOLD_Y,
+	GESTURE_FAIL_TOLERANCE_X,
+	GESTURE_FAIL_TOLERANCE_Y,
+} from "../../constants";
+import {
 	type ActivationArea,
 	type GestureActivationArea,
 	GestureOffsetState,
@@ -60,17 +69,6 @@ interface ReturnValues {
 	isSwipingRight: boolean;
 	isSwipingLeft: boolean;
 }
-
-/**
- * 10 seems like the correct threshold for compatability with nested gestures outside of our package.
- */
-const GESTURE_ACTIVATION_THRESHOLD_X = 10;
-const GESTURE_ACTIVATION_THRESHOLD_Y = 10;
-const GESTURE_FAIL_TOLERANCE_X = 15;
-const GESTURE_FAIL_TOLERANCE_Y = 20;
-const DEFAULT_EDGE_DISTANCE_HORIZONTAL = 50;
-const DEFAULT_EDGE_DISTANCE_VERTICAL = 135;
-const DEFAULT_ACTIVATION_AREA = "screen" as const;
 
 function normalizeSides(area?: GestureActivationArea): NormalizedSides {
 	"worklet";

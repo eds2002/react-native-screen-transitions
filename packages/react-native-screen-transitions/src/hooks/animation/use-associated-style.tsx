@@ -4,14 +4,13 @@ import {
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
+import { NO_STYLES } from "../../constants";
 import { useTransitionStyles } from "../../providers/transition-styles";
 
 type Props = {
 	id?: string;
 	style?: StyleProps;
 };
-
-const EMPTY_STYLE = Object.freeze({});
 
 /**
  * This hook is used to get the associated styles for a given styleId / boundTag.
@@ -41,9 +40,9 @@ export const useAssociatedStyles = ({ id }: Props = {}) => {
 		"worklet";
 
 		if (!id || !stylesMap) {
-			return EMPTY_STYLE;
+			return NO_STYLES;
 		}
-		const base = stylesMap.value[id] || EMPTY_STYLE;
+		const base = stylesMap.value[id] || NO_STYLES;
 
 		let opacity = 1;
 

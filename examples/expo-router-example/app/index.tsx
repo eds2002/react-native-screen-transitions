@@ -266,6 +266,12 @@ const End2EndComponent = memo(() => {
 			href: "/e2e/bounds/longer-flow/a",
 			testID: "e2e-bounds-longer-flow",
 		},
+		{
+			title: "List",
+			description: "Test list",
+			href: "/e2e/bounds/list",
+			testID: "e2e-bounds-list",
+		},
 	];
 
 	const reactnavigation = [

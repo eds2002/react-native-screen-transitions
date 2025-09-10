@@ -3,21 +3,21 @@ import type { AnimationMap } from "../../stores/animations";
 import type { TransitionSpec } from "../../types/animation";
 import { animate } from "./animate";
 
-interface RunTransitionProps {
+interface StartScreenTransitionProps {
 	target: "open" | "close";
 	spec?: TransitionSpec;
-	onFinish?: (finished: boolean) => void;
+	onAnimationFinish?: (finished: boolean) => void;
 	animations: AnimationMap;
 	velocity?: number;
 }
 
-export const runTransition = ({
+export const startScreenTransition = ({
 	target,
 	spec,
-	onFinish,
+	onAnimationFinish,
 	animations,
 	velocity,
-}: RunTransitionProps) => {
+}: StartScreenTransitionProps) => {
 	"worklet";
 	const value = target === "open" ? 1 : 0;
 	const config = target === "open" ? spec?.open : spec?.close;
@@ -32,8 +32,8 @@ export const runTransition = ({
 		animating.value = 0;
 		progress.value = value;
 
-		if (onFinish) {
-			runOnJS(onFinish)(true);
+		if (onAnimationFinish) {
+			runOnJS(onAnimationFinish)(true);
 		}
 		return;
 	}
@@ -44,8 +44,8 @@ export const runTransition = ({
 		"worklet";
 		if (finished) {
 			animating.value = 0;
-			if (onFinish) {
-				runOnJS(onFinish)(finished);
+			if (onAnimationFinish) {
+				runOnJS(onAnimationFinish)(finished);
 			}
 		}
 	});

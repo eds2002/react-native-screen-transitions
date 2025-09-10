@@ -5,7 +5,7 @@ import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import { resetStoresForScreen } from "../../stores/utils/reset-stores-for-screen";
-import { runTransition } from "../../utils/animation/run-transition";
+import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 
 interface ScreenLifecycleProps {
 	children: React.ReactNode;
@@ -35,7 +35,7 @@ export const ScreenLifecycleController = ({
 		}
 
 		e.preventDefault();
-		const onFinish = (finished: boolean) => {
+		const onAnimationFinish = (finished: boolean) => {
 			if (finished) {
 				current.navigation.dispatch(e.data.action);
 
@@ -46,16 +46,16 @@ export const ScreenLifecycleController = ({
 			}
 		};
 
-		runTransition({
+		startScreenTransition({
 			target: "close",
 			spec: current.options.transitionSpec,
-			onFinish,
+			onAnimationFinish,
 			animations,
 		});
 	});
 
 	const handleInitialize = useStableCallback(() => {
-		runTransition({
+		startScreenTransition({
 			target: "open",
 			spec: current.options.transitionSpec,
 			animations,

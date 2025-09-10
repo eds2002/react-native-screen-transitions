@@ -1,18 +1,18 @@
-import * as React from 'react';
-import type { Animated } from 'react-native';
+import * as React from "react";
+import type { Animated } from "react-native";
 
 export const AnimatedHeaderHeightContext = React.createContext<
-  Animated.AnimatedInterpolation<number> | undefined
+	Animated.AnimatedInterpolation<number> | undefined
 >(undefined);
 
 export function useAnimatedHeaderHeight() {
-  const animatedValue = React.useContext(AnimatedHeaderHeightContext);
+	const animatedValue = React.useContext(AnimatedHeaderHeightContext);
 
-  if (animatedValue === undefined) {
-    throw new Error(
-      "Couldn't find the header height. Are you inside a screen in a native stack navigator?"
-    );
-  }
+	if (animatedValue === undefined) {
+		throw new Error(
+			"Couldn't find the header height. Are you inside a screen in a native stack navigator?",
+		);
+	}
 
-  return animatedValue;
+	return animatedValue;
 }

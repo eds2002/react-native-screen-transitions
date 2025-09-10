@@ -26,15 +26,6 @@ type ScreenGestureProviderProps = {
 	children: React.ReactNode;
 };
 
-export const DEFAULT_SCROLL_CONFIG: ScrollConfig = {
-	x: 0,
-	y: 0,
-	contentHeight: 0,
-	contentWidth: 0,
-	layoutHeight: 0,
-	layoutWidth: 0,
-};
-
 const GestureContext = createContext<GestureContextType | undefined>(undefined);
 
 export const ScreenGestureProvider = ({

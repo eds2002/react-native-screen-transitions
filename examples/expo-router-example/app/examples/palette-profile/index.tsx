@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { FlatList, StyleSheet, Text, View } from "react-native";
 import {
 	Easing,
@@ -49,8 +49,14 @@ const ColorItem = ({ color, index }: { color: string; index: number }) => {
 	const screenProps = useScreenAnimation();
 	const scale = useSharedValue(1);
 
+	const boundId = useMemo(() => {
+		return `color-${color}`;
+	}, [color]);
+
 	const animatedContainerStyle = useAnimatedStyle(() => {
 		"worklet";
+
+		if (screenProps.value.activeBoundId === boundId) return {};
 
 		return {
 			transform: [

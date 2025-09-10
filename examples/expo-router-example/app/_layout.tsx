@@ -124,7 +124,12 @@ export default function RootLayout() {
 						}) => {
 							"worklet";
 
-							const transformBounds = bounds().relative().size().build();
+							const transformBounds = bounds({
+								method: "size",
+								scaleMode: "match",
+								space: "relative",
+								anchor: "center",
+							});
 							const { styles } = bounds.get();
 
 							return {

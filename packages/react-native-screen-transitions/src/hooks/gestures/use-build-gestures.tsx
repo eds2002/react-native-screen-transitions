@@ -14,24 +14,25 @@ import {
 	type SharedValue,
 	useSharedValue,
 } from "react-native-reanimated";
+import {
+	DEFAULT_GESTURE_ACTIVATION_AREA,
+	DEFAULT_GESTURE_DIRECTION,
+	DEFAULT_GESTURE_DRIVES_PROGRESS,
+	DEFAULT_GESTURE_ENABLED,
+	GESTURE_VELOCITY_IMPACT,
+} from "../../constants";
 import type { ScrollConfig } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
-import { type ActivationArea, GestureOffsetState } from "../../types/gesture";
+import { GestureOffsetState } from "../../types/gesture";
 import { animate } from "../../utils/animation/animate";
-import { runTransition } from "../../utils/animation/run-transition";
+import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import useStableCallback from "../use-stable-callback";
-
-const GESTURE_VELOCITY_IMPACT = 0.3;
-const DEFAULT_GESTURE_DIRECTION = "horizontal";
-const DEFAULT_GESTURE_ENABLED = false;
-const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
-const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
@@ -293,9 +294,9 @@ export const useBuildGestures = ({
 				runOnJS(setNavigatorDismissal)();
 			}
 
-			runTransition({
+			startScreenTransition({
 				target: shouldDismiss ? "close" : "open",
-				onFinish: shouldDismiss ? handleDismiss : undefined,
+				onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
 				spec: transitionSpec,
 				velocity,
 				animations,
