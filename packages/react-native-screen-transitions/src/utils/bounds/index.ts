@@ -1,5 +1,13 @@
 import type { ScaledSize } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
+import {
+	DEFAULT_BUILDER_OPTIONS,
+	EMPTY_BOUND_HELPER_RESULT,
+	EMPTY_BOUND_HELPER_RESULT_RAW,
+	ENTER_RANGE,
+	EXIT_RANGE,
+	FULLSCREEN_DIMENSIONS,
+} from "../../constants";
 import type { ScreenTransitionState } from "../../types/animation";
 import type { BoundsAccessor, BoundsBuilder } from "../../types/bounds";
 import type { ScreenPhase } from "../../types/core";
@@ -20,7 +28,6 @@ import {
 	composeTransformRelative,
 	type ElementComposeParams,
 } from "./_utils/style-composers";
-import { DEFAULT_BUILDER_OPTIONS, FULLSCREEN_DIMENSIONS } from "./constants";
 
 export interface BuildBoundsAccessorParams {
 	activeBoundId: string | null;
@@ -30,20 +37,6 @@ export interface BuildBoundsAccessorParams {
 	progress: number;
 	dimensions: ScaledSize;
 }
-
-const EMPTY_STYLE = Object.freeze({});
-const EMPTY_STYLE_RAW = Object.freeze({
-	scaleX: 1,
-	scaleY: 1,
-	scale: 1,
-	translateX: 0,
-	translateY: 0,
-	width: 0,
-	height: 0,
-});
-
-const ENTER_RANGE = [0, 1] as const;
-const EXIT_RANGE = [1, 2] as const;
 
 const resolveBounds = (props: {
 	id: string;
@@ -114,9 +107,9 @@ const computeBoundStyles = (
 	"worklet";
 	if (!id) {
 		if (computeOptions.raw) {
-			return EMPTY_STYLE_RAW;
+			return EMPTY_BOUND_HELPER_RESULT_RAW;
 		}
-		return EMPTY_STYLE;
+		return EMPTY_BOUND_HELPER_RESULT;
 	}
 
 	const { start, end, entering } = resolveBounds({
@@ -130,9 +123,9 @@ const computeBoundStyles = (
 
 	if (!start || !end) {
 		if (computeOptions.raw) {
-			return EMPTY_STYLE_RAW;
+			return EMPTY_BOUND_HELPER_RESULT_RAW;
 		}
-		return EMPTY_STYLE;
+		return EMPTY_BOUND_HELPER_RESULT;
 	}
 
 	const ranges: readonly [number, number] = entering ? ENTER_RANGE : EXIT_RANGE;

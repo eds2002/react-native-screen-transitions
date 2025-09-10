@@ -1,13 +1,12 @@
 import { createContext, useContext, useMemo } from "react";
 import { isWorkletFunction, useDerivedValue } from "react-native-reanimated";
+import { NO_STYLES } from "../constants";
 import { _useScreenAnimation } from "../hooks/animation/use-screen-animation";
 import type { TransitionInterpolatedStyle } from "../types/animation";
 
 type Props = {
 	children: React.ReactNode;
 };
-
-const EMPTY_MAP = Object.freeze({});
 
 const TransitionStylesContext = createContext<ReturnType<
 	typeof useMemo<{
@@ -28,12 +27,12 @@ export function TransitionStylesProvider({ children }: Props) {
 			console.warn(
 				`[react-native-screen-transitions] screenStyleInterpolator is not a worklet function`,
 			);
-			return EMPTY_MAP;
+			return NO_STYLES;
 		}
 
 		return screenStyleInterpolator
 			? screenStyleInterpolator(screenInterpolatorProps.value)
-			: EMPTY_MAP;
+			: NO_STYLES;
 	});
 
 	const value = useMemo(() => {

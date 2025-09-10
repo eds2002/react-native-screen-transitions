@@ -1,10 +1,10 @@
 import type React from "react";
+import { ScreenLifecycleController } from "../components/controllers/screen-lifecycle";
+import { RootTransitionAware } from "../components/root-transition-aware";
 import { ScreenGestureProvider } from "../providers/gestures";
 import { KeysProvider } from "../providers/keys";
 import { TransitionStylesProvider } from "../providers/transition-styles";
 import type { NativeStackDescriptor } from "../types/navigator";
-import { ScreenLifecycleController } from "./controllers/screen-lifecycle";
-import { RootTransitionAware } from "./root-transition-aware";
 
 type Props = {
 	previous?: NativeStackDescriptor;
@@ -13,7 +13,7 @@ type Props = {
 	children: React.ReactNode;
 };
 
-export function ScreenTransitionTree({
+export function ScreenTransitionProvider({
 	previous,
 	current,
 	next,

@@ -3,6 +3,10 @@ import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import {
+	DEFAULT_SCREEN_TRANSITION_STATE,
+	NO_BOUNDS_MAP,
+} from "../../constants";
 import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Bounds } from "../../stores/bounds";
@@ -11,7 +15,7 @@ import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
 } from "../../types/animation";
-import type { BoundEntry } from "../../types/bounds";
+
 import type { NativeStackDescriptor } from "../../types/navigator";
 import { derivations } from "../../utils/animation/derivations";
 
@@ -22,24 +26,6 @@ type BuiltState = {
 	gesture: GestureMap;
 	route: RouteProp<ParamListBase>;
 };
-
-const EMPTY_BOUNDS = Object.freeze({}) as Record<string, BoundEntry>;
-
-const FALLBACK: ScreenTransitionState = Object.freeze({
-	progress: 0,
-	closing: 0,
-	animating: 0,
-	gesture: {
-		x: 0,
-		y: 0,
-		normalizedX: 0,
-		normalizedY: 0,
-		isDismissing: 0,
-		isDragging: 0,
-	},
-	bounds: {} as Record<string, BoundEntry>,
-	route: {} as RouteProp<ParamListBase>,
-});
 
 const unwrap = (
 	s: BuiltState | undefined,
@@ -60,7 +46,7 @@ const unwrap = (
 			isDismissing: s.gesture.isDismissing.value,
 			isDragging: s.gesture.isDragging.value,
 		},
-		bounds: Bounds.getBounds(key) || EMPTY_BOUNDS,
+		bounds: Bounds.getBounds(key) || NO_BOUNDS_MAP,
 		route: s.route,
 	};
 };
@@ -108,7 +94,8 @@ export function _useScreenAnimation() {
 				: undefined;
 
 			const current =
-				unwrap(currentAnimation, currentDescriptor?.route.key) ?? FALLBACK;
+				unwrap(currentAnimation, currentDescriptor?.route.key) ??
+				DEFAULT_SCREEN_TRANSITION_STATE;
 
 			const {
 				progress,

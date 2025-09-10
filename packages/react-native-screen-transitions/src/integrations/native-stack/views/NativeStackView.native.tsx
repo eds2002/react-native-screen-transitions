@@ -32,7 +32,7 @@ import {
 	ScreenStack,
 	ScreenStackItem,
 } from "react-native-screens";
-import { ScreenTransitionTree } from "../../../components/screen-transition-tree";
+import { ScreenTransitionProvider } from "../../../providers/screen-transition-provider";
 import type {
 	NativeStackDescriptor,
 	NativeStackDescriptorMap,
@@ -465,13 +465,13 @@ const SceneView = ({
 								value={isParentHeaderShown || headerShown !== false}
 							>
 								<HeaderBackContext.Provider value={headerBack}>
-									<ScreenTransitionTree
+									<ScreenTransitionProvider
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
 									>
 										{render()}
-									</ScreenTransitionTree>
+									</ScreenTransitionProvider>
 								</HeaderBackContext.Provider>
 							</HeaderShownContext.Provider>
 						</HeaderHeightContext.Provider>

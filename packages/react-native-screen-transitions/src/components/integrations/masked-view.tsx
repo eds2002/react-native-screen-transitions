@@ -1,4 +1,5 @@
 import { type StyleProp, StyleSheet, View, type ViewStyle } from "react-native";
+import { CONTAINER_STYLE_ID, MASK_STYLE_ID } from "../../constants";
 import { createTransitionAwareComponent } from "../create-transition-aware-component";
 
 const TransitionView = createTransitionAwareComponent(View);
@@ -10,9 +11,6 @@ try {
 } catch (_) {
 	// noop
 }
-
-const MASK_STYLE_ID = "_ROOT_MASKED";
-const CONTAINER_STYLE_ID = "_ROOT_CONTAINER";
 
 export default function MaskedView({
 	children,
