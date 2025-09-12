@@ -1,25 +1,25 @@
 import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
-	Gesture,
-	type GestureStateChangeEvent,
-	type GestureTouchEvent,
-	type GestureType,
-	type GestureUpdateEvent,
-	type PanGestureHandlerEventPayload,
+  Gesture,
+  type GestureStateChangeEvent,
+  type GestureTouchEvent,
+  type GestureType,
+  type GestureUpdateEvent,
+  type PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import {
-	runOnJS,
-	type SharedValue,
-	useSharedValue,
+  runOnJS,
+  type SharedValue,
+  useSharedValue,
 } from "react-native-reanimated";
 import {
-	DEFAULT_GESTURE_ACTIVATION_AREA,
-	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_DRIVES_PROGRESS,
-	DEFAULT_GESTURE_ENABLED,
-	GESTURE_VELOCITY_IMPACT,
+  DEFAULT_GESTURE_ACTIVATION_AREA,
+  DEFAULT_GESTURE_DIRECTION,
+  DEFAULT_GESTURE_DRIVES_PROGRESS,
+  DEFAULT_GESTURE_ENABLED,
+  GESTURE_VELOCITY_IMPACT,
 } from "../../constants";
 import type { ScrollConfig } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
@@ -27,11 +27,11 @@ import { Animations } from "../../stores/animations";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import { GestureOffsetState } from "../../types/gesture";
-import { animate } from "../../utils/animation/animate";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
+import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import useStableCallback from "../use-stable-callback";
 
 interface BuildGesturesHookProps {
@@ -277,18 +277,13 @@ export const useBuildGestures = ({
 
 			const spec = shouldDismiss ? transitionSpec?.close : transitionSpec?.open;
 
-			gestures.isDismissing.value = Number(shouldDismiss);
-
-			// Provide per-axis velocities so drag return can bounce naturally
-			const vxPx = event.velocityX;
-			const vyPx = event.velocityY;
-			const vxNorm = vxPx / Math.max(1, dimensions.width);
-			const vyNorm = vyPx / Math.max(1, dimensions.height);
-			gestures.x.value = animate(0, { ...spec, velocity: vxPx });
-			gestures.y.value = animate(0, { ...spec, velocity: vyPx });
-			gestures.normalizedX.value = animate(0, { ...spec, velocity: vxNorm });
-			gestures.normalizedY.value = animate(0, { ...spec, velocity: vyNorm });
-			gestures.isDragging.value = 0;
+			resetGestureValues({
+				event,
+				dimensions,
+				spec,
+				gestures,
+				shouldDismiss,
+			});
 
 			if (shouldDismiss) {
 				runOnJS(setNavigatorDismissal)();

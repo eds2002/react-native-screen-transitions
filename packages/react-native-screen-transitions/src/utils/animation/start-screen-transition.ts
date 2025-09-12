@@ -40,13 +40,17 @@ export const startScreenTransition = ({
 
 	animating.value = 1;
 
-	progress.value = animate(value, { ...config, velocity }, (finished) => {
-		"worklet";
-		if (finished) {
-			animating.value = 0;
-			if (onAnimationFinish) {
-				runOnJS(onAnimationFinish)(finished);
+	progress.value = animate(
+		value,
+		{ ...config, velocity: velocity ?? 0 },
+		(finished) => {
+			"worklet";
+			if (finished) {
+				animating.value = 0;
+				if (onAnimationFinish) {
+					runOnJS(onAnimationFinish)(finished);
+				}
 			}
-		}
-	});
+		},
+	);
 };

@@ -47,7 +47,7 @@ const getVelocity = (
 	velocityX: number,
 	velocityY: number,
 	dismissAxis: "x" | "y",
-) => {
+): number => {
 	"worklet";
 	const axisSize = dismissAxis === "y" ? dimensions.height : dimensions.width;
 	const axisVelocityPx = dismissAxis === "y" ? velocityY : velocityX;
@@ -56,7 +56,7 @@ const getVelocity = (
 	if (velocity > MAX_PROGRESS_VELOCITY) velocity = MAX_PROGRESS_VELOCITY;
 	if (velocity < -MAX_PROGRESS_VELOCITY) velocity = -MAX_PROGRESS_VELOCITY;
 
-	return velocity;
+	return velocity ?? 0;
 };
 
 export const determineDismissal = ({
