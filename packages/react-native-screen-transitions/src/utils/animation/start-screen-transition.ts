@@ -8,7 +8,6 @@ interface StartScreenTransitionProps {
 	spec?: TransitionSpec;
 	onAnimationFinish?: (finished: boolean) => void;
 	animations: AnimationMap;
-	velocity?: number;
 }
 
 export const startScreenTransition = ({
@@ -16,7 +15,6 @@ export const startScreenTransition = ({
 	spec,
 	onAnimationFinish,
 	animations,
-	velocity,
 }: StartScreenTransitionProps) => {
 	"worklet";
 	const value = target === "open" ? 1 : 0;
@@ -40,17 +38,13 @@ export const startScreenTransition = ({
 
 	animating.value = 1;
 
-	progress.value = animate(
-		value,
-		{ ...config, velocity: velocity ?? 0 },
-		(finished) => {
-			"worklet";
-			if (finished) {
-				animating.value = 0;
-				if (onAnimationFinish) {
-					runOnJS(onAnimationFinish)(finished);
-				}
+	progress.value = animate(value, config, (finished) => {
+		"worklet";
+		if (finished) {
+			if (onAnimationFinish) {
+				runOnJS(onAnimationFinish)(finished);
 			}
-		},
-	);
+			animating.value = 0;
+		}
+	});
 };

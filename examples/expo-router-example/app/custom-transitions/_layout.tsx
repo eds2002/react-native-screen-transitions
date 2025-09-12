@@ -71,7 +71,12 @@ export default function PresetsLayout() {
 							progress,
 							[0, 1, 2],
 							[width, 0, -width * 0.3],
+							"clamp",
 						);
+
+						if (focused) {
+							console.log("progress", progress);
+						}
 
 						return {
 							contentStyle: {

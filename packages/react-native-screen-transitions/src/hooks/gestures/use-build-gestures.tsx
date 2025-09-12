@@ -1,25 +1,25 @@
 import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
-  Gesture,
-  type GestureStateChangeEvent,
-  type GestureTouchEvent,
-  type GestureType,
-  type GestureUpdateEvent,
-  type PanGestureHandlerEventPayload,
+	Gesture,
+	type GestureStateChangeEvent,
+	type GestureTouchEvent,
+	type GestureType,
+	type GestureUpdateEvent,
+	type PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import {
-  runOnJS,
-  type SharedValue,
-  useSharedValue,
+	runOnJS,
+	type SharedValue,
+	useSharedValue,
 } from "react-native-reanimated";
 import {
-  DEFAULT_GESTURE_ACTIVATION_AREA,
-  DEFAULT_GESTURE_DIRECTION,
-  DEFAULT_GESTURE_DRIVES_PROGRESS,
-  DEFAULT_GESTURE_ENABLED,
-  GESTURE_VELOCITY_IMPACT,
+	DEFAULT_GESTURE_ACTIVATION_AREA,
+	DEFAULT_GESTURE_DIRECTION,
+	DEFAULT_GESTURE_DRIVES_PROGRESS,
+	DEFAULT_GESTURE_ENABLED,
+	GESTURE_VELOCITY_IMPACT,
 } from "../../constants";
 import type { ScrollConfig } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
@@ -268,7 +268,7 @@ export const useBuildGestures = ({
 		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
-			const { shouldDismiss, velocity } = determineDismissal({
+			const { shouldDismiss } = determineDismissal({
 				event,
 				directions,
 				dimensions,
@@ -278,8 +278,6 @@ export const useBuildGestures = ({
 			const spec = shouldDismiss ? transitionSpec?.close : transitionSpec?.open;
 
 			resetGestureValues({
-				event,
-				dimensions,
 				spec,
 				gestures,
 				shouldDismiss,
@@ -293,7 +291,6 @@ export const useBuildGestures = ({
 				target: shouldDismiss ? "close" : "open",
 				onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
 				spec: transitionSpec,
-				velocity,
 				animations,
 			});
 		},
