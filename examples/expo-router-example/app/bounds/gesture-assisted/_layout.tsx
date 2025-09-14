@@ -20,12 +20,10 @@ export default function ActiveBoundsLayout() {
 						bounds,
 						activeBoundId,
 						current,
-						next,
-						focused,
+
+						active,
 					}) => {
 						"worklet";
-
-						if (!activeBoundId) return {};
 
 						/**
 						 * Bounds are designed to work between unfocused & focused screen. While this approach is okay, it realy just gives off a lazy feel. I would recommend separating the bound animations by the focused prop.
@@ -33,8 +31,8 @@ export default function ActiveBoundsLayout() {
 
 						const boundStyles = bounds({
 							gestures: {
-								x: focused ? current.gesture.x : next?.gesture.x,
-								y: focused ? current.gesture.y : next?.gesture.y,
+								x: active.gesture.x,
+								y: active.gesture.y,
 							},
 							target: "fullscreen",
 						});

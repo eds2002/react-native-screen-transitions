@@ -27,11 +27,12 @@ import { Animations } from "../../stores/animations";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import { GestureOffsetState } from "../../types/gesture";
-import { animate } from "../../utils/animation/animate";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
+import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
+import { velocity } from "../../utils/gesture/velocity";
 import useStableCallback from "../use-stable-callback";
 
 interface BuildGesturesHookProps {
@@ -51,6 +52,7 @@ export const useBuildGestures = ({
 		x: 0,
 		y: 0,
 	});
+
 	const gestureOffsetState = useSharedValue<GestureOffsetState>(
 		GestureOffsetState.PENDING,
 	);
@@ -268,7 +270,7 @@ export const useBuildGestures = ({
 		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
-			const { shouldDismiss, velocity } = determineDismissal({
+			const { shouldDismiss } = determineDismissal({
 				event,
 				directions,
 				dimensions,
@@ -277,29 +279,32 @@ export const useBuildGestures = ({
 
 			const spec = shouldDismiss ? transitionSpec?.close : transitionSpec?.open;
 
-			gestures.isDismissing.value = Number(shouldDismiss);
-
-			// Provide per-axis velocities so drag return can bounce naturally
-			const vxPx = event.velocityX;
-			const vyPx = event.velocityY;
-			const vxNorm = vxPx / Math.max(1, dimensions.width);
-			const vyNorm = vyPx / Math.max(1, dimensions.height);
-			gestures.x.value = animate(0, { ...spec, velocity: vxPx });
-			gestures.y.value = animate(0, { ...spec, velocity: vyPx });
-			gestures.normalizedX.value = animate(0, { ...spec, velocity: vxNorm });
-			gestures.normalizedY.value = animate(0, { ...spec, velocity: vyNorm });
-			gestures.isDragging.value = 0;
+			resetGestureValues({
+				spec,
+				gestures,
+				shouldDismiss,
+				event,
+				dimensions,
+			});
 
 			if (shouldDismiss) {
 				runOnJS(setNavigatorDismissal)();
 			}
 
+			const initialVelocity = velocity.calculateProgressVelocity({
+				animations,
+				shouldDismiss,
+				event,
+				dimensions,
+				directions,
+			});
+
 			startScreenTransition({
 				target: shouldDismiss ? "close" : "open",
 				onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
 				spec: transitionSpec,
-				velocity,
 				animations,
+				initialVelocity,
 			});
 		},
 		[

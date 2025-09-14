@@ -5,5 +5,6 @@ export const DefaultSpec: WithSpringConfig = {
 	damping: 500,
 	mass: 3,
 	overshootClamping: true,
+	// @ts-expect-error
 	restSpeedThreshold: 0.02,
 };

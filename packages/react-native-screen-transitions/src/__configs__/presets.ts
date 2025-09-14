@@ -246,11 +246,13 @@ export const SharedIGImage = (
 				normX,
 				[-1, 0, 1],
 				[-width * 0.7, 0, width * 0.7],
+				"clamp",
 			);
 			const dragY = interpolate(
 				normY,
 				[-1, 0, 1],
 				[-height * 0.4, 0, height * 0.4],
+				"clamp",
 			);
 			const dragXScale = interpolate(normX, [0, 1], [1, 0.8]);
 			const dragYScale = interpolate(normY, [0, 1], [1, 0.8]);
@@ -328,6 +330,7 @@ export const SharedIGImage = (
 				damping: 1000,
 				mass: 3,
 				overshootClamping: true,
+				//@ts-expect-error
 				restSpeedThreshold: 0.02,
 			},
 			close: {
@@ -335,6 +338,7 @@ export const SharedIGImage = (
 				damping: 1000,
 				mass: 3,
 				overshootClamping: true,
+				//@ts-expect-error
 				restSpeedThreshold: 0.02,
 			},
 		},
@@ -507,13 +511,15 @@ export const SharedAppleMusic = (
 				damping: 500,
 				mass: 3,
 				overshootClamping: true,
+				//@ts-expect-error
 				restSpeedThreshold: 0.02,
 			},
 			close: {
 				stiffness: 600,
 				damping: 60,
-				mass: 3,
+				mass: 4,
 				overshootClamping: false,
+				//@ts-expect-error
 				restSpeedThreshold: 0.02,
 				restDisplacementThreshold: 0.002,
 			},

@@ -41,13 +41,13 @@
 		"react": "*",
 		"react-native": "*",
 		"react-native-gesture-handler": ">=2.16.1",
-		"react-native-reanimated": ">=3.16.0",
+		"react-native-reanimated": ">=3.16.0 || >=4.0.0-",
 		"react-native-safe-area-context": "*",
 		"react-native-screens": ">=4.4.0"
 	},
 	"devDependencies": {
 		"@testing-library/react-native": "^13.2.0",
-		"@types/react": "~19.0.10",
+		"@types/react": "~19.1.10",
 		"react-native-builder-bob": "0.39.0",
 		"typescript": "catalog:"
 	},

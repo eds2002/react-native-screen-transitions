@@ -267,12 +267,12 @@ const SceneView = ({
 	}, [canGoBack, backTitle]);
 
 	const isRemovePrevented = preventedRoutes[route.key]?.preventRemove;
+
 	const modifiedPresentation = enableTransitions
 		? "containedTransparentModal"
 		: presentation === "card"
 			? "push"
 			: presentation;
-
 	const modifiedAnimation = enableTransitions ? "none" : animation;
 	const modifiedHeaderShown =
 		enableTransitions || header !== undefined ? false : headerShown;
