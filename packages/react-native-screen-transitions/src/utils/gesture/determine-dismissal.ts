@@ -22,6 +22,8 @@ interface DetermineDismissalProps {
 	gestureVelocityImpact: number;
 }
 
+import { velocity as V } from "./velocity";
+
 const getAxisThreshold = ({
 	translation,
 	velocity,
@@ -29,11 +31,11 @@ const getAxisThreshold = ({
 	gestureVelocityImpact,
 }: GetAxisThresholdProps) => {
 	"worklet";
-	const finalTranslation = translation + velocity * gestureVelocityImpact;
-
-	return (
-		Math.abs(finalTranslation) > screenSize / 2 &&
-		(velocity !== 0 || translation !== 0)
+	return V.shouldPassDismissalThreshold(
+		translation,
+		velocity,
+		screenSize,
+		gestureVelocityImpact,
 	);
 };
 

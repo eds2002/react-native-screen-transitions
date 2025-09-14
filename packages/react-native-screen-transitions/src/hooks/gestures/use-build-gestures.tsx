@@ -32,6 +32,7 @@ import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
+import { velocity } from "../../utils/gesture/velocity";
 import useStableCallback from "../use-stable-callback";
 
 interface BuildGesturesHookProps {
@@ -51,6 +52,7 @@ export const useBuildGestures = ({
 		x: 0,
 		y: 0,
 	});
+
 	const gestureOffsetState = useSharedValue<GestureOffsetState>(
 		GestureOffsetState.PENDING,
 	);
@@ -281,17 +283,28 @@ export const useBuildGestures = ({
 				spec,
 				gestures,
 				shouldDismiss,
+				event,
+				dimensions,
 			});
 
 			if (shouldDismiss) {
 				runOnJS(setNavigatorDismissal)();
 			}
 
+			const initialVelocity = velocity.calculateProgressVelocity({
+				animations,
+				shouldDismiss,
+				event,
+				dimensions,
+				directions,
+			});
+
 			startScreenTransition({
 				target: shouldDismiss ? "close" : "open",
 				onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
 				spec: transitionSpec,
 				animations,
+				initialVelocity,
 			});
 		},
 		[

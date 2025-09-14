@@ -152,7 +152,6 @@ export const useBoundsRegistry = ({
 	);
 
 	return {
-		maybeMeasureAndStore,
 		handleTransitionLayout,
 		captureActiveOnPress,
 		MeasurementSyncProvider,

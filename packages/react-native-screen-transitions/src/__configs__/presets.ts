@@ -517,7 +517,7 @@ export const SharedAppleMusic = (
 			close: {
 				stiffness: 600,
 				damping: 60,
-				mass: 3,
+				mass: 4,
 				overshootClamping: false,
 				//@ts-expect-error
 				restSpeedThreshold: 0.02,
