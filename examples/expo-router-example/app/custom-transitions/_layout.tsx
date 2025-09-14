@@ -74,10 +74,6 @@ export default function PresetsLayout() {
 							"clamp",
 						);
 
-						if (focused) {
-							console.log("progress", progress);
-						}
-
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],
