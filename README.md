@@ -5,12 +5,15 @@
 |---|---|
 | <video src="https://github.com/user-attachments/assets/c0d17b8f-7268-421c-9051-e242f8ddca76" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/3f8d5fb1-96d2-4fe3-860d-62f6fb5a687e" width="300" controls></video> |
 
+## ✨ Features
 
-**WIP**: This package is a work-in-progress. It provides customizable screen transition animations for React Native apps, primarily designed for use with `expo-router` and `react-navigation`. It supports gestures, predefined presets, and custom animations, making it easy to add polished transitions to your navigation flows.
-
-## Compatibility
-- **Platforms**: Currently tested on iOS and Android. Not tested or intended for web—web support is not a priority and may not work due to gesture and animation differences.
-- **Dependencies**: Requires React Native, Reanimated, Gesture Handler, and either expo-router or react-navigation.
+- 🎯 **Reanimated v3-4 Compatible** – Built for the latest React Native Reanimated
+- 📱 **Cross-Platform** – Supports iOS and Android (web not supported)
+- 🔷 **TypeScript First** – Fully typed for better development experience
+- 👆 **Advanced Gestures** – Powered by react-native-gesture-handler with edge and screen activation areas
+- 🧭 **Navigation Ready** – Works seamlessly with expo-router and react-navigation
+- 🔗 **Shared Elements** – Bounds API for measure-driven transitions between screens
+- 🎭 **Ready-Made Presets** – Instagram, Apple Music, X (Twitter) style transitions included
 
 ## Installation
 ```bash
@@ -306,17 +309,52 @@ gestureActivationArea: { top: 'screen', left: 'edge' }
 
 ## Bounds (measure-driven screen transitions)
 
-Bounds let you animate any component between two screens by measuring its start and end positions. They are not shared elements — just measurements. Tag components with `sharedBoundTag` on both screens, then compute styles using `bounds(options)`.
+Bounds let you animate any component between two screens by measuring its start and end positions. They are not shared elements — just measurements.
 
-1) Tag source and destination
+**Current Implementation:** For bounds to be measured, a `Transition.Pressable` must have both an `onPress` handler and a `sharedBoundTag`. When pressed, it triggers measurement. If the `Transition.Pressable` has children with `sharedBoundTag`s, those children are automatically measured and stored as well.
+
+*Note: This measurement trigger mechanism may change in future versions.*
+
+1) Tag source and destination with pressable triggers
 
 ```tsx
-<Transition.View sharedBoundTag="hero" style={{ width: 100, height: 100 }} />
-// ... next screen
-<Transition.View sharedBoundTag="hero" style={{ width: 200, height: 200 }} />
+// Source screen
+<Transition.Pressable
+  sharedBoundTag="hero"
+  onPress={() => router.push('/detail')}
+  style={{ width: 100, height: 100 }}
+>
+  <Image source={...} />
+</Transition.Pressable>
+
+// Destination screen
+<Transition.Pressable
+  sharedBoundTag="hero"
+  onPress={() => {/* handle press */}}
+  style={{ width: 200, height: 200 }}
+>
+  <Image source={...} />
+</Transition.Pressable>
 ```
 
-2) Drive the animation with the object API
+2) Children are automatically measured
+
+```tsx
+<Transition.Pressable
+  sharedBoundTag="card"
+  onPress={() => router.push('/detail')}
+>
+  {/* These children will be automatically measured when parent is pressed */}
+  <Transition.View sharedBoundTag="title">
+    <Text>Title</Text>
+  </Transition.View>
+  <Transition.View sharedBoundTag="subtitle">
+    <Text>Subtitle</Text>
+  </Transition.View>
+</Transition.Pressable>
+```
+
+3) Drive the animation with the object API
 
 ```tsx
 screenStyleInterpolator: ({ activeBoundId, bounds }) => {
@@ -406,7 +444,7 @@ The red square fades in as the screen opens.
 
 ## Known Issues
 
-- **Delayed Touch Events** – There’s a noticeable delay in touch events, likely caused by the `beforeRemove` listener in the native stack. If this affects your app, please hold off on using this package until a fix is available.
+- **Delayed Touch Events** – There’s a noticeable delay in touch events when the transition is finished. If this affects your app, please hold off on using this package until a fix is available.
 
 
 ## Support and Development
