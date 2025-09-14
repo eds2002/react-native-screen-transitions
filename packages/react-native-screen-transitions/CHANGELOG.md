@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.3.3
+
+### Patch Changes
+
+- [#38](https://github.com/eds2002/react-native-screen-transitions/pull/38) [`c3647ce`](https://github.com/eds2002/react-native-screen-transitions/commit/c3647ce5af18575caf0722402c6792121aa1ef2f) Thanks [@eds2002](https://github.com/eds2002)! - Introduce fixes to support new reanimated v4
+
 ## 2.3.2
 
 ### Patch Changes
