@@ -22,14 +22,12 @@ export const ScreenLifecycleController = ({
 		const key = current.navigation.getParent()?.getState().key;
 		const requestedDismissOnNavigator = NavigatorDismissState.get(key);
 
-		// Don't run e.preventDefault when the dismissal was on the local root
-		if (requestedDismissOnNavigator) {
-			resetStoresForScreen(current);
-			return;
-		}
+		const isEnabled = current.options.enableTransitions;
+		const isRequestedDismissOnNavigator = requestedDismissOnNavigator;
+		const isFirstScreen = current.navigation.getState().index === 0;
 
-		// Don't run e.preventDefault when this is the first screen of the stack
-		if (current.navigation.getState().index === 0) {
+		// If transitions are disabled, or the dismissal was on the local root, or this is the first screen of the stack, reset the stores
+		if (!isEnabled || isRequestedDismissOnNavigator || isFirstScreen) {
 			resetStoresForScreen(current);
 			return;
 		}
