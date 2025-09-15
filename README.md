@@ -146,16 +146,28 @@ Ready-made presets for common shared-element patterns. These leverage the bounds
 
 Other presets: `SharedAppleMusic()`, `SharedXImage()`.
 
-Note: Masked container required
+#### 🎭 Masked View Setup (Required for SharedIGImage & SharedAppleMusic)
 
-- For `SharedIGImage` and `SharedAppleMusic`, wrap the next screen with `Transition.MaskedView` as the first element so the preset can animate `_ROOT_CONTAINER` and `_ROOT_MASKED` correctly.
-- Install the mask package:
-  - Expo: `npx expo install @react-native-masked-view/masked-view`
-  - Bare RN: `npm i @react-native-masked-view/masked-view` (then iOS: `cd ios && pod install`)
-- `Transition.MaskedView` lazy-loads the native mask and falls back to a plain `View` if missing, but the mask is required for the full shared effect.
+> **⚠️ Important**: These presets require native code and **will not work in Expo Go**. You must use a development build.
 
-Minimal usage on the destination screen:
+**1. Install the dependency**
+```bash
+# Expo projects
+npx expo install @react-native-masked-view/masked-view
 
+# Bare React Native
+npm install @react-native-masked-view/masked-view
+cd ios && pod install  # iOS only
+```
+
+**2. Create a development build** (if using Expo)
+```bash
+npx expo run:ios
+# or
+npx expo run:android
+```
+
+**3. Wrap your destination screen**
 ```tsx
 export default function PostScreen() {
   return (
@@ -165,6 +177,10 @@ export default function PostScreen() {
   );
 }
 ```
+
+> **💡 Fallback behavior**: `Transition.MaskedView` will fall back to a plain `View` if the masked view library is missing, but this breaks the shared element effect and may cause errors like "bounds is not a function".
+
+---
 
 ### Navigator-level custom animations
 
