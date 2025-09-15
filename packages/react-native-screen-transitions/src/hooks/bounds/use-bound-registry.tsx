@@ -25,9 +25,13 @@ import useStableCallback from "../use-stable-callback";
 interface BoundMeasurerHookProps {
 	sharedBoundTag?: string;
 	animatedRef: AnimatedRef<View>;
-
 	style: StyleProps;
 	onPress?: ((...args: unknown[]) => void) | undefined;
+}
+
+interface MaybeMeasureAndStoreParams {
+	onPress?: ((...args: unknown[]) => void) | undefined;
+	skipMarkingActive?: boolean;
 }
 
 interface MeasurementUpdateContextType {
@@ -43,12 +47,11 @@ export const useBoundsRegistry = ({
 	style,
 	onPress,
 }: BoundMeasurerHookProps) => {
-	const { previous, current } = useKeys();
+	const { previous, current, next } = useKeys();
 
 	const ROOT_MEASUREMENT_SIGNAL = useContext(MeasurementUpdateContext);
 	const ROOT_SIGNAL = useSharedValue(0);
 	const IS_ROOT = !ROOT_MEASUREMENT_SIGNAL;
-	const hasMeasured = useSharedValue(false);
 
 	const emitUpdate = useCallback(() => {
 		"worklet";
@@ -56,15 +59,10 @@ export const useBoundsRegistry = ({
 	}, [IS_ROOT, ROOT_SIGNAL]);
 
 	const maybeMeasureAndStore = useCallback(
-		({
-			onPress,
-			skipMarkingActive,
-		}: {
-			onPress?: () => void;
-			skipMarkingActive?: boolean;
-		}) => {
+		({ onPress, skipMarkingActive }: MaybeMeasureAndStoreParams) => {
 			"worklet";
-			if (!sharedBoundTag) return;
+			// Currently, there's no necessity to measure when the current route is blurred ( could potentially change in the future )
+			if (!sharedBoundTag || next) return;
 
 			const measured = measure(animatedRef);
 
@@ -95,14 +93,15 @@ export const useBoundsRegistry = ({
 
 			if (onPress) runOnJS(onPress)();
 		},
-		[sharedBoundTag, animatedRef, current.route.key, style, emitUpdate],
+		[sharedBoundTag, animatedRef, current.route.key, style, emitUpdate, next],
 	);
 
-	const handleTransitionLayout = useCallback(() => {
+	const hasMeasuredOnLayout = useSharedValue(false);
+	const handleInitialLayout = useCallback(() => {
 		"worklet";
 
 		const prevKey = previous?.route.key;
-		if (!sharedBoundTag || hasMeasured.value || !prevKey) {
+		if (!sharedBoundTag || hasMeasuredOnLayout.value || !prevKey) {
 			return;
 		}
 
@@ -112,9 +111,14 @@ export const useBoundsRegistry = ({
 			// Should skip mark active if we are in a transition
 			maybeMeasureAndStore({ skipMarkingActive: true });
 			// Should not measure again while in transition
-			hasMeasured.value = true;
+			hasMeasuredOnLayout.value = true;
 		}
-	}, [maybeMeasureAndStore, sharedBoundTag, previous?.route.key, hasMeasured]);
+	}, [
+		maybeMeasureAndStore,
+		sharedBoundTag,
+		previous?.route.key,
+		hasMeasuredOnLayout,
+	]);
 
 	const captureActiveOnPress = useStableCallback(() => {
 		if (!sharedBoundTag) {
@@ -152,7 +156,7 @@ export const useBoundsRegistry = ({
 	);
 
 	return {
-		handleTransitionLayout,
+		handleInitialLayout,
 		captureActiveOnPress,
 		MeasurementSyncProvider,
 	};

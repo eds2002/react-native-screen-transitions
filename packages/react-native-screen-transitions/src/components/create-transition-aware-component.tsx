@@ -62,7 +62,7 @@ export function createTransitionAwareComponent<P extends object>(
 		});
 
 		const {
-			handleTransitionLayout,
+			handleInitialLayout,
 			captureActiveOnPress,
 			MeasurementSyncProvider,
 		} = useBoundsRegistry({
@@ -79,7 +79,7 @@ export function createTransitionAwareComponent<P extends object>(
 					ref={animatedRef}
 					style={[style, associatedStyles]}
 					onPress={captureActiveOnPress}
-					onLayout={runOnUI(handleTransitionLayout)}
+					onLayout={runOnUI(handleInitialLayout)}
 					collapsable={!sharedBoundTag}
 				>
 					{children}
