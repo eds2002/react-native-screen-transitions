@@ -1,5 +1,13 @@
 # Change Log
 
+## 2.3.4
+
+### Patch Changes
+
+- [#40](https://github.com/eds2002/react-native-screen-transitions/pull/40) [`aea9f15`](https://github.com/eds2002/react-native-screen-transitions/commit/aea9f1557797fbee18ed190fd4d15bfed6747cf9) Thanks [@eds2002](https://github.com/eds2002)! - Prevent bounds from measuring again when the screen is blurred, prevent running the beforeRemove listener on screens that don't have transitions enabled.
+
+- [#40](https://github.com/eds2002/react-native-screen-transitions/pull/40) [`aea9f15`](https://github.com/eds2002/react-native-screen-transitions/commit/aea9f1557797fbee18ed190fd4d15bfed6747cf9) Thanks [@eds2002](https://github.com/eds2002)! - Introduce fixes to support new reanimated v4
+
 ## 2.3.3
 
 ### Patch Changes
