@@ -38,11 +38,29 @@ export const resetGestureValues = ({
 	const vxTowardZero = velocity.calculateRestoreVelocity(nx, vxNorm);
 	const vyTowardZero = velocity.calculateRestoreVelocity(ny, vyNorm);
 
-	gestures.x.value = animate(0, { ...spec, velocity: vxTowardZero });
-	gestures.y.value = animate(0, { ...spec, velocity: vyTowardZero });
+	let remainingAnimations = 4;
 
-	gestures.normalizedX.value = animate(0, { ...spec, velocity: vxTowardZero });
-	gestures.normalizedY.value = animate(0, { ...spec, velocity: vyTowardZero });
+	const onFinish = (finished: boolean | undefined) => {
+		"worklet";
+		if (!finished) return;
+		remainingAnimations -= 1;
+		if (remainingAnimations === 0) {
+			gestures.direction.value = null;
+		}
+	};
+
+	gestures.x.value = animate(0, { ...spec, velocity: vxTowardZero }, onFinish);
+	gestures.y.value = animate(0, { ...spec, velocity: vyTowardZero }, onFinish);
+	gestures.normalizedX.value = animate(
+		0,
+		{ ...spec, velocity: vxTowardZero },
+		onFinish,
+	);
+	gestures.normalizedY.value = animate(
+		0,
+		{ ...spec, velocity: vyTowardZero },
+		onFinish,
+	);
 	gestures.isDragging.value = 0;
 	gestures.isDismissing.value = Number(shouldDismiss);
 };

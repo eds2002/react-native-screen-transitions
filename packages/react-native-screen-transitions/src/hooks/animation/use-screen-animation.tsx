@@ -45,6 +45,7 @@ const unwrap = (
 			normalizedY: s.gesture.normalizedY.value,
 			isDismissing: s.gesture.isDismissing.value,
 			isDragging: s.gesture.isDragging.value,
+			direction: s.gesture.direction.value,
 		},
 		bounds: Bounds.getBounds(key) || NO_BOUNDS_MAP,
 		route: s.route,

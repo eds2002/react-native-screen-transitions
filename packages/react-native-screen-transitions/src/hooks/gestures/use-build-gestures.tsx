@@ -26,7 +26,7 @@ import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
-import { GestureOffsetState } from "../../types/gesture";
+import { type GestureDirection, GestureOffsetState } from "../../types/gesture";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
@@ -149,18 +149,24 @@ export const useBuildGestures = ({
 			const scrollCfg = scrollConfig.value;
 
 			let shouldActivate = false;
+			let activatedDirection: GestureDirection | null = null;
+
 			if (recognizedDirection) {
 				if (directions.vertical && isSwipingDown) {
 					shouldActivate = scrollCfg ? scrollCfg.y <= 0 : true;
+					if (shouldActivate) activatedDirection = "vertical";
 				}
 				if (directions.horizontal && isSwipingRight) {
 					shouldActivate = scrollCfg ? scrollCfg.x <= 0 : true;
+					if (shouldActivate) activatedDirection = "horizontal";
 				}
 				if (directions.verticalInverted && isSwipingUp) {
 					shouldActivate = scrollCfg ? scrollCfg.y >= maxScrollY : true;
+					if (shouldActivate) activatedDirection = "vertical-inverted";
 				}
 				if (directions.horizontalInverted && isSwipingLeft) {
 					shouldActivate = scrollCfg ? scrollCfg.x >= maxScrollX : true;
+					if (shouldActivate) activatedDirection = "horizontal-inverted";
 				}
 			}
 
@@ -174,6 +180,7 @@ export const useBuildGestures = ({
 				gestureOffsetState.value === GestureOffsetState.PASSED &&
 				!gestures.isDismissing?.value
 			) {
+				gestures.direction.value = activatedDirection;
 				manager.activate();
 				return;
 			}
