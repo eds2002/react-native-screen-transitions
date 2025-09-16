@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	Gesture,
@@ -34,6 +34,7 @@ import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progres
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import { velocity } from "../../utils/gesture/velocity";
 import useStableCallback from "../use-stable-callback";
+import useStableCallbackValue from "../use-stable-callback-value";
 
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
@@ -98,17 +99,14 @@ export const useBuildGestures = ({
 		NavigatorDismissState.remove(key);
 	});
 
-	const onTouchesDown = useCallback(
-		(e: GestureTouchEvent) => {
-			"worklet";
-			const firstTouch = e.changedTouches[0];
-			initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
-			gestureOffsetState.value = GestureOffsetState.PENDING;
-		},
-		[initialTouch, gestureOffsetState],
-	);
+	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
+		"worklet";
+		const firstTouch = e.changedTouches[0];
+		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
+		gestureOffsetState.value = GestureOffsetState.PENDING;
+	});
 
-	const onTouchesMove = useCallback(
+	const onTouchesMove = useStableCallbackValue(
 		(e: GestureTouchEvent, manager: GestureStateManagerType) => {
 			"worklet";
 
@@ -180,25 +178,15 @@ export const useBuildGestures = ({
 				return;
 			}
 		},
-		[
-			initialTouch,
-			scrollConfig,
-			gestures,
-			directions,
-			gestureOffsetState,
-			dimensions,
-			gestureActivationArea,
-			gestureResponseDistance,
-		],
 	);
 
-	const onStart = useCallback(() => {
+	const onStart = useStableCallbackValue(() => {
 		"worklet";
 		gestures.isDragging.value = 1;
 		gestures.isDismissing.value = 0;
-	}, [gestures]);
+	});
 
-	const onUpdate = useCallback(
+	const onUpdate = useStableCallbackValue(
 		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
@@ -263,10 +251,9 @@ export const useBuildGestures = ({
 				animations.progress.value = 1 - gestureProgress;
 			}
 		},
-		[dimensions, gestures, animations, gestureDrivesProgress, directions],
 	);
 
-	const onEnd = useCallback(
+	const onEnd = useStableCallbackValue(
 		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
@@ -307,16 +294,6 @@ export const useBuildGestures = ({
 				initialVelocity,
 			});
 		},
-		[
-			dimensions,
-			animations,
-			transitionSpec,
-			setNavigatorDismissal,
-			handleDismiss,
-			gestures,
-			directions,
-			gestureVelocityImpact,
-		],
 	);
 
 	return useMemo(() => {
