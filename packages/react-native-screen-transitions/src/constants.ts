@@ -33,6 +33,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 			normalizedY: 0,
 			isDismissing: 0,
 			isDragging: 0,
+			direction: null,
 		},
 		bounds: {} as Record<string, BoundEntry>,
 		route: {} as RouteProp<ParamListBase>,
@@ -54,6 +55,7 @@ export const EMPTY_BOUND_HELPER_RESULT_RAW = Object.freeze({
 });
 export const ENTER_RANGE = [0, 1] as const;
 export const EXIT_RANGE = [1, 2] as const;
+
 export const FULLSCREEN_DIMENSIONS = (
 	dimensions: ScaledSize,
 ): MeasuredDimensions => {

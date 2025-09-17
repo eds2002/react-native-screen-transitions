@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	Gesture,
@@ -26,7 +26,7 @@ import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Gestures } from "../../stores/gestures";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
-import { GestureOffsetState } from "../../types/gesture";
+import { type GestureDirection, GestureOffsetState } from "../../types/gesture";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
@@ -34,6 +34,7 @@ import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progres
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import { velocity } from "../../utils/gesture/velocity";
 import useStableCallback from "../use-stable-callback";
+import useStableCallbackValue from "../use-stable-callback-value";
 
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
@@ -98,17 +99,14 @@ export const useBuildGestures = ({
 		NavigatorDismissState.remove(key);
 	});
 
-	const onTouchesDown = useCallback(
-		(e: GestureTouchEvent) => {
-			"worklet";
-			const firstTouch = e.changedTouches[0];
-			initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
-			gestureOffsetState.value = GestureOffsetState.PENDING;
-		},
-		[initialTouch, gestureOffsetState],
-	);
+	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
+		"worklet";
+		const firstTouch = e.changedTouches[0];
+		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
+		gestureOffsetState.value = GestureOffsetState.PENDING;
+	});
 
-	const onTouchesMove = useCallback(
+	const onTouchesMove = useStableCallbackValue(
 		(e: GestureTouchEvent, manager: GestureStateManagerType) => {
 			"worklet";
 
@@ -151,18 +149,24 @@ export const useBuildGestures = ({
 			const scrollCfg = scrollConfig.value;
 
 			let shouldActivate = false;
+			let activatedDirection: GestureDirection | null = null;
+
 			if (recognizedDirection) {
 				if (directions.vertical && isSwipingDown) {
 					shouldActivate = scrollCfg ? scrollCfg.y <= 0 : true;
+					if (shouldActivate) activatedDirection = "vertical";
 				}
 				if (directions.horizontal && isSwipingRight) {
 					shouldActivate = scrollCfg ? scrollCfg.x <= 0 : true;
+					if (shouldActivate) activatedDirection = "horizontal";
 				}
 				if (directions.verticalInverted && isSwipingUp) {
 					shouldActivate = scrollCfg ? scrollCfg.y >= maxScrollY : true;
+					if (shouldActivate) activatedDirection = "vertical-inverted";
 				}
 				if (directions.horizontalInverted && isSwipingLeft) {
 					shouldActivate = scrollCfg ? scrollCfg.x >= maxScrollX : true;
+					if (shouldActivate) activatedDirection = "horizontal-inverted";
 				}
 			}
 
@@ -176,29 +180,20 @@ export const useBuildGestures = ({
 				gestureOffsetState.value === GestureOffsetState.PASSED &&
 				!gestures.isDismissing?.value
 			) {
+				gestures.direction.value = activatedDirection;
 				manager.activate();
 				return;
 			}
 		},
-		[
-			initialTouch,
-			scrollConfig,
-			gestures,
-			directions,
-			gestureOffsetState,
-			dimensions,
-			gestureActivationArea,
-			gestureResponseDistance,
-		],
 	);
 
-	const onStart = useCallback(() => {
+	const onStart = useStableCallbackValue(() => {
 		"worklet";
 		gestures.isDragging.value = 1;
 		gestures.isDismissing.value = 0;
-	}, [gestures]);
+	});
 
-	const onUpdate = useCallback(
+	const onUpdate = useStableCallbackValue(
 		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
@@ -263,10 +258,9 @@ export const useBuildGestures = ({
 				animations.progress.value = 1 - gestureProgress;
 			}
 		},
-		[dimensions, gestures, animations, gestureDrivesProgress, directions],
 	);
 
-	const onEnd = useCallback(
+	const onEnd = useStableCallbackValue(
 		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
@@ -307,16 +301,6 @@ export const useBuildGestures = ({
 				initialVelocity,
 			});
 		},
-		[
-			dimensions,
-			animations,
-			transitionSpec,
-			setNavigatorDismissal,
-			handleDismiss,
-			gestures,
-			directions,
-			gestureVelocityImpact,
-		],
 	);
 
 	return useMemo(() => {

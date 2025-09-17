@@ -18,9 +18,10 @@ import {
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
 import { useKeys } from "../../providers/keys";
 import { Bounds } from "../../stores/bounds";
-import { flattenStyle } from "../../utils/bounds/_utils/flatten-styles";
 import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
+import { prepareStyleForBounds } from "../../utils/bounds/_utils/styles";
 import useStableCallback from "../use-stable-callback";
+import useStableCallbackValue from "../use-stable-callback-value";
 
 interface BoundMeasurerHookProps {
 	sharedBoundTag?: string;
@@ -48,17 +49,18 @@ export const useBoundsRegistry = ({
 	onPress,
 }: BoundMeasurerHookProps) => {
 	const { previous, current, next } = useKeys();
+	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 	const ROOT_MEASUREMENT_SIGNAL = useContext(MeasurementUpdateContext);
 	const ROOT_SIGNAL = useSharedValue(0);
 	const IS_ROOT = !ROOT_MEASUREMENT_SIGNAL;
 
-	const emitUpdate = useCallback(() => {
+	const emitUpdate = useStableCallbackValue(() => {
 		"worklet";
 		if (IS_ROOT) ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
-	}, [IS_ROOT, ROOT_SIGNAL]);
+	});
 
-	const maybeMeasureAndStore = useCallback(
+	const maybeMeasureAndStore = useStableCallbackValue(
 		({ onPress, skipMarkingActive }: MaybeMeasureAndStoreParams) => {
 			"worklet";
 			// Currently, there's no necessity to measure when the current route is blurred ( could potentially change in the future )
@@ -86,18 +88,17 @@ export const useBoundsRegistry = ({
 
 			emitUpdate();
 
-			Bounds.setBounds(key, sharedBoundTag, measured, flattenStyle(style));
+			Bounds.setBounds(key, sharedBoundTag, measured, preparedStyles);
 			if (!skipMarkingActive) {
 				Bounds.setRouteActive(key, sharedBoundTag);
 			}
 
 			if (onPress) runOnJS(onPress)();
 		},
-		[sharedBoundTag, animatedRef, current.route.key, style, emitUpdate, next],
 	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
-	const handleInitialLayout = useCallback(() => {
+	const handleInitialLayout = useStableCallbackValue(() => {
 		"worklet";
 
 		const prevKey = previous?.route.key;
@@ -113,12 +114,7 @@ export const useBoundsRegistry = ({
 			// Should not measure again while in transition
 			hasMeasuredOnLayout.value = true;
 		}
-	}, [
-		maybeMeasureAndStore,
-		sharedBoundTag,
-		previous?.route.key,
-		hasMeasuredOnLayout,
-	]);
+	});
 
 	const captureActiveOnPress = useStableCallback(() => {
 		if (!sharedBoundTag) {

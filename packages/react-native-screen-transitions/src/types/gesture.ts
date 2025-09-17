@@ -49,4 +49,8 @@ export type GestureValues = {
 	 * A flag indicating if the screen is in the process of dismissing.
 	 */
 	isDismissing: number;
+	/**
+	 * The initial direction that activated the gesture.
+	 */
+	direction: Omit<GestureDirection, "bidirectional"> | null;
 };

@@ -173,7 +173,6 @@ export const ElasticCard = (
 			/**
 			 * Applies to both screens ( previous and incoming)
 			 */
-
 			const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.8]);
 
 			// applies to current screen
@@ -367,16 +366,33 @@ export const SharedAppleMusic = (
 
 			const normX = active.gesture.normalizedX;
 			const normY = active.gesture.normalizedY;
+			const initialDirection = active.gesture.direction;
 
 			/**
 			 * ===============================
 			 * Animations for both bounds
 			 * ===============================
 			 */
-			const dragX = interpolate(normX, [0, 1], [0, screen.width * 0.8]);
-			const dragY = interpolate(normY, [0, 1], [0, screen.height * 0.8]);
-			const dragXScale = interpolate(normX, [0, 1], [1, 0.75]);
-			const dragYScale = interpolate(normY, [0, 1], [1, 0.75]);
+			const xResistance = initialDirection === "horizontal" ? 0.7 : 0.4;
+			const yResistance = initialDirection === "vertical" ? 0.7 : 0.4;
+
+			const xScaleOuput = initialDirection === "horizontal" ? [1, 0.5] : [1, 1];
+			const yScaleOuput = initialDirection === "vertical" ? [1, 0.5] : [1, 1];
+
+			const dragX = interpolate(
+				normX,
+				[-1, 0, 1],
+				[-screen.width * xResistance, 0, screen.width * xResistance],
+				"clamp",
+			);
+			const dragY = interpolate(
+				normY,
+				[-1, 0, 1],
+				[-screen.height * yResistance, 0, screen.height * yResistance],
+				"clamp",
+			);
+			const dragXScale = interpolate(normX, [0, 1], xScaleOuput);
+			const dragYScale = interpolate(normY, [0, 1], yScaleOuput);
 
 			const boundValues = bounds({
 				method: focused ? "content" : "transform",
@@ -387,8 +403,8 @@ export const SharedAppleMusic = (
 
 			const opacity = interpolate(
 				progress,
-				[0, 0.35, 1, 1.25, 2],
-				[0, 1, 1, 1, 0],
+				[0, 0.25, 1.25, 2],
+				[0, 1, 1, 0],
 				"clamp",
 			);
 
