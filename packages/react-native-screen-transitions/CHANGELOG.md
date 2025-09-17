@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.4.0
+
+### Minor Changes
+
+- [#42](https://github.com/eds2002/react-native-screen-transitions/pull/42) [`bc8f46d`](https://github.com/eds2002/react-native-screen-transitions/commit/bc8f46d940aa3763b105b93133041e632cfcee45) Thanks [@eds2002](https://github.com/eds2002)! - Integrate new direction value for screen interpolation props, as well as introduce some improvements in the apple music preset to closely match.
+
 ## 2.3.4
 
 ### Patch Changes
