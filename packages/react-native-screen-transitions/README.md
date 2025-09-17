@@ -184,18 +184,21 @@ export default function PostScreen() {
 
 ### Navigator-level custom animations
 
-Instead of presets, you can define a custom transition directly on the screen’s options.
+Instead of presets, you can define a custom transition directly on the screen's options.
 `screenStyleInterpolator` receives an object with the following useful fields:
 
-- `progress` – overall transition progress (`0 → 2`).
-- `current` – state for the current screen (includes `progress`, `closing`, `gesture`, `route`, etc.).
-- `previous` – state for the previous screen (may be `undefined`).
-- `next` – state for the next screen (may be `undefined`).
+- `progress` – combined progress of current and next screen transitions, ranging from 0-2.
+- `current` – state for the current screen being interpolated (includes `progress`, `closing`, `gesture`, `route`, etc.).
+- `previous` – state for the screen that came before the current one in the navigation stack (may be `undefined`).
+- `next` – state for the screen that comes after the current one in the navigation stack (may be `undefined`).
 - `layouts.screen` – `{ width, height }` of the container.
 - `insets` – `{ top, right, bottom, left }` safe-area insets.
-- `bounds(options)` – compute shared-bound transforms/styles or raw values for a given bound. See "Bounds" below.
-- `activeBoundId`	– id of the active bound.
-- `focused` – state of the current screen
+- `bounds(options)` – function that provides access to bounds builders for creating shared element transitions. See "Bounds" below.
+- `activeBoundId` – ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a').
+- `focused` – whether the current screen is the focused (topmost) screen in the stack.
+- `active` – the screen state that is currently driving the transition (either current or next, whichever is focused).
+- `isActiveTransitioning` – whether the active screen is currently transitioning (either being dragged or animating).
+- `isDismissing` – whether the active screen is in the process of being dismissed/closed.
 
 
 ```tsx
