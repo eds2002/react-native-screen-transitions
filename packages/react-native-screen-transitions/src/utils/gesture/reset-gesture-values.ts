@@ -31,6 +31,7 @@ export const resetGestureValues = ({
 	const nx =
 		gestures.normalizedX.value ||
 		event.translationX / Math.max(1, dimensions.width);
+
 	const ny =
 		gestures.normalizedY.value ||
 		event.translationY / Math.max(1, dimensions.height);
