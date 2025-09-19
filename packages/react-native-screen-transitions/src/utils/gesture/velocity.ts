@@ -41,11 +41,10 @@ const normalize = (velocityPixelsPerSecond: number, screenSize: number) => {
 const calculateRestoreVelocity = (
 	currentValueNormalized: number,
 	baseVelocityNormalized: number,
-	threshold: number = NEAR_ZERO_THRESHOLD,
 ) => {
 	"worklet";
 
-	if (Math.abs(currentValueNormalized) < threshold) return 0;
+	if (Math.abs(currentValueNormalized) < NEAR_ZERO_THRESHOLD) return 0;
 
 	const directionTowardZero = Math.sign(currentValueNormalized) || 1;
 	const clampedVelocity = Math.min(Math.abs(baseVelocityNormalized), 1);

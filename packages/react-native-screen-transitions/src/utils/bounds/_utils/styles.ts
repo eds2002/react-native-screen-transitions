@@ -1,9 +1,10 @@
 import type { ImageStyle, StyleProp, TextStyle, ViewStyle } from "react-native";
 import { isSharedValue } from "react-native-reanimated";
+import type { Any } from "../../../types/utils";
 
 type AnyStyle = ViewStyle | TextStyle | ImageStyle;
 type StyleValue = StyleProp<AnyStyle>;
-type PlainStyleObject = Record<string, any>;
+type PlainStyleObject = Record<string, Any>;
 
 function mergeStyleArrays<T extends StyleValue>(style: T): T {
 	"worklet";
