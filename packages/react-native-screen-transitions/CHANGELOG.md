@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.4.1
+
+### Patch Changes
+
+- [#46](https://github.com/eds2002/react-native-screen-transitions/pull/46) [`dd54bb7`](https://github.com/eds2002/react-native-screen-transitions/commit/dd54bb78734cceba38d6de62a777c8e20845825f) Thanks [@eds2002](https://github.com/eds2002)! - Move NEAR_ZERO_THRESHOLD to the function body instead, also remove it as a prop required prop since it's not needed.
+
 ## 2.4.0
 
 ### Minor Changes
