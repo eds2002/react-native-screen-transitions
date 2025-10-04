@@ -1,16 +1,18 @@
-import type { ScaledSize } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import {
-	DEFAULT_BUILDER_OPTIONS,
 	EMPTY_BOUND_HELPER_RESULT,
 	EMPTY_BOUND_HELPER_RESULT_RAW,
 	ENTER_RANGE,
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 } from "../../constants";
-import type { ScreenTransitionState } from "../../types/animation";
-import type { BoundsAccessor, BoundsBuilder } from "../../types/bounds";
+import type {
+	ScreenInterpolationProps,
+	ScreenTransitionState,
+} from "../../types/animation";
+import type { BoundsAccessor } from "../../types/bounds";
 import type { ScreenPhase } from "../../types/core";
+import type { Layout } from "../../types/navigator";
 import type {
 	BoundsBuilderInitParams,
 	BoundsBuilderOptions,
@@ -35,7 +37,7 @@ export interface BuildBoundsAccessorParams {
 	previous?: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	progress: number;
-	dimensions: ScaledSize;
+	dimensions: Layout;
 }
 
 const resolveBounds = (props: {
@@ -44,7 +46,7 @@ const resolveBounds = (props: {
 	current?: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	toRect?: Partial<MeasuredDimensions>;
-	dimensions: ScaledSize;
+	dimensions: Layout;
 	computeOptions: BoundsBuilderOptions;
 }) => {
 	"worklet";
@@ -180,110 +182,38 @@ const computeBoundStyles = (
 			: composeTransformRelative(common);
 };
 
-/**
- * @deprecated Use `createBounds` instead. We'll avoid using the builder pattern for this type of function.
- */
-const buildBoundStyles = (params: BoundsBuilderInitParams): BoundsBuilder => {
+export const createBounds = (
+	props: Omit<ScreenInterpolationProps, "bounds">,
+): BoundsAccessor => {
 	"worklet";
 
-	const cfg: { options: BoundsBuilderOptions } = {
-		options: { ...DEFAULT_BUILDER_OPTIONS },
+	const boundsFunction = (params?: BoundsBuilderOptions) => {
+		"worklet";
+		const id = params?.id ?? props.activeBoundId;
+
+		return computeBoundStyles(
+			{
+				id,
+				current: props.current,
+				previous: props.previous,
+				next: props.next,
+				progress: props.progress,
+				dimensions: props.layouts.screen,
+			},
+			params,
+		);
 	};
 
-	const builder = (): BoundsBuilder => ({
-		gestures: (options) => {
-			cfg.options.gestures = options;
-			return builder();
-		},
-		toFullscreen: () => {
-			cfg.options.toFullscreen = true;
-			return builder();
-		},
-		absolute: () => {
-			cfg.options.absolute = true;
-			cfg.options.relative = false;
-			return builder();
-		},
-		relative: () => {
-			cfg.options.relative = true;
-			cfg.options.absolute = false;
-			return builder();
-		},
-		transform: () => {
-			cfg.options.method = "transform";
-			return builder();
-		},
-		size: () => {
-			cfg.options.method = "size";
-			return builder();
-		},
-		content: () => {
-			cfg.options.method = "content";
-			return builder();
-		},
-		contentFill: () => {
-			cfg.options.contentScaleMode = "aspectFill";
-			return builder();
-		},
-		contentFit: () => {
-			cfg.options.contentScaleMode = "aspectFit";
-			return builder();
-		},
-
-		build: () => {
-			return computeBoundStyles(params, cfg.options);
-		},
-	});
-
-	return builder();
-};
-
-export const createBounds = ({
-	activeBoundId,
-	current,
-	previous,
-	next,
-	progress,
-	dimensions,
-}: BuildBoundsAccessorParams): BoundsAccessor => {
-	"worklet";
-
-	const bounds: BoundsAccessor = ((params?: string | BoundsBuilderOptions) => {
-		if (typeof params === "object") {
-			const id = params.id ?? activeBoundId;
-
-			return computeBoundStyles(
-				{
-					id,
-					current,
-					previous,
-					next,
-					progress,
-					dimensions,
-				},
-				params,
-			);
-		}
-
-		const id = typeof params === "string" ? params : activeBoundId;
-		return buildBoundStyles({
-			id,
-			current,
-			previous,
-			next,
-			progress,
-			dimensions,
-		});
-	}) as BoundsAccessor;
-
-	bounds.get = (id?: string, phase?: ScreenPhase) =>
-		getBounds({
-			id: id ?? activeBoundId,
+	const get = (id?: string, phase?: ScreenPhase) => {
+		"worklet";
+		return getBounds({
+			id: id ?? props.activeBoundId,
 			phase,
-			current,
-			previous,
-			next,
+			current: props.current,
+			previous: props.previous,
+			next: props.next,
 		});
+	};
 
-	return bounds;
+	return Object.assign(boundsFunction, { get }) as BoundsAccessor;
 };

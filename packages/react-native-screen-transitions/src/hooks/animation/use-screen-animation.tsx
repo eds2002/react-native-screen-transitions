@@ -18,6 +18,7 @@ import type {
 
 import type { NativeStackDescriptor } from "../../types/navigator";
 import { derivations } from "../../utils/animation/derivations";
+import { createBounds } from "../../utils/bounds";
 
 type BuiltState = {
 	progress: SharedValue<number>;
@@ -84,51 +85,49 @@ export function _useScreenAnimation() {
 	const nextAnimation = useBuildScreenTransitionState(nextDescriptor);
 	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
 
-	const screenInterpolatorProps = useDerivedValue<ScreenInterpolationProps>(
-		(): ScreenInterpolationProps => {
-			"worklet";
+	const screenInterpolatorProps = useDerivedValue<
+		Omit<ScreenInterpolationProps, "bounds">
+	>(() => {
+		"worklet";
 
-			const previous = unwrap(prevAnimation, previousDescriptor?.route.key);
+		const previous = unwrap(prevAnimation, previousDescriptor?.route.key);
 
-			const next = nextDescriptor?.options?.enableTransitions
-				? unwrap(nextAnimation, nextDescriptor?.route.key)
-				: undefined;
+		const next = nextDescriptor?.options?.enableTransitions
+			? unwrap(nextAnimation, nextDescriptor?.route.key)
+			: undefined;
 
-			const current =
-				unwrap(currentAnimation, currentDescriptor?.route.key) ??
-				DEFAULT_SCREEN_TRANSITION_STATE;
+		const current =
+			unwrap(currentAnimation, currentDescriptor?.route.key) ??
+			DEFAULT_SCREEN_TRANSITION_STATE;
 
-			const {
-				progress,
-				focused,
-				activeBoundId,
-				bounds,
-				active,
-				isActiveTransitioning,
-				isDismissing,
-			} = derivations({
-				current,
-				next,
-				previous,
-				dimensions,
-			});
+		const {
+			progress,
+			focused,
+			activeBoundId,
+			active,
+			isActiveTransitioning,
+			isDismissing,
+		} = derivations({
+			current,
+			next,
+			previous,
+		});
 
-			return {
-				layouts: { screen: dimensions },
-				insets,
-				previous,
-				current,
-				next,
-				focused,
-				activeBoundId,
-				progress,
-				bounds,
-				active,
-				isActiveTransitioning,
-				isDismissing,
-			};
-		},
-	);
+		return {
+			layouts: { screen: dimensions },
+			insets,
+			previous,
+			current,
+			next,
+			focused,
+			activeBoundId,
+			progress,
+
+			active,
+			isActiveTransitioning,
+			isDismissing,
+		};
+	});
 
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
 	const currentInterpolator =
@@ -142,5 +141,11 @@ export function _useScreenAnimation() {
 export function useScreenAnimation() {
 	const { screenInterpolatorProps } = _useScreenAnimation();
 
-	return useDerivedValue(() => screenInterpolatorProps.value);
+	return useDerivedValue<ScreenInterpolationProps>(() => {
+		const props = screenInterpolatorProps.value;
+		return {
+			...props,
+			bounds: createBounds(props),
+		};
+	});
 }

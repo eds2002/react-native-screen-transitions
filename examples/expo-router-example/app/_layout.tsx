@@ -115,7 +115,6 @@ export default function RootLayout() {
 						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: ["horizontal", "vertical"],
-
 						screenStyleInterpolator: ({
 							bounds,
 							activeBoundId,
@@ -161,11 +160,13 @@ export default function RootLayout() {
 						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: "bidirectional",
-
 						screenStyleInterpolator: ({ bounds, progress }) => {
 							"worklet";
 
-							const transformBounds = bounds().relative().transform().build();
+							const transformBounds = bounds({
+								space: "relative",
+								method: "transform",
+							});
 
 							return {
 								overlayStyle: {

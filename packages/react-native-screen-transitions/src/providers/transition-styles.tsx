@@ -1,8 +1,9 @@
 import { createContext, useContext, useMemo } from "react";
-import { isWorkletFunction, useDerivedValue } from "react-native-reanimated";
+import { useDerivedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../constants";
 import { _useScreenAnimation } from "../hooks/animation/use-screen-animation";
 import type { TransitionInterpolatedStyle } from "../types/animation";
+import { createBounds } from "../utils/bounds";
 
 type Props = {
 	children: React.ReactNode;
@@ -18,21 +19,33 @@ export function TransitionStylesProvider({ children }: Props) {
 	const { screenInterpolatorProps, screenStyleInterpolator } =
 		_useScreenAnimation();
 
-	const isFunctionWorklet = isWorkletFunction(screenStyleInterpolator);
-
 	const stylesMap = useDerivedValue<TransitionInterpolatedStyle>(() => {
 		"worklet";
 
-		if (screenStyleInterpolator && !isFunctionWorklet && __DEV__) {
-			console.warn(
-				`[react-native-screen-transitions] screenStyleInterpolator is not a worklet function`,
-			);
+		/**
+		 * ### Maintainer note
+		 *
+		 * From my understanding, reanimated will serialize the DerivedValue result. Thus resulting in us receiving a `bounds is not a function, it is an object` error. We'll build the bounds function inside here (the final step) and pass it alongside the interpolator instead.
+		 */
+		const props = screenInterpolatorProps.value;
+
+		const bounds = createBounds(props);
+		try {
+			if (!screenStyleInterpolator) return NO_STYLES;
+
+			return screenStyleInterpolator({
+				...props,
+				bounds,
+			});
+		} catch (err) {
+			if (__DEV__) {
+				console.warn(
+					"[react-native-screen-transitions] screenStyleInterpolator must be a worklet",
+					err,
+				);
+			}
 			return NO_STYLES;
 		}
-
-		return screenStyleInterpolator
-			? screenStyleInterpolator(screenInterpolatorProps.value)
-			: NO_STYLES;
 	});
 
 	const value = useMemo(() => {

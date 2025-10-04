@@ -1,10 +1,10 @@
-import type { ScaledSize } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { Complete } from "../../types/utils";
 import type { BoundsBuilderOptions } from "./_types/builder";
+import type { Layout } from "../ ../../../types/navigator";
 
 export const FULLSCREEN_DIMENSIONS = (
-	dimensions: ScaledSize,
+	dimensions: Layout,
 ): MeasuredDimensions => {
 	"worklet";
 	return {
