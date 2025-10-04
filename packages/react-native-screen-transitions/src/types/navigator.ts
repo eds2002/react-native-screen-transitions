@@ -25,6 +25,11 @@ import type {
 import type { ScreenStyleInterpolator, TransitionSpec } from "./animation";
 import type { GestureActivationArea, GestureDirection } from "./gesture";
 
+export type Layout = {
+	width: number;
+	height: number;
+};
+
 export type NativeStackNavigationEventMap = {
 	/**
 	 * Event which fires when a transition animation starts.

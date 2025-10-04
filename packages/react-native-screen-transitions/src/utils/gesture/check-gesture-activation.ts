@@ -1,4 +1,3 @@
-import type { ScaledSize } from "react-native";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import type { SharedValue } from "react-native-reanimated";
 import {
@@ -7,6 +6,7 @@ import {
 	GestureOffsetState,
 	type SideActivation,
 } from "../../types/gesture";
+import type { Layout } from "../../types/navigator";
 
 type Directions = {
 	vertical: boolean;
@@ -22,7 +22,7 @@ interface CheckGestureActivationProps {
 	manager?: GestureStateManagerType;
 	gestureOffsetState: SharedValue<GestureOffsetState>;
 	activationArea?: GestureActivationArea;
-	dimensions: ScaledSize;
+	dimensions: Layout;
 	responseDistance?: number;
 }
 
@@ -90,7 +90,7 @@ function normalizeSides(area?: GestureActivationArea): NormalizedSides {
 
 function computeEdgeConstraints(
 	initialTouch: { x: number; y: number },
-	dimensions: ScaledSize,
+	dimensions: Layout,
 	sides: NormalizedSides,
 	responseDistance?: number,
 ) {

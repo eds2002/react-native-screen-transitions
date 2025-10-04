@@ -7,6 +7,7 @@ import type {
 import type { EdgeInsets } from "react-native-safe-area-context";
 import type { BoundEntry, BoundsAccessor } from "./bounds";
 import type { GestureValues } from "./gesture";
+import type { Layout } from "./navigator";
 
 export type ScreenTransitionState = {
 	progress: number;
@@ -27,10 +28,7 @@ export interface ScreenInterpolationProps {
 	/** Layout measurements for the screen. */
 	layouts: {
 		/** The `width` and `height` of the screen container. */
-		screen: {
-			width: number;
-			height: number;
-		};
+		screen: Layout;
 	};
 	/** The safe area insets for the screen. */
 	insets: EdgeInsets;

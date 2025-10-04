@@ -1,5 +1,5 @@
-import type { ScaledSize } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
+import type { Layout } from "../../../types/navigator";
 import type { BoundsAnchor, BoundsScaleMode } from "../_types/builder";
 import type {
 	ContentTransformGeometry,
@@ -109,7 +109,7 @@ export function computeContentTransformGeometry({
 	start: MeasuredDimensions;
 	end: MeasuredDimensions;
 	entering: boolean;
-	dimensions: ScaledSize;
+	dimensions: Layout;
 	anchor?: BoundsAnchor;
 	scaleMode?: BoundsScaleMode;
 }): ContentTransformGeometry {

@@ -1,9 +1,9 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
-import type { ScaledSize } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "./types/animation";
 import type { BoundEntry } from "./types/bounds";
 import type { ActivationArea } from "./types/gesture";
+import type { Layout } from "./types/navigator";
 import type { Complete } from "./types/utils";
 import type { BoundsBuilderOptions } from "./utils/bounds/_types/builder";
 
@@ -57,7 +57,7 @@ export const ENTER_RANGE = [0, 1] as const;
 export const EXIT_RANGE = [1, 2] as const;
 
 export const FULLSCREEN_DIMENSIONS = (
-	dimensions: ScaledSize,
+	dimensions: Layout,
 ): MeasuredDimensions => {
 	"worklet";
 	return {

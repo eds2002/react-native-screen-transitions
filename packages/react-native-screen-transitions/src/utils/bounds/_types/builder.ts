@@ -1,7 +1,7 @@
-import type { ScaledSize } from "react-native";
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { ScreenTransitionState } from "../../../types/animation";
 import type { BoundsMethod } from "../../../types/bounds";
+import type { Layout } from "../../../types/navigator";
 
 /**
  * Params passed to the builder initializer. No method required here.
@@ -12,7 +12,7 @@ export type BoundsBuilderInitParams = {
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	progress: number;
-	dimensions: ScaledSize;
+	dimensions: Layout;
 };
 
 export type BoundsAnchor =
