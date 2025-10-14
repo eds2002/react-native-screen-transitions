@@ -1,38 +1,38 @@
 import { createContext, useContext, useMemo } from "react";
-import type { NativeStackDescriptor } from "../types/navigator";
+import type { NativeStackDescriptor } from "../types/native-stack.navigator";
 
 interface KeysContextType {
-	previous?: NativeStackDescriptor;
-	current: NativeStackDescriptor;
-	next?: NativeStackDescriptor;
+  previous?: NativeStackDescriptor;
+  current: NativeStackDescriptor;
+  next?: NativeStackDescriptor;
 }
 
 const KeysContext = createContext<KeysContextType | undefined>(undefined);
 
 interface KeysProviderProps {
-	children: React.ReactNode;
-	previous?: NativeStackDescriptor;
-	current: NativeStackDescriptor;
-	next?: NativeStackDescriptor;
+  children: React.ReactNode;
+  previous?: NativeStackDescriptor;
+  current: NativeStackDescriptor;
+  next?: NativeStackDescriptor;
 }
 
 export const KeysProvider = ({
-	children,
-	previous,
-	current,
-	next,
+  children,
+  previous,
+  current,
+  next,
 }: KeysProviderProps) => {
-	const value = useMemo(
-		() => ({ previous, current, next }),
-		[previous, current, next],
-	);
-	return <KeysContext.Provider value={value}>{children}</KeysContext.Provider>;
+  const value = useMemo(
+    () => ({ previous, current, next }),
+    [previous, current, next]
+  );
+  return <KeysContext.Provider value={value}>{children}</KeysContext.Provider>;
 };
 
 export const useKeys = (): KeysContextType => {
-	const context = useContext(KeysContext);
-	if (context === undefined) {
-		throw new Error("useKeys must be used within a KeysProvider");
-	}
-	return context;
+  const context = useContext(KeysContext);
+  if (context === undefined) {
+    throw new Error("useKeys must be used within a KeysProvider");
+  }
+  return context;
 };

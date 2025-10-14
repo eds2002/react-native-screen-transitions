@@ -12,7 +12,7 @@ import type {
 } from "../../types/animation";
 import type { BoundsAccessor } from "../../types/bounds";
 import type { ScreenPhase } from "../../types/core";
-import type { Layout } from "../../types/navigator";
+import type { Layout } from "../../types/native-stack.navigator";
 import type {
 	BoundsBuilderInitParams,
 	BoundsBuilderOptions,

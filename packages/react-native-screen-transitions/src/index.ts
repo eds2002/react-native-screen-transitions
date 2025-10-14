@@ -4,31 +4,42 @@ import { createTransitionAwareComponent } from "./components/create-transition-a
 import MaskedView from "./components/integrations/masked-view";
 
 export default {
-	View: createTransitionAwareComponent(View),
-	Pressable: createTransitionAwareComponent(Pressable),
-	ScrollView: createTransitionAwareComponent(ScrollView, {
-		isScrollable: true,
-	}),
-	FlatList: createTransitionAwareComponent(FlatList, {
-		isScrollable: true,
-	}),
-	MaskedView: MaskedView,
-	presets,
-	specs,
-	createTransitionAwareComponent,
+  View: createTransitionAwareComponent(View),
+  Pressable: createTransitionAwareComponent(Pressable),
+  ScrollView: createTransitionAwareComponent(ScrollView, {
+    isScrollable: true,
+  }),
+  FlatList: createTransitionAwareComponent(FlatList, {
+    isScrollable: true,
+  }),
+  MaskedView: MaskedView,
+  presets,
+  specs,
+  createTransitionAwareComponent,
 };
 
 export { useScreenAnimation } from "./hooks/animation/use-screen-animation";
 export { createNativeStackNavigator } from "./integrations/native-stack/navigators/createNativeStackNavigator";
+export { createBlankStackNavigator } from "./integrations/blank-stack/navigators/createBlankStackNavigator";
 
 export type {
-	NativeStackHeaderLeftProps,
-	NativeStackHeaderProps,
-	NativeStackHeaderRightProps,
-	NativeStackNavigationEventMap,
-	NativeStackNavigationOptions,
-	NativeStackNavigationProp,
-	NativeStackNavigatorProps,
-	NativeStackOptionsArgs,
-	NativeStackScreenProps,
-} from "./types/navigator";
+  NativeStackHeaderLeftProps,
+  NativeStackHeaderProps,
+  NativeStackHeaderRightProps,
+  NativeStackNavigationEventMap,
+  NativeStackNavigationOptions,
+  NativeStackNavigationProp,
+  NativeStackNavigatorProps,
+  NativeStackOptionsArgs,
+  NativeStackScreenProps,
+} from "./types/native-stack.navigator";
+
+export type {
+  BlankStackHeaderProps,
+  BlankStackNavigationEventMap,
+  BlankStackNavigationOptions,
+  BlankStackNavigationProp,
+  BlankStackNavigatorProps,
+  BlankStackOptionsArgs,
+  BlankStackScreenProps,
+} from "./types/blank-stack.navigator";

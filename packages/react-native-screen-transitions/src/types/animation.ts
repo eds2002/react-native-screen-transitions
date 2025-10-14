@@ -7,7 +7,7 @@ import type {
 import type { EdgeInsets } from "react-native-safe-area-context";
 import type { BoundEntry, BoundsAccessor } from "./bounds";
 import type { GestureValues } from "./gesture";
-import type { Layout } from "./navigator";
+import type { Layout } from "./native-stack.navigator";
 
 export type ScreenTransitionState = {
 	progress: number;

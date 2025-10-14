@@ -3,7 +3,7 @@ import type { MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "./types/animation";
 import type { BoundEntry } from "./types/bounds";
 import type { ActivationArea } from "./types/gesture";
-import type { Layout } from "./types/navigator";
+import type { Layout } from "./types/native-stack.navigator";
 import type { Complete } from "./types/utils";
 import type { BoundsBuilderOptions } from "./utils/bounds/_types/builder";
 
@@ -22,22 +22,22 @@ export const NO_STYLES = Object.freeze({});
  * Default screen transition state
  */
 export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
-	Object.freeze({
-		progress: 0,
-		closing: 0,
-		animating: 0,
-		gesture: {
-			x: 0,
-			y: 0,
-			normalizedX: 0,
-			normalizedY: 0,
-			isDismissing: 0,
-			isDragging: 0,
-			direction: null,
-		},
-		bounds: {} as Record<string, BoundEntry>,
-		route: {} as RouteProp<ParamListBase>,
-	});
+  Object.freeze({
+    progress: 0,
+    closing: 0,
+    animating: 0,
+    gesture: {
+      x: 0,
+      y: 0,
+      normalizedX: 0,
+      normalizedY: 0,
+      isDismissing: 0,
+      isDragging: 0,
+      direction: null,
+    },
+    bounds: {} as Record<string, BoundEntry>,
+    route: {} as RouteProp<ParamListBase>,
+  });
 
 /**
  * Bounds API Defaults
@@ -45,46 +45,46 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 export const NO_BOUNDS_MAP: Record<string, BoundEntry> = Object.freeze({});
 export const EMPTY_BOUND_HELPER_RESULT = Object.freeze({});
 export const EMPTY_BOUND_HELPER_RESULT_RAW = Object.freeze({
-	scaleX: 1,
-	scaleY: 1,
-	scale: 1,
-	translateX: 0,
-	translateY: 0,
-	width: 0,
-	height: 0,
+  scaleX: 1,
+  scaleY: 1,
+  scale: 1,
+  translateX: 0,
+  translateY: 0,
+  width: 0,
+  height: 0,
 });
 export const ENTER_RANGE = [0, 1] as const;
 export const EXIT_RANGE = [1, 2] as const;
 
 export const FULLSCREEN_DIMENSIONS = (
-	dimensions: Layout,
+  dimensions: Layout
 ): MeasuredDimensions => {
-	"worklet";
-	return {
-		x: 0,
-		y: 0,
-		pageX: 0,
-		pageY: 0,
-		width: dimensions.width,
-		height: dimensions.height,
-	};
+  "worklet";
+  return {
+    x: 0,
+    y: 0,
+    pageX: 0,
+    pageY: 0,
+    width: dimensions.width,
+    height: dimensions.height,
+  };
 };
 
 export const DEFAULT_BUILDER_OPTIONS: Complete<
-	Omit<BoundsBuilderOptions, "id">
+  Omit<BoundsBuilderOptions, "id">
 > = Object.freeze({
-	gestures: { x: 0, y: 0 },
-	toFullscreen: false,
-	absolute: false,
-	relative: true,
-	method: "transform",
-	contentScaleMode: "auto",
-	//
-	space: "relative",
-	target: "bound",
-	scaleMode: "match",
-	anchor: "center",
-	raw: false,
+  gestures: { x: 0, y: 0 },
+  toFullscreen: false,
+  absolute: false,
+  relative: true,
+  method: "transform",
+  contentScaleMode: "auto",
+  //
+  space: "relative",
+  target: "bound",
+  scaleMode: "match",
+  anchor: "center",
+  raw: false,
 } as const);
 
 /**

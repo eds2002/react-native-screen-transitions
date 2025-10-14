@@ -5,40 +5,40 @@ import { NO_STYLES } from "../constants";
 import { useTransitionStyles } from "../providers/transition-styles";
 
 type Props = {
-	children: React.ReactNode;
+  children: React.ReactNode;
 };
 
 export const RootTransitionAware = memo(({ children }: Props) => {
-	const { stylesMap } = useTransitionStyles();
+  const { stylesMap } = useTransitionStyles();
 
-	const animatedContentStyle = useAnimatedStyle(() => {
-		"worklet";
-		return stylesMap.value.contentStyle || NO_STYLES;
-	});
+  const animatedContentStyle = useAnimatedStyle(() => {
+    "worklet";
+    return stylesMap.value.contentStyle || NO_STYLES;
+  });
 
-	const animatedOverlayStyle = useAnimatedStyle(() => {
-		"worklet";
-		return stylesMap.value.overlayStyle || NO_STYLES;
-	});
+  const animatedOverlayStyle = useAnimatedStyle(() => {
+    "worklet";
+    return stylesMap.value.overlayStyle || NO_STYLES;
+  });
 
-	return (
-		<View style={styles.container}>
-			<Animated.View
-				style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
-				pointerEvents="none"
-			/>
-			<Animated.View style={[styles.content, animatedContentStyle]}>
-				{children}
-			</Animated.View>
-		</View>
-	);
+  return (
+    <View style={styles.container}>
+      <Animated.View
+        style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
+        pointerEvents="none"
+      />
+      <Animated.View style={[styles.content, animatedContentStyle]}>
+        {children}
+      </Animated.View>
+    </View>
+  );
 });
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
-	content: {
-		flex: 1,
-	},
+  container: {
+    flex: 1,
+  },
+  content: {
+    flex: 1,
+  },
 });

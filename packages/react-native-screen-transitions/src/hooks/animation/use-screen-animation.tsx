@@ -16,7 +16,7 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation";
 
-import type { NativeStackDescriptor } from "../../types/navigator";
+import type { NativeStackDescriptor } from "../../types/native-stack.navigator";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
 

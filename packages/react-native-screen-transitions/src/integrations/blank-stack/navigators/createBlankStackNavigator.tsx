@@ -13,16 +13,15 @@ import {
   useNavigationBuilder,
 } from "@react-navigation/native";
 import * as React from "react";
-
+import { StackView } from "../components/StackView";
 import type {
-  NativeStackNavigationEventMap,
-  NativeStackNavigationOptions,
-  NativeStackNavigationProp,
-  NativeStackNavigatorProps,
-} from "../../../types/native-stack.navigator";
-import { NativeStackView } from "../views/NativeStackView";
+  BlankStackNavigationEventMap,
+  BlankStackNavigationOptions,
+  BlankStackNavigationProp,
+  BlankStackNavigatorProps,
+} from "../../../types/blank-stack.navigator";
 
-function NativeStackNavigator({
+function BlankStackNavigator({
   id,
   initialRouteName,
   children,
@@ -31,14 +30,14 @@ function NativeStackNavigator({
   screenOptions,
   screenLayout,
   ...rest
-}: NativeStackNavigatorProps) {
+}: BlankStackNavigatorProps) {
   const { state, describe, descriptors, navigation, NavigationContent } =
     useNavigationBuilder<
       StackNavigationState<ParamListBase>,
       StackRouterOptions,
       StackActionHelpers<ParamListBase>,
-      NativeStackNavigationOptions,
-      NativeStackNavigationEventMap
+      BlankStackNavigationOptions,
+      BlankStackNavigationEventMap
     >(StackRouter, {
       id,
       initialRouteName,
@@ -77,7 +76,7 @@ function NativeStackNavigator({
 
   return (
     <NavigationContent>
-      <NativeStackView
+      <StackView
         {...rest}
         state={state}
         navigation={navigation}
@@ -88,25 +87,36 @@ function NativeStackNavigator({
   );
 }
 
-export function createNativeStackNavigator<
+export function createBlankStackNavigator<
   const ParamList extends ParamListBase,
   const NavigatorID extends string | undefined = undefined,
   const TypeBag extends NavigatorTypeBagBase = {
     ParamList: ParamList;
     NavigatorID: NavigatorID;
     State: StackNavigationState<ParamList>;
-    ScreenOptions: NativeStackNavigationOptions;
-    EventMap: NativeStackNavigationEventMap;
+    ScreenOptions: BlankStackNavigationOptions;
+    EventMap: BlankStackNavigationEventMap;
     NavigationList: {
-      [RouteName in keyof ParamList]: NativeStackNavigationProp<
+      [RouteName in keyof ParamList]: BlankStackNavigationProp<
         ParamList,
         RouteName,
         NavigatorID
       >;
     };
-    Navigator: typeof NativeStackNavigator;
+    Navigator: typeof BlankStackNavigator;
   },
   const Config extends StaticConfig<TypeBag> = StaticConfig<TypeBag>
 >(config?: Config): TypedNavigator<TypeBag, Config> {
-  return createNavigatorFactory(NativeStackNavigator)(config);
+  return createNavigatorFactory(BlankStackNavigator)(config);
 }
+
+import { withLayoutContext } from "expo-router";
+
+const { Navigator } = createBlankStackNavigator();
+
+export const BlankStack = withLayoutContext<
+  BlankStackNavigationOptions,
+  typeof Navigator,
+  StackNavigationState<ParamListBase>,
+  BlankStackNavigationEventMap
+>(Navigator);

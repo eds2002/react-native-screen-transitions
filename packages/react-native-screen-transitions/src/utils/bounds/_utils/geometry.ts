@@ -1,5 +1,5 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
-import type { Layout } from "../../../types/navigator";
+import type { Layout } from "../../../types/native-stack.navigator";
 import type { BoundsAnchor, BoundsScaleMode } from "../_types/builder";
 import type {
 	ContentTransformGeometry,
