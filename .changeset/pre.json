@@ -1,0 +1,11 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "expo-router-example": "2.2.0",
+    "react-native-screen-transitions": "2.4.1"
+  },
+  "changesets": [
+    "odd-shrimps-stare"
+  ]
+}

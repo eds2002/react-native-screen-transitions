@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.4.2-beta.0
+
+### Patch Changes
+
+- [#49](https://github.com/eds2002/react-native-screen-transitions/pull/49) [`b2ba4a7`](https://github.com/eds2002/react-native-screen-transitions/commit/b2ba4a76530b84d2198f6a95b38279e5a2648487) Thanks [@eds2002](https://github.com/eds2002)! - Fix shared element transitions crashing in production
+
 ## 2.4.1
 
 ### Patch Changes
