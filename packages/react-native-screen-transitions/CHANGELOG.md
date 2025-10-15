@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.4.2-beta.1
+
+### Patch Changes
+
+- Fixes for the blank stack
+
 ## 2.4.2-beta.0
 
 ### Patch Changes

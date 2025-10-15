@@ -6,6 +6,7 @@
     "react-native-screen-transitions": "2.4.1"
   },
   "changesets": [
+    "cute-wombats-occur",
     "odd-shrimps-stare"
   ]
 }
