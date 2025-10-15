@@ -9,7 +9,6 @@ import type { BlankStackDescriptor } from "../../../types/blank-stack.navigator"
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
 import { Header } from "./Header";
 import { Screen } from "./Screens";
-import { RootTransitionAware } from "../../../components/root-transition-aware";
 import { ScreenTransitionProvider } from "../providers/screen-transition-provider";
 
 function isFabric() {
@@ -28,10 +27,8 @@ const SceneView = ({ descriptor }: SceneViewProps) => {
   return (
     <NavigationContext.Provider value={navigation}>
       <NavigationRouteContext.Provider value={route}>
-        <RootTransitionAware>
-          {descriptor.options.headerMode === "screen" && <Header.Screen />}
-          {render()}
-        </RootTransitionAware>
+        {descriptor.options.headerMode === "screen" && <Header.Screen />}
+        {render()}
       </NavigationRouteContext.Provider>
     </NavigationContext.Provider>
   );

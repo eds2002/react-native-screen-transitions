@@ -12,7 +12,7 @@ import type {
   StackNavigationContextProps,
   StackNavigationContextValue,
 } from "./_types";
-import { calculateActiveScreensLimit } from "./_utils/calculateActiveScreensLimit";
+import { calculateActiveScreensLimit } from "./_utils/calculate-active-screens-limit";
 
 export const StackNavigationContext =
   createContext<StackNavigationContextValue | null>(null);
