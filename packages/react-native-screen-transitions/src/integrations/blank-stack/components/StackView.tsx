@@ -5,12 +5,12 @@ import {
 } from "@react-navigation/native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
-import { RootTransitionAware } from "../../../components/root-transition-aware";
-import { ScreenTransitionProvider } from "../../../providers/screen-transition-provider";
 import type { BlankStackDescriptor } from "../../../types/blank-stack.navigator";
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
 import { Header } from "./Header";
 import { Screen } from "./Screens";
+import { RootTransitionAware } from "../../../components/root-transition-aware";
+import { ScreenTransitionProvider } from "../providers/screen-transition-provider";
 
 function isFabric() {
   return "nativeFabricUIManager" in global;
@@ -81,11 +81,8 @@ export const StackView = withStackNavigationProvider(
                   freezeOnBlur={descriptor.options.freezeOnBlur}
                 >
                   <ScreenTransitionProvider
-                    // @ts-expect-error
                     previous={previousDescriptor}
-                    // @ts-expect-error
                     current={descriptor}
-                    // @ts-expect-error
                     next={nextDescriptor}
                   >
                     <SceneView

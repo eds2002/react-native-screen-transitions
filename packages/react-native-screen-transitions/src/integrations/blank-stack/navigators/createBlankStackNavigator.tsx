@@ -109,14 +109,3 @@ export function createBlankStackNavigator<
 >(config?: Config): TypedNavigator<TypeBag, Config> {
   return createNavigatorFactory(BlankStackNavigator)(config);
 }
-
-import { withLayoutContext } from "expo-router";
-
-const { Navigator } = createBlankStackNavigator();
-
-export const BlankStack = withLayoutContext<
-  BlankStackNavigationOptions,
-  typeof Navigator,
-  StackNavigationState<ParamListBase>,
-  BlankStackNavigationEventMap
->(Navigator);

@@ -11,7 +11,6 @@ import type {
   StackRouterOptions,
   Theme,
 } from "@react-navigation/native";
-import type { StyleProp, ViewStyle } from "react-native";
 import type { DerivedValue } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import type { ScreenProps } from "react-native-screens";
@@ -233,10 +232,6 @@ export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
    * @platform android, ios
    */
   statusBarStyle?: ScreenProps["statusBarStyle"];
-  /**
-   * Style object for the scene content.
-   */
-  contentStyle?: StyleProp<ViewStyle>;
   /**
    * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
    * Defaults to `true` when `enableFreeze()` is run at the top of the application.

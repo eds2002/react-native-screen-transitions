@@ -32,7 +32,7 @@ import {
   ScreenStack,
   ScreenStackItem,
 } from "react-native-screens";
-import { ScreenTransitionProvider } from "../../../providers/screen-transition-provider";
+import { ScreenTransitionProvider } from "../providers/screen-transition-provider";
 import type {
   NativeStackDescriptor,
   NativeStackDescriptorMap,

@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "../../../hooks/animation/use-screen-animation";
 import { KeysProvider, useKeys } from "../../../providers/keys";
 import type {
+  BlankStackDescriptor,
   BlankStackHeaderProps,
   BlankStackScene,
 } from "../../../types/blank-stack.navigator";
@@ -89,7 +90,6 @@ const FloatHeader = () => {
   const next = scenes[headerIndex + 1]?.descriptor;
 
   return (
-    //@ts-expect-error
     <KeysProvider current={current} previous={previous} next={next}>
       <HeaderHost scene={scene} focusedIndex={focusedIndex} isFloating />
     </KeysProvider>
@@ -98,17 +98,15 @@ const FloatHeader = () => {
 
 const ScreenHeader = () => {
   const { focusedIndex } = useStackNavigationContext();
-  const { current } = useKeys();
+  const { current } = useKeys<BlankStackDescriptor>();
 
   const options = current.options;
 
-  // @ts-expect-error
   if (!options.headerShown || options.headerMode !== "screen") {
     return null;
   }
 
   const scene: BlankStackScene = {
-    //@ts-expect-error
     descriptor: current,
     route: current.route,
   };
