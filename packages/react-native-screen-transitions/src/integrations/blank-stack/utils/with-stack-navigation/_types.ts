@@ -5,7 +5,6 @@ import type {
   RouteProp,
   StackNavigationState,
 } from "@react-navigation/native";
-import type React from "react";
 import type { SharedValue } from "react-native-reanimated";
 import type {
   BlankStackDescriptor,
@@ -21,7 +20,7 @@ export interface StackNavigationContextValue {
   activeScreensLimit: number;
   closingRouteKeysShared: SharedValue<string[]>;
   handleCloseRoute: (payload: { route: Route<string> }) => void;
-  FloatHeader: React.MemoExoticComponent<() => React.JSX.Element | null>;
+  shouldShowFloatHeader: boolean;
   focusedIndex: number;
 }
 

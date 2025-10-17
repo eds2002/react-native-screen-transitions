@@ -1,11 +1,4 @@
-import {
-  type ComponentType,
-  createContext,
-  memo,
-  useContext,
-  useMemo,
-} from "react";
-import { Header } from "../../components/Header";
+import { type ComponentType, createContext, useContext, useMemo } from "react";
 import type { BlankStackScene } from "../../../../types/blank-stack.navigator";
 import { useStackNavigationState } from "./_hooks/use-stack-navigation-state";
 import type {
@@ -38,18 +31,12 @@ export function withStackNavigationProvider(
       return calculateActiveScreensLimit(state.routes, state.descriptors);
     }, [state.routes, state.descriptors]);
 
-    const FloatHeader = memo(() => {
-      const shouldShowFloatHeader = props.state.routes.some((route) => {
-        const options = props.descriptors[route.key]?.options;
+    const shouldShowFloatHeader = useMemo(() => {
+      return state.routes.some((route) => {
+        const options = state.descriptors[route.key]?.options;
         return options?.headerMode === "float" && options?.headerShown;
       });
-
-      if (!shouldShowFloatHeader) {
-        return null;
-      }
-
-      return <Header.Float />;
-    });
+    }, [state.routes, state.descriptors]);
 
     const contextValue = useMemo<StackNavigationContextValue>(() => {
       return {
@@ -60,7 +47,7 @@ export function withStackNavigationProvider(
         activeScreensLimit,
         handleCloseRoute,
         scenes,
-        FloatHeader,
+        shouldShowFloatHeader,
       };
     }, [
       state,
@@ -69,7 +56,7 @@ export function withStackNavigationProvider(
       closingRouteKeys,
       handleCloseRoute,
       props.state.index,
-      FloatHeader,
+      shouldShowFloatHeader,
     ]);
 
     return (

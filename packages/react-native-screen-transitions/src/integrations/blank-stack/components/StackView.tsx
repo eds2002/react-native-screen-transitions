@@ -38,15 +38,15 @@ export const StackView = withStackNavigationProvider(
   ({
     activeScreensLimit,
     descriptors,
-    FloatHeader,
     focusedIndex,
     routes,
     scenes,
+    shouldShowFloatHeader,
   }) => {
     return (
       <GestureHandlerRootView>
         <SafeAreaProviderCompat>
-          <FloatHeader />
+          {shouldShowFloatHeader ? <Header.Float /> : null}
           <ScreenContainer style={{ flex: 1 }}>
             {scenes.map((scene, sceneIndex) => {
               const descriptor = scene.descriptor;
