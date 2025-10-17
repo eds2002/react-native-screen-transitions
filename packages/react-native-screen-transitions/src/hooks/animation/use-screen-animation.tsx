@@ -71,7 +71,7 @@ const useBuildScreenTransitionState = (
 	}, [key, descriptor?.route]);
 };
 
-export function _useScreenAnimation() {
+export function _useScreenAnimation(defaultEnableTransitions = false) {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 
@@ -92,7 +92,13 @@ export function _useScreenAnimation() {
 
 		const previous = unwrap(prevAnimation, previousDescriptor?.route.key);
 
-		const next = nextDescriptor?.options?.enableTransitions
+		const nextEnableTransitions = nextDescriptor?.options?.enableTransitions;
+		const shouldEnableNext =
+			nextEnableTransitions === undefined
+				? defaultEnableTransitions
+				: nextEnableTransitions;
+
+		const next = shouldEnableNext
 			? unwrap(nextAnimation, nextDescriptor?.route.key)
 			: undefined;
 

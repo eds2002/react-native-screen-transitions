@@ -7,6 +7,7 @@ import { createBounds } from "../utils/bounds";
 
 type Props = {
 	children: React.ReactNode;
+	defaultEnableTransitions?: boolean;
 };
 
 const TransitionStylesContext = createContext<ReturnType<
@@ -15,9 +16,12 @@ const TransitionStylesContext = createContext<ReturnType<
 	}>
 > | null>(null);
 
-export function TransitionStylesProvider({ children }: Props) {
+export function TransitionStylesProvider({
+	children,
+	defaultEnableTransitions = false,
+}: Props) {
 	const { screenInterpolatorProps, screenStyleInterpolator } =
-		_useScreenAnimation();
+		_useScreenAnimation(defaultEnableTransitions);
 
 	const stylesMap = useDerivedValue<TransitionInterpolatedStyle>(() => {
 		"worklet";

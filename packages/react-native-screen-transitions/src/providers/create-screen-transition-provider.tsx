@@ -18,9 +18,16 @@ type ScreenTransitionProviderProps<DescriptorType extends AnyDescriptor> = {
   children: React.ReactNode;
 };
 
+type CreateScreenTransitionProviderOptions = {
+  defaultEnableTransitions?: boolean;
+};
+
 export function createScreenTransitionProvider<
   DescriptorType extends AnyDescriptor
->(ScreenLifecycleComponent: ScreenLifecycleComponent) {
+>(
+  ScreenLifecycleComponent: ScreenLifecycleComponent,
+  { defaultEnableTransitions = false }: CreateScreenTransitionProviderOptions = {}
+) {
   return function ScreenTransitionProvider({
     previous,
     current,
@@ -35,7 +42,9 @@ export function createScreenTransitionProvider<
       >
         <ScreenGestureProvider>
           <ScreenLifecycleComponent>
-            <TransitionStylesProvider>
+            <TransitionStylesProvider
+              defaultEnableTransitions={defaultEnableTransitions}
+            >
               <RootTransitionAware>{children}</RootTransitionAware>
             </TransitionStylesProvider>
           </ScreenLifecycleComponent>
