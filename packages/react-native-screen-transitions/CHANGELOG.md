@@ -1,5 +1,11 @@
 # Change Log
 
+## 2.4.2-beta.2
+
+### Patch Changes
+
+- [`2c67448`](https://github.com/eds2002/react-native-screen-transitions/commit/2c6744850e0cc76c670da42961d429915afda1cf) Thanks [@eds2002](https://github.com/eds2002)! - Fix blank stack float header from rerendering on each route change. Fix enableTransitions being required in the blank stack configuration ( enableTransitions is on always )
+
 ## 2.4.2-beta.1
 
 ### Patch Changes
