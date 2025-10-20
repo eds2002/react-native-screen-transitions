@@ -15,6 +15,7 @@ import type { DerivedValue } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import type { ScreenProps } from "react-native-screens";
 import type {
+  HeaderInterpolationProps,
   ScreenInterpolationProps,
   ScreenStyleInterpolator,
   TransitionSpec,
@@ -112,9 +113,9 @@ export type BlankStackHeaderProps = {
    */
   insets: EdgeInsets;
   /**
-   * Animation for the screen.
+   * Accumulated progress across the stack for the header owner and subsequent screens.
    */
-  animation: DerivedValue<ScreenInterpolationProps>;
+  animation: DerivedValue<HeaderInterpolationProps>;
   /**
    * Index of the active route
    */

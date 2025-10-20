@@ -5,7 +5,7 @@ import {
 import { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useScreenAnimation } from "../../../hooks/animation/use-screen-animation";
+import { useHeaderAnimation } from "../../../hooks/animation/use-header-animation";
 import { KeysProvider, useKeys } from "../../../providers/keys";
 import type {
   BlankStackDescriptor,
@@ -35,9 +35,10 @@ const getActiveFloatHeader = (scenes: BlankStackScene[], index: number) => {
 
 const HeaderHost = ({ scene, focusedIndex, isFloating }: HeaderHostProps) => {
   const insets = useSafeAreaInsets();
-  const animation = useScreenAnimation();
 
   const HeaderComponent = scene.descriptor.options.header;
+
+  const animation = useHeaderAnimation();
 
   if (!HeaderComponent) {
     return null;
@@ -62,7 +63,7 @@ const HeaderHost = ({ scene, focusedIndex, isFloating }: HeaderHostProps) => {
     >
       <NavigationContext.Provider value={scene.descriptor.navigation}>
         <NavigationRouteContext.Provider value={scene.route}>
-          <View pointerEvents="auto" style={styles.header}>
+          <View pointerEvents="box-none" style={styles.header}>
             <HeaderComponent {...headerProps} />
           </View>
         </NavigationRouteContext.Provider>
@@ -123,8 +124,10 @@ const styles = StyleSheet.create({
   header: {
     position: "absolute",
     top: 0,
-    start: 0,
-    end: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 1,
   },
   container: {
     flex: 1,
@@ -132,8 +135,9 @@ const styles = StyleSheet.create({
   absolute: {
     position: "absolute",
     top: 0,
-    start: 0,
-    end: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
   },
   floating: {
     zIndex: 1000,

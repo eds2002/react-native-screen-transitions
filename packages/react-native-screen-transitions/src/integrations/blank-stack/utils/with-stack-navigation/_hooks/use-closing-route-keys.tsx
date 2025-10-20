@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useMemo, useRef } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import useStableCallback from "../../../../../hooks/use-stable-callback";
 
@@ -52,11 +52,14 @@ export const useClosingRouteKeys = () => {
     });
   });
 
-  return {
-    ref: keysRef,
-    shared,
-    add,
-    remove,
-    clear,
-  };
+  return useMemo(
+    () => ({
+      ref: keysRef,
+      shared,
+      add,
+      remove,
+      clear,
+    }),
+    [keysRef, shared, add, remove, clear]
+  );
 };
