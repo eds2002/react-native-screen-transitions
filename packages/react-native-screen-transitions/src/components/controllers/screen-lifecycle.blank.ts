@@ -1,14 +1,14 @@
 import type React from "react";
 import { useLayoutEffect } from "react";
-import { useAnimatedReaction } from "react-native-reanimated";
+import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
 
 import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
 import useStableCallback from "../../hooks/use-stable-callback";
+import { useStackNavigationContext } from "../../integrations/blank-stack/utils/with-stack-navigation";
 import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
-import { startScreenTransition } from "../../utils/animation/start-screen-transition";
-import { useStackNavigationContext } from "../../integrations/blank-stack/utils/with-stack-navigation";
 import type { BlankStackDescriptor } from "../../types/blank-stack.navigator";
+import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 
 interface ScreenLifecycleProps {
   children: React.ReactNode;
@@ -18,6 +18,7 @@ export const ScreenLifecycleController = ({
   children,
 }: ScreenLifecycleProps) => {
   const { current } = useKeys<BlankStackDescriptor>();
+  const progress = Animations.getAll(current.route.key);
   const { handleCloseRoute, closingRouteKeysShared } =
     useStackNavigationContext();
 
@@ -35,7 +36,6 @@ export const ScreenLifecycleController = ({
     if (!finished) {
       return;
     }
-
     handleCloseRoute({ route: current.route });
   });
 
@@ -43,6 +43,11 @@ export const ScreenLifecycleController = ({
     () => closingRouteKeysShared.value,
     (keys) => {
       if (keys.includes(current.route.key)) {
+        if (progress.closing.value === 1) {
+          runOnJS(handleCloseEnd)(true);
+          return;
+        }
+
         startScreenTransition({
           target: "close",
           spec: current.options.transitionSpec,

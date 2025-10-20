@@ -7,71 +7,71 @@ import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 
 export type ScrollConfig = {
-	x: number;
-	y: number;
-	contentHeight: number;
-	contentWidth: number;
-	layoutHeight: number;
-	layoutWidth: number;
+  x: number;
+  y: number;
+  contentHeight: number;
+  contentWidth: number;
+  layoutHeight: number;
+  layoutWidth: number;
 };
 
 export interface GestureContextType {
-	panGesture: GestureType;
-	nativeGesture: GestureType;
-	scrollConfig: SharedValue<ScrollConfig | null>;
-	parentContext: GestureContextType | null;
+  panGesture: GestureType;
+  nativeGesture: GestureType;
+  scrollConfig: SharedValue<ScrollConfig | null>;
+  parentContext: GestureContextType | null;
 }
 
 type ScreenGestureProviderProps = {
-	children: React.ReactNode;
+  children: React.ReactNode;
 };
 
 const GestureContext = createContext<GestureContextType | undefined>(undefined);
 
 export const ScreenGestureProvider = ({
-	children,
+  children,
 }: ScreenGestureProviderProps) => {
-	const parentContext = useContext(GestureContext);
+  const parentContext = useContext(GestureContext);
 
-	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
+  const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
-	const { panGesture, nativeGesture } = useBuildGestures({
-		scrollConfig,
-	});
+  const { panGesture, nativeGesture } = useBuildGestures({
+    scrollConfig,
+  });
 
-	const value: GestureContextType = useMemo(
-		() => ({
-			panGesture,
-			scrollConfig,
-			nativeGesture,
-			parentContext: parentContext || null,
-		}),
-		[panGesture, scrollConfig, nativeGesture, parentContext],
-	);
+  const value: GestureContextType = useMemo(
+    () => ({
+      panGesture,
+      scrollConfig,
+      nativeGesture,
+      parentContext: parentContext || null,
+    }),
+    [panGesture, scrollConfig, nativeGesture, parentContext]
+  );
 
-	return (
-		<GestureContext.Provider value={value}>
-			<GestureDetector gesture={panGesture}>
-				<View style={styles.container}>{children}</View>
-			</GestureDetector>
-		</GestureContext.Provider>
-	);
+  return (
+    <GestureContext.Provider value={value}>
+      <GestureDetector gesture={panGesture}>
+        <View style={styles.container}>{children}</View>
+      </GestureDetector>
+    </GestureContext.Provider>
+  );
 };
 
 export const useGestureContext = () => {
-	const context = useContext(GestureContext);
+  const context = useContext(GestureContext);
 
-	if (!context) {
-		throw new Error(
-			"useGestureContext must be used within a ScreenGestureProvider",
-		);
-	}
+  if (!context) {
+    throw new Error(
+      "useGestureContext must be used within a ScreenGestureProvider"
+    );
+  }
 
-	return context;
+  return context;
 };
 
 const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
+  container: {
+    flex: 1,
+  },
 });
