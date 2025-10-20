@@ -14,11 +14,12 @@ interface ScreenLifecycleProps {
   children: React.ReactNode;
 }
 
+const CLOSED_THRESHOLD = 1e-3;
+
 export const ScreenLifecycleController = ({
   children,
 }: ScreenLifecycleProps) => {
   const { current } = useKeys<BlankStackDescriptor>();
-  const progress = Animations.getAll(current.route.key);
   const { handleCloseRoute, closingRouteKeysShared } =
     useStackNavigationContext();
 
@@ -40,14 +41,33 @@ export const ScreenLifecycleController = ({
   });
 
   useAnimatedReaction(
-    () => closingRouteKeysShared.value,
-    (keys) => {
-      if (keys.includes(current.route.key)) {
-        if (progress.closing.value === 1) {
-          runOnJS(handleCloseEnd)(true);
-          return;
-        }
+    () => ({
+      keys: closingRouteKeysShared.value,
+      closing: animations.closing.value,
+      progress: animations.progress.value,
+      animating: animations.animating.value,
+    }),
+    ({ keys, closing, progress, animating }) => {
+      if (!keys.includes(current.route.key)) {
+        return;
+      }
 
+      const isFullyClosed = progress <= CLOSED_THRESHOLD;
+
+      if (isFullyClosed) {
+        if (closing < 1) {
+          animations.closing.value = 1;
+        }
+        runOnJS(handleCloseEnd)(true);
+        return;
+      }
+
+      if (closing === 1 && animating === 0) {
+        runOnJS(handleCloseEnd)(true);
+        return;
+      }
+
+      if (animating !== 1) {
         startScreenTransition({
           target: "close",
           spec: current.options.transitionSpec,
