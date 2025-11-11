@@ -20,7 +20,7 @@ export const ScreenLifecycleController = ({
   children,
 }: ScreenLifecycleProps) => {
   const { current } = useKeys<BlankStackDescriptor>();
-  const { handleCloseRoute, closingRouteKeysShared } =
+  const { handleCloseRoute, closingRouteKeysShared, markRouteClosingFinished } =
     useStackNavigationContext();
 
   const animations = Animations.getAll(current.route.key);
@@ -54,16 +54,21 @@ export const ScreenLifecycleController = ({
 
       const isFullyClosed = progress <= CLOSED_THRESHOLD;
 
+      const notifyCloseComplete = () => {
+        runOnJS(markRouteClosingFinished)(current.route.key);
+        runOnJS(handleCloseEnd)(true);
+      };
+
       if (isFullyClosed) {
         if (closing < 1) {
           animations.closing.value = 1;
         }
-        runOnJS(handleCloseEnd)(true);
+        notifyCloseComplete();
         return;
       }
 
       if (closing === 1 && animating === 0) {
-        runOnJS(handleCloseEnd)(true);
+        notifyCloseComplete();
         return;
       }
 

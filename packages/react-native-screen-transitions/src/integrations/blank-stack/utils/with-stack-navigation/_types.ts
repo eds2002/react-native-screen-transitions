@@ -19,6 +19,7 @@ export interface StackNavigationContextValue {
   scenes: BlankStackScene[];
   activeScreensLimit: number;
   closingRouteKeysShared: SharedValue<string[]>;
+  markRouteClosingFinished: (routeKey: string) => void;
   handleCloseRoute: (payload: { route: Route<string> }) => void;
   shouldShowFloatHeader: boolean;
   focusedIndex: number;

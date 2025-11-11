@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useContext, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	Gesture,
@@ -21,6 +21,7 @@ import {
 	DEFAULT_GESTURE_ENABLED,
 	GESTURE_VELOCITY_IMPACT,
 } from "../../constants";
+import { StackNavigationContext } from "../../integrations/blank-stack/utils/with-stack-navigation";
 import type { ScrollConfig } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
@@ -48,6 +49,8 @@ export const useBuildGestures = ({
 } => {
 	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
+	const stackContext = useContext(StackNavigationContext);
+	const markRouteClosingFinished = stackContext?.markRouteClosingFinished;
 
 	const initialTouch = useSharedValue({
 		x: 0,
@@ -94,6 +97,7 @@ export const useBuildGestures = ({
 	});
 
 	const handleDismiss = useStableCallback(() => {
+		markRouteClosingFinished?.(current.route.key);
 		const key = current.navigation.getState().key;
 		current.navigation.goBack();
 		NavigatorDismissState.remove(key);
