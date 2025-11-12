@@ -1,4 +1,4 @@
-import FontAwesome from "@expo/vector-icons/FontAwesome6";
+import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
 import { router } from "expo-router";
 import {
 	KeyboardAvoidingView,
@@ -16,13 +16,12 @@ import type { BlankStackOverlayProps } from "react-native-screen-transitions/bla
 import { ComposableText } from "@/components/composeable-text";
 import { BlankStack } from "@/components/layouts/blank-stack";
 
-const ProgressPill = ({
-	animation,
-	index,
-}: {
+interface ProgressPillProps {
 	animation: BlankStackOverlayProps["animation"];
 	index: number;
-}) => {
+}
+
+const ProgressPill = ({ animation, index }: ProgressPillProps) => {
 	const fillStyle = useAnimatedStyle(() => {
 		"worklet";
 		const total = animation.value.progress;
@@ -30,13 +29,13 @@ const ProgressPill = ({
 
 		return {
 			flex: Math.max(localProgress, 0),
-			backgroundColor: "#000",
+			backgroundColor: "#e11d48",
 			borderRadius: 999,
 		};
 	});
 
 	return (
-		<Animated.View style={styles.progressContainer}>
+		<Animated.View style={styles.progressPillContainer}>
 			<Animated.View style={fillStyle} />
 		</Animated.View>
 	);
@@ -85,11 +84,12 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 				behavior="padding"
 				keyboardVerticalOffset={10}
 			>
-				<View>
-					<Pressable onPress={router.back}>
-						<FontAwesome name="chevron-left" size={18} />
+				<View style={[styles.topBar]}>
+					<Pressable style={styles.iconWrapper} onPress={router.back}>
+						<FontAwesome6 name="chevron-left" size={16} color="black" />
 					</Pressable>
-					<View style={{ ...styles.progressContainer }}>
+
+					<View style={styles.progressContainer}>
 						{Array.from({ length: 3 }).map((_, index) => (
 							<ProgressPill
 								key={index.toString()}
@@ -98,7 +98,10 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 							/>
 						))}
 					</View>
+
+					<View style={styles.iconWrapper} />
 				</View>
+
 				<Pressable
 					style={{
 						padding: 16,
@@ -197,7 +200,6 @@ const styles = StyleSheet.create({
 		justifyContent: "space-between",
 	},
 	topBar: {
-		paddingHorizontal: 24,
 		alignItems: "center",
 		justifyContent: "space-between",
 		height: 50,
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
 		height: 5,
 		borderRadius: 999,
 		justifyContent: "flex-start",
-		backgroundColor: "#d4d4d4",
+		backgroundColor: "#ffe4e6",
 		flexDirection: "row",
 		overflow: "hidden",
 	},

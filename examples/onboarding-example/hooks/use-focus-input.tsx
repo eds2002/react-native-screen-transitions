@@ -7,9 +7,7 @@ export const useFocusInput = () => {
 
 	useFocusEffect(
 		useCallback(() => {
-			requestAnimationFrame(() => {
-				ref.current?.focus();
-			});
+			ref.current?.focus();
 		}, []),
 	);
 	return { ref };
