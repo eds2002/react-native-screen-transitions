@@ -8,7 +8,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 
-import { HeaderInterpolationProps } from "../../shared/types/animation";
+import { OverlayInterpolationProps } from "../../shared/types/animation";
 import { useKeys} from '../../shared/providers/keys'
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
 import {Animations} from '../../shared/stores/animations'
@@ -16,12 +16,12 @@ import {Animations} from '../../shared/stores/animations'
 
 
 /**
- * Aggregates progress values for the header owner and every scene that sits
- * above it in the stack. The result can be consumed by floating headers to
+ * Aggregates progress values for the overlay owner and every scene that sits
+ * above it in the stack. The result can be consumed by floating overlays to
  * drive animations that span multiple screens.
  */
-export const useHeaderAnimation =
-  (): DerivedValue<HeaderInterpolationProps> => {
+export const useOverlayAnimation =
+  (): DerivedValue<OverlayInterpolationProps> => {
     const { current } = useKeys();
     const { scenes } = useStackNavigationContext();
 
@@ -31,15 +31,15 @@ export const useHeaderAnimation =
         return [];
       }
 
-      const headerIndex = scenes.findIndex(
+      const overlayIndex = scenes.findIndex(
         (scene) => scene.route.key === routeKey
       );
 
-      if (headerIndex === -1) {
+      if (overlayIndex === -1) {
         return [];
       }
 
-      return scenes.slice(headerIndex).map((scene) => {
+      return scenes.slice(overlayIndex).map((scene) => {
         return Animations.getAnimation(scene.route.key, "progress");
       });
     }, [current?.route?.key, scenes]);
@@ -59,7 +59,7 @@ export const useHeaderAnimation =
     const screen = useWindowDimensions();
     const insets = useSafeAreaInsets();
 
-    return useDerivedValue<HeaderInterpolationProps>(() => ({
+    return useDerivedValue<OverlayInterpolationProps>(() => ({
       progress: accumulatedProgress.value,
       layouts: {
         screen,

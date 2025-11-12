@@ -31,10 +31,10 @@ export function withStackNavigationProvider(
       return calculateActiveScreensLimit(state.routes, state.descriptors);
     }, [state.routes, state.descriptors]);
 
-    const shouldShowFloatHeader = useMemo(() => {
+    const shouldShowFloatOverlay = useMemo(() => {
       return state.routes.some((route) => {
         const options = state.descriptors[route.key]?.options;
-        return options?.headerMode === "float" && options?.headerShown;
+        return options?.overlayMode === "float" && options?.overlayShown;
       });
     }, [state.routes, state.descriptors]);
 
@@ -48,7 +48,7 @@ export function withStackNavigationProvider(
         activeScreensLimit,
         handleCloseRoute,
         scenes,
-        shouldShowFloatHeader,
+        shouldShowFloatOverlay,
       };
     }, [
       state,
@@ -58,7 +58,7 @@ export function withStackNavigationProvider(
       closingRouteKeys.markFinished,
       handleCloseRoute,
       props.state.index,
-      shouldShowFloatHeader,
+      shouldShowFloatOverlay,
     ]);
 
     return (

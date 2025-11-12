@@ -7,7 +7,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
 import type { BlankStackDescriptor } from "../types";
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
-import { Header } from "./Header";
+import { Overlay } from "./Overlay";
 import { Screen } from "./Screens";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition-provider";
 import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
@@ -29,7 +29,7 @@ const SceneView = ({ descriptor }: SceneViewProps) => {
   return (
     <NavigationContext.Provider value={navigation}>
       <NavigationRouteContext.Provider value={route}>
-        {descriptor.options.headerMode === "screen" && <Header.Screen />}
+        {descriptor.options.overlayMode === "screen" && <Overlay.Screen />}
         {render()}
       </NavigationRouteContext.Provider>
     </NavigationContext.Provider>
@@ -43,12 +43,12 @@ export const StackView = withStackNavigationProvider(
     focusedIndex,
     routes,
     scenes,
-    shouldShowFloatHeader,
+    shouldShowFloatOverlay,
   }) => {
     return (
       <GestureHandlerRootView>
         <SafeAreaProviderCompat>
-          {shouldShowFloatHeader ? <Header.Float /> : null}
+          {shouldShowFloatOverlay ? <Overlay.Float /> : null}
           <ScreenContainer style={{ flex: 1 }}>
             {scenes.map((scene, sceneIndex) => {
               const descriptor = scene.descriptor;

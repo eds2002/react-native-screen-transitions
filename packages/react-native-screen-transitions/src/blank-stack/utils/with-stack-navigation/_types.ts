@@ -21,7 +21,7 @@ export interface StackNavigationContextValue {
   closingRouteKeysShared: SharedValue<string[]>;
   markRouteClosingFinished: (routeKey: string) => void;
   handleCloseRoute: (payload: { route: Route<string> }) => void;
-  shouldShowFloatHeader: boolean;
+  shouldShowFloatOverlay: boolean;
   focusedIndex: number;
 }
 

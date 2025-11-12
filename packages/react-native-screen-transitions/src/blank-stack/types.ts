@@ -14,7 +14,7 @@ import type {
 import type { DerivedValue } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import type { ScreenProps } from "react-native-screens";
-import { HeaderInterpolationProps, ScreenStyleInterpolator, TransitionSpec } from "../shared/types/animation";
+import { OverlayInterpolationProps, ScreenStyleInterpolator, TransitionSpec } from "../shared/types/animation";
 import { GestureActivationArea, GestureDirection } from "../shared/types/gesture";
 
 
@@ -87,7 +87,7 @@ export type BlankStackScene = {
 // We want it to be an empty object because navigator does not have any additional props
 export type BlankStackNavigationConfig = {};
 
-export type BlankStackHeaderProps = {
+export type BlankStackOverlayProps = {
   /**
    * Options for the back button.
    */
@@ -102,7 +102,7 @@ export type BlankStackHeaderProps = {
    */
   route: Route<string>;
   /**
-   * Navigation prop for the header.
+   * Navigation prop for the overlay.
    */
   navigation: BlankStackNavigationProp<ParamListBase>;
   /**
@@ -110,9 +110,9 @@ export type BlankStackHeaderProps = {
    */
   insets: EdgeInsets;
   /**
-   * Accumulated progress across the stack for the header owner and subsequent screens.
+   * Accumulated progress across the stack for the overlay owner and subsequent screens.
    */
-  animation: DerivedValue<HeaderInterpolationProps>;
+  animation: DerivedValue<OverlayInterpolationProps>;
   /**
    * Index of the active route
    */
@@ -163,21 +163,21 @@ export type BlankStackScreenTransitionConfig = {
 
 export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
   /**
-   * Function that given `HeaderProps` returns a React Element to display as a header.
+   * Function that given `OverlayProps` returns a React Element to display as a overlay.
    */
-  header?: (props: BlankStackHeaderProps) => React.ReactNode;
+  overlay?: (props: BlankStackOverlayProps) => React.ReactNode;
   /**
-   * Layout: How the header is positioned
-   * - 'float': Single persistent header above all screens (like iOS)
-   * - 'screen': Per-screen header that transitions with content
+   * Layout: How the Overlay is positioned
+   * - 'float': Single persistent overlay above all screens (like iOS)
+   * - 'screen': Per-screen overlay that transitions with content
    * @default 'screen'
    */
-  headerMode?: "float" | "screen";
+  overlayMode?: "float" | "screen";
   /**
-   * Whether to show the header. The header is shown by default.
-   * Setting this to `false` hides the header.
+   * Whether to show the overlay. The overlay is shown by default.
+   * Setting this to `false` hides the overlay.
    */
-  headerShown?: boolean;
+  overlayShown?: boolean;
 
   /**
    * Whether the home indicator should prefer to stay hidden on this screen. Defaults to `false`.

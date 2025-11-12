@@ -9,43 +9,43 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { KeysProvider, useKeys } from "../../shared/providers/keys";
 import type {
   BlankStackDescriptor,
-  BlankStackHeaderProps,
+  BlankStackOverlayProps,
   BlankStackScene,
 } from "../types";
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
-import { useHeaderAnimation } from "../hooks/use-header-animation";
+import { useOverlayAnimation } from "../hooks/use-overlay-animation";
 
-type HeaderHostProps = {
+type OverlayHostProps = {
   scene: BlankStackScene;
   focusedIndex: number;
   isFloating?: boolean;
 };
 
-const getActiveFloatHeader = (scenes: BlankStackScene[], index: number) => {
+const getActiveFloatOverlay = (scenes: BlankStackScene[], index: number) => {
   for (let i = index; i >= 0; i--) {
     const scene = scenes[i];
     const options = scene?.descriptor?.options;
 
-    if (options?.headerMode === "float" && options?.headerShown) {
-      return { scene, headerIndex: i };
+    if (options?.overlayMode === "float" && options?.overlayShown) {
+      return { scene, overlayIndex: i };
     }
   }
 
   return null;
 };
 
-const HeaderHost = ({ scene, focusedIndex, isFloating }: HeaderHostProps) => {
+const OverlayHost = ({ scene, focusedIndex, isFloating }: OverlayHostProps) => {
   const insets = useSafeAreaInsets();
 
-  const HeaderComponent = scene.descriptor.options.header;
+  const OverlayComponent = scene.descriptor.options.overlay;
 
-  const animation = useHeaderAnimation();
+  const animation = useOverlayAnimation();
 
-  if (!HeaderComponent) {
+  if (!OverlayComponent) {
     return null;
   }
 
-  const headerProps: BlankStackHeaderProps = {
+  const overlayProps: BlankStackOverlayProps = {
     route: scene.route,
     navigation: scene.descriptor.navigation,
     animation,
@@ -64,8 +64,8 @@ const HeaderHost = ({ scene, focusedIndex, isFloating }: HeaderHostProps) => {
     >
       <NavigationContext.Provider value={scene.descriptor.navigation}>
         <NavigationRouteContext.Provider value={scene.route}>
-          <View pointerEvents="box-none" style={styles.header}>
-            <HeaderComponent {...headerProps} />
+          <View pointerEvents="box-none" style={styles.overlay}>
+            <OverlayComponent {...overlayProps} />
           </View>
         </NavigationRouteContext.Provider>
       </NavigationContext.Provider>
@@ -73,38 +73,38 @@ const HeaderHost = ({ scene, focusedIndex, isFloating }: HeaderHostProps) => {
   );
 };
 
-const FloatHeader = () => {
+const FloatOverlay = () => {
   const { scenes, focusedIndex } = useStackNavigationContext();
 
-  const activeHeader = useMemo(
-    () => getActiveFloatHeader(scenes, focusedIndex),
+  const activeOverlay = useMemo(
+    () => getActiveFloatOverlay(scenes, focusedIndex),
     [scenes, focusedIndex]
   );
 
-  if (!activeHeader) {
+  if (!activeOverlay) {
     return null;
   }
 
-  const { scene, headerIndex } = activeHeader;
+  const { scene, overlayIndex } = activeOverlay;
 
-  const previous = scenes[headerIndex - 1]?.descriptor;
+  const previous = scenes[overlayIndex - 1]?.descriptor;
   const current = scene.descriptor;
-  const next = scenes[headerIndex + 1]?.descriptor;
+  const next = scenes[overlayIndex + 1]?.descriptor;
 
   return (
     <KeysProvider current={current} previous={previous} next={next}>
-      <HeaderHost scene={scene} focusedIndex={focusedIndex} isFloating />
+      <OverlayHost scene={scene} focusedIndex={focusedIndex} isFloating />
     </KeysProvider>
   );
 };
 
-const ScreenHeader = () => {
+const ScreenOverlay = () => {
   const { focusedIndex } = useStackNavigationContext();
   const { current } = useKeys<BlankStackDescriptor>();
 
   const options = current.options;
 
-  if (!options.headerShown || options.headerMode !== "screen") {
+  if (!options.overlayShown || options.overlayMode !== "screen") {
     return null;
   }
 
@@ -113,33 +113,23 @@ const ScreenHeader = () => {
     route: current.route,
   };
 
-  return <HeaderHost scene={scene} focusedIndex={focusedIndex} />;
+  return <OverlayHost scene={scene} focusedIndex={focusedIndex} />;
 };
 
-export const Header = {
-  Float: FloatHeader,
-  Screen: ScreenHeader,
+export const Overlay = {
+  Float: FloatOverlay,
+  Screen: ScreenOverlay,
 };
 
 const styles = StyleSheet.create({
-  header: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
     zIndex: 1,
   },
   container: {
     flex: 1,
   },
-  absolute: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
-  },
+  absolute: StyleSheet.absoluteFillObject,
   floating: {
     zIndex: 1000,
   },

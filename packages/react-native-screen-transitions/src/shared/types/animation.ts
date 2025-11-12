@@ -9,7 +9,7 @@ import type { BoundEntry, BoundsAccessor } from "./bounds";
 import type { Layout } from "./core";
 import type { GestureValues } from "./gesture";
 
-export interface HeaderInterpolationProps {
+export interface OverlayInterpolationProps {
   progress: number;
   layouts: {
     /** The `width` and `height` of the screen container. */
