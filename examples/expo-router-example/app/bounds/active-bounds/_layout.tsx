@@ -16,6 +16,7 @@ export default function ActiveBoundsLayout() {
 					gestureDirection: ["bidirectional"],
 					gestureDrivesProgress: false,
 					enableTransitions: true,
+
 					screenStyleInterpolator: ({
 						bounds,
 						progress,
@@ -49,9 +50,10 @@ export default function ActiveBoundsLayout() {
 							},
 						};
 					},
+
 					transitionSpec: {
-						open: Transition.specs.DefaultSpec,
-						close: Transition.specs.DefaultSpec,
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
 					},
 				}}
 			/>

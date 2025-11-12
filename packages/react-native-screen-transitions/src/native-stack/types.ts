@@ -22,7 +22,7 @@ import type {
 	ScreenStackHeaderConfigProps,
 	SearchBarProps,
 } from "react-native-screens";
-import type { ScreenTransitionConfig } from "src/shared/types/core";
+import type { ScreenTransitionConfig } from "../shared/types/core";
 
 export type Layout = {
 	width: number;

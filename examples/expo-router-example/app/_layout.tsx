@@ -41,7 +41,7 @@ export default function RootLayout() {
 					options={{
 						headerShown: false,
 						enableTransitions: true,
-						...Transition.presets.SlideFromTop(),
+						...Transition.Presets.SlideFromTop(),
 					}}
 				/>
 
@@ -104,8 +104,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -149,8 +149,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -180,8 +180,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -295,8 +295,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -358,8 +358,8 @@ export default function RootLayout() {
 							return {};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -403,8 +403,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -456,8 +456,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -509,8 +509,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -554,8 +554,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -582,8 +582,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -610,8 +610,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -638,8 +638,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -667,8 +667,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -699,8 +699,8 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
