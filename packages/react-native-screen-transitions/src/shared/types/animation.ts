@@ -9,6 +9,15 @@ import type { BoundEntry, BoundsAccessor } from "./bounds";
 import type { Layout } from "./core";
 import type { GestureValues } from "./gesture";
 
+export interface HeaderInterpolationProps {
+  progress: number;
+  layouts: {
+    /** The `width` and `height` of the screen container. */
+    screen: Layout;
+  };
+  insets: EdgeInsets;
+}
+
 export type ScreenTransitionState = {
 	progress: number;
 	closing: number;
