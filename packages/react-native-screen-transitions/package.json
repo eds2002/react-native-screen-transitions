@@ -9,16 +9,16 @@
 		"url": "https://github.com/eds2002/react-native-screen-transitions.git",
 		"directory": "packages/react-native-screen-transitions"
 	},
-	"main": "lib/commonjs/native-stack/index.js",
-	"module": "lib/module/native-stack/index.js",
-	"types": "lib/typescript/native-stack/index.d.ts",
-	"react-native": "src/native-stack/index",
+	"main": "lib/commonjs/shared/index.js",
+	"module": "lib/module/shared/index.js",
+	"types": "lib/typescript/shared/index.d.ts",
+	"react-native": "src/shared/index",
 	"exports": {
 		".": {
-			"types": "./lib/typescript/native-stack/index.d.ts",
-			"import": "./lib/module/native-stack/index.js",
-			"require": "./lib/commonjs/native-stack/index.js",
-			"react-native": "./src/native-stack/index"
+			"types": "./lib/typescript/shared/index.d.ts",
+			"import": "./lib/module/shared/index.js",
+			"require": "./lib/commonjs/shared/index.js",
+			"react-native": "./src/shared/index"
 		},
 		"./native-stack": {
 			"types": "./lib/typescript/native-stack/index.d.ts",
