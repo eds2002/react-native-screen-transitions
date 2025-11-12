@@ -8,7 +8,7 @@ export default function RootLayout() {
 			<Stack.Screen
 				name="[id]"
 				options={{
-					...Transition.presets.SharedXImage(),
+					...Transition.Presets.SharedXImage(),
 				}}
 			/>
 		</Stack>

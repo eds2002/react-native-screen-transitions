@@ -1,8 +1,7 @@
 # react-native-screen-transitions
 
-
-| iOS | Android |
-|---|---|
+| iOS                                                                                                                                     | Android                                                                                                                    |
+| --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | <video src="https://github.com/user-attachments/assets/c0d17b8f-7268-421c-9051-e242f8ddca76" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/3f8d5fb1-96d2-4fe3-860d-62f6fb5a687e" width="300" controls></video> |
 
 ## ✨ Features
@@ -16,6 +15,7 @@
 - 🎭 **Ready-Made Presets** – Instagram, Apple Music, X (Twitter) style transitions included
 
 ## Installation
+
 ```bash
 npm install react-native-screen-transitions
 # or
@@ -25,6 +25,7 @@ bun add react-native-screen-transitions
 ```
 
 ## Peer Dependencies
+
 ```bash
 npm install react-native-reanimated react-native-gesture-handler \
   @react-navigation/native @react-navigation/native-stack \
@@ -66,7 +67,7 @@ If you’re using **React Navigation** directly (not Expo Router), the navigator
 No extra setup is required—just import and use as usual:
 
 ```tsx
-import { createNativeStackNavigator } from 'react-native-screen-transitions';
+import { createNativeStackNavigator } from "react-native-screen-transitions";
 
 const Stack = createNativeStackNavigator();
 
@@ -78,30 +79,29 @@ const Stack = createNativeStackNavigator();
 This package ships an **extended native stack** built on top of React Navigation’s native stack.
 All the usual native-stack options are available, plus the following extras:
 
-| Option | Type | Description |
-|---|---|---|
-| `enableTransitions` | `boolean` | Switches the screen to a transparent modal and disables the header so custom transitions can take over. |
-| `screenStyleInterpolator` | `ScreenStyleInterpolator` | Function that returns animated styles based on transition progress. |
-| `transitionSpec` | `TransitionSpec` | Reanimated timing/spring config for open/close animations. |
-| `gestureEnabled` | `boolean` | Whether swipe-to-dismiss is allowed. |
-| `gestureDirection` | `GestureDirection \| GestureDirection[]` | Allowed swipe directions (`vertical`, `horizontal`, etc.). |
-| `gestureVelocityImpact` | `number` | How much the gesture’s velocity affects dismissal. |
-| `gestureResponseDistance` | `number` | Distance from screen where the gesture is recognized. |
-| `gestureDrivesProgress` | `boolean` | Whether the gesture directly drives the transition progress. |
-| `gestureActivationArea` | `GestureActivationArea` | Where a gesture may start. `'edge' | 'screen'` or per-side `{ left|right|top|bottom: 'edge'|'screen' }`. |
+| Option                    | Type                                     | Description                                                                                             |
+| ------------------------- | ---------------------------------------- | ------------------------------------------------------------------------------------------------------- | --------------------------- | ----- | --- | -------------- | ------------ |
+| `enableTransitions`       | `boolean`                                | Switches the screen to a transparent modal and disables the header so custom transitions can take over. |
+| `screenStyleInterpolator` | `ScreenStyleInterpolator`                | Function that returns animated styles based on transition progress.                                     |
+| `transitionSpec`          | `TransitionSpec`                         | Reanimated timing/spring config for open/close animations.                                              |
+| `gestureEnabled`          | `boolean`                                | Whether swipe-to-dismiss is allowed.                                                                    |
+| `gestureDirection`        | `GestureDirection \| GestureDirection[]` | Allowed swipe directions (`vertical`, `horizontal`, etc.).                                              |
+| `gestureVelocityImpact`   | `number`                                 | How much the gesture’s velocity affects dismissal.                                                      |
+| `gestureResponseDistance` | `number`                                 | Distance from screen where the gesture is recognized.                                                   |
+| `gestureDrivesProgress`   | `boolean`                                | Whether the gesture directly drives the transition progress.                                            |
+| `gestureActivationArea`   | `GestureActivationArea`                  | Where a gesture may start. `'edge'                                                                      | 'screen'`or per-side`{ left | right | top | bottom: 'edge' | 'screen' }`. |
 
 ### Renamed native options (extended stack)
 
 To avoid collisions with the new options above, the built-in React Navigation gesture props are renamed:
 
-| React Navigation prop | Renamed to |
-|---|---|
-| `gestureDirection` | `nativeGestureDirection` |
-| `gestureEnabled` | `nativeGestureEnabled` |
+| React Navigation prop     | Renamed to                      |
+| ------------------------- | ------------------------------- |
+| `gestureDirection`        | `nativeGestureDirection`        |
+| `gestureEnabled`          | `nativeGestureEnabled`          |
 | `gestureResponseDistance` | `nativeGestureResponseDistance` |
 
 All other React Navigation native-stack options keep their original names.
-
 
 ## Creating your screen animations
 
@@ -112,22 +112,20 @@ The incoming screen automatically controls the previous screen.
 
 ```tsx
 <Stack>
-  <Stack.Screen
-    name="a"
-  />
+  <Stack.Screen name="a" />
   <Stack.Screen
     name="b"
     options={{
-      ...Transition.presets.SlideFromTop(),
+      ...Transition.Presets.SlideFromTop(),
     }}
   />
   <Stack.Screen
     name="c"
     options={{
-      ...Transition.presets.SlideFromBottom(),
+      ...Transition.Presets.SlideFromBottom(),
     }}
   />
- </Stack>
+</Stack>
 ```
 
 #### Shared element presets (new)
@@ -139,7 +137,7 @@ Ready-made presets for common shared-element patterns. These leverage the bounds
 <Stack.Screen
   name="post"
   options={{
-    ...Transition.presets.SharedIGImage(),
+    ...Transition.Presets.SharedIGImage(),
   }}
 />
 ```
@@ -151,6 +149,7 @@ Other presets: `SharedAppleMusic()`, `SharedXImage()`.
 > **⚠️ Important**: These presets require native code and **will not work in Expo Go**. You must use a development build.
 
 **1. Install the dependency**
+
 ```bash
 # Expo projects
 npx expo install @react-native-masked-view/masked-view
@@ -161,6 +160,7 @@ cd ios && pod install  # iOS only
 ```
 
 **2. Create a development build** (if using Expo)
+
 ```bash
 npx expo run:ios
 # or
@@ -168,10 +168,11 @@ npx expo run:android
 ```
 
 **3. Wrap your destination screen**
+
 ```tsx
 export default function PostScreen() {
   return (
-    <Transition.MaskedView style={{ flex: 1, backgroundColor: 'white' }}>
+    <Transition.MaskedView style={{ flex: 1, backgroundColor: "white" }}>
       {/* screen content, including the destination bound */}
     </Transition.MaskedView>
   );
@@ -200,16 +201,17 @@ Instead of presets, you can define a custom transition directly on the screen's 
 - `isActiveTransitioning` – whether the active screen is currently transitioning (either being dragged or animating).
 - `isDismissing` – whether the active screen is in the process of being dismissed/closed.
 
-
 ```tsx
-import { interpolate } from 'react-native-reanimated'
+import { interpolate } from "react-native-reanimated";
 
 <Stack.Screen
   name="b"
   options={{
     enableTransitions: true,
     screenStyleInterpolator: ({
-      layouts: { screen: { width } },
+      layouts: {
+        screen: { width },
+      },
       progress,
     }) => {
       "worklet";
@@ -222,11 +224,11 @@ import { interpolate } from 'react-native-reanimated'
       };
     },
     transitionSpec: {
-      close: Transition.specs.DefaultSpec,
-      open: Transition.specs.DefaultSpec,
+      close: Transition.Specs.DefaultSpec,
+      open: Transition.Specs.DefaultSpec,
     },
   }}
-/>
+/>;
 ```
 
 In this example the incoming screen slides in from the right while the exiting screen slides out to the left.
@@ -236,16 +238,21 @@ In this example the incoming screen slides in from the right while the exiting s
 For per-screen control, import the `useScreenAnimation` hook and compose your own animated styles.
 
 ```tsx
-import { useScreenAnimation } from 'react-native-screen-transitions';
-import Animated, { useAnimatedStyle, interpolate } from 'react-native-reanimated';
+import { useScreenAnimation } from "react-native-screen-transitions";
+import Animated, {
+  useAnimatedStyle,
+  interpolate,
+} from "react-native-reanimated";
 
 export default function BScreen() {
   const props = useScreenAnimation();
 
   const animatedStyle = useAnimatedStyle(() => {
-    const { current: { progress } } = props.value
+    const {
+      current: { progress },
+    } = props.value;
     return {
-      opacity: progress
+      opacity: progress,
     };
   });
 
@@ -263,8 +270,8 @@ You can drag a screen away even when it contains a scroll view.
 Just swap the regular scrollable for a transition-aware one:
 
 ```tsx
-import Transition from 'react-native-screen-transitions';
-import { LegendList } from "@legendapp/list"
+import Transition from "react-native-screen-transitions";
+import { LegendList } from "@legendapp/list";
 import { FlashList } from "@shopify/flash-list";
 
 // Drop-in replacements
@@ -272,11 +279,15 @@ const ScrollView = Transition.ScrollView;
 const FlatList = Transition.FlatList;
 
 // Or wrap any list you like
-const TransitionFlashList =
-  Transition.createTransitionAwareComponent(FlashList, { isScrollable: true });
+const TransitionFlashList = Transition.createTransitionAwareComponent(
+  FlashList,
+  { isScrollable: true }
+);
 
-const TransitionLegendList =
-  Transition.createTransitionAwareComponent(LegendList, { isScrollable: true} );
+const TransitionLegendList = Transition.createTransitionAwareComponent(
+  LegendList,
+  { isScrollable: true }
+);
 ```
 
 Enable the gesture on the screen:
@@ -287,7 +298,7 @@ Enable the gesture on the screen:
   options={{
     enableTransitions: true,
     gestureEnabled: true,
-    gestureDirection: 'vertical', // or 'horizontal', ['vertical', 'horizontal'], etc.
+    gestureDirection: "vertical", // or 'horizontal', ['vertical', 'horizontal'], etc.
   }}
 />
 ```
@@ -296,11 +307,7 @@ Use it in the screen:
 
 ```tsx
 export default function B() {
-  return (
-    <Transition.ScrollView>
-      {/* content */}
-    </Transition.ScrollView>
-  );
+  return <Transition.ScrollView>{/* content */}</Transition.ScrollView>;
 }
 ```
 
@@ -332,9 +339,9 @@ Bounds let you animate any component between two screens by measuring its start 
 
 **Current Implementation:** For bounds to be measured, a `Transition.Pressable` must have both an `onPress` handler and a `sharedBoundTag`. When pressed, it triggers measurement. If the `Transition.Pressable` has children with `sharedBoundTag`s, those children are automatically measured and stored as well.
 
-*Note: This measurement trigger mechanism may change in future versions.*
+_Note: This measurement trigger mechanism may change in future versions._
 
-1) Tag source and destination with pressable triggers
+1. Tag source and destination with pressable triggers
 
 ```tsx
 // Source screen
@@ -356,12 +363,12 @@ Bounds let you animate any component between two screens by measuring its start 
 </Transition.Pressable>
 ```
 
-2) Children are automatically measured
+2. Children are automatically measured
 
 ```tsx
 <Transition.Pressable
   sharedBoundTag="card"
-  onPress={() => router.push('/detail')}
+  onPress={() => router.push("/detail")}
 >
   {/* These children will be automatically measured when parent is pressed */}
   <Transition.View sharedBoundTag="title">
@@ -373,26 +380,26 @@ Bounds let you animate any component between two screens by measuring its start 
 </Transition.Pressable>
 ```
 
-3) Drive the animation with the object API
+3. Drive the animation with the object API
 
 ```tsx
 screenStyleInterpolator: ({ activeBoundId, bounds }) => {
   "worklet";
 
   const styles = bounds({
-    method: "transform",      // "transform" | "size" | "content"
-    space: "relative",        // "relative" | "absolute"
-    scaleMode: "match",       // "match" | "none" | "uniform"
-    anchor: "center",         // see anchors below
+    method: "transform", // "transform" | "size" | "content"
+    space: "relative", // "relative" | "absolute"
+    scaleMode: "match", // "match" | "none" | "uniform"
+    anchor: "center", // see anchors below
     // target: "bound" | "fullscreen" | { x, y, width, height, pageX, pageY }
     // gestures: { x?: number; y?: number }
   });
 
   return { [activeBoundId]: styles };
-}
+};
 ```
 
-3) Raw values when you need them
+3. Raw values when you need them
 
 ```tsx
 const raw = bounds({ method: "transform", raw: true });
@@ -402,7 +409,12 @@ const raw = bounds({ method: "transform", raw: true });
 Or for size/content methods:
 
 ```tsx
-const toSize = bounds({ method: "size", target: "fullscreen", space: "absolute", raw: true });
+const toSize = bounds({
+  method: "size",
+  target: "fullscreen",
+  space: "absolute",
+  raw: true,
+});
 // { width, height, translateX, translateY }
 
 const content = bounds({ method: "content", raw: true });
@@ -432,7 +444,7 @@ Quick access: `bounds.get()`
 Use `bounds.get(id?, phase?)` to retrieve raw measurements and the resolved style for any bound in a given phase (`current`, `next`, `previous`).
 
 ```tsx
-const { bounds: metrics, styles } = bounds.get('hero', 'current');
+const { bounds: metrics, styles } = bounds.get("hero", "current");
 ```
 
 ## Animating individual components with `styleId`
@@ -442,7 +454,10 @@ Use `styleId` to animate a single view inside a screen.
 1. Tag the element:
 
 ```tsx
-<Transition.View styleId="fade-box" style={{ width: 100, height: 100, backgroundColor: 'crimson' }} />
+<Transition.View
+  styleId="fade-box"
+  style={{ width: 100, height: 100, backgroundColor: "crimson" }}
+/>
 ```
 
 2. Drive it from the interpolator:
@@ -452,9 +467,9 @@ screenStyleInterpolator: ({ progress }) => {
   "worklet";
 
   return {
-    'fade-box': {
-      opacity: interpolate(progress, [0, 1, 2],[0, 1, 0])
-    }
+    "fade-box": {
+      opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+    },
   };
 };
 ```
@@ -464,7 +479,6 @@ The red square fades in as the screen opens.
 ## Known Issues
 
 - **Delayed Touch Events** – There’s a noticeable delay in touch events when the transition is finished. If this affects your app, please hold off on using this package until a fix is available.
-
 
 ## Support and Development
 
@@ -476,10 +490,10 @@ This package is provided as-is and is developed in my free time. While I strive 
 I apologize for any inconvenience this may cause. If you encounter issues or have suggestions, please feel free to open an issue on the repository.
 
 ### Support the project
+
 I’ve estimated I downed around 60 cups of coffee while building this.
 If you’d like to fuel the next release, [buy me a coffee](https://buymeacoffee.com/trpfsu)
 
-
-
 ## License
+
 MIT

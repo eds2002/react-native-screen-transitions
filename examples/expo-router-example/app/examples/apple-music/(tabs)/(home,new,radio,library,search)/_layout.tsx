@@ -59,7 +59,7 @@ const Layout = ({ segment }: { segment: string }) => {
 				<Stack.Screen
 					name="[id]"
 					options={{
-						...Transition.presets.SharedAppleMusic(),
+						...Transition.Presets.SharedAppleMusic(),
 					}}
 				/>
 			</Stack>

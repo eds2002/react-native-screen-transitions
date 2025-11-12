@@ -11,7 +11,7 @@ export default function StyleIdLayout() {
 			<Stack.Screen
 				name="[id]"
 				options={{
-					...Transition.presets.SharedIGImage(),
+					...Transition.Presets.SharedIGImage(),
 				}}
 			/>
 		</Stack>

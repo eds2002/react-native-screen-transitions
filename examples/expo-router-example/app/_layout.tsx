@@ -303,7 +303,7 @@ export default function RootLayout() {
 				<Stack.Screen
 					name="examples/settings-screen"
 					options={{
-						...Transition.presets.SlideFromTop(),
+						...Transition.Presets.SlideFromTop(),
 						transitionSpec: {
 							open: {
 								duration: 350,

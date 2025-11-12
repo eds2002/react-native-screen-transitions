@@ -28,8 +28,8 @@ export default function LongerFlowLayout() {
 						},
 						enableTransitions: true,
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -51,8 +51,8 @@ export default function LongerFlowLayout() {
 						},
 						enableTransitions: true,
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>

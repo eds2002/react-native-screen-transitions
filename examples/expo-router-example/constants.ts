@@ -8,27 +8,27 @@ export const mainExampleGroups = {
 			{
 				label: "Slide from top",
 				href: "/a" as const,
-				preset: Transition.presets.SlideFromTop(),
+				preset: Transition.Presets.SlideFromTop(),
 			},
 			{
 				label: "Zoom in",
 				href: "/b" as const,
-				preset: Transition.presets.ZoomIn(),
+				preset: Transition.Presets.ZoomIn(),
 			},
 			{
 				label: "Slide from bottom",
 				href: "/c" as const,
-				preset: Transition.presets.SlideFromBottom(),
+				preset: Transition.Presets.SlideFromBottom(),
 			},
 			{
 				label: "Draggable Card",
 				href: "/d" as const,
-				preset: Transition.presets.DraggableCard(),
+				preset: Transition.Presets.DraggableCard(),
 			},
 			{
 				label: "Elastic Card",
 				href: "/e" as const,
-				preset: Transition.presets.ElasticCard(),
+				preset: Transition.Presets.ElasticCard(),
 			},
 		],
 	},

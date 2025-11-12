@@ -28,8 +28,8 @@ export default function ListLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>

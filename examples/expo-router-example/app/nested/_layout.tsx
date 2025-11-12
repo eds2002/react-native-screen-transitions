@@ -31,8 +31,8 @@ export default function NestedLayout() {
 						};
 					},
 					transitionSpec: {
-						open: Transition.specs.DefaultSpec,
-						close: Transition.specs.DefaultSpec,
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
 					},
 				}}
 			/>
@@ -41,7 +41,7 @@ export default function NestedLayout() {
 				options={{
 					headerShown: false,
 					enableTransitions: true,
-					...Transition.presets.SlideFromTop(),
+					...Transition.Presets.SlideFromTop(),
 				}}
 			/>
 		</Stack>

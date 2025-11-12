@@ -7,7 +7,7 @@ export default function NestedLayout() {
 			<Stack.Screen name="index" />
 			<Stack.Screen
 				name="b"
-				options={{ ...Transition.presets.SlideFromTop() }}
+				options={{ ...Transition.Presets.SlideFromTop() }}
 			/>
 		</Stack>
 	);
