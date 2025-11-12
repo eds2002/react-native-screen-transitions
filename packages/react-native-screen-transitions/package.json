@@ -26,7 +26,12 @@
 			"require": "./lib/commonjs/native-stack/index.js",
 			"react-native": "./src/native-stack/index"
 		},
-		"./package.json": "./package.json"
+		"./blank-stack": {
+			"types": "./lib/typescript/blank-stack/index.d.ts",
+			"import": "./lib/module/blank-stack/index.js",
+			"require": "./lib/commonjs/blank-stack/index.js",
+			"react-native": "./src/blank-stack/index"
+		}
 	},
 	"scripts": {
 		"build": "bob build",
