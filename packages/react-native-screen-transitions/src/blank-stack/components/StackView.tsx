@@ -10,6 +10,7 @@ import { withStackNavigationProvider } from "../utils/with-stack-navigation";
 import { Header } from "./Header";
 import { Screen } from "./Screens";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition-provider";
+import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
 
 
 function isFabric() {
@@ -82,6 +83,7 @@ export const StackView = withStackNavigationProvider(
                     previous={previousDescriptor}
                     current={descriptor}
                     next={nextDescriptor}
+                    LifecycleController={BlankStackScreenLifecycleController}
                   >
                     <SceneView
                       key={route.key}

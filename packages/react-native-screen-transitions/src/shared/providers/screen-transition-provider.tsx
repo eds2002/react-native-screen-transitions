@@ -1,15 +1,17 @@
 import type React from "react";
-import { ScreenLifecycleController } from "../components/controllers/screen-lifecycle";
 import { RootTransitionAware } from "../components/root-transition-aware";
+import type { ScreenLifecycleProps } from "../components/controllers/screen-lifecycle";
 import { ScreenGestureProvider } from "../providers/gestures";
 import { KeysProvider, type TransitionDescriptor } from "../providers/keys";
 import { TransitionStylesProvider } from "../providers/transition-styles";
+import { ComponentType, ReactNode } from "react";
 
 type Props<TDescriptor extends TransitionDescriptor> = {
 	previous?: TDescriptor;
 	current: TDescriptor;
 	next?: TDescriptor;
 	children: React.ReactNode;
+  LifecycleController: ComponentType<ScreenLifecycleProps>
 };
 
 export function ScreenTransitionProvider<TDescriptor extends TransitionDescriptor>(
@@ -18,6 +20,7 @@ export function ScreenTransitionProvider<TDescriptor extends TransitionDescripto
 	current,
 	next,
 	children,
+	LifecycleController,
 }: Props<TDescriptor>,
 ) {
 	return (
@@ -27,11 +30,11 @@ export function ScreenTransitionProvider<TDescriptor extends TransitionDescripto
 			next={next}
 		>
 			<ScreenGestureProvider>
-				<ScreenLifecycleController>
+				<LifecycleController>
 					<TransitionStylesProvider>
 						<RootTransitionAware>{children}</RootTransitionAware>
 					</TransitionStylesProvider>
-				</ScreenLifecycleController>
+				</LifecycleController>
 			</ScreenGestureProvider>
 		</KeysProvider>
 	);

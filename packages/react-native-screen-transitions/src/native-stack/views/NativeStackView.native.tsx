@@ -44,6 +44,7 @@ import { AnimatedHeaderHeightContext } from "../utils/useAnimatedHeaderHeight";
 import { useDismissedRouteError } from "../utils/useDismissedRouteError";
 import { useInvalidPreventRemoveError } from "../utils/useInvalidPreventRemoveError";
 import { useHeaderConfigProps } from "./useHeaderConfigProps";
+import { NativeStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
 
 const ANDROID_DEFAULT_HEADER_HEIGHT = 56;
 
@@ -469,6 +470,7 @@ const SceneView = ({
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
+										LifecycleController={NativeStackScreenLifecycleController}
 									>
 										{render()}
 									</ScreenTransitionProvider>

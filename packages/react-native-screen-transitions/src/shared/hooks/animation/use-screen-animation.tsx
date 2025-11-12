@@ -8,7 +8,7 @@ import {
 	DEFAULT_SCREEN_TRANSITION_STATE,
 	NO_BOUNDS_MAP,
 } from "../../constants";
-import { useKeys } from "../../providers/keys";
+import { TransitionDescriptor, useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Bounds } from "../../stores/bounds";
 import { type GestureMap, Gestures } from "../../stores/gestures";
@@ -53,7 +53,7 @@ const unwrap = (
 };
 
 const useBuildScreenTransitionState = (
-	descriptor: NativeStackDescriptor | undefined,
+	descriptor: TransitionDescriptor | undefined,
 ): BuiltState | undefined => {
 	const key = descriptor?.route.key;
 

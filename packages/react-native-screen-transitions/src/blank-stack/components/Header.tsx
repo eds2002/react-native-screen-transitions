@@ -100,7 +100,7 @@ const FloatHeader = () => {
 
 const ScreenHeader = () => {
   const { focusedIndex } = useStackNavigationContext();
-  const { current } = useKeys();
+  const { current } = useKeys<BlankStackDescriptor>();
 
   const options = current.options;
 
