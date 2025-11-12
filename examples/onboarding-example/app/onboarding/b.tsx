@@ -1,14 +1,11 @@
 import { router } from "expo-router";
 import { Button, Text, View } from "react-native";
 
-export default function App() {
+export default function B() {
 	return (
 		<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-			<Text>Welcome to Expo Router!</Text>
-			<Button
-				title="Go to Page B"
-				onPress={() => router.push("/onboarding/b")}
-			/>
+			<Text>Page B</Text>
+			<Button title="Go to Page C" onPress={() => router.back()} />
 		</View>
 	);
 }
