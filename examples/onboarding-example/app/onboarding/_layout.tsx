@@ -6,12 +6,48 @@ import {
 	StyleSheet,
 	View,
 } from "react-native";
-import { interpolate } from "react-native-reanimated";
+import Animated, {
+	interpolate,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import type { BlankStackOverlayProps } from "react-native-screen-transitions/blank-stack";
 import { ComposableText } from "@/components/composeable-text";
 import { BlankStack } from "@/components/layouts/blank-stack";
+
+const ProgressPill = ({
+	animation,
+	index,
+}: {
+	animation: BlankStackOverlayProps["animation"];
+	index: number;
+}) => {
+	const fillStyle = useAnimatedStyle(() => {
+		"worklet";
+		const total = animation.value.progress;
+		const localProgress = Math.min(Math.max(total - index, 0), 1);
+
+		return {
+			flex: Math.max(localProgress, 0),
+			backgroundColor: "#000",
+			borderRadius: 999,
+		};
+	});
+
+	return (
+		<Animated.View
+			style={{
+				flex: 1,
+				backgroundColor: "#E5E7EB",
+				borderRadius: 999,
+				overflow: "hidden",
+			}}
+		>
+			<Animated.View style={fillStyle} />
+		</Animated.View>
+	);
+};
 
 const OverlayComponent = (props: BlankStackOverlayProps) => {
 	const insets = useSafeAreaInsets();
@@ -60,6 +96,10 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 					<Pressable onPress={router.back}>
 						<FontAwesome name="chevron-left" size={18} />
 					</Pressable>
+					<ProgressPill
+						animation={props.animation}
+						index={props.focusedIndex}
+					/>
 				</View>
 				<Pressable
 					style={{
