@@ -3,8 +3,13 @@ import "react-native-reanimated";
 
 export default function RootLayout() {
 	return (
-		<Stack>
-			<Stack.Screen name="index" />
-		</Stack>
+		<Stack
+			screenOptions={{
+				headerShown: false,
+				contentStyle: {
+					backgroundColor: "#FFF",
+				},
+			}}
+		/>
 	);
 }

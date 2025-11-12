@@ -10,9 +10,9 @@ export default function App() {
 		<Container>
 			<View style={{ gap: 48 }}>
 				<View>
-					<Typography.Heading>Your nickname</Typography.Heading>
+					<Typography.Heading>Bio</Typography.Heading>
 					<Typography.Subtitle>
-						Just so we know what to call you
+						We aim to invade your privacy
 					</Typography.Subtitle>
 				</View>
 				<Input ref={ref} placeholder="Jerry" autoFocus />
