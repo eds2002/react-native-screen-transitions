@@ -36,14 +36,7 @@ const ProgressPill = ({
 	});
 
 	return (
-		<Animated.View
-			style={{
-				flex: 1,
-				backgroundColor: "#E5E7EB",
-				borderRadius: 999,
-				overflow: "hidden",
-			}}
-		>
+		<Animated.View style={styles.progressContainer}>
 			<Animated.View style={fillStyle} />
 		</Animated.View>
 	);
@@ -96,10 +89,15 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 					<Pressable onPress={router.back}>
 						<FontAwesome name="chevron-left" size={18} />
 					</Pressable>
-					<ProgressPill
-						animation={props.animation}
-						index={props.focusedIndex}
-					/>
+					<View style={{ ...styles.progressContainer }}>
+						{Array.from({ length: 3 }).map((_, index) => (
+							<ProgressPill
+								key={index.toString()}
+								animation={props.animation}
+								index={index}
+							/>
+						))}
+					</View>
 				</View>
 				<Pressable
 					style={{
@@ -193,3 +191,57 @@ export default function OnboardingLayout() {
 		</BlankStack>
 	);
 }
+
+const styles = StyleSheet.create({
+	headerWrapper: {
+		justifyContent: "space-between",
+	},
+	topBar: {
+		paddingHorizontal: 24,
+		alignItems: "center",
+		justifyContent: "space-between",
+		height: 50,
+		flexDirection: "row",
+		gap: 82,
+	},
+	iconWrapper: {
+		width: 50,
+		height: 50,
+		justifyContent: "center",
+	},
+	progressContainer: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		flex: 1,
+		gap: 6,
+	},
+	progressPillContainer: {
+		flex: 1,
+		height: 5,
+		borderRadius: 999,
+		justifyContent: "flex-start",
+		backgroundColor: "#d4d4d4",
+		flexDirection: "row",
+		overflow: "hidden",
+	},
+	footer: {
+		width: "100%",
+		alignItems: "center",
+		justifyContent: "center",
+		padding: 24,
+	},
+	primaryButton: {
+		height: 65,
+		backgroundColor: "#000",
+		width: "100%",
+		borderRadius: 999,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	primaryButtonText: {
+		fontSize: 20,
+		fontWeight: "600",
+		color: "white",
+	},
+});
