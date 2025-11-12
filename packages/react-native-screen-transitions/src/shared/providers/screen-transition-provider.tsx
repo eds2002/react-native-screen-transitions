@@ -1,26 +1,31 @@
 import type React from "react";
-import type { NativeStackDescriptor } from "../../native-stack/types";
 import { ScreenLifecycleController } from "../components/controllers/screen-lifecycle";
 import { RootTransitionAware } from "../components/root-transition-aware";
 import { ScreenGestureProvider } from "../providers/gestures";
-import { KeysProvider } from "../providers/keys";
+import { KeysProvider, type TransitionDescriptor } from "../providers/keys";
 import { TransitionStylesProvider } from "../providers/transition-styles";
 
-type Props = {
-	previous?: NativeStackDescriptor;
-	current: NativeStackDescriptor;
-	next?: NativeStackDescriptor;
+type Props<TDescriptor extends TransitionDescriptor> = {
+	previous?: TDescriptor;
+	current: TDescriptor;
+	next?: TDescriptor;
 	children: React.ReactNode;
 };
 
-export function ScreenTransitionProvider({
+export function ScreenTransitionProvider<TDescriptor extends TransitionDescriptor>(
+{
 	previous,
 	current,
 	next,
 	children,
-}: Props) {
+}: Props<TDescriptor>,
+) {
 	return (
-		<KeysProvider previous={previous} current={current} next={next}>
+		<KeysProvider<TDescriptor>
+			previous={previous}
+			current={current}
+			next={next}
+		>
 			<ScreenGestureProvider>
 				<ScreenLifecycleController>
 					<TransitionStylesProvider>
