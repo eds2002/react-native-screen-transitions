@@ -1,5 +1,5 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
-import { Bounds } from "../../../stores/bounds";
+import { BoundStore } from "../../../stores/bound-store";
 
 export const isBoundsEqual = ({
 	measured,
@@ -11,7 +11,7 @@ export const isBoundsEqual = ({
 	sharedBoundTag: string;
 }) => {
 	"worklet";
-	const existing = Bounds.getBounds(key)?.[sharedBoundTag]?.bounds;
+	const existing = BoundStore.getBounds(key)?.[sharedBoundTag]?.bounds;
 	return (
 		existing &&
 		existing.width === measured.width &&

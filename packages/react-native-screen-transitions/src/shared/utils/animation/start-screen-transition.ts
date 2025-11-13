@@ -1,5 +1,5 @@
 import { runOnJS } from "react-native-reanimated";
-import type { AnimationMap } from "../../stores/animations";
+import type { AnimationStoreMap } from "../../stores/animation-store";
 import type { TransitionSpec } from "../../types/animation";
 import { animate } from "./animate";
 
@@ -7,7 +7,7 @@ interface StartScreenTransitionProps {
 	target: "open" | "close";
 	spec?: TransitionSpec;
 	onAnimationFinish?: (finished: boolean) => void;
-	animations: AnimationMap;
+	animations: AnimationStoreMap;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
 	initialVelocity?: number;
 }

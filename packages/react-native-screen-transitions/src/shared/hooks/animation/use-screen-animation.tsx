@@ -9,9 +9,9 @@ import {
 	NO_BOUNDS_MAP,
 } from "../../constants";
 import { type TransitionDescriptor, useKeys } from "../../providers/keys";
-import { Animations } from "../../stores/animations";
-import { Bounds } from "../../stores/bounds";
-import { type GestureMap, Gestures } from "../../stores/gestures";
+import { AnimationStore } from "../../stores/animation-store";
+import { BoundStore } from "../../stores/bound-store";
+import { type GestureStoreMap, GestureStore } from "../../stores/gesture-store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
@@ -23,7 +23,7 @@ type BuiltState = {
 	progress: SharedValue<number>;
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
-	gesture: GestureMap;
+	gesture: GestureStoreMap;
 	route: RouteProp<ParamListBase>;
 };
 
@@ -47,7 +47,7 @@ const unwrap = (
 			isDragging: s.gesture.isDragging.value,
 			direction: s.gesture.direction.value,
 		},
-		bounds: Bounds.getBounds(key) || NO_BOUNDS_MAP,
+		bounds: BoundStore.getBounds(key) || NO_BOUNDS_MAP,
 		route: s.route,
 	};
 };
@@ -61,10 +61,10 @@ const useBuildScreenTransitionState = (
 		if (!key) return undefined;
 
 		return {
-			progress: Animations.getAnimation(key, "progress"),
-			closing: Animations.getAnimation(key, "closing"),
-			animating: Animations.getAnimation(key, "animating"),
-			gesture: Gestures.getRouteGestures(key),
+			progress: AnimationStore.getAnimation(key, "progress"),
+			closing: AnimationStore.getAnimation(key, "closing"),
+			animating: AnimationStore.getAnimation(key, "animating"),
+			gesture: GestureStore.getRouteGestures(key),
 			route: descriptor.route,
 		};
 	}, [key, descriptor?.route]);

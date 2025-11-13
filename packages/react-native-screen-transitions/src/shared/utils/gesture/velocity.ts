@@ -3,10 +3,10 @@ import type {
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
-import type { AnimationMap } from "../../stores/animations";
+import type { AnimationStoreMap } from "../../stores/animation-store";
 
 interface CalculateProgressProps {
-	animations: AnimationMap;
+	animations: AnimationStoreMap;
 	shouldDismiss: boolean;
 	event: GestureStateChangeEvent<PanGestureHandlerEventPayload>;
 	dimensions: { width: number; height: number };

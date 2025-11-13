@@ -1,19 +1,15 @@
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
-  type DerivedValue,
-  type SharedValue,
-  useDerivedValue,
+	type DerivedValue,
+	type SharedValue,
+	useDerivedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
-
-import { OverlayInterpolationProps } from "../../shared/types/animation";
-import { useKeys} from '../../shared/providers/keys'
+import { useKeys } from "../../shared/providers/keys";
+import { AnimationStore } from "../../shared/stores/animation-store";
+import type { OverlayInterpolationProps } from "../../shared/types/animation";
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
-import {Animations} from '../../shared/stores/animations'
-
-
 
 /**
  * Aggregates progress values for the overlay owner and every scene that sits
@@ -21,49 +17,49 @@ import {Animations} from '../../shared/stores/animations'
  * drive animations that span multiple screens.
  */
 export const useOverlayAnimation =
-  (): DerivedValue<OverlayInterpolationProps> => {
-    const { current } = useKeys();
-    const { scenes } = useStackNavigationContext();
+	(): DerivedValue<OverlayInterpolationProps> => {
+		const { current } = useKeys();
+		const { scenes } = useStackNavigationContext();
 
-    const progressValues = useMemo<SharedValue<number>[]>(() => {
-      const routeKey = current?.route?.key;
-      if (!routeKey) {
-        return [];
-      }
+		const progressValues = useMemo<SharedValue<number>[]>(() => {
+			const routeKey = current?.route?.key;
+			if (!routeKey) {
+				return [];
+			}
 
-      const overlayIndex = scenes.findIndex(
-        (scene) => scene.route.key === routeKey
-      );
+			const overlayIndex = scenes.findIndex(
+				(scene) => scene.route.key === routeKey,
+			);
 
-      if (overlayIndex === -1) {
-        return [];
-      }
+			if (overlayIndex === -1) {
+				return [];
+			}
 
-      return scenes.slice(overlayIndex).map((scene) => {
-        return Animations.getAnimation(scene.route.key, "progress");
-      });
-    }, [current?.route?.key, scenes]);
+			return scenes.slice(overlayIndex).map((scene) => {
+				return AnimationStore.getAnimation(scene.route.key, "progress");
+			});
+		}, [current?.route?.key, scenes]);
 
-    const accumulatedProgress = useDerivedValue(() => {
-      "worklet";
+		const accumulatedProgress = useDerivedValue(() => {
+			"worklet";
 
-      let total = 0;
+			let total = 0;
 
-      for (let i = 0; i < progressValues.length; i += 1) {
-        total += progressValues[i].value;
-      }
+			for (let i = 0; i < progressValues.length; i += 1) {
+				total += progressValues[i].value;
+			}
 
-      return total;
-    }, [progressValues]);
+			return total;
+		}, [progressValues]);
 
-    const screen = useWindowDimensions();
-    const insets = useSafeAreaInsets();
+		const screen = useWindowDimensions();
+		const insets = useSafeAreaInsets();
 
-    return useDerivedValue<OverlayInterpolationProps>(() => ({
-      progress: accumulatedProgress.value,
-      layouts: {
-        screen,
-      },
-      insets,
-    }));
-  };
+		return useDerivedValue<OverlayInterpolationProps>(() => ({
+			progress: accumulatedProgress.value,
+			layouts: {
+				screen,
+			},
+			insets,
+		}));
+	};

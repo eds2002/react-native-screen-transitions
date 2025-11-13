@@ -8,7 +8,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
-import { Animations } from "../../shared/stores/animations";
+import { AnimationStore } from "../../shared/stores/animation-store";
 
 interface ScreenProps {
 	routeKey: string;
@@ -39,7 +39,7 @@ export const Screen = ({
 	freezeOnBlur,
 	shouldFreeze,
 }: ScreenProps) => {
-	const sceneProgress = Animations.getAnimation(routeKey, "progress");
+	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");
 	const screenActivity = useSharedValue<0 | 1 | 2>(1);
 
 	useDerivedValue(() => {

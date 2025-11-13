@@ -17,7 +17,7 @@ import {
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
 import { useKeys } from "../../providers/keys";
-import { Bounds } from "../../stores/bounds";
+import { BoundStore } from "../../stores/bound-store";
 import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
 import { prepareStyleForBounds } from "../../utils/bounds/_utils/styles";
 import useStableCallback from "../use-stable-callback";
@@ -80,7 +80,7 @@ export const useBoundsRegistry = ({
 			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
 				emitUpdate();
 				if (!skipMarkingActive) {
-					Bounds.setRouteActive(key, sharedBoundTag);
+					BoundStore.setRouteActive(key, sharedBoundTag);
 				}
 				if (onPress) runOnJS(onPress)();
 				return;
@@ -88,9 +88,9 @@ export const useBoundsRegistry = ({
 
 			emitUpdate();
 
-			Bounds.setBounds(key, sharedBoundTag, measured, preparedStyles);
+			BoundStore.setBounds(key, sharedBoundTag, measured, preparedStyles);
 			if (!skipMarkingActive) {
-				Bounds.setRouteActive(key, sharedBoundTag);
+				BoundStore.setRouteActive(key, sharedBoundTag);
 			}
 
 			if (onPress) runOnJS(onPress)();
@@ -106,7 +106,7 @@ export const useBoundsRegistry = ({
 			return;
 		}
 
-		const prevBounds = Bounds.getBounds(prevKey)?.[sharedBoundTag];
+		const prevBounds = BoundStore.getBounds(prevKey)?.[sharedBoundTag];
 
 		if (prevBounds) {
 			// Should skip mark active if we are in a transition

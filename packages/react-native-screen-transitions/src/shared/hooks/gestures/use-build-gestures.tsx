@@ -23,8 +23,8 @@ import {
 } from "../../constants";
 import type { ScrollConfig } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
-import { Animations } from "../../stores/animations";
-import { Gestures } from "../../stores/gestures";
+import { AnimationStore } from "../../stores/animation-store";
+import { GestureStore } from "../../stores/gesture-store";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import { type GestureDirection, GestureOffsetState } from "../../types/gesture";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
@@ -58,8 +58,8 @@ export const useBuildGestures = ({
 		GestureOffsetState.PENDING,
 	);
 
-	const gestures = Gestures.getRouteGestures(current.route.key);
-	const animations = Animations.getAll(current.route.key);
+	const gestures = GestureStore.getRouteGestures(current.route.key);
+	const animations = AnimationStore.getAll(current.route.key);
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,

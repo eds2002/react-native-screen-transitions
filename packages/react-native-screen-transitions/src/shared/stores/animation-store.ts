@@ -1,13 +1,13 @@
 import { makeMutable, type SharedValue } from "react-native-reanimated";
 import type { ScreenKey } from "../types/core";
 
-export type AnimationMap = {
+export type AnimationStoreMap = {
 	progress: SharedValue<number>;
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 };
 
-const store: Record<ScreenKey, AnimationMap> = {};
+const store: Record<ScreenKey, AnimationStoreMap> = {};
 
 const ensure = (key: ScreenKey) => {
 	let bag = store[key];
@@ -38,7 +38,7 @@ function clear(routeKey: ScreenKey) {
 	delete store[routeKey];
 }
 
-export const Animations = {
+export const AnimationStore = {
 	getAnimation,
 	clear,
 	getAll,

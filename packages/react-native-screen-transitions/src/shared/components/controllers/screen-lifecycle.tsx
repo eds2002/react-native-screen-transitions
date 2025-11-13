@@ -6,7 +6,7 @@ import type { NativeStackDescriptor } from "../../../native-stack/types";
 import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { useKeys } from "../../providers/keys";
-import { Animations } from "../../stores/animations";
+import { AnimationStore } from "../../stores/animation-store";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import { resetStoresForScreen } from "../../stores/utils/reset-stores-for-screen";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
@@ -23,7 +23,7 @@ export const NativeStackScreenLifecycleController = ({
 }: ScreenLifecycleProps) => {
 	const { current } = useKeys<NativeStackDescriptor>();
 
-	const animations = Animations.getAll(current.route.key);
+	const animations = AnimationStore.getAll(current.route.key);
 
 	const handleBeforeRemove = useStableCallback((e: any) => {
 		const key = current.navigation.getParent()?.getState().key;
@@ -97,7 +97,7 @@ export const BlankStackScreenLifecycleController = ({
 	const { handleCloseRoute, closingRouteKeysShared } =
 		useStackNavigationContext();
 
-	const animations = Animations.getAll(current.route.key);
+	const animations = AnimationStore.getAll(current.route.key);
 
 	const handleInitialize = useStableCallback(() => {
 		startScreenTransition({

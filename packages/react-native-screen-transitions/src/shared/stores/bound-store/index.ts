@@ -115,7 +115,7 @@ function getActiveBound(
 	});
 }
 
-export const Bounds = {
+export const BoundStore = {
 	setBounds,
 	getBounds,
 	setRouteActive,

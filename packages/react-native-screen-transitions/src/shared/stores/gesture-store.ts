@@ -10,7 +10,7 @@ export type GestureKey =
 	| "isDismissing"
 	| "isDragging";
 
-export type GestureMap = {
+export type GestureStoreMap = {
 	x: SharedValue<number>;
 	y: SharedValue<number>;
 	normalizedX: SharedValue<number>;
@@ -20,9 +20,9 @@ export type GestureMap = {
 	direction: SharedValue<Omit<GestureDirection, "bidirectional"> | null>;
 };
 
-const store: Record<ScreenKey, GestureMap> = {};
+const store: Record<ScreenKey, GestureStoreMap> = {};
 
-function ensure(routeKey: ScreenKey): GestureMap {
+function ensure(routeKey: ScreenKey): GestureStoreMap {
 	let bag = store[routeKey];
 	if (!bag) {
 		bag = {
@@ -53,7 +53,7 @@ function clear(routeKey: ScreenKey) {
 	delete store[routeKey];
 }
 
-export const Gestures = {
+export const GestureStore = {
 	getGesture,
 	getRouteGestures,
 	clear,
