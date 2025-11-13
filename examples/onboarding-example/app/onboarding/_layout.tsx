@@ -131,9 +131,26 @@ export default function OnboardingLayout() {
 			<BlankStack.Screen
 				name="index"
 				options={{
+					enableTransitions: true, //please fix, this should not be required for blank stack
 					overlay: OverlayComponent,
 					overlayMode: "float",
 					overlayShown: true,
+					screenStyleInterpolator: ({
+						progress,
+						layouts: {
+							screen: { width },
+						},
+					}) => {
+						"worklet";
+
+						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+						return {
+							contentStyle: {
+								transform: [{ translateX: x }],
+								backgroundColor: "#FFF",
+							},
+						};
+					},
 				}}
 			/>
 			<BlankStack.Screen

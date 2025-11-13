@@ -127,16 +127,11 @@ const syncRoutesWithRemoved = ({
 		);
 
 		if (nextRouteWasPresent && !previousRouteStillPresent) {
-			//@ts-expect-error
-			if (closingRouteKeys.hasFinished(previousFocusedRoute.key)) {
-				closingRouteKeys.remove(previousFocusedRoute.key);
-			} else {
-				// Previous route was removed, mark as closing
-				closingRouteKeys.add(previousFocusedRoute.key);
+			// Previous route was removed, mark as closing
+			closingRouteKeys.add(previousFocusedRoute.key);
 
-				ensureMutable();
-				derivedRoutes.push(previousFocusedRoute);
-			}
+			ensureMutable();
+			derivedRoutes.push(previousFocusedRoute);
 		} else {
 			// Next route is now active, not closing
 			closingRouteKeys.remove(nextFocusedRoute.key);
