@@ -131,7 +131,6 @@ export default function OnboardingLayout() {
 			<BlankStack.Screen
 				name="index"
 				options={{
-					enableTransitions: true, //please fix, this should not be required for blank stack
 					overlay: OverlayComponent,
 					overlayMode: "float",
 					overlayShown: true,
@@ -156,7 +155,6 @@ export default function OnboardingLayout() {
 			<BlankStack.Screen
 				name="b"
 				options={{
-					enableTransitions: true, //please fix, this should not be required for blank stack
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
 					screenStyleInterpolator: ({
@@ -184,7 +182,6 @@ export default function OnboardingLayout() {
 			<BlankStack.Screen
 				name="c"
 				options={{
-					enableTransitions: true, //please fix, this should not be required for blank stack
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
 					screenStyleInterpolator: ({

@@ -3,12 +3,12 @@ import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { NativeStackDescriptor } from "../../../native-stack/types";
+
 import {
 	DEFAULT_SCREEN_TRANSITION_STATE,
 	NO_BOUNDS_MAP,
 } from "../../constants";
-import { TransitionDescriptor, useKeys } from "../../providers/keys";
+import { type TransitionDescriptor, useKeys } from "../../providers/keys";
 import { Animations } from "../../stores/animations";
 import { Bounds } from "../../stores/bounds";
 import { type GestureMap, Gestures } from "../../stores/gestures";
