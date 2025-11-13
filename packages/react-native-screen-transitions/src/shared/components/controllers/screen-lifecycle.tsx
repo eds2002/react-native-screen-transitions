@@ -84,8 +84,6 @@ export const NativeStackScreenLifecycleController = ({
 	return children;
 };
 
-const CLOSED_THRESHOLD = 1e-3;
-
 /**
  * ScreenLifecycleController built out for Blank Stack implementation.
  */
@@ -117,42 +115,18 @@ export const BlankStackScreenLifecycleController = ({
 	useAnimatedReaction(
 		() => ({
 			keys: closingRouteKeysShared.value,
-			closing: animations.closing.value,
-			progress: animations.progress.value,
-			animating: animations.animating.value,
 		}),
-		({ keys, closing, progress, animating }) => {
+		({ keys }) => {
 			if (!keys.includes(current.route.key)) {
 				return;
 			}
 
-			const isFullyClosed = progress <= CLOSED_THRESHOLD;
-
-			const notifyCloseComplete = () => {
-				runOnJS(handleCloseEnd)(true);
-			};
-
-			if (isFullyClosed) {
-				if (closing < 1) {
-					animations.closing.value = 1;
-				}
-				notifyCloseComplete();
-				return;
-			}
-
-			if (closing === 1 && animating === 0) {
-				notifyCloseComplete();
-				return;
-			}
-
-			if (animating !== 1) {
-				startScreenTransition({
-					target: "close",
-					spec: current.options.transitionSpec,
-					animations,
-					onAnimationFinish: handleCloseEnd,
-				});
-			}
+			startScreenTransition({
+				target: "close",
+				spec: current.options.transitionSpec,
+				animations,
+				onAnimationFinish: handleCloseEnd,
+			});
 		},
 	);
 
