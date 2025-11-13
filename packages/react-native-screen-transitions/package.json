@@ -15,22 +15,34 @@
 	"react-native": "src/shared/index",
 	"exports": {
 		".": {
-			"types": "./lib/typescript/shared/index.d.ts",
+			"react-native": "./src/shared/index.ts",
 			"import": "./lib/module/shared/index.js",
 			"require": "./lib/commonjs/shared/index.js",
-			"react-native": "./src/shared/index"
+			"types": "./lib/typescript/shared/index.d.ts"
 		},
 		"./native-stack": {
-			"types": "./lib/typescript/native-stack/index.d.ts",
+			"react-native": "./src/native-stack/index.ts",
 			"import": "./lib/module/native-stack/index.js",
 			"require": "./lib/commonjs/native-stack/index.js",
-			"react-native": "./src/native-stack/index"
+			"types": "./lib/typescript/native-stack/index.d.ts"
+		},
+		"./native-stack/index": {
+			"react-native": "./src/native-stack/index.ts",
+			"import": "./lib/module/native-stack/index.js",
+			"require": "./lib/commonjs/native-stack/index.js",
+			"types": "./lib/typescript/native-stack/index.d.ts"
 		},
 		"./blank-stack": {
-			"types": "./lib/typescript/blank-stack/index.d.ts",
+			"react-native": "./src/blank-stack/index.ts",
 			"import": "./lib/module/blank-stack/index.js",
 			"require": "./lib/commonjs/blank-stack/index.js",
-			"react-native": "./src/blank-stack/index"
+			"types": "./lib/typescript/blank-stack/index.d.ts"
+		},
+		"./blank-stack/index": {
+			"react-native": "./src/blank-stack/index.ts",
+			"import": "./lib/module/blank-stack/index.js",
+			"require": "./lib/commonjs/blank-stack/index.js",
+			"types": "./lib/typescript/blank-stack/index.d.ts"
 		}
 	},
 	"scripts": {
