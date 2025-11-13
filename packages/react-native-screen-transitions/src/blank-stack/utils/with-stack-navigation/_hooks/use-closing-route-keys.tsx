@@ -7,10 +7,6 @@ export const useClosingRouteKeys = () => {
 	const finishedRef = useRef<Set<string>>(new Set());
 	const shared = useSharedValue<string[]>([]);
 
-	const markFinished = useStableCallback((key: string) => {
-		finishedRef.current.add(key);
-	});
-
 	const add = useStableCallback((key: string) => {
 		const keys = keysRef.current;
 		if (keys.has(key)) {
@@ -69,8 +65,7 @@ export const useClosingRouteKeys = () => {
 			add,
 			remove,
 			clear,
-			markFinished,
 		}),
-		[shared, add, remove, clear, markFinished],
+		[shared, add, remove, clear],
 	);
 };

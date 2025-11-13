@@ -1,4 +1,8 @@
 import { useEffect, useLayoutEffect } from "react";
+import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
+import type { BlankStackDescriptor } from "../../../blank-stack/types";
+import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
+import type { NativeStackDescriptor } from "../../../native-stack/types";
 import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { useKeys } from "../../providers/keys";
@@ -6,15 +10,10 @@ import { Animations } from "../../stores/animations";
 import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import { resetStoresForScreen } from "../../stores/utils/reset-stores-for-screen";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
-import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
-import { BlankStackDescriptor } from "../../../blank-stack/types";
-import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
-import { NativeStackDescriptor } from "../../../native-stack/types";
 
 export interface ScreenLifecycleProps {
 	children: React.ReactNode;
 }
-
 
 /**
  * ScreenLifecycleController built out for Native Stack implementation.
@@ -92,76 +91,75 @@ const CLOSED_THRESHOLD = 1e-3;
  */
 
 export const BlankStackScreenLifecycleController = ({
-  children,
+	children,
 }: ScreenLifecycleProps) => {
-  const { current } = useKeys<BlankStackDescriptor>();
-  const { handleCloseRoute, closingRouteKeysShared, markRouteClosingFinished } =
-    useStackNavigationContext();
+	const { current } = useKeys<BlankStackDescriptor>();
+	const { handleCloseRoute, closingRouteKeysShared } =
+		useStackNavigationContext();
 
-  const animations = Animations.getAll(current.route.key);
+	const animations = Animations.getAll(current.route.key);
 
-  const handleInitialize = useStableCallback(() => {
-    startScreenTransition({
-      target: "open",
-      spec: current.options.transitionSpec,
-      animations,
-    });
-  });
+	const handleInitialize = useStableCallback(() => {
+		startScreenTransition({
+			target: "open",
+			spec: current.options.transitionSpec,
+			animations,
+		});
+	});
 
-  const handleCloseEnd = useStableCallback((finished: boolean) => {
-    if (!finished) {
-      return;
-    }
-    handleCloseRoute({ route: current.route });
-  });
+	const handleCloseEnd = useStableCallback((finished: boolean) => {
+		if (!finished) {
+			return;
+		}
+		handleCloseRoute({ route: current.route });
+	});
 
-  useAnimatedReaction(
-    () => ({
-      keys: closingRouteKeysShared.value,
-      closing: animations.closing.value,
-      progress: animations.progress.value,
-      animating: animations.animating.value,
-    }),
-    ({ keys, closing, progress, animating }) => {
-      if (!keys.includes(current.route.key)) {
-        return;
-      }
+	useAnimatedReaction(
+		() => ({
+			keys: closingRouteKeysShared.value,
+			closing: animations.closing.value,
+			progress: animations.progress.value,
+			animating: animations.animating.value,
+		}),
+		({ keys, closing, progress, animating }) => {
+			if (!keys.includes(current.route.key)) {
+				return;
+			}
 
-      const isFullyClosed = progress <= CLOSED_THRESHOLD;
+			const isFullyClosed = progress <= CLOSED_THRESHOLD;
 
-      const notifyCloseComplete = () => {
-        runOnJS(markRouteClosingFinished)(current.route.key);
-        runOnJS(handleCloseEnd)(true);
-      };
+			const notifyCloseComplete = () => {
+				runOnJS(handleCloseEnd)(true);
+			};
 
-      if (isFullyClosed) {
-        if (closing < 1) {
-          animations.closing.value = 1;
-        }
-        notifyCloseComplete();
-        return;
-      }
+			if (isFullyClosed) {
+				if (closing < 1) {
+					animations.closing.value = 1;
+				}
+				notifyCloseComplete();
+				return;
+			}
 
-      if (closing === 1 && animating === 0) {
-        notifyCloseComplete();
-        return;
-      }
+			if (closing === 1 && animating === 0) {
+				notifyCloseComplete();
+				return;
+			}
 
-      if (animating !== 1) {
-        startScreenTransition({
-          target: "close",
-          spec: current.options.transitionSpec,
-          animations,
-          onAnimationFinish: handleCloseEnd,
-        });
-      }
-    }
-  );
+			if (animating !== 1) {
+				startScreenTransition({
+					target: "close",
+					spec: current.options.transitionSpec,
+					animations,
+					onAnimationFinish: handleCloseEnd,
+				});
+			}
+		},
+	);
 
-  useLayoutEffect(handleInitialize);
+	useLayoutEffect(handleInitialize);
 
-  // important for t.a scrollviews inside nested navigators.
-  useParentGestureRegistry();
+	// important for t.a scrollviews inside nested navigators.
+	useParentGestureRegistry();
 
-  return children;
+	return children;
 };
