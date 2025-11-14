@@ -5,7 +5,6 @@ import {
 import { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
 import { KeysProvider, useKeys } from "../../shared/providers/keys";
 import { useOverlayAnimation } from "../hooks/use-overlay-animation";
 import type {
@@ -17,7 +16,6 @@ import { useStackNavigationContext } from "../utils/with-stack-navigation";
 
 type OverlayHostProps = {
 	scene: BlankStackScene;
-	focusedIndex: number;
 	isFloating?: boolean;
 };
 
@@ -34,12 +32,12 @@ const getActiveFloatOverlay = (scenes: BlankStackScene[], index: number) => {
 	return null;
 };
 
-const OverlayHost = ({ scene, focusedIndex, isFloating }: OverlayHostProps) => {
+const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	const insets = useSafeAreaInsets();
 
 	const OverlayComponent = scene.descriptor.options.overlay;
 
-	const animation = useOverlayAnimation();
+	const { animation, optimisticActiveIndex } = useOverlayAnimation();
 
 	if (!OverlayComponent) {
 		return null;
@@ -49,8 +47,8 @@ const OverlayHost = ({ scene, focusedIndex, isFloating }: OverlayHostProps) => {
 		route: scene.route,
 		navigation: scene.descriptor.navigation,
 		animation,
+		focusedIndex: optimisticActiveIndex,
 		insets,
-		focusedIndex,
 	};
 
 	return (
@@ -93,7 +91,7 @@ const FloatOverlay = () => {
 
 	return (
 		<KeysProvider current={current} previous={previous} next={next}>
-			<OverlayHost scene={scene} focusedIndex={focusedIndex} isFloating />
+			<OverlayHost scene={scene} isFloating />
 		</KeysProvider>
 	);
 };
@@ -113,7 +111,7 @@ const ScreenOverlay = () => {
 		route: current.route,
 	};
 
-	return <OverlayHost scene={scene} focusedIndex={focusedIndex} />;
+	return <OverlayHost scene={scene} />;
 };
 
 export const Overlay = {

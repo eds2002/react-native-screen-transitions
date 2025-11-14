@@ -4,10 +4,16 @@ import {
 	type DerivedValue,
 	type SharedValue,
 	useDerivedValue,
+	useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSharedValueState } from "../../shared/hooks/use-shared-value-state";
 import { useKeys } from "../../shared/providers/keys";
-import { AnimationStore } from "../../shared/stores/animation-store";
+import {
+	AnimationStore,
+	type AnimationStoreMap,
+} from "../../shared/stores/animation-store";
+import { GestureStore } from "../../shared/stores/gesture-store";
 import type { OverlayInterpolationProps } from "../../shared/types/animation";
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
 
@@ -16,50 +22,79 @@ import { useStackNavigationContext } from "../utils/with-stack-navigation";
  * above it in the stack. The result can be consumed by floating overlays to
  * drive animations that span multiple screens.
  */
-export const useOverlayAnimation =
-	(): DerivedValue<OverlayInterpolationProps> => {
-		const { current } = useKeys();
-		const { scenes } = useStackNavigationContext();
+export const useOverlayAnimation = (): {
+	animation: DerivedValue<OverlayInterpolationProps>;
+	optimisticActiveIndex: number;
+} => {
+	const { current } = useKeys();
+	const { scenes, focusedIndex } = useStackNavigationContext();
+	const routeKey = current?.route?.key;
 
-		const progressValues = useMemo<SharedValue<number>[]>(() => {
-			const routeKey = current?.route?.key;
-			if (!routeKey) {
-				return [];
-			}
+	const gestureState = routeKey
+		? GestureStore.getRouteGestures(routeKey)
+		: null;
 
-			const overlayIndex = scenes.findIndex(
-				(scene) => scene.route.key === routeKey,
-			);
+	const fallbackIsDismissing = useSharedValue(0);
 
-			if (overlayIndex === -1) {
-				return [];
-			}
+	const progressValues = useMemo(() => {
+		if (!routeKey) {
+			return [];
+		}
 
-			return scenes.slice(overlayIndex).map((scene) => {
-				return AnimationStore.getAnimation(scene.route.key, "progress");
-			});
-		}, [current?.route?.key, scenes]);
+		const overlayIndex = scenes.findIndex(
+			(scene) => scene.route.key === routeKey,
+		);
 
-		const accumulatedProgress = useDerivedValue(() => {
-			"worklet";
+		if (overlayIndex === -1) {
+			return [];
+		}
 
-			let total = 0;
+		return scenes.slice(overlayIndex).map((scene) => {
+			return AnimationStore.getAll(scene.route.key);
+		});
+	}, [routeKey, scenes]);
 
-			for (let i = 0; i < progressValues.length; i += 1) {
-				total += progressValues[i].value;
-			}
+	const accumulatedProgress = useDerivedValue(() => {
+		"worklet";
 
-			return total;
-		}, [progressValues]);
+		let total = 0;
 
-		const screen = useWindowDimensions();
-		const insets = useSafeAreaInsets();
+		for (let i = 0; i < progressValues.length; i += 1) {
+			total += progressValues[i].progress.value;
+		}
 
-		return useDerivedValue<OverlayInterpolationProps>(() => ({
-			progress: accumulatedProgress.value,
-			layouts: {
-				screen,
-			},
-			insets,
-		}));
+		return total;
+	}, [progressValues]);
+
+	const optimisticActiveIndexValue = useDerivedValue(() => {
+		"worklet";
+
+		const activeIndex = progressValues.length - 1;
+		const someDimissing = Number(
+			progressValues.some((value) => value.closing.value > 0),
+		);
+
+		const optimisticIndex = activeIndex - someDimissing;
+
+		return optimisticIndex;
+	});
+
+	const optimisticActiveIndex = useSharedValueState(optimisticActiveIndexValue);
+
+	const screen = useWindowDimensions();
+
+	const insets = useSafeAreaInsets();
+
+	const animation = useDerivedValue<OverlayInterpolationProps>(() => ({
+		progress: accumulatedProgress.value,
+		layouts: {
+			screen,
+		},
+		insets,
+	}));
+
+	return {
+		animation,
+		optimisticActiveIndex,
 	};
+};
