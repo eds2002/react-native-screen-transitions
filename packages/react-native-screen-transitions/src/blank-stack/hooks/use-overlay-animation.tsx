@@ -70,11 +70,12 @@ export const useOverlayAnimation = (): {
 		"worklet";
 
 		const activeIndex = progressValues.length - 1;
-		const someDimissing = Number(
+
+		const isOneDismissing = Number(
 			progressValues.some((value) => value.closing.value > 0),
 		);
 
-		const optimisticIndex = activeIndex - someDimissing;
+		const optimisticIndex = activeIndex - isOneDismissing;
 
 		return optimisticIndex;
 	});
