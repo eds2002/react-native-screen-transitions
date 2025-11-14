@@ -1,10 +1,10 @@
-import { createContext, useContext, useMemo } from "react";
 import type {
 	Descriptor,
 	NavigationProp,
 	ParamListBase,
 	RouteProp,
 } from "@react-navigation/native";
+import { createContext, useContext, useMemo } from "react";
 import type { ScreenTransitionConfig } from "../types/core";
 
 export type TransitionDescriptor = Descriptor<
@@ -43,11 +43,7 @@ export function KeysProvider<TDescriptor extends TransitionDescriptor>({
 		[previous, current, next],
 	);
 
-	return (
-		<KeysContext.Provider value={value}>
-			{children}
-		</KeysContext.Provider>
-	);
+	return <KeysContext.Provider value={value}>{children}</KeysContext.Provider>;
 }
 
 export function useKeys<

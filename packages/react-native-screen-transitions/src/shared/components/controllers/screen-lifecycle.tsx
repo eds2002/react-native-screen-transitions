@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect } from "react";
-import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
+import { useAnimatedReaction } from "react-native-reanimated";
 import type { BlankStackDescriptor } from "../../../blank-stack/types";
 import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
 import type { NativeStackDescriptor } from "../../../native-stack/types";

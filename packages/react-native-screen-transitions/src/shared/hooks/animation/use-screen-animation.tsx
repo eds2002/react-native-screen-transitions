@@ -11,7 +11,7 @@ import {
 import { type TransitionDescriptor, useKeys } from "../../providers/keys";
 import { AnimationStore } from "../../stores/animation-store";
 import { BoundStore } from "../../stores/bound-store";
-import { type GestureStoreMap, GestureStore } from "../../stores/gesture-store";
+import { GestureStore, type GestureStoreMap } from "../../stores/gesture-store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,

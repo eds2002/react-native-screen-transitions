@@ -1,10 +1,4 @@
-import {
-	createContext,
-	Fragment,
-	useCallback,
-	useContext,
-	useMemo,
-} from "react";
+import { createContext, Fragment, useContext, useMemo } from "react";
 import type { View } from "react-native";
 import {
 	type AnimatedRef,

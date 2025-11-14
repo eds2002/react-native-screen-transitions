@@ -1,15 +1,15 @@
 import type { BlankStackDescriptorMap } from "../../../types";
 
 export const areDescriptorsEqual = (
-  a: BlankStackDescriptorMap,
-  b: BlankStackDescriptorMap
+	a: BlankStackDescriptorMap,
+	b: BlankStackDescriptorMap,
 ): boolean => {
-  if (a === b) return true;
+	if (a === b) return true;
 
-  const aKeys = Object.keys(a);
-  const bKeys = Object.keys(b);
+	const aKeys = Object.keys(a);
+	const bKeys = Object.keys(b);
 
-  if (aKeys.length !== bKeys.length) return false;
+	if (aKeys.length !== bKeys.length) return false;
 
-  return aKeys.every((key) => a[key] === b[key]);
+	return aKeys.every((key) => a[key] === b[key]);
 };

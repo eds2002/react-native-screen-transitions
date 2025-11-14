@@ -10,12 +10,12 @@ import type { Layout } from "./core";
 import type { GestureValues } from "./gesture";
 
 export interface OverlayInterpolationProps {
-  progress: number;
-  layouts: {
-    /** The `width` and `height` of the screen container. */
-    screen: Layout;
-  };
-  insets: EdgeInsets;
+	progress: number;
+	layouts: {
+		/** The `width` and `height` of the screen container. */
+		screen: Layout;
+	};
+	insets: EdgeInsets;
 }
 
 export type ScreenTransitionState = {

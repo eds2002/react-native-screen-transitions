@@ -32,6 +32,7 @@ import {
 	ScreenStack,
 	ScreenStackItem,
 } from "react-native-screens";
+import { NativeStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition-provider";
 import type {
 	NativeStackDescriptor,
@@ -44,7 +45,6 @@ import { AnimatedHeaderHeightContext } from "../utils/useAnimatedHeaderHeight";
 import { useDismissedRouteError } from "../utils/useDismissedRouteError";
 import { useInvalidPreventRemoveError } from "../utils/useInvalidPreventRemoveError";
 import { useHeaderConfigProps } from "./useHeaderConfigProps";
-import { NativeStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
 
 const ANDROID_DEFAULT_HEADER_HEIGHT = 56;
 

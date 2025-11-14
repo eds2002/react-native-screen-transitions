@@ -2,28 +2,28 @@ import type { NavigationRoute, ParamListBase } from "@react-navigation/native";
 import type { BlankStackDescriptorMap } from "../../../types";
 
 export function calculateActiveScreensLimit(
-  routes: NavigationRoute<ParamListBase, string>[],
-  descriptors: BlankStackDescriptorMap
+	routes: NavigationRoute<ParamListBase, string>[],
+	descriptors: BlankStackDescriptorMap,
 ): number {
-  if (routes.length === 0) {
-    return 1;
-  }
+	if (routes.length === 0) {
+		return 1;
+	}
 
-  let limit = 1;
+	let limit = 1;
 
-  for (let i = routes.length - 1; i >= 0; i--) {
-    const route = routes[i];
+	for (let i = routes.length - 1; i >= 0; i--) {
+		const route = routes[i];
 
-    const shouldKeepPrevious =
-      descriptors?.[route.key]?.options?.detachPreviousScreen !== true;
+		const shouldKeepPrevious =
+			descriptors?.[route.key]?.options?.detachPreviousScreen !== true;
 
-    if (shouldKeepPrevious) {
-      limit++;
-      continue;
-    }
+		if (shouldKeepPrevious) {
+			limit++;
+			continue;
+		}
 
-    break;
-  }
+		break;
+	}
 
-  return Math.min(limit, routes.length);
+	return Math.min(limit, routes.length);
 }
