@@ -98,16 +98,7 @@ const syncRoutesWithRemoved = ({
 	}
 
 	// Start with next routes, will mutate if needed
-	let derivedRoutes: Route<string>[] = nextRoutes;
-	let mutated = false;
-
-	// Helper to ensure we're working with a mutable copy
-	const ensureMutable = () => {
-		if (!mutated) {
-			derivedRoutes = derivedRoutes.slice();
-			mutated = true;
-		}
-	};
+	const derivedRoutes: Route<string>[] = nextRoutes.slice();
 
 	// Get focused (last) routes for comparison
 	const previousFocusedRoute = prevRoutes[prevRoutes.length - 1];
@@ -130,7 +121,6 @@ const syncRoutesWithRemoved = ({
 			// Previous route was removed, mark as closing
 			closingRouteKeys.add(previousFocusedRoute.key);
 
-			ensureMutable();
 			derivedRoutes.push(previousFocusedRoute);
 		} else {
 			// Next route is now active, not closing
@@ -140,7 +130,6 @@ const syncRoutesWithRemoved = ({
 				// Previous route needs to be inserted for transition
 				closingRouteKeys.remove(previousFocusedRoute.key);
 
-				ensureMutable();
 				const insertIndex = Math.max(derivedRoutes.length - 1, 0);
 				derivedRoutes.splice(insertIndex, 0, previousFocusedRoute);
 			}
@@ -158,12 +147,10 @@ const syncRoutesWithRemoved = ({
 		}
 	}
 
-	const routesResult = mutated ? derivedRoutes : nextRoutes;
-
 	return {
-		routes: routesResult,
+		routes: derivedRoutes,
 		descriptors: composeDescriptors(
-			routesResult,
+			derivedRoutes,
 			nextDescriptors,
 			prevDescriptors,
 		),
