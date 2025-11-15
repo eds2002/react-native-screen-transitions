@@ -12,6 +12,7 @@
   },
   "scripts": {
     "e2e": "maestro test e2e/maestro/flows ",
+    "e2e:native-stack": "maestro test apps/e2e-native-stack/.maestro/complete.yaml",
     "clean": "lerna run clean && rm -rf node_modules && rm -rf bun.lockb",
     "build": "lerna run prepack",
     "publish": "lerna publish from-package",
