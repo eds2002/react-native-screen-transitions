@@ -1,0 +1,77 @@
+name: Bug Report
+description: File a bug report.
+title: "[Bug]: "
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+
+        ⚠️ **Please note that issues that do not follow the template will be closed.**
+        ## Environment Info
+  - type: dropdown
+    id: version
+    attributes:
+      label: Version
+      description: What version of the library are you using?
+      options:
+        - v3 (beta)
+        - v2
+      default: 0
+    validations:
+      required: true
+  - type: dropdown
+    id: ra-version
+    attributes:
+      label: Reanimated Version
+      description: What version of React Native Reanimated are you using?
+      options:
+        - v4
+        - v3
+      default: 0
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platforms
+      description: What platform is this bug is occurring on?
+      multiple: true
+      options:
+        - iOS
+        - Android
+        - Web
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Please provide a clear and concise description of what the bug is? Include screenshots or gifs if needed.
+      placeholder: Tell us what happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: repo-steps
+    attributes:
+      label: Reproduction steps
+      description: You must provide a clear list of steps and code to reproduce the problem.
+      placeholder: ex. - pushing screen b...
+      value: "- "
+    validations:
+      required: true
+
+  - type: input
+    id: snack
+    attributes:
+      label: Reproduction sample
+      description: >
+        You must provide a minimal reproduction.
+        Use **Expo Snack** whenever possible. If the issue requires a dev build (e.g. MaskedView/Shared bounds),
+        link to a public GitHub repository that demonstrates the problem.
+      placeholder: e.g. https://snack.expo.dev/... or https://github.com/username/repro
+    validations:
+      required: true

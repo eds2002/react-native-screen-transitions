@@ -1,0 +1,28 @@
+name: Auto Close Issue Workflow
+
+on:
+  issues:
+    types:
+      - opened
+      - reopened
+      - edited
+
+env:
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  NUMBER: ${{ github.event.issue.number }}
+  USER: ${{ github.event.issue.user.login }}
+  REPO: ${{ github.repository }}
+
+jobs:
+  autoclose:
+    if: ${{ !contains(github.event.issue.body, 'snack.expo.dev') && !contains(github.event.issue.body, 'github.com') }}
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Close Issue
+        run: gh issue close "$NUMBER" --comment "Hello @$USER :wave:, we require a reproduction for every bug report. Please provide an Expo Snack link (preferred) or a GitHub repository if the issue needs a dev build. This issue is being closed automatically because no reproduction link was detected." --repo "$REPO"
+      - name: Label Issue
+        run: gh issue edit "$NUMBER" --add-label "invalid" --repo "$REPO"
+      - name: Lock Issue
+        run: gh issue lock "$NUMBER" -r "spam" --repo "$REPO"
