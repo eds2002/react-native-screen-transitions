@@ -89,7 +89,10 @@ describe("velocity.calculateProgressVelocity", () => {
 			shouldDismiss: true,
 			event,
 			dimensions,
-			directions: createDirections({ horizontal: true, verticalInverted: true }),
+			directions: createDirections({
+				horizontal: true,
+				verticalInverted: true,
+			}),
 		});
 
 		expect(result).toBeLessThan(0);
@@ -119,20 +122,18 @@ describe("velocity.shouldPassDismissalThreshold", () => {
 	const width = 320;
 
 	it("returns true once translation alone crosses half the screen", () => {
-		expect(
-			velocity.shouldPassDismissalThreshold(170, 0, width, 0.3),
-		).toBe(true);
+		expect(velocity.shouldPassDismissalThreshold(170, 0, width, 0.3)).toBe(
+			true,
+		);
 	});
 
 	it("combines translation with weighted velocity", () => {
-		expect(
-			velocity.shouldPassDismissalThreshold(40, 2500, width, 0.5),
-		).toBe(true);
+		expect(velocity.shouldPassDismissalThreshold(40, 2500, width, 0.5)).toBe(
+			true,
+		);
 	});
 
 	it("returns false when movement is negligible", () => {
-		expect(
-			velocity.shouldPassDismissalThreshold(0, 0, width, 0.3),
-		).toBe(false);
+		expect(velocity.shouldPassDismissalThreshold(0, 0, width, 0.3)).toBe(false);
 	});
 });
