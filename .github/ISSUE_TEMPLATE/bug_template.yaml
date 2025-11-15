@@ -41,7 +41,6 @@ body:
       options:
         - iOS
         - Android
-        - Web
     validations:
       required: true
 
