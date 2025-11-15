@@ -3,7 +3,8 @@
   "workspaces": {
     "packages": [
       "packages/*",
-      "examples/*"
+      "examples/*",
+      "apps/*"
     ],
     "catalog": {
       "typescript": "~5.8.3"
