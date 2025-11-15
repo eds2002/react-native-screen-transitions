@@ -1,12 +1,8 @@
-appId: com.eds2002.exporouterexample
+appId: "com.eds2002.e2e"
 ---
 
 - launchApp
 
-- assertVisible:
-    id: "tab-E2E"
-- tapOn:
-    id: "tab-E2E"
 
 # ========NAVIGATION=========
 # 1) Push/back navigation
