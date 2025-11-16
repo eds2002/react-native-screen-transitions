@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.0
+
+### Major Changes
+
+- Introduce the v3 beta with the new blank stack navigator, overlay channel, and the bespoke transition workflow for building custom flows.
+
 ## 2.4.2
 
 ### Patch Changes

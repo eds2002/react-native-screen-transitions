@@ -125,6 +125,7 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 		</View>
 	);
 };
+
 export default function OnboardingLayout() {
 	return (
 		<BlankStack>

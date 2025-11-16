@@ -103,6 +103,107 @@ To avoid collisions with the new options above, the built-in React Navigation ge
 
 All other React Navigation native-stack options keep their original names.
 
+## Blank Stack Navigator (beta)
+
+Use the blank stack when you want the navigator to stay out of your way so you can build bespoke flows (think onboarding, paywalls, or custom shells). It lives at `react-native-screen-transitions/blank-stack` and exposes the same API surface (`Navigator`, `Screen`, etc.) as the native stack.
+
+> ⚠️ The blank stack mirrors `@react-navigation/stack` under the hood, so it’s still implemented in JavaScript. Animations and gestures run natively through Reanimated and RNGH, but extremely complex stacks might not be as fast as `@react-navigation/native-stack`. If you run into navigation performance issues, prefer the native stack.
+
+```tsx
+import type {
+  ParamListBase,
+  StackNavigationState,
+} from "@react-navigation/native";
+import { withLayoutContext } from "expo-router";
+import {
+  createBlankStackNavigator,
+  type BlankStackNavigationEventMap,
+  type BlankStackNavigationOptions,
+} from "react-native-screen-transitions/blank-stack";
+
+const { Navigator } = createBlankStackNavigator();
+
+export const BlankStack = withLayoutContext<
+  BlankStackNavigationOptions,
+  typeof Navigator,
+  StackNavigationState<ParamListBase>,
+  BlankStackNavigationEventMap
+>(Navigator);
+```
+
+### Ship your own transitions
+
+- Every screen automatically has `enableTransitions` set to `true`, so you can omit it from your options.
+- No visual transition is applied by default—screens simply swap in/out until you define an animation via `screenStyleInterpolator`, `transitionSpec`, or `useScreenAnimation`.
+- All of the extended screen options from the native stack continue to work here (gestures, bounds helpers, presets, etc.).
+
+```tsx
+import { interpolate } from "react-native-reanimated";
+
+<BlankStack.Screen
+  name="welcome"
+  options={{
+    screenStyleInterpolator: ({ progress, layouts }) => {
+      "worklet";
+      const translateY = interpolate(
+        progress,
+        [0, 1, 2],
+        [layouts.screen.height, 0, -layouts.screen.height]
+      );
+      return {
+        contentStyle: {
+          transform: [{ translateY }],
+        },
+      };
+    },
+  }}
+/>;
+```
+
+Because every screen starts as a blank canvas, treat building a bespoke transition as the default workflow for this navigator.
+
+### Overlay: floating headers, footers, and chrome
+
+Blank stack adds an overlay channel—think of it as a secondary view layer that can stay pinned above the stack (like iOS Safari’s floating bar) or travel with each screen.
+
+- Provide an `overlay` component in the screen options. It receives `BlankStackOverlayProps`, including safe-area `insets`, the current `route`, a navigation prop, and an `animation` derived value (`progress`, `layouts`, and `insets`) that you can feed into Reanimated.
+- Toggle where it lives with `overlayMode`: `"screen"` (default) keeps the overlay scoped to the current screen, while `"float"` lets it persist and react to the whole stack.
+- Control visibility per screen with `overlayShown` (defaults to `true`).
+
+```tsx
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import type { BlankStackOverlayProps } from "react-native-screen-transitions/blank-stack";
+
+function FloatingOverlay({
+  animation,
+  insets,
+  navigation,
+}: BlankStackOverlayProps) {
+  const style = useAnimatedStyle(() => ({
+    opacity: 1 - Math.min(animation.value.progress, 1),
+    transform: [{ translateY: animation.value.progress * -8 }],
+  }));
+
+  return (
+    <Animated.View
+      style={[styles.floatingHeader, style, { paddingTop: insets.top }]}
+    >
+      <FloatingHeader navigation={navigation} />
+    </Animated.View>
+  );
+}
+
+<BlankStack.Screen
+  name="onboarding-stack"
+  options={{
+    overlay: FloatingOverlay,
+    overlayMode: "float", // persist across screens (great for onboarding headers/footers)
+  }}
+/>;
+```
+
+...WIP
+
 ## Creating your screen animations
 
 ### Using presets
@@ -128,7 +229,7 @@ The incoming screen automatically controls the previous screen.
 </Stack>
 ```
 
-#### Shared element presets (new)
+#### Shared element presets
 
 Ready-made presets for common shared-element patterns. These leverage the bounds API under the hood. Tag your views with `sharedBoundTag` on both screens.
 
