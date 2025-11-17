@@ -13,6 +13,7 @@ import type {
 	BlankStackScene,
 } from "../types";
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
+import { useScreenAnimation } from "../../shared/hooks/animation/use-screen-animation";
 
 type OverlayHostProps = {
 	scene: BlankStackScene;
@@ -48,7 +49,9 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 
 	const OverlayComponent = scene.descriptor.options.overlay;
 
-	const { animation, optimisticActiveIndex } = useOverlayAnimation();
+	const { overlayAnimation, optimisticActiveIndex } = useOverlayAnimation();
+
+	const screenAnimation = useScreenAnimation();
 
 	if (!OverlayComponent) {
 		return null;
@@ -57,7 +60,8 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	const overlayProps: BlankStackOverlayProps = {
 		route: scene.route,
 		navigation: scene.descriptor.navigation,
-		animation,
+		overlayAnimation,
+		screenAnimation,
 		focusedIndex: optimisticActiveIndex,
 		insets,
 	};

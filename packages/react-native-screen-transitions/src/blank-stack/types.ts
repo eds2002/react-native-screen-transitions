@@ -16,6 +16,7 @@ import type { EdgeInsets } from "react-native-safe-area-context";
 import type { ScreenProps } from "react-native-screens";
 import type {
 	OverlayInterpolationProps,
+	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	TransitionSpec,
 } from "../shared/types/animation";
@@ -115,9 +116,13 @@ export type BlankStackOverlayProps = {
 	 */
 	insets: EdgeInsets;
 	/**
-	 * Accumulated progress across the stack for the overlay owner and subsequent screens.
+	 * Animation values for the overlay.
 	 */
-	animation: DerivedValue<OverlayInterpolationProps>;
+	overlayAnimation: DerivedValue<OverlayInterpolationProps>;
+	/**
+	 * Animation values for the screen.
+	 */
+	screenAnimation: DerivedValue<ScreenInterpolationProps>;
 	/**
 	 * Index of the active route
 	 */

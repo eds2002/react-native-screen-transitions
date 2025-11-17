@@ -23,7 +23,7 @@ import { useStackNavigationContext } from "../utils/with-stack-navigation";
  * drive animations that span multiple screens.
  */
 export const useOverlayAnimation = (): {
-	animation: DerivedValue<OverlayInterpolationProps>;
+	overlayAnimation: DerivedValue<OverlayInterpolationProps>;
 	optimisticActiveIndex: number;
 } => {
 	const { current } = useKeys();
@@ -86,7 +86,7 @@ export const useOverlayAnimation = (): {
 
 	const insets = useSafeAreaInsets();
 
-	const animation = useDerivedValue<OverlayInterpolationProps>(() => ({
+	const overlayAnimation = useDerivedValue<OverlayInterpolationProps>(() => ({
 		progress: accumulatedProgress.value,
 		layouts: {
 			screen,
@@ -95,7 +95,7 @@ export const useOverlayAnimation = (): {
 	}));
 
 	return {
-		animation,
+		overlayAnimation,
 		optimisticActiveIndex,
 	};
 };

@@ -17,7 +17,7 @@ import { ComposableText } from "@/components/composeable-text";
 import { BlankStack } from "@/components/layouts/blank-stack";
 
 interface ProgressPillProps {
-	animation: BlankStackOverlayProps["animation"];
+	animation: BlankStackOverlayProps["overlayAnimation"];
 	index: number;
 }
 
@@ -93,7 +93,7 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 						{Array.from({ length: 3 }).map((_, index) => (
 							<ProgressPill
 								key={index.toString()}
-								animation={props.animation}
+								animation={props.overlayAnimation}
 								index={index}
 							/>
 						))}
