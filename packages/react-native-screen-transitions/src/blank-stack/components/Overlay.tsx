@@ -20,7 +20,17 @@ type OverlayHostProps = {
 };
 
 const getActiveFloatOverlay = (scenes: BlankStackScene[], index: number) => {
-	for (let i = index; i >= 0; i--) {
+	if (scenes.length === 0) {
+		return null;
+	}
+
+	// When navigating back, closing scenes are kept at the top of the local stack
+	// while the focused index already points to the destination screen. We need to
+	// start scanning from the actual top of the stack so the overlay can animate
+	// out together with its closing screen instead of disappearing immediately.
+	const startIndex = Math.max(index, scenes.length - 1);
+
+	for (let i = startIndex; i >= 0; i--) {
 		const scene = scenes[i];
 		const options = scene?.descriptor?.options;
 
@@ -31,6 +41,7 @@ const getActiveFloatOverlay = (scenes: BlankStackScene[], index: number) => {
 
 	return null;
 };
+
 
 const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	const insets = useSafeAreaInsets();
