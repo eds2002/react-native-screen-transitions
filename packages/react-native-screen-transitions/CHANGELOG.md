@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.1
+
+### Patch Changes
+
+- Release another beta patch of `react-native-screen-transitions`.
+
 ## 3.0.0-beta.0
 
 ### Major Changes
