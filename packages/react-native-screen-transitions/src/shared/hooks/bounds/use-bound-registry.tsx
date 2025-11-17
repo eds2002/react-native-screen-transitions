@@ -1,4 +1,11 @@
-import { createContext, Fragment, useContext, useMemo } from "react";
+import {
+	createContext,
+	Fragment,
+	useContext,
+	useLayoutEffect,
+	useMemo,
+	useRef,
+} from "react";
 import type { View } from "react-native";
 import {
 	type AnimatedRef,
@@ -132,6 +139,30 @@ export const useBoundsRegistry = ({
 		);
 	}, [IS_ROOT, sharedBoundTag, ROOT_SIGNAL]);
 
+	const prevNextRef = useRef(next);
+	/**
+	 * Measure non-pressable elements when the screen goes from focused to blurred
+	 * (or when a new `next` descriptor appears) so we capture final bounds
+	 * right before the transition starts.
+	 */
+	useLayoutEffect(() => {
+		if (!sharedBoundTag || onPress) return;
+
+		const hadNext = !!prevNextRef.current;
+		const hasNext = !!next;
+
+		if (!hadNext && hasNext) {
+			runOnUI(maybeMeasureAndStore)({});
+		}
+
+		prevNextRef.current = next;
+	}, [next, sharedBoundTag, onPress, maybeMeasureAndStore]);
+
+	/**
+	 * Signal child shared elements (nested under this provider) to refresh their
+	 * measurements when the root updates, while preventing them from marking
+	 * themselves active during that sync.
+	 */
 	useAnimatedReaction(
 		() => ROOT_MEASUREMENT_SIGNAL?.updateSignal.value,
 		(current) => {
