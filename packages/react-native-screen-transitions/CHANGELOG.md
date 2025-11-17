@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.2
+
+### Minor Changes
+
+- [`a312b70`](https://github.com/eds2002/react-native-screen-transitions/commit/a312b70129e8e895d4d85f02772409266020e230) - Adds support for non pressable bounds
+
 ## 3.0.0-beta.1
 
 ### Patch Changes

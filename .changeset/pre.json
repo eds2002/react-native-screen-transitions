@@ -9,6 +9,7 @@
   },
   "changesets": [
     "beta-patch",
+    "swift-seals-shine",
     "v3-beta"
   ]
 }
