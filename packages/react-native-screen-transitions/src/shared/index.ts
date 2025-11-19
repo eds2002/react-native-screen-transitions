@@ -21,6 +21,9 @@ export default {
 export { useScreenAnimation } from "./hooks/animation/use-screen-animation";
 
 export type {
+	AnimationConfig,
 	OverlayInterpolationProps,
 	ScreenInterpolationProps,
+	ScreenStyleInterpolator,
 } from "./types/animation";
+export type { ScreenTransitionConfig } from "./types/core";
