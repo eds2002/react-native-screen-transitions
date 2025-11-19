@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.3
+
+### Minor Changes
+
+- [`67bfbe3`](https://github.com/eds2002/react-native-screen-transitions/commit/67bfbe34d3fa4750a0864e52b4db5b3a4d46bb20) - Performance optimizations & new type exports
+
 ## 3.0.0-beta.2
 
 ### Minor Changes
