@@ -13,7 +13,7 @@ import { AnimationStore } from "../../shared/stores/animation-store";
 interface ScreenProps {
 	routeKey: string;
 	index: number;
-	routes: NavigationRoute<ParamListBase, string>[];
+	routesLength: number;
 	isPreloaded: boolean;
 	children: React.ReactNode;
 	freezeOnBlur?: boolean;
@@ -32,7 +32,7 @@ const AnimatedScreen = Animated.createAnimatedComponent(RNSScreen);
 export const Screen = ({
 	routeKey,
 	index,
-	routes,
+	routesLength,
 	isPreloaded,
 	activeScreensLimit,
 	children,
@@ -48,13 +48,13 @@ export const Screen = ({
 			return;
 		}
 
-		if (index < routes.length - activeScreensLimit - 1 || isPreloaded) {
+		if (index < routesLength - activeScreensLimit - 1 || isPreloaded) {
 			screenActivity.value = STATE_INACTIVE;
 		} else {
 			const outputValue =
-				index === routes.length - 1
+				index === routesLength - 1
 					? STATE_ON_TOP
-					: index >= routes.length - activeScreensLimit
+					: index >= routesLength - activeScreensLimit
 						? STATE_TRANSITIONING_OR_BELOW_TOP
 						: STATE_INACTIVE;
 

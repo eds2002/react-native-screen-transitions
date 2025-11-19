@@ -3,6 +3,7 @@ import {
 	NavigationContext,
 	NavigationRouteContext,
 } from "@react-navigation/native";
+import * as React from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
 import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
@@ -22,7 +23,7 @@ type SceneViewProps = {
 	sceneIndex: number;
 };
 
-const SceneView = ({ descriptor }: SceneViewProps) => {
+const SceneView = React.memo(({ descriptor }: SceneViewProps) => {
 	const { route, navigation, render } = descriptor;
 
 	return (
@@ -33,7 +34,7 @@ const SceneView = ({ descriptor }: SceneViewProps) => {
 			</NavigationRouteContext.Provider>
 		</NavigationContext.Provider>
 	);
-};
+});
 
 export const StackView = withStackNavigationProvider(
 	({
@@ -74,7 +75,7 @@ export const StackView = withStackNavigationProvider(
 									index={sceneIndex}
 									activeScreensLimit={activeScreensLimit}
 									routeKey={route.key}
-									routes={routes}
+									routesLength={routes.length}
 									shouldFreeze={shouldFreeze}
 									freezeOnBlur={descriptor.options.freezeOnBlur}
 								>
