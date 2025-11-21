@@ -166,7 +166,7 @@ Because every screen starts as a blank canvas, treat building a bespoke transiti
 
 Blank stack adds an overlay channel—think of it as a secondary view layer that can stay pinned above the stack (like iOS Safari’s floating bar) or travel with each screen.
 
-- Provide an `overlay` component in the screen options. It receives `BlankStackOverlayProps`, including safe-area `insets`, the current `route`, a navigation prop, and an `animation` derived value (`progress`, `layouts`, and `insets`) that you can feed into Reanimated.
+- Provide an `overlay` component in the screen options. It receives `BlankStackOverlayProps`, including safe-area `insets`, the current `route`, the currently focused route (`focusedRoute`) when floating, a navigation prop, and an `animation` derived value (`progress`, `layouts`, and `insets`) that you can feed into Reanimated.
 - Toggle where it lives with `overlayMode`: `"screen"` (default) keeps the overlay scoped to the current screen, while `"float"` lets it persist and react to the whole stack.
 - Control visibility per screen with `overlayShown` (defaults to `true`).
 

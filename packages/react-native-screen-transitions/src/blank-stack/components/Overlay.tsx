@@ -50,6 +50,29 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	const OverlayComponent = scene.descriptor.options.overlay;
 
 	const { overlayAnimation, optimisticActiveIndex } = useOverlayAnimation();
+	const { scenes } = useStackNavigationContext();
+
+	const overlaySceneIndex = useMemo(() => {
+		return scenes.findIndex(
+			(stackScene) => stackScene.route.key === scene.route.key,
+		);
+	}, [scenes, scene.route.key]);
+
+	const focusedRoute = useMemo(() => {
+		if (overlaySceneIndex === -1) {
+			return scene.route;
+		}
+
+		const maxOffset = Math.max(scenes.length - overlaySceneIndex - 1, 0);
+		const normalizedIndex = Math.min(
+			Math.max(optimisticActiveIndex, 0),
+			maxOffset,
+		);
+
+		return (
+			scenes[overlaySceneIndex + normalizedIndex]?.route ?? scene.route
+		);
+	}, [overlaySceneIndex, optimisticActiveIndex, scenes, scene.route]);
 
 	const screenAnimation = useScreenAnimation();
 
@@ -59,6 +82,7 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 
 	const overlayProps: BlankStackOverlayProps = {
 		route: scene.route,
+		focusedRoute,
 		navigation: scene.descriptor.navigation,
 		overlayAnimation,
 		screenAnimation,

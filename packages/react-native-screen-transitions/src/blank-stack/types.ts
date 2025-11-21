@@ -108,6 +108,10 @@ export type BlankStackOverlayProps = {
 	 */
 	route: Route<string>;
 	/**
+	 * Route object for the currently focused screen in the stack.
+	 */
+	focusedRoute: Route<string>;
+	/**
 	 * Navigation prop for the overlay.
 	 */
 	navigation: BlankStackNavigationProp<ParamListBase>;
