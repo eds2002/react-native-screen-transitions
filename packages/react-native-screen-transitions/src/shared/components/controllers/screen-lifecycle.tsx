@@ -4,10 +4,11 @@ import type { BlankStackDescriptor } from "../../../blank-stack/types";
 import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
 import type { NativeStackDescriptor } from "../../../native-stack/types";
 import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
+import { useDerivedValueState } from "../../hooks/use-derived-value-state";
 import useStableCallback from "../../hooks/use-stable-callback";
+import { useGestureContext } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
 import { AnimationStore } from "../../stores/animation-store";
-import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
 import { resetStoresForScreen } from "../../stores/utils/reset-stores-for-screen";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 
@@ -22,19 +23,22 @@ export const NativeStackScreenLifecycleController = ({
 	children,
 }: ScreenLifecycleProps) => {
 	const { current } = useKeys<NativeStackDescriptor>();
+	const { parentContext } = useGestureContext();
+
+	const isParentDismissingViaGesture = useDerivedValueState(() => {
+		"worklet";
+		return parentContext?.gestureAnimationValues.isDismissing?.value ?? false;
+	});
 
 	const animations = AnimationStore.getAll(current.route.key);
 
 	const handleBeforeRemove = useStableCallback((e: any) => {
-		const key = current.navigation.getParent()?.getState().key;
-		const requestedDismissOnNavigator = NavigatorDismissState.get(key);
-
 		const isEnabled = current.options.enableTransitions;
-		const isRequestedDismissOnNavigator = requestedDismissOnNavigator;
+
 		const isFirstScreen = current.navigation.getState().index === 0;
 
 		// If transitions are disabled, or the dismissal was on the local root, or this is the first screen of the stack, reset the stores
-		if (!isEnabled || isRequestedDismissOnNavigator || isFirstScreen) {
+		if (!isEnabled || isParentDismissingViaGesture || isFirstScreen) {
 			resetStoresForScreen(current);
 			return;
 		}

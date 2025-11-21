@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	Gesture,
@@ -9,11 +9,7 @@ import {
 	type PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
-import {
-	runOnJS,
-	type SharedValue,
-	useSharedValue,
-} from "react-native-reanimated";
+import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
@@ -24,8 +20,8 @@ import {
 import type { ScrollConfig } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
 import { AnimationStore } from "../../stores/animation-store";
-import { GestureStore } from "../../stores/gesture-store";
-import { NavigatorDismissState } from "../../stores/navigator-dismiss-state";
+import { GestureStore, type GestureStoreMap } from "../../stores/gesture-store";
+
 import { type GestureDirection, GestureOffsetState } from "../../types/gesture";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
@@ -33,7 +29,6 @@ import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import { velocity } from "../../utils/gesture/velocity";
-import useStableCallback from "../use-stable-callback";
 import useStableCallbackValue from "../use-stable-callback-value";
 
 interface BuildGesturesHookProps {
@@ -45,6 +40,7 @@ export const useBuildGestures = ({
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
 	nativeGesture: GestureType;
+	gestureAnimationValues: GestureStoreMap;
 } => {
 	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
@@ -58,7 +54,9 @@ export const useBuildGestures = ({
 		GestureOffsetState.PENDING,
 	);
 
-	const gestures = GestureStore.getRouteGestures(current.route.key);
+	const gestureAnimationValues = GestureStore.getRouteGestures(
+		current.route.key,
+	);
 	const animations = AnimationStore.getAll(current.route.key);
 
 	const {
@@ -87,17 +85,9 @@ export const useBuildGestures = ({
 		};
 	}, [gestureDirection]);
 
-	const setNavigatorDismissal = useStableCallback(() => {
-		const key = current.navigation.getState().key;
-
-		NavigatorDismissState.set(key, true);
-	});
-
-	const handleDismiss = useStableCallback(() => {
-		const key = current.navigation.getState().key;
+	const handleDismiss = useCallback(() => {
 		current.navigation.goBack();
-		NavigatorDismissState.remove(key);
-	});
+	}, [current]);
 
 	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
 		"worklet";
@@ -130,7 +120,7 @@ export const useBuildGestures = ({
 			}
 
 			// Keep pending until thresholds are met; no eager activation.
-			if (gestures.isDragging?.value) {
+			if (gestureAnimationValues.isDragging?.value) {
 				manager.activate();
 				return;
 			}
@@ -178,9 +168,9 @@ export const useBuildGestures = ({
 			if (
 				shouldActivate &&
 				gestureOffsetState.value === GestureOffsetState.PASSED &&
-				!gestures.isDismissing?.value
+				!gestureAnimationValues.isDismissing?.value
 			) {
-				gestures.direction.value = activatedDirection;
+				gestureAnimationValues.direction.value = activatedDirection;
 				manager.activate();
 				return;
 			}
@@ -189,8 +179,8 @@ export const useBuildGestures = ({
 
 	const onStart = useStableCallbackValue(() => {
 		"worklet";
-		gestures.isDragging.value = 1;
-		gestures.isDismissing.value = 0;
+		gestureAnimationValues.isDragging.value = 1;
+		gestureAnimationValues.isDismissing.value = 0;
 	});
 
 	const onUpdate = useStableCallbackValue(
@@ -202,13 +192,13 @@ export const useBuildGestures = ({
 			const { translationX, translationY } = event;
 			const { width, height } = dimensions;
 
-			gestures.x.value = translationX;
-			gestures.y.value = translationY;
-			gestures.normalizedX.value = Math.max(
+			gestureAnimationValues.x.value = translationX;
+			gestureAnimationValues.y.value = translationY;
+			gestureAnimationValues.normalizedX.value = Math.max(
 				-1,
 				Math.min(1, translationX / width),
 			);
-			gestures.normalizedY.value = Math.max(
+			gestureAnimationValues.normalizedY.value = Math.max(
 				-1,
 				Math.min(1, translationY / height),
 			);
@@ -275,15 +265,11 @@ export const useBuildGestures = ({
 
 			resetGestureValues({
 				spec,
-				gestures,
+				gestures: gestureAnimationValues,
 				shouldDismiss,
 				event,
 				dimensions,
 			});
-
-			if (shouldDismiss) {
-				runOnJS(setNavigatorDismissal)();
-			}
 
 			const initialVelocity = velocity.calculateProgressVelocity({
 				animations,
@@ -319,6 +305,15 @@ export const useBuildGestures = ({
 		return {
 			panGesture,
 			nativeGesture,
+			gestureAnimationValues,
 		};
-	}, [gestureEnabled, onTouchesDown, onTouchesMove, onStart, onUpdate, onEnd]);
+	}, [
+		gestureEnabled,
+		onTouchesDown,
+		onTouchesMove,
+		onStart,
+		onUpdate,
+		onEnd,
+		gestureAnimationValues,
+	]);
 };

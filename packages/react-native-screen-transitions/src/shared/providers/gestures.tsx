@@ -5,6 +5,7 @@ import { GestureDetector } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
+import type { GestureStoreMap } from "../stores/gesture-store";
 
 export type ScrollConfig = {
 	x: number;
@@ -19,34 +20,41 @@ export interface GestureContextType {
 	panGesture: GestureType;
 	nativeGesture: GestureType;
 	scrollConfig: SharedValue<ScrollConfig | null>;
+	gestureAnimationValues: GestureStoreMap;
 	parentContext: GestureContextType | null;
 }
 
-type ScreenGestureProviderProps = {
+type GestureProviderProps = {
 	children: React.ReactNode;
 };
 
 const GestureContext = createContext<GestureContextType | undefined>(undefined);
 
-export const ScreenGestureProvider = ({
-	children,
-}: ScreenGestureProviderProps) => {
+export const ScreenGestureProvider = ({ children }: GestureProviderProps) => {
 	const parentContext = useContext(GestureContext);
 
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
-	const { panGesture, nativeGesture } = useBuildGestures({
-		scrollConfig,
-	});
+	const { panGesture, nativeGesture, gestureAnimationValues } =
+		useBuildGestures({
+			scrollConfig,
+		});
 
 	const value: GestureContextType = useMemo(
 		() => ({
 			panGesture,
 			scrollConfig,
 			nativeGesture,
+			gestureAnimationValues,
 			parentContext: parentContext || null,
 		}),
-		[panGesture, scrollConfig, nativeGesture, parentContext],
+		[
+			panGesture,
+			scrollConfig,
+			nativeGesture,
+			gestureAnimationValues,
+			parentContext,
+		],
 	);
 
 	return (
