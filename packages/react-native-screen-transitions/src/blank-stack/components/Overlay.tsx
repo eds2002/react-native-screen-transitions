@@ -5,6 +5,7 @@ import {
 import { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useScreenAnimation } from "../../shared/hooks/animation/use-screen-animation";
 import { KeysProvider, useKeys } from "../../shared/providers/keys";
 import { useOverlayAnimation } from "../hooks/use-overlay-animation";
 import type {
@@ -13,7 +14,6 @@ import type {
 	BlankStackScene,
 } from "../types";
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
-import { useScreenAnimation } from "../../shared/hooks/animation/use-screen-animation";
 
 type OverlayHostProps = {
 	scene: BlankStackScene;
@@ -43,7 +43,6 @@ const getActiveFloatOverlay = (scenes: BlankStackScene[], index: number) => {
 	return null;
 };
 
-
 const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	const insets = useSafeAreaInsets();
 
@@ -69,9 +68,7 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 			maxOffset,
 		);
 
-		return (
-			scenes[overlaySceneIndex + normalizedIndex]?.route ?? scene.route
-		);
+		return scenes[overlaySceneIndex + normalizedIndex]?.route ?? scene.route;
 	}, [overlaySceneIndex, optimisticActiveIndex, scenes, scene.route]);
 
 	const screenAnimation = useScreenAnimation();
@@ -95,7 +92,7 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 			pointerEvents="box-none"
 			style={[
 				styles.container,
-				isFloating ? styles.floating : null,
+				isFloating ? styles.floating : { zIndex: 1 },
 				styles.absolute,
 			]}
 		>
@@ -136,7 +133,6 @@ const FloatOverlay = () => {
 };
 
 const ScreenOverlay = () => {
-	const { focusedIndex } = useStackNavigationContext();
 	const { current } = useKeys<BlankStackDescriptor>();
 
 	const options = current.options;
