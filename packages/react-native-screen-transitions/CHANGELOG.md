@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.4
+
+### Minor Changes
+
+- Integrate focusedRoute for overlays
+
 ## 3.0.0-beta.3
 
 ### Minor Changes
