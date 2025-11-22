@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.5
+
+### Patch Changes
+
+- Fixes gesture race condition
+
 ## 3.0.0-beta.4
 
 ### Minor Changes
