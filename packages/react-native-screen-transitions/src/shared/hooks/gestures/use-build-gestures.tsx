@@ -1,3 +1,4 @@
+import { StackActions } from "@react-navigation/native";
 import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
@@ -17,7 +18,10 @@ import {
 	DEFAULT_GESTURE_ENABLED,
 	GESTURE_VELOCITY_IMPACT,
 } from "../../constants";
-import type { ScrollConfig } from "../../providers/gestures";
+import type {
+	GestureContextType,
+	ScrollConfig,
+} from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
 import { AnimationStore } from "../../stores/animation-store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture-store";
@@ -33,10 +37,12 @@ import useStableCallbackValue from "../use-stable-callback-value";
 
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
+	parentContext?: GestureContextType | null;
 }
 
 export const useBuildGestures = ({
 	scrollConfig,
+	parentContext,
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
 	nativeGesture: GestureType;
@@ -86,8 +92,28 @@ export const useBuildGestures = ({
 	}, [gestureDirection]);
 
 	const handleDismiss = useCallback(() => {
-		current.navigation.goBack();
-	}, [current]);
+		// If an ancestor navigator is already dismissing, skip this dismiss to
+		// avoid racing with the parent
+		if (parentContext?.gestureAnimationValues.isDismissing?.value) {
+			return;
+		}
+
+		const state = current.navigation.getState();
+
+		const routeStillPresent = state.routes.some(
+			(route) => route.key === current.route.key,
+		);
+
+		if (!routeStillPresent) {
+			return;
+		}
+
+		current.navigation.dispatch({
+			...StackActions.pop(),
+			source: current.route.key,
+			target: state.key,
+		});
+	}, [current, parentContext]);
 
 	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
 		"worklet";
@@ -99,6 +125,13 @@ export const useBuildGestures = ({
 	const onTouchesMove = useStableCallbackValue(
 		(e: GestureTouchEvent, manager: GestureStateManagerType) => {
 			"worklet";
+
+			// If an ancestor navigator is already dismissing via gesture, block new gestures here.
+			if (parentContext?.gestureAnimationValues.isDismissing?.value) {
+				gestureOffsetState.value = GestureOffsetState.FAILED;
+				manager.fail();
+				return;
+			}
 
 			const touch = e.changedTouches[0];
 

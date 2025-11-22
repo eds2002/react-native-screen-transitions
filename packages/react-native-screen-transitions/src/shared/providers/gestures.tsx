@@ -38,6 +38,7 @@ export const ScreenGestureProvider = ({ children }: GestureProviderProps) => {
 	const { panGesture, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
 			scrollConfig,
+			parentContext,
 		});
 
 	const value: GestureContextType = useMemo(
