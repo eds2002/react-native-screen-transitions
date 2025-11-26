@@ -109,12 +109,15 @@ export const BlankStackScreenLifecycleController = ({
 		});
 	});
 
+	const handleCleanup = useStableCallback(() => {
+		resetStoresForScreen(current);
+	});
+
 	const handleCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished) {
 			return;
 		}
 		handleCloseRoute({ route: current.route });
-		resetStoresForScreen(current);
 	});
 
 	useAnimatedReaction(
@@ -135,7 +138,12 @@ export const BlankStackScreenLifecycleController = ({
 		},
 	);
 
-	useLayoutEffect(handleInitialize);
+	useLayoutEffect(() => {
+		handleInitialize();
+		return () => {
+			handleCleanup();
+		};
+	}, [handleInitialize, handleCleanup]);
 
 	// important for t.a scrollviews inside nested navigators.
 	useParentGestureRegistry();

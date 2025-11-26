@@ -14,5 +14,7 @@ export const useParentGestureRegistry = () => {
 		}
 	});
 
-	useEffect(registerNativeGesture);
+	useEffect(() => {
+		registerNativeGesture();
+	}, [registerNativeGesture]);
 };
