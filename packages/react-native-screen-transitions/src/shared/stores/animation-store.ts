@@ -1,4 +1,8 @@
-import { makeMutable, type SharedValue } from "react-native-reanimated";
+import {
+	cancelAnimation,
+	makeMutable,
+	type SharedValue,
+} from "react-native-reanimated";
 import type { ScreenKey } from "../types/core";
 
 export type AnimationStoreMap = {
@@ -22,24 +26,36 @@ const ensure = (key: ScreenKey) => {
 	return bag;
 };
 
-export function getAnimation(
+function getAnimation(
 	key: ScreenKey,
 	type: "progress" | "closing" | "animating",
 ): SharedValue<number> {
 	return ensure(key)[type];
 }
 
-export function getAll(key: ScreenKey) {
+function getAll(key: ScreenKey) {
 	return ensure(key);
 }
 
 function clear(routeKey: ScreenKey) {
 	"worklet";
+	const bag = store[routeKey];
+	if (bag) {
+		cancelAnimation(bag.progress);
+		cancelAnimation(bag.closing);
+		cancelAnimation(bag.animating);
+	}
 	delete store[routeKey];
+}
+
+function debugStoreSize() {
+	console.log("[AnimationStore] Size:", Object.keys(store).length);
+	console.log("[AnimationStore] Keys:", Object.keys(store));
 }
 
 export const AnimationStore = {
 	getAnimation,
 	clear,
 	getAll,
+	debugStoreSize,
 };

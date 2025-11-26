@@ -1,4 +1,8 @@
-import { makeMutable, type SharedValue } from "react-native-reanimated";
+import {
+	cancelAnimation,
+	makeMutable,
+	type SharedValue,
+} from "react-native-reanimated";
 import type { ScreenKey } from "../types/core";
 import type { GestureDirection } from "../types/gesture";
 
@@ -50,6 +54,16 @@ function getRouteGestures(routeKey: ScreenKey) {
 }
 
 function clear(routeKey: ScreenKey) {
+	const bag = store[routeKey];
+	if (bag) {
+		cancelAnimation(bag.x);
+		cancelAnimation(bag.y);
+		cancelAnimation(bag.normalizedX);
+		cancelAnimation(bag.normalizedY);
+		cancelAnimation(bag.isDismissing);
+		cancelAnimation(bag.isDragging);
+		cancelAnimation(bag.direction);
+	}
 	delete store[routeKey];
 }
 
