@@ -114,6 +114,7 @@ export const BlankStackScreenLifecycleController = ({
 			return;
 		}
 		handleCloseRoute({ route: current.route });
+		resetStoresForScreen(current);
 	});
 
 	useAnimatedReaction(
