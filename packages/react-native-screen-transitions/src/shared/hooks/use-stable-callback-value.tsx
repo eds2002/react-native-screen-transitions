@@ -4,6 +4,7 @@
  */
 import { useCallback, useEffect, useState } from "react";
 import {
+	cancelAnimation,
 	isWorkletFunction,
 	makeMutable,
 	runOnJS,
@@ -13,7 +14,15 @@ import {
 type AnyFunction = (...args: Array<any>) => any;
 
 function useMutableValue<T>(initialValue: T) {
-	return useState(() => makeMutable(initialValue))[0];
+	const [mutable] = useState(() => makeMutable(initialValue));
+
+	useEffect(() => {
+		return () => {
+			cancelAnimation(mutable);
+		};
+	}, [mutable]);
+
+	return mutable;
 }
 
 // We cannot store a function as a SharedValue because reanimated will treat

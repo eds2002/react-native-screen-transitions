@@ -163,15 +163,19 @@ export default function OnboardingLayout() {
 						layouts: {
 							screen: { width },
 						},
+						bounds,
+						activeBoundId,
 					}) => {
 						"worklet";
 
 						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+						const boundsConfig = bounds({});
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],
 								backgroundColor: "#FFF",
 							},
+							[activeBoundId]: boundsConfig,
 						};
 					},
 					transitionSpec: {

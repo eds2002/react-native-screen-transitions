@@ -1,6 +1,7 @@
 import { useFocusEffect } from "@react-navigation/native";
 import { useCallback, useRef } from "react";
 import { type TextInput, View } from "react-native";
+import Transition from "react-native-screen-transitions";
 import { Container } from "@/components/container";
 import { Input } from "@/components/input";
 import { Typography } from "@/components/typography";
@@ -17,6 +18,10 @@ export default function App() {
 						P.S. We don't have a way to moderate yet.
 					</Typography.Subtitle>
 				</View>
+				<Transition.View
+					style={{ width: 100, height: 100, backgroundColor: "green",alignSelf:"flex-end" }}
+					sharedBoundTag="SHARED"
+				/>
 				<Input ref={ref} placeholder="@trpfsu" />
 			</View>
 		</Container>

@@ -99,6 +99,28 @@ function clear(routeKey: ScreenKey) {
 	});
 }
 
+function debugBoundStore() {
+	"worklet";
+	console.log("[BoundStore] registry keys:", Object.keys(registry.value));
+	console.log(
+		"[BoundStore] registry size:",
+		Object.keys(registry.value).length,
+	);
+	console.log("[BoundStore] pairCache keys:", Object.keys(pairCache.value));
+	console.log(
+		"[BoundStore] pairCache size:",
+		Object.keys(pairCache.value).length,
+	);
+	console.log(
+		"[BoundStore] lastActiveByRoute keys:",
+		Object.keys(lastActiveByRoute.value),
+	);
+	console.log(
+		"[BoundStore] lastActiveByRoute size:",
+		Object.keys(lastActiveByRoute.value).length,
+	);
+}
+
 function getActiveBound(
 	current: ScreenTransitionState,
 	next: ScreenTransitionState | undefined,
@@ -122,4 +144,5 @@ export const BoundStore = {
 	getRouteActive,
 	clear,
 	getActiveBound,
+	debugBoundStore,
 };
