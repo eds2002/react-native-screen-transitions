@@ -9,6 +9,7 @@
   },
   "changesets": [
     "beta-patch",
+    "clean-facts-shout",
     "fresh-oranges-poke",
     "grumpy-cameras-melt",
     "khaki-ducks-glow",
