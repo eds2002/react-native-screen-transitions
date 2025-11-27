@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.9
+
+### Minor Changes
+
+- Export useOverlayAnimation
+
 ## 3.0.0-beta.8
 
 ### Patch Changes
