@@ -1,19 +1,10 @@
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import {
-	type DerivedValue,
-	type SharedValue,
-	useDerivedValue,
-	useSharedValue,
-} from "react-native-reanimated";
+import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSharedValueState } from "../../shared/hooks/use-shared-value-state";
 import { useKeys } from "../../shared/providers/keys";
-import {
-	AnimationStore,
-	type AnimationStoreMap,
-} from "../../shared/stores/animation-store";
-import { GestureStore } from "../../shared/stores/gesture-store";
+import { AnimationStore } from "../../shared/stores/animation-store";
 import type { OverlayInterpolationProps } from "../../shared/types/animation";
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
 
@@ -27,14 +18,8 @@ export const useOverlayAnimation = (): {
 	optimisticActiveIndex: number;
 } => {
 	const { current } = useKeys();
-	const { scenes, focusedIndex } = useStackNavigationContext();
+	const { scenes } = useStackNavigationContext();
 	const routeKey = current?.route?.key;
-
-	const gestureState = routeKey
-		? GestureStore.getRouteGestures(routeKey)
-		: null;
-
-	const fallbackIsDismissing = useSharedValue(0);
 
 	const progressValues = useMemo(() => {
 		if (!routeKey) {
