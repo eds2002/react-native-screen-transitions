@@ -9,6 +9,7 @@ import {
 	NO_BOUNDS_MAP,
 } from "../../constants";
 import { type TransitionDescriptor, useKeys } from "../../providers/keys";
+import { useStackProgressContext } from "../../providers/stack-progress.provider";
 import { AnimationStore } from "../../stores/animation-store";
 import { BoundStore } from "../../stores/bound-store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture-store";
@@ -71,6 +72,7 @@ const useBuildScreenTransitionState = (
 };
 
 export function _useScreenAnimation() {
+	const { routes } = useStackProgressContext();
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 
@@ -79,6 +81,23 @@ export function _useScreenAnimation() {
 		next: nextDescriptor,
 		previous: previousDescriptor,
 	} = useKeys();
+
+	const progressValues = useMemo(() => {
+		const currentIndex = routes.findIndex(
+			(r) => r.key === currentDescriptor?.route?.key,
+		);
+		if (currentIndex === -1) return [];
+		return routes.slice(currentIndex).map((r) => AnimationStore.getAll(r.key));
+	}, [routes, currentDescriptor.route.key]);
+
+	const stackProgress = useDerivedValue(() => {
+		"worklet";
+		let total = 0;
+		for (const pv of progressValues) {
+			total += pv.progress.value;
+		}
+		return total;
+	}, [progressValues]);
 
 	const currentAnimation = useBuildScreenTransitionState(currentDescriptor);
 	const nextAnimation = useBuildScreenTransitionState(nextDescriptor);
@@ -121,10 +140,10 @@ export function _useScreenAnimation() {
 			focused,
 			activeBoundId,
 			progress,
-
 			active,
 			isActiveTransitioning,
 			isDismissing,
+			stackProgress,
 		};
 	});
 
