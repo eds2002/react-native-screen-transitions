@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.10
+
+### Minor Changes
+
+- Integrate helper hook for viewing blank stack state
+
 ## 3.0.0-beta.9
 
 ### Minor Changes
