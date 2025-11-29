@@ -8,7 +8,6 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
 import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
-import { BlankStackStateProvider } from "../providers/blank-stack-state";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition-provider";
 import type { BlankStackDescriptor } from "../types";
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
@@ -50,56 +49,54 @@ export const StackView = withStackNavigationProvider(
 		return (
 			<GestureHandlerRootView>
 				<SafeAreaProviderCompat>
-					<BlankStackStateProvider>
-						{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-						<ScreenContainer style={styles.container}>
-							{scenes.map((scene, sceneIndex) => {
-								const descriptor = scene.descriptor;
-								const route = scene.route;
-								const isFocused = focusedIndex === sceneIndex;
-								const isBelowFocused = focusedIndex - 1 === sceneIndex;
+					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
+					<ScreenContainer style={styles.container}>
+						{scenes.map((scene, sceneIndex) => {
+							const descriptor = scene.descriptor;
+							const route = scene.route;
+							const isFocused = focusedIndex === sceneIndex;
+							const isBelowFocused = focusedIndex - 1 === sceneIndex;
 
-								const previousDescriptor =
-									scenes[sceneIndex - 1]?.descriptor ?? undefined;
-								const nextDescriptor =
-									scenes[sceneIndex + 1]?.descriptor ?? undefined;
+							const previousDescriptor =
+								scenes[sceneIndex - 1]?.descriptor ?? undefined;
+							const nextDescriptor =
+								scenes[sceneIndex + 1]?.descriptor ?? undefined;
 
-								const isPreloaded = descriptors[route.key] === undefined;
+							const isPreloaded = descriptors[route.key] === undefined;
 
-								// On Fabric, when screen is frozen, animated and reanimated values are not updated
-								// due to component being unmounted. To avoid this, we don't freeze the previous screen there
-								const shouldFreeze = isFabric()
-									? !isPreloaded && !isFocused && !isBelowFocused
-									: !isPreloaded && !isFocused;
-								return (
-									<Screen
-										key={route.key}
-										isPreloaded={isPreloaded}
-										index={sceneIndex}
-										activeScreensLimit={activeScreensLimit}
-										routeKey={route.key}
-										routesLength={routes.length}
-										shouldFreeze={shouldFreeze}
-										freezeOnBlur={descriptor.options.freezeOnBlur}
+							// On Fabric, when screen is frozen, animated and reanimated values are not updated
+							// due to component being unmounted. To avoid this, we don't freeze the previous screen there
+							const shouldFreeze = isFabric()
+								? !isPreloaded && !isFocused && !isBelowFocused
+								: !isPreloaded && !isFocused;
+							return (
+								<Screen
+									key={route.key}
+									isPreloaded={isPreloaded}
+									index={sceneIndex}
+									activeScreensLimit={activeScreensLimit}
+									routeKey={route.key}
+									routesLength={routes.length}
+									shouldFreeze={shouldFreeze}
+									freezeOnBlur={descriptor.options.freezeOnBlur}
+								>
+									<ScreenTransitionProvider
+										previous={previousDescriptor}
+										current={descriptor}
+										next={nextDescriptor}
+										LifecycleController={BlankStackScreenLifecycleController}
 									>
-										<ScreenTransitionProvider
-											previous={previousDescriptor}
-											current={descriptor}
-											next={nextDescriptor}
-											LifecycleController={BlankStackScreenLifecycleController}
-										>
-											<SceneView
-												key={route.key}
-												isFocused={isFocused}
-												sceneIndex={sceneIndex}
-												descriptor={descriptor}
-											/>
-										</ScreenTransitionProvider>
-									</Screen>
-								);
-							})}
-						</ScreenContainer>
-					</BlankStackStateProvider>
+										<SceneView
+											key={route.key}
+											isFocused={isFocused}
+											sceneIndex={sceneIndex}
+											descriptor={descriptor}
+										/>
+									</ScreenTransitionProvider>
+								</Screen>
+							);
+						})}
+					</ScreenContainer>
 				</SafeAreaProviderCompat>
 			</GestureHandlerRootView>
 		);
