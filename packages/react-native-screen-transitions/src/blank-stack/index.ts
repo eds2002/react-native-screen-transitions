@@ -9,4 +9,3 @@ export type {
 	BlankStackOverlayProps,
 	BlankStackScreenProps,
 } from "../blank-stack/types";
-export { useBlankStackState } from "./providers/blank-stack-state";

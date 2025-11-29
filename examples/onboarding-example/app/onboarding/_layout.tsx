@@ -1,11 +1,6 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-import {
-	useNavigation,
-	useNavigationState,
-	useRoute,
-} from "@react-navigation/native";
+
 import { router } from "expo-router";
-import { Fragment } from "react";
 import {
 	KeyboardAvoidingView,
 	Pressable,
