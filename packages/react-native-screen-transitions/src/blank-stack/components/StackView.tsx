@@ -4,6 +4,7 @@ import {
 	NavigationRouteContext,
 } from "@react-navigation/native";
 import * as React from "react";
+import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
 import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
@@ -49,7 +50,7 @@ export const StackView = withStackNavigationProvider(
 			<GestureHandlerRootView>
 				<SafeAreaProviderCompat>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-					<ScreenContainer style={{ flex: 1 }}>
+					<ScreenContainer style={styles.container}>
 						{scenes.map((scene, sceneIndex) => {
 							const descriptor = scene.descriptor;
 							const route = scene.route;
@@ -101,3 +102,7 @@ export const StackView = withStackNavigationProvider(
 		);
 	},
 );
+
+const styles = StyleSheet.create({
+	container: { flex: 1 },
+});
