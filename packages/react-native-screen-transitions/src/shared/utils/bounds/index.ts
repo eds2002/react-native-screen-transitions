@@ -6,6 +6,7 @@ import {
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 } from "../../constants";
+import { BoundStore } from "../../stores/bound-store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
@@ -53,25 +54,21 @@ const resolveBounds = (props: {
 
 	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
 
-	const startPhase: ScreenPhase = entering ? "previous" : "current";
-	const endPhase: ScreenPhase = entering ? "current" : "next";
+	const link = BoundStore.getActiveLink(props.id);
 
-	const getPhaseBounds = (phase?: ScreenPhase) => {
-		"worklet";
-		switch (phase) {
-			case "previous":
-				return props.previous?.bounds?.[props.id]?.bounds;
-			case "current":
-				return props.current?.bounds?.[props.id]?.bounds;
-			case "next":
-				return props.next?.bounds?.[props.id]?.bounds;
-			default:
-				return null;
-		}
-	};
+	if (!link || !link.destination || !link.source) {
+		return {
+			start: null,
+			end: null,
+			entering,
+		};
+	}
 
-	const start = getPhaseBounds(startPhase);
-	let end = getPhaseBounds(endPhase);
+	const { destination, source } = link;
+
+	const start = source.bounds;
+
+	let end = destination.bounds;
 
 	const isFullscreen =
 		props.computeOptions.target === "fullscreen" ||

@@ -4,14 +4,10 @@ import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-	DEFAULT_SCREEN_TRANSITION_STATE,
-	NO_BOUNDS_MAP,
-} from "../../constants";
+import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
 import { type TransitionDescriptor, useKeys } from "../../providers/keys";
 
 import { AnimationStore } from "../../stores/animation-store";
-import { BoundStore } from "../../stores/bound-store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture-store";
 import type {
 	ScreenInterpolationProps,
@@ -48,7 +44,6 @@ const unwrap = (
 			isDragging: s.gesture.isDragging.value,
 			direction: s.gesture.direction.value,
 		},
-		bounds: BoundStore.getBounds(key) || NO_BOUNDS_MAP,
 		route: s.route,
 	};
 };
@@ -110,7 +105,6 @@ export function _useScreenAnimation() {
 		} = derivations({
 			current,
 			next,
-			previous,
 		});
 
 		return {

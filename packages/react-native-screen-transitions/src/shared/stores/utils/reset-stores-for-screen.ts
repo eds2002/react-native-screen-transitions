@@ -9,5 +9,5 @@ import { GestureStore } from "../gesture-store";
 export const resetStoresForScreen = (current: NativeStackDescriptor) => {
 	AnimationStore.clear(current.route.key);
 	GestureStore.clear(current.route.key);
-	BoundStore.clear(current.route.key);
+	// BoundStore.clear(current.route.key);
 };

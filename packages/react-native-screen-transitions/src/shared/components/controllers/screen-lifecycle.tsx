@@ -9,6 +9,7 @@ import useStableCallback from "../../hooks/use-stable-callback";
 import { useGestureContext } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
 import { AnimationStore } from "../../stores/animation-store";
+import { BoundStore } from "../../stores/bound-store";
 import { resetStoresForScreen } from "../../stores/utils/reset-stores-for-screen";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 

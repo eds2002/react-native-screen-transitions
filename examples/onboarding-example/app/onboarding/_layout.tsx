@@ -170,7 +170,9 @@ export default function OnboardingLayout() {
 						"worklet";
 
 						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-						const boundsConfig = bounds({});
+						const boundsConfig = bounds({
+							id: "SHARED",
+						});
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],
@@ -201,7 +203,9 @@ export default function OnboardingLayout() {
 						"worklet";
 
 						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-						const boundsConfig = bounds({});
+						const boundsConfig = bounds({
+							id: "SHARED",
+						});
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],

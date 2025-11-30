@@ -18,8 +18,8 @@ import {
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
 import { useKeys } from "../../providers/keys";
+import { AnimationStore } from "../../stores/animation-store";
 import { BoundStore } from "../../stores/bound-store";
-import { isBoundsEqual } from "../../utils/bounds/_utils/is-bounds-equal";
 import { prepareStyleForBounds } from "../../utils/bounds/_utils/styles";
 import useStableCallback from "../use-stable-callback";
 import useStableCallbackValue from "../use-stable-callback-value";
@@ -33,7 +33,8 @@ interface BoundMeasurerHookProps {
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
-	skipMarkingActive?: boolean;
+	shouldSetSource?: boolean;
+	shouldSetDestination?: boolean;
 }
 
 interface MeasurementUpdateContextType {
@@ -49,7 +50,11 @@ export const useBoundsRegistry = ({
 	style,
 	onPress,
 }: BoundMeasurerHookProps) => {
-	const { previous, current, next } = useKeys();
+	const { current, next } = useKeys();
+	const isAnimating = AnimationStore.getAnimation(
+		current.route.key,
+		"animating",
+	);
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 	const ROOT_MEASUREMENT_SIGNAL = useContext(MeasurementUpdateContext);
@@ -62,36 +67,42 @@ export const useBoundsRegistry = ({
 	});
 
 	const maybeMeasureAndStore = useStableCallbackValue(
-		({ onPress, skipMarkingActive }: MaybeMeasureAndStoreParams) => {
+		({
+			onPress,
+			shouldSetSource,
+			shouldSetDestination,
+		}: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
-			// Currently, there's no necessity to measure when the current route is blurred ( could potentially change in the future )
-			if (!sharedBoundTag || next) return;
+			if (!sharedBoundTag) return;
 
 			const measured = measure(animatedRef);
-
-			if (!measured) {
-				console.warn(
-					`[react-native-screen-transitions] measure() returned null for sharedBoundTag="${sharedBoundTag}"`,
-				);
-				return;
-			}
+			if (!measured) return;
 
 			const key = current.route.key;
 
-			if (isBoundsEqual({ measured, key, sharedBoundTag })) {
-				emitUpdate();
-				if (!skipMarkingActive) {
-					BoundStore.setRouteActive(key, sharedBoundTag);
-				}
-				if (onPress) runOnJS(onPress)();
-				return;
+			emitUpdate();
+			// 1. Always update the registry map
+			BoundStore.registerOccurrence(
+				sharedBoundTag,
+				key,
+				measured,
+				preparedStyles,
+			);
+
+			// 2. If this is a press (or passive start), I am the SOURCE
+			if (shouldSetSource) {
+				BoundStore.setLinkSource(sharedBoundTag, key, measured, preparedStyles);
 			}
 
-			emitUpdate();
-
-			BoundStore.setBounds(key, sharedBoundTag, measured, preparedStyles);
-			if (!skipMarkingActive) {
-				BoundStore.setRouteActive(key, sharedBoundTag);
+			// 3. If I am waking up and a source exists, I am the DESTINATION
+			if (shouldSetDestination) {
+				// This checks inside if a source exists before setting itself
+				BoundStore.setLinkDestination(
+					sharedBoundTag,
+					key,
+					measured,
+					preparedStyles,
+				);
 			}
 
 			if (onPress) runOnJS(onPress)();
@@ -99,22 +110,18 @@ export const useBoundsRegistry = ({
 	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
+
 	const handleInitialLayout = useStableCallbackValue(() => {
 		"worklet";
-
-		const prevKey = previous?.route.key;
-		if (!sharedBoundTag || hasMeasuredOnLayout.value || !prevKey) {
+		if (!sharedBoundTag || hasMeasuredOnLayout.value || !isAnimating.value)
 			return;
-		}
 
-		const prevBounds = BoundStore.getBounds(prevKey)?.[sharedBoundTag];
+		maybeMeasureAndStore({
+			shouldSetSource: false,
+			shouldSetDestination: true,
+		});
 
-		if (prevBounds) {
-			// Should skip mark active if we are in a transition
-			maybeMeasureAndStore({ skipMarkingActive: true });
-			// Should not measure again while in transition
-			hasMeasuredOnLayout.value = true;
-		}
+		hasMeasuredOnLayout.value = true;
 	});
 
 	const captureActiveOnPress = useStableCallback(() => {
@@ -122,9 +129,8 @@ export const useBoundsRegistry = ({
 			if (onPress) onPress();
 			return;
 		}
-
-		// In this case, we DO want to mark active
-		runOnUI(maybeMeasureAndStore)({ onPress });
+		// I am the Source
+		runOnUI(maybeMeasureAndStore)({ onPress, shouldSetSource: true });
 	});
 
 	const MeasurementSyncProvider = useMemo(() => {
@@ -152,7 +158,9 @@ export const useBoundsRegistry = ({
 		const hasNext = !!next;
 
 		if (!hadNext && hasNext) {
-			runOnUI(maybeMeasureAndStore)({});
+			runOnUI(maybeMeasureAndStore)({
+				shouldSetSource: true,
+			});
 		}
 
 		prevNextRef.current = next;
@@ -160,19 +168,16 @@ export const useBoundsRegistry = ({
 
 	/**
 	 * Signal child shared elements (nested under this provider) to refresh their
-	 * measurements when the root updates, while preventing them from marking
-	 * themselves active during that sync.
+	 * measurements when the root updates.
 	 */
 	useAnimatedReaction(
 		() => ROOT_MEASUREMENT_SIGNAL?.updateSignal.value,
 		(current) => {
 			"worklet";
 
-			// We don't want to run on the initial amount)
 			if (current === 0 || current === undefined) return;
 
-			// Children should not have the ability to mark active
-			maybeMeasureAndStore({ skipMarkingActive: true });
+			maybeMeasureAndStore();
 		},
 	);
 

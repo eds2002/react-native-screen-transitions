@@ -16,7 +16,12 @@ export default function App() {
 						We aim to invade your privacy
 					</Typography.Subtitle>
 					<Transition.View
-						style={{ width: 100, height: 100, backgroundColor: "green" }}
+						style={{
+							width: 100,
+							height: 100,
+							backgroundColor: "green",
+							alignSelf: "center",
+						}}
 						sharedBoundTag="SHARED"
 					/>
 				</View>

@@ -35,7 +35,6 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 			isDragging: 0,
 			direction: null,
 		},
-		bounds: {} as Record<string, BoundEntry>,
 		route: {} as RouteProp<ParamListBase>,
 	});
 

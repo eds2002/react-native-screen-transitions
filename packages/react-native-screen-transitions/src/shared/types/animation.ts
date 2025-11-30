@@ -23,7 +23,6 @@ export type ScreenTransitionState = {
 	closing: number;
 	animating: number;
 	gesture: GestureValues;
-	bounds: Record<string, BoundEntry>;
 	route: RouteProp<ParamListBase>;
 };
 
