@@ -53,7 +53,6 @@ function removeOccurrence(tag: TagID, screenKey: ScreenKey) {
 	});
 }
 
-// Push a new link onto the stack
 function setLinkSource(
 	tag: TagID,
 	screenKey: ScreenKey,
@@ -74,7 +73,6 @@ function setLinkSource(
 	});
 }
 
-// Set destination on the top link that's waiting for one
 function setLinkDestination(
 	tag: TagID,
 	screenKey: ScreenKey,
@@ -98,7 +96,6 @@ function setLinkDestination(
 	});
 }
 
-// Remove link(s) involving a screen (call when screen is removed)
 function clearLinksForScreen(tag: TagID, screenKey: ScreenKey) {
 	"worklet";
 	registry.modify((state: Any) => {
@@ -114,7 +111,6 @@ function clearLinksForScreen(tag: TagID, screenKey: ScreenKey) {
 	});
 }
 
-// Clear all links for a tag
 function clearLink(tag: TagID) {
 	"worklet";
 	registry.modify((state: Any) => {
@@ -126,21 +122,34 @@ function clearLink(tag: TagID) {
 	});
 }
 
-// --- Getters ---
-
 function getTagState(tag: TagID) {
 	"worklet";
 	return registry.value[tag] ?? null;
 }
 
 // Get the active link for a specific screen (finds link where screen is source or destination)
-function getActiveLink(tag: TagID, screenKey?: ScreenKey) {
+function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 	"worklet";
 	const stack = registry.value[tag]?.linkStack;
 	if (!stack || stack.length === 0) return null;
 
 	// If screenKey provided, find link involving that screen
 	if (screenKey) {
+		// When closing (backward nav), we want the link where this screen is the DESTINATION
+		// When opening (forward nav), we want the link where this screen is the DESTINATION too
+		// The source is always the "from" screen, destination is the "to" screen
+
+		if (isClosing) {
+			// Backward: find link where I am the destination (I'm going back to source)
+			for (let i = stack.length - 1; i >= 0; i--) {
+				const link = stack[i];
+				if (link.destination?.screenKey === screenKey) {
+					return link;
+				}
+			}
+		}
+
+		// Forward or fallback: find any link involving this screen
 		for (let i = stack.length - 1; i >= 0; i--) {
 			const link = stack[i];
 			if (

@@ -54,7 +54,12 @@ const resolveBounds = (props: {
 
 	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
 
-	const link = BoundStore.getActiveLink(props.id, props.current?.route.key);
+	const isClosing = props.current?.closing === 1;
+	const link = BoundStore.getActiveLink(
+		props.id,
+		props.current?.route.key,
+		isClosing,
+	);
 
 	if (!link || !link.destination || !link.source) {
 		return {
