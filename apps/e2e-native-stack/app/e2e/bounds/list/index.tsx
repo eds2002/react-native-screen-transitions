@@ -27,7 +27,10 @@ export default function List() {
 			onPress={() =>
 				router.push({
 					pathname: "/e2e/bounds/list/[id]",
-					params: { id: `list-bounds-${item}` },
+					params: {
+						id: `list-bounds-${item}`,
+						nestedIcon: `list-bounds-${item}-icon`,
+					},
 				})
 			}
 			sharedBoundTag={`list-bounds-${item}`}

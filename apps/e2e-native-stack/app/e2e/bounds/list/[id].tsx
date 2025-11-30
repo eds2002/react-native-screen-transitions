@@ -3,11 +3,14 @@ import { View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
 export default function ListScreen() {
-	const { id } = useLocalSearchParams<{ id: string }>();
+	const { id, nestedIcon } = useLocalSearchParams<{
+		id: string;
+		nestedIcon: string;
+	}>();
 	return (
 		<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
 			<Transition.Pressable
-				sharedBoundTag={`${id}-icon`}
+				sharedBoundTag={nestedIcon}
 				style={{ width: 100, height: 100, backgroundColor: "red" }}
 				onPress={router.back}
 			/>

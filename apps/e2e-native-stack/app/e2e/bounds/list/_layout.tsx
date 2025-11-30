@@ -23,13 +23,18 @@ export default function ListLayout() {
 							const animation = bounds({
 								id,
 							});
+
 							return {
-								[id]: animation,
+								[activeBoundId]: animation,
 							};
 						},
 						transitionSpec: {
-							open: Transition.Specs.DefaultSpec,
-							close: Transition.Specs.DefaultSpec,
+							open: {
+								duration: 1000,
+							},
+							close: {
+								duration: 1000,
+							},
 						},
 					}}
 				/>
