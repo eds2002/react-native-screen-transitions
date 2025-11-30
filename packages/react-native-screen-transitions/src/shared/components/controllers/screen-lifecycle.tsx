@@ -4,12 +4,11 @@ import type { BlankStackDescriptor } from "../../../blank-stack/types";
 import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
 import type { NativeStackDescriptor } from "../../../native-stack/types";
 import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
-import { useDerivedValueState } from "../../hooks/use-derived-value-state";
+import { useDerivedValueState } from "../../hooks/reanimated/use-derived-value-state";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { useGestureContext } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
 import { AnimationStore } from "../../stores/animation-store";
-import { BoundStore } from "../../stores/bound-store";
 import { resetStoresForScreen } from "../../stores/utils/reset-stores-for-screen";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 

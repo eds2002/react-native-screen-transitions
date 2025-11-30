@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useSharedValueState } from "../../shared/hooks/use-shared-value-state";
+import { useSharedValueState } from "../../shared/hooks/reanimated/use-shared-value-state";
 import { useKeys } from "../../shared/providers/keys";
 import { AnimationStore } from "../../shared/stores/animation-store";
 import type { OverlayInterpolationProps } from "../../shared/types/animation";
