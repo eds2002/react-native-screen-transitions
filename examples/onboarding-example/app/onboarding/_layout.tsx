@@ -54,7 +54,7 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 			buttonContent: "Set my nickname",
 		},
 		2: {
-			next: "",
+			next: "/onboarding/nested-stack/",
 			buttonContent: "All set",
 		},
 	} as const;
@@ -195,14 +195,51 @@ export default function OnboardingLayout() {
 						layouts: {
 							screen: { width },
 						},
+						activeBoundId,
+						bounds,
 					}) => {
 						"worklet";
 
 						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+						const boundsConfig = bounds({});
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],
 							},
+							[activeBoundId]: boundsConfig,
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="nested-stack"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "horizontal",
+					screenStyleInterpolator: ({
+						progress,
+						layouts: { screen },
+						activeBoundId,
+						bounds,
+					}) => {
+						"worklet";
+
+						const x = interpolate(
+							progress,
+							[0, 1, 2],
+							[screen.width, 0, -screen.width],
+						);
+						// const boundsConfig = bounds({});
+						return {
+							contentStyle: {
+								transform: [{ translateX: x }],
+								backgroundColor: "#FFF",
+							},
+							// [activeBoundId]: boundsConfig,
 						};
 					},
 					transitionSpec: {
