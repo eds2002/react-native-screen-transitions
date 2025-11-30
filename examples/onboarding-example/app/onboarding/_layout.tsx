@@ -209,6 +209,7 @@ export default function OnboardingLayout() {
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],
+								backgroundColor: "#FFF",
 							},
 							[activeBoundId]: boundsConfig,
 						};

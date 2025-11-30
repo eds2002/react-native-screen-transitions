@@ -54,8 +54,14 @@ const resolveBounds = (props: {
 
 	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
 
-	const link = BoundStore.getActiveLink(props.id);
+	const link = BoundStore.getActiveLink(props.id, props.current?.route.key);
 
+	if (props?.current?.route.key.includes("index")) {
+		console.log("SOURCE=>", link?.source.bounds);
+		console.log("DESTINATION=>", link?.destination?.bounds);
+	}
+
+	// Early bail if link isn't complete yet
 	if (!link || !link.destination || !link.source) {
 		return {
 			start: null,

@@ -91,6 +91,20 @@ export const useBoundsRegistry = ({
 
 			// 2. If this is a press (or passive start), I am the SOURCE
 			if (shouldSetSource) {
+				if (isAnimating.value) {
+					// If its animating, we don't want to trigger a remeasure, we instead just want to use the existing measurements if any
+					const recordedMeasurements = BoundStore.getOccurrence(
+						sharedBoundTag,
+						key,
+					);
+					BoundStore.setLinkSource(
+						sharedBoundTag,
+						key,
+						recordedMeasurements.bounds,
+						preparedStyles,
+					);
+					return;
+				}
 				BoundStore.setLinkSource(sharedBoundTag, key, measured, preparedStyles);
 			}
 

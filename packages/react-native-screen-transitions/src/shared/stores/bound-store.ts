@@ -14,13 +14,13 @@ type TagData = {
 };
 
 type TagLink = {
-	source: ({ screenKey: ScreenKey } & TagData) | null;
+	source: { screenKey: ScreenKey } & TagData;
 	destination: ({ screenKey: ScreenKey } & TagData) | null;
 };
 
 type TagState = {
 	occurrences: Record<ScreenKey, TagData>;
-	activeLink: TagLink | null;
+	linkStack: TagLink[];
 };
 
 const registry = makeMutable<Record<TagID, TagState>>({});
@@ -35,7 +35,7 @@ function registerOccurrence(
 	registry.modify((state: Any) => {
 		"worklet";
 		if (!state[tag]) {
-			state[tag] = { occurrences: {}, activeLink: null };
+			state[tag] = { occurrences: {}, linkStack: [] };
 		}
 		state[tag].occurrences[screenKey] = { bounds, styles };
 		return state;
@@ -53,7 +53,7 @@ function removeOccurrence(tag: TagID, screenKey: ScreenKey) {
 	});
 }
 
-// 1. Called on Press (Source -> Link)
+// Push a new link onto the stack
 function setLinkSource(
 	tag: TagID,
 	screenKey: ScreenKey,
@@ -63,17 +63,18 @@ function setLinkSource(
 	"worklet";
 	registry.modify((state: Any) => {
 		"worklet";
-		if (!state[tag]) state[tag] = { occurrences: {}, activeLink: null };
+		if (!state[tag]) state[tag] = { occurrences: {}, linkStack: [] };
 
-		state[tag].activeLink = {
+		// Push new link onto stack
+		state[tag].linkStack.push({
 			source: { screenKey, bounds, styles },
 			destination: null,
-		};
+		});
 		return state;
 	});
 }
 
-// 2. Called on Layout (Destination -> Link)
+// Set destination on the top link that's waiting for one
 function setLinkDestination(
 	tag: TagID,
 	screenKey: ScreenKey,
@@ -83,22 +84,43 @@ function setLinkDestination(
 	"worklet";
 	registry.modify((state: Any) => {
 		"worklet";
-		const link = state[tag]?.activeLink;
+		const stack = state[tag]?.linkStack;
+		if (!stack || stack.length === 0) return state;
 
-		// Only set destination if a source is already waiting!
-		if (link.source) {
-			link.destination = { screenKey, bounds, styles };
+		// Find the topmost link without a destination
+		for (let i = stack.length - 1; i >= 0; i--) {
+			if (stack[i].destination === null) {
+				stack[i].destination = { screenKey, bounds, styles };
+				break;
+			}
 		}
 		return state;
 	});
 }
 
+// Remove link(s) involving a screen (call when screen is removed)
+function clearLinksForScreen(tag: TagID, screenKey: ScreenKey) {
+	"worklet";
+	registry.modify((state: Any) => {
+		"worklet";
+		if (!state[tag]?.linkStack) return state;
+
+		state[tag].linkStack = state[tag].linkStack.filter(
+			(link: TagLink) =>
+				link.source.screenKey !== screenKey &&
+				link.destination?.screenKey !== screenKey,
+		);
+		return state;
+	});
+}
+
+// Clear all links for a tag
 function clearLink(tag: TagID) {
 	"worklet";
 	registry.modify((state: Any) => {
 		"worklet";
 		if (state[tag]) {
-			state[tag].activeLink = null;
+			state[tag].linkStack = [];
 		}
 		return state;
 	});
@@ -111,9 +133,33 @@ function getTagState(tag: TagID) {
 	return registry.value[tag] ?? null;
 }
 
-function getActiveLink(tag: TagID) {
+// Get the active link for a specific screen (finds link where screen is source or destination)
+function getActiveLink(tag: TagID, screenKey?: ScreenKey) {
 	"worklet";
-	return registry.value[tag]?.activeLink ?? null;
+	const stack = registry.value[tag]?.linkStack;
+	if (!stack || stack.length === 0) return null;
+
+	// If screenKey provided, find link involving that screen
+	if (screenKey) {
+		for (let i = stack.length - 1; i >= 0; i--) {
+			const link = stack[i];
+			if (
+				link.source.screenKey === screenKey ||
+				link.destination?.screenKey === screenKey
+			) {
+				return link;
+			}
+		}
+		return null;
+	}
+
+	// Otherwise return top complete link
+	for (let i = stack.length - 1; i >= 0; i--) {
+		if (stack[i].destination !== null) {
+			return stack[i];
+		}
+	}
+	return null;
 }
 
 function findActiveTagForScreen(screenKey: ScreenKey): TagID | null {
@@ -123,15 +169,16 @@ function findActiveTagForScreen(screenKey: ScreenKey): TagID | null {
 
 	for (const tag of tags) {
 		const tagData = state[tag];
-		const link = tagData.activeLink;
+		const stack = tagData.linkStack;
 
-		if (link) {
-			// If I am part of the active link (either source or destination)
-			if (
-				link.source?.screenKey === screenKey ||
-				link.destination?.screenKey === screenKey
-			) {
-				return tag;
+		if (stack) {
+			for (const link of stack) {
+				if (
+					link.source.screenKey === screenKey ||
+					link.destination?.screenKey === screenKey
+				) {
+					return tag;
+				}
 			}
 		}
 	}
@@ -141,11 +188,12 @@ function findActiveTagForScreen(screenKey: ScreenKey): TagID | null {
 export const BoundStore = {
 	registerOccurrence,
 	removeOccurrence,
-	setLinkSource, // Replaces setActiveSource
-	setLinkDestination, // New!
+	setLinkSource,
+	setLinkDestination,
 	clearLink,
+	clearLinksForScreen,
 	getTagState,
-	getActiveLink, // Replaces getActiveSource
+	getActiveLink,
 	findActiveTagForScreen,
 	getOccurrence: (tag: TagID, key: ScreenKey) => {
 		"worklet";
