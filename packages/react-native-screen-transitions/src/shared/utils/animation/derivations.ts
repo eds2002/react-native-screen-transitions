@@ -24,13 +24,9 @@ export const derivations = ({ current, next }: DerivationsParams) => {
 
 	const isDismissing = !!(active.gesture.isDismissing || active.closing);
 
-	// The active bound id
-	const activeBoundId = "bound-id";
-
 	return {
 		progress,
 		focused,
-		activeBoundId,
 		active,
 		isActiveTransitioning,
 		isDismissing,

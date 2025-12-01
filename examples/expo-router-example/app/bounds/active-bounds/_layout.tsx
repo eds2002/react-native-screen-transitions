@@ -18,7 +18,6 @@ export default function ActiveBoundsLayout() {
 					gestureDirection: ["bidirectional"],
 					gestureDrivesProgress: false,
 					enableTransitions: true,
-
 					screenStyleInterpolator: ({ bounds, progress, focused }) => {
 						"worklet";
 

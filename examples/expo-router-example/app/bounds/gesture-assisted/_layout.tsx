@@ -22,7 +22,6 @@ export default function ActiveBoundsLayout() {
 						bounds,
 						current,
 						active,
-						activeBoundId,
 					}) => {
 						"worklet";
 

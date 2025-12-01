@@ -165,7 +165,6 @@ export default function OnboardingLayout() {
 							screen: { width },
 						},
 						bounds,
-						activeBoundId,
 					}) => {
 						"worklet";
 

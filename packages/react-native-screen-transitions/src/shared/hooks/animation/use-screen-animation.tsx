@@ -95,14 +95,7 @@ export function _useScreenAnimation() {
 			unwrap(currentAnimation, currentDescriptor?.route.key) ??
 			DEFAULT_SCREEN_TRANSITION_STATE;
 
-		const {
-			progress,
-			focused,
-			activeBoundId,
-			active,
-			isActiveTransitioning,
-			isDismissing,
-		} = derivations({
+		const helpers = derivations({
 			current,
 			next,
 		});
@@ -113,12 +106,7 @@ export function _useScreenAnimation() {
 			previous,
 			current,
 			next,
-			focused,
-			activeBoundId,
-			progress,
-			active,
-			isActiveTransitioning,
-			isDismissing,
+			...helpers,
 		};
 	});
 

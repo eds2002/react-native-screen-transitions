@@ -60,9 +60,10 @@ export interface ScreenInterpolationProps {
 	insets: EdgeInsets;
 
 	/**
-	 * @deprecated The ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a').
+	 * The ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a').
+	 * @deprecated
 	 */
-	activeBoundId: string;
+	activeBoundId?: never;
 
 	/**
 	 * Whether the current screen is the focused (topmost) screen in the stack.
