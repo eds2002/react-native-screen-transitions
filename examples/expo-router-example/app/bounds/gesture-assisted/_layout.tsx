@@ -5,6 +5,7 @@ import { Stack } from "@/layouts/stack";
 
 export default function ActiveBoundsLayout() {
 	const { id } = useGlobalSearchParams();
+	const idString = (id ?? "").toString();
 	return (
 		<Stack>
 			<Stack.Screen
@@ -18,14 +19,10 @@ export default function ActiveBoundsLayout() {
 					gestureDirection: ["vertical"],
 					gestureDrivesProgress: false,
 					enableTransitions: true,
-					screenStyleInterpolator: ({
-						bounds,
-						current,
-						active,
-					}) => {
+					screenStyleInterpolator: ({ bounds, current, active }) => {
 						"worklet";
 
-						const ID = `gesture-bounds-${id.toString()}`;
+						const ID = `gesture-bounds-${idString}`;
 						/**
 						 * Bounds are designed to work between unfocused & focused screen. While this approach is okay, it realy just gives off a lazy feel. I would recommend separating the bound animations by the focused prop.
 						 */
