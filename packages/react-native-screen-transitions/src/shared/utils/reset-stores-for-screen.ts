@@ -8,5 +8,4 @@ import { GestureStore } from "../stores/gesture.store";
 export const resetStoresForScreen = (current: TransitionDescriptor) => {
 	AnimationStore.clear(current.route.key);
 	GestureStore.clear(current.route.key);
-	// BoundStore.clear(current.route.key);
 };

@@ -28,6 +28,16 @@ type TagState = {
 	linkStack: TagLink[];
 };
 
+/**
+ * Note on cleanup: We intentionally skip automatic cleanup of old links.
+ * The linkStack grows by one entry per navigation, but `getActiveLink`
+ * finds the correct link via screenKey matching regardless of stack size.
+ * This is unlikely to cause performance issues in typical apps, but if
+ * memory becomes a concern in apps with heavy navigation (hundreds of
+ * transitions), we should consider implementing cleanup on screen unmount using
+ * screenKey filtering.
+ */
+
 const registry = makeMutable<Record<TagID, TagState>>({});
 
 function registerOccurrence(
@@ -43,17 +53,6 @@ function registerOccurrence(
 			state[tag] = { occurrences: {}, linkStack: [] };
 		}
 		state[tag].occurrences[screenKey] = { bounds, styles };
-		return state;
-	});
-}
-
-function removeOccurrence(tag: TagID, screenKey: ScreenKey) {
-	"worklet";
-	registry.modify((state: Any) => {
-		"worklet";
-		if (state[tag]?.occurrences[screenKey]) {
-			delete state[tag].occurrences[screenKey];
-		}
 		return state;
 	});
 }
@@ -103,37 +102,9 @@ function setLinkDestination(
 	});
 }
 
-function clearLinksForScreen(tag: TagID, screenKey: ScreenKey) {
+function getOccurrence(tag: TagID, key: ScreenKey) {
 	"worklet";
-	registry.modify((state: Any) => {
-		"worklet";
-		if (!state[tag]?.linkStack) return state;
-
-		state[tag].linkStack = state[tag].linkStack.filter(
-			(link: TagLink) =>
-				link.source.screenKey !== screenKey &&
-				link.source.parentScreenKey !== screenKey &&
-				link.destination?.screenKey !== screenKey &&
-				link.destination?.parentScreenKey !== screenKey,
-		);
-		return state;
-	});
-}
-
-function clearLink(tag: TagID) {
-	"worklet";
-	registry.modify((state: Any) => {
-		"worklet";
-		if (state[tag]) {
-			state[tag].linkStack = [];
-		}
-		return state;
-	});
-}
-
-function getTagState(tag: TagID) {
-	"worklet";
-	return registry.value[tag] ?? null;
+	return registry.value[tag]?.occurrences[key] ?? null;
 }
 
 // Helper to check if a screen identifier matches a given key
@@ -146,48 +117,13 @@ function matchesScreenKey(
 	return identifier.screenKey === key || identifier.parentScreenKey === key;
 }
 
-// function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
-// 	"worklet";
-// 	const stack = registry.value[tag]?.linkStack;
-// 	if (!stack || stack.length === 0) return null;
-
-// 	if (screenKey) {
-// 		if (isClosing) {
-// 			for (let i = stack.length - 1; i >= 0; i--) {
-// 				if (matchesScreenKey(stack[i].destination, screenKey)) {
-// 					return stack[i];
-// 				}
-// 			}
-// 		}
-
-// 		for (let i = stack.length - 1; i >= 0; i--) {
-// 			const link = stack[i];
-// 			if (
-// 				matchesScreenKey(link.source, screenKey) ||
-// 				matchesScreenKey(link.destination, screenKey)
-// 			) {
-// 				return link;
-// 			}
-// 		}
-// 		// Don't return null here - fall through to generic lookup
-// 	}
-
-// 	// Fallback: return most recent link for this tag
-// 	// (handles timing issues where destination isn't set yet)
-// 	for (let i = stack.length - 1; i >= 0; i--) {
-// 		if (stack[i].destination !== null) {
-// 			return stack[i];
-// 		}
-// 	}
-
-// 	// Last resort: return most recent even if incomplete
-// 	return stack[stack.length - 1] ?? null;
-// }
 function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 	"worklet";
 	const stack = registry.value[tag]?.linkStack;
 
-	if (!stack || stack.length === 0) return null;
+	if (!stack || stack.length === 0) {
+		return null;
+	}
 
 	// If screenKey provided, find link involving that screen
 	if (screenKey) {
@@ -221,19 +157,10 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 	return stack[stack.length - 1] ?? null;
 }
 
-function getOccurrence(tag: TagID, key: ScreenKey) {
-	"worklet";
-	return registry.value[tag]?.occurrences[key] ?? null;
-}
-
 export const BoundStore = {
 	registerOccurrence,
-	removeOccurrence,
 	setLinkSource,
 	setLinkDestination,
-	clearLink,
-	clearLinksForScreen,
-	getTagState,
 	getActiveLink,
 	getOccurrence,
 };
