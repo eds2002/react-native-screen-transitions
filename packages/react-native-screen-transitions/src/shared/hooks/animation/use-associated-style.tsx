@@ -16,13 +16,11 @@ type Props = {
  * This hook is used to get the associated styles for a given styleId / boundTag.
  */
 export const useAssociatedStyles = ({ id }: Props = {}) => {
-	const { stylesMap } = useTransitionStyles();
+	const { stylesMap, parentStylesMap } = useTransitionStyles();
 	const showAfterFirstFrame = useSharedValue(false);
 
 	useDerivedValue(() => {
 		"worklet";
-
-		// If the associated styles have already been shown, return.
 
 		if (!id) {
 			showAfterFirstFrame.value = true;
@@ -39,10 +37,14 @@ export const useAssociatedStyles = ({ id }: Props = {}) => {
 	const associatedStyles = useAnimatedStyle(() => {
 		"worklet";
 
-		if (!id || !stylesMap) {
+		if (!id) {
 			return NO_STYLES;
 		}
-		const base = stylesMap.value[id] || NO_STYLES;
+
+		// Check local styles first, then fall back to parent
+		const localStyles = stylesMap?.value[id];
+		const parentStyles = parentStylesMap?.value[id];
+		const base = localStyles || parentStyles || NO_STYLES;
 
 		let opacity = 1;
 
@@ -50,13 +52,10 @@ export const useAssociatedStyles = ({ id }: Props = {}) => {
 			opacity = base.opacity as number;
 		}
 
-		// Only force opacity to 0 during the initial frame; once ready,
-		// return base unchanged so we never override user-provided opacity.
 		if (!showAfterFirstFrame.value) {
 			return { ...base, opacity: 0 };
 		}
 
-		// Since opacity exists on the base style, we don't need to override it.
 		if ("opacity" in base) {
 			return base;
 		}
