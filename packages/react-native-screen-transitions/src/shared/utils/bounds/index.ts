@@ -1,4 +1,3 @@
-import type { MeasuredDimensions } from "react-native-reanimated";
 import {
 	EMPTY_BOUND_HELPER_RESULT,
 	EMPTY_BOUND_HELPER_RESULT_RAW,
@@ -13,8 +12,8 @@ import type {
 import type { BoundsAccessor } from "../../types/bounds";
 import type { Layout, ScreenPhase } from "../../types/core";
 import type {
-	BoundsBuilderInitParams,
 	BoundsBuilderOptions,
+	BoundsComputeParams,
 } from "./_types/builder";
 import {
 	computeContentTransformGeometry,
@@ -77,7 +76,7 @@ const resolveBounds = (props: {
 };
 
 const computeBoundStyles = (
-	{ id, current, next, progress, dimensions }: BoundsBuilderInitParams,
+	{ id, current, next, progress, dimensions }: BoundsComputeParams,
 	computeOptions: BoundsBuilderOptions = {},
 ) => {
 	"worklet";

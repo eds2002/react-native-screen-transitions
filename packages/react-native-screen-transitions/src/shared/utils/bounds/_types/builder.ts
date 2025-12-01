@@ -3,17 +3,6 @@ import type { ScreenTransitionState } from "../../../types/animation";
 import type { BoundsMethod } from "../../../types/bounds";
 import type { Layout } from "../../../types/core";
 
-/**
- * Params passed to the builder initializer. No method required here.
- */
-export type BoundsBuilderInitParams = {
-	id: string | null;
-	current: ScreenTransitionState;
-	next?: ScreenTransitionState;
-	progress: number;
-	dimensions: Layout;
-};
-
 export type BoundsAnchor =
 	| "topLeading"
 	| "top"
@@ -31,7 +20,13 @@ export type BoundsTarget = "bound" | "fullscreen" | MeasuredDimensions;
 
 export type BoundsSpace = "relative" | "absolute";
 
-export type BoundsComputeParams = BoundsBuilderInitParams;
+export type BoundsComputeParams = {
+	id: string | null;
+	current: ScreenTransitionState;
+	next?: ScreenTransitionState;
+	progress: number;
+	dimensions: Layout;
+};
 
 export type RawSizeAbsoluteReturn = {
 	width: number;
@@ -129,7 +124,6 @@ export type BoundsBuilderOptions = {
 	/**
 	 * Whether the bound should target the screen or the bound.
 	 * @deprecated
-	 * @default "bound"
 	 */
 	target?: BoundsTarget;
 };

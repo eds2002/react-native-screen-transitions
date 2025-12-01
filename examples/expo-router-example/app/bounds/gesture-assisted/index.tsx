@@ -1,10 +1,9 @@
-import { router, useGlobalSearchParams } from "expo-router";
+import { router } from "expo-router";
 import { Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import Page from "@/components/page";
 
 export default function PageTransition() {
-	
 	return (
 		<Page
 			title="Bounds + Gesture"
