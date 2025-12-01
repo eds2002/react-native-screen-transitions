@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect } from "react";
-import { useAnimatedReaction } from "react-native-reanimated";
+import { useAnimatedReaction, useDerivedValue } from "react-native-reanimated";
 import type { BlankStackDescriptor } from "../../../blank-stack/types";
 import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
 import type { NativeStackDescriptor } from "../../../native-stack/types";
 import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
-import { useDerivedValueState } from "../../hooks/reanimated/use-derived-value-state";
+import { useSharedValueState } from "../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { useGestureContext } from "../../providers/gestures";
 import { useKeys } from "../../providers/keys";
@@ -25,10 +25,13 @@ export const NativeStackScreenLifecycleController = ({
 	const { current } = useKeys<NativeStackDescriptor>();
 	const { parentContext } = useGestureContext();
 
-	const isParentDismissingViaGesture = useDerivedValueState(() => {
+	const isParentDismissingViaGesture = useDerivedValue(() => {
 		"worklet";
 		return parentContext?.gestureAnimationValues.isDismissing?.value ?? false;
 	});
+	const isParentDismissingViaGestureValue = useSharedValueState(
+		isParentDismissingViaGesture,
+	);
 
 	const animations = AnimationStore.getAll(current.route.key);
 
@@ -38,7 +41,7 @@ export const NativeStackScreenLifecycleController = ({
 		const isFirstScreen = current.navigation.getState().index === 0;
 
 		// If transitions are disabled, or the dismissal was on the local root, or this is the first screen of the stack, reset the stores
-		if (!isEnabled || isParentDismissingViaGesture || isFirstScreen) {
+		if (!isEnabled || isParentDismissingViaGestureValue || isFirstScreen) {
 			resetStoresForScreen(current);
 			return;
 		}
