@@ -12,7 +12,7 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation";
 import type { BoundsAccessor } from "../../types/bounds";
-import type { Layout, ScreenPhase } from "../../types/core";
+import type { Layout } from "../../types/core";
 import type {
 	BoundsBuilderOptions,
 	BoundsComputeParams,
@@ -21,7 +21,6 @@ import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
 } from "./_utils/geometry";
-import { getBounds } from "./_utils/get-bounds";
 import {
 	composeContentStyle,
 	composeSizeAbsolute,
@@ -32,7 +31,6 @@ import {
 } from "./_utils/style-composers";
 
 export interface BuildBoundsAccessorParams {
-	activeBoundId: string | null;
 	current: ScreenTransitionState;
 	previous?: ScreenTransitionState;
 	next?: ScreenTransitionState;
@@ -209,16 +207,5 @@ export const createBounds = (
 		);
 	};
 
-	const get = (id: string, phase?: ScreenPhase) => {
-		"worklet";
-		return getBounds({
-			id,
-			phase,
-			previous: props.previous,
-			current: props.current,
-			next: props.next,
-		});
-	};
-
-	return Object.assign(boundsFunction, { get }) as BoundsAccessor;
+	return Object.assign(boundsFunction);
 };

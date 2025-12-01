@@ -19,7 +19,6 @@ export type BoundEntry = {
 	styles: StyleProps;
 };
 
-export type BoundsAccessor = {
-	<T extends BoundsBuilderOptions>(options: T): BoundsReturnType<T>;
-	get: (id?: string, phase?: ScreenPhase) => BoundEntry;
-};
+export type BoundsAccessor = <T extends BoundsBuilderOptions>(
+	options: T,
+) => BoundsReturnType<T>;
