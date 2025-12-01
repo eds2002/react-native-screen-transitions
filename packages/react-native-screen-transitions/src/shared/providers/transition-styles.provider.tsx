@@ -2,7 +2,7 @@ import { createContext, useContext, useMemo } from "react";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../constants";
 import { _useScreenAnimation } from "../hooks/animation/use-screen-animation";
-import type { TransitionInterpolatedStyle } from "../types/animation";
+import type { TransitionInterpolatedStyle } from "../types/animation.types";
 import { createBounds } from "../utils/bounds";
 
 type Props = {

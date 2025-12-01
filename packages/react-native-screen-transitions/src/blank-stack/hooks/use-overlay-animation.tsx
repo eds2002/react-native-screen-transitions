@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useSharedValueState } from "../../shared/hooks/reanimated/use-shared-value-state";
 import { useKeys } from "../../shared/providers/keys.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
-import type { OverlayInterpolationProps } from "../../shared/types/animation";
+import type { OverlayInterpolationProps } from "../../shared/types/animation.types";
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
 
 /**

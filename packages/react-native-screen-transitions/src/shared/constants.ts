@@ -1,10 +1,10 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import type { MeasuredDimensions } from "react-native-reanimated";
-import type { ScreenTransitionState } from "./types/animation";
-import type { BoundEntry } from "./types/bounds";
-import type { Layout } from "./types/core";
-import type { ActivationArea } from "./types/gesture";
-import type { Complete } from "./types/utils";
+import type { ScreenTransitionState } from "./types/animation.types";
+import type { BoundEntry } from "./types/bounds.types";
+import type { Layout } from "./types/core.types";
+import type { ActivationArea } from "./types/gesture.types";
+import type { Complete } from "./types/utils.types";
 import type { BoundsBuilderOptions } from "./utils/bounds/types/builder";
 
 /**

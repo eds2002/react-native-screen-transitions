@@ -10,9 +10,9 @@ import { BoundStore, type TagData } from "../../stores/bounds.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
-} from "../../types/animation";
-import type { BoundsAccessor } from "../../types/bounds";
-import type { Layout } from "../../types/core";
+} from "../../types/animation.types";
+import type { BoundsAccessor } from "../../types/bounds.types";
+import type { Layout } from "../../types/core.types";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,

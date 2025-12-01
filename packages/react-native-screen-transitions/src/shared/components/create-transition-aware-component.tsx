@@ -7,8 +7,8 @@ import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { useGestureContext } from "../providers/gestures.provider";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
-import type { TransitionAwareProps } from "../types/core";
-import type { Any } from "../types/utils";
+import type { TransitionAwareProps } from "../types/core.types";
+import type { Any } from "../types/utils.types";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;

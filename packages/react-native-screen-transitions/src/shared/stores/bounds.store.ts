@@ -3,7 +3,7 @@ import {
 	makeMutable,
 	type StyleProps,
 } from "react-native-reanimated";
-import type { Any } from "../types/utils";
+import type { Any } from "../types/utils.types";
 
 type TagID = string;
 type ScreenKey = string;

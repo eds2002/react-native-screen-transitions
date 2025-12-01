@@ -1,6 +1,6 @@
 import type { ImageStyle, StyleProp, TextStyle, ViewStyle } from "react-native";
 import { isSharedValue } from "react-native-reanimated";
-import type { Any } from "../../../types/utils";
+import type { Any } from "../../../types/utils.types";
 
 type AnyStyle = ViewStyle | TextStyle | ImageStyle;
 type StyleValue = StyleProp<AnyStyle>;

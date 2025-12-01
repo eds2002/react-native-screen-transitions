@@ -1,4 +1,4 @@
-import type { ScreenTransitionState } from "../../types/animation";
+import type { ScreenTransitionState } from "../../types/animation.types";
 
 interface DerivationsParams {
 	current: ScreenTransitionState;

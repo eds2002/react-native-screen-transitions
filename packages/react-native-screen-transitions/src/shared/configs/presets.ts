@@ -4,7 +4,7 @@ import {
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
-import type { ScreenTransitionConfig } from "../types/core";
+import type { ScreenTransitionConfig } from "../types/core.types";
 import { DefaultSpec } from "./specs";
 
 const platform = Platform.OS;

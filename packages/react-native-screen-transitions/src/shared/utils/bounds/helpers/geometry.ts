@@ -1,5 +1,5 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
-import type { Layout } from "../../../types/core";
+import type { Layout } from "../../../types/core.types";
 import type { BoundsAnchor, BoundsScaleMode } from "../types/builder";
 import type {
 	ContentTransformGeometry,

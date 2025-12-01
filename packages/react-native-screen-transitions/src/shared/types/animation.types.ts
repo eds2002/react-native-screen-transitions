@@ -5,9 +5,9 @@ import type {
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import type { BoundsAccessor } from "./bounds";
-import type { Layout } from "./core";
-import type { GestureValues } from "./gesture";
+import type { BoundsAccessor } from "./bounds.types";
+import type { Layout } from "./core.types";
+import type { GestureValues } from "./gesture.types";
 
 export interface OverlayInterpolationProps {
 	progress: number;

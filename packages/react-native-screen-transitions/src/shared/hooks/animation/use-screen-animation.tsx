@@ -12,7 +12,7 @@ import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
-} from "../../types/animation";
+} from "../../types/animation.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
 

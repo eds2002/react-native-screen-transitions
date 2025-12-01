@@ -1,6 +1,6 @@
 import type { AnimatedProps } from "react-native-reanimated";
-import type { ScreenStyleInterpolator, TransitionSpec } from "./animation";
-import type { GestureActivationArea, GestureDirection } from "./gesture";
+import type { ScreenStyleInterpolator, TransitionSpec } from "./animation.types";
+import type { GestureActivationArea, GestureDirection } from "./gesture.types";
 
 export type Layout = {
 	width: number;
