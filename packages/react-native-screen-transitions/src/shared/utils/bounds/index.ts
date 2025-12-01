@@ -177,7 +177,7 @@ export const createBounds = (
 
 	const boundsFunction = (params?: BoundsBuilderOptions) => {
 		"worklet";
-		const id = params?.id;
+		const id = params?.id ?? props.activeBoundId;
 
 		return computeBoundStyles(
 			{
