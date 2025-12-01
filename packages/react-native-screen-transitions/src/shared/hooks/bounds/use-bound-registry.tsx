@@ -1,6 +1,7 @@
 import {
 	createContext,
 	Fragment,
+	useCallback,
 	useContext,
 	useLayoutEffect,
 	useMemo,
@@ -161,7 +162,7 @@ export const useBoundsRegistry = ({
 
 	const hasMeasuredOnLayout = useSharedValue(false);
 
-	const handleInitialLayout = useStableCallbackValue(() => {
+	const handleInitialLayout = useCallback(() => {
 		"worklet";
 		if (!sharedBoundTag || hasMeasuredOnLayout.value) return;
 
@@ -173,7 +174,13 @@ export const useBoundsRegistry = ({
 		});
 
 		hasMeasuredOnLayout.value = true;
-	});
+	}, [
+		sharedBoundTag,
+		hasMeasuredOnLayout,
+		isAnimating,
+		isParentAnimating,
+		maybeMeasureAndStore,
+	]);
 
 	const captureActiveOnPress = useStableCallback(() => {
 		if (!sharedBoundTag) {

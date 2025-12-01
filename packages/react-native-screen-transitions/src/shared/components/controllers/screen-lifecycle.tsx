@@ -25,12 +25,11 @@ export const NativeStackScreenLifecycleController = ({
 	const { current } = useKeys<NativeStackDescriptor>();
 	const { parentContext } = useGestureContext();
 
-	const isParentDismissingViaGesture = useDerivedValue(() => {
-		"worklet";
-		return parentContext?.gestureAnimationValues.isDismissing?.value ?? false;
-	});
-	const isParentDismissingViaGestureValue = useSharedValueState(
-		isParentDismissingViaGesture,
+	const isParentDismissingViaGesture = useSharedValueState(
+		useDerivedValue(() => {
+			"worklet";
+			return parentContext?.gestureAnimationValues.isDismissing?.value ?? false;
+		}),
 	);
 
 	const animations = AnimationStore.getAll(current.route.key);
@@ -41,7 +40,7 @@ export const NativeStackScreenLifecycleController = ({
 		const isFirstScreen = current.navigation.getState().index === 0;
 
 		// If transitions are disabled, or the dismissal was on the local root, or this is the first screen of the stack, reset the stores
-		if (!isEnabled || isParentDismissingViaGestureValue || isFirstScreen) {
+		if (!isEnabled || isParentDismissingViaGesture || isFirstScreen) {
 			resetStoresForScreen(current);
 			return;
 		}
