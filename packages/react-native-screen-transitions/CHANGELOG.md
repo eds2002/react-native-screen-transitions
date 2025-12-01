@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-beta.11
+
+### Minor Changes
+
+- Introduce new bounds architecture
+
 ## 3.0.0-beta.10
 
 ### Minor Changes
