@@ -22,6 +22,7 @@ export type BoundsSpace = "relative" | "absolute";
 
 export type BoundsComputeParams = {
 	id?: string;
+	previous?: ScreenTransitionState;
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	progress: number;
@@ -80,7 +81,7 @@ export type BoundsBuilderOptions = {
 	/**
 	 * The ID of the bound to compute bounds for. If not provided, uses the active bound ID.
 	 */
-	id?: string;
+	id: string;
 
 	/**
 	 * Whether the bound should target the screen or the bound.

@@ -146,30 +146,20 @@ function matchesScreenKey(
 	return identifier.screenKey === key || identifier.parentScreenKey === key;
 }
 
-// Get the active link for a specific screen (finds link where screen is source or destination)
 function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 	"worklet";
 	const stack = registry.value[tag]?.linkStack;
-
 	if (!stack || stack.length === 0) return null;
 
-	// If screenKey provided, find link involving that screen
 	if (screenKey) {
-		// When closing (backward nav), we want the link where this screen is the DESTINATION
-		// When opening (forward nav), we want the link where this screen is the DESTINATION too
-		// The source is always the "from" screen, destination is the "to" screen
-
 		if (isClosing) {
-			// Backward: find link where I am the destination (I'm going back to source)
 			for (let i = stack.length - 1; i >= 0; i--) {
-				const link = stack[i];
-				if (matchesScreenKey(link.destination, screenKey)) {
-					return link;
+				if (matchesScreenKey(stack[i].destination, screenKey)) {
+					return stack[i];
 				}
 			}
 		}
 
-		// Forward or fallback: find any link involving this screen
 		for (let i = stack.length - 1; i >= 0; i--) {
 			const link = stack[i];
 			if (
@@ -179,39 +169,19 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 				return link;
 			}
 		}
-		return null;
+		// Don't return null here - fall through to generic lookup
 	}
 
-	// Otherwise return top complete link
+	// Fallback: return most recent link for this tag
+	// (handles timing issues where destination isn't set yet)
 	for (let i = stack.length - 1; i >= 0; i--) {
 		if (stack[i].destination !== null) {
 			return stack[i];
 		}
 	}
-	return null;
-}
 
-function findActiveTagForScreen(screenKey: ScreenKey): TagID | null {
-	"worklet";
-	const state = registry.value;
-	const tags = Object.keys(state);
-
-	for (const tag of tags) {
-		const tagData = state[tag];
-		const stack = tagData.linkStack;
-
-		if (stack) {
-			for (const link of stack) {
-				if (
-					matchesScreenKey(link.source, screenKey) ||
-					matchesScreenKey(link.destination, screenKey)
-				) {
-					return tag;
-				}
-			}
-		}
-	}
-	return null;
+	// Last resort: return most recent even if incomplete
+	return stack[stack.length - 1] ?? null;
 }
 
 function getOccurrence(tag: TagID, key: ScreenKey) {
@@ -228,6 +198,5 @@ export const BoundStore = {
 	clearLinksForScreen,
 	getTagState,
 	getActiveLink,
-	findActiveTagForScreen,
 	getOccurrence,
 };

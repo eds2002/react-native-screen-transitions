@@ -42,6 +42,7 @@ export interface BuildBoundsAccessorParams {
 
 const resolveBounds = (props: {
 	id: string;
+	previous?: ScreenTransitionState;
 	current?: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	computeOptions: BoundsBuilderOptions;
@@ -93,8 +94,8 @@ const resolveBounds = (props: {
 };
 
 const computeBoundStyles = (
-	{ id, current, next, progress, dimensions }: BoundsComputeParams,
-	computeOptions: BoundsBuilderOptions = {},
+	{ id, previous, current, next, progress, dimensions }: BoundsComputeParams,
+	computeOptions: BoundsBuilderOptions = { id: "bound-id" },
 ) => {
 	"worklet";
 	if (!id) {
@@ -106,6 +107,7 @@ const computeBoundStyles = (
 
 	const { start, end, entering } = resolveBounds({
 		id,
+		previous,
 		current,
 		next,
 		computeOptions,
@@ -177,11 +179,12 @@ export const createBounds = (
 
 	const boundsFunction = (params?: BoundsBuilderOptions) => {
 		"worklet";
-		const id = params?.id ?? props.activeBoundId;
+		const id = params?.id;
 
 		return computeBoundStyles(
 			{
 				id,
+				previous: props.previous,
 				current: props.current,
 				next: props.next,
 				progress: props.progress,
@@ -191,13 +194,13 @@ export const createBounds = (
 		);
 	};
 
-	const get = (id?: string, phase?: ScreenPhase) => {
+	const get = (id: string, phase?: ScreenPhase) => {
 		"worklet";
 		return getBounds({
-			id: id ?? props.activeBoundId,
+			id,
 			phase,
-			current: props.current,
 			previous: props.previous,
+			current: props.current,
 			next: props.next,
 		});
 	};

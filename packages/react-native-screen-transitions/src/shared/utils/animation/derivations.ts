@@ -1,4 +1,3 @@
-import { BoundStore } from "../../stores/bound-store";
 import type { ScreenTransitionState } from "../../types/animation";
 
 interface DerivationsParams {
@@ -26,8 +25,7 @@ export const derivations = ({ current, next }: DerivationsParams) => {
 	const isDismissing = !!(active.gesture.isDismissing || active.closing);
 
 	// The active bound id
-	const activeBoundId =
-		BoundStore.findActiveTagForScreen(active.route.key) || "";
+	const activeBoundId = "bound-id";
 
 	return {
 		progress,

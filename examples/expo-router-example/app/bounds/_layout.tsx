@@ -22,13 +22,11 @@ export default function PresetsLayout() {
 					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: "vertical",
-					screenStyleInterpolator: ({ progress, focused, bounds }) => {
+					screenStyleInterpolator: ({ focused, bounds }) => {
 						"worklet";
 						if (focused) {
-							const BOUND_ID = "page-transition";
-
 							const transform = bounds({
-								id: BOUND_ID,
+								id: "page-transition",
 								method: "size",
 								space: "absolute",
 								target: "fullscreen",
