@@ -51,9 +51,7 @@ interface BoundRegistryContextValue {
  * Gets the parent screen's route key for nested navigators.
  * Returns undefined if we're not inside a nested navigator.
  */
-const getParentScreenKey = (
-	current: TransitionDescriptor,
-): string | undefined => {
+const getParentScreenKey = (current: TransitionDescriptor) => {
 	const parent = current.navigation.getParent();
 	if (!parent) return undefined;
 
