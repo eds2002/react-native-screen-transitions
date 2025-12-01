@@ -8,7 +8,7 @@ import type { Any } from "../types/utils";
 type TagID = string;
 type ScreenKey = string;
 
-type TagData = {
+export type TagData = {
 	bounds: MeasuredDimensions;
 	styles: StyleProps;
 };

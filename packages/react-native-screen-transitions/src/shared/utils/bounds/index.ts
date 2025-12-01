@@ -6,7 +6,7 @@ import {
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 } from "../../constants";
-import { BoundStore } from "../../stores/bound-store";
+import { BoundStore, type TagData } from "../../stores/bound-store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
@@ -207,5 +207,10 @@ export const createBounds = (
 		);
 	};
 
-	return Object.assign(boundsFunction);
+	const getOccurrence = (tag: string, key: string): TagData => {
+		"worklet";
+		return BoundStore.getOccurrence(tag, key);
+	};
+
+	return Object.assign(boundsFunction, { getOccurrence }) as BoundsAccessor;
 };
