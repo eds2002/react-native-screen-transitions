@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "../../shared/hooks/animation/use-screen-animation";
-import { KeysProvider, useKeys } from "../../shared/providers/keys";
+import { KeysProvider, useKeys } from "../../shared/providers/keys.provider";
 import { useOverlayAnimation } from "../hooks/use-overlay-animation";
 import type {
 	BlankStackDescriptor,

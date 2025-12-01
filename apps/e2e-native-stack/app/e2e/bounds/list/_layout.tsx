@@ -19,7 +19,7 @@ export default function ListLayout() {
 						screenStyleInterpolator: ({ bounds, activeBoundId }) => {
 							"worklet";
 
-							const id = `${activeBoundId}-icon`;
+							const id = `${activeBoundId}`;
 							const animation = bounds({
 								id,
 							});

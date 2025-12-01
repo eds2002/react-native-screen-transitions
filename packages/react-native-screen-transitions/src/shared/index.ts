@@ -25,5 +25,5 @@ export type {
 	OverlayInterpolationProps,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
-} from "./types/animation";
-export type { ScreenTransitionConfig } from "./types/core";
+} from "./types/animation.types";
+export type { ScreenTransitionConfig } from "./types/core.types";

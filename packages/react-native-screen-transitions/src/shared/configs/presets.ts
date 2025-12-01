@@ -4,7 +4,7 @@ import {
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
-import type { ScreenTransitionConfig } from "../types/core";
+import type { ScreenTransitionConfig } from "../types/core.types";
 import { DefaultSpec } from "./specs";
 
 const platform = Platform.OS;
@@ -216,9 +216,12 @@ export const ElasticCard = (
 	};
 };
 
-export const SharedIGImage = (
-	config: Partial<ScreenTransitionConfig> = {},
-): ScreenTransitionConfig => {
+export const SharedIGImage = ({
+	sharedBoundTag,
+	...config
+}: Partial<ScreenTransitionConfig> & {
+	sharedBoundTag: string;
+}): ScreenTransitionConfig => {
 	return {
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
@@ -232,7 +235,6 @@ export const SharedIGImage = (
 			bounds,
 			progress,
 			focused,
-			activeBoundId,
 			active,
 		}) => {
 			"worklet";
@@ -257,6 +259,7 @@ export const SharedIGImage = (
 			const dragYScale = interpolate(normY, [0, 1], [1, 0.8]);
 
 			const boundValues = bounds({
+				id: sharedBoundTag,
 				method: focused ? "content" : "transform",
 				scaleMode: "uniform",
 				raw: true,
@@ -265,6 +268,7 @@ export const SharedIGImage = (
 			// focused specific animations
 			if (focused) {
 				const maskedValues = bounds({
+					id: sharedBoundTag,
 					space: "absolute",
 					target: "fullscreen",
 					method: "size",
@@ -309,7 +313,7 @@ export const SharedIGImage = (
 				contentStyle: {
 					pointerEvents: current.gesture.isDismissing ? "none" : "auto",
 				},
-				[activeBoundId]: {
+				[sharedBoundTag]: {
 					transform: [
 						{ translateX: dragX || 0 },
 						{ translateY: dragY || 0 },
@@ -345,9 +349,12 @@ export const SharedIGImage = (
 	};
 };
 
-export const SharedAppleMusic = (
-	config: Partial<ScreenTransitionConfig> = {},
-): ScreenTransitionConfig => {
+export const SharedAppleMusic = ({
+	sharedBoundTag,
+	...config
+}: Partial<ScreenTransitionConfig> & {
+	sharedBoundTag: string;
+}): ScreenTransitionConfig => {
 	return {
 		enableTransitions: true,
 		gestureEnabled: true,
@@ -355,7 +362,6 @@ export const SharedAppleMusic = (
 		gestureDrivesProgress: false,
 		screenStyleInterpolator: ({
 			bounds,
-			activeBoundId,
 			focused,
 			progress,
 			layouts: { screen },
@@ -395,6 +401,7 @@ export const SharedAppleMusic = (
 			const dragYScale = interpolate(normY, [0, 1], yScaleOuput);
 
 			const boundValues = bounds({
+				id: sharedBoundTag,
 				method: focused ? "content" : "transform",
 				anchor: "top",
 				scaleMode: "uniform",
@@ -415,6 +422,7 @@ export const SharedAppleMusic = (
 			 */
 			if (focused) {
 				const maskedValues = bounds({
+					id: sharedBoundTag,
 					space: "absolute",
 					method: "size",
 					target: "fullscreen",
@@ -501,7 +509,7 @@ export const SharedAppleMusic = (
 			const contentScale = interpolate(progress, [1, 2], [1, 0.9], "clamp");
 
 			return {
-				[activeBoundId]: {
+				[sharedBoundTag]: {
 					transform: [
 						{ translateX: dragX || 0 },
 						{ translateY: dragY || 0 },
@@ -544,9 +552,12 @@ export const SharedAppleMusic = (
 	};
 };
 
-export const SharedXImage = (
-	config: Partial<ScreenTransitionConfig> = {},
-): ScreenTransitionConfig => {
+export const SharedXImage = ({
+	sharedBoundTag,
+	...config
+}: Partial<ScreenTransitionConfig> & {
+	sharedBoundTag: string;
+}): ScreenTransitionConfig => {
 	return {
 		enableTransitions: true,
 		gestureEnabled: true,
@@ -554,7 +565,6 @@ export const SharedXImage = (
 		gestureDrivesProgress: false,
 		screenStyleInterpolator: ({
 			focused,
-			activeBoundId,
 			bounds,
 			current,
 			layouts: { screen },
@@ -565,7 +575,11 @@ export const SharedXImage = (
 			// twitter doesn't animate the unfocused screen
 			if (!focused) return {};
 
-			const boundValues = bounds({ method: "transform", raw: true });
+			const boundValues = bounds({
+				id: sharedBoundTag,
+				method: "transform",
+				raw: true,
+			});
 
 			// content styles
 			const dragY = interpolate(
@@ -596,7 +610,7 @@ export const SharedXImage = (
 			const scaleY = !current.closing ? boundValues.scaleY : 1;
 
 			return {
-				[activeBoundId]: {
+				[sharedBoundTag]: {
 					transform: [
 						{
 							translateX: x,

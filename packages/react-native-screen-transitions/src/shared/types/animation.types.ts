@@ -5,14 +5,16 @@ import type {
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import type { BoundEntry, BoundsAccessor } from "./bounds";
-import type { Layout } from "./core";
-import type { GestureValues } from "./gesture";
+import type { BoundsAccessor } from "./bounds.types";
+import type { Layout } from "./core.types";
+import type { GestureValues } from "./gesture.types";
 
 export interface OverlayInterpolationProps {
 	progress: number;
 	layouts: {
-		/** The `width` and `height` of the screen container. */
+		/**
+		 * The `width` and `height` of the screen container.
+		 */
 		screen: Layout;
 	};
 	insets: EdgeInsets;
@@ -23,37 +25,74 @@ export type ScreenTransitionState = {
 	closing: number;
 	animating: number;
 	gesture: GestureValues;
-	bounds: Record<string, BoundEntry>;
 	route: RouteProp<ParamListBase>;
 };
 
 export interface ScreenInterpolationProps {
-	/** Values for the screen that came before the current one in the navigation stack. */
+	/**
+	 * Values for the screen that came before the current one in the navigation stack.
+	 */
 	previous: ScreenTransitionState | undefined;
-	/** Values for the current screen being interpolated. */
+
+	/**
+	 * Values for the current screen being interpolated.
+	 */
 	current: ScreenTransitionState;
-	/** Values for the screen that comes after the current one in the navigation stack. */
+
+	/**
+	 * Values for the screen that comes after the current one in the navigation stack.
+	 */
 	next: ScreenTransitionState | undefined;
-	/** Layout measurements for the screen. */
+
+	/**
+	 * Layout measurements for the screen.
+	 */
 	layouts: {
-		/** The `width` and `height` of the screen container. */
+		/**
+		 * The `width` and `height` of the screen container.
+		 */
 		screen: Layout;
 	};
-	/** The safe area insets for the screen. */
+
+	/**
+	 * The safe area insets for the screen.
+	 */
 	insets: EdgeInsets;
-	/** The ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a'). */
-	activeBoundId: string;
-	/** Whether the current screen is the focused (topmost) screen in the stack. */
+
+	/**
+	 * The ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a').
+	 * @deprecated
+	 */
+	activeBoundId?: never;
+
+	/**
+	 * Whether the current screen is the focused (topmost) screen in the stack.
+	 */
 	focused: boolean;
-	/** Combined progress of current and next screen transitions, ranging from 0-2. */
+
+	/**
+	 * Combined progress of current and next screen transitions, ranging from 0-2.
+	 */
 	progress: number;
-	/** Function that provides access to bounds builders for creating shared element transitions. */
+
+	/**
+	 * Function that provides access to bounds builders for creating shared element transitions.
+	 */
 	bounds: BoundsAccessor;
-	/** The screen state that is currently driving the transition (either current or next, whichever is focused). */
+
+	/**
+	 * The screen state that is currently driving the transition (either current or next, whichever is focused).
+	 */
 	active: ScreenTransitionState;
-	/** Whether the active screen is currently transitioning (either being dragged or animating). */
+
+	/**
+	 * Whether the active screen is currently transitioning (either being dragged or animating).
+	 */
 	isActiveTransitioning: boolean;
-	/** Whether the active screen is in the process of being dismissed/closed. */
+
+	/**
+	 * Whether the active screen is in the process of being dismissed/closed.
+	 */
 	isDismissing: boolean;
 }
 
@@ -66,10 +105,12 @@ export type TransitionInterpolatedStyle = {
 	 * Animated style for the main screen view. Styles are only applied when Transition.View is present.
 	 */
 	contentStyle?: StyleProps;
+
 	/**
 	 * Animated style for a semi-transparent overlay. Styles are only applied when Transition.View is present.
 	 */
 	overlayStyle?: StyleProps;
+
 	/**
 	 * Define your own custom styles by using an id as the key: [id]: StyleProps
 	 */

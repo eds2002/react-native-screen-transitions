@@ -1,6 +1,6 @@
 import type { AnimatedProps } from "react-native-reanimated";
-import type { ScreenStyleInterpolator, TransitionSpec } from "./animation";
-import type { GestureActivationArea, GestureDirection } from "./gesture";
+import type { ScreenStyleInterpolator, TransitionSpec } from "./animation.types";
+import type { GestureActivationArea, GestureDirection } from "./gesture.types";
 
 export type Layout = {
 	width: number;
@@ -62,34 +62,42 @@ export type ScreenTransitionConfig = {
 	 * The user-provided function to calculate styles based on animation progress.
 	 */
 	screenStyleInterpolator?: ScreenStyleInterpolator;
+
 	/**
 	 * The Reanimated animation config for opening and closing transitions.
 	 */
 	transitionSpec?: TransitionSpec;
+
 	/**
 	 * Whether the gesture is enabled.
 	 */
 	gestureEnabled?: boolean;
+
 	/**
 	 * The direction of the swipe gesture used to dismiss the screen.
 	 */
 	gestureDirection?: GestureDirection | GestureDirection[];
+
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.
 	 */
 	gestureVelocityImpact?: number;
+
 	/**
 	 * Distance threshold for gesture recognition throughout the screen.
 	 */
 	gestureResponseDistance?: number;
+
 	/**
 	 * Whether the gesture drives the progress.
 	 */
 	gestureDrivesProgress?: boolean;
+
 	/**
 	 * The area of the screen where the gesture is activated.
 	 */
 	gestureActivationArea?: GestureActivationArea;
+
 	/**
 	 * Whether to enable transitions. It sets the presentation to containedTransparentModal, animation none, and headerShown to false.
 	 */

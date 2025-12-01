@@ -6,21 +6,17 @@ import {
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 } from "../../constants";
+import { BoundStore, type TagData } from "../../stores/bounds.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
-} from "../../types/animation";
-import type { BoundsAccessor } from "../../types/bounds";
-import type { Layout, ScreenPhase } from "../../types/core";
-import type {
-	BoundsBuilderInitParams,
-	BoundsBuilderOptions,
-} from "./_types/builder";
+} from "../../types/animation.types";
+import type { BoundsAccessor } from "../../types/bounds.types";
+import type { Layout } from "../../types/core.types";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
-} from "./_utils/geometry";
-import { getBounds } from "./_utils/get-bounds";
+} from "./helpers/geometry";
 import {
 	composeContentStyle,
 	composeSizeAbsolute,
@@ -28,10 +24,13 @@ import {
 	composeTransformAbsolute,
 	composeTransformRelative,
 	type ElementComposeParams,
-} from "./_utils/style-composers";
+} from "./helpers/style-composers";
+import type {
+	BoundsBuilderOptions,
+	BoundsComputeParams,
+} from "./types/builder";
 
 export interface BuildBoundsAccessorParams {
-	activeBoundId: string | null;
 	current: ScreenTransitionState;
 	previous?: ScreenTransitionState;
 	next?: ScreenTransitionState;
@@ -50,34 +49,47 @@ const resolveBounds = (props: {
 }) => {
 	"worklet";
 	const entering = !props.next;
-
 	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
+	const isClosing = props.current?.closing === 1;
 
-	const startPhase: ScreenPhase = entering ? "previous" : "current";
-	const endPhase: ScreenPhase = entering ? "current" : "next";
+	const isFullscreenTarget = props.computeOptions.target === "fullscreen";
 
-	const getPhaseBounds = (phase?: ScreenPhase) => {
-		"worklet";
-		switch (phase) {
-			case "previous":
-				return props.previous?.bounds?.[props.id]?.bounds;
-			case "current":
-				return props.current?.bounds?.[props.id]?.bounds;
-			case "next":
-				return props.next?.bounds?.[props.id]?.bounds;
-			default:
-				return null;
-		}
-	};
+	// Try exact match first (strict matching for nested stacks)
+	let link = BoundStore.getActiveLink(
+		props.id,
+		props.current?.route.key,
+		isClosing,
+	);
 
-	const start = getPhaseBounds(startPhase);
-	let end = getPhaseBounds(endPhase);
+	// For fullscreen target, fall back to most recent link for this tag
+	// (destination screen might not have a matching element)
+	if (!link && isFullscreenTarget) {
+		link = BoundStore.getActiveLink(props.id); // No screenKey = get most recent
+	}
 
-	const isFullscreen =
-		props.computeOptions.target === "fullscreen" ||
-		props.computeOptions.toFullscreen;
+	if (!link || !link.source) {
+		return {
+			start: null,
+			end: null,
+			entering,
+		};
+	}
 
-	if (isFullscreen) {
+	// For fullscreen target, destination element is not required
+	if (!isFullscreenTarget && !link.destination) {
+		return {
+			start: null,
+			end: null,
+			entering,
+		};
+	}
+
+	const { destination, source } = link;
+
+	const start = source.bounds;
+	let end = destination?.bounds ?? fullscreen;
+
+	if (isFullscreenTarget) {
 		end = fullscreen;
 	}
 
@@ -95,15 +107,8 @@ const resolveBounds = (props: {
 };
 
 const computeBoundStyles = (
-	{
-		id,
-		previous,
-		current,
-		next,
-		progress,
-		dimensions,
-	}: BoundsBuilderInitParams,
-	computeOptions: BoundsBuilderOptions = {},
+	{ id, previous, current, next, progress, dimensions }: BoundsComputeParams,
+	computeOptions: BoundsBuilderOptions = { id: "bound-id" },
 ) => {
 	"worklet";
 	if (!id) {
@@ -169,8 +174,7 @@ const computeBoundStyles = (
 	};
 
 	const isSize = computeOptions.method === "size";
-	const isAbs =
-		computeOptions.space === "absolute" || !!computeOptions.absolute;
+	const isAbs = computeOptions.space === "absolute";
 
 	return isSize
 		? isAbs
@@ -188,13 +192,13 @@ export const createBounds = (
 
 	const boundsFunction = (params?: BoundsBuilderOptions) => {
 		"worklet";
-		const id = params?.id ?? props.activeBoundId;
+		const id = params?.id;
 
 		return computeBoundStyles(
 			{
 				id,
-				current: props.current,
 				previous: props.previous,
+				current: props.current,
 				next: props.next,
 				progress: props.progress,
 				dimensions: props.layouts.screen,
@@ -203,16 +207,10 @@ export const createBounds = (
 		);
 	};
 
-	const get = (id?: string, phase?: ScreenPhase) => {
+	const getOccurrence = (tag: string, key: string): TagData => {
 		"worklet";
-		return getBounds({
-			id: id ?? props.activeBoundId,
-			phase,
-			current: props.current,
-			previous: props.previous,
-			next: props.next,
-		});
+		return BoundStore.getOccurrence(tag, key);
 	};
 
-	return Object.assign(boundsFunction, { get }) as BoundsAccessor;
+	return Object.assign(boundsFunction, { getOccurrence }) as BoundsAccessor;
 };

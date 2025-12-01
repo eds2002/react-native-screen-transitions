@@ -8,7 +8,7 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
 import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
-import { ScreenTransitionProvider } from "../../shared/providers/screen-transition-provider";
+import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import type { BlankStackDescriptor } from "../types";
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
 import { Overlay } from "./Overlay";

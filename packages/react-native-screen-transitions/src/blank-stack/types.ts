@@ -19,11 +19,11 @@ import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	TransitionSpec,
-} from "../shared/types/animation";
+} from "../shared/types/animation.types";
 import type {
 	GestureActivationArea,
 	GestureDirection,
-} from "../shared/types/gesture";
+} from "../shared/types/gesture.types";
 
 export type BlankStackNavigationEventMap = {
 	/**

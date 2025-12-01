@@ -1,9 +1,9 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type { TagData } from "../stores/bounds.store";
 import type {
 	BoundsBuilderOptions,
 	BoundsReturnType,
-} from "../utils/bounds/_types/builder";
-import type { ScreenPhase } from "./core";
+} from "../utils/bounds/types/builder";
 
 /**
  * Target style computation.
@@ -21,5 +21,5 @@ export type BoundEntry = {
 
 export type BoundsAccessor = {
 	<T extends BoundsBuilderOptions>(options: T): BoundsReturnType<T>;
-	get: (id?: string, phase?: ScreenPhase) => BoundEntry;
+	getOccurrence: (id: string, key: string) => TagData;
 };

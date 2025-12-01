@@ -21,12 +21,12 @@ import {
 import type {
 	GestureContextType,
 	ScrollConfig,
-} from "../../providers/gestures";
-import { useKeys } from "../../providers/keys";
-import { AnimationStore } from "../../stores/animation-store";
-import { GestureStore, type GestureStoreMap } from "../../stores/gesture-store";
+} from "../../providers/gestures.provider";
+import { useKeys } from "../../providers/keys.provider";
+import { AnimationStore } from "../../stores/animation.store";
+import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 
-import { type GestureDirection, GestureOffsetState } from "../../types/gesture";
+import { type GestureDirection, GestureOffsetState } from "../../types/gesture.types";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";

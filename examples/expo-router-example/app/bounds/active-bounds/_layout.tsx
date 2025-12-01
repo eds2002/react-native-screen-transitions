@@ -1,8 +1,10 @@
+import { useGlobalSearchParams } from "expo-router";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { Stack } from "@/layouts/stack";
 
 export default function ActiveBoundsLayout() {
+	const { id } = useGlobalSearchParams<{ id: string }>();
 	return (
 		<Stack>
 			<Stack.Screen
@@ -16,14 +18,7 @@ export default function ActiveBoundsLayout() {
 					gestureDirection: ["bidirectional"],
 					gestureDrivesProgress: false,
 					enableTransitions: true,
-
-					screenStyleInterpolator: ({
-						bounds,
-						progress,
-
-						focused,
-						activeBoundId,
-					}) => {
+					screenStyleInterpolator: ({ bounds, progress, focused }) => {
 						"worklet";
 
 						if (focused) {
@@ -32,10 +27,12 @@ export default function ActiveBoundsLayout() {
 							 * This ensures the animation is relative to its parent container, not the entire screen.
 							 * .transform() (default) - Animates the transform properties (translate, scale, etc.) of the bound, which is generally more performant than animating width/height.
 							 */
-							const focusedBoundStyles = bounds({});
+							const focusedBoundStyles = bounds({
+								id: id,
+							});
 
 							return {
-								[activeBoundId]: focusedBoundStyles,
+								[id]: focusedBoundStyles,
 							};
 						}
 

@@ -165,18 +165,19 @@ export default function OnboardingLayout() {
 							screen: { width },
 						},
 						bounds,
-						activeBoundId,
 					}) => {
 						"worklet";
 
 						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-						const boundsConfig = bounds({});
+						const boundsConfig = bounds({
+							id: "SHARED",
+						});
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],
 								backgroundColor: "#FFF",
 							},
-							[activeBoundId]: boundsConfig,
+							["SHARED"]: boundsConfig,
 						};
 					},
 					transitionSpec: {
@@ -195,18 +196,20 @@ export default function OnboardingLayout() {
 						layouts: {
 							screen: { width },
 						},
-						activeBoundId,
 						bounds,
 					}) => {
 						"worklet";
 
 						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-						const boundsConfig = bounds({});
+						const boundsConfig = bounds({
+							id: "SHARED",
+						});
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],
+								backgroundColor: "#FFF",
 							},
-							[activeBoundId]: boundsConfig,
+							["SHARED"]: boundsConfig,
 						};
 					},
 					transitionSpec: {
@@ -223,7 +226,6 @@ export default function OnboardingLayout() {
 					screenStyleInterpolator: ({
 						progress,
 						layouts: { screen },
-						activeBoundId,
 						bounds,
 					}) => {
 						"worklet";
@@ -233,13 +235,15 @@ export default function OnboardingLayout() {
 							[0, 1, 2],
 							[screen.width, 0, -screen.width],
 						);
-						// const boundsConfig = bounds({});
+						const boundsConfig = bounds({
+							id: "SHARED",
+						});
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }],
 								backgroundColor: "#FFF",
 							},
-							// [activeBoundId]: boundsConfig,
+							["SHARED"]: boundsConfig,
 						};
 					},
 					transitionSpec: {

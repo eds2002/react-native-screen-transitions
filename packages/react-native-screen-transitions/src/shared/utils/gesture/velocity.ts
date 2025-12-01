@@ -3,7 +3,7 @@ import type {
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
-import type { AnimationStoreMap } from "../../stores/animation-store";
+import type { AnimationStoreMap } from "../../stores/animation.store";
 
 interface CalculateProgressProps {
 	animations: AnimationStoreMap;

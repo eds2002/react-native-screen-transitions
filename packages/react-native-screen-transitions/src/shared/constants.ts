@@ -1,11 +1,11 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import type { MeasuredDimensions } from "react-native-reanimated";
-import type { ScreenTransitionState } from "./types/animation";
-import type { BoundEntry } from "./types/bounds";
-import type { Layout } from "./types/core";
-import type { ActivationArea } from "./types/gesture";
-import type { Complete } from "./types/utils";
-import type { BoundsBuilderOptions } from "./utils/bounds/_types/builder";
+import type { ScreenTransitionState } from "./types/animation.types";
+import type { BoundEntry } from "./types/bounds.types";
+import type { Layout } from "./types/core.types";
+import type { ActivationArea } from "./types/gesture.types";
+import type { Complete } from "./types/utils.types";
+import type { BoundsBuilderOptions } from "./utils/bounds/types/builder";
 
 /**
  * Masked view integration
@@ -35,7 +35,6 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 			isDragging: 0,
 			direction: null,
 		},
-		bounds: {} as Record<string, BoundEntry>,
 		route: {} as RouteProp<ParamListBase>,
 	});
 

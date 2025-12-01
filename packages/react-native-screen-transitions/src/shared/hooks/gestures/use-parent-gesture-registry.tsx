@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useGestureContext } from "../../providers/gestures";
+import { useGestureContext } from "../../providers/gestures.provider";
 import useStableCallback from "../use-stable-callback";
 
 /**

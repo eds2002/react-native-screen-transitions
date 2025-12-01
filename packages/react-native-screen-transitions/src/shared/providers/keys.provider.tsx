@@ -5,7 +5,7 @@ import type {
 	RouteProp,
 } from "@react-navigation/native";
 import { createContext, useContext, useMemo } from "react";
-import type { ScreenTransitionConfig } from "../types/core";
+import type { ScreenTransitionConfig } from "../types/core.types";
 
 export type TransitionDescriptor = Descriptor<
 	ScreenTransitionConfig,

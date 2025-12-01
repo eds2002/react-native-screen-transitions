@@ -2,9 +2,9 @@ import type React from "react";
 import type { ComponentType } from "react";
 import type { ScreenLifecycleProps } from "../components/controllers/screen-lifecycle";
 import { RootTransitionAware } from "../components/root-transition-aware";
-import { ScreenGestureProvider } from "../providers/gestures";
-import { KeysProvider, type TransitionDescriptor } from "../providers/keys";
-import { TransitionStylesProvider } from "../providers/transition-styles";
+import { ScreenGestureProvider } from "./gestures.provider";
+import { KeysProvider, type TransitionDescriptor } from "./keys.provider";
+import { TransitionStylesProvider } from "./transition-styles.provider";
 
 type Props<TDescriptor extends TransitionDescriptor> = {
 	previous?: TDescriptor;

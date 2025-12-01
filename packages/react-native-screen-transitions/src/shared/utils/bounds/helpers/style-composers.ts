@@ -3,11 +3,11 @@ import {
 	type MeasuredDimensions,
 	type StyleProps,
 } from "react-native-reanimated";
-import type { BoundsBuilderOptions } from "../_types/builder";
+import type { BoundsBuilderOptions } from "../types/builder";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
-} from "../_types/geometry";
+} from "../types/geometry";
 
 /**
  * Element-level (relative) params shared by size/transform composers.

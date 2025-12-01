@@ -4,19 +4,15 @@ import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import {
-	DEFAULT_SCREEN_TRANSITION_STATE,
-	NO_BOUNDS_MAP,
-} from "../../constants";
-import { type TransitionDescriptor, useKeys } from "../../providers/keys";
+import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
+import { type TransitionDescriptor, useKeys } from "../../providers/keys.provider";
 
-import { AnimationStore } from "../../stores/animation-store";
-import { BoundStore } from "../../stores/bound-store";
-import { GestureStore, type GestureStoreMap } from "../../stores/gesture-store";
+import { AnimationStore } from "../../stores/animation.store";
+import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
-} from "../../types/animation";
+} from "../../types/animation.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
 
@@ -48,7 +44,6 @@ const unwrap = (
 			isDragging: s.gesture.isDragging.value,
 			direction: s.gesture.direction.value,
 		},
-		bounds: BoundStore.getBounds(key) || NO_BOUNDS_MAP,
 		route: s.route,
 	};
 };
@@ -100,17 +95,9 @@ export function _useScreenAnimation() {
 			unwrap(currentAnimation, currentDescriptor?.route.key) ??
 			DEFAULT_SCREEN_TRANSITION_STATE;
 
-		const {
-			progress,
-			focused,
-			activeBoundId,
-			active,
-			isActiveTransitioning,
-			isDismissing,
-		} = derivations({
+		const helpers = derivations({
 			current,
 			next,
-			previous,
 		});
 
 		return {
@@ -119,12 +106,7 @@ export function _useScreenAnimation() {
 			previous,
 			current,
 			next,
-			focused,
-			activeBoundId,
-			progress,
-			active,
-			isActiveTransitioning,
-			isDismissing,
+			...helpers,
 		};
 	});
 

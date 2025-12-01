@@ -9,13 +9,13 @@ import {
 	GESTURE_FAIL_TOLERANCE_X,
 	GESTURE_FAIL_TOLERANCE_Y,
 } from "../../constants";
-import type { Layout } from "../../types/core";
+import type { Layout } from "../../types/core.types";
 import {
 	type ActivationArea,
 	type GestureActivationArea,
 	GestureOffsetState,
 	type SideActivation,
-} from "../../types/gesture";
+} from "../../types/gesture.types";
 
 type Directions = {
 	vertical: boolean;

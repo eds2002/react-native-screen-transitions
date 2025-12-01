@@ -3,19 +3,13 @@
  * https://github.com/MatiPl01/react-native-sortables/blob/main/packages/react-native-sortables/src/providers/utils/createProvider.tsx
  * SUPER COOL AMAZING UTILITY
  */
-import {
-	createContext,
-	type PropsWithChildren,
-	type ReactNode,
-	useContext,
-	useMemo,
-} from "react";
+import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 export default function createProvider<
 	ProviderName extends string,
 	Guarded extends boolean = true,
 >(name: ProviderName, options?: { guarded?: Guarded }) {
-	return <ProviderProps extends PropsWithChildren<object>, ContextValue>(
+	return <ProviderProps extends object, ContextValue>(
 		factory: (props: ProviderProps) => {
 			value?: ContextValue;
 			enabled?: boolean;
@@ -29,7 +23,7 @@ export default function createProvider<
 
 		const Provider: React.FC<ProviderProps> = (props) => {
 			const {
-				children = props.children,
+				children = (props as { children?: ReactNode }).children,
 				enabled = true,
 				value,
 			} = factory(props);

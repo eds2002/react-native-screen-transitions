@@ -1,16 +1,14 @@
-import { BoundStore } from "../../stores/bound-store";
-import type { ScreenTransitionState } from "../../types/animation";
+import type { ScreenTransitionState } from "../../types/animation.types";
 
 interface DerivationsParams {
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
-	previous?: ScreenTransitionState;
 }
 
 /**
  * Additional values to help make defining animations easier.
  */
-export const derivations = ({ current, next, previous }: DerivationsParams) => {
+export const derivations = ({ current, next }: DerivationsParams) => {
 	"worklet";
 
 	// The combined progress
@@ -26,13 +24,9 @@ export const derivations = ({ current, next, previous }: DerivationsParams) => {
 
 	const isDismissing = !!(active.gesture.isDismissing || active.closing);
 
-	// The active bound id
-	const activeBoundId = BoundStore.getActiveBound(current, next, previous);
-
 	return {
 		progress,
 		focused,
-		activeBoundId,
 		active,
 		isActiveTransitioning,
 		isDismissing,

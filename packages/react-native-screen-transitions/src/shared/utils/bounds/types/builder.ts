@@ -1,19 +1,7 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import type { ScreenTransitionState } from "../../../types/animation";
-import type { BoundsMethod } from "../../../types/bounds";
-import type { Layout } from "../../../types/core";
-
-/**
- * Params passed to the builder initializer. No method required here.
- */
-export type BoundsBuilderInitParams = {
-	id: string | null;
-	previous?: ScreenTransitionState;
-	current: ScreenTransitionState;
-	next?: ScreenTransitionState;
-	progress: number;
-	dimensions: Layout;
-};
+import type { ScreenTransitionState } from "../../../types/animation.types";
+import type { BoundsMethod } from "../../../types/bounds.types";
+import type { Layout } from "../../../types/core.types";
 
 export type BoundsAnchor =
 	| "topLeading"
@@ -32,7 +20,14 @@ export type BoundsTarget = "bound" | "fullscreen" | MeasuredDimensions;
 
 export type BoundsSpace = "relative" | "absolute";
 
-export type BoundsComputeParams = BoundsBuilderInitParams;
+export type BoundsComputeParams = {
+	id?: string;
+	previous?: ScreenTransitionState;
+	current: ScreenTransitionState;
+	next?: ScreenTransitionState;
+	progress: number;
+	dimensions: Layout;
+};
 
 export type RawSizeAbsoluteReturn = {
 	width: number;
@@ -84,26 +79,14 @@ export type BoundsReturnType<T extends BoundsBuilderOptions> =
 
 export type BoundsBuilderOptions = {
 	/**
-	 * @deprecated Use `content.scaleMode` instead.
-	 */
-	toFullscreen?: boolean;
-	/**
-	 * @deprecated Use `content.anchor` instead.
-	 */
-	absolute?: boolean;
-	/**
-	 * @deprecated Use `content.anchor` instead.
-	 */
-	relative?: boolean;
-	/**
-	 * @deprecated Use `scaleMode` instead.
-	 */
-	contentScaleMode?: "aspectFill" | "aspectFit" | "auto";
-
-	/**
 	 * The ID of the bound to compute bounds for. If not provided, uses the active bound ID.
 	 */
-	id?: string;
+	id: string;
+
+	/**
+	 * Whether the bound should target the screen or the bound.
+	 */
+	target?: BoundsTarget;
 
 	/**
 	 * The method to use to compute the bounds.
@@ -124,25 +107,24 @@ export type BoundsBuilderOptions = {
 	 * @default "relative"
 	 */
 	space?: BoundsSpace;
-	/**
-	 * Whether the bound should target the screen or the bound.
-	 * @default "bound"
-	 */
-	target?: BoundsTarget;
+
 	/**
 	 * The gesture offsets to apply to the bounds.
 	 */
 	gestures?: { x?: number; y?: number };
+
 	/**
 	 * How the bounds should be scaled between each other.
 	 * @default "match"
 	 */
 	scaleMode?: BoundsScaleMode;
+
 	/**
 	 * Where the bounds should be anchored between each other.
 	 * @default "center"
 	 */
 	anchor?: BoundsAnchor;
+
 	/**
 	 * If true, the raw values will be returned instead of the computed values.
 	 * @default false
