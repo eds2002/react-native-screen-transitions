@@ -4,7 +4,6 @@ import {
 	EMPTY_BOUND_HELPER_RESULT_RAW,
 	ENTER_RANGE,
 	EXIT_RANGE,
-	FULLSCREEN_DIMENSIONS,
 } from "../../constants";
 import { BoundStore } from "../../stores/bound-store";
 import type {
@@ -42,17 +41,12 @@ export interface BuildBoundsAccessorParams {
 
 const resolveBounds = (props: {
 	id: string;
-	previous?: ScreenTransitionState;
 	current?: ScreenTransitionState;
 	next?: ScreenTransitionState;
-	toRect?: Partial<MeasuredDimensions>;
-	dimensions: Layout;
 	computeOptions: BoundsBuilderOptions;
 }) => {
 	"worklet";
 	const entering = !props.next;
-
-	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
 
 	const isClosing = props.current?.closing === 1;
 	const link = BoundStore.getActiveLink(
@@ -73,21 +67,7 @@ const resolveBounds = (props: {
 
 	const start = source.bounds;
 
-	let end = destination.bounds;
-
-	const isFullscreen =
-		props.computeOptions.target === "fullscreen" ||
-		props.computeOptions.toFullscreen;
-
-	if (isFullscreen) {
-		end = fullscreen;
-	}
-
-	const customTarget = props.computeOptions.target;
-
-	if (typeof customTarget === "object") {
-		end = customTarget;
-	}
+	const end = destination.bounds;
 
 	return {
 		start,
@@ -97,14 +77,7 @@ const resolveBounds = (props: {
 };
 
 const computeBoundStyles = (
-	{
-		id,
-		previous,
-		current,
-		next,
-		progress,
-		dimensions,
-	}: BoundsBuilderInitParams,
+	{ id, current, next, progress, dimensions }: BoundsBuilderInitParams,
 	computeOptions: BoundsBuilderOptions = {},
 ) => {
 	"worklet";
@@ -117,11 +90,9 @@ const computeBoundStyles = (
 
 	const { start, end, entering } = resolveBounds({
 		id,
-		previous,
 		current,
 		next,
 		computeOptions,
-		dimensions,
 	});
 
 	if (!start || !end) {
@@ -171,8 +142,7 @@ const computeBoundStyles = (
 	};
 
 	const isSize = computeOptions.method === "size";
-	const isAbs =
-		computeOptions.space === "absolute" || !!computeOptions.absolute;
+	const isAbs = computeOptions.space === "absolute";
 
 	return isSize
 		? isAbs
@@ -196,7 +166,6 @@ export const createBounds = (
 			{
 				id,
 				current: props.current,
-				previous: props.previous,
 				next: props.next,
 				progress: props.progress,
 				dimensions: props.layouts.screen,

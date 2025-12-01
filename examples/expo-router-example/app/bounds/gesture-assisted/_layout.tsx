@@ -34,12 +34,9 @@ export default function ActiveBoundsLayout() {
 								x: active.gesture.x,
 								y: active.gesture.y,
 							},
-							target: "fullscreen",
 						});
 
 						return {
-							// contentStyle:{...}
-							// overlayStyle:{...}
 							[activeBoundId]: {
 								...boundStyles,
 								opacity: withTiming(current.gesture.isDragging ? 0.5 : 1),

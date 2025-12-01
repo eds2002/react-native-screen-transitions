@@ -8,7 +8,6 @@ import type { Layout } from "../../../types/core";
  */
 export type BoundsBuilderInitParams = {
 	id: string | null;
-	previous?: ScreenTransitionState;
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	progress: number;
@@ -84,23 +83,6 @@ export type BoundsReturnType<T extends BoundsBuilderOptions> =
 
 export type BoundsBuilderOptions = {
 	/**
-	 * @deprecated Use `content.scaleMode` instead.
-	 */
-	toFullscreen?: boolean;
-	/**
-	 * @deprecated Use `content.anchor` instead.
-	 */
-	absolute?: boolean;
-	/**
-	 * @deprecated Use `content.anchor` instead.
-	 */
-	relative?: boolean;
-	/**
-	 * @deprecated Use `scaleMode` instead.
-	 */
-	contentScaleMode?: "aspectFill" | "aspectFit" | "auto";
-
-	/**
 	 * The ID of the bound to compute bounds for. If not provided, uses the active bound ID.
 	 */
 	id?: string;
@@ -125,11 +107,6 @@ export type BoundsBuilderOptions = {
 	 */
 	space?: BoundsSpace;
 	/**
-	 * Whether the bound should target the screen or the bound.
-	 * @default "bound"
-	 */
-	target?: BoundsTarget;
-	/**
 	 * The gesture offsets to apply to the bounds.
 	 */
 	gestures?: { x?: number; y?: number };
@@ -148,4 +125,11 @@ export type BoundsBuilderOptions = {
 	 * @default false
 	 */
 	raw?: boolean;
+
+	/**
+	 * Whether the bound should target the screen or the bound.
+	 * @deprecated
+	 * @default "bound"
+	 */
+	target?: BoundsTarget;
 };
