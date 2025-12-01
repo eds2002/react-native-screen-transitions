@@ -13,9 +13,14 @@ type TagData = {
 	styles: StyleProps;
 };
 
+type ScreenIdentifier = {
+	screenKey: ScreenKey;
+	parentScreenKey?: ScreenKey;
+};
+
 type TagLink = {
-	source: { screenKey: ScreenKey } & TagData;
-	destination: ({ screenKey: ScreenKey } & TagData) | null;
+	source: ScreenIdentifier & TagData;
+	destination: (ScreenIdentifier & TagData) | null;
 };
 
 type TagState = {
@@ -58,6 +63,7 @@ function setLinkSource(
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
+	parentScreenKey?: ScreenKey,
 ) {
 	"worklet";
 	registry.modify((state: Any) => {
@@ -66,7 +72,7 @@ function setLinkSource(
 
 		// Push new link onto stack
 		state[tag].linkStack.push({
-			source: { screenKey, bounds, styles },
+			source: { screenKey, parentScreenKey, bounds, styles },
 			destination: null,
 		});
 		return state;
@@ -78,6 +84,7 @@ function setLinkDestination(
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
+	parentScreenKey?: ScreenKey,
 ) {
 	"worklet";
 	registry.modify((state: Any) => {
@@ -88,7 +95,7 @@ function setLinkDestination(
 		// Find the topmost link without a destination
 		for (let i = stack.length - 1; i >= 0; i--) {
 			if (stack[i].destination === null) {
-				stack[i].destination = { screenKey, bounds, styles };
+				stack[i].destination = { screenKey, parentScreenKey, bounds, styles };
 				break;
 			}
 		}
@@ -105,7 +112,9 @@ function clearLinksForScreen(tag: TagID, screenKey: ScreenKey) {
 		state[tag].linkStack = state[tag].linkStack.filter(
 			(link: TagLink) =>
 				link.source.screenKey !== screenKey &&
-				link.destination?.screenKey !== screenKey,
+				link.source.parentScreenKey !== screenKey &&
+				link.destination?.screenKey !== screenKey &&
+				link.destination?.parentScreenKey !== screenKey,
 		);
 		return state;
 	});
@@ -127,10 +136,21 @@ function getTagState(tag: TagID) {
 	return registry.value[tag] ?? null;
 }
 
+// Helper to check if a screen identifier matches a given key
+function matchesScreenKey(
+	identifier: ScreenIdentifier | null | undefined,
+	key: ScreenKey,
+): boolean {
+	"worklet";
+	if (!identifier) return false;
+	return identifier.screenKey === key || identifier.parentScreenKey === key;
+}
+
 // Get the active link for a specific screen (finds link where screen is source or destination)
 function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 	"worklet";
 	const stack = registry.value[tag]?.linkStack;
+
 	if (!stack || stack.length === 0) return null;
 
 	// If screenKey provided, find link involving that screen
@@ -143,7 +163,7 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 			// Backward: find link where I am the destination (I'm going back to source)
 			for (let i = stack.length - 1; i >= 0; i--) {
 				const link = stack[i];
-				if (link.destination?.screenKey === screenKey) {
+				if (matchesScreenKey(link.destination, screenKey)) {
 					return link;
 				}
 			}
@@ -153,8 +173,8 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 		for (let i = stack.length - 1; i >= 0; i--) {
 			const link = stack[i];
 			if (
-				link.source.screenKey === screenKey ||
-				link.destination?.screenKey === screenKey
+				matchesScreenKey(link.source, screenKey) ||
+				matchesScreenKey(link.destination, screenKey)
 			) {
 				return link;
 			}
@@ -183,8 +203,8 @@ function findActiveTagForScreen(screenKey: ScreenKey): TagID | null {
 		if (stack) {
 			for (const link of stack) {
 				if (
-					link.source.screenKey === screenKey ||
-					link.destination?.screenKey === screenKey
+					matchesScreenKey(link.source, screenKey) ||
+					matchesScreenKey(link.destination, screenKey)
 				) {
 					return tag;
 				}

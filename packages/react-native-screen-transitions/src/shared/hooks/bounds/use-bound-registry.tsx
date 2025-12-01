@@ -51,10 +51,40 @@ export const useBoundsRegistry = ({
 	onPress,
 }: BoundMeasurerHookProps) => {
 	const { current, next } = useKeys();
+	const currentScreenKey = current.route.key;
+
+	// Get the parent screen key by finding our nested navigator in the parent's routes
+	const getParentScreenKey = (): string | undefined => {
+		const parent = current.navigation.getParent();
+		if (!parent) return undefined;
+
+		const parentState = parent.getState();
+		if (!parentState?.routes) return undefined;
+
+		const currentRouteKey = current.route.key;
+
+		// Check if our route key exists directly in parent's routes
+		const existsInParent = parentState.routes.some(
+			(r) => r.key === currentRouteKey,
+		);
+
+		if (!existsInParent && parentState.index !== undefined) {
+			// We're inside a nested navigator - the focused parent route is our "parent screen"
+			return parentState.routes[parentState.index]?.key;
+		}
+
+		return undefined;
+	};
+
+	const parentScreenKey = getParentScreenKey();
+
 	const isAnimating = AnimationStore.getAnimation(
-		current.route.key,
+		currentScreenKey,
 		"animating",
 	);
+	const isParentAnimating = parentScreenKey
+		? AnimationStore.getAnimation(parentScreenKey, "animating")
+		: null;
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 	const ROOT_MEASUREMENT_SIGNAL = useContext(MeasurementUpdateContext);
@@ -78,13 +108,11 @@ export const useBoundsRegistry = ({
 			const measured = measure(animatedRef);
 			if (!measured) return;
 
-			const key = current.route.key;
-
 			emitUpdate();
 			// 1. Always update the registry map
 			BoundStore.registerOccurrence(
 				sharedBoundTag,
-				key,
+				currentScreenKey,
 				measured,
 				preparedStyles,
 			);
@@ -95,17 +123,24 @@ export const useBoundsRegistry = ({
 					// If its animating, we don't want to trigger a remeasure, we instead just want to use the existing measurements if any
 					const recordedMeasurements = BoundStore.getOccurrence(
 						sharedBoundTag,
-						key,
+						currentScreenKey,
 					);
 					BoundStore.setLinkSource(
 						sharedBoundTag,
-						key,
+						currentScreenKey,
 						recordedMeasurements.bounds,
 						preparedStyles,
+						parentScreenKey,
 					);
 					return;
 				}
-				BoundStore.setLinkSource(sharedBoundTag, key, measured, preparedStyles);
+				BoundStore.setLinkSource(
+					sharedBoundTag,
+					currentScreenKey,
+					measured,
+					preparedStyles,
+					parentScreenKey,
+				);
 			}
 
 			// 3. If I am waking up and a source exists, I am the DESTINATION
@@ -113,9 +148,10 @@ export const useBoundsRegistry = ({
 				// This checks inside if a source exists before setting itself
 				BoundStore.setLinkDestination(
 					sharedBoundTag,
-					key,
+					currentScreenKey,
 					measured,
 					preparedStyles,
+					parentScreenKey,
 				);
 			}
 
@@ -127,8 +163,9 @@ export const useBoundsRegistry = ({
 
 	const handleInitialLayout = useStableCallbackValue(() => {
 		"worklet";
-		if (!sharedBoundTag || hasMeasuredOnLayout.value || !isAnimating.value)
-			return;
+		if (!sharedBoundTag || hasMeasuredOnLayout.value) return;
+
+		if (!isAnimating.value && !isParentAnimating?.value) return;
 
 		maybeMeasureAndStore({
 			shouldSetSource: false,
