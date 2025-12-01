@@ -146,20 +146,66 @@ function matchesScreenKey(
 	return identifier.screenKey === key || identifier.parentScreenKey === key;
 }
 
+// function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
+// 	"worklet";
+// 	const stack = registry.value[tag]?.linkStack;
+// 	if (!stack || stack.length === 0) return null;
+
+// 	if (screenKey) {
+// 		if (isClosing) {
+// 			for (let i = stack.length - 1; i >= 0; i--) {
+// 				if (matchesScreenKey(stack[i].destination, screenKey)) {
+// 					return stack[i];
+// 				}
+// 			}
+// 		}
+
+// 		for (let i = stack.length - 1; i >= 0; i--) {
+// 			const link = stack[i];
+// 			if (
+// 				matchesScreenKey(link.source, screenKey) ||
+// 				matchesScreenKey(link.destination, screenKey)
+// 			) {
+// 				return link;
+// 			}
+// 		}
+// 		// Don't return null here - fall through to generic lookup
+// 	}
+
+// 	// Fallback: return most recent link for this tag
+// 	// (handles timing issues where destination isn't set yet)
+// 	for (let i = stack.length - 1; i >= 0; i--) {
+// 		if (stack[i].destination !== null) {
+// 			return stack[i];
+// 		}
+// 	}
+
+// 	// Last resort: return most recent even if incomplete
+// 	return stack[stack.length - 1] ?? null;
+// }
 function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 	"worklet";
 	const stack = registry.value[tag]?.linkStack;
+
 	if (!stack || stack.length === 0) return null;
 
+	// If screenKey provided, find link involving that screen
 	if (screenKey) {
+		// When closing (backward nav), we want the link where this screen is the DESTINATION
+		// When opening (forward nav), we want the link where this screen is the DESTINATION too
+		// The source is always the "from" screen, destination is the "to" screen
+
 		if (isClosing) {
+			// Backward: find link where I am the destination (I'm going back to source)
 			for (let i = stack.length - 1; i >= 0; i--) {
-				if (matchesScreenKey(stack[i].destination, screenKey)) {
-					return stack[i];
+				const link = stack[i];
+				if (matchesScreenKey(link.destination, screenKey)) {
+					return link;
 				}
 			}
 		}
 
+		// Forward or fallback: find any link involving this screen
 		for (let i = stack.length - 1; i >= 0; i--) {
 			const link = stack[i];
 			if (
@@ -169,18 +215,9 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 				return link;
 			}
 		}
-		// Don't return null here - fall through to generic lookup
+		return null;
 	}
 
-	// Fallback: return most recent link for this tag
-	// (handles timing issues where destination isn't set yet)
-	for (let i = stack.length - 1; i >= 0; i--) {
-		if (stack[i].destination !== null) {
-			return stack[i];
-		}
-	}
-
-	// Last resort: return most recent even if incomplete
 	return stack[stack.length - 1] ?? null;
 }
 

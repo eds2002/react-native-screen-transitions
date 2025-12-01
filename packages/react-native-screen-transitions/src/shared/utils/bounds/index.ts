@@ -45,50 +45,65 @@ const resolveBounds = (props: {
 	previous?: ScreenTransitionState;
 	current?: ScreenTransitionState;
 	next?: ScreenTransitionState;
+	toRect?: Partial<MeasuredDimensions>;
+	dimensions: Layout;
 	computeOptions: BoundsBuilderOptions;
-	dimensions: Layout; // Add this parameter
 }) => {
 	"worklet";
 	const entering = !props.next;
+	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
 	const isClosing = props.current?.closing === 1;
 
-	const link = BoundStore.getActiveLink(
+	const isFullscreenTarget = props.computeOptions.target === "fullscreen";
+
+	// Try exact match first (strict matching for nested stacks)
+	let link = BoundStore.getActiveLink(
 		props.id,
 		props.current?.route.key,
 		isClosing,
 	);
 
-	// Handle target: "fullscreen" or custom MeasuredDimensions
-	// Only requires source, end is derived from target
-	if (props.computeOptions.target && props.computeOptions.target !== "bound") {
-		const source = link?.source;
-		if (!source) {
-			return { start: null, end: null, entering };
-		}
+	// For fullscreen target, fall back to most recent link for this tag
+	// (destination screen might not have a matching element)
+	if (!link && isFullscreenTarget) {
+		link = BoundStore.getActiveLink(props.id); // No screenKey = get most recent
+	}
 
-		let end: MeasuredDimensions;
-
-		if (props.computeOptions.target === "fullscreen") {
-			end = FULLSCREEN_DIMENSIONS(props.dimensions);
-		} else {
-			end = props.computeOptions.target;
-		}
-
+	if (!link || !link.source) {
 		return {
-			start: source.bounds,
-			end,
+			start: null,
+			end: null,
 			entering,
 		};
 	}
 
-	// Default case: both source and destination required from link
-	if (!link || !link.destination || !link.source) {
-		return { start: null, end: null, entering };
+	// For fullscreen target, destination element is not required
+	if (!isFullscreenTarget && !link.destination) {
+		return {
+			start: null,
+			end: null,
+			entering,
+		};
+	}
+
+	const { destination, source } = link;
+
+	const start = source.bounds;
+	let end = destination?.bounds ?? fullscreen;
+
+	if (isFullscreenTarget) {
+		end = fullscreen;
+	}
+
+	const customTarget = props.computeOptions.target;
+
+	if (typeof customTarget === "object") {
+		end = customTarget;
 	}
 
 	return {
-		start: link.source.bounds,
-		end: link.destination.bounds,
+		start,
+		end,
 		entering,
 	};
 };
