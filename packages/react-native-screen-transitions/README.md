@@ -1,5 +1,9 @@
 # react-native-screen-transitions
 
+> ⚠️ **Work In Progress** ⚠️
+> This documentation is for **v3 beta 10**. API and features may change.
+
+
 | iOS                                                                                                                                     | Android                                                                                                                    |
 | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | <video src="https://github.com/user-attachments/assets/c0d17b8f-7268-421c-9051-e242f8ddca76" width="300" height="600" controls></video> | <video src="https://github.com/user-attachments/assets/3f8d5fb1-96d2-4fe3-860d-62f6fb5a687e" width="300" controls></video> |
@@ -47,7 +51,7 @@ import {
   createNativeStackNavigator,
   type NativeStackNavigationEventMap,
   type NativeStackNavigationOptions,
-} from "react-native-screen-transitions";
+} from "react-native-screen-transitions/native-stack";
 
 const { Navigator } = createNativeStackNavigator();
 
@@ -67,7 +71,7 @@ If you’re using **React Navigation** directly (not Expo Router), the navigator
 No extra setup is required—just import and use as usual:
 
 ```tsx
-import { createNativeStackNavigator } from "react-native-screen-transitions";
+import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
 
 const Stack = createNativeStackNavigator();
 
@@ -102,6 +106,55 @@ To avoid collisions with the new options above, the built-in React Navigation ge
 | `gestureResponseDistance` | `nativeGestureResponseDistance` |
 
 All other React Navigation native-stack options keep their original names.
+
+## Blank Stack (New in v3)
+
+v3 introduces `createBlankStackNavigator`, a pure JavaScript stack inspired by `react-navigation/stack`.
+Unlike `native-stack`, it does not rely on native screen primitives for transitions, giving you full control over animations without fighting the OS.
+
+**Philosophy:**
+- **"Blank" Canvas:** No default OS-style animations. You build or choose your transitions.
+- **High Performance:** Logic is handled in JS (Reanimated), avoiding native-side interruptions.
+- **No Hacks:** Does not use transparent modals or `beforeRemove` listeners.
+
+### Usage
+
+```tsx
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator();
+
+function App() {
+  return (
+    <Stack.Navigator screenOptions={{ ...Transition.Presets.SlideFromBottom() }}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Detail" component={DetailScreen} />
+    </Stack.Navigator>
+  );
+}
+```
+
+### Overlay
+
+The Blank Stack introduces a powerful `overlay` prop for animating headers, footers, or floating elements that persist or transition between screens.
+
+- **Modes:**
+  - `float`: Persists above the stack (like a native header). Smartly handles transitions so it doesn't disappear prematurely.
+  - `screen`: Moves with the screen content.
+
+```tsx
+<Stack.Screen
+  name="Profile"
+  options={{
+    overlayShown: true,
+    overlayMode: 'float',
+    overlay: ({ overlayAnimation, insets }) => (
+       // Your custom header
+       <Header progress={overlayAnimation} top={insets.top} />
+    )
+  }}
+/>
+```
 
 ## Creating your screen animations
 
@@ -335,11 +388,13 @@ gestureActivationArea: { top: 'screen', left: 'edge' }
 
 ## Bounds (measure-driven screen transitions)
 
+> **⚠️ Breaking Change in v3**: The `sharedBoundTag` is now **strictly required** for all dynamic animations. The new architecture uses a Link Stack system that relies on this ID to correctly pair source and destination views. Without it, animations will fail.
+
 Bounds let you animate any component between two screens by measuring its start and end positions. They are not shared elements — just measurements.
 
-**Current Implementation:** For bounds to be measured, a `Transition.Pressable` must have both an `onPress` handler and a `sharedBoundTag`. When pressed, it triggers measurement. If the `Transition.Pressable` has children with `sharedBoundTag`s, those children are automatically measured and stored as well.
-
-_Note: This measurement trigger mechanism may change in future versions._
+**Measurement Behavior (v3)**: In v3, bounds are automatically measured **before a screen leaves the stack**. The trigger for measurement depends on the presence of an `onPress` handler on a `Transition.Pressable` component with a `sharedBoundTag`:
+*   **With `onPress`**: If a `Transition.Pressable` has an `onPress` handler, it will automatically measure its bounds (and the bounds of any children with `sharedBoundTag`s) when pressed.
+*   **Without `onPress`**: If a `Transition.Pressable` does *not* have an `onPress` handler, it will measure its bounds (and its children's) when the screen blurs (i.e., just before the screen transitions away).
 
 1. Tag source and destination with pressable triggers
 
