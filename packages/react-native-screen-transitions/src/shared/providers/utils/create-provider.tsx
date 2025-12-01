@@ -15,7 +15,7 @@ export default function createProvider<
 	ProviderName extends string,
 	Guarded extends boolean = true,
 >(name: ProviderName, options?: { guarded?: Guarded }) {
-	return <ProviderProps extends PropsWithChildren<object>, ContextValue>(
+	return <ProviderProps extends object, ContextValue>(
 		factory: (props: ProviderProps) => {
 			value?: ContextValue;
 			enabled?: boolean;
@@ -29,7 +29,7 @@ export default function createProvider<
 
 		const Provider: React.FC<ProviderProps> = (props) => {
 			const {
-				children = props.children,
+				children = (props as { children?: ReactNode }).children,
 				enabled = true,
 				value,
 			} = factory(props);

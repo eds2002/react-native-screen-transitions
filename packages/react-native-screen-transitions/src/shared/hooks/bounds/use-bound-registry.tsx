@@ -1,8 +1,6 @@
 import {
-	createContext,
-	Fragment,
+	type ReactNode,
 	useCallback,
-	useContext,
 	useLayoutEffect,
 	useMemo,
 	useRef,
@@ -18,19 +16,13 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
-import { useKeys } from "../../providers/keys";
+import { type TransitionDescriptor, useKeys } from "../../providers/keys";
+import createProvider from "../../providers/utils/create-provider";
 import { AnimationStore } from "../../stores/animation-store";
 import { BoundStore } from "../../stores/bound-store";
 import { prepareStyleForBounds } from "../../utils/bounds/_utils/styles";
 import useStableCallback from "../use-stable-callback";
 import useStableCallbackValue from "../use-stable-callback-value";
-
-interface BoundMeasurerHookProps {
-	sharedBoundTag?: string;
-	animatedRef: AnimatedRef<View>;
-	style: StyleProps;
-	onPress?: ((...args: unknown[]) => void) | undefined;
-}
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
@@ -38,46 +30,65 @@ interface MaybeMeasureAndStoreParams {
 	shouldSetDestination?: boolean;
 }
 
-interface MeasurementUpdateContextType {
+interface BoundRegistryRenderProps {
+	handleInitialLayout: () => void;
+	captureActiveOnPress: () => void;
+}
+
+interface BoundRegistryProviderProps {
+	sharedBoundTag?: string;
+	animatedRef: AnimatedRef<View>;
+	style: StyleProps;
+	onPress?: ((...args: unknown[]) => void) | undefined;
+	children: (props: BoundRegistryRenderProps) => ReactNode;
+}
+
+interface BoundRegistryContextValue {
 	updateSignal: SharedValue<number>;
 }
 
-const MeasurementUpdateContext =
-	createContext<MeasurementUpdateContextType | null>(null);
+/**
+ * Gets the parent screen's route key for nested navigators.
+ * Returns undefined if we're not inside a nested navigator.
+ */
+const getParentScreenKey = (
+	current: TransitionDescriptor,
+): string | undefined => {
+	const parent = current.navigation.getParent();
+	if (!parent) return undefined;
 
-export const useBoundsRegistry = ({
-	sharedBoundTag,
-	animatedRef,
-	style,
-	onPress,
-}: BoundMeasurerHookProps) => {
-	const { current, next } = useKeys();
-	const currentScreenKey = current.route.key;
+	const parentState = parent.getState();
+	if (!parentState?.routes) return undefined;
 
-	// Get the parent screen key by finding our nested navigator in the parent's routes
-	const getParentScreenKey = (): string | undefined => {
-		const parent = current.navigation.getParent();
-		if (!parent) return undefined;
+	// Check if our route key exists directly in parent's routes
+	const existsInParent = parentState.routes.some(
+		(r) => r.key === current.route.key,
+	);
 
-		const parentState = parent.getState();
-		if (!parentState?.routes) return undefined;
+	// If we don't exist in parent's routes, we're nested inside the focused route
+	if (!existsInParent && parentState.index !== undefined) {
+		return parentState.routes[parentState.index]?.key;
+	}
 
-		const currentRouteKey = current.route.key;
+	return undefined;
+};
 
-		// Check if our route key exists directly in parent's routes
-		const existsInParent = parentState.routes.some(
-			(r) => r.key === currentRouteKey,
-		);
-
-		if (!existsInParent && parentState.index !== undefined) {
-			// We're inside a nested navigator - the focused parent route is our "parent screen"
-			return parentState.routes[parentState.index]?.key;
-		}
-
-		return undefined;
-	};
-
-	const parentScreenKey = getParentScreenKey();
+/**
+ * Handles initial layout measurement for destination elements.
+ * Only measures if an animation is in progress (local or parent).
+ */
+const useInitialLayoutHandler = (params: {
+	sharedBoundTag?: string;
+	currentScreenKey: string;
+	parentScreenKey?: string;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const {
+		sharedBoundTag,
+		currentScreenKey,
+		parentScreenKey,
+		maybeMeasureAndStore,
+	} = params;
 
 	const isAnimating = AnimationStore.getAnimation(
 		currentScreenKey,
@@ -86,86 +97,12 @@ export const useBoundsRegistry = ({
 	const isParentAnimating = parentScreenKey
 		? AnimationStore.getAnimation(parentScreenKey, "animating")
 		: null;
-	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
-
-	const ROOT_MEASUREMENT_SIGNAL = useContext(MeasurementUpdateContext);
-	const ROOT_SIGNAL = useSharedValue(0);
-	const IS_ROOT = !ROOT_MEASUREMENT_SIGNAL;
-
-	const emitUpdate = useStableCallbackValue(() => {
-		"worklet";
-		if (IS_ROOT) ROOT_SIGNAL.value = ROOT_SIGNAL.value + 1;
-	});
-
-	const maybeMeasureAndStore = useStableCallbackValue(
-		({
-			onPress,
-			shouldSetSource,
-			shouldSetDestination,
-		}: MaybeMeasureAndStoreParams = {}) => {
-			"worklet";
-			if (!sharedBoundTag) return;
-
-			const measured = measure(animatedRef);
-			if (!measured) return;
-
-			emitUpdate();
-			// 1. Always update the registry map
-			BoundStore.registerOccurrence(
-				sharedBoundTag,
-				currentScreenKey,
-				measured,
-				preparedStyles,
-			);
-
-			// 2. If this is a press (or passive start), I am the SOURCE
-			if (shouldSetSource) {
-				if (isAnimating.value) {
-					// If its animating, we don't want to trigger a remeasure, we instead just want to use the existing measurements if any
-					const recordedMeasurements = BoundStore.getOccurrence(
-						sharedBoundTag,
-						currentScreenKey,
-					);
-					BoundStore.setLinkSource(
-						sharedBoundTag,
-						currentScreenKey,
-						recordedMeasurements.bounds,
-						preparedStyles,
-						parentScreenKey,
-					);
-					return;
-				}
-				BoundStore.setLinkSource(
-					sharedBoundTag,
-					currentScreenKey,
-					measured,
-					preparedStyles,
-					parentScreenKey,
-				);
-			}
-
-			// 3. If I am waking up and a source exists, I am the DESTINATION
-			if (shouldSetDestination) {
-				// This checks inside if a source exists before setting itself
-				BoundStore.setLinkDestination(
-					sharedBoundTag,
-					currentScreenKey,
-					measured,
-					preparedStyles,
-					parentScreenKey,
-				);
-			}
-
-			if (onPress) runOnJS(onPress)();
-		},
-	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
 
-	const handleInitialLayout = useCallback(() => {
+	return useCallback(() => {
 		"worklet";
 		if (!sharedBoundTag || hasMeasuredOnLayout.value) return;
-
 		if (!isAnimating.value && !isParentAnimating?.value) return;
 
 		maybeMeasureAndStore({
@@ -181,67 +118,169 @@ export const useBoundsRegistry = ({
 		isParentAnimating,
 		maybeMeasureAndStore,
 	]);
+};
 
-	const captureActiveOnPress = useStableCallback(() => {
-		if (!sharedBoundTag) {
-			if (onPress) onPress();
-			return;
-		}
-		// I am the Source
-		runOnUI(maybeMeasureAndStore)({ onPress, shouldSetSource: true });
-	});
-
-	const MeasurementSyncProvider = useMemo(() => {
-		if (!IS_ROOT || !sharedBoundTag) {
-			return Fragment;
-		}
-
-		return ({ children }: { children: React.ReactNode }) => (
-			<MeasurementUpdateContext.Provider value={{ updateSignal: ROOT_SIGNAL }}>
-				{children}
-			</MeasurementUpdateContext.Provider>
-		);
-	}, [IS_ROOT, sharedBoundTag, ROOT_SIGNAL]);
-
+/**
+ * Measures non-pressable elements when screen becomes blurred.
+ * Captures bounds right before transition starts.
+ */
+const useBlurMeasurement = (params: {
+	sharedBoundTag?: string;
+	next?: TransitionDescriptor;
+	onPress?: () => void;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const { sharedBoundTag, next, onPress, maybeMeasureAndStore } = params;
 	const prevNextRef = useRef(next);
-	/**
-	 * Measure non-pressable elements when the screen goes from focused to blurred
-	 * (or when a new `next` descriptor appears) so we capture final bounds
-	 * right before the transition starts.
-	 */
+
 	useLayoutEffect(() => {
 		if (!sharedBoundTag || onPress) return;
 
 		const hadNext = !!prevNextRef.current;
 		const hasNext = !!next;
 
+		// Screen went from focused to blurred
 		if (!hadNext && hasNext) {
-			runOnUI(maybeMeasureAndStore)({
-				shouldSetSource: true,
-			});
+			runOnUI(maybeMeasureAndStore)({ shouldSetSource: true });
 		}
 
 		prevNextRef.current = next;
 	}, [next, sharedBoundTag, onPress, maybeMeasureAndStore]);
+};
 
-	/**
-	 * Signal child shared elements (nested under this provider) to refresh their
-	 * measurements when the root updates.
-	 */
+/**
+ * Syncs child measurements when parent updates.
+ */
+const useParentSyncReaction = (params: {
+	parentContext: BoundRegistryContextValue | null;
+	maybeMeasureAndStore: (options?: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const { parentContext, maybeMeasureAndStore } = params;
+
 	useAnimatedReaction(
-		() => ROOT_MEASUREMENT_SIGNAL?.updateSignal.value,
-		(current) => {
+		() => parentContext?.updateSignal.value,
+		(value) => {
 			"worklet";
-
-			if (current === 0 || current === undefined) return;
-
+			if (value === 0 || value === undefined) return;
 			maybeMeasureAndStore();
 		},
 	);
-
-	return {
-		handleInitialLayout,
-		captureActiveOnPress,
-		MeasurementSyncProvider,
-	};
 };
+
+const { BoundRegistryProvider, useBoundRegistryContext } = createProvider(
+	"BoundRegistry",
+	{ guarded: false },
+)<BoundRegistryProviderProps, BoundRegistryContextValue>(
+	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
+		const { current, next } = useKeys();
+		const currentScreenKey = current.route.key;
+		const parentScreenKey = getParentScreenKey(current);
+
+		// Context & signals
+		const parentContext: BoundRegistryContextValue | null =
+			useBoundRegistryContext();
+		const ownSignal = useSharedValue(0);
+		const updateSignal: SharedValue<number> =
+			parentContext?.updateSignal ?? ownSignal;
+
+		const isAnimating = AnimationStore.getAnimation(
+			currentScreenKey,
+			"animating",
+		);
+		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
+
+		const emitUpdate = useStableCallbackValue(() => {
+			"worklet";
+			const isRoot = !parentContext;
+			if (isRoot) updateSignal.value = updateSignal.value + 1;
+		});
+
+		const maybeMeasureAndStore = useStableCallbackValue(
+			({
+				onPress,
+				shouldSetSource,
+				shouldSetDestination,
+			}: MaybeMeasureAndStoreParams = {}) => {
+				"worklet";
+				if (!sharedBoundTag) return;
+
+				const measured = measure(animatedRef);
+				if (!measured) return;
+
+				emitUpdate();
+
+				// Always register occurrence
+				BoundStore.registerOccurrence(
+					sharedBoundTag,
+					currentScreenKey,
+					measured,
+					preparedStyles,
+				);
+
+				// Set as source (on press or blur)
+				if (shouldSetSource) {
+					if (isAnimating.value) {
+						const existing = BoundStore.getOccurrence(
+							sharedBoundTag,
+							currentScreenKey,
+						);
+						BoundStore.setLinkSource(
+							sharedBoundTag,
+							currentScreenKey,
+							existing.bounds,
+							preparedStyles,
+							parentScreenKey,
+						);
+						return;
+					}
+					BoundStore.setLinkSource(
+						sharedBoundTag,
+						currentScreenKey,
+						measured,
+						preparedStyles,
+						parentScreenKey,
+					);
+				}
+
+				// Set as destination (on mount during animation)
+				if (shouldSetDestination) {
+					BoundStore.setLinkDestination(
+						sharedBoundTag,
+						currentScreenKey,
+						measured,
+						preparedStyles,
+						parentScreenKey,
+					);
+				}
+
+				if (onPress) runOnJS(onPress)();
+			},
+		);
+
+		const handleInitialLayout = useInitialLayoutHandler({
+			sharedBoundTag,
+			currentScreenKey,
+			parentScreenKey,
+			maybeMeasureAndStore,
+		});
+
+		const captureActiveOnPress = useStableCallback(() => {
+			if (!sharedBoundTag) {
+				onPress?.();
+				return;
+			}
+			runOnUI(maybeMeasureAndStore)({ onPress, shouldSetSource: true });
+		});
+
+		// Side effects
+		useBlurMeasurement({ sharedBoundTag, next, onPress, maybeMeasureAndStore });
+		useParentSyncReaction({ parentContext, maybeMeasureAndStore });
+
+		return {
+			value: { updateSignal },
+			children: children({ handleInitialLayout, captureActiveOnPress }),
+		};
+	},
+);
+
+export { BoundRegistryProvider };

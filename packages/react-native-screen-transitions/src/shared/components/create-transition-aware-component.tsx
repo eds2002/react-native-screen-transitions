@@ -4,7 +4,10 @@ import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
-import { useBoundsRegistry } from "../hooks/bounds/use-bound-registry";
+import {
+	BoundRegistryProvider,
+	useBoundsRegistry,
+} from "../hooks/bounds/use-bound-registry";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { useGestureContext } from "../providers/gestures";
 import type { TransitionAwareProps } from "../types/core";
@@ -61,30 +64,26 @@ export function createTransitionAwareComponent<P extends object>(
 			style,
 		});
 
-		const {
-			handleInitialLayout,
-			captureActiveOnPress,
-			MeasurementSyncProvider,
-		} = useBoundsRegistry({
-			sharedBoundTag,
-			animatedRef,
-			style,
-			onPress,
-		});
-
 		return (
-			<MeasurementSyncProvider>
-				<AnimatedComponent
-					{...(rest as Any)}
-					ref={animatedRef}
-					style={[style, associatedStyles]}
-					onPress={captureActiveOnPress}
-					onLayout={runOnUI(handleInitialLayout)}
-					collapsable={!sharedBoundTag}
-				>
-					{children}
-				</AnimatedComponent>
-			</MeasurementSyncProvider>
+			<BoundRegistryProvider
+				animatedRef={animatedRef}
+				style={style}
+				onPress={onPress}
+				sharedBoundTag={sharedBoundTag}
+			>
+				{({ captureActiveOnPress, handleInitialLayout }) => (
+					<AnimatedComponent
+						{...(rest as Any)}
+						ref={animatedRef}
+						style={[style, associatedStyles]}
+						onPress={captureActiveOnPress}
+						onLayout={runOnUI(handleInitialLayout)}
+						collapsable={!sharedBoundTag}
+					>
+						{children}
+					</AnimatedComponent>
+				)}
+			</BoundRegistryProvider>
 		);
 	});
 
