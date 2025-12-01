@@ -5,7 +5,7 @@ import type { BoundEntry } from "./types/bounds";
 import type { Layout } from "./types/core";
 import type { ActivationArea } from "./types/gesture";
 import type { Complete } from "./types/utils";
-import type { BoundsBuilderOptions } from "./utils/bounds/_types/builder";
+import type { BoundsBuilderOptions } from "./utils/bounds/types/builder";
 
 /**
  * Masked view integration

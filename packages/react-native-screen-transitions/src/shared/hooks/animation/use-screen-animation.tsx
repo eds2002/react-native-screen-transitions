@@ -5,10 +5,10 @@ import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
-import { type TransitionDescriptor, useKeys } from "../../providers/keys";
+import { type TransitionDescriptor, useKeys } from "../../providers/keys.provider";
 
-import { AnimationStore } from "../../stores/animation-store";
-import { GestureStore, type GestureStoreMap } from "../../stores/gesture-store";
+import { AnimationStore } from "../../stores/animation.store";
+import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,

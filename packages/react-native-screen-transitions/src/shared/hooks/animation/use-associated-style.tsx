@@ -5,7 +5,7 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../constants";
-import { useTransitionStyles } from "../../providers/transition-styles";
+import { useTransitionStyles } from "../../providers/transition-styles.provider";
 
 type Props = {
 	id?: string;

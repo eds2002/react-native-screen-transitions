@@ -1,5 +1,5 @@
 import { runOnJS } from "react-native-reanimated";
-import type { AnimationStoreMap } from "../../stores/animation-store";
+import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation";
 import { animate } from "./animate";
 

@@ -18,11 +18,11 @@ import {
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
 import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
-import { AnimationStore } from "../stores/animation-store";
-import { BoundStore } from "../stores/bound-store";
-import { prepareStyleForBounds } from "../utils/bounds/_utils/styles";
-import { type TransitionDescriptor, useKeys } from "./keys";
-import createProvider from "./utils/create-provider";
+import { AnimationStore } from "../stores/animation.store";
+import { BoundStore } from "../stores/bounds.store";
+import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
+import createProvider from "../utils/create-provider";
+import { type TransitionDescriptor, useKeys } from "./keys.provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
@@ -30,20 +30,20 @@ interface MaybeMeasureAndStoreParams {
 	shouldSetDestination?: boolean;
 }
 
-interface BoundRegistryRenderProps {
+interface RegisterBoundsRenderProps {
 	handleInitialLayout: () => void;
 	captureActiveOnPress: () => void;
 }
 
-interface BoundRegistryProviderProps {
+interface RegisterBoundsProviderProps {
 	sharedBoundTag?: string;
 	animatedRef: AnimatedRef<View>;
 	style: StyleProps;
 	onPress?: ((...args: unknown[]) => void) | undefined;
-	children: (props: BoundRegistryRenderProps) => ReactNode;
+	children: (props: RegisterBoundsRenderProps) => ReactNode;
 }
 
-interface BoundRegistryContextValue {
+interface RegisterBoundsContextValue {
 	updateSignal: SharedValue<number>;
 }
 
@@ -150,7 +150,7 @@ const useBlurMeasurement = (params: {
  * Syncs child measurements when parent updates.
  */
 const useParentSyncReaction = (params: {
-	parentContext: BoundRegistryContextValue | null;
+	parentContext: RegisterBoundsContextValue | null;
 	maybeMeasureAndStore: (options?: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const { parentContext, maybeMeasureAndStore } = params;
@@ -165,18 +165,18 @@ const useParentSyncReaction = (params: {
 	);
 };
 
-const { BoundRegistryProvider, useBoundRegistryContext } = createProvider(
-	"BoundRegistry",
+const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
+	"RegisterBounds",
 	{ guarded: false },
-)<BoundRegistryProviderProps, BoundRegistryContextValue>(
+)<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
 	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
 		const { current, next } = useKeys();
 		const currentScreenKey = current.route.key;
 		const parentScreenKey = getParentScreenKey(current);
 
 		// Context & signals
-		const parentContext: BoundRegistryContextValue | null =
-			useBoundRegistryContext();
+		const parentContext: RegisterBoundsContextValue | null =
+			useRegisterBoundsContext();
 		const ownSignal = useSharedValue(0);
 		const updateSignal: SharedValue<number> =
 			parentContext?.updateSignal ?? ownSignal;
@@ -281,4 +281,4 @@ const { BoundRegistryProvider, useBoundRegistryContext } = createProvider(
 	},
 );
 
-export { BoundRegistryProvider };
+export { RegisterBoundsProvider };

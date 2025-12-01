@@ -2,7 +2,7 @@ import type {
 	GestureStateChangeEvent,
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
-import type { GestureStoreMap } from "../../stores/gesture-store";
+import type { GestureStoreMap } from "../../stores/gesture.store";
 import type { AnimationConfig } from "../../types/animation";
 import { animate } from "../animation/animate";
 import { velocity } from "./velocity";

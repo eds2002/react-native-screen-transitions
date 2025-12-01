@@ -1,9 +1,9 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import type { TagData } from "../stores/bound-store";
+import type { TagData } from "../stores/bounds.store";
 import type {
 	BoundsBuilderOptions,
 	BoundsReturnType,
-} from "../utils/bounds/_types/builder";
+} from "../utils/bounds/types/builder";
 
 /**
  * Target style computation.

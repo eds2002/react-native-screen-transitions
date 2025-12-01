@@ -3,13 +3,7 @@
  * https://github.com/MatiPl01/react-native-sortables/blob/main/packages/react-native-sortables/src/providers/utils/createProvider.tsx
  * SUPER COOL AMAZING UTILITY
  */
-import {
-	createContext,
-	type PropsWithChildren,
-	type ReactNode,
-	useContext,
-	useMemo,
-} from "react";
+import { createContext, type ReactNode, useContext, useMemo } from "react";
 
 export default function createProvider<
 	ProviderName extends string,

@@ -5,7 +5,7 @@ import { GestureDetector } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
-import type { GestureStoreMap } from "../stores/gesture-store";
+import type { GestureStoreMap } from "../stores/gesture.store";
 
 export type ScrollConfig = {
 	x: number;

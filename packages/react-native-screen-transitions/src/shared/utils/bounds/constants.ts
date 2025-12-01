@@ -1,7 +1,7 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { Layout } from "../../types/core";
 import type { Complete } from "../../types/utils";
-import type { BoundsBuilderOptions } from "./_types/builder";
+import type { BoundsBuilderOptions } from "./types/builder";
 
 export const FULLSCREEN_DIMENSIONS = (
 	dimensions: Layout,

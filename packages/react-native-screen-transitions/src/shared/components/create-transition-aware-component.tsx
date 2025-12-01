@@ -5,8 +5,8 @@ import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
-import { BoundRegistryProvider } from "../providers/bounds-registry";
-import { useGestureContext } from "../providers/gestures";
+import { useGestureContext } from "../providers/gestures.provider";
+import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import type { TransitionAwareProps } from "../types/core";
 import type { Any } from "../types/utils";
 
@@ -62,7 +62,7 @@ export function createTransitionAwareComponent<P extends object>(
 		});
 
 		return (
-			<BoundRegistryProvider
+			<RegisterBoundsProvider
 				animatedRef={animatedRef}
 				style={style}
 				onPress={onPress}
@@ -80,7 +80,7 @@ export function createTransitionAwareComponent<P extends object>(
 						{children}
 					</AnimatedComponent>
 				)}
-			</BoundRegistryProvider>
+			</RegisterBoundsProvider>
 		);
 	});
 

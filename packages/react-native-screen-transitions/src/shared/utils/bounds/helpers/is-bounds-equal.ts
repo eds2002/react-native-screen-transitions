@@ -1,5 +1,5 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
-import { BoundStore } from "../../../stores/bound-store";
+import { BoundStore } from "../../../stores/bounds.store";
 
 export const isBoundsEqual = ({
 	measured,

@@ -34,7 +34,7 @@ import {
 	ScreenStackItem,
 } from "react-native-screens";
 import { NativeStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
-import { ScreenTransitionProvider } from "../../shared/providers/screen-transition-provider";
+import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import type {
 	NativeStackDescriptor,
 	NativeStackDescriptorMap,

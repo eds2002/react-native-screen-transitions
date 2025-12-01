@@ -6,11 +6,11 @@ import type { NativeStackDescriptor } from "../../../native-stack/types";
 import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
 import { useSharedValueState } from "../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../hooks/use-stable-callback";
-import { useGestureContext } from "../../providers/gestures";
-import { useKeys } from "../../providers/keys";
-import { AnimationStore } from "../../stores/animation-store";
-import { resetStoresForScreen } from "../../stores/utils/reset-stores-for-screen";
+import { useGestureContext } from "../../providers/gestures.provider";
+import { useKeys } from "../../providers/keys.provider";
+import { AnimationStore } from "../../stores/animation.store";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
+import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
 
 export interface ScreenLifecycleProps {
 	children: React.ReactNode;

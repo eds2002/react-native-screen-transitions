@@ -6,21 +6,17 @@ import {
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 } from "../../constants";
-import { BoundStore, type TagData } from "../../stores/bound-store";
+import { BoundStore, type TagData } from "../../stores/bounds.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
 } from "../../types/animation";
 import type { BoundsAccessor } from "../../types/bounds";
 import type { Layout } from "../../types/core";
-import type {
-	BoundsBuilderOptions,
-	BoundsComputeParams,
-} from "./_types/builder";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
-} from "./_utils/geometry";
+} from "./helpers/geometry";
 import {
 	composeContentStyle,
 	composeSizeAbsolute,
@@ -28,7 +24,11 @@ import {
 	composeTransformAbsolute,
 	composeTransformRelative,
 	type ElementComposeParams,
-} from "./_utils/style-composers";
+} from "./helpers/style-composers";
+import type {
+	BoundsBuilderOptions,
+	BoundsComputeParams,
+} from "./types/builder";
 
 export interface BuildBoundsAccessorParams {
 	current: ScreenTransitionState;

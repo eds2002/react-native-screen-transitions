@@ -8,7 +8,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
-import { AnimationStore } from "../../shared/stores/animation-store";
+import { AnimationStore } from "../../shared/stores/animation.store";
 
 interface ScreenProps {
 	routeKey: string;
