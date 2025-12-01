@@ -1,8 +1,10 @@
+import type { MeasuredDimensions } from "react-native-reanimated";
 import {
 	EMPTY_BOUND_HELPER_RESULT,
 	EMPTY_BOUND_HELPER_RESULT_RAW,
 	ENTER_RANGE,
 	EXIT_RANGE,
+	FULLSCREEN_DIMENSIONS,
 } from "../../constants";
 import { BoundStore } from "../../stores/bound-store";
 import type {
@@ -43,34 +45,49 @@ const resolveBounds = (props: {
 	current?: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	computeOptions: BoundsBuilderOptions;
+	dimensions: Layout; // Add this parameter
 }) => {
 	"worklet";
 	const entering = !props.next;
-
 	const isClosing = props.current?.closing === 1;
+
 	const link = BoundStore.getActiveLink(
 		props.id,
 		props.current?.route.key,
 		isClosing,
 	);
 
-	if (!link || !link.destination || !link.source) {
+	// Handle target: "fullscreen" or custom MeasuredDimensions
+	// Only requires source, end is derived from target
+	if (props.computeOptions.target && props.computeOptions.target !== "bound") {
+		const source = link?.source;
+		if (!source) {
+			return { start: null, end: null, entering };
+		}
+
+		let end: MeasuredDimensions;
+
+		if (props.computeOptions.target === "fullscreen") {
+			end = FULLSCREEN_DIMENSIONS(props.dimensions);
+		} else {
+			end = props.computeOptions.target;
+		}
+
 		return {
-			start: null,
-			end: null,
+			start: source.bounds,
+			end,
 			entering,
 		};
 	}
 
-	const { destination, source } = link;
-
-	const start = source.bounds;
-
-	const end = destination.bounds;
+	// Default case: both source and destination required from link
+	if (!link || !link.destination || !link.source) {
+		return { start: null, end: null, entering };
+	}
 
 	return {
-		start,
-		end,
+		start: link.source.bounds,
+		end: link.destination.bounds,
 		entering,
 	};
 };
@@ -92,6 +109,7 @@ const computeBoundStyles = (
 		current,
 		next,
 		computeOptions,
+		dimensions,
 	});
 
 	if (!start || !end) {
@@ -159,7 +177,7 @@ export const createBounds = (
 
 	const boundsFunction = (params?: BoundsBuilderOptions) => {
 		"worklet";
-		const id = params?.id ?? props.activeBoundId;
+		const id = params?.id;
 
 		return computeBoundStyles(
 			{

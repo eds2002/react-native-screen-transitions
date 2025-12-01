@@ -21,7 +21,7 @@ export type BoundsTarget = "bound" | "fullscreen" | MeasuredDimensions;
 export type BoundsSpace = "relative" | "absolute";
 
 export type BoundsComputeParams = {
-	id: string | null;
+	id?: string;
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
 	progress: number;
@@ -83,6 +83,11 @@ export type BoundsBuilderOptions = {
 	id?: string;
 
 	/**
+	 * Whether the bound should target the screen or the bound.
+	 */
+	target?: BoundsTarget;
+
+	/**
 	 * The method to use to compute the bounds.
 	 *
 	 * - "transform": translates and scales (scaleX/scaleY), no width/height size
@@ -101,29 +106,27 @@ export type BoundsBuilderOptions = {
 	 * @default "relative"
 	 */
 	space?: BoundsSpace;
+
 	/**
 	 * The gesture offsets to apply to the bounds.
 	 */
 	gestures?: { x?: number; y?: number };
+
 	/**
 	 * How the bounds should be scaled between each other.
 	 * @default "match"
 	 */
 	scaleMode?: BoundsScaleMode;
+
 	/**
 	 * Where the bounds should be anchored between each other.
 	 * @default "center"
 	 */
 	anchor?: BoundsAnchor;
+
 	/**
 	 * If true, the raw values will be returned instead of the computed values.
 	 * @default false
 	 */
 	raw?: boolean;
-
-	/**
-	 * Whether the bound should target the screen or the bound.
-	 * @deprecated
-	 */
-	target?: BoundsTarget;
 };

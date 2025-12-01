@@ -104,10 +104,12 @@ export type TransitionInterpolatedStyle = {
 	 * Animated style for the main screen view. Styles are only applied when Transition.View is present.
 	 */
 	contentStyle?: StyleProps;
+
 	/**
 	 * Animated style for a semi-transparent overlay. Styles are only applied when Transition.View is present.
 	 */
 	overlayStyle?: StyleProps;
+
 	/**
 	 * Define your own custom styles by using an id as the key: [id]: StyleProps
 	 */

@@ -16,13 +16,13 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
-import { type TransitionDescriptor, useKeys } from "../../providers/keys";
-import createProvider from "../../providers/utils/create-provider";
-import { AnimationStore } from "../../stores/animation-store";
-import { BoundStore } from "../../stores/bound-store";
-import { prepareStyleForBounds } from "../../utils/bounds/_utils/styles";
-import useStableCallback from "../use-stable-callback";
-import useStableCallbackValue from "../use-stable-callback-value";
+import useStableCallback from "../hooks/use-stable-callback";
+import useStableCallbackValue from "../hooks/use-stable-callback-value";
+import { AnimationStore } from "../stores/animation-store";
+import { BoundStore } from "../stores/bound-store";
+import { prepareStyleForBounds } from "../utils/bounds/_utils/styles";
+import { type TransitionDescriptor, useKeys } from "./keys";
+import createProvider from "./utils/create-provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
