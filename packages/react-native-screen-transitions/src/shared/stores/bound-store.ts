@@ -214,6 +214,11 @@ function findActiveTagForScreen(screenKey: ScreenKey): TagID | null {
 	return null;
 }
 
+function getOccurrence(tag: TagID, key: ScreenKey) {
+	"worklet";
+	return registry.value[tag]?.occurrences[key] ?? null;
+}
+
 export const BoundStore = {
 	registerOccurrence,
 	removeOccurrence,
@@ -224,8 +229,5 @@ export const BoundStore = {
 	getTagState,
 	getActiveLink,
 	findActiveTagForScreen,
-	getOccurrence: (tag: TagID, key: ScreenKey) => {
-		"worklet";
-		return registry.value[tag]?.occurrences[key] ?? null;
-	},
+	getOccurrence,
 };
