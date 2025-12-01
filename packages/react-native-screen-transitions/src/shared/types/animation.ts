@@ -5,14 +5,16 @@ import type {
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import type { BoundEntry, BoundsAccessor } from "./bounds";
+import type { BoundsAccessor } from "./bounds";
 import type { Layout } from "./core";
 import type { GestureValues } from "./gesture";
 
 export interface OverlayInterpolationProps {
 	progress: number;
 	layouts: {
-		/** The `width` and `height` of the screen container. */
+		/**
+		 * The `width` and `height` of the screen container.
+		 */
 		screen: Layout;
 	};
 	insets: EdgeInsets;
@@ -27,32 +29,69 @@ export type ScreenTransitionState = {
 };
 
 export interface ScreenInterpolationProps {
-	/** Values for the screen that came before the current one in the navigation stack. */
+	/**
+	 * Values for the screen that came before the current one in the navigation stack.
+	 */
 	previous: ScreenTransitionState | undefined;
-	/** Values for the current screen being interpolated. */
+
+	/**
+	 * Values for the current screen being interpolated.
+	 */
 	current: ScreenTransitionState;
-	/** Values for the screen that comes after the current one in the navigation stack. */
+
+	/**
+	 * Values for the screen that comes after the current one in the navigation stack.
+	 */
 	next: ScreenTransitionState | undefined;
-	/** Layout measurements for the screen. */
+
+	/**
+	 * Layout measurements for the screen.
+	 */
 	layouts: {
-		/** The `width` and `height` of the screen container. */
+		/**
+		 * The `width` and `height` of the screen container.
+		 */
 		screen: Layout;
 	};
-	/** The safe area insets for the screen. */
+
+	/**
+	 * The safe area insets for the screen.
+	 */
 	insets: EdgeInsets;
-	/** The ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a'). */
+
+	/**
+	 * @deprecated The ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a').
+	 */
 	activeBoundId: string;
-	/** Whether the current screen is the focused (topmost) screen in the stack. */
+
+	/**
+	 * Whether the current screen is the focused (topmost) screen in the stack.
+	 */
 	focused: boolean;
-	/** Combined progress of current and next screen transitions, ranging from 0-2. */
+
+	/**
+	 * Combined progress of current and next screen transitions, ranging from 0-2.
+	 */
 	progress: number;
-	/** Function that provides access to bounds builders for creating shared element transitions. */
+
+	/**
+	 * Function that provides access to bounds builders for creating shared element transitions.
+	 */
 	bounds: BoundsAccessor;
-	/** The screen state that is currently driving the transition (either current or next, whichever is focused). */
+
+	/**
+	 * The screen state that is currently driving the transition (either current or next, whichever is focused).
+	 */
 	active: ScreenTransitionState;
-	/** Whether the active screen is currently transitioning (either being dragged or animating). */
+
+	/**
+	 * Whether the active screen is currently transitioning (either being dragged or animating).
+	 */
 	isActiveTransitioning: boolean;
-	/** Whether the active screen is in the process of being dismissed/closed. */
+
+	/**
+	 * Whether the active screen is in the process of being dismissed/closed.
+	 */
 	isDismissing: boolean;
 }
 
