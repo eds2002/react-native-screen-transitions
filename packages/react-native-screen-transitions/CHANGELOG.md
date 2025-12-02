@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-rc.1
+
+### Patch Changes
+
+- Better handling of measure on blur
+
 ## 3.0.0-beta.11
 
 ### Minor Changes
