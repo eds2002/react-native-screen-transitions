@@ -16,7 +16,7 @@ type Props = {
  * This hook is used to get the associated styles for a given styleId / boundTag.
  */
 export const useAssociatedStyles = ({ id }: Props = {}) => {
-	const { stylesMap, parentStylesMap } = useTransitionStyles();
+	const { stylesMap, ancestorStylesMaps } = useTransitionStyles();
 	const showAfterFirstFrame = useSharedValue(false);
 
 	useDerivedValue(() => {
@@ -42,9 +42,13 @@ export const useAssociatedStyles = ({ id }: Props = {}) => {
 		}
 
 		// Check local styles first, then fall back to parent
-		const localStyles = stylesMap?.value[id];
-		const parentStyles = parentStylesMap?.value[id];
-		const base = localStyles || parentStyles || NO_STYLES;
+		const ownStyle = stylesMap.value[id];
+
+		const ancestorStyle = ancestorStylesMaps.find(
+			(ancestorMap) => ancestorMap.value[id],
+		)?.value[id];
+
+		const base = ownStyle || ancestorStyle || NO_STYLES;
 
 		let opacity = 1;
 

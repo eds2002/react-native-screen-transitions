@@ -11,7 +11,7 @@ type Props = {
 
 type TransitionStylesContextValue = {
 	stylesMap: SharedValue<TransitionInterpolatedStyle>;
-	parentStylesMap?: SharedValue<TransitionInterpolatedStyle>;
+	ancestorStylesMaps: SharedValue<TransitionInterpolatedStyle>[];
 };
 
 export const TransitionStylesContext =
@@ -19,18 +19,16 @@ export const TransitionStylesContext =
 
 export function TransitionStylesProvider({ children }: Props) {
 	const parentCtx = useContext(TransitionStylesContext);
+
 	const { screenInterpolatorProps, screenStyleInterpolator } =
 		_useScreenAnimation();
 
 	const stylesMap = useDerivedValue<TransitionInterpolatedStyle>(() => {
 		"worklet";
-
 		const props = screenInterpolatorProps.value;
 		const bounds = createBounds(props);
-
 		try {
 			if (!screenStyleInterpolator) return NO_STYLES;
-
 			return screenStyleInterpolator({
 				...props,
 				bounds,
@@ -47,11 +45,16 @@ export function TransitionStylesProvider({ children }: Props) {
 	});
 
 	const value = useMemo(() => {
+		// Build ancestor chain: [parent, grandparent, great-grandparent, ...]
+		const ancestorStylesMaps = parentCtx
+			? [parentCtx.stylesMap, ...parentCtx.ancestorStylesMaps]
+			: [];
+
 		return {
 			stylesMap,
-			parentStylesMap: parentCtx?.stylesMap,
+			ancestorStylesMaps,
 		};
-	}, [stylesMap, parentCtx?.stylesMap]);
+	}, [stylesMap, parentCtx]);
 
 	return (
 		<TransitionStylesContext.Provider value={value}>
