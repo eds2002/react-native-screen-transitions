@@ -1,10 +1,5 @@
-import {
-	type ReactNode,
-	useCallback,
-	useLayoutEffect,
-	useMemo,
-	useRef,
-} from "react";
+import { useFocusEffect } from "@react-navigation/native";
+import { type ReactNode, useCallback, useMemo, useRef } from "react";
 import type { View } from "react-native";
 import {
 	type AnimatedRef,
@@ -124,26 +119,32 @@ const useInitialLayoutHandler = (params: {
  */
 const useBlurMeasurement = (params: {
 	sharedBoundTag?: string;
-	next?: TransitionDescriptor;
-	onPress?: () => void;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { sharedBoundTag, next, onPress, maybeMeasureAndStore } = params;
-	const prevNextRef = useRef(next);
+	const { sharedBoundTag, maybeMeasureAndStore } = params;
+	const isFocused = useRef(true);
+	const hasCapturedSource = useRef(false);
 
-	useLayoutEffect(() => {
-		if (!sharedBoundTag || onPress) return;
+	useFocusEffect(
+		useCallback(() => {
+			isFocused.current = true;
+			hasCapturedSource.current = false;
 
-		const hadNext = !!prevNextRef.current;
-		const hasNext = !!next;
+			return () => {
+				if (!sharedBoundTag) return;
+				if (hasCapturedSource.current) return;
 
-		// Screen went from focused to blurred
-		if (!hadNext && hasNext) {
-			runOnUI(maybeMeasureAndStore)({ shouldSetSource: true });
-		}
+				isFocused.current = false;
+				runOnUI(maybeMeasureAndStore)({ shouldSetSource: true });
+			};
+		}, [sharedBoundTag, maybeMeasureAndStore]),
+	);
 
-		prevNextRef.current = next;
-	}, [next, sharedBoundTag, onPress, maybeMeasureAndStore]);
+	return {
+		markSourceCaptured: () => {
+			hasCapturedSource.current = true;
+		},
+	};
 };
 
 /**
@@ -170,7 +171,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 	{ guarded: false },
 )<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
 	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
-		const { current, next } = useKeys();
+		const { current } = useKeys();
 		const currentScreenKey = current.route.key;
 		const parentScreenKey = getParentScreenKey(current);
 
@@ -262,17 +263,22 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 			maybeMeasureAndStore,
 		});
 
+		// Side effects
+		const { markSourceCaptured } = useBlurMeasurement({
+			sharedBoundTag,
+			maybeMeasureAndStore,
+		});
+
+		useParentSyncReaction({ parentContext, maybeMeasureAndStore });
+
 		const captureActiveOnPress = useStableCallback(() => {
 			if (!sharedBoundTag) {
 				onPress?.();
 				return;
 			}
 			runOnUI(maybeMeasureAndStore)({ onPress, shouldSetSource: true });
+			markSourceCaptured();
 		});
-
-		// Side effects
-		useBlurMeasurement({ sharedBoundTag, next, onPress, maybeMeasureAndStore });
-		useParentSyncReaction({ parentContext, maybeMeasureAndStore });
 
 		return {
 			value: { updateSignal },
