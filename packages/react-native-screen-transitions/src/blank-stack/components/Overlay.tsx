@@ -7,6 +7,7 @@ import { Animated, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "../../shared/hooks/animation/use-screen-animation";
 import { KeysProvider, useKeys } from "../../shared/providers/keys.provider";
+import { TransitionStylesProvider } from "../../shared/providers/transition-styles.provider";
 import { useOverlayAnimation } from "../hooks/use-overlay-animation";
 import type {
 	BlankStackDescriptor,
@@ -127,7 +128,9 @@ const FloatOverlay = () => {
 
 	return (
 		<KeysProvider current={current} previous={previous} next={next}>
-			<OverlayHost scene={scene} isFloating />
+			<TransitionStylesProvider>
+				<OverlayHost scene={scene} isFloating />
+			</TransitionStylesProvider>
 		</KeysProvider>
 	);
 };
