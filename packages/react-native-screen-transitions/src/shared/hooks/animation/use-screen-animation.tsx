@@ -69,8 +69,10 @@ const useBuildScreenTransitionState = (
 	}, [key, descriptor?.route]);
 };
 
-const hasTransitionsEnabled = (options?: ScreenTransitionConfig) =>
-	!!(options as NativeStackScreenTransitionConfig)?.enableTransitions;
+const hasTransitionsEnabled = (options?: ScreenTransitionConfig) => {
+	"worklet";
+	return !!(options as NativeStackScreenTransitionConfig)?.enableTransitions;
+};
 
 export function _useScreenAnimation() {
 	const dimensions = useWindowDimensions();

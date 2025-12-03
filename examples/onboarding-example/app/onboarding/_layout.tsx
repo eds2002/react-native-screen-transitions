@@ -1,6 +1,5 @@
 import FontAwesome6 from "@expo/vector-icons/FontAwesome6";
-
-import { router } from "expo-router";
+import { type Href, router } from "expo-router";
 import {
 	KeyboardAvoidingView,
 	Pressable,
@@ -12,7 +11,9 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Transition from "react-native-screen-transitions";
+import Transition, {
+	type ScreenStyleInterpolator,
+} from "react-native-screen-transitions";
 import type { BlankStackOverlayProps } from "react-native-screen-transitions/blank-stack";
 import { ComposableText } from "@/components/composeable-text";
 import { BlankStack } from "@/components/layouts/blank-stack";
@@ -42,29 +43,19 @@ const ProgressPill = ({ animation, index }: ProgressPillProps) => {
 	);
 };
 
-const OverlayComponent = (props: BlankStackOverlayProps) => {
-	const insets = useSafeAreaInsets();
-	const routeMeta = {
-		0: {
-			next: "/onboarding/b",
-			buttonContent: "Set my username",
-		},
-		1: {
-			next: "/onboarding/c",
-			buttonContent: "Set my nickname",
-		},
-		2: {
-			next: "/onboarding/nested-stack/",
-			buttonContent: "All set",
-		},
-	} as const;
+type OnboardingOverlayOptions = {
+	buttonText: string;
+	next?: Href;
+};
 
-	const content = routeMeta[props.focusedIndex as keyof typeof routeMeta];
+const OverlayComponent = (props: BlankStackOverlayProps) => {
+	const content = props.overlayOptions as OnboardingOverlayOptions;
+	const insets = useSafeAreaInsets();
+
 	const onHandlePress = () => {
-		if (!content.next) {
-			return;
-		}
-		router.navigate(content.next);
+		const next = content.next;
+		if (!next) return;
+		router.navigate(next);
 	};
 
 	return (
@@ -114,7 +105,7 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 					onPress={onHandlePress}
 				>
 					<ComposableText
-						text={content?.buttonContent ?? ""}
+						text={content.buttonText ?? ""}
 						style={{
 							color: "white",
 							fontSize: 18,
@@ -127,6 +118,22 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 	);
 };
 
+const sharedScreenInterpolator: ScreenStyleInterpolator = ({
+	progress,
+	layouts: { screen },
+	bounds,
+}) => {
+	"worklet";
+	const x = interpolate(progress, [0, 1, 2], [screen.width, 0, -screen.width]);
+	return {
+		contentStyle: {
+			transform: [{ translateX: x }],
+			backgroundColor: "#FFF",
+		},
+		["SHARED"]: bounds({ id: "SHARED" }),
+	};
+};
+
 export default function OnboardingLayout() {
 	return (
 		<BlankStack>
@@ -136,22 +143,11 @@ export default function OnboardingLayout() {
 					overlay: OverlayComponent,
 					overlayMode: "float",
 					overlayShown: true,
-					screenStyleInterpolator: ({
-						progress,
-						layouts: {
-							screen: { width },
-						},
-					}) => {
-						"worklet";
-
-						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-						return {
-							contentStyle: {
-								transform: [{ translateX: x }],
-								backgroundColor: "#FFF",
-							},
-						};
+					overlayOptions: {
+						buttonText: "Set my username",
+						next: "/onboarding/b",
 					},
+					screenStyleInterpolator: sharedScreenInterpolator,
 				}}
 			/>
 			<BlankStack.Screen
@@ -159,27 +155,11 @@ export default function OnboardingLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
-					screenStyleInterpolator: ({
-						progress,
-						layouts: {
-							screen: { width },
-						},
-						bounds,
-					}) => {
-						"worklet";
-
-						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-						const boundsConfig = bounds({
-							id: "SHARED",
-						});
-						return {
-							contentStyle: {
-								transform: [{ translateX: x }],
-								backgroundColor: "#FFF",
-							},
-							["SHARED"]: boundsConfig,
-						};
+					overlayOptions: {
+						buttonText: "Set my nickname",
+						next: "/onboarding/c",
 					},
+					screenStyleInterpolator: sharedScreenInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.DefaultSpec,
@@ -191,27 +171,11 @@ export default function OnboardingLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
-					screenStyleInterpolator: ({
-						progress,
-						layouts: {
-							screen: { width },
-						},
-						bounds,
-					}) => {
-						"worklet";
-
-						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-						const boundsConfig = bounds({
-							id: "SHARED",
-						});
-						return {
-							contentStyle: {
-								transform: [{ translateX: x }],
-								backgroundColor: "#FFF",
-							},
-							["SHARED"]: boundsConfig,
-						};
+					overlayOptions: {
+						buttonText: "All set",
+						next: "/onboarding/nested-stack/",
 					},
+					screenStyleInterpolator: sharedScreenInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.DefaultSpec,
@@ -223,29 +187,7 @@ export default function OnboardingLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
-					screenStyleInterpolator: ({
-						progress,
-						layouts: { screen },
-						bounds,
-					}) => {
-						"worklet";
-
-						const x = interpolate(
-							progress,
-							[0, 1, 2],
-							[screen.width, 0, -screen.width],
-						);
-						const boundsConfig = bounds({
-							id: "SHARED",
-						});
-						return {
-							contentStyle: {
-								transform: [{ translateX: x }],
-								backgroundColor: "#FFF",
-							},
-							["SHARED"]: boundsConfig,
-						};
-					},
+					screenStyleInterpolator: sharedScreenInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.DefaultSpec,
