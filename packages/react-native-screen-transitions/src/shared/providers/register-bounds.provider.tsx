@@ -43,27 +43,26 @@ interface RegisterBoundsContextValue {
 }
 
 /**
- * Gets the parent screen's route key for nested navigators.
- * Returns undefined if we're not inside a nested navigator.
+ * Builds the full ancestor key chain for nested navigators.
+ * Returns an array of screen keys from immediate parent to root.
+ * [parentKey, grandparentKey, greatGrandparentKey, ...]
  */
-const getParentScreenKey = (current: TransitionDescriptor) => {
-	const parent = current.navigation.getParent();
-	if (!parent) return undefined;
+const getAncestorKeys = (current: TransitionDescriptor): string[] => {
+	const ancestors: string[] = [];
+	let nav = current.navigation.getParent();
 
-	const parentState = parent.getState();
-	if (!parentState?.routes) return undefined;
-
-	// Check if our route key exists directly in parent's routes
-	const existsInParent = parentState.routes.some(
-		(r) => r.key === current.route.key,
-	);
-
-	// If we don't exist in parent's routes, we're nested inside the focused route
-	if (!existsInParent && parentState.index !== undefined) {
-		return parentState.routes[parentState.index]?.key;
+	while (nav) {
+		const state = nav.getState();
+		if (state?.routes && state.index !== undefined) {
+			const focusedRoute = state.routes[state.index];
+			if (focusedRoute?.key) {
+				ancestors.push(focusedRoute.key);
+			}
+		}
+		nav = nav.getParent();
 	}
 
-	return undefined;
+	return ancestors;
 };
 
 /**
@@ -73,13 +72,13 @@ const getParentScreenKey = (current: TransitionDescriptor) => {
 const useInitialLayoutHandler = (params: {
 	sharedBoundTag?: string;
 	currentScreenKey: string;
-	parentScreenKey?: string;
+	ancestorKeys: string[];
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {
 		sharedBoundTag,
 		currentScreenKey,
-		parentScreenKey,
+		ancestorKeys,
 		maybeMeasureAndStore,
 	} = params;
 
@@ -87,28 +86,40 @@ const useInitialLayoutHandler = (params: {
 		currentScreenKey,
 		"animating",
 	);
-	const isParentAnimating = parentScreenKey
-		? AnimationStore.getAnimation(parentScreenKey, "animating")
-		: null;
+
+	// Check if any ancestor is animating
+	const ancestorAnimations = ancestorKeys.map((key) =>
+		AnimationStore.getAnimation(key, "animating"),
+	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
 
 	return useCallback(() => {
 		"worklet";
-		if (!sharedBoundTag || hasMeasuredOnLayout.value) return;
-		if (!isAnimating.value && !isParentAnimating?.value) return;
+		if (!sharedBoundTag || hasMeasuredOnLayout.get()) return;
+
+		// Check if current or any ancestor is animating
+		let isAnyAnimating = isAnimating.get();
+		for (let i = 0; i < ancestorAnimations.length; i++) {
+			if (ancestorAnimations[i].get()) {
+				isAnyAnimating = 1;
+				break;
+			}
+		}
+
+		if (!isAnyAnimating) return;
 
 		maybeMeasureAndStore({
 			shouldSetSource: false,
 			shouldSetDestination: true,
 		});
 
-		hasMeasuredOnLayout.value = true;
+		hasMeasuredOnLayout.set(true);
 	}, [
 		sharedBoundTag,
 		hasMeasuredOnLayout,
 		isAnimating,
-		isParentAnimating,
+		ancestorAnimations,
 		maybeMeasureAndStore,
 	]);
 };
@@ -119,26 +130,37 @@ const useInitialLayoutHandler = (params: {
  */
 const useBlurMeasurement = (params: {
 	sharedBoundTag?: string;
+	ancestorKeys: string[];
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { sharedBoundTag, maybeMeasureAndStore } = params;
-	const isFocused = useRef(true);
+	const { current } = useKeys();
+	const { sharedBoundTag, ancestorKeys, maybeMeasureAndStore } = params;
 	const hasCapturedSource = useRef(false);
 
-	useFocusEffect(
-		useCallback(() => {
-			isFocused.current = true;
-			hasCapturedSource.current = false;
-
-			return () => {
-				if (!sharedBoundTag) return;
-				if (hasCapturedSource.current) return;
-
-				isFocused.current = false;
-				runOnUI(maybeMeasureAndStore)({ shouldSetSource: true });
-			};
-		}, [sharedBoundTag, maybeMeasureAndStore]),
+	const ancestorClosing = [current.route.key, ...ancestorKeys].map((key) =>
+		AnimationStore.getAnimation(key, "closing"),
 	);
+
+	const maybeMeasureOnBlur = useStableCallbackValue(() => {
+		"worklet";
+
+		// Don't measure if current / any ancestor is closing
+		const isOneClosing = ancestorClosing.some((closing) => closing.get());
+		if (isOneClosing) return;
+
+		maybeMeasureAndStore({ shouldSetSource: true });
+	});
+
+	const handleOnScreenBlur = useStableCallback(() => {
+		hasCapturedSource.current = false;
+
+		return () => {
+			if (!sharedBoundTag || hasCapturedSource.current) return;
+			runOnUI(maybeMeasureOnBlur)();
+		};
+	});
+
+	useFocusEffect(handleOnScreenBlur);
 
 	return {
 		markSourceCaptured: () => {
@@ -157,7 +179,7 @@ const useParentSyncReaction = (params: {
 	const { parentContext, maybeMeasureAndStore } = params;
 
 	useAnimatedReaction(
-		() => parentContext?.updateSignal.value,
+		() => parentContext?.updateSignal.get(),
 		(value) => {
 			"worklet";
 			if (value === 0 || value === undefined) return;
@@ -173,11 +195,12 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
 		const { current } = useKeys();
 		const currentScreenKey = current.route.key;
-		const parentScreenKey = getParentScreenKey(current);
+		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 
 		// Context & signals
 		const parentContext: RegisterBoundsContextValue | null =
 			useRegisterBoundsContext();
+
 		const ownSignal = useSharedValue(0);
 		const updateSignal: SharedValue<number> =
 			parentContext?.updateSignal ?? ownSignal;
@@ -191,7 +214,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		const emitUpdate = useStableCallbackValue(() => {
 			"worklet";
 			const isRoot = !parentContext;
-			if (isRoot) updateSignal.value = updateSignal.value + 1;
+			if (isRoot) updateSignal.set(updateSignal.get() + 1);
 		});
 
 		const maybeMeasureAndStore = useStableCallbackValue(
@@ -208,28 +231,31 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 
 				emitUpdate();
 
-				// Always register occurrence
 				BoundStore.registerOccurrence(
 					sharedBoundTag,
 					currentScreenKey,
 					measured,
 					preparedStyles,
+					ancestorKeys,
 				);
 
-				// Set as source (on press or blur)
 				if (shouldSetSource) {
-					if (isAnimating.value) {
+					if (isAnimating.get()) {
+						// If animation is already in progress,
+						// lets use the existing measuremenets.
 						const existing = BoundStore.getOccurrence(
 							sharedBoundTag,
 							currentScreenKey,
 						);
-						BoundStore.setLinkSource(
-							sharedBoundTag,
-							currentScreenKey,
-							existing.bounds,
-							preparedStyles,
-							parentScreenKey,
-						);
+						if (existing) {
+							BoundStore.setLinkSource(
+								sharedBoundTag,
+								currentScreenKey,
+								existing.bounds,
+								preparedStyles,
+								ancestorKeys,
+							);
+						}
 						return;
 					}
 					BoundStore.setLinkSource(
@@ -237,7 +263,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 						currentScreenKey,
 						measured,
 						preparedStyles,
-						parentScreenKey,
+						ancestorKeys,
 					);
 				}
 
@@ -248,7 +274,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 						currentScreenKey,
 						measured,
 						preparedStyles,
-						parentScreenKey,
+						ancestorKeys,
 					);
 				}
 
@@ -259,7 +285,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		const handleInitialLayout = useInitialLayoutHandler({
 			sharedBoundTag,
 			currentScreenKey,
-			parentScreenKey,
+			ancestorKeys,
 			maybeMeasureAndStore,
 		});
 
@@ -267,6 +293,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		const { markSourceCaptured } = useBlurMeasurement({
 			sharedBoundTag,
 			maybeMeasureAndStore,
+			ancestorKeys,
 		});
 
 		useParentSyncReaction({ parentContext, maybeMeasureAndStore });

@@ -15,7 +15,7 @@ export type TagData = {
 
 type ScreenIdentifier = {
 	screenKey: ScreenKey;
-	parentScreenKey?: ScreenKey;
+	ancestorKeys?: ScreenKey[];
 };
 
 type TagLink = {
@@ -24,7 +24,7 @@ type TagLink = {
 };
 
 type TagState = {
-	occurrences: Record<ScreenKey, TagData>;
+	occurrences: Record<ScreenKey, TagData & { ancestorKeys?: ScreenKey[] }>;
 	linkStack: TagLink[];
 };
 
@@ -37,7 +37,6 @@ type TagState = {
  * transitions), we should consider implementing cleanup on screen unmount using
  * screenKey filtering.
  */
-
 const registry = makeMutable<Record<TagID, TagState>>({});
 
 function registerOccurrence(
@@ -45,6 +44,7 @@ function registerOccurrence(
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
+	ancestorKeys?: ScreenKey[],
 ) {
 	"worklet";
 	registry.modify((state: Any) => {
@@ -52,7 +52,7 @@ function registerOccurrence(
 		if (!state[tag]) {
 			state[tag] = { occurrences: {}, linkStack: [] };
 		}
-		state[tag].occurrences[screenKey] = { bounds, styles };
+		state[tag].occurrences[screenKey] = { bounds, styles, ancestorKeys };
 		return state;
 	});
 }
@@ -62,16 +62,15 @@ function setLinkSource(
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
-	parentScreenKey?: ScreenKey,
+	ancestorKeys?: ScreenKey[],
 ) {
 	"worklet";
 	registry.modify((state: Any) => {
 		"worklet";
 		if (!state[tag]) state[tag] = { occurrences: {}, linkStack: [] };
 
-		// Push new link onto stack
 		state[tag].linkStack.push({
-			source: { screenKey, parentScreenKey, bounds, styles },
+			source: { screenKey, ancestorKeys, bounds, styles },
 			destination: null,
 		});
 		return state;
@@ -83,7 +82,7 @@ function setLinkDestination(
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
-	parentScreenKey?: ScreenKey,
+	ancestorKeys?: ScreenKey[],
 ) {
 	"worklet";
 	registry.modify((state: Any) => {
@@ -94,7 +93,7 @@ function setLinkDestination(
 		// Find the topmost link without a destination
 		for (let i = stack.length - 1; i >= 0; i--) {
 			if (stack[i].destination === null) {
-				stack[i].destination = { screenKey, parentScreenKey, bounds, styles };
+				stack[i].destination = { screenKey, ancestorKeys, bounds, styles };
 				break;
 			}
 		}
@@ -102,19 +101,49 @@ function setLinkDestination(
 	});
 }
 
-function getOccurrence(tag: TagID, key: ScreenKey) {
-	"worklet";
-	return registry.value[tag]?.occurrences[key] ?? null;
-}
-
-// Helper to check if a screen identifier matches a given key
+/**
+ * Helper to check if a screen identifier matches a given key.
+ * Checks both direct screenKey match and ancestor chain.
+ */
 function matchesScreenKey(
 	identifier: ScreenIdentifier | null | undefined,
 	key: ScreenKey,
 ): boolean {
 	"worklet";
 	if (!identifier) return false;
-	return identifier.screenKey === key || identifier.parentScreenKey === key;
+
+	// Direct match
+	if (identifier.screenKey === key) return true;
+
+	// Check ancestor chain
+	return identifier.ancestorKeys?.includes(key) ?? false;
+}
+
+/**
+ * Get occurrence by tag and key.
+ * Supports ancestor matching - if the key matches any ancestor of a stored occurrence,
+ * that occurrence will be returned.
+ */
+function getOccurrence(tag: TagID, key: ScreenKey): TagData | null {
+	"worklet";
+	const tagState = registry.value[tag];
+	if (!tagState) return null;
+
+	// Direct match in occurrences
+	if (tagState.occurrences[key]) {
+		const occ = tagState.occurrences[key];
+		return { bounds: occ.bounds, styles: occ.styles };
+	}
+
+	// Ancestor match
+	for (const screenKey in tagState.occurrences) {
+		const occ = tagState.occurrences[screenKey];
+		if (occ.ancestorKeys?.includes(key)) {
+			return { bounds: occ.bounds, styles: occ.styles };
+		}
+	}
+
+	return null;
 }
 
 function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
