@@ -3,10 +3,10 @@ import { useLayoutEffect, useState } from "react";
 import useStableCallback from "../../../../shared/hooks/use-stable-callback";
 import type { BlankStackDescriptorMap } from "../../../types";
 import type { StackNavigationContextProps } from "../_types";
-import { areDescriptorsEqual } from "../_utils/are-descriptors-equal";
-import { composeDescriptors } from "../_utils/compose-descriptors";
-import { haveSameRouteKeys } from "../_utils/have-same-route-keys";
-import { routesAreIdentical } from "../_utils/routes-are-identical";
+import { areDescriptorsEqual } from "../helpers/are-descriptors-equal";
+import { composeDescriptors } from "../helpers/compose-descriptors";
+import { haveSameRouteKeys } from "../helpers/have-same-route-keys";
+import { routesAreIdentical } from "../helpers/routes-are-identical";
 import { useClosingRouteKeys } from "./use-closing-route-keys";
 import { usePrevious } from "./use-previous";
 

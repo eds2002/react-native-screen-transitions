@@ -100,6 +100,20 @@ export type BlankStackOverlayProps = {
 	focusedRoute: Route<string>;
 
 	/**
+	 * Index of the focused route in the stack.
+	 */
+	focusedIndex: number;
+
+	/**
+	 * Options passed to the overlay component.
+	 */
+	overlayOptions?: {
+		title?: string;
+		subtitle?: string;
+		[key: string]: unknown;
+	};
+
+	/**
 	 * Navigation prop for the overlay.
 	 */
 	navigation: BlankStackNavigationProp<ParamListBase>;
@@ -113,11 +127,6 @@ export type BlankStackOverlayProps = {
 	 * Animation values for the screen.
 	 */
 	screenAnimation: DerivedValue<ScreenInterpolationProps>;
-
-	/**
-	 * Index of the focused route in the stack.
-	 */
-	focusedIndex: number;
 };
 
 export type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
@@ -135,6 +144,7 @@ export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
 	 * Function that given `OverlayProps` returns a React Element to display as a overlay.
 	 */
 	overlay?: (props: BlankStackOverlayProps) => React.ReactNode;
+
 	/**
 	 * Layout: How the Overlay is positioned
 	 * - 'float': Single persistent overlay above all screens (like iOS)
@@ -142,6 +152,7 @@ export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
 	 * @default 'screen'
 	 */
 	overlayMode?: "float" | "screen";
+
 	/**
 	 * Whether to show the overlay. The overlay is shown by default.
 	 * Setting this to `false` hides the overlay.
@@ -149,56 +160,14 @@ export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
 	overlayShown?: boolean;
 
 	/**
-	 * Whether the home indicator should prefer to stay hidden on this screen. Defaults to `false`.
-	 *
-	 * @platform ios
+	 * Options passed to the overlay component.
 	 */
-	autoHideHomeIndicator?: boolean;
-	/**
-	 * Whether the keyboard should hide when swiping to the previous screen. Defaults to `false`.
-	 *
-	 * @platform ios
-	 */
-	keyboardHandlingEnabled?: boolean;
-	/**
-	 * Sets the visibility of the navigation bar. Defaults to `false`.
-	 *
-	 * @platform android
-	 */
-	navigationBarHidden?: boolean;
-	/**
-	 * Sets the status bar animation (similar to the `StatusBar` component).
-	 * On Android, setting either `fade` or `slide` will set the transition of status bar color. On iOS, this option applies to appereance animation of the status bar.
-	 * Requires setting `View controller-based status bar appearance -> YES` (or removing the config) in your `Info.plist` file.
-	 *
-	 * Defaults to `fade` on iOS and `none` on Android.
-	 *
-	 * Only supported on Android and iOS.
-	 *
-	 * @platform android, ios
-	 */
-	statusBarAnimation?: ScreenProps["statusBarAnimation"];
-	/**
-	 * Whether the status bar should be hidden on this screen.
-	 * Requires setting `View controller-based status bar appearance -> YES` in your Info.plist file.
-	 *
-	 * Only supported on Android and iOS.
-	 *
-	 * @platform android, ios
-	 */
-	statusBarHidden?: boolean;
-	/**
-	 * Sets the status bar color (similar to the `StatusBar` component).
-	 * Requires setting `View controller-based status bar appearance -> YES` (or removing the config) in your `Info.plist` file.
-	 * `auto` and `inverted` are supported only on iOS. On Android, they will fallback to `light`.
-	 *
-	 * Defaults to `auto` on iOS and `light` on Android.
-	 *
-	 * Only supported on Android and iOS.
-	 *
-	 * @platform android, ios
-	 */
-	statusBarStyle?: ScreenProps["statusBarStyle"];
+	overlayOptions?: {
+		title?: string;
+		subtitle?: string;
+		[key: string]: unknown;
+	};
+
 	/**
 	 * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
 	 * Defaults to `true` when `enableFreeze()` is run at the top of the application.

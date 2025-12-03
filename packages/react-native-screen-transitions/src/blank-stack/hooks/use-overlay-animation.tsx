@@ -51,21 +51,21 @@ export const useOverlayAnimation = (): {
 		return total;
 	}, [progressValues]);
 
-	const optimisticActiveIndexValue = useDerivedValue(() => {
-		"worklet";
+	const optimisticActiveIndex = useSharedValueState(
+		useDerivedValue(() => {
+			"worklet";
 
-		const activeIndex = progressValues.length - 1;
+			const activeIndex = progressValues.length - 1;
 
-		const isOneDismissing = Number(
-			progressValues.some((value) => value.closing.value > 0),
-		);
+			const isOneDismissing = Number(
+				progressValues.some((value) => value.closing.value > 0),
+			);
 
-		const optimisticIndex = activeIndex - isOneDismissing;
+			const optimisticIndex = activeIndex - isOneDismissing;
 
-		return optimisticIndex;
-	});
-
-	const optimisticActiveIndex = useSharedValueState(optimisticActiveIndexValue);
+			return optimisticIndex;
+		}),
+	);
 
 	const screen = useWindowDimensions();
 

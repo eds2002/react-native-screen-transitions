@@ -4,7 +4,6 @@ import {
 } from "@react-navigation/native";
 import { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "../../shared/hooks/animation/use-screen-animation";
 import { KeysProvider, useKeys } from "../../shared/providers/keys.provider";
 import { TransitionStylesProvider } from "../../shared/providers/transition-styles.provider";
@@ -56,9 +55,9 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 		);
 	}, [scenes, scene.route.key]);
 
-	const focusedRoute = useMemo(() => {
+	const focusedScene = useMemo(() => {
 		if (overlaySceneIndex === -1) {
-			return scene.route;
+			return scene;
 		}
 
 		const maxOffset = Math.max(scenes.length - overlaySceneIndex - 1, 0);
@@ -67,8 +66,8 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 			maxOffset,
 		);
 
-		return scenes[overlaySceneIndex + normalizedIndex]?.route ?? scene.route;
-	}, [overlaySceneIndex, optimisticActiveIndex, scenes, scene.route]);
+		return scenes[overlaySceneIndex + normalizedIndex] ?? scene;
+	}, [overlaySceneIndex, optimisticActiveIndex, scenes, scene]);
 
 	const screenAnimation = useScreenAnimation();
 
@@ -77,11 +76,12 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	}
 
 	const overlayProps: BlankStackOverlayProps = {
-		focusedRoute,
+		focusedRoute: focusedScene.route,
+		focusedIndex: optimisticActiveIndex,
+		overlayOptions: focusedScene.descriptor.options.overlayOptions,
 		navigation: scene.descriptor.navigation,
 		overlayAnimation,
 		screenAnimation,
-		focusedIndex: optimisticActiveIndex,
 	};
 
 	return (
