@@ -1,5 +1,8 @@
 import type { AnimatedProps } from "react-native-reanimated";
-import type { ScreenStyleInterpolator, TransitionSpec } from "./animation.types";
+import type {
+	ScreenStyleInterpolator,
+	TransitionSpec,
+} from "./animation.types";
 import type { GestureActivationArea, GestureDirection } from "./gesture.types";
 
 export type Layout = {
@@ -97,9 +100,4 @@ export type ScreenTransitionConfig = {
 	 * The area of the screen where the gesture is activated.
 	 */
 	gestureActivationArea?: GestureActivationArea;
-
-	/**
-	 * Whether to enable transitions. It sets the presentation to containedTransparentModal, animation none, and headerShown to false.
-	 */
-	enableTransitions?: boolean;
 };

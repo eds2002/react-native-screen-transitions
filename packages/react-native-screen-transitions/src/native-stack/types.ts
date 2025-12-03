@@ -143,7 +143,14 @@ export type NativeStackHeaderLeftProps = NativeStackHeaderRightProps & {
 	href?: string;
 };
 
-export type NativeStackNavigationOptions = ScreenTransitionConfig & {
+export type NativeStackScreenTransitionConfig = ScreenTransitionConfig & {
+	/**
+	 * Whether to enable transitions. It sets the presentation to containedTransparentModal, animation none, and headerShown to false.
+	 */
+	enableTransitions?: boolean;
+};
+
+export type NativeStackNavigationOptions = NativeStackScreenTransitionConfig & {
 	/**
 	 * String that can be displayed in the header as a fallback for `headerTitle`.
 	 */

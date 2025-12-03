@@ -45,8 +45,6 @@ const getActiveFloatOverlay = (scenes: BlankStackScene[], index: number) => {
 };
 
 const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
-	const insets = useSafeAreaInsets();
-
 	const OverlayComponent = scene.descriptor.options.overlay;
 
 	const { overlayAnimation, optimisticActiveIndex } = useOverlayAnimation();
@@ -79,13 +77,11 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	}
 
 	const overlayProps: BlankStackOverlayProps = {
-		route: scene.route,
 		focusedRoute,
 		navigation: scene.descriptor.navigation,
 		overlayAnimation,
 		screenAnimation,
 		focusedIndex: optimisticActiveIndex,
-		insets,
 	};
 
 	return (

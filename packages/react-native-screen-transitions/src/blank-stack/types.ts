@@ -12,8 +12,8 @@ import type {
 	Theme,
 } from "@react-navigation/native";
 import type { DerivedValue } from "react-native-reanimated";
-import type { EdgeInsets } from "react-native-safe-area-context";
 import type { ScreenProps } from "react-native-screens";
+import type { ScreenTransitionConfig } from "../shared";
 import type {
 	OverlayInterpolationProps,
 	ScreenInterpolationProps,
@@ -95,65 +95,32 @@ export type BlankStackNavigationConfig = {};
 
 export type BlankStackOverlayProps = {
 	/**
-	 * Options for the back button.
-	 */
-	back?: {
-		/**
-		 * Title of the previous screen.
-		 */
-		title: string;
-	};
-	/**
-	 * Route object for the current screen.
-	 */
-	route: Route<string>;
-	/**
-	 * Route object for the currently focused screen in the stack.
+	 * Route of the currently focused screen in the stack.
 	 */
 	focusedRoute: Route<string>;
+
 	/**
 	 * Navigation prop for the overlay.
 	 */
 	navigation: BlankStackNavigationProp<ParamListBase>;
-	/**
-	 * Safe area insets for the screen.
-	 */
-	insets: EdgeInsets;
+
 	/**
 	 * Animation values for the overlay.
 	 */
 	overlayAnimation: DerivedValue<OverlayInterpolationProps>;
+
 	/**
 	 * Animation values for the screen.
 	 */
 	screenAnimation: DerivedValue<ScreenInterpolationProps>;
+
 	/**
-	 * Index of the active route
+	 * Index of the focused route in the stack.
 	 */
 	focusedIndex: number;
 };
 
-export type BlankStackScreenTransitionConfig = {
-	/**
-	 * The user-provided function to calculate styles based on animation progress.
-	 */
-	screenStyleInterpolator?: ScreenStyleInterpolator;
-	/**
-	 * The Reanimated animation config for opening and closing transitions.
-	 */
-	transitionSpec?: TransitionSpec;
-	/**
-	 * Whether the gesture is enabled.
-	 */
-	gestureEnabled?: boolean;
-	/**
-	 * The direction of the swipe gesture used to dismiss the screen.
-	 */
-	gestureDirection?: GestureDirection | GestureDirection[];
-	/**
-	 * How much the gesture's final velocity impacts the dismiss decision.
-	 */
-	gestureVelocityImpact?: number;
+export type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
 	/**
 	 * Whether to detach the previous screen from the view hierarchy to save memory.
 	 * Set it to `false` if you need the previous screen to be seen through the active screen.
@@ -161,18 +128,6 @@ export type BlankStackScreenTransitionConfig = {
 	 * Defaults to `false` for the last screen for modals, otherwise `true`.
 	 */
 	detachPreviousScreen?: boolean;
-	/**
-	 * Distance threshold for gesture recognition throughout the screen.
-	 */
-	gestureResponseDistance?: number;
-	/**
-	 * Whether the gesture drives the progress.
-	 */
-	gestureDrivesProgress?: boolean;
-	/**
-	 * The area of the screen where the gesture is activated.
-	 */
-	gestureActivationArea?: GestureActivationArea;
 };
 
 export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {

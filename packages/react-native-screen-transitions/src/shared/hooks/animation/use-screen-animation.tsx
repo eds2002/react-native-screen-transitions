@@ -3,16 +3,19 @@ import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-
+import type { NativeStackScreenTransitionConfig } from "../../../native-stack/types";
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
-import { type TransitionDescriptor, useKeys } from "../../providers/keys.provider";
-
+import {
+	type TransitionDescriptor,
+	useKeys,
+} from "../../providers/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
 } from "../../types/animation.types";
+import type { ScreenTransitionConfig } from "../../types/core.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
 
@@ -66,6 +69,9 @@ const useBuildScreenTransitionState = (
 	}, [key, descriptor?.route]);
 };
 
+const hasTransitionsEnabled = (options?: ScreenTransitionConfig) =>
+	!!(options as NativeStackScreenTransitionConfig)?.enableTransitions;
+
 export function _useScreenAnimation() {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
@@ -87,7 +93,7 @@ export function _useScreenAnimation() {
 
 		const previous = unwrap(prevAnimation, previousDescriptor?.route.key);
 
-		const next = nextDescriptor?.options?.enableTransitions
+		const next = hasTransitionsEnabled(nextDescriptor?.options)
 			? unwrap(nextAnimation, nextDescriptor?.route.key)
 			: undefined;
 

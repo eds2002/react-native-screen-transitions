@@ -13,6 +13,7 @@ export const SlideFromTop = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
+		//@ts-expect-error - Should not lead to any issues
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "vertical-inverted",
@@ -45,6 +46,7 @@ export const ZoomIn = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
+		//@ts-expect-error - Should not lead to any issues
 		enableTransitions: true,
 		gestureEnabled: false,
 		screenStyleInterpolator: ({ progress }) => {
@@ -83,6 +85,7 @@ export const SlideFromBottom = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
+		//@ts-expect-error - Should not lead to any issues
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "vertical",
@@ -114,6 +117,7 @@ export const DraggableCard = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
+		//@ts-expect-error - Should not lead to any issues
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["horizontal", "vertical"],
@@ -159,6 +163,7 @@ export const ElasticCard = (
 	} = { elasticFactor: 0.5 },
 ): ScreenTransitionConfig => {
 	return {
+		//@ts-expect-error - Should not lead to any issues
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "bidirectional",
@@ -535,7 +540,7 @@ export const SharedAppleMusic = ({
 				damping: 500,
 				mass: 3,
 				overshootClamping: true,
-				//@ts-expect-error
+				//@ts-expect-error - Should not lead to any issues
 				restSpeedThreshold: 0.02,
 			},
 			close: {
@@ -543,7 +548,7 @@ export const SharedAppleMusic = ({
 				damping: 60,
 				mass: 4,
 				overshootClamping: false,
-				//@ts-expect-error
+				//@ts-expect-error - Should not lead to any issues
 				restSpeedThreshold: 0.02,
 				restDisplacementThreshold: 0.002,
 			},
@@ -559,6 +564,7 @@ export const SharedXImage = ({
 	sharedBoundTag: string;
 }): ScreenTransitionConfig => {
 	return {
+		//@ts-expect-error - Should not lead to any issues
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "vertical-inverted"],
