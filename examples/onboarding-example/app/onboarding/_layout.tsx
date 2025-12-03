@@ -186,6 +186,10 @@ export default function OnboardingLayout() {
 				name="nested-stack"
 				options={{
 					gestureEnabled: true,
+					overlayOptions: {
+						buttonText: "All set",
+						next: "/onboarding/nested-stack/",
+					},
 					gestureDirection: "horizontal",
 					screenStyleInterpolator: sharedScreenInterpolator,
 					transitionSpec: {
