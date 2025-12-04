@@ -1,5 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import type { TagData } from "../stores/bounds.store";
+import type { Snapshot } from "../stores/bounds.store";
 import type {
 	BoundsBuilderOptions,
 	BoundsReturnType,
@@ -21,5 +21,6 @@ export type BoundEntry = {
 
 export type BoundsAccessor = {
 	<T extends BoundsBuilderOptions>(options: T): BoundsReturnType<T>;
-	getOccurrence: (id: string, key: string) => TagData;
+	getSnapshot: (id: string, key?: string) => Snapshot | null;
+	getPair: (id: string) => { from: Snapshot; to: Snapshot } | null;
 };

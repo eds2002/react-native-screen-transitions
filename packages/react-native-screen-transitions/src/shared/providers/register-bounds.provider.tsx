@@ -235,7 +235,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 
 				emitUpdate();
 
-				BoundStore.registerOccurrence(
+				BoundStore.registerSnapshot(
 					sharedBoundTag,
 					currentScreenKey,
 					measured,
@@ -247,7 +247,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					if (isAnimating.get()) {
 						// If animation is already in progress,
 						// lets use the existing measuremenets.
-						const existing = BoundStore.getOccurrence(
+						const existing = BoundStore.getSnapshot(
 							sharedBoundTag,
 							currentScreenKey,
 						);

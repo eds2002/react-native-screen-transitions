@@ -11,7 +11,7 @@ export const isBoundsEqual = ({
 	sharedBoundTag: string;
 }) => {
 	"worklet";
-	const existing = BoundStore.getOccurrence(sharedBoundTag, key)?.bounds;
+	const existing = BoundStore.getSnapshot(sharedBoundTag, key)?.bounds;
 	return (
 		!!existing &&
 		existing.width === measured.width &&

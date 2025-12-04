@@ -6,7 +6,7 @@ import {
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 } from "../../constants";
-import { BoundStore, type TagData } from "../../stores/bounds.store";
+import { BoundStore, type Snapshot } from "../../stores/bounds.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
@@ -207,10 +207,19 @@ export const createBounds = (
 		);
 	};
 
-	const getOccurrence = (tag: string, key: string): TagData | null => {
+	const getSnapshot = (tag: string, key: string): Snapshot | null => {
 		"worklet";
-		return BoundStore.getOccurrence(tag, key);
+		return BoundStore.getSnapshot(tag, key);
 	};
 
-	return Object.assign(boundsFunction, { getOccurrence }) as BoundsAccessor;
+	const getPair = (tag: string): { from: Snapshot; to: Snapshot } | null => {
+		"worklet";
+		const isClosing = props.current?.closing === 1;
+		return BoundStore.getPair(tag, props.current?.route.key, isClosing);
+	};
+
+	return Object.assign(boundsFunction, {
+		getSnapshot,
+		getPair,
+	}) as BoundsAccessor;
 };

@@ -8,7 +8,7 @@ import type { Any } from "../types/utils.types";
 type TagID = string;
 type ScreenKey = string;
 
-export type TagData = {
+export type Snapshot = {
 	bounds: MeasuredDimensions;
 	styles: StyleProps;
 };
@@ -19,27 +19,18 @@ type ScreenIdentifier = {
 };
 
 type TagLink = {
-	source: ScreenIdentifier & TagData;
-	destination: (ScreenIdentifier & TagData) | null;
+	source: ScreenIdentifier & Snapshot;
+	destination: (ScreenIdentifier & Snapshot) | null;
 };
 
 type TagState = {
-	occurrences: Record<ScreenKey, TagData & { ancestorKeys?: ScreenKey[] }>;
+	snapshots: Record<ScreenKey, Snapshot & { ancestorKeys?: ScreenKey[] }>;
 	linkStack: TagLink[];
 };
 
-/**
- * Note on cleanup: We intentionally skip automatic cleanup of old links.
- * The linkStack grows by one entry per navigation, but `getActiveLink`
- * finds the correct link via screenKey matching regardless of stack size.
- * This is unlikely to cause performance issues in typical apps, but if
- * memory becomes a concern in apps with heavy navigation (hundreds of
- * transitions), we should consider implementing cleanup on screen unmount using
- * screenKey filtering.
- */
 const registry = makeMutable<Record<TagID, TagState>>({});
 
-function registerOccurrence(
+function registerSnapshot(
 	tag: TagID,
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
@@ -50,9 +41,9 @@ function registerOccurrence(
 	registry.modify((state: Any) => {
 		"worklet";
 		if (!state[tag]) {
-			state[tag] = { occurrences: {}, linkStack: [] };
+			state[tag] = { snapshots: {}, linkStack: [] };
 		}
-		state[tag].occurrences[screenKey] = { bounds, styles, ancestorKeys };
+		state[tag].snapshots[screenKey] = { bounds, styles, ancestorKeys };
 		return state;
 	});
 }
@@ -67,7 +58,7 @@ function setLinkSource(
 	"worklet";
 	registry.modify((state: Any) => {
 		"worklet";
-		if (!state[tag]) state[tag] = { occurrences: {}, linkStack: [] };
+		if (!state[tag]) state[tag] = { snapshots: {}, linkStack: [] };
 
 		state[tag].linkStack.push({
 			source: { screenKey, ancestorKeys, bounds, styles },
@@ -120,30 +111,50 @@ function matchesScreenKey(
 }
 
 /**
- * Get occurrence by tag and key.
- * Supports ancestor matching - if the key matches any ancestor of a stored occurrence,
- * that occurrence will be returned.
+ * Get snapshot by tag and optional key.
+ * If key is provided, supports ancestor matching - if the key matches any ancestor
+ * of a stored snapshot, that snapshot will be returned.
+ * If key is omitted, returns the most recently registered snapshot.
  */
-function getOccurrence(tag: TagID, key: ScreenKey): TagData | null {
+function getSnapshot(tag: TagID, key: ScreenKey): Snapshot | null {
 	"worklet";
 	const tagState = registry.value[tag];
 	if (!tagState) return null;
 
 	// Direct match in occurrences
-	if (tagState.occurrences[key]) {
-		const occ = tagState.occurrences[key];
-		return { bounds: occ.bounds, styles: occ.styles };
+	if (tagState.snapshots[key]) {
+		const snap = tagState.snapshots[key];
+		return { bounds: snap.bounds, styles: snap.styles };
 	}
 
 	// Ancestor match
-	for (const screenKey in tagState.occurrences) {
-		const occ = tagState.occurrences[screenKey];
-		if (occ.ancestorKeys?.includes(key)) {
-			return { bounds: occ.bounds, styles: occ.styles };
+	for (const screenKey in tagState.snapshots) {
+		const snap = tagState.snapshots[screenKey];
+		if (snap.ancestorKeys?.includes(key)) {
+			return { bounds: snap.bounds, styles: snap.styles };
 		}
 	}
 
 	return null;
+}
+
+/**
+ * Get a pair of snapshots (from/to) for a shared element transition.
+ * Returns the active link's source and destination snapshots.
+ */
+function getPair(
+	tag: TagID,
+	screenKey?: ScreenKey,
+	isClosing?: boolean,
+): { from: Snapshot; to: Snapshot } | null {
+	"worklet";
+	const link = getActiveLink(tag, screenKey, isClosing);
+	if (!link || !link.destination) return null;
+
+	return {
+		from: { bounds: link.source.bounds, styles: link.source.styles },
+		to: { bounds: link.destination.bounds, styles: link.destination.styles },
+	};
 }
 
 function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
@@ -187,9 +198,10 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 }
 
 export const BoundStore = {
-	registerOccurrence,
+	registerSnapshot,
 	setLinkSource,
 	setLinkDestination,
 	getActiveLink,
-	getOccurrence,
+	getSnapshot,
+	getPair,
 };

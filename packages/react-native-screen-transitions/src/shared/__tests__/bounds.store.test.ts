@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { BoundStore, type TagData } from "../stores/bounds.store";
+import { BoundStore, type Snapshot } from "../stores/bounds.store";
 
 // Helper to create mock bounds
 const createBounds = (
@@ -7,7 +7,7 @@ const createBounds = (
 	y = 0,
 	width = 100,
 	height = 100,
-): TagData["bounds"] => ({
+): Snapshot["bounds"] => ({
 	x,
 	y,
 	pageX: x,
@@ -22,33 +22,33 @@ beforeEach(() => {
 });
 
 // =============================================================================
-// Unit Tests - registerOccurrence
+// Unit Tests - registerSnapshot
 // =============================================================================
 
-describe("BoundStore.registerOccurrence", () => {
+describe("BoundStore.registerSnapshot", () => {
 	it("registers new tag with bounds and styles", () => {
 		const bounds = createBounds(10, 20, 200, 300);
 		const styles = { backgroundColor: "red" };
 
-		BoundStore.registerOccurrence("card", "screen-a", bounds, styles);
+		BoundStore.registerSnapshot("card", "screen-a", bounds, styles);
 
-		const occurrence = BoundStore.getOccurrence("card", "screen-a");
-		expect(occurrence).not.toBeNull();
-		expect(occurrence?.bounds).toEqual(bounds);
-		expect(occurrence?.styles).toEqual(styles);
+		const snapshot = BoundStore.getSnapshot("card", "screen-a");
+		expect(snapshot).not.toBeNull();
+		expect(snapshot?.bounds).toEqual(bounds);
+		expect(snapshot?.styles).toEqual(styles);
 	});
 
-	it("adds occurrence to existing tag", () => {
+	it("adds snapshot to existing tag", () => {
 		const boundsA = createBounds(0, 0, 100, 100);
 		const boundsB = createBounds(50, 50, 150, 150);
 
-		BoundStore.registerOccurrence("card", "screen-a", boundsA);
-		BoundStore.registerOccurrence("card", "screen-b", boundsB);
+		BoundStore.registerSnapshot("card", "screen-a", boundsA);
+		BoundStore.registerSnapshot("card", "screen-b", boundsB);
 
-		expect(BoundStore.getOccurrence("card", "screen-a")?.bounds).toEqual(
+		expect(BoundStore.getSnapshot("card", "screen-a")?.bounds).toEqual(
 			boundsA,
 		);
-		expect(BoundStore.getOccurrence("card", "screen-b")?.bounds).toEqual(
+		expect(BoundStore.getSnapshot("card", "screen-b")?.bounds).toEqual(
 			boundsB,
 		);
 	});
@@ -57,23 +57,23 @@ describe("BoundStore.registerOccurrence", () => {
 		const bounds = createBounds();
 		const ancestors = ["stack-a", "tab-nav"];
 
-		BoundStore.registerOccurrence("card", "screen-a", bounds, {}, ancestors);
+		BoundStore.registerSnapshot("card", "screen-a", bounds, {}, ancestors);
 
 		// Verify ancestor matching works
-		const viaAncestor = BoundStore.getOccurrence("card", "stack-a");
+		const viaAncestor = BoundStore.getSnapshot("card", "stack-a");
 		expect(viaAncestor).not.toBeNull();
 		expect(viaAncestor?.bounds).toEqual(bounds);
 	});
 
-	it("updates existing occurrence on re-measurement", () => {
+	it("updates existing snapshot on re-measurement", () => {
 		const initialBounds = createBounds(0, 0, 100, 100);
 		const updatedBounds = createBounds(10, 10, 200, 200);
 
-		BoundStore.registerOccurrence("card", "screen-a", initialBounds);
-		BoundStore.registerOccurrence("card", "screen-a", updatedBounds);
+		BoundStore.registerSnapshot("card", "screen-a", initialBounds);
+		BoundStore.registerSnapshot("card", "screen-a", updatedBounds);
 
-		const occurrence = BoundStore.getOccurrence("card", "screen-a");
-		expect(occurrence?.bounds).toEqual(updatedBounds);
+		const snapshot = BoundStore.getSnapshot("card", "screen-a");
+		expect(snapshot?.bounds).toEqual(updatedBounds);
 	});
 });
 
@@ -156,12 +156,12 @@ describe("BoundStore.setLinkDestination", () => {
 });
 
 // =============================================================================
-// Unit Tests - getOccurrence
+// Unit Tests - getSnapshot
 // =============================================================================
 
-describe("BoundStore.getOccurrence", () => {
+describe("BoundStore.getSnapshot", () => {
 	it("returns null for unknown tag", () => {
-		const result = BoundStore.getOccurrence("unknown", "screen-a");
+		const result = BoundStore.getSnapshot("unknown", "screen-a");
 		expect(result).toBeNull();
 	});
 
@@ -169,9 +169,9 @@ describe("BoundStore.getOccurrence", () => {
 		const bounds = createBounds(10, 20, 300, 400);
 		const styles = { borderRadius: 8 };
 
-		BoundStore.registerOccurrence("card", "screen-a", bounds, styles);
+		BoundStore.registerSnapshot("card", "screen-a", bounds, styles);
 
-		const result = BoundStore.getOccurrence("card", "screen-a");
+		const result = BoundStore.getSnapshot("card", "screen-a");
 		expect(result).toEqual({ bounds, styles });
 	});
 
@@ -179,10 +179,10 @@ describe("BoundStore.getOccurrence", () => {
 		const bounds = createBounds();
 		const ancestors = ["stack-a", "root"];
 
-		BoundStore.registerOccurrence("card", "screen-a", bounds, {}, ancestors);
+		BoundStore.registerSnapshot("card", "screen-a", bounds, {}, ancestors);
 
 		// Query by ancestor key
-		const result = BoundStore.getOccurrence("card", "stack-a");
+		const result = BoundStore.getSnapshot("card", "stack-a");
 		expect(result).not.toBeNull();
 		expect(result?.bounds).toEqual(bounds);
 	});
@@ -192,17 +192,17 @@ describe("BoundStore.getOccurrence", () => {
 		const ancestorBounds = createBounds(200, 200, 50, 50);
 
 		// Register with ancestor that matches another screen's key
-		BoundStore.registerOccurrence(
+		BoundStore.registerSnapshot(
 			"card",
 			"screen-a",
 			ancestorBounds,
 			{},
 			["stack-a"],
 		);
-		BoundStore.registerOccurrence("card", "stack-a", directBounds);
+		BoundStore.registerSnapshot("card", "stack-a", directBounds);
 
 		// Direct match should win
-		const result = BoundStore.getOccurrence("card", "stack-a");
+		const result = BoundStore.getSnapshot("card", "stack-a");
 		expect(result?.bounds).toEqual(directBounds);
 	});
 });
@@ -218,8 +218,8 @@ describe("BoundStore.getActiveLink", () => {
 	});
 
 	it("returns null for empty linkStack", () => {
-		// Register occurrence but no links
-		BoundStore.registerOccurrence("card", "screen-a", createBounds());
+		// Register snapshot but no links
+		BoundStore.registerSnapshot("card", "screen-a", createBounds());
 
 		const result = BoundStore.getActiveLink("card");
 		expect(result).toBeNull();
@@ -312,9 +312,9 @@ describe("Scenario: Simple push/pop navigation", () => {
 describe("Scenario: Multiple bounds, only one matches", () => {
 	it("establishes link only for matching bound", () => {
 		// Screen A has header, card, footer
-		BoundStore.registerOccurrence("header", "screen-a", createBounds(0, 0));
-		BoundStore.registerOccurrence("card", "screen-a", createBounds(0, 100));
-		BoundStore.registerOccurrence("footer", "screen-a", createBounds(0, 500));
+		BoundStore.registerSnapshot("header", "screen-a", createBounds(0, 0));
+		BoundStore.registerSnapshot("card", "screen-a", createBounds(0, 100));
+		BoundStore.registerSnapshot("footer", "screen-a", createBounds(0, 500));
 
 		// Only card triggers navigation
 		BoundStore.setLinkSource("card", "screen-a", createBounds(0, 100));
@@ -325,7 +325,7 @@ describe("Scenario: Multiple bounds, only one matches", () => {
 		// Card link exists
 		expect(BoundStore.getActiveLink("card")).not.toBeNull();
 
-		// Header and footer have no links (only occurrences)
+		// Header and footer have no links (only snapshots)
 		expect(BoundStore.getActiveLink("header")).toBeNull();
 		expect(BoundStore.getActiveLink("footer")).toBeNull();
 	});
@@ -340,17 +340,17 @@ describe("Scenario: Nested navigator with ancestor keys", () => {
 		const boundsA = createBounds(10, 10, 80, 80);
 		const boundsB = createBounds(20, 20, 100, 100);
 
-		// Register occurrence in Stack A
-		BoundStore.registerOccurrence("profile", "a1", boundsA, {}, ["stack-a"]);
+		// Register snapshot in Stack A
+		BoundStore.registerSnapshot("profile", "a1", boundsA, {}, ["stack-a"]);
 
-		// Register occurrence in Stack B
-		BoundStore.registerOccurrence("profile", "b1", boundsB, {}, ["stack-b"]);
+		// Register snapshot in Stack B
+		BoundStore.registerSnapshot("profile", "b1", boundsB, {}, ["stack-b"]);
 
 		// Query by stack key should return correct bounds
-		const fromStackA = BoundStore.getOccurrence("profile", "stack-a");
+		const fromStackA = BoundStore.getSnapshot("profile", "stack-a");
 		expect(fromStackA?.bounds).toEqual(boundsA);
 
-		const fromStackB = BoundStore.getOccurrence("profile", "stack-b");
+		const fromStackB = BoundStore.getSnapshot("profile", "stack-b");
 		expect(fromStackB?.bounds).toEqual(boundsB);
 	});
 
