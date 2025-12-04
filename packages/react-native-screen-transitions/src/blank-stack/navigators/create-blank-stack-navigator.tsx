@@ -13,7 +13,7 @@ import {
 	useNavigationBuilder,
 } from "@react-navigation/native";
 import * as React from "react";
-import { StackView } from "../components/StackView";
+import { StackView } from "../components/stack-view";
 import type {
 	BlankStackNavigationEventMap,
 	BlankStackNavigationOptions,

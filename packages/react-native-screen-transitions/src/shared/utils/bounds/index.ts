@@ -207,7 +207,7 @@ export const createBounds = (
 		);
 	};
 
-	const getOccurrence = (tag: string, key: string): TagData => {
+	const getOccurrence = (tag: string, key: string): TagData | null => {
 		"worklet";
 		return BoundStore.getOccurrence(tag, key);
 	};

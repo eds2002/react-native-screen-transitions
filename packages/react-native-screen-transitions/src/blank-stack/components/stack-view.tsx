@@ -11,8 +11,8 @@ import { BlankStackScreenLifecycleController } from "../../shared/components/con
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import type { BlankStackDescriptor } from "../types";
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
-import { Overlay } from "./Overlay";
-import { Screen } from "./Screens";
+import { Overlay } from "./overlay";
+import { Screen } from "./screens";
 
 function isFabric() {
 	return "nativeFabricUIManager" in global;

@@ -12,18 +12,11 @@ import type {
 	Theme,
 } from "@react-navigation/native";
 import type { DerivedValue } from "react-native-reanimated";
-import type { ScreenProps } from "react-native-screens";
 import type { ScreenTransitionConfig } from "../shared";
 import type {
 	OverlayInterpolationProps,
 	ScreenInterpolationProps,
-	ScreenStyleInterpolator,
-	TransitionSpec,
 } from "../shared/types/animation.types";
-import type {
-	GestureActivationArea,
-	GestureDirection,
-} from "../shared/types/gesture.types";
 
 export type BlankStackNavigationEventMap = {
 	/**

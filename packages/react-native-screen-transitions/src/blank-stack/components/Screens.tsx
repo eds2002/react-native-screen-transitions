@@ -1,4 +1,3 @@
-import type { NavigationRoute, ParamListBase } from "@react-navigation/native";
 import type * as React from "react";
 import { StyleSheet } from "react-native";
 import Animated, {
@@ -44,12 +43,12 @@ export const Screen = ({
 
 	useDerivedValue(() => {
 		if (!sceneProgress) {
-			screenActivity.value = STATE_TRANSITIONING_OR_BELOW_TOP;
+			screenActivity.set(STATE_TRANSITIONING_OR_BELOW_TOP);
 			return;
 		}
 
 		if (index < routesLength - activeScreensLimit - 1 || isPreloaded) {
-			screenActivity.value = STATE_INACTIVE;
+			screenActivity.set(STATE_INACTIVE);
 		} else {
 			const outputValue =
 				index === routesLength - 1
@@ -59,7 +58,7 @@ export const Screen = ({
 						: STATE_INACTIVE;
 
 			const v = interpolate(
-				sceneProgress.value,
+				sceneProgress.get(),
 				[0, 1 - EPSILON, 1],
 				[1, 1, outputValue],
 				"clamp",
@@ -68,17 +67,16 @@ export const Screen = ({
 			const next =
 				(Math.trunc(v) as 0 | 1 | 2) ?? STATE_TRANSITIONING_OR_BELOW_TOP;
 
-			// avoid spamming JS thread
-			if (next !== screenActivity.value) {
-				screenActivity.value = next;
+			if (next !== screenActivity.get()) {
+				screenActivity.set(next);
 			}
 		}
 	});
 
 	const animatedProps = useAnimatedProps(() => {
 		return {
-			activityState: screenActivity.value,
-			shouldFreeze: screenActivity.value === STATE_INACTIVE && shouldFreeze,
+			activityState: screenActivity.get(),
+			shouldFreeze: screenActivity.get() === STATE_INACTIVE && shouldFreeze,
 		};
 	});
 

@@ -36,6 +36,7 @@
   "scripts": {
     "build": "bob build",
     "lint": "biome check ./src",
+    "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build"
   },
   "keywords": [

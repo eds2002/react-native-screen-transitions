@@ -1,11 +1,11 @@
 import { type ComponentType, createContext, useContext, useMemo } from "react";
 import type { BlankStackScene } from "../../types";
+import { calculateActiveScreensLimit } from "./helpers/calculate-active-screens-limit";
 import { useStackNavigationState } from "./hooks/use-stack-navigation-state";
 import type {
 	StackNavigationContextProps,
 	StackNavigationContextValue,
-} from "./_types";
-import { calculateActiveScreensLimit } from "./helpers/calculate-active-screens-limit";
+} from "./types";
 
 export const StackNavigationContext =
 	createContext<StackNavigationContextValue | null>(null);

@@ -1,5 +1,5 @@
 export { useOverlayAnimation } from "../blank-stack/hooks/use-overlay-animation";
-export { createBlankStackNavigator } from "../blank-stack/navigators/createBlankStackNavigator";
+export { createBlankStackNavigator } from "../blank-stack/navigators/create-blank-stack-navigator";
 export type {
 	BlankStackNavigationEventMap,
 	BlankStackNavigationOptions,
