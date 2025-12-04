@@ -9,13 +9,8 @@ export const composeDescriptors = (
 	const composed: BlankStackDescriptorMap = {};
 
 	for (const route of routes) {
-		const adjusted =
+		composed[route.key] =
 			nextDescriptors[route.key] ?? currentDescriptors[route.key];
-
-		//@ts-expect-error - This option isn't used in blank-stack, however useScreenAnimation requires it, so lets just set it to true.
-		adjusted.options.enableTransitions = true;
-
-		composed[route.key] = adjusted;
 	}
 
 	return composed;

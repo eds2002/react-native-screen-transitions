@@ -5,6 +5,7 @@ import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenTransitionConfig } from "../../../native-stack/types";
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
+import { useFlagsContext } from "../../providers/flags.provider";
 import {
 	type TransitionDescriptor,
 	useKeys,
@@ -86,14 +87,20 @@ const useBuildScreenTransitionState = (
 	}, [key, descriptor?.route]);
 };
 
-const hasTransitionsEnabled = (options?: ScreenTransitionConfig) => {
+const hasTransitionsEnabled = (
+	options: ScreenTransitionConfig | undefined,
+	alwaysOn: boolean,
+) => {
 	"worklet";
+	if (alwaysOn) return true;
 	return !!(options as NativeStackScreenTransitionConfig)?.enableTransitions;
 };
 
 export function _useScreenAnimation() {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
+	const flags = useFlagsContext();
+	const transitionsAlwaysOn = flags?.TRANSITIONS_ALWAYS_ON ?? false;
 
 	const {
 		current: currentDescriptor,
@@ -113,7 +120,8 @@ export function _useScreenAnimation() {
 		const previous = prevAnimation ? unwrapInto(prevAnimation) : undefined;
 
 		const next =
-			nextAnimation && hasTransitionsEnabled(nextDescriptor?.options)
+			nextAnimation &&
+			hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn)
 				? unwrapInto(nextAnimation)
 				: undefined;
 

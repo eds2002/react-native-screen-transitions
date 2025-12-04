@@ -8,6 +8,7 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
 import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
+import { FlagsProvider } from "../../shared/providers/flags.provider";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import type { BlankStackDescriptor } from "../types";
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
@@ -47,8 +48,9 @@ export const StackView = withStackNavigationProvider(
 		shouldShowFloatOverlay,
 	}) => {
 		return (
-			<GestureHandlerRootView>
-				<SafeAreaProviderCompat>
+			<FlagsProvider TRANSITIONS_ALWAYS_ON>
+				<GestureHandlerRootView>
+					<SafeAreaProviderCompat>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
 					<ScreenContainer style={styles.container}>
 						{scenes.map((scene, sceneIndex) => {
@@ -97,8 +99,9 @@ export const StackView = withStackNavigationProvider(
 							);
 						})}
 					</ScreenContainer>
-				</SafeAreaProviderCompat>
-			</GestureHandlerRootView>
+					</SafeAreaProviderCompat>
+				</GestureHandlerRootView>
+			</FlagsProvider>
 		);
 	},
 );
