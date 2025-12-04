@@ -3,6 +3,7 @@ import type { ScreenStyleInterpolator } from "react-native-screen-transitions";
 
 export const horizontalSlide: ScreenStyleInterpolator = ({
 	progress,
+	current,
 	layouts: { screen },
 	bounds,
 }) => {
@@ -12,6 +13,6 @@ export const horizontalSlide: ScreenStyleInterpolator = ({
 		contentStyle: {
 			transform: [{ translateX: x }],
 		},
-		["SHARED"]: bounds({ id: "SHARED" }),
+		["SHARED"]: { ...sharedBounds, opacity },
 	};
 };

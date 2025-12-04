@@ -6,7 +6,7 @@ import {
 export default function RootLayout() {
 	return (
 		<BlankStack>
-			<BlankStack.Screen name="index" options={defaultScreenOptions} />
+			<BlankStack.Screen name="index" />
 			<BlankStack.Screen name="onboarding" options={defaultScreenOptions} />
 		</BlankStack>
 	);
