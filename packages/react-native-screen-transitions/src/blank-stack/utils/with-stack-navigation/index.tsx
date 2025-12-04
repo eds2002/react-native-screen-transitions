@@ -17,25 +17,29 @@ export function withStackNavigationProvider(
 		const { state, handleCloseRoute, closingRouteKeys } =
 			useStackNavigationState(props);
 
-		const scenes = useMemo(() => {
-			return state.routes.reduce((acc, route) => {
-				acc.push({
-					route,
-					descriptor: state.descriptors[route.key],
-				});
-				return acc;
-			}, [] as BlankStackScene[]);
-		}, [state.routes, state.descriptors]);
+		const { scenes, activeScreensLimit, shouldShowFloatOverlay } = useMemo(() => {
+			const scenes: BlankStackScene[] = [];
+			let shouldShowFloatOverlay = false;
 
-		const activeScreensLimit = useMemo(() => {
-			return calculateActiveScreensLimit(state.routes, state.descriptors);
-		}, [state.routes, state.descriptors]);
+			for (const route of state.routes) {
+				const descriptor = state.descriptors[route.key];
+				scenes.push({ route, descriptor });
 
-		const shouldShowFloatOverlay = useMemo(() => {
-			return state.routes.some((route) => {
-				const options = state.descriptors[route.key]?.options;
-				return options?.overlayMode === "float" && options?.overlayShown;
-			});
+				if (!shouldShowFloatOverlay) {
+					const options = descriptor?.options;
+					shouldShowFloatOverlay =
+						options?.overlayMode === "float" && options?.overlayShown === true;
+				}
+			}
+
+			return {
+				scenes,
+				activeScreensLimit: calculateActiveScreensLimit(
+					state.routes,
+					state.descriptors,
+				),
+				shouldShowFloatOverlay,
+			};
 		}, [state.routes, state.descriptors]);
 
 		const contextValue = useMemo<StackNavigationContextValue>(() => {

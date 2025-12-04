@@ -12,12 +12,10 @@ export const composeDescriptors = (
 		const adjusted =
 			nextDescriptors[route.key] ?? currentDescriptors[route.key];
 
-		// useScreenAnimation depends on this, however with blank-stack, this should be enabled by default
-		const withEnableTransitions = {
-			...adjusted,
-			options: { ...adjusted.options, enableTransitions: true },
-		};
-		composed[route.key] = withEnableTransitions;
+		//@ts-expect-error - This option isn't used in blank-stack, however useScreenAnimation requires it, so lets just set it to true.
+		adjusted.options.enableTransitions = true;
+
+		composed[route.key] = adjusted;
 	}
 
 	return composed;
