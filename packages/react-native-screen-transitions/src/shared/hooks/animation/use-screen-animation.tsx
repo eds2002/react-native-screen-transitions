@@ -16,6 +16,7 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation.types";
 import type { ScreenTransitionConfig } from "../../types/core.types";
+import type { GestureDirection } from "../../types/gesture.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
 
@@ -25,30 +26,45 @@ type BuiltState = {
 	animating: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: RouteProp<ParamListBase>;
+	unwrapped: ScreenTransitionState;
 };
 
-const unwrap = (
-	s: BuiltState | undefined,
-	key: string | undefined,
-): ScreenTransitionState | undefined => {
-	"worklet";
-	if (!s || !key) return undefined;
+const createScreenTransitionState = (
+	route: RouteProp<ParamListBase>,
+): ScreenTransitionState => ({
+	progress: 0,
+	closing: 0,
+	animating: 0,
+	gesture: {
+		x: 0,
+		y: 0,
+		normalizedX: 0,
+		normalizedY: 0,
+		isDismissing: 0,
+		isDragging: 0,
+		direction: null,
+	},
+	route,
+});
 
-	return {
-		progress: s.progress.value,
-		closing: s.closing.value,
-		animating: s.animating.value,
-		gesture: {
-			x: s.gesture.x.value,
-			y: s.gesture.y.value,
-			normalizedX: s.gesture.normalizedX.value,
-			normalizedY: s.gesture.normalizedY.value,
-			isDismissing: s.gesture.isDismissing.value,
-			isDragging: s.gesture.isDragging.value,
-			direction: s.gesture.direction.value,
-		},
-		route: s.route,
-	};
+const unwrapInto = (s: BuiltState): ScreenTransitionState => {
+	"worklet";
+	const out = s.unwrapped;
+	out.progress = s.progress.value;
+	out.closing = s.closing.value;
+	out.animating = s.animating.value;
+	out.gesture.x = s.gesture.x.value;
+	out.gesture.y = s.gesture.y.value;
+	out.gesture.normalizedX = s.gesture.normalizedX.value;
+	out.gesture.normalizedY = s.gesture.normalizedY.value;
+	out.gesture.isDismissing = s.gesture.isDismissing.value;
+	out.gesture.isDragging = s.gesture.isDragging.value;
+	out.gesture.direction = s.gesture.direction.value as Omit<
+		GestureDirection,
+		"bidirectional"
+	> | null;
+
+	return out;
 };
 
 const useBuildScreenTransitionState = (
@@ -65,6 +81,7 @@ const useBuildScreenTransitionState = (
 			animating: AnimationStore.getAnimation(key, "animating"),
 			gesture: GestureStore.getRouteGestures(key),
 			route: descriptor.route,
+			unwrapped: createScreenTransitionState(descriptor.route),
 		};
 	}, [key, descriptor?.route]);
 };
@@ -93,15 +110,16 @@ export function _useScreenAnimation() {
 	>(() => {
 		"worklet";
 
-		const previous = unwrap(prevAnimation, previousDescriptor?.route.key);
+		const previous = prevAnimation ? unwrapInto(prevAnimation) : undefined;
 
-		const next = hasTransitionsEnabled(nextDescriptor?.options)
-			? unwrap(nextAnimation, nextDescriptor?.route.key)
-			: undefined;
+		const next =
+			nextAnimation && hasTransitionsEnabled(nextDescriptor?.options)
+				? unwrapInto(nextAnimation)
+				: undefined;
 
-		const current =
-			unwrap(currentAnimation, currentDescriptor?.route.key) ??
-			DEFAULT_SCREEN_TRANSITION_STATE;
+		const current = currentAnimation
+			? unwrapInto(currentAnimation)
+			: DEFAULT_SCREEN_TRANSITION_STATE;
 
 		const helpers = derivations({
 			current,
