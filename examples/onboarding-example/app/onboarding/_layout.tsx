@@ -6,17 +6,16 @@ import {
 	StyleSheet,
 	View,
 } from "react-native";
-import Animated, {
-	interpolate,
-	useAnimatedStyle,
-} from "react-native-reanimated";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Transition, {
-	type ScreenStyleInterpolator,
-} from "react-native-screen-transitions";
 import type { BlankStackOverlayProps } from "react-native-screen-transitions/blank-stack";
 import { ComposableText } from "@/components/composeable-text";
-import { BlankStack } from "@/components/layouts/blank-stack";
+import {
+	BlankStack,
+	defaultScreenOptions,
+} from "@/components/layouts/blank-stack";
+
+const TOTAL_STEPS = 3;
 
 interface ProgressPillProps {
 	animation: BlankStackOverlayProps["overlayAnimation"];
@@ -48,7 +47,7 @@ type OnboardingOverlayOptions = {
 	next?: Href;
 };
 
-const OverlayComponent = (props: BlankStackOverlayProps) => {
+const OnboardingOverlay = (props: BlankStackOverlayProps) => {
 	const content = props.overlayOptions as OnboardingOverlayOptions;
 	const insets = useSafeAreaInsets();
 
@@ -76,13 +75,13 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 				behavior="padding"
 				keyboardVerticalOffset={10}
 			>
-				<View style={[styles.topBar]}>
+				<View style={styles.topBar}>
 					<Pressable style={styles.iconWrapper} onPress={router.back}>
 						<FontAwesome6 name="chevron-left" size={16} color="black" />
 					</Pressable>
 
 					<View style={styles.progressContainer}>
-						{Array.from({ length: 3 }).map((_, index) => (
+						{Array.from({ length: TOTAL_STEPS }).map((_, index) => (
 							<ProgressPill
 								key={index.toString()}
 								animation={props.overlayAnimation}
@@ -94,44 +93,15 @@ const OverlayComponent = (props: BlankStackOverlayProps) => {
 					<View style={styles.iconWrapper} />
 				</View>
 
-				<Pressable
-					style={{
-						padding: 16,
-						borderRadius: 99,
-						backgroundColor: "#e11d48",
-						alignItems: "center",
-						justifyContent: "center",
-					}}
-					onPress={onHandlePress}
-				>
+				<Pressable style={styles.primaryButton} onPress={onHandlePress}>
 					<ComposableText
 						text={content.buttonText ?? ""}
-						style={{
-							color: "white",
-							fontSize: 18,
-							fontWeight: "600",
-						}}
+						style={styles.primaryButtonText}
 					/>
 				</Pressable>
 			</KeyboardAvoidingView>
 		</View>
 	);
-};
-
-const sharedScreenInterpolator: ScreenStyleInterpolator = ({
-	progress,
-	layouts: { screen },
-	bounds,
-}) => {
-	"worklet";
-	const x = interpolate(progress, [0, 1, 2], [screen.width, 0, -screen.width]);
-	return {
-		contentStyle: {
-			transform: [{ translateX: x }],
-			backgroundColor: "#FFF",
-		},
-		["SHARED"]: bounds({ id: "SHARED" }),
-	};
 };
 
 export default function OnboardingLayout() {
@@ -140,62 +110,33 @@ export default function OnboardingLayout() {
 			<BlankStack.Screen
 				name="index"
 				options={{
-					overlay: OverlayComponent,
+					overlay: OnboardingOverlay,
 					overlayMode: "float",
 					overlayShown: true,
 					overlayOptions: {
 						buttonText: "Set my username",
 						next: "/onboarding/b",
 					},
-					screenStyleInterpolator: sharedScreenInterpolator,
 				}}
 			/>
 			<BlankStack.Screen
 				name="b"
 				options={{
-					gestureEnabled: true,
-					gestureDirection: "horizontal",
 					overlayOptions: {
 						buttonText: "Set my nickname",
 						next: "/onboarding/c",
 					},
-					screenStyleInterpolator: sharedScreenInterpolator,
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
+					...defaultScreenOptions,
 				}}
 			/>
 			<BlankStack.Screen
 				name="c"
 				options={{
-					gestureEnabled: true,
-					gestureDirection: "horizontal",
 					overlayOptions: {
 						buttonText: "All set",
 						next: "/onboarding/nested-stack/",
 					},
-					screenStyleInterpolator: sharedScreenInterpolator,
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
-				}}
-			/>
-			<BlankStack.Screen
-				name="nested-stack"
-				options={{
-					gestureEnabled: true,
-					overlayOptions: {
-						buttonText: "All set",
-						next: "/onboarding/nested-stack/",
-					},
-					gestureDirection: "horizontal",
-					screenStyleInterpolator: sharedScreenInterpolator,
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
+					...defaultScreenOptions,
 				}}
 			/>
 		</BlankStack>
@@ -203,9 +144,6 @@ export default function OnboardingLayout() {
 }
 
 const styles = StyleSheet.create({
-	headerWrapper: {
-		justifyContent: "space-between",
-	},
 	topBar: {
 		alignItems: "center",
 		justifyContent: "space-between",
@@ -234,23 +172,16 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		overflow: "hidden",
 	},
-	footer: {
-		width: "100%",
-		alignItems: "center",
-		justifyContent: "center",
-		padding: 24,
-	},
 	primaryButton: {
-		height: 65,
-		backgroundColor: "#000",
-		width: "100%",
-		borderRadius: 999,
+		padding: 16,
+		borderRadius: 99,
+		backgroundColor: "#e11d48",
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	primaryButtonText: {
-		fontSize: 20,
-		fontWeight: "600",
 		color: "white",
+		fontSize: 18,
+		fontWeight: "600",
 	},
 });

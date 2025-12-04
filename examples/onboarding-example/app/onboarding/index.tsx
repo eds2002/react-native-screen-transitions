@@ -1,29 +1,12 @@
-import { useFocusEffect } from "@react-navigation/native";
-import { useCallback, useRef } from "react";
-import { type TextInput, View } from "react-native";
-import Transition from "react-native-screen-transitions";
-import { Container } from "@/components/container";
-import { Input } from "@/components/input";
-import { Typography } from "@/components/typography";
-import { useFocusInput } from "@/hooks/use-focus-input";
+import { OnboardingScreen } from "@/components/onboarding-screen";
 
-export default function App() {
-	const { ref } = useFocusInput();
+export default function HandleScreen() {
 	return (
-		<Container>
-			<View style={{ gap: 48 }}>
-				<View>
-					<Typography.Heading>Your handle</Typography.Heading>
-					<Typography.Subtitle>
-						P.S. We don't have a way to moderate yet.
-					</Typography.Subtitle>
-				</View>
-				<Transition.View
-					style={{ width: 100, height: 100, backgroundColor: "green",alignSelf:"flex-end" }}
-					sharedBoundTag="SHARED"
-				/>
-				<Input ref={ref} placeholder="@trpfsu" />
-			</View>
-		</Container>
+		<OnboardingScreen
+			heading="Your handle"
+			subtitle="P.S. We don't have a way to moderate yet."
+			placeholder="@trpfsu"
+			sharedElementAlign="flex-end"
+		/>
 	);
 }
