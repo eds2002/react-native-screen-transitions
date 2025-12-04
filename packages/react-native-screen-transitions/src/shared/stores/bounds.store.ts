@@ -138,26 +138,7 @@ function getSnapshot(tag: TagID, key: ScreenKey): Snapshot | null {
 	return null;
 }
 
-/**
- * Get a pair of snapshots (from/to) for a shared element transition.
- * Returns the active link's source and destination snapshots.
- */
-function getPair(
-	tag: TagID,
-	screenKey?: ScreenKey,
-	isClosing?: boolean,
-): { from: Snapshot; to: Snapshot } | null {
-	"worklet";
-	const link = getActiveLink(tag, screenKey, isClosing);
-	if (!link || !link.destination) return null;
-
-	return {
-		from: { bounds: link.source.bounds, styles: link.source.styles },
-		to: { bounds: link.destination.bounds, styles: link.destination.styles },
-	};
-}
-
-function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
+function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
 	"worklet";
 	const stack = registry.value[tag]?.linkStack;
 
@@ -167,34 +148,48 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey, isClosing?: boolean) {
 
 	// If screenKey provided, find link involving that screen
 	if (screenKey) {
-		// When closing (backward nav), we want the link where this screen is the DESTINATION
-		// When opening (forward nav), we want the link where this screen is the DESTINATION too
-		// The source is always the "from" screen, destination is the "to" screen
-
-		if (isClosing) {
-			// Backward: find link where I am the destination (I'm going back to source)
-			for (let i = stack.length - 1; i >= 0; i--) {
-				const link = stack[i];
-				if (matchesScreenKey(link.destination, screenKey)) {
-					return link;
-				}
-			}
-		}
-
-		// Forward or fallback: find any link involving this screen
 		for (let i = stack.length - 1; i >= 0; i--) {
 			const link = stack[i];
-			if (
-				matchesScreenKey(link.source, screenKey) ||
-				matchesScreenKey(link.destination, screenKey)
-			) {
+			if (!link.destination) continue;
+
+			const isSource = matchesScreenKey(link.source, screenKey);
+			const isDestination = matchesScreenKey(link.destination, screenKey);
+
+			if (isSource || isDestination) {
+				// If I match the source, I'm closing (going back to where I came from)
 				return link;
 			}
 		}
 		return null;
 	}
 
-	return stack[stack.length - 1] ?? null;
+	const lastLink = stack[stack.length - 1];
+	return lastLink ? lastLink : null;
+}
+
+/**
+ * Clear all snapshots and links for a screen across all tags.
+ * Called when a screen unmounts.
+ */
+function clear(screenKey: ScreenKey) {
+	"worklet";
+	registry.modify((state: Any) => {
+		"worklet";
+		for (const tag in state) {
+			// Remove snapshot
+			if (state[tag].snapshots[screenKey]) {
+				delete state[tag].snapshots[screenKey];
+			}
+
+			// Remove links involving this screen
+			state[tag].linkStack = state[tag].linkStack.filter((link: TagLink) => {
+				const sourceMatches = matchesScreenKey(link.source, screenKey);
+				const destMatches = matchesScreenKey(link.destination, screenKey);
+				return !sourceMatches && !destMatches;
+			});
+		}
+		return state;
+	});
 }
 
 export const BoundStore = {
@@ -203,5 +198,5 @@ export const BoundStore = {
 	setLinkDestination,
 	getActiveLink,
 	getSnapshot,
-	getPair,
+	clear,
 };

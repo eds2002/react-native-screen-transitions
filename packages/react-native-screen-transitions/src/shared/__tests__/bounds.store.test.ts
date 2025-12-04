@@ -236,23 +236,19 @@ describe("BoundStore.getActiveLink", () => {
 		expect(link?.destination?.screenKey).toBe("screen-c");
 	});
 
-	it("with screenKey + isClosing: finds link where screen is destination", () => {
+	it("infers isClosing when screenKey matches source", () => {
 		BoundStore.setLinkSource("card", "screen-a", createBounds());
 		BoundStore.setLinkDestination("card", "screen-b", createBounds());
 
-		// When closing from screen-b, find link where screen-b is destination
-		const link = BoundStore.getActiveLink("card", "screen-b", true);
-		expect(link?.source.screenKey).toBe("screen-a");
-		expect(link?.destination?.screenKey).toBe("screen-b");
-	});
+		// Query from source screen = closing (going back)
+		const linkFromSource = BoundStore.getActiveLink("card", "screen-a");
+		expect(linkFromSource?.isClosing).toBe(true);
+		expect(linkFromSource?.source.screenKey).toBe("screen-a");
 
-	it("with screenKey (opening): finds link involving screen", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkDestination("card", "screen-b", createBounds());
-
-		// Opening to screen-b, find link involving it
-		const link = BoundStore.getActiveLink("card", "screen-b", false);
-		expect(link?.destination?.screenKey).toBe("screen-b");
+		// Query from destination screen = opening
+		const linkFromDest = BoundStore.getActiveLink("card", "screen-b");
+		expect(linkFromDest?.isClosing).toBe(false);
+		expect(linkFromDest?.destination?.screenKey).toBe("screen-b");
 	});
 
 	it("ancestor matching works in link lookup", () => {
@@ -267,17 +263,18 @@ describe("BoundStore.getActiveLink", () => {
 		);
 		BoundStore.setLinkDestination("card", "screen-b", createBounds());
 
-		// Query by ancestor key
-		const link = BoundStore.getActiveLink("card", "stack-a", false);
+		// Query by ancestor key (matches source)
+		const link = BoundStore.getActiveLink("card", "stack-a");
 		expect(link).not.toBeNull();
 		expect(link?.source.screenKey).toBe("screen-a");
+		expect(link?.isClosing).toBe(true); // Ancestor of source = closing
 	});
 
 	it("returns null when screenKey does not match any link", () => {
 		BoundStore.setLinkSource("card", "screen-a", createBounds());
 		BoundStore.setLinkDestination("card", "screen-b", createBounds());
 
-		const link = BoundStore.getActiveLink("card", "screen-x", false);
+		const link = BoundStore.getActiveLink("card", "screen-x");
 		expect(link).toBeNull();
 	});
 });
@@ -297,13 +294,15 @@ describe("Scenario: Simple push/pop navigation", () => {
 		// 2. Screen B mounts, measures card (destination captured)
 		BoundStore.setLinkDestination("card", "screen-b", dstBounds);
 
-		// Verify link is complete
-		const openingLink = BoundStore.getActiveLink("card", "screen-b", false);
+		// Verify link is complete - query from destination (opening)
+		const openingLink = BoundStore.getActiveLink("card", "screen-b");
+		expect(openingLink?.isClosing).toBe(false);
 		expect(openingLink?.source.bounds).toEqual(srcBounds);
 		expect(openingLink?.destination?.bounds).toEqual(dstBounds);
 
-		// 3. User pops back (closing)
-		const closingLink = BoundStore.getActiveLink("card", "screen-b", true);
+		// 3. Query from source (closing - going back)
+		const closingLink = BoundStore.getActiveLink("card", "screen-a");
+		expect(closingLink?.isClosing).toBe(true);
 		expect(closingLink?.source.screenKey).toBe("screen-a");
 		expect(closingLink?.destination?.screenKey).toBe("screen-b");
 	});
@@ -366,8 +365,9 @@ describe("Scenario: Nested navigator with ancestor keys", () => {
 		BoundStore.setLinkDestination("profile", "detail", createBounds(0, 0));
 
 		// Query by ancestor should find the link
-		const link = BoundStore.getActiveLink("profile", "stack-a", false);
+		const link = BoundStore.getActiveLink("profile", "stack-a");
 		expect(link?.source.screenKey).toBe("a1");
+		expect(link?.isClosing).toBe(true); // Ancestor matches source = closing
 	});
 });
 
@@ -386,14 +386,15 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 		expect(latest?.source.screenKey).toBe("screen-b");
 		expect(latest?.destination?.screenKey).toBe("screen-c");
 
-		// Closing from C should find B → C link
-		const closingC = BoundStore.getActiveLink("card", "screen-c", true);
-		expect(closingC?.destination?.screenKey).toBe("screen-c");
+		// Query from C (destination of B→C) = opening
+		const fromC = BoundStore.getActiveLink("card", "screen-c");
+		expect(fromC?.isClosing).toBe(false);
+		expect(fromC?.destination?.screenKey).toBe("screen-c");
 
-		// Closing from B should find A → B link
-		const closingB = BoundStore.getActiveLink("card", "screen-b", true);
-		expect(closingB?.destination?.screenKey).toBe("screen-b");
-		expect(closingB?.source.screenKey).toBe("screen-a");
+		// Query from B - B is source of B→C link, so isClosing=true
+		const fromB = BoundStore.getActiveLink("card", "screen-b");
+		expect(fromB?.isClosing).toBe(true);
+		expect(fromB?.source.screenKey).toBe("screen-b");
 	});
 });
 

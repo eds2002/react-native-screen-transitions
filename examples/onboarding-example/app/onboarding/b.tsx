@@ -6,6 +6,7 @@ export default function NicknameScreen() {
 			heading="Your nickname"
 			subtitle="Just so we know what to call you"
 			placeholder="Jerry"
+			color="green"
 		/>
 	);
 }

@@ -1,16 +1,17 @@
 import type { FlexAlignType, ViewStyle } from "react-native";
 import { View } from "react-native";
 import Transition from "react-native-screen-transitions";
+import { useFocusInput } from "@/hooks/use-focus-input";
 import { Container } from "./container";
 import { Input } from "./input";
 import { Typography } from "./typography";
-import { useFocusInput } from "@/hooks/use-focus-input";
 
 interface OnboardingScreenProps {
 	heading: string;
 	subtitle: string;
 	placeholder: string;
 	sharedElementAlign?: FlexAlignType;
+	color?: string;
 }
 
 export const OnboardingScreen = ({
@@ -18,6 +19,7 @@ export const OnboardingScreen = ({
 	subtitle,
 	placeholder,
 	sharedElementAlign = "flex-start",
+	color = "green",
 }: OnboardingScreenProps) => {
 	const { ref } = useFocusInput();
 
@@ -32,7 +34,7 @@ export const OnboardingScreen = ({
 					style={{
 						width: 100,
 						height: 100,
-						backgroundColor: "green",
+						backgroundColor: color,
 						alignSelf: sharedElementAlign,
 					}}
 					sharedBoundTag="SHARED"

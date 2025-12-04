@@ -50,16 +50,11 @@ const resolveBounds = (props: {
 	"worklet";
 	const entering = !props.next;
 	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
-	const isClosing = props.current?.closing === 1;
 
 	const isFullscreenTarget = props.computeOptions.target === "fullscreen";
 
 	// Try exact match first (strict matching for nested stacks)
-	let link = BoundStore.getActiveLink(
-		props.id,
-		props.current?.route.key,
-		isClosing,
-	);
+	let link = BoundStore.getActiveLink(props.id, props.current?.route.key);
 
 	// For fullscreen target, fall back to most recent link for this tag
 	// (destination screen might not have a matching element)
@@ -212,14 +207,7 @@ export const createBounds = (
 		return BoundStore.getSnapshot(tag, key);
 	};
 
-	const getPair = (tag: string): { from: Snapshot; to: Snapshot } | null => {
-		"worklet";
-		const isClosing = props.current?.closing === 1;
-		return BoundStore.getPair(tag, props.current?.route.key, isClosing);
-	};
-
 	return Object.assign(boundsFunction, {
 		getSnapshot,
-		getPair,
 	}) as BoundsAccessor;
 };

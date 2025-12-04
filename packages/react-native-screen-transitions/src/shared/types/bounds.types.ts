@@ -22,5 +22,4 @@ export type BoundEntry = {
 export type BoundsAccessor = {
 	<T extends BoundsBuilderOptions>(options: T): BoundsReturnType<T>;
 	getSnapshot: (id: string, key?: string) => Snapshot | null;
-	getPair: (id: string) => { from: Snapshot; to: Snapshot } | null;
 };

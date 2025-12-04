@@ -7,6 +7,7 @@ export default function BioScreen() {
 			subtitle="We aim to invade your privacy"
 			placeholder="Tell us about yourself..."
 			sharedElementAlign="center"
+			color="purple"
 		/>
 	);
 }

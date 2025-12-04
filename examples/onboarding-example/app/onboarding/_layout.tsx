@@ -13,6 +13,7 @@ import { ComposableText } from "@/components/composeable-text";
 import {
 	BlankStack,
 	defaultScreenOptions,
+	verticalScreenOptions,
 } from "@/components/layouts/blank-stack";
 
 const TOTAL_STEPS = 3;
@@ -134,9 +135,19 @@ export default function OnboardingLayout() {
 				options={{
 					overlayOptions: {
 						buttonText: "All set",
-						next: "/onboarding/nested-stack/",
+						next: "/onboarding/nested/a",
 					},
 					...defaultScreenOptions,
+				}}
+			/>
+			<BlankStack.Screen
+				name="nested"
+				options={{
+					overlayOptions: {
+						buttonText: "NESTED HOLY MOLY",
+						next: "/onboarding/nested/a",
+					},
+					...verticalScreenOptions,
 				}}
 			/>
 		</BlankStack>
