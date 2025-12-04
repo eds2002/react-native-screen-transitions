@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
-} from "../utils/bounds/_utils/geometry";
+} from "../utils/bounds/helpers/geometry";
 
 describe("computeRelativeGeometry", () => {
 	it("calculates correct relative geometry when entering", () => {

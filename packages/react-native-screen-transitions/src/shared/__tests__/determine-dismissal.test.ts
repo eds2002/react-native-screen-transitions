@@ -1,15 +1,5 @@
-import { describe, expect, it, mock } from "bun:test";
-
-mock.module("react-native", () => ({}));
-mock.module("react-native-gesture-handler", () => ({}));
-mock.module("react-native-reanimated", () => ({
-	clamp: (value: number, lower: number, upper: number) =>
-		Math.min(Math.max(value, lower), upper),
-}));
-
-const { determineDismissal } = await import(
-	"../utils/gesture/determine-dismissal"
-);
+import { describe, expect, it } from "bun:test";
+import { determineDismissal } from "../utils/gesture/determine-dismissal";
 
 describe("determineDismissal", () => {
 	const dimensions = { width: 320, height: 640 };

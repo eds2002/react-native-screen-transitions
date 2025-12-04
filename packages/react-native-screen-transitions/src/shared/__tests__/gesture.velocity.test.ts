@@ -1,13 +1,5 @@
-import { describe, expect, it, mock } from "bun:test";
-
-mock.module("react-native", () => ({}));
-mock.module("react-native-gesture-handler", () => ({}));
-mock.module("react-native-reanimated", () => ({
-	clamp: (value: number, lower: number, upper: number) =>
-		Math.min(Math.max(value, lower), upper),
-}));
-
-const { velocity } = await import("../utils/gesture/velocity");
+import { describe, expect, it } from "bun:test";
+import { velocity } from "../utils/gesture/velocity";
 
 type Directions = {
 	horizontal: boolean;
