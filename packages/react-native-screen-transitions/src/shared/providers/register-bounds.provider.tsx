@@ -128,6 +128,10 @@ const useInitialLayoutHandler = (params: {
  * Measures non-pressable elements when screen becomes blurred.
  * Captures bounds right before transition starts.
  */
+/**
+ * Measures non-pressable elements when screen becomes blurred.
+ * Captures bounds right before transition starts.
+ */
 const useBlurMeasurement = (params: {
 	sharedBoundTag?: string;
 	ancestorKeys: string[];
@@ -151,16 +155,16 @@ const useBlurMeasurement = (params: {
 		maybeMeasureAndStore({ shouldSetSource: true });
 	});
 
-	const handleOnScreenBlur = useStableCallback(() => {
-		hasCapturedSource.current = false;
+	useFocusEffect(
+		useCallback(() => {
+			hasCapturedSource.current = false;
 
-		return () => {
-			if (!sharedBoundTag || hasCapturedSource.current) return;
-			runOnUI(maybeMeasureOnBlur)();
-		};
-	});
-
-	useFocusEffect(handleOnScreenBlur);
+			return () => {
+				if (!sharedBoundTag || hasCapturedSource.current) return;
+				runOnUI(maybeMeasureOnBlur)();
+			};
+		}, [sharedBoundTag, maybeMeasureOnBlur]),
+	);
 
 	return {
 		markSourceCaptured: () => {
