@@ -3,7 +3,13 @@
  * https://github.com/MatiPl01/react-native-sortables/blob/main/packages/react-native-sortables/src/providers/utils/createProvider.tsx
  * SUPER COOL AMAZING UTILITY
  */
-import { createContext, type ReactNode, useContext, useMemo } from "react";
+import {
+	type ComponentType,
+	createContext,
+	type ReactNode,
+	useContext,
+	useMemo,
+} from "react";
 
 export default function createProvider<
 	ProviderName extends string,
@@ -54,10 +60,34 @@ export default function createProvider<
 			return context;
 		};
 
+		const withProvider = (Component: ComponentType<ContextValue>) => {
+			return function WithProviderWrapper(props: ProviderProps) {
+				const { enabled = true, value } = factory(props);
+
+				if (!value) {
+					throw new Error(
+						`${name}Context value must be provided. You likely forgot to return it from the factory function.`,
+					);
+				}
+
+				const memoValue = useMemo(
+					() => (enabled ? value : null),
+					[enabled, value],
+				);
+
+				return (
+					<Context.Provider value={memoValue}>
+						<Component {...value} />
+					</Context.Provider>
+				);
+			};
+		};
+
 		return {
 			[`${name}Context`]: Context,
 			[`${name}Provider`]: Provider,
 			[`use${name}Context`]: useEnhancedContext,
+			[`with${name}Provider`]: withProvider,
 		} as {
 			[P in ProviderName as `${P}Context`]: React.Context<ContextValue>;
 		} & {
@@ -66,6 +96,10 @@ export default function createProvider<
 			[P in ProviderName as `use${P}Context`]: () => Guarded extends true
 				? ContextValue
 				: ContextValue | null;
+		} & {
+			[P in ProviderName as `with${P}Provider`]: (
+				Component: ComponentType<ContextValue>,
+			) => React.FC<ProviderProps>;
 		};
 	};
 }
