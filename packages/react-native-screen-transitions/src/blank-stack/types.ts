@@ -98,6 +98,11 @@ export type BlankStackOverlayProps = {
 	focusedIndex: number;
 
 	/**
+	 * All routes currently in the stack.
+	 */
+	routes: Route<string>[];
+
+	/**
 	 * Options passed to the overlay component.
 	 */
 	overlayOptions?: {

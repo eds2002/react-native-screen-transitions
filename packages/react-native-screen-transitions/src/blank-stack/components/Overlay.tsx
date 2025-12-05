@@ -47,7 +47,7 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	const OverlayComponent = scene.descriptor.options.overlay;
 
 	const { overlayAnimation, optimisticActiveIndex } = useOverlayAnimation();
-	const { scenes } = useStackNavigationContext();
+	const { scenes, routes } = useStackNavigationContext();
 
 	const overlaySceneIndex = useMemo(() => {
 		return scenes.findIndex(
@@ -76,6 +76,7 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 	}
 
 	const overlayProps: BlankStackOverlayProps = {
+		routes,
 		focusedRoute: focusedScene.route,
 		focusedIndex: optimisticActiveIndex,
 		overlayOptions: focusedScene.descriptor.options.overlayOptions,
