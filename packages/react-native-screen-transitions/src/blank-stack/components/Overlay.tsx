@@ -77,12 +77,12 @@ const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
 
 	const overlayProps: BlankStackOverlayProps = {
 		routes,
+		overlayAnimation,
+		screenAnimation,
 		focusedRoute: focusedScene.route,
 		focusedIndex: optimisticActiveIndex,
 		overlayOptions: focusedScene.descriptor.options.overlayOptions,
 		navigation: scene.descriptor.navigation,
-		overlayAnimation,
-		screenAnimation,
 	};
 
 	return (
