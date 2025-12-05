@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-rc.3
+
+### Minor Changes
+
+- refactors & remove useOverlayAnimation
+
 ## 3.0.0-rc.1
 
 ### Patch Changes
