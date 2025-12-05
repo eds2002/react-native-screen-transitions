@@ -76,6 +76,19 @@ export interface ScreenInterpolationProps {
 	progress: number;
 
 	/**
+	 * Accumulated progress from the current screen's position onwards in the stack.
+	 * Unlike `progress` (0-2), this ranges from 0-N where N is the number of screens
+	 * above the current screen. Each screen at index I sees stackProgress as the
+	 * sum of all progress values from index I to the top of the stack.
+	 *
+	 * Example: With 4 screens pushed, screen at index 1 would see stackProgress = 3
+	 * when all screens are fully transitioned.
+	 *
+	 * Falls back to `progress` when not in blank-stack.
+	 */
+	stackProgress: number;
+
+	/**
 	 * Function that provides access to bounds builders for creating shared element transitions.
 	 */
 	bounds: BoundsAccessor;

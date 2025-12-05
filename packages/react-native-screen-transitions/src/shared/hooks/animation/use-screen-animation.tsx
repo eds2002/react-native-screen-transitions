@@ -10,6 +10,7 @@ import {
 	type TransitionDescriptor,
 	useKeys,
 } from "../../providers/keys.provider";
+import { useStackAnimationValues } from "../../providers/routes.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
@@ -111,6 +112,9 @@ export function _useScreenAnimation() {
 	const currentAnimation = useBuildScreenTransitionState(currentDescriptor);
 	const nextAnimation = useBuildScreenTransitionState(nextDescriptor);
 	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
+	const stackAnimationValues = useStackAnimationValues(
+		currentDescriptor?.route?.key,
+	);
 
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">
@@ -129,9 +133,18 @@ export function _useScreenAnimation() {
 			? unwrapInto(currentAnimation)
 			: DEFAULT_SCREEN_TRANSITION_STATE;
 
+		let computedStackProgress: number | undefined;
+		if (stackAnimationValues.length > 0) {
+			computedStackProgress = 0;
+			for (let i = 0; i < stackAnimationValues.length; i += 1) {
+				computedStackProgress += stackAnimationValues[i].progress.value;
+			}
+		}
+
 		const helpers = derivations({
 			current,
 			next,
+			stackProgress: computedStackProgress,
 		});
 
 		return {

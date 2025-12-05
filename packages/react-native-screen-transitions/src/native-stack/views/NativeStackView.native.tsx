@@ -34,6 +34,7 @@ import {
 	ScreenStackItem,
 } from "react-native-screens";
 import { NativeStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
+import { RoutesProvider } from "../../shared/providers/routes.provider";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import type {
 	NativeStackDescriptor,
@@ -515,11 +516,18 @@ export function NativeStackView({
 
 	const routes = state.routes.concat(state.preloadedRoutes);
 
+	// Memoize route keys array for RoutesProvider
+	const routeKeys = React.useMemo(
+		() => routes.map((route) => route.key),
+		[routes],
+	);
+
 	return (
-		<GestureHandlerRootView>
-			<SafeAreaProviderCompat>
-				<ScreenStack style={styles.container}>
-					{routes.map((route, index) => {
+		<RoutesProvider routeKeys={routeKeys}>
+			<GestureHandlerRootView>
+				<SafeAreaProviderCompat>
+					<ScreenStack style={styles.container}>
+						{routes.map((route, index) => {
 						const descriptor =
 							descriptors[route.key] ?? preloadedDescriptors[route.key];
 						const isFocused = state.index === index;
@@ -624,9 +632,10 @@ export function NativeStackView({
 							/>
 						);
 					})}
-				</ScreenStack>
-			</SafeAreaProviderCompat>
-		</GestureHandlerRootView>
+					</ScreenStack>
+				</SafeAreaProviderCompat>
+			</GestureHandlerRootView>
+		</RoutesProvider>
 	);
 }
 

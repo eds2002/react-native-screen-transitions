@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
 import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
 import { FlagsProvider } from "../../shared/providers/flags.provider";
+import { RoutesProvider } from "../../shared/providers/routes.provider";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import type { BlankStackDescriptor } from "../types";
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
@@ -45,13 +46,20 @@ export const StackView = withStackNavigationProvider(
 		scenes,
 		shouldShowFloatOverlay,
 	}) => {
+		// Memoize route keys array for ScenesProvider
+		const routeKeys = React.useMemo(
+			() => routes.map((route) => route.key),
+			[routes],
+		);
+
 		return (
 			<FlagsProvider TRANSITIONS_ALWAYS_ON>
-				<GestureHandlerRootView>
-					<SafeAreaProviderCompat>
-						{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-						<ScreenContainer style={styles.container}>
-							{scenes.map((scene, sceneIndex) => {
+				<RoutesProvider routeKeys={routeKeys}>
+					<GestureHandlerRootView>
+						<SafeAreaProviderCompat>
+							{shouldShowFloatOverlay ? <Overlay.Float /> : null}
+							<ScreenContainer style={styles.container}>
+								{scenes.map((scene, sceneIndex) => {
 								const descriptor = scene.descriptor;
 								const route = scene.route;
 								const isFocused = focusedIndex === sceneIndex;
@@ -92,8 +100,9 @@ export const StackView = withStackNavigationProvider(
 								);
 							})}
 						</ScreenContainer>
-					</SafeAreaProviderCompat>
-				</GestureHandlerRootView>
+						</SafeAreaProviderCompat>
+					</GestureHandlerRootView>
+				</RoutesProvider>
 			</FlagsProvider>
 		);
 	},

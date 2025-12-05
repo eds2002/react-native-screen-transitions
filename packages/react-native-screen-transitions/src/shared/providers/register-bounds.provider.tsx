@@ -148,9 +148,10 @@ const useBlurMeasurement = (params: {
 	const maybeMeasureOnBlur = useStableCallbackValue(() => {
 		"worklet";
 
-		// Don't measure if current / any ancestor is closing
-		const isOneClosing = ancestorClosing.some((closing) => closing.get());
-		if (isOneClosing) return;
+		//.some doesnt work here apparently... :-(
+		for (const closing of ancestorClosing) {
+			if (closing.get()) return;
+		}
 
 		maybeMeasureAndStore({ shouldSetSource: true });
 	});
