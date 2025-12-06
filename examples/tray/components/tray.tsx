@@ -174,6 +174,7 @@ function TrayComponent({
 					pointerEvents="none"
 				/>
 			}
+			pointerEvents="box-none"
 		>
 			<Transition.View
 				styleId={TRAY_BACKGROUND_ID}
