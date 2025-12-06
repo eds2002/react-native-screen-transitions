@@ -109,9 +109,9 @@ export function _useScreenAnimation() {
 	const currentAnimation = useBuildScreenTransitionState(currentDescriptor);
 	const nextAnimation = useBuildScreenTransitionState(nextDescriptor);
 	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
-	const stackAnimationValues = useStackAnimationValues(
-		currentDescriptor?.route?.key,
-	);
+
+	const currentRouteKey = currentDescriptor?.route?.key;
+	const stackAnimationValues = useStackAnimationValues(currentRouteKey);
 
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">
