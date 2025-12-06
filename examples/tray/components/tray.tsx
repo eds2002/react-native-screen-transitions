@@ -1,7 +1,11 @@
+import FontAwesome from "@expo/vector-icons/FontAwesome6";
 import MaskedView from "@react-native-masked-view/masked-view";
+import { router } from "expo-router";
 import type React from "react";
 import {
+	Pressable,
 	type StyleProp,
+	Text,
 	useWindowDimensions,
 	View,
 	type ViewStyle,
@@ -28,6 +32,16 @@ interface TrayProps {
 	children: React.ReactNode;
 }
 
+interface TrayHeaderProps {
+	title?: string;
+	onClose?: () => void;
+}
+
+interface TrayContentProps {
+	style?: StyleProp<ViewStyle>;
+	children: React.ReactNode;
+}
+
 interface TrayInterpolatorOptions {
 	/**
 	 * Additional styles to merge with the tray interpolation.
@@ -42,6 +56,7 @@ interface TrayInterpolatorOptions {
 
 const TRAY_ROOT_TAG = "TRAY_ROOT";
 const TRAY_CONTENT_ID = "TRAY_CONTENT";
+const TRAY_SCALED_CONTENT_ID = "TRAY_SCALED_CONTENT";
 const TRAY_BACKGROUND_ID = "TRAY_BACKGROUND";
 
 const DEFAULT_BORDER_RADIUS = 36;
@@ -178,6 +193,7 @@ function TrayComponent({
 					<View
 						style={[
 							{
+								flex: 1,
 								maxHeight: snapPoint,
 								borderRadius: DEFAULT_BORDER_RADIUS,
 								marginHorizontal: detached ? DEFAULT_MARGIN : 0,
@@ -191,6 +207,47 @@ function TrayComponent({
 				</Transition.View>
 			</Transition.View>
 		</MaskedView>
+	);
+}
+
+function TrayHeader({ title = "Header", onClose }: TrayHeaderProps) {
+	return (
+		<View
+			style={{
+				flexDirection: "row",
+				alignItems: "center",
+				justifyContent: "space-between",
+				width: "100%",
+				padding: 24,
+			}}
+		>
+			<Text style={{ fontSize: 20, fontWeight: "600" }}>{title}</Text>
+			<Pressable
+				onPress={onClose ?? router.back}
+				style={{
+					width: 30,
+					height: 30,
+					borderRadius: 50,
+					backgroundColor: "#f5f5f5",
+					alignItems: "center",
+					justifyContent: "center",
+				}}
+			>
+				<FontAwesome name="xmark" size={18} color="#a3a3a3" />
+			</Pressable>
+		</View>
+	);
+}
+
+function TrayContent({ style, children }: TrayContentProps) {
+	return (
+		<Transition.View
+			styleId={TRAY_SCALED_CONTENT_ID}
+			style={[{ flex: 1, paddingHorizontal: 24 }, style]}
+			pointerEvents="box-none"
+		>
+			{children}
+		</Transition.View>
 	);
 }
 
@@ -315,8 +372,16 @@ function createInterpolator(
 								[targetTranslateY, currentTranslateY],
 							),
 						},
+					],
+				},
+				[TRAY_SCALED_CONTENT_ID]: {
+					transform: [
 						{
-							scale: interpolate(progress, [0, 1], [0.9, 1]),
+							scale: withSpring(interpolate(progress, [0, 1], [0.8, 1]), {
+								mass: 0.3,
+								stiffness: 800,
+								damping: 18,
+							}),
 						},
 					],
 				},
@@ -360,8 +425,16 @@ function createInterpolator(
 								[currentTranslateY, targetTranslateY],
 							),
 						},
+					],
+				},
+				[TRAY_SCALED_CONTENT_ID]: {
+					transform: [
 						{
-							scale: interpolate(progress, [1, 2], [1, 1.1]),
+							scale: withSpring(interpolate(progress, [1, 2], [1, 1.2]), {
+								mass: 0.3,
+								stiffness: 800,
+								damping: 18,
+							}),
 						},
 					],
 				},
@@ -380,7 +453,14 @@ function createInterpolator(
 
 export const Tray = {
 	View: TrayComponent,
+	Header: TrayHeader,
+	Content: TrayContent,
 	interpolator: createInterpolator,
 };
 
-export type { TrayProps, TrayInterpolatorOptions };
+export type {
+	TrayProps,
+	TrayHeaderProps,
+	TrayContentProps,
+	TrayInterpolatorOptions,
+};
