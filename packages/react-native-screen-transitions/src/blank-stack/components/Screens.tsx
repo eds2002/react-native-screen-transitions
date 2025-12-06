@@ -19,12 +19,13 @@ interface ScreenProps {
 	shouldFreeze?: boolean;
 	activeScreensLimit: number;
 }
+enum ScreenActivity {
+	INACTIVE = 0,
+	TRANSITIONING_OR_BELOW_TOP = 1,
+	ON_TOP = 2,
+}
 
 const EPSILON = 1e-5;
-
-const STATE_INACTIVE = 0;
-const STATE_TRANSITIONING_OR_BELOW_TOP = 1;
-const STATE_ON_TOP = 2;
 
 const AnimatedScreen = Animated.createAnimatedComponent(RNSScreen);
 
@@ -40,23 +41,25 @@ export const Screen = ({
 }: ScreenProps) => {
 	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");
 	const sceneClosing = AnimationStore.getAnimation(routeKey, "closing");
-	const screenActivity = useSharedValue<0 | 1 | 2>(1);
+	const screenActivity = useSharedValue<ScreenActivity>(
+		ScreenActivity.TRANSITIONING_OR_BELOW_TOP,
+	);
 
 	useDerivedValue(() => {
 		if (!sceneProgress) {
-			screenActivity.set(STATE_TRANSITIONING_OR_BELOW_TOP);
+			screenActivity.set(ScreenActivity.TRANSITIONING_OR_BELOW_TOP);
 			return;
 		}
 
 		if (index < routesLength - activeScreensLimit - 1 || isPreloaded) {
-			screenActivity.set(STATE_INACTIVE);
+			screenActivity.set(ScreenActivity.INACTIVE);
 		} else {
 			const outputValue =
 				index === routesLength - 1
-					? STATE_ON_TOP
+					? ScreenActivity.ON_TOP
 					: index >= routesLength - activeScreensLimit
-						? STATE_TRANSITIONING_OR_BELOW_TOP
-						: STATE_INACTIVE;
+						? ScreenActivity.TRANSITIONING_OR_BELOW_TOP
+						: ScreenActivity.INACTIVE;
 
 			const v = interpolate(
 				sceneProgress.get(),
@@ -65,8 +68,7 @@ export const Screen = ({
 				"clamp",
 			);
 
-			const next =
-				(Math.trunc(v) as 0 | 1 | 2) ?? STATE_TRANSITIONING_OR_BELOW_TOP;
+			const next = Math.trunc(v) ?? ScreenActivity.TRANSITIONING_OR_BELOW_TOP;
 
 			if (next !== screenActivity.get()) {
 				screenActivity.set(next);
@@ -78,7 +80,7 @@ export const Screen = ({
 		const activity = screenActivity.get();
 		return {
 			activityState: activity,
-			shouldFreeze: activity === STATE_INACTIVE && shouldFreeze,
+			shouldFreeze: activity === ScreenActivity.INACTIVE && shouldFreeze,
 			pointerEvents: sceneClosing.get()
 				? ("none" as const)
 				: ("box-none" as const),
