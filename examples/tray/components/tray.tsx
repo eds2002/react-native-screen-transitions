@@ -229,40 +229,44 @@ function createInterpolator(
 			screen.height,
 		);
 
-		const targetHeight = parseStoredSnapPoint(
-			targetOcc?.styles?.maxHeight,
-			screen.height,
-		);
+		// If no target snapshot (first tray, or next screen not rendered yet),
+		// use current values to avoid animating to wrong height
+		const targetHeight = targetOcc
+			? parseStoredSnapPoint(targetOcc?.styles?.maxHeight, screen.height)
+			: currentHeight;
 
 		// Parse margins (0 if not detached)
 		const currentMargin =
 			typeof currentOcc?.styles?.margin === "number"
 				? currentOcc.styles.margin
 				: 0;
-		const targetMargin =
-			typeof targetOcc?.styles?.margin === "number"
+		const targetMargin = targetOcc
+			? typeof targetOcc?.styles?.margin === "number"
 				? targetOcc.styles.margin
-				: 0;
+				: 0
+			: currentMargin;
 
 		// Parse margin bottoms (0 if not detached)
 		const currentMarginBottom =
 			typeof currentOcc?.styles?.marginBottom === "number"
 				? currentOcc.styles.marginBottom
 				: 0;
-		const targetMarginBottom =
-			typeof targetOcc?.styles?.marginBottom === "number"
+		const targetMarginBottom = targetOcc
+			? typeof targetOcc?.styles?.marginBottom === "number"
 				? targetOcc.styles.marginBottom
-				: 0;
+				: 0
+			: currentMarginBottom;
 
 		// Parse border radius
 		const currentBorderRadius =
 			typeof currentOcc?.styles?.borderRadius === "number"
 				? currentOcc.styles.borderRadius
 				: DEFAULT_BORDER_RADIUS;
-		const targetBorderRadius =
-			typeof targetOcc?.styles?.borderRadius === "number"
+		const targetBorderRadius = targetOcc
+			? typeof targetOcc?.styles?.borderRadius === "number"
 				? targetOcc.styles.borderRadius
-				: 0;
+				: DEFAULT_BORDER_RADIUS
+			: currentBorderRadius;
 
 		// Calculate content translateY
 		const currentTranslateY = calculateContentTranslateY(
@@ -345,6 +349,7 @@ function createInterpolator(
 						[currentBorderRadius, targetBorderRadius],
 					),
 					overflow: "hidden" as const,
+					opacity: props.stackProgress > 2 ? 0 : 1,
 				},
 				[TRAY_CONTENT_ID]: {
 					transform: [

@@ -9,8 +9,8 @@ export default function Screen() {
 			snapPoint="10%"
 			backgroundColor="#e5e5e5"
 			style={{
-				// flex: 1,
-				// alignItems: "center",
+				flex: 1,
+				alignItems: "center",
 				padding: 24,
 			}}
 		>
