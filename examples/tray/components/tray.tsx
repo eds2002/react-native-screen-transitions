@@ -1,9 +1,9 @@
 import MaskedView from "@react-native-masked-view/masked-view";
 import type React from "react";
-import { createContext, useContext } from "react";
 import {
 	type StyleProp,
 	useWindowDimensions,
+	View,
 	type ViewStyle,
 } from "react-native";
 import {
@@ -17,20 +17,14 @@ import Transition from "react-native-screen-transitions";
 
 type SnapPoint = StyleProps["maxHeight"];
 
-interface TrayRootProps {
+interface TrayProps {
 	snapPoint: SnapPoint;
 	detached?: boolean;
 	backgroundColor?: string;
-	style?: StyleProp<ViewStyle>;
-	children: React.ReactNode;
-}
-
-interface TrayContentProps {
 	/**
-	 * Additional styles for the animated content container.
+	 * Additional styles for the tray mask container.
 	 */
 	style?: StyleProp<ViewStyle>;
-
 	children: React.ReactNode;
 }
 
@@ -53,26 +47,6 @@ const TRAY_BACKGROUND_ID = "TRAY_BACKGROUND";
 const DEFAULT_BORDER_RADIUS = 36;
 const DEFAULT_MARGIN = 16;
 const DEFAULT_DETACHED = true;
-
-// ============================================================================
-// Context
-// ============================================================================
-
-interface TrayContextValue {
-	snapPoint: SnapPoint;
-	detached: boolean;
-	backgroundColor?: string;
-}
-
-const TrayContext = createContext<TrayContextValue | null>(null);
-
-function useTrayContext() {
-	const ctx = useContext(TrayContext);
-	if (!ctx) {
-		throw new Error("Tray.Content must be used within a Tray.Root");
-	}
-	return ctx;
-}
 
 /**
  * Parses a snap point to a percentage number (0-100).
@@ -145,14 +119,16 @@ const calculateContentTranslateY = (
 	);
 };
 
-function TrayRoot({
+function TrayComponent({
 	snapPoint,
 	detached = DEFAULT_DETACHED,
 	backgroundColor,
 	style,
 	children,
-}: TrayRootProps) {
+}: TrayProps) {
+	const { height: screenHeight } = useWindowDimensions();
 	const insets = useSafeAreaInsets();
+
 	const maskStyle: ViewStyle = {
 		backgroundColor: "white",
 		flex: 1,
@@ -164,58 +140,57 @@ function TrayRoot({
 		overflow: "hidden",
 	};
 
-	return (
-		<TrayContext.Provider value={{ snapPoint, detached, backgroundColor }}>
-			<MaskedView
-				style={{ flex: 1 }}
-				maskElement={
-					<Transition.View
-						sharedBoundTag={TRAY_ROOT_TAG}
-						style={[maskStyle, style]}
-						pointerEvents="none"
-					/>
-				}
-			>
-				{children}
-			</MaskedView>
-		</TrayContext.Provider>
-	);
-}
-
-function TrayContent({ style, children }: TrayContentProps) {
-	const { snapPoint, detached, backgroundColor } = useTrayContext();
-	const { height: screenHeight } = useWindowDimensions();
-	const insets = useSafeAreaInsets();
-
-	// Calculate initial translateY based on snap point from context
+	// Calculate initial translateY based on snap point
 	const heightPercent = parseSnapPointToPercent(snapPoint, screenHeight);
 	const initialTranslateY = calculateContentTranslateY(
 		heightPercent,
 		screenHeight,
 		insets.bottom,
-		detached ?? DEFAULT_DETACHED,
+		detached,
 	);
 
 	return (
-		<Transition.View
-			styleId={TRAY_BACKGROUND_ID}
-			style={{ flex: 1, backgroundColor }}
-			pointerEvents="box-none"
+		<MaskedView
+			style={{ flex: 1 }}
+			maskElement={
+				<Transition.View
+					sharedBoundTag={TRAY_ROOT_TAG}
+					style={[maskStyle]}
+					pointerEvents="none"
+				/>
+			}
 		>
 			<Transition.View
-				styleId={TRAY_CONTENT_ID}
-				style={[
-					{
-						flex: 1,
-						transform: [{ translateY: initialTranslateY }],
-					},
-					style,
-				]}
+				styleId={TRAY_BACKGROUND_ID}
+				style={{ flex: 1, backgroundColor }}
 				pointerEvents="box-none"
 			>
-				{children}
+				<Transition.View
+					styleId={TRAY_CONTENT_ID}
+					style={[
+						{
+							flex: 1,
+							transform: [{ translateY: initialTranslateY }],
+						},
+					]}
+					pointerEvents="box-none"
+				>
+					<View
+						style={[
+							{
+								maxHeight: snapPoint,
+								borderRadius: DEFAULT_BORDER_RADIUS,
+								marginHorizontal: detached ? DEFAULT_MARGIN : 0,
+								marginBottom: detached ? insets.bottom : 0,
+							},
+							style,
+						]}
+					>
+						{children}
+					</View>
+				</Transition.View>
 			</Transition.View>
-		</Transition.View>
+		</MaskedView>
 	);
 }
 
@@ -399,9 +374,8 @@ function createInterpolator(
 }
 
 export const Tray = {
-	Root: TrayRoot,
-	Content: TrayContent,
+	View: TrayComponent,
 	interpolator: createInterpolator,
 };
 
-export type { TrayRootProps, TrayContentProps, TrayInterpolatorOptions };
+export type { TrayProps, TrayInterpolatorOptions };

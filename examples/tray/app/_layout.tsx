@@ -2,45 +2,52 @@ import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
 import { StatusBar } from "expo-status-bar";
 import { BlankStack } from "@/components/layouts/blank-stack";
 import "react-native-reanimated";
-import { interpolate, interpolateColor } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { Tray } from "@/components/tray";
 
 export default function RootLayout() {
 	return (
 		<ThemeProvider value={DefaultTheme}>
 			<BlankStack>
 				<BlankStack.Screen
-					name="tray-routes"
+					name="tray-routes/index"
 					options={{
-						gestureEnabled: true,
 						gestureDirection: "vertical",
-						freezeOnBlur: false,
-						screenStyleInterpolator: ({ focused, progress, layouts }) => {
+						gestureEnabled: true,
+						screenStyleInterpolator: (props) => {
 							"worklet";
 
-							if (focused) {
-								const overlayColor = interpolateColor(
-									progress,
-									[0, 1],
-									["#00000000", "#00000040"],
-								);
+							const trayStyles = Tray.interpolator();
+							return trayStyles(props);
+						},
+						transitionSpec: {
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
+						},
+					}}
+				/>
+				<BlankStack.Screen
+					name="tray-routes/b"
+					options={{
+						screenStyleInterpolator: (props) => {
+							"worklet";
 
-								const y = interpolate(
-									progress,
-									[0, 1],
-									[layouts.screen.height, 0],
-									"clamp",
-								);
-								return {
-									contentStyle: {
-										transform: [{ translateY: y }],
-									},
-									overlayStyle: {
-										backgroundColor: overlayColor,
-									},
-								};
-							}
-							return {};
+							const trayStyles = Tray.interpolator();
+							return trayStyles(props);
+						},
+						transitionSpec: {
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
+						},
+					}}
+				/>
+				<BlankStack.Screen
+					name="tray-routes/c"
+					options={{
+						screenStyleInterpolator: (props) => {
+							"worklet";
+							const trayStyles = Tray.interpolator();
+							return trayStyles(props);
 						},
 						transitionSpec: {
 							open: Transition.Specs.DefaultSpec,
