@@ -1,7 +1,5 @@
 import { useEffect, useLayoutEffect } from "react";
-import { useAnimatedReaction, useDerivedValue } from "react-native-reanimated";
-import type { BlankStackDescriptor } from "../../../blank-stack/types";
-import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
+import { useDerivedValue } from "react-native-reanimated";
 import type { NativeStackDescriptor } from "../../../native-stack/types";
 import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
 import { useSharedValueState } from "../../hooks/reanimated/use-shared-value-state";
@@ -9,19 +7,18 @@ import useStableCallback from "../../hooks/use-stable-callback";
 import { useGestureContext } from "../../providers/gestures.provider";
 import { useKeys } from "../../providers/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
+import { TRUE } from "../../types/state.types";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
 
-export interface ScreenLifecycleProps {
+export interface Props {
 	children: React.ReactNode;
 }
 
 /**
- * ScreenLifecycleController built out for Native Stack implementation.
+ * Lifecycle controller built out for Native Stack implementation.
  */
-export const NativeStackScreenLifecycleController = ({
-	children,
-}: ScreenLifecycleProps) => {
+export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 	const { current } = useKeys<NativeStackDescriptor>();
 	const { parentContext } = useGestureContext();
 
@@ -41,6 +38,7 @@ export const NativeStackScreenLifecycleController = ({
 
 		// If transitions are disabled, or the dismissal was on the local root, or this is the first screen of the stack, reset the stores
 		if (!isEnabled || isParentDismissingViaGesture || isFirstScreen) {
+			animations.closing.set(TRUE);
 			resetStoresForScreen(current);
 			return;
 		}
@@ -83,69 +81,6 @@ export const NativeStackScreenLifecycleController = ({
 	}, [current.navigation, handleBeforeRemove]);
 
 	useLayoutEffect(handleInitialize, []);
-
-	// important for t.a scrollviews inside nested navigators.
-	useParentGestureRegistry();
-
-	return children;
-};
-
-/**
- * ScreenLifecycleController built out for Blank Stack implementation.
- */
-
-export const BlankStackScreenLifecycleController = ({
-	children,
-}: ScreenLifecycleProps) => {
-	const { current } = useKeys<BlankStackDescriptor>();
-	const { handleCloseRoute, closingRouteKeysShared } =
-		useStackNavigationContext();
-
-	const animations = AnimationStore.getAll(current.route.key);
-
-	const handleInitialize = useStableCallback(() => {
-		startScreenTransition({
-			target: "open",
-			spec: current.options.transitionSpec,
-			animations,
-		});
-	});
-
-	const handleCleanup = useStableCallback(() => {
-		resetStoresForScreen(current);
-	});
-
-	const handleCloseEnd = useStableCallback((finished: boolean) => {
-		if (!finished) {
-			return;
-		}
-		handleCloseRoute({ route: current.route });
-	});
-
-	useAnimatedReaction(
-		() => ({
-			keys: closingRouteKeysShared.value,
-		}),
-		({ keys }) => {
-			if (!keys.includes(current.route.key)) {
-				return;
-			}
-
-			startScreenTransition({
-				target: "close",
-				spec: current.options.transitionSpec,
-				animations,
-				onAnimationFinish: handleCloseEnd,
-			});
-		},
-	);
-
-	useLayoutEffect(() => {
-		handleInitialize();
-		return () => {
-			handleCleanup();
-		};
-	}, [handleInitialize, handleCleanup]);
 
 	// important for t.a scrollviews inside nested navigators.
 	useParentGestureRegistry();

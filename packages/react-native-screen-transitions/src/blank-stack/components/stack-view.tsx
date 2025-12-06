@@ -7,7 +7,7 @@ import * as React from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
-import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/screen-lifecycle";
+import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/blank-stack-lifecycle";
 import { FlagsProvider } from "../../shared/providers/flags.provider";
 import { RoutesProvider } from "../../shared/providers/routes.provider";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";

@@ -1,6 +1,7 @@
 import { runOnJS } from "react-native-reanimated";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
+import { FALSE, TRUE } from "../../types/state.types";
 import { animate } from "./animate";
 
 interface StartScreenTransitionProps {
@@ -34,12 +35,12 @@ export const startScreenTransition = ({
 	const { progress, animating, closing } = animations;
 
 	if (target === "close") {
-		closing.value = 1;
+		closing.set(TRUE);
 	}
 
 	if (!config) {
-		animating.value = 0;
-		progress.value = value;
+		animating.set(FALSE);
+		progress.set(value);
 
 		if (onAnimationFinish) {
 			runOnJS(onAnimationFinish)(true);
@@ -47,15 +48,17 @@ export const startScreenTransition = ({
 		return;
 	}
 
-	animating.value = 1;
+	animating.set(TRUE); //<-- Do not move this into the callback
+	progress.set(
+		animate(value, effectiveConfig, (finished) => {
+			"worklet";
+			if (!finished) return;
 
-	progress.value = animate(value, effectiveConfig, (finished) => {
-		"worklet";
-		if (finished) {
 			if (onAnimationFinish) {
 				runOnJS(onAnimationFinish)(finished);
 			}
-			animating.value = 0;
-		}
-	});
+
+			animating.set(FALSE);
+		}),
+	);
 };
