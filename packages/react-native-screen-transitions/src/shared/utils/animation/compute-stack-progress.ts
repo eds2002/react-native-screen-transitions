@@ -4,6 +4,7 @@ export const computeStackProgress = (
 	stackAnimationValues: AnimationStoreMap[],
 	fallback: number = 0,
 ) => {
+	"worklet";
 	let computedStackProgress: number | undefined;
 	if (stackAnimationValues.length > 0) {
 		computedStackProgress = 0;
