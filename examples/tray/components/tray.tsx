@@ -377,9 +377,9 @@ function createInterpolator(
 				[TRAY_SCALED_CONTENT_ID]: {
 					transform: [
 						{
-							scale: withSpring(interpolate(progress, [0, 1], [0.8, 1]), {
+							scale: withSpring(interpolate(progress, [0, 1], [0.9, 1]), {
 								mass: 0.3,
-								stiffness: 800,
+								stiffness: 2000,
 								damping: 18,
 							}),
 						},
@@ -388,7 +388,7 @@ function createInterpolator(
 				[TRAY_BACKGROUND_ID]: {
 					opacity: withSpring(interpolate(progress, [0, 1], [0, 1]), {
 						mass: 0.3,
-						stiffness: 800,
+						stiffness: 2000,
 						damping: 18,
 					}),
 				},
@@ -430,9 +430,9 @@ function createInterpolator(
 				[TRAY_SCALED_CONTENT_ID]: {
 					transform: [
 						{
-							scale: withSpring(interpolate(progress, [1, 2], [1, 1.2]), {
+							scale: withSpring(interpolate(progress, [1, 2], [1, 1.1]), {
 								mass: 0.3,
-								stiffness: 800,
+								stiffness: 2000,
 								damping: 18,
 							}),
 						},
