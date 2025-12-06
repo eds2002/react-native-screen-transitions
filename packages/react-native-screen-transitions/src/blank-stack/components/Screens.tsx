@@ -39,6 +39,7 @@ export const Screen = ({
 	shouldFreeze,
 }: ScreenProps) => {
 	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");
+	const sceneClosing = AnimationStore.getAnimation(routeKey, "closing");
 	const screenActivity = useSharedValue<0 | 1 | 2>(1);
 
 	useDerivedValue(() => {
@@ -74,9 +75,13 @@ export const Screen = ({
 	});
 
 	const animatedProps = useAnimatedProps(() => {
+		const activity = screenActivity.get();
 		return {
-			activityState: screenActivity.get(),
-			shouldFreeze: screenActivity.get() === STATE_INACTIVE && shouldFreeze,
+			activityState: activity,
+			shouldFreeze: activity === STATE_INACTIVE && shouldFreeze,
+			pointerEvents: sceneClosing.get()
+				? ("none" as const)
+				: ("box-none" as const),
 		};
 	});
 
@@ -84,7 +89,6 @@ export const Screen = ({
 		<AnimatedScreen
 			enabled
 			style={StyleSheet.absoluteFill}
-			pointerEvents="box-none"
 			freezeOnBlur={freezeOnBlur}
 			animatedProps={animatedProps}
 		>
