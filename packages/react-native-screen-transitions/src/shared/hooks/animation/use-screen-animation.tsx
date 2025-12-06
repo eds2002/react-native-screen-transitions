@@ -18,7 +18,7 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation.types";
 import type { ScreenTransitionConfig } from "../../types/core.types";
-import type { GestureDirection } from "../../types/gesture.types";
+import { computeStackProgress } from "../../utils/animation/compute-stack-progress";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
 
@@ -61,10 +61,7 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	out.gesture.normalizedY = s.gesture.normalizedY.value;
 	out.gesture.isDismissing = s.gesture.isDismissing.value;
 	out.gesture.isDragging = s.gesture.isDragging.value;
-	out.gesture.direction = s.gesture.direction.value as Omit<
-		GestureDirection,
-		"bidirectional"
-	> | null;
+	out.gesture.direction = s.gesture.direction.value;
 
 	return out;
 };
@@ -133,19 +130,12 @@ export function _useScreenAnimation() {
 			? unwrapInto(currentAnimation)
 			: DEFAULT_SCREEN_TRANSITION_STATE;
 
-		let computedStackProgress: number | undefined;
-		if (stackAnimationValues.length > 0) {
-			computedStackProgress = 0;
-			for (let i = 0; i < stackAnimationValues.length; i += 1) {
-				computedStackProgress += stackAnimationValues[i].progress.value;
-			}
-		}
-
-		const helpers = derivations({
+		const { progress, ...helpers } = derivations({
 			current,
 			next,
-			stackProgress: computedStackProgress,
 		});
+
+		const stackProgress = computeStackProgress(stackAnimationValues, progress);
 
 		return {
 			layouts: { screen: dimensions },
@@ -153,6 +143,8 @@ export function _useScreenAnimation() {
 			previous,
 			current,
 			next,
+			progress,
+			stackProgress,
 			...helpers,
 		};
 	});

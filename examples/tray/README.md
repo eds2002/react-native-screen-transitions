@@ -40,4 +40,3 @@ The tray animation is built using `screen-transitions`, allowing you to define c
 ## Credits
 
 - Original design concept: [Family Wallet](https://family.co/)
-- Built with [Expo](https://expo.dev) and [screen-transitions](https://github.com/example/screen-transitions)
