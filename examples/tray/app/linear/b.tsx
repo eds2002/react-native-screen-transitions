@@ -14,7 +14,7 @@ export default function Screen() {
 				<Card
 					title="Go to Tray C"
 					description="Take me to Tray B"
-					onPress={() => router.push("/tray-routes/c")}
+					onPress={() => router.push("/linear/c")}
 					variant="success"
 				/>
 				<Card

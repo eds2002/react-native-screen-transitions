@@ -1,7 +1,5 @@
 import { router } from "expo-router";
-import { Button, Text } from "react-native";
 import { Card } from "@/components/card";
-import { Header } from "@/components/header";
 import { Tray } from "@/components/tray";
 
 export default function Screen() {
@@ -10,10 +8,10 @@ export default function Screen() {
 			<Tray.Header title="Screen A" />
 			<Tray.Content style={{ gap: 4 }}>
 				<Card
-					title="Go to Tray B"
-					description="Take me to Tray B"
+					title="Go to swerving/nested"
+					description="This will take us to a full screen flow."
 					variant="success"
-					onPress={() => router.push("/tray-routes/b")}
+					onPress={() => router.navigate("/swerving/nested")}
 				/>
 				<Card
 					title="Or go back"

@@ -1,8 +1,14 @@
-# Welcome to your Expo app 👋
+# Tray Animations
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+This example recreates the beautiful tray navigation pattern popularized by [Family Wallet](https://family.co/).
 
-## Get started
+Massive respect to the design engineers at Family who crafted this interaction. It's genuinely beautiful to see in action.
+
+## Requirements
+
+This example **requires a development build**. It cannot run in Expo Go due to its dependency on `@react-native-masked-view/masked-view`.
+
+## Getting Started
 
 1. Install dependencies
 
@@ -10,41 +16,28 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    npm install
    ```
 
-2. Start the app
+2. Create a development build
 
    ```bash
-   npx expo start
+   npx expo run:ios
+   # or
+   npx expo run:android
    ```
 
-In the output, you'll find options to open the app in a
+3. Start the development server
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+   ```bash
+   npx expo start --dev-client
+   ```
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## How It Works
 
-## Get a fresh project
+The tray animation is built using `screen-transitions`, allowing you to define custom enter/exit animations for each route. The key to achieving the Family Wallet feel is the combination of:
 
-When you're ready, run:
+- Masked views for the rounded corner clipping effect
+- Carefully tuned spring animations for natural movement
 
-```bash
-npm run reset-project
-```
+## Credits
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- Original design concept: [Family Wallet](https://family.co/)
+- Built with [Expo](https://expo.dev) and [screen-transitions](https://github.com/example/screen-transitions)

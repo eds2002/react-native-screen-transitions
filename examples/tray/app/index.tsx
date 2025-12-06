@@ -5,8 +5,16 @@ export default function App() {
 	return (
 		<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
 			<Button
-				title="Tray routes"
-				onPress={() => router.navigate("/tray-routes")}
+				title="Linear tray routes"
+				onPress={() => router.navigate("/linear")}
+			/>
+			<Button
+				title="Nested tray routes"
+				onPress={() =>
+					router.navigate({
+						pathname: "/swerving",
+					})
+				}
 			/>
 		</View>
 	);
