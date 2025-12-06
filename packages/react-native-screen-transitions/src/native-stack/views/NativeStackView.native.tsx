@@ -528,110 +528,110 @@ export function NativeStackView({
 				<SafeAreaProviderCompat>
 					<ScreenStack style={styles.container}>
 						{routes.map((route, index) => {
-						const descriptor =
-							descriptors[route.key] ?? preloadedDescriptors[route.key];
-						const isFocused = state.index === index;
-						const isBelowFocused = state.index - 1 === index;
-						const previousKey = state.routes[index - 1]?.key;
-						const nextKey = state.routes[index + 1]?.key;
-						const previousDescriptor = previousKey
-							? descriptors[previousKey]
-							: undefined;
-						const nextDescriptor = nextKey ? descriptors[nextKey] : undefined;
+							const descriptor =
+								descriptors[route.key] ?? preloadedDescriptors[route.key];
+							const isFocused = state.index === index;
+							const isBelowFocused = state.index - 1 === index;
+							const previousKey = state.routes[index - 1]?.key;
+							const nextKey = state.routes[index + 1]?.key;
+							const previousDescriptor = previousKey
+								? descriptors[previousKey]
+								: undefined;
+							const nextDescriptor = nextKey ? descriptors[nextKey] : undefined;
 
-						const isModal = modalRouteKeys.includes(route.key);
+							const isModal = modalRouteKeys.includes(route.key);
 
-						const isPreloaded =
-							preloadedDescriptors[route.key] !== undefined &&
-							descriptors[route.key] === undefined;
+							const isPreloaded =
+								preloadedDescriptors[route.key] !== undefined &&
+								descriptors[route.key] === undefined;
 
-						// On Fabric, when screen is frozen, animated and reanimated values are not updated
-						// due to component being unmounted. To avoid this, we don't freeze the previous screen there
-						const shouldFreeze = isFabric()
-							? !isPreloaded && !isFocused && !isBelowFocused
-							: !isPreloaded && !isFocused;
+							// On Fabric, when screen is frozen, animated and reanimated values are not updated
+							// due to component being unmounted. To avoid this, we don't freeze the previous screen there
+							const shouldFreeze = isFabric()
+								? !isPreloaded && !isFocused && !isBelowFocused
+								: !isPreloaded && !isFocused;
 
-						return (
-							<SceneView
-								key={route.key}
-								index={index}
-								focused={isFocused}
-								shouldFreeze={shouldFreeze}
-								descriptor={descriptor}
-								previousDescriptor={previousDescriptor}
-								nextDescriptor={nextDescriptor}
-								isPresentationModal={isModal}
-								isPreloaded={isPreloaded}
-								onWillDisappear={() => {
-									navigation.emit({
-										type: "transitionStart",
-										data: { closing: true },
-										target: route.key,
-									});
-								}}
-								onWillAppear={() => {
-									navigation.emit({
-										type: "transitionStart",
-										data: { closing: false },
-										target: route.key,
-									});
-								}}
-								onAppear={() => {
-									navigation.emit({
-										type: "transitionEnd",
-										data: { closing: false },
-										target: route.key,
-									});
-								}}
-								onDisappear={() => {
-									navigation.emit({
-										type: "transitionEnd",
-										data: { closing: true },
-										target: route.key,
-									});
-								}}
-								onDismissed={(event) => {
-									navigation.dispatch({
-										...StackActions.pop(event.nativeEvent.dismissCount),
-										source: route.key,
-										target: state.key,
-									});
+							return (
+								<SceneView
+									key={route.key}
+									index={index}
+									focused={isFocused}
+									shouldFreeze={shouldFreeze}
+									descriptor={descriptor}
+									previousDescriptor={previousDescriptor}
+									nextDescriptor={nextDescriptor}
+									isPresentationModal={isModal}
+									isPreloaded={isPreloaded}
+									onWillDisappear={() => {
+										navigation.emit({
+											type: "transitionStart",
+											data: { closing: true },
+											target: route.key,
+										});
+									}}
+									onWillAppear={() => {
+										navigation.emit({
+											type: "transitionStart",
+											data: { closing: false },
+											target: route.key,
+										});
+									}}
+									onAppear={() => {
+										navigation.emit({
+											type: "transitionEnd",
+											data: { closing: false },
+											target: route.key,
+										});
+									}}
+									onDisappear={() => {
+										navigation.emit({
+											type: "transitionEnd",
+											data: { closing: true },
+											target: route.key,
+										});
+									}}
+									onDismissed={(event) => {
+										navigation.dispatch({
+											...StackActions.pop(event.nativeEvent.dismissCount),
+											source: route.key,
+											target: state.key,
+										});
 
-									setNextDismissedKey(route.key);
-								}}
-								onHeaderBackButtonClicked={() => {
-									navigation.dispatch({
-										...StackActions.pop(),
-										source: route.key,
-										target: state.key,
-									});
-								}}
-								onNativeDismissCancelled={(event) => {
-									navigation.dispatch({
-										...StackActions.pop(event.nativeEvent.dismissCount),
-										source: route.key,
-										target: state.key,
-									});
-								}}
-								onGestureCancel={() => {
-									navigation.emit({
-										type: "gestureCancel",
-										target: route.key,
-									});
-								}}
-								onSheetDetentChanged={(event) => {
-									navigation.emit({
-										type: "sheetDetentChange",
-										target: route.key,
-										data: {
-											index: event.nativeEvent.index,
-											stable: event.nativeEvent.isStable,
-										},
-									});
-								}}
-							/>
-						);
-					})}
+										setNextDismissedKey(route.key);
+									}}
+									onHeaderBackButtonClicked={() => {
+										navigation.dispatch({
+											...StackActions.pop(),
+											source: route.key,
+											target: state.key,
+										});
+									}}
+									onNativeDismissCancelled={(event) => {
+										navigation.dispatch({
+											...StackActions.pop(event.nativeEvent.dismissCount),
+											source: route.key,
+											target: state.key,
+										});
+									}}
+									onGestureCancel={() => {
+										navigation.emit({
+											type: "gestureCancel",
+											target: route.key,
+										});
+									}}
+									onSheetDetentChanged={(event) => {
+										navigation.emit({
+											type: "sheetDetentChange",
+											target: route.key,
+											data: {
+												index: event.nativeEvent.index,
+												stable: event.nativeEvent.isStable,
+											},
+										});
+									}}
+								/>
+							);
+						})}
 					</ScreenStack>
 				</SafeAreaProviderCompat>
 			</GestureHandlerRootView>

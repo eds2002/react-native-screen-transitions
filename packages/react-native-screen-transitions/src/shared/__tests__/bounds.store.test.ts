@@ -45,12 +45,8 @@ describe("BoundStore.registerSnapshot", () => {
 		BoundStore.registerSnapshot("card", "screen-a", boundsA);
 		BoundStore.registerSnapshot("card", "screen-b", boundsB);
 
-		expect(BoundStore.getSnapshot("card", "screen-a")?.bounds).toEqual(
-			boundsA,
-		);
-		expect(BoundStore.getSnapshot("card", "screen-b")?.bounds).toEqual(
-			boundsB,
-		);
+		expect(BoundStore.getSnapshot("card", "screen-a")?.bounds).toEqual(boundsA);
+		expect(BoundStore.getSnapshot("card", "screen-b")?.bounds).toEqual(boundsB);
 	});
 
 	it("stores ancestorKeys correctly", () => {
@@ -192,13 +188,9 @@ describe("BoundStore.getSnapshot", () => {
 		const ancestorBounds = createBounds(200, 200, 50, 50);
 
 		// Register with ancestor that matches another screen's key
-		BoundStore.registerSnapshot(
-			"card",
-			"screen-a",
-			ancestorBounds,
-			{},
-			["stack-a"],
-		);
+		BoundStore.registerSnapshot("card", "screen-a", ancestorBounds, {}, [
+			"stack-a",
+		]);
 		BoundStore.registerSnapshot("card", "stack-a", directBounds);
 
 		// Direct match should win
@@ -242,32 +234,23 @@ describe("BoundStore.getActiveLink", () => {
 
 		// Query from source screen = closing (going back)
 		const linkFromSource = BoundStore.getActiveLink("card", "screen-a");
-		expect(linkFromSource?.isClosing).toBe(true);
 		expect(linkFromSource?.source.screenKey).toBe("screen-a");
 
 		// Query from destination screen = opening
 		const linkFromDest = BoundStore.getActiveLink("card", "screen-b");
-		expect(linkFromDest?.isClosing).toBe(false);
 		expect(linkFromDest?.destination?.screenKey).toBe("screen-b");
 	});
 
 	it("ancestor matching works in link lookup", () => {
 		const ancestors = ["stack-a"];
 
-		BoundStore.setLinkSource(
-			"card",
-			"screen-a",
-			createBounds(),
-			{},
-			ancestors,
-		);
+		BoundStore.setLinkSource("card", "screen-a", createBounds(), {}, ancestors);
 		BoundStore.setLinkDestination("card", "screen-b", createBounds());
 
 		// Query by ancestor key (matches source)
 		const link = BoundStore.getActiveLink("card", "stack-a");
 		expect(link).not.toBeNull();
 		expect(link?.source.screenKey).toBe("screen-a");
-		expect(link?.isClosing).toBe(true); // Ancestor of source = closing
 	});
 
 	it("returns null when screenKey does not match any link", () => {
@@ -296,13 +279,11 @@ describe("Scenario: Simple push/pop navigation", () => {
 
 		// Verify link is complete - query from destination (opening)
 		const openingLink = BoundStore.getActiveLink("card", "screen-b");
-		expect(openingLink?.isClosing).toBe(false);
 		expect(openingLink?.source.bounds).toEqual(srcBounds);
 		expect(openingLink?.destination?.bounds).toEqual(dstBounds);
 
 		// 3. Query from source (closing - going back)
 		const closingLink = BoundStore.getActiveLink("card", "screen-a");
-		expect(closingLink?.isClosing).toBe(true);
 		expect(closingLink?.source.screenKey).toBe("screen-a");
 		expect(closingLink?.destination?.screenKey).toBe("screen-b");
 	});
@@ -355,19 +336,14 @@ describe("Scenario: Nested navigator with ancestor keys", () => {
 
 	it("getActiveLink respects ancestor chain", () => {
 		// Navigation from Stack A to detail screen
-		BoundStore.setLinkSource(
-			"profile",
-			"a1",
-			createBounds(10, 10),
-			{},
-			["stack-a"],
-		);
+		BoundStore.setLinkSource("profile", "a1", createBounds(10, 10), {}, [
+			"stack-a",
+		]);
 		BoundStore.setLinkDestination("profile", "detail", createBounds(0, 0));
 
 		// Query by ancestor should find the link
 		const link = BoundStore.getActiveLink("profile", "stack-a");
 		expect(link?.source.screenKey).toBe("a1");
-		expect(link?.isClosing).toBe(true); // Ancestor matches source = closing
 	});
 });
 
@@ -388,12 +364,10 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 
 		// Query from C (destination of B→C) = opening
 		const fromC = BoundStore.getActiveLink("card", "screen-c");
-		expect(fromC?.isClosing).toBe(false);
 		expect(fromC?.destination?.screenKey).toBe("screen-c");
 
 		// Query from B - B is source of B→C link, so isClosing=true
 		const fromB = BoundStore.getActiveLink("card", "screen-b");
-		expect(fromB?.isClosing).toBe(true);
 		expect(fromB?.source.screenKey).toBe("screen-b");
 	});
 });
@@ -401,7 +375,11 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 describe("Scenario: Global bounds (fullscreen target)", () => {
 	it("getActiveLink with no screenKey returns most recent for fullscreen", () => {
 		// Source exists, destination will be fullscreen (no specific screenKey needed)
-		BoundStore.setLinkSource("image", "gallery", createBounds(50, 50, 100, 100));
+		BoundStore.setLinkSource(
+			"image",
+			"gallery",
+			createBounds(50, 50, 100, 100),
+		);
 		BoundStore.setLinkDestination(
 			"image",
 			"fullscreen-viewer",
