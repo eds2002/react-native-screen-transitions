@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <This helper is usually being used inside a transitionable stack> */
 import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
@@ -26,7 +27,7 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof Wrapped>,
 		TransitionAwareProps<P>
 	>((props: Any, ref) => {
-		const { nativeGesture } = useGestureContext();
+		const { nativeGesture } = useGestureContext()!;
 		const { scrollHandler, onContentSizeChange, onLayout } = useScrollRegistry({
 			onScroll: props.onScroll,
 			onContentSizeChange: props.onContentSizeChange,

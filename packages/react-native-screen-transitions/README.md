@@ -12,8 +12,8 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 - **Shared Elements** – Measure-driven transitions between screens using the Bounds API
 - **Gesture Support** – Swipe-to-dismiss with edge or full-screen activation, works with ScrollViews
 - **Two Stack Options** – Pure JS stack (recommended) or native stack integration
+- **Stack Progress** – Track animation progress across the entire stack, not just adjacent screens
 - **Ready-Made Presets** – Instagram, Apple Music, X (Twitter) style transitions included
-- **TypeScript First** – Fully typed for better development experience
 
 ## Installation
 
@@ -176,6 +176,7 @@ import { interpolate } from "react-native-reanimated";
 | Prop                    | Description                                              |
 | ----------------------- | -------------------------------------------------------- |
 | `progress`              | Combined progress (0-2). 0=entering, 1=active, 2=exiting |
+| `stackProgress`         | Accumulated progress across entire stack (0, 1, 2, 3...) |
 | `current`               | Current screen state (progress, closing, gesture, route) |
 | `previous`              | Previous screen state (may be undefined)                 |
 | `next`                  | Next screen state (may be undefined)                     |
@@ -393,15 +394,15 @@ An overlay that moves with screen content:
 
 ### Overlay Props
 
-| Prop               | Description                       |
-| ------------------ | --------------------------------- |
-| `focusedRoute`     | Currently focused route           |
-| `focusedIndex`     | Index of focused screen           |
-| `routes`           | All routes in the stack           |
-| `overlayOptions`   | Custom options passed from screen |
-| `navigation`       | Navigation prop                   |
-| `overlayAnimation` | Animation values for overlay      |
-| `screenAnimation`  | Animation values for screens      |
+| Prop               | Description                                                  |
+| ------------------ | ------------------------------------------------------------ |
+| `focusedRoute`     | Currently focused route                                      |
+| `focusedIndex`     | Index of focused screen                                      |
+| `routes`           | All routes in the stack                                      |
+| `overlayOptions`   | Custom options passed from screen                            |
+| `navigation`       | Navigation prop                                              |
+| `overlayAnimation` | Animation values with `progress` accumulated across stack    |
+| `screenAnimation`  | Animation values for the current focused screen              |
 
 ### Passing Custom Data
 

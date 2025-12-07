@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <Will always consume context from GestureProvider> */
 import type { LayoutChangeEvent } from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import type { ReanimatedScrollEvent } from "react-native-reanimated/lib/typescript/hook/commonTypes";
@@ -12,7 +13,7 @@ interface ScrollProgressHookProps {
 }
 
 export const useScrollRegistry = (props: ScrollProgressHookProps) => {
-	const { scrollConfig, ancestorContext } = useGestureContext();
+	const { scrollConfig, ancestorContext } = useGestureContext()!;
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
-import { derivations } from "../utils/animation/derivations";
 import type { ScreenTransitionState } from "../types/animation.types";
+import { derivations } from "../utils/animation/derivations";
 
 const createMockState = (
 	overrides: Partial<ScreenTransitionState> = {},
