@@ -43,8 +43,8 @@ const { withStackNavigationProvider, useStackNavigationContext } =
 				};
 			}, [state.routes, state.descriptors]);
 
-		return {
-			value: {
+		const value = useMemo(
+			() => ({
 				routes: state.routes,
 				focusedIndex: props.state.index,
 				descriptors: state.descriptors,
@@ -53,7 +53,21 @@ const { withStackNavigationProvider, useStackNavigationContext } =
 				handleCloseRoute,
 				scenes,
 				shouldShowFloatOverlay,
-			},
+			}),
+			[
+				state.routes,
+				state.descriptors,
+				props.state.index,
+				closingRouteKeys.shared,
+				activeScreensLimit,
+				handleCloseRoute,
+				scenes,
+				shouldShowFloatOverlay,
+			],
+		);
+
+		return {
+			value,
 		};
 	});
 

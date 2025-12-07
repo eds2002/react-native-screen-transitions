@@ -8,16 +8,15 @@ import Animated, {
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
 import { AnimationStore } from "../../shared/stores/animation.store";
+import { useStackNavigationContext } from "../utils/with-stack-navigation";
 
 interface ScreenProps {
 	routeKey: string;
 	index: number;
-	routesLength: number;
 	isPreloaded: boolean;
 	children: React.ReactNode;
 	freezeOnBlur?: boolean;
 	shouldFreeze?: boolean;
-	activeScreensLimit: number;
 }
 enum ScreenActivity {
 	INACTIVE = 0,
@@ -32,13 +31,14 @@ const AnimatedScreen = Animated.createAnimatedComponent(RNSScreen);
 export const Screen = ({
 	routeKey,
 	index,
-	routesLength,
 	isPreloaded,
-	activeScreensLimit,
 	children,
 	freezeOnBlur,
 	shouldFreeze,
 }: ScreenProps) => {
+	const { activeScreensLimit, routes } = useStackNavigationContext();
+	const routesLength = routes.length;
+
 	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");
 	const sceneClosing = AnimationStore.getAnimation(routeKey, "closing");
 	const screenActivity = useSharedValue<ScreenActivity>(

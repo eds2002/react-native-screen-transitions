@@ -24,7 +24,9 @@ type SceneViewProps = {
 	descriptor: BlankStackDescriptor;
 };
 
-const SceneView = React.memo(({ descriptor }: SceneViewProps) => {
+const SceneView = React.memo(function SceneView({
+	descriptor,
+}: SceneViewProps) {
 	const { route, navigation, render } = descriptor;
 
 	return (
@@ -38,14 +40,7 @@ const SceneView = React.memo(({ descriptor }: SceneViewProps) => {
 });
 
 export const StackView = withStackNavigationProvider(
-	({
-		activeScreensLimit,
-		descriptors,
-		focusedIndex,
-		routes,
-		scenes,
-		shouldShowFloatOverlay,
-	}) => {
+	({ descriptors, focusedIndex, routes, scenes, shouldShowFloatOverlay }) => {
 		// Memoize route keys array for ScenesProvider
 		const routeKeys = React.useMemo(
 			() => routes.map((route) => route.key),
@@ -82,9 +77,7 @@ export const StackView = withStackNavigationProvider(
 											key={route.key}
 											isPreloaded={isPreloaded}
 											index={sceneIndex}
-											activeScreensLimit={activeScreensLimit}
 											routeKey={route.key}
-											routesLength={routes.length}
 											shouldFreeze={shouldFreeze}
 											freezeOnBlur={descriptor.options.freezeOnBlur}
 										>
