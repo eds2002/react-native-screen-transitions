@@ -12,7 +12,7 @@ interface ScrollProgressHookProps {
 }
 
 export const useScrollRegistry = (props: ScrollProgressHookProps) => {
-	const { scrollConfig, parentContext } = useGestureContext();
+	const { scrollConfig, ancestorContext } = useGestureContext();
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
@@ -35,8 +35,8 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				return v;
 			});
 
-			if (parentContext?.scrollConfig) {
-				parentContext.scrollConfig.modify((v: Any) => {
+			if (ancestorContext?.scrollConfig) {
+				ancestorContext.scrollConfig.modify((v: Any) => {
 					"worklet";
 					if (v === null) {
 						return {
@@ -76,8 +76,8 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				v.contentHeight = height;
 				return v;
 			});
-			if (parentContext?.scrollConfig) {
-				parentContext.scrollConfig.modify((v: Any) => {
+			if (ancestorContext?.scrollConfig) {
+				ancestorContext.scrollConfig.modify((v: Any) => {
 					"worklet";
 					if (v === null) {
 						return {
@@ -117,8 +117,8 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 			v.layoutWidth = width;
 			return v;
 		});
-		if (parentContext?.scrollConfig) {
-			parentContext.scrollConfig.modify((v: Any) => {
+		if (ancestorContext?.scrollConfig) {
+			ancestorContext.scrollConfig.modify((v: Any) => {
 				"worklet";
 				if (v === null) {
 					return {

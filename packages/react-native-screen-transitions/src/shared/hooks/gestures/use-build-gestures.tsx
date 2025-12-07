@@ -40,12 +40,12 @@ import useStableCallbackValue from "../use-stable-callback-value";
 
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
-	parentContext?: GestureContextType | null;
+	ancestorContext?: GestureContextType | null;
 }
 
 export const useBuildGestures = ({
 	scrollConfig,
-	parentContext,
+	ancestorContext,
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
 	nativeGesture: GestureType;
@@ -96,8 +96,8 @@ export const useBuildGestures = ({
 
 	const handleDismiss = useCallback(() => {
 		// If an ancestor navigator is already dismissing, skip this dismiss to
-		// avoid racing with the parent
-		if (parentContext?.gestureAnimationValues.isDismissing?.value) {
+		// avoid racing with the ancestor
+		if (ancestorContext?.gestureAnimationValues.isDismissing?.value) {
 			return;
 		}
 
@@ -116,7 +116,7 @@ export const useBuildGestures = ({
 			source: current.route.key,
 			target: state.key,
 		});
-	}, [current, parentContext]);
+	}, [current, ancestorContext]);
 
 	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
 		"worklet";
@@ -130,7 +130,7 @@ export const useBuildGestures = ({
 			"worklet";
 
 			// If an ancestor navigator is already dismissing via gesture, block new gestures here.
-			if (parentContext?.gestureAnimationValues.isDismissing?.value) {
+			if (ancestorContext?.gestureAnimationValues.isDismissing?.value) {
 				gestureOffsetState.value = GestureOffsetState.FAILED;
 				manager.fail();
 				return;
@@ -339,8 +339,8 @@ export const useBuildGestures = ({
 			.blocksExternalGesture(nativeGesture);
 
 		// Allow ancestors to block child native gestures
-		if (parentContext?.panGesture && nativeGesture) {
-			parentContext.panGesture.blocksExternalGesture(nativeGesture);
+		if (ancestorContext?.panGesture && nativeGesture) {
+			ancestorContext.panGesture.blocksExternalGesture(nativeGesture);
 		}
 
 		return {
@@ -356,6 +356,6 @@ export const useBuildGestures = ({
 		onUpdate,
 		onEnd,
 		gestureAnimationValues,
-		parentContext,
+		ancestorContext,
 	]);
 };

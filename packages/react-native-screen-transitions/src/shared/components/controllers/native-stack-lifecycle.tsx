@@ -1,7 +1,6 @@
 import { useEffect, useLayoutEffect } from "react";
 import { useDerivedValue } from "react-native-reanimated";
 import type { NativeStackDescriptor } from "../../../native-stack/types";
-import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
 import { useSharedValueState } from "../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { useGestureContext } from "../../providers/gestures.provider";
@@ -20,12 +19,12 @@ export interface Props {
  */
 export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 	const { current } = useKeys<NativeStackDescriptor>();
-	const { parentContext } = useGestureContext();
+	const { ancestorContext } = useGestureContext();
 
-	const isParentDismissingViaGesture = useSharedValueState(
+	const isAncestorDismissingViaGesture = useSharedValueState(
 		useDerivedValue(() => {
 			"worklet";
-			return parentContext?.gestureAnimationValues.isDismissing?.value ?? false;
+			return ancestorContext?.gestureAnimationValues.isDismissing?.value ?? false;
 		}),
 	);
 
@@ -36,8 +35,8 @@ export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 
 		const isFirstScreen = current.navigation.getState().index === 0;
 
-		// If transitions are disabled, or the dismissal was on the local root, or this is the first screen of the stack, reset the stores
-		if (!isEnabled || isParentDismissingViaGesture || isFirstScreen) {
+		// If transitions are disabled, or an ancestor is dismissing via gesture, or this is the first screen of the stack, reset the stores
+		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
 			animations.closing.set(TRUE);
 			resetStoresForScreen(current);
 			return;

@@ -2,7 +2,6 @@ import { useLayoutEffect } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
 import type { BlankStackDescriptor } from "../../../blank-stack/types";
 import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
-import { useParentGestureRegistry } from "../../hooks/gestures/use-parent-gesture-registry";
 import useStableCallback from "../../hooks/use-stable-callback";
 import { useKeys } from "../../providers/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";

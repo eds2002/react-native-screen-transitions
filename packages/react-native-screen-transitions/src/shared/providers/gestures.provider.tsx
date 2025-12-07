@@ -22,7 +22,7 @@ export interface GestureContextType {
 	nativeGesture: GestureType;
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	gestureAnimationValues: GestureStoreMap;
-	parentContext: GestureContextType | undefined;
+	ancestorContext: GestureContextType | undefined;
 }
 
 type GestureProviderProps = {
@@ -38,20 +38,19 @@ const GestureContext = createContext<GestureContextType | undefined>(undefined);
  * with the ancestor's gestures.
  */
 export const ScreenGestureProvider = ({ children }: GestureProviderProps) => {
-	const parentContext = useContext(GestureContext);
+	const ancestorContext = useContext(GestureContext);
 	const { current } = useKeys();
 
 	const hasOwnGestures = current.options.gestureEnabled === true;
 
-	// If this screen doesn't have its own gestures but there's a parent context,
-	// pass through the parent's gestures so scrollable children coordinate with
-	// the ancestor that actually handles dismissal
-	if (!hasOwnGestures && parentContext) {
+	// If this screen doesn't have its own gestures but an ancestor does,
+	// pass through so scrollable children coordinate with that ancestor
+	if (!hasOwnGestures && ancestorContext) {
 		return children;
 	}
 
 	return (
-		<ScreenGestureProviderInner parentContext={parentContext}>
+		<ScreenGestureProviderInner ancestorContext={ancestorContext}>
 			{children}
 		</ScreenGestureProviderInner>
 	);
@@ -59,16 +58,16 @@ export const ScreenGestureProvider = ({ children }: GestureProviderProps) => {
 
 const ScreenGestureProviderInner = ({
 	children,
-	parentContext,
+	ancestorContext,
 }: GestureProviderProps & {
-	parentContext: GestureContextType | undefined;
+	ancestorContext: GestureContextType | undefined;
 }) => {
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
 	const { panGesture, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
 			scrollConfig,
-			parentContext,
+			ancestorContext,
 		});
 
 	const value: GestureContextType = useMemo(
@@ -77,14 +76,14 @@ const ScreenGestureProviderInner = ({
 			scrollConfig,
 			nativeGesture,
 			gestureAnimationValues,
-			parentContext,
+			ancestorContext,
 		}),
 		[
 			panGesture,
 			scrollConfig,
 			nativeGesture,
 			gestureAnimationValues,
-			parentContext,
+			ancestorContext,
 		],
 	);
 
