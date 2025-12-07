@@ -387,7 +387,7 @@ function createInterpolator(
 					],
 				},
 				[TRAY_BACKGROUND_ID]: {
-					opacity: withSpring(interpolate(progress, [0, 1], [0, 1]), {
+					opacity: withSpring(interpolate(progress, [0.1, 0.9], [0, 1]), {
 						mass: 0.3,
 						stiffness: 2000,
 						damping: 18,
