@@ -5,7 +5,8 @@
     "e2e": "1.0.0",
     "expo-router-example": "2.2.0",
     "onboarding-example": "1.0.0",
-    "react-native-screen-transitions": "2.4.2"
+    "react-native-screen-transitions": "2.4.2",
+    "tray": "1.0.0"
   },
   "changesets": [
     "beta-patch",
@@ -14,6 +15,7 @@
     "fresh-oranges-poke",
     "grumpy-cameras-melt",
     "khaki-ducks-glow",
+    "loud-balloons-mate",
     "quick-llamas-leave",
     "sharp-bushes-follow",
     "sixty-turtles-shave",

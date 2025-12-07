@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-rc.4
+
+### Patch Changes
+
+- New stackProgress, avoid setting gestures to non gesture defined screens, set 'none' to pointer events in already closing screens
+
 ## 3.0.0-rc.3
 
 ### Minor Changes
