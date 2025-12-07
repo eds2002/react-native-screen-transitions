@@ -18,29 +18,7 @@ import type {
 	ScreenInterpolationProps,
 } from "../shared/types/animation.types";
 
-export type BlankStackNavigationEventMap = {
-	/**
-	 * Event which fires when a transition animation starts.
-	 */
-	transitionStart: { data: { closing: boolean } };
-	/**
-	 * Event which fires when a transition animation ends.
-	 */
-	transitionEnd: { data: { closing: boolean } };
-	/**
-	 * Event which fires when a swipe back is canceled on iOS.
-	 */
-	gestureCancel: { data: undefined };
-	/**
-	 * Event which fires when screen is in sheet presentation & it's detent changes.
-	 *
-	 * In payload it caries two fields:
-	 *
-	 * * `index` - current detent index in the `sheetAllowedDetents` array,
-	 * * `stable` - on Android `false` value means that the user is dragging the sheet or it is settling; on iOS it is always `true`.
-	 */
-	sheetDetentChange: { data: { index: number; stable: boolean } };
-};
+export type BlankStackNavigationEventMap = {};
 
 export type BlankStackNavigationProp<
 	ParamList extends ParamListBase,
@@ -132,7 +110,6 @@ export type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
 	 * Whether to detach the previous screen from the view hierarchy to save memory.
 	 * Set it to `false` if you need the previous screen to be seen through the active screen.
 	 * Only applicable if `detachInactiveScreens` isn't set to `false`.
-	 * Defaults to `false` for the last screen for modals, otherwise `true`.
 	 */
 	detachPreviousScreen?: boolean;
 };
