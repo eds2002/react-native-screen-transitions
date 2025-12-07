@@ -1,9 +1,16 @@
+import { useNavigation } from "@react-navigation/native";
+import { useEffect } from "react";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/components/layouts/blank-stack";
 import { Tray } from "@/components/tray";
 
 export default function TrayRoutesLayout() {
+	const navigation = useNavigation();
+
+	useEffect(() => {
+		navigation.getParent()?.getParent()?.setOptions({ gestureEnabled: false });
+	}, [navigation]);
 	return (
 		<Tray.View detached={false} snapPoint="100%" backgroundColor="#FFF">
 			<BlankStack>

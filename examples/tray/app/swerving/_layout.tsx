@@ -9,6 +9,8 @@ export default function TrayRoutesLayout() {
 			<BlankStack.Screen
 				name="nested"
 				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
 					screenStyleInterpolator: (props) => {
 						"worklet";
 
