@@ -8,7 +8,7 @@ This repo is a monorepo managed with Bun workspaces and Changesets.
 
 - `packages/react-native-screen-transitions` – the published library (built with `react-native-builder-bob`).
 - `examples/tray` – example app demonstrating tray/drawer patterns.
-- `apps/e2e-native-stack` – Expo app for e2e testing with Maestro.
+- `apps/e2e` – Expo app for e2e testing with Maestro.
 
 ## Development workflow
 
@@ -46,7 +46,7 @@ bun run typecheck  # tsc --noEmit
 bun test           # unit tests
 
 # E2e tests (requires Maestro CLI + iOS simulator)
-cd apps/e2e-native-stack
+cd apps/e2e
 npx expo run:ios --configuration Release
 maestro test .maestro/complete.yaml
 ```
