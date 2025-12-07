@@ -14,65 +14,23 @@ const TEST_ROUTES: Array<{ href: Href; testID: string; label: string }> = [
 		label: "Gesture directions",
 	},
 	{
-		href: "/e2e/gestures/bi-directional",
-		testID: "e2e-bi-directional",
-		label: "Bi-directional gestures",
-	},
-	{
-		href: "/e2e/gestures/gesture-dismissal",
-		testID: "e2e-gesture-dismissal",
-		label: "Gesture dismissal logic",
-	},
-	{
 		href: "/e2e/gestures-scrollables/vertical",
 		testID: "e2e-scrollable-vertical",
 		label: "Scrollables (vertical)",
-	},
-	{
-		href: "/e2e/gestures-scrollables/horizontal",
-		testID: "e2e-scrollable-horizontal",
-		label: "Scrollables (horizontal)",
-	},
-	{
-		href: "/e2e/gestures-scrollables/nested",
-		testID: "e2e-scrollable-nested",
-		label: "Scrollables (nested)",
-	},
-	{
-		href: "/e2e/gesture-edges/all-edges",
-		testID: "e2e-gesture-edges-all-edges",
-		label: "Gesture edges (all)",
-	},
-	{
-		href: "/e2e/gesture-edges/custom-edges",
-		testID: "e2e-gesture-edges-custom-edges",
-		label: "Gesture edges (custom)",
-	},
-	{
-		href: "/e2e/bounds/anchor-point",
-		testID: "e2e-bounds-anchor-point",
-		label: "Bounds: anchor point",
-	},
-	{
-		href: "/e2e/bounds/custom-bounds",
-		testID: "e2e-bounds-custom-bounds",
-		label: "Bounds: custom bounds",
 	},
 	{
 		href: "/e2e/bounds/longer-flow/a",
 		testID: "e2e-bounds-longer-flow",
 		label: "Bounds: longer flow",
 	},
-	{
-		href: "/e2e/bounds/list",
-		testID: "e2e-bounds-list",
-		label: "Bounds: list",
-	},
 ];
 
 export default function ModalScreen() {
 	return (
-		<SafeAreaView testID="HOME_PAGE">
+		<SafeAreaView
+			testID="HOME_PAGE"
+			style={{ alignItems: "center", justifyContent: "center", flex: 1 }}
+		>
 			{TEST_ROUTES.map((route) => (
 				<Button
 					key={route.testID}

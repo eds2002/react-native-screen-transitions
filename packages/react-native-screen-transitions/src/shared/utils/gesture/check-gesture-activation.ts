@@ -72,7 +72,7 @@ const DEFAULT_EDGE_DISTANCE_HORIZONTAL = 50;
 const DEFAULT_EDGE_DISTANCE_VERTICAL = 135;
 const DEFAULT_ACTIVATION_AREA = "screen" as const;
 
-function normalizeSides(area?: GestureActivationArea): NormalizedSides {
+export function normalizeSides(area?: GestureActivationArea): NormalizedSides {
 	"worklet";
 	if (!area || typeof area === "string") {
 		const mode: ActivationArea = area ?? DEFAULT_ACTIVATION_AREA;
@@ -88,7 +88,7 @@ function normalizeSides(area?: GestureActivationArea): NormalizedSides {
 	};
 }
 
-function computeEdgeConstraints(
+export function computeEdgeConstraints(
 	initialTouch: { x: number; y: number },
 	dimensions: Layout,
 	sides: NormalizedSides,
@@ -108,7 +108,7 @@ function computeEdgeConstraints(
 	return { horizontalRight, horizontalLeft, verticalDown, verticalUp } as const;
 }
 
-function calculateSwipeDirs(deltaX: number, deltaY: number) {
+export function calculateSwipeDirs(deltaX: number, deltaY: number) {
 	"worklet";
 
 	const isVerticalSwipe = Math.abs(deltaY) > Math.abs(deltaX);
@@ -129,7 +129,7 @@ function calculateSwipeDirs(deltaX: number, deltaY: number) {
 	};
 }
 
-function shouldActivateOrFail(params: ShouldActivateOrFailProps) {
+export function shouldActivateOrFail(params: ShouldActivateOrFailProps) {
 	"worklet";
 
 	const {
