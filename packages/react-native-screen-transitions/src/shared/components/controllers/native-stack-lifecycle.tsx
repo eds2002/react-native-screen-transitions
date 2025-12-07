@@ -24,7 +24,9 @@ export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 	const isAncestorDismissingViaGesture = useSharedValueState(
 		useDerivedValue(() => {
 			"worklet";
-			return ancestorContext?.gestureAnimationValues.isDismissing?.value ?? false;
+			return (
+				ancestorContext?.gestureAnimationValues.isDismissing?.value ?? false
+			);
 		}),
 	);
 
