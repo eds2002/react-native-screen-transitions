@@ -1,11 +1,15 @@
-import { createContext, useContext, useMemo } from "react";
+import { useMemo } from "react";
 import { StyleSheet, View } from "react-native";
-import type { GestureType } from "react-native-gesture-handler";
-import { GestureDetector } from "react-native-gesture-handler";
+import {
+	Gesture,
+	GestureDetector,
+	type GestureType,
+} from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 import type { GestureStoreMap } from "../stores/gesture.store";
+import createProvider from "../utils/create-provider";
 import { useKeys } from "./keys.provider";
 
 export type ScrollConfig = {
@@ -22,47 +26,28 @@ export interface GestureContextType {
 	nativeGesture: GestureType;
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	gestureAnimationValues: GestureStoreMap;
-	ancestorContext: GestureContextType | undefined;
+	ancestorContext: GestureContextType | null;
 }
-
-type GestureProviderProps = {
-	children: React.ReactNode;
-};
-
-const GestureContext = createContext<GestureContextType | undefined>(undefined);
 
 /**
  * Provider that creates gesture handling for a screen.
- * If the current screen doesn't have gestures enabled but a parent does,
- * we pass through the parent's context so scrollable children can coordinate
+ * If the current screen doesn't have gestures enabled but an ancestor does,
+ * we pass through the ancestor's context so scrollable children can coordinate
  * with the ancestor's gestures.
  */
-export const ScreenGestureProvider = ({ children }: GestureProviderProps) => {
-	const ancestorContext = useContext(GestureContext);
+export const {
+	ScreenGestureProvider,
+	useScreenGestureContext: useGestureContext,
+} = createProvider("ScreenGesture", { guarded: false })<
+	{ children: React.ReactNode },
+	GestureContextType
+>(({ children }) => {
+	const ancestorContext = useGestureContext();
 	const { current } = useKeys();
+	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
 	const hasOwnGestures = current.options.gestureEnabled === true;
-
-	// If this screen doesn't have its own gestures but an ancestor does,
-	// pass through so scrollable children coordinate with that ancestor
-	if (!hasOwnGestures && ancestorContext) {
-		return children;
-	}
-
-	return (
-		<ScreenGestureProviderInner ancestorContext={ancestorContext}>
-			{children}
-		</ScreenGestureProviderInner>
-	);
-};
-
-const ScreenGestureProviderInner = ({
-	children,
-	ancestorContext,
-}: GestureProviderProps & {
-	ancestorContext: GestureContextType | undefined;
-}) => {
-	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
+	const shouldPassthrough = !hasOwnGestures && !!ancestorContext;
 
 	const { panGesture, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
@@ -70,43 +55,30 @@ const ScreenGestureProviderInner = ({
 			ancestorContext,
 		});
 
-	const value: GestureContextType = useMemo(
-		() => ({
-			panGesture,
-			scrollConfig,
-			nativeGesture,
-			gestureAnimationValues,
-			ancestorContext,
-		}),
-		[
-			panGesture,
-			scrollConfig,
-			nativeGesture,
-			gestureAnimationValues,
-			ancestorContext,
-		],
-	);
+	const value: GestureContextType = shouldPassthrough
+		? ancestorContext
+		: {
+				panGesture,
+				scrollConfig,
+				nativeGesture,
+				gestureAnimationValues,
+				ancestorContext,
+			};
 
-	return (
-		<GestureContext.Provider value={value}>
-			<GestureDetector gesture={panGesture}>
+	// When passing through, use a no-op gesture to avoid conflicts.
+	// Attaching the same gesture to multiple GestureDetectors causes issues.
+	const noOpGesture = useMemo(() => Gesture.Pan().enabled(false), []);
+	const activeGesture = shouldPassthrough ? noOpGesture : panGesture;
+
+	return {
+		value,
+		children: (
+			<GestureDetector gesture={activeGesture}>
 				<View style={styles.container}>{children}</View>
 			</GestureDetector>
-		</GestureContext.Provider>
-	);
-};
-
-export const useGestureContext = () => {
-	const context = useContext(GestureContext);
-
-	if (!context) {
-		throw new Error(
-			"useGestureContext must be used within a ScreenGestureProvider",
-		);
-	}
-
-	return context;
-};
+		),
+	};
+});
 
 const styles = StyleSheet.create({
 	container: {

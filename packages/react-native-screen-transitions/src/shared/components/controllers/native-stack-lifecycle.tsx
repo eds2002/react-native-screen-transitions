@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <Lifecycles are rendered right under the gesture provider> */
 import { useEffect, useLayoutEffect } from "react";
 import { useDerivedValue } from "react-native-reanimated";
 import type { NativeStackDescriptor } from "../../../native-stack/types";
@@ -7,6 +8,7 @@ import { useGestureContext } from "../../providers/gestures.provider";
 import { useKeys } from "../../providers/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { TRUE } from "../../types/state.types";
+import type { Any } from "../../types/utils.types";
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
 
@@ -19,7 +21,7 @@ export interface Props {
  */
 export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 	const { current } = useKeys<NativeStackDescriptor>();
-	const { ancestorContext } = useGestureContext();
+	const { ancestorContext } = useGestureContext()!;
 
 	const isAncestorDismissingViaGesture = useSharedValueState(
 		useDerivedValue(() => {
@@ -32,7 +34,7 @@ export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 
 	const animations = AnimationStore.getAll(current.route.key);
 
-	const handleBeforeRemove = useStableCallback((e: any) => {
+	const handleBeforeRemove = useStableCallback((e: Any) => {
 		const isEnabled = current.options.enableTransitions;
 
 		const isFirstScreen = current.navigation.getState().index === 0;
