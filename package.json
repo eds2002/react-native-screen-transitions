@@ -16,6 +16,8 @@
     "test:native-stack": "maestro test apps/e2e-native-stack/.maestro/complete.yaml",
     "clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
     "build": "lerna run prepack",
+    "lint": "biome check packages/react-native-screen-transitions/src",
+    "typecheck": "tsc --noEmit -p packages/react-native-screen-transitions/tsconfig.json",
     "publish": "lerna publish from-package",
     "release": "bun run build && bun run changeset:publish",
     "changeset": "changeset",
