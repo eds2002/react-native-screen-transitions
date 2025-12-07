@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.0.0-rc.5
+
+### Patch Changes
+
+- Fix entire stack rerendering due to new gestures logic
+
 ## 3.0.0-rc.4
 
 ### Patch Changes

@@ -36,10 +36,29 @@ npm install react-native-reanimated react-native-gesture-handler \
 
 This package provides two stack navigators:
 
-| Stack | Description |
-|-------|-------------|
-| **Blank Stack** (recommended) | Pure JavaScript stack with full control over transitions, overlays, and gestures. No native limitations. |
-| **Native Stack** | Extends `@react-navigation/native-stack`. More limited due to native constraints. |
+| Stack                         | Description                                                                       |
+| ----------------------------- | --------------------------------------------------------------------------------- |
+| **Blank Stack** (recommended) | Pure JavaScript stack with full control over transitions, overlays, and gestures. |
+| **Native Stack**              | Extends `@react-navigation/native-stack`. Fewer features but potentially faster.  |
+
+### Choosing a Stack
+
+**Blank Stack** is feature-rich and recommended for most use cases:
+
+- Full overlay system (float and screen modes)
+- Stack progress tracking across the entire stack
+- No delayed touch events on exiting screens
+
+However, it's still a JavaScript implementation. While optimized to be as fast as possible (using `react-native-screens` under the hood, with animations and gesture logic running on the UI thread), heavy usage may not match native performance.
+
+**Native Stack** has limitations but uses native navigation primitives:
+
+- No overlay system
+- Relies on `beforeRemove` listeners to intercept navigation
+- Uses transparent modal presentation which can cause delayed touch events
+- Some edge cases with rapid navigation
+
+Choose Native Stack if you need maximum performance and can live without overlays.
 
 ### Blank Stack Setup
 
@@ -104,16 +123,16 @@ Built-in animation presets you can spread into screen options:
 />
 ```
 
-| Preset | Description |
-|--------|-------------|
-| `SlideFromTop()` | Slides in from top, vertical gesture dismiss |
-| `SlideFromBottom()` | Slides in from bottom, vertical gesture dismiss |
-| `ZoomIn()` | Scales in with fade, no gesture |
-| `DraggableCard()` | Multi-directional drag with card scaling |
-| `ElasticCard()` | Elastic drag with overlay darkening |
-| `SharedIGImage({ sharedBoundTag })` | Instagram-style shared image transition |
-| `SharedAppleMusic({ sharedBoundTag })` | Apple Music-style shared element |
-| `SharedXImage({ sharedBoundTag })` | X (Twitter)-style image transition |
+| Preset                                 | Description                                     |
+| -------------------------------------- | ----------------------------------------------- |
+| `SlideFromTop()`                       | Slides in from top, vertical gesture dismiss    |
+| `SlideFromBottom()`                    | Slides in from bottom, vertical gesture dismiss |
+| `ZoomIn()`                             | Scales in with fade, no gesture                 |
+| `DraggableCard()`                      | Multi-directional drag with card scaling        |
+| `ElasticCard()`                        | Elastic drag with overlay darkening             |
+| `SharedIGImage({ sharedBoundTag })`    | Instagram-style shared image transition         |
+| `SharedAppleMusic({ sharedBoundTag })` | Apple Music-style shared element                |
+| `SharedXImage({ sharedBoundTag })`     | X (Twitter)-style image transition              |
 
 ---
 
@@ -154,19 +173,19 @@ import { interpolate } from "react-native-reanimated";
 
 ### Interpolator Props
 
-| Prop | Description |
-|------|-------------|
-| `progress` | Combined progress (0-2). 0=entering, 1=active, 2=exiting |
-| `current` | Current screen state (progress, closing, gesture, route) |
-| `previous` | Previous screen state (may be undefined) |
-| `next` | Next screen state (may be undefined) |
-| `layouts.screen` | Screen dimensions `{ width, height }` |
-| `insets` | Safe area insets `{ top, right, bottom, left }` |
-| `focused` | Whether current screen is the topmost |
-| `active` | The screen driving the transition |
-| `isActiveTransitioning` | Whether active screen is animating |
-| `isDismissing` | Whether active screen is being dismissed |
-| `bounds` | Function to access shared element positions |
+| Prop                    | Description                                              |
+| ----------------------- | -------------------------------------------------------- |
+| `progress`              | Combined progress (0-2). 0=entering, 1=active, 2=exiting |
+| `current`               | Current screen state (progress, closing, gesture, route) |
+| `previous`              | Previous screen state (may be undefined)                 |
+| `next`                  | Next screen state (may be undefined)                     |
+| `layouts.screen`        | Screen dimensions `{ width, height }`                    |
+| `insets`                | Safe area insets `{ top, right, bottom, left }`          |
+| `focused`               | Whether current screen is the topmost                    |
+| `active`                | The screen driving the transition                        |
+| `isActiveTransitioning` | Whether active screen is animating                       |
+| `isDismissing`          | Whether active screen is being dismissed                 |
+| `bounds`                | Function to access shared element positions              |
 
 ### Return Value
 
@@ -231,10 +250,10 @@ screenStyleInterpolator: ({ bounds }) => {
 
   const avatarStyles = bounds({
     id: "avatar",
-    method: "transform",  // "transform" | "size" | "content"
-    space: "relative",    // "relative" | "absolute"
-    scaleMode: "match",   // "match" | "none" | "uniform"
-    anchor: "center",     // positioning anchor
+    method: "transform", // "transform" | "size" | "content"
+    space: "relative", // "relative" | "absolute"
+    scaleMode: "match", // "match" | "none" | "uniform"
+    anchor: "center", // positioning anchor
   });
 
   return {
@@ -245,15 +264,15 @@ screenStyleInterpolator: ({ bounds }) => {
 
 ### Bounds Options
 
-| Option | Values | Description |
-|--------|--------|-------------|
-| `id` | string | The `sharedBoundTag` to match |
-| `method` | `"transform"` `"size"` `"content"` | How to animate (scale vs width/height) |
-| `space` | `"relative"` `"absolute"` | Coordinate space |
-| `scaleMode` | `"match"` `"none"` `"uniform"` | How to handle aspect ratio |
-| `anchor` | `"center"` `"top"` `"topLeading"` etc. | Transform origin |
-| `target` | `"bound"` `"fullscreen"` or custom | Destination target |
-| `raw` | boolean | Return raw values instead of styles |
+| Option      | Values                                 | Description                            |
+| ----------- | -------------------------------------- | -------------------------------------- |
+| `id`        | string                                 | The `sharedBoundTag` to match          |
+| `method`    | `"transform"` `"size"` `"content"`     | How to animate (scale vs width/height) |
+| `space`     | `"relative"` `"absolute"`              | Coordinate space                       |
+| `scaleMode` | `"match"` `"none"` `"uniform"`         | How to handle aspect ratio             |
+| `anchor`    | `"center"` `"top"` `"topLeading"` etc. | Transform origin                       |
+| `target`    | `"bound"` `"fullscreen"` or custom     | Destination target                     |
+| `raw`       | boolean                                | Return raw values instead of styles    |
 
 ### Raw Values
 
@@ -273,8 +292,8 @@ Enable swipe-to-dismiss on screens:
   name="Detail"
   options={{
     gestureEnabled: true,
-    gestureDirection: "vertical",        // or "horizontal", ["vertical", "horizontal"]
-    gestureActivationArea: "edge",       // or "screen", or { left: "edge", top: "screen" }
+    gestureDirection: "vertical", // or "horizontal", ["vertical", "horizontal"]
+    gestureActivationArea: "edge", // or "screen", or { left: "edge", top: "screen" }
     gestureResponseDistance: 50,
     gestureVelocityImpact: 0.3,
   }}
@@ -283,14 +302,14 @@ Enable swipe-to-dismiss on screens:
 
 ### Gesture Options
 
-| Option | Description |
-|--------|-------------|
-| `gestureEnabled` | Enable/disable gesture |
-| `gestureDirection` | `"horizontal"` `"vertical"` `"horizontal-inverted"` `"vertical-inverted"` or array |
-| `gestureActivationArea` | `"edge"` `"screen"` or per-side config |
-| `gestureResponseDistance` | Distance threshold for gesture recognition |
-| `gestureVelocityImpact` | How much velocity affects dismissal decision |
-| `gestureDrivesProgress` | Whether gesture directly drives animation (default: true) |
+| Option                    | Description                                                                        |
+| ------------------------- | ---------------------------------------------------------------------------------- |
+| `gestureEnabled`          | Enable/disable gesture                                                             |
+| `gestureDirection`        | `"horizontal"` `"vertical"` `"horizontal-inverted"` `"vertical-inverted"` or array |
+| `gestureActivationArea`   | `"edge"` `"screen"` or per-side config                                             |
+| `gestureResponseDistance` | Distance threshold for gesture recognition                                         |
+| `gestureVelocityImpact`   | How much velocity affects dismissal decision                                       |
+| `gestureDrivesProgress`   | Whether gesture directly drives animation (default: true)                          |
 
 ### Gestures with ScrollViews
 
@@ -317,6 +336,7 @@ const TransitionFlashList = Transition.createTransitionAwareComponent(
 ```
 
 Gesture rules with scrollables:
+
 - **vertical** – only starts when scrolled to top
 - **vertical-inverted** – only starts when scrolled to bottom
 - **horizontal** – only starts at left/right edge
@@ -339,7 +359,9 @@ const FloatingHeader = ({ focusedIndex, routes, overlayAnimation }) => {
 
   return (
     <Animated.View style={[styles.header, style]}>
-      <Text>Screen {focusedIndex + 1} of {routes.length}</Text>
+      <Text>
+        Screen {focusedIndex + 1} of {routes.length}
+      </Text>
     </Animated.View>
   );
 };
@@ -351,7 +373,7 @@ const FloatingHeader = ({ focusedIndex, routes, overlayAnimation }) => {
     overlayMode: "float",
     overlayShown: true,
   }}
-/>
+/>;
 ```
 
 ### Screen Overlay
@@ -371,15 +393,15 @@ An overlay that moves with screen content:
 
 ### Overlay Props
 
-| Prop | Description |
-|------|-------------|
-| `focusedRoute` | Currently focused route |
-| `focusedIndex` | Index of focused screen |
-| `routes` | All routes in the stack |
-| `overlayOptions` | Custom options passed from screen |
-| `navigation` | Navigation prop |
-| `overlayAnimation` | Animation values for overlay |
-| `screenAnimation` | Animation values for screens |
+| Prop               | Description                       |
+| ------------------ | --------------------------------- |
+| `focusedRoute`     | Currently focused route           |
+| `focusedIndex`     | Index of focused screen           |
+| `routes`           | All routes in the stack           |
+| `overlayOptions`   | Custom options passed from screen |
+| `navigation`       | Navigation prop                   |
+| `overlayAnimation` | Animation values for overlay      |
+| `screenAnimation`  | Animation values for screens      |
 
 ### Passing Custom Data
 
@@ -392,7 +414,7 @@ An overlay that moves with screen content:
       showProgress: true,
     },
   }}
-/>
+/>;
 
 // In overlay
 const MyOverlay = ({ overlayOptions }) => {
@@ -404,13 +426,13 @@ const MyOverlay = ({ overlayOptions }) => {
 
 ## Transition Components
 
-| Component | Description |
-|-----------|-------------|
-| `Transition.View` | Animated view, supports `styleId` and `sharedBoundTag` |
-| `Transition.Pressable` | Pressable with bounds measurement on press |
-| `Transition.ScrollView` | ScrollView with gesture coordination |
-| `Transition.FlatList` | FlatList with gesture coordination |
-| `Transition.MaskedView` | For clipping during shared element transitions |
+| Component               | Description                                            |
+| ----------------------- | ------------------------------------------------------ |
+| `Transition.View`       | Animated view, supports `styleId` and `sharedBoundTag` |
+| `Transition.Pressable`  | Pressable with bounds measurement on press             |
+| `Transition.ScrollView` | ScrollView with gesture coordination                   |
+| `Transition.FlatList`   | FlatList with gesture coordination                     |
+| `Transition.MaskedView` | For clipping during shared element transitions         |
 
 ### Creating Custom Components
 
@@ -522,10 +544,10 @@ const Stack = createNativeStackNavigator();
 <Stack.Screen
   name="Detail"
   options={{
-    enableTransitions: true,  // Required to enable custom transitions
+    enableTransitions: true, // Required to enable custom transitions
     ...Transition.Presets.SlideFromBottom(),
   }}
-/>
+/>;
 ```
 
 ### Expo Router Setup
@@ -556,26 +578,26 @@ export const Stack = withLayoutContext<
 
 All standard `@react-navigation/native-stack` options are available, plus:
 
-| Option | Type | Description |
-|--------|------|-------------|
-| `enableTransitions` | `boolean` | Enable custom transitions (sets presentation to transparent modal) |
-| `screenStyleInterpolator` | `ScreenStyleInterpolator` | Function that returns animated styles |
-| `transitionSpec` | `TransitionSpec` | Animation config for open/close |
-| `gestureEnabled` | `boolean` | Whether swipe-to-dismiss is allowed |
-| `gestureDirection` | `GestureDirection \| GestureDirection[]` | Allowed swipe directions |
-| `gestureVelocityImpact` | `number` | How much velocity affects dismissal |
-| `gestureResponseDistance` | `number` | Distance threshold for gesture |
-| `gestureDrivesProgress` | `boolean` | Whether gesture drives animation |
-| `gestureActivationArea` | `GestureActivationArea` | Where gesture can start |
+| Option                    | Type                                     | Description                                                        |
+| ------------------------- | ---------------------------------------- | ------------------------------------------------------------------ |
+| `enableTransitions`       | `boolean`                                | Enable custom transitions (sets presentation to transparent modal) |
+| `screenStyleInterpolator` | `ScreenStyleInterpolator`                | Function that returns animated styles                              |
+| `transitionSpec`          | `TransitionSpec`                         | Animation config for open/close                                    |
+| `gestureEnabled`          | `boolean`                                | Whether swipe-to-dismiss is allowed                                |
+| `gestureDirection`        | `GestureDirection \| GestureDirection[]` | Allowed swipe directions                                           |
+| `gestureVelocityImpact`   | `number`                                 | How much velocity affects dismissal                                |
+| `gestureResponseDistance` | `number`                                 | Distance threshold for gesture                                     |
+| `gestureDrivesProgress`   | `boolean`                                | Whether gesture drives animation                                   |
+| `gestureActivationArea`   | `GestureActivationArea`                  | Where gesture can start                                            |
 
 ### Renamed Native Options
 
 To avoid collisions with custom gesture options, some native options are renamed:
 
-| React Navigation | Renamed to |
-|------------------|------------|
-| `gestureDirection` | `nativeGestureDirection` |
-| `gestureEnabled` | `nativeGestureEnabled` |
+| React Navigation          | Renamed to                      |
+| ------------------------- | ------------------------------- |
+| `gestureDirection`        | `nativeGestureDirection`        |
+| `gestureEnabled`          | `nativeGestureEnabled`          |
 | `gestureResponseDistance` | `nativeGestureResponseDistance` |
 
 ### Limitations
