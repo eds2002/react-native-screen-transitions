@@ -39,6 +39,7 @@ jobs:
         run: bun run build
 
       - name: Version or Publish via Changesets
+        id: changesets
         uses: changesets/action@v1
         with:
           publish: "bun run changeset:publish"
@@ -46,3 +47,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
+
+      - name: Create v* tag
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSION=$(jq -r '.[0].version' <<< '${{ steps.changesets.outputs.publishedPackages }}')
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"

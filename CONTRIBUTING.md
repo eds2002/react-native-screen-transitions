@@ -4,129 +4,102 @@ We want this community to be friendly and respectful to each other. Please follo
 
 ## Repository layout
 
-This repo is a small monorepo managed with Bun workspaces, Changesets, and Lerna Lite.
+This repo is a monorepo managed with Bun workspaces and Changesets.
 
 - `packages/react-native-screen-transitions` – the published library (built with `react-native-builder-bob`).
-- `examples/expo-router-example` – the main Expo Router development app (requires a dev build).
-- `examples/onboarding-example` – minimal example for onboarding-style transitions.
-- `e2e/maestro` – Maestro-powered regression scenarios.
+- `examples/tray` – example app demonstrating tray/drawer patterns.
+- `apps/e2e-native-stack` – Expo app for e2e testing with Maestro.
 
 ## Development workflow
 
 ### 1. Set up your environment
 
-Install dependencies from the repo root. We use Bun by default (see `bun.lock`), but Yarn or pnpm will also work if you prefer.
+Install dependencies from the repo root:
 
 ```sh
-# Recommended
 bun install
-
-# Or
-yarn install
-pnpm install
 ```
 
-### 2. Build and link local packages
+### 2. Build the library
 
-Compile the library once before running an example app:
+Compile the library before running an example app:
 
 ```sh
 bun run build
-# runs `lerna run prepack` which calls `bob build` in each package
 ```
 
 ### 3. Run an example app
 
-Most UI/gesture changes should be tested in `examples/expo-router-example`:
-
 ```sh
-cd examples/expo-router-example
-```
-
-First run (requires native deps):
-
-```sh
+cd examples/tray
 npx expo run:ios   # or expo run:android
 ```
 
-Subsequent runs:
-
-```sh
-bun start          # Metro dev server
-bun run ios        # launch iOS dev build
-bun run android    # launch Android dev build
-```
-
-The onboarding example lives in `examples/onboarding-example` and can be run with the same commands as any bare React Native app after `bun install`.
-
 ## Quality checks
 
-We rely on TypeScript, Biome (lint + format), Bun tests, and Maestro flows. Please make sure everything passes before sending a PR.
+We use TypeScript, Biome (lint + format), Bun tests, and Maestro for e2e. Make sure everything passes before sending a PR.
 
 ```sh
-# From packages/react-native-screen-transitions
-bun run lint       # biome check ./src
-bun test           # runs Bun-powered unit tests
+# From repo root
+bun run lint       # biome check
+bun run typecheck  # tsc --noEmit
+bun test           # unit tests
 
-# Optional type-only build (tsconfig.build.json)
-bun run build
-
-# From repo root (requires Maestro CLI)
-bun run e2e
+# E2e tests (requires Maestro CLI + iOS simulator)
+cd apps/e2e-native-stack
+npx expo run:ios --configuration Release
+maestro test .maestro/complete.yaml
 ```
 
-Biome auto-fixes many issues via:
+Biome auto-fixes many issues:
 
 ```sh
-biome check ./src --write
+biome check packages/react-native-screen-transitions/src --write
 ```
 
-but please only run it inside the package you touched.
+## Scripts
 
-### Commit message convention
+From the repo root:
 
-We follow the [conventional commits specification](https://www.conventionalcommits.org/en) for our commit messages:
+| Script | Description |
+|--------|-------------|
+| `build` | Compiles the library via bob |
+| `lint` | Runs Biome on the library |
+| `typecheck` | Type-checks the library |
+| `clean` | Removes node_modules and lockfiles |
+| `changeset` | Create a new changeset |
+| `changeset:version` | Version packages from changesets |
+| `changeset:publish` | Publish to npm |
+| `release` | Build + publish |
 
-- `fix`: bug fixes, e.g. fix crash due to deprecated method.
-- `feat`: new features, e.g. add new method to the module.
-- `refactor`: code refactor, e.g. migrate from class components to hooks.
-- `docs`: changes into documentation, e.g. add usage example for the module..
-- `test`: adding or updating tests, eg add integration tests using detox.
-- `chore`: tooling changes, e.g. change CI config.
+Inside `packages/react-native-screen-transitions`:
 
-Our pre-commit hooks verify that your commit message matches this format when committing.
+| Script | Description |
+|--------|-------------|
+| `build` | `bob build` - emits CJS/ESM/types |
+| `lint` | Runs Biome |
+| `typecheck` | Type-check only |
 
-### Scripts
+## Commit message convention
 
-Helpful workspace-level scripts (run from the repo root with `bun run …`, `yarn …`, or `pnpm …`):
+We follow [conventional commits](https://www.conventionalcommits.org/en):
 
-- `build` – runs `lerna run prepack` to compile every package via Bob.
-- `clean` – removes each package’s build output plus the workspace `node_modules`.
-- `e2e` – executes the Maestro flows under `e2e/`.
-- `changeset`, `changeset:version`, `changeset:publish` – standard Changesets lifecycle.
-- `release` – convenience script that builds and publishes (`bun run build && bun run changeset:publish`).
+- `fix`: bug fixes
+- `feat`: new features
+- `refactor`: code refactor
+- `docs`: documentation changes
+- `test`: adding or updating tests
+- `chore`: tooling changes
 
-Inside `packages/react-native-screen-transitions` you’ll also find:
+## Changesets & releases
 
-- `bun run build` – calls `bob build` to emit CJS/ESM/types.
-- `bun run lint` – runs Biome.
-- `bun test` – Bun’s built-in test runner (see `src/__tests__`).
+- Run `bun run changeset` if your change affects user-facing behavior
+- Changesets live under `.changeset/` and describe the change + bump type
+- Docs-only or chore changes don't need a changeset
 
-### Changesets & releases
+## Sending a pull request
 
-- If your change affects user-facing behavior (API additions, fixes, etc.), run `bun run changeset` and follow the prompt so we can version the package correctly.
-- Changesets live under `.changeset/`. They are consumed during release (`bun run changeset:version`) so make sure they describe the change and bump type accurately.
-- Docs-only or repo-chore changes don’t need a changeset unless they impact a published package.
-
-### Sending a pull request
-
-> **Working on your first pull request?** You can learn how from this _free_ series: [How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github).
-
-When you're sending a pull request:
-
-- Prefer small pull requests focused on one change.
-- Verify that Biome, Bun tests, and (when relevant) Maestro flows are passing.
-- Review the documentation and example apps to make sure they reflect the change.
-- Follow the pull request template when opening a pull request.
-- For pull requests that change the API or implementation, discuss with maintainers first by opening an issue.
-- Include a Changeset when the public package needs a version bump.
+- Prefer small PRs focused on one change
+- Verify lint, typecheck, and tests pass
+- Include a changeset when the public package needs a version bump
+- For API changes, open an issue first to discuss
