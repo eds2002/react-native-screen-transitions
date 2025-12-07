@@ -338,6 +338,11 @@ export const useBuildGestures = ({
 			.onEnd(onEnd)
 			.blocksExternalGesture(nativeGesture);
 
+		// Allow ancestors to block child native gestures
+		if (parentContext?.panGesture && nativeGesture) {
+			parentContext.panGesture.blocksExternalGesture(nativeGesture);
+		}
+
 		return {
 			panGesture,
 			nativeGesture,
@@ -351,5 +356,6 @@ export const useBuildGestures = ({
 		onUpdate,
 		onEnd,
 		gestureAnimationValues,
+		parentContext,
 	]);
 };

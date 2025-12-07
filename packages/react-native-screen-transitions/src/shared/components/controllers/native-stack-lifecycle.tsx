@@ -82,8 +82,5 @@ export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 
 	useLayoutEffect(handleInitialize, []);
 
-	// important for t.a scrollviews inside nested navigators.
-	useParentGestureRegistry();
-
 	return children;
 };

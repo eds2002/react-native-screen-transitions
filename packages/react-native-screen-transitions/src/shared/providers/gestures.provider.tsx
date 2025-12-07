@@ -6,6 +6,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 import type { GestureStoreMap } from "../stores/gesture.store";
+import { useKeys } from "./keys.provider";
 
 export type ScrollConfig = {
 	x: number;
@@ -21,7 +22,7 @@ export interface GestureContextType {
 	nativeGesture: GestureType;
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	gestureAnimationValues: GestureStoreMap;
-	parentContext: GestureContextType | null;
+	parentContext: GestureContextType | undefined;
 }
 
 type GestureProviderProps = {
@@ -30,9 +31,38 @@ type GestureProviderProps = {
 
 const GestureContext = createContext<GestureContextType | undefined>(undefined);
 
+/**
+ * Provider that creates gesture handling for a screen.
+ * If the current screen doesn't have gestures enabled but a parent does,
+ * we pass through the parent's context so scrollable children can coordinate
+ * with the ancestor's gestures.
+ */
 export const ScreenGestureProvider = ({ children }: GestureProviderProps) => {
 	const parentContext = useContext(GestureContext);
+	const { current } = useKeys();
 
+	const hasOwnGestures = current.options.gestureEnabled === true;
+
+	// If this screen doesn't have its own gestures but there's a parent context,
+	// pass through the parent's gestures so scrollable children coordinate with
+	// the ancestor that actually handles dismissal
+	if (!hasOwnGestures && parentContext) {
+		return children;
+	}
+
+	return (
+		<ScreenGestureProviderInner parentContext={parentContext}>
+			{children}
+		</ScreenGestureProviderInner>
+	);
+};
+
+const ScreenGestureProviderInner = ({
+	children,
+	parentContext,
+}: GestureProviderProps & {
+	parentContext: GestureContextType | undefined;
+}) => {
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
 	const { panGesture, nativeGesture, gestureAnimationValues } =
@@ -47,7 +77,7 @@ export const ScreenGestureProvider = ({ children }: GestureProviderProps) => {
 			scrollConfig,
 			nativeGesture,
 			gestureAnimationValues,
-			parentContext: parentContext || null,
+			parentContext,
 		}),
 		[
 			panGesture,

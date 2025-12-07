@@ -67,8 +67,5 @@ export const BlankStackScreenLifecycleController = ({ children }: Props) => {
 		};
 	}, [handleInitialize, handleCleanup]);
 
-	// important for t.a scrollviews inside nested navigators.
-	useParentGestureRegistry();
-
 	return children;
 };
