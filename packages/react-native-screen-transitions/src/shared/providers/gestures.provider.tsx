@@ -1,7 +1,6 @@
-import { useMemo } from "react";
+import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import {
-	Gesture,
 	GestureDetector,
 	type GestureType,
 } from "react-native-gesture-handler";
@@ -31,9 +30,8 @@ export interface GestureContextType {
 
 /**
  * Provider that creates gesture handling for a screen.
- * If the current screen doesn't have gestures enabled but an ancestor does,
- * we pass through the ancestor's context so scrollable children can coordinate
- * with the ancestor's gestures.
+ * When gestures are enabled, wraps children in GestureDetector and provides context.
+ * When disabled, renders children directly without the gesture provider.
  */
 export const {
 	ScreenGestureProvider,
@@ -42,12 +40,11 @@ export const {
 	{ children: React.ReactNode },
 	GestureContextType
 >(({ children }) => {
-	const ancestorContext = useGestureContext();
 	const { current } = useKeys();
+	const ancestorContext = useGestureContext();
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
-	const hasOwnGestures = current.options.gestureEnabled === true;
-	const shouldPassthrough = !hasOwnGestures && !!ancestorContext;
+	const hasGestures = current.options.gestureEnabled === true;
 
 	const { panGesture, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
@@ -55,28 +52,28 @@ export const {
 			ancestorContext,
 		});
 
-	const value: GestureContextType = shouldPassthrough
-		? ancestorContext
-		: {
-				panGesture,
-				scrollConfig,
-				nativeGesture,
-				gestureAnimationValues,
-				ancestorContext,
-			};
+	const value: GestureContextType = {
+		panGesture,
+		scrollConfig,
+		nativeGesture,
+		gestureAnimationValues,
+		ancestorContext,
+	};
 
-	// When passing through, use a no-op gesture to avoid conflicts.
-	// Attaching the same gesture to multiple GestureDetectors causes issues.
-	const noOpGesture = useMemo(() => Gesture.Pan().enabled(false), []);
-	const activeGesture = shouldPassthrough ? noOpGesture : panGesture;
+	const content = <View style={styles.container}>{children}</View>;
 
 	return {
 		value,
-		children: (
-			<GestureDetector gesture={activeGesture}>
-				<View style={styles.container}>{children}</View>
-			</GestureDetector>
-		),
+		children: ({ ScreenGestureProvider }) => {
+			if (!hasGestures) {
+				return content;
+			}
+			return (
+				<ScreenGestureProvider>
+					<GestureDetector gesture={panGesture}>{content}</GestureDetector>
+				</ScreenGestureProvider>
+			);
+		},
 	};
 });
 
