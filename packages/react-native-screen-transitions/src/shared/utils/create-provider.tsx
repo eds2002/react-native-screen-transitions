@@ -5,7 +5,6 @@
  */
 import {
 	type ComponentType,
-	type Context,
 	createContext,
 	type ReactNode,
 	useContext,
@@ -13,50 +12,31 @@ import {
 	useRef,
 } from "react";
 
-type ChildrenComponent = (props: { children: ReactNode }) => ReactNode;
-
-type InnerProviderMap<Name extends string> = {
-	[K in Name as `${K}Provider`]: ChildrenComponent;
-};
-
-type FactoryResult<ContextValue, Name extends string> = {
-	value?: ContextValue;
-	enabled?: boolean;
-	children?: ReactNode | ((props: InnerProviderMap<Name>) => ReactNode);
-};
-
-type ProviderReturn<
-	Name extends string,
-	Props extends object,
-	Value,
-	Guarded extends boolean,
-> = {
-	[K in Name as `${K}Context`]: Context<Value | null>;
-} & {
-	[K in Name as `${K}Provider`]: ChildrenComponent & Props;
-} & {
-	[K in Name as `use${K}Context`]: () => Guarded extends true
-		? Value
-		: Value | null;
-} & {
-	[K in Name as `with${K}Provider`]: (
-		Component: ComponentType<Value>,
-	) => (props: Props) => ReactNode;
-};
+type InnerProviderComponent = (props: { children: ReactNode }) => ReactNode;
 
 export default function createProvider<
 	ProviderName extends string,
 	Guarded extends boolean = true,
 >(name: ProviderName, options?: { guarded?: Guarded }) {
 	return <ProviderProps extends object, ContextValue>(
-		factory: (props: ProviderProps) => FactoryResult<ContextValue, ProviderName>,
+		factory: (props: ProviderProps) => {
+			value?: ContextValue;
+			enabled?: boolean;
+			children?:
+				| ReactNode
+				| ((
+						innerProvider: {
+							[K in ProviderName as `${K}Provider`]: InnerProviderComponent;
+						},
+				  ) => ReactNode);
+		},
 	) => {
 		const { guarded = true } = options ?? {};
 
 		const Context = createContext<ContextValue | null>(null);
 		Context.displayName = name;
 
-		function Provider(props: ProviderProps) {
+		const Provider: React.FC<ProviderProps> = (props) => {
 			const {
 				children = (props as { children?: ReactNode }).children,
 				enabled = true,
@@ -74,12 +54,13 @@ export default function createProvider<
 				[enabled, value],
 			);
 
-			// Per-instance ref and stable InnerProvider
+			// Per-instance ref ensures InnerProvider reads latest value while keeping
+			// a stable component reference.
 			const valueRef = useRef<ContextValue | null>(memoValue);
 			valueRef.current = memoValue;
 
 			const InnerProvider = useMemo(
-				(): ChildrenComponent =>
+				(): InnerProviderComponent =>
 					({ children }) => (
 						<Context.Provider value={valueRef.current}>
 							{children}
@@ -91,13 +72,13 @@ export default function createProvider<
 			if (typeof children === "function") {
 				return children({
 					[`${name}Provider`]: InnerProvider,
-				} as InnerProviderMap<ProviderName>);
+				} as { [K in ProviderName as `${K}Provider`]: InnerProviderComponent });
 			}
 
 			return <Context.Provider value={memoValue}>{children}</Context.Provider>;
-		}
+		};
 
-		function useEnhancedContext() {
+		const useEnhancedContext = (): ContextValue | null => {
 			const context = useContext(Context);
 
 			if (guarded && context === null) {
@@ -107,9 +88,9 @@ export default function createProvider<
 			}
 
 			return context;
-		}
+		};
 
-		function withProvider(Component: ComponentType<ContextValue>) {
+		const withProvider = (Component: ComponentType<ContextValue>) => {
 			return function WithProviderWrapper(props: ProviderProps) {
 				const { enabled = true, value } = factory(props);
 
@@ -130,13 +111,25 @@ export default function createProvider<
 					</Context.Provider>
 				);
 			};
-		}
+		};
 
 		return {
 			[`${name}Context`]: Context,
 			[`${name}Provider`]: Provider,
 			[`use${name}Context`]: useEnhancedContext,
 			[`with${name}Provider`]: withProvider,
-		} as ProviderReturn<ProviderName, ProviderProps, ContextValue, Guarded>;
+		} as {
+			[P in ProviderName as `${P}Context`]: React.Context<ContextValue>;
+		} & {
+			[P in ProviderName as `${P}Provider`]: React.FC<ProviderProps>;
+		} & {
+			[P in ProviderName as `use${P}Context`]: () => Guarded extends true
+				? ContextValue
+				: ContextValue | null;
+		} & {
+			[P in ProviderName as `with${P}Provider`]: (
+				Component: ComponentType<ContextValue>,
+			) => React.FC<ProviderProps>;
+		};
 	};
 }
