@@ -325,9 +325,10 @@ export const useBuildGestures = ({
 		},
 	);
 
+	// Memoize gestures to keep stable references - critical for RNGH
+	// Child gestures reference ancestor's pan via requireExternalGestureToFail,
+	// so the pan gesture MUST be stable or children will reference stale objects
 	return useMemo(() => {
-		const nativeGesture = Gesture.Native();
-
 		const panGesture = Gesture.Pan()
 			.enabled(gestureEnabled)
 			.manualActivation(true)
@@ -335,12 +336,32 @@ export const useBuildGestures = ({
 			.onTouchesMove(onTouchesMove)
 			.onStart(onStart)
 			.onUpdate(onUpdate)
-			.onEnd(onEnd)
-			.blocksExternalGesture(nativeGesture);
+			.onEnd(onEnd);
 
-		// Allow ancestors to block child native gestures
-		if (ancestorContext?.panGesture && nativeGesture) {
-			ancestorContext.panGesture.blocksExternalGesture(nativeGesture);
+		// Native gesture setup depends on whether this screen has gestures
+		let nativeGesture: GestureType;
+
+		if (gestureEnabled) {
+			// This screen has gestures - set up normal pan/native relationship
+			nativeGesture = Gesture.Native().requireExternalGestureToFail(panGesture);
+			panGesture.blocksExternalGesture(nativeGesture);
+		} else {
+			// This screen has no gestures
+			// Find nearest ancestor with gestureEnabled=true (attached pan)
+			let activePanAncestor = ancestorContext;
+			while (activePanAncestor && !activePanAncestor.gestureEnabled) {
+				activePanAncestor = activePanAncestor.ancestorContext;
+			}
+
+			if (activePanAncestor?.panGesture) {
+				// Found an ancestor with enabled pan - wait for it
+				nativeGesture = Gesture.Native().requireExternalGestureToFail(
+					activePanAncestor.panGesture,
+				);
+			} else {
+				// No ancestor with enabled pan - plain native
+				nativeGesture = Gesture.Native();
+			}
 		}
 
 		return {

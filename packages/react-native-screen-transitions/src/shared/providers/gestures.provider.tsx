@@ -1,4 +1,3 @@
-import { useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import {
 	GestureDetector,
@@ -26,6 +25,7 @@ export interface GestureContextType {
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	gestureAnimationValues: GestureStoreMap;
 	ancestorContext: GestureContextType | null;
+	gestureEnabled: boolean;
 }
 
 /**
@@ -58,6 +58,7 @@ export const {
 		nativeGesture,
 		gestureAnimationValues,
 		ancestorContext,
+		gestureEnabled: hasGestures,
 	};
 
 	const content = <View style={styles.container}>{children}</View>;
@@ -65,8 +66,11 @@ export const {
 	return {
 		value,
 		children: ({ ScreenGestureProvider }) => {
+			// ALWAYS wrap with ScreenGestureProvider so children get THIS screen's context
+			// (not ancestor's). Otherwise scrollables would use ancestor's nativeGesture
+			// which competes with ancestor's panGesture.
 			if (!hasGestures) {
-				return content;
+				return <ScreenGestureProvider>{content}</ScreenGestureProvider>;
 			}
 			return (
 				<ScreenGestureProvider>
