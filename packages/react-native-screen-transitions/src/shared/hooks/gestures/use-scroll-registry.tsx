@@ -1,4 +1,6 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Will always consume context from GestureProvider> */
+
+import { useMemo } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import type { ReanimatedScrollEvent } from "react-native-reanimated/lib/typescript/hook/commonTypes";
@@ -13,13 +15,26 @@ interface ScrollProgressHookProps {
 }
 
 export const useScrollRegistry = (props: ScrollProgressHookProps) => {
-	const { scrollConfig, ancestorContext } = useGestureContext()!;
+	const context = useGestureContext()!;
+	const { scrollConfig, ancestorContext } = context;
+
+	const ancestorScrollConfigs = useMemo(() => {
+		const configs: (typeof scrollConfig)[] = [];
+		let current = ancestorContext;
+		while (current) {
+			if (current.scrollConfig) {
+				configs.push(current.scrollConfig);
+			}
+			current = current.ancestorContext;
+		}
+		return configs;
+	}, [ancestorContext]);
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
 			props.onScroll?.(event);
 
-			scrollConfig.modify((v: Any) => {
+			const updateScrollPosition = (v: Any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -34,25 +49,13 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				v.x = event.contentOffset.x;
 				v.y = event.contentOffset.y;
 				return v;
-			});
+			};
 
-			if (ancestorContext?.scrollConfig) {
-				ancestorContext.scrollConfig.modify((v: Any) => {
-					"worklet";
-					if (v === null) {
-						return {
-							x: event.contentOffset.x,
-							y: event.contentOffset.y,
-							contentHeight: 0,
-							contentWidth: 0,
-							layoutHeight: 0,
-							layoutWidth: 0,
-						};
-					}
-					v.x = event.contentOffset.x;
-					v.y = event.contentOffset.y;
-					return v;
-				});
+			scrollConfig.modify(updateScrollPosition);
+
+			// Sync to ALL ancestors, not just immediate parent
+			for (const ancestorConfig of ancestorScrollConfigs) {
+				ancestorConfig.modify(updateScrollPosition);
 			}
 		},
 	});
@@ -61,7 +64,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		(width: number, height: number) => {
 			props.onContentSizeChange?.(width, height);
 
-			scrollConfig.modify((v: Any) => {
+			const updateContentSize = (v: Any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -76,24 +79,12 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				v.contentWidth = width;
 				v.contentHeight = height;
 				return v;
-			});
-			if (ancestorContext?.scrollConfig) {
-				ancestorContext.scrollConfig.modify((v: Any) => {
-					"worklet";
-					if (v === null) {
-						return {
-							x: 0,
-							y: 0,
-							layoutHeight: 0,
-							layoutWidth: 0,
-							contentWidth: width,
-							contentHeight: height,
-						};
-					}
-					v.contentWidth = width;
-					v.contentHeight = height;
-					return v;
-				});
+			};
+
+			scrollConfig.modify(updateContentSize);
+
+			for (const ancestorConfig of ancestorScrollConfigs) {
+				ancestorConfig.modify(updateContentSize);
 			}
 		},
 	);
@@ -102,7 +93,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		props.onLayout?.(event);
 		const { width, height } = event.nativeEvent.layout;
 
-		scrollConfig.modify((v: Any) => {
+		const updateLayout = (v: Any) => {
 			"worklet";
 			if (v === null) {
 				return {
@@ -117,24 +108,12 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 			v.layoutHeight = height;
 			v.layoutWidth = width;
 			return v;
-		});
-		if (ancestorContext?.scrollConfig) {
-			ancestorContext.scrollConfig.modify((v: Any) => {
-				"worklet";
-				if (v === null) {
-					return {
-						x: 0,
-						y: 0,
-						contentHeight: 0,
-						contentWidth: 0,
-						layoutHeight: height,
-						layoutWidth: width,
-					};
-				}
-				v.layoutHeight = height;
-				v.layoutWidth = width;
-				return v;
-			});
+		};
+
+		scrollConfig.modify(updateLayout);
+
+		for (const ancestorConfig of ancestorScrollConfigs) {
+			ancestorConfig.modify(updateLayout);
 		}
 	});
 

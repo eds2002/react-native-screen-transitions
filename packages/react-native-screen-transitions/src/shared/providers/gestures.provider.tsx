@@ -28,11 +28,6 @@ export interface GestureContextType {
 	gestureEnabled: boolean;
 }
 
-/**
- * Provider that creates gesture handling for a screen.
- * When gestures are enabled, wraps children in GestureDetector and provides context.
- * When disabled, renders children directly without the gesture provider.
- */
 export const {
 	ScreenGestureProvider,
 	useScreenGestureContext: useGestureContext,
@@ -61,23 +56,13 @@ export const {
 		gestureEnabled: hasGestures,
 	};
 
-	const content = <View style={styles.container}>{children}</View>;
-
 	return {
 		value,
-		children: ({ ScreenGestureProvider }) => {
-			// ALWAYS wrap with ScreenGestureProvider so children get THIS screen's context
-			// (not ancestor's). Otherwise scrollables would use ancestor's nativeGesture
-			// which competes with ancestor's panGesture.
-			if (!hasGestures) {
-				return <ScreenGestureProvider>{content}</ScreenGestureProvider>;
-			}
-			return (
-				<ScreenGestureProvider>
-					<GestureDetector gesture={panGesture}>{content}</GestureDetector>
-				</ScreenGestureProvider>
-			);
-		},
+		children: (
+			<GestureDetector gesture={panGesture}>
+				<View style={styles.container}>{children}</View>
+			</GestureDetector>
+		),
 	};
 });
 
