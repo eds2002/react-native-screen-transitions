@@ -19,6 +19,7 @@ export default {
 };
 
 export { useScreenAnimation } from "./hooks/animation/use-screen-animation";
+export { useScreenGesture } from "./hooks/gestures/use-screen-gesture";
 
 export type {
 	AnimationConfig,

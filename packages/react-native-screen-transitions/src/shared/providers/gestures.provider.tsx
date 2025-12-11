@@ -21,6 +21,7 @@ export type ScrollConfig = {
 
 export interface GestureContextType {
 	panGesture: GestureType;
+	panGestureRef: React.MutableRefObject<GestureType | undefined>;
 	nativeGesture: GestureType;
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	gestureAnimationValues: GestureStoreMap;
@@ -41,7 +42,7 @@ export const {
 
 	const hasGestures = current.options.gestureEnabled === true;
 
-	const { panGesture, nativeGesture, gestureAnimationValues } =
+	const { panGesture, panGestureRef, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
 			scrollConfig,
 			ancestorContext,
@@ -49,6 +50,7 @@ export const {
 
 	const value: GestureContextType = {
 		panGesture,
+		panGestureRef,
 		scrollConfig,
 		nativeGesture,
 		gestureAnimationValues,

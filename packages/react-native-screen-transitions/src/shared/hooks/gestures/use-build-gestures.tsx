@@ -1,5 +1,5 @@
 import { StackActions } from "@react-navigation/native";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	Gesture,
@@ -48,6 +48,7 @@ export const useBuildGestures = ({
 	ancestorContext,
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
+	panGestureRef: React.MutableRefObject<GestureType | undefined>;
 	nativeGesture: GestureType;
 	gestureAnimationValues: GestureStoreMap;
 } => {
@@ -62,6 +63,9 @@ export const useBuildGestures = ({
 	const gestureOffsetState = useSharedValue<GestureOffsetState>(
 		GestureOffsetState.PENDING,
 	);
+
+	// Ref for external gesture coordination (e.g., swipeable lists)
+	const panGestureRef = useRef<GestureType | undefined>(undefined);
 
 	const gestureAnimationValues = GestureStore.getRouteGestures(
 		current.route.key,
@@ -330,6 +334,7 @@ export const useBuildGestures = ({
 	// so the pan gesture MUST be stable or children will reference stale objects
 	return useMemo(() => {
 		const panGesture = Gesture.Pan()
+			.withRef(panGestureRef)
 			.enabled(gestureEnabled)
 			.manualActivation(true)
 			.onTouchesDown(onTouchesDown)
@@ -366,6 +371,7 @@ export const useBuildGestures = ({
 
 		return {
 			panGesture,
+			panGestureRef,
 			nativeGesture,
 			gestureAnimationValues,
 		};
