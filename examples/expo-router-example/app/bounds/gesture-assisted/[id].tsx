@@ -6,9 +6,10 @@ import Page from "@/components/page";
 
 export default function GestureBoundsScreen() {
 	const { id } = useLocalSearchParams();
+
 	return (
 		<Transition.View
-			styleId={`gesture-bounds-${id.toString()}`}
+			sharedBoundTag={`gesture-bounds-${id.toString()}`}
 			style={{ flex: 1 }}
 		>
 			<Page

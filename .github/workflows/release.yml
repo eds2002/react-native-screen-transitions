@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-      packages: write
+      id-token: write # Required for npm provenance / trusted publishing
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,6 +23,15 @@ jobs:
         with:
           bun-version: 1.2.20
 
+      - name: Setup Node (for npm provenance)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Update npm (trusted publishing requires 11.5.1+)
+        run: npm install -g npm@latest
+
       - name: Install deps
         run: bun install --frozen-lockfile
 
@@ -30,10 +39,18 @@ jobs:
         run: bun run build
 
       - name: Version or Publish via Changesets
+        id: changesets
         uses: changesets/action@v1
         with:
           publish: "bun run changeset:publish"
           title: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          NPM_CONFIG_PROVENANCE: true
+
+      - name: Create v* tag
+        if: steps.changesets.outputs.published == 'true'
+        run: |
+          VERSION=$(jq -r '.[0].version' <<< '${{ steps.changesets.outputs.publishedPackages }}')
+          git tag "v${VERSION}"
+          git push origin "v${VERSION}"

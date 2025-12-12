@@ -18,32 +18,32 @@ export default function PresetsLayout() {
 				name="slide-from-top"
 				options={{
 					title: "Slide From Top",
-					...Transition.presets.SlideFromTop(),
+					...Transition.Presets.SlideFromTop(),
 				}}
 			/>
 			<Stack.Screen
 				name="zoom-in"
-				options={{ title: "Zoom In", ...Transition.presets.ZoomIn() }}
+				options={{ title: "Zoom In", ...Transition.Presets.ZoomIn() }}
 			/>
 			<Stack.Screen
 				name="slide-from-bottom"
 				options={{
 					title: "Slide From Bottom",
-					...Transition.presets.SlideFromBottom(),
+					...Transition.Presets.SlideFromBottom(),
 				}}
 			/>
 			<Stack.Screen
 				name="draggable-card"
 				options={{
 					title: "Draggable Card",
-					...Transition.presets.DraggableCard(),
+					...Transition.Presets.DraggableCard(),
 				}}
 			/>
 			<Stack.Screen
 				name="elastic-card"
 				options={{
 					title: "Elastic Card",
-					...Transition.presets.ElasticCard(),
+					...Transition.Presets.ElasticCard(),
 				}}
 			/>
 		</Stack>

@@ -2,29 +2,31 @@ name: Checks
 on:
   pull_request:
     types: [opened, synchronize]
+  push:
+    branches: [main]
 
 jobs:
   checks:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-    - uses: oven-sh/setup-bun@v2
-      with:
-        bun-version: latest
-        registries: |
-          https://registry.npmjs.org/
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.2.20
 
-    - name: Install dependencies
-      run: bun install
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
 
-    - name: Lint
-      run: bun run lint
-      working-directory: packages/react-native-screen-transitions
+      - name: Lint
+        run: bun run lint
 
-    - name: Build packages
-      run: bun run build
+      - name: Typecheck
+        run: bun run typecheck
 
-    - name: Run tests
-      run: bun test
+      - name: Build packages
+        run: bun run build
+
+      - name: Run tests
+        run: bun test

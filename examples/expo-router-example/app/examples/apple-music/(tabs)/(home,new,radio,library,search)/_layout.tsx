@@ -1,9 +1,14 @@
+import { useGlobalSearchParams } from "expo-router";
 import { useMemo } from "react";
 import Transition from "react-native-screen-transitions";
 import { Footer } from "@/components/footer";
 import { Stack } from "@/layouts/stack";
 
 const Layout = ({ segment }: { segment: string }) => {
+	const { sharedId } = useGlobalSearchParams<{
+		sharedId: string;
+	}>();
+
 	const rootScreen = useMemo(() => {
 		switch (segment) {
 			case "(home)":
@@ -59,7 +64,9 @@ const Layout = ({ segment }: { segment: string }) => {
 				<Stack.Screen
 					name="[id]"
 					options={{
-						...Transition.presets.SharedAppleMusic(),
+						...Transition.Presets.SharedAppleMusic({
+							sharedBoundTag: sharedId,
+						}),
 					}}
 				/>
 			</Stack>

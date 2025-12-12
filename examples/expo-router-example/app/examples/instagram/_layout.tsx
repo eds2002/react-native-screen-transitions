@@ -1,7 +1,9 @@
+import { useGlobalSearchParams } from "expo-router";
 import Transition from "react-native-screen-transitions";
 import { Stack } from "@/layouts/stack";
 
 export default function StyleIdLayout() {
+	const { sharedBoundId } = useGlobalSearchParams<{ sharedBoundId: string }>();
 	return (
 		<Stack>
 			<Stack.Screen
@@ -11,7 +13,9 @@ export default function StyleIdLayout() {
 			<Stack.Screen
 				name="[id]"
 				options={{
-					...Transition.presets.SharedIGImage(),
+					...Transition.Presets.SharedIGImage({
+						sharedBoundTag: sharedBoundId,
+					}),
 				}}
 			/>
 		</Stack>

@@ -22,10 +22,11 @@ export default function PresetsLayout() {
 					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: "vertical",
-					screenStyleInterpolator: ({ progress, focused, bounds }) => {
+					screenStyleInterpolator: ({ focused, bounds }) => {
 						"worklet";
 						if (focused) {
 							const transform = bounds({
+								id: "page-transition",
 								method: "size",
 								space: "absolute",
 								target: "fullscreen",
@@ -49,8 +50,8 @@ export default function PresetsLayout() {
 						return {};
 					},
 					transitionSpec: {
-						open: Transition.specs.DefaultSpec,
-						close: Transition.specs.DefaultSpec,
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
 					},
 				}}
 			/>

@@ -1,8 +1,11 @@
+import { useGlobalSearchParams } from "expo-router";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { Stack } from "@/layouts/stack";
 
 export default function StyleIdLayout() {
+	const { id } = useGlobalSearchParams<{ id: string }>();
+
 	return (
 		<Stack>
 			<Stack.Screen
@@ -22,10 +25,11 @@ export default function StyleIdLayout() {
 						bounds,
 						progress,
 						focused,
-						activeBoundId,
 						next,
 					}) => {
 						"worklet";
+
+						const ID = id; // The sharedBoundTag from params
 
 						const x = interpolate(
 							focused
@@ -45,26 +49,15 @@ export default function StyleIdLayout() {
 						);
 
 						if (focused) {
-							/**
-							 * Rather than animating the bound itself, we animate the entire screen.
-							 * `bounds(activeBoundId).content()` provides the correct styles for animating `contentStyle` instead of the bound.
-							 */
 							const focusedBoundStyles = bounds({
+								id: ID,
 								method: "content",
 								anchor: "top",
 								scaleMode: "uniform",
 							});
 
-							/**
-							 * A little tiny detail is the mask effect, here's why we're using the following modifiers:
-							 *
-							 * .absolute() - The mask is not constrained by the parent and has access to the entire screen.
-							 *
-							 * .size() - The mask has no set width / height, using a transform animation wouldn't make much sense here + by using size, we can animate the border radius as well.
-							 *
-							 * .toFullscreen() - We're using styleId to animate the mask, styleId's are not stored in the bounds store.
-							 */
 							const focusMaskStyles = bounds({
+								id: ID,
 								space: "absolute",
 								target: "fullscreen",
 								method: "size",
@@ -86,14 +79,8 @@ export default function StyleIdLayout() {
 							};
 						}
 
-						/**
-						 * The bounds helper by default will aniamte the transform properties, however it does not take account for the gesture.
-						 *
-						 * The reason is because gestures can be modified to adjust for certain looks. In that case, you would want to pass the gesture params to the gestures modifier.
-						 *
-						 * This syncs the gestures from the next screen onto this screen, giving us that shared look we're chasing.
-						 */
 						const unfocusedBound = bounds({
+							id: ID,
 							gestures: {
 								x,
 								y,
@@ -108,12 +95,12 @@ export default function StyleIdLayout() {
 									},
 								],
 							},
-							[activeBoundId]: unfocusedBound,
+							[ID]: unfocusedBound,
 						};
 					},
 					transitionSpec: {
-						open: Transition.specs.DefaultSpec,
-						close: Transition.specs.DefaultSpec,
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
 					},
 				}}
 			/>

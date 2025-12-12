@@ -1,31 +1,29 @@
 {
-	"private": true,
-	"workspaces": {
-		"packages": [
-			"packages/*",
-			"examples/*"
-		],
-		"catalog": {
-			"typescript": "~5.8.3"
-		}
-	},
-	"scripts": {
-		"e2e": "maestro test e2e/maestro/flows ",
-		"clean": "lerna run clean && rm -rf node_modules && rm -rf bun.lockb",
-		"build": "lerna run prepack",
-		"publish": "lerna publish from-package",
-		"release": "bun run build && bun run changeset:publish",
-		"changeset": "changeset",
-		"changeset:version": "changeset version",
-		"changeset:publish": "changeset publish"
-	},
-	"devDependencies": {
-		"@changesets/changelog-github": "^0.5.0",
-		"@changesets/cli": "^2.27.7",
-		"@biomejs/biome": "2.1.2",
-		"@lerna-lite/cli": "^4.7.0",
-		"@lerna-lite/publish": "^4.7.0",
-		"@lerna-lite/run": "^4.7.0",
-		"@types/bun": "^1.2.19"
-	}
+  "private": true,
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "examples/*",
+      "apps/*"
+    ],
+    "catalog": {
+      "typescript": "~5.8.3"
+    }
+  },
+  "scripts": {
+    "clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
+    "build": "bun run --cwd packages/react-native-screen-transitions build",
+    "lint": "biome check packages/react-native-screen-transitions/src",
+    "typecheck": "tsc --noEmit -p packages/react-native-screen-transitions/tsconfig.json",
+    "release": "bun run build && bun run changeset:publish",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.5",
+    "@changesets/changelog-github": "^0.5.0",
+    "@changesets/cli": "^2.27.7",
+    "@types/bun": "^1.2.19"
+  }
 }

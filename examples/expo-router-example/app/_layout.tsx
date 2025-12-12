@@ -41,7 +41,7 @@ export default function RootLayout() {
 					options={{
 						headerShown: false,
 						enableTransitions: true,
-						...Transition.presets.SlideFromTop(),
+						...Transition.Presets.SlideFromTop(),
 					}}
 				/>
 
@@ -104,41 +104,33 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
 				<Stack.Screen
 					name="examples/palette-profile/[color]"
-					options={{
+					options={({ route: { params } }: any) => ({
 						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: ["horizontal", "vertical"],
-						screenStyleInterpolator: ({
-							bounds,
-							activeBoundId,
-							focused,
-							progress,
-						}) => {
+						meta: { scalesOthers: true },
+						screenStyleInterpolator: ({ bounds, focused, progress }) => {
 							"worklet";
 
 							const transformBounds = bounds({
-								method: "size",
-								scaleMode: "match",
-								space: "relative",
-								anchor: "center",
+								id: params.sharedBoundTag,
+								method: "size", // <--- Use size for consistent border radius
 							});
-							const { styles } = bounds.get();
 
 							return {
-								[activeBoundId]: {
+								[params.sharedBoundTag]: {
 									...transformBounds,
 									...(focused && {
-										borderRadius: interpolate(
-											progress,
-											[0, 1],
-											[(styles.borderRadius as number) ?? 0, 12],
+										borderRadius: bounds.interpolateStyle(
+											params.sharedBoundTag,
+											"borderRadius",
 										),
 									}),
 								},
@@ -149,14 +141,14 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
-					}}
+					})}
 				/>
 				<Stack.Screen
 					name="examples/palette-profile/profile"
-					options={{
+					options={({ route: { params } }: any) => ({
 						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: "bidirectional",
@@ -164,6 +156,7 @@ export default function RootLayout() {
 							"worklet";
 
 							const transformBounds = bounds({
+								id: params?.sharedBoundTag ?? "profile",
 								space: "relative",
 								method: "transform",
 							});
@@ -180,10 +173,10 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
-					}}
+					})}
 				/>
 				<Stack.Screen
 					name="examples/gallery-modal"
@@ -295,15 +288,15 @@ export default function RootLayout() {
 							};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
 				<Stack.Screen
 					name="examples/settings-screen"
 					options={{
-						...Transition.presets.SlideFromTop(),
+						...Transition.Presets.SlideFromTop(),
 						transitionSpec: {
 							open: {
 								duration: 350,
@@ -358,8 +351,8 @@ export default function RootLayout() {
 							return {};
 						},
 						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
+							open: Transition.Specs.DefaultSpec,
+							close: Transition.Specs.DefaultSpec,
 						},
 					}}
 				/>
@@ -371,366 +364,6 @@ export default function RootLayout() {
 				/>
 				<Stack.Screen
 					name="examples/instagram"
-					options={{
-						headerShown: false,
-					}}
-				/>
-				{/*
-        ==============================
-        E2E ROUTES
-        ==============================
-        */}
-				<Stack.Screen
-					name="e2e/navigation"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: "horizontal",
-						screenStyleInterpolator: ({
-							progress,
-							layouts: {
-								screen: { width },
-							},
-						}) => {
-							"worklet";
-
-							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-
-							return {
-								contentStyle: {
-									transform: [{ translateX: x }],
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/gestures/all-gesture-directions"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: [
-							"horizontal",
-							"vertical",
-							"horizontal-inverted",
-							"vertical-inverted",
-						],
-						screenStyleInterpolator: ({
-							progress,
-							current,
-							layouts: {
-								screen: { width, height },
-							},
-							focused,
-						}) => {
-							"worklet";
-
-							const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.75]);
-							const gestureX = interpolate(
-								current.gesture.normalizedX,
-								[-1, 0, 1],
-								[-width, 0, width],
-							);
-
-							const y = interpolate(
-								current.gesture.normalizedY,
-								[-1, 0, 1],
-								[-height, 0, height],
-							);
-
-							return {
-								contentStyle: {
-									transform: [
-										{ scale },
-										{ translateX: gestureX },
-										{ translateY: y },
-									],
-									...(focused && {
-										backgroundColor: "lightblue",
-									}),
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/gestures/bi-directional"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: [
-							"horizontal",
-							"vertical",
-							"horizontal-inverted",
-							"vertical-inverted",
-						],
-						screenStyleInterpolator: ({
-							progress,
-							current,
-							layouts: {
-								screen: { width, height },
-							},
-							focused,
-						}) => {
-							"worklet";
-
-							const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.75]);
-							const gestureX = interpolate(
-								current.gesture.normalizedX,
-								[-1, 0, 1],
-								[-width, 0, width],
-							);
-
-							const y = interpolate(
-								current.gesture.normalizedY,
-								[-1, 0, 1],
-								[-height, 0, height],
-							);
-
-							return {
-								contentStyle: {
-									transform: [
-										{ scale },
-										{ translateX: gestureX },
-										{ translateY: y },
-									],
-									...(focused && {
-										backgroundColor: "lightblue",
-									}),
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/gestures/gesture-dismissal"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: ["vertical"],
-						screenStyleInterpolator: ({
-							progress,
-							current,
-							layouts: {
-								screen: { height, width },
-							},
-						}) => {
-							"worklet";
-
-							const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
-
-							const gestureX = interpolate(
-								current.gesture.normalizedX,
-								[-1, 0, 1],
-								[-width, 0, width],
-							);
-
-							const gestureY = interpolate(
-								current.gesture.normalizedY,
-								[-1, 0, 1],
-								[-height, 0, height],
-							);
-
-							return {
-								contentStyle: {
-									transform: [
-										{ translateY: y },
-										{ translateX: gestureX },
-										{ translateY: gestureY },
-									],
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/gestures-scrollables/vertical"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: ["vertical", "vertical-inverted"],
-						screenStyleInterpolator: ({
-							progress,
-							layouts: {
-								screen: { height },
-							},
-						}) => {
-							"worklet";
-
-							const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
-
-							return {
-								contentStyle: {
-									transform: [{ translateY: y }],
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/gestures-scrollables/horizontal"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: ["horizontal", "horizontal-inverted"],
-						screenStyleInterpolator: ({
-							progress,
-							layouts: {
-								screen: { width },
-							},
-						}) => {
-							"worklet";
-
-							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
-
-							return {
-								contentStyle: {
-									transform: [{ translateX: x }],
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/gestures-scrollables/nested"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: "vertical",
-						screenStyleInterpolator: ({
-							progress,
-							layouts: {
-								screen: { height },
-							},
-						}) => {
-							"worklet";
-
-							const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
-
-							return {
-								contentStyle: {
-									transform: [{ translateY: y }],
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/gesture-edges/all-edges"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: "bidirectional",
-						gestureActivationArea: "edge",
-						screenStyleInterpolator: ({
-							progress,
-							layouts: {
-								screen: { height },
-							},
-						}) => {
-							"worklet";
-
-							const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
-
-							return {
-								contentStyle: {
-									transform: [{ translateY: y }],
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/gesture-edges/custom-edges"
-					options={{
-						enableTransitions: true,
-						gestureEnabled: true,
-						gestureDirection: ["horizontal", "vertical"],
-						gestureActivationArea: {
-							left: "edge",
-							top: "screen",
-						},
-						screenStyleInterpolator: ({
-							progress,
-							layouts: {
-								screen: { height },
-							},
-						}) => {
-							"worklet";
-
-							const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
-
-							return {
-								contentStyle: {
-									transform: [{ translateY: y }],
-								},
-							};
-						},
-						transitionSpec: {
-							open: Transition.specs.DefaultSpec,
-							close: Transition.specs.DefaultSpec,
-						},
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/bounds/anchor-point"
-					options={{
-						headerShown: false,
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/bounds/custom-bounds"
-					options={{
-						headerShown: false,
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/bounds/longer-flow"
-					options={{
-						headerShown: false,
-					}}
-				/>
-				<Stack.Screen
-					name="e2e/nested"
-					options={{
-						presentation: "modal",
-						headerShown: false,
-					}}
-				/>
-				<Stack.Screen
-					name="examples/apple-music/(tabs)"
 					options={{
 						headerShown: false,
 					}}

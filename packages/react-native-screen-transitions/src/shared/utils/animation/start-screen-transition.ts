@@ -1,0 +1,64 @@
+import { runOnJS } from "react-native-reanimated";
+import type { AnimationStoreMap } from "../../stores/animation.store";
+import type { TransitionSpec } from "../../types/animation.types";
+import { FALSE, TRUE } from "../../types/state.types";
+import { animate } from "./animate";
+
+interface StartScreenTransitionProps {
+	target: "open" | "close";
+	spec?: TransitionSpec;
+	onAnimationFinish?: (finished: boolean) => void;
+	animations: AnimationStoreMap;
+	/** Optional initial velocity for spring-based progress (units: progress/sec). */
+	initialVelocity?: number;
+}
+
+export const startScreenTransition = ({
+	target,
+	spec,
+	onAnimationFinish,
+	animations,
+	initialVelocity,
+}: StartScreenTransitionProps) => {
+	"worklet";
+	const value = target === "open" ? 1 : 0;
+	const config = target === "open" ? spec?.open : spec?.close;
+
+	const isSpringConfig =
+		!!config && !("duration" in config) && !("easing" in config);
+
+	const effectiveConfig =
+		isSpringConfig && typeof initialVelocity === "number"
+			? { ...config, velocity: initialVelocity }
+			: config;
+
+	const { progress, animating, closing } = animations;
+
+	if (target === "close") {
+		closing.set(TRUE);
+	}
+
+	if (!config) {
+		animating.set(FALSE);
+		progress.set(value);
+
+		if (onAnimationFinish) {
+			runOnJS(onAnimationFinish)(true);
+		}
+		return;
+	}
+
+	animating.set(TRUE); //<-- Do not move this into the callback
+	progress.set(
+		animate(value, effectiveConfig, (finished) => {
+			"worklet";
+			if (!finished) return;
+
+			if (onAnimationFinish) {
+				runOnJS(onAnimationFinish)(finished);
+			}
+
+			animating.set(FALSE);
+		}),
+	);
+};

@@ -16,8 +16,19 @@ body:
       label: Version
       description: What version of the library are you using?
       options:
-        - v3 (beta)
+        - v3
         - v2
+      default: 0
+    validations:
+      required: true
+  - type: dropdown
+    id: stack
+    attributes:
+      label: Stack
+      description: Which stack navigator are you using?
+      options:
+        - Blank Stack
+        - Native Stack
       default: 0
     validations:
       required: true

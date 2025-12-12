@@ -34,3 +34,6 @@ lerna-debug.log*
 
 # NPM
 .npmrc
+
+# Misc
+CONVENTIONS.md

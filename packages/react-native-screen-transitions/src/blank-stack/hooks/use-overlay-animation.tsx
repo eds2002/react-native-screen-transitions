@@ -1,0 +1,86 @@
+import { useMemo } from "react";
+import { useWindowDimensions } from "react-native";
+import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useSharedValueState } from "../../shared/hooks/reanimated/use-shared-value-state";
+import { useKeys } from "../../shared/providers/keys.provider";
+import { AnimationStore } from "../../shared/stores/animation.store";
+import type { OverlayInterpolationProps } from "../../shared/types/animation.types";
+import { useStackNavigationContext } from "../utils/with-stack-navigation";
+
+/**
+ * Aggregates progress values for the overlay owner and every scene that sits
+ * above it in the stack. The result can be consumed by floating overlays to
+ * drive animations that span multiple screens.
+ */
+export const useOverlayAnimation = (): {
+	overlayAnimation: DerivedValue<OverlayInterpolationProps>;
+	optimisticActiveIndex: number;
+} => {
+	const { current } = useKeys();
+	const { scenes } = useStackNavigationContext();
+	const routeKey = current?.route?.key;
+
+	const progressValues = useMemo(() => {
+		if (!routeKey) {
+			return [];
+		}
+
+		const overlayIndex = scenes.findIndex(
+			(scene) => scene.route.key === routeKey,
+		);
+
+		if (overlayIndex === -1) {
+			return [];
+		}
+
+		return scenes.slice(overlayIndex).map((scene) => {
+			return AnimationStore.getAll(scene.route.key);
+		});
+	}, [routeKey, scenes]);
+
+	const accumulatedProgress = useDerivedValue(() => {
+		"worklet";
+
+		let total = 0;
+
+		for (let i = 0; i < progressValues.length; i += 1) {
+			total += progressValues[i].progress.value;
+		}
+
+		return total;
+	}, [progressValues]);
+
+	const optimisticActiveIndex = useSharedValueState(
+		useDerivedValue(() => {
+			"worklet";
+
+			const activeIndex = progressValues.length - 1;
+
+			const isOneDismissing = Number(
+				progressValues.some((value) => value.closing.value > 0),
+			);
+
+			const optimisticIndex = activeIndex - isOneDismissing;
+
+			return optimisticIndex;
+		}),
+	);
+
+	const screen = useWindowDimensions();
+
+	const insets = useSafeAreaInsets();
+
+	const overlayAnimation = useDerivedValue<OverlayInterpolationProps>(() => ({
+		progress: accumulatedProgress.value,
+		layouts: {
+			screen,
+		},
+		insets,
+	}));
+
+	return {
+		overlayAnimation,
+		optimisticActiveIndex,
+	};
+};

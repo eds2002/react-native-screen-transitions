@@ -1,0 +1,70 @@
+appId: "com.eds2002.e2e"
+---
+
+- launchApp
+
+# ======== NAVIGATION =========
+# Basic push/back
+- scrollUntilVisible:
+    element:
+      id: "e2e-navigation"
+- tapOn:
+    id: "e2e-navigation"
+- assertVisible: "Back"
+- tapOn: "Back"
+- assertVisible:
+    id: "HOME_PAGE"
+
+# ======== GESTURES =========
+# Horizontal dismiss
+- scrollUntilVisible:
+    element:
+      id: "e2e-gesture-directions"
+- tapOn:
+    id: "e2e-gesture-directions"
+- assertVisible: "All Gesture Directions"
+- swipe:
+    start: "10%, 50%"
+    end: "70%, 50%"
+    duration: 100
+- assertVisible:
+    id: "HOME_PAGE"
+
+# ======== SCROLLABLES =========
+# Vertical scrollable dismiss
+- scrollUntilVisible:
+    element:
+      id: "e2e-scrollable-vertical"
+- tapOn:
+    id: "e2e-scrollable-vertical"
+- assertVisible: "Item 1"
+- swipe:
+    start: "50%, 10%"
+    end: "50%, 90%"
+    duration: 500
+- assertVisible:
+    id: "HOME_PAGE"
+
+# ======== BOUNDS =========
+# Simple bound transition (A → B → back)
+- scrollUntilVisible:
+    element:
+      id: "e2e-bounds-longer-flow"
+    direction: DOWN
+    speed: 5000
+- tapOn:
+    id: "e2e-bounds-longer-flow"
+- assertVisible:
+    id: "a"
+- tapOn:
+    id: "a-bound"
+- assertVisible:
+    id: "b"
+- tapOn:
+    id: "back-icon"
+- assertVisible:
+    id: "a"
+- tapOn:
+    id: "back-icon"
+- assertVisible:
+    id: "HOME_PAGE"

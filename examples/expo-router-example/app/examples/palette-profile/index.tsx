@@ -30,6 +30,9 @@ const ProfileSection = () => {
 				onPress={() => {
 					router.push({
 						pathname: "/examples/palette-profile/profile",
+						params: {
+							sharedBoundTag: "profile",
+						},
 					});
 				}}
 			>
@@ -45,7 +48,7 @@ const ProfileSection = () => {
 	);
 };
 
-const ColorItem = ({ color, index }: { color: string; index: number }) => {
+const ColorItem = ({ color }: { color: string; index: number }) => {
 	const screenProps = useScreenAnimation();
 	const scale = useSharedValue(1);
 
@@ -70,12 +73,13 @@ const ColorItem = ({ color, index }: { color: string; index: number }) => {
 	useAnimatedReaction(
 		() => screenProps.value,
 		(props) => {
-			const forRoute = "examples/palette-profile/[color]";
-			if (props.next?.route.name !== forRoute) return;
+			if (!props.next?.meta?.scalesOthers) return;
+
 			if (props.next?.closing === undefined) {
 				scale.value = withSpring(1);
 				return;
 			}
+
 			if (props.next.closing === 0) {
 				scale.value = withTiming(0, {
 					duration: 1000,
