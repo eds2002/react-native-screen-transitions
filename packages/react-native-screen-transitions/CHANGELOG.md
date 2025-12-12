@@ -1,5 +1,47 @@
 # Change Log
 
+## 3.0.0
+
+### Major Changes
+
+- [`04cafc1`](https://github.com/eds2002/react-native-screen-transitions/commit/04cafc1c1de5f7616d3179c3c607fcbc47bcb5d7) - Introduce the v3 beta with the new blank stack navigator, overlay channel, and the bespoke transition workflow for building custom flows.
+
+### Minor Changes
+
+- [`5ae76bb`](https://github.com/eds2002/react-native-screen-transitions/commit/5ae76bb9bb3a60087e7fadc06c66c998acad0bae) - Integrate helper hook for viewing blank stack state
+
+- [`9730dc9`](https://github.com/eds2002/react-native-screen-transitions/commit/9730dc9b2d01e8622fbe31ef607967083d7ac201) - Integrate focusedRoute for overlays
+
+- [`daab39b`](https://github.com/eds2002/react-native-screen-transitions/commit/daab39b26209cbc613374a4c80b5930099de835d) - refactors & remove useOverlayAnimation
+
+- [`4b5ff23`](https://github.com/eds2002/react-native-screen-transitions/commit/4b5ff23c0180f08452bcaa3a33b1b86530405e85) - Introduce new bounds architecture
+
+- [`6fcc868`](https://github.com/eds2002/react-native-screen-transitions/commit/6fcc8689bfa8eb8275d0ecbddd26d358482eec57) - Export useOverlayAnimation
+
+- [`75fac81`](https://github.com/eds2002/react-native-screen-transitions/commit/75fac8139cca72d84c44b95c0bb1cec79d64b2e7) - Meta options for overlays
+
+- [`a312b70`](https://github.com/eds2002/react-native-screen-transitions/commit/a312b70129e8e895d4d85f02772409266020e230) - Adds support for non pressable bounds
+
+- [`67bfbe3`](https://github.com/eds2002/react-native-screen-transitions/commit/67bfbe34d3fa4750a0864e52b4db5b3a4d46bb20) - Performance optimizations & new type exports
+
+### Patch Changes
+
+- [`eb5fec4`](https://github.com/eds2002/react-native-screen-transitions/commit/eb5fec4be082029373d641e85a9888a6b29220dd) - Release another beta patch of `react-native-screen-transitions`.
+
+- [`b5c8bc0`](https://github.com/eds2002/react-native-screen-transitions/commit/b5c8bc0f73cfa2223750402b311b6b83da63c018) - Potential memory leak
+
+- [`7608071`](https://github.com/eds2002/react-native-screen-transitions/commit/76080716b7ec13eddf94b6f55a6c0e75120427f0) - Fix memory leak
+
+- [`f389166`](https://github.com/eds2002/react-native-screen-transitions/commit/f3891668a1ec5f42d50931eaedaa356a9f53f637) - Fix entire stack rerendering due to new gestures logic
+
+- [`b5686ed`](https://github.com/eds2002/react-native-screen-transitions/commit/b5686ede836020aaa5479717c2ee2943fc3849e7) - Memory leak 2
+
+- [`873f360`](https://github.com/eds2002/react-native-screen-transitions/commit/873f3605d4ca08377366656196769471259fccf5) - New stackProgress, avoid setting gestures to non gesture defined screens, set 'none' to pointer events in already closing screens
+
+- [`e9fbace`](https://github.com/eds2002/react-native-screen-transitions/commit/e9fbace61e38a4e496cd1fe0a3c618d5620b8782) - Better handling of measure on blur
+
+- [`fe74315`](https://github.com/eds2002/react-native-screen-transitions/commit/fe74315a9fc7c63cf32939470262d8a966b7a2e3) - Fixes gesture race condition
+
 ## 3.0.0-rc.5
 
 ### Patch Changes
