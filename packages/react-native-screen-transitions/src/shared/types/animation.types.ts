@@ -21,11 +21,52 @@ export interface OverlayInterpolationProps {
 }
 
 export type ScreenTransitionState = {
+	/**
+	 * Animation progress for this screen.
+	 * - `0`: Screen is fully off-screen (entering)
+	 * - `1`: Screen is fully visible (active)
+	 *
+	 * This value animates from 0 to 1 when the screen enters,
+	 * and from 1 to 0 when it exits.
+	 */
 	progress: number;
+
+	/**
+	 * Whether this screen is in the process of being dismissed.
+	 * - `0`: Screen is opening or active
+	 * - `1`: Screen is closing/being dismissed
+	 *
+	 * Use this to trigger different animations when navigating back vs forward.
+	 */
 	closing: number;
+
+	/**
+	 * Whether this screen is currently animating.
+	 * - `0`: No animation in progress
+	 * - `1`: Animation or gesture is in progress
+	 */
 	animating: number;
+
+	/**
+	 * Live gesture values for this screen.
+	 * Contains translation (x, y), normalized values (-1 to 1),
+	 * and flags for dragging/dismissing state.
+	 */
 	gesture: GestureValues;
+
+	/**
+	 * Custom metadata passed from screen options.
+	 * Use this for conditional animation logic instead of checking route names.
+	 *
+	 * @example
+	 * // In screen options:
+	 * options={{ meta: { scalesOthers: true } }}
+	 *
+	 * // In animation logic:
+	 * if (props.next?.meta?.scalesOthers) { ... }
+	 */
 	meta?: Record<string, unknown>;
+
 	/**
 	 * The route object for this screen.
 	 *
