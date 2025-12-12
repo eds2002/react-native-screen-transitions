@@ -19,7 +19,18 @@ export type BoundEntry = {
 	styles: StyleProps;
 };
 
+export type BoundsLink = {
+	source: BoundEntry | null;
+	destination: BoundEntry | null;
+};
+
 export type BoundsAccessor = {
 	<T extends BoundsBuilderOptions>(options: T): BoundsReturnType<T>;
 	getSnapshot: (id: string, key?: string) => Snapshot | null;
+	getLink: (id: string) => BoundsLink | null;
+	interpolateStyle: (
+		id: string,
+		property: keyof StyleProps,
+		fallback?: number,
+	) => number;
 };

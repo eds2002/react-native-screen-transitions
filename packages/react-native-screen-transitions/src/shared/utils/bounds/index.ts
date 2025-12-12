@@ -11,12 +11,13 @@ import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
 } from "../../types/animation.types";
-import type { BoundsAccessor } from "../../types/bounds.types";
+import type { BoundsAccessor, BoundsLink } from "../../types/bounds.types";
 import type { Layout } from "../../types/core.types";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
 } from "./helpers/geometry";
+import { interpolateLinkStyle } from "./helpers/interpolate-style";
 import {
 	composeContentStyle,
 	composeSizeAbsolute,
@@ -207,7 +208,36 @@ export const createBounds = (
 		return BoundStore.getSnapshot(tag, key);
 	};
 
+	const getLink = (tag: string): BoundsLink | null => {
+		"worklet";
+		const link = BoundStore.getActiveLink(tag, props.current?.route.key);
+		if (!link) return null;
+		return {
+			source: link.source
+				? { bounds: link.source.bounds, styles: link.source.styles }
+				: null,
+			destination: link.destination
+				? { bounds: link.destination.bounds, styles: link.destination.styles }
+				: null,
+		};
+	};
+
+	const interpolateStyle = (
+		tag: string,
+		property: string,
+		fallback?: number,
+	): number => {
+		"worklet";
+		const link = getLink(tag);
+		const entering = !props.next;
+		return interpolateLinkStyle(link, property, props.progress, entering, {
+			fallback,
+		});
+	};
+
 	return Object.assign(boundsFunction, {
 		getSnapshot,
+		getLink,
+		interpolateStyle,
 	}) as BoundsAccessor;
 };

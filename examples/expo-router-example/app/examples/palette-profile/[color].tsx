@@ -1,5 +1,5 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { Pressable, useWindowDimensions, View } from "react-native";
+import { Pressable, useWindowDimensions } from "react-native";
 import Animated, {
 	interpolate,
 	useAnimatedStyle,

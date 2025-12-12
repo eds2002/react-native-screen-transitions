@@ -12,7 +12,7 @@ type PageType = {
 	testID?: string;
 };
 
-const tabs = ["Start", "Examples", "E2E"];
+const tabs = ["Start", "Examples"];
 
 const StartComponent = memo(() => {
 	const basics: PageType[] = [

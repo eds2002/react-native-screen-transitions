@@ -30,6 +30,9 @@ const ProfileSection = () => {
 				onPress={() => {
 					router.push({
 						pathname: "/examples/palette-profile/profile",
+						params: {
+							sharedBoundTag: "profile",
+						},
 					});
 				}}
 			>

@@ -111,34 +111,25 @@ export default function RootLayout() {
 				/>
 				<Stack.Screen
 					name="examples/palette-profile/[color]"
-					options={{
+					options={({ route: { params } }: any) => ({
 						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: ["horizontal", "vertical"],
-						screenStyleInterpolator: ({
-							bounds,
-							activeBoundId,
-							focused,
-							progress,
-						}) => {
+						screenStyleInterpolator: ({ bounds, focused, progress }) => {
 							"worklet";
 
 							const transformBounds = bounds({
-								method: "size",
-								scaleMode: "match",
-								space: "relative",
-								anchor: "center",
+								id: params.sharedBoundTag,
+								method: "size", // <--- Use size for consistent border radius
 							});
-							const { styles } = bounds.get();
 
 							return {
-								[activeBoundId]: {
+								[params.sharedBoundTag]: {
 									...transformBounds,
 									...(focused && {
-										borderRadius: interpolate(
-											progress,
-											[0, 1],
-											[(styles.borderRadius as number) ?? 0, 12],
+										borderRadius: bounds.interpolateStyle(
+											params.sharedBoundTag,
+											"borderRadius",
 										),
 									}),
 								},
@@ -152,11 +143,11 @@ export default function RootLayout() {
 							open: Transition.Specs.DefaultSpec,
 							close: Transition.Specs.DefaultSpec,
 						},
-					}}
+					})}
 				/>
 				<Stack.Screen
 					name="examples/palette-profile/profile"
-					options={{
+					options={({ route: { params } }: any) => ({
 						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: "bidirectional",
@@ -164,6 +155,7 @@ export default function RootLayout() {
 							"worklet";
 
 							const transformBounds = bounds({
+								id: params?.sharedBoundTag ?? "profile",
 								space: "relative",
 								method: "transform",
 							});
@@ -183,7 +175,7 @@ export default function RootLayout() {
 							open: Transition.Specs.DefaultSpec,
 							close: Transition.Specs.DefaultSpec,
 						},
-					}}
+					})}
 				/>
 				<Stack.Screen
 					name="examples/gallery-modal"
