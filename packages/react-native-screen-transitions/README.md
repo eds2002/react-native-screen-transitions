@@ -60,6 +60,44 @@ However, it's still a JavaScript implementation. While optimized to be as fast a
 
 Choose Native Stack if you need maximum performance and can live without overlays.
 
+### Blank Stack Philosophy
+
+The Blank Stack is intentionally **blank** - transparent screens with no default animations. Unlike platform navigators that impose iOS or Android-style transitions, the Blank Stack gives you a clean slate.
+
+**Why no defaults?**
+
+- **Full creative control** – You define exactly how screens appear, not the OS
+- **Consistency across platforms** – Same animation on iOS and Android
+- **No fighting the framework** – No need to override or disable built-in behaviors
+
+Every screen starts invisible and static. You bring it to life with your own `screenStyleInterpolator`. This encourages intentional, custom transitions rather than settling for platform defaults.
+
+Under the hood, the Blank Stack uses `react-native-screens` for native-level performance. All animation and gesture logic runs on the UI thread via Reanimated worklets.
+
+```tsx
+// A screen with no options = invisible, no animation
+<Stack.Screen name="Detail" component={DetailScreen} />
+
+// Add your own transition
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    screenStyleInterpolator: ({ progress, layouts }) => {
+      "worklet";
+      return {
+        contentStyle: {
+          opacity: progress,
+          transform: [
+            { translateY: interpolate(progress, [0, 1], [layouts.screen.height, 0]) }
+          ],
+        },
+      };
+    },
+  }}
+/>
+```
+
 ### Blank Stack Setup
 
 ```tsx
@@ -684,12 +722,6 @@ To avoid collisions with custom gesture options, some native options are renamed
 - Relies on `beforeRemove` listener to intercept navigation
 - Uses transparent modal presentation
 - Some edge cases with rapid navigation
-
----
-
-## Known Issues
-
-- **Delayed Touch Events** – There may be a noticeable delay in touch events when transitions finish. If this affects your app, consider using the Blank Stack.
 
 ---
 
