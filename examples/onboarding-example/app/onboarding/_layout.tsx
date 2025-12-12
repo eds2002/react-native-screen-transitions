@@ -49,7 +49,7 @@ type OnboardingOverlayOptions = {
 };
 
 const OnboardingOverlay = (props: BlankStackOverlayProps) => {
-	const content = props.overlayOptions as OnboardingOverlayOptions;
+	const content = props.meta as OnboardingOverlayOptions;
 	const insets = useSafeAreaInsets();
 
 	const onHandlePress = () => {
@@ -114,7 +114,7 @@ export default function OnboardingLayout() {
 					overlay: OnboardingOverlay,
 					overlayMode: "float",
 					overlayShown: true,
-					overlayOptions: {
+					meta: {
 						buttonText: "Set my username",
 						next: "/onboarding/b",
 					},
@@ -123,7 +123,7 @@ export default function OnboardingLayout() {
 			<BlankStack.Screen
 				name="b"
 				options={{
-					overlayOptions: {
+					meta: {
 						buttonText: "Set my nickname",
 						next: "/onboarding/c",
 					},
@@ -133,7 +133,7 @@ export default function OnboardingLayout() {
 			<BlankStack.Screen
 				name="c"
 				options={{
-					overlayOptions: {
+					meta: {
 						buttonText: "All set",
 						next: "/onboarding/nested/a",
 					},
@@ -143,7 +143,7 @@ export default function OnboardingLayout() {
 			<BlankStack.Screen
 				name="nested"
 				options={{
-					overlayOptions: {
+					meta: {
 						buttonText: "NESTED HOLY MOLY",
 						next: "/onboarding/nested/a",
 					},

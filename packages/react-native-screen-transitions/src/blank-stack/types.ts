@@ -81,13 +81,9 @@ export type BlankStackOverlayProps = {
 	routes: Route<string>[];
 
 	/**
-	 * Options passed to the overlay component.
+	 * Custom metadata from the focused screen's options.
 	 */
-	overlayOptions?: {
-		title?: string;
-		subtitle?: string;
-		[key: string]: unknown;
-	};
+	meta?: Record<string, unknown>;
 
 	/**
 	 * Navigation prop for the overlay.
@@ -133,15 +129,6 @@ export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
 	 * Setting this to `false` hides the overlay.
 	 */
 	overlayShown?: boolean;
-
-	/**
-	 * Options passed to the overlay component.
-	 */
-	overlayOptions?: {
-		title?: string;
-		subtitle?: string;
-		[key: string]: unknown;
-	};
 
 	/**
 	 * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.

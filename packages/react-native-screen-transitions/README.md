@@ -177,7 +177,7 @@ import { interpolate } from "react-native-reanimated";
 | ----------------------- | -------------------------------------------------------- |
 | `progress`              | Combined progress (0-2). 0=entering, 1=active, 2=exiting |
 | `stackProgress`         | Accumulated progress across entire stack (0, 1, 2, 3...) |
-| `current`               | Current screen state (progress, closing, gesture, route) |
+| `current`               | Current screen state (progress, closing, gesture, meta)  |
 | `previous`              | Previous screen state (may be undefined)                 |
 | `next`                  | Next screen state (may be undefined)                     |
 | `layouts.screen`        | Screen dimensions `{ width, height }`                    |
@@ -187,6 +187,49 @@ import { interpolate } from "react-native-reanimated";
 | `isActiveTransitioning` | Whether active screen is animating                       |
 | `isDismissing`          | Whether active screen is being dismissed                 |
 | `bounds`                | Function to access shared element positions              |
+
+### Screen State (`current`, `previous`, `next`)
+
+Each screen state contains:
+
+| Property   | Description                                        |
+| ---------- | -------------------------------------------------- |
+| `progress` | Animation progress for this screen (0 or 1)        |
+| `closing`  | Whether screen is closing (0 or 1)                 |
+| `animating`| Whether screen is currently animating (0 or 1)     |
+| `gesture`  | Gesture values (x, y, normalizedX, normalizedY, etc.) |
+| `meta`     | Custom metadata from screen options                |
+
+### Using `meta` for Conditional Logic
+
+Use `meta` to pass custom data for conditional animation logic. This is more robust than checking route names:
+
+```tsx
+// In screen options
+<Stack.Screen
+  name="Detail"
+  options={{
+    meta: { scalesOthers: true },
+    screenStyleInterpolator: ({ progress }) => {
+      "worklet";
+      return { contentStyle: { opacity: progress } };
+    },
+  }}
+/>
+
+// In a component on a previous screen
+const animation = useScreenAnimation();
+
+useAnimatedReaction(
+  () => animation.value,
+  (props) => {
+    // React to next screen's meta
+    if (props.next?.meta?.scalesOthers) {
+      scale.value = withTiming(0);
+    }
+  }
+);
+```
 
 ### Return Value
 
@@ -281,6 +324,39 @@ screenStyleInterpolator: ({ bounds }) => {
 const raw = bounds({ id: "avatar", method: "transform", raw: true });
 // { translateX, translateY, scaleX, scaleY }
 ```
+
+### Bounds Utilities
+
+Access additional bounds data for custom animations:
+
+```tsx
+screenStyleInterpolator: ({ bounds, progress }) => {
+  "worklet";
+
+  // Get the active link between source and destination
+  const link = bounds.getLink("avatar");
+  // { source: { bounds, styles }, destination: { bounds, styles } }
+
+  // Interpolate a style property (e.g., borderRadius) between source and destination
+  const borderRadius = bounds.interpolateStyle("avatar", "borderRadius");
+
+  // Or access raw values for custom logic
+  const sourceBorderRadius = link?.source?.styles?.borderRadius ?? 0;
+
+  return {
+    avatar: {
+      ...bounds({ id: "avatar" }),
+      borderRadius,
+    },
+  };
+};
+```
+
+| Method                                     | Description                                           |
+| ------------------------------------------ | ----------------------------------------------------- |
+| `bounds.getLink(id)`                       | Get source/destination bounds and styles for a tag    |
+| `bounds.interpolateStyle(id, prop, fallback?)` | Interpolate a numeric style between source and dest   |
+| `bounds.getSnapshot(id, key)`              | Manual lookup by specific screen key (edge cases)     |
 
 ---
 
@@ -399,7 +475,7 @@ An overlay that moves with screen content:
 | `focusedRoute`     | Currently focused route                                      |
 | `focusedIndex`     | Index of focused screen                                      |
 | `routes`           | All routes in the stack                                      |
-| `overlayOptions`   | Custom options passed from screen                            |
+| `meta`             | Custom metadata passed from screen options                   |
 | `navigation`       | Navigation prop                                              |
 | `overlayAnimation` | Animation values with `progress` accumulated across stack    |
 | `screenAnimation`  | Animation values for the current focused screen              |
@@ -410,7 +486,7 @@ An overlay that moves with screen content:
 <Stack.Screen
   options={{
     overlay: MyOverlay,
-    overlayOptions: {
+    meta: {
       title: "Step 1",
       showProgress: true,
     },
@@ -418,8 +494,8 @@ An overlay that moves with screen content:
 />;
 
 // In overlay
-const MyOverlay = ({ overlayOptions }) => {
-  return <Text>{overlayOptions.title}</Text>;
+const MyOverlay = ({ meta }) => {
+  return <Text>{meta?.title}</Text>;
 };
 ```
 
@@ -590,6 +666,7 @@ All standard `@react-navigation/native-stack` options are available, plus:
 | `gestureResponseDistance` | `number`                                 | Distance threshold for gesture                                     |
 | `gestureDrivesProgress`   | `boolean`                                | Whether gesture drives animation                                   |
 | `gestureActivationArea`   | `GestureActivationArea`                  | Where gesture can start                                            |
+| `meta`                    | `Record<string, unknown>`                | Custom metadata for conditional animation logic                    |
 
 ### Renamed Native Options
 

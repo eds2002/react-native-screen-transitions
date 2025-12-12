@@ -28,11 +28,13 @@ type BuiltState = {
 	animating: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: RouteProp<ParamListBase>;
+	meta?: Record<string, unknown>;
 	unwrapped: ScreenTransitionState;
 };
 
 const createScreenTransitionState = (
 	route: RouteProp<ParamListBase>,
+	meta?: Record<string, unknown>,
 ): ScreenTransitionState => ({
 	progress: 0,
 	closing: 0,
@@ -47,6 +49,7 @@ const createScreenTransitionState = (
 		direction: null,
 	},
 	route,
+	meta,
 });
 
 const unwrapInto = (s: BuiltState): ScreenTransitionState => {
@@ -62,6 +65,7 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	out.gesture.isDismissing = s.gesture.isDismissing.value;
 	out.gesture.isDragging = s.gesture.isDragging.value;
 	out.gesture.direction = s.gesture.direction.value;
+	out.meta = s.meta;
 
 	return out;
 };
@@ -70,6 +74,7 @@ const useBuildScreenTransitionState = (
 	descriptor: TransitionDescriptor | undefined,
 ): BuiltState | undefined => {
 	const key = descriptor?.route.key;
+	const meta = descriptor?.options?.meta;
 
 	return useMemo(() => {
 		if (!key) return undefined;
@@ -80,9 +85,10 @@ const useBuildScreenTransitionState = (
 			animating: AnimationStore.getAnimation(key, "animating"),
 			gesture: GestureStore.getRouteGestures(key),
 			route: descriptor.route,
-			unwrapped: createScreenTransitionState(descriptor.route),
+			meta,
+			unwrapped: createScreenTransitionState(descriptor.route, meta),
 		};
-	}, [key, descriptor?.route]);
+	}, [key, descriptor?.route, meta]);
 };
 
 const hasTransitionsEnabled = (

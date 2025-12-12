@@ -25,6 +25,14 @@ export type ScreenTransitionState = {
 	closing: number;
 	animating: number;
 	gesture: GestureValues;
+	meta?: Record<string, unknown>;
+	/**
+	 * The route object for this screen.
+	 *
+	 * @deprecated Use `meta` instead for conditional animation logic.
+	 * Pass route params via options: `options={({ route }) => ({ meta: { id: route.params.id } })}`
+	 * This field may be removed in a future version.
+	 */
 	route: RouteProp<ParamListBase>;
 };
 

@@ -100,4 +100,12 @@ export type ScreenTransitionConfig = {
 	 * The area of the screen where the gesture is activated.
 	 */
 	gestureActivationArea?: GestureActivationArea;
+
+	/**
+	 * Custom metadata passed through to animation props.
+	 *
+	 * @example
+	 * options={{ meta: { scalesOthers: true } }}
+	 */
+	meta?: Record<string, unknown>;
 };

@@ -115,6 +115,7 @@ export default function RootLayout() {
 						enableTransitions: true,
 						gestureEnabled: true,
 						gestureDirection: ["horizontal", "vertical"],
+						meta: { scalesOthers: true },
 						screenStyleInterpolator: ({ bounds, focused, progress }) => {
 							"worklet";
 
