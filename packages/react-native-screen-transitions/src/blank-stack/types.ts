@@ -18,7 +18,7 @@ import type {
 	ScreenInterpolationProps,
 } from "../shared/types/animation.types";
 
-export type BlankStackNavigationEventMap = Record<string, never>;
+export type BlankStackNavigationEventMap = {};
 
 export type BlankStackNavigationProp<
 	ParamList extends ParamListBase,
@@ -62,7 +62,7 @@ export type BlankStackScene = {
 };
 
 // We want it to be an empty object because navigator does not have any additional props
-export type BlankStackNavigationConfig = Record<string, never>;
+export type BlankStackNavigationConfig = {};
 
 export type BlankStackOverlayProps = {
 	/**
