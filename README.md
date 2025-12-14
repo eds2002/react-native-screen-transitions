@@ -211,22 +211,21 @@ import { interpolate } from "react-native-reanimated";
 
 ### Interpolator Props
 
-| Prop                    | Description                                              |
-| ----------------------- | -------------------------------------------------------- |
-| `progress`              | Combined progress (0-2). 0=entering, 1=active, 2=exiting |
-| `stackProgress`         | Accumulated progress across entire stack (0, 1, 2, 3...) |
-| `current`               | Current screen state (progress, closing, gesture, meta)  |
-| `previous`              | Previous screen state (may be undefined)                 |
-| `next`                  | Next screen state (may be undefined)                     |
-| `layouts.screen`        | Screen dimensions `{ width, height }`                    |
-| `insets`                | Safe area insets `{ top, right, bottom, left }`          |
-| `focused`               | Whether current screen is the topmost                    |
-| `active`                | The screen driving the transition                        |
-| `isActiveTransitioning` | Whether active screen is animating                       |
-| `isDismissing`          | Whether active screen is being dismissed                 |
-| `bounds`                | Function to access shared element positions              |
+| Prop             | Description                                              |
+| ---------------- | -------------------------------------------------------- |
+| `progress`       | Combined progress (0-2). 0=entering, 1=active, 2=exiting |
+| `stackProgress`  | Accumulated progress across entire stack (0, 1, 2, 3...) |
+| `current`        | Current screen state (progress, closing, gesture, meta)  |
+| `previous`       | Previous screen state (may be undefined)                 |
+| `next`           | Next screen state (may be undefined)                     |
+| `layouts.screen` | Screen dimensions `{ width, height }`                    |
+| `insets`         | Safe area insets `{ top, right, bottom, left }`          |
+| `focused`        | Whether current screen is the topmost                    |
+| `active`         | The screen driving the transition                        |
+| `inactive`       | The screen NOT driving the transition                    |
+| `bounds`         | Function to access shared element positions              |
 
-### Screen State (`current`, `previous`, `next`)
+### Screen State (`current`, `previous`, `next`, `active`, `inactive`)
 
 Each screen state contains:
 
@@ -238,24 +237,59 @@ Each screen state contains:
 | `gesture`   | Gesture values (x, y, normalizedX, normalizedY, etc.) |
 | `meta`      | Custom metadata from screen options                   |
 
+### Understanding `active` and `inactive`
+
+The `active` and `inactive` props help you write cleaner conditional logic:
+
+- **`active`** – The screen driving the transition. When focused, this is `current`. When not focused, this is `next`.
+- **`inactive`** – The screen NOT driving the transition. When focused, this is `previous`. When not focused, this is `current`.
+
+```tsx
+// Check if the inactive screen wants to disable an animation
+const disableTranslateY = props.inactive?.meta?.disableTranslateYAnimation;
+
+// Check if the active screen is animating or closing
+const isAnimating = props.active.animating;
+const isClosing = props.active.closing;
+```
+
 ### Using `meta` for Conditional Logic
 
 Use `meta` to pass custom data for conditional animation logic. This is more robust than checking route names:
 
 ```tsx
-// In screen options
+// Screen A sets meta to affect how Screen B animates
 <Stack.Screen
-  name="Detail"
+  name="ScreenA"
   options={{
-    meta: { scalesOthers: true },
-    screenStyleInterpolator: ({ progress }) => {
+    meta: { disableTranslateYAnimation: true },
+  }}
+/>
+
+// Screen B checks inactive screen's meta
+<Stack.Screen
+  name="ScreenB"
+  options={{
+    screenStyleInterpolator: (props) => {
       "worklet";
-      return { contentStyle: { opacity: progress } };
+
+      // When entering from ScreenA, inactive = ScreenA (previous)
+      // When going back to ScreenA, inactive = ScreenB (current)
+      const disableY = props.inactive?.meta?.disableTranslateYAnimation;
+
+      return {
+        contentStyle: {
+          transform: [{ translateY: disableY ? 0 : translateY }],
+        },
+      };
     },
   }}
-/>;
+/>
+```
 
-// In a component on a previous screen
+You can also react to screen state changes within components:
+
+```tsx
 const animation = useScreenAnimation();
 
 useAnimatedReaction(
@@ -616,9 +650,11 @@ transitionSpec: {
 
 ## Masked View Setup
 
-Required for `SharedIGImage` and `SharedAppleMusic` presets.
+Required for `SharedIGImage` and `SharedAppleMusic` presets. The masked view creates the "reveal" effect where content appears to expand from the shared element.
 
 > **Note**: Requires native code. Will not work in Expo Go.
+
+### Installation
 
 ```bash
 # Expo
@@ -629,17 +665,99 @@ npm install @react-native-masked-view/masked-view
 cd ios && pod install
 ```
 
-Wrap destination screen content:
+### Complete Example
+
+Here's a full example showing how to set up an Apple Music-style shared element transition:
+
+**1. Source Screen** – Tag pressable elements with `sharedBoundTag`:
 
 ```tsx
-export default function DetailScreen() {
+// app/index.tsx
+import { router } from "expo-router";
+import { View } from "react-native";
+import Transition from "react-native-screen-transitions";
+
+export default function HomeScreen() {
   return (
-    <Transition.MaskedView style={{ flex: 1 }}>
-      {/* screen content */}
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <Transition.Pressable
+        sharedBoundTag="album-art"
+        style={{
+          width: 200,
+          height: 200,
+          backgroundColor: "#1DB954",
+          borderRadius: 12,
+        }}
+        onPress={() => {
+          router.push({
+            pathname: "/details",
+            params: { sharedBoundTag: "album-art" },
+          });
+        }}
+      />
+    </View>
+  );
+}
+```
+
+**2. Destination Screen** – Wrap content with `MaskedView` and match the `sharedBoundTag`:
+
+```tsx
+// app/details.tsx
+import { useLocalSearchParams } from "expo-router";
+import Transition from "react-native-screen-transitions";
+
+export default function DetailsScreen() {
+  const { sharedBoundTag } = useLocalSearchParams<{ sharedBoundTag: string }>();
+
+  return (
+    <Transition.MaskedView style={{ flex: 1, backgroundColor: "#121212" }}>
+      <Transition.View
+        sharedBoundTag={sharedBoundTag}
+        style={{
+          backgroundColor: "#1DB954",
+          width: 400,
+          height: 400,
+          alignSelf: "center",
+          borderRadius: 12,
+        }}
+      />
+      {/* Additional screen content */}
     </Transition.MaskedView>
   );
 }
 ```
+
+**3. Layout** – Apply the shared element preset with dynamic `sharedBoundTag`:
+
+```tsx
+// app/_layout.tsx
+import Transition from "react-native-screen-transitions";
+import { Stack } from "./stack";
+
+export default function RootLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="index" />
+      <Stack.Screen
+        name="details"
+        options={({ route }) => ({
+          ...Transition.Presets.SharedAppleMusic({
+            sharedBoundTag: route.params?.sharedBoundTag ?? "",
+          }),
+        })}
+      />
+    </Stack>
+  );
+}
+```
+
+### How It Works
+
+1. `Transition.Pressable` measures its bounds when pressed and stores them with the `sharedBoundTag`
+2. `Transition.View` on the destination screen registers as the target for that tag
+3. `Transition.MaskedView` clips the destination content to the animating shared element bounds
+4. The preset interpolates position, size, and the mask to create the seamless expand/collapse effect
 
 ---
 
@@ -722,6 +840,19 @@ To avoid collisions with custom gesture options, some native options are renamed
 - Relies on `beforeRemove` listener to intercept navigation
 - Uses transparent modal presentation
 - Some edge cases with rapid navigation
+
+---
+
+## Migrating from Earlier Versions
+
+### Deprecated Props
+
+The following props are deprecated and will be removed in a future version:
+
+| Deprecated Prop         | Use Instead        |
+| ----------------------- | ------------------ |
+| `isActiveTransitioning` | `active.animating` |
+| `isDismissing`          | `active.closing`   |
 
 ---
 
