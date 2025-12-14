@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.1.0
+
+### Minor Changes
+
+- [#62](https://github.com/eds2002/react-native-screen-transitions/pull/62) [`6292b27`](https://github.com/eds2002/react-native-screen-transitions/commit/6292b274cd8c2d61f359f3938659cbfbae8ad73c) Thanks [@eds2002](https://github.com/eds2002)! - Integrate new helper prop `inactive`, useful for knowing the meta of unfocused screens.
+
 ## 3.0.0
 
 ### Major Changes
