@@ -137,6 +137,7 @@ export function _useScreenAnimation() {
 			: DEFAULT_SCREEN_TRANSITION_STATE;
 
 		const { progress, ...helpers } = derivations({
+			previous,
 			current,
 			next,
 		});

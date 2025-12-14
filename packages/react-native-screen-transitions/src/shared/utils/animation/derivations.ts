@@ -1,6 +1,7 @@
 import type { ScreenTransitionState } from "../../types/animation.types";
 
 interface DerivationsParams {
+	previous?: ScreenTransitionState;
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
 }
@@ -8,7 +9,7 @@ interface DerivationsParams {
 /**
  * Additional values to help make defining animations easier.
  */
-export const derivations = ({ current, next }: DerivationsParams) => {
+export const derivations = ({ previous, current, next }: DerivationsParams) => {
 	"worklet";
 
 	// The combined progress (current + next, 0-2 range)
@@ -17,7 +18,12 @@ export const derivations = ({ current, next }: DerivationsParams) => {
 	// Whether the current screen is focused
 	const focused = !next;
 
+	// The screen driving the transition
 	const active = focused ? current : (next ?? current);
+
+	// The screen NOT driving the transition
+	const inactive = focused ? previous : current;
+
 	const isActiveTransitioning = !!(
 		active.gesture.isDragging || active.animating
 	);
@@ -28,6 +34,7 @@ export const derivations = ({ current, next }: DerivationsParams) => {
 		progress,
 		focused,
 		active,
+		inactive,
 		isActiveTransitioning,
 		isDismissing,
 	};
