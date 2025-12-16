@@ -44,13 +44,17 @@ jobs:
         with:
           publish: "bun run changeset:publish"
           title: "chore: version packages"
+          createGithubReleases: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
 
-      - name: Create v* tag
+      - name: Create v* tag and release
         if: steps.changesets.outputs.published == 'true'
         run: |
           VERSION=$(jq -r '.[0].version' <<< '${{ steps.changesets.outputs.publishedPackages }}')
           git tag "v${VERSION}"
           git push origin "v${VERSION}"
+          gh release create "v${VERSION}" --title "v${VERSION}" --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
