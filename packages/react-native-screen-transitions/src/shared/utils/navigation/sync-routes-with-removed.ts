@@ -1,3 +1,7 @@
+import {
+	executeOnUIRuntimeSync,
+	type SharedValue,
+} from "react-native-reanimated";
 import type { useClosingRouteKeys } from "../../hooks/navigation/use-closing-route-keys";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore } from "../../stores/gesture.store";
@@ -18,16 +22,33 @@ type SyncRoutesWithRemovedParams<
 	closingRouteKeys: ReturnType<typeof useClosingRouteKeys>;
 };
 
+/**
+ * Safely read a SharedValue from the UI thread.
+ * Avoids the "cannot read .value inside component render" warning.
+ */
+const readSharedValue = executeOnUIRuntimeSync(
+	<T,>(sv: SharedValue<T>): T => {
+		"worklet";
+		return sv.value;
+	},
+);
+
 const isRouteDismissing = (routeKey: string): boolean => {
 	const gestures = GestureStore.getRouteGestures(routeKey);
 	const animations = AnimationStore.getAll(routeKey);
 
-	const isBeingDragged = gestures.isDragging.value === 1;
-	const isProgrammaticallyDismissing = gestures.isDismissing.value === 1;
-	const isClosing = animations.closing.value === 1;
-	const hasNotFullyEntered = animations.progress.value < 0.5;
+	const isBeingDragged = readSharedValue(gestures.isDragging) === 1;
+	const isProgrammaticallyDismissing =
+		readSharedValue(gestures.isDismissing) === 1;
+	const isClosing = readSharedValue(animations.closing) === 1;
+	const hasNotFullyEntered = readSharedValue(animations.progress) < 0.5;
 
-	return isBeingDragged || isProgrammaticallyDismissing || isClosing || hasNotFullyEntered;
+	return (
+		isBeingDragged ||
+		isProgrammaticallyDismissing ||
+		isClosing ||
+		hasNotFullyEntered
+	);
 };
 
 /**

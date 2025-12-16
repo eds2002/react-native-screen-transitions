@@ -44,4 +44,10 @@ mock.module("react-native-reanimated", () => ({
 	cancelAnimation: () => {},
 	clamp: (value: number, lower: number, upper: number) =>
 		Math.min(Math.max(value, lower), upper),
+	// Mock executeOnUIRuntimeSync - in tests, just execute the worklet directly
+	executeOnUIRuntimeSync: <T, A extends unknown[]>(
+		worklet: (...args: A) => T,
+	) => {
+		return (...args: A): T => worklet(...args);
+	},
 }));
