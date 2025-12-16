@@ -31,10 +31,17 @@ mock.module("react-native-reanimated", () => ({
 			modify(fn: (v: T) => T) {
 				this.value = fn(this.value);
 			},
+			get() {
+				return this.value;
+			},
+			set(v: T) {
+				this.value = v;
+			},
 		};
 		mutableObjects.push({ obj: mutable as { value: unknown }, initial });
 		return mutable;
 	},
+	cancelAnimation: () => {},
 	clamp: (value: number, lower: number, upper: number) =>
 		Math.min(Math.max(value, lower), upper),
 }));

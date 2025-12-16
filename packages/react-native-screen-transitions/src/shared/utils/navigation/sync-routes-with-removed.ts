@@ -1,4 +1,6 @@
 import type { useClosingRouteKeys } from "../../hooks/navigation/use-closing-route-keys";
+import { AnimationStore } from "../../stores/animation.store";
+import { GestureStore } from "../../stores/gesture.store";
 import { composeDescriptors } from "./compose-descriptors";
 
 interface RouteWithKey {
@@ -14,6 +16,17 @@ type SyncRoutesWithRemovedParams<
 	nextRoutes: Route[];
 	nextDescriptors: DescriptorMap;
 	closingRouteKeys: ReturnType<typeof useClosingRouteKeys>;
+};
+
+const isRouteDismissing = (routeKey: string): boolean => {
+	const gestures = GestureStore.getRouteGestures(routeKey);
+	const animations = AnimationStore.getAll(routeKey);
+	return (
+		gestures.isDragging.value === 1 ||
+		gestures.isDismissing.value === 1 ||
+		animations.closing.value === 1 ||
+		animations.progress.value < 0.5
+	);
 };
 
 /**
@@ -41,8 +54,24 @@ export const syncRoutesWithRemoved = <
 		};
 	}
 
-	// Start with next routes, will mutate if needed
-	const derivedRoutes: Route[] = nextRoutes.slice();
+	// Move mid-dismiss routes to the end so they can animate out
+	// without affecting the transition of other screens
+	const normalRoutes: Route[] = [];
+	const dismissingRoutes: Route[] = [];
+
+	for (let i = 0; i < nextRoutes.length; i++) {
+		const route = nextRoutes[i];
+		const isMiddle = i > 0 && i < nextRoutes.length - 1;
+
+		if (isMiddle && isRouteDismissing(route.key)) {
+			closingRouteKeys.add(route.key);
+			dismissingRoutes.push(route);
+		} else {
+			normalRoutes.push(route);
+		}
+	}
+
+	const derivedRoutes: Route[] = [...normalRoutes, ...dismissingRoutes];
 
 	// Get focused (last) routes for comparison
 	const previousFocusedRoute = prevRoutes[prevRoutes.length - 1];
@@ -72,10 +101,9 @@ export const syncRoutesWithRemoved = <
 
 			if (!previousRouteStillPresent) {
 				// Previous route needs to be inserted for transition
-				closingRouteKeys.remove(previousFocusedRoute.key);
-
 				const insertIndex = Math.max(derivedRoutes.length - 1, 0);
 				derivedRoutes.splice(insertIndex, 0, previousFocusedRoute);
+				closingRouteKeys.remove(previousFocusedRoute.key);
 			}
 		}
 	} else if (nextFocusedRoute) {
