@@ -49,6 +49,13 @@ interface RegisterBoundsContextValue {
  */
 const getAncestorKeys = (current: TransitionDescriptor): string[] => {
 	const ancestors: string[] = [];
+
+	// hmm
+	// Safety check for component-stack which doesn't have getParent
+	if (typeof current.navigation?.getParent !== "function") {
+		return ancestors;
+	}
+
 	let nav = current.navigation.getParent();
 
 	while (nav) {

@@ -41,11 +41,13 @@ import useStableCallbackValue from "../use-stable-callback-value";
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	ancestorContext?: GestureContextType | null;
+	onDismiss?: () => void;
 }
 
 export const useBuildGestures = ({
 	scrollConfig,
 	ancestorContext,
+	onDismiss,
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
 	panGestureRef: React.MutableRefObject<GestureType | undefined>;
@@ -105,22 +107,33 @@ export const useBuildGestures = ({
 			return;
 		}
 
-		const state = current.navigation.getState();
+		if (onDismiss) {
+			onDismiss();
+			return;
+		}
+
+		// Fall back to React Navigation dispatch
+		const navigation = current.navigation as {
+			getState: () => { routes: Array<{ key: string }>; key: string };
+			dispatch: (action: unknown) => void;
+		};
+
+		const state = navigation.getState();
 
 		const routeStillPresent = state.routes.some(
-			(route) => route.key === current.route.key,
+			(route: { key: string }) => route.key === current.route.key,
 		);
 
 		if (!routeStillPresent) {
 			return;
 		}
 
-		current.navigation.dispatch({
+		navigation.dispatch({
 			...StackActions.pop(),
 			source: current.route.key,
 			target: state.key,
 		});
-	}, [current, ancestorContext]);
+	}, [current, ancestorContext, onDismiss]);
 
 	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
 		"worklet";
