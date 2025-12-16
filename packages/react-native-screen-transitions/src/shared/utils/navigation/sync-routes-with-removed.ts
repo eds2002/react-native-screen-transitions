@@ -21,12 +21,13 @@ type SyncRoutesWithRemovedParams<
 const isRouteDismissing = (routeKey: string): boolean => {
 	const gestures = GestureStore.getRouteGestures(routeKey);
 	const animations = AnimationStore.getAll(routeKey);
-	return (
-		gestures.isDragging.value === 1 ||
-		gestures.isDismissing.value === 1 ||
-		animations.closing.value === 1 ||
-		animations.progress.value < 0.5
-	);
+
+	const isBeingDragged = gestures.isDragging.value === 1;
+	const isProgrammaticallyDismissing = gestures.isDismissing.value === 1;
+	const isClosing = animations.closing.value === 1;
+	const hasNotFullyEntered = animations.progress.value < 0.5;
+
+	return isBeingDragged || isProgrammaticallyDismissing || isClosing || hasNotFullyEntered;
 };
 
 /**
@@ -54,55 +55,53 @@ export const syncRoutesWithRemoved = <
 		};
 	}
 
-	// Move mid-dismiss routes to the end so they can animate out
-	// without affecting the transition of other screens
-	const normalRoutes: Route[] = [];
-	const dismissingRoutes: Route[] = [];
+	// Reorder mid-dismiss routes to the end so they animate out above newer routes.
+	// Only middle routes are moved - first (root) and last (focused) stay in place.
+	const stableRoutes: Route[] = [];
+	const dismissingMiddleRoutes: Route[] = [];
 
 	for (let i = 0; i < nextRoutes.length; i++) {
 		const route = nextRoutes[i];
-		const isMiddle = i > 0 && i < nextRoutes.length - 1;
+		const isFirstOrLast = i === 0 || i === nextRoutes.length - 1;
 
-		if (isMiddle && isRouteDismissing(route.key)) {
+		if (!isFirstOrLast && isRouteDismissing(route.key)) {
 			closingRouteKeys.add(route.key);
-			dismissingRoutes.push(route);
+			dismissingMiddleRoutes.push(route);
 		} else {
-			normalRoutes.push(route);
+			stableRoutes.push(route);
 		}
 	}
 
-	const derivedRoutes: Route[] = [...normalRoutes, ...dismissingRoutes];
+	const routes: Route[] = [...stableRoutes, ...dismissingMiddleRoutes];
 
-	// Get focused (last) routes for comparison
+	// Handle focus transitions (when the top route changes)
 	const previousFocusedRoute = prevRoutes[prevRoutes.length - 1];
 	const nextFocusedRoute = nextRoutes[nextRoutes.length - 1];
-
-	// Handle focus changes between routes
-	if (
+	const focusHasChanged =
 		previousFocusedRoute &&
 		nextFocusedRoute &&
-		previousFocusedRoute.key !== nextFocusedRoute.key
-	) {
-		const nextRouteWasPresent = prevRoutes.some(
+		previousFocusedRoute.key !== nextFocusedRoute.key;
+
+	if (focusHasChanged) {
+		const nextRouteExistedBefore = prevRoutes.some(
 			(route) => route.key === nextFocusedRoute.key,
 		);
-		const previousRouteStillPresent = nextRoutes.some(
+		const previousRouteStillExists = nextRoutes.some(
 			(route) => route.key === previousFocusedRoute.key,
 		);
 
-		if (nextRouteWasPresent && !previousRouteStillPresent) {
-			// Previous route was removed, mark as closing
+		if (nextRouteExistedBefore && !previousRouteStillExists) {
+			// Back navigation: previous route was popped, keep it for exit animation
 			closingRouteKeys.add(previousFocusedRoute.key);
-
-			derivedRoutes.push(previousFocusedRoute);
+			routes.push(previousFocusedRoute);
 		} else {
-			// Next route is now active, not closing
+			// Forward navigation: new route gained focus
 			closingRouteKeys.remove(nextFocusedRoute.key);
 
-			if (!previousRouteStillPresent) {
-				// Previous route needs to be inserted for transition
-				const insertIndex = Math.max(derivedRoutes.length - 1, 0);
-				derivedRoutes.splice(insertIndex, 0, previousFocusedRoute);
+			if (!previousRouteStillExists) {
+				// Previous route was replaced, insert it underneath for transition
+				const insertIndex = Math.max(routes.length - 1, 0);
+				routes.splice(insertIndex, 0, previousFocusedRoute);
 				closingRouteKeys.remove(previousFocusedRoute.key);
 			}
 		}
@@ -111,8 +110,8 @@ export const syncRoutesWithRemoved = <
 		closingRouteKeys.remove(nextFocusedRoute.key);
 	}
 
-	// Clean up closing keys that are no longer in the route list
-	const activeKeys = new Set(derivedRoutes.map((route) => route.key));
+	// Clean up orphaned closing keys
+	const activeKeys = new Set(routes.map((route) => route.key));
 	for (const key of Array.from(closingRouteKeys.ref.current)) {
 		if (!activeKeys.has(key)) {
 			closingRouteKeys.remove(key);
@@ -120,11 +119,7 @@ export const syncRoutesWithRemoved = <
 	}
 
 	return {
-		routes: derivedRoutes,
-		descriptors: composeDescriptors(
-			derivedRoutes,
-			nextDescriptors,
-			prevDescriptors,
-		),
+		routes,
+		descriptors: composeDescriptors(routes, nextDescriptors, prevDescriptors),
 	};
 };
