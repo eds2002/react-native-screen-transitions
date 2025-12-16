@@ -85,7 +85,7 @@ export type NativeStackNavigationHelpers = NavigationHelpers<
 >;
 
 // We want it to be an empty object because navigator does not have any additional props
-export type NativeStackNavigationConfig = {};
+type NativeStackNavigationConfig = {};
 
 export type NativeStackHeaderProps = {
 	/**

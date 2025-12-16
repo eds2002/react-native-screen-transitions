@@ -16,9 +16,9 @@ export type BoundsAnchor =
 
 export type BoundsScaleMode = "match" | "none" | "uniform";
 
-export type BoundsTarget = "bound" | "fullscreen" | MeasuredDimensions;
+type BoundsTarget = "bound" | "fullscreen" | MeasuredDimensions;
 
-export type BoundsSpace = "relative" | "absolute";
+type BoundsSpace = "relative" | "absolute";
 
 export type BoundsComputeParams = {
 	id?: string;
@@ -29,35 +29,35 @@ export type BoundsComputeParams = {
 	dimensions: Layout;
 };
 
-export type RawSizeAbsoluteReturn = {
+type RawSizeAbsoluteReturn = {
 	width: number;
 	height: number;
 	translateX: number;
 	translateY: number;
 };
 
-export type RawSizeRelativeReturn = {
+type RawSizeRelativeReturn = {
 	translateX: number;
 	translateY: number;
 	width: number;
 	height: number;
 };
 
-export type RawTransformAbsoluteReturn = {
+type RawTransformAbsoluteReturn = {
 	translateX: number;
 	translateY: number;
 	scaleX: number;
 	scaleY: number;
 };
 
-export type RawTransformRelativeReturn = {
+type RawTransformRelativeReturn = {
 	translateX: number;
 	translateY: number;
 	scaleX: number;
 	scaleY: number;
 };
 
-export type RawContentReturn = {
+type RawContentReturn = {
 	translateX: number;
 	translateY: number;
 	scale: number;

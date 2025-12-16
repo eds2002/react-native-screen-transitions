@@ -5,7 +5,7 @@ interface RouteWithKey {
 	key: string;
 }
 
-export type SyncRoutesWithRemovedParams<
+type SyncRoutesWithRemovedParams<
 	Route extends RouteWithKey,
 	DescriptorMap extends Record<string, unknown>,
 > = {

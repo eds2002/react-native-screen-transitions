@@ -1,4 +1,4 @@
-export type GeometryBase = {
+type GeometryBase = {
 	entering: boolean;
 };
 

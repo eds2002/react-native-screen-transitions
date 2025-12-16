@@ -40,7 +40,7 @@ function ComponentNavigator({
 	);
 }
 
-export interface ComponentStack {
+interface ComponentStack {
 	Navigator: React.FC<ComponentNavigatorProps>;
 	Screen: React.FC<ComponentScreenProps>;
 }
@@ -77,10 +77,3 @@ export function createComponentNavigator(): ComponentStack {
 	};
 }
 
-// Re-export types for convenience
-export type {
-	ComponentNavigatorProps,
-	ComponentScreenProps,
-	ComponentStackNavigationOptions,
-	ComponentStackScreenProps,
-};

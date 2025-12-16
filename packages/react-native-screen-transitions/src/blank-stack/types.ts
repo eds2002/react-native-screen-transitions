@@ -62,7 +62,7 @@ export type BlankStackScene = {
 };
 
 // We want it to be an empty object because navigator does not have any additional props
-export type BlankStackNavigationConfig = {};
+type BlankStackNavigationConfig = {};
 
 export type BlankStackOverlayProps = {
 	/**
@@ -101,7 +101,7 @@ export type BlankStackOverlayProps = {
 	screenAnimation: DerivedValue<ScreenInterpolationProps>;
 };
 
-export type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
+type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
 	/**
 	 * Whether to detach the previous screen from the view hierarchy to save memory.
 	 * Set it to `false` if you need the previous screen to be seen through the active screen.

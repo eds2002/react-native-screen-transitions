@@ -1,11 +1,8 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "./types/animation.types";
-import type { BoundEntry } from "./types/bounds.types";
 import type { Layout } from "./types/core.types";
 import type { ActivationArea } from "./types/gesture.types";
-import type { Complete } from "./types/utils.types";
-import type { BoundsBuilderOptions } from "./utils/bounds/types/builder";
 
 /**
  * Masked view integration
@@ -68,23 +65,6 @@ export const FULLSCREEN_DIMENSIONS = (
 	};
 };
 
-export const DEFAULT_BUILDER_OPTIONS: Complete<
-	Omit<BoundsBuilderOptions, "id">
-> = Object.freeze({
-	gestures: { x: 0, y: 0 },
-	toFullscreen: false,
-	absolute: false,
-	relative: true,
-	method: "transform",
-	contentScaleMode: "auto",
-	//
-	space: "relative",
-	target: "bound",
-	scaleMode: "match",
-	anchor: "center",
-	raw: false,
-} as const);
-
 /**
  * Default gesture config
  */
@@ -94,13 +74,3 @@ export const DEFAULT_GESTURE_ENABLED = false;
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 
-/**
- * Default gesture offset
- */
-export const GESTURE_ACTIVATION_THRESHOLD_X = 10;
-export const GESTURE_ACTIVATION_THRESHOLD_Y = 10;
-export const GESTURE_FAIL_TOLERANCE_X = 15;
-export const GESTURE_FAIL_TOLERANCE_Y = 20;
-export const DEFAULT_EDGE_DISTANCE_HORIZONTAL = 50;
-export const DEFAULT_EDGE_DISTANCE_VERTICAL = 135;
-export const DEFAULT_ACTIVATION_AREA = "screen" as const;

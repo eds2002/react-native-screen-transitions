@@ -6,7 +6,7 @@ import {
 import type { ScreenKey } from "../types/core.types";
 import type { GestureDirection } from "../types/gesture.types";
 
-export type GestureKey =
+type GestureKey =
 	| "x"
 	| "y"
 	| "normalizedX"

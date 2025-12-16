@@ -1,0 +1,21 @@
+{
+  "$schema": "https://unpkg.com/knip@latest/schema.json",
+  "workspaces": {
+    "packages/react-native-screen-transitions": {
+      "entry": ["src/**/index.ts"],
+      "project": ["src/**/*.{ts,tsx}"],
+      "ignore": [
+        "src/**/*.native.tsx",
+        "src/**/__tests__/**",
+        "src/native-stack/controllers/**",
+        "src/native-stack/utils/**",
+        "src/native-stack/views/FontProcessor.tsx",
+        "src/native-stack/views/useHeaderConfigProps.tsx",
+        "src/shared/utils/gesture/check-gesture-activation.ts"
+      ],
+      "ignoreDependencies": [
+        "@react-native-masked-view/masked-view"
+      ]
+    }
+  }
+}

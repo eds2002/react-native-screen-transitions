@@ -14,7 +14,7 @@ type TransitionStylesContextValue = {
 	ancestorStylesMaps: SharedValue<TransitionInterpolatedStyle>[];
 };
 
-export const TransitionStylesContext =
+const TransitionStylesContext =
 	createContext<TransitionStylesContextValue | null>(null);
 
 export function TransitionStylesProvider({ children }: Props) {

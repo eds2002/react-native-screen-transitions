@@ -30,7 +30,7 @@ export type ElementComposeParams = {
  * - geometry: precomputed screen-level tx/ty/sx/sy plus ranges/entering
  * - interp: function to interpolate between numbers using the correct progress range
  */
-export type ContentComposeParams = {
+type ContentComposeParams = {
 	start: MeasuredDimensions;
 	end: MeasuredDimensions;
 	geometry: ContentTransformGeometry;

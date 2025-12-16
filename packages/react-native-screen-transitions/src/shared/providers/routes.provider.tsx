@@ -23,7 +23,7 @@ const { RoutesProvider, useRoutesContext } = createProvider("Routes", {
 	value: { routeKeys },
 }));
 
-export { RoutesProvider, useRoutesContext };
+export { RoutesProvider };
 
 /**
  * Hook to get animation values for all screens from a given index onwards.

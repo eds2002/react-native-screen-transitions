@@ -8,7 +8,7 @@ import { resetStoresForScreen } from "../../shared/utils/reset-stores-for-screen
 import type { BlankStackDescriptor } from "../types";
 import { useStackNavigationContext } from "../utils/with-stack-navigation";
 
-export interface Props {
+interface Props {
 	children: React.ReactNode;
 }
 

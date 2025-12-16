@@ -128,7 +128,7 @@ interface UseComponentNavigationBuilderOptions {
 	screenOptions?: ComponentStackNavigationOptions;
 }
 
-export interface ComponentNavigationBuilderResult {
+interface ComponentNavigationBuilderResult {
 	state: ComponentStackState;
 	descriptors: ComponentStackDescriptorMap;
 	navigation: ComponentNavigation;

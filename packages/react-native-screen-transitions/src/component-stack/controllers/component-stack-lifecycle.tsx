@@ -9,7 +9,7 @@ import { startScreenTransition } from "../../shared/utils/animation/start-screen
 import type { ComponentStackDescriptor } from "../types";
 import { useComponentNavigationContext } from "../utils/with-component-navigation";
 
-export interface Props {
+interface Props {
 	children: React.ReactNode;
 }
 
