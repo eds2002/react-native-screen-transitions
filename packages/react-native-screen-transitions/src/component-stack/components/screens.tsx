@@ -6,7 +6,6 @@ import Animated, {
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import { Screen as RNSScreen } from "react-native-screens";
 import { AnimationStore } from "../../shared/stores/animation.store";
 import { useComponentNavigationContext } from "../utils/with-component-navigation";
 
@@ -14,8 +13,6 @@ interface ScreenProps {
 	routeKey: string;
 	index: number;
 	children: React.ReactNode;
-	freezeOnBlur?: boolean;
-	shouldFreeze?: boolean;
 }
 
 enum ScreenActivity {
@@ -26,15 +23,7 @@ enum ScreenActivity {
 
 const EPSILON = 1e-5;
 
-const AnimatedScreen = Animated.createAnimatedComponent(RNSScreen);
-
-export const Screen = ({
-	routeKey,
-	index,
-	children,
-	freezeOnBlur,
-	shouldFreeze,
-}: ScreenProps) => {
+export const Screen = ({ routeKey, index, children }: ScreenProps) => {
 	const { activeScreensLimit, routes } = useComponentNavigationContext();
 	const routesLength = routes.length;
 
@@ -76,10 +65,10 @@ export const Screen = ({
 	});
 
 	const animatedProps = useAnimatedProps(() => {
-		const activity = screenActivity.get();
+		// const activity = screenActivity.get();
 		return {
-			activityState: activity,
-			shouldFreeze: activity === ScreenActivity.INACTIVE && shouldFreeze,
+			// activityState: activity,
+			// shouldFreeze: activity === ScreenActivity.INACTIVE && shouldFreeze,
 			pointerEvents: sceneClosing.get()
 				? ("none" as const)
 				: ("box-none" as const),
@@ -87,13 +76,8 @@ export const Screen = ({
 	});
 
 	return (
-		<AnimatedScreen
-			enabled
-			style={StyleSheet.absoluteFill}
-			freezeOnBlur={freezeOnBlur}
-			animatedProps={animatedProps}
-		>
+		<Animated.View style={StyleSheet.absoluteFill} animatedProps={animatedProps}>
 			{children}
-		</AnimatedScreen>
+		</Animated.View>
 	);
 };
