@@ -13,6 +13,7 @@
   "scripts": {
     "clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
     "build": "bun run --cwd packages/react-native-screen-transitions build",
+    "knip": "bunx knip --workspace packages/react-native-screen-transitions",
     "lint": "biome check packages/react-native-screen-transitions/src",
     "typecheck": "tsc --noEmit -p packages/react-native-screen-transitions/tsconfig.json",
     "release": "bun run build && bun run changeset:publish",

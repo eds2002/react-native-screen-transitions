@@ -31,14 +31,6 @@ import type {
 	BoundsComputeParams,
 } from "./types/builder";
 
-export interface BuildBoundsAccessorParams {
-	current: ScreenTransitionState;
-	previous?: ScreenTransitionState;
-	next?: ScreenTransitionState;
-	progress: number;
-	dimensions: Layout;
-}
-
 const resolveBounds = (props: {
 	id: string;
 	previous?: ScreenTransitionState;

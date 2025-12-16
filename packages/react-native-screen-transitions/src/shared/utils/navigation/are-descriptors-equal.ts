@@ -1,8 +1,6 @@
-import type { BlankStackDescriptorMap } from "../../../types";
-
-export const areDescriptorsEqual = (
-	a: BlankStackDescriptorMap,
-	b: BlankStackDescriptorMap,
+export const areDescriptorsEqual = <T extends Record<string, unknown>>(
+	a: T,
+	b: T,
 ): boolean => {
 	if (a === b) return true;
 

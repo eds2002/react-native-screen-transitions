@@ -41,7 +41,6 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 /**
  * Bounds API Defaults
  */
-export const NO_BOUNDS_MAP: Record<string, BoundEntry> = Object.freeze({});
 export const EMPTY_BOUND_HELPER_RESULT = Object.freeze({});
 export const EMPTY_BOUND_HELPER_RESULT_RAW = Object.freeze({
 	scaleX: 1,

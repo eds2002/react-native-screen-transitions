@@ -24,11 +24,6 @@ import type {
 } from "react-native-screens";
 import type { ScreenTransitionConfig } from "../shared/types/core.types";
 
-export type Layout = {
-	width: number;
-	height: number;
-};
-
 export type NativeStackNavigationEventMap = {
 	/**
 	 * Event which fires when a transition animation starts.

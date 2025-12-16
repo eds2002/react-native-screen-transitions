@@ -1,8 +1,10 @@
-import type { Route } from "@react-navigation/native";
+interface RouteWithKey {
+	key: string;
+}
 
-export const routesAreIdentical = (
-	a: Route<string>[],
-	b: Route<string>[],
+export const routesAreIdentical = <T extends RouteWithKey>(
+	a: T[],
+	b: T[],
 ): boolean => {
 	if (a === b) return true;
 	if (a.length !== b.length) return false;

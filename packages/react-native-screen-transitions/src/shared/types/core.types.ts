@@ -12,8 +12,6 @@ export type Layout = {
 
 export type ScreenKey = string;
 
-export type ScreenPhase = "previous" | "current" | "next";
-
 export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	/**
 	 * Connects this component to custom animated styles defined in screenStyleInterpolator.
@@ -53,11 +51,6 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * </Transition.View>
 	 */
 	sharedBoundTag?: string;
-};
-
-export type TransitionConfig = {
-	open: TransitionSpec;
-	close: TransitionSpec;
 };
 
 export type ScreenTransitionConfig = {

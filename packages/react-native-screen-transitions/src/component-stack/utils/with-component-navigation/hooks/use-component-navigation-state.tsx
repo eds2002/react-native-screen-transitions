@@ -1,4 +1,3 @@
-import { type Route, StackActions } from "@react-navigation/native";
 import { useLayoutEffect, useState } from "react";
 import { useClosingRouteKeys } from "../../../../shared/hooks/navigation/use-closing-route-keys";
 import { usePrevious } from "../../../../shared/hooks/use-previous";
@@ -7,14 +6,17 @@ import { areDescriptorsEqual } from "../../../../shared/utils/navigation/are-des
 import { composeDescriptors } from "../../../../shared/utils/navigation/compose-descriptors";
 import { haveSameRouteKeys } from "../../../../shared/utils/navigation/have-same-route-keys";
 import { routesAreIdentical } from "../../../../shared/utils/navigation/routes-are-identical";
-import type { BlankStackDescriptorMap } from "../../../types";
-import type { StackNavigationContextProps } from "../types";
+import type {
+	ComponentRoute,
+	ComponentStackDescriptorMap,
+} from "../../../types";
+import type { ComponentNavigationContextProps } from "../types";
 
 type SyncRoutesWithRemovedParams = {
-	prevRoutes: Route<string>[];
-	prevDescriptors: BlankStackDescriptorMap;
-	nextRoutes: Route<string>[];
-	nextDescriptors: BlankStackDescriptorMap;
+	prevRoutes: ComponentRoute[];
+	prevDescriptors: ComponentStackDescriptorMap;
+	nextRoutes: ComponentRoute[];
+	nextDescriptors: ComponentStackDescriptorMap;
 	closingRouteKeys: ReturnType<typeof useClosingRouteKeys>;
 };
 
@@ -23,10 +25,10 @@ type SyncRoutesWithRemovedParams = {
  * when possible for performance optimization
  */
 const alignRoutesWithLatest = (
-	currentRoutes: Route<string>[],
-	currentDescriptors: BlankStackDescriptorMap,
-	nextRoutes: Route<string>[],
-	nextDescriptors: BlankStackDescriptorMap,
+	currentRoutes: ComponentRoute[],
+	currentDescriptors: ComponentStackDescriptorMap,
+	nextRoutes: ComponentRoute[],
+	nextDescriptors: ComponentStackDescriptorMap,
 ) => {
 	// Early return for empty current routes
 	if (currentRoutes.length === 0) {
@@ -41,7 +43,7 @@ const alignRoutesWithLatest = (
 	}
 
 	// Create lookup map for efficient route finding
-	const nextRouteLookup = new Map<string, Route<string>>();
+	const nextRouteLookup = new Map<string, ComponentRoute>();
 	for (const route of nextRoutes) {
 		nextRouteLookup.set(route.key, route);
 	}
@@ -93,12 +95,12 @@ const syncRoutesWithRemoved = ({
 		closingRouteKeys.clear();
 		return {
 			routes: nextRoutes,
-			descriptors: {},
+			descriptors: {} as ComponentStackDescriptorMap,
 		};
 	}
 
 	// Start with next routes, will mutate if needed
-	const derivedRoutes: Route<string>[] = nextRoutes.slice();
+	const derivedRoutes: ComponentRoute[] = nextRoutes.slice();
 
 	// Get focused (last) routes for comparison
 	const previousFocusedRoute = prevRoutes[prevRoutes.length - 1];
@@ -157,7 +159,9 @@ const syncRoutesWithRemoved = ({
 	};
 };
 
-export const useStackNavigationState = (props: StackNavigationContextProps) => {
+export const useComponentNavigationState = (
+	props: ComponentNavigationContextProps,
+) => {
 	const previousRoutes = usePrevious(props.state.routes) ?? [];
 	const closingRouteKeys = useClosingRouteKeys();
 
@@ -176,8 +180,8 @@ export const useStackNavigationState = (props: StackNavigationContextProps) => {
 				nextRoutesSnapshot,
 			);
 
-			let derivedRoutes: Route<string>[];
-			let derivedDescriptors: BlankStackDescriptorMap;
+			let derivedRoutes: ComponentRoute[];
+			let derivedDescriptors: ComponentStackDescriptorMap;
 
 			if (routeKeysUnchanged) {
 				const result = alignRoutesWithLatest(
@@ -227,16 +231,9 @@ export const useStackNavigationState = (props: StackNavigationContextProps) => {
 	}, [props.state.routes, props.descriptors, previousRoutes, closingRouteKeys]);
 
 	const handleCloseRoute = useStableCallback(
-		({ route }: { route: Route<string> }) => {
-			if (props.state.routes.some((r) => r.key === route.key)) {
-				props.navigation.dispatch({
-					...StackActions.pop(),
-					source: route.key,
-					target: props.state.key,
-				});
-				return;
-			}
-
+		({ route }: { route: ComponentRoute }) => {
+			// Component-stack is self-contained, so we just remove from closing list
+			// and update local state (no dispatch back to React Navigation)
 			closingRouteKeys.remove(route.key);
 
 			setLocalState((current) => {
