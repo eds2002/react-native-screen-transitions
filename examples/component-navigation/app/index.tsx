@@ -7,7 +7,7 @@ const Stack = createComponentNavigator();
 
 function HomeScreen({ navigation }: ComponentStackScreenProps) {
 	return (
-		<View style={styles.screen}>
+		<View style={[styles.screen, { height: 400 }]}>
 			<Transition.View style={styles.content}>
 				<Text style={styles.title}>Home Screen</Text>
 				<Text style={styles.subtitle}>
@@ -34,7 +34,7 @@ function HomeScreen({ navigation }: ComponentStackScreenProps) {
 
 function DetailsScreen({ navigation }: ComponentStackScreenProps) {
 	return (
-		<View style={[styles.screen, styles.detailsScreen]}>
+		<View style={[styles.screen, styles.detailsScreen, { height: 100 }]}>
 			<Transition.View style={styles.content}>
 				<Text style={styles.title}>Details Screen</Text>
 				<Text style={styles.subtitle}>Swipe down to go back</Text>
@@ -57,77 +57,17 @@ function DetailsScreen({ navigation }: ComponentStackScreenProps) {
 	);
 }
 
-function ProfileScreen({ navigation }: ComponentStackScreenProps) {
-	return (
-		<View style={[styles.screen, styles.profileScreen]}>
-			<Transition.View style={styles.content}>
-				<Text style={styles.title}>Profile Screen</Text>
-				<Text style={styles.subtitle}>Third level deep!</Text>
-
-				<Pressable
-					style={[styles.button, styles.buttonSecondary]}
-					onPress={() => navigation.goBack()}
-				>
-					<Text style={styles.buttonText}>Go Back</Text>
-				</Pressable>
-
-				<Pressable
-					style={[styles.button, styles.buttonDanger]}
-					onPress={() => navigation.reset()}
-				>
-					<Text style={styles.buttonText}>Reset to Home</Text>
-				</Pressable>
-			</Transition.View>
-		</View>
-	);
-}
-
-function SettingsScreen({ navigation }: ComponentStackScreenProps) {
-	return (
-		<View style={[styles.screen, styles.settingsScreen]}>
-			<Transition.View style={styles.content}>
-				<Text style={styles.title}>Settings Screen</Text>
-
-				<Pressable
-					style={[styles.button, styles.buttonSecondary]}
-					onPress={() => navigation.goBack()}
-				>
-					<Text style={styles.buttonText}>Go Back</Text>
-				</Pressable>
-			</Transition.View>
-		</View>
-	);
-}
-
 export default function App() {
 	return (
 		<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-			<View style={styles.container}>
+			<View style={[styles.container]}>
 				<Stack.Navigator initialRouteName="Home" screenOptions={{}}>
 					<Stack.Screen name="Home" component={HomeScreen} options={{}} />
 					<Stack.Screen
 						name="Details"
 						component={DetailsScreen}
 						options={{
-							...Transition.Presets.SlideFromBottom(),
-							gestureEnabled: true,
-							gestureDirection: "vertical",
-						}}
-					/>
-					<Stack.Screen
-						name="Profile"
-						component={ProfileScreen}
-						options={{
-							...Transition.Presets.SlideFromBottom(),
-							gestureEnabled: true,
-							gestureDirection: "vertical",
-						}}
-					/>
-					<Stack.Screen
-						name="Settings"
-						component={SettingsScreen}
-						options={{
-							...Transition.Presets.SlideFromBottom(),
+							...Transition.Presets.SlideFromTop(),
 							gestureEnabled: true,
 							gestureDirection: "vertical",
 						}}
@@ -145,7 +85,8 @@ const styles = StyleSheet.create({
 		overflow: "hidden",
 	},
 	screen: {
-		flex: 1,
+		// flex: 1,
+
 		backgroundColor: "#1a1a2e",
 		padding: 20,
 		paddingTop: 60,

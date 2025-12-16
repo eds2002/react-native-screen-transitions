@@ -25,17 +25,19 @@ function ComponentNavigator({
 	initialRouteName,
 	screenOptions,
 }: ComponentNavigatorProps) {
-	const { state, descriptors, navigation } = useComponentNavigationBuilder({
-		children,
-		initialRouteName,
-		screenOptions,
-	});
+	const { state, descriptors, navigation, dispatchPopByKey } =
+		useComponentNavigationBuilder({
+			children,
+			initialRouteName,
+			screenOptions,
+		});
 
 	return (
 		<ComponentView
 			state={state}
 			descriptors={descriptors}
 			navigation={navigation}
+			dispatchPopByKey={dispatchPopByKey}
 		/>
 	);
 }

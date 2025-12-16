@@ -1,10 +1,7 @@
-import {
-	executeOnUIRuntimeSync,
-	type SharedValue,
-} from "react-native-reanimated";
 import type { useClosingRouteKeys } from "../../hooks/navigation/use-closing-route-keys";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore } from "../../stores/gesture.store";
+import { readSharedValue } from "../read-shared-value";
 import { composeDescriptors } from "./compose-descriptors";
 
 interface RouteWithKey {
@@ -21,17 +18,6 @@ type SyncRoutesWithRemovedParams<
 	nextDescriptors: DescriptorMap;
 	closingRouteKeys: ReturnType<typeof useClosingRouteKeys>;
 };
-
-/**
- * Safely read a SharedValue from the UI thread.
- * Avoids the "cannot read .value inside component render" warning.
- */
-const readSharedValue = executeOnUIRuntimeSync(
-	<T,>(sv: SharedValue<T>): T => {
-		"worklet";
-		return sv.value;
-	},
-);
 
 const isRouteDismissing = (routeKey: string): boolean => {
 	const gestures = GestureStore.getRouteGestures(routeKey);

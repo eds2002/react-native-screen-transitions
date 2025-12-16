@@ -23,4 +23,6 @@ export interface ComponentNavigationContextProps {
 	state: ComponentStackState;
 	descriptors: ComponentStackDescriptorMap;
 	navigation: ComponentNavigation;
+	/** Internal: Dispatch to remove a specific route by key */
+	dispatchPopByKey: (key: string) => void;
 }

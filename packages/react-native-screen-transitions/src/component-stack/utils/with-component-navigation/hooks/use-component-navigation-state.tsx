@@ -86,8 +86,14 @@ export const useComponentNavigationState = (
 
 	const handleCloseRoute = useStableCallback(
 		({ route }: { route: ComponentRoute }) => {
-			// Component-stack is self-contained, so we just remove from closing list
-			// and update local state (no dispatch back to React Navigation)
+			// If the route is still in the builder state, dispatch to remove it.
+			// This mirrors React Navigation's source-based pop behavior.
+			if (props.state.routes.some((r) => r.key === route.key)) {
+				props.dispatchPopByKey(route.key);
+				return;
+			}
+
+			// Route already removed from builder state, just clean up local state
 			closingRouteKeys.remove(route.key);
 
 			setLocalState((current) => {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { useMemo, useReducer, useRef } from "react";
+import { useCallback, useMemo, useReducer, useRef } from "react";
 import type {
 	ComponentNavigation,
 	ComponentRoute,
@@ -21,6 +21,7 @@ const generateStackKey = () => `component-stack-${Date.now()}`;
 type NavigationAction =
 	| { type: "PUSH"; name: string; params?: Record<string, unknown> }
 	| { type: "POP" }
+	| { type: "POP_BY_KEY"; key: string }
 	| { type: "NAVIGATE"; name: string; params?: Record<string, unknown> }
 	| { type: "RESET"; name?: string; params?: Record<string, unknown> };
 
@@ -70,6 +71,28 @@ function navigationReducer(
 				...state,
 				routes: state.routes.slice(0, -1),
 				index: state.index - 1,
+			};
+		}
+
+		case "POP_BY_KEY": {
+			const routeIndex = state.routes.findIndex(
+				(route) => route.key === action.key,
+			);
+			if (routeIndex === -1) {
+				// Route not found, nothing to do
+				return state;
+			}
+			if (state.routes.length <= 1) {
+				// Can't pop the last route
+				return state;
+			}
+			const nextRoutes = state.routes.filter(
+				(route) => route.key !== action.key,
+			);
+			return {
+				...state,
+				routes: nextRoutes,
+				index: Math.min(state.index, nextRoutes.length - 1),
 			};
 		}
 
@@ -132,6 +155,8 @@ interface ComponentNavigationBuilderResult {
 	state: ComponentStackState;
 	descriptors: ComponentStackDescriptorMap;
 	navigation: ComponentNavigation;
+	/** Internal: Dispatch to remove a specific route by key */
+	dispatchPopByKey: (key: string) => void;
 }
 
 /**
@@ -249,9 +274,15 @@ export function useComponentNavigationBuilder({
 		return result;
 	}, [state.routes, screens, screenOptions, navigation]);
 
+	// Callback to remove a specific route by key (mirrors React Navigation's source-based pop)
+	const dispatchPopByKey = useCallback((key: string) => {
+		dispatch({ type: "POP_BY_KEY", key });
+	}, []);
+
 	return {
 		state,
 		descriptors,
 		navigation,
+		dispatchPopByKey,
 	};
 }
