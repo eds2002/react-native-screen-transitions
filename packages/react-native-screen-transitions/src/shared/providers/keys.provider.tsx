@@ -7,6 +7,27 @@ import type {
 import { createContext, useContext, useMemo } from "react";
 import type { ScreenTransitionConfig } from "../types/core.types";
 
+/**
+ * Base route interface - minimal contract for all stack types
+ */
+export interface BaseRoute {
+	key: string;
+}
+
+/**
+ * Base descriptor interface - minimal contract for all stack types.
+ * This allows component-stack, blank-stack, and native-stack to all
+ * work with the shared providers without tight coupling to React Navigation.
+ */
+export interface BaseDescriptor {
+	route: BaseRoute;
+	options: ScreenTransitionConfig;
+	navigation?: unknown;
+}
+
+/**
+ * React Navigation specific descriptor - extends base with full typing
+ */
 export type TransitionDescriptor = Descriptor<
 	ScreenTransitionConfig,
 	NavigationProp<ParamListBase>,
@@ -14,25 +35,23 @@ export type TransitionDescriptor = Descriptor<
 >;
 
 export interface KeysContextType<
-	TDescriptor extends TransitionDescriptor = TransitionDescriptor,
+	TDescriptor extends BaseDescriptor = BaseDescriptor,
 > {
 	previous?: TDescriptor;
 	current: TDescriptor;
 	next?: TDescriptor;
 }
 
-const KeysContext = createContext<
-	KeysContextType<TransitionDescriptor> | undefined
->(undefined);
+const KeysContext = createContext<KeysContextType | undefined>(undefined);
 
-interface KeysProviderProps<TDescriptor extends TransitionDescriptor> {
+interface KeysProviderProps<TDescriptor extends BaseDescriptor> {
 	children: React.ReactNode;
 	previous?: TDescriptor;
 	current: TDescriptor;
 	next?: TDescriptor;
 }
 
-export function KeysProvider<TDescriptor extends TransitionDescriptor>({
+export function KeysProvider<TDescriptor extends BaseDescriptor>({
 	children,
 	previous,
 	current,
@@ -47,7 +66,7 @@ export function KeysProvider<TDescriptor extends TransitionDescriptor>({
 }
 
 export function useKeys<
-	TDescriptor extends TransitionDescriptor = TransitionDescriptor,
+	TDescriptor extends BaseDescriptor = BaseDescriptor,
 >(): KeysContextType<TDescriptor> {
 	const context = useContext(KeysContext);
 	if (context === undefined) {

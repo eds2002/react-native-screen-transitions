@@ -29,13 +29,19 @@ export interface GestureContextType {
 	gestureEnabled: boolean;
 }
 
+interface ScreenGestureProviderProps {
+	children: React.ReactNode;
+	/** Optional custom dismiss handler for non-React-Navigation stacks */
+	onGestureDismiss?: () => void;
+}
+
 export const {
 	ScreenGestureProvider,
 	useScreenGestureContext: useGestureContext,
 } = createProvider("ScreenGesture", { guarded: false })<
-	{ children: React.ReactNode },
+	ScreenGestureProviderProps,
 	GestureContextType
->(({ children }) => {
+>(({ children, onGestureDismiss }) => {
 	const { current } = useKeys();
 	const ancestorContext = useGestureContext();
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
@@ -46,6 +52,7 @@ export const {
 		useBuildGestures({
 			scrollConfig,
 			ancestorContext,
+			onGestureDismiss,
 		});
 
 	const value: GestureContextType = {

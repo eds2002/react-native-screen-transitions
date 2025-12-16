@@ -1,16 +1,16 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Lifecycles are rendered right under the gesture provider> */
 import { useEffect, useLayoutEffect } from "react";
 import { useDerivedValue } from "react-native-reanimated";
-import type { NativeStackDescriptor } from "../../../native-stack/types";
-import { useSharedValueState } from "../../hooks/reanimated/use-shared-value-state";
-import useStableCallback from "../../hooks/use-stable-callback";
-import { useGestureContext } from "../../providers/gestures.provider";
-import { useKeys } from "../../providers/keys.provider";
-import { AnimationStore } from "../../stores/animation.store";
-import { TRUE } from "../../types/state.types";
-import type { Any } from "../../types/utils.types";
-import { startScreenTransition } from "../../utils/animation/start-screen-transition";
-import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
+import { useSharedValueState } from "../../shared/hooks/reanimated/use-shared-value-state";
+import useStableCallback from "../../shared/hooks/use-stable-callback";
+import { useGestureContext } from "../../shared/providers/gestures.provider";
+import { useKeys } from "../../shared/providers/keys.provider";
+import { AnimationStore } from "../../shared/stores/animation.store";
+import { TRUE } from "../../shared/types/state.types";
+import type { Any } from "../../shared/types/utils.types";
+import { startScreenTransition } from "../../shared/utils/animation/start-screen-transition";
+import { resetStoresForScreen } from "../../shared/utils/reset-stores-for-screen";
+import type { NativeStackDescriptor } from "../types";
 
 export interface Props {
 	children: React.ReactNode;

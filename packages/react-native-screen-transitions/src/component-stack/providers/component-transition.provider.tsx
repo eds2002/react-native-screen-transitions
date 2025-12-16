@@ -1,11 +1,9 @@
 import type React from "react";
 import type { ComponentType } from "react";
-import { RootTransitionAware } from "../../shared/components/root-transition-aware";
-import { KeysProvider } from "../../shared/providers/keys.provider";
-import { TransitionStylesProvider } from "../../shared/providers/transition-styles.provider";
+import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import type { Any } from "../../shared/types/utils.types";
 import type { ComponentStackDescriptor } from "../types";
-import { ComponentGestureProvider } from "./component-gesture.provider";
+import { useComponentNavigationContext } from "../utils/with-component-navigation";
 
 type Props = {
 	previous?: ComponentStackDescriptor;
@@ -22,19 +20,23 @@ export function ComponentTransitionProvider({
 	children,
 	LifecycleController,
 }: Props) {
+	const { navigation } = useComponentNavigationContext();
+
+	const handleGestureDismiss = () => {
+		if (navigation.canGoBack()) {
+			navigation.pop();
+		}
+	};
+
 	return (
-		<KeysProvider
-			previous={previous as any}
-			current={current as any}
-			next={next as any}
+		<ScreenTransitionProvider
+			previous={previous}
+			current={current}
+			next={next}
+			LifecycleController={LifecycleController}
+			onGestureDismiss={handleGestureDismiss}
 		>
-			<ComponentGestureProvider>
-				<LifecycleController>
-					<TransitionStylesProvider>
-						<RootTransitionAware>{children}</RootTransitionAware>
-					</TransitionStylesProvider>
-				</LifecycleController>
-			</ComponentGestureProvider>
-		</KeysProvider>
+			{children}
+		</ScreenTransitionProvider>
 	);
 }

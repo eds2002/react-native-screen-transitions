@@ -15,9 +15,10 @@ import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds.store";
+import type { Any } from "../types/utils.types";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
-import { type TransitionDescriptor, useKeys } from "./keys.provider";
+import { type BaseDescriptor, useKeys } from "./keys.provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
@@ -47,26 +48,26 @@ interface RegisterBoundsContextValue {
  * Returns an array of screen keys from immediate parent to root.
  * [parentKey, grandparentKey, greatGrandparentKey, ...]
  */
-const getAncestorKeys = (current: TransitionDescriptor): string[] => {
+const getAncestorKeys = (current: BaseDescriptor): string[] => {
 	const ancestors: string[] = [];
+	const nav = current.navigation as Any;
 
-	// hmm
 	// Safety check for component-stack which doesn't have getParent
-	if (typeof current.navigation?.getParent !== "function") {
+	if (typeof nav?.getParent !== "function") {
 		return ancestors;
 	}
 
-	let nav = current.navigation.getParent();
+	let parent = nav.getParent();
 
-	while (nav) {
-		const state = nav.getState();
+	while (parent) {
+		const state = parent.getState();
 		if (state?.routes && state.index !== undefined) {
 			const focusedRoute = state.routes[state.index];
 			if (focusedRoute?.key) {
 				ancestors.push(focusedRoute.key);
 			}
 		}
-		nav = nav.getParent();
+		parent = parent.getParent();
 	}
 
 	return ancestors;

@@ -3,9 +3,9 @@ import * as React from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { ScreenContainer } from "react-native-screens";
-import { ComponentStackScreenLifecycleController } from "../../shared/components/controllers/component-stack-lifecycle";
 import { FlagsProvider } from "../../shared/providers/flags.provider";
 import { RoutesProvider } from "../../shared/providers/routes.provider";
+import { ComponentStackScreenLifecycleController } from "../controllers/component-stack-lifecycle";
 import { ComponentTransitionProvider } from "../providers/component-transition.provider";
 import type { ComponentStackDescriptor } from "../types";
 import { withComponentNavigationProvider } from "../utils/with-component-navigation";
@@ -32,7 +32,7 @@ const SceneView = React.memo(function SceneView({
 });
 
 export const ComponentView = withComponentNavigationProvider(
-	({ descriptors, focusedIndex, routes, scenes, shouldShowFloatOverlay }) => {
+	({ focusedIndex, routes, scenes, shouldShowFloatOverlay }) => {
 		// Memoize route keys array for RoutesProvider
 		const routeKeys = React.useMemo(
 			() => routes.map((route) => route.key),

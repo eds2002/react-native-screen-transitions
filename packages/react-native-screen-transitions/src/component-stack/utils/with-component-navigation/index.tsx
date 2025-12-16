@@ -1,4 +1,5 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import useStableCallback from "../../../shared/hooks/use-stable-callback";
 import createProvider from "../../../shared/utils/create-provider";
 import type {
 	ComponentRoute,
@@ -36,84 +37,126 @@ function calculateActiveScreensLimit(
 	return Math.min(limit + 1, routes.length);
 }
 
+/**
+ * Stores routes and descriptors for closing screens.
+ */
+interface ClosingRouteData {
+	route: ComponentRoute;
+	descriptor: ComponentStackDescriptorMap[string];
+}
+
 const { withComponentNavigationProvider, useComponentNavigationContext } =
 	createProvider("ComponentNavigation")<
 		ComponentNavigationContextProps,
 		ComponentNavigationContextValue
 	>((props) => {
 		const closingRouteKeys = useClosingRouteKeys();
-		const prevRoutesRef = useRef<ComponentRoute[]>([]);
 
-		// Track local routes that include closing routes
-		const [localRoutes, setLocalRoutes] = useState<ComponentRoute[]>(
-			props.state.routes,
-		);
-		const [localDescriptors, setLocalDescriptors] =
-			useState<ComponentStackDescriptorMap>(props.descriptors);
+		// Track previous props - updated during render
+		const prevPropsRef = useRef({
+			routes: props.state.routes,
+			descriptors: props.descriptors,
+		});
 
-		// Sync local state when props change
-		useMemo(() => {
-			const prevRoutes = prevRoutesRef.current;
-			const nextRoutes = props.state.routes;
+		// Closing routes data - stored in ref for synchronous access
+		const closingDataRef = useRef<Map<string, ClosingRouteData>>(new Map());
 
-			// Detect if a route was removed (going back)
-			if (prevRoutes.length > nextRoutes.length) {
-				// Find the route that was removed
-				const removedRoute = prevRoutes.find(
-					(prevRoute) =>
-						!nextRoutes.some((nextRoute) => nextRoute.key === prevRoute.key),
+		// Counter to force re-renders when closing data changes
+		const [, forceUpdate] = useState(0);
+
+		// Synchronously detect route changes during render
+		const prevProps = prevPropsRef.current;
+		const prevRoutes = prevProps.routes;
+		const prevDescriptors = prevProps.descriptors;
+		const nextRoutes = props.state.routes;
+
+		// Check if routes actually changed (by key)
+		const prevKeys = prevRoutes.map((r) => r.key).join(",");
+		const nextKeys = nextRoutes.map((r) => r.key).join(",");
+
+		if (prevKeys !== nextKeys) {
+			const previousFocusedRoute = prevRoutes[prevRoutes.length - 1];
+			const nextFocusedRoute = nextRoutes[nextRoutes.length - 1];
+
+			if (
+				previousFocusedRoute &&
+				nextFocusedRoute &&
+				previousFocusedRoute.key !== nextFocusedRoute.key
+			) {
+				const nextRouteWasPresent = prevRoutes.some(
+					(r) => r.key === nextFocusedRoute.key,
+				);
+				const previousRouteStillPresent = nextRoutes.some(
+					(r) => r.key === previousFocusedRoute.key,
 				);
 
-				if (removedRoute) {
-					// Mark as closing and keep in local state
-					closingRouteKeys.add(removedRoute.key);
-					setLocalRoutes([...nextRoutes, removedRoute]);
-					setLocalDescriptors({ ...props.descriptors, ...localDescriptors });
-				}
-			} else {
-				// Routes added or unchanged - sync directly
-				setLocalRoutes(nextRoutes);
-				setLocalDescriptors(props.descriptors);
+				if (nextRouteWasPresent && !previousRouteStillPresent) {
+					// Going back: previous route was removed, mark as closing
+					const descriptor = prevDescriptors[previousFocusedRoute.key];
 
-				// Clean up any closing keys that are no longer relevant
-				const activeKeys = new Set(nextRoutes.map((r) => r.key));
-				for (const key of Array.from(closingRouteKeys.ref.current)) {
-					if (!activeKeys.has(key)) {
-						closingRouteKeys.remove(key);
+					if (descriptor && !closingDataRef.current.has(previousFocusedRoute.key)) {
+						closingRouteKeys.add(previousFocusedRoute.key);
+						closingDataRef.current.set(previousFocusedRoute.key, {
+							route: previousFocusedRoute,
+							descriptor,
+						});
 					}
 				}
 			}
+		}
 
-			prevRoutesRef.current = nextRoutes;
-		}, [props.state.routes, props.descriptors, closingRouteKeys, localDescriptors]);
+		// Update ref for next render (must be after the check above)
+		prevPropsRef.current = {
+			routes: props.state.routes,
+			descriptors: props.descriptors,
+		};
 
-		const handleCloseRoute = useCallback(
+		const handleCloseRoute = useStableCallback(
 			({ route }: { route: ComponentRoute }) => {
 				closingRouteKeys.remove(route.key);
-
-				setLocalRoutes((current) => {
-					if (!current.some((r) => r.key === route.key)) {
-						return current;
-					}
-					return current.filter((r) => r.key !== route.key);
-				});
-
-				setLocalDescriptors((current) => {
-					const next = { ...current };
-					delete next[route.key];
-					return next;
-				});
+				if (closingDataRef.current.has(route.key)) {
+					closingDataRef.current.delete(route.key);
+					forceUpdate((c) => c + 1);
+				}
 			},
-			[closingRouteKeys],
 		);
+
+		// Derive routes: props routes + closing routes
+		const derivedRoutes = useMemo(() => {
+			const routes = [...props.state.routes];
+			const propsRouteKeys = new Set(routes.map((r) => r.key));
+
+			// Add closing routes that aren't in props anymore
+			for (const [key, data] of closingDataRef.current) {
+				if (!propsRouteKeys.has(key)) {
+					routes.push(data.route);
+				}
+			}
+
+			return routes;
+		}, [props.state.routes]);
+
+		// Derive descriptors: props descriptors + closing route descriptors
+		const derivedDescriptors = useMemo(() => {
+			const descriptors: ComponentStackDescriptorMap = { ...props.descriptors };
+
+			// Add closing route descriptors
+			for (const [key, data] of closingDataRef.current) {
+				if (!descriptors[key]) {
+					descriptors[key] = data.descriptor;
+				}
+			}
+
+			return descriptors;
+		}, [props.descriptors]);
 
 		const { scenes, activeScreensLimit, shouldShowFloatOverlay } =
 			useMemo(() => {
 				const scenes: ComponentStackScene[] = [];
 				let shouldShowFloatOverlay = false;
 
-				for (const route of localRoutes) {
-					const descriptor = localDescriptors[route.key];
+				for (const route of derivedRoutes) {
+					const descriptor = derivedDescriptors[route.key];
 					if (!descriptor) continue;
 
 					scenes.push({ route, descriptor });
@@ -129,18 +172,18 @@ const { withComponentNavigationProvider, useComponentNavigationContext } =
 				return {
 					scenes,
 					activeScreensLimit: calculateActiveScreensLimit(
-						localRoutes,
-						localDescriptors,
+						derivedRoutes,
+						derivedDescriptors,
 					),
 					shouldShowFloatOverlay,
 				};
-			}, [localRoutes, localDescriptors]);
+			}, [derivedRoutes, derivedDescriptors]);
 
 		const value = useMemo(
 			() => ({
-				routes: localRoutes,
+				routes: derivedRoutes,
 				focusedIndex: props.state.index,
-				descriptors: localDescriptors,
+				descriptors: derivedDescriptors,
 				closingRouteKeysShared: closingRouteKeys.shared,
 				activeScreensLimit,
 				handleCloseRoute,
@@ -149,8 +192,8 @@ const { withComponentNavigationProvider, useComponentNavigationContext } =
 				navigation: props.navigation,
 			}),
 			[
-				localRoutes,
-				localDescriptors,
+				derivedRoutes,
+				derivedDescriptors,
 				props.state.index,
 				props.navigation,
 				closingRouteKeys.shared,

@@ -103,7 +103,7 @@ export default function App() {
 	return (
 		<View style={styles.container}>
 			<Stack.Navigator initialRouteName="Home" screenOptions={{}}>
-				<Stack.Screen name="Home" component={HomeScreen} />
+				<Stack.Screen name="Home" component={HomeScreen} options={{}} />
 				<Stack.Screen
 					name="Details"
 					component={DetailsScreen}

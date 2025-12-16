@@ -33,7 +33,7 @@ import {
 	ScreenStack,
 	ScreenStackItem,
 } from "react-native-screens";
-import { NativeStackScreenLifecycleController } from "../../shared/components/controllers/native-stack-lifecycle";
+import { NativeStackScreenLifecycleController } from "../controllers/native-stack-lifecycle";
 import { RoutesProvider } from "../../shared/providers/routes.provider";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import type {

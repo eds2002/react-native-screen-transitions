@@ -11,10 +11,6 @@ import type {
 } from "../types";
 import { useComponentNavigationContext } from "../utils/with-component-navigation";
 
-// Helper to cast component descriptors for KeysProvider
-const asAny = (descriptor: ComponentStackDescriptor | undefined) =>
-	descriptor as any;
-
 type OverlayHostProps = {
 	scene: ComponentStackScene;
 	isFloating?: boolean;
@@ -120,7 +116,7 @@ const FloatOverlay = () => {
 	const next = scenes[overlayIndex + 1]?.descriptor;
 
 	return (
-		<KeysProvider current={asAny(current)} previous={asAny(previous)} next={asAny(next)}>
+		<KeysProvider current={current} previous={previous} next={next}>
 			<TransitionStylesProvider>
 				<OverlayHost scene={scene} isFloating />
 			</TransitionStylesProvider>
@@ -129,8 +125,7 @@ const FloatOverlay = () => {
 };
 
 const ScreenOverlay = () => {
-	// Cast since component-stack descriptors don't match React Navigation's type
-	const { current } = useKeys() as unknown as { current: ComponentStackDescriptor };
+	const { current } = useKeys<ComponentStackDescriptor>();
 
 	const options = current.options;
 

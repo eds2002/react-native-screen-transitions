@@ -1,8 +1,7 @@
 import * as React from "react";
-import { useCallback, useMemo, useReducer, useRef } from "react";
+import { useMemo, useReducer, useRef } from "react";
 import type {
 	ComponentNavigation,
-	ComponentNavigatorProps,
 	ComponentRoute,
 	ComponentScreenConfig,
 	ComponentScreenProps,
@@ -42,7 +41,10 @@ function createRoute(
 
 function navigationReducer(
 	state: ComponentStackState,
-	action: NavigationAction & { screens: ScreenRegistry; initialRouteName: string },
+	action: NavigationAction & {
+		screens: ScreenRegistry;
+		initialRouteName: string;
+	},
 ): ComponentStackState {
 	switch (action.type) {
 		case "PUSH": {

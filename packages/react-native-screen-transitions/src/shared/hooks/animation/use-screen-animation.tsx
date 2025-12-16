@@ -1,4 +1,3 @@
-import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
@@ -7,7 +6,8 @@ import type { NativeStackScreenTransitionConfig } from "../../../native-stack/ty
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
 import { useFlagsContext } from "../../providers/flags.provider";
 import {
-	type TransitionDescriptor,
+	type BaseDescriptor,
+	type BaseRoute,
 	useKeys,
 } from "../../providers/keys.provider";
 import { useStackAnimationValues } from "../../providers/routes.provider";
@@ -27,13 +27,13 @@ type BuiltState = {
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	gesture: GestureStoreMap;
-	route: RouteProp<ParamListBase>;
+	route: BaseRoute;
 	meta?: Record<string, unknown>;
 	unwrapped: ScreenTransitionState;
 };
 
 const createScreenTransitionState = (
-	route: RouteProp<ParamListBase>,
+	route: BaseRoute,
 	meta?: Record<string, unknown>,
 ): ScreenTransitionState => ({
 	progress: 0,
@@ -71,7 +71,7 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 };
 
 const useBuildScreenTransitionState = (
-	descriptor: TransitionDescriptor | undefined,
+	descriptor: BaseDescriptor | undefined,
 ): BuiltState | undefined => {
 	const key = descriptor?.route.key;
 	const meta = descriptor?.options?.meta;

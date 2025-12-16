@@ -1,24 +1,26 @@
 import { useLayoutEffect } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
-import type { BlankStackDescriptor } from "../../../blank-stack/types";
-import { useStackNavigationContext } from "../../../blank-stack/utils/with-stack-navigation";
-import useStableCallback from "../../hooks/use-stable-callback";
-import { useKeys } from "../../providers/keys.provider";
-import { AnimationStore } from "../../stores/animation.store";
-import { startScreenTransition } from "../../utils/animation/start-screen-transition";
-import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
+import useStableCallback from "../../shared/hooks/use-stable-callback";
+import { useKeys } from "../../shared/providers/keys.provider";
+import { AnimationStore } from "../../shared/stores/animation.store";
+import { BoundStore } from "../../shared/stores/bounds.store";
+import { GestureStore } from "../../shared/stores/gesture.store";
+import { startScreenTransition } from "../../shared/utils/animation/start-screen-transition";
+import type { ComponentStackDescriptor } from "../types";
+import { useComponentNavigationContext } from "../utils/with-component-navigation";
 
 export interface Props {
 	children: React.ReactNode;
 }
 
 /**
- * Lifecycle controller built out for Blank Stack implementation.
+ * Lifecycle controller built out for Component Stack implementation.
+ * Similar to BlankStackScreenLifecycleController but uses component navigation context.
  */
-export const BlankStackScreenLifecycleController = ({ children }: Props) => {
-	const { current } = useKeys<BlankStackDescriptor>();
+export const ComponentStackScreenLifecycleController = ({ children }: Props) => {
+	const { current } = useKeys<ComponentStackDescriptor>();
 	const { handleCloseRoute, closingRouteKeysShared } =
-		useStackNavigationContext();
+		useComponentNavigationContext();
 
 	const animations = AnimationStore.getAll(current.route.key);
 
@@ -31,7 +33,10 @@ export const BlankStackScreenLifecycleController = ({ children }: Props) => {
 	});
 
 	const handleCleanup = useStableCallback(() => {
-		resetStoresForScreen(current);
+		// Inline reset since resetStoresForScreen expects TransitionDescriptor
+		AnimationStore.clear(current.route.key);
+		GestureStore.clear(current.route.key);
+		BoundStore.clear(current.route.key);
 	});
 
 	const handleCloseEnd = useStableCallback((finished: boolean) => {

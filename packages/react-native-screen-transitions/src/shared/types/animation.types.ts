@@ -1,10 +1,10 @@
-import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import type {
 	StyleProps,
 	WithSpringConfig,
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
+import type { BaseRoute } from "../providers/keys.provider";
 import type { BoundsAccessor } from "./bounds.types";
 import type { Layout } from "./core.types";
 import type { GestureValues } from "./gesture.types";
@@ -74,7 +74,7 @@ export type ScreenTransitionState = {
 	 * Pass route params via options: `options={({ route }) => ({ meta: { id: route.params.id } })}`
 	 * This field may be removed in a future version.
 	 */
-	route: RouteProp<ParamListBase>;
+	route: BaseRoute;
 };
 
 export interface ScreenInterpolationProps {
