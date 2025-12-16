@@ -2,162 +2,16 @@ import { useLayoutEffect, useState } from "react";
 import { useClosingRouteKeys } from "../../../../shared/hooks/navigation/use-closing-route-keys";
 import { usePrevious } from "../../../../shared/hooks/use-previous";
 import useStableCallback from "../../../../shared/hooks/use-stable-callback";
+import { alignRoutesWithLatest } from "../../../../shared/utils/navigation/align-routes-with-latest";
 import { areDescriptorsEqual } from "../../../../shared/utils/navigation/are-descriptors-equal";
-import { composeDescriptors } from "../../../../shared/utils/navigation/compose-descriptors";
 import { haveSameRouteKeys } from "../../../../shared/utils/navigation/have-same-route-keys";
 import { routesAreIdentical } from "../../../../shared/utils/navigation/routes-are-identical";
+import { syncRoutesWithRemoved } from "../../../../shared/utils/navigation/sync-routes-with-removed";
 import type {
 	ComponentRoute,
 	ComponentStackDescriptorMap,
 } from "../../../types";
 import type { ComponentNavigationContextProps } from "../types";
-
-type SyncRoutesWithRemovedParams = {
-	prevRoutes: ComponentRoute[];
-	prevDescriptors: ComponentStackDescriptorMap;
-	nextRoutes: ComponentRoute[];
-	nextDescriptors: ComponentStackDescriptorMap;
-	closingRouteKeys: ReturnType<typeof useClosingRouteKeys>;
-};
-
-/**
- * Aligns current routes with the latest route data while preserving references
- * when possible for performance optimization
- */
-const alignRoutesWithLatest = (
-	currentRoutes: ComponentRoute[],
-	currentDescriptors: ComponentStackDescriptorMap,
-	nextRoutes: ComponentRoute[],
-	nextDescriptors: ComponentStackDescriptorMap,
-) => {
-	// Early return for empty current routes
-	if (currentRoutes.length === 0) {
-		return {
-			routes: nextRoutes,
-			descriptors: composeDescriptors(
-				nextRoutes,
-				nextDescriptors,
-				currentDescriptors,
-			),
-		};
-	}
-
-	// Create lookup map for efficient route finding
-	const nextRouteLookup = new Map<string, ComponentRoute>();
-	for (const route of nextRoutes) {
-		nextRouteLookup.set(route.key, route);
-	}
-
-	// Track if any changes occurred
-	let didChange = currentRoutes.length !== nextRoutes.length;
-
-	// Align routes, updating references where needed
-	const alignedRoutes = currentRoutes.map((route) => {
-		const nextRoute = nextRouteLookup.get(route.key);
-
-		if (!nextRoute) {
-			return route; // Keep current route if not in next
-		}
-
-		if (nextRoute !== route) {
-			didChange = true;
-			return nextRoute; // Update to new route reference
-		}
-
-		return route; // Keep current route reference
-	});
-
-	// Only create new array if changes occurred
-	const routesResult = didChange ? alignedRoutes : currentRoutes;
-
-	return {
-		routes: routesResult,
-		descriptors: composeDescriptors(
-			routesResult,
-			nextDescriptors,
-			currentDescriptors,
-		),
-	};
-};
-
-/**
- * Synchronizes routes while handling removed routes that may still be animating out.
- * This manages the complex logic of keeping closing routes visible during transitions.
- */
-const syncRoutesWithRemoved = ({
-	prevRoutes,
-	prevDescriptors,
-	nextRoutes,
-	nextDescriptors,
-	closingRouteKeys,
-}: SyncRoutesWithRemovedParams) => {
-	if (nextRoutes.length === 0) {
-		closingRouteKeys.clear();
-		return {
-			routes: nextRoutes,
-			descriptors: {} as ComponentStackDescriptorMap,
-		};
-	}
-
-	// Start with next routes, will mutate if needed
-	const derivedRoutes: ComponentRoute[] = nextRoutes.slice();
-
-	// Get focused (last) routes for comparison
-	const previousFocusedRoute = prevRoutes[prevRoutes.length - 1];
-	const nextFocusedRoute = nextRoutes[nextRoutes.length - 1];
-
-	// Handle focus changes between routes
-	if (
-		previousFocusedRoute &&
-		nextFocusedRoute &&
-		previousFocusedRoute.key !== nextFocusedRoute.key
-	) {
-		const nextRouteWasPresent = prevRoutes.some(
-			(route) => route.key === nextFocusedRoute.key,
-		);
-		const previousRouteStillPresent = nextRoutes.some(
-			(route) => route.key === previousFocusedRoute.key,
-		);
-
-		if (nextRouteWasPresent && !previousRouteStillPresent) {
-			// Previous route was removed, mark as closing
-			closingRouteKeys.add(previousFocusedRoute.key);
-
-			derivedRoutes.push(previousFocusedRoute);
-		} else {
-			// Next route is now active, not closing
-			closingRouteKeys.remove(nextFocusedRoute.key);
-
-			if (!previousRouteStillPresent) {
-				// Previous route needs to be inserted for transition
-				closingRouteKeys.remove(previousFocusedRoute.key);
-
-				const insertIndex = Math.max(derivedRoutes.length - 1, 0);
-				derivedRoutes.splice(insertIndex, 0, previousFocusedRoute);
-			}
-		}
-	} else if (nextFocusedRoute) {
-		// Same focused route, ensure it's not marked as closing
-		closingRouteKeys.remove(nextFocusedRoute.key);
-	}
-
-	// Clean up closing keys that are no longer in the route list
-	const activeKeys = new Set(derivedRoutes.map((route) => route.key));
-	for (const key of Array.from(closingRouteKeys.ref.current)) {
-		if (!activeKeys.has(key)) {
-			closingRouteKeys.remove(key);
-		}
-	}
-
-	return {
-		routes: derivedRoutes,
-		descriptors: composeDescriptors(
-			derivedRoutes,
-			nextDescriptors,
-			prevDescriptors,
-		),
-	};
-};
 
 export const useComponentNavigationState = (
 	props: ComponentNavigationContextProps,

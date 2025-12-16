@@ -3,14 +3,14 @@ interface RouteWithKey {
 }
 
 export const composeDescriptors = <
-	R extends RouteWithKey,
-	D extends Record<string, unknown>,
+	Route extends RouteWithKey,
+	DescriptorMap extends Record<string, unknown>,
 >(
-	routes: R[],
-	nextDescriptors: D,
-	currentDescriptors: D,
-): D => {
-	const composed = {} as D;
+	routes: Route[],
+	nextDescriptors: DescriptorMap,
+	currentDescriptors: DescriptorMap,
+): DescriptorMap => {
+	const composed = {} as DescriptorMap;
 
 	for (const route of routes) {
 		(composed as Record<string, unknown>)[route.key] =
