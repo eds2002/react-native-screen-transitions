@@ -1,8 +1,9 @@
 import { SafeAreaProviderCompat } from "@react-navigation/elements";
 import * as React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { FlagsProvider } from "../../shared/providers/flags.provider";
+import { LayoutDimensionsProvider } from "../../shared/providers/layout-dimensions.provider";
 import { RoutesProvider } from "../../shared/providers/routes.provider";
 import { ComponentStackScreenLifecycleController } from "../controllers/component-stack-lifecycle";
 import { ComponentTransitionProvider } from "../providers/component-transition.provider";
@@ -40,7 +41,7 @@ export const ComponentView = withComponentNavigationProvider(
 					<GestureHandlerRootView style={styles.container}>
 						<SafeAreaProviderCompat>
 							{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-							<View style={styles.container}>
+							<LayoutDimensionsProvider>
 								{scenes.map((scene, sceneIndex) => {
 									const descriptor = scene.descriptor;
 									const route = scene.route;
@@ -69,7 +70,7 @@ export const ComponentView = withComponentNavigationProvider(
 										</Screen>
 									);
 								})}
-							</View>
+							</LayoutDimensionsProvider>
 						</SafeAreaProviderCompat>
 					</GestureHandlerRootView>
 				</RoutesProvider>

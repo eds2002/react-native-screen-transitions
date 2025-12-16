@@ -10,6 +10,7 @@ import {
 	type BaseRoute,
 	useKeys,
 } from "../../providers/keys.provider";
+import { useLayoutDimensionsContext } from "../../providers/layout-dimensions.provider";
 import { useStackAnimationValues } from "../../providers/routes.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
@@ -101,7 +102,10 @@ const hasTransitionsEnabled = (
 };
 
 export function _useScreenAnimation() {
-	const dimensions = useWindowDimensions();
+	const windowDimensions = useWindowDimensions();
+	const layoutContext = useLayoutDimensionsContext();
+	const dimensions = layoutContext?.layout ?? windowDimensions;
+
 	const insets = useSafeAreaInsets();
 	const flags = useFlagsContext();
 	const transitionsAlwaysOn = flags?.TRANSITIONS_ALWAYS_ON ?? false;

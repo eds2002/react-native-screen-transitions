@@ -101,37 +101,39 @@ function SettingsScreen({ navigation }: ComponentStackScreenProps) {
 
 export default function App() {
 	return (
-		<View style={styles.container}>
-			<Stack.Navigator initialRouteName="Home" screenOptions={{}}>
-				<Stack.Screen name="Home" component={HomeScreen} options={{}} />
-				<Stack.Screen
-					name="Details"
-					component={DetailsScreen}
-					options={{
-						...Transition.Presets.SlideFromBottom(),
-						gestureEnabled: true,
-						gestureDirection: "vertical",
-					}}
-				/>
-				<Stack.Screen
-					name="Profile"
-					component={ProfileScreen}
-					options={{
-						...Transition.Presets.SlideFromBottom(),
-						gestureEnabled: true,
-						gestureDirection: "vertical",
-					}}
-				/>
-				<Stack.Screen
-					name="Settings"
-					component={SettingsScreen}
-					options={{
-						...Transition.Presets.SlideFromBottom(),
-						gestureEnabled: true,
-						gestureDirection: "vertical",
-					}}
-				/>
-			</Stack.Navigator>
+		<View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+			<View style={styles.container}>
+				<Stack.Navigator initialRouteName="Home" screenOptions={{}}>
+					<Stack.Screen name="Home" component={HomeScreen} options={{}} />
+					<Stack.Screen
+						name="Details"
+						component={DetailsScreen}
+						options={{
+							...Transition.Presets.SlideFromBottom(),
+							gestureEnabled: true,
+							gestureDirection: "vertical",
+						}}
+					/>
+					<Stack.Screen
+						name="Profile"
+						component={ProfileScreen}
+						options={{
+							...Transition.Presets.SlideFromBottom(),
+							gestureEnabled: true,
+							gestureDirection: "vertical",
+						}}
+					/>
+					<Stack.Screen
+						name="Settings"
+						component={SettingsScreen}
+						options={{
+							...Transition.Presets.SlideFromBottom(),
+							gestureEnabled: true,
+							gestureDirection: "vertical",
+						}}
+					/>
+				</Stack.Navigator>
+			</View>
 		</View>
 	);
 }
@@ -140,6 +142,7 @@ const styles = StyleSheet.create({
 	container: {
 		width: 300,
 		height: 300,
+		overflow: "hidden",
 	},
 	screen: {
 		flex: 1,
