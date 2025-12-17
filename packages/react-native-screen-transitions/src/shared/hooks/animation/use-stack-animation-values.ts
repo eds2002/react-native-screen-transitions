@@ -1,29 +1,9 @@
 import { useMemo } from "react";
+import { useStackRootContext } from "../../providers/stack-root.provider";
 import {
 	AnimationStore,
 	type AnimationStoreMap,
-} from "../stores/animation.store";
-import createProvider from "../utils/create-provider";
-
-interface RoutesProviderProps {
-	children: React.ReactNode;
-	routeKeys: string[];
-}
-
-interface RoutesContextValue {
-	/**
-	 * Array of route keys for all routes in the stack, in order.
-	 */
-	routeKeys: string[];
-}
-
-const { RoutesProvider, useRoutesContext } = createProvider("Routes", {
-	guarded: false,
-})<RoutesProviderProps, RoutesContextValue>(({ routeKeys }) => ({
-	value: { routeKeys },
-}));
-
-export { RoutesProvider };
+} from "../../stores/animation.store";
 
 /**
  * Hook to get animation values for all screens from a given index onwards.
@@ -32,7 +12,7 @@ export { RoutesProvider };
 export function useStackAnimationValues(
 	currentRouteKey: string | undefined,
 ): AnimationStoreMap[] {
-	const routesContext = useRoutesContext();
+	const routesContext = useStackRootContext();
 
 	return useMemo(() => {
 		if (!currentRouteKey || !routesContext) {

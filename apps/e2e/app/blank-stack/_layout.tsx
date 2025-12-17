@@ -1,0 +1,91 @@
+import { BlankStack } from "@/layouts/blank-stack";
+import { interpolate } from "react-native-reanimated";
+import Transition from "react-native-screen-transitions";
+
+export default function BlankStackLayout() {
+	return (
+		<BlankStack>
+			<BlankStack.Screen name="index" />
+			<BlankStack.Screen
+				name="slide-horizontal"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "horizontal",
+					screenStyleInterpolator: ({
+						progress,
+						layouts: {
+							screen: { width },
+						},
+					}) => {
+						"worklet";
+						const translateX = interpolate(
+							progress,
+							[0, 1, 2],
+							[width, 0, -width * 0.3],
+						);
+						return {
+							contentStyle: {
+								transform: [{ translateX }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="slide-vertical"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					...Transition.Presets.SlideFromBottom(),
+				}}
+			/>
+			<BlankStack.Screen
+				name="draggable-card"
+				options={{
+					gestureEnabled: true,
+					...Transition.Presets.DraggableCard(),
+				}}
+			/>
+			<BlankStack.Screen
+				name="elastic-card"
+				options={{
+					gestureEnabled: true,
+					...Transition.Presets.ElasticCard(),
+				}}
+			/>
+			<BlankStack.Screen
+				name="detail"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "horizontal",
+					screenStyleInterpolator: ({
+						progress,
+						layouts: {
+							screen: { width },
+						},
+					}) => {
+						"worklet";
+						const translateX = interpolate(
+							progress,
+							[0, 1, 2],
+							[width, 0, -width * 0.3],
+						);
+						return {
+							contentStyle: {
+								transform: [{ translateX }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+		</BlankStack>
+	);
+}

@@ -4,14 +4,13 @@ import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenTransitionConfig } from "../../../native-stack/types";
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
-import { useFlagsContext } from "../../providers/flags.provider";
 import {
 	type BaseDescriptor,
 	type BaseRoute,
 	useKeys,
 } from "../../providers/keys.provider";
 import { useLayoutDimensionsContext } from "../../providers/layout-dimensions.provider";
-import { useStackAnimationValues } from "../../providers/routes.provider";
+import { useStackRootContext } from "../../providers/stack-root.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
@@ -22,6 +21,7 @@ import type { ScreenTransitionConfig } from "../../types/core.types";
 import { computeStackProgress } from "../../utils/animation/compute-stack-progress";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
+import { useStackAnimationValues } from "./use-stack-animation-values";
 
 type BuiltState = {
 	progress: SharedValue<number>;
@@ -107,8 +107,8 @@ export function _useScreenAnimation() {
 	const dimensions = layoutContext?.layout ?? windowDimensions;
 
 	const insets = useSafeAreaInsets();
-	const flags = useFlagsContext();
-	const transitionsAlwaysOn = flags?.TRANSITIONS_ALWAYS_ON ?? false;
+	const { flags } = useStackRootContext();
+	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {
 		current: currentDescriptor,
