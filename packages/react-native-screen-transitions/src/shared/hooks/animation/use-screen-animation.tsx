@@ -9,7 +9,6 @@ import {
 	type BaseRoute,
 	useKeys,
 } from "../../providers/keys.provider";
-import { useLayoutDimensionsContext } from "../../providers/layout-dimensions.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
@@ -101,8 +100,7 @@ const hasTransitionsEnabled = (
 
 export function _useScreenAnimation() {
 	const windowDimensions = useWindowDimensions();
-	const layoutContext = useLayoutDimensionsContext();
-	const dimensions = layoutContext?.layout ?? windowDimensions;
+	const dimensions = windowDimensions;
 
 	const insets = useSafeAreaInsets();
 	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
