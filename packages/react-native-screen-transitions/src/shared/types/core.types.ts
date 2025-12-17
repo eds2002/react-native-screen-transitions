@@ -1,5 +1,8 @@
-import type { AnimatedProps } from "react-native-reanimated";
+import type { Route } from "@react-navigation/native";
+import type { AnimatedProps, DerivedValue } from "react-native-reanimated";
 import type {
+	OverlayInterpolationProps,
+	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	TransitionSpec,
 } from "./animation.types";
@@ -53,6 +56,47 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	sharedBoundTag?: string;
 };
 
+/**
+ * Props passed to overlay components.
+ * Generic over the navigation type since different stacks have different navigation props.
+ */
+export type OverlayProps<TNavigation = unknown> = {
+	/**
+	 * Route of the currently focused screen in the stack.
+	 */
+	focusedRoute: Route<string>;
+
+	/**
+	 * Index of the focused route in the stack.
+	 */
+	focusedIndex: number;
+
+	/**
+	 * All routes currently in the stack.
+	 */
+	routes: Route<string>[];
+
+	/**
+	 * Custom metadata from the focused screen's options.
+	 */
+	meta?: Record<string, unknown>;
+
+	/**
+	 * Navigation prop for the overlay.
+	 */
+	navigation: TNavigation;
+
+	/**
+	 * Animation values for the overlay.
+	 */
+	overlayAnimation: DerivedValue<OverlayInterpolationProps>;
+
+	/**
+	 * Animation values for the screen.
+	 */
+	screenAnimation: DerivedValue<ScreenInterpolationProps>;
+};
+
 export type ScreenTransitionConfig = {
 	/**
 	 * The user-provided function to calculate styles based on animation progress.
@@ -101,4 +145,25 @@ export type ScreenTransitionConfig = {
 	 * options={{ meta: { scalesOthers: true } }}
 	 */
 	meta?: Record<string, unknown>;
+
+	/**
+	 * Function that given `OverlayProps` returns a React Element to display as an overlay.
+	 * The navigation type is `unknown` here to avoid circular references in type definitions.
+	 * Each stack defines its own typed overlay props (e.g., BlankStackOverlayProps).
+	 */
+	overlay?: (props: OverlayProps) => React.ReactNode;
+
+	/**
+	 * How the overlay is positioned relative to screens.
+	 * - 'float': Single persistent overlay above all screens (like iOS tab bar)
+	 * - 'screen': Per-screen overlay that transitions with content
+	 * @default 'screen'
+	 */
+	overlayMode?: "float" | "screen";
+
+	/**
+	 * Whether to show the overlay. The overlay is shown by default when `overlay` is provided.
+	 * Setting this to `false` hides the overlay.
+	 */
+	overlayShown?: boolean;
 };

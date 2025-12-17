@@ -18,10 +18,8 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation.types";
 import type { ScreenTransitionConfig } from "../../types/core.types";
-import { computeStackProgress } from "../../utils/animation/compute-stack-progress";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
-import { useStackAnimationValues } from "./use-stack-animation-values";
 
 type BuiltState = {
 	progress: SharedValue<number>;
@@ -107,7 +105,11 @@ export function _useScreenAnimation() {
 	const dimensions = layoutContext?.layout ?? windowDimensions;
 
 	const insets = useSafeAreaInsets();
-	const { flags } = useStackRootContext();
+	const {
+		flags,
+		stackProgress: rootStackProgress,
+		routeKeys,
+	} = useStackRootContext();
 	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {
@@ -121,7 +123,9 @@ export function _useScreenAnimation() {
 	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
 
 	const currentRouteKey = currentDescriptor?.route?.key;
-	const stackAnimationValues = useStackAnimationValues(currentRouteKey);
+	const currentIndex = currentRouteKey
+		? routeKeys.indexOf(currentRouteKey)
+		: -1;
 
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">
@@ -146,7 +150,11 @@ export function _useScreenAnimation() {
 			next,
 		});
 
-		const stackProgress = computeStackProgress(stackAnimationValues, progress);
+		// Compute relative stack progress: total - currentIndex
+		// This gives us the sum of progress values from current screen onwards
+		// Falls back to current progress if index is invalid
+		const stackProgress =
+			currentIndex >= 0 ? rootStackProgress.value - currentIndex : progress;
 
 		return {
 			layouts: { screen: dimensions },

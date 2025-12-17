@@ -17,7 +17,9 @@ interface Props {
  * Lifecycle controller built out for Component Stack implementation.
  * Similar to BlankStackScreenLifecycleController but uses component navigation context.
  */
-export const ComponentStackScreenLifecycleController = ({ children }: Props) => {
+export const ComponentStackScreenLifecycleController = ({
+	children,
+}: Props) => {
 	const { current } = useKeys<ComponentStackDescriptor>();
 	const { handleCloseRoute, closingRouteKeysShared } =
 		useComponentNavigationContext();

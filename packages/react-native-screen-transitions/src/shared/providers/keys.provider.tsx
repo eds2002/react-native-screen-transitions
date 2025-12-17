@@ -34,9 +34,7 @@ export type TransitionDescriptor = Descriptor<
 	RouteProp<ParamListBase>
 >;
 
-interface KeysContextType<
-	TDescriptor extends BaseDescriptor = BaseDescriptor,
-> {
+interface KeysContextType<TDescriptor extends BaseDescriptor = BaseDescriptor> {
 	previous?: TDescriptor;
 	current: TDescriptor;
 	next?: TDescriptor;

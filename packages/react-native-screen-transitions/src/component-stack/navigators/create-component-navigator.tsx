@@ -1,12 +1,7 @@
-import * as React from "react";
+import type * as React from "react";
 import { ComponentView } from "../components/component-view";
 import { useComponentNavigationBuilder } from "../hooks/use-component-navigation-builder";
-import type {
-	ComponentNavigatorProps,
-	ComponentScreenProps,
-	ComponentStackNavigationOptions,
-	ComponentStackScreenProps,
-} from "../types";
+import type { ComponentNavigatorProps, ComponentScreenProps } from "../types";
 
 /**
  * Screen component for defining screens in a ComponentNavigator.
@@ -78,4 +73,3 @@ export function createComponentNavigator(): ComponentStack {
 		Screen: ComponentScreen,
 	};
 }
-

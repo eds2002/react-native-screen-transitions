@@ -11,12 +11,7 @@ import type {
 	StackRouterOptions,
 	Theme,
 } from "@react-navigation/native";
-import type { DerivedValue } from "react-native-reanimated";
-import type { ScreenTransitionConfig } from "../shared";
-import type {
-	OverlayInterpolationProps,
-	ScreenInterpolationProps,
-} from "../shared/types/animation.types";
+import type { OverlayProps, ScreenTransitionConfig } from "../shared";
 
 export type BlankStackNavigationEventMap = {};
 
@@ -64,42 +59,13 @@ export type BlankStackScene = {
 // We want it to be an empty object because navigator does not have any additional props
 type BlankStackNavigationConfig = {};
 
-export type BlankStackOverlayProps = {
-	/**
-	 * Route of the currently focused screen in the stack.
-	 */
-	focusedRoute: Route<string>;
-
-	/**
-	 * Index of the focused route in the stack.
-	 */
-	focusedIndex: number;
-
-	/**
-	 * All routes currently in the stack.
-	 */
-	routes: Route<string>[];
-
-	/**
-	 * Custom metadata from the focused screen's options.
-	 */
-	meta?: Record<string, unknown>;
-
-	/**
-	 * Navigation prop for the overlay.
-	 */
-	navigation: BlankStackNavigationProp<ParamListBase>;
-
-	/**
-	 * Animation values for the overlay.
-	 */
-	overlayAnimation: DerivedValue<OverlayInterpolationProps>;
-
-	/**
-	 * Animation values for the screen.
-	 */
-	screenAnimation: DerivedValue<ScreenInterpolationProps>;
-};
+/**
+ * Props passed to overlay components in blank-stack.
+ * Uses the shared OverlayProps type with blank-stack's navigation type.
+ */
+export type BlankStackOverlayProps = OverlayProps<
+	BlankStackNavigationProp<ParamListBase>
+>;
 
 type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
 	/**
@@ -111,25 +77,6 @@ type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
 };
 
 export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
-	/**
-	 * Function that given `OverlayProps` returns a React Element to display as a overlay.
-	 */
-	overlay?: (props: BlankStackOverlayProps) => React.ReactNode;
-
-	/**
-	 * Layout: How the Overlay is positioned
-	 * - 'float': Single persistent overlay above all screens (like iOS)
-	 * - 'screen': Per-screen overlay that transitions with content
-	 * @default 'screen'
-	 */
-	overlayMode?: "float" | "screen";
-
-	/**
-	 * Whether to show the overlay. The overlay is shown by default.
-	 * Setting this to `false` hides the overlay.
-	 */
-	overlayShown?: boolean;
-
 	/**
 	 * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
 	 * Defaults to `true` when `enableFreeze()` is run at the top of the application.

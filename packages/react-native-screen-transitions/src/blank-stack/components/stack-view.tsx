@@ -6,12 +6,12 @@ import * as React from "react";
 import { Fragment } from "react";
 import { StyleSheet } from "react-native";
 import { ScreenContainer } from "react-native-screens";
+import { Overlay } from "../../shared/components/overlay";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
 import { withStackRootProvider } from "../../shared/providers/stack-root.provider";
 import { BlankStackScreenLifecycleController } from "../controllers/blank-stack-lifecycle";
 import type { BlankStackDescriptor } from "../types";
 import { withStackNavigationProvider } from "../utils/with-stack-navigation";
-import { Overlay } from "./overlay";
 import { Screen } from "./screens";
 
 function isFabric() {

@@ -1,4 +1,6 @@
-export const areDescriptorsEqual = <DescriptorMap extends Record<string, unknown>>(
+export const areDescriptorsEqual = <
+	DescriptorMap extends Record<string, unknown>,
+>(
 	a: DescriptorMap,
 	b: DescriptorMap,
 ): boolean => {

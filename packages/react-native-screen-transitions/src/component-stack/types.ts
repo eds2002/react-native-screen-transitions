@@ -125,9 +125,7 @@ export type ComponentStackDescriptorMap = {
 /**
  * Props passed to screen components.
  */
-export interface ComponentStackScreenProps<
-	Params = Record<string, unknown>,
-> {
+export interface ComponentStackScreenProps<Params = Record<string, unknown>> {
 	/** Navigation object for controlling the stack */
 	navigation: ComponentNavigation;
 	/** Route object with params */

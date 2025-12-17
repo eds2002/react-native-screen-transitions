@@ -1,9 +1,10 @@
 import { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
+import { useOverlayState } from "../../shared/hooks/animation/use-overlay-state";
 import { useScreenAnimation } from "../../shared/hooks/animation/use-screen-animation";
 import { KeysProvider, useKeys } from "../../shared/providers/keys.provider";
+import { useStackRootContext } from "../../shared/providers/stack-root.provider";
 import { TransitionStylesProvider } from "../../shared/providers/transition-styles.provider";
-import { useOverlayAnimation } from "../hooks/use-overlay-animation";
 import type {
 	ComponentStackDescriptor,
 	ComponentStackOverlayProps,
@@ -13,10 +14,14 @@ import { useComponentNavigationContext } from "../utils/with-component-navigatio
 
 type OverlayHostProps = {
 	scene: ComponentStackScene;
+	overlayIndex: number;
 	isFloating?: boolean;
 };
 
-const getActiveFloatOverlay = (scenes: ComponentStackScene[], index: number) => {
+const getActiveFloatOverlay = (
+	scenes: ComponentStackScene[],
+	index: number,
+) => {
 	if (scenes.length === 0) {
 		return null;
 	}
@@ -39,31 +44,27 @@ const getActiveFloatOverlay = (scenes: ComponentStackScene[], index: number) => 
 	return null;
 };
 
-const OverlayHost = ({ scene, isFloating }: OverlayHostProps) => {
+const OverlayHost = ({ scene, overlayIndex, isFloating }: OverlayHostProps) => {
 	const OverlayComponent = scene.descriptor.options.overlay;
 
-	const { overlayAnimation, optimisticActiveIndex } = useOverlayAnimation();
+	// Use shared overlay state from root context
+	const { overlayAnimation, optimisticActiveIndex } =
+		useOverlayState(overlayIndex);
 	const { scenes, routes, navigation } = useComponentNavigationContext();
 
-	const overlaySceneIndex = useMemo(() => {
-		return scenes.findIndex(
-			(stackScene) => stackScene.route.key === scene.route.key,
-		);
-	}, [scenes, scene.route.key]);
-
 	const focusedScene = useMemo(() => {
-		if (overlaySceneIndex === -1) {
+		if (overlayIndex === -1) {
 			return scene;
 		}
 
-		const maxOffset = Math.max(scenes.length - overlaySceneIndex - 1, 0);
+		const maxOffset = Math.max(scenes.length - overlayIndex - 1, 0);
 		const normalizedIndex = Math.min(
 			Math.max(optimisticActiveIndex, 0),
 			maxOffset,
 		);
 
-		return scenes[overlaySceneIndex + normalizedIndex] ?? scene;
-	}, [overlaySceneIndex, optimisticActiveIndex, scenes, scene]);
+		return scenes[overlayIndex + normalizedIndex] ?? scene;
+	}, [overlayIndex, optimisticActiveIndex, scenes, scene]);
 
 	const screenAnimation = useScreenAnimation();
 
@@ -118,7 +119,7 @@ const FloatOverlay = () => {
 	return (
 		<KeysProvider current={current} previous={previous} next={next}>
 			<TransitionStylesProvider>
-				<OverlayHost scene={scene} isFloating />
+				<OverlayHost scene={scene} overlayIndex={overlayIndex} isFloating />
 			</TransitionStylesProvider>
 		</KeysProvider>
 	);
@@ -126,6 +127,7 @@ const FloatOverlay = () => {
 
 const ScreenOverlay = () => {
 	const { current } = useKeys<ComponentStackDescriptor>();
+	const { routeKeys } = useStackRootContext();
 
 	const options = current.options;
 
@@ -138,7 +140,10 @@ const ScreenOverlay = () => {
 		route: current.route,
 	};
 
-	return <OverlayHost scene={scene} />;
+	// Find the index of this screen in the stack
+	const overlayIndex = routeKeys.indexOf(current.route.key);
+
+	return <OverlayHost scene={scene} overlayIndex={overlayIndex} />;
 };
 
 export const Overlay = {

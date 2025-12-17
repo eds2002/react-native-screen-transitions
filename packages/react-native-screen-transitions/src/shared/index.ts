@@ -28,4 +28,4 @@ export type {
 	ScreenStyleInterpolator,
 } from "./types/animation.types";
 export type { BoundEntry, BoundsLink } from "./types/bounds.types";
-export type { ScreenTransitionConfig } from "./types/core.types";
+export type { OverlayProps, ScreenTransitionConfig } from "./types/core.types";
