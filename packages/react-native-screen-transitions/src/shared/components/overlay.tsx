@@ -3,7 +3,7 @@ import {
 	NavigationRouteContext,
 	type Route,
 } from "@react-navigation/native";
-import { useMemo } from "react";
+import { memo, useMemo } from "react";
 import { Animated, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -57,7 +57,7 @@ type OverlayHostProps = {
 	isFloating?: boolean;
 };
 
-function OverlayHost({
+const OverlayHost = memo(function OverlayHost({
 	scene,
 	scenes,
 	routes,
@@ -160,7 +160,7 @@ function OverlayHost({
 			</NavigationContext.Provider>
 		</Animated.View>
 	);
-}
+});
 
 function getActiveFloatOverlay(
 	scenes: OverlayScene[],
@@ -269,13 +269,19 @@ export function ScreenOverlay() {
 		return null;
 	}
 
-	const scene: OverlayScene = {
-		descriptor: current,
-		route: current.route,
-	};
+	const scene = useMemo<OverlayScene>(
+		() => ({
+			descriptor: current,
+			route: current.route,
+		}),
+		[current],
+	);
 
 	// Find the index of this screen in the stack
-	const overlayIndex = routeKeys.indexOf(current.route.key);
+	const overlayIndex = useMemo(
+		() => routeKeys.indexOf(current.route.key),
+		[routeKeys, current.route.key],
+	);
 
 	return (
 		<OverlayHost
