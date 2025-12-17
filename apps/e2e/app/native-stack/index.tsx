@@ -23,6 +23,11 @@ const TEST_FLOWS = [
 		title: "Stack Progress",
 		description: "Demonstrates stackProgress accumulating across screens",
 	},
+	{
+		id: "overlay",
+		title: "Floating Overlay",
+		description: "Tab bar overlay that animates with screen transitions",
+	},
 ];
 
 export default function NativeStackIndex() {

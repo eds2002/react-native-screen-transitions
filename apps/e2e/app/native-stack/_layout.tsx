@@ -93,6 +93,13 @@ export default function NativeStackLayout() {
 				name="stack-progress"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<Stack.Screen
+				name="overlay"
+				options={{
+					enableTransitions: true,
+					...Transition.Presets.SlideFromBottom(),
+				}}
+			/>
 		</Stack>
 	);
 }

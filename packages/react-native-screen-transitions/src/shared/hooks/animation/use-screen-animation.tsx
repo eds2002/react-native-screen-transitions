@@ -123,9 +123,7 @@ export function _useScreenAnimation() {
 	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
 
 	const currentRouteKey = currentDescriptor?.route?.key;
-	const currentIndex = currentRouteKey
-		? routeKeys.indexOf(currentRouteKey)
-		: -1;
+	const currentIndex = routeKeys.indexOf(currentRouteKey);
 
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">

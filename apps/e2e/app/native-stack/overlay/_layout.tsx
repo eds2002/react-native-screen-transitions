@@ -1,14 +1,24 @@
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
-import { BlankStack } from "@/layouts/blank-stack";
+import { Stack } from "@/layouts/stack";
+import { TabBarOverlay } from "@/components/tab-bar-overlay";
 
-export default function BlankStackLayout() {
+export default function NativeStackOverlayLayout() {
 	return (
-		<BlankStack>
-			<BlankStack.Screen name="index" />
-			<BlankStack.Screen
-				name="slide-horizontal"
+		<Stack screenOptions={{ headerShown: false }}>
+			<Stack.Screen
+				name="index"
 				options={{
+					enableTransitions: true,
+					overlay: TabBarOverlay,
+					overlayMode: "float",
+					overlayShown: true,
+				}}
+			/>
+			<Stack.Screen
+				name="second"
+				options={{
+					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
 					screenStyleInterpolator: ({
@@ -33,33 +43,29 @@ export default function BlankStackLayout() {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.DefaultSpec,
 					},
+					// Inherit overlay from previous screen
+					overlay: TabBarOverlay,
+					overlayMode: "float",
+					overlayShown: true,
 				}}
 			/>
-			<BlankStack.Screen
-				name="slide-vertical"
+			<Stack.Screen
+				name="third"
 				options={{
+					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: "vertical",
 					...Transition.Presets.SlideFromBottom(),
+					// Overlay still visible on this screen
+					overlay: TabBarOverlay,
+					overlayMode: "float",
+					overlayShown: true,
 				}}
 			/>
-			<BlankStack.Screen
-				name="draggable-card"
+			<Stack.Screen
+				name="no-overlay"
 				options={{
-					gestureEnabled: true,
-					...Transition.Presets.DraggableCard(),
-				}}
-			/>
-			<BlankStack.Screen
-				name="elastic-card"
-				options={{
-					gestureEnabled: true,
-					...Transition.Presets.ElasticCard(),
-				}}
-			/>
-			<BlankStack.Screen
-				name="detail"
-				options={{
+					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
 					screenStyleInterpolator: ({
@@ -84,16 +90,10 @@ export default function BlankStackLayout() {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.DefaultSpec,
 					},
+					// No overlay on this screen
+					overlayShown: false,
 				}}
 			/>
-			<BlankStack.Screen
-				name="stack-progress"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<BlankStack.Screen
-				name="overlay"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-		</BlankStack>
+		</Stack>
 	);
 }
