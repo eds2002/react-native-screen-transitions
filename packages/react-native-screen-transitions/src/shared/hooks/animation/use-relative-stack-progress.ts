@@ -1,5 +1,5 @@
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
-import { useStackRootContext } from "../../providers/stack-root.provider";
+import { useStack } from "../use-stack";
 
 /**
  * Hook that computes relative stack progress for a screen/overlay at a given index.
@@ -17,7 +17,7 @@ import { useStackRootContext } from "../../providers/stack-root.provider";
 export function useRelativeStackProgress(
 	myIndex: number,
 ): DerivedValue<number> {
-	const { stackProgress } = useStackRootContext();
+	const { stackProgress } = useStack();
 
 	return useDerivedValue(() => {
 		"worklet";

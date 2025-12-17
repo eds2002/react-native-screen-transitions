@@ -9,45 +9,24 @@ import { useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "../hooks/animation/use-screen-animation";
 import { useSharedValueState } from "../hooks/reanimated/use-shared-value-state";
+import { type StackDescriptor, useStack } from "../hooks/use-stack";
 import { KeysProvider, useKeys } from "../providers/keys.provider";
-import { useStackRootContext } from "../providers/stack-root.provider";
 import { TransitionStylesProvider } from "../providers/transition-styles.provider";
 import type { OverlayInterpolationProps } from "../types/animation.types";
 import type { OverlayProps } from "../types/core.types";
 
 /**
- * Generic scene type for overlay components.
+ * Scene type for overlay components (route + descriptor pair).
  */
 type OverlayScene = {
 	route: Route<string>;
-	descriptor: BaseOverlayDescriptor;
+	descriptor: StackDescriptor;
 };
 
 /**
  * Base descriptor shape required for overlay functionality.
  */
-type BaseOverlayDescriptor = {
-	route: Route<string>;
-	navigation: any;
-	options: {
-		overlay?: (props: OverlayProps<any>) => React.ReactNode;
-		overlayMode?: "float" | "screen";
-		overlayShown?: boolean;
-		meta?: Record<string, unknown>;
-		enableTransitions?: boolean;
-	};
-};
-
-/**
- * Props shape expected from stack-root context.
- */
-type StackRootProps = {
-	state: {
-		routes: Route<string>[];
-		index: number;
-	};
-	descriptors: Record<string, BaseOverlayDescriptor>;
-};
+type BaseOverlayDescriptor = StackDescriptor;
 
 type OverlayHostProps = {
 	scene: OverlayScene;
@@ -67,8 +46,7 @@ const OverlayHost = memo(function OverlayHost({
 	const OverlayComponent = scene.descriptor.options.overlay;
 	const screen = useWindowDimensions();
 
-	const { stackProgress, optimisticFocusedIndex, routeKeys } =
-		useStackRootContext();
+	const { stackProgress, optimisticFocusedIndex, routeKeys } = useStack();
 	const insets = useSafeAreaInsets();
 
 	const relativeProgress = useDerivedValue(() => {
@@ -151,7 +129,10 @@ const OverlayHost = memo(function OverlayHost({
 				styles.absolute,
 			]}
 		>
-			<NavigationContext.Provider value={scene.descriptor.navigation}>
+			<NavigationContext.Provider
+				// biome-ignore lint/suspicious/noExplicitAny: navigation type varies by stack
+				value={scene.descriptor.navigation as any}
+			>
 				<NavigationRouteContext.Provider value={scene.route}>
 					<View pointerEvents="box-none" style={styles.overlay}>
 						<OverlayComponent {...overlayProps} />
@@ -196,28 +177,21 @@ function getActiveFloatOverlay(
 
 /**
  * Float overlay component that renders above all screens.
- * Gets scenes and routes from stack-root context.
+ * Gets routes and descriptors from stack context.
  */
 export function FloatOverlay() {
-	const { props, flags } = useStackRootContext<StackRootProps>();
+	const { routes, descriptors, focusedIndex, flags } = useStack();
 
-	const { scenes, routes, focusedIndex } = useMemo(() => {
+	const scenes = useMemo(() => {
 		const scenes: OverlayScene[] = [];
-		const routes = props.state.routes;
-
 		for (const route of routes) {
-			const descriptor = props.descriptors[route.key];
+			const descriptor = descriptors[route.key];
 			if (descriptor) {
 				scenes.push({ route, descriptor });
 			}
 		}
-
-		return {
-			scenes,
-			routes,
-			focusedIndex: props.state.index,
-		};
-	}, [props.state.routes, props.state.index, props.descriptors]);
+		return scenes;
+	}, [routes, descriptors]);
 
 	const activeOverlay = useMemo(
 		() =>
@@ -256,18 +230,9 @@ export function FloatOverlay() {
  */
 export function ScreenOverlay() {
 	const { current } = useKeys<BaseOverlayDescriptor>();
-	const { routeKeys, flags } = useStackRootContext();
+	const { routeKeys, flags } = useStack();
 
 	const options = current.options;
-
-	// Skip screens without enableTransitions (native-stack only)
-	if (!flags.TRANSITIONS_ALWAYS_ON && !options.enableTransitions) {
-		return null;
-	}
-
-	if (!options.overlayShown || options.overlayMode !== "screen") {
-		return null;
-	}
 
 	const scene = useMemo<OverlayScene>(
 		() => ({
@@ -282,6 +247,14 @@ export function ScreenOverlay() {
 		() => routeKeys.indexOf(current.route.key),
 		[routeKeys, current.route.key],
 	);
+	// Skip screens without enableTransitions (native-stack only)
+	if (!flags.TRANSITIONS_ALWAYS_ON && !options.enableTransitions) {
+		return null;
+	}
+
+	if (!options.overlayShown || options.overlayMode !== "screen") {
+		return null;
+	}
 
 	return (
 		<OverlayHost

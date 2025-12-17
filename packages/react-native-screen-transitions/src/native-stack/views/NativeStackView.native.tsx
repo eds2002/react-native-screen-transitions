@@ -9,10 +9,7 @@ import {
 import {
 	NavigationContext,
 	NavigationRouteContext,
-	type ParamListBase,
-	type RouteProp,
 	StackActions,
-	type StackNavigationState,
 	usePreventRemoveContext,
 	useTheme,
 } from "@react-navigation/native";
@@ -32,14 +29,14 @@ import {
 	ScreenStackItem,
 } from "react-native-screens";
 import { Overlay } from "../../shared/components/overlay";
+import {
+	type NativeLifecycleContextValue,
+	withNativeLifecycle,
+} from "../../shared/providers/native-lifecycle.provider";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
-import { withStackRootProvider } from "../../shared/providers/stack-root.provider";
+import { withStackCore } from "../../shared/providers/stack-core.provider";
 import { NativeStackScreenLifecycleController } from "../controllers/native-stack-lifecycle";
-import type {
-	NativeStackDescriptor,
-	NativeStackDescriptorMap,
-	NativeStackNavigationHelpers,
-} from "../types";
+import type { NativeStackDescriptor } from "../types";
 import { debounce } from "../utils/debounce";
 import { getModalRouteKeys } from "../utils/getModalRoutesKeys";
 import { AnimatedHeaderHeightContext } from "../utils/useAnimatedHeaderHeight";
@@ -485,68 +482,32 @@ const SceneView = ({
 	);
 };
 
-type Props = {
-	state: StackNavigationState<ParamListBase>;
-	navigation: NativeStackNavigationHelpers;
-	descriptors: NativeStackDescriptorMap;
-	describe: (
-		route: RouteProp<ParamListBase>,
-		placeholder: boolean,
-	) => NativeStackDescriptor;
-};
-
-export const NativeStackView = withStackRootProvider(
+export const NativeStackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: false },
-	function NativeStackViewContent({
+	withNativeLifecycle(function NativeStackViewContent({
 		state,
 		navigation,
 		descriptors,
-		describe,
-	}: Props) {
+		scenes,
+		focusedIndex,
+		shouldShowFloatOverlay,
+	}: NativeLifecycleContextValue) {
 		const { setNextDismissedKey } = useDismissedRouteError(state);
 
 		useInvalidPreventRemoveError(descriptors);
 
 		const modalRouteKeys = getModalRouteKeys(state.routes, descriptors);
 
-		const preloadedDescriptors =
-			state.preloadedRoutes.reduce<NativeStackDescriptorMap>((acc, route) => {
-				acc[route.key] = acc[route.key] || describe(route, true);
-				return acc;
-			}, {});
-
-		const routes = state.routes.concat(state.preloadedRoutes);
-
-		// Check if we should show float overlay
-		const shouldShowFloatOverlay = React.useMemo(() => {
-			for (const route of routes) {
-				const descriptor =
-					descriptors[route.key] ?? preloadedDescriptors[route.key];
-				if (descriptor) {
-					const options = descriptor.options;
-					if (
-						options?.enableTransitions === true &&
-						options?.overlayMode === "float" &&
-						options?.overlayShown === true
-					) {
-						return true;
-					}
-				}
-			}
-			return false;
-		}, [routes, descriptors, preloadedDescriptors]);
-
 		return (
 			<>
-				{shouldShowFloatOverlay ? (
-					<Overlay.Float />
-				) : null}
+				{shouldShowFloatOverlay ? <Overlay.Float /> : null}
 				<ScreenStack style={styles.container}>
-					{routes.map((route, index) => {
-						const descriptor =
-							descriptors[route.key] ?? preloadedDescriptors[route.key];
-						const isFocused = state.index === index;
-						const isBelowFocused = state.index - 1 === index;
+					{scenes.map((scene, index) => {
+						const { route, descriptor, isPreloaded } = scene;
+						const isFocused = focusedIndex === index;
+						const isBelowFocused = focusedIndex - 1 === index;
+
+						// Get previous/next descriptors from state.routes (not scenes) for proper navigation
 						const previousKey = state.routes[index - 1]?.key;
 						const nextKey = state.routes[index + 1]?.key;
 						const previousDescriptor = previousKey
@@ -555,10 +516,6 @@ export const NativeStackView = withStackRootProvider(
 						const nextDescriptor = nextKey ? descriptors[nextKey] : undefined;
 
 						const isModal = modalRouteKeys.includes(route.key);
-
-						const isPreloaded =
-							preloadedDescriptors[route.key] !== undefined &&
-							descriptors[route.key] === undefined;
 
 						// On Fabric, when screen is frozen, animated and reanimated values are not updated
 						// due to component being unmounted. To avoid this, we don't freeze the previous screen there
@@ -650,7 +607,7 @@ export const NativeStackView = withStackRootProvider(
 				</ScreenStack>
 			</>
 		);
-	},
+	}),
 );
 
 const styles = StyleSheet.create({

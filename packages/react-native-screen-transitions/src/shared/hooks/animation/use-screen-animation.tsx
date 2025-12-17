@@ -10,7 +10,6 @@ import {
 	useKeys,
 } from "../../providers/keys.provider";
 import { useLayoutDimensionsContext } from "../../providers/layout-dimensions.provider";
-import { useStackRootContext } from "../../providers/stack-root.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
@@ -20,6 +19,7 @@ import type {
 import type { ScreenTransitionConfig } from "../../types/core.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
+import { useStack } from "../use-stack";
 
 type BuiltState = {
 	progress: SharedValue<number>;
@@ -105,11 +105,7 @@ export function _useScreenAnimation() {
 	const dimensions = layoutContext?.layout ?? windowDimensions;
 
 	const insets = useSafeAreaInsets();
-	const {
-		flags,
-		stackProgress: rootStackProgress,
-		routeKeys,
-	} = useStackRootContext();
+	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
 	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {

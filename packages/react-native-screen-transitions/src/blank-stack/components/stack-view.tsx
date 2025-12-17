@@ -7,11 +7,11 @@ import { Fragment } from "react";
 import { StyleSheet } from "react-native";
 import { ScreenContainer } from "react-native-screens";
 import { Overlay } from "../../shared/components/overlay";
+import { withAnimatedLifecycle } from "../../shared/providers/animated-lifecycle.provider";
 import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
-import { withStackRootProvider } from "../../shared/providers/stack-root.provider";
+import { withStackCore } from "../../shared/providers/stack-core.provider";
 import { BlankStackScreenLifecycleController } from "../controllers/blank-stack-lifecycle";
 import type { BlankStackDescriptor } from "../types";
-import { withStackNavigationProvider } from "../utils/with-stack-navigation";
 import { Screen } from "./screens";
 
 function isFabric() {
@@ -37,9 +37,9 @@ const SceneView = React.memo(function SceneView({
 	);
 });
 
-export const StackView = withStackRootProvider(
+export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true },
-	withStackNavigationProvider(
+	withAnimatedLifecycle(
 		({ descriptors, focusedIndex, scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>
