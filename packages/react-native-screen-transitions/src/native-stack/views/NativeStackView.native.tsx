@@ -539,7 +539,7 @@ export const NativeStackView = withStackRootProvider(
 		return (
 			<>
 				{shouldShowFloatOverlay ? (
-					<Overlay.Float requireEnableTransitions />
+					<Overlay.Float />
 				) : null}
 				<ScreenStack style={styles.container}>
 					{routes.map((route, index) => {

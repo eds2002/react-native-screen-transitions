@@ -4,12 +4,15 @@ import {
 	type Route,
 } from "@react-navigation/native";
 import { useMemo } from "react";
-import { Animated, StyleSheet, View } from "react-native";
-import { useOverlayState } from "../hooks/animation/use-overlay-state";
+import { Animated, StyleSheet, useWindowDimensions, View } from "react-native";
+import { useDerivedValue } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "../hooks/animation/use-screen-animation";
+import { useSharedValueState } from "../hooks/reanimated/use-shared-value-state";
 import { KeysProvider, useKeys } from "../providers/keys.provider";
 import { useStackRootContext } from "../providers/stack-root.provider";
 import { TransitionStylesProvider } from "../providers/transition-styles.provider";
+import type { OverlayInterpolationProps } from "../types/animation.types";
 import type { OverlayProps } from "../types/core.types";
 
 /**
@@ -62,16 +65,58 @@ function OverlayHost({
 	isFloating,
 }: OverlayHostProps) {
 	const OverlayComponent = scene.descriptor.options.overlay;
+	const screen = useWindowDimensions();
 
-	// Use shared overlay state from root context
-	const { overlayAnimation, optimisticActiveIndex } =
-		useOverlayState(overlayIndex);
+	const { stackProgress, optimisticFocusedIndex, routeKeys } =
+		useStackRootContext();
+	const insets = useSafeAreaInsets();
+
+	const relativeProgress = useDerivedValue(() => {
+		"worklet";
+		return stackProgress.value - overlayIndex;
+	});
+
+	// For float overlays: global focused index (can be any screen in the stack)
+	// For screen overlays: relative to overlay position (only screens at or after)
+	const optimisticActiveIndex = useSharedValueState(
+		useDerivedValue(() => {
+			"worklet";
+			if (isFloating) {
+				// For float overlays, use global optimistic focused index directly
+				const globalIndex = optimisticFocusedIndex.get();
+				const clampedIndex = Math.max(
+					0,
+					Math.min(globalIndex, routeKeys.length - 1),
+				);
+				return clampedIndex;
+			}
+
+			// For screen overlays, compute relative to overlay position
+			const screensAbove = routeKeys.length - 1 - overlayIndex;
+			const relativeOptimistic = optimisticFocusedIndex.value - overlayIndex;
+			const result = Math.max(0, Math.min(relativeOptimistic, screensAbove));
+
+			return result;
+		}),
+	);
+
+	const overlayAnimation = useDerivedValue<OverlayInterpolationProps>(() => ({
+		progress: relativeProgress.value,
+		layouts: { screen },
+		insets,
+	}));
 
 	const focusedScene = useMemo(() => {
 		if (overlayIndex === -1) {
 			return scene;
 		}
 
+		if (isFloating) {
+			// For float overlays, optimisticActiveIndex is the global focused index
+			return scenes[optimisticActiveIndex] ?? scene;
+		}
+
+		// For screen overlays, optimisticActiveIndex is relative to overlayIndex
 		const maxOffset = Math.max(scenes.length - overlayIndex - 1, 0);
 		const normalizedIndex = Math.min(
 			Math.max(optimisticActiveIndex, 0),
@@ -79,7 +124,7 @@ function OverlayHost({
 		);
 
 		return scenes[overlayIndex + normalizedIndex] ?? scene;
-	}, [overlayIndex, optimisticActiveIndex, scenes, scene]);
+	}, [overlayIndex, optimisticActiveIndex, scenes, scene, isFloating]);
 
 	const screenAnimation = useScreenAnimation();
 
@@ -120,7 +165,7 @@ function OverlayHost({
 function getActiveFloatOverlay(
 	scenes: OverlayScene[],
 	index: number,
-	requireEnableTransitions: boolean,
+	transitionsAlwaysOn: boolean,
 ): { scene: OverlayScene; overlayIndex: number } | null {
 	if (scenes.length === 0) {
 		return null;
@@ -136,8 +181,8 @@ function getActiveFloatOverlay(
 		const scene = scenes[i];
 		const options = scene?.descriptor?.options;
 
-		// Check enableTransitions requirement (native-stack only)
-		if (requireEnableTransitions && !options?.enableTransitions) {
+		// Skip screens without enableTransitions (native-stack only)
+		if (!transitionsAlwaysOn && !options?.enableTransitions) {
 			continue;
 		}
 
@@ -149,21 +194,12 @@ function getActiveFloatOverlay(
 	return null;
 }
 
-export type FloatOverlayProps = {
-	/**
-	 * Whether to require enableTransitions option (native-stack only)
-	 */
-	requireEnableTransitions?: boolean;
-};
-
 /**
  * Float overlay component that renders above all screens.
  * Gets scenes and routes from stack-root context.
  */
-export function FloatOverlay({
-	requireEnableTransitions = false,
-}: FloatOverlayProps = {}) {
-	const { props } = useStackRootContext<StackRootProps>();
+export function FloatOverlay() {
+	const { props, flags } = useStackRootContext<StackRootProps>();
 
 	const { scenes, routes, focusedIndex } = useMemo(() => {
 		const scenes: OverlayScene[] = [];
@@ -184,8 +220,9 @@ export function FloatOverlay({
 	}, [props.state.routes, props.state.index, props.descriptors]);
 
 	const activeOverlay = useMemo(
-		() => getActiveFloatOverlay(scenes, focusedIndex, requireEnableTransitions),
-		[scenes, focusedIndex, requireEnableTransitions],
+		() =>
+			getActiveFloatOverlay(scenes, focusedIndex, flags.TRANSITIONS_ALWAYS_ON),
+		[scenes, focusedIndex, flags.TRANSITIONS_ALWAYS_ON],
 	);
 
 	if (!activeOverlay) {
@@ -213,27 +250,18 @@ export function FloatOverlay({
 	);
 }
 
-export type ScreenOverlayProps = {
-	/**
-	 * Whether to require enableTransitions option (native-stack only)
-	 */
-	requireEnableTransitions?: boolean;
-};
-
 /**
  * Screen overlay component that renders per-screen.
  * Gets current descriptor from keys context.
  */
-export function ScreenOverlay({
-	requireEnableTransitions = false,
-}: ScreenOverlayProps = {}) {
+export function ScreenOverlay() {
 	const { current } = useKeys<BaseOverlayDescriptor>();
-	const { routeKeys } = useStackRootContext();
+	const { routeKeys, flags } = useStackRootContext();
 
 	const options = current.options;
 
-	// Check enableTransitions requirement (native-stack only)
-	if (requireEnableTransitions && !options.enableTransitions) {
+	// Skip screens without enableTransitions (native-stack only)
+	if (!flags.TRANSITIONS_ALWAYS_ON && !options.enableTransitions) {
 		return null;
 	}
 

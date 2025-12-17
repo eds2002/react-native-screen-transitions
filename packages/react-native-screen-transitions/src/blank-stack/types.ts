@@ -11,7 +11,8 @@ import type {
 	StackRouterOptions,
 	Theme,
 } from "@react-navigation/native";
-import type { OverlayProps, ScreenTransitionConfig } from "../shared";
+import type { ScreenTransitionConfig } from "../shared";
+import type { OverlayProps } from "../shared/types/core.types";
 
 export type BlankStackNavigationEventMap = {};
 
