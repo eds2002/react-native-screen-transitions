@@ -18,11 +18,16 @@ const TEST_FLOWS = [
 		title: "Zoom In",
 		description: "Scale animation with fade",
 	},
+	{
+		id: "stack-progress",
+		title: "Stack Progress",
+		description: "Demonstrates stackProgress accumulating across screens",
+	},
 ];
 
 export default function NativeStackIndex() {
 	return (
-		<SafeAreaView style={styles.container} edges={["bottom"]}>
+		<SafeAreaView style={styles.container}>
 			<ScrollView contentContainerStyle={styles.content}>
 				<Text style={styles.header}>Native Stack E2E Tests</Text>
 				<Text style={styles.subheader}>
@@ -36,7 +41,9 @@ export default function NativeStackIndex() {
 							testID={`native-${flow.id}`}
 							style={styles.item}
 							onPress={() =>
-								router.push(`/native-stack/${flow.id}` as `/native-stack/${string}`)
+								router.push(
+									`/native-stack/${flow.id}` as `/native-stack/${string}`,
+								)
 							}
 						>
 							<Text style={styles.itemTitle}>{flow.title}</Text>

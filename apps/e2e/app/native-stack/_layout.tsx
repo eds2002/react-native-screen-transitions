@@ -1,10 +1,10 @@
-import { Stack } from "@/layouts/stack";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { Stack } from "@/layouts/stack";
 
 export default function NativeStackLayout() {
 	return (
-		<Stack>
+		<Stack screenOptions={{ headerShown: false }}>
 			<Stack.Screen
 				name="index"
 				options={{
@@ -88,6 +88,10 @@ export default function NativeStackLayout() {
 						close: Transition.Specs.DefaultSpec,
 					},
 				}}
+			/>
+			<Stack.Screen
+				name="stack-progress"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 		</Stack>
 	);

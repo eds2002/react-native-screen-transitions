@@ -23,6 +23,11 @@ const TEST_FLOWS = [
 		title: "Elastic Card",
 		description: "Elastic drag with overlay darkening",
 	},
+	{
+		id: "stack-progress",
+		title: "Stack Progress",
+		description: "Demonstrates stackProgress accumulating across screens",
+	},
 ];
 
 export default function BlankStackIndex() {

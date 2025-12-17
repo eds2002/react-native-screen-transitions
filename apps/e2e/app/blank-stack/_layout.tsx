@@ -1,6 +1,6 @@
-import { BlankStack } from "@/layouts/blank-stack";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { BlankStack } from "@/layouts/blank-stack";
 
 export default function BlankStackLayout() {
 	return (
@@ -85,6 +85,10 @@ export default function BlankStackLayout() {
 						close: Transition.Specs.DefaultSpec,
 					},
 				}}
+			/>
+			<BlankStack.Screen
+				name="stack-progress"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 		</BlankStack>
 	);
