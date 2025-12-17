@@ -29,12 +29,12 @@ import {
 	ScreenStackItem,
 } from "react-native-screens";
 import { Overlay } from "../../shared/components/overlay";
+import { ScreenTransitionProvider } from "../../shared/providers/screen/transition.provider";
+import { withStackCore } from "../../shared/providers/stack/core.provider";
 import {
-	type NativeLifecycleContextValue,
-	withNativeLifecycle,
-} from "../../shared/providers/native-lifecycle.provider";
-import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
-import { withStackCore } from "../../shared/providers/stack-core.provider";
+	type DirectStackContextValue,
+	withDirectStack,
+} from "../../shared/providers/stack/direct.provider";
 import { NativeStackScreenLifecycleController } from "../controllers/native-stack-lifecycle";
 import type { NativeStackDescriptor } from "../types";
 import { debounce } from "../utils/debounce";
@@ -484,14 +484,14 @@ const SceneView = ({
 
 export const NativeStackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: false },
-	withNativeLifecycle(function NativeStackViewContent({
+	withDirectStack(function NativeStackViewContent({
 		state,
 		navigation,
 		descriptors,
 		scenes,
 		focusedIndex,
 		shouldShowFloatOverlay,
-	}: NativeLifecycleContextValue) {
+	}: DirectStackContextValue) {
 		const { setNextDismissedKey } = useDismissedRouteError(state);
 
 		useInvalidPreventRemoveError(descriptors);

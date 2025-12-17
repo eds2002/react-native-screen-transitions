@@ -7,7 +7,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
-import { useAnimatedLifecycleContext } from "../../shared/providers/animated-lifecycle.provider";
+import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
 
 interface ScreenProps {
@@ -36,7 +36,7 @@ export const Screen = ({
 	freezeOnBlur,
 	shouldFreeze,
 }: ScreenProps) => {
-	const { activeScreensLimit, routes } = useAnimatedLifecycleContext();
+	const { activeScreensLimit, routes } = useManagedStackContext();
 	const routesLength = routes.length;
 
 	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");

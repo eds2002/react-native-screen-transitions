@@ -1,10 +1,10 @@
 import type React from "react";
 import type { ComponentType } from "react";
-import { RootTransitionAware } from "../components/root-transition-aware";
-import type { Any } from "../types/utils.types";
-import { ScreenGestureProvider } from "./gestures.provider";
+import { RootTransitionAware } from "../../components/root-transition-aware";
+import type { Any } from "../../types/utils.types";
+import { ScreenGestureProvider } from "../gestures.provider";
 import { type BaseDescriptor, KeysProvider } from "./keys.provider";
-import { TransitionStylesProvider } from "./transition-styles.provider";
+import { TransitionStylesProvider } from "./styles.provider";
 
 type Props<TDescriptor extends BaseDescriptor> = {
 	previous?: TDescriptor;

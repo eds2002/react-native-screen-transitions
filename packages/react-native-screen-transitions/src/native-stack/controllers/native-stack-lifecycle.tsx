@@ -4,7 +4,7 @@ import { useDerivedValue } from "react-native-reanimated";
 import { useSharedValueState } from "../../shared/hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../shared/hooks/use-stable-callback";
 import { useGestureContext } from "../../shared/providers/gestures.provider";
-import { useKeys } from "../../shared/providers/keys.provider";
+import { useKeys } from "../../shared/providers/screen/keys.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
 import { TRUE } from "../../shared/types/state.types";
 import type { Any } from "../../shared/types/utils.types";

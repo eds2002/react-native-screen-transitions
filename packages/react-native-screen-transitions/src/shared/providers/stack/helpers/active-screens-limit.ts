@@ -1,5 +1,5 @@
 import type { NavigationRoute, ParamListBase } from "@react-navigation/native";
-import type { BlankStackDescriptorMap } from "../../../types";
+import type { BlankStackDescriptorMap } from "../../../../blank-stack/types";
 
 export function calculateActiveScreensLimit(
 	routes: NavigationRoute<ParamListBase, string>[],

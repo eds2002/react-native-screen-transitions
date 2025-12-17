@@ -1,8 +1,8 @@
 import { useLayoutEffect } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
 import useStableCallback from "../../shared/hooks/use-stable-callback";
-import { useAnimatedLifecycleContext } from "../../shared/providers/animated-lifecycle.provider";
-import { useKeys } from "../../shared/providers/keys.provider";
+import { useKeys } from "../../shared/providers/screen/keys.provider";
+import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
 import { startScreenTransition } from "../../shared/utils/animation/start-screen-transition";
 import { resetStoresForScreen } from "../../shared/utils/reset-stores-for-screen";
@@ -17,8 +17,7 @@ interface Props {
  */
 export const BlankStackScreenLifecycleController = ({ children }: Props) => {
 	const { current } = useKeys<BlankStackDescriptor>();
-	const { handleCloseRoute, closingRouteKeysShared } =
-		useAnimatedLifecycleContext();
+	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
 
 	const animations = AnimationStore.getAll(current.route.key);
 

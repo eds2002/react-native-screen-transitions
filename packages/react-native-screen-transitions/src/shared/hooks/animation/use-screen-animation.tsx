@@ -8,7 +8,7 @@ import {
 	type BaseDescriptor,
 	type BaseRoute,
 	useKeys,
-} from "../../providers/keys.provider";
+} from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
@@ -18,7 +18,7 @@ import type {
 import type { ScreenTransitionConfig } from "../../types/core.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
-import { useStack } from "../use-stack";
+import { useStack } from "../navigation/use-stack";
 
 type BuiltState = {
 	progress: SharedValue<number>;

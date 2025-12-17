@@ -1,4 +1,4 @@
-import type { TransitionDescriptor } from "../providers/keys.provider";
+import type { TransitionDescriptor } from "../providers/screen/keys.provider";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds.store";
 import { GestureStore } from "../stores/gesture.store";

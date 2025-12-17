@@ -2,7 +2,7 @@ import { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { NO_STYLES } from "../constants";
-import { useTransitionStyles } from "../providers/transition-styles.provider";
+import { useTransitionStyles } from "../providers/screen/styles.provider";
 
 type Props = {
 	children: React.ReactNode;

@@ -8,7 +8,7 @@ import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 import type { GestureStoreMap } from "../stores/gesture.store";
 import createProvider from "../utils/create-provider";
-import { useKeys } from "./keys.provider";
+import { useKeys } from "./screen/keys.provider";
 
 export type ScrollConfig = {
 	x: number;

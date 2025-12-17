@@ -22,7 +22,7 @@ import type {
 	GestureContextType,
 	ScrollConfig,
 } from "../../providers/gestures.provider";
-import { useKeys } from "../../providers/keys.provider";
+import { useKeys } from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 

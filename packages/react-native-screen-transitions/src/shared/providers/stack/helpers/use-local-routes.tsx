@@ -1,17 +1,17 @@
 import { type Route, StackActions } from "@react-navigation/native";
 import { useLayoutEffect, useState } from "react";
-import { useClosingRouteKeys } from "../../../../shared/hooks/navigation/use-closing-route-keys";
-import { usePrevious } from "../../../../shared/hooks/use-previous";
-import useStableCallback from "../../../../shared/hooks/use-stable-callback";
-import { alignRoutesWithLatest } from "../../../../shared/utils/navigation/align-routes-with-latest";
-import { areDescriptorsEqual } from "../../../../shared/utils/navigation/are-descriptors-equal";
-import { haveSameRouteKeys } from "../../../../shared/utils/navigation/have-same-route-keys";
-import { routesAreIdentical } from "../../../../shared/utils/navigation/routes-are-identical";
-import { syncRoutesWithRemoved } from "../../../../shared/utils/navigation/sync-routes-with-removed";
-import type { BlankStackDescriptorMap } from "../../../types";
-import type { StackNavigationContextProps } from "../types";
+import type { BlankStackDescriptorMap } from "../../../../blank-stack/types";
+import { useClosingRouteKeys } from "../../../hooks/navigation/use-closing-route-keys";
+import { usePrevious } from "../../../hooks/navigation/use-previous";
+import useStableCallback from "../../../hooks/use-stable-callback";
+import { alignRoutesWithLatest } from "../../../utils/navigation/align-routes-with-latest";
+import { areDescriptorsEqual } from "../../../utils/navigation/are-descriptors-equal";
+import { haveSameRouteKeys } from "../../../utils/navigation/have-same-route-keys";
+import { routesAreIdentical } from "../../../utils/navigation/routes-are-identical";
+import { syncRoutesWithRemoved } from "../../../utils/navigation/sync-routes-with-removed";
+import type { ManagedStackProps } from "../managed.provider";
 
-export const useStackNavigationState = (props: StackNavigationContextProps) => {
+export const useLocalRoutes = (props: ManagedStackProps) => {
 	const previousRoutes = usePrevious(props.state.routes) ?? [];
 	const closingRouteKeys = useClosingRouteKeys();
 

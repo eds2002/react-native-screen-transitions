@@ -7,9 +7,9 @@ import { Fragment } from "react";
 import { StyleSheet } from "react-native";
 import { ScreenContainer } from "react-native-screens";
 import { Overlay } from "../../shared/components/overlay";
-import { withAnimatedLifecycle } from "../../shared/providers/animated-lifecycle.provider";
-import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
-import { withStackCore } from "../../shared/providers/stack-core.provider";
+import { ScreenTransitionProvider } from "../../shared/providers/screen/transition.provider";
+import { withStackCore } from "../../shared/providers/stack/core.provider";
+import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { BlankStackScreenLifecycleController } from "../controllers/blank-stack-lifecycle";
 import type { BlankStackDescriptor } from "../types";
 import { Screen } from "./screens";
@@ -39,7 +39,7 @@ const SceneView = React.memo(function SceneView({
 
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true },
-	withAnimatedLifecycle(
+	withManagedStack(
 		({ descriptors, focusedIndex, scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>

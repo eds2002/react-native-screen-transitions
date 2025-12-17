@@ -1,7 +1,7 @@
 import type { Route } from "@react-navigation/native";
 import { createContext, useContext } from "react";
 import type { DerivedValue } from "react-native-reanimated";
-import type { OverlayProps } from "../types/core.types";
+import type { OverlayProps } from "../../types/core.types";
 
 /**
  * Base descriptor type for shared components.
@@ -20,7 +20,7 @@ export interface StackDescriptor {
 }
 
 /**
- * Common stack context value that both animated and native lifecycle providers populate.
+ * Common stack context value that both managed and direct stack providers populate.
  * Used by overlays and shared components that need stack progress info.
  */
 export interface StackContextValue {

@@ -8,10 +8,10 @@ import { Animated, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "../hooks/animation/use-screen-animation";
+import { type StackDescriptor, useStack } from "../hooks/navigation/use-stack";
 import { useSharedValueState } from "../hooks/reanimated/use-shared-value-state";
-import { type StackDescriptor, useStack } from "../hooks/use-stack";
-import { KeysProvider, useKeys } from "../providers/keys.provider";
-import { TransitionStylesProvider } from "../providers/transition-styles.provider";
+import { KeysProvider, useKeys } from "../providers/screen/keys.provider";
+import { TransitionStylesProvider } from "../providers/screen/styles.provider";
 import type { OverlayInterpolationProps } from "../types/animation.types";
 import type { OverlayProps } from "../types/core.types";
 

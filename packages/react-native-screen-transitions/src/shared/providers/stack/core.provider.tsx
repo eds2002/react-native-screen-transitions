@@ -2,7 +2,7 @@ import { SafeAreaProviderCompat } from "@react-navigation/elements";
 import * as React from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import createProvider from "../utils/create-provider";
+import createProvider from "../../utils/create-provider";
 
 export interface StackCoreConfig {
 	TRANSITIONS_ALWAYS_ON?: boolean;

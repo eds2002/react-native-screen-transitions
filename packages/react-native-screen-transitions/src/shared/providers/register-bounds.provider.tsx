@@ -18,7 +18,7 @@ import { BoundStore } from "../stores/bounds.store";
 import type { Any } from "../types/utils.types";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
-import { type BaseDescriptor, useKeys } from "./keys.provider";
+import { type BaseDescriptor, useKeys } from "./screen/keys.provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;

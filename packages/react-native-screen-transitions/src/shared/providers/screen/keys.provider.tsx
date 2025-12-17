@@ -5,7 +5,7 @@ import type {
 	RouteProp,
 } from "@react-navigation/native";
 import { createContext, useContext, useMemo } from "react";
-import type { ScreenTransitionConfig } from "../types/core.types";
+import type { ScreenTransitionConfig } from "../../types/core.types";
 
 /**
  * Base route interface - minimal contract for all stack types

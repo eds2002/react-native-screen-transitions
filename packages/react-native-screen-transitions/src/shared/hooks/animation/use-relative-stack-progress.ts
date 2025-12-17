@@ -1,5 +1,5 @@
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
-import { useStack } from "../use-stack";
+import { useStack } from "../navigation/use-stack";
 
 /**
  * Hook that computes relative stack progress for a screen/overlay at a given index.

@@ -17,13 +17,16 @@ import type {
 	BlankStackDescriptorMap,
 	BlankStackNavigationHelpers,
 	BlankStackScene,
-} from "../../blank-stack/types";
-import { StackContext, type StackContextValue } from "../hooks/use-stack";
-import { AnimationStore } from "../stores/animation.store";
-import { calculateActiveScreensLimit } from "./animated-lifecycle/calculate-active-screens-limit";
-import { useAnimatedLifecycleState } from "./animated-lifecycle/use-animated-lifecycle-state";
+} from "../../../blank-stack/types";
+import {
+	StackContext,
+	type StackContextValue,
+} from "../../hooks/navigation/use-stack";
+import { AnimationStore } from "../../stores/animation.store";
+import { calculateActiveScreensLimit } from "./helpers/active-screens-limit";
+import { useLocalRoutes } from "./helpers/use-local-routes";
 
-export interface AnimatedLifecycleProps {
+export interface ManagedStackProps {
 	state: StackNavigationState<ParamListBase>;
 	navigation: BlankStackNavigationHelpers;
 	descriptors: BlankStackDescriptorMap;
@@ -33,7 +36,7 @@ export interface AnimatedLifecycleProps {
 	) => BlankStackDescriptor;
 }
 
-export interface AnimatedLifecycleContextValue {
+export interface ManagedStackContextValue {
 	routes: NavigationRoute<ParamListBase, string>[];
 	descriptors: BlankStackDescriptorMap;
 	scenes: BlankStackScene[];
@@ -46,26 +49,24 @@ export interface AnimatedLifecycleContextValue {
 	optimisticFocusedIndex: DerivedValue<number>;
 }
 
-const AnimatedLifecycleContext =
-	React.createContext<AnimatedLifecycleContextValue | null>(null);
-AnimatedLifecycleContext.displayName = "AnimatedLifecycle";
+const ManagedStackContext =
+	React.createContext<ManagedStackContextValue | null>(null);
+ManagedStackContext.displayName = "ManagedStack";
 
-function useAnimatedLifecycleContext(): AnimatedLifecycleContextValue {
-	const context = React.useContext(AnimatedLifecycleContext);
+function useManagedStackContext(): ManagedStackContextValue {
+	const context = React.useContext(ManagedStackContext);
 	if (!context) {
 		throw new Error(
-			"useAnimatedLifecycleContext must be used within AnimatedLifecycleProvider",
+			"useManagedStackContext must be used within ManagedStackProvider",
 		);
 	}
 	return context;
 }
 
-
-function useAnimatedLifecycleValue(
-	props: AnimatedLifecycleProps,
-): AnimatedLifecycleContextValue & { stackContextValue: StackContextValue } {
-	const { state, handleCloseRoute, closingRouteKeys } =
-		useAnimatedLifecycleState(props);
+function useManagedStackValue(
+	props: ManagedStackProps,
+): ManagedStackContextValue & { stackContextValue: StackContextValue } {
+	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
 
 	const { scenes, activeScreensLimit, shouldShowFloatOverlay, routeKeys } =
 		useMemo(() => {
@@ -149,8 +150,8 @@ function useAnimatedLifecycleValue(
 		],
 	);
 
-	// AnimatedLifecycle context value
-	const lifecycleValue = useMemo<AnimatedLifecycleContextValue>(
+	// ManagedStack context value
+	const lifecycleValue = useMemo<ManagedStackContextValue>(
 		() => ({
 			routes: state.routes,
 			focusedIndex,
@@ -181,23 +182,24 @@ function useAnimatedLifecycleValue(
 }
 
 /**
- * HOC that wraps component with AnimatedLifecycle provider AND StackContext.
+ * HOC that wraps component with ManagedStack provider AND StackContext.
+ * Used by blank-stack which manages local route state for closing animations.
  */
-function withAnimatedLifecycle<TProps extends AnimatedLifecycleProps>(
-	Component: React.ComponentType<AnimatedLifecycleContextValue>,
+function withManagedStack<TProps extends ManagedStackProps>(
+	Component: React.ComponentType<ManagedStackContextValue>,
 ): React.FC<TProps> {
-	return function AnimatedLifecycleProvider(props: TProps) {
+	return function ManagedStackProvider(props: TProps) {
 		const { stackContextValue, ...lifecycleValue } =
-			useAnimatedLifecycleValue(props);
+			useManagedStackValue(props);
 
 		return (
 			<StackContext.Provider value={stackContextValue}>
-				<AnimatedLifecycleContext.Provider value={lifecycleValue}>
+				<ManagedStackContext.Provider value={lifecycleValue}>
 					<Component {...lifecycleValue} />
-				</AnimatedLifecycleContext.Provider>
+				</ManagedStackContext.Provider>
 			</StackContext.Provider>
 		);
 	};
 }
 
-export { useAnimatedLifecycleContext, withAnimatedLifecycle };
+export { useManagedStackContext, withManagedStack };

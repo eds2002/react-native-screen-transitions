@@ -10,17 +10,20 @@ import type {
 	NativeStackDescriptor,
 	NativeStackDescriptorMap,
 	NativeStackNavigationHelpers,
-} from "../../native-stack/types";
-import { StackContext, type StackContextValue } from "../hooks/use-stack";
-import { AnimationStore } from "../stores/animation.store";
+} from "../../../native-stack/types";
+import {
+	StackContext,
+	type StackContextValue,
+} from "../../hooks/navigation/use-stack";
+import { AnimationStore } from "../../stores/animation.store";
 
-export interface NativeStackScene {
+export interface DirectStackScene {
 	route: StackNavigationState<ParamListBase>["routes"][number];
 	descriptor: NativeStackDescriptor;
 	isPreloaded: boolean;
 }
 
-export interface NativeLifecycleProps {
+export interface DirectStackProps {
 	state: StackNavigationState<ParamListBase>;
 	navigation: NativeStackNavigationHelpers;
 	descriptors: NativeStackDescriptorMap;
@@ -30,27 +33,28 @@ export interface NativeLifecycleProps {
 	) => NativeStackDescriptor;
 }
 
-export interface NativeLifecycleContextValue {
+export interface DirectStackContextValue {
 	state: StackNavigationState<ParamListBase>;
 	navigation: NativeStackNavigationHelpers;
 	descriptors: NativeStackDescriptorMap;
 	preloadedDescriptors: NativeStackDescriptorMap;
-	scenes: NativeStackScene[];
+	scenes: DirectStackScene[];
 	focusedIndex: number;
 	shouldShowFloatOverlay: boolean;
 	stackProgress: DerivedValue<number>;
 	optimisticFocusedIndex: DerivedValue<number>;
 }
 
-const NativeLifecycleContext =
-	React.createContext<NativeLifecycleContextValue | null>(null);
-NativeLifecycleContext.displayName = "NativeLifecycle";
+const DirectStackContext = React.createContext<DirectStackContextValue | null>(
+	null,
+);
+DirectStackContext.displayName = "DirectStack";
 
-function useNativeLifecycleContext(): NativeLifecycleContextValue {
-	const context = React.useContext(NativeLifecycleContext);
+function useDirectStackContext(): DirectStackContextValue {
+	const context = React.useContext(DirectStackContext);
 	if (!context) {
 		throw new Error(
-			"useNativeLifecycleContext must be used within NativeLifecycleProvider",
+			"useDirectStackContext must be used within DirectStackProvider",
 		);
 	}
 	return context;
@@ -59,9 +63,9 @@ function useNativeLifecycleContext(): NativeLifecycleContextValue {
 /**
  * Internal hook that computes all lifecycle values.
  */
-function useNativeLifecycleValue(
-	props: NativeLifecycleProps,
-): NativeLifecycleContextValue & { stackContextValue: StackContextValue } {
+function useDirectStackValue(
+	props: DirectStackProps,
+): DirectStackContextValue & { stackContextValue: StackContextValue } {
 	const { state, navigation, descriptors, describe } = props;
 
 	const preloadedDescriptors = useMemo(() => {
@@ -82,7 +86,7 @@ function useNativeLifecycleValue(
 		allDescriptors,
 	} = useMemo(() => {
 		const allRoutes = state.routes.concat(state.preloadedRoutes);
-		const scenes: NativeStackScene[] = [];
+		const scenes: DirectStackScene[] = [];
 		const routeKeys: string[] = [];
 		const allDescriptors: NativeStackDescriptorMap = {
 			...preloadedDescriptors,
@@ -170,8 +174,8 @@ function useNativeLifecycleValue(
 		],
 	);
 
-	// NativeLifecycle context value
-	const lifecycleValue = useMemo<NativeLifecycleContextValue>(
+	// DirectStack context value
+	const lifecycleValue = useMemo<DirectStackContextValue>(
 		() => ({
 			state,
 			navigation,
@@ -200,23 +204,23 @@ function useNativeLifecycleValue(
 }
 
 /**
- * HOC that wraps component with NativeLifecycle provider AND StackContext.
+ * HOC that wraps component with DirectStack provider AND StackContext.
+ * Used by native-stack which uses navigation state directly (no local route management).
  */
-function withNativeLifecycle<TProps extends NativeLifecycleProps>(
-	Component: React.ComponentType<NativeLifecycleContextValue>,
+function withDirectStack<TProps extends DirectStackProps>(
+	Component: React.ComponentType<DirectStackContextValue>,
 ): React.FC<TProps> {
-	return function NativeLifecycleProvider(props: TProps) {
-		const { stackContextValue, ...lifecycleValue } =
-			useNativeLifecycleValue(props);
+	return function DirectStackProvider(props: TProps) {
+		const { stackContextValue, ...lifecycleValue } = useDirectStackValue(props);
 
 		return (
 			<StackContext.Provider value={stackContextValue}>
-				<NativeLifecycleContext.Provider value={lifecycleValue}>
+				<DirectStackContext.Provider value={lifecycleValue}>
 					<Component {...lifecycleValue} />
-				</NativeLifecycleContext.Provider>
+				</DirectStackContext.Provider>
 			</StackContext.Provider>
 		);
 	};
 }
 
-export { useNativeLifecycleContext, withNativeLifecycle };
+export { useDirectStackContext, withDirectStack };
