@@ -9,9 +9,8 @@ import type {
 } from "../types";
 
 // Context for component navigation
-const ComponentNavigationContext = React.createContext<ComponentNavigation | null>(
-	null,
-);
+const ComponentNavigationContext =
+	React.createContext<ComponentNavigation | null>(null);
 
 export function useComponentNavigationContext(): ComponentNavigation {
 	const context = React.useContext(ComponentNavigationContext);

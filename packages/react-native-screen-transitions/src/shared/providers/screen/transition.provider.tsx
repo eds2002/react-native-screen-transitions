@@ -12,8 +12,6 @@ type Props<TDescriptor extends BaseDescriptor> = {
 	next?: TDescriptor;
 	children: React.ReactNode;
 	LifecycleController: ComponentType<Any>;
-	/** Optional custom dismiss handler for non-React-Navigation stacks */
-	onGestureDismiss?: () => void;
 };
 
 export function ScreenTransitionProvider<TDescriptor extends BaseDescriptor>({
@@ -22,7 +20,6 @@ export function ScreenTransitionProvider<TDescriptor extends BaseDescriptor>({
 	next,
 	children,
 	LifecycleController,
-	onGestureDismiss,
 }: Props<TDescriptor>) {
 	return (
 		<KeysProvider<TDescriptor>
@@ -30,7 +27,7 @@ export function ScreenTransitionProvider<TDescriptor extends BaseDescriptor>({
 			current={current}
 			next={next}
 		>
-			<ScreenGestureProvider onGestureDismiss={onGestureDismiss}>
+			<ScreenGestureProvider>
 				<LifecycleController>
 					<TransitionStylesProvider>
 						<RootTransitionAware>{children}</RootTransitionAware>

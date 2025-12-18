@@ -76,7 +76,10 @@ export const Screen = ({ routeKey, index, children }: ScreenProps) => {
 	});
 
 	return (
-		<Animated.View style={StyleSheet.absoluteFill} animatedProps={animatedProps}>
+		<Animated.View
+			style={StyleSheet.absoluteFill}
+			animatedProps={animatedProps}
+		>
 			{children}
 		</Animated.View>
 	);

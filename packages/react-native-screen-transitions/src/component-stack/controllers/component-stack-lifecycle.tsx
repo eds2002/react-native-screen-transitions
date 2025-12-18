@@ -16,7 +16,9 @@ interface Props {
  * Lifecycle controller built out for Component Stack implementation.
  * Uses the shared ManagedStackContext for closing route handling.
  */
-export const ComponentStackScreenLifecycleController = ({ children }: Props) => {
+export const ComponentStackScreenLifecycleController = ({
+	children,
+}: Props) => {
 	const { current } = useKeys<ComponentStackDescriptor>();
 	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
 

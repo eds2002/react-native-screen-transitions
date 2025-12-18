@@ -25,7 +25,6 @@ import type {
 import { useKeys } from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
-
 import {
 	type GestureDirection,
 	GestureOffsetState,
@@ -41,13 +40,11 @@ import useStableCallbackValue from "../use-stable-callback-value";
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	ancestorContext?: GestureContextType | null;
-	onGestureDismiss?: () => void;
 }
 
 export const useBuildGestures = ({
 	scrollConfig,
 	ancestorContext,
-	onGestureDismiss,
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
 	panGestureRef: React.MutableRefObject<GestureType | undefined>;
@@ -107,33 +104,22 @@ export const useBuildGestures = ({
 			return;
 		}
 
-		if (onGestureDismiss) {
-			onGestureDismiss();
-			return;
-		}
-
-		// Fall back to React Navigation dispatch
-		const navigation = current.navigation as {
-			getState: () => { routes: Array<{ key: string }>; key: string };
-			dispatch: (action: unknown) => void;
-		};
-
-		const state = navigation.getState();
+		const state = current.navigation.getState();
 
 		const routeStillPresent = state.routes.some(
-			(route: { key: string }) => route.key === current.route.key,
+			(route) => route.key === current.route.key,
 		);
 
 		if (!routeStillPresent) {
 			return;
 		}
 
-		navigation.dispatch({
+		current.navigation.dispatch({
 			...StackActions.pop(),
 			source: current.route.key,
 			target: state.key,
 		});
-	}, [current, ancestorContext, onGestureDismiss]);
+	}, [current, ancestorContext]);
 
 	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
 		"worklet";

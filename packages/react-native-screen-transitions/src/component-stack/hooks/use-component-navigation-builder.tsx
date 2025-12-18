@@ -286,6 +286,10 @@ export function useComponentNavigationBuilder({
 		[],
 	);
 
+	// Ref for getState to always return latest state
+	const stateRef = useRef(state);
+	stateRef.current = state;
+
 	// Navigation object
 	const navigation: ComponentNavigation = useMemo(() => {
 		return {
@@ -301,14 +305,15 @@ export function useComponentNavigationBuilder({
 			navigate: (name: string, params?: Record<string, unknown>) => {
 				internalDispatch({ type: "NAVIGATE", name, params });
 			},
-			canGoBack: () => state.routes.length > 1,
+			canGoBack: () => stateRef.current.routes.length > 1,
 			reset: (name?: string, params?: Record<string, unknown>) => {
 				internalDispatch({ type: "RESET", name, params });
 			},
 			dispatch,
+			getState: () => stateRef.current,
 			index: state.index,
 		};
-	}, [state.routes.length, state.index, dispatch]);
+	}, [state.index, dispatch]);
 
 	// Build descriptors for each route
 	const descriptors = useMemo(() => {

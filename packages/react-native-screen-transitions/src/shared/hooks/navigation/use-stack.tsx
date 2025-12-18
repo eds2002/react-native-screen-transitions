@@ -1,6 +1,7 @@
 import type { Route } from "@react-navigation/native";
 import { createContext, useContext } from "react";
 import type { DerivedValue } from "react-native-reanimated";
+import type { BaseNavigation } from "../../providers/screen/keys.provider";
 import type { OverlayProps } from "../../types/core.types";
 
 /**
@@ -9,7 +10,7 @@ import type { OverlayProps } from "../../types/core.types";
  */
 export interface StackDescriptor {
 	route: Route<string>;
-	navigation: unknown;
+	navigation: BaseNavigation;
 	options: {
 		overlay?: (props: OverlayProps) => React.ReactNode;
 		overlayMode?: "float" | "screen";

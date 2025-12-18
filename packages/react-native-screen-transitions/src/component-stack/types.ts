@@ -47,6 +47,8 @@ export interface ComponentNavigation {
 	reset: (name?: string, params?: Record<string, unknown>) => void;
 	/** Dispatch a navigation action (compatible with React Navigation's StackActions) */
 	dispatch: (action: ComponentNavigationAction) => void;
+	/** Get current navigation state (for gesture handling compatibility) */
+	getState: () => ComponentStackState;
 	/** Current index in the stack */
 	index: number;
 }
@@ -138,9 +140,7 @@ export type ComponentStackDescriptorMap = {
 /**
  * Props passed to screen components.
  */
-export interface ComponentStackScreenProps<
-	Params = Record<string, unknown>,
-> {
+export interface ComponentStackScreenProps<Params = Record<string, unknown>> {
 	/** Navigation object for controlling the stack */
 	navigation: ComponentNavigation;
 	/** Route object with params */

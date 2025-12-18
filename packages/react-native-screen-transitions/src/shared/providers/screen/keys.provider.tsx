@@ -15,6 +15,16 @@ export interface BaseRoute {
 }
 
 /**
+ * Navigation interface for gesture handling - both React Navigation and
+ * component-stack navigation objects must satisfy this contract.
+ */
+export interface BaseNavigation {
+	getState: () => { routes: Array<{ key: string }>; key: string };
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	dispatch: (action: any) => void;
+}
+
+/**
  * Base descriptor interface - minimal contract for all stack types.
  * This allows component-stack, blank-stack, and native-stack to all
  * work with the shared providers without tight coupling to React Navigation.
@@ -22,7 +32,7 @@ export interface BaseRoute {
 export interface BaseDescriptor {
 	route: BaseRoute;
 	options: ScreenTransitionConfig;
-	navigation?: unknown;
+	navigation: BaseNavigation;
 }
 
 /**
