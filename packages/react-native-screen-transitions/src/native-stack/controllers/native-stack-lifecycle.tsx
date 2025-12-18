@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Lifecycles are rendered right under the gesture provider> */
 import { useEffect, useLayoutEffect } from "react";
 import { useDerivedValue } from "react-native-reanimated";
+import { useHighRefreshRate } from "../../shared/hooks/animation/use-high-refresh-rate";
 import { useSharedValueState } from "../../shared/hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../shared/hooks/use-stable-callback";
 import { useGestureContext } from "../../shared/providers/gestures.provider";
@@ -34,6 +35,9 @@ export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 
 	const animations = AnimationStore.getAll(current.route.key);
 
+	const { deactivateHighRefreshRate, activateHighRefreshRate } =
+		useHighRefreshRate(current);
+
 	const handleBeforeRemove = useStableCallback((e: Any) => {
 		const isEnabled = current.options.enableTransitions;
 
@@ -47,7 +51,9 @@ export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 		}
 
 		e.preventDefault();
+		activateHighRefreshRate();
 		const onAnimationFinish = (finished: boolean) => {
+			deactivateHighRefreshRate();
 			if (finished) {
 				current.navigation.dispatch(e.data.action);
 
@@ -67,10 +73,12 @@ export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 	});
 
 	const handleInitialize = useStableCallback(() => {
+		activateHighRefreshRate();
 		startScreenTransition({
 			target: "open",
 			spec: current.options.transitionSpec,
 			animations,
+			onAnimationFinish: deactivateHighRefreshRate,
 		});
 	});
 

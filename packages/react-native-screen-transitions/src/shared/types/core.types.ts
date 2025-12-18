@@ -166,4 +166,16 @@ export type ScreenTransitionConfig = {
 	 * Setting this to `false` hides the overlay.
 	 */
 	overlayShown?: boolean;
+
+	/**
+	 * Forces the display to run at its maximum refresh rate during screen transitions.
+	 * Prevents iOS/Android from throttling to 60fps for battery savings.
+	 *
+	 * Useful for smoother animations on high refresh rate displays (90/120/144Hz).
+	 * Note: Increases battery usage while active.
+	 *
+	 * @experimental This API may change in future versions.
+	 * @default false
+	 */
+	experimental_enableHighRefreshRate?: boolean;
 };

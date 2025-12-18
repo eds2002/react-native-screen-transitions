@@ -1,5 +1,6 @@
 import { useLayoutEffect } from "react";
-import { useAnimatedReaction } from "react-native-reanimated";
+import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
+import { useHighRefreshRate } from "../../shared/hooks/animation/use-high-refresh-rate";
 import useStableCallback from "../../shared/hooks/use-stable-callback";
 import { useKeys } from "../../shared/providers/screen/keys.provider";
 import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
@@ -24,11 +25,16 @@ export const ComponentStackScreenLifecycleController = ({
 
 	const animations = AnimationStore.getAll(current.route.key);
 
+	const { deactivateHighRefreshRate, activateHighRefreshRate } =
+		useHighRefreshRate(current);
+
 	const handleInitialize = useStableCallback(() => {
+		activateHighRefreshRate();
 		startScreenTransition({
 			target: "open",
 			spec: current.options.transitionSpec,
 			animations,
+			onAnimationFinish: deactivateHighRefreshRate,
 		});
 	});
 
@@ -41,6 +47,7 @@ export const ComponentStackScreenLifecycleController = ({
 	});
 
 	const handleCloseEnd = useStableCallback((finished: boolean) => {
+		deactivateHighRefreshRate();
 		if (!finished) {
 			return;
 		}
@@ -56,6 +63,7 @@ export const ComponentStackScreenLifecycleController = ({
 				return;
 			}
 
+			runOnJS(activateHighRefreshRate)();
 			startScreenTransition({
 				target: "close",
 				spec: current.options.transitionSpec,

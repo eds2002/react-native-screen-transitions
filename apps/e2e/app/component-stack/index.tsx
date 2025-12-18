@@ -109,6 +109,7 @@ function ComponentStackDemo() {
 				options={{
 					gestureDirection: "horizontal",
 					gestureEnabled: true,
+					experimental_enableHighRefreshRate: true,
 					screenStyleInterpolator: ({
 						progress,
 						layouts: {

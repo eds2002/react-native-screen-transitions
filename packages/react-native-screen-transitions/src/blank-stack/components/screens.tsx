@@ -46,6 +46,14 @@ export const Screen = ({
 	);
 
 	useDerivedValue(() => {
+		const isInactive = index < routesLength - activeScreensLimit - 1;
+		if (isInactive) {
+			if (screenActivity.get() !== ScreenActivity.INACTIVE) {
+				screenActivity.set(ScreenActivity.INACTIVE);
+			}
+			return;
+		}
+
 		if (!sceneProgress) {
 			screenActivity.set(ScreenActivity.TRANSITIONING_OR_BELOW_TOP);
 			return;
