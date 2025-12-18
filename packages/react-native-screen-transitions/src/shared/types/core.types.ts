@@ -97,6 +97,19 @@ export type OverlayProps<TNavigation = unknown> = {
 	screenAnimation: DerivedValue<ScreenInterpolationProps>;
 };
 
+/**
+ * Props passed to container overlay components.
+ * Extends OverlayProps with children - the screen content to wrap.
+ */
+export type ContainerOverlayProps<TNavigation = unknown> =
+	OverlayProps<TNavigation> & {
+		/**
+		 * The screen content to be wrapped by the container overlay.
+		 * This allows the overlay to act as a wrapper (e.g., MaskedView) around screens.
+		 */
+		children: React.ReactNode;
+	};
+
 export type ScreenTransitionConfig = {
 	/**
 	 * The user-provided function to calculate styles based on animation progress.
@@ -157,9 +170,10 @@ export type ScreenTransitionConfig = {
 	 * How the overlay is positioned relative to screens.
 	 * - 'float': Single persistent overlay above all screens (like iOS tab bar)
 	 * - 'screen': Per-screen overlay that transitions with content
+	 * - 'container': Wraps all screen content, receives children prop (for MaskedView, custom containers)
 	 * @default 'screen'
 	 */
-	overlayMode?: "float" | "screen";
+	overlayMode?: "float" | "screen" | "container";
 
 	/**
 	 * Whether to show the overlay. The overlay is shown by default when `overlay` is provided.

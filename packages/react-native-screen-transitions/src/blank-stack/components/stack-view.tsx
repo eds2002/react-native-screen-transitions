@@ -44,46 +44,48 @@ export const StackView = withStackCore(
 			return (
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-					<ScreenContainer style={styles.container}>
-						{scenes.map((scene, sceneIndex) => {
-							const descriptor = scene.descriptor;
-							const route = scene.route;
-							const isFocused = focusedIndex === sceneIndex;
-							const isBelowFocused = focusedIndex - 1 === sceneIndex;
+					<Overlay.Container>
+						<ScreenContainer style={styles.container}>
+							{scenes.map((scene, sceneIndex) => {
+								const descriptor = scene.descriptor;
+								const route = scene.route;
+								const isFocused = focusedIndex === sceneIndex;
+								const isBelowFocused = focusedIndex - 1 === sceneIndex;
 
-							const previousDescriptor =
-								scenes[sceneIndex - 1]?.descriptor ?? undefined;
-							const nextDescriptor =
-								scenes[sceneIndex + 1]?.descriptor ?? undefined;
+								const previousDescriptor =
+									scenes[sceneIndex - 1]?.descriptor ?? undefined;
+								const nextDescriptor =
+									scenes[sceneIndex + 1]?.descriptor ?? undefined;
 
-							const isPreloaded = descriptors[route.key] === undefined;
+								const isPreloaded = descriptors[route.key] === undefined;
 
-							// On Fabric, when screen is frozen, animated and reanimated values are not updated
-							// due to component being unmounted. To avoid this, we don't freeze the previous screen there
-							const shouldFreeze = isFabric()
-								? !isPreloaded && !isFocused && !isBelowFocused
-								: !isPreloaded && !isFocused;
-							return (
-								<Screen
-									key={route.key}
-									isPreloaded={isPreloaded}
-									index={sceneIndex}
-									routeKey={route.key}
-									shouldFreeze={shouldFreeze}
-									freezeOnBlur={descriptor.options.freezeOnBlur}
-								>
-									<ScreenComposer
-										previous={previousDescriptor}
-										current={descriptor}
-										next={nextDescriptor}
-										LifecycleController={BlankStackScreenLifecycleController}
+								// On Fabric, when screen is frozen, animated and reanimated values are not updated
+								// due to component being unmounted. To avoid this, we don't freeze the previous screen there
+								const shouldFreeze = isFabric()
+									? !isPreloaded && !isFocused && !isBelowFocused
+									: !isPreloaded && !isFocused;
+								return (
+									<Screen
+										key={route.key}
+										isPreloaded={isPreloaded}
+										index={sceneIndex}
+										routeKey={route.key}
+										shouldFreeze={shouldFreeze}
+										freezeOnBlur={descriptor.options.freezeOnBlur}
 									>
-										<SceneView key={route.key} descriptor={descriptor} />
-									</ScreenComposer>
-								</Screen>
-							);
-						})}
-					</ScreenContainer>
+										<ScreenComposer
+											previous={previousDescriptor}
+											current={descriptor}
+											next={nextDescriptor}
+											LifecycleController={BlankStackScreenLifecycleController}
+										>
+											<SceneView key={route.key} descriptor={descriptor} />
+										</ScreenComposer>
+									</Screen>
+								);
+							})}
+						</ScreenContainer>
+					</Overlay.Container>
 				</Fragment>
 			);
 		},

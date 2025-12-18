@@ -30,31 +30,35 @@ export const ComponentView = withStackCore(
 		return (
 			<Fragment>
 				{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-				<View style={styles.container}>
-					{scenes.map((scene, sceneIndex) => {
-						const descriptor =
-							scene.descriptor as unknown as ComponentStackDescriptor;
-						const route = scene.route;
+				<Overlay.Container>
+					<View style={styles.container}>
+						{scenes.map((scene, sceneIndex) => {
+							const descriptor =
+								scene.descriptor as unknown as ComponentStackDescriptor;
+							const route = scene.route;
 
-						const previousDescriptor = scenes[sceneIndex - 1]
-							?.descriptor as unknown as ComponentStackDescriptor | undefined;
-						const nextDescriptor = scenes[sceneIndex + 1]
-							?.descriptor as unknown as ComponentStackDescriptor | undefined;
+							const previousDescriptor = scenes[sceneIndex - 1]
+								?.descriptor as unknown as ComponentStackDescriptor | undefined;
+							const nextDescriptor = scenes[sceneIndex + 1]
+								?.descriptor as unknown as ComponentStackDescriptor | undefined;
 
-						return (
-							<Screen key={route.key} index={sceneIndex} routeKey={route.key}>
-								<ScreenComposer
-									previous={previousDescriptor}
-									current={descriptor}
-									next={nextDescriptor}
-									LifecycleController={ComponentStackScreenLifecycleController}
-								>
-									<SceneView key={route.key} descriptor={descriptor} />
-								</ScreenComposer>
-							</Screen>
-						);
-					})}
-				</View>
+							return (
+								<Screen key={route.key} index={sceneIndex} routeKey={route.key}>
+									<ScreenComposer
+										previous={previousDescriptor}
+										current={descriptor}
+										next={nextDescriptor}
+										LifecycleController={
+											ComponentStackScreenLifecycleController
+										}
+									>
+										<SceneView key={route.key} descriptor={descriptor} />
+									</ScreenComposer>
+								</Screen>
+							);
+						})}
+					</View>
+				</Overlay.Container>
 			</Fragment>
 		);
 	}),

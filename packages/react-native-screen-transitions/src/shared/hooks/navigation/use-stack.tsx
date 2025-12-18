@@ -13,11 +13,19 @@ export interface StackDescriptor {
 	navigation: BaseNavigation;
 	options: {
 		overlay?: (props: OverlayProps) => React.ReactNode;
-		overlayMode?: "float" | "screen";
+		overlayMode?: "float" | "screen" | "container";
 		overlayShown?: boolean;
 		meta?: Record<string, unknown>;
 		enableTransitions?: boolean;
 	};
+}
+
+/**
+ * Scene type for stack context (route + descriptor pair).
+ */
+export interface StackScene {
+	route: Route<string>;
+	descriptor: StackDescriptor;
 }
 
 /**
@@ -43,6 +51,10 @@ export interface StackContextValue {
 	 * Descriptor map for all routes.
 	 */
 	descriptors: Record<string, StackDescriptor>;
+	/**
+	 * Pre-computed scenes (route + descriptor pairs).
+	 */
+	scenes: StackScene[];
 	/**
 	 * The current focused index from navigation state.
 	 */
