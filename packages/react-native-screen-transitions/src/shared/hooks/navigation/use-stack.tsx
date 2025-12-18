@@ -4,9 +4,9 @@ import type { DerivedValue } from "react-native-reanimated";
 import type { BaseNavigation } from "../../providers/screen/keys.provider";
 import type {
 	ContainerOverlayProps,
+	OverlayMode,
 	OverlayProps,
-} from "../../types/core.types";
-import type { OverlayMode } from "../../types/overlay.types";
+} from "../../types/overlay.types";
 
 /**
  * Base descriptor type for shared components.

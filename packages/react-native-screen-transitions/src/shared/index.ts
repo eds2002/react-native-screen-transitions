@@ -23,14 +23,13 @@ export { useScreenGesture } from "./hooks/gestures/use-screen-gesture";
 
 export type {
 	AnimationConfig,
+	BoundEntry,
+	BoundsLink,
+	ContainerOverlayProps,
 	OverlayInterpolationProps,
+	OverlayMode,
+	OverlayProps,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
-} from "./types/animation.types";
-export type { BoundEntry, BoundsLink } from "./types/bounds.types";
-export type {
-	ContainerOverlayProps,
-	OverlayProps,
 	ScreenTransitionConfig,
-} from "./types/core.types";
-export type { OverlayMode } from "./types/overlay.types";
+} from "./types";

@@ -3,7 +3,7 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { ScreenKey } from "../types/core.types";
+import type { ScreenKey } from "../types/screen.types";
 
 export type AnimationStoreMap = {
 	progress: SharedValue<number>;

@@ -1,8 +1,8 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "./types/animation.types";
-import type { Layout } from "./types/core.types";
 import type { ActivationArea } from "./types/gesture.types";
+import type { Layout } from "./types/screen.types";
 
 /**
  * Masked view integration

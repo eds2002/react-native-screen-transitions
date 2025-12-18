@@ -15,7 +15,6 @@ import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds.store";
-import type { Any } from "../types/utils.types";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
 import { type BaseDescriptor, useKeys } from "./screen/keys.provider";
@@ -50,7 +49,7 @@ interface RegisterBoundsContextValue {
  */
 const getAncestorKeys = (current: BaseDescriptor): string[] => {
 	const ancestors: string[] = [];
-	const nav = current.navigation as Any;
+	const nav = current.navigation as any;
 
 	// Safety check for component-stack which doesn't have getParent
 	if (typeof nav?.getParent !== "function") {

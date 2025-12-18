@@ -3,8 +3,8 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { ScreenKey } from "../types/core.types";
 import type { GestureDirection } from "../types/gesture.types";
+import type { ScreenKey } from "../types/screen.types";
 
 type GestureKey =
 	| "x"

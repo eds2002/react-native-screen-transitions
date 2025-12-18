@@ -15,7 +15,7 @@ import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
 } from "../../types/animation.types";
-import type { ScreenTransitionConfig } from "../../types/core.types";
+import type { ScreenTransitionConfig } from "../../types/screen.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
 import { useStack } from "../navigation/use-stack";

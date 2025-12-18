@@ -11,7 +11,7 @@ import { useScreenAnimation } from "../../../hooks/animation/use-screen-animatio
 import { type StackScene, useStack } from "../../../hooks/navigation/use-stack";
 import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
 import type { OverlayInterpolationProps } from "../../../types/animation.types";
-import type { OverlayProps } from "../../../types/core.types";
+import type { OverlayProps } from "../../../types/overlay.types";
 
 type OverlayHostProps = {
 	scene: StackScene;

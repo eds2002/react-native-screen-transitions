@@ -8,7 +8,6 @@ import { useGestureContext } from "../../shared/providers/gestures.provider";
 import { useKeys } from "../../shared/providers/screen/keys.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
 import { TRUE } from "../../shared/types/state.types";
-import type { Any } from "../../shared/types/utils.types";
 import { startScreenTransition } from "../../shared/utils/animation/start-screen-transition";
 import { resetStoresForScreen } from "../../shared/utils/reset-stores-for-screen";
 import type { NativeStackDescriptor } from "../types";
@@ -38,7 +37,7 @@ export const NativeStackScreenLifecycleController = ({ children }: Props) => {
 	const { deactivateHighRefreshRate, activateHighRefreshRate } =
 		useHighRefreshRate(current);
 
-	const handleBeforeRemove = useStableCallback((e: Any) => {
+	const handleBeforeRemove = useStableCallback((e: any) => {
 		const isEnabled = current.options.enableTransitions;
 
 		const isFirstScreen = current.navigation.getState().index === 0;

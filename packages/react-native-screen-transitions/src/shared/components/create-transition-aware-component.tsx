@@ -8,8 +8,7 @@ import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { useGestureContext } from "../providers/gestures.provider";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
-import type { TransitionAwareProps } from "../types/core.types";
-import type { Any } from "../types/utils.types";
+import type { TransitionAwareProps } from "../types/screen.types";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
@@ -26,7 +25,7 @@ export function createTransitionAwareComponent<P extends object>(
 	const ScrollableInner = forwardRef<
 		React.ComponentRef<typeof Wrapped>,
 		TransitionAwareProps<P>
-	>((props: Any, ref) => {
+	>((props: any, ref) => {
 		const { nativeGesture } = useGestureContext()!;
 		const { scrollHandler, onContentSizeChange, onLayout } = useScrollRegistry({
 			onScroll: props.onScroll,
@@ -37,7 +36,7 @@ export function createTransitionAwareComponent<P extends object>(
 		return (
 			<GestureDetector gesture={nativeGesture}>
 				<AnimatedComponent
-					{...(props as Any)}
+					{...(props as any)}
 					ref={ref}
 					onScroll={scrollHandler}
 					onContentSizeChange={onContentSizeChange}
@@ -53,7 +52,7 @@ export function createTransitionAwareComponent<P extends object>(
 		TransitionAwareProps<P>
 	>((props, _) => {
 		const { children, style, sharedBoundTag, styleId, onPress, ...rest } =
-			props as Any;
+			props as any;
 
 		const animatedRef = useAnimatedRef<View>();
 
@@ -71,7 +70,7 @@ export function createTransitionAwareComponent<P extends object>(
 			>
 				{({ captureActiveOnPress, handleInitialLayout }) => (
 					<AnimatedComponent
-						{...(rest as Any)}
+						{...(rest as any)}
 						ref={animatedRef}
 						style={[style, associatedStyles]}
 						onPress={captureActiveOnPress}

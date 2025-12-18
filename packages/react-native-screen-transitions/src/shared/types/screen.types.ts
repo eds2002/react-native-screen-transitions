@@ -1,10 +1,14 @@
 import type { AnimatedProps } from "react-native-reanimated";
-import type { ScreenStyleInterpolator, TransitionSpec } from "./animation.types";
+import type {
+	ScreenStyleInterpolator,
+	TransitionSpec,
+} from "./animation.types";
 import type { GestureActivationArea, GestureDirection } from "./gesture.types";
-import type { ContainerOverlayProps, OverlayMode, OverlayProps } from "./overlay.types";
-
-// Re-export overlay types
-export type { ContainerOverlayProps, OverlayProps } from "./overlay.types";
+import type {
+	ContainerOverlayProps,
+	OverlayMode,
+	OverlayProps,
+} from "./overlay.types";
 
 export type Layout = {
 	width: number;
@@ -118,7 +122,7 @@ export type ScreenTransitionConfig = {
 	 * - 'container': Wraps all screen content, receives children prop (for MaskedView, custom containers)
 	 * @default 'screen'
 	 */
-	overlayMode?: OverlayMode
+	overlayMode?: OverlayMode;
 
 	/**
 	 * Whether to show the overlay. The overlay is shown by default when `overlay` is provided.

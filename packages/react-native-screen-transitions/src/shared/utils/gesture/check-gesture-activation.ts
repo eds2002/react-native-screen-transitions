@@ -1,12 +1,12 @@
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import type { SharedValue } from "react-native-reanimated";
-import type { Layout } from "../../types/core.types";
 import {
 	type ActivationArea,
 	type GestureActivationArea,
 	GestureOffsetState,
 	type SideActivation,
 } from "../../types/gesture.types";
+import type { Layout } from "../../types/screen.types";
 
 type Directions = {
 	vertical: boolean;

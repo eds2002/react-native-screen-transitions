@@ -1,7 +1,6 @@
 import type React from "react";
 import type { ComponentType } from "react";
 import { RootTransitionAware } from "../../components/root-transition-aware";
-import type { Any } from "../../types/utils.types";
 import { ScreenGestureProvider } from "../gestures.provider";
 import { type BaseDescriptor, KeysProvider } from "./keys.provider";
 import { ScreenStylesProvider } from "./styles.provider";
@@ -11,7 +10,7 @@ type Props<TDescriptor extends BaseDescriptor> = {
 	current: TDescriptor;
 	next?: TDescriptor;
 	children: React.ReactNode;
-	LifecycleController: ComponentType<Any>;
+	LifecycleController: ComponentType<any>;
 };
 
 export function ScreenComposer<TDescriptor extends BaseDescriptor>({

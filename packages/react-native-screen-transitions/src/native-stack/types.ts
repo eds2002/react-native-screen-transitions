@@ -22,10 +22,8 @@ import type {
 	ScreenStackHeaderConfigProps,
 	SearchBarProps,
 } from "react-native-screens";
-import type {
-	OverlayProps,
-	ScreenTransitionConfig,
-} from "../shared/types/core.types";
+import type { OverlayProps } from "../shared/types/overlay.types";
+import type { ScreenTransitionConfig } from "../shared/types/screen.types";
 
 export type NativeStackNavigationEventMap = {
 	/**

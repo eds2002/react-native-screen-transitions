@@ -1,7 +1,7 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { ScreenTransitionState } from "../../../types/animation.types";
 import type { BoundsMethod } from "../../../types/bounds.types";
-import type { Layout } from "../../../types/core.types";
+import type { Layout } from "../../../types/screen.types";
 
 export type BoundsAnchor =
 	| "topLeading"

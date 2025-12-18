@@ -5,7 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { useScreenAnimation } from "../../../hooks/animation/use-screen-animation";
 import { type StackScene, useStack } from "../../../hooks/navigation/use-stack";
 import type { OverlayInterpolationProps } from "../../../types/animation.types";
-import type { ContainerOverlayProps } from "../../../types/core.types";
+import type { ContainerOverlayProps } from "../../../types/overlay.types";
 import { getActiveContainerOverlay } from "../helpers/get-active-overlay";
 
 /**

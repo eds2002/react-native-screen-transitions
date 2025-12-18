@@ -12,7 +12,7 @@ import type {
 	Theme,
 } from "@react-navigation/native";
 import type { ScreenTransitionConfig } from "../shared";
-import type { OverlayProps } from "../shared/types/core.types";
+import type { OverlayProps } from "../shared/types/overlay.types";
 
 export type BlankStackNavigationEventMap = {};
 

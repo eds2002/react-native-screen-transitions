@@ -12,7 +12,7 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation.types";
 import type { BoundsAccessor, BoundsLink } from "../../types/bounds.types";
-import type { Layout } from "../../types/core.types";
+import type { Layout } from "../../types/screen.types";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
