@@ -34,12 +34,13 @@ npm install react-native-reanimated react-native-gesture-handler \
 
 ## Quick Start
 
-This package provides two stack navigators:
+This package provides three stack navigators:
 
 | Stack                         | Description                                                                       |
 | ----------------------------- | --------------------------------------------------------------------------------- |
 | **Blank Stack** (recommended) | Pure JavaScript stack with full control over transitions, overlays, and gestures. |
-| **Native Stack**              | Extends `@react-navigation/native-stack`. Fewer features but potentially faster.  |
+| **Native Stack**              | Extends `@react-navigation/native-stack`. Full overlay support, native primitives.|
+| **Component Stack**           | Standalone navigator without React Navigation. For internal/embedded navigation.  |
 
 ### Choosing a Stack
 
@@ -51,14 +52,21 @@ This package provides two stack navigators:
 
 However, it's still a JavaScript implementation. While optimized to be as fast as possible (using `react-native-screens` under the hood, with animations and gesture logic running on the UI thread), heavy usage may not match native performance.
 
-**Native Stack** has limitations but uses native navigation primitives:
+**Native Stack** uses native navigation primitives with some trade-offs:
 
-- No overlay system
+- Full overlay system support (float and screen modes)
 - Relies on `beforeRemove` listeners to intercept navigation
 - Uses transparent modal presentation which can cause delayed touch events
 - Some edge cases with rapid navigation
 
-Choose Native Stack if you need maximum performance and can live without overlays.
+Choose Native Stack if you need native performance with overlay support.
+
+**Component Stack** is a standalone navigator that doesn't integrate with React Navigation:
+
+- No integration with React Navigation ecosystem (no linking, no deep linking)
+- Ideal for embedded navigation within a screen (e.g., onboarding flows, wizards)
+- Lightweight, component-based API
+- Full transition and gesture support
 
 ### Blank Stack Philosophy
 
@@ -492,9 +500,9 @@ Gesture rules with scrollables:
 
 ---
 
-## Overlays (Blank Stack)
+## Overlays
 
-The Blank Stack supports persistent overlays that animate across screen transitions.
+Both Blank Stack and Native Stack support persistent overlays that animate across screen transitions.
 
 ### Float Overlay
 
@@ -836,10 +844,97 @@ To avoid collisions with custom gesture options, some native options are renamed
 
 ### Limitations
 
-- Overlay system not available
 - Relies on `beforeRemove` listener to intercept navigation
 - Uses transparent modal presentation
 - Some edge cases with rapid navigation
+
+---
+
+## Component Stack
+
+A standalone navigator for when you don't need React Navigation integration. Perfect for embedded flows like onboarding, wizards, or any self-contained navigation.
+
+### Setup
+
+```tsx
+import {
+  createComponentNavigator,
+  useComponentNavigation,
+} from "react-native-screen-transitions/component-stack";
+import Transition from "react-native-screen-transitions";
+
+const Stack = createComponentNavigator();
+
+function OnboardingFlow() {
+  return (
+    <Stack.Navigator initialRoute="step1">
+      <Stack.Screen
+        name="step1"
+        component={Step1}
+        options={{
+          ...Transition.Presets.SlideFromBottom(),
+        }}
+      />
+      <Stack.Screen
+        name="step2"
+        component={Step2}
+        options={{
+          ...Transition.Presets.SlideFromBottom(),
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+function Step1() {
+  const navigation = useComponentNavigation();
+
+  return (
+    <View>
+      <Text>Step 1</Text>
+      <Button title="Next" onPress={() => navigation.push("step2")} />
+    </View>
+  );
+}
+```
+
+### Navigation API
+
+```tsx
+const navigation = useComponentNavigation();
+
+navigation.push("screenName", { param: "value" }); // Push a screen
+navigation.pop(); // Go back
+navigation.popTo("screenName"); // Pop to a specific screen
+navigation.reset("screenName"); // Reset to a single screen
+```
+
+### When to Use Component Stack
+
+- **Onboarding flows** – Self-contained multi-step experiences
+- **Wizards/Forms** – Multi-step forms within a screen
+- **Embedded navigation** – Navigation inside a modal or sheet
+- **Non-URL navigation** – When you don't need deep linking
+
+---
+
+## Experimental Features
+
+### High Refresh Rate
+
+Force the display to run at maximum refresh rate during transitions. This can make animations smoother on high refresh rate displays (90Hz, 120Hz).
+
+```tsx
+<Stack.Screen
+  name="Detail"
+  options={{
+    experimental_enableHighRefreshRate: true,
+    ...Transition.Presets.SlideFromBottom(),
+  }}
+/>
+```
+
+> **Note**: This is experimental and may have performance implications. Test on target devices.
 
 ---
 
