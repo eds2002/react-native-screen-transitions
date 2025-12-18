@@ -7,7 +7,7 @@ import { Fragment } from "react";
 import { StyleSheet } from "react-native";
 import { ScreenContainer } from "react-native-screens";
 import { Overlay } from "../../shared/components/overlay";
-import { ScreenTransitionProvider } from "../../shared/providers/screen/transition.provider";
+import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { BlankStackScreenLifecycleController } from "../controllers/blank-stack-lifecycle";
@@ -72,14 +72,14 @@ export const StackView = withStackCore(
 									shouldFreeze={shouldFreeze}
 									freezeOnBlur={descriptor.options.freezeOnBlur}
 								>
-									<ScreenTransitionProvider
+									<ScreenComposer
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
 										LifecycleController={BlankStackScreenLifecycleController}
 									>
 										<SceneView key={route.key} descriptor={descriptor} />
-									</ScreenTransitionProvider>
+									</ScreenComposer>
 								</Screen>
 							);
 						})}

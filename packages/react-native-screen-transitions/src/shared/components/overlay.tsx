@@ -11,7 +11,7 @@ import { useScreenAnimation } from "../hooks/animation/use-screen-animation";
 import { type StackDescriptor, useStack } from "../hooks/navigation/use-stack";
 import { useSharedValueState } from "../hooks/reanimated/use-shared-value-state";
 import { KeysProvider, useKeys } from "../providers/screen/keys.provider";
-import { TransitionStylesProvider } from "../providers/screen/styles.provider";
+import { ScreenStylesProvider } from "../providers/screen/styles.provider";
 import type { OverlayInterpolationProps } from "../types/animation.types";
 import type { OverlayProps } from "../types/core.types";
 
@@ -179,7 +179,7 @@ function getActiveFloatOverlay(
  * Float overlay component that renders above all screens.
  * Gets routes and descriptors from stack context.
  */
-export function FloatOverlay() {
+function FloatOverlay() {
 	const { routes, descriptors, focusedIndex, flags } = useStack();
 
 	const scenes = useMemo(() => {
@@ -211,7 +211,7 @@ export function FloatOverlay() {
 
 	return (
 		<KeysProvider current={current} previous={previous} next={next}>
-			<TransitionStylesProvider>
+			<ScreenStylesProvider>
 				<OverlayHost
 					scene={scene}
 					scenes={scenes}
@@ -219,7 +219,7 @@ export function FloatOverlay() {
 					overlayIndex={overlayIndex}
 					isFloating
 				/>
-			</TransitionStylesProvider>
+			</ScreenStylesProvider>
 		</KeysProvider>
 	);
 }
@@ -228,7 +228,7 @@ export function FloatOverlay() {
  * Screen overlay component that renders per-screen.
  * Gets current descriptor from keys context.
  */
-export function ScreenOverlay() {
+function ScreenOverlay() {
 	const { current } = useKeys<BaseOverlayDescriptor>();
 	const { routeKeys, flags } = useStack();
 

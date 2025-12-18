@@ -2,7 +2,7 @@ import * as React from "react";
 import { Fragment } from "react";
 import { StyleSheet, View } from "react-native";
 import { Overlay } from "../../shared/components/overlay";
-import { ScreenTransitionProvider } from "../../shared/providers/screen/transition.provider";
+import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { ComponentStackScreenLifecycleController } from "../controllers/component-stack-lifecycle";
@@ -43,14 +43,14 @@ export const ComponentView = withStackCore(
 
 						return (
 							<Screen key={route.key} index={sceneIndex} routeKey={route.key}>
-								<ScreenTransitionProvider
+								<ScreenComposer
 									previous={previousDescriptor}
 									current={descriptor}
 									next={nextDescriptor}
 									LifecycleController={ComponentStackScreenLifecycleController}
 								>
 									<SceneView key={route.key} descriptor={descriptor} />
-								</ScreenTransitionProvider>
+								</ScreenComposer>
 							</Screen>
 						);
 					})}

@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import createProvider from "../../utils/create-provider";
 
-export interface StackCoreConfig {
+interface StackCoreConfig {
 	TRANSITIONS_ALWAYS_ON?: boolean;
 }
 
@@ -13,19 +13,16 @@ interface StackCoreProviderProps {
 	children: React.ReactNode;
 }
 
-export interface StackCoreContextValue {
+interface StackCoreContextValue {
 	flags: {
 		TRANSITIONS_ALWAYS_ON: boolean;
 	};
 }
 
-const {
-	StackCoreProvider: InternalStackCoreProvider,
-	useStackCoreContext: internalUseStackCoreContext,
-} = createProvider("StackCore", { guarded: true })<
-	StackCoreProviderProps,
-	StackCoreContextValue
->(({ config, children }) => {
+const { StackCoreProvider: InternalStackCoreProvider } = createProvider(
+	"StackCore",
+	{ guarded: true },
+)<StackCoreProviderProps, StackCoreContextValue>(({ config, children }) => {
 	const { TRANSITIONS_ALWAYS_ON = false } = config;
 
 	const value = React.useMemo(
@@ -60,13 +57,6 @@ export function withStackCore<TProps extends object>(
 			</InternalStackCoreProvider>
 		);
 	};
-}
-
-/**
- * Hook to access the StackCore context (flags only).
- */
-export function useStackCoreContext(): StackCoreContextValue {
-	return internalUseStackCoreContext();
 }
 
 const styles = StyleSheet.create({

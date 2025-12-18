@@ -36,7 +36,7 @@ export interface ManagedStackProps {
 	) => BlankStackDescriptor;
 }
 
-export interface ManagedStackContextValue {
+interface ManagedStackContextValue {
 	routes: NavigationRoute<ParamListBase, string>[];
 	descriptors: BlankStackDescriptorMap;
 	scenes: BlankStackScene[];

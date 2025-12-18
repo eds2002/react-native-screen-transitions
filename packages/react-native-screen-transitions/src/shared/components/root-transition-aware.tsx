@@ -2,14 +2,14 @@ import { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { NO_STYLES } from "../constants";
-import { useTransitionStyles } from "../providers/screen/styles.provider";
+import { useScreenStyles } from "../providers/screen/styles.provider";
 
 type Props = {
 	children: React.ReactNode;
 };
 
 export const RootTransitionAware = memo(({ children }: Props) => {
-	const { stylesMap } = useTransitionStyles();
+	const { stylesMap } = useScreenStyles();
 
 	const animatedContentStyle = useAnimatedStyle(() => {
 		"worklet";

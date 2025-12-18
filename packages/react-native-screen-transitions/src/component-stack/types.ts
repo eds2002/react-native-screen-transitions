@@ -21,7 +21,7 @@ export interface ComponentRoute<Params = Record<string, unknown>> {
 /**
  * Navigation action for dispatch method.
  */
-export type ComponentNavigationAction =
+type ComponentNavigationAction =
 	| { type: "PUSH"; name: string; params?: Record<string, unknown> }
 	| { type: "POP" }
 	| { type: "POP_BY_KEY"; key: string }

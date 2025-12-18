@@ -29,7 +29,7 @@ import {
 	ScreenStackItem,
 } from "react-native-screens";
 import { Overlay } from "../../shared/components/overlay";
-import { ScreenTransitionProvider } from "../../shared/providers/screen/transition.provider";
+import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import {
 	type DirectStackContextValue,
@@ -464,14 +464,14 @@ const SceneView = ({
 								value={isParentHeaderShown || headerShown !== false}
 							>
 								<HeaderBackContext.Provider value={headerBack}>
-									<ScreenTransitionProvider
+									<ScreenComposer
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
 										LifecycleController={NativeStackScreenLifecycleController}
 									>
 										{render()}
-									</ScreenTransitionProvider>
+									</ScreenComposer>
 								</HeaderBackContext.Provider>
 							</HeaderShownContext.Provider>
 						</HeaderHeightContext.Provider>

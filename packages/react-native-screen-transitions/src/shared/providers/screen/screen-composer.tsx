@@ -4,7 +4,7 @@ import { RootTransitionAware } from "../../components/root-transition-aware";
 import type { Any } from "../../types/utils.types";
 import { ScreenGestureProvider } from "../gestures.provider";
 import { type BaseDescriptor, KeysProvider } from "./keys.provider";
-import { TransitionStylesProvider } from "./styles.provider";
+import { ScreenStylesProvider } from "./styles.provider";
 
 type Props<TDescriptor extends BaseDescriptor> = {
 	previous?: TDescriptor;
@@ -14,7 +14,7 @@ type Props<TDescriptor extends BaseDescriptor> = {
 	LifecycleController: ComponentType<Any>;
 };
 
-export function ScreenTransitionProvider<TDescriptor extends BaseDescriptor>({
+export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 	previous,
 	current,
 	next,
@@ -29,9 +29,9 @@ export function ScreenTransitionProvider<TDescriptor extends BaseDescriptor>({
 		>
 			<ScreenGestureProvider>
 				<LifecycleController>
-					<TransitionStylesProvider>
+					<ScreenStylesProvider>
 						<RootTransitionAware>{children}</RootTransitionAware>
-					</TransitionStylesProvider>
+					</ScreenStylesProvider>
 				</LifecycleController>
 			</ScreenGestureProvider>
 		</KeysProvider>

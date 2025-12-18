@@ -9,16 +9,17 @@ type Props = {
 	children: React.ReactNode;
 };
 
-type TransitionStylesContextValue = {
+type ScreenStylesContextValue = {
 	stylesMap: SharedValue<TransitionInterpolatedStyle>;
 	ancestorStylesMaps: SharedValue<TransitionInterpolatedStyle>[];
 };
 
-const TransitionStylesContext =
-	createContext<TransitionStylesContextValue | null>(null);
+const ScreenStylesContext = createContext<ScreenStylesContextValue | null>(
+	null,
+);
 
-export function TransitionStylesProvider({ children }: Props) {
-	const parentCtx = useContext(TransitionStylesContext);
+export function ScreenStylesProvider({ children }: Props) {
+	const parentCtx = useContext(ScreenStylesContext);
 
 	const { screenInterpolatorProps, screenStyleInterpolator } =
 		_useScreenAnimation();
@@ -57,14 +58,14 @@ export function TransitionStylesProvider({ children }: Props) {
 	}, [stylesMap, parentCtx]);
 
 	return (
-		<TransitionStylesContext.Provider value={value}>
+		<ScreenStylesContext.Provider value={value}>
 			{children}
-		</TransitionStylesContext.Provider>
+		</ScreenStylesContext.Provider>
 	);
 }
 
-export function useTransitionStyles() {
-	const ctx = useContext(TransitionStylesContext);
+export function useScreenStyles() {
+	const ctx = useContext(ScreenStylesContext);
 	if (!ctx) {
 		throw new Error(
 			"useTransitionStyles must be used within a TransitionStylesProvider",
