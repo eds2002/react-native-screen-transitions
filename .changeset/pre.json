@@ -1,0 +1,15 @@
+{
+  "mode": "pre",
+  "tag": "beta",
+  "initialVersions": {
+    "e2e": "1.0.1-beta.0",
+    "component-navigation": "1.0.0",
+    "expo-router-example": "2.2.0",
+    "onboarding-example": "1.0.1-beta.0",
+    "tray": "1.0.0",
+    "react-native-screen-transitions": "3.1.0"
+  },
+  "changesets": [
+    "beta-release"
+  ]
+}

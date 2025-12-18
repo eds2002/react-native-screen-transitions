@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.2.0-beta.0
+
+### Minor Changes
+
+- feat: unified stack type system, component-stack improvements
+
 ## 3.1.0
 
 ### Minor Changes
