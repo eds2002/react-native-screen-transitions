@@ -1,12 +1,12 @@
 import * as React from "react";
-import { StyleSheet } from "react-native";
-import { LayoutDimensionsProvider } from "../../shared/providers/layout-dimensions.provider";
-import { withStackRootProvider } from "../../shared/providers/stack-root.provider";
+import { Fragment } from "react";
+import { StyleSheet, View } from "react-native";
+import { Overlay } from "../../shared/components/overlay";
+import { ScreenTransitionProvider } from "../../shared/providers/screen/transition.provider";
+import { withStackCore } from "../../shared/providers/stack/core.provider";
+import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { ComponentStackScreenLifecycleController } from "../controllers/component-stack-lifecycle";
-import { ComponentTransitionProvider } from "../providers/component-transition.provider";
 import type { ComponentStackDescriptor } from "../types";
-import { withComponentNavigationProvider } from "../utils/with-component-navigation";
-import { Overlay } from "./overlay";
 import { Screen } from "./screens";
 
 type SceneViewProps = {
@@ -24,37 +24,38 @@ const SceneView = React.memo(function SceneView({
 	);
 });
 
-export const ComponentView = withStackRootProvider(
+export const ComponentView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true },
-	withComponentNavigationProvider(({ scenes, shouldShowFloatOverlay }) => {
+	withManagedStack(({ scenes, shouldShowFloatOverlay }) => {
 		return (
-			<>
+			<Fragment>
 				{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-				<LayoutDimensionsProvider>
+				<View style={styles.container}>
 					{scenes.map((scene, sceneIndex) => {
-						const descriptor = scene.descriptor;
+						const descriptor =
+							scene.descriptor as unknown as ComponentStackDescriptor;
 						const route = scene.route;
 
-						const previousDescriptor =
-							scenes[sceneIndex - 1]?.descriptor ?? undefined;
-						const nextDescriptor =
-							scenes[sceneIndex + 1]?.descriptor ?? undefined;
+						const previousDescriptor = scenes[sceneIndex - 1]
+							?.descriptor as unknown as ComponentStackDescriptor | undefined;
+						const nextDescriptor = scenes[sceneIndex + 1]
+							?.descriptor as unknown as ComponentStackDescriptor | undefined;
 
 						return (
 							<Screen key={route.key} index={sceneIndex} routeKey={route.key}>
-								<ComponentTransitionProvider
+								<ScreenTransitionProvider
 									previous={previousDescriptor}
 									current={descriptor}
 									next={nextDescriptor}
 									LifecycleController={ComponentStackScreenLifecycleController}
 								>
 									<SceneView key={route.key} descriptor={descriptor} />
-								</ComponentTransitionProvider>
+								</ScreenTransitionProvider>
 							</Screen>
 						);
 					})}
-				</LayoutDimensionsProvider>
-			</>
+				</View>
+			</Fragment>
 		);
 	}),
 );

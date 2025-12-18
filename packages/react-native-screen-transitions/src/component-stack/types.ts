@@ -19,6 +19,17 @@ export interface ComponentRoute<Params = Record<string, unknown>> {
 }
 
 /**
+ * Navigation action for dispatch method.
+ */
+export type ComponentNavigationAction =
+	| { type: "PUSH"; name: string; params?: Record<string, unknown> }
+	| { type: "POP" }
+	| { type: "POP_BY_KEY"; key: string }
+	| { type: "NAVIGATE"; name: string; params?: Record<string, unknown> }
+	| { type: "RESET"; name?: string; params?: Record<string, unknown> }
+	| { type: string; source?: string; target?: string; payload?: unknown };
+
+/**
  * Navigation object provided to screens and available via useComponentNavigation hook.
  */
 export interface ComponentNavigation {
@@ -34,6 +45,8 @@ export interface ComponentNavigation {
 	canGoBack: () => boolean;
 	/** Reset to a specific screen or initial state */
 	reset: (name?: string, params?: Record<string, unknown>) => void;
+	/** Dispatch a navigation action (compatible with React Navigation's StackActions) */
+	dispatch: (action: ComponentNavigationAction) => void;
 	/** Current index in the stack */
 	index: number;
 }
@@ -102,7 +115,7 @@ export interface ComponentStackDescriptor {
 	/** Navigation object */
 	navigation: ComponentNavigation;
 	/** Render function for the screen content */
-	render: () => React.JSX.Element;
+	render: () => React.JSX.Element | null;
 	/** Screen options/configuration */
 	options: ComponentStackNavigationOptions;
 }

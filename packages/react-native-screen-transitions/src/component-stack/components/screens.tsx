@@ -6,8 +6,8 @@ import Animated, {
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
+import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
-import { useComponentNavigationContext } from "../utils/with-component-navigation";
 
 interface ScreenProps {
 	routeKey: string;
@@ -24,7 +24,7 @@ enum ScreenActivity {
 const EPSILON = 1e-5;
 
 export const Screen = ({ routeKey, index, children }: ScreenProps) => {
-	const { activeScreensLimit, routes } = useComponentNavigationContext();
+	const { activeScreensLimit, routes } = useManagedStackContext();
 	const routesLength = routes.length;
 
 	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");

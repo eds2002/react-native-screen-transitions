@@ -1,4 +1,4 @@
-import { useComponentNavigationContext } from "../utils/with-component-navigation";
+import { useComponentNavigationContext } from "../navigators/create-component-navigator";
 
 /**
  * Hook to access the component navigation object from within a screen.
@@ -18,6 +18,5 @@ import { useComponentNavigationContext } from "../utils/with-component-navigatio
  * ```
  */
 export function useComponentNavigation() {
-	const context = useComponentNavigationContext();
-	return context.navigation;
+	return useComponentNavigationContext();
 }

@@ -1,12 +1,27 @@
 import * as React from "react";
+import type { ManagedStackProps } from "../../shared/providers/stack/managed.provider";
 import { ComponentView } from "../components/component-view";
 import { useComponentNavigationBuilder } from "../hooks/use-component-navigation-builder";
 import type {
+	ComponentNavigation,
 	ComponentNavigatorProps,
 	ComponentScreenProps,
-	ComponentStackNavigationOptions,
-	ComponentStackScreenProps,
 } from "../types";
+
+// Context for component navigation
+const ComponentNavigationContext = React.createContext<ComponentNavigation | null>(
+	null,
+);
+
+export function useComponentNavigationContext(): ComponentNavigation {
+	const context = React.useContext(ComponentNavigationContext);
+	if (!context) {
+		throw new Error(
+			"useComponentNavigation must be used within a ComponentStack.Navigator",
+		);
+	}
+	return context;
+}
 
 /**
  * Screen component for defining screens in a ComponentNavigator.
@@ -25,20 +40,28 @@ function ComponentNavigator({
 	initialRouteName,
 	screenOptions,
 }: ComponentNavigatorProps) {
-	const { state, descriptors, navigation, dispatchPopByKey } =
+	const { state, navigation, describe, descriptors, NavigationContent } =
 		useComponentNavigationBuilder({
 			children,
 			initialRouteName,
 			screenOptions,
 		});
 
+	// Type assertion: component-stack types are compatible with ManagedStackProps
+	// but TypeScript doesn't know this due to different type definitions
+	const managedStackProps = {
+		state,
+		navigation,
+		describe,
+		descriptors,
+	} as unknown as ManagedStackProps;
+
 	return (
-		<ComponentView
-			state={state}
-			descriptors={descriptors}
-			navigation={navigation}
-			dispatchPopByKey={dispatchPopByKey}
-		/>
+		<ComponentNavigationContext.Provider value={navigation}>
+			<NavigationContent>
+				<ComponentView {...managedStackProps} />
+			</NavigationContent>
+		</ComponentNavigationContext.Provider>
 	);
 }
 
@@ -78,4 +101,3 @@ export function createComponentNavigator(): ComponentStack {
 		Screen: ComponentScreen,
 	};
 }
-

@@ -1,13 +1,12 @@
 import { useLayoutEffect } from "react";
 import { useAnimatedReaction } from "react-native-reanimated";
 import useStableCallback from "../../shared/hooks/use-stable-callback";
-import { useKeys } from "../../shared/providers/keys.provider";
+import { useKeys } from "../../shared/providers/screen/keys.provider";
+import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
-import { BoundStore } from "../../shared/stores/bounds.store";
-import { GestureStore } from "../../shared/stores/gesture.store";
 import { startScreenTransition } from "../../shared/utils/animation/start-screen-transition";
+import { resetStoresForScreen } from "../../shared/utils/reset-stores-for-screen";
 import type { ComponentStackDescriptor } from "../types";
-import { useComponentNavigationContext } from "../utils/with-component-navigation";
 
 interface Props {
 	children: React.ReactNode;
@@ -15,12 +14,11 @@ interface Props {
 
 /**
  * Lifecycle controller built out for Component Stack implementation.
- * Similar to BlankStackScreenLifecycleController but uses component navigation context.
+ * Uses the shared ManagedStackContext for closing route handling.
  */
 export const ComponentStackScreenLifecycleController = ({ children }: Props) => {
 	const { current } = useKeys<ComponentStackDescriptor>();
-	const { handleCloseRoute, closingRouteKeysShared } =
-		useComponentNavigationContext();
+	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
 
 	const animations = AnimationStore.getAll(current.route.key);
 
@@ -33,10 +31,11 @@ export const ComponentStackScreenLifecycleController = ({ children }: Props) => 
 	});
 
 	const handleCleanup = useStableCallback(() => {
-		// Inline reset since resetStoresForScreen expects TransitionDescriptor
-		AnimationStore.clear(current.route.key);
-		GestureStore.clear(current.route.key);
-		BoundStore.clear(current.route.key);
+		// Type assertion needed because ComponentStackDescriptor differs from TransitionDescriptor
+		// but resetStoresForScreen only uses route.key internally
+		resetStoresForScreen(
+			current as unknown as Parameters<typeof resetStoresForScreen>[0],
+		);
 	});
 
 	const handleCloseEnd = useStableCallback((finished: boolean) => {

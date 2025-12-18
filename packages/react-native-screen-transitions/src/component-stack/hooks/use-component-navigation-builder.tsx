@@ -153,10 +153,13 @@ interface UseComponentNavigationBuilderOptions {
 
 interface ComponentNavigationBuilderResult {
 	state: ComponentStackState;
-	descriptors: ComponentStackDescriptorMap;
 	navigation: ComponentNavigation;
-	/** Internal: Dispatch to remove a specific route by key */
-	dispatchPopByKey: (key: string) => void;
+	describe: (
+		route: ComponentRoute,
+		placeholder: boolean,
+	) => ComponentStackDescriptor;
+	descriptors: ComponentStackDescriptorMap;
+	NavigationContent: React.FC<{ children: React.ReactNode }>;
 }
 
 /**
@@ -206,7 +209,7 @@ export function useComponentNavigationBuilder({
 	const stackKeyRef = useRef(generateStackKey());
 
 	// Navigation state reducer
-	const [state, dispatch] = useReducer(
+	const [state, internalDispatch] = useReducer(
 		(state: ComponentStackState, action: NavigationAction) =>
 			navigationReducer(state, {
 				...action,
@@ -220,28 +223,92 @@ export function useComponentNavigationBuilder({
 		},
 	);
 
+	// Dispatch method that handles both internal actions and StackActions format
+	const dispatch = useCallback(
+		(
+			action:
+				| NavigationAction
+				| { type: string; source?: string; target?: string; payload?: unknown },
+		) => {
+			// Handle StackActions.pop() format from useLocalRoutes: { type: 'POP', source: routeKey }
+			if (
+				action.type === "POP" &&
+				"source" in action &&
+				typeof action.source === "string"
+			) {
+				internalDispatch({ type: "POP_BY_KEY", key: action.source });
+				return;
+			}
+
+			// Handle standard internal actions
+			switch (action.type) {
+				case "PUSH":
+					if ("name" in action && typeof action.name === "string") {
+						internalDispatch({
+							type: "PUSH",
+							name: action.name,
+							params: action.params as Record<string, unknown> | undefined,
+						});
+					}
+					break;
+				case "POP":
+					internalDispatch({ type: "POP" });
+					break;
+				case "NAVIGATE":
+					if ("name" in action && typeof action.name === "string") {
+						internalDispatch({
+							type: "NAVIGATE",
+							name: action.name,
+							params: action.params as Record<string, unknown> | undefined,
+						});
+					}
+					break;
+				case "RESET":
+					internalDispatch({
+						type: "RESET",
+						name:
+							"name" in action
+								? (action.name as string | undefined)
+								: undefined,
+						params:
+							"params" in action
+								? (action.params as Record<string, unknown> | undefined)
+								: undefined,
+					});
+					break;
+				case "POP_BY_KEY":
+					if ("key" in action && typeof action.key === "string") {
+						internalDispatch({ type: "POP_BY_KEY", key: action.key });
+					}
+					break;
+			}
+		},
+		[],
+	);
+
 	// Navigation object
 	const navigation: ComponentNavigation = useMemo(() => {
 		return {
 			push: (name: string, params?: Record<string, unknown>) => {
-				dispatch({ type: "PUSH", name, params });
+				internalDispatch({ type: "PUSH", name, params });
 			},
 			pop: () => {
-				dispatch({ type: "POP" });
+				internalDispatch({ type: "POP" });
 			},
 			goBack: () => {
-				dispatch({ type: "POP" });
+				internalDispatch({ type: "POP" });
 			},
 			navigate: (name: string, params?: Record<string, unknown>) => {
-				dispatch({ type: "NAVIGATE", name, params });
+				internalDispatch({ type: "NAVIGATE", name, params });
 			},
 			canGoBack: () => state.routes.length > 1,
 			reset: (name?: string, params?: Record<string, unknown>) => {
-				dispatch({ type: "RESET", name, params });
+				internalDispatch({ type: "RESET", name, params });
 			},
+			dispatch,
 			index: state.index,
 		};
-	}, [state.routes.length, state.index]);
+	}, [state.routes.length, state.index, dispatch]);
 
 	// Build descriptors for each route
 	const descriptors = useMemo(() => {
@@ -274,15 +341,43 @@ export function useComponentNavigationBuilder({
 		return result;
 	}, [state.routes, screens, screenOptions, navigation]);
 
-	// Callback to remove a specific route by key (mirrors React Navigation's source-based pop)
-	const dispatchPopByKey = useCallback((key: string) => {
-		dispatch({ type: "POP_BY_KEY", key });
-	}, []);
+	// Describe function: creates a descriptor for a route (used for placeholder screens)
+	const describe = useCallback(
+		(route: ComponentRoute, placeholder: boolean): ComponentStackDescriptor => {
+			const screenConfig = screens[route.name];
+			const mergedOptions: ComponentStackNavigationOptions = {
+				...screenOptions,
+				...screenConfig?.options,
+			};
+
+			const Component = screenConfig?.component;
+
+			return {
+				route,
+				navigation,
+				options: mergedOptions,
+				render: (): React.JSX.Element | null =>
+					placeholder || !Component ? null : (
+						<Component navigation={navigation} route={route} />
+					),
+			};
+		},
+		[screens, screenOptions, navigation],
+	);
+
+	// NavigationContent wrapper (simple pass-through for component-stack)
+	const NavigationContent = useCallback(
+		({ children }: { children: React.ReactNode }) => {
+			return <>{children}</>;
+		},
+		[],
+	);
 
 	return {
 		state,
-		descriptors,
 		navigation,
-		dispatchPopByKey,
+		describe,
+		descriptors,
+		NavigationContent,
 	};
 }
