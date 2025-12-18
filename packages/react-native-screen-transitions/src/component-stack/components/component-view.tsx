@@ -6,7 +6,7 @@ import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { ComponentStackScreenLifecycleController } from "../controllers/component-stack-lifecycle";
-import type { ComponentStackDescriptor } from "../types";
+import type { ComponentNavigation, ComponentStackDescriptor } from "../types";
 import { Screen } from "./screens";
 
 type SceneViewProps = {
@@ -26,42 +26,45 @@ const SceneView = React.memo(function SceneView({
 
 export const ComponentView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true },
-	withManagedStack(({ scenes, shouldShowFloatOverlay }) => {
-		return (
-			<Fragment>
-				{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-				<Overlay.Container>
-					<View style={styles.container}>
-						{scenes.map((scene, sceneIndex) => {
-							const descriptor =
-								scene.descriptor as unknown as ComponentStackDescriptor;
-							const route = scene.route;
+	withManagedStack<ComponentStackDescriptor, ComponentNavigation>(
+		({ scenes, shouldShowFloatOverlay }) => {
+			return (
+				<Fragment>
+					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
+					<Overlay.Container>
+						<View style={styles.container}>
+							{scenes.map((scene, sceneIndex) => {
+								const descriptor = scene.descriptor;
+								const route = scene.route;
 
-							const previousDescriptor = scenes[sceneIndex - 1]
-								?.descriptor as unknown as ComponentStackDescriptor | undefined;
-							const nextDescriptor = scenes[sceneIndex + 1]
-								?.descriptor as unknown as ComponentStackDescriptor | undefined;
+								const previousDescriptor = scenes[sceneIndex - 1]?.descriptor;
+								const nextDescriptor = scenes[sceneIndex + 1]?.descriptor;
 
-							return (
-								<Screen key={route.key} index={sceneIndex} routeKey={route.key}>
-									<ScreenComposer
-										previous={previousDescriptor}
-										current={descriptor}
-										next={nextDescriptor}
-										LifecycleController={
-											ComponentStackScreenLifecycleController
-										}
+								return (
+									<Screen
+										key={route.key}
+										index={sceneIndex}
+										routeKey={route.key}
 									>
-										<SceneView key={route.key} descriptor={descriptor} />
-									</ScreenComposer>
-								</Screen>
-							);
-						})}
-					</View>
-				</Overlay.Container>
-			</Fragment>
-		);
-	}),
+										<ScreenComposer
+											previous={previousDescriptor}
+											current={descriptor}
+											next={nextDescriptor}
+											LifecycleController={
+												ComponentStackScreenLifecycleController
+											}
+										>
+											<SceneView key={route.key} descriptor={descriptor} />
+										</ScreenComposer>
+									</Screen>
+								);
+							})}
+						</View>
+					</Overlay.Container>
+				</Fragment>
+			);
+		},
+	),
 );
 
 const styles = StyleSheet.create({

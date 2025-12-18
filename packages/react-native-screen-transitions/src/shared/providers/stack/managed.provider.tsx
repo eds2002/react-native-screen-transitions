@@ -1,10 +1,4 @@
-import type {
-	NavigationRoute,
-	ParamListBase,
-	Route,
-	RouteProp,
-	StackNavigationState,
-} from "@react-navigation/native";
+import type { Route } from "@react-navigation/native";
 import * as React from "react";
 import { useMemo } from "react";
 import {
@@ -12,37 +6,47 @@ import {
 	type SharedValue,
 	useDerivedValue,
 } from "react-native-reanimated";
-import type {
-	BlankStackDescriptor,
-	BlankStackDescriptorMap,
-	BlankStackNavigationHelpers,
-	BlankStackScene,
-} from "../../../blank-stack/types";
 import {
 	StackContext,
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
 import { AnimationStore } from "../../stores/animation.store";
+import type {
+	BaseStackDescriptor,
+	BaseStackNavigation,
+	BaseStackRoute,
+	BaseStackScene,
+	BaseStackState,
+} from "../../types/stack.types";
 import { calculateActiveScreensLimit } from "./helpers/active-screens-limit";
 import { useLocalRoutes } from "./helpers/use-local-routes";
 
-export interface ManagedStackProps {
-	state: StackNavigationState<ParamListBase>;
-	navigation: BlankStackNavigationHelpers;
-	descriptors: BlankStackDescriptorMap;
-	describe: (
-		route: RouteProp<ParamListBase>,
-		placeholder: boolean,
-	) => BlankStackDescriptor;
+/**
+ * Props for managed stack - generic over descriptor and navigation types.
+ * Defaults to base types for backward compatibility.
+ */
+export interface ManagedStackProps<
+	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
+	TNavigation extends BaseStackNavigation = BaseStackNavigation,
+> {
+	state: BaseStackState<TDescriptor["route"]>;
+	navigation: TNavigation;
+	descriptors: Record<string, TDescriptor>;
+	describe: (route: TDescriptor["route"], placeholder: boolean) => TDescriptor;
 }
 
-interface ManagedStackContextValue {
-	routes: NavigationRoute<ParamListBase, string>[];
-	descriptors: BlankStackDescriptorMap;
-	scenes: BlankStackScene[];
+/**
+ * Context value for managed stack - generic over descriptor type.
+ */
+interface ManagedStackContextValue<
+	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
+> {
+	routes: TDescriptor["route"][];
+	descriptors: Record<string, TDescriptor>;
+	scenes: BaseStackScene<TDescriptor>[];
 	activeScreensLimit: number;
 	closingRouteKeysShared: SharedValue<string[]>;
-	handleCloseRoute: (payload: { route: Route<string> }) => void;
+	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 	shouldShowFloatOverlay: boolean;
 	focusedIndex: number;
 	stackProgress: DerivedValue<number>;
@@ -53,29 +57,36 @@ const ManagedStackContext =
 	React.createContext<ManagedStackContextValue | null>(null);
 ManagedStackContext.displayName = "ManagedStack";
 
-function useManagedStackContext(): ManagedStackContextValue {
+function useManagedStackContext<
+	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
+>(): ManagedStackContextValue<TDescriptor> {
 	const context = React.useContext(ManagedStackContext);
 	if (!context) {
 		throw new Error(
 			"useManagedStackContext must be used within ManagedStackProvider",
 		);
 	}
-	return context;
+	return context as ManagedStackContextValue<TDescriptor>;
 }
 
-function useManagedStackValue(
-	props: ManagedStackProps,
-): ManagedStackContextValue & { stackContextValue: StackContextValue } {
+function useManagedStackValue<
+	TDescriptor extends BaseStackDescriptor,
+	TNavigation extends BaseStackNavigation,
+>(
+	props: ManagedStackProps<TDescriptor, TNavigation>,
+): ManagedStackContextValue<TDescriptor> & {
+	stackContextValue: StackContextValue;
+} {
 	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
 
 	const { scenes, activeScreensLimit, shouldShowFloatOverlay, routeKeys } =
 		useMemo(() => {
-			const scenes: BlankStackScene[] = [];
+			const scenes: BaseStackScene<TDescriptor>[] = [];
 			const routeKeys: string[] = [];
 			let shouldShowFloatOverlay = false;
 
 			for (const route of state.routes) {
-				const descriptor = state.descriptors[route.key];
+				const descriptor = state.descriptors[route.key] as TDescriptor;
 				scenes.push({ route, descriptor });
 				routeKeys.push(route.key);
 
@@ -134,9 +145,9 @@ function useManagedStackValue(
 		() => ({
 			flags: { TRANSITIONS_ALWAYS_ON: true },
 			routeKeys,
-			routes: state.routes,
-			descriptors: state.descriptors,
-			scenes,
+			routes: state.routes as Route<string>[],
+			descriptors: state.descriptors as Record<string, BaseStackDescriptor>,
+			scenes: scenes as BaseStackScene[],
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
@@ -153,7 +164,7 @@ function useManagedStackValue(
 	);
 
 	// ManagedStack context value
-	const lifecycleValue = useMemo<ManagedStackContextValue>(
+	const lifecycleValue = useMemo<ManagedStackContextValue<TDescriptor>>(
 		() => ({
 			routes: state.routes,
 			focusedIndex,
@@ -185,14 +196,22 @@ function useManagedStackValue(
 
 /**
  * HOC that wraps component with ManagedStack provider AND StackContext.
- * Used by blank-stack which manages local route state for closing animations.
+ * Used by blank-stack and component-stack which manage local route state for closing animations.
+ * Generic over descriptor type - defaults to BaseStackDescriptor.
  */
-function withManagedStack<TProps extends ManagedStackProps>(
-	Component: React.ComponentType<ManagedStackContextValue>,
-): React.FC<TProps> {
-	return function ManagedStackProvider(props: TProps) {
-		const { stackContextValue, ...lifecycleValue } =
-			useManagedStackValue(props);
+function withManagedStack<
+	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
+	TNavigation extends BaseStackNavigation = BaseStackNavigation,
+>(
+	Component: React.ComponentType<ManagedStackContextValue<TDescriptor>>,
+): React.FC<ManagedStackProps<TDescriptor, TNavigation>> {
+	return function ManagedStackProvider(
+		props: ManagedStackProps<TDescriptor, TNavigation>,
+	) {
+		const { stackContextValue, ...lifecycleValue } = useManagedStackValue<
+			TDescriptor,
+			TNavigation
+		>(props);
 
 		return (
 			<StackContext.Provider value={stackContextValue}>

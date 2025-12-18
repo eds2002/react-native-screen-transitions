@@ -1,9 +1,15 @@
-import type { NavigationRoute, ParamListBase } from "@react-navigation/native";
-import type { BlankStackDescriptorMap } from "../../../../blank-stack/types";
+import type {
+	BaseStackDescriptor,
+	BaseStackRoute,
+} from "../../../types/stack.types";
+
+type DescriptorWithDetach = BaseStackDescriptor & {
+	options: { detachPreviousScreen?: boolean };
+};
 
 export function calculateActiveScreensLimit(
-	routes: NavigationRoute<ParamListBase, string>[],
-	descriptors: BlankStackDescriptorMap,
+	routes: BaseStackRoute[],
+	descriptors: Record<string, DescriptorWithDetach>,
 ): number {
 	if (routes.length === 0) {
 		return 1;

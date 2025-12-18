@@ -1,9 +1,13 @@
-import { type Route, StackActions } from "@react-navigation/native";
+import { StackActions } from "@react-navigation/native";
 import { useLayoutEffect, useState } from "react";
-import type { BlankStackDescriptorMap } from "../../../../blank-stack/types";
 import { useClosingRouteKeys } from "../../../hooks/navigation/use-closing-route-keys";
 import { usePrevious } from "../../../hooks/navigation/use-previous";
 import useStableCallback from "../../../hooks/use-stable-callback";
+import type {
+	BaseStackDescriptor,
+	BaseStackNavigation,
+	BaseStackRoute,
+} from "../../../types/stack.types";
 import { alignRoutesWithLatest } from "../../../utils/navigation/align-routes-with-latest";
 import { areDescriptorsEqual } from "../../../utils/navigation/are-descriptors-equal";
 import { haveSameRouteKeys } from "../../../utils/navigation/have-same-route-keys";
@@ -11,13 +15,21 @@ import { routesAreIdentical } from "../../../utils/navigation/routes-are-identic
 import { syncRoutesWithRemoved } from "../../../utils/navigation/sync-routes-with-removed";
 import type { ManagedStackProps } from "../managed.provider";
 
-export const useLocalRoutes = (props: ManagedStackProps) => {
+export const useLocalRoutes = <
+	TDescriptor extends BaseStackDescriptor,
+	TNavigation extends BaseStackNavigation,
+>(
+	props: ManagedStackProps<TDescriptor, TNavigation>,
+) => {
+	type TRoute = TDescriptor["route"];
+	type TDescriptorMap = Record<string, TDescriptor>;
+
 	const previousRoutes = usePrevious(props.state.routes) ?? [];
 	const closingRouteKeys = useClosingRouteKeys();
 
 	const [localState, setLocalState] = useState(() => ({
-		routes: props.state.routes,
-		descriptors: props.descriptors,
+		routes: props.state.routes as TRoute[],
+		descriptors: props.descriptors as TDescriptorMap,
 	}));
 
 	useLayoutEffect(() => {
@@ -30,8 +42,8 @@ export const useLocalRoutes = (props: ManagedStackProps) => {
 				nextRoutesSnapshot,
 			);
 
-			let derivedRoutes: Route<string>[];
-			let derivedDescriptors: BlankStackDescriptorMap;
+			let derivedRoutes: TRoute[];
+			let derivedDescriptors: TDescriptorMap;
 
 			if (routeKeysUnchanged) {
 				const result = alignRoutesWithLatest(
@@ -41,8 +53,8 @@ export const useLocalRoutes = (props: ManagedStackProps) => {
 					props.descriptors,
 				);
 
-				derivedRoutes = result.routes;
-				derivedDescriptors = result.descriptors;
+				derivedRoutes = result.routes as TRoute[];
+				derivedDescriptors = result.descriptors as TDescriptorMap;
 			} else {
 				const fallbackRoutes =
 					previousRoutesSnapshot.length > 0
@@ -57,8 +69,8 @@ export const useLocalRoutes = (props: ManagedStackProps) => {
 					closingRouteKeys,
 				});
 
-				derivedRoutes = result.routes;
-				derivedDescriptors = result.descriptors;
+				derivedRoutes = result.routes as TRoute[];
+				derivedDescriptors = result.descriptors as TDescriptorMap;
 			}
 
 			const routesChanged = !routesAreIdentical(current.routes, derivedRoutes);
@@ -81,7 +93,7 @@ export const useLocalRoutes = (props: ManagedStackProps) => {
 	}, [props.state.routes, props.descriptors, previousRoutes, closingRouteKeys]);
 
 	const handleCloseRoute = useStableCallback(
-		({ route }: { route: Route<string> }) => {
+		({ route }: { route: BaseStackRoute }) => {
 			if (props.state.routes.some((r) => r.key === route.key)) {
 				props.navigation.dispatch({
 					...StackActions.pop(),

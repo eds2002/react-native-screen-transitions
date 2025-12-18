@@ -11,7 +11,10 @@ import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { BlankStackScreenLifecycleController } from "../controllers/blank-stack-lifecycle";
-import type { BlankStackDescriptor } from "../types";
+import type {
+	BlankStackDescriptor,
+	BlankStackNavigationHelpers,
+} from "../types";
 import { Screen } from "./screens";
 
 function isFabric() {
@@ -39,7 +42,7 @@ const SceneView = React.memo(function SceneView({
 
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true },
-	withManagedStack(
+	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
 		({ descriptors, focusedIndex, scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>

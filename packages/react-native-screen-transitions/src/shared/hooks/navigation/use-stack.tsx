@@ -1,21 +1,27 @@
 import type { Route } from "@react-navigation/native";
 import { createContext, useContext } from "react";
 import type { DerivedValue } from "react-native-reanimated";
-import type { BaseNavigation } from "../../providers/screen/keys.provider";
 import type {
 	ContainerOverlayProps,
 	OverlayMode,
 	OverlayProps,
 } from "../../types/overlay.types";
+import type {
+	BaseStackDescriptor,
+	BaseStackNavigation,
+	BaseStackRoute,
+	BaseStackScene,
+} from "../../types/stack.types";
 
 /**
- * Base descriptor type for shared components.
- * Uses loose typing to be compatible with both BlankStack and NativeStack descriptors.
+ * Stack descriptor with overlay options.
+ * Extends BaseStackDescriptor with overlay-specific options.
  */
-export interface StackDescriptor {
-	route: Route<string>;
-	navigation: BaseNavigation;
-	options: {
+export interface StackDescriptor<
+	TRoute extends BaseStackRoute = Route<string>,
+	TNavigation extends BaseStackNavigation = BaseStackNavigation,
+> extends BaseStackDescriptor<TRoute, TNavigation> {
+	options: BaseStackDescriptor["options"] & {
 		overlay?:
 			| ((props: OverlayProps) => React.ReactNode)
 			| ((props: ContainerOverlayProps) => React.ReactNode);
@@ -29,10 +35,8 @@ export interface StackDescriptor {
 /**
  * Scene type for stack context (route + descriptor pair).
  */
-export interface StackScene {
-	route: Route<string>;
-	descriptor: StackDescriptor;
-}
+export type StackScene<TDescriptor extends StackDescriptor = StackDescriptor> =
+	BaseStackScene<TDescriptor>;
 
 /**
  * Common stack context value that both managed and direct stack providers populate.

@@ -6,34 +6,22 @@ import type {
 } from "@react-navigation/native";
 import { createContext, useContext, useMemo } from "react";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
+import type {
+	BaseStackDescriptor,
+	BaseStackNavigation,
+	BaseStackRoute,
+} from "../../types/stack.types";
 
-/**
- * Base route interface - minimal contract for all stack types
- */
-export interface BaseRoute {
-	key: string;
-}
-
-/**
- * Navigation interface for gesture handling - both React Navigation and
- * component-stack navigation objects must satisfy this contract.
- */
-export interface BaseNavigation {
-	getState: () => { routes: Array<{ key: string }>; key: string };
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	dispatch: (action: any) => void;
-}
+// Re-export for backward compatibility
+export type { BaseStackNavigation as BaseNavigation };
+export type { BaseStackRoute as BaseRoute };
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
  * This allows component-stack, blank-stack, and native-stack to all
  * work with the shared providers without tight coupling to React Navigation.
  */
-export interface BaseDescriptor {
-	route: BaseRoute;
-	options: ScreenTransitionConfig;
-	navigation: BaseNavigation;
-}
+export type BaseDescriptor = BaseStackDescriptor;
 
 /**
  * React Navigation specific descriptor - extends base with full typing

@@ -6,6 +6,7 @@ import type {
 	ComponentNavigation,
 	ComponentNavigatorProps,
 	ComponentScreenProps,
+	ComponentStackDescriptor,
 } from "../types";
 
 // Context for component navigation
@@ -46,14 +47,15 @@ function ComponentNavigator({
 			screenOptions,
 		});
 
-	// Type assertion: component-stack types are compatible with ManagedStackProps
-	// but TypeScript doesn't know this due to different type definitions
-	const managedStackProps = {
+	const managedStackProps: ManagedStackProps<
+		ComponentStackDescriptor,
+		ComponentNavigation
+	> = {
 		state,
 		navigation,
 		describe,
 		descriptors,
-	} as unknown as ManagedStackProps;
+	};
 
 	return (
 		<ComponentNavigationContext.Provider value={navigation}>

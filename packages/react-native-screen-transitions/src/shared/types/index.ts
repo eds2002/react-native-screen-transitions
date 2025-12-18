@@ -36,4 +36,12 @@ export type {
 	TransitionAwareProps,
 } from "./screen.types";
 
+export type {
+	BaseStackDescriptor,
+	BaseStackNavigation,
+	BaseStackRoute,
+	BaseStackScene,
+	BaseStackState,
+} from "./stack.types";
+
 export { FALSE, TRUE } from "./state.types";

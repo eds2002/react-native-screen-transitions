@@ -39,11 +39,7 @@ export const ComponentStackScreenLifecycleController = ({
 	});
 
 	const handleCleanup = useStableCallback(() => {
-		// Type assertion needed because ComponentStackDescriptor differs from TransitionDescriptor
-		// but resetStoresForScreen only uses route.key internally
-		resetStoresForScreen(
-			current as unknown as Parameters<typeof resetStoresForScreen>[0],
-		);
+		resetStoresForScreen(current);
 	});
 
 	const handleCloseEnd = useStableCallback((finished: boolean) => {
