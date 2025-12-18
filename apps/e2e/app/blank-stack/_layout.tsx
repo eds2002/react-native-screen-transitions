@@ -11,6 +11,7 @@ export default function BlankStackLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
+					experimental_enableHighRefreshRate: true,
 					screenStyleInterpolator: ({
 						progress,
 						layouts: {
