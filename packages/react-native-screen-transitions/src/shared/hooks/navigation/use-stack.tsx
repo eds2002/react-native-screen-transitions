@@ -2,7 +2,11 @@ import type { Route } from "@react-navigation/native";
 import { createContext, useContext } from "react";
 import type { DerivedValue } from "react-native-reanimated";
 import type { BaseNavigation } from "../../providers/screen/keys.provider";
-import type { OverlayProps } from "../../types/core.types";
+import type {
+	ContainerOverlayProps,
+	OverlayProps,
+} from "../../types/core.types";
+import type { OverlayMode } from "../../types/overlay.types";
 
 /**
  * Base descriptor type for shared components.
@@ -12,8 +16,10 @@ export interface StackDescriptor {
 	route: Route<string>;
 	navigation: BaseNavigation;
 	options: {
-		overlay?: (props: OverlayProps) => React.ReactNode;
-		overlayMode?: "float" | "screen" | "container";
+		overlay?:
+			| ((props: OverlayProps) => React.ReactNode)
+			| ((props: ContainerOverlayProps) => React.ReactNode);
+		overlayMode?: OverlayMode;
 		overlayShown?: boolean;
 		meta?: Record<string, unknown>;
 		enableTransitions?: boolean;

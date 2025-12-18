@@ -33,3 +33,4 @@ export type {
 	OverlayProps,
 	ScreenTransitionConfig,
 } from "./types/core.types";
+export type { OverlayMode } from "./types/overlay.types";

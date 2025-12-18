@@ -1,12 +1,10 @@
-import type { Route } from "@react-navigation/native";
-import type { AnimatedProps, DerivedValue } from "react-native-reanimated";
-import type {
-	OverlayInterpolationProps,
-	ScreenInterpolationProps,
-	ScreenStyleInterpolator,
-	TransitionSpec,
-} from "./animation.types";
+import type { AnimatedProps } from "react-native-reanimated";
+import type { ScreenStyleInterpolator, TransitionSpec } from "./animation.types";
 import type { GestureActivationArea, GestureDirection } from "./gesture.types";
+import type { ContainerOverlayProps, OverlayMode, OverlayProps } from "./overlay.types";
+
+// Re-export overlay types
+export type { ContainerOverlayProps, OverlayProps } from "./overlay.types";
 
 export type Layout = {
 	width: number;
@@ -55,60 +53,6 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 */
 	sharedBoundTag?: string;
 };
-
-/**
- * Props passed to overlay components.
- * Generic over the navigation type since different stacks have different navigation props.
- */
-export type OverlayProps<TNavigation = unknown> = {
-	/**
-	 * Route of the currently focused screen in the stack.
-	 */
-	focusedRoute: Route<string>;
-
-	/**
-	 * Index of the focused route in the stack.
-	 */
-	focusedIndex: number;
-
-	/**
-	 * All routes currently in the stack.
-	 */
-	routes: Route<string>[];
-
-	/**
-	 * Custom metadata from the focused screen's options.
-	 */
-	meta?: Record<string, unknown>;
-
-	/**
-	 * Navigation prop for the overlay.
-	 */
-	navigation: TNavigation;
-
-	/**
-	 * Animation values for the overlay.
-	 */
-	overlayAnimation: DerivedValue<OverlayInterpolationProps>;
-
-	/**
-	 * Animation values for the screen.
-	 */
-	screenAnimation: DerivedValue<ScreenInterpolationProps>;
-};
-
-/**
- * Props passed to container overlay components.
- * Extends OverlayProps with children - the screen content to wrap.
- */
-export type ContainerOverlayProps<TNavigation = unknown> =
-	OverlayProps<TNavigation> & {
-		/**
-		 * The screen content to be wrapped by the container overlay.
-		 * This allows the overlay to act as a wrapper (e.g., MaskedView) around screens.
-		 */
-		children: React.ReactNode;
-	};
 
 export type ScreenTransitionConfig = {
 	/**
@@ -160,11 +104,12 @@ export type ScreenTransitionConfig = {
 	meta?: Record<string, unknown>;
 
 	/**
-	 * Function that given `OverlayProps` returns a React Element to display as an overlay.
-	 * The navigation type is `unknown` here to avoid circular references in type definitions.
-	 * Each stack defines its own typed overlay props (e.g., BlankStackOverlayProps).
+	 * Function that returns a React Element to display as an overlay.
+	 * For container overlays (overlayMode: 'container'), use ContainerOverlayProps which includes children.
 	 */
-	overlay?: (props: OverlayProps) => React.ReactNode;
+	overlay?:
+		| ((props: OverlayProps) => React.ReactNode)
+		| ((props: ContainerOverlayProps) => React.ReactNode);
 
 	/**
 	 * How the overlay is positioned relative to screens.
@@ -173,7 +118,7 @@ export type ScreenTransitionConfig = {
 	 * - 'container': Wraps all screen content, receives children prop (for MaskedView, custom containers)
 	 * @default 'screen'
 	 */
-	overlayMode?: "float" | "screen" | "container";
+	overlayMode?: OverlayMode
 
 	/**
 	 * Whether to show the overlay. The overlay is shown by default when `overlay` is provided.

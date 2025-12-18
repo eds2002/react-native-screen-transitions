@@ -105,6 +105,11 @@ export const OverlayHost = memo(function OverlayHost({
 		navigation: scene.descriptor.navigation,
 	};
 
+	// Cast to OverlayProps function - container overlays are handled by ContainerOverlay component
+	const renderOverlay = OverlayComponent as (
+		props: OverlayProps,
+	) => React.ReactNode;
+
 	return (
 		<Animated.View
 			pointerEvents="box-none"
@@ -120,7 +125,7 @@ export const OverlayHost = memo(function OverlayHost({
 			>
 				<NavigationRouteContext.Provider value={scene.route}>
 					<View pointerEvents="box-none" style={styles.overlay}>
-						<OverlayComponent {...overlayProps} />
+						{renderOverlay(overlayProps)}
 					</View>
 				</NavigationRouteContext.Provider>
 			</NavigationContext.Provider>

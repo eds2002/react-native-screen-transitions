@@ -4,6 +4,7 @@ import type {
 	OverlayInterpolationProps,
 	ScreenInterpolationProps,
 } from "../shared/types/animation.types";
+import type { OverlayMode } from "../shared/types/overlay.types";
 
 /**
  * A synthetic route object for component navigation.
@@ -85,19 +86,31 @@ export type ComponentStackOverlayProps = {
 };
 
 /**
+ * Props passed to container overlay components.
+ * Extends overlay props with children to wrap screen content.
+ */
+export type ComponentStackContainerOverlayProps = ComponentStackOverlayProps & {
+	/** The screen content to be wrapped by the container overlay. */
+	children: React.ReactNode;
+};
+
+/**
  * Full navigation options for a component stack screen.
  */
 export type ComponentStackNavigationOptions =
 	ComponentStackScreenTransitionConfig & {
-		/** Function that given OverlayProps returns a React Element to display as overlay. */
-		overlay?: (props: ComponentStackOverlayProps) => React.ReactNode;
+		/** Function that returns a React Element to display as overlay. */
+		overlay?:
+			| ((props: ComponentStackOverlayProps) => React.ReactNode)
+			| ((props: ComponentStackContainerOverlayProps) => React.ReactNode);
 		/**
 		 * Layout: How the Overlay is positioned
 		 * - 'float': Single persistent overlay above all screens (like iOS)
 		 * - 'screen': Per-screen overlay that transitions with content
+		 * - 'container': Wraps all screen content (for MaskedView, custom containers)
 		 * @default 'screen'
 		 */
-		overlayMode?: "float" | "screen";
+		overlayMode?: OverlayMode;
 		/** Whether to show the overlay. Defaults to true when overlay is provided. */
 		overlayShown?: boolean;
 		/**
