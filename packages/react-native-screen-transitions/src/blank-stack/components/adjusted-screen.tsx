@@ -7,6 +7,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
+import { useStack } from "../../shared/hooks/navigation/use-stack";
 import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
 
@@ -26,9 +27,9 @@ enum ScreenActivity {
 
 const EPSILON = 1e-5;
 
-const AnimatedScreen = Animated.createAnimatedComponent(RNSScreen);
+const AnimatedNativeScreen = Animated.createAnimatedComponent(RNSScreen);
 
-export const Screen = ({
+export const AdjustedScreen = ({
 	routeKey,
 	index,
 	isPreloaded,
@@ -36,6 +37,9 @@ export const Screen = ({
 	freezeOnBlur,
 	shouldFreeze,
 }: ScreenProps) => {
+	const {
+		flags: { DISABLE_NATIVE_SCREENS = false },
+	} = useStack();
 	const { activeScreensLimit, routes } = useManagedStackContext();
 	const routesLength = routes.length;
 
@@ -78,23 +82,35 @@ export const Screen = ({
 
 	const animatedProps = useAnimatedProps(() => {
 		const activity = screenActivity.get();
+		if (!DISABLE_NATIVE_SCREENS) {
+			return {
+				activityState: activity,
+				shouldFreeze: activity === ScreenActivity.INACTIVE && shouldFreeze,
+				pointerEvents: sceneClosing.get()
+					? ("none" as const)
+					: ("box-none" as const),
+			};
+		}
+
 		return {
-			activityState: activity,
-			shouldFreeze: activity === ScreenActivity.INACTIVE && shouldFreeze,
 			pointerEvents: sceneClosing.get()
 				? ("none" as const)
 				: ("box-none" as const),
 		};
 	});
 
+	const AdjustedScreenComponent = !DISABLE_NATIVE_SCREENS
+		? AnimatedNativeScreen
+		: Animated.View;
+
 	return (
-		<AnimatedScreen
+		<AdjustedScreenComponent
 			enabled
 			style={StyleSheet.absoluteFill}
 			freezeOnBlur={freezeOnBlur}
 			animatedProps={animatedProps}
 		>
 			{children}
-		</AnimatedScreen>
+		</AdjustedScreenComponent>
 	);
 };

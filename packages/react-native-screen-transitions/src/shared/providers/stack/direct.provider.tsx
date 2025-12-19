@@ -16,6 +16,7 @@ import {
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
 import { AnimationStore } from "../../stores/animation.store";
+import { useStackCoreContext } from "./core.provider";
 
 export interface DirectStackScene {
 	route: StackNavigationState<ParamListBase>["routes"][number];
@@ -67,6 +68,7 @@ function useDirectStackValue(
 	props: DirectStackProps,
 ): DirectStackContextValue & { stackContextValue: StackContextValue } {
 	const { state, navigation, descriptors, describe } = props;
+	const { flags } = useStackCoreContext();
 
 	const preloadedDescriptors = useMemo(() => {
 		return state.preloadedRoutes.reduce<NativeStackDescriptorMap>(
@@ -156,7 +158,7 @@ function useDirectStackValue(
 
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
-			flags: { TRANSITIONS_ALWAYS_ON: false },
+			flags,
 			routeKeys,
 			routes: allRoutes,
 			descriptors: allDescriptors,
@@ -173,6 +175,7 @@ function useDirectStackValue(
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
+			flags,
 		],
 	);
 

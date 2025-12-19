@@ -57,8 +57,9 @@ export type BlankStackScene = {
 	descriptor: BlankStackDescriptor;
 };
 
-// We want it to be an empty object because navigator does not have any additional props
-type BlankStackNavigationConfig = {};
+type BlankStackNavigationConfig = {
+	DISABLE_NATIVE_SCREENS?: boolean;
+};
 
 /**
  * Props passed to overlay components in blank-stack.

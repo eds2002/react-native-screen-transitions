@@ -18,6 +18,7 @@ import type {
 	BaseStackScene,
 	BaseStackState,
 } from "../../types/stack.types";
+import { useStackCoreContext } from "./core.provider";
 import { calculateActiveScreensLimit } from "./helpers/active-screens-limit";
 import { useLocalRoutes } from "./helpers/use-local-routes";
 
@@ -77,6 +78,7 @@ function useManagedStackValue<
 ): ManagedStackContextValue<TDescriptor> & {
 	stackContextValue: StackContextValue;
 } {
+	const { flags } = useStackCoreContext();
 	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
 
 	const { scenes, activeScreensLimit, shouldShowFloatOverlay, routeKeys } =
@@ -143,7 +145,7 @@ function useManagedStackValue<
 	// StackContext value - for overlays via useStack()
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
-			flags: { TRANSITIONS_ALWAYS_ON: true },
+			flags,
 			routeKeys,
 			routes: state.routes as Route<string>[],
 			descriptors: state.descriptors as Record<string, BaseStackDescriptor>,
@@ -160,6 +162,7 @@ function useManagedStackValue<
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
+			flags,
 		],
 	);
 

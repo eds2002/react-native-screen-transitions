@@ -2,12 +2,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenStyleInterpolator } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
-import {
-	type ComponentStackScreenProps,
-	createComponentNavigator,
-} from "react-native-screen-transitions/component-stack";
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+import type { ComponentStackScreenProps } from "react-native-screen-transitions/component-stack";
 
-const Stack = createComponentNavigator();
+const Stack = createBlankStackNavigator({ DISABLE_NATIVE_SCREENS: true });
 
 const SHARED_BOUND_TAG = "floating-trigger";
 
