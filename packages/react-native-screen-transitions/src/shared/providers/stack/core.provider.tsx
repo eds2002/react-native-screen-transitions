@@ -15,7 +15,7 @@ interface StackCoreProviderProps {
 	children: React.ReactNode;
 }
 
-interface StackCoreContextValue {
+export interface StackCoreContextValue {
 	flags: {
 		TRANSITIONS_ALWAYS_ON: boolean;
 		TYPE?: StackType;

@@ -1,6 +1,7 @@
 import type { Route } from "@react-navigation/native";
 import { createContext, useContext } from "react";
 import type { DerivedValue } from "react-native-reanimated";
+import type { StackCoreContextValue } from "../../providers/stack/core.provider";
 import type { OverlayMode, OverlayProps } from "../../types/overlay.types";
 import type {
 	BaseStackDescriptor,
@@ -36,13 +37,7 @@ export type StackScene<TDescriptor extends StackDescriptor = StackDescriptor> =
  * Common stack context value that both managed and direct stack providers populate.
  * Used by overlays and shared components that need stack progress info.
  */
-export interface StackContextValue {
-	/**
-	 * Stack flags.
-	 */
-	flags: {
-		TRANSITIONS_ALWAYS_ON: boolean;
-	};
+export interface StackContextValue extends StackCoreContextValue {
 	/**
 	 * Route keys for all routes in the stack.
 	 */
