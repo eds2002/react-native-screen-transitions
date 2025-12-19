@@ -41,7 +41,7 @@ const SceneView = React.memo(function SceneView({
 });
 
 export const StackView = withStackCore(
-	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: true },
+	{ TRANSITIONS_ALWAYS_ON: true },
 	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
 		({ descriptors, focusedIndex, scenes, shouldShowFloatOverlay }) => {
 			return (

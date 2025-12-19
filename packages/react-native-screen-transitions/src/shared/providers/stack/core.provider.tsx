@@ -65,11 +65,12 @@ export function withStackCore<TProps extends object>(
 		STACK_TYPE,
 		...props
 	}: TProps & StackCoreConfig) {
+		// User props first, then defaultConfig overrides (config takes priority)
 		const config: StackCoreConfig = {
-			...defaultConfig,
 			...(DISABLE_NATIVE_SCREENS !== undefined && { DISABLE_NATIVE_SCREENS }),
 			...(TRANSITIONS_ALWAYS_ON !== undefined && { TRANSITIONS_ALWAYS_ON }),
 			...(STACK_TYPE !== undefined && { STACK_TYPE }),
+			...defaultConfig,
 		};
 		return (
 			<InternalStackCoreProvider config={config}>
