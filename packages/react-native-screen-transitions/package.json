@@ -31,6 +31,12 @@
       "import": "./lib/module/blank-stack/index.js",
       "require": "./lib/commonjs/blank-stack/index.js",
       "types": "./lib/typescript/blank-stack/index.d.ts"
+    },
+    "./component-stack": {
+      "react-native": "./src/component-stack/index.ts",
+      "import": "./lib/module/component-stack/index.js",
+      "require": "./lib/commonjs/component-stack/index.js",
+      "types": "./lib/typescript/component-stack/index.d.ts"
     }
   },
   "scripts": {
