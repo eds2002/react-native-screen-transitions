@@ -2,7 +2,6 @@ import type { ScreenTransitionConfig } from "./screen.types";
 
 /**
  * Base route interface - minimal contract all stacks satisfy.
- * React Navigation routes and ComponentStack routes both extend this.
  * Uses `object` for params to be compatible with React Navigation's `Readonly<object | undefined>`.
  */
 export interface BaseStackRoute {
@@ -22,7 +21,7 @@ export interface BaseStackNavigation {
 
 /**
  * Base descriptor interface - generic over route, navigation, and options.
- * All stack descriptors (BlankStack, NativeStack, ComponentStack) extend this.
+ * All stack descriptors (BlankStack, NativeStack) extend this.
  */
 export interface BaseStackDescriptor<
 	TRoute extends BaseStackRoute = BaseStackRoute,
@@ -59,7 +58,6 @@ export interface BaseStackState<
 }
 
 export enum StackType {
-	COMPONENT = "component",
 	NATIVE = "native",
 	BLANK = "blank",
 }

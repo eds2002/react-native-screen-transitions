@@ -10,7 +10,6 @@ export const AdjustedScreenContainer = ({ children }: Props) => {
 	const {
 		flags: { DISABLE_NATIVE_SCREENS = false },
 	} = useStack();
-	console.log(DISABLE_NATIVE_SCREENS);
 	if (!DISABLE_NATIVE_SCREENS) {
 		return (
 			<ScreenContainer style={styles.container}>{children}</ScreenContainer>

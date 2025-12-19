@@ -199,7 +199,7 @@ function useManagedStackValue<
 
 /**
  * HOC that wraps component with ManagedStack provider AND StackContext.
- * Used by blank-stack and component-stack which manage local route state for closing animations.
+ * Used by blank-stack which manages local route state for closing animations.
  * Generic over descriptor type - defaults to BaseStackDescriptor.
  */
 function withManagedStack<

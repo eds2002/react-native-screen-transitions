@@ -18,8 +18,8 @@ export type { BaseStackRoute as BaseRoute };
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
- * This allows component-stack, blank-stack, and native-stack to all
- * work with the shared providers without tight coupling to React Navigation.
+ * This allows blank-stack and native-stack to work with the shared
+ * providers without tight coupling to React Navigation.
  */
 export type BaseDescriptor = BaseStackDescriptor;
 

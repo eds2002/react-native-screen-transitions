@@ -51,7 +51,7 @@ const getAncestorKeys = (current: BaseDescriptor): string[] => {
 	const ancestors: string[] = [];
 	const nav = current.navigation as any;
 
-	// Safety check for component-stack which doesn't have getParent
+	// Safety check for navigators without getParent
 	if (typeof nav?.getParent !== "function") {
 		return ancestors;
 	}
