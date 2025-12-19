@@ -5,7 +5,7 @@ import type {
 	ScreenInterpolationProps,
 } from "./animation.types";
 
-export type OverlayMode = "float" | "screen" | "container";
+export type OverlayMode = "float" | "screen";
 
 /**
  * Props passed to overlay components.
@@ -47,16 +47,3 @@ export type OverlayProps<TNavigation = unknown> = {
 	 */
 	screenAnimation: DerivedValue<ScreenInterpolationProps>;
 };
-
-/**
- * Props passed to container overlay components.
- * Extends OverlayProps with children - the screen content to wrap.
- */
-export type ContainerOverlayProps<TNavigation = unknown> =
-	OverlayProps<TNavigation> & {
-		/**
-		 * The screen content to be wrapped by the container overlay.
-		 * This allows the overlay to act as a wrapper (e.g., MaskedView) around screens.
-		 */
-		children: React.ReactNode;
-	};

@@ -57,3 +57,9 @@ export interface BaseStackState<
 	index: number;
 	key: string;
 }
+
+export enum StackType {
+	COMPONENT = "component",
+	NATIVE = "native",
+	BLANK = "blank",
+}

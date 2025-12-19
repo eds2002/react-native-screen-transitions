@@ -4,11 +4,7 @@ import type {
 	TransitionSpec,
 } from "./animation.types";
 import type { GestureActivationArea, GestureDirection } from "./gesture.types";
-import type {
-	ContainerOverlayProps,
-	OverlayMode,
-	OverlayProps,
-} from "./overlay.types";
+import type { OverlayMode, OverlayProps } from "./overlay.types";
 
 export type Layout = {
 	width: number;
@@ -111,9 +107,7 @@ export type ScreenTransitionConfig = {
 	 * Function that returns a React Element to display as an overlay.
 	 * For container overlays (overlayMode: 'container'), use ContainerOverlayProps which includes children.
 	 */
-	overlay?:
-		| ((props: OverlayProps) => React.ReactNode)
-		| ((props: ContainerOverlayProps) => React.ReactNode);
+	overlay?: (props: OverlayProps) => React.ReactNode;
 
 	/**
 	 * How the overlay is positioned relative to screens.

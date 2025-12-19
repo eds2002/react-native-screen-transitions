@@ -25,7 +25,6 @@ export type {
 	AnimationConfig,
 	BoundEntry,
 	BoundsLink,
-	ContainerOverlayProps,
 	OverlayInterpolationProps,
 	OverlayMode,
 	OverlayProps,

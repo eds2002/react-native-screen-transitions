@@ -5,6 +5,7 @@ import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
+import { StackType } from "../../shared/types/stack.types";
 import { ComponentStackScreenLifecycleController } from "../controllers/component-stack-lifecycle";
 import type { ComponentNavigation, ComponentStackDescriptor } from "../types";
 import { Screen } from "./screens";
@@ -25,42 +26,36 @@ const SceneView = React.memo(function SceneView({
 });
 
 export const ComponentView = withStackCore(
-	{ TRANSITIONS_ALWAYS_ON: true },
+	{ TRANSITIONS_ALWAYS_ON: true, TYPE: StackType.COMPONENT },
 	withManagedStack<ComponentStackDescriptor, ComponentNavigation>(
 		({ scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-					<Overlay.Container>
-						<View style={styles.container}>
-							{scenes.map((scene, sceneIndex) => {
-								const descriptor = scene.descriptor;
-								const route = scene.route;
+					<View style={styles.container}>
+						{scenes.map((scene, sceneIndex) => {
+							const descriptor = scene.descriptor;
+							const route = scene.route;
 
-								const previousDescriptor = scenes[sceneIndex - 1]?.descriptor;
-								const nextDescriptor = scenes[sceneIndex + 1]?.descriptor;
+							const previousDescriptor = scenes[sceneIndex - 1]?.descriptor;
+							const nextDescriptor = scenes[sceneIndex + 1]?.descriptor;
 
-								return (
-									<Screen
-										key={route.key}
-										index={sceneIndex}
-										routeKey={route.key}
+							return (
+								<Screen key={route.key} index={sceneIndex} routeKey={route.key}>
+									<ScreenComposer
+										previous={previousDescriptor}
+										current={descriptor}
+										next={nextDescriptor}
+										LifecycleController={
+											ComponentStackScreenLifecycleController
+										}
 									>
-										<ScreenComposer
-											previous={previousDescriptor}
-											current={descriptor}
-											next={nextDescriptor}
-											LifecycleController={
-												ComponentStackScreenLifecycleController
-											}
-										>
-											<SceneView key={route.key} descriptor={descriptor} />
-										</ScreenComposer>
-									</Screen>
-								);
-							})}
-						</View>
-					</Overlay.Container>
+										<SceneView key={route.key} descriptor={descriptor} />
+									</ScreenComposer>
+								</Screen>
+							);
+						})}
+					</View>
 				</Fragment>
 			);
 		},

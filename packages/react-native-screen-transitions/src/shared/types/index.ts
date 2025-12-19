@@ -24,7 +24,6 @@ export type {
 } from "./gesture.types";
 
 export type {
-	ContainerOverlayProps,
 	OverlayMode,
 	OverlayProps,
 } from "./overlay.types";

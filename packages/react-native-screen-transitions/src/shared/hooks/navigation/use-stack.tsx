@@ -1,11 +1,7 @@
 import type { Route } from "@react-navigation/native";
 import { createContext, useContext } from "react";
 import type { DerivedValue } from "react-native-reanimated";
-import type {
-	ContainerOverlayProps,
-	OverlayMode,
-	OverlayProps,
-} from "../../types/overlay.types";
+import type { OverlayMode, OverlayProps } from "../../types/overlay.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
@@ -22,9 +18,7 @@ export interface StackDescriptor<
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
 > extends BaseStackDescriptor<TRoute, TNavigation> {
 	options: BaseStackDescriptor["options"] & {
-		overlay?:
-			| ((props: OverlayProps) => React.ReactNode)
-			| ((props: ContainerOverlayProps) => React.ReactNode);
+		overlay?: (props: OverlayProps) => React.ReactNode;
 		overlayMode?: OverlayMode;
 		overlayShown?: boolean;
 		meta?: Record<string, unknown>;
