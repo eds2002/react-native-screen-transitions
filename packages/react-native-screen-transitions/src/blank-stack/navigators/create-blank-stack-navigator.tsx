@@ -29,7 +29,6 @@ function BlankStackNavigator({
 	screenListeners,
 	screenOptions,
 	screenLayout,
-	DISABLE_NATIVE_SCREENS,
 	...rest
 }: BlankStackNavigatorProps) {
 	const { state, describe, descriptors, navigation, NavigationContent } =
@@ -83,15 +82,10 @@ function BlankStackNavigator({
 				navigation={navigation}
 				descriptors={descriptors}
 				describe={describe}
-				DISABLE_NATIVE_SCREENS={DISABLE_NATIVE_SCREENS}
 			/>
 		</NavigationContent>
 	);
 }
-
-type BlankStackFactoryConfig = {
-	DISABLE_NATIVE_SCREENS?: boolean;
-};
 
 export function createBlankStackNavigator<
 	const ParamList extends ParamListBase,
@@ -112,20 +106,6 @@ export function createBlankStackNavigator<
 		Navigator: typeof BlankStackNavigator;
 	},
 	const Config extends StaticConfig<TypeBag> = StaticConfig<TypeBag>,
->(
-	factoryConfig?: BlankStackFactoryConfig,
-	staticConfig?: Config,
-): TypedNavigator<TypeBag, Config> {
-	function ConfiguredNavigator(
-		props: Omit<BlankStackNavigatorProps, "DISABLE_NATIVE_SCREENS">,
-	) {
-		return (
-			<BlankStackNavigator
-				{...props}
-				DISABLE_NATIVE_SCREENS={factoryConfig?.DISABLE_NATIVE_SCREENS}
-			/>
-		);
-	}
-
-	return createNavigatorFactory(ConfiguredNavigator)(staticConfig);
+>(config?: Config): TypedNavigator<TypeBag, Config> {
+	return createNavigatorFactory(BlankStackNavigator)(config);
 }

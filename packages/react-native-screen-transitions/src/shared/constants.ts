@@ -1,4 +1,5 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
+import { Platform } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "./types/animation.types";
 import type { ActivationArea } from "./types/gesture.types";
@@ -73,3 +74,5 @@ export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_ENABLED = false;
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
+
+export const IS_WEB = Platform.OS === "web";

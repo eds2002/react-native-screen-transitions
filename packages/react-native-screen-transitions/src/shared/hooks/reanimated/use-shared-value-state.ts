@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import { useState } from "react";
 import {
 	executeOnUIRuntimeSync,
@@ -6,8 +5,7 @@ import {
 	type SharedValue,
 	useAnimatedReaction,
 } from "react-native-reanimated";
-
-const isNative = Platform.OS !== "web";
+import { IS_WEB } from "../../constants";
 
 /**
  * Derives React state from a Reanimated SharedValue.
@@ -15,7 +13,7 @@ const isNative = Platform.OS !== "web";
  */
 export function useSharedValueState<T>(sharedValue: SharedValue<T>): T {
 	const [state, setState] = useState<T>(() => {
-		if (!isNative) {
+		if (IS_WEB) {
 			// Web fallback - executeOnUIRuntimeSync not available
 			return sharedValue.value;
 		}

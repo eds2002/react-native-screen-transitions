@@ -4,7 +4,6 @@ import {
 } from "@react-navigation/native";
 import * as React from "react";
 import { Fragment } from "react";
-import { StyleSheet } from "react-native";
 import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
