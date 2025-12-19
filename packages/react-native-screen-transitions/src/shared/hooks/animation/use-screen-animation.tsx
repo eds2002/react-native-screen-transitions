@@ -164,9 +164,11 @@ export function _useScreenAnimation() {
 	const currentInterpolator =
 		currentDescriptor?.options.screenStyleInterpolator;
 
-	const screenStyleInterpolator = nextInterpolator ?? currentInterpolator;
-
-	return { screenInterpolatorProps, screenStyleInterpolator };
+	return {
+		screenInterpolatorProps,
+		nextInterpolator,
+		currentInterpolator,
+	};
 }
 
 export function useScreenAnimation() {
