@@ -30,6 +30,17 @@ export default function HomeScreen() {
 						Pure JS stack with full control over transitions
 					</Text>
 				</Pressable>
+
+				<Pressable
+					testID="component-stack-button"
+					style={styles.button}
+					onPress={() => router.push("/component-stack")}
+				>
+					<Text style={styles.buttonTitle}>Component Stack</Text>
+					<Text style={styles.buttonDescription}>
+						Standalone navigator with bounds-based floating animation
+					</Text>
+				</Pressable>
 			</View>
 		</SafeAreaView>
 	);

@@ -31,4 +31,6 @@ export type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionConfig,
+	TransitionInterpolatedStyle,
+	TransitionSpec,
 } from "./types";

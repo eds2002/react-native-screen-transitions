@@ -7,6 +7,7 @@ export default function RootLayout() {
 			<ExpoStack.Screen name="index" />
 			<ExpoStack.Screen name="native-stack" />
 			<ExpoStack.Screen name="blank-stack" />
+			<ExpoStack.Screen name="component-stack" />
 		</ExpoStack>
 	);
 }
