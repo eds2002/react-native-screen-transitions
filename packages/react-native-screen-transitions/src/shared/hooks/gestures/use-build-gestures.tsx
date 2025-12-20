@@ -35,6 +35,7 @@ import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import { velocity } from "../../utils/gesture/velocity";
+import { useStack } from "../navigation/use-stack";
 import useStableCallbackValue from "../use-stable-callback-value";
 
 interface BuildGesturesHookProps {
@@ -52,7 +53,11 @@ export const useBuildGestures = ({
 	gestureAnimationValues: GestureStoreMap;
 } => {
 	const dimensions = useWindowDimensions();
+
 	const { current } = useKeys();
+	const navState = current.navigation.getState();
+	const isFirstScreen =
+		navState.routes.findIndex((r) => r.key === current.route.key) === 0;
 
 	const initialTouch = useSharedValue({
 		x: 0,
@@ -73,13 +78,14 @@ export const useBuildGestures = ({
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
-		gestureEnabled = DEFAULT_GESTURE_ENABLED,
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
 		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureResponseDistance,
 		transitionSpec,
 	} = current.options;
+
+	const gestureEnabled = isFirstScreen ? false : current.options.gestureEnabled;
 
 	const directions = useMemo(() => {
 		const directionsArray = Array.isArray(gestureDirection)
