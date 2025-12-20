@@ -4,6 +4,7 @@ import Transition from "react-native-screen-transitions";
 
 interface BoundsIndicatorProps {
 	children: ReactNode;
+	tag?: string;
 }
 
 /**
@@ -13,7 +14,10 @@ interface BoundsIndicatorProps {
  * overlay that shows where the "active viewing area" is. The bounds API
  * animates this indicator's position and size during transitions.
  */
-export function BoundsIndicator({ children }: BoundsIndicatorProps) {
+export function BoundsIndicator({
+	children,
+	tag = "BOUNDS_INDICATOR",
+}: BoundsIndicatorProps) {
 	return (
 		<View style={styles.container}>
 			{children}
@@ -21,7 +25,7 @@ export function BoundsIndicator({ children }: BoundsIndicatorProps) {
 			{/* Position absolute indicator controlled by bounds API */}
 			<View style={StyleSheet.absoluteFillObject}>
 				<Transition.View
-					sharedBoundTag="BOUNDS_INDICATOR"
+					sharedBoundTag={"BOUNDS_INDICATOR"}
 					style={styles.indicator}
 					pointerEvents="none"
 				/>

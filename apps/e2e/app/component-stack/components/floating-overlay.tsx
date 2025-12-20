@@ -8,6 +8,7 @@ import {
 	ScreenFullscreen,
 	ScreenLarge,
 	ScreenMedium,
+	ScreenNested,
 	type ScreenParamList,
 } from "./screens";
 
@@ -22,8 +23,6 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 
 	const { bounds } = props;
 
-	const scale = interpolate(props.progress, [0, 1, 2], [0.9, 1, 0.9]);
-	const opacity = interpolate(props.progress, [0, 1, 2], [0.5, 1, 0.5]);
 	return {
 		BOUNDS_INDICATOR: {
 			height: bounds.interpolateBounds("FLOATING_ELEMENT", "height", 0),
@@ -36,11 +35,7 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 					translateY: bounds.interpolateBounds("FLOATING_ELEMENT", "pageY", 0),
 				},
 			],
-		},
-
-		FLOATING_ELEMENT: {
-			transform: [{ scale }],
-			opacity,
+			opacity: interpolate(props.progress, [0, 1, 2], [0, 1, 0]),
 		},
 	};
 };
@@ -80,6 +75,11 @@ export function FloatingOverlay() {
 				<Stack.Screen
 					name="fullscreen"
 					component={ScreenFullscreen}
+					options={screenOptions}
+				/>
+				<Stack.Screen
+					name="nested"
+					component={ScreenNested}
 					options={screenOptions}
 				/>
 			</Stack.Navigator>

@@ -2,12 +2,14 @@ import { StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import type { ComponentStackScreenProps } from "react-native-screen-transitions/component-stack";
 import { BoundsIndicator } from "./bounds-indicator";
+import { NestedStackScreen } from "./nested-stack";
 
 export type ScreenParamList = {
 	compact: undefined;
 	medium: undefined;
 	large: undefined;
 	fullscreen: undefined;
+	nested: undefined;
 };
 
 type Props = ComponentStackScreenProps<ScreenParamList>;
@@ -17,6 +19,7 @@ const NAV_BUTTONS: { name: keyof ScreenParamList; label: string }[] = [
 	{ name: "medium", label: "Medium" },
 	{ name: "large", label: "Large" },
 	{ name: "fullscreen", label: "Full" },
+	{ name: "nested", label: "Nested" },
 ];
 
 function NavButtons({
@@ -77,25 +80,25 @@ export function ScreenCompact({ navigation }: Props) {
 }
 
 /**
- * ScreenB - Medium height panel
+ * ScreenB - Medium height panel (edge-to-edge, no horizontal padding)
  */
 export function ScreenMedium({ navigation }: Props) {
 	return (
 		<BoundsIndicator>
-			<View style={styles.containerBottom}>
+			<View style={styles.containerBottomEdge}>
 				<Transition.View
 					sharedBoundTag="FLOATING_ELEMENT"
-					style={[styles.card, styles.cardMedium]}
+					style={[styles.card, styles.cardMediumEdge]}
 				>
 					<View style={styles.handle} />
 					<Text style={styles.title}>Medium</Text>
 					<Text style={styles.subtitle}>
-						A taller panel with more content space
+						Edge-to-edge panel anchored to bottom
 					</Text>
 					<View style={styles.contentBlock}>
 						<Text style={styles.contentText}>
-							This panel demonstrates a medium height. It has enough room for
-							some additional content like a list or form fields.
+							This panel is full-width with no horizontal padding. Tests x
+							position and width changes during transitions.
 						</Text>
 					</View>
 					<NavButtons navigation={navigation} current="medium" />
@@ -176,12 +179,25 @@ export function ScreenFullscreen({ navigation }: Props) {
 	);
 }
 
+/**
+ * ScreenE - Nested navigator example
+ * Contains its own push-based stack inside the replace-based outer stack
+ */
+export function ScreenNested(_props: Props) {
+	return <NestedStackScreen />;
+}
+
 const styles = StyleSheet.create({
 	containerBottom: {
 		flex: 1,
 		justifyContent: "flex-end",
 		padding: 16,
 		paddingBottom: 32,
+	},
+	containerBottomEdge: {
+		flex: 1,
+		justifyContent: "flex-end",
+		// No horizontal padding - edge-to-edge
 	},
 	card: {
 		backgroundColor: "#1a1a1a",
@@ -193,8 +209,11 @@ const styles = StyleSheet.create({
 	cardCompact: {
 		// Small bar ~120px
 	},
-	cardMedium: {
+	cardMediumEdge: {
 		minHeight: 280,
+		borderRadius: 24,
+		borderBottomLeftRadius: 0,
+		borderBottomRightRadius: 0,
 	},
 	cardLarge: {
 		minHeight: 420,
