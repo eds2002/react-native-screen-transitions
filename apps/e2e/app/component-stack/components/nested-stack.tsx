@@ -1,9 +1,10 @@
 import { StyleSheet, Text, View } from "react-native";
-import Transition from "react-native-screen-transitions";
+import { interpolate } from "react-native-reanimated";
 import type { ScreenInterpolationProps } from "react-native-screen-transitions";
+import Transition from "react-native-screen-transitions";
 import {
-	createComponentStackNavigator,
 	type ComponentStackScreenProps,
+	createComponentStackNavigator,
 } from "react-native-screen-transitions/component-stack";
 import { BoundsIndicator } from "./bounds-indicator";
 import { transitionSpec } from "./interpolator";
@@ -20,20 +21,55 @@ const NestedStack = createComponentStackNavigator<NestedParamList>();
 const nestedInterpolator = (props: ScreenInterpolationProps) => {
 	"worklet";
 
-	const { bounds } = props;
+	const { bounds, progress } = props;
+	const entering = !props.next;
+
+	// Get interpolated position
+	const interpolatedPageX = bounds.interpolateBounds(
+		"FLOATING_ELEMENT",
+		"pageX",
+		0,
+	);
+	const interpolatedPageY = bounds.interpolateBounds(
+		"FLOATING_ELEMENT",
+		"pageY",
+		0,
+	);
+	const interpolatedWidth = bounds.interpolateBounds(
+		"FLOATING_ELEMENT",
+		"width",
+		0,
+	);
+	const interpolatedHeight = bounds.interpolateBounds(
+		"FLOATING_ELEMENT",
+		"height",
+		0,
+	);
+
+	// Get current screen's natural position
+	const link = bounds.getLink("FLOATING_ELEMENT");
+	const currentBounds = entering
+		? link?.destination?.bounds
+		: link?.source?.bounds;
+	const currentPageX = currentBounds?.pageX ?? 0;
+	const currentPageY = currentBounds?.pageY ?? 0;
+
+	// Calculate offset from natural position
+	const translateX = interpolatedPageX - currentPageX;
+	const translateY = interpolatedPageY - currentPageY;
 
 	return {
 		BOUNDS_INDICATOR: {
-			height: bounds.interpolateBounds("FLOATING_ELEMENT", "height", 0),
-			width: bounds.interpolateBounds("FLOATING_ELEMENT", "width", 0),
+			height: interpolatedHeight,
+			width: interpolatedWidth,
 			transform: [
-				{
-					translateX: bounds.interpolateBounds("FLOATING_ELEMENT", "pageX", 0),
-				},
-				{
-					translateY: bounds.interpolateBounds("FLOATING_ELEMENT", "pageY", 0),
-				},
+				{ translateX: interpolatedPageX },
+				{ translateY: interpolatedPageY },
 			],
+			opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+		},
+		FLOATING_ELEMENT: {
+			transform: [{ translateX }, { translateY }],
 		},
 	};
 };
@@ -46,8 +82,6 @@ const nestedScreenOptions = {
 };
 
 function NestedHome({ navigation }: NestedProps) {
-	const parentNav = navigation.getParent();
-
 	return (
 		<BoundsIndicator>
 			<View style={styles.containerBottom}>
@@ -61,7 +95,7 @@ function NestedHome({ navigation }: NestedProps) {
 					<View style={styles.buttonRow}>
 						<Transition.Pressable
 							style={styles.backButton}
-							onPress={() => parentNav?.navigate("compact" as never)}
+							onPress={() => navigation.goBack()}
 						>
 							<Text style={styles.backButtonText}>Back</Text>
 						</Transition.Pressable>

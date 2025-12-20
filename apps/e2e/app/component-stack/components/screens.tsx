@@ -14,12 +14,16 @@ export type ScreenParamList = {
 
 type Props = ComponentStackScreenProps<ScreenParamList>;
 
-const NAV_BUTTONS: { name: keyof ScreenParamList; label: string }[] = [
+const NAV_BUTTONS: {
+	name: keyof ScreenParamList;
+	label: string;
+	type?: string;
+}[] = [
 	{ name: "compact", label: "Compact" },
 	{ name: "medium", label: "Medium" },
 	{ name: "large", label: "Large" },
 	{ name: "fullscreen", label: "Full" },
-	{ name: "nested", label: "Nested" },
+	{ name: "nested", label: "Nested", type: "PUSH" },
 ];
 
 function NavButtons({
@@ -31,16 +35,17 @@ function NavButtons({
 }) {
 	return (
 		<View style={styles.navRow}>
-			{NAV_BUTTONS.map(({ name, label }) => (
+			{NAV_BUTTONS.map(({ name, label, type }) => (
 				<Transition.Pressable
 					key={name}
-					style={[
-						styles.navButton,
-						current === name && styles.navButtonActive,
-					]}
+					style={[styles.navButton, current === name && styles.navButtonActive]}
 					onPress={() => {
 						if (current !== name) {
-							navigation.replace(name);
+							if (type === "PUSH") {
+								navigation.push(name);
+							} else {
+								navigation.replace(name);
+							}
 						}
 					}}
 				>
@@ -257,14 +262,15 @@ const styles = StyleSheet.create({
 	},
 	navRow: {
 		flexDirection: "row",
+		flexWrap: "wrap",
 		justifyContent: "center",
 		gap: 8,
 		marginTop: 8,
 	},
 	navButton: {
-		paddingHorizontal: 16,
-		paddingVertical: 10,
-		borderRadius: 20,
+		paddingHorizontal: 14,
+		paddingVertical: 8,
+		borderRadius: 16,
 		backgroundColor: "#333",
 	},
 	navButtonActive: {
