@@ -1,4 +1,4 @@
-import type { MeasuredDimensions } from "react-native-reanimated";
+import { interpolate, type MeasuredDimensions } from "react-native-reanimated";
 import {
 	EMPTY_BOUND_HELPER_RESULT,
 	EMPTY_BOUND_HELPER_RESULT_RAW,
@@ -227,9 +227,26 @@ export const createBounds = (
 		});
 	};
 
+	const interpolateBounds = (
+		tag: string,
+		property: keyof MeasuredDimensions,
+		fallback?: number,
+	): number => {
+		"worklet";
+		const link = getLink(tag);
+		const entering = !props.next;
+		const range = entering ? ENTER_RANGE : EXIT_RANGE;
+
+		const sourceValue = link?.source?.bounds?.[property] ?? fallback ?? 0;
+		const destValue = link?.destination?.bounds?.[property] ?? fallback ?? 0;
+
+		return interpolate(props.progress, range, [sourceValue, destValue], "clamp");
+	};
+
 	return Object.assign(boundsFunction, {
 		getSnapshot,
 		getLink,
 		interpolateStyle,
+		interpolateBounds,
 	}) as BoundsAccessor;
 };

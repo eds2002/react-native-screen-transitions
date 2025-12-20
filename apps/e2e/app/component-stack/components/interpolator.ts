@@ -35,9 +35,6 @@ export function floatingInterpolator(
 
 	const { bounds } = props;
 
-	// Use bounds API for shared element transition
-	// This will morph FLOATING_ELEMENT from source to destination
-	console.log(bounds.getLink("FLOATING_ELEMENT"));
 	const elementStyles = bounds({
 		id: "FLOATING_ELEMENT",
 		method: "size",

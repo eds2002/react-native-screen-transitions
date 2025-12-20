@@ -19,11 +19,13 @@ export function BoundsIndicator({ children }: BoundsIndicatorProps) {
 			{children}
 
 			{/* Position absolute indicator controlled by bounds API */}
-			<Transition.View
-				sharedBoundTag="BOUNDS_INDICATOR"
-				style={styles.indicator}
-				pointerEvents="none"
-			/>
+			<View style={StyleSheet.absoluteFillObject}>
+				<Transition.View
+					sharedBoundTag="BOUNDS_INDICATOR"
+					style={styles.indicator}
+					pointerEvents="none"
+				/>
+			</View>
 		</View>
 	);
 }
@@ -33,12 +35,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	indicator: {
-		position: "absolute",
-		top: 0,
-		left: 0,
-		right: 0,
-		bottom: 0,
-		borderWidth: 3,
+		borderWidth: 10,
 		borderColor: "green",
 		borderRadius: 24,
 	},

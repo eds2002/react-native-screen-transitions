@@ -1,23 +1,23 @@
 import { useLayoutEffect } from "react";
 import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
-import { useHighRefreshRate } from "../../shared/hooks/animation/use-high-refresh-rate";
-import useStableCallback from "../../shared/hooks/use-stable-callback";
-import { useKeys } from "../../shared/providers/screen/keys.provider";
-import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
-import { AnimationStore } from "../../shared/stores/animation.store";
-import { startScreenTransition } from "../../shared/utils/animation/start-screen-transition";
-import { resetStoresForScreen } from "../../shared/utils/reset-stores-for-screen";
-import type { ComponentStackDescriptor } from "../types";
+import type { BlankStackDescriptor } from "../../blank-stack/types";
+import { useHighRefreshRate } from "../hooks/animation/use-high-refresh-rate";
+import useStableCallback from "../hooks/use-stable-callback";
+import { useKeys } from "../providers/screen/keys.provider";
+import { useManagedStackContext } from "../providers/stack/managed.provider";
+import { AnimationStore } from "../stores/animation.store";
+import { startScreenTransition } from "../utils/animation/start-screen-transition";
+import { resetStoresForScreen } from "../utils/reset-stores-for-screen";
 
 interface Props {
 	children: React.ReactNode;
 }
 
 /**
- * Lifecycle controller built out for Component Stack implementation.
+ * Lifecycle controller built out for Blank Stack implementation.
  */
-export const ComponentStackScreenLifecycleController = ({ children }: Props) => {
-	const { current } = useKeys<ComponentStackDescriptor>();
+export const ManagedLifecycle = ({ children }: Props) => {
+	const { current } = useKeys<BlankStackDescriptor>();
 	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
 
 	const animations = AnimationStore.getAll(current.route.key);
@@ -35,16 +35,15 @@ export const ComponentStackScreenLifecycleController = ({ children }: Props) => 
 		});
 	});
 
-	const handleCleanup = useStableCallback(() => {
-		resetStoresForScreen(current);
-	});
-
 	const handleCloseEnd = useStableCallback((finished: boolean) => {
-		deactivateHighRefreshRate();
 		if (!finished) {
 			return;
 		}
 		handleCloseRoute({ route: current.route });
+		requestAnimationFrame(() => {
+			deactivateHighRefreshRate();
+			resetStoresForScreen(current);
+		});
 	});
 
 	useAnimatedReaction(
@@ -68,10 +67,7 @@ export const ComponentStackScreenLifecycleController = ({ children }: Props) => 
 
 	useLayoutEffect(() => {
 		handleInitialize();
-		return () => {
-			handleCleanup();
-		};
-	}, [handleInitialize, handleCleanup]);
+	}, [handleInitialize]);
 
 	return children;
 };
