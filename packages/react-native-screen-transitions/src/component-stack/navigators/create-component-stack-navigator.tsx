@@ -1,5 +1,7 @@
 import {
 	createNavigatorFactory,
+	NavigationContainer,
+	NavigationIndependentTree,
 	type NavigatorTypeBagBase,
 	type ParamListBase,
 	type StackActionHelpers,
@@ -46,15 +48,19 @@ function ComponentStackNavigator({
 		});
 
 	return (
-		<NavigationContent>
-			<StackView
-				{...rest}
-				state={state}
-				navigation={navigation}
-				descriptors={descriptors}
-				describe={describe}
-			/>
-		</NavigationContent>
+		<NavigationIndependentTree>
+			<NavigationContainer>
+				<NavigationContent>
+					<StackView
+						{...rest}
+						state={state}
+						navigation={navigation}
+						descriptors={descriptors}
+						describe={describe}
+					/>
+				</NavigationContent>
+			</NavigationContainer>
+		</NavigationIndependentTree>
 	);
 }
 
