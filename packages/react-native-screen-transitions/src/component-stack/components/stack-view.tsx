@@ -9,12 +9,12 @@ import { ManagedLifecycle } from "../../shared/controller/managed-lifecycle";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
+import { StackType } from "../../shared/types/stack.types";
 import type {
 	ComponentStackDescriptor,
 	ComponentStackNavigationHelpers,
 } from "../types";
 import { ComponentScreen } from "./component-screen";
-import { ComponentScreenContainer } from "./component-screen-container";
 
 type SceneViewProps = {
 	descriptor: ComponentStackDescriptor;
@@ -36,14 +36,14 @@ const SceneView = React.memo(function SceneView({
 });
 
 export const StackView = withStackCore(
-	{ TRANSITIONS_ALWAYS_ON: true },
+	{ TRANSITIONS_ALWAYS_ON: true, STACK_TYPE: StackType.COMPONENT },
 	withManagedStack<ComponentStackDescriptor, ComponentStackNavigationHelpers>(
 		({ scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
 
-					<ComponentScreenContainer>
+					<Fragment>
 						{scenes.map((scene, sceneIndex) => {
 							const descriptor = scene.descriptor;
 							const route = scene.route;
@@ -66,7 +66,7 @@ export const StackView = withStackCore(
 								</ComponentScreen>
 							);
 						})}
-					</ComponentScreenContainer>
+					</Fragment>
 				</Fragment>
 			);
 		},

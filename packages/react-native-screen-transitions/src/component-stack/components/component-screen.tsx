@@ -11,6 +11,8 @@ interface ScreenProps {
 	routeKey: string;
 	children: React.ReactNode;
 }
+const POINT_NONE = "none" as const;
+const POINT_BOX_NONE = "box-none" as const;
 
 export const ComponentScreen = ({ routeKey, children }: ScreenProps) => {
 	const sceneClosing = AnimationStore.getAnimation(routeKey, "closing");
@@ -18,9 +20,7 @@ export const ComponentScreen = ({ routeKey, children }: ScreenProps) => {
 
 	const animatedProps = useAnimatedProps(() => {
 		return {
-			pointerEvents: sceneClosing.get()
-				? ("none" as const)
-				: ("box-none" as const),
+			pointerEvents: sceneClosing.get() ? POINT_NONE : POINT_BOX_NONE,
 		};
 	});
 

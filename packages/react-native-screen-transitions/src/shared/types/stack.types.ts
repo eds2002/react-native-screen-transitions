@@ -60,4 +60,5 @@ export interface BaseStackState<
 export enum StackType {
 	NATIVE = "native",
 	BLANK = "blank",
+	COMPONENT = "component",
 }

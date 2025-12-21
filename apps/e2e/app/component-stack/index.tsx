@@ -1,5 +1,6 @@
-import { StyleSheet, Text, View } from "react-native";
+import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Button from "@/components/button";
 import { FloatingOverlay } from "./components/floating-overlay";
 
 export default function ComponentStackDemo() {
@@ -14,6 +15,7 @@ export default function ComponentStackDemo() {
 				<Text style={styles.subtitle}>
 					(independent of Expo Router - URL doesn&apos;t change)
 				</Text>
+				<Button onPress={() => Alert.alert("HI")}>Touch through test</Button>
 			</SafeAreaView>
 
 			<FloatingOverlay />
