@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.2.0-beta.1
+
+### Patch Changes
+
+- More accurate bound measurements, component-stack is seperated from the root navigation tree. Handle flickering better
+
 ## 3.2.0-beta.0
 
 ### Minor Changes

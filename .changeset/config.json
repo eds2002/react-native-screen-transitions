@@ -10,5 +10,5 @@
   "access": "public",
   "baseBranch": "main",
   "updateInternalDependencies": "patch",
-  "ignore": ["expo-router-example", "e2e", "onboarding-example", "tray"]
+  "ignore": ["*", "!react-native-screen-transitions"]
 }

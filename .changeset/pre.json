@@ -10,6 +10,7 @@
     "react-native-screen-transitions": "3.1.0"
   },
   "changesets": [
-    "beta-release"
+    "beta-release",
+    "great-feet-jump"
   ]
 }
