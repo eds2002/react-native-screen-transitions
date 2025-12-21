@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.2.0-beta.2
+
+### Patch Changes
+
+- Fix touch through events in new component-stack, fix isolated navigation bug
+
 ## 3.2.0-beta.1
 
 ### Patch Changes
