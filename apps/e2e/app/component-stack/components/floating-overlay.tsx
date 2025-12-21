@@ -22,6 +22,32 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 	"worklet";
 
 	const { bounds, progress } = props;
+	const isClosing = !!props.current?.closing;
+
+	// If we're stable at progress=1 and not closing, stay at natural position
+	// This prevents snapping when a closing screen above us is removed
+	if (progress === 1 && !isClosing) {
+		// Get this screen's own registered bounds (not from link, which may reference other screens)
+		const screenKey = props.current?.route?.key ?? "";
+		const snapshot = bounds.getSnapshot("FLOATING_ELEMENT", screenKey);
+		const myBounds = snapshot?.bounds;
+		return {
+			BOUNDS_INDICATOR: {
+				height: myBounds?.height ?? 0,
+				width: myBounds?.width ?? 0,
+				transform: [
+					{ translateX: myBounds?.pageX ?? 0 },
+					{ translateY: myBounds?.pageY ?? 0 },
+				],
+				opacity: 1,
+			},
+			FLOATING_ELEMENT: {
+				transform: [{ translateX: 0 }, { translateY: 0 }],
+				opacity: 1,
+			},
+		};
+	}
+
 	const entering = !props.next;
 
 	// Get interpolated position (animates between source and destination)

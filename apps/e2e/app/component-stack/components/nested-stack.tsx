@@ -162,7 +162,7 @@ export function NestedStackScreen() {
 				<NestedStack.Screen
 					name="nested-home"
 					component={NestedHome}
-					options={nestedScreenOptions}
+					// options={nestedScreenOptions}
 				/>
 				<NestedStack.Screen
 					name="nested-detail"

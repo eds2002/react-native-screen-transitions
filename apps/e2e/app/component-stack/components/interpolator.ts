@@ -5,13 +5,13 @@ import type { TransitionSpec } from "react-native-screen-transitions";
  */
 export const transitionSpec: TransitionSpec = {
 	open: {
-		stiffness: 300,
-		damping: 30,
-		mass: 1,
+		stiffness: 1000,
+		damping: 500,
+		mass: 3,
 	},
 	close: {
-		stiffness: 300,
-		damping: 30,
-		mass: 1,
+		stiffness: 1000,
+		damping: 500,
+		mass: 3,
 	},
 };
