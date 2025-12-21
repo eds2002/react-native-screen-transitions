@@ -35,8 +35,6 @@ const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
 			STACK_TYPE = StackType.BLANK,
 		} = config;
 
-		const isComponentStack = STACK_TYPE === StackType.COMPONENT;
-
 		return {
 			value: {
 				flags: {
@@ -48,7 +46,9 @@ const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
 			children: (
 				<GestureHandlerRootView
 					style={styles.container}
-					pointerEvents={isComponentStack ? "box-none" : undefined}
+					pointerEvents={
+						STACK_TYPE === StackType.COMPONENT ? "box-none" : undefined
+					}
 				>
 					<SafeAreaProviderCompat>{children}</SafeAreaProviderCompat>
 				</GestureHandlerRootView>

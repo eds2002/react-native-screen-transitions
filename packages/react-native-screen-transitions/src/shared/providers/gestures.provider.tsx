@@ -6,11 +6,10 @@ import {
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
+import { useStackPointerEvents } from "../hooks/use-stack-pointer-events";
 import type { GestureStoreMap } from "../stores/gesture.store";
-import { StackType } from "../types/stack.types";
 import createProvider from "../utils/create-provider";
 import { useKeys } from "./screen/keys.provider";
-import { useStackCoreContext } from "./stack/core.provider";
 
 export type ScrollConfig = {
 	x: number;
@@ -43,12 +42,11 @@ export const {
 	GestureContextType
 >(({ children }) => {
 	const { current } = useKeys();
-	const { flags } = useStackCoreContext();
+	const pointerEvents = useStackPointerEvents();
 	const ancestorContext = useGestureContext();
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
 	const hasGestures = current.options.gestureEnabled === true;
-	const isComponentStack = flags.STACK_TYPE === StackType.COMPONENT;
 
 	const { panGesture, panGestureRef, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
@@ -70,10 +68,7 @@ export const {
 		value,
 		children: (
 			<GestureDetector gesture={panGesture}>
-				<View
-					style={styles.container}
-					pointerEvents={isComponentStack ? "box-none" : undefined}
-				>
+				<View style={styles.container} pointerEvents={pointerEvents}>
 					{children}
 				</View>
 			</GestureDetector>
