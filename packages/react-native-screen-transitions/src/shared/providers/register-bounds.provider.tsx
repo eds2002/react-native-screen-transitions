@@ -18,6 +18,7 @@ import { BoundStore } from "../stores/bounds.store";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
 import { type BaseDescriptor, useKeys } from "./screen/keys.provider";
+import { useLayoutAnchorContext } from "./layout-anchor.provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
@@ -208,6 +209,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		const { current } = useKeys();
 		const currentScreenKey = current.route.key;
 		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
+		const layoutAnchor = useLayoutAnchorContext();
 
 		// Context & signals
 		const parentContext: RegisterBoundsContextValue | null =
@@ -241,12 +243,17 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 				const measured = measure(animatedRef);
 				if (!measured) return;
 
+				// Correct for parent transforms (e.g., when parent screen is animating)
+				const correctedMeasured = layoutAnchor
+					? layoutAnchor.correctMeasurement(measured)
+					: measured;
+
 				emitUpdate();
 
 				BoundStore.registerSnapshot(
 					sharedBoundTag,
 					currentScreenKey,
-					measured,
+					correctedMeasured,
 					preparedStyles,
 					ancestorKeys,
 				);
@@ -273,7 +280,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					BoundStore.setLinkSource(
 						sharedBoundTag,
 						currentScreenKey,
-						measured,
+						correctedMeasured,
 						preparedStyles,
 						ancestorKeys,
 					);
@@ -284,7 +291,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					BoundStore.setLinkDestination(
 						sharedBoundTag,
 						currentScreenKey,
-						measured,
+						correctedMeasured,
 						preparedStyles,
 						ancestorKeys,
 					);

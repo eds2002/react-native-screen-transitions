@@ -1,6 +1,10 @@
 import type * as React from "react";
-import { StyleSheet } from "react-native";
-import Animated, { useAnimatedProps } from "react-native-reanimated";
+import { StyleSheet, type View } from "react-native";
+import Animated, {
+	useAnimatedProps,
+	useAnimatedRef,
+} from "react-native-reanimated";
+import { LayoutAnchorProvider } from "../../shared/providers/layout-anchor.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
 
 interface ScreenProps {
@@ -10,6 +14,7 @@ interface ScreenProps {
 
 export const ComponentScreen = ({ routeKey, children }: ScreenProps) => {
 	const sceneClosing = AnimationStore.getAnimation(routeKey, "closing");
+	const screenRef = useAnimatedRef<View>();
 
 	const animatedProps = useAnimatedProps(() => {
 		return {
@@ -23,10 +28,13 @@ export const ComponentScreen = ({ routeKey, children }: ScreenProps) => {
 
 	return (
 		<ComponentScreenComponent
+			ref={screenRef}
 			style={StyleSheet.absoluteFill}
 			animatedProps={animatedProps}
 		>
-			{children}
+			<LayoutAnchorProvider anchorRef={screenRef}>
+				{children}
+			</LayoutAnchorProvider>
 		</ComponentScreenComponent>
 	);
 };

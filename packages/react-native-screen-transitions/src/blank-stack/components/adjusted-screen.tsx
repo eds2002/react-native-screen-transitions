@@ -1,13 +1,16 @@
 import type * as React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, type View } from "react-native";
 import Animated, {
+	Extrapolation,
 	interpolate,
 	useAnimatedProps,
+	useAnimatedRef,
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
 import { useStack } from "../../shared/hooks/navigation/use-stack";
+import { LayoutAnchorProvider } from "../../shared/providers/layout-anchor.provider";
 import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
 import { AnimationStore } from "../../shared/stores/animation.store";
 
@@ -26,6 +29,8 @@ enum ScreenActivity {
 }
 
 const EPSILON = 1e-5;
+const POINT_NONE = "none" as const;
+const POINT_BOX_NONE = "box-none" as const;
 
 const AnimatedNativeScreen = Animated.createAnimatedComponent(RNSScreen);
 
@@ -42,6 +47,7 @@ export const AdjustedScreen = ({
 	} = useStack();
 	const { activeScreensLimit, routes } = useManagedStackContext();
 	const routesLength = routes.length;
+	const screenRef = useAnimatedRef<View>();
 
 	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");
 	const sceneClosing = AnimationStore.getAnimation(routeKey, "closing");
@@ -69,7 +75,7 @@ export const AdjustedScreen = ({
 				sceneProgress.get(),
 				[0, 1 - EPSILON, 1],
 				[1, 1, outputValue],
-				"clamp",
+				Extrapolation.CLAMP,
 			);
 
 			const next = Math.trunc(v) ?? ScreenActivity.TRANSITIONING_OR_BELOW_TOP;
@@ -86,16 +92,12 @@ export const AdjustedScreen = ({
 			return {
 				activityState: activity,
 				shouldFreeze: activity === ScreenActivity.INACTIVE && shouldFreeze,
-				pointerEvents: sceneClosing.get()
-					? ("none" as const)
-					: ("box-none" as const),
+				pointerEvents: sceneClosing.get() ? POINT_NONE : POINT_BOX_NONE,
 			};
 		}
 
 		return {
-			pointerEvents: sceneClosing.get()
-				? ("none" as const)
-				: ("box-none" as const),
+			pointerEvents: sceneClosing.get() ? POINT_NONE : POINT_BOX_NONE,
 		};
 	});
 
@@ -106,11 +108,14 @@ export const AdjustedScreen = ({
 	return (
 		<AdjustedScreenComponent
 			enabled
+			ref={screenRef}
 			style={StyleSheet.absoluteFill}
 			freezeOnBlur={freezeOnBlur}
 			animatedProps={animatedProps}
 		>
-			{children}
+			<LayoutAnchorProvider anchorRef={screenRef}>
+				{children}
+			</LayoutAnchorProvider>
 		</AdjustedScreenComponent>
 	);
 };
