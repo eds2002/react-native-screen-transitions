@@ -15,8 +15,33 @@ import {
 const Stack = createComponentStackNavigator<ScreenParamList>();
 
 /**
- * Shared screen interpolator for bounds-based transitions.
- * Animates both the BOUNDS_INDICATOR and the FLOATING_ELEMENT content.
+ * Bounds-based screen interpolator for shared element transitions.
+ *
+ * This interpolator animates elements between screens by tracking their measured
+ * bounds (position + size) and interpolating between source and destination.
+ *
+ * ## Animated Elements
+ *
+ * - `BOUNDS_INDICATOR`: Absolutely positioned overlay showing the interpolated
+ *   bounds. Useful for debugging or as a mask/clip region.
+ *
+ * - `FLOATING_ELEMENT`: The actual content element. Uses transform (translateX/Y)
+ *   to offset from its natural layout position to the interpolated position.
+ *
+ * ## Why the Stable Screen Check?
+ *
+ * The interpolation logic depends on `entering` (derived from `props.next`).
+ * When a closing screen is removed from the scene list, `props.next` becomes
+ * undefined, flipping `entering` from false → true. This causes:
+ *
+ * 1. `interpolateBounds` to use a different range (EXIT vs ENTER)
+ * 2. `currentBounds` to flip between source/destination
+ *
+ * Both changes cause the final transform to "snap" unexpectedly.
+ *
+ * The fix: when a screen is stable (progress=1, not closing), bypass the
+ * interpolation entirely and return the screen's own snapshot bounds with
+ * zero transform. The element just sits at its natural position.
  */
 const boundsInterpolator = (props: ScreenInterpolationProps) => {
 	"worklet";
@@ -24,10 +49,12 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 	const { bounds, progress } = props;
 	const isClosing = !!props.current?.closing;
 
-	// If we're stable at progress=1 and not closing, stay at natural position
-	// This prevents snapping when a closing screen above us is removed
+	//
+	// ━━━ STABLE SCREEN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	// When progress=1 and not closing, the screen is at rest.
+	// Return snapshot bounds directly - no interpolation, no transforms.
+	//
 	if (progress === 1 && !isClosing) {
-		// Get this screen's own registered bounds (not from link, which may reference other screens)
 		const screenKey = props.current?.route?.key ?? "";
 		const snapshot = bounds.getSnapshot("FLOATING_ELEMENT", screenKey);
 		const myBounds = snapshot?.bounds;
@@ -39,23 +66,27 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 					{ translateX: myBounds?.pageX ?? 0 },
 					{ translateY: myBounds?.pageY ?? 0 },
 				],
-				opacity: 1,
 			},
 			FLOATING_ELEMENT: {
 				transform: [{ translateX: 0 }, { translateY: 0 }],
-				opacity: 1,
 			},
 		};
 	}
 
+	//
+	// ━━━ ANIMATING SCREEN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	// Interpolate between source and destination bounds based on progress.
+	//
+
 	const entering = !props.next;
 
-	// Get interpolated position (animates between source and destination)
+	// Interpolated bounds: animates source → destination
 	const interpolatedPageX = bounds.interpolateBounds(
 		"FLOATING_ELEMENT",
 		"pageX",
 		0,
 	);
+
 	const interpolatedPageY = bounds.interpolateBounds(
 		"FLOATING_ELEMENT",
 		"pageY",
@@ -72,7 +103,10 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 		0,
 	);
 
-	// Get current screen's natural position (where element sits without animation)
+	// Current screen's natural position (where it sits in layout without transforms)
+	// - entering=true (no next screen): this screen is destination
+	// - entering=false (has next screen): this screen is source
+	//
 	const link = bounds.getLink("FLOATING_ELEMENT");
 	const currentBounds = entering
 		? link?.destination?.bounds
@@ -80,7 +114,7 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 	const currentPageX = currentBounds?.pageX ?? 0;
 	const currentPageY = currentBounds?.pageY ?? 0;
 
-	// Calculate offset from natural position to interpolated position
+	// Transform = offset from natural position to interpolated position
 	const translateX = interpolatedPageX - currentPageX;
 	const translateY = interpolatedPageY - currentPageY;
 

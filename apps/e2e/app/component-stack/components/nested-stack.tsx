@@ -70,6 +70,7 @@ const nestedInterpolator = (props: ScreenInterpolationProps) => {
 		},
 		FLOATING_ELEMENT: {
 			transform: [{ translateX }, { translateY }],
+			opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
 		},
 	};
 };
