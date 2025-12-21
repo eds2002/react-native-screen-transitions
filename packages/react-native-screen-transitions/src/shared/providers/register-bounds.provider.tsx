@@ -17,8 +17,8 @@ import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds.store";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
-import { type BaseDescriptor, useKeys } from "./screen/keys.provider";
 import { useLayoutAnchorContext } from "./layout-anchor.provider";
+import { type BaseDescriptor, useKeys } from "./screen/keys.provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;

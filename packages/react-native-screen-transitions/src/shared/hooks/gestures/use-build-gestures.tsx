@@ -85,7 +85,9 @@ export const useBuildGestures = ({
 		transitionSpec,
 	} = current.options;
 
-	const gestureEnabled = isFirstScreen ? false : current.options.gestureEnabled;
+	const gestureEnabled = Boolean(
+		isFirstScreen ? false : current.options.gestureEnabled,
+	);
 
 	const directions = useMemo(() => {
 		const directionsArray = Array.isArray(gestureDirection)
