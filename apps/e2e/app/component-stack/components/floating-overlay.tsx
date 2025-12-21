@@ -49,13 +49,16 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 	const { bounds, progress } = props;
 	const isClosing = !!props.current?.closing;
 
+	const screenKey = props.current?.route?.key ?? "";
+	const link = bounds.getLink("FLOATING_ELEMENT");
+	const hasLink = !!(link?.source || link?.destination);
+
 	//
-	// ━━━ STABLE SCREEN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-	// When progress=1 and not closing, the screen is at rest.
-	// Return snapshot bounds directly - no interpolation, no transforms.
+	// ━━━ STABLE SCREEN (or initial with no link) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+	// When progress=1 and not closing, OR when there's no link data (initial screen),
+	// return snapshot bounds directly - no interpolation, no transforms.
 	//
-	if (progress === 1 && !isClosing) {
-		const screenKey = props.current?.route?.key ?? "";
+	if ((progress === 1 && !isClosing) || !hasLink) {
 		const snapshot = bounds.getSnapshot("FLOATING_ELEMENT", screenKey);
 		const myBounds = snapshot?.bounds;
 		return {
@@ -107,7 +110,6 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 	// - entering=true (no next screen): this screen is destination
 	// - entering=false (has next screen): this screen is source
 	//
-	const link = bounds.getLink("FLOATING_ELEMENT");
 	const currentBounds = entering
 		? link?.destination?.bounds
 		: link?.source?.bounds;

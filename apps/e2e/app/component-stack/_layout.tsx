@@ -1,5 +1,4 @@
 import { interpolate } from "react-native-reanimated";
-import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
 import { DefaultSpec } from "../../../../packages/react-native-screen-transitions/src/shared/configs/specs";
 
@@ -14,16 +13,17 @@ export default function ComponentStackLayout() {
 					screenStyleInterpolator: ({
 						progress,
 						layouts: {
-							screen: { height, width },
+							screen: { width, height },
 						},
 					}) => {
 						"worklet";
 
-						const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
+						const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
+						const scale = interpolate(progress, [0, 1, 2], [0.01, 1, 0.01]);
 
 						return {
 							contentStyle: {
-								transform: [{ translateX: x }],
+								transform: [{ translateY: y }, { scale }],
 							},
 						};
 					},

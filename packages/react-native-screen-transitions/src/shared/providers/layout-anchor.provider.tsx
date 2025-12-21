@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import type { View } from "react-native";
+import { useWindowDimensions, type View } from "react-native";
 import {
 	type AnimatedRef,
 	type MeasuredDimensions,
@@ -14,9 +14,10 @@ interface LayoutAnchorProviderProps {
 
 interface LayoutAnchorContextValue {
 	/**
-	 * Corrects measured dimensions for parent transforms.
-	 * The anchor should be at (0, 0) - any offset is from parent transforms.
-	 * Subtracting this offset gives the true layout position.
+	 * Corrects measured dimensions for parent transforms (translation and scale).
+	 * The anchor should be at (0, 0) with full screen dimensions - any difference
+	 * is from parent transforms. This function reverses those transforms to yield
+	 * the true layout position and dimensions.
 	 */
 	correctMeasurement: (measured: MeasuredDimensions) => MeasuredDimensions;
 }
@@ -27,25 +28,46 @@ interface LayoutAnchorContextValue {
  * When a parent view has transforms applied (e.g., during screen transitions),
  * `measure()` returns visual positions that include those transforms. This provider
  * establishes an anchor point (typically the screen container at 0,0) and exposes
- * a `correctMeasurement` function that subtracts the anchor's offset to yield
- * the true layout position.
+ * a `correctMeasurement` function that reverses translation and scale transforms
+ * to yield the true layout position and dimensions.
+ *
+ * ## How it works
+ *
+ * 1. **Translation**: Subtract anchor's pageX/pageY offset
+ * 2. **Scale**: Compare anchor's measured size to expected (screen) size to compute
+ *    scale factor, then divide positions and dimensions by that factor
  */
 const { LayoutAnchorProvider, useLayoutAnchorContext } = createProvider(
 	"LayoutAnchor",
 	{ guarded: false },
 )<LayoutAnchorProviderProps, LayoutAnchorContextValue>(
 	({ anchorRef, children }) => {
+		const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+
 		const correctMeasurement = (
 			measured: MeasuredDimensions,
 		): MeasuredDimensions => {
 			"worklet";
-			const anchorMeasured = measure(anchorRef);
-			if (!anchorMeasured) return measured;
+			const anchor = measure(anchorRef);
+			if (!anchor) return measured;
 
+			// Compute scale factor by comparing anchor size to expected screen size.
+			// Anchor should be full-screen (absoluteFill), so any difference is from scale.
+			const scaleX = anchor.width > 0 ? anchor.width / screenWidth : 1;
+			const scaleY = anchor.height > 0 ? anchor.height / screenHeight : 1;
+
+			// Get element position relative to anchor (removes translation)
+			const relativeX = measured.pageX - anchor.pageX;
+			const relativeY = measured.pageY - anchor.pageY;
+
+			// Reverse scale: divide relative position and dimensions by scale factor
 			return {
-				...measured,
-				pageX: measured.pageX - anchorMeasured.pageX,
-				pageY: measured.pageY - anchorMeasured.pageY,
+				x: measured.x,
+				y: measured.y,
+				width: scaleX !== 1 ? measured.width / scaleX : measured.width,
+				height: scaleY !== 1 ? measured.height / scaleY : measured.height,
+				pageX: scaleX !== 1 ? relativeX / scaleX : relativeX,
+				pageY: scaleY !== 1 ? relativeY / scaleY : relativeY,
 			};
 		};
 
