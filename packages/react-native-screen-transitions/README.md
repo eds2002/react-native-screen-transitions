@@ -36,37 +36,23 @@ npm install react-native-reanimated react-native-gesture-handler \
 
 This package provides three stack navigators:
 
-| Stack                         | Description                                                                       |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| **Blank Stack** (recommended) | Pure JavaScript stack with full control over transitions, overlays, and gestures. |
-| **Native Stack**              | Extends `@react-navigation/native-stack`. Full overlay support, native primitives.|
-| **Component Stack**           | Standalone navigator without React Navigation. For internal/embedded navigation.  |
+| Stack                         | Description                                                                        |
+| ----------------------------- | ---------------------------------------------------------------------------------- |
+| **Blank Stack** (recommended) | Pure JavaScript stack with full control over transitions, overlays, and gestures.  |
+| **Native Stack**              | Extends `@react-navigation/native-stack`. Full overlay support, native primitives. |
+| **Component Stack**           | Standalone navigator without React Navigation. For internal/embedded navigation.   |
 
 ### Choosing a Stack
 
-**Blank Stack** is feature-rich and recommended for most use cases:
+For most apps, **start with Blank Stack**. It's the most flexible and has full feature support.
 
-- Full overlay system (float and screen modes)
-- Stack progress tracking across the entire stack
-- No delayed touch events on exiting screens
+| Stack               | Best For                                                                          |
+| ------------------- | --------------------------------------------------------------------------------- |
+| **Blank Stack**     | Most apps. Full control, all features, JS-based with native performance.          |
+| **Native Stack**    | When you need native screen primitives. Has some trade-offs.                      |
+| **Component Stack** | Embedded flows (wizards, popovers). Isolated from React Navigation. Experimental. |
 
-However, it's still a JavaScript implementation. While optimized to be as fast as possible (using `react-native-screens` under the hood, with animations and gesture logic running on the UI thread), heavy usage may not match native performance.
-
-**Native Stack** uses native navigation primitives with some trade-offs:
-
-- Full overlay system support (float and screen modes)
-- Relies on `beforeRemove` listeners to intercept navigation
-- Uses transparent modal presentation which can cause delayed touch events
-- Some edge cases with rapid navigation
-
-Choose Native Stack if you need native performance with overlay support.
-
-**Component Stack** is a standalone navigator that doesn't integrate with React Navigation:
-
-- No integration with React Navigation ecosystem (no linking, no deep linking)
-- Ideal for embedded navigation within a screen (e.g., onboarding flows, wizards)
-- Lightweight, component-based API
-- Full transition and gesture support
+All three stacks share the same animation API – `screenStyleInterpolator`, gestures, overlays, and presets work identically across them.
 
 ### Blank Stack Philosophy
 
@@ -184,9 +170,88 @@ Built-in animation presets you can spread into screen options:
 
 ## Custom Animations
 
-### Using `screenStyleInterpolator`
+### Understanding Progress
 
-Define custom transitions directly in screen options. The interpolator receives animation state and returns styles:
+The `progress` value tells you where a screen is in its lifecycle:
+
+```
+0 ──────────────── 1 ──────────────── 2
+│                  │                  │
+Screen is          Screen is          Screen is
+OFF-SCREEN         FULLY VISIBLE      OFF-SCREEN
+(entering)         (active)           (exiting)
+```
+
+When you navigate from Screen A to Screen B:
+
+- **Screen B** (entering): `progress` animates from `0` → `1`
+- **Screen A** (exiting): `progress` animates from `1` → `2`
+
+### Basic Examples
+
+**Fade in/out:**
+
+```tsx
+screenStyleInterpolator: ({ progress }) => {
+  "worklet";
+  // At 0: opacity = 0 (invisible)
+  // At 1: opacity = 1 (visible)
+  // At 2: opacity = 0 (invisible again)
+  return {
+    contentStyle: {
+      opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+    },
+  };
+};
+```
+
+**Slide from right:**
+
+```tsx
+screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+  "worklet";
+  // At 0: off-screen to the right
+  // At 1: centered (0)
+  // At 2: off-screen to the left
+  return {
+    contentStyle: {
+      transform: [
+        {
+          translateX: interpolate(
+            progress,
+            [0, 1, 2],
+            [screen.width, 0, -screen.width * 0.3]
+          ),
+        },
+      ],
+    },
+  };
+};
+```
+
+**Slide from bottom (modal-style):**
+
+```tsx
+screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+  "worklet";
+  return {
+    contentStyle: {
+      transform: [
+        {
+          translateY: interpolate(progress, [0, 1], [screen.height, 0]),
+        },
+      ],
+    },
+  };
+};
+```
+
+### Writing Your Interpolator
+
+Every `screenStyleInterpolator` must:
+
+1. Be marked with `"worklet"` (runs on UI thread)
+2. Return an object with style properties
 
 ```tsx
 import { interpolate } from "react-native-reanimated";
@@ -197,15 +262,9 @@ import { interpolate } from "react-native-reanimated";
     screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
       "worklet";
 
-      const translateX = interpolate(
-        progress,
-        [0, 1, 2],
-        [screen.width, 0, -screen.width]
-      );
-
       return {
         contentStyle: {
-          transform: [{ translateX }],
+          // Your animated styles here
         },
       };
     },
@@ -850,9 +909,21 @@ To avoid collisions with custom gesture options, some native options are renamed
 
 ---
 
-## Component Stack
+## Component Stack (Experimental)
 
-A standalone navigator for when you don't need React Navigation integration. Perfect for embedded flows like onboarding, wizards, or any self-contained navigation.
+A standalone navigator that operates **independently** from React Navigation. It uses React Navigation's isolation API under the hood but doesn't affect your primary navigation state.
+
+> **Experimental**: This API may change in future versions.
+
+### How It Differs
+
+Unlike Blank Stack and Native Stack which integrate with React Navigation:
+
+- **No deep linking** – Routes aren't part of your app's URL structure
+- **No navigation state sharing** – Completely isolated from parent navigators
+- **Transparent by default** – All screens use `pointerEvents="box-none"`, allowing touches to pass through to content behind. Your screen content handles its own touch areas.
+
+This makes Component Stack ideal for **overlay-style navigation** within a screen – think embedded wizards, popovers, or flows that shouldn't affect the main navigation.
 
 ### Setup
 

@@ -62,6 +62,16 @@ export interface BaseStackState<
 	key: string;
 }
 
+/**
+ * Generic descriptor map - keyed by route key.
+ * Use this instead of defining stack-specific DescriptorMap types.
+ */
+export type DescriptorMap<
+	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
+> = {
+	[key: string]: TDescriptor;
+};
+
 export enum StackType {
 	NATIVE = "native",
 	BLANK = "blank",

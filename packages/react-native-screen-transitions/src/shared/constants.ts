@@ -75,3 +75,6 @@ export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 
 export const IS_WEB = Platform.OS === "web";
+
+export const TRUE = 1;
+export const FALSE = 0;

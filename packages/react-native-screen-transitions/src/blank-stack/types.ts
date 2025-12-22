@@ -4,7 +4,6 @@ import type {
 	NavigationHelpers,
 	NavigationProp,
 	ParamListBase,
-	Route,
 	RouteProp,
 	StackActionHelpers,
 	StackNavigationState,
@@ -13,6 +12,10 @@ import type {
 } from "@react-navigation/native";
 import type { ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
+import type {
+	BaseStackScene,
+	DescriptorMap,
+} from "../shared/types/stack.types";
 
 export type BlankStackNavigationEventMap = {};
 
@@ -52,10 +55,7 @@ export type BlankStackNavigationHelpers = NavigationHelpers<
 	BlankStackNavigationEventMap
 >;
 
-export type BlankStackScene = {
-	route: Route<string>;
-	descriptor: BlankStackDescriptor;
-};
+export type BlankStackScene = BaseStackScene<BlankStackDescriptor>;
 
 type BlankStackNavigationConfig = {
 	DISABLE_NATIVE_SCREENS?: boolean;
@@ -106,6 +106,4 @@ export type BlankStackDescriptor = Descriptor<
 	RouteProp<ParamListBase>
 >;
 
-export type BlankStackDescriptorMap = {
-	[key: string]: BlankStackDescriptor;
-};
+export type BlankStackDescriptorMap = DescriptorMap<BlankStackDescriptor>;

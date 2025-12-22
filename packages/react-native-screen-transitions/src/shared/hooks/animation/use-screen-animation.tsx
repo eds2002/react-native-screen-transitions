@@ -6,7 +6,6 @@ import type { NativeStackScreenTransitionConfig } from "../../../native-stack/ty
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
 import {
 	type BaseDescriptor,
-	type BaseRoute,
 	useKeys,
 } from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
@@ -16,6 +15,7 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation.types";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
+import type { BaseStackRoute } from "../../types/stack.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
 import { useStack } from "../navigation/use-stack";
@@ -25,13 +25,13 @@ type BuiltState = {
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	gesture: GestureStoreMap;
-	route: BaseRoute;
+	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
 	unwrapped: ScreenTransitionState;
 };
 
 const createScreenTransitionState = (
-	route: BaseRoute,
+	route: BaseStackRoute,
 	meta?: Record<string, unknown>,
 ): ScreenTransitionState => ({
 	progress: 0,

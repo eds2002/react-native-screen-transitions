@@ -4,7 +4,6 @@ import type {
 	NavigationHelpers,
 	NavigationProp,
 	ParamListBase,
-	Route,
 	RouteProp,
 	StackActionHelpers,
 	StackNavigationState,
@@ -13,6 +12,10 @@ import type {
 } from "@react-navigation/native";
 import type { ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
+import type {
+	BaseStackScene,
+	DescriptorMap,
+} from "../shared/types/stack.types";
 
 export type ComponentStackNavigationEventMap = {};
 
@@ -52,10 +55,7 @@ export type ComponentStackNavigationHelpers = NavigationHelpers<
 	ComponentStackNavigationEventMap
 >;
 
-export type ComponentStackScene = {
-	route: Route<string>;
-	descriptor: ComponentStackDescriptor;
-};
+export type ComponentStackScene = BaseStackScene<ComponentStackDescriptor>;
 
 type ComponentStackNavigationConfig = {};
 
@@ -96,6 +96,5 @@ export type ComponentStackDescriptor = Descriptor<
 	RouteProp<ParamListBase>
 >;
 
-export type ComponentStackDescriptorMap = {
-	[key: string]: ComponentStackDescriptor;
-};
+export type ComponentStackDescriptorMap =
+	DescriptorMap<ComponentStackDescriptor>;

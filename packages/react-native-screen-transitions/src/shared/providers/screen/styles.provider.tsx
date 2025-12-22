@@ -113,7 +113,7 @@ export function useScreenStyles() {
 	const ctx = useContext(ScreenStylesContext);
 	if (!ctx) {
 		throw new Error(
-			"useTransitionStyles must be used within a TransitionStylesProvider",
+			"useScreenStyles must be used within a ScreenStylesProvider",
 		);
 	}
 	return ctx;

@@ -4,10 +4,10 @@ import type {
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
-import type { BaseRoute } from "../providers/screen/keys.provider";
 import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";
 import type { Layout } from "./screen.types";
+import type { BaseStackRoute } from "./stack.types";
 
 export interface OverlayInterpolationProps {
 	progress: number;
@@ -74,7 +74,7 @@ export type ScreenTransitionState = {
 	 * Pass route params via options: `options={({ route }) => ({ meta: { id: route.params.id } })}`
 	 * This field may be removed in a future version.
 	 */
-	route: BaseRoute;
+	route: BaseStackRoute;
 };
 
 export interface ScreenInterpolationProps {

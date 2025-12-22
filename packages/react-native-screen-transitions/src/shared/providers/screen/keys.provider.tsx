@@ -6,15 +6,7 @@ import type {
 } from "@react-navigation/native";
 import { createContext, useContext, useMemo } from "react";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
-import type {
-	BaseStackDescriptor,
-	BaseStackNavigation,
-	BaseStackRoute,
-} from "../../types/stack.types";
-
-// Re-export for backward compatibility
-export type { BaseStackNavigation as BaseNavigation };
-export type { BaseStackRoute as BaseRoute };
+import type { BaseStackDescriptor } from "../../types/stack.types";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.

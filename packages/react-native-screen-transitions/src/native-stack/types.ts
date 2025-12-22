@@ -24,6 +24,7 @@ import type {
 } from "react-native-screens";
 import type { OverlayProps } from "../shared/types/overlay.types";
 import type { ScreenTransitionConfig } from "../shared/types/screen.types";
+import type { DescriptorMap } from "../shared/types/stack.types";
 
 export type NativeStackNavigationEventMap = {
 	/**
@@ -717,6 +718,4 @@ export type NativeStackDescriptor = Descriptor<
 	RouteProp<ParamListBase>
 >;
 
-export type NativeStackDescriptorMap = {
-	[key: string]: NativeStackDescriptor;
-};
+export type NativeStackDescriptorMap = DescriptorMap<NativeStackDescriptor>;

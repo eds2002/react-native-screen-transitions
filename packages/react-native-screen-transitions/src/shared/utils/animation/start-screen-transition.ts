@@ -1,7 +1,7 @@
 import { runOnJS } from "react-native-reanimated";
+import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
-import { FALSE, TRUE } from "../../types/state.types";
 import { animate } from "./animate";
 
 interface StartScreenTransitionProps {
