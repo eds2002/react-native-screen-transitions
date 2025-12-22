@@ -1,5 +1,11 @@
 # Change Log
 
+## 3.2.0-beta.3
+
+### Minor Changes
+
+- Added useScreenState() hook and progress prop for overlays, deprecated overlayMode/screenAnimation/overlayAnimation in favor of simpler APIs, and fixed a navigation dismissal bug caused by lifecycle re-runs.
+
 ## 3.2.0-beta.2
 
 ### Patch Changes
