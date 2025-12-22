@@ -10,7 +10,7 @@ import { OverlayHost } from "./overlay-host";
  * Gets routes and descriptors from stack context.
  */
 export function FloatOverlay() {
-	const { routes, scenes, focusedIndex, flags } = useStack();
+	const { scenes, focusedIndex, flags } = useStack();
 
 	const activeOverlay = useMemo(
 		() =>
@@ -31,13 +31,7 @@ export function FloatOverlay() {
 	return (
 		<KeysProvider current={current} previous={previous} next={next}>
 			<ScreenStylesProvider>
-				<OverlayHost
-					scene={scene}
-					scenes={scenes}
-					routes={routes}
-					overlayIndex={overlayIndex}
-					isFloating
-				/>
+				<OverlayHost scene={scene} />
 			</ScreenStylesProvider>
 		</KeysProvider>
 	);

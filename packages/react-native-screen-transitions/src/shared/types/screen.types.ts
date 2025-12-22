@@ -111,10 +111,11 @@ export type ScreenTransitionConfig = {
 
 	/**
 	 * How the overlay is positioned relative to screens.
-	 * - 'float': Single persistent overlay above all screens (like iOS tab bar)
-	 * - 'screen': Per-screen overlay that transitions with content
-	 * - 'container': Wraps all screen content, receives children prop (for MaskedView, custom containers)
-	 * @default 'screen'
+	 *
+	 * @deprecated This option is no longer needed. Overlays now always render as "float" mode
+	 * (single persistent overlay above all screens). For per-screen overlays, render an
+	 * absolute-positioned view directly in your screen component and use `useScreenAnimation()`
+	 * to access animation values.
 	 */
 	overlayMode?: OverlayMode;
 

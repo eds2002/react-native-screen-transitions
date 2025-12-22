@@ -69,10 +69,6 @@ export type ScreenTransitionState = {
 
 	/**
 	 * The route object for this screen.
-	 *
-	 * @deprecated Use `meta` instead for conditional animation logic.
-	 * Pass route params via options: `options={({ route }) => ({ meta: { id: route.params.id } })}`
-	 * This field may be removed in a future version.
 	 */
 	route: BaseStackRoute;
 };

@@ -10,10 +10,14 @@ import { OverlayHost } from "./overlay-host";
 /**
  * Screen overlay component that renders per-screen.
  * Gets current descriptor from keys context.
+ *
+ * @deprecated Screen overlays are deprecated. For per-screen overlays, render an
+ * absolute-positioned view directly in your screen component and use `useScreenAnimation()`
+ * to access animation values. This component will be removed in a future version.
  */
 export function ScreenOverlay() {
 	const { current } = useKeys<StackDescriptor>();
-	const { routeKeys, flags } = useStack();
+	const { flags } = useStack();
 
 	const options = current.options;
 
@@ -25,12 +29,6 @@ export function ScreenOverlay() {
 		[current],
 	);
 
-	// Find the index of this screen in the stack
-	const overlayIndex = useMemo(
-		() => routeKeys.indexOf(current.route.key),
-		[routeKeys, current.route.key],
-	);
-
 	// Skip screens without enableTransitions (native-stack only)
 	if (!flags.TRANSITIONS_ALWAYS_ON && !options.enableTransitions) {
 		return null;
@@ -40,12 +38,5 @@ export function ScreenOverlay() {
 		return null;
 	}
 
-	return (
-		<OverlayHost
-			scene={scene}
-			scenes={[scene]}
-			routes={[]}
-			overlayIndex={overlayIndex}
-		/>
-	);
+	return <OverlayHost scene={scene} />;
 }
