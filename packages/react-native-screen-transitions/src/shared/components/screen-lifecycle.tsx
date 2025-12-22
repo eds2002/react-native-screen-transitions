@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useLayoutEffect } from "react";
 import {
 	runOnJS,
 	useAnimatedReaction,
@@ -24,7 +24,6 @@ interface Props {
 }
 
 interface CloseHookParams {
-	enabled: boolean;
 	current: BaseDescriptor;
 	animations: ReturnType<typeof AnimationStore.getAll>;
 	activate: () => void;
@@ -36,18 +35,16 @@ interface CloseHookParams {
  * Used by blank-stack and component-stack.
  */
 const useManagedClose = ({
-	enabled,
 	current,
 	animations,
 	activate,
 	deactivate,
 }: CloseHookParams) => {
-	// biome-ignore lint/correctness/useHookAtTopLevel: <STACK_TYPE is stable>
-	const managedCtx = enabled ? useManagedStackContext() : null;
+	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
 
 	const handleCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished) return;
-		managedCtx?.handleCloseRoute({ route: current.route });
+		handleCloseRoute({ route: current.route });
 		requestAnimationFrame(() => {
 			deactivate();
 			resetStoresForScreen(current);
@@ -55,9 +52,9 @@ const useManagedClose = ({
 	});
 
 	useAnimatedReaction(
-		() => (enabled ? managedCtx?.closingRouteKeysShared.value : []),
+		() => closingRouteKeysShared.value,
 		(keys) => {
-			if (!enabled || !keys?.includes(current.route.key)) return;
+			if (!keys?.includes(current.route.key)) return;
 
 			runOnJS(activate)();
 			startScreenTransition({
@@ -74,7 +71,6 @@ const useManagedClose = ({
  * Native stack close - listens to beforeRemove navigation event.
  */
 const useNativeStackClose = ({
-	enabled,
 	current,
 	animations,
 	activate,
@@ -85,7 +81,6 @@ const useNativeStackClose = ({
 	const isAncestorDismissingViaGesture = useSharedValueState(
 		useDerivedValue(() => {
 			"worklet";
-			if (!enabled) return false;
 			return (
 				gestureCtx?.ancestorContext?.gestureAnimationValues.isDismissing
 					?.value ?? false
@@ -94,8 +89,6 @@ const useNativeStackClose = ({
 	);
 
 	const handleBeforeRemove = useStableCallback((e: any) => {
-		if (!enabled) return;
-
 		const options = current.options as { enableTransitions?: boolean };
 		const isEnabled = options.enableTransitions;
 		const navigation = current.navigation;
@@ -127,25 +120,14 @@ const useNativeStackClose = ({
 		});
 	});
 
-	useEffect(() => {
-		if (!enabled) return;
-
-		const navigation = current.navigation;
-
-		return navigation.addListener?.("beforeRemove", handleBeforeRemove);
-	}, [enabled, current.navigation, handleBeforeRemove]);
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Only re-subscribe when navigation changes
+	useLayoutEffect(() => {
+		return current.navigation.addListener?.("beforeRemove", handleBeforeRemove);
+	}, [current.navigation]);
 };
 
 /**
  * Unified lifecycle controller for all stack types.
- *
- * Handles:
- * - Open transition on mount (all stacks)
- * - Close transition based on stack type:
- *   - Native stack: listens to beforeRemove event
- *   - Blank/Component stack: reacts to closingRouteKeysShared
- * - High refresh rate activation during transitions
- * - Store cleanup after transitions
  */
 export const ScreenLifecycle = ({ children }: Props) => {
 	const { flags } = useStackCoreContext();
@@ -156,9 +138,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
 
-	// ═══════════════════════════════════════════
-	// OPEN - identical for all stacks
-	// ═══════════════════════════════════════════
+	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
 		activateHighRefreshRate();
 		startScreenTransition({
@@ -167,23 +147,22 @@ export const ScreenLifecycle = ({ children }: Props) => {
 			animations,
 			onAnimationFinish: deactivateHighRefreshRate,
 		});
-	}, [animations, current, deactivateHighRefreshRate, activateHighRefreshRate]);
+	}, []);
 
-	useManagedClose({
-		enabled: !isNativeStack,
+	const closeParams: CloseHookParams = {
 		current,
 		animations,
 		activate: activateHighRefreshRate,
 		deactivate: deactivateHighRefreshRate,
-	});
+	};
 
-	useNativeStackClose({
-		enabled: isNativeStack,
-		current,
-		animations,
-		activate: activateHighRefreshRate,
-		deactivate: deactivateHighRefreshRate,
-	});
+	if (isNativeStack) {
+		// biome-ignore lint/correctness/useHookAtTopLevel: STACK_TYPE is stable per screen instance
+		useNativeStackClose(closeParams);
+	} else {
+		// biome-ignore lint/correctness/useHookAtTopLevel: STACK_TYPE is stable per screen instance
+		useManagedClose(closeParams);
+	}
 
 	return children;
 };
