@@ -10,7 +10,6 @@ import {
 	runOnJS,
 } from "react-native-reanimated";
 
-// biome-ignore lint/suspicious/noExplicitAny: <Does not matter>
 type AnyFunction = (...args: Array<any>) => any;
 
 function useMutableValue<T>(initialValue: T) {

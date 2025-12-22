@@ -35,7 +35,7 @@ import {
 	type DirectStackContextValue,
 	withDirectStack,
 } from "../../shared/providers/stack/direct.provider";
-import { NativeStackScreenLifecycleController } from "../controllers/native-stack-lifecycle";
+import { StackType } from "../../shared/types/stack.types";
 import type { NativeStackDescriptor } from "../types";
 import { debounce } from "../utils/debounce";
 import { getModalRouteKeys } from "../utils/getModalRoutesKeys";
@@ -468,7 +468,6 @@ const SceneView = ({
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
-										LifecycleController={NativeStackScreenLifecycleController}
 									>
 										{render()}
 									</ScreenComposer>
@@ -483,7 +482,7 @@ const SceneView = ({
 };
 
 export const NativeStackView = withStackCore(
-	{ TRANSITIONS_ALWAYS_ON: false },
+	{ TRANSITIONS_ALWAYS_ON: false, STACK_TYPE: StackType.NATIVE },
 	withDirectStack(function NativeStackViewContent({
 		state,
 		navigation,

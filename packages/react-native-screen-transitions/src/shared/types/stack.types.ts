@@ -15,8 +15,13 @@ export interface BaseStackRoute {
  * Both React Navigation helpers and ComponentNavigation satisfy this.
  */
 export interface BaseStackNavigation {
-	getState: () => { routes: Array<{ key: string }>; key: string };
+	getState: () => {
+		routes: Array<{ key: string }>;
+		key: string;
+		index: number;
+	};
 	dispatch: (action: any) => void;
+	addListener?: (event: any, callback: any) => () => void;
 }
 
 /**

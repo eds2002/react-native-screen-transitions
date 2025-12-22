@@ -240,7 +240,12 @@ export const createBounds = (
 		const sourceValue = link?.source?.bounds?.[property] ?? fallback ?? 0;
 		const destValue = link?.destination?.bounds?.[property] ?? fallback ?? 0;
 
-		return interpolate(props.progress, range, [sourceValue, destValue], "clamp");
+		return interpolate(
+			props.progress,
+			range,
+			[sourceValue, destValue],
+			"clamp",
+		);
 	};
 
 	return Object.assign(boundsFunction, {

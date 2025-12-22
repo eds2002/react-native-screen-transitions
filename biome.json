@@ -3,5 +3,15 @@
   "files": {
     "includes": ["**", "!node_modules", "!.next", "!**/__tests__/**", "!**/*.test.*"],
     "ignoreUnknown": true
+  },
+  "linter": {
+    "rules": {
+      "suspicious": {
+        "noExplicitAny": "off"
+      },
+      "complexity": {
+        "noBannedTypes": "off"
+      }
+    }
   }
 }

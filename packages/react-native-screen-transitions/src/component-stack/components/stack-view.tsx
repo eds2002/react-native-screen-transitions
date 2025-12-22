@@ -5,7 +5,6 @@ import {
 import * as React from "react";
 import { Fragment } from "react";
 import { Overlay } from "../../shared/components/overlay";
-import { ManagedLifecycle } from "../../shared/controller/managed-lifecycle";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
@@ -43,30 +42,27 @@ export const StackView = withStackCore(
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
 
-					<Fragment>
-						{scenes.map((scene, sceneIndex) => {
-							const descriptor = scene.descriptor;
-							const route = scene.route;
+					{scenes.map((scene, sceneIndex) => {
+						const descriptor = scene.descriptor;
+						const route = scene.route;
 
-							const previousDescriptor =
-								scenes[sceneIndex - 1]?.descriptor ?? undefined;
-							const nextDescriptor =
-								scenes[sceneIndex + 1]?.descriptor ?? undefined;
+						const previousDescriptor =
+							scenes[sceneIndex - 1]?.descriptor ?? undefined;
+						const nextDescriptor =
+							scenes[sceneIndex + 1]?.descriptor ?? undefined;
 
-							return (
-								<ComponentScreen key={route.key} routeKey={route.key}>
-									<ScreenComposer
-										previous={previousDescriptor}
-										current={descriptor}
-										next={nextDescriptor}
-										LifecycleController={ManagedLifecycle}
-									>
-										<SceneView key={route.key} descriptor={descriptor} />
-									</ScreenComposer>
-								</ComponentScreen>
-							);
-						})}
-					</Fragment>
+						return (
+							<ComponentScreen key={route.key} routeKey={route.key}>
+								<ScreenComposer
+									previous={previousDescriptor}
+									current={descriptor}
+									next={nextDescriptor}
+								>
+									<SceneView key={route.key} descriptor={descriptor} />
+								</ScreenComposer>
+							</ComponentScreen>
+						);
+					})}
 				</Fragment>
 			);
 		},

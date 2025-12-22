@@ -15,7 +15,6 @@ import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
 	DEFAULT_GESTURE_DRIVES_PROGRESS,
-	DEFAULT_GESTURE_ENABLED,
 	GESTURE_VELOCITY_IMPACT,
 } from "../../constants";
 import type {
@@ -35,7 +34,6 @@ import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import { velocity } from "../../utils/gesture/velocity";
-import { useStack } from "../navigation/use-stack";
 import useStableCallbackValue from "../use-stable-callback-value";
 
 interface BuildGesturesHookProps {

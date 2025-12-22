@@ -119,10 +119,7 @@ export const OverlayHost = memo(function OverlayHost({
 				styles.absolute,
 			]}
 		>
-			<NavigationContext.Provider
-				// biome-ignore lint/suspicious/noExplicitAny: navigation type varies by stack
-				value={scene.descriptor.navigation as any}
-			>
+			<NavigationContext.Provider value={scene.descriptor.navigation as any}>
 				<NavigationRouteContext.Provider value={scene.route}>
 					<View pointerEvents="box-none" style={styles.overlay}>
 						{renderOverlay(overlayProps)}

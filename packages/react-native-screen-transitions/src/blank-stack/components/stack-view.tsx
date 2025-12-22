@@ -5,7 +5,6 @@ import {
 import * as React from "react";
 import { Fragment } from "react";
 import { Overlay } from "../../shared/components/overlay";
-import { ManagedLifecycle } from "../../shared/controller/managed-lifecycle";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
@@ -79,7 +78,6 @@ export const StackView = withStackCore(
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
-										LifecycleController={ManagedLifecycle}
 									>
 										<SceneView key={route.key} descriptor={descriptor} />
 									</ScreenComposer>

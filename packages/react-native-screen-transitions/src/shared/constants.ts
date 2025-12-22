@@ -71,7 +71,6 @@ export const FULLSCREEN_DIMENSIONS = (
  */
 export const GESTURE_VELOCITY_IMPACT = 0.3;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
-export const DEFAULT_GESTURE_ENABLED = false;
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 
