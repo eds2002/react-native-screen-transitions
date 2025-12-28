@@ -26,15 +26,11 @@ type SceneViewProps = {
 const SceneView = React.memo(function SceneView({
 	descriptor,
 }: SceneViewProps) {
-	const { route, navigation, render } = descriptor;
-
 	return (
-		<NavigationContext.Provider value={navigation}>
-			<NavigationRouteContext.Provider value={route}>
-				{descriptor.options.overlayMode === "screen" && <Overlay.Screen />}
-				{render()}
-			</NavigationRouteContext.Provider>
-		</NavigationContext.Provider>
+		<>
+			{descriptor.options.overlayMode === "screen" && <Overlay.Screen />}
+			{descriptor.render()}
+		</>
 	);
 });
 
@@ -74,13 +70,17 @@ export const StackView = withStackCore(
 									shouldFreeze={shouldFreeze}
 									freezeOnBlur={descriptor.options.freezeOnBlur}
 								>
-									<ScreenComposer
-										previous={previousDescriptor}
-										current={descriptor}
-										next={nextDescriptor}
-									>
-										<SceneView key={route.key} descriptor={descriptor} />
-									</ScreenComposer>
+									<NavigationContext.Provider value={descriptor.navigation}>
+										<NavigationRouteContext.Provider value={route}>
+											<ScreenComposer
+												previous={previousDescriptor}
+												current={descriptor}
+												next={nextDescriptor}
+											>
+												<SceneView key={route.key} descriptor={descriptor} />
+											</ScreenComposer>
+										</NavigationRouteContext.Provider>
+									</NavigationContext.Provider>
 								</AdjustedScreen>
 							);
 						})}

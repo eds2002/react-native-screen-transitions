@@ -7,16 +7,15 @@ import {
 } from "react-native-reanimated";
 import { FALSE, TRUE } from "../constants";
 import { useHighRefreshRate } from "../hooks/animation/use-high-refresh-rate";
+import { useScreenKeys } from "../hooks/navigation/use-screen-keys";
 import { useSharedValueState } from "../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../hooks/use-stable-callback";
 import { useGestureContext } from "../providers/gestures.provider";
-import {
-	type BaseDescriptor,
-	useKeys,
-} from "../providers/screen/keys.provider";
+import type { BaseDescriptor } from "../providers/screen/keys.provider";
 import { useStackCoreContext } from "../providers/stack/core.provider";
 import { useManagedStackContext } from "../providers/stack/managed.provider";
 import { AnimationStore } from "../stores/animation.store";
+import { HistoryStore } from "../stores/history.store";
 import { StackType } from "../types/stack.types";
 import { startScreenTransition } from "../utils/animation/start-screen-transition";
 import { resetStoresForScreen } from "../utils/reset-stores-for-screen";
@@ -50,6 +49,7 @@ const useManagedClose = ({
 		requestAnimationFrame(() => {
 			deactivate();
 			resetStoresForScreen(current);
+			HistoryStore.remove(current.route.key);
 		});
 	});
 
@@ -100,6 +100,7 @@ const useNativeStackClose = ({
 		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
 			animations.closing.set(1);
 			resetStoresForScreen(current);
+			HistoryStore.remove(current.route.key);
 			return;
 		}
 
@@ -116,6 +117,7 @@ const useNativeStackClose = ({
 					navigation.dispatch(e.data.action);
 					requestAnimationFrame(() => {
 						resetStoresForScreen(current);
+						HistoryStore.remove(current.route.key);
 					});
 				}
 			},
@@ -133,7 +135,7 @@ const useNativeStackClose = ({
  */
 export const ScreenLifecycle = ({ children }: Props) => {
 	const { flags } = useStackCoreContext();
-	const { current } = useKeys();
+	const { current } = useScreenKeys();
 	const isFocused = useIsFocused();
 	const animations = AnimationStore.getAll(current.route.key);
 	const { activateHighRefreshRate, deactivateHighRefreshRate } =

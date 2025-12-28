@@ -13,12 +13,13 @@ import {
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
 import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
+import { useScreenKeys } from "../hooks/navigation/use-screen-keys";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds.store";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
 import { useLayoutAnchorContext } from "./layout-anchor.provider";
-import { type BaseDescriptor, useKeys } from "./screen/keys.provider";
+import type { BaseDescriptor } from "./screen/keys.provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
@@ -145,7 +146,7 @@ const useBlurMeasurement = (params: {
 	ancestorKeys: string[];
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { current } = useKeys();
+	const { current } = useScreenKeys();
 	const { sharedBoundTag, ancestorKeys, maybeMeasureAndStore } = params;
 	const hasCapturedSource = useRef(false);
 
@@ -206,7 +207,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 	{ guarded: false },
 )<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
 	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
-		const { current } = useKeys();
+		const { current } = useScreenKeys();
 		const currentScreenKey = current.route.key;
 		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 		const layoutAnchor = useLayoutAnchorContext();

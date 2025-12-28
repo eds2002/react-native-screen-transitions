@@ -1,13 +1,11 @@
 import type { Route } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useDerivedValue } from "react-native-reanimated";
-import {
-	type BaseDescriptor,
-	useKeys,
-} from "../../providers/screen/keys.provider";
+import type { BaseDescriptor } from "../../providers/screen/keys.provider";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
 import { useSharedValueState } from "../reanimated/use-shared-value-state";
+import { useScreenKeys } from "./use-screen-keys";
 import { type StackContextValue, useStack } from "./use-stack";
 
 export interface ScreenState<
@@ -59,7 +57,7 @@ export function useScreenState<
 >(): ScreenState<TNavigation> {
 	const { routes, scenes, routeKeys, optimisticFocusedIndex } =
 		useStack<StackContextValue>();
-	const { current } = useKeys<BaseDescriptor>();
+	const { current } = useScreenKeys<BaseDescriptor>();
 
 	const index = useMemo(
 		() => routeKeys.indexOf(current.route.key),

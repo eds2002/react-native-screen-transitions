@@ -4,10 +4,8 @@ import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenTransitionConfig } from "../../../native-stack/types";
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
-import {
-	type BaseDescriptor,
-	useKeys,
-} from "../../providers/screen/keys.provider";
+import type { BaseDescriptor } from "../../providers/screen/keys.provider";
+import { useScreenKeys } from "../navigation/use-screen-keys";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
@@ -114,7 +112,7 @@ export function _useScreenAnimation() {
 		current: currentDescriptor,
 		next: nextDescriptor,
 		previous: previousDescriptor,
-	} = useKeys();
+	} = useScreenKeys();
 
 	const currentAnimation = useBuildScreenTransitionState(currentDescriptor);
 	const nextAnimation = useBuildScreenTransitionState(nextDescriptor);

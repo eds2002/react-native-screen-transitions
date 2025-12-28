@@ -21,7 +21,7 @@ import type {
 	GestureContextType,
 	ScrollConfig,
 } from "../../providers/gestures.provider";
-import { useKeys } from "../../providers/screen/keys.provider";
+import { useScreenKeys } from "../navigation/use-screen-keys";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import {
@@ -52,7 +52,7 @@ export const useBuildGestures = ({
 } => {
 	const dimensions = useWindowDimensions();
 
-	const { current } = useKeys();
+	const { current } = useScreenKeys();
 	const navState = current.navigation.getState();
 	const isFirstScreen =
 		navState.routes.findIndex((r) => r.key === current.route.key) === 0;

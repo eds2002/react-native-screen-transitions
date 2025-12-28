@@ -6,10 +6,10 @@ import {
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
+import { useScreenKeys } from "../hooks/navigation/use-screen-keys";
 import { useStackPointerEvents } from "../hooks/use-stack-pointer-events";
 import type { GestureStoreMap } from "../stores/gesture.store";
 import createProvider from "../utils/create-provider";
-import { useKeys } from "./screen/keys.provider";
 
 export type ScrollConfig = {
 	x: number;
@@ -41,7 +41,7 @@ export const {
 	ScreenGestureProviderProps,
 	GestureContextType
 >(({ children }) => {
-	const { current } = useKeys();
+	const { current } = useScreenKeys();
 	const pointerEvents = useStackPointerEvents();
 	const ancestorContext = useGestureContext();
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
