@@ -12,7 +12,6 @@ import type {
 } from "@react-navigation/native";
 import type { ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
-import type { BaseStackScene } from "../shared/types/stack.types";
 
 export type ComponentStackNavigationEventMap = {};
 
