@@ -2,20 +2,24 @@ import { useLayoutEffect } from "react";
 import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
 import type { BaseDescriptor } from "../../providers/screen/keys.provider";
 import type { AnimationStoreMap } from "../../stores/animation.store";
+import { HistoryStore } from "../../stores/history.store";
 import useStableCallback from "../use-stable-callback";
 
 /**
  * Emits screenFocus and screenBlur events via navigation.emit().
- * These events can be listened to by users via navigation.addListener().
+ * Also updates the HistoryStore for navigation history tracking.
  */
 export function useScreenEvents(
 	current: BaseDescriptor,
 	previous: BaseDescriptor | undefined,
 	animations: AnimationStoreMap,
 ) {
-	// Emit focus on mount
+	const navigatorKey = current.navigation.getState()?.key ?? "";
+
+	// Focus on mount - emit event and update history
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
+		HistoryStore.focus(current, navigatorKey);
 		current.navigation.emit?.({
 			type: "screenFocus",
 			data: { descriptor: current, previous },
@@ -23,8 +27,13 @@ export function useScreenEvents(
 		});
 	}, []);
 
-	// Emit blur when closing starts
-	const emitBlur = useStableCallback(() => {
+	// Blur when closing starts - emit event and focus previous in history
+	const handleBlur = useStableCallback(() => {
+		if (previous) {
+			const prevNavigatorKey = previous.navigation.getState()?.key ?? "";
+			HistoryStore.focus(previous, prevNavigatorKey);
+		}
+
 		current.navigation.emit?.({
 			type: "screenBlur",
 			data: { descriptor: current, previous },
@@ -36,7 +45,7 @@ export function useScreenEvents(
 		() => animations.closing.get(),
 		(closing, prevClosing) => {
 			if (closing && !prevClosing) {
-				runOnJS(emitBlur)();
+				runOnJS(handleBlur)();
 			}
 		},
 	);

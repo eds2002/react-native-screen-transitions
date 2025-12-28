@@ -55,8 +55,6 @@ export type BlankStackNavigationHelpers = NavigationHelpers<
 	BlankStackNavigationEventMap
 >;
 
-export type BlankStackScene = BaseStackScene<BlankStackDescriptor>;
-
 type BlankStackNavigationConfig = {
 	DISABLE_NATIVE_SCREENS?: boolean;
 };
@@ -105,5 +103,3 @@ export type BlankStackDescriptor = Descriptor<
 	BlankStackNavigationProp<ParamListBase>,
 	RouteProp<ParamListBase>
 >;
-
-export type BlankStackDescriptorMap = DescriptorMap<BlankStackDescriptor>;

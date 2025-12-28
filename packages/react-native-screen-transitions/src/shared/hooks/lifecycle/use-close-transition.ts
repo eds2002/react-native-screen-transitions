@@ -26,7 +26,7 @@ export interface CloseHookParams {
  * Managed close - reacts to closingRouteKeysShared from ManagedStackContext.
  * Used by blank-stack and component-stack.
  */
-export const useManagedClose = ({
+const useManagedClose = ({
 	current,
 	animations,
 	activate,
@@ -62,7 +62,7 @@ export const useManagedClose = ({
 /**
  * Native stack close - listens to beforeRemove navigation event.
  */
-export const useNativeStackClose = ({
+const useNativeStackClose = ({
 	current,
 	animations,
 	activate,

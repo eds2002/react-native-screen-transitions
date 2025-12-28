@@ -1,11 +1,4 @@
-import type {
-	Descriptor,
-	NavigationProp,
-	ParamListBase,
-	RouteProp,
-} from "@react-navigation/native";
 import { createContext, useContext, useMemo } from "react";
-import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackDescriptor } from "../../types/stack.types";
 
 /**
@@ -14,15 +7,6 @@ import type { BaseStackDescriptor } from "../../types/stack.types";
  * providers without tight coupling to React Navigation.
  */
 export type BaseDescriptor = BaseStackDescriptor;
-
-/**
- * React Navigation specific descriptor - extends base with full typing
- */
-export type TransitionDescriptor = Descriptor<
-	ScreenTransitionConfig,
-	NavigationProp<ParamListBase>,
-	RouteProp<ParamListBase>
->;
 
 interface KeysContextType<TDescriptor extends BaseDescriptor = BaseDescriptor> {
 	previous?: TDescriptor;
