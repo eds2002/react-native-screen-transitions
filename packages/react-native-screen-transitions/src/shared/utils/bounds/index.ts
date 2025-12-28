@@ -230,15 +230,41 @@ export const createBounds = (
 	const interpolateBounds = (
 		tag: string,
 		property: keyof MeasuredDimensions,
+		fallbackOrTargetKey?: number | string,
 		fallback?: number,
 	): number => {
 		"worklet";
-		const link = getLink(tag);
 		const entering = !props.next;
 		const range = entering ? ENTER_RANGE : EXIT_RANGE;
 
-		const sourceValue = link?.source?.bounds?.[property] ?? fallback ?? 0;
-		const destValue = link?.destination?.bounds?.[property] ?? fallback ?? 0;
+		// If third param is a string, it's a targetKey (snapshot approach)
+		if (typeof fallbackOrTargetKey === "string") {
+			const targetKey = fallbackOrTargetKey;
+			const currentKey = props.current?.route?.key;
+			const fb = fallback ?? 0;
+
+			const currentSnapshot = currentKey
+				? BoundStore.getSnapshot(tag, currentKey)
+				: null;
+			const targetSnapshot = BoundStore.getSnapshot(tag, targetKey);
+
+			const currentValue = currentSnapshot?.bounds?.[property] ?? fb;
+			const targetValue = targetSnapshot?.bounds?.[property] ?? fb;
+
+			return interpolate(
+				props.progress,
+				range,
+				[targetValue, currentValue],
+				"clamp",
+			);
+		}
+
+		// Otherwise, use link approach (existing behavior)
+		const link = getLink(tag);
+		const fb = fallbackOrTargetKey ?? 0;
+
+		const sourceValue = link?.source?.bounds?.[property] ?? fb;
+		const destValue = link?.destination?.bounds?.[property] ?? fb;
 
 		return interpolate(
 			props.progress,
