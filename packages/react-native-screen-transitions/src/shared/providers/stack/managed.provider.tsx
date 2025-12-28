@@ -1,6 +1,6 @@
 import type { Route } from "@react-navigation/native";
 import * as React from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
 	type DerivedValue,
 	type SharedValue,
@@ -11,6 +11,7 @@ import {
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
 import { AnimationStore } from "../../stores/animation.store";
+import { HistoryStore } from "../../stores/history.store";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
@@ -211,6 +212,15 @@ function withManagedStack<
 	return function ManagedStackProvider(
 		props: ManagedStackProps<TDescriptor, TNavigation>,
 	) {
+		const navigatorKey = props.state.key;
+
+		// Clean up history when navigator unmounts
+		useEffect(() => {
+			return () => {
+				HistoryStore.clearNavigator(navigatorKey);
+			};
+		}, [navigatorKey]);
+
 		const { stackContextValue, ...lifecycleValue } = useManagedStackValue<
 			TDescriptor,
 			TNavigation

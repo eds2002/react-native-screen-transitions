@@ -32,10 +32,13 @@ export const startScreenTransition = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, animating, closing } = animations;
+	const { progress, animating, closing, entering } = animations;
 
 	if (target === "close") {
 		closing.set(TRUE);
+		entering.set(FALSE);
+	} else {
+		entering.set(TRUE);
 	}
 
 	if (!config) {

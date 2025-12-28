@@ -22,6 +22,7 @@ export interface BaseStackNavigation {
 	};
 	dispatch: (action: any) => void;
 	addListener?: (event: any, callback: any) => () => void;
+	emit?: (event: any) => any;
 }
 
 /**

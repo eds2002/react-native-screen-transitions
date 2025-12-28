@@ -20,6 +20,7 @@ export default {
 
 export { useScreenAnimation } from "./hooks/animation/use-screen-animation";
 export { useScreenGesture } from "./hooks/gestures/use-screen-gesture";
+export { useHistory } from "./hooks/navigation/use-history";
 export {
 	type ScreenState,
 	useScreenState,

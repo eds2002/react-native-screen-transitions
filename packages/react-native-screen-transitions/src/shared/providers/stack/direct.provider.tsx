@@ -4,7 +4,7 @@ import type {
 	StackNavigationState,
 } from "@react-navigation/native";
 import * as React from "react";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import type {
 	NativeStackDescriptor,
@@ -16,6 +16,7 @@ import {
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
 import { AnimationStore } from "../../stores/animation.store";
+import { HistoryStore } from "../../stores/history.store";
 import { useStackCoreContext } from "./core.provider";
 
 export interface DirectStackScene {
@@ -216,6 +217,15 @@ function withDirectStack<TProps extends DirectStackProps>(
 	Component: React.ComponentType<DirectStackContextValue>,
 ): React.FC<TProps> {
 	return function DirectStackProvider(props: TProps) {
+		const navigatorKey = props.state.key;
+
+		// Clean up history when navigator unmounts
+		useEffect(() => {
+			return () => {
+				HistoryStore.clearNavigator(navigatorKey);
+			};
+		}, [navigatorKey]);
+
 		const { stackContextValue, ...lifecycleValue } = useDirectStackValue(props);
 
 		return (
