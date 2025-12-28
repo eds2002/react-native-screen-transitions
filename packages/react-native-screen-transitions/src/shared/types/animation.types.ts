@@ -41,6 +41,15 @@ export type ScreenTransitionState = {
 	closing: number;
 
 	/**
+	 * Whether this screen is in the process of entering.
+	 * - `0`: Screen is closing or inactive
+	 * - `1`: Screen is opening/entering
+	 *
+	 * Use this to trigger different animations when navigating back vs forward.
+	 */
+	entering: number;
+
+	/**
 	 * Whether this screen is currently animating.
 	 * - `0`: No animation in progress
 	 * - `1`: Animation or gesture is in progress

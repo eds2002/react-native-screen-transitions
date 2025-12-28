@@ -1,9 +1,11 @@
+import { useIsFocused } from "@react-navigation/native";
 import { useLayoutEffect } from "react";
 import {
 	runOnJS,
 	useAnimatedReaction,
 	useDerivedValue,
 } from "react-native-reanimated";
+import { FALSE, TRUE } from "../constants";
 import { useHighRefreshRate } from "../hooks/animation/use-high-refresh-rate";
 import { useSharedValueState } from "../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../hooks/use-stable-callback";
@@ -132,11 +134,21 @@ const useNativeStackClose = ({
 export const ScreenLifecycle = ({ children }: Props) => {
 	const { flags } = useStackCoreContext();
 	const { current } = useKeys();
+	const isFocused = useIsFocused();
 	const animations = AnimationStore.getAll(current.route.key);
 	const { activateHighRefreshRate, deactivateHighRefreshRate } =
 		useHighRefreshRate(current);
 
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
+
+	useAnimatedReaction(
+		() => animations.closing.get(),
+		(closing) => {
+			if (isFocused) {
+				animations.entering.set(closing ? FALSE : TRUE);
+			}
+		},
+	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {

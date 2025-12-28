@@ -24,6 +24,7 @@ type BuiltState = {
 	progress: SharedValue<number>;
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
+	entering: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
@@ -37,6 +38,7 @@ const createScreenTransitionState = (
 	progress: 0,
 	closing: 0,
 	animating: 0,
+	entering: 1,
 	gesture: {
 		x: 0,
 		y: 0,
@@ -55,6 +57,7 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	const out = s.unwrapped;
 	out.progress = s.progress.value;
 	out.closing = s.closing.value;
+	out.entering = s.entering.value;
 	out.animating = s.animating.value;
 	out.gesture.x = s.gesture.x.value;
 	out.gesture.y = s.gesture.y.value;
@@ -80,6 +83,7 @@ const useBuildScreenTransitionState = (
 		return {
 			progress: AnimationStore.getAnimation(key, "progress"),
 			closing: AnimationStore.getAnimation(key, "closing"),
+			entering: AnimationStore.getAnimation(key, "entering"),
 			animating: AnimationStore.getAnimation(key, "animating"),
 			gesture: GestureStore.getRouteGestures(key),
 			route: descriptor.route,

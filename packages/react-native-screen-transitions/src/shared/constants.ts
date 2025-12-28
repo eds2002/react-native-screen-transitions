@@ -24,6 +24,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		progress: 0,
 		closing: 0,
 		animating: 0,
+		entering: 1,
 		gesture: {
 			x: 0,
 			y: 0,
