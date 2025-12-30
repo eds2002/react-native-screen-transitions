@@ -1,7 +1,7 @@
 import { runOnJS } from "react-native-reanimated";
+import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
-import { FALSE, TRUE } from "../../types/state.types";
 import { animate } from "./animate";
 
 interface StartScreenTransitionProps {
@@ -32,10 +32,13 @@ export const startScreenTransition = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, animating, closing } = animations;
+	const { progress, animating, closing, entering } = animations;
 
 	if (target === "close") {
 		closing.set(TRUE);
+		entering.set(FALSE);
+	} else {
+		entering.set(TRUE);
 	}
 
 	if (!config) {

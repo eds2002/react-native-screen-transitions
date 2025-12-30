@@ -1,44 +1,44 @@
-import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenTransitionConfig } from "../../../native-stack/types";
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
-import { useFlagsContext } from "../../providers/flags.provider";
 import {
-	type TransitionDescriptor,
+	type BaseDescriptor,
 	useKeys,
-} from "../../providers/keys.provider";
-import { useStackAnimationValues } from "../../providers/routes.provider";
+} from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
 } from "../../types/animation.types";
-import type { ScreenTransitionConfig } from "../../types/core.types";
-import { computeStackProgress } from "../../utils/animation/compute-stack-progress";
+import type { ScreenTransitionConfig } from "../../types/screen.types";
+import type { BaseStackRoute } from "../../types/stack.types";
 import { derivations } from "../../utils/animation/derivations";
 import { createBounds } from "../../utils/bounds";
+import { useStack } from "../navigation/use-stack";
 
 type BuiltState = {
 	progress: SharedValue<number>;
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
+	entering: SharedValue<number>;
 	gesture: GestureStoreMap;
-	route: RouteProp<ParamListBase>;
+	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
 	unwrapped: ScreenTransitionState;
 };
 
 const createScreenTransitionState = (
-	route: RouteProp<ParamListBase>,
+	route: BaseStackRoute,
 	meta?: Record<string, unknown>,
 ): ScreenTransitionState => ({
 	progress: 0,
 	closing: 0,
 	animating: 0,
+	entering: 1,
 	gesture: {
 		x: 0,
 		y: 0,
@@ -57,6 +57,7 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	const out = s.unwrapped;
 	out.progress = s.progress.value;
 	out.closing = s.closing.value;
+	out.entering = s.entering.value;
 	out.animating = s.animating.value;
 	out.gesture.x = s.gesture.x.value;
 	out.gesture.y = s.gesture.y.value;
@@ -71,7 +72,7 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 };
 
 const useBuildScreenTransitionState = (
-	descriptor: TransitionDescriptor | undefined,
+	descriptor: BaseDescriptor | undefined,
 ): BuiltState | undefined => {
 	const key = descriptor?.route.key;
 	const meta = descriptor?.options?.meta;
@@ -82,6 +83,7 @@ const useBuildScreenTransitionState = (
 		return {
 			progress: AnimationStore.getAnimation(key, "progress"),
 			closing: AnimationStore.getAnimation(key, "closing"),
+			entering: AnimationStore.getAnimation(key, "entering"),
 			animating: AnimationStore.getAnimation(key, "animating"),
 			gesture: GestureStore.getRouteGestures(key),
 			route: descriptor.route,
@@ -101,10 +103,12 @@ const hasTransitionsEnabled = (
 };
 
 export function _useScreenAnimation() {
-	const dimensions = useWindowDimensions();
+	const windowDimensions = useWindowDimensions();
+	const dimensions = windowDimensions;
+
 	const insets = useSafeAreaInsets();
-	const flags = useFlagsContext();
-	const transitionsAlwaysOn = flags?.TRANSITIONS_ALWAYS_ON ?? false;
+	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
+	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {
 		current: currentDescriptor,
@@ -117,7 +121,7 @@ export function _useScreenAnimation() {
 	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
 
 	const currentRouteKey = currentDescriptor?.route?.key;
-	const stackAnimationValues = useStackAnimationValues(currentRouteKey);
+	const currentIndex = routeKeys.indexOf(currentRouteKey);
 
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">
@@ -142,7 +146,11 @@ export function _useScreenAnimation() {
 			next,
 		});
 
-		const stackProgress = computeStackProgress(stackAnimationValues, progress);
+		// Compute relative stack progress: total - currentIndex
+		// This gives us the sum of progress values from current screen onwards
+		// Falls back to current progress if index is invalid
+		const stackProgress =
+			currentIndex >= 0 ? rootStackProgress.value - currentIndex : progress;
 
 		return {
 			layouts: { screen: dimensions },
@@ -160,9 +168,11 @@ export function _useScreenAnimation() {
 	const currentInterpolator =
 		currentDescriptor?.options.screenStyleInterpolator;
 
-	const screenStyleInterpolator = nextInterpolator ?? currentInterpolator;
-
-	return { screenInterpolatorProps, screenStyleInterpolator };
+	return {
+		screenInterpolatorProps,
+		nextInterpolator,
+		currentInterpolator,
+	};
 }
 
 export function useScreenAnimation() {

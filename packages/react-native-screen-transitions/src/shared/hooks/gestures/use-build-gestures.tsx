@@ -15,17 +15,15 @@ import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
 	DEFAULT_GESTURE_DRIVES_PROGRESS,
-	DEFAULT_GESTURE_ENABLED,
 	GESTURE_VELOCITY_IMPACT,
 } from "../../constants";
 import type {
 	GestureContextType,
 	ScrollConfig,
 } from "../../providers/gestures.provider";
-import { useKeys } from "../../providers/keys.provider";
+import { useKeys } from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
-
 import {
 	type GestureDirection,
 	GestureOffsetState,
@@ -53,7 +51,11 @@ export const useBuildGestures = ({
 	gestureAnimationValues: GestureStoreMap;
 } => {
 	const dimensions = useWindowDimensions();
+
 	const { current } = useKeys();
+	const navState = current.navigation.getState();
+	const isFirstScreen =
+		navState.routes.findIndex((r) => r.key === current.route.key) === 0;
 
 	const initialTouch = useSharedValue({
 		x: 0,
@@ -74,13 +76,16 @@ export const useBuildGestures = ({
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
-		gestureEnabled = DEFAULT_GESTURE_ENABLED,
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
 		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureResponseDistance,
 		transitionSpec,
 	} = current.options;
+
+	const gestureEnabled = Boolean(
+		isFirstScreen ? false : current.options.gestureEnabled,
+	);
 
 	const directions = useMemo(() => {
 		const directionsArray = Array.isArray(gestureDirection)

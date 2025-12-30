@@ -1,6 +1,6 @@
 {
   "name": "react-native-screen-transitions",
-  "version": "3.1.0",
+  "version": "3.2.0-beta.3",
   "description": "Easy screen transitions for React Native and Expo",
   "author": "Ed",
   "license": "MIT",
@@ -31,6 +31,12 @@
       "import": "./lib/module/blank-stack/index.js",
       "require": "./lib/commonjs/blank-stack/index.js",
       "types": "./lib/typescript/blank-stack/index.d.ts"
+    },
+    "./component-stack": {
+      "react-native": "./src/component-stack/index.ts",
+      "import": "./lib/module/component-stack/index.js",
+      "require": "./lib/commonjs/component-stack/index.js",
+      "types": "./lib/typescript/component-stack/index.d.ts"
     }
   },
   "scripts": {
@@ -67,7 +73,6 @@
     "react-native-screens": ">=4.4.0"
   },
   "devDependencies": {
-    "@testing-library/react-native": "^13.2.0",
     "@types/react": "~19.1.10",
     "react-native-builder-bob": "0.39.0",
     "typescript": "catalog:"

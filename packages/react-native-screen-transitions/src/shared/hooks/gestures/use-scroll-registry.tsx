@@ -5,7 +5,6 @@ import type { LayoutChangeEvent } from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import type { ReanimatedScrollEvent } from "react-native-reanimated/lib/typescript/hook/commonTypes";
 import { useGestureContext } from "../../providers/gestures.provider";
-import type { Any } from "../../types/utils.types";
 import useStableCallback from "../use-stable-callback";
 
 interface ScrollProgressHookProps {
@@ -34,7 +33,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		onScroll: (event) => {
 			props.onScroll?.(event);
 
-			const updateScrollPosition = (v: Any) => {
+			const updateScrollPosition = (v: any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -64,7 +63,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		(width: number, height: number) => {
 			props.onContentSizeChange?.(width, height);
 
-			const updateContentSize = (v: Any) => {
+			const updateContentSize = (v: any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -93,7 +92,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		props.onLayout?.(event);
 		const { width, height } = event.nativeEvent.layout;
 
-		const updateLayout = (v: Any) => {
+		const updateLayout = (v: any) => {
 			"worklet";
 			if (v === null) {
 				return {

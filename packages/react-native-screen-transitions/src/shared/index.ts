@@ -20,12 +20,22 @@ export default {
 
 export { useScreenAnimation } from "./hooks/animation/use-screen-animation";
 export { useScreenGesture } from "./hooks/gestures/use-screen-gesture";
+export { useHistory } from "./hooks/navigation/use-history";
+export {
+	type ScreenState,
+	useScreenState,
+} from "./hooks/navigation/use-screen-state";
 
 export type {
 	AnimationConfig,
+	BoundEntry,
+	BoundsLink,
 	OverlayInterpolationProps,
+	OverlayMode,
+	OverlayProps,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
-} from "./types/animation.types";
-export type { BoundEntry, BoundsLink } from "./types/bounds.types";
-export type { ScreenTransitionConfig } from "./types/core.types";
+	ScreenTransitionConfig,
+	TransitionInterpolatedStyle,
+	TransitionSpec,
+} from "./types";

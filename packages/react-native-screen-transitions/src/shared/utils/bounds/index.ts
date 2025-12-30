@@ -1,4 +1,4 @@
-import type { MeasuredDimensions } from "react-native-reanimated";
+import { interpolate, type MeasuredDimensions } from "react-native-reanimated";
 import {
 	EMPTY_BOUND_HELPER_RESULT,
 	EMPTY_BOUND_HELPER_RESULT_RAW,
@@ -12,7 +12,7 @@ import type {
 	ScreenTransitionState,
 } from "../../types/animation.types";
 import type { BoundsAccessor, BoundsLink } from "../../types/bounds.types";
-import type { Layout } from "../../types/core.types";
+import type { Layout } from "../../types/screen.types";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
@@ -30,14 +30,6 @@ import type {
 	BoundsBuilderOptions,
 	BoundsComputeParams,
 } from "./types/builder";
-
-export interface BuildBoundsAccessorParams {
-	current: ScreenTransitionState;
-	previous?: ScreenTransitionState;
-	next?: ScreenTransitionState;
-	progress: number;
-	dimensions: Layout;
-}
 
 const resolveBounds = (props: {
 	id: string;
@@ -235,9 +227,57 @@ export const createBounds = (
 		});
 	};
 
+	const interpolateBounds = (
+		tag: string,
+		property: keyof MeasuredDimensions,
+		fallbackOrTargetKey?: number | string,
+		fallback?: number,
+	): number => {
+		"worklet";
+		const entering = !props.next;
+		const range = entering ? ENTER_RANGE : EXIT_RANGE;
+
+		// If third param is a string, it's a targetKey (snapshot approach)
+		if (typeof fallbackOrTargetKey === "string") {
+			const targetKey = fallbackOrTargetKey;
+			const currentKey = props.current?.route?.key;
+			const fb = fallback ?? 0;
+
+			const currentSnapshot = currentKey
+				? BoundStore.getSnapshot(tag, currentKey)
+				: null;
+			const targetSnapshot = BoundStore.getSnapshot(tag, targetKey);
+
+			const currentValue = currentSnapshot?.bounds?.[property] ?? fb;
+			const targetValue = targetSnapshot?.bounds?.[property] ?? fb;
+
+			return interpolate(
+				props.progress,
+				range,
+				[targetValue, currentValue],
+				"clamp",
+			);
+		}
+
+		// Otherwise, use link approach (existing behavior)
+		const link = getLink(tag);
+		const fb = fallbackOrTargetKey ?? 0;
+
+		const sourceValue = link?.source?.bounds?.[property] ?? fb;
+		const destValue = link?.destination?.bounds?.[property] ?? fb;
+
+		return interpolate(
+			props.progress,
+			range,
+			[sourceValue, destValue],
+			"clamp",
+		);
+	};
+
 	return Object.assign(boundsFunction, {
 		getSnapshot,
 		getLink,
 		interpolateStyle,
+		interpolateBounds,
 	}) as BoundsAccessor;
 };

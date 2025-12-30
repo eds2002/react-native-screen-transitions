@@ -2,14 +2,16 @@ import { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { NO_STYLES } from "../constants";
-import { useTransitionStyles } from "../providers/transition-styles.provider";
+import { useStackPointerEvents } from "../hooks/use-stack-pointer-events";
+import { useScreenStyles } from "../providers/screen/styles.provider";
 
 type Props = {
 	children: React.ReactNode;
 };
 
 export const RootTransitionAware = memo(({ children }: Props) => {
-	const { stylesMap } = useTransitionStyles();
+	const { stylesMap } = useScreenStyles();
+	const pointerEvents = useStackPointerEvents();
 
 	const animatedContentStyle = useAnimatedStyle(() => {
 		"worklet";
@@ -22,12 +24,15 @@ export const RootTransitionAware = memo(({ children }: Props) => {
 	});
 
 	return (
-		<View style={styles.container}>
+		<View style={[styles.container]} pointerEvents={pointerEvents}>
 			<Animated.View
 				style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
 				pointerEvents="none"
 			/>
-			<Animated.View style={[styles.content, animatedContentStyle]}>
+			<Animated.View
+				style={[styles.content, animatedContentStyle]}
+				pointerEvents={pointerEvents}
+			>
 				{children}
 			</Animated.View>
 		</View>

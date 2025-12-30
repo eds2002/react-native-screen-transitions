@@ -1,5 +1,29 @@
 # Change Log
 
+## 3.2.0-beta.3
+
+### Minor Changes
+
+- Added useScreenState() hook and progress prop for overlays, deprecated overlayMode/screenAnimation/overlayAnimation in favor of simpler APIs, and fixed a navigation dismissal bug caused by lifecycle re-runs.
+
+## 3.2.0-beta.2
+
+### Patch Changes
+
+- Fix touch through events in new component-stack, fix isolated navigation bug
+
+## 3.2.0-beta.1
+
+### Patch Changes
+
+- More accurate bound measurements, component-stack is seperated from the root navigation tree. Handle flickering better
+
+## 3.2.0-beta.0
+
+### Minor Changes
+
+- feat: unified stack type system, component-stack improvements
+
 ## 3.1.0
 
 ### Minor Changes

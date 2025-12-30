@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import type { OverlayProps } from "react-native-screen-transitions";
 import type { BlankStackOverlayProps } from "react-native-screen-transitions/blank-stack";
 import { ComposableText } from "@/components/composeable-text";
 import {
@@ -48,7 +49,7 @@ type OnboardingOverlayOptions = {
 	next?: Href;
 };
 
-const OnboardingOverlay = (props: BlankStackOverlayProps) => {
+const OnboardingOverlay = (props: OverlayProps) => {
 	const content = props.meta as OnboardingOverlayOptions;
 	const insets = useSafeAreaInsets();
 

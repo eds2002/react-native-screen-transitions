@@ -22,12 +22,9 @@ import type {
 	ScreenStackHeaderConfigProps,
 	SearchBarProps,
 } from "react-native-screens";
-import type { ScreenTransitionConfig } from "../shared/types/core.types";
-
-export type Layout = {
-	width: number;
-	height: number;
-};
+import type { OverlayProps } from "../shared/types/overlay.types";
+import type { ScreenTransitionConfig } from "../shared/types/screen.types";
+import type { DescriptorMap } from "../shared/types/stack.types";
 
 export type NativeStackNavigationEventMap = {
 	/**
@@ -90,7 +87,7 @@ export type NativeStackNavigationHelpers = NavigationHelpers<
 >;
 
 // We want it to be an empty object because navigator does not have any additional props
-export type NativeStackNavigationConfig = {};
+type NativeStackNavigationConfig = {};
 
 export type NativeStackHeaderProps = {
 	/**
@@ -142,6 +139,14 @@ export type NativeStackHeaderLeftProps = NativeStackHeaderRightProps & {
 	 */
 	href?: string;
 };
+
+/**
+ * Props passed to overlay components in native-stack.
+ * Uses the shared OverlayProps type with native-stack's navigation type.
+ */
+export type NativeStackOverlayProps = OverlayProps<
+	NativeStackNavigationProp<ParamListBase>
+>;
 
 export type NativeStackScreenTransitionConfig = ScreenTransitionConfig & {
 	/**
@@ -713,6 +718,4 @@ export type NativeStackDescriptor = Descriptor<
 	RouteProp<ParamListBase>
 >;
 
-export type NativeStackDescriptorMap = {
-	[key: string]: NativeStackDescriptor;
-};
+export type NativeStackDescriptorMap = DescriptorMap<NativeStackDescriptor>;

@@ -8,5 +8,6 @@ export type {
 	NativeStackNavigationProp,
 	NativeStackNavigatorProps,
 	NativeStackOptionsArgs,
+	NativeStackOverlayProps,
 	NativeStackScreenProps,
 } from "./types";

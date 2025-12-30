@@ -17,7 +17,8 @@ import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds.store";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
-import { type TransitionDescriptor, useKeys } from "./keys.provider";
+import { useLayoutAnchorContext } from "./layout-anchor.provider";
+import { type BaseDescriptor, useKeys } from "./screen/keys.provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
@@ -47,19 +48,26 @@ interface RegisterBoundsContextValue {
  * Returns an array of screen keys from immediate parent to root.
  * [parentKey, grandparentKey, greatGrandparentKey, ...]
  */
-const getAncestorKeys = (current: TransitionDescriptor): string[] => {
+const getAncestorKeys = (current: BaseDescriptor): string[] => {
 	const ancestors: string[] = [];
-	let nav = current.navigation.getParent();
+	const nav = current.navigation as any;
 
-	while (nav) {
-		const state = nav.getState();
+	// Safety check for navigators without getParent
+	if (typeof nav?.getParent !== "function") {
+		return ancestors;
+	}
+
+	let parent = nav.getParent();
+
+	while (parent) {
+		const state = parent.getState();
 		if (state?.routes && state.index !== undefined) {
 			const focusedRoute = state.routes[state.index];
 			if (focusedRoute?.key) {
 				ancestors.push(focusedRoute.key);
 			}
 		}
-		nav = nav.getParent();
+		parent = parent.getParent();
 	}
 
 	return ancestors;
@@ -201,6 +209,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		const { current } = useKeys();
 		const currentScreenKey = current.route.key;
 		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
+		const layoutAnchor = useLayoutAnchorContext();
 
 		// Context & signals
 		const parentContext: RegisterBoundsContextValue | null =
@@ -234,12 +243,17 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 				const measured = measure(animatedRef);
 				if (!measured) return;
 
+				// Correct for parent transforms (e.g., when parent screen is animating)
+				const correctedMeasured = layoutAnchor
+					? layoutAnchor.correctMeasurement(measured)
+					: measured;
+
 				emitUpdate();
 
 				BoundStore.registerSnapshot(
 					sharedBoundTag,
 					currentScreenKey,
-					measured,
+					correctedMeasured,
 					preparedStyles,
 					ancestorKeys,
 				);
@@ -266,7 +280,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					BoundStore.setLinkSource(
 						sharedBoundTag,
 						currentScreenKey,
-						measured,
+						correctedMeasured,
 						preparedStyles,
 						ancestorKeys,
 					);
@@ -277,7 +291,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					BoundStore.setLinkDestination(
 						sharedBoundTag,
 						currentScreenKey,
-						measured,
+						correctedMeasured,
 						preparedStyles,
 						ancestorKeys,
 					);

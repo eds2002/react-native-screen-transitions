@@ -33,4 +33,10 @@ export type BoundsAccessor = {
 		property: keyof StyleProps,
 		fallback?: number,
 	) => number;
+	interpolateBounds: (
+		id: string,
+		property: keyof MeasuredDimensions,
+		fallbackOrTargetKey?: number | string,
+		fallback?: number,
+	) => number;
 };

@@ -5,7 +5,7 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../constants";
-import { useTransitionStyles } from "../../providers/transition-styles.provider";
+import { useScreenStyles } from "../../providers/screen/styles.provider";
 
 type Props = {
 	id?: string;
@@ -16,7 +16,7 @@ type Props = {
  * This hook is used to get the associated styles for a given styleId / boundTag.
  */
 export const useAssociatedStyles = ({ id }: Props = {}) => {
-	const { stylesMap, ancestorStylesMaps } = useTransitionStyles();
+	const { stylesMap, ancestorStylesMaps } = useScreenStyles();
 	const showAfterFirstFrame = useSharedValue(false);
 
 	useDerivedValue(() => {

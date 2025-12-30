@@ -4,16 +4,12 @@ import {
 	HeaderBackContext,
 	HeaderHeightContext,
 	HeaderShownContext,
-	SafeAreaProviderCompat,
 	useFrameSize,
 } from "@react-navigation/elements";
 import {
 	NavigationContext,
 	NavigationRouteContext,
-	type ParamListBase,
-	type RouteProp,
 	StackActions,
-	type StackNavigationState,
 	usePreventRemoveContext,
 	useTheme,
 } from "@react-navigation/native";
@@ -26,21 +22,21 @@ import {
 	useAnimatedValue,
 	View,
 } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
 	type ScreenProps,
 	ScreenStack,
 	ScreenStackItem,
 } from "react-native-screens";
-import { NativeStackScreenLifecycleController } from "../../shared/components/controllers/native-stack-lifecycle";
-import { RoutesProvider } from "../../shared/providers/routes.provider";
-import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
-import type {
-	NativeStackDescriptor,
-	NativeStackDescriptorMap,
-	NativeStackNavigationHelpers,
-} from "../types";
+import { Overlay } from "../../shared/components/overlay";
+import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
+import { withStackCore } from "../../shared/providers/stack/core.provider";
+import {
+	type DirectStackContextValue,
+	withDirectStack,
+} from "../../shared/providers/stack/direct.provider";
+import { StackType } from "../../shared/types/stack.types";
+import type { NativeStackDescriptor } from "../types";
 import { debounce } from "../utils/debounce";
 import { getModalRouteKeys } from "../utils/getModalRoutesKeys";
 import { AnimatedHeaderHeightContext } from "../utils/useAnimatedHeaderHeight";
@@ -468,14 +464,13 @@ const SceneView = ({
 								value={isParentHeaderShown || headerShown !== false}
 							>
 								<HeaderBackContext.Provider value={headerBack}>
-									<ScreenTransitionProvider
+									<ScreenComposer
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
-										LifecycleController={NativeStackScreenLifecycleController}
 									>
 										{render()}
-									</ScreenTransitionProvider>
+									</ScreenComposer>
 								</HeaderBackContext.Provider>
 							</HeaderShownContext.Provider>
 						</HeaderHeightContext.Provider>
@@ -486,158 +481,133 @@ const SceneView = ({
 	);
 };
 
-type Props = {
-	state: StackNavigationState<ParamListBase>;
-	navigation: NativeStackNavigationHelpers;
-	descriptors: NativeStackDescriptorMap;
-	describe: (
-		route: RouteProp<ParamListBase>,
-		placeholder: boolean,
-	) => NativeStackDescriptor;
-};
+export const NativeStackView = withStackCore(
+	{ TRANSITIONS_ALWAYS_ON: false, STACK_TYPE: StackType.NATIVE },
+	withDirectStack(function NativeStackViewContent({
+		state,
+		navigation,
+		descriptors,
+		scenes,
+		focusedIndex,
+		shouldShowFloatOverlay,
+	}: DirectStackContextValue) {
+		const { setNextDismissedKey } = useDismissedRouteError(state);
 
-export function NativeStackView({
-	state,
-	navigation,
-	descriptors,
-	describe,
-}: Props) {
-	const { setNextDismissedKey } = useDismissedRouteError(state);
+		useInvalidPreventRemoveError(descriptors);
 
-	useInvalidPreventRemoveError(descriptors);
+		const modalRouteKeys = getModalRouteKeys(state.routes, descriptors);
 
-	const modalRouteKeys = getModalRouteKeys(state.routes, descriptors);
+		return (
+			<>
+				{shouldShowFloatOverlay ? <Overlay.Float /> : null}
+				<ScreenStack style={styles.container}>
+					{scenes.map((scene, index) => {
+						const { route, descriptor, isPreloaded } = scene;
+						const isFocused = focusedIndex === index;
+						const isBelowFocused = focusedIndex - 1 === index;
 
-	const preloadedDescriptors =
-		state.preloadedRoutes.reduce<NativeStackDescriptorMap>((acc, route) => {
-			acc[route.key] = acc[route.key] || describe(route, true);
-			return acc;
-		}, {});
+						// Get previous/next descriptors from state.routes (not scenes) for proper navigation
+						const previousKey = state.routes[index - 1]?.key;
+						const nextKey = state.routes[index + 1]?.key;
+						const previousDescriptor = previousKey
+							? descriptors[previousKey]
+							: undefined;
+						const nextDescriptor = nextKey ? descriptors[nextKey] : undefined;
 
-	const routes = state.routes.concat(state.preloadedRoutes);
+						const isModal = modalRouteKeys.includes(route.key);
 
-	// Memoize route keys array for RoutesProvider
-	const routeKeys = React.useMemo(
-		() => routes.map((route) => route.key),
-		[routes],
-	);
+						// On Fabric, when screen is frozen, animated and reanimated values are not updated
+						// due to component being unmounted. To avoid this, we don't freeze the previous screen there
+						const shouldFreeze = isFabric()
+							? !isPreloaded && !isFocused && !isBelowFocused
+							: !isPreloaded && !isFocused;
 
-	return (
-		<RoutesProvider routeKeys={routeKeys}>
-			<GestureHandlerRootView>
-				<SafeAreaProviderCompat>
-					<ScreenStack style={styles.container}>
-						{routes.map((route, index) => {
-							const descriptor =
-								descriptors[route.key] ?? preloadedDescriptors[route.key];
-							const isFocused = state.index === index;
-							const isBelowFocused = state.index - 1 === index;
-							const previousKey = state.routes[index - 1]?.key;
-							const nextKey = state.routes[index + 1]?.key;
-							const previousDescriptor = previousKey
-								? descriptors[previousKey]
-								: undefined;
-							const nextDescriptor = nextKey ? descriptors[nextKey] : undefined;
+						return (
+							<SceneView
+								key={route.key}
+								index={index}
+								focused={isFocused}
+								shouldFreeze={shouldFreeze}
+								descriptor={descriptor}
+								previousDescriptor={previousDescriptor}
+								nextDescriptor={nextDescriptor}
+								isPresentationModal={isModal}
+								isPreloaded={isPreloaded}
+								onWillDisappear={() => {
+									navigation.emit({
+										type: "transitionStart",
+										data: { closing: true },
+										target: route.key,
+									});
+								}}
+								onWillAppear={() => {
+									navigation.emit({
+										type: "transitionStart",
+										data: { closing: false },
+										target: route.key,
+									});
+								}}
+								onAppear={() => {
+									navigation.emit({
+										type: "transitionEnd",
+										data: { closing: false },
+										target: route.key,
+									});
+								}}
+								onDisappear={() => {
+									navigation.emit({
+										type: "transitionEnd",
+										data: { closing: true },
+										target: route.key,
+									});
+								}}
+								onDismissed={(event) => {
+									navigation.dispatch({
+										...StackActions.pop(event.nativeEvent.dismissCount),
+										source: route.key,
+										target: state.key,
+									});
 
-							const isModal = modalRouteKeys.includes(route.key);
-
-							const isPreloaded =
-								preloadedDescriptors[route.key] !== undefined &&
-								descriptors[route.key] === undefined;
-
-							// On Fabric, when screen is frozen, animated and reanimated values are not updated
-							// due to component being unmounted. To avoid this, we don't freeze the previous screen there
-							const shouldFreeze = isFabric()
-								? !isPreloaded && !isFocused && !isBelowFocused
-								: !isPreloaded && !isFocused;
-
-							return (
-								<SceneView
-									key={route.key}
-									index={index}
-									focused={isFocused}
-									shouldFreeze={shouldFreeze}
-									descriptor={descriptor}
-									previousDescriptor={previousDescriptor}
-									nextDescriptor={nextDescriptor}
-									isPresentationModal={isModal}
-									isPreloaded={isPreloaded}
-									onWillDisappear={() => {
-										navigation.emit({
-											type: "transitionStart",
-											data: { closing: true },
-											target: route.key,
-										});
-									}}
-									onWillAppear={() => {
-										navigation.emit({
-											type: "transitionStart",
-											data: { closing: false },
-											target: route.key,
-										});
-									}}
-									onAppear={() => {
-										navigation.emit({
-											type: "transitionEnd",
-											data: { closing: false },
-											target: route.key,
-										});
-									}}
-									onDisappear={() => {
-										navigation.emit({
-											type: "transitionEnd",
-											data: { closing: true },
-											target: route.key,
-										});
-									}}
-									onDismissed={(event) => {
-										navigation.dispatch({
-											...StackActions.pop(event.nativeEvent.dismissCount),
-											source: route.key,
-											target: state.key,
-										});
-
-										setNextDismissedKey(route.key);
-									}}
-									onHeaderBackButtonClicked={() => {
-										navigation.dispatch({
-											...StackActions.pop(),
-											source: route.key,
-											target: state.key,
-										});
-									}}
-									onNativeDismissCancelled={(event) => {
-										navigation.dispatch({
-											...StackActions.pop(event.nativeEvent.dismissCount),
-											source: route.key,
-											target: state.key,
-										});
-									}}
-									onGestureCancel={() => {
-										navigation.emit({
-											type: "gestureCancel",
-											target: route.key,
-										});
-									}}
-									onSheetDetentChanged={(event) => {
-										navigation.emit({
-											type: "sheetDetentChange",
-											target: route.key,
-											data: {
-												index: event.nativeEvent.index,
-												stable: event.nativeEvent.isStable,
-											},
-										});
-									}}
-								/>
-							);
-						})}
-					</ScreenStack>
-				</SafeAreaProviderCompat>
-			</GestureHandlerRootView>
-		</RoutesProvider>
-	);
-}
+									setNextDismissedKey(route.key);
+								}}
+								onHeaderBackButtonClicked={() => {
+									navigation.dispatch({
+										...StackActions.pop(),
+										source: route.key,
+										target: state.key,
+									});
+								}}
+								onNativeDismissCancelled={(event) => {
+									navigation.dispatch({
+										...StackActions.pop(event.nativeEvent.dismissCount),
+										source: route.key,
+										target: state.key,
+									});
+								}}
+								onGestureCancel={() => {
+									navigation.emit({
+										type: "gestureCancel",
+										target: route.key,
+									});
+								}}
+								onSheetDetentChanged={(event) => {
+									navigation.emit({
+										type: "sheetDetentChange",
+										target: route.key,
+										data: {
+											index: event.nativeEvent.index,
+											stable: event.nativeEvent.isStable,
+										},
+									});
+								}}
+							/>
+						);
+					})}
+				</ScreenStack>
+			</>
+		);
+	}),
+);
 
 const styles = StyleSheet.create({
 	container: {

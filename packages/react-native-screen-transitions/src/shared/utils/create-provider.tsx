@@ -90,25 +90,23 @@ export default function createProvider<
 			return context;
 		};
 
+		/**
+		 * HOC that wraps a component with the provider.
+		 * Uses the Provider component internally to ensure hooks are called correctly.
+		 */
 		const withProvider = (Component: ComponentType<ContextValue>) => {
+			// Consumer component that reads context and passes to wrapped component
+			const ContextConsumer = () => {
+				const contextValue = useEnhancedContext();
+				if (!contextValue) return null;
+				return <Component {...contextValue} />;
+			};
+
 			return function WithProviderWrapper(props: ProviderProps) {
-				const { enabled = true, value } = factory(props);
-
-				if (!value) {
-					throw new Error(
-						`${name}Context value must be provided. You likely forgot to return it from the factory function.`,
-					);
-				}
-
-				const memoValue = useMemo(
-					() => (enabled ? value : null),
-					[enabled, value],
-				);
-
 				return (
-					<Context.Provider value={memoValue}>
-						<Component {...value} />
-					</Context.Provider>
+					<Provider {...props}>
+						<ContextConsumer />
+					</Provider>
 				);
 			};
 		};

@@ -1,20 +1,19 @@
-import { SafeAreaProviderCompat } from "@react-navigation/elements";
 import {
 	NavigationContext,
 	NavigationRouteContext,
 } from "@react-navigation/native";
 import * as React from "react";
-import { StyleSheet } from "react-native";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
-import { ScreenContainer } from "react-native-screens";
-import { BlankStackScreenLifecycleController } from "../../shared/components/controllers/blank-stack-lifecycle";
-import { FlagsProvider } from "../../shared/providers/flags.provider";
-import { RoutesProvider } from "../../shared/providers/routes.provider";
-import { ScreenTransitionProvider } from "../../shared/providers/screen-transition.provider";
-import type { BlankStackDescriptor } from "../types";
-import { withStackNavigationProvider } from "../utils/with-stack-navigation";
-import { Overlay } from "./overlay";
-import { Screen } from "./screens";
+import { Fragment } from "react";
+import { Overlay } from "../../shared/components/overlay";
+import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
+import { withStackCore } from "../../shared/providers/stack/core.provider";
+import { withManagedStack } from "../../shared/providers/stack/managed.provider";
+import type {
+	BlankStackDescriptor,
+	BlankStackNavigationHelpers,
+} from "../types";
+import { AdjustedScreen } from "./adjusted-screen";
+import { AdjustedScreenContainer } from "./adjusted-screen-container";
 
 function isFabric() {
 	return "nativeFabricUIManager" in global;
@@ -39,70 +38,55 @@ const SceneView = React.memo(function SceneView({
 	);
 });
 
-export const StackView = withStackNavigationProvider(
-	({ descriptors, focusedIndex, routes, scenes, shouldShowFloatOverlay }) => {
-		// Memoize route keys array for ScenesProvider
-		const routeKeys = React.useMemo(
-			() => routes.map((route) => route.key),
-			[routes],
-		);
+export const StackView = withStackCore(
+	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: true },
+	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
+		({ descriptors, focusedIndex, scenes, shouldShowFloatOverlay }) => {
+			return (
+				<Fragment>
+					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
 
-		return (
-			<FlagsProvider TRANSITIONS_ALWAYS_ON>
-				<RoutesProvider routeKeys={routeKeys}>
-					<GestureHandlerRootView>
-						<SafeAreaProviderCompat>
-							{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-							<ScreenContainer style={styles.container}>
-								{scenes.map((scene, sceneIndex) => {
-									const descriptor = scene.descriptor;
-									const route = scene.route;
-									const isFocused = focusedIndex === sceneIndex;
-									const isBelowFocused = focusedIndex - 1 === sceneIndex;
+					<AdjustedScreenContainer>
+						{scenes.map((scene, sceneIndex) => {
+							const descriptor = scene.descriptor;
+							const route = scene.route;
+							const isFocused = focusedIndex === sceneIndex;
+							const isBelowFocused = focusedIndex - 1 === sceneIndex;
 
-									const previousDescriptor =
-										scenes[sceneIndex - 1]?.descriptor ?? undefined;
-									const nextDescriptor =
-										scenes[sceneIndex + 1]?.descriptor ?? undefined;
+							const previousDescriptor =
+								scenes[sceneIndex - 1]?.descriptor ?? undefined;
+							const nextDescriptor =
+								scenes[sceneIndex + 1]?.descriptor ?? undefined;
 
-									const isPreloaded = descriptors[route.key] === undefined;
+							const isPreloaded = descriptors[route.key] === undefined;
 
-									// On Fabric, when screen is frozen, animated and reanimated values are not updated
-									// due to component being unmounted. To avoid this, we don't freeze the previous screen there
-									const shouldFreeze = isFabric()
-										? !isPreloaded && !isFocused && !isBelowFocused
-										: !isPreloaded && !isFocused;
-									return (
-										<Screen
-											key={route.key}
-											isPreloaded={isPreloaded}
-											index={sceneIndex}
-											routeKey={route.key}
-											shouldFreeze={shouldFreeze}
-											freezeOnBlur={descriptor.options.freezeOnBlur}
-										>
-											<ScreenTransitionProvider
-												previous={previousDescriptor}
-												current={descriptor}
-												next={nextDescriptor}
-												LifecycleController={
-													BlankStackScreenLifecycleController
-												}
-											>
-												<SceneView key={route.key} descriptor={descriptor} />
-											</ScreenTransitionProvider>
-										</Screen>
-									);
-								})}
-							</ScreenContainer>
-						</SafeAreaProviderCompat>
-					</GestureHandlerRootView>
-				</RoutesProvider>
-			</FlagsProvider>
-		);
-	},
+							// On Fabric, when screen is frozen, animated and reanimated values are not updated
+							// due to component being unmounted. To avoid this, we don't freeze the previous screen there
+							const shouldFreeze = isFabric()
+								? !isPreloaded && !isFocused && !isBelowFocused
+								: !isPreloaded && !isFocused;
+							return (
+								<AdjustedScreen
+									key={route.key}
+									isPreloaded={isPreloaded}
+									index={sceneIndex}
+									routeKey={route.key}
+									shouldFreeze={shouldFreeze}
+									freezeOnBlur={descriptor.options.freezeOnBlur}
+								>
+									<ScreenComposer
+										previous={previousDescriptor}
+										current={descriptor}
+										next={nextDescriptor}
+									>
+										<SceneView key={route.key} descriptor={descriptor} />
+									</ScreenComposer>
+								</AdjustedScreen>
+							);
+						})}
+					</AdjustedScreenContainer>
+				</Fragment>
+			);
+		},
+	),
 );
-
-const styles = StyleSheet.create({
-	container: { flex: 1 },
-});

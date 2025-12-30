@@ -3,7 +3,6 @@ import {
 	makeMutable,
 	type StyleProps,
 } from "react-native-reanimated";
-import type { Any } from "../types/utils.types";
 
 type TagID = string;
 type ScreenKey = string;
@@ -38,7 +37,7 @@ function registerSnapshot(
 	ancestorKeys?: ScreenKey[],
 ) {
 	"worklet";
-	registry.modify((state: Any) => {
+	registry.modify((state: any) => {
 		"worklet";
 		if (!state[tag]) {
 			state[tag] = { snapshots: {}, linkStack: [] };
@@ -56,7 +55,7 @@ function setLinkSource(
 	ancestorKeys?: ScreenKey[],
 ) {
 	"worklet";
-	registry.modify((state: Any) => {
+	registry.modify((state: any) => {
 		"worklet";
 		if (!state[tag]) state[tag] = { snapshots: {}, linkStack: [] };
 
@@ -76,7 +75,7 @@ function setLinkDestination(
 	ancestorKeys?: ScreenKey[],
 ) {
 	"worklet";
-	registry.modify((state: Any) => {
+	registry.modify((state: any) => {
 		"worklet";
 		const stack = state[tag]?.linkStack;
 		if (!stack || stack.length === 0) return state;
@@ -173,7 +172,7 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
  */
 function clear(screenKey: ScreenKey) {
 	"worklet";
-	registry.modify((state: Any) => {
+	registry.modify((state: any) => {
 		"worklet";
 		for (const tag in state) {
 			// Remove snapshot

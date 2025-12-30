@@ -1,4 +1,3 @@
-import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import type {
 	StyleProps,
 	WithSpringConfig,
@@ -6,8 +5,9 @@ import type {
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import type { BoundsAccessor } from "./bounds.types";
-import type { Layout } from "./core.types";
 import type { GestureValues } from "./gesture.types";
+import type { Layout } from "./screen.types";
+import type { BaseStackRoute } from "./stack.types";
 
 export interface OverlayInterpolationProps {
 	progress: number;
@@ -41,6 +41,15 @@ export type ScreenTransitionState = {
 	closing: number;
 
 	/**
+	 * Whether this screen is in the process of entering.
+	 * - `0`: Screen is closing or inactive
+	 * - `1`: Screen is opening/entering
+	 *
+	 * Use this to trigger different animations when navigating back vs forward.
+	 */
+	entering: number;
+
+	/**
 	 * Whether this screen is currently animating.
 	 * - `0`: No animation in progress
 	 * - `1`: Animation or gesture is in progress
@@ -69,12 +78,8 @@ export type ScreenTransitionState = {
 
 	/**
 	 * The route object for this screen.
-	 *
-	 * @deprecated Use `meta` instead for conditional animation logic.
-	 * Pass route params via options: `options={({ route }) => ({ meta: { id: route.params.id } })}`
-	 * This field may be removed in a future version.
 	 */
-	route: RouteProp<ParamListBase>;
+	route: BaseStackRoute;
 };
 
 export interface ScreenInterpolationProps {
