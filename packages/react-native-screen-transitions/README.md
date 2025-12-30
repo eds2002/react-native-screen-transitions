@@ -487,7 +487,7 @@ All three stacks share the same animation API. Choose based on your needs:
 | ------------------- | --------------------------------------------------------- |
 | **Blank Stack**     | Most apps. Full control, all features.                    |
 | **Native Stack**    | When you need native screen primitives.                   |
-| **Component Stack** | Embedded flows, isolated from React Navigation.           |
+| **Component Stack** | Embedded flows, isolated from React Navigation. *(Experimental)* |
 
 ### Blank Stack
 
@@ -513,7 +513,9 @@ import { createNativeStackNavigator } from "react-native-screen-transitions/nati
 />
 ```
 
-### Component Stack
+### Component Stack (Experimental)
+
+> **Note:** This API is experimental and may change based on community feedback.
 
 Standalone navigator, not connected to React Navigation. Ideal for embedded flows.
 
