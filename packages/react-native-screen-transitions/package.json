@@ -43,7 +43,8 @@
     "build": "bob build",
     "lint": "biome check ./src",
     "typecheck": "tsc --noEmit",
-    "prepublishOnly": "bun run build"
+    "prepublishOnly": "bun run build",
+    "release": "release-it"
   },
   "keywords": [
     "react-native",
@@ -73,8 +74,10 @@
     "react-native-screens": ">=4.4.0"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "^10.0.1",
     "@types/react": "~19.1.10",
     "react-native-builder-bob": "0.39.0",
+    "release-it": "^19.0.4",
     "typescript": "catalog:"
   },
   "react-native-builder-bob": {
@@ -90,6 +93,27 @@
         }
       ]
     ]
+  },
+  "release-it": {
+    "git": {
+      "commitMessage": "chore: release ${version}",
+      "tagName": "v${version}",
+      "commitArgs": ["-n"]
+    },
+    "npm": {
+      "publish": true
+    },
+    "github": {
+      "release": true
+    },
+    "plugins": {
+      "@release-it/conventional-changelog": {
+        "preset": {
+          "name": "angular"
+        },
+        "path": "."
+      }
+    }
   },
   "gitHead": "888d4df9936ec0e3b8221bea7cd81115e6301693"
 }
