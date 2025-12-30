@@ -1,5 +1,48 @@
 # Change Log
 
+## 3.2.0
+
+### Minor Changes
+
+- [#70](https://github.com/eds2002/react-native-screen-transitions/pull/70) [`1deafc5`](https://github.com/eds2002/react-native-screen-transitions/commit/1deafc5fa4293c6075776e26546a9d0151fb8be8) Thanks [@eds2002](https://github.com/eds2002)! - feat: unified stack type system, component-stack improvements
+
+- [#70](https://github.com/eds2002/react-native-screen-transitions/pull/70) [`1deafc5`](https://github.com/eds2002/react-native-screen-transitions/commit/1deafc5fa4293c6075776e26546a9d0151fb8be8) Thanks [@eds2002](https://github.com/eds2002)! - Added useScreenState() hook and progress prop for overlays, deprecated overlayMode/screenAnimation/overlayAnimation in favor of simpler APIs, and fixed a navigation dismissal bug caused by lifecycle re-runs.
+
+- [#70](https://github.com/eds2002/react-native-screen-transitions/pull/70) [`1deafc5`](https://github.com/eds2002/react-native-screen-transitions/commit/1deafc5fa4293c6075776e26546a9d0151fb8be8) Thanks [@eds2002](https://github.com/eds2002)! - ## v3.2.0 Release Summary
+
+  ### New Features
+
+  - `useScreenState()` hook - Access screen index, focused route, navigation state, and metadata
+  - `useHistory()` hook - Navigation history tracking with path queries
+  - Component Stack (Experimental) - Standalone navigator isolated from React Navigation, ideal for embedded flows
+  - Unified stack type system - Consistent APIs across Blank Stack, Native Stack, and Component Stack
+  - Overlay `progress` prop - Direct access to transition progress in overlay components
+  - `entering` animation state - New interpolation value for enter transitions
+
+  ### Improvements
+
+  - More accurate bounds measurements
+  - Better flickering handling during transitions
+  - Component Stack is fully separated from root navigation tree
+  - Touch-through events fixed in Component Stack
+
+  ### Breaking Changes
+
+  - Deprecated `overlayMode` - Overlays are now float by default. For screen overlays, use a position absolute view instead.
+  - `screenAnimation` / `overlayAnimation` replaced by `screenStyleInterpolator`
+
+  ### Fixes
+
+  - Navigation dismissal bug caused by lifecycle re-runs
+  - Isolated navigation state bug in Component Stack
+  - Removed dead code and unused types
+
+### Patch Changes
+
+- [#70](https://github.com/eds2002/react-native-screen-transitions/pull/70) [`1deafc5`](https://github.com/eds2002/react-native-screen-transitions/commit/1deafc5fa4293c6075776e26546a9d0151fb8be8) Thanks [@eds2002](https://github.com/eds2002)! - Fix touch through events in new component-stack, fix isolated navigation bug
+
+- [#70](https://github.com/eds2002/react-native-screen-transitions/pull/70) [`1deafc5`](https://github.com/eds2002/react-native-screen-transitions/commit/1deafc5fa4293c6075776e26546a9d0151fb8be8) Thanks [@eds2002](https://github.com/eds2002)! - More accurate bound measurements, component-stack is seperated from the root navigation tree. Handle flickering better
+
 ## 3.2.0-beta.3
 
 ### Minor Changes
