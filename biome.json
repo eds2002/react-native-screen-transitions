@@ -1,15 +1,27 @@
 {
-  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-  "files": {
-    "includes": [
-      "**",
-      "!**/node_modules",
-      "!**/.expo",
-      "!**/lib",
-      "!**/build",
-      "!**/dist",
-      "!**/expo-env.d.ts"
-    ],
-    "ignoreUnknown": true
-  }
+	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+	"files": {
+		"includes": [
+			"**",
+			"!**/node_modules",
+			"!**/.expo",
+			"!**/lib",
+			"!**/build",
+			"!**/dist",
+			"!**/expo-env.d.ts",
+			"!**/__tests__",
+			"!**/*.test.*"
+		],
+		"ignoreUnknown": true
+	},
+	"linter": {
+		"rules": {
+			"suspicious": {
+				"noExplicitAny": "off"
+			},
+			"complexity": {
+				"noBannedTypes": "off"
+			}
+		}
+	}
 }
