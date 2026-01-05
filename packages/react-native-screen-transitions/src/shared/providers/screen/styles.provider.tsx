@@ -28,56 +28,62 @@ export function ScreenStylesProvider({ children }: Props) {
 	const { screenInterpolatorProps, nextInterpolator, currentInterpolator } =
 		_useScreenAnimation();
 
-	// Track when a gesture is triggered while another screen is closing
-	const hasTriggeredGestureWhileInFlight = useSharedValue(false);
+	/**
+	 * Tracks when user starts a gesture while another screen is still closing.
+	 * This persists until both the gesture ends AND the closing animation completes.
+	 */
+	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
 	const stylesMap = useDerivedValue<TransitionInterpolatedStyle>(() => {
 		"worklet";
 		const props = screenInterpolatorProps.value;
-		const bounds = createBounds(props);
+		const { current, next, progress, stackProgress } = props;
+		const isDragging = current.gesture.isDragging;
+		const isNextClosing = !!next?.closing;
 
-		// Detect when user starts gesture on current screen while next screen is closing
-		if (props.current.gesture.isDragging && props.next?.closing) {
-			hasTriggeredGestureWhileInFlight.value = true;
+		if (isDragging && isNextClosing) {
+			isGesturingDuringCloseAnimation.value = true;
 		}
 
-		// Reset the flag when no longer dragging and next screen is done closing
-		if (
-			!props.current.gesture.isDragging &&
-			!props.next?.closing &&
-			hasTriggeredGestureWhileInFlight.value
-		) {
-			hasTriggeredGestureWhileInFlight.value = false;
+		if (!isDragging && !isNextClosing) {
+			isGesturingDuringCloseAnimation.value = false;
 		}
 
-		// Use current interpolator when gesture triggered while in-flight,
-		// otherwise use next interpolator if available (normal case)
-		const shouldUseCurrentInterpolator =
-			props.current.gesture.isDragging ||
-			hasTriggeredGestureWhileInFlight.value;
+		const isInGestureMode = isDragging || isGesturingDuringCloseAnimation.value;
 
-		const interpolator = shouldUseCurrentInterpolator
+		const hasPushedScreenWhileClosing =
+			!isInGestureMode && isNextClosing && stackProgress > progress;
+
+		// Select interpolator
+		//  - If in gesture mode, use current screen's interpolator since we're driving
+		//    the animation from this screen (dragging back to dismiss next).
+		const interpolator = isInGestureMode
 			? currentInterpolator
 			: (nextInterpolator ?? currentInterpolator);
 
-		/**
-		 * Maintainer Note:
-		 * To avoid unnecessary jumps in off directions, we have to snap back to the currents progress.
-		 * While this still introduces a 'snap back' animation, it's still very rare that a user would encounter this unless
-		 * they're spamming things out. Not ideal, but this is the best way to go about dealing with fast rapid gestures.
-		 *
-		 * The alternative was preventing users from actually being able to drag back while animation was still in flight. But there was a significant delay
-		 * when waiting for gestures to register again.
-		 */
-		const effectiveProps = shouldUseCurrentInterpolator
-			? { ...props, progress: props.current.progress, next: undefined }
-			: props;
+		if (!interpolator) return NO_STYLES;
+
+		// Build effective props with corrected progress
+		//  - Gesture mode: use current.progress only (avoids jumps during drag)
+		//  - Pushed while closing: use stackProgress (includes new screen)
+		//  - Normal: use derived progress as-is
+
+		let effectiveProgress = progress;
+		let effectiveNext = next;
+
+		if (isInGestureMode) {
+			effectiveProgress = current.progress;
+			effectiveNext = undefined;
+		} else if (hasPushedScreenWhileClosing) {
+			effectiveProgress = stackProgress;
+		}
 
 		try {
-			if (!interpolator) return NO_STYLES;
 			return interpolator({
-				...effectiveProps,
-				bounds,
+				...props,
+				progress: effectiveProgress,
+				next: effectiveNext,
+				bounds: createBounds(props),
 			});
 		} catch (err) {
 			if (__DEV__) {
