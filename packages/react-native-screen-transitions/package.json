@@ -1,6 +1,6 @@
 {
   "name": "react-native-screen-transitions",
-  "version": "3.2.0",
+  "version": "3.2.1",
   "description": "Easy screen transitions for React Native and Expo",
   "author": "Ed",
   "license": "MIT",
@@ -98,7 +98,9 @@
     "git": {
       "commitMessage": "chore: release ${version}",
       "tagName": "v${version}",
-      "commitArgs": ["-n"]
+      "commitArgs": [
+        "-n"
+      ]
     },
     "npm": {
       "publish": true
