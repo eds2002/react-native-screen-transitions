@@ -1,17 +1,21 @@
-name: Release (Changesets)
+name: Release
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: "Dry run (no actual release)"
+        required: false
+        default: false
+        type: boolean
 
 jobs:
   release:
-    name: Version or Publish
+    name: Release
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
-      id-token: write # Required for npm provenance / trusted publishing
+      id-token: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -29,32 +33,20 @@ jobs:
           node-version: "20"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Update npm (trusted publishing requires 11.5.1+)
-        run: npm install -g npm@latest
+      - name: Setup Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Install deps
         run: bun install --frozen-lockfile
 
-      - name: Build packages
+      - name: Build
         run: bun run build
 
-      - name: Version or Publish via Changesets
-        id: changesets
-        uses: changesets/action@v1
-        with:
-          publish: "bun run changeset:publish"
-          title: "chore: version packages"
-          createGithubReleases: false
+      - name: Release
+        run: bun run release:react-native-screen-transitions --ci ${{ inputs.dry-run && '--dry-run' || '' }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
-
-      - name: Create v* tag and release
-        if: steps.changesets.outputs.published == 'true'
-        run: |
-          VERSION=$(jq -r '.[0].version' <<< '${{ steps.changesets.outputs.publishedPackages }}')
-          git tag "v${VERSION}"
-          git push origin "v${VERSION}"
-          gh release create "v${VERSION}" --title "v${VERSION}" --generate-notes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

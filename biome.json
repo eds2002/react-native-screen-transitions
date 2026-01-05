@@ -1,17 +1,15 @@
 {
   "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
   "files": {
-    "includes": ["**", "!node_modules", "!.next", "!**/__tests__/**", "!**/*.test.*"],
+    "includes": [
+      "**",
+      "!**/node_modules",
+      "!**/.expo",
+      "!**/lib",
+      "!**/build",
+      "!**/dist",
+      "!**/expo-env.d.ts"
+    ],
     "ignoreUnknown": true
-  },
-  "linter": {
-    "rules": {
-      "suspicious": {
-        "noExplicitAny": "off"
-      },
-      "complexity": {
-        "noBannedTypes": "off"
-      }
-    }
   }
 }
