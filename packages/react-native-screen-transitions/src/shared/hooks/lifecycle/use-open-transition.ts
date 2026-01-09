@@ -5,6 +5,24 @@ import { startScreenTransition } from "../../utils/animation/start-screen-transi
 import { useHighRefreshRate } from "../animation/use-high-refresh-rate";
 
 /**
+ * Calculates the initial progress value based on snap points configuration.
+ */
+function getInitialProgress(
+	snapPoints: number[] | "fitToContents" | undefined,
+	initialSnapIndex: number,
+): number | undefined {
+	if (!snapPoints || snapPoints === "fitToContents") {
+		return undefined;
+	}
+
+	const clampedIndex = Math.min(
+		Math.max(0, initialSnapIndex),
+		snapPoints.length - 1,
+	);
+	return snapPoints[clampedIndex];
+}
+
+/**
  * Handles opening animation on mount.
  * Returns activate/deactivate functions for high refresh rate.
  */
@@ -17,12 +35,16 @@ export function useOpenTransition(
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
+		const { snapPoints, initialSnapIndex = 0 } = current.options;
+		const targetProgress = getInitialProgress(snapPoints, initialSnapIndex);
+
 		activateHighRefreshRate();
 		startScreenTransition({
 			target: "open",
 			spec: current.options.transitionSpec,
 			animations,
 			onAnimationFinish: deactivateHighRefreshRate,
+			targetProgress,
 		});
 	}, []);
 

@@ -136,4 +136,24 @@ export type ScreenTransitionConfig = {
 	 * @default false
 	 */
 	experimental_enableHighRefreshRate?: boolean;
+
+	/**
+	 * Describes heights where a screen can rest, as fractions of screen height.
+	 * Pass an array of ascending values from 0 to 1, or 'fitToContents' to
+	 * size the screen to its content height.
+	 *
+	 * @example
+	 * snapPoints={[0.5, 1.0]} // 50% and 100% of screen height
+	 * snapPoints={'fitToContents'}
+	 *
+	 * @default [1.0]
+	 */
+	snapPoints?: number[] | "fitToContents";
+
+	/**
+	 * The initial snap point index when the screen opens.
+	 *
+	 * @default 0
+	 */
+	initialSnapIndex?: number;
 };

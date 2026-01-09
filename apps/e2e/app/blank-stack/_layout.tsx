@@ -41,6 +41,7 @@ export default function BlankStackLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "vertical",
+					snapPoints: [0.6],
 					...Transition.Presets.SlideFromBottom(),
 				}}
 			/>

@@ -11,6 +11,8 @@ interface StartScreenTransitionProps {
 	animations: AnimationStoreMap;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
 	initialVelocity?: number;
+	/** Optional target progress value. If provided, overrides the default 0/1 target. */
+	targetProgress?: number;
 }
 
 export const startScreenTransition = ({
@@ -19,9 +21,10 @@ export const startScreenTransition = ({
 	onAnimationFinish,
 	animations,
 	initialVelocity,
+	targetProgress,
 }: StartScreenTransitionProps) => {
 	"worklet";
-	const value = target === "open" ? 1 : 0;
+	const value = targetProgress ?? (target === "open" ? 1 : 0);
 	const config = target === "open" ? spec?.open : spec?.close;
 
 	const isSpringConfig =
