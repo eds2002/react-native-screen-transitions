@@ -35,6 +35,15 @@ const normalize = (velocityPixelsPerSecond: number, screenSize: number) => {
 };
 
 /**
+ * Normalizes translation to -1...1 range (for gesture tracking).
+ * Used to convert pixel translation to normalized gesture values.
+ */
+const normalizeTranslation = (translation: number, dimension: number) => {
+	"worklet";
+	return clamp(translation / Math.max(1, dimension), -1, 1);
+};
+
+/**
  * Calculates a normalized velocity that moves the current value toward zero.
  * Used for spring-back animations when dismissing gestures.
  */
@@ -137,6 +146,7 @@ const shouldPassDismissalThreshold = (
 
 export const velocity = {
 	normalize,
+	normalizeTranslation,
 	calculateRestoreVelocity,
 	calculateProgressVelocity,
 	shouldPassDismissalThreshold,

@@ -41,8 +41,7 @@ export default function BlankStackLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "vertical",
-					snapPoints: [0.25, 1.0],
-					initialSnapIndex: 1,
+
 					...Transition.Presets.SlideFromBottom(),
 				}}
 			/>
@@ -102,47 +101,22 @@ export default function BlankStackLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "vertical",
-					snapPoints: [0.4, 0.85],
+					snapPoints: [0.5, 1.0],
 					initialSnapIndex: 0,
 					screenStyleInterpolator: ({
 						layouts: {
 							screen: { height },
 						},
 						progress,
-						focused,
 					}) => {
 						"worklet";
 
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
-						if (!focused) {
-							return {
-								contentStyle: {
-									transform: [
-										{
-											scale: interpolate(
-												progress,
-												[1, 1.4, 1.85],
-												[1, 1, 0.9],
-												"clamp",
-											),
-										},
-									],
-									borderRadius: interpolate(
-										progress,
-										[1.4, 1.85],
-										[12, 36],
-										"clamp",
-									),
-									overflow: "hidden" as const,
-								},
-							};
-						}
-
-						console.log(progress);
 						return {
 							contentStyle: {
-								transform: [{ translateY: y }],
+								transform: [{ translateY: y }, { scale }],
 							},
 						};
 					},

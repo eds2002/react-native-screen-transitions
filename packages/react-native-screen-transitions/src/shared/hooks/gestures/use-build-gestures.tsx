@@ -23,13 +23,6 @@ interface BuildGesturesHookProps {
 	ancestorContext?: GestureContextType | null;
 }
 
-/**
- * Composes screen pan and native gestures.
- *
- * This hook extracts screen options, computes gesture configuration,
- * and builds the actual Gesture objects. All handler logic is delegated
- * to useScreenGestureHandlers.
- */
 export const useBuildGestures = ({
 	scrollConfig,
 	ancestorContext,
@@ -66,39 +59,33 @@ export const useBuildGestures = ({
 
 	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
 
-	// Edge dismiss gesture is controlled by gestureEnabled
-	const edgeDismissEnabled = Boolean(
+	// Dismiss gesture is controlled by gestureEnabled (disabled for first screen)
+	const canDismiss = Boolean(
 		isFirstScreen ? false : current.options.gestureEnabled,
 	);
 
 	// Snap navigation works independently - enabled when snap points exist
-	// This matches iOS native sheet behavior where nativeGestureEnabled: false
-	// disables edge dismiss but you can still drag between detents
-	const gestureEnabled = edgeDismissEnabled || hasSnapPoints;
-
-	// Determine primary snap axis based on gestureDirection
-	const snapAxis = useMemo(() => {
-		if (!hasSnapPoints) return "vertical" as const;
-		const directionsArray = Array.isArray(gestureDirection)
-			? gestureDirection
-			: [gestureDirection];
-		const hasHorizontal =
-			directionsArray.includes("horizontal") ||
-			directionsArray.includes("horizontal-inverted");
-		return hasHorizontal ? ("horizontal" as const) : ("vertical" as const);
-	}, [gestureDirection, hasSnapPoints]);
+	// This matches iOS native sheet behavior where gestureEnabled: false
+	// disables dismiss but you can still drag between detents
+	const gestureEnabled = canDismiss || hasSnapPoints;
 
 	const directions = useMemo(() => {
 		const directionsArray = Array.isArray(gestureDirection)
 			? gestureDirection
 			: [gestureDirection];
+
 		const isBidirectional = directionsArray.includes("bidirectional");
+
+		// Determine primary axis for snap points (horizontal takes priority)
+		const hasHorizontalDirection =
+			directionsArray.includes("horizontal") ||
+			directionsArray.includes("horizontal-inverted");
 
 		// When snap points exist, enable bidirectional movement on the snap axis
 		const enableBothVertical =
-			isBidirectional || (hasSnapPoints && snapAxis === "vertical");
+			isBidirectional || (hasSnapPoints && !hasHorizontalDirection);
 		const enableBothHorizontal =
-			isBidirectional || (hasSnapPoints && snapAxis === "horizontal");
+			isBidirectional || (hasSnapPoints && hasHorizontalDirection);
 
 		return {
 			vertical: directionsArray.includes("vertical") || enableBothVertical,
@@ -109,7 +96,7 @@ export const useBuildGestures = ({
 			horizontalInverted:
 				directionsArray.includes("horizontal-inverted") || enableBothHorizontal,
 		};
-	}, [gestureDirection, hasSnapPoints, snapAxis]);
+	}, [gestureDirection, hasSnapPoints]);
 
 	const handleDismiss = useCallback(() => {
 		// If an ancestor navigator is already dismissing, skip this dismiss to
@@ -149,8 +136,7 @@ export const useBuildGestures = ({
 			ancestorIsDismissing:
 				ancestorContext?.gestureAnimationValues.isDismissing,
 			snapPoints: hasSnapPoints ? (snapPoints as number[]) : undefined,
-			snapAxis,
-			edgeDismissEnabled,
+			canDismiss,
 			transitionSpec,
 			handleDismiss,
 		});

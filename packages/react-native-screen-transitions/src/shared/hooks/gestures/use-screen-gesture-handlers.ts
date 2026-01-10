@@ -18,7 +18,10 @@ import {
 } from "../../types/gesture.types";
 import type { Layout } from "../../types/screen.types";
 import { animateToProgress } from "../../utils/animation/animate-to-progress";
-import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
+import {
+	applyOffsetRules,
+	checkScrollAwareActivation,
+} from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { determineSnapTarget } from "../../utils/gesture/determine-snap-target";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
@@ -51,27 +54,14 @@ interface UseScreenGestureHandlersProps {
 
 	// Snap mode (optional - presence enables snap behavior)
 	snapPoints?: number[];
-	snapAxis?: "horizontal" | "vertical";
-	edgeDismissEnabled?: boolean;
+	canDismiss?: boolean;
 
 	transitionSpec?: TransitionSpec;
 	handleDismiss: () => void;
 }
 
-// Softer spring for snap transitions
 const SNAP_SPRING = { damping: 50, stiffness: 500, mass: 1 };
 
-/**
- * Unified gesture handlers for screen transitions.
- * Handles both standard dismiss and snap point modes.
- *
- * Returns all gesture callbacks needed for Pan gesture:
- * - onTouchesDown: Captures initial touch position
- * - onTouchesMove: Handles gesture activation logic
- * - onStart: Marks gesture as active
- * - onUpdate: Updates progress during drag
- * - onEnd: Determines dismiss/snap target and animates
- */
 export const useScreenGestureHandlers = ({
 	dimensions,
 	animations,
@@ -84,14 +74,17 @@ export const useScreenGestureHandlers = ({
 	gestureResponseDistance,
 	ancestorIsDismissing,
 	snapPoints,
-	snapAxis = "vertical",
-	edgeDismissEnabled = true,
+	canDismiss = true,
 	transitionSpec,
 	handleDismiss,
 }: UseScreenGestureHandlersProps) => {
 	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
 
-	// Internal shared values for gesture state
+	const snapAxis =
+		directions.horizontal || directions.horizontalInverted
+			? "horizontal"
+			: "vertical";
+
 	const initialTouch = useSharedValue({ x: 0, y: 0 });
 	const gestureOffsetState = useSharedValue<GestureOffsetState>(
 		GestureOffsetState.PENDING,
@@ -141,40 +134,33 @@ export const useScreenGestureHandlers = ({
 				return;
 			}
 
-			const maxScrollY = scrollConfig.value?.contentHeight
-				? scrollConfig.value.contentHeight - scrollConfig.value.layoutHeight
-				: 0;
-
-			const maxScrollX = scrollConfig.value?.contentWidth
-				? scrollConfig.value.contentWidth - scrollConfig.value.layoutWidth
-				: 0;
-
 			const recognizedDirection =
 				isSwipingDown || isSwipingUp || isSwipingRight || isSwipingLeft;
 
 			const scrollCfg = scrollConfig.value;
+			const scrollX = scrollCfg?.x ?? 0;
+			const scrollY = scrollCfg?.y ?? 0;
+			const maxScrollX = scrollCfg?.contentWidth
+				? scrollCfg.contentWidth - scrollCfg.layoutWidth
+				: 0;
+			const maxScrollY = scrollCfg?.contentHeight
+				? scrollCfg.contentHeight - scrollCfg.layoutHeight
+				: 0;
 
-			let shouldActivate = false;
-			let activatedDirection: GestureDirection | null = null;
-
-			if (recognizedDirection) {
-				if (directions.vertical && isSwipingDown) {
-					shouldActivate = scrollCfg ? scrollCfg.y <= 0 : true;
-					if (shouldActivate) activatedDirection = "vertical";
-				}
-				if (directions.horizontal && isSwipingRight) {
-					shouldActivate = scrollCfg ? scrollCfg.x <= 0 : true;
-					if (shouldActivate) activatedDirection = "horizontal";
-				}
-				if (directions.verticalInverted && isSwipingUp) {
-					shouldActivate = scrollCfg ? scrollCfg.y >= maxScrollY : true;
-					if (shouldActivate) activatedDirection = "vertical-inverted";
-				}
-				if (directions.horizontalInverted && isSwipingLeft) {
-					shouldActivate = scrollCfg ? scrollCfg.x >= maxScrollX : true;
-					if (shouldActivate) activatedDirection = "horizontal-inverted";
-				}
-			}
+			const { shouldActivate, direction: activatedDirection } =
+				checkScrollAwareActivation({
+					swipeInfo: {
+						isSwipingDown,
+						isSwipingUp,
+						isSwipingRight,
+						isSwipingLeft,
+					},
+					directions,
+					scrollX,
+					scrollY,
+					maxScrollX,
+					maxScrollY,
+				});
 
 			if (recognizedDirection && !shouldActivate) {
 				manager.fail();
@@ -210,13 +196,13 @@ export const useScreenGestureHandlers = ({
 			// Update gesture values (shared across all modes)
 			gestureAnimationValues.x.value = translationX;
 			gestureAnimationValues.y.value = translationY;
-			gestureAnimationValues.normalizedX.value = Math.max(
-				-1,
-				Math.min(1, translationX / width),
+			gestureAnimationValues.normalizedX.value = velocity.normalizeTranslation(
+				translationX,
+				width,
 			);
-			gestureAnimationValues.normalizedY.value = Math.max(
-				-1,
-				Math.min(1, translationY / height),
+			gestureAnimationValues.normalizedY.value = velocity.normalizeTranslation(
+				translationY,
+				height,
 			);
 
 			if (hasSnapPoints && gestureDrivesProgress) {
@@ -231,50 +217,57 @@ export const useScreenGestureHandlers = ({
 
 				const sortedSnaps = snapPoints.slice().sort((a, b) => a - b);
 				// Clamp to snap point bounds (dismiss at 0 only if allowed)
-				const minProgress = edgeDismissEnabled ? 0 : sortedSnaps[0];
+				const minProgress = canDismiss ? 0 : sortedSnaps[0];
 				const maxProgress = sortedSnaps[sortedSnaps.length - 1];
 
 				animations.progress.value = Math.max(
 					minProgress,
 					Math.min(maxProgress, gestureStartProgress.value + progressDelta),
 				);
-			} else {
-				// Standard mode: direction-based progress
+			} else if (gestureDrivesProgress) {
+				// Standard mode: find max progress across allowed directions
+				const axes = [
+					{
+						enabled: directions.horizontal,
+						translation: translationX,
+						dimension: width,
+						sign: 1,
+					},
+					{
+						enabled: directions.horizontalInverted,
+						translation: translationX,
+						dimension: width,
+						sign: -1,
+					},
+					{
+						enabled: directions.vertical,
+						translation: translationY,
+						dimension: height,
+						sign: 1,
+					},
+					{
+						enabled: directions.verticalInverted,
+						translation: translationY,
+						dimension: height,
+						sign: -1,
+					},
+				];
+
 				let maxProgress = 0;
-
-				const allowedDown = directions.vertical;
-				const allowedUp = directions.verticalInverted;
-				const allowedRight = directions.horizontal;
-				const allowedLeft = directions.horizontalInverted;
-
-				if (allowedRight && translationX > 0) {
-					const currentProgress = mapGestureToProgress(translationX, width);
-					maxProgress = Math.max(maxProgress, currentProgress);
+				for (const axis of axes) {
+					if (axis.enabled && axis.translation * axis.sign > 0) {
+						const progress = mapGestureToProgress(
+							Math.abs(axis.translation),
+							axis.dimension,
+						);
+						maxProgress = Math.max(maxProgress, progress);
+					}
 				}
 
-				if (allowedLeft && translationX < 0) {
-					const currentProgress = mapGestureToProgress(-translationX, width);
-					maxProgress = Math.max(maxProgress, currentProgress);
-				}
-
-				if (allowedDown && translationY > 0) {
-					const currentProgress = mapGestureToProgress(translationY, height);
-					maxProgress = Math.max(maxProgress, currentProgress);
-				}
-
-				if (allowedUp && translationY < 0) {
-					const currentProgress = mapGestureToProgress(-translationY, height);
-					maxProgress = Math.max(maxProgress, currentProgress);
-				}
-
-				const gestureProgress = Math.max(0, Math.min(1, maxProgress));
-
-				if (gestureDrivesProgress) {
-					animations.progress.value = Math.max(
-						0,
-						Math.min(1, gestureStartProgress.value - gestureProgress),
-					);
-				}
+				animations.progress.value = Math.max(
+					0,
+					Math.min(1, gestureStartProgress.value - maxProgress),
+				);
 			}
 		},
 	);
@@ -284,7 +277,6 @@ export const useScreenGestureHandlers = ({
 			"worklet";
 
 			if (hasSnapPoints) {
-				// Snap mode: use determineSnapTarget
 				const isHorizontal = snapAxis === "horizontal";
 				const axisVelocity = isHorizontal ? event.velocityX : event.velocityY;
 				const axisDimension = isHorizontal
@@ -296,7 +288,7 @@ export const useScreenGestureHandlers = ({
 					snapPoints,
 					velocity: axisVelocity,
 					dimension: axisDimension,
-					canDismiss: edgeDismissEnabled,
+					canDismiss: canDismiss,
 				});
 
 				const shouldDismiss = result.shouldDismiss;
@@ -320,9 +312,10 @@ export const useScreenGestureHandlers = ({
 
 				// For snap transitions, velocity should match gesture direction
 				// Positive velocity (dragging down/right) = decreasing progress = negative velocity
-				const normalizedVelocity = axisVelocity / axisDimension;
-				// Clamp to prevent overly energetic springs
-				const initialVelocity = Math.max(-3, Math.min(3, -normalizedVelocity));
+				const initialVelocity = -velocity.normalize(
+					axisVelocity,
+					axisDimension,
+				);
 
 				animateToProgress({
 					target: targetProgress,

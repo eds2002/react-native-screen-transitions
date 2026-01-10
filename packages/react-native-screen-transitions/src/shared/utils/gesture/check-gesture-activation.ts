@@ -308,3 +308,85 @@ export const applyOffsetRules = ({
 		isSwipingLeft,
 	};
 };
+
+interface ScrollAwareActivationParams {
+	swipeInfo: {
+		isSwipingDown: boolean;
+		isSwipingUp: boolean;
+		isSwipingRight: boolean;
+		isSwipingLeft: boolean;
+	};
+	directions: Directions;
+	scrollX: number;
+	scrollY: number;
+	maxScrollX: number;
+	maxScrollY: number;
+}
+
+type GestureDirection =
+	| "vertical"
+	| "vertical-inverted"
+	| "horizontal"
+	| "horizontal-inverted";
+
+/**
+ * Checks if a gesture should activate based on scroll position.
+ * Returns the direction to activate for, or null if activation should not occur.
+ */
+export function checkScrollAwareActivation({
+	swipeInfo,
+	directions,
+	scrollX,
+	scrollY,
+	maxScrollX,
+	maxScrollY,
+}: ScrollAwareActivationParams): {
+	shouldActivate: boolean;
+	direction: GestureDirection | null;
+} {
+	"worklet";
+
+	const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
+		swipeInfo;
+
+	// Data-driven approach: each check maps direction + swipe + scroll boundary
+	const checks: Array<{
+		enabled: boolean;
+		swiping: boolean;
+		atBoundary: boolean;
+		direction: GestureDirection;
+	}> = [
+		{
+			enabled: directions.vertical,
+			swiping: isSwipingDown,
+			atBoundary: scrollY <= 0,
+			direction: "vertical",
+		},
+		{
+			enabled: directions.horizontal,
+			swiping: isSwipingRight,
+			atBoundary: scrollX <= 0,
+			direction: "horizontal",
+		},
+		{
+			enabled: directions.verticalInverted,
+			swiping: isSwipingUp,
+			atBoundary: scrollY >= maxScrollY,
+			direction: "vertical-inverted",
+		},
+		{
+			enabled: directions.horizontalInverted,
+			swiping: isSwipingLeft,
+			atBoundary: scrollX >= maxScrollX,
+			direction: "horizontal-inverted",
+		},
+	];
+
+	for (const check of checks) {
+		if (check.enabled && check.swiping && check.atBoundary) {
+			return { shouldActivate: true, direction: check.direction };
+		}
+	}
+
+	return { shouldActivate: false, direction: null };
+}
