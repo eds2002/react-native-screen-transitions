@@ -7,11 +7,14 @@ import { useHighRefreshRate } from "../animation/use-high-refresh-rate";
 /**
  * Calculates the initial progress value based on snap points configuration.
  */
-function getInitialProgress(
-	snapPoints: number[] | "fitToContents" | undefined,
-	initialSnapIndex: number,
-): number | undefined {
-	if (!snapPoints || snapPoints === "fitToContents") {
+function getInitialProgress({
+	snapPoints,
+	initialSnapIndex,
+}: {
+	snapPoints?: number[];
+	initialSnapIndex: number;
+}): number | undefined {
+	if (!snapPoints) {
 		return undefined;
 	}
 
@@ -36,7 +39,7 @@ export function useOpenTransition(
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
 		const { snapPoints, initialSnapIndex = 0 } = current.options;
-		const targetProgress = getInitialProgress(snapPoints, initialSnapIndex);
+		const targetProgress = getInitialProgress({ snapPoints, initialSnapIndex });
 
 		activateHighRefreshRate();
 		animateToProgress({
