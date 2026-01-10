@@ -1,0 +1,374 @@
+import type {
+	GestureStateChangeEvent,
+	GestureTouchEvent,
+	GestureUpdateEvent,
+	PanGestureHandlerEventPayload,
+} from "react-native-gesture-handler";
+import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
+import { type SharedValue, useSharedValue } from "react-native-reanimated";
+import { FALSE, TRUE } from "../../constants";
+import type { ScrollConfig } from "../../providers/gestures.provider";
+import type { AnimationStoreMap } from "../../stores/animation.store";
+import type { GestureStoreMap } from "../../stores/gesture.store";
+import type { TransitionSpec } from "../../types/animation.types";
+import {
+	type GestureActivationArea,
+	type GestureDirection,
+	GestureOffsetState,
+} from "../../types/gesture.types";
+import type { Layout } from "../../types/screen.types";
+import { animateToProgress } from "../../utils/animation/animate-to-progress";
+import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
+import { determineDismissal } from "../../utils/gesture/determine-dismissal";
+import { determineSnapTarget } from "../../utils/gesture/determine-snap-target";
+import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
+import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
+import { velocity } from "../../utils/gesture/velocity";
+import useStableCallbackValue from "../use-stable-callback-value";
+
+interface DirectionsMap {
+	vertical: boolean;
+	verticalInverted: boolean;
+	horizontal: boolean;
+	horizontalInverted: boolean;
+}
+
+interface UseScreenGestureHandlersProps {
+	dimensions: Layout;
+	animations: AnimationStoreMap;
+	gestureAnimationValues: GestureStoreMap;
+
+	// Direction config
+	directions: DirectionsMap;
+	gestureDrivesProgress: boolean;
+	gestureVelocityImpact: number;
+
+	// Activation config
+	scrollConfig: SharedValue<ScrollConfig | null>;
+	gestureActivationArea: GestureActivationArea;
+	gestureResponseDistance?: number;
+	ancestorIsDismissing?: SharedValue<number> | null;
+
+	// Snap mode (optional - presence enables snap behavior)
+	snapPoints?: number[];
+	snapAxis?: "horizontal" | "vertical";
+	edgeDismissEnabled?: boolean;
+
+	transitionSpec?: TransitionSpec;
+	handleDismiss: () => void;
+}
+
+// Softer spring for snap transitions
+const SNAP_SPRING = { damping: 50, stiffness: 500, mass: 1 };
+
+/**
+ * Unified gesture handlers for screen transitions.
+ * Handles both standard dismiss and snap point modes.
+ *
+ * Returns all gesture callbacks needed for Pan gesture:
+ * - onTouchesDown: Captures initial touch position
+ * - onTouchesMove: Handles gesture activation logic
+ * - onStart: Marks gesture as active
+ * - onUpdate: Updates progress during drag
+ * - onEnd: Determines dismiss/snap target and animates
+ */
+export const useScreenGestureHandlers = ({
+	dimensions,
+	animations,
+	gestureAnimationValues,
+	directions,
+	gestureDrivesProgress,
+	gestureVelocityImpact,
+	scrollConfig,
+	gestureActivationArea,
+	gestureResponseDistance,
+	ancestorIsDismissing,
+	snapPoints,
+	snapAxis = "vertical",
+	edgeDismissEnabled = true,
+	transitionSpec,
+	handleDismiss,
+}: UseScreenGestureHandlersProps) => {
+	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
+
+	// Internal shared values for gesture state
+	const initialTouch = useSharedValue({ x: 0, y: 0 });
+	const gestureOffsetState = useSharedValue<GestureOffsetState>(
+		GestureOffsetState.PENDING,
+	);
+	const gestureStartProgress = useSharedValue(1);
+
+	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
+		"worklet";
+		const firstTouch = e.changedTouches[0];
+		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
+		gestureOffsetState.value = GestureOffsetState.PENDING;
+	});
+
+	const onTouchesMove = useStableCallbackValue(
+		(e: GestureTouchEvent, manager: GestureStateManagerType) => {
+			"worklet";
+
+			// If an ancestor navigator is already dismissing via gesture, block new gestures here.
+			if (ancestorIsDismissing?.value) {
+				gestureOffsetState.value = GestureOffsetState.FAILED;
+				manager.fail();
+				return;
+			}
+
+			const touch = e.changedTouches[0];
+
+			const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
+				applyOffsetRules({
+					touch,
+					directions,
+					manager,
+					dimensions,
+					gestureOffsetState,
+					initialTouch: initialTouch.value,
+					activationArea: gestureActivationArea,
+					responseDistance: gestureResponseDistance,
+				});
+
+			if (gestureOffsetState.value === GestureOffsetState.FAILED) {
+				manager.fail();
+				return;
+			}
+
+			// Keep pending until thresholds are met; no eager activation.
+			if (gestureAnimationValues.isDragging?.value) {
+				manager.activate();
+				return;
+			}
+
+			const maxScrollY = scrollConfig.value?.contentHeight
+				? scrollConfig.value.contentHeight - scrollConfig.value.layoutHeight
+				: 0;
+
+			const maxScrollX = scrollConfig.value?.contentWidth
+				? scrollConfig.value.contentWidth - scrollConfig.value.layoutWidth
+				: 0;
+
+			const recognizedDirection =
+				isSwipingDown || isSwipingUp || isSwipingRight || isSwipingLeft;
+
+			const scrollCfg = scrollConfig.value;
+
+			let shouldActivate = false;
+			let activatedDirection: GestureDirection | null = null;
+
+			if (recognizedDirection) {
+				if (directions.vertical && isSwipingDown) {
+					shouldActivate = scrollCfg ? scrollCfg.y <= 0 : true;
+					if (shouldActivate) activatedDirection = "vertical";
+				}
+				if (directions.horizontal && isSwipingRight) {
+					shouldActivate = scrollCfg ? scrollCfg.x <= 0 : true;
+					if (shouldActivate) activatedDirection = "horizontal";
+				}
+				if (directions.verticalInverted && isSwipingUp) {
+					shouldActivate = scrollCfg ? scrollCfg.y >= maxScrollY : true;
+					if (shouldActivate) activatedDirection = "vertical-inverted";
+				}
+				if (directions.horizontalInverted && isSwipingLeft) {
+					shouldActivate = scrollCfg ? scrollCfg.x >= maxScrollX : true;
+					if (shouldActivate) activatedDirection = "horizontal-inverted";
+				}
+			}
+
+			if (recognizedDirection && !shouldActivate) {
+				manager.fail();
+				return;
+			}
+
+			if (
+				shouldActivate &&
+				gestureOffsetState.value === GestureOffsetState.PASSED &&
+				!gestureAnimationValues.isDismissing?.value
+			) {
+				gestureAnimationValues.direction.value = activatedDirection;
+				manager.activate();
+				return;
+			}
+		},
+	);
+
+	const onStart = useStableCallbackValue(() => {
+		"worklet";
+		gestureAnimationValues.isDragging.value = TRUE;
+		gestureAnimationValues.isDismissing.value = FALSE;
+		gestureStartProgress.value = animations.progress.value;
+	});
+
+	const onUpdate = useStableCallbackValue(
+		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
+			"worklet";
+
+			const { translationX, translationY } = event;
+			const { width, height } = dimensions;
+
+			// Update gesture values (shared across all modes)
+			gestureAnimationValues.x.value = translationX;
+			gestureAnimationValues.y.value = translationY;
+			gestureAnimationValues.normalizedX.value = Math.max(
+				-1,
+				Math.min(1, translationX / width),
+			);
+			gestureAnimationValues.normalizedY.value = Math.max(
+				-1,
+				Math.min(1, translationY / height),
+			);
+
+			if (hasSnapPoints && gestureDrivesProgress) {
+				// Snap mode: bidirectional tracking on snap axis
+				const isHorizontal = snapAxis === "horizontal";
+				const translation = isHorizontal ? translationX : translationY;
+				const dimension = isHorizontal ? width : height;
+
+				// Positive translation (down/right) = decrease progress (toward 0)
+				// Negative translation (up/left) = increase progress (toward 1)
+				const progressDelta = -translation / dimension;
+
+				const sortedSnaps = snapPoints.slice().sort((a, b) => a - b);
+				// Clamp to snap point bounds (dismiss at 0 only if allowed)
+				const minProgress = edgeDismissEnabled ? 0 : sortedSnaps[0];
+				const maxProgress = sortedSnaps[sortedSnaps.length - 1];
+
+				animations.progress.value = Math.max(
+					minProgress,
+					Math.min(maxProgress, gestureStartProgress.value + progressDelta),
+				);
+			} else {
+				// Standard mode: direction-based progress
+				let maxProgress = 0;
+
+				const allowedDown = directions.vertical;
+				const allowedUp = directions.verticalInverted;
+				const allowedRight = directions.horizontal;
+				const allowedLeft = directions.horizontalInverted;
+
+				if (allowedRight && translationX > 0) {
+					const currentProgress = mapGestureToProgress(translationX, width);
+					maxProgress = Math.max(maxProgress, currentProgress);
+				}
+
+				if (allowedLeft && translationX < 0) {
+					const currentProgress = mapGestureToProgress(-translationX, width);
+					maxProgress = Math.max(maxProgress, currentProgress);
+				}
+
+				if (allowedDown && translationY > 0) {
+					const currentProgress = mapGestureToProgress(translationY, height);
+					maxProgress = Math.max(maxProgress, currentProgress);
+				}
+
+				if (allowedUp && translationY < 0) {
+					const currentProgress = mapGestureToProgress(-translationY, height);
+					maxProgress = Math.max(maxProgress, currentProgress);
+				}
+
+				const gestureProgress = Math.max(0, Math.min(1, maxProgress));
+
+				if (gestureDrivesProgress) {
+					animations.progress.value = Math.max(
+						0,
+						Math.min(1, gestureStartProgress.value - gestureProgress),
+					);
+				}
+			}
+		},
+	);
+
+	const onEnd = useStableCallbackValue(
+		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
+			"worklet";
+
+			if (hasSnapPoints) {
+				// Snap mode: use determineSnapTarget
+				const isHorizontal = snapAxis === "horizontal";
+				const axisVelocity = isHorizontal ? event.velocityX : event.velocityY;
+				const axisDimension = isHorizontal
+					? dimensions.width
+					: dimensions.height;
+
+				const result = determineSnapTarget({
+					currentProgress: animations.progress.value,
+					snapPoints,
+					velocity: axisVelocity,
+					dimension: axisDimension,
+					canDismiss: edgeDismissEnabled,
+				});
+
+				const shouldDismiss = result.shouldDismiss;
+				const targetProgress = result.targetProgress;
+				const isSnapping = !shouldDismiss;
+
+				const spec = shouldDismiss
+					? transitionSpec?.close
+					: transitionSpec?.open;
+				const effectiveSpec = isSnapping
+					? { open: SNAP_SPRING, close: SNAP_SPRING }
+					: transitionSpec;
+
+				resetGestureValues({
+					spec,
+					gestures: gestureAnimationValues,
+					shouldDismiss,
+					event,
+					dimensions,
+				});
+
+				// For snap transitions, velocity should match gesture direction
+				// Positive velocity (dragging down/right) = decreasing progress = negative velocity
+				const normalizedVelocity = axisVelocity / axisDimension;
+				// Clamp to prevent overly energetic springs
+				const initialVelocity = Math.max(-3, Math.min(3, -normalizedVelocity));
+
+				animateToProgress({
+					target: targetProgress,
+					onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
+					spec: effectiveSpec,
+					animations,
+					initialVelocity,
+				});
+			} else {
+				// Standard mode: use determineDismissal
+				const result = determineDismissal({
+					event,
+					directions,
+					dimensions,
+					gestureVelocityImpact,
+				});
+
+				const shouldDismiss = result.shouldDismiss;
+				const targetProgress = shouldDismiss ? 0 : gestureStartProgress.value;
+
+				resetGestureValues({
+					spec: shouldDismiss ? transitionSpec?.close : transitionSpec?.open,
+					gestures: gestureAnimationValues,
+					shouldDismiss,
+					event,
+					dimensions,
+				});
+
+				const initialVelocity = velocity.calculateProgressVelocity({
+					animations,
+					shouldDismiss,
+					event,
+					dimensions,
+					directions,
+				});
+
+				animateToProgress({
+					target: targetProgress,
+					onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
+					spec: transitionSpec,
+					animations,
+					initialVelocity,
+				});
+			}
+		},
+	);
+
+	return { onTouchesDown, onTouchesMove, onStart, onUpdate, onEnd };
+};

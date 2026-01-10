@@ -4,28 +4,37 @@ import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
 import { animate } from "./animate";
 
-interface StartScreenTransitionProps {
-	target: "open" | "close";
+interface AnimateToProgressProps {
+	/**
+	 * Target for the animation:
+	 * - "open" = animate to progress 1
+	 * - "close" = animate to progress 0
+	 * - number = animate to specific progress value (e.g., 0.5 for snap point)
+	 */
+	target: "open" | "close" | number;
 	spec?: TransitionSpec;
 	onAnimationFinish?: (finished: boolean) => void;
 	animations: AnimationStoreMap;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
 	initialVelocity?: number;
-	/** Optional target progress value. If provided, overrides the default 0/1 target. */
-	targetProgress?: number;
 }
 
-export const startScreenTransition = ({
+export const animateToProgress = ({
 	target,
 	spec,
 	onAnimationFinish,
 	animations,
 	initialVelocity,
-	targetProgress,
-}: StartScreenTransitionProps) => {
+}: AnimateToProgressProps) => {
 	"worklet";
-	const value = targetProgress ?? (target === "open" ? 1 : 0);
-	const config = target === "open" ? spec?.open : spec?.close;
+
+	// Determine target value and direction
+	const isClosing =
+		target === "close" || (typeof target === "number" && target === 0);
+	const value = typeof target === "number" ? target : target === "open" ? 1 : 0;
+
+	// Select spec based on direction (closing uses close spec, otherwise open)
+	const config = isClosing ? spec?.close : spec?.open;
 
 	const isSpringConfig =
 		!!config && !("duration" in config) && !("easing" in config);
@@ -37,7 +46,7 @@ export const startScreenTransition = ({
 
 	const { progress, animating, closing, entering } = animations;
 
-	if (target === "close") {
+	if (isClosing) {
 		closing.set(TRUE);
 		entering.set(FALSE);
 	} else {
