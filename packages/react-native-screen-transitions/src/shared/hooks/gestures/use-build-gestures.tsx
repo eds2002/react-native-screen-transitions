@@ -15,7 +15,9 @@ import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
 	DEFAULT_GESTURE_DRIVES_PROGRESS,
+	FALSE,
 	GESTURE_VELOCITY_IMPACT,
+	TRUE,
 } from "../../constants";
 import type {
 	GestureContextType,
@@ -31,6 +33,7 @@ import {
 import { startScreenTransition } from "../../utils/animation/start-screen-transition";
 import { applyOffsetRules } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
+import { determineSnapTarget } from "../../utils/gesture/determine-snap-target";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import { velocity } from "../../utils/gesture/velocity";
@@ -66,6 +69,9 @@ export const useBuildGestures = ({
 		GestureOffsetState.PENDING,
 	);
 
+	// Captures progress at gesture start for snap point support
+	const gestureStartProgress = useSharedValue(1);
+
 	// Ref for external gesture coordination (e.g., swipeable lists)
 	const panGestureRef = useRef<GestureType | undefined>(undefined);
 
@@ -81,7 +87,10 @@ export const useBuildGestures = ({
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureResponseDistance,
 		transitionSpec,
+		snapPoints,
 	} = current.options;
+
+	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
 
 	const gestureEnabled = Boolean(
 		isFirstScreen ? false : current.options.gestureEnabled,
@@ -224,8 +233,9 @@ export const useBuildGestures = ({
 
 	const onStart = useStableCallbackValue(() => {
 		"worklet";
-		gestureAnimationValues.isDragging.value = 1;
-		gestureAnimationValues.isDismissing.value = 0;
+		gestureAnimationValues.isDragging.value = TRUE;
+		gestureAnimationValues.isDismissing.value = FALSE;
+		gestureStartProgress.value = animations.progress.value;
 	});
 
 	const onUpdate = useStableCallbackValue(
@@ -287,10 +297,13 @@ export const useBuildGestures = ({
 				maxProgress = Math.max(maxProgress, currentProgress);
 			}
 
-			gestureProgress = maxProgress;
+			gestureProgress = Math.max(0, Math.min(1, maxProgress));
 
 			if (gestureDrivesProgress) {
-				animations.progress.value = 1 - gestureProgress;
+				animations.progress.value = Math.max(
+					0,
+					Math.min(1, gestureStartProgress.value - gestureProgress),
+				);
 			}
 		},
 	);
@@ -299,14 +312,39 @@ export const useBuildGestures = ({
 		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
-			const { shouldDismiss } = determineDismissal({
-				event,
-				directions,
-				dimensions,
-				gestureVelocityImpact,
-			});
+			let shouldDismiss: boolean;
+			let targetProgress: number;
 
+			if (hasSnapPoints) {
+				// Use snap point logic
+				const result = determineSnapTarget({
+					currentProgress: animations.progress.value,
+					snapPoints: snapPoints as number[],
+					velocityY: event.velocityY,
+					screenHeight: dimensions.height,
+				});
+				shouldDismiss = result.shouldDismiss;
+				targetProgress = result.targetProgress;
+			} else {
+				// Use original dismiss logic
+				const result = determineDismissal({
+					event,
+					directions,
+					dimensions,
+					gestureVelocityImpact,
+				});
+				shouldDismiss = result.shouldDismiss;
+				targetProgress = shouldDismiss ? 0 : gestureStartProgress.value;
+			}
+
+			const isSnapping = hasSnapPoints && !shouldDismiss;
+
+			// Softer spring for snap transitions (including snap-back)
+			const SNAP_SPRING = { damping: 50, stiffness: 500, mass: 1 };
 			const spec = shouldDismiss ? transitionSpec?.close : transitionSpec?.open;
+			const effectiveSpec = isSnapping
+				? { open: SNAP_SPRING, close: SNAP_SPRING }
+				: transitionSpec;
 
 			resetGestureValues({
 				spec,
@@ -316,20 +354,31 @@ export const useBuildGestures = ({
 				dimensions,
 			});
 
-			const initialVelocity = velocity.calculateProgressVelocity({
-				animations,
-				shouldDismiss,
-				event,
-				dimensions,
-				directions,
-			});
+			let initialVelocity: number;
+
+			if (isSnapping) {
+				// For snap transitions, velocity should match gesture direction
+				// Positive velocityY (dragging down) = decreasing progress = negative velocity
+				const normalizedVelocityY = event.velocityY / dimensions.height;
+				// Clamp to prevent overly energetic springs
+				initialVelocity = Math.max(-3, Math.min(3, -normalizedVelocityY));
+			} else {
+				initialVelocity = velocity.calculateProgressVelocity({
+					animations,
+					shouldDismiss,
+					event,
+					dimensions,
+					directions,
+				});
+			}
 
 			startScreenTransition({
 				target: shouldDismiss ? "close" : "open",
 				onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
-				spec: transitionSpec,
+				spec: effectiveSpec,
 				animations,
 				initialVelocity,
+				targetProgress,
 			});
 		},
 	);
