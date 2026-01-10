@@ -92,9 +92,28 @@ export const useBuildGestures = ({
 
 	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
 
-	const gestureEnabled = Boolean(
+	// Edge dismiss gesture is controlled by gestureEnabled
+	const edgeDismissEnabled = Boolean(
 		isFirstScreen ? false : current.options.gestureEnabled,
 	);
+
+	// Snap navigation works independently - enabled when snap points exist
+	// This matches iOS native sheet behavior where nativeGestureEnabled: false
+	// disables edge dismiss but you can still drag between detents
+	const gestureEnabled = edgeDismissEnabled || hasSnapPoints;
+
+	// Determine primary snap axis based on gestureDirection
+	const snapAxis = useMemo(() => {
+		if (!hasSnapPoints) return null;
+		const directionsArray = Array.isArray(gestureDirection)
+			? gestureDirection
+			: [gestureDirection];
+		// Check if horizontal direction is specified
+		const hasHorizontal =
+			directionsArray.includes("horizontal") ||
+			directionsArray.includes("horizontal-inverted");
+		return hasHorizontal ? "horizontal" : "vertical";
+	}, [gestureDirection, hasSnapPoints]);
 
 	const directions = useMemo(() => {
 		const directionsArray = Array.isArray(gestureDirection)
@@ -102,15 +121,22 @@ export const useBuildGestures = ({
 			: [gestureDirection];
 		const isBidirectional = directionsArray.includes("bidirectional");
 
+		// When snap points exist, enable bidirectional movement on the snap axis
+		const enableBothVertical =
+			isBidirectional || (hasSnapPoints && snapAxis === "vertical");
+		const enableBothHorizontal =
+			isBidirectional || (hasSnapPoints && snapAxis === "horizontal");
+
 		return {
-			vertical: directionsArray.includes("vertical") || isBidirectional,
+			vertical: directionsArray.includes("vertical") || enableBothVertical,
 			verticalInverted:
-				directionsArray.includes("vertical-inverted") || isBidirectional,
-			horizontal: directionsArray.includes("horizontal") || isBidirectional,
+				directionsArray.includes("vertical-inverted") || enableBothVertical,
+			horizontal:
+				directionsArray.includes("horizontal") || enableBothHorizontal,
 			horizontalInverted:
-				directionsArray.includes("horizontal-inverted") || isBidirectional,
+				directionsArray.includes("horizontal-inverted") || enableBothHorizontal,
 		};
-	}, [gestureDirection]);
+	}, [gestureDirection, hasSnapPoints, snapAxis]);
 
 	const handleDismiss = useCallback(() => {
 		// If an ancestor navigator is already dismissing, skip this dismiss to
@@ -242,8 +268,6 @@ export const useBuildGestures = ({
 		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
-			let gestureProgress = 0;
-
 			const { translationX, translationY } = event;
 			const { width, height } = dimensions;
 
@@ -258,6 +282,28 @@ export const useBuildGestures = ({
 				Math.min(1, translationY / height),
 			);
 
+			// Snap mode: bidirectional tracking on the snap axis
+			// Positive translation (down/right) = decrease progress (toward 0)
+			// Negative translation (up/left) = increase progress (toward 1)
+			if (hasSnapPoints && gestureDrivesProgress) {
+				const isHorizontal = snapAxis === "horizontal";
+				const translation = isHorizontal ? translationX : translationY;
+				const dimension = isHorizontal ? width : height;
+				const progressDelta = -translation / dimension;
+				const sortedSnaps = (snapPoints as number[])
+					.slice()
+					.sort((a, b) => a - b);
+				// Clamp to snap point bounds (dismiss at 0 only if allowed)
+				const minProgress = edgeDismissEnabled ? 0 : sortedSnaps[0];
+				const maxProgress = sortedSnaps[sortedSnaps.length - 1];
+				animations.progress.value = Math.max(
+					minProgress,
+					Math.min(maxProgress, gestureStartProgress.value + progressDelta),
+				);
+				return;
+			}
+
+			// Standard mode: direction-based progress calculation
 			let maxProgress = 0;
 
 			const allowedDown = directions.vertical;
@@ -297,7 +343,7 @@ export const useBuildGestures = ({
 				maxProgress = Math.max(maxProgress, currentProgress);
 			}
 
-			gestureProgress = Math.max(0, Math.min(1, maxProgress));
+			const gestureProgress = Math.max(0, Math.min(1, maxProgress));
 
 			if (gestureDrivesProgress) {
 				animations.progress.value = Math.max(
@@ -316,12 +362,18 @@ export const useBuildGestures = ({
 			let targetProgress: number;
 
 			if (hasSnapPoints) {
-				// Use snap point logic
+				// Use snap point logic with axis-appropriate velocity and dimension
+				const isHorizontal = snapAxis === "horizontal";
+				const axisVelocity = isHorizontal ? event.velocityX : event.velocityY;
+				const axisDimension = isHorizontal
+					? dimensions.width
+					: dimensions.height;
 				const result = determineSnapTarget({
 					currentProgress: animations.progress.value,
-					snapPoints: snapPoints as number[],
-					velocityY: event.velocityY,
-					screenHeight: dimensions.height,
+					snapPoints: snapPoints,
+					velocity: axisVelocity,
+					dimension: axisDimension,
+					canDismiss: edgeDismissEnabled,
 				});
 				shouldDismiss = result.shouldDismiss;
 				targetProgress = result.targetProgress;

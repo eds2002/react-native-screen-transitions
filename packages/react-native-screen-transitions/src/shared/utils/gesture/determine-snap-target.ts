@@ -1,10 +1,14 @@
 interface DetermineSnapTargetProps {
 	currentProgress: number;
 	snapPoints: number[];
-	velocityY: number;
-	screenHeight: number;
+	/** Velocity along the snap axis (positive = toward dismiss) */
+	velocity: number;
+	/** Screen dimension along the snap axis (width or height) */
+	dimension: number;
 	/** How much velocity affects the snap decision (0-1). Default 0.15 */
 	velocityFactor?: number;
+	/** Whether dismiss (progress=0) is allowed. Default true */
+	canDismiss?: boolean;
 }
 
 interface DetermineSnapTargetResult {
@@ -22,20 +26,23 @@ interface DetermineSnapTargetResult {
 export function determineSnapTarget({
 	currentProgress,
 	snapPoints,
-	velocityY,
-	screenHeight,
+	velocity,
+	dimension,
 	velocityFactor = 0.15,
+	canDismiss = true,
 }: DetermineSnapTargetProps): DetermineSnapTargetResult {
 	"worklet";
 
-	// Convert velocity to progress units (positive = dragging down = decreasing progress)
-	const velocityInProgress = (velocityY / screenHeight) * velocityFactor;
+	// Convert velocity to progress units (positive = toward dismiss = decreasing progress)
+	const velocityInProgress = (velocity / dimension) * velocityFactor;
 
 	// Project where we'd end up with velocity
 	const projectedProgress = currentProgress - velocityInProgress;
 
-	// Build all possible targets: dismiss (0) + all snap points
-	const allTargets = [0, ...snapPoints].sort((a, b) => a - b);
+	// Build all possible targets: dismiss (0) only if allowed, plus all snap points
+	const allTargets = canDismiss
+		? [0, ...snapPoints].sort((a, b) => a - b)
+		: [...snapPoints].sort((a, b) => a - b);
 
 	// Find the target whose zone contains the projected progress
 	// Zones are split at midpoints between adjacent targets
