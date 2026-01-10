@@ -33,6 +33,11 @@ const TEST_FLOWS = [
 		title: "Floating Overlay",
 		description: "Tab bar overlay that animates with screen transitions",
 	},
+	{
+		id: "bottom-sheet",
+		title: "Bottom Sheet",
+		description: "Vertical sheet with snap points",
+	},
 ];
 
 export default function BlankStackIndex() {
@@ -51,7 +56,9 @@ export default function BlankStackIndex() {
 							testID={`blank-${flow.id}`}
 							style={styles.item}
 							onPress={() =>
-								router.push(`/blank-stack/${flow.id}` as `/blank-stack/${string}`)
+								router.push(
+									`/blank-stack/${flow.id}` as `/blank-stack/${string}`,
+								)
 							}
 						>
 							<Text style={styles.itemTitle}>{flow.title}</Text>

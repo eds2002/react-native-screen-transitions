@@ -97,6 +97,16 @@ export default function BlankStackLayout() {
 				name="overlay"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<BlankStack.Screen
+				name="bottom-sheet"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					snapPoints: [0.4, 0.85],
+					initialSnapIndex: 0,
+					...Transition.Presets.SlideFromBottom(),
+				}}
+			/>
 		</BlankStack>
 	);
 }
