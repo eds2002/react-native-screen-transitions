@@ -7,7 +7,14 @@ export default function WithResistanceScreen() {
 	return (
 		<MaskedView
 			style={StyleSheet.absoluteFill}
-			maskElement={<Transition.View styleId="MASKED" style={{ flex: 1 }} />}
+			maskElement={
+				<Transition.View
+					styleId="MASKED"
+					style={{ flex: 1 }}
+					pointerEvents="none"
+				/>
+			}
+			pointerEvents="box-none"
 		>
 			{/* Content positioned at bottom, mask reveals it from bottom up */}
 			<Transition.View styleId="CONTENT" style={styles.container}>

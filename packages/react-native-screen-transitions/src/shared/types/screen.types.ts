@@ -154,4 +154,15 @@ export type ScreenTransitionConfig = {
 	 * @default 0
 	 */
 	initialSnapIndex?: number;
+
+	/**
+	 * Controls how touches interact with the backdrop area (outside the screen content).
+	 *
+	 * - `'block'`: Backdrop catches all touches (default for most screens)
+	 * - `'passthrough'`: Touches pass through to content behind (default for component stacks)
+	 * - `'dismiss'`: Tapping backdrop dismisses the screen
+	 *
+	 * @default 'block' (or 'passthrough' for component stacks)
+	 */
+	backdropBehavior?: "block" | "passthrough" | "dismiss";
 };

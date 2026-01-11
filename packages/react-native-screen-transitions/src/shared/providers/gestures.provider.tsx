@@ -6,7 +6,7 @@ import {
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
-import { useStackPointerEvents } from "../hooks/use-stack-pointer-events";
+import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
 import type { GestureStoreMap } from "../stores/gesture.store";
 import createProvider from "../utils/create-provider";
 import { useKeys } from "./screen/keys.provider";
@@ -42,9 +42,9 @@ export const {
 	GestureContextType
 >(({ children }) => {
 	const { current } = useKeys();
-	const pointerEvents = useStackPointerEvents();
 	const ancestorContext = useGestureContext();
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
+	const { pointerEvents } = useBackdropPointerEvents();
 
 	const hasGestures = current.options.gestureEnabled === true;
 

@@ -1,5 +1,5 @@
 import type React from "react";
-import { RootTransitionAware } from "../../components/root-transition-aware";
+import { ScreenContainer } from "../../components/screen-container";
 import { ScreenLifecycle } from "../../components/screen-lifecycle";
 import { ScreenGestureProvider } from "../gestures.provider";
 import { type BaseDescriptor, KeysProvider } from "./keys.provider";
@@ -23,7 +23,7 @@ export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 			<KeysProvider previous={previous} current={current} next={next}>
 				<ScreenGestureProvider>
 					<ScreenStylesProvider>
-						<RootTransitionAware>{children}</RootTransitionAware>
+						<ScreenContainer>{children}</ScreenContainer>
 					</ScreenStylesProvider>
 				</ScreenGestureProvider>
 			</KeysProvider>
