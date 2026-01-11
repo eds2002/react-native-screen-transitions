@@ -188,7 +188,7 @@ export default function BottomSheetLayout() {
 				name="horizontal-drawer"
 				options={{
 					gestureEnabled: true,
-					gestureDirection: "horizontal-inverted",
+					gestureDirection: "horizontal",
 					snapPoints: [0.5, 1.0],
 					initialSnapIndex: 0,
 					screenStyleInterpolator: ({
@@ -333,6 +333,93 @@ export default function BottomSheetLayout() {
 						return {
 							contentStyle: {
 								transform: [{ translateY: y }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="with-scroll-inverted"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical-inverted",
+					snapPoints: [0.5, 0.8],
+					initialSnapIndex: 1,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [-height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="with-scroll-horizontal"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "horizontal",
+					snapPoints: [0.5, 0.8],
+					initialSnapIndex: 1,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { width },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const x = interpolate(progress, [0, 1], [width, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateX: x }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="with-scroll-horizontal-inverted"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "horizontal-inverted",
+					snapPoints: [0.5, 0.8],
+					initialSnapIndex: 1,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { width },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const x = interpolate(progress, [0, 1], [-width, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateX: x }, { scale }],
 							},
 						};
 					},

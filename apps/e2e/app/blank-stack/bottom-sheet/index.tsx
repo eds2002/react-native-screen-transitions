@@ -43,6 +43,21 @@ const EXAMPLES = [
 		title: "With ScrollView",
 		description: "Scrollable content with gesture coordination",
 	},
+	{
+		id: "with-scroll-inverted",
+		title: "With ScrollView (Inverted)",
+		description: "Top sheet with scrollable content",
+	},
+	{
+		id: "with-scroll-horizontal",
+		title: "Horizontal ScrollView",
+		description: "Right drawer with horizontal scroll",
+	},
+	{
+		id: "with-scroll-horizontal-inverted",
+		title: "Horizontal ScrollView (Inverted)",
+		description: "Left drawer with horizontal scroll",
+	},
 ];
 
 export default function BottomSheetIndex() {
