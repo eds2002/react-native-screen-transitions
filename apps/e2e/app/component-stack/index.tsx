@@ -1,25 +1,58 @@
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { router } from "expo-router";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Button from "@/components/button";
-import { FloatingOverlay } from "@/components/component-stack/floating-overlay";
+import { ScreenHeader } from "@/components/screen-header";
 
-export default function ComponentStackDemo() {
+const DEMOS = [
+	{
+		id: "music-player",
+		title: "Music Player",
+		description: "Spotify-style mini player with shared bounds transition",
+	},
+	{
+		id: "story-viewer",
+		title: "Story Viewer",
+		description: "Instagram-style stories with auto-advance and gestures",
+	},
+	{
+		id: "onboarding",
+		title: "Onboarding",
+		description: "Multi-step wizard with horizontal slide transitions",
+	},
+	{
+		id: "size-transitions",
+		title: "Size Transitions",
+		description: "Shared element bounds between different card sizes",
+	},
+];
+
+export default function ComponentStackIndex() {
 	return (
-		<View style={styles.container}>
-			{/* Background content */}
-			<SafeAreaView style={styles.background}>
-				<Text style={styles.title}>Component Stack Demo</Text>
-				<Text style={styles.subtitle}>
-					The floating overlay below uses ComponentStack
-				</Text>
-				<Text style={styles.subtitle}>
-					(independent of Expo Router - URL doesn&apos;t change)
-				</Text>
-				<Button onPress={() => Alert.alert("HI")}>Touch through test</Button>
-			</SafeAreaView>
-
-			<FloatingOverlay />
-		</View>
+		<SafeAreaView style={styles.container} edges={["top"]}>
+			<ScreenHeader
+				title="Component Stack"
+				subtitle="Standalone navigators isolated from React Navigation"
+			/>
+			<ScrollView contentContainerStyle={styles.content}>
+				<View style={styles.list}>
+					{DEMOS.map((demo) => (
+						<Pressable
+							key={demo.id}
+							testID={`component-${demo.id}`}
+							style={styles.item}
+							onPress={() =>
+								router.push(
+									`/component-stack/${demo.id}` as `/component-stack/${string}`,
+								)
+							}
+						>
+							<Text style={styles.itemTitle}>{demo.title}</Text>
+							<Text style={styles.itemDescription}>{demo.description}</Text>
+						</Pressable>
+					))}
+				</View>
+			</ScrollView>
+		</SafeAreaView>
 	);
 }
 
@@ -28,23 +61,27 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#121212",
 	},
-	background: {
-		flex: 1,
-		padding: 20,
-		justifyContent: "center",
-		alignItems: "center",
+	content: {
+		padding: 16,
 	},
-	title: {
-		fontSize: 24,
-		fontWeight: "bold",
+	list: {
+		gap: 12,
+	},
+	item: {
+		backgroundColor: "#1e1e1e",
+		padding: 16,
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: "#333",
+	},
+	itemTitle: {
+		fontSize: 16,
+		fontWeight: "600",
 		color: "#fff",
-		marginBottom: 12,
-		textAlign: "center",
-	},
-	subtitle: {
-		fontSize: 14,
-		color: "#666",
-		textAlign: "center",
 		marginBottom: 4,
+	},
+	itemDescription: {
+		fontSize: 13,
+		color: "#888",
 	},
 });

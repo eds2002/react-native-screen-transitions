@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import type {
 	GestureStateChangeEvent,
 	GestureTouchEvent,
@@ -14,6 +15,7 @@ import type { GestureStoreMap } from "../../stores/gesture.store";
 import type { TransitionSpec } from "../../types/animation.types";
 import {
 	type GestureActivationArea,
+	type GestureDirection,
 	GestureOffsetState,
 } from "../../types/gesture.types";
 import type { Layout } from "../../types/screen.types";
@@ -26,24 +28,17 @@ import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { determineSnapTarget } from "../../utils/gesture/determine-snap-target";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
+import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
 import { velocity } from "../../utils/gesture/velocity";
 import useStableCallbackValue from "../use-stable-callback-value";
-
-interface DirectionsMap {
-	vertical: boolean;
-	verticalInverted: boolean;
-	horizontal: boolean;
-	horizontalInverted: boolean;
-	snapAxisInverted?: boolean;
-}
 
 interface UseScreenGestureHandlersProps {
 	dimensions: Layout;
 	animations: AnimationStoreMap;
 	gestureAnimationValues: GestureStoreMap;
 
-	// Direction config
-	directions: DirectionsMap;
+	// Direction config (raw - will be processed internally)
+	gestureDirection: GestureDirection | GestureDirection[];
 	gestureDrivesProgress: boolean;
 	gestureVelocityImpact: number;
 
@@ -53,9 +48,9 @@ interface UseScreenGestureHandlersProps {
 	gestureResponseDistance?: number;
 	ancestorIsDismissing?: SharedValue<number> | null;
 
-	// Snap mode (optional - presence enables snap behavior)
+	// Snap mode (raw - will be processed internally)
 	snapPoints?: number[];
-	canDismiss?: boolean;
+	canDismiss: boolean;
 
 	transitionSpec?: TransitionSpec;
 	handleDismiss: () => void;
@@ -65,19 +60,56 @@ export const useScreenGestureHandlers = ({
 	dimensions,
 	animations,
 	gestureAnimationValues,
-	directions,
+	gestureDirection,
 	gestureDrivesProgress,
 	gestureVelocityImpact,
 	scrollConfig,
 	gestureActivationArea,
 	gestureResponseDistance,
 	ancestorIsDismissing,
-	snapPoints,
-	canDismiss = true,
+	snapPoints: rawSnapPoints,
+	canDismiss,
 	transitionSpec,
 	handleDismiss,
 }: UseScreenGestureHandlersProps) => {
-	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
+	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } = useMemo(
+		() => validateSnapPoints({ snapPoints: rawSnapPoints, canDismiss }),
+		[rawSnapPoints, canDismiss],
+	);
+
+	const directions = useMemo(() => {
+		const directionsArray = Array.isArray(gestureDirection)
+			? gestureDirection
+			: [gestureDirection];
+
+		const isBidirectional = directionsArray.includes("bidirectional");
+
+		const hasHorizontalDirection =
+			directionsArray.includes("horizontal") ||
+			directionsArray.includes("horizontal-inverted");
+
+		const isSnapAxisInverted = hasHorizontalDirection
+			? directionsArray.includes("horizontal-inverted") &&
+				!directionsArray.includes("horizontal")
+			: directionsArray.includes("vertical-inverted") &&
+				!directionsArray.includes("vertical");
+
+		const enableBothVertical =
+			isBidirectional || (hasSnapPoints && !hasHorizontalDirection);
+		const enableBothHorizontal =
+			isBidirectional || (hasSnapPoints && hasHorizontalDirection);
+
+		return {
+			vertical: directionsArray.includes("vertical") || enableBothVertical,
+			verticalInverted:
+				directionsArray.includes("vertical-inverted") || enableBothVertical,
+			horizontal:
+				directionsArray.includes("horizontal") || enableBothHorizontal,
+			horizontalInverted:
+				directionsArray.includes("horizontal-inverted") || enableBothHorizontal,
+			snapAxisInverted: hasSnapPoints && isSnapAxisInverted,
+		};
+	}, [gestureDirection, hasSnapPoints]);
 
 	const snapAxis =
 		directions.horizontal || directions.horizontalInverted
@@ -103,7 +135,7 @@ export const useScreenGestureHandlers = ({
 
 			// If an ancestor navigator is already dismissing via gesture, block new gestures here.
 			if (ancestorIsDismissing?.value) {
-				gestureOffsetState.value = GestureOffsetState.FAILED;
+				gestureOffsetState.set(GestureOffsetState.FAILED);
 				manager.fail();
 				return;
 			}
@@ -139,24 +171,28 @@ export const useScreenGestureHandlers = ({
 			const scrollCfg = scrollConfig.value;
 			const isTouchingScrollView = scrollCfg?.isTouched ?? false;
 
-			// If NOT touching ScrollView, skip scroll checks - gesture always wins
 			if (!isTouchingScrollView) {
-				if (
+				// Early return if gesture hasn't met activation criteria
+				const canActivate =
 					recognizedDirection &&
 					gestureOffsetState.value === GestureOffsetState.PASSED &&
-					!gestureAnimationValues.isDismissing?.value
-				) {
-					gestureAnimationValues.direction.value =
-						isSwipingDown || isSwipingUp
-							? isSwipingDown
-								? "vertical"
-								: "vertical-inverted"
-							: isSwipingRight
-								? "horizontal"
-								: "horizontal-inverted";
-					manager.activate();
+					!gestureAnimationValues.isDismissing?.value;
+
+				if (!canActivate) {
 					return;
 				}
+
+				if (isSwipingDown) {
+					gestureAnimationValues.direction.set("vertical");
+				} else if (isSwipingUp) {
+					gestureAnimationValues.direction.set("vertical-inverted");
+				} else if (isSwipingRight) {
+					gestureAnimationValues.direction.set("horizontal");
+				} else if (isSwipingLeft) {
+					gestureAnimationValues.direction.set("horizontal-inverted");
+				}
+
+				manager.activate();
 				return;
 			}
 
@@ -171,10 +207,8 @@ export const useScreenGestureHandlers = ({
 				: 0;
 
 			// Snap mode: determine if sheet can still expand
-			const maxSnapPoint = hasSnapPoints
-				? Math.max(...(snapPoints as number[]))
-				: 1;
-			const canExpandMore = animations.progress.value < maxSnapPoint - 0.01;
+			const canExpandMore =
+				hasSnapPoints && animations.progress.value < maxSnapPoint - 0.01;
 
 			const { shouldActivate, direction: activatedDirection } =
 				checkScrollAwareActivation({
@@ -250,14 +284,10 @@ export const useScreenGestureHandlers = ({
 				const sign = directions.snapAxisInverted ? -baseSign : baseSign;
 				const progressDelta = (sign * translation) / dimension;
 
-				const sortedSnaps = snapPoints.slice().sort((a, b) => a - b);
-				// Clamp to snap point bounds (dismiss at 0 only if allowed)
-				const minProgress = canDismiss ? 0 : sortedSnaps[0];
-				const maxProgress = sortedSnaps[sortedSnaps.length - 1];
-
+				// Use pre-computed bounds (minSnapPoint already accounts for canDismiss)
 				animations.progress.value = Math.max(
-					minProgress,
-					Math.min(maxProgress, gestureStartProgress.value + progressDelta),
+					minSnapPoint,
+					Math.min(maxSnapPoint, gestureStartProgress.value + progressDelta),
 				);
 			} else if (gestureDrivesProgress) {
 				// Standard mode: find max progress across allowed directions

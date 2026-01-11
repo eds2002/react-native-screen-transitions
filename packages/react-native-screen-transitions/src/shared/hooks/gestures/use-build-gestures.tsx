@@ -57,8 +57,6 @@ export const useBuildGestures = ({
 		snapPoints,
 	} = current.options;
 
-	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
-
 	// Dismiss gesture is controlled by gestureEnabled (disabled for first screen)
 	const canDismiss = Boolean(
 		isFirstScreen ? false : current.options.gestureEnabled,
@@ -67,45 +65,8 @@ export const useBuildGestures = ({
 	// Snap navigation works independently - enabled when snap points exist
 	// This matches iOS native sheet behavior where gestureEnabled: false
 	// disables dismiss but you can still drag between detents
+	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
 	const gestureEnabled = canDismiss || hasSnapPoints;
-
-	const directions = useMemo(() => {
-		const directionsArray = Array.isArray(gestureDirection)
-			? gestureDirection
-			: [gestureDirection];
-
-		const isBidirectional = directionsArray.includes("bidirectional");
-
-		// Determine primary axis for snap points (horizontal takes priority)
-		const hasHorizontalDirection =
-			directionsArray.includes("horizontal") ||
-			directionsArray.includes("horizontal-inverted");
-
-		// Check if the primary snap direction is inverted
-		// (only inverted direction specified, not the normal one)
-		const isSnapAxisInverted = hasHorizontalDirection
-			? directionsArray.includes("horizontal-inverted") &&
-				!directionsArray.includes("horizontal")
-			: directionsArray.includes("vertical-inverted") &&
-				!directionsArray.includes("vertical");
-
-		// When snap points exist, enable bidirectional movement on the snap axis
-		const enableBothVertical =
-			isBidirectional || (hasSnapPoints && !hasHorizontalDirection);
-		const enableBothHorizontal =
-			isBidirectional || (hasSnapPoints && hasHorizontalDirection);
-
-		return {
-			vertical: directionsArray.includes("vertical") || enableBothVertical,
-			verticalInverted:
-				directionsArray.includes("vertical-inverted") || enableBothVertical,
-			horizontal:
-				directionsArray.includes("horizontal") || enableBothHorizontal,
-			horizontalInverted:
-				directionsArray.includes("horizontal-inverted") || enableBothHorizontal,
-			snapAxisInverted: hasSnapPoints && isSnapAxisInverted,
-		};
-	}, [gestureDirection, hasSnapPoints]);
 
 	const handleDismiss = useCallback(() => {
 		// If an ancestor navigator is already dismissing, skip this dismiss to
@@ -136,7 +97,7 @@ export const useBuildGestures = ({
 			dimensions,
 			animations,
 			gestureAnimationValues,
-			directions,
+			gestureDirection,
 			gestureDrivesProgress,
 			gestureVelocityImpact,
 			scrollConfig,
@@ -144,7 +105,7 @@ export const useBuildGestures = ({
 			gestureResponseDistance,
 			ancestorIsDismissing:
 				ancestorContext?.gestureAnimationValues.isDismissing,
-			snapPoints: hasSnapPoints ? (snapPoints as number[]) : undefined,
+			snapPoints,
 			canDismiss,
 			transitionSpec,
 			handleDismiss,
