@@ -184,6 +184,135 @@ export default function BottomSheetLayout() {
 					},
 				}}
 			/>
+			<BlankStack.Screen
+				name="horizontal-drawer"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "horizontal-inverted",
+					snapPoints: [0.5, 1.0],
+					initialSnapIndex: 0,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { width },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const x = interpolate(progress, [0, 1], [width, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateX: x }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="multi-snap"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					snapPoints: [0.2, 0.4, 0.6, 0.8, 1.0],
+					initialSnapIndex: 0,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="backdrop-dismiss"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					backdropBehavior: "dismiss",
+					snapPoints: [0.4],
+					initialSnapIndex: 0,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(
+							progress,
+							[0, 0.4],
+							[height * 0.4, 0],
+							"clamp",
+						);
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }],
+							},
+							backdropStyle: {
+								backgroundColor: `rgba(0,0,0,${interpolate(progress, [0, 0.4], [0, 0.5], "clamp")})`,
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="passthrough"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					backdropBehavior: "passthrough",
+					snapPoints: [0.35],
+					initialSnapIndex: 0,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(
+							progress,
+							[0, 0.35],
+							[height * 0.35, 0],
+							"clamp",
+						);
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
 		</BlankStack>
 	);
 }

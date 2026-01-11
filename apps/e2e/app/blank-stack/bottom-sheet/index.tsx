@@ -16,7 +16,27 @@ const EXAMPLES = [
 	{
 		id: "with-resistance",
 		title: "With Resistance",
-		description: "Single snap point with rubber-band over-drag",
+		description: "Apple Maps style with 3 detents and rubber-band",
+	},
+	{
+		id: "horizontal-drawer",
+		title: "Horizontal Drawer",
+		description: "Side panel that slides from the right edge",
+	},
+	{
+		id: "multi-snap",
+		title: "Multi Snap",
+		description: "Stress test with 5 snap points (20-100%)",
+	},
+	{
+		id: "backdrop-dismiss",
+		title: "Backdrop Dismiss",
+		description: "Tap outside the sheet to dismiss",
+	},
+	{
+		id: "passthrough",
+		title: "Passthrough",
+		description: "Interact with content behind the sheet",
 	},
 ];
 

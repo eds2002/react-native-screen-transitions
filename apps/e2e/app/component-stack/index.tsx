@@ -1,7 +1,7 @@
 import { Alert, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Button from "@/components/button";
-import { FloatingOverlay } from "./components/floating-overlay";
+import { FloatingOverlay } from "@/components/component-stack/floating-overlay";
 
 export default function ComponentStackDemo() {
 	return (

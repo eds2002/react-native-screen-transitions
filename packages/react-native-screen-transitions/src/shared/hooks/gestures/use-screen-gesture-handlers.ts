@@ -211,9 +211,12 @@ export const useScreenGestureHandlers = ({
 				const translation = isHorizontal ? translationX : translationY;
 				const dimension = isHorizontal ? width : height;
 
-				// For normal direction: positive translation (down/right) = decrease progress
-				// For inverted direction: positive translation (down/right) = increase progress
-				const sign = directions.snapAxisInverted ? 1 : -1;
+				// Map translation to progress delta based on axis and direction:
+				// - Vertical: down = positive translation = decrease progress (dismiss)
+				// - Horizontal: right = positive translation = increase progress (expand)
+				// Inverted directions flip this behavior
+				const baseSign = isHorizontal ? 1 : -1;
+				const sign = directions.snapAxisInverted ? -baseSign : baseSign;
 				const progressDelta = (sign * translation) / dimension;
 
 				const sortedSnaps = snapPoints.slice().sort((a, b) => a - b);
@@ -284,11 +287,13 @@ export const useScreenGestureHandlers = ({
 					? dimensions.width
 					: dimensions.height;
 
-				// For inverted axes, flip velocity so determineSnapTarget interprets it correctly
-				// (it expects positive velocity = toward dismiss)
-				const snapVelocity = directions.snapAxisInverted
-					? -axisVelocity
-					: axisVelocity;
+				// determineSnapTarget expects positive velocity = toward dismiss (decreasing progress)
+				// Vertical: positive velocity (down) = dismiss, inverted needs flip
+				// Horizontal: negative velocity (left) = dismiss, NON-inverted needs flip
+				const shouldFlipVelocity = isHorizontal
+					? !directions.snapAxisInverted
+					: directions.snapAxisInverted;
+				const snapVelocity = shouldFlipVelocity ? -axisVelocity : axisVelocity;
 
 				const result = determineSnapTarget({
 					currentProgress: animations.progress.value,
@@ -318,8 +323,15 @@ export const useScreenGestureHandlers = ({
 				});
 
 				// For snap transitions, velocity should match gesture direction
-				// Sign flips for inverted directions
-				const velocitySign = directions.snapAxisInverted ? 1 : -1;
+				// Horizontal: positive velocity = expanding, negative = collapsing
+				// Vertical: negative velocity = expanding, positive = collapsing
+				const velocitySign = isHorizontal
+					? directions.snapAxisInverted
+						? -1
+						: 1
+					: directions.snapAxisInverted
+						? 1
+						: -1;
 				const initialVelocity =
 					velocitySign * velocity.normalize(axisVelocity, axisDimension);
 
