@@ -44,7 +44,8 @@
     "lint": "biome check ./src",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "bun run build",
-    "release": "release-it"
+    "release": "release-it",
+    "release:beta": "release-it --preRelease=beta"
   },
   "keywords": [
     "react-native",

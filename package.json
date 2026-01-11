@@ -16,7 +16,8 @@
     "knip": "bunx knip --workspace packages/react-native-screen-transitions",
     "lint": "biome check packages/react-native-screen-transitions/src",
     "typecheck": "tsc --noEmit -p packages/react-native-screen-transitions/tsconfig.json",
-    "release:react-native-screen-transitions": "bun run --cwd packages/react-native-screen-transitions release"
+    "release:react-native-screen-transitions": "bun run --cwd packages/react-native-screen-transitions release",
+    "release:react-native-screen-transitions:beta": "bun run --cwd packages/react-native-screen-transitions release:beta"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.5",
