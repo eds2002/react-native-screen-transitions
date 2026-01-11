@@ -138,6 +138,30 @@ export const useScreenGestureHandlers = ({
 				isSwipingDown || isSwipingUp || isSwipingRight || isSwipingLeft;
 
 			const scrollCfg = scrollConfig.value;
+			const isTouchingScrollView = scrollCfg?.isTouched ?? false;
+
+			// If NOT touching ScrollView, skip scroll checks - gesture always wins
+			if (!isTouchingScrollView) {
+				if (
+					recognizedDirection &&
+					gestureOffsetState.value === GestureOffsetState.PASSED &&
+					!gestureAnimationValues.isDismissing?.value
+				) {
+					gestureAnimationValues.direction.value =
+						isSwipingDown || isSwipingUp
+							? isSwipingDown
+								? "vertical"
+								: "vertical-inverted"
+							: isSwipingRight
+								? "horizontal"
+								: "horizontal-inverted";
+					manager.activate();
+					return;
+				}
+				return;
+			}
+
+			// Touch IS on ScrollView - apply scroll-aware rules
 			const scrollX = scrollCfg?.x ?? 0;
 			const scrollY = scrollCfg?.y ?? 0;
 			const maxScrollX = scrollCfg?.contentWidth
@@ -146,6 +170,12 @@ export const useScreenGestureHandlers = ({
 			const maxScrollY = scrollCfg?.contentHeight
 				? scrollCfg.contentHeight - scrollCfg.layoutHeight
 				: 0;
+
+			// Snap mode: determine if sheet can still expand
+			const maxSnapPoint = hasSnapPoints
+				? Math.max(...(snapPoints as number[]))
+				: 1;
+			const canExpandMore = animations.progress.value < maxSnapPoint - 0.01;
 
 			const { shouldActivate, direction: activatedDirection } =
 				checkScrollAwareActivation({
@@ -160,6 +190,8 @@ export const useScreenGestureHandlers = ({
 					scrollY,
 					maxScrollX,
 					maxScrollY,
+					hasSnapPoints,
+					canExpandMore,
 				});
 
 			if (recognizedDirection && !shouldActivate) {

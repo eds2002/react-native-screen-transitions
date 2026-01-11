@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Will always consume context from GestureProvider> */
 
 import { useMemo } from "react";
-import type { LayoutChangeEvent } from "react-native";
+import type { GestureResponderEvent, LayoutChangeEvent } from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import type { ReanimatedScrollEvent } from "react-native-reanimated/lib/typescript/hook/commonTypes";
 import { useGestureContext } from "../../providers/gestures.provider";
@@ -11,6 +11,8 @@ interface ScrollProgressHookProps {
 	onScroll?: (event: ReanimatedScrollEvent) => void;
 	onContentSizeChange?: (width: number, height: number) => void;
 	onLayout?: (event: LayoutChangeEvent) => void;
+	onTouchStart?: (event: GestureResponderEvent) => void;
+	onTouchEnd?: (event: GestureResponderEvent) => void;
 }
 
 export const useScrollRegistry = (props: ScrollProgressHookProps) => {
@@ -43,6 +45,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 						contentWidth: 0,
 						layoutHeight: 0,
 						layoutWidth: 0,
+						isTouched: true,
 					};
 				}
 				v.x = event.contentOffset.x;
@@ -73,6 +76,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 						layoutWidth: 0,
 						contentWidth: width,
 						contentHeight: height,
+						isTouched: false,
 					};
 				}
 				v.contentWidth = width;
@@ -102,6 +106,7 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 					contentWidth: 0,
 					layoutHeight: height,
 					layoutWidth: width,
+					isTouched: false,
 				};
 			}
 			v.layoutHeight = height;
@@ -116,9 +121,55 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		}
 	});
 
+	const onTouchStart = useStableCallback((event: GestureResponderEvent) => {
+		props.onTouchStart?.(event);
+
+		const setTouched = (v: any) => {
+			"worklet";
+			if (v === null) {
+				return {
+					x: 0,
+					y: 0,
+					contentHeight: 0,
+					contentWidth: 0,
+					layoutHeight: 0,
+					layoutWidth: 0,
+					isTouched: true,
+				};
+			}
+			v.isTouched = true;
+			return v;
+		};
+
+		scrollConfig.modify(setTouched);
+
+		for (const ancestorConfig of ancestorScrollConfigs) {
+			ancestorConfig.modify(setTouched);
+		}
+	});
+
+	const onTouchEnd = useStableCallback((event: GestureResponderEvent) => {
+		props.onTouchEnd?.(event);
+
+		const clearTouched = (v: any) => {
+			"worklet";
+			if (v === null) return v;
+			v.isTouched = false;
+			return v;
+		};
+
+		scrollConfig.modify(clearTouched);
+
+		for (const ancestorConfig of ancestorScrollConfigs) {
+			ancestorConfig.modify(clearTouched);
+		}
+	});
+
 	return {
 		scrollHandler,
 		onContentSizeChange,
 		onLayout,
+		onTouchStart,
+		onTouchEnd,
 	};
 };

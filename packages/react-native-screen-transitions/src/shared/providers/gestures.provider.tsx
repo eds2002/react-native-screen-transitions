@@ -18,6 +18,7 @@ export type ScrollConfig = {
 	contentWidth: number;
 	layoutHeight: number;
 	layoutWidth: number;
+	isTouched: boolean;
 };
 
 export interface GestureContextType {

@@ -38,6 +38,11 @@ const EXAMPLES = [
 		title: "Passthrough",
 		description: "Interact with content behind the sheet",
 	},
+	{
+		id: "with-scroll",
+		title: "With ScrollView",
+		description: "Scrollable content with gesture coordination",
+	},
 ];
 
 export default function BottomSheetIndex() {

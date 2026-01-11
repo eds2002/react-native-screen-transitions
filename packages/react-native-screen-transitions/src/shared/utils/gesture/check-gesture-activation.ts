@@ -321,6 +321,8 @@ interface ScrollAwareActivationParams {
 	scrollY: number;
 	maxScrollX: number;
 	maxScrollY: number;
+	hasSnapPoints?: boolean;
+	canExpandMore?: boolean;
 }
 
 type GestureDirection =
@@ -340,6 +342,8 @@ export function checkScrollAwareActivation({
 	scrollY,
 	maxScrollX,
 	maxScrollY,
+	hasSnapPoints,
+	canExpandMore,
 }: ScrollAwareActivationParams): {
 	shouldActivate: boolean;
 	direction: GestureDirection | null;
@@ -385,6 +389,36 @@ export function checkScrollAwareActivation({
 	for (const check of checks) {
 		if (check.enabled && check.swiping && check.atBoundary) {
 			return { shouldActivate: true, direction: check.direction };
+		}
+	}
+
+	if (hasSnapPoints && canExpandMore) {
+		const snapExpandChecks: Array<{
+			enabled: boolean;
+			swiping: boolean;
+			atBoundary: boolean;
+			direction: GestureDirection;
+		}> = [
+			{
+				// Vertical sheet: swipe up at scroll top → expand
+				enabled: directions.vertical || directions.verticalInverted,
+				swiping: isSwipingUp,
+				atBoundary: scrollY <= 0,
+				direction: "vertical-inverted",
+			},
+			{
+				// Horizontal sheet: swipe left at scroll left → expand
+				enabled: directions.horizontal || directions.horizontalInverted,
+				swiping: isSwipingLeft,
+				atBoundary: scrollX <= 0,
+				direction: "horizontal-inverted",
+			},
+		];
+
+		for (const check of snapExpandChecks) {
+			if (check.enabled && check.swiping && check.atBoundary) {
+				return { shouldActivate: true, direction: check.direction };
+			}
 		}
 	}
 
