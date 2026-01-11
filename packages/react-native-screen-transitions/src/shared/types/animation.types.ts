@@ -182,7 +182,18 @@ export type TransitionInterpolatedStyle = {
 	contentStyle?: StyleProps;
 
 	/**
-	 * Animated style for a semi-transparent overlay. Styles are only applied when Transition.View is present.
+	 * Animated style for the semi-transparent backdrop layer behind screen content.
+	 *
+	 * @example
+	 * backdropStyle: {
+	 *   backgroundColor: "black",
+	 *   opacity: interpolate(progress, [0, 1], [0, 0.5]),
+	 * }
+	 */
+	backdropStyle?: StyleProps;
+
+	/**
+	 * @deprecated Use `backdropStyle` instead. Will be removed in next major version.
 	 */
 	overlayStyle?: StyleProps;
 

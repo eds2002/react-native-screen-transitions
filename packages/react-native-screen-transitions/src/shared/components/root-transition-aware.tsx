@@ -18,15 +18,17 @@ export const RootTransitionAware = memo(({ children }: Props) => {
 		return stylesMap.value.contentStyle || NO_STYLES;
 	});
 
-	const animatedOverlayStyle = useAnimatedStyle(() => {
+	const animatedBackdropStyle = useAnimatedStyle(() => {
 		"worklet";
-		return stylesMap.value.overlayStyle || NO_STYLES;
+		return (
+			stylesMap.value.backdropStyle ?? stylesMap.value.overlayStyle ?? NO_STYLES
+		);
 	});
 
 	return (
 		<View style={[styles.container]} pointerEvents={pointerEvents}>
 			<Animated.View
-				style={[StyleSheet.absoluteFillObject, animatedOverlayStyle]}
+				style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
 				pointerEvents="none"
 			/>
 			<Animated.View

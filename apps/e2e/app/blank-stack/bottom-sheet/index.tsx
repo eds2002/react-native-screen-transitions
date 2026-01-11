@@ -13,6 +13,11 @@ const EXAMPLES = [
 		title: "From Top",
 		description: "Sheet slides down from the top edge",
 	},
+	{
+		id: "with-resistance",
+		title: "With Resistance",
+		description: "Single snap point with rubber-band over-drag",
+	},
 ];
 
 export default function BottomSheetIndex() {

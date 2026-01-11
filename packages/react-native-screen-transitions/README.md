@@ -177,7 +177,7 @@ Your interpolator can return:
 ```tsx
 return {
   contentStyle: { ... },   // Main screen
-  overlayStyle: { ... },   // Semi-transparent backdrop
+  backdropStyle: { ... },  // Semi-transparent backdrop
   ["my-id"]: { ... },      // Specific element via styleId
 };
 ```

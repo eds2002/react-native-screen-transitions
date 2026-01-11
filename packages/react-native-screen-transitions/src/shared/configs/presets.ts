@@ -208,7 +208,7 @@ export const ElasticCard = (
 				contentStyle: {
 					transform: [{ scale }, { translateX }, { translateY }],
 				},
-				overlayStyle: {
+				backdropStyle: {
 					backgroundColor: !next ? overlayColor : "rgba(0,0,0,0)",
 				},
 			};
@@ -281,7 +281,7 @@ export const SharedIGImage = ({
 				});
 
 				return {
-					overlayStyle: {
+					backdropStyle: {
 						backgroundColor: "black",
 						opacity: interpolate(progress, [0, 1], [0, 0.5]),
 					},
@@ -634,7 +634,7 @@ export const SharedXImage = ({
 					transform: [{ translateY: contentY }, { translateY: dragY }],
 					pointerEvents: current.animating ? "none" : "auto",
 				},
-				overlayStyle: {
+				backdropStyle: {
 					backgroundColor: overlayClr,
 				},
 			};
