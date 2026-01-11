@@ -4,6 +4,7 @@ import {
 	computeEdgeConstraints,
 	calculateSwipeDirs,
 	shouldActivateOrFail,
+	checkScrollAwareActivation,
 } from "../utils/gesture/check-gesture-activation";
 
 describe("normalizeSides", () => {
@@ -247,5 +248,251 @@ describe("shouldActivateOrFail", () => {
 			isSwipingDown: true,
 		});
 		expect(result.shouldActivate).toBe(true);
+	});
+});
+
+describe("checkScrollAwareActivation", () => {
+	const baseDirections = {
+		vertical: true,
+		verticalInverted: false,
+		horizontal: false,
+		horizontalInverted: false,
+	};
+
+	const noSwipe = {
+		isSwipingDown: false,
+		isSwipingUp: false,
+		isSwipingRight: false,
+		isSwipingLeft: false,
+	};
+
+	describe("vertical sheet (dismiss down)", () => {
+		it("activates when swiping down at scroll top", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingDown: true },
+				directions: baseDirections,
+				scrollX: 0,
+				scrollY: 0,
+				maxScrollX: 0,
+				maxScrollY: 500,
+			});
+			expect(result.shouldActivate).toBe(true);
+			expect(result.direction).toBe("vertical");
+		});
+
+		it("does not activate when swiping down but scroll is not at top", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingDown: true },
+				directions: baseDirections,
+				scrollX: 0,
+				scrollY: 100,
+				maxScrollX: 0,
+				maxScrollY: 500,
+			});
+			expect(result.shouldActivate).toBe(false);
+		});
+
+		it("does not activate when swiping up without snap points", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingUp: true },
+				directions: baseDirections,
+				scrollX: 0,
+				scrollY: 0,
+				maxScrollX: 0,
+				maxScrollY: 500,
+			});
+			expect(result.shouldActivate).toBe(false);
+		});
+	});
+
+	describe("vertical inverted sheet (dismiss up)", () => {
+		const invertedDirections = {
+			vertical: false,
+			verticalInverted: true,
+			horizontal: false,
+			horizontalInverted: false,
+		};
+
+		it("activates when swiping up at scroll bottom", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingUp: true },
+				directions: invertedDirections,
+				scrollX: 0,
+				scrollY: 500,
+				maxScrollX: 0,
+				maxScrollY: 500,
+			});
+			expect(result.shouldActivate).toBe(true);
+			expect(result.direction).toBe("vertical-inverted");
+		});
+
+		it("does not activate when swiping up but scroll is not at bottom", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingUp: true },
+				directions: invertedDirections,
+				scrollX: 0,
+				scrollY: 200,
+				maxScrollX: 0,
+				maxScrollY: 500,
+			});
+			expect(result.shouldActivate).toBe(false);
+		});
+	});
+
+	describe("horizontal sheet (dismiss right)", () => {
+		const horizontalDirections = {
+			vertical: false,
+			verticalInverted: false,
+			horizontal: true,
+			horizontalInverted: false,
+		};
+
+		it("activates when swiping right at scroll left edge", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingRight: true },
+				directions: horizontalDirections,
+				scrollX: 0,
+				scrollY: 0,
+				maxScrollX: 500,
+				maxScrollY: 0,
+			});
+			expect(result.shouldActivate).toBe(true);
+			expect(result.direction).toBe("horizontal");
+		});
+
+		it("does not activate when scroll is not at left edge", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingRight: true },
+				directions: horizontalDirections,
+				scrollX: 100,
+				scrollY: 0,
+				maxScrollX: 500,
+				maxScrollY: 0,
+			});
+			expect(result.shouldActivate).toBe(false);
+		});
+	});
+
+	describe("horizontal inverted sheet (dismiss left)", () => {
+		const invertedHorizontalDirections = {
+			vertical: false,
+			verticalInverted: false,
+			horizontal: false,
+			horizontalInverted: true,
+		};
+
+		it("activates when swiping left at scroll right edge", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingLeft: true },
+				directions: invertedHorizontalDirections,
+				scrollX: 500,
+				scrollY: 0,
+				maxScrollX: 500,
+				maxScrollY: 0,
+			});
+			expect(result.shouldActivate).toBe(true);
+			expect(result.direction).toBe("horizontal-inverted");
+		});
+	});
+
+	describe("snap points behavior", () => {
+		it("activates for swipe up (expand) at scroll top when hasSnapPoints and canExpandMore", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingUp: true },
+				directions: baseDirections,
+				scrollX: 0,
+				scrollY: 0,
+				maxScrollX: 0,
+				maxScrollY: 500,
+				hasSnapPoints: true,
+				canExpandMore: true,
+			});
+			expect(result.shouldActivate).toBe(true);
+			expect(result.direction).toBe("vertical-inverted");
+		});
+
+		it("does not activate for swipe up when canExpandMore is false", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingUp: true },
+				directions: baseDirections,
+				scrollX: 0,
+				scrollY: 0,
+				maxScrollX: 0,
+				maxScrollY: 500,
+				hasSnapPoints: true,
+				canExpandMore: false,
+			});
+			expect(result.shouldActivate).toBe(false);
+		});
+
+		it("does not activate for swipe up when scroll is not at top", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingUp: true },
+				directions: baseDirections,
+				scrollX: 0,
+				scrollY: 100,
+				maxScrollX: 0,
+				maxScrollY: 500,
+				hasSnapPoints: true,
+				canExpandMore: true,
+			});
+			expect(result.shouldActivate).toBe(false);
+		});
+
+		it("activates for swipe left (expand) on horizontal sheet with snap points", () => {
+			const horizontalDirections = {
+				vertical: false,
+				verticalInverted: false,
+				horizontal: true,
+				horizontalInverted: false,
+			};
+
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingLeft: true },
+				directions: horizontalDirections,
+				scrollX: 0,
+				scrollY: 0,
+				maxScrollX: 500,
+				maxScrollY: 0,
+				hasSnapPoints: true,
+				canExpandMore: true,
+			});
+			expect(result.shouldActivate).toBe(true);
+			expect(result.direction).toBe("horizontal-inverted");
+		});
+	});
+
+	describe("no activation cases", () => {
+		it("returns false when no swipe is detected", () => {
+			const result = checkScrollAwareActivation({
+				swipeInfo: noSwipe,
+				directions: baseDirections,
+				scrollX: 0,
+				scrollY: 0,
+				maxScrollX: 0,
+				maxScrollY: 500,
+			});
+			expect(result.shouldActivate).toBe(false);
+			expect(result.direction).toBe(null);
+		});
+
+		it("returns false when direction is disabled", () => {
+			const disabledDirections = {
+				vertical: false,
+				verticalInverted: false,
+				horizontal: false,
+				horizontalInverted: false,
+			};
+
+			const result = checkScrollAwareActivation({
+				swipeInfo: { ...noSwipe, isSwipingDown: true },
+				directions: disabledDirections,
+				scrollX: 0,
+				scrollY: 0,
+				maxScrollX: 0,
+				maxScrollY: 500,
+			});
+			expect(result.shouldActivate).toBe(false);
+		});
 	});
 });
