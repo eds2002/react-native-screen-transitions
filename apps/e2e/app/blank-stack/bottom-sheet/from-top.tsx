@@ -2,14 +2,13 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-export default function BottomSheetScreen() {
+export default function FromTopScreen() {
 	return (
 		<SafeAreaView style={styles.container}>
 			<View style={styles.content}>
-				<View style={styles.handle} />
-				<Text style={styles.title}>Bottom Sheet</Text>
+				<Text style={styles.title}>From Top</Text>
 				<Text style={styles.description}>
-					Drag up and down to snap between points. Swipe down to dismiss.
+					Drag up and down to snap between points. Swipe up to dismiss.
 				</Text>
 
 				<Pressable
@@ -19,6 +18,8 @@ export default function BottomSheetScreen() {
 				>
 					<Text style={styles.buttonText}>Close</Text>
 				</Pressable>
+
+				<View style={styles.handle} />
 			</View>
 		</SafeAreaView>
 	);
@@ -27,21 +28,22 @@ export default function BottomSheetScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
-		borderTopLeftRadius: 16,
-		borderTopRightRadius: 16,
+		backgroundColor: "#2e1a1a",
+		borderBottomLeftRadius: 16,
+		borderBottomRightRadius: 16,
 	},
 	content: {
 		flex: 1,
 		padding: 20,
 		alignItems: "center",
+		justifyContent: "flex-end",
 	},
 	handle: {
 		width: 40,
 		height: 4,
 		backgroundColor: "rgba(255,255,255,0.3)",
 		borderRadius: 2,
-		marginBottom: 20,
+		marginTop: 20,
 	},
 	title: {
 		fontSize: 24,
