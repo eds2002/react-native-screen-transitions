@@ -35,9 +35,12 @@ export const useBuildGestures = ({
 	const dimensions = useWindowDimensions();
 
 	const { current } = useKeys();
+
 	const navState = current.navigation.getState();
-	const isFirstScreen =
-		navState.routes.findIndex((r) => r.key === current.route.key) === 0;
+
+	const isFirstScreen = useMemo(() => {
+		return navState.routes.findIndex((r) => r.key === current.route.key) === 0;
+	}, [navState.routes, current.route.key]);
 
 	// Ref for external gesture coordination (e.g., swipeable lists)
 	const panGestureRef = useRef<GestureType | undefined>(undefined);
