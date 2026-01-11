@@ -13,7 +13,6 @@ import type { GestureStoreMap } from "../../stores/gesture.store";
 import type { TransitionSpec } from "../../types/animation.types";
 import {
 	type GestureActivationArea,
-	type GestureDirection,
 	GestureOffsetState,
 } from "../../types/gesture.types";
 import type { Layout } from "../../types/screen.types";
@@ -34,6 +33,7 @@ interface DirectionsMap {
 	verticalInverted: boolean;
 	horizontal: boolean;
 	horizontalInverted: boolean;
+	snapAxisInverted?: boolean;
 }
 
 interface UseScreenGestureHandlersProps {
@@ -211,9 +211,10 @@ export const useScreenGestureHandlers = ({
 				const translation = isHorizontal ? translationX : translationY;
 				const dimension = isHorizontal ? width : height;
 
-				// Positive translation (down/right) = decrease progress (toward 0)
-				// Negative translation (up/left) = increase progress (toward 1)
-				const progressDelta = -translation / dimension;
+				// For normal direction: positive translation (down/right) = decrease progress
+				// For inverted direction: positive translation (down/right) = increase progress
+				const sign = directions.snapAxisInverted ? 1 : -1;
+				const progressDelta = (sign * translation) / dimension;
 
 				const sortedSnaps = snapPoints.slice().sort((a, b) => a - b);
 				// Clamp to snap point bounds (dismiss at 0 only if allowed)
@@ -283,10 +284,16 @@ export const useScreenGestureHandlers = ({
 					? dimensions.width
 					: dimensions.height;
 
+				// For inverted axes, flip velocity so determineSnapTarget interprets it correctly
+				// (it expects positive velocity = toward dismiss)
+				const snapVelocity = directions.snapAxisInverted
+					? -axisVelocity
+					: axisVelocity;
+
 				const result = determineSnapTarget({
 					currentProgress: animations.progress.value,
 					snapPoints,
-					velocity: axisVelocity,
+					velocity: snapVelocity,
 					dimension: axisDimension,
 					canDismiss: canDismiss,
 				});
@@ -311,11 +318,10 @@ export const useScreenGestureHandlers = ({
 				});
 
 				// For snap transitions, velocity should match gesture direction
-				// Positive velocity (dragging down/right) = decreasing progress = negative velocity
-				const initialVelocity = -velocity.normalize(
-					axisVelocity,
-					axisDimension,
-				);
+				// Sign flips for inverted directions
+				const velocitySign = directions.snapAxisInverted ? 1 : -1;
+				const initialVelocity =
+					velocitySign * velocity.normalize(axisVelocity, axisDimension);
 
 				animateToProgress({
 					target: targetProgress,

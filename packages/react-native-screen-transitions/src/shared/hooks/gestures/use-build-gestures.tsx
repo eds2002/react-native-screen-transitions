@@ -81,6 +81,14 @@ export const useBuildGestures = ({
 			directionsArray.includes("horizontal") ||
 			directionsArray.includes("horizontal-inverted");
 
+		// Check if the primary snap direction is inverted
+		// (only inverted direction specified, not the normal one)
+		const isSnapAxisInverted = hasHorizontalDirection
+			? directionsArray.includes("horizontal-inverted") &&
+				!directionsArray.includes("horizontal")
+			: directionsArray.includes("vertical-inverted") &&
+				!directionsArray.includes("vertical");
+
 		// When snap points exist, enable bidirectional movement on the snap axis
 		const enableBothVertical =
 			isBidirectional || (hasSnapPoints && !hasHorizontalDirection);
@@ -95,6 +103,7 @@ export const useBuildGestures = ({
 				directionsArray.includes("horizontal") || enableBothHorizontal,
 			horizontalInverted:
 				directionsArray.includes("horizontal-inverted") || enableBothHorizontal,
+			snapAxisInverted: hasSnapPoints && isSnapAxisInverted,
 		};
 	}, [gestureDirection, hasSnapPoints]);
 
