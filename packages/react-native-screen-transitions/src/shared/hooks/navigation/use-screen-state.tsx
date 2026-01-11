@@ -1,14 +1,18 @@
 import type { Route } from "@react-navigation/native";
-import { useMemo } from "react";
-import { useDerivedValue } from "react-native-reanimated";
+import { useCallback, useMemo } from "react";
+import { runOnUI, useDerivedValue } from "react-native-reanimated";
 import {
 	type BaseDescriptor,
 	useKeys,
 } from "../../providers/screen/keys.provider";
+import { AnimationStore } from "../../stores/animation.store";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
+import { animateToProgress } from "../../utils/animation/animate-to-progress";
 import { useSharedValueState } from "../reanimated/use-shared-value-state";
 import { type StackContextValue, useStack } from "./use-stack";
+
+const SNAP_SPRING = { damping: 50, stiffness: 500, mass: 1 };
 
 export interface ScreenState<
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
@@ -47,6 +51,14 @@ export interface ScreenState<
 	 * Navigation object for this screen.
 	 */
 	navigation: TNavigation;
+
+	/**
+	 * Programmatically snap to a specific snap point by index.
+	 * Only works if the screen has snapPoints defined.
+	 *
+	 * @param index - The index of the snap point to snap to (0-based)
+	 */
+	snapTo: (index: number) => void;
 }
 
 /**
@@ -77,6 +89,39 @@ export function useScreenState<
 		return scenes[focusedIndex] ?? scenes[scenes.length - 1];
 	}, [scenes, focusedIndex]);
 
+	const currentOptions = current.options;
+	const snapPoints = currentOptions?.snapPoints;
+
+	const snapTo = useCallback(
+		(targetIndex: number) => {
+			if (!snapPoints || snapPoints.length === 0) {
+				console.warn("snapTo called but no snapPoints defined");
+				return;
+			}
+
+			if (targetIndex < 0 || targetIndex >= snapPoints.length) {
+				console.warn(
+					`snapTo index ${targetIndex} out of bounds (0-${snapPoints.length - 1})`,
+				);
+				return;
+			}
+
+			const targetProgress = snapPoints[targetIndex];
+			const routeKey = current.route.key;
+			const animations = AnimationStore.getAll(routeKey);
+
+			runOnUI(() => {
+				"worklet";
+				animateToProgress({
+					target: targetProgress,
+					animations,
+					spec: { open: SNAP_SPRING, close: SNAP_SPRING },
+				});
+			})();
+		},
+		[snapPoints, current.route.key],
+	);
+
 	return useMemo(
 		() => ({
 			index,
@@ -86,6 +131,7 @@ export function useScreenState<
 			focusedIndex,
 			meta: focusedScene?.descriptor?.options?.meta,
 			navigation: current.navigation as TNavigation,
+			snapTo,
 		}),
 		[
 			index,
@@ -94,6 +140,7 @@ export function useScreenState<
 			focusedIndex,
 			current.navigation,
 			current.route,
+			snapTo,
 		],
 	);
 }

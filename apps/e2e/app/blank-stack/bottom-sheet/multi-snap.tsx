@@ -1,23 +1,39 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useScreenState } from "react-native-screen-transitions";
+
+const SNAP_POINTS = [
+	{ index: 0, label: "20%" },
+	{ index: 1, label: "40%" },
+	{ index: 2, label: "60%" },
+	{ index: 3, label: "80%" },
+	{ index: 4, label: "100%" },
+];
 
 export default function MultiSnapScreen() {
+	const { snapTo } = useScreenState();
+
 	return (
 		<SafeAreaView style={styles.container}>
 			<View style={styles.content}>
 				<View style={styles.handle} />
 				<Text style={styles.title}>Multi Snap</Text>
 				<Text style={styles.description}>
-					5 snap points at 20%, 40%, 60%, 80%, and 100%. Stress test for the
-					snap point system.
+					Tap a button to programmatically snap to that point, or drag to snap
+					manually.
 				</Text>
 
 				<View style={styles.indicators}>
-					{[20, 40, 60, 80, 100].map((pct) => (
-						<View key={pct} style={styles.indicator}>
-							<Text style={styles.indicatorText}>{pct}%</Text>
-						</View>
+					{SNAP_POINTS.map(({ index, label }) => (
+						<Pressable
+							key={index}
+							testID={`snap-to-${index}`}
+							style={styles.indicator}
+							onPress={() => snapTo(index)}
+						>
+							<Text style={styles.indicatorText}>{label}</Text>
+						</Pressable>
 					))}
 				</View>
 
