@@ -153,6 +153,36 @@ export default function BottomSheetLayout() {
 					},
 				}}
 			/>
+			<BlankStack.Screen
+				name="normal"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "horizontal",
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { width },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const x = interpolate(
+							progress,
+							[0, 1, 2],
+							[width, 0, -width * 0.3],
+						);
+
+						return {
+							contentStyle: {
+								transform: [{ translateX: x }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
 		</BlankStack>
 	);
 }

@@ -25,6 +25,13 @@ export default function WithResistanceScreen() {
 				>
 					<Text style={styles.buttonText}>Close</Text>
 				</Pressable>
+
+				<Pressable
+					style={[styles.button, styles.secondaryButton]}
+					onPress={() => router.push("/blank-stack/bottom-sheet/normal")}
+				>
+					<Text style={styles.buttonText}>Push Normal Stack</Text>
+				</Pressable>
 			</Transition.View>
 		</MaskedView>
 	);
@@ -73,5 +80,11 @@ const styles = StyleSheet.create({
 		fontSize: 16,
 		fontWeight: "600",
 		color: "#fff",
+	},
+	secondaryButton: {
+		marginTop: 12,
+		backgroundColor: "transparent",
+		borderWidth: 1,
+		borderColor: "rgba(255,255,255,0.3)",
 	},
 });
