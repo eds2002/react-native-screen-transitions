@@ -36,22 +36,15 @@ interface UseScreenGestureHandlersProps {
 	dimensions: Layout;
 	animations: AnimationStoreMap;
 	gestureAnimationValues: GestureStoreMap;
-
-	// Direction config (raw - will be processed internally)
 	gestureDirection: GestureDirection | GestureDirection[];
 	gestureDrivesProgress: boolean;
 	gestureVelocityImpact: number;
-
-	// Activation config
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	gestureActivationArea: GestureActivationArea;
 	gestureResponseDistance?: number;
 	ancestorIsDismissing?: SharedValue<number> | null;
-
-	// Snap mode (raw - will be processed internally)
 	snapPoints?: number[];
 	canDismiss: boolean;
-
 	transitionSpec?: TransitionSpec;
 	handleDismiss: () => void;
 }

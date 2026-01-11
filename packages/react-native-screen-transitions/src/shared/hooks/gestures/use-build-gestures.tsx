@@ -106,12 +106,12 @@ export const useBuildGestures = ({
 			scrollConfig,
 			gestureActivationArea,
 			gestureResponseDistance,
-			ancestorIsDismissing:
-				ancestorContext?.gestureAnimationValues.isDismissing,
 			snapPoints,
 			canDismiss,
 			transitionSpec,
 			handleDismiss,
+			ancestorIsDismissing:
+				ancestorContext?.gestureAnimationValues.isDismissing,
 		});
 
 	// Memoize gestures to keep stable references - critical for RNGH
