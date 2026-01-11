@@ -1,16 +1,21 @@
+import MaskedView from "@react-native-masked-view/masked-view";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import Transition from "react-native-screen-transitions";
 
 export default function WithResistanceScreen() {
 	return (
-		<SafeAreaView style={styles.container}>
-			<View style={styles.content}>
+		<MaskedView
+			style={StyleSheet.absoluteFill}
+			maskElement={<Transition.View styleId="MASKED" style={{ flex: 1 }} />}
+		>
+			{/* Content positioned at bottom, mask reveals it from bottom up */}
+			<Transition.View styleId="CONTENT" style={styles.container}>
 				<View style={styles.handle} />
 				<Text style={styles.title}>With Resistance</Text>
 				<Text style={styles.description}>
-					Single snap point at 50%. Try dragging past the bounds - you'll feel
-					resistance that springs back.
+					Apple Maps style sheet. Drag between snap points - compact pill, half
+					sheet, or full screen.
 				</Text>
 
 				<Pressable
@@ -20,21 +25,21 @@ export default function WithResistanceScreen() {
 				>
 					<Text style={styles.buttonText}>Close</Text>
 				</Pressable>
-			</View>
-		</SafeAreaView>
+			</Transition.View>
+		</MaskedView>
 	);
 }
 
 const styles = StyleSheet.create({
 	container: {
-		flex: 1,
+		position: "absolute",
+		left: 0,
+		right: 0,
+		bottom: 0,
+		height: "100%",
 		backgroundColor: "#1a2e1a",
-		borderTopLeftRadius: 16,
-		borderTopRightRadius: 16,
-	},
-	content: {
-		flex: 1,
 		padding: 20,
+		paddingTop: 12,
 		alignItems: "center",
 	},
 	handle: {

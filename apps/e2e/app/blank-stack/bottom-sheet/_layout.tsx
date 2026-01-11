@@ -1,3 +1,4 @@
+import { StyleSheet } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
@@ -69,7 +70,7 @@ export default function BottomSheetLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "vertical",
-					snapPoints: [0.5, 0.9],
+					snapPoints: [0.1, 0.5, 0.9],
 					initialSnapIndex: 0,
 					screenStyleInterpolator: ({
 						layouts: {
@@ -77,39 +78,72 @@ export default function BottomSheetLayout() {
 						},
 						progress,
 						current,
-						insets,
 						focused,
 					}) => {
 						"worklet";
 
-						// Base position from progress (0.5 = halfway up the screen)
-						const baseY = interpolate(progress, [0, 1], [height, 0], "clamp");
-
-						// Resistance when over-extending past max snap point (0.5)
-						// gesture.y is negative when dragging up, animates back to 0 on release
 						const maxProgress = 0.9;
 						const atMax = progress >= maxProgress - 0.01;
 
 						let resistanceOffset = 0;
 						if (atMax && current.gesture.y < 0) {
-							// Apply rubber-band resistance (diminishing returns)
 							const overDrag = -current.gesture.y;
 							const resistanceFactor = 0.1;
 							resistanceOffset = -overDrag * resistanceFactor;
 						}
 
-						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
-						const margin = focused
-							? interpolate(progress, [0.5, 0.9], [insets.bottom, 0], "clamp")
+						const scale = interpolate(progress, [1.5, 2], [1, 0.9], "clamp");
+
+						const hMargin = interpolate(
+							progress,
+							[0.1, 0.15, 0.9],
+							[24, 16, 0],
+							"clamp",
+						);
+
+						const maskBottom = focused
+							? interpolate(progress, [0.1, 0.15, 0.9], [24, 16, 0], "clamp")
 							: 0;
+
+						const sheetHeight = interpolate(
+							progress,
+							[0, 0.1, 0.5, 0.9, 1],
+							[height * 0.1, height * 0.1, height * 0.5, height * 0.9, height],
+							"clamp",
+						);
+
+						const maskTop =
+							height - sheetHeight - maskBottom + resistanceOffset;
+
+						const slideY = interpolate(
+							progress,
+							[0, 0.1],
+							[sheetHeight + maskBottom + 50, 0],
+							"clamp",
+						);
 
 						return {
 							contentStyle: {
-								transform: [
-									{ translateY: baseY + resistanceOffset },
-									{ scale },
-								],
-								margin,
+								transform: [{ translateY: slideY }, { scale }],
+								borderRadius: interpolate(
+									progress,
+									[1, 1.5, 1.9],
+									[0, 0, 36],
+									"clamp",
+								),
+								overflow: "hidden",
+							},
+							["CONTENT"]: {
+								transform: [{ translateY: maskTop }],
+							},
+							["MASKED"]: {
+								position: "absolute" as const,
+								top: maskTop,
+								left: hMargin,
+								right: hMargin,
+								height: sheetHeight,
+								borderRadius: 36,
+								backgroundColor: "white",
 							},
 						};
 					},
