@@ -1,6 +1,7 @@
-import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
+
+import { ScreenHeader } from "@/components/screen-header";
 
 const ITEMS = Array.from({ length: 20 }, (_, i) => ({
 	id: i + 1,
@@ -12,10 +13,10 @@ export default function WithScrollHorizontalInvertedScreen() {
 		<View style={styles.container}>
 			<View style={styles.sheet}>
 				<View style={styles.handle} />
-				<Text style={styles.title}>Left Drawer</Text>
-				<Text style={styles.subtitle}>
-					Scroll horizontally. Swipe left at start to dismiss.
-				</Text>
+				<ScreenHeader
+					title="Left Drawer"
+					subtitle="Scroll horizontally. Swipe left at start to dismiss."
+				/>
 
 				<Transition.ScrollView
 					horizontal
@@ -29,14 +30,6 @@ export default function WithScrollHorizontalInvertedScreen() {
 						</View>
 					))}
 				</Transition.ScrollView>
-
-				<Pressable
-					testID="go-back"
-					style={styles.button}
-					onPress={() => router.back()}
-				>
-					<Text style={styles.buttonText}>Close</Text>
-				</Pressable>
 			</View>
 		</View>
 	);
@@ -63,20 +56,6 @@ const styles = StyleSheet.create({
 		alignSelf: "center",
 		marginBottom: 16,
 	},
-	title: {
-		fontSize: 24,
-		fontWeight: "bold",
-		color: "#fff",
-		textAlign: "center",
-		marginBottom: 4,
-	},
-	subtitle: {
-		fontSize: 14,
-		color: "rgba(255,255,255,0.6)",
-		textAlign: "center",
-		marginBottom: 16,
-		paddingHorizontal: 20,
-	},
 	scrollView: {
 		flexGrow: 0,
 		marginBottom: 16,
@@ -94,19 +73,6 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 	},
 	cardText: {
-		fontSize: 16,
-		fontWeight: "600",
-		color: "#fff",
-	},
-	button: {
-		backgroundColor: "rgba(255,255,255,0.2)",
-		paddingVertical: 16,
-		paddingHorizontal: 32,
-		borderRadius: 12,
-		marginHorizontal: 20,
-		alignItems: "center",
-	},
-	buttonText: {
 		fontSize: 16,
 		fontWeight: "600",
 		color: "#fff",

@@ -3,56 +3,51 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
 
-const TEST_FLOWS = [
+const EXAMPLES = [
 	{
-		id: "slide-horizontal",
-		title: "Slide from Right",
-		description: "Horizontal slide with swipe-to-dismiss",
+		id: "vertical",
+		title: "Vertical Scroll",
+		description: "Vertical dismiss + vertical ScrollView",
 	},
 	{
-		id: "slide-vertical",
-		title: "Slide from Bottom",
-		description: "Vertical slide with swipe-to-dismiss",
+		id: "horizontal",
+		title: "Horizontal Scroll",
+		description: "Horizontal dismiss + horizontal ScrollView",
 	},
 	{
-		id: "zoom",
-		title: "Zoom In",
-		description: "Scale animation with fade",
+		id: "nested",
+		title: "Nested ScrollViews",
+		description: "Vertical outer + horizontal inner (Netflix-style)",
 	},
 	{
-		id: "stack-progress",
-		title: "Stack Progress",
-		description: "Demonstrates stackProgress accumulating across screens",
-	},
-	{
-		id: "overlay",
-		title: "Floating Overlay",
-		description: "Tab bar overlay that animates with screen transitions",
+		id: "nested-deep",
+		title: "Deeply Nested",
+		description: "3 levels: vertical > horizontal > vertical",
 	},
 ];
 
-export default function NativeStackIndex() {
+export default function ScrollTestsIndex() {
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
-				title="Native Stack"
-				subtitle="@react-navigation/native-stack with enableTransitions"
+				title="Scroll Tests"
+				subtitle="No snap points - regular dismissible screens"
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
 				<View style={styles.list}>
-					{TEST_FLOWS.map((flow) => (
+					{EXAMPLES.map((example) => (
 						<Pressable
-							key={flow.id}
-							testID={`native-${flow.id}`}
+							key={example.id}
+							testID={`scroll-${example.id}`}
 							style={styles.item}
 							onPress={() =>
 								router.push(
-									`/native-stack/${flow.id}` as `/native-stack/${string}`,
+									`/blank-stack/scroll-tests/${example.id}` as `/blank-stack/scroll-tests/${string}`,
 								)
 							}
 						>
-							<Text style={styles.itemTitle}>{flow.title}</Text>
-							<Text style={styles.itemDescription}>{flow.description}</Text>
+							<Text style={styles.itemTitle}>{example.title}</Text>
+							<Text style={styles.itemDescription}>{example.description}</Text>
 						</Pressable>
 					))}
 				</View>

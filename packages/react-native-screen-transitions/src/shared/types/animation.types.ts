@@ -209,9 +209,25 @@ export type TransitionInterpolatedStyle = {
 export type AnimationConfig = WithSpringConfig | WithTimingConfig;
 
 /**
- * Defines separate animation configurations for opening and closing a screen.
+ * Defines separate animation configurations for screen transitions and snap point changes.
  */
 export interface TransitionSpec {
+	/**
+	 * Animation config for opening/entering a screen.
+	 */
 	open?: AnimationConfig;
+	/**
+	 * Animation config for closing/exiting a screen.
+	 */
 	close?: AnimationConfig;
+	/**
+	 * Animation config for expanding to a higher snap point.
+	 * Uses lower intensity than `open` to match smaller movement distances.
+	 */
+	expand?: AnimationConfig;
+	/**
+	 * Animation config for collapsing to a lower snap point.
+	 * Uses lower intensity than `close` to match smaller movement distances.
+	 */
+	collapse?: AnimationConfig;
 }

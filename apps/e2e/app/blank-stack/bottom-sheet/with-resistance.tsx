@@ -3,6 +3,8 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
+import { ScreenHeader } from "@/components/screen-header";
+
 export default function WithResistanceScreen() {
 	return (
 		<MaskedView
@@ -19,19 +21,10 @@ export default function WithResistanceScreen() {
 			{/* Content positioned at bottom, mask reveals it from bottom up */}
 			<Transition.View styleId="CONTENT" style={styles.container}>
 				<View style={styles.handle} />
-				<Text style={styles.title}>With Resistance</Text>
-				<Text style={styles.description}>
-					Apple Maps style sheet. Drag between snap points - compact pill, half
-					sheet, or full screen.
-				</Text>
-
-				<Pressable
-					testID="go-back"
-					style={styles.button}
-					onPress={() => router.back()}
-				>
-					<Text style={styles.buttonText}>Close</Text>
-				</Pressable>
+				<ScreenHeader
+					title="With Resistance"
+					subtitle="Apple Maps style sheet. Drag between snap points - compact pill, half sheet, or full screen."
+				/>
 
 				<Pressable
 					style={[styles.button, styles.secondaryButton]}
@@ -62,18 +55,6 @@ const styles = StyleSheet.create({
 		backgroundColor: "rgba(255,255,255,0.3)",
 		borderRadius: 2,
 		marginBottom: 20,
-	},
-	title: {
-		fontSize: 24,
-		fontWeight: "bold",
-		color: "#fff",
-		marginBottom: 12,
-	},
-	description: {
-		fontSize: 16,
-		color: "rgba(255,255,255,0.7)",
-		textAlign: "center",
-		marginBottom: 40,
 	},
 	button: {
 		backgroundColor: "rgba(255,255,255,0.2)",

@@ -1,24 +1,16 @@
-import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
+
+import { ScreenHeader } from "@/components/screen-header";
 
 export default function PassthroughScreen() {
 	return (
 		<View style={styles.container}>
 			<View style={styles.sheet}>
 				<View style={styles.handle} />
-				<Text style={styles.title}>Passthrough</Text>
-				<Text style={styles.description}>
-					Content behind this sheet is still interactive. Try scrolling or
-					tapping the list behind.
-				</Text>
-
-				<Pressable
-					testID="go-back"
-					style={styles.button}
-					onPress={() => router.back()}
-				>
-					<Text style={styles.buttonText}>Close</Text>
-				</Pressable>
+				<ScreenHeader
+					title="Passthrough"
+					subtitle="Content behind this sheet is still interactive. Try scrolling or tapping the list behind."
+				/>
 			</View>
 		</View>
 	);
@@ -44,31 +36,5 @@ const styles = StyleSheet.create({
 		backgroundColor: "rgba(255,255,255,0.3)",
 		borderRadius: 2,
 		marginBottom: 20,
-	},
-	title: {
-		fontSize: 24,
-		fontWeight: "bold",
-		color: "#fff",
-		marginBottom: 12,
-	},
-	description: {
-		fontSize: 16,
-		color: "rgba(255,255,255,0.7)",
-		textAlign: "center",
-		marginBottom: 40,
-		paddingHorizontal: 20,
-	},
-	button: {
-		backgroundColor: "rgba(255,255,255,0.2)",
-		paddingVertical: 16,
-		paddingHorizontal: 32,
-		borderRadius: 12,
-		minWidth: 200,
-		alignItems: "center",
-	},
-	buttonText: {
-		fontSize: 16,
-		fontWeight: "600",
-		color: "#fff",
 	},
 });

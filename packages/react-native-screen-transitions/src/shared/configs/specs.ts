@@ -8,3 +8,9 @@ export const DefaultSpec: WithSpringConfig = {
 	// @ts-expect-error
 	restSpeedThreshold: 0.02,
 };
+
+export const DefaultSnapSpec: WithSpringConfig = {
+	stiffness: 500,
+	damping: 50,
+	mass: 1,
+};

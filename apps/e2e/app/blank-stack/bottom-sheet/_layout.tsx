@@ -2,7 +2,6 @@ import { StyleSheet } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
-
 export default function BottomSheetLayout() {
 	return (
 		<BlankStack>

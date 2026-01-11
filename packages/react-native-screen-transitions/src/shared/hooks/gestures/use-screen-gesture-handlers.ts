@@ -6,6 +6,7 @@ import type {
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
+import { DefaultSnapSpec } from "../../configs/specs";
 import { FALSE, TRUE } from "../../constants";
 import type { ScrollConfig } from "../../providers/gestures.provider";
 import type { AnimationStoreMap } from "../../stores/animation.store";
@@ -59,8 +60,6 @@ interface UseScreenGestureHandlersProps {
 	transitionSpec?: TransitionSpec;
 	handleDismiss: () => void;
 }
-
-const SNAP_SPRING = { damping: 50, stiffness: 500, mass: 1 };
 
 export const useScreenGestureHandlers = ({
 	dimensions,
@@ -341,8 +340,12 @@ export const useScreenGestureHandlers = ({
 				const spec = shouldDismiss
 					? transitionSpec?.close
 					: transitionSpec?.open;
+
 				const effectiveSpec = isSnapping
-					? { open: SNAP_SPRING, close: SNAP_SPRING }
+					? {
+							open: transitionSpec?.expand ?? DefaultSnapSpec,
+							close: transitionSpec?.collapse ?? DefaultSnapSpec,
+						}
 					: transitionSpec;
 
 				resetGestureValues({

@@ -1,7 +1,8 @@
-import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScreenState } from "react-native-screen-transitions";
+
+import { ScreenHeader } from "@/components/screen-header";
 
 const SNAP_POINTS = [
 	{ index: 0, label: "20%" },
@@ -15,14 +16,13 @@ export default function MultiSnapScreen() {
 	const { snapTo } = useScreenState();
 
 	return (
-		<SafeAreaView style={styles.container}>
+		<SafeAreaView style={styles.container} edges={["top"]}>
 			<View style={styles.content}>
 				<View style={styles.handle} />
-				<Text style={styles.title}>Multi Snap</Text>
-				<Text style={styles.description}>
-					Tap a button to programmatically snap to that point, or drag to snap
-					manually.
-				</Text>
+				<ScreenHeader
+					title="Multi Snap"
+					subtitle="Tap a button to programmatically snap to that point, or drag to snap manually."
+				/>
 
 				<View style={styles.indicators}>
 					{SNAP_POINTS.map(({ index, label }) => (
@@ -36,14 +36,6 @@ export default function MultiSnapScreen() {
 						</Pressable>
 					))}
 				</View>
-
-				<Pressable
-					testID="go-back"
-					style={styles.button}
-					onPress={() => router.back()}
-				>
-					<Text style={styles.buttonText}>Close</Text>
-				</Pressable>
 			</View>
 		</SafeAreaView>
 	);
@@ -68,18 +60,6 @@ const styles = StyleSheet.create({
 		borderRadius: 2,
 		marginBottom: 20,
 	},
-	title: {
-		fontSize: 24,
-		fontWeight: "bold",
-		color: "#fff",
-		marginBottom: 12,
-	},
-	description: {
-		fontSize: 16,
-		color: "rgba(255,255,255,0.7)",
-		textAlign: "center",
-		marginBottom: 24,
-	},
 	indicators: {
 		flexDirection: "row",
 		gap: 8,
@@ -95,18 +75,5 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		fontWeight: "600",
 		color: "rgba(255,255,255,0.7)",
-	},
-	button: {
-		backgroundColor: "rgba(255,255,255,0.2)",
-		paddingVertical: 16,
-		paddingHorizontal: 32,
-		borderRadius: 12,
-		minWidth: 200,
-		alignItems: "center",
-	},
-	buttonText: {
-		fontSize: 16,
-		fontWeight: "600",
-		color: "#fff",
 	},
 });

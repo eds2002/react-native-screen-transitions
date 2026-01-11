@@ -1,6 +1,7 @@
 import type { Route } from "@react-navigation/native";
 import { useCallback, useMemo } from "react";
 import { runOnUI, useDerivedValue } from "react-native-reanimated";
+import { DefaultSnapSpec } from "../../configs/specs";
 import {
 	type BaseDescriptor,
 	useKeys,
@@ -11,8 +12,6 @@ import type { BaseStackNavigation } from "../../types/stack.types";
 import { animateToProgress } from "../../utils/animation/animate-to-progress";
 import { useSharedValueState } from "../reanimated/use-shared-value-state";
 import { type StackContextValue, useStack } from "./use-stack";
-
-const SNAP_SPRING = { damping: 50, stiffness: 500, mass: 1 };
 
 export interface ScreenState<
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
@@ -115,11 +114,18 @@ export function useScreenState<
 				animateToProgress({
 					target: targetProgress,
 					animations,
-					spec: { open: SNAP_SPRING, close: SNAP_SPRING },
+					spec: {
+						open:
+							focusedScene.descriptor.options.transitionSpec?.expand ??
+							DefaultSnapSpec,
+						close:
+							focusedScene.descriptor.options.transitionSpec?.expand ??
+							DefaultSnapSpec,
+					},
 				});
 			})();
 		},
-		[snapPoints, current.route.key],
+		[snapPoints, current.route.key, focusedScene],
 	);
 
 	return useMemo(

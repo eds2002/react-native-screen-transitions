@@ -100,6 +100,10 @@ export default function BlankStackLayout() {
 				name="bottom-sheet"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<BlankStack.Screen
+				name="scroll-tests"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
 		</BlankStack>
 	);
 }

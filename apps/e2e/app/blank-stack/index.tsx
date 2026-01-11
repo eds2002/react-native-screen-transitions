@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ScreenHeader } from "@/components/screen-header";
 
 const TEST_FLOWS = [
 	{
@@ -38,17 +39,21 @@ const TEST_FLOWS = [
 		title: "Bottom Sheet",
 		description: "Vertical sheet with snap points",
 	},
+	{
+		id: "scroll-tests",
+		title: "Scroll Tests",
+		description: "ScrollView + gesture coordination (no snap points)",
+	},
 ];
 
 export default function BlankStackIndex() {
 	return (
-		<SafeAreaView style={styles.container}>
+		<SafeAreaView style={styles.container} edges={["top"]}>
+			<ScreenHeader
+				title="Blank Stack"
+				subtitle="Pure JS stack with full animation control"
+			/>
 			<ScrollView contentContainerStyle={styles.content}>
-				<Text style={styles.header}>Blank Stack E2E Tests</Text>
-				<Text style={styles.subheader}>
-					Pure JS stack with full animation control
-				</Text>
-
 				<View style={styles.list}>
 					{TEST_FLOWS.map((flow) => (
 						<Pressable
@@ -66,14 +71,6 @@ export default function BlankStackIndex() {
 						</Pressable>
 					))}
 				</View>
-
-				<Pressable
-					testID="back-home"
-					style={styles.backButton}
-					onPress={() => router.back()}
-				>
-					<Text style={styles.backButtonText}>Back to Home</Text>
-				</Pressable>
 			</ScrollView>
 		</SafeAreaView>
 	);
@@ -85,18 +82,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "#121212",
 	},
 	content: {
-		padding: 20,
-	},
-	header: {
-		fontSize: 24,
-		fontWeight: "bold",
-		color: "#fff",
-		marginBottom: 8,
-	},
-	subheader: {
-		fontSize: 14,
-		color: "#888",
-		marginBottom: 24,
+		padding: 16,
 	},
 	list: {
 		gap: 12,
@@ -117,14 +103,5 @@ const styles = StyleSheet.create({
 	itemDescription: {
 		fontSize: 13,
 		color: "#888",
-	},
-	backButton: {
-		marginTop: 24,
-		padding: 16,
-		alignItems: "center",
-	},
-	backButtonText: {
-		fontSize: 16,
-		color: "#4a9eff",
 	},
 });
