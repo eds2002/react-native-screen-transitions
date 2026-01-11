@@ -1,6 +1,10 @@
 import type { Route } from "@react-navigation/native";
 import { useCallback, useMemo } from "react";
-import { runOnUI, useDerivedValue } from "react-native-reanimated";
+import {
+	runOnUI,
+	type SharedValue,
+	useDerivedValue,
+} from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../configs/specs";
 import {
 	type BaseDescriptor,
@@ -58,6 +62,13 @@ export interface ScreenState<
 	 * @param index - The index of the snap point to snap to (0-based)
 	 */
 	snapTo: (index: number) => void;
+
+	/**
+	 * Animated value representing the current snap point index.
+	 * Interpolates between indices during gestures (e.g., 0.5 means halfway between snap 0 and 1).
+	 * Returns -1 if no snap points are defined.
+	 */
+	animatedSnapIndex: SharedValue<number>;
 }
 
 /**
@@ -90,24 +101,62 @@ export function useScreenState<
 
 	const currentOptions = current.options;
 	const snapPoints = currentOptions?.snapPoints;
+	const animations = useMemo(
+		() => AnimationStore.getAll(current.route.key),
+		[current.route.key],
+	);
+
+	// Pre-sort snap points for the derived value (avoids sorting in worklet)
+	const sortedSnapPoints = useMemo(
+		() => (snapPoints ? [...snapPoints].sort((a, b) => a - b) : []),
+		[snapPoints],
+	);
+
+	const animatedSnapIndex = useDerivedValue(() => {
+		if (sortedSnapPoints.length === 0) {
+			return -1;
+		}
+
+		const progress = animations.progress.value;
+
+		// Below first snap point
+		if (progress <= sortedSnapPoints[0]) {
+			return 0;
+		}
+
+		// Above last snap point
+		if (progress >= sortedSnapPoints[sortedSnapPoints.length - 1]) {
+			return sortedSnapPoints.length - 1;
+		}
+
+		// Find segment and interpolate
+		for (let i = 0; i < sortedSnapPoints.length - 1; i++) {
+			if (progress <= sortedSnapPoints[i + 1]) {
+				const t =
+					(progress - sortedSnapPoints[i]) /
+					(sortedSnapPoints[i + 1] - sortedSnapPoints[i]);
+				return i + t;
+			}
+		}
+
+		return sortedSnapPoints.length - 1;
+	});
 
 	const snapTo = useCallback(
 		(targetIndex: number) => {
-			if (!snapPoints || snapPoints.length === 0) {
+			if (!sortedSnapPoints || sortedSnapPoints.length === 0) {
 				console.warn("snapTo called but no snapPoints defined");
 				return;
 			}
 
-			if (targetIndex < 0 || targetIndex >= snapPoints.length) {
+			if (targetIndex < 0 || targetIndex >= sortedSnapPoints.length) {
 				console.warn(
-					`snapTo index ${targetIndex} out of bounds (0-${snapPoints.length - 1})`,
+					`snapTo index ${targetIndex} out of bounds (0-${sortedSnapPoints.length - 1})`,
 				);
 				return;
 			}
 
-			const targetProgress = snapPoints[targetIndex];
-			const routeKey = current.route.key;
-			const animations = AnimationStore.getAll(routeKey);
+			const targetProgress = sortedSnapPoints[targetIndex];
 
 			runOnUI(() => {
 				"worklet";
@@ -119,13 +168,13 @@ export function useScreenState<
 							focusedScene.descriptor.options.transitionSpec?.expand ??
 							DefaultSnapSpec,
 						close:
-							focusedScene.descriptor.options.transitionSpec?.expand ??
+							focusedScene.descriptor.options.transitionSpec?.collapse ??
 							DefaultSnapSpec,
 					},
 				});
 			})();
 		},
-		[snapPoints, current.route.key, focusedScene],
+		[sortedSnapPoints, animations, focusedScene],
 	);
 
 	return useMemo(
@@ -138,6 +187,7 @@ export function useScreenState<
 			meta: focusedScene?.descriptor?.options?.meta,
 			navigation: current.navigation as TNavigation,
 			snapTo,
+			animatedSnapIndex,
 		}),
 		[
 			index,
@@ -147,6 +197,7 @@ export function useScreenState<
 			current.navigation,
 			current.route,
 			snapTo,
+			animatedSnapIndex,
 		],
 	);
 }
