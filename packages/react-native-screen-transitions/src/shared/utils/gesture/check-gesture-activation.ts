@@ -353,72 +353,34 @@ export function checkScrollAwareActivation({
 	const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
 		swipeInfo;
 
-	// Data-driven approach: each check maps direction + swipe + scroll boundary
-	const checks: Array<{
-		enabled: boolean;
-		swiping: boolean;
-		atBoundary: boolean;
-		direction: GestureDirection;
-	}> = [
-		{
-			enabled: directions.vertical,
-			swiping: isSwipingDown,
-			atBoundary: scrollY <= 0,
-			direction: "vertical",
-		},
-		{
-			enabled: directions.horizontal,
-			swiping: isSwipingRight,
-			atBoundary: scrollX <= 0,
-			direction: "horizontal",
-		},
-		{
-			enabled: directions.verticalInverted,
-			swiping: isSwipingUp,
-			atBoundary: scrollY >= maxScrollY,
-			direction: "vertical-inverted",
-		},
-		{
-			enabled: directions.horizontalInverted,
-			swiping: isSwipingLeft,
-			atBoundary: scrollX >= maxScrollX,
-			direction: "horizontal-inverted",
-		},
-	];
+	if (directions.vertical && isSwipingDown && scrollY <= 0) {
+		return { shouldActivate: true, direction: "vertical" };
+	}
 
-	for (const check of checks) {
-		if (check.enabled && check.swiping && check.atBoundary) {
-			return { shouldActivate: true, direction: check.direction };
-		}
+	if (directions.horizontal && isSwipingRight && scrollX <= 0) {
+		return { shouldActivate: true, direction: "horizontal" };
+	}
+
+	if (directions.verticalInverted && isSwipingUp && scrollY >= maxScrollY) {
+		return { shouldActivate: true, direction: "vertical-inverted" };
+	}
+
+	if (directions.horizontalInverted && isSwipingLeft && scrollX >= maxScrollX) {
+		return { shouldActivate: true, direction: "horizontal-inverted" };
 	}
 
 	if (hasSnapPoints && canExpandMore) {
-		const snapExpandChecks: Array<{
-			enabled: boolean;
-			swiping: boolean;
-			atBoundary: boolean;
-			direction: GestureDirection;
-		}> = [
-			{
-				// Vertical sheet: swipe up at scroll top → expand
-				enabled: directions.vertical || directions.verticalInverted,
-				swiping: isSwipingUp,
-				atBoundary: scrollY <= 0,
-				direction: "vertical-inverted",
-			},
-			{
-				// Horizontal sheet: swipe left at scroll left → expand
-				enabled: directions.horizontal || directions.horizontalInverted,
-				swiping: isSwipingLeft,
-				atBoundary: scrollX <= 0,
-				direction: "horizontal-inverted",
-			},
-		];
+		// Vertical sheet: swipe up at scroll top → expand
+		const enabledYAxis = directions.vertical || directions.verticalInverted;
+		const enabledXAxis = directions.horizontal || directions.horizontalInverted;
 
-		for (const check of snapExpandChecks) {
-			if (check.enabled && check.swiping && check.atBoundary) {
-				return { shouldActivate: true, direction: check.direction };
-			}
+		if (enabledYAxis && isSwipingUp && scrollY <= 0) {
+			return { shouldActivate: true, direction: "vertical-inverted" };
+		}
+
+		// Horizontal sheet: swipe left at scroll left → expand
+		if (enabledXAxis && isSwipingLeft && scrollX <= 0) {
+			return { shouldActivate: true, direction: "horizontal-inverted" };
 		}
 	}
 
