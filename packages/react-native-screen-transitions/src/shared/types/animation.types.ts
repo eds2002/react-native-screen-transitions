@@ -57,6 +57,17 @@ export type ScreenTransitionState = {
 	animating: number;
 
 	/**
+	 * Whether this screen's animation has fully settled.
+	 * - `0`: Animation in progress or not yet settled
+	 * - `1`: Animation has completed and final frame has rendered
+	 *
+	 * This is set to TRUE one frame after the animation finishes,
+	 * ensuring the final frame has been painted. Useful for removing
+	 * border radius after animations complete (matching iOS native behavior).
+	 */
+	settled: number;
+
+	/**
 	 * Live gesture values for this screen.
 	 * Contains translation (x, y), normalized values (-1 to 1),
 	 * and flags for dragging/dismissing state.

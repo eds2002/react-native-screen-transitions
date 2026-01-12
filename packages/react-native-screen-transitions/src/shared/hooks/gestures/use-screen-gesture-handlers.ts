@@ -242,6 +242,7 @@ export const useScreenGestureHandlers = ({
 		gestureAnimationValues.isDragging.value = TRUE;
 		gestureAnimationValues.isDismissing.value = FALSE;
 		gestureStartProgress.value = animations.progress.value;
+		animations.settled.value = FALSE;
 	});
 
 	const onUpdate = useStableCallbackValue(

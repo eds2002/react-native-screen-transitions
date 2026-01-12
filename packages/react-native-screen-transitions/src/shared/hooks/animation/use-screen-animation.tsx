@@ -3,7 +3,10 @@ import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenTransitionConfig } from "../../../native-stack/types";
-import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
+import {
+	createScreenTransitionState,
+	DEFAULT_SCREEN_TRANSITION_STATE,
+} from "../../constants";
 import {
 	type BaseDescriptor,
 	useKeys,
@@ -25,32 +28,12 @@ type BuiltState = {
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	entering: SharedValue<number>;
+	settled: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
 	unwrapped: ScreenTransitionState;
 };
-
-const createScreenTransitionState = (
-	route: BaseStackRoute,
-	meta?: Record<string, unknown>,
-): ScreenTransitionState => ({
-	progress: 0,
-	closing: 0,
-	animating: 0,
-	entering: 1,
-	gesture: {
-		x: 0,
-		y: 0,
-		normalizedX: 0,
-		normalizedY: 0,
-		isDismissing: 0,
-		isDragging: 0,
-		direction: null,
-	},
-	route,
-	meta,
-});
 
 const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	"worklet";
@@ -59,6 +42,7 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	out.closing = s.closing.value;
 	out.entering = s.entering.value;
 	out.animating = s.animating.value;
+	out.settled = s.settled.value;
 	out.gesture.x = s.gesture.x.value;
 	out.gesture.y = s.gesture.y.value;
 	out.gesture.normalizedX = s.gesture.normalizedX.value;
@@ -85,6 +69,7 @@ const useBuildScreenTransitionState = (
 			closing: AnimationStore.getAnimation(key, "closing"),
 			entering: AnimationStore.getAnimation(key, "entering"),
 			animating: AnimationStore.getAnimation(key, "animating"),
+			settled: AnimationStore.getAnimation(key, "settled"),
 			gesture: GestureStore.getRouteGestures(key),
 			route: descriptor.route,
 			meta,

@@ -8,6 +8,8 @@ const createMockState = (
 	progress: 1,
 	closing: 0,
 	animating: 0,
+	entering: 1,
+	settled: 0,
 	gesture: {
 		isDragging: 0,
 		x: 0,
