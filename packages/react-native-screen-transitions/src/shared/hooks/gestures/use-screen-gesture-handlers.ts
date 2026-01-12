@@ -234,6 +234,7 @@ export const useScreenGestureHandlers = ({
 					maxScrollY,
 					hasSnapPoints,
 					canExpandMore,
+					snapAxisInverted: directions.snapAxisInverted,
 				});
 
 			if (recognizedDirection && !shouldActivate) {

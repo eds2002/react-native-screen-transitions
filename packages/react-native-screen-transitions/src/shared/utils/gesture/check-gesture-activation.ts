@@ -323,6 +323,8 @@ interface ScrollAwareActivationParams {
 	maxScrollY: number;
 	hasSnapPoints?: boolean;
 	canExpandMore?: boolean;
+	/** When true, the snap axis is inverted (sheet comes from top/left instead of bottom/right) */
+	snapAxisInverted?: boolean;
 }
 
 type GestureDirection =
@@ -344,6 +346,7 @@ export function checkScrollAwareActivation({
 	maxScrollY,
 	hasSnapPoints,
 	canExpandMore,
+	snapAxisInverted,
 }: ScrollAwareActivationParams): {
 	shouldActivate: boolean;
 	direction: GestureDirection | null;
@@ -352,6 +355,65 @@ export function checkScrollAwareActivation({
 
 	const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
 		swipeInfo;
+
+	// With snap points, gestures should only activate based on the PRIMARY scroll edge
+	// (the edge where the sheet originates from), not the opposite edge.
+	// This prevents the auto-enabled opposite direction from hijacking scrolls.
+	if (hasSnapPoints) {
+		const isVerticalAxis = directions.vertical || directions.verticalInverted;
+		const isHorizontalAxis =
+			directions.horizontal || directions.horizontalInverted;
+
+		if (isVerticalAxis) {
+			if (snapAxisInverted) {
+				// Sheet from TOP (vertical-inverted): only activate at scroll BOTTOM
+				if (scrollY >= maxScrollY) {
+					if (isSwipingUp) {
+						return { shouldActivate: true, direction: "vertical-inverted" };
+					}
+					if (isSwipingDown && canExpandMore) {
+						return { shouldActivate: true, direction: "vertical" };
+					}
+				}
+			} else {
+				// Sheet from BOTTOM (vertical): only activate at scroll TOP
+				if (scrollY <= 0) {
+					if (isSwipingDown) {
+						return { shouldActivate: true, direction: "vertical" };
+					}
+					if (isSwipingUp && canExpandMore) {
+						return { shouldActivate: true, direction: "vertical-inverted" };
+					}
+				}
+			}
+		}
+
+		if (isHorizontalAxis) {
+			if (snapAxisInverted) {
+				// Sheet from LEFT (horizontal-inverted): only activate at scroll RIGHT
+				if (scrollX >= maxScrollX) {
+					if (isSwipingLeft) {
+						return { shouldActivate: true, direction: "horizontal-inverted" };
+					}
+					if (isSwipingRight && canExpandMore) {
+						return { shouldActivate: true, direction: "horizontal" };
+					}
+				}
+			} else {
+				// Sheet from RIGHT (horizontal): only activate at scroll LEFT
+				if (scrollX <= 0) {
+					if (isSwipingRight) {
+						return { shouldActivate: true, direction: "horizontal" };
+					}
+					if (isSwipingLeft && canExpandMore) {
+						return { shouldActivate: true, direction: "horizontal-inverted" };
+					}
+				}
+			}
+		}
+
+		return { shouldActivate: false, direction: null };
+	}
 
 	if (directions.vertical && isSwipingDown && scrollY <= 0) {
 		return { shouldActivate: true, direction: "vertical" };
@@ -367,21 +429,6 @@ export function checkScrollAwareActivation({
 
 	if (directions.horizontalInverted && isSwipingLeft && scrollX >= maxScrollX) {
 		return { shouldActivate: true, direction: "horizontal-inverted" };
-	}
-
-	if (hasSnapPoints && canExpandMore) {
-		// Vertical sheet: swipe up at scroll top → expand
-		const enabledYAxis = directions.vertical || directions.verticalInverted;
-		const enabledXAxis = directions.horizontal || directions.horizontalInverted;
-
-		if (enabledYAxis && isSwipingUp && scrollY <= 0) {
-			return { shouldActivate: true, direction: "vertical-inverted" };
-		}
-
-		// Horizontal sheet: swipe left at scroll left → expand
-		if (enabledXAxis && isSwipingLeft && scrollX <= 0) {
-			return { shouldActivate: true, direction: "horizontal-inverted" };
-		}
 	}
 
 	return { shouldActivate: false, direction: null };
