@@ -30,6 +30,7 @@ import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progres
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
 import { velocity } from "../../utils/gesture/velocity";
+import { logger } from "../../utils/logger";
 import useStableCallbackValue from "../use-stable-callback-value";
 
 interface UseScreenGestureHandlersProps {
@@ -71,9 +72,24 @@ export const useScreenGestureHandlers = ({
 	);
 
 	const directions = useMemo(() => {
-		const directionsArray = Array.isArray(gestureDirection)
-			? gestureDirection
-			: [gestureDirection];
+		if (hasSnapPoints && Array.isArray(gestureDirection)) {
+			logger.warn(
+				`gestureDirection array is not supported with snapPoints. ` +
+					`Only the first direction "${gestureDirection[0]}" will be used. ` +
+					`Snap points define a single axis of movement, so only one gesture direction is needed.`,
+			);
+		}
+
+		// When snap points are defined, use only the first direction from the array
+		const effectiveDirection = hasSnapPoints
+			? Array.isArray(gestureDirection)
+				? gestureDirection[0]
+				: gestureDirection
+			: gestureDirection;
+
+		const directionsArray = Array.isArray(effectiveDirection)
+			? effectiveDirection
+			: [effectiveDirection];
 
 		const isBidirectional = directionsArray.includes("bidirectional");
 
