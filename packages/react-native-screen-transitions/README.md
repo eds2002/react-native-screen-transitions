@@ -212,13 +212,14 @@ options={{
 
 ### Gesture Options
 
-| Option                    | Description                            |
-| ------------------------- | -------------------------------------- |
-| `gestureEnabled`          | Enable swipe-to-dismiss                |
-| `gestureDirection`        | Direction(s) for swipe gesture         |
-| `gestureActivationArea`   | Where gesture can start                |
-| `gestureResponseDistance` | Pixel threshold for activation         |
-| `gestureVelocityImpact`   | How much velocity affects dismissal    |
+| Option                    | Description                               |
+| ------------------------- | ----------------------------------------- |
+| `gestureEnabled`          | Enable swipe-to-dismiss                   |
+| `gestureDirection`        | Direction(s) for swipe gesture            |
+| `gestureActivationArea`   | Where gesture can start                   |
+| `gestureResponseDistance` | Pixel threshold for activation            |
+| `gestureVelocityImpact`   | How much velocity affects dismissal       |
+| `backdropBehavior`        | Touch handling for backdrop area          |
 
 ### Gesture Direction
 
@@ -265,6 +266,84 @@ Gesture rules with scrollables:
 - **vertical** – only activates when scrolled to top
 - **vertical-inverted** – only activates when scrolled to bottom
 - **horizontal** – only activates at left/right scroll edges
+
+---
+
+## Bottom Sheets
+
+Create multi-stop bottom sheets with snap points:
+
+### Basic Configuration
+
+```tsx
+<Stack.Screen
+  name="Sheet"
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.5, 1],         // 50% and 100% height
+    initialSnapIndex: 0,          // Start at 50%
+    backdropBehavior: "dismiss",  // Tap backdrop to dismiss
+    ...Transition.Presets.SlideFromBottom(),
+  }}
+/>
+```
+
+### Options
+
+| Option             | Description                                             |
+| ------------------ | ------------------------------------------------------- |
+| `snapPoints`       | Array of fractions (0-1) where sheet can rest           |
+| `initialSnapIndex` | Index of initial snap point (default: 0)                |
+| `backdropBehavior` | Touch handling: `"block"`, `"passthrough"`, `"dismiss"` |
+
+### Programmatic Control
+
+Control snap points from within your screen:
+
+```tsx
+import { useScreenState } from "react-native-screen-transitions";
+
+function BottomSheet() {
+  const { snapTo, animatedSnapIndex } = useScreenState();
+
+  // Expand to full height (index 1)
+  const expand = () => snapTo(1);
+
+  // Collapse to half height (index 0)
+  const collapse = () => snapTo(0);
+
+  // Animate based on current snap position
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedSnapIndex.value, [0, 1], [0.5, 1]),
+  }));
+
+  return (
+    <Animated.View style={style}>
+      <Button title="Expand" onPress={expand} />
+    </Animated.View>
+  );
+}
+```
+
+### ScrollView Behavior
+
+With `Transition.ScrollView` inside a snap-enabled sheet:
+- **Scroll at top**: Swipe up expands, swipe down collapses
+- **Scrolled into content**: Normal scroll behavior
+
+### Snap Animation Specs
+
+Customize snap animations separately from enter/exit:
+
+```tsx
+transitionSpec: {
+  open: { stiffness: 1000, damping: 500, mass: 3 },   // Screen enter
+  close: { stiffness: 1000, damping: 500, mass: 3 },  // Screen exit
+  expand: { stiffness: 300, damping: 30 },            // Snap up
+  collapse: { stiffness: 300, damping: 30 },          // Snap down
+}
+```
 
 ---
 
@@ -382,13 +461,20 @@ function DetailScreen() {
 
 ### useScreenState
 
-Get navigation state without animation values:
+Get navigation state and snap point controls:
 
 ```tsx
 import { useScreenState } from "react-native-screen-transitions";
 
 function DetailScreen() {
-  const { index, focusedRoute, routes, navigation } = useScreenState();
+  const {
+    index,
+    focusedRoute,
+    routes,
+    navigation,
+    snapTo,              // Snap to index programmatically
+    animatedSnapIndex,   // Animated value tracking snap position
+  } = useScreenState();
   // ...
 }
 ```

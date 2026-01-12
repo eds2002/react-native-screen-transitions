@@ -1,4 +1,3 @@
-import { StyleSheet } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
