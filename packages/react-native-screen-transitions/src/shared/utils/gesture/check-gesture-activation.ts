@@ -1,5 +1,6 @@
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import type { SharedValue } from "react-native-reanimated";
+import type { ScrollConfig } from "../../providers/gestures.provider";
 import {
 	type ActivationArea,
 	type GestureActivationArea,
@@ -13,6 +14,7 @@ type Directions = {
 	verticalInverted: boolean;
 	horizontal: boolean;
 	horizontalInverted: boolean;
+	snapAxisInverted?: boolean;
 };
 
 interface CheckGestureActivationProps {
@@ -317,14 +319,9 @@ interface ScrollAwareActivationParams {
 		isSwipingLeft: boolean;
 	};
 	directions: Directions;
-	scrollX: number;
-	scrollY: number;
-	maxScrollX: number;
-	maxScrollY: number;
+	scrollConfig: ScrollConfig | null;
 	hasSnapPoints?: boolean;
 	canExpandMore?: boolean;
-	/** When true, the snap axis is inverted (sheet comes from top/left instead of bottom/right) */
-	snapAxisInverted?: boolean;
 }
 
 type GestureDirection =
@@ -340,13 +337,9 @@ type GestureDirection =
 export function checkScrollAwareActivation({
 	swipeInfo,
 	directions,
-	scrollX,
-	scrollY,
-	maxScrollX,
-	maxScrollY,
+	scrollConfig,
 	hasSnapPoints,
 	canExpandMore,
-	snapAxisInverted,
 }: ScrollAwareActivationParams): {
 	shouldActivate: boolean;
 	direction: GestureDirection | null;
@@ -355,6 +348,17 @@ export function checkScrollAwareActivation({
 
 	const { isSwipingDown, isSwipingUp, isSwipingRight, isSwipingLeft } =
 		swipeInfo;
+
+	// Extract scroll values from config
+	const scrollX = scrollConfig?.x ?? 0;
+	const scrollY = scrollConfig?.y ?? 0;
+	const maxScrollX = scrollConfig
+		? scrollConfig.contentWidth - scrollConfig.layoutWidth
+		: 0;
+	const maxScrollY = scrollConfig
+		? scrollConfig.contentHeight - scrollConfig.layoutHeight
+		: 0;
+	const snapAxisInverted = directions.snapAxisInverted;
 
 	// With snap points, gestures should only activate based on the PRIMARY scroll edge
 	// (the edge where the sheet originates from), not the opposite edge.

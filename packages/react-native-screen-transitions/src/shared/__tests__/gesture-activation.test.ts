@@ -1,4 +1,5 @@
 import { describe, expect, it } from "bun:test";
+import type { ScrollConfig } from "../providers/gestures.provider";
 import {
 	normalizeSides,
 	computeEdgeConstraints,
@@ -6,6 +7,20 @@ import {
 	shouldActivateOrFail,
 	checkScrollAwareActivation,
 } from "../utils/gesture/check-gesture-activation";
+
+/** Helper to create ScrollConfig with sensible defaults */
+const createScrollConfig = (
+	overrides: Partial<ScrollConfig> = {},
+): ScrollConfig => ({
+	x: 0,
+	y: 0,
+	contentWidth: 0,
+	contentHeight: 0,
+	layoutWidth: 0,
+	layoutHeight: 0,
+	isTouched: true,
+	...overrides,
+});
 
 describe("normalizeSides", () => {
 	it("returns all sides as 'screen' when no area provided", () => {
@@ -271,10 +286,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingDown: true },
 				directions: baseDirections,
-				scrollX: 0,
-				scrollY: 0,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ contentHeight: 500, layoutHeight: 0 }),
 			});
 			expect(result.shouldActivate).toBe(true);
 			expect(result.direction).toBe("vertical");
@@ -284,10 +296,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingDown: true },
 				directions: baseDirections,
-				scrollX: 0,
-				scrollY: 100,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ y: 100, contentHeight: 500, layoutHeight: 0 }),
 			});
 			expect(result.shouldActivate).toBe(false);
 		});
@@ -296,10 +305,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingUp: true },
 				directions: baseDirections,
-				scrollX: 0,
-				scrollY: 0,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ contentHeight: 500, layoutHeight: 0 }),
 			});
 			expect(result.shouldActivate).toBe(false);
 		});
@@ -317,10 +323,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingUp: true },
 				directions: invertedDirections,
-				scrollX: 0,
-				scrollY: 500,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ y: 500, contentHeight: 500, layoutHeight: 0 }),
 			});
 			expect(result.shouldActivate).toBe(true);
 			expect(result.direction).toBe("vertical-inverted");
@@ -330,10 +333,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingUp: true },
 				directions: invertedDirections,
-				scrollX: 0,
-				scrollY: 200,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ y: 200, contentHeight: 500, layoutHeight: 0 }),
 			});
 			expect(result.shouldActivate).toBe(false);
 		});
@@ -351,10 +351,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingRight: true },
 				directions: horizontalDirections,
-				scrollX: 0,
-				scrollY: 0,
-				maxScrollX: 500,
-				maxScrollY: 0,
+				scrollConfig: createScrollConfig({ contentWidth: 500, layoutWidth: 0 }),
 			});
 			expect(result.shouldActivate).toBe(true);
 			expect(result.direction).toBe("horizontal");
@@ -364,10 +361,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingRight: true },
 				directions: horizontalDirections,
-				scrollX: 100,
-				scrollY: 0,
-				maxScrollX: 500,
-				maxScrollY: 0,
+				scrollConfig: createScrollConfig({ x: 100, contentWidth: 500, layoutWidth: 0 }),
 			});
 			expect(result.shouldActivate).toBe(false);
 		});
@@ -385,10 +379,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingLeft: true },
 				directions: invertedHorizontalDirections,
-				scrollX: 500,
-				scrollY: 0,
-				maxScrollX: 500,
-				maxScrollY: 0,
+				scrollConfig: createScrollConfig({ x: 500, contentWidth: 500, layoutWidth: 0 }),
 			});
 			expect(result.shouldActivate).toBe(true);
 			expect(result.direction).toBe("horizontal-inverted");
@@ -400,10 +391,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingUp: true },
 				directions: baseDirections,
-				scrollX: 0,
-				scrollY: 0,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ contentHeight: 500, layoutHeight: 0 }),
 				hasSnapPoints: true,
 				canExpandMore: true,
 			});
@@ -415,10 +403,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingUp: true },
 				directions: baseDirections,
-				scrollX: 0,
-				scrollY: 0,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ contentHeight: 500, layoutHeight: 0 }),
 				hasSnapPoints: true,
 				canExpandMore: false,
 			});
@@ -429,10 +414,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingUp: true },
 				directions: baseDirections,
-				scrollX: 0,
-				scrollY: 100,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ y: 100, contentHeight: 500, layoutHeight: 0 }),
 				hasSnapPoints: true,
 				canExpandMore: true,
 			});
@@ -450,10 +432,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingLeft: true },
 				directions: horizontalDirections,
-				scrollX: 0,
-				scrollY: 0,
-				maxScrollX: 500,
-				maxScrollY: 0,
+				scrollConfig: createScrollConfig({ contentWidth: 500, layoutWidth: 0 }),
 				hasSnapPoints: true,
 				canExpandMore: true,
 			});
@@ -467,10 +446,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: noSwipe,
 				directions: baseDirections,
-				scrollX: 0,
-				scrollY: 0,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ contentHeight: 500, layoutHeight: 0 }),
 			});
 			expect(result.shouldActivate).toBe(false);
 			expect(result.direction).toBe(null);
@@ -487,10 +463,7 @@ describe("checkScrollAwareActivation", () => {
 			const result = checkScrollAwareActivation({
 				swipeInfo: { ...noSwipe, isSwipingDown: true },
 				directions: disabledDirections,
-				scrollX: 0,
-				scrollY: 0,
-				maxScrollX: 0,
-				maxScrollY: 500,
+				scrollConfig: createScrollConfig({ contentHeight: 500, layoutHeight: 0 }),
 			});
 			expect(result.shouldActivate).toBe(false);
 		});

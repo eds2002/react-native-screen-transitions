@@ -206,15 +206,6 @@ export const useScreenGestureHandlers = ({
 			}
 
 			// Touch IS on ScrollView - apply scroll-aware rules
-			const scrollX = scrollCfg?.x ?? 0;
-			const scrollY = scrollCfg?.y ?? 0;
-			const maxScrollX = scrollCfg?.contentWidth
-				? scrollCfg.contentWidth - scrollCfg.layoutWidth
-				: 0;
-			const maxScrollY = scrollCfg?.contentHeight
-				? scrollCfg.contentHeight - scrollCfg.layoutHeight
-				: 0;
-
 			// Snap mode: determine if sheet can still expand
 			const canExpandMore =
 				hasSnapPoints && animations.progress.value < maxSnapPoint - 0.01;
@@ -228,13 +219,9 @@ export const useScreenGestureHandlers = ({
 						isSwipingLeft,
 					},
 					directions,
-					scrollX,
-					scrollY,
-					maxScrollX,
-					maxScrollY,
+					scrollConfig: scrollCfg,
 					hasSnapPoints,
 					canExpandMore,
-					snapAxisInverted: directions.snapAxisInverted,
 				});
 
 			if (recognizedDirection && !shouldActivate) {
