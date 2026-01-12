@@ -241,6 +241,35 @@ export default function BottomSheetLayout() {
 				}}
 			/>
 			<BlankStack.Screen
+				name="snap-index-animation"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					snapPoints: [0.25, 0.5, 0.75, 1.0],
+					initialSnapIndex: 0,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
 				name="backdrop-dismiss"
 				options={{
 					gestureEnabled: true,

@@ -154,6 +154,16 @@ export interface ScreenInterpolationProps {
 	stackProgress: number;
 
 	/**
+	 * Animated index of the current snap point.
+	 * Interpolates between indices during gestures/animations.
+	 * - Returns -1 if no snap points are defined
+	 * - Returns 0 when at or below first snap point
+	 * - Returns fractional values between snap points (e.g., 1.5 = halfway between snap 1 and 2)
+	 * - Returns length-1 when at or above last snap point
+	 */
+	snapIndex: number;
+
+	/**
 	 * Function that provides access to bounds builders for creating shared element transitions.
 	 */
 	bounds: BoundsAccessor;

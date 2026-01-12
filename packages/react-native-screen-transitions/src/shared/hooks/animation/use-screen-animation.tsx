@@ -35,6 +35,27 @@ type BuiltState = {
 	unwrapped: ScreenTransitionState;
 };
 
+/**
+ * Computes the animated snap index based on progress and snap points.
+ * Returns -1 if no snap points, otherwise interpolates between indices.
+ */
+const computeSnapIndex = (progress: number, snapPoints: number[]): number => {
+	"worklet";
+	if (snapPoints.length === 0) return -1;
+	if (progress <= snapPoints[0]) return 0;
+	if (progress >= snapPoints[snapPoints.length - 1])
+		return snapPoints.length - 1;
+
+	for (let i = 0; i < snapPoints.length - 1; i++) {
+		if (progress <= snapPoints[i + 1]) {
+			const t =
+				(progress - snapPoints[i]) / (snapPoints[i + 1] - snapPoints[i]);
+			return i + t;
+		}
+	}
+	return snapPoints.length - 1;
+};
+
 const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	"worklet";
 	const out = s.unwrapped;
@@ -108,6 +129,11 @@ export function _useScreenAnimation() {
 	const currentRouteKey = currentDescriptor?.route?.key;
 	const currentIndex = routeKeys.indexOf(currentRouteKey);
 
+	const sortedSnapPoints = useMemo(() => {
+		const points = currentDescriptor?.options?.snapPoints;
+		return points ? [...points].sort((a, b) => a - b) : [];
+	}, [currentDescriptor?.options?.snapPoints]);
+
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">
 	>(() => {
@@ -137,6 +163,8 @@ export function _useScreenAnimation() {
 		const stackProgress =
 			currentIndex >= 0 ? rootStackProgress.value - currentIndex : progress;
 
+		const snapIndex = computeSnapIndex(current.progress, sortedSnapPoints);
+
 		return {
 			layouts: { screen: dimensions },
 			insets,
@@ -145,6 +173,7 @@ export function _useScreenAnimation() {
 			next,
 			progress,
 			stackProgress,
+			snapIndex,
 			...helpers,
 		};
 	});

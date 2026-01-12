@@ -30,6 +30,11 @@ const EXAMPLES = [
 		description: "Stress test with 5 snap points (20-100%)",
 	},
 	{
+		id: "snap-index-animation",
+		title: "Snap Index Animation",
+		description: "Animate UI based on snapIndex value",
+	},
+	{
 		id: "backdrop-dismiss",
 		title: "Backdrop Dismiss",
 		description: "Tap outside the sheet to dismiss",

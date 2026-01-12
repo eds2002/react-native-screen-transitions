@@ -305,7 +305,7 @@ Control snap points from within your screen:
 import { useScreenState } from "react-native-screen-transitions";
 
 function BottomSheet() {
-  const { snapTo, animatedSnapIndex } = useScreenState();
+  const { snapTo } = useScreenState();
 
   // Expand to full height (index 1)
   const expand = () => snapTo(1);
@@ -313,16 +313,26 @@ function BottomSheet() {
   // Collapse to half height (index 0)
   const collapse = () => snapTo(0);
 
-  // Animate based on current snap position
-  const style = useAnimatedStyle(() => ({
-    opacity: interpolate(animatedSnapIndex.value, [0, 1], [0.5, 1]),
-  }));
-
   return (
-    <Animated.View style={style}>
+    <View>
       <Button title="Expand" onPress={expand} />
-    </Animated.View>
+      <Button title="Collapse" onPress={collapse} />
+    </View>
   );
+}
+```
+
+The animated `snapIndex` is available in screen interpolators via `ScreenInterpolationProps`:
+
+```tsx
+screenStyleInterpolator: ({ snapIndex }) => {
+  // snapIndex interpolates between snap point indices
+  // e.g., 0.5 means halfway between snap point 0 and 1
+  return {
+    contentStyle: {
+      opacity: interpolate(snapIndex, [0, 1], [0.5, 1]),
+    },
+  };
 }
 ```
 
@@ -473,7 +483,6 @@ function DetailScreen() {
     routes,
     navigation,
     snapTo,              // Snap to index programmatically
-    animatedSnapIndex,   // Animated value tracking snap position
   } = useScreenState();
   // ...
 }
