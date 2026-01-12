@@ -9,6 +9,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
+import { EPSILON } from "../../shared/constants";
 import { useStack } from "../../shared/hooks/navigation/use-stack";
 import { LayoutAnchorProvider } from "../../shared/providers/layout-anchor.provider";
 import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
@@ -28,7 +29,6 @@ enum ScreenActivity {
 	ON_TOP = 2,
 }
 
-const EPSILON = 1e-5;
 const POINT_NONE = "none" as const;
 const POINT_BOX_NONE = "box-none" as const;
 

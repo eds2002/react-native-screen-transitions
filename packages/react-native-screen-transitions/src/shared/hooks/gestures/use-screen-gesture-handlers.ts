@@ -8,7 +8,7 @@ import type {
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../configs/specs";
-import { FALSE, TRUE } from "../../constants";
+import { EPSILON, FALSE, TRUE } from "../../constants";
 import type { ScrollConfig } from "../../providers/gestures.provider";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { GestureStoreMap } from "../../stores/gesture.store";
@@ -208,7 +208,7 @@ export const useScreenGestureHandlers = ({
 			// Touch IS on ScrollView - apply scroll-aware rules
 			// Snap mode: determine if sheet can still expand
 			const canExpandMore =
-				hasSnapPoints && animations.progress.value < maxSnapPoint - 0.01;
+				hasSnapPoints && animations.progress.value < maxSnapPoint - EPSILON;
 
 			const { shouldActivate, direction: activatedDirection } =
 				checkScrollAwareActivation({

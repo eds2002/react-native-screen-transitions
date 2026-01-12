@@ -103,3 +103,8 @@ export const IS_WEB = Platform.OS === "web";
 
 export const TRUE = 1;
 export const FALSE = 0;
+
+/**
+ * Small value for floating-point comparisons to handle animation/interpolation imprecision
+ */
+export const EPSILON = 1e-5;
