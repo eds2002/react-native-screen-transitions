@@ -44,7 +44,9 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, animating, closing, entering } = animations;
+	const { progress, animating, closing, entering, targetProgress } = animations;
+
+	targetProgress.set(value);
 
 	if (isClosing) {
 		closing.set(TRUE);

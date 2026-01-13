@@ -6,6 +6,7 @@ export type AnimationStoreMap = {
 	animating: SharedValue<number>;
 	closing: SharedValue<number>;
 	entering: SharedValue<number>;
+	targetProgress: SharedValue<number>;
 };
 
 const store: Record<ScreenKey, AnimationStoreMap> = {};
@@ -18,6 +19,7 @@ const ensure = (key: ScreenKey) => {
 			closing: makeMutable(0),
 			animating: makeMutable(0),
 			entering: makeMutable(1),
+			targetProgress: makeMutable(1),
 		} satisfies AnimationStoreMap;
 		store[key] = bag;
 	}

@@ -216,8 +216,11 @@ export const useScreenGestureHandlers = ({
 
 			// Touch IS on ScrollView - apply scroll-aware rules
 			// Snap mode: determine if sheet can still expand
+			// Also check targetProgress - if we're already animating toward max, scroll should win
 			const canExpandMore =
-				hasSnapPoints && animations.progress.value < maxSnapPoint - EPSILON;
+				hasSnapPoints &&
+				animations.progress.value < maxSnapPoint - EPSILON &&
+				animations.targetProgress.value < maxSnapPoint - EPSILON;
 
 			const { shouldActivate, direction: activatedDirection } =
 				checkScrollAwareActivation({
