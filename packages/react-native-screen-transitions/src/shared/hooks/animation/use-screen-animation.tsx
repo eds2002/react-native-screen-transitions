@@ -28,7 +28,6 @@ type BuiltState = {
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	entering: SharedValue<number>;
-	settled: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
@@ -63,7 +62,6 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	out.closing = s.closing.value;
 	out.entering = s.entering.value;
 	out.animating = s.animating.value;
-	out.settled = s.settled.value;
 	out.gesture.x = s.gesture.x.value;
 	out.gesture.y = s.gesture.y.value;
 	out.gesture.normalizedX = s.gesture.normalizedX.value;
@@ -90,7 +88,6 @@ const useBuildScreenTransitionState = (
 			closing: AnimationStore.getAnimation(key, "closing"),
 			entering: AnimationStore.getAnimation(key, "entering"),
 			animating: AnimationStore.getAnimation(key, "animating"),
-			settled: AnimationStore.getAnimation(key, "settled"),
 			gesture: GestureStore.getRouteGestures(key),
 			route: descriptor.route,
 			meta,

@@ -41,7 +41,6 @@ export const createScreenTransitionState = (
 	closing: 0,
 	animating: 0,
 	entering: 1,
-	settled: 0,
 	gesture: { ...DEFAULT_GESTURE_VALUES },
 	route,
 	meta,
@@ -56,7 +55,6 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		closing: 0,
 		animating: 0,
 		entering: 1,
-		settled: 0,
 		gesture: DEFAULT_GESTURE_VALUES,
 		route: {} as RouteProp<ParamListBase>,
 	});

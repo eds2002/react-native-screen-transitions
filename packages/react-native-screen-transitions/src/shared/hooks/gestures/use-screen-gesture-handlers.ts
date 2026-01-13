@@ -134,8 +134,8 @@ export const useScreenGestureHandlers = ({
 	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
 		"worklet";
 		const firstTouch = e.changedTouches[0];
-		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
-		gestureOffsetState.value = GestureOffsetState.PENDING;
+		initialTouch.set({ x: firstTouch.x, y: firstTouch.y });
+		gestureOffsetState.set(GestureOffsetState.PENDING);
 	});
 
 	const onTouchesMove = useStableCallbackValue(
@@ -234,7 +234,7 @@ export const useScreenGestureHandlers = ({
 				gestureOffsetState.value === GestureOffsetState.PASSED &&
 				!gestureAnimationValues.isDismissing?.value
 			) {
-				gestureAnimationValues.direction.value = activatedDirection;
+				gestureAnimationValues.direction.set(activatedDirection);
 				manager.activate();
 				return;
 			}
@@ -243,10 +243,10 @@ export const useScreenGestureHandlers = ({
 
 	const onStart = useStableCallbackValue(() => {
 		"worklet";
-		gestureAnimationValues.isDragging.value = TRUE;
-		gestureAnimationValues.isDismissing.value = FALSE;
-		gestureStartProgress.value = animations.progress.value;
-		animations.settled.value = FALSE;
+		gestureAnimationValues.isDragging.set(TRUE);
+		gestureAnimationValues.isDismissing.set(FALSE);
+		gestureStartProgress.set(animations.progress.value);
+		animations.animating.set(TRUE);
 	});
 
 	const onUpdate = useStableCallbackValue(
@@ -256,16 +256,13 @@ export const useScreenGestureHandlers = ({
 			const { translationX, translationY } = event;
 			const { width, height } = dimensions;
 
-			// Update gesture values (shared across all modes)
-			gestureAnimationValues.x.value = translationX;
-			gestureAnimationValues.y.value = translationY;
-			gestureAnimationValues.normalizedX.value = velocity.normalizeTranslation(
-				translationX,
-				width,
+			gestureAnimationValues.x.set(translationX);
+			gestureAnimationValues.y.set(translationY);
+			gestureAnimationValues.normalizedX.set(
+				velocity.normalizeTranslation(translationX, width),
 			);
-			gestureAnimationValues.normalizedY.value = velocity.normalizeTranslation(
-				translationY,
-				height,
+			gestureAnimationValues.normalizedY.set(
+				velocity.normalizeTranslation(translationY, height),
 			);
 
 			if (hasSnapPoints && gestureDrivesProgress) {
@@ -283,9 +280,11 @@ export const useScreenGestureHandlers = ({
 				const progressDelta = (sign * translation) / dimension;
 
 				// Use pre-computed bounds (minSnapPoint already accounts for canDismiss)
-				animations.progress.value = Math.max(
-					minSnapPoint,
-					Math.min(maxSnapPoint, gestureStartProgress.value + progressDelta),
+				animations.progress.set(
+					Math.max(
+						minSnapPoint,
+						Math.min(maxSnapPoint, gestureStartProgress.value + progressDelta),
+					),
 				);
 			} else if (gestureDrivesProgress) {
 				// Standard mode: find max progress across allowed directions
@@ -327,9 +326,8 @@ export const useScreenGestureHandlers = ({
 					}
 				}
 
-				animations.progress.value = Math.max(
-					0,
-					Math.min(1, gestureStartProgress.value - maxProgress),
+				animations.progress.set(
+					Math.max(0, Math.min(1, gestureStartProgress.value - maxProgress)),
 				);
 			}
 		},

@@ -1,22 +1,8 @@
-import type { SharedValue } from "react-native-reanimated";
-import { runOnJS, runOnUI } from "react-native-reanimated";
+import { runOnJS } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
 import { animate } from "./animate";
-
-/**
- * Sets the settled value to TRUE after one frame.
- * This ensures the final animation frame has been painted before marking as settled.
- */
-const setSettledAfterFrame = (settled: SharedValue<number>) => {
-	requestAnimationFrame(() => {
-		runOnUI(() => {
-			"worklet";
-			settled.value = TRUE;
-		})();
-	});
-};
 
 interface AnimateToProgressProps {
 	/**
@@ -58,7 +44,7 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, animating, closing, entering, settled } = animations;
+	const { progress, animating, closing, entering } = animations;
 
 	if (isClosing) {
 		closing.set(TRUE);
@@ -69,7 +55,6 @@ export const animateToProgress = ({
 
 	if (!config) {
 		animating.set(FALSE);
-		settled.set(TRUE);
 		progress.set(value);
 
 		if (onAnimationFinish) {
@@ -79,7 +64,6 @@ export const animateToProgress = ({
 	}
 
 	animating.set(TRUE); //<-- Do not move this into the callback
-	settled.set(FALSE);
 	progress.set(
 		animate(value, effectiveConfig, (finished) => {
 			"worklet";
@@ -89,8 +73,10 @@ export const animateToProgress = ({
 				runOnJS(onAnimationFinish)(finished);
 			}
 
-			animating.set(FALSE);
-			runOnJS(setSettledAfterFrame)(settled);
+			// Delay setting animating=FALSE by one frame to ensure final frame is painted
+			requestAnimationFrame(() => {
+				animating.set(FALSE);
+			});
 		}),
 	);
 };
