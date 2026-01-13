@@ -1,20 +1,12 @@
 import { StackActions } from "@react-navigation/native";
 import { useCallback, useMemo, useRef } from "react";
-import { useWindowDimensions } from "react-native";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
-import {
-	DEFAULT_GESTURE_ACTIVATION_AREA,
-	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_DRIVES_PROGRESS,
-	GESTURE_VELOCITY_IMPACT,
-} from "../../constants";
 import type {
 	GestureContextType,
 	ScrollConfig,
 } from "../../providers/gestures.provider";
 import { useKeys } from "../../providers/screen/keys.provider";
-import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import { useScreenGestureHandlers } from "./use-screen-gesture-handlers";
 
@@ -32,8 +24,6 @@ export const useBuildGestures = ({
 	nativeGesture: GestureType;
 	gestureAnimationValues: GestureStoreMap;
 } => {
-	const dimensions = useWindowDimensions();
-
 	const { current } = useKeys();
 
 	const navState = current.navigation.getState();
@@ -48,17 +38,8 @@ export const useBuildGestures = ({
 	const gestureAnimationValues = GestureStore.getRouteGestures(
 		current.route.key,
 	);
-	const animations = AnimationStore.getAll(current.route.key);
 
-	const {
-		gestureDirection = DEFAULT_GESTURE_DIRECTION,
-		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
-		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
-		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
-		gestureResponseDistance,
-		transitionSpec,
-		snapPoints,
-	} = current.options;
+	const { snapPoints } = current.options;
 
 	// Dismiss gesture is controlled by gestureEnabled (disabled for first screen)
 	const canDismiss = Boolean(
@@ -97,26 +78,13 @@ export const useBuildGestures = ({
 
 	const { onTouchesDown, onTouchesMove, onStart, onUpdate, onEnd } =
 		useScreenGestureHandlers({
-			dimensions,
-			animations,
-			gestureAnimationValues,
-			gestureDirection,
-			gestureDrivesProgress,
-			gestureVelocityImpact,
 			scrollConfig,
-			gestureActivationArea,
-			gestureResponseDistance,
-			snapPoints,
 			canDismiss,
-			transitionSpec,
 			handleDismiss,
 			ancestorIsDismissing:
 				ancestorContext?.gestureAnimationValues.isDismissing,
 		});
 
-	// Memoize gestures to keep stable references - critical for RNGH
-	// Child gestures reference ancestor's pan via requireExternalGestureToFail,
-	// so the pan gesture MUST be stable or children will reference stale objects
 	return useMemo(() => {
 		const panGesture = Gesture.Pan()
 			.withRef(panGestureRef)

@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { useWindowDimensions } from "react-native";
 import type {
 	GestureStateChangeEvent,
 	GestureTouchEvent,
@@ -8,17 +9,20 @@ import type {
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../configs/specs";
-import { EPSILON, FALSE, TRUE } from "../../constants";
-import type { ScrollConfig } from "../../providers/gestures.provider";
-import type { AnimationStoreMap } from "../../stores/animation.store";
-import type { GestureStoreMap } from "../../stores/gesture.store";
-import type { TransitionSpec } from "../../types/animation.types";
 import {
-	type GestureActivationArea,
-	type GestureDirection,
-	GestureOffsetState,
-} from "../../types/gesture.types";
-import type { Layout } from "../../types/screen.types";
+	DEFAULT_GESTURE_ACTIVATION_AREA,
+	DEFAULT_GESTURE_DIRECTION,
+	DEFAULT_GESTURE_DRIVES_PROGRESS,
+	EPSILON,
+	FALSE,
+	GESTURE_VELOCITY_IMPACT,
+	TRUE,
+} from "../../constants";
+import type { ScrollConfig } from "../../providers/gestures.provider";
+import { useKeys } from "../../providers/screen/keys.provider";
+import { AnimationStore } from "../../stores/animation.store";
+import { GestureStore } from "../../stores/gesture.store";
+import { GestureOffsetState } from "../../types/gesture.types";
 import { animateToProgress } from "../../utils/animation/animate-to-progress";
 import {
 	applyOffsetRules,
@@ -34,38 +38,36 @@ import { logger } from "../../utils/logger";
 import useStableCallbackValue from "../use-stable-callback-value";
 
 interface UseScreenGestureHandlersProps {
-	dimensions: Layout;
-	animations: AnimationStoreMap;
-	gestureAnimationValues: GestureStoreMap;
-	gestureDirection: GestureDirection | GestureDirection[];
-	gestureDrivesProgress: boolean;
-	gestureVelocityImpact: number;
 	scrollConfig: SharedValue<ScrollConfig | null>;
-	gestureActivationArea: GestureActivationArea;
-	gestureResponseDistance?: number;
 	ancestorIsDismissing?: SharedValue<number> | null;
-	snapPoints?: number[];
 	canDismiss: boolean;
-	transitionSpec?: TransitionSpec;
 	handleDismiss: () => void;
 }
 
 export const useScreenGestureHandlers = ({
-	dimensions,
-	animations,
-	gestureAnimationValues,
-	gestureDirection,
-	gestureDrivesProgress,
-	gestureVelocityImpact,
 	scrollConfig,
-	gestureActivationArea,
-	gestureResponseDistance,
 	ancestorIsDismissing,
-	snapPoints: rawSnapPoints,
 	canDismiss,
-	transitionSpec,
 	handleDismiss,
 }: UseScreenGestureHandlersProps) => {
+	const dimensions = useWindowDimensions();
+	const { current } = useKeys();
+
+	const animations = AnimationStore.getAll(current.route.key);
+	const gestureAnimationValues = GestureStore.getRouteGestures(
+		current.route.key,
+	);
+
+	const {
+		gestureDirection = DEFAULT_GESTURE_DIRECTION,
+		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
+		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
+		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
+		gestureResponseDistance,
+		transitionSpec,
+		snapPoints: rawSnapPoints,
+	} = current.options;
+
 	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } = useMemo(
 		() => validateSnapPoints({ snapPoints: rawSnapPoints, canDismiss }),
 		[rawSnapPoints, canDismiss],
@@ -73,6 +75,13 @@ export const useScreenGestureHandlers = ({
 
 	const directions = useMemo(() => {
 		if (hasSnapPoints && Array.isArray(gestureDirection)) {
+			/**
+			 * Unsure if this behavior will change in the future, as I cannot find a use case as to why
+			 * you would want multiple gesture dismisals for a sheet.
+			 *
+			 * e.g. When defining a snap point with a gesture of vertical ( default ), the system
+			 * assumes that the inverse ( vertical-inverted ), will grow the sheet.
+			 */
 			logger.warn(
 				`gestureDirection array is not supported with snapPoints. ` +
 					`Only the first direction "${gestureDirection[0]}" will be used. ` +
