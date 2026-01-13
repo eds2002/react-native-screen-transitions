@@ -277,7 +277,6 @@ export const useScreenGestureHandlers = ({
 			);
 
 			if (hasSnapPoints && gestureDrivesProgress) {
-				// Snap mode: bidirectional tracking on snap axis
 				const isHorizontal = snapAxis === "horizontal";
 				const translation = isHorizontal ? translationX : translationY;
 				const dimension = isHorizontal ? width : height;
@@ -296,43 +295,30 @@ export const useScreenGestureHandlers = ({
 					Math.min(maxSnapPoint, gestureStartProgress.value + progressDelta),
 				);
 			} else if (gestureDrivesProgress) {
-				// Standard mode: find max progress across allowed directions
-				const axes = [
-					{
-						enabled: directions.horizontal,
-						translation: translationX,
-						dimension: width,
-						sign: 1,
-					},
-					{
-						enabled: directions.horizontalInverted,
-						translation: translationX,
-						dimension: width,
-						sign: -1,
-					},
-					{
-						enabled: directions.vertical,
-						translation: translationY,
-						dimension: height,
-						sign: 1,
-					},
-					{
-						enabled: directions.verticalInverted,
-						translation: translationY,
-						dimension: height,
-						sign: -1,
-					},
-				];
-
 				let maxProgress = 0;
-				for (const axis of axes) {
-					if (axis.enabled && axis.translation * axis.sign > 0) {
-						const progress = mapGestureToProgress(
-							Math.abs(axis.translation),
-							axis.dimension,
-						);
-						maxProgress = Math.max(maxProgress, progress);
-					}
+
+				// Horizontal swipe right (positive X)
+				if (directions.horizontal && translationX > 0) {
+					const progress = mapGestureToProgress(translationX, width);
+					maxProgress = Math.max(maxProgress, progress);
+				}
+
+				// Horizontal inverted swipe left (negative X)
+				if (directions.horizontalInverted && translationX < 0) {
+					const progress = mapGestureToProgress(-translationX, width);
+					maxProgress = Math.max(maxProgress, progress);
+				}
+
+				// Vertical swipe down (positive Y)
+				if (directions.vertical && translationY > 0) {
+					const progress = mapGestureToProgress(translationY, height);
+					maxProgress = Math.max(maxProgress, progress);
+				}
+
+				// Vertical inverted swipe up (negative Y)
+				if (directions.verticalInverted && translationY < 0) {
+					const progress = mapGestureToProgress(-translationY, height);
+					maxProgress = Math.max(maxProgress, progress);
 				}
 
 				animations.progress.value = Math.max(
@@ -407,7 +393,6 @@ export const useScreenGestureHandlers = ({
 					initialVelocity,
 				});
 			} else {
-				// Standard mode: use determineDismissal
 				const result = determineDismissal({
 					event,
 					directions,
