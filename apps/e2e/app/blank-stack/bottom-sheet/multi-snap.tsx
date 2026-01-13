@@ -1,6 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useScreenState } from "react-native-screen-transitions";
+import { snapTo } from "react-native-screen-transitions";
 
 import { ScreenHeader } from "@/components/screen-header";
 
@@ -13,8 +13,6 @@ const SNAP_POINTS = [
 ];
 
 export default function MultiSnapScreen() {
-	const { snapTo } = useScreenState();
-
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<View style={styles.content}>

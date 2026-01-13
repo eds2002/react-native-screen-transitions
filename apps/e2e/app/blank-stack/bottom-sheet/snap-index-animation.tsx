@@ -5,10 +5,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import {
-	useScreenAnimation,
-	useScreenState,
-} from "react-native-screen-transitions";
+import { snapTo, useScreenAnimation } from "react-native-screen-transitions";
 
 import { ScreenHeader } from "@/components/screen-header";
 
@@ -20,7 +17,6 @@ const SNAP_POINTS = [
 ];
 
 export default function SnapIndexAnimationScreen() {
-	const { snapTo } = useScreenState();
 	const animationProps = useScreenAnimation();
 
 	// Animate background color based on snapIndex
