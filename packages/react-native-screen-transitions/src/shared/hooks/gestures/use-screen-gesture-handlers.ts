@@ -401,7 +401,8 @@ export const useScreenGestureHandlers = ({
 				});
 
 				const shouldDismiss = result.shouldDismiss;
-				const targetProgress = shouldDismiss ? 0 : gestureStartProgress.value;
+				// Without snap points, always animate to fully visible (1) when not dismissing
+				const targetProgress = shouldDismiss ? 0 : 1;
 
 				resetGestureValues({
 					spec: shouldDismiss ? transitionSpec?.close : transitionSpec?.open,
