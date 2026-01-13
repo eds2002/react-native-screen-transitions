@@ -143,8 +143,8 @@ export const useScreenGestureHandlers = ({
 	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
 		"worklet";
 		const firstTouch = e.changedTouches[0];
-		initialTouch.set({ x: firstTouch.x, y: firstTouch.y });
-		gestureOffsetState.set(GestureOffsetState.PENDING);
+		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
+		gestureOffsetState.value = GestureOffsetState.PENDING;
 	});
 
 	const onTouchesMove = useStableCallbackValue(
@@ -153,7 +153,7 @@ export const useScreenGestureHandlers = ({
 
 			// If an ancestor navigator is already dismissing via gesture, block new gestures here.
 			if (ancestorIsDismissing?.value) {
-				gestureOffsetState.set(GestureOffsetState.FAILED);
+				gestureOffsetState.value = GestureOffsetState.FAILED;
 				manager.fail();
 				return;
 			}
@@ -201,13 +201,13 @@ export const useScreenGestureHandlers = ({
 				}
 
 				if (isSwipingDown) {
-					gestureAnimationValues.direction.set("vertical");
+					gestureAnimationValues.direction.value = "vertical";
 				} else if (isSwipingUp) {
-					gestureAnimationValues.direction.set("vertical-inverted");
+					gestureAnimationValues.direction.value = "vertical-inverted";
 				} else if (isSwipingRight) {
-					gestureAnimationValues.direction.set("horizontal");
+					gestureAnimationValues.direction.value = "horizontal";
 				} else if (isSwipingLeft) {
-					gestureAnimationValues.direction.set("horizontal-inverted");
+					gestureAnimationValues.direction.value = "horizontal-inverted";
 				}
 
 				manager.activate();
@@ -243,7 +243,7 @@ export const useScreenGestureHandlers = ({
 				gestureOffsetState.value === GestureOffsetState.PASSED &&
 				!gestureAnimationValues.isDismissing?.value
 			) {
-				gestureAnimationValues.direction.set(activatedDirection);
+				gestureAnimationValues.direction.value = activatedDirection;
 				manager.activate();
 				return;
 			}
@@ -252,10 +252,10 @@ export const useScreenGestureHandlers = ({
 
 	const onStart = useStableCallbackValue(() => {
 		"worklet";
-		gestureAnimationValues.isDragging.set(TRUE);
-		gestureAnimationValues.isDismissing.set(FALSE);
-		gestureStartProgress.set(animations.progress.value);
-		animations.animating.set(TRUE);
+		gestureAnimationValues.isDragging.value = TRUE;
+		gestureAnimationValues.isDismissing.value = FALSE;
+		gestureStartProgress.value = animations.progress.value;
+		animations.animating.value = TRUE;
 	});
 
 	const onUpdate = useStableCallbackValue(
@@ -265,13 +265,15 @@ export const useScreenGestureHandlers = ({
 			const { translationX, translationY } = event;
 			const { width, height } = dimensions;
 
-			gestureAnimationValues.x.set(translationX);
-			gestureAnimationValues.y.set(translationY);
-			gestureAnimationValues.normalizedX.set(
-				velocity.normalizeTranslation(translationX, width),
+			gestureAnimationValues.x.value = translationX;
+			gestureAnimationValues.y.value = translationY;
+			gestureAnimationValues.normalizedX.value = velocity.normalizeTranslation(
+				translationX,
+				width,
 			);
-			gestureAnimationValues.normalizedY.set(
-				velocity.normalizeTranslation(translationY, height),
+			gestureAnimationValues.normalizedY.value = velocity.normalizeTranslation(
+				translationY,
+				height,
 			);
 
 			if (hasSnapPoints && gestureDrivesProgress) {
@@ -289,11 +291,9 @@ export const useScreenGestureHandlers = ({
 				const progressDelta = (sign * translation) / dimension;
 
 				// Use pre-computed bounds (minSnapPoint already accounts for canDismiss)
-				animations.progress.set(
-					Math.max(
-						minSnapPoint,
-						Math.min(maxSnapPoint, gestureStartProgress.value + progressDelta),
-					),
+				animations.progress.value = Math.max(
+					minSnapPoint,
+					Math.min(maxSnapPoint, gestureStartProgress.value + progressDelta),
 				);
 			} else if (gestureDrivesProgress) {
 				// Standard mode: find max progress across allowed directions
@@ -335,8 +335,9 @@ export const useScreenGestureHandlers = ({
 					}
 				}
 
-				animations.progress.set(
-					Math.max(0, Math.min(1, gestureStartProgress.value - maxProgress)),
+				animations.progress.value = Math.max(
+					0,
+					Math.min(1, gestureStartProgress.value - maxProgress),
 				);
 			}
 		},
