@@ -1,9 +1,11 @@
 import { StackActions } from "@react-navigation/native";
 import { memo, useCallback } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { NO_STYLES } from "../constants";
 import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
+import { useGestureContext } from "../providers/gestures.provider";
 import { useKeys } from "../providers/screen/keys.provider";
 import { useScreenStyles } from "../providers/screen/styles.provider";
 
@@ -15,6 +17,7 @@ export const ScreenContainer = memo(({ children }: Props) => {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useKeys();
 	const { pointerEvents, backdropBehavior } = useBackdropPointerEvents();
+	const gestureContext = useGestureContext();
 
 	const isDismissable = backdropBehavior === "dismiss";
 
@@ -45,12 +48,14 @@ export const ScreenContainer = memo(({ children }: Props) => {
 					style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
 				/>
 			</Pressable>
-			<Animated.View
-				style={[styles.content, animatedContentStyle]}
-				pointerEvents={isDismissable ? "box-none" : pointerEvents}
-			>
-				{children}
-			</Animated.View>
+			<GestureDetector gesture={gestureContext!.panGesture}>
+				<Animated.View
+					style={[styles.content, animatedContentStyle]}
+					pointerEvents={isDismissable ? "box-none" : pointerEvents}
+				>
+					{children}
+				</Animated.View>
+			</GestureDetector>
 		</View>
 	);
 });

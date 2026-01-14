@@ -1,12 +1,7 @@
-import { StyleSheet, View } from "react-native";
-import {
-	GestureDetector,
-	type GestureType,
-} from "react-native-gesture-handler";
+import type { GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
-import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
 import type { GestureStoreMap } from "../stores/gesture.store";
 import createProvider from "../utils/create-provider";
 import { useKeys } from "./screen/keys.provider";
@@ -45,7 +40,6 @@ export const {
 	const { current } = useKeys();
 	const ancestorContext = useGestureContext();
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
-	const { pointerEvents } = useBackdropPointerEvents();
 
 	const hasGestures = current.options.gestureEnabled === true;
 
@@ -67,18 +61,6 @@ export const {
 
 	return {
 		value,
-		children: (
-			<GestureDetector gesture={panGesture}>
-				<View style={styles.container} pointerEvents={pointerEvents}>
-					{children}
-				</View>
-			</GestureDetector>
-		),
+		children,
 	};
-});
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
 });
