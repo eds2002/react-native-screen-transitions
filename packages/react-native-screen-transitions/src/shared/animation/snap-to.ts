@@ -3,6 +3,7 @@ import { DefaultSnapSpec } from "../configs/specs";
 import { AnimationStore } from "../stores/animation.store";
 import { HistoryStore } from "../stores/history.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
+import { logger } from "../utils/logger";
 
 /**
  * Programmatically snap the currently focused screen to a specific snap point.
@@ -21,25 +22,29 @@ import { animateToProgress } from "../utils/animation/animate-to-progress";
  * ```
  */
 export function snapTo(index: number): void {
-	const recent = HistoryStore.getMostRecent();
+	// Find the most recent screen that has snapPoints defined.
+	// This handles cases where parent screens (e.g., expo-router) register after
+	// ComponentStack screens, but the ComponentStack is what we want to snap.
+	const allHistory = HistoryStore.toArray();
+	const screenWithSnapPoints = allHistory
+		.filter((entry) => {
+			const sp = entry.descriptor.options?.snapPoints;
+			return sp && sp.length > 0;
+		})
+		.pop(); // Last item is most recent (toArray returns oldest-first)
 
-	if (!recent) {
-		console.warn("snapTo: No screen in history");
+	if (!screenWithSnapPoints) {
+		logger.warn("snapTo: No screens with snapPoints in history");
 		return;
 	}
 
-	const { descriptor } = recent;
-	const snapPoints = descriptor.options?.snapPoints;
-
-	if (!snapPoints || snapPoints.length === 0) {
-		console.warn("snapTo: No snapPoints defined on current screen");
-		return;
-	}
+	const { descriptor } = screenWithSnapPoints;
+	const snapPoints = descriptor.options!.snapPoints!;
 
 	const sorted = [...snapPoints].sort((a, b) => a - b);
 
 	if (index < 0 || index >= sorted.length) {
-		console.warn(
+		logger.warn(
 			`snapTo: index ${index} out of bounds (0-${sorted.length - 1})`,
 		);
 		return;
