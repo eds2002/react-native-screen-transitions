@@ -3,8 +3,10 @@ import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 import type { GestureStoreMap } from "../stores/gesture.store";
+import { StackType } from "../types/stack.types";
 import createProvider from "../utils/create-provider";
 import { useKeys } from "./screen/keys.provider";
+import { useStackCoreContext } from "./stack/core.provider";
 
 export type ScrollConfig = {
 	x: number;
@@ -24,6 +26,7 @@ export interface GestureContextType {
 	gestureAnimationValues: GestureStoreMap;
 	ancestorContext: GestureContextType | null;
 	gestureEnabled: boolean;
+	isIsolated: boolean;
 }
 
 interface ScreenGestureProviderProps {
@@ -38,10 +41,12 @@ export const {
 	GestureContextType
 >(({ children }) => {
 	const { current } = useKeys();
+	const { flags } = useStackCoreContext();
 	const ancestorContext = useGestureContext();
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
 	const hasGestures = current.options.gestureEnabled === true;
+	const isIsolated = flags.STACK_TYPE === StackType.COMPONENT;
 
 	const { panGesture, panGestureRef, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
@@ -57,6 +62,7 @@ export const {
 		gestureAnimationValues,
 		ancestorContext,
 		gestureEnabled: hasGestures,
+		isIsolated,
 	};
 
 	return {
