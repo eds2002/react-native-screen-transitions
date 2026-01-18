@@ -27,8 +27,6 @@ export const useBuildGestures = ({
 	gestureAnimationValues: GestureStoreMap;
 } => {
 	const { current } = useKeys();
-	const { flags } = useStackCoreContext();
-	const isCurrentScreenIsolated = flags.STACK_TYPE === StackType.COMPONENT;
 
 	const navState = current.navigation.getState();
 
@@ -100,35 +98,30 @@ export const useBuildGestures = ({
 			.onUpdate(onUpdate)
 			.onEnd(onEnd);
 
-		// Collect ALL ancestor pan gestures, respecting isolation boundaries
-		// This applies regardless of whether this screen has gestures
-		const ancestorPanGestures: GestureType[] = [];
-		let currentAncestor = ancestorContext;
-
-		while (currentAncestor) {
-			// Stop at isolation boundary: we're isolated, ancestor is not
-			if (isCurrentScreenIsolated && !currentAncestor.isIsolated) {
-				break;
-			}
-
-			if (currentAncestor.gestureEnabled && currentAncestor.panGesture) {
-				ancestorPanGestures.push(currentAncestor.panGesture);
-			}
-
-			currentAncestor = currentAncestor.ancestorContext;
-		}
-
-		const nativeGesture: GestureType = Gesture.Native();
+		// Native gesture setup depends on whether this screen has gestures
+		let nativeGesture: GestureType;
 
 		if (gestureEnabled) {
-			// This screen has gestures - native waits for this pan first
-			nativeGesture.requireExternalGestureToFail(panGesture);
+			// This screen has gestures - set up normal pan/native relationship
+			nativeGesture = Gesture.Native().requireExternalGestureToFail(panGesture);
 			panGesture.blocksExternalGesture(nativeGesture);
-		}
+		} else {
+			// This screen has no gestures
+			// Find nearest ancestor with gestureEnabled=true (attached pan)
+			let activePanAncestor = ancestorContext;
+			while (activePanAncestor && !activePanAncestor.gestureEnabled) {
+				activePanAncestor = activePanAncestor.ancestorContext;
+			}
 
-		// Chain all ancestor pan gestures - native waits for all to fail
-		for (const ancestorPan of ancestorPanGestures) {
-			nativeGesture.requireExternalGestureToFail(ancestorPan);
+			if (activePanAncestor?.panGesture) {
+				// Found an ancestor with enabled pan - wait for it
+				nativeGesture = Gesture.Native().requireExternalGestureToFail(
+					activePanAncestor.panGesture,
+				);
+			} else {
+				// No ancestor with enabled pan - plain native
+				nativeGesture = Gesture.Native();
+			}
 		}
 
 		return {
@@ -146,6 +139,5 @@ export const useBuildGestures = ({
 		onEnd,
 		gestureAnimationValues,
 		ancestorContext,
-		isCurrentScreenIsolated,
 	]);
 };
