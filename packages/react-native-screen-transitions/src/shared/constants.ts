@@ -106,3 +106,9 @@ export const FALSE = 0;
  * Small value for floating-point comparisons to handle animation/interpolation imprecision
  */
 export const EPSILON = 1e-5;
+
+/**
+ * Threshold for snapping animations to target when "close enough" (1% of range).
+ * Prevents micro-jitter/oscillation near animation endpoints.
+ */
+export const ANIMATION_SNAP_THRESHOLD = 0.01;
