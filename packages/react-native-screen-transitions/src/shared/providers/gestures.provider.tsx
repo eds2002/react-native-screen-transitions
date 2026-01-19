@@ -67,7 +67,7 @@ import type { GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
-import type { GestureStoreMap } from "../stores/gesture.store";
+import { GestureStore, type GestureStoreMap } from "../stores/gesture.store";
 import type { ClaimedDirections, Direction } from "../types/ownership.types";
 import { StackType } from "../types/stack.types";
 import createProvider from "../utils/create-provider";
@@ -85,12 +85,20 @@ export type ScrollConfig = {
 	isTouched: boolean;
 };
 
-/** Maps direction -> routeKey of the child that has claimed it (or null). */
+/**
+ * A claim registered by a child that shadows this screen's direction.
+ * Includes isDismissing ref so parent can ignore claims from dismissing children.
+ */
+export type DirectionClaim = {
+	routeKey: string;
+	isDismissing: SharedValue<number>;
+} | null;
+
 export type DirectionClaimMap = {
-	vertical: string | null;
-	"vertical-inverted": string | null;
-	horizontal: string | null;
-	"horizontal-inverted": string | null;
+	vertical: DirectionClaim;
+	"vertical-inverted": DirectionClaim;
+	horizontal: DirectionClaim;
+	"horizontal-inverted": DirectionClaim;
 };
 
 const NO_CLAIMS: DirectionClaimMap = {
@@ -119,6 +127,10 @@ function useRegisterDirectionClaims(
 	useEffect(() => {
 		if (!ancestorContext) return;
 
+		// Get our isDismissing ref to include in claims
+		const gestureValues = GestureStore.getRouteGestures(routeKey);
+		const isDismissing = gestureValues.isDismissing;
+
 		const claimedAncestors: Array<{
 			ancestor: GestureContextType;
 			directions: Direction[];
@@ -140,7 +152,7 @@ function useRegisterDirectionClaims(
 
 				const newClaims = { ...ancestor.childDirectionClaims.value };
 				for (const dir of shadowedDirections) {
-					newClaims[dir] = routeKey;
+					newClaims[dir] = { routeKey, isDismissing };
 				}
 				ancestor.childDirectionClaims.value = newClaims;
 			}
@@ -156,7 +168,7 @@ function useRegisterDirectionClaims(
 				let needsUpdate = false;
 
 				for (const dir of directions) {
-					if (currentClaims[dir] === routeKey) {
+					if (currentClaims[dir]?.routeKey === routeKey) {
 						newClaims[dir] = null;
 						needsUpdate = true;
 					}

@@ -72,13 +72,13 @@ interface UseScreenGestureHandlersProps {
  *   3. OWNERSHIP CHECK: Do we own this direction? (ownershipStatus)
  *      - "self" → continue
  *      - "ancestor" or null → fail (let it bubble up)
- *   4. SCROLLVIEW CHECK: If touch is on ScrollView, is it at boundary?
- *      - Not at boundary → fail (let ScrollView scroll)
- *      - At boundary → continue
- *   5. EXPAND CHECK (snap sheets): If expanding via ScrollView, is expandViaScrollView enabled?
- *   6. CHILD CLAIM CHECK: Has a child pre-registered a claim for this direction?
- *      - Yes → fail (child shadows us, defer to child)
- *      - No → activate!
+ *   4. CHILD CLAIM CHECK: Has a child pre-registered a claim for this direction?
+ *      - Yes → fail immediately (child shadows us, no delay)
+ *      - No → continue
+ *   5. OFFSET THRESHOLD: Wait for sufficient touch movement
+ *   6. SCROLLVIEW CHECK: If touch is on ScrollView, is it at boundary?
+ *   7. EXPAND CHECK (snap sheets): If expanding via ScrollView, is expandViaScrollView enabled?
+ *   8. ACTIVATE!
  * ```
  *
  * ## Key Concepts
@@ -88,7 +88,10 @@ interface UseScreenGestureHandlersProps {
  *
  * **Child Claims**: Registered at mount time via useEffect in gestures.provider.tsx.
  * When a child shadows our direction, it pre-registers a claim so we know to defer.
- * This prevents race conditions where both handlers might activate simultaneously.
+ * IMPORTANT: This check happens BEFORE offset threshold to ensure the parent fails
+ * immediately when shadowed, avoiding any perceptible delay.
+ * ALSO: Claims from dismissing children are ignored, allowing the parent to handle
+ * new gestures while the child is animating out.
  *
  * **ScrollView Boundaries**: Per spec, a ScrollView must be at its boundary before
  * yielding to gestures. The boundary depends on sheet type:
@@ -268,6 +271,19 @@ export const useScreenGestureHandlers = ({
 				return;
 			}
 
+			// Step 4: Child claim check - fail EARLY if a child shadows this direction
+			// This MUST happen before offset threshold to avoid delay when shadowing
+			// ALSO: Ignore claims from children that are currently dismissing
+			const childClaim = childDirectionClaims.value[swipeDirection];
+			if (
+				childClaim &&
+				childClaim.routeKey !== routeKey &&
+				!childClaim.isDismissing.value
+			) {
+				manager.fail();
+				return;
+			}
+
 			if (gestureOffsetState.value !== GestureOffsetState.PASSED) {
 				return;
 			}
@@ -277,7 +293,7 @@ export const useScreenGestureHandlers = ({
 				return;
 			}
 
-			// Step 4: ScrollView boundary check
+			// Step 6: ScrollView boundary check
 			const scrollCfg = scrollConfig.value;
 			const isTouchingScrollView = scrollCfg?.isTouched ?? false;
 
@@ -293,7 +309,7 @@ export const useScreenGestureHandlers = ({
 					return;
 				}
 
-				// Step 5: Expand check for snap sheets
+				// Step 7: Expand check for snap sheets
 				if (hasSnapPoints) {
 					const isExpandGesture =
 						(directions.snapAxisInverted && swipeDirection === "vertical") ||
@@ -319,13 +335,6 @@ export const useScreenGestureHandlers = ({
 						}
 					}
 				}
-			}
-
-			// Step 6: Child claim check - defer to child if it has claimed this direction
-			const childClaim = childDirectionClaims.value[swipeDirection];
-			if (childClaim && childClaim !== routeKey) {
-				manager.fail();
-				return;
 			}
 
 			gestureAnimationValues.direction.value = swipeDirection;
