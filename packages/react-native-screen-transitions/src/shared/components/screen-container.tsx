@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
 import { StackActions } from "@react-navigation/native";
 import { memo, useCallback } from "react";
 import { Pressable, StyleSheet, View } from "react-native";

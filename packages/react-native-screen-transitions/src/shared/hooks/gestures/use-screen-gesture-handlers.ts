@@ -206,6 +206,20 @@ export const useScreenGestureHandlers = ({
 				return;
 			}
 
+			// EARLY OWNERSHIP CHECK: Must happen BEFORE offset state check.
+			// If we don't own this direction, fail immediately so the gesture
+			// can bubble up to an ancestor that does own it.
+			// Example: B leaf claims horizontal, Nested claims vertical.
+			// When user swipes down, B leaf fails immediately, allowing Nested to handle it.
+			const ownership = ownershipStatus[swipeDirection];
+
+			if (ownership !== "self") {
+				// We don't own this direction - fail to let it bubble up to ancestor
+				// (or fail silently if no one owns it)
+				manager.fail();
+				return;
+			}
+
 			// Check if gesture passed offset threshold
 			if (gestureOffsetState.value !== GestureOffsetState.PASSED) {
 				return;
@@ -213,16 +227,6 @@ export const useScreenGestureHandlers = ({
 
 			// Don't activate if already dismissing
 			if (gestureAnimationValues.isDismissing?.value) {
-				return;
-			}
-
-			// OWNERSHIP CHECK: Do we own this direction?
-			const ownership = ownershipStatus[swipeDirection];
-
-			if (ownership !== "self") {
-				// We don't own this direction - fail to let it bubble up to ancestor
-				// (or fail silently if no one owns it)
-				manager.fail();
 				return;
 			}
 

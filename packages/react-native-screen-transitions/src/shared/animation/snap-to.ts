@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/style/noNonNullAssertion: <Options always exist> */
 import { runOnUI } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../configs/specs";
 import { AnimationStore } from "../stores/animation.store";
