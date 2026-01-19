@@ -2,7 +2,7 @@ pre-commit:
   parallel: true
   commands:
     lint:
-      glob: "*.{js,ts,tsx}"
+      glob: "packages/**/*.{js,ts,tsx}"
       run: bunx biome check --write {staged_files} --no-errors-on-unmatched
       stage_fixed: true
 
