@@ -77,8 +77,16 @@ export type ScreenTransitionConfig = {
 
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.
+	 * @default 0.3
 	 */
 	gestureVelocityImpact?: number;
+
+	/**
+	 * How much velocity affects snap point targeting. Lower values make snapping
+	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
+	 * @default 0.1
+	 */
+	snapVelocityImpact?: number;
 
 	/**
 	 * Distance threshold for gesture recognition throughout the screen.

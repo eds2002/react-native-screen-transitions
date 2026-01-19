@@ -5,7 +5,11 @@ interface DetermineSnapTargetProps {
 	velocity: number;
 	/** Screen dimension along the snap axis (width or height) */
 	dimension: number;
-	/** How much velocity affects the snap decision (0-1). Default 0.15 */
+	/**
+	 * How much velocity affects the snap decision.
+	 * Lower values = more deliberate/iOS-like, higher values = more responsive to flicks.
+	 * @default 0.1
+	 */
 	velocityFactor?: number;
 	/** Whether dismiss (progress=0) is allowed. Default true */
 	canDismiss?: boolean;
@@ -28,7 +32,7 @@ export function determineSnapTarget({
 	snapPoints,
 	velocity,
 	dimension,
-	velocityFactor = 0.15,
+	velocityFactor = 0.1,
 	canDismiss = true,
 }: DetermineSnapTargetProps): DetermineSnapTargetResult {
 	"worklet";

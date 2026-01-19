@@ -16,6 +16,7 @@ import {
 	EPSILON,
 	FALSE,
 	GESTURE_VELOCITY_IMPACT,
+	SNAP_VELOCITY_IMPACT,
 	TRUE,
 } from "../../constants";
 import type {
@@ -124,6 +125,7 @@ export const useScreenGestureHandlers = ({
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
 		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
+		snapVelocityImpact = SNAP_VELOCITY_IMPACT,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureResponseDistance,
 		transitionSpec,
@@ -438,6 +440,7 @@ export const useScreenGestureHandlers = ({
 					snapPoints,
 					velocity: snapVelocity,
 					dimension: axisDimension,
+					velocityFactor: snapVelocityImpact,
 					canDismiss: canDismiss,
 				});
 

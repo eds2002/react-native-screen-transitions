@@ -199,6 +199,7 @@ describe("determineSnapTarget", () => {
 				snapPoints,
 				velocity: 5000, // Very high velocity
 				dimension,
+				velocityFactor: 0.15, // Higher factor to demonstrate velocity pushing far
 				canDismiss: true,
 			});
 			expect(result.targetProgress).toBe(0);
