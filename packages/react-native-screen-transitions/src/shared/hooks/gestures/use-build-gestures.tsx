@@ -3,26 +3,63 @@ import { useCallback, useMemo, useRef } from "react";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type {
+	DirectionClaimMap,
 	GestureContextType,
 	ScrollConfig,
 } from "../../providers/gestures.provider";
 import { useKeys } from "../../providers/screen/keys.provider";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
-import type { ClaimedDirections } from "../../types/ownership.types";
+import type { ClaimedDirections, Direction } from "../../types/ownership.types";
 import { claimsAnyDirection } from "../../utils/gesture/compute-claimed-directions";
 import { resolveOwnership } from "../../utils/gesture/resolve-ownership";
 import { useScreenGestureHandlers } from "./use-screen-gesture-handlers";
+
+const DIRECTIONS: Direction[] = [
+	"vertical",
+	"vertical-inverted",
+	"horizontal",
+	"horizontal-inverted",
+];
+
+/**
+ * Check if this screen shadows any direction claimed by an ancestor.
+ * Shadowing means both this screen and an ancestor claim the same direction.
+ */
+function findShadowedAncestorPanGestures(
+	selfClaims: ClaimedDirections,
+	ancestorContext: GestureContextType | null | undefined,
+): GestureType[] {
+	const shadowedGestures: GestureType[] = [];
+
+	let ancestor = ancestorContext;
+	while (ancestor) {
+		// Check if we shadow any direction this ancestor claims
+		const shadowsAncestor = DIRECTIONS.some(
+			(dir) => selfClaims[dir] && ancestor?.claimedDirections?.[dir],
+		);
+
+		if (shadowsAncestor && ancestor.panGesture) {
+			shadowedGestures.push(ancestor.panGesture);
+		}
+
+		ancestor = ancestor.ancestorContext;
+	}
+
+	return shadowedGestures;
+}
 
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	ancestorContext?: GestureContextType | null;
 	claimedDirections: ClaimedDirections;
+	childDirectionClaims: SharedValue<DirectionClaimMap>;
 }
 
 export const useBuildGestures = ({
 	scrollConfig,
 	ancestorContext,
 	claimedDirections,
+	childDirectionClaims,
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
 	panGestureRef: React.MutableRefObject<GestureType | undefined>;
@@ -99,6 +136,9 @@ export const useBuildGestures = ({
 			ownershipStatus,
 			ancestorIsDismissing:
 				ancestorContext?.gestureAnimationValues.isDismissing,
+			claimedDirections,
+			ancestorContext,
+			childDirectionClaims,
 		});
 
 	return useMemo(() => {
@@ -119,6 +159,16 @@ export const useBuildGestures = ({
 			// This screen claims directions - set up normal pan/native relationship
 			nativeGesture = Gesture.Native().requireExternalGestureToFail(panGesture);
 			panGesture.blocksExternalGesture(nativeGesture);
+
+			// If this screen shadows any ancestor's direction, block their pan gestures.
+			// This ensures the child's gesture takes priority when both claim the same direction.
+			const shadowedAncestorGestures = findShadowedAncestorPanGestures(
+				claimedDirections,
+				ancestorContext,
+			);
+			for (const ancestorPan of shadowedAncestorGestures) {
+				panGesture.blocksExternalGesture(ancestorPan);
+			}
 		} else {
 			// This screen claims nothing
 			// Find nearest ancestor that claims any direction
@@ -150,6 +200,7 @@ export const useBuildGestures = ({
 	}, [
 		gestureEnabled,
 		selfClaimsAny,
+		claimedDirections,
 		onTouchesDown,
 		onTouchesMove,
 		onStart,

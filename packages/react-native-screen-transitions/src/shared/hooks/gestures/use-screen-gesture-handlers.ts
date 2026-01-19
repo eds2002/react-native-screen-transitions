@@ -18,12 +18,17 @@ import {
 	GESTURE_VELOCITY_IMPACT,
 	TRUE,
 } from "../../constants";
-import type { ScrollConfig } from "../../providers/gestures.provider";
+import type {
+	DirectionClaimMap,
+	GestureContextType,
+	ScrollConfig,
+} from "../../providers/gestures.provider";
 import { useKeys } from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore } from "../../stores/gesture.store";
 import { GestureOffsetState } from "../../types/gesture.types";
 import type {
+	ClaimedDirections,
 	Direction,
 	DirectionOwnership,
 } from "../../types/ownership.types";
@@ -51,6 +56,18 @@ interface UseScreenGestureHandlersProps {
 	 * Determines whether this screen owns each direction or should bubble up.
 	 */
 	ownershipStatus: DirectionOwnership;
+	/**
+	 * This screen's claimed directions.
+	 */
+	claimedDirections: ClaimedDirections;
+	/**
+	 * Ancestor gesture context for setting direction claims when shadowing.
+	 */
+	ancestorContext: GestureContextType | null | undefined;
+	/**
+	 * This screen's child direction claims - checked before activating.
+	 */
+	childDirectionClaims: SharedValue<DirectionClaimMap>;
 }
 
 export const useScreenGestureHandlers = ({
@@ -59,6 +76,9 @@ export const useScreenGestureHandlers = ({
 	canDismiss,
 	handleDismiss,
 	ownershipStatus,
+	claimedDirections,
+	ancestorContext,
+	childDirectionClaims,
 }: UseScreenGestureHandlersProps) => {
 	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
@@ -167,6 +187,8 @@ export const useScreenGestureHandlers = ({
 		}
 	});
 
+	const routeKey = current.route.key;
+
 	const onTouchesMove = useStableCallbackValue(
 		(e: GestureTouchEvent, manager: GestureStateManagerType) => {
 			"worklet";
@@ -234,8 +256,9 @@ export const useScreenGestureHandlers = ({
 				return;
 			}
 
-			// Don't activate if already dismissing
-			if (gestureAnimationValues.isDismissing?.value) {
+			// For non-snap screens, don't activate if already dismissing.
+			// For snap sheets, allow interruption so user can re-grab during animation.
+			if (!hasSnapPoints && gestureAnimationValues.isDismissing?.value) {
 				return;
 			}
 
@@ -291,6 +314,15 @@ export const useScreenGestureHandlers = ({
 						}
 					}
 				}
+			}
+
+			// Check if a child has already claimed this direction.
+			// Claims are pre-registered at mount time when a child shadows this screen's direction.
+			// If a child has claimed, defer to it by failing.
+			const childClaim = childDirectionClaims.value[swipeDirection];
+			if (childClaim && childClaim !== routeKey) {
+				manager.fail();
+				return;
 			}
 
 			// We own this direction and (if ScrollView) we're at boundary - activate!
