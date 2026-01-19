@@ -76,6 +76,7 @@ export const useScreenGestureHandlers = ({
 		gestureResponseDistance,
 		transitionSpec,
 		snapPoints: rawSnapPoints,
+		expandViaScrollView = true,
 	} = current.options;
 
 	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } = useMemo(
@@ -231,7 +232,14 @@ export const useScreenGestureHandlers = ({
 
 			if (isTouchingScrollView) {
 				// Touch IS on ScrollView - check if at boundary
-				const atBoundary = checkScrollBoundary(scrollCfg, swipeDirection);
+				// For snap point sheets, pass snapAxisInverted so boundary is correct:
+				// - Bottom sheet (not inverted): scrollY = 0
+				// - Top sheet (inverted): scrollY >= maxY
+				const atBoundary = checkScrollBoundary(
+					scrollCfg,
+					swipeDirection,
+					hasSnapPoints ? directions.snapAxisInverted : undefined,
+				);
 
 				if (!atBoundary) {
 					// Not at boundary - let ScrollView handle it
@@ -239,13 +247,8 @@ export const useScreenGestureHandlers = ({
 					return;
 				}
 
-				// For snap points, also check if we can expand more
-				// This handles the case where swipe-to-expand should work
+				// For snap points, check expand behavior
 				if (hasSnapPoints) {
-					const canExpandMore =
-						animations.progress.value < maxSnapPoint - EPSILON &&
-						animations.targetProgress.value < maxSnapPoint - EPSILON;
-
 					// Check if this is an expand gesture (inverse of dismiss direction)
 					const isExpandGesture =
 						(directions.snapAxisInverted && swipeDirection === "vertical") ||
@@ -255,10 +258,24 @@ export const useScreenGestureHandlers = ({
 						(!directions.snapAxisInverted &&
 							swipeDirection === "horizontal-inverted");
 
-					// If expanding but can't expand more, fail
-					if (isExpandGesture && !canExpandMore) {
-						manager.fail();
-						return;
+					if (isExpandGesture) {
+						// expandViaScrollView: false (Instagram style) - expand only via deadspace
+						// expandViaScrollView: true (Apple Maps style) - expand works from ScrollView
+						if (!expandViaScrollView) {
+							// Expand from ScrollView is disabled - fail the gesture
+							manager.fail();
+							return;
+						}
+
+						// Check if we can expand more
+						const canExpandMore =
+							animations.progress.value < maxSnapPoint - EPSILON &&
+							animations.targetProgress.value < maxSnapPoint - EPSILON;
+
+						if (!canExpandMore) {
+							manager.fail();
+							return;
+						}
 					}
 				}
 			}

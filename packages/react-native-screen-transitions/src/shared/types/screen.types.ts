@@ -156,6 +156,20 @@ export type ScreenTransitionConfig = {
 	initialSnapIndex?: number;
 
 	/**
+	 * Controls whether swiping to expand the sheet works from within a ScrollView.
+	 *
+	 * - `true` (Apple Maps style): Swiping up at scroll top expands the sheet
+	 * - `false` (Instagram style): Expand only works via deadspace (non-scrollable areas)
+	 *
+	 * Collapse (swipe down at scroll top) always works regardless of this setting.
+	 *
+	 * Only applies to screens with `snapPoints` configured.
+	 *
+	 * @default true
+	 */
+	expandViaScrollView?: boolean;
+
+	/**
 	 * Controls how touches interact with the backdrop area (outside the screen content).
 	 *
 	 * - `'block'`: Backdrop catches all touches (default for most screens)

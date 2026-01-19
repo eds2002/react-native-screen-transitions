@@ -448,13 +448,24 @@ export function checkScrollAwareActivation({
  * - A horizontal ScrollView never yields to vertical gestures
  * - ScrollView must be at boundary before yielding control
  *
+ * For snap point sheets, the boundary depends on where the sheet originates from:
+ * - Bottom sheet (vertical): scrollY = 0 (top/base)
+ * - Top sheet (verticalInverted): scrollY >= maxY (bottom/end)
+ * - Right drawer (horizontal): scrollX = 0 (left/base)
+ * - Left drawer (horizontalInverted): scrollX >= maxX (right/end)
+ *
+ * The rule: "when the ScrollView can't scroll any further in the direction
+ * the sheet came from, yield to the gesture."
+ *
  * @param scrollConfig - The current scroll state
  * @param direction - The swipe direction to check
+ * @param snapAxisInverted - For snap point sheets, whether the axis is inverted (top sheet / left drawer)
  * @returns true if at boundary (gesture should activate), false otherwise
  */
 export function checkScrollBoundary(
 	scrollConfig: ScrollConfig | null,
 	direction: Direction,
+	snapAxisInverted?: boolean,
 ): boolean {
 	"worklet";
 
@@ -480,7 +491,25 @@ export function checkScrollBoundary(
 	const isVerticallyScrollable = contentHeight > layoutHeight;
 	const isHorizontallyScrollable = contentWidth > layoutWidth;
 
-	// Check direction and corresponding boundary
+	// For snap point sheets (snapAxisInverted is defined), boundary depends on sheet origin
+	if (snapAxisInverted !== undefined) {
+		const isVerticalDirection =
+			direction === "vertical" || direction === "vertical-inverted";
+
+		if (isVerticalDirection) {
+			if (!isVerticallyScrollable) return true;
+			// Bottom sheet (not inverted): boundary at scroll top
+			// Top sheet (inverted): boundary at scroll bottom
+			return snapAxisInverted ? scrollY >= maxScrollY : scrollY <= 0;
+		}
+		// Horizontal direction
+		if (!isHorizontallyScrollable) return true;
+		// Right drawer (not inverted): boundary at scroll left
+		// Left drawer (inverted): boundary at scroll right
+		return snapAxisInverted ? scrollX >= maxScrollX : scrollX <= 0;
+	}
+
+	// Non-sheet screens: each direction has its own boundary
 	switch (direction) {
 		case "vertical":
 			// Swipe down - check if at top of vertical scroll
