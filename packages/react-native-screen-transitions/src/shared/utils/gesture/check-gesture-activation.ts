@@ -7,6 +7,7 @@ import {
 	GestureOffsetState,
 	type SideActivation,
 } from "../../types/gesture.types";
+import type { Direction } from "../../types/ownership.types";
 import type { Layout } from "../../types/screen.types";
 
 type Directions = {
@@ -436,4 +437,73 @@ export function checkScrollAwareActivation({
 	}
 
 	return { shouldActivate: false, direction: null };
+}
+
+/**
+ * Checks if a ScrollView is at its boundary for the given swipe direction.
+ * This is a simplified boundary check that respects axis isolation.
+ *
+ * Per the spec:
+ * - A vertical ScrollView never yields to horizontal gestures
+ * - A horizontal ScrollView never yields to vertical gestures
+ * - ScrollView must be at boundary before yielding control
+ *
+ * @param scrollConfig - The current scroll state
+ * @param direction - The swipe direction to check
+ * @returns true if at boundary (gesture should activate), false otherwise
+ */
+export function checkScrollBoundary(
+	scrollConfig: ScrollConfig | null,
+	direction: Direction,
+): boolean {
+	"worklet";
+
+	if (!scrollConfig) {
+		// No scroll config means no ScrollView - allow gesture
+		return true;
+	}
+
+	const {
+		x: scrollX,
+		y: scrollY,
+		contentWidth,
+		contentHeight,
+		layoutWidth,
+		layoutHeight,
+	} = scrollConfig;
+
+	// Calculate max scroll values
+	const maxScrollX = Math.max(0, contentWidth - layoutWidth);
+	const maxScrollY = Math.max(0, contentHeight - layoutHeight);
+
+	// Determine if ScrollView is scrollable on each axis
+	const isVerticallyScrollable = contentHeight > layoutHeight;
+	const isHorizontallyScrollable = contentWidth > layoutWidth;
+
+	// Check direction and corresponding boundary
+	switch (direction) {
+		case "vertical":
+			// Swipe down - check if at top of vertical scroll
+			// If not vertically scrollable, allow gesture (axis isolation)
+			if (!isVerticallyScrollable) return true;
+			return scrollY <= 0;
+
+		case "vertical-inverted":
+			// Swipe up - check if at bottom of vertical scroll
+			if (!isVerticallyScrollable) return true;
+			return scrollY >= maxScrollY;
+
+		case "horizontal":
+			// Swipe right - check if at left of horizontal scroll
+			if (!isHorizontallyScrollable) return true;
+			return scrollX <= 0;
+
+		case "horizontal-inverted":
+			// Swipe left - check if at right of horizontal scroll
+			if (!isHorizontallyScrollable) return true;
+			return scrollX >= maxScrollX;
+
+		default:
+			return true;
+	}
 }

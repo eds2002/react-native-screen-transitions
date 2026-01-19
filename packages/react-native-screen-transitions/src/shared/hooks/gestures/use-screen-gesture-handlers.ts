@@ -23,10 +23,14 @@ import { useKeys } from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { GestureStore } from "../../stores/gesture.store";
 import { GestureOffsetState } from "../../types/gesture.types";
+import type {
+	Direction,
+	DirectionOwnership,
+} from "../../types/ownership.types";
 import { animateToProgress } from "../../utils/animation/animate-to-progress";
 import {
 	applyOffsetRules,
-	checkScrollAwareActivation,
+	checkScrollBoundary,
 } from "../../utils/gesture/check-gesture-activation";
 import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { determineSnapTarget } from "../../utils/gesture/determine-snap-target";
@@ -42,6 +46,11 @@ interface UseScreenGestureHandlersProps {
 	ancestorIsDismissing?: SharedValue<number> | null;
 	canDismiss: boolean;
 	handleDismiss: () => void;
+	/**
+	 * Pre-computed ownership status for all directions.
+	 * Determines whether this screen owns each direction or should bubble up.
+	 */
+	ownershipStatus: DirectionOwnership;
 }
 
 export const useScreenGestureHandlers = ({
@@ -49,6 +58,7 @@ export const useScreenGestureHandlers = ({
 	ancestorIsDismissing,
 	canDismiss,
 	handleDismiss,
+	ownershipStatus,
 }: UseScreenGestureHandlersProps) => {
 	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
@@ -183,73 +193,79 @@ export const useScreenGestureHandlers = ({
 				return;
 			}
 
-			const recognizedDirection =
-				isSwipingDown || isSwipingUp || isSwipingRight || isSwipingLeft;
+			// Determine the swipe direction
+			let swipeDirection: Direction | null = null;
+			if (isSwipingDown) swipeDirection = "vertical";
+			else if (isSwipingUp) swipeDirection = "vertical-inverted";
+			else if (isSwipingRight) swipeDirection = "horizontal";
+			else if (isSwipingLeft) swipeDirection = "horizontal-inverted";
 
-			const scrollCfg = scrollConfig.value;
-			const isTouchingScrollView = scrollCfg?.isTouched ?? false;
-
-			if (!isTouchingScrollView) {
-				// Early return if gesture hasn't met activation criteria
-				const canActivate =
-					recognizedDirection &&
-					gestureOffsetState.value === GestureOffsetState.PASSED &&
-					!gestureAnimationValues.isDismissing?.value;
-
-				if (!canActivate) {
-					return;
-				}
-
-				if (isSwipingDown) {
-					gestureAnimationValues.direction.value = "vertical";
-				} else if (isSwipingUp) {
-					gestureAnimationValues.direction.value = "vertical-inverted";
-				} else if (isSwipingRight) {
-					gestureAnimationValues.direction.value = "horizontal";
-				} else if (isSwipingLeft) {
-					gestureAnimationValues.direction.value = "horizontal-inverted";
-				}
-
-				manager.activate();
+			// No clear direction yet - keep waiting
+			if (!swipeDirection) {
 				return;
 			}
 
-			// Touch IS on ScrollView - apply scroll-aware rules
-			// Snap mode: determine if sheet can still expand
-			// Also check targetProgress - if we're already animating toward max, scroll should win
-			const canExpandMore =
-				hasSnapPoints &&
-				animations.progress.value < maxSnapPoint - EPSILON &&
-				animations.targetProgress.value < maxSnapPoint - EPSILON;
+			// Check if gesture passed offset threshold
+			if (gestureOffsetState.value !== GestureOffsetState.PASSED) {
+				return;
+			}
 
-			const { shouldActivate, direction: activatedDirection } =
-				checkScrollAwareActivation({
-					swipeInfo: {
-						isSwipingDown,
-						isSwipingUp,
-						isSwipingRight,
-						isSwipingLeft,
-					},
-					directions,
-					scrollConfig: scrollCfg,
-					hasSnapPoints,
-					canExpandMore,
-				});
+			// Don't activate if already dismissing
+			if (gestureAnimationValues.isDismissing?.value) {
+				return;
+			}
 
-			if (recognizedDirection && !shouldActivate) {
+			// OWNERSHIP CHECK: Do we own this direction?
+			const ownership = ownershipStatus[swipeDirection];
+
+			if (ownership !== "self") {
+				// We don't own this direction - fail to let it bubble up to ancestor
+				// (or fail silently if no one owns it)
 				manager.fail();
 				return;
 			}
 
-			if (
-				shouldActivate &&
-				gestureOffsetState.value === GestureOffsetState.PASSED &&
-				!gestureAnimationValues.isDismissing?.value
-			) {
-				gestureAnimationValues.direction.value = activatedDirection;
-				manager.activate();
-				return;
+			// We own this direction - check ScrollView boundary if applicable
+			const scrollCfg = scrollConfig.value;
+			const isTouchingScrollView = scrollCfg?.isTouched ?? false;
+
+			if (isTouchingScrollView) {
+				// Touch IS on ScrollView - check if at boundary
+				const atBoundary = checkScrollBoundary(scrollCfg, swipeDirection);
+
+				if (!atBoundary) {
+					// Not at boundary - let ScrollView handle it
+					manager.fail();
+					return;
+				}
+
+				// For snap points, also check if we can expand more
+				// This handles the case where swipe-to-expand should work
+				if (hasSnapPoints) {
+					const canExpandMore =
+						animations.progress.value < maxSnapPoint - EPSILON &&
+						animations.targetProgress.value < maxSnapPoint - EPSILON;
+
+					// Check if this is an expand gesture (inverse of dismiss direction)
+					const isExpandGesture =
+						(directions.snapAxisInverted && swipeDirection === "vertical") ||
+						(!directions.snapAxisInverted &&
+							swipeDirection === "vertical-inverted") ||
+						(directions.snapAxisInverted && swipeDirection === "horizontal") ||
+						(!directions.snapAxisInverted &&
+							swipeDirection === "horizontal-inverted");
+
+					// If expanding but can't expand more, fail
+					if (isExpandGesture && !canExpandMore) {
+						manager.fail();
+						return;
+					}
+				}
 			}
+
+			// We own this direction and (if ScrollView) we're at boundary - activate!
+			gestureAnimationValues.direction.value = swipeDirection;
+			manager.activate();
 		},
 	);
 

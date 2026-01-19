@@ -1,10 +1,13 @@
+import { useMemo } from "react";
 import type { GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 import type { GestureStoreMap } from "../stores/gesture.store";
+import type { ClaimedDirections } from "../types/ownership.types";
 import { StackType } from "../types/stack.types";
 import createProvider from "../utils/create-provider";
+import { computeClaimedDirections } from "../utils/gesture/compute-claimed-directions";
 import { useKeys } from "./screen/keys.provider";
 import { useStackCoreContext } from "./stack/core.provider";
 
@@ -27,6 +30,11 @@ export interface GestureContextType {
 	ancestorContext: GestureContextType | null;
 	gestureEnabled: boolean;
 	isIsolated: boolean;
+	/**
+	 * The directions this screen claims ownership of.
+	 * Used for gesture ownership resolution.
+	 */
+	claimedDirections: ClaimedDirections;
 }
 
 interface ScreenGestureProviderProps {
@@ -48,10 +56,26 @@ export const {
 	const hasGestures = current.options.gestureEnabled === true;
 	const isIsolated = flags.STACK_TYPE === StackType.COMPONENT;
 
+	// Compute claimed directions for ownership resolution
+	const hasSnapPoints =
+		Array.isArray(current.options.snapPoints) &&
+		current.options.snapPoints.length > 0;
+
+	const claimedDirections = useMemo(
+		() =>
+			computeClaimedDirections(
+				hasGestures,
+				current.options.gestureDirection,
+				hasSnapPoints,
+			),
+		[hasGestures, current.options.gestureDirection, hasSnapPoints],
+	);
+
 	const { panGesture, panGestureRef, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
 			scrollConfig,
 			ancestorContext,
+			claimedDirections,
 		});
 
 	const value: GestureContextType = {
@@ -63,6 +87,7 @@ export const {
 		ancestorContext,
 		gestureEnabled: hasGestures,
 		isIsolated,
+		claimedDirections,
 	};
 
 	return {

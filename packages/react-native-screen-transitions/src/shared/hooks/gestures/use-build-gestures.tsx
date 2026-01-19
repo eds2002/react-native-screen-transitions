@@ -7,19 +7,22 @@ import type {
 	ScrollConfig,
 } from "../../providers/gestures.provider";
 import { useKeys } from "../../providers/screen/keys.provider";
-import { useStackCoreContext } from "../../providers/stack/core.provider";
 import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
-import { StackType } from "../../types/stack.types";
+import type { ClaimedDirections } from "../../types/ownership.types";
+import { claimsAnyDirection } from "../../utils/gesture/compute-claimed-directions";
+import { resolveOwnership } from "../../utils/gesture/resolve-ownership";
 import { useScreenGestureHandlers } from "./use-screen-gesture-handlers";
 
 interface BuildGesturesHookProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
 	ancestorContext?: GestureContextType | null;
+	claimedDirections: ClaimedDirections;
 }
 
 export const useBuildGestures = ({
 	scrollConfig,
 	ancestorContext,
+	claimedDirections,
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
 	panGestureRef: React.MutableRefObject<GestureType | undefined>;
@@ -54,6 +57,16 @@ export const useBuildGestures = ({
 	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
 	const gestureEnabled = canDismiss || hasSnapPoints;
 
+	// Compute ownership status for all directions
+	// This determines whether this screen owns each direction or should bubble up
+	const ownershipStatus = useMemo(
+		() => resolveOwnership(claimedDirections, ancestorContext ?? null),
+		[claimedDirections, ancestorContext],
+	);
+
+	// Check if this screen claims any direction (for native gesture setup)
+	const selfClaimsAny = claimsAnyDirection(claimedDirections);
+
 	const handleDismiss = useCallback(() => {
 		// If an ancestor navigator is already dismissing, skip this dismiss to
 		// avoid racing with the ancestor
@@ -83,6 +96,7 @@ export const useBuildGestures = ({
 			scrollConfig,
 			canDismiss,
 			handleDismiss,
+			ownershipStatus,
 			ancestorIsDismissing:
 				ancestorContext?.gestureAnimationValues.isDismissing,
 		});
@@ -98,28 +112,31 @@ export const useBuildGestures = ({
 			.onUpdate(onUpdate)
 			.onEnd(onEnd);
 
-		// Native gesture setup depends on whether this screen has gestures
+		// Native gesture setup depends on whether this screen or ancestors claim directions
 		let nativeGesture: GestureType;
 
-		if (gestureEnabled) {
-			// This screen has gestures - set up normal pan/native relationship
+		if (selfClaimsAny) {
+			// This screen claims directions - set up normal pan/native relationship
 			nativeGesture = Gesture.Native().requireExternalGestureToFail(panGesture);
 			panGesture.blocksExternalGesture(nativeGesture);
 		} else {
-			// This screen has no gestures
-			// Find nearest ancestor with gestureEnabled=true (attached pan)
+			// This screen claims nothing
+			// Find nearest ancestor that claims any direction
 			let activePanAncestor = ancestorContext;
-			while (activePanAncestor && !activePanAncestor.gestureEnabled) {
+			while (
+				activePanAncestor &&
+				!claimsAnyDirection(activePanAncestor.claimedDirections)
+			) {
 				activePanAncestor = activePanAncestor.ancestorContext;
 			}
 
 			if (activePanAncestor?.panGesture) {
-				// Found an ancestor with enabled pan - wait for it
+				// Found an ancestor that claims directions - wait for its pan
 				nativeGesture = Gesture.Native().requireExternalGestureToFail(
 					activePanAncestor.panGesture,
 				);
 			} else {
-				// No ancestor with enabled pan - plain native
+				// No ancestor claims any direction - plain native
 				nativeGesture = Gesture.Native();
 			}
 		}
@@ -132,6 +149,7 @@ export const useBuildGestures = ({
 		};
 	}, [
 		gestureEnabled,
+		selfClaimsAny,
 		onTouchesDown,
 		onTouchesMove,
 		onStart,
