@@ -1,14 +1,33 @@
 /**
- * useScrollRegistry - Tracks scroll state for gesture handoff
+ * ScrollView State Registry for Gesture Handoff
  *
- * This hook registers a ScrollView's scroll state with the gesture system.
- * The ownership system handles "who gets the gesture" - this hook just
- * tracks the local scroll state so the gesture handler can check boundaries.
+ * ## Mental Model
  *
- * Per the spec:
- * - ScrollView must be at boundary before yielding to gestures
- * - Ownership resolution determines which gesture handler activates
- * - Only the owner checks scroll boundaries
+ * This hook connects a ScrollView to the gesture ownership system by tracking:
+ * - **Scroll position** (x, y): For boundary detection
+ * - **Content size**: To calculate max scroll positions
+ * - **Layout size**: To determine if content is scrollable
+ * - **isTouched**: Whether the current gesture started on this ScrollView
+ *
+ * ## How It Works With Gestures
+ *
+ * The gesture handler (use-screen-gesture-handlers) checks `isTouched` to determine
+ * if a touch is on ScrollView vs deadspace:
+ *
+ * ```
+ * Touch on deadspace → Gesture controls sheet directly
+ * Touch on ScrollView → Check boundary before yielding to gesture
+ * ```
+ *
+ * The `isTouched` flag is reset to false in onTouchesDown, then set true by
+ * ScrollView's onTouchStart if the touch is actually on the ScrollView.
+ *
+ * ## Boundary Rules (per spec)
+ *
+ * | Sheet Type | Boundary | Yields When |
+ * |------------|----------|-------------|
+ * | Bottom (vertical) | scrollY = 0 | Can't scroll further up |
+ * | Top (vertical-inverted) | scrollY >= maxY | Can't scroll further down |
  */
 
 import type { GestureResponderEvent, LayoutChangeEvent } from "react-native";
@@ -25,6 +44,10 @@ interface ScrollProgressHookProps {
 	onTouchEnd?: (event: GestureResponderEvent) => void;
 }
 
+/**
+ * Returns event handlers to attach to a ScrollView for gesture coordination.
+ * All handlers pass through to user-provided handlers if specified.
+ */
 export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 	const context = useGestureContext();
 	const scrollConfig = context?.scrollConfig;

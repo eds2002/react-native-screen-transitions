@@ -51,25 +51,54 @@ interface UseScreenGestureHandlersProps {
 	ancestorIsDismissing?: SharedValue<number> | null;
 	canDismiss: boolean;
 	handleDismiss: () => void;
-	/**
-	 * Pre-computed ownership status for all directions.
-	 * Determines whether this screen owns each direction or should bubble up.
-	 */
 	ownershipStatus: DirectionOwnership;
-	/**
-	 * This screen's claimed directions.
-	 */
 	claimedDirections: ClaimedDirections;
-	/**
-	 * Ancestor gesture context for setting direction claims when shadowing.
-	 */
 	ancestorContext: GestureContextType | null | undefined;
-	/**
-	 * This screen's child direction claims - checked before activating.
-	 */
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
 }
 
+/**
+ * Gesture Handlers for Screen Dismissal and Snap Navigation
+ *
+ * ## Mental Model
+ *
+ * This hook implements the touch handling logic for the gesture ownership system.
+ * Each screen has a pan gesture handler that runs through this decision flow:
+ *
+ * ```
+ * onTouchesMove (for each touch move event):
+ *   1. ANCESTOR CHECK: If ancestor is dismissing → fail (avoid racing)
+ *   2. DIRECTION DETECTION: Determine swipe direction from touch delta
+ *   3. OWNERSHIP CHECK: Do we own this direction? (ownershipStatus)
+ *      - "self" → continue
+ *      - "ancestor" or null → fail (let it bubble up)
+ *   4. SCROLLVIEW CHECK: If touch is on ScrollView, is it at boundary?
+ *      - Not at boundary → fail (let ScrollView scroll)
+ *      - At boundary → continue
+ *   5. EXPAND CHECK (snap sheets): If expanding via ScrollView, is expandViaScrollView enabled?
+ *   6. CHILD CLAIM CHECK: Has a child pre-registered a claim for this direction?
+ *      - Yes → fail (child shadows us, defer to child)
+ *      - No → activate!
+ * ```
+ *
+ * ## Key Concepts
+ *
+ * **Ownership**: Pre-computed at render time. "self" means this screen handles
+ * the direction, "ancestor" means bubble up, null means no handler exists.
+ *
+ * **Child Claims**: Registered at mount time via useEffect in gestures.provider.tsx.
+ * When a child shadows our direction, it pre-registers a claim so we know to defer.
+ * This prevents race conditions where both handlers might activate simultaneously.
+ *
+ * **ScrollView Boundaries**: Per spec, a ScrollView must be at its boundary before
+ * yielding to gestures. The boundary depends on sheet type:
+ * - Bottom sheet (vertical): scrollY = 0 (top)
+ * - Top sheet (vertical-inverted): scrollY >= maxY (bottom)
+ *
+ * **Snap Points**: Sheets with snapPoints claim BOTH directions on their axis
+ * (e.g., vertical sheet claims vertical AND vertical-inverted). This allows
+ * expand (drag up) and collapse/dismiss (drag down) gestures.
+ */
 export const useScreenGestureHandlers = ({
 	scrollConfig,
 	ancestorIsDismissing,
@@ -177,10 +206,7 @@ export const useScreenGestureHandlers = ({
 		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
 		gestureOffsetState.value = GestureOffsetState.PENDING;
 
-		// Reset isTouched to false at the start of each gesture.
-		// If the touch is actually on the ScrollView, its onTouchStart will set it back to true.
-		// This fixes the bug where isTouched stays true after touching deadspace
-		// (because ScrollView's touch handlers don't fire for deadspace touches).
+		// Reset isTouched - ScrollView's onTouchStart will set it true if touch is on ScrollView
 		const cfg = scrollConfig.value;
 		if (cfg) {
 			cfg.isTouched = false;
@@ -193,7 +219,7 @@ export const useScreenGestureHandlers = ({
 		(e: GestureTouchEvent, manager: GestureStateManagerType) => {
 			"worklet";
 
-			// If an ancestor navigator is already dismissing via gesture, block new gestures here.
+			// Step 1: Ancestor dismissing check
 			if (ancestorIsDismissing?.value) {
 				gestureOffsetState.value = GestureOffsetState.FAILED;
 				manager.fail();
@@ -219,58 +245,43 @@ export const useScreenGestureHandlers = ({
 				return;
 			}
 
-			// Keep pending until thresholds are met; no eager activation.
 			if (gestureAnimationValues.isDragging?.value) {
 				manager.activate();
 				return;
 			}
 
-			// Determine the swipe direction
+			// Step 2: Direction detection
 			let swipeDirection: Direction | null = null;
 			if (isSwipingDown) swipeDirection = "vertical";
 			else if (isSwipingUp) swipeDirection = "vertical-inverted";
 			else if (isSwipingRight) swipeDirection = "horizontal";
 			else if (isSwipingLeft) swipeDirection = "horizontal-inverted";
 
-			// No clear direction yet - keep waiting
 			if (!swipeDirection) {
 				return;
 			}
 
-			// EARLY OWNERSHIP CHECK: Must happen BEFORE offset state check.
-			// If we don't own this direction, fail immediately so the gesture
-			// can bubble up to an ancestor that does own it.
-			// Example: B leaf claims horizontal, Nested claims vertical.
-			// When user swipes down, B leaf fails immediately, allowing Nested to handle it.
+			// Step 3: Ownership check - fail if we don't own this direction
 			const ownership = ownershipStatus[swipeDirection];
-
 			if (ownership !== "self") {
-				// We don't own this direction - fail to let it bubble up to ancestor
-				// (or fail silently if no one owns it)
 				manager.fail();
 				return;
 			}
 
-			// Check if gesture passed offset threshold
 			if (gestureOffsetState.value !== GestureOffsetState.PASSED) {
 				return;
 			}
 
-			// For non-snap screens, don't activate if already dismissing.
-			// For snap sheets, allow interruption so user can re-grab during animation.
+			// Snap sheets can interrupt their own animation; non-snap cannot
 			if (!hasSnapPoints && gestureAnimationValues.isDismissing?.value) {
 				return;
 			}
 
-			// We own this direction - check ScrollView boundary if applicable
+			// Step 4: ScrollView boundary check
 			const scrollCfg = scrollConfig.value;
 			const isTouchingScrollView = scrollCfg?.isTouched ?? false;
 
 			if (isTouchingScrollView) {
-				// Touch IS on ScrollView - check if at boundary
-				// For snap point sheets, pass snapAxisInverted so boundary is correct:
-				// - Bottom sheet (not inverted): scrollY = 0
-				// - Top sheet (inverted): scrollY >= maxY
 				const atBoundary = checkScrollBoundary(
 					scrollCfg,
 					swipeDirection,
@@ -278,14 +289,12 @@ export const useScreenGestureHandlers = ({
 				);
 
 				if (!atBoundary) {
-					// Not at boundary - let ScrollView handle it
 					manager.fail();
 					return;
 				}
 
-				// For snap points, check expand behavior
+				// Step 5: Expand check for snap sheets
 				if (hasSnapPoints) {
-					// Check if this is an expand gesture (inverse of dismiss direction)
 					const isExpandGesture =
 						(directions.snapAxisInverted && swipeDirection === "vertical") ||
 						(!directions.snapAxisInverted &&
@@ -295,15 +304,11 @@ export const useScreenGestureHandlers = ({
 							swipeDirection === "horizontal-inverted");
 
 					if (isExpandGesture) {
-						// expandViaScrollView: false (Instagram style) - expand only via deadspace
-						// expandViaScrollView: true (Apple Maps style) - expand works from ScrollView
 						if (!expandViaScrollView) {
-							// Expand from ScrollView is disabled - fail the gesture
 							manager.fail();
 							return;
 						}
 
-						// Check if we can expand more
 						const canExpandMore =
 							animations.progress.value < maxSnapPoint - EPSILON &&
 							animations.targetProgress.value < maxSnapPoint - EPSILON;
@@ -316,16 +321,13 @@ export const useScreenGestureHandlers = ({
 				}
 			}
 
-			// Check if a child has already claimed this direction.
-			// Claims are pre-registered at mount time when a child shadows this screen's direction.
-			// If a child has claimed, defer to it by failing.
+			// Step 6: Child claim check - defer to child if it has claimed this direction
 			const childClaim = childDirectionClaims.value[swipeDirection];
 			if (childClaim && childClaim !== routeKey) {
 				manager.fail();
 				return;
 			}
 
-			// We own this direction and (if ScrollView) we're at boundary - activate!
 			gestureAnimationValues.direction.value = swipeDirection;
 			manager.activate();
 		},
@@ -362,15 +364,11 @@ export const useScreenGestureHandlers = ({
 				const translation = isHorizontal ? translationX : translationY;
 				const dimension = isHorizontal ? width : height;
 
-				// Map translation to progress delta:
-				// - Positive translation (down/right) = decrease progress (dismiss)
-				// - Negative translation (up/left) = increase progress (expand)
-				// Inverted directions flip this behavior
+				// Map translation to progress: positive = dismiss, negative = expand
 				const baseSign = -1;
 				const sign = directions.snapAxisInverted ? -baseSign : baseSign;
 				const progressDelta = (sign * translation) / dimension;
 
-				// Use pre-computed bounds (minSnapPoint already accounts for canDismiss)
 				animations.progress.value = Math.max(
 					minSnapPoint,
 					Math.min(maxSnapPoint, gestureStartProgress.value + progressDelta),
@@ -421,9 +419,7 @@ export const useScreenGestureHandlers = ({
 					? dimensions.width
 					: dimensions.height;
 
-				// determineSnapTarget expects positive velocity = toward dismiss (decreasing progress)
-				// Positive velocity (down/right) = dismiss for non-inverted
-				// Inverted directions need velocity flipped
+				// Normalize velocity: positive = toward dismiss
 				const snapVelocity = directions.snapAxisInverted
 					? -axisVelocity
 					: axisVelocity;
@@ -459,9 +455,6 @@ export const useScreenGestureHandlers = ({
 					dimensions,
 				});
 
-				// For snap transitions, velocity should match gesture direction
-				// Positive gesture velocity (down/right) = collapsing (negative progress velocity)
-				// Inverted directions flip this
 				const velocitySign = directions.snapAxisInverted ? 1 : -1;
 				const initialVelocity =
 					velocitySign * velocity.normalize(axisVelocity, axisDimension);
@@ -482,7 +475,6 @@ export const useScreenGestureHandlers = ({
 				});
 
 				const shouldDismiss = result.shouldDismiss;
-				// Without snap points, always animate to fully visible (1) when not dismissing
 				const targetProgress = shouldDismiss ? 0 : 1;
 
 				resetGestureValues({
