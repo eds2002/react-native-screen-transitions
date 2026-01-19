@@ -156,6 +156,15 @@ export const useScreenGestureHandlers = ({
 		const firstTouch = e.changedTouches[0];
 		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
 		gestureOffsetState.value = GestureOffsetState.PENDING;
+
+		// Reset isTouched to false at the start of each gesture.
+		// If the touch is actually on the ScrollView, its onTouchStart will set it back to true.
+		// This fixes the bug where isTouched stays true after touching deadspace
+		// (because ScrollView's touch handlers don't fire for deadspace touches).
+		const cfg = scrollConfig.value;
+		if (cfg) {
+			cfg.isTouched = false;
+		}
 	});
 
 	const onTouchesMove = useStableCallbackValue(
