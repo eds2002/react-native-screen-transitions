@@ -1,44 +1,6 @@
 /**
- * ScrollView State Registry for Gesture Handoff
- *
- * ## Mental Model
- *
- * This hook connects a ScrollView to the gesture ownership system by tracking:
- * - **Scroll position** (x, y): For boundary detection
- * - **Content size**: To calculate max scroll positions
- * - **Layout size**: To determine if content is scrollable
- *
- * ## How It Works With Gestures
- *
- * The gesture handler (use-screen-gesture-handlers) checks `isTouched` to determine
- * if a touch is on ScrollView vs deadspace:
- *
- * ```
- * Touch on deadspace → Gesture controls sheet directly
- * Touch on ScrollView → Check boundary before yielding to gesture
- * ```
- *
- * Note: The `isTouched` flag is managed by the nativeGesture handlers in
- * use-build-gestures.tsx, which run on the UI thread to avoid race conditions.
- *
- * ## Boundary Rules (per spec)
- *
- * | Sheet Type | Boundary | Yields When |
- * |------------|----------|-------------|
- * | Bottom (vertical) | scrollY = 0 | Can't scroll further up |
- * | Top (vertical-inverted) | scrollY >= maxY | Can't scroll further down |
- *
- * ## Axis-Based Gesture Owner Resolution
- *
- * ScrollViews report their state to the gesture OWNER for their scroll axis,
- * not necessarily the current screen. This enables axis isolation:
- *
- * ```
- * workout (claims vertical)
- *   └─ exercise (claims horizontal)
- *        └─ <VerticalScrollView> → reports to workout (owns vertical)
- *        └─ <HorizontalScrollView> → reports to exercise (owns horizontal)
- * ```
+ * Connects ScrollViews to the gesture ownership system.
+ * Finds the gesture owner for the scroll axis and coordinates with their panGesture.
  */
 
 import { useMemo } from "react";
@@ -54,14 +16,7 @@ import {
 } from "../../providers/gestures.provider";
 import useStableCallback from "../use-stable-callback";
 
-/**
- * Finds the gesture owner for a specific scroll axis by walking up the context tree.
- * Returns the scrollConfig and panGesture from the screen that claims this axis.
- *
- * @param context - Current gesture context
- * @param axis - The scroll axis ('vertical' or 'horizontal')
- * @returns The owner's scrollConfig and panGesture, or nulls if no owner found
- */
+/** Walks up context tree to find the screen that owns this scroll axis. */
 function findGestureOwnerForAxis(
 	context: GestureContextType | null | undefined,
 	axis: "vertical" | "horizontal",
@@ -73,12 +28,10 @@ function findGestureOwnerForAxis(
 	const startIsolated = context?.isIsolated;
 
 	while (current) {
-		// Stop at isolation boundary (don't cross between isolated and non-isolated stacks)
 		if (startIsolated !== undefined && current.isIsolated !== startIsolated) {
 			break;
 		}
 
-		// Check if this screen owns this axis (claims the direction or its inverse)
 		const ownsAxis =
 			axis === "vertical"
 				? current.claimedDirections?.vertical ||
@@ -96,7 +49,6 @@ function findGestureOwnerForAxis(
 		current = current.ancestorContext;
 	}
 
-	// No owner found for this axis
 	return { scrollConfig: null, panGesture: null };
 }
 
@@ -104,40 +56,25 @@ interface ScrollProgressHookProps {
 	onScroll?: (event: ReanimatedScrollEvent) => void;
 	onContentSizeChange?: (width: number, height: number) => void;
 	onLayout?: (event: LayoutChangeEvent) => void;
-	/**
-	 * The scroll direction of the ScrollView.
-	 * Used to find the correct gesture owner for this axis.
-	 * Defaults to 'vertical'.
-	 */
 	direction?: "vertical" | "horizontal";
 }
 
 /**
- * Returns event handlers to attach to a ScrollView for gesture coordination.
- * All handlers pass through to user-provided handlers if specified.
- *
- * The hook finds the gesture owner for the ScrollView's axis and returns:
- * - Event handlers that report scroll state to the owner's scrollConfig
- * - A native gesture that coordinates with the owner's panGesture
+ * Returns scroll handlers and a native gesture for ScrollView coordination.
+ * Automatically finds the gesture owner for the scroll axis.
  */
 export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 	const context = useGestureContext();
 	const scrollDirection = props.direction ?? "vertical";
 
-	// Find the gesture owner for this scroll axis
 	const { scrollConfig, panGesture } = findGestureOwnerForAxis(
 		context,
 		scrollDirection,
 	);
 
-	// Create a native gesture that coordinates with the owner's pan gesture
-	// We must create a NEW gesture instance (can't reuse owner's nativeGesture)
 	const nativeGesture = useMemo(() => {
-		if (!panGesture || !scrollConfig) {
-			return null;
-		}
+		if (!panGesture || !scrollConfig) return null;
 
-		// Track touch state on the owner's scrollConfig
 		const setIsTouched = () => {
 			"worklet";
 			if (scrollConfig.value) {
@@ -152,9 +89,6 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 			}
 		};
 
-		// Create native gesture that:
-		// 1. Tracks isTouched on the owner's scrollConfig
-		// 2. Waits for the owner's panGesture to fail before allowing native scroll
 		return Gesture.Native()
 			.onTouchesDown(setIsTouched)
 			.onTouchesUp(clearIsTouched)
@@ -165,10 +99,9 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
 			props.onScroll?.(event);
-
 			if (!scrollConfig) return;
 
-			const updateScrollPosition = (v: any) => {
+			const update = (v: any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -185,18 +118,16 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				v.y = event.contentOffset.y;
 				return v;
 			};
-
-			scrollConfig.modify(updateScrollPosition);
+			scrollConfig.modify(update);
 		},
 	});
 
 	const onContentSizeChange = useStableCallback(
 		(width: number, height: number) => {
 			props.onContentSizeChange?.(width, height);
-
 			if (!scrollConfig) return;
 
-			const updateContentSize = (v: any) => {
+			const update = (v: any) => {
 				"worklet";
 				if (v === null) {
 					return {
@@ -213,19 +144,17 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				v.contentHeight = height;
 				return v;
 			};
-
-			scrollConfig.modify(updateContentSize);
+			scrollConfig.modify(update);
 		},
 	);
 
 	const onLayout = useStableCallback((event: LayoutChangeEvent) => {
 		props.onLayout?.(event);
-
 		if (!scrollConfig) return;
 
 		const { width, height } = event.nativeEvent.layout;
 
-		const updateLayout = (v: any) => {
+		const update = (v: any) => {
 			"worklet";
 			if (v === null) {
 				return {
@@ -242,15 +171,13 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 			v.layoutWidth = width;
 			return v;
 		};
-
-		scrollConfig.modify(updateLayout);
+		scrollConfig.modify(update);
 	});
 
 	return {
 		scrollHandler,
 		onContentSizeChange,
 		onLayout,
-		/** A native gesture coordinated with the gesture owner's panGesture, or null if no owner */
 		nativeGesture,
 	};
 };
