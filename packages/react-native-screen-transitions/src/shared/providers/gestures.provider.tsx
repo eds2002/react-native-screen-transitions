@@ -71,10 +71,7 @@ import { GestureStore, type GestureStoreMap } from "../stores/gesture.store";
 import type { ClaimedDirections, Direction } from "../types/ownership.types";
 import { StackType } from "../types/stack.types";
 import createProvider from "../utils/create-provider";
-import {
-	claimsAnyDirection,
-	computeClaimedDirections,
-} from "../utils/gesture/compute-claimed-directions";
+import { computeClaimedDirections } from "../utils/gesture/compute-claimed-directions";
 import { useKeys } from "./screen/keys.provider";
 import { useStackCoreContext } from "./stack/core.provider";
 
@@ -241,31 +238,19 @@ export const {
 	);
 
 	/**
-	 * ScrollConfig Inheritance
+	 * ScrollConfig - Each Screen Gets Its Own
 	 *
-	 * If this screen claims any gesture directions, it needs its own scrollConfig
-	 * so that ScrollViews inside it can register their state for boundary detection.
+	 * Each screen has its own scrollConfig. The useScrollRegistry hook
+	 * dynamically finds the correct gesture owner for a ScrollView's axis
+	 * and writes to that owner's scrollConfig.
 	 *
-	 * If this screen doesn't claim any directions, it inherits the scrollConfig
-	 * from its nearest ancestor that does. This ensures that when a gesture owner
-	 * (ancestor) checks scroll boundaries, it sees the state of ScrollViews that
-	 * are inside descendant screens.
-	 *
-	 * Example:
-	 *   workout (claims vertical, scrollConfig_A)
-	 *     └─ start/index (claims nothing, inherits scrollConfig_A)
-	 *          └─ <FlatList> registers with scrollConfig_A
-	 *
-	 * Now when workout's gesture handler checks scroll boundary, it sees the FlatList's state.
+	 * This enables axis isolation:
+	 *   workout (claims vertical, scrollConfig_W)
+	 *     └─ exercise (claims horizontal, scrollConfig_E)
+	 *          └─ <VerticalScrollView> → writes to scrollConfig_W (workout owns vertical)
+	 *          └─ <HorizontalScrollView> → writes to scrollConfig_E (exercise owns horizontal)
 	 */
-	const selfClaimsAny = claimsAnyDirection(claimedDirections);
-	const ownScrollConfig = useSharedValue<ScrollConfig | null>(null);
-
-	// Inherit from ancestor if we don't claim any directions
-	// Fall back to own scrollConfig if no ancestor exists (edge case)
-	const scrollConfig = selfClaimsAny
-		? ownScrollConfig
-		: (ancestorContext?.scrollConfig ?? ownScrollConfig);
+	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 
 	const childDirectionClaims = useSharedValue<DirectionClaimMap>({
 		...NO_CLAIMS,

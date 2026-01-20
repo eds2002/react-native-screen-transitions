@@ -6,7 +6,6 @@ import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
-import { useGestureContext } from "../providers/gestures.provider";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import type { TransitionAwareProps } from "../types/screen.types";
 
@@ -26,23 +25,37 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof Wrapped>,
 		TransitionAwareProps<P>
 	>((props: any, ref) => {
-		const { nativeGesture } = useGestureContext()!;
-		const { scrollHandler, onContentSizeChange, onLayout } = useScrollRegistry({
-			onScroll: props.onScroll,
-			onContentSizeChange: props.onContentSizeChange,
-			onLayout: props.onLayout,
-		});
+		// Determine scroll direction from the horizontal prop (standard ScrollView API)
+		const scrollDirection = props.horizontal ? "horizontal" : "vertical";
+
+		// Get scroll handlers and the gesture owner's nativeGesture for this axis
+		const { scrollHandler, onContentSizeChange, onLayout, nativeGesture } =
+			useScrollRegistry({
+				onScroll: props.onScroll,
+				onContentSizeChange: props.onContentSizeChange,
+				onLayout: props.onLayout,
+				direction: scrollDirection,
+			});
+
+		const scrollableComponent = (
+			<AnimatedComponent
+				{...(props as any)}
+				ref={ref}
+				onScroll={scrollHandler}
+				onContentSizeChange={onContentSizeChange}
+				onLayout={onLayout}
+				scrollEventThrottle={props.scrollEventThrottle || 16}
+			/>
+		);
+
+		// If no gesture owner found for this axis, render without GestureDetector
+		if (!nativeGesture) {
+			return scrollableComponent;
+		}
 
 		return (
 			<GestureDetector gesture={nativeGesture}>
-				<AnimatedComponent
-					{...(props as any)}
-					ref={ref}
-					onScroll={scrollHandler}
-					onContentSizeChange={onContentSizeChange}
-					onLayout={onLayout}
-					scrollEventThrottle={props.scrollEventThrottle || 16}
-				/>
+				{scrollableComponent}
 			</GestureDetector>
 		);
 	});
