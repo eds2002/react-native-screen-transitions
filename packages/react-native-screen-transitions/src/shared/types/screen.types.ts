@@ -183,8 +183,9 @@ export type ScreenTransitionConfig = {
 	 * - `'block'`: Backdrop catches all touches (default for most screens)
 	 * - `'passthrough'`: Touches pass through to content behind (default for component stacks)
 	 * - `'dismiss'`: Tapping backdrop dismisses the screen
+	 * - `'collapse'`: Tapping backdrop collapses to next lower snap point (dismisses at min)
 	 *
 	 * @default 'block' (or 'passthrough' for component stacks)
 	 */
-	backdropBehavior?: "block" | "passthrough" | "dismiss";
+	backdropBehavior?: "block" | "passthrough" | "dismiss" | "collapse";
 };

@@ -2,7 +2,7 @@ import { useKeys } from "../providers/screen/keys.provider";
 import { useStackCoreContext } from "../providers/stack/core.provider";
 import { StackType } from "../types/stack.types";
 
-type BackdropBehavior = "block" | "passthrough" | "dismiss";
+type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 
 interface BackdropPointerEventsResult {
 	pointerEvents: "box-none" | undefined;
