@@ -21,15 +21,24 @@ const DIRECTIONS: Direction[] = [
 	"horizontal-inverted",
 ];
 
-/** Returns pan gestures of ancestors whose directions we shadow (claim the same direction). */
+/**
+ * Returns pan gestures of ancestors whose directions we shadow (claim the same direction).
+ * Does not cross isolation boundaries.
+ */
 function findShadowedAncestorPanGestures(
 	selfClaims: ClaimedDirections,
 	ancestorContext: GestureContextType | null | undefined,
+	isIsolated: boolean,
 ): GestureType[] {
 	const shadowedGestures: GestureType[] = [];
 
 	let ancestor = ancestorContext;
 	while (ancestor) {
+		// Stop at isolation boundary
+		if (ancestor.isIsolated !== isIsolated) {
+			break;
+		}
+
 		// Check if we shadow any direction this ancestor claims
 		const shadowsAncestor = DIRECTIONS.some(
 			(dir) => selfClaims[dir] && ancestor?.claimedDirections?.[dir],
@@ -50,6 +59,7 @@ interface BuildGesturesHookProps {
 	ancestorContext?: GestureContextType | null;
 	claimedDirections: ClaimedDirections;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
+	isIsolated: boolean;
 }
 
 /**
@@ -95,6 +105,7 @@ export const useBuildGestures = ({
 	ancestorContext,
 	claimedDirections,
 	childDirectionClaims,
+	isIsolated,
 }: BuildGesturesHookProps): {
 	panGesture: GestureType;
 	panGestureRef: React.MutableRefObject<GestureType | undefined>;
@@ -187,25 +198,31 @@ export const useBuildGestures = ({
 			nativeGesture = Gesture.Native().requireExternalGestureToFail(panGesture);
 			panGesture.blocksExternalGesture(nativeGesture);
 
-			// Block shadowed ancestor pan gestures
+			// Block shadowed ancestor pan gestures (within same isolation level)
 			const shadowedAncestorGestures = findShadowedAncestorPanGestures(
 				claimedDirections,
 				ancestorContext,
+				isIsolated,
 			);
 			for (const ancestorPan of shadowedAncestorGestures) {
 				panGesture.blocksExternalGesture(ancestorPan);
 			}
 		} else {
-			// Screen claims nothing: find nearest ancestor with claims
+			// Screen claims nothing: find nearest ancestor with claims (within same isolation level)
 			let activePanAncestor = ancestorContext;
 			while (
 				activePanAncestor &&
+				activePanAncestor.isIsolated === isIsolated &&
 				!claimsAnyDirection(activePanAncestor.claimedDirections)
 			) {
 				activePanAncestor = activePanAncestor.ancestorContext;
 			}
 
-			if (activePanAncestor?.panGesture) {
+			// Only use ancestor if it's within the same isolation level
+			if (
+				activePanAncestor?.panGesture &&
+				activePanAncestor.isIsolated === isIsolated
+			) {
 				nativeGesture = Gesture.Native().requireExternalGestureToFail(
 					activePanAncestor.panGesture,
 				);
@@ -231,5 +248,6 @@ export const useBuildGestures = ({
 		onEnd,
 		gestureAnimationValues,
 		ancestorContext,
+		isIsolated,
 	]);
 };

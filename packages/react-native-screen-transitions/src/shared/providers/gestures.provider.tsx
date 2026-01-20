@@ -118,11 +118,15 @@ const DIRECTIONS: Direction[] = [
 /**
  * Registers this screen's direction claims on ancestors that it shadows.
  * Cleans up claims on unmount.
+ *
+ * IMPORTANT: Does not cross isolation boundaries. Isolated stacks (component stacks)
+ * are self-contained and do not participate in the gesture system of their parent stacks.
  */
 function useRegisterDirectionClaims(
 	ancestorContext: GestureContextType | null | undefined,
 	claimedDirections: ClaimedDirections,
 	routeKey: string,
+	isIsolated: boolean,
 ) {
 	useEffect(() => {
 		if (!ancestorContext) return;
@@ -137,8 +141,14 @@ function useRegisterDirectionClaims(
 		}> = [];
 
 		// Walk up tree, find ancestors we shadow, register claims
+		// Stop at isolation boundaries (don't cross between isolated and non-isolated stacks)
 		let ancestor: GestureContextType | null = ancestorContext;
 		while (ancestor) {
+			// Stop if we cross an isolation boundary
+			if (ancestor.isIsolated !== isIsolated) {
+				break;
+			}
+
 			const shadowedDirections: Direction[] = [];
 
 			for (const dir of DIRECTIONS) {
@@ -179,7 +189,7 @@ function useRegisterDirectionClaims(
 				}
 			}
 		};
-	}, [ancestorContext, claimedDirections, routeKey]);
+	}, [ancestorContext, claimedDirections, routeKey, isIsolated]);
 }
 
 export interface GestureContextType {
@@ -236,7 +246,12 @@ export const {
 
 	// We need to register claims on ancestors BEFORE any gesture can fire, and clean up on unmount.
 	// Doing this during render would be a side effect; doing it in the gesture handler causes races.
-	useRegisterDirectionClaims(ancestorContext, claimedDirections, routeKey);
+	useRegisterDirectionClaims(
+		ancestorContext,
+		claimedDirections,
+		routeKey,
+		isIsolated,
+	);
 
 	const { panGesture, panGestureRef, nativeGesture, gestureAnimationValues } =
 		useBuildGestures({
@@ -244,6 +259,7 @@ export const {
 			ancestorContext,
 			claimedDirections,
 			childDirectionClaims,
+			isIsolated,
 		});
 
 	const value: GestureContextType = {
