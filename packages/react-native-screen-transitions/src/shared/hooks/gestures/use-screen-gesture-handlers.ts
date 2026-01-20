@@ -210,12 +210,6 @@ export const useScreenGestureHandlers = ({
 		const firstTouch = e.changedTouches[0];
 		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
 		gestureOffsetState.value = GestureOffsetState.PENDING;
-
-		// Reset isTouched - ScrollView's onTouchStart will set it true if touch is on ScrollView
-		const cfg = scrollConfig.value;
-		if (cfg) {
-			cfg.isTouched = false;
-		}
 	});
 
 	const routeKey = current.route.key;

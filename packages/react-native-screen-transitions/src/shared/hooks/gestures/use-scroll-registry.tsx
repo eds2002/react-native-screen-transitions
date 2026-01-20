@@ -7,7 +7,6 @@
  * - **Scroll position** (x, y): For boundary detection
  * - **Content size**: To calculate max scroll positions
  * - **Layout size**: To determine if content is scrollable
- * - **isTouched**: Whether the current gesture started on this ScrollView
  *
  * ## How It Works With Gestures
  *
@@ -19,8 +18,8 @@
  * Touch on ScrollView → Check boundary before yielding to gesture
  * ```
  *
- * The `isTouched` flag is reset to false in onTouchesDown, then set true by
- * ScrollView's onTouchStart if the touch is actually on the ScrollView.
+ * Note: The `isTouched` flag is managed by the nativeGesture handlers in
+ * use-build-gestures.tsx, which run on the UI thread to avoid race conditions.
  *
  * ## Boundary Rules (per spec)
  *
@@ -30,7 +29,7 @@
  * | Top (vertical-inverted) | scrollY >= maxY | Can't scroll further down |
  */
 
-import type { GestureResponderEvent, LayoutChangeEvent } from "react-native";
+import type { LayoutChangeEvent } from "react-native";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import type { ReanimatedScrollEvent } from "react-native-reanimated/lib/typescript/hook/commonTypes";
 import { useGestureContext } from "../../providers/gestures.provider";
@@ -40,8 +39,6 @@ interface ScrollProgressHookProps {
 	onScroll?: (event: ReanimatedScrollEvent) => void;
 	onContentSizeChange?: (width: number, height: number) => void;
 	onLayout?: (event: LayoutChangeEvent) => void;
-	onTouchStart?: (event: GestureResponderEvent) => void;
-	onTouchEnd?: (event: GestureResponderEvent) => void;
 }
 
 /**
@@ -136,51 +133,9 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		scrollConfig.modify(updateLayout);
 	});
 
-	const onTouchStart = useStableCallback((event: GestureResponderEvent) => {
-		props.onTouchStart?.(event);
-
-		if (!scrollConfig) return;
-
-		const setTouched = (v: any) => {
-			"worklet";
-			if (v === null) {
-				return {
-					x: 0,
-					y: 0,
-					contentHeight: 0,
-					contentWidth: 0,
-					layoutHeight: 0,
-					layoutWidth: 0,
-					isTouched: true,
-				};
-			}
-			v.isTouched = true;
-			return v;
-		};
-
-		scrollConfig.modify(setTouched);
-	});
-
-	const onTouchEnd = useStableCallback((event: GestureResponderEvent) => {
-		props.onTouchEnd?.(event);
-
-		if (!scrollConfig) return;
-
-		const clearTouched = (v: any) => {
-			"worklet";
-			if (v === null) return v;
-			v.isTouched = false;
-			return v;
-		};
-
-		scrollConfig.modify(clearTouched);
-	});
-
 	return {
 		scrollHandler,
 		onContentSizeChange,
 		onLayout,
-		onTouchStart,
-		onTouchEnd,
 	};
 };

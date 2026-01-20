@@ -27,18 +27,10 @@ export function createTransitionAwareComponent<P extends object>(
 		TransitionAwareProps<P>
 	>((props: any, ref) => {
 		const { nativeGesture } = useGestureContext()!;
-		const {
-			scrollHandler,
-			onContentSizeChange,
-			onLayout,
-			onTouchStart,
-			onTouchEnd,
-		} = useScrollRegistry({
+		const { scrollHandler, onContentSizeChange, onLayout } = useScrollRegistry({
 			onScroll: props.onScroll,
 			onContentSizeChange: props.onContentSizeChange,
 			onLayout: props.onLayout,
-			onTouchStart: props.onTouchStart,
-			onTouchEnd: props.onTouchEnd,
 		});
 
 		return (
@@ -49,8 +41,6 @@ export function createTransitionAwareComponent<P extends object>(
 					onScroll={scrollHandler}
 					onContentSizeChange={onContentSizeChange}
 					onLayout={onLayout}
-					onTouchStart={onTouchStart}
-					onTouchEnd={onTouchEnd}
 					scrollEventThrottle={props.scrollEventThrottle || 16}
 				/>
 			</GestureDetector>

@@ -191,11 +191,42 @@ export const useBuildGestures = ({
 			.onUpdate(onUpdate)
 			.onEnd(onEnd);
 
+		/**
+		 * Native gesture touch handlers for isTouched tracking.
+		 *
+		 * These handlers run on the UI thread and set isTouched = true when touch
+		 * starts on the ScrollView. This fixes the race condition where the pan
+		 * gesture's onTouchesMove could check isTouched before the JS thread's
+		 * onTouchStart had a chance to set it.
+		 *
+		 * The nativeGesture ONLY receives touch events when the touch is ON its
+		 * view (the ScrollView), so we can reliably use this to detect ScrollView touches.
+		 */
+		const setIsTouched = () => {
+			"worklet";
+			scrollConfig.modify((v) => {
+				if (v) v.isTouched = true;
+				return v;
+			});
+		};
+
+		const clearIsTouched = () => {
+			"worklet";
+			scrollConfig.modify((v) => {
+				if (v) v.isTouched = false;
+				return v;
+			});
+		};
+
 		let nativeGesture: GestureType;
 
 		if (selfClaimsAny) {
 			// Screen claims directions: native waits for pan, pan blocks native
-			nativeGesture = Gesture.Native().requireExternalGestureToFail(panGesture);
+			nativeGesture = Gesture.Native()
+				.onTouchesDown(setIsTouched)
+				.onTouchesUp(clearIsTouched)
+				.onTouchesCancelled(clearIsTouched)
+				.requireExternalGestureToFail(panGesture);
 			panGesture.blocksExternalGesture(nativeGesture);
 
 			// Block shadowed ancestor pan gestures (within same isolation level)
@@ -223,11 +254,16 @@ export const useBuildGestures = ({
 				activePanAncestor?.panGesture &&
 				activePanAncestor.isIsolated === isIsolated
 			) {
-				nativeGesture = Gesture.Native().requireExternalGestureToFail(
-					activePanAncestor.panGesture,
-				);
+				nativeGesture = Gesture.Native()
+					.onTouchesDown(setIsTouched)
+					.onTouchesUp(clearIsTouched)
+					.onTouchesCancelled(clearIsTouched)
+					.requireExternalGestureToFail(activePanAncestor.panGesture);
 			} else {
-				nativeGesture = Gesture.Native();
+				nativeGesture = Gesture.Native()
+					.onTouchesDown(setIsTouched)
+					.onTouchesUp(clearIsTouched)
+					.onTouchesCancelled(clearIsTouched);
 			}
 		}
 
@@ -249,5 +285,6 @@ export const useBuildGestures = ({
 		gestureAnimationValues,
 		ancestorContext,
 		isIsolated,
+		scrollConfig,
 	]);
 };
