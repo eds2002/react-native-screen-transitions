@@ -11,6 +11,7 @@
  * gesture owner for the scroll axis and creates appropriate Native gestures.
  */
 
+import { useNavigationState } from "@react-navigation/native";
 import { useEffect, useMemo } from "react";
 import type { GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
@@ -62,16 +63,21 @@ const DIRECTIONS: Direction[] = [
 
 /**
  * Registers direction claims on ancestors that this screen shadows.
- * Does not cross isolation boundaries.
+ * Only registers claims when this screen is the current (topmost) route
+ * in its navigator, preventing unfocused screens from blocking gestures.
  */
 function useRegisterDirectionClaims(
 	ancestorContext: GestureContextType | null | undefined,
 	claimedDirections: ClaimedDirections,
 	routeKey: string,
 	isIsolated: boolean,
+	isCurrentRoute: boolean,
 ) {
 	useEffect(() => {
-		if (!ancestorContext) return;
+		// Only register claims when this screen is the current route
+		if (!isCurrentRoute || !ancestorContext) {
+			return;
+		}
 
 		const gestureValues = GestureStore.getRouteGestures(routeKey);
 		const isDismissing = gestureValues.isDismissing;
@@ -122,7 +128,13 @@ function useRegisterDirectionClaims(
 				}
 			}
 		};
-	}, [ancestorContext, claimedDirections, routeKey, isIsolated]);
+	}, [
+		ancestorContext,
+		claimedDirections,
+		routeKey,
+		isIsolated,
+		isCurrentRoute,
+	]);
 }
 
 export interface GestureContextType {
@@ -169,18 +181,22 @@ export const {
 		[hasGestures, current.options.gestureDirection, hasSnapPoints],
 	);
 
-	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
-	const childDirectionClaims = useSharedValue<DirectionClaimMap>({
-		...NO_CLAIMS,
-	});
-
 	const routeKey = current.route.key;
+
+	// Check if this screen is the current (topmost) route in its navigator
+	const isCurrentRoute = useNavigationState(
+		(state) => state.routes[state.index]?.key === routeKey,
+	);
+
+	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
+	const childDirectionClaims = useSharedValue<DirectionClaimMap>(NO_CLAIMS);
 
 	useRegisterDirectionClaims(
 		ancestorContext,
 		claimedDirections,
 		routeKey,
 		isIsolated,
+		isCurrentRoute,
 	);
 
 	const { panGesture, panGestureRef, gestureAnimationValues } =
