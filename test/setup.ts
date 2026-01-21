@@ -22,7 +22,13 @@ globalThis.resetMutableRegistry = () => {
 	}
 };
 
-mock.module("react-native", () => ({}));
+mock.module("react-native", () => ({
+	Platform: {
+		OS: "ios",
+		select: <T>(obj: { ios?: T; android?: T; default?: T }) =>
+			obj.ios ?? obj.default,
+	},
+}));
 mock.module("react-native-gesture-handler", () => ({}));
 mock.module("react-native-reanimated", () => ({
 	makeMutable: <T>(initial: T) => {

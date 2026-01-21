@@ -42,6 +42,7 @@ import { determineDismissal } from "../../utils/gesture/determine-dismissal";
 import { determineSnapTarget } from "../../utils/gesture/determine-snap-target";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
+import { shouldDeferToChildClaim } from "../../utils/gesture/should-defer-to-child-claim";
 import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
 import { velocity } from "../../utils/gesture/velocity";
 import { logger } from "../../utils/logger";
@@ -269,13 +270,8 @@ export const useScreenGestureHandlers = ({
 
 			// Step 4: Child claim check - fail EARLY if a child shadows this direction
 			// This MUST happen before offset threshold to avoid delay when shadowing
-			// ALSO: Ignore claims from children that are currently dismissing
 			const childClaim = childDirectionClaims.value[swipeDirection];
-			if (
-				childClaim &&
-				childClaim.routeKey !== routeKey &&
-				!childClaim.isDismissing.value
-			) {
+			if (shouldDeferToChildClaim(childClaim, routeKey)) {
 				manager.fail();
 				return;
 			}

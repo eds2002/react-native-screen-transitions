@@ -4,6 +4,7 @@ import type {
 	DirectionClaim,
 	DirectionClaimMap,
 } from "../providers/gestures.provider";
+import { shouldDeferToChildClaim } from "../utils/gesture/should-defer-to-child-claim";
 
 /**
  * Mock SharedValue for testing - mimics Reanimated's SharedValue interface
@@ -15,22 +16,6 @@ function mockSharedValue<T>(initial: T): SharedValue<T> {
 		removeListener: () => {},
 		modify: () => {},
 	} as unknown as SharedValue<T>;
-}
-
-/**
- * Simulates the child claim check logic from use-screen-gesture-handlers.ts
- *
- * Returns true if the gesture should FAIL (defer to child)
- * Returns false if the gesture should CONTINUE (no blocking claim)
- */
-function shouldDeferToChildClaim(
-	childClaim: DirectionClaim,
-	selfRouteKey: string,
-): boolean {
-	if (!childClaim) return false;
-	if (childClaim.routeKey === selfRouteKey) return false;
-	if (childClaim.isDismissing.value) return false; // Ignore dismissing children
-	return true;
 }
 
 describe("Child Direction Claims", () => {

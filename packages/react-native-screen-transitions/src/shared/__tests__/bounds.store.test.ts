@@ -18,7 +18,7 @@ const createBounds = (
 
 // Reset registry before each test
 beforeEach(() => {
-	globalThis.resetMutableRegistry();
+	(globalThis as any).resetMutableRegistry();
 });
 
 // =============================================================================
