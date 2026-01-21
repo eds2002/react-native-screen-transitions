@@ -360,23 +360,18 @@ export function checkScrollBoundary(
 	const maxScrollX = Math.max(0, contentWidth - layoutWidth);
 	const maxScrollY = Math.max(0, contentHeight - layoutHeight);
 
-	// Determine if ScrollView is scrollable on each axis
-	const isVerticallyScrollable = contentHeight > layoutHeight;
-	const isHorizontallyScrollable = contentWidth > layoutWidth;
-
 	// For snap point sheets (snapAxisInverted is defined), boundary depends on sheet origin
+	// Even if content isn't scrollable, respect bounce/overscroll state
 	if (snapAxisInverted !== undefined) {
 		const isVerticalDirection =
 			direction === "vertical" || direction === "vertical-inverted";
 
 		if (isVerticalDirection) {
-			if (!isVerticallyScrollable) return true;
 			// Bottom sheet (not inverted): boundary at scroll top
 			// Top sheet (inverted): boundary at scroll bottom
 			return snapAxisInverted ? scrollY >= maxScrollY : scrollY <= 0;
 		}
 		// Horizontal direction
-		if (!isHorizontallyScrollable) return true;
 		// Right drawer (not inverted): boundary at scroll left
 		// Left drawer (inverted): boundary at scroll right
 		return snapAxisInverted ? scrollX >= maxScrollX : scrollX <= 0;
@@ -386,23 +381,22 @@ export function checkScrollBoundary(
 	switch (direction) {
 		case "vertical":
 			// Swipe down - check if at top of vertical scroll
-			// If not vertically scrollable, allow gesture (axis isolation)
-			if (!isVerticallyScrollable) return true;
+			// Even if content isn't scrollable, respect bounce/overscroll state
 			return scrollY <= 0;
 
 		case "vertical-inverted":
 			// Swipe up - check if at bottom of vertical scroll
-			if (!isVerticallyScrollable) return true;
+			// Even if content isn't scrollable, respect bounce/overscroll state
 			return scrollY >= maxScrollY;
 
 		case "horizontal":
 			// Swipe right - check if at left of horizontal scroll
-			if (!isHorizontallyScrollable) return true;
+			// Even if content isn't scrollable, respect bounce/overscroll state
 			return scrollX <= 0;
 
 		case "horizontal-inverted":
 			// Swipe left - check if at right of horizontal scroll
-			if (!isHorizontallyScrollable) return true;
+			// Even if content isn't scrollable, respect bounce/overscroll state
 			return scrollX >= maxScrollX;
 
 		default:

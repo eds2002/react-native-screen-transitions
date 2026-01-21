@@ -14,6 +14,22 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 - **Stack Progress** – Track animation progress across the entire stack
 - **Ready-Made Presets** – Instagram, Apple Music, X (Twitter) style transitions included
 
+## When to Use This Library
+
+| Use Case | This Library | Alternative |
+|----------|--------------|-------------|
+| Custom transitions (slide, zoom, fade variations) | Yes | `@react-navigation/stack` works too |
+| Shared element transitions | **Yes** | Limited options elsewhere |
+| Multi-stop sheets (bottom, top, side) with snap points | **Yes** | Dedicated sheet libraries |
+| Gesture-driven animations (drag to dismiss, elastic) | **Yes** | Requires custom implementation |
+| Instagram/Apple Music/Twitter-style transitions | **Yes** | Custom implementation |
+| Simple push/pop with platform defaults | Overkill | `@react-navigation/native-stack` |
+| Maximum raw performance on low-end devices | Not ideal | `@react-navigation/native-stack` |
+
+**Choose this library when** you need custom animations, shared elements, or gesture-driven transitions that go beyond platform defaults.
+
+**Choose native-stack when** you want platform-native transitions with zero configuration and maximum performance on low-end Android devices.
+
 ## Installation
 
 ```bash
@@ -190,8 +206,10 @@ Control timing with spring configs:
 options={{
   screenStyleInterpolator: myInterpolator,
   transitionSpec: {
-    open: { stiffness: 1000, damping: 500, mass: 3 },
-    close: { stiffness: 1000, damping: 500, mass: 3 },
+    open: { stiffness: 1000, damping: 500, mass: 3 },    // Screen enters
+    close: { stiffness: 1000, damping: 500, mass: 3 },   // Screen exits
+    expand: { stiffness: 300, damping: 30 },             // Snap point increases
+    collapse: { stiffness: 300, damping: 30 },           // Snap point decreases
   },
 }}
 ```
@@ -212,14 +230,17 @@ options={{
 
 ### Gesture Options
 
-| Option                    | Description                               |
-| ------------------------- | ----------------------------------------- |
-| `gestureEnabled`          | Enable swipe-to-dismiss                   |
-| `gestureDirection`        | Direction(s) for swipe gesture            |
-| `gestureActivationArea`   | Where gesture can start                   |
-| `gestureResponseDistance` | Pixel threshold for activation            |
-| `gestureVelocityImpact`   | How much velocity affects dismissal       |
-| `backdropBehavior`        | Touch handling for backdrop area          |
+| Option                    | Description                                                              |
+| ------------------------- | ------------------------------------------------------------------------ |
+| `gestureEnabled`          | Enable swipe-to-dismiss                                                  |
+| `gestureDirection`        | Direction(s) for swipe gesture                                           |
+| `gestureActivationArea`   | Where gesture can start                                                  |
+| `gestureResponseDistance` | Pixel threshold for activation                                           |
+| `gestureVelocityImpact`   | How much velocity affects dismissal (default: 0.3)                       |
+| `gestureDrivesProgress`   | Whether gesture controls animation progress (default: true)              |
+| `snapVelocityImpact`      | How much velocity affects snap targeting (default: 0.1, lower = iOS-like)|
+| `expandViaScrollView`     | Whether scroll-at-top expands snap sheets (default: true)                |
+| `backdropBehavior`        | Touch handling for backdrop area                                         |
 
 ### Gesture Direction
 
@@ -269,44 +290,64 @@ Gesture rules with scrollables:
 
 ---
 
-## Bottom Sheets
+## Snap Points
 
-Create multi-stop bottom sheets with snap points:
+Create multi-stop sheets that snap to defined positions. Works with any gesture direction (bottom sheets, top sheets, side sheets):
 
 ### Basic Configuration
 
 ```tsx
+// Bottom sheet (most common)
 <Stack.Screen
   name="Sheet"
   options={{
     gestureEnabled: true,
     gestureDirection: "vertical",
-    snapPoints: [0.5, 1],         // 50% and 100% height
+    snapPoints: [0.5, 1],         // 50% and 100% of screen
     initialSnapIndex: 0,          // Start at 50%
     backdropBehavior: "dismiss",  // Tap backdrop to dismiss
     ...Transition.Presets.SlideFromBottom(),
+  }}
+/>
+
+// Side sheet (same API, different direction)
+<Stack.Screen
+  name="SidePanel"
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "horizontal",
+    snapPoints: [0.3, 0.7, 1],    // 30%, 70%, 100% of screen width
+    initialSnapIndex: 1,
+    ...Transition.Presets.SlideFromRight(),
   }}
 />
 ```
 
 ### Options
 
-| Option             | Description                                             |
-| ------------------ | ------------------------------------------------------- |
-| `snapPoints`       | Array of fractions (0-1) where sheet can rest           |
-| `initialSnapIndex` | Index of initial snap point (default: 0)                |
-| `backdropBehavior` | Touch handling: `"block"`, `"passthrough"`, `"dismiss"` |
+| Option             | Description                                                          |
+| ------------------ | -------------------------------------------------------------------- |
+| `snapPoints`       | Array of fractions (0-1) where sheet can rest                        |
+| `initialSnapIndex` | Index of initial snap point (default: 0)                             |
+| `backdropBehavior` | Touch handling: `"block"`, `"passthrough"`, `"dismiss"`, `"collapse"`|
+
+#### backdropBehavior Values
+
+| Value           | Description                                                      |
+| --------------- | ---------------------------------------------------------------- |
+| `"block"`       | Backdrop catches all touches (default)                           |
+| `"passthrough"` | Touches pass through to content behind                           |
+| `"dismiss"`     | Tapping backdrop dismisses the screen                            |
+| `"collapse"`    | Tapping backdrop collapses to next lower snap point, then dismisses |
 
 ### Programmatic Control
 
-Control snap points from within your screen:
+Control snap points from anywhere in your app:
 
 ```tsx
-import { useScreenState } from "react-native-screen-transitions";
+import { snapTo } from "react-native-screen-transitions";
 
 function BottomSheet() {
-  const { snapTo } = useScreenState();
-
   // Expand to full height (index 1)
   const expand = () => snapTo(1);
 
@@ -471,19 +512,13 @@ function DetailScreen() {
 
 ### useScreenState
 
-Get navigation state and snap point controls:
+Get navigation state without animation values:
 
 ```tsx
 import { useScreenState } from "react-native-screen-transitions";
 
 function DetailScreen() {
-  const {
-    index,
-    focusedRoute,
-    routes,
-    navigation,
-    snapTo,              // Snap to index programmatically
-  } = useScreenState();
+  const { index, focusedRoute, routes, navigation } = useScreenState();
   // ...
 }
 ```
@@ -503,6 +538,33 @@ function MyComponent() {
 }
 ```
 
+### useScreenGesture
+
+Coordinate your own pan gestures with the navigation gesture:
+
+```tsx
+import { useScreenGesture } from "react-native-screen-transitions";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+
+function MyScreen() {
+  const screenGesture = useScreenGesture();
+
+  const myPanGesture = Gesture.Pan()
+    .simultaneousWithExternalGesture(screenGesture)
+    .onUpdate((e) => {
+      // Your gesture logic
+    });
+
+  return (
+    <GestureDetector gesture={myPanGesture}>
+      <View />
+    </GestureDetector>
+  );
+}
+```
+
+Use this when you have custom pan gestures that need to work alongside screen dismiss gestures.
+
 ---
 
 ## Advanced Animation Props
@@ -513,6 +575,8 @@ The full `screenStyleInterpolator` receives these props:
 | ---------------- | -------------------------------------------------------- |
 | `progress`       | Combined progress (0-2)                                  |
 | `stackProgress`  | Accumulated progress across entire stack                 |
+| `snapIndex`      | Animated snap point index (-1 if no snap points)         |
+| `focused`        | Whether this screen is the topmost in the stack          |
 | `current`        | Current screen state                                     |
 | `previous`       | Previous screen state                                    |
 | `next`           | Next screen state                                        |
@@ -586,7 +650,7 @@ All three stacks share the same animation API. Choose based on your needs:
 
 ### Blank Stack
 
-The default choice. Pure JavaScript with native-level performance via `react-native-screens`.
+The default choice. Uses `react-native-screens` for native screen containers, with animations powered by Reanimated worklets running on the UI thread (not the JS thread).
 
 ```tsx
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
