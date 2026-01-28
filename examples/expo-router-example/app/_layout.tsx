@@ -368,6 +368,13 @@ export default function RootLayout() {
 						headerShown: false,
 					}}
 				/>
+				<Stack.Screen
+					name="examples/[id]"
+					options={{
+						headerShown: false,
+						...Transition.Presets.SlideFromBottom(),
+					}}
+				/>
 			</Stack>
 		</GestureHandlerRootView>
 	);
