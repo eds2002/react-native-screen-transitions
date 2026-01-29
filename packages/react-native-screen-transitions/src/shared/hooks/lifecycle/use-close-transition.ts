@@ -43,15 +43,18 @@ const useManagedClose = ({
 		});
 	});
 
+	const routeKey = current.route.key;
+	const transitionSpec = current.options.transitionSpec;
+
 	useAnimatedReaction(
 		() => closingRouteKeysShared.value,
 		(keys) => {
-			if (!keys?.includes(current.route.key)) return;
+			if (!keys?.includes(routeKey)) return;
 
 			runOnJS(activate)();
 			animateToProgress({
 				target: "close",
-				spec: current.options.transitionSpec,
+				spec: transitionSpec,
 				animations,
 				onAnimationFinish: handleCloseEnd,
 			});

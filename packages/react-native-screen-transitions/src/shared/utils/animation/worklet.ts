@@ -1,124 +1,47 @@
 import type { BaseStackRoute } from "../../types/stack.types";
-import { error, logger } from "../logger";
 
 /**
- * Checks if a value is a plain object
+ * Deep-clones a value, ensuring every object in the tree has Object.prototype.
+ * Handles null-prototype objects created by expo-router during deep linking.
+ * Non-plain objects (class instances, functions, symbols) are omitted.
  */
-export const isPlainObject = (
-	value: unknown,
-): value is Record<string, unknown> => {
-	if (!value || typeof value !== "object") return false;
-	const proto = Object.getPrototypeOf(value);
-	return proto === Object.prototype || proto === null;
-};
+export const toPlainValue = (value: unknown): unknown => {
+	if (value === null || value === undefined) return value;
 
-/**
- * Validates that a value is worklet serializable.
- * Throws with a clear path if invalid values are found.
- */
-export const assertWorkletSerializable = (
-	value: unknown,
-	label: string,
-	seen = new WeakSet<object>(),
-	path = label,
-): void => {
-	if (!__DEV__) return;
+	const type = typeof value;
+	if (type === "string" || type === "number" || type === "boolean")
+		return value;
 
-	// Primitives are always safe
-	if (
-		value === null ||
-		value === undefined ||
-		typeof value === "string" ||
-		typeof value === "number" ||
-		typeof value === "boolean"
-	) {
-		return;
-	}
+	if (type === "function" || type === "symbol") return undefined;
 
-	// Functions are not serializable
-	if (typeof value === "function") {
-		logger.error(
-			`${label} must be worklet-serializable. Invalid function at: ${path}`,
-		);
-		throw error(
-			`${label} must be worklet-serializable. Invalid function at: ${path}`,
-		);
-	}
+	if (type !== "object") return undefined;
 
-	// Symbols are not serializable
-	if (typeof value === "symbol") {
-		logger.error(
-			`${label} must be worklet-serializable. Invalid symbol at: ${path}`,
-		);
-		throw error(
-			`${label} must be worklet-serializable. Invalid symbol at: ${path}`,
-		);
-	}
-
-	// Must be an object at this point
-	if (typeof value !== "object") {
-		logger.error(
-			`${label} must be worklet-serializable. Invalid type "${typeof value}" at: ${path}`,
-		);
-		throw error(
-			`${label} must be worklet-serializable. Invalid type "${typeof value}" at: ${path}`,
-		);
-	}
-
-	// Check for circular references
-	if (seen.has(value)) {
-		logger.error(
-			`${label} must be worklet-serializable. Circular reference at: ${path}`,
-		);
-		throw error(
-			`${label} must be worklet-serializable. Circular reference at: ${path}`,
-		);
-	}
-	seen.add(value);
-
-	// Arrays: validate all elements
 	if (Array.isArray(value)) {
-		for (let i = 0; i < value.length; i++) {
-			assertWorkletSerializable(value[i], label, seen, `${path}[${i}]`);
-		}
-		return;
+		return value.map(toPlainValue);
 	}
 
-	// Must be a plain object
-	if (!isPlainObject(value)) {
-		const constructorName = value.constructor?.name ?? "unknown";
-		logger.error(
-			`${label} must be worklet-serializable. Invalid ${constructorName} instance at: ${path}`,
-		);
-		throw error(
-			`${label} must be worklet-serializable. Invalid ${constructorName} instance at: ${path}`,
-		);
+	const proto = Object.getPrototypeOf(value);
+	if (proto !== Object.prototype && proto !== null) {
+		return undefined;
 	}
 
-	// Validate all keys of the plain object
-	for (const key of Object.keys(value)) {
-		assertWorkletSerializable(value[key], label, seen, `${path}.${key}`);
+	const obj = value as Record<string, unknown>;
+	const result: Record<string, unknown> = {};
+	for (const key of Object.keys(obj)) {
+		result[key] = toPlainValue(obj[key]);
 	}
+	return result;
 };
 
 /**
  * Creates a plain, serializable route object for worklet consumption.
- * Only includes params if they are a plain object (no functions or class instances).
+ * Deep-clones params to ensure all nested objects have Object.prototype
+ * (expo-router can produce null-prototype objects during deep linking).
  */
 export const toPlainRoute = (route: BaseStackRoute): BaseStackRoute => {
-	let plainParams: object | undefined;
-
-	if (route.params != null && typeof route.params === "object") {
-		// Check if params is a plain object (not a class instance, array, etc.)
-		const proto = Object.getPrototypeOf(route.params);
-		if (proto === Object.prototype || proto === null) {
-			plainParams = { ...route.params };
-		}
-	}
-
 	return {
 		key: route.key,
 		name: route.name,
-		params: plainParams,
+		params: toPlainValue(route.params) as object | undefined,
 	};
 };

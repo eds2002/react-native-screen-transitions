@@ -20,10 +20,7 @@ import type {
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackRoute } from "../../types/stack.types";
 import { derivations } from "../../utils/animation/derivations";
-import {
-	assertWorkletSerializable,
-	toPlainRoute,
-} from "../../utils/animation/worklet";
+import { toPlainRoute, toPlainValue } from "../../utils/animation/worklet";
 import { createBounds } from "../../utils/bounds";
 import { useStack } from "../navigation/use-stack";
 
@@ -87,17 +84,10 @@ const useBuildScreenTransitionState = (
 	return useMemo(() => {
 		if (!key || !descriptor?.route) return undefined;
 
-		// DEV-only: ensure meta and params are worklet-serializable
-		if (__DEV__) {
-			if (meta !== undefined) {
-				assertWorkletSerializable(meta, "options.meta");
-			}
-			if (descriptor.route.params !== undefined) {
-				assertWorkletSerializable(descriptor.route.params, "route.params");
-			}
-		}
-
 		const plainRoute = toPlainRoute(descriptor.route);
+		const plainMeta = meta
+			? (toPlainValue(meta) as Record<string, unknown>)
+			: undefined;
 
 		return {
 			progress: AnimationStore.getAnimation(key, "progress"),
@@ -106,8 +96,8 @@ const useBuildScreenTransitionState = (
 			animating: AnimationStore.getAnimation(key, "animating"),
 			gesture: GestureStore.getRouteGestures(key),
 			route: plainRoute,
-			meta,
-			unwrapped: createScreenTransitionState(plainRoute, meta),
+			meta: plainMeta,
+			unwrapped: createScreenTransitionState(plainRoute, plainMeta),
 		};
 	}, [key, meta, descriptor]);
 };
