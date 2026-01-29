@@ -200,7 +200,7 @@
     },
     "packages/react-native-screen-transitions": {
       "name": "react-native-screen-transitions",
-      "version": "3.2.0",
+      "version": "3.3.0-rc.0",
       "devDependencies": {
         "@release-it/conventional-changelog": "^10.0.1",
         "@types/react": "~19.1.10",

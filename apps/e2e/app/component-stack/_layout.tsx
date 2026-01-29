@@ -110,6 +110,10 @@ export default function ComponentStackLayout() {
 					},
 				}}
 			/>
+			<BlankStack.Screen
+				name="deep-link/[id]"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
 		</BlankStack>
 	);
 }

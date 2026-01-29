@@ -29,6 +29,11 @@ const TEST_FLOWS = [
 		title: "Floating Overlay",
 		description: "Tab bar overlay that animates with screen transitions",
 	},
+	{
+		id: "deep-link/test",
+		title: "Deep Link Test",
+		description: "Dynamic route for deep link testing",
+	},
 ];
 
 export default function NativeStackIndex() {

@@ -104,6 +104,10 @@ export default function BlankStackLayout() {
 				name="scroll-tests"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<BlankStack.Screen
+				name="deep-link/[id]"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
 		</BlankStack>
 	);
 }

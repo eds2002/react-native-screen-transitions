@@ -24,6 +24,11 @@ const DEMOS = [
 		title: "Size Transitions",
 		description: "Shared element bounds between different card sizes",
 	},
+	{
+		id: "deep-link/test",
+		title: "Deep Link Test",
+		description: "Dynamic route for deep link testing",
+	},
 ];
 
 export default function ComponentStackIndex() {

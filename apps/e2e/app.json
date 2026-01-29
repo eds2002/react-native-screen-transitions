@@ -16,7 +16,8 @@
         "backgroundColor": "#E6F4FE"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.eds2002.e2e"
     },
     "web": {
       "output": "static"

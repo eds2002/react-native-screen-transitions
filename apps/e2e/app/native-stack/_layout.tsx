@@ -100,6 +100,13 @@ export default function NativeStackLayout() {
 					...Transition.Presets.SlideFromBottom(),
 				}}
 			/>
+			<Stack.Screen
+				name="deep-link/[id]"
+				options={{
+					enableTransitions: true,
+					...Transition.Presets.SlideFromBottom(),
+				}}
+			/>
 		</Stack>
 	);
 }

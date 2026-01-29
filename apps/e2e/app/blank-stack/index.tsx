@@ -44,6 +44,11 @@ const TEST_FLOWS = [
 		title: "Scroll Tests",
 		description: "ScrollView + gesture coordination (no snap points)",
 	},
+	{
+		id: "deep-link/test",
+		title: "Deep Link Test",
+		description: "Dynamic route for deep link testing",
+	},
 ];
 
 export default function BlankStackIndex() {
