@@ -89,6 +89,10 @@ export default function GesturesLayout() {
 			/>
 			{/* ScrollView Examples */}
 			<BlankStack.Screen
+				name="scroll-direction-propagation"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
 				name="scroll-boundary"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>

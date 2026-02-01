@@ -76,6 +76,12 @@ const SNAP_POINT_EXAMPLES: Example[] = [
 
 const SCROLLVIEW_EXAMPLES: Example[] = [
 	{
+		id: "scroll-direction-propagation",
+		title: "Scroll Direction Propagation",
+		description: "ScrollView coordinates with two owners on same axis",
+		scenario: "Outer/ (vertical) > Settings/ (vertical-inverted) > ScrollView",
+	},
+	{
 		id: "scroll-boundary",
 		title: "ScrollView Boundary",
 		description: "Dismiss only works at scroll top",
