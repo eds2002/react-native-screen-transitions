@@ -1,12 +1,12 @@
 import { StyleSheet, View } from "react-native";
 import { ScreenContainer } from "react-native-screens";
-import { useStack } from "../../shared/hooks/navigation/use-stack";
+import { useStack } from "../hooks/navigation/use-stack";
 
 interface Props {
 	children: React.ReactNode;
 }
 
-export const AdjustedScreenContainer = ({ children }: Props) => {
+export const NativeScreenContainer = ({ children }: Props) => {
 	const {
 		flags: { DISABLE_NATIVE_SCREENS = false },
 	} = useStack();

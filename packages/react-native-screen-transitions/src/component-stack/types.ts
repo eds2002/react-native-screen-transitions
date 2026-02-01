@@ -68,6 +68,12 @@ type ComponentStackScreenTransitionConfig = ScreenTransitionConfig & {
 	 * Only applicable if `detachInactiveScreens` isn't set to `false`.
 	 */
 	detachPreviousScreen?: boolean;
+
+	/**
+	 * Whether inactive screens should be suspended from re-rendering.
+	 * Defaults to `true` on native platforms when using react-native-screens.
+	 */
+	freezeOnBlur?: boolean;
 };
 
 export type ComponentStackNavigationOptions =

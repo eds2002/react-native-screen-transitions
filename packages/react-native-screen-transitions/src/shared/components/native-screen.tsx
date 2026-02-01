@@ -9,11 +9,11 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
-import { EPSILON } from "../../shared/constants";
-import { useStack } from "../../shared/hooks/navigation/use-stack";
-import { LayoutAnchorProvider } from "../../shared/providers/layout-anchor.provider";
-import { useManagedStackContext } from "../../shared/providers/stack/managed.provider";
-import { AnimationStore } from "../../shared/stores/animation.store";
+import { EPSILON } from "../constants";
+import { useStack } from "../hooks/navigation/use-stack";
+import { LayoutAnchorProvider } from "../providers/layout-anchor.provider";
+import { useManagedStackContext } from "../providers/stack/managed.provider";
+import { AnimationStore } from "../stores/animation.store";
 
 interface ScreenProps {
 	routeKey: string;
@@ -34,7 +34,7 @@ const POINT_BOX_NONE = "box-none" as const;
 
 const AnimatedNativeScreen = Animated.createAnimatedComponent(RNSScreen);
 
-export const AdjustedScreen = ({
+export const NativeScreen = ({
 	routeKey,
 	index,
 	isPreloaded,
@@ -101,12 +101,12 @@ export const AdjustedScreen = ({
 		};
 	});
 
-	const AdjustedScreenComponent = !DISABLE_NATIVE_SCREENS
+	const NativeScreenComponent = !DISABLE_NATIVE_SCREENS
 		? AnimatedNativeScreen
 		: Animated.View;
 
 	return (
-		<AdjustedScreenComponent
+		<NativeScreenComponent
 			enabled
 			ref={screenRef}
 			style={StyleSheet.absoluteFill}
@@ -116,6 +116,6 @@ export const AdjustedScreen = ({
 			<LayoutAnchorProvider anchorRef={screenRef}>
 				{children}
 			</LayoutAnchorProvider>
-		</AdjustedScreenComponent>
+		</NativeScreenComponent>
 	);
 };

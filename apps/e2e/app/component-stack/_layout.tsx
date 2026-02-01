@@ -111,6 +111,34 @@ export default function ComponentStackLayout() {
 				}}
 			/>
 			<BlankStack.Screen
+				name="embedded-flow"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					screenStyleInterpolator: ({
+						progress,
+						layouts: {
+							screen: { height },
+						},
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }],
+							},
+							backdropStyle: {
+								backgroundColor: `rgba(0,0,0,${interpolate(progress, [0, 1], [0, 0.5], "clamp")})`,
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
 				name="deep-link/[id]"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>

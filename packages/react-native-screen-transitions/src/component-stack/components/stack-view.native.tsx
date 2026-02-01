@@ -10,9 +10,10 @@ import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
+import { StackType } from "../../shared/types/stack.types";
 import type {
-	BlankStackDescriptor,
-	BlankStackNavigationHelpers,
+	ComponentStackDescriptor,
+	ComponentStackNavigationHelpers,
 } from "../types";
 
 function isFabric() {
@@ -20,7 +21,7 @@ function isFabric() {
 }
 
 type SceneViewProps = {
-	descriptor: BlankStackDescriptor;
+	descriptor: ComponentStackDescriptor;
 };
 
 const SceneView = React.memo(function SceneView({
@@ -39,8 +40,12 @@ const SceneView = React.memo(function SceneView({
 });
 
 export const StackView = withStackCore(
-	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: true },
-	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
+	{
+		TRANSITIONS_ALWAYS_ON: true,
+		STACK_TYPE: StackType.COMPONENT,
+		DISABLE_NATIVE_SCREENS: false,
+	},
+	withManagedStack<ComponentStackDescriptor, ComponentStackNavigationHelpers>(
 		({ descriptors, focusedIndex, scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>
