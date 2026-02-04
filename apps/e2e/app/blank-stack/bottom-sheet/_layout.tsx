@@ -104,10 +104,12 @@ export default function BottomSheetLayout() {
 							? interpolate(progress, [0.1, 0.15, 0.9], [24, 16, 0], "clamp")
 							: 0;
 
+						// Clamp at 0.9 so mask doesn't grow when a screen pushes on top
+						const clampedProgress = Math.min(progress, 0.9);
 						const sheetHeight = interpolate(
-							progress,
-							[0, 0.1, 0.5, 0.9, 1],
-							[height * 0.1, height * 0.1, height * 0.5, height * 0.9, height],
+							clampedProgress,
+							[0, 0.1, 0.5, 0.9],
+							[height * 0.1, height * 0.1, height * 0.5, height * 0.9],
 							"clamp",
 						);
 
@@ -157,24 +159,27 @@ export default function BottomSheetLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
+					backdropBehavior: "block",
+          expandViaScrollView: true,
+					 
 					screenStyleInterpolator: ({
 						layouts: {
 							screen: { width },
 						},
 						progress,
+						focused,
 					}) => {
 						"worklet";
-						const x = interpolate(
-							progress,
-							[0, 1, 2],
-							[width, 0, -width * 0.3],
-						);
+						if (focused) {
+							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
 
-						return {
-							contentStyle: {
-								transform: [{ translateX: x }],
-							},
-						};
+							return {
+								contentStyle: {
+									transform: [{ translateX: x }],
+								},
+							};
+						}
+						return {};
 					},
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
@@ -284,12 +289,7 @@ export default function BottomSheetLayout() {
 						progress,
 					}) => {
 						"worklet";
-						const y = interpolate(
-							progress,
-							[0, 0.4],
-							[height * 0.4, 0],
-							"clamp",
-						);
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 
 						return {
 							contentStyle: {
@@ -321,12 +321,7 @@ export default function BottomSheetLayout() {
 						progress,
 					}) => {
 						"worklet";
-						const y = interpolate(
-							progress,
-							[0, 0.35],
-							[height * 0.35, 0],
-							"clamp",
-						);
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 
 						return {
 							contentStyle: {
