@@ -49,6 +49,11 @@ const TEST_FLOWS = [
 		title: "Deep Link Test",
 		description: "Dynamic route for deep link testing",
 	},
+	{
+		id: "touch-gating",
+		title: "Touch Gating",
+		description: "Demonstrates proper touch blocking during transitions",
+	},
 ];
 
 export default function BlankStackIndex() {

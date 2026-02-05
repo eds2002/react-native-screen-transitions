@@ -108,6 +108,10 @@ export default function BlankStackLayout() {
 				name="deep-link/[id]"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<BlankStack.Screen
+				name="touch-gating"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
 		</BlankStack>
 	);
 }

@@ -15,6 +15,8 @@ import { LayoutAnchorProvider } from "../providers/layout-anchor.provider";
 import { useManagedStackContext } from "../providers/stack/managed.provider";
 import { AnimationStore } from "../stores/animation.store";
 
+const PASSTHROUGH = "passthrough";
+
 interface ScreenProps {
 	routeKey: string;
 	index: number;
@@ -45,7 +47,14 @@ export const NativeScreen = ({
 	const {
 		flags: { DISABLE_NATIVE_SCREENS = false },
 	} = useStack();
-	const { activeScreensLimit, routes } = useManagedStackContext();
+
+	const {
+		activeScreensLimit,
+		routes,
+		optimisticFocusedIndex,
+		backdropBehaviors,
+	} = useManagedStackContext();
+
 	const routesLength = routes.length;
 	const screenRef = useAnimatedRef<View>();
 
@@ -88,16 +97,36 @@ export const NativeScreen = ({
 
 	const animatedProps = useAnimatedProps(() => {
 		const activity = screenActivity.get();
+		const isClosing = sceneClosing.get() > 0;
+		const activeIndex = optimisticFocusedIndex.value;
+		const isActive = index === activeIndex;
+
+		// Check if the active screen allows passthrough to the screen below
+		const activeBackdrop = backdropBehaviors[activeIndex] ?? "block";
+		const activeAllowsPassthrough = activeBackdrop === PASSTHROUGH;
+		const isAllowedPassthroughBelow =
+			activeAllowsPassthrough && index === activeIndex - 1;
+
+		// Determine pointer events:
+		// - "none" if closing (immediately disable touches)
+		// - "box-none" if this is the active screen
+		// - "box-none" if the active screen allows passthrough and we're immediately below
+		// - "none" otherwise (block touches to non-active screens)
+		const pointerEvents =
+			isClosing || (!isActive && !isAllowedPassthroughBelow)
+				? POINT_NONE
+				: POINT_BOX_NONE;
+
 		if (!DISABLE_NATIVE_SCREENS) {
 			return {
 				activityState: activity,
 				shouldFreeze: activity === ScreenActivity.INACTIVE && shouldFreeze,
-				pointerEvents: sceneClosing.get() ? POINT_NONE : POINT_BOX_NONE,
+				pointerEvents,
 			};
 		}
 
 		return {
-			pointerEvents: sceneClosing.get() ? POINT_NONE : POINT_BOX_NONE,
+			pointerEvents,
 		};
 	});
 

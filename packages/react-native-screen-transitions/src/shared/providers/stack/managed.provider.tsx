@@ -20,7 +20,6 @@ import type {
 	BaseStackState,
 } from "../../types/stack.types";
 import { useStackCoreContext } from "./core.provider";
-import { calculateActiveScreensLimit } from "./helpers/active-screens-limit";
 import { useLocalRoutes } from "./helpers/use-local-routes";
 
 /**
@@ -53,6 +52,7 @@ interface ManagedStackContextValue<
 	focusedIndex: number;
 	stackProgress: DerivedValue<number>;
 	optimisticFocusedIndex: DerivedValue<number>;
+	backdropBehaviors: string[];
 }
 
 const ManagedStackContext =
@@ -82,34 +82,62 @@ function useManagedStackValue<
 	const { flags } = useStackCoreContext();
 	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
 
-	const { scenes, activeScreensLimit, shouldShowFloatOverlay, routeKeys } =
-		useMemo(() => {
-			const scenes: BaseStackScene<TDescriptor>[] = [];
-			const routeKeys: string[] = [];
-			let shouldShowFloatOverlay = false;
+	const {
+		scenes,
+		activeScreensLimit,
+		shouldShowFloatOverlay,
+		routeKeys,
+		backdropBehaviors,
+	} = useMemo(() => {
+		const routes = state.routes;
+		const scenes: BaseStackScene<TDescriptor>[] = [];
+		const routeKeys: string[] = [];
+		const backdropBehaviors: string[] = [];
 
-			for (const route of state.routes) {
-				const descriptor = state.descriptors[route.key] as TDescriptor;
-				scenes.push({ route, descriptor });
-				routeKeys.push(route.key);
+		let shouldShowFloatOverlay = false;
+		let limit = 1;
+		let stopLimit = false;
 
-				if (!shouldShowFloatOverlay) {
-					const options = descriptor?.options;
-					shouldShowFloatOverlay =
-						options?.overlayMode === "float" && options?.overlayShown === true;
-				}
+		for (let i = routes.length - 1; i >= 0; i--) {
+			const route = routes[i];
+			const descriptor = state.descriptors[route.key] as TDescriptor;
+			const options = descriptor?.options;
+
+			scenes[i] = { route, descriptor };
+			routeKeys[i] = route.key;
+			backdropBehaviors[i] = options?.backdropBehavior ?? "block";
+
+			if (!shouldShowFloatOverlay) {
+				shouldShowFloatOverlay =
+					options?.overlayMode === "float" && options?.overlayShown === true;
 			}
 
-			return {
-				scenes,
-				routeKeys,
-				activeScreensLimit: calculateActiveScreensLimit(
-					state.routes,
-					state.descriptors,
-				),
-				shouldShowFloatOverlay,
-			};
-		}, [state.routes, state.descriptors]);
+			if (!stopLimit) {
+				const shouldKeepPrevious =
+					(options as { detachPreviousScreen?: boolean })
+						?.detachPreviousScreen !== true;
+
+				if (shouldKeepPrevious) {
+					limit += 1;
+				} else {
+					stopLimit = true;
+				}
+			}
+		}
+
+		const activeScreensLimit = Math.min(
+			limit,
+			routes.length === 0 ? 1 : routes.length,
+		);
+
+		return {
+			scenes,
+			routeKeys,
+			backdropBehaviors,
+			activeScreensLimit,
+			shouldShowFloatOverlay,
+		};
+	}, [state.routes, state.descriptors]);
 
 	// Get animation store maps for LOCAL routes (including closing routes)
 	const animationMaps = useMemo(
@@ -143,7 +171,6 @@ function useManagedStackValue<
 
 	const focusedIndex = props.state.index;
 
-	// StackContext value - for overlays via useStack()
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
@@ -180,6 +207,7 @@ function useManagedStackValue<
 			shouldShowFloatOverlay,
 			stackProgress,
 			optimisticFocusedIndex,
+			backdropBehaviors,
 		}),
 		[
 			state.routes,
@@ -192,6 +220,7 @@ function useManagedStackValue<
 			shouldShowFloatOverlay,
 			stackProgress,
 			optimisticFocusedIndex,
+			backdropBehaviors,
 		],
 	);
 
