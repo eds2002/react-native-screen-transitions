@@ -5,14 +5,25 @@ import type { AnimationStoreMap } from "../../stores/animation.store";
 import { HistoryStore } from "../../stores/history.store";
 import useStableCallback from "../use-stable-callback";
 
+function hasSnapPoints(descriptor: BaseDescriptor): boolean {
+	const snapPoints = descriptor.options?.snapPoints;
+	return Boolean(snapPoints && snapPoints.length > 0);
+}
+
 /**
  * Check if a screen is a leaf (renders visible content) vs a navigator container.
  * Navigator containers have nested state with routes.
  */
 function isLeafScreen(navigation: BaseDescriptor["navigation"]): boolean {
 	const state = navigation.getState();
-	const currentRoute = state.routes[state.index];
+	const index = state?.index ?? -1;
+	const currentRoute = state?.routes?.[index];
+	if (!currentRoute) return false;
 	return !("state" in currentRoute);
+}
+
+function shouldTrackInHistory(descriptor: BaseDescriptor): boolean {
+	return hasSnapPoints(descriptor) || isLeafScreen(descriptor.navigation);
 }
 
 /**
@@ -29,13 +40,13 @@ export function useScreenEvents(
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useEffect(() => {
 		// Check on mount (after paint, nested navs initialized)
-		if (isLeafScreen(current.navigation)) {
+		if (shouldTrackInHistory(current)) {
 			HistoryStore.focus(current, navigatorKey);
 		}
 
 		// Also listen for focus events
 		const unsubscribe = current.navigation.addListener?.("focus", () => {
-			if (isLeafScreen(current.navigation)) {
+			if (shouldTrackInHistory(current)) {
 				HistoryStore.focus(current, navigatorKey);
 			}
 		});
@@ -45,7 +56,7 @@ export function useScreenEvents(
 
 	// When closing starts, focus previous in history
 	const handleBlur = useStableCallback(() => {
-		if (previous && isLeafScreen(previous.navigation)) {
+		if (previous && shouldTrackInHistory(previous)) {
 			const prevNavigatorKey = previous.navigation.getState()?.key ?? "";
 			HistoryStore.focus(previous, prevNavigatorKey);
 		}

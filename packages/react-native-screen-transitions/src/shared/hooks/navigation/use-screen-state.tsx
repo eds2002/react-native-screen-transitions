@@ -1,6 +1,7 @@
 import type { Route } from "@react-navigation/native";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useDerivedValue } from "react-native-reanimated";
+import { snapDescriptorToIndex } from "../../animation/snap-to";
 import {
 	type BaseDescriptor,
 	useKeys,
@@ -47,6 +48,13 @@ export interface ScreenState<
 	 * Navigation object for this screen.
 	 */
 	navigation: TNavigation;
+
+	/**
+	 * Programmatically snap the focused screen to a snap point index.
+	 *
+	 * Scoped to this screen's stack context, avoiding global history ambiguity.
+	 */
+	snapTo: (index: number) => void;
 }
 
 /**
@@ -77,6 +85,15 @@ export function useScreenState<
 		return scenes[focusedIndex] ?? scenes[scenes.length - 1];
 	}, [scenes, focusedIndex]);
 
+	const snapTo = useCallback(
+		(targetIndex: number) => {
+			const descriptor = focusedScene?.descriptor;
+			if (!descriptor) return;
+			snapDescriptorToIndex(descriptor, targetIndex);
+		},
+		[focusedScene],
+	);
+
 	return useMemo(
 		() => ({
 			index,
@@ -86,6 +103,7 @@ export function useScreenState<
 			focusedIndex,
 			meta: focusedScene?.descriptor?.options?.meta,
 			navigation: current.navigation as TNavigation,
+			snapTo,
 		}),
 		[
 			index,
@@ -94,6 +112,7 @@ export function useScreenState<
 			focusedIndex,
 			current.navigation,
 			current.route,
+			snapTo,
 		],
 	);
 }
