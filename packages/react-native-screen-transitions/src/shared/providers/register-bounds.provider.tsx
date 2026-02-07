@@ -24,6 +24,7 @@ interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
 	shouldSetSource?: boolean;
 	shouldSetDestination?: boolean;
+	shouldUpdateSource?: boolean;
 }
 
 interface RegisterBoundsRenderProps {
@@ -36,6 +37,7 @@ interface RegisterBoundsProviderProps {
 	animatedRef: AnimatedRef<View>;
 	style: StyleProps;
 	onPress?: ((...args: unknown[]) => void) | undefined;
+	remeasureOnFocus?: boolean;
 	children: (props: RegisterBoundsRenderProps) => ReactNode;
 }
 
@@ -142,11 +144,17 @@ const useInitialLayoutHandler = (params: {
  */
 const useBlurMeasurement = (params: {
 	sharedBoundTag?: string;
+	remeasureOnFocus?: boolean;
 	ancestorKeys: string[];
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const { current } = useKeys();
-	const { sharedBoundTag, ancestorKeys, maybeMeasureAndStore } = params;
+	const {
+		sharedBoundTag,
+		remeasureOnFocus,
+		ancestorKeys,
+		maybeMeasureAndStore,
+	} = params;
 	const hasCapturedSource = useRef(false);
 
 	const ancestorClosing = [current.route.key, ...ancestorKeys].map((key) =>
@@ -166,13 +174,22 @@ const useBlurMeasurement = (params: {
 
 	useFocusEffect(
 		useCallback(() => {
+			if (sharedBoundTag && remeasureOnFocus) {
+				runOnUI(maybeMeasureAndStore)({ shouldUpdateSource: true });
+			}
+
 			hasCapturedSource.current = false;
 
 			return () => {
 				if (!sharedBoundTag || hasCapturedSource.current) return;
 				runOnUI(maybeMeasureOnBlur)();
 			};
-		}, [sharedBoundTag, maybeMeasureOnBlur]),
+		}, [
+			sharedBoundTag,
+			remeasureOnFocus,
+			maybeMeasureOnBlur,
+			maybeMeasureAndStore,
+		]),
 	);
 
 	return {
@@ -205,7 +222,14 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 	"RegisterBounds",
 	{ guarded: false },
 )<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
-	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
+	({
+		style,
+		onPress,
+		sharedBoundTag,
+		animatedRef,
+		remeasureOnFocus,
+		children,
+	}) => {
 		const { current } = useKeys();
 		const currentScreenKey = current.route.key;
 		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
@@ -236,6 +260,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 				onPress,
 				shouldSetSource,
 				shouldSetDestination,
+				shouldUpdateSource,
 			}: MaybeMeasureAndStoreParams = {}) => {
 				"worklet";
 				if (!sharedBoundTag) return;
@@ -286,6 +311,16 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					);
 				}
 
+				if (shouldUpdateSource) {
+					BoundStore.updateLinkSource(
+						sharedBoundTag,
+						currentScreenKey,
+						correctedMeasured,
+						preparedStyles,
+						ancestorKeys,
+					);
+				}
+
 				// Set as destination (on mount during animation)
 				if (shouldSetDestination) {
 					BoundStore.setLinkDestination(
@@ -311,6 +346,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		// Side effects
 		const { markSourceCaptured } = useBlurMeasurement({
 			sharedBoundTag,
+			remeasureOnFocus,
 			maybeMeasureAndStore,
 			ancestorKeys,
 		});

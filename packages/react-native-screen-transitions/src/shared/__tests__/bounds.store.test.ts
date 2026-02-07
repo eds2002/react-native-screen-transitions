@@ -111,6 +111,69 @@ describe("BoundStore.setLinkSource", () => {
 	});
 });
 
+describe("BoundStore.updateLinkSource", () => {
+	it("updates source in place and preserves destination", () => {
+		const initialSource = createBounds(0, 0, 100, 100);
+		const destination = createBounds(100, 100, 200, 200);
+		const updatedSource = createBounds(20, 30, 120, 120);
+
+		BoundStore.setLinkSource("card", "screen-a", initialSource);
+		BoundStore.setLinkDestination("card", "screen-b", destination);
+		BoundStore.updateLinkSource("card", "screen-a", updatedSource);
+
+		const link = BoundStore.getActiveLink("card", "screen-a");
+		expect(link?.source.bounds).toEqual(updatedSource);
+		expect(link?.destination?.screenKey).toBe("screen-b");
+		expect(link?.destination?.bounds).toEqual(destination);
+	});
+
+	it("prefers newest completed matching link over newer pending link", () => {
+		const completedSource = createBounds(0, 0, 100, 100);
+		const pendingSource = createBounds(50, 50, 100, 100);
+		const destination = createBounds(100, 100, 150, 150);
+		const updatedSource = createBounds(10, 10, 110, 110);
+
+		BoundStore.setLinkSource("card", "screen-a", completedSource);
+		BoundStore.setLinkDestination("card", "screen-b", destination);
+
+		// Newer pending link with same source screen.
+		BoundStore.setLinkSource("card", "screen-a", pendingSource);
+
+		BoundStore.updateLinkSource("card", "screen-a", updatedSource);
+
+		const completed = BoundStore.getActiveLink("card", "screen-b");
+		expect(completed?.source.bounds).toEqual(updatedSource);
+
+		const latest = BoundStore.getActiveLink("card");
+		expect(latest?.destination).toBeNull();
+		expect(latest?.source.bounds).toEqual(pendingSource);
+	});
+
+	it("falls back to pending matching link when no completed link exists", () => {
+		const pendingSource = createBounds(25, 25, 100, 100);
+		const updatedSource = createBounds(30, 35, 110, 115);
+
+		BoundStore.setLinkSource("card", "screen-a", pendingSource);
+		BoundStore.updateLinkSource("card", "screen-a", updatedSource);
+
+		const latest = BoundStore.getActiveLink("card");
+		expect(latest?.destination).toBeNull();
+		expect(latest?.source.bounds).toEqual(updatedSource);
+	});
+
+	it("no-ops when no matching source exists", () => {
+		const source = createBounds(0, 0, 100, 100);
+		const destination = createBounds(100, 100, 120, 120);
+
+		BoundStore.setLinkSource("card", "screen-a", source);
+		BoundStore.setLinkDestination("card", "screen-b", destination);
+		BoundStore.updateLinkSource("card", "screen-x", createBounds(999, 999));
+
+		const link = BoundStore.getActiveLink("card", "screen-a");
+		expect(link?.source.bounds).toEqual(source);
+	});
+});
+
 describe("BoundStore.setLinkDestination", () => {
 	it("fills topmost link with null destination", () => {
 		const srcBounds = createBounds(0, 0);

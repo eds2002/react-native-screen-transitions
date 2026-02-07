@@ -25,26 +25,30 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof Wrapped>,
 		TransitionAwareProps<P>
 	>((props: any, ref) => {
+		const { remeasureOnFocus: _remeasureOnFocus, ...scrollableProps } = props;
+
 		// Determine scroll direction from the horizontal prop (standard ScrollView API)
-		const scrollDirection = props.horizontal ? "horizontal" : "vertical";
+		const scrollDirection = scrollableProps.horizontal
+			? "horizontal"
+			: "vertical";
 
 		// Get scroll handlers and the gesture owner's nativeGesture for this axis
 		const { scrollHandler, onContentSizeChange, onLayout, nativeGesture } =
 			useScrollRegistry({
-				onScroll: props.onScroll,
-				onContentSizeChange: props.onContentSizeChange,
-				onLayout: props.onLayout,
+				onScroll: scrollableProps.onScroll,
+				onContentSizeChange: scrollableProps.onContentSizeChange,
+				onLayout: scrollableProps.onLayout,
 				direction: scrollDirection,
 			});
 
 		const scrollableComponent = (
 			<AnimatedComponent
-				{...(props as any)}
+				{...(scrollableProps as any)}
 				ref={ref}
 				onScroll={scrollHandler}
 				onContentSizeChange={onContentSizeChange}
 				onLayout={onLayout}
-				scrollEventThrottle={props.scrollEventThrottle || 16}
+				scrollEventThrottle={scrollableProps.scrollEventThrottle || 16}
 			/>
 		);
 
@@ -64,8 +68,15 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof AnimatedComponent>,
 		TransitionAwareProps<P>
 	>((props, _) => {
-		const { children, style, sharedBoundTag, styleId, onPress, ...rest } =
-			props as any;
+		const {
+			children,
+			style,
+			sharedBoundTag,
+			styleId,
+			onPress,
+			remeasureOnFocus,
+			...rest
+		} = props as any;
 
 		const animatedRef = useAnimatedRef<View>();
 
@@ -80,6 +91,7 @@ export function createTransitionAwareComponent<P extends object>(
 				style={style}
 				onPress={onPress}
 				sharedBoundTag={sharedBoundTag}
+				remeasureOnFocus={remeasureOnFocus}
 			>
 				{({ captureActiveOnPress, handleInitialLayout }) => (
 					<AnimatedComponent
