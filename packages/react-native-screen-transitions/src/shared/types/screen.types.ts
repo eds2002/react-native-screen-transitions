@@ -189,6 +189,17 @@ export type ScreenTransitionConfig = {
 	expandViaScrollView?: boolean;
 
 	/**
+	 * Locks gesture-based snap movement to the current snap point.
+	 *
+	 * When enabled, users cannot gesture between snap points. If dismiss gestures
+	 * are allowed (`gestureEnabled !== false`), swipe-to-dismiss still works.
+	 * Programmatic `snapTo()` calls are not affected.
+	 *
+	 * @default false
+	 */
+	gestureSnapLocked?: boolean;
+
+	/**
 	 * Controls how touches interact with the backdrop area (outside the screen content).
 	 *
 	 * - `'block'`: Backdrop catches all touches (default for most screens)

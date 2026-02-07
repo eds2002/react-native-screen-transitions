@@ -35,6 +35,36 @@ const EXAMPLES = [
 		description: "Animate UI based on snapIndex value",
 	},
 	{
+		id: "snap-lock-unlocked",
+		title: "Snap Lock (Unlocked)",
+		description: "Baseline: gestures can move across all snap points",
+	},
+	{
+		id: "snap-lock-locked",
+		title: "Snap Lock (Locked)",
+		description: "Gesture snapping locked; dismiss + snapTo still work",
+	},
+	{
+		id: "snap-lock-toggle",
+		title: "Snap Lock (Dynamic Toggle)",
+		description: "Toggle lock at runtime and verify gesture behavior",
+	},
+	{
+		id: "snap-lock-horizontal-locked",
+		title: "Snap Lock (Horizontal)",
+		description: "Axis check: horizontal drawer with gesture lock",
+	},
+	{
+		id: "snap-lock-scroll-locked",
+		title: "Snap Lock (ScrollView)",
+		description: "Scroll + sheet coordination with snap lock enabled",
+	},
+	{
+		id: "snap-lock-locked-no-dismiss",
+		title: "Snap Lock (No Dismiss)",
+		description: "gestureEnabled=false: no dismiss, no gesture snapping",
+	},
+	{
 		id: "backdrop-dismiss",
 		title: "Backdrop Dismiss",
 		description: "Tap outside the sheet to dismiss",
@@ -81,9 +111,7 @@ export default function BottomSheetIndex() {
 							testID={`sheet-${example.id}`}
 							style={styles.item}
 							onPress={() =>
-								router.push(
-									`/blank-stack/bottom-sheet/${example.id}` as `/blank-stack/bottom-sheet/${string}`,
-								)
+								router.push(`/blank-stack/bottom-sheet/${example.id}` as any)
 							}
 						>
 							<Text style={styles.itemTitle}>{example.title}</Text>

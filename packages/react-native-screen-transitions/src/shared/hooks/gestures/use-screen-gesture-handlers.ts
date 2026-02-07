@@ -132,6 +132,7 @@ export const useScreenGestureHandlers = ({
 		transitionSpec,
 		snapPoints: rawSnapPoints,
 		expandViaScrollView = true,
+		gestureSnapLocked = false,
 	} = current.options;
 
 	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } = useMemo(
@@ -200,11 +201,25 @@ export const useScreenGestureHandlers = ({
 			? "horizontal"
 			: "vertical";
 
+	const isExpandGesture = (swipeDirection: Direction): boolean => {
+		"worklet";
+		if (snapAxis === "horizontal") {
+			return directions.snapAxisInverted
+				? swipeDirection === "horizontal"
+				: swipeDirection === "horizontal-inverted";
+		}
+
+		return directions.snapAxisInverted
+			? swipeDirection === "vertical"
+			: swipeDirection === "vertical-inverted";
+	};
+
 	const initialTouch = useSharedValue({ x: 0, y: 0 });
 	const gestureOffsetState = useSharedValue<GestureOffsetState>(
 		GestureOffsetState.PENDING,
 	);
 	const gestureStartProgress = useSharedValue(1);
+	const lockedSnapPoint = useSharedValue(maxSnapPoint);
 
 	const onTouchesDown = useStableCallbackValue((e: GestureTouchEvent) => {
 		"worklet";
@@ -280,6 +295,15 @@ export const useScreenGestureHandlers = ({
 				return;
 			}
 
+			if (
+				hasSnapPoints &&
+				gestureSnapLocked &&
+				isExpandGesture(swipeDirection)
+			) {
+				manager.fail();
+				return;
+			}
+
 			// Snap sheets can interrupt their own animation; non-snap cannot
 			if (!hasSnapPoints && gestureAnimationValues.isDismissing?.value) {
 				return;
@@ -303,23 +327,19 @@ export const useScreenGestureHandlers = ({
 
 				// Step 7: Expand check for snap sheets
 				if (hasSnapPoints) {
-					const isExpandGesture =
-						(directions.snapAxisInverted && swipeDirection === "vertical") ||
-						(!directions.snapAxisInverted &&
-							swipeDirection === "vertical-inverted") ||
-						(directions.snapAxisInverted && swipeDirection === "horizontal") ||
-						(!directions.snapAxisInverted &&
-							swipeDirection === "horizontal-inverted");
-
-					if (isExpandGesture) {
+					if (isExpandGesture(swipeDirection)) {
 						if (!expandViaScrollView) {
 							manager.fail();
 							return;
 						}
 
+						const effectiveMaxSnapPoint = gestureSnapLocked
+							? lockedSnapPoint.value
+							: maxSnapPoint;
+
 						const canExpandMore =
-							animations.progress.value < maxSnapPoint - EPSILON &&
-							animations.targetProgress.value < maxSnapPoint - EPSILON;
+							animations.progress.value < effectiveMaxSnapPoint - EPSILON &&
+							animations.targetProgress.value < effectiveMaxSnapPoint - EPSILON;
 
 						if (!canExpandMore) {
 							manager.fail();
@@ -336,6 +356,24 @@ export const useScreenGestureHandlers = ({
 
 	const onStart = useStableCallbackValue(() => {
 		"worklet";
+		if (hasSnapPoints && gestureSnapLocked) {
+			let nearest = snapPoints[0] ?? animations.progress.value;
+			let smallestDistance = Math.abs(animations.progress.value - nearest);
+
+			for (let i = 1; i < snapPoints.length; i++) {
+				const point = snapPoints[i];
+				const distance = Math.abs(animations.progress.value - point);
+				if (distance < smallestDistance) {
+					smallestDistance = distance;
+					nearest = point;
+				}
+			}
+
+			lockedSnapPoint.value = nearest;
+		} else {
+			lockedSnapPoint.value = maxSnapPoint;
+		}
+
 		gestureAnimationValues.isDragging.value = TRUE;
 		gestureAnimationValues.isDismissing.value = FALSE;
 		gestureStartProgress.value = animations.progress.value;
@@ -369,10 +407,21 @@ export const useScreenGestureHandlers = ({
 				const baseSign = -1;
 				const sign = directions.snapAxisInverted ? -baseSign : baseSign;
 				const progressDelta = (sign * translation) / dimension;
+				const maxProgressForGesture = gestureSnapLocked
+					? lockedSnapPoint.value
+					: maxSnapPoint;
+				const minProgressForGesture = gestureSnapLocked
+					? canDismiss
+						? 0
+						: lockedSnapPoint.value
+					: minSnapPoint;
 
 				animations.progress.value = Math.max(
-					minSnapPoint,
-					Math.min(maxSnapPoint, gestureStartProgress.value + progressDelta),
+					minProgressForGesture,
+					Math.min(
+						maxProgressForGesture,
+						gestureStartProgress.value + progressDelta,
+					),
 				);
 			} else if (gestureDrivesProgress) {
 				let maxProgress = 0;
@@ -427,7 +476,7 @@ export const useScreenGestureHandlers = ({
 
 				const result = determineSnapTarget({
 					currentProgress: animations.progress.value,
-					snapPoints,
+					snapPoints: gestureSnapLocked ? [lockedSnapPoint.value] : snapPoints,
 					velocity: snapVelocity,
 					dimension: axisDimension,
 					velocityFactor: snapVelocityImpact,

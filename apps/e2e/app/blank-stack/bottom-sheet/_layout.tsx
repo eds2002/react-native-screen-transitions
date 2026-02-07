@@ -160,8 +160,8 @@ export default function BottomSheetLayout() {
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
 					backdropBehavior: "block",
-          expandViaScrollView: true,
-					 
+					expandViaScrollView: true,
+
 					screenStyleInterpolator: ({
 						layouts: {
 							screen: { width },
@@ -413,6 +413,187 @@ export default function BottomSheetLayout() {
 						return {
 							contentStyle: {
 								transform: [{ translateX: x }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="snap-lock-unlocked"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					snapPoints: [0.25, 0.5, 0.75, 1.0],
+					initialSnapIndex: 1,
+					gestureSnapLocked: false,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="snap-lock-locked"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					snapPoints: [0.25, 0.5, 0.75, 1.0],
+					initialSnapIndex: 1,
+					gestureSnapLocked: true,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="snap-lock-toggle"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					snapPoints: [0.25, 0.5, 0.75, 1.0],
+					initialSnapIndex: 1,
+					gestureSnapLocked: true,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="snap-lock-horizontal-locked"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "horizontal",
+					snapPoints: [0.35, 0.65, 1.0],
+					initialSnapIndex: 1,
+					gestureSnapLocked: true,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { width },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const x = interpolate(progress, [0, 1], [width, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateX: x }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="snap-lock-scroll-locked"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					snapPoints: [0.3, 0.6, 1.0],
+					initialSnapIndex: 1,
+					gestureSnapLocked: true,
+					expandViaScrollView: true,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }, { scale }],
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen
+				name="snap-lock-locked-no-dismiss"
+				options={{
+					gestureEnabled: false,
+					gestureDirection: "vertical",
+					snapPoints: [0.25, 0.6, 1.0],
+					initialSnapIndex: 1,
+					gestureSnapLocked: true,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							contentStyle: {
+								transform: [{ translateY: y }, { scale }],
 							},
 						};
 					},
