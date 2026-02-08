@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useRef } from "react";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -80,11 +80,12 @@ const useBuildScreenTransitionState = (
 ): BuiltState | undefined => {
 	const key = descriptor?.route?.key;
 	const meta = descriptor?.options?.meta;
+	const route = descriptor?.route;
 
 	return useMemo(() => {
-		if (!key || !descriptor?.route) return undefined;
+		if (!key || !route) return undefined;
 
-		const plainRoute = toPlainRoute(descriptor.route);
+		const plainRoute = toPlainRoute(route);
 		const plainMeta = meta
 			? (toPlainValue(meta) as Record<string, unknown>)
 			: undefined;
@@ -99,7 +100,7 @@ const useBuildScreenTransitionState = (
 			meta: plainMeta,
 			unwrapped: createScreenTransitionState(plainRoute, plainMeta),
 		};
-	}, [key, meta, descriptor]);
+	}, [key, meta, route]);
 };
 
 const hasTransitionsEnabled = (
@@ -135,11 +136,14 @@ export function _useScreenAnimation() {
 		return points ? [...points].sort((a, b) => a - b) : [];
 	}, [currentDescriptor?.options?.snapPoints]);
 
+	const nextRouteKey = nextDescriptor?.route?.key;
+	const nextOptionsRef = useRef(nextDescriptor?.options);
+
 	const nextHasTransitions = useMemo(() => {
-		return nextDescriptor
-			? hasTransitionsEnabled(nextDescriptor.options, transitionsAlwaysOn)
+		return nextRouteKey
+			? hasTransitionsEnabled(nextOptionsRef.current, transitionsAlwaysOn)
 			: false;
-	}, [nextDescriptor, transitionsAlwaysOn]);
+	}, [nextRouteKey, transitionsAlwaysOn]);
 
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">

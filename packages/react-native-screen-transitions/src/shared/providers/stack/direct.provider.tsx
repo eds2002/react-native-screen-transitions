@@ -4,7 +4,7 @@ import type {
 	StackNavigationState,
 } from "@react-navigation/native";
 import * as React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import type {
 	NativeStackDescriptor,
@@ -15,7 +15,10 @@ import {
 	StackContext,
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
-import { AnimationStore } from "../../stores/animation.store";
+import {
+	AnimationStore,
+	type AnimationStoreMap,
+} from "../../stores/animation.store";
 import { HistoryStore } from "../../stores/history.store";
 import { useStackCoreContext } from "./core.provider";
 
@@ -81,30 +84,42 @@ function useDirectStackValue(
 		);
 	}, [state.preloadedRoutes, describe]);
 
+	// Keep a ref to the latest descriptors so we can read them in useMemo
+	// without adding descriptors as a dependency
+	const descriptorsRef = useRef(descriptors);
+	descriptorsRef.current = descriptors;
+	const preloadedDescriptorsRef = useRef(preloadedDescriptors);
+	preloadedDescriptorsRef.current = preloadedDescriptors;
+
 	const {
 		scenes,
 		shouldShowFloatOverlay,
 		routeKeys,
 		allRoutes,
 		allDescriptors,
+		animationMaps,
 	} = useMemo(() => {
+		const currentDescriptors = descriptorsRef.current;
+		const currentPreloaded = preloadedDescriptorsRef.current;
 		const allRoutes = state.routes.concat(state.preloadedRoutes);
 		const scenes: DirectStackScene[] = [];
 		const routeKeys: string[] = [];
+		const animationMaps: AnimationStoreMap[] = [];
 		const allDescriptors: NativeStackDescriptorMap = {
-			...preloadedDescriptors,
-			...descriptors,
+			...currentPreloaded,
+			...currentDescriptors,
 		};
 		let shouldShowFloatOverlay = false;
 
 		for (const route of allRoutes) {
 			const descriptor = allDescriptors[route.key];
 			const isPreloaded =
-				preloadedDescriptors[route.key] !== undefined &&
-				descriptors[route.key] === undefined;
+				currentPreloaded[route.key] !== undefined &&
+				currentDescriptors[route.key] === undefined;
 
 			scenes.push({ route, descriptor, isPreloaded });
 			routeKeys.push(route.key);
+			animationMaps.push(AnimationStore.getAll(route.key));
 
 			if (!shouldShowFloatOverlay && descriptor) {
 				const options = descriptor.options;
@@ -124,14 +139,9 @@ function useDirectStackValue(
 			routeKeys,
 			allRoutes,
 			allDescriptors,
+			animationMaps,
 		};
-	}, [state.routes, state.preloadedRoutes, descriptors, preloadedDescriptors]);
-
-	// Get animation store maps for all routes
-	const animationMaps = useMemo(
-		() => allRoutes.map((route) => AnimationStore.getAll(route.key)),
-		[allRoutes],
-	);
+	}, [state.routes, state.preloadedRoutes]);
 
 	const stackProgress = useDerivedValue(() => {
 		"worklet";
@@ -155,6 +165,7 @@ function useDirectStackValue(
 
 	const focusedIndex = state.index;
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: allDescriptors is derived from scenes (same useMemo); descriptors use refs to avoid cascade from React Navigation
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
@@ -169,7 +180,6 @@ function useDirectStackValue(
 		[
 			routeKeys,
 			allRoutes,
-			allDescriptors,
 			scenes,
 			focusedIndex,
 			stackProgress,
@@ -183,8 +193,8 @@ function useDirectStackValue(
 		() => ({
 			state,
 			navigation,
-			descriptors,
-			preloadedDescriptors,
+			descriptors: descriptorsRef.current,
+			preloadedDescriptors: preloadedDescriptorsRef.current,
 			scenes,
 			focusedIndex,
 			shouldShowFloatOverlay,
@@ -194,8 +204,6 @@ function useDirectStackValue(
 		[
 			state,
 			navigation,
-			descriptors,
-			preloadedDescriptors,
 			scenes,
 			focusedIndex,
 			shouldShowFloatOverlay,

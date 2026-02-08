@@ -110,8 +110,6 @@ export const useScreenGestureHandlers = ({
 	canDismiss,
 	handleDismiss,
 	ownershipStatus,
-	claimedDirections,
-	ancestorContext,
 	childDirectionClaims,
 }: UseScreenGestureHandlersProps) => {
 	const dimensions = useWindowDimensions();

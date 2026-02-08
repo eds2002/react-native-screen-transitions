@@ -1,6 +1,6 @@
 import type { Route } from "@react-navigation/native";
 import * as React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
 	type DerivedValue,
 	type SharedValue,
@@ -10,7 +10,10 @@ import {
 	StackContext,
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
-import { AnimationStore } from "../../stores/animation.store";
+import {
+	AnimationStore,
+	type AnimationStoreMap,
+} from "../../stores/animation.store";
 import { HistoryStore } from "../../stores/history.store";
 import type {
 	BaseStackDescriptor,
@@ -82,17 +85,25 @@ function useManagedStackValue<
 	const { flags } = useStackCoreContext();
 	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
 
+	// Keep a ref to the latest descriptors so we can read them in useMemo
+	// without adding state.descriptors as a dependency.
+	const descriptorsRef = useRef(state.descriptors);
+	descriptorsRef.current = state.descriptors;
+
 	const {
 		scenes,
 		activeScreensLimit,
 		shouldShowFloatOverlay,
 		routeKeys,
 		backdropBehaviors,
+		animationMaps,
 	} = useMemo(() => {
 		const routes = state.routes;
+		const descriptors = descriptorsRef.current;
 		const scenes: BaseStackScene<TDescriptor>[] = [];
 		const routeKeys: string[] = [];
 		const backdropBehaviors: string[] = [];
+		const animationMaps: AnimationStoreMap[] = [];
 
 		let shouldShowFloatOverlay = false;
 		let limit = 1;
@@ -100,12 +111,13 @@ function useManagedStackValue<
 
 		for (let i = routes.length - 1; i >= 0; i--) {
 			const route = routes[i];
-			const descriptor = state.descriptors[route.key] as TDescriptor;
+			const descriptor = descriptors[route.key] as TDescriptor;
 			const options = descriptor?.options;
 
 			scenes[i] = { route, descriptor };
 			routeKeys[i] = route.key;
 			backdropBehaviors[i] = options?.backdropBehavior ?? "block";
+			animationMaps[i] = AnimationStore.getAll(route.key);
 
 			if (!shouldShowFloatOverlay) {
 				shouldShowFloatOverlay =
@@ -136,14 +148,9 @@ function useManagedStackValue<
 			backdropBehaviors,
 			activeScreensLimit,
 			shouldShowFloatOverlay,
+			animationMaps,
 		};
-	}, [state.routes, state.descriptors]);
-
-	// Get animation store maps for LOCAL routes (including closing routes)
-	const animationMaps = useMemo(
-		() => state.routes.map((route) => AnimationStore.getAll(route.key)),
-		[state.routes],
-	);
+	}, [state.routes]);
 
 	// Aggregated stack progress from LOCAL routes (includes closing routes)
 	const stackProgress = useDerivedValue(() => {
@@ -177,7 +184,10 @@ function useManagedStackValue<
 			flags,
 			routeKeys,
 			routes: state.routes as Route<string>[],
-			descriptors: state.descriptors as Record<string, BaseStackDescriptor>,
+			descriptors: descriptorsRef.current as Record<
+				string,
+				BaseStackDescriptor
+			>,
 			scenes: scenes as BaseStackScene[],
 			focusedIndex,
 			stackProgress,
@@ -186,7 +196,6 @@ function useManagedStackValue<
 		[
 			routeKeys,
 			state.routes,
-			state.descriptors,
 			scenes,
 			focusedIndex,
 			stackProgress,
@@ -200,7 +209,7 @@ function useManagedStackValue<
 		() => ({
 			routes: state.routes,
 			focusedIndex,
-			descriptors: state.descriptors,
+			descriptors: descriptorsRef.current,
 			closingRouteKeysShared: closingRouteKeys.shared,
 			activeScreensLimit,
 			handleCloseRoute,
@@ -212,7 +221,6 @@ function useManagedStackValue<
 		}),
 		[
 			state.routes,
-			state.descriptors,
 			focusedIndex,
 			closingRouteKeys.shared,
 			activeScreensLimit,
