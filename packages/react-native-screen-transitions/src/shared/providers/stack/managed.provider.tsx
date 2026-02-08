@@ -155,18 +155,19 @@ function useManagedStackValue<
 		return total;
 	});
 
-	// Optimistic focused index: accounts for closing screens
+	// Optimistic focused index: accounts for closing screens.
+	// Counts consecutive closing screens from the top of the stack so that
+	// rapid dismiss chains (e.g. dismiss C then B while C is still in flight)
+	// correctly identify the actual focused screen for pointer-event gating.
 	const optimisticFocusedIndex = useDerivedValue(() => {
 		"worklet";
-		const currentIndex = animationMaps.length - 1;
-		let isAnyClosing = false;
-		for (let i = 0; i < animationMaps.length; i++) {
-			if (animationMaps[i].closing.value > 0) {
-				isAnyClosing = true;
-				break;
-			}
+		const lastIndex = animationMaps.length - 1;
+		let closingFromTop = 0;
+		for (let i = lastIndex; i >= 0; i--) {
+			if (animationMaps[i].closing.value > 0) closingFromTop++;
+			else break;
 		}
-		return currentIndex - Number(isAnyClosing);
+		return lastIndex - closingFromTop;
 	});
 
 	const focusedIndex = props.state.index;

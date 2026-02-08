@@ -144,15 +144,13 @@ function useDirectStackValue(
 
 	const optimisticFocusedIndex = useDerivedValue(() => {
 		"worklet";
-		const currentIndex = animationMaps.length - 1;
-		let isAnyClosing = false;
-		for (let i = 0; i < animationMaps.length; i++) {
-			if (animationMaps[i].closing.value > 0) {
-				isAnyClosing = true;
-				break;
-			}
+		const lastIndex = animationMaps.length - 1;
+		let closingFromTop = 0;
+		for (let i = lastIndex; i >= 0; i--) {
+			if (animationMaps[i].closing.value > 0) closingFromTop++;
+			else break;
 		}
-		return currentIndex - (isAnyClosing ? 1 : 0);
+		return lastIndex - closingFromTop;
 	});
 
 	const focusedIndex = state.index;
