@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { BoundStore, type Snapshot } from "../stores/bounds.store";
 
+
 // Helper to create mock bounds
 const createBounds = (
 	x = 0,

@@ -83,9 +83,17 @@ function updateLinkSource(
 		let targetIndex = -1;
 
 		// Prefer the most recent completed link first.
+		// NOTE: matchesScreenKey is inlined here to avoid a Reanimated
+		// workletization crash caused by nested worklet function calls
+		// inside registry.modify callbacks.
 		for (let i = stack.length - 1; i >= 0; i--) {
 			const link = stack[i];
-			if (link.destination && matchesScreenKey(link.source, screenKey)) {
+			const src = link.source;
+			const srcMatches =
+				src &&
+				(src.screenKey === screenKey ||
+					(src.ancestorKeys?.includes(screenKey) ?? false));
+			if (link.destination && srcMatches) {
 				targetIndex = i;
 				break;
 			}
@@ -94,7 +102,12 @@ function updateLinkSource(
 		// Fallback to pending links when no completed link matches.
 		if (targetIndex === -1) {
 			for (let i = stack.length - 1; i >= 0; i--) {
-				if (matchesScreenKey(stack[i].source, screenKey)) {
+				const src = stack[i].source;
+				if (
+					src &&
+					(src.screenKey === screenKey ||
+						(src.ancestorKeys?.includes(screenKey) ?? false))
+				) {
 					targetIndex = i;
 					break;
 				}

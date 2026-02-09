@@ -138,23 +138,13 @@ const useInitialLayoutHandler = (params: {
  * Measures non-pressable elements when screen becomes blurred.
  * Captures bounds right before transition starts.
  */
-/**
- * Measures non-pressable elements when screen becomes blurred.
- * Captures bounds right before transition starts.
- */
 const useBlurMeasurement = (params: {
 	sharedBoundTag?: string;
-	remeasureOnFocus?: boolean;
 	ancestorKeys: string[];
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const { current } = useKeys();
-	const {
-		sharedBoundTag,
-		remeasureOnFocus,
-		ancestorKeys,
-		maybeMeasureAndStore,
-	} = params;
+	const { sharedBoundTag, ancestorKeys, maybeMeasureAndStore } = params;
 	const hasCapturedSource = useRef(false);
 
 	const ancestorClosing = [current.route.key, ...ancestorKeys].map((key) =>
@@ -174,22 +164,13 @@ const useBlurMeasurement = (params: {
 
 	useFocusEffect(
 		useCallback(() => {
-			if (sharedBoundTag && remeasureOnFocus) {
-				runOnUI(maybeMeasureAndStore)({ shouldUpdateSource: true });
-			}
-
 			hasCapturedSource.current = false;
 
 			return () => {
 				if (!sharedBoundTag || hasCapturedSource.current) return;
 				runOnUI(maybeMeasureOnBlur)();
 			};
-		}, [
-			sharedBoundTag,
-			remeasureOnFocus,
-			maybeMeasureOnBlur,
-			maybeMeasureAndStore,
-		]),
+		}, [sharedBoundTag, maybeMeasureOnBlur]),
 	);
 
 	return {
@@ -230,7 +211,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		remeasureOnFocus,
 		children,
 	}) => {
-		const { current } = useKeys();
+		const { current, next } = useKeys();
 		const currentScreenKey = current.route.key;
 		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 		const layoutAnchor = useLayoutAnchorContext();
@@ -346,10 +327,30 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		// Side effects
 		const { markSourceCaptured } = useBlurMeasurement({
 			sharedBoundTag,
-			remeasureOnFocus,
 			maybeMeasureAndStore,
 			ancestorKeys,
 		});
+
+		// Re-measure source bounds when the destination screen (next in stack)
+		// starts closing. This fires at the instant the back animation begins,
+		// unlike useFocusEffect which fires too late (after the screen is removed
+		// from state).
+		const nextScreenKey = next?.route.key;
+		const nextClosing = nextScreenKey
+			? AnimationStore.getAnimation(nextScreenKey, "closing")
+			: null;
+
+		useAnimatedReaction(
+			() => nextClosing?.get() ?? 0,
+			(closing, prevClosing) => {
+				"worklet";
+				if (!sharedBoundTag || !remeasureOnFocus) return;
+				if (closing === 1 && (prevClosing === 0 || prevClosing === null)) {
+					maybeMeasureAndStore({ shouldUpdateSource: true });
+				}
+			},
+			[sharedBoundTag, remeasureOnFocus, nextClosing],
+		);
 
 		useParentSyncReaction({ parentContext, maybeMeasureAndStore });
 
