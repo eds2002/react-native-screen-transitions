@@ -107,6 +107,24 @@ export default function NativeStackLayout() {
 					...Transition.Presets.SlideFromBottom(),
 				}}
 			/>
+			<Stack.Screen
+				name="active-bounds"
+				options={{
+					headerShown: false,
+				}}
+			/>
+			<Stack.Screen
+				name="gesture-bounds"
+				options={{
+					headerShown: false,
+				}}
+			/>
+			<Stack.Screen
+				name="style-id-bounds"
+				options={{
+					headerShown: false,
+				}}
+			/>
 		</Stack>
 	);
 }

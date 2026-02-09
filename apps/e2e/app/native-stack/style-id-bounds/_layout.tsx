@@ -3,26 +3,22 @@ import Transition from "react-native-screen-transitions";
 import { create } from "zustand";
 import { Stack } from "@/layouts/stack";
 
-export const useStyleIdStore = create<{ boundTag: string }>(() => ({
+export const useStyleIdBoundsStore = create<{ boundTag: string }>(() => ({
 	boundTag: "",
 }));
 
-export default function StyleIdLayout() {
-	const boundTag = useStyleIdStore((s) => s.boundTag);
+export default function StyleIdBoundsLayout() {
+	const boundTag = useStyleIdBoundsStore((s) => s.boundTag);
 
 	return (
-		<Stack>
-			<Stack.Screen
-				name="index"
-				options={{ title: "Bounds + Style Id", headerShown: false }}
-			/>
-
+		<Stack screenOptions={{ headerShown: false }}>
+			<Stack.Screen name="index" />
 			<Stack.Screen
 				name="[id]"
 				options={{
+					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical"],
-					enableTransitions: true,
 					screenStyleInterpolator: ({
 						current,
 						layouts: { screen },
@@ -83,10 +79,7 @@ export default function StyleIdLayout() {
 
 						const unfocusedBound = bounds({
 							id: boundTag,
-							gestures: {
-								x,
-								y,
-							},
+							gestures: { x, y },
 						});
 
 						return {

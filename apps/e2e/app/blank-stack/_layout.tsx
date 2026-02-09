@@ -112,6 +112,18 @@ export default function BlankStackLayout() {
 				name="touch-gating"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<BlankStack.Screen
+				name="active-bounds"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="gesture-bounds"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="style-id-bounds"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
 		</BlankStack>
 	);
 }

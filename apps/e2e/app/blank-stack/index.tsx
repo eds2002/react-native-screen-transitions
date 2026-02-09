@@ -54,6 +54,21 @@ const TEST_FLOWS = [
 		title: "Touch Gating",
 		description: "Demonstrates proper touch blocking during transitions",
 	},
+	{
+		id: "active-bounds",
+		title: "Active Bounds",
+		description: "Shared element bounds animation with dynamic bound tags",
+	},
+	{
+		id: "gesture-bounds",
+		title: "Gesture Bounds",
+		description: "Bounds animation with gesture syncing and drag feedback",
+	},
+	{
+		id: "style-id-bounds",
+		title: "Style ID Bounds",
+		description: "Bounds with styleId masking for complex shared transitions",
+	},
 ];
 
 export default function BlankStackIndex() {

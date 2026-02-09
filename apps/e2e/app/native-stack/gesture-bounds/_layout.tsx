@@ -7,28 +7,22 @@ export const useGestureBoundsStore = create<{ boundTag: string }>(() => ({
 	boundTag: "",
 }));
 
-export default function GestureAssistedLayout() {
+export default function GestureBoundsLayout() {
 	const boundTag = useGestureBoundsStore((s) => s.boundTag);
 
 	return (
-		<Stack>
-			<Stack.Screen
-				name="index"
-				options={{ title: "Active Bounds", headerShown: false }}
-			/>
+		<Stack screenOptions={{ headerShown: false }}>
+			<Stack.Screen name="index" />
 			<Stack.Screen
 				name="[id]"
 				options={{
+					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical"],
 					gestureDrivesProgress: false,
-					enableTransitions: true,
 					screenStyleInterpolator: ({ bounds, current, active }) => {
 						"worklet";
 
-						/**
-						 * Bounds are designed to work between unfocused & focused screen. While this approach is okay, it realy just gives off a lazy feel. I would recommend separating the bound animations by the focused prop.
-						 */
 						const boundStyles = bounds({
 							id: boundTag,
 							gestures: {

@@ -4,6 +4,7 @@ import { memo } from "react";
 import { FlatList } from "react-native-gesture-handler";
 import Transition from "react-native-screen-transitions";
 import Page from "@/components/page";
+import { useStyleIdStore } from "./_layout";
 
 const Images = memo(() => {
 	const data = [
@@ -65,6 +66,7 @@ const Images = memo(() => {
 							backgroundColor: "#eee",
 						}}
 						onPress={() => {
+							useStyleIdStore.setState({ boundTag: id });
 							router.push({
 								pathname: "/bounds/style-id/[id]",
 								params: {

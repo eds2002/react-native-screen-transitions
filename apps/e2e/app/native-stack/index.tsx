@@ -34,6 +34,21 @@ const TEST_FLOWS = [
 		title: "Deep Link Test",
 		description: "Dynamic route for deep link testing",
 	},
+	{
+		id: "active-bounds",
+		title: "Active Bounds",
+		description: "Shared element bounds animation with dynamic bound tags",
+	},
+	{
+		id: "gesture-bounds",
+		title: "Gesture Bounds",
+		description: "Bounds animation with gesture syncing and drag feedback",
+	},
+	{
+		id: "style-id-bounds",
+		title: "Style ID Bounds",
+		description: "Bounds with styleId masking for complex shared transitions",
+	},
 ];
 
 export default function NativeStackIndex() {
