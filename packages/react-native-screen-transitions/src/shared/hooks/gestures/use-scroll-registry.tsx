@@ -17,7 +17,6 @@ import type { LayoutChangeEvent } from "react-native";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
-import type { ReanimatedScrollEvent } from "react-native-reanimated/lib/typescript/hook/commonTypes";
 import {
 	type GestureContextType,
 	type ScrollConfig,
@@ -76,7 +75,6 @@ function findGestureOwnersForAxis(
 }
 
 interface ScrollProgressHookProps {
-	onScroll?: (event: ReanimatedScrollEvent) => void;
 	onContentSizeChange?: (width: number, height: number) => void;
 	onLayout?: (event: LayoutChangeEvent) => void;
 	direction?: "vertical" | "horizontal";
@@ -156,7 +154,6 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
-			props.onScroll?.(event);
 			if (scrollConfigs.length === 0) return;
 
 			const update = (v: any) => {
