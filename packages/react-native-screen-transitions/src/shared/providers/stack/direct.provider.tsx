@@ -4,7 +4,7 @@ import type {
 	StackNavigationState,
 } from "@react-navigation/native";
 import * as React from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import type {
 	NativeStackDescriptor,
@@ -84,13 +84,6 @@ function useDirectStackValue(
 		);
 	}, [state.preloadedRoutes, describe]);
 
-	// Keep a ref to the latest descriptors so we can read them in useMemo
-	// without adding descriptors as a dependency
-	const descriptorsRef = useRef(descriptors);
-	descriptorsRef.current = descriptors;
-	const preloadedDescriptorsRef = useRef(preloadedDescriptors);
-	preloadedDescriptorsRef.current = preloadedDescriptors;
-
 	const {
 		scenes,
 		shouldShowFloatOverlay,
@@ -99,23 +92,21 @@ function useDirectStackValue(
 		allDescriptors,
 		animationMaps,
 	} = useMemo(() => {
-		const currentDescriptors = descriptorsRef.current;
-		const currentPreloaded = preloadedDescriptorsRef.current;
 		const allRoutes = state.routes.concat(state.preloadedRoutes);
 		const scenes: DirectStackScene[] = [];
 		const routeKeys: string[] = [];
 		const animationMaps: AnimationStoreMap[] = [];
 		const allDescriptors: NativeStackDescriptorMap = {
-			...currentPreloaded,
-			...currentDescriptors,
+			...preloadedDescriptors,
+			...descriptors,
 		};
 		let shouldShowFloatOverlay = false;
 
 		for (const route of allRoutes) {
 			const descriptor = allDescriptors[route.key];
 			const isPreloaded =
-				currentPreloaded[route.key] !== undefined &&
-				currentDescriptors[route.key] === undefined;
+				preloadedDescriptors[route.key] !== undefined &&
+				descriptors[route.key] === undefined;
 
 			scenes.push({ route, descriptor, isPreloaded });
 			routeKeys.push(route.key);
@@ -141,7 +132,7 @@ function useDirectStackValue(
 			allDescriptors,
 			animationMaps,
 		};
-	}, [state.routes, state.preloadedRoutes]);
+	}, [state.routes, state.preloadedRoutes, preloadedDescriptors, descriptors]);
 
 	const stackProgress = useDerivedValue(() => {
 		"worklet";
@@ -165,7 +156,6 @@ function useDirectStackValue(
 
 	const focusedIndex = state.index;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: allDescriptors is derived from scenes (same useMemo); descriptors use refs to avoid cascade from React Navigation
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
@@ -185,6 +175,7 @@ function useDirectStackValue(
 			stackProgress,
 			optimisticFocusedIndex,
 			flags,
+			allDescriptors,
 		],
 	);
 
@@ -193,8 +184,8 @@ function useDirectStackValue(
 		() => ({
 			state,
 			navigation,
-			descriptors: descriptorsRef.current,
-			preloadedDescriptors: preloadedDescriptorsRef.current,
+			descriptors,
+			preloadedDescriptors,
 			scenes,
 			focusedIndex,
 			shouldShowFloatOverlay,
@@ -204,6 +195,8 @@ function useDirectStackValue(
 		[
 			state,
 			navigation,
+			descriptors,
+			preloadedDescriptors,
 			scenes,
 			focusedIndex,
 			shouldShowFloatOverlay,

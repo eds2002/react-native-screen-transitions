@@ -1,4 +1,4 @@
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -137,14 +137,9 @@ export function _useScreenAnimation() {
 	}, [currentDescriptor?.options?.snapPoints]);
 
 	const nextRouteKey = nextDescriptor?.route?.key;
-	const nextOptionsRef = useRef(nextDescriptor?.options);
-	nextOptionsRef.current = nextDescriptor?.options;
-
-	const nextHasTransitions = useMemo(() => {
-		return nextRouteKey
-			? hasTransitionsEnabled(nextOptionsRef.current, transitionsAlwaysOn)
-			: false;
-	}, [nextRouteKey, transitionsAlwaysOn]);
+	const nextHasTransitions =
+		!!nextRouteKey &&
+		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
 
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">

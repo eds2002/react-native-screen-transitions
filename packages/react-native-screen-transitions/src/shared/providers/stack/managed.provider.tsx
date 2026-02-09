@@ -1,6 +1,6 @@
 import type { Route } from "@react-navigation/native";
 import * as React from "react";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import {
 	type DerivedValue,
 	type SharedValue,
@@ -85,11 +85,6 @@ function useManagedStackValue<
 	const { flags } = useStackCoreContext();
 	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
 
-	// Keep a ref to the latest descriptors so we can read them in useMemo
-	// without adding state.descriptors as a dependency.
-	const descriptorsRef = useRef(state.descriptors);
-	descriptorsRef.current = state.descriptors;
-
 	const {
 		scenes,
 		activeScreensLimit,
@@ -99,7 +94,7 @@ function useManagedStackValue<
 		animationMaps,
 	} = useMemo(() => {
 		const routes = state.routes;
-		const descriptors = descriptorsRef.current;
+		const descriptors = state.descriptors;
 		const scenes: BaseStackScene<TDescriptor>[] = [];
 		const routeKeys: string[] = [];
 		const backdropBehaviors: string[] = [];
@@ -150,7 +145,7 @@ function useManagedStackValue<
 			shouldShowFloatOverlay,
 			animationMaps,
 		};
-	}, [state.routes]);
+	}, [state.routes, state.descriptors]);
 
 	// Aggregated stack progress from LOCAL routes (includes closing routes)
 	const stackProgress = useDerivedValue(() => {
@@ -184,10 +179,7 @@ function useManagedStackValue<
 			flags,
 			routeKeys,
 			routes: state.routes as Route<string>[],
-			descriptors: descriptorsRef.current as Record<
-				string,
-				BaseStackDescriptor
-			>,
+			descriptors: state.descriptors as Record<string, BaseStackDescriptor>,
 			scenes: scenes as BaseStackScene[],
 			focusedIndex,
 			stackProgress,
@@ -196,6 +188,7 @@ function useManagedStackValue<
 		[
 			routeKeys,
 			state.routes,
+			state.descriptors,
 			scenes,
 			focusedIndex,
 			stackProgress,
@@ -209,7 +202,7 @@ function useManagedStackValue<
 		() => ({
 			routes: state.routes,
 			focusedIndex,
-			descriptors: descriptorsRef.current,
+			descriptors: state.descriptors,
 			closingRouteKeysShared: closingRouteKeys.shared,
 			activeScreensLimit,
 			handleCloseRoute,
@@ -221,6 +214,7 @@ function useManagedStackValue<
 		}),
 		[
 			state.routes,
+			state.descriptors,
 			focusedIndex,
 			closingRouteKeys.shared,
 			activeScreensLimit,
