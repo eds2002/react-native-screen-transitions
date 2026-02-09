@@ -138,6 +138,7 @@ export function _useScreenAnimation() {
 
 	const nextRouteKey = nextDescriptor?.route?.key;
 	const nextOptionsRef = useRef(nextDescriptor?.options);
+	nextOptionsRef.current = nextDescriptor?.options;
 
 	const nextHasTransitions = useMemo(() => {
 		return nextRouteKey
