@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useCallback, useMemo } from "react";
 import { useWindowDimensions, type View } from "react-native";
 import {
 	type AnimatedRef,
@@ -44,35 +44,38 @@ const { LayoutAnchorProvider, useLayoutAnchorContext } = createProvider(
 	({ anchorRef, children }) => {
 		const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
-		const correctMeasurement = (
-			measured: MeasuredDimensions,
-		): MeasuredDimensions => {
-			"worklet";
-			const anchor = measure(anchorRef);
-			if (!anchor) return measured;
+		const correctMeasurement = useCallback(
+			(measured: MeasuredDimensions): MeasuredDimensions => {
+				"worklet";
+				const anchor = measure(anchorRef);
+				if (!anchor) return measured;
 
-			// Compute scale factor by comparing anchor size to expected screen size.
-			// Anchor should be full-screen (absoluteFill), so any difference is from scale.
-			const scaleX = anchor.width > 0 ? anchor.width / screenWidth : 1;
-			const scaleY = anchor.height > 0 ? anchor.height / screenHeight : 1;
+				// Compute scale factor by comparing anchor size to expected screen size.
+				// Anchor should be full-screen (absoluteFill), so any difference is from scale.
+				const scaleX = anchor.width > 0 ? anchor.width / screenWidth : 1;
+				const scaleY = anchor.height > 0 ? anchor.height / screenHeight : 1;
 
-			// Get element position relative to anchor (removes translation)
-			const relativeX = measured.pageX - anchor.pageX;
-			const relativeY = measured.pageY - anchor.pageY;
+				// Get element position relative to anchor (removes translation)
+				const relativeX = measured.pageX - anchor.pageX;
+				const relativeY = measured.pageY - anchor.pageY;
 
-			// Reverse scale: divide relative position and dimensions by scale factor
-			return {
-				x: measured.x,
-				y: measured.y,
-				width: scaleX !== 1 ? measured.width / scaleX : measured.width,
-				height: scaleY !== 1 ? measured.height / scaleY : measured.height,
-				pageX: scaleX !== 1 ? relativeX / scaleX : relativeX,
-				pageY: scaleY !== 1 ? relativeY / scaleY : relativeY,
-			};
-		};
+				// Reverse scale: divide relative position and dimensions by scale factor
+				return {
+					x: measured.x,
+					y: measured.y,
+					width: scaleX !== 1 ? measured.width / scaleX : measured.width,
+					height: scaleY !== 1 ? measured.height / scaleY : measured.height,
+					pageX: scaleX !== 1 ? relativeX / scaleX : relativeX,
+					pageY: scaleY !== 1 ? relativeY / scaleY : relativeY,
+				};
+			},
+			[anchorRef, screenWidth, screenHeight],
+		);
+
+		const value = useMemo(() => ({ correctMeasurement }), [correctMeasurement]);
 
 		return {
-			value: { correctMeasurement },
+			value,
 			children,
 		};
 	},

@@ -123,18 +123,22 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		const setIsTouched = () => {
 			"worklet";
 			for (const scrollConfig of scrollConfigs) {
-				if (scrollConfig.value) {
-					scrollConfig.value = { ...scrollConfig.value, isTouched: true };
-				}
+				scrollConfig.modify((v) => {
+					"worklet";
+					if (v) v.isTouched = true;
+					return v;
+				});
 			}
 		};
 
 		const clearIsTouched = () => {
 			"worklet";
 			for (const scrollConfig of scrollConfigs) {
-				if (scrollConfig.value) {
-					scrollConfig.value = { ...scrollConfig.value, isTouched: false };
-				}
+				scrollConfig.modify((v) => {
+					"worklet";
+					if (v) v.isTouched = false;
+					return v;
+				});
 			}
 		};
 

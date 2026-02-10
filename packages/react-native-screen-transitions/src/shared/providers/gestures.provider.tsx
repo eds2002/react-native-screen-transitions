@@ -159,10 +159,10 @@ export const {
 } = createProvider("ScreenGesture", { guarded: false })<
 	ScreenGestureProviderProps,
 	GestureContextType
->(({ children }) => {
+>(({ children }): { value: GestureContextType; children: React.ReactNode } => {
 	const { current } = useKeys();
 	const { flags } = useStackCoreContext();
-	const ancestorContext = useGestureContext();
+	const ancestorContext: GestureContextType | null = useGestureContext();
 
 	const hasGestures = current.options.gestureEnabled === true;
 	const isIsolated = flags.STACK_TYPE === StackType.COMPONENT;
@@ -208,17 +208,30 @@ export const {
 			isIsolated,
 		});
 
-	const value: GestureContextType = {
-		panGesture,
-		panGestureRef,
-		scrollConfig,
-		gestureAnimationValues,
-		ancestorContext,
-		gestureEnabled: hasGestures,
-		isIsolated,
-		claimedDirections,
-		childDirectionClaims,
-	};
+	const value = useMemo<GestureContextType>(
+		() => ({
+			panGesture,
+			panGestureRef,
+			scrollConfig,
+			gestureAnimationValues,
+			ancestorContext,
+			gestureEnabled: hasGestures,
+			isIsolated,
+			claimedDirections,
+			childDirectionClaims,
+		}),
+		[
+			panGesture,
+			panGestureRef,
+			scrollConfig,
+			gestureAnimationValues,
+			ancestorContext,
+			hasGestures,
+			isIsolated,
+			claimedDirections,
+			childDirectionClaims,
+		],
+	);
 
 	return {
 		value,
