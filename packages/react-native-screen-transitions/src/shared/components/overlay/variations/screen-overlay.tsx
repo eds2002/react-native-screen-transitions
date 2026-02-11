@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
+import { useOptimisticFocusedIndex } from "../../../hooks/navigation/use-optimistic-focused-index";
 import {
 	type StackDescriptor,
 	type StackScene,
@@ -7,6 +8,7 @@ import {
 } from "../../../hooks/navigation/use-stack";
 import { useKeys } from "../../../providers/screen/keys.provider";
 import type { OverlayProps } from "../../../types/overlay.types";
+import { isScreenOverlayVisible } from "../../../utils/overlay/visibility";
 import { OverlayHost } from "./overlay-host";
 
 type OverlayScreenState = Omit<
@@ -27,7 +29,11 @@ type OverlayScreenState = Omit<
  */
 export function ScreenOverlay() {
 	const { current } = useKeys<StackDescriptor>();
-	const { flags, routes, focusedIndex, routeKeys } = useStack();
+	const { flags, routes, optimisticFocusedIndex, routeKeys } = useStack();
+	const focusedIndex = useOptimisticFocusedIndex(
+		optimisticFocusedIndex,
+		routeKeys.length,
+	);
 
 	const options = current.options;
 
@@ -60,7 +66,7 @@ export function ScreenOverlay() {
 		return null;
 	}
 
-	if (!options.overlayShown || options.overlayMode !== "screen") {
+	if (!isScreenOverlayVisible(options)) {
 		return null;
 	}
 

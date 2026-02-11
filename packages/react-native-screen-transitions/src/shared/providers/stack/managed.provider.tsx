@@ -22,6 +22,7 @@ import type {
 	BaseStackScene,
 	BaseStackState,
 } from "../../types/stack.types";
+import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 import { useLocalRoutes } from "./helpers/use-local-routes";
 
@@ -115,8 +116,7 @@ function useManagedStackValue<
 			animationMaps[i] = AnimationStore.getAll(route.key);
 
 			if (!shouldShowFloatOverlay) {
-				shouldShowFloatOverlay =
-					options?.overlayMode === "float" && options?.overlayShown === true;
+				shouldShowFloatOverlay = isFloatOverlayVisible(options);
 			}
 
 			if (!stopLimit) {

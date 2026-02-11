@@ -1,6 +1,5 @@
 import type { Route } from "@react-navigation/native";
 import { useCallback, useMemo } from "react";
-import { useDerivedValue } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../animation/snap-to";
 import {
 	type BaseDescriptor,
@@ -8,7 +7,7 @@ import {
 } from "../../providers/screen/keys.provider";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
-import { useSharedValueState } from "../reanimated/use-shared-value-state";
+import { useOptimisticFocusedIndex } from "./use-optimistic-focused-index";
 import { type StackContextValue, useStack } from "./use-stack";
 
 export interface ScreenState<
@@ -74,11 +73,9 @@ export function useScreenState<
 		[routeKeys, current.route.key],
 	);
 
-	const focusedIndex = useSharedValueState(
-		useDerivedValue(() => {
-			const globalIndex = optimisticFocusedIndex.get();
-			return Math.max(0, Math.min(globalIndex, routeKeys.length - 1));
-		}),
+	const focusedIndex = useOptimisticFocusedIndex(
+		optimisticFocusedIndex,
+		routeKeys.length,
 	);
 
 	const focusedScene = useMemo(() => {

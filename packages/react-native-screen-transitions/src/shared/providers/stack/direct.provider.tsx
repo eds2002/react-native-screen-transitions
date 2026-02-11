@@ -20,6 +20,7 @@ import {
 	type AnimationStoreMap,
 } from "../../stores/animation.store";
 import { HistoryStore } from "../../stores/history.store";
+import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 
 export interface DirectStackScene {
@@ -116,8 +117,7 @@ function useDirectStackValue(
 				const options = descriptor.options;
 				if (
 					options?.enableTransitions === true &&
-					options?.overlayMode === "float" &&
-					options?.overlayShown === true
+					isFloatOverlayVisible(options)
 				) {
 					shouldShowFloatOverlay = true;
 				}

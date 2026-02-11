@@ -10,6 +10,7 @@ import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
+import { isScreenOverlayVisible } from "../../shared/utils/overlay/visibility";
 import type {
 	BlankStackDescriptor,
 	BlankStackNavigationHelpers,
@@ -31,7 +32,7 @@ const SceneView = React.memo(function SceneView({
 	return (
 		<NavigationContext.Provider value={navigation}>
 			<NavigationRouteContext.Provider value={route}>
-				{descriptor.options.overlayMode === "screen" && <Overlay.Screen />}
+				{isScreenOverlayVisible(descriptor.options) && <Overlay.Screen />}
 				{render()}
 			</NavigationRouteContext.Provider>
 		</NavigationContext.Provider>
