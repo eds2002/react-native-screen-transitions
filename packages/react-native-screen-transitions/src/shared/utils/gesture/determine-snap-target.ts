@@ -43,10 +43,21 @@ export function determineSnapTarget({
 	// Project where we'd end up with velocity
 	const projectedProgress = currentProgress - velocityInProgress;
 
+	const sanitizedSnapPoints = snapPoints.filter((point) =>
+		canDismiss ? Number.isFinite(point) : Number.isFinite(point) && point > 0,
+	);
+
 	// Build all possible targets: dismiss (0) only if allowed, plus all snap points
-	const allTargets = canDismiss
-		? [0, ...snapPoints].sort((a, b) => a - b)
-		: [...snapPoints].sort((a, b) => a - b);
+	const allTargets = Array.from(
+		new Set(canDismiss ? [0, ...sanitizedSnapPoints] : sanitizedSnapPoints),
+	).sort((a, b) => a - b);
+
+	if (allTargets.length === 0) {
+		return {
+			targetProgress: currentProgress,
+			shouldDismiss: false,
+		};
+	}
 
 	// Find the target whose zone contains the projected progress
 	// Zones are split at midpoints between adjacent targets
@@ -74,6 +85,6 @@ export function determineSnapTarget({
 
 	return {
 		targetProgress,
-		shouldDismiss: targetProgress === 0,
+		shouldDismiss: canDismiss && targetProgress === 0,
 	};
 }

@@ -127,6 +127,18 @@ describe("determineSnapTarget", () => {
 			expect(result.shouldDismiss).toBe(false);
 		});
 
+		it("ignores zero snap points when canDismiss is false", () => {
+			const result = determineSnapTarget({
+				currentProgress: 0.1,
+				snapPoints: [0, 0.3, 0.6, 1],
+				velocity: 1000,
+				dimension,
+				canDismiss: false,
+			});
+			expect(result.targetProgress).toBe(0.3);
+			expect(result.shouldDismiss).toBe(false);
+		});
+
 		it("defaults canDismiss to true", () => {
 			const result = determineSnapTarget({
 				currentProgress: 0.1,
@@ -149,6 +161,18 @@ describe("determineSnapTarget", () => {
 	});
 
 	describe("edge cases", () => {
+		it("returns current progress when no valid targets exist", () => {
+			const result = determineSnapTarget({
+				currentProgress: 0.42,
+				snapPoints: [],
+				velocity: 1200,
+				dimension,
+				canDismiss: false,
+			});
+			expect(result.targetProgress).toBe(0.42);
+			expect(result.shouldDismiss).toBe(false);
+		});
+
 		it("handles single snap point", () => {
 			const result = determineSnapTarget({
 				currentProgress: 0.3,

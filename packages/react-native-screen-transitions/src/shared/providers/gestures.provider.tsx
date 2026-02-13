@@ -22,6 +22,7 @@ import type { ClaimedDirections, Direction } from "../types/ownership.types";
 import { StackType } from "../types/stack.types";
 import createProvider from "../utils/create-provider";
 import { computeClaimedDirections } from "../utils/gesture/compute-claimed-directions";
+import { validateSnapPoints } from "../utils/gesture/validate-snap-points";
 import { useKeys } from "./screen/keys.provider";
 import { useStackCoreContext } from "./stack/core.provider";
 
@@ -163,25 +164,38 @@ export const {
 	const { current } = useKeys();
 	const { flags } = useStackCoreContext();
 	const ancestorContext: GestureContextType | null = useGestureContext();
-
-	const hasGestures = current.options.gestureEnabled === true;
 	const isIsolated = flags.STACK_TYPE === StackType.COMPONENT;
+	const routeKey = current.route.key;
 
-	const hasSnapPoints =
-		Array.isArray(current.options.snapPoints) &&
-		current.options.snapPoints.length > 0;
+	const isFirstScreen = useNavigationState((state) => {
+		const index = state.routes.findIndex((route) => route.key === routeKey);
+		return index === 0;
+	});
+
+	const canDismiss = Boolean(
+		isFirstScreen ? false : current.options.gestureEnabled,
+	);
+
+	const { hasSnapPoints } = useMemo(
+		() =>
+			validateSnapPoints({
+				snapPoints: current.options.snapPoints,
+				canDismiss,
+			}),
+		[current.options.snapPoints, canDismiss],
+	);
+
+	const gestureEnabled = canDismiss || hasSnapPoints;
 
 	const claimedDirections = useMemo(
 		() =>
 			computeClaimedDirections(
-				hasGestures,
+				gestureEnabled,
 				current.options.gestureDirection,
 				hasSnapPoints,
 			),
-		[hasGestures, current.options.gestureDirection, hasSnapPoints],
+		[gestureEnabled, current.options.gestureDirection, hasSnapPoints],
 	);
-
-	const routeKey = current.route.key;
 
 	// Check if this screen is the current (topmost) route in its navigator
 	const isCurrentRoute = useNavigationState(
@@ -215,7 +229,7 @@ export const {
 			scrollConfig,
 			gestureAnimationValues,
 			ancestorContext,
-			gestureEnabled: hasGestures,
+			gestureEnabled,
 			isIsolated,
 			claimedDirections,
 			childDirectionClaims,
@@ -226,7 +240,7 @@ export const {
 			scrollConfig,
 			gestureAnimationValues,
 			ancestorContext,
-			hasGestures,
+			gestureEnabled,
 			isIsolated,
 			claimedDirections,
 			childDirectionClaims,

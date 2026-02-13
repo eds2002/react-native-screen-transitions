@@ -22,7 +22,17 @@ export function findCollapseTarget(
 ): FindCollapseTargetResult {
 	"worklet";
 
-	const sorted = [...snapPoints].sort((a, b) => a - b);
+	const normalized = snapPoints.filter((point) =>
+		canDismiss ? Number.isFinite(point) : Number.isFinite(point) && point > 0,
+	);
+
+	if (normalized.length === 0) {
+		return canDismiss
+			? { target: 0, shouldDismiss: true }
+			: { target: currentProgress, shouldDismiss: false };
+	}
+
+	const sorted = [...normalized].sort((a, b) => a - b);
 	const minSnap = sorted[0];
 
 	// Find next lower snap point

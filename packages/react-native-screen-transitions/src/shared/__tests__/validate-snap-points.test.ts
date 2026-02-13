@@ -92,9 +92,10 @@ describe("validateSnapPoints", () => {
 	describe("edge cases", () => {
 		it("handles empty array", () => {
 			const result = validateSnapPoints({ snapPoints: [] });
-			// Empty array is falsy for snap points
-			expect(result.hasSnapPoints).toBe(true); // Array exists but is empty
+			expect(result.hasSnapPoints).toBe(false);
 			expect(result.snapPoints).toEqual([]);
+			expect(result.minSnapPoint).toBe(-1);
+			expect(result.maxSnapPoint).toBe(-1);
 		});
 
 		it("handles snap points at 0", () => {
@@ -104,6 +105,27 @@ describe("validateSnapPoints", () => {
 			});
 			expect(result.minSnapPoint).toBe(0);
 			expect(result.snapPoints).toEqual([0, 0.5, 1]);
+		});
+
+		it("filters zero snap points when dismiss is disabled", () => {
+			const result = validateSnapPoints({
+				snapPoints: [0, 0.5, 1],
+				canDismiss: false,
+			});
+			expect(result.snapPoints).toEqual([0.5, 1]);
+			expect(result.minSnapPoint).toBe(0.5);
+		});
+
+		it("treats all-zero snap points as disabled when dismiss is disabled", () => {
+			const result = validateSnapPoints({
+				snapPoints: [0],
+				canDismiss: false,
+			});
+			expect(result.hasSnapPoints).toBe(false);
+			expect(result.snapPoints).toEqual([]);
+
+			expect(result.minSnapPoint).toBe(-1);
+			expect(result.maxSnapPoint).toBe(-1);
 		});
 
 		it("handles duplicate snap points", () => {

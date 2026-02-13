@@ -12,6 +12,7 @@ import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
 import type { ClaimedDirections, Direction } from "../../types/ownership.types";
 import { claimsAnyDirection } from "../../utils/gesture/compute-claimed-directions";
 import { resolveOwnership } from "../../utils/gesture/resolve-ownership";
+import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
 import { useScreenGestureHandlers } from "./use-screen-gesture-handlers";
 
 const DIRECTIONS: Direction[] = [
@@ -94,7 +95,10 @@ export const useBuildGestures = ({
 	const canDismiss = Boolean(
 		isFirstScreen ? false : current.options.gestureEnabled,
 	);
-	const hasSnapPoints = Array.isArray(snapPoints) && snapPoints.length > 0;
+	const { hasSnapPoints } = useMemo(
+		() => validateSnapPoints({ snapPoints, canDismiss }),
+		[snapPoints, canDismiss],
+	);
 	const gestureEnabled = canDismiss || hasSnapPoints;
 
 	const ownershipStatus = useMemo(

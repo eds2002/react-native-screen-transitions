@@ -77,7 +77,10 @@ export type ScreenTransitionConfig = {
 	transitionSpec?: TransitionSpec;
 
 	/**
-	 * Whether the gesture is enabled.
+	 * Controls whether swipe-to-dismiss is enabled.
+	 *
+	 * For screens with `snapPoints`, gesture-driven snapping between non-dismiss
+	 * snap points remains available even when this is `false`.
 	 */
 	gestureEnabled?: boolean;
 
