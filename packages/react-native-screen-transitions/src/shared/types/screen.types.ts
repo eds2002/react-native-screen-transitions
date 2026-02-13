@@ -210,4 +210,17 @@ export type ScreenTransitionConfig = {
 	 * @default 'block' (or 'passthrough' for component stacks)
 	 */
 	backdropBehavior?: "block" | "passthrough" | "dismiss" | "collapse";
+
+	/**
+	 * Custom component to render as the backdrop layer.
+	 * When provided, replaces the default backdrop entirely — including press handling.
+	 *
+	 * Use `useScreenAnimation()` inside the component to access animation values.
+	 * Use your navigation method of choice (e.g. `router.back()`) to handle dismissal.
+	 *
+	 * `backdropBehavior` still controls container-level pointer events when this is set.
+	 *
+	 * @default undefined
+	 */
+	backdropComponent?: React.FC;
 };

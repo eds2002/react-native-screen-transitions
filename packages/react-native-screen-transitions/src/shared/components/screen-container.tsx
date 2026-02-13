@@ -25,6 +25,8 @@ export const ScreenContainer = memo(({ children }: Props) => {
 	const { pointerEvents, backdropBehavior } = useBackdropPointerEvents();
 	const gestureContext = useGestureContext();
 
+	const BackdropComponent = current.options.backdropComponent;
+
 	const isBackdropActive =
 		backdropBehavior === "dismiss" || backdropBehavior === "collapse";
 
@@ -101,15 +103,19 @@ export const ScreenContainer = memo(({ children }: Props) => {
 
 	return (
 		<View style={styles.container} pointerEvents={pointerEvents}>
-			<Pressable
-				style={StyleSheet.absoluteFillObject}
-				pointerEvents={isBackdropActive ? "auto" : "none"}
-				onPress={isBackdropActive ? handleBackdropPress : undefined}
-			>
-				<Animated.View
-					style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
-				/>
-			</Pressable>
+			{BackdropComponent ? (
+				<BackdropComponent />
+			) : (
+				<Pressable
+					style={StyleSheet.absoluteFillObject}
+					pointerEvents={isBackdropActive ? "auto" : "none"}
+					onPress={isBackdropActive ? handleBackdropPress : undefined}
+				>
+					<Animated.View
+						style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
+					/>
+				</Pressable>
+			)}
 			<GestureDetector gesture={gestureContext!.panGesture}>
 				<Animated.View
 					style={[styles.content, animatedContentStyle]}
