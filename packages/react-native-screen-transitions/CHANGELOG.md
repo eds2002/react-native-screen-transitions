@@ -1,3 +1,49 @@
+# Changelog
+
+# [3.3.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.3.0-rc.2...v3.3.0-rc.3) (2026-02-14)
+
+
+### Bug Fixes
+
+* bug fix for spamming multiple screens ([dc87378](https://github.com/eds2002/react-native-screen-transitions/commit/dc87378431eeb0083df276179f213179a1db4a5c))
+* **overlay:** default float overlays and sync optimistic focus state ([a4d1c5d](https://github.com/eds2002/react-native-screen-transitions/commit/a4d1c5d779e74bd93b363c6b7f087b2a28c73564))
+* **snap:** prevent ancestor fallback and invalid targets in no dismiss snap flows ([5c9d7fc](https://github.com/eds2002/react-native-screen-transitions/commit/5c9d7fcf2fc6adde70da420af8e0954205011272))
+
+
+### Features
+
+* backdrop component ([d1d3f41](https://github.com/eds2002/react-native-screen-transitions/commit/d1d3f4154beb03795341f0ca8f1b074590cb0c97))
+
+
+### Performance Improvements
+
+* **overlay:** reduce JS coordination overhead during push transitions ([1e37d75](https://github.com/eds2002/react-native-screen-transitions/commit/1e37d75648225811f3c288ba19ac0b9200eb211f))
+
+
+
+# [3.3.0-rc.3](https://github.com/eds2002/react-native-screen-transitions/compare/v3.3.0-rc.2...v3.3.0-rc.3) (2026-02-09)
+
+
+### Bug Fixes
+
+* **bounds:** fix crashing when using remeasureOnFocus prop ([91c5d3b](https://github.com/eds2002/react-native-screen-transitions/commit/91c5d3b5fafb0520572d9234fc5a2a47a2d93a4b))
+* **bounds:** refresh stale source bounds on refocus and honor custom target overrides ([c6b2471](https://github.com/eds2002/react-native-screen-transitions/commit/c6b2471777017a8990f698b9df377db081d2fe79))
+* options ref not updating correctly ([510b4b1](https://github.com/eds2002/react-native-screen-transitions/commit/510b4b14b0882e83b80e786025e1bc8515626ff9))
+* **scroll:** compose user onScroll handler instead of calling it directly ([4b05328](https://github.com/eds2002/react-native-screen-transitions/commit/4b053283281fa060cc8290898f7016839cd5de4c))
+* **snap:** make snapTo work in nested layout routes ([3c2bce8](https://github.com/eds2002/react-native-screen-transitions/commit/3c2bce8e2c7fe591904286aa5ae8007e0f8e4d05))
+* **transitions:** correct optimistic focused index for rapid dismiss chains ([b0a2088](https://github.com/eds2002/react-native-screen-transitions/commit/b0a208872963ed739c6c07c1db143e6452bf9845))
+
+
+### Features
+
+* build SET examples with bounds api for native stack and blank stack ([c2fd34a](https://github.com/eds2002/react-native-screen-transitions/commit/c2fd34a39bd2ba048c4271d3f96b4be0ebfd347c))
+* **snap:** add gestureSnapLocked with comprehensive bottom-sheet e2e scenarios ([f59b056](https://github.com/eds2002/react-native-screen-transitions/commit/f59b056565b6db6a8ea7afaa2e1a079976b8f8fe))
+
+
+### Performance Improvements
+
+* stabilize context memoization to prevent rerender cascades from unstable descriptors ([fbc6776](https://github.com/eds2002/react-native-screen-transitions/commit/fbc6776ba032dcd6411b934ea7da1ea09f89b456))
+
 # Change Log
 
 ## 3.3.0-rc.3
