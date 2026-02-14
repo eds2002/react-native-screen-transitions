@@ -22,7 +22,13 @@ import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
 type BoundaryId = string | number;
 
 export interface BoundaryProps extends Omit<ViewProps, "id"> {
-	namespace: string;
+	/**
+	 * Optional group name for collection/list scenarios.
+	 * When provided, boundaries are tracked as a group and the active member
+	 * re-measures automatically when focus changes within the group.
+	 * The internal tag becomes `group:id`.
+	 */
+	group?: string;
 	id: BoundaryId;
 }
 
@@ -30,6 +36,7 @@ interface MaybeMeasureAndStoreParams {
 	shouldSetSource?: boolean;
 	shouldSetDestination?: boolean;
 	shouldUpdateSource?: boolean;
+	shouldUpdateDestination?: boolean;
 }
 
 /**
@@ -180,18 +187,57 @@ const useFocusMeasurement = (params: {
 };
 
 export const buildBoundaryMatchKey = (
-	namespace: string,
+	group: string | undefined,
 	id: BoundaryId,
-): string => `${namespace}:${id}`;
+): string => (group ? `${group}:${id}` : String(id));
+
+/**
+ * Watches the group's active id in the BoundStore.
+ * When this boundary becomes the active member of its group,
+ * re-measures itself and updates the link destination with fresh bounds.
+ * This handles the case where a boundary scrolled into view after initial mount
+ * (e.g., paging ScrollView in a detail screen).
+ */
+const useGroupActiveMeasurement = (params: {
+	group: string | undefined;
+	id: BoundaryId;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const { group, id, maybeMeasureAndStore } = params;
+	const idStr = String(id);
+
+	const allGroups = BoundStore.getGroups();
+
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			if (!group) return null;
+			return allGroups.value;
+		},
+		(groups, previousGroups) => {
+			"worklet";
+			if (!groups || !group) return;
+
+			const activeGroupActiveId = groups[group]?.activeId;
+			if (
+				activeGroupActiveId === idStr &&
+				activeGroupActiveId !== previousGroups?.[group]?.activeId
+			) {
+				maybeMeasureAndStore({ shouldUpdateDestination: true });
+			}
+		},
+		[group, idStr, maybeMeasureAndStore],
+	);
+};
 
 const BoundaryComponent = ({
-	namespace,
+	group,
 	id,
 	style,
 	onLayout,
 	...rest
 }: BoundaryProps) => {
-	const sharedBoundTag = buildBoundaryMatchKey(namespace, id);
+	const sharedBoundTag = buildBoundaryMatchKey(group, id);
 	const animatedRef = useAnimatedRef<View>();
 
 	const { current } = useKeys();
@@ -211,6 +257,7 @@ const BoundaryComponent = ({
 			shouldSetSource,
 			shouldSetDestination,
 			shouldUpdateSource,
+			shouldUpdateDestination,
 		}: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
 
@@ -256,20 +303,25 @@ const BoundaryComponent = ({
 				);
 			}
 
-			/**
-			 * Will try to figure out a better way to update our source,
-			 * this is very important for scenarios where we may want to measure again incase this view was in a scrollview
-			 * scenario, etc.
-			 */
-			// if (shouldUpdateSource) {
-			// 	BoundStore.updateLinkSource(
-			// 		sharedBoundTag,
-			// 		currentScreenKey,
-			// 		correctedMeasured,
-			// 		preparedStyles,
-			// 		ancestorKeys,
-			// 	);
-			// }
+			if (shouldUpdateSource) {
+				BoundStore.updateLinkSource(
+					sharedBoundTag,
+					currentScreenKey,
+					correctedMeasured,
+					preparedStyles,
+					ancestorKeys,
+				);
+			}
+
+			if (shouldUpdateDestination) {
+				BoundStore.updateLinkDestination(
+					sharedBoundTag,
+					currentScreenKey,
+					correctedMeasured,
+					preparedStyles,
+					ancestorKeys,
+				);
+			}
 
 			if (shouldSetDestination) {
 				BoundStore.setLinkDestination(
@@ -297,7 +349,16 @@ const BoundaryComponent = ({
 		maybeMeasureAndStore,
 	});
 
-	useFocusMeasurement({
+	/**
+	 * We'll have to figure out a more better way of handling this lol, this causes some ugly cases.
+	 */
+	// useFocusMeasurement({
+	// 	maybeMeasureAndStore,
+	// });
+
+	useGroupActiveMeasurement({
+		group,
+		id,
 		maybeMeasureAndStore,
 	});
 

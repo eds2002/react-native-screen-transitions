@@ -1,28 +1,67 @@
 import { useLocalSearchParams } from "expo-router";
+import { useRef } from "react";
+import type {
+	NativeScrollEvent,
+	NativeSyntheticEvent,
+	ScrollView,
+} from "react-native";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import Animated, { runOnUI } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
-import { BOUNDARY_ID, BOUNDARY_NAMESPACE } from "./constants";
+import { activeBoundaryId, BOUNDARY_GROUP, ITEMS } from "./constants";
 
 export default function BoundsDetail() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const { width } = useWindowDimensions();
+	const scrollRef = useRef<ScrollView>(null);
+
+	const initialIndex = ITEMS.findIndex((item) => item.id === id);
+	const itemSize = width * 0.85;
+
+	const handleMomentumScrollEnd = (
+		event: NativeSyntheticEvent<NativeScrollEvent>,
+	) => {
+		const offsetX = event.nativeEvent.contentOffset.x;
+		const pageIndex = Math.round(offsetX / width);
+		const item = ITEMS[pageIndex];
+
+		activeBoundaryId.value = item.id;
+	};
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
-			<ScreenHeader title="Boundary Detail" subtitle={id ?? "detail"} />
+		<SafeAreaView style={styles.container} edges={[]}>
+			<ScreenHeader title="Boundary Detail" subtitle={`Active: ${id}`} />
 			<View style={styles.content}>
-				<Transition.Boundary
-					namespace={BOUNDARY_NAMESPACE}
-					id={BOUNDARY_ID}
-					style={[
-						styles.destination,
-						{ width: width * 0.85, height: width * 0.85 },
-					]}
+				<Animated.ScrollView
+					ref={scrollRef as any}
+					horizontal
+					pagingEnabled
+					showsHorizontalScrollIndicator={false}
+					contentOffset={{ x: initialIndex * width, y: 0 }}
+					onMomentumScrollEnd={handleMomentumScrollEnd}
+					style={styles.scrollView}
 				>
-					<Text style={styles.destinationText}>Shared Boundary</Text>
-				</Transition.Boundary>
+					{ITEMS.map((item) => (
+						<View key={item.id} style={[styles.page, { width }]}>
+							<Transition.Boundary
+								group={BOUNDARY_GROUP}
+								id={item.id}
+								style={[
+									styles.destination,
+									{
+										width: itemSize,
+										height: itemSize,
+										backgroundColor: item.color,
+									},
+								]}
+							>
+								<Text style={styles.destinationText}>{item.label}</Text>
+							</Transition.Boundary>
+						</View>
+					))}
+				</Animated.ScrollView>
 			</View>
 		</SafeAreaView>
 	);
@@ -31,23 +70,26 @@ export default function BoundsDetail() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		// backgroundColor: "#121212",
-		opacity: 0.5,
 	},
 	content: {
+		flex: 1,
+	},
+	scrollView: {
+		flex: 1,
+	},
+	page: {
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	destination: {
 		borderRadius: 24,
-		backgroundColor: "#4f7cff",
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	destinationText: {
 		color: "#fff",
 		fontWeight: "700",
-		fontSize: 18,
+		fontSize: 48,
 	},
 });

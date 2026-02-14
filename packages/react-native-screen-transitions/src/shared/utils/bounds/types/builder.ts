@@ -80,8 +80,17 @@ export type BoundsReturnType<T extends BoundsBuilderOptions> =
 export type BoundsBuilderOptions = {
 	/**
 	 * The ID of the bound to compute bounds for. If not provided, uses the active bound ID.
+	 * When `group` is also provided, this is the member id within the group (not the combined tag).
 	 */
 	id: string;
+
+	/**
+	 * Optional group name for collection/list scenarios.
+	 * When provided, boundaries are tracked as a group and the active member id
+	 * is managed automatically. The internal tag becomes `group:id`.
+	 * Without this, `id` is used directly as the tag (backward compatible).
+	 */
+	group?: string;
 
 	/**
 	 * Whether the bound should target the screen or the bound.

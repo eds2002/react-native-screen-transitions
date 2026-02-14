@@ -30,7 +30,6 @@ export {
 	type ScreenState,
 	useScreenState,
 } from "./hooks/navigation/use-screen-state";
-
 export type {
 	AnimationConfig,
 	BoundEntry,

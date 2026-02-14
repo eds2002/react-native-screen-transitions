@@ -29,6 +29,17 @@ type TagState = {
 
 const registry = makeMutable<Record<TagID, TagState>>({});
 
+/**
+ * Group registry — tracks the currently-active boundary id per group.
+ * Used for collection/list scenarios where multiple boundaries share a group
+ * and the active member can change (e.g., scrolling a pager in a detail screen).
+ */
+type GroupState = {
+	activeId: string;
+};
+
+const groups = makeMutable<Record<string, GroupState>>({});
+
 function registerSnapshot(
 	tag: TagID,
 	screenKey: ScreenKey,
@@ -222,6 +233,93 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
 }
 
 /**
+ * Set the currently-active boundary id for a group.
+ * Called by the bounds accessor when a new id is requested for a group.
+ */
+function setGroupActiveId(group: string, id: string) {
+	"worklet";
+	// IMPORTANT: Use direct .value assignment (not .modify) to ensure
+	// useAnimatedReaction properly detects the change. .modify() mutates
+	// in-place which doesn't reliably trigger Reanimated's dependency tracking.
+	groups.value = { ...groups.value, [group]: { activeId: id } };
+}
+
+/**
+ * Get the currently-active boundary id for a group.
+ * Returns null if the group has no tracked active id.
+ */
+function getGroupActiveId(group: string): string | null {
+	"worklet";
+	return groups.value[group]?.activeId ?? null;
+}
+function getGroups() {
+	"worklet";
+	return groups;
+}
+
+/**
+ * Update the destination bounds of an existing link.
+ * Mirror of updateLinkSource — finds the most recent link for a tag where
+ * the destination matches the given screen key and updates its bounds.
+ * Also handles the case where destination was null (measure failed at mount).
+ */
+function updateLinkDestination(
+	tag: TagID,
+	screenKey: ScreenKey,
+	bounds: MeasuredDimensions,
+	styles: StyleProps = {},
+	ancestorKeys?: ScreenKey[],
+) {
+	"worklet";
+	registry.modify((state: any) => {
+		"worklet";
+		const stack = state[tag]?.linkStack;
+		if (!stack || stack.length === 0) return state;
+
+		let targetIndex = -1;
+
+		// Prefer the most recent completed link where destination matches.
+		// NOTE: matchesScreenKey is inlined here to avoid a Reanimated
+		// workletization crash caused by nested worklet function calls
+		// inside registry.modify callbacks.
+		for (let i = stack.length - 1; i >= 0; i--) {
+			const link = stack[i];
+			const dest = link.destination;
+			const destMatches =
+				dest &&
+				(dest.screenKey === screenKey ||
+					(dest.ancestorKeys?.includes(screenKey) ?? false));
+			if (destMatches) {
+				targetIndex = i;
+				break;
+			}
+		}
+
+		// Fallback: find a link where destination is null (measure failed at mount)
+		// but source exists — fill in the destination.
+		if (targetIndex === -1) {
+			for (let i = stack.length - 1; i >= 0; i--) {
+				if (stack[i].source && stack[i].destination === null) {
+					targetIndex = i;
+					break;
+				}
+			}
+		}
+
+		if (targetIndex !== -1) {
+			stack[targetIndex].destination = {
+				screenKey,
+				ancestorKeys,
+				bounds,
+				styles,
+			};
+		}
+
+		return state;
+	});
+}
+
+/**
  * Clear all snapshots and links for a screen across all tags.
  * Called when a screen unmounts.
  */
@@ -251,7 +349,11 @@ export const BoundStore = {
 	setLinkSource,
 	setLinkDestination,
 	updateLinkSource,
+	updateLinkDestination,
 	getActiveLink,
 	getSnapshot,
+	setGroupActiveId,
+	getGroupActiveId,
 	clear,
+	getGroups,
 };

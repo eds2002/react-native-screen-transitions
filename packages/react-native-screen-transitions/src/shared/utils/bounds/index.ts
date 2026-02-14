@@ -182,11 +182,27 @@ export const createBounds = (
 
 	const boundsFunction = (params?: BoundsBuilderOptions) => {
 		"worklet";
-		const id = params?.id;
+		const group = params?.group;
+		const rawId = params?.id;
+
+		// When group is provided, combine into a tag.
+		// Without group, use id directly as the tag (backward compatible).
+		let tag = rawId;
+		if (group && rawId) {
+			tag = `${group}:${rawId}`;
+
+			// Automatically update the group's active id when the requested id changes.
+			// This triggers useGroupActiveMeasurement in boundary.tsx which re-measures
+			// the newly-active boundary (e.g., after scrolling to a different page).
+			const currentActiveId = BoundStore.getGroupActiveId(group);
+			if (currentActiveId !== rawId) {
+				BoundStore.setGroupActiveId(group, rawId);
+			}
+		}
 
 		return computeBoundStyles(
 			{
-				id,
+				id: tag,
 				previous: props.previous,
 				current: props.current,
 				next: props.next,
