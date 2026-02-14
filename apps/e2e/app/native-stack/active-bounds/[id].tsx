@@ -12,17 +12,17 @@ export default function ActiveBoundsDetail() {
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader title="Detail" subtitle={id} />
 			<View style={styles.content}>
-				<Transition.View
-					sharedBoundTag={id}
+				<Transition.Boundary
+					id={id}
 					style={[
 						styles.destination,
 						{ width: width * 0.9, height: width * 0.9 },
 					]}
 				>
 					<Text style={styles.destinationText}>
-						{`sharedBoundTag\n"${id}"`}
+						{`Transition.Boundary id\n"${id}"`}
 					</Text>
-				</Transition.View>
+				</Transition.Boundary>
 			</View>
 		</SafeAreaView>
 	);

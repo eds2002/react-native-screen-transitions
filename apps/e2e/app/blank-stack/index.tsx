@@ -57,12 +57,12 @@ const TEST_FLOWS = [
 	{
 		id: "active-bounds",
 		title: "Active Bounds",
-		description: "Shared element bounds animation with dynamic bound tags",
+		description: "Transition.Boundary with id-only matching (group optional)",
 	},
 	{
 		id: "gesture-bounds",
 		title: "Gesture Bounds",
-		description: "Bounds animation with gesture syncing and drag feedback",
+		description: "Transition.Boundary id-only with gesture-aware bounds",
 	},
 	{
 		id: "style-id-bounds",

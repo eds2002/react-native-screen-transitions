@@ -1,16 +1,15 @@
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
-import { useActiveBoundsStore } from "./_layout";
 
 export default function ActiveBoundsIndex() {
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
 				title="Active Bounds"
-				subtitle="Tap a square to see the bound animate"
+				subtitle="Transition.Boundary id-only (group optional)"
 			/>
 			<View style={styles.content}>
 				<View style={styles.grid}>
@@ -20,29 +19,28 @@ export default function ActiveBoundsIndex() {
 								const idx = rowIdx * 3 + colIdx;
 								const tag = `active-bounds-${idx}`;
 								return (
-									<Transition.Pressable
+									<Pressable
 										key={tag}
 										testID={tag}
-										sharedBoundTag={tag}
-										style={[
-											styles.cell,
-											{
-												backgroundColor: `hsl(${idx * 40}, 90%, 60%)`,
-											},
-										]}
+										style={styles.cell}
 										onPress={() => {
-											useActiveBoundsStore.setState({
-												boundTag: tag,
-											});
-											router.push({
-												pathname:
-													"/native-stack/active-bounds/[id]" as `/native-stack/active-bounds/${string}`,
-												params: { id: tag },
-											});
+											router.push(
+												`/native-stack/active-bounds/${tag}` as never,
+											);
 										}}
 									>
-										<Text style={styles.cellText}>{idx + 1}</Text>
-									</Transition.Pressable>
+										<Transition.Boundary
+											id={tag}
+											style={[
+												styles.cellBoundary,
+												{
+													backgroundColor: `hsl(${idx * 40}, 90%, 60%)`,
+												},
+											]}
+										>
+											<Text style={styles.cellText}>{idx + 1}</Text>
+										</Transition.Boundary>
+									</Pressable>
 								);
 							})}
 						</View>
@@ -73,6 +71,9 @@ const styles = StyleSheet.create({
 	cell: {
 		flex: 1,
 		aspectRatio: 1,
+	},
+	cellBoundary: {
+		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
 		borderRadius: 8,

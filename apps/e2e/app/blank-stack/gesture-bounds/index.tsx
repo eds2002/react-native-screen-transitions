@@ -1,16 +1,19 @@
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
-import { useGestureBoundsStore } from "./_layout";
 
 export default function GestureBoundsIndex() {
+	const pushToDetail = (id: string) => {
+		router.push(`/blank-stack/gesture-bounds/${id}` as never);
+	};
+
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
 				title="Gesture Bounds"
-				subtitle="Bounds with gesture syncing"
+				subtitle="Transition.Boundary id-only + gesture syncing"
 			/>
 			<View style={styles.content}>
 				<View style={styles.grid}>
@@ -19,30 +22,28 @@ export default function GestureBoundsIndex() {
 							{Array.from({ length: 3 }).map((_, colIdx) => {
 								const idx = rowIdx * 3 + colIdx;
 								const tag = `gesture-bounds-${idx}`;
+								const id = idx.toString();
 								return (
-									<Transition.Pressable
+									<Pressable
 										key={tag}
 										testID={tag}
-										sharedBoundTag={tag}
-										style={[
-											styles.cell,
-											{
-												backgroundColor: `hsl(${idx * 40}, 90%, 60%)`,
-											},
-										]}
+										style={styles.cell}
 										onPress={() => {
-											useGestureBoundsStore.setState({
-												boundTag: tag,
-											});
-											router.push({
-												pathname:
-													"/blank-stack/gesture-bounds/[id]" as `/blank-stack/gesture-bounds/${string}`,
-												params: { id: idx.toString() },
-											});
+											pushToDetail(id);
 										}}
 									>
-										<Text style={styles.cellText}>{idx + 1}</Text>
-									</Transition.Pressable>
+										<Transition.Boundary
+											id={tag}
+											style={[
+												styles.cellBoundary,
+												{
+													backgroundColor: `hsl(${idx * 40}, 90%, 60%)`,
+												},
+											]}
+										>
+											<Text style={styles.cellText}>{idx + 1}</Text>
+										</Transition.Boundary>
+									</Pressable>
 								);
 							})}
 						</View>
@@ -73,6 +74,9 @@ const styles = StyleSheet.create({
 	cell: {
 		flex: 1,
 		aspectRatio: 1,
+	},
+	cellBoundary: {
+		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
 		borderRadius: 8,

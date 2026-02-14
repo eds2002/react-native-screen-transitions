@@ -9,17 +9,17 @@ export default function GestureBoundsDetail() {
 	const tag = `gesture-bounds-${id}`;
 
 	return (
-		<Transition.View sharedBoundTag={tag} style={styles.wrapper}>
+		<Transition.Boundary id={tag} style={styles.wrapper}>
 			<SafeAreaView style={styles.container} edges={["top"]}>
 				<ScreenHeader title="Gesture Bounds" subtitle="Swipe down to dismiss" />
 				<View style={styles.content}>
-					<Text style={styles.text}>{`sharedBoundTag\n"${tag}"`}</Text>
+					<Text style={styles.text}>{`Transition.Boundary id\n"${tag}"`}</Text>
 					<Text style={styles.hint}>
 						Drag around to see the unfocused bound follow the gesture
 					</Text>
 				</View>
 			</SafeAreaView>
-		</Transition.View>
+		</Transition.Boundary>
 	);
 }
 

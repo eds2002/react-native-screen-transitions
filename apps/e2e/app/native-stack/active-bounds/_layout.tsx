@@ -1,15 +1,15 @@
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
-import { create } from "zustand";
 import { Stack } from "@/layouts/stack";
 
-export const useActiveBoundsStore = create<{ boundTag: string }>(() => ({
-	boundTag: "",
-}));
+const getRouteBoundaryId = (route: { params?: object }) => {
+	"worklet";
+	const params = route.params as Record<string, unknown> | undefined;
+	const rawId = params?.id;
+	return typeof rawId === "string" ? rawId : null;
+};
 
 export default function ActiveBoundsLayout() {
-	const boundTag = useActiveBoundsStore((s) => s.boundTag);
-
 	return (
 		<Stack screenOptions={{ headerShown: false }}>
 			<Stack.Screen name="index" />
@@ -20,16 +20,15 @@ export default function ActiveBoundsLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["bidirectional"],
 					gestureDrivesProgress: false,
-					screenStyleInterpolator: ({ bounds, progress, focused }) => {
+					screenStyleInterpolator: ({ bounds, progress, current }) => {
 						"worklet";
+						const boundaryId = getRouteBoundaryId(current.route);
 
-						if (focused) {
-							const focusedBoundStyles = bounds({
-								id: boundTag,
-							});
-
+						if (boundaryId) {
 							return {
-								[boundTag]: focusedBoundStyles,
+								[boundaryId]: bounds({
+									id: boundaryId,
+								}),
 							};
 						}
 
