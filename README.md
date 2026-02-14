@@ -232,14 +232,17 @@ options={{
 
 | Option                    | Description                                                              |
 | ------------------------- | ------------------------------------------------------------------------ |
-| `gestureEnabled`          | Enable swipe-to-dismiss                                                  |
+| `gestureEnabled`          | Enable swipe-to-dismiss (snap sheets: `false` blocks dismiss-to-0 only) |
 | `gestureDirection`        | Direction(s) for swipe gesture                                           |
 | `gestureActivationArea`   | Where gesture can start                                                  |
 | `gestureResponseDistance` | Pixel threshold for activation                                           |
 | `gestureVelocityImpact`   | How much velocity affects dismissal (default: 0.3)                       |
 | `gestureDrivesProgress`   | Whether gesture controls animation progress (default: true)              |
 | `snapVelocityImpact`      | How much velocity affects snap targeting (default: 0.1, lower = iOS-like)|
-| `expandViaScrollView`     | Whether scroll-at-top expands snap sheets (default: true)                |
+| `expandViaScrollView`     | Allow expansion from ScrollView at boundary (default: true)               |
+| `gestureSnapLocked`       | Lock gesture-based snap movement to current snap point                   |
+| `backdropBehavior`        | Touch handling for backdrop area                                         |
+| `backdropComponent`       | Custom backdrop component (replaces default backdrop + press behavior)   |
 
 ### Gesture Direction
 
@@ -293,7 +296,10 @@ Gesture rules with scrollables:
 
 Create multi-stop sheets that snap to defined positions. Works with any gesture direction (bottom sheets, top sheets, side sheets):
 
+### Basic Configuration
+
 ```tsx
+// Bottom sheet (most common)
 <Stack.Screen
   name="Sheet"
   options={{
@@ -305,6 +311,18 @@ Create multi-stop sheets that snap to defined positions. Works with any gesture 
     ...Transition.Presets.SlideFromBottom(),
   }}
 />
+
+// Side sheet (same API, different direction)
+<Stack.Screen
+  name="SidePanel"
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "horizontal",
+    snapPoints: [0.3, 0.7, 1],    // 30%, 70%, 100% of screen width
+    initialSnapIndex: 1,
+    // Add a horizontal screenStyleInterpolator for drawer-style motion
+  }}
+/>
 ```
 
 ### Options
@@ -313,18 +331,113 @@ Create multi-stop sheets that snap to defined positions. Works with any gesture 
 | ------------------ | -------------------------------------------------------------------- |
 | `snapPoints`       | Array of fractions (0-1) where sheet can rest                        |
 | `initialSnapIndex` | Index of initial snap point (default: 0)                             |
+| `gestureSnapLocked` | Locks gesture snapping to current point (programmatic `snapTo` still works) |
 | `backdropBehavior` | Touch handling: `"block"`, `"passthrough"`, `"dismiss"`, `"collapse"`|
+| `backdropComponent` | Custom backdrop component; replaces default backdrop + tap handling    |
+
+#### backdropBehavior Values
+
+| Value           | Description                                                      |
+| --------------- | ---------------------------------------------------------------- |
+| `"block"`       | Backdrop catches all touches (default)                           |
+| `"passthrough"` | Touches pass through to content behind                           |
+| `"dismiss"`     | Tapping backdrop dismisses the screen                            |
+| `"collapse"`    | Tapping backdrop collapses to next lower snap point, then dismisses |
+
+#### Custom Backdrop Component
+
+Use `backdropComponent` when you want full control over backdrop visuals and interactions.
+
+- When provided, it replaces the default backdrop entirely (including default tap behavior)
+- You are responsible for dismiss/collapse actions inside the custom component
+- `backdropBehavior` still controls container-level pointer event behavior
+
+```tsx
+import { router } from "expo-router";
+import { Pressable } from "react-native";
+import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
+import { useScreenAnimation } from "react-native-screen-transitions";
+
+function SheetBackdrop() {
+  const animation = useScreenAnimation();
+
+  const style = useAnimatedStyle(() => ({
+    opacity: interpolate(animation.value.current.progress, [0, 1], [0, 0.4]),
+    backgroundColor: "#000",
+  }));
+
+  return (
+    <Pressable style={{ flex: 1 }} onPress={() => router.back()}>
+      <Animated.View style={[{ flex: 1 }, style]} />
+    </Pressable>
+  );
+}
+
+<Stack.Screen
+  name="Sheet"
+  options={{
+    snapPoints: [0.5, 1],
+    backdropBehavior: "dismiss",
+    backdropComponent: SheetBackdrop,
+  }}
+/>
+```
 
 ### Programmatic Control
+
+Control snap points from anywhere in your app:
 
 ```tsx
 import { snapTo } from "react-native-screen-transitions";
 
-// Snap to first point (smallest)
-snapTo(0);
+function BottomSheet() {
+  // Expand to full height (index 1)
+  const expand = () => snapTo(1);
 
-// Snap to second point
-snapTo(1);
+  // Collapse to half height (index 0)
+  const collapse = () => snapTo(0);
+
+  return (
+    <View>
+      <Button title="Expand" onPress={expand} />
+      <Button title="Collapse" onPress={collapse} />
+    </View>
+  );
+}
+```
+
+The animated `snapIndex` is available in screen interpolators via `ScreenInterpolationProps`:
+
+```tsx
+screenStyleInterpolator: ({ snapIndex }) => {
+  // snapIndex interpolates between snap point indices
+  // e.g., 0.5 means halfway between snap point 0 and 1
+  return {
+    contentStyle: {
+      opacity: interpolate(snapIndex, [0, 1], [0.5, 1]),
+    },
+  };
+}
+```
+
+### ScrollView Behavior
+
+With `Transition.ScrollView` inside a snap-enabled sheet:
+- **`expandViaScrollView: true`**: At boundary, swipe up expands and swipe down collapses (or dismisses at min if enabled)
+- **`expandViaScrollView: false`**: Expand works only via deadspace; collapse/dismiss via scroll still works at boundary
+- **Scrolled into content**: Normal scroll behavior
+
+### Snap Animation Specs
+
+Customize snap animations separately from enter/exit:
+
+```tsx
+transitionSpec: {
+  open: { stiffness: 1000, damping: 500, mass: 3 },   // Screen enter
+  close: { stiffness: 1000, damping: 500, mass: 3 },  // Screen exit
+  expand: { stiffness: 300, damping: 30 },            // Snap up
+  collapse: { stiffness: 300, damping: 30 },          // Snap down
+}
 ```
 
 ---
@@ -610,11 +723,11 @@ import { createNativeStackNavigator } from "react-native-screen-transitions/nati
 Standalone navigator, not connected to React Navigation. Ideal for embedded flows.
 
 ```tsx
-import { createComponentNavigator } from "react-native-screen-transitions/component-stack";
+import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
 
-const Stack = createComponentNavigator();
+const Stack = createComponentStackNavigator();
 
-<Stack.Navigator initialRoute="step1">
+<Stack.Navigator initialRouteName="step1">
   <Stack.Screen name="step1" component={Step1} />
   <Stack.Screen name="step2" component={Step2} />
 </Stack.Navigator>
