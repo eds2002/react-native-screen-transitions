@@ -15,6 +15,7 @@ import {
 	type BaseDescriptor,
 	useKeys,
 } from "../../providers/screen/keys.provider";
+import { useScrollSettleContext } from "../../providers/scroll-settle.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds.store";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
@@ -253,6 +254,32 @@ const useGroupActiveMeasurement = (params: {
 	);
 };
 
+const useScrollSettledMeasurement = (params: {
+	group: string | undefined;
+	hasNextScreen: boolean;
+	isAnimating: ReturnType<typeof AnimationStore.getAnimation>;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const { group, hasNextScreen, isAnimating, maybeMeasureAndStore } = params;
+	const scrollSettle = useScrollSettleContext();
+	const settledSignal = scrollSettle?.settledSignal;
+
+	useAnimatedReaction(
+		() => settledSignal?.value ?? 0,
+		(signal, previousSignal) => {
+			"worklet";
+			if (!group || !hasNextScreen || !settledSignal) return;
+			if (signal === 0 || signal === previousSignal) return;
+			if (isAnimating.value) return;
+
+			// Re-measure source bounds after scroll settles while idle.
+			// This captures post-scroll positions before close transition starts.
+			maybeMeasureAndStore({ shouldUpdateSource: true });
+		},
+		[group, hasNextScreen, settledSignal, isAnimating, maybeMeasureAndStore],
+	);
+};
+
 const BoundaryComponent = ({
 	group,
 	id,
@@ -263,8 +290,9 @@ const BoundaryComponent = ({
 	const sharedBoundTag = buildBoundaryMatchKey({ group, id });
 	const animatedRef = useAnimatedRef<View>();
 
-	const { current } = useKeys();
+	const { current, next } = useKeys();
 	const currentScreenKey = current.route.key;
+	const hasNextScreen = !!next;
 	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 	const layoutAnchor = useLayoutAnchorContext();
 
@@ -385,6 +413,13 @@ const BoundaryComponent = ({
 	useGroupActiveMeasurement({
 		group,
 		id,
+		maybeMeasureAndStore,
+	});
+
+	useScrollSettledMeasurement({
+		group,
+		hasNextScreen,
+		isAnimating,
 		maybeMeasureAndStore,
 	});
 
