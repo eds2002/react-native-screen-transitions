@@ -1,5 +1,95 @@
 # Change Log
 
+## 3.3.0-rc.3
+
+### Patch Changes
+
+- fix(scroll): compose user `onScroll` with the transition-aware handler to prevent dropped user handlers
+- fix(transitions): correct optimistic focused index during rapid dismiss chains
+- feat(snap): add `gestureSnapLocked` with expanded bottom-sheet scenarios
+- fix(snap): make `snapTo` work in nested layout routes
+- fix(bounds): refresh stale source bounds on refocus and honor custom target overrides
+- fix: resolve stale options refs and `remeasureOnFocus` crash cases
+
+## 3.3.0-rc.2
+
+### Patch Changes
+
+- fix(blank-stack): prevent background touches during transitions
+- fix(component-stack): revert to regular views after regressions from native-screen integration
+
+## 3.3.0-rc.1
+
+### Patch Changes
+
+- feat(component-stack): integrate `react-native-screens`-based screen management
+- fix(worklets): normalize deep-link params for safer serialization
+
+## 3.3.0-rc.0
+
+### Patch Changes
+
+- fix(reanimated): avoid worklet crashes by using plain route snapshots
+- fix(gestures): resolve ScrollView ownership per direction (instead of per axis)
+
+## 3.3.0-beta.4
+
+### Patch Changes
+
+- fix(gestures): resolve scroll/gesture race conditions and improve snap shadowing behavior
+- fix(gestures): enable axis-isolated ScrollView coordination with ancestor gesture owners
+- fix: register direction claims only for the current route to avoid stale ownership
+- feat: add `backdropBehavior: "collapse"`
+- feat: add `snapVelocityImpact` and improve snap targeting
+- fix: respect ScrollView bounce state in gesture activation
+- chore: tests/docs updates and dead code cleanup
+
+## 3.3.0-beta.3
+
+### Patch Changes
+
+- feat: improve `snapTo` behavior
+- fix: move gesture detector placement to content for better interaction handling
+
+## 3.3.0-beta.2
+
+### Patch Changes
+
+- feat: add global `snapTo`
+- fix(gestures): allow ScrollView scrolling while animating to max detent
+- fix(gestures): animate back to fully visible when canceling mid-transition
+
+## 3.3.0-beta.1
+
+### Patch Changes
+
+- feat: improve animation-settled/animating reliability
+- fix: avoid `.set/.get` usage patterns that caused worklet instability
+- fix: correct vertical-inverted scrollable logic with snap points
+- refactor: cleanup and readability improvements across gesture handlers
+
+## 3.3.0-beta.0
+
+### Minor Changes
+
+- feat: introduce snap points (`snapPoints`, `initialSnapIndex`) with bidirectional axis claims
+- feat: add backdrop behavior controls (`block`, `passthrough`, `dismiss`, `collapse`)
+- feat: add programmatic `snapTo` and animated `snapIndex`
+- feat: extend snap sheets to horizontal gestures and sheet-specific ScrollView boundary rules
+- feat: add customizable `expand`/`collapse` transition specs
+- feat: integrate a unified gesture ownership mental model with e2e coverage
+
+### Patch Changes
+
+- fix: previous screen not animating during flight
+
+## 3.2.1
+
+### Patch Changes
+
+- fix: previous screen not animating during flight
+- chore: migrate package release process to `release-it`
+
 ## 3.2.0
 
 ### Minor Changes
