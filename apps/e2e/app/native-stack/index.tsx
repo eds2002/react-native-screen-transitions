@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { ScreenHeader } from "@/components/screen-header";
 
 const TEST_FLOWS = [
 	{
@@ -28,17 +29,36 @@ const TEST_FLOWS = [
 		title: "Floating Overlay",
 		description: "Tab bar overlay that animates with screen transitions",
 	},
+	{
+		id: "deep-link/test",
+		title: "Deep Link Test",
+		description: "Dynamic route for deep link testing",
+	},
+	{
+		id: "active-bounds",
+		title: "Active Bounds",
+		description: "Shared element bounds animation with dynamic bound tags",
+	},
+	{
+		id: "gesture-bounds",
+		title: "Gesture Bounds",
+		description: "Bounds animation with gesture syncing and drag feedback",
+	},
+	{
+		id: "style-id-bounds",
+		title: "Style ID Bounds",
+		description: "Bounds with styleId masking for complex shared transitions",
+	},
 ];
 
 export default function NativeStackIndex() {
 	return (
-		<SafeAreaView style={styles.container}>
+		<SafeAreaView style={styles.container} edges={["top"]}>
+			<ScreenHeader
+				title="Native Stack"
+				subtitle="@react-navigation/native-stack with enableTransitions"
+			/>
 			<ScrollView contentContainerStyle={styles.content}>
-				<Text style={styles.header}>Native Stack E2E Tests</Text>
-				<Text style={styles.subheader}>
-					Using @react-navigation/native-stack with enableTransitions
-				</Text>
-
 				<View style={styles.list}>
 					{TEST_FLOWS.map((flow) => (
 						<Pressable
@@ -67,18 +87,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "#121212",
 	},
 	content: {
-		padding: 20,
-	},
-	header: {
-		fontSize: 24,
-		fontWeight: "bold",
-		color: "#fff",
-		marginBottom: 8,
-	},
-	subheader: {
-		fontSize: 14,
-		color: "#888",
-		marginBottom: 24,
+		padding: 16,
 	},
 	list: {
 		gap: 12,

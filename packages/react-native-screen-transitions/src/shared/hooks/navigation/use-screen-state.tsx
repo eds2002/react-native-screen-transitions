@@ -1,13 +1,13 @@
 import type { Route } from "@react-navigation/native";
-import { useMemo } from "react";
-import { useDerivedValue } from "react-native-reanimated";
+import { useCallback, useMemo } from "react";
+import { snapDescriptorToIndex } from "../../animation/snap-to";
 import {
 	type BaseDescriptor,
 	useKeys,
 } from "../../providers/screen/keys.provider";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
-import { useSharedValueState } from "../reanimated/use-shared-value-state";
+import { useOptimisticFocusedIndex } from "./use-optimistic-focused-index";
 import { type StackContextValue, useStack } from "./use-stack";
 
 export interface ScreenState<
@@ -47,6 +47,13 @@ export interface ScreenState<
 	 * Navigation object for this screen.
 	 */
 	navigation: TNavigation;
+
+	/**
+	 * Programmatically snap the focused screen to a snap point index.
+	 *
+	 * Scoped to this screen's stack context, avoiding global history ambiguity.
+	 */
+	snapTo: (index: number) => void;
 }
 
 /**
@@ -66,16 +73,23 @@ export function useScreenState<
 		[routeKeys, current.route.key],
 	);
 
-	const focusedIndex = useSharedValueState(
-		useDerivedValue(() => {
-			const globalIndex = optimisticFocusedIndex.get();
-			return Math.max(0, Math.min(globalIndex, routeKeys.length - 1));
-		}),
+	const focusedIndex = useOptimisticFocusedIndex(
+		optimisticFocusedIndex,
+		routeKeys.length,
 	);
 
 	const focusedScene = useMemo(() => {
 		return scenes[focusedIndex] ?? scenes[scenes.length - 1];
 	}, [scenes, focusedIndex]);
+
+	const snapTo = useCallback(
+		(targetIndex: number) => {
+			const descriptor = focusedScene?.descriptor;
+			if (!descriptor) return;
+			snapDescriptorToIndex(descriptor, targetIndex);
+		},
+		[focusedScene],
+	);
 
 	return useMemo(
 		() => ({
@@ -86,6 +100,7 @@ export function useScreenState<
 			focusedIndex,
 			meta: focusedScene?.descriptor?.options?.meta,
 			navigation: current.navigation as TNavigation,
+			snapTo,
 		}),
 		[
 			index,
@@ -94,6 +109,7 @@ export function useScreenState<
 			focusedIndex,
 			current.navigation,
 			current.route,
+			snapTo,
 		],
 	);
 }

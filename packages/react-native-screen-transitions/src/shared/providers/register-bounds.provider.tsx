@@ -24,6 +24,7 @@ interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
 	shouldSetSource?: boolean;
 	shouldSetDestination?: boolean;
+	shouldUpdateSource?: boolean;
 }
 
 interface RegisterBoundsRenderProps {
@@ -36,6 +37,7 @@ interface RegisterBoundsProviderProps {
 	animatedRef: AnimatedRef<View>;
 	style: StyleProps;
 	onPress?: ((...args: unknown[]) => void) | undefined;
+	remeasureOnFocus?: boolean;
 	children: (props: RegisterBoundsRenderProps) => ReactNode;
 }
 
@@ -136,10 +138,6 @@ const useInitialLayoutHandler = (params: {
  * Measures non-pressable elements when screen becomes blurred.
  * Captures bounds right before transition starts.
  */
-/**
- * Measures non-pressable elements when screen becomes blurred.
- * Captures bounds right before transition starts.
- */
 const useBlurMeasurement = (params: {
 	sharedBoundTag?: string;
 	ancestorKeys: string[];
@@ -205,8 +203,15 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 	"RegisterBounds",
 	{ guarded: false },
 )<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
-	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
-		const { current } = useKeys();
+	({
+		style,
+		onPress,
+		sharedBoundTag,
+		animatedRef,
+		remeasureOnFocus,
+		children,
+	}) => {
+		const { current, next } = useKeys();
 		const currentScreenKey = current.route.key;
 		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 		const layoutAnchor = useLayoutAnchorContext();
@@ -236,6 +241,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 				onPress,
 				shouldSetSource,
 				shouldSetDestination,
+				shouldUpdateSource,
 			}: MaybeMeasureAndStoreParams = {}) => {
 				"worklet";
 				if (!sharedBoundTag) return;
@@ -286,6 +292,16 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					);
 				}
 
+				if (shouldUpdateSource) {
+					BoundStore.updateLinkSource(
+						sharedBoundTag,
+						currentScreenKey,
+						correctedMeasured,
+						preparedStyles,
+						ancestorKeys,
+					);
+				}
+
 				// Set as destination (on mount during animation)
 				if (shouldSetDestination) {
 					BoundStore.setLinkDestination(
@@ -314,6 +330,27 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 			maybeMeasureAndStore,
 			ancestorKeys,
 		});
+
+		// Re-measure source bounds when the destination screen (next in stack)
+		// starts closing. This fires at the instant the back animation begins,
+		// unlike useFocusEffect which fires too late (after the screen is removed
+		// from state).
+		const nextScreenKey = next?.route.key;
+		const nextClosing = nextScreenKey
+			? AnimationStore.getAnimation(nextScreenKey, "closing")
+			: null;
+
+		useAnimatedReaction(
+			() => nextClosing?.get() ?? 0,
+			(closing, prevClosing) => {
+				"worklet";
+				if (!sharedBoundTag || !remeasureOnFocus) return;
+				if (closing === 1 && (prevClosing === 0 || prevClosing === null)) {
+					maybeMeasureAndStore({ shouldUpdateSource: true });
+				}
+			},
+			[sharedBoundTag, remeasureOnFocus, nextClosing],
+		);
 
 		useParentSyncReaction({ parentContext, maybeMeasureAndStore });
 

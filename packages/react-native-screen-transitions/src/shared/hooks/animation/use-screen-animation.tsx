@@ -3,7 +3,10 @@ import { useWindowDimensions } from "react-native";
 import { type SharedValue, useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenTransitionConfig } from "../../../native-stack/types";
-import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../constants";
+import {
+	createScreenTransitionState,
+	DEFAULT_SCREEN_TRANSITION_STATE,
+} from "../../constants";
 import {
 	type BaseDescriptor,
 	useKeys,
@@ -17,6 +20,7 @@ import type {
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackRoute } from "../../types/stack.types";
 import { derivations } from "../../utils/animation/derivations";
+import { toPlainRoute, toPlainValue } from "../../utils/animation/worklet";
 import { createBounds } from "../../utils/bounds";
 import { useStack } from "../navigation/use-stack";
 
@@ -31,26 +35,26 @@ type BuiltState = {
 	unwrapped: ScreenTransitionState;
 };
 
-const createScreenTransitionState = (
-	route: BaseStackRoute,
-	meta?: Record<string, unknown>,
-): ScreenTransitionState => ({
-	progress: 0,
-	closing: 0,
-	animating: 0,
-	entering: 1,
-	gesture: {
-		x: 0,
-		y: 0,
-		normalizedX: 0,
-		normalizedY: 0,
-		isDismissing: 0,
-		isDragging: 0,
-		direction: null,
-	},
-	route,
-	meta,
-});
+/**
+ * Computes the animated snap index based on progress and snap points.
+ * Returns -1 if no snap points, otherwise interpolates between indices.
+ */
+const computeSnapIndex = (progress: number, snapPoints: number[]): number => {
+	"worklet";
+	if (snapPoints.length === 0) return -1;
+	if (progress <= snapPoints[0]) return 0;
+	if (progress >= snapPoints[snapPoints.length - 1])
+		return snapPoints.length - 1;
+
+	for (let i = 0; i < snapPoints.length - 1; i++) {
+		if (progress <= snapPoints[i + 1]) {
+			const t =
+				(progress - snapPoints[i]) / (snapPoints[i + 1] - snapPoints[i]);
+			return i + t;
+		}
+	}
+	return snapPoints.length - 1;
+};
 
 const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	"worklet";
@@ -74,11 +78,17 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 const useBuildScreenTransitionState = (
 	descriptor: BaseDescriptor | undefined,
 ): BuiltState | undefined => {
-	const key = descriptor?.route.key;
+	const key = descriptor?.route?.key;
 	const meta = descriptor?.options?.meta;
+	const route = descriptor?.route;
 
 	return useMemo(() => {
-		if (!key) return undefined;
+		if (!key || !route) return undefined;
+
+		const plainRoute = toPlainRoute(route);
+		const plainMeta = meta
+			? (toPlainValue(meta) as Record<string, unknown>)
+			: undefined;
 
 		return {
 			progress: AnimationStore.getAnimation(key, "progress"),
@@ -86,27 +96,25 @@ const useBuildScreenTransitionState = (
 			entering: AnimationStore.getAnimation(key, "entering"),
 			animating: AnimationStore.getAnimation(key, "animating"),
 			gesture: GestureStore.getRouteGestures(key),
-			route: descriptor.route,
-			meta,
-			unwrapped: createScreenTransitionState(descriptor.route, meta),
+			route: plainRoute,
+			meta: plainMeta,
+			unwrapped: createScreenTransitionState(plainRoute, plainMeta),
 		};
-	}, [key, descriptor?.route, meta]);
+	}, [key, meta, route]);
 };
 
 const hasTransitionsEnabled = (
 	options: ScreenTransitionConfig | undefined,
 	alwaysOn: boolean,
 ) => {
-	"worklet";
 	if (alwaysOn) return true;
 	return !!(options as NativeStackScreenTransitionConfig)?.enableTransitions;
 };
 
 export function _useScreenAnimation() {
-	const windowDimensions = useWindowDimensions();
-	const dimensions = windowDimensions;
-
 	const insets = useSafeAreaInsets();
+	const dimensions = useWindowDimensions();
+
 	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
 	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
@@ -123,6 +131,16 @@ export function _useScreenAnimation() {
 	const currentRouteKey = currentDescriptor?.route?.key;
 	const currentIndex = routeKeys.indexOf(currentRouteKey);
 
+	const sortedSnapPoints = useMemo(() => {
+		const points = currentDescriptor?.options?.snapPoints;
+		return points ? [...points].sort((a, b) => a - b) : [];
+	}, [currentDescriptor?.options?.snapPoints]);
+
+	const nextRouteKey = nextDescriptor?.route?.key;
+	const nextHasTransitions =
+		!!nextRouteKey &&
+		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
+
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">
 	>(() => {
@@ -131,8 +149,7 @@ export function _useScreenAnimation() {
 		const previous = prevAnimation ? unwrapInto(prevAnimation) : undefined;
 
 		const next =
-			nextAnimation &&
-			hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn)
+			nextAnimation && nextHasTransitions
 				? unwrapInto(nextAnimation)
 				: undefined;
 
@@ -152,6 +169,8 @@ export function _useScreenAnimation() {
 		const stackProgress =
 			currentIndex >= 0 ? rootStackProgress.value - currentIndex : progress;
 
+		const snapIndex = computeSnapIndex(current.progress, sortedSnapPoints);
+
 		return {
 			layouts: { screen: dimensions },
 			insets,
@@ -160,6 +179,7 @@ export function _useScreenAnimation() {
 			next,
 			progress,
 			stackProgress,
+			snapIndex,
 			...helpers,
 		};
 	});

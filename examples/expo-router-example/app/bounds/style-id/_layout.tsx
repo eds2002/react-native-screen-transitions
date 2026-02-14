@@ -1,10 +1,14 @@
-import { useGlobalSearchParams } from "expo-router";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { create } from "zustand";
 import { Stack } from "@/layouts/stack";
 
+export const useStyleIdStore = create<{ boundTag: string }>(() => ({
+	boundTag: "",
+}));
+
 export default function StyleIdLayout() {
-	const { id } = useGlobalSearchParams<{ id: string }>();
+	const boundTag = useStyleIdStore((s) => s.boundTag);
 
 	return (
 		<Stack>
@@ -29,8 +33,6 @@ export default function StyleIdLayout() {
 					}) => {
 						"worklet";
 
-						const ID = id; // The sharedBoundTag from params
-
 						const x = interpolate(
 							focused
 								? current.gesture.normalizedX
@@ -50,14 +52,14 @@ export default function StyleIdLayout() {
 
 						if (focused) {
 							const focusedBoundStyles = bounds({
-								id: ID,
+								id: boundTag,
 								method: "content",
 								anchor: "top",
 								scaleMode: "uniform",
 							});
 
 							const focusMaskStyles = bounds({
-								id: ID,
+								id: boundTag,
 								space: "absolute",
 								target: "fullscreen",
 								method: "size",
@@ -80,7 +82,7 @@ export default function StyleIdLayout() {
 						}
 
 						const unfocusedBound = bounds({
-							id: ID,
+							id: boundTag,
 							gestures: {
 								x,
 								y,
@@ -95,7 +97,7 @@ export default function StyleIdLayout() {
 									},
 								],
 							},
-							[ID]: unfocusedBound,
+							[boundTag]: unfocusedBound,
 						};
 					},
 					transitionSpec: {

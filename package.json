@@ -1,31 +1,41 @@
 {
-  "private": true,
-  "workspaces": {
-    "packages": [
-      "packages/*",
-      "examples/*",
-      "apps/*"
-    ],
-    "catalog": {
-      "typescript": "~5.8.3"
-    }
-  },
-  "scripts": {
-    "clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
-    "build": "bun run --cwd packages/react-native-screen-transitions build",
-    "knip": "bunx knip --workspace packages/react-native-screen-transitions",
-    "lint": "biome check packages/react-native-screen-transitions/src",
-    "typecheck": "tsc --noEmit -p packages/react-native-screen-transitions/tsconfig.json",
-    "release:react-native-screen-transitions": "bun run --cwd packages/react-native-screen-transitions release"
-  },
-  "devDependencies": {
-    "@biomejs/biome": "2.3.5",
-    "@commitlint/config-conventional": "^19.8.1",
-    "@types/bun": "^1.2.19",
-    "commitlint": "^19.8.1",
-    "lefthook": "^2.0.3"
-  },
-  "commitlint": {
-    "extends": ["@commitlint/config-conventional"]
-  }
+	"private": true,
+	"workspaces": {
+		"packages": [
+			"packages/*",
+			"examples/*",
+			"apps/*"
+		],
+		"catalog": {
+			"typescript": "~5.8.3"
+		}
+	},
+	"scripts": {
+		"clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
+		"build": "bun run --cwd packages/react-native-screen-transitions build",
+		"knip": "bunx knip --workspace packages/react-native-screen-transitions",
+		"lint": "biome check packages/react-native-screen-transitions/src",
+		"typecheck": "tsc --noEmit -p packages/react-native-screen-transitions/tsconfig.json",
+		"release": "bun run release:stable",
+		"release:stable": "bun run --cwd packages/react-native-screen-transitions release:stable",
+		"release:beta": "bun run --cwd packages/react-native-screen-transitions release:beta",
+		"release:rc": "bun run --cwd packages/react-native-screen-transitions release:rc",
+		"release:dry-run": "bun run --cwd packages/react-native-screen-transitions release:dry-run",
+		"release:beta:dry-run": "bun run --cwd packages/react-native-screen-transitions release:beta:dry-run",
+		"release:rc:dry-run": "bun run --cwd packages/react-native-screen-transitions release:rc:dry-run",
+		"release:react-native-screen-transitions": "bun run release:stable",
+		"release:react-native-screen-transitions:beta": "bun run release:beta"
+	},
+	"devDependencies": {
+		"@biomejs/biome": "2.3.5",
+		"@commitlint/config-conventional": "^19.8.1",
+		"@types/bun": "^1.2.19",
+		"commitlint": "^19.8.1",
+		"lefthook": "^2.0.3"
+	},
+	"commitlint": {
+		"extends": [
+			"@commitlint/config-conventional"
+		]
+	}
 }

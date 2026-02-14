@@ -3,10 +3,13 @@ import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
+import Animated, {
+	runOnUI,
+	useAnimatedRef,
+	useComposedEventHandler,
+} from "react-native-reanimated";
 import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
-import { useGestureContext } from "../providers/gestures.provider";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import type { TransitionAwareProps } from "../types/screen.types";
 
@@ -26,23 +29,49 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof Wrapped>,
 		TransitionAwareProps<P>
 	>((props: any, ref) => {
-		const { nativeGesture } = useGestureContext()!;
-		const { scrollHandler, onContentSizeChange, onLayout } = useScrollRegistry({
-			onScroll: props.onScroll,
-			onContentSizeChange: props.onContentSizeChange,
-			onLayout: props.onLayout,
-		});
+		const {
+			remeasureOnFocus: _remeasureOnFocus,
+			onScroll: userOnScroll,
+			...scrollableProps
+		} = props;
+
+		// Determine scroll direction from the horizontal prop (standard ScrollView API)
+		const scrollDirection = scrollableProps.horizontal
+			? "horizontal"
+			: "vertical";
+
+		// Get scroll handlers and the gesture owner's nativeGesture for this axis
+		const { scrollHandler, onContentSizeChange, onLayout, nativeGesture } =
+			useScrollRegistry({
+				onContentSizeChange: scrollableProps.onContentSizeChange,
+				onLayout: scrollableProps.onLayout,
+				direction: scrollDirection,
+			});
+
+		const composedScrollHandler = useComposedEventHandler([
+			scrollHandler,
+			userOnScroll ?? null,
+		]);
+
+		const scrollableComponent = (
+			<AnimatedComponent
+				{...(scrollableProps as any)}
+				ref={ref}
+				onScroll={composedScrollHandler}
+				onContentSizeChange={onContentSizeChange}
+				onLayout={onLayout}
+				scrollEventThrottle={scrollableProps.scrollEventThrottle || 16}
+			/>
+		);
+
+		// If no gesture owner found for this axis, render without GestureDetector
+		if (!nativeGesture) {
+			return scrollableComponent;
+		}
 
 		return (
 			<GestureDetector gesture={nativeGesture}>
-				<AnimatedComponent
-					{...(props as any)}
-					ref={ref}
-					onScroll={scrollHandler}
-					onContentSizeChange={onContentSizeChange}
-					onLayout={onLayout}
-					scrollEventThrottle={props.scrollEventThrottle || 16}
-				/>
+				{scrollableComponent}
 			</GestureDetector>
 		);
 	});
@@ -51,8 +80,15 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof AnimatedComponent>,
 		TransitionAwareProps<P>
 	>((props, _) => {
-		const { children, style, sharedBoundTag, styleId, onPress, ...rest } =
-			props as any;
+		const {
+			children,
+			style,
+			sharedBoundTag,
+			styleId,
+			onPress,
+			remeasureOnFocus,
+			...rest
+		} = props as any;
 
 		const animatedRef = useAnimatedRef<View>();
 
@@ -67,6 +103,7 @@ export function createTransitionAwareComponent<P extends object>(
 				style={style}
 				onPress={onPress}
 				sharedBoundTag={sharedBoundTag}
+				remeasureOnFocus={remeasureOnFocus}
 			>
 				{({ captureActiveOnPress, handleInitialLayout }) => (
 					<AnimatedComponent

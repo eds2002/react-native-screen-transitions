@@ -1,119 +1,129 @@
 {
-  "name": "react-native-screen-transitions",
-  "version": "3.2.0",
-  "description": "Easy screen transitions for React Native and Expo",
-  "author": "Ed",
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/eds2002/react-native-screen-transitions.git",
-    "directory": "packages/react-native-screen-transitions"
-  },
-  "main": "lib/commonjs/shared/index.js",
-  "module": "lib/module/shared/index.js",
-  "types": "lib/typescript/shared/index.d.ts",
-  "react-native": "src/shared/index",
-  "exports": {
-    ".": {
-      "react-native": "./src/shared/index.ts",
-      "import": "./lib/module/shared/index.js",
-      "require": "./lib/commonjs/shared/index.js",
-      "types": "./lib/typescript/shared/index.d.ts"
-    },
-    "./native-stack": {
-      "react-native": "./src/native-stack/index.ts",
-      "import": "./lib/module/native-stack/index.js",
-      "require": "./lib/commonjs/native-stack/index.js",
-      "types": "./lib/typescript/native-stack/index.d.ts"
-    },
-    "./blank-stack": {
-      "react-native": "./src/blank-stack/index.ts",
-      "import": "./lib/module/blank-stack/index.js",
-      "require": "./lib/commonjs/blank-stack/index.js",
-      "types": "./lib/typescript/blank-stack/index.d.ts"
-    },
-    "./component-stack": {
-      "react-native": "./src/component-stack/index.ts",
-      "import": "./lib/module/component-stack/index.js",
-      "require": "./lib/commonjs/component-stack/index.js",
-      "types": "./lib/typescript/component-stack/index.d.ts"
-    }
-  },
-  "scripts": {
-    "build": "bob build",
-    "lint": "biome check ./src",
-    "typecheck": "tsc --noEmit",
-    "prepublishOnly": "bun run build",
-    "release": "release-it"
-  },
-  "keywords": [
-    "react-native",
-    "transitions",
-    "animation",
-    "react-navigation",
-    "expo-router",
-    "reanimated"
-  ],
-  "files": [
-    "lib",
-    "src",
-    "README.md",
-    "LICENSE"
-  ],
-  "peerDependencies": {
-    "@react-navigation/elements": ">=2.0.0",
-    "@react-navigation/native": ">=6.0.0",
-    "@react-navigation/native-stack": ">=7.0.0",
-    "@types/react": "*",
-    "@types/react-native": "*",
-    "react": "*",
-    "react-native": "*",
-    "react-native-gesture-handler": ">=2.16.1",
-    "react-native-reanimated": ">=3.16.0 || >=4.0.0-",
-    "react-native-safe-area-context": "*",
-    "react-native-screens": ">=4.4.0"
-  },
-  "devDependencies": {
-    "@release-it/conventional-changelog": "^10.0.1",
-    "@types/react": "~19.1.10",
-    "react-native-builder-bob": "0.39.0",
-    "release-it": "^19.0.4",
-    "typescript": "catalog:"
-  },
-  "react-native-builder-bob": {
-    "source": "src",
-    "output": "lib",
-    "targets": [
-      "commonjs",
-      "module",
-      [
-        "typescript",
-        {
-          "project": "tsconfig.build.json"
-        }
-      ]
-    ]
-  },
-  "release-it": {
-    "git": {
-      "commitMessage": "chore: release ${version}",
-      "tagName": "v${version}",
-      "commitArgs": ["-n"]
-    },
-    "npm": {
-      "publish": true
-    },
-    "github": {
-      "release": true
-    },
-    "plugins": {
-      "@release-it/conventional-changelog": {
-        "preset": {
-          "name": "angular"
-        },
-        "path": "."
-      }
-    }
-  },
-  "gitHead": "888d4df9936ec0e3b8221bea7cd81115e6301693"
+	"name": "react-native-screen-transitions",
+	"version": "3.3.0",
+	"description": "Easy screen transitions for React Native and Expo",
+	"author": "Ed",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/eds2002/react-native-screen-transitions.git",
+		"directory": "packages/react-native-screen-transitions"
+	},
+	"main": "lib/commonjs/shared/index.js",
+	"module": "lib/module/shared/index.js",
+	"types": "lib/typescript/shared/index.d.ts",
+	"react-native": "src/shared/index",
+	"exports": {
+		".": {
+			"react-native": "./src/shared/index.ts",
+			"import": "./lib/module/shared/index.js",
+			"require": "./lib/commonjs/shared/index.js",
+			"types": "./lib/typescript/shared/index.d.ts"
+		},
+		"./native-stack": {
+			"react-native": "./src/native-stack/index.ts",
+			"import": "./lib/module/native-stack/index.js",
+			"require": "./lib/commonjs/native-stack/index.js",
+			"types": "./lib/typescript/native-stack/index.d.ts"
+		},
+		"./blank-stack": {
+			"react-native": "./src/blank-stack/index.ts",
+			"import": "./lib/module/blank-stack/index.js",
+			"require": "./lib/commonjs/blank-stack/index.js",
+			"types": "./lib/typescript/blank-stack/index.d.ts"
+		},
+		"./component-stack": {
+			"react-native": "./src/component-stack/index.ts",
+			"import": "./lib/module/component-stack/index.js",
+			"require": "./lib/commonjs/component-stack/index.js",
+			"types": "./lib/typescript/component-stack/index.d.ts"
+		}
+	},
+	"scripts": {
+		"build": "bob build",
+		"lint": "biome check ./src",
+		"typecheck": "tsc --noEmit",
+		"prepublishOnly": "bun run build",
+		"release": "release-it",
+		"release:stable": "release-it",
+		"release:beta": "release-it --preRelease=beta",
+		"release:rc": "release-it --preRelease=rc",
+		"release:dry-run": "release-it --dry-run",
+		"release:beta:dry-run": "release-it --preRelease=beta --dry-run",
+		"release:rc:dry-run": "release-it --preRelease=rc --dry-run"
+	},
+	"keywords": [
+		"react-native",
+		"transitions",
+		"animation",
+		"react-navigation",
+		"expo-router",
+		"reanimated"
+	],
+	"files": [
+		"lib",
+		"src",
+		"!src/**/__tests__",
+		"README.md",
+		"LICENSE"
+	],
+	"peerDependencies": {
+		"@react-navigation/elements": ">=2.0.0",
+		"@react-navigation/native": ">=6.0.0",
+		"@react-navigation/native-stack": ">=7.0.0",
+		"@types/react": "*",
+		"@types/react-native": "*",
+		"react": "*",
+		"react-native": "*",
+		"react-native-gesture-handler": ">=2.16.1",
+		"react-native-reanimated": ">=3.16.0 || >=4.0.0-",
+		"react-native-safe-area-context": "*",
+		"react-native-screens": ">=4.4.0"
+	},
+	"devDependencies": {
+		"@release-it/conventional-changelog": "^10.0.1",
+		"@types/react": "~19.1.10",
+		"react-native-builder-bob": "0.39.0",
+		"release-it": "^19.0.4",
+		"typescript": "catalog:"
+	},
+	"react-native-builder-bob": {
+		"source": "src",
+		"output": "lib",
+		"targets": [
+			"commonjs",
+			"module",
+			[
+				"typescript",
+				{
+					"project": "tsconfig.build.json"
+				}
+			]
+		]
+	},
+	"release-it": {
+		"git": {
+			"commitMessage": "chore: release ${version}",
+			"tagName": "v${version}",
+			"commitArgs": [
+				"-n"
+			]
+		},
+		"npm": {
+			"publish": true
+		},
+		"github": {
+			"release": true
+		},
+		"plugins": {
+			"@release-it/conventional-changelog": {
+				"infile": "CHANGELOG.md",
+				"preset": {
+					"name": "angular"
+				},
+				"path": "."
+			}
+		}
+	},
+	"gitHead": "888d4df9936ec0e3b8221bea7cd81115e6301693"
 }

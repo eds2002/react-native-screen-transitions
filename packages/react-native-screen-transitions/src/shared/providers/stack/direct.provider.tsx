@@ -15,8 +15,12 @@ import {
 	StackContext,
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
-import { AnimationStore } from "../../stores/animation.store";
+import {
+	AnimationStore,
+	type AnimationStoreMap,
+} from "../../stores/animation.store";
 import { HistoryStore } from "../../stores/history.store";
+import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 
 export interface DirectStackScene {
@@ -87,10 +91,12 @@ function useDirectStackValue(
 		routeKeys,
 		allRoutes,
 		allDescriptors,
+		animationMaps,
 	} = useMemo(() => {
 		const allRoutes = state.routes.concat(state.preloadedRoutes);
 		const scenes: DirectStackScene[] = [];
 		const routeKeys: string[] = [];
+		const animationMaps: AnimationStoreMap[] = [];
 		const allDescriptors: NativeStackDescriptorMap = {
 			...preloadedDescriptors,
 			...descriptors,
@@ -105,13 +111,13 @@ function useDirectStackValue(
 
 			scenes.push({ route, descriptor, isPreloaded });
 			routeKeys.push(route.key);
+			animationMaps.push(AnimationStore.getAll(route.key));
 
 			if (!shouldShowFloatOverlay && descriptor) {
 				const options = descriptor.options;
 				if (
 					options?.enableTransitions === true &&
-					options?.overlayMode === "float" &&
-					options?.overlayShown === true
+					isFloatOverlayVisible(options)
 				) {
 					shouldShowFloatOverlay = true;
 				}
@@ -124,14 +130,9 @@ function useDirectStackValue(
 			routeKeys,
 			allRoutes,
 			allDescriptors,
+			animationMaps,
 		};
-	}, [state.routes, state.preloadedRoutes, descriptors, preloadedDescriptors]);
-
-	// Get animation store maps for all routes
-	const animationMaps = useMemo(
-		() => allRoutes.map((route) => AnimationStore.getAll(route.key)),
-		[allRoutes],
-	);
+	}, [state.routes, state.preloadedRoutes, preloadedDescriptors, descriptors]);
 
 	const stackProgress = useDerivedValue(() => {
 		"worklet";
@@ -144,15 +145,13 @@ function useDirectStackValue(
 
 	const optimisticFocusedIndex = useDerivedValue(() => {
 		"worklet";
-		const currentIndex = animationMaps.length - 1;
-		let isAnyClosing = false;
-		for (let i = 0; i < animationMaps.length; i++) {
-			if (animationMaps[i].closing.value > 0) {
-				isAnyClosing = true;
-				break;
-			}
+		const lastIndex = animationMaps.length - 1;
+		let closingFromTop = 0;
+		for (let i = lastIndex; i >= 0; i--) {
+			if (animationMaps[i].closing.value > 0) closingFromTop++;
+			else break;
 		}
-		return currentIndex - (isAnyClosing ? 1 : 0);
+		return lastIndex - closingFromTop;
 	});
 
 	const focusedIndex = state.index;
@@ -171,12 +170,12 @@ function useDirectStackValue(
 		[
 			routeKeys,
 			allRoutes,
-			allDescriptors,
 			scenes,
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
 			flags,
+			allDescriptors,
 		],
 	);
 

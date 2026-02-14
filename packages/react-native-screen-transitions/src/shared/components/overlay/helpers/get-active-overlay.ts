@@ -1,9 +1,10 @@
 import type { StackScene } from "../../../hooks/navigation/use-stack";
+import { isFloatOverlayVisible } from "../../../utils/overlay/visibility";
 
 /**
  * Find the active float overlay from scenes.
  * Scans from the top of the stack downward to find the first screen
- * with overlayMode="float" and overlayShown=true.
+ * with a visible overlay that isn't explicitly set to legacy screen mode.
  */
 export function getActiveFloatOverlay(
 	scenes: StackScene[],
@@ -29,7 +30,7 @@ export function getActiveFloatOverlay(
 			continue;
 		}
 
-		if (options?.overlayMode === "float" && options?.overlayShown) {
+		if (isFloatOverlayVisible(options)) {
 			return { scene, overlayIndex: i };
 		}
 	}

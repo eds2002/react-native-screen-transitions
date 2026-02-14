@@ -60,7 +60,7 @@ const setRouteState = (
 
 // Reset stores before each test
 beforeEach(() => {
-	globalThis.resetMutableRegistry();
+	(globalThis as any).resetMutableRegistry();
 });
 
 describe("syncRoutesWithRemoved", () => {

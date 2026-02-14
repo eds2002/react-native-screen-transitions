@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import Page from "@/components/page";
+import { useGestureBoundsStore } from "./_layout";
 
 export default function PageTransition() {
 	return (
@@ -42,6 +43,9 @@ export default function PageTransition() {
 										justifyContent: "center",
 									}}
 									onPress={() => {
+										useGestureBoundsStore.setState({
+											boundTag: `gesture-bounds-${idx}`,
+										});
 										router.push(`/bounds/gesture-assisted/${idx}`);
 									}}
 								>

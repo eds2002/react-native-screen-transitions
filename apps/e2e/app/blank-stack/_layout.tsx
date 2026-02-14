@@ -41,6 +41,7 @@ export default function BlankStackLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "vertical",
+
 					...Transition.Presets.SlideFromBottom(),
 				}}
 			/>
@@ -93,6 +94,34 @@ export default function BlankStackLayout() {
 			/>
 			<BlankStack.Screen
 				name="overlay"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="bottom-sheet"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="scroll-tests"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="deep-link/[id]"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="touch-gating"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="active-bounds"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="gesture-bounds"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="style-id-bounds"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 		</BlankStack>

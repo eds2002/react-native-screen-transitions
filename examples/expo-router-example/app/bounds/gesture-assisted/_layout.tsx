@@ -1,11 +1,15 @@
-import { useGlobalSearchParams } from "expo-router";
 import { withTiming } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { create } from "zustand";
 import { Stack } from "@/layouts/stack";
 
-export default function ActiveBoundsLayout() {
-	const { id } = useGlobalSearchParams();
-	const idString = (id ?? "").toString();
+export const useGestureBoundsStore = create<{ boundTag: string }>(() => ({
+	boundTag: "",
+}));
+
+export default function GestureAssistedLayout() {
+	const boundTag = useGestureBoundsStore((s) => s.boundTag);
+
 	return (
 		<Stack>
 			<Stack.Screen
@@ -22,12 +26,11 @@ export default function ActiveBoundsLayout() {
 					screenStyleInterpolator: ({ bounds, current, active }) => {
 						"worklet";
 
-						const ID = `gesture-bounds-${idString}`;
 						/**
 						 * Bounds are designed to work between unfocused & focused screen. While this approach is okay, it realy just gives off a lazy feel. I would recommend separating the bound animations by the focused prop.
 						 */
 						const boundStyles = bounds({
-							id: ID,
+							id: boundTag,
 							gestures: {
 								x: active.gesture.x,
 								y: active.gesture.y,
@@ -36,7 +39,7 @@ export default function ActiveBoundsLayout() {
 						});
 
 						return {
-							[ID]: {
+							[boundTag]: {
 								...boundStyles,
 								opacity: withTiming(current.gesture.isDragging ? 0.5 : 1),
 							},

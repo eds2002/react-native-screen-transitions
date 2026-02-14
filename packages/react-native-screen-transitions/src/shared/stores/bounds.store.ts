@@ -67,6 +67,61 @@ function setLinkSource(
 	});
 }
 
+function updateLinkSource(
+	tag: TagID,
+	screenKey: ScreenKey,
+	bounds: MeasuredDimensions,
+	styles: StyleProps = {},
+	ancestorKeys?: ScreenKey[],
+) {
+	"worklet";
+	registry.modify((state: any) => {
+		"worklet";
+		const stack = state[tag]?.linkStack;
+		if (!stack || stack.length === 0) return state;
+
+		let targetIndex = -1;
+
+		// Prefer the most recent completed link first.
+		// NOTE: matchesScreenKey is inlined here to avoid a Reanimated
+		// workletization crash caused by nested worklet function calls
+		// inside registry.modify callbacks.
+		for (let i = stack.length - 1; i >= 0; i--) {
+			const link = stack[i];
+			const src = link.source;
+			const srcMatches =
+				src &&
+				(src.screenKey === screenKey ||
+					(src.ancestorKeys?.includes(screenKey) ?? false));
+			if (link.destination && srcMatches) {
+				targetIndex = i;
+				break;
+			}
+		}
+
+		// Fallback to pending links when no completed link matches.
+		if (targetIndex === -1) {
+			for (let i = stack.length - 1; i >= 0; i--) {
+				const src = stack[i].source;
+				if (
+					src &&
+					(src.screenKey === screenKey ||
+						(src.ancestorKeys?.includes(screenKey) ?? false))
+				) {
+					targetIndex = i;
+					break;
+				}
+			}
+		}
+
+		if (targetIndex !== -1) {
+			stack[targetIndex].source = { screenKey, ancestorKeys, bounds, styles };
+		}
+
+		return state;
+	});
+}
+
 function setLinkDestination(
 	tag: TagID,
 	screenKey: ScreenKey,
@@ -195,6 +250,7 @@ export const BoundStore = {
 	registerSnapshot,
 	setLinkSource,
 	setLinkDestination,
+	updateLinkSource,
 	getActiveLink,
 	getSnapshot,
 	clear,

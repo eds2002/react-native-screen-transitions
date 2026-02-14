@@ -10,7 +10,7 @@ import { useStackCoreContext } from "../../providers/stack/core.provider";
 import { useManagedStackContext } from "../../providers/stack/managed.provider";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import { StackType } from "../../types/stack.types";
-import { startScreenTransition } from "../../utils/animation/start-screen-transition";
+import { animateToProgress } from "../../utils/animation/animate-to-progress";
 import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
 import { useSharedValueState } from "../reanimated/use-shared-value-state";
 import useStableCallback from "../use-stable-callback";
@@ -43,15 +43,21 @@ const useManagedClose = ({
 		});
 	});
 
+	const routeKey = current.route.key;
+	const transitionSpec = current.options.transitionSpec;
+
 	useAnimatedReaction(
-		() => closingRouteKeysShared.value,
-		(keys) => {
-			if (!keys?.includes(current.route.key)) return;
+		() => {
+			const keys = closingRouteKeysShared.value;
+			return keys?.includes(routeKey) ?? false;
+		},
+		(isClosing, wasClosing) => {
+			if (!isClosing || wasClosing) return;
 
 			runOnJS(activate)();
-			startScreenTransition({
+			animateToProgress({
 				target: "close",
-				spec: current.options.transitionSpec,
+				spec: transitionSpec,
 				animations,
 				onAnimationFinish: handleCloseEnd,
 			});
@@ -96,7 +102,7 @@ const useNativeStackClose = ({
 		e.preventDefault();
 		activate();
 
-		startScreenTransition({
+		animateToProgress({
 			target: "close",
 			spec: current.options.transitionSpec,
 			animations,

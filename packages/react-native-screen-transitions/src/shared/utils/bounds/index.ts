@@ -45,13 +45,15 @@ const resolveBounds = (props: {
 	const fullscreen = FULLSCREEN_DIMENSIONS(props.dimensions);
 
 	const isFullscreenTarget = props.computeOptions.target === "fullscreen";
+	const hasCustomTarget = typeof props.computeOptions.target === "object";
+	const hasTargetOverride = isFullscreenTarget || hasCustomTarget;
 
 	// Try exact match first (strict matching for nested stacks)
 	let link = BoundStore.getActiveLink(props.id, props.current?.route.key);
 
-	// For fullscreen target, fall back to most recent link for this tag
+	// For target overrides, fall back to most recent link for this tag
 	// (destination screen might not have a matching element)
-	if (!link && isFullscreenTarget) {
+	if (!link && hasTargetOverride) {
 		link = BoundStore.getActiveLink(props.id); // No screenKey = get most recent
 	}
 
@@ -63,8 +65,8 @@ const resolveBounds = (props: {
 		};
 	}
 
-	// For fullscreen target, destination element is not required
-	if (!isFullscreenTarget && !link.destination) {
+	// When target is overridden, destination element is not required
+	if (!hasTargetOverride && !link.destination) {
 		return {
 			start: null,
 			end: null,

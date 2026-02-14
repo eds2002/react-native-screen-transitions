@@ -9,14 +9,16 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.eds2002.e2e"
+      "bundleIdentifier": "com.eds2002.e2e",
+      "appleTeamId": "5743WD6SWX"
     },
     "android": {
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.eds2002.e2e"
     },
     "web": {
       "output": "static"

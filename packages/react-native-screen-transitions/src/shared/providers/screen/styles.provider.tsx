@@ -37,7 +37,7 @@ export function ScreenStylesProvider({ children }: Props) {
 	const stylesMap = useDerivedValue<TransitionInterpolatedStyle>(() => {
 		"worklet";
 		const props = screenInterpolatorProps.value;
-		const { current, next, progress, stackProgress } = props;
+		const { current, next, progress } = props;
 		const isDragging = current.gesture.isDragging;
 		const isNextClosing = !!next?.closing;
 
@@ -51,9 +51,6 @@ export function ScreenStylesProvider({ children }: Props) {
 
 		const isInGestureMode = isDragging || isGesturingDuringCloseAnimation.value;
 
-		const hasPushedScreenWhileClosing =
-			!isInGestureMode && isNextClosing && stackProgress > progress;
-
 		// Select interpolator
 		//  - If in gesture mode, use current screen's interpolator since we're driving
 		//    the animation from this screen (dragging back to dismiss next).
@@ -65,7 +62,6 @@ export function ScreenStylesProvider({ children }: Props) {
 
 		// Build effective props with corrected progress
 		//  - Gesture mode: use current.progress only (avoids jumps during drag)
-		//  - Pushed while closing: use stackProgress (includes new screen)
 		//  - Normal: use derived progress as-is
 
 		let effectiveProgress = progress;
@@ -74,8 +70,6 @@ export function ScreenStylesProvider({ children }: Props) {
 		if (isInGestureMode) {
 			effectiveProgress = current.progress;
 			effectiveNext = undefined;
-		} else if (hasPushedScreenWhileClosing) {
-			effectiveProgress = stackProgress;
 		}
 
 		try {

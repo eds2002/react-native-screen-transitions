@@ -143,6 +143,16 @@ export interface ScreenInterpolationProps {
 	stackProgress: number;
 
 	/**
+	 * Animated index of the current snap point.
+	 * Interpolates between indices during gestures/animations.
+	 * - Returns -1 if no snap points are defined
+	 * - Returns 0 when at or below first snap point
+	 * - Returns fractional values between snap points (e.g., 1.5 = halfway between snap 1 and 2)
+	 * - Returns length-1 when at or above last snap point
+	 */
+	snapIndex: number;
+
+	/**
 	 * Function that provides access to bounds builders for creating shared element transitions.
 	 */
 	bounds: BoundsAccessor;
@@ -182,7 +192,18 @@ export type TransitionInterpolatedStyle = {
 	contentStyle?: StyleProps;
 
 	/**
-	 * Animated style for a semi-transparent overlay. Styles are only applied when Transition.View is present.
+	 * Animated style for the semi-transparent backdrop layer behind screen content.
+	 *
+	 * @example
+	 * backdropStyle: {
+	 *   backgroundColor: "black",
+	 *   opacity: interpolate(progress, [0, 1], [0, 0.5]),
+	 * }
+	 */
+	backdropStyle?: StyleProps;
+
+	/**
+	 * @deprecated Use `backdropStyle` instead. Will be removed in next major version.
 	 */
 	overlayStyle?: StyleProps;
 
@@ -198,9 +219,25 @@ export type TransitionInterpolatedStyle = {
 export type AnimationConfig = WithSpringConfig | WithTimingConfig;
 
 /**
- * Defines separate animation configurations for opening and closing a screen.
+ * Defines separate animation configurations for screen transitions and snap point changes.
  */
 export interface TransitionSpec {
+	/**
+	 * Animation config for opening/entering a screen.
+	 */
 	open?: AnimationConfig;
+	/**
+	 * Animation config for closing/exiting a screen.
+	 */
 	close?: AnimationConfig;
+	/**
+	 * Animation config for expanding to a higher snap point.
+	 * Uses lower intensity than `open` to match smaller movement distances.
+	 */
+	expand?: AnimationConfig;
+	/**
+	 * Animation config for collapsing to a lower snap point.
+	 * Uses lower intensity than `close` to match smaller movement distances.
+	 */
+	collapse?: AnimationConfig;
 }

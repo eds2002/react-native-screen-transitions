@@ -4,16 +4,17 @@ import {
 } from "@react-navigation/native";
 import * as React from "react";
 import { Fragment } from "react";
+import { NativeScreen } from "../../shared/components/native-screen";
+import { NativeScreenContainer } from "../../shared/components/native-screen-container";
 import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
+import { isScreenOverlayVisible } from "../../shared/utils/overlay/visibility";
 import type {
 	BlankStackDescriptor,
 	BlankStackNavigationHelpers,
 } from "../types";
-import { AdjustedScreen } from "./adjusted-screen";
-import { AdjustedScreenContainer } from "./adjusted-screen-container";
 
 function isFabric() {
 	return "nativeFabricUIManager" in global;
@@ -31,7 +32,7 @@ const SceneView = React.memo(function SceneView({
 	return (
 		<NavigationContext.Provider value={navigation}>
 			<NavigationRouteContext.Provider value={route}>
-				{descriptor.options.overlayMode === "screen" && <Overlay.Screen />}
+				{isScreenOverlayVisible(descriptor.options) && <Overlay.Screen />}
 				{render()}
 			</NavigationRouteContext.Provider>
 		</NavigationContext.Provider>
@@ -46,7 +47,7 @@ export const StackView = withStackCore(
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
 
-					<AdjustedScreenContainer>
+					<NativeScreenContainer>
 						{scenes.map((scene, sceneIndex) => {
 							const descriptor = scene.descriptor;
 							const route = scene.route;
@@ -66,7 +67,7 @@ export const StackView = withStackCore(
 								? !isPreloaded && !isFocused && !isBelowFocused
 								: !isPreloaded && !isFocused;
 							return (
-								<AdjustedScreen
+								<NativeScreen
 									key={route.key}
 									isPreloaded={isPreloaded}
 									index={sceneIndex}
@@ -81,10 +82,10 @@ export const StackView = withStackCore(
 									>
 										<SceneView key={route.key} descriptor={descriptor} />
 									</ScreenComposer>
-								</AdjustedScreen>
+								</NativeScreen>
 							);
 						})}
-					</AdjustedScreenContainer>
+					</NativeScreenContainer>
 				</Fragment>
 			);
 		},

@@ -52,6 +52,17 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * </Transition.View>
 	 */
 	sharedBoundTag?: string;
+
+	/**
+	 * Re-measures this component when the screen regains focus and updates
+	 * any matching shared-bound source link in place.
+	 *
+	 * Useful when layout can change while unfocused (for example, programmatic
+	 * ScrollView/FlatList scrolling triggered from another screen).
+	 *
+	 * @default false
+	 */
+	remeasureOnFocus?: boolean;
 };
 
 export type ScreenTransitionConfig = {
@@ -66,7 +77,10 @@ export type ScreenTransitionConfig = {
 	transitionSpec?: TransitionSpec;
 
 	/**
-	 * Whether the gesture is enabled.
+	 * Controls whether swipe-to-dismiss is enabled.
+	 *
+	 * For screens with `snapPoints`, gesture-driven snapping between non-dismiss
+	 * snap points remains available even when this is `false`.
 	 */
 	gestureEnabled?: boolean;
 
@@ -77,8 +91,16 @@ export type ScreenTransitionConfig = {
 
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.
+	 * @default 0.3
 	 */
 	gestureVelocityImpact?: number;
+
+	/**
+	 * How much velocity affects snap point targeting. Lower values make snapping
+	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
+	 * @default 0.1
+	 */
+	snapVelocityImpact?: number;
 
 	/**
 	 * Distance threshold for gesture recognition throughout the screen.
@@ -136,4 +158,72 @@ export type ScreenTransitionConfig = {
 	 * @default false
 	 */
 	experimental_enableHighRefreshRate?: boolean;
+
+	/**
+	 * Describes heights where a screen can rest, as fractions of screen height.
+	 * Pass an array of ascending values from 0 to 1.
+	 *
+	 * @example
+	 * snapPoints={[0.5, 1.0]} // 50% and 100% of screen height
+	 *
+	 * @default [1.0]
+	 */
+	snapPoints?: number[];
+
+	/**
+	 * The initial snap point index when the screen opens.
+	 *
+	 * @default 0
+	 */
+	initialSnapIndex?: number;
+
+	/**
+	 * Controls whether swiping to expand the sheet works from within a ScrollView.
+	 *
+	 * - `true` (Apple Maps style): Swiping up at scroll top expands the sheet
+	 * - `false` (Instagram style): Expand only works via deadspace (non-scrollable areas)
+	 *
+	 * Collapse (swipe down at scroll top) always works regardless of this setting.
+	 *
+	 * Only applies to screens with `snapPoints` configured.
+	 *
+	 * @default true
+	 */
+	expandViaScrollView?: boolean;
+
+	/**
+	 * Locks gesture-based snap movement to the current snap point.
+	 *
+	 * When enabled, users cannot gesture between snap points. If dismiss gestures
+	 * are allowed (`gestureEnabled !== false`), swipe-to-dismiss still works.
+	 * Programmatic `snapTo()` calls are not affected.
+	 *
+	 * @default false
+	 */
+	gestureSnapLocked?: boolean;
+
+	/**
+	 * Controls how touches interact with the backdrop area (outside the screen content).
+	 *
+	 * - `'block'`: Backdrop catches all touches (default for most screens)
+	 * - `'passthrough'`: Touches pass through to content behind (default for component stacks)
+	 * - `'dismiss'`: Tapping backdrop dismisses the screen
+	 * - `'collapse'`: Tapping backdrop collapses to next lower snap point (dismisses at min)
+	 *
+	 * @default 'block' (or 'passthrough' for component stacks)
+	 */
+	backdropBehavior?: "block" | "passthrough" | "dismiss" | "collapse";
+
+	/**
+	 * Custom component to render as the backdrop layer.
+	 * When provided, replaces the default backdrop entirely — including press handling.
+	 *
+	 * Use `useScreenAnimation()` inside the component to access animation values.
+	 * Use your navigation method of choice (e.g. `router.back()`) to handle dismissal.
+	 *
+	 * `backdropBehavior` still controls container-level pointer events when this is set.
+	 *
+	 * @default undefined
+	 */
+	backdropComponent?: React.FC;
 };

@@ -10,7 +10,10 @@ import {
 	StackContext,
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
-import { AnimationStore } from "../../stores/animation.store";
+import {
+	AnimationStore,
+	type AnimationStoreMap,
+} from "../../stores/animation.store";
 import { HistoryStore } from "../../stores/history.store";
 import type {
 	BaseStackDescriptor,
@@ -19,8 +22,8 @@ import type {
 	BaseStackScene,
 	BaseStackState,
 } from "../../types/stack.types";
+import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
-import { calculateActiveScreensLimit } from "./helpers/active-screens-limit";
 import { useLocalRoutes } from "./helpers/use-local-routes";
 
 /**
@@ -53,6 +56,7 @@ interface ManagedStackContextValue<
 	focusedIndex: number;
 	stackProgress: DerivedValue<number>;
 	optimisticFocusedIndex: DerivedValue<number>;
+	backdropBehaviors: string[];
 }
 
 const ManagedStackContext =
@@ -82,40 +86,66 @@ function useManagedStackValue<
 	const { flags } = useStackCoreContext();
 	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
 
-	const { scenes, activeScreensLimit, shouldShowFloatOverlay, routeKeys } =
-		useMemo(() => {
-			const scenes: BaseStackScene<TDescriptor>[] = [];
-			const routeKeys: string[] = [];
-			let shouldShowFloatOverlay = false;
+	const {
+		scenes,
+		activeScreensLimit,
+		shouldShowFloatOverlay,
+		routeKeys,
+		backdropBehaviors,
+		animationMaps,
+	} = useMemo(() => {
+		const routes = state.routes;
+		const descriptors = state.descriptors;
+		const scenes: BaseStackScene<TDescriptor>[] = [];
+		const routeKeys: string[] = [];
+		const backdropBehaviors: string[] = [];
+		const animationMaps: AnimationStoreMap[] = [];
 
-			for (const route of state.routes) {
-				const descriptor = state.descriptors[route.key] as TDescriptor;
-				scenes.push({ route, descriptor });
-				routeKeys.push(route.key);
+		let shouldShowFloatOverlay = false;
+		let limit = 1;
+		let stopLimit = false;
 
-				if (!shouldShowFloatOverlay) {
-					const options = descriptor?.options;
-					shouldShowFloatOverlay =
-						options?.overlayMode === "float" && options?.overlayShown === true;
-				}
+		for (let i = routes.length - 1; i >= 0; i--) {
+			const route = routes[i];
+			const descriptor = descriptors[route.key] as TDescriptor;
+			const options = descriptor?.options;
+
+			scenes[i] = { route, descriptor };
+			routeKeys[i] = route.key;
+			backdropBehaviors[i] = options?.backdropBehavior ?? "block";
+			animationMaps[i] = AnimationStore.getAll(route.key);
+
+			if (!shouldShowFloatOverlay) {
+				shouldShowFloatOverlay = isFloatOverlayVisible(options);
 			}
 
-			return {
-				scenes,
-				routeKeys,
-				activeScreensLimit: calculateActiveScreensLimit(
-					state.routes,
-					state.descriptors,
-				),
-				shouldShowFloatOverlay,
-			};
-		}, [state.routes, state.descriptors]);
+			if (!stopLimit) {
+				const shouldKeepPrevious =
+					(options as { detachPreviousScreen?: boolean })
+						?.detachPreviousScreen !== true;
 
-	// Get animation store maps for LOCAL routes (including closing routes)
-	const animationMaps = useMemo(
-		() => state.routes.map((route) => AnimationStore.getAll(route.key)),
-		[state.routes],
-	);
+				if (shouldKeepPrevious) {
+					limit += 1;
+				} else {
+					stopLimit = true;
+				}
+			}
+		}
+
+		const activeScreensLimit = Math.min(
+			limit,
+			routes.length === 0 ? 1 : routes.length,
+		);
+
+		return {
+			scenes,
+			routeKeys,
+			backdropBehaviors,
+			activeScreensLimit,
+			shouldShowFloatOverlay,
+			animationMaps,
+		};
+	}, [state.routes, state.descriptors]);
 
 	// Aggregated stack progress from LOCAL routes (includes closing routes)
 	const stackProgress = useDerivedValue(() => {
@@ -127,23 +157,23 @@ function useManagedStackValue<
 		return total;
 	});
 
-	// Optimistic focused index: accounts for closing screens
+	// Optimistic focused index: accounts for closing screens.
+	// Counts consecutive closing screens from the top of the stack so that
+	// rapid dismiss chains (e.g. dismiss C then B while C is still in flight)
+	// correctly identify the actual focused screen for pointer-event gating.
 	const optimisticFocusedIndex = useDerivedValue(() => {
 		"worklet";
-		const currentIndex = animationMaps.length - 1;
-		let isAnyClosing = false;
-		for (let i = 0; i < animationMaps.length; i++) {
-			if (animationMaps[i].closing.value > 0) {
-				isAnyClosing = true;
-				break;
-			}
+		const lastIndex = animationMaps.length - 1;
+		let closingFromTop = 0;
+		for (let i = lastIndex; i >= 0; i--) {
+			if (animationMaps[i].closing.value > 0) closingFromTop++;
+			else break;
 		}
-		return currentIndex - Number(isAnyClosing);
+		return lastIndex - closingFromTop;
 	});
 
 	const focusedIndex = props.state.index;
 
-	// StackContext value - for overlays via useStack()
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
@@ -180,6 +210,7 @@ function useManagedStackValue<
 			shouldShowFloatOverlay,
 			stackProgress,
 			optimisticFocusedIndex,
+			backdropBehaviors,
 		}),
 		[
 			state.routes,
@@ -192,6 +223,7 @@ function useManagedStackValue<
 			shouldShowFloatOverlay,
 			stackProgress,
 			optimisticFocusedIndex,
+			backdropBehaviors,
 		],
 	);
 

@@ -7,25 +7,33 @@ import { Animated, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useScreenAnimation } from "../../../hooks/animation/use-screen-animation";
-import { useScreenState } from "../../../hooks/navigation/use-screen-state";
 import type { StackScene } from "../../../hooks/navigation/use-stack";
 import type { BaseDescriptor } from "../../../providers/screen/keys.provider";
 import type { OverlayInterpolationProps } from "../../../types/animation.types";
 import type { OverlayProps } from "../../../types/overlay.types";
 
+type OverlayScreenState = Omit<
+	OverlayProps<BaseDescriptor["navigation"]>,
+	"progress" | "overlayAnimation" | "screenAnimation"
+> & {
+	index: number;
+	snapTo: (index: number) => void;
+};
+
 type OverlayHostProps = {
 	scene: StackScene;
+	overlayScreenState: OverlayScreenState;
 };
 
 export const OverlayHost = memo(function OverlayHost({
 	scene,
+	overlayScreenState,
 }: OverlayHostProps) {
 	const OverlayComponent = scene.descriptor.options.overlay;
 	const screen = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 
 	const screenAnimation = useScreenAnimation();
-	const screenState = useScreenState();
 	const relativeProgress = useDerivedValue(() => {
 		"worklet";
 		return screenAnimation.value.stackProgress;
@@ -39,12 +47,14 @@ export const OverlayHost = memo(function OverlayHost({
 
 	const overlayProps: OverlayProps<BaseDescriptor["navigation"]> = useMemo(
 		() => ({
-			...screenState,
+			...overlayScreenState,
 			progress: relativeProgress,
-			overlayAnimation, //Deprecated
-			screenAnimation, //Deprecated
+			/**@deprecated */
+			overlayAnimation,
+			/**@deprecated */
+			screenAnimation,
 		}),
-		[relativeProgress, overlayAnimation, screenAnimation, screenState],
+		[relativeProgress, overlayAnimation, screenAnimation, overlayScreenState],
 	);
 
 	if (!OverlayComponent) {

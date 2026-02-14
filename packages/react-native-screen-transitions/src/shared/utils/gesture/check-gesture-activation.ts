@@ -1,11 +1,13 @@
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import type { SharedValue } from "react-native-reanimated";
+import type { ScrollConfig } from "../../providers/gestures.provider";
 import {
 	type ActivationArea,
 	type GestureActivationArea,
 	GestureOffsetState,
 	type SideActivation,
 } from "../../types/gesture.types";
+import type { Direction } from "../../types/ownership.types";
 import type { Layout } from "../../types/screen.types";
 
 type Directions = {
@@ -13,6 +15,7 @@ type Directions = {
 	verticalInverted: boolean;
 	horizontal: boolean;
 	horizontalInverted: boolean;
+	snapAxisInverted?: boolean;
 };
 
 interface CheckGestureActivationProps {
@@ -308,3 +311,95 @@ export const applyOffsetRules = ({
 		isSwipingLeft,
 	};
 };
+
+/**
+ * Checks if a ScrollView is at its boundary for the given swipe direction.
+ * This is a simplified boundary check that respects axis isolation.
+ *
+ * Per the spec:
+ * - A vertical ScrollView never yields to horizontal gestures
+ * - A horizontal ScrollView never yields to vertical gestures
+ * - ScrollView must be at boundary before yielding control
+ *
+ * For snap point sheets, the boundary depends on where the sheet originates from:
+ * - Bottom sheet (vertical): scrollY = 0 (top/base)
+ * - Top sheet (verticalInverted): scrollY >= maxY (bottom/end)
+ * - Right drawer (horizontal): scrollX = 0 (left/base)
+ * - Left drawer (horizontalInverted): scrollX >= maxX (right/end)
+ *
+ * The rule: "when the ScrollView can't scroll any further in the direction
+ * the sheet came from, yield to the gesture."
+ *
+ * @param scrollConfig - The current scroll state
+ * @param direction - The swipe direction to check
+ * @param snapAxisInverted - For snap point sheets, whether the axis is inverted (top sheet / left drawer)
+ * @returns true if at boundary (gesture should activate), false otherwise
+ */
+export function checkScrollBoundary(
+	scrollConfig: ScrollConfig | null,
+	direction: Direction,
+	snapAxisInverted?: boolean,
+): boolean {
+	"worklet";
+
+	if (!scrollConfig) {
+		// No scroll config means no ScrollView - allow gesture
+		return true;
+	}
+
+	const {
+		x: scrollX,
+		y: scrollY,
+		contentWidth,
+		contentHeight,
+		layoutWidth,
+		layoutHeight,
+	} = scrollConfig;
+
+	// Calculate max scroll values
+	const maxScrollX = Math.max(0, contentWidth - layoutWidth);
+	const maxScrollY = Math.max(0, contentHeight - layoutHeight);
+
+	// For snap point sheets (snapAxisInverted is defined), boundary depends on sheet origin
+	// Even if content isn't scrollable, respect bounce/overscroll state
+	if (snapAxisInverted !== undefined) {
+		const isVerticalDirection =
+			direction === "vertical" || direction === "vertical-inverted";
+
+		if (isVerticalDirection) {
+			// Bottom sheet (not inverted): boundary at scroll top
+			// Top sheet (inverted): boundary at scroll bottom
+			return snapAxisInverted ? scrollY >= maxScrollY : scrollY <= 0;
+		}
+		// Horizontal direction
+		// Right drawer (not inverted): boundary at scroll left
+		// Left drawer (inverted): boundary at scroll right
+		return snapAxisInverted ? scrollX >= maxScrollX : scrollX <= 0;
+	}
+
+	// Non-sheet screens: each direction has its own boundary
+	switch (direction) {
+		case "vertical":
+			// Swipe down - check if at top of vertical scroll
+			// Even if content isn't scrollable, respect bounce/overscroll state
+			return scrollY <= 0;
+
+		case "vertical-inverted":
+			// Swipe up - check if at bottom of vertical scroll
+			// Even if content isn't scrollable, respect bounce/overscroll state
+			return scrollY >= maxScrollY;
+
+		case "horizontal":
+			// Swipe right - check if at left of horizontal scroll
+			// Even if content isn't scrollable, respect bounce/overscroll state
+			return scrollX <= 0;
+
+		case "horizontal-inverted":
+			// Swipe left - check if at right of horizontal scroll
+			// Even if content isn't scrollable, respect bounce/overscroll state
+			return scrollX >= maxScrollX;
+
+		default:
+			return true;
+	}
+}

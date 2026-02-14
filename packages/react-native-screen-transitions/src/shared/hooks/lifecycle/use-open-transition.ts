@@ -1,8 +1,29 @@
 import { useLayoutEffect } from "react";
 import type { BaseDescriptor } from "../../providers/screen/keys.provider";
 import type { AnimationStoreMap } from "../../stores/animation.store";
-import { startScreenTransition } from "../../utils/animation/start-screen-transition";
+import { animateToProgress } from "../../utils/animation/animate-to-progress";
 import { useHighRefreshRate } from "../animation/use-high-refresh-rate";
+
+/**
+ * Calculates the initial progress value based on snap points configuration.
+ */
+function getInitialProgress({
+	snapPoints,
+	initialSnapIndex,
+}: {
+	snapPoints?: number[];
+	initialSnapIndex: number;
+}): number | undefined {
+	if (!snapPoints) {
+		return undefined;
+	}
+
+	const clampedIndex = Math.min(
+		Math.max(0, initialSnapIndex),
+		snapPoints.length - 1,
+	);
+	return snapPoints[clampedIndex];
+}
 
 /**
  * Handles opening animation on mount.
@@ -17,9 +38,12 @@ export function useOpenTransition(
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
+		const { snapPoints, initialSnapIndex = 0 } = current.options;
+		const targetProgress = getInitialProgress({ snapPoints, initialSnapIndex });
+
 		activateHighRefreshRate();
-		startScreenTransition({
-			target: "open",
+		animateToProgress({
+			target: targetProgress ?? "open",
 			spec: current.options.transitionSpec,
 			animations,
 			onAnimationFinish: deactivateHighRefreshRate,
