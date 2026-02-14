@@ -74,6 +74,22 @@ const SNAP_POINT_EXAMPLES: Example[] = [
 	},
 ];
 
+const REGRESSION_EXAMPLES: Example[] = [
+	{
+		id: "claim-fallback",
+		title: "Claim Fallback Chain",
+		description:
+			"After top claim unmount, ownership should fall back to nearest",
+		scenario: "L1 (vertical) > L2 (vertical) > L3 (vertical)",
+	},
+	{
+		id: "snap-locked-no-bubble",
+		title: "Locked Snap No Bubble",
+		description: "Locked no-dismiss sheet should not bubble to ancestor",
+		scenario: "Parent (vertical) > Sheet (snap lock + no dismiss)",
+	},
+];
+
 const SCROLLVIEW_EXAMPLES: Example[] = [
 	{
 		id: "scroll-direction-propagation",
@@ -111,9 +127,7 @@ function Section({ title, examples }: { title: string; examples: Example[] }) {
 						key={example.id}
 						testID={`gesture-${example.id}`}
 						style={styles.item}
-						onPress={() =>
-							router.push(`/gestures/${example.id}` as `/gestures/${string}`)
-						}
+						onPress={() => router.push(`/gestures/${example.id}` as never)}
 					>
 						<Text style={styles.itemTitle}>{example.title}</Text>
 						<Text style={styles.itemDescription}>{example.description}</Text>
@@ -141,6 +155,7 @@ export default function GesturesIndex() {
 					examples={INTERMEDIATE_EXAMPLES}
 				/>
 				<Section title="Snap Points" examples={SNAP_POINT_EXAMPLES} />
+				<Section title="Regression Visuals" examples={REGRESSION_EXAMPLES} />
 				<Section title="ScrollView Handoff" examples={SCROLLVIEW_EXAMPLES} />
 			</ScrollView>
 		</SafeAreaView>

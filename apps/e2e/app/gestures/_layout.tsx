@@ -87,6 +87,22 @@ export default function GesturesLayout() {
 				name="snap-deep-nesting"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<BlankStack.Screen
+				name="claim-fallback"
+				options={{
+					...Transition.Presets.SlideFromBottom(),
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+				}}
+			/>
+			<BlankStack.Screen
+				name="snap-locked-no-bubble"
+				options={{
+					...Transition.Presets.SlideFromBottom(),
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+				}}
+			/>
 			{/* ScrollView Examples */}
 			<BlankStack.Screen
 				name="scroll-direction-propagation"
