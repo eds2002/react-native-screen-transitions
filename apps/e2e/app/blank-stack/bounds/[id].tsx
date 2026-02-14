@@ -6,7 +6,7 @@ import type {
 	ScrollView,
 } from "react-native";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import Animated, { runOnUI } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
@@ -17,8 +17,11 @@ export default function BoundsDetail() {
 	const { width } = useWindowDimensions();
 	const scrollRef = useRef<ScrollView>(null);
 
-	const initialIndex = ITEMS.findIndex((item) => item.id === id);
-	const itemSize = width * 0.85;
+	const initialIndex = Math.max(
+		0,
+		ITEMS.findIndex((item) => item.id === id),
+	);
+	const itemSize = width * 0.92;
 
 	const handleMomentumScrollEnd = (
 		event: NativeSyntheticEvent<NativeScrollEvent>,
@@ -26,6 +29,8 @@ export default function BoundsDetail() {
 		const offsetX = event.nativeEvent.contentOffset.x;
 		const pageIndex = Math.round(offsetX / width);
 		const item = ITEMS[pageIndex];
+
+		if (!item) return;
 
 		activeBoundaryId.value = item.id;
 	};

@@ -11,6 +11,10 @@ export type BoundaryItem = {
 export const ITEMS: BoundaryItem[] = [
 	{ id: "a", color: "#4f7cff", label: "A" },
 	{ id: "b", color: "#ff6b35", label: "B" },
+	{ id: "c", color: "#18a999", label: "C" },
+	{ id: "d", color: "#f4b400", label: "D" },
+	{ id: "e", color: "#8b5cf6", label: "E" },
+	{ id: "f", color: "#ef4444", label: "F" },
 ];
 
 /**
