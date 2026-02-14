@@ -225,9 +225,17 @@ export function buildBoundaryMatchKey(
 const useGroupActiveMeasurement = (params: {
 	group: string | undefined;
 	id: BoundaryId;
+	shouldUpdateDestination: boolean;
+	isAnimating: ReturnType<typeof AnimationStore.getAnimation>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { group, id, maybeMeasureAndStore } = params;
+	const {
+		group,
+		id,
+		shouldUpdateDestination,
+		isAnimating,
+		maybeMeasureAndStore,
+	} = params;
 	const idStr = String(id);
 
 	const allGroups = BoundStore.getGroups();
@@ -240,7 +248,8 @@ const useGroupActiveMeasurement = (params: {
 		},
 		(groups, previousGroups) => {
 			"worklet";
-			if (!groups || !group) return;
+			if (!groups || !group || !shouldUpdateDestination) return;
+			if (isAnimating.value) return;
 
 			const activeGroupActiveId = groups[group]?.activeId;
 			if (
@@ -250,7 +259,7 @@ const useGroupActiveMeasurement = (params: {
 				maybeMeasureAndStore({ shouldUpdateDestination: true });
 			}
 		},
-		[group, idStr, maybeMeasureAndStore],
+		[group, idStr, shouldUpdateDestination, isAnimating, maybeMeasureAndStore],
 	);
 };
 
@@ -293,6 +302,7 @@ const BoundaryComponent = ({
 	const { current, next } = useKeys();
 	const currentScreenKey = current.route.key;
 	const hasNextScreen = !!next;
+	const shouldUpdateDestination = !hasNextScreen;
 	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 	const layoutAnchor = useLayoutAnchorContext();
 
@@ -413,6 +423,8 @@ const BoundaryComponent = ({
 	useGroupActiveMeasurement({
 		group,
 		id,
+		shouldUpdateDestination,
+		isAnimating,
 		maybeMeasureAndStore,
 	});
 
