@@ -1,6 +1,6 @@
 {
 	"name": "react-native-screen-transitions",
-	"version": "3.3.0-rc.3",
+	"version": "3.3.0",
 	"description": "Easy screen transitions for React Native and Expo",
 	"author": "Ed",
 	"license": "MIT",
@@ -45,7 +45,12 @@
 		"typecheck": "tsc --noEmit",
 		"prepublishOnly": "bun run build",
 		"release": "release-it",
-		"release:beta": "release-it --preRelease=beta"
+		"release:stable": "release-it",
+		"release:beta": "release-it --preRelease=beta",
+		"release:rc": "release-it --preRelease=rc",
+		"release:dry-run": "release-it --dry-run",
+		"release:beta:dry-run": "release-it --preRelease=beta --dry-run",
+		"release:rc:dry-run": "release-it --preRelease=rc --dry-run"
 	},
 	"keywords": [
 		"react-native",
@@ -112,6 +117,7 @@
 		},
 		"plugins": {
 			"@release-it/conventional-changelog": {
+				"infile": "CHANGELOG.md",
 				"preset": {
 					"name": "angular"
 				},
