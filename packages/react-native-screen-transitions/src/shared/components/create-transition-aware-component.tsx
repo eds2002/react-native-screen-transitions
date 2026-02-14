@@ -95,6 +95,7 @@ export function createTransitionAwareComponent<P extends object>(
 		const { associatedStyles } = useAssociatedStyles({
 			id: sharedBoundTag || styleId,
 			style,
+			resetTransformOnUnset: !!sharedBoundTag,
 		});
 
 		return (

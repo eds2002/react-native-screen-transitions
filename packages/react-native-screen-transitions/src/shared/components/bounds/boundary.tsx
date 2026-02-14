@@ -186,10 +186,33 @@ const useFocusMeasurement = (params: {
 	);
 };
 
-export const buildBoundaryMatchKey = (
+type BuildBoundaryMatchKeyParams = {
+	group?: string;
+	id: BoundaryId;
+};
+
+export function buildBoundaryMatchKey(
+	params: BuildBoundaryMatchKeyParams,
+): string;
+export function buildBoundaryMatchKey(
 	group: string | undefined,
 	id: BoundaryId,
-): string => (group ? `${group}:${id}` : String(id));
+): string;
+export function buildBoundaryMatchKey(
+	paramsOrGroup: BuildBoundaryMatchKeyParams | string | undefined,
+	legacyId?: BoundaryId,
+): string {
+	"worklet";
+
+	if (typeof paramsOrGroup === "object" && paramsOrGroup !== null) {
+		const { group, id } = paramsOrGroup;
+		return group ? `${group}:${id}` : String(id);
+	}
+
+	const group = paramsOrGroup;
+	const id = legacyId;
+	return group ? `${group}:${id}` : String(id);
+}
 
 /**
  * Watches the group's active id in the BoundStore.
@@ -237,7 +260,7 @@ const BoundaryComponent = ({
 	onLayout,
 	...rest
 }: BoundaryProps) => {
-	const sharedBoundTag = buildBoundaryMatchKey(group, id);
+	const sharedBoundTag = buildBoundaryMatchKey({ group, id });
 	const animatedRef = useAnimatedRef<View>();
 
 	const { current } = useKeys();
@@ -250,7 +273,10 @@ const BoundaryComponent = ({
 		"animating",
 	);
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
-	const { associatedStyles } = useAssociatedStyles({ id: sharedBoundTag });
+	const { associatedStyles } = useAssociatedStyles({
+		id: sharedBoundTag,
+		resetTransformOnUnset: true,
+	});
 
 	const maybeMeasureAndStore = useStableCallbackValue(
 		({
