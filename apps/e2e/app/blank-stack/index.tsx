@@ -69,6 +69,11 @@ const TEST_FLOWS = [
 		title: "Style ID Bounds",
 		description: "Bounds with styleId masking for complex shared transitions",
 	},
+	{
+		id: "bounds",
+		title: "Boundary (v2)",
+		description: "Minimal Transition.Boundary example between two screens",
+	},
 ];
 
 export default function BlankStackIndex() {
@@ -85,11 +90,7 @@ export default function BlankStackIndex() {
 							key={flow.id}
 							testID={`blank-${flow.id}`}
 							style={styles.item}
-							onPress={() =>
-								router.push(
-									`/blank-stack/${flow.id}` as `/blank-stack/${string}`,
-								)
-							}
+							onPress={() => router.push(`/blank-stack/${flow.id}` as never)}
 						>
 							<Text style={styles.itemTitle}>{flow.title}</Text>
 							<Text style={styles.itemDescription}>{flow.description}</Text>

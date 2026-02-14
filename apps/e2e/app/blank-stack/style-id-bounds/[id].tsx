@@ -1,6 +1,6 @@
 import MaskedView from "@react-native-masked-view/masked-view";
 import { Image } from "expo-image";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
@@ -29,6 +29,7 @@ function SharedImage({
 		<Transition.View
 			sharedBoundTag={id}
 			style={[styles.sharedImage, { width: size, height: size }]}
+			onTouchStart={router.back}
 		>
 			<Image
 				source={image}

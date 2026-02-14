@@ -124,6 +124,10 @@ export default function BlankStackLayout() {
 				name="style-id-bounds"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<BlankStack.Screen
+				name="bounds"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
 		</BlankStack>
 	);
 }
