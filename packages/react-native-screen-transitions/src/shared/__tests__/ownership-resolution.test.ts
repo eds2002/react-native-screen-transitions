@@ -5,18 +5,21 @@ import {
 	claimsAnyDirection,
 	computeClaimedDirections,
 } from "../utils/gesture/compute-claimed-directions";
-import {
-	type AncestorClaimsContext,
-	resolveOwnership,
-} from "../utils/gesture/resolve-ownership";
+import { resolveOwnership } from "../utils/gesture/resolve-ownership";
+
+/** Minimal shape matching resolve-ownership's internal AncestorClaimsContext */
+interface MockAncestorContext {
+	claimedDirections: ClaimedDirections;
+	ancestorContext: MockAncestorContext | null;
+}
 
 /**
  * Helper to create a mock context chain for testing.
  */
 function createContext(
 	claims: ClaimedDirections,
-	parent: AncestorClaimsContext | null = null,
-): AncestorClaimsContext {
+	parent: MockAncestorContext | null = null,
+): MockAncestorContext {
 	return {
 		claimedDirections: claims,
 		ancestorContext: parent,

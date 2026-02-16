@@ -6,14 +6,6 @@ import {
 import type { GestureDirection } from "../types/gesture.types";
 import type { ScreenKey } from "../types/screen.types";
 
-type GestureKey =
-	| "x"
-	| "y"
-	| "normalizedX"
-	| "normalizedY"
-	| "isDismissing"
-	| "isDragging";
-
 export type GestureStoreMap = {
 	x: SharedValue<number>;
 	y: SharedValue<number>;
@@ -45,10 +37,6 @@ function ensure(routeKey: ScreenKey): GestureStoreMap {
 	return bag;
 }
 
-function getGesture(routeKey: ScreenKey, gestureKey: GestureKey) {
-	return ensure(routeKey)[gestureKey];
-}
-
 function getRouteGestures(routeKey: ScreenKey) {
 	return ensure(routeKey);
 }
@@ -68,7 +56,6 @@ function clear(routeKey: ScreenKey) {
 }
 
 export const GestureStore = {
-	getGesture,
 	getRouteGestures,
 	clear,
 };

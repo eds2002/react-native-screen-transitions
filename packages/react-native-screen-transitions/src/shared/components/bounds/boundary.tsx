@@ -164,29 +164,6 @@ const useBlurMeasurement = (params: {
 	);
 };
 
-const useFocusMeasurement = (params: {
-	maybeMeasureAndStore: (options?: MaybeMeasureAndStoreParams) => void;
-}) => {
-	const { next } = useKeys();
-	const nextScreenKey = next?.route.key;
-	const { maybeMeasureAndStore } = params;
-
-	const nextClosing = nextScreenKey
-		? AnimationStore.getAnimation(nextScreenKey, "closing")
-		: null;
-
-	useAnimatedReaction(
-		() => nextClosing?.get() ?? 0,
-		(closing, prevClosing) => {
-			"worklet";
-			if (closing === 1 && (prevClosing === 0 || prevClosing === null)) {
-				maybeMeasureAndStore({ shouldUpdateSource: true });
-			}
-		},
-		[nextClosing, maybeMeasureAndStore],
-	);
-};
-
 type BuildBoundaryMatchKeyParams = {
 	group?: string;
 	id: BoundaryId;
@@ -412,13 +389,6 @@ const BoundaryComponent = ({
 		ancestorKeys,
 		maybeMeasureAndStore,
 	});
-
-	/**
-	 * We'll have to figure out a more better way of handling this lol, this causes some ugly cases.
-	 */
-	// useFocusMeasurement({
-	// 	maybeMeasureAndStore,
-	// });
 
 	useGroupActiveMeasurement({
 		group,

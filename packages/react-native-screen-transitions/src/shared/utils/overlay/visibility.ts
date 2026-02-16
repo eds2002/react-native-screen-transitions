@@ -6,7 +6,7 @@ type OverlayOptionsLike = {
 	overlayShown?: boolean;
 };
 
-export const isOverlayVisible = (options?: OverlayOptionsLike): boolean => {
+const isOverlayVisible = (options?: OverlayOptionsLike): boolean => {
 	return Boolean(options?.overlay) && options?.overlayShown !== false;
 };
 

@@ -1,4 +1,4 @@
-import * as React from "react";
+import type * as React from "react";
 import { useEffect, useMemo } from "react";
 import type { NativeStackDescriptorMap } from "../../../native-stack/types";
 import {
@@ -18,11 +18,6 @@ import type {
 import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 import { useStackDerived } from "./helpers/use-stack-derived";
-
-const DirectStackContext = React.createContext<DirectStackContextValue | null>(
-	null,
-);
-DirectStackContext.displayName = "DirectStack";
 
 function useDirectStackValue(
 	props: DirectStackProps,
@@ -151,9 +146,7 @@ function withDirectStack<TProps extends DirectStackProps>(
 
 		return (
 			<StackContext.Provider value={stackContextValue}>
-				<DirectStackContext.Provider value={lifecycleValue}>
-					<Component {...lifecycleValue} />
-				</DirectStackContext.Provider>
+				<Component {...lifecycleValue} />
 			</StackContext.Provider>
 		);
 	};

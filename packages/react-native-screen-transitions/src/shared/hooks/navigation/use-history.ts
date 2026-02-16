@@ -2,7 +2,7 @@ import { useMemo, useSyncExternalStore } from "react";
 import { type HistoryEntry, HistoryStore } from "../../stores/history.store";
 import type { ScreenKey } from "../../types/screen.types";
 
-export interface UseHistoryReturn {
+interface UseHistoryReturn {
 	/**
 	 * The full history map.
 	 */

@@ -4,7 +4,6 @@
  * SUPER COOL AMAZING UTILITY
  */
 import {
-	type ComponentType,
 	createContext,
 	type ReactNode,
 	useContext,
@@ -90,32 +89,10 @@ export default function createProvider<
 			return context;
 		};
 
-		/**
-		 * HOC that wraps a component with the provider.
-		 * Uses the Provider component internally to ensure hooks are called correctly.
-		 */
-		const withProvider = (Component: ComponentType<ContextValue>) => {
-			// Consumer component that reads context and passes to wrapped component
-			const ContextConsumer = () => {
-				const contextValue = useEnhancedContext();
-				if (!contextValue) return null;
-				return <Component {...contextValue} />;
-			};
-
-			return function WithProviderWrapper(props: ProviderProps) {
-				return (
-					<Provider {...props}>
-						<ContextConsumer />
-					</Provider>
-				);
-			};
-		};
-
 		return {
 			[`${name}Context`]: Context,
 			[`${name}Provider`]: Provider,
 			[`use${name}Context`]: useEnhancedContext,
-			[`with${name}Provider`]: withProvider,
 		} as {
 			[P in ProviderName as `${P}Context`]: React.Context<ContextValue>;
 		} & {
@@ -124,10 +101,6 @@ export default function createProvider<
 			[P in ProviderName as `use${P}Context`]: () => Guarded extends true
 				? ContextValue
 				: ContextValue | null;
-		} & {
-			[P in ProviderName as `with${P}Provider`]: (
-				Component: ComponentType<ContextValue>,
-			) => React.FC<ProviderProps>;
 		};
 	};
 }

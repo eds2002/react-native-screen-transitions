@@ -18,7 +18,11 @@ import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
 import { GestureStore, type GestureStoreMap } from "../stores/gesture.store";
-import type { ClaimedDirections, Direction } from "../types/ownership.types";
+import {
+	type ClaimedDirections,
+	DIRECTIONS,
+	type Direction,
+} from "../types/ownership.types";
 import { StackType } from "../types/stack.types";
 import createProvider from "../utils/create-provider";
 import { computeClaimedDirections } from "../utils/gesture/compute-claimed-directions";
@@ -54,13 +58,6 @@ const NO_CLAIMS: DirectionClaimMap = {
 	horizontal: null,
 	"horizontal-inverted": null,
 };
-
-const DIRECTIONS: Direction[] = [
-	"vertical",
-	"vertical-inverted",
-	"horizontal",
-	"horizontal-inverted",
-];
 
 /**
  * Registers direction claims on ancestors that this screen shadows.

@@ -15,7 +15,7 @@ import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
 import { useSharedValueState } from "../reanimated/use-shared-value-state";
 import useStableCallback from "../use-stable-callback";
 
-export interface CloseHookParams {
+interface CloseHookParams {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
 	activate: () => void;
