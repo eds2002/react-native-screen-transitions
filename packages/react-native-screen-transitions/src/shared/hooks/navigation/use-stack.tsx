@@ -10,10 +10,6 @@ import type {
 	BaseStackScene,
 } from "../../types/stack.types";
 
-/**
- * Stack descriptor with overlay options.
- * Extends BaseStackDescriptor with overlay-specific options.
- */
 export interface StackDescriptor<
 	TRoute extends BaseStackRoute = Route<string>,
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
@@ -27,62 +23,20 @@ export interface StackDescriptor<
 	};
 }
 
-/**
- * Scene type for stack context (route + descriptor pair).
- */
 export type StackScene<TDescriptor extends StackDescriptor = StackDescriptor> =
 	BaseStackScene<TDescriptor>;
 
-/**
- * Common stack context value that both managed and direct stack providers populate.
- * Used by overlays and shared components that need stack progress info.
- */
 export interface StackContextValue extends StackCoreContextValue {
-	/**
-	 * Route keys for all routes in the stack.
-	 */
 	routeKeys: string[];
-	/**
-	 * All routes in the stack.
-	 */
 	routes: Route<string>[];
-	/**
-	 * Descriptor map for all routes.
-	 */
-	descriptors: Record<string, StackDescriptor>;
-	/**
-	 * Pre-computed scenes (route + descriptor pairs).
-	 */
 	scenes: StackScene[];
-	/**
-	 * The current focused index from navigation state.
-	 */
-	focusedIndex: number;
-	/**
-	 * Aggregated stack progress across all routes.
-	 * Sum of all individual screen progress values.
-	 * When 4 screens are fully visible, stackProgress = 4.
-	 */
 	stackProgress: DerivedValue<number>;
-	/**
-	 * Focused index that accounts for closing screens.
-	 * Returns currentIndex - 1 if any screen is closing, otherwise currentIndex.
-	 */
 	optimisticFocusedIndex: DerivedValue<number>;
-	/**
-	 * Ref-based map of routes that are visually closing.
-	 * Bridged from the UI thread without triggering rerenders.
-	 */
-	closingRouteMap: React.RefObject<Readonly<Record<string, true>>>;
 }
 
 export const StackContext = createContext<StackContextValue | null>(null);
 StackContext.displayName = "Stack";
 
-/**
- * Hook to access common stack context values.
- * Works in both blank-stack and native-stack navigators.
- */
 export function useStack<T extends StackContextValue = StackContextValue>(): T {
 	const context = useContext(StackContext);
 

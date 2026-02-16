@@ -5,7 +5,7 @@ import type {
 } from "@react-navigation/native";
 import * as React from "react";
 import { useEffect, useMemo } from "react";
-import type { DerivedValue } from "react-native-reanimated";
+
 import type {
 	NativeStackDescriptor,
 	NativeStackDescriptorMap,
@@ -23,7 +23,6 @@ import { HistoryStore } from "../../stores/history.store";
 import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 import { useStackDerived } from "./helpers/use-stack-derived";
-import { useClosingRouteMap } from "./helpers/use-visually-closing-route-map";
 
 export interface DirectStackScene {
 	route: StackNavigationState<ParamListBase>["routes"][number];
@@ -45,29 +44,15 @@ export interface DirectStackContextValue {
 	state: StackNavigationState<ParamListBase>;
 	navigation: NativeStackNavigationHelpers;
 	descriptors: NativeStackDescriptorMap;
-	preloadedDescriptors: NativeStackDescriptorMap;
 	scenes: DirectStackScene[];
 	focusedIndex: number;
 	shouldShowFloatOverlay: boolean;
-	stackProgress: DerivedValue<number>;
-	optimisticFocusedIndex: DerivedValue<number>;
-	closingRouteMap: React.RefObject<Readonly<Record<string, true>>>;
 }
 
 const DirectStackContext = React.createContext<DirectStackContextValue | null>(
 	null,
 );
 DirectStackContext.displayName = "DirectStack";
-
-function useDirectStackContext(): DirectStackContextValue {
-	const context = React.useContext(DirectStackContext);
-	if (!context) {
-		throw new Error(
-			"useDirectStackContext must be used within DirectStackProvider",
-		);
-	}
-	return context;
-}
 
 /**
  * Internal hook that computes all lifecycle values.
@@ -93,7 +78,6 @@ function useDirectStackValue(
 		shouldShowFloatOverlay,
 		routeKeys,
 		allRoutes,
-		allDescriptors,
 		animationMaps,
 	} = useMemo(() => {
 		const allRoutes = state.routes.concat(state.preloadedRoutes);
@@ -132,7 +116,6 @@ function useDirectStackValue(
 			shouldShowFloatOverlay,
 			routeKeys,
 			allRoutes,
-			allDescriptors,
 			animationMaps,
 		};
 	}, [state.routes, state.preloadedRoutes, preloadedDescriptors, descriptors]);
@@ -142,30 +125,22 @@ function useDirectStackValue(
 
 	const focusedIndex = state.index;
 
-	const closingRouteMap = useClosingRouteMap(routeKeys, animationMaps);
-
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
 			routeKeys,
 			routes: allRoutes,
-			descriptors: allDescriptors,
 			scenes,
-			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
-			closingRouteMap,
 		}),
 		[
+			flags,
 			routeKeys,
 			allRoutes,
 			scenes,
-			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
-			closingRouteMap,
-			flags,
-			allDescriptors,
 		],
 	);
 
@@ -175,25 +150,17 @@ function useDirectStackValue(
 			state,
 			navigation,
 			descriptors,
-			preloadedDescriptors,
 			scenes,
 			focusedIndex,
 			shouldShowFloatOverlay,
-			stackProgress,
-			optimisticFocusedIndex,
-			closingRouteMap,
 		}),
 		[
 			state,
 			navigation,
 			descriptors,
-			preloadedDescriptors,
 			scenes,
 			focusedIndex,
 			shouldShowFloatOverlay,
-			stackProgress,
-			optimisticFocusedIndex,
-			closingRouteMap,
 		],
 	);
 
@@ -229,4 +196,4 @@ function withDirectStack<TProps extends DirectStackProps>(
 	};
 }
 
-export { useDirectStackContext, withDirectStack };
+export { withDirectStack };
