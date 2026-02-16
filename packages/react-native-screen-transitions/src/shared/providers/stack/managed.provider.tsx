@@ -51,6 +51,7 @@ interface ManagedStackContextValue<
 	scenes: BaseStackScene<TDescriptor>[];
 	activeScreensLimit: number;
 	closingRouteKeysShared: SharedValue<string[]>;
+	closingRouteKeysRef: React.RefObject<Set<string>>;
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 	shouldShowFloatOverlay: boolean;
 	focusedIndex: number;
@@ -204,6 +205,7 @@ function useManagedStackValue<
 			focusedIndex,
 			descriptors: state.descriptors,
 			closingRouteKeysShared: closingRouteKeys.shared,
+			closingRouteKeysRef: closingRouteKeys.ref,
 			activeScreensLimit,
 			handleCloseRoute,
 			scenes,
@@ -217,6 +219,7 @@ function useManagedStackValue<
 			state.descriptors,
 			focusedIndex,
 			closingRouteKeys.shared,
+			closingRouteKeys.ref,
 			activeScreensLimit,
 			handleCloseRoute,
 			scenes,

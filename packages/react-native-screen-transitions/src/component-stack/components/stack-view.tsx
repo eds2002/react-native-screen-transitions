@@ -8,7 +8,10 @@ import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
+import { AnimationStore } from "../../shared/stores/animation.store";
+import { GestureStore } from "../../shared/stores/gesture.store";
 import { StackType } from "../../shared/types/stack.types";
+import { resolveSceneNeighbors } from "../../shared/utils/navigation/resolve-scene-neighbors";
 import { isScreenOverlayVisible } from "../../shared/utils/overlay/visibility";
 import type {
 	ComponentStackDescriptor,
@@ -38,7 +41,20 @@ const SceneView = React.memo(function SceneView({
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, STACK_TYPE: StackType.COMPONENT },
 	withManagedStack<ComponentStackDescriptor, ComponentStackNavigationHelpers>(
-		({ scenes, shouldShowFloatOverlay }) => {
+		({ scenes, shouldShowFloatOverlay, closingRouteKeysRef }) => {
+			const isRouteClosing = (routeKey: string) => {
+				const inClosingSet = closingRouteKeysRef.current.has(routeKey);
+				if (inClosingSet) return true;
+
+				const isClosing =
+					AnimationStore.getAnimation(routeKey, "closing").value > 0;
+				if (isClosing) return true;
+
+				const isDismissing =
+					GestureStore.getGesture(routeKey, "isDismissing").value > 0;
+				return isDismissing;
+			};
+
 			return (
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
@@ -47,10 +63,8 @@ export const StackView = withStackCore(
 						const descriptor = scene.descriptor;
 						const route = scene.route;
 
-						const previousDescriptor =
-							scenes[sceneIndex - 1]?.descriptor ?? undefined;
-						const nextDescriptor =
-							scenes[sceneIndex + 1]?.descriptor ?? undefined;
+						const { previousDescriptor, nextDescriptor } =
+							resolveSceneNeighbors(scenes, sceneIndex, isRouteClosing);
 
 						return (
 							<ComponentScreen key={route.key} routeKey={route.key}>

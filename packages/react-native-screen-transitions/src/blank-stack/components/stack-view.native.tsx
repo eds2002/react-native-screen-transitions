@@ -10,6 +10,9 @@ import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
+import { AnimationStore } from "../../shared/stores/animation.store";
+import { GestureStore } from "../../shared/stores/gesture.store";
+import { resolveSceneNeighbors } from "../../shared/utils/navigation/resolve-scene-neighbors";
 import { isScreenOverlayVisible } from "../../shared/utils/overlay/visibility";
 import type {
 	BlankStackDescriptor,
@@ -42,7 +45,25 @@ const SceneView = React.memo(function SceneView({
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: false },
 	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
-		({ descriptors, focusedIndex, scenes, shouldShowFloatOverlay }) => {
+		({
+			descriptors,
+			focusedIndex,
+			scenes,
+			shouldShowFloatOverlay,
+			closingRouteKeysRef,
+		}) => {
+			const isRouteClosing = (routeKey: string) => {
+				const inClosingSet = closingRouteKeysRef.current.has(routeKey);
+				if (inClosingSet) return true;
+
+				const isClosing =
+					AnimationStore.getAnimation(routeKey, "closing").value > 0;
+
+				if (isClosing) return true;
+
+				return false;
+			};
+
 			return (
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
@@ -54,10 +75,8 @@ export const StackView = withStackCore(
 							const isFocused = focusedIndex === sceneIndex;
 							const isBelowFocused = focusedIndex - 1 === sceneIndex;
 
-							const previousDescriptor =
-								scenes[sceneIndex - 1]?.descriptor ?? undefined;
-							const nextDescriptor =
-								scenes[sceneIndex + 1]?.descriptor ?? undefined;
+							const { previousDescriptor, nextDescriptor } =
+								resolveSceneNeighbors(scenes, sceneIndex, isRouteClosing);
 
 							const isPreloaded = descriptors[route.key] === undefined;
 
