@@ -1,71 +1,27 @@
 import type { Route } from "@react-navigation/native";
 import * as React from "react";
 import { useEffect, useMemo } from "react";
-import type { SharedValue } from "react-native-reanimated";
 import {
 	StackContext,
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
 import { HistoryStore } from "../../stores/history.store";
 import type {
+	ManagedStackContextValue,
+	ManagedStackProps,
+	ManagedStackRenderProps,
+	ManagedStackResult,
+} from "../../types/providers/managed-stack.types";
+import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
-	BaseStackRoute,
 	BaseStackScene,
-	BaseStackState,
 } from "../../types/stack.types";
 import { useStackCoreContext } from "./core.provider";
 import { useClosingRouteMap } from "./helpers/use-closing-route-map";
 import { useLocalRoutes } from "./helpers/use-local-routes";
 import { useProcessedRoutes } from "./helpers/use-processed-routes";
 import { useStackDerived } from "./helpers/use-stack-derived";
-
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-/**
- * Props for managed stack - generic over descriptor and navigation types.
- * Defaults to base types for backward compatibility.
- */
-export interface ManagedStackProps<
-	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation = BaseStackNavigation,
-> {
-	state: BaseStackState<TDescriptor["route"]>;
-	navigation: TNavigation;
-	descriptors: Record<string, TDescriptor>;
-	describe: (route: TDescriptor["route"], placeholder: boolean) => TDescriptor;
-}
-
-/**
- * Context value for managed stack — only fields unique to managed lifecycle.
- * Shared fields (routes, scenes, etc.) live in StackContext.
- */
-interface ManagedStackContextValue {
-	activeScreensLimit: number;
-	closingRouteKeysShared: SharedValue<string[]>;
-	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
-	backdropBehaviors: string[];
-}
-
-/**
- * Props passed to the render child of `withManagedStack`.
- * Only the fields that stack-view components actually consume.
- */
-export interface ManagedStackRenderProps<
-	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-> {
-	descriptors: Record<string, TDescriptor>;
-	scenes: BaseStackScene<TDescriptor>[];
-	focusedIndex: number;
-	closingRouteMap: React.RefObject<Readonly<Record<string, true>>>;
-	shouldShowFloatOverlay: boolean;
-}
-
-// ---------------------------------------------------------------------------
-// Context
-// ---------------------------------------------------------------------------
 
 const ManagedStackContext =
 	React.createContext<ManagedStackContextValue | null>(null);
@@ -79,16 +35,6 @@ function useManagedStackContext(): ManagedStackContextValue {
 		);
 	}
 	return context;
-}
-
-// ---------------------------------------------------------------------------
-// Hook — thin orchestrator
-// ---------------------------------------------------------------------------
-
-interface ManagedStackResult<TDescriptor extends BaseStackDescriptor> {
-	stackContextValue: StackContextValue;
-	managedContextValue: ManagedStackContextValue;
-	renderProps: ManagedStackRenderProps<TDescriptor>;
 }
 
 function useManagedStackValue<
@@ -168,15 +114,6 @@ function useManagedStackValue<
 	return { stackContextValue, managedContextValue, renderProps };
 }
 
-// ---------------------------------------------------------------------------
-// HOC
-// ---------------------------------------------------------------------------
-
-/**
- * HOC that wraps component with ManagedStack provider AND StackContext.
- * Used by blank-stack and component-stack which manage local route state
- * for closing animations.
- */
 function withManagedStack<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
@@ -209,3 +146,8 @@ function withManagedStack<
 }
 
 export { useManagedStackContext, withManagedStack };
+export type {
+	ManagedStackContextValue,
+	ManagedStackProps,
+	ManagedStackRenderProps,
+};

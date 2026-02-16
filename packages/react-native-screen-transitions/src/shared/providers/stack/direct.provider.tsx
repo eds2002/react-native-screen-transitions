@@ -1,16 +1,6 @@
-import type {
-	ParamListBase,
-	RouteProp,
-	StackNavigationState,
-} from "@react-navigation/native";
 import * as React from "react";
 import { useEffect, useMemo } from "react";
-
-import type {
-	NativeStackDescriptor,
-	NativeStackDescriptorMap,
-	NativeStackNavigationHelpers,
-} from "../../../native-stack/types";
+import type { NativeStackDescriptorMap } from "../../../native-stack/types";
 import {
 	StackContext,
 	type StackContextValue,
@@ -20,43 +10,20 @@ import {
 	type AnimationStoreMap,
 } from "../../stores/animation.store";
 import { HistoryStore } from "../../stores/history.store";
+import type {
+	DirectStackContextValue,
+	DirectStackProps,
+	DirectStackScene,
+} from "../../types/providers/direct-stack.types";
 import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 import { useStackDerived } from "./helpers/use-stack-derived";
-
-export interface DirectStackScene {
-	route: StackNavigationState<ParamListBase>["routes"][number];
-	descriptor: NativeStackDescriptor;
-	isPreloaded: boolean;
-}
-
-export interface DirectStackProps {
-	state: StackNavigationState<ParamListBase>;
-	navigation: NativeStackNavigationHelpers;
-	descriptors: NativeStackDescriptorMap;
-	describe: (
-		route: RouteProp<ParamListBase>,
-		placeholder: boolean,
-	) => NativeStackDescriptor;
-}
-
-export interface DirectStackContextValue {
-	state: StackNavigationState<ParamListBase>;
-	navigation: NativeStackNavigationHelpers;
-	descriptors: NativeStackDescriptorMap;
-	scenes: DirectStackScene[];
-	focusedIndex: number;
-	shouldShowFloatOverlay: boolean;
-}
 
 const DirectStackContext = React.createContext<DirectStackContextValue | null>(
 	null,
 );
 DirectStackContext.displayName = "DirectStack";
 
-/**
- * Internal hook that computes all lifecycle values.
- */
 function useDirectStackValue(
 	props: DirectStackProps,
 ): DirectStackContextValue & { stackContextValue: StackContextValue } {
@@ -167,10 +134,6 @@ function useDirectStackValue(
 	return { ...lifecycleValue, stackContextValue };
 }
 
-/**
- * HOC that wraps component with DirectStack provider AND StackContext.
- * Used by native-stack which uses navigation state directly (no local route management).
- */
 function withDirectStack<TProps extends DirectStackProps>(
 	Component: React.ComponentType<DirectStackContextValue>,
 ): React.FC<TProps> {
@@ -197,3 +160,4 @@ function withDirectStack<TProps extends DirectStackProps>(
 }
 
 export { withDirectStack };
+export type { DirectStackContextValue, DirectStackProps, DirectStackScene };
