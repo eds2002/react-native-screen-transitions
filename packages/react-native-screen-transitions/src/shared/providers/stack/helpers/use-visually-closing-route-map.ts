@@ -1,12 +1,16 @@
 import { useDerivedValue } from "react-native-reanimated";
-import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
+import { useSharedValueRef } from "../../../hooks/reanimated/use-shared-value-ref";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 
-export const useVisuallyClosingRouteMap = (
+/**
+ * Ref-based hash map of routes that are visually closing.
+ * Derived on the UI thread and bridged to a JS ref — no rerenders.
+ */
+export const useClosingRouteMap = (
 	routeKeys: string[],
 	animationMaps: AnimationStoreMap[],
-): Readonly<Record<string, true>> => {
-	return useSharedValueState(
+): React.RefObject<Readonly<Record<string, true>>> => {
+	return useSharedValueRef(
 		useDerivedValue(() => {
 			"worklet";
 			const map: Record<string, true> = {};

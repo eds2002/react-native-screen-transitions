@@ -25,7 +25,7 @@ import type {
 import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 import { useLocalRoutes } from "./helpers/use-local-routes";
-import { useVisuallyClosingRouteMap } from "./helpers/use-visually-closing-route-map";
+import { useClosingRouteMap } from "./helpers/use-visually-closing-route-map";
 
 /**
  * Props for managed stack - generic over descriptor and navigation types.
@@ -52,7 +52,7 @@ interface ManagedStackContextValue<
 	scenes: BaseStackScene<TDescriptor>[];
 	activeScreensLimit: number;
 	closingRouteKeysShared: SharedValue<string[]>;
-	visuallyClosingRouteMap: Readonly<Record<string, true>>;
+	closingRouteMap: React.RefObject<Readonly<Record<string, true>>>;
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 	shouldShowFloatOverlay: boolean;
 	focusedIndex: number;
@@ -176,10 +176,7 @@ function useManagedStackValue<
 
 	const focusedIndex = props.state.index;
 
-	const visuallyClosingRouteMap = useVisuallyClosingRouteMap(
-		routeKeys,
-		animationMaps,
-	);
+	const closingRouteMap = useClosingRouteMap(routeKeys, animationMaps);
 
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
@@ -191,7 +188,7 @@ function useManagedStackValue<
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
-			visuallyClosingRouteMap,
+			closingRouteMap,
 		}),
 		[
 			routeKeys,
@@ -201,7 +198,7 @@ function useManagedStackValue<
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
-			visuallyClosingRouteMap,
+			closingRouteMap,
 			flags,
 		],
 	);
@@ -210,16 +207,16 @@ function useManagedStackValue<
 	const lifecycleValue = useMemo<ManagedStackContextValue<TDescriptor>>(
 		() => ({
 			routes: state.routes,
-			focusedIndex,
 			descriptors: state.descriptors,
-			closingRouteKeysShared: closingRouteKeys.shared,
-			visuallyClosingRouteMap,
-			activeScreensLimit,
-			handleCloseRoute,
 			scenes,
+			closingRouteKeysShared: closingRouteKeys.shared,
+			closingRouteMap,
+			handleCloseRoute,
+			focusedIndex,
+			optimisticFocusedIndex,
+			activeScreensLimit,
 			shouldShowFloatOverlay,
 			stackProgress,
-			optimisticFocusedIndex,
 			backdropBehaviors,
 		}),
 		[
@@ -227,9 +224,9 @@ function useManagedStackValue<
 			state.descriptors,
 			focusedIndex,
 			closingRouteKeys.shared,
-			visuallyClosingRouteMap,
-			activeScreensLimit,
+			closingRouteMap,
 			handleCloseRoute,
+			activeScreensLimit,
 			scenes,
 			shouldShowFloatOverlay,
 			stackProgress,

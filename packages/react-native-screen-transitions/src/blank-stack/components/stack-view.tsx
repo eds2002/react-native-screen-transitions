@@ -48,10 +48,10 @@ export const StackView = withStackCore(
 			focusedIndex,
 			scenes,
 			shouldShowFloatOverlay,
-			visuallyClosingRouteMap,
+			closingRouteMap,
 		}) => {
 			const isRouteClosing = (routeKey: string) =>
-				Boolean(visuallyClosingRouteMap[routeKey]);
+				Boolean(closingRouteMap.current[routeKey]);
 
 			return (
 				<Fragment>

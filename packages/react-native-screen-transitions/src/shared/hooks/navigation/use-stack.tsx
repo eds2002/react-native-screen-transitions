@@ -70,9 +70,10 @@ export interface StackContextValue extends StackCoreContextValue {
 	 */
 	optimisticFocusedIndex: DerivedValue<number>;
 	/**
-	 * Routes that are currently visually closing.
+	 * Ref-based map of routes that are visually closing.
+	 * Bridged from the UI thread without triggering rerenders.
 	 */
-	visuallyClosingRouteMap: Readonly<Record<string, true>>;
+	closingRouteMap: React.RefObject<Readonly<Record<string, true>>>;
 }
 
 export const StackContext = createContext<StackContextValue | null>(null);

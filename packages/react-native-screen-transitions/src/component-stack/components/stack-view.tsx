@@ -39,9 +39,9 @@ const SceneView = React.memo(function SceneView({
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, STACK_TYPE: StackType.COMPONENT },
 	withManagedStack<ComponentStackDescriptor, ComponentStackNavigationHelpers>(
-		({ scenes, shouldShowFloatOverlay, visuallyClosingRouteMap }) => {
+		({ scenes, shouldShowFloatOverlay, closingRouteMap }) => {
 			const isRouteClosing = (routeKey: string) =>
-				Boolean(visuallyClosingRouteMap[routeKey]);
+				Boolean(closingRouteMap.current[routeKey]);
 
 			return (
 				<Fragment>
