@@ -10,19 +10,14 @@ import { useScreenAnimation } from "../../../hooks/animation/use-screen-animatio
 import type { StackScene } from "../../../hooks/navigation/use-stack";
 import type { BaseDescriptor } from "../../../providers/screen/keys.provider";
 import type { OverlayInterpolationProps } from "../../../types/animation.types";
-import type { OverlayProps } from "../../../types/overlay.types";
-
-type OverlayScreenState = Omit<
-	OverlayProps<BaseDescriptor["navigation"]>,
-	"progress" | "overlayAnimation" | "screenAnimation"
-> & {
-	index: number;
-	snapTo: (index: number) => void;
-};
+import type {
+	OverlayProps,
+	OverlayScreenState,
+} from "../../../types/overlay.types";
 
 type OverlayHostProps = {
 	scene: StackScene;
-	overlayScreenState: OverlayScreenState;
+	overlayScreenState: OverlayScreenState<BaseDescriptor["navigation"]>;
 };
 
 export const OverlayHost = memo(function OverlayHost({

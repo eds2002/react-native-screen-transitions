@@ -7,17 +7,9 @@ import {
 	useStack,
 } from "../../../hooks/navigation/use-stack";
 import { useKeys } from "../../../providers/screen/keys.provider";
-import type { OverlayProps } from "../../../types/overlay.types";
+import type { OverlayScreenState } from "../../../types/overlay.types";
 import { isScreenOverlayVisible } from "../../../utils/overlay/visibility";
 import { OverlayHost } from "./overlay-host";
-
-type OverlayScreenState = Omit<
-	OverlayProps<StackDescriptor["navigation"]>,
-	"progress" | "overlayAnimation" | "screenAnimation"
-> & {
-	index: number;
-	snapTo: (index: number) => void;
-};
 
 /**
  * Screen overlay component that renders per-screen.
@@ -45,7 +37,9 @@ export function ScreenOverlay() {
 		[current],
 	);
 
-	const overlayScreenState = useMemo<OverlayScreenState>(
+	const overlayScreenState = useMemo<
+		OverlayScreenState<StackDescriptor["navigation"]>
+	>(
 		() => ({
 			index: routeKeys.indexOf(current.route.key),
 			options: current.options,

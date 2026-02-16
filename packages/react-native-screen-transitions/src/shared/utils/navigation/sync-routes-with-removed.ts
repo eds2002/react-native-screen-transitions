@@ -1,9 +1,6 @@
 import type { useClosingRouteKeys } from "../../hooks/navigation/use-closing-route-keys";
+import type { RouteWithKey } from "../../types/stack.types";
 import { composeDescriptors } from "./compose-descriptors";
-
-interface RouteWithKey {
-	key: string;
-}
 
 type SyncRoutesWithRemovedParams<
 	Route extends RouteWithKey,

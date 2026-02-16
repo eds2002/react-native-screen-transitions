@@ -5,18 +5,14 @@ import type {
 import { clamp } from "react-native-reanimated";
 import { ANIMATION_SNAP_THRESHOLD, EPSILON } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
+import type { GestureDirections } from "../../types/gesture.types";
 
 interface CalculateProgressProps {
 	animations: AnimationStoreMap;
 	shouldDismiss: boolean;
 	event: GestureStateChangeEvent<PanGestureHandlerEventPayload>;
 	dimensions: { width: number; height: number };
-	directions: {
-		horizontal: boolean;
-		horizontalInverted: boolean;
-		vertical: boolean;
-		verticalInverted: boolean;
-	};
+	directions: GestureDirections;
 }
 
 const MAX_VELOCITY_MAGNITUDE = 3.2;

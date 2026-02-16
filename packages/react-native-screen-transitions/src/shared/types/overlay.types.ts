@@ -17,6 +17,18 @@ export type OverlayMode = "float" | "screen";
  * Props passed to overlay components.
  * Generic over the navigation type since different stacks have different navigation props.
  */
+/**
+ * Overlay screen state passed to overlay host for rendering.
+ * Generic over navigation type — defaults to `unknown` for flexibility.
+ */
+export type OverlayScreenState<TNavigation = unknown> = Omit<
+	OverlayProps<TNavigation>,
+	"progress" | "overlayAnimation" | "screenAnimation"
+> & {
+	index: number;
+	snapTo: (index: number) => void;
+};
+
 export type OverlayProps<TNavigation = unknown> = {
 	/**
 	 * Route of the currently focused screen in the stack.

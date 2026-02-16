@@ -5,6 +5,8 @@ interface GetAxisThresholdProps {
 	gestureVelocityImpact: number;
 }
 
+import type { GestureDirections } from "../../types/gesture.types";
+
 interface DetermineDismissalProps {
 	event: {
 		translationX: number;
@@ -12,12 +14,7 @@ interface DetermineDismissalProps {
 		velocityX: number;
 		velocityY: number;
 	};
-	directions: {
-		vertical: boolean;
-		verticalInverted: boolean;
-		horizontal: boolean;
-		horizontalInverted: boolean;
-	};
+	directions: GestureDirections;
 	dimensions: { width: number; height: number };
 	gestureVelocityImpact: number;
 }

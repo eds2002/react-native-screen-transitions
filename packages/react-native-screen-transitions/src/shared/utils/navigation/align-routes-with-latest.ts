@@ -1,8 +1,5 @@
+import type { RouteWithKey } from "../../types/stack.types";
 import { composeDescriptors } from "./compose-descriptors";
-
-interface RouteWithKey {
-	key: string;
-}
 
 /**
  * Aligns current routes with the latest route data while preserving references
