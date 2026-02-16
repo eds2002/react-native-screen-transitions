@@ -25,6 +25,7 @@ import type {
 import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 import { useLocalRoutes } from "./helpers/use-local-routes";
+import { useVisuallyClosingRouteMap } from "./helpers/use-visually-closing-route-map";
 
 /**
  * Props for managed stack - generic over descriptor and navigation types.
@@ -51,7 +52,7 @@ interface ManagedStackContextValue<
 	scenes: BaseStackScene<TDescriptor>[];
 	activeScreensLimit: number;
 	closingRouteKeysShared: SharedValue<string[]>;
-	closingRouteKeysRef: React.RefObject<Set<string>>;
+	visuallyClosingRouteMap: Readonly<Record<string, true>>;
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 	shouldShowFloatOverlay: boolean;
 	focusedIndex: number;
@@ -175,6 +176,11 @@ function useManagedStackValue<
 
 	const focusedIndex = props.state.index;
 
+	const visuallyClosingRouteMap = useVisuallyClosingRouteMap(
+		routeKeys,
+		animationMaps,
+	);
+
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
@@ -185,6 +191,7 @@ function useManagedStackValue<
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
+			visuallyClosingRouteMap,
 		}),
 		[
 			routeKeys,
@@ -194,6 +201,7 @@ function useManagedStackValue<
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
+			visuallyClosingRouteMap,
 			flags,
 		],
 	);
@@ -205,7 +213,7 @@ function useManagedStackValue<
 			focusedIndex,
 			descriptors: state.descriptors,
 			closingRouteKeysShared: closingRouteKeys.shared,
-			closingRouteKeysRef: closingRouteKeys.ref,
+			visuallyClosingRouteMap,
 			activeScreensLimit,
 			handleCloseRoute,
 			scenes,
@@ -219,7 +227,7 @@ function useManagedStackValue<
 			state.descriptors,
 			focusedIndex,
 			closingRouteKeys.shared,
-			closingRouteKeys.ref,
+			visuallyClosingRouteMap,
 			activeScreensLimit,
 			handleCloseRoute,
 			scenes,

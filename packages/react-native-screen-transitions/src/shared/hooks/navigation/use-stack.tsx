@@ -69,6 +69,10 @@ export interface StackContextValue extends StackCoreContextValue {
 	 * Returns currentIndex - 1 if any screen is closing, otherwise currentIndex.
 	 */
 	optimisticFocusedIndex: DerivedValue<number>;
+	/**
+	 * Routes that are currently visually closing.
+	 */
+	visuallyClosingRouteMap: Readonly<Record<string, true>>;
 }
 
 export const StackContext = createContext<StackContextValue | null>(null);

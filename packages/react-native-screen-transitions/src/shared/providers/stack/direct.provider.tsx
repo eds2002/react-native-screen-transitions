@@ -22,6 +22,7 @@ import {
 import { HistoryStore } from "../../stores/history.store";
 import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
+import { useVisuallyClosingRouteMap } from "./helpers/use-visually-closing-route-map";
 
 export interface DirectStackScene {
 	route: StackNavigationState<ParamListBase>["routes"][number];
@@ -49,6 +50,7 @@ export interface DirectStackContextValue {
 	shouldShowFloatOverlay: boolean;
 	stackProgress: DerivedValue<number>;
 	optimisticFocusedIndex: DerivedValue<number>;
+	visuallyClosingRouteMap: Readonly<Record<string, true>>;
 }
 
 const DirectStackContext = React.createContext<DirectStackContextValue | null>(
@@ -156,6 +158,11 @@ function useDirectStackValue(
 
 	const focusedIndex = state.index;
 
+	const visuallyClosingRouteMap = useVisuallyClosingRouteMap(
+		routeKeys,
+		animationMaps,
+	);
+
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
@@ -166,6 +173,7 @@ function useDirectStackValue(
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
+			visuallyClosingRouteMap,
 		}),
 		[
 			routeKeys,
@@ -174,6 +182,7 @@ function useDirectStackValue(
 			focusedIndex,
 			stackProgress,
 			optimisticFocusedIndex,
+			visuallyClosingRouteMap,
 			flags,
 			allDescriptors,
 		],
@@ -191,6 +200,7 @@ function useDirectStackValue(
 			shouldShowFloatOverlay,
 			stackProgress,
 			optimisticFocusedIndex,
+			visuallyClosingRouteMap,
 		}),
 		[
 			state,
@@ -202,6 +212,7 @@ function useDirectStackValue(
 			shouldShowFloatOverlay,
 			stackProgress,
 			optimisticFocusedIndex,
+			visuallyClosingRouteMap,
 		],
 	);
 
