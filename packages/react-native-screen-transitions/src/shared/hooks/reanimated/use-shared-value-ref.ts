@@ -7,7 +7,7 @@ import {
 } from "react-native-reanimated";
 import { IS_WEB } from "../../constants";
 
-function readInitialValue<T>(sharedValue: SharedValue<T>): T {
+export function readInitialValue<T>(sharedValue: SharedValue<T>): T {
 	if (IS_WEB) {
 		return sharedValue.value;
 	}

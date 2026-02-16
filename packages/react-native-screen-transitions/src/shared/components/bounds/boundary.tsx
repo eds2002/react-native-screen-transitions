@@ -11,14 +11,12 @@ import Animated, {
 import { useAssociatedStyles } from "../../hooks/animation/use-associated-style";
 import useStableCallbackValue from "../../hooks/use-stable-callback-value";
 import { useLayoutAnchorContext } from "../../providers/layout-anchor.provider";
-import {
-	type BaseDescriptor,
-	useKeys,
-} from "../../providers/screen/keys.provider";
+import { useKeys } from "../../providers/screen/keys.provider";
 import { useScrollSettleContext } from "../../providers/scroll-settle.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds.store";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
+import { getAncestorKeys } from "../../utils/navigation/get-ancestor-keys";
 
 type BoundaryId = string | number;
 
@@ -39,35 +37,6 @@ interface MaybeMeasureAndStoreParams {
 	shouldUpdateSource?: boolean;
 	shouldUpdateDestination?: boolean;
 }
-
-/**
- * Builds the full ancestor key chain for nested navigators.
- * Returns an array of screen keys from immediate parent to root.
- * [parentKey, grandparentKey, great-grandparentKey, ...]
- */
-const getAncestorKeys = (current: BaseDescriptor): string[] => {
-	const ancestors: string[] = [];
-	const nav = current.navigation as any;
-
-	if (typeof nav?.getParent !== "function") {
-		return ancestors;
-	}
-
-	let parent = nav.getParent();
-
-	while (parent) {
-		const state = parent.getState();
-		if (state?.routes && state.index !== undefined) {
-			const focusedRoute = state.routes[state.index];
-			if (focusedRoute?.key) {
-				ancestors.push(focusedRoute.key);
-			}
-		}
-		parent = parent.getParent();
-	}
-
-	return ancestors;
-};
 
 const useInitialLayoutHandler = (params: {
 	sharedBoundTag: string;

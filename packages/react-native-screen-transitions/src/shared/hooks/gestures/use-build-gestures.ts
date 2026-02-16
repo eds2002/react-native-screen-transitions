@@ -87,15 +87,15 @@ export const useBuildGestures = ({
 		current.route.key,
 	);
 
-	const { snapPoints } = current.options;
+	const { snapPoints: rawSnapPoints } = current.options;
 	const canDismiss = Boolean(
 		isFirstScreen ? false : current.options.gestureEnabled,
 	);
-	const { hasSnapPoints } = useMemo(
-		() => validateSnapPoints({ snapPoints, canDismiss }),
-		[snapPoints, canDismiss],
+	const validatedSnapPoints = useMemo(
+		() => validateSnapPoints({ snapPoints: rawSnapPoints, canDismiss }),
+		[rawSnapPoints, canDismiss],
 	);
-	const gestureEnabled = canDismiss || hasSnapPoints;
+	const gestureEnabled = canDismiss || validatedSnapPoints.hasSnapPoints;
 
 	const ownershipStatus = useMemo(
 		() => resolveOwnership(claimedDirections, ancestorContext ?? null),
@@ -131,6 +131,7 @@ export const useBuildGestures = ({
 			claimedDirections,
 			ancestorContext,
 			childDirectionClaims,
+			validatedSnapPoints,
 		});
 
 	return useMemo(() => {

@@ -43,7 +43,7 @@ import { determineSnapTarget } from "../../utils/gesture/determine-snap-target";
 import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
 import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
 import { shouldDeferToChildClaim } from "../../utils/gesture/should-defer-to-child-claim";
-import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
+import type { ValidateSnapPointsResult } from "../../utils/gesture/validate-snap-points";
 import { velocity } from "../../utils/gesture/velocity";
 import { logger } from "../../utils/logger";
 import useStableCallbackValue from "../use-stable-callback-value";
@@ -57,6 +57,7 @@ interface UseScreenGestureHandlersProps {
 	claimedDirections: ClaimedDirections;
 	ancestorContext: GestureContextType | null | undefined;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
+	validatedSnapPoints: ValidateSnapPointsResult;
 }
 
 /**
@@ -111,6 +112,7 @@ export const useScreenGestureHandlers = ({
 	handleDismiss,
 	ownershipStatus,
 	childDirectionClaims,
+	validatedSnapPoints,
 }: UseScreenGestureHandlersProps) => {
 	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
@@ -128,15 +130,12 @@ export const useScreenGestureHandlers = ({
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureResponseDistance,
 		transitionSpec,
-		snapPoints: rawSnapPoints,
 		expandViaScrollView = true,
 		gestureSnapLocked = false,
 	} = current.options;
 
-	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } = useMemo(
-		() => validateSnapPoints({ snapPoints: rawSnapPoints, canDismiss }),
-		[rawSnapPoints, canDismiss],
-	);
+	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } =
+		validatedSnapPoints;
 
 	const directions = useMemo(() => {
 		if (hasSnapPoints && Array.isArray(gestureDirection)) {

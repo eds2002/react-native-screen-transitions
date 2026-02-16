@@ -1,3 +1,5 @@
+import { sanitizeSnapPoints } from "./validate-snap-points";
+
 interface DetermineSnapTargetProps {
 	currentProgress: number;
 	snapPoints: number[];
@@ -43,9 +45,7 @@ export function determineSnapTarget({
 	// Project where we'd end up with velocity
 	const projectedProgress = currentProgress - velocityInProgress;
 
-	const sanitizedSnapPoints = snapPoints.filter((point) =>
-		canDismiss ? Number.isFinite(point) : Number.isFinite(point) && point > 0,
-	);
+	const sanitizedSnapPoints = sanitizeSnapPoints(snapPoints, canDismiss);
 
 	// Build all possible targets: dismiss (0) only if allowed, plus all snap points
 	const allTargets = Array.from(

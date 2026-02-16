@@ -1,44 +1,17 @@
-import {
-	NavigationContext,
-	NavigationRouteContext,
-} from "@react-navigation/native";
-import * as React from "react";
 import { Fragment } from "react";
 import { NativeScreen } from "../../shared/components/native-screen";
 import { NativeScreenContainer } from "../../shared/components/native-screen-container";
 import { Overlay } from "../../shared/components/overlay";
+import { SceneView } from "../../shared/components/scene-view";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { resolveSceneNeighbors } from "../../shared/utils/navigation/resolve-scene-neighbors";
-import { isScreenOverlayVisible } from "../../shared/utils/overlay/visibility";
+import { isFabric } from "../../shared/utils/platform";
 import type {
 	BlankStackDescriptor,
 	BlankStackNavigationHelpers,
 } from "../types";
-
-function isFabric() {
-	return "nativeFabricUIManager" in global;
-}
-
-type SceneViewProps = {
-	descriptor: BlankStackDescriptor;
-};
-
-const SceneView = React.memo(function SceneView({
-	descriptor,
-}: SceneViewProps) {
-	const { route, navigation, render } = descriptor;
-
-	return (
-		<NavigationContext.Provider value={navigation}>
-			<NavigationRouteContext.Provider value={route}>
-				{isScreenOverlayVisible(descriptor.options) && <Overlay.Screen />}
-				{render()}
-			</NavigationRouteContext.Provider>
-		</NavigationContext.Provider>
-	);
-});
 
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: true },

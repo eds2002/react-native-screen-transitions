@@ -17,8 +17,9 @@ import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds.store";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
+import { getAncestorKeys } from "../utils/navigation/get-ancestor-keys";
 import { useLayoutAnchorContext } from "./layout-anchor.provider";
-import { type BaseDescriptor, useKeys } from "./screen/keys.provider";
+import { useKeys } from "./screen/keys.provider";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
@@ -44,36 +45,6 @@ interface RegisterBoundsProviderProps {
 interface RegisterBoundsContextValue {
 	updateSignal: SharedValue<number>;
 }
-
-/**
- * Builds the full ancestor key chain for nested navigators.
- * Returns an array of screen keys from immediate parent to root.
- * [parentKey, grandparentKey, greatGrandparentKey, ...]
- */
-const getAncestorKeys = (current: BaseDescriptor): string[] => {
-	const ancestors: string[] = [];
-	const nav = current.navigation as any;
-
-	// Safety check for navigators without getParent
-	if (typeof nav?.getParent !== "function") {
-		return ancestors;
-	}
-
-	let parent = nav.getParent();
-
-	while (parent) {
-		const state = parent.getState();
-		if (state?.routes && state.index !== undefined) {
-			const focusedRoute = state.routes[state.index];
-			if (focusedRoute?.key) {
-				ancestors.push(focusedRoute.key);
-			}
-		}
-		parent = parent.getParent();
-	}
-
-	return ancestors;
-};
 
 /**
  * Handles initial layout measurement for destination elements.

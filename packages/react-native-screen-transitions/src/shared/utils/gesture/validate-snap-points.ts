@@ -1,4 +1,18 @@
-interface ValidateSnapPointsResult {
+/**
+ * Filters snap points to only valid, finite values.
+ * Excludes zero (dismiss) when canDismiss is false.
+ */
+export function sanitizeSnapPoints(
+	snapPoints: number[],
+	canDismiss: boolean,
+): number[] {
+	"worklet";
+	return snapPoints.filter((point) =>
+		canDismiss ? Number.isFinite(point) : Number.isFinite(point) && point > 0,
+	);
+}
+
+export interface ValidateSnapPointsResult {
 	hasSnapPoints: boolean;
 	snapPoints: number[];
 	minSnapPoint: number;
@@ -23,9 +37,7 @@ export const validateSnapPoints = ({
 		};
 	}
 
-	const normalizedSnaps = snapPoints.filter((point) =>
-		canDismiss ? Number.isFinite(point) : Number.isFinite(point) && point > 0,
-	);
+	const normalizedSnaps = sanitizeSnapPoints(snapPoints, canDismiss ?? false);
 
 	if (normalizedSnaps.length === 0) {
 		return {

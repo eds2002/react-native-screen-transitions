@@ -1,4 +1,5 @@
 import { EPSILON } from "../../constants";
+import { sanitizeSnapPoints } from "./validate-snap-points";
 
 interface FindCollapseTargetResult {
 	target: number;
@@ -22,9 +23,7 @@ export function findCollapseTarget(
 ): FindCollapseTargetResult {
 	"worklet";
 
-	const normalized = snapPoints.filter((point) =>
-		canDismiss ? Number.isFinite(point) : Number.isFinite(point) && point > 0,
-	);
+	const normalized = sanitizeSnapPoints(snapPoints, canDismiss);
 
 	if (normalized.length === 0) {
 		return canDismiss
