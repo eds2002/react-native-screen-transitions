@@ -5,7 +5,7 @@ import type {
 } from "@react-navigation/native";
 import * as React from "react";
 import { useEffect, useMemo } from "react";
-import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
+import type { DerivedValue } from "react-native-reanimated";
 import type {
 	NativeStackDescriptor,
 	NativeStackDescriptorMap,
@@ -22,6 +22,7 @@ import {
 import { HistoryStore } from "../../stores/history.store";
 import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
+import { useStackDerived } from "./helpers/use-stack-derived";
 import { useClosingRouteMap } from "./helpers/use-visually-closing-route-map";
 
 export interface DirectStackScene {
@@ -136,25 +137,8 @@ function useDirectStackValue(
 		};
 	}, [state.routes, state.preloadedRoutes, preloadedDescriptors, descriptors]);
 
-	const stackProgress = useDerivedValue(() => {
-		"worklet";
-		let total = 0;
-		for (let i = 0; i < animationMaps.length; i++) {
-			total += animationMaps[i].progress.value;
-		}
-		return total;
-	});
-
-	const optimisticFocusedIndex = useDerivedValue(() => {
-		"worklet";
-		const lastIndex = animationMaps.length - 1;
-		let closingFromTop = 0;
-		for (let i = lastIndex; i >= 0; i--) {
-			if (animationMaps[i].closing.value > 0) closingFromTop++;
-			else break;
-		}
-		return lastIndex - closingFromTop;
-	});
+	const { stackProgress, optimisticFocusedIndex } =
+		useStackDerived(animationMaps);
 
 	const focusedIndex = state.index;
 

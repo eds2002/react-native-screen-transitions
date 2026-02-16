@@ -46,14 +46,10 @@ export const NativeScreen = ({
 }: ScreenProps) => {
 	const {
 		flags: { DISABLE_NATIVE_SCREENS = false },
-	} = useStack();
-
-	const {
-		activeScreensLimit,
 		routes,
 		optimisticFocusedIndex,
-		backdropBehaviors,
-	} = useManagedStackContext();
+	} = useStack();
+	const { activeScreensLimit, backdropBehaviors } = useManagedStackContext();
 
 	const routesLength = routes.length;
 	const screenRef = useAnimatedRef<View>();
