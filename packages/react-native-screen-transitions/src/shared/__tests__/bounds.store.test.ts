@@ -326,6 +326,87 @@ describe("BoundStore.getActiveLink", () => {
 	});
 });
 
+describe("BoundStore link predicates", () => {
+	it("hasPendingLink returns true when destination is missing", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds());
+
+		expect(BoundStore.hasPendingLink("card")).toBe(true);
+	});
+
+	it("hasPendingLink returns false when latest links are complete", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds());
+		BoundStore.setLinkDestination("card", "screen-b", createBounds());
+
+		expect(BoundStore.hasPendingLink("card")).toBe(false);
+	});
+
+	it("hasSourceLink matches direct source screen", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds());
+
+		expect(BoundStore.hasSourceLink("card", "screen-a")).toBe(true);
+		expect(BoundStore.hasSourceLink("card", "screen-x")).toBe(false);
+	});
+
+	it("hasSourceLink matches source ancestor chain", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds(), {}, ["stack-a"]);
+
+		expect(BoundStore.hasSourceLink("card", "stack-a")).toBe(true);
+	});
+
+	it("hasDestinationLink matches direct destination screen", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds());
+		BoundStore.setLinkDestination("card", "screen-b", createBounds());
+
+		expect(BoundStore.hasDestinationLink("card", "screen-b")).toBe(true);
+		expect(BoundStore.hasDestinationLink("card", "screen-x")).toBe(false);
+	});
+
+	it("hasDestinationLink matches destination ancestor chain", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds());
+		BoundStore.setLinkDestination("card", "screen-b", createBounds(), {}, [
+			"stack-b",
+		]);
+
+		expect(BoundStore.hasDestinationLink("card", "stack-b")).toBe(true);
+	});
+});
+
+describe("BoundStore boundary presence", () => {
+	it("tracks boundary presence by tag and screen", () => {
+		BoundStore.registerBoundaryPresence("card", "screen-a");
+
+		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(true);
+		expect(BoundStore.hasBoundaryPresence("card", "screen-b")).toBe(false);
+	});
+
+	it("supports ancestor matching for boundary presence", () => {
+		BoundStore.registerBoundaryPresence("card", "screen-a", ["stack-a"]);
+
+		expect(BoundStore.hasBoundaryPresence("card", "stack-a")).toBe(true);
+	});
+
+	it("keeps presence alive until all duplicates unmount", () => {
+		BoundStore.registerBoundaryPresence("card", "screen-a");
+		BoundStore.registerBoundaryPresence("card", "screen-a");
+		BoundStore.unregisterBoundaryPresence("card", "screen-a");
+
+		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(true);
+
+		BoundStore.unregisterBoundaryPresence("card", "screen-a");
+		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(false);
+	});
+
+	it("clear removes boundary presence for a screen", () => {
+		BoundStore.registerBoundaryPresence("card", "screen-a");
+		BoundStore.registerBoundaryPresence("card", "screen-b");
+
+		BoundStore.clear("screen-a");
+
+		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(false);
+		expect(BoundStore.hasBoundaryPresence("card", "screen-b")).toBe(true);
+	});
+});
+
 // =============================================================================
 // Scenario Tests - Navigation Flows
 // =============================================================================

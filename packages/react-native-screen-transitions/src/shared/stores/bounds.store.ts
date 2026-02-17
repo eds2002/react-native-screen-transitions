@@ -27,7 +27,15 @@ type TagState = {
 	linkStack: TagLink[];
 };
 
+type PresenceEntry = {
+	count: number;
+	ancestorKeys?: ScreenKey[];
+};
+
+type PresenceState = Record<TagID, Record<ScreenKey, PresenceEntry>>;
+
 const registry = makeMutable<Record<TagID, TagState>>({});
+const presence = makeMutable<PresenceState>({});
 
 /**
  * Group registry — tracks the currently-active boundary id per group.
@@ -232,6 +240,136 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
 	return lastLink ? lastLink : null;
 }
 
+function registerBoundaryPresence(
+	tag: TagID,
+	screenKey: ScreenKey,
+	ancestorKeys?: ScreenKey[],
+) {
+	"worklet";
+	const current = presence.value;
+	const tagEntries = current[tag] ?? {};
+	const currentEntry = tagEntries[screenKey];
+
+	presence.value = {
+		...current,
+		[tag]: {
+			...tagEntries,
+			[screenKey]: {
+				count: (currentEntry?.count ?? 0) + 1,
+				ancestorKeys: ancestorKeys ?? currentEntry?.ancestorKeys,
+			},
+		},
+	};
+}
+
+function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
+	"worklet";
+	const current = presence.value;
+	const tagEntries = current[tag];
+	if (!tagEntries) return;
+
+	const currentEntry = tagEntries[screenKey];
+	if (!currentEntry) return;
+
+	const nextCount = currentEntry.count - 1;
+
+	if (nextCount > 0) {
+		presence.value = {
+			...current,
+			[tag]: {
+				...tagEntries,
+				[screenKey]: {
+					...currentEntry,
+					count: nextCount,
+				},
+			},
+		};
+		return;
+	}
+
+	const { [screenKey]: _removed, ...remainingForTag } = tagEntries;
+	if (Object.keys(remainingForTag).length === 0) {
+		const { [tag]: _removedTag, ...remainingPresence } = current;
+		presence.value = remainingPresence;
+		return;
+	}
+
+	presence.value = {
+		...current,
+		[tag]: remainingForTag,
+	};
+}
+
+function hasBoundaryPresence(tag: TagID, screenKey: ScreenKey): boolean {
+	"worklet";
+	const tagEntries = presence.value[tag];
+	if (!tagEntries) return false;
+
+	const direct = tagEntries[screenKey];
+	if (direct && direct.count > 0) return true;
+
+	for (const entryScreenKey in tagEntries) {
+		const entry = tagEntries[entryScreenKey];
+		if (entry.ancestorKeys?.includes(screenKey)) {
+			return true;
+		}
+	}
+
+	return false;
+}
+
+function getBoundaryPresence() {
+	"worklet";
+	return presence;
+}
+
+/**
+ * Returns true when a tag has at least one link waiting for destination.
+ */
+function hasPendingLink(tag: TagID): boolean {
+	"worklet";
+	const stack = registry.value[tag]?.linkStack;
+	if (!stack || stack.length === 0) return false;
+
+	for (let i = stack.length - 1; i >= 0; i--) {
+		if (stack[i].destination === null) return true;
+	}
+
+	return false;
+}
+
+/**
+ * Returns true when the given screen (or one of its ancestors) is a source
+ * in the link stack for the provided tag.
+ */
+function hasSourceLink(tag: TagID, screenKey: ScreenKey): boolean {
+	"worklet";
+	const stack = registry.value[tag]?.linkStack;
+	if (!stack || stack.length === 0) return false;
+
+	for (let i = stack.length - 1; i >= 0; i--) {
+		if (matchesScreenKey(stack[i].source, screenKey)) return true;
+	}
+
+	return false;
+}
+
+/**
+ * Returns true when the given screen (or one of its ancestors) is a destination
+ * in the link stack for the provided tag.
+ */
+function hasDestinationLink(tag: TagID, screenKey: ScreenKey): boolean {
+	"worklet";
+	const stack = registry.value[tag]?.linkStack;
+	if (!stack || stack.length === 0) return false;
+
+	for (let i = stack.length - 1; i >= 0; i--) {
+		if (matchesScreenKey(stack[i].destination, screenKey)) return true;
+	}
+
+	return false;
+}
+
 /**
  * Set the currently-active boundary id for a group.
  * Called by the bounds accessor when a new id is requested for a group.
@@ -342,6 +480,29 @@ function clear(screenKey: ScreenKey) {
 		}
 		return state;
 	});
+
+	const currentPresence = presence.value;
+	let nextPresence: PresenceState | null = null;
+
+	for (const tag in currentPresence) {
+		const tagEntries = currentPresence[tag];
+		if (!tagEntries[screenKey]) continue;
+
+		if (!nextPresence) {
+			nextPresence = { ...currentPresence };
+		}
+
+		const { [screenKey]: _removed, ...remainingForTag } = nextPresence[tag];
+		if (Object.keys(remainingForTag).length === 0) {
+			delete nextPresence[tag];
+		} else {
+			nextPresence[tag] = remainingForTag;
+		}
+	}
+
+	if (nextPresence) {
+		presence.value = nextPresence;
+	}
 }
 
 export const BoundStore = {
@@ -351,6 +512,13 @@ export const BoundStore = {
 	updateLinkSource,
 	updateLinkDestination,
 	getActiveLink,
+	registerBoundaryPresence,
+	unregisterBoundaryPresence,
+	hasBoundaryPresence,
+	getBoundaryPresence,
+	hasPendingLink,
+	hasSourceLink,
+	hasDestinationLink,
 	getSnapshot,
 	setGroupActiveId,
 	getGroupActiveId,

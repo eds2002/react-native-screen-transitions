@@ -46,6 +46,26 @@ interface RegisterBoundsContextValue {
 	updateSignal: SharedValue<number>;
 }
 
+const getRouteParamId = (
+	route: { params?: object } | undefined,
+): string | null => {
+	const params = route?.params as Record<string, unknown> | undefined;
+	const rawId = params?.id;
+	return typeof rawId === "string" ? rawId : null;
+};
+
+const matchesSelectionTag = (
+	tag: string | undefined,
+	selectedId: string | null,
+): boolean => {
+	"worklet";
+	if (!tag || !selectedId) return false;
+	if (tag === selectedId) return true;
+	if (tag.endsWith(`:${selectedId}`)) return true;
+	if (tag.endsWith(`-${selectedId}`)) return true;
+	return false;
+};
+
 /**
  * Handles initial layout measurement for destination elements.
  * Only measures if an animation is in progress (local or parent).
@@ -110,12 +130,20 @@ const useInitialLayoutHandler = (params: {
  * Captures bounds right before transition starts.
  */
 const useBlurMeasurement = (params: {
+	enabled: boolean;
 	sharedBoundTag?: string;
+	selectedRouteId: string | null;
 	ancestorKeys: string[];
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const { current } = useKeys();
-	const { sharedBoundTag, ancestorKeys, maybeMeasureAndStore } = params;
+	const {
+		enabled,
+		sharedBoundTag,
+		selectedRouteId,
+		ancestorKeys,
+		maybeMeasureAndStore,
+	} = params;
 	const hasCapturedSource = useRef(false);
 
 	const ancestorClosing = [current.route.key, ...ancestorKeys].map((key) =>
@@ -124,6 +152,8 @@ const useBlurMeasurement = (params: {
 
 	const maybeMeasureOnBlur = useStableCallbackValue(() => {
 		"worklet";
+		if (!enabled) return;
+		if (!matchesSelectionTag(sharedBoundTag, selectedRouteId)) return;
 
 		//.some doesnt work here apparently... :-(
 		for (const closing of ancestorClosing) {
@@ -137,11 +167,15 @@ const useBlurMeasurement = (params: {
 		useCallback(() => {
 			hasCapturedSource.current = false;
 
+			if (!enabled) {
+				return;
+			}
+
 			return () => {
 				if (!sharedBoundTag || hasCapturedSource.current) return;
 				runOnUI(maybeMeasureOnBlur)();
 			};
-		}, [sharedBoundTag, maybeMeasureOnBlur]),
+		}, [enabled, sharedBoundTag, maybeMeasureOnBlur]),
 	);
 
 	return {
@@ -184,6 +218,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 	}) => {
 		const { current, next } = useKeys();
 		const currentScreenKey = current.route.key;
+		const selectedNextRouteId = getRouteParamId(next?.route);
 		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 		const layoutAnchor = useLayoutAnchorContext();
 
@@ -215,12 +250,69 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 				shouldUpdateSource,
 			}: MaybeMeasureAndStoreParams = {}) => {
 				"worklet";
-				if (!sharedBoundTag) return;
+				if (!sharedBoundTag) {
+					if (onPress) runOnJS(onPress)();
+					return;
+				}
+
+				if (shouldSetSource && isAnimating.get()) {
+					const existing = BoundStore.getSnapshot(
+						sharedBoundTag,
+						currentScreenKey,
+					);
+					if (existing) {
+						BoundStore.setLinkSource(
+							sharedBoundTag,
+							currentScreenKey,
+							existing.bounds,
+							preparedStyles,
+							ancestorKeys,
+						);
+					}
+
+					if (onPress) runOnJS(onPress)();
+					return;
+				}
+
+				const hasPendingLink = BoundStore.hasPendingLink(sharedBoundTag);
+				const hasSourceLink = BoundStore.hasSourceLink(
+					sharedBoundTag,
+					currentScreenKey,
+				);
+				const hasDestinationLink = BoundStore.hasDestinationLink(
+					sharedBoundTag,
+					currentScreenKey,
+				);
+
+				const wantsSetSource = !!shouldSetSource;
+				const wantsSetDestination = !!shouldSetDestination;
+				const wantsUpdateSource = !!shouldUpdateSource;
+				const wantsSnapshotOnly =
+					!wantsSetSource && !wantsSetDestination && !wantsUpdateSource;
+
+				const canSetSource = wantsSetSource;
+				const canSetDestination = wantsSetDestination && hasPendingLink;
+				const canUpdateSource = wantsUpdateSource && hasSourceLink;
+				const canSnapshotOnly =
+					wantsSnapshotOnly &&
+					(hasPendingLink || hasSourceLink || hasDestinationLink);
+
+				if (
+					!canSetSource &&
+					!canSetDestination &&
+					!canUpdateSource &&
+					!canSnapshotOnly
+				) {
+					if (onPress) runOnJS(onPress)();
+					return;
+				}
 
 				const measured = measure(animatedRef);
-				if (!measured) return;
+				if (!measured) {
+					if (onPress) runOnJS(onPress)();
+					return;
+				}
 
-				// Correct for parent transforms (e.g., when parent screen is animating)
 				const correctedMeasured = layoutAnchor
 					? layoutAnchor.correctMeasurement(measured)
 					: measured;
@@ -235,25 +327,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					ancestorKeys,
 				);
 
-				if (shouldSetSource) {
-					if (isAnimating.get()) {
-						// If animation is already in progress,
-						// lets use the existing measuremenets.
-						const existing = BoundStore.getSnapshot(
-							sharedBoundTag,
-							currentScreenKey,
-						);
-						if (existing) {
-							BoundStore.setLinkSource(
-								sharedBoundTag,
-								currentScreenKey,
-								existing.bounds,
-								preparedStyles,
-								ancestorKeys,
-							);
-						}
-						return;
-					}
+				if (canSetSource) {
 					BoundStore.setLinkSource(
 						sharedBoundTag,
 						currentScreenKey,
@@ -263,7 +337,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					);
 				}
 
-				if (shouldUpdateSource) {
+				if (canUpdateSource) {
 					BoundStore.updateLinkSource(
 						sharedBoundTag,
 						currentScreenKey,
@@ -273,8 +347,7 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 					);
 				}
 
-				// Set as destination (on mount during animation)
-				if (shouldSetDestination) {
+				if (canSetDestination) {
 					BoundStore.setLinkDestination(
 						sharedBoundTag,
 						currentScreenKey,
@@ -297,7 +370,9 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 
 		// Side effects
 		const { markSourceCaptured } = useBlurMeasurement({
+			enabled: !onPress,
 			sharedBoundTag,
+			selectedRouteId: selectedNextRouteId,
 			maybeMeasureAndStore,
 			ancestorKeys,
 		});

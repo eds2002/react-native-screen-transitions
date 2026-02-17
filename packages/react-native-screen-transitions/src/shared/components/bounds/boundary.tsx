@@ -1,5 +1,4 @@
-import { useFocusEffect } from "@react-navigation/native";
-import { memo, useCallback, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import type { LayoutChangeEvent, View, ViewProps } from "react-native";
 import Animated, {
 	measure,
@@ -101,35 +100,90 @@ const useInitialLayoutHandler = (params: {
 	);
 };
 
-const useBlurMeasurement = (params: {
+const useBoundaryPresence = (params: {
 	sharedBoundTag: string;
+	currentScreenKey: string;
 	ancestorKeys: string[];
+}) => {
+	const { sharedBoundTag, currentScreenKey, ancestorKeys } = params;
+
+	useEffect(() => {
+		runOnUI(BoundStore.registerBoundaryPresence)(
+			sharedBoundTag,
+			currentScreenKey,
+			ancestorKeys,
+		);
+
+		return () => {
+			runOnUI(BoundStore.unregisterBoundaryPresence)(
+				sharedBoundTag,
+				currentScreenKey,
+			);
+		};
+	}, [sharedBoundTag, currentScreenKey, ancestorKeys]);
+};
+
+const useAutoSourceMeasurement = (params: {
+	sharedBoundTag: string;
+	nextScreenKey?: string;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { current } = useKeys();
-	const { sharedBoundTag, ancestorKeys, maybeMeasureAndStore } = params;
+	const { sharedBoundTag, nextScreenKey, maybeMeasureAndStore } = params;
+	const boundaryPresence = BoundStore.getBoundaryPresence();
 
-	const ancestorClosing = [current.route.key, ...ancestorKeys].map((key) =>
-		AnimationStore.getAnimation(key, "closing"),
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			if (!nextScreenKey) return 0;
+			const tagPresence = boundaryPresence.value[sharedBoundTag];
+			if (!tagPresence) return 0;
+
+			const direct = tagPresence[nextScreenKey];
+			if (direct && direct.count > 0) return 1;
+
+			for (const screenKey in tagPresence) {
+				const entry = tagPresence[screenKey];
+				if (entry.ancestorKeys?.includes(nextScreenKey)) {
+					return 1;
+				}
+			}
+
+			return 0;
+		},
+		(shouldCapture, previousShouldCapture) => {
+			"worklet";
+			if (!nextScreenKey) return;
+			if (shouldCapture === 0 || shouldCapture === previousShouldCapture)
+				return;
+			maybeMeasureAndStore({ shouldSetSource: true });
+		},
+		[nextScreenKey, sharedBoundTag, boundaryPresence, maybeMeasureAndStore],
 	);
+};
 
-	const maybeMeasureOnBlur = useStableCallbackValue(() => {
-		"worklet";
+const usePendingDestinationMeasurement = (params: {
+	sharedBoundTag: string;
+	enabled: boolean;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const { sharedBoundTag, enabled, maybeMeasureAndStore } = params;
 
-		for (const closing of ancestorClosing) {
-			if (closing.get()) return;
-		}
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			if (!enabled) return 0;
+			return BoundStore.hasPendingLink(sharedBoundTag) ? 1 : 0;
+		},
+		(hasPendingLink, previousHasPendingLink) => {
+			"worklet";
+			if (!enabled) return;
+			if (hasPendingLink === 0 || hasPendingLink === previousHasPendingLink) {
+				return;
+			}
 
-		maybeMeasureAndStore({ shouldSetSource: true });
-	});
-
-	useFocusEffect(
-		useCallback(() => {
-			return () => {
-				if (!sharedBoundTag) return;
-				runOnUI(maybeMeasureOnBlur)();
-			};
-		}, [sharedBoundTag, maybeMeasureOnBlur]),
+			maybeMeasureAndStore({ shouldSetDestination: true });
+		},
+		[enabled, sharedBoundTag, maybeMeasureAndStore],
 	);
 };
 
@@ -190,18 +244,14 @@ const useGroupActiveMeasurement = (params: {
 		() => {
 			"worklet";
 			if (!group) return null;
-			return allGroups.value;
+			return allGroups.value[group]?.activeId ?? null;
 		},
-		(groups, previousGroups) => {
+		(activeId, previousActiveId) => {
 			"worklet";
-			if (!groups || !group || !shouldUpdateDestination) return;
+			if (!group || !shouldUpdateDestination) return;
 			if (isAnimating.value) return;
 
-			const activeGroupActiveId = groups[group]?.activeId;
-			if (
-				activeGroupActiveId === idStr &&
-				activeGroupActiveId !== previousGroups?.[group]?.activeId
-			) {
+			if (activeId === idStr && activeId !== previousActiveId) {
 				maybeMeasureAndStore({ shouldUpdateDestination: true });
 			}
 		},
@@ -247,6 +297,7 @@ const BoundaryComponent = ({
 
 	const { current, next } = useKeys();
 	const currentScreenKey = current.route.key;
+	const nextScreenKey = next?.route.key;
 	const hasNextScreen = !!next;
 	const shouldUpdateDestination = !hasNextScreen;
 	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
@@ -271,6 +322,48 @@ const BoundaryComponent = ({
 		}: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
 
+			if (shouldSetSource && isAnimating.get()) {
+				const existing = BoundStore.getSnapshot(
+					sharedBoundTag,
+					currentScreenKey,
+				);
+				if (existing) {
+					BoundStore.setLinkSource(
+						sharedBoundTag,
+						currentScreenKey,
+						existing.bounds,
+						preparedStyles,
+						ancestorKeys,
+					);
+				}
+				return;
+			}
+
+			const hasPendingLink = BoundStore.hasPendingLink(sharedBoundTag);
+			const hasSourceLink = BoundStore.hasSourceLink(
+				sharedBoundTag,
+				currentScreenKey,
+			);
+			const hasDestinationLink = BoundStore.hasDestinationLink(
+				sharedBoundTag,
+				currentScreenKey,
+			);
+
+			const canSetSource = !!shouldSetSource;
+			const canSetDestination = !!shouldSetDestination && hasPendingLink;
+			const canUpdateSource = !!shouldUpdateSource && hasSourceLink;
+			const canUpdateDestination =
+				!!shouldUpdateDestination && (hasDestinationLink || hasPendingLink);
+
+			if (
+				!canSetSource &&
+				!canSetDestination &&
+				!canUpdateSource &&
+				!canUpdateDestination
+			) {
+				return;
+			}
+
 			const measured = measure(animatedRef);
 			if (!measured) return;
 
@@ -286,24 +379,7 @@ const BoundaryComponent = ({
 				ancestorKeys,
 			);
 
-			if (shouldSetSource) {
-				if (isAnimating.get()) {
-					const existing = BoundStore.getSnapshot(
-						sharedBoundTag,
-						currentScreenKey,
-					);
-					if (existing) {
-						BoundStore.setLinkSource(
-							sharedBoundTag,
-							currentScreenKey,
-							existing.bounds,
-							preparedStyles,
-							ancestorKeys,
-						);
-					}
-					return;
-				}
-
+			if (canSetSource) {
 				BoundStore.setLinkSource(
 					sharedBoundTag,
 					currentScreenKey,
@@ -313,7 +389,7 @@ const BoundaryComponent = ({
 				);
 			}
 
-			if (shouldUpdateSource) {
+			if (canUpdateSource) {
 				BoundStore.updateLinkSource(
 					sharedBoundTag,
 					currentScreenKey,
@@ -323,7 +399,7 @@ const BoundaryComponent = ({
 				);
 			}
 
-			if (shouldUpdateDestination) {
+			if (canUpdateDestination) {
 				BoundStore.updateLinkDestination(
 					sharedBoundTag,
 					currentScreenKey,
@@ -333,7 +409,7 @@ const BoundaryComponent = ({
 				);
 			}
 
-			if (shouldSetDestination) {
+			if (canSetDestination) {
 				BoundStore.setLinkDestination(
 					sharedBoundTag,
 					currentScreenKey,
@@ -353,9 +429,21 @@ const BoundaryComponent = ({
 		onLayout,
 	});
 
-	useBlurMeasurement({
+	useBoundaryPresence({
 		sharedBoundTag,
+		currentScreenKey,
 		ancestorKeys,
+	});
+
+	useAutoSourceMeasurement({
+		sharedBoundTag,
+		nextScreenKey,
+		maybeMeasureAndStore,
+	});
+
+	usePendingDestinationMeasurement({
+		sharedBoundTag,
+		enabled: !hasNextScreen,
 		maybeMeasureAndStore,
 	});
 
