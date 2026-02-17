@@ -3,7 +3,6 @@
 	"workspaces": {
 		"packages": [
 			"packages/*",
-			"examples/*",
 			"apps/*"
 		],
 		"catalog": {

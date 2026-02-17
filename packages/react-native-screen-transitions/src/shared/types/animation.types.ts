@@ -114,12 +114,6 @@ export interface ScreenInterpolationProps {
 	insets: EdgeInsets;
 
 	/**
-	 * The ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a').
-	 * @deprecated
-	 */
-	activeBoundId?: never;
-
-	/**
 	 * Whether the current screen is the focused (topmost) screen in the stack.
 	 */
 	focused: boolean;
@@ -153,7 +147,7 @@ export interface ScreenInterpolationProps {
 	snapIndex: number;
 
 	/**
-	 * Function that provides access to bounds builders for creating shared element transitions.
+	 * Function that provides access to bounds style helpers for shared element transitions.
 	 */
 	bounds: BoundsAccessor;
 

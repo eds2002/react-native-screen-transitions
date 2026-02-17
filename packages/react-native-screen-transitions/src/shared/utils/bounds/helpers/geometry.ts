@@ -1,10 +1,10 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { Layout } from "../../../types/screen.types";
-import type { BoundsAnchor, BoundsScaleMode } from "../types/builder";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
 } from "../types/geometry";
+import type { BoundsAnchor, BoundsScaleMode } from "../types/options";
 
 /**
  * Get the anchor point coordinates for a given bound

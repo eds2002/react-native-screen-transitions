@@ -3,11 +3,11 @@ import {
 	type MeasuredDimensions,
 	type StyleProps,
 } from "react-native-reanimated";
-import type { BoundsBuilderOptions } from "../types/builder";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
 } from "../types/geometry";
+import type { BoundsOptions } from "../types/options";
 
 /**
  * Element-level (relative) params shared by size/transform composers.
@@ -21,7 +21,7 @@ export type ElementComposeParams = {
 	geometry: RelativeGeometry;
 	progress: number;
 	ranges: readonly [number, number];
-	computeOptions: BoundsBuilderOptions;
+	computeOptions: BoundsOptions;
 };
 
 /**
@@ -36,7 +36,7 @@ type ContentComposeParams = {
 	geometry: ContentTransformGeometry;
 	progress: number;
 	ranges: readonly [number, number];
-	computeOptions: BoundsBuilderOptions;
+	computeOptions: BoundsOptions;
 };
 
 export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {

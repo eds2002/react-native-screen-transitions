@@ -7,8 +7,7 @@ We want this community to be friendly and respectful to each other. Please follo
 This repo is a monorepo managed with Bun workspaces and Changesets.
 
 - `packages/react-native-screen-transitions` – the published library (built with `react-native-builder-bob`).
-- `examples/tray` – example app demonstrating tray/drawer patterns.
-- `apps/e2e` – Expo app for e2e testing with Maestro.
+- `apps/e2e` – Expo app for interactive transition demos and e2e testing with Maestro.
 
 ## Development workflow
 
@@ -22,16 +21,16 @@ bun install
 
 ### 2. Build the library
 
-Compile the library before running an example app:
+Compile the library before running the e2e app:
 
 ```sh
 bun run build
 ```
 
-### 3. Run an example app
+### 3. Run the e2e app
 
 ```sh
-cd examples/tray
+cd apps/e2e
 npx expo run:ios   # or expo run:android
 ```
 

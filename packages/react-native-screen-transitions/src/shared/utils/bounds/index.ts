@@ -26,10 +26,7 @@ import {
 	composeTransformRelative,
 	type ElementComposeParams,
 } from "./helpers/style-composers";
-import type {
-	BoundsBuilderOptions,
-	BoundsComputeParams,
-} from "./types/builder";
+import type { BoundsComputeParams, BoundsOptions } from "./types/options";
 
 const resolveBounds = (props: {
 	id: string;
@@ -38,7 +35,7 @@ const resolveBounds = (props: {
 	next?: ScreenTransitionState;
 	toRect?: Partial<MeasuredDimensions>;
 	dimensions: Layout;
-	computeOptions: BoundsBuilderOptions;
+	computeOptions: BoundsOptions;
 }) => {
 	"worklet";
 	const entering = !props.next;
@@ -98,7 +95,7 @@ const resolveBounds = (props: {
 
 const computeBoundStyles = (
 	{ id, previous, current, next, progress, dimensions }: BoundsComputeParams,
-	computeOptions: BoundsBuilderOptions = { id: "bound-id" },
+	computeOptions: BoundsOptions = { id: "bound-id" },
 ) => {
 	"worklet";
 	if (!id) {
@@ -180,7 +177,7 @@ export const createBounds = (
 ): BoundsAccessor => {
 	"worklet";
 
-	const boundsFunction = (params?: BoundsBuilderOptions) => {
+	const boundsFunction = (params?: BoundsOptions) => {
 		"worklet";
 		const group = params?.group;
 		const rawId = params?.id;

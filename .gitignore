@@ -24,8 +24,6 @@ node_modules/
 .DS_Store
 Thumbs.db"
 
-examples/perf/*
-
 todo
 *.todo
 

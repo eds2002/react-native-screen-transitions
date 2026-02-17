@@ -64,22 +64,21 @@ type RawContentReturn = {
 };
 
 // Conditional return type based on options
-export type BoundsReturnType<T extends BoundsBuilderOptions> =
-	T["raw"] extends true
-		? T["method"] extends "size"
-			? T["space"] extends "absolute"
-				? RawSizeAbsoluteReturn
-				: RawSizeRelativeReturn
-			: T["method"] extends "content"
-				? RawContentReturn
-				: T["space"] extends "absolute"
-					? RawTransformAbsoluteReturn
-					: RawTransformRelativeReturn
-		: StyleProps;
+export type BoundsOptionsResult<T extends BoundsOptions> = T["raw"] extends true
+	? T["method"] extends "size"
+		? T["space"] extends "absolute"
+			? RawSizeAbsoluteReturn
+			: RawSizeRelativeReturn
+		: T["method"] extends "content"
+			? RawContentReturn
+			: T["space"] extends "absolute"
+				? RawTransformAbsoluteReturn
+				: RawTransformRelativeReturn
+	: StyleProps;
 
-export type BoundsBuilderOptions = {
+export type BoundsOptions = {
 	/**
-	 * The ID of the bound to compute bounds for. If not provided, uses the active bound ID.
+	 * The ID of the bound to compute bounds for.
 	 * When `group` is also provided, this is the member id within the group (not the combined tag).
 	 */
 	id: string;
