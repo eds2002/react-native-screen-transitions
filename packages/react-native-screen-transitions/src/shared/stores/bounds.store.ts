@@ -78,7 +78,28 @@ function setLinkSource(
 		"worklet";
 		if (!state[tag]) state[tag] = { snapshots: {}, linkStack: [] };
 
-		state[tag].linkStack.push({
+		const stack = state[tag].linkStack;
+		const topLink = stack[stack.length - 1];
+
+		// Spam-safety: if the top link is still pending and comes from the same
+		// source screen (or ancestor chain), update it in place instead of pushing
+		// another pending link. This prevents duplicate pending links for repeated
+		// taps on the same element while a transition is in flight.
+		if (topLink && topLink.destination === null) {
+			const topSource = topLink.source;
+			const sameSource =
+				topSource &&
+				(topSource.screenKey === screenKey ||
+					(topSource.ancestorKeys?.includes(screenKey) ?? false) ||
+					(ancestorKeys?.includes(topSource.screenKey) ?? false));
+
+			if (sameSource) {
+				topLink.source = { screenKey, ancestorKeys, bounds, styles };
+				return state;
+			}
+		}
+
+		stack.push({
 			source: { screenKey, ancestorKeys, bounds, styles },
 			destination: null,
 		});
@@ -147,6 +168,7 @@ function setLinkDestination(
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
 	ancestorKeys?: ScreenKey[],
+	expectedSourceScreenKey?: ScreenKey,
 ) {
 	"worklet";
 	registry.modify((state: any) => {
@@ -154,12 +176,46 @@ function setLinkDestination(
 		const stack = state[tag]?.linkStack;
 		if (!stack || stack.length === 0) return state;
 
-		// Find the topmost link without a destination
-		for (let i = stack.length - 1; i >= 0; i--) {
-			if (stack[i].destination === null) {
-				stack[i].destination = { screenKey, ancestorKeys, bounds, styles };
-				break;
+		let targetIndex = -1;
+
+		if (expectedSourceScreenKey) {
+			for (let i = stack.length - 1; i >= 0; i--) {
+				const link = stack[i];
+				if (link.destination !== null) continue;
+
+				const src = link.source;
+				const sourceMatches =
+					src &&
+					(src.screenKey === expectedSourceScreenKey ||
+						(src.ancestorKeys?.includes(expectedSourceScreenKey) ?? false));
+
+				if (sourceMatches) {
+					targetIndex = i;
+					break;
+				}
 			}
+
+			// In expected-source mode, do not fall back to unrelated pending links.
+			if (targetIndex === -1) {
+				return state;
+			}
+		} else {
+			// Legacy behavior: pick the topmost pending link.
+			for (let i = stack.length - 1; i >= 0; i--) {
+				if (stack[i].destination === null) {
+					targetIndex = i;
+					break;
+				}
+			}
+		}
+
+		if (targetIndex !== -1) {
+			stack[targetIndex].destination = {
+				screenKey,
+				ancestorKeys,
+				bounds,
+				styles,
+			};
 		}
 		return state;
 	});
@@ -339,6 +395,45 @@ function hasPendingLink(tag: TagID): boolean {
 }
 
 /**
+ * Returns true when a tag has a pending link whose source matches
+ * the provided screen (or one of its ancestors).
+ */
+function hasPendingLinkFromSource(
+	tag: TagID,
+	sourceScreenKey: ScreenKey,
+): boolean {
+	"worklet";
+	const stack = registry.value[tag]?.linkStack;
+	if (!stack || stack.length === 0) return false;
+
+	for (let i = stack.length - 1; i >= 0; i--) {
+		const link = stack[i];
+		if (link.destination !== null) continue;
+		if (matchesScreenKey(link.source, sourceScreenKey)) return true;
+	}
+
+	return false;
+}
+
+/**
+ * Returns the source screen key of the most recent pending link for a tag.
+ */
+function getLatestPendingSourceScreenKey(tag: TagID): ScreenKey | null {
+	"worklet";
+	const stack = registry.value[tag]?.linkStack;
+	if (!stack || stack.length === 0) return null;
+
+	for (let i = stack.length - 1; i >= 0; i--) {
+		const link = stack[i];
+		if (link.destination === null) {
+			return link.source.screenKey;
+		}
+	}
+
+	return null;
+}
+
+/**
  * Returns true when the given screen (or one of its ancestors) is a source
  * in the link stack for the provided tag.
  */
@@ -407,6 +502,7 @@ function updateLinkDestination(
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
 	ancestorKeys?: ScreenKey[],
+	expectedSourceScreenKey?: ScreenKey,
 ) {
 	"worklet";
 	registry.modify((state: any) => {
@@ -437,10 +533,19 @@ function updateLinkDestination(
 		// but source exists — fill in the destination.
 		if (targetIndex === -1) {
 			for (let i = stack.length - 1; i >= 0; i--) {
-				if (stack[i].source && stack[i].destination === null) {
-					targetIndex = i;
-					break;
+				const link = stack[i];
+				if (!link.source || link.destination !== null) continue;
+
+				if (expectedSourceScreenKey) {
+					const sourceMatches =
+						link.source.screenKey === expectedSourceScreenKey ||
+						(link.source.ancestorKeys?.includes(expectedSourceScreenKey) ??
+							false);
+					if (!sourceMatches) continue;
 				}
+
+				targetIndex = i;
+				break;
 			}
 		}
 
@@ -517,6 +622,8 @@ export const BoundStore = {
 	hasBoundaryPresence,
 	getBoundaryPresence,
 	hasPendingLink,
+	hasPendingLinkFromSource,
+	getLatestPendingSourceScreenKey,
 	hasSourceLink,
 	hasDestinationLink,
 	getSnapshot,

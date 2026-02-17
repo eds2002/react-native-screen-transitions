@@ -19,56 +19,32 @@ const GAP = 16;
 export default function BoundsIndex() {
 	const { width: screenWidth } = useWindowDimensions();
 	const scrollRef = useAnimatedRef<any>();
-	const isFocused = useIsFocused();
-	const isFocusedShared = useSharedValue(isFocused ? 1 : 0);
-	const pushInFlight = useRef(false);
-	const queuedSelection = useRef<string | null>(null);
-
-	useEffect(() => {
-		isFocusedShared.value = isFocused ? 1 : 0;
-		if (isFocused) {
-			pushInFlight.current = false;
-
-			const nextQueuedId = queuedSelection.current;
-			if (nextQueuedId) {
-				queuedSelection.current = null;
-				activeBoundaryId.value = nextQueuedId;
-				pushInFlight.current = true;
-
-				requestAnimationFrame(() => {
-					router.push(
-						`/blank-stack/bounds/${nextQueuedId}` as `/blank-stack/bounds/${string}`,
-					);
-				});
-			}
-		}
-	}, [isFocused, isFocusedShared]);
 
 	// Horizontal padding so first and last items can center in the viewport.
 	const horizontalPadding = screenWidth / 2 - ITEM_SIZE / 2;
 
 	// Auto-scroll to center the active boundary when it changes
 	// (e.g., when the user pages through the detail screen).
-	useAnimatedReaction(
-		() => activeBoundaryId.value,
-		(activeId, previousId) => {
-			"worklet";
-			if (isFocusedShared.value === 1) return;
-			if (activeId === previousId) return;
+	// useAnimatedReaction(
+	// 	() => activeBoundaryId.value,
+	// 	(activeId, previousId) => {
+	// 		"worklet";
+	// 		if (isFocusedShared.value === 1) return;
+	// 		if (activeId === previousId) return;
 
-			let index = -1;
-			for (let i = 0; i < ITEMS.length; i++) {
-				if (ITEMS[i].id === activeId) {
-					index = i;
-					break;
-				}
-			}
-			if (index === -1) return;
+	// 		let index = -1;
+	// 		for (let i = 0; i < ITEMS.length; i++) {
+	// 			if (ITEMS[i].id === activeId) {
+	// 				index = i;
+	// 				break;
+	// 			}
+	// 		}
+	// 		if (index === -1) return;
 
-			const offsetX = index * (ITEM_SIZE + GAP);
-			scrollTo(scrollRef, offsetX, 0, false);
-		},
-	);
+	// 		const offsetX = index * (ITEM_SIZE + GAP);
+	// 		scrollTo(scrollRef, offsetX, 0, false);
+	// 	},
+	// );
 
 	return (
 		<SafeAreaView style={styles.container} edges={[]}>
@@ -89,24 +65,9 @@ export default function BoundsIndex() {
 				{ITEMS.map((item) => (
 					<Pressable
 						key={item.id}
-						testID={`bounds-open-${item.id}`}
 						onPress={() => {
-							if (!isFocused) {
-								queuedSelection.current = item.id;
-								return;
-							}
-
-							if (pushInFlight.current) {
-								queuedSelection.current = item.id;
-								return;
-							}
-
-							activeBoundaryId.value = item.id;
-							pushInFlight.current = true;
-
-							router.push(
-								`/blank-stack/bounds/${item.id}` as `/blank-stack/bounds/${string}`,
-							);
+							// activeBoundaryId.value = item.id;
+							router.push(`/blank-stack/bounds/${item.id}`);
 						}}
 						style={{ overflow: "visible" }}
 					>

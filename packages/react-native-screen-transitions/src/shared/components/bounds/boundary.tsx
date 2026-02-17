@@ -27,6 +27,11 @@ export interface BoundaryProps extends Omit<ViewProps, "id"> {
 	 * The internal tag becomes `group:id`.
 	 */
 	group?: string;
+	/**
+	 * Whether this boundary should participate in matching and measurement.
+	 * @default true
+	 */
+	enabled?: boolean;
 	id: BoundaryId;
 }
 
@@ -38,6 +43,7 @@ interface MaybeMeasureAndStoreParams {
 }
 
 const useInitialLayoutHandler = (params: {
+	enabled: boolean;
 	sharedBoundTag: string;
 	currentScreenKey: string;
 	ancestorKeys: string[];
@@ -45,6 +51,7 @@ const useInitialLayoutHandler = (params: {
 	onLayout?: ViewProps["onLayout"];
 }) => {
 	const {
+		enabled,
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
@@ -65,6 +72,7 @@ const useInitialLayoutHandler = (params: {
 
 	const handleInitialLayout = useCallback(() => {
 		"worklet";
+		if (!enabled) return;
 		if (!sharedBoundTag || hasMeasuredOnLayout.get()) return;
 
 		let isAnyAnimating = isAnimating.get();
@@ -84,6 +92,7 @@ const useInitialLayoutHandler = (params: {
 
 		hasMeasuredOnLayout.set(true);
 	}, [
+		enabled,
 		sharedBoundTag,
 		hasMeasuredOnLayout,
 		isAnimating,
@@ -101,13 +110,16 @@ const useInitialLayoutHandler = (params: {
 };
 
 const useBoundaryPresence = (params: {
+	enabled: boolean;
 	sharedBoundTag: string;
 	currentScreenKey: string;
 	ancestorKeys: string[];
 }) => {
-	const { sharedBoundTag, currentScreenKey, ancestorKeys } = params;
+	const { enabled, sharedBoundTag, currentScreenKey, ancestorKeys } = params;
 
 	useEffect(() => {
+		if (!enabled) return;
+
 		runOnUI(BoundStore.registerBoundaryPresence)(
 			sharedBoundTag,
 			currentScreenKey,
@@ -120,70 +132,112 @@ const useBoundaryPresence = (params: {
 				currentScreenKey,
 			);
 		};
-	}, [sharedBoundTag, currentScreenKey, ancestorKeys]);
+	}, [enabled, sharedBoundTag, currentScreenKey, ancestorKeys]);
 };
 
 const useAutoSourceMeasurement = (params: {
+	enabled: boolean;
 	sharedBoundTag: string;
 	nextScreenKey?: string;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { sharedBoundTag, nextScreenKey, maybeMeasureAndStore } = params;
+	const { enabled, sharedBoundTag, nextScreenKey, maybeMeasureAndStore } =
+		params;
 	const boundaryPresence = BoundStore.getBoundaryPresence();
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
+			if (!enabled) return 0;
 			if (!nextScreenKey) return 0;
 			const tagPresence = boundaryPresence.value[sharedBoundTag];
 			if (!tagPresence) return 0;
 
 			const direct = tagPresence[nextScreenKey];
-			if (direct && direct.count > 0) return 1;
+			if (direct && direct.count > 0) return nextScreenKey;
 
 			for (const screenKey in tagPresence) {
 				const entry = tagPresence[screenKey];
 				if (entry.ancestorKeys?.includes(nextScreenKey)) {
-					return 1;
+					return nextScreenKey;
 				}
 			}
 
 			return 0;
 		},
-		(shouldCapture, previousShouldCapture) => {
+		(captureSignal, previousCaptureSignal) => {
 			"worklet";
+			if (!enabled) return;
 			if (!nextScreenKey) return;
-			if (shouldCapture === 0 || shouldCapture === previousShouldCapture)
-				return;
+			if (!captureSignal || captureSignal === previousCaptureSignal) return;
 			maybeMeasureAndStore({ shouldSetSource: true });
 		},
-		[nextScreenKey, sharedBoundTag, boundaryPresence, maybeMeasureAndStore],
+		[
+			enabled,
+			nextScreenKey,
+			sharedBoundTag,
+			boundaryPresence,
+			maybeMeasureAndStore,
+		],
 	);
 };
 
 const usePendingDestinationMeasurement = (params: {
 	sharedBoundTag: string;
 	enabled: boolean;
+	expectedSourceScreenKey?: string;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { sharedBoundTag, enabled, maybeMeasureAndStore } = params;
+	const {
+		sharedBoundTag,
+		enabled,
+		expectedSourceScreenKey,
+		maybeMeasureAndStore,
+	} = params;
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 			if (!enabled) return 0;
-			return BoundStore.hasPendingLink(sharedBoundTag) ? 1 : 0;
+			if (expectedSourceScreenKey) {
+				const resolvedSourceKey = BoundStore.hasPendingLinkFromSource(
+					sharedBoundTag,
+					expectedSourceScreenKey,
+				)
+					? expectedSourceScreenKey
+					: BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag);
+
+				if (!resolvedSourceKey) return 0;
+
+				return BoundStore.hasPendingLinkFromSource(
+					sharedBoundTag,
+					resolvedSourceKey,
+				)
+					? resolvedSourceKey
+					: 0;
+			}
+
+			const latestPendingSource =
+				BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag);
+			if (!latestPendingSource) return 0;
+
+			return BoundStore.hasPendingLinkFromSource(
+				sharedBoundTag,
+				latestPendingSource,
+			)
+				? latestPendingSource
+				: 0;
 		},
-		(hasPendingLink, previousHasPendingLink) => {
+		(captureSignal, previousCaptureSignal) => {
 			"worklet";
 			if (!enabled) return;
-			if (hasPendingLink === 0 || hasPendingLink === previousHasPendingLink) {
+			if (!captureSignal || captureSignal === previousCaptureSignal) {
 				return;
 			}
 
 			maybeMeasureAndStore({ shouldSetDestination: true });
 		},
-		[enabled, sharedBoundTag, maybeMeasureAndStore],
+		[enabled, sharedBoundTag, expectedSourceScreenKey, maybeMeasureAndStore],
 	);
 };
 
@@ -223,6 +277,7 @@ export function buildBoundaryMatchKey(
  * (e.g., paging ScrollView in a detail screen).
  */
 const useGroupActiveMeasurement = (params: {
+	enabled: boolean;
 	group: string | undefined;
 	id: BoundaryId;
 	shouldUpdateDestination: boolean;
@@ -230,6 +285,7 @@ const useGroupActiveMeasurement = (params: {
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {
+		enabled,
 		group,
 		id,
 		shouldUpdateDestination,
@@ -243,11 +299,13 @@ const useGroupActiveMeasurement = (params: {
 	useAnimatedReaction(
 		() => {
 			"worklet";
+			if (!enabled) return null;
 			if (!group) return null;
 			return allGroups.value[group]?.activeId ?? null;
 		},
 		(activeId, previousActiveId) => {
 			"worklet";
+			if (!enabled) return;
 			if (!group || !shouldUpdateDestination) return;
 			if (isAnimating.value) return;
 
@@ -255,17 +313,26 @@ const useGroupActiveMeasurement = (params: {
 				maybeMeasureAndStore({ shouldUpdateDestination: true });
 			}
 		},
-		[group, idStr, shouldUpdateDestination, isAnimating, maybeMeasureAndStore],
+		[
+			enabled,
+			group,
+			idStr,
+			shouldUpdateDestination,
+			isAnimating,
+			maybeMeasureAndStore,
+		],
 	);
 };
 
 const useScrollSettledMeasurement = (params: {
+	enabled: boolean;
 	group: string | undefined;
 	hasNextScreen: boolean;
 	isAnimating: ReturnType<typeof AnimationStore.getAnimation>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { group, hasNextScreen, isAnimating, maybeMeasureAndStore } = params;
+	const { enabled, group, hasNextScreen, isAnimating, maybeMeasureAndStore } =
+		params;
 	const scrollSettle = useScrollSettleContext();
 	const settledSignal = scrollSettle?.settledSignal;
 
@@ -273,6 +340,7 @@ const useScrollSettledMeasurement = (params: {
 		() => settledSignal?.value ?? 0,
 		(signal, previousSignal) => {
 			"worklet";
+			if (!enabled) return;
 			if (!group || !hasNextScreen || !settledSignal) return;
 			if (signal === 0 || signal === previousSignal) return;
 			if (isAnimating.value) return;
@@ -281,11 +349,19 @@ const useScrollSettledMeasurement = (params: {
 			// This captures post-scroll positions before close transition starts.
 			maybeMeasureAndStore({ shouldUpdateSource: true });
 		},
-		[group, hasNextScreen, settledSignal, isAnimating, maybeMeasureAndStore],
+		[
+			enabled,
+			group,
+			hasNextScreen,
+			settledSignal,
+			isAnimating,
+			maybeMeasureAndStore,
+		],
 	);
 };
 
 const BoundaryComponent = ({
+	enabled = true,
 	group,
 	id,
 	style,
@@ -295,9 +371,10 @@ const BoundaryComponent = ({
 	const sharedBoundTag = buildBoundaryMatchKey({ group, id });
 	const animatedRef = useAnimatedRef<View>();
 
-	const { current, next } = useKeys();
+	const { previous, current, next } = useKeys();
 	const currentScreenKey = current.route.key;
 	const nextScreenKey = next?.route.key;
+	const preferredSourceScreenKey = previous?.route.key;
 	const hasNextScreen = !!next;
 	const shouldUpdateDestination = !hasNextScreen;
 	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
@@ -321,6 +398,18 @@ const BoundaryComponent = ({
 			shouldUpdateDestination,
 		}: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
+			if (!enabled) return;
+
+			const fallbackSourceScreenKey =
+				BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag);
+			const expectedSourceScreenKey: string | undefined =
+				preferredSourceScreenKey &&
+				BoundStore.hasPendingLinkFromSource(
+					sharedBoundTag,
+					preferredSourceScreenKey,
+				)
+					? preferredSourceScreenKey
+					: fallbackSourceScreenKey || undefined;
 
 			if (shouldSetSource && isAnimating.get()) {
 				const existing = BoundStore.getSnapshot(
@@ -339,7 +428,12 @@ const BoundaryComponent = ({
 				return;
 			}
 
-			const hasPendingLink = BoundStore.hasPendingLink(sharedBoundTag);
+			const hasPendingLink = expectedSourceScreenKey
+				? BoundStore.hasPendingLinkFromSource(
+						sharedBoundTag,
+						expectedSourceScreenKey,
+					)
+				: BoundStore.hasPendingLink(sharedBoundTag);
 			const hasSourceLink = BoundStore.hasSourceLink(
 				sharedBoundTag,
 				currentScreenKey,
@@ -406,6 +500,7 @@ const BoundaryComponent = ({
 					correctedMeasured,
 					preparedStyles,
 					ancestorKeys,
+					expectedSourceScreenKey,
 				);
 			}
 
@@ -416,12 +511,14 @@ const BoundaryComponent = ({
 					correctedMeasured,
 					preparedStyles,
 					ancestorKeys,
+					expectedSourceScreenKey,
 				);
 			}
 		},
 	);
 
 	const handleInitialLayout = useInitialLayoutHandler({
+		enabled,
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
@@ -430,12 +527,14 @@ const BoundaryComponent = ({
 	});
 
 	useBoundaryPresence({
+		enabled,
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
 	});
 
 	useAutoSourceMeasurement({
+		enabled,
 		sharedBoundTag,
 		nextScreenKey,
 		maybeMeasureAndStore,
@@ -443,11 +542,13 @@ const BoundaryComponent = ({
 
 	usePendingDestinationMeasurement({
 		sharedBoundTag,
-		enabled: !hasNextScreen,
+		enabled: enabled && !hasNextScreen,
+		expectedSourceScreenKey: preferredSourceScreenKey,
 		maybeMeasureAndStore,
 	});
 
 	useGroupActiveMeasurement({
+		enabled,
 		group,
 		id,
 		shouldUpdateDestination,
@@ -456,6 +557,7 @@ const BoundaryComponent = ({
 	});
 
 	useScrollSettledMeasurement({
+		enabled,
 		group,
 		hasNextScreen,
 		isAnimating,
@@ -466,7 +568,7 @@ const BoundaryComponent = ({
 		<Animated.View
 			{...rest}
 			ref={animatedRef}
-			style={[style, associatedStyles]}
+			style={[style, enabled ? associatedStyles : undefined]}
 			onLayout={handleInitialLayout}
 			collapsable={false}
 		/>

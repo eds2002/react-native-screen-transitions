@@ -110,6 +110,22 @@ describe("BoundStore.setLinkSource", () => {
 		const link = BoundStore.getActiveLink("card");
 		expect(link?.source.screenKey).toBe("screen-b");
 	});
+
+	it("coalesces duplicate pending source from same screen", () => {
+		const first = createBounds(0, 0, 100, 100);
+		const second = createBounds(20, 30, 120, 130);
+
+		BoundStore.setLinkSource("card", "screen-a", first);
+		BoundStore.setLinkSource("card", "screen-a", second);
+
+		// Completing destination once should finalize the single coalesced pending link.
+		BoundStore.setLinkDestination("card", "screen-b", createBounds(200, 200));
+
+		const link = BoundStore.getActiveLink("card", "screen-b");
+		expect(link?.source.screenKey).toBe("screen-a");
+		expect(link?.source.bounds).toEqual(second);
+		expect(link?.destination?.screenKey).toBe("screen-b");
+	});
 });
 
 describe("BoundStore.updateLinkSource", () => {
@@ -212,6 +228,49 @@ describe("BoundStore.setLinkDestination", () => {
 		const link = BoundStore.getActiveLink("card");
 		expect(link?.source.screenKey).toBe("screen-b");
 		expect(link?.destination?.screenKey).toBe("screen-c");
+	});
+
+	it("targets pending link by expected source screen", () => {
+		const boundsA = createBounds(0, 0);
+		const boundsB = createBounds(50, 50);
+		const destination = createBounds(200, 200);
+
+		BoundStore.setLinkSource("card", "screen-a", boundsA);
+		BoundStore.setLinkSource("card", "screen-b", boundsB);
+
+		BoundStore.setLinkDestination(
+			"card",
+			"screen-detail",
+			destination,
+			{},
+			undefined,
+			"screen-a",
+		);
+
+		const fromDetail = BoundStore.getActiveLink("card", "screen-detail");
+		expect(fromDetail?.source.screenKey).toBe("screen-a");
+		expect(fromDetail?.destination?.screenKey).toBe("screen-detail");
+
+		const latest = BoundStore.getActiveLink("card");
+		expect(latest?.source.screenKey).toBe("screen-b");
+		expect(latest?.destination).toBeNull();
+	});
+
+	it("no-ops in expected source mode when no matching pending source exists", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds());
+
+		BoundStore.setLinkDestination(
+			"card",
+			"screen-detail",
+			createBounds(200, 200),
+			{},
+			undefined,
+			"screen-x",
+		);
+
+		const link = BoundStore.getActiveLink("card");
+		expect(link?.source.screenKey).toBe("screen-a");
+		expect(link?.destination).toBeNull();
 	});
 });
 
@@ -338,6 +397,33 @@ describe("BoundStore link predicates", () => {
 		BoundStore.setLinkDestination("card", "screen-b", createBounds());
 
 		expect(BoundStore.hasPendingLink("card")).toBe(false);
+	});
+
+	it("hasPendingLinkFromSource matches pending source screen", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds());
+		BoundStore.setLinkSource("card", "screen-b", createBounds());
+
+		expect(BoundStore.hasPendingLinkFromSource("card", "screen-a")).toBe(true);
+		expect(BoundStore.hasPendingLinkFromSource("card", "screen-b")).toBe(true);
+		expect(BoundStore.hasPendingLinkFromSource("card", "screen-x")).toBe(
+			false,
+		);
+	});
+
+	it("hasPendingLinkFromSource supports ancestor matching", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds(), {}, ["stack-a"]);
+
+		expect(BoundStore.hasPendingLinkFromSource("card", "stack-a")).toBe(true);
+	});
+
+	it("getLatestPendingSourceScreenKey returns most recent pending source", () => {
+		BoundStore.setLinkSource("card", "screen-a", createBounds());
+		BoundStore.setLinkSource("card", "screen-b", createBounds());
+
+		expect(BoundStore.getLatestPendingSourceScreenKey("card")).toBe("screen-b");
+
+		BoundStore.setLinkDestination("card", "screen-c", createBounds());
+		expect(BoundStore.getLatestPendingSourceScreenKey("card")).toBe("screen-a");
 	});
 
 	it("hasSourceLink matches direct source screen", () => {
