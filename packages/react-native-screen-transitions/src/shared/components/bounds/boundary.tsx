@@ -424,8 +424,12 @@ const BoundaryComponent = ({
 						preparedStyles,
 						ancestorKeys,
 					);
+					return;
 				}
-				return;
+
+				// No cached snapshot while animating.
+				// Fall through to a live measurement so rapid retargeting still
+				// captures a valid source link.
 			}
 
 			const hasPendingLink = expectedSourceScreenKey

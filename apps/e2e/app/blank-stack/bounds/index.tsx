@@ -66,7 +66,7 @@ export default function BoundsIndex() {
 					<Pressable
 						key={item.id}
 						onPress={() => {
-							// activeBoundaryId.value = item.id;
+							activeBoundaryId.value = item.id;
 							router.push(`/blank-stack/bounds/${item.id}`);
 						}}
 						style={{ overflow: "visible" }}

@@ -5,7 +5,9 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../constants";
+import { useKeys } from "../../providers/screen/keys.provider";
 import { useScreenStyles } from "../../providers/screen/styles.provider";
+import { AnimationStore } from "../../stores/animation.store";
 
 type Props = {
 	id?: string;
@@ -21,6 +23,13 @@ export const useAssociatedStyles = ({
 	resetTransformOnUnset = false,
 }: Props = {}) => {
 	const { stylesMap, ancestorStylesMaps } = useScreenStyles();
+	const { current } = useKeys();
+	const currentScreenKey = current.route.key;
+	const isAnimating = AnimationStore.getAnimation(
+		currentScreenKey,
+		"animating",
+	);
+	const isClosing = AnimationStore.getAnimation(currentScreenKey, "closing");
 	const showAfterFirstFrame = useSharedValue(false);
 	const previousAppliedKeys = useSharedValue<Record<string, true>>({});
 
@@ -60,9 +69,17 @@ export const useAssociatedStyles = ({
 			currentKeys[key] = true;
 		}
 
+		const shouldDeferUnset =
+			resetTransformOnUnset &&
+			(isAnimating.get() !== 0 || isClosing.get() !== 0);
+
 		const unsetPatch: Record<string, any> = {};
 		for (const key in previousAppliedKeys.value) {
 			if (!currentKeys[key]) {
+				if (shouldDeferUnset) {
+					continue;
+				}
+
 				if (key === "transform" && resetTransformOnUnset) {
 					unsetPatch.transform = [
 						{ translateX: 0 },
@@ -76,7 +93,14 @@ export const useAssociatedStyles = ({
 			}
 		}
 
-		previousAppliedKeys.value = currentKeys;
+		if (shouldDeferUnset) {
+			previousAppliedKeys.value = {
+				...previousAppliedKeys.value,
+				...currentKeys,
+			};
+		} else {
+			previousAppliedKeys.value = currentKeys;
+		}
 
 		const mergedBase = { ...unsetPatch, ...base };
 
