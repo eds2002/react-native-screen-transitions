@@ -1,5 +1,6 @@
 import { SafeAreaProviderCompat } from "@react-navigation/elements";
 import type * as React from "react";
+import { useMemo } from "react";
 import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StackType } from "../../types/stack.types";
@@ -35,14 +36,15 @@ const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
 			STACK_TYPE = StackType.BLANK,
 		} = config;
 
+		const flags = useMemo(
+			() => ({ TRANSITIONS_ALWAYS_ON, STACK_TYPE, DISABLE_NATIVE_SCREENS }),
+			[TRANSITIONS_ALWAYS_ON, STACK_TYPE, DISABLE_NATIVE_SCREENS],
+		);
+
+		const value = useMemo(() => ({ flags }), [flags]);
+
 		return {
-			value: {
-				flags: {
-					TRANSITIONS_ALWAYS_ON,
-					STACK_TYPE,
-					DISABLE_NATIVE_SCREENS,
-				},
-			},
+			value,
 			children: (
 				<GestureHandlerRootView
 					style={styles.container}
