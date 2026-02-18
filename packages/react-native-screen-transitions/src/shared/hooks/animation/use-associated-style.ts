@@ -13,6 +13,7 @@ type Props = {
 	id?: string;
 	style?: StyleProps;
 	resetTransformOnUnset?: boolean;
+	waitForFirstResolvedStyle?: boolean;
 };
 
 const TRANSIENT_EMPTY_GRACE_FRAMES = 2;
@@ -133,10 +134,14 @@ const buildUnsetPatch = ({
  *
  * For grouped tags (`group:id`), previous-screen transition evidence is only
  * considered for the group's active member to avoid hiding non-active siblings.
+ *
+ * Set `waitForFirstResolvedStyle` to `false` for generic shared-bound-tag usage
+ * where the transition can be driven by other style ids.
  */
 export const useAssociatedStyles = ({
 	id,
 	resetTransformOnUnset = false,
+	waitForFirstResolvedStyle = true,
 }: Props = {}) => {
 	const { stylesMap, ancestorStylesMaps } = useScreenStyles();
 	const { previous, current, next } = useKeys();
@@ -246,6 +251,7 @@ export const useAssociatedStyles = ({
 		 */
 		let mode: AssociatedStyleMode = "live";
 		if (
+			waitForFirstResolvedStyle &&
 			resetTransformOnUnset &&
 			hasConfiguredInterpolator &&
 			shouldExpectTransitionStyle &&

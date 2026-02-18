@@ -388,6 +388,7 @@ const BoundaryComponent = ({
 	const { associatedStyles } = useAssociatedStyles({
 		id: sharedBoundTag,
 		resetTransformOnUnset: true,
+		waitForFirstResolvedStyle: true,
 	});
 
 	const maybeMeasureAndStore = useStableCallbackValue(

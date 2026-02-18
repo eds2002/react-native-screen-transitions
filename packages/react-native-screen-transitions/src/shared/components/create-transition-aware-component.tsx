@@ -137,6 +137,7 @@ export function createTransitionAwareComponent<P extends object>(
 			id: sharedBoundTag || styleId,
 			style,
 			resetTransformOnUnset: !!sharedBoundTag,
+			waitForFirstResolvedStyle: false,
 		});
 
 		return (
