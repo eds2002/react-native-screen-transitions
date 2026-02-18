@@ -208,9 +208,7 @@ export const useAssociatedStyles = ({
 		// Evidence-based fallback covers the first frame where links
 		// may not be wired yet but a transition is clearly expected.
 		const shouldExpectTransitionStyle =
-			resetTransformOnUnset &&
-			((hasActiveLink && canUsePreviousTransitionEvidence) ||
-				hasPreviousTransitionEvidence);
+			resetTransformOnUnset && (hasActiveLink || hasPreviousTransitionEvidence);
 
 		if (hasCurrentKeys) {
 			lastResolvedBase.value = base as Record<string, any>;
