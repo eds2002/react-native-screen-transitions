@@ -1,4 +1,4 @@
-import { interpolate, type MeasuredDimensions } from "react-native-reanimated";
+import type { MeasuredDimensions } from "react-native-reanimated";
 import {
 	EMPTY_BOUND_HELPER_RESULT,
 	EMPTY_BOUND_HELPER_RESULT_RAW,
@@ -11,12 +11,17 @@ import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
 } from "../../types/animation.types";
-import type { BoundsAccessor, BoundsLink } from "../../types/bounds.types";
+import type {
+	BoundsAccessor,
+	BoundsLink,
+	BoundsMatchStyleOptions,
+} from "../../types/bounds.types";
 import type { Layout } from "../../types/screen.types";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
 } from "./helpers/geometry";
+import { interpolateClamped } from "./helpers/interpolate";
 import { interpolateLinkStyle } from "./helpers/interpolate-style";
 import {
 	composeContentStyle,
@@ -27,6 +32,15 @@ import {
 	type ElementComposeParams,
 } from "./helpers/style-composers";
 import type { BoundsComputeParams, BoundsOptions } from "./types/options";
+
+const DEFAULT_BOUNDS_OPTIONS = {
+	target: "bound",
+	method: "transform",
+	space: "relative",
+	scaleMode: "match",
+	anchor: "center",
+	raw: false,
+} as const satisfies Omit<BoundsOptions, "id" | "group" | "gestures">;
 
 const resolveBounds = (props: {
 	id: string;
@@ -176,38 +190,97 @@ export const createBounds = (
 	props: Omit<ScreenInterpolationProps, "bounds">,
 ): BoundsAccessor => {
 	"worklet";
-
-	const boundsFunction = (params?: BoundsOptions) => {
+	const resolveTag = ({
+		id,
+		group,
+	}: {
+		id?: string;
+		group?: string;
+	}): string | undefined => {
 		"worklet";
-		const group = params?.group;
-		const rawId = params?.id;
 
-		// When group is provided, combine into a tag.
-		// Without group, use id directly as the tag (backward compatible).
-		let tag = rawId;
-		if (group && rawId) {
-			tag = `${group}:${rawId}`;
+		if (!id) return id;
 
-			// Automatically update the group's active id when the requested id changes.
-			// This triggers useGroupActiveMeasurement in boundary.tsx which re-measures
-			// the newly-active boundary (e.g., after scrolling to a different page).
-			const currentActiveId = BoundStore.getGroupActiveId(group);
-			if (currentActiveId !== rawId) {
-				BoundStore.setGroupActiveId(group, rawId);
-			}
+		if (!group) {
+			return id;
 		}
 
+		const currentActiveId = BoundStore.getGroupActiveId(group);
+		if (currentActiveId !== id) {
+			BoundStore.setGroupActiveId(group, id);
+		}
+
+		return `${group}:${id}`;
+	};
+
+	const resolveComputeOptions = ({
+		id,
+		group,
+		overrides,
+	}: {
+		id?: string;
+		group?: string;
+		overrides?: Partial<BoundsOptions>;
+	}): BoundsOptions => {
+		"worklet";
+		const tag = resolveTag({ id, group });
+		const currentScreenKey = props.current?.route.key;
+		const boundaryConfig =
+			tag && currentScreenKey
+				? BoundStore.getBoundaryConfig(tag, currentScreenKey)
+				: null;
+
+		return {
+			...DEFAULT_BOUNDS_OPTIONS,
+			...(boundaryConfig ?? {}),
+			...(overrides ?? {}),
+			id: tag ?? "",
+			group,
+		};
+	};
+
+	const compute = (resolvedOptions: BoundsOptions) => {
+		"worklet";
 		return computeBoundStyles(
 			{
-				id: tag,
+				id: resolvedOptions.id,
 				previous: props.previous,
 				current: props.current,
 				next: props.next,
 				progress: props.progress,
 				dimensions: props.layouts.screen,
 			},
-			params,
+			resolvedOptions,
 		);
+	};
+
+	const boundsFunction = (params?: BoundsOptions) => {
+		"worklet";
+		const resolved = resolveComputeOptions({
+			id: params?.id,
+			group: params?.group,
+			overrides: params,
+		});
+
+		return compute(resolved);
+	};
+
+	const match = (params: { id: string; group?: string }) => {
+		"worklet";
+		const { id, group } = params;
+
+		return {
+			style: (options?: BoundsMatchStyleOptions) => {
+				"worklet";
+				const resolved = resolveComputeOptions({
+					id,
+					group,
+					overrides: { ...(options ?? {}), id, group },
+				});
+
+				return compute(resolved);
+			},
+		};
 	};
 
 	const getSnapshot = (tag: string, key: string): Snapshot | null => {
@@ -266,12 +339,10 @@ export const createBounds = (
 			const currentValue = currentSnapshot?.bounds?.[property] ?? fb;
 			const targetValue = targetSnapshot?.bounds?.[property] ?? fb;
 
-			return interpolate(
-				props.progress,
-				range,
-				[targetValue, currentValue],
-				"clamp",
-			);
+			return interpolateClamped(props.progress, range, [
+				targetValue,
+				currentValue,
+			]);
 		}
 
 		// Otherwise, use link approach (existing behavior)
@@ -281,15 +352,11 @@ export const createBounds = (
 		const sourceValue = link?.source?.bounds?.[property] ?? fb;
 		const destValue = link?.destination?.bounds?.[property] ?? fb;
 
-		return interpolate(
-			props.progress,
-			range,
-			[sourceValue, destValue],
-			"clamp",
-		);
+		return interpolateClamped(props.progress, range, [sourceValue, destValue]);
 	};
 
 	return Object.assign(boundsFunction, {
+		match,
 		getSnapshot,
 		getLink,
 		interpolateStyle,

@@ -24,8 +24,18 @@ export type BoundsLink = {
 	destination: BoundEntry | null;
 };
 
+export type BoundsMatchParams = Pick<BoundsOptions, "id" | "group">;
+export type BoundsMatchStyleOptions = Omit<BoundsOptions, "id" | "group">;
+
+export type BoundsMatchAccessor = {
+	style: <T extends BoundsMatchStyleOptions = BoundsMatchStyleOptions>(
+		options?: T,
+	) => BoundsOptionsResult<T & BoundsOptions>;
+};
+
 export type BoundsAccessor = {
 	<T extends BoundsOptions>(options: T): BoundsOptionsResult<T>;
+	match: (params: BoundsMatchParams) => BoundsMatchAccessor;
 	getSnapshot: (id: string, key?: string) => Snapshot | null;
 	getLink: (id: string) => BoundsLink | null;
 	interpolateStyle: (

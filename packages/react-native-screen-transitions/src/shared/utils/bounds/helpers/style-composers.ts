@@ -1,13 +1,10 @@
-import {
-	interpolate,
-	type MeasuredDimensions,
-	type StyleProps,
-} from "react-native-reanimated";
+import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
 } from "../types/geometry";
 import type { BoundsOptions } from "../types/options";
+import { interpolateClamped } from "./interpolate";
 
 /**
  * Element-level (relative) params shared by size/transform composers.
@@ -44,18 +41,18 @@ export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 	const { start, end, geometry, progress, ranges, computeOptions } = params;
 
 	const width = geometry.entering
-		? interpolate(progress, ranges, [start.width, end.width])
-		: interpolate(progress, ranges, [end.width, start.width]);
+		? interpolateClamped(progress, ranges, [start.width, end.width])
+		: interpolateClamped(progress, ranges, [end.width, start.width]);
 	const height = geometry.entering
-		? interpolate(progress, ranges, [start.height, end.height])
-		: interpolate(progress, ranges, [end.height, start.height]);
+		? interpolateClamped(progress, ranges, [start.height, end.height])
+		: interpolateClamped(progress, ranges, [end.height, start.height]);
 
 	const translateX = geometry.entering
-		? interpolate(progress, ranges, [start.pageX, end.pageX])
-		: interpolate(progress, ranges, [end.pageX, start.pageX]);
+		? interpolateClamped(progress, ranges, [start.pageX, end.pageX])
+		: interpolateClamped(progress, ranges, [end.pageX, start.pageX]);
 	const translateY = geometry.entering
-		? interpolate(progress, ranges, [start.pageY, end.pageY])
-		: interpolate(progress, ranges, [end.pageY, start.pageY]);
+		? interpolateClamped(progress, ranges, [start.pageY, end.pageY])
+		: interpolateClamped(progress, ranges, [end.pageY, start.pageY]);
 
 	if (computeOptions.raw) {
 		return {
@@ -78,20 +75,20 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 	const { start, end, geometry, progress, ranges, computeOptions } = params;
 
 	const translateX = geometry.entering
-		? interpolate(progress, ranges, [geometry.dx, 0])
-		: interpolate(progress, ranges, [0, -geometry.dx]);
+		? interpolateClamped(progress, ranges, [geometry.dx, 0])
+		: interpolateClamped(progress, ranges, [0, -geometry.dx]);
 
 	const translateY = geometry.entering
-		? interpolate(progress, ranges, [geometry.dy, 0])
-		: interpolate(progress, ranges, [0, -geometry.dy]);
+		? interpolateClamped(progress, ranges, [geometry.dy, 0])
+		: interpolateClamped(progress, ranges, [0, -geometry.dy]);
 
 	const width = geometry.entering
-		? interpolate(progress, ranges, [start.width, end.width])
-		: interpolate(progress, ranges, [end.width, start.width]);
+		? interpolateClamped(progress, ranges, [start.width, end.width])
+		: interpolateClamped(progress, ranges, [end.width, start.width]);
 
 	const height = geometry.entering
-		? interpolate(progress, ranges, [start.height, end.height])
-		: interpolate(progress, ranges, [end.height, start.height]);
+		? interpolateClamped(progress, ranges, [start.height, end.height])
+		: interpolateClamped(progress, ranges, [end.height, start.height]);
 
 	if (computeOptions.raw) {
 		return {
@@ -116,17 +113,17 @@ export function composeTransformAbsolute(
 	const { start, end, geometry, progress, ranges, computeOptions } = params;
 
 	const translateX = geometry.entering
-		? interpolate(progress, ranges, [start.pageX, end.pageX])
-		: interpolate(progress, ranges, [end.pageX, start.pageX]);
+		? interpolateClamped(progress, ranges, [start.pageX, end.pageX])
+		: interpolateClamped(progress, ranges, [end.pageX, start.pageX]);
 	const translateY = geometry.entering
-		? interpolate(progress, ranges, [start.pageY, end.pageY])
-		: interpolate(progress, ranges, [end.pageY, start.pageY]);
+		? interpolateClamped(progress, ranges, [start.pageY, end.pageY])
+		: interpolateClamped(progress, ranges, [end.pageY, start.pageY]);
 	const scaleX = geometry.entering
-		? interpolate(progress, ranges, [geometry.scaleX, 1])
-		: interpolate(progress, ranges, [1, 1 / geometry.scaleX]);
+		? interpolateClamped(progress, ranges, [geometry.scaleX, 1])
+		: interpolateClamped(progress, ranges, [1, 1 / geometry.scaleX]);
 	const scaleY = geometry.entering
-		? interpolate(progress, ranges, [geometry.scaleY, 1])
-		: interpolate(progress, ranges, [1, 1 / geometry.scaleY]);
+		? interpolateClamped(progress, ranges, [geometry.scaleY, 1])
+		: interpolateClamped(progress, ranges, [1, 1 / geometry.scaleY]);
 
 	if (computeOptions.raw) {
 		return {
@@ -149,17 +146,17 @@ export function composeTransformRelative(
 	const { geometry, computeOptions, progress, ranges } = params;
 
 	const translateX = geometry.entering
-		? interpolate(progress, ranges, [geometry.dx, 0])
-		: interpolate(progress, ranges, [0, -geometry.dx]);
+		? interpolateClamped(progress, ranges, [geometry.dx, 0])
+		: interpolateClamped(progress, ranges, [0, -geometry.dx]);
 	const translateY = geometry.entering
-		? interpolate(progress, ranges, [geometry.dy, 0])
-		: interpolate(progress, ranges, [0, -geometry.dy]);
+		? interpolateClamped(progress, ranges, [geometry.dy, 0])
+		: interpolateClamped(progress, ranges, [0, -geometry.dy]);
 	const scaleX = geometry.entering
-		? interpolate(progress, ranges, [geometry.scaleX, 1])
-		: interpolate(progress, ranges, [1, 1 / geometry.scaleX]);
+		? interpolateClamped(progress, ranges, [geometry.scaleX, 1])
+		: interpolateClamped(progress, ranges, [1, 1 / geometry.scaleX]);
 	const scaleY = geometry.entering
-		? interpolate(progress, ranges, [geometry.scaleY, 1])
-		: interpolate(progress, ranges, [1, 1 / geometry.scaleY]);
+		? interpolateClamped(progress, ranges, [geometry.scaleY, 1])
+		: interpolateClamped(progress, ranges, [1, 1 / geometry.scaleY]);
 
 	if (computeOptions.raw) {
 		return {
@@ -193,14 +190,14 @@ export function composeContentStyle(params: ContentComposeParams): StyleProps {
 	const { s, tx, ty, entering } = geometry;
 
 	const translateX = entering
-		? interpolate(progress, ranges, [tx, 0])
-		: interpolate(progress, ranges, [0, tx]);
+		? interpolateClamped(progress, ranges, [tx, 0])
+		: interpolateClamped(progress, ranges, [0, tx]);
 	const translateY = entering
-		? interpolate(progress, ranges, [ty, 0])
-		: interpolate(progress, ranges, [0, ty]);
+		? interpolateClamped(progress, ranges, [ty, 0])
+		: interpolateClamped(progress, ranges, [0, ty]);
 	const scale = entering
-		? interpolate(progress, ranges, [s, 1])
-		: interpolate(progress, ranges, [1, s]);
+		? interpolateClamped(progress, ranges, [s, 1])
+		: interpolateClamped(progress, ranges, [1, s]);
 
 	if (raw) {
 		return {

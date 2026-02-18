@@ -12,6 +12,9 @@ export type {
 	BoundEntry,
 	BoundsAccessor,
 	BoundsLink,
+	BoundsMatchAccessor,
+	BoundsMatchParams,
+	BoundsMatchStyleOptions,
 	BoundsMethod,
 } from "./bounds.types";
 export type {
