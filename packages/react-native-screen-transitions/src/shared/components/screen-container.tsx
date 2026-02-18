@@ -1,11 +1,21 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
 import { StackActions } from "@react-navigation/native";
-import { memo, useCallback } from "react";
+import { memo, useCallback, useEffect, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnUI, useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+	runOnJS,
+	runOnUI,
+	useAnimatedReaction,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 import { DefaultSnapSpec } from "../configs/specs";
-import { NO_STYLES } from "../constants";
+import {
+	NAVIGATION_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
+	NAVIGATION_MASK_STYLE_ID,
+	NO_STYLES,
+} from "../constants";
 import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
 import { useGestureContext } from "../providers/gestures.provider";
 import { useKeys } from "../providers/screen/keys.provider";
@@ -19,11 +29,22 @@ type Props = {
 	children: React.ReactNode;
 };
 
+let LazyMaskedView = View;
+
+try {
+	LazyMaskedView = require("@react-native-masked-view/masked-view").default;
+} catch (_) {
+	// optional peer dependency
+}
+
+let hasWarnedMissingMaskedViewDependency = false;
+
 export const ScreenContainer = memo(({ children }: Props) => {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useKeys();
 	const { pointerEvents, backdropBehavior } = useBackdropPointerEvents();
 	const gestureContext = useGestureContext();
+	const [isNavigationMaskEnabled, setNavigationMaskEnabled] = useState(false);
 
 	const BackdropComponent = current.options.backdropComponent;
 
@@ -94,12 +115,43 @@ export const ScreenContainer = memo(({ children }: Props) => {
 		return stylesMap.value.contentStyle || NO_STYLES;
 	});
 
+	const animatedNavigationContainerStyle = useAnimatedStyle(() => {
+		"worklet";
+		return stylesMap.value[NAVIGATION_CONTAINER_STYLE_ID] || NO_STYLES;
+	});
+
+	const animatedNavigationMaskStyle = useAnimatedStyle(() => {
+		"worklet";
+		return stylesMap.value[NAVIGATION_MASK_STYLE_ID] || NO_STYLES;
+	});
+
 	const animatedBackdropStyle = useAnimatedStyle(() => {
 		"worklet";
 		return (
 			stylesMap.value.backdropStyle ?? stylesMap.value.overlayStyle ?? NO_STYLES
 		);
 	});
+
+	useAnimatedReaction(
+		() => !!stylesMap.value[NAVIGATION_MASK_HOST_FLAG_STYLE_ID],
+		(enabled, previousEnabled) => {
+			"worklet";
+			if (enabled === previousEnabled) return;
+			runOnJS(setNavigationMaskEnabled)(enabled);
+		},
+		[stylesMap],
+	);
+
+	useEffect(() => {
+		if (!isNavigationMaskEnabled) return;
+		if (LazyMaskedView !== View) return;
+		if (!__DEV__ || hasWarnedMissingMaskedViewDependency) return;
+
+		hasWarnedMissingMaskedViewDependency = true;
+		console.warn(
+			"[react-native-screen-transitions] navigation bounds masking requires @react-native-masked-view/masked-view. Install it to enable full hero/zoom masking.",
+		);
+	}, [isNavigationMaskEnabled]);
 
 	return (
 		<View style={styles.container} pointerEvents={pointerEvents}>
@@ -121,7 +173,42 @@ export const ScreenContainer = memo(({ children }: Props) => {
 					style={[styles.content, animatedContentStyle]}
 					pointerEvents={isBackdropActive ? "box-none" : pointerEvents}
 				>
-					{children}
+					{isNavigationMaskEnabled ? (
+						LazyMaskedView !== View ? (
+							<LazyMaskedView
+								style={styles.navigationMaskedRoot}
+								// @ts-expect-error masked-view package types are too strict here
+								maskElement={
+									<Animated.View
+										style={[
+											styles.navigationMaskElement,
+											animatedNavigationMaskStyle,
+										]}
+									/>
+								}
+							>
+								<Animated.View
+									style={[
+										styles.navigationContainer,
+										animatedNavigationContainerStyle,
+									]}
+								>
+									{children}
+								</Animated.View>
+							</LazyMaskedView>
+						) : (
+							<Animated.View
+								style={[
+									styles.navigationContainer,
+									animatedNavigationContainerStyle,
+								]}
+							>
+								{children}
+							</Animated.View>
+						)
+					) : (
+						children
+					)}
 				</Animated.View>
 			</GestureDetector>
 		</View>
@@ -133,6 +220,15 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	content: {
+		flex: 1,
+	},
+	navigationMaskedRoot: {
+		flex: 1,
+	},
+	navigationMaskElement: {
+		backgroundColor: "white",
+	},
+	navigationContainer: {
 		flex: 1,
 	},
 });

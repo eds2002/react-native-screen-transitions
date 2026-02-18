@@ -5,16 +5,22 @@ import {
 	ENTER_RANGE,
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
+	NAVIGATION_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
+	NAVIGATION_MASK_STYLE_ID,
 } from "../../constants";
 import { BoundStore, type Snapshot } from "../../stores/bounds.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenTransitionState,
+	TransitionInterpolatedStyle,
 } from "../../types/animation.types";
 import type {
 	BoundsAccessor,
 	BoundsLink,
 	BoundsMatchStyleOptions,
+	BoundsNavigationOptions,
+	BoundsNavigationPreset,
 } from "../../types/bounds.types";
 import type { Layout } from "../../types/screen.types";
 import {
@@ -41,6 +47,13 @@ const DEFAULT_BOUNDS_OPTIONS = {
 	anchor: "center",
 	raw: false,
 } as const satisfies Omit<BoundsOptions, "id" | "group" | "gestures">;
+
+const NO_NAVIGATION_STYLE = Object.freeze({}) as TransitionInterpolatedStyle;
+
+const toNumber = (value: unknown, fallback = 0): number => {
+	"worklet";
+	return typeof value === "number" ? value : fallback;
+};
 
 const resolveBounds = (props: {
 	id: string;
@@ -254,6 +267,196 @@ export const createBounds = (
 		);
 	};
 
+	const buildNavigationStyles = ({
+		id,
+		group,
+		preset,
+		navigationOptions,
+	}: {
+		id: string;
+		group?: string;
+		preset: BoundsNavigationPreset;
+		navigationOptions?: BoundsNavigationOptions;
+	}): TransitionInterpolatedStyle => {
+		"worklet";
+
+		const isZoomPreset = preset === "zoom";
+		const defaultAnchor = preset === "zoom" ? "top" : undefined;
+		const defaultScaleMode = "uniform";
+
+		const resolvedTag = resolveTag({ id, group });
+		if (!resolvedTag) return NO_NAVIGATION_STYLE;
+
+		const currentScreenKey = props.current?.route.key;
+		const boundaryConfig = currentScreenKey
+			? BoundStore.getBoundaryConfig(resolvedTag, currentScreenKey)
+			: null;
+
+		const sharedOptions = {
+			...(navigationOptions ?? {}),
+			id,
+			group,
+			anchor:
+				navigationOptions?.anchor ?? boundaryConfig?.anchor ?? defaultAnchor,
+			scaleMode:
+				navigationOptions?.scaleMode ??
+				boundaryConfig?.scaleMode ??
+				defaultScaleMode,
+		};
+
+		const explicitTarget = navigationOptions?.target ?? boundaryConfig?.target;
+
+		const zoomContentTarget = (() => {
+			"worklet";
+			if (!isZoomPreset) return null;
+			if (explicitTarget !== undefined) return explicitTarget;
+
+			const scopedLink = BoundStore.getActiveLink(
+				resolvedTag,
+				props.current?.route.key,
+			);
+			const latestLink = scopedLink ?? BoundStore.getActiveLink(resolvedTag);
+			const sourceBounds = latestLink?.source?.bounds;
+			const screenWidth = props.layouts.screen.width;
+
+			if (!sourceBounds || sourceBounds.width <= 0 || screenWidth <= 0) {
+				return "fullscreen";
+			}
+
+			const height = (sourceBounds.height / sourceBounds.width) * screenWidth;
+
+			return {
+				x: 0,
+				y: 0,
+				pageX: 0,
+				pageY: 0,
+				width: screenWidth,
+				height,
+			};
+		})();
+
+		const contentTarget =
+			explicitTarget ??
+			(isZoomPreset ? (zoomContentTarget ?? "fullscreen") : "bound");
+		const elementTarget = isZoomPreset
+			? contentTarget
+			: (explicitTarget ?? "bound");
+
+		const elementRaw = compute(
+			resolveComputeOptions({
+				id,
+				group,
+				overrides: {
+					...sharedOptions,
+					raw: true,
+					method: "transform",
+					space: "relative",
+					target: elementTarget,
+				},
+			}),
+		) as Record<string, unknown>;
+
+		const zoomFadeInComplete = 0.6;
+		const zoomSourceFadeOutEnd = 1;
+
+		const openingFade =
+			props.progress <= 0.55
+				? 0
+				: interpolateClamped(props.progress, [0.55, 1], [0, 1]);
+		const closingFadeFromZeroToOne = interpolateClamped(
+			props.progress,
+			[0, 1],
+			[0, 1],
+		);
+		const closingFadeFromOneToTwo = interpolateClamped(
+			props.progress,
+			[1, 2],
+			[1, 0],
+		);
+		const focusedFade =
+			props.progress > 1 ? closingFadeFromOneToTwo : closingFadeFromZeroToOne;
+
+		const focusedZoomFade =
+			props.progress > 1
+				? interpolateClamped(
+						props.progress,
+						[1, 1 + zoomFadeInComplete],
+						[1, 0],
+					)
+				: interpolateClamped(props.progress, [0, zoomFadeInComplete], [0, 1]);
+
+		const sourceZoomFade =
+			props.progress <= 1 + zoomFadeInComplete
+				? 1
+				: interpolateClamped(
+						props.progress,
+						[1 + zoomFadeInComplete, 1 + zoomSourceFadeOutEnd],
+						[1, 0],
+					);
+
+		const contentRaw = compute(
+			resolveComputeOptions({
+				id,
+				group,
+				overrides: {
+					...sharedOptions,
+					raw: true,
+					method: "content",
+					target: contentTarget,
+				},
+			}),
+		) as Record<string, unknown>;
+
+		const maskRaw = compute(
+			resolveComputeOptions({
+				id,
+				group,
+				overrides: {
+					...sharedOptions,
+					raw: true,
+					method: "size",
+					space: "absolute",
+					target: "fullscreen",
+				},
+			}),
+		) as Record<string, unknown>;
+
+		if (props.focused) {
+			return {
+				[NAVIGATION_MASK_HOST_FLAG_STYLE_ID]: {},
+				[NAVIGATION_CONTAINER_STYLE_ID]: {
+					opacity: isZoomPreset ? focusedZoomFade : focusedFade,
+					transform: [
+						{ translateX: toNumber(contentRaw.translateX) },
+						{ translateY: toNumber(contentRaw.translateY) },
+						{ scale: toNumber(contentRaw.scale, 1) },
+					],
+				},
+				[NAVIGATION_MASK_STYLE_ID]: {
+					width: toNumber(maskRaw.width),
+					height: toNumber(maskRaw.height),
+					transform: [
+						{ translateX: toNumber(maskRaw.translateX) },
+						{ translateY: toNumber(maskRaw.translateY) },
+					],
+					borderRadius: toNumber(navigationOptions?.maskBorderRadius, 0),
+				},
+			};
+		}
+
+		return {
+			[resolvedTag]: {
+				opacity: isZoomPreset ? sourceZoomFade : undefined,
+				transform: [
+					{ translateX: toNumber(elementRaw.translateX) },
+					{ translateY: toNumber(elementRaw.translateY) },
+					{ scaleX: toNumber(elementRaw.scaleX, 1) },
+					{ scaleY: toNumber(elementRaw.scaleY, 1) },
+				],
+			},
+		};
+	};
+
 	const boundsFunction = (params?: BoundsOptions) => {
 		"worklet";
 		const resolved = resolveComputeOptions({
@@ -279,6 +482,26 @@ export const createBounds = (
 				});
 
 				return compute(resolved);
+			},
+			navigation: {
+				hero: (options?: BoundsNavigationOptions) => {
+					"worklet";
+					return buildNavigationStyles({
+						id,
+						group,
+						preset: "hero",
+						navigationOptions: options,
+					});
+				},
+				zoom: (options?: BoundsNavigationOptions) => {
+					"worklet";
+					return buildNavigationStyles({
+						id,
+						group,
+						preset: "zoom",
+						navigationOptions: options,
+					});
+				},
 			},
 		};
 	};

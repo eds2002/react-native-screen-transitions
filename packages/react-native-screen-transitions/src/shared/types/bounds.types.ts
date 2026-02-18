@@ -4,6 +4,7 @@ import type {
 	BoundsOptions,
 	BoundsOptionsResult,
 } from "../utils/bounds/types/options";
+import type { TransitionInterpolatedStyle } from "./animation.types";
 
 /**
  * Target style computation.
@@ -27,10 +28,22 @@ export type BoundsLink = {
 export type BoundsMatchParams = Pick<BoundsOptions, "id" | "group">;
 export type BoundsMatchStyleOptions = Omit<BoundsOptions, "id" | "group">;
 
+export type BoundsNavigationPreset = "hero" | "zoom";
+
+export type BoundsNavigationOptions = BoundsMatchStyleOptions & {
+	maskBorderRadius?: number;
+};
+
+export type BoundsNavigationAccessor = {
+	hero: (options?: BoundsNavigationOptions) => TransitionInterpolatedStyle;
+	zoom: (options?: BoundsNavigationOptions) => TransitionInterpolatedStyle;
+};
+
 export type BoundsMatchAccessor = {
 	style: <T extends BoundsMatchStyleOptions = BoundsMatchStyleOptions>(
 		options?: T,
 	) => BoundsOptionsResult<T & BoundsOptions>;
+	navigation: BoundsNavigationAccessor;
 };
 
 export type BoundsAccessor = {

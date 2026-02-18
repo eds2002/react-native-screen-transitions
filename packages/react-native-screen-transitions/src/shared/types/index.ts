@@ -16,6 +16,9 @@ export type {
 	BoundsMatchParams,
 	BoundsMatchStyleOptions,
 	BoundsMethod,
+	BoundsNavigationAccessor,
+	BoundsNavigationOptions,
+	BoundsNavigationPreset,
 } from "./bounds.types";
 export type {
 	ActivationArea,

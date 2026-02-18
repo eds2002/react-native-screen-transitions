@@ -11,6 +11,9 @@ import type { BaseStackRoute } from "./types/stack.types";
  */
 export const MASK_STYLE_ID = "_ROOT_MASKED";
 export const CONTAINER_STYLE_ID = "_ROOT_CONTAINER";
+export const NAVIGATION_MASK_HOST_FLAG_STYLE_ID = "_NAVIGATION_MASK_HOST";
+export const NAVIGATION_MASK_STYLE_ID = "_NAVIGATION_ROOT_MASK";
+export const NAVIGATION_CONTAINER_STYLE_ID = "_NAVIGATION_ROOT_CONTAINER";
 
 /**
  * Styles

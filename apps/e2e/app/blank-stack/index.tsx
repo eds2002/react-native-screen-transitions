@@ -70,6 +70,11 @@ const TEST_FLOWS = [
 		description: "Bounds with styleId masking for complex shared transitions",
 	},
 	{
+		id: "zoom",
+		title: "Zoom (Navigation)",
+		description: "bounds.match(...).navigation.zoom() with auto mask host",
+	},
+	{
 		id: "bounds",
 		title: "Boundary (v2)",
 		description: "Minimal Transition.Boundary example between two screens",

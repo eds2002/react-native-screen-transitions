@@ -125,6 +125,10 @@ export default function BlankStackLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<BlankStack.Screen
+				name="zoom"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
 				name="bounds"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
