@@ -205,9 +205,15 @@ export const useAssociatedStyles = ({
 			(!!BoundStore.getSnapshot(id, previousScreenKey) ||
 				BoundStore.hasBoundaryPresence(id, previousScreenKey));
 
-		// Evidence-based fallback covers the first frame where links
-		// may not be wired yet but a transition is clearly expected.
-		const shouldExpectTransitionStyle =
+		// Split intent:
+		// - incoming: strict signal for first-style hiding
+		// - in-flight: broad signal to keep existing styles from resetting
+		const shouldExpectIncomingStyle =
+			resetTransformOnUnset &&
+			((hasActiveLink && canUsePreviousTransitionEvidence) ||
+				hasPreviousTransitionEvidence);
+
+		const shouldProtectInFlightStyles =
 			resetTransformOnUnset && (hasActiveLink || hasPreviousTransitionEvidence);
 
 		if (hasCurrentKeys) {
@@ -219,7 +225,7 @@ export const useAssociatedStyles = ({
 
 		const isTransientEmptyGap =
 			hasConfiguredInterpolator &&
-			shouldExpectTransitionStyle &&
+			shouldProtectInFlightStyles &&
 			!isTransitioning &&
 			!hasCurrentKeys &&
 			(hasPreviousKeys || hasPersistedResolvedStyle);
@@ -238,7 +244,7 @@ export const useAssociatedStyles = ({
 
 		const shouldDeferUnset =
 			resetTransformOnUnset &&
-			shouldExpectTransitionStyle &&
+			shouldProtectInFlightStyles &&
 			(isTransitioning || isWithinGapGrace);
 
 		/**
@@ -252,7 +258,7 @@ export const useAssociatedStyles = ({
 			waitForFirstResolvedStyle &&
 			resetTransformOnUnset &&
 			hasConfiguredInterpolator &&
-			shouldExpectTransitionStyle &&
+			shouldExpectIncomingStyle &&
 			isTransitionInFlight &&
 			!hasResolvedStyle
 		) {
@@ -287,7 +293,7 @@ export const useAssociatedStyles = ({
 
 			// Drop cached style when fully idle so future transitions
 			// start from a clean state.
-			if (!hasCurrentKeys && !shouldExpectTransitionStyle && !isTransitioning) {
+			if (!hasCurrentKeys && !shouldProtectInFlightStyles && !isTransitioning) {
 				lastResolvedBase.value = null;
 			}
 		}
