@@ -1,3 +1,4 @@
+import { interpolate } from "react-native-reanimated";
 import {
 	NAVIGATION_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
@@ -41,6 +42,9 @@ type BuildNavigationStylesParams = {
 
 const NO_NAVIGATION_STYLE = Object.freeze({}) as TransitionInterpolatedStyle;
 const ZOOM_FREEFORM_RESISTANCE = 0.2;
+const ZOOM_MASK_SHRINK_X_MAX = 10;
+const ZOOM_MASK_SHRINK_Y_MAX = 15;
+const ZOOM_MASK_SHRINK_INPUT_MAX = 220;
 
 const toNumber = (value: unknown, fallback = 0): number => {
 	"worklet";
@@ -173,6 +177,25 @@ export const buildNavigationStyles = ({
 	const gestureY = activeGestureY * resistance;
 	const sourceGestureX = isZoomPreset ? gestureX : 0;
 	const sourceGestureY = isZoomPreset ? gestureY : 0;
+	const dragMagnitude = Math.abs(activeGestureX) + Math.abs(activeGestureY);
+	const maskShrinkX = isZoomPreset
+		? interpolate(
+				dragMagnitude,
+				[0, ZOOM_MASK_SHRINK_INPUT_MAX],
+				[0, ZOOM_MASK_SHRINK_X_MAX],
+			)
+		: 0;
+	const maskShrinkY = isZoomPreset
+		? interpolate(
+				dragMagnitude,
+				[0, ZOOM_MASK_SHRINK_INPUT_MAX],
+				[0, ZOOM_MASK_SHRINK_Y_MAX],
+			)
+		: 0;
+	const rawMaskWidth = toNumber(maskRaw.width);
+	const rawMaskHeight = toNumber(maskRaw.height);
+	const maskWidth = Math.max(1, rawMaskWidth - maskShrinkX * 2);
+	const maskHeight = Math.max(1, rawMaskHeight - maskShrinkY * 2);
 
 	if (focused) {
 		return {
@@ -186,11 +209,15 @@ export const buildNavigationStyles = ({
 				],
 			},
 			[NAVIGATION_MASK_STYLE_ID]: {
-				width: toNumber(maskRaw.width),
-				height: toNumber(maskRaw.height),
+				width: maskWidth,
+				height: maskHeight,
 				transform: [
-					{ translateX: toNumber(maskRaw.translateX) + gestureX },
-					{ translateY: toNumber(maskRaw.translateY) + gestureY },
+					{
+						translateX: toNumber(maskRaw.translateX) + gestureX + maskShrinkX,
+					},
+					{
+						translateY: toNumber(maskRaw.translateY) + gestureY + maskShrinkY,
+					},
 				],
 				borderRadius: toNumber(navigationOptions?.maskBorderRadius, 0),
 			},

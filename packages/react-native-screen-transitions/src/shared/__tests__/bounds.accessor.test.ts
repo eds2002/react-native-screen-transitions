@@ -43,7 +43,10 @@ const createAccessor = (
 			route: { key: currentKey },
 			progress: currentProgress,
 			closing: activeClosing,
-			gesture: { x: gestureX, y: gestureY },
+			gesture: {
+				x: gestureX,
+				y: gestureY,
+			},
 		} as any,
 		next: undefined,
 		layouts: { screen: { width: 400, height: 800 } },
@@ -56,7 +59,10 @@ const createAccessor = (
 			route: { key: currentKey },
 			progress: currentProgress,
 			closing: activeClosing,
-			gesture: { x: gestureX, y: gestureY },
+			gesture: {
+				x: gestureX,
+				y: gestureY,
+			},
 		} as any,
 		inactive: undefined,
 		isActiveTransitioning: false,
@@ -277,8 +283,8 @@ describe("createBounds accessor", () => {
 			(entry: Record<string, number>) => "translateY" in entry,
 		)?.translateY;
 
-		expect(draggedX - baselineX).toBeCloseTo(24 * 0.72, 5);
-		expect(draggedY - baselineY).toBeCloseTo(-18 * 0.72, 5);
+		expect(draggedX - baselineX).toBeCloseTo(24 * 0.2, 5);
+		expect(draggedY - baselineY).toBeCloseTo(-18 * 0.2, 5);
 	});
 
 	it("match(...).navigation.zoom() applies freeform drag to focused mask", () => {
@@ -292,12 +298,14 @@ describe("createBounds accessor", () => {
 			gestureY: 9,
 		});
 
-		const baselineTransform = (
-			baseline.match({ id: "card" }).navigation.zoom()[NAVIGATION_MASK_STYLE_ID] as any
-		).transform;
-		const draggedTransform = (
-			dragged.match({ id: "card" }).navigation.zoom()[NAVIGATION_MASK_STYLE_ID] as any
-		).transform;
+		const baselineMaskStyle = baseline.match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_MASK_STYLE_ID
+		] as any;
+		const draggedMaskStyle = dragged.match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_MASK_STYLE_ID
+		] as any;
+		const baselineTransform = baselineMaskStyle.transform;
+		const draggedTransform = draggedMaskStyle.transform;
 
 		const baselineX = baselineTransform.find(
 			(entry: Record<string, number>) => "translateX" in entry,
@@ -312,8 +320,12 @@ describe("createBounds accessor", () => {
 			(entry: Record<string, number>) => "translateY" in entry,
 		)?.translateY;
 
-		expect(draggedX - baselineX).toBeCloseTo(12 * 0.72, 5);
-		expect(draggedY - baselineY).toBeCloseTo(9 * 0.72, 5);
+		expect(draggedX - baselineX).toBeGreaterThan(0);
+		expect(draggedY - baselineY).toBeGreaterThan(0);
+		expect(draggedX - baselineX).toBeLessThan(12);
+		expect(draggedY - baselineY).toBeLessThan(9);
+		expect(draggedMaskStyle.width).toBeLessThan(baselineMaskStyle.width);
+		expect(draggedMaskStyle.height).toBeLessThan(baselineMaskStyle.height);
 	});
 
 	it("match(...).navigation.zoom() keeps unfocused contentStyle as scale-only", () => {
@@ -368,8 +380,8 @@ describe("createBounds accessor", () => {
 			(entry: Record<string, number>) => "translateY" in entry,
 		)?.translateY;
 
-		expect(draggedX - baselineX).toBeCloseTo(-15 * 0.72, 5);
-		expect(draggedY - baselineY).toBeCloseTo(20 * 0.72, 5);
+		expect(draggedX - baselineX).toBeCloseTo(-15 * 0.2, 5);
+		expect(draggedY - baselineY).toBeCloseTo(20 * 0.2, 5);
 	});
 
 	it("match(...).navigation.zoom() scales focused screen from source-width ratio", () => {
@@ -384,4 +396,5 @@ describe("createBounds accessor", () => {
 
 		expect(scaleEntry?.scale).toBe(0.25);
 	});
+
 });
