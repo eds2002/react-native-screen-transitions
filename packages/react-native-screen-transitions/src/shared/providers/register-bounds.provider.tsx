@@ -17,7 +17,6 @@ import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds.store";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
-import { getAncestorKeys } from "../utils/navigation/get-ancestor-keys";
 import { useLayoutAnchorContext } from "./layout-anchor.provider";
 import { useKeys } from "./screen/keys.provider";
 
@@ -204,10 +203,38 @@ const useParentSyncReaction = (params: {
 	);
 };
 
-const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
-	"RegisterBounds",
-	{ guarded: false },
-)<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
+const CloseRemeasureReactionEffect = (params: {
+	sharedBoundTag: string;
+	remeasureOnFocus: boolean;
+	nextClosing: ReturnType<typeof AnimationStore.getAnimation>;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const {
+		sharedBoundTag,
+		remeasureOnFocus,
+		nextClosing,
+		maybeMeasureAndStore,
+	} = params;
+
+	useAnimatedReaction(
+		() => nextClosing.get(),
+		(closing, prevClosing) => {
+			"worklet";
+			if (closing === 1 && (prevClosing === 0 || prevClosing === null)) {
+				maybeMeasureAndStore({ shouldUpdateSource: true });
+			}
+		},
+		[sharedBoundTag, remeasureOnFocus, nextClosing],
+	);
+
+	return null;
+};
+
+let useRegisterBoundsContext: () => RegisterBoundsContextValue | null;
+
+const registerBoundsBundle = createProvider("RegisterBounds", {
+	guarded: false,
+})<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
 	({
 		style,
 		onPress,
@@ -216,15 +243,13 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 		remeasureOnFocus,
 		children,
 	}) => {
-		const { current, next } = useKeys();
+		const { current, next, ancestorKeys } = useKeys();
 		const currentScreenKey = current.route.key;
 		const selectedNextRouteId = getRouteParamId(next?.route);
-		const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 		const layoutAnchor = useLayoutAnchorContext();
 
 		// Context & signals
-		const parentContext: RegisterBoundsContextValue | null =
-			useRegisterBoundsContext();
+		const parentContext = useRegisterBoundsContext();
 
 		const ownSignal = useSharedValue(0);
 		const updateSignal: SharedValue<number> =
@@ -386,18 +411,6 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 			? AnimationStore.getAnimation(nextScreenKey, "closing")
 			: null;
 
-		useAnimatedReaction(
-			() => nextClosing?.get() ?? 0,
-			(closing, prevClosing) => {
-				"worklet";
-				if (!sharedBoundTag || !remeasureOnFocus) return;
-				if (closing === 1 && (prevClosing === 0 || prevClosing === null)) {
-					maybeMeasureAndStore({ shouldUpdateSource: true });
-				}
-			},
-			[sharedBoundTag, remeasureOnFocus, nextClosing],
-		);
-
 		useParentSyncReaction({ parentContext, maybeMeasureAndStore });
 
 		const captureActiveOnPress = useStableCallback(() => {
@@ -411,9 +424,24 @@ const { RegisterBoundsProvider, useRegisterBoundsContext } = createProvider(
 
 		return {
 			value: { updateSignal },
-			children: children({ handleInitialLayout, captureActiveOnPress }),
+			children: (
+				<>
+					{sharedBoundTag && remeasureOnFocus && nextClosing ? (
+						<CloseRemeasureReactionEffect
+							sharedBoundTag={sharedBoundTag}
+							remeasureOnFocus={remeasureOnFocus}
+							nextClosing={nextClosing}
+							maybeMeasureAndStore={maybeMeasureAndStore}
+						/>
+					) : null}
+					{children({ handleInitialLayout, captureActiveOnPress })}
+				</>
+			),
 		};
 	},
 );
+
+const RegisterBoundsProvider = registerBoundsBundle.RegisterBoundsProvider;
+useRegisterBoundsContext = registerBoundsBundle.useRegisterBoundsContext;
 
 export { RegisterBoundsProvider };

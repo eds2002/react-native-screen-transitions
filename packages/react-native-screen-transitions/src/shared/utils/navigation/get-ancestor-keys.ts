@@ -1,11 +1,11 @@
-import type { BaseDescriptor } from "../../providers/screen/keys.provider";
+import type { BaseStackDescriptor } from "../../types/stack.types";
 
 /**
  * Builds the full ancestor key chain for nested navigators.
  * Returns an array of screen keys from immediate parent to root.
  * [parentKey, grandparentKey, greatGrandparentKey, ...]
  */
-export function getAncestorKeys(current: BaseDescriptor): string[] {
+export function getAncestorKeys(current: BaseStackDescriptor): string[] {
 	const ancestors: string[] = [];
 	const nav = current.navigation as any;
 

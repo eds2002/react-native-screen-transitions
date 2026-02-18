@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo } from "react";
 import type { BaseStackDescriptor } from "../../types/stack.types";
+import { getAncestorKeys } from "../../utils/navigation/get-ancestor-keys";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
@@ -12,6 +13,7 @@ interface KeysContextType<TDescriptor extends BaseDescriptor = BaseDescriptor> {
 	previous?: TDescriptor;
 	current: TDescriptor;
 	next?: TDescriptor;
+	ancestorKeys: string[];
 }
 
 const KeysContext = createContext<KeysContextType | undefined>(undefined);
@@ -30,7 +32,12 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 	next,
 }: KeysProviderProps<TDescriptor>) {
 	const value = useMemo<KeysContextType<TDescriptor>>(
-		() => ({ previous, current, next }),
+		() => ({
+			previous,
+			current,
+			next,
+			ancestorKeys: getAncestorKeys(current),
+		}),
 		[previous, current, next],
 	);
 

@@ -15,7 +15,6 @@ import { useScrollSettleContext } from "../../providers/scroll-settle.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds.store";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
-import { getAncestorKeys } from "../../utils/navigation/get-ancestor-keys";
 
 type BoundaryId = string | number;
 
@@ -360,6 +359,75 @@ const useScrollSettledMeasurement = (params: {
 	);
 };
 
+const GroupMeasurementEffects = (params: {
+	enabled: boolean;
+	group: string;
+	id: BoundaryId;
+	shouldUpdateDestination: boolean;
+	hasNextScreen: boolean;
+	isAnimating: ReturnType<typeof AnimationStore.getAnimation>;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const {
+		enabled,
+		group,
+		id,
+		shouldUpdateDestination,
+		hasNextScreen,
+		isAnimating,
+		maybeMeasureAndStore,
+	} = params;
+
+	useGroupActiveMeasurement({
+		enabled,
+		group,
+		id,
+		shouldUpdateDestination,
+		isAnimating,
+		maybeMeasureAndStore,
+	});
+
+	useScrollSettledMeasurement({
+		enabled,
+		group,
+		hasNextScreen,
+		isAnimating,
+		maybeMeasureAndStore,
+	});
+
+	return null;
+};
+
+const BoundaryPresenceEffect = (params: {
+	enabled: boolean;
+	sharedBoundTag: string;
+	currentScreenKey: string;
+	ancestorKeys: string[];
+}) => {
+	useBoundaryPresence(params);
+	return null;
+};
+
+const AutoSourceMeasurementEffect = (params: {
+	enabled: boolean;
+	sharedBoundTag: string;
+	nextScreenKey: string;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	useAutoSourceMeasurement(params);
+	return null;
+};
+
+const PendingDestinationMeasurementEffect = (params: {
+	sharedBoundTag: string;
+	enabled: boolean;
+	expectedSourceScreenKey?: string;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	usePendingDestinationMeasurement(params);
+	return null;
+};
+
 const BoundaryComponent = ({
 	enabled = true,
 	group,
@@ -371,13 +439,16 @@ const BoundaryComponent = ({
 	const sharedBoundTag = buildBoundaryMatchKey({ group, id });
 	const animatedRef = useAnimatedRef<View>();
 
-	const { previous, current, next } = useKeys();
+	const { previous, current, next, ancestorKeys } = useKeys();
 	const currentScreenKey = current.route.key;
 	const nextScreenKey = next?.route.key;
 	const preferredSourceScreenKey = previous?.route.key;
+	const hasConfiguredInterpolator =
+		!!current.options.screenStyleInterpolator ||
+		!!next?.options?.screenStyleInterpolator;
+	const runtimeEnabled = enabled && hasConfiguredInterpolator;
 	const hasNextScreen = !!next;
 	const shouldUpdateDestination = !hasNextScreen;
-	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 	const layoutAnchor = useLayoutAnchorContext();
 
 	const isAnimating = AnimationStore.getAnimation(
@@ -523,7 +594,7 @@ const BoundaryComponent = ({
 	);
 
 	const handleInitialLayout = useInitialLayoutHandler({
-		enabled,
+		enabled: runtimeEnabled,
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
@@ -531,52 +602,51 @@ const BoundaryComponent = ({
 		onLayout,
 	});
 
-	useBoundaryPresence({
-		enabled,
-		sharedBoundTag,
-		currentScreenKey,
-		ancestorKeys,
-	});
-
-	useAutoSourceMeasurement({
-		enabled,
-		sharedBoundTag,
-		nextScreenKey,
-		maybeMeasureAndStore,
-	});
-
-	usePendingDestinationMeasurement({
-		sharedBoundTag,
-		enabled: enabled && !hasNextScreen,
-		expectedSourceScreenKey: preferredSourceScreenKey,
-		maybeMeasureAndStore,
-	});
-
-	useGroupActiveMeasurement({
-		enabled,
-		group,
-		id,
-		shouldUpdateDestination,
-		isAnimating,
-		maybeMeasureAndStore,
-	});
-
-	useScrollSettledMeasurement({
-		enabled,
-		group,
-		hasNextScreen,
-		isAnimating,
-		maybeMeasureAndStore,
-	});
-
 	return (
-		<Animated.View
-			{...rest}
-			ref={animatedRef}
-			style={[style, enabled ? associatedStyles : undefined]}
-			onLayout={handleInitialLayout}
-			collapsable={false}
-		/>
+		<>
+			{runtimeEnabled ? (
+				<BoundaryPresenceEffect
+					enabled={runtimeEnabled}
+					sharedBoundTag={sharedBoundTag}
+					currentScreenKey={currentScreenKey}
+					ancestorKeys={ancestorKeys}
+				/>
+			) : null}
+			{runtimeEnabled && nextScreenKey ? (
+				<AutoSourceMeasurementEffect
+					enabled={runtimeEnabled}
+					sharedBoundTag={sharedBoundTag}
+					nextScreenKey={nextScreenKey}
+					maybeMeasureAndStore={maybeMeasureAndStore}
+				/>
+			) : null}
+			{runtimeEnabled && !hasNextScreen ? (
+				<PendingDestinationMeasurementEffect
+					sharedBoundTag={sharedBoundTag}
+					enabled={runtimeEnabled}
+					expectedSourceScreenKey={preferredSourceScreenKey}
+					maybeMeasureAndStore={maybeMeasureAndStore}
+				/>
+			) : null}
+			{group ? (
+				<GroupMeasurementEffects
+					enabled={runtimeEnabled}
+					group={group}
+					id={id}
+					shouldUpdateDestination={shouldUpdateDestination}
+					hasNextScreen={hasNextScreen}
+					isAnimating={isAnimating}
+					maybeMeasureAndStore={maybeMeasureAndStore}
+				/>
+			) : null}
+			<Animated.View
+				{...rest}
+				ref={animatedRef}
+				style={[style, enabled ? associatedStyles : undefined]}
+				onLayout={handleInitialLayout}
+				collapsable={false}
+			/>
+		</>
 	);
 };
 
