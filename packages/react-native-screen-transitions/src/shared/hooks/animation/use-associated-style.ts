@@ -24,6 +24,18 @@ const IDENTITY_TRANSFORM = [
 	{ scaleY: 1 },
 ] as any;
 
+type AssociatedStyleMode = "waiting-first-style" | "hold-last-style" | "live";
+
+type GroupTagParts = {
+	group: string;
+	memberId: string;
+};
+
+type KeyMeta = {
+	keys: Record<string, true>;
+	hasAny: boolean;
+};
+
 const hasAnyKeys = (record: Record<string, unknown>) => {
 	"worklet";
 	for (const _key in record) {
@@ -32,16 +44,18 @@ const hasAnyKeys = (record: Record<string, unknown>) => {
 	return false;
 };
 
-const toKeySet = (record: Record<string, unknown>) => {
+const collectKeyMeta = (record: Record<string, unknown>): KeyMeta => {
 	"worklet";
 	const keys: Record<string, true> = {};
+	let hasAny = false;
 	for (const key in record) {
 		keys[key] = true;
+		hasAny = true;
 	}
-	return keys;
+	return { keys, hasAny };
 };
 
-const getGroupTagParts = (tag: string) => {
+const getGroupTagParts = (tag: string): GroupTagParts | null => {
 	"worklet";
 	const separatorIndex = tag.indexOf(":");
 	if (separatorIndex <= 0 || separatorIndex >= tag.length - 1) {
@@ -54,8 +68,71 @@ const getGroupTagParts = (tag: string) => {
 	};
 };
 
+const allowPreviousTransitionEvidence = (tag: string): boolean => {
+	"worklet";
+	const groupTagParts = getGroupTagParts(tag);
+	if (!groupTagParts) {
+		return true;
+	}
+
+	// For grouped boundaries, only the active member can inherit
+	// transition evidence from the previous screen.
+	const activeGroupMemberId = BoundStore.getGroupActiveId(groupTagParts.group);
+	return (
+		activeGroupMemberId !== null &&
+		activeGroupMemberId === groupTagParts.memberId
+	);
+};
+
+const buildUnsetPatch = ({
+	previousKeys,
+	currentKeys,
+	shouldDeferUnset,
+	resetTransformOnUnset,
+}: {
+	previousKeys: Record<string, true>;
+	currentKeys: Record<string, true>;
+	shouldDeferUnset: boolean;
+	resetTransformOnUnset: boolean;
+}) => {
+	"worklet";
+	const unsetPatch: Record<string, any> = {};
+
+	for (const key in previousKeys) {
+		if (currentKeys[key]) continue;
+		if (shouldDeferUnset) continue;
+
+		if (key === "transform" && resetTransformOnUnset) {
+			unsetPatch.transform = IDENTITY_TRANSFORM;
+		} else {
+			unsetPatch[key] = undefined;
+		}
+	}
+
+	return unsetPatch;
+};
+
 /**
- * This hook is used to get the associated styles for a given styleId / boundTag.
+ * Resolves the animated style associated with an `id` (styleId/bound tag), while
+ * guarding against one-frame glitches during shared-boundary transitions.
+ *
+ * Why this exists:
+ * - During push/pop, links and style maps can be briefly out of sync.
+ * - Without guards, boundaries can flash raw layout for one frame.
+ * - Cleanup must be deterministic so stale transform keys do not linger.
+ *
+ * Visual model (worklet state machine):
+ *
+ *   expected transition + no resolved style yet -> waiting-first-style
+ *   expected transition + transient empty style map -> hold-last-style
+ *   otherwise -> live
+ *
+ * - `waiting-first-style`: return `opacity: 0` until first resolved style arrives.
+ * - `hold-last-style`: reuse last resolved style through short empty-map gaps.
+ * - `live`: apply current resolved style directly.
+ *
+ * For grouped tags (`group:id`), previous-screen transition evidence is only
+ * considered for the group's active member to avoid hiding non-active siblings.
  */
 export const useAssociatedStyles = ({
 	id,
@@ -63,9 +140,11 @@ export const useAssociatedStyles = ({
 }: Props = {}) => {
 	const { stylesMap, ancestorStylesMaps } = useScreenStyles();
 	const { previous, current, next } = useKeys();
+
 	const hasConfiguredInterpolator =
 		!!current.options.screenStyleInterpolator ||
 		!!next?.options?.screenStyleInterpolator;
+
 	const previousScreenKey = previous?.route.key;
 	const currentScreenKey = current.route.key;
 	const isAnimating = AnimationStore.getAnimation(
@@ -94,13 +173,20 @@ export const useAssociatedStyles = ({
 
 		const base = ownStyle || ancestorStyle || NO_STYLES;
 
-		const currentKeys = toKeySet(base as Record<string, unknown>);
-		const hasCurrentKeys = hasAnyKeys(currentKeys);
+		const { keys: currentKeys, hasAny: hasCurrentKeys } = collectKeyMeta(
+			base as Record<string, unknown>,
+		);
+
 		const hasPreviousKeys = hasAnyKeys(previousAppliedKeys.value);
 
 		const isTransitioning = isAnimating.get() !== 0 || isClosing.get() !== 0;
 		const isTransitionProgressInFlight =
 			progress.get() < TRANSITION_PROGRESS_COMPLETE;
+		const isTransitionInFlight =
+			isTransitioning || isTransitionProgressInFlight;
+
+		const canUsePreviousTransitionEvidence =
+			resetTransformOnUnset && allowPreviousTransitionEvidence(id);
 
 		const hasActiveLink =
 			resetTransformOnUnset &&
@@ -108,43 +194,25 @@ export const useAssociatedStyles = ({
 				BoundStore.hasSourceLink(id, currentScreenKey) ||
 				BoundStore.hasDestinationLink(id, currentScreenKey));
 
-		const groupTagParts = resetTransformOnUnset ? getGroupTagParts(id) : null;
-		const activeGroupMemberId = groupTagParts
-			? BoundStore.getGroupActiveId(groupTagParts.group)
-			: null;
-
-		const allowPreviousTransitionEvidence =
-			!groupTagParts ||
-			(activeGroupMemberId !== null &&
-				activeGroupMemberId === groupTagParts.memberId);
-
-		const hasRelevantActiveLink =
-			hasActiveLink && allowPreviousTransitionEvidence;
-
 		const hasPreviousTransitionEvidence =
-			resetTransformOnUnset &&
-			allowPreviousTransitionEvidence &&
+			canUsePreviousTransitionEvidence &&
 			!!previousScreenKey &&
 			(!!BoundStore.getSnapshot(id, previousScreenKey) ||
 				BoundStore.hasBoundaryPresence(id, previousScreenKey));
 
+		// Evidence-based fallback covers the first frame where links
+		// may not be wired yet but a transition is clearly expected.
 		const shouldExpectTransitionStyle =
 			resetTransformOnUnset &&
-			(hasRelevantActiveLink || hasPreviousTransitionEvidence);
+			((hasActiveLink && canUsePreviousTransitionEvidence) ||
+				hasPreviousTransitionEvidence);
 
 		if (hasCurrentKeys) {
 			lastResolvedBase.value = base as Record<string, any>;
 		}
 
-		const shouldHideUntilFirstResolvedStyle =
-			resetTransformOnUnset &&
-			hasConfiguredInterpolator &&
-			shouldExpectTransitionStyle &&
-			(isTransitioning || isTransitionProgressInFlight) &&
-			!hasCurrentKeys &&
-			!lastResolvedBase.value;
-
 		const hasPersistedResolvedStyle = !!lastResolvedBase.value;
+		const hasResolvedStyle = hasCurrentKeys || hasPersistedResolvedStyle;
 
 		const isTransientEmptyGap =
 			hasConfiguredInterpolator &&
@@ -153,6 +221,8 @@ export const useAssociatedStyles = ({
 			!hasCurrentKeys &&
 			(hasPreviousKeys || hasPersistedResolvedStyle);
 
+		// Keep styles stable for a couple of frames to absorb
+		// transient empty-map gaps on slower devices.
 		if (isTransientEmptyGap) {
 			emptyGraceFrameCount.value = emptyGraceFrameCount.value + 1;
 		} else {
@@ -168,25 +238,40 @@ export const useAssociatedStyles = ({
 			shouldExpectTransitionStyle &&
 			(isTransitioning || isWithinGapGrace);
 
+		/**
+		 * Associated-style state machine:
+		 * - waiting-first-style: transition is expected but no style has resolved yet.
+		 * - hold-last-style: transient empty frame; reuse last resolved style.
+		 * - live: apply current resolved style normally.
+		 */
+		let mode: AssociatedStyleMode = "live";
+		if (
+			resetTransformOnUnset &&
+			hasConfiguredInterpolator &&
+			shouldExpectTransitionStyle &&
+			isTransitionInFlight &&
+			!hasResolvedStyle
+		) {
+			mode = "waiting-first-style";
+		} else if (
+			shouldDeferUnset &&
+			!hasCurrentKeys &&
+			hasPersistedResolvedStyle
+		) {
+			mode = "hold-last-style";
+		}
+
 		const resolvedBase =
-			shouldDeferUnset && !hasCurrentKeys && hasPersistedResolvedStyle
+			mode === "hold-last-style"
 				? (lastResolvedBase.value as Record<string, any>)
 				: (base as Record<string, any>);
 
-		const unsetPatch: Record<string, any> = {};
-		for (const key in previousAppliedKeys.value) {
-			if (!currentKeys[key]) {
-				if (shouldDeferUnset) {
-					continue;
-				}
-
-				if (key === "transform" && resetTransformOnUnset) {
-					unsetPatch.transform = IDENTITY_TRANSFORM;
-				} else {
-					unsetPatch[key] = undefined;
-				}
-			}
-		}
+		const unsetPatch = buildUnsetPatch({
+			previousKeys: previousAppliedKeys.value,
+			currentKeys,
+			shouldDeferUnset,
+			resetTransformOnUnset,
+		});
 
 		if (shouldDeferUnset) {
 			previousAppliedKeys.value = {
@@ -196,12 +281,14 @@ export const useAssociatedStyles = ({
 		} else {
 			previousAppliedKeys.value = currentKeys;
 
+			// Drop cached style when fully idle so future transitions
+			// start from a clean state.
 			if (!hasCurrentKeys && !shouldExpectTransitionStyle && !isTransitioning) {
 				lastResolvedBase.value = null;
 			}
 		}
 
-		if (shouldHideUntilFirstResolvedStyle) {
+		if (mode === "waiting-first-style") {
 			return { ...unsetPatch, opacity: 0 };
 		}
 
