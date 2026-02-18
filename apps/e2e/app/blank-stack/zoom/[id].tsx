@@ -14,17 +14,14 @@ export default function ZoomDetail() {
 		<SafeAreaView style={styles.container} edges={[]}>
 			<ScreenHeader title="Zoom Detail" subtitle={item.title} />
 			<Transition.ScrollView contentContainerStyle={styles.content}>
-				<Transition.Boundary
-					id={item.id}
-					// anchor="top"
-					// scaleMode="uniform"
+				<View
 					style={[
 						styles.hero,
 						{ backgroundColor: item.color, width: width - 32 },
 					]}
 				>
 					<Text style={styles.heroTitle}>{item.title}</Text>
-				</Transition.Boundary>
+				</View>
 
 				<View style={styles.section}>
 					<Text style={styles.sectionTitle}>Navigation Zoom</Text>

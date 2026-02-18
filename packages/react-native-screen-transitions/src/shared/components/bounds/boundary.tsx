@@ -18,6 +18,7 @@ import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
 import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 type BoundaryId = string | number;
+type BoundaryRole = "source" | "destination";
 
 type BoundaryConfigProps = Pick<
 	BoundsOptions,
@@ -25,7 +26,7 @@ type BoundaryConfigProps = Pick<
 >;
 
 export interface BoundaryProps
-	extends Omit<ViewProps, "id">,
+	extends Omit<ViewProps, "id" | "role">,
 		BoundaryConfigProps {
 	/**
 	 * Optional group name for collection/list scenarios.
@@ -39,6 +40,21 @@ export interface BoundaryProps
 	 * @default true
 	 */
 	enabled?: boolean;
+	/**
+	 * Explicitly sets this boundary's role in matching.
+	 *
+	 * By default, `Transition.Boundary` auto-detects source/destination behavior
+	 * based on whether a matching boundary is found on the next screen.
+	 *
+	 * Use `role="source"` when your destination does not render a matching
+	 * boundary (for example with `bounds.match(...).navigation.zoom()`).
+	 * In this mode, source bounds are still captured when transitioning away,
+	 * even if no destination match is found.
+	 *
+	 * Use `role="destination"` when this boundary should only participate as
+	 * a destination.
+	 */
+	role?: BoundaryRole;
 	id: BoundaryId;
 }
 
@@ -152,11 +168,12 @@ const useBoundaryPresence = (params: {
 
 const useAutoSourceMeasurement = (params: {
 	enabled: boolean;
+	role?: BoundaryRole;
 	sharedBoundTag: string;
 	nextScreenKey?: string;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { enabled, sharedBoundTag, nextScreenKey, maybeMeasureAndStore } =
+	const { enabled, role, sharedBoundTag, nextScreenKey, maybeMeasureAndStore } =
 		params;
 	const boundaryPresence = BoundStore.getBoundaryPresence();
 
@@ -164,7 +181,9 @@ const useAutoSourceMeasurement = (params: {
 		() => {
 			"worklet";
 			if (!enabled) return 0;
+			if (role === "destination") return 0;
 			if (!nextScreenKey) return 0;
+			if (role === "source") return nextScreenKey;
 			const tagPresence = boundaryPresence.value[sharedBoundTag];
 			if (!tagPresence) return 0;
 
@@ -183,12 +202,14 @@ const useAutoSourceMeasurement = (params: {
 		(captureSignal, previousCaptureSignal) => {
 			"worklet";
 			if (!enabled) return;
+			if (role === "destination") return;
 			if (!nextScreenKey) return;
 			if (!captureSignal || captureSignal === previousCaptureSignal) return;
 			maybeMeasureAndStore({ shouldSetSource: true });
 		},
 		[
 			enabled,
+			role,
 			nextScreenKey,
 			sharedBoundTag,
 			boundaryPresence,
@@ -427,6 +448,7 @@ const BoundaryPresenceEffect = (params: {
 
 const AutoSourceMeasurementEffect = (params: {
 	enabled: boolean;
+	role?: BoundaryRole;
 	sharedBoundTag: string;
 	nextScreenKey: string;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
@@ -449,6 +471,7 @@ const BoundaryComponent = ({
 	enabled = true,
 	group,
 	id,
+	role,
 	anchor,
 	scaleMode,
 	target,
@@ -512,6 +535,8 @@ const BoundaryComponent = ({
 		}: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
 			if (!enabled) return;
+			const canParticipateAsSource = role !== "destination";
+			const canParticipateAsDestination = role !== "source";
 
 			const fallbackSourceScreenKey =
 				BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag);
@@ -524,7 +549,7 @@ const BoundaryComponent = ({
 					? preferredSourceScreenKey
 					: fallbackSourceScreenKey || undefined;
 
-			if (shouldSetSource && isAnimating.get()) {
+			if (shouldSetSource && canParticipateAsSource && isAnimating.get()) {
 				const existing = BoundStore.getSnapshot(
 					sharedBoundTag,
 					currentScreenKey,
@@ -560,11 +585,15 @@ const BoundaryComponent = ({
 				currentScreenKey,
 			);
 
-			const canSetSource = !!shouldSetSource;
-			const canSetDestination = !!shouldSetDestination && hasPendingLink;
-			const canUpdateSource = !!shouldUpdateSource && hasSourceLink;
+			const canSetSource = canParticipateAsSource && !!shouldSetSource;
+			const canSetDestination =
+				canParticipateAsDestination && !!shouldSetDestination && hasPendingLink;
+			const canUpdateSource =
+				canParticipateAsSource && !!shouldUpdateSource && hasSourceLink;
 			const canUpdateDestination =
-				!!shouldUpdateDestination && (hasDestinationLink || hasPendingLink);
+				canParticipateAsDestination &&
+				!!shouldUpdateDestination &&
+				(hasDestinationLink || hasPendingLink);
 
 			if (
 				!canSetSource &&
@@ -635,7 +664,7 @@ const BoundaryComponent = ({
 	);
 
 	const handleInitialLayout = useInitialLayoutHandler({
-		enabled: runtimeEnabled,
+		enabled: runtimeEnabled && role !== "source",
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
@@ -657,12 +686,13 @@ const BoundaryComponent = ({
 			{runtimeEnabled && nextScreenKey ? (
 				<AutoSourceMeasurementEffect
 					enabled={runtimeEnabled}
+					role={role}
 					sharedBoundTag={sharedBoundTag}
 					nextScreenKey={nextScreenKey}
 					maybeMeasureAndStore={maybeMeasureAndStore}
 				/>
 			) : null}
-			{runtimeEnabled && !hasNextScreen ? (
+			{runtimeEnabled && !hasNextScreen && role !== "source" ? (
 				<PendingDestinationMeasurementEffect
 					sharedBoundTag={sharedBoundTag}
 					enabled={runtimeEnabled}

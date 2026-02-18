@@ -356,7 +356,7 @@ export const createBounds = (
 			}),
 		) as Record<string, unknown>;
 
-		const zoomFadeInComplete = 0.6;
+		const zoomFadeInComplete = 0.325;
 		const zoomSourceFadeOutEnd = 1;
 
 		const openingFade =

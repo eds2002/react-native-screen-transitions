@@ -20,6 +20,7 @@ export default function ZoomIndex() {
 					>
 						<Transition.Boundary
 							id={item.id}
+							role="source"
 							style={[styles.card, { backgroundColor: item.color }]}
 						>
 							<Text style={styles.title}>{item.title}</Text>
