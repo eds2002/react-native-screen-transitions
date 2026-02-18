@@ -22,7 +22,7 @@ export default function ZoomLayout() {
 				name="[id]"
 				options={{
 					gestureEnabled: true,
-					gestureDirection: ["vertical", "vertical-inverted"],
+					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					screenStyleInterpolator: ({ bounds, current, active, progress }) => {
 						"worklet";
 
@@ -48,8 +48,8 @@ export default function ZoomLayout() {
 						};
 					},
 					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
+						open: Transition.Specs.IOSZoomSpec,
+						close: Transition.Specs.IOSZoomSpec,
 					},
 				}}
 			/>

@@ -25,10 +25,26 @@ const createAccessor = (
 	currentKey = "screen-b",
 	focused = true,
 	progress = 0.5,
+	options: {
+		currentProgress?: number;
+		activeClosing?: number;
+		gestureX?: number;
+		gestureY?: number;
+	} = {},
 ) => {
+	const currentProgress = options.currentProgress ?? 1;
+	const activeClosing = options.activeClosing ?? 0;
+	const gestureX = options.gestureX ?? 0;
+	const gestureY = options.gestureY ?? 0;
+
 	return createBounds({
 		previous: undefined,
-		current: { route: { key: currentKey } } as any,
+		current: {
+			route: { key: currentKey },
+			progress: currentProgress,
+			closing: activeClosing,
+			gesture: { x: gestureX, y: gestureY },
+		} as any,
 		next: undefined,
 		layouts: { screen: { width: 400, height: 800 } },
 		insets: { top: 0, right: 0, bottom: 0, left: 0 },
@@ -36,7 +52,12 @@ const createAccessor = (
 		progress,
 		stackProgress: 1,
 		snapIndex: -1,
-		active: { route: { key: currentKey } } as any,
+		active: {
+			route: { key: currentKey },
+			progress: currentProgress,
+			closing: activeClosing,
+			gesture: { x: gestureX, y: gestureY },
+		} as any,
 		inactive: undefined,
 		isActiveTransitioning: false,
 		isDismissing: false,
@@ -181,44 +202,174 @@ describe("createBounds accessor", () => {
 		expect(focusedContainer.opacity).toBeDefined();
 	});
 
-	it("match(...).navigation.zoom() fades focused screen in quickly", () => {
+	it("match(...).navigation.zoom() keeps full opacity when not closing", () => {
 		registerBasicLink();
-		const earlyBounds = createAccessor("screen-b", true, 0.1);
-		const thresholdBounds = createAccessor("screen-b", true, 0.325);
+		const openingBounds = createAccessor("screen-b", true, 0.1, {
+			activeClosing: 0,
+			currentProgress: 0.1,
+		});
 
-		const earlyStyles = earlyBounds.match({ id: "card" }).navigation.zoom();
-		const thresholdStyles = thresholdBounds
-			.match({ id: "card" })
-			.navigation.zoom();
-
-		const earlyOpacity = (earlyStyles[NAVIGATION_CONTAINER_STYLE_ID] as any)
-			.opacity;
-		const thresholdOpacity = (thresholdStyles[NAVIGATION_CONTAINER_STYLE_ID] as any)
+		const openingStyles = openingBounds.match({ id: "card" }).navigation.zoom();
+		const openingOpacity = (openingStyles[NAVIGATION_CONTAINER_STYLE_ID] as any)
 			.opacity;
 
-		expect(earlyOpacity).toBeGreaterThan(0);
-		expect(earlyOpacity).toBeLessThan(1);
-		expect(thresholdOpacity).toBe(1);
+		expect(openingOpacity).toBe(1);
 	});
 
-	it("match(...).navigation.zoom() fades source element after focused fade completes", () => {
+	it("match(...).navigation.zoom() fades focused screen only while closing", () => {
 		registerBasicLink();
-		const beforeFadeBounds = createAccessor("screen-a", false, 1.2);
-		const duringFadeBounds = createAccessor("screen-a", false, 1.6);
+		const closingBounds = createAccessor("screen-b", true, 0.5, {
+			activeClosing: 1,
+			currentProgress: 0.4,
+		});
 
-		const beforeFadeStyles = beforeFadeBounds
+		const closingStyles = closingBounds.match({ id: "card" }).navigation.zoom();
+		const closingOpacity = (closingStyles[NAVIGATION_CONTAINER_STYLE_ID] as any)
+			.opacity;
+
+		expect(closingOpacity).toBe(0.4);
+	});
+
+	it("match(...).navigation.zoom() scales unfocused contentStyle from 1 to 0.95", () => {
+		registerBasicLink();
+		const unfocusedBounds = createAccessor("screen-a", false, 1.5);
+		const styles = unfocusedBounds.match({ id: "card" }).navigation.zoom();
+		const contentStyle = styles.contentStyle as any;
+		const scaleEntry = contentStyle?.transform?.find(
+			(entry: Record<string, number>) => "scale" in entry,
+		);
+
+		expect(scaleEntry?.scale).toBe(0.975);
+	});
+
+	it("match(...).navigation.zoom() applies freeform drag to focused translation", () => {
+		registerBasicLink();
+		const baseline = createAccessor("screen-b", true, 0.5, {
+			gestureX: 0,
+			gestureY: 0,
+		});
+		const dragged = createAccessor("screen-b", true, 0.5, {
+			gestureX: 24,
+			gestureY: -18,
+		});
+
+		const baselineTransform = (
+			baseline.match({ id: "card" }).navigation.zoom()[
+				NAVIGATION_CONTAINER_STYLE_ID
+			] as any
+		).transform;
+		const draggedTransform = (
+			dragged.match({ id: "card" }).navigation.zoom()[
+				NAVIGATION_CONTAINER_STYLE_ID
+			] as any
+		).transform;
+
+		const baselineX = baselineTransform.find(
+			(entry: Record<string, number>) => "translateX" in entry,
+		)?.translateX;
+		const baselineY = baselineTransform.find(
+			(entry: Record<string, number>) => "translateY" in entry,
+		)?.translateY;
+		const draggedX = draggedTransform.find(
+			(entry: Record<string, number>) => "translateX" in entry,
+		)?.translateX;
+		const draggedY = draggedTransform.find(
+			(entry: Record<string, number>) => "translateY" in entry,
+		)?.translateY;
+
+		expect(draggedX - baselineX).toBeCloseTo(24 * 0.72, 5);
+		expect(draggedY - baselineY).toBeCloseTo(-18 * 0.72, 5);
+	});
+
+	it("match(...).navigation.zoom() applies freeform drag to focused mask", () => {
+		registerBasicLink();
+		const baseline = createAccessor("screen-b", true, 0.5, {
+			gestureX: 0,
+			gestureY: 0,
+		});
+		const dragged = createAccessor("screen-b", true, 0.5, {
+			gestureX: 12,
+			gestureY: 9,
+		});
+
+		const baselineTransform = (
+			baseline.match({ id: "card" }).navigation.zoom()[NAVIGATION_MASK_STYLE_ID] as any
+		).transform;
+		const draggedTransform = (
+			dragged.match({ id: "card" }).navigation.zoom()[NAVIGATION_MASK_STYLE_ID] as any
+		).transform;
+
+		const baselineX = baselineTransform.find(
+			(entry: Record<string, number>) => "translateX" in entry,
+		)?.translateX;
+		const baselineY = baselineTransform.find(
+			(entry: Record<string, number>) => "translateY" in entry,
+		)?.translateY;
+		const draggedX = draggedTransform.find(
+			(entry: Record<string, number>) => "translateX" in entry,
+		)?.translateX;
+		const draggedY = draggedTransform.find(
+			(entry: Record<string, number>) => "translateY" in entry,
+		)?.translateY;
+
+		expect(draggedX - baselineX).toBeCloseTo(12 * 0.72, 5);
+		expect(draggedY - baselineY).toBeCloseTo(9 * 0.72, 5);
+	});
+
+	it("match(...).navigation.zoom() keeps unfocused contentStyle as scale-only", () => {
+		registerBasicLink();
+		const styles = createAccessor("screen-a", false, 1.5, {
+			gestureX: -15,
+			gestureY: 20,
+		})
 			.match({ id: "card" })
 			.navigation.zoom();
-		const duringFadeStyles = duringFadeBounds
-			.match({ id: "card" })
-			.navigation.zoom();
 
-		const beforeOpacity = (beforeFadeStyles.card as any).opacity;
-		const duringOpacity = (duringFadeStyles.card as any).opacity;
+		const contentTransform = (styles.contentStyle as any)?.transform;
+		const hasTranslateX = contentTransform?.some(
+			(entry: Record<string, number>) => "translateX" in entry,
+		);
+		const hasTranslateY = contentTransform?.some(
+			(entry: Record<string, number>) => "translateY" in entry,
+		);
 
-		expect(beforeOpacity).toBe(1);
-		expect(duringOpacity).toBeLessThan(1);
-		expect(duringOpacity).toBeGreaterThan(0);
+		expect(hasTranslateX).toBe(false);
+		expect(hasTranslateY).toBe(false);
+	});
+
+	it("match(...).navigation.zoom() applies freeform drag to unfocused source element", () => {
+		registerBasicLink();
+		const baseline = createAccessor("screen-a", false, 1.5, {
+			gestureX: 0,
+			gestureY: 0,
+		});
+		const dragged = createAccessor("screen-a", false, 1.5, {
+			gestureX: -15,
+			gestureY: 20,
+		});
+
+		const baselineTransform = (
+			baseline.match({ id: "card" }).navigation.zoom().card as any
+		).transform;
+		const draggedTransform = (
+			dragged.match({ id: "card" }).navigation.zoom().card as any
+		).transform;
+
+		const baselineX = baselineTransform.find(
+			(entry: Record<string, number>) => "translateX" in entry,
+		)?.translateX;
+		const baselineY = baselineTransform.find(
+			(entry: Record<string, number>) => "translateY" in entry,
+		)?.translateY;
+		const draggedX = draggedTransform.find(
+			(entry: Record<string, number>) => "translateX" in entry,
+		)?.translateX;
+		const draggedY = draggedTransform.find(
+			(entry: Record<string, number>) => "translateY" in entry,
+		)?.translateY;
+
+		expect(draggedX - baselineX).toBeCloseTo(-15 * 0.72, 5);
+		expect(draggedY - baselineY).toBeCloseTo(20 * 0.72, 5);
 	});
 
 	it("match(...).navigation.zoom() scales focused screen from source-width ratio", () => {
