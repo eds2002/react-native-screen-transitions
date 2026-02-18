@@ -74,6 +74,23 @@ const TEST_FLOWS = [
 		title: "Boundary (v2)",
 		description: "Minimal Transition.Boundary example between two screens",
 	},
+	{
+		id: "bounds-spam",
+		title: "Bounds Spam",
+		description:
+			"4x4 grid — rapid tap same or different items during transitions",
+	},
+	{
+		id: "bounds-multi",
+		title: "Multi Boundary",
+		description: "Two independent boundaries (image + label) per transition",
+	},
+	{
+		id: "bounds-list",
+		title: "Bounds List",
+		description:
+			"30-item scroll list — tests measurement at arbitrary scroll offset",
+	},
 ];
 
 export default function BlankStackIndex() {

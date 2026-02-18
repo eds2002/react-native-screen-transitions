@@ -128,6 +128,18 @@ export default function BlankStackLayout() {
 				name="bounds"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<BlankStack.Screen
+				name="bounds-spam"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="bounds-multi"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="bounds-list"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
 		</BlankStack>
 	);
 }
