@@ -15,10 +15,18 @@ import { useScrollSettleContext } from "../../providers/scroll-settle.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds.store";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
+import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 type BoundaryId = string | number;
 
-export interface BoundaryProps extends Omit<ViewProps, "id"> {
+type BoundaryConfigProps = Pick<
+	BoundsOptions,
+	"anchor" | "scaleMode" | "target" | "method" | "space"
+>;
+
+export interface BoundaryProps
+	extends Omit<ViewProps, "id">,
+		BoundaryConfigProps {
 	/**
 	 * Optional group name for collection/list scenarios.
 	 * When provided, boundaries are tracked as a group and the active member
@@ -113,8 +121,15 @@ const useBoundaryPresence = (params: {
 	sharedBoundTag: string;
 	currentScreenKey: string;
 	ancestorKeys: string[];
+	boundaryConfig?: BoundaryConfigProps;
 }) => {
-	const { enabled, sharedBoundTag, currentScreenKey, ancestorKeys } = params;
+	const {
+		enabled,
+		sharedBoundTag,
+		currentScreenKey,
+		ancestorKeys,
+		boundaryConfig,
+	} = params;
 
 	useEffect(() => {
 		if (!enabled) return;
@@ -123,6 +138,7 @@ const useBoundaryPresence = (params: {
 			sharedBoundTag,
 			currentScreenKey,
 			ancestorKeys,
+			boundaryConfig,
 		);
 
 		return () => {
@@ -131,7 +147,7 @@ const useBoundaryPresence = (params: {
 				currentScreenKey,
 			);
 		};
-	}, [enabled, sharedBoundTag, currentScreenKey, ancestorKeys]);
+	}, [enabled, sharedBoundTag, currentScreenKey, ancestorKeys, boundaryConfig]);
 };
 
 const useAutoSourceMeasurement = (params: {
@@ -403,6 +419,7 @@ const BoundaryPresenceEffect = (params: {
 	sharedBoundTag: string;
 	currentScreenKey: string;
 	ancestorKeys: string[];
+	boundaryConfig?: BoundaryConfigProps;
 }) => {
 	useBoundaryPresence(params);
 	return null;
@@ -432,6 +449,11 @@ const BoundaryComponent = ({
 	enabled = true,
 	group,
 	id,
+	anchor,
+	scaleMode,
+	target,
+	method,
+	space,
 	style,
 	onLayout,
 	...rest
@@ -450,6 +472,25 @@ const BoundaryComponent = ({
 	const hasNextScreen = !!next;
 	const shouldUpdateDestination = !hasNextScreen;
 	const layoutAnchor = useLayoutAnchorContext();
+	const boundaryConfig = useMemo<BoundaryConfigProps | undefined>(() => {
+		if (
+			anchor === undefined &&
+			scaleMode === undefined &&
+			target === undefined &&
+			method === undefined &&
+			space === undefined
+		) {
+			return undefined;
+		}
+
+		return {
+			anchor,
+			scaleMode,
+			target,
+			method,
+			space,
+		};
+	}, [anchor, scaleMode, target, method, space]);
 
 	const isAnimating = AnimationStore.getAnimation(
 		currentScreenKey,
@@ -610,6 +651,7 @@ const BoundaryComponent = ({
 					sharedBoundTag={sharedBoundTag}
 					currentScreenKey={currentScreenKey}
 					ancestorKeys={ancestorKeys}
+					boundaryConfig={boundaryConfig}
 				/>
 			) : null}
 			{runtimeEnabled && nextScreenKey ? (

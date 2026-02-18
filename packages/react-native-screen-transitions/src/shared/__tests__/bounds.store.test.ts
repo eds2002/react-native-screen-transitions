@@ -491,6 +491,69 @@ describe("BoundStore boundary presence", () => {
 		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(false);
 		expect(BoundStore.hasBoundaryPresence("card", "screen-b")).toBe(true);
 	});
+
+	it("stores boundary config and retrieves it by direct screen key", () => {
+		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
+			anchor: "top",
+			scaleMode: "uniform",
+			target: "fullscreen",
+			method: "content",
+			space: "absolute",
+		});
+
+		expect(BoundStore.getBoundaryConfig("card", "screen-a")).toEqual({
+			anchor: "top",
+			scaleMode: "uniform",
+			target: "fullscreen",
+			method: "content",
+			space: "absolute",
+		});
+	});
+
+	it("updates boundary config when re-registering same screen", () => {
+		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
+			anchor: "center",
+			method: "transform",
+		});
+
+		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
+			anchor: "bottom",
+			method: "size",
+		});
+
+		expect(BoundStore.getBoundaryConfig("card", "screen-a")).toEqual({
+			anchor: "bottom",
+			method: "size",
+		});
+	});
+
+	it("supports ancestor matching for boundary config", () => {
+		BoundStore.registerBoundaryPresence("card", "screen-a", ["stack-a"], {
+			anchor: "topLeading",
+			scaleMode: "match",
+		});
+
+		expect(BoundStore.getBoundaryConfig("card", "stack-a")).toEqual({
+			anchor: "topLeading",
+			scaleMode: "match",
+		});
+	});
+
+	it("clear removes boundary config for the cleared screen", () => {
+		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
+			anchor: "top",
+		});
+		BoundStore.registerBoundaryPresence("card", "screen-b", undefined, {
+			anchor: "bottom",
+		});
+
+		BoundStore.clear("screen-a");
+
+		expect(BoundStore.getBoundaryConfig("card", "screen-a")).toBeNull();
+		expect(BoundStore.getBoundaryConfig("card", "screen-b")).toEqual({
+			anchor: "bottom",
+		});
+	});
 });
 
 // =============================================================================

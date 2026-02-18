@@ -3,9 +3,22 @@ import {
 	makeMutable,
 	type StyleProps,
 } from "react-native-reanimated";
+import type { BoundsMethod } from "../types/bounds.types";
+import type {
+	BoundsAnchor,
+	BoundsScaleMode,
+} from "../utils/bounds/types/options";
 
 type TagID = string;
 type ScreenKey = string;
+
+export type BoundaryConfig = {
+	anchor?: BoundsAnchor;
+	scaleMode?: BoundsScaleMode;
+	target?: "bound" | "fullscreen" | MeasuredDimensions;
+	method?: BoundsMethod;
+	space?: "relative" | "absolute";
+};
 
 export type Snapshot = {
 	bounds: MeasuredDimensions;
@@ -30,6 +43,7 @@ type TagState = {
 type PresenceEntry = {
 	count: number;
 	ancestorKeys?: ScreenKey[];
+	boundaryConfig?: BoundaryConfig;
 };
 
 type PresenceState = Record<TagID, Record<ScreenKey, PresenceEntry>>;
@@ -300,6 +314,7 @@ function registerBoundaryPresence(
 	tag: TagID,
 	screenKey: ScreenKey,
 	ancestorKeys?: ScreenKey[],
+	boundaryConfig?: BoundaryConfig,
 ) {
 	"worklet";
 	const current = presence.value;
@@ -313,9 +328,34 @@ function registerBoundaryPresence(
 			[screenKey]: {
 				count: (currentEntry?.count ?? 0) + 1,
 				ancestorKeys: ancestorKeys ?? currentEntry?.ancestorKeys,
+				boundaryConfig: boundaryConfig ?? currentEntry?.boundaryConfig,
 			},
 		},
 	};
+}
+
+function getBoundaryConfig(
+	tag: TagID,
+	screenKey: ScreenKey,
+): BoundaryConfig | null {
+	"worklet";
+	const tagEntries = presence.value[tag];
+	if (!tagEntries) return null;
+
+	const direct = tagEntries[screenKey];
+	if (direct && direct.count > 0) {
+		return direct.boundaryConfig ?? null;
+	}
+
+	for (const entryScreenKey in tagEntries) {
+		const entry = tagEntries[entryScreenKey];
+		if (entry.count <= 0) continue;
+		if (entry.ancestorKeys?.includes(screenKey)) {
+			return entry.boundaryConfig ?? null;
+		}
+	}
+
+	return null;
 }
 
 function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
@@ -621,6 +661,7 @@ export const BoundStore = {
 	unregisterBoundaryPresence,
 	hasBoundaryPresence,
 	getBoundaryPresence,
+	getBoundaryConfig,
 	hasPendingLink,
 	hasPendingLinkFromSource,
 	getLatestPendingSourceScreenKey,
