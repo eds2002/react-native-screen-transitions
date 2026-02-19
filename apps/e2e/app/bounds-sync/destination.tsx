@@ -1,8 +1,4 @@
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import {
-	SafeAreaView,
-	useSafeAreaInsets,
-} from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import {
@@ -12,23 +8,28 @@ import {
 	getCaseById,
 } from "./constants";
 
+const FORCED_TOP_INSET = 59;
+const HEADER_HEIGHT_ESTIMATE = 60;
+
 export default function BoundsSyncDestination() {
 	const { width, height } = useWindowDimensions();
-	const insets = useSafeAreaInsets();
 	const caseId = activeCaseId.value;
 	const testCase = getCaseById(caseId);
 
 	if (!testCase) {
 		return (
-			<SafeAreaView style={styles.container}>
+			<View style={[styles.container, { paddingTop: FORCED_TOP_INSET }]}>
 				<ScreenHeader title="Unknown Case" />
-			</SafeAreaView>
+			</View>
 		);
 	}
 
 	const { destination } = testCase;
+	const source = testCase.source;
 	const destinationBoundary = destination.boundary;
-	const containerHeight = height - insets.top - 60;
+	const sourceAnchor = source.boundary.anchor ?? "center";
+	const destinationAnchor = destinationBoundary.anchor ?? "center";
+	const containerHeight = height - FORCED_TOP_INSET - HEADER_HEIGHT_ESTIMATE;
 	const positionStyle = getBoxPositionStyle(
 		destination.position,
 		destination.width,
@@ -44,11 +45,13 @@ export default function BoundsSyncDestination() {
 		typeof destinationBoundary?.target === "object";
 
 	const infoLines = [
-		`method: ${destinationBoundary?.method ?? "transform"}`,
+		`scope: element | method: ${destinationBoundary?.method ?? "transform"}`,
 		destinationBoundary?.scaleMode
 			? `scaleMode: ${destinationBoundary.scaleMode}`
 			: null,
-		destinationBoundary?.anchor ? `anchor: ${destinationBoundary.anchor}` : null,
+		destinationBoundary?.anchor
+			? `anchor: ${destinationBoundary.anchor}`
+			: null,
 		destinationBoundary?.target
 			? `target: ${
 					typeof destinationBoundary.target === "string"
@@ -59,19 +62,29 @@ export default function BoundsSyncDestination() {
 	].filter(Boolean);
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<View style={[styles.container, { paddingTop: FORCED_TOP_INSET }]}>
 			<ScreenHeader
 				title={`Dest: ${testCase.title}`}
 				subtitle={`${destination.width}x${destination.height} @ ${destination.position}`}
 			/>
+			<Text style={styles.concernText}>
+				Concern: Element transition, not navigation transition
+			</Text>
+			<Text style={styles.anchorNoteText}>
+				Anchor selects the alignment point (e.g. center), not a fixed top-left
+				lock.
+			</Text>
+			<Text style={styles.anchorPairText}>
+				sourceAnchor: {sourceAnchor} | destinationAnchor: {destinationAnchor}
+			</Text>
 			<View style={styles.arena}>
-					{!hasTargetOverride && (
-						<Transition.Boundary
-							id={BOUNDARY_TAG}
-							method={destinationBoundary?.method}
-							target={destinationBoundary?.target}
-							anchor={destinationBoundary?.anchor}
-							scaleMode={destinationBoundary?.scaleMode}
+				{!hasTargetOverride && (
+					<Transition.Boundary
+						id={BOUNDARY_TAG}
+						method={destinationBoundary?.method}
+						target={destinationBoundary?.target}
+						anchor={destinationBoundary?.anchor}
+						scaleMode={destinationBoundary?.scaleMode}
 						style={[
 							styles.box,
 							{
@@ -87,6 +100,7 @@ export default function BoundsSyncDestination() {
 
 				{/* Ghost outline showing where the source was */}
 				<View
+					pointerEvents="none"
 					style={[
 						styles.ghost,
 						{
@@ -114,7 +128,7 @@ export default function BoundsSyncDestination() {
 					</Text>
 				))}
 			</View>
-		</SafeAreaView>
+		</View>
 	);
 }
 
@@ -125,6 +139,27 @@ const styles = StyleSheet.create({
 	arena: {
 		flex: 1,
 		position: "relative",
+	},
+	concernText: {
+		paddingHorizontal: 16,
+		paddingBottom: 4,
+		fontSize: 11,
+		color: "#7fa5cf",
+		fontFamily: "monospace",
+	},
+	anchorNoteText: {
+		paddingHorizontal: 16,
+		paddingBottom: 4,
+		fontSize: 11,
+		color: "#97abc3",
+		fontFamily: "monospace",
+	},
+	anchorPairText: {
+		paddingHorizontal: 16,
+		paddingBottom: 10,
+		fontSize: 11,
+		color: "#89a4c4",
+		fontFamily: "monospace",
 	},
 	box: {
 		position: "absolute",

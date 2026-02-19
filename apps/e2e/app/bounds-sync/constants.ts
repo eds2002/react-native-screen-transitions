@@ -183,10 +183,35 @@ const ANCHOR_CASES: BoundsTestCase[] = [
 		destination: {
 			width: 240,
 			height: 240,
-			position: "bottomTrailing",
+			position: "topLeading",
 			boundary: {
 				method: "transform",
 				anchor: "center",
+				scaleMode: "none",
+			},
+		},
+	},
+	{
+		id: "anchor-asymmetric-trailing",
+		title: "Asymmetric Trailing",
+		category: "Anchors",
+		source: {
+			width: 80,
+			height: 80,
+			position: "topLeading",
+			boundary: {
+				method: "transform",
+				anchor: "topTrailing",
+				scaleMode: "none",
+			},
+		},
+		destination: {
+			width: 240,
+			height: 240,
+			position: "topLeading",
+			boundary: {
+				method: "transform",
+				anchor: "bottomTrailing",
 				scaleMode: "none",
 			},
 		},

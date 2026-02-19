@@ -55,9 +55,20 @@ export default function BoundsSyncIndex() {
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
 				title="Bounds Sync"
-				subtitle="Bulletproof sync math across all combos"
+				subtitle="Element transitions (A/B boundary sync)"
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
+				<View style={styles.concernCard}>
+					<Text style={styles.concernCardTitle}>Next Concern: Navigation SST</Text>
+					<Text style={styles.concernCardText}>
+						Navigation transitions are handled separately via
+						{" "}
+						<Text style={styles.concernCardCode}>
+							bounds({"{ id }"}).navigation.zoom()/hero()
+						</Text>
+						.
+					</Text>
+				</View>
 				{CATEGORIES.map((cat) => (
 					<Section key={cat.title} title={cat.title} cases={cat.cases} />
 				))}
@@ -74,6 +85,29 @@ const styles = StyleSheet.create({
 	content: {
 		padding: 16,
 		paddingBottom: 40,
+	},
+	concernCard: {
+		backgroundColor: "#151d28",
+		borderColor: "#2b3c55",
+		borderWidth: 1,
+		borderRadius: 12,
+		padding: 14,
+		marginBottom: 20,
+	},
+	concernCardTitle: {
+		fontSize: 13,
+		fontWeight: "700",
+		color: "#8ec5ff",
+		marginBottom: 6,
+	},
+	concernCardText: {
+		fontSize: 12,
+		color: "#b5c4d6",
+		lineHeight: 18,
+	},
+	concernCardCode: {
+		fontFamily: "monospace",
+		color: "#d4e8ff",
 	},
 	section: {
 		marginBottom: 24,

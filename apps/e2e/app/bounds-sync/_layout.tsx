@@ -20,9 +20,10 @@ const resolveActiveCase = () => {
 };
 
 /**
- * The sync interpolator — only applied to the source→destination transition.
- * Uses explicit bounds options from the active test case for deterministic
- * method/anchor/scaleMode/target coverage.
+ * Bounds-sync interpolator for element-transition coverage only.
+ * This validates A/B boundary interpolation behavior (transform/size/content)
+ * and is intentionally separate from navigation primitives such as
+ * bounds({ id }).navigation.zoom()/hero().
  */
 const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 	bounds,
@@ -34,6 +35,10 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 	const testCase = resolveActiveCase();
 	const sourceBoundary = testCase.source.boundary;
 	const destinationBoundary = testCase.destination.boundary;
+	// Anchor semantics are resolved per screen:
+	// - focused screen uses destination boundary config
+	// - unfocused screen uses source boundary config
+	// This is why asymmetric anchors (source !== destination) are intentional.
 	const activeBoundary = focused ? destinationBoundary : sourceBoundary;
 	const activeStyleOptions = {
 		id: BOUNDARY_TAG,
@@ -44,9 +49,8 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 	};
 
 	if (destinationBoundary?.method === "content") {
-		// Content method: screen-level transform on focused,
-		// element-level transform on unfocused.
-		// The destination Boundary has method="content", source has method="transform".
+		// Content method in this harness still belongs to the element concern:
+		// screen-level content transform on focused, element-style on unfocused.
 		if (focused) {
 			const contentStyle = bounds(activeStyleOptions);
 

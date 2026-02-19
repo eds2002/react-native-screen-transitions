@@ -6,10 +6,6 @@ import {
 	useWindowDimensions,
 	View,
 } from "react-native";
-import {
-	SafeAreaView,
-	useSafeAreaInsets,
-} from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import {
@@ -19,23 +15,28 @@ import {
 	getCaseById,
 } from "./constants";
 
+const FORCED_TOP_INSET = 59;
+const HEADER_HEIGHT_ESTIMATE = 60;
+
 export default function BoundsSyncSource() {
 	const { width, height } = useWindowDimensions();
-	const insets = useSafeAreaInsets();
 	const caseId = activeCaseId.value;
 	const testCase = getCaseById(caseId);
 
 	if (!testCase) {
 		return (
-			<SafeAreaView style={styles.container}>
+			<View style={[styles.container, { paddingTop: FORCED_TOP_INSET }]}>
 				<ScreenHeader title="Unknown Case" />
-			</SafeAreaView>
+			</View>
 		);
 	}
 
 	const { source } = testCase;
+	const destination = testCase.destination;
 	const sourceBoundary = source.boundary;
-	const containerHeight = height - insets.top - 60;
+	const sourceAnchor = sourceBoundary.anchor ?? "center";
+	const destinationAnchor = destination.boundary.anchor ?? "center";
+	const containerHeight = height - FORCED_TOP_INSET - HEADER_HEIGHT_ESTIMATE;
 	const positionStyle = getBoxPositionStyle(
 		source.position,
 		source.width,
@@ -58,11 +59,20 @@ export default function BoundsSyncSource() {
 			: (sourceBoundary?.method ?? "transform");
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<View style={[styles.container, { paddingTop: FORCED_TOP_INSET }]}>
 			<ScreenHeader
 				title={`Source: ${testCase.title}`}
 				subtitle={`${source.width}x${source.height} @ ${source.position}`}
 			/>
+			<Text style={styles.concernText}>
+				Concern: Element transition, not navigation transition
+			</Text>
+			<Text style={styles.anchorNoteText}>
+				Anchor selects the alignment point (e.g. center), not a fixed top-left lock.
+			</Text>
+			<Text style={styles.anchorPairText}>
+				sourceAnchor: {sourceAnchor} | destinationAnchor: {destinationAnchor}
+			</Text>
 			<View style={styles.arena}>
 				<Pressable
 					onPress={() => {
@@ -92,6 +102,7 @@ export default function BoundsSyncSource() {
 				{/* Ghost outline showing where the destination will appear */}
 				{!needsExplicitRole && (
 					<View
+						pointerEvents="none"
 						style={[
 							styles.ghost,
 							{
@@ -111,7 +122,7 @@ export default function BoundsSyncSource() {
 					</View>
 				)}
 			</View>
-		</SafeAreaView>
+		</View>
 	);
 }
 
@@ -123,6 +134,27 @@ const styles = StyleSheet.create({
 	arena: {
 		flex: 1,
 		position: "relative",
+	},
+	concernText: {
+		paddingHorizontal: 16,
+		paddingBottom: 4,
+		fontSize: 11,
+		color: "#7fa5cf",
+		fontFamily: "monospace",
+	},
+	anchorNoteText: {
+		paddingHorizontal: 16,
+		paddingBottom: 4,
+		fontSize: 11,
+		color: "#97abc3",
+		fontFamily: "monospace",
+	},
+	anchorPairText: {
+		paddingHorizontal: 16,
+		paddingBottom: 10,
+		fontSize: 11,
+		color: "#89a4c4",
+		fontFamily: "monospace",
 	},
 	box: {
 		position: "absolute",
