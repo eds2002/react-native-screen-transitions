@@ -23,6 +23,7 @@ export default function ZoomLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
+					gestureDrivesProgress: false,
 					screenStyleInterpolator: ({ bounds, current, active, progress }) => {
 						"worklet";
 
