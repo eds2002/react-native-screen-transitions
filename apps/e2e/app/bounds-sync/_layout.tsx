@@ -19,6 +19,18 @@ const resolveActiveCase = () => {
 	return ALL_CASES[0];
 };
 
+const toZoomId = (route: { params?: object }) => {
+	"worklet";
+	const params = route.params as Record<string, unknown> | undefined;
+	const rawId = params?.id;
+
+	if (typeof rawId !== "string") {
+		return null;
+	}
+
+	return rawId;
+};
+
 /**
  * Bounds-sync interpolator for element-transition coverage only.
  * This validates A/B boundary interpolation behavior (transform/size/content)
@@ -88,6 +100,31 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 	};
 };
 
+const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
+	({ bounds, current, active, progress }) => {
+		"worklet";
+		const currentId = toZoomId(current.route);
+		const activeId = toZoomId(active.route);
+		const id = currentId ?? activeId;
+
+		if (!id) {
+			return {};
+		}
+
+		const navigationStyles = bounds({ id }).navigation.zoom({
+			scaleMode: "uniform",
+			maskBorderRadius: 28,
+		});
+
+		return {
+			...navigationStyles,
+			overlayStyle: {
+				backgroundColor: "black",
+				opacity: interpolate(progress, [0, 1, 2], [0, 0.5, 0]),
+			},
+		};
+	};
+
 export default function BoundsSyncLayout() {
 	return (
 		<BlankStack>
@@ -107,6 +144,24 @@ export default function BoundsSyncLayout() {
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<BlankStack.Screen name="zoom/index" />
+			<BlankStack.Screen
+				name="zoom/[id]"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: [
+						"vertical",
+						"vertical-inverted",
+						"horizontal",
+					],
+					gestureDrivesProgress: false,
+					screenStyleInterpolator: navigationZoomInterpolator,
+					transitionSpec: {
+						open: Transition.Specs.IOSZoomSpec,
+						close: Transition.Specs.IOSZoomSpec,
 					},
 				}}
 			/>

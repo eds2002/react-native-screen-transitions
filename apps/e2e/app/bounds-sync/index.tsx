@@ -69,6 +69,21 @@ export default function BoundsSyncIndex() {
 						.
 					</Text>
 				</View>
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Navigation</Text>
+					<View style={styles.list}>
+						<Pressable
+							style={[styles.item, styles.navigationItem]}
+							onPress={() => router.push("/bounds-sync/zoom" as never)}
+						>
+							<Text style={styles.itemTitle}>Zoom (SST Navigation)</Text>
+							<Text style={styles.itemTags}>bounds({"{ id }"}).navigation.zoom()</Text>
+							<Text style={styles.itemDetail}>
+								Separate route pair for navigation-level zoom and drag-dismiss.
+							</Text>
+						</Pressable>
+					</View>
+				</View>
 				{CATEGORIES.map((cat) => (
 					<Section key={cat.title} title={cat.title} cases={cat.cases} />
 				))}
@@ -130,6 +145,10 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		borderWidth: 1,
 		borderColor: "#333",
+	},
+	navigationItem: {
+		backgroundColor: "#122237",
+		borderColor: "#2b4567",
 	},
 	itemTitle: {
 		fontSize: 16,
