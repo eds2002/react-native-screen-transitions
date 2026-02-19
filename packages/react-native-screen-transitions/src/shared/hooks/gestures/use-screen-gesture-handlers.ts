@@ -16,6 +16,7 @@ import {
 	EPSILON,
 	FALSE,
 	GESTURE_VELOCITY_IMPACT,
+	RELEASE_VELOCITY_MAX,
 	SNAP_VELOCITY_IMPACT,
 	TRUE,
 } from "../../constants";
@@ -127,12 +128,25 @@ export const useScreenGestureHandlers = ({
 		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
 		snapVelocityImpact = SNAP_VELOCITY_IMPACT,
+		releaseVelocityScale = 1,
+		releaseVelocityMax = RELEASE_VELOCITY_MAX,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureResponseDistance,
 		transitionSpec,
 		expandViaScrollView = true,
 		gestureSnapLocked = false,
 	} = current.options;
+	const effectiveReleaseVelocityMax = Math.max(
+		0.1,
+		Math.abs(releaseVelocityMax),
+	);
+	const clampReleaseVelocity = (value: number) => {
+		"worklet";
+		return Math.max(
+			-effectiveReleaseVelocityMax,
+			Math.min(effectiveReleaseVelocityMax, value),
+		);
+	};
 
 	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } =
 		validatedSnapPoints;
@@ -503,9 +517,18 @@ export const useScreenGestureHandlers = ({
 					dimensions,
 				});
 
-				const velocitySign = directions.snapAxisInverted ? 1 : -1;
+				const snapDirection = Math.sign(
+					targetProgress - animations.progress.value,
+				);
+
 				const initialVelocity =
-					velocitySign * velocity.normalize(axisVelocity, axisDimension);
+					snapDirection === 0
+						? 0
+						: clampReleaseVelocity(
+								snapDirection *
+									Math.abs(velocity.normalize(axisVelocity, axisDimension)) *
+									releaseVelocityScale,
+							);
 
 				animateToProgress({
 					target: targetProgress,
@@ -541,12 +564,16 @@ export const useScreenGestureHandlers = ({
 					directions,
 				});
 
+				const scaledInitialVelocity = clampReleaseVelocity(
+					initialVelocity * releaseVelocityScale,
+				);
+
 				animateToProgress({
 					target: targetProgress,
 					onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
 					spec: transitionSpec,
 					animations,
-					initialVelocity,
+					initialVelocity: scaledInitialVelocity,
 				});
 			}
 		},

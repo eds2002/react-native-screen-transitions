@@ -15,6 +15,11 @@ interface CalculateProgressProps {
 	directions: GestureDirections;
 }
 
+type GestureAxisCandidate = {
+	progressContribution: number;
+	velocityContribution: number;
+};
+
 const MAX_VELOCITY_MAGNITUDE = 3.2;
 
 /**
@@ -72,34 +77,51 @@ const calculateProgressVelocity = ({
 
 	const progressDirection = progressDelta === 0 ? 0 : Math.sign(progressDelta);
 
-	const normalizedVelocityX = normalize(event.velocityX, dimensions.width);
-	const normalizedVelocityY = normalize(event.velocityY, dimensions.height);
+	const candidates: GestureAxisCandidate[] = [];
 
-	const normalizedTranslationX = Math.abs(
-		event.translationX / dimensions.width,
-	);
-	const normalizedTranslationY = Math.abs(
-		event.translationY / dimensions.height,
-	);
+	if (directions.horizontal && event.translationX > 0) {
+		candidates.push({
+			progressContribution: event.translationX / Math.max(1, dimensions.width),
+			velocityContribution: normalize(event.velocityX, dimensions.width),
+		});
+	}
 
-	const supportsHorizontalGestures =
-		directions.horizontal || directions.horizontalInverted;
+	if (directions.horizontalInverted && event.translationX < 0) {
+		candidates.push({
+			progressContribution: -event.translationX / Math.max(1, dimensions.width),
+			velocityContribution: normalize(-event.velocityX, dimensions.width),
+		});
+	}
 
-	const supportsVerticalGestures =
-		directions.vertical || directions.verticalInverted;
+	if (directions.vertical && event.translationY > 0) {
+		candidates.push({
+			progressContribution: event.translationY / Math.max(1, dimensions.height),
+			velocityContribution: normalize(event.velocityY, dimensions.height),
+		});
+	}
+
+	if (directions.verticalInverted && event.translationY < 0) {
+		candidates.push({
+			progressContribution:
+				-event.translationY / Math.max(1, dimensions.height),
+			velocityContribution: normalize(-event.velocityY, dimensions.height),
+		});
+	}
 
 	let progressVelocityMagnitude = 0;
 
-	// Determine which axis should drive the progress velocity
-	if (
-		supportsHorizontalGestures &&
-		(!supportsVerticalGestures ||
-			normalizedTranslationX >= normalizedTranslationY)
-	) {
-		progressVelocityMagnitude = Math.abs(normalizedVelocityX);
-	} else if (supportsVerticalGestures) {
-		progressVelocityMagnitude = Math.abs(normalizedVelocityY);
+	if (candidates.length > 0) {
+		let dominant = candidates[0];
+		for (let i = 1; i < candidates.length; i++) {
+			const candidate = candidates[i];
+			if (candidate.progressContribution > dominant.progressContribution) {
+				dominant = candidate;
+			}
+		}
+		progressVelocityMagnitude = Math.abs(dominant.velocityContribution);
 	} else {
+		const normalizedVelocityX = normalize(event.velocityX, dimensions.width);
+		const normalizedVelocityY = normalize(event.velocityY, dimensions.height);
 		progressVelocityMagnitude = Math.max(
 			Math.abs(normalizedVelocityX),
 			Math.abs(normalizedVelocityY),

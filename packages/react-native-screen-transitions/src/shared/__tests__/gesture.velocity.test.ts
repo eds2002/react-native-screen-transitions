@@ -108,6 +108,30 @@ describe("velocity.calculateProgressVelocity", () => {
 
 		expect(result).toBeCloseTo(3.2, 5);
 	});
+
+	it("ignores axis movement that could not have driven gesture progress", () => {
+		const animations = createAnimations(0.8);
+		const event = createEvent({
+			translationX: -220, // opposite of horizontal dismiss direction
+			translationY: 96, // valid vertical dismiss direction
+			velocityX: -2200,
+			velocityY: 640,
+		});
+
+		const result = velocity.calculateProgressVelocity({
+			animations: animations as any,
+			shouldDismiss: true,
+			event,
+			dimensions,
+			directions: createDirections({
+				horizontal: true,
+				vertical: true,
+			}),
+		});
+
+		// Uses vertical candidate (96/640), not unsupported horizontal movement.
+		expect(result).toBeCloseTo(-1, 5);
+	});
 });
 
 describe("velocity.shouldPassDismissalThreshold", () => {

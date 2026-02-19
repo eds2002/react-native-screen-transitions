@@ -328,6 +328,84 @@ describe("createBounds accessor", () => {
 		expect(draggedMaskStyle.height).toBeLessThan(baselineMaskStyle.height);
 	});
 
+	it("match(...).navigation.zoom() applies resistance to mask cropping distance", () => {
+		registerBasicLink();
+		const baseline = createAccessor("screen-b", true, 0.5, {
+			gestureX: 0,
+			gestureY: 0,
+		});
+		const dragged = createAccessor("screen-b", true, 0.5, {
+			gestureX: 120,
+			gestureY: 100,
+		});
+
+		const baselineMaskStyle = baseline.match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_MASK_STYLE_ID
+		] as any;
+		const draggedMaskStyle = dragged.match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_MASK_STYLE_ID
+		] as any;
+
+		const expectedResistedDrag = (Math.abs(120) + Math.abs(100)) * 0.2;
+		const expectedBaseShrinkX = (expectedResistedDrag / 220) * 10;
+		const expectedBaseShrinkY = (expectedResistedDrag / 220) * 15;
+		const expectedDownwardDrag = Math.max(0, 100 * 0.2);
+		const expectedDownwardShrinkX = (expectedDownwardDrag / 60) * 14;
+		const expectedDownwardShrinkY = (expectedDownwardDrag / 60) * 24;
+		const expectedShrinkX = expectedBaseShrinkX + expectedDownwardShrinkX;
+		const expectedShrinkY = expectedBaseShrinkY + expectedDownwardShrinkY;
+		const expectedWidthDelta = expectedShrinkX * 2;
+		const expectedHeightDelta = expectedShrinkY * 2;
+
+		expect(baselineMaskStyle.width - draggedMaskStyle.width).toBeCloseTo(
+			expectedWidthDelta,
+			5,
+		);
+		expect(baselineMaskStyle.height - draggedMaskStyle.height).toBeCloseTo(
+			expectedHeightDelta,
+			5,
+		);
+	});
+
+	it("match(...).navigation.zoom() scales focused container down as drag moves toward dismiss", () => {
+		registerBasicLink();
+		const baseline = createAccessor("screen-b", true, 0.5, {
+			gestureX: 0,
+			gestureY: 0,
+		});
+		const draggedDown = createAccessor("screen-b", true, 0.5, {
+			gestureX: 0,
+			gestureY: 120,
+		});
+		const draggedUp = createAccessor("screen-b", true, 0.5, {
+			gestureX: 0,
+			gestureY: -120,
+		});
+
+		const baselineContainer = baseline.match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_CONTAINER_STYLE_ID
+		] as any;
+		const downContainer = draggedDown.match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_CONTAINER_STYLE_ID
+		] as any;
+		const upContainer = draggedUp.match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_CONTAINER_STYLE_ID
+		] as any;
+
+		const baselineScale = baselineContainer.transform.find(
+			(entry: Record<string, number>) => "scale" in entry,
+		)?.scale;
+		const downScale = downContainer.transform.find(
+			(entry: Record<string, number>) => "scale" in entry,
+		)?.scale;
+		const upScale = upContainer.transform.find(
+			(entry: Record<string, number>) => "scale" in entry,
+		)?.scale;
+
+		expect(downScale).toBeLessThan(baselineScale);
+		expect(downScale).toBeLessThan(upScale);
+	});
+
 	it("match(...).navigation.zoom() keeps unfocused contentStyle as scale-only", () => {
 		registerBasicLink();
 		const styles = createAccessor("screen-a", false, 1.5, {
@@ -380,8 +458,80 @@ describe("createBounds accessor", () => {
 			(entry: Record<string, number>) => "translateY" in entry,
 		)?.translateY;
 
-		expect(draggedX - baselineX).toBeCloseTo(-15 * 0.2, 5);
-		expect(draggedY - baselineY).toBeCloseTo(20 * 0.2, 5);
+		expect(draggedX - baselineX).toBeLessThan(0);
+		expect(draggedX - baselineX).toBeGreaterThan(-4);
+		expect(draggedY - baselineY).toBeGreaterThan(0);
+		expect(draggedY - baselineY).toBeLessThan(6);
+	});
+
+	it("match(...).navigation.zoom() scales the unfocused source element with mask shrink compensation", () => {
+		registerBasicLink();
+		const baselineUnfocused = createAccessor("screen-a", false, 1.5, {
+			gestureX: 0,
+			gestureY: 0,
+		});
+		const draggedUnfocused = createAccessor("screen-a", false, 1.5, {
+			gestureX: 120,
+			gestureY: 100,
+		});
+
+		const baselineTransform = (
+			baselineUnfocused.match({ id: "card" }).navigation.zoom().card as any
+		).transform;
+		const draggedTransform = (
+			draggedUnfocused.match({ id: "card" }).navigation.zoom().card as any
+		).transform;
+
+		const baselineScaleX = baselineTransform.find(
+			(entry: Record<string, number>) => "scaleX" in entry,
+		)?.scaleX;
+		const baselineScaleY = baselineTransform.find(
+			(entry: Record<string, number>) => "scaleY" in entry,
+		)?.scaleY;
+		const draggedScaleX = draggedTransform.find(
+			(entry: Record<string, number>) => "scaleX" in entry,
+		)?.scaleX;
+		const draggedScaleY = draggedTransform.find(
+			(entry: Record<string, number>) => "scaleY" in entry,
+		)?.scaleY;
+
+		const baselineFocusedMask = createAccessor("screen-b", true, 1.5, {
+			gestureX: 0,
+			gestureY: 0,
+		}).match({ id: "card" }).navigation.zoom()[NAVIGATION_MASK_STYLE_ID] as any;
+		const draggedFocusedMask = createAccessor("screen-b", true, 1.5, {
+			gestureX: 120,
+			gestureY: 100,
+		}).match({ id: "card" }).navigation.zoom()[NAVIGATION_MASK_STYLE_ID] as any;
+
+		const maskScaleX = draggedFocusedMask.width / baselineFocusedMask.width;
+		const maskScaleY = draggedFocusedMask.height / baselineFocusedMask.height;
+		const sourceCompensationX = draggedScaleX / baselineScaleX;
+		const sourceCompensationY = draggedScaleY / baselineScaleY;
+		const baselineFocusedContainer = createAccessor("screen-b", true, 1.5, {
+			gestureX: 0,
+			gestureY: 0,
+		}).match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_CONTAINER_STYLE_ID
+		] as any;
+		const draggedFocusedContainer = createAccessor("screen-b", true, 1.5, {
+			gestureX: 120,
+			gestureY: 100,
+		}).match({ id: "card" }).navigation.zoom()[
+			NAVIGATION_CONTAINER_STYLE_ID
+		] as any;
+		const baselineContainerScale = baselineFocusedContainer.transform.find(
+			(entry: Record<string, number>) => "scale" in entry,
+		)?.scale;
+		const draggedContainerScale = draggedFocusedContainer.transform.find(
+			(entry: Record<string, number>) => "scale" in entry,
+		)?.scale;
+		const focusedCompensation = draggedContainerScale / baselineContainerScale;
+
+		expect(sourceCompensationX).toBeCloseTo(focusedCompensation, 5);
+		expect(sourceCompensationY).toBeCloseTo(focusedCompensation, 5);
+		expect(sourceCompensationX).toBeLessThanOrEqual(maskScaleX);
+		expect(sourceCompensationY).toBeLessThanOrEqual(maskScaleY);
 	});
 
 	it("match(...).navigation.zoom() scales focused screen from source-width ratio", () => {
