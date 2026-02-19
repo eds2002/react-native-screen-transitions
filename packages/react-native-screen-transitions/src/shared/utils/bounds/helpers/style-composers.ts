@@ -3,7 +3,7 @@ import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
 } from "../types/geometry";
-import type { BoundsOptions } from "../types/options";
+import type { BoundsAnchor, BoundsOptions } from "../types/options";
 import { interpolateClamped } from "./interpolate";
 
 /**
@@ -36,23 +36,94 @@ type ContentComposeParams = {
 	computeOptions: BoundsOptions;
 };
 
+const getAnchorPoint = (
+	bounds: MeasuredDimensions,
+	anchor: BoundsAnchor = "center",
+): { x: number; y: number } => {
+	"worklet";
+
+	const { pageX, pageY, width, height } = bounds;
+
+	switch (anchor) {
+		case "topLeading":
+			return { x: pageX, y: pageY };
+		case "top":
+			return { x: pageX + width / 2, y: pageY };
+		case "topTrailing":
+			return { x: pageX + width, y: pageY };
+		case "leading":
+			return { x: pageX, y: pageY + height / 2 };
+		case "center":
+			return { x: pageX + width / 2, y: pageY + height / 2 };
+		case "trailing":
+			return { x: pageX + width, y: pageY + height / 2 };
+		case "bottomLeading":
+			return { x: pageX, y: pageY + height };
+		case "bottom":
+			return { x: pageX + width / 2, y: pageY + height };
+		case "bottomTrailing":
+			return { x: pageX + width, y: pageY + height };
+	}
+};
+
+const getAnchorOffset = ({
+	width,
+	height,
+	anchor,
+}: {
+	width: number;
+	height: number;
+	anchor: BoundsAnchor;
+}): { x: number; y: number } => {
+	"worklet";
+
+	switch (anchor) {
+		case "topLeading":
+			return { x: 0, y: 0 };
+		case "top":
+			return { x: width / 2, y: 0 };
+		case "topTrailing":
+			return { x: width, y: 0 };
+		case "leading":
+			return { x: 0, y: height / 2 };
+		case "center":
+			return { x: width / 2, y: height / 2 };
+		case "trailing":
+			return { x: width, y: height / 2 };
+		case "bottomLeading":
+			return { x: 0, y: height };
+		case "bottom":
+			return { x: width / 2, y: height };
+		case "bottomTrailing":
+			return { x: width, y: height };
+	}
+};
+
 export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 	"worklet";
-	const { start, end, geometry, progress, ranges, computeOptions } = params;
+	const { start, end, progress, ranges, computeOptions } = params;
+	const anchor = computeOptions.anchor ?? "center";
+	const startAnchor = getAnchorPoint(start, anchor);
+	const endAnchor = getAnchorPoint(end, anchor);
 
-	const width = geometry.entering
-		? interpolateClamped(progress, ranges, [start.width, end.width])
-		: interpolateClamped(progress, ranges, [end.width, start.width]);
-	const height = geometry.entering
-		? interpolateClamped(progress, ranges, [start.height, end.height])
-		: interpolateClamped(progress, ranges, [end.height, start.height]);
+	const width = interpolateClamped(progress, ranges, [start.width, end.width]);
+	const height = interpolateClamped(progress, ranges, [
+		start.height,
+		end.height,
+	]);
 
-	const translateX = geometry.entering
-		? interpolateClamped(progress, ranges, [start.pageX, end.pageX])
-		: interpolateClamped(progress, ranges, [end.pageX, start.pageX]);
-	const translateY = geometry.entering
-		? interpolateClamped(progress, ranges, [start.pageY, end.pageY])
-		: interpolateClamped(progress, ranges, [end.pageY, start.pageY]);
+	const anchorX = interpolateClamped(progress, ranges, [
+		startAnchor.x,
+		endAnchor.x,
+	]);
+	const anchorY = interpolateClamped(progress, ranges, [
+		startAnchor.y,
+		endAnchor.y,
+	]);
+	const anchorOffset = getAnchorOffset({ width, height, anchor });
+
+	const translateX = anchorX - anchorOffset.x;
+	const translateY = anchorY - anchorOffset.y;
 
 	if (computeOptions.raw) {
 		return {
@@ -73,22 +144,29 @@ export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 	"worklet";
 	const { start, end, geometry, progress, ranges, computeOptions } = params;
+	const anchor = computeOptions.anchor ?? "center";
+	const startAnchor = getAnchorPoint(start, anchor);
+	const endAnchor = getAnchorPoint(end, anchor);
+	const baseX = geometry.entering ? end.pageX : start.pageX;
+	const baseY = geometry.entering ? end.pageY : start.pageY;
 
-	const translateX = geometry.entering
-		? interpolateClamped(progress, ranges, [geometry.dx, 0])
-		: interpolateClamped(progress, ranges, [0, -geometry.dx]);
+	const width = interpolateClamped(progress, ranges, [start.width, end.width]);
+	const height = interpolateClamped(progress, ranges, [
+		start.height,
+		end.height,
+	]);
+	const anchorX = interpolateClamped(progress, ranges, [
+		startAnchor.x,
+		endAnchor.x,
+	]);
+	const anchorY = interpolateClamped(progress, ranges, [
+		startAnchor.y,
+		endAnchor.y,
+	]);
+	const anchorOffset = getAnchorOffset({ width, height, anchor });
 
-	const translateY = geometry.entering
-		? interpolateClamped(progress, ranges, [geometry.dy, 0])
-		: interpolateClamped(progress, ranges, [0, -geometry.dy]);
-
-	const width = geometry.entering
-		? interpolateClamped(progress, ranges, [start.width, end.width])
-		: interpolateClamped(progress, ranges, [end.width, start.width]);
-
-	const height = geometry.entering
-		? interpolateClamped(progress, ranges, [start.height, end.height])
-		: interpolateClamped(progress, ranges, [end.height, start.height]);
+	const translateX = anchorX - (baseX + anchorOffset.x);
+	const translateY = anchorY - (baseY + anchorOffset.y);
 
 	if (computeOptions.raw) {
 		return {

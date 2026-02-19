@@ -12,13 +12,11 @@ export type {
 	BoundEntry,
 	BoundsAccessor,
 	BoundsLink,
-	BoundsMatchAccessor,
-	BoundsMatchParams,
-	BoundsMatchStyleOptions,
 	BoundsMethod,
 	BoundsNavigationAccessor,
 	BoundsNavigationOptions,
 	BoundsNavigationPreset,
+	BoundsStyleOptions,
 } from "./bounds.types";
 export type {
 	ActivationArea,

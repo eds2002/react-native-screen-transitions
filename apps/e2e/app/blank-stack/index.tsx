@@ -72,7 +72,7 @@ const TEST_FLOWS = [
 	{
 		id: "zoom",
 		title: "Zoom (Navigation)",
-		description: "bounds.match(...).navigation.zoom() with auto mask host",
+		description: "bounds({ id }).navigation.zoom() with auto mask host",
 	},
 	{
 		id: "bounds",

@@ -10,7 +10,7 @@ export default function ZoomIndex() {
 		<SafeAreaView style={styles.container} edges={[]}>
 			<ScreenHeader
 				title="Zoom"
-				subtitle="bounds.match(...).navigation.zoom()"
+				subtitle="bounds({ id }).navigation.zoom()"
 			/>
 			<View style={styles.list}>
 				{ZOOM_ITEMS.map((item) => (

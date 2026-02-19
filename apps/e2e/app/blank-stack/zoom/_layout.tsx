@@ -35,7 +35,7 @@ export default function ZoomLayout() {
 							return {};
 						}
 
-						const navigationStyles = bounds.match({ id }).navigation.zoom({
+						const navigationStyles = bounds({ id }).navigation.zoom({
 							scaleMode: "uniform",
 							maskBorderRadius: 28,
 						});

@@ -147,7 +147,7 @@ export interface ScreenInterpolationProps {
 	snapIndex: number;
 
 	/**
-	 * Function that provides access to bounds style helpers for shared element transitions.
+	 * Function that provides access to bounds helpers for shared screen transitions.
 	 */
 	bounds: BoundsAccessor;
 

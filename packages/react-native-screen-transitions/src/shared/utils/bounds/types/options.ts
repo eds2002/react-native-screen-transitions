@@ -108,10 +108,10 @@ export type BoundsOptions = {
 	method?: BoundsMethod;
 
 	/**
-	 * The space to use to compute the bounds.
+	 * Coordinate space selection.
 	 *
-	 * - "relative": the bounds are computed with relative deltas, constrained by parent layout
-	 * - "absolute": the bounds are computed with absolute coordinates, unconstrained by parent layout
+	 * For `bounds({ ... })` element styles, space is normalized to `"relative"`.
+	 * `"absolute"` is reserved for internal navigation helpers (e.g. mask geometry).
 	 * @default "relative"
 	 */
 	space?: BoundsSpace;

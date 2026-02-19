@@ -17,7 +17,6 @@ export type BoundaryConfig = {
 	scaleMode?: BoundsScaleMode;
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
 	method?: BoundsMethod;
-	space?: "relative" | "absolute";
 };
 
 export type Snapshot = {

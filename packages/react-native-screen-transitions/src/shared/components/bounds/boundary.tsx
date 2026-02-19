@@ -22,7 +22,7 @@ type BoundaryRole = "source" | "destination";
 
 type BoundaryConfigProps = Pick<
 	BoundsOptions,
-	"anchor" | "scaleMode" | "target" | "method" | "space"
+	"anchor" | "scaleMode" | "target" | "method"
 >;
 
 export interface BoundaryProps
@@ -47,7 +47,7 @@ export interface BoundaryProps
 	 * based on whether a matching boundary is found on the next screen.
 	 *
 	 * Use `role="source"` when your destination does not render a matching
-	 * boundary (for example with `bounds.match(...).navigation.zoom()`).
+	 * boundary (for example with `bounds({ id }).navigation.zoom()`).
 	 * In this mode, source bounds are still captured when transitioning away,
 	 * even if no destination match is found.
 	 *
@@ -476,7 +476,6 @@ const BoundaryComponent = ({
 	scaleMode,
 	target,
 	method,
-	space,
 	style,
 	onLayout,
 	...rest
@@ -500,8 +499,7 @@ const BoundaryComponent = ({
 			anchor === undefined &&
 			scaleMode === undefined &&
 			target === undefined &&
-			method === undefined &&
-			space === undefined
+			method === undefined
 		) {
 			return undefined;
 		}
@@ -511,9 +509,8 @@ const BoundaryComponent = ({
 			scaleMode,
 			target,
 			method,
-			space,
 		};
-	}, [anchor, scaleMode, target, method, space]);
+	}, [anchor, scaleMode, target, method]);
 
 	const isAnimating = AnimationStore.getAnimation(
 		currentScreenKey,

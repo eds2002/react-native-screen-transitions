@@ -1,4 +1,3 @@
-import { interpolate } from "react-native-reanimated";
 import {
 	NAVIGATION_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
@@ -6,6 +5,7 @@ import {
 } from "../../../../constants";
 import { BoundStore } from "../../../../stores/bounds.store";
 import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
+import { interpolateClamped } from "../../helpers/interpolate";
 import type { BoundsOptions } from "../../types/options";
 import {
 	getClosingFade,
@@ -108,7 +108,7 @@ export const buildZoomNavigationStyles = ({
 
 	const isClosing = activeClosing !== 0;
 	const focusedFade = getClosingFade(currentProgress, isClosing);
-	const unfocusedScale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
+	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.95]);
 	const gestureX = activeGestureX;
 	const gestureY = activeGestureY;
 	const rawMaskWidth = toNumber(maskRaw.width);

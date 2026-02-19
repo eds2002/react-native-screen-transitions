@@ -498,7 +498,6 @@ describe("BoundStore boundary presence", () => {
 			scaleMode: "uniform",
 			target: "fullscreen",
 			method: "content",
-			space: "absolute",
 		});
 
 		expect(BoundStore.getBoundaryConfig("card", "screen-a")).toEqual({
@@ -506,7 +505,6 @@ describe("BoundStore boundary presence", () => {
 			scaleMode: "uniform",
 			target: "fullscreen",
 			method: "content",
-			space: "absolute",
 		});
 	});
 

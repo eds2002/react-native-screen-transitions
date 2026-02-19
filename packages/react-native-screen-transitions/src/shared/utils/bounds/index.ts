@@ -14,7 +14,6 @@ import type {
 import type {
 	BoundsAccessor,
 	BoundsLink,
-	BoundsMatchStyleOptions,
 	BoundsNavigationOptions,
 } from "../../types/bounds.types";
 import type { Layout } from "../../types/screen.types";
@@ -219,10 +218,12 @@ export const createBounds = (
 		id,
 		group,
 		overrides,
+		mode = "style",
 	}: {
 		id?: string;
 		group?: string;
 		overrides?: Partial<BoundsOptions>;
+		mode?: "style" | "navigation";
 	}): BoundsOptions => {
 		"worklet";
 		const tag = resolveTag({ id, group });
@@ -232,13 +233,21 @@ export const createBounds = (
 				? BoundStore.getBoundaryConfig(tag, currentScreenKey)
 				: null;
 
-		return {
+		const resolved = {
 			...DEFAULT_BOUNDS_OPTIONS,
 			...(boundaryConfig ?? {}),
 			...(overrides ?? {}),
 			id: tag ?? "",
 			group,
 		};
+
+		// Element-level bounds style composition always uses relative space.
+		// Absolute space is reserved for internal navigation helpers (masking).
+		if (mode === "style") {
+			resolved.space = "relative";
+		}
+
+		return resolved;
 	};
 
 	const compute = (resolvedOptions: BoundsOptions) => {
@@ -286,9 +295,27 @@ export const createBounds = (
 							...(overrides ?? {}),
 							raw: true,
 						},
+						mode: "navigation",
 					}),
 				) as Record<string, unknown>,
 		});
+	};
+
+	const createNavigationAccessor = (id?: string, group?: string) => {
+		"worklet";
+
+		const resolvedId = id ?? "";
+
+		return {
+			hero: (options?: BoundsNavigationOptions) => {
+				"worklet";
+				return navigationStyles(resolvedId, group, "hero", options);
+			},
+			zoom: (options?: BoundsNavigationOptions) => {
+				"worklet";
+				return navigationStyles(resolvedId, group, "zoom", options);
+			},
+		};
 	};
 
 	const boundsFunction = (params?: BoundsOptions) => {
@@ -297,41 +324,25 @@ export const createBounds = (
 			id: params?.id,
 			group: params?.group,
 			overrides: params,
+			mode: "style",
 		});
 
-		return compute(resolved);
+		const computed = compute(resolved) as Record<string, unknown>;
+		const navigation = createNavigationAccessor(params?.id, params?.group);
+		const target = Object.isExtensible(computed) ? computed : { ...computed };
+
+		Object.defineProperty(target, "navigation", {
+			value: navigation,
+			enumerable: false,
+			configurable: true,
+		});
+
+		return target as typeof computed & { navigation: typeof navigation };
 	};
 
-	const match = (params: { id: string; group?: string }) => {
+	const getSnapshot = (tag: string, key?: string): Snapshot | null => {
 		"worklet";
-		const { id, group } = params;
-
-		return {
-			style: (options?: BoundsMatchStyleOptions) => {
-				"worklet";
-				const resolved = resolveComputeOptions({
-					id,
-					group,
-					overrides: { ...(options ?? {}), id, group },
-				});
-
-				return compute(resolved);
-			},
-			navigation: {
-				hero: (options?: BoundsNavigationOptions) => {
-					"worklet";
-					return navigationStyles(id, group, "hero", options);
-				},
-				zoom: (options?: BoundsNavigationOptions) => {
-					"worklet";
-					return navigationStyles(id, group, "zoom", options);
-				},
-			},
-		};
-	};
-
-	const getSnapshot = (tag: string, key: string): Snapshot | null => {
-		"worklet";
+		if (!key) return null;
 		return BoundStore.getSnapshot(tag, key);
 	};
 
@@ -403,7 +414,6 @@ export const createBounds = (
 	};
 
 	return Object.assign(boundsFunction, {
-		match,
 		getSnapshot,
 		getLink,
 		interpolateStyle,

@@ -29,7 +29,7 @@ export default function ZoomDetail() {
 						This screen uses the new composed API:
 					</Text>
 					<Text style={styles.codeLine}>
-						bounds.match({`{ id }`}).navigation.zoom()
+						bounds({`{ id }`}).navigation.zoom()
 					</Text>
 					<Text style={styles.sectionBody}>
 						The mask host is injected automatically by the container when the

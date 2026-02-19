@@ -25,12 +25,11 @@ export type BoundsLink = {
 	destination: BoundEntry | null;
 };
 
-export type BoundsMatchParams = Pick<BoundsOptions, "id" | "group">;
-export type BoundsMatchStyleOptions = Omit<BoundsOptions, "id" | "group">;
+export type BoundsStyleOptions = Omit<BoundsOptions, "id" | "group">;
 
 export type BoundsNavigationPreset = "hero" | "zoom";
 
-export type BoundsNavigationOptions = BoundsMatchStyleOptions & {
+export type BoundsNavigationOptions = BoundsStyleOptions & {
 	maskBorderRadius?: number;
 };
 
@@ -39,16 +38,15 @@ export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationOptions) => TransitionInterpolatedStyle;
 };
 
-export type BoundsMatchAccessor = {
-	style: <T extends BoundsMatchStyleOptions = BoundsMatchStyleOptions>(
-		options?: T,
-	) => BoundsOptionsResult<T & BoundsOptions>;
+type BoundsBoundNavigationAccessor = {
 	navigation: BoundsNavigationAccessor;
 };
 
+type BoundsCallResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
+	BoundsBoundNavigationAccessor;
+
 export type BoundsAccessor = {
-	<T extends BoundsOptions>(options: T): BoundsOptionsResult<T>;
-	match: (params: BoundsMatchParams) => BoundsMatchAccessor;
+	<T extends BoundsOptions>(options: T): BoundsCallResult<T>;
 	getSnapshot: (id: string, key?: string) => Snapshot | null;
 	getLink: (id: string) => BoundsLink | null;
 	interpolateStyle: (

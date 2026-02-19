@@ -4,6 +4,10 @@ import {
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
+import {
+	NAVIGATION_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_STYLE_ID,
+} from "../constants";
 import type { ScreenTransitionConfig } from "../types/screen.types";
 import { DefaultSpec } from "./specs";
 
@@ -247,7 +251,6 @@ export const SharedIGImage = ({
 			const normX = active.gesture.normalizedX;
 			const normY = active.gesture.normalizedY;
 
-			// animations for both bounds
 			const dragX = interpolate(
 				normX,
 				[-1, 0, 1],
@@ -263,24 +266,24 @@ export const SharedIGImage = ({
 			const dragXScale = interpolate(normX, [0, 1], [1, 0.8]);
 			const dragYScale = interpolate(normY, [0, 1], [1, 0.8]);
 
-			const boundValues = bounds({
+			const navigationStyles = bounds({
 				id: sharedBoundTag,
-				method: focused ? "content" : "transform",
+			}).navigation.zoom({
 				scaleMode: "uniform",
-				raw: true,
 			});
+			const sourceStyle = navigationStyles[sharedBoundTag] as
+				| Record<string, unknown>
+				| undefined;
+			const containerStyle = navigationStyles[NAVIGATION_CONTAINER_STYLE_ID] as
+				| Record<string, unknown>
+				| undefined;
+			const maskStyle = navigationStyles[NAVIGATION_MASK_STYLE_ID] as
+				| Record<string, unknown>
+				| undefined;
 
-			// focused specific animations
 			if (focused) {
-				const maskedValues = bounds({
-					id: sharedBoundTag,
-					space: "absolute",
-					target: "fullscreen",
-					method: "size",
-					raw: true,
-				});
-
 				return {
+					...navigationStyles,
 					backdropStyle: {
 						backgroundColor: "black",
 						opacity: interpolate(progress, [0, 1], [0, 0.5]),
@@ -293,39 +296,37 @@ export const SharedIGImage = ({
 							{ scale: dragYScale },
 						],
 					},
-
-					_ROOT_CONTAINER: {
-						transform: [
-							{ translateX: boundValues.translateX || 0 },
-							{ translateY: boundValues.translateY || 0 },
-							//@ts-expect-error
-							{ scale: boundValues.scale || 1 },
-						],
-					},
-					_ROOT_MASKED: {
-						width: maskedValues.width,
-						height: maskedValues.height,
-						transform: [
-							{ translateX: maskedValues.translateX || 0 },
-							{ translateY: maskedValues.translateY || 0 },
-						],
-						borderRadius: interpolate(progress, [0, 1], [0, 24]),
-					},
+					[NAVIGATION_CONTAINER_STYLE_ID]: containerStyle
+						? {
+								...containerStyle,
+								transform: [
+									...(((containerStyle.transform as any[]) ?? []) as any[]),
+									{ translateX: dragX * 0.2 },
+									{ translateY: dragY * 0.2 },
+								],
+							}
+						: undefined,
+					[NAVIGATION_MASK_STYLE_ID]: maskStyle
+						? {
+								...maskStyle,
+								borderRadius: interpolate(progress, [0, 1], [0, 24]),
+							}
+						: undefined,
 				};
 			}
 
 			return {
+				...navigationStyles,
 				contentStyle: {
+					...(navigationStyles.contentStyle ?? {}),
 					pointerEvents: current.gesture.isDismissing ? "none" : "auto",
 				},
 				[sharedBoundTag]: {
+					...(sourceStyle ?? {}),
 					transform: [
 						{ translateX: dragX || 0 },
 						{ translateY: dragY || 0 },
-						{ translateX: boundValues.translateX || 0 },
-						{ translateY: boundValues.translateY || 0 },
-						{ scaleX: boundValues.scaleX || 1 },
-						{ scaleY: boundValues.scaleY || 1 },
+						...(((sourceStyle?.transform as any[]) ?? []) as any[]),
 						{ scale: dragXScale },
 						{ scale: dragYScale },
 					],
@@ -379,11 +380,6 @@ export const SharedAppleMusic = ({
 			const normY = active.gesture.normalizedY;
 			const initialDirection = active.gesture.direction;
 
-			/**
-			 * ===============================
-			 * Animations for both bounds
-			 * ===============================
-			 */
 			const xResistance = initialDirection === "horizontal" ? 0.7 : 0.4;
 			const yResistance = initialDirection === "vertical" ? 0.7 : 0.4;
 
@@ -405,13 +401,18 @@ export const SharedAppleMusic = ({
 			const dragXScale = interpolate(normX, [0, 1], xScaleOuput);
 			const dragYScale = interpolate(normY, [0, 1], yScaleOuput);
 
-			const boundValues = bounds({
+			const navigationStyles = bounds({
 				id: sharedBoundTag,
-				method: focused ? "content" : "transform",
+			}).navigation.zoom({
 				anchor: "top",
 				scaleMode: "uniform",
-				raw: true,
 			});
+			const sourceStyle = navigationStyles[sharedBoundTag] as
+				| Record<string, unknown>
+				| undefined;
+			const maskStyle = navigationStyles[NAVIGATION_MASK_STYLE_ID] as
+				| Record<string, unknown>
+				| undefined;
 
 			const opacity = interpolate(
 				progress,
@@ -420,21 +421,7 @@ export const SharedAppleMusic = ({
 				"clamp",
 			);
 
-			/**
-			 * ===============================
-			 * Focused specific animations
-			 * ===============================
-			 */
 			if (focused) {
-				const maskedValues = bounds({
-					id: sharedBoundTag,
-					space: "absolute",
-					method: "size",
-					target: "fullscreen",
-					raw: true,
-				});
-
-				// Apple Music style drop shadow that increases with drag magnitude
 				const dragMagnitude = Math.max(Math.abs(normX), Math.abs(normY));
 				const shadowOpacity = interpolate(
 					dragMagnitude,
@@ -469,6 +456,7 @@ export const SharedAppleMusic = ({
 				};
 
 				return {
+					...navigationStyles,
 					contentStyle: {
 						pointerEvents: current.animating ? "none" : "auto",
 						transform: [
@@ -480,50 +468,27 @@ export const SharedAppleMusic = ({
 						opacity,
 						...(platform === "ios" ? IOSShadowStyle : AndroidShadowStyle),
 					},
-					_ROOT_CONTAINER: {
-						transform: [
-							{ translateX: boundValues.translateX || 0 },
-							{ translateY: boundValues.translateY || 0 },
-							//@ts-expect-error
-							{ scale: boundValues.scale || 1 },
-						],
-					},
-					_ROOT_MASKED: {
-						width: maskedValues.width,
-						height: maskedValues.height,
-						transform: [
-							{ translateX: maskedValues.translateX || 0 },
-							{ translateY: maskedValues.translateY || 0 },
-						],
-						borderRadius: interpolate(progress, [0, 1], [0, 24]),
-					},
+					[NAVIGATION_MASK_STYLE_ID]: maskStyle
+						? {
+								...maskStyle,
+								borderRadius: interpolate(progress, [0, 1], [0, 24]),
+							}
+						: undefined,
 				};
 			}
-
-			/**
-			 * ===============================
-			 * Unfocused specific animations
-			 * ===============================
-			 */
-
-			const scaledBoundTranslateX = (boundValues.translateX || 0) * dragXScale;
-			const scaledBoundTranslateY = (boundValues.translateY || 0) * dragYScale;
-			const scaledBoundScaleX = (boundValues.scaleX || 1) * dragXScale;
-			const scaledBoundScaleY = (boundValues.scaleY || 1) * dragYScale;
 
 			const contentScale = interpolate(progress, [1, 2], [1, 0.9], "clamp");
 
 			return {
+				...navigationStyles,
 				[sharedBoundTag]: {
+					...(sourceStyle ?? {}),
 					transform: [
 						{ translateX: dragX || 0 },
 						{ translateY: dragY || 0 },
-						{ translateX: scaledBoundTranslateX },
-						{ translateY: scaledBoundTranslateY },
+						...(((sourceStyle?.transform as any[]) ?? []) as any[]),
 						{ scale: dragXScale },
 						{ scale: dragYScale },
-						{ scaleX: scaledBoundScaleX },
-						{ scaleY: scaledBoundScaleY },
 					],
 					opacity,
 					zIndex: current.animating ? 999 : -1,
@@ -578,23 +543,21 @@ export const SharedXImage = ({
 		}) => {
 			"worklet";
 
-			// twitter doesn't animate the unfocused screen
 			if (!focused) return {};
 
-			const boundValues = bounds({
+			const navigationStyles = bounds({
 				id: sharedBoundTag,
-				method: "transform",
-				raw: true,
-			});
+			}).navigation.zoom();
+			const maskStyle = navigationStyles[NAVIGATION_MASK_STYLE_ID] as
+				| Record<string, unknown>
+				| undefined;
 
-			// content styles
 			const dragY = interpolate(
 				current.gesture.normalizedY,
 				[-1, 0, 1],
 				[-screen.height, 0, screen.height],
 			);
 
-			// dynamically changes direction based on the drag direction
 			const contentY = interpolate(
 				progress,
 				[0, 1],
@@ -609,27 +572,14 @@ export const SharedXImage = ({
 
 			const borderRadius = interpolate(current.progress, [0, 1], [12, 0]);
 
-			// bound styles - only enter animation
-			const x = !current.closing ? boundValues.translateX : 0;
-			const y = !current.closing ? boundValues.translateY : 0;
-			const scaleX = !current.closing ? boundValues.scaleX : 1;
-			const scaleY = !current.closing ? boundValues.scaleY : 1;
-
 			return {
-				[sharedBoundTag]: {
-					transform: [
-						{
-							translateX: x,
-						},
-						{
-							translateY: y,
-						},
-						{ scaleX: scaleX },
-						{ scaleY: scaleY },
-					],
-					borderRadius,
-					overflow: "hidden",
-				},
+				...navigationStyles,
+				[NAVIGATION_MASK_STYLE_ID]: maskStyle
+					? {
+							...maskStyle,
+							borderRadius,
+						}
+					: undefined,
 				contentStyle: {
 					transform: [{ translateY: contentY }, { translateY: dragY }],
 					pointerEvents: current.animating ? "none" : "auto",

@@ -1,6 +1,6 @@
 # react-native-screen-transitions
 
-Customizable screen transitions for React Native. Build gesture-driven, shared element, and fully custom animations with a simple API.
+Customizable screen transitions for React Native. Build gesture-driven, shared screen transitions, and fully custom animations with a simple API.
 
 | iOS                                                                                                                                     | Android                                                                                                                    |
 | --------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -9,7 +9,7 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 ## Features
 
 - **Full Animation Control** – Define exactly how screens enter, exit, and respond to gestures
-- **Shared Elements** – Smooth transitions between screens using the Bounds API
+- **Shared Screen Transitions (SST)** – Smooth cross-screen transitions with `bounds({ id }).navigation.zoom()`
 - **Gesture Support** – Swipe-to-dismiss with edge or full-screen activation
 - **Stack Progress** – Track animation progress across the entire stack
 - **Ready-Made Presets** – Instagram, Apple Music, X (Twitter) style transitions included
@@ -19,14 +19,14 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 | Use Case | This Library | Alternative |
 |----------|--------------|-------------|
 | Custom transitions (slide, zoom, fade variations) | Yes | `@react-navigation/stack` works too |
-| Shared element transitions | **Yes** | Limited options elsewhere |
+| Shared screen transitions (SST) | **Yes** | Limited options elsewhere |
 | Multi-stop sheets (bottom, top, side) with snap points | **Yes** | Dedicated sheet libraries |
 | Gesture-driven animations (drag to dismiss, elastic) | **Yes** | Requires custom implementation |
 | Instagram/Apple Music/Twitter-style transitions | **Yes** | Custom implementation |
 | Simple push/pop with platform defaults | Overkill | `@react-navigation/native-stack` |
 | Maximum raw performance on low-end devices | Not ideal | `@react-navigation/native-stack` |
 
-**Choose this library when** you need custom animations, shared elements, or gesture-driven transitions that go beyond platform defaults.
+**Choose this library when** you need custom animations, shared screen transitions, or gesture-driven transitions that go beyond platform defaults.
 
 **Choose native-stack when** you want platform-native transitions with zero configuration and maximum performance on low-end Android devices.
 
@@ -113,7 +113,7 @@ Use built-in presets for common transitions:
 | `DraggableCard()`                      | Multi-directional drag with scaling     |
 | `ElasticCard()`                        | Elastic drag with overlay               |
 | `SharedIGImage({ sharedBoundTag })`    | Instagram-style shared image            |
-| `SharedAppleMusic({ sharedBoundTag })` | Apple Music-style shared element        |
+| `SharedAppleMusic({ sharedBoundTag })` | Apple Music-style shared screen transition |
 | `SharedXImage({ sharedBoundTag })`     | X (Twitter)-style image transition      |
 
 ---
@@ -442,7 +442,7 @@ transitionSpec: {
 
 ---
 
-## Shared Elements (Bounds API)
+## Shared Screen Transitions (SST)
 
 Animate elements between screens by tagging them.
 
@@ -465,24 +465,26 @@ Animate elements between screens by tagging them.
 </Transition.View>
 ```
 
-### 3. Use in Interpolator
+### 3. Use SST in Interpolator
 
 ```tsx
 screenStyleInterpolator: ({ bounds }) => {
   "worklet";
-  return {
-    avatar: bounds({ id: "avatar", method: "transform" }),
-  };
+  return bounds({ id: "avatar" }).navigation.zoom({
+    scaleMode: "uniform",
+  });
 };
 ```
 
-### Bounds Options
+`bounds({ id })` still supports low-level style composition for advanced cases, but `navigation.zoom()` is the recommended SST path.
+
+### Bounds Options (Advanced)
 
 | Option      | Values                             | Description                   |
 | ----------- | ---------------------------------- | ----------------------------- |
 | `id`        | string                             | The `sharedBoundTag` to match |
 | `method`    | `"transform"` `"size"` `"content"` | How to animate                |
-| `space`     | `"relative"` `"absolute"`          | Coordinate space              |
+| `space`     | `"relative"` `"absolute"`          | Advanced: element styles normalize to relative; absolute is for internal navigation masking |
 | `scaleMode` | `"match"` `"none"` `"uniform"`     | Aspect ratio handling         |
 | `raw`       | boolean                            | Return raw values             |
 
@@ -771,7 +773,7 @@ options={{
 
 ## Masked View Setup
 
-Required for `SharedIGImage` and `SharedAppleMusic` presets. The masked view creates the "reveal" effect where content expands from the shared element.
+Optional for custom mask-driven transitions. Use this when you need manual `_ROOT_MASKED` / `_ROOT_CONTAINER` clipping flows beyond SST navigation zoom.
 
 > **Note**: Requires native code. Will not work in Expo Go.
 
@@ -875,7 +877,7 @@ export default function RootLayout() {
 
 1. `Transition.Pressable` measures its bounds on press and stores them with the tag
 2. `Transition.View` on the destination registers as the target for that tag
-3. `Transition.MaskedView` clips content to the animating shared element bounds
+3. `Transition.MaskedView` clips content to the animating transition bounds
 4. The preset interpolates position, size, and mask for a seamless expand/collapse effect
 
 ---
