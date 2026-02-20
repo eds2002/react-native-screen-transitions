@@ -1,26 +1,11 @@
 import { BoundStore } from "../../../../stores/bounds.store";
-import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
 import type { BoundsNavigationOptions } from "../../../../types/bounds.types";
-import { interpolateClamped } from "../../helpers/interpolate";
 import type { BoundsOptions } from "../../types/options";
 import type { ResolveTag } from "./types";
-
-export const NO_NAVIGATION_STYLE = Object.freeze(
-	{},
-) as TransitionInterpolatedStyle;
 
 export const toNumber = (value: unknown, fallback = 0): number => {
 	"worklet";
 	return typeof value === "number" ? value : fallback;
-};
-
-export const getClosingFade = (progress: number, isClosing: boolean) => {
-	"worklet";
-	if (!isClosing) {
-		return 1;
-	}
-
-	return interpolateClamped(progress, [0, 1], [0, 1]);
 };
 
 export const resolveNavigationConfig = ({

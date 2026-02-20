@@ -2,20 +2,15 @@ import { interpolate } from "react-native-reanimated";
 import {
 	EPSILON,
 	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
 	NAVIGATION_MASK_STYLE_ID,
+	NO_STYLES,
 } from "../../../../constants";
 import { BoundStore } from "../../../../stores/bounds.store";
 import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
 import { interpolateClamped } from "../../helpers/interpolate";
 import type { BoundsOptions } from "../../types/options";
-import {
-	getClosingFade,
-	NO_NAVIGATION_STYLE,
-	resolveNavigationConfig,
-	toNumber,
-} from "./helpers";
+import { resolveNavigationConfig, toNumber } from "./helpers";
 import type { BuildNavigationStylesParams } from "./types";
 
 const getZoomContentTarget = ({
@@ -103,7 +98,8 @@ export const buildZoomNavigationStyles = ({
 		resolveTag,
 		defaultAnchor: "top",
 	});
-	if (!resolvedConfig) return NO_NAVIGATION_STYLE;
+
+	if (!resolvedConfig) return NO_STYLES;
 
 	const { resolvedTag, sharedOptions, explicitTarget } = resolvedConfig;
 
@@ -146,7 +142,6 @@ export const buildZoomNavigationStyles = ({
 
 	if (focused) {
 		return {
-			[NAVIGATION_MASK_HOST_FLAG_STYLE_ID]: {},
 			[NAVIGATION_CONTAINER_STYLE_ID]: {
 				opacity: focusedFade,
 				transform: [
