@@ -152,16 +152,13 @@ export default function BoundsSyncLayout() {
 				name="zoom/[id]"
 				options={{
 					gestureEnabled: true,
-					gestureDirection: [
-						"vertical",
-						"vertical-inverted",
-						"horizontal",
-					],
+					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
+					releaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: navigationZoomInterpolator,
 					transitionSpec: {
-						open: Transition.Specs.IOSZoomSpec,
-						close: Transition.Specs.IOSZoomSpec,
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
 					},
 				}}
 			/>

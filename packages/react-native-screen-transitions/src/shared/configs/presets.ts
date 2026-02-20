@@ -380,6 +380,11 @@ export const SharedAppleMusic = ({
 			const normY = active.gesture.normalizedY;
 			const initialDirection = active.gesture.direction;
 
+			/**
+			 * ===============================
+			 * Animations for both bounds
+			 * ===============================
+			 */
 			const xResistance = initialDirection === "horizontal" ? 0.7 : 0.4;
 			const yResistance = initialDirection === "vertical" ? 0.7 : 0.4;
 
@@ -401,18 +406,13 @@ export const SharedAppleMusic = ({
 			const dragXScale = interpolate(normX, [0, 1], xScaleOuput);
 			const dragYScale = interpolate(normY, [0, 1], yScaleOuput);
 
-			const navigationStyles = bounds({
+			const boundValues = bounds({
 				id: sharedBoundTag,
-			}).navigation.zoom({
+				method: focused ? "content" : "transform",
 				anchor: "top",
 				scaleMode: "uniform",
+				raw: true,
 			});
-			const sourceStyle = navigationStyles[sharedBoundTag] as
-				| Record<string, unknown>
-				| undefined;
-			const maskStyle = navigationStyles[NAVIGATION_MASK_STYLE_ID] as
-				| Record<string, unknown>
-				| undefined;
 
 			const opacity = interpolate(
 				progress,
@@ -421,7 +421,21 @@ export const SharedAppleMusic = ({
 				"clamp",
 			);
 
+			/**
+			 * ===============================
+			 * Focused specific animations
+			 * ===============================
+			 */
 			if (focused) {
+				const maskedValues = bounds({
+					id: sharedBoundTag,
+					space: "absolute",
+					method: "size",
+					target: "fullscreen",
+					raw: true,
+				});
+
+				// Apple Music style drop shadow that increases with drag magnitude
 				const dragMagnitude = Math.max(Math.abs(normX), Math.abs(normY));
 				const shadowOpacity = interpolate(
 					dragMagnitude,
@@ -456,7 +470,6 @@ export const SharedAppleMusic = ({
 				};
 
 				return {
-					...navigationStyles,
 					contentStyle: {
 						pointerEvents: current.animating ? "none" : "auto",
 						transform: [
@@ -468,27 +481,50 @@ export const SharedAppleMusic = ({
 						opacity,
 						...(platform === "ios" ? IOSShadowStyle : AndroidShadowStyle),
 					},
-					[NAVIGATION_MASK_STYLE_ID]: maskStyle
-						? {
-								...maskStyle,
-								borderRadius: interpolate(progress, [0, 1], [0, 24]),
-							}
-						: undefined,
+					_ROOT_CONTAINER: {
+						transform: [
+							{ translateX: boundValues.translateX || 0 },
+							{ translateY: boundValues.translateY || 0 },
+							//@ts-expect-error
+							{ scale: boundValues.scale || 1 },
+						],
+					},
+					_ROOT_MASKED: {
+						width: maskedValues.width,
+						height: maskedValues.height,
+						transform: [
+							{ translateX: maskedValues.translateX || 0 },
+							{ translateY: maskedValues.translateY || 0 },
+						],
+						borderRadius: interpolate(progress, [0, 1], [0, 24]),
+					},
 				};
 			}
+
+			/**
+			 * ===============================
+			 * Unfocused specific animations
+			 * ===============================
+			 */
+
+			const scaledBoundTranslateX = (boundValues.translateX || 0) * dragXScale;
+			const scaledBoundTranslateY = (boundValues.translateY || 0) * dragYScale;
+			const scaledBoundScaleX = (boundValues.scaleX || 1) * dragXScale;
+			const scaledBoundScaleY = (boundValues.scaleY || 1) * dragYScale;
 
 			const contentScale = interpolate(progress, [1, 2], [1, 0.9], "clamp");
 
 			return {
-				...navigationStyles,
 				[sharedBoundTag]: {
-					...(sourceStyle ?? {}),
 					transform: [
 						{ translateX: dragX || 0 },
 						{ translateY: dragY || 0 },
-						...(((sourceStyle?.transform as any[]) ?? []) as any[]),
+						{ translateX: scaledBoundTranslateX },
+						{ translateY: scaledBoundTranslateY },
 						{ scale: dragXScale },
 						{ scale: dragYScale },
+						{ scaleX: scaledBoundScaleX },
+						{ scaleY: scaledBoundScaleY },
 					],
 					opacity,
 					zIndex: current.animating ? 999 : -1,

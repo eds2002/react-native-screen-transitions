@@ -191,6 +191,7 @@ export const createBounds = (
 	props: Omit<ScreenInterpolationProps, "bounds">,
 ): BoundsAccessor => {
 	"worklet";
+
 	const resolveTag = ({
 		id,
 		group,
@@ -277,14 +278,7 @@ export const createBounds = (
 			group,
 			preset,
 			navigationOptions,
-			focused: props.focused,
-			progress: props.progress,
-			currentProgress: props.current?.progress ?? 1,
-			currentRouteKey: props.current?.route.key,
-			screenLayout: props.layouts.screen,
-			activeClosing: props.active?.closing ?? 0,
-			activeGestureX: props.active?.gesture?.x ?? 0,
-			activeGestureY: props.active?.gesture?.y ?? 0,
+			props,
 			resolveTag,
 			computeRaw: (overrides) =>
 				compute(

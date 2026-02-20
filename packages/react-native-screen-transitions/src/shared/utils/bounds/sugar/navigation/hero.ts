@@ -16,16 +16,18 @@ export const buildHeroNavigationStyles = ({
 	id,
 	group,
 	navigationOptions,
-	focused,
-	currentProgress,
-	currentRouteKey,
-	activeClosing,
-	activeGestureX,
-	activeGestureY,
+	props,
 	resolveTag,
 	computeRaw,
 }: BuildNavigationStylesParams): TransitionInterpolatedStyle => {
 	"worklet";
+
+	const focused = props.focused;
+	const currentProgress = props.current?.progress ?? 1;
+	const currentRouteKey = props.current?.route.key;
+	const activeClosing = props.active?.closing ?? 0;
+	const activeGestureX = props.active?.gesture?.x ?? 0;
+	const activeGestureY = props.active?.gesture?.y ?? 0;
 
 	const resolvedConfig = resolveNavigationConfig({
 		id,
