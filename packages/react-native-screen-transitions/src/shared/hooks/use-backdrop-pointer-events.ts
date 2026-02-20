@@ -7,6 +7,7 @@ type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 interface BackdropPointerEventsResult {
 	pointerEvents: "box-none" | undefined;
 	backdropBehavior: BackdropBehavior;
+	isBackdropActive: boolean;
 }
 
 /**
@@ -28,5 +29,8 @@ export function useBackdropPointerEvents(): BackdropPointerEventsResult {
 	const pointerEvents =
 		backdropBehavior === "passthrough" ? "box-none" : undefined;
 
-	return { pointerEvents, backdropBehavior };
+	const isBackdropActive =
+		backdropBehavior === "dismiss" || backdropBehavior === "collapse";
+
+	return { pointerEvents, backdropBehavior, isBackdropActive };
 }

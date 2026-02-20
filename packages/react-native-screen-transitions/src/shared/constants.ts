@@ -19,6 +19,7 @@ export const NAVIGATION_CONTAINER_STYLE_ID = "_NAVIGATION_ROOT_CONTAINER";
  * Styles
  */
 export const NO_STYLES = Object.freeze({});
+export const NO_PROPS = Object.freeze({});
 
 /**
  * Default gesture values
