@@ -111,11 +111,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 			return {};
 		}
 
-		const navigationStyles = bounds({ id }).navigation.zoom({
-			scaleMode: "uniform",
-			maskBorderRadius: 28,
-		});
-
+		const navigationStyles = bounds({ id }).navigation.zoom();
 		return {
 			...navigationStyles,
 			overlayStyle: {

@@ -3,6 +3,10 @@ export type BoundsSyncZoomItem = {
 	title: string;
 	subtitle: string;
 	color: string;
+	/** Dark variant of color used as the detail screen background */
+	bgColor: string;
+	/** Description shown on the detail screen */
+	description: string;
 	/** Width multiplier relative to a single grid column (1 = half, 2 = full width) */
 	cols: 1 | 2;
 	/** Height in points */
@@ -10,89 +14,113 @@ export type BoundsSyncZoomItem = {
 };
 
 export const BOUNDS_SYNC_ZOOM_ITEMS: BoundsSyncZoomItem[] = [
-	// Row 1: two squares
 	{
 		id: "atlas",
 		title: "Atlas Board",
-		subtitle: "Square source",
+		subtitle: "Plan your next adventure",
 		color: "#3A86FF",
+		bgColor: "#0A1A33",
+		description:
+			"Pin destinations, map routes, and organize your travel itinerary all in one place. Atlas Board keeps your wanderlust organized.",
 		cols: 1,
 		height: 170,
 	},
 	{
 		id: "ember",
 		title: "Ember Notes",
-		subtitle: "Square source",
+		subtitle: "Thoughts that spark ideas",
 		color: "#FB5607",
+		bgColor: "#2D1204",
+		description:
+			"Capture fleeting thoughts before they fade. Ember Notes uses a timeline-first approach so your best ideas are always within reach.",
 		cols: 1,
 		height: 170,
 	},
-	// Row 2: full-width banner
 	{
 		id: "horizon",
 		title: "Horizon",
-		subtitle: "Wide banner source",
+		subtitle: "Daily weather at a glance",
 		color: "#8338EC",
+		bgColor: "#1A0D30",
+		description:
+			"A minimal weather companion that shows you what matters — temperature, chance of rain, and golden hour. Nothing more, nothing less.",
 		cols: 2,
 		height: 120,
 	},
-	// Row 3: tall + short
 	{
 		id: "jade",
 		title: "Jade Gallery",
-		subtitle: "Tall source",
+		subtitle: "Your photo library, curated",
 		color: "#2A9D8F",
+		bgColor: "#0B2320",
+		description:
+			"Jade uses on-device intelligence to surface your best shots, group memories by moment, and build galleries that tell a story.",
 		cols: 1,
 		height: 260,
 	},
 	{
 		id: "coral",
 		title: "Coral Drift",
-		subtitle: "Short source",
+		subtitle: "Ambient soundscapes",
 		color: "#E63946",
+		bgColor: "#2B0B0E",
+		description:
+			"Ocean waves, forest rain, crackling fire. Coral Drift generates infinite ambient soundscapes that adapt to your environment.",
 		cols: 1,
 		height: 110,
 	},
-	// Row 4: small + wide
 	{
 		id: "mint",
 		title: "Mint",
-		subtitle: "Tiny square",
+		subtitle: "Split bills instantly",
 		color: "#06D6A0",
+		bgColor: "#032B20",
+		description:
+			"Scan a receipt, tag your friends, and settle up. Mint makes splitting the check painless — no awkward math required.",
 		cols: 1,
 		height: 90,
 	},
 	{
 		id: "slate",
 		title: "Slate Docs",
-		subtitle: "Wide half-width",
+		subtitle: "Markdown meets design",
 		color: "#457B9D",
+		bgColor: "#0E1A22",
+		description:
+			"Write in markdown, publish something beautiful. Slate Docs bridges the gap between developer notes and polished documentation.",
 		cols: 1,
 		height: 140,
 	},
-	// Row 5: full-width tall
 	{
 		id: "dusk",
 		title: "Dusk Player",
-		subtitle: "Full-width tall source",
+		subtitle: "Music for the late hours",
 		color: "#1D3557",
+		bgColor: "#080E18",
+		description:
+			"A music player designed for nighttime listening. Warm EQ, crossfade between tracks, and a UI that won't blind you at 2am.",
 		cols: 2,
 		height: 200,
 	},
-	// Row 6: three-ish feel (two uneven)
 	{
 		id: "peach",
 		title: "Peach",
-		subtitle: "Compact",
+		subtitle: "Recipes worth saving",
 		color: "#FF9F1C",
+		bgColor: "#2D1C06",
+		description:
+			"Clip recipes from anywhere, scale ingredients for your group size, and follow step-by-step with hands-free voice mode.",
 		cols: 1,
 		height: 130,
 	},
 	{
 		id: "noir",
 		title: "Noir",
-		subtitle: "Tall narrow",
+		subtitle: "Monochrome photo editor",
 		color: "#2B2D42",
+		bgColor: "#0D0D14",
+		description:
+			"Strip the color, find the emotion. Noir gives you precise control over contrast, grain, and tone curves for stunning black and white edits.",
 		cols: 1,
 		height: 220,
 	},

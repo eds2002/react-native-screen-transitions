@@ -11,8 +11,11 @@ export default function BoundsSyncZoomDetail() {
 	const item = getBoundsSyncZoomItemById(id);
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
-			<ScreenHeader title="Zoom Detail" subtitle={item.title} />
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: item.bgColor }]}
+			edges={["top"]}
+		>
+			<ScreenHeader title={item.title} subtitle={item.subtitle} />
 
 			<Transition.ScrollView contentContainerStyle={styles.content}>
 				<View
@@ -22,20 +25,22 @@ export default function BoundsSyncZoomDetail() {
 					]}
 				>
 					<Text style={styles.heroTitle}>{item.title}</Text>
+					<Text style={styles.heroSubtitle}>{item.subtitle}</Text>
 				</View>
 
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Navigation Zoom</Text>
-					<Text style={styles.sectionBody}>
-						This route is intentionally separate from the source/destination
-						element sync harness.
-					</Text>
+				<View style={[styles.section, { borderColor: `${item.color}22` }]}>
+					<Text style={styles.sectionTitle}>About</Text>
+					<Text style={styles.sectionBody}>{item.description}</Text>
+				</View>
+
+				<View style={[styles.section, { borderColor: `${item.color}22` }]}>
+					<Text style={styles.sectionTitle}>Transition</Text>
 					<Text style={styles.codeLine}>
-						bounds({`{ id }`}).navigation.zoom()
+						bounds({`{ id: "${item.id}" }`}).navigation.zoom()
 					</Text>
 					<Text style={styles.sectionBody}>
-						Swipe down to dismiss and observe reverse zoom back into the source
-						boundary.
+						Swipe in any direction to dismiss and observe the reverse zoom back
+						into the source boundary.
 					</Text>
 				</View>
 			</Transition.ScrollView>
@@ -46,12 +51,11 @@ export default function BoundsSyncZoomDetail() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#111111",
 	},
 	content: {
 		paddingHorizontal: 16,
 		paddingBottom: 40,
-		gap: 20,
+		gap: 16,
 	},
 	hero: {
 		height: 250,
@@ -66,12 +70,17 @@ const styles = StyleSheet.create({
 		fontWeight: "800",
 		color: "#fff",
 	},
+	heroSubtitle: {
+		marginTop: 4,
+		fontSize: 15,
+		fontWeight: "500",
+		color: "rgba(255,255,255,0.7)",
+	},
 	section: {
-		backgroundColor: "#1C1C1C",
+		backgroundColor: "rgba(255,255,255,0.04)",
 		borderRadius: 18,
 		padding: 16,
 		borderWidth: 1,
-		borderColor: "#2E2E2E",
 		gap: 8,
 	},
 	sectionTitle: {
@@ -81,12 +90,12 @@ const styles = StyleSheet.create({
 	},
 	sectionBody: {
 		fontSize: 14,
-		lineHeight: 20,
-		color: "#BDBDBD",
+		lineHeight: 22,
+		color: "rgba(255,255,255,0.65)",
 	},
 	codeLine: {
 		fontSize: 13,
-		color: "#F2F2F2",
+		color: "rgba(255,255,255,0.85)",
 		fontFamily: "Courier",
 	},
 });
