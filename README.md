@@ -9,10 +9,13 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 ## Features
 
 - **Full Animation Control** – Define exactly how screens enter, exit, and respond to gestures
-- **Shared Elements** – Smooth transitions between screens using the Bounds API
-- **Gesture Support** – Swipe-to-dismiss with edge or full-screen activation
+- **Shared Elements** – Smooth transitions between screens using `Transition.Boundary` and the Bounds API
+- **Navigation Bounds** – iOS-style zoom transitions with masked reveal effects via `bounds().navigation.zoom()`
+- **Gesture Support** – Swipe-to-dismiss with edge or full-screen activation, configurable velocity
+- **Animated Props** – Drive component-specific props (e.g., BlurView `intensity`) alongside styles
+- **Custom Layers** – `backgroundComponent` and `backdropComponent` with animated styles and props
 - **Stack Progress** – Track animation progress across the entire stack
-- **Ready-Made Presets** – Instagram, Apple Music, X (Twitter) style transitions included
+- **Ready-Made Presets** – Instagram, Apple Music, X (Twitter), zoom navigation style transitions included
 
 ## When to Use This Library
 
@@ -140,8 +143,10 @@ options={{
   screenStyleInterpolator: ({ progress }) => {
     "worklet";
     return {
-      contentStyle: {
-        opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+      content: {
+        style: {
+          opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+        },
       },
     };
   },
@@ -155,48 +160,77 @@ options={{
   screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
     "worklet";
     return {
-      contentStyle: {
-        transform: [{
-          translateX: interpolate(
-            progress,
-            [0, 1, 2],
-            [screen.width, 0, -screen.width * 0.3]
-          ),
-        }],
+      content: {
+        style: {
+          transform: [{
+            translateX: interpolate(
+              progress,
+              [0, 1, 2],
+              [screen.width, 0, -screen.width * 0.3]
+            ),
+          }],
+        },
       },
     };
   },
 }}
 ```
 
-### Slide from Bottom
+### Slide from Bottom with Backdrop
 
 ```tsx
 options={{
   screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
     "worklet";
     return {
-      contentStyle: {
-        transform: [{
-          translateY: interpolate(progress, [0, 1], [screen.height, 0]),
-        }],
+      content: {
+        style: {
+          transform: [{
+            translateY: interpolate(progress, [0, 1], [screen.height, 0]),
+          }],
+        },
+      },
+      backdrop: {
+        style: {
+          backgroundColor: "black",
+          opacity: interpolate(progress, [0, 1], [0, 0.5]),
+        },
       },
     };
   },
 }}
 ```
 
-### Return Styles
+### Return Format
 
-Your interpolator can return:
+Your interpolator returns a map of **slots**. Each slot can use shorthand styles or the explicit `{ style, props }` form:
 
 ```tsx
 return {
-  contentStyle: { ... },   // Main screen
-  backdropStyle: { ... },  // Semi-transparent backdrop
-  ["my-id"]: { ... },      // Specific element via styleId
+  content: { ... },          // Main screen content
+  backdrop: { ... },         // Backdrop layer between screens
+  background: { ... },       // Background component layer
+  ["my-id"]: { ... },        // Specific element via styleId
 };
 ```
+
+Each slot accepts two forms:
+
+```tsx
+// Shorthand — plain styles (auto-wrapped as { style: value })
+content: {
+  opacity: 0.5,
+  transform: [{ scale: 0.9 }],
+},
+
+// Explicit — separate style and props buckets
+content: {
+  style: { opacity: 0.5, transform: [{ scale: 0.9 }] },
+  props: { intensity: 80 },  // for useAnimatedProps (e.g., BlurView)
+},
+```
+
+> **Legacy format**: The flat `contentStyle`/`backdropStyle` format is still supported but deprecated. It will be auto-converted with a one-time warning in development.
 
 ### Animation Specs
 
@@ -230,19 +264,23 @@ options={{
 
 ### Gesture Options
 
-| Option                    | Description                                                              |
-| ------------------------- | ------------------------------------------------------------------------ |
-| `gestureEnabled`          | Enable swipe-to-dismiss (snap sheets: `false` blocks dismiss-to-0 only) |
-| `gestureDirection`        | Direction(s) for swipe gesture                                           |
-| `gestureActivationArea`   | Where gesture can start                                                  |
-| `gestureResponseDistance` | Pixel threshold for activation                                           |
-| `gestureVelocityImpact`   | How much velocity affects dismissal (default: 0.3)                       |
-| `gestureDrivesProgress`   | Whether gesture controls animation progress (default: true)              |
-| `snapVelocityImpact`      | How much velocity affects snap targeting (default: 0.1, lower = iOS-like)|
-| `expandViaScrollView`     | Allow expansion from ScrollView at boundary (default: true)               |
-| `gestureSnapLocked`       | Lock gesture-based snap movement to current snap point                   |
-| `backdropBehavior`        | Touch handling for backdrop area                                         |
-| `backdropComponent`       | Custom backdrop component (replaces default backdrop + press behavior)   |
+| Option                          | Description                                                              |
+| ------------------------------- | ------------------------------------------------------------------------ |
+| `gestureEnabled`                | Enable swipe-to-dismiss (snap sheets: `false` blocks dismiss-to-0 only) |
+| `gestureDirection`              | Direction(s) for swipe gesture                                           |
+| `gestureActivationArea`         | Where gesture can start                                                  |
+| `gestureResponseDistance`       | Pixel threshold for activation                                           |
+| `gestureVelocityImpact`        | How much velocity affects dismissal (default: 0.3)                       |
+| `gestureDrivesProgress`        | Whether gesture controls animation progress (default: true)              |
+| `snapVelocityImpact`           | How much velocity affects snap targeting (default: 0.1, lower = iOS-like)|
+| `gestureReleaseVelocityScale`  | Multiplier for post-release spring velocity (default: 1)                 |
+| `gestureReleaseVelocityMax`    | Cap on post-release spring velocity (default: 3.2)                       |
+| `expandViaScrollView`          | Allow expansion from ScrollView at boundary (default: true)              |
+| `gestureSnapLocked`            | Lock gesture-based snap movement to current snap point                   |
+| `backdropBehavior`             | Touch handling for backdrop area                                         |
+| `backdropComponent`            | Custom backdrop component, driven by interpolator `backdrop` slot        |
+| `backgroundComponent`          | Custom background component, driven by interpolator `background` slot    |
+| `maskEnabled`                  | Pre-mount masked view wrapper for navigation bounds masking              |
 
 ### Gesture Direction
 
@@ -333,7 +371,7 @@ Create multi-stop sheets that snap to defined positions. Works with any gesture 
 | `initialSnapIndex` | Index of initial snap point (default: 0)                             |
 | `gestureSnapLocked` | Locks gesture snapping to current point (programmatic `snapTo` still works) |
 | `backdropBehavior` | Touch handling: `"block"`, `"passthrough"`, `"dismiss"`, `"collapse"`|
-| `backdropComponent` | Custom backdrop component; replaces default backdrop + tap handling    |
+| `backdropComponent` | Custom backdrop component, driven by interpolator `backdrop` slot     |
 
 #### backdropBehavior Values
 
@@ -346,39 +384,69 @@ Create multi-stop sheets that snap to defined positions. Works with any gesture 
 
 #### Custom Backdrop Component
 
-Use `backdropComponent` when you want full control over backdrop visuals and interactions.
+Use `backdropComponent` to provide a custom component for the backdrop layer between screens (e.g., a `BlurView`).
 
-- When provided, it replaces the default backdrop entirely (including default tap behavior)
-- You are responsible for dismiss/collapse actions inside the custom component
-- `backdropBehavior` still controls container-level pointer event behavior
+- The library wraps your component with `Animated.createAnimatedComponent` internally
+- Animated styles and props are driven by the `backdrop` slot in your interpolator
+- `backdropBehavior` still controls the wrapping `Pressable` for dismiss/collapse handling
 
 ```tsx
-import { router } from "expo-router";
-import { Pressable } from "react-native";
-import Animated, { interpolate, useAnimatedStyle } from "react-native-reanimated";
-import { useScreenAnimation } from "react-native-screen-transitions";
-
-function SheetBackdrop() {
-  const animation = useScreenAnimation();
-
-  const style = useAnimatedStyle(() => ({
-    opacity: interpolate(animation.value.current.progress, [0, 1], [0, 0.4]),
-    backgroundColor: "#000",
-  }));
-
-  return (
-    <Pressable style={{ flex: 1 }} onPress={() => router.back()}>
-      <Animated.View style={[{ flex: 1 }, style]} />
-    </Pressable>
-  );
-}
+import { BlurView } from "expo-blur";
 
 <Stack.Screen
   name="Sheet"
   options={{
     snapPoints: [0.5, 1],
     backdropBehavior: "dismiss",
-    backdropComponent: SheetBackdrop,
+    backdropComponent: BlurView,
+    screenStyleInterpolator: ({ progress }) => {
+      "worklet";
+      return {
+        backdrop: {
+          style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+          props: { intensity: interpolate(progress, [0, 1], [0, 80]) },
+        },
+        content: {
+          style: {
+            transform: [{ translateY: interpolate(progress, [0, 1], [800, 0]) }],
+          },
+        },
+      };
+    },
+  }}
+/>
+```
+
+The `props` bucket is applied via `useAnimatedProps`, letting you animate component-specific properties like `BlurView`'s `intensity` or `SquircleView`'s `cornerRadius`.
+
+#### Custom Background Component
+
+Use `backgroundComponent` to replace the screen's content wrapper with a custom component (e.g., a `SquircleView` for smooth rounded corners).
+
+- Replaces the default `Animated.View` wrapper (does not nest inside it)
+- Receives content styles + background styles merged
+- Animated props are driven by the `background` slot in your interpolator
+
+```tsx
+import { SquircleView } from "react-native-figma-squircle";
+
+<Stack.Screen
+  name="Card"
+  options={{
+    backgroundComponent: SquircleView,
+    screenStyleInterpolator: ({ progress }) => {
+      "worklet";
+      return {
+        content: {
+          style: {
+            transform: [{ scale: interpolate(progress, [0, 1], [0.8, 1]) }],
+          },
+        },
+        background: {
+          props: { cornerRadius: 24, cornerSmoothing: 0.7 },
+        },
+      };
+    },
   }}
 />
 ```
@@ -413,8 +481,10 @@ screenStyleInterpolator: ({ snapIndex }) => {
   // snapIndex interpolates between snap point indices
   // e.g., 0.5 means halfway between snap point 0 and 1
   return {
-    contentStyle: {
-      opacity: interpolate(snapIndex, [0, 1], [0.5, 1]),
+    content: {
+      style: {
+        opacity: interpolate(snapIndex, [0, 1], [0.5, 1]),
+      },
     },
   };
 }
@@ -444,46 +514,130 @@ transitionSpec: {
 
 ## Shared Elements (Bounds API)
 
-Animate elements between screens by tagging them.
+Animate elements between screens by tagging them. There are two approaches: `Transition.Boundary` for declarative shared element transitions, and `sharedBoundTag` on `Transition.View`/`Transition.Pressable` for inline usage.
 
-### 1. Tag the Source
+### Transition.Boundary
+
+The recommended way to set up shared elements. Automatically handles measurement, matching, and lifecycle:
 
 ```tsx
+// Source screen — list item
+<Transition.Boundary
+  id="album-art"
+  group="albums"           // Optional: for lists/collections
+  role="source"            // Optional: explicit role
+  onPress={() => router.push("/details")}
+>
+  <Image source={album} style={{ width: 100, height: 100 }} />
+</Transition.Boundary>
+
+// Destination screen
+<Transition.Boundary id="album-art">
+  <Image source={album} style={{ width: 300, height: 300 }} />
+</Transition.Boundary>
+```
+
+#### Boundary Props
+
+| Prop        | Description                                                              |
+| ----------- | ------------------------------------------------------------------------ |
+| `id`        | Unique identifier for matching across screens                            |
+| `group`     | Group name for collection/list scenarios (tag becomes `group:id`)        |
+| `role`      | `"source"` or `"destination"` — auto-detected if omitted                 |
+| `enabled`   | Whether this boundary participates in matching (default: true)           |
+| `method`    | `"transform"` `"size"` `"content"` — how to animate                     |
+| `anchor`    | Alignment anchor point                                                   |
+| `scaleMode` | `"match"` `"none"` `"uniform"` — aspect ratio handling                   |
+| `target`    | Target for size calculations (e.g., `"fullscreen"`)                      |
+
+#### Groups
+
+For list/collection scenarios where multiple items share the same transition:
+
+```tsx
+{items.map((item) => (
+  <Transition.Boundary
+    key={item.id}
+    id={item.id}
+    group="photos"
+    onPress={() => router.push(`/photo/${item.id}`)}
+  >
+    <Image source={item.src} />
+  </Transition.Boundary>
+))}
+```
+
+Only the tapped item transitions. The library tracks which group member is active and handles re-measurement when focus changes.
+
+### Inline Shared Elements
+
+For simpler cases, use `sharedBoundTag` directly on `Transition.View` or `Transition.Pressable`:
+
+```tsx
+// Source
 <Transition.Pressable
   sharedBoundTag="avatar"
   onPress={() => navigation.navigate("Profile")}
 >
   <Image source={avatar} style={{ width: 50, height: 50 }} />
 </Transition.Pressable>
-```
 
-### 2. Tag the Destination
-
-```tsx
+// Destination
 <Transition.View sharedBoundTag="avatar">
   <Image source={avatar} style={{ width: 200, height: 200 }} />
 </Transition.View>
 ```
 
-### 3. Use in Interpolator
+### Using Bounds in Interpolators
 
 ```tsx
 screenStyleInterpolator: ({ bounds }) => {
   "worklet";
   return {
-    avatar: bounds({ id: "avatar", method: "transform" }),
+    "avatar": bounds({ id: "avatar", method: "transform" }),
   };
 };
 ```
+
+### Navigation Bounds (Zoom Transitions)
+
+For iOS-style zoom transitions where content expands from a source element with a masked reveal:
+
+```tsx
+<Stack.Screen
+  name="Detail"
+  options={{
+    maskEnabled: true,  // Required for masked reveal
+    screenStyleInterpolator: ({ bounds, progress, focused }) => {
+      "worklet";
+      if (!focused) return {};
+
+      return bounds({ id: "album-art" }).navigation.zoom({
+        scaleMode: "uniform",
+      });
+    },
+    transitionSpec: {
+      open: { stiffness: 1000, damping: 500, mass: 3, overshootClamping: true },
+      close: { stiffness: 1000, damping: 500, mass: 3, overshootClamping: true },
+    },
+  }}
+/>
+```
+
+`bounds().navigation.zoom()` returns a complete interpolator result with content, mask, and container styles. Set `maskEnabled: true` to pre-mount the masked view wrapper so it's ready from the first frame.
+
+> **Note**: Navigation bounds masking requires `@react-native-masked-view/masked-view` to be installed.
 
 ### Bounds Options
 
 | Option      | Values                             | Description                   |
 | ----------- | ---------------------------------- | ----------------------------- |
-| `id`        | string                             | The `sharedBoundTag` to match |
+| `id`        | string                             | The boundary id to match      |
 | `method`    | `"transform"` `"size"` `"content"` | How to animate                |
 | `space`     | `"relative"` `"absolute"`          | Coordinate space              |
 | `scaleMode` | `"match"` `"none"` `"uniform"`     | Aspect ratio handling         |
+| `anchor`    | string                             | Alignment anchor point        |
+| `target`    | `"fullscreen"` etc.                | Target for size calculations  |
 | `raw`       | boolean                            | Return raw values             |
 
 ---
@@ -524,13 +678,14 @@ const TabBar = ({ focusedIndex, progress }) => {
 
 ## Transition Components
 
-| Component               | Description                            |
-| ----------------------- | -------------------------------------- |
-| `Transition.View`       | Animated view with `sharedBoundTag`    |
-| `Transition.Pressable`  | Pressable that measures bounds         |
-| `Transition.ScrollView` | ScrollView with gesture coordination   |
-| `Transition.FlatList`   | FlatList with gesture coordination     |
-| `Transition.MaskedView` | For reveal effects (requires native)   |
+| Component               | Description                                              |
+| ----------------------- | -------------------------------------------------------- |
+| `Transition.Boundary`   | Declarative shared element with auto-matching and groups |
+| `Transition.View`       | Animated view with `sharedBoundTag` or `styleId`         |
+| `Transition.Pressable`  | Pressable that measures bounds on press                  |
+| `Transition.ScrollView` | ScrollView with gesture coordination                     |
+| `Transition.FlatList`   | FlatList with gesture coordination                       |
+| `Transition.MaskedView` | For reveal effects (requires native)                     |
 
 ---
 
@@ -669,7 +824,10 @@ screenStyleInterpolator: ({ progress }) => {
   "worklet";
   return {
     "hero-image": {
-      opacity: interpolate(progress, [0, 1], [0, 1]),
+      style: {
+        opacity: interpolate(progress, [0, 1], [0, 1]),
+        transform: [{ scale: interpolate(progress, [0, 1], [0.8, 1]) }],
+      },
     },
   };
 };
@@ -771,7 +929,7 @@ options={{
 
 ## Masked View Setup
 
-Required for `SharedIGImage` and `SharedAppleMusic` presets. The masked view creates the "reveal" effect where content expands from the shared element.
+Required for `SharedIGImage`, `SharedAppleMusic` presets, and `bounds().navigation.zoom()` transitions. The masked view creates the "reveal" effect where content expands from the shared element.
 
 > **Note**: Requires native code. Will not work in Expo Go.
 
@@ -873,9 +1031,9 @@ export default function RootLayout() {
 
 ### How It Works
 
-1. `Transition.Pressable` measures its bounds on press and stores them with the tag
-2. `Transition.View` on the destination registers as the target for that tag
-3. `Transition.MaskedView` clips content to the animating shared element bounds
+1. `Transition.Boundary` (or `Transition.Pressable`) measures its bounds and stores them with the tag
+2. `Transition.Boundary` (or `Transition.View`) on the destination registers as the target for that tag
+3. `Transition.MaskedView` (or `maskEnabled: true`) clips content to the animating shared element bounds
 4. The preset interpolates position, size, and mask for a seamless expand/collapse effect
 
 ---
