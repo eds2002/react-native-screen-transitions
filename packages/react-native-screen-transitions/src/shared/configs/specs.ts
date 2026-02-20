@@ -35,8 +35,8 @@ export const IOSZoomSpec: WithSpringConfig = {
 };
 
 export const FlingSpec: WithSpringConfig = {
-	damping: 20,
-	stiffness: 200,
+	damping: 24,
+	stiffness: 170,
 	mass: 1,
 	overshootClamping: false,
 };

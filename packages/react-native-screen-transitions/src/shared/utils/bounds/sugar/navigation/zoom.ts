@@ -90,8 +90,10 @@ export const buildZoomNavigationStyles = ({
 		[-screenLayout.height * yResistance, 0, screenLayout.height * yResistance],
 		"clamp",
 	);
-	const dragXScale = interpolate(normX, [0, 1], xScaleOuput, "clamp");
-	const dragYScale = interpolate(normY, [0, 1], yScaleOuput, "clamp");
+	const rawDragXScale = interpolate(normX, [0, 1], xScaleOuput, "clamp");
+	const rawDragYScale = interpolate(normY, [0, 1], yScaleOuput, "clamp");
+	const dragXScale = rawDragXScale ** 2;
+	const dragYScale = rawDragYScale ** 2;
 
 	const resolvedConfig = resolveNavigationConfig({
 		id,
