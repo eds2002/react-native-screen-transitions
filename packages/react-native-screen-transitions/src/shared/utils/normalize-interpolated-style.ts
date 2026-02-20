@@ -1,6 +1,6 @@
 import type {
 	NormalizedTransitionInterpolatedStyle,
-	TransitionSlotStyle,
+	NormalizedTransitionSlotStyle,
 } from "../types/animation.types";
 
 /**
@@ -23,7 +23,8 @@ export function normalizeInterpolatedStyle(raw: Record<string, any>): {
 	const hasLegacyKeys =
 		"contentStyle" in raw || "backdropStyle" in raw || "overlayStyle" in raw;
 
-	const normalized: Record<string, TransitionSlotStyle | undefined> = {};
+	const normalized: Record<string, NormalizedTransitionSlotStyle | undefined> =
+		{};
 
 	for (const key in raw) {
 		const value = raw[key];

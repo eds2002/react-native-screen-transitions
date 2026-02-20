@@ -185,6 +185,34 @@ export const ScreenContainer = memo(({ children }: Props) => {
 		);
 	}, [isNavigationMaskEnabled]);
 
+	const contentChildren = isNavigationMaskEnabled ? (
+		LazyMaskedView !== View ? (
+			<LazyMaskedView
+				style={styles.navigationMaskedRoot}
+				// @ts-expect-error masked-view package types are too strict here
+				maskElement={
+					<Animated.View
+						style={[styles.navigationMaskElement, animatedNavigationMaskStyle]}
+					/>
+				}
+			>
+				<Animated.View
+					style={[styles.navigationContainer, animatedNavigationContainerStyle]}
+				>
+					{children}
+				</Animated.View>
+			</LazyMaskedView>
+		) : (
+			<Animated.View
+				style={[styles.navigationContainer, animatedNavigationContainerStyle]}
+			>
+				{children}
+			</Animated.View>
+		)
+	) : (
+		children
+	);
+
 	return (
 		<View style={styles.container} pointerEvents={pointerEvents}>
 			{/* ── Backdrop layer (between screens) ── */}
@@ -207,56 +235,27 @@ export const ScreenContainer = memo(({ children }: Props) => {
 
 			{/* ── Content layer ── */}
 			<GestureDetector gesture={gestureContext!.panGesture}>
-				<Animated.View
-					style={[styles.content, animatedContentStyle]}
-					animatedProps={animatedContentProps}
-					pointerEvents={isBackdropActive ? "box-none" : pointerEvents}
-				>
-					{/* ── Background layer (inside content scope, behind children) ── */}
-					{AnimatedBackgroundComponent && (
-						<AnimatedBackgroundComponent
-							style={[StyleSheet.absoluteFillObject, animatedBackgroundStyle]}
-							animatedProps={animatedBackgroundProps}
-						/>
-					)}
-
-					{isNavigationMaskEnabled ? (
-						LazyMaskedView !== View ? (
-							<LazyMaskedView
-								style={styles.navigationMaskedRoot}
-								// @ts-expect-error masked-view package types are too strict here
-								maskElement={
-									<Animated.View
-										style={[
-											styles.navigationMaskElement,
-											animatedNavigationMaskStyle,
-										]}
-									/>
-								}
-							>
-								<Animated.View
-									style={[
-										styles.navigationContainer,
-										animatedNavigationContainerStyle,
-									]}
-								>
-									{children}
-								</Animated.View>
-							</LazyMaskedView>
-						) : (
-							<Animated.View
-								style={[
-									styles.navigationContainer,
-									animatedNavigationContainerStyle,
-								]}
-							>
-								{children}
-							</Animated.View>
-						)
-					) : (
-						children
-					)}
-				</Animated.View>
+				{AnimatedBackgroundComponent ? (
+					<AnimatedBackgroundComponent
+						style={[
+							styles.content,
+							animatedContentStyle,
+							animatedBackgroundStyle,
+						]}
+						animatedProps={animatedBackgroundProps}
+						pointerEvents={isBackdropActive ? "box-none" : pointerEvents}
+					>
+						{contentChildren}
+					</AnimatedBackgroundComponent>
+				) : (
+					<Animated.View
+						style={[styles.content, animatedContentStyle]}
+						animatedProps={animatedContentProps}
+						pointerEvents={isBackdropActive ? "box-none" : pointerEvents}
+					>
+						{contentChildren}
+					</Animated.View>
+				)}
 			</GestureDetector>
 		</View>
 	);

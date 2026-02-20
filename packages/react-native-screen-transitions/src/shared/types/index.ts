@@ -1,13 +1,17 @@
 export { FALSE, TRUE } from "../constants";
 export type {
+	AnimatedViewStyle,
 	AnimationConfig,
 	LegacyTransitionInterpolatedStyle,
+	NewTransitionInterpolatedStyle,
 	NormalizedTransitionInterpolatedStyle,
+	NormalizedTransitionSlotStyle,
 	OverlayInterpolationProps,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionState,
 	TransitionInterpolatedStyle,
+	TransitionSlotExplicit,
 	TransitionSlotStyle,
 	TransitionSpec,
 } from "./animation.types";

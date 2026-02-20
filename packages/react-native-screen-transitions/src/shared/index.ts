@@ -31,6 +31,7 @@ export {
 	useScreenState,
 } from "./hooks/navigation/use-screen-state";
 export type {
+	AnimatedViewStyle,
 	AnimationConfig,
 	BoundEntry,
 	BoundsLink,
@@ -39,7 +40,9 @@ export type {
 	BoundsNavigationPreset,
 	BoundsStyleOptions,
 	LegacyTransitionInterpolatedStyle,
+	NewTransitionInterpolatedStyle,
 	NormalizedTransitionInterpolatedStyle,
+	NormalizedTransitionSlotStyle,
 	OverlayInterpolationProps,
 	OverlayMode,
 	OverlayProps,
@@ -47,6 +50,7 @@ export type {
 	ScreenStyleInterpolator,
 	ScreenTransitionConfig,
 	TransitionInterpolatedStyle,
+	TransitionSlotExplicit,
 	TransitionSlotStyle,
 	TransitionSpec,
 } from "./types";
