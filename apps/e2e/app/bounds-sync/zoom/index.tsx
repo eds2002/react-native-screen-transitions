@@ -39,7 +39,7 @@ export default function BoundsSyncZoomIndex() {
 							>
 								<Transition.Boundary
 									id={item.id}
-									role="source"
+									mode="source"
 									style={[
 										styles.card,
 										{

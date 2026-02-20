@@ -8,10 +8,7 @@ import { ZOOM_ITEMS } from "./constants";
 export default function ZoomIndex() {
 	return (
 		<SafeAreaView style={styles.container} edges={[]}>
-			<ScreenHeader
-				title="Zoom"
-				subtitle="bounds({ id }).navigation.zoom()"
-			/>
+			<ScreenHeader title="Zoom" subtitle="bounds({ id }).navigation.zoom()" />
 			<View style={styles.list}>
 				{ZOOM_ITEMS.map((item) => (
 					<Pressable
@@ -20,7 +17,7 @@ export default function ZoomIndex() {
 					>
 						<Transition.Boundary
 							id={item.id}
-							role="source"
+							mode="source"
 							style={[styles.card, { backgroundColor: item.color }]}
 						>
 							<Text style={styles.title}>{item.title}</Text>

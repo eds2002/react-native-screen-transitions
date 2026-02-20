@@ -8,20 +8,12 @@ import {
 	SlideFromTop,
 	ZoomIn,
 } from "./presets";
-import {
-	DefaultSnapSpec,
-	DefaultSpec,
-	FlingSpec,
-	IOSSpec,
-	IOSZoomSpec,
-} from "./specs";
+import { DefaultSnapSpec, DefaultSpec, FlingSpec } from "./specs";
 
 export const Specs = {
 	DefaultSpec,
 	DefaultSnapSpec,
 	FlingSpec,
-	IOSSpec,
-	IOSZoomSpec,
 };
 
 export const Presets = {

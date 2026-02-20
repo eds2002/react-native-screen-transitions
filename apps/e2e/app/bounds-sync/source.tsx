@@ -46,8 +46,8 @@ export default function BoundsSyncSource() {
 	);
 
 	// For fullscreen/custom targets, the destination screen may not have a
-	// matching Boundary. Use role="source" to force measurement regardless.
-	const needsExplicitRole =
+	// matching Boundary. Use mode="source" to force measurement regardless.
+	const needsExplicitMode =
 		sourceBoundary?.target === "fullscreen" ||
 		typeof sourceBoundary?.target === "object";
 
@@ -68,7 +68,8 @@ export default function BoundsSyncSource() {
 				Concern: Element transition, not navigation transition
 			</Text>
 			<Text style={styles.anchorNoteText}>
-				Anchor selects the alignment point (e.g. center), not a fixed top-left lock.
+				Anchor selects the alignment point (e.g. center), not a fixed top-left
+				lock.
 			</Text>
 			<Text style={styles.anchorPairText}>
 				sourceAnchor: {sourceAnchor} | destinationAnchor: {destinationAnchor}
@@ -79,13 +80,13 @@ export default function BoundsSyncSource() {
 						router.push("/bounds-sync/destination" as never);
 					}}
 				>
-						<Transition.Boundary
-							id={BOUNDARY_TAG}
-							role={needsExplicitRole ? "source" : undefined}
-							method={sourceMethod}
-							target={sourceBoundary?.target}
-							anchor={sourceBoundary?.anchor}
-							scaleMode={sourceBoundary?.scaleMode}
+					<Transition.Boundary
+						id={BOUNDARY_TAG}
+						mode={needsExplicitMode ? "source" : undefined}
+						method={sourceMethod}
+						target={sourceBoundary?.target}
+						anchor={sourceBoundary?.anchor}
+						scaleMode={sourceBoundary?.scaleMode}
 						style={[
 							styles.box,
 							{
@@ -100,7 +101,7 @@ export default function BoundsSyncSource() {
 				</Pressable>
 
 				{/* Ghost outline showing where the destination will appear */}
-				{!needsExplicitRole && (
+				{!needsExplicitMode && (
 					<View
 						pointerEvents="none"
 						style={[
