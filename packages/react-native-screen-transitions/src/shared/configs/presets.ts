@@ -143,7 +143,6 @@ export const DraggableCard = (
 				current.gesture.normalizedY,
 				[-1, 1],
 				[-screen.height * 0.5, screen.height * 0.5],
-				"clamp",
 			);
 
 			/** Horizontal */
@@ -151,7 +150,6 @@ export const DraggableCard = (
 				current.gesture.normalizedX,
 				[-1, 1],
 				[-screen.width * 0.5, screen.width * 0.5],
-				"clamp",
 			);
 
 			return {
@@ -163,8 +161,8 @@ export const DraggableCard = (
 			};
 		},
 		transitionSpec: {
-			open: DefaultSpec,
-			close: DefaultSpec,
+			open: { ...DefaultSpec, overshootClamping: false },
+			close: { ...DefaultSpec, overshootClamping: false },
 		},
 		...config,
 	};
@@ -231,8 +229,8 @@ export const ElasticCard = (
 			};
 		},
 		transitionSpec: {
-			open: DefaultSpec,
-			close: DefaultSpec,
+			open: { ...DefaultSpec, overshootClamping: false },
+			close: { ...DefaultSpec, overshootClamping: false },
 		},
 		...config,
 	};
