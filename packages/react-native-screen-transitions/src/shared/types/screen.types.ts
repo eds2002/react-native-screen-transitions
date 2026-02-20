@@ -77,6 +77,14 @@ export type ScreenTransitionConfig = {
 	transitionSpec?: TransitionSpec;
 
 	/**
+	 * Pre-mounts the masked view wrapper so navigation bounds masking
+	 * (e.g. `bounds().navigation.zoom()`) is ready from the first frame.
+	 *
+	 * Requires `@react-native-masked-view/masked-view` to be installed.
+	 */
+	maskEnabled?: boolean;
+
+	/**
 	 * Controls whether swipe-to-dismiss is enabled.
 	 *
 	 * For screens with `snapPoints`, gesture-driven snapping between non-dismiss

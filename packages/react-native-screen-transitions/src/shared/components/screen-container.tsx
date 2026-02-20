@@ -1,18 +1,12 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
 import { StackActions } from "@react-navigation/native";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-	runOnJS,
-	runOnUI,
-	useAnimatedReaction,
-	useAnimatedStyle,
-} from "react-native-reanimated";
+import Animated, { runOnUI, useAnimatedStyle } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../configs/specs";
 import {
 	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
 	NAVIGATION_MASK_STYLE_ID,
 	NO_STYLES,
 } from "../constants";
@@ -24,6 +18,7 @@ import { AnimationStore } from "../stores/animation.store";
 import { GestureStore } from "../stores/gesture.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../utils/gesture/find-collapse-target";
+import { logger } from "../utils/logger";
 
 type Props = {
 	children: React.ReactNode;
@@ -37,14 +32,14 @@ try {
 	// optional peer dependency
 }
 
-let hasWarnedMissingMaskedViewDependency = false;
+let hasWarnedMissingMaskedView = false;
 
 export const ScreenContainer = memo(({ children }: Props) => {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useKeys();
 	const { pointerEvents, backdropBehavior } = useBackdropPointerEvents();
 	const gestureContext = useGestureContext();
-	const [isNavigationMaskEnabled, setNavigationMaskEnabled] = useState(false);
+	const isNavigationMaskEnabled = !!current.options.maskEnabled;
 
 	const BackdropComponent = current.options.backdropComponent;
 
@@ -132,24 +127,14 @@ export const ScreenContainer = memo(({ children }: Props) => {
 		);
 	});
 
-	useAnimatedReaction(
-		() => !!stylesMap.value[NAVIGATION_MASK_HOST_FLAG_STYLE_ID],
-		(enabled, previousEnabled) => {
-			"worklet";
-			if (enabled === previousEnabled) return;
-			runOnJS(setNavigationMaskEnabled)(enabled);
-		},
-		[stylesMap],
-	);
-
 	useEffect(() => {
 		if (!isNavigationMaskEnabled) return;
 		if (LazyMaskedView !== View) return;
-		if (!__DEV__ || hasWarnedMissingMaskedViewDependency) return;
+		if (hasWarnedMissingMaskedView) return;
 
-		hasWarnedMissingMaskedViewDependency = true;
-		console.warn(
-			"[react-native-screen-transitions] navigation bounds masking requires @react-native-masked-view/masked-view. Install it to enable full hero/zoom masking.",
+		hasWarnedMissingMaskedView = true;
+		logger.warn(
+			"maskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
 		);
 	}, [isNavigationMaskEnabled]);
 

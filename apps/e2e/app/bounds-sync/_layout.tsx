@@ -151,6 +151,7 @@ export default function BoundsSyncLayout() {
 			<BlankStack.Screen
 				name="zoom/[id]"
 				options={{
+					maskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.6,
