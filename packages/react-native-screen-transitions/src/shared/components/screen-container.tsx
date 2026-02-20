@@ -1,9 +1,13 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
 import { StackActions } from "@react-navigation/native";
-import { memo, useCallback, useEffect } from "react";
+import { memo, useCallback, useEffect, useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, { runOnUI, useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+	runOnUI,
+	useAnimatedProps,
+	useAnimatedStyle,
+} from "react-native-reanimated";
 import { DefaultSnapSpec } from "../configs/specs";
 import {
 	NAVIGATION_CONTAINER_STYLE_ID,
@@ -34,6 +38,8 @@ try {
 
 let hasWarnedMissingMaskedView = false;
 
+const NO_PROPS = Object.freeze({});
+
 export const ScreenContainer = memo(({ children }: Props) => {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useKeys();
@@ -42,6 +48,25 @@ export const ScreenContainer = memo(({ children }: Props) => {
 	const isNavigationMaskEnabled = !!current.options.maskEnabled;
 
 	const BackdropComponent = current.options.backdropComponent;
+	const BackgroundComponent = current.options.backgroundComponent;
+
+	// Memoize animated component wrappers so createAnimatedComponent is only called
+	// when the underlying component reference changes.
+	const AnimatedBackdropComponent = useMemo(
+		() =>
+			BackdropComponent
+				? Animated.createAnimatedComponent(BackdropComponent)
+				: null,
+		[BackdropComponent],
+	);
+
+	const AnimatedBackgroundComponent = useMemo(
+		() =>
+			BackgroundComponent
+				? Animated.createAnimatedComponent(BackgroundComponent)
+				: null,
+		[BackgroundComponent],
+	);
 
 	const isBackdropActive =
 		backdropBehavior === "dismiss" || backdropBehavior === "collapse";
@@ -105,26 +130,48 @@ export const ScreenContainer = memo(({ children }: Props) => {
 		}
 	}, [backdropBehavior, current, handleDismiss]);
 
+	// ── Content ──
 	const animatedContentStyle = useAnimatedStyle(() => {
 		"worklet";
-		return stylesMap.value.contentStyle || NO_STYLES;
+		return stylesMap.value.content?.style || NO_STYLES;
 	});
 
+	const animatedContentProps = useAnimatedProps(() => {
+		"worklet";
+		return stylesMap.value.content?.props ?? NO_PROPS;
+	});
+
+	// ── Navigation mask / container ──
 	const animatedNavigationContainerStyle = useAnimatedStyle(() => {
 		"worklet";
-		return stylesMap.value[NAVIGATION_CONTAINER_STYLE_ID] || NO_STYLES;
+		return stylesMap.value[NAVIGATION_CONTAINER_STYLE_ID]?.style || NO_STYLES;
 	});
 
 	const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 		"worklet";
-		return stylesMap.value[NAVIGATION_MASK_STYLE_ID] || NO_STYLES;
+		return stylesMap.value[NAVIGATION_MASK_STYLE_ID]?.style || NO_STYLES;
 	});
 
+	// ── Backdrop ──
 	const animatedBackdropStyle = useAnimatedStyle(() => {
 		"worklet";
-		return (
-			stylesMap.value.backdropStyle ?? stylesMap.value.overlayStyle ?? NO_STYLES
-		);
+		return stylesMap.value.backdrop?.style ?? NO_STYLES;
+	});
+
+	const animatedBackdropProps = useAnimatedProps(() => {
+		"worklet";
+		return stylesMap.value.backdrop?.props ?? NO_PROPS;
+	});
+
+	// ── Background ──
+	const animatedBackgroundStyle = useAnimatedStyle(() => {
+		"worklet";
+		return stylesMap.value.background?.style ?? NO_STYLES;
+	});
+
+	const animatedBackgroundProps = useAnimatedProps(() => {
+		"worklet";
+		return stylesMap.value.background?.props ?? NO_PROPS;
 	});
 
 	useEffect(() => {
@@ -140,24 +187,39 @@ export const ScreenContainer = memo(({ children }: Props) => {
 
 	return (
 		<View style={styles.container} pointerEvents={pointerEvents}>
-			{BackdropComponent ? (
-				<BackdropComponent />
-			) : (
-				<Pressable
-					style={StyleSheet.absoluteFillObject}
-					pointerEvents={isBackdropActive ? "auto" : "none"}
-					onPress={isBackdropActive ? handleBackdropPress : undefined}
-				>
+			{/* ── Backdrop layer (between screens) ── */}
+			<Pressable
+				style={StyleSheet.absoluteFillObject}
+				pointerEvents={isBackdropActive ? "auto" : "none"}
+				onPress={isBackdropActive ? handleBackdropPress : undefined}
+			>
+				{AnimatedBackdropComponent ? (
+					<AnimatedBackdropComponent
+						style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
+						animatedProps={animatedBackdropProps}
+					/>
+				) : (
 					<Animated.View
 						style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
 					/>
-				</Pressable>
-			)}
+				)}
+			</Pressable>
+
+			{/* ── Content layer ── */}
 			<GestureDetector gesture={gestureContext!.panGesture}>
 				<Animated.View
 					style={[styles.content, animatedContentStyle]}
+					animatedProps={animatedContentProps}
 					pointerEvents={isBackdropActive ? "box-none" : pointerEvents}
 				>
+					{/* ── Background layer (inside content scope, behind children) ── */}
+					{AnimatedBackgroundComponent && (
+						<AnimatedBackgroundComponent
+							style={[StyleSheet.absoluteFillObject, animatedBackgroundStyle]}
+							animatedProps={animatedBackgroundProps}
+						/>
+					)}
+
 					{isNavigationMaskEnabled ? (
 						LazyMaskedView !== View ? (
 							<LazyMaskedView

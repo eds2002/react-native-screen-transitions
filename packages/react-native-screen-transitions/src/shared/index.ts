@@ -38,6 +38,8 @@ export type {
 	BoundsNavigationOptions,
 	BoundsNavigationPreset,
 	BoundsStyleOptions,
+	LegacyTransitionInterpolatedStyle,
+	NormalizedTransitionInterpolatedStyle,
 	OverlayInterpolationProps,
 	OverlayMode,
 	OverlayProps,
@@ -45,5 +47,6 @@ export type {
 	ScreenStyleInterpolator,
 	ScreenTransitionConfig,
 	TransitionInterpolatedStyle,
+	TransitionSlotStyle,
 	TransitionSpec,
 } from "./types";

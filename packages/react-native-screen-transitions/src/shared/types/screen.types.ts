@@ -245,15 +245,45 @@ export type ScreenTransitionConfig = {
 	backdropBehavior?: "block" | "passthrough" | "dismiss" | "collapse";
 
 	/**
-	 * Custom component to render as the backdrop layer.
-	 * When provided, replaces the default backdrop entirely — including press handling.
+	 * Custom component to render as the backdrop layer (between screens).
 	 *
-	 * Use `useScreenAnimation()` inside the component to access animation values.
-	 * Use your navigation method of choice (e.g. `router.back()`) to handle dismissal.
+	 * The library wraps this component with `Animated.createAnimatedComponent` internally.
+	 * Animated styles and props are driven by the `backdrop` slot in the interpolator return value.
 	 *
-	 * `backdropBehavior` still controls container-level pointer events when this is set.
+	 * `backdropBehavior` still controls the wrapping Pressable for dismiss/collapse handling.
+	 *
+	 * @example
+	 * backdropComponent: BlurView,
+	 * screenStyleInterpolator: ({ progress }) => ({
+	 *   backdrop: {
+	 *     style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+	 *     props: { intensity: interpolate(progress, [0, 1], [0, 80]) },
+	 *   },
+	 * })
 	 *
 	 * @default undefined
 	 */
-	backdropComponent?: React.FC;
+	backdropComponent?: React.ComponentType<any>;
+
+	/**
+	 * Custom component to render as the screen's background layer.
+	 *
+	 * Renders inside the content animation scope (moves with the screen) as an
+	 * absolutely-positioned layer behind the screen's children.
+	 *
+	 * The library wraps this component with `Animated.createAnimatedComponent` internally.
+	 * Animated styles and props are driven by the `background` slot in the interpolator return value.
+	 *
+	 * @example
+	 * backgroundComponent: SquircleView,
+	 * screenStyleInterpolator: ({ progress }) => ({
+	 *   background: {
+	 *     style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+	 *     props: { cornerRadius: 24, cornerSmoothing: 0.7 },
+	 *   },
+	 * })
+	 *
+	 * @default undefined
+	 */
+	backgroundComponent?: React.ComponentType<any>;
 };

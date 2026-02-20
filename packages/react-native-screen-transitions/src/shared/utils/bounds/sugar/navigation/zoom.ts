@@ -143,25 +143,29 @@ export const buildZoomNavigationStyles = ({
 	if (focused) {
 		return {
 			[NAVIGATION_CONTAINER_STYLE_ID]: {
-				opacity: focusedFade,
-				transform: [
-					{ translateX: toNumber(contentRaw.translateX) + dragX },
-					{ translateY: toNumber(contentRaw.translateY) + dragY },
-					{ scale: toNumber(contentRaw.scale, 1) },
-					{ scale: dragXScale },
-					{ scale: dragYScale },
-				],
+				style: {
+					opacity: focusedFade,
+					transform: [
+						{ translateX: toNumber(contentRaw.translateX) + dragX },
+						{ translateY: toNumber(contentRaw.translateY) + dragY },
+						{ scale: toNumber(contentRaw.scale, 1) },
+						{ scale: dragXScale },
+						{ scale: dragYScale },
+					],
+				},
 			},
 			[NAVIGATION_MASK_STYLE_ID]: {
-				width: maskWidth,
-				height: maskHeight,
-				transform: [
-					{ translateX: toNumber(maskRaw.translateX) + dragX },
-					{ translateY: toNumber(maskRaw.translateY) + dragY },
-					{ scale: dragXScale },
-					{ scale: dragYScale },
-				],
-				borderRadius: 12,
+				style: {
+					width: maskWidth,
+					height: maskHeight,
+					transform: [
+						{ translateX: toNumber(maskRaw.translateX) + dragX },
+						{ translateY: toNumber(maskRaw.translateY) + dragY },
+						{ scale: dragXScale },
+						{ scale: dragYScale },
+					],
+					borderRadius: 12,
+				},
 			},
 		};
 	}
@@ -179,16 +183,20 @@ export const buildZoomNavigationStyles = ({
 	const compensatedGestureY = (dragY + scaleShiftY) / safeScale;
 
 	return {
-		contentStyle: {
-			transform: [{ scale: unfocusedScale }],
+		content: {
+			style: {
+				transform: [{ scale: unfocusedScale }],
+			},
 		},
 		[resolvedTag]: {
-			transform: [
-				{ translateX: toNumber(elementRaw.translateX) + compensatedGestureX },
-				{ translateY: toNumber(elementRaw.translateY) + compensatedGestureY },
-				{ scaleX: toNumber(elementRaw.scaleX, 1) * dragScale },
-				{ scaleY: toNumber(elementRaw.scaleY, 1) * dragScale },
-			],
+			style: {
+				transform: [
+					{ translateX: toNumber(elementRaw.translateX) + compensatedGestureX },
+					{ translateY: toNumber(elementRaw.translateY) + compensatedGestureY },
+					{ scaleX: toNumber(elementRaw.scaleX, 1) * dragScale },
+					{ scaleY: toNumber(elementRaw.scaleY, 1) * dragScale },
+				],
+			},
 		},
 	};
 };

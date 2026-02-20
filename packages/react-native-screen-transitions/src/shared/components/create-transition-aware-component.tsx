@@ -133,7 +133,7 @@ export function createTransitionAwareComponent<P extends object>(
 
 		const animatedRef = useAnimatedRef<View>();
 
-		const { associatedStyles } = useAssociatedStyles({
+		const { associatedStyles, associatedProps } = useAssociatedStyles({
 			id: sharedBoundTag || styleId,
 			style,
 			resetTransformOnUnset: !!sharedBoundTag,
@@ -153,6 +153,7 @@ export function createTransitionAwareComponent<P extends object>(
 						{...(rest as any)}
 						ref={animatedRef}
 						style={[style, associatedStyles]}
+						animatedProps={associatedProps}
 						onPress={captureActiveOnPress}
 						onLayout={runOnUI(handleInitialLayout)}
 						collapsable={!sharedBoundTag}

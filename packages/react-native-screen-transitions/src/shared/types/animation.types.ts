@@ -179,33 +179,52 @@ export type ScreenStyleInterpolator = (
 	props: ScreenInterpolationProps,
 ) => TransitionInterpolatedStyle;
 
-export type TransitionInterpolatedStyle = {
-	/**
-	 * Animated style for the main screen view. Styles are only applied when Transition.View is present.
-	 */
+/**
+ * A slot in the interpolated style map containing animated styles and/or animated props.
+ *
+ * - `style` is applied via `useAnimatedStyle` (transform, opacity, backgroundColor, etc.)
+ * - `props` is applied via `useAnimatedProps` (component-specific props like BlurView intensity)
+ */
+export type TransitionSlotStyle = {
+	/** Animated styles applied via useAnimatedStyle. */
+	style?: StyleProps;
+	/** Animated props applied via useAnimatedProps (e.g., BlurView intensity, SquircleView cornerRadius). */
+	props?: Record<string, any>;
+};
+
+/**
+ * Normalized interpolated style map used internally after the backward-compat shim.
+ * All slots use the `{ style, props }` shape.
+ */
+export type NormalizedTransitionInterpolatedStyle = {
+	/** Animated style and props for the main screen content view. */
+	content?: TransitionSlotStyle;
+	/** Animated style and props for the backdrop layer between screens. */
+	backdrop?: TransitionSlotStyle;
+	/** Animated style and props for the background component layer within the screen. */
+	background?: TransitionSlotStyle;
+	/** Custom styles/props by id for Transition.View components. */
+	[id: string]: TransitionSlotStyle | undefined;
+};
+
+/**
+ * @deprecated Use the nested format instead: `{ content: { style }, backdrop: { style } }`.
+ * This flat format is auto-converted via a backward-compat shim.
+ */
+export type LegacyTransitionInterpolatedStyle = {
 	contentStyle?: StyleProps;
-
-	/**
-	 * Animated style for the semi-transparent backdrop layer behind screen content.
-	 *
-	 * @example
-	 * backdropStyle: {
-	 *   backgroundColor: "black",
-	 *   opacity: interpolate(progress, [0, 1], [0, 0.5]),
-	 * }
-	 */
 	backdropStyle?: StyleProps;
-
-	/**
-	 * @deprecated Use `backdropStyle` instead. Will be removed in next major version.
-	 */
 	overlayStyle?: StyleProps;
-
-	/**
-	 * Define your own custom styles by using an id as the key: [id]: StyleProps
-	 */
 	[id: string]: StyleProps | undefined;
 };
+
+/**
+ * The return type of `screenStyleInterpolator`.
+ * Accepts both the new nested format and the legacy flat format (auto-converted).
+ */
+export type TransitionInterpolatedStyle =
+	| NormalizedTransitionInterpolatedStyle
+	| LegacyTransitionInterpolatedStyle;
 
 /**
  * A Reanimated animation configuration object.

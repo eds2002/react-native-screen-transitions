@@ -1,5 +1,6 @@
 import {
 	type StyleProps,
+	useAnimatedProps,
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
@@ -169,14 +170,15 @@ export const useAssociatedStyles = ({
 			return NO_STYLES;
 		}
 
-		// Check local styles first, then fall back to parent
-		const ownStyle = stylesMap.value[id];
+		// Check local slot first, then fall back to parent
+		const ownSlot = stylesMap.value[id];
 
-		const ancestorStyle = ancestorStylesMaps.find(
+		const ancestorSlot = ancestorStylesMaps.find(
 			(ancestorMap) => ancestorMap.value[id],
 		)?.value[id];
 
-		const base = ownStyle || ancestorStyle || NO_STYLES;
+		const slot = ownSlot || ancestorSlot;
+		const base = slot?.style || NO_STYLES;
 
 		const { keys: currentKeys, hasAny: hasCurrentKeys } = collectKeyMeta(
 			base as Record<string, unknown>,
@@ -317,5 +319,18 @@ export const useAssociatedStyles = ({
 		return { ...mergedBase, opacity };
 	});
 
-	return { associatedStyles };
+	const associatedProps = useAnimatedProps(() => {
+		"worklet";
+
+		if (!id) return {};
+
+		const ownSlot = stylesMap.value[id];
+		const ancestorSlot = ancestorStylesMaps.find(
+			(ancestorMap) => ancestorMap.value[id],
+		)?.value[id];
+
+		return (ownSlot || ancestorSlot)?.props ?? {};
+	});
+
+	return { associatedStyles, associatedProps };
 };

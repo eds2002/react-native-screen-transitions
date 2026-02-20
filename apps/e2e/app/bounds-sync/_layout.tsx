@@ -114,7 +114,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({ id }).navigation.zoom();
 		return {
 			...navigationStyles,
-			overlayStyle: {
+			backdropStyle: {
 				backgroundColor: "black",
 				opacity: interpolate(progress, [0, 1, 2], [0, 0.5, 0]),
 			},

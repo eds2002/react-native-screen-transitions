@@ -9,6 +9,7 @@ import {
 	NAVIGATION_MASK_STYLE_ID,
 } from "../constants";
 import type { ScreenTransitionConfig } from "../types/screen.types";
+import { normalizeInterpolatedStyle } from "../utils/normalize-interpolated-style";
 import { DefaultSpec } from "./specs";
 
 const platform = Platform.OS;
@@ -32,8 +33,10 @@ export const SlideFromTop = (
 			const y = interpolate(progress, [0, 1, 2], [-height, 0, height]);
 
 			return {
-				contentStyle: {
-					transform: [{ translateY: y }],
+				content: {
+					style: {
+						transform: [{ translateY: y }],
+					},
 				},
 			};
 		},
@@ -71,9 +74,11 @@ export const ZoomIn = (
 			);
 
 			return {
-				contentStyle: {
-					transform: [{ scale }],
-					opacity,
+				content: {
+					style: {
+						transform: [{ scale }],
+						opacity,
+					},
 				},
 			};
 		},
@@ -104,8 +109,10 @@ export const SlideFromBottom = (
 			const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
 
 			return {
-				contentStyle: {
-					transform: [{ translateY: y }],
+				content: {
+					style: {
+						transform: [{ translateY: y }],
+					},
 				},
 			};
 		},
@@ -148,8 +155,10 @@ export const DraggableCard = (
 			);
 
 			return {
-				contentStyle: {
-					transform: [{ scale }, { translateY: translateY }, { translateX }],
+				content: {
+					style: {
+						transform: [{ scale }, { translateY: translateY }, { translateX }],
+					},
 				},
 			};
 		},
@@ -209,11 +218,15 @@ export const ElasticCard = (
 			);
 
 			return {
-				contentStyle: {
-					transform: [{ scale }, { translateX }, { translateY }],
+				content: {
+					style: {
+						transform: [{ scale }, { translateX }, { translateY }],
+					},
 				},
-				backdropStyle: {
-					backgroundColor: !next ? overlayColor : "rgba(0,0,0,0)",
+				backdrop: {
+					style: {
+						backgroundColor: !next ? overlayColor : "rgba(0,0,0,0)",
+					},
 				},
 			};
 		},
@@ -271,6 +284,8 @@ export const SharedIGImage = ({
 			}).navigation.zoom({
 				scaleMode: "uniform",
 			});
+
+			// Extract raw style values from bounds result (legacy format)
 			const sourceStyle = navigationStyles[sharedBoundTag] as
 				| Record<string, unknown>
 				| undefined;
@@ -281,55 +296,72 @@ export const SharedIGImage = ({
 				| Record<string, unknown>
 				| undefined;
 
+			// Normalize bounds result to new slot format for spreading
+			const normalizedNav = normalizeInterpolatedStyle(
+				navigationStyles as Record<string, any>,
+			).result;
+
 			if (focused) {
 				return {
-					...navigationStyles,
-					backdropStyle: {
-						backgroundColor: "black",
-						opacity: interpolate(progress, [0, 1], [0, 0.5]),
+					...normalizedNav,
+					backdrop: {
+						style: {
+							backgroundColor: "black",
+							opacity: interpolate(progress, [0, 1], [0, 0.5]),
+						},
 					},
-					contentStyle: {
-						transform: [
-							{ translateX: dragX },
-							{ translateY: dragY },
-							{ scale: dragXScale },
-							{ scale: dragYScale },
-						],
+					content: {
+						style: {
+							transform: [
+								{ translateX: dragX },
+								{ translateY: dragY },
+								{ scale: dragXScale },
+								{ scale: dragYScale },
+							],
+						},
 					},
 					[NAVIGATION_CONTAINER_STYLE_ID]: containerStyle
 						? {
-								...containerStyle,
-								transform: [
-									...(((containerStyle.transform as any[]) ?? []) as any[]),
-									{ translateX: dragX * 0.2 },
-									{ translateY: dragY * 0.2 },
-								],
+								style: {
+									...containerStyle,
+									transform: [
+										...(((containerStyle.transform as any[]) ?? []) as any[]),
+										{ translateX: dragX * 0.2 },
+										{ translateY: dragY * 0.2 },
+									],
+								},
 							}
 						: undefined,
 					[NAVIGATION_MASK_STYLE_ID]: maskStyle
 						? {
-								...maskStyle,
-								borderRadius: interpolate(progress, [0, 1], [0, 24]),
+								style: {
+									...maskStyle,
+									borderRadius: interpolate(progress, [0, 1], [0, 24]),
+								},
 							}
 						: undefined,
 				};
 			}
 
 			return {
-				...navigationStyles,
-				contentStyle: {
-					...(navigationStyles.contentStyle ?? {}),
-					pointerEvents: current.gesture.isDismissing ? "none" : "auto",
+				...normalizedNav,
+				content: {
+					style: {
+						...(normalizedNav.content?.style ?? {}),
+						pointerEvents: current.gesture.isDismissing ? "none" : "auto",
+					},
 				},
 				[sharedBoundTag]: {
-					...(sourceStyle ?? {}),
-					transform: [
-						{ translateX: dragX || 0 },
-						{ translateY: dragY || 0 },
-						...(((sourceStyle?.transform as any[]) ?? []) as any[]),
-						{ scale: dragXScale },
-						{ scale: dragYScale },
-					],
+					style: {
+						...(sourceStyle ?? {}),
+						transform: [
+							{ translateX: dragX || 0 },
+							{ translateY: dragY || 0 },
+							...(((sourceStyle?.transform as any[]) ?? []) as any[]),
+							{ scale: dragXScale },
+							{ scale: dragYScale },
+						],
+					},
 				},
 			};
 		},
@@ -470,33 +502,39 @@ export const SharedAppleMusic = ({
 				};
 
 				return {
-					contentStyle: {
-						pointerEvents: current.animating ? "none" : "auto",
-						transform: [
-							{ translateX: dragX || 0 },
-							{ translateY: dragY || 0 },
-							{ scale: dragXScale },
-							{ scale: dragYScale },
-						],
-						opacity,
-						...(platform === "ios" ? IOSShadowStyle : AndroidShadowStyle),
+					content: {
+						style: {
+							pointerEvents: current.animating ? "none" : "auto",
+							transform: [
+								{ translateX: dragX || 0 },
+								{ translateY: dragY || 0 },
+								{ scale: dragXScale },
+								{ scale: dragYScale },
+							],
+							opacity,
+							...(platform === "ios" ? IOSShadowStyle : AndroidShadowStyle),
+						},
 					},
 					_ROOT_CONTAINER: {
-						transform: [
-							{ translateX: boundValues.translateX || 0 },
-							{ translateY: boundValues.translateY || 0 },
-							//@ts-expect-error
-							{ scale: boundValues.scale || 1 },
-						],
+						style: {
+							transform: [
+								{ translateX: boundValues.translateX || 0 },
+								{ translateY: boundValues.translateY || 0 },
+								//@ts-expect-error
+								{ scale: boundValues.scale || 1 },
+							],
+						},
 					},
 					_ROOT_MASKED: {
-						width: maskedValues.width,
-						height: maskedValues.height,
-						transform: [
-							{ translateX: maskedValues.translateX || 0 },
-							{ translateY: maskedValues.translateY || 0 },
-						],
-						borderRadius: interpolate(progress, [0, 1], [0, 24]),
+						style: {
+							width: maskedValues.width,
+							height: maskedValues.height,
+							transform: [
+								{ translateX: maskedValues.translateX || 0 },
+								{ translateY: maskedValues.translateY || 0 },
+							],
+							borderRadius: interpolate(progress, [0, 1], [0, 24]),
+						},
 					},
 				};
 			}
@@ -516,22 +554,26 @@ export const SharedAppleMusic = ({
 
 			return {
 				[sharedBoundTag]: {
-					transform: [
-						{ translateX: dragX || 0 },
-						{ translateY: dragY || 0 },
-						{ translateX: scaledBoundTranslateX },
-						{ translateY: scaledBoundTranslateY },
-						{ scale: dragXScale },
-						{ scale: dragYScale },
-						{ scaleX: scaledBoundScaleX },
-						{ scaleY: scaledBoundScaleY },
-					],
-					opacity,
-					zIndex: current.animating ? 999 : -1,
-					position: "relative",
+					style: {
+						transform: [
+							{ translateX: dragX || 0 },
+							{ translateY: dragY || 0 },
+							{ translateX: scaledBoundTranslateX },
+							{ translateY: scaledBoundTranslateY },
+							{ scale: dragXScale },
+							{ scale: dragYScale },
+							{ scaleX: scaledBoundScaleX },
+							{ scaleY: scaledBoundScaleY },
+						],
+						opacity,
+						zIndex: current.animating ? 999 : -1,
+						position: "relative",
+					},
 				},
-				contentStyle: {
-					transform: [{ scale: contentScale }],
+				content: {
+					style: {
+						transform: [{ scale: contentScale }],
+					},
 				},
 			};
 		},
@@ -588,6 +630,11 @@ export const SharedXImage = ({
 				| Record<string, unknown>
 				| undefined;
 
+			// Normalize bounds result to new slot format for spreading
+			const normalizedNav = normalizeInterpolatedStyle(
+				navigationStyles as Record<string, any>,
+			).result;
+
 			const dragY = interpolate(
 				current.gesture.normalizedY,
 				[-1, 0, 1],
@@ -609,19 +656,25 @@ export const SharedXImage = ({
 			const borderRadius = interpolate(current.progress, [0, 1], [12, 0]);
 
 			return {
-				...navigationStyles,
+				...normalizedNav,
 				[NAVIGATION_MASK_STYLE_ID]: maskStyle
 					? {
-							...maskStyle,
-							borderRadius,
+							style: {
+								...maskStyle,
+								borderRadius,
+							},
 						}
 					: undefined,
-				contentStyle: {
-					transform: [{ translateY: contentY }, { translateY: dragY }],
-					pointerEvents: current.animating ? "none" : "auto",
+				content: {
+					style: {
+						transform: [{ translateY: contentY }, { translateY: dragY }],
+						pointerEvents: current.animating ? "none" : "auto",
+					},
 				},
-				backdropStyle: {
-					backgroundColor: overlayClr,
+				backdrop: {
+					style: {
+						backgroundColor: overlayClr,
+					},
 				},
 			};
 		},
