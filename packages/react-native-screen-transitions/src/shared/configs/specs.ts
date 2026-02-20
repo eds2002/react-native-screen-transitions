@@ -15,25 +15,6 @@ export const DefaultSnapSpec: WithSpringConfig = {
 	mass: 1,
 };
 
-export const IOSSpec: WithSpringConfig = {
-	mass: 1,
-	stiffness: 520,
-	damping: 62,
-	overshootClamping: true,
-	// @ts-expect-error
-	restSpeedThreshold: 0.01,
-	restDisplacementThreshold: 0.01,
-};
-export const IOSZoomSpec: WithSpringConfig = {
-	mass: 1,
-	stiffness: 380,
-	damping: 40,
-	overshootClamping: true,
-	// @ts-expect-error
-	restSpeedThreshold: 0.01,
-	restDisplacementThreshold: 0.01,
-};
-
 export const FlingSpec: WithSpringConfig = {
 	damping: 24,
 	stiffness: 170,
