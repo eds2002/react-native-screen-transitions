@@ -11,11 +11,12 @@ import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import { BOUNDS_SYNC_ZOOM_ITEMS } from "../zoom.constants";
 
+const GAP = 10;
+const PADDING = 16;
+
 export default function BoundsSyncZoomIndex() {
 	const { width } = useWindowDimensions();
-	const gap = 12;
-	const padding = 16;
-	const cardSize = (width - padding * 2 - gap) / 2;
+	const colWidth = (width - PADDING * 2 - GAP) / 2;
 
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
@@ -24,34 +25,38 @@ export default function BoundsSyncZoomIndex() {
 				subtitle="bounds({ id }).navigation.zoom()"
 			/>
 
-			<Text style={styles.concernText}>
-				Concern: Navigation transition, separate from element A/B interpolation
-			</Text>
+			<Transition.ScrollView contentContainerStyle={styles.scrollContent}>
+				<View style={styles.grid}>
+					{BOUNDS_SYNC_ZOOM_ITEMS.map((item) => {
+						const cardWidth = item.cols === 2 ? colWidth * 2 + GAP : colWidth;
 
-			<View style={[styles.grid, { paddingHorizontal: padding, gap }]}>
-				{BOUNDS_SYNC_ZOOM_ITEMS.map((item) => (
-					<Pressable
-						key={item.id}
-						onPress={() => router.push(`/bounds-sync/zoom/${item.id}` as never)}
-					>
-						<Transition.Boundary
-							id={item.id}
-							role="source"
-							style={[
-								styles.card,
-								{
-									backgroundColor: item.color,
-									width: cardSize,
-									height: cardSize,
-								},
-							]}
-						>
-							<Text style={styles.title}>{item.title}</Text>
-							<Text style={styles.subtitle}>{item.subtitle}</Text>
-						</Transition.Boundary>
-					</Pressable>
-				))}
-			</View>
+						return (
+							<Pressable
+								key={item.id}
+								onPress={() =>
+									router.push(`/bounds-sync/zoom/${item.id}` as never)
+								}
+							>
+								<Transition.Boundary
+									id={item.id}
+									role="source"
+									style={[
+										styles.card,
+										{
+											backgroundColor: item.color,
+											width: cardWidth,
+											height: item.height,
+										},
+									]}
+								>
+									<Text style={styles.title}>{item.title}</Text>
+									<Text style={styles.subtitle}>{item.subtitle}</Text>
+								</Transition.Boundary>
+							</Pressable>
+						);
+					})}
+				</View>
+			</Transition.ScrollView>
 		</SafeAreaView>
 	);
 }
@@ -61,33 +66,30 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#121212",
 	},
-	concernText: {
-		paddingHorizontal: 16,
-		paddingBottom: 12,
-		fontSize: 11,
-		color: "#7fa5cf",
-		fontFamily: "monospace",
+	scrollContent: {
+		paddingHorizontal: PADDING,
+		paddingBottom: 40,
 	},
 	grid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
-		paddingBottom: 24,
+		gap: GAP,
 	},
 	card: {
-		borderRadius: 24,
-		padding: 16,
+		borderRadius: 20,
+		padding: 14,
 		justifyContent: "flex-end",
 		overflow: "hidden",
 	},
 	title: {
 		color: "#fff",
-		fontSize: 21,
+		fontSize: 18,
 		fontWeight: "700",
 	},
 	subtitle: {
-		marginTop: 4,
-		color: "rgba(255,255,255,0.86)",
-		fontSize: 13,
+		marginTop: 2,
+		color: "rgba(255,255,255,0.75)",
+		fontSize: 11,
 		fontWeight: "500",
 	},
 });

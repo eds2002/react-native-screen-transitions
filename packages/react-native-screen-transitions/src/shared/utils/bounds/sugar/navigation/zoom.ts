@@ -136,9 +136,9 @@ export const buildZoomNavigationStyles = ({
 
 	const focusedFade = props.active?.closing
 		? interpolate(progress, [0.2, 0.5], [0, 1], "clamp")
-		: 1;
+		: interpolate(progress, [0, 0.3], [0, 1], "clamp");
 
-	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.95]);
+	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.9]);
 	const rawMaskWidth = toNumber(maskRaw.width);
 	const rawMaskHeight = toNumber(maskRaw.height);
 	const maskWidth = Math.max(1, rawMaskWidth);
@@ -166,7 +166,7 @@ export const buildZoomNavigationStyles = ({
 					{ scale: dragXScale },
 					{ scale: dragYScale },
 				],
-				borderRadius: toNumber(navigationOptions?.maskBorderRadius, 0),
+				borderRadius: 12,
 			},
 		};
 	}
