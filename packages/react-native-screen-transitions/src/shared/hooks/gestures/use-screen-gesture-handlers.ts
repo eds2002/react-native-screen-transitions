@@ -128,8 +128,8 @@ export const useScreenGestureHandlers = ({
 		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
 		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
 		snapVelocityImpact = SNAP_VELOCITY_IMPACT,
-		releaseVelocityScale = 1,
-		releaseVelocityMax = RELEASE_VELOCITY_MAX,
+		gestureReleaseVelocityScale = 1,
+		gestureReleaseVelocityMax = RELEASE_VELOCITY_MAX,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureResponseDistance,
 		transitionSpec,
@@ -138,7 +138,7 @@ export const useScreenGestureHandlers = ({
 	} = current.options;
 	const effectiveReleaseVelocityMax = Math.max(
 		0.1,
-		Math.abs(releaseVelocityMax),
+		Math.abs(gestureReleaseVelocityMax),
 	);
 	const clampReleaseVelocity = (value: number) => {
 		"worklet";
@@ -515,6 +515,7 @@ export const useScreenGestureHandlers = ({
 					shouldDismiss,
 					event,
 					dimensions,
+					gestureReleaseVelocityScale,
 				});
 
 				const snapDirection = Math.sign(
@@ -527,7 +528,7 @@ export const useScreenGestureHandlers = ({
 						: clampReleaseVelocity(
 								snapDirection *
 									Math.abs(velocity.normalize(axisVelocity, axisDimension)) *
-									releaseVelocityScale,
+									gestureReleaseVelocityScale,
 							);
 
 				animateToProgress({
@@ -554,6 +555,7 @@ export const useScreenGestureHandlers = ({
 					shouldDismiss,
 					event,
 					dimensions,
+					gestureReleaseVelocityScale,
 				});
 
 				const initialVelocity = velocity.calculateProgressVelocity({
@@ -565,7 +567,7 @@ export const useScreenGestureHandlers = ({
 				});
 
 				const scaledInitialVelocity = clampReleaseVelocity(
-					initialVelocity * releaseVelocityScale,
+					initialVelocity * gestureReleaseVelocityScale,
 				);
 
 				animateToProgress({

@@ -13,6 +13,7 @@ interface ResetGestureValuesProps {
 	shouldDismiss: boolean;
 	event: GestureStateChangeEvent<PanGestureHandlerEventPayload>;
 	dimensions: { width: number; height: number };
+	gestureReleaseVelocityScale?: number;
 }
 
 export const resetGestureValues = ({
@@ -21,6 +22,7 @@ export const resetGestureValues = ({
 	shouldDismiss,
 	event,
 	dimensions,
+	gestureReleaseVelocityScale = 1,
 }: ResetGestureValuesProps) => {
 	"worklet";
 
@@ -50,16 +52,26 @@ export const resetGestureValues = ({
 		}
 	};
 
-	gestures.x.value = animate(0, { ...spec, velocity: vxTowardZero }, onFinish);
-	gestures.y.value = animate(0, { ...spec, velocity: vyTowardZero }, onFinish);
+	// When dismissing, use raw fling velocity (scaled by gestureReleaseVelocityScale)
+	// so the spring carries the gesture's momentum. The spec controls the
+	// spring character — use an underdamped spec (e.g. FlingSpec) for orbit/fling.
+	const resetVX = shouldDismiss
+		? vxNorm * gestureReleaseVelocityScale
+		: vxTowardZero;
+	const resetVY = shouldDismiss
+		? vyNorm * gestureReleaseVelocityScale
+		: vyTowardZero;
+
+	gestures.x.value = animate(0, { ...spec, velocity: resetVX }, onFinish);
+	gestures.y.value = animate(0, { ...spec, velocity: resetVY }, onFinish);
 	gestures.normalizedX.value = animate(
 		0,
-		{ ...spec, velocity: vxTowardZero },
+		{ ...spec, velocity: resetVX },
 		onFinish,
 	);
 	gestures.normalizedY.value = animate(
 		0,
-		{ ...spec, velocity: vyTowardZero },
+		{ ...spec, velocity: resetVY },
 		onFinish,
 	);
 	gestures.isDragging.value = 0;

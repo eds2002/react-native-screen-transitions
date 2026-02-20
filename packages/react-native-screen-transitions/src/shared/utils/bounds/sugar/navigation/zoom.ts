@@ -75,8 +75,8 @@ export const buildZoomNavigationStyles = ({
 	const xResistance = initialDirection === "horizontal" ? 0.4 : 0.4;
 	const yResistance = initialDirection === "vertical" ? 0.4 : 0.4;
 
-	const xScaleOuput = initialDirection === "horizontal" ? [1, 0.5] : [1, 1];
-	const yScaleOuput = initialDirection === "vertical" ? [1, 0.5] : [1, 1];
+	const xScaleOuput = initialDirection === "horizontal" ? [1, 0.25] : [1, 1];
+	const yScaleOuput = initialDirection === "vertical" ? [1, 0.25] : [1, 1];
 
 	const dragX = interpolate(
 		normX,

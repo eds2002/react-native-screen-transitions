@@ -111,18 +111,18 @@ export type ScreenTransitionConfig = {
 	 *
 	 * @default 1
 	 */
-	releaseVelocityScale?: number;
+	gestureReleaseVelocityScale?: number;
 
 	/**
 	 * Caps the absolute post-scale release velocity used by spring animations.
 	 *
 	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
 	 * or snap target selection (`snapVelocityImpact`). It only bounds release
-	 * animation intensity after `releaseVelocityScale` is applied.
+	 * animation intensity after `gestureReleaseVelocityScale` is applied.
 	 *
 	 * @default 3.2
 	 */
-	releaseVelocityMax?: number;
+	gestureReleaseVelocityMax?: number;
 
 	/**
 	 * Distance threshold for gesture recognition throughout the screen.

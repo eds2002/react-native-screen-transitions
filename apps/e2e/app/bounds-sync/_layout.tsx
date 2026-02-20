@@ -153,12 +153,12 @@ export default function BoundsSyncLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
-					releaseVelocityScale: 1.6,
+					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: navigationZoomInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.FlingSpec,
 					},
 				}}
 			/>

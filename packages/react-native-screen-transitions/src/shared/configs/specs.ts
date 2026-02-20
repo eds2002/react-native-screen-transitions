@@ -33,3 +33,10 @@ export const IOSZoomSpec: WithSpringConfig = {
 	restSpeedThreshold: 0.01,
 	restDisplacementThreshold: 0.01,
 };
+
+export const FlingSpec: WithSpringConfig = {
+	damping: 20,
+	stiffness: 200,
+	mass: 1,
+	overshootClamping: false,
+};

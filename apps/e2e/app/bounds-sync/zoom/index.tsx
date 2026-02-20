@@ -1,11 +1,22 @@
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import {
+	Pressable,
+	StyleSheet,
+	Text,
+	useWindowDimensions,
+	View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import { BOUNDS_SYNC_ZOOM_ITEMS } from "../zoom.constants";
 
 export default function BoundsSyncZoomIndex() {
+	const { width } = useWindowDimensions();
+	const gap = 12;
+	const padding = 16;
+	const cardSize = (width - padding * 2 - gap) / 2;
+
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
@@ -17,7 +28,7 @@ export default function BoundsSyncZoomIndex() {
 				Concern: Navigation transition, separate from element A/B interpolation
 			</Text>
 
-			<View style={styles.list}>
+			<View style={[styles.grid, { paddingHorizontal: padding, gap }]}>
 				{BOUNDS_SYNC_ZOOM_ITEMS.map((item) => (
 					<Pressable
 						key={item.id}
@@ -26,7 +37,14 @@ export default function BoundsSyncZoomIndex() {
 						<Transition.Boundary
 							id={item.id}
 							role="source"
-							style={[styles.card, { backgroundColor: item.color }]}
+							style={[
+								styles.card,
+								{
+									backgroundColor: item.color,
+									width: cardSize,
+									height: cardSize,
+								},
+							]}
 						>
 							<Text style={styles.title}>{item.title}</Text>
 							<Text style={styles.subtitle}>{item.subtitle}</Text>
@@ -50,13 +68,12 @@ const styles = StyleSheet.create({
 		color: "#7fa5cf",
 		fontFamily: "monospace",
 	},
-	list: {
-		paddingHorizontal: 16,
+	grid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
 		paddingBottom: 24,
-		gap: 14,
 	},
 	card: {
-		height: 150,
 		borderRadius: 24,
 		padding: 16,
 		justifyContent: "flex-end",

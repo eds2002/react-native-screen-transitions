@@ -24,10 +24,18 @@ export const BOUNDS_SYNC_ZOOM_ITEMS: BoundsSyncZoomItem[] = [
 		subtitle: "Uniform scale with drag-to-dismiss",
 		color: "#2A9D8F",
 	},
+	{
+		id: "coral",
+		title: "Coral Drift",
+		subtitle: "Fling orbit with centered source",
+		color: "#E63946",
+	},
 ];
 
 export const getBoundsSyncZoomItemById = (id: string | undefined) => {
 	if (!id) return BOUNDS_SYNC_ZOOM_ITEMS[0];
-	return BOUNDS_SYNC_ZOOM_ITEMS.find((item) => item.id === id)
-		?? BOUNDS_SYNC_ZOOM_ITEMS[0];
+	return (
+		BOUNDS_SYNC_ZOOM_ITEMS.find((item) => item.id === id) ??
+		BOUNDS_SYNC_ZOOM_ITEMS[0]
+	);
 };
