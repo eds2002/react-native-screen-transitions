@@ -46,7 +46,6 @@ export default function BoundsSyncZoomIndex() {
 									group={ZOOM_GROUP}
 									scaleMode="uniform"
 									mode="source"
-									anchor="center"
 									id={item.id}
 									style={[
 										styles.card,

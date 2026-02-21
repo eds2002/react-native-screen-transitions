@@ -18,11 +18,13 @@ const getZoomContentTarget = ({
 	resolvedTag,
 	currentRouteKey,
 	screenLayout,
+	anchor,
 }: {
 	explicitTarget: BoundsOptions["target"] | undefined;
 	resolvedTag: string;
 	currentRouteKey?: string;
 	screenLayout: Layout;
+	anchor: BoundsOptions["anchor"] | undefined;
 }) => {
 	"worklet";
 	if (explicitTarget !== undefined) return explicitTarget;
@@ -37,12 +39,57 @@ const getZoomContentTarget = ({
 	}
 
 	const height = (sourceBounds.height / sourceBounds.width) * screenWidth;
+	let horizontalAnchor: "leading" | "center" | "trailing";
+	switch (anchor) {
+		case "topLeading":
+		case "leading":
+		case "bottomLeading":
+			horizontalAnchor = "leading";
+			break;
+		case "topTrailing":
+		case "trailing":
+		case "bottomTrailing":
+			horizontalAnchor = "trailing";
+			break;
+		default:
+			horizontalAnchor = "center";
+			break;
+	}
+
+	let verticalAnchor: "top" | "center" | "bottom";
+	switch (anchor) {
+		case "topLeading":
+		case "top":
+		case "topTrailing":
+			verticalAnchor = "top";
+			break;
+		case "bottomLeading":
+		case "bottom":
+		case "bottomTrailing":
+			verticalAnchor = "bottom";
+			break;
+		default:
+			verticalAnchor = "center";
+			break;
+	}
+	const x =
+		horizontalAnchor === "leading"
+			? 0
+			: horizontalAnchor === "trailing"
+				? screenLayout.width - screenWidth
+				: (screenLayout.width - screenWidth) / 2;
+	const y =
+		verticalAnchor === "top"
+			? 0
+			: verticalAnchor === "bottom"
+				? screenLayout.height - height
+				: (screenLayout.height - height) / 2;
 
 	return {
-		x: 0,
-		y: 0,
-		pageX: 0,
-		pageY: 0,
+		x,
+		y,
+		pageX: x,
+		pageY: y,
 		width: screenWidth,
 		height,
 	};
@@ -108,6 +155,7 @@ export const buildZoomNavigationStyles = ({
 		resolvedTag,
 		currentRouteKey,
 		screenLayout,
+		anchor: sharedOptions.anchor,
 	});
 
 	// When scaleMode is "match", the source element should track the mask
@@ -140,7 +188,11 @@ export const buildZoomNavigationStyles = ({
 
 	const focusedFade = props.active?.closing
 		? interpolate(progress, [0.6, 1], [0, 1], "clamp")
-		: interpolate(progress, [0, 0.3], [0, 1], "clamp");
+		: interpolate(progress, [0, 0.5], [0, 1], "clamp");
+
+	const unfocusedFade = props.active?.closing
+		? interpolate(progress, [1.6, 2], [1, 0], "clamp")
+		: interpolate(progress, [1, 1.5], [1, 0], "clamp");
 
 	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.9]);
 	const rawMaskWidth = toNumber(maskRaw.width);
@@ -182,11 +234,6 @@ export const buildZoomNavigationStyles = ({
 			[resolvedTag]: {
 				style: { opacity: 1 },
 			},
-			// content: {
-			// 	style: {
-			// 		opacity: 0.2,
-			// 	},
-			// },
 		};
 	}
 
@@ -222,6 +269,7 @@ export const buildZoomNavigationStyles = ({
 					{ scaleX: toNumber(elementRaw.scaleX, 1) * dragScale },
 					{ scaleY: toNumber(elementRaw.scaleY, 1) * dragScale },
 				],
+				opacity: unfocusedFade,
 			},
 		},
 	};

@@ -250,6 +250,49 @@ describe("createBounds accessor", () => {
 		);
 	});
 
+	it("bounds({...}).navigation.zoom() inherits source defaults when destination boundary is missing", () => {
+		BoundStore.setLinkSource(
+			"card",
+			"screen-a",
+			createMeasured(32, 48, 96, 96),
+		);
+		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
+			scaleMode: "none",
+		});
+
+		const bounds = createAccessor("screen-b", true, 0.5);
+		const styles = bounds({ id: "card" }).navigation.zoom();
+		const containerStyle = styles[NAVIGATION_CONTAINER_STYLE_ID] as any;
+		const contentScale = containerStyle.transform?.[2]?.scale;
+
+		expect(contentScale).toBe(1);
+	});
+
+	it("bounds({...}).navigation.zoom() applies vertical anchor alignment to synthesized targets", () => {
+		BoundStore.setLinkSource(
+			"card",
+			"screen-a",
+			createMeasured(20, 40, 120, 120),
+		);
+
+		const bounds = createAccessor("screen-b", true, 0);
+		const topStyles = bounds({ id: "card" }).navigation.zoom({
+			anchor: "top",
+			scaleMode: "uniform",
+		});
+		const bottomStyles = bounds({ id: "card" }).navigation.zoom({
+			anchor: "bottom",
+			scaleMode: "uniform",
+		});
+
+		const topTranslateY =
+			(topStyles[NAVIGATION_CONTAINER_STYLE_ID] as any).transform?.[1]?.translateY;
+		const bottomTranslateY = (bottomStyles[NAVIGATION_CONTAINER_STYLE_ID] as any)
+			.transform?.[1]?.translateY;
+
+		expect(bottomTranslateY).not.toBe(topTranslateY);
+	});
+
 	it("bounds({...}).navigation.zoom() enables mask host only for focused screen", () => {
 		registerBasicLink();
 		const focusedBounds = createAccessor("screen-b", true);

@@ -41,9 +41,13 @@ export const resolveNavigationConfig = ({
 	// source screen so that props like scaleMode propagate to both sides.
 	let effectiveConfig = boundaryConfig;
 	if (!effectiveConfig) {
-		const link = currentRouteKey
+		// For no-destination navigation zoom, the focused route won't appear in
+		// a completed link yet. Fall back to the latest unscoped link so source
+		// boundary defaults (anchor/scaleMode/target) still propagate.
+		const scopedLink = currentRouteKey
 			? BoundStore.getActiveLink(resolvedTag, currentRouteKey)
-			: BoundStore.getActiveLink(resolvedTag);
+			: null;
+		const link = scopedLink ?? BoundStore.getActiveLink(resolvedTag);
 		if (link?.source) {
 			effectiveConfig = BoundStore.getBoundaryConfig(
 				resolvedTag,
