@@ -1,4 +1,4 @@
-import { memo, useCallback, useEffect, useMemo } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef } from "react";
 import type { LayoutChangeEvent, View, ViewProps } from "react-native";
 import Animated, {
 	measure,
@@ -92,6 +92,7 @@ const useInitialLayoutHandler = (params: {
 	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
+	const hasScheduledInitialLayout = useRef(false);
 
 	const handleInitialLayout = useCallback(() => {
 		"worklet";
@@ -126,9 +127,11 @@ const useInitialLayoutHandler = (params: {
 	return useCallback(
 		(event: LayoutChangeEvent) => {
 			onLayout?.(event);
+			if (!enabled || hasScheduledInitialLayout.current) return;
+			hasScheduledInitialLayout.current = true;
 			runOnUI(handleInitialLayout)();
 		},
-		[onLayout, handleInitialLayout],
+		[enabled, onLayout, handleInitialLayout],
 	);
 };
 
@@ -274,6 +277,79 @@ const usePendingDestinationMeasurement = (params: {
 			maybeMeasureAndStore({ shouldSetDestination: true });
 		},
 		[enabled, sharedBoundTag, expectedSourceScreenKey, maybeMeasureAndStore],
+	);
+};
+
+const usePendingDestinationRetryMeasurement = (params: {
+	sharedBoundTag: string;
+	enabled: boolean;
+	currentScreenKey: string;
+	expectedSourceScreenKey?: string;
+	progress: ReturnType<typeof AnimationStore.getAnimation>;
+	animating: ReturnType<typeof AnimationStore.getAnimation>;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	const {
+		sharedBoundTag,
+		enabled,
+		currentScreenKey,
+		expectedSourceScreenKey,
+		progress,
+		animating,
+		maybeMeasureAndStore,
+	} = params;
+
+	const retryCount = useSharedValue(0);
+	const MAX_RETRIES = 12;
+
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			if (!enabled) return 0;
+			if (!animating.get()) return 0;
+			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey))
+				return 0;
+
+			const resolvedSourceKey = expectedSourceScreenKey
+				? BoundStore.hasPendingLinkFromSource(
+						sharedBoundTag,
+						expectedSourceScreenKey,
+					)
+					? expectedSourceScreenKey
+					: BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag)
+				: BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag);
+
+			if (!resolvedSourceKey) return 0;
+			if (
+				!BoundStore.hasPendingLinkFromSource(sharedBoundTag, resolvedSourceKey)
+			) {
+				return 0;
+			}
+
+			return progress.get();
+		},
+		(captureSignal) => {
+			"worklet";
+			if (!enabled) return;
+			if (!captureSignal) {
+				retryCount.set(0);
+				return;
+			}
+
+			if (retryCount.get() >= MAX_RETRIES) return;
+			retryCount.set(retryCount.get() + 1);
+			maybeMeasureAndStore({ shouldSetDestination: true });
+		},
+		[
+			enabled,
+			sharedBoundTag,
+			currentScreenKey,
+			expectedSourceScreenKey,
+			progress,
+			animating,
+			maybeMeasureAndStore,
+			retryCount,
+		],
 	);
 };
 
@@ -467,6 +543,19 @@ const PendingDestinationMeasurementEffect = (params: {
 	return null;
 };
 
+const PendingDestinationRetryEffect = (params: {
+	sharedBoundTag: string;
+	enabled: boolean;
+	currentScreenKey: string;
+	expectedSourceScreenKey?: string;
+	progress: ReturnType<typeof AnimationStore.getAnimation>;
+	animating: ReturnType<typeof AnimationStore.getAnimation>;
+	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
+}) => {
+	usePendingDestinationRetryMeasurement(params);
+	return null;
+};
+
 const BoundaryComponent = ({
 	enabled = true,
 	group,
@@ -516,6 +605,7 @@ const BoundaryComponent = ({
 		currentScreenKey,
 		"animating",
 	);
+	const progress = AnimationStore.getAnimation(currentScreenKey, "progress");
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 	const { associatedStyles } = useAssociatedStyles({
 		id: sharedBoundTag,
@@ -694,6 +784,17 @@ const BoundaryComponent = ({
 					sharedBoundTag={sharedBoundTag}
 					enabled={runtimeEnabled}
 					expectedSourceScreenKey={preferredSourceScreenKey}
+					maybeMeasureAndStore={maybeMeasureAndStore}
+				/>
+			) : null}
+			{runtimeEnabled && !hasNextScreen && mode !== "source" ? (
+				<PendingDestinationRetryEffect
+					sharedBoundTag={sharedBoundTag}
+					enabled={runtimeEnabled}
+					currentScreenKey={currentScreenKey}
+					expectedSourceScreenKey={preferredSourceScreenKey}
+					progress={progress}
+					animating={isAnimating}
 					maybeMeasureAndStore={maybeMeasureAndStore}
 				/>
 			) : null}
