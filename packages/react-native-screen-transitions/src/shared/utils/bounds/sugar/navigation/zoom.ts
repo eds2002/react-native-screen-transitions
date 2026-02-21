@@ -139,7 +139,7 @@ export const buildZoomNavigationStyles = ({
 	});
 
 	const focusedFade = props.active?.closing
-		? interpolate(progress, [0.2, 0.5], [0, 1], "clamp")
+		? interpolate(progress, [0.7, 1], [0, 1], "clamp")
 		: interpolate(progress, [0, 0.3], [0, 1], "clamp");
 
 	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.9]);
@@ -182,23 +182,26 @@ export const buildZoomNavigationStyles = ({
 			[resolvedTag]: {
 				style: { opacity: 1 },
 			},
-			content: {
-				style: {
-					opacity: 0.2,
-				},
-			},
+			// content: {
+			// 	style: {
+			// 		opacity: 0.2,
+			// 	},
+			// },
 		};
 	}
 
 	const safeScale = Math.max(unfocusedScale, EPSILON);
 	const dragScale = dragXScale * dragYScale;
 
-	const destCenterY =
-		typeof contentTarget === "object"
-			? contentTarget.pageY + contentTarget.height / 2
+	// Keep compensation tied to the element target's center. In `scaleMode: "match"`
+	// this target is fullscreen, so the center offset should resolve to zero.
+	const elementCenterY =
+		typeof elementTarget === "object"
+			? elementTarget.pageY + elementTarget.height / 2
 			: screenLayout.height / 2;
 
-	const scaleShiftY = (destCenterY - screenLayout.height / 2) * (dragScale - 1);
+	const scaleShiftY =
+		(elementCenterY - screenLayout.height / 2) * (dragScale - 1);
 
 	const compensatedGestureX = dragX / safeScale;
 	// dragY is measured in screen space and must be unscaled by the parent

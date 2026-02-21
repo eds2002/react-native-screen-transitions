@@ -505,6 +505,71 @@ describe("createBounds accessor", () => {
 		expect(draggedY - baselineY).toBeLessThan(24);
 	});
 
+	it("bounds({...}).navigation.zoom() avoids extra Y offset in scaleMode match drag compensation", () => {
+		registerBasicLink();
+		const baseline = createAccessor("screen-a", false, 1.5, {
+			gestureX: 0,
+			gestureY: 0,
+		});
+		const dragged = createAccessor("screen-a", false, 1.5, {
+			gestureX: 0,
+			gestureY: 20,
+		});
+
+		const baselineTransform = (
+			baseline({ id: "card" }).navigation.zoom({ scaleMode: "match" }).card as any
+		).transform;
+		const draggedTransform = (
+			dragged({ id: "card" }).navigation.zoom({ scaleMode: "match" }).card as any
+		).transform;
+
+		const baselineY = baselineTransform.find(
+			(entry: Record<string, number>) => "translateY" in entry,
+		)?.translateY;
+		const draggedY = draggedTransform.find(
+			(entry: Record<string, number>) => "translateY" in entry,
+		)?.translateY;
+
+		// gestureY=20 on an 800px screen => normalizedY=0.025 => dragY=8 (0.4 resistance)
+		// At progress=1.5, unfocusedScale=0.95, so local compensation should be dragY / 0.95.
+		const expectedDeltaY = 8 / 0.95;
+
+		expect(draggedY - baselineY).toBeCloseTo(expectedDeltaY, 5);
+	});
+
+	it("bounds({...}).navigation.zoom() compensates content shrink for scaleMode match", () => {
+		registerBasicLink();
+		const bounds = createAccessor("screen-a", false, 1.5, {
+			gestureX: 0,
+			gestureY: 0,
+		});
+
+		const styles = bounds({ id: "card" }).navigation.zoom({ scaleMode: "match" });
+		const sharedTransform = (styles.card as any).transform;
+		const contentTransform = (styles.content as any)?.style?.transform;
+		const contentScale = contentTransform?.find(
+			(entry: Record<string, number>) => "scale" in entry,
+		)?.scale;
+		const sharedScaleX = sharedTransform.find(
+			(entry: Record<string, number>) => "scaleX" in entry,
+		)?.scaleX;
+		const sharedScaleY = sharedTransform.find(
+			(entry: Record<string, number>) => "scaleY" in entry,
+		)?.scaleY;
+
+		const rawMatch = bounds({
+			id: "card",
+			method: "transform",
+			space: "relative",
+			target: "fullscreen",
+			scaleMode: "match",
+			raw: true,
+		}) as any;
+
+		expect(sharedScaleX * contentScale).toBeCloseTo(rawMatch.scaleX, 5);
+		expect(sharedScaleY * contentScale).toBeCloseTo(rawMatch.scaleY, 5);
+	});
+
 	it("bounds({...}).navigation.zoom() scales the unfocused source element with mask shrink compensation", () => {
 		registerBasicLink();
 		const baselineUnfocused = createAccessor("screen-a", false, 1.5, {
