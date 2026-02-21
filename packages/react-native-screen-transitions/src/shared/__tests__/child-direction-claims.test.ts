@@ -4,7 +4,7 @@ import type {
 	DirectionClaim,
 	DirectionClaimMap,
 } from "../providers/gestures.provider";
-import { shouldDeferToChildClaim } from "../utils/gesture/should-defer-to-child-claim";
+import { shouldDeferToChildClaim } from "../hooks/gestures/use-build-gestures/helpers/should-defer-to-child-claim";
 
 /**
  * Mock SharedValue for testing - mimics Reanimated's SharedValue interface

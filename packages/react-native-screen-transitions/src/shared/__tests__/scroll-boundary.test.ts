@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import type { ScrollConfig } from "../providers/gestures.provider";
-import { checkScrollBoundary } from "../utils/gesture/check-gesture-activation";
+import { checkScrollBoundary } from "../hooks/gestures/use-build-gestures/helpers/check-gesture-activation";
 
 /**
  * Tests for ScrollView boundary detection.

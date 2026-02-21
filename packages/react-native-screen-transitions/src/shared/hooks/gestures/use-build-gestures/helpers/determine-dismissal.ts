@@ -1,11 +1,12 @@
+import type { GestureDirections } from "../../../../types/gesture.types";
+import { shouldDismissFromTranslationAndVelocity } from "./velocity";
+
 interface GetAxisThresholdProps {
 	translation: number;
 	velocity: number;
 	screenSize: number;
 	gestureVelocityImpact: number;
 }
-
-import type { GestureDirections } from "../../types/gesture.types";
 
 interface DetermineDismissalProps {
 	event: {
@@ -19,8 +20,6 @@ interface DetermineDismissalProps {
 	gestureVelocityImpact: number;
 }
 
-import { velocity as V } from "../../hooks/gestures/use-build-gestures/helpers/velocity";
-
 const getAxisThreshold = ({
 	translation,
 	velocity,
@@ -28,7 +27,7 @@ const getAxisThreshold = ({
 	gestureVelocityImpact,
 }: GetAxisThresholdProps) => {
 	"worklet";
-	return V.shouldPassDismissalThreshold(
+	return shouldDismissFromTranslationAndVelocity(
 		translation,
 		velocity,
 		screenSize,

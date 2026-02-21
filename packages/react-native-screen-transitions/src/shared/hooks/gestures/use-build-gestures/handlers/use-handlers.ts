@@ -35,19 +35,23 @@ import type {
 	DirectionOwnership,
 } from "../../../../types/ownership.types";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
-import {
-	applyOffsetRules,
-	checkScrollBoundary,
-} from "../../../../utils/gesture/check-gesture-activation";
-import { determineDismissal } from "../../../../utils/gesture/determine-dismissal";
-import { determineSnapTarget } from "../../../../utils/gesture/determine-snap-target";
-import { mapGestureToProgress } from "../../../../utils/gesture/map-gesture-to-progress";
-import { resetGestureValues } from "../../../../utils/gesture/reset-gesture-values";
-import { shouldDeferToChildClaim } from "../../../../utils/gesture/should-defer-to-child-claim";
 import type { ValidateSnapPointsResult } from "../../../../utils/gesture/validate-snap-points";
 import { logger } from "../../../../utils/logger";
 import useStableCallbackValue from "../../../use-stable-callback-value";
-import { velocity } from "../helpers/velocity";
+import {
+	applyOffsetRules,
+	checkScrollBoundary,
+} from "../helpers/check-gesture-activation";
+import { determineDismissal } from "../helpers/determine-dismissal";
+import { determineSnapTarget } from "../helpers/determine-snap-target";
+import { mapGestureToProgress } from "../helpers/map-gesture-to-progress";
+import { resetGestureValues } from "../helpers/reset-gesture-values";
+import { shouldDeferToChildClaim } from "../helpers/should-defer-to-child-claim";
+import {
+	calculateProgressSpringVelocity,
+	normalizeGestureTranslation,
+	normalizeVelocity,
+} from "../helpers/velocity";
 
 interface UseScreenGestureHandlersProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
@@ -400,11 +404,11 @@ export const useHandlers = ({
 
 			gestureAnimationValues.x.value = translationX;
 			gestureAnimationValues.y.value = translationY;
-			gestureAnimationValues.normalizedX.value = velocity.normalizeTranslation(
+			gestureAnimationValues.normalizedX.value = normalizeGestureTranslation(
 				translationX,
 				width,
 			);
-			gestureAnimationValues.normalizedY.value = velocity.normalizeTranslation(
+			gestureAnimationValues.normalizedY.value = normalizeGestureTranslation(
 				translationY,
 				height,
 			);
@@ -527,7 +531,7 @@ export const useHandlers = ({
 						? 0
 						: clampReleaseVelocity(
 								snapDirection *
-									Math.abs(velocity.normalize(axisVelocity, axisDimension)) *
+									Math.abs(normalizeVelocity(axisVelocity, axisDimension)) *
 									gestureReleaseVelocityScale,
 							);
 
@@ -558,7 +562,7 @@ export const useHandlers = ({
 					gestureReleaseVelocityScale,
 				});
 
-				const initialVelocity = velocity.calculateProgressVelocity({
+				const initialVelocity = calculateProgressSpringVelocity({
 					animations,
 					shouldDismiss,
 					event,

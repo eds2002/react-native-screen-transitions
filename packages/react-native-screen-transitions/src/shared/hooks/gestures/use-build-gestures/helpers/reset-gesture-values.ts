@@ -2,10 +2,13 @@ import type {
 	GestureStateChangeEvent,
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
-import { velocity } from "../../hooks/gestures/use-build-gestures/helpers/velocity";
-import type { GestureStoreMap } from "../../stores/gesture.store";
-import type { AnimationConfig } from "../../types/animation.types";
-import { animate } from "../animation/animate";
+import type { GestureStoreMap } from "../../../../stores/gesture.store";
+import type { AnimationConfig } from "../../../../types/animation.types";
+import { animate } from "../../../../utils/animation/animate";
+import {
+	calculateRestoreVelocityTowardZero,
+	normalizeVelocity,
+} from "./velocity";
 
 interface ResetGestureValuesProps {
 	spec?: AnimationConfig;
@@ -26,8 +29,8 @@ export const resetGestureValues = ({
 }: ResetGestureValuesProps) => {
 	"worklet";
 
-	const vxNorm = velocity.normalize(event.velocityX, dimensions.width);
-	const vyNorm = velocity.normalize(event.velocityY, dimensions.height);
+	const vxNorm = normalizeVelocity(event.velocityX, dimensions.width);
+	const vyNorm = normalizeVelocity(event.velocityY, dimensions.height);
 
 	// Ensure spring starts moving toward zero using normalized gesture values for direction.
 	const nx =
@@ -38,8 +41,8 @@ export const resetGestureValues = ({
 		gestures.normalizedY.value ||
 		event.translationY / Math.max(1, dimensions.height);
 
-	const vxTowardZero = velocity.calculateRestoreVelocity(nx, vxNorm);
-	const vyTowardZero = velocity.calculateRestoreVelocity(ny, vyNorm);
+	const vxTowardZero = calculateRestoreVelocityTowardZero(nx, vxNorm);
+	const vyTowardZero = calculateRestoreVelocityTowardZero(ny, vyNorm);
 
 	let remainingAnimations = 4;
 

@@ -26,7 +26,7 @@ const MAX_VELOCITY_MAGNITUDE = 3.2;
  * Converts velocity from pixels/second to normalized units/second (0-1 range)
  * and caps the result for stability
  */
-export const normalize = (
+export const normalizeVelocity = (
 	velocityPixelsPerSecond: number,
 	screenSize: number,
 ) => {
@@ -42,7 +42,7 @@ export const normalize = (
  * Normalizes translation to -1...1 range (for gesture tracking).
  * Used to convert pixel translation to normalized gesture values.
  */
-export const normalizeTranslation = (
+export const normalizeGestureTranslation = (
 	translation: number,
 	dimension: number,
 ) => {
@@ -54,7 +54,7 @@ export const normalizeTranslation = (
  * Calculates a normalized velocity that moves the current value toward zero.
  * Used for spring-back animations when dismissing gestures.
  */
-export const calculateRestoreVelocity = (
+export const calculateRestoreVelocityTowardZero = (
 	currentValueNormalized: number,
 	baseVelocityNormalized: number,
 ) => {
@@ -68,7 +68,7 @@ export const calculateRestoreVelocity = (
 	return -directionTowardZero * clampedVelocity;
 };
 
-export const calculateProgressVelocity = ({
+export const calculateProgressSpringVelocity = ({
 	animations,
 	shouldDismiss,
 	event,
@@ -88,21 +88,30 @@ export const calculateProgressVelocity = ({
 	if (directions.horizontal && event.translationX > 0) {
 		candidates.push({
 			progressContribution: event.translationX / Math.max(1, dimensions.width),
-			velocityContribution: normalize(event.velocityX, dimensions.width),
+			velocityContribution: normalizeVelocity(
+				event.velocityX,
+				dimensions.width,
+			),
 		});
 	}
 
 	if (directions.horizontalInverted && event.translationX < 0) {
 		candidates.push({
 			progressContribution: -event.translationX / Math.max(1, dimensions.width),
-			velocityContribution: normalize(-event.velocityX, dimensions.width),
+			velocityContribution: normalizeVelocity(
+				-event.velocityX,
+				dimensions.width,
+			),
 		});
 	}
 
 	if (directions.vertical && event.translationY > 0) {
 		candidates.push({
 			progressContribution: event.translationY / Math.max(1, dimensions.height),
-			velocityContribution: normalize(event.velocityY, dimensions.height),
+			velocityContribution: normalizeVelocity(
+				event.velocityY,
+				dimensions.height,
+			),
 		});
 	}
 
@@ -110,7 +119,10 @@ export const calculateProgressVelocity = ({
 		candidates.push({
 			progressContribution:
 				-event.translationY / Math.max(1, dimensions.height),
-			velocityContribution: normalize(-event.velocityY, dimensions.height),
+			velocityContribution: normalizeVelocity(
+				-event.velocityY,
+				dimensions.height,
+			),
 		});
 	}
 
@@ -126,8 +138,14 @@ export const calculateProgressVelocity = ({
 		}
 		progressVelocityMagnitude = Math.abs(dominant.velocityContribution);
 	} else {
-		const normalizedVelocityX = normalize(event.velocityX, dimensions.width);
-		const normalizedVelocityY = normalize(event.velocityY, dimensions.height);
+		const normalizedVelocityX = normalizeVelocity(
+			event.velocityX,
+			dimensions.width,
+		);
+		const normalizedVelocityY = normalizeVelocity(
+			event.velocityY,
+			dimensions.height,
+		);
 		progressVelocityMagnitude = Math.max(
 			Math.abs(normalizedVelocityX),
 			Math.abs(normalizedVelocityY),
@@ -147,7 +165,7 @@ export const calculateProgressVelocity = ({
  *
  * Formula: |translation/screen + clamp(velocity/screen, ±1) * velocityWeight| > 0.5
  */
-export const shouldPassDismissalThreshold = (
+export const shouldDismissFromTranslationAndVelocity = (
 	translationPixels: number,
 	velocityPixelsPerSecond: number,
 	screenSize: number,
@@ -163,7 +181,10 @@ export const shouldPassDismissalThreshold = (
 		return false;
 	}
 
-	const normalizedVelocity = normalize(velocityPixelsPerSecond, screenSize);
+	const normalizedVelocity = normalizeVelocity(
+		velocityPixelsPerSecond,
+		screenSize,
+	);
 
 	const projectedNormalizedPosition =
 		normalizedTranslation + normalizedVelocity * velocityWeight;
@@ -176,12 +197,4 @@ export const shouldPassDismissalThreshold = (
 	const exceedsThreshold = projectedInDismissDirection > 0.5;
 
 	return exceedsThreshold;
-};
-
-export const velocity = {
-	normalize,
-	normalizeTranslation,
-	calculateRestoreVelocity,
-	calculateProgressVelocity,
-	shouldPassDismissalThreshold,
 };

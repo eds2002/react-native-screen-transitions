@@ -1,4 +1,4 @@
-import { sanitizeSnapPoints } from "./validate-snap-points";
+import { sanitizeSnapPoints } from "../../../../utils/gesture/validate-snap-points";
 
 interface DetermineSnapTargetProps {
 	currentProgress: number;

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { velocity } from "../hooks/gestures/use-build-gestures/helpers/velocity";
+import {
+	calculateProgressSpringVelocity,
+	normalizeVelocity,
+	shouldDismissFromTranslationAndVelocity,
+} from "../hooks/gestures/use-build-gestures/helpers/velocity";
 
 type Directions = {
 	horizontal: boolean;
@@ -38,14 +42,14 @@ const createDirections = (overrides: Partial<Directions> = {}) => ({
 	...overrides,
 });
 
-describe("velocity.normalize", () => {
+describe("normalizeVelocity", () => {
 	it("clamps values to the configured range", () => {
-		expect(velocity.normalize(6400, 320)).toBeCloseTo(3.2, 5);
-		expect(velocity.normalize(-6400, 320)).toBeCloseTo(-3.2, 5);
+		expect(normalizeVelocity(6400, 320)).toBeCloseTo(3.2, 5);
+		expect(normalizeVelocity(-6400, 320)).toBeCloseTo(-3.2, 5);
 	});
 });
 
-describe("velocity.calculateProgressVelocity", () => {
+describe("calculateProgressSpringVelocity", () => {
 	const dimensions = { width: 320, height: 640 };
 
 	it("returns positive magnitude when progressing toward open target", () => {
@@ -56,7 +60,7 @@ describe("velocity.calculateProgressVelocity", () => {
 			velocityX: 800,
 		});
 
-		const result = velocity.calculateProgressVelocity({
+		const result = calculateProgressSpringVelocity({
 			animations: animations as any,
 			shouldDismiss: false,
 			event,
@@ -76,7 +80,7 @@ describe("velocity.calculateProgressVelocity", () => {
 			velocityY: -900,
 		});
 
-		const result = velocity.calculateProgressVelocity({
+		const result = calculateProgressSpringVelocity({
 			animations: animations as any,
 			shouldDismiss: true,
 			event,
@@ -98,7 +102,7 @@ describe("velocity.calculateProgressVelocity", () => {
 			velocityX: 5000,
 		});
 
-		const result = velocity.calculateProgressVelocity({
+		const result = calculateProgressSpringVelocity({
 			animations: animations as any,
 			shouldDismiss: false,
 			event,
@@ -118,7 +122,7 @@ describe("velocity.calculateProgressVelocity", () => {
 			velocityY: 640,
 		});
 
-		const result = velocity.calculateProgressVelocity({
+		const result = calculateProgressSpringVelocity({
 			animations: animations as any,
 			shouldDismiss: true,
 			event,
@@ -134,22 +138,26 @@ describe("velocity.calculateProgressVelocity", () => {
 	});
 });
 
-describe("velocity.shouldPassDismissalThreshold", () => {
+describe("shouldDismissFromTranslationAndVelocity", () => {
 	const width = 320;
 
 	it("returns true once translation alone crosses half the screen", () => {
-		expect(velocity.shouldPassDismissalThreshold(170, 0, width, 0.3)).toBe(
+		expect(shouldDismissFromTranslationAndVelocity(170, 0, width, 0.3)).toBe(
 			true,
 		);
 	});
 
 	it("combines translation with weighted velocity", () => {
-		expect(velocity.shouldPassDismissalThreshold(40, 2500, width, 0.5)).toBe(
+		expect(
+			shouldDismissFromTranslationAndVelocity(40, 2500, width, 0.5),
+		).toBe(
 			true,
 		);
 	});
 
 	it("returns false when movement is negligible", () => {
-		expect(velocity.shouldPassDismissalThreshold(0, 0, width, 0.3)).toBe(false);
+		expect(shouldDismissFromTranslationAndVelocity(0, 0, width, 0.3)).toBe(
+			false,
+		);
 	});
 });
