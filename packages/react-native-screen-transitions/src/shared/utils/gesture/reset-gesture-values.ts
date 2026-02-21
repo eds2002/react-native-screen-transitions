@@ -2,10 +2,10 @@ import type {
 	GestureStateChangeEvent,
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
+import { velocity } from "../../hooks/gestures/use-build-gestures/helpers/velocity";
 import type { GestureStoreMap } from "../../stores/gesture.store";
 import type { AnimationConfig } from "../../types/animation.types";
 import { animate } from "../animation/animate";
-import { velocity } from "./velocity";
 
 interface ResetGestureValuesProps {
 	spec?: AnimationConfig;

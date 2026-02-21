@@ -3,9 +3,9 @@ import type {
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
-import { ANIMATION_SNAP_THRESHOLD, EPSILON } from "../../constants";
-import type { AnimationStoreMap } from "../../stores/animation.store";
-import type { GestureDirections } from "../../types/gesture.types";
+import { ANIMATION_SNAP_THRESHOLD, EPSILON } from "../../../../constants";
+import type { AnimationStoreMap } from "../../../../stores/animation.store";
+import type { GestureDirections } from "../../../../types/gesture.types";
 
 interface CalculateProgressProps {
 	animations: AnimationStoreMap;
@@ -26,7 +26,10 @@ const MAX_VELOCITY_MAGNITUDE = 3.2;
  * Converts velocity from pixels/second to normalized units/second (0-1 range)
  * and caps the result for stability
  */
-const normalize = (velocityPixelsPerSecond: number, screenSize: number) => {
+export const normalize = (
+	velocityPixelsPerSecond: number,
+	screenSize: number,
+) => {
 	"worklet";
 	return clamp(
 		velocityPixelsPerSecond / Math.max(1, screenSize),
@@ -39,7 +42,10 @@ const normalize = (velocityPixelsPerSecond: number, screenSize: number) => {
  * Normalizes translation to -1...1 range (for gesture tracking).
  * Used to convert pixel translation to normalized gesture values.
  */
-const normalizeTranslation = (translation: number, dimension: number) => {
+export const normalizeTranslation = (
+	translation: number,
+	dimension: number,
+) => {
 	"worklet";
 	return clamp(translation / Math.max(1, dimension), -1, 1);
 };
@@ -48,7 +54,7 @@ const normalizeTranslation = (translation: number, dimension: number) => {
  * Calculates a normalized velocity that moves the current value toward zero.
  * Used for spring-back animations when dismissing gestures.
  */
-const calculateRestoreVelocity = (
+export const calculateRestoreVelocity = (
 	currentValueNormalized: number,
 	baseVelocityNormalized: number,
 ) => {
@@ -62,7 +68,7 @@ const calculateRestoreVelocity = (
 	return -directionTowardZero * clampedVelocity;
 };
 
-const calculateProgressVelocity = ({
+export const calculateProgressVelocity = ({
 	animations,
 	shouldDismiss,
 	event,
@@ -141,7 +147,7 @@ const calculateProgressVelocity = ({
  *
  * Formula: |translation/screen + clamp(velocity/screen, ±1) * velocityWeight| > 0.5
  */
-const shouldPassDismissalThreshold = (
+export const shouldPassDismissalThreshold = (
 	translationPixels: number,
 	velocityPixelsPerSecond: number,
 	screenSize: number,

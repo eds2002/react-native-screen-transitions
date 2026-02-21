@@ -8,7 +8,7 @@ import type {
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import { DefaultSnapSpec } from "../../configs/specs";
+import { DefaultSnapSpec } from "../../../../configs/specs";
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
@@ -19,35 +19,35 @@ import {
 	RELEASE_VELOCITY_MAX,
 	SNAP_VELOCITY_IMPACT,
 	TRUE,
-} from "../../constants";
+} from "../../../../constants";
 import type {
 	DirectionClaimMap,
 	GestureContextType,
 	ScrollConfig,
-} from "../../providers/gestures.provider";
-import { useKeys } from "../../providers/screen/keys.provider";
-import { AnimationStore } from "../../stores/animation.store";
-import { GestureStore } from "../../stores/gesture.store";
-import { GestureOffsetState } from "../../types/gesture.types";
+} from "../../../../providers/gestures.provider";
+import { useKeys } from "../../../../providers/screen/keys.provider";
+import { AnimationStore } from "../../../../stores/animation.store";
+import { GestureStore } from "../../../../stores/gesture.store";
+import { GestureOffsetState } from "../../../../types/gesture.types";
 import type {
 	ClaimedDirections,
 	Direction,
 	DirectionOwnership,
-} from "../../types/ownership.types";
-import { animateToProgress } from "../../utils/animation/animate-to-progress";
+} from "../../../../types/ownership.types";
+import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import {
 	applyOffsetRules,
 	checkScrollBoundary,
-} from "../../utils/gesture/check-gesture-activation";
-import { determineDismissal } from "../../utils/gesture/determine-dismissal";
-import { determineSnapTarget } from "../../utils/gesture/determine-snap-target";
-import { mapGestureToProgress } from "../../utils/gesture/map-gesture-to-progress";
-import { resetGestureValues } from "../../utils/gesture/reset-gesture-values";
-import { shouldDeferToChildClaim } from "../../utils/gesture/should-defer-to-child-claim";
-import type { ValidateSnapPointsResult } from "../../utils/gesture/validate-snap-points";
-import { velocity } from "../../utils/gesture/velocity";
-import { logger } from "../../utils/logger";
-import useStableCallbackValue from "../use-stable-callback-value";
+} from "../../../../utils/gesture/check-gesture-activation";
+import { determineDismissal } from "../../../../utils/gesture/determine-dismissal";
+import { determineSnapTarget } from "../../../../utils/gesture/determine-snap-target";
+import { mapGestureToProgress } from "../../../../utils/gesture/map-gesture-to-progress";
+import { resetGestureValues } from "../../../../utils/gesture/reset-gesture-values";
+import { shouldDeferToChildClaim } from "../../../../utils/gesture/should-defer-to-child-claim";
+import type { ValidateSnapPointsResult } from "../../../../utils/gesture/validate-snap-points";
+import { logger } from "../../../../utils/logger";
+import useStableCallbackValue from "../../../use-stable-callback-value";
+import { velocity } from "../helpers/velocity";
 
 interface UseScreenGestureHandlersProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
@@ -106,7 +106,7 @@ interface UseScreenGestureHandlersProps {
  * (e.g., vertical sheet claims vertical AND vertical-inverted). This allows
  * expand (drag up) and collapse/dismiss (drag down) gestures.
  */
-export const useScreenGestureHandlers = ({
+export const useHandlers = ({
 	scrollConfig,
 	ancestorIsDismissing,
 	canDismiss,

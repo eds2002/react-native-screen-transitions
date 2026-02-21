@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { velocity } from "../utils/gesture/velocity";
+import { velocity } from "../hooks/gestures/use-build-gestures/helpers/velocity";
 
 type Directions = {
 	horizontal: boolean;

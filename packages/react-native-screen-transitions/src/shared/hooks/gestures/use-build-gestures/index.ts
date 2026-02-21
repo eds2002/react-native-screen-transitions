@@ -6,17 +6,20 @@ import type {
 	DirectionClaimMap,
 	GestureContextType,
 	ScrollConfig,
-} from "../../providers/gestures.provider";
-import { useKeys } from "../../providers/screen/keys.provider";
-import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
+} from "../../../providers/gestures.provider";
+import { useKeys } from "../../../providers/screen/keys.provider";
+import {
+	GestureStore,
+	type GestureStoreMap,
+} from "../../../stores/gesture.store";
 import {
 	type ClaimedDirections,
 	DIRECTIONS,
-} from "../../types/ownership.types";
-import { claimsAnyDirection } from "../../utils/gesture/compute-claimed-directions";
-import { resolveOwnership } from "../../utils/gesture/resolve-ownership";
-import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
-import { useScreenGestureHandlers } from "./use-screen-gesture-handlers";
+} from "../../../types/ownership.types";
+import { claimsAnyDirection } from "../../../utils/gesture/compute-claimed-directions";
+import { resolveOwnership } from "../../../utils/gesture/resolve-ownership";
+import { validateSnapPoints } from "../../../utils/gesture/validate-snap-points";
+import { useHandlers } from "./handlers/use-handlers";
 
 /**
  * Finds ancestor pan gestures that we shadow (claim the same direction).
@@ -121,7 +124,7 @@ export const useBuildGestures = ({
 	}, [current, ancestorContext]);
 
 	const { onTouchesDown, onTouchesMove, onStart, onUpdate, onEnd } =
-		useScreenGestureHandlers({
+		useHandlers({
 			scrollConfig,
 			canDismiss,
 			handleDismiss,

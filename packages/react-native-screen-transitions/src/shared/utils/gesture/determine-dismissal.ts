@@ -19,7 +19,7 @@ interface DetermineDismissalProps {
 	gestureVelocityImpact: number;
 }
 
-import { velocity as V } from "./velocity";
+import { velocity as V } from "../../hooks/gestures/use-build-gestures/helpers/velocity";
 
 const getAxisThreshold = ({
 	translation,
