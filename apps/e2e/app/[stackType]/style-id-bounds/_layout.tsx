@@ -25,8 +25,6 @@ export default function StyleIdBoundsLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: ["vertical"],
-					gestureReleaseVelocityScale: 1.6,
-					gestureReleaseVelocityMax: 100000,
 					screenStyleInterpolator: ({
 						current,
 						layouts: { screen },

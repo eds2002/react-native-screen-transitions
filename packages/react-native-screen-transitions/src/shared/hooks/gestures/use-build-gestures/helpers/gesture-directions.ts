@@ -92,5 +92,6 @@ export const isExpandGestureForDirection = (
 
 export const clampVelocity = (value: number, maxMagnitude: number) => {
 	"worklet";
-	return Math.max(-maxMagnitude, Math.min(maxMagnitude, value));
+	const max = Math.max(0, Math.abs(maxMagnitude));
+	return Math.max(-max, Math.min(max, value));
 };

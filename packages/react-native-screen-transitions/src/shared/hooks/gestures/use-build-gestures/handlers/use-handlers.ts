@@ -152,11 +152,6 @@ export const useHandlers = ({
 		current.route.key,
 	);
 
-	const effectiveReleaseVelocityMax = Math.max(
-		0.1,
-		Math.abs(gestureReleaseVelocityMax),
-	);
-
 	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } =
 		effectiveSnapPoints;
 
@@ -466,6 +461,7 @@ export const useHandlers = ({
 					event,
 					dimensions,
 					gestureReleaseVelocityScale,
+					gestureReleaseVelocityMax,
 				});
 
 				const snapDirection = Math.sign(
@@ -473,7 +469,11 @@ export const useHandlers = ({
 				);
 
 				const normalizedAxisVelocity = Math.abs(
-					normalizeVelocity(axisVelocity, axisDimension),
+					normalizeVelocity(
+						axisVelocity,
+						axisDimension,
+						gestureReleaseVelocityMax,
+					),
 				);
 
 				const signedSnapVelocity =
@@ -482,7 +482,7 @@ export const useHandlers = ({
 				const initialVelocity =
 					snapDirection === 0
 						? 0
-						: clampVelocity(signedSnapVelocity, effectiveReleaseVelocityMax);
+						: clampVelocity(signedSnapVelocity, gestureReleaseVelocityMax);
 
 				animateToProgress({
 					target: targetProgress,
@@ -509,6 +509,7 @@ export const useHandlers = ({
 					event,
 					dimensions,
 					gestureReleaseVelocityScale,
+					gestureReleaseVelocityMax,
 				});
 
 				const initialVelocity = calculateProgressSpringVelocity({
@@ -521,7 +522,7 @@ export const useHandlers = ({
 
 				const scaledInitialVelocity = clampVelocity(
 					initialVelocity * gestureReleaseVelocityScale,
-					effectiveReleaseVelocityMax,
+					gestureReleaseVelocityMax,
 				);
 
 				animateToProgress({

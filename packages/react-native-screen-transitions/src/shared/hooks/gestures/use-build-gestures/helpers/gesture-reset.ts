@@ -3,6 +3,7 @@ import type {
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import {
+	DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	FALSE,
 	TRUE,
@@ -22,6 +23,7 @@ interface ResetGestureValuesProps {
 	event: GestureStateChangeEvent<PanGestureHandlerEventPayload>;
 	dimensions: { width: number; height: number };
 	gestureReleaseVelocityScale?: number;
+	gestureReleaseVelocityMax?: number;
 }
 
 export const resetGestureValues = ({
@@ -31,11 +33,25 @@ export const resetGestureValues = ({
 	event,
 	dimensions,
 	gestureReleaseVelocityScale = DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+	gestureReleaseVelocityMax = DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 }: ResetGestureValuesProps) => {
 	"worklet";
 
-	const vxNorm = normalizeVelocity(event.velocityX, dimensions.width);
-	const vyNorm = normalizeVelocity(event.velocityY, dimensions.height);
+	const effectiveReleaseVelocityMax = Math.max(
+		0,
+		Math.abs(gestureReleaseVelocityMax),
+	);
+
+	const vxNorm = normalizeVelocity(
+		event.velocityX,
+		dimensions.width,
+		effectiveReleaseVelocityMax,
+	);
+	const vyNorm = normalizeVelocity(
+		event.velocityY,
+		dimensions.height,
+		effectiveReleaseVelocityMax,
+	);
 
 	// Ensure spring starts moving toward zero using normalized gesture values for direction.
 	const nx =

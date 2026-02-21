@@ -47,6 +47,17 @@ describe("normalizeVelocity", () => {
 		expect(normalizeVelocity(6400, 320)).toBeCloseTo(3.2, 5);
 		expect(normalizeVelocity(-6400, 320)).toBeCloseTo(-3.2, 5);
 	});
+
+	it("respects a custom max magnitude", () => {
+		expect(normalizeVelocity(6400, 320, 10)).toBeCloseTo(10, 5);
+		expect(normalizeVelocity(-6400, 320, 10)).toBeCloseTo(-10, 5);
+		expect(normalizeVelocity(6400, 320, 1.5)).toBeCloseTo(1.5, 5);
+	});
+
+	it("returns zero when max magnitude is zero", () => {
+		expect(normalizeVelocity(6400, 320, 0)).toBeCloseTo(0, 5);
+		expect(normalizeVelocity(-6400, 320, 0)).toBeCloseTo(0, 5);
+	});
 });
 
 describe("calculateProgressSpringVelocity", () => {
