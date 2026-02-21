@@ -2,9 +2,9 @@
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { create } from "zustand";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 export const useStyleIdBoundsStore = create<{ boundTag: string }>(() => ({
 	boundTag: "",
@@ -25,6 +25,8 @@ export default function StyleIdBoundsLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: ["vertical"],
+					gestureReleaseVelocityScale: 1.6,
+					gestureReleaseVelocityMax: 100000,
 					screenStyleInterpolator: ({
 						current,
 						layouts: { screen },
@@ -100,8 +102,8 @@ export default function StyleIdBoundsLayout() {
 						};
 					},
 					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
+						open: Transition.Specs.FlingSpec,
+						close: Transition.Specs.FlingSpec,
 					},
 				}}
 			/>
