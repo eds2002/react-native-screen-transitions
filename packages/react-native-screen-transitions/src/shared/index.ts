@@ -21,8 +21,6 @@ export default {
 };
 
 export { snapTo } from "./animation/snap-to";
-export type { BoundaryProps } from "./components/boundary";
-export { Boundary, buildBoundaryMatchKey } from "./components/boundary";
 export { useScreenAnimation } from "./hooks/animation/use-screen-animation";
 export { useScreenGesture } from "./hooks/gestures/use-screen-gesture";
 export { useHistory } from "./hooks/navigation/use-history";
@@ -30,6 +28,7 @@ export {
 	type ScreenState,
 	useScreenState,
 } from "./hooks/navigation/use-screen-state";
+
 export type {
 	AnimatedViewStyle,
 	AnimationConfig,
