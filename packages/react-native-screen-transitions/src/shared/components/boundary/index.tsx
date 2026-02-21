@@ -92,6 +92,8 @@ const BoundaryComponent = ({
 	const shouldRunDestinationEffects =
 		runtimeEnabled && !hasNextScreen && mode !== "source";
 
+	// Register/unregister this boundary in the presence map so source/destination
+	// matching can resolve across screens (including ancestor relationships).
 	useBoundaryPresence({
 		enabled: runtimeEnabled,
 		sharedBoundTag,
@@ -100,6 +102,8 @@ const BoundaryComponent = ({
 		boundaryConfig,
 	});
 
+	// On the source screen, capture source bounds when a matching destination
+	// appears on the next screen.
 	useAutoSourceMeasurement({
 		enabled: runtimeEnabled,
 		mode,
@@ -108,6 +112,8 @@ const BoundaryComponent = ({
 		maybeMeasureAndStore,
 	});
 
+	// Primary destination capture: once a pending source link exists for this tag,
+	// measure destination bounds and complete the pair.
 	usePendingDestinationMeasurement({
 		sharedBoundTag,
 		enabled: shouldRunDestinationEffects,
@@ -115,6 +121,8 @@ const BoundaryComponent = ({
 		maybeMeasureAndStore,
 	});
 
+	// Reliability fallback: retry destination capture during transition progress
+	// when the initial pending-destination attempt happens before layout is ready.
 	usePendingDestinationRetryMeasurement({
 		sharedBoundTag,
 		enabled: shouldRunDestinationEffects,
@@ -125,6 +133,8 @@ const BoundaryComponent = ({
 		maybeMeasureAndStore,
 	});
 
+	// Grouped boundaries (e.g. paged/detail UIs): re-measure when this boundary
+	// becomes the active member so destination bounds stay accurate.
 	useGroupActiveMeasurement({
 		enabled: runtimeEnabled,
 		group,
@@ -134,6 +144,8 @@ const BoundaryComponent = ({
 		maybeMeasureAndStore,
 	});
 
+	// While idle on source screens, re-measure after scroll settles so a later
+	// close transition starts from up-to-date source geometry.
 	useScrollSettledMeasurement({
 		enabled: runtimeEnabled,
 		group,
@@ -142,6 +154,8 @@ const BoundaryComponent = ({
 		maybeMeasureAndStore,
 	});
 
+	// Destination mount-time capture path: onLayout schedules a one-time UI-thread
+	// initial measurement when transitions are active.
 	const handleInitialLayout = useInitialLayoutHandler({
 		enabled: runtimeEnabled && mode !== "source",
 		sharedBoundTag,
