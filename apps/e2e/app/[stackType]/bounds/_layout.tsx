@@ -4,9 +4,9 @@ import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition, {
 	buildBoundaryMatchKey,
 } from "react-native-screen-transitions";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { activeBoundaryId, BOUNDARY_GROUP } from "./constants";
 
 const sharedBoundaryInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
@@ -24,14 +24,22 @@ const sharedBoundaryInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 
 		return {
 			[activeTag]: {
-				...bounds({
-					group: BOUNDARY_GROUP,
-					id: activeId,
-				}),
-				opacity: interpolate(progress, [0, 0.7, 1, 1.3, 1.7], [0, 1, 1, 1, 0]),
+				style: {
+					...bounds({
+						group: BOUNDARY_GROUP,
+						id: activeId,
+					}),
+					opacity: interpolate(
+						progress,
+						[0, 0.7, 1, 1.3, 1.7],
+						[0, 1, 1, 1, 0],
+					),
+				},
 			},
-			contentStyle: {
-				transform: [{ scale }],
+			content: {
+				style: {
+					transform: [{ scale }],
+				},
 			},
 		};
 	};

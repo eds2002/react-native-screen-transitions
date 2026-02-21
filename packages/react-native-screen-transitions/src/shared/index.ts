@@ -1,5 +1,6 @@
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { Boundary } from "./components/boundary";
+import { buildBoundaryMatchKey } from "./components/boundary/utils/build-boundary-match-key";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
 import MaskedView from "./components/integrations/masked-view";
 import { Presets, Specs } from "./configs";
@@ -28,6 +29,7 @@ export {
 	type ScreenState,
 	useScreenState,
 } from "./hooks/navigation/use-screen-state";
+export { buildBoundaryMatchKey };
 
 export type {
 	AnimatedViewStyle,
