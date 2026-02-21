@@ -38,13 +38,19 @@ import type {
 } from "../../../../types/ownership.types";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import type { EffectiveSnapPointsResult } from "../../../../utils/gesture/validate-snap-points";
-import { logger } from "../../../../utils/logger";
 import useStableCallbackValue from "../../../use-stable-callback-value";
 import {
 	applyOffsetRules,
 	checkScrollBoundary,
 } from "../helpers/gesture-activation";
 import { shouldDeferToChildClaim } from "../helpers/gesture-claims";
+import {
+	clampVelocity,
+	getSnapAxis,
+	isExpandGestureForDirection,
+	resolveGestureDirections,
+	warnOnSnapDirectionArray,
+} from "../helpers/gesture-directions";
 import {
 	calculateProgressSpringVelocity,
 	mapGestureToProgress,
@@ -151,90 +157,15 @@ export const useHandlers = ({
 		Math.abs(gestureReleaseVelocityMax),
 	);
 
-	const clampReleaseVelocity = (value: number) => {
-		"worklet";
-		return Math.max(
-			-effectiveReleaseVelocityMax,
-			Math.min(effectiveReleaseVelocityMax, value),
-		);
-	};
-
 	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } =
 		effectiveSnapPoints;
 
 	const directions = useMemo(() => {
-		if (hasSnapPoints && Array.isArray(gestureDirection)) {
-			/**
-			 * Unsure if this behavior will change in the future, as I cannot find a use case as to why
-			 * you would want multiple gesture dismisals for a sheet.
-			 *
-			 * e.g. When defining a snap point with a gesture of vertical ( default ), the system
-			 * assumes that the inverse ( vertical-inverted ), will grow the sheet.
-			 */
-			logger.warn(
-				`gestureDirection array is not supported with snapPoints. ` +
-					`Only the first direction "${gestureDirection[0]}" will be used. ` +
-					`Snap points define a single axis of movement, so only one gesture direction is needed.`,
-			);
-		}
-
-		// When snap points are defined, use only the first direction from the array
-		const effectiveDirection = hasSnapPoints
-			? Array.isArray(gestureDirection)
-				? gestureDirection[0]
-				: gestureDirection
-			: gestureDirection;
-
-		const directionsArray = Array.isArray(effectiveDirection)
-			? effectiveDirection
-			: [effectiveDirection];
-
-		const isBidirectional = directionsArray.includes("bidirectional");
-
-		const hasHorizontalDirection =
-			directionsArray.includes("horizontal") ||
-			directionsArray.includes("horizontal-inverted");
-
-		const isSnapAxisInverted = hasHorizontalDirection
-			? directionsArray.includes("horizontal-inverted") &&
-				!directionsArray.includes("horizontal")
-			: directionsArray.includes("vertical-inverted") &&
-				!directionsArray.includes("vertical");
-
-		const enableBothVertical =
-			isBidirectional || (hasSnapPoints && !hasHorizontalDirection);
-		const enableBothHorizontal =
-			isBidirectional || (hasSnapPoints && hasHorizontalDirection);
-
-		return {
-			vertical: directionsArray.includes("vertical") || enableBothVertical,
-			verticalInverted:
-				directionsArray.includes("vertical-inverted") || enableBothVertical,
-			horizontal:
-				directionsArray.includes("horizontal") || enableBothHorizontal,
-			horizontalInverted:
-				directionsArray.includes("horizontal-inverted") || enableBothHorizontal,
-			snapAxisInverted: hasSnapPoints && isSnapAxisInverted,
-		};
+		warnOnSnapDirectionArray({ gestureDirection, hasSnapPoints });
+		return resolveGestureDirections({ gestureDirection, hasSnapPoints });
 	}, [gestureDirection, hasSnapPoints]);
 
-	const snapAxis =
-		directions.horizontal || directions.horizontalInverted
-			? "horizontal"
-			: "vertical";
-
-	const isExpandGesture = (swipeDirection: Direction): boolean => {
-		"worklet";
-		if (snapAxis === "horizontal") {
-			return directions.snapAxisInverted
-				? swipeDirection === "horizontal"
-				: swipeDirection === "horizontal-inverted";
-		}
-
-		return directions.snapAxisInverted
-			? swipeDirection === "vertical"
-			: swipeDirection === "vertical-inverted";
-	};
+	const snapAxis = getSnapAxis(directions);
 
 	const initialTouch = useSharedValue({ x: 0, y: 0 });
 	const gestureOffsetState = useSharedValue<GestureOffsetState>(
@@ -318,7 +249,11 @@ export const useHandlers = ({
 			if (
 				hasSnapPoints &&
 				gestureSnapLocked &&
-				isExpandGesture(swipeDirection)
+				isExpandGestureForDirection(
+					swipeDirection,
+					snapAxis,
+					directions.snapAxisInverted ?? false,
+				)
 			) {
 				manager.fail();
 				return;
@@ -347,7 +282,13 @@ export const useHandlers = ({
 
 				// Step 7: Expand check for snap sheets
 				if (hasSnapPoints) {
-					if (isExpandGesture(swipeDirection)) {
+					if (
+						isExpandGestureForDirection(
+							swipeDirection,
+							snapAxis,
+							directions.snapAxisInverted ?? false,
+						)
+					) {
 						if (!expandViaScrollView) {
 							manager.fail();
 							return;
@@ -531,14 +472,17 @@ export const useHandlers = ({
 					targetProgress - animations.progress.value,
 				);
 
+				const normalizedAxisVelocity = Math.abs(
+					normalizeVelocity(axisVelocity, axisDimension),
+				);
+
+				const signedSnapVelocity =
+					snapDirection * normalizedAxisVelocity * gestureReleaseVelocityScale;
+
 				const initialVelocity =
 					snapDirection === 0
 						? 0
-						: clampReleaseVelocity(
-								snapDirection *
-									Math.abs(normalizeVelocity(axisVelocity, axisDimension)) *
-									gestureReleaseVelocityScale,
-							);
+						: clampVelocity(signedSnapVelocity, effectiveReleaseVelocityMax);
 
 				animateToProgress({
 					target: targetProgress,
@@ -575,8 +519,9 @@ export const useHandlers = ({
 					directions,
 				});
 
-				const scaledInitialVelocity = clampReleaseVelocity(
+				const scaledInitialVelocity = clampVelocity(
 					initialVelocity * gestureReleaseVelocityScale,
+					effectiveReleaseVelocityMax,
 				);
 
 				animateToProgress({
