@@ -2,10 +2,14 @@ import type {
 	GestureStateChangeEvent,
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
-import { DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE } from "../../../../constants";
+import {
+	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+	FALSE,
+	TRUE,
+} from "../../../../constants";
 import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type { AnimationConfig } from "../../../../types/animation.types";
-import { animate } from "../../../../utils/animation/animate";
+import { animateMany } from "../../../../utils/animation/animate-many";
 import {
 	calculateRestoreVelocityTowardZero,
 	normalizeVelocity,
@@ -45,17 +49,6 @@ export const resetGestureValues = ({
 	const vxTowardZero = calculateRestoreVelocityTowardZero(nx, vxNorm);
 	const vyTowardZero = calculateRestoreVelocityTowardZero(ny, vyNorm);
 
-	let remainingAnimations = 4;
-
-	const onFinish = (finished: boolean | undefined) => {
-		"worklet";
-		if (!finished) return;
-		remainingAnimations -= 1;
-		if (remainingAnimations === 0) {
-			gestures.direction.value = null;
-		}
-	};
-
 	// When dismissing, use raw fling velocity (scaled by gestureReleaseVelocityScale)
 	// so the spring carries the gesture's momentum. The spec controls the
 	// spring character — use an underdamped spec (e.g. FlingSpec) for orbit/fling.
@@ -67,18 +60,35 @@ export const resetGestureValues = ({
 		? vyNorm * gestureReleaseVelocityScale
 		: vyTowardZero;
 
-	gestures.x.value = animate(0, { ...spec, velocity: resetVX }, onFinish);
-	gestures.y.value = animate(0, { ...spec, velocity: resetVY }, onFinish);
-	gestures.normalizedX.value = animate(
-		0,
-		{ ...spec, velocity: resetVX },
-		onFinish,
-	);
-	gestures.normalizedY.value = animate(
-		0,
-		{ ...spec, velocity: resetVY },
-		onFinish,
-	);
-	gestures.isDragging.value = 0;
-	gestures.isDismissing.value = Number(shouldDismiss);
+	animateMany({
+		items: [
+			{
+				value: gestures.x,
+				toValue: 0,
+				config: { ...spec, velocity: resetVX },
+			},
+			{
+				value: gestures.y,
+				toValue: 0,
+				config: { ...spec, velocity: resetVY },
+			},
+			{
+				value: gestures.normalizedX,
+				toValue: 0,
+				config: { ...spec, velocity: resetVX },
+			},
+			{
+				value: gestures.normalizedY,
+				toValue: 0,
+				config: { ...spec, velocity: resetVY },
+			},
+		],
+		onAllFinished: () => {
+			"worklet";
+			gestures.direction.value = null;
+		},
+	});
+
+	gestures.isDragging.value = FALSE;
+	gestures.isDismissing.value = shouldDismiss ? TRUE : FALSE;
 };

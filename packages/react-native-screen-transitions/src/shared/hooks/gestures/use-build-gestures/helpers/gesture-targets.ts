@@ -1,3 +1,4 @@
+import { DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT } from "../../../../constants";
 import type { GestureDirections } from "../../../../types/gesture.types";
 import { sanitizeSnapPoints } from "../../../../utils/gesture/validate-snap-points";
 import { shouldDismissFromTranslationAndVelocity } from "./gesture-physics";
@@ -110,7 +111,7 @@ export function determineSnapTarget({
 	snapPoints,
 	velocity,
 	dimension,
-	velocityFactor = 0.1,
+	velocityFactor = DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
 	canDismiss = true,
 }: DetermineSnapTargetProps): DetermineSnapTargetResult {
 	"worklet";

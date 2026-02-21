@@ -15,6 +15,7 @@ import {
 	DEFAULT_GESTURE_DRIVES_PROGRESS,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+	DEFAULT_GESTURE_SNAP_LOCKED,
 	DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
 	DEFAULT_GESTURE_VELOCITY_IMPACT,
 	EPSILON,
@@ -138,15 +139,17 @@ export const useHandlers = ({
 		gestureReleaseVelocityScale = DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 		gestureReleaseVelocityMax = DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
+		gestureSnapLocked = DEFAULT_GESTURE_SNAP_LOCKED,
+		expandViaScrollView = true,
 		gestureResponseDistance,
 		transitionSpec,
-		expandViaScrollView = true,
-		gestureSnapLocked = false,
 	} = current.options;
+
 	const effectiveReleaseVelocityMax = Math.max(
 		0.1,
 		Math.abs(gestureReleaseVelocityMax),
 	);
+
 	const clampReleaseVelocity = (value: number) => {
 		"worklet";
 		return Math.max(

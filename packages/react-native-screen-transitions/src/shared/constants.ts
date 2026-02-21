@@ -99,6 +99,7 @@ export const DEFAULT_GESTURE_RELEASE_VELOCITY_MAX = 3.2;
 export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
+export const DEFAULT_GESTURE_SNAP_LOCKED = false;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 
 export const IS_WEB = Platform.OS === "web";
