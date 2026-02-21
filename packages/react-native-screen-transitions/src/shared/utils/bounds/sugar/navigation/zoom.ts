@@ -184,7 +184,7 @@ export const buildZoomNavigationStyles = ({
 			},
 			content: {
 				style: {
-					opacity: 0.5,
+					opacity: 0.2,
 				},
 			},
 		};
@@ -197,10 +197,13 @@ export const buildZoomNavigationStyles = ({
 		typeof contentTarget === "object"
 			? contentTarget.pageY + contentTarget.height / 2
 			: screenLayout.height / 2;
+
 	const scaleShiftY = (destCenterY - screenLayout.height / 2) * (dragScale - 1);
 
 	const compensatedGestureX = dragX / safeScale;
-	const compensatedGestureY = (dragY + scaleShiftY) / safeScale;
+	// dragY is measured in screen space and must be unscaled by the parent
+	// content shrink, while scaleShiftY is already in the parent's local space.
+	const compensatedGestureY = dragY / safeScale + scaleShiftY;
 
 	return {
 		content: {
