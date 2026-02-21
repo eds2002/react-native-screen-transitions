@@ -1,4 +1,4 @@
-import type { RouteWithKey } from "../../types/stack.types";
+import type { RouteWithKey } from "../../../../../types/stack.types";
 
 export const routesAreIdentical = <Route extends RouteWithKey>(
 	a: Route[],

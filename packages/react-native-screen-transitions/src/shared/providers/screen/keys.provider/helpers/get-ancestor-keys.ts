@@ -1,4 +1,4 @@
-import type { BaseStackDescriptor } from "../../types/stack.types";
+import type { BaseStackDescriptor } from "../../../../types/stack.types";
 
 /**
  * Builds the full ancestor key chain for nested navigators.

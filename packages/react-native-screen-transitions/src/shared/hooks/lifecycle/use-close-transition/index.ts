@@ -4,16 +4,16 @@ import {
 	useAnimatedReaction,
 	useDerivedValue,
 } from "react-native-reanimated";
-import { useGestureContext } from "../../providers/gestures.provider";
-import type { BaseDescriptor } from "../../providers/screen/keys.provider";
-import { useStackCoreContext } from "../../providers/stack/core.provider";
-import { useManagedStackContext } from "../../providers/stack/managed.provider";
-import type { AnimationStoreMap } from "../../stores/animation.store";
-import { StackType } from "../../types/stack.types";
-import { animateToProgress } from "../../utils/animation/animate-to-progress";
-import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
-import { useSharedValueState } from "../reanimated/use-shared-value-state";
-import useStableCallback from "../use-stable-callback";
+import { useGestureContext } from "../../../providers/gestures.provider";
+import type { BaseDescriptor } from "../../../providers/screen/keys.provider";
+import { useStackCoreContext } from "../../../providers/stack/core.provider";
+import { useManagedStackContext } from "../../../providers/stack/managed.provider";
+import type { AnimationStoreMap } from "../../../stores/animation.store";
+import { StackType } from "../../../types/stack.types";
+import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import { useSharedValueState } from "../../reanimated/use-shared-value-state";
+import useStableCallback from "../../use-stable-callback";
+import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
 
 interface CloseHookParams {
 	current: BaseDescriptor;

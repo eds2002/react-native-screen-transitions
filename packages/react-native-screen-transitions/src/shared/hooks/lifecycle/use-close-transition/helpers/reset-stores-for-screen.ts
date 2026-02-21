@@ -1,7 +1,7 @@
-import { AnimationStore } from "../stores/animation.store";
-import { BoundStore } from "../stores/bounds.store";
-import { GestureStore } from "../stores/gesture.store";
-import type { BaseStackDescriptor } from "../types/stack.types";
+import { AnimationStore } from "../../../../stores/animation.store";
+import { BoundStore } from "../../../../stores/bounds.store";
+import { GestureStore } from "../../../../stores/gesture.store";
+import type { BaseStackDescriptor } from "../../../../types/stack.types";
 
 /**
  * Reset all stores for a given screen.

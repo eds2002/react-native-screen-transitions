@@ -1,4 +1,4 @@
-import type { BaseStackRoute } from "../../types/stack.types";
+import type { BaseStackRoute } from "../../../../types/stack.types";
 
 /**
  * Deep-clones a value, ensuring every object in the tree has Object.prototype.

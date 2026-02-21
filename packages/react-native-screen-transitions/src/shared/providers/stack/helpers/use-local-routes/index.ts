@@ -1,19 +1,19 @@
 import { StackActions } from "@react-navigation/native";
 import { useLayoutEffect, useState } from "react";
-import { useClosingRouteKeys } from "../../../hooks/navigation/use-closing-route-keys";
-import { usePrevious } from "../../../hooks/navigation/use-previous";
-import useStableCallback from "../../../hooks/use-stable-callback";
+import { useClosingRouteKeys } from "../../../../hooks/navigation/use-closing-route-keys";
+import { usePrevious } from "../../../../hooks/navigation/use-previous";
+import useStableCallback from "../../../../hooks/use-stable-callback";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
 	BaseStackRoute,
-} from "../../../types/stack.types";
-import { alignRoutesWithLatest } from "../../../utils/navigation/align-routes-with-latest";
-import { areDescriptorsEqual } from "../../../utils/navigation/are-descriptors-equal";
-import { haveSameRouteKeys } from "../../../utils/navigation/have-same-route-keys";
-import { routesAreIdentical } from "../../../utils/navigation/routes-are-identical";
-import { syncRoutesWithRemoved } from "../../../utils/navigation/sync-routes-with-removed";
-import type { ManagedStackProps } from "../managed.provider";
+} from "../../../../types/stack.types";
+import { syncRoutesWithRemoved } from "../../../../utils/navigation/sync-routes-with-removed";
+import type { ManagedStackProps } from "../../managed.provider";
+import { alignRoutesWithLatest } from "./helpers/align-routes-with-latest";
+import { areDescriptorsEqual } from "./helpers/are-descriptors-equal";
+import { haveSameRouteKeys } from "./helpers/have-same-route-keys";
+import { routesAreIdentical } from "./helpers/routes-are-identical";
 
 export const useLocalRoutes = <
 	TDescriptor extends BaseStackDescriptor,

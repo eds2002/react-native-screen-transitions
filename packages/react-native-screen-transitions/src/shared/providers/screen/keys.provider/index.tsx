@@ -1,6 +1,6 @@
 import { createContext, useContext, useMemo } from "react";
-import type { BaseStackDescriptor } from "../../types/stack.types";
-import { getAncestorKeys } from "../../utils/navigation/get-ancestor-keys";
+import type { BaseStackDescriptor } from "../../../types/stack.types";
+import { getAncestorKeys } from "./helpers/get-ancestor-keys";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
