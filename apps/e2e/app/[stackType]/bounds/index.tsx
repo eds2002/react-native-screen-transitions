@@ -1,18 +1,14 @@
-import { useIsFocused } from "@react-navigation/native";
 import { router } from "expo-router";
-import { useEffect, useRef } from "react";
 import { Pressable, StyleSheet, Text, useWindowDimensions } from "react-native";
-import {
-	scrollTo,
-	useAnimatedReaction,
-	useAnimatedRef,
-	useSharedValue,
-} from "react-native-reanimated";
+import { useAnimatedRef } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 import { activeBoundaryId, BOUNDARY_GROUP, ITEMS } from "./constants";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 const ITEM_SIZE = 100;
 const GAP = 16;
