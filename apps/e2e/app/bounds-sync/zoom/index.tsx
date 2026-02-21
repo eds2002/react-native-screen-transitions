@@ -9,7 +9,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
-import { BOUNDS_SYNC_ZOOM_ITEMS } from "../zoom.constants";
+import {
+	activeZoomId,
+	BOUNDS_SYNC_ZOOM_ITEMS,
+	ZOOM_GROUP,
+} from "../zoom.constants";
 
 const GAP = 10;
 const PADDING = 16;
@@ -33,13 +37,14 @@ export default function BoundsSyncZoomIndex() {
 						return (
 							<Pressable
 								key={item.id}
-								onPress={() =>
-									router.push(`/bounds-sync/zoom/${item.id}` as never)
-								}
+								onPress={() => {
+									activeZoomId.value = item.id;
+									router.push(`/bounds-sync/zoom/${item.id}` as never);
+								}}
 							>
 								<Transition.Boundary
+									group={ZOOM_GROUP}
 									id={item.id}
-									mode="source"
 									style={[
 										styles.card,
 										{

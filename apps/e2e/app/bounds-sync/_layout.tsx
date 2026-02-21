@@ -1,8 +1,10 @@
+import { BlurView } from "expo-blur";
 import { Extrapolation, interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
 import { ALL_CASES, activeCaseId, BOUNDARY_TAG } from "./constants";
+import { activeZoomId, ZOOM_GROUP } from "./zoom.constants";
 
 /**
  * Resolves the bounds options for the active test case on the UI thread.
@@ -17,18 +19,6 @@ const resolveActiveCase = () => {
 		}
 	}
 	return ALL_CASES[0];
-};
-
-const toZoomId = (route: { params?: object }) => {
-	"worklet";
-	const params = route.params as Record<string, unknown> | undefined;
-	const rawId = params?.id;
-
-	if (typeof rawId !== "string") {
-		return null;
-	}
-
-	return rawId;
 };
 
 /**
@@ -101,20 +91,22 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 };
 
 const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, current, active, progress }) => {
+	({ bounds, progress }) => {
 		"worklet";
-		const currentId = toZoomId(current.route);
-		const activeId = toZoomId(active.route);
-		const id = currentId ?? activeId;
+		const id = activeZoomId.value;
 
 		if (!id) {
 			return {};
 		}
 
-		const navigationStyles = bounds({ id }).navigation.zoom();
+		const navigationStyles = bounds({
+			id,
+			group: ZOOM_GROUP,
+		}).navigation.zoom();
+
 		return {
 			...navigationStyles,
-			backdropStyle: {
+			backdrop: {
 				backgroundColor: "black",
 				opacity: interpolate(progress, [0, 1, 2], [0, 0.5, 0]),
 			},
@@ -153,6 +145,7 @@ export default function BoundsSyncLayout() {
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: navigationZoomInterpolator,
+					// backdropComponent: BlurView,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,

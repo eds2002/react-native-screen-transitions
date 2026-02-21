@@ -167,6 +167,13 @@ export const buildZoomNavigationStyles = ({
 					borderRadius: 12,
 				},
 			},
+			// Signal the destination boundary to stay visible during the transition.
+			// Without this, useAssociatedStyles enters "waiting-first-style" mode
+			// (opacity: 0) because it detects previous-screen evidence but never
+			// receives a resolved style for this tag.
+			[resolvedTag]: {
+				style: { opacity: 1 },
+			},
 		};
 	}
 

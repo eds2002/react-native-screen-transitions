@@ -197,6 +197,7 @@ export const useAssociatedStyles = ({
 
 		const hasActiveLink =
 			resetTransformOnUnset &&
+			canUsePreviousTransitionEvidence &&
 			(BoundStore.hasPendingLink(id) ||
 				BoundStore.hasSourceLink(id, currentScreenKey) ||
 				BoundStore.hasDestinationLink(id, currentScreenKey));
