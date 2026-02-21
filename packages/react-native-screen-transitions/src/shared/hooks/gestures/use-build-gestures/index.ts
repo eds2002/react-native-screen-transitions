@@ -1,4 +1,3 @@
-import { StackActions } from "@react-navigation/native";
 import { useCallback, useMemo, useRef } from "react";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
@@ -19,6 +18,7 @@ import {
 import { claimsAnyDirection } from "../../../utils/gesture/compute-claimed-directions";
 import { resolveOwnership } from "../../../utils/gesture/resolve-ownership";
 import { validateSnapPoints } from "../../../utils/gesture/validate-snap-points";
+import { useNavigationHelpers } from "../../navigation/use-navigation-helpers";
 import { useHandlers } from "./handlers/use-handlers";
 
 /**
@@ -79,11 +79,7 @@ export const useBuildGestures = ({
 	gestureAnimationValues: GestureStoreMap;
 } => {
 	const { current } = useKeys();
-	const navState = current.navigation.getState();
-
-	const isFirstScreen = useMemo(() => {
-		return navState.routes.findIndex((r) => r.key === current.route.key) === 0;
-	}, [navState.routes, current.route.key]);
+	const { isFirstKey, dismissScreen } = useNavigationHelpers();
 
 	const panGestureRef = useRef<GestureType | undefined>(undefined);
 	const gestureAnimationValues = GestureStore.getRouteGestures(
@@ -92,13 +88,13 @@ export const useBuildGestures = ({
 
 	const { snapPoints: rawSnapPoints } = current.options;
 	const canDismiss = Boolean(
-		isFirstScreen ? false : current.options.gestureEnabled,
+		isFirstKey ? false : current.options.gestureEnabled,
 	);
-	const validatedSnapPoints = useMemo(
+	const effectiveSnapPoints = useMemo(
 		() => validateSnapPoints({ snapPoints: rawSnapPoints, canDismiss }),
 		[rawSnapPoints, canDismiss],
 	);
-	const gestureEnabled = canDismiss || validatedSnapPoints.hasSnapPoints;
+	const gestureEnabled = canDismiss || effectiveSnapPoints.hasSnapPoints;
 
 	const ownershipStatus = useMemo(
 		() => resolveOwnership(claimedDirections, ancestorContext ?? null),
@@ -109,19 +105,8 @@ export const useBuildGestures = ({
 
 	const handleDismiss = useCallback(() => {
 		if (ancestorContext?.gestureAnimationValues.isDismissing?.value) return;
-
-		const state = current.navigation.getState();
-		const routeStillPresent = state.routes.some(
-			(route) => route.key === current.route.key,
-		);
-		if (!routeStillPresent) return;
-
-		current.navigation.dispatch({
-			...StackActions.pop(),
-			source: current.route.key,
-			target: state.key,
-		});
-	}, [current, ancestorContext]);
+		dismissScreen();
+	}, [ancestorContext, dismissScreen]);
 
 	const { onTouchesDown, onTouchesMove, onStart, onUpdate, onEnd } =
 		useHandlers({
@@ -134,7 +119,7 @@ export const useBuildGestures = ({
 			claimedDirections,
 			ancestorContext,
 			childDirectionClaims,
-			validatedSnapPoints,
+			effectiveSnapPoints,
 		});
 
 	return useMemo(() => {

@@ -12,6 +12,7 @@ import type { AnimationStoreMap } from "../../stores/animation.store";
 import { StackType } from "../../types/stack.types";
 import { animateToProgress } from "../../utils/animation/animate-to-progress";
 import { resetStoresForScreen } from "../../utils/reset-stores-for-screen";
+import { useNavigationHelpers } from "../navigation/use-navigation-helpers";
 import { useSharedValueState } from "../reanimated/use-shared-value-state";
 import useStableCallback from "../use-stable-callback";
 
@@ -75,6 +76,7 @@ const useNativeStackClose = ({
 	deactivate,
 }: CloseHookParams) => {
 	const gestureCtx = useGestureContext();
+	const { isFirstKey } = useNavigationHelpers();
 
 	const isAncestorDismissingViaGesture = useSharedValueState(
 		useDerivedValue(() => {
@@ -90,10 +92,9 @@ const useNativeStackClose = ({
 		const options = current.options as { enableTransitions?: boolean };
 		const isEnabled = options.enableTransitions;
 		const navigation = current.navigation;
-		const isFirstScreen = navigation.getState().index === 0;
 
 		// If transitions are disabled, ancestor is dismissing, or first screen - let native handle it
-		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
+		if (!isEnabled || isAncestorDismissingViaGesture || isFirstKey) {
 			animations.closing.set(1);
 			resetStoresForScreen(current);
 			return;

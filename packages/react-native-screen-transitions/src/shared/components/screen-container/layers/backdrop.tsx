@@ -1,4 +1,3 @@
-import { StackActions } from "@react-navigation/native";
 import { memo, useCallback, useMemo } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated, {
@@ -8,6 +7,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
+import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import { useBackdropPointerEvents } from "../../../hooks/use-backdrop-pointer-events";
 import { useKeys } from "../../../providers/screen/keys.provider";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
@@ -19,6 +19,7 @@ import { findCollapseTarget } from "../../../utils/gesture/find-collapse-target"
 export const BackdropLayer = memo(() => {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useKeys();
+	const { dismissScreen } = useNavigationHelpers();
 	const { isBackdropActive, backdropBehavior } = useBackdropPointerEvents();
 
 	const BackdropComponent = current.options.backdropComponent;
@@ -30,18 +31,9 @@ export const BackdropLayer = memo(() => {
 				: null,
 		[BackdropComponent],
 	);
-
-	const handleDismiss = useCallback(() => {
-		current.navigation.dispatch({
-			...StackActions.pop(),
-			source: current.route.key,
-			target: current.route.key,
-		});
-	}, [current]);
-
 	const handleBackdropPress = useCallback(() => {
 		if (backdropBehavior === "dismiss") {
-			handleDismiss();
+			dismissScreen();
 			return;
 		}
 
@@ -51,7 +43,7 @@ export const BackdropLayer = memo(() => {
 
 			// No snap points → fallback to dismiss
 			if (!snapPoints || snapPoints.length === 0) {
-				handleDismiss();
+				dismissScreen();
 				return;
 			}
 
@@ -83,11 +75,11 @@ export const BackdropLayer = memo(() => {
 					target,
 					spec,
 					animations,
-					onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
+					onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				});
 			})();
 		}
-	}, [backdropBehavior, current, handleDismiss]);
+	}, [backdropBehavior, current, dismissScreen]);
 
 	const animatedBackdropStyle = useAnimatedStyle(() => {
 		"worklet";

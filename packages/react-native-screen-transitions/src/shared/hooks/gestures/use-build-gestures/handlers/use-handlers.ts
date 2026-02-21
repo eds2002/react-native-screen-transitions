@@ -37,7 +37,7 @@ import type {
 	DirectionOwnership,
 } from "../../../../types/ownership.types";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
-import type { ValidateSnapPointsResult } from "../../../../utils/gesture/validate-snap-points";
+import type { EffectiveSnapPointsResult } from "../../../../utils/gesture/validate-snap-points";
 import { logger } from "../../../../utils/logger";
 import useStableCallbackValue from "../../../use-stable-callback-value";
 import {
@@ -66,7 +66,7 @@ interface UseScreenGestureHandlersProps {
 	claimedDirections: ClaimedDirections;
 	ancestorContext: GestureContextType | null | undefined;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
-	validatedSnapPoints: ValidateSnapPointsResult;
+	effectiveSnapPoints: EffectiveSnapPointsResult;
 }
 
 /**
@@ -121,15 +121,9 @@ export const useHandlers = ({
 	handleDismiss,
 	ownershipStatus,
 	childDirectionClaims,
-	validatedSnapPoints,
+	effectiveSnapPoints,
 }: UseScreenGestureHandlersProps) => {
-	const dimensions = useWindowDimensions();
 	const { current } = useKeys();
-
-	const animations = AnimationStore.getAll(current.route.key);
-	const gestureAnimationValues = GestureStore.getRouteGestures(
-		current.route.key,
-	);
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
@@ -145,6 +139,13 @@ export const useHandlers = ({
 		transitionSpec,
 	} = current.options;
 
+	const dimensions = useWindowDimensions();
+	const routeKey = current.route.key;
+	const animations = AnimationStore.getAll(current.route.key);
+	const gestureAnimationValues = GestureStore.getRouteGestures(
+		current.route.key,
+	);
+
 	const effectiveReleaseVelocityMax = Math.max(
 		0.1,
 		Math.abs(gestureReleaseVelocityMax),
@@ -159,7 +160,7 @@ export const useHandlers = ({
 	};
 
 	const { hasSnapPoints, snapPoints, minSnapPoint, maxSnapPoint } =
-		validatedSnapPoints;
+		effectiveSnapPoints;
 
 	const directions = useMemo(() => {
 		if (hasSnapPoints && Array.isArray(gestureDirection)) {
@@ -248,8 +249,6 @@ export const useHandlers = ({
 		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
 		gestureOffsetState.value = GestureOffsetState.PENDING;
 	});
-
-	const routeKey = current.route.key;
 
 	const onTouchesMove = useStableCallbackValue(
 		(e: GestureTouchEvent, manager: GestureStateManagerType) => {

@@ -17,6 +17,7 @@ import type { GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { useBuildGestures } from "../hooks/gestures/use-build-gestures";
+import { useNavigationHelpers } from "../hooks/navigation/use-navigation-helpers";
 import { GestureStore, type GestureStoreMap } from "../stores/gesture.store";
 import {
 	type ClaimedDirections,
@@ -159,18 +160,14 @@ export const {
 	GestureContextType
 >(({ children }): { value: GestureContextType; children: React.ReactNode } => {
 	const { current } = useKeys();
+	const { isFirstKey } = useNavigationHelpers();
 	const { flags } = useStackCoreContext();
 	const ancestorContext: GestureContextType | null = useGestureContext();
 	const isIsolated = flags.STACK_TYPE === StackType.COMPONENT;
 	const routeKey = current.route.key;
 
-	const isFirstScreen = useNavigationState((state) => {
-		const index = state.routes.findIndex((route) => route.key === routeKey);
-		return index === 0;
-	});
-
 	const canDismiss = Boolean(
-		isFirstScreen ? false : current.options.gestureEnabled,
+		isFirstKey ? false : current.options.gestureEnabled,
 	);
 
 	const { hasSnapPoints } = useMemo(

@@ -12,7 +12,7 @@ export function sanitizeSnapPoints(
 	);
 }
 
-export interface ValidateSnapPointsResult {
+export interface EffectiveSnapPointsResult {
 	hasSnapPoints: boolean;
 	snapPoints: number[];
 	minSnapPoint: number;
@@ -27,7 +27,7 @@ interface ValidateSnapPointsOptions {
 export const validateSnapPoints = ({
 	snapPoints,
 	canDismiss,
-}: ValidateSnapPointsOptions): ValidateSnapPointsResult => {
+}: ValidateSnapPointsOptions): EffectiveSnapPointsResult => {
 	if (!snapPoints || snapPoints.length === 0) {
 		return {
 			hasSnapPoints: false,
