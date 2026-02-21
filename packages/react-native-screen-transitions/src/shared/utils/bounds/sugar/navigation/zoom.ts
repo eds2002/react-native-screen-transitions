@@ -139,7 +139,7 @@ export const buildZoomNavigationStyles = ({
 	});
 
 	const focusedFade = props.active?.closing
-		? interpolate(progress, [0.7, 1], [0, 1], "clamp")
+		? interpolate(progress, [0.6, 1], [0, 1], "clamp")
 		: interpolate(progress, [0, 0.3], [0, 1], "clamp");
 
 	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.9]);
