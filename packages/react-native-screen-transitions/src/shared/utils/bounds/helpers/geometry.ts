@@ -131,10 +131,11 @@ export function computeContentTransformGeometry({
 
 		s = aspectDifference < 0.1 ? Math.max(sx, sy) : Math.min(sx, sy);
 	} else {
-		// For "match" mode on full screen, we need uniform scale
+		// "match" mode: use a cover strategy so the scaled content always
+		// fills the mask area. max() ensures no gaps inside the mask clip.
 		const sx = start.width / end.width;
 		const sy = start.height / end.height;
-		s = (sx + sy) / 2;
+		s = Math.max(sx, sy);
 	}
 
 	// Get anchor points

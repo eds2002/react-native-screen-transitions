@@ -31,19 +31,36 @@ export const resolveNavigationConfig = ({
 	const resolvedTag = resolveTag({ id, group });
 	if (!resolvedTag) return null;
 
+	// Try direct boundary config for the current screen first.
 	const boundaryConfig = currentRouteKey
 		? BoundStore.getBoundaryConfig(resolvedTag, currentRouteKey)
 		: null;
 
+	// Fallback: when the current screen has no Boundary (e.g. a zoom detail
+	// screen without a destination element), inherit config from the link's
+	// source screen so that props like scaleMode propagate to both sides.
+	let effectiveConfig = boundaryConfig;
+	if (!effectiveConfig) {
+		const link = currentRouteKey
+			? BoundStore.getActiveLink(resolvedTag, currentRouteKey)
+			: BoundStore.getActiveLink(resolvedTag);
+		if (link?.source) {
+			effectiveConfig = BoundStore.getBoundaryConfig(
+				resolvedTag,
+				link.source.screenKey,
+			);
+		}
+	}
+
 	const sharedOptions: Partial<BoundsOptions> = {
 		...(navigationOptions ?? {}),
 		anchor:
-			navigationOptions?.anchor ?? boundaryConfig?.anchor ?? defaultAnchor,
+			navigationOptions?.anchor ?? effectiveConfig?.anchor ?? defaultAnchor,
 		scaleMode:
-			navigationOptions?.scaleMode ?? boundaryConfig?.scaleMode ?? "uniform",
+			navigationOptions?.scaleMode ?? effectiveConfig?.scaleMode ?? "uniform",
 	};
 
-	const explicitTarget = navigationOptions?.target ?? boundaryConfig?.target;
+	const explicitTarget = navigationOptions?.target ?? effectiveConfig?.target;
 
 	return {
 		resolvedTag,

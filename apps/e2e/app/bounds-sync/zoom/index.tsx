@@ -44,6 +44,7 @@ export default function BoundsSyncZoomIndex() {
 							>
 								<Transition.Boundary
 									group={ZOOM_GROUP}
+									scaleMode="uniform"
 									id={item.id}
 									style={[
 										styles.card,

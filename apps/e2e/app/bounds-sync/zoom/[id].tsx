@@ -8,12 +8,10 @@ import type {
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Transition from "react-native-screen-transitions";
 import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
-	ZOOM_GROUP,
 } from "../zoom.constants";
 
 const CARD_INSET = 16;
@@ -56,19 +54,6 @@ export default function BoundsSyncZoomDetail() {
 	const renderItem = useCallback(
 		({ item }: ListRenderItemInfo<BoundsSyncZoomItem>) => (
 			<View style={[styles.page, { width, backgroundColor: item.bgColor }]}>
-				<Transition.Boundary
-					group={ZOOM_GROUP}
-					id={item.id}
-					style={[
-						styles.card,
-						{
-							width: cardWidth,
-							backgroundColor: item.color,
-							marginTop: insets.top + CARD_INSET,
-						},
-					]}
-				/>
-
 				<View style={styles.body}>
 					<View style={styles.textSection}>
 						<Text style={styles.title}>{item.title}</Text>
@@ -99,7 +84,7 @@ export default function BoundsSyncZoomDetail() {
 				</View>
 			</View>
 		),
-		[width, cardWidth, insets.top, insets.bottom],
+		[width, insets.bottom],
 	);
 
 	const keyExtractor = useCallback((item: BoundsSyncZoomItem) => item.id, []);

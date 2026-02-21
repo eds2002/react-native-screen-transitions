@@ -110,11 +110,19 @@ export const buildZoomNavigationStyles = ({
 		screenLayout,
 	});
 
+	// When scaleMode is "match", the source element should track the mask
+	// dimensions exactly (independent scaleX/scaleY). The mask always targets
+	// fullscreen, so the element must target the same to stay in sync.
+	const elementTarget =
+		sharedOptions.scaleMode === "match"
+			? ("fullscreen" as const)
+			: contentTarget;
+
 	const elementRaw = computeRaw({
 		...sharedOptions,
 		method: "transform",
 		space: "relative",
-		target: contentTarget,
+		target: elementTarget,
 	});
 
 	const contentRaw = computeRaw({
@@ -173,6 +181,11 @@ export const buildZoomNavigationStyles = ({
 			// receives a resolved style for this tag.
 			[resolvedTag]: {
 				style: { opacity: 1 },
+			},
+			content: {
+				style: {
+					opacity: 0.5,
+				},
 			},
 		};
 	}
