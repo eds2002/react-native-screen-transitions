@@ -1,9 +1,9 @@
 import { useLocalSearchParams } from "expo-router";
-import { useRef } from "react";
+import { useCallback } from "react";
 import type {
+	ListRenderItemInfo,
 	NativeScrollEvent,
 	NativeSyntheticEvent,
-	ScrollView,
 } from "react-native";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
@@ -12,16 +12,17 @@ import Transition from "react-native-screen-transitions";
 import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
+	type BoundsSyncZoomItem,
 	ZOOM_GROUP,
 } from "../zoom.constants";
 
 const CARD_INSET = 16;
 const CARD_RADIUS = 24;
+
 export default function BoundsSyncZoomDetail() {
 	const { width } = useWindowDimensions();
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const insets = useSafeAreaInsets();
-	const scrollRef = useRef<ScrollView>(null);
 
 	const initialIndex = Math.max(
 		0,
@@ -30,80 +31,94 @@ export default function BoundsSyncZoomDetail() {
 
 	const cardWidth = width - CARD_INSET * 2;
 
-	const handleMomentumScrollEnd = (
-		event: NativeSyntheticEvent<NativeScrollEvent>,
-	) => {
-		const offsetX = event.nativeEvent.contentOffset.x;
-		const pageIndex = Math.round(offsetX / width);
-		const item = BOUNDS_SYNC_ZOOM_ITEMS[pageIndex];
+	const handleMomentumScrollEnd = useCallback(
+		(event: NativeSyntheticEvent<NativeScrollEvent>) => {
+			const offsetX = event.nativeEvent.contentOffset.x;
+			const pageIndex = Math.round(offsetX / width);
+			const item = BOUNDS_SYNC_ZOOM_ITEMS[pageIndex];
 
-		if (!item) return;
+			if (!item) return;
 
-		activeZoomId.value = item.id;
-	};
+			activeZoomId.value = item.id;
+		},
+		[width],
+	);
+
+	const getItemLayout = useCallback(
+		(_: any, index: number) => ({
+			length: width,
+			offset: width * index,
+			index,
+		}),
+		[width],
+	);
+
+	const renderItem = useCallback(
+		({ item }: ListRenderItemInfo<BoundsSyncZoomItem>) => (
+			<View style={[styles.page, { width, backgroundColor: item.bgColor }]}>
+				<Transition.Boundary
+					group={ZOOM_GROUP}
+					id={item.id}
+					style={[
+						styles.card,
+						{
+							width: cardWidth,
+							backgroundColor: item.color,
+							marginTop: insets.top + CARD_INSET,
+						},
+					]}
+				/>
+
+				<View style={styles.body}>
+					<View style={styles.textSection}>
+						<Text style={styles.title}>{item.title}</Text>
+						<Text style={styles.subtitle}>{item.subtitle}</Text>
+						<Text style={styles.description}>{item.description}</Text>
+					</View>
+
+					<View style={styles.infoGrid}>
+						<View style={styles.infoItem}>
+							<Text style={styles.infoLabel}>Category</Text>
+							<Text style={styles.infoValue}>Productivity</Text>
+						</View>
+						<View style={styles.infoItem}>
+							<Text style={styles.infoLabel}>Size</Text>
+							<Text style={styles.infoValue}>24 MB</Text>
+						</View>
+						<View style={styles.infoItem}>
+							<Text style={styles.infoLabel}>Rating</Text>
+							<Text style={styles.infoValue}>4.8</Text>
+						</View>
+						<View style={styles.infoItem}>
+							<Text style={styles.infoLabel}>Age</Text>
+							<Text style={styles.infoValue}>4+</Text>
+						</View>
+					</View>
+
+					<View style={{ paddingBottom: insets.bottom + 16 }} />
+				</View>
+			</View>
+		),
+		[width, cardWidth, insets.top, insets.bottom],
+	);
+
+	const keyExtractor = useCallback((item: BoundsSyncZoomItem) => item.id, []);
 
 	return (
-		<Animated.ScrollView
-			ref={scrollRef as any}
+		<Animated.FlatList
+			data={BOUNDS_SYNC_ZOOM_ITEMS}
+			renderItem={renderItem}
+			keyExtractor={keyExtractor}
+			getItemLayout={getItemLayout}
+			initialScrollIndex={initialIndex}
 			horizontal
 			pagingEnabled
 			showsHorizontalScrollIndicator={false}
-			contentOffset={{ x: initialIndex * width, y: 0 }}
 			onMomentumScrollEnd={handleMomentumScrollEnd}
+			windowSize={3}
+			maxToRenderPerBatch={1}
 			style={styles.scrollView}
-		>
-			{BOUNDS_SYNC_ZOOM_ITEMS.map((item) => (
-				<View
-					key={item.id}
-					style={[styles.page, { width, backgroundColor: item.bgColor }]}
-				>
-					{/* Inset card with rounded corners */}
-					<Transition.Boundary
-						group={ZOOM_GROUP}
-						id={item.id}
-						style={[
-							styles.card,
-							{
-								width: cardWidth,
-								backgroundColor: item.color,
-								marginTop: insets.top + CARD_INSET,
-							},
-						]}
-					/>
-
-					{/* Content area */}
-					<View style={styles.body}>
-						<View style={styles.textSection}>
-							<Text style={styles.title}>{item.title}</Text>
-							<Text style={styles.subtitle}>{item.subtitle}</Text>
-							<Text style={styles.description}>{item.description}</Text>
-						</View>
-
-						{/* Info grid */}
-						<View style={styles.infoGrid}>
-							<View style={styles.infoItem}>
-								<Text style={styles.infoLabel}>Category</Text>
-								<Text style={styles.infoValue}>Productivity</Text>
-							</View>
-							<View style={styles.infoItem}>
-								<Text style={styles.infoLabel}>Size</Text>
-								<Text style={styles.infoValue}>24 MB</Text>
-							</View>
-							<View style={styles.infoItem}>
-								<Text style={styles.infoLabel}>Rating</Text>
-								<Text style={styles.infoValue}>4.8</Text>
-							</View>
-							<View style={styles.infoItem}>
-								<Text style={styles.infoLabel}>Age</Text>
-								<Text style={styles.infoValue}>4+</Text>
-							</View>
-						</View>
-
-						<View style={{ paddingBottom: insets.bottom + 16 }} />
-					</View>
-				</View>
-			))}
-		</Animated.ScrollView>
+		/>
 	);
 }
 
