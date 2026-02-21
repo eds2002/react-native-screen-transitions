@@ -13,11 +13,12 @@ import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
 	DEFAULT_GESTURE_DRIVES_PROGRESS,
+	DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
+	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+	DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
+	DEFAULT_GESTURE_VELOCITY_IMPACT,
 	EPSILON,
 	FALSE,
-	GESTURE_VELOCITY_IMPACT,
-	RELEASE_VELOCITY_MAX,
-	SNAP_VELOCITY_IMPACT,
 	TRUE,
 } from "../../../../constants";
 import type {
@@ -41,17 +42,19 @@ import useStableCallbackValue from "../../../use-stable-callback-value";
 import {
 	applyOffsetRules,
 	checkScrollBoundary,
-} from "../helpers/check-gesture-activation";
-import { determineDismissal } from "../helpers/determine-dismissal";
-import { determineSnapTarget } from "../helpers/determine-snap-target";
-import { mapGestureToProgress } from "../helpers/map-gesture-to-progress";
-import { resetGestureValues } from "../helpers/reset-gesture-values";
-import { shouldDeferToChildClaim } from "../helpers/should-defer-to-child-claim";
+} from "../helpers/gesture-activation";
+import { shouldDeferToChildClaim } from "../helpers/gesture-claims";
 import {
 	calculateProgressSpringVelocity,
+	mapGestureToProgress,
 	normalizeGestureTranslation,
 	normalizeVelocity,
-} from "../helpers/velocity";
+} from "../helpers/gesture-physics";
+import { resetGestureValues } from "../helpers/gesture-reset";
+import {
+	determineDismissal,
+	determineSnapTarget,
+} from "../helpers/gesture-targets";
 
 interface UseScreenGestureHandlersProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;
@@ -130,10 +133,10 @@ export const useHandlers = ({
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,
 		gestureDrivesProgress = DEFAULT_GESTURE_DRIVES_PROGRESS,
-		gestureVelocityImpact = GESTURE_VELOCITY_IMPACT,
-		snapVelocityImpact = SNAP_VELOCITY_IMPACT,
-		gestureReleaseVelocityScale = 1,
-		gestureReleaseVelocityMax = RELEASE_VELOCITY_MAX,
+		gestureVelocityImpact = DEFAULT_GESTURE_VELOCITY_IMPACT,
+		snapVelocityImpact = DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
+		gestureReleaseVelocityScale = DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+		gestureReleaseVelocityMax = DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureResponseDistance,
 		transitionSpec,

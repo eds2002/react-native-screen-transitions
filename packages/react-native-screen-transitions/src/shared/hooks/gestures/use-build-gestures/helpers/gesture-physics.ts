@@ -3,7 +3,11 @@ import type {
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
-import { ANIMATION_SNAP_THRESHOLD, EPSILON } from "../../../../constants";
+import {
+	ANIMATION_SNAP_THRESHOLD,
+	DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
+	EPSILON,
+} from "../../../../constants";
 import type { AnimationStoreMap } from "../../../../stores/animation.store";
 import type { GestureDirections } from "../../../../types/gesture.types";
 
@@ -20,8 +24,6 @@ type GestureAxisCandidate = {
 	velocityContribution: number;
 };
 
-const MAX_VELOCITY_MAGNITUDE = 3.2;
-
 /**
  * Converts velocity from pixels/second to normalized units/second (0-1 range)
  * and caps the result for stability
@@ -33,8 +35,8 @@ export const normalizeVelocity = (
 	"worklet";
 	return clamp(
 		velocityPixelsPerSecond / Math.max(1, screenSize),
-		-MAX_VELOCITY_MAGNITUDE,
-		MAX_VELOCITY_MAGNITUDE,
+		-DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
+		DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 	);
 };
 
@@ -155,7 +157,7 @@ export const calculateProgressSpringVelocity = ({
 	// Apply direction and clamp to prevent overly energetic springs
 	return (
 		progressDirection *
-		clamp(progressVelocityMagnitude, 0, MAX_VELOCITY_MAGNITUDE)
+		clamp(progressVelocityMagnitude, 0, DEFAULT_GESTURE_RELEASE_VELOCITY_MAX)
 	);
 };
 
@@ -197,4 +199,16 @@ export const shouldDismissFromTranslationAndVelocity = (
 	const exceedsThreshold = projectedInDismissDirection > 0.5;
 
 	return exceedsThreshold;
+};
+
+/**
+ * Utility function to map raw gesture translation to a progress value.
+ */
+export const mapGestureToProgress = (
+	translation: number,
+	dimension: number,
+) => {
+	"worklet";
+	const rawProgress = translation / dimension;
+	return Math.max(0, Math.min(1, rawProgress));
 };

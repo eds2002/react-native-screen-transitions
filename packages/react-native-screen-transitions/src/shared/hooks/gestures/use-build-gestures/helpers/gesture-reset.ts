@@ -2,13 +2,14 @@ import type {
 	GestureStateChangeEvent,
 	PanGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
+import { DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE } from "../../../../constants";
 import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type { AnimationConfig } from "../../../../types/animation.types";
 import { animate } from "../../../../utils/animation/animate";
 import {
 	calculateRestoreVelocityTowardZero,
 	normalizeVelocity,
-} from "./velocity";
+} from "./gesture-physics";
 
 interface ResetGestureValuesProps {
 	spec?: AnimationConfig;
@@ -25,7 +26,7 @@ export const resetGestureValues = ({
 	shouldDismiss,
 	event,
 	dimensions,
-	gestureReleaseVelocityScale = 1,
+	gestureReleaseVelocityScale = DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 }: ResetGestureValuesProps) => {
 	"worklet";
 
@@ -61,6 +62,7 @@ export const resetGestureValues = ({
 	const resetVX = shouldDismiss
 		? vxNorm * gestureReleaseVelocityScale
 		: vxTowardZero;
+
 	const resetVY = shouldDismiss
 		? vyNorm * gestureReleaseVelocityScale
 		: vyTowardZero;

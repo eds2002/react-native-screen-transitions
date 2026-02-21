@@ -93,12 +93,10 @@ export const FULLSCREEN_DIMENSIONS = (
 	};
 };
 
-/**
- * Default gesture config
- */
-export const GESTURE_VELOCITY_IMPACT = 0.3;
-export const SNAP_VELOCITY_IMPACT = 0.1;
-export const RELEASE_VELOCITY_MAX = 3.2;
+export const DEFAULT_GESTURE_VELOCITY_IMPACT = 0.3;
+export const DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT = 0.1;
+export const DEFAULT_GESTURE_RELEASE_VELOCITY_MAX = 3.2;
+export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { determineDismissal } from "../hooks/gestures/use-build-gestures/helpers/determine-dismissal";
+import { determineDismissal } from "../hooks/gestures/use-build-gestures/helpers/gesture-targets";
 
 describe("determineDismissal", () => {
 	const dimensions = { width: 320, height: 640 };
