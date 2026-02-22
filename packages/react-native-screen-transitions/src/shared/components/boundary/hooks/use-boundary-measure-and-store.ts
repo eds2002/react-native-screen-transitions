@@ -15,6 +15,24 @@ type LayoutAnchor = {
 	isMeasurementInViewport?: (measured: MeasuredDimensions) => boolean;
 } | null;
 
+const SNAPSHOT_EPSILON = 0.5;
+
+const areMeasurementsEqual = (
+	a: MeasuredDimensions,
+	b: MeasuredDimensions,
+): boolean => {
+	"worklet";
+
+	return (
+		Math.abs(a.x - b.x) <= SNAPSHOT_EPSILON &&
+		Math.abs(a.y - b.y) <= SNAPSHOT_EPSILON &&
+		Math.abs(a.pageX - b.pageX) <= SNAPSHOT_EPSILON &&
+		Math.abs(a.pageY - b.pageY) <= SNAPSHOT_EPSILON &&
+		Math.abs(a.width - b.width) <= SNAPSHOT_EPSILON &&
+		Math.abs(a.height - b.height) <= SNAPSHOT_EPSILON
+	);
+};
+
 export const useBoundaryMeasureAndStore = (params: {
 	enabled: boolean;
 	mode?: BoundaryMode;
@@ -136,13 +154,23 @@ export const useBoundaryMeasureAndStore = (params: {
 				return;
 			}
 
-			BoundStore.registerSnapshot(
+			const existingSnapshot = BoundStore.getSnapshot(
 				sharedBoundTag,
 				currentScreenKey,
-				correctedMeasured,
-				preparedStyles,
-				ancestorKeys,
 			);
+			const hasSnapshotChanged =
+				!existingSnapshot ||
+				!areMeasurementsEqual(existingSnapshot.bounds, correctedMeasured);
+
+			if (hasSnapshotChanged) {
+				BoundStore.registerSnapshot(
+					sharedBoundTag,
+					currentScreenKey,
+					correctedMeasured,
+					preparedStyles,
+					ancestorKeys,
+				);
+			}
 
 			if (canSetSource) {
 				BoundStore.setLinkSource(
@@ -154,7 +182,7 @@ export const useBoundaryMeasureAndStore = (params: {
 				);
 			}
 
-			if (canUpdateSource) {
+			if (canUpdateSource && hasSnapshotChanged) {
 				BoundStore.updateLinkSource(
 					sharedBoundTag,
 					currentScreenKey,
@@ -164,7 +192,7 @@ export const useBoundaryMeasureAndStore = (params: {
 				);
 			}
 
-			if (canUpdateDestination && destinationInViewport) {
+			if (canUpdateDestination && destinationInViewport && hasSnapshotChanged) {
 				BoundStore.updateLinkDestination(
 					sharedBoundTag,
 					currentScreenKey,
