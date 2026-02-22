@@ -9,6 +9,13 @@ import { BoundStore } from "../../../../stores/bounds.store";
 import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
 import { interpolateClamped } from "../../helpers/interpolate";
+import {
+	combineScales,
+	composeCompensatedTranslation,
+	computeCenterScaleShift,
+	normalizedToScale,
+	normalizedToTranslation,
+} from "../../helpers/math";
 import type { BoundsOptions } from "../../types/options";
 import { resolveNavigationConfig, toNumber } from "./helpers";
 import type { BuildNavigationStylesParams } from "./types";
@@ -117,25 +124,29 @@ export const buildZoomNavigationStyles = ({
 	const xResistance = initialDirection === "horizontal" ? 0.4 : 0.4;
 	const yResistance = initialDirection === "vertical" ? 0.4 : 0.4;
 
-	const xScaleOuput = initialDirection === "horizontal" ? [1, 0.25] : [1, 1];
-	const yScaleOuput = initialDirection === "vertical" ? [1, 0.25] : [1, 1];
+	const xScaleOutput = initialDirection === "horizontal" ? [1, 0.25] : [1, 1];
+	const yScaleOutput = initialDirection === "vertical" ? [1, 0.25] : [1, 1];
 
-	const dragX = interpolate(
-		normX,
-		[-1, 0, 1],
-		[-screenLayout.width * xResistance, 0, screenLayout.width * xResistance],
-		"clamp",
-	);
-	const dragY = interpolate(
-		normY,
-		[-1, 0, 1],
-		[-screenLayout.height * yResistance, 0, screenLayout.height * yResistance],
-		"clamp",
-	);
-	const rawDragXScale = interpolate(normX, [0, 1], xScaleOuput, "clamp");
-	const rawDragYScale = interpolate(normY, [0, 1], yScaleOuput, "clamp");
-	const dragXScale = rawDragXScale ** 2;
-	const dragYScale = rawDragYScale ** 2;
+	const dragX = normalizedToTranslation({
+		normalized: normX,
+		dimension: screenLayout.width,
+		resistance: xResistance,
+	});
+	const dragY = normalizedToTranslation({
+		normalized: normY,
+		dimension: screenLayout.height,
+		resistance: yResistance,
+	});
+	const dragXScale = normalizedToScale({
+		normalized: normX,
+		outputRange: xScaleOutput,
+		exponent: 2,
+	});
+	const dragYScale = normalizedToScale({
+		normalized: normY,
+		outputRange: yScaleOutput,
+		exponent: 2,
+	});
 
 	const resolvedConfig = resolveNavigationConfig({
 		id,
@@ -237,8 +248,7 @@ export const buildZoomNavigationStyles = ({
 		};
 	}
 
-	const safeScale = Math.max(unfocusedScale, EPSILON);
-	const dragScale = dragXScale * dragYScale;
+	const dragScale = combineScales(dragXScale, dragYScale);
 
 	// Keep compensation tied to the element target's center. In `scaleMode: "match"`
 	// this target is fullscreen, so the center offset should resolve to zero.
@@ -247,13 +257,25 @@ export const buildZoomNavigationStyles = ({
 			? elementTarget.pageY + elementTarget.height / 2
 			: screenLayout.height / 2;
 
-	const scaleShiftY =
-		(elementCenterY - screenLayout.height / 2) * (dragScale - 1);
+	const scaleShiftY = computeCenterScaleShift({
+		center: elementCenterY,
+		containerCenter: screenLayout.height / 2,
+		scale: dragScale,
+	});
 
-	const compensatedGestureX = dragX / safeScale;
+	const compensatedGestureX = composeCompensatedTranslation({
+		gesture: dragX,
+		parentScale: unfocusedScale,
+		epsilon: EPSILON,
+	});
 	// dragY is measured in screen space and must be unscaled by the parent
 	// content shrink, while scaleShiftY is already in the parent's local space.
-	const compensatedGestureY = dragY / safeScale + scaleShiftY;
+	const compensatedGestureY = composeCompensatedTranslation({
+		gesture: dragY,
+		parentScale: unfocusedScale,
+		centerShift: scaleShiftY,
+		epsilon: EPSILON,
+	});
 
 	return {
 		content: {
