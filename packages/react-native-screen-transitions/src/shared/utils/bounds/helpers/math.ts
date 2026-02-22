@@ -80,7 +80,7 @@ export const normalizedToScale = ({
 	positiveOnly = true,
 }: {
 	normalized: number;
-	outputRange: number[];
+	outputRange: readonly [number, number];
 	exponent?: number;
 	positiveOnly?: boolean;
 }): number => {

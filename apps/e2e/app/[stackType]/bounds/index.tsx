@@ -34,6 +34,11 @@ const BOUNDS_EXAMPLES = [
 		description: "bounds({ id, group }).navigation.zoom() with grouped source/destination",
 	},
 	{
+		id: "zoom-id",
+		title: "Navigation Zoom ID Transition",
+		description: "bounds({ id }).navigation.zoom() with simple id-only matching",
+	},
+	{
 		id: "sync",
 		title: "Bounds Sync Harness",
 		description: "Method/anchor/scaleMode/target permutations (source -> destination only)",

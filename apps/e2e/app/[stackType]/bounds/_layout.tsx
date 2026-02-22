@@ -34,6 +34,10 @@ export default function BoundsLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<StackNavigator.Screen
+				name="zoom-id"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
 				name="sync"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>

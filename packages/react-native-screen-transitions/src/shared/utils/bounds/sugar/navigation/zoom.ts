@@ -124,8 +124,12 @@ export const buildZoomNavigationStyles = ({
 	const xResistance = initialDirection === "horizontal" ? 0.4 : 0.4;
 	const yResistance = initialDirection === "vertical" ? 0.4 : 0.4;
 
-	const xScaleOutput = initialDirection === "horizontal" ? [1, 0.25] : [1, 1];
-	const yScaleOutput = initialDirection === "vertical" ? [1, 0.25] : [1, 1];
+	const xScaleOutput =
+		initialDirection === "horizontal"
+			? ([1, 0.25] as const)
+			: ([1, 1] as const);
+	const yScaleOutput =
+		initialDirection === "vertical" ? ([1, 0.25] as const) : ([1, 1] as const);
 
 	const dragX = normalizedToTranslation({
 		normalized: normX,
