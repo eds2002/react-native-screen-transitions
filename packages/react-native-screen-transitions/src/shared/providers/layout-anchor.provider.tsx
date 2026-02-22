@@ -20,6 +20,11 @@ interface LayoutAnchorContextValue {
 	 * the true layout position and dimensions.
 	 */
 	correctMeasurement: (measured: MeasuredDimensions) => MeasuredDimensions;
+	/**
+	 * Returns true when the corrected measurement is plausibly inside viewport space.
+	 * This helps reject transient off-page measurements from paged containers.
+	 */
+	isMeasurementInViewport: (measured: MeasuredDimensions) => boolean;
 }
 
 /**
@@ -72,7 +77,30 @@ const { LayoutAnchorProvider, useLayoutAnchorContext } = createProvider(
 			[anchorRef, screenWidth, screenHeight],
 		);
 
-		const value = useMemo(() => ({ correctMeasurement }), [correctMeasurement]);
+		const isMeasurementInViewport = useCallback(
+			(measured: MeasuredDimensions): boolean => {
+				"worklet";
+				if (measured.width <= 0 || measured.height <= 0) return false;
+
+				const toleranceX = screenWidth * 0.15;
+				const toleranceY = screenHeight * 0.15;
+				const centerX = measured.pageX + measured.width / 2;
+				const centerY = measured.pageY + measured.height / 2;
+
+				return (
+					centerX >= -toleranceX &&
+					centerX <= screenWidth + toleranceX &&
+					centerY >= -toleranceY &&
+					centerY <= screenHeight + toleranceY
+				);
+			},
+			[screenWidth, screenHeight],
+		);
+
+		const value = useMemo(
+			() => ({ correctMeasurement, isMeasurementInViewport }),
+			[correctMeasurement, isMeasurementInViewport],
+		);
 
 		return {
 			value,

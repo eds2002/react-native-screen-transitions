@@ -12,6 +12,7 @@ import type { BoundaryMode, MaybeMeasureAndStoreParams } from "../types";
 
 type LayoutAnchor = {
 	correctMeasurement: (measured: MeasuredDimensions) => MeasuredDimensions;
+	isMeasurementInViewport?: (measured: MeasuredDimensions) => boolean;
 } | null;
 
 export const useBoundaryMeasureAndStore = (params: {
@@ -124,6 +125,17 @@ export const useBoundaryMeasureAndStore = (params: {
 				? layoutAnchor.correctMeasurement(measured)
 				: measured;
 
+			const wantsDestinationWrite = canSetDestination || canUpdateDestination;
+			const destinationInViewport =
+				!wantsDestinationWrite ||
+				!layoutAnchor ||
+				!layoutAnchor.isMeasurementInViewport ||
+				layoutAnchor.isMeasurementInViewport(correctedMeasured);
+
+			if (!destinationInViewport && !canSetSource && !canUpdateSource) {
+				return;
+			}
+
 			BoundStore.registerSnapshot(
 				sharedBoundTag,
 				currentScreenKey,
@@ -152,7 +164,7 @@ export const useBoundaryMeasureAndStore = (params: {
 				);
 			}
 
-			if (canUpdateDestination) {
+			if (canUpdateDestination && destinationInViewport) {
 				BoundStore.updateLinkDestination(
 					sharedBoundTag,
 					currentScreenKey,
@@ -163,7 +175,7 @@ export const useBoundaryMeasureAndStore = (params: {
 				);
 			}
 
-			if (canSetDestination) {
+			if (canSetDestination && destinationInViewport) {
 				BoundStore.setLinkDestination(
 					sharedBoundTag,
 					currentScreenKey,
