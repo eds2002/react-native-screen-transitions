@@ -2,14 +2,14 @@ import { BoundStore, type Snapshot } from "../../../stores/bounds.store";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsLink } from "../../../types/bounds.types";
 
+type GetProps = () => Omit<ScreenInterpolationProps, "bounds">;
+
 export type LinkAccessor = {
 	getSnapshot: (tag: string, key?: string) => Snapshot | null;
 	getLink: (tag: string) => BoundsLink | null;
 };
 
-export const createLinkAccessor = (
-	props: Omit<ScreenInterpolationProps, "bounds">,
-): LinkAccessor => {
+export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
 	"worklet";
 
 	const getSnapshot = (tag: string, key?: string): Snapshot | null => {
@@ -20,6 +20,7 @@ export const createLinkAccessor = (
 
 	const getLink = (tag: string): BoundsLink | null => {
 		"worklet";
+		const props = getProps();
 		const link = BoundStore.getActiveLink(tag, props.current?.route.key);
 		if (!link) return null;
 		return {

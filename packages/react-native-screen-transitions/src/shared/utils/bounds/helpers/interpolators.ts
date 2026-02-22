@@ -7,11 +7,14 @@ import { interpolateLinkStyle } from "./interpolate-style";
 import type { LinkAccessor } from "./link-accessor";
 
 type InterpolatorParams = {
-	props: Omit<ScreenInterpolationProps, "bounds">;
+	getProps: () => Omit<ScreenInterpolationProps, "bounds">;
 	getLink: LinkAccessor["getLink"];
 };
 
-export const createInterpolators = ({ props, getLink }: InterpolatorParams) => {
+export const createInterpolators = ({
+	getProps,
+	getLink,
+}: InterpolatorParams) => {
 	"worklet";
 
 	const interpolateStyle = (
@@ -20,6 +23,7 @@ export const createInterpolators = ({ props, getLink }: InterpolatorParams) => {
 		fallback?: number,
 	): number => {
 		"worklet";
+		const props = getProps();
 		const link = getLink(tag);
 		const entering = !props.next;
 		return interpolateLinkStyle(link, property, props.progress, entering, {
@@ -35,6 +39,7 @@ export const createInterpolators = ({ props, getLink }: InterpolatorParams) => {
 	): number => {
 		"worklet";
 
+		const props = getProps();
 		const entering = !props.next;
 		const range = entering ? ENTER_RANGE : EXIT_RANGE;
 		const currentKey = props.current?.route?.key;
@@ -61,6 +66,7 @@ export const createInterpolators = ({ props, getLink }: InterpolatorParams) => {
 	): number => {
 		"worklet";
 
+		const props = getProps();
 		const entering = !props.next;
 		const range = entering ? ENTER_RANGE : EXIT_RANGE;
 		const link = getLink(tag);

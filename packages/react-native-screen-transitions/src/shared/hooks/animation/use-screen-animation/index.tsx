@@ -22,8 +22,9 @@ import type {
 } from "../../../types/animation.types";
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
 import type { BaseStackRoute } from "../../../types/stack.types";
-import { createBounds } from "../../../utils/bounds";
+import { createBoundsAccessor } from "../../../utils/bounds";
 import { useStack } from "../../navigation/use-stack";
+import { useMutableValue } from "../../reanimated/use-mutable-value";
 import { derivations } from "./helpers/derivations";
 import { toPlainRoute, toPlainValue } from "./helpers/worklet";
 
@@ -144,6 +145,31 @@ export function _useScreenAnimation() {
 		!!nextRouteKey &&
 		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
 
+	const framePropsMutable = useMutableValue<
+		Omit<ScreenInterpolationProps, "bounds">
+	>({
+		layouts: { screen: dimensions },
+		insets,
+		previous: undefined,
+		current: DEFAULT_SCREEN_TRANSITION_STATE,
+		next: undefined,
+		progress: 0,
+		stackProgress: 0,
+		snapIndex: -1,
+		focused: true,
+		active: DEFAULT_SCREEN_TRANSITION_STATE,
+		inactive: undefined,
+		isActiveTransitioning: false,
+		isDismissing: false,
+	});
+
+	const boundsAccessor = useMemo(() => {
+		return createBoundsAccessor(() => {
+			"worklet";
+			return framePropsMutable.value;
+		});
+	}, [framePropsMutable]);
+
 	const screenInterpolatorProps = useDerivedValue<
 		Omit<ScreenInterpolationProps, "bounds">
 	>(() => {
@@ -174,7 +200,7 @@ export function _useScreenAnimation() {
 
 		const snapIndex = computeSnapIndex(current.progress, sortedSnapPoints);
 
-		return {
+		const nextProps = {
 			layouts: { screen: dimensions },
 			insets,
 			previous,
@@ -185,6 +211,9 @@ export function _useScreenAnimation() {
 			snapIndex,
 			...helpers,
 		};
+
+		framePropsMutable.value = nextProps;
+		return nextProps;
 	});
 
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
@@ -195,17 +224,18 @@ export function _useScreenAnimation() {
 		screenInterpolatorProps,
 		nextInterpolator,
 		currentInterpolator,
+		boundsAccessor,
 	};
 }
 
 export function useScreenAnimation() {
-	const { screenInterpolatorProps } = _useScreenAnimation();
+	const { screenInterpolatorProps, boundsAccessor } = _useScreenAnimation();
 
 	return useDerivedValue<ScreenInterpolationProps>(() => {
 		const props = screenInterpolatorProps.value;
 		return {
 			...props,
-			bounds: createBounds(props),
+			bounds: boundsAccessor,
 		};
 	});
 }

@@ -8,13 +8,14 @@ import { createNavigationAccessor } from "./helpers/navigation-accessor";
 import { resolveBoundTag } from "./helpers/resolve-bound-tag";
 import type { BoundsOptions } from "./types/options";
 
-export const createBounds = (
-	props: Omit<ScreenInterpolationProps, "bounds">,
+export const createBoundsAccessor = (
+	getProps: () => Omit<ScreenInterpolationProps, "bounds">,
 ): BoundsAccessor => {
 	"worklet";
 
 	const computeForResolvedOptions = (resolvedOptions: BoundsOptions) => {
 		"worklet";
+		const props = getProps();
 		return computeBoundStyles(
 			{
 				id: resolvedOptions.id,
@@ -30,6 +31,7 @@ export const createBounds = (
 
 	const computeElementBoundsStyles = (params?: BoundsOptions) => {
 		"worklet";
+		const props = getProps();
 
 		const resolved = buildBoundsOptions({
 			props,
@@ -52,20 +54,23 @@ export const createBounds = (
 		const navigation = createNavigationAccessor({
 			id: params?.id,
 			group: params?.group,
-			props,
+			getProps,
 			resolveBoundTag,
 			zoomBaseOptions,
 			computeRaw: (overrides) =>
-				computeForResolvedOptions(
-					buildBoundsOptions({
-						props,
-						id: params?.id,
-						group: params?.group,
-						overrides,
-						mode: "navigation",
-						resolveBoundTag,
-					}),
-				) as Record<string, unknown>,
+				(() => {
+					const currentProps = getProps();
+					return computeForResolvedOptions(
+						buildBoundsOptions({
+							props: currentProps,
+							id: params?.id,
+							group: params?.group,
+							overrides,
+							mode: "navigation",
+							resolveBoundTag,
+						}),
+					) as Record<string, unknown>;
+				})(),
 		});
 
 		const target = Object.isExtensible(computed) ? computed : { ...computed };
@@ -79,9 +84,9 @@ export const createBounds = (
 		return target as typeof computed & { navigation: typeof navigation };
 	};
 
-	const { getSnapshot, getLink } = createLinkAccessor(props);
+	const { getSnapshot, getLink } = createLinkAccessor(getProps);
 	const { interpolateStyle, interpolateBounds } = createInterpolators({
-		props,
+		getProps,
 		getLink,
 	});
 

@@ -5,7 +5,7 @@ import {
 	NAVIGATION_MASK_STYLE_ID,
 } from "../constants";
 import { BoundStore } from "../stores/bounds.store";
-import { createBounds } from "../utils/bounds";
+import { createBoundsAccessor } from "../utils/bounds";
 
 const createMeasured = (
 	x = 0,
@@ -59,7 +59,7 @@ const createAccessor = (
 			} as any)
 		: undefined;
 
-	return createBounds({
+	const frameProps = {
 		previous: undefined,
 		current: {
 			route: { key: currentKey },
@@ -89,7 +89,12 @@ const createAccessor = (
 		inactive: nextState,
 		isActiveTransitioning: false,
 		isDismissing: false,
-	} as any);
+	} as any;
+
+	return createBoundsAccessor(() => {
+		"worklet";
+		return frameProps;
+	});
 };
 
 const registerBasicLink = (tag = "card") => {
@@ -102,6 +107,65 @@ beforeEach(() => {
 });
 
 describe("createBounds accessor", () => {
+	it("createBoundsAccessor keeps accessor identity stable while frame state updates", () => {
+		registerBasicLink();
+
+		let frameProps = {
+			previous: undefined,
+			current: {
+				route: { key: "screen-b" },
+				progress: 1,
+				closing: 0,
+				gesture: { x: 0, y: 0 },
+			},
+			next: undefined,
+			layouts: { screen: { width: 400, height: 800 } },
+			insets: { top: 0, right: 0, bottom: 0, left: 0 },
+			focused: true,
+			progress: 0,
+			stackProgress: 1,
+			snapIndex: -1,
+			active: {
+				route: { key: "screen-b" },
+				progress: 1,
+				closing: 0,
+				gesture: { x: 0, y: 0 },
+			},
+			inactive: undefined,
+			isActiveTransitioning: false,
+			isDismissing: false,
+		} as any;
+
+		const bounds = createBoundsAccessor(() => {
+			"worklet";
+			return frameProps;
+		});
+
+		const firstRef = bounds;
+		const before = bounds({
+			id: "card",
+			method: "transform",
+			space: "relative",
+			raw: true,
+		}) as any;
+
+		frameProps = {
+			...frameProps,
+			progress: 1,
+		};
+
+		const after = bounds({
+			id: "card",
+			method: "transform",
+			space: "relative",
+			raw: true,
+		}) as any;
+
+		expect(bounds).toBe(firstRef);
+		expect(after.translateX).not.toBe(before.translateX);
+		expect(after.translateY).not.toBe(before.translateY);
+	});
+
 	it("bounds({...}) produces deterministic style output for same options", () => {
 		registerBasicLink();
 

@@ -7,7 +7,7 @@ import type { ResolveBoundTagParams } from "./resolve-bound-tag";
 type NavigationAccessorParams = {
 	id?: string;
 	group?: string;
-	props: Omit<ScreenInterpolationProps, "bounds">;
+	getProps: () => Omit<ScreenInterpolationProps, "bounds">;
 	resolveBoundTag: (params: ResolveBoundTagParams) => string | undefined;
 	computeRaw: (overrides?: Partial<BoundsOptions>) => Record<string, unknown>;
 	zoomBaseOptions?: Pick<BoundsOptions, "anchor" | "scaleMode" | "target">;
@@ -16,7 +16,7 @@ type NavigationAccessorParams = {
 export const createNavigationAccessor = ({
 	id,
 	group,
-	props,
+	getProps,
 	resolveBoundTag,
 	computeRaw,
 	zoomBaseOptions,
@@ -35,7 +35,7 @@ export const createNavigationAccessor = ({
 			group,
 			preset,
 			navigationOptions,
-			props,
+			props: getProps(),
 			resolveTag: resolveBoundTag,
 			computeRaw: (overrides) =>
 				computeRaw({

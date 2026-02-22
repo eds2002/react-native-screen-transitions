@@ -7,7 +7,6 @@ import {
 import { NO_STYLES } from "../../constants";
 import { _useScreenAnimation } from "../../hooks/animation/use-screen-animation";
 import type { NormalizedTransitionInterpolatedStyle } from "../../types/animation.types";
-import { createBounds } from "../../utils/bounds";
 import { logger } from "../../utils/logger";
 import { normalizeInterpolatedStyle } from "../../utils/normalize-interpolated-style";
 
@@ -27,8 +26,12 @@ const ScreenStylesContext = createContext<ScreenStylesContextValue | null>(
 export function ScreenStylesProvider({ children }: Props) {
 	const parentCtx = useContext(ScreenStylesContext);
 
-	const { screenInterpolatorProps, nextInterpolator, currentInterpolator } =
-		_useScreenAnimation();
+	const {
+		screenInterpolatorProps,
+		nextInterpolator,
+		currentInterpolator,
+		boundsAccessor,
+	} = _useScreenAnimation();
 
 	/**
 	 * Tracks when user starts a gesture while another screen is still closing.
@@ -83,7 +86,7 @@ export function ScreenStylesProvider({ children }: Props) {
 					...props,
 					progress: effectiveProgress,
 					next: effectiveNext,
-					bounds: createBounds(props),
+					bounds: boundsAccessor,
 				});
 
 				const { result, wasLegacy } = normalizeInterpolatedStyle(
