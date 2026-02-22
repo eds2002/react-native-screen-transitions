@@ -612,9 +612,10 @@ For iOS-style zoom transitions where content expands from a source element with 
       "worklet";
       if (!focused) return {};
 
-      return bounds({ id: "album-art" }).navigation.zoom({
+      return bounds({
+        id: "album-art",
         scaleMode: "uniform",
-      });
+      }).navigation.zoom();
     },
     transitionSpec: {
       open: { stiffness: 1000, damping: 500, mass: 3, overshootClamping: true },
@@ -625,6 +626,8 @@ For iOS-style zoom transitions where content expands from a source element with 
 ```
 
 `bounds().navigation.zoom()` returns a complete interpolator result with content, mask, and container styles. Set `maskEnabled: true` to pre-mount the masked view wrapper so it's ready from the first frame.
+
+`navigation.zoom()` does not accept options. Configure zoom via `Transition.Boundary` props or the outer `bounds({ ... })` call.
 
 > **Note**: Navigation bounds masking requires `@react-native-masked-view/masked-view` to be installed.
 

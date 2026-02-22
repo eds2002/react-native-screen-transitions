@@ -42,10 +42,10 @@ export default function ZoomLayout() {
 							return {};
 						}
 
-						const navigationStyles = bounds({ id }).navigation.zoom({
+						const navigationStyles = bounds({
+							id,
 							scaleMode: "uniform",
-							maskBorderRadius: 28,
-						});
+						}).navigation.zoom();
 
 						return {
 							...navigationStyles,

@@ -39,7 +39,7 @@ export default function BoundsSyncZoomIndex() {
 								key={item.id}
 								onPress={() => {
 									activeZoomId.value = item.id;
-									router.push(`/bounds-sync/zoom/${item.id}` as never);
+									router.navigate(`/bounds-sync/zoom/${item.id}` as never);
 								}}
 							>
 								<Transition.Boundary

@@ -230,9 +230,10 @@ describe("createBounds accessor", () => {
 		const bounds = createAccessor("screen-b");
 
 		const inherited = bounds({ id: "card" }).navigation.zoom();
-		const overridden = bounds({ id: "card" }).navigation.zoom({
+		const overridden = bounds({
+			id: "card",
 			anchor: "center",
-		});
+		}).navigation.zoom();
 
 		expect(inherited[NAVIGATION_CONTAINER_STYLE_ID]).toBeDefined();
 		expect(overridden[NAVIGATION_CONTAINER_STYLE_ID]).toBeDefined();
@@ -243,11 +244,22 @@ describe("createBounds accessor", () => {
 		const bounds = createAccessor("screen-b");
 
 		const presetDefault = bounds({ id: "card" }).navigation.zoom();
-		const explicitTop = bounds({ id: "card" }).navigation.zoom({ anchor: "top" });
+		const explicitTop = bounds({ id: "card", anchor: "top" }).navigation.zoom();
 
 		expect(presetDefault[NAVIGATION_CONTAINER_STYLE_ID]).toEqual(
 			explicitTop[NAVIGATION_CONTAINER_STYLE_ID],
 		);
+	});
+
+	it("bounds({...}).navigation.zoom() rejects per-call options at the type level", () => {
+		registerBasicLink();
+		const bounds = createAccessor("screen-b");
+		const badZoomOptions = { anchor: "top" } as const;
+
+		// @ts-expect-error zoom no longer accepts per-call options
+		const styles = bounds({ id: "card" }).navigation.zoom(badZoomOptions);
+
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeDefined();
 	});
 
 	it("bounds({...}).navigation.zoom() inherits source defaults when destination boundary is missing", () => {
@@ -276,14 +288,16 @@ describe("createBounds accessor", () => {
 		);
 
 		const bounds = createAccessor("screen-b", true, 0);
-		const topStyles = bounds({ id: "card" }).navigation.zoom({
+		const topStyles = bounds({
+			id: "card",
 			anchor: "top",
 			scaleMode: "uniform",
-		});
-		const bottomStyles = bounds({ id: "card" }).navigation.zoom({
+		}).navigation.zoom();
+		const bottomStyles = bounds({
+			id: "card",
 			anchor: "bottom",
 			scaleMode: "uniform",
-		});
+		}).navigation.zoom();
 
 		const topTranslateY =
 			(topStyles[NAVIGATION_CONTAINER_STYLE_ID] as any).transform?.[1]?.translateY;
@@ -560,10 +574,10 @@ describe("createBounds accessor", () => {
 		});
 
 		const baselineTransform = (
-			baseline({ id: "card" }).navigation.zoom({ scaleMode: "match" }).card as any
+			baseline({ id: "card", scaleMode: "match" }).navigation.zoom().card as any
 		).transform;
 		const draggedTransform = (
-			dragged({ id: "card" }).navigation.zoom({ scaleMode: "match" }).card as any
+			dragged({ id: "card", scaleMode: "match" }).navigation.zoom().card as any
 		).transform;
 
 		const baselineY = baselineTransform.find(
@@ -587,7 +601,7 @@ describe("createBounds accessor", () => {
 			gestureY: 0,
 		});
 
-		const styles = bounds({ id: "card" }).navigation.zoom({ scaleMode: "match" });
+		const styles = bounds({ id: "card", scaleMode: "match" }).navigation.zoom();
 		const sharedTransform = (styles.card as any).transform;
 		const contentTransform = (styles.content as any)?.style?.transform;
 		const contentScale = contentTransform?.find(

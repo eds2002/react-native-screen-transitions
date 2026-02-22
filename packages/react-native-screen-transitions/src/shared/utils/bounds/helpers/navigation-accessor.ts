@@ -10,6 +10,7 @@ type NavigationAccessorParams = {
 	props: Omit<ScreenInterpolationProps, "bounds">;
 	resolveBoundTag: (params: ResolveBoundTagParams) => string | undefined;
 	computeRaw: (overrides?: Partial<BoundsOptions>) => Record<string, unknown>;
+	zoomBaseOptions?: Pick<BoundsOptions, "anchor" | "scaleMode" | "target">;
 };
 
 export const createNavigationAccessor = ({
@@ -18,6 +19,7 @@ export const createNavigationAccessor = ({
 	props,
 	resolveBoundTag,
 	computeRaw,
+	zoomBaseOptions,
 }: NavigationAccessorParams) => {
 	"worklet";
 
@@ -48,9 +50,9 @@ export const createNavigationAccessor = ({
 			"worklet";
 			return computeNavigationPresetStyles("hero", options);
 		},
-		zoom: (options?: BoundsNavigationOptions) => {
+		zoom: () => {
 			"worklet";
-			return computeNavigationPresetStyles("zoom", options);
+			return computeNavigationPresetStyles("zoom", zoomBaseOptions);
 		},
 	};
 };

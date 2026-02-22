@@ -44,11 +44,17 @@ export const createBounds = (
 			string,
 			unknown
 		>;
+		const zoomBaseOptions = {
+			anchor: params?.anchor,
+			scaleMode: params?.scaleMode,
+			target: params?.target,
+		};
 		const navigation = createNavigationAccessor({
 			id: params?.id,
 			group: params?.group,
 			props,
 			resolveBoundTag,
+			zoomBaseOptions,
 			computeRaw: (overrides) =>
 				computeForResolvedOptions(
 					buildBoundsOptions({

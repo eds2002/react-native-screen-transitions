@@ -35,7 +35,7 @@ export type BoundsNavigationOptions = BoundsStyleOptions & {
 
 export type BoundsNavigationAccessor = {
 	hero: (options?: BoundsNavigationOptions) => TransitionInterpolatedStyle;
-	zoom: (options?: BoundsNavigationOptions) => TransitionInterpolatedStyle;
+	zoom: () => TransitionInterpolatedStyle;
 };
 
 type BoundsBoundNavigationAccessor = {
