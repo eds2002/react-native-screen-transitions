@@ -258,6 +258,14 @@ export default function BoundsSyncZoomDetail() {
 			pagingEnabled
 			showsHorizontalScrollIndicator={false}
 			onMomentumScrollEnd={handleMomentumScrollEnd}
+			windowSize={3}
+			maxToRenderPerBatch={1}
+			initialNumToRender={1}
+			removeClippedSubviews
+			updateCellsBatchingPeriod={100}
+			scrollEventThrottle={16}
+			decelerationRate="fast"
+			overScrollMode="never"
 			style={styles.flatList}
 		/>
 	);
