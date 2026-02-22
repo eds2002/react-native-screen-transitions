@@ -6,7 +6,6 @@ import {
 	useWindowDimensions,
 	View,
 } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
