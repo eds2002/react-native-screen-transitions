@@ -146,10 +146,10 @@ export default function BoundsSyncLayout() {
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: navigationZoomInterpolator,
+					experimental_enableHighRefreshRate: true,
 					// backdropComponent: BlurView,
 					transitionSpec: {
-						// open: Transition.Specs.DefaultSpec,
-						open: { duration: 5000 },
+						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,
 					},
 				}}
