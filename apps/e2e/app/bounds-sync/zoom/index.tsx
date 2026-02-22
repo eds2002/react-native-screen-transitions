@@ -6,17 +6,58 @@ import {
 	useWindowDimensions,
 	View,
 } from "react-native";
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
+	type BoundsSyncZoomItem,
 	ZOOM_GROUP,
 } from "../zoom.constants";
 
 const GAP = 10;
 const PADDING = 16;
+
+function ZoomSourceCard({
+	item,
+	colWidth,
+}: {
+	item: BoundsSyncZoomItem;
+	colWidth: number;
+}) {
+	const cardWidth = item.cols === 2 ? colWidth * 2 + GAP : colWidth;
+
+	return (
+		<Transition.Boundary
+			group={ZOOM_GROUP}
+			scaleMode="uniform"
+			mode="source"
+			id={item.id}
+			style={[
+				styles.card,
+				{
+					backgroundColor: item.color,
+					width: cardWidth,
+					height: item.height,
+				},
+			]}
+			pointerEvents="box-none"
+		>
+			<Pressable
+				onPress={() => {
+					activeZoomId.value = item.id;
+					router.push(`/bounds-sync/zoom/${item.id}` as never);
+				}}
+				style={{ flex: 1 }}
+			>
+				<Text style={styles.title}>{item.title}</Text>
+				<Text style={styles.subtitle}>{item.subtitle}</Text>
+			</Pressable>
+		</Transition.Boundary>
+	);
+}
 
 export default function BoundsSyncZoomIndex() {
 	const { width } = useWindowDimensions();
@@ -31,37 +72,9 @@ export default function BoundsSyncZoomIndex() {
 
 			<Transition.ScrollView contentContainerStyle={styles.scrollContent}>
 				<View style={styles.grid}>
-					{BOUNDS_SYNC_ZOOM_ITEMS.map((item) => {
-						const cardWidth = item.cols === 2 ? colWidth * 2 + GAP : colWidth;
-
-						return (
-							<Pressable
-								key={item.id}
-								onPress={() => {
-									activeZoomId.value = item.id;
-									router.navigate(`/bounds-sync/zoom/${item.id}` as never);
-								}}
-							>
-								<Transition.Boundary
-									group={ZOOM_GROUP}
-									scaleMode="uniform"
-									mode="source"
-									id={item.id}
-									style={[
-										styles.card,
-										{
-											backgroundColor: item.color,
-											width: cardWidth,
-											height: item.height,
-										},
-									]}
-								>
-									<Text style={styles.title}>{item.title}</Text>
-									<Text style={styles.subtitle}>{item.subtitle}</Text>
-								</Transition.Boundary>
-							</Pressable>
-						);
-					})}
+					{BOUNDS_SYNC_ZOOM_ITEMS.map((item) => (
+						<ZoomSourceCard key={item.id} item={item} colWidth={colWidth} />
+					))}
 				</View>
 			</Transition.ScrollView>
 		</SafeAreaView>
@@ -76,11 +89,16 @@ const styles = StyleSheet.create({
 	scrollContent: {
 		paddingHorizontal: PADDING,
 		paddingBottom: 40,
+		overflow: "visible",
 	},
 	grid: {
 		flexDirection: "row",
 		flexWrap: "wrap",
 		gap: GAP,
+		overflow: "visible",
+	},
+	cardLayer: {
+		position: "relative",
 	},
 	card: {
 		borderRadius: 20,

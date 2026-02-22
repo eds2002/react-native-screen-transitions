@@ -4,7 +4,7 @@ import {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
-import { EPSILON, NO_STYLES } from "../../constants";
+import { EPSILON, NO_PROPS, NO_STYLES } from "../../constants";
 import { useKeys } from "../../providers/screen/keys.provider";
 import { useScreenStyles } from "../../providers/screen/styles.provider";
 import { AnimationStore } from "../../stores/animation.store";
@@ -25,6 +25,10 @@ const IDENTITY_TRANSFORM = [
 	{ scaleX: 1 },
 	{ scaleY: 1 },
 ] as any;
+const ALWAYS_RESET_STYLE_VALUES = {
+	zIndex: 0,
+	elevation: 0,
+} as const;
 
 type AssociatedStyleMode = "waiting-first-style" | "hold-last-style" | "live";
 
@@ -102,10 +106,16 @@ const buildUnsetPatch = ({
 
 	for (const key in previousKeys) {
 		if (currentKeys[key]) continue;
-		if (shouldDeferUnset) continue;
+		const shouldAlwaysUnset = key in ALWAYS_RESET_STYLE_VALUES;
+		if (shouldDeferUnset && !shouldAlwaysUnset) continue;
 
 		if (key === "transform" && resetTransformOnUnset) {
 			unsetPatch.transform = IDENTITY_TRANSFORM;
+		} else if (key in ALWAYS_RESET_STYLE_VALUES) {
+			unsetPatch[key] =
+				ALWAYS_RESET_STYLE_VALUES[
+					key as keyof typeof ALWAYS_RESET_STYLE_VALUES
+				];
 		} else {
 			unsetPatch[key] = undefined;
 		}
@@ -323,14 +333,14 @@ export const useAssociatedStyles = ({
 	const associatedProps = useAnimatedProps(() => {
 		"worklet";
 
-		if (!id) return {};
+		if (!id) return NO_PROPS;
 
 		const ownSlot = stylesMap.value[id];
 		const ancestorSlot = ancestorStylesMaps.find(
 			(ancestorMap) => ancestorMap.value[id],
 		)?.value[id];
 
-		return (ownSlot || ancestorSlot)?.props ?? {};
+		return (ownSlot || ancestorSlot)?.props ?? NO_PROPS;
 	});
 
 	return { associatedStyles, associatedProps };

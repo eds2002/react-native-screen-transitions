@@ -270,6 +270,8 @@ export const buildZoomNavigationStyles = ({
 					{ scaleY: toNumber(elementRaw.scaleY, 1) * dragScale },
 				],
 				opacity: unfocusedFade,
+				zIndex: 9999,
+				elevation: 9999,
 			},
 		},
 	};
