@@ -1,11 +1,17 @@
 import { useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
 	ListRenderItemInfo,
 	NativeScrollEvent,
 	NativeSyntheticEvent,
 } from "react-native";
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import {
+	InteractionManager,
+	StyleSheet,
+	Text,
+	useWindowDimensions,
+	View,
+} from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
@@ -69,14 +75,54 @@ const PALETTES = [
 	{ name: "Earth", colors: ["#C4A882", "#8B7355", "#D4C5A9", "#A0826D"] },
 ];
 
+function WarmupDestinationBoundary({
+	item,
+	insets,
+}: {
+	item: BoundsSyncZoomItem;
+	insets: { top: number; bottom: number };
+}) {
+	return (
+		<View
+			pointerEvents="none"
+			accessible={false}
+			style={styles.warmupOverlay}
+		>
+			<View
+				style={[
+					styles.warmupContent,
+					{
+						paddingTop: insets.top + 20,
+						paddingBottom: insets.bottom + 32,
+					},
+				]}
+			>
+				<View style={styles.warmupHeroSpacer} />
+				<View style={styles.swatchSection}>
+					<Transition.Boundary
+						id={item.id}
+						group={ZOOM_GROUP}
+						mode="destination"
+						style={[styles.swatch, { backgroundColor: item.color }]}
+					>
+						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>
+					</Transition.Boundary>
+				</View>
+			</View>
+		</View>
+	);
+}
+
 function DetailPage({
 	item,
 	width,
 	insets,
+	deferHeavySections,
 }: {
 	item: BoundsSyncZoomItem;
 	width: number;
 	insets: { top: number; bottom: number };
+	deferHeavySections: boolean;
 }) {
 	const hsl = hexToHSL(item.color);
 
@@ -93,16 +139,13 @@ function DetailPage({
 				]}
 				showsVerticalScrollIndicator={false}
 			>
-				{/* Header */}
 				<View style={styles.header}>
 					<Text style={styles.title}>{item.title}</Text>
 					<Text style={styles.subtitle}>{item.subtitle}</Text>
 				</View>
 
-				{/* Description */}
 				<Text style={styles.description}>{item.description}</Text>
 
-				{/* Color Swatch */}
 				<View style={styles.swatchSection}>
 					<Transition.Boundary
 						id={item.id}
@@ -113,94 +156,99 @@ function DetailPage({
 					</Transition.Boundary>
 				</View>
 
-				{/* Color Properties */}
-				<View style={styles.propertiesGrid}>
-					{COLOR_PROPERTIES.map((prop) => (
-						<View
-							key={prop.key}
-							style={[
-								styles.propertyCard,
-								{ backgroundColor: `${item.color}15` },
-							]}
-						>
-							<Text
-								style={[styles.propertyLabel, { color: `${item.color}AA` }]}
-							>
-								{prop.label}
-							</Text>
-							<Text style={styles.propertyValue}>
-								{getColorProperty(item.color, prop.key)}
-							</Text>
-						</View>
-					))}
-				</View>
-
-				{/* HSL Bars */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>HSL Breakdown</Text>
-					{[
-						{ label: "Hue", value: hsl.h, max: 360 },
-						{ label: "Saturation", value: hsl.s, max: 100 },
-						{ label: "Lightness", value: hsl.l, max: 100 },
-					].map((bar) => (
-						<View key={bar.label} style={styles.barRow}>
-							<Text style={styles.barLabel}>{bar.label}</Text>
-							<View style={styles.barTrack}>
+				{deferHeavySections ? (
+					<View style={styles.deferredContentSpacer} />
+				) : (
+					<>
+						<View style={styles.propertiesGrid}>
+							{COLOR_PROPERTIES.map((prop) => (
 								<View
+									key={prop.key}
 									style={[
-										styles.barFill,
-										{
-											backgroundColor: item.color,
-											width: `${(bar.value / bar.max) * 100}%`,
-										},
+										styles.propertyCard,
+										{ backgroundColor: `${item.color}15` },
 									]}
-								/>
-							</View>
-							<Text style={styles.barValue}>{bar.value}</Text>
+								>
+									<Text
+										style={[styles.propertyLabel, { color: `${item.color}AA` }]}
+									>
+										{prop.label}
+									</Text>
+									<Text style={styles.propertyValue}>
+										{getColorProperty(item.color, prop.key)}
+									</Text>
+								</View>
+							))}
 						</View>
-					))}
-				</View>
 
-				{/* Companion Palettes */}
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Companion Palettes</Text>
-					{PALETTES.map((palette) => (
-						<View key={palette.name} style={styles.paletteRow}>
-							<Text style={styles.paletteLabel}>{palette.name}</Text>
-							<View style={styles.paletteSwatches}>
-								{palette.colors.map((c) => (
+						<View style={styles.section}>
+							<Text style={styles.sectionTitle}>HSL Breakdown</Text>
+							{[
+								{ label: "Hue", value: hsl.h, max: 360 },
+								{ label: "Saturation", value: hsl.s, max: 100 },
+								{ label: "Lightness", value: hsl.l, max: 100 },
+							].map((bar) => (
+								<View key={bar.label} style={styles.barRow}>
+									<Text style={styles.barLabel}>{bar.label}</Text>
+									<View style={styles.barTrack}>
+										<View
+											style={[
+												styles.barFill,
+												{
+													backgroundColor: item.color,
+													width: `${(bar.value / bar.max) * 100}%`,
+												},
+											]}
+										/>
+									</View>
+									<Text style={styles.barValue}>{bar.value}</Text>
+								</View>
+							))}
+						</View>
+
+						<View style={styles.section}>
+							<Text style={styles.sectionTitle}>Companion Palettes</Text>
+							{PALETTES.map((palette) => (
+								<View key={palette.name} style={styles.paletteRow}>
+									<Text style={styles.paletteLabel}>{palette.name}</Text>
+									<View style={styles.paletteSwatches}>
+										{palette.colors.map((c) => (
+											<View
+												key={c}
+												style={[styles.paletteSwatch, { backgroundColor: c }]}
+											/>
+										))}
+									</View>
+								</View>
+							))}
+						</View>
+
+						<View style={[styles.section, styles.notesCard]}>
+							<Text style={styles.sectionTitle}>Usage Notes</Text>
+							<Text style={styles.noteText}>
+								This color works best as an accent against dark backgrounds. Pair
+								with neutral greys for UI elements or use at reduced opacity for
+								subtle surface tints. Avoid placing small text directly on this
+								color without sufficient contrast.
+							</Text>
+							<View style={styles.noteTags}>
+								{["Accent", "UI", "Vibrant", "Accessible"].map((tag) => (
 									<View
-										key={c}
-										style={[styles.paletteSwatch, { backgroundColor: c }]}
-									/>
+										key={tag}
+										style={[
+											styles.noteTag,
+											{ backgroundColor: `${item.color}20` },
+										]}
+									>
+										<Text style={[styles.noteTagText, { color: item.color }]}>
+											{tag}
+										</Text>
+									</View>
 								))}
 							</View>
 						</View>
-					))}
-				</View>
-
-				{/* Usage Notes */}
-				<View style={[styles.section, styles.notesCard]}>
-					<Text style={styles.sectionTitle}>Usage Notes</Text>
-					<Text style={styles.noteText}>
-						This color works best as an accent against dark backgrounds. Pair
-						with neutral greys for UI elements or use at reduced opacity for
-						subtle surface tints. Avoid placing small text directly on this
-						color without sufficient contrast.
-					</Text>
-					<View style={styles.noteTags}>
-						{["Accent", "UI", "Vibrant", "Accessible"].map((tag) => (
-							<View
-								key={tag}
-								style={[styles.noteTag, { backgroundColor: `${item.color}20` }]}
-							>
-								<Text style={[styles.noteTagText, { color: item.color }]}>
-									{tag}
-								</Text>
-							</View>
-						))}
-					</View>
-				</View>
+					</>
+				)}
 			</Transition.ScrollView>
 		</View>
 	);
@@ -216,21 +264,57 @@ export default function BoundsSyncZoomDetail() {
 		BOUNDS_SYNC_ZOOM_ITEMS.findIndex((item) => item.id === id),
 	);
 
+	const [isDetailHydrated, setIsDetailHydrated] = useState(false);
+	const [currentPageIndex, setCurrentPageIndex] = useState(initialIndex);
+
+	const selectedItem = useMemo(
+		() =>
+			BOUNDS_SYNC_ZOOM_ITEMS[initialIndex] ??
+			BOUNDS_SYNC_ZOOM_ITEMS.find((item) => item.id === id) ??
+			BOUNDS_SYNC_ZOOM_ITEMS[0],
+		[initialIndex, id],
+	);
+
+	useEffect(() => {
+		setCurrentPageIndex(initialIndex);
+		activeZoomId.value = selectedItem.id;
+	}, [initialIndex, selectedItem.id]);
+
+	useEffect(() => {
+		let didHydrate = false;
+
+		setIsDetailHydrated(false);
+
+		const hydrate = () => {
+			if (didHydrate) return;
+			didHydrate = true;
+			setIsDetailHydrated(true);
+		};
+
+		const interactionTask = InteractionManager.runAfterInteractions(hydrate);
+		const fallbackTimer = setTimeout(hydrate, 300);
+
+		return () => {
+			interactionTask.cancel();
+			clearTimeout(fallbackTimer);
+		};
+	}, [id]);
+
 	const handleMomentumScrollEnd = useCallback(
 		(event: NativeSyntheticEvent<NativeScrollEvent>) => {
 			const offsetX = event.nativeEvent.contentOffset.x;
 			const pageIndex = Math.round(offsetX / width);
 			const item = BOUNDS_SYNC_ZOOM_ITEMS[pageIndex];
-
 			if (!item) return;
 
+			setCurrentPageIndex(pageIndex);
 			activeZoomId.value = item.id;
 		},
 		[width],
 	);
 
 	const getItemLayout = useCallback(
-		(_: any, index: number) => ({
+		(_: unknown, index: number) => ({
 			length: width,
 			offset: width * index,
 			index,
@@ -239,41 +323,64 @@ export default function BoundsSyncZoomDetail() {
 	);
 
 	const renderItem = useCallback(
-		({ item }: ListRenderItemInfo<BoundsSyncZoomItem>) => (
-			<DetailPage item={item} width={width} insets={insets} />
+		({ item, index }: ListRenderItemInfo<BoundsSyncZoomItem>) => (
+			<DetailPage
+				item={item}
+				width={width}
+				insets={insets}
+				deferHeavySections={!isDetailHydrated || index !== currentPageIndex}
+			/>
 		),
-		[width, insets],
+		[currentPageIndex, insets, isDetailHydrated, width],
 	);
 
 	const keyExtractor = useCallback((item: BoundsSyncZoomItem) => item.id, []);
 
 	return (
-		<Animated.FlatList
-			data={BOUNDS_SYNC_ZOOM_ITEMS}
-			renderItem={renderItem}
-			keyExtractor={keyExtractor}
-			getItemLayout={getItemLayout}
-			initialScrollIndex={initialIndex}
-			horizontal
-			pagingEnabled
-			showsHorizontalScrollIndicator={false}
-			onMomentumScrollEnd={handleMomentumScrollEnd}
-			windowSize={3}
-			maxToRenderPerBatch={1}
-			initialNumToRender={1}
-			removeClippedSubviews
-			updateCellsBatchingPeriod={100}
-			scrollEventThrottle={16}
-			decelerationRate="fast"
-			overScrollMode="never"
-			style={styles.flatList}
-		/>
+		<View style={styles.root}>
+			{!isDetailHydrated ? (
+				<WarmupDestinationBoundary item={selectedItem} insets={insets} />
+			) : null}
+			<Animated.FlatList
+				data={BOUNDS_SYNC_ZOOM_ITEMS}
+				renderItem={renderItem}
+				keyExtractor={keyExtractor}
+				getItemLayout={getItemLayout}
+				initialScrollIndex={initialIndex}
+				horizontal
+				pagingEnabled
+				showsHorizontalScrollIndicator={false}
+				onMomentumScrollEnd={handleMomentumScrollEnd}
+				windowSize={1}
+				maxToRenderPerBatch={1}
+				initialNumToRender={1}
+				removeClippedSubviews
+				updateCellsBatchingPeriod={100}
+				scrollEventThrottle={16}
+				decelerationRate="fast"
+				overScrollMode="never"
+				style={styles.flatList}
+			/>
+		</View>
 	);
 }
 
 const styles = StyleSheet.create({
+	root: {
+		flex: 1,
+	},
 	flatList: {
 		flex: 1,
+	},
+	warmupOverlay: {
+		...StyleSheet.absoluteFillObject,
+		opacity: 0,
+	},
+	warmupContent: {
+		paddingHorizontal: 24,
+	},
+	warmupHeroSpacer: {
+		height: 128,
 	},
 	page: {
 		flex: 1,
@@ -321,6 +428,9 @@ const styles = StyleSheet.create({
 		fontWeight: "700",
 		color: "rgba(255,255,255,0.9)",
 		letterSpacing: 2,
+	},
+	deferredContentSpacer: {
+		height: 640,
 	},
 	propertiesGrid: {
 		flexDirection: "row",
