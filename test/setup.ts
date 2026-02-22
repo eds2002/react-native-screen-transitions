@@ -47,6 +47,33 @@ mock.module("react-native-reanimated", () => ({
 		mutableObjects.push({ obj: mutable as { value: unknown }, initial });
 		return mutable;
 	},
+	Extrapolation: { CLAMP: "clamp", EXTEND: "extend", IDENTITY: "identity" },
+	interpolate: (
+		value: number,
+		inputRange: number[],
+		outputRange: number[],
+		extrapolation?: string,
+	) => {
+		if (inputRange.length < 2 || outputRange.length < 2)
+			return outputRange[0] ?? 0;
+		// Find segment
+		let i = 0;
+		for (; i < inputRange.length - 1; i++) {
+			if (value <= inputRange[i + 1]) break;
+		}
+		i = Math.min(i, inputRange.length - 2);
+		const inputMin = inputRange[i];
+		const inputMax = inputRange[i + 1];
+		const outputMin = outputRange[i];
+		const outputMax = outputRange[i + 1];
+		const range = inputMax - inputMin;
+		if (range === 0) return outputMin;
+		let t = (value - inputMin) / range;
+		if (extrapolation === "clamp") {
+			t = Math.min(Math.max(t, 0), 1);
+		}
+		return outputMin + t * (outputMax - outputMin);
+	},
 	cancelAnimation: () => {},
 	clamp: (value: number, lower: number, upper: number) =>
 		Math.min(Math.max(value, lower), upper),
