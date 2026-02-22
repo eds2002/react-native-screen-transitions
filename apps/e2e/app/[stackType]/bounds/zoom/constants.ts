@@ -7,13 +7,9 @@ export type BoundsSyncZoomItem = {
 	title: string;
 	subtitle: string;
 	color: string;
-	/** Dark variant of color used as the detail screen background */
 	bgColor: string;
-	/** Description shown on the detail screen */
 	description: string;
-	/** Width multiplier relative to a single grid column (1 = half, 2 = full width) */
 	cols: 1 | 2;
-	/** Height in points */
 	height: number;
 };
 
@@ -130,11 +126,6 @@ export const BOUNDS_SYNC_ZOOM_ITEMS: BoundsSyncZoomItem[] = [
 	},
 ];
 
-/**
- * Module-level mutable shared value tracking the currently visible item
- * in the detail pager. Written by onMomentumScrollEnd, read by the
- * layout interpolator to retarget bounds({ group, id }).navigation.zoom().
- */
 export const activeZoomId = makeMutable(BOUNDS_SYNC_ZOOM_ITEMS[0].id);
 
 export const getBoundsSyncZoomItemById = (id: string | undefined) => {

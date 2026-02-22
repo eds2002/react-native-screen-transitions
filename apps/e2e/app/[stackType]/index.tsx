@@ -2,7 +2,10 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 
 const TEST_FLOWS = [
 	{
@@ -56,46 +59,9 @@ const TEST_FLOWS = [
 		description: "Demonstrates proper touch blocking during transitions",
 	},
 	{
-		id: "active-bounds",
-		title: "Active Bounds",
-		description: "Transition.Boundary with id-only matching (group optional)",
-	},
-	{
-		id: "gesture-bounds",
-		title: "Gesture Bounds",
-		description: "Transition.Boundary id-only with gesture-aware bounds",
-	},
-	{
-		id: "style-id-bounds",
-		title: "Style ID Bounds",
-		description: "Bounds with styleId masking for complex shared transitions",
-	},
-	{
-		id: "zoom",
-		title: "Zoom (Navigation)",
-		description: "bounds({ id }).navigation.zoom() with auto mask host",
-	},
-	{
 		id: "bounds",
-		title: "Boundary (v2)",
-		description: "Minimal Transition.Boundary example between two screens",
-	},
-	{
-		id: "bounds-spam",
-		title: "Bounds Spam",
-		description:
-			"4x4 grid — rapid tap same or different items during transitions",
-	},
-	{
-		id: "bounds-multi",
-		title: "Multi Boundary",
-		description: "Two independent boundaries (image + label) per transition",
-	},
-	{
-		id: "bounds-list",
-		title: "Bounds List",
-		description:
-			"30-item scroll list — tests measurement at arbitrary scroll offset",
+		title: "Bounds",
+		description: "All bounds examples: active, gesture, styleId, spam, zoom, sync",
 	},
 ];
 

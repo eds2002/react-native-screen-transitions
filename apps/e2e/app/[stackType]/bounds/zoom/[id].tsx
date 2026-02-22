@@ -20,7 +20,7 @@ import {
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
 	ZOOM_GROUP,
-} from "../zoom.constants";
+} from "./constants";
 
 const COLOR_SWATCH_RADIUS = 28;
 
@@ -83,11 +83,7 @@ function WarmupDestinationBoundary({
 	insets: { top: number; bottom: number };
 }) {
 	return (
-		<View
-			pointerEvents="none"
-			accessible={false}
-			style={styles.warmupOverlay}
-		>
+		<View pointerEvents="none" accessible={false} style={styles.warmupOverlay}>
 			<View
 				style={[
 					styles.warmupContent,
@@ -127,7 +123,7 @@ function DetailPage({
 	const hsl = hexToHSL(item.color);
 
 	return (
-		<View style={[styles.page, { width, backgroundColor: item.bgColor }]}>
+		<View style={[styles.page, { width, backgroundColor: item.bgColor }]}> 
 			<Transition.ScrollView
 				style={styles.scrollView}
 				contentContainerStyle={[
@@ -254,7 +250,7 @@ function DetailPage({
 	);
 }
 
-export default function BoundsSyncZoomDetail() {
+export default function NavigationZoomGroupTransitionsDetail() {
 	const { width } = useWindowDimensions();
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const insets = useSafeAreaInsets();

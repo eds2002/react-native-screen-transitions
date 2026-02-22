@@ -10,11 +10,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
+import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
 	ZOOM_GROUP,
-} from "../zoom.constants";
+} from "./constants";
 
 const GAP = 10;
 const PADDING = 16;
@@ -26,6 +30,7 @@ function ZoomSourceCard({
 	item: BoundsSyncZoomItem;
 	colWidth: number;
 }) {
+	const stackType = useResolvedStackType();
 	const cardWidth = item.cols === 2 ? colWidth * 2 + GAP : colWidth;
 
 	return (
@@ -47,7 +52,7 @@ function ZoomSourceCard({
 			<Pressable
 				onPress={() => {
 					activeZoomId.value = item.id;
-					router.push(`/bounds-sync/zoom/${item.id}` as never);
+					router.push(buildStackPath(stackType, `bounds/zoom/${item.id}`) as never);
 				}}
 				style={{ flex: 1 }}
 			>
@@ -58,15 +63,15 @@ function ZoomSourceCard({
 	);
 }
 
-export default function BoundsSyncZoomIndex() {
+export default function NavigationZoomGroupTransitionsIndex() {
 	const { width } = useWindowDimensions();
 	const colWidth = (width - PADDING * 2 - GAP) / 2;
 
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
-				title="Bounds Sync: Navigation Zoom"
-				subtitle="bounds({ id }).navigation.zoom()"
+				title="Navigation Zoom Group Transitions"
+				subtitle="bounds({ id, group }).navigation.zoom()"
 			/>
 
 			<Transition.ScrollView contentContainerStyle={styles.scrollContent}>
@@ -95,9 +100,6 @@ const styles = StyleSheet.create({
 		flexWrap: "wrap",
 		gap: GAP,
 		overflow: "visible",
-	},
-	cardLayer: {
-		position: "relative",
 	},
 	card: {
 		borderRadius: 20,

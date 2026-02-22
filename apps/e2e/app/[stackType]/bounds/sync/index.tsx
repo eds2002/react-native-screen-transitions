@@ -2,9 +2,21 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 import { activeCaseId, type BoundsTestCase, CATEGORIES } from "./constants";
 
-function Section({ title, cases }: { title: string; cases: BoundsTestCase[] }) {
+function Section({
+	title,
+	cases,
+	stackType,
+}: {
+	title: string;
+	cases: BoundsTestCase[];
+	stackType: "blank-stack" | "native-stack";
+}) {
 	return (
 		<View style={styles.section}>
 			<Text style={styles.sectionTitle}>{title}</Text>
@@ -31,7 +43,7 @@ function Section({ title, cases }: { title: string; cases: BoundsTestCase[] }) {
 							style={styles.item}
 							onPress={() => {
 								activeCaseId.value = testCase.id;
-								router.push("/bounds-sync/source" as never);
+								router.push(buildStackPath(stackType, "bounds/sync/source") as never);
 							}}
 						>
 							<Text style={styles.itemTitle}>{testCase.title}</Text>
@@ -51,6 +63,7 @@ function Section({ title, cases }: { title: string; cases: BoundsTestCase[] }) {
 }
 
 export default function BoundsSyncIndex() {
+	const stackType = useResolvedStackType();
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
@@ -58,34 +71,13 @@ export default function BoundsSyncIndex() {
 				subtitle="Element transitions (A/B boundary sync)"
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
-				<View style={styles.concernCard}>
-					<Text style={styles.concernCardTitle}>Next Concern: Navigation SST</Text>
-					<Text style={styles.concernCardText}>
-						Navigation transitions are handled separately via
-						{" "}
-						<Text style={styles.concernCardCode}>
-							bounds({"{ id }"}).navigation.zoom()/hero()
-						</Text>
-						.
-					</Text>
-				</View>
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Navigation</Text>
-					<View style={styles.list}>
-						<Pressable
-							style={[styles.item, styles.navigationItem]}
-							onPress={() => router.push("/bounds-sync/zoom" as never)}
-						>
-							<Text style={styles.itemTitle}>Zoom (SST Navigation)</Text>
-							<Text style={styles.itemTags}>bounds({"{ id }"}).navigation.zoom()</Text>
-							<Text style={styles.itemDetail}>
-								Separate route pair for navigation-level zoom and drag-dismiss.
-							</Text>
-						</Pressable>
-					</View>
-				</View>
 				{CATEGORIES.map((cat) => (
-					<Section key={cat.title} title={cat.title} cases={cat.cases} />
+					<Section
+						key={cat.title}
+						title={cat.title}
+						cases={cat.cases}
+						stackType={stackType}
+					/>
 				))}
 			</ScrollView>
 		</SafeAreaView>
@@ -100,29 +92,6 @@ const styles = StyleSheet.create({
 	content: {
 		padding: 16,
 		paddingBottom: 40,
-	},
-	concernCard: {
-		backgroundColor: "#151d28",
-		borderColor: "#2b3c55",
-		borderWidth: 1,
-		borderRadius: 12,
-		padding: 14,
-		marginBottom: 20,
-	},
-	concernCardTitle: {
-		fontSize: 13,
-		fontWeight: "700",
-		color: "#8ec5ff",
-		marginBottom: 6,
-	},
-	concernCardText: {
-		fontSize: 12,
-		color: "#b5c4d6",
-		lineHeight: 18,
-	},
-	concernCardCode: {
-		fontFamily: "monospace",
-		color: "#d4e8ff",
 	},
 	section: {
 		marginBottom: 24,
@@ -145,10 +114,6 @@ const styles = StyleSheet.create({
 		borderRadius: 12,
 		borderWidth: 1,
 		borderColor: "#333",
-	},
-	navigationItem: {
-		backgroundColor: "#122237",
-		borderColor: "#2b4567",
 	},
 	itemTitle: {
 		fontSize: 16,

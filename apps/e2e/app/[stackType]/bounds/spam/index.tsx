@@ -32,7 +32,9 @@ export default function BoundsSpamIndex() {
 									key={item.id}
 									style={styles.cell}
 									onPress={() => {
-										router.push(buildStackPath(stackType, `bounds-spam/${item.id}`) as never);
+										router.push(
+											buildStackPath(stackType, `bounds/spam/${item.id}`) as never,
+										);
 									}}
 								>
 									<Transition.Boundary

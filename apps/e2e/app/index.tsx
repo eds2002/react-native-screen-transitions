@@ -20,15 +20,6 @@ const STACK_OPTIONS = [
 	},
 ];
 
-const BOUNDS_OPTIONS = [
-	{
-		id: "bounds-sync",
-		title: "Bounds Sync",
-		description:
-			"Bulletproof sync math: method, space, anchor, scaleMode, target combos",
-	},
-];
-
 const GESTURE_OPTIONS = [
 	{
 		id: "gestures",
@@ -49,25 +40,6 @@ export default function HomeScreen() {
 					<Text style={styles.sectionTitle}>Stacks</Text>
 					<View style={styles.buttonContainer}>
 						{STACK_OPTIONS.map((option) => (
-							<Pressable
-								key={option.id}
-								testID={`${option.id}-button`}
-								style={styles.button}
-								onPress={() => router.push(`/${option.id}` as `/${string}`)}
-							>
-								<Text style={styles.buttonTitle}>{option.title}</Text>
-								<Text style={styles.buttonDescription}>
-									{option.description}
-								</Text>
-							</Pressable>
-						))}
-					</View>
-				</View>
-
-				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Bounds</Text>
-					<View style={styles.buttonContainer}>
-						{BOUNDS_OPTIONS.map((option) => (
 							<Pressable
 								key={option.id}
 								testID={`${option.id}-button`}

@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 export default function BlankStackLayout() {
 	const stackType = useResolvedStackType();
@@ -48,7 +48,6 @@ export default function BlankStackLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "vertical",
-
 					...Transition.Presets.SlideFromBottom(),
 				}}
 			/>
@@ -120,35 +119,7 @@ export default function BlankStackLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<StackNavigator.Screen
-				name="active-bounds"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<StackNavigator.Screen
-				name="gesture-bounds"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<StackNavigator.Screen
-				name="style-id-bounds"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<StackNavigator.Screen
-				name="zoom"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<StackNavigator.Screen
 				name="bounds"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<StackNavigator.Screen
-				name="bounds-spam"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<StackNavigator.Screen
-				name="bounds-multi"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<StackNavigator.Screen
-				name="bounds-list"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 		</StackNavigator>

@@ -62,7 +62,7 @@ export default function StyleIdBoundsIndex() {
 									useStyleIdBoundsStore.setState({ boundTag: tag });
 									router.push({
 										pathname:
-											buildStackPath(stackType, "style-id-bounds/[id]") as never,
+											buildStackPath(stackType, "bounds/style-id/[id]") as never,
 										params: {
 											id: tag,
 											image: item.source,

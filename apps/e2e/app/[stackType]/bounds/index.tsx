@@ -1,87 +1,69 @@
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, useWindowDimensions } from "react-native";
-import { useAnimatedRef } from "react-native-reanimated";
+import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
-import { activeBoundaryId, BOUNDARY_GROUP, ITEMS } from "./constants";
 
-const ITEM_SIZE = 100;
-const GAP = 16;
+const BOUNDS_EXAMPLES = [
+	{
+		id: "active",
+		title: "Active Bounds",
+		description: "Transition.Boundary id-only matching (no explicit source/destination)",
+	},
+	{
+		id: "gesture",
+		title: "Gesture Bounds",
+		description: "Sync active gesture values into bounds animation",
+	},
+	{
+		id: "style-id",
+		title: "Style ID Bounds",
+		description: "Combine bounds with styleId mask/container choreography",
+	},
+	{
+		id: "spam",
+		title: "Bounds Spam",
+		description: "Rapid tap stress test for bound linkage and blank stack behavior",
+	},
+	{
+		id: "zoom",
+		title: "Navigation Zoom Group Transitions",
+		description: "bounds({ id, group }).navigation.zoom() with grouped source/destination",
+	},
+	{
+		id: "sync",
+		title: "Bounds Sync Harness",
+		description: "Method/anchor/scaleMode/target permutations (source -> destination only)",
+	},
+];
 
-export default function BoundsIndex() {
+export default function BoundsHubIndex() {
 	const stackType = useResolvedStackType();
-	const { width: screenWidth } = useWindowDimensions();
-	const scrollRef = useAnimatedRef<any>();
-
-	// Horizontal padding so first and last items can center in the viewport.
-	const horizontalPadding = screenWidth / 2 - ITEM_SIZE / 2;
-
-	// Auto-scroll to center the active boundary when it changes
-	// (e.g., when the user pages through the detail screen).
-	// useAnimatedReaction(
-	// 	() => activeBoundaryId.value,
-	// 	(activeId, previousId) => {
-	// 		"worklet";
-	// 		if (isFocusedShared.value === 1) return;
-	// 		if (activeId === previousId) return;
-
-	// 		let index = -1;
-	// 		for (let i = 0; i < ITEMS.length; i++) {
-	// 			if (ITEMS[i].id === activeId) {
-	// 				index = i;
-	// 				break;
-	// 			}
-	// 		}
-	// 		if (index === -1) return;
-
-	// 		const offsetX = index * (ITEM_SIZE + GAP);
-	// 		scrollTo(scrollRef, offsetX, 0, false);
-	// 	},
-	// );
+	const testPrefix = stackType === "native-stack" ? "native" : "blank";
 
 	return (
-		<SafeAreaView style={styles.container} edges={[]}>
-			<ScreenHeader
-				title="Boundary (v2)"
-				subtitle="Dynamic retargeting · horizontal scroll"
-			/>
-			<Transition.ScrollView
-				ref={scrollRef}
-				horizontal
-				showsHorizontalScrollIndicator={false}
-				contentContainerStyle={[
-					styles.scrollContent,
-					{ paddingHorizontal: horizontalPadding, overflow: "visible" },
-				]}
-				style={[styles.scrollView, { overflow: "visible" }]}
-			>
-				{ITEMS.map((item) => (
-					<Pressable
-						key={item.id}
-						onPress={() => {
-							activeBoundaryId.value = item.id;
-							router.push(buildStackPath(stackType, `bounds/${item.id}`));
-						}}
-						style={{ overflow: "visible" }}
-					>
-						<Transition.Boundary
-							group={BOUNDARY_GROUP}
-							id={item.id}
-							style={[
-								styles.source,
-								{ backgroundColor: item.color, overflow: "visible" },
-							]}
+		<SafeAreaView style={styles.container} edges={["top"]}>
+			<ScreenHeader title="Bounds" subtitle="Stack-scoped bounds examples" />
+			<ScrollView contentContainerStyle={styles.content}>
+				<View style={styles.list}>
+					{BOUNDS_EXAMPLES.map((example) => (
+						<Pressable
+							key={example.id}
+							testID={`${testPrefix}-bounds-${example.id}`}
+							style={styles.item}
+							onPress={() =>
+								router.push(buildStackPath(stackType, `bounds/${example.id}`) as never)
+							}
 						>
-							<Text style={styles.sourceText}>{item.label}</Text>
-						</Transition.Boundary>
-					</Pressable>
-				))}
-			</Transition.ScrollView>
+							<Text style={styles.itemTitle}>{example.title}</Text>
+							<Text style={styles.itemDescription}>{example.description}</Text>
+						</Pressable>
+					))}
+				</View>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }
@@ -91,25 +73,27 @@ const styles = StyleSheet.create({
 		flex: 1,
 		backgroundColor: "#121212",
 	},
-	scrollView: {
-		flexGrow: 0,
-		marginTop: "auto",
-		marginBottom: "auto",
+	content: {
+		padding: 16,
 	},
-	scrollContent: {
-		alignItems: "center",
-		gap: GAP,
+	list: {
+		gap: 12,
 	},
-	source: {
-		width: ITEM_SIZE,
-		height: ITEM_SIZE,
-		borderRadius: 16,
-		alignItems: "center",
-		justifyContent: "center",
+	item: {
+		backgroundColor: "#1e1e1e",
+		padding: 16,
+		borderRadius: 12,
+		borderWidth: 1,
+		borderColor: "#333",
 	},
-	sourceText: {
+	itemTitle: {
+		fontSize: 16,
+		fontWeight: "600",
 		color: "#fff",
-		fontWeight: "700",
-		fontSize: 24,
+		marginBottom: 4,
+	},
+	itemDescription: {
+		fontSize: 13,
+		color: "#888",
 	},
 });

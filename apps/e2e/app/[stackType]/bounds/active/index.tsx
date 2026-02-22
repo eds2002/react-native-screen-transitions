@@ -5,17 +5,13 @@ import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
-export default function GestureBoundsIndex() {
+export default function ActiveBoundsIndex() {
 	const stackType = useResolvedStackType();
-	const pushToDetail = (id: string) => {
-		router.push(buildStackPath(stackType, `gesture-bounds/${id}`) as never);
-	};
-
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
-				title="Gesture Bounds"
-				subtitle="Transition.Boundary id-only + gesture syncing"
+				title="Active Bounds"
+				subtitle="Transition.Boundary id-only (group optional)"
 			/>
 			<View style={styles.content}>
 				<View style={styles.grid}>
@@ -23,15 +19,16 @@ export default function GestureBoundsIndex() {
 						<View key={`row-${rowIdx}`} style={styles.row}>
 							{Array.from({ length: 3 }).map((_, colIdx) => {
 								const idx = rowIdx * 3 + colIdx;
-								const tag = `gesture-bounds-${idx}`;
-								const id = idx.toString();
+								const tag = `active-bounds-${idx}`;
 								return (
 									<Pressable
 										key={tag}
 										testID={tag}
 										style={styles.cell}
 										onPress={() => {
-											pushToDetail(id);
+											router.push(
+												buildStackPath(stackType, `bounds/active/${tag}`) as never,
+											);
 										}}
 									>
 										<Transition.Boundary

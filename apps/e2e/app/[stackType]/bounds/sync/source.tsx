@@ -9,6 +9,10 @@ import {
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
+import {
 	activeCaseId,
 	BOUNDARY_TAG,
 	getBoxPositionStyle,
@@ -19,6 +23,7 @@ const FORCED_TOP_INSET = 59;
 const HEADER_HEIGHT_ESTIMATE = 60;
 
 export default function BoundsSyncSource() {
+	const stackType = useResolvedStackType();
 	const { width, height } = useWindowDimensions();
 	const caseId = activeCaseId.value;
 	const testCase = getCaseById(caseId);
@@ -45,14 +50,10 @@ export default function BoundsSyncSource() {
 		containerHeight,
 	);
 
-	// For fullscreen/custom targets, the destination screen may not have a
-	// matching Boundary. Use mode="source" to force measurement regardless.
 	const needsExplicitMode =
 		sourceBoundary?.target === "fullscreen" ||
 		typeof sourceBoundary?.target === "object";
 
-	// Source always uses "transform" method for element-level animation.
-	// anchor/scaleMode are declared as Boundary props so match().style() reads them.
 	const sourceMethod =
 		sourceBoundary?.method === "content"
 			? "transform"
@@ -77,7 +78,7 @@ export default function BoundsSyncSource() {
 			<View style={styles.arena}>
 				<Pressable
 					onPress={() => {
-						router.push("/bounds-sync/destination" as never);
+						router.push(buildStackPath(stackType, "bounds/sync/destination") as never);
 					}}
 				>
 					<Transition.Boundary
@@ -100,7 +101,6 @@ export default function BoundsSyncSource() {
 					</Transition.Boundary>
 				</Pressable>
 
-				{/* Ghost outline showing where the destination will appear */}
 				{!needsExplicitMode && (
 					<View
 						pointerEvents="none"
