@@ -13,6 +13,7 @@ import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
+	ZOOM_GROUP,
 } from "../zoom.constants";
 
 const COLOR_SWATCH_RADIUS = 28;
@@ -103,9 +104,13 @@ function DetailPage({
 
 				{/* Color Swatch */}
 				<View style={styles.swatchSection}>
-					<View style={[styles.swatch, { backgroundColor: item.color }]}>
+					<Transition.Boundary
+						id={item.id}
+						group={ZOOM_GROUP}
+						style={[styles.swatch, { backgroundColor: item.color }]}
+					>
 						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>
-					</View>
+					</Transition.Boundary>
 				</View>
 
 				{/* Color Properties */}
@@ -253,8 +258,6 @@ export default function BoundsSyncZoomDetail() {
 			pagingEnabled
 			showsHorizontalScrollIndicator={false}
 			onMomentumScrollEnd={handleMomentumScrollEnd}
-			windowSize={3}
-			maxToRenderPerBatch={1}
 			style={styles.flatList}
 		/>
 	);

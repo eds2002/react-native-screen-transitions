@@ -102,6 +102,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
+			target: "bound",
 		}).navigation.zoom();
 
 		return {
@@ -147,7 +148,8 @@ export default function BoundsSyncLayout() {
 					screenStyleInterpolator: navigationZoomInterpolator,
 					// backdropComponent: BlurView,
 					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
+						// open: Transition.Specs.DefaultSpec,
+						open: { duration: 5000 },
 						close: Transition.Specs.FlingSpec,
 					},
 				}}
