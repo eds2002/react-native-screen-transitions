@@ -5,7 +5,7 @@ import {
 	NAVIGATION_MASK_STYLE_ID,
 	NO_STYLES,
 } from "../../../../constants";
-import { BoundStore } from "../../../../stores/bounds.store";
+import { BoundStore } from "../../../../stores/bounds";
 import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
 import { interpolateClamped } from "../../helpers/interpolate";

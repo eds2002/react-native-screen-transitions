@@ -1,5 +1,5 @@
 import { useAnimatedReaction } from "react-native-reanimated";
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryMode, MaybeMeasureAndStoreParams } from "../types";
 
 export const useAutoSourceMeasurement = (params: {

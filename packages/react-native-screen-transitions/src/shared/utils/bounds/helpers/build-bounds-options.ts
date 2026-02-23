@@ -1,4 +1,4 @@
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsOptions } from "../types/options";
 import { DEFAULT_BOUNDS_OPTIONS } from "./constants";

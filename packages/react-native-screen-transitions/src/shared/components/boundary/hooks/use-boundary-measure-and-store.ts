@@ -7,7 +7,8 @@ import {
 } from "react-native-reanimated";
 import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
 import type { AnimationStore } from "../../../stores/animation.store";
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
+import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { BoundaryMode, MaybeMeasureAndStoreParams } from "../types";
 
 type LayoutAnchor = {
@@ -70,16 +71,9 @@ export const useBoundaryMeasureAndStore = (params: {
 			const canParticipateAsSource = mode !== "destination";
 			const canParticipateAsDestination = mode !== "source";
 
-			const fallbackSourceScreenKey =
-				BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag);
 			const expectedSourceScreenKey: string | undefined =
-				preferredSourceScreenKey &&
-				BoundStore.hasPendingLinkFromSource(
-					sharedBoundTag,
-					preferredSourceScreenKey,
-				)
-					? preferredSourceScreenKey
-					: fallbackSourceScreenKey || undefined;
+				resolvePendingSourceKey(sharedBoundTag, preferredSourceScreenKey) ||
+				undefined;
 
 			if (shouldSetSource && canParticipateAsSource && isAnimating.get()) {
 				const existing = BoundStore.getSnapshot(

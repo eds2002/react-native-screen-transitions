@@ -6,7 +6,7 @@ import {
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 } from "../../../constants";
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
 import type { ScreenTransitionState } from "../../../types/animation.types";
 import type { Layout } from "../../../types/screen.types";
 import type { BoundsComputeParams, BoundsOptions } from "../types/options";

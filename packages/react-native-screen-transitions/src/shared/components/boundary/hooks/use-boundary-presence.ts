@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { runOnUI } from "react-native-reanimated";
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryConfigProps } from "../types";
 
 export const useBoundaryPresence = (params: {

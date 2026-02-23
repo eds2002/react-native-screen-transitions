@@ -1,6 +1,6 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import type { AnimationStore } from "../../../stores/animation.store";
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
 
 /**

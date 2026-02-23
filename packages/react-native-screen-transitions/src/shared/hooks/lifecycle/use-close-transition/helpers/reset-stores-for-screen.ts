@@ -1,5 +1,5 @@
 import { AnimationStore } from "../../../../stores/animation.store";
-import { BoundStore } from "../../../../stores/bounds.store";
+import { BoundStore } from "../../../../stores/bounds";
 import { GestureStore } from "../../../../stores/gesture.store";
 import type { BaseStackDescriptor } from "../../../../types/stack.types";
 
@@ -10,5 +10,5 @@ import type { BaseStackDescriptor } from "../../../../types/stack.types";
 export const resetStoresForScreen = (current: BaseStackDescriptor) => {
 	AnimationStore.clear(current.route.key);
 	GestureStore.clear(current.route.key);
-	BoundStore.clear(current.route.key);
+	BoundStore.clearByAncestor(current.route.key);
 };

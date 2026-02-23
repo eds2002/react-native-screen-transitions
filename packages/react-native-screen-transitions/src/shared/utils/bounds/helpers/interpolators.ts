@@ -1,6 +1,6 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import { ENTER_RANGE, EXIT_RANGE } from "../../../constants";
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import { interpolateClamped } from "./interpolate";
 import { interpolateLinkStyle } from "./interpolate-style";

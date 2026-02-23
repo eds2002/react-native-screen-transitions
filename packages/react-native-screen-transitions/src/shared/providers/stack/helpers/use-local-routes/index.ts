@@ -3,6 +3,7 @@ import { useLayoutEffect, useState } from "react";
 import { useClosingRouteKeys } from "../../../../hooks/navigation/use-closing-route-keys";
 import { usePrevious } from "../../../../hooks/navigation/use-previous";
 import useStableCallback from "../../../../hooks/use-stable-callback";
+import { BoundStore } from "../../../../stores/bounds";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
@@ -37,6 +38,19 @@ export const useLocalRoutes = <
 		const previousRoutesSnapshot = previousRoutes;
 
 		setLocalState((current) => {
+			if (nextRoutesSnapshot.length === 0) {
+				const keysToClear: Record<string, true> = {};
+				for (let i = 0; i < current.routes.length; i++) {
+					keysToClear[current.routes[i].key] = true;
+				}
+				for (let i = 0; i < previousRoutesSnapshot.length; i++) {
+					keysToClear[previousRoutesSnapshot[i].key] = true;
+				}
+				for (const routeKey in keysToClear) {
+					BoundStore.clearByAncestor(routeKey);
+				}
+			}
+
 			const routeKeysUnchanged = haveSameRouteKeys(
 				previousRoutesSnapshot,
 				nextRoutesSnapshot,

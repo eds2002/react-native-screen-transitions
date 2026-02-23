@@ -8,7 +8,7 @@ import { EPSILON, NO_PROPS, NO_STYLES } from "../../constants";
 import { useKeys } from "../../providers/screen/keys.provider";
 import { useScreenStyles } from "../../providers/screen/styles.provider";
 import { AnimationStore } from "../../stores/animation.store";
-import { BoundStore } from "../../stores/bounds.store";
+import { BoundStore } from "../../stores/bounds";
 
 type Props = {
 	id?: string;

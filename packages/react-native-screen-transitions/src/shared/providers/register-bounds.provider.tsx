@@ -14,7 +14,7 @@ import type { SharedValue } from "react-native-reanimated/lib/typescript/commonT
 import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
-import { BoundStore } from "../stores/bounds.store";
+import { BoundStore } from "../stores/bounds";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
 import { useLayoutAnchorContext } from "./layout-anchor.provider";

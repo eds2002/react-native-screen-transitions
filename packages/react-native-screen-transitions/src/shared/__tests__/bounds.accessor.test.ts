@@ -4,7 +4,7 @@ import {
 	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
 	NAVIGATION_MASK_STYLE_ID,
 } from "../constants";
-import { BoundStore } from "../stores/bounds.store";
+import { BoundStore } from "../stores/bounds";
 import { createBoundsAccessor } from "../utils/bounds";
 
 const createMeasured = (

@@ -1,5 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import type { Snapshot } from "../stores/bounds.store";
+import type { Snapshot } from "../stores/bounds";
 import type {
 	BoundsOptions,
 	BoundsOptionsResult,

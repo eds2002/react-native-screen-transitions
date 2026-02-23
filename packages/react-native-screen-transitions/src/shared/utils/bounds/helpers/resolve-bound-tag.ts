@@ -1,4 +1,4 @@
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
 
 export type ResolveBoundTagParams = {
 	id?: string;

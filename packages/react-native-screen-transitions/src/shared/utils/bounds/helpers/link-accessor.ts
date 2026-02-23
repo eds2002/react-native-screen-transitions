@@ -1,4 +1,4 @@
-import { BoundStore, type Snapshot } from "../../../stores/bounds.store";
+import { BoundStore, type Snapshot } from "../../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsLink } from "../../../types/bounds.types";
 

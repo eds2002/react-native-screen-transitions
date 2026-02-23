@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { BoundStore, type Snapshot } from "../stores/bounds.store";
+import { BoundStore, type Snapshot } from "../stores/bounds";
 
 
 // Helper to create mock bounds

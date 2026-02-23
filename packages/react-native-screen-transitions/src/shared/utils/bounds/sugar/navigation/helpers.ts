@@ -1,4 +1,4 @@
-import { BoundStore } from "../../../../stores/bounds.store";
+import { BoundStore } from "../../../../stores/bounds";
 import type { BoundsNavigationOptions } from "../../../../types/bounds.types";
 import type { BoundsOptions } from "../../types/options";
 import type { ResolveTag } from "./types";

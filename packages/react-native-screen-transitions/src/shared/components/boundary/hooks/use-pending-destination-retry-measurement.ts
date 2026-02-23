@@ -1,6 +1,7 @@
 import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
 import type { AnimationStore } from "../../../stores/animation.store";
-import { BoundStore } from "../../../stores/bounds.store";
+import { BoundStore } from "../../../stores/bounds";
+import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { MaybeMeasureAndStoreParams } from "../types";
 
 export const usePendingDestinationRetryMeasurement = (params: {
@@ -33,14 +34,10 @@ export const usePendingDestinationRetryMeasurement = (params: {
 			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey))
 				return 0;
 
-			const resolvedSourceKey = expectedSourceScreenKey
-				? BoundStore.hasPendingLinkFromSource(
-						sharedBoundTag,
-						expectedSourceScreenKey,
-					)
-					? expectedSourceScreenKey
-					: BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag)
-				: BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag);
+			const resolvedSourceKey = resolvePendingSourceKey(
+				sharedBoundTag,
+				expectedSourceScreenKey,
+			);
 
 			if (!resolvedSourceKey) return 0;
 			if (
