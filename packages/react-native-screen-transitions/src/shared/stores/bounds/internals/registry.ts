@@ -10,7 +10,7 @@ import type {
 	TagLinkIndex,
 	TagState,
 } from "../types";
-import { registry } from "./state";
+import { debugStoreSizeLog, registry } from "./state";
 
 const createEmptyLinkIndex = (): TagLinkIndex => ({
 	latestPendingIndex: -1,
@@ -121,6 +121,7 @@ function registerSnapshot(
 		state[tag].snapshots[screenKey] = { bounds, styles, ancestorKeys };
 		return state;
 	});
+	debugStoreSizeLog(`registerSnapshot(${tag},${screenKey})`);
 }
 
 function setLinkSource(
@@ -328,6 +329,7 @@ function setLinkSource(
 
 		return state;
 	});
+	debugStoreSizeLog(`setLinkSource(${tag},${screenKey})`);
 }
 
 function updateLinkSource(
@@ -545,6 +547,7 @@ function updateLinkSource(
 
 		return state;
 	});
+	debugStoreSizeLog(`updateLinkSource(${tag},${screenKey})`);
 }
 
 function setLinkDestination(
@@ -697,6 +700,7 @@ function setLinkDestination(
 
 		return state;
 	});
+	debugStoreSizeLog(`setLinkDestination(${tag},${screenKey})`);
 }
 
 function updateLinkDestination(
@@ -887,6 +891,7 @@ function updateLinkDestination(
 
 		return state;
 	});
+	debugStoreSizeLog(`updateLinkDestination(${tag},${screenKey})`);
 }
 
 function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {

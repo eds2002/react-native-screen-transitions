@@ -1,17 +1,10 @@
 import { useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
 import type {
 	ListRenderItemInfo,
 	NativeScrollEvent,
 	NativeSyntheticEvent,
 } from "react-native";
-import {
-	InteractionManager,
-	StyleSheet,
-	Text,
-	useWindowDimensions,
-	View,
-} from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
@@ -75,7 +68,7 @@ const PALETTES = [
 	{ name: "Earth", colors: ["#C4A882", "#8B7355", "#D4C5A9", "#A0826D"] },
 ];
 
-function WarmupDestinationBoundary({
+function Boundary({
 	item,
 	insets,
 }: {
@@ -113,17 +106,15 @@ function DetailPage({
 	item,
 	width,
 	insets,
-	deferHeavySections,
 }: {
 	item: BoundsSyncZoomItem;
 	width: number;
 	insets: { top: number; bottom: number };
-	deferHeavySections: boolean;
 }) {
 	const hsl = hexToHSL(item.color);
 
 	return (
-		<View style={[styles.page, { width, backgroundColor: item.bgColor }]}> 
+		<View style={[styles.page, { width, backgroundColor: item.bgColor }]}>
 			<Transition.ScrollView
 				style={styles.scrollView}
 				contentContainerStyle={[
@@ -152,99 +143,90 @@ function DetailPage({
 					</Transition.Boundary>
 				</View>
 
-				{deferHeavySections ? (
-					<View style={styles.deferredContentSpacer} />
-				) : (
-					<>
-						<View style={styles.propertiesGrid}>
-							{COLOR_PROPERTIES.map((prop) => (
-								<View
-									key={prop.key}
-									style={[
-										styles.propertyCard,
-										{ backgroundColor: `${item.color}15` },
-									]}
-								>
-									<Text
-										style={[styles.propertyLabel, { color: `${item.color}AA` }]}
-									>
-										{prop.label}
-									</Text>
-									<Text style={styles.propertyValue}>
-										{getColorProperty(item.color, prop.key)}
-									</Text>
-								</View>
-							))}
-						</View>
-
-						<View style={styles.section}>
-							<Text style={styles.sectionTitle}>HSL Breakdown</Text>
-							{[
-								{ label: "Hue", value: hsl.h, max: 360 },
-								{ label: "Saturation", value: hsl.s, max: 100 },
-								{ label: "Lightness", value: hsl.l, max: 100 },
-							].map((bar) => (
-								<View key={bar.label} style={styles.barRow}>
-									<Text style={styles.barLabel}>{bar.label}</Text>
-									<View style={styles.barTrack}>
-										<View
-											style={[
-												styles.barFill,
-												{
-													backgroundColor: item.color,
-													width: `${(bar.value / bar.max) * 100}%`,
-												},
-											]}
-										/>
-									</View>
-									<Text style={styles.barValue}>{bar.value}</Text>
-								</View>
-							))}
-						</View>
-
-						<View style={styles.section}>
-							<Text style={styles.sectionTitle}>Companion Palettes</Text>
-							{PALETTES.map((palette) => (
-								<View key={palette.name} style={styles.paletteRow}>
-									<Text style={styles.paletteLabel}>{palette.name}</Text>
-									<View style={styles.paletteSwatches}>
-										{palette.colors.map((c) => (
-											<View
-												key={c}
-												style={[styles.paletteSwatch, { backgroundColor: c }]}
-											/>
-										))}
-									</View>
-								</View>
-							))}
-						</View>
-
-						<View style={[styles.section, styles.notesCard]}>
-							<Text style={styles.sectionTitle}>Usage Notes</Text>
-							<Text style={styles.noteText}>
-								This color works best as an accent against dark backgrounds. Pair
-								with neutral greys for UI elements or use at reduced opacity for
-								subtle surface tints. Avoid placing small text directly on this
-								color without sufficient contrast.
+				<View style={styles.propertiesGrid}>
+					{COLOR_PROPERTIES.map((prop) => (
+						<View
+							key={prop.key}
+							style={[
+								styles.propertyCard,
+								{ backgroundColor: `${item.color}15` },
+							]}
+						>
+							<Text
+								style={[styles.propertyLabel, { color: `${item.color}AA` }]}
+							>
+								{prop.label}
 							</Text>
-							<View style={styles.noteTags}>
-								{["Accent", "UI", "Vibrant", "Accessible"].map((tag) => (
+							<Text style={styles.propertyValue}>
+								{getColorProperty(item.color, prop.key)}
+							</Text>
+						</View>
+					))}
+				</View>
+
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>HSL Breakdown</Text>
+					{[
+						{ label: "Hue", value: hsl.h, max: 360 },
+						{ label: "Saturation", value: hsl.s, max: 100 },
+						{ label: "Lightness", value: hsl.l, max: 100 },
+					].map((bar) => (
+						<View key={bar.label} style={styles.barRow}>
+							<Text style={styles.barLabel}>{bar.label}</Text>
+							<View style={styles.barTrack}>
+								<View
+									style={[
+										styles.barFill,
+										{
+											backgroundColor: item.color,
+											width: `${(bar.value / bar.max) * 100}%`,
+										},
+									]}
+								/>
+							</View>
+							<Text style={styles.barValue}>{bar.value}</Text>
+						</View>
+					))}
+				</View>
+
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Companion Palettes</Text>
+					{PALETTES.map((palette) => (
+						<View key={palette.name} style={styles.paletteRow}>
+							<Text style={styles.paletteLabel}>{palette.name}</Text>
+							<View style={styles.paletteSwatches}>
+								{palette.colors.map((c) => (
 									<View
-										key={tag}
-										style={[
-											styles.noteTag,
-											{ backgroundColor: `${item.color}20` },
-										]}
-									>
-										<Text style={[styles.noteTagText, { color: item.color }]}>
-											{tag}
-										</Text>
-									</View>
+										key={c}
+										style={[styles.paletteSwatch, { backgroundColor: c }]}
+									/>
 								))}
 							</View>
 						</View>
-					</>
-				)}
+					))}
+				</View>
+
+				<View style={[styles.section, styles.notesCard]}>
+					<Text style={styles.sectionTitle}>Usage Notes</Text>
+					<Text style={styles.noteText}>
+						This color works best as an accent against dark backgrounds. Pair
+						with neutral greys for UI elements or use at reduced opacity for
+						subtle surface tints. Avoid placing small text directly on this
+						color without sufficient contrast.
+					</Text>
+					<View style={styles.noteTags}>
+						{["Accent", "UI", "Vibrant", "Accessible"].map((tag) => (
+							<View
+								key={tag}
+								style={[styles.noteTag, { backgroundColor: `${item.color}20` }]}
+							>
+								<Text style={[styles.noteTagText, { color: item.color }]}>
+									{tag}
+								</Text>
+							</View>
+						))}
+					</View>
+				</View>
 			</Transition.ScrollView>
 		</View>
 	);
@@ -260,83 +242,37 @@ export default function NavigationZoomGroupTransitionsDetail() {
 		BOUNDS_SYNC_ZOOM_ITEMS.findIndex((item) => item.id === id),
 	);
 
-	const [isDetailHydrated, setIsDetailHydrated] = useState(false);
-	const [currentPageIndex, setCurrentPageIndex] = useState(initialIndex);
+	const selectedItem =
+		BOUNDS_SYNC_ZOOM_ITEMS[initialIndex] ??
+		BOUNDS_SYNC_ZOOM_ITEMS.find((item) => item.id === id) ??
+		BOUNDS_SYNC_ZOOM_ITEMS[0];
 
-	const selectedItem = useMemo(
-		() =>
-			BOUNDS_SYNC_ZOOM_ITEMS[initialIndex] ??
-			BOUNDS_SYNC_ZOOM_ITEMS.find((item) => item.id === id) ??
-			BOUNDS_SYNC_ZOOM_ITEMS[0],
-		[initialIndex, id],
+	const handleMomentumScrollEnd = (
+		event: NativeSyntheticEvent<NativeScrollEvent>,
+	) => {
+		const offsetX = event.nativeEvent.contentOffset.x;
+		const pageIndex = Math.round(offsetX / width);
+		const item = BOUNDS_SYNC_ZOOM_ITEMS[pageIndex];
+		if (!item) return;
+
+		activeZoomId.value = item.id;
+	};
+
+	const getItemLayout = (_: unknown, index: number) => ({
+		length: width,
+		offset: width * index,
+		index,
+	});
+
+	const renderItem = ({ item }: ListRenderItemInfo<BoundsSyncZoomItem>) => (
+		<DetailPage item={item} width={width} insets={insets} />
 	);
 
-	useEffect(() => {
-		setCurrentPageIndex(initialIndex);
-		activeZoomId.value = selectedItem.id;
-	}, [initialIndex, selectedItem.id]);
-
-	useEffect(() => {
-		let didHydrate = false;
-
-		setIsDetailHydrated(false);
-
-		const hydrate = () => {
-			if (didHydrate) return;
-			didHydrate = true;
-			setIsDetailHydrated(true);
-		};
-
-		const interactionTask = InteractionManager.runAfterInteractions(hydrate);
-		const fallbackTimer = setTimeout(hydrate, 300);
-
-		return () => {
-			interactionTask.cancel();
-			clearTimeout(fallbackTimer);
-		};
-	}, [id]);
-
-	const handleMomentumScrollEnd = useCallback(
-		(event: NativeSyntheticEvent<NativeScrollEvent>) => {
-			const offsetX = event.nativeEvent.contentOffset.x;
-			const pageIndex = Math.round(offsetX / width);
-			const item = BOUNDS_SYNC_ZOOM_ITEMS[pageIndex];
-			if (!item) return;
-
-			setCurrentPageIndex(pageIndex);
-			activeZoomId.value = item.id;
-		},
-		[width],
-	);
-
-	const getItemLayout = useCallback(
-		(_: unknown, index: number) => ({
-			length: width,
-			offset: width * index,
-			index,
-		}),
-		[width],
-	);
-
-	const renderItem = useCallback(
-		({ item, index }: ListRenderItemInfo<BoundsSyncZoomItem>) => (
-			<DetailPage
-				item={item}
-				width={width}
-				insets={insets}
-				deferHeavySections={!isDetailHydrated || index !== currentPageIndex}
-			/>
-		),
-		[currentPageIndex, insets, isDetailHydrated, width],
-	);
-
-	const keyExtractor = useCallback((item: BoundsSyncZoomItem) => item.id, []);
+	const keyExtractor = (item: BoundsSyncZoomItem) => item.id;
 
 	return (
 		<View style={styles.root}>
-			{!isDetailHydrated ? (
-				<WarmupDestinationBoundary item={selectedItem} insets={insets} />
-			) : null}
+			<Boundary item={selectedItem} insets={insets} />
 			<Animated.FlatList
 				data={BOUNDS_SYNC_ZOOM_ITEMS}
 				renderItem={renderItem}

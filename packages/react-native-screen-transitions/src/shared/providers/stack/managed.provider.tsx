@@ -1,10 +1,11 @@
 import type { Route } from "@react-navigation/native";
 import * as React from "react";
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import {
 	StackContext,
 	type StackContextValue,
 } from "../../hooks/navigation/use-stack";
+import { BoundStore } from "../../stores/bounds";
 import { HistoryStore } from "../../stores/history.store";
 import type {
 	ManagedStackContextValue,
@@ -124,16 +125,23 @@ function withManagedStack<
 		props: ManagedStackProps<TDescriptor, TNavigation>,
 	) {
 		const navigatorKey = props.state.key;
+		const routeKeysRef = useRef<string[]>([]);
+
+		const { stackContextValue, managedContextValue, renderProps } =
+			useManagedStackValue<TDescriptor, TNavigation>(props);
+
+		routeKeysRef.current = stackContextValue.routeKeys;
 
 		// Clean up history when navigator unmounts
 		useEffect(() => {
 			return () => {
+				const routeKeys = routeKeysRef.current;
+				for (let i = 0; i < routeKeys.length; i++) {
+					BoundStore.clearByAncestor(routeKeys[i]);
+				}
 				HistoryStore.clearNavigator(navigatorKey);
 			};
 		}, [navigatorKey]);
-
-		const { stackContextValue, managedContextValue, renderProps } =
-			useManagedStackValue<TDescriptor, TNavigation>(props);
 
 		return (
 			<StackContext.Provider value={stackContextValue}>

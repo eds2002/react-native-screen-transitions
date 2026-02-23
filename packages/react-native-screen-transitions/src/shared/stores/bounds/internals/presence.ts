@@ -1,5 +1,5 @@
 import type { BoundaryConfig, ScreenKey, TagID } from "../types";
-import { groups, presence } from "./state";
+import { debugStoreSizeLog, groups, presence } from "./state";
 
 function registerBoundaryPresence(
 	tag: TagID,
@@ -23,6 +23,7 @@ function registerBoundaryPresence(
 			},
 		},
 	};
+	debugStoreSizeLog(`registerBoundaryPresence(${tag},${screenKey})`);
 }
 
 function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
@@ -47,6 +48,7 @@ function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
 				},
 			},
 		};
+		debugStoreSizeLog(`unregisterBoundaryPresence(${tag},${screenKey})`);
 		return;
 	}
 
@@ -54,6 +56,7 @@ function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
 	if (Object.keys(remainingForTag).length === 0) {
 		const { [tag]: _removedTag, ...remainingPresence } = current;
 		presence.value = remainingPresence;
+		debugStoreSizeLog(`unregisterBoundaryPresence(${tag},${screenKey})`);
 		return;
 	}
 
@@ -61,6 +64,7 @@ function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
 		...current,
 		[tag]: remainingForTag,
 	};
+	debugStoreSizeLog(`unregisterBoundaryPresence(${tag},${screenKey})`);
 }
 
 function hasBoundaryPresence(tag: TagID, screenKey: ScreenKey): boolean {
@@ -113,6 +117,7 @@ function getBoundaryConfig(
 function setGroupActiveId(group: string, id: string) {
 	"worklet";
 	groups.value = { ...groups.value, [group]: { activeId: id } };
+	debugStoreSizeLog(`setGroupActiveId(${group},${id})`);
 }
 
 function getGroupActiveId(group: string): string | null {
