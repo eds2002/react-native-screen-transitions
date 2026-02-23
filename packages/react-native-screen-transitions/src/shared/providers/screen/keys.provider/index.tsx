@@ -16,7 +16,18 @@ interface KeysContextType<TDescriptor extends BaseDescriptor = BaseDescriptor> {
 	ancestorKeys: string[];
 }
 
+interface ScreenKeysContextType {
+	previousScreenKey?: string;
+	currentScreenKey: string;
+	nextScreenKey?: string;
+	ancestorKeys: string[];
+	hasConfiguredInterpolator: boolean;
+}
+
 const KeysContext = createContext<KeysContextType | undefined>(undefined);
+const ScreenKeysContext = createContext<ScreenKeysContextType | undefined>(
+	undefined,
+);
 
 interface KeysProviderProps<TDescriptor extends BaseDescriptor> {
 	children: React.ReactNode;
@@ -31,17 +42,51 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 	current,
 	next,
 }: KeysProviderProps<TDescriptor>) {
+	const ancestorKeys = getAncestorKeys(current);
+	const ancestorKeysSignature = ancestorKeys.join("|");
+	const previousScreenKey = previous?.route.key;
+	const currentScreenKey = current.route.key;
+	const nextScreenKey = next?.route.key;
+	const hasConfiguredInterpolator =
+		!!current.options.screenStyleInterpolator ||
+		!!next?.options?.screenStyleInterpolator;
+
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the signature instead>
 	const value = useMemo<KeysContextType<TDescriptor>>(
 		() => ({
 			previous,
 			current,
 			next,
-			ancestorKeys: getAncestorKeys(current),
+			ancestorKeys,
 		}),
-		[previous, current, next],
+		[previous, current, next, ancestorKeysSignature],
 	);
 
-	return <KeysContext.Provider value={value}>{children}</KeysContext.Provider>;
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the signature instead>
+	const screenKeysValue = useMemo<ScreenKeysContextType>(
+		() => ({
+			previousScreenKey,
+			currentScreenKey,
+			nextScreenKey,
+			ancestorKeys,
+			hasConfiguredInterpolator,
+		}),
+		[
+			previousScreenKey,
+			currentScreenKey,
+			nextScreenKey,
+			ancestorKeysSignature,
+			hasConfiguredInterpolator,
+		],
+	);
+
+	return (
+		<KeysContext.Provider value={value}>
+			<ScreenKeysContext.Provider value={screenKeysValue}>
+				{children}
+			</ScreenKeysContext.Provider>
+		</KeysContext.Provider>
+	);
 }
 
 export function useKeys<
@@ -52,4 +97,12 @@ export function useKeys<
 		throw new Error("useKeys must be used within a KeysProvider");
 	}
 	return context as KeysContextType<TDescriptor>;
+}
+
+export function useScreenKeys(): ScreenKeysContextType {
+	const context = useContext(ScreenKeysContext);
+	if (context === undefined) {
+		throw new Error("useScreenKeys must be used within a KeysProvider");
+	}
+	return context;
 }

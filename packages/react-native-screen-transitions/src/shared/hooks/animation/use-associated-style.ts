@@ -5,7 +5,7 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { EPSILON, NO_PROPS, NO_STYLES } from "../../constants";
-import { useKeys } from "../../providers/screen/keys.provider";
+import { useScreenKeys } from "../../providers/screen/keys.provider";
 import { useScreenStyles } from "../../providers/screen/styles.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
@@ -155,14 +155,8 @@ export const useAssociatedStyles = ({
 	waitForFirstResolvedStyle = true,
 }: Props = {}) => {
 	const { stylesMap, ancestorStylesMaps } = useScreenStyles();
-	const { previous, current, next } = useKeys();
-
-	const hasConfiguredInterpolator =
-		!!current.options.screenStyleInterpolator ||
-		!!next?.options?.screenStyleInterpolator;
-
-	const previousScreenKey = previous?.route.key;
-	const currentScreenKey = current.route.key;
+	const { previousScreenKey, currentScreenKey, hasConfiguredInterpolator } =
+		useScreenKeys();
 	const isAnimating = AnimationStore.getAnimation(
 		currentScreenKey,
 		"animating",

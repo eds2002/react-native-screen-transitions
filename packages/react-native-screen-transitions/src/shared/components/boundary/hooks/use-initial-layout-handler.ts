@@ -2,6 +2,8 @@ import { useCallback, useRef } from "react";
 import type { LayoutChangeEvent, ViewProps } from "react-native";
 import { runOnUI, useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
+import { BoundStore } from "../../../stores/bounds";
+import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { MaybeMeasureAndStoreParams } from "../types";
 
 export const useInitialLayoutHandler = (params: {
@@ -9,6 +11,7 @@ export const useInitialLayoutHandler = (params: {
 	sharedBoundTag: string;
 	currentScreenKey: string;
 	ancestorKeys: string[];
+	expectedSourceScreenKey?: string;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 	onLayout?: ViewProps["onLayout"];
 }) => {
@@ -17,6 +20,7 @@ export const useInitialLayoutHandler = (params: {
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
+		expectedSourceScreenKey,
 		maybeMeasureAndStore,
 		onLayout,
 	} = params;
@@ -47,6 +51,16 @@ export const useInitialLayoutHandler = (params: {
 		}
 
 		if (!isAnyAnimating) return;
+		const resolvedSourceKey = resolvePendingSourceKey(
+			sharedBoundTag,
+			expectedSourceScreenKey,
+		);
+		if (!resolvedSourceKey) return;
+		if (
+			!BoundStore.hasPendingLinkFromSource(sharedBoundTag, resolvedSourceKey)
+		) {
+			return;
+		}
 
 		maybeMeasureAndStore({
 			shouldSetSource: false,
@@ -61,6 +75,7 @@ export const useInitialLayoutHandler = (params: {
 		isAnimating,
 		ancestorAnimations,
 		maybeMeasureAndStore,
+		expectedSourceScreenKey,
 	]);
 
 	return useCallback(

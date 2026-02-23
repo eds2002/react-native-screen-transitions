@@ -30,6 +30,7 @@ export const usePendingDestinationRetryMeasurement = (params: {
 		() => {
 			"worklet";
 			if (!enabled) return 0;
+			if (retryCount.get() >= MAX_RETRIES) return 0;
 			if (!animating.get()) return 0;
 			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey))
 				return 0;

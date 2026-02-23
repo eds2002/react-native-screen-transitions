@@ -17,7 +17,9 @@ export const useBoundaryPresence = (params: {
 		ancestorKeys,
 		boundaryConfig,
 	} = params;
+	const ancestorKeysSignature = ancestorKeys.join("|");
 
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the ancestory keys signature>
 	useEffect(() => {
 		if (!enabled) return;
 
@@ -34,5 +36,11 @@ export const useBoundaryPresence = (params: {
 				currentScreenKey,
 			);
 		};
-	}, [enabled, sharedBoundTag, currentScreenKey, ancestorKeys, boundaryConfig]);
+	}, [
+		enabled,
+		sharedBoundTag,
+		currentScreenKey,
+		ancestorKeysSignature,
+		boundaryConfig,
+	]);
 };

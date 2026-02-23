@@ -37,7 +37,6 @@ function ZoomSourceCard({
 		<Transition.Boundary
 			group={ZOOM_GROUP}
 			scaleMode="uniform"
-			mode="source"
 			id={item.id}
 			style={[
 				styles.card,
@@ -52,7 +51,9 @@ function ZoomSourceCard({
 			<Pressable
 				onPress={() => {
 					activeZoomId.value = item.id;
-					router.push(buildStackPath(stackType, `bounds/zoom/${item.id}`) as never);
+					router.push(
+						buildStackPath(stackType, `bounds/zoom/${item.id}`) as never,
+					);
 				}}
 				style={{ flex: 1 }}
 			>

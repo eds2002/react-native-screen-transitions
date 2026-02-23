@@ -3,7 +3,7 @@ import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../../hooks/animation/use-associated-style";
 import { useLayoutAnchorContext } from "../../providers/layout-anchor.provider";
-import { useKeys } from "../../providers/screen/keys.provider";
+import { useScreenKeys } from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
 import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
@@ -33,15 +33,15 @@ const BoundaryComponent = ({
 	const sharedBoundTag = buildBoundaryMatchKey({ group, id });
 	const animatedRef = useAnimatedRef<View>();
 
-	const { previous, current, next, ancestorKeys } = useKeys();
-	const currentScreenKey = current.route.key;
-	const nextScreenKey = next?.route.key;
-	const preferredSourceScreenKey = previous?.route.key;
-	const hasConfiguredInterpolator =
-		!!current.options.screenStyleInterpolator ||
-		!!next?.options?.screenStyleInterpolator;
+	const {
+		previousScreenKey: preferredSourceScreenKey,
+		currentScreenKey,
+		nextScreenKey,
+		ancestorKeys,
+		hasConfiguredInterpolator,
+	} = useScreenKeys();
 	const runtimeEnabled = enabled && hasConfiguredInterpolator;
-	const hasNextScreen = !!next;
+	const hasNextScreen = !!nextScreenKey;
 	const shouldUpdateDestination = !hasNextScreen;
 	const layoutAnchor = useLayoutAnchorContext();
 	const boundaryConfig = useMemo<BoundaryConfigProps | undefined>(() => {
@@ -161,6 +161,7 @@ const BoundaryComponent = ({
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
+		expectedSourceScreenKey: preferredSourceScreenKey,
 		maybeMeasureAndStore,
 		onLayout,
 	});
