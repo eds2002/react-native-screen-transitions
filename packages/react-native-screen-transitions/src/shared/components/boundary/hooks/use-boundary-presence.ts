@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useLayoutEffect } from "react";
 import { runOnUI } from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryConfigProps } from "../types";
@@ -20,7 +20,7 @@ export const useBoundaryPresence = (params: {
 	const ancestorKeysSignature = ancestorKeys.join("|");
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the ancestory keys signature>
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (!enabled) return;
 
 		runOnUI(BoundStore.registerBoundaryPresence)(

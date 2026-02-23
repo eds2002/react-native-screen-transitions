@@ -156,14 +156,13 @@ const BoundaryComponent = ({
 
 	// Destination mount-time capture path: onLayout schedules a one-time UI-thread
 	// initial measurement when transitions are active.
-	const handleInitialLayout = useInitialLayoutHandler({
+	useInitialLayoutHandler({
 		enabled: runtimeEnabled && mode !== "source",
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
 		expectedSourceScreenKey: preferredSourceScreenKey,
 		maybeMeasureAndStore,
-		onLayout,
 	});
 
 	return (
@@ -171,7 +170,6 @@ const BoundaryComponent = ({
 			{...rest}
 			ref={animatedRef}
 			style={[style, enabled ? associatedStyles : undefined]}
-			onLayout={handleInitialLayout}
 			collapsable={false}
 		/>
 	);

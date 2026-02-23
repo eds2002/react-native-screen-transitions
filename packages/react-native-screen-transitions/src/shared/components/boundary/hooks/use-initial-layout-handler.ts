@@ -1,5 +1,4 @@
-import { useCallback, useRef } from "react";
-import type { LayoutChangeEvent, ViewProps } from "react-native";
+import { useCallback, useLayoutEffect } from "react";
 import { runOnUI, useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
@@ -13,7 +12,6 @@ export const useInitialLayoutHandler = (params: {
 	ancestorKeys: string[];
 	expectedSourceScreenKey?: string;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
-	onLayout?: ViewProps["onLayout"];
 }) => {
 	const {
 		enabled,
@@ -22,7 +20,6 @@ export const useInitialLayoutHandler = (params: {
 		ancestorKeys,
 		expectedSourceScreenKey,
 		maybeMeasureAndStore,
-		onLayout,
 	} = params;
 
 	const isAnimating = AnimationStore.getAnimation(
@@ -35,7 +32,6 @@ export const useInitialLayoutHandler = (params: {
 	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
-	const hasScheduledInitialLayout = useRef(false);
 
 	const handleInitialLayout = useCallback(() => {
 		"worklet";
@@ -78,13 +74,10 @@ export const useInitialLayoutHandler = (params: {
 		expectedSourceScreenKey,
 	]);
 
-	return useCallback(
-		(event: LayoutChangeEvent) => {
-			onLayout?.(event);
-			if (!enabled || hasScheduledInitialLayout.current) return;
-			hasScheduledInitialLayout.current = true;
-			runOnUI(handleInitialLayout)();
-		},
-		[enabled, onLayout, handleInitialLayout],
-	);
+	// Try to capture destination bounds during layout phase as soon as the
+	// boundary mounts; guards in handleInitialLayout keep this idempotent.
+	useLayoutEffect(() => {
+		if (!enabled) return;
+		runOnUI(handleInitialLayout)();
+	}, [enabled, handleInitialLayout]);
 };

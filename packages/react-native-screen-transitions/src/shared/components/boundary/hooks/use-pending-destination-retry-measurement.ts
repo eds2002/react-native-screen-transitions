@@ -24,7 +24,9 @@ export const usePendingDestinationRetryMeasurement = (params: {
 	} = params;
 
 	const retryCount = useSharedValue(0);
-	const MAX_RETRIES = 12;
+	const MAX_RETRIES = 4;
+	const RETRY_PROGRESS_BUCKETS = 8;
+	const RETRY_PROGRESS_MAX = 1.05;
 
 	useAnimatedReaction(
 		() => {
@@ -34,6 +36,11 @@ export const usePendingDestinationRetryMeasurement = (params: {
 			if (!animating.get()) return 0;
 			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey))
 				return 0;
+
+			const currentProgress = progress.get();
+			if (currentProgress <= 0 || currentProgress >= RETRY_PROGRESS_MAX) {
+				return 0;
+			}
 
 			const resolvedSourceKey = resolvePendingSourceKey(
 				sharedBoundTag,
@@ -47,7 +54,8 @@ export const usePendingDestinationRetryMeasurement = (params: {
 				return 0;
 			}
 
-			return progress.get();
+			const bucket = Math.floor(currentProgress * RETRY_PROGRESS_BUCKETS) + 1;
+			return bucket;
 		},
 		(captureSignal) => {
 			"worklet";
