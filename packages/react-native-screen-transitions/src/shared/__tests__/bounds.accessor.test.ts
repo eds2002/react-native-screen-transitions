@@ -26,6 +26,11 @@ const createAccessor = (
 	focused = true,
 	progress = 0.5,
 	options: {
+		previousKey?: string;
+		previousProgress?: number;
+		previousClosing?: number;
+		previousGestureX?: number;
+		previousGestureY?: number;
 		currentProgress?: number;
 		activeClosing?: number;
 		gestureX?: number;
@@ -37,6 +42,11 @@ const createAccessor = (
 		nextGestureY?: number;
 	} = {},
 ) => {
+	const previousKey = options.previousKey;
+	const previousProgress = options.previousProgress ?? 1;
+	const previousClosing = options.previousClosing ?? 0;
+	const previousGestureX = options.previousGestureX ?? 0;
+	const previousGestureY = options.previousGestureY ?? 0;
 	const currentProgress = options.currentProgress ?? 1;
 	const activeClosing = options.activeClosing ?? 0;
 	const gestureX = options.gestureX ?? 0;
@@ -59,8 +69,20 @@ const createAccessor = (
 			} as any)
 		: undefined;
 
+	const previousState = previousKey
+		? ({
+				route: { key: previousKey },
+				progress: previousProgress,
+				closing: previousClosing,
+				gesture: {
+					x: previousGestureX,
+					y: previousGestureY,
+				},
+			} as any)
+		: undefined;
+
 	const frameProps = {
-		previous: undefined,
+		previous: previousState,
 		current: {
 			route: { key: currentKey },
 			progress: currentProgress,
@@ -252,6 +274,49 @@ describe("createBounds accessor", () => {
 		expect(sourceStyle.height).toBe(220);
 		expect(sourceStyle.translateX).toBe(100);
 		expect(sourceStyle.translateY).toBe(100);
+	});
+
+	it("bounds({...}) recovers target bound from pending source + snapshot destination", () => {
+		BoundStore.setLinkSource("card", "screen-a", createMeasured(0, 0, 100, 100));
+		BoundStore.registerSnapshot(
+			"card",
+			"screen-b",
+			createMeasured(100, 100, 220, 220),
+		);
+
+		const bounds = createAccessor("screen-b", true, 1, {
+			previousKey: "screen-a",
+		});
+		const style = bounds({
+			id: "card",
+			method: "size",
+			space: "absolute",
+			target: "bound",
+			raw: true,
+		}) as any;
+
+		expect(style.width).toBe(220);
+		expect(style.height).toBe(220);
+		expect(style.translateX).toBe(0);
+		expect(style.translateY).toBe(0);
+	});
+
+	it("bounds({...}) keeps fullscreen target override when destination is unresolved", () => {
+		BoundStore.setLinkSource("card", "screen-a", createMeasured(20, 30, 100, 100));
+
+		const bounds = createAccessor("screen-b", true, 1, {
+			previousKey: "screen-a",
+		});
+		const style = bounds({
+			id: "card",
+			method: "size",
+			space: "absolute",
+			target: "fullscreen",
+			raw: true,
+		}) as any;
+
+		expect(style.width).toBe(400);
+		expect(style.height).toBe(800);
 	});
 
 	it("bounds({...}) updates group active id", () => {

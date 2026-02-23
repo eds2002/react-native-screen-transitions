@@ -385,6 +385,121 @@ describe("BoundStore.getActiveLink", () => {
 	});
 });
 
+describe("BoundStore.resolveTransitionPair", () => {
+	it("entering prefers completed link whose destination matches current", () => {
+		const source = createBounds(0, 0, 100, 100);
+		const destination = createBounds(100, 120, 220, 240);
+
+		BoundStore.setLinkSource("card", "screen-a", source);
+		BoundStore.setLinkDestination("card", "screen-b", destination);
+
+		const resolved = BoundStore.resolveTransitionPair("card", {
+			entering: true,
+			currentScreenKey: "screen-b",
+			previousScreenKey: "screen-a",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toEqual(destination);
+		expect(resolved.usedPending).toBe(false);
+		expect(resolved.usedSnapshotSource).toBe(false);
+		expect(resolved.usedSnapshotDestination).toBe(false);
+	});
+
+	it("entering falls back to pending-from-previous and destination snapshot", () => {
+		const source = createBounds(10, 20, 100, 100);
+		const destinationSnapshot = createBounds(200, 220, 240, 260);
+
+		BoundStore.setLinkSource("card", "screen-a", source);
+		BoundStore.registerSnapshot("card", "screen-b", destinationSnapshot);
+
+		const resolved = BoundStore.resolveTransitionPair("card", {
+			entering: true,
+			currentScreenKey: "screen-b",
+			previousScreenKey: "screen-a",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toEqual(destinationSnapshot);
+		expect(resolved.usedPending).toBe(true);
+		expect(resolved.usedSnapshotSource).toBe(false);
+		expect(resolved.usedSnapshotDestination).toBe(true);
+	});
+
+	it("exiting prefers completed link whose source matches current", () => {
+		const source = createBounds(100, 120, 220, 240);
+		const destination = createBounds(0, 0, 100, 100);
+
+		BoundStore.setLinkSource("card", "screen-b", source);
+		BoundStore.setLinkDestination("card", "screen-a", destination);
+
+		const resolved = BoundStore.resolveTransitionPair("card", {
+			entering: false,
+			currentScreenKey: "screen-b",
+			nextScreenKey: "screen-a",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toEqual(destination);
+		expect(resolved.usedPending).toBe(false);
+	});
+
+	it("uses snapshot fallback for source-only and source+destination recovery", () => {
+		const sourceSnapshot = createBounds(12, 24, 80, 90);
+		const destinationSnapshot = createBounds(40, 50, 200, 210);
+
+		BoundStore.registerSnapshot("card", "screen-a", sourceSnapshot);
+
+		const sourceOnly = BoundStore.resolveTransitionPair("card", {
+			entering: true,
+			previousScreenKey: "screen-a",
+			currentScreenKey: "screen-b",
+		});
+
+		expect(sourceOnly.sourceBounds).toEqual(sourceSnapshot);
+		expect(sourceOnly.destinationBounds).toBeNull();
+		expect(sourceOnly.usedSnapshotSource).toBe(true);
+		expect(sourceOnly.usedSnapshotDestination).toBe(false);
+
+		BoundStore.registerSnapshot("card", "screen-b", destinationSnapshot);
+
+		const sourceAndDestination = BoundStore.resolveTransitionPair("card", {
+			entering: true,
+			previousScreenKey: "screen-a",
+			currentScreenKey: "screen-b",
+		});
+
+		expect(sourceAndDestination.sourceBounds).toEqual(sourceSnapshot);
+		expect(sourceAndDestination.destinationBounds).toEqual(destinationSnapshot);
+		expect(sourceAndDestination.usedSnapshotSource).toBe(true);
+		expect(sourceAndDestination.usedSnapshotDestination).toBe(true);
+	});
+
+	it("resolves grouped and non-group tags with identical selection behavior", () => {
+		const source = createBounds(1, 2, 111, 122);
+		const destinationSnapshot = createBounds(200, 210, 230, 240);
+		const tags = ["card", "zoom-sync:card"];
+
+		for (const tag of tags) {
+			BoundStore.setLinkSource(tag, "screen-a", source);
+			BoundStore.registerSnapshot(tag, "screen-b", destinationSnapshot);
+		}
+
+		const plain = BoundStore.resolveTransitionPair("card", {
+			entering: true,
+			previousScreenKey: "screen-a",
+			currentScreenKey: "screen-b",
+		});
+		const grouped = BoundStore.resolveTransitionPair("zoom-sync:card", {
+			entering: true,
+			previousScreenKey: "screen-a",
+			currentScreenKey: "screen-b",
+		});
+
+		expect(grouped).toEqual(plain);
+	});
+});
+
 describe("BoundStore link predicates", () => {
 	it("hasPendingLink returns true when destination is missing", () => {
 		BoundStore.setLinkSource("card", "screen-a", createBounds());

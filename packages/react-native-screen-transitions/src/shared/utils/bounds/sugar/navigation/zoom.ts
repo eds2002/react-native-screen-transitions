@@ -24,21 +24,31 @@ const getZoomContentTarget = ({
 	explicitTarget,
 	resolvedTag,
 	currentRouteKey,
+	previousRouteKey,
+	nextRouteKey,
+	entering,
 	screenLayout,
 	anchor,
 }: {
 	explicitTarget: BoundsOptions["target"] | undefined;
 	resolvedTag: string;
 	currentRouteKey?: string;
+	previousRouteKey?: string;
+	nextRouteKey?: string;
+	entering: boolean;
 	screenLayout: Layout;
 	anchor: BoundsOptions["anchor"] | undefined;
 }) => {
 	"worklet";
 	if (explicitTarget !== undefined) return explicitTarget;
 
-	const scopedLink = BoundStore.getActiveLink(resolvedTag, currentRouteKey);
-	const latestLink = scopedLink ?? BoundStore.getActiveLink(resolvedTag);
-	const sourceBounds = latestLink?.source?.bounds;
+	const resolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
+		currentScreenKey: currentRouteKey,
+		previousScreenKey: previousRouteKey,
+		nextScreenKey: nextRouteKey,
+		entering,
+	});
+	const sourceBounds = resolvedPair.sourceBounds;
 	const screenWidth = screenLayout.width;
 
 	if (!sourceBounds || sourceBounds.width <= 0 || screenWidth <= 0) {
@@ -115,6 +125,9 @@ export const buildZoomNavigationStyles = ({
 	const focused = props.focused;
 	const progress = props.progress;
 	const currentRouteKey = props.current?.route.key;
+	const previousRouteKey = props.previous?.route.key;
+	const nextRouteKey = props.next?.route.key;
+	const entering = !props.next;
 	const screenLayout = props.layouts.screen;
 
 	const normX = props.active.gesture.normalizedX;
@@ -169,6 +182,9 @@ export const buildZoomNavigationStyles = ({
 		explicitTarget,
 		resolvedTag,
 		currentRouteKey,
+		previousRouteKey,
+		nextRouteKey,
+		entering,
 		screenLayout,
 		anchor: sharedOptions.anchor,
 	});

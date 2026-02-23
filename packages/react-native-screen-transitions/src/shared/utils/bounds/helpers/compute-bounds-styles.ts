@@ -41,16 +41,21 @@ const resolveBounds = (params: {
 	const hasCustomTarget = typeof params.computeOptions.target === "object";
 	const hasTargetOverride = isFullscreenTarget || hasCustomTarget;
 
-	// Try exact match first (strict matching for nested stacks)
-	let link = BoundStore.getActiveLink(params.id, params.current?.route.key);
+	const currentScreenKey = params.current?.route.key;
+	const previousScreenKey = params.previous?.route.key;
+	const nextScreenKey = params.next?.route.key;
 
-	// For target overrides, fall back to most recent link for this tag
-	// (destination screen might not have a matching element)
-	if (!link && hasTargetOverride) {
-		link = BoundStore.getActiveLink(params.id);
-	}
+	const resolvedPair = BoundStore.resolveTransitionPair(params.id, {
+		currentScreenKey,
+		previousScreenKey,
+		nextScreenKey,
+		entering,
+	});
 
-	if (!link || !link.source) {
+	const sourceBounds = resolvedPair.sourceBounds;
+	const destinationBounds = resolvedPair.destinationBounds;
+
+	if (!sourceBounds) {
 		return {
 			start: null,
 			end: null,
@@ -59,7 +64,7 @@ const resolveBounds = (params: {
 	}
 
 	// When target is overridden, destination element is not required
-	if (!hasTargetOverride && !link.destination) {
+	if (!hasTargetOverride && !destinationBounds) {
 		return {
 			start: null,
 			end: null,
@@ -67,10 +72,8 @@ const resolveBounds = (params: {
 		};
 	}
 
-	const { destination, source } = link;
-
-	const start = source.bounds;
-	let end = destination?.bounds ?? fullscreen;
+	const start = sourceBounds;
+	let end = destinationBounds ?? fullscreen;
 
 	if (isFullscreenTarget) {
 		end = fullscreen;
