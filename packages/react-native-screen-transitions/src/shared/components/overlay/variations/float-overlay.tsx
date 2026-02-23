@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
 import { useOptimisticFocusedIndex } from "../../../hooks/navigation/use-optimistic-focused-index";
 import { useStack } from "../../../hooks/navigation/use-stack";
+import { ScreenAnimationProvider } from "../../../providers/screen/animation.provider";
 import type { BaseDescriptor } from "../../../providers/screen/keys.provider";
 import { KeysProvider } from "../../../providers/screen/keys.provider";
 import { ScreenStylesProvider } from "../../../providers/screen/styles.provider";
@@ -69,9 +70,11 @@ export function FloatOverlay() {
 
 	return (
 		<KeysProvider current={current} previous={previous} next={next}>
-			<ScreenStylesProvider>
-				<OverlayHost scene={scene} overlayScreenState={overlayScreenState} />
-			</ScreenStylesProvider>
+			<ScreenAnimationProvider>
+				<ScreenStylesProvider>
+					<OverlayHost scene={scene} overlayScreenState={overlayScreenState} />
+				</ScreenStylesProvider>
+			</ScreenAnimationProvider>
 		</KeysProvider>
 	);
 }

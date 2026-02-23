@@ -27,6 +27,7 @@ export type StackScene<TDescriptor extends StackDescriptor = StackDescriptor> =
 	BaseStackScene<TDescriptor>;
 
 export interface StackContextValue extends StackCoreContextValue {
+	navigatorKey: string;
 	routeKeys: string[];
 	routes: Route<string>[];
 	scenes: StackScene[];

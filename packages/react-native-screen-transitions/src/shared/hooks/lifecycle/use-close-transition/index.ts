@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import {
 	runOnJS,
 	useAnimatedReaction,
@@ -9,11 +9,17 @@ import type { BaseDescriptor } from "../../../providers/screen/keys.provider";
 import { useStackCoreContext } from "../../../providers/stack/core.provider";
 import { useManagedStackContext } from "../../../providers/stack/managed.provider";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
+import { HistoryStore } from "../../../stores/history.store";
 import { StackType } from "../../../types/stack.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import { useStack } from "../../navigation/use-stack";
 import { useSharedValueState } from "../../reanimated/use-shared-value-state";
 import useStableCallback from "../../use-stable-callback";
-import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
+import {
+	registerMountedRoute,
+	unregisterMountedRoute,
+} from "./helpers/navigator-route-registry";
+import { resetStoresForRoute } from "./helpers/reset-stores-for-screen";
 
 interface CloseHookParams {
 	current: BaseDescriptor;
@@ -33,17 +39,17 @@ const useManagedClose = ({
 	deactivate,
 }: CloseHookParams) => {
 	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
+	const routeKey = current.route.key;
 
 	const handleCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished) return;
 		handleCloseRoute({ route: current.route });
 		requestAnimationFrame(() => {
 			deactivate();
-			resetStoresForScreen(current);
+			resetStoresForRoute(routeKey);
 		});
 	});
 
-	const routeKey = current.route.key;
 	const transitionSpec = current.options.transitionSpec;
 
 	useAnimatedReaction(
@@ -90,16 +96,17 @@ const useNativeStackClose = ({
 		const options = current.options as { enableTransitions?: boolean };
 		const isEnabled = options.enableTransitions;
 		const navigation = current.navigation;
+		const routeKey = current.route.key;
 		const state = navigation.getState();
 		const routeIndex = state.routes.findIndex(
-			(route) => route.key === current.route.key,
+			(route) => route.key === routeKey,
 		);
 		const isFirstScreen = routeIndex <= 0;
 
 		// If transitions are disabled, ancestor is dismissing, or first screen - let native handle it
 		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
 			animations.closing.set(1);
-			resetStoresForScreen(current);
+			resetStoresForRoute(routeKey);
 			return;
 		}
 
@@ -115,7 +122,7 @@ const useNativeStackClose = ({
 				if (finished) {
 					navigation.dispatch(e.data.action);
 					requestAnimationFrame(() => {
-						resetStoresForScreen(current);
+						resetStoresForRoute(routeKey);
 					});
 				}
 			},
@@ -137,8 +144,25 @@ export function useCloseTransition(
 	activate: () => void,
 	deactivate: () => void,
 ) {
+	const routeKey = current.route.key;
+	const { navigatorKey } = useStack();
 	const { flags } = useStackCoreContext();
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
+
+	useEffect(() => {
+		registerMountedRoute(navigatorKey, routeKey);
+
+		return () => {
+			resetStoresForRoute(routeKey);
+			const shouldClearNavigator = unregisterMountedRoute(
+				navigatorKey,
+				routeKey,
+			);
+			if (shouldClearNavigator) {
+				HistoryStore.clearNavigator(navigatorKey);
+			}
+		};
+	}, [navigatorKey, routeKey]);
 
 	const closeParams: CloseHookParams = {
 		current,
