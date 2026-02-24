@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 const getRouteBoundaryId = (route: { params?: object }) => {
 	"worklet";
@@ -40,12 +40,14 @@ export default function BoundsSpamLayout() {
 						}
 
 						return {
-							contentStyle: {
-								transform: [
-									{
-										scale: interpolate(progress, [1, 2], [1, 0.95], "clamp"),
-									},
-								],
+							content: {
+								style: {
+									transform: [
+										{
+											scale: interpolate(progress, [1, 2], [1, 0.95], "clamp"),
+										},
+									],
+								},
 							},
 						};
 					},

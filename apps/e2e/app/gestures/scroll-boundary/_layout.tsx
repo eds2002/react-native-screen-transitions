@@ -26,8 +26,10 @@ export default function ScrollBoundaryLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},

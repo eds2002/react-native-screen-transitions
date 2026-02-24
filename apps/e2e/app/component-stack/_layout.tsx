@@ -20,8 +20,10 @@ export default function ComponentStackLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},
@@ -46,8 +48,10 @@ export default function ComponentStackLayout() {
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						const scale = interpolate(progress, [1, 2], [1, 0.9], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -71,11 +75,15 @@ export default function ComponentStackLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
-							backdropStyle: {
-								backgroundColor: `rgba(0,0,0,${interpolate(progress, [0, 1], [0, 0.5], "clamp")})`,
+							backdrop: {
+								style: {
+									backgroundColor: `rgba(0,0,0,${interpolate(progress, [0, 1], [0, 0.5], "clamp")})`,
+								},
 							},
 						};
 					},
@@ -99,8 +107,10 @@ export default function ComponentStackLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},
@@ -124,11 +134,15 @@ export default function ComponentStackLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
-							backdropStyle: {
-								backgroundColor: `rgba(0,0,0,${interpolate(progress, [0, 1], [0, 0.5], "clamp")})`,
+							backdrop: {
+								style: {
+									backgroundColor: `rgba(0,0,0,${interpolate(progress, [0, 1], [0, 0.5], "clamp")})`,
+								},
 							},
 						};
 					},

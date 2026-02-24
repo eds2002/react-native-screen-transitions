@@ -40,8 +40,10 @@ export default function SnapDifferentAxisLayout() {
 						const x = interpolate(progress, [0, 1], [width, 0], "clamp");
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateX: x }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateX: x }, { scale }],
+								},
 							},
 						};
 					},

@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 export default function ScrollTestsLayout() {
 	const stackType = useResolvedStackType();
@@ -27,8 +27,10 @@ export default function ScrollTestsLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},
@@ -56,8 +58,10 @@ export default function ScrollTestsLayout() {
 							[width, 0, -width * 0.3],
 						);
 						return {
-							contentStyle: {
-								transform: [{ translateX: x }],
+							content: {
+								style: {
+									transform: [{ translateX: x }],
+								},
 							},
 						};
 					},
@@ -81,8 +85,10 @@ export default function ScrollTestsLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},
@@ -106,8 +112,10 @@ export default function ScrollTestsLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},

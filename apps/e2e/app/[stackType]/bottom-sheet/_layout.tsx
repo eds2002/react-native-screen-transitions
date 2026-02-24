@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 export default function BottomSheetLayout() {
 	const stackType = useResolvedStackType();
 	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
@@ -30,8 +30,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -59,8 +61,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -131,15 +135,17 @@ export default function BottomSheetLayout() {
 						);
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: slideY }, { scale }],
-								borderRadius: interpolate(
-									progress,
-									[1, 1.5, 1.9],
-									[0, 0, 36],
-									"clamp",
-								),
-								overflow: "hidden",
+							content: {
+								style: {
+									transform: [{ translateY: slideY }, { scale }],
+									borderRadius: interpolate(
+										progress,
+										[1, 1.5, 1.9],
+										[0, 0, 36],
+										"clamp",
+									),
+									overflow: "hidden",
+								},
 							},
 							["CONTENT"]: {
 								transform: [{ translateY: maskTop }],
@@ -181,8 +187,10 @@ export default function BottomSheetLayout() {
 							const x = interpolate(progress, [0, 1, 2], [width, 0, -width]);
 
 							return {
-								contentStyle: {
-									transform: [{ translateX: x }],
+								content: {
+									style: {
+										transform: [{ translateX: x }],
+									},
 								},
 							};
 						}
@@ -212,8 +220,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateX: x }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateX: x }, { scale }],
+								},
 							},
 						};
 					},
@@ -241,8 +251,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -270,8 +282,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -299,11 +313,15 @@ export default function BottomSheetLayout() {
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
-							backdropStyle: {
-								backgroundColor: `rgba(0,0,0,${interpolate(progress, [0, 0.4], [0, 0.5], "clamp")})`,
+							backdrop: {
+								style: {
+									backgroundColor: `rgba(0,0,0,${interpolate(progress, [0, 0.4], [0, 0.5], "clamp")})`,
+								},
 							},
 						};
 					},
@@ -331,8 +349,10 @@ export default function BottomSheetLayout() {
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},
@@ -360,8 +380,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -389,8 +411,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -418,8 +442,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateX: x }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateX: x }, { scale }],
+								},
 							},
 						};
 					},
@@ -448,8 +474,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -478,8 +506,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -508,8 +538,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -538,8 +570,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateX: x }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateX: x }, { scale }],
+								},
 							},
 						};
 					},
@@ -569,8 +603,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -599,8 +635,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},
@@ -628,8 +666,10 @@ export default function BottomSheetLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateX: x }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateX: x }, { scale }],
+								},
 							},
 						};
 					},

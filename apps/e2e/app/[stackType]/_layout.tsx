@@ -32,8 +32,10 @@ export default function BlankStackLayout() {
 							[width, 0, -width * 0.3],
 						);
 						return {
-							contentStyle: {
-								transform: [{ translateX }],
+							content: {
+								style: {
+									transform: [{ translateX }],
+								},
 							},
 						};
 					},
@@ -83,8 +85,10 @@ export default function BlankStackLayout() {
 							[width, 0, -width * 0.3],
 						);
 						return {
-							contentStyle: {
-								transform: [{ translateX }],
+							content: {
+								style: {
+									transform: [{ translateX }],
+								},
 							},
 						};
 					},

@@ -2,9 +2,7 @@
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
-import {
-	useResolvedStackType,
-} from "@/components/stack-examples/stack-routing";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
 import { ALL_CASES, activeCaseId, BOUNDARY_TAG } from "./constants";
@@ -41,13 +39,17 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 
 	if (destinationBoundary?.method === "content") {
 		if (focused) {
-			const contentStyle = bounds(activeStyleOptions);
+			const contentStyles = bounds(activeStyleOptions);
 
 			return {
-				contentStyle,
-				overlayStyle: {
-					backgroundColor: "black",
-					opacity: interpolate(progress, [0, 1], [0, 0.5]),
+				content: {
+					style: contentStyles,
+				},
+				backdrop: {
+					style: {
+						backgroundColor: "black",
+						opacity: interpolate(progress, [0, 1], [0, 0.5]),
+					},
 				},
 			};
 		}

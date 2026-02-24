@@ -30,8 +30,10 @@ export default function AppleMapsLayout() {
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},

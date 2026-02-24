@@ -478,11 +478,11 @@ describe("createBounds accessor", () => {
 		expect(closingOpacity).toBe(0.4);
 	});
 
-	it("bounds({...}).navigation.zoom() scales unfocused contentStyle from 1 to 0.95", () => {
+	it("bounds({...}).navigation.zoom() scales unfocused content.style from 1 to 0.95", () => {
 		registerBasicLink();
 		const unfocusedBounds = createAccessor("screen-a", false, 1.5);
 		const styles = unfocusedBounds({ id: "card" }).navigation.zoom();
-		const contentStyle = styles.contentStyle as any;
+		const contentStyle = (styles.content as any)?.style;
 		const scaleEntry = contentStyle?.transform?.find(
 			(entry: Record<string, number>) => "scale" in entry,
 		);
@@ -633,7 +633,7 @@ describe("createBounds accessor", () => {
 		expect(downScale).toBeLessThanOrEqual(upScale);
 	});
 
-	it("bounds({...}).navigation.zoom() keeps unfocused contentStyle as scale-only", () => {
+	it("bounds({...}).navigation.zoom() keeps unfocused content.style as scale-only", () => {
 		registerBasicLink();
 		const styles = createAccessor("screen-a", false, 1.5, {
 			gestureX: -15,
@@ -642,7 +642,7 @@ describe("createBounds accessor", () => {
 			({ id: "card" })
 			.navigation.zoom();
 
-		const contentTransform = (styles.contentStyle as any)?.transform;
+		const contentTransform = (styles.content as any)?.style?.transform;
 		const hasTranslateX = contentTransform?.some(
 			(entry: Record<string, number>) => "translateX" in entry,
 		);

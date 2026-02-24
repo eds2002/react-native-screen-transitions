@@ -1,10 +1,10 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
-import { BlankStack } from "@/layouts/blank-stack";
-import { Stack } from "@/layouts/stack";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { TabBarOverlay } from "@/components/tab-bar-overlay";
+import { BlankStack } from "@/layouts/blank-stack";
+import { Stack } from "@/layouts/stack";
 
 export default function BlankStackOverlayLayout() {
 	const stackType = useResolvedStackType();
@@ -39,8 +39,10 @@ export default function BlankStackOverlayLayout() {
 							[width, 0, -width * 0.3],
 						);
 						return {
-							contentStyle: {
-								transform: [{ translateX }],
+							content: {
+								style: {
+									transform: [{ translateX }],
+								},
 							},
 						};
 					},
@@ -84,8 +86,10 @@ export default function BlankStackOverlayLayout() {
 							[width, 0, -width * 0.3],
 						);
 						return {
-							contentStyle: {
-								transform: [{ translateX }],
+							content: {
+								style: {
+									transform: [{ translateX }],
+								},
 							},
 						};
 					},

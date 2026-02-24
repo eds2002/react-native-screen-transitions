@@ -68,12 +68,16 @@ export default function StyleIdBoundsLayout() {
 							});
 
 							return {
-								overlayStyle: {
-									backgroundColor: "black",
-									opacity: interpolate(progress, [0, 1], [0, 0.75]),
+								backdrop: {
+									style: {
+										backgroundColor: "black",
+										opacity: interpolate(progress, [0, 1], [0, 0.75]),
+									},
 								},
-								contentStyle: {
-									transform: [{ translateX: x }, { translateY: y }],
+								content: {
+									style: {
+										transform: [{ translateX: x }, { translateY: y }],
+									},
 								},
 								"container-view": focusedBoundStyles,
 								"masked-view": {
@@ -89,12 +93,14 @@ export default function StyleIdBoundsLayout() {
 						});
 
 						return {
-							contentStyle: {
-								transform: [
-									{
-										scale: interpolate(progress, [1, 2], [1, 0.9]),
-									},
-								],
+							content: {
+								style: {
+									transform: [
+										{
+											scale: interpolate(progress, [1, 2], [1, 0.9]),
+										},
+									],
+								},
 							},
 							[boundTag]: unfocusedBound,
 						};

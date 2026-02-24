@@ -36,8 +36,10 @@ export default function DeepNestingLayout() {
 							[width, 0, -width * 0.3],
 						);
 						return {
-							contentStyle: {
-								transform: [{ translateX: x }],
+							content: {
+								style: {
+									transform: [{ translateX: x }],
+								},
 							},
 						};
 					},

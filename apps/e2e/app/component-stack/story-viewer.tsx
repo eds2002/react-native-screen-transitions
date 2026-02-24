@@ -85,8 +85,10 @@ const storyInterpolator = (props: ScreenInterpolationProps) => {
 	const scale = interpolate(progress, [1, 2], [1, 0.9], "clamp");
 
 	return {
-		contentStyle: {
-			transform: [{ translateY }, { scale }],
+		content: {
+			style: {
+				transform: [{ translateY }, { scale }],
+			},
 		},
 	};
 };

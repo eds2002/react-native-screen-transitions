@@ -36,8 +36,10 @@ const slideUpInterpolator = (props: ScreenInterpolationProps) => {
 	const translateY = interpolate(progress, [0, 1], [height, 0], "clamp");
 
 	return {
-		contentStyle: {
-			transform: [{ translateY }],
+		content: {
+			style: {
+				transform: [{ translateY }],
+			},
 		},
 	};
 };

@@ -1,8 +1,8 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 // EXTREMELY slow animation spec for testing touch gating behavior
 const SlowSpec = {
@@ -39,11 +39,15 @@ export default function TouchGatingLayout() {
 						);
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
-							overlayStyle: {
-								backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`,
+							backdrop: {
+								style: {
+									backgroundColor: `rgba(0, 0, 0, ${overlayOpacity})`,
+								},
 							},
 						};
 					},
@@ -70,8 +74,10 @@ export default function TouchGatingLayout() {
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},

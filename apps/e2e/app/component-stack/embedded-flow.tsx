@@ -30,16 +30,18 @@ const slideFromRight = (props: ScreenInterpolationProps) => {
 	const { width } = layouts.screen;
 
 	return {
-		contentStyle: {
-			transform: [
-				{
-					translateX: interpolate(
-						progress,
-						[0, 1, 2],
-						[width, 0, -width * 0.3],
-					),
-				},
-			],
+		content: {
+			style: {
+				transform: [
+					{
+						translateX: interpolate(
+							progress,
+							[0, 1, 2],
+							[width, 0, -width * 0.3],
+						),
+					},
+				],
+			},
 		},
 	};
 };

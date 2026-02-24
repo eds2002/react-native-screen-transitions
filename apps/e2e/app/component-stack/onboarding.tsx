@@ -33,8 +33,10 @@ const slideInterpolator = (props: ScreenInterpolationProps) => {
 	const scale = interpolate(progress, [0, 1, 2], [0.95, 1, 0.95]);
 
 	return {
-		contentStyle: {
-			transform: [{ translateX }, { scale }],
+		content: {
+			style: {
+				transform: [{ translateX }, { scale }],
+			},
 		},
 	};
 };
