@@ -6,7 +6,10 @@ import {
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 } from "../../../constants";
-import { BoundStore } from "../../../stores/bounds";
+import {
+	BoundStore,
+	type ResolvedTransitionPair,
+} from "../../../stores/bounds";
 import type { ScreenTransitionState } from "../../../types/animation.types";
 import type { Layout } from "../../../types/screen.types";
 import type { BoundsComputeParams, BoundsOptions } from "../types/options";
@@ -31,6 +34,7 @@ const resolveBounds = (params: {
 	toRect?: Partial<MeasuredDimensions>;
 	dimensions: Layout;
 	computeOptions: BoundsOptions;
+	resolvedPair?: ResolvedTransitionPair;
 }) => {
 	"worklet";
 
@@ -45,12 +49,14 @@ const resolveBounds = (params: {
 	const previousScreenKey = params.previous?.route.key;
 	const nextScreenKey = params.next?.route.key;
 
-	const resolvedPair = BoundStore.resolveTransitionPair(params.id, {
-		currentScreenKey,
-		previousScreenKey,
-		nextScreenKey,
-		entering,
-	});
+	const resolvedPair =
+		params.resolvedPair ??
+		BoundStore.resolveTransitionPair(params.id, {
+			currentScreenKey,
+			previousScreenKey,
+			nextScreenKey,
+			entering,
+		});
 
 	const sourceBounds = resolvedPair.sourceBounds;
 	const destinationBounds = resolvedPair.destinationBounds;
@@ -94,6 +100,7 @@ const resolveBounds = (params: {
 export const computeBoundStyles = (
 	{ id, previous, current, next, progress, dimensions }: BoundsComputeParams,
 	computeOptions: BoundsOptions = { id: "bound-id" },
+	resolvedPair?: ResolvedTransitionPair,
 ) => {
 	"worklet";
 
@@ -111,6 +118,7 @@ export const computeBoundStyles = (
 		next,
 		computeOptions,
 		dimensions,
+		resolvedPair,
 	});
 
 	if (!start || !end) {

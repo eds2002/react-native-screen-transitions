@@ -20,6 +20,10 @@ import type { BoundsOptions } from "../../types/options";
 import { resolveNavigationConfig, toNumber } from "./helpers";
 import type { BuildNavigationStylesParams } from "./types";
 
+const DRAG_RESISTANCE = 0.4;
+const DIRECTIONAL_DRAG_SCALE_OUTPUT = [1, 0.25] as const;
+const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
+
 const getZoomContentTarget = ({
 	explicitTarget,
 	resolvedTag,
@@ -134,25 +138,24 @@ export const buildZoomNavigationStyles = ({
 	const normY = props.active.gesture.normalizedY;
 	const initialDirection = props.active.gesture.direction;
 
-	const xResistance = initialDirection === "horizontal" ? 0.4 : 0.4;
-	const yResistance = initialDirection === "vertical" ? 0.4 : 0.4;
-
 	const xScaleOutput =
 		initialDirection === "horizontal"
-			? ([1, 0.25] as const)
-			: ([1, 1] as const);
+			? DIRECTIONAL_DRAG_SCALE_OUTPUT
+			: IDENTITY_DRAG_SCALE_OUTPUT;
 	const yScaleOutput =
-		initialDirection === "vertical" ? ([1, 0.25] as const) : ([1, 1] as const);
+		initialDirection === "vertical"
+			? DIRECTIONAL_DRAG_SCALE_OUTPUT
+			: IDENTITY_DRAG_SCALE_OUTPUT;
 
 	const dragX = normalizedToTranslation({
 		normalized: normX,
 		dimension: screenLayout.width,
-		resistance: xResistance,
+		resistance: DRAG_RESISTANCE,
 	});
 	const dragY = normalizedToTranslation({
 		normalized: normY,
 		dimension: screenLayout.height,
-		resistance: yResistance,
+		resistance: DRAG_RESISTANCE,
 	});
 	const dragXScale = normalizedToScale({
 		normalized: normX,
@@ -164,6 +167,7 @@ export const buildZoomNavigationStyles = ({
 		outputRange: yScaleOutput,
 		exponent: 2,
 	});
+	const dragScale = combineScales(dragXScale, dragYScale);
 
 	const resolvedConfig = resolveNavigationConfig({
 		id,
@@ -178,70 +182,50 @@ export const buildZoomNavigationStyles = ({
 
 	const { resolvedTag, sharedOptions, explicitTarget } = resolvedConfig;
 
-	const contentTarget = getZoomContentTarget({
-		explicitTarget,
-		resolvedTag,
-		currentRouteKey,
-		previousRouteKey,
-		nextRouteKey,
-		entering,
-		screenLayout,
-		anchor: sharedOptions.anchor,
-	});
-
-	// When scaleMode is "match", the source element should track the mask
-	// dimensions exactly (independent scaleX/scaleY). The mask always targets
-	// fullscreen, so the element must target the same to stay in sync.
-	const elementTarget =
-		sharedOptions.scaleMode === "match"
-			? ("fullscreen" as const)
-			: contentTarget;
-
-	const elementRaw = computeRaw({
-		...sharedOptions,
-		method: "transform",
-		space: "relative",
-		target: elementTarget,
-	});
-
-	const contentRaw = computeRaw({
-		...sharedOptions,
-		method: "content",
-		target: contentTarget,
-	});
-
-	const maskRaw = computeRaw({
-		...sharedOptions,
-		method: "size",
-		space: "absolute",
-		target: "fullscreen",
-	});
-
-	const focusedFade = props.active?.closing
-		? interpolate(progress, [0.6, 1], [0, 1], "clamp")
-		: interpolate(progress, [0, 0.5], [0, 1], "clamp");
-
-	const unfocusedFade = props.active?.closing
-		? interpolate(progress, [1.6, 2], [1, 0], "clamp")
-		: interpolate(progress, [1, 1.5], [1, 0], "clamp");
-
-	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.9]);
-	const rawMaskWidth = toNumber(maskRaw.width);
-	const rawMaskHeight = toNumber(maskRaw.height);
-	const maskWidth = Math.max(1, rawMaskWidth);
-	const maskHeight = Math.max(1, rawMaskHeight);
-
 	if (focused) {
+		const contentTarget = getZoomContentTarget({
+			explicitTarget,
+			resolvedTag,
+			currentRouteKey,
+			previousRouteKey,
+			nextRouteKey,
+			entering,
+			screenLayout,
+			anchor: sharedOptions.anchor,
+		});
+
+		const contentRaw = computeRaw({
+			...sharedOptions,
+			method: "content",
+			target: contentTarget,
+		});
+
+		const maskRaw = computeRaw({
+			...sharedOptions,
+			method: "size",
+			space: "absolute",
+			target: "fullscreen",
+		});
+
+		const focusedFade = props.active?.closing
+			? interpolate(progress, [0.6, 1], [0, 1], "clamp")
+			: interpolate(progress, [0, 0.5], [0, 1], "clamp");
+		const maskWidth = Math.max(1, toNumber(maskRaw.width));
+		const maskHeight = Math.max(1, toNumber(maskRaw.height));
+		const contentTranslateX = toNumber(contentRaw.translateX) + dragX;
+		const contentTranslateY = toNumber(contentRaw.translateY) + dragY;
+		const contentScale = toNumber(contentRaw.scale, 1) * dragScale;
+		const maskTranslateX = toNumber(maskRaw.translateX) + dragX;
+		const maskTranslateY = toNumber(maskRaw.translateY) + dragY;
+
 		return {
 			[NAVIGATION_CONTAINER_STYLE_ID]: {
 				style: {
 					opacity: focusedFade,
 					transform: [
-						{ translateX: toNumber(contentRaw.translateX) + dragX },
-						{ translateY: toNumber(contentRaw.translateY) + dragY },
-						{ scale: toNumber(contentRaw.scale, 1) },
-						{ scale: dragXScale },
-						{ scale: dragYScale },
+						{ translateX: contentTranslateX },
+						{ translateY: contentTranslateY },
+						{ scale: contentScale },
 					],
 				},
 			},
@@ -250,10 +234,9 @@ export const buildZoomNavigationStyles = ({
 					width: maskWidth,
 					height: maskHeight,
 					transform: [
-						{ translateX: toNumber(maskRaw.translateX) + dragX },
-						{ translateY: toNumber(maskRaw.translateY) + dragY },
-						{ scale: dragXScale },
-						{ scale: dragYScale },
+						{ translateX: maskTranslateX },
+						{ translateY: maskTranslateY },
+						{ scale: dragScale },
 					],
 					borderRadius: 12,
 				},
@@ -268,7 +251,31 @@ export const buildZoomNavigationStyles = ({
 		};
 	}
 
-	const dragScale = combineScales(dragXScale, dragYScale);
+	const unfocusedFade = props.active?.closing
+		? interpolate(progress, [1.6, 2], [1, 0], "clamp")
+		: interpolate(progress, [1, 1.5], [1, 0], "clamp");
+	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.9]);
+
+	const elementTarget =
+		sharedOptions.scaleMode === "match"
+			? ("fullscreen" as const)
+			: getZoomContentTarget({
+					explicitTarget,
+					resolvedTag,
+					currentRouteKey,
+					previousRouteKey,
+					nextRouteKey,
+					entering,
+					screenLayout,
+					anchor: sharedOptions.anchor,
+				});
+
+	const elementRaw = computeRaw({
+		...sharedOptions,
+		method: "transform",
+		space: "relative",
+		target: elementTarget,
+	});
 
 	// Keep compensation tied to the element target's center. In `scaleMode: "match"`
 	// this target is fullscreen, so the center offset should resolve to zero.
@@ -296,6 +303,12 @@ export const buildZoomNavigationStyles = ({
 		centerShift: scaleShiftY,
 		epsilon: EPSILON,
 	});
+	const elementTranslateX =
+		toNumber(elementRaw.translateX) + compensatedGestureX;
+	const elementTranslateY =
+		toNumber(elementRaw.translateY) + compensatedGestureY;
+	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
+	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
 
 	return {
 		content: {
@@ -306,10 +319,10 @@ export const buildZoomNavigationStyles = ({
 		[resolvedTag]: {
 			style: {
 				transform: [
-					{ translateX: toNumber(elementRaw.translateX) + compensatedGestureX },
-					{ translateY: toNumber(elementRaw.translateY) + compensatedGestureY },
-					{ scaleX: toNumber(elementRaw.scaleX, 1) * dragScale },
-					{ scaleY: toNumber(elementRaw.scaleY, 1) * dragScale },
+					{ translateX: elementTranslateX },
+					{ translateY: elementTranslateY },
+					{ scaleX: elementScaleX },
+					{ scaleY: elementScaleY },
 				],
 				opacity: unfocusedFade,
 				zIndex: 9999,

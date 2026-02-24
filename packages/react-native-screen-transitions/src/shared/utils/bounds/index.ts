@@ -1,3 +1,4 @@
+import { BoundStore, type ResolvedTransitionPair } from "../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../types/animation.types";
 import type { BoundsAccessor } from "../../types/bounds.types";
 import { buildBoundsOptions } from "./helpers/build-bounds-options";
@@ -13,9 +14,12 @@ export const createBoundsAccessor = (
 ): BoundsAccessor => {
 	"worklet";
 
-	const computeForResolvedOptions = (resolvedOptions: BoundsOptions) => {
+	const computeForResolvedOptions = (
+		resolvedOptions: BoundsOptions,
+		props: Omit<ScreenInterpolationProps, "bounds">,
+		resolvedPair?: ResolvedTransitionPair,
+	) => {
 		"worklet";
-		const props = getProps();
 		return computeBoundStyles(
 			{
 				id: resolvedOptions.id,
@@ -26,6 +30,7 @@ export const createBoundsAccessor = (
 				dimensions: props.layouts.screen,
 			},
 			resolvedOptions,
+			resolvedPair,
 		);
 	};
 
@@ -42,7 +47,7 @@ export const createBoundsAccessor = (
 			resolveBoundTag,
 		});
 
-		const computed = computeForResolvedOptions(resolved) as Record<
+		const computed = computeForResolvedOptions(resolved, props) as Record<
 			string,
 			unknown
 		>;
@@ -51,24 +56,66 @@ export const createBoundsAccessor = (
 			scaleMode: params?.scaleMode,
 			target: params?.target,
 		};
+		let cachedNavigationPairProps:
+			| Omit<ScreenInterpolationProps, "bounds">
+			| undefined;
+		let cachedNavigationPairTag = "";
+		let cachedNavigationPair: ResolvedTransitionPair | undefined;
+
+		const resolveNavigationPair = (
+			tag: string,
+			frameProps: Omit<ScreenInterpolationProps, "bounds">,
+		): ResolvedTransitionPair | undefined => {
+			"worklet";
+			if (!tag) return undefined;
+
+			if (
+				cachedNavigationPairProps === frameProps &&
+				cachedNavigationPairTag === tag
+			) {
+				return cachedNavigationPair;
+			}
+
+			const nextPair = BoundStore.resolveTransitionPair(tag, {
+				currentScreenKey: frameProps.current?.route.key,
+				previousScreenKey: frameProps.previous?.route.key,
+				nextScreenKey: frameProps.next?.route.key,
+				entering: !frameProps.next,
+			});
+
+			cachedNavigationPairProps = frameProps;
+			cachedNavigationPairTag = tag;
+			cachedNavigationPair = nextPair;
+
+			return nextPair;
+		};
+
 		const navigation = createNavigationAccessor({
 			id: params?.id,
 			group: params?.group,
 			getProps,
 			resolveBoundTag,
 			zoomBaseOptions,
-			computeRaw: (overrides) =>
+			computeRaw: (overrides, frameProps) =>
 				(() => {
-					const currentProps = getProps();
+					const currentProps = frameProps ?? getProps();
+					const resolvedNavigationOptions = buildBoundsOptions({
+						props: currentProps,
+						id: params?.id,
+						group: params?.group,
+						overrides,
+						mode: "navigation",
+						resolveBoundTag,
+					});
+					const resolvedPair = resolveNavigationPair(
+						resolvedNavigationOptions.id,
+						currentProps,
+					);
+
 					return computeForResolvedOptions(
-						buildBoundsOptions({
-							props: currentProps,
-							id: params?.id,
-							group: params?.group,
-							overrides,
-							mode: "navigation",
-							resolveBoundTag,
-						}),
+						resolvedNavigationOptions,
+						currentProps,
+						resolvedPair,
 					) as Record<string, unknown>;
 				})(),
 		});

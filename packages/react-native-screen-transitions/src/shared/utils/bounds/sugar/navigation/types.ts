@@ -12,6 +12,7 @@ export type ResolveTag = (params: {
 
 export type ComputeRaw = (
 	overrides: Partial<BoundsOptions>,
+	frameProps?: Omit<ScreenInterpolationProps, "bounds">,
 ) => Record<string, unknown>;
 
 export type BuildNavigationStylesParams = {
