@@ -29,7 +29,7 @@ export const createNavigationAccessor = ({
 	const resolvedId = id ?? "";
 
 	const computeNavigationPresetStyles = (
-		preset: "hero" | "zoom",
+		preset: "zoom",
 		navigationOptions?: BoundsNavigationOptions,
 	) => {
 		"worklet";
@@ -53,10 +53,6 @@ export const createNavigationAccessor = ({
 	};
 
 	return {
-		hero: (options?: BoundsNavigationOptions) => {
-			"worklet";
-			return computeNavigationPresetStyles("hero", options);
-		},
 		zoom: () => {
 			"worklet";
 			return computeNavigationPresetStyles("zoom", zoomBaseOptions);

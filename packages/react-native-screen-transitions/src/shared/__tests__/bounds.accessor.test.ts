@@ -327,30 +327,6 @@ describe("createBounds accessor", () => {
 		expect(BoundStore.getGroupActiveId("feed")).toBe("42");
 	});
 
-	it("bounds({...}).navigation.hero() returns focused navigation styles and mask host flag", () => {
-		registerBasicLink();
-		const bounds = createAccessor("screen-b");
-
-		const styles = bounds({ id: "card" }).navigation.hero();
-
-		expect(styles[NAVIGATION_MASK_HOST_FLAG_STYLE_ID]).toEqual({});
-		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeDefined();
-		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeDefined();
-		expect(styles.card).toBeUndefined();
-	});
-
-	it("bounds({...}).navigation.hero() returns unfocused shared-element style", () => {
-		registerBasicLink();
-		const bounds = createAccessor("screen-a", false);
-
-		const styles = bounds({ id: "card" }).navigation.hero();
-
-		expect(styles[NAVIGATION_MASK_HOST_FLAG_STYLE_ID]).toBeUndefined();
-		expect(styles.card).toBeDefined();
-		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeUndefined();
-		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeUndefined();
-	});
-
 	it("bounds({...}).navigation.zoom() defaults to top anchoring and allows overrides", () => {
 		registerBasicLink();
 		BoundStore.registerBoundaryPresence("card", "screen-b", undefined, {

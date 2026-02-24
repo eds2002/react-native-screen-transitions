@@ -27,14 +27,13 @@ export type BoundsLink = {
 
 export type BoundsStyleOptions = Omit<BoundsOptions, "id" | "group">;
 
-export type BoundsNavigationPreset = "hero" | "zoom";
+export type BoundsNavigationPreset = "zoom";
 
 export type BoundsNavigationOptions = BoundsStyleOptions & {
 	maskBorderRadius?: number;
 };
 
 export type BoundsNavigationAccessor = {
-	hero: (options?: BoundsNavigationOptions) => TransitionInterpolatedStyle;
 	zoom: () => TransitionInterpolatedStyle;
 };
 
