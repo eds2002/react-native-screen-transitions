@@ -11,7 +11,8 @@ const BOUNDS_EXAMPLES = [
 	{
 		id: "active",
 		title: "Active Bounds",
-		description: "Transition.Boundary id-only matching (no explicit source/destination)",
+		description:
+			"Transition.Boundary id-only matching (no explicit source/destination)",
 	},
 	{
 		id: "gesture",
@@ -26,22 +27,31 @@ const BOUNDS_EXAMPLES = [
 	{
 		id: "spam",
 		title: "Bounds Spam",
-		description: "Rapid tap stress test for bound linkage and blank stack behavior",
+		description:
+			"Rapid tap stress test for bound linkage and blank stack behavior",
 	},
 	{
 		id: "zoom",
 		title: "Navigation Zoom Group Transitions",
-		description: "bounds({ id, group }).navigation.zoom() with grouped source/destination",
+		description:
+			"bounds({ id, group }).navigation.zoom() with grouped source/destination",
 	},
 	{
 		id: "zoom-id",
 		title: "Navigation Zoom ID Transition",
-		description: "bounds({ id }).navigation.zoom() with simple id-only matching",
+		description:
+			"bounds({ id }).navigation.zoom() with simple id-only matching",
 	},
 	{
 		id: "sync",
 		title: "Bounds Sync Harness",
-		description: "Method/anchor/scaleMode/target permutations (source -> destination only)",
+		description:
+			"Method/anchor/scaleMode/target permutations (source -> destination only)",
+	},
+	{
+		id: "gallery",
+		title: "Gallery",
+		description: "Image gallery with shared element zoom transitions",
 	},
 ];
 
@@ -60,7 +70,9 @@ export default function BoundsHubIndex() {
 							testID={`${testPrefix}-bounds-${example.id}`}
 							style={styles.item}
 							onPress={() =>
-								router.push(buildStackPath(stackType, `bounds/${example.id}`) as never)
+								router.push(
+									buildStackPath(stackType, `bounds/${example.id}`) as never,
+								)
 							}
 						>
 							<Text style={styles.itemTitle}>{example.title}</Text>

@@ -16,7 +16,7 @@ import { GestureStore } from "../../../stores/gesture.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../../../utils/gesture/find-collapse-target";
 
-export const BackdropLayer = memo(() => {
+export const BackdropLayer = memo(function BackdropLayer() {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useKeys();
 	const { dismissScreen } = useNavigationHelpers();
@@ -97,16 +97,15 @@ export const BackdropLayer = memo(() => {
 			pointerEvents={isBackdropActive ? "auto" : "none"}
 			onPress={isBackdropActive ? handleBackdropPress : undefined}
 		>
-			{AnimatedBackdropComponent ? (
+			{AnimatedBackdropComponent && (
 				<AnimatedBackdropComponent
-					style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
+					style={[StyleSheet.absoluteFillObject]}
 					animatedProps={animatedBackdropProps}
 				/>
-			) : (
-				<Animated.View
-					style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
-				/>
 			)}
+			<Animated.View
+				style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
+			/>
 		</Pressable>
 	);
 });

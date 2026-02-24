@@ -41,6 +41,10 @@ export default function BoundsLayout() {
 				name="sync"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
+			<StackNavigator.Screen
+				name="gallery"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
 		</StackNavigator>
 	);
 }
