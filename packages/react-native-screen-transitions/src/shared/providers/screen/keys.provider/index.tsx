@@ -22,6 +22,7 @@ interface ScreenKeysContextType {
 	nextScreenKey?: string;
 	ancestorKeys: string[];
 	hasConfiguredInterpolator: boolean;
+	isBranchScreen: boolean;
 }
 
 const KeysContext = createContext<KeysContextType | undefined>(undefined);
@@ -51,6 +52,14 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 		!!current.options.screenStyleInterpolator ||
 		!!next?.options?.screenStyleInterpolator;
 
+	const isBranchScreen = useMemo(() => {
+		const state = current.navigation.getState();
+		const index = state?.index ?? -1;
+		const currentRoute = state?.routes?.[index];
+		if (!currentRoute) return false;
+		return "state" in currentRoute;
+	}, [current]);
+
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the signature instead>
 	const value = useMemo<KeysContextType<TDescriptor>>(
 		() => ({
@@ -70,6 +79,7 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 			nextScreenKey,
 			ancestorKeys,
 			hasConfiguredInterpolator,
+			isBranchScreen,
 		}),
 		[
 			previousScreenKey,
@@ -77,6 +87,7 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 			nextScreenKey,
 			ancestorKeysSignature,
 			hasConfiguredInterpolator,
+			isBranchScreen,
 		],
 	);
 

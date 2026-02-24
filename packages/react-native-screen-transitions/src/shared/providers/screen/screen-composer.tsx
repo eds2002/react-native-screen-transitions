@@ -20,8 +20,8 @@ export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 	children,
 }: Props<TDescriptor>) {
 	return (
-		<ScreenLifecycle current={current} previous={previous}>
-			<KeysProvider previous={previous} current={current} next={next}>
+		<KeysProvider previous={previous} current={current} next={next}>
+			<ScreenLifecycle>
 				<ScreenGestureProvider>
 					<ScreenAnimationProvider>
 						<ScreenStylesProvider>
@@ -29,7 +29,7 @@ export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 						</ScreenStylesProvider>
 					</ScreenAnimationProvider>
 				</ScreenGestureProvider>
-			</KeysProvider>
-		</ScreenLifecycle>
+			</ScreenLifecycle>
+		</KeysProvider>
 	);
 }

@@ -23,7 +23,7 @@ beforeEach(() => {
 });
 
 describe("close transition cleanup", () => {
-	it("resets animation, gesture, and bounds stores by route key idempotently", () => {
+	it("resets animation, gesture, and bounds stores for a branch screen (clears ancestors)", () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
@@ -38,8 +38,8 @@ describe("close transition cleanup", () => {
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(true);
 		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(true);
 
-		resetStoresForRoute(routeKey);
-		resetStoresForRoute(routeKey);
+		resetStoresForRoute(routeKey, true);
+		resetStoresForRoute(routeKey, true);
 
 		expect(BoundStore.getSnapshot("card", routeKey)).toBeNull();
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(false);
@@ -50,5 +50,33 @@ describe("close transition cleanup", () => {
 
 		expect(animationAfter).not.toBe(animationBefore);
 		expect(gestureAfter).not.toBe(gestureBefore);
+	});
+
+	it("skips ancestor bound clearing for leaf screens", () => {
+		const routeKey = "leaf-screen";
+		const bounds = createMeasured(10, 20, 120, 140);
+
+		BoundStore.registerSnapshot("card", routeKey, bounds);
+		BoundStore.setLinkSource("card", routeKey, bounds);
+		BoundStore.registerBoundaryPresence("card", routeKey, [routeKey]);
+
+		const animationBefore = AnimationStore.getAll(routeKey);
+		const gestureBefore = GestureStore.getRouteGestures(routeKey);
+
+		// Leaf screen: isBranchScreen = false — should NOT clearByAncestor
+		resetStoresForRoute(routeKey, false);
+
+		// Animation and gesture stores are still cleared
+		const animationAfter = AnimationStore.getAll(routeKey);
+		const gestureAfter = GestureStore.getRouteGestures(routeKey);
+		expect(animationAfter).not.toBe(animationBefore);
+		expect(gestureAfter).not.toBe(gestureBefore);
+
+		// Bound data registered directly under this key is NOT cleared by
+		// clearByAncestor (which is skipped), so snapshot/source/presence
+		// remain intact — only ancestor-based clearing is gated.
+		expect(BoundStore.getSnapshot("card", routeKey)).toBeTruthy();
+		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(true);
+		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(true);
 	});
 });
