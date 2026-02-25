@@ -60,9 +60,9 @@ export const BackdropLayer = memo(function BackdropLayer() {
 				);
 
 				// If already dismissing, skip
-				if (gestures.isDismissing.value) return;
+				if (gestures.dismissing.value) return;
 
-				gestures.isDismissing.value = shouldDismiss ? 1 : 0;
+				gestures.dismissing.value = shouldDismiss ? 1 : 0;
 
 				const spec = shouldDismiss
 					? transitionSpec

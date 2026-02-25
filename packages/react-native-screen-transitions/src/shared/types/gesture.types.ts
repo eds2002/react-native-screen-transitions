@@ -36,10 +36,6 @@ export type GestureDirections = {
 
 export type GestureValues = {
 	/**
-	 * A `SharedValue` indicating if the user's finger is on the screen (0 or 1).
-	 */
-	isDragging: number;
-	/**
 	 * The live horizontal translation of the gesture.
 	 */
 	x: number;
@@ -50,17 +46,30 @@ export type GestureValues = {
 	/**
 	 * The live normalized horizontal translation of the gesture (-1 to 1).
 	 */
-	normalizedX: number;
+	normX: number;
 	/**
 	 * The live normalized vertical translation of the gesture (-1 to 1).
 	 */
-	normalizedY: number;
+	normY: number;
 	/**
-	 * A flag indicating if the screen is in the process of dismissing.
+	 * A flag indicating if the screen is in the process of dismissing (0 or 1).
 	 */
-	isDismissing: number;
+	dismissing: number;
+	/**
+	 * A flag indicating if the user's finger is on the screen (0 or 1).
+	 */
+	dragging: number;
 	/**
 	 * The initial direction that activated the gesture.
 	 */
 	direction: Omit<GestureDirection, "bidirectional"> | null;
+
+	/** @deprecated Use `normX` instead. */
+	normalizedX: number;
+	/** @deprecated Use `normY` instead. */
+	normalizedY: number;
+	/** @deprecated Use `dismissing` instead. */
+	isDismissing: number;
+	/** @deprecated Use `dragging` instead. */
+	isDragging: number;
 };

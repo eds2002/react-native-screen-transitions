@@ -79,7 +79,7 @@ function useRegisterDirectionClaims(
 		}
 
 		const gestureValues = GestureStore.getRouteGestures(routeKey);
-		const isDismissing = gestureValues.isDismissing;
+		const isDismissing = gestureValues.dismissing;
 
 		const claimedAncestors: Array<{
 			ancestor: GestureContextType;

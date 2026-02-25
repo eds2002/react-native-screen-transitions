@@ -1,9 +1,9 @@
 // @ts-nocheck
 import { withTiming } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 const toGestureBoundaryId = (route: { params?: object }) => {
 	"worklet";
@@ -55,7 +55,7 @@ export default function GestureBoundsLayout() {
 						return {
 							[boundTag]: {
 								...boundStyles,
-								opacity: withTiming(current.gesture.isDragging ? 0.5 : 1),
+								opacity: withTiming(current.gesture.dragging ? 0.5 : 1),
 							},
 						};
 					},

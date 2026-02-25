@@ -104,7 +104,7 @@ export const useBuildGestures = ({
 	const selfClaimsAny = claimsAnyDirection(claimedDirections);
 
 	const handleDismiss = useCallback(() => {
-		if (ancestorContext?.gestureAnimationValues.isDismissing?.value) return;
+		if (ancestorContext?.gestureAnimationValues.dismissing?.value) return;
 		dismissScreen();
 	}, [ancestorContext, dismissScreen]);
 
@@ -114,8 +114,7 @@ export const useBuildGestures = ({
 			canDismiss,
 			handleDismiss,
 			ownershipStatus,
-			ancestorIsDismissing:
-				ancestorContext?.gestureAnimationValues.isDismissing,
+			ancestorIsDismissing: ancestorContext?.gestureAnimationValues.dismissing,
 			claimedDirections,
 			ancestorContext,
 			childDirectionClaims,

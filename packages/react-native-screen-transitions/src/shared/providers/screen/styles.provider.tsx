@@ -49,7 +49,7 @@ const {
 				"worklet";
 				const props = screenInterpolatorProps.value;
 				const { current, next, progress } = props;
-				const isDragging = current.gesture.isDragging;
+				const isDragging = current.gesture.dragging;
 				const isNextClosing = !!next?.closing;
 
 				if (isDragging && isNextClosing) {

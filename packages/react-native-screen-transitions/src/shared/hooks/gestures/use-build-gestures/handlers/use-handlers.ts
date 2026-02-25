@@ -206,7 +206,7 @@ export const useHandlers = ({
 				return;
 			}
 
-			if (gestureAnimationValues.isDragging?.value) {
+			if (gestureAnimationValues.dragging?.value) {
 				manager.activate();
 				return;
 			}
@@ -255,7 +255,7 @@ export const useHandlers = ({
 			}
 
 			// Snap sheets can interrupt their own animation; non-snap cannot
-			if (!hasSnapPoints && gestureAnimationValues.isDismissing?.value) {
+			if (!hasSnapPoints && gestureAnimationValues.dismissing?.value) {
 				return;
 			}
 
@@ -330,8 +330,8 @@ export const useHandlers = ({
 			lockedSnapPoint.value = maxSnapPoint;
 		}
 
-		gestureAnimationValues.isDragging.value = TRUE;
-		gestureAnimationValues.isDismissing.value = FALSE;
+		gestureAnimationValues.dragging.value = TRUE;
+		gestureAnimationValues.dismissing.value = FALSE;
 		gestureStartProgress.value = animations.progress.value;
 		animations.animating.value = TRUE;
 	});
@@ -345,11 +345,11 @@ export const useHandlers = ({
 
 			gestureAnimationValues.x.value = translationX;
 			gestureAnimationValues.y.value = translationY;
-			gestureAnimationValues.normalizedX.value = normalizeGestureTranslation(
+			gestureAnimationValues.normX.value = normalizeGestureTranslation(
 				translationX,
 				width,
 			);
-			gestureAnimationValues.normalizedY.value = normalizeGestureTranslation(
+			gestureAnimationValues.normY.value = normalizeGestureTranslation(
 				translationY,
 				height,
 			);

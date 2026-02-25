@@ -84,15 +84,22 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	out.animating = s.animating.value;
 	out.gesture.x = s.gesture.x.value;
 	out.gesture.y = s.gesture.y.value;
-	out.gesture.normalizedX = s.gesture.normalizedX.value;
-	out.gesture.normalizedY = s.gesture.normalizedY.value;
-	out.gesture.isDismissing = s.gesture.isDismissing.value;
-	out.gesture.isDragging = s.gesture.isDragging.value;
+	out.gesture.normX = s.gesture.normX.value;
+	out.gesture.normY = s.gesture.normY.value;
+	out.gesture.dismissing = s.gesture.dismissing.value;
+	out.gesture.dragging = s.gesture.dragging.value;
 	out.gesture.direction = s.gesture.direction.value;
+
+	// Deprecated aliases (kept for backwards compatibility)
+	out.gesture.normalizedX = out.gesture.normX;
+	out.gesture.normalizedY = out.gesture.normY;
+	out.gesture.isDismissing = out.gesture.dismissing;
+	out.gesture.isDragging = out.gesture.dragging;
+
 	out.settled =
-		out.gesture.isDragging ||
+		out.gesture.dragging ||
 		out.animating ||
-		out.gesture.isDismissing ||
+		out.gesture.dismissing ||
 		out.closing
 			? 0
 			: 1;

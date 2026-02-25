@@ -36,17 +36,13 @@ export default function StyleIdBoundsLayout() {
 						"worklet";
 
 						const x = interpolate(
-							focused
-								? current.gesture.normalizedX
-								: (next?.gesture.normalizedX ?? 0),
+							focused ? current.gesture.normX : (next?.gesture.normX ?? 0),
 							[-1, 1],
 							[-screen.width * 0.5, screen.width * 0.5],
 							"clamp",
 						);
 						const y = interpolate(
-							focused
-								? current.gesture.normalizedY
-								: (next?.gesture.normalizedY ?? 0),
+							focused ? current.gesture.normY : (next?.gesture.normY ?? 0),
 							[-1, 1],
 							[-screen.height * 0.5, screen.height * 0.5],
 							"clamp",

@@ -140,14 +140,14 @@ export const DraggableCard = (
 
 			/** Vertical */
 			const translateY = interpolate(
-				current.gesture.normalizedY,
+				current.gesture.normY,
 				[-1, 1],
 				[-screen.height * 0.5, screen.height * 0.5],
 			);
 
 			/** Horizontal */
 			const translateX = interpolate(
-				current.gesture.normalizedX,
+				current.gesture.normX,
 				[-1, 1],
 				[-screen.width * 0.5, screen.width * 0.5],
 			);
@@ -195,14 +195,14 @@ export const ElasticCard = (
 			const maxElasticityX = screen.width * (config.elasticFactor ?? 0.5);
 			const maxElasticityY = screen.height * (config.elasticFactor ?? 0.5);
 			const translateX = interpolate(
-				current.gesture.normalizedX,
+				current.gesture.normX,
 				[-1, 0, 1],
 				[-maxElasticityX, 0, maxElasticityX],
 				"clamp",
 			);
 
 			const translateY = interpolate(
-				current.gesture.normalizedY,
+				current.gesture.normY,
 				[-1, 0, 1],
 				[-maxElasticityY, 0, maxElasticityY],
 				"clamp",
@@ -259,8 +259,8 @@ export const SharedIGImage = ({
 		}) => {
 			"worklet";
 
-			const normX = active.gesture.normalizedX;
-			const normY = active.gesture.normalizedY;
+			const normX = active.gesture.normX;
+			const normY = active.gesture.normY;
 
 			const dragX = interpolate(
 				normX,
@@ -345,7 +345,7 @@ export const SharedIGImage = ({
 				content: {
 					style: {
 						...(normalizedNav.content?.style ?? {}),
-						pointerEvents: current.gesture.isDismissing ? "none" : "auto",
+						pointerEvents: current.gesture.dismissing ? "none" : "auto",
 					},
 				},
 				[sharedBoundTag]: {
@@ -405,8 +405,8 @@ export const SharedAppleMusic = ({
 		}) => {
 			"worklet";
 
-			const normX = active.gesture.normalizedX;
-			const normY = active.gesture.normalizedY;
+			const normX = active.gesture.normX;
+			const normY = active.gesture.normY;
 			const initialDirection = active.gesture.direction;
 
 			/**
@@ -633,7 +633,7 @@ export const SharedXImage = ({
 			).result;
 
 			const dragY = interpolate(
-				current.gesture.normalizedY,
+				current.gesture.normY,
 				[-1, 0, 1],
 				[-screen.height, 0, screen.height],
 			);
@@ -645,7 +645,7 @@ export const SharedXImage = ({
 			);
 
 			const overlayClr = interpolateColor(
-				current.progress - Math.abs(current.gesture.normalizedY),
+				current.progress - Math.abs(current.gesture.normY),
 				[0, 1],
 				["rgba(0,0,0,0)", "rgba(0,0,0,1)"],
 			);

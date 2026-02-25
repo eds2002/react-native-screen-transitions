@@ -27,11 +27,17 @@ export const NO_PROPS = Object.freeze({});
 const DEFAULT_GESTURE_VALUES = {
 	x: 0,
 	y: 0,
+	normX: 0,
+	normY: 0,
+	dismissing: 0,
+	dragging: 0,
+	direction: null,
+
+	// Deprecated aliases
 	normalizedX: 0,
 	normalizedY: 0,
 	isDismissing: 0,
 	isDragging: 0,
-	direction: null,
 } as const;
 
 /**

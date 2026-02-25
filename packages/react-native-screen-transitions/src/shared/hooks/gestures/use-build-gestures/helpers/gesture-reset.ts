@@ -55,12 +55,10 @@ export const resetGestureValues = ({
 
 	// Ensure spring starts moving toward zero using normalized gesture values for direction.
 	const nx =
-		gestures.normalizedX.value ||
-		event.translationX / Math.max(1, dimensions.width);
+		gestures.normX.value || event.translationX / Math.max(1, dimensions.width);
 
 	const ny =
-		gestures.normalizedY.value ||
-		event.translationY / Math.max(1, dimensions.height);
+		gestures.normY.value || event.translationY / Math.max(1, dimensions.height);
 
 	const vxTowardZero = calculateRestoreVelocityTowardZero(nx, vxNorm);
 	const vyTowardZero = calculateRestoreVelocityTowardZero(ny, vyNorm);
@@ -89,12 +87,12 @@ export const resetGestureValues = ({
 				config: { ...spec, velocity: resetVY },
 			},
 			{
-				value: gestures.normalizedX,
+				value: gestures.normX,
 				toValue: 0,
 				config: { ...spec, velocity: resetVX },
 			},
 			{
-				value: gestures.normalizedY,
+				value: gestures.normY,
 				toValue: 0,
 				config: { ...spec, velocity: resetVY },
 			},
@@ -105,6 +103,6 @@ export const resetGestureValues = ({
 		},
 	});
 
-	gestures.isDragging.value = FALSE;
-	gestures.isDismissing.value = shouldDismiss ? TRUE : FALSE;
+	gestures.dragging.value = FALSE;
+	gestures.dismissing.value = shouldDismiss ? TRUE : FALSE;
 };

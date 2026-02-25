@@ -95,8 +95,8 @@ const useNativeStackClose = ({
 		useDerivedValue(() => {
 			"worklet";
 			return (
-				gestureCtx?.ancestorContext?.gestureAnimationValues.isDismissing
-					?.value ?? false
+				gestureCtx?.ancestorContext?.gestureAnimationValues.dismissing?.value ??
+				false
 			);
 		}),
 	);

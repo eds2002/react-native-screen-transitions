@@ -9,11 +9,20 @@ import type { ScreenKey } from "../types/screen.types";
 export type GestureStoreMap = {
 	x: SharedValue<number>;
 	y: SharedValue<number>;
-	normalizedX: SharedValue<number>;
-	normalizedY: SharedValue<number>;
-	isDismissing: SharedValue<number>;
-	isDragging: SharedValue<number>;
+	normX: SharedValue<number>;
+	normY: SharedValue<number>;
+	dismissing: SharedValue<number>;
+	dragging: SharedValue<number>;
 	direction: SharedValue<Omit<GestureDirection, "bidirectional"> | null>;
+
+	/** @deprecated Use `normX` instead. */
+	normalizedX: SharedValue<number>;
+	/** @deprecated Use `normY` instead. */
+	normalizedY: SharedValue<number>;
+	/** @deprecated Use `dismissing` instead. */
+	isDismissing: SharedValue<number>;
+	/** @deprecated Use `dragging` instead. */
+	isDragging: SharedValue<number>;
 };
 
 const store: Record<ScreenKey, GestureStoreMap> = {};
@@ -21,16 +30,27 @@ const store: Record<ScreenKey, GestureStoreMap> = {};
 function ensure(routeKey: ScreenKey): GestureStoreMap {
 	let bag = store[routeKey];
 	if (!bag) {
+		const normX = makeMutable(0);
+		const normY = makeMutable(0);
+		const dismissing = makeMutable(0);
+		const dragging = makeMutable(0);
+
 		bag = {
 			x: makeMutable(0),
 			y: makeMutable(0),
-			normalizedX: makeMutable(0),
-			normalizedY: makeMutable(0),
-			isDismissing: makeMutable(0),
-			isDragging: makeMutable(0),
+			normX,
+			normY,
+			dismissing,
+			dragging,
 			direction: makeMutable<Omit<GestureDirection, "bidirectional"> | null>(
 				null,
 			),
+
+			// Deprecated aliases (same underlying SharedValue)
+			normalizedX: normX,
+			normalizedY: normY,
+			isDismissing: dismissing,
+			isDragging: dragging,
 		};
 		store[routeKey] = bag;
 	}
@@ -46,10 +66,10 @@ function clear(routeKey: ScreenKey) {
 	if (bag) {
 		cancelAnimation(bag.x);
 		cancelAnimation(bag.y);
-		cancelAnimation(bag.normalizedX);
-		cancelAnimation(bag.normalizedY);
-		cancelAnimation(bag.isDismissing);
-		cancelAnimation(bag.isDragging);
+		cancelAnimation(bag.normX);
+		cancelAnimation(bag.normY);
+		cancelAnimation(bag.dismissing);
+		cancelAnimation(bag.dragging);
 		cancelAnimation(bag.direction);
 	}
 	delete store[routeKey];

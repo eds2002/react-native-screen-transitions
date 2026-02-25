@@ -134,8 +134,8 @@ export const buildZoomNavigationStyles = ({
 	const entering = !props.next;
 	const screenLayout = props.layouts.screen;
 
-	const normX = props.active.gesture.normalizedX;
-	const normY = props.active.gesture.normalizedY;
+	const normX = props.active.gesture.normX;
+	const normY = props.active.gesture.normY;
 	const initialDirection = props.active.gesture.direction;
 
 	const xScaleOutput =
