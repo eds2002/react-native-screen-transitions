@@ -12,7 +12,7 @@ export default function ActiveBoundsDetail() {
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader title="Detail" subtitle={id} />
 			<View style={styles.content}>
-				<Transition.Boundary
+				<Transition.Boundary.View
 					id={id}
 					style={[
 						styles.destination,
@@ -22,7 +22,7 @@ export default function ActiveBoundsDetail() {
 					<Text style={styles.destinationText}>
 						{`Transition.Boundary id\n"${id}"`}
 					</Text>
-				</Transition.Boundary>
+				</Transition.Boundary.View>
 			</View>
 		</SafeAreaView>
 	);

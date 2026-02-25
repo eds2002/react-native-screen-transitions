@@ -78,10 +78,12 @@ export default function BoundsSyncSource() {
 			<View style={styles.arena}>
 				<Pressable
 					onPress={() => {
-						router.push(buildStackPath(stackType, "bounds/sync/destination") as never);
+						router.push(
+							buildStackPath(stackType, "bounds/sync/destination") as never,
+						);
 					}}
 				>
-					<Transition.Boundary
+					<Transition.Boundary.View
 						id={BOUNDARY_TAG}
 						mode={needsExplicitMode ? "source" : undefined}
 						method={sourceMethod}
@@ -98,7 +100,7 @@ export default function BoundsSyncSource() {
 						]}
 					>
 						<Text style={styles.boxLabel}>SRC</Text>
-					</Transition.Boundary>
+					</Transition.Boundary.View>
 				</Pressable>
 
 				{!needsExplicitMode && (

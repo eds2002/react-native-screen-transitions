@@ -9,7 +9,7 @@ export default function GestureBoundsDetail() {
 	const tag = `gesture-bounds-${id}`;
 
 	return (
-		<Transition.Boundary id={tag} style={styles.wrapper}>
+		<Transition.Boundary.View id={tag} style={styles.wrapper}>
 			<SafeAreaView style={styles.container} edges={["top"]}>
 				<ScreenHeader title="Gesture Bounds" subtitle="Swipe down to dismiss" />
 				<View style={styles.content}>
@@ -19,7 +19,7 @@ export default function GestureBoundsDetail() {
 					</Text>
 				</View>
 			</SafeAreaView>
-		</Transition.Boundary>
+		</Transition.Boundary.View>
 	);
 }
 

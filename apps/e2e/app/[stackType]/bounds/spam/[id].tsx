@@ -20,7 +20,7 @@ export default function BoundsSpamDetail() {
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader title="Spam Detail" subtitle={id} />
 			<View style={styles.content}>
-				<Transition.Boundary
+				<Transition.Boundary.View
 					id={id}
 					style={[
 						styles.destination,
@@ -32,7 +32,7 @@ export default function BoundsSpamDetail() {
 					]}
 				>
 					<Text style={styles.label}>{item?.label ?? "?"}</Text>
-				</Transition.Boundary>
+				</Transition.Boundary.View>
 			</View>
 		</SafeAreaView>
 	);

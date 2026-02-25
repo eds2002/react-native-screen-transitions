@@ -1,12 +1,7 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useCallback, useMemo, useRef } from "react";
-import {
-	Pressable,
-	StyleSheet,
-	useWindowDimensions,
-	View,
-} from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
@@ -38,7 +33,7 @@ function GalleryThumbnail({
 	const thumbHeight = columnWidth / aspectRatio;
 
 	return (
-		<Transition.Boundary
+		<Transition.Boundary.View
 			group={GALLERY_GROUP}
 			scaleMode="uniform"
 			id={item.id}
@@ -63,7 +58,7 @@ function GalleryThumbnail({
 					contentFit="cover"
 				/>
 			</Pressable>
-		</Transition.Boundary>
+		</Transition.Boundary.View>
 	);
 }
 

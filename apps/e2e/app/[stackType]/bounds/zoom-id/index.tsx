@@ -14,7 +14,7 @@ function ZoomIdCard({ item }: { item: ZoomIdItem }) {
 	const stackType = useResolvedStackType();
 
 	return (
-		<Transition.Boundary
+		<Transition.Boundary.View
 			id={item.id}
 			mode="source"
 			scaleMode="uniform"
@@ -45,7 +45,7 @@ function ZoomIdCard({ item }: { item: ZoomIdItem }) {
 					</View>
 				</View>
 			</Pressable>
-		</Transition.Boundary>
+		</Transition.Boundary.View>
 	);
 }
 

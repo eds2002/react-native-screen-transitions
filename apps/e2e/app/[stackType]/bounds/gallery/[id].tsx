@@ -29,7 +29,7 @@ function ImagePage({
 	return (
 		<View style={[styles.page, { width: screenWidth }]}>
 			<View style={styles.imageCenter}>
-				<Transition.Boundary
+				<Transition.Boundary.View
 					id={item.id}
 					group={GALLERY_GROUP}
 					style={{
@@ -43,7 +43,7 @@ function ImagePage({
 						style={styles.image}
 						contentFit="cover"
 					/>
-				</Transition.Boundary>
+				</Transition.Boundary.View>
 			</View>
 		</View>
 	);

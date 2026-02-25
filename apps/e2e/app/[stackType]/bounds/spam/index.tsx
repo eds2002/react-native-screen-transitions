@@ -3,7 +3,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 
 const COLUMNS = 4;
 const ROWS = 4;
@@ -33,16 +36,19 @@ export default function BoundsSpamIndex() {
 									style={styles.cell}
 									onPress={() => {
 										router.push(
-											buildStackPath(stackType, `bounds/spam/${item.id}`) as never,
+											buildStackPath(
+												stackType,
+												`bounds/spam/${item.id}`,
+											) as never,
 										);
 									}}
 								>
-									<Transition.Boundary
+									<Transition.Boundary.View
 										id={item.id}
 										style={[styles.boundary, { backgroundColor: item.color }]}
 									>
 										<Text style={styles.label}>{item.label}</Text>
-									</Transition.Boundary>
+									</Transition.Boundary.View>
 								</Pressable>
 							);
 						})}

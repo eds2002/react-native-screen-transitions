@@ -88,14 +88,14 @@ function Boundary({
 			>
 				<View style={styles.warmupHeroSpacer} />
 				<View style={styles.swatchSection}>
-					<Transition.Boundary
+					<Transition.Boundary.View
 						id={item.id}
 						group={ZOOM_GROUP}
 						mode="destination"
 						style={[styles.swatch, { backgroundColor: item.color }]}
 					>
 						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>
-					</Transition.Boundary>
+					</Transition.Boundary.View>
 				</View>
 			</View>
 		</View>
@@ -134,13 +134,13 @@ function DetailPage({
 				<Text style={styles.description}>{item.description}</Text>
 
 				<View style={styles.swatchSection}>
-					<Transition.Boundary
+					<Transition.Boundary.View
 						id={item.id}
 						group={ZOOM_GROUP}
 						style={[styles.swatch, { backgroundColor: item.color }]}
 					>
 						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>
-					</Transition.Boundary>
+					</Transition.Boundary.View>
 				</View>
 
 				<View style={styles.propertiesGrid}>

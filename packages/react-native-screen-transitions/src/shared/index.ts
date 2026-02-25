@@ -1,12 +1,16 @@
 import { FlatList, Pressable, ScrollView, View } from "react-native";
-import { Boundary } from "./components/boundary";
-import { buildBoundaryMatchKey } from "./components/boundary/utils/build-boundary-match-key";
+import {
+	Boundary,
+	createBoundaryComponent,
+} from "./components/create-boundary-component";
+import { buildBoundaryMatchKey } from "./components/create-boundary-component/utils/build-boundary-match-key";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
 import MaskedView from "./components/integrations/masked-view";
 import { Presets, Specs } from "./configs";
 
 export default {
 	createTransitionAwareComponent,
+	createBoundaryComponent,
 	Boundary,
 	View: createTransitionAwareComponent(View),
 	Pressable: createTransitionAwareComponent(Pressable),

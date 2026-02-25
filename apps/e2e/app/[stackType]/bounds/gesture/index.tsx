@@ -3,7 +3,10 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 
 export default function GestureBoundsIndex() {
 	const stackType = useResolvedStackType();
@@ -34,7 +37,7 @@ export default function GestureBoundsIndex() {
 											pushToDetail(id);
 										}}
 									>
-										<Transition.Boundary
+										<Transition.Boundary.View
 											id={tag}
 											style={[
 												styles.cellBoundary,
@@ -44,7 +47,7 @@ export default function GestureBoundsIndex() {
 											]}
 										>
 											<Text style={styles.cellText}>{idx + 1}</Text>
-										</Transition.Boundary>
+										</Transition.Boundary.View>
 									</Pressable>
 								);
 							})}

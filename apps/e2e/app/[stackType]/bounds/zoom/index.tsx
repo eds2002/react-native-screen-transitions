@@ -34,7 +34,7 @@ function ZoomSourceCard({
 	const cardWidth = item.cols === 2 ? colWidth * 2 + GAP : colWidth;
 
 	return (
-		<Transition.Boundary
+		<Transition.Boundary.View
 			group={ZOOM_GROUP}
 			scaleMode="uniform"
 			id={item.id}
@@ -60,7 +60,7 @@ function ZoomSourceCard({
 				<Text style={styles.title}>{item.title}</Text>
 				<Text style={styles.subtitle}>{item.subtitle}</Text>
 			</Pressable>
-		</Transition.Boundary>
+		</Transition.Boundary.View>
 	);
 }
 
