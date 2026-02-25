@@ -89,6 +89,13 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 	out.gesture.isDismissing = s.gesture.isDismissing.value;
 	out.gesture.isDragging = s.gesture.isDragging.value;
 	out.gesture.direction = s.gesture.direction.value;
+	out.settled =
+		out.gesture.isDragging ||
+		out.animating ||
+		out.gesture.isDismissing ||
+		out.closing
+			? 0
+			: 1;
 	out.meta = s.meta;
 
 	return out;

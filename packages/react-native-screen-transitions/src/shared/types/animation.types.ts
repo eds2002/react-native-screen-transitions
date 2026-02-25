@@ -58,6 +58,13 @@ export type ScreenTransitionState = {
 	animating: number;
 
 	/**
+	 * Whether this screen is fully settled (not transitioning and not dismissing).
+	 * - `0`: Transition/gesture is active or dismissing
+	 * - `1`: Screen is fully settled/idle
+	 */
+	settled: number;
+
+	/**
 	 * Live gesture values for this screen.
 	 * Contains translation (x, y), normalized values (-1 to 1),
 	 * and flags for dragging/dismissing state.

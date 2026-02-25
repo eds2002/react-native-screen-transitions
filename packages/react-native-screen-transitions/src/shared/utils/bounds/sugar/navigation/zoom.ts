@@ -254,7 +254,8 @@ export const buildZoomNavigationStyles = ({
 	const unfocusedFade = props.active?.closing
 		? interpolate(progress, [1.6, 2], [1, 0], "clamp")
 		: interpolate(progress, [1, 1.5], [1, 0], "clamp");
-	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.9]);
+	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.95]);
+	const isUnfocusedIdle = props.active.settled === 1;
 
 	const elementTarget =
 		sharedOptions.scaleMode === "match"
@@ -310,14 +311,19 @@ export const buildZoomNavigationStyles = ({
 	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
 	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
 
-	return {
-		content: {
-			style: {
-				transform: [{ scale: unfocusedScale }],
-			},
-		},
-		[resolvedTag]: {
-			style: {
+	const resolvedElementStyle = isUnfocusedIdle
+		? {
+				transform: [
+					{ translateX: 0 },
+					{ translateY: 0 },
+					{ scaleX: 1 },
+					{ scaleY: 1 },
+				],
+				opacity: 0,
+				zIndex: 0,
+				elevation: 0,
+			}
+		: {
 				transform: [
 					{ translateX: elementTranslateX },
 					{ translateY: elementTranslateY },
@@ -327,7 +333,16 @@ export const buildZoomNavigationStyles = ({
 				opacity: unfocusedFade,
 				zIndex: 9999,
 				elevation: 9999,
+			};
+
+	return {
+		content: {
+			style: {
+				transform: [{ scale: unfocusedScale }],
 			},
+		},
+		[resolvedTag]: {
+			style: resolvedElementStyle,
 		},
 	};
 };
