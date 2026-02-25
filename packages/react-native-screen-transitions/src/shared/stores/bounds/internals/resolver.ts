@@ -10,6 +10,21 @@ import type {
 import { getSnapshot } from "./registry";
 import { debugResolverLog, registry } from "./state";
 
+const findLatestLink = (
+	tagState: TagState,
+	predicate: (link: TagLink) => boolean,
+): TagLink | null => {
+	"worklet";
+	const stack = tagState.linkStack;
+	for (let i = stack.length - 1; i >= 0; i--) {
+		const link = stack[i];
+		if (predicate(link)) {
+			return link;
+		}
+	}
+	return null;
+};
+
 function findCompletedLinkByDestination(
 	tagState: TagState,
 	screenKey?: ScreenKey,
@@ -17,27 +32,11 @@ function findCompletedLinkByDestination(
 	"worklet";
 	if (!screenKey) return null;
 
-	const stack = tagState.linkStack;
-	const bucket = tagState.linkIndex.completedByDestinationKey[screenKey] ?? [];
-	for (let i = bucket.length - 1; i >= 0; i--) {
-		const index = bucket[i];
-		if (index < 0 || index >= stack.length) continue;
-		const link = stack[index];
-		if (!link.destination) continue;
-		if (matchesScreenKey(link.destination, screenKey)) {
-			return link;
-		}
-	}
-
-	for (let i = stack.length - 1; i >= 0; i--) {
-		const link = stack[i];
-		if (!link.destination) continue;
-		if (matchesScreenKey(link.destination, screenKey)) {
-			return link;
-		}
-	}
-
-	return null;
+	return findLatestLink(
+		tagState,
+		(link) =>
+			!!link.destination && matchesScreenKey(link.destination, screenKey),
+	);
 }
 
 function findCompletedLinkBySource(
@@ -47,27 +46,10 @@ function findCompletedLinkBySource(
 	"worklet";
 	if (!screenKey) return null;
 
-	const stack = tagState.linkStack;
-	const bucket = tagState.linkIndex.completedBySourceKey[screenKey] ?? [];
-	for (let i = bucket.length - 1; i >= 0; i--) {
-		const index = bucket[i];
-		if (index < 0 || index >= stack.length) continue;
-		const link = stack[index];
-		if (!link.destination) continue;
-		if (matchesScreenKey(link.source, screenKey)) {
-			return link;
-		}
-	}
-
-	for (let i = stack.length - 1; i >= 0; i--) {
-		const link = stack[i];
-		if (!link.destination) continue;
-		if (matchesScreenKey(link.source, screenKey)) {
-			return link;
-		}
-	}
-
-	return null;
+	return findLatestLink(
+		tagState,
+		(link) => !!link.destination && matchesScreenKey(link.source, screenKey),
+	);
 }
 
 function findPendingLinkBySource(
@@ -77,27 +59,11 @@ function findPendingLinkBySource(
 	"worklet";
 	if (!screenKey) return null;
 
-	const stack = tagState.linkStack;
-	const bucket = tagState.linkIndex.pendingBySourceKey[screenKey] ?? [];
-	for (let i = bucket.length - 1; i >= 0; i--) {
-		const index = bucket[i];
-		if (index < 0 || index >= stack.length) continue;
-		const link = stack[index];
-		if (link.destination !== null) continue;
-		if (matchesScreenKey(link.source, screenKey)) {
-			return link;
-		}
-	}
-
-	for (let i = stack.length - 1; i >= 0; i--) {
-		const link = stack[i];
-		if (link.destination !== null) continue;
-		if (matchesScreenKey(link.source, screenKey)) {
-			return link;
-		}
-	}
-
-	return null;
+	return findLatestLink(
+		tagState,
+		(link) =>
+			link.destination === null && matchesScreenKey(link.source, screenKey),
+	);
 }
 
 function getSnapshotBoundsByPriority(

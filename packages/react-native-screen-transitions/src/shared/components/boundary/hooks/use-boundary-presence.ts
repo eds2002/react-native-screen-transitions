@@ -8,6 +8,8 @@ export const useBoundaryPresence = (params: {
 	sharedBoundTag: string;
 	currentScreenKey: string;
 	ancestorKeys: string[];
+	navigatorKey?: string;
+	ancestorNavigatorKeys?: string[];
 	boundaryConfig?: BoundaryConfigProps;
 }) => {
 	const {
@@ -15,9 +17,12 @@ export const useBoundaryPresence = (params: {
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
+		navigatorKey,
+		ancestorNavigatorKeys,
 		boundaryConfig,
 	} = params;
 	const ancestorKeysSignature = ancestorKeys.join("|");
+	const ancestorNavigatorKeysSignature = ancestorNavigatorKeys?.join("|");
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the ancestory keys signature>
 	useLayoutEffect(() => {
@@ -28,6 +33,8 @@ export const useBoundaryPresence = (params: {
 			currentScreenKey,
 			ancestorKeys,
 			boundaryConfig,
+			navigatorKey,
+			ancestorNavigatorKeys,
 		);
 
 		return () => {
@@ -41,6 +48,8 @@ export const useBoundaryPresence = (params: {
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeysSignature,
+		navigatorKey,
+		ancestorNavigatorKeysSignature,
 		boundaryConfig,
 	]);
 };

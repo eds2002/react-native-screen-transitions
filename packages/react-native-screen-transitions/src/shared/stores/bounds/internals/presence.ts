@@ -6,6 +6,8 @@ function registerBoundaryPresence(
 	screenKey: ScreenKey,
 	ancestorKeys?: ScreenKey[],
 	boundaryConfig?: BoundaryConfig,
+	navigatorKey?: string,
+	ancestorNavigatorKeys?: string[],
 ) {
 	"worklet";
 	const current = presence.value;
@@ -20,6 +22,9 @@ function registerBoundaryPresence(
 				count: (currentEntry?.count ?? 0) + 1,
 				ancestorKeys: ancestorKeys ?? currentEntry?.ancestorKeys,
 				boundaryConfig: boundaryConfig ?? currentEntry?.boundaryConfig,
+				navigatorKey: navigatorKey ?? currentEntry?.navigatorKey,
+				ancestorNavigatorKeys:
+					ancestorNavigatorKeys ?? currentEntry?.ancestorNavigatorKeys,
 			},
 		},
 	};

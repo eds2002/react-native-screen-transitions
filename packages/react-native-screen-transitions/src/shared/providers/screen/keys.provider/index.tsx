@@ -1,6 +1,7 @@
 import { createContext, useContext, useMemo } from "react";
 import type { BaseStackDescriptor } from "../../../types/stack.types";
 import { getAncestorKeys } from "./helpers/get-ancestor-keys";
+import { getAncestorNavigatorKeys } from "./helpers/get-ancestor-navigator-keys";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
@@ -14,6 +15,9 @@ interface KeysContextType<TDescriptor extends BaseDescriptor = BaseDescriptor> {
 	current: TDescriptor;
 	next?: TDescriptor;
 	ancestorKeys: string[];
+	navigatorKey: string;
+	ancestorNavigatorKeys: string[];
+	branchNavigatorKey?: string;
 }
 
 interface ScreenKeysContextType {
@@ -21,8 +25,11 @@ interface ScreenKeysContextType {
 	currentScreenKey: string;
 	nextScreenKey?: string;
 	ancestorKeys: string[];
+	navigatorKey: string;
+	ancestorNavigatorKeys: string[];
 	hasConfiguredInterpolator: boolean;
 	isBranchScreen: boolean;
+	branchNavigatorKey?: string;
 }
 
 const KeysContext = createContext<KeysContextType | undefined>(undefined);
@@ -45,19 +52,29 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 }: KeysProviderProps<TDescriptor>) {
 	const ancestorKeys = getAncestorKeys(current);
 	const ancestorKeysSignature = ancestorKeys.join("|");
+	const ancestorNavigatorKeys = getAncestorNavigatorKeys(current);
+	const ancestorNavigatorKeysSignature = ancestorNavigatorKeys.join("|");
 	const previousScreenKey = previous?.route.key;
 	const currentScreenKey = current.route.key;
 	const nextScreenKey = next?.route.key;
+	const navigatorKey = current.navigation.getState()?.key ?? "";
 	const hasConfiguredInterpolator =
 		!!current.options.screenStyleInterpolator ||
 		!!next?.options?.screenStyleInterpolator;
 
-	const isBranchScreen = useMemo(() => {
+	const { isBranchScreen, branchNavigatorKey } = useMemo(() => {
 		const state = current.navigation.getState();
 		const index = state?.index ?? -1;
 		const currentRoute = state?.routes?.[index];
-		if (!currentRoute) return false;
-		return "state" in currentRoute;
+		if (!currentRoute || !("state" in currentRoute)) {
+			return { isBranchScreen: false, branchNavigatorKey: undefined };
+		}
+		const nestedState = (currentRoute as { state?: { key?: unknown } }).state;
+		return {
+			isBranchScreen: true,
+			branchNavigatorKey:
+				typeof nestedState?.key === "string" ? nestedState.key : undefined,
+		};
 	}, [current]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the signature instead>
@@ -67,8 +84,19 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 			current,
 			next,
 			ancestorKeys,
+			navigatorKey,
+			ancestorNavigatorKeys,
+			branchNavigatorKey,
 		}),
-		[previous, current, next, ancestorKeysSignature],
+		[
+			previous,
+			current,
+			next,
+			ancestorKeysSignature,
+			navigatorKey,
+			ancestorNavigatorKeysSignature,
+			branchNavigatorKey,
+		],
 	);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the signature instead>
@@ -78,16 +106,22 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 			currentScreenKey,
 			nextScreenKey,
 			ancestorKeys,
+			navigatorKey,
+			ancestorNavigatorKeys,
 			hasConfiguredInterpolator,
 			isBranchScreen,
+			branchNavigatorKey,
 		}),
 		[
 			previousScreenKey,
 			currentScreenKey,
 			nextScreenKey,
 			ancestorKeysSignature,
+			navigatorKey,
+			ancestorNavigatorKeysSignature,
 			hasConfiguredInterpolator,
 			isBranchScreen,
+			branchNavigatorKey,
 		],
 	);
 

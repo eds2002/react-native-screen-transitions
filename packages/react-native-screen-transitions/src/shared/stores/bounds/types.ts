@@ -7,6 +7,7 @@ import type {
 
 export type TagID = string;
 export type ScreenKey = string;
+export type NavigatorKey = string;
 
 export type BoundaryConfig = {
 	anchor?: BoundsAnchor;
@@ -23,6 +24,8 @@ export type Snapshot = {
 export type ScreenIdentifier = {
 	screenKey: ScreenKey;
 	ancestorKeys?: ScreenKey[];
+	navigatorKey?: NavigatorKey;
+	ancestorNavigatorKeys?: NavigatorKey[];
 };
 
 export type TagLink = {
@@ -47,28 +50,22 @@ export type ResolvedTransitionPair = {
 	usedSnapshotDestination: boolean;
 };
 
-export type SnapshotEntry = Snapshot & { ancestorKeys?: ScreenKey[] };
-
-export type LinkIndexMap = Record<ScreenKey, number[]>;
-
-export type TagLinkIndex = {
-	latestPendingIndex: number;
-	pendingIndices: number[];
-	pendingBySourceKey: LinkIndexMap;
-	anyBySourceKey: LinkIndexMap;
-	completedBySourceKey: LinkIndexMap;
-	completedByDestinationKey: LinkIndexMap;
+export type SnapshotEntry = Snapshot & {
+	ancestorKeys?: ScreenKey[];
+	navigatorKey?: NavigatorKey;
+	ancestorNavigatorKeys?: NavigatorKey[];
 };
 
 export type TagState = {
 	snapshots: Record<ScreenKey, SnapshotEntry>;
 	linkStack: TagLink[];
-	linkIndex: TagLinkIndex;
 };
 
 export type PresenceEntry = {
 	count: number;
 	ancestorKeys?: ScreenKey[];
+	navigatorKey?: NavigatorKey;
+	ancestorNavigatorKeys?: NavigatorKey[];
 	boundaryConfig?: BoundaryConfig;
 };
 

@@ -1,4 +1,4 @@
-import { clear, clearByAncestor } from "./internals/clear";
+import { clear, clearByAncestor, clearByBranch } from "./internals/clear";
 import {
 	getBoundaryConfig,
 	getBoundaryPresence,
@@ -55,5 +55,6 @@ export const BoundStore = {
 	getGroupActiveId,
 	clear,
 	clearByAncestor,
+	clearByBranch,
 	getGroups,
 };

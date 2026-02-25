@@ -1,6 +1,11 @@
-import { matchesScreenKey } from "../helpers/matching";
-import type { ScreenKey, SnapshotEntry, TagLink, TagState } from "../types";
-import { rebuildLinkIndexForTagState } from "./registry";
+import { matchesNavigatorKey, matchesScreenKey } from "../helpers/matching";
+import type {
+	NavigatorKey,
+	ScreenKey,
+	SnapshotEntry,
+	TagLink,
+	TagState,
+} from "../types";
 import { debugClearLog, debugStoreSizeLog, presence, registry } from "./state";
 
 const hasAnyKeys = (record: Record<string, unknown>) => {
@@ -46,6 +51,39 @@ const countRegistryMatches = (
 	return { snapshots, links };
 };
 
+const countRegistryMatchesByBranch = (
+	branchNavigatorKey: NavigatorKey,
+): { snapshots: number; links: number } => {
+	"worklet";
+	const currentRegistry = registry.value;
+	let snapshots = 0;
+	let links = 0;
+
+	for (const tag in currentRegistry) {
+		const tagState = currentRegistry[tag];
+
+		for (const snapshotKey in tagState.snapshots) {
+			const snapshot = tagState.snapshots[snapshotKey];
+			const matched =
+				snapshot.navigatorKey === branchNavigatorKey ||
+				(snapshot.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
+			if (matched) snapshots++;
+		}
+
+		for (let i = 0; i < tagState.linkStack.length; i++) {
+			const link = tagState.linkStack[i];
+			if (
+				matchesNavigatorKey(link.source, branchNavigatorKey) ||
+				matchesNavigatorKey(link.destination, branchNavigatorKey)
+			) {
+				links++;
+			}
+		}
+	}
+
+	return { snapshots, links };
+};
+
 const countPresenceMatches = (
 	screenKey: ScreenKey,
 	matchByAncestor: boolean,
@@ -62,6 +100,27 @@ const countPresenceMatches = (
 				? entryScreenKey === screenKey ||
 					(entry.ancestorKeys?.includes(screenKey) ?? false)
 				: entryScreenKey === screenKey;
+			if (matched) matches++;
+		}
+	}
+
+	return matches;
+};
+
+const countPresenceMatchesByBranch = (
+	branchNavigatorKey: NavigatorKey,
+): number => {
+	"worklet";
+	const currentPresence = presence.value;
+	let matches = 0;
+
+	for (const tag in currentPresence) {
+		const tagEntries = currentPresence[tag];
+		for (const entryScreenKey in tagEntries) {
+			const entry = tagEntries[entryScreenKey];
+			const matched =
+				entry.navigatorKey === branchNavigatorKey ||
+				(entry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
 			if (matched) matches++;
 		}
 	}
@@ -120,25 +179,10 @@ const clearRegistry = (params: {
 			continue;
 		}
 
-		const nextTagState: TagState = {
+		nextRegistry[tag] = {
 			snapshots: snapshotsChanged ? nextSnapshots : tagState.snapshots,
 			linkStack: linksChanged ? nextLinkStack : tagState.linkStack,
-			linkIndex: tagState.linkIndex,
 		};
-
-		if (linksChanged) {
-			nextTagState.linkIndex = {
-				latestPendingIndex: -1,
-				pendingIndices: [],
-				pendingBySourceKey: {},
-				anyBySourceKey: {},
-				completedBySourceKey: {},
-				completedByDestinationKey: {},
-			};
-			rebuildLinkIndexForTagState(nextTagState);
-		}
-
-		nextRegistry[tag] = nextTagState;
 	}
 
 	if (nextRegistry) {
@@ -187,6 +231,48 @@ const clearPresenceByAncestor = (ancestorKey: ScreenKey) => {
 			const shouldRemove =
 				entryScreenKey === ancestorKey ||
 				(entry.ancestorKeys?.includes(ancestorKey) ?? false);
+
+			if (shouldRemove) {
+				tagChanged = true;
+				continue;
+			}
+
+			remainingForTag[entryScreenKey] = entry;
+		}
+
+		if (!tagChanged) continue;
+
+		if (!nextPresence) {
+			nextPresence = { ...currentPresence };
+		}
+
+		if (!hasAnyKeys(remainingForTag)) {
+			delete nextPresence[tag];
+		} else {
+			nextPresence[tag] = remainingForTag;
+		}
+	}
+
+	if (nextPresence) {
+		presence.value = nextPresence;
+	}
+};
+
+const clearPresenceByBranch = (branchNavigatorKey: NavigatorKey) => {
+	"worklet";
+	const currentPresence = presence.value;
+	let nextPresence: typeof currentPresence | null = null;
+
+	for (const tag in currentPresence) {
+		const tagEntries = currentPresence[tag];
+		let tagChanged = false;
+		const remainingForTag: Record<string, any> = {};
+
+		for (const entryScreenKey in tagEntries) {
+			const entry = tagEntries[entryScreenKey];
+			const shouldRemove =
+				entry.navigatorKey === branchNavigatorKey ||
+				(entry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
 
 			if (shouldRemove) {
 				tagChanged = true;
@@ -271,4 +357,38 @@ function clearByAncestor(ancestorKey: ScreenKey) {
 	debugStoreSizeLog(`clearByAncestor(${ancestorKey})`);
 }
 
-export { clear, clearByAncestor };
+function clearByBranch(branchNavigatorKey: NavigatorKey) {
+	"worklet";
+	if (!branchNavigatorKey) return;
+
+	const beforeMatches = countRegistryMatchesByBranch(branchNavigatorKey);
+	const beforePresenceMatches =
+		countPresenceMatchesByBranch(branchNavigatorKey);
+
+	clearRegistry({
+		shouldRemoveSnapshot: (_snapshotKey, snapshot) => {
+			return (
+				snapshot.navigatorKey === branchNavigatorKey ||
+				(snapshot.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false)
+			);
+		},
+		shouldRemoveLink: (link) => {
+			return (
+				matchesNavigatorKey(link.source, branchNavigatorKey) ||
+				matchesNavigatorKey(link.destination, branchNavigatorKey)
+			);
+		},
+	});
+
+	clearPresenceByBranch(branchNavigatorKey);
+
+	const afterMatches = countRegistryMatchesByBranch(branchNavigatorKey);
+	const afterPresenceMatches = countPresenceMatchesByBranch(branchNavigatorKey);
+
+	debugClearLog(
+		`clearByBranch(${branchNavigatorKey}) snapshots=${beforeMatches.snapshots}->${afterMatches.snapshots} links=${beforeMatches.links}->${afterMatches.links} presence=${beforePresenceMatches}->${afterPresenceMatches}`,
+	);
+	debugStoreSizeLog(`clearByBranch(${branchNavigatorKey})`);
+}
+
+export { clear, clearByAncestor, clearByBranch };

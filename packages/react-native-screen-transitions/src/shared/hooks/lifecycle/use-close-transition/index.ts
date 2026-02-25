@@ -30,6 +30,7 @@ interface CloseHookParams {
 	activate: () => void;
 	deactivate: () => void;
 	isBranchScreen: boolean;
+	branchNavigatorKey?: string;
 }
 
 /**
@@ -42,6 +43,7 @@ const useManagedClose = ({
 	activate,
 	deactivate,
 	isBranchScreen,
+	branchNavigatorKey,
 }: CloseHookParams) => {
 	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
 	const routeKey = current.route.key;
@@ -51,7 +53,7 @@ const useManagedClose = ({
 		handleCloseRoute({ route: current.route });
 		requestAnimationFrame(() => {
 			deactivate();
-			resetStoresForRoute(routeKey, isBranchScreen);
+			resetStoresForRoute(routeKey, isBranchScreen, branchNavigatorKey);
 		});
 	});
 
@@ -85,6 +87,7 @@ const useNativeStackClose = ({
 	activate,
 	deactivate,
 	isBranchScreen,
+	branchNavigatorKey,
 }: CloseHookParams) => {
 	const gestureCtx = useGestureContext();
 
@@ -112,7 +115,7 @@ const useNativeStackClose = ({
 		// If transitions are disabled, ancestor is dismissing, or first screen - let native handle it
 		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
 			animations.closing.set(1);
-			resetStoresForRoute(routeKey, isBranchScreen);
+			resetStoresForRoute(routeKey, isBranchScreen, branchNavigatorKey);
 			return;
 		}
 
@@ -128,7 +131,7 @@ const useNativeStackClose = ({
 				if (finished) {
 					navigation.dispatch(e.data.action);
 					requestAnimationFrame(() => {
-						resetStoresForRoute(routeKey, isBranchScreen);
+						resetStoresForRoute(routeKey, isBranchScreen, branchNavigatorKey);
 					});
 				}
 			},
@@ -153,14 +156,14 @@ export function useCloseTransition(
 	const routeKey = current.route.key;
 	const { navigatorKey } = useStack();
 	const { flags } = useStackCoreContext();
-	const { isBranchScreen } = useScreenKeys();
+	const { isBranchScreen, branchNavigatorKey } = useScreenKeys();
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
 
 	useEffect(() => {
 		registerMountedRoute(navigatorKey, routeKey);
 
 		return () => {
-			resetStoresForRoute(routeKey, isBranchScreen);
+			resetStoresForRoute(routeKey, isBranchScreen, branchNavigatorKey);
 			const shouldClearNavigator = unregisterMountedRoute(
 				navigatorKey,
 				routeKey,
@@ -169,7 +172,7 @@ export function useCloseTransition(
 				HistoryStore.clearNavigator(navigatorKey);
 			}
 		};
-	}, [navigatorKey, routeKey, isBranchScreen]);
+	}, [navigatorKey, routeKey, isBranchScreen, branchNavigatorKey]);
 
 	const closeParams: CloseHookParams = {
 		current,
@@ -177,6 +180,7 @@ export function useCloseTransition(
 		activate,
 		deactivate,
 		isBranchScreen,
+		branchNavigatorKey,
 	};
 
 	if (isNativeStack) {

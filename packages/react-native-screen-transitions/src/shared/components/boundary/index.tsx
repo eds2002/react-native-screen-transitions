@@ -38,6 +38,8 @@ const BoundaryComponent = ({
 		currentScreenKey,
 		nextScreenKey,
 		ancestorKeys,
+		navigatorKey,
+		ancestorNavigatorKeys,
 		hasConfiguredInterpolator,
 	} = useScreenKeys();
 	const runtimeEnabled = enabled && hasConfiguredInterpolator;
@@ -83,6 +85,8 @@ const BoundaryComponent = ({
 		preferredSourceScreenKey,
 		currentScreenKey,
 		ancestorKeys,
+		navigatorKey,
+		ancestorNavigatorKeys,
 		isAnimating,
 		preparedStyles,
 		animatedRef,
@@ -99,6 +103,8 @@ const BoundaryComponent = ({
 		sharedBoundTag,
 		currentScreenKey,
 		ancestorKeys,
+		navigatorKey,
+		ancestorNavigatorKeys,
 		boundaryConfig,
 	});
 

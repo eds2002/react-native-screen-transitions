@@ -1,25 +1,9 @@
 import { makeMutable } from "react-native-reanimated";
-import type {
-	GroupState,
-	PresenceState,
-	TagID,
-	TagLinkIndex,
-	TagState,
-} from "../types";
-
-export const createEmptyLinkIndex = (): TagLinkIndex => ({
-	latestPendingIndex: -1,
-	pendingIndices: [],
-	pendingBySourceKey: {},
-	anyBySourceKey: {},
-	completedBySourceKey: {},
-	completedByDestinationKey: {},
-});
+import type { GroupState, PresenceState, TagID, TagState } from "../types";
 
 export const createEmptyTagState = (): TagState => ({
 	snapshots: {},
 	linkStack: [],
-	linkIndex: createEmptyLinkIndex(),
 });
 
 export const registry = makeMutable<Record<TagID, TagState>>({});

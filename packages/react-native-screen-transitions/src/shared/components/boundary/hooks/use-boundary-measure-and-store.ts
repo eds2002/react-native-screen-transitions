@@ -8,6 +8,7 @@ import {
 import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
 import type { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
+import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { BoundaryMode, MaybeMeasureAndStoreParams } from "../types";
 
@@ -41,6 +42,8 @@ export const useBoundaryMeasureAndStore = (params: {
 	preferredSourceScreenKey?: string;
 	currentScreenKey: string;
 	ancestorKeys: string[];
+	navigatorKey?: string;
+	ancestorNavigatorKeys?: string[];
 	isAnimating: ReturnType<typeof AnimationStore.getAnimation>;
 	preparedStyles: StyleProps;
 	animatedRef: AnimatedRef<View>;
@@ -53,6 +56,8 @@ export const useBoundaryMeasureAndStore = (params: {
 		preferredSourceScreenKey,
 		currentScreenKey,
 		ancestorKeys,
+		navigatorKey,
+		ancestorNavigatorKeys,
 		isAnimating,
 		preparedStyles,
 		animatedRef,
@@ -81,13 +86,16 @@ export const useBoundaryMeasureAndStore = (params: {
 					currentScreenKey,
 				);
 				if (existing) {
-					BoundStore.setLinkSource(
+					applyMeasuredBoundsWrites({
 						sharedBoundTag,
-						currentScreenKey,
-						existing.bounds,
-						preparedStyles,
 						ancestorKeys,
-					);
+						navigatorKey,
+						ancestorNavigatorKeys,
+						currentScreenKey,
+						measured: existing.bounds,
+						preparedStyles,
+						shouldSetSource: true,
+					});
 					return;
 				}
 
@@ -156,57 +164,22 @@ export const useBoundaryMeasureAndStore = (params: {
 				!existingSnapshot ||
 				!areMeasurementsEqual(existingSnapshot.bounds, correctedMeasured);
 
-			if (hasSnapshotChanged) {
-				BoundStore.registerSnapshot(
-					sharedBoundTag,
-					currentScreenKey,
-					correctedMeasured,
-					preparedStyles,
-					ancestorKeys,
-				);
-			}
-
-			if (canSetSource) {
-				BoundStore.setLinkSource(
-					sharedBoundTag,
-					currentScreenKey,
-					correctedMeasured,
-					preparedStyles,
-					ancestorKeys,
-				);
-			}
-
-			if (canUpdateSource && hasSnapshotChanged) {
-				BoundStore.updateLinkSource(
-					sharedBoundTag,
-					currentScreenKey,
-					correctedMeasured,
-					preparedStyles,
-					ancestorKeys,
-				);
-			}
-
-			if (canUpdateDestination && destinationInViewport && hasSnapshotChanged) {
-				BoundStore.updateLinkDestination(
-					sharedBoundTag,
-					currentScreenKey,
-					correctedMeasured,
-					preparedStyles,
-					ancestorKeys,
-					expectedSourceScreenKey,
-				);
-			}
-
-			if (canSetDestination && destinationInViewport) {
-				BoundStore.setLinkDestination(
-					sharedBoundTag,
-					currentScreenKey,
-					correctedMeasured,
-					preparedStyles,
-					ancestorKeys,
-					expectedSourceScreenKey,
-				);
-			}
+			applyMeasuredBoundsWrites({
+				sharedBoundTag,
+				currentScreenKey,
+				measured: correctedMeasured,
+				preparedStyles,
+				ancestorKeys,
+				navigatorKey,
+				ancestorNavigatorKeys,
+				expectedSourceScreenKey,
+				shouldRegisterSnapshot: hasSnapshotChanged,
+				shouldSetSource: canSetSource,
+				shouldUpdateSource: canUpdateSource && hasSnapshotChanged,
+				shouldUpdateDestination:
+					canUpdateDestination && destinationInViewport && hasSnapshotChanged,
+				shouldSetDestination: canSetDestination && destinationInViewport,
+			});
 		},
 	);
 };

@@ -15,6 +15,7 @@ import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
+import { applyMeasuredBoundsWrites } from "../stores/bounds/helpers/apply-measured-bounds-writes";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
 import { useLayoutAnchorContext } from "./layout-anchor.provider";
@@ -243,7 +244,8 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 		remeasureOnFocus,
 		children,
 	}) => {
-		const { current, next, ancestorKeys } = useKeys();
+		const { current, next, ancestorKeys, navigatorKey, ancestorNavigatorKeys } =
+			useKeys();
 		const currentScreenKey = current.route.key;
 		const selectedNextRouteId = getRouteParamId(next?.route);
 		const layoutAnchor = useLayoutAnchorContext();
@@ -286,13 +288,16 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 						currentScreenKey,
 					);
 					if (existing) {
-						BoundStore.setLinkSource(
+						applyMeasuredBoundsWrites({
 							sharedBoundTag,
-							currentScreenKey,
-							existing.bounds,
-							preparedStyles,
 							ancestorKeys,
-						);
+							navigatorKey,
+							ancestorNavigatorKeys,
+							currentScreenKey,
+							measured: existing.bounds,
+							preparedStyles,
+							shouldSetSource: true,
+						});
 					}
 
 					if (onPress) runOnJS(onPress)();
@@ -344,43 +349,19 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 
 				emitUpdate();
 
-				BoundStore.registerSnapshot(
+				applyMeasuredBoundsWrites({
 					sharedBoundTag,
 					currentScreenKey,
-					correctedMeasured,
+					measured: correctedMeasured,
 					preparedStyles,
 					ancestorKeys,
-				);
-
-				if (canSetSource) {
-					BoundStore.setLinkSource(
-						sharedBoundTag,
-						currentScreenKey,
-						correctedMeasured,
-						preparedStyles,
-						ancestorKeys,
-					);
-				}
-
-				if (canUpdateSource) {
-					BoundStore.updateLinkSource(
-						sharedBoundTag,
-						currentScreenKey,
-						correctedMeasured,
-						preparedStyles,
-						ancestorKeys,
-					);
-				}
-
-				if (canSetDestination) {
-					BoundStore.setLinkDestination(
-						sharedBoundTag,
-						currentScreenKey,
-						correctedMeasured,
-						preparedStyles,
-						ancestorKeys,
-					);
-				}
+					navigatorKey,
+					ancestorNavigatorKeys,
+					shouldRegisterSnapshot: true,
+					shouldSetSource: canSetSource,
+					shouldUpdateSource: canUpdateSource,
+					shouldSetDestination: canSetDestination,
+				});
 
 				if (onPress) runOnJS(onPress)();
 			},
