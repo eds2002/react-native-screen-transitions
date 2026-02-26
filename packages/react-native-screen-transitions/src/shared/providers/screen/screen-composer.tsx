@@ -1,9 +1,9 @@
 import type React from "react";
 import { ScreenContainer } from "../../components/screen-container";
 import { ScreenLifecycle } from "../../components/screen-lifecycle";
-import { ScreenGestureProvider } from "../gestures.provider";
-import { ScreenAnimationProvider } from "./animation.provider";
-import { type BaseDescriptor, KeysProvider } from "./keys.provider";
+import { ScreenGestureProvider } from "../gestures";
+import { ScreenAnimationProvider } from "./animation";
+import { type BaseDescriptor, KeysProvider } from "./keys";
 import { ScreenStylesProvider } from "./styles.provider";
 
 type Props<TDescriptor extends BaseDescriptor> = {

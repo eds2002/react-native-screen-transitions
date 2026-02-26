@@ -1,6 +1,6 @@
 import { StackActions, useNavigationState } from "@react-navigation/native";
 import { useCallback } from "react";
-import { useKeys } from "../../providers/screen/keys.provider";
+import { useKeys } from "../../providers/screen/keys";
 
 export function useNavigationHelpers() {
 	const { current } = useKeys();

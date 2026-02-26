@@ -1,4 +1,4 @@
-import { useGestureContext } from "../../providers/gestures.provider";
+import { useGestureContext } from "../../providers/gestures";
 
 /**
  * Returns a ref to the screen's navigation pan gesture.

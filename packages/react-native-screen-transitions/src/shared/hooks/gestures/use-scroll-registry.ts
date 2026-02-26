@@ -21,7 +21,7 @@ import {
 	type GestureContextType,
 	type ScrollConfig,
 	useGestureContext,
-} from "../../providers/gestures.provider";
+} from "../../providers/gestures";
 import type { Direction } from "../../types/ownership.types";
 import useStableCallback from "../use-stable-callback";
 

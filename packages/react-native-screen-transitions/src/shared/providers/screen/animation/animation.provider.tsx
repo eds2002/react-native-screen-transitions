@@ -1,8 +1,8 @@
 import { type ReactNode, useMemo } from "react";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
-import { useScreenAnimationPipeline } from "../../hooks/animation/use-screen-animation/pipeline";
-import type { ScreenInterpolationProps } from "../../types/animation.types";
-import createProvider from "../../utils/create-provider";
+import type { ScreenInterpolationProps } from "../../../types/animation.types";
+import createProvider from "../../../utils/create-provider";
+import { useScreenAnimationPipeline } from "./helpers/pipeline";
 
 type Props = {
 	children: ReactNode;

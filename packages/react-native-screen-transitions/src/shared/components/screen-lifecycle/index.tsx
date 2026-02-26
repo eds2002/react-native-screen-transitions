@@ -1,8 +1,8 @@
-import { useCloseTransition } from "../hooks/lifecycle/use-close-transition";
-import { useOpenTransition } from "../hooks/lifecycle/use-open-transition";
-import { useScreenEvents } from "../hooks/lifecycle/use-screen-events";
-import { useKeys } from "../providers/screen/keys.provider";
-import { AnimationStore } from "../stores/animation.store";
+import { useKeys } from "../../providers/screen/keys";
+import { AnimationStore } from "../../stores/animation.store";
+import { useCloseTransition } from "./hooks/use-close-transition";
+import { useOpenTransition } from "./hooks/use-open-transition";
+import { useScreenEvents } from "./hooks/use-screen-events";
 
 interface Props {
 	children: React.ReactNode;

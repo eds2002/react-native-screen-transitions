@@ -1,25 +1,22 @@
 import { useCallback, useMemo, useRef } from "react";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
+import { useNavigationHelpers } from "../../hooks/navigation/use-navigation-helpers";
+import { GestureStore, type GestureStoreMap } from "../../stores/gesture.store";
+import {
+	type ClaimedDirections,
+	DIRECTIONS,
+} from "../../types/ownership.types";
+import { claimsAnyDirection } from "../../utils/gesture/compute-claimed-directions";
+import { resolveOwnership } from "../../utils/gesture/resolve-ownership";
+import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
+import { useKeys } from "../screen/keys";
+import { useHandlers } from "./handlers/use-handlers";
 import type {
 	DirectionClaimMap,
 	GestureContextType,
 	ScrollConfig,
-} from "../../../providers/gestures.provider";
-import { useKeys } from "../../../providers/screen/keys.provider";
-import {
-	GestureStore,
-	type GestureStoreMap,
-} from "../../../stores/gesture.store";
-import {
-	type ClaimedDirections,
-	DIRECTIONS,
-} from "../../../types/ownership.types";
-import { claimsAnyDirection } from "../../../utils/gesture/compute-claimed-directions";
-import { resolveOwnership } from "../../../utils/gesture/resolve-ownership";
-import { validateSnapPoints } from "../../../utils/gesture/validate-snap-points";
-import { useNavigationHelpers } from "../../navigation/use-navigation-helpers";
-import { useHandlers } from "./handlers/use-handlers";
+} from "./types";
 
 /**
  * Finds ancestor pan gestures that we shadow (claim the same direction).

@@ -1,4 +1,4 @@
-import { useScreenAnimationContext } from "../../../providers/screen/animation.provider";
+import { useScreenAnimationContext } from "./animation.provider";
 
 export function useScreenAnimation() {
 	const { screenAnimation } = useScreenAnimationContext();

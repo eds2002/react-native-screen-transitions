@@ -1,15 +1,15 @@
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import type { SharedValue } from "react-native-reanimated";
-import type { ScrollConfig } from "../../../../providers/gestures.provider";
-import type { GestureDirections } from "../../../../types/gesture.types";
+import type { GestureDirections } from "../../../types/gesture.types";
 import {
 	type ActivationArea,
 	type GestureActivationArea,
 	GestureOffsetState,
 	type SideActivation,
-} from "../../../../types/gesture.types";
-import type { Direction } from "../../../../types/ownership.types";
-import type { Layout } from "../../../../types/screen.types";
+} from "../../../types/gesture.types";
+import type { Direction } from "../../../types/ownership.types";
+import type { Layout } from "../../../types/screen.types";
+import type { ScrollConfig } from "../types";
 
 interface CheckGestureActivationProps {
 	initialTouch: { x: number; y: number };

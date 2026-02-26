@@ -1,9 +1,9 @@
 import type {
 	GestureDirection,
 	GestureDirections,
-} from "../../../../types/gesture.types";
-import type { Direction } from "../../../../types/ownership.types";
-import { logger } from "../../../../utils/logger";
+} from "../../../types/gesture.types";
+import type { Direction } from "../../../types/ownership.types";
+import { logger } from "../../../utils/logger";
 
 interface ResolveGestureDirectionsProps {
 	gestureDirection: GestureDirection | GestureDirection[];

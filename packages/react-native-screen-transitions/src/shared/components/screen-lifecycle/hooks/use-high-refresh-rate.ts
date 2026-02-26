@@ -1,6 +1,6 @@
 import { useFrameCallback } from "react-native-reanimated";
-import type { BaseDescriptor } from "../../providers/screen/keys.provider";
-import useStableCallback from "../use-stable-callback";
+import useStableCallback from "../../../hooks/use-stable-callback";
+import type { BaseDescriptor } from "../../../providers/screen/keys";
 
 /**
  * Maintainer Notes:

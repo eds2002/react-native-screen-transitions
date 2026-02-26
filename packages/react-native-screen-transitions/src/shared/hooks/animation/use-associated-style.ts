@@ -5,7 +5,7 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { EPSILON, NO_PROPS, NO_STYLES } from "../../constants";
-import { useScreenKeys } from "../../providers/screen/keys.provider";
+import { useScreenKeys } from "../../providers/screen/keys";
 import { useScreenStyles } from "../../providers/screen/styles.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";

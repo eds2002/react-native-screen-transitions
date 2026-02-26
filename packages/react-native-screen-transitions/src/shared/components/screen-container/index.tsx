@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { StyleSheet, View } from "react-native";
-import { useBackdropPointerEvents } from "../../hooks/use-backdrop-pointer-events";
+import { useBackdropPointerEvents } from "./hooks/use-backdrop-pointer-events";
 import { BackdropLayer } from "./layers/backdrop";
 import { ContentLayer } from "./layers/content";
 

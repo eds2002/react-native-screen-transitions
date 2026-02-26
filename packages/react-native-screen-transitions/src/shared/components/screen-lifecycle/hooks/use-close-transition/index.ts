@@ -4,20 +4,20 @@ import {
 	useAnimatedReaction,
 	useDerivedValue,
 } from "react-native-reanimated";
-import { useGestureContext } from "../../../providers/gestures.provider";
+import { useStack } from "../../../../hooks/navigation/use-stack";
+import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
+import useStableCallback from "../../../../hooks/use-stable-callback";
+import { useGestureContext } from "../../../../providers/gestures";
 import {
 	type BaseDescriptor,
 	useScreenKeys,
-} from "../../../providers/screen/keys.provider";
-import { useStackCoreContext } from "../../../providers/stack/core.provider";
-import { useManagedStackContext } from "../../../providers/stack/managed.provider";
-import type { AnimationStoreMap } from "../../../stores/animation.store";
-import { HistoryStore } from "../../../stores/history.store";
-import { StackType } from "../../../types/stack.types";
-import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { useStack } from "../../navigation/use-stack";
-import { useSharedValueState } from "../../reanimated/use-shared-value-state";
-import useStableCallback from "../../use-stable-callback";
+} from "../../../../providers/screen/keys";
+import { useStackCoreContext } from "../../../../providers/stack/core.provider";
+import { useManagedStackContext } from "../../../../providers/stack/managed.provider";
+import type { AnimationStoreMap } from "../../../../stores/animation.store";
+import { HistoryStore } from "../../../../stores/history.store";
+import { StackType } from "../../../../types/stack.types";
+import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import {
 	registerMountedRoute,
 	unregisterMountedRoute,

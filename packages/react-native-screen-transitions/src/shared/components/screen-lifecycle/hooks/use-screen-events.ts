@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
-import type { BaseDescriptor } from "../../providers/screen/keys.provider";
-import type { AnimationStoreMap } from "../../stores/animation.store";
-import { HistoryStore } from "../../stores/history.store";
-import useStableCallback from "../use-stable-callback";
+import useStableCallback from "../../../hooks/use-stable-callback";
+import type { BaseDescriptor } from "../../../providers/screen/keys";
+import type { AnimationStoreMap } from "../../../stores/animation.store";
+import { HistoryStore } from "../../../stores/history.store";
 
 function hasSnapPoints(descriptor: BaseDescriptor): boolean {
 	const snapPoints = descriptor.options?.snapPoints;

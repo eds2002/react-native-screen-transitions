@@ -1,8 +1,8 @@
 import { useLayoutEffect } from "react";
-import type { BaseDescriptor } from "../../providers/screen/keys.provider";
-import type { AnimationStoreMap } from "../../stores/animation.store";
-import { animateToProgress } from "../../utils/animation/animate-to-progress";
-import { useHighRefreshRate } from "../animation/use-high-refresh-rate";
+import type { BaseDescriptor } from "../../../providers/screen/keys";
+import type { AnimationStoreMap } from "../../../stores/animation.store";
+import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import { useHighRefreshRate } from "./use-high-refresh-rate";
 
 /**
  * Calculates the initial progress value based on snap points configuration.

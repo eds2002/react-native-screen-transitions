@@ -7,10 +7,10 @@ import {
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	FALSE,
 	TRUE,
-} from "../../../../constants";
-import type { GestureStoreMap } from "../../../../stores/gesture.store";
-import type { AnimationConfig } from "../../../../types/animation.types";
-import { animateMany } from "../../../../utils/animation/animate-many";
+} from "../../../constants";
+import type { GestureStoreMap } from "../../../stores/gesture.store";
+import type { AnimationConfig } from "../../../types/animation.types";
+import { animateMany } from "../../../utils/animation/animate-many";
 import {
 	calculateRestoreVelocityTowardZero,
 	normalizeVelocity,

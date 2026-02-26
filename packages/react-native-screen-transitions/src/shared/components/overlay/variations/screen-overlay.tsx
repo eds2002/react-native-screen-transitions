@@ -6,7 +6,7 @@ import {
 	type StackScene,
 	useStack,
 } from "../../../hooks/navigation/use-stack";
-import { useKeys } from "../../../providers/screen/keys.provider";
+import { useKeys } from "../../../providers/screen/keys";
 import type { OverlayScreenState } from "../../../types/overlay.types";
 import { isScreenOverlayVisible } from "../../../utils/overlay/visibility";
 import { OverlayHost } from "./overlay-host";

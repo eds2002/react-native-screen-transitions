@@ -12,11 +12,11 @@ import {
 	NO_PROPS,
 	NO_STYLES,
 } from "../../../constants";
-import { useBackdropPointerEvents } from "../../../hooks/use-backdrop-pointer-events";
-import { useGestureContext } from "../../../providers/gestures.provider";
-import { useKeys } from "../../../providers/screen/keys.provider";
+import { useGestureContext } from "../../../providers/gestures";
+import { useKeys } from "../../../providers/screen/keys";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
 import { logger } from "../../../utils/logger";
+import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
 
 type Props = {
 	children: React.ReactNode;

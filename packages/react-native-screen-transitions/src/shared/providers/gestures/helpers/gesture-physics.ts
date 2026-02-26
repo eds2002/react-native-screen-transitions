@@ -7,9 +7,9 @@ import {
 	ANIMATION_SNAP_THRESHOLD,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 	EPSILON,
-} from "../../../../constants";
-import type { AnimationStoreMap } from "../../../../stores/animation.store";
-import type { GestureDirections } from "../../../../types/gesture.types";
+} from "../../../constants";
+import type { AnimationStoreMap } from "../../../stores/animation.store";
+import type { GestureDirections } from "../../../types/gesture.types";
 
 interface CalculateProgressProps {
 	animations: AnimationStoreMap;

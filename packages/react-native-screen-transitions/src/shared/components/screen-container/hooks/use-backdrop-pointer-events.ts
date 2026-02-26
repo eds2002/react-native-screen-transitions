@@ -1,6 +1,6 @@
-import { useKeys } from "../providers/screen/keys.provider";
-import { useStackCoreContext } from "../providers/stack/core.provider";
-import { StackType } from "../types/stack.types";
+import { useKeys } from "../../../providers/screen/keys";
+import { useStackCoreContext } from "../../../providers/stack/core.provider";
+import { StackType } from "../../../types/stack.types";
 
 type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 

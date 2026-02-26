@@ -3,7 +3,7 @@ import {
 	calculateProgressSpringVelocity,
 	normalizeVelocity,
 	shouldDismissFromTranslationAndVelocity,
-} from "../hooks/gestures/use-build-gestures/helpers/gesture-physics";
+} from "../providers/gestures/helpers/gesture-physics";
 
 type Directions = {
 	horizontal: boolean;

@@ -2,9 +2,9 @@ import { useMemo } from "react";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
 import { useOptimisticFocusedIndex } from "../../../hooks/navigation/use-optimistic-focused-index";
 import { useStack } from "../../../hooks/navigation/use-stack";
-import { ScreenAnimationProvider } from "../../../providers/screen/animation.provider";
-import type { BaseDescriptor } from "../../../providers/screen/keys.provider";
-import { KeysProvider } from "../../../providers/screen/keys.provider";
+import { ScreenAnimationProvider } from "../../../providers/screen/animation";
+import type { BaseDescriptor } from "../../../providers/screen/keys";
+import { KeysProvider } from "../../../providers/screen/keys";
 import { ScreenStylesProvider } from "../../../providers/screen/styles.provider";
 import type { OverlayScreenState } from "../../../types/overlay.types";
 

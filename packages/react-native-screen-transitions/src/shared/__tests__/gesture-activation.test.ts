@@ -4,7 +4,7 @@ import {
 	computeEdgeConstraints,
 	calculateSwipeDirs,
 	shouldActivateOrFail,
-} from "../hooks/gestures/use-build-gestures/helpers/gesture-activation";
+} from "../providers/gestures/helpers/gesture-activation";
 
 describe("normalizeSides", () => {
 	it("returns all sides as 'screen' when no area provided", () => {

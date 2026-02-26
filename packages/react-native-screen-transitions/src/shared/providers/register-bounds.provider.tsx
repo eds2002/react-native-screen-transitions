@@ -19,7 +19,7 @@ import { applyMeasuredBoundsWrites } from "../stores/bounds/helpers/apply-measur
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
 import { useLayoutAnchorContext } from "./layout-anchor.provider";
-import { useKeys } from "./screen/keys.provider";
+import { useKeys } from "./screen/keys";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;

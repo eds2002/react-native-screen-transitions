@@ -8,13 +8,13 @@ import Animated, {
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
-import { useBackdropPointerEvents } from "../../../hooks/use-backdrop-pointer-events";
-import { useKeys } from "../../../providers/screen/keys.provider";
+import { useKeys } from "../../../providers/screen/keys";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../../../utils/gesture/find-collapse-target";
+import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
 
 export const BackdropLayer = memo(function BackdropLayer() {
 	const { stylesMap } = useScreenStyles();

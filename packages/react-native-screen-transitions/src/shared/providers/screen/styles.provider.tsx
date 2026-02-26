@@ -9,7 +9,7 @@ import type { NormalizedTransitionInterpolatedStyle } from "../../types/animatio
 import createProvider from "../../utils/create-provider";
 import { logger } from "../../utils/logger";
 import { normalizeInterpolatedStyle } from "../../utils/normalize-interpolated-style";
-import { useScreenAnimationContext } from "./animation.provider";
+import { useScreenAnimationContext } from "./animation";
 
 type Props = {
 	children: ReactNode;

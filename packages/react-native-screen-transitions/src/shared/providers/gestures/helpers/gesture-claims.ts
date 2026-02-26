@@ -1,4 +1,4 @@
-import type { DirectionClaim } from "../../../../providers/gestures.provider";
+import type { DirectionClaim } from "../types";
 
 /**
  * Determines if the parent gesture should defer to a child's claim on a direction.

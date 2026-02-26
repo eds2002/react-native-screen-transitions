@@ -6,9 +6,9 @@ import { memo, useMemo } from "react";
 import { Animated, StyleSheet, useWindowDimensions, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useScreenAnimation } from "../../../hooks/animation/use-screen-animation";
 import type { StackScene } from "../../../hooks/navigation/use-stack";
-import type { BaseDescriptor } from "../../../providers/screen/keys.provider";
+import { useScreenAnimation } from "../../../providers/screen/animation";
+import type { BaseDescriptor } from "../../../providers/screen/keys";
 import type { OverlayInterpolationProps } from "../../../types/animation.types";
 import type {
 	OverlayProps,

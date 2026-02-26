@@ -1,6 +1,6 @@
-import { DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT } from "../../../../constants";
-import type { GestureDirections } from "../../../../types/gesture.types";
-import { sanitizeSnapPoints } from "../../../../utils/gesture/validate-snap-points";
+import { DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT } from "../../../constants";
+import type { GestureDirections } from "../../../types/gesture.types";
+import { sanitizeSnapPoints } from "../../../utils/gesture/validate-snap-points";
 import { shouldDismissFromTranslationAndVelocity } from "./gesture-physics";
 
 interface GetAxisThresholdProps {

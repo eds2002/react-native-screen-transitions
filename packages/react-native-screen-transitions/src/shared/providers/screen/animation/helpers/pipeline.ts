@@ -7,32 +7,29 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { NativeStackScreenTransitionConfig } from "../../../../native-stack/types";
+import type { NativeStackScreenTransitionConfig } from "../../../../../native-stack/types";
 import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_STATE,
-} from "../../../constants";
-import {
-	type BaseDescriptor,
-	useKeys,
-} from "../../../providers/screen/keys.provider";
-import { AnimationStore } from "../../../stores/animation.store";
+} from "../../../../constants";
+import { useStack } from "../../../../hooks/navigation/use-stack";
+import { AnimationStore } from "../../../../stores/animation.store";
 import {
 	GestureStore,
 	type GestureStoreMap,
-} from "../../../stores/gesture.store";
+} from "../../../../stores/gesture.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionState,
-} from "../../../types/animation.types";
-import type { BoundsAccessor } from "../../../types/bounds.types";
-import type { ScreenTransitionConfig } from "../../../types/screen.types";
-import type { BaseStackRoute } from "../../../types/stack.types";
-import { createBoundsAccessor } from "../../../utils/bounds";
-import { useStack } from "../../navigation/use-stack";
-import { derivations } from "./helpers/derivations";
-import { toPlainRoute, toPlainValue } from "./helpers/worklet";
+} from "../../../../types/animation.types";
+import type { BoundsAccessor } from "../../../../types/bounds.types";
+import type { ScreenTransitionConfig } from "../../../../types/screen.types";
+import type { BaseStackRoute } from "../../../../types/stack.types";
+import { createBoundsAccessor } from "../../../../utils/bounds";
+import { type BaseDescriptor, useKeys } from "../../keys";
+import { derivations } from "./derivations";
+import { toPlainRoute, toPlainValue } from "./worklet";
 
 type BuiltState = {
 	progress: SharedValue<number>;

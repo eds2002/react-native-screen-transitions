@@ -8,7 +8,7 @@ import type {
 } from "react-native-gesture-handler";
 import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import { DefaultSnapSpec } from "../../../../configs/specs";
+import { DefaultSnapSpec } from "../../../configs/specs";
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
@@ -21,24 +21,19 @@ import {
 	EPSILON,
 	FALSE,
 	TRUE,
-} from "../../../../constants";
-import type {
-	DirectionClaimMap,
-	GestureContextType,
-	ScrollConfig,
-} from "../../../../providers/gestures.provider";
-import { useKeys } from "../../../../providers/screen/keys.provider";
-import { AnimationStore } from "../../../../stores/animation.store";
-import { GestureStore } from "../../../../stores/gesture.store";
-import { GestureOffsetState } from "../../../../types/gesture.types";
+} from "../../../constants";
+import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
+import { AnimationStore } from "../../../stores/animation.store";
+import { GestureStore } from "../../../stores/gesture.store";
+import { GestureOffsetState } from "../../../types/gesture.types";
 import type {
 	ClaimedDirections,
 	Direction,
 	DirectionOwnership,
-} from "../../../../types/ownership.types";
-import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
-import type { EffectiveSnapPointsResult } from "../../../../utils/gesture/validate-snap-points";
-import useStableCallbackValue from "../../../use-stable-callback-value";
+} from "../../../types/ownership.types";
+import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import type { EffectiveSnapPointsResult } from "../../../utils/gesture/validate-snap-points";
+import { useKeys } from "../../screen/keys";
 import {
 	applyOffsetRules,
 	checkScrollBoundary,
@@ -62,6 +57,11 @@ import {
 	determineDismissal,
 	determineSnapTarget,
 } from "../helpers/gesture-targets";
+import type {
+	DirectionClaimMap,
+	GestureContextType,
+	ScrollConfig,
+} from "../types";
 
 interface UseScreenGestureHandlersProps {
 	scrollConfig: SharedValue<ScrollConfig | null>;

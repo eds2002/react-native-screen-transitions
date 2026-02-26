@@ -3,8 +3,8 @@ import type { SharedValue } from "react-native-reanimated";
 import type {
 	DirectionClaim,
 	DirectionClaimMap,
-} from "../providers/gestures.provider";
-import { shouldDeferToChildClaim } from "../hooks/gestures/use-build-gestures/helpers/gesture-claims";
+} from "../providers/gestures";
+import { shouldDeferToChildClaim } from "../providers/gestures/helpers/gesture-claims";
 
 /**
  * Mock SharedValue for testing - mimics Reanimated's SharedValue interface
