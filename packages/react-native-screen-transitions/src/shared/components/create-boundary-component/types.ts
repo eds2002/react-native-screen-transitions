@@ -2,7 +2,6 @@ import type { ViewProps } from "react-native";
 import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
-export type BoundaryMode = "source" | "destination";
 
 export type BoundaryConfigProps = Pick<
 	BoundsOptions,
@@ -27,21 +26,6 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 	 * @default true
 	 */
 	enabled?: boolean;
-	/**
-	 * Explicitly sets this boundary's mode in matching.
-	 *
-	 * By default, `Transition.Boundary` auto-detects source/destination behavior
-	 * based on whether a matching boundary is found on the next screen.
-	 *
-	 * Use `mode="source"` when your destination does not render a matching
-	 * boundary (for example with `bounds({ id }).navigation.zoom()`).
-	 * In this mode, source bounds are still captured when transitioning away,
-	 * even if no destination match is found.
-	 *
-	 * Use `mode="destination"` when this boundary should only participate as
-	 * a destination.
-	 */
-	mode?: BoundaryMode;
 	id: BoundaryId;
 }
 

@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
@@ -14,38 +14,29 @@ function ZoomIdCard({ item }: { item: ZoomIdItem }) {
 	const stackType = useResolvedStackType();
 
 	return (
-		<Transition.Boundary.View
+		<Transition.Boundary.Pressable
 			id={item.id}
-			mode="source"
 			scaleMode="uniform"
 			anchor="top"
+			onPress={() =>
+				router.push(
+					buildStackPath(stackType, `bounds/zoom-id/${item.id}`) as never,
+				)
+			}
 			style={styles.card}
 			key={item.id}
 		>
-			<Pressable
-				onPress={() =>
-					router.push(
-						buildStackPath(stackType, `bounds/zoom-id/${item.id}`) as never,
-					)
-				}
-				style={styles.cardPressable}
-			>
-				<Image
-					source={item.image}
-					style={styles.cardImage}
-					contentFit="cover"
-				/>
-				<View style={styles.cardGradient}>
-					<View style={styles.cardTextContainer}>
-						<Text style={styles.cardTitle}>{item.title}</Text>
-						<Text style={styles.cardSubtitle}>{item.subtitle}</Text>
-					</View>
-					<View style={styles.cardMeta}>
-						<Text style={styles.cardLocation}>{item.location}</Text>
-					</View>
+			<Image source={item.image} style={styles.cardImage} contentFit="cover" />
+			<View style={styles.cardGradient}>
+				<View style={styles.cardTextContainer}>
+					<Text style={styles.cardTitle}>{item.title}</Text>
+					<Text style={styles.cardSubtitle}>{item.subtitle}</Text>
 				</View>
-			</Pressable>
-		</Transition.Boundary.View>
+				<View style={styles.cardMeta}>
+					<Text style={styles.cardLocation}>{item.location}</Text>
+				</View>
+			</View>
+		</Transition.Boundary.Pressable>
 	);
 }
 
@@ -86,10 +77,6 @@ const styles = StyleSheet.create({
 		gap: 16,
 	},
 	card: {
-		borderRadius: 20,
-		overflow: "hidden",
-	},
-	cardPressable: {
 		height: 220,
 		borderRadius: 20,
 		overflow: "hidden",

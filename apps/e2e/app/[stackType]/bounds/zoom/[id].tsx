@@ -91,7 +91,6 @@ function Boundary({
 					<Transition.Boundary.View
 						id={item.id}
 						group={ZOOM_GROUP}
-						mode="destination"
 						style={[styles.swatch, { backgroundColor: item.color }]}
 					>
 						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>

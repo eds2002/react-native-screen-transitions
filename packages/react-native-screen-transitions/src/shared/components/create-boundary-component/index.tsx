@@ -1,10 +1,17 @@
-import { type ComponentType, forwardRef, memo, useMemo } from "react";
+import {
+	type ComponentType,
+	forwardRef,
+	memo,
+	useCallback,
+	useMemo,
+} from "react";
 import { Pressable, View as RNView, type View } from "react-native";
-import Animated, { useAnimatedRef } from "react-native-reanimated";
+import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../../hooks/animation/use-associated-style";
 import { useLayoutAnchorContext } from "../../providers/layout-anchor.provider";
 import { useScreenKeys } from "../../providers/screen/keys.provider";
 import { AnimationStore } from "../../stores/animation.store";
+import { BoundStore } from "../../stores/bounds";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
 import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
 import { useBoundaryMeasureAndStore } from "./hooks/use-boundary-measure-and-store";
@@ -16,6 +23,11 @@ import { usePendingDestinationRetryMeasurement } from "./hooks/use-pending-desti
 import { useScrollSettledMeasurement } from "./hooks/use-scroll-settled-measurement";
 import type { BoundaryComponentProps, BoundaryConfigProps } from "./types";
 import { buildBoundaryMatchKey } from "./utils/build-boundary-match-key";
+
+const setGroupActiveIdOnUI = (group: string, id: string) => {
+	"worklet";
+	BoundStore.setGroupActiveId(group, id);
+};
 
 export function createBoundaryComponent<P extends object>(
 	Wrapped: ComponentType<P>,
@@ -30,13 +42,12 @@ export function createBoundaryComponent<P extends object>(
 			enabled = true,
 			group,
 			id,
-			mode,
 			anchor,
 			scaleMode,
 			target,
 			method,
 			style,
-			onLayout,
+			onPress,
 			...rest
 		} = props as any;
 
@@ -90,7 +101,6 @@ export function createBoundaryComponent<P extends object>(
 
 		const maybeMeasureAndStore = useBoundaryMeasureAndStore({
 			enabled,
-			mode,
 			sharedBoundTag,
 			preferredSourceScreenKey,
 			currentScreenKey,
@@ -103,8 +113,7 @@ export function createBoundaryComponent<P extends object>(
 			layoutAnchor,
 		});
 
-		const shouldRunDestinationEffects =
-			runtimeEnabled && !hasNextScreen && mode !== "source";
+		const shouldRunDestinationEffects = runtimeEnabled && !hasNextScreen;
 
 		// Register/unregister this boundary in the presence map so source/destination
 		// matching can resolve across screens (including ancestor relationships).
@@ -122,7 +131,6 @@ export function createBoundaryComponent<P extends object>(
 		// appears on the next screen.
 		useAutoSourceMeasurement({
 			enabled: runtimeEnabled,
-			mode,
 			sharedBoundTag,
 			nextScreenKey,
 			maybeMeasureAndStore,
@@ -173,7 +181,7 @@ export function createBoundaryComponent<P extends object>(
 		// Destination mount-time capture path: onLayout schedules a one-time UI-thread
 		// initial measurement when transitions are active.
 		useInitialLayoutHandler({
-			enabled: runtimeEnabled && mode !== "source",
+			enabled: runtimeEnabled,
 			sharedBoundTag,
 			currentScreenKey,
 			ancestorKeys,
@@ -181,11 +189,30 @@ export function createBoundaryComponent<P extends object>(
 			maybeMeasureAndStore,
 		});
 
+		const handlePress = useCallback(
+			(...args: unknown[]) => {
+				// Press path has priority: capture source before user onPress/navigation.
+				if (group) {
+					runOnUI(setGroupActiveIdOnUI)(group, String(id));
+				}
+				runOnUI(maybeMeasureAndStore)({ shouldSetSource: true });
+
+				if (typeof onPress === "function") {
+					onPress(...args);
+				}
+			},
+			[group, id, maybeMeasureAndStore, onPress],
+		);
+
+		const resolvedOnPress =
+			typeof onPress === "function" ? handlePress : undefined;
+
 		return (
 			<AnimatedComponent
 				{...(rest as any)}
 				ref={animatedRef}
 				style={[style, enabled ? associatedStyles : undefined]}
+				onPress={resolvedOnPress}
 				collapsable={false}
 			/>
 		);
@@ -206,8 +233,28 @@ BoundaryView.displayName = "Transition.Boundary.View";
 const BoundaryPressable = createBoundaryComponent(Pressable);
 BoundaryPressable.displayName = "Transition.Boundary.Pressable";
 
+/**
+ * Shared-boundary components.
+ *
+ * How measurement works:
+ * 1. Source screen captures bounds for a tag.
+ * 2. Destination screen captures bounds for the same tag.
+ * 3. The link is updated as layout changes (group-active + scroll-settled paths).
+ *
+ * Press behavior:
+ * - When a boundary has `onPress` (typically `Boundary.Pressable`), source
+ *   measurement runs before the user callback. This gives navigation transitions
+ *   fresh source geometry on the first frame.
+ *
+ * Use:
+ * - `Boundary.View` for passive/shared elements.
+ * - `Boundary.Pressable` for tappable elements that start navigation.
+ */
 export const Boundary = {
+	/** Passive boundary wrapper (no built-in press semantics). */
 	View: BoundaryView,
+	/** Pressable boundary wrapper with press-priority source capture. */
 	Pressable: BoundaryPressable,
+	/** Factory for custom boundary wrappers. */
 	createBoundaryComponent,
 };

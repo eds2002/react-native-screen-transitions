@@ -10,7 +10,7 @@ import type { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
-import type { BoundaryMode, MaybeMeasureAndStoreParams } from "../types";
+import type { MaybeMeasureAndStoreParams } from "../types";
 
 type LayoutAnchor = {
 	correctMeasurement: (measured: MeasuredDimensions) => MeasuredDimensions;
@@ -37,7 +37,6 @@ const areMeasurementsEqual = (
 
 export const useBoundaryMeasureAndStore = (params: {
 	enabled: boolean;
-	mode?: BoundaryMode;
 	sharedBoundTag: string;
 	preferredSourceScreenKey?: string;
 	currentScreenKey: string;
@@ -51,7 +50,6 @@ export const useBoundaryMeasureAndStore = (params: {
 }) => {
 	const {
 		enabled,
-		mode,
 		sharedBoundTag,
 		preferredSourceScreenKey,
 		currentScreenKey,
@@ -73,14 +71,12 @@ export const useBoundaryMeasureAndStore = (params: {
 		}: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
 			if (!enabled) return;
-			const canParticipateAsSource = mode !== "destination";
-			const canParticipateAsDestination = mode !== "source";
 
 			const expectedSourceScreenKey: string | undefined =
 				resolvePendingSourceKey(sharedBoundTag, preferredSourceScreenKey) ||
 				undefined;
 
-			if (shouldSetSource && canParticipateAsSource && isAnimating.get()) {
+			if (shouldSetSource && isAnimating.get()) {
 				const existing = BoundStore.getSnapshot(
 					sharedBoundTag,
 					currentScreenKey,
@@ -119,15 +115,11 @@ export const useBoundaryMeasureAndStore = (params: {
 				currentScreenKey,
 			);
 
-			const canSetSource = canParticipateAsSource && !!shouldSetSource;
-			const canSetDestination =
-				canParticipateAsDestination && !!shouldSetDestination && hasPendingLink;
-			const canUpdateSource =
-				canParticipateAsSource && !!shouldUpdateSource && hasSourceLink;
+			const canSetSource = !!shouldSetSource;
+			const canSetDestination = !!shouldSetDestination && hasPendingLink;
+			const canUpdateSource = !!shouldUpdateSource && hasSourceLink;
 			const canUpdateDestination =
-				canParticipateAsDestination &&
-				!!shouldUpdateDestination &&
-				(hasDestinationLink || hasPendingLink);
+				!!shouldUpdateDestination && (hasDestinationLink || hasPendingLink);
 
 			if (
 				!canSetSource &&

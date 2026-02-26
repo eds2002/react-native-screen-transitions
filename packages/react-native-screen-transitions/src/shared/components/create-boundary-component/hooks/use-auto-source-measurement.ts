@@ -1,15 +1,14 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
-import type { BoundaryMode, MaybeMeasureAndStoreParams } from "../types";
+import type { MaybeMeasureAndStoreParams } from "../types";
 
 export const useAutoSourceMeasurement = (params: {
 	enabled: boolean;
-	mode?: BoundaryMode;
 	sharedBoundTag: string;
 	nextScreenKey?: string;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { enabled, mode, sharedBoundTag, nextScreenKey, maybeMeasureAndStore } =
+	const { enabled, sharedBoundTag, nextScreenKey, maybeMeasureAndStore } =
 		params;
 	const boundaryPresence = BoundStore.getBoundaryPresence();
 
@@ -17,9 +16,7 @@ export const useAutoSourceMeasurement = (params: {
 		() => {
 			"worklet";
 			if (!enabled) return 0;
-			if (mode === "destination") return 0;
 			if (!nextScreenKey) return 0;
-			if (mode === "source") return nextScreenKey;
 			const tagPresence = boundaryPresence.value[sharedBoundTag];
 			if (!tagPresence) return 0;
 
@@ -38,14 +35,12 @@ export const useAutoSourceMeasurement = (params: {
 		(captureSignal, previousCaptureSignal) => {
 			"worklet";
 			if (!enabled) return;
-			if (mode === "destination") return;
 			if (!nextScreenKey) return;
 			if (!captureSignal || captureSignal === previousCaptureSignal) return;
 			maybeMeasureAndStore({ shouldSetSource: true });
 		},
 		[
 			enabled,
-			mode,
 			nextScreenKey,
 			sharedBoundTag,
 			boundaryPresence,
