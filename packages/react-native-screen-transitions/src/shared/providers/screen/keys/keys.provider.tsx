@@ -24,6 +24,8 @@ interface ScreenKeysContextType {
 	previousScreenKey?: string;
 	currentScreenKey: string;
 	nextScreenKey?: string;
+	isFirstKey: boolean;
+	isTopMostScreen: boolean;
 	ancestorKeys: string[];
 	navigatorKey: string;
 	ancestorNavigatorKeys: string[];
@@ -57,7 +59,13 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 	const previousScreenKey = previous?.route.key;
 	const currentScreenKey = current.route.key;
 	const nextScreenKey = next?.route.key;
-	const navigatorKey = current.navigation.getState()?.key ?? "";
+	const navigationState = current.navigation.getState();
+	const navigatorKey = navigationState?.key ?? "";
+	const isFirstKey =
+		navigationState.routes.findIndex(
+			(route) => route.key === current.route.key,
+		) === 0;
+	const isTopMostScreen = !next;
 	const hasConfiguredInterpolator =
 		!!current.options.screenStyleInterpolator ||
 		!!next?.options?.screenStyleInterpolator;
@@ -106,6 +114,8 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 			previousScreenKey,
 			currentScreenKey,
 			nextScreenKey,
+			isFirstKey,
+			isTopMostScreen,
 			ancestorKeys,
 			navigatorKey,
 			ancestorNavigatorKeys,
@@ -117,6 +127,8 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 			previousScreenKey,
 			currentScreenKey,
 			nextScreenKey,
+			isFirstKey,
+			isTopMostScreen,
 			ancestorKeysSignature,
 			navigatorKey,
 			ancestorNavigatorKeysSignature,

@@ -13,12 +13,11 @@
 
 import { useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
-import { useNavigationHelpers } from "../../hooks/navigation/use-navigation-helpers";
 import { StackType } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
 import { computeClaimedDirections } from "../../utils/gesture/compute-claimed-directions";
 import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
-import { useKeys } from "../screen/keys";
+import { useKeys, useScreenKeys } from "../screen/keys";
 import { useStackCoreContext } from "../stack/core.provider";
 import { useRegisterDirectionClaims } from "./helpers/register-direction-claims";
 import {
@@ -41,7 +40,7 @@ export const {
 	GestureContextType
 >(({ children }): { value: GestureContextType; children: React.ReactNode } => {
 	const { current } = useKeys();
-	const { isFirstKey, isTopMostScreen } = useNavigationHelpers();
+	const { isFirstKey, isTopMostScreen } = useScreenKeys();
 	const { flags } = useStackCoreContext();
 
 	const ancestorContext: GestureContextType | null = useGestureContext();
