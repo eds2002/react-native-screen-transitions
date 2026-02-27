@@ -1,16 +1,19 @@
-import { StackActions, useNavigationState } from "@react-navigation/native";
-import { useCallback } from "react";
+import { StackActions } from "@react-navigation/native";
+import { useCallback, useMemo } from "react";
 import { useKeys } from "../../providers/screen/keys";
 
 export function useNavigationHelpers() {
-	const { current } = useKeys();
+	const { current, next } = useKeys();
 
-	const isFirstKey = useNavigationState((state) => {
+	const isFirstKey = useMemo(() => {
+		const state = current.navigation.getState();
 		const index = state.routes.findIndex(
 			(route) => route.key === current.route.key,
 		);
 		return index === 0;
-	});
+	}, [current]);
+
+	const isTopMostScreen = !next;
 
 	const dismissScreen = useCallback((): boolean => {
 		const state = current.navigation.getState();
@@ -28,5 +31,5 @@ export function useNavigationHelpers() {
 		return true;
 	}, [current]);
 
-	return { isFirstKey, dismissScreen };
+	return { isFirstKey, dismissScreen, isTopMostScreen };
 }

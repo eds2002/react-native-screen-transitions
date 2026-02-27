@@ -42,8 +42,9 @@ export const {
 	GestureContextType
 >(({ children }): { value: GestureContextType; children: React.ReactNode } => {
 	const { current } = useKeys();
-	const { isFirstKey } = useNavigationHelpers();
+	const { isFirstKey, isTopMostScreen } = useNavigationHelpers();
 	const { flags } = useStackCoreContext();
+
 	const ancestorContext: GestureContextType | null = useGestureContext();
 	const isIsolated = flags.STACK_TYPE === StackType.COMPONENT;
 	const routeKey = current.route.key;
@@ -73,11 +74,6 @@ export const {
 		[gestureEnabled, current.options.gestureDirection, hasSnapPoints],
 	);
 
-	// Check if this screen is the current (topmost) route in its navigator
-	const isCurrentRoute = useNavigationState(
-		(state) => state.routes[state.index]?.key === routeKey,
-	);
-
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 	const childDirectionClaims = useSharedValue<DirectionClaimMap>(NO_CLAIMS);
 
@@ -86,7 +82,7 @@ export const {
 		claimedDirections,
 		routeKey,
 		isIsolated,
-		isCurrentRoute,
+		isTopMostScreen,
 	);
 
 	const { panGesture, panGestureRef, gestureAnimationValues } =
