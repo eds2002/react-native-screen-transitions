@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 import {
 	runOnJS,
 	useAnimatedReaction,
@@ -158,12 +158,20 @@ export function useCloseTransition(
 	const { flags } = useStackCoreContext();
 	const { isBranchScreen, branchNavigatorKey } = useScreenKeys();
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
+	const isBranchScreenRef = useRef(isBranchScreen);
+	const branchNavigatorKeyRef = useRef(branchNavigatorKey);
+	isBranchScreenRef.current = isBranchScreen;
+	branchNavigatorKeyRef.current = branchNavigatorKey;
 
 	useEffect(() => {
 		registerMountedRoute(navigatorKey, routeKey);
 
 		return () => {
-			resetStoresForRoute(routeKey, isBranchScreen, branchNavigatorKey);
+			resetStoresForRoute(
+				routeKey,
+				isBranchScreenRef.current,
+				branchNavigatorKeyRef.current,
+			);
 			const shouldClearNavigator = unregisterMountedRoute(
 				navigatorKey,
 				routeKey,
@@ -172,7 +180,7 @@ export function useCloseTransition(
 				HistoryStore.clearNavigator(navigatorKey);
 			}
 		};
-	}, [navigatorKey, routeKey, isBranchScreen, branchNavigatorKey]);
+	}, [navigatorKey, routeKey]);
 
 	const closeParams: CloseHookParams = {
 		current,

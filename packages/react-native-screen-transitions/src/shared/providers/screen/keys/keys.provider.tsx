@@ -64,8 +64,9 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 
 	const { isBranchScreen, branchNavigatorKey } = useMemo(() => {
 		const state = current.navigation.getState();
-		const index = state?.index ?? -1;
-		const currentRoute = state?.routes?.[index];
+		const currentRoute = state?.routes?.find(
+			(route) => route.key === current.route.key,
+		);
 		if (!currentRoute || !("state" in currentRoute)) {
 			return { isBranchScreen: false, branchNavigatorKey: undefined };
 		}
@@ -75,7 +76,7 @@ export function KeysProvider<TDescriptor extends BaseDescriptor>({
 			branchNavigatorKey:
 				typeof nestedState?.key === "string" ? nestedState.key : undefined,
 		};
-	}, [current]);
+	}, [current.navigation, current.route.key]);
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the signature instead>
 	const value = useMemo<KeysContextType<TDescriptor>>(
