@@ -11,7 +11,6 @@
  * gesture owner for the scroll axis and creates appropriate Native gestures.
  */
 
-import { useNavigationState } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../hooks/navigation/use-navigation-helpers";
