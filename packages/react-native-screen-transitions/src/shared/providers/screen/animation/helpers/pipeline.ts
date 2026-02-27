@@ -1,12 +1,10 @@
 import { useMemo } from "react";
-import { useWindowDimensions } from "react-native";
 import {
 	type DerivedValue,
 	type SharedValue,
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenTransitionConfig } from "../../../../../native-stack/types";
 import {
 	createScreenTransitionState,
@@ -27,6 +25,7 @@ import type { BoundsAccessor } from "../../../../types/bounds.types";
 import type { ScreenTransitionConfig } from "../../../../types/screen.types";
 import type { BaseStackRoute } from "../../../../types/stack.types";
 import { createBoundsAccessor } from "../../../../utils/bounds";
+import { useViewportContext } from "../../../viewport.provider";
 import { type BaseDescriptor, useKeys } from "../../keys";
 import { derivations } from "./derivations";
 import { toPlainRoute, toPlainValue } from "./worklet";
@@ -107,10 +106,18 @@ const unwrapInto = (s: BuiltState): ScreenTransitionState => {
 
 const useBuildScreenTransitionState = (
 	descriptor: BaseDescriptor | undefined,
+	slot: "current" | "next" | "previous",
 ): BuiltState | undefined => {
 	const key = descriptor?.route?.key;
 	const meta = descriptor?.options?.meta;
 	const route = descriptor?.route;
+	const gestureEnabled = descriptor?.options?.gestureEnabled;
+	const snapPoints = descriptor?.options?.snapPoints;
+
+	const shouldUseNeutralNextGestures =
+		slot === "next" &&
+		gestureEnabled === false &&
+		(!snapPoints || snapPoints.length === 0);
 
 	return useMemo(() => {
 		if (!key || !route) return undefined;
@@ -125,12 +132,15 @@ const useBuildScreenTransitionState = (
 			closing: AnimationStore.getAnimation(key, "closing"),
 			entering: AnimationStore.getAnimation(key, "entering"),
 			animating: AnimationStore.getAnimation(key, "animating"),
-			gesture: GestureStore.getRouteGestures(key),
+			gesture: shouldUseNeutralNextGestures
+				? (GestureStore.peekRouteGestures(key) ??
+					GestureStore.getNeutralGestures())
+				: GestureStore.getRouteGestures(key),
 			route: plainRoute,
 			meta: plainMeta,
 			unwrapped: createScreenTransitionState(plainRoute, plainMeta),
 		};
-	}, [key, meta, route]);
+	}, [key, meta, route, shouldUseNeutralNextGestures]);
 };
 
 const hasTransitionsEnabled = (
@@ -142,10 +152,8 @@ const hasTransitionsEnabled = (
 };
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
-	const insets = useSafeAreaInsets();
-	const dimensions = useWindowDimensions();
-
 	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
+	const { dimensions, insets } = useViewportContext();
 	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {
@@ -154,9 +162,15 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		previous: previousDescriptor,
 	} = useKeys();
 
-	const currentAnimation = useBuildScreenTransitionState(currentDescriptor);
-	const nextAnimation = useBuildScreenTransitionState(nextDescriptor);
-	const prevAnimation = useBuildScreenTransitionState(previousDescriptor);
+	const currentAnimation = useBuildScreenTransitionState(
+		currentDescriptor,
+		"current",
+	);
+	const nextAnimation = useBuildScreenTransitionState(nextDescriptor, "next");
+	const prevAnimation = useBuildScreenTransitionState(
+		previousDescriptor,
+		"previous",
+	);
 
 	const currentRouteKey = currentDescriptor?.route?.key;
 	const currentIndex = routeKeys.indexOf(currentRouteKey);

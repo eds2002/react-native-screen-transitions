@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import { useWindowDimensions } from "react-native";
 import type {
 	GestureStateChangeEvent,
 	GestureTouchEvent,
@@ -34,6 +33,7 @@ import type {
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import type { EffectiveSnapPointsResult } from "../../../utils/gesture/validate-snap-points";
 import { useKeys } from "../../screen/keys";
+import { useViewportContext } from "../../viewport.provider";
 import {
 	applyOffsetRules,
 	checkScrollBoundary,
@@ -145,7 +145,7 @@ export const useHandlers = ({
 		transitionSpec,
 	} = current.options;
 
-	const dimensions = useWindowDimensions();
+	const { dimensions } = useViewportContext();
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getAll(current.route.key);
 	const gestureAnimationValues = GestureStore.getRouteGestures(

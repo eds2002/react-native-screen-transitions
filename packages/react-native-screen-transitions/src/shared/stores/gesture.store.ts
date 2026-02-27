@@ -26,39 +26,55 @@ export type GestureStoreMap = {
 };
 
 const store: Record<ScreenKey, GestureStoreMap> = {};
+let neutralGestures: GestureStoreMap | undefined;
+
+function createGestureBag(): GestureStoreMap {
+	const normX = makeMutable(0);
+	const normY = makeMutable(0);
+	const dismissing = makeMutable(0);
+	const dragging = makeMutable(0);
+
+	return {
+		x: makeMutable(0),
+		y: makeMutable(0),
+		normX,
+		normY,
+		dismissing,
+		dragging,
+		direction: makeMutable<Omit<GestureDirection, "bidirectional"> | null>(
+			null,
+		),
+
+		// Deprecated aliases (same underlying SharedValue)
+		normalizedX: normX,
+		normalizedY: normY,
+		isDismissing: dismissing,
+		isDragging: dragging,
+	};
+}
 
 function ensure(routeKey: ScreenKey): GestureStoreMap {
 	let bag = store[routeKey];
 	if (!bag) {
-		const normX = makeMutable(0);
-		const normY = makeMutable(0);
-		const dismissing = makeMutable(0);
-		const dragging = makeMutable(0);
-
-		bag = {
-			x: makeMutable(0),
-			y: makeMutable(0),
-			normX,
-			normY,
-			dismissing,
-			dragging,
-			direction: makeMutable<Omit<GestureDirection, "bidirectional"> | null>(
-				null,
-			),
-
-			// Deprecated aliases (same underlying SharedValue)
-			normalizedX: normX,
-			normalizedY: normY,
-			isDismissing: dismissing,
-			isDragging: dragging,
-		};
+		bag = createGestureBag();
 		store[routeKey] = bag;
 	}
 	return bag;
 }
 
+function peekRouteGestures(routeKey: ScreenKey): GestureStoreMap | undefined {
+	return store[routeKey];
+}
+
 function getRouteGestures(routeKey: ScreenKey) {
 	return ensure(routeKey);
+}
+
+function getNeutralGestures(): GestureStoreMap {
+	if (!neutralGestures) {
+		neutralGestures = createGestureBag();
+	}
+	return neutralGestures;
 }
 
 function clear(routeKey: ScreenKey) {
@@ -76,6 +92,8 @@ function clear(routeKey: ScreenKey) {
 }
 
 export const GestureStore = {
+	peekRouteGestures,
 	getRouteGestures,
+	getNeutralGestures,
 	clear,
 };
