@@ -1,6 +1,7 @@
-import { useEffect, useLayoutEffect, useRef } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import {
 	runOnJS,
+	runOnUI,
 	useAnimatedReaction,
 	useDerivedValue,
 } from "react-native-reanimated";
@@ -15,22 +16,17 @@ import {
 import { useStackCoreContext } from "../../../../providers/stack/core.provider";
 import { useManagedStackContext } from "../../../../providers/stack/managed.provider";
 import type { AnimationStoreMap } from "../../../../stores/animation.store";
-import { HistoryStore } from "../../../../stores/history.store";
 import { StackType } from "../../../../types/stack.types";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
-import {
-	registerMountedRoute,
-	unregisterMountedRoute,
-} from "./helpers/navigator-route-registry";
-import { resetStoresForRoute } from "./helpers/reset-stores-for-screen";
+import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
+import { useNavigatorHistoryRegistry } from "./helpers/use-navigator-history-registry";
 
 interface CloseHookParams {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
 	activate: () => void;
 	deactivate: () => void;
-	isBranchScreen: boolean;
-	branchNavigatorKey?: string;
+	resetStores: () => void;
 }
 
 /**
@@ -42,8 +38,7 @@ const useManagedClose = ({
 	animations,
 	activate,
 	deactivate,
-	isBranchScreen,
-	branchNavigatorKey,
+	resetStores,
 }: CloseHookParams) => {
 	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
 	const routeKey = current.route.key;
@@ -53,7 +48,7 @@ const useManagedClose = ({
 		handleCloseRoute({ route: current.route });
 		requestAnimationFrame(() => {
 			deactivate();
-			resetStoresForRoute(routeKey, isBranchScreen, branchNavigatorKey);
+			resetStores();
 		});
 	});
 
@@ -86,8 +81,7 @@ const useNativeStackClose = ({
 	animations,
 	activate,
 	deactivate,
-	isBranchScreen,
-	branchNavigatorKey,
+	resetStores,
 }: CloseHookParams) => {
 	const gestureCtx = useGestureContext();
 
@@ -115,7 +109,7 @@ const useNativeStackClose = ({
 		// If transitions are disabled, ancestor is dismissing, or first screen - let native handle it
 		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
 			animations.closing.set(1);
-			resetStoresForRoute(routeKey, isBranchScreen, branchNavigatorKey);
+			resetStores();
 			return;
 		}
 
@@ -131,7 +125,7 @@ const useNativeStackClose = ({
 				if (finished) {
 					navigation.dispatch(e.data.action);
 					requestAnimationFrame(() => {
-						resetStoresForRoute(routeKey, isBranchScreen, branchNavigatorKey);
+						resetStores();
 					});
 				}
 			},
@@ -158,39 +152,20 @@ export function useCloseTransition(
 	const { flags } = useStackCoreContext();
 	const { isBranchScreen, branchNavigatorKey } = useDescriptorDerivations();
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
-	const isBranchScreenRef = useRef(isBranchScreen);
-	const branchNavigatorKeyRef = useRef(branchNavigatorKey);
-	isBranchScreenRef.current = isBranchScreen;
-	branchNavigatorKeyRef.current = branchNavigatorKey;
 
-	useEffect(() => {
-		registerMountedRoute(navigatorKey, routeKey);
-
-		return () => {
-			resetStoresForRoute(
-				routeKey,
-				isBranchScreenRef.current,
-				branchNavigatorKeyRef.current,
-			);
-			const shouldClearNavigator = unregisterMountedRoute(
-				navigatorKey,
-				routeKey,
-			);
-			if (shouldClearNavigator) {
-				HistoryStore.clearNavigator(navigatorKey);
-			}
-		};
-	}, [navigatorKey, routeKey]);
+	const resetStores = useStableCallback(() => {
+		resetStoresForScreen(routeKey, isBranchScreen, branchNavigatorKey);
+	});
 
 	const closeParams: CloseHookParams = {
 		current,
 		animations,
 		activate,
 		deactivate,
-		isBranchScreen,
-		branchNavigatorKey,
+		resetStores,
 	};
 
+	useNavigatorHistoryRegistry(navigatorKey, routeKey);
 	if (isNativeStack) {
 		// biome-ignore lint/correctness/useHookAtTopLevel: STACK_TYPE is stable per screen instance
 		useNativeStackClose(closeParams);

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { resetStoresForRoute } from "../components/screen-lifecycle/hooks/use-close-transition/helpers/reset-stores-for-screen";
+
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
 import { GestureStore } from "../stores/gesture.store";
@@ -17,6 +17,26 @@ const createMeasured = (
 	width,
 	height,
 });
+
+const resetStoresForScreenForTest = (
+	routeKey: string,
+	isBranchScreen: boolean,
+	branchNavigatorKey?: string,
+) => {
+	AnimationStore.clear(routeKey);
+	GestureStore.clear(routeKey);
+
+	if (!isBranchScreen) return;
+
+	BoundStore.clear(routeKey);
+
+	if (branchNavigatorKey) {
+		BoundStore.clearByBranch(branchNavigatorKey);
+		return;
+	}
+
+	BoundStore.clearByAncestor(routeKey);
+};
 
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
@@ -38,8 +58,8 @@ describe("close transition cleanup", () => {
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(true);
 		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(true);
 
-		resetStoresForRoute(routeKey, true);
-		resetStoresForRoute(routeKey, true);
+		resetStoresForScreenForTest(routeKey, true);
+		resetStoresForScreenForTest(routeKey, true);
 
 		expect(BoundStore.getSnapshot("card", routeKey)).toBeNull();
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(false);
@@ -63,8 +83,7 @@ describe("close transition cleanup", () => {
 		const animationBefore = AnimationStore.getAll(routeKey);
 		const gestureBefore = GestureStore.getRouteGestures(routeKey);
 
-		// Leaf screen: isBranchScreen = false — should NOT clearByAncestor
-		resetStoresForRoute(routeKey, false);
+		resetStoresForScreenForTest(routeKey, false);
 
 		// Animation and gesture stores are still cleared
 		const animationAfter = AnimationStore.getAll(routeKey);
@@ -78,5 +97,100 @@ describe("close transition cleanup", () => {
 		expect(BoundStore.getSnapshot("card", routeKey)).toBeTruthy();
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(true);
 		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(true);
+	});
+
+	it("clears branch-associated entries when a branch navigator key is provided", () => {
+		const routeKey = "branch-host-screen";
+		const branchNavigatorKey = "nav-branch";
+		const directBranchRoute = "direct-branch-route";
+		const descendantBranchRoute = "descendant-branch-route";
+		const unrelatedRoute = "unrelated-route";
+		const bounds = createMeasured(12, 24, 130, 150);
+
+		BoundStore.registerSnapshot(
+			"card",
+			directBranchRoute,
+			bounds,
+			{},
+			[],
+			branchNavigatorKey,
+		);
+		BoundStore.setLinkSource(
+			"card",
+			directBranchRoute,
+			bounds,
+			{},
+			[],
+			branchNavigatorKey,
+		);
+		BoundStore.registerBoundaryPresence(
+			"card",
+			directBranchRoute,
+			[],
+			undefined,
+			branchNavigatorKey,
+		);
+
+		BoundStore.registerSnapshot(
+			"card",
+			descendantBranchRoute,
+			bounds,
+			{},
+			[],
+			"nav-child",
+			[branchNavigatorKey],
+		);
+		BoundStore.setLinkSource(
+			"card",
+			descendantBranchRoute,
+			bounds,
+			{},
+			[],
+			"nav-child",
+			[branchNavigatorKey],
+		);
+		BoundStore.registerBoundaryPresence(
+			"card",
+			descendantBranchRoute,
+			[],
+			undefined,
+			"nav-child",
+			[branchNavigatorKey],
+		);
+
+		BoundStore.registerSnapshot(
+			"card",
+			unrelatedRoute,
+			bounds,
+			{},
+			[],
+			"nav-other",
+		);
+		BoundStore.setLinkSource("card", unrelatedRoute, bounds, {}, [], "nav-other");
+		BoundStore.registerBoundaryPresence(
+			"card",
+			unrelatedRoute,
+			[],
+			undefined,
+			"nav-other",
+		);
+
+		resetStoresForScreenForTest(routeKey, true, branchNavigatorKey);
+
+		expect(BoundStore.getSnapshot("card", directBranchRoute)).toBeNull();
+		expect(BoundStore.hasSourceLink("card", directBranchRoute)).toBe(false);
+		expect(BoundStore.hasBoundaryPresence("card", directBranchRoute)).toBe(
+			false,
+		);
+
+		expect(BoundStore.getSnapshot("card", descendantBranchRoute)).toBeNull();
+		expect(BoundStore.hasSourceLink("card", descendantBranchRoute)).toBe(false);
+		expect(BoundStore.hasBoundaryPresence("card", descendantBranchRoute)).toBe(
+			false,
+		);
+
+		expect(BoundStore.getSnapshot("card", unrelatedRoute)).toBeTruthy();
+		expect(BoundStore.hasSourceLink("card", unrelatedRoute)).toBe(true);
+		expect(BoundStore.hasBoundaryPresence("card", unrelatedRoute)).toBe(true);
 	});
 });
