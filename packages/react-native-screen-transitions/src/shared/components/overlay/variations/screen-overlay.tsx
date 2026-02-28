@@ -6,7 +6,7 @@ import {
 	type StackScene,
 	useStack,
 } from "../../../hooks/navigation/use-stack";
-import { useKeys } from "../../../providers/screen/keys";
+import { useDescriptors } from "../../../providers/screen/descriptors";
 import type { OverlayScreenState } from "../../../types/overlay.types";
 import { isScreenOverlayVisible } from "../../../utils/overlay/visibility";
 import { OverlayHost } from "./overlay-host";
@@ -20,7 +20,7 @@ import { OverlayHost } from "./overlay-host";
  * to access animation values. This component will be removed in a future version.
  */
 export function ScreenOverlay() {
-	const { current } = useKeys<StackDescriptor>();
+	const { current } = useDescriptors<StackDescriptor>();
 	const { flags, routes, optimisticFocusedIndex, routeKeys } = useStack();
 	const focusedIndex = useOptimisticFocusedIndex(
 		optimisticFocusedIndex,

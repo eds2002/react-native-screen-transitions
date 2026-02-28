@@ -17,7 +17,10 @@ import { StackType } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
 import { computeClaimedDirections } from "../../utils/gesture/compute-claimed-directions";
 import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
-import { useKeys, useScreenKeys } from "../screen/keys";
+import {
+	useDescriptorDerivations,
+	useDescriptors,
+} from "../screen/descriptors";
 import { useStackCoreContext } from "../stack/core.provider";
 import { useRegisterDirectionClaims } from "./helpers/register-direction-claims";
 import {
@@ -39,8 +42,8 @@ export const {
 	ScreenGestureProviderProps,
 	GestureContextType
 >(({ children }): { value: GestureContextType; children: React.ReactNode } => {
-	const { current } = useKeys();
-	const { isFirstKey, isTopMostScreen } = useScreenKeys();
+	const { current } = useDescriptors();
+	const { isFirstKey, isTopMostScreen } = useDescriptorDerivations();
 	const { flags } = useStackCoreContext();
 
 	const ancestorContext: GestureContextType | null = useGestureContext();

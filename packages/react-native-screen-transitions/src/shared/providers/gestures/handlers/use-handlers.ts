@@ -32,7 +32,7 @@ import type {
 } from "../../../types/ownership.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import type { EffectiveSnapPointsResult } from "../../../utils/gesture/validate-snap-points";
-import { useKeys } from "../../screen/keys";
+import { useDescriptors } from "../../screen/descriptors";
 import { useViewportContext } from "../../viewport.provider";
 import {
 	applyOffsetRules,
@@ -129,7 +129,7 @@ export const useHandlers = ({
 	childDirectionClaims,
 	effectiveSnapPoints,
 }: UseScreenGestureHandlersProps) => {
-	const { current } = useKeys();
+	const { current } = useDescriptors();
 
 	const {
 		gestureDirection = DEFAULT_GESTURE_DIRECTION,

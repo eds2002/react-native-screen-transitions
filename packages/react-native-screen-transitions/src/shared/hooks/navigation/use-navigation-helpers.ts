@@ -1,9 +1,9 @@
 import { StackActions } from "@react-navigation/native";
 import { useCallback } from "react";
-import { useKeys } from "../../providers/screen/keys";
+import { useDescriptors } from "../../providers/screen/descriptors";
 
 export function useNavigationHelpers() {
-	const { current } = useKeys();
+	const { current } = useDescriptors();
 
 	const dismissScreen = useCallback((): boolean => {
 		const state = current.navigation.getState();

@@ -3,7 +3,7 @@ import { ScreenContainer } from "../../components/screen-container";
 import { ScreenLifecycle } from "../../components/screen-lifecycle";
 import { ScreenGestureProvider } from "../gestures";
 import { ScreenAnimationProvider } from "./animation";
-import { type BaseDescriptor, KeysProvider } from "./keys";
+import { type BaseDescriptor, DescriptorsProvider } from "./descriptors";
 import { ScreenStylesProvider } from "./styles.provider";
 
 type Props<TDescriptor extends BaseDescriptor> = {
@@ -20,7 +20,7 @@ export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 	children,
 }: Props<TDescriptor>) {
 	return (
-		<KeysProvider previous={previous} current={current} next={next}>
+		<DescriptorsProvider previous={previous} current={current} next={next}>
 			<ScreenLifecycle>
 				<ScreenGestureProvider>
 					<ScreenAnimationProvider>
@@ -30,6 +30,6 @@ export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 					</ScreenAnimationProvider>
 				</ScreenGestureProvider>
 			</ScreenLifecycle>
-		</KeysProvider>
+		</DescriptorsProvider>
 	);
 }

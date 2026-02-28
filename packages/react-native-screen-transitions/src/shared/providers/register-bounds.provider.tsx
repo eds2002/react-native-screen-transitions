@@ -19,7 +19,7 @@ import { applyMeasuredBoundsWrites } from "../stores/bounds/helpers/apply-measur
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles";
 import createProvider from "../utils/create-provider";
 import { useLayoutAnchorContext } from "./layout-anchor.provider";
-import { useKeys } from "./screen/keys";
+import { useDescriptorDerivations, useDescriptors } from "./screen/descriptors";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
@@ -136,7 +136,7 @@ const useBlurMeasurement = (params: {
 	ancestorKeys: string[];
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { current } = useKeys();
+	const { current } = useDescriptors();
 	const {
 		enabled,
 		sharedBoundTag,
@@ -244,8 +244,9 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 		remeasureOnFocus,
 		children,
 	}) => {
-		const { current, next, ancestorKeys, navigatorKey, ancestorNavigatorKeys } =
-			useKeys();
+		const { current, next } = useDescriptors();
+		const { ancestorKeys, navigatorKey, ancestorNavigatorKeys } =
+			useDescriptorDerivations();
 		const currentScreenKey = current.route.key;
 		const selectedNextRouteId = getRouteParamId(next?.route);
 		const layoutAnchor = useLayoutAnchorContext();

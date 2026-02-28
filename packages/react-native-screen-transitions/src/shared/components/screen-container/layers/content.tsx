@@ -13,7 +13,7 @@ import {
 	NO_STYLES,
 } from "../../../constants";
 import { useGestureContext } from "../../../providers/gestures";
-import { useKeys } from "../../../providers/screen/keys";
+import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
 import { logger } from "../../../utils/logger";
 import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
@@ -34,7 +34,7 @@ let hasWarnedMissingMaskedView = false;
 
 export const ContentLayer = memo(({ children }: Props) => {
 	const { stylesMap } = useScreenStyles();
-	const { current } = useKeys();
+	const { current } = useDescriptors();
 	const { pointerEvents, isBackdropActive } = useBackdropPointerEvents();
 	const gestureContext = useGestureContext();
 	const isNavigationMaskEnabled = !!current.options.maskEnabled;

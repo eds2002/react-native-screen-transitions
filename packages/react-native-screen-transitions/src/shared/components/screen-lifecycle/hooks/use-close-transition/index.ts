@@ -10,8 +10,8 @@ import useStableCallback from "../../../../hooks/use-stable-callback";
 import { useGestureContext } from "../../../../providers/gestures";
 import {
 	type BaseDescriptor,
-	useScreenKeys,
-} from "../../../../providers/screen/keys";
+	useDescriptorDerivations,
+} from "../../../../providers/screen/descriptors";
 import { useStackCoreContext } from "../../../../providers/stack/core.provider";
 import { useManagedStackContext } from "../../../../providers/stack/managed.provider";
 import type { AnimationStoreMap } from "../../../../stores/animation.store";
@@ -156,7 +156,7 @@ export function useCloseTransition(
 	const routeKey = current.route.key;
 	const { navigatorKey } = useStack();
 	const { flags } = useStackCoreContext();
-	const { isBranchScreen, branchNavigatorKey } = useScreenKeys();
+	const { isBranchScreen, branchNavigatorKey } = useDescriptorDerivations();
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
 	const isBranchScreenRef = useRef(isBranchScreen);
 	const branchNavigatorKeyRef = useRef(branchNavigatorKey);

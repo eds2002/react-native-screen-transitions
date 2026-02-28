@@ -1,4 +1,4 @@
-import { useKeys } from "../../../providers/screen/keys";
+import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useStackCoreContext } from "../../../providers/stack/core.provider";
 import { StackType } from "../../../types/stack.types";
 
@@ -18,7 +18,7 @@ interface BackdropPointerEventsResult {
  * - Other stacks default to 'block' (undefined = normal touch handling)
  */
 export function useBackdropPointerEvents(): BackdropPointerEventsResult {
-	const { current } = useKeys();
+	const { current } = useDescriptors();
 	const { flags } = useStackCoreContext();
 
 	const isComponentStack = flags.STACK_TYPE === StackType.COMPONENT;

@@ -8,7 +8,7 @@ import { useDerivedValue } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { StackScene } from "../../../hooks/navigation/use-stack";
 import { useScreenAnimation } from "../../../providers/screen/animation";
-import type { BaseDescriptor } from "../../../providers/screen/keys";
+import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import type { OverlayInterpolationProps } from "../../../types/animation.types";
 import type {
 	OverlayProps,

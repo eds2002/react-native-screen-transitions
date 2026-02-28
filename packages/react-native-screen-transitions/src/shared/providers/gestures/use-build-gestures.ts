@@ -10,7 +10,10 @@ import {
 import { claimsAnyDirection } from "../../utils/gesture/compute-claimed-directions";
 import { resolveOwnership } from "../../utils/gesture/resolve-ownership";
 import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
-import { useKeys, useScreenKeys } from "../screen/keys";
+import {
+	useDescriptorDerivations,
+	useDescriptors,
+} from "../screen/descriptors";
 import { useHandlers } from "./handlers/use-handlers";
 import type {
 	DirectionClaimMap,
@@ -75,8 +78,8 @@ export const useBuildGestures = ({
 	panGestureRef: React.MutableRefObject<GestureType | undefined>;
 	gestureAnimationValues: GestureStoreMap;
 } => {
-	const { current } = useKeys();
-	const { isFirstKey } = useScreenKeys();
+	const { current } = useDescriptors();
+	const { isFirstKey } = useDescriptorDerivations();
 	const { dismissScreen } = useNavigationHelpers();
 
 	const panGestureRef = useRef<GestureType | undefined>(undefined);

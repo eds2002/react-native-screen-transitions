@@ -3,8 +3,8 @@ import { snapDescriptorToIndex } from "../../../animation/snap-to";
 import { useOptimisticFocusedIndex } from "../../../hooks/navigation/use-optimistic-focused-index";
 import { useStack } from "../../../hooks/navigation/use-stack";
 import { ScreenAnimationProvider } from "../../../providers/screen/animation";
-import type { BaseDescriptor } from "../../../providers/screen/keys";
-import { KeysProvider } from "../../../providers/screen/keys";
+import type { BaseDescriptor } from "../../../providers/screen/descriptors";
+import { DescriptorsProvider } from "../../../providers/screen/descriptors";
 import { ScreenStylesProvider } from "../../../providers/screen/styles.provider";
 import type { OverlayScreenState } from "../../../types/overlay.types";
 
@@ -69,12 +69,12 @@ export function FloatOverlay() {
 	const { scene, previous, current, next, overlayScreenState } = overlayData;
 
 	return (
-		<KeysProvider current={current} previous={previous} next={next}>
+		<DescriptorsProvider current={current} previous={previous} next={next}>
 			<ScreenAnimationProvider>
 				<ScreenStylesProvider>
 					<OverlayHost scene={scene} overlayScreenState={overlayScreenState} />
 				</ScreenStylesProvider>
 			</ScreenAnimationProvider>
-		</KeysProvider>
+		</DescriptorsProvider>
 	);
 }

@@ -9,7 +9,7 @@ import { Pressable, View as RNView, type View } from "react-native";
 import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
 import { useAssociatedStyles } from "../../hooks/animation/use-associated-style";
 import { useLayoutAnchorContext } from "../../providers/layout-anchor.provider";
-import { useScreenKeys } from "../../providers/screen/keys";
+import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
@@ -62,7 +62,7 @@ export function createBoundaryComponent<P extends object>(
 			navigatorKey,
 			ancestorNavigatorKeys,
 			hasConfiguredInterpolator,
-		} = useScreenKeys();
+		} = useDescriptorDerivations();
 		const runtimeEnabled = enabled && hasConfiguredInterpolator;
 		const hasNextScreen = !!nextScreenKey;
 		const shouldUpdateDestination = !hasNextScreen;

@@ -26,7 +26,7 @@ import type { ScreenTransitionConfig } from "../../../../types/screen.types";
 import type { BaseStackRoute } from "../../../../types/stack.types";
 import { createBoundsAccessor } from "../../../../utils/bounds";
 import { useViewportContext } from "../../../viewport.provider";
-import { type BaseDescriptor, useKeys } from "../../keys";
+import { type BaseDescriptor, useDescriptors } from "../../descriptors";
 import { derivations } from "./derivations";
 import { toPlainRoute, toPlainValue } from "./worklet";
 
@@ -160,7 +160,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		current: currentDescriptor,
 		next: nextDescriptor,
 		previous: previousDescriptor,
-	} = useKeys();
+	} = useDescriptors();
 
 	const currentAnimation = useBuildScreenTransitionState(
 		currentDescriptor,

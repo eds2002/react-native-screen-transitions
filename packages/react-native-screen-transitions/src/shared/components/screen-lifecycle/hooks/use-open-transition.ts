@@ -1,5 +1,5 @@
 import { useLayoutEffect } from "react";
-import type { BaseDescriptor } from "../../../providers/screen/keys";
+import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { useHighRefreshRate } from "./use-high-refresh-rate";

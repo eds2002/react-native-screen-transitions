@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
 import useStableCallback from "../../../hooks/use-stable-callback";
-import type { BaseDescriptor } from "../../../providers/screen/keys";
+import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import { HistoryStore } from "../../../stores/history.store";
 

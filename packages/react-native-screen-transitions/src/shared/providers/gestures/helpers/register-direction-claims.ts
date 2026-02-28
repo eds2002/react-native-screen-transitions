@@ -5,7 +5,7 @@ import {
 	DIRECTIONS,
 	type Direction,
 } from "../../../types/ownership.types";
-import type { DirectionClaimMap, GestureContextType } from "../types";
+import type { GestureContextType } from "../types";
 
 /**
  * Registers direction claims on ancestors that this screen shadows.

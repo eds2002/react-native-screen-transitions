@@ -1,7 +1,10 @@
 import type { Route } from "@react-navigation/native";
 import { useCallback, useMemo } from "react";
 import { snapDescriptorToIndex } from "../../animation/snap-to";
-import { type BaseDescriptor, useKeys } from "../../providers/screen/keys";
+import {
+	type BaseDescriptor,
+	useDescriptors,
+} from "../../providers/screen/descriptors";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
 import { useOptimisticFocusedIndex } from "./use-optimistic-focused-index";
@@ -63,7 +66,7 @@ export function useScreenState<
 >(): ScreenState<TNavigation> {
 	const { routes, scenes, routeKeys, optimisticFocusedIndex } =
 		useStack<StackContextValue>();
-	const { current } = useKeys<BaseDescriptor>();
+	const { current } = useDescriptors<BaseDescriptor>();
 
 	const index = useMemo(
 		() => routeKeys.indexOf(current.route.key),

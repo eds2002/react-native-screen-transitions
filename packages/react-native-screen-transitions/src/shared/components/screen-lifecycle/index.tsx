@@ -1,4 +1,7 @@
-import { useKeys, useScreenKeys } from "../../providers/screen/keys";
+import {
+	useDescriptorDerivations,
+	useDescriptors,
+} from "../../providers/screen/descriptors";
 import { AnimationStore } from "../../stores/animation.store";
 import { useCloseTransition } from "./hooks/use-close-transition";
 import { useOpenTransition } from "./hooks/use-open-transition";
@@ -10,11 +13,11 @@ interface Props {
 
 /**
  * Unified lifecycle controller for all stack types.
- * Reads current/previous descriptors from KeysProvider context.
+ * Reads current/previous descriptors from DescriptorsProvider context.
  */
 export const ScreenLifecycle = ({ children }: Props) => {
-	const { current, previous } = useKeys();
-	const { isFirstKey } = useScreenKeys();
+	const { current, previous } = useDescriptors();
+	const { isFirstKey } = useDescriptorDerivations();
 	const animations = AnimationStore.getAll(current.route.key);
 
 	const { activateHighRefreshRate, deactivateHighRefreshRate } =

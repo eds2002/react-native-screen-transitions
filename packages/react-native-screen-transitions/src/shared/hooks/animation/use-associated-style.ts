@@ -5,7 +5,7 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import { EPSILON, NO_PROPS, NO_STYLES } from "../../constants";
-import { useScreenKeys } from "../../providers/screen/keys";
+import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles.provider";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
@@ -156,7 +156,7 @@ export const useAssociatedStyles = ({
 }: Props = {}) => {
 	const { stylesMap, ancestorStylesMaps } = useScreenStyles();
 	const { previousScreenKey, currentScreenKey, hasConfiguredInterpolator } =
-		useScreenKeys();
+		useDescriptorDerivations();
 	const isAnimating = AnimationStore.getAnimation(
 		currentScreenKey,
 		"animating",
