@@ -1,5 +1,5 @@
-import type { BoundaryConfig, ScreenKey, TagID } from "../types";
-import { debugStoreSizeLog, groups, presence } from "./state";
+import type { BoundaryConfig, PresenceState, ScreenKey, TagID } from "../types";
+import { debugStoreSizeLog, type GroupsState, groups, presence } from "./state";
 
 function registerBoundaryPresence(
 	tag: TagID,
@@ -10,65 +10,59 @@ function registerBoundaryPresence(
 	ancestorNavigatorKeys?: string[],
 ) {
 	"worklet";
-	const current = presence.value;
-	const tagEntries = current[tag] ?? {};
-	const currentEntry = tagEntries[screenKey];
+	presence.modify(<T extends PresenceState>(state: T): T => {
+		"worklet";
+		const mutableState = state as PresenceState;
+		let tagEntries = mutableState[tag];
+		if (!tagEntries) {
+			tagEntries = {};
+			mutableState[tag] = tagEntries;
+		}
+		const currentEntry = tagEntries[screenKey];
 
-	presence.value = {
-		...current,
-		[tag]: {
-			...tagEntries,
-			[screenKey]: {
-				count: (currentEntry?.count ?? 0) + 1,
-				ancestorKeys: ancestorKeys ?? currentEntry?.ancestorKeys,
-				boundaryConfig: boundaryConfig ?? currentEntry?.boundaryConfig,
-				navigatorKey: navigatorKey ?? currentEntry?.navigatorKey,
-				ancestorNavigatorKeys:
-					ancestorNavigatorKeys ?? currentEntry?.ancestorNavigatorKeys,
-			},
-		},
-	};
+		tagEntries[screenKey] = {
+			count: (currentEntry?.count ?? 0) + 1,
+			ancestorKeys: ancestorKeys ?? currentEntry?.ancestorKeys,
+			boundaryConfig: boundaryConfig ?? currentEntry?.boundaryConfig,
+			navigatorKey: navigatorKey ?? currentEntry?.navigatorKey,
+			ancestorNavigatorKeys:
+				ancestorNavigatorKeys ?? currentEntry?.ancestorNavigatorKeys,
+		};
+
+		return state;
+	});
 	debugStoreSizeLog(`registerBoundaryPresence(${tag},${screenKey})`);
 }
 
 function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
 	"worklet";
-	const current = presence.value;
-	const tagEntries = current[tag];
+	const tagEntries = presence.value[tag];
 	if (!tagEntries) return;
 
 	const currentEntry = tagEntries[screenKey];
 	if (!currentEntry) return;
 
-	const nextCount = currentEntry.count - 1;
+	presence.modify(<T extends PresenceState>(state: T): T => {
+		"worklet";
+		const mutableTagEntries = state[tag];
+		const mutableEntry = mutableTagEntries?.[screenKey];
+		if (!mutableTagEntries || !mutableEntry) return state;
+		const nextCount = mutableEntry.count - 1;
 
-	if (nextCount > 0) {
-		presence.value = {
-			...current,
-			[tag]: {
-				...tagEntries,
-				[screenKey]: {
-					...currentEntry,
-					count: nextCount,
-				},
-			},
-		};
-		debugStoreSizeLog(`unregisterBoundaryPresence(${tag},${screenKey})`);
-		return;
-	}
+		if (nextCount > 0) {
+			mutableEntry.count = nextCount;
+			return state;
+		}
 
-	const { [screenKey]: _removed, ...remainingForTag } = tagEntries;
-	if (Object.keys(remainingForTag).length === 0) {
-		const { [tag]: _removedTag, ...remainingPresence } = current;
-		presence.value = remainingPresence;
-		debugStoreSizeLog(`unregisterBoundaryPresence(${tag},${screenKey})`);
-		return;
-	}
+		delete mutableTagEntries[screenKey];
 
-	presence.value = {
-		...current,
-		[tag]: remainingForTag,
-	};
+		for (const _remainingKey in mutableTagEntries) {
+			return state;
+		}
+
+		delete state[tag];
+		return state;
+	});
 	debugStoreSizeLog(`unregisterBoundaryPresence(${tag},${screenKey})`);
 }
 
@@ -121,7 +115,12 @@ function getBoundaryConfig(
 
 function setGroupActiveId(group: string, id: string) {
 	"worklet";
-	groups.value = { ...groups.value, [group]: { activeId: id } };
+	groups.modify(<T extends GroupsState>(state: T): T => {
+		"worklet";
+		const mutableState = state as GroupsState;
+		mutableState[group] = { activeId: id };
+		return state;
+	});
 	debugStoreSizeLog(`setGroupActiveId(${group},${id})`);
 }
 

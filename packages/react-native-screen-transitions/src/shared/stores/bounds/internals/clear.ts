@@ -1,12 +1,18 @@
 import { matchesNavigatorKey, matchesScreenKey } from "../helpers/matching";
 import type {
 	NavigatorKey,
+	PresenceState,
 	ScreenKey,
 	SnapshotEntry,
 	TagLink,
-	TagState,
 } from "../types";
-import { debugClearLog, debugStoreSizeLog, presence, registry } from "./state";
+import {
+	debugClearLog,
+	debugStoreSizeLog,
+	presence,
+	type RegistryState,
+	registry,
+} from "./state";
 
 const hasAnyKeys = (record: Record<string, unknown>) => {
 	"worklet";
@@ -138,166 +144,101 @@ const clearRegistry = (params: {
 	"worklet";
 	const { shouldRemoveSnapshot, shouldRemoveLink } = params;
 
-	const currentRegistry = registry.value;
-	let nextRegistry: Record<string, TagState> | null = null;
+	registry.modify(<T extends RegistryState>(state: T): T => {
+		"worklet";
+		for (const tag in state) {
+			const tagState = state[tag];
 
-	for (const tag in currentRegistry) {
-		const tagState = currentRegistry[tag];
-		let snapshotsChanged = false;
-		const nextSnapshots: Record<string, SnapshotEntry> = {};
-
-		for (const snapshotKey in tagState.snapshots) {
-			const snapshot = tagState.snapshots[snapshotKey];
-			if (shouldRemoveSnapshot(snapshotKey, snapshot)) {
-				snapshotsChanged = true;
-				continue;
+			for (const snapshotKey in tagState.snapshots) {
+				const snapshot = tagState.snapshots[snapshotKey];
+				if (shouldRemoveSnapshot(snapshotKey, snapshot)) {
+					delete tagState.snapshots[snapshotKey];
+				}
 			}
-			nextSnapshots[snapshotKey] = snapshot;
-		}
 
-		let linksChanged = false;
-		const nextLinkStack: TagLink[] = [];
-		for (let i = 0; i < tagState.linkStack.length; i++) {
-			const link = tagState.linkStack[i];
-			if (shouldRemoveLink(link)) {
-				linksChanged = true;
-				continue;
+			for (let i = tagState.linkStack.length - 1; i >= 0; i--) {
+				const link = tagState.linkStack[i];
+				if (shouldRemoveLink(link)) {
+					tagState.linkStack.splice(i, 1);
+				}
 			}
-			nextLinkStack.push(link);
+
+			if (!hasAnyKeys(tagState.snapshots) && tagState.linkStack.length === 0) {
+				delete state[tag];
+			}
 		}
 
-		if (!snapshotsChanged && !linksChanged) {
-			continue;
-		}
-
-		if (!nextRegistry) {
-			nextRegistry = { ...currentRegistry };
-		}
-
-		if (!hasAnyKeys(nextSnapshots) && nextLinkStack.length === 0) {
-			delete nextRegistry[tag];
-			continue;
-		}
-
-		nextRegistry[tag] = {
-			snapshots: snapshotsChanged ? nextSnapshots : tagState.snapshots,
-			linkStack: linksChanged ? nextLinkStack : tagState.linkStack,
-		};
-	}
-
-	if (nextRegistry) {
-		registry.value = nextRegistry;
-	}
+		return state;
+	});
 };
 
 const clearPresenceDirect = (screenKey: ScreenKey) => {
 	"worklet";
-	const currentPresence = presence.value;
-	let nextPresence: typeof currentPresence | null = null;
+	presence.modify(<T extends PresenceState>(state: T): T => {
+		"worklet";
+		for (const tag in state) {
+			const tagEntries = state[tag];
+			if (!tagEntries[screenKey]) continue;
 
-	for (const tag in currentPresence) {
-		const tagEntries = currentPresence[tag];
-		if (!tagEntries[screenKey]) continue;
+			delete tagEntries[screenKey];
 
-		if (!nextPresence) {
-			nextPresence = { ...currentPresence };
+			if (!hasAnyKeys(tagEntries)) {
+				delete state[tag];
+			}
 		}
-
-		const { [screenKey]: _removed, ...remainingForTag } = nextPresence[tag];
-		if (!hasAnyKeys(remainingForTag)) {
-			delete nextPresence[tag];
-		} else {
-			nextPresence[tag] = remainingForTag;
-		}
-	}
-
-	if (nextPresence) {
-		presence.value = nextPresence;
-	}
+		return state;
+	});
 };
 
 const clearPresenceByAncestor = (ancestorKey: ScreenKey) => {
 	"worklet";
-	const currentPresence = presence.value;
-	let nextPresence: typeof currentPresence | null = null;
+	presence.modify(<T extends PresenceState>(state: T): T => {
+		"worklet";
+		for (const tag in state) {
+			const tagEntries = state[tag];
 
-	for (const tag in currentPresence) {
-		const tagEntries = currentPresence[tag];
-		let tagChanged = false;
-		const remainingForTag: Record<string, any> = {};
-
-		for (const entryScreenKey in tagEntries) {
-			const entry = tagEntries[entryScreenKey];
-			const shouldRemove =
-				entryScreenKey === ancestorKey ||
-				(entry.ancestorKeys?.includes(ancestorKey) ?? false);
-
-			if (shouldRemove) {
-				tagChanged = true;
-				continue;
+			for (const entryScreenKey in tagEntries) {
+				const entry = tagEntries[entryScreenKey];
+				const shouldRemove =
+					entryScreenKey === ancestorKey ||
+					(entry.ancestorKeys?.includes(ancestorKey) ?? false);
+				if (shouldRemove) {
+					delete tagEntries[entryScreenKey];
+				}
 			}
 
-			remainingForTag[entryScreenKey] = entry;
+			if (!hasAnyKeys(tagEntries)) {
+				delete state[tag];
+			}
 		}
-
-		if (!tagChanged) continue;
-
-		if (!nextPresence) {
-			nextPresence = { ...currentPresence };
-		}
-
-		if (!hasAnyKeys(remainingForTag)) {
-			delete nextPresence[tag];
-		} else {
-			nextPresence[tag] = remainingForTag;
-		}
-	}
-
-	if (nextPresence) {
-		presence.value = nextPresence;
-	}
+		return state;
+	});
 };
 
 const clearPresenceByBranch = (branchNavigatorKey: NavigatorKey) => {
 	"worklet";
-	const currentPresence = presence.value;
-	let nextPresence: typeof currentPresence | null = null;
+	presence.modify(<T extends PresenceState>(state: T): T => {
+		"worklet";
+		for (const tag in state) {
+			const tagEntries = state[tag];
 
-	for (const tag in currentPresence) {
-		const tagEntries = currentPresence[tag];
-		let tagChanged = false;
-		const remainingForTag: Record<string, any> = {};
+			for (const entryScreenKey in tagEntries) {
+				const entry = tagEntries[entryScreenKey];
+				const shouldRemove =
+					entry.navigatorKey === branchNavigatorKey ||
+					(entry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
 
-		for (const entryScreenKey in tagEntries) {
-			const entry = tagEntries[entryScreenKey];
-			const shouldRemove =
-				entry.navigatorKey === branchNavigatorKey ||
-				(entry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
-
-			if (shouldRemove) {
-				tagChanged = true;
-				continue;
+				if (shouldRemove) {
+					delete tagEntries[entryScreenKey];
+				}
 			}
 
-			remainingForTag[entryScreenKey] = entry;
+			if (!hasAnyKeys(tagEntries)) {
+				delete state[tag];
+			}
 		}
-
-		if (!tagChanged) continue;
-
-		if (!nextPresence) {
-			nextPresence = { ...currentPresence };
-		}
-
-		if (!hasAnyKeys(remainingForTag)) {
-			delete nextPresence[tag];
-		} else {
-			nextPresence[tag] = remainingForTag;
-		}
-	}
-
-	if (nextPresence) {
-		presence.value = nextPresence;
-	}
+		return state;
+	});
 };
 
 function clear(screenKey: ScreenKey) {

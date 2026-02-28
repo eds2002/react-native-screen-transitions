@@ -1,14 +1,20 @@
 import { makeMutable } from "react-native-reanimated";
 import type { GroupState, PresenceState, TagID, TagState } from "../types";
 
-export const createEmptyTagState = (): TagState => ({
-	snapshots: {},
-	linkStack: [],
-});
+export const createEmptyTagState = (): TagState => {
+	"worklet";
+	return {
+		snapshots: {},
+		linkStack: [],
+	};
+};
 
-export const registry = makeMutable<Record<TagID, TagState>>({});
+export type RegistryState = Record<TagID, TagState>;
+export type GroupsState = Record<string, GroupState>;
+
+export const registry = makeMutable<RegistryState>({});
 export const presence = makeMutable<PresenceState>({});
-export const groups = makeMutable<Record<string, GroupState>>({});
+export const groups = makeMutable<GroupsState>({});
 
 const RESOLVER_LOG_PREFIX = "[bounds:resolver]";
 const ENABLE_RESOLVER_DEBUG_LOGS = false;

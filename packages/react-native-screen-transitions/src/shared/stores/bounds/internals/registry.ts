@@ -8,22 +8,16 @@ import type {
 	TagLink,
 	TagState,
 } from "../types";
-import { debugStoreSizeLog, registry } from "./state";
+import {
+	createEmptyTagState,
+	debugStoreSizeLog,
+	type RegistryState,
+	registry,
+} from "./state";
 
 const LINK_HISTORY_LIMIT = 3;
 
-const createEmptyTagState = (): TagState => {
-	"worklet";
-	return {
-		snapshots: {},
-		linkStack: [],
-	};
-};
-
-const ensureTagState = (
-	state: Record<string, TagState>,
-	tag: TagID,
-): TagState => {
+const ensureTagState = (state: RegistryState, tag: TagID): TagState => {
 	"worklet";
 	if (!state[tag]) {
 		state[tag] = createEmptyTagState();
@@ -80,7 +74,7 @@ function registerSnapshot(
 	ancestorNavigatorKeys?: NavigatorKey[],
 ) {
 	"worklet";
-	registry.modify((state: any) => {
+	registry.modify(<T extends RegistryState>(state: T): T => {
 		"worklet";
 		const tagState = ensureTagState(state, tag);
 		tagState.snapshots[screenKey] = {
@@ -105,7 +99,7 @@ function setLinkSource(
 	ancestorNavigatorKeys?: NavigatorKey[],
 ) {
 	"worklet";
-	registry.modify((state: any) => {
+	registry.modify(<T extends RegistryState>(state: T): T => {
 		"worklet";
 		const tagState = ensureTagState(state, tag);
 		const stack = tagState.linkStack;
@@ -148,7 +142,7 @@ function updateLinkSource(
 	ancestorNavigatorKeys?: NavigatorKey[],
 ) {
 	"worklet";
-	registry.modify((state: any) => {
+	registry.modify(<T extends RegistryState>(state: T): T => {
 		"worklet";
 		const tagState = state[tag];
 		const stack = tagState?.linkStack;
@@ -221,7 +215,7 @@ function setLinkDestination(
 	ancestorNavigatorKeys?: NavigatorKey[],
 ) {
 	"worklet";
-	registry.modify((state: any) => {
+	registry.modify(<T extends RegistryState>(state: T): T => {
 		"worklet";
 		const tagState = state[tag];
 		const stack = tagState?.linkStack;
@@ -258,7 +252,7 @@ function updateLinkDestination(
 	ancestorNavigatorKeys?: NavigatorKey[],
 ) {
 	"worklet";
-	registry.modify((state: any) => {
+	registry.modify(<T extends RegistryState>(state: T): T => {
 		"worklet";
 		const tagState = state[tag];
 		const stack = tagState?.linkStack;
