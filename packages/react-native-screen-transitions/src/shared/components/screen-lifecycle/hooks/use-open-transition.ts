@@ -32,6 +32,7 @@ function getInitialProgress({
 export function useOpenTransition(
 	current: BaseDescriptor,
 	animations: AnimationStoreMap,
+	isFirstKey: boolean,
 ) {
 	const { activateHighRefreshRate, deactivateHighRefreshRate } =
 		useHighRefreshRate(current);
@@ -40,6 +41,16 @@ export function useOpenTransition(
 	useLayoutEffect(() => {
 		const { snapPoints, initialSnapIndex = 0 } = current.options;
 		const targetProgress = getInitialProgress({ snapPoints, initialSnapIndex });
+		const target = targetProgress ?? 1;
+
+		if (isFirstKey) {
+			animations.targetProgress.set(target);
+			animations.progress.set(target);
+			animations.animating.set(0);
+			animations.closing.set(0);
+			animations.entering.set(1);
+			return;
+		}
 
 		activateHighRefreshRate();
 		animateToProgress({

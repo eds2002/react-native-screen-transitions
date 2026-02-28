@@ -1,4 +1,4 @@
-import { useKeys } from "../../providers/screen/keys";
+import { useKeys, useScreenKeys } from "../../providers/screen/keys";
 import { AnimationStore } from "../../stores/animation.store";
 import { useCloseTransition } from "./hooks/use-close-transition";
 import { useOpenTransition } from "./hooks/use-open-transition";
@@ -14,10 +14,11 @@ interface Props {
  */
 export const ScreenLifecycle = ({ children }: Props) => {
 	const { current, previous } = useKeys();
+	const { isFirstKey } = useScreenKeys();
 	const animations = AnimationStore.getAll(current.route.key);
 
 	const { activateHighRefreshRate, deactivateHighRefreshRate } =
-		useOpenTransition(current, animations);
+		useOpenTransition(current, animations, isFirstKey);
 
 	useCloseTransition(
 		current,
