@@ -53,6 +53,12 @@ const BOUNDS_EXAMPLES = [
 		title: "Gallery",
 		description: "Image gallery with shared element zoom transitions",
 	},
+	{
+		id: "example",
+		title: "Nested Bounds A/B",
+		description:
+			"2x2 image grid -> nested [id]/a,b route flow with navigation zoom",
+	},
 ];
 
 export default function BoundsHubIndex() {
