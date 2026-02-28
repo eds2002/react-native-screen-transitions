@@ -15,7 +15,7 @@ export const useGroupActiveMeasurement = (params: {
 	group: string | undefined;
 	id: BoundaryId;
 	shouldUpdateDestination: boolean;
-	isAnimating: ReturnType<typeof AnimationStore.getAnimation>;
+	isAnimating: ReturnType<typeof AnimationStore.getRouteAnimation>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {

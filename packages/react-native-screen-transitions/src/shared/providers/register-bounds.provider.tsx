@@ -83,14 +83,14 @@ const useInitialLayoutHandler = (params: {
 		maybeMeasureAndStore,
 	} = params;
 
-	const isAnimating = AnimationStore.getAnimation(
+	const isAnimating = AnimationStore.getRouteAnimation(
 		currentScreenKey,
 		"animating",
 	);
 
 	// Check if any ancestor is animating
 	const ancestorAnimations = ancestorKeys.map((key) =>
-		AnimationStore.getAnimation(key, "animating"),
+		AnimationStore.getRouteAnimation(key, "animating"),
 	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
@@ -147,7 +147,7 @@ const useBlurMeasurement = (params: {
 	const hasCapturedSource = useRef(false);
 
 	const ancestorClosing = [current.route.key, ...ancestorKeys].map((key) =>
-		AnimationStore.getAnimation(key, "closing"),
+		AnimationStore.getRouteAnimation(key, "closing"),
 	);
 
 	const maybeMeasureOnBlur = useStableCallbackValue(() => {
@@ -207,7 +207,7 @@ const useParentSyncReaction = (params: {
 const CloseRemeasureReactionEffect = (params: {
 	sharedBoundTag: string;
 	remeasureOnFocus: boolean;
-	nextClosing: ReturnType<typeof AnimationStore.getAnimation>;
+	nextClosing: ReturnType<typeof AnimationStore.getRouteAnimation>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {
@@ -258,7 +258,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 		const updateSignal: SharedValue<number> =
 			parentContext?.updateSignal ?? ownSignal;
 
-		const isAnimating = AnimationStore.getAnimation(
+		const isAnimating = AnimationStore.getRouteAnimation(
 			currentScreenKey,
 			"animating",
 		);
@@ -390,7 +390,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 		// from state).
 		const nextScreenKey = next?.route.key;
 		const nextClosing = nextScreenKey
-			? AnimationStore.getAnimation(nextScreenKey, "closing")
+			? AnimationStore.getRouteAnimation(nextScreenKey, "closing")
 			: null;
 
 		useParentSyncReaction({ parentContext, maybeMeasureAndStore });

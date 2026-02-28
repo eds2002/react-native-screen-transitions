@@ -54,8 +54,8 @@ export const NativeScreen = ({
 	const routesLength = routes.length;
 	const screenRef = useAnimatedRef<View>();
 
-	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");
-	const sceneClosing = AnimationStore.getAnimation(routeKey, "closing");
+	const sceneProgress = AnimationStore.getRouteAnimation(routeKey, "progress");
+	const sceneClosing = AnimationStore.getRouteAnimation(routeKey, "closing");
 	const screenActivity = useSharedValue<ScreenActivity>(
 		ScreenActivity.TRANSITIONING_OR_BELOW_TOP,
 	);

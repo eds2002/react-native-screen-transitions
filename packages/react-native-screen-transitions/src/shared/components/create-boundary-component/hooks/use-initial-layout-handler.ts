@@ -22,13 +22,13 @@ export const useInitialLayoutHandler = (params: {
 		maybeMeasureAndStore,
 	} = params;
 
-	const isAnimating = AnimationStore.getAnimation(
+	const isAnimating = AnimationStore.getRouteAnimation(
 		currentScreenKey,
 		"animating",
 	);
 
 	const ancestorAnimations = ancestorKeys.map((key) =>
-		AnimationStore.getAnimation(key, "animating"),
+		AnimationStore.getRouteAnimation(key, "animating"),
 	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);

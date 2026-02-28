@@ -1,4 +1,8 @@
-import { makeMutable, type SharedValue } from "react-native-reanimated";
+import {
+	cancelAnimation,
+	makeMutable,
+	type SharedValue,
+} from "react-native-reanimated";
 import type { ScreenKey } from "../types/screen.types";
 
 export type AnimationStoreMap = {
@@ -11,39 +15,57 @@ export type AnimationStoreMap = {
 
 const store: Record<ScreenKey, AnimationStoreMap> = {};
 
-const ensure = (key: ScreenKey) => {
-	let bag = store[key];
-	if (!bag) {
-		bag = {
-			progress: makeMutable(0),
-			closing: makeMutable(0),
-			animating: makeMutable(0),
-			entering: makeMutable(1),
-			targetProgress: makeMutable(1),
-		} satisfies AnimationStoreMap;
-		store[key] = bag;
-	}
-	return bag;
-};
-
-function getAnimation(
-	key: ScreenKey,
-	type: keyof AnimationStoreMap,
-): SharedValue<number> {
-	return ensure(key)[type];
+function createAnimationBag(): AnimationStoreMap {
+	return {
+		progress: makeMutable(0),
+		closing: makeMutable(0),
+		animating: makeMutable(0),
+		entering: makeMutable(1),
+		targetProgress: makeMutable(1),
+	};
 }
 
-function getAll(key: ScreenKey) {
-	return ensure(key);
+function ensure(routeKey: ScreenKey): AnimationStoreMap {
+	let bag = store[routeKey];
+	if (!bag) {
+		bag = createAnimationBag();
+		store[routeKey] = bag;
+	}
+	return bag;
+}
+
+function peekRouteAnimations(
+	routeKey: ScreenKey,
+): AnimationStoreMap | undefined {
+	return store[routeKey];
+}
+
+function getRouteAnimation(
+	routeKey: ScreenKey,
+	type: keyof AnimationStoreMap,
+): SharedValue<number> {
+	return ensure(routeKey)[type];
+}
+
+function getRouteAnimations(routeKey: ScreenKey): AnimationStoreMap {
+	return ensure(routeKey);
 }
 
 function clear(routeKey: ScreenKey) {
-	"worklet";
+	const bag = store[routeKey];
+	if (bag) {
+		cancelAnimation(bag.progress);
+		cancelAnimation(bag.animating);
+		cancelAnimation(bag.closing);
+		cancelAnimation(bag.entering);
+		cancelAnimation(bag.targetProgress);
+	}
 	delete store[routeKey];
 }
 
 export const AnimationStore = {
-	getAnimation,
+	peekRouteAnimations,
+	getRouteAnimation,
+	getRouteAnimations,
 	clear,
-	getAll,
 };

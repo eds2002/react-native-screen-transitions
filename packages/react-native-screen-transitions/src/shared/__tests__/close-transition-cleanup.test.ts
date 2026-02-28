@@ -47,7 +47,7 @@ describe("close transition cleanup", () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
-		const animationBefore = AnimationStore.getAll(routeKey);
+		const animationBefore = AnimationStore.getRouteAnimations(routeKey);
 		const gestureBefore = GestureStore.getRouteGestures(routeKey);
 
 		BoundStore.registerSnapshot("card", routeKey, bounds);
@@ -65,7 +65,7 @@ describe("close transition cleanup", () => {
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(false);
 		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(false);
 
-		const animationAfter = AnimationStore.getAll(routeKey);
+		const animationAfter = AnimationStore.getRouteAnimations(routeKey);
 		const gestureAfter = GestureStore.getRouteGestures(routeKey);
 
 		expect(animationAfter).not.toBe(animationBefore);
@@ -80,13 +80,13 @@ describe("close transition cleanup", () => {
 		BoundStore.setLinkSource("card", routeKey, bounds);
 		BoundStore.registerBoundaryPresence("card", routeKey, [routeKey]);
 
-		const animationBefore = AnimationStore.getAll(routeKey);
+		const animationBefore = AnimationStore.getRouteAnimations(routeKey);
 		const gestureBefore = GestureStore.getRouteGestures(routeKey);
 
 		resetStoresForScreenForTest(routeKey, false);
 
 		// Animation and gesture stores are still cleared
-		const animationAfter = AnimationStore.getAll(routeKey);
+		const animationAfter = AnimationStore.getRouteAnimations(routeKey);
 		const gestureAfter = GestureStore.getRouteGestures(routeKey);
 		expect(animationAfter).not.toBe(animationBefore);
 		expect(gestureAfter).not.toBe(gestureBefore);

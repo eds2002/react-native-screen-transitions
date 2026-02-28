@@ -147,7 +147,7 @@ export const useHandlers = ({
 
 	const { dimensions } = useViewportContext();
 	const routeKey = current.route.key;
-	const animations = AnimationStore.getAll(current.route.key);
+	const animations = AnimationStore.getRouteAnimations(current.route.key);
 	const gestureAnimationValues = GestureStore.getRouteGestures(
 		current.route.key,
 	);

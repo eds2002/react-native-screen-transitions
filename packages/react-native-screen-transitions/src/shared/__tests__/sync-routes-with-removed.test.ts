@@ -47,7 +47,7 @@ const setRouteState = (
 		dismissing?: number;
 	},
 ) => {
-	const animations = AnimationStore.getAll(routeKey);
+	const animations = AnimationStore.getRouteAnimations(routeKey);
 	const gestures = GestureStore.getRouteGestures(routeKey);
 
 	if (state.progress !== undefined) animations.progress.value = state.progress;

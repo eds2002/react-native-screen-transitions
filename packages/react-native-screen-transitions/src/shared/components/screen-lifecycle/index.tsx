@@ -18,7 +18,7 @@ interface Props {
 export const ScreenLifecycle = ({ children }: Props) => {
 	const { current, previous } = useDescriptors();
 	const { isFirstKey } = useDescriptorDerivations();
-	const animations = AnimationStore.getAll(current.route.key);
+	const animations = AnimationStore.getRouteAnimations(current.route.key);
 
 	const { activateHighRefreshRate, deactivateHighRefreshRate } =
 		useOpenTransition(current, animations, isFirstKey);

@@ -47,7 +47,7 @@ export const BackdropLayer = memo(function BackdropLayer() {
 				return;
 			}
 
-			const animations = AnimationStore.getAll(current.route.key);
+			const animations = AnimationStore.getRouteAnimations(current.route.key);
 			const gestures = GestureStore.getRouteGestures(current.route.key);
 			const transitionSpec = current.options.transitionSpec;
 

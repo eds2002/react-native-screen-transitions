@@ -60,7 +60,7 @@ function useDirectStackValue(
 
 			scenes.push({ route, descriptor, isPreloaded });
 			routeKeys.push(route.key);
-			animationMaps.push(AnimationStore.getAll(route.key));
+			animationMaps.push(AnimationStore.getRouteAnimations(route.key));
 
 			if (!shouldShowFloatOverlay && descriptor) {
 				const options = descriptor.options;

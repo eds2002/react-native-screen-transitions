@@ -9,8 +9,8 @@ export const usePendingDestinationRetryMeasurement = (params: {
 	enabled: boolean;
 	currentScreenKey: string;
 	expectedSourceScreenKey?: string;
-	progress: ReturnType<typeof AnimationStore.getAnimation>;
-	animating: ReturnType<typeof AnimationStore.getAnimation>;
+	progress: ReturnType<typeof AnimationStore.getRouteAnimation>;
+	animating: ReturnType<typeof AnimationStore.getRouteAnimation>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {

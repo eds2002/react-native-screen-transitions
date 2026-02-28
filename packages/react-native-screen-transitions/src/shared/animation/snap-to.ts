@@ -32,7 +32,7 @@ export function snapDescriptorToIndex(
 	}
 
 	const targetProgress = sorted[index];
-	const animations = AnimationStore.getAll(descriptor.route.key);
+	const animations = AnimationStore.getRouteAnimations(descriptor.route.key);
 
 	runOnUI(() => {
 		"worklet";

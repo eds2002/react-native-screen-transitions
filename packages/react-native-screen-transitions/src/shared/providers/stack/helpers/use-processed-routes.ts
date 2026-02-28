@@ -49,7 +49,7 @@ export function useProcessedRoutes<
 			scenes[i] = { route, descriptor };
 			routeKeys[i] = route.key;
 			backdropBehaviors[i] = options?.backdropBehavior ?? "block";
-			animationMaps[i] = AnimationStore.getAll(route.key);
+			animationMaps[i] = AnimationStore.getRouteAnimations(route.key);
 
 			if (!shouldShowFloatOverlay) {
 				shouldShowFloatOverlay = isFloatOverlayVisible(options);

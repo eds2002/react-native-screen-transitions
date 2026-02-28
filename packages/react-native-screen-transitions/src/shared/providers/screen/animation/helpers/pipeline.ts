@@ -128,10 +128,10 @@ const useBuildScreenTransitionState = (
 			: undefined;
 
 		return {
-			progress: AnimationStore.getAnimation(key, "progress"),
-			closing: AnimationStore.getAnimation(key, "closing"),
-			entering: AnimationStore.getAnimation(key, "entering"),
-			animating: AnimationStore.getAnimation(key, "animating"),
+			progress: AnimationStore.getRouteAnimation(key, "progress"),
+			closing: AnimationStore.getRouteAnimation(key, "closing"),
+			entering: AnimationStore.getRouteAnimation(key, "entering"),
+			animating: AnimationStore.getRouteAnimation(key, "animating"),
 			gesture: shouldUseNeutralNextGestures
 				? (GestureStore.peekRouteGestures(key) ??
 					GestureStore.getNeutralGestures())

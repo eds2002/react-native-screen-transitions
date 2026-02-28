@@ -7,7 +7,7 @@ export const useScrollSettledMeasurement = (params: {
 	enabled: boolean;
 	group: string | undefined;
 	hasNextScreen: boolean;
-	isAnimating: ReturnType<typeof AnimationStore.getAnimation>;
+	isAnimating: ReturnType<typeof AnimationStore.getRouteAnimation>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const { enabled, group, hasNextScreen, isAnimating, maybeMeasureAndStore } =

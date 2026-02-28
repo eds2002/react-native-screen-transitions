@@ -43,7 +43,7 @@ export const useBoundaryMeasureAndStore = (params: {
 	ancestorKeys: string[];
 	navigatorKey?: string;
 	ancestorNavigatorKeys?: string[];
-	isAnimating: ReturnType<typeof AnimationStore.getAnimation>;
+	isAnimating: ReturnType<typeof AnimationStore.getRouteAnimation>;
 	preparedStyles: StyleProps;
 	animatedRef: AnimatedRef<View>;
 	layoutAnchor: LayoutAnchor;
