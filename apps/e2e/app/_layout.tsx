@@ -8,7 +8,14 @@ export default function RootLayout() {
 			<ExpoStack.Screen name="native-stack" />
 			<ExpoStack.Screen name="blank-stack" />
 			<ExpoStack.Screen name="component-stack" />
+			<ExpoStack.Screen name="stack-benchmark" />
 			<ExpoStack.Screen name="gestures" />
+			<ExpoStack.Screen
+				name="stack-benchmark/[impl"
+				options={{
+					animation: "none",
+				}}
+			/>
 		</ExpoStack>
 	);
 }

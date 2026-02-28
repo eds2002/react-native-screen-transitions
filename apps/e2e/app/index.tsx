@@ -20,6 +20,15 @@ const STACK_OPTIONS = [
 	},
 ];
 
+const BENCHMARK_OPTIONS = [
+	{
+		id: "stack-benchmark",
+		title: "Stack Benchmark (Transparency)",
+		description:
+			"Run a 20-cycle benchmark to compare blank-stack and js-stack side-by-side",
+	},
+];
+
 const GESTURE_OPTIONS = [
 	{
 		id: "gestures",
@@ -59,6 +68,25 @@ export default function HomeScreen() {
 					<Text style={styles.sectionTitle}>Gestures</Text>
 					<View style={styles.buttonContainer}>
 						{GESTURE_OPTIONS.map((option) => (
+							<Pressable
+								key={option.id}
+								testID={`${option.id}-button`}
+								style={styles.button}
+								onPress={() => router.push(`/${option.id}` as `/${string}`)}
+							>
+								<Text style={styles.buttonTitle}>{option.title}</Text>
+								<Text style={styles.buttonDescription}>
+									{option.description}
+								</Text>
+							</Pressable>
+						))}
+					</View>
+				</View>
+
+				<View style={styles.section}>
+					<Text style={styles.sectionTitle}>Benchmarks</Text>
+					<View style={styles.buttonContainer}>
+						{BENCHMARK_OPTIONS.map((option) => (
 							<Pressable
 								key={option.id}
 								testID={`${option.id}-button`}
