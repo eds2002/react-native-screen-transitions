@@ -13,7 +13,7 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 - **Navigation Bounds** – SwiftUI-like zoom transitions with masked reveal effects via `bounds().navigation.zoom()`
 - **Gesture Support** – Swipe-to-dismiss with edge or full-screen activation, configurable velocity
 - **Animated Props** – Drive component-specific props (e.g., BlurView `intensity`) alongside styles
-- **Custom Layers** – `backgroundComponent` and `backdropComponent` with animated styles and props
+- **Custom Layers** – `surfaceComponent` and `backdropComponent` with animated styles and props
 - **Stack Progress** – Track animation progress across the entire stack
 - **Ready-Made Presets** – Instagram, Apple Music, X (Twitter), zoom navigation style transitions included
 
@@ -214,9 +214,6 @@ return {
     style: { opacity: 0.5 },
     props: { intensity: 80 }, // for components like BlurView
   },                          // Backdrop layer between screens
-  background: {
-    style: { transform: [{ scale: 0.98 }] },
-  },                          // Background component layer
   ["hero-image"]: {
     style: { borderRadius: 24 },
   },                          // Specific element via styleId
@@ -288,7 +285,7 @@ options={{
 | `gestureSnapLocked`            | Lock gesture-based snap movement to current snap point                   |
 | `backdropBehavior`             | Touch handling for backdrop area                                         |
 | `backdropComponent`            | Custom backdrop component, driven by interpolator `backdrop` slot        |
-| `backgroundComponent`          | Custom background component, driven by interpolator `background` slot    |
+| `surfaceComponent`             | Custom surface component, driven by interpolator `surface` slot          |
 | `maskEnabled`                  | Pre-mount masked view wrapper for navigation bounds masking              |
 
 ### Gesture Direction
@@ -430,13 +427,12 @@ import { BlurView } from "expo-blur";
 
 The `props` bucket is applied via `useAnimatedProps`, letting you animate component-specific properties like `BlurView`'s `intensity` or `SquircleView`'s `cornerRadius`.
 
-#### Custom Background Component
+#### Custom Surface Component
 
-Use `backgroundComponent` to replace the screen's content wrapper with a custom component (e.g., a `SquircleView` for smooth rounded corners).
+Use `surfaceComponent` to render a custom surface inside the animated content wrapper (e.g., a `SquircleView` for smooth rounded corners).
 
-- Replaces the default `Animated.View` wrapper (does not nest inside it)
-- Receives content styles + background styles merged
-- Animated props are driven by the `background` slot in your interpolator
+- `content` drives container-level transitions (position/scale/opacity)
+- `surface` drives custom surface styles/props
 
 ```tsx
 import { SquircleView } from "react-native-figma-squircle";
@@ -444,7 +440,7 @@ import { SquircleView } from "react-native-figma-squircle";
 <Stack.Screen
   name="Card"
   options={{
-    backgroundComponent: SquircleView,
+    surfaceComponent: SquircleView,
     screenStyleInterpolator: ({ progress }) => {
       "worklet";
       return {
@@ -453,7 +449,7 @@ import { SquircleView } from "react-native-figma-squircle";
             transform: [{ scale: interpolate(progress, [0, 1], [0.8, 1]) }],
           },
         },
-        background: {
+        surface: {
           props: { cornerRadius: 24, cornerSmoothing: 0.7 },
         },
       };

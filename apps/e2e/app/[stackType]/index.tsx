@@ -39,6 +39,18 @@ const TEST_FLOWS = [
 		description: "Tab bar overlay that animates with screen transitions",
 	},
 	{
+		id: "custom-backdrop",
+		title: "Custom Backdrop",
+		description:
+			"BlurView backdrop component with animated intensity and opacity",
+	},
+	{
+		id: "custom-background",
+		title: "Custom Surface",
+		description:
+			"Fast squircle surface component with animated corner smoothing",
+	},
+	{
 		id: "bottom-sheet",
 		title: "Bottom Sheet",
 		description: "Vertical sheet with snap points",
@@ -61,13 +73,15 @@ const TEST_FLOWS = [
 	{
 		id: "bounds",
 		title: "Bounds",
-		description: "All bounds examples: active, gesture, styleId, spam, zoom, sync",
+		description:
+			"All bounds examples: active, gesture, styleId, spam, zoom, sync",
 	},
 ];
 
 export default function BlankStackIndex() {
 	const stackType = useResolvedStackType();
-	const stackLabel = stackType === "native-stack" ? "Native Stack" : "Blank Stack";
+	const stackLabel =
+		stackType === "native-stack" ? "Native Stack" : "Blank Stack";
 	const testPrefix = stackType === "native-stack" ? "native" : "blank";
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
@@ -86,7 +100,9 @@ export default function BlankStackIndex() {
 							key={flow.id}
 							testID={`${testPrefix}-${flow.id}`}
 							style={styles.item}
-							onPress={() => router.push(buildStackPath(stackType, `${flow.id}`) as never)}
+							onPress={() =>
+								router.push(buildStackPath(stackType, `${flow.id}`) as never)
+							}
 						>
 							<Text style={styles.itemTitle}>{flow.title}</Text>
 							<Text style={styles.itemDescription}>{flow.description}</Text>

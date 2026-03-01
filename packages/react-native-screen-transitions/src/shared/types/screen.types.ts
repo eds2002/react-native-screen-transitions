@@ -266,18 +266,18 @@ export type ScreenTransitionConfig = {
 	backdropComponent?: React.ComponentType<any>;
 
 	/**
-	 * Custom component to render as the screen's background layer.
+	 * Custom component to render as the screen's surface layer.
 	 *
 	 * Renders inside the content animation scope (moves with the screen) as an
 	 * absolutely-positioned layer behind the screen's children.
 	 *
 	 * The library wraps this component with `Animated.createAnimatedComponent` internally.
-	 * Animated styles and props are driven by the `background` slot in the interpolator return value.
+	 * Animated styles and props are driven by the `surface` slot in the interpolator return value.
 	 *
 	 * @example
-	 * backgroundComponent: SquircleView,
+	 * surfaceComponent: SquircleView,
 	 * screenStyleInterpolator: ({ progress }) => ({
-	 *   background: {
+	 *   surface: {
 	 *     style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
 	 *     props: { cornerRadius: 24, cornerSmoothing: 0.7 },
 	 *   },
@@ -285,5 +285,5 @@ export type ScreenTransitionConfig = {
 	 *
 	 * @default undefined
 	 */
-	backgroundComponent?: React.ComponentType<any>;
+	surfaceComponent?: React.ComponentType<any>;
 };

@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
-import { memo, useEffect, useMemo } from "react";
+import { memo, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
@@ -17,6 +17,7 @@ import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
 import { logger } from "../../../utils/logger";
 import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
+import { SurfaceContainer } from "./surface-container";
 
 type Props = {
 	children: React.ReactNode;
@@ -38,16 +39,7 @@ export const ContentLayer = memo(({ children }: Props) => {
 	const { pointerEvents, isBackdropActive } = useBackdropPointerEvents();
 	const gestureContext = useGestureContext();
 	const isNavigationMaskEnabled = !!current.options.maskEnabled;
-
-	const BackgroundComponent = current.options.backgroundComponent;
-
-	const AnimatedBackgroundComponent = useMemo(
-		() =>
-			BackgroundComponent
-				? Animated.createAnimatedComponent(BackgroundComponent)
-				: null,
-		[BackgroundComponent],
-	);
+	const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
 
 	// ── Content ──
 	const animatedContentStyle = useAnimatedStyle(() => {
@@ -69,17 +61,6 @@ export const ContentLayer = memo(({ children }: Props) => {
 	const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 		"worklet";
 		return stylesMap.value[NAVIGATION_MASK_STYLE_ID]?.style || NO_STYLES;
-	});
-
-	// ── Background ──
-	const animatedBackgroundStyle = useAnimatedStyle(() => {
-		"worklet";
-		return stylesMap.value.background?.style ?? NO_STYLES;
-	});
-
-	const animatedBackgroundProps = useAnimatedProps(() => {
-		"worklet";
-		return stylesMap.value.background?.props ?? NO_PROPS;
 	});
 
 	useEffect(() => {
@@ -123,27 +104,15 @@ export const ContentLayer = memo(({ children }: Props) => {
 
 	return (
 		<GestureDetector gesture={gestureContext!.panGesture}>
-			{AnimatedBackgroundComponent ? (
-				<AnimatedBackgroundComponent
-					style={[
-						styles.content,
-						animatedContentStyle,
-						animatedBackgroundStyle,
-					]}
-					animatedProps={animatedBackgroundProps}
-					pointerEvents={isBackdropActive ? "box-none" : pointerEvents}
-				>
+			<Animated.View
+				style={[styles.content, animatedContentStyle]}
+				animatedProps={animatedContentProps}
+				pointerEvents={contentPointerEvents}
+			>
+				<SurfaceContainer pointerEvents={contentPointerEvents}>
 					{contentChildren}
-				</AnimatedBackgroundComponent>
-			) : (
-				<Animated.View
-					style={[styles.content, animatedContentStyle]}
-					animatedProps={animatedContentProps}
-					pointerEvents={isBackdropActive ? "box-none" : pointerEvents}
-				>
-					{contentChildren}
-				</Animated.View>
-			)}
+				</SurfaceContainer>
+			</Animated.View>
 		</GestureDetector>
 	);
 });

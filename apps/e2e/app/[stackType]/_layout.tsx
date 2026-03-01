@@ -1,4 +1,6 @@
 // @ts-nocheck
+import { BlurView } from "expo-blur";
+import SquircleView from "react-native-fast-squircle";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
@@ -105,6 +107,88 @@ export default function BlankStackLayout() {
 			<StackNavigator.Screen
 				name="overlay"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
+				name="custom-backdrop"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					backdropComponent: BlurView,
+					screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+						"worklet";
+						return {
+							backdrop: {
+								props: {
+									intensity: interpolate(progress, [0, 1], [0, 75], "clamp"),
+								},
+							},
+							content: {
+								style: {
+									transform: [
+										{
+											scale: interpolate(
+												progress,
+												[0, 1, 2],
+												[0, 1, 0.9],
+												"clamp",
+											),
+										},
+									],
+								},
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<StackNavigator.Screen
+				name="custom-background"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					surfaceComponent: SquircleView,
+					screenStyleInterpolator: ({
+						progress,
+						active,
+						layouts: { screen },
+					}) => {
+						"worklet";
+						return {
+							content: {
+								style: {
+									transform: [
+										{
+											scale: interpolate(
+												progress,
+												[0, 1, 2],
+												[0, 1, 0.9],
+												"clamp",
+											),
+										},
+									],
+								},
+							},
+							surface: {
+								style: {
+									flex: 1,
+									backgroundColor: "#4A90E2",
+									borderRadius: active.animating ? 48 : 0,
+									overflow: "hidden",
+								},
+								props: {
+									cornerSmoothing: 1,
+								},
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
 			/>
 			<StackNavigator.Screen
 				name="bottom-sheet"

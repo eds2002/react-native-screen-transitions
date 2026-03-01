@@ -235,8 +235,8 @@ export type NormalizedTransitionInterpolatedStyle = {
 	content?: NormalizedTransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
 	backdrop?: NormalizedTransitionSlotStyle;
-	/** Animated style and props for the background component layer within the screen. */
-	background?: NormalizedTransitionSlotStyle;
+	/** Animated style and props for the surface component layer within the screen. */
+	surface?: NormalizedTransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
 	[id: string]: NormalizedTransitionSlotStyle | undefined;
 };
@@ -250,8 +250,8 @@ export type NewTransitionInterpolatedStyle = {
 	content?: TransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
 	backdrop?: TransitionSlotStyle;
-	/** Animated style and props for the background component layer within the screen. */
-	background?: TransitionSlotStyle;
+	/** Animated style and props for the surface component layer within the screen. */
+	surface?: TransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
 	[id: string]: TransitionSlotStyle | undefined;
 };
