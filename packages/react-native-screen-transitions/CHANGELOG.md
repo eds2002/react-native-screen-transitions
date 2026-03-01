@@ -1,5 +1,79 @@
 # Changelog
 
+# [3.4.0-alpha.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.2.0...v3.4.0-alpha.0) (2026-03-01)
+
+
+### Bug Fixes
+
+* adjust animation for a better masking during drag ([b3a08b1](https://github.com/eds2002/react-native-screen-transitions/commit/b3a08b171a9258dbeb683229b575afae252d0258))
+* bounds improvement ([4ac3fb8](https://github.com/eds2002/react-native-screen-transitions/commit/4ac3fb8353e7e2341b1fff9c979e2cb432fb5a60))
+* **bounds:** clear bounds by navigator route keys on stack teardown ([6d35f38](https://github.com/eds2002/react-native-screen-transitions/commit/6d35f3885610fa26281775867d3d11b16aee2aa5))
+* **bounds:** defer style unsets during active transitions ([2607382](https://github.com/eds2002/react-native-screen-transitions/commit/2607382013c485e9e2c396485617e4b6b73de9f0))
+* **bounds:** gate destination link writes to viewport valid measurements ([76e0350](https://github.com/eds2002/react-native-screen-transitions/commit/76e0350d2d45bebd0c4e2bb63996368a1f5eea5d))
+* **bounds:** harden associated style lifecycle for grouped shared boundaries ([04ea98a](https://github.com/eds2002/react-native-screen-transitions/commit/04ea98a2e3ddbde14fbd350c68e3142af04194c0))
+* **bounds:** keep active links protected during retarget close ([71e4766](https://github.com/eds2002/react-native-screen-transitions/commit/71e4766fe3311ec1f1985965f1ce264b83d3896e))
+* **bounds:** reset grouped boundary styles when no longer active member ([f5b6544](https://github.com/eds2002/react-native-screen-transitions/commit/f5b6544716f55e36ba20db8c877bc9d93de898d9))
+* **bounds:** split startup vs in-flight style guards for retarget stability ([93872ee](https://github.com/eds2002/react-native-screen-transitions/commit/93872eef3209068586f14274583191be592e1fcc))
+* **bounds:** stabilize associated style lifecycle for shared boundaries ([398176d](https://github.com/eds2002/react-native-screen-transitions/commit/398176d11425d949a45f0183034bee5ad5355db4))
+* clean up bound functions causing crash on spam ([d3ca9ef](https://github.com/eds2002/react-native-screen-transitions/commit/d3ca9efc1ee9da8be20fdfab017629daef52183c))
+* custom backdrop issues ([0eeb53d](https://github.com/eds2002/react-native-screen-transitions/commit/0eeb53d12718df256cf77337deb8007f4edad819))
+* dont block other boundary components when it has already resolved ([1f05417](https://github.com/eds2002/react-native-screen-transitions/commit/1f054179f19ba5a372a18a7a91c8b24f72d3dc2f))
+* fix anchor handling inside zoom ([8483350](https://github.com/eds2002/react-native-screen-transitions/commit/848335068ff635072bfc8b78d251983941ffe460))
+* fix same element spamming bug ([9a47ae5](https://github.com/eds2002/react-native-screen-transitions/commit/9a47ae534735904836e5783152457d463a97662f))
+* for branch calculation, use the actually screen index rather than global index ([69db2f1](https://github.com/eds2002/react-native-screen-transitions/commit/69db2f108a3d9b4cb4c2af7990d0e244e03a2944))
+* **gestures:** honor gestureReleaseVelocityMax ([2b6c021](https://github.com/eds2002/react-native-screen-transitions/commit/2b6c0210e56c5baee919a1d97b30f52a5bb1eec4))
+* performance issues with boundary component ([9f4363a](https://github.com/eds2002/react-native-screen-transitions/commit/9f4363a9dca2133cc8b06d0c748fd2bc61ebcb77))
+* preset specs ([293f12e](https://github.com/eds2002/react-native-screen-transitions/commit/293f12efb70817f1369004375f6a37bdaa3bf28d))
+* prevent against spam pressing ([5309ece](https://github.com/eds2002/react-native-screen-transitions/commit/5309ece2f8d34385a0a83785de22e072d3011d84))
+* previous screen not animating during flight ([#74](https://github.com/eds2002/react-native-screen-transitions/issues/74)) ([071512c](https://github.com/eds2002/react-native-screen-transitions/commit/071512c292e81986efdffe7e7b40ebbd220670a2))
+* remove useNavigationHelpers from native stack close transition ([26c4841](https://github.com/eds2002/react-native-screen-transitions/commit/26c4841f305a51a753faf4a697fa358773ea4700))
+* reset zIndex / elevation on reset ([83d4cc0](https://github.com/eds2002/react-native-screen-transitions/commit/83d4cc0bc2f6543f2d7f7f4033b02a51edce7f56))
+* resolve size bounds bug, integrate bound sync examples ([9c8ecc8](https://github.com/eds2002/react-native-screen-transitions/commit/9c8ecc828eb8a35e408642d52d0537def7c03cc6))
+* **stack:** skip closing routes in neighbor resolution via provider derived closing map ([af62c4d](https://github.com/eds2002/react-native-screen-transitions/commit/af62c4d549c5b42865aa9703b188065e6cb32cca))
+* **stack:** skip visually closing routes when resolving scene neighbors ([327ade4](https://github.com/eds2002/react-native-screen-transitions/commit/327ade43498c346a85fba7187d7f7fdcace10705))
+* style id example ([efbdc0d](https://github.com/eds2002/react-native-screen-transitions/commit/efbdc0d32d64a66f9e9c9415ee80022c1c7a8613))
+* type safety ([1cf2044](https://github.com/eds2002/react-native-screen-transitions/commit/1cf2044438a5606759c3838ab5326fe98cef2ece))
+* zoom example ([b3247c7](https://github.com/eds2002/react-native-screen-transitions/commit/b3247c7b87cade16f2c2e5ad363beecda32c990f))
+* zoom preset initial faulty measurement ([51eb719](https://github.com/eds2002/react-native-screen-transitions/commit/51eb719fab7e9778ce1af92c199f6f2bf2c750c7))
+* zoom preset shifting downwards on drag ([3ed4f24](https://github.com/eds2002/react-native-screen-transitions/commit/3ed4f24e734f556042792822e8c466f2350a7e47))
+* **zoom:** respect scaleMode "match" in navigation zoom preset ([55996f8](https://github.com/eds2002/react-native-screen-transitions/commit/55996f8162685b4da03102f83270f678ef2e4aee))
+
+
+### Features
+
+* add benchmark ([c730ad8](https://github.com/eds2002/react-native-screen-transitions/commit/c730ad8968709bcc60dab28877ce1cee0b53cccf))
+* add bounds options inside boundary component ([f8806d0](https://github.com/eds2002/react-native-screen-transitions/commit/f8806d00904f5b5f056fd5d8273b15ef90368863))
+* add fling/orbit dismiss effect to zoom navigation with drag-scale sync ([10126b0](https://github.com/eds2002/react-native-screen-transitions/commit/10126b06d3e59e462b322834b66ca9c0081b1051))
+* add scroll settle source remeasurement for grouped boundaries ([7868e1c](https://github.com/eds2002/react-native-screen-transitions/commit/7868e1c77e9386f38584131c2a546878e65bd895))
+* bake masked view into a prop ([b557964](https://github.com/eds2002/react-native-screen-transitions/commit/b557964bc4871bc48f4d86fcad38849686ed7cba))
+* **boundary:** remove mode API and prioritize source measurement on press ([0e4ade6](https://github.com/eds2002/react-native-screen-transitions/commit/0e4ade6ac65d26cffe42480a6400733c98be580f))
+* **bounds:** add deterministic transition-pair resolver and migrate compute/zoom paths ([0540f57](https://github.com/eds2002/react-native-screen-transitions/commit/0540f57fc8835f0803913135e8342c67f2706d47))
+* **bounds:** auto match Boundary links without route params and add conservative measurement gating ([e7491a5](https://github.com/eds2002/react-native-screen-transitions/commit/e7491a5c40b8f2c2371db924aa5dfc7bb7aee41b))
+* build math helpers ([864636c](https://github.com/eds2002/react-native-screen-transitions/commit/864636c837e25fd5d7136ed6a3e805e3a69f9fa4))
+* build new boundary component ([631d650](https://github.com/eds2002/react-native-screen-transitions/commit/631d6503e874c37be322a8364a78d24f49b563a4))
+* build out zoom animation ([9efb98e](https://github.com/eds2002/react-native-screen-transitions/commit/9efb98eda0367e859fbd9efd63605c921b9d7c28))
+* export buildBoundaryMatchKey ([de9e76e](https://github.com/eds2002/react-native-screen-transitions/commit/de9e76e7f51fc8839bb2f183e32c3edf7254e40c))
+* handle new group prop ([0eb6b1a](https://github.com/eds2002/react-native-screen-transitions/commit/0eb6b1aa4fa324d33ff84342144b3ede9cb7f6ad))
+* integrate masked view into the package, integrate bounds zoom transition ([eb438fc](https://github.com/eds2002/react-native-screen-transitions/commit/eb438fc4dac67292d09feff7cc6e89e2cea11851))
+* integrate new role prop ([8494493](https://github.com/eds2002/react-native-screen-transitions/commit/849449372dd6dcd5ee13d6a373604cd5e9904e04))
+* integrate set list example ([bbf0ae7](https://github.com/eds2002/react-native-screen-transitions/commit/bbf0ae7d904fc99b714bbbd977dc91938df5e037))
+* phase 2, work in bounds options into new bounds util api ([28c132a](https://github.com/eds2002/react-native-screen-transitions/commit/28c132a4dde878374992e2c47810bf22e5f48ef6))
+* provide props for user to customize velocity ([419098c](https://github.com/eds2002/react-native-screen-transitions/commit/419098c66222e86b3b4b34d40263b7deecaf94e2))
+* **surface:** replace background API with surface and extract SurfaceContainer layer ([113672c](https://github.com/eds2002/react-native-screen-transitions/commit/113672cc1e4c75643276cb90a6ee4a036a82b480))
+* **transitions:** skip initial-route open animation ([d8a75b9](https://github.com/eds2002/react-native-screen-transitions/commit/d8a75b9b1bf63105e47950ab97ac260dd76773f7))
+* unified interpolator slot system with backgroundComponent support ([51aba84](https://github.com/eds2002/react-native-screen-transitions/commit/51aba84c3face030fe3bcf72c6282879ec3bd075))
+* unset styles when previous active id changes ([4034b64](https://github.com/eds2002/react-native-screen-transitions/commit/4034b64b0ab9d3d74e5fd3fa0851f930b4e86597))
+
+
+### Performance Improvements
+
+* **boundary:** split keys context to reduce context-driven rerenders ([de98af3](https://github.com/eds2002/react-native-screen-transitions/commit/de98af31fd1f9ebeb1cc6e6ebebd38aed94ccf09))
+* **bounds:** reduce mount-time overhead for boundary-heavy screens ([62e16f0](https://github.com/eds2002/react-native-screen-transitions/commit/62e16f0603ac4e86f54f3eaa6bd7b1c8b67775c8))
+* **bounds:** reduce transition stutter with bounds fast-path + layout-timed destination capture ([253474b](https://github.com/eds2002/react-native-screen-transitions/commit/253474b6e0ffda37fb919d75ce72eac92c06af3f))
+* memoize flags in StackCoreProvider to stabilize context ([7d10006](https://github.com/eds2002/react-native-screen-transitions/commit/7d10006392e2d86d025dd9a9fe3c6e401d7507f5))
+* **shared:** hoist viewport reads and avoid inert next route gesture allocation ([40b7337](https://github.com/eds2002/react-native-screen-transitions/commit/40b7337f32825971e8db57110c80f5f70a6b75af))
+* **stack:** add local routes fast path and snapshot gesture checks ([5cba5fd](https://github.com/eds2002/react-native-screen-transitions/commit/5cba5fda4ca6dbada87aec7e840b96a09302649b))
+
 # [3.3.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.3.0-rc.2...v3.3.0-rc.3) (2026-02-14)
 
 
