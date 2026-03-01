@@ -47,8 +47,10 @@
 		"release": "release-it",
 		"release:stable": "release-it",
 		"release:beta": "release-it --preRelease=beta",
+		"release:alpha": "release-it --preRelease=alpha",
 		"release:rc": "release-it --preRelease=rc",
 		"release:dry-run": "release-it --dry-run",
+		"release:alpha:dry-run": "release-it --preRelease=alpha --dry-run",
 		"release:beta:dry-run": "release-it --preRelease=beta --dry-run",
 		"release:rc:dry-run": "release-it --preRelease=rc --dry-run"
 	},

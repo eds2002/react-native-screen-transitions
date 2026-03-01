@@ -10,7 +10,7 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 
 - **Full Animation Control** – Define exactly how screens enter, exit, and respond to gestures
 - **Shared Elements** – Smooth transitions between screens using `Transition.Boundary` and the Bounds API
-- **Navigation Bounds** – iOS-style zoom transitions with masked reveal effects via `bounds().navigation.zoom()`
+- **Navigation Bounds** – SwiftUI-like zoom transitions with masked reveal effects via `bounds().navigation.zoom()`
 - **Gesture Support** – Swipe-to-dismiss with edge or full-screen activation, configurable velocity
 - **Animated Props** – Drive component-specific props (e.g., BlurView `intensity`) alongside styles
 - **Custom Layers** – `backgroundComponent` and `backdropComponent` with animated styles and props
@@ -203,27 +203,36 @@ options={{
 
 ### Return Format
 
-Your interpolator returns a map of **slots**. Each slot can use shorthand styles or the explicit `{ style, props }` form:
+Your interpolator returns a map of **slots**. The canonical format is explicit `{ style, props }`:
 
 ```tsx
 return {
-  content: { ... },          // Main screen content
-  backdrop: { ... },         // Backdrop layer between screens
-  background: { ... },       // Background component layer
-  ["my-id"]: { ... },        // Specific element via styleId
+  content: {
+    style: { opacity: 1 },
+  },                          // Main screen content
+  backdrop: {
+    style: { opacity: 0.5 },
+    props: { intensity: 80 }, // for components like BlurView
+  },                          // Backdrop layer between screens
+  background: {
+    style: { transform: [{ scale: 0.98 }] },
+  },                          // Background component layer
+  ["hero-image"]: {
+    style: { borderRadius: 24 },
+  },                          // Specific element via styleId
 };
 ```
 
-Each slot accepts two forms:
+Shorthand styles are still supported and auto-wrapped as `{ style: value }`:
 
 ```tsx
-// Shorthand — plain styles (auto-wrapped as { style: value })
+// Shorthand
 content: {
   opacity: 0.5,
   transform: [{ scale: 0.9 }],
 },
 
-// Explicit — separate style and props buckets
+// Explicit
 content: {
   style: { opacity: 0.5, transform: [{ scale: 0.9 }] },
   props: { intensity: 80 },  // for useAnimatedProps (e.g., BlurView)
@@ -327,6 +336,8 @@ Gesture rules with scrollables:
 - **vertical** – only activates when scrolled to top
 - **vertical-inverted** – only activates when scrolled to bottom
 - **horizontal** – only activates at left/right scroll edges
+
+`Transition.ScrollView` and `Transition.FlatList` also emit a settled signal (on momentum end, or drag end with no momentum). Grouped boundaries listen for that signal and re-measure source bounds while idle, which keeps list/detail shared transitions accurate after focus-change auto-scrolling.
 
 ---
 
@@ -514,41 +525,41 @@ transitionSpec: {
 
 ## Shared Elements (Bounds API)
 
-Animate elements between screens by tagging them. There are two approaches: `Transition.Boundary` for declarative shared element transitions, and `sharedBoundTag` on `Transition.View`/`Transition.Pressable` for inline usage.
+Animate elements between screens by tagging them. There are two approaches: the `Transition.Boundary` namespace for declarative shared element transitions, and `sharedBoundTag` on `Transition.View`/`Transition.Pressable` for inline usage.
 
 ### Transition.Boundary
 
-The recommended way to set up shared elements. Automatically handles measurement, matching, and lifecycle:
+The recommended setup. `Transition.Boundary` is a namespace with prebuilt variants:
+- `Transition.Boundary.Pressable` for source elements that trigger navigation
+- `Transition.Boundary.View` for passive source/destination elements
 
 ```tsx
 // Source screen — list item
-<Transition.Boundary
+<Transition.Boundary.Pressable
   id="album-art"
-  group="albums"           // Optional: for lists/collections
-  role="source"            // Optional: explicit role
+  group="albums"           // Optional: list/collection grouping
   onPress={() => router.push("/details")}
 >
   <Image source={album} style={{ width: 100, height: 100 }} />
-</Transition.Boundary>
+</Transition.Boundary.Pressable>
 
 // Destination screen
-<Transition.Boundary id="album-art">
+<Transition.Boundary.View id="album-art">
   <Image source={album} style={{ width: 300, height: 300 }} />
-</Transition.Boundary>
+</Transition.Boundary.View>
 ```
 
 #### Boundary Props
 
-| Prop        | Description                                                              |
-| ----------- | ------------------------------------------------------------------------ |
-| `id`        | Unique identifier for matching across screens                            |
-| `group`     | Group name for collection/list scenarios (tag becomes `group:id`)        |
-| `role`      | `"source"` or `"destination"` — auto-detected if omitted                 |
-| `enabled`   | Whether this boundary participates in matching (default: true)           |
-| `method`    | `"transform"` `"size"` `"content"` — how to animate                     |
-| `anchor`    | Alignment anchor point                                                   |
-| `scaleMode` | `"match"` `"none"` `"uniform"` — aspect ratio handling                   |
-| `target`    | Target for size calculations (e.g., `"fullscreen"`)                      |
+| Prop        | Description                                                        |
+| ----------- | ------------------------------------------------------------------ |
+| `id`        | Unique identifier for matching across screens                      |
+| `group`     | Group name for list/collection scenarios (tag becomes `group:id`)  |
+| `enabled`   | Whether this boundary participates in matching (default: true)     |
+| `method`    | `"transform"` `"size"` `"content"` — how to animate               |
+| `anchor`    | Alignment anchor point                                             |
+| `scaleMode` | `"match"` `"none"` `"uniform"` — aspect ratio handling             |
+| `target`    | Target for size calculations (for example `"fullscreen"`)          |
 
 #### Groups
 
@@ -556,22 +567,35 @@ For list/collection scenarios where multiple items share the same transition:
 
 ```tsx
 {items.map((item) => (
-  <Transition.Boundary
+  <Transition.Boundary.Pressable
     key={item.id}
     id={item.id}
     group="photos"
     onPress={() => router.push(`/photo/${item.id}`)}
   >
     <Image source={item.src} />
-  </Transition.Boundary>
+  </Transition.Boundary.Pressable>
 ))}
 ```
 
-Only the tapped item transitions. The library tracks which group member is active and handles re-measurement when focus changes.
+Only the tapped item transitions. The library tracks the active member for each group, and transition-aware scrollables emit settled signals so grouped boundaries can re-measure after focus-change auto-scrolling.
+
+### Custom Boundary Components
+
+Use the boundary factory when you want a custom wrapped component (for example `Image`, `BlurView`, or design-system primitives):
+
+```tsx
+import { Image } from "react-native";
+import Transition from "react-native-screen-transitions";
+
+const BoundaryImage = Transition.createBoundaryComponent(Image);
+
+<BoundaryImage id="cover-art" group="albums" source={cover} />
+```
 
 ### Inline Shared Elements
 
-For simpler cases, use `sharedBoundTag` directly on `Transition.View` or `Transition.Pressable`:
+For simpler legacy cases, use `sharedBoundTag` directly on `Transition.View` or `Transition.Pressable`:
 
 ```tsx
 // Source
@@ -588,6 +612,8 @@ For simpler cases, use `sharedBoundTag` directly on `Transition.View` or `Transi
 </Transition.View>
 ```
 
+> `sharedBoundTag` on `Transition.Pressable` is planned for deprecation in the next major version. Prefer `Transition.Boundary.Pressable` and `Transition.Boundary.View`.
+
 ### Using Bounds in Interpolators
 
 ```tsx
@@ -601,7 +627,7 @@ screenStyleInterpolator: ({ bounds }) => {
 
 ### Navigation Bounds (Zoom Transitions)
 
-For iOS-style zoom transitions where content expands from a source element with a masked reveal:
+For SwiftUI-like navigation zoom transitions where content expands from a source element with a masked reveal:
 
 ```tsx
 <Stack.Screen
@@ -614,7 +640,6 @@ For iOS-style zoom transitions where content expands from a source element with 
 
       return bounds({
         id: "album-art",
-        scaleMode: "uniform",
       }).navigation.zoom();
     },
     transitionSpec: {
@@ -627,11 +652,17 @@ For iOS-style zoom transitions where content expands from a source element with 
 
 `bounds().navigation.zoom()` returns a complete interpolator result with content, mask, and container styles. Set `maskEnabled: true` to pre-mount the masked view wrapper so it's ready from the first frame.
 
-`navigation.zoom()` does not accept options. Configure zoom via `Transition.Boundary` props or the outer `bounds({ ... })` call.
+`navigation.zoom()` does not accept options.
+
+Configuration guidance:
+- Preferred: define transition configuration on boundary components (`anchor`, `scaleMode`, `target`, `method`) via `Transition.Boundary.View` / `Transition.Boundary.Pressable`.
+- Supported but secondary: pass options through `bounds({ ... })` when needed.
 
 > **Note**: Navigation bounds masking requires `@react-native-masked-view/masked-view` to be installed.
 
 ### Bounds Options
+
+`bounds({ ... })` options are supported. For shared boundary flows, prefer setting configuration on boundary components and keep `bounds({ id })` minimal.
 
 | Option      | Values                             | Description                   |
 | ----------- | ---------------------------------- | ----------------------------- |
@@ -681,14 +712,17 @@ const TabBar = ({ focusedIndex, progress }) => {
 
 ## Transition Components
 
-| Component               | Description                                              |
-| ----------------------- | -------------------------------------------------------- |
-| `Transition.Boundary`   | Declarative shared element with auto-matching and groups |
-| `Transition.View`       | Animated view with `sharedBoundTag` or `styleId`         |
-| `Transition.Pressable`  | Pressable that measures bounds on press                  |
-| `Transition.ScrollView` | ScrollView with gesture coordination                     |
-| `Transition.FlatList`   | FlatList with gesture coordination                       |
-| `Transition.MaskedView` | For reveal effects (requires native)                     |
+| Component                                   | Description                                                                    |
+| ------------------------------------------- | ------------------------------------------------------------------------------ |
+| `Transition.Boundary`                       | Namespace for shared-boundary helpers                                          |
+| `Transition.Boundary.View`                  | Passive boundary wrapper for shared elements                                   |
+| `Transition.Boundary.Pressable`             | Pressable boundary wrapper with press-priority source measurement              |
+| `Transition.createBoundaryComponent`        | Factory for building boundary wrappers around custom components                |
+| `Transition.View`                           | Animated view with `sharedBoundTag` or `styleId`                               |
+| `Transition.Pressable`                      | Pressable wrapper. `sharedBoundTag` usage is legacy and planned for next-major deprecation |
+| `Transition.ScrollView`                     | ScrollView with gesture coordination + scroll-settled signaling                |
+| `Transition.FlatList`                       | FlatList with gesture coordination + scroll-settled signaling                  |
+| `Transition.MaskedView`                     | Deprecated legacy masking wrapper. Prefer `maskEnabled` on screen options      |
 
 ---
 
@@ -930,9 +964,9 @@ options={{
 
 ---
 
-## Masked View Setup
+## Masked View Setup (`maskEnabled` Recommended)
 
-Required for `SharedIGImage`, `SharedAppleMusic` presets, and `bounds().navigation.zoom()` transitions. The masked view creates the "reveal" effect where content expands from the shared element.
+Required for `SharedIGImage`, `SharedAppleMusic` presets, and `bounds().navigation.zoom()` transitions. For new code, prefer `maskEnabled: true` on screen options.
 
 > **Note**: Requires native code. Will not work in Expo Go.
 
@@ -947,72 +981,57 @@ npm install @react-native-masked-view/masked-view
 cd ios && pod install
 ```
 
-### Full Example
+### Recommended Flow (`maskEnabled`)
 
-**1. Source Screen** – Tag pressable elements:
+**1. Source Screen** – use a boundary pressable:
 
 ```tsx
 // app/index.tsx
 import { router } from "expo-router";
-import { View } from "react-native";
 import Transition from "react-native-screen-transitions";
 
 export default function HomeScreen() {
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Transition.Pressable
-        sharedBoundTag="album-art"
-        style={{
-          width: 200,
-          height: 200,
-          backgroundColor: "#1DB954",
-          borderRadius: 12,
-        }}
-        onPress={() => {
-          router.push({
-            pathname: "/details",
-            params: { sharedBoundTag: "album-art" },
-          });
-        }}
-      />
-    </View>
+    <Transition.Boundary.Pressable
+      id="album-art"
+      style={{
+        width: 200,
+        height: 200,
+        backgroundColor: "#1DB954",
+        borderRadius: 12,
+      }}
+      onPress={() => router.push("/details")}
+    />
   );
 }
 ```
 
-**2. Destination Screen** – Wrap with MaskedView and match the tag:
+**2. Destination Screen** – render the matching boundary:
 
 ```tsx
 // app/details.tsx
-import { useLocalSearchParams } from "expo-router";
 import Transition from "react-native-screen-transitions";
 
 export default function DetailsScreen() {
-  const { sharedBoundTag } = useLocalSearchParams<{ sharedBoundTag: string }>();
-
   return (
-    <Transition.MaskedView style={{ flex: 1, backgroundColor: "#121212" }}>
-      <Transition.View
-        sharedBoundTag={sharedBoundTag}
-        style={{
-          backgroundColor: "#1DB954",
-          width: 400,
-          height: 400,
-          alignSelf: "center",
-          borderRadius: 12,
-        }}
-      />
-      {/* Additional screen content */}
-    </Transition.MaskedView>
+    <Transition.Boundary.View
+      id="album-art"
+      style={{
+        backgroundColor: "#1DB954",
+        width: 400,
+        height: 400,
+        alignSelf: "center",
+        borderRadius: 12,
+      }}
+    />
   );
 }
 ```
 
-**3. Layout** – Apply the preset with dynamic tag:
+**3. Layout** – enable `maskEnabled` and use `bounds().navigation.zoom()`:
 
 ```tsx
 // app/_layout.tsx
-import Transition from "react-native-screen-transitions";
 import { Stack } from "./stack";
 
 export default function RootLayout() {
@@ -1021,23 +1040,36 @@ export default function RootLayout() {
       <Stack.Screen name="index" />
       <Stack.Screen
         name="details"
-        options={({ route }) => ({
-          ...Transition.Presets.SharedAppleMusic({
-            sharedBoundTag: route.params?.sharedBoundTag ?? "",
-          }),
-        })}
+        options={{
+          maskEnabled: true,
+          screenStyleInterpolator: ({ bounds, focused }) => {
+            "worklet";
+            if (!focused) return {};
+            return bounds({ id: "album-art" }).navigation.zoom();
+          },
+        }}
       />
     </Stack>
   );
 }
 ```
 
+### Legacy Fallback (Deprecated): `Transition.MaskedView`
+
+`Transition.MaskedView` remains available for legacy/manual masking flows, but new implementations should use `maskEnabled`.
+
+```tsx
+<Transition.MaskedView style={{ flex: 1 }}>
+  <Transition.View sharedBoundTag="album-art" />
+</Transition.MaskedView>
+```
+
 ### How It Works
 
-1. `Transition.Boundary` (or `Transition.Pressable`) measures its bounds and stores them with the tag
-2. `Transition.Boundary` (or `Transition.View`) on the destination registers as the target for that tag
-3. `Transition.MaskedView` (or `maskEnabled: true`) clips content to the animating shared element bounds
-4. The preset interpolates position, size, and mask for a seamless expand/collapse effect
+1. `Transition.Boundary.Pressable` measures and stores source bounds (legacy fallback: `Transition.Pressable` with `sharedBoundTag`, planned for next-major deprecation).
+2. `Transition.Boundary.View` (or `Transition.View`) on the destination registers the matching target.
+3. `maskEnabled: true` pre-mounts the masked wrapper for zoom/reveal transitions (legacy fallback: `Transition.MaskedView`).
+4. The zoom preset interpolates position, size, and mask for a seamless expand/collapse effect.
 
 ---
 
