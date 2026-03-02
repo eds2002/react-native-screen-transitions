@@ -23,7 +23,10 @@ export type {
 	BoundsNavigationAccessor,
 	BoundsNavigationOptions,
 	BoundsNavigationPreset,
+	BoundsNavigationZoomOptions,
 	BoundsStyleOptions,
+	ZoomEdgeInsets,
+	ZoomRadiusValue,
 } from "./bounds.types";
 export type {
 	ActivationArea,

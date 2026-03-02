@@ -1,11 +1,111 @@
 import { BoundStore } from "../../../../stores/bounds";
-import type { BoundsNavigationOptions } from "../../../../types/bounds.types";
+import type {
+	BoundsNavigationZoomOptions,
+	ZoomEdgeInsets,
+	ZoomRadiusValue,
+} from "../../../../types/bounds.types";
 import type { BoundsOptions } from "../../types/options";
 import type { ResolveTag } from "./types";
+
+const DEFAULT_DRAG_RESISTANCE = 0.4;
+const DEFAULT_DRAG_DIRECTIONAL_SCALE_MIN = 0.25;
+const DEFAULT_MASK_BORDER_RADIUS: ZoomRadiusValue = 12;
+
+const ZERO_OUTSET = Object.freeze({
+	top: 0,
+	right: 0,
+	bottom: 0,
+	left: 0,
+});
+
+type ResolvedZoomOutset = {
+	top: number;
+	right: number;
+	bottom: number;
+	left: number;
+};
+
+export type ResolvedNavigationZoomOptions = {
+	mask: {
+		borderRadius: ZoomRadiusValue;
+		borderTopLeftRadius?: ZoomRadiusValue;
+		borderTopRightRadius?: ZoomRadiusValue;
+		borderBottomLeftRadius?: ZoomRadiusValue;
+		borderBottomRightRadius?: ZoomRadiusValue;
+		borderCurve?: "circular" | "continuous";
+		outset: ResolvedZoomOutset;
+	};
+	motion: {
+		dragResistance: number;
+		dragDirectionalScaleMin: number;
+	};
+};
 
 export const toNumber = (value: unknown, fallback = 0): number => {
 	"worklet";
 	return typeof value === "number" ? value : fallback;
+};
+
+const isFiniteNumber = (value: unknown): value is number => {
+	"worklet";
+	return typeof value === "number" && Number.isFinite(value);
+};
+
+const normalizeOutset = (value?: ZoomEdgeInsets): ResolvedZoomOutset => {
+	"worklet";
+	if (typeof value === "number") {
+		return {
+			top: value,
+			right: value,
+			bottom: value,
+			left: value,
+		};
+	}
+
+	if (!value) {
+		return ZERO_OUTSET;
+	}
+
+	return {
+		top: isFiniteNumber(value.top) ? value.top : 0,
+		right: isFiniteNumber(value.right) ? value.right : 0,
+		bottom: isFiniteNumber(value.bottom) ? value.bottom : 0,
+		left: isFiniteNumber(value.left) ? value.left : 0,
+	};
+};
+
+const normalizeZoomOptions = (
+	navigationOptions?: BoundsNavigationZoomOptions,
+): ResolvedNavigationZoomOptions => {
+	"worklet";
+
+	const resolvedMaskRadius =
+		navigationOptions?.mask?.borderRadius ??
+		(isFiniteNumber(navigationOptions?.maskBorderRadius)
+			? navigationOptions?.maskBorderRadius
+			: DEFAULT_MASK_BORDER_RADIUS);
+
+	return {
+		mask: {
+			borderRadius: resolvedMaskRadius,
+			borderTopLeftRadius: navigationOptions?.mask?.borderTopLeftRadius,
+			borderTopRightRadius: navigationOptions?.mask?.borderTopRightRadius,
+			borderBottomLeftRadius: navigationOptions?.mask?.borderBottomLeftRadius,
+			borderBottomRightRadius: navigationOptions?.mask?.borderBottomRightRadius,
+			borderCurve: navigationOptions?.mask?.borderCurve,
+			outset: normalizeOutset(navigationOptions?.mask?.outset),
+		},
+		motion: {
+			dragResistance: isFiniteNumber(navigationOptions?.motion?.dragResistance)
+				? navigationOptions.motion.dragResistance
+				: DEFAULT_DRAG_RESISTANCE,
+			dragDirectionalScaleMin: isFiniteNumber(
+				navigationOptions?.motion?.dragDirectionalScaleMin,
+			)
+				? navigationOptions.motion.dragDirectionalScaleMin
+				: DEFAULT_DRAG_DIRECTIONAL_SCALE_MIN,
+		},
+	};
 };
 
 export const resolveNavigationConfig = ({
@@ -18,7 +118,7 @@ export const resolveNavigationConfig = ({
 }: {
 	id: string;
 	group?: string;
-	navigationOptions?: BoundsNavigationOptions;
+	navigationOptions?: BoundsNavigationZoomOptions;
 	currentRouteKey?: string;
 	resolveTag: ResolveTag;
 	defaultAnchor: BoundsOptions["anchor"] | undefined;
@@ -26,6 +126,7 @@ export const resolveNavigationConfig = ({
 	resolvedTag: string;
 	sharedOptions: Partial<BoundsOptions>;
 	explicitTarget: BoundsOptions["target"] | undefined;
+	zoomOptions: ResolvedNavigationZoomOptions;
 } | null => {
 	"worklet";
 	const resolvedTag = resolveTag({ id, group });
@@ -57,7 +158,6 @@ export const resolveNavigationConfig = ({
 	}
 
 	const sharedOptions: Partial<BoundsOptions> = {
-		...(navigationOptions ?? {}),
 		anchor:
 			navigationOptions?.anchor ?? effectiveConfig?.anchor ?? defaultAnchor,
 		scaleMode:
@@ -65,10 +165,12 @@ export const resolveNavigationConfig = ({
 	};
 
 	const explicitTarget = navigationOptions?.target ?? effectiveConfig?.target;
+	const zoomOptions = normalizeZoomOptions(navigationOptions);
 
 	return {
 		resolvedTag,
 		sharedOptions,
 		explicitTarget,
+		zoomOptions,
 	};
 };

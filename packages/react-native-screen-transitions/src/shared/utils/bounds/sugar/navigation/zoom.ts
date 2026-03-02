@@ -1,12 +1,16 @@
-import { interpolate } from "react-native-reanimated";
+import { interpolate, type StyleProps } from "react-native-reanimated";
 import {
 	EPSILON,
 	NAVIGATION_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_STYLE_ID,
 	NO_STYLES,
 } from "../../../../constants";
-import { BoundStore } from "../../../../stores/bounds";
+import {
+	BoundStore,
+	type ResolvedTransitionPair,
+} from "../../../../stores/bounds";
 import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
+import type { ZoomRadiusValue } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
 import { interpolateClamped } from "../../helpers/interpolate";
 import {
@@ -17,11 +21,13 @@ import {
 	normalizedToTranslation,
 } from "../../helpers/math";
 import type { BoundsOptions } from "../../types/options";
-import { resolveNavigationConfig, toNumber } from "./helpers";
+import {
+	type ResolvedNavigationZoomOptions,
+	resolveNavigationConfig,
+	toNumber,
+} from "./helpers";
 import type { BuildNavigationStylesParams } from "./types";
 
-const DRAG_RESISTANCE = 0.4;
-const DIRECTIONAL_DRAG_SCALE_OUTPUT = [1, 0.25] as const;
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 
 const getZoomContentTarget = ({
@@ -33,6 +39,7 @@ const getZoomContentTarget = ({
 	entering,
 	screenLayout,
 	anchor,
+	resolvedPair,
 }: {
 	explicitTarget: BoundsOptions["target"] | undefined;
 	resolvedTag: string;
@@ -42,17 +49,21 @@ const getZoomContentTarget = ({
 	entering: boolean;
 	screenLayout: Layout;
 	anchor: BoundsOptions["anchor"] | undefined;
+	resolvedPair?: ResolvedTransitionPair;
 }) => {
 	"worklet";
 	if (explicitTarget !== undefined) return explicitTarget;
 
-	const resolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
-		currentScreenKey: currentRouteKey,
-		previousScreenKey: previousRouteKey,
-		nextScreenKey: nextRouteKey,
-		entering,
-	});
-	const sourceBounds = resolvedPair.sourceBounds;
+	const pair =
+		resolvedPair ??
+		BoundStore.resolveTransitionPair(resolvedTag, {
+			currentScreenKey: currentRouteKey,
+			previousScreenKey: previousRouteKey,
+			nextScreenKey: nextRouteKey,
+			entering,
+		});
+
+	const sourceBounds = pair.sourceBounds;
 	const screenWidth = screenLayout.width;
 
 	if (!sourceBounds || sourceBounds.width <= 0 || screenWidth <= 0) {
@@ -116,6 +127,139 @@ const getZoomContentTarget = ({
 	};
 };
 
+const getStyleRadius = (
+	styles: StyleProps | null,
+	property:
+		| "borderRadius"
+		| "borderTopLeftRadius"
+		| "borderTopRightRadius"
+		| "borderBottomLeftRadius"
+		| "borderBottomRightRadius",
+): number | undefined => {
+	"worklet";
+	if (!styles || typeof styles !== "object") return undefined;
+
+	const styleRecord = styles as Record<string, unknown>;
+	const direct = styleRecord[property];
+	if (typeof direct === "number") return direct;
+
+	if (property !== "borderRadius") {
+		const fallback = styleRecord.borderRadius;
+		if (typeof fallback === "number") return fallback;
+	}
+
+	return undefined;
+};
+
+const resolveRadiusRange = ({
+	value,
+	progress,
+	sourceRadius,
+	destinationRadius,
+	fallback,
+}: {
+	value: ZoomRadiusValue | undefined;
+	progress: number;
+	sourceRadius?: number;
+	destinationRadius?: number;
+	fallback: number;
+}): number => {
+	"worklet";
+
+	if (typeof value === "number") return value;
+
+	if (value === "auto") {
+		const from = sourceRadius ?? fallback;
+		const to = destinationRadius ?? fallback;
+		return interpolate(progress, [0, 1], [from, to], "clamp");
+	}
+
+	if (value && typeof value === "object") {
+		const from = typeof value.from === "number" ? value.from : fallback;
+		const to = typeof value.to === "number" ? value.to : fallback;
+		return interpolate(progress, [0, 1], [from, to], "clamp");
+	}
+
+	const from = sourceRadius ?? fallback;
+	const to = destinationRadius ?? fallback;
+	return interpolate(progress, [0, 1], [from, to], "clamp");
+};
+
+const resolveMaskRadii = ({
+	progress,
+	zoomOptions,
+	resolvedPair,
+}: {
+	progress: number;
+	zoomOptions: ResolvedNavigationZoomOptions;
+	resolvedPair: ResolvedTransitionPair;
+}) => {
+	"worklet";
+	const sourceStyles = resolvedPair.sourceStyles;
+	const destinationStyles = resolvedPair.destinationStyles;
+
+	const defaultRadius = resolveRadiusRange({
+		value: zoomOptions.mask.borderRadius,
+		progress,
+		sourceRadius: getStyleRadius(sourceStyles, "borderRadius"),
+		destinationRadius: getStyleRadius(destinationStyles, "borderRadius"),
+		fallback: 12,
+	});
+
+	const topLeftValue =
+		zoomOptions.mask.borderTopLeftRadius ?? zoomOptions.mask.borderRadius;
+	const topRightValue =
+		zoomOptions.mask.borderTopRightRadius ?? zoomOptions.mask.borderRadius;
+	const bottomLeftValue =
+		zoomOptions.mask.borderBottomLeftRadius ?? zoomOptions.mask.borderRadius;
+	const bottomRightValue =
+		zoomOptions.mask.borderBottomRightRadius ?? zoomOptions.mask.borderRadius;
+
+	return {
+		borderRadius: defaultRadius,
+		borderTopLeftRadius: resolveRadiusRange({
+			value: topLeftValue,
+			progress,
+			sourceRadius: getStyleRadius(sourceStyles, "borderTopLeftRadius"),
+			destinationRadius: getStyleRadius(
+				destinationStyles,
+				"borderTopLeftRadius",
+			),
+			fallback: defaultRadius,
+		}),
+		borderTopRightRadius: resolveRadiusRange({
+			value: topRightValue,
+			progress,
+			sourceRadius: getStyleRadius(sourceStyles, "borderTopRightRadius"),
+			destinationRadius: getStyleRadius(
+				destinationStyles,
+				"borderTopRightRadius",
+			),
+			fallback: defaultRadius,
+		}),
+		borderBottomLeftRadius: resolveRadiusRange({
+			value: bottomLeftValue,
+			progress,
+			sourceRadius: getStyleRadius(sourceStyles, "borderBottomLeftRadius"),
+			destinationRadius: getStyleRadius(
+				destinationStyles,
+				"borderBottomLeftRadius",
+			),
+			fallback: defaultRadius,
+		}),
+		borderBottomRightRadius: resolveRadiusRange({
+			value: bottomRightValue,
+			progress,
+			sourceRadius: getStyleRadius(sourceStyles, "borderBottomRightRadius"),
+			destinationRadius: getStyleRadius(
+				destinationStyles,
+				"borderBottomRightRadius",
+			),
+			fallback: defaultRadius,
+		}),
+	};
+};
+
 export const buildZoomNavigationStyles = ({
 	id,
 	group,
@@ -134,28 +278,46 @@ export const buildZoomNavigationStyles = ({
 	const entering = !props.next;
 	const screenLayout = props.layouts.screen;
 
+	const resolvedConfig = resolveNavigationConfig({
+		id,
+		group,
+		navigationOptions,
+		currentRouteKey,
+		resolveTag,
+		defaultAnchor: "top",
+	});
+
+	if (!resolvedConfig) return NO_STYLES;
+
+	const { resolvedTag, sharedOptions, explicitTarget, zoomOptions } =
+		resolvedConfig;
+
 	const normX = props.active.gesture.normX;
 	const normY = props.active.gesture.normY;
 	const initialDirection = props.active.gesture.direction;
+	const directionalDragScaleOutput: [number, number] = [
+		1,
+		zoomOptions.motion.dragDirectionalScaleMin,
+	];
 
 	const xScaleOutput =
 		initialDirection === "horizontal"
-			? DIRECTIONAL_DRAG_SCALE_OUTPUT
+			? directionalDragScaleOutput
 			: IDENTITY_DRAG_SCALE_OUTPUT;
 	const yScaleOutput =
 		initialDirection === "vertical"
-			? DIRECTIONAL_DRAG_SCALE_OUTPUT
+			? directionalDragScaleOutput
 			: IDENTITY_DRAG_SCALE_OUTPUT;
 
 	const dragX = normalizedToTranslation({
 		normalized: normX,
 		dimension: screenLayout.width,
-		resistance: DRAG_RESISTANCE,
+		resistance: zoomOptions.motion.dragResistance,
 	});
 	const dragY = normalizedToTranslation({
 		normalized: normY,
 		dimension: screenLayout.height,
-		resistance: DRAG_RESISTANCE,
+		resistance: zoomOptions.motion.dragResistance,
 	});
 	const dragXScale = normalizedToScale({
 		normalized: normX,
@@ -169,20 +331,14 @@ export const buildZoomNavigationStyles = ({
 	});
 	const dragScale = combineScales(dragXScale, dragYScale);
 
-	const resolvedConfig = resolveNavigationConfig({
-		id,
-		group,
-		navigationOptions,
-		currentRouteKey,
-		resolveTag,
-		defaultAnchor: "top",
-	});
-
-	if (!resolvedConfig) return NO_STYLES;
-
-	const { resolvedTag, sharedOptions, explicitTarget } = resolvedConfig;
-
 	if (focused) {
+		const focusedPair = BoundStore.resolveTransitionPair(resolvedTag, {
+			currentScreenKey: currentRouteKey,
+			previousScreenKey: previousRouteKey,
+			nextScreenKey: nextRouteKey,
+			entering,
+		});
+
 		const contentTarget = getZoomContentTarget({
 			explicitTarget,
 			resolvedTag,
@@ -192,6 +348,7 @@ export const buildZoomNavigationStyles = ({
 			entering,
 			screenLayout,
 			anchor: sharedOptions.anchor,
+			resolvedPair: focusedPair,
 		});
 
 		const contentRaw = computeRaw({
@@ -210,13 +367,19 @@ export const buildZoomNavigationStyles = ({
 		const focusedFade = props.active?.closing
 			? interpolate(progress, [0.6, 1], [0, 1], "clamp")
 			: interpolate(progress, [0, 0.5], [0, 1], "clamp");
-		const maskWidth = Math.max(1, toNumber(maskRaw.width));
-		const maskHeight = Math.max(1, toNumber(maskRaw.height));
+		const { top, right, bottom, left } = zoomOptions.mask.outset;
+		const maskWidth = Math.max(1, toNumber(maskRaw.width) + left + right);
+		const maskHeight = Math.max(1, toNumber(maskRaw.height) + top + bottom);
 		const contentTranslateX = toNumber(contentRaw.translateX) + dragX;
 		const contentTranslateY = toNumber(contentRaw.translateY) + dragY;
 		const contentScale = toNumber(contentRaw.scale, 1) * dragScale;
-		const maskTranslateX = toNumber(maskRaw.translateX) + dragX;
-		const maskTranslateY = toNumber(maskRaw.translateY) + dragY;
+		const maskTranslateX = toNumber(maskRaw.translateX) + dragX - left;
+		const maskTranslateY = toNumber(maskRaw.translateY) + dragY - top;
+		const maskRadii = resolveMaskRadii({
+			progress,
+			zoomOptions,
+			resolvedPair: focusedPair,
+		});
 
 		return {
 			[NAVIGATION_CONTAINER_STYLE_ID]: {
@@ -238,7 +401,14 @@ export const buildZoomNavigationStyles = ({
 						{ translateY: maskTranslateY },
 						{ scale: dragScale },
 					],
-					borderRadius: 12,
+					borderRadius: maskRadii.borderRadius,
+					borderTopLeftRadius: maskRadii.borderTopLeftRadius,
+					borderTopRightRadius: maskRadii.borderTopRightRadius,
+					borderBottomLeftRadius: maskRadii.borderBottomLeftRadius,
+					borderBottomRightRadius: maskRadii.borderBottomRightRadius,
+					...(zoomOptions.mask.borderCurve
+						? { borderCurve: zoomOptions.mask.borderCurve }
+						: {}),
 				},
 			},
 			// Signal the destination boundary to stay visible during the transition.

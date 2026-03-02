@@ -1,5 +1,5 @@
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
-import type { BoundsNavigationOptions } from "../../../types/bounds.types";
+import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
 import { buildNavigationStyles } from "../sugar/navigation";
 import type { BoundsOptions } from "../types/options";
 import type { ResolveBoundTagParams } from "./resolve-bound-tag";
@@ -13,7 +13,10 @@ type NavigationAccessorParams = {
 		overrides?: Partial<BoundsOptions>,
 		frameProps?: Omit<ScreenInterpolationProps, "bounds">,
 	) => Record<string, unknown>;
-	zoomBaseOptions?: Pick<BoundsOptions, "anchor" | "scaleMode" | "target">;
+	zoomBaseOptions?: Pick<
+		BoundsNavigationZoomOptions,
+		"anchor" | "scaleMode" | "target"
+	>;
 };
 
 export const createNavigationAccessor = ({
@@ -30,7 +33,7 @@ export const createNavigationAccessor = ({
 
 	const computeNavigationPresetStyles = (
 		preset: "zoom",
-		navigationOptions?: BoundsNavigationOptions,
+		navigationOptions?: BoundsNavigationZoomOptions,
 	) => {
 		"worklet";
 		const frameProps = getProps();
@@ -53,9 +56,18 @@ export const createNavigationAccessor = ({
 	};
 
 	return {
-		zoom: () => {
+		zoom: (options?: BoundsNavigationZoomOptions) => {
 			"worklet";
-			return computeNavigationPresetStyles("zoom", zoomBaseOptions);
+			const mergedOptions =
+				zoomBaseOptions || options
+					? {
+							...(zoomBaseOptions ?? {}),
+							...(options ?? {}),
+							...(options?.mask ? { mask: options.mask } : {}),
+							...(options?.motion ? { motion: options.motion } : {}),
+						}
+					: undefined;
+			return computeNavigationPresetStyles("zoom", mergedOptions);
 		},
 	};
 };

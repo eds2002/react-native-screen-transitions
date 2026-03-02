@@ -655,7 +655,36 @@ For SwiftUI-like navigation zoom transitions where content expands from a source
 
 When using `surfaceComponent`, it participates in the same masked navigation container path under `maskEnabled: true`, so surface and children animate/clip together during zoom.
 
-`navigation.zoom()` does not accept options.
+`navigation.zoom(options?)` accepts optional zoom overrides for mask shape and drag feel.
+
+```tsx
+screenStyleInterpolator: ({ bounds, focused }) => {
+  "worklet";
+  if (!focused) return {};
+
+  return bounds({ id: "album-art" }).navigation.zoom({
+    mask: {
+      borderRadius: { from: 24, to: 0 },
+      borderCurve: "continuous",
+      outset: { bottom: 16 },
+    },
+    motion: {
+      dragResistance: 0.32,
+      dragDirectionalScaleMin: 0.2,
+    },
+  });
+};
+```
+
+`navigation.zoom(options)` fields:
+- `anchor`, `scaleMode`, `target`: same meaning as `bounds({ ... })` options
+- `mask.borderRadius`: `number`, `"auto"`, or `{ from, to }`
+- `mask.borderTopLeftRadius`, `mask.borderTopRightRadius`, `mask.borderBottomLeftRadius`, `mask.borderBottomRightRadius`: per-corner overrides
+- `mask.borderCurve`: `"circular"` or `"continuous"` (where supported)
+- `mask.outset`: `number` or `{ top, right, bottom, left }` to expand mask bounds and avoid edge clipping
+- `motion.dragResistance`: drag translation resistance (default `0.4`)
+- `motion.dragDirectionalScaleMin`: directional drag minimum scale (default `0.25`)
+- `maskBorderRadius`: deprecated alias for `mask.borderRadius`
 
 Configuration guidance:
 - Preferred: define transition configuration on boundary components (`anchor`, `scaleMode`, `target`, `method`) via `Transition.Boundary.View` / `Transition.Boundary.Pressable`.

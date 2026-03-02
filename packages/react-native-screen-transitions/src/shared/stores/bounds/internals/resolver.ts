@@ -1,3 +1,4 @@
+import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import { matchesScreenKey } from "../helpers/matching";
 import type {
 	ResolvedTransitionPair,
@@ -69,7 +70,11 @@ function findPendingLinkBySource(
 function getSnapshotBoundsByPriority(
 	tag: TagID,
 	keys: (ScreenKey | undefined)[],
-): { bounds: any; screenKey: ScreenKey } | null {
+): {
+	bounds: MeasuredDimensions;
+	styles: StyleProps;
+	screenKey: ScreenKey;
+} | null {
 	"worklet";
 	for (let i = 0; i < keys.length; i++) {
 		const key = keys[i];
@@ -78,6 +83,7 @@ function getSnapshotBoundsByPriority(
 		if (!snapshot) continue;
 		return {
 			bounds: snapshot.bounds,
+			styles: snapshot.styles,
 			screenKey: key,
 		};
 	}
@@ -149,6 +155,8 @@ function resolveTransitionPair(
 
 	let sourceBounds = matchedLink?.source?.bounds ?? null;
 	let destinationBounds = matchedLink?.destination?.bounds ?? null;
+	let sourceStyles = matchedLink?.source?.styles ?? null;
+	let destinationStyles = matchedLink?.destination?.styles ?? null;
 	let sourceScreenKey = matchedLink?.source?.screenKey ?? null;
 	let destinationScreenKey = matchedLink?.destination?.screenKey ?? null;
 	let usedSnapshotSource = false;
@@ -174,6 +182,7 @@ function resolveTransitionPair(
 		const sourceSnapshot = getSnapshotBoundsByPriority(tag, sourceFallbackKeys);
 		if (sourceSnapshot) {
 			sourceBounds = sourceSnapshot.bounds;
+			sourceStyles = sourceSnapshot.styles;
 			sourceScreenKey = sourceSnapshot.screenKey;
 			usedSnapshotSource = true;
 		}
@@ -186,6 +195,7 @@ function resolveTransitionPair(
 		);
 		if (destinationSnapshot) {
 			destinationBounds = destinationSnapshot.bounds;
+			destinationStyles = destinationSnapshot.styles;
 			destinationScreenKey = destinationSnapshot.screenKey;
 			usedSnapshotDestination = true;
 		}
@@ -202,6 +212,8 @@ function resolveTransitionPair(
 	return {
 		sourceBounds,
 		destinationBounds,
+		sourceStyles,
+		destinationStyles,
 		sourceScreenKey,
 		destinationScreenKey,
 		usedPending,

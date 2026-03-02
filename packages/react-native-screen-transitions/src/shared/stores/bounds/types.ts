@@ -43,6 +43,8 @@ export type ResolveTransitionContext = {
 export type ResolvedTransitionPair = {
 	sourceBounds: MeasuredDimensions | null;
 	destinationBounds: MeasuredDimensions | null;
+	sourceStyles: StyleProps | null;
+	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
 	usedPending: boolean;

@@ -1,8 +1,10 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { Snapshot } from "../stores/bounds";
 import type {
+	BoundsAnchor,
 	BoundsOptions,
 	BoundsOptionsResult,
+	BoundsScaleMode,
 } from "../utils/bounds/types/options";
 import type { TransitionInterpolatedStyle } from "./animation.types";
 
@@ -29,12 +31,42 @@ export type BoundsStyleOptions = Omit<BoundsOptions, "id" | "group">;
 
 export type BoundsNavigationPreset = "zoom";
 
-export type BoundsNavigationOptions = BoundsStyleOptions & {
+export type ZoomEdgeInsets =
+	| number
+	| { top?: number; right?: number; bottom?: number; left?: number };
+
+export type ZoomRadiusValue = number | "auto" | { from?: number; to?: number };
+
+export type BoundsNavigationZoomOptions = {
+	anchor?: BoundsAnchor;
+	scaleMode?: BoundsScaleMode;
+	target?: "bound" | "fullscreen" | MeasuredDimensions;
+	mask?: {
+		borderRadius?: ZoomRadiusValue;
+		borderTopLeftRadius?: ZoomRadiusValue;
+		borderTopRightRadius?: ZoomRadiusValue;
+		borderBottomLeftRadius?: ZoomRadiusValue;
+		borderBottomRightRadius?: ZoomRadiusValue;
+		borderCurve?: "circular" | "continuous";
+		outset?: ZoomEdgeInsets;
+	};
+	motion?: {
+		dragResistance?: number;
+		dragDirectionalScaleMin?: number;
+	};
+	/**
+	 * @deprecated Use `mask.borderRadius` instead.
+	 */
 	maskBorderRadius?: number;
 };
 
+/**
+ * @deprecated Use `BoundsNavigationZoomOptions`.
+ */
+export type BoundsNavigationOptions = BoundsNavigationZoomOptions;
+
 export type BoundsNavigationAccessor = {
-	zoom: () => TransitionInterpolatedStyle;
+	zoom: (options?: BoundsNavigationZoomOptions) => TransitionInterpolatedStyle;
 };
 
 type BoundsBoundNavigationAccessor = {

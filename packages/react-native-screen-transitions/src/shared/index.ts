@@ -43,6 +43,7 @@ export type {
 	BoundsNavigationAccessor,
 	BoundsNavigationOptions,
 	BoundsNavigationPreset,
+	BoundsNavigationZoomOptions,
 	BoundsStyleOptions,
 	LegacyTransitionInterpolatedStyle,
 	NewTransitionInterpolatedStyle,
@@ -58,4 +59,6 @@ export type {
 	TransitionSlotExplicit,
 	TransitionSlotStyle,
 	TransitionSpec,
+	ZoomEdgeInsets,
+	ZoomRadiusValue,
 } from "./types";
