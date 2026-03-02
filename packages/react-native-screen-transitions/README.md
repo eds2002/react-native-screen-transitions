@@ -437,6 +437,7 @@ Use `surfaceComponent` to render a custom surface inside the animated content wr
 - `content` drives container-level transitions (position/scale/opacity)
 - `surface` drives custom surface styles/props
 - Animated props are driven by the `surface` slot in your interpolator
+- When `maskEnabled: true` is active, the surface is rendered inside the masked navigation container so it stays clipped/transformed with zoom transitions
 
 ```tsx
 import { SquircleView } from "react-native-figma-squircle";
@@ -651,6 +652,8 @@ For SwiftUI-like navigation zoom transitions where content expands from a source
 ```
 
 `bounds().navigation.zoom()` returns a complete interpolator result with content, mask, and container styles. Set `maskEnabled: true` to pre-mount the masked view wrapper so it's ready from the first frame.
+
+When using `surfaceComponent`, it participates in the same masked navigation container path under `maskEnabled: true`, so surface and children animate/clip together during zoom.
 
 `navigation.zoom()` does not accept options.
 

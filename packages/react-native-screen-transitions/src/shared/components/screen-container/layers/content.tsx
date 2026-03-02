@@ -1,37 +1,22 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
-import { memo, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { memo } from "react";
+import { StyleSheet } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	useAnimatedProps,
 	useAnimatedStyle,
 } from "react-native-reanimated";
-import {
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
-	NO_PROPS,
-	NO_STYLES,
-} from "../../../constants";
+import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useGestureContext } from "../../../providers/gestures";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
-import { logger } from "../../../utils/logger";
 import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
+import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
 import { SurfaceContainer } from "./surface-container";
 
 type Props = {
 	children: React.ReactNode;
 };
-
-let LazyMaskedView = View;
-
-try {
-	LazyMaskedView = require("@react-native-masked-view/masked-view").default;
-} catch (_) {
-	// optional peer dependency
-}
-
-let hasWarnedMissingMaskedView = false;
 
 export const ContentLayer = memo(({ children }: Props) => {
 	const { stylesMap } = useScreenStyles();
@@ -41,7 +26,6 @@ export const ContentLayer = memo(({ children }: Props) => {
 	const isNavigationMaskEnabled = !!current.options.maskEnabled;
 	const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
 
-	// ── Content ──
 	const animatedContentStyle = useAnimatedStyle(() => {
 		"worklet";
 		return stylesMap.value.content?.style || NO_STYLES;
@@ -52,56 +36,6 @@ export const ContentLayer = memo(({ children }: Props) => {
 		return stylesMap.value.content?.props ?? NO_PROPS;
 	});
 
-	// ── Navigation mask / container ──
-	const animatedNavigationContainerStyle = useAnimatedStyle(() => {
-		"worklet";
-		return stylesMap.value[NAVIGATION_CONTAINER_STYLE_ID]?.style || NO_STYLES;
-	});
-
-	const animatedNavigationMaskStyle = useAnimatedStyle(() => {
-		"worklet";
-		return stylesMap.value[NAVIGATION_MASK_STYLE_ID]?.style || NO_STYLES;
-	});
-
-	useEffect(() => {
-		if (!isNavigationMaskEnabled) return;
-		if (LazyMaskedView !== View) return;
-		if (hasWarnedMissingMaskedView) return;
-
-		hasWarnedMissingMaskedView = true;
-		logger.warn(
-			"maskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
-		);
-	}, [isNavigationMaskEnabled]);
-
-	const contentChildren = isNavigationMaskEnabled ? (
-		LazyMaskedView !== View ? (
-			<LazyMaskedView
-				style={styles.navigationMaskedRoot}
-				// @ts-expect-error masked-view package types are too strict here
-				maskElement={
-					<Animated.View
-						style={[styles.navigationMaskElement, animatedNavigationMaskStyle]}
-					/>
-				}
-			>
-				<Animated.View
-					style={[styles.navigationContainer, animatedNavigationContainerStyle]}
-				>
-					{children}
-				</Animated.View>
-			</LazyMaskedView>
-		) : (
-			<Animated.View
-				style={[styles.navigationContainer, animatedNavigationContainerStyle]}
-			>
-				{children}
-			</Animated.View>
-		)
-	) : (
-		children
-	);
-
 	return (
 		<GestureDetector gesture={gestureContext!.panGesture}>
 			<Animated.View
@@ -109,9 +43,11 @@ export const ContentLayer = memo(({ children }: Props) => {
 				animatedProps={animatedContentProps}
 				pointerEvents={contentPointerEvents}
 			>
-				<SurfaceContainer pointerEvents={contentPointerEvents}>
-					{contentChildren}
-				</SurfaceContainer>
+				<MaybeMaskedNavigationContainer enabled={isNavigationMaskEnabled}>
+					<SurfaceContainer pointerEvents={contentPointerEvents}>
+						{children}
+					</SurfaceContainer>
+				</MaybeMaskedNavigationContainer>
 			</Animated.View>
 		</GestureDetector>
 	);
@@ -119,15 +55,6 @@ export const ContentLayer = memo(({ children }: Props) => {
 
 const styles = StyleSheet.create({
 	content: {
-		flex: 1,
-	},
-	navigationMaskedRoot: {
-		flex: 1,
-	},
-	navigationMaskElement: {
-		backgroundColor: "white",
-	},
-	navigationContainer: {
 		flex: 1,
 	},
 });
