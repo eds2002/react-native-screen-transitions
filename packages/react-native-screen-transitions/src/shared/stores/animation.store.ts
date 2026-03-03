@@ -11,6 +11,8 @@ export type AnimationStoreMap = {
 	closing: SharedValue<number>;
 	entering: SharedValue<number>;
 	targetProgress: SharedValue<number>;
+	/** Resolved fraction (contentHeight / screenHeight) for the 'auto' snap point. -1 = not yet measured. */
+	autoSnapPoint: SharedValue<number>;
 };
 
 const store: Record<ScreenKey, AnimationStoreMap> = {};
@@ -22,6 +24,7 @@ function createAnimationBag(): AnimationStoreMap {
 		animating: makeMutable(0),
 		entering: makeMutable(0),
 		targetProgress: makeMutable(1),
+		autoSnapPoint: makeMutable(-1),
 	};
 }
 
@@ -47,6 +50,13 @@ function getRouteAnimation(
 	return ensure(routeKey)[type];
 }
 
+function getAnimation(
+	routeKey: ScreenKey,
+	type: keyof AnimationStoreMap,
+): SharedValue<number> {
+	return getRouteAnimation(routeKey, type);
+}
+
 function getRouteAnimations(routeKey: ScreenKey): AnimationStoreMap {
 	return ensure(routeKey);
 }
@@ -59,11 +69,13 @@ function clear(routeKey: ScreenKey) {
 		cancelAnimation(bag.closing);
 		cancelAnimation(bag.entering);
 		cancelAnimation(bag.targetProgress);
+		cancelAnimation(bag.autoSnapPoint);
 	}
 	delete store[routeKey];
 }
 
 export const AnimationStore = {
+	getAnimation,
 	peekRouteAnimations,
 	getRouteAnimation,
 	getRouteAnimations,

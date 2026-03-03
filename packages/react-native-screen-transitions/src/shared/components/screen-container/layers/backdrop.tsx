@@ -23,6 +23,12 @@ export const BackdropLayer = memo(function BackdropLayer() {
 	const { isBackdropActive, backdropBehavior } = useBackdropPointerEvents();
 
 	const BackdropComponent = current.options.backdropComponent;
+	const routeKey = current.route.key;
+	const animations = AnimationStore.getRouteAnimations(routeKey);
+	const autoSnapPointValue = AnimationStore.getAnimation(
+		routeKey,
+		"autoSnapPoint",
+	);
 
 	const AnimatedBackdropComponent = useMemo(
 		() =>
@@ -38,24 +44,27 @@ export const BackdropLayer = memo(function BackdropLayer() {
 		}
 
 		if (backdropBehavior === "collapse") {
-			const snapPoints = current.options.snapPoints;
+			const rawSnapPoints = current.options.snapPoints;
 			const canDismiss = current.options.gestureEnabled !== false;
 
 			// No snap points → fallback to dismiss
-			if (!snapPoints || snapPoints.length === 0) {
+			if (!rawSnapPoints || rawSnapPoints.length === 0) {
 				dismissScreen();
 				return;
 			}
 
-			const animations = AnimationStore.getRouteAnimations(current.route.key);
-			const gestures = GestureStore.getRouteGestures(current.route.key);
+			const gestures = GestureStore.getRouteGestures(routeKey);
 			const transitionSpec = current.options.transitionSpec;
 
 			runOnUI(() => {
 				"worklet";
+				const resolvedSnaps = rawSnapPoints
+					.map((point) => (point === "auto" ? autoSnapPointValue.value : point))
+					.filter((point): point is number => typeof point === "number");
+
 				const { target, shouldDismiss } = findCollapseTarget(
 					animations.progress.value,
-					snapPoints,
+					resolvedSnaps,
 					canDismiss,
 				);
 
@@ -79,7 +88,14 @@ export const BackdropLayer = memo(function BackdropLayer() {
 				});
 			})();
 		}
-	}, [backdropBehavior, current, dismissScreen]);
+	}, [
+		animations,
+		autoSnapPointValue,
+		backdropBehavior,
+		current,
+		dismissScreen,
+		routeKey,
+	]);
 
 	const animatedBackdropStyle = useAnimatedStyle(() => {
 		"worklet";

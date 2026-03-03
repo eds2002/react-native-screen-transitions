@@ -11,7 +11,18 @@ const getSortedSnapPoints = (
 ): number[] | null => {
 	const snapPoints = descriptor.options?.snapPoints;
 	if (!snapPoints || snapPoints.length === 0) return null;
-	return [...snapPoints].sort((a, b) => a - b);
+
+	// Resolve 'auto' to the measured fraction stored in AnimationStore
+	const autoVal = AnimationStore.getAnimation(
+		descriptor.route.key,
+		"autoSnapPoint",
+	).value;
+
+	const resolved = snapPoints
+		.map((p) => (p === "auto" ? autoVal : p))
+		.filter((p): p is number => typeof p === "number" && p > 0);
+
+	return resolved.length > 0 ? resolved.sort((a, b) => a - b) : null;
 };
 
 export function snapDescriptorToIndex(

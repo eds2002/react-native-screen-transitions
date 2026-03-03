@@ -13,6 +13,12 @@ export type Layout = {
 
 export type ScreenKey = string;
 
+/**
+ * A single snap point value. Either a fraction of screen height (0–1) or
+ * `'auto'` to snap to the intrinsic height of the screen content.
+ */
+export type SnapPoint = number | "auto";
+
 export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	/**
 	 * Connects this component to custom animated styles defined in screenStyleInterpolator.
@@ -190,15 +196,21 @@ export type ScreenTransitionConfig = {
 	experimental_enableHighRefreshRate?: boolean;
 
 	/**
-	 * Describes heights where a screen can rest, as fractions of screen height.
-	 * Pass an array of ascending values from 0 to 1.
+	 * Describes heights where a screen can rest, as fractions of screen height,
+	 * or `'auto'` to snap to the intrinsic height of the screen content.
+	 *
+	 * Pass an array of ascending values from 0 to 1, or `'auto'`.
+	 * The `'auto'` value measures the content's natural height after layout and
+	 * converts it to the equivalent fraction of the screen height.
 	 *
 	 * @example
-	 * snapPoints={[0.5, 1.0]} // 50% and 100% of screen height
+	 * snapPoints={[0.5, 1.0]}     // 50% and 100% of screen height
+	 * snapPoints={['auto']}       // snap to content height
+	 * snapPoints={['auto', 1.0]}  // content height or full screen
 	 *
 	 * @default [1.0]
 	 */
-	snapPoints?: number[];
+	snapPoints?: SnapPoint[];
 
 	/**
 	 * The initial snap point index when the screen opens.
