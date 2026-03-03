@@ -1,19 +1,22 @@
 import { useLayoutEffect } from "react";
 import type { BaseDescriptor } from "../../providers/screen/keys.provider";
 import type { AnimationStoreMap } from "../../stores/animation.store";
+import type { SnapPoint } from "../../types/screen.types";
 import { animateToProgress } from "../../utils/animation/animate-to-progress";
 import { useHighRefreshRate } from "../animation/use-high-refresh-rate";
 
 /**
  * Calculates the initial progress value based on snap points configuration.
+ * Returns `'auto'` if the initial snap point is the `'auto'` keyword
+ * (meaning the animation must be deferred until content is measured).
  */
 function getInitialProgress({
 	snapPoints,
 	initialSnapIndex,
 }: {
-	snapPoints?: number[];
+	snapPoints?: SnapPoint[];
 	initialSnapIndex: number;
-}): number | undefined {
+}): number | "auto" | undefined {
 	if (!snapPoints) {
 		return undefined;
 	}
@@ -40,6 +43,12 @@ export function useOpenTransition(
 	useLayoutEffect(() => {
 		const { snapPoints, initialSnapIndex = 0 } = current.options;
 		const targetProgress = getInitialProgress({ snapPoints, initialSnapIndex });
+
+		// When the initial snap point is 'auto', defer the opening animation until
+		// ScreenContainer has measured the content and set autoSnapPoint.
+		if (targetProgress === "auto") {
+			return;
+		}
 
 		activateHighRefreshRate();
 		animateToProgress({

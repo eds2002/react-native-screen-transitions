@@ -1,12 +1,15 @@
+import type { SnapPoint } from "../../types/screen.types";
+
 interface ValidateSnapPointsResult {
 	hasSnapPoints: boolean;
+	hasAutoSnapPoint: boolean;
 	snapPoints: number[];
 	minSnapPoint: number;
 	maxSnapPoint: number;
 }
 
 interface ValidateSnapPointsOptions {
-	snapPoints?: number[];
+	snapPoints?: SnapPoint[];
 	canDismiss?: boolean;
 }
 
@@ -17,19 +20,28 @@ export const validateSnapPoints = ({
 	if (!snapPoints || snapPoints.length === 0) {
 		return {
 			hasSnapPoints: false,
+			hasAutoSnapPoint: false,
 			snapPoints: [],
 			minSnapPoint: -1,
 			maxSnapPoint: -1,
 		};
 	}
 
-	const normalizedSnaps = snapPoints.filter((point) =>
-		canDismiss ? Number.isFinite(point) : Number.isFinite(point) && point > 0,
+	const hasAuto = snapPoints.includes("auto");
+
+	const normalizedSnaps = snapPoints.filter(
+		(point): point is number =>
+			typeof point === "number" &&
+			(canDismiss
+				? Number.isFinite(point)
+				: Number.isFinite(point) && point > 0),
 	);
 
-	if (normalizedSnaps.length === 0) {
+	// hasSnapPoints is true if there are valid numeric points OR an 'auto' point
+	if (normalizedSnaps.length === 0 && !hasAuto) {
 		return {
 			hasSnapPoints: false,
+			hasAutoSnapPoint: false,
 			snapPoints: [],
 			minSnapPoint: -1,
 			maxSnapPoint: -1,
@@ -38,11 +50,12 @@ export const validateSnapPoints = ({
 
 	const sortedSnaps = normalizedSnaps.slice().sort((a, b) => a - b);
 	// Clamp to snap point bounds (dismiss at 0 only if allowed)
-	const minProgress = canDismiss ? 0 : sortedSnaps[0];
-	const maxProgress = sortedSnaps[sortedSnaps.length - 1];
+	const minProgress = canDismiss ? 0 : (sortedSnaps[0] ?? -1);
+	const maxProgress = sortedSnaps[sortedSnaps.length - 1] ?? -1;
 
 	return {
 		hasSnapPoints: true,
+		hasAutoSnapPoint: hasAuto,
 		snapPoints: sortedSnaps,
 		minSnapPoint: minProgress,
 		maxSnapPoint: maxProgress,

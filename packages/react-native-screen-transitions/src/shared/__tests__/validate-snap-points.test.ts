@@ -144,4 +144,60 @@ describe("validateSnapPoints", () => {
 			expect(result.maxSnapPoint).toBe(1.5);
 		});
 	});
+
+	describe("'auto' snap point", () => {
+		it("returns hasSnapPoints true for ['auto']", () => {
+			const result = validateSnapPoints({ snapPoints: ["auto"] });
+			expect(result.hasSnapPoints).toBe(true);
+		});
+
+		it("sets hasAutoSnapPoint true when 'auto' is present", () => {
+			const result = validateSnapPoints({ snapPoints: ["auto"] });
+			expect(result.hasAutoSnapPoint).toBe(true);
+		});
+
+		it("sets hasAutoSnapPoint false when no 'auto' is present", () => {
+			const result = validateSnapPoints({ snapPoints: [0.5, 1] });
+			expect(result.hasAutoSnapPoint).toBe(false);
+		});
+
+		it("excludes 'auto' from the numeric snapPoints array", () => {
+			const result = validateSnapPoints({ snapPoints: ["auto"] });
+			expect(result.snapPoints).toEqual([]);
+		});
+
+		it("returns -1 for min and max when only 'auto' is present", () => {
+			const result = validateSnapPoints({ snapPoints: ["auto"] });
+			expect(result.minSnapPoint).toBe(-1);
+			expect(result.maxSnapPoint).toBe(-1);
+		});
+
+		it("includes numeric points alongside 'auto'", () => {
+			const result = validateSnapPoints({ snapPoints: ["auto", 1.0] });
+			expect(result.hasSnapPoints).toBe(true);
+			expect(result.hasAutoSnapPoint).toBe(true);
+			expect(result.snapPoints).toEqual([1.0]);
+			expect(result.maxSnapPoint).toBe(1.0);
+		});
+
+		it("sorts numeric points and excludes 'auto' from the array", () => {
+			const result = validateSnapPoints({ snapPoints: [1.0, "auto", 0.5] });
+			expect(result.snapPoints).toEqual([0.5, 1.0]);
+			expect(result.hasAutoSnapPoint).toBe(true);
+		});
+
+		it("sets minSnapPoint to 0 when canDismiss and 'auto' is the only point", () => {
+			const result = validateSnapPoints({
+				snapPoints: ["auto"],
+				canDismiss: true,
+			});
+			expect(result.minSnapPoint).toBe(0);
+		});
+
+		it("does not mutate original array containing 'auto'", () => {
+			const original: ("auto" | number)[] = [1, "auto", 0.5];
+			validateSnapPoints({ snapPoints: original });
+			expect(original).toEqual([1, "auto", 0.5]);
+		});
+	});
 });

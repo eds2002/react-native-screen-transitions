@@ -7,6 +7,8 @@ export type AnimationStoreMap = {
 	closing: SharedValue<number>;
 	entering: SharedValue<number>;
 	targetProgress: SharedValue<number>;
+	/** Resolved fraction (contentHeight / screenHeight) for the 'auto' snap point. -1 = not yet measured. */
+	autoSnapPoint: SharedValue<number>;
 };
 
 const store: Record<ScreenKey, AnimationStoreMap> = {};
@@ -20,6 +22,7 @@ const ensure = (key: ScreenKey) => {
 			animating: makeMutable(0),
 			entering: makeMutable(1),
 			targetProgress: makeMutable(1),
+			autoSnapPoint: makeMutable(-1),
 		} satisfies AnimationStoreMap;
 		store[key] = bag;
 	}

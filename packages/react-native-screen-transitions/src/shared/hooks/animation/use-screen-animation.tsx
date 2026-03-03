@@ -131,10 +131,23 @@ export function _useScreenAnimation() {
 	const currentRouteKey = currentDescriptor?.route?.key;
 	const currentIndex = routeKeys.indexOf(currentRouteKey);
 
-	const sortedSnapPoints = useMemo(() => {
+	const sortedNumericSnapPoints = useMemo(() => {
 		const points = currentDescriptor?.options?.snapPoints;
-		return points ? [...points].sort((a, b) => a - b) : [];
+		if (!points) return [];
+		return points
+			.filter((p): p is number => typeof p === "number")
+			.sort((a, b) => a - b);
 	}, [currentDescriptor?.options?.snapPoints]);
+
+	const hasAutoSnapPoint = useMemo(
+		() => currentDescriptor?.options?.snapPoints?.includes("auto") ?? false,
+		[currentDescriptor?.options?.snapPoints],
+	);
+
+	const autoSnapPointValue = AnimationStore.getAnimation(
+		currentRouteKey ?? "_",
+		"autoSnapPoint",
+	);
 
 	const nextRouteKey = nextDescriptor?.route?.key;
 	const nextHasTransitions =
@@ -169,7 +182,17 @@ export function _useScreenAnimation() {
 		const stackProgress =
 			currentIndex >= 0 ? rootStackProgress.value - currentIndex : progress;
 
-		const snapIndex = computeSnapIndex(current.progress, sortedSnapPoints);
+		// Resolve 'auto' snap point reactively so computeSnapIndex stays accurate
+		const resolvedAutoSnap =
+			hasAutoSnapPoint && autoSnapPointValue.value > 0
+				? autoSnapPointValue.value
+				: null;
+		const resolvedSnapPoints =
+			resolvedAutoSnap !== null
+				? [...sortedNumericSnapPoints, resolvedAutoSnap].sort((a, b) => a - b)
+				: sortedNumericSnapPoints;
+
+		const snapIndex = computeSnapIndex(current.progress, resolvedSnapPoints);
 
 		return {
 			layouts: { screen: dimensions },

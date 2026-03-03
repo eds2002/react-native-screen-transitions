@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
 import { StackActions } from "@react-navigation/native";
 import { memo, useCallback } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, { runOnUI, useAnimatedStyle } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../configs/specs";
@@ -24,11 +24,19 @@ export const ScreenContainer = memo(({ children }: Props) => {
 	const { current } = useKeys();
 	const { pointerEvents, backdropBehavior } = useBackdropPointerEvents();
 	const gestureContext = useGestureContext();
+	const { height: screenHeight } = useWindowDimensions();
 
 	const BackdropComponent = current.options.backdropComponent;
 
 	const isBackdropActive =
 		backdropBehavior === "dismiss" || backdropBehavior === "collapse";
+
+	const routeKey = current.route.key;
+	const animations = AnimationStore.getAll(routeKey);
+	const autoSnapPointValue = animations.autoSnapPoint;
+
+	const hasAutoSnapPoint =
+		current.options.snapPoints?.includes("auto") ?? false;
 
 	const handleDismiss = useCallback(() => {
 		const state = current.navigation.getState();
@@ -46,24 +54,28 @@ export const ScreenContainer = memo(({ children }: Props) => {
 		}
 
 		if (backdropBehavior === "collapse") {
-			const snapPoints = current.options.snapPoints;
+			const rawSnapPoints = current.options.snapPoints;
 			const canDismiss = current.options.gestureEnabled !== false;
 
 			// No snap points → fallback to dismiss
-			if (!snapPoints || snapPoints.length === 0) {
+			if (!rawSnapPoints || rawSnapPoints.length === 0) {
 				handleDismiss();
 				return;
 			}
 
-			const animations = AnimationStore.getAll(current.route.key);
-			const gestures = GestureStore.getRouteGestures(current.route.key);
+			const gestures = GestureStore.getRouteGestures(routeKey);
 			const transitionSpec = current.options.transitionSpec;
 
 			runOnUI(() => {
 				"worklet";
+				// Resolve 'auto' snap points to numeric values inside the worklet
+				const resolvedSnaps = rawSnapPoints
+					.map((p) => (p === "auto" ? autoSnapPointValue.value : p))
+					.filter((p): p is number => typeof p === "number" && p > 0);
+
 				const { target, shouldDismiss } = findCollapseTarget(
 					animations.progress.value,
-					snapPoints,
+					resolvedSnaps,
 					canDismiss,
 				);
 
@@ -87,7 +99,52 @@ export const ScreenContainer = memo(({ children }: Props) => {
 				});
 			})();
 		}
-	}, [backdropBehavior, current, handleDismiss]);
+	}, [
+		backdropBehavior,
+		current,
+		handleDismiss,
+		routeKey,
+		animations,
+		autoSnapPointValue,
+	]);
+
+	// Measures the intrinsic content height when 'auto' is in snapPoints.
+	// Sets autoSnapPoint on the UI thread so worklets can reactively read it.
+	// If the open animation was deferred (progress still at 0), triggers it now.
+	const handleContentLayout = useCallback(
+		(event: { nativeEvent: { layout: { height: number } } }) => {
+			const contentHeight = event.nativeEvent.layout.height;
+			if (contentHeight <= 0) return;
+
+			const fraction = Math.min(contentHeight / screenHeight, 1);
+			const transitionSpec = current.options.transitionSpec;
+
+			runOnUI(() => {
+				"worklet";
+				const isFirstMeasurement = autoSnapPointValue.value <= 0;
+				autoSnapPointValue.value = fraction;
+
+				// If the screen was waiting for measurement before opening, animate now
+				if (
+					isFirstMeasurement &&
+					animations.progress.value === 0 &&
+					animations.animating.value === 0
+				) {
+					animateToProgress({
+						target: fraction,
+						spec: transitionSpec,
+						animations,
+					});
+				}
+			})();
+		},
+		[
+			screenHeight,
+			current.options.transitionSpec,
+			animations,
+			autoSnapPointValue,
+		],
+	);
 
 	const animatedContentStyle = useAnimatedStyle(() => {
 		"worklet";
@@ -121,7 +178,11 @@ export const ScreenContainer = memo(({ children }: Props) => {
 					style={[styles.content, animatedContentStyle]}
 					pointerEvents={isBackdropActive ? "box-none" : pointerEvents}
 				>
-					{children}
+					{hasAutoSnapPoint ? (
+						<View onLayout={handleContentLayout}>{children}</View>
+					) : (
+						children
+					)}
 				</Animated.View>
 			</GestureDetector>
 		</View>
