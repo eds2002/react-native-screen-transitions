@@ -762,7 +762,9 @@ const TabBar = ({ focusedIndex, progress }) => {
 
 ### useScreenAnimation
 
-Access animation state inside a screen:
+Access animation state inside a screen.
+
+By default, this returns the local screen animation values:
 
 ```tsx
 import { useScreenAnimation } from "react-native-screen-transitions";
@@ -775,6 +777,35 @@ function DetailScreen() {
   }));
 
   return <Animated.View style={style}>...</Animated.View>;
+}
+```
+
+You can also target ancestor animations:
+
+```tsx
+const self = useScreenAnimation(); // local screen
+const parent = useScreenAnimation("parent"); // immediate parent
+const root = useScreenAnimation("root"); // highest ancestor
+const grandparent = useScreenAnimation({ ancestor: 2 }); // explicit depth
+```
+
+If the requested target does not exist, the hook automatically falls back to local (`self`) values.
+
+Nested navigator example (`/_layout -> nested/_layout -> index`) where the leaf animates with the parent gesture:
+
+```tsx
+import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import { useScreenAnimation } from "react-native-screen-transitions";
+
+function NestedIndexScreen() {
+  const parentAnimation = useScreenAnimation("parent");
+
+  const staggeredStyle = useAnimatedStyle(() => ({
+    opacity: parentAnimation.value.active.progress,
+    transform: [{ translateY: (1 - parentAnimation.value.active.progress) * 16 }],
+  }));
+
+  return <Animated.View style={staggeredStyle}>{/* content */}</Animated.View>;
 }
 ```
 

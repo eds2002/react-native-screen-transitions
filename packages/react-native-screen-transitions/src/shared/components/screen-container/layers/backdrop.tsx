@@ -97,6 +97,9 @@ export const BackdropLayer = memo(function BackdropLayer() {
 			pointerEvents={isBackdropActive ? "auto" : "none"}
 			onPress={isBackdropActive ? handleBackdropPress : undefined}
 		>
+			{/* Keep blur props and visual style separated.
+			 * BlurView's animatable ref points at the inner native blur view, and mixing
+			 * animated style with animatedProps can break intensity updates. */}
 			{AnimatedBackdropComponent && (
 				<AnimatedBackdropComponent
 					style={[StyleSheet.absoluteFillObject]}

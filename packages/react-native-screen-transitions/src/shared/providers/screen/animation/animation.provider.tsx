@@ -1,23 +1,26 @@
-import { type ReactNode, useMemo } from "react";
+import { createContext, type ReactNode, useContext, useMemo } from "react";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
-import createProvider from "../../../utils/create-provider";
 import { useScreenAnimationPipeline } from "./helpers/pipeline";
 
 type Props = {
 	children: ReactNode;
 };
 
-type ScreenAnimationContextValue = ReturnType<
+export type ScreenAnimationContextValue = ReturnType<
 	typeof useScreenAnimationPipeline
 > & {
 	screenAnimation: DerivedValue<ScreenInterpolationProps>;
+	ancestorScreenAnimations: DerivedValue<ScreenInterpolationProps>[];
 };
 
-const { ScreenAnimationProvider, useScreenAnimationContext } = createProvider(
-	"ScreenAnimation",
-	{ guarded: true },
-)<Props, ScreenAnimationContextValue>(() => {
+const ScreenAnimationContext =
+	createContext<ScreenAnimationContextValue | null>(null);
+ScreenAnimationContext.displayName = "ScreenAnimation";
+
+function ScreenAnimationProvider({ children }: Props) {
+	const parentContext = useContext(ScreenAnimationContext);
+
 	const {
 		screenInterpolatorProps,
 		nextInterpolator,
@@ -34,6 +37,17 @@ const { ScreenAnimationProvider, useScreenAnimationContext } = createProvider(
 		};
 	});
 
+	const ancestorScreenAnimations = useMemo(() => {
+		if (!parentContext) {
+			return [];
+		}
+
+		return [
+			parentContext.screenAnimation,
+			...parentContext.ancestorScreenAnimations,
+		];
+	}, [parentContext]);
+
 	const value = useMemo(
 		() => ({
 			screenInterpolatorProps,
@@ -41,6 +55,7 @@ const { ScreenAnimationProvider, useScreenAnimationContext } = createProvider(
 			currentInterpolator,
 			boundsAccessor,
 			screenAnimation,
+			ancestorScreenAnimations,
 		}),
 		[
 			screenInterpolatorProps,
@@ -48,10 +63,31 @@ const { ScreenAnimationProvider, useScreenAnimationContext } = createProvider(
 			currentInterpolator,
 			boundsAccessor,
 			screenAnimation,
+			ancestorScreenAnimations,
 		],
 	);
 
-	return { value };
-});
+	return (
+		<ScreenAnimationContext.Provider value={value}>
+			{children}
+		</ScreenAnimationContext.Provider>
+	);
+}
 
-export { ScreenAnimationProvider, useScreenAnimationContext };
+function useScreenAnimationContext(): ScreenAnimationContextValue {
+	const context = useContext(ScreenAnimationContext);
+
+	if (!context) {
+		throw new Error(
+			"ScreenAnimation context must be used within a ScreenAnimationProvider",
+		);
+	}
+
+	return context;
+}
+
+export {
+	ScreenAnimationContext,
+	ScreenAnimationProvider,
+	useScreenAnimationContext,
+};

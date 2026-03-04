@@ -32,6 +32,7 @@ export {
 	type ScreenState,
 	useScreenState,
 } from "./hooks/navigation/use-screen-state";
+export type { ScreenAnimationTarget } from "./providers/screen/animation";
 export { useScreenAnimation } from "./providers/screen/animation";
 export { buildBoundaryMatchKey };
 
