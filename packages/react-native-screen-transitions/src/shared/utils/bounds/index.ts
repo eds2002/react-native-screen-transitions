@@ -106,7 +106,7 @@ export const createBoundsAccessor = (
 						resolveBoundTag,
 					});
 					const resolvedPair = resolveNavigationPair(
-						resolvedNavigationOptions.id,
+						String(resolvedNavigationOptions.id),
 						currentProps,
 					);
 

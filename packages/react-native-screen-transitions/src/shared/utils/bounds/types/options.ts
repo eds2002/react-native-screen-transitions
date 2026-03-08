@@ -3,6 +3,8 @@ import type { ScreenTransitionState } from "../../../types/animation.types";
 import type { BoundsMethod } from "../../../types/bounds.types";
 import type { Layout } from "../../../types/screen.types";
 
+export type BoundId = string | number;
+
 export type BoundsAnchor =
 	| "topLeading"
 	| "top"
@@ -21,7 +23,7 @@ type BoundsTarget = "bound" | "fullscreen" | MeasuredDimensions;
 type BoundsSpace = "relative" | "absolute";
 
 export type BoundsComputeParams = {
-	id?: string;
+	id?: BoundId;
 	previous?: ScreenTransitionState;
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
@@ -81,7 +83,7 @@ export type BoundsOptions = {
 	 * The ID of the bound to compute bounds for.
 	 * When `group` is also provided, this is the member id within the group (not the combined tag).
 	 */
-	id: string;
+	id: BoundId;
 
 	/**
 	 * Optional group name for collection/list scenarios.

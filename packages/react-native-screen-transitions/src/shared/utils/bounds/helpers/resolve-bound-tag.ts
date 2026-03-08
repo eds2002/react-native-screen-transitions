@@ -1,7 +1,8 @@
 import { BoundStore } from "../../../stores/bounds";
+import type { BoundId } from "../types/options";
 
 export type ResolveBoundTagParams = {
-	id?: string;
+	id?: BoundId;
 	group?: string;
 };
 
@@ -11,16 +12,18 @@ export const resolveBoundTag = ({
 }: ResolveBoundTagParams): string | undefined => {
 	"worklet";
 
-	if (!id) return id;
+	if (id === undefined || id === null || id === "") return undefined;
+
+	const normalizedId = String(id);
 
 	if (!group) {
-		return id;
+		return normalizedId;
 	}
 
 	const currentActiveId = BoundStore.getGroupActiveId(group);
-	if (currentActiveId !== id) {
-		BoundStore.setGroupActiveId(group, id);
+	if (currentActiveId !== normalizedId) {
+		BoundStore.setGroupActiveId(group, normalizedId);
 	}
 
-	return `${group}:${id}`;
+	return `${group}:${normalizedId}`;
 };

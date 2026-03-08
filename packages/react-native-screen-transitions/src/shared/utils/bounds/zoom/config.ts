@@ -1,6 +1,6 @@
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
-import type { BoundsOptions } from "../types/options";
+import type { BoundId, BoundsOptions } from "../types/options";
 import type { ResolveTag } from "./types";
 
 const DEFAULT_DRAG_RESISTANCE = 0.4;
@@ -120,7 +120,7 @@ export const resolveZoomConfig = ({
 	resolveTag,
 	defaultAnchor,
 }: {
-	id: string;
+	id: BoundId;
 	group?: string;
 	zoomOptions?: BoundsNavigationZoomOptions;
 	currentRouteKey?: string;

@@ -1,12 +1,12 @@
 import { BoundStore } from "../../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
-import type { BoundsOptions } from "../types/options";
+import type { BoundId, BoundsOptions } from "../types/options";
 import { DEFAULT_BOUNDS_OPTIONS } from "./constants";
 import type { ResolveBoundTagParams } from "./resolve-bound-tag";
 
 type BuildBoundsOptionsParams = {
 	props: Omit<ScreenInterpolationProps, "bounds">;
-	id?: string;
+	id?: BoundId;
 	group?: string;
 	overrides?: Partial<BoundsOptions>;
 	mode?: "style" | "navigation";

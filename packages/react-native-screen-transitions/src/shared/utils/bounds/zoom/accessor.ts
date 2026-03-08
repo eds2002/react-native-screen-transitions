@@ -1,11 +1,11 @@
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
 import type { ResolveBoundTagParams } from "../helpers/resolve-bound-tag";
-import type { BoundsOptions } from "../types/options";
+import type { BoundId, BoundsOptions } from "../types/options";
 import { buildZoomStyles } from "./build";
 
 type ZoomAccessorParams = {
-	id?: string;
+	id?: BoundId;
 	group?: string;
 	getProps: () => Omit<ScreenInterpolationProps, "bounds">;
 	resolveBoundTag: (params: ResolveBoundTagParams) => string | undefined;

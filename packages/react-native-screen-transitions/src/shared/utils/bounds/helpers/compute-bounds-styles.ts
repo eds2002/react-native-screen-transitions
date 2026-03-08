@@ -12,7 +12,11 @@ import {
 } from "../../../stores/bounds";
 import type { ScreenTransitionState } from "../../../types/animation.types";
 import type { Layout } from "../../../types/screen.types";
-import type { BoundsComputeParams, BoundsOptions } from "../types/options";
+import type {
+	BoundId,
+	BoundsComputeParams,
+	BoundsOptions,
+} from "../types/options";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
@@ -27,7 +31,7 @@ import {
 } from "./style-composers";
 
 const resolveBounds = (params: {
-	id: string;
+	id: BoundId;
 	previous?: ScreenTransitionState;
 	current?: ScreenTransitionState;
 	next?: ScreenTransitionState;
@@ -51,7 +55,7 @@ const resolveBounds = (params: {
 
 	const resolvedPair =
 		params.resolvedPair ??
-		BoundStore.resolveTransitionPair(params.id, {
+		BoundStore.resolveTransitionPair(String(params.id), {
 			currentScreenKey,
 			previousScreenKey,
 			nextScreenKey,

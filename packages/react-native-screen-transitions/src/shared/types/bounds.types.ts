@@ -1,6 +1,7 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { Snapshot } from "../stores/bounds";
 import type {
+	BoundId,
 	BoundsAnchor,
 	BoundsOptions,
 	BoundsOptionsResult,
@@ -65,15 +66,15 @@ type BoundsCallResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
 
 export type BoundsAccessor = {
 	<T extends BoundsOptions>(options: T): BoundsCallResult<T>;
-	getSnapshot: (id: string, key?: string) => Snapshot | null;
-	getLink: (id: string) => BoundsLink | null;
+	getSnapshot: (id: BoundId, key?: string) => Snapshot | null;
+	getLink: (id: BoundId) => BoundsLink | null;
 	interpolateStyle: (
-		id: string,
+		id: BoundId,
 		property: keyof StyleProps,
 		fallback?: number,
 	) => number;
 	interpolateBounds: (
-		id: string,
+		id: BoundId,
 		property: keyof MeasuredDimensions,
 		fallbackOrTargetKey?: number | string,
 		fallback?: number,

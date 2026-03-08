@@ -2,6 +2,7 @@ import type { MeasuredDimensions } from "react-native-reanimated";
 import { ENTER_RANGE, EXIT_RANGE } from "../../../constants";
 import { BoundStore } from "../../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
+import type { BoundId } from "../types/options";
 import { interpolateClamped } from "./interpolate";
 import { interpolateLinkStyle } from "./interpolate-style";
 import type { LinkAccessor } from "./link-accessor";
@@ -18,7 +19,7 @@ export const createInterpolators = ({
 	"worklet";
 
 	const interpolateStyle = (
-		tag: string,
+		tag: BoundId,
 		property: string,
 		fallback?: number,
 	): number => {
@@ -32,7 +33,7 @@ export const createInterpolators = ({
 	};
 
 	const interpolateBoundsFromSnapshot = (
-		tag: string,
+		tag: BoundId,
 		property: keyof MeasuredDimensions,
 		targetKey: string,
 		fallback?: number,
@@ -44,11 +45,12 @@ export const createInterpolators = ({
 		const range = entering ? ENTER_RANGE : EXIT_RANGE;
 		const currentKey = props.current?.route?.key;
 		const fb = fallback ?? 0;
+		const normalizedTag = String(tag);
 
 		const currentSnapshot = currentKey
-			? BoundStore.getSnapshot(tag, currentKey)
+			? BoundStore.getSnapshot(normalizedTag, currentKey)
 			: null;
-		const targetSnapshot = BoundStore.getSnapshot(tag, targetKey);
+		const targetSnapshot = BoundStore.getSnapshot(normalizedTag, targetKey);
 
 		const currentValue = currentSnapshot?.bounds?.[property] ?? fb;
 		const targetValue = targetSnapshot?.bounds?.[property] ?? fb;
@@ -60,7 +62,7 @@ export const createInterpolators = ({
 	};
 
 	const interpolateBoundsFromLink = (
-		tag: string,
+		tag: BoundId,
 		property: keyof MeasuredDimensions,
 		fallback?: number,
 	): number => {
@@ -82,7 +84,7 @@ export const createInterpolators = ({
 	};
 
 	const interpolateBounds = (
-		tag: string,
+		tag: BoundId,
 		property: keyof MeasuredDimensions,
 		fallbackOrTargetKey?: number | string,
 		fallback?: number,
