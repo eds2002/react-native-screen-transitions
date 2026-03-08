@@ -58,6 +58,9 @@ export const animateToProgress = ({
 	if (!config) {
 		animating.set(FALSE);
 		progress.set(value);
+		if (!isClosing) {
+			entering.set(FALSE);
+		}
 
 		if (onAnimationFinish) {
 			runOnJS(onAnimationFinish)(true);
@@ -70,6 +73,10 @@ export const animateToProgress = ({
 		animate(value, effectiveConfig, (finished) => {
 			"worklet";
 			if (!finished) return;
+
+			if (!isClosing) {
+				entering.set(FALSE);
+			}
 
 			if (onAnimationFinish) {
 				runOnJS(onAnimationFinish)(finished);

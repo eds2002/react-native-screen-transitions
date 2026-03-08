@@ -1,5 +1,10 @@
 import { interpolate, type StyleProps } from "react-native-reanimated";
-import { EPSILON, NO_STYLES } from "../../../constants";
+import {
+	EPSILON,
+	NAVIGATION_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_STYLE_ID,
+	NO_STYLES,
+} from "../../../constants";
 import {
 	BoundStore,
 	type ResolvedTransitionPair,
@@ -13,7 +18,6 @@ import {
 	resolveZoomConfig,
 	toNumber,
 } from "./config";
-import { ZOOM_CONTAINER_STYLE_ID, ZOOM_MASK_STYLE_ID } from "./constants";
 import type { BuildZoomStylesParams } from "./types";
 
 type CombinedScaleMode = "multiply" | "average" | "max" | "min";
@@ -565,7 +569,7 @@ export const buildZoomStyles = ({
 		});
 
 		return {
-			[ZOOM_CONTAINER_STYLE_ID]: {
+			[NAVIGATION_CONTAINER_STYLE_ID]: {
 				style: {
 					opacity: focusedFade,
 					transform: [
@@ -575,7 +579,7 @@ export const buildZoomStyles = ({
 					],
 				},
 			},
-			[ZOOM_MASK_STYLE_ID]: {
+			[NAVIGATION_MASK_STYLE_ID]: {
 				style: {
 					width: maskWidth,
 					height: maskHeight,

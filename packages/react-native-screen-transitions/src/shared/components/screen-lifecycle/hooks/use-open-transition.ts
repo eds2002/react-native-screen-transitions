@@ -48,7 +48,7 @@ export function useOpenTransition(
 			animations.progress.set(target);
 			animations.animating.set(0);
 			animations.closing.set(0);
-			animations.entering.set(1);
+			animations.entering.set(0);
 			return;
 		}
 

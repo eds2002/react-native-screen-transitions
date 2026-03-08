@@ -3,6 +3,10 @@ import type {
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "../..";
+import {
+	NAVIGATION_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_STYLE_ID,
+} from "../..";
 
 const slotStyle: TransitionSlotStyle = {
 	style: {
@@ -56,6 +60,10 @@ const zoomOptions: BoundsNavigationZoomOptions = {
 };
 
 export const publicApiTypecheck = {
+	navigationSlots: {
+		container: NAVIGATION_CONTAINER_STYLE_ID,
+		mask: NAVIGATION_MASK_STYLE_ID,
+	},
 	slotStyle,
 	nestedInterpolatedStyle,
 	legacyInterpolatedStyle,

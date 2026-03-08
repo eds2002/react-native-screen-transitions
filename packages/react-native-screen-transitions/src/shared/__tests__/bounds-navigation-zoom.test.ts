@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from "bun:test";
+import {
+	NAVIGATION_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_STYLE_ID,
+} from "../constants";
 import type { ScreenInterpolationProps, ScreenTransitionState } from "../types/animation.types";
 import { createBoundsAccessor } from "../utils/bounds";
-import {
-	buildZoomStyles,
-	ZOOM_CONTAINER_STYLE_ID,
-	ZOOM_MASK_STYLE_ID,
-} from "../utils/bounds/zoom";
+import { buildZoomStyles } from "../utils/bounds/zoom";
 import { createBounds, registerSourceAndDestination } from "./helpers/bounds-behavior-fixtures";
 
 const resolveTag = ({
@@ -163,7 +163,7 @@ describe("bounds navigation zoom", () => {
 			},
 		});
 
-		expect(styles[ZOOM_CONTAINER_STYLE_ID]).toEqual({
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toEqual({
 			style: {
 				opacity: 0.5,
 				transform: [
@@ -173,7 +173,7 @@ describe("bounds navigation zoom", () => {
 				],
 			},
 		});
-		expect(styles[ZOOM_MASK_STYLE_ID]).toEqual({
+		expect(styles[NAVIGATION_MASK_STYLE_ID]).toEqual({
 			style: {
 				width: 140,
 				height: 200,
@@ -291,29 +291,31 @@ describe("bounds navigation zoom", () => {
 			normY: 0,
 		});
 
-		expect(getTransformScale(verticalDismiss, ZOOM_CONTAINER_STYLE_ID)).toBeLessThan(
+		expect(
+			getTransformScale(verticalDismiss, NAVIGATION_CONTAINER_STYLE_ID),
+		).toBeLessThan(
 			1,
 		);
 		expect(
-			getTransformScale(verticalOpposite, ZOOM_CONTAINER_STYLE_ID),
+			getTransformScale(verticalOpposite, NAVIGATION_CONTAINER_STYLE_ID),
 		).toBeGreaterThan(1);
 		expect(
-			getTransformScale(verticalInvertedDismiss, ZOOM_CONTAINER_STYLE_ID),
+			getTransformScale(verticalInvertedDismiss, NAVIGATION_CONTAINER_STYLE_ID),
 		).toBeLessThan(1);
 		expect(
-			getTransformScale(verticalInvertedOpposite, ZOOM_CONTAINER_STYLE_ID),
+			getTransformScale(verticalInvertedOpposite, NAVIGATION_CONTAINER_STYLE_ID),
 		).toBeGreaterThan(1);
 		expect(
-			getTransformScale(horizontalDismiss, ZOOM_CONTAINER_STYLE_ID),
+			getTransformScale(horizontalDismiss, NAVIGATION_CONTAINER_STYLE_ID),
 		).toBeLessThan(1);
 		expect(
-			getTransformScale(horizontalOpposite, ZOOM_CONTAINER_STYLE_ID),
+			getTransformScale(horizontalOpposite, NAVIGATION_CONTAINER_STYLE_ID),
 		).toBeGreaterThan(1);
 		expect(
-			getTransformScale(horizontalInvertedDismiss, ZOOM_CONTAINER_STYLE_ID),
+			getTransformScale(horizontalInvertedDismiss, NAVIGATION_CONTAINER_STYLE_ID),
 		).toBeLessThan(1);
 		expect(
-			getTransformScale(horizontalInvertedOpposite, ZOOM_CONTAINER_STYLE_ID),
+			getTransformScale(horizontalInvertedOpposite, NAVIGATION_CONTAINER_STYLE_ID),
 		).toBeGreaterThan(1);
 	});
 
@@ -370,8 +372,8 @@ describe("bounds navigation zoom", () => {
 				elevation: 9999,
 			},
 		});
-		expect(styles[ZOOM_CONTAINER_STYLE_ID]).toBeUndefined();
-		expect(styles[ZOOM_MASK_STYLE_ID]).toBeUndefined();
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeUndefined();
+		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeUndefined();
 	});
 
 	it("keeps bounds({ id }).navigation.zoom() wired through the zoom module", () => {
@@ -403,12 +405,12 @@ describe("bounds navigation zoom", () => {
 			},
 		});
 
-		expect(styles[ZOOM_CONTAINER_STYLE_ID]).toBeDefined();
-		expect(styles[ZOOM_MASK_STYLE_ID]).toBeDefined();
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeDefined();
+		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeDefined();
 		expect(styles["album-art"]).toBeDefined();
 		expect(
 			(
-				styles[ZOOM_MASK_STYLE_ID] as {
+				styles[NAVIGATION_MASK_STYLE_ID] as {
 					style?: { borderRadius?: number };
 				}
 			).style?.borderRadius,

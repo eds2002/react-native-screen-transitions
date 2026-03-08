@@ -20,7 +20,7 @@ function createAnimationBag(): AnimationStoreMap {
 		progress: makeMutable(0),
 		closing: makeMutable(0),
 		animating: makeMutable(0),
-		entering: makeMutable(1),
+		entering: makeMutable(0),
 		targetProgress: makeMutable(1),
 	};
 }

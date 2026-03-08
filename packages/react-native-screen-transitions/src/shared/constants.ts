@@ -13,6 +13,13 @@ export const MASK_STYLE_ID = "_ROOT_MASKED";
 export const CONTAINER_STYLE_ID = "_ROOT_CONTAINER";
 
 /**
+ * Navigation mask integration
+ */
+export const NAVIGATION_MASK_HOST_FLAG_STYLE_ID = "_NAVIGATION_MASK_HOST";
+export const NAVIGATION_MASK_STYLE_ID = "_NAVIGATION_ROOT_MASK";
+export const NAVIGATION_CONTAINER_STYLE_ID = "_NAVIGATION_ROOT_CONTAINER";
+
+/**
  * Styles
  */
 export const NO_STYLES = Object.freeze({});
@@ -48,7 +55,7 @@ export const createScreenTransitionState = (
 	closing: 0,
 	animating: 0,
 	settled: 1,
-	entering: 1,
+	entering: 0,
 	gesture: { ...DEFAULT_GESTURE_VALUES },
 	route,
 	meta,
@@ -63,7 +70,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		closing: 0,
 		animating: 0,
 		settled: 1,
-		entering: 1,
+		entering: 0,
 		gesture: DEFAULT_GESTURE_VALUES,
 		route: {} as RouteProp<ParamListBase>,
 	});
