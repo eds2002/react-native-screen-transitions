@@ -10,17 +10,6 @@ import type { GestureValues } from "./gesture.types";
 import type { Layout } from "./screen.types";
 import type { BaseStackRoute } from "./stack.types";
 
-export interface OverlayInterpolationProps {
-	progress: number;
-	layouts: {
-		/**
-		 * The `width` and `height` of the screen container.
-		 */
-		screen: Layout;
-	};
-	insets: EdgeInsets;
-}
-
 export type ScreenTransitionState = {
 	/**
 	 * Animation progress for this screen.
@@ -195,17 +184,11 @@ export type ScreenStyleInterpolator = (
  */
 export type AnimatedViewStyle = ViewStyle & TextStyle;
 
-/**
- * Explicit slot format with separate `style` and `props` buckets.
- *
- * - `style` is applied via `useAnimatedStyle` (transform, opacity, backgroundColor, etc.)
- * - `props` is applied via `useAnimatedProps` (component-specific props like BlurView intensity)
- */
-export type TransitionSlotExplicit = {
-	/** Animated styles applied via useAnimatedStyle. */
+type TransitionSlotDefinition = {
+	/** Animated styles applied via `useAnimatedStyle`. */
 	style?: AnimatedViewStyle;
-	/** Animated props applied via useAnimatedProps (e.g., BlurView intensity, SquircleView cornerRadius). */
-	props?: Record<string, any>;
+	/** Animated props applied via `useAnimatedProps`. */
+	props?: Record<string, unknown>;
 };
 
 /**
@@ -215,7 +198,7 @@ export type TransitionSlotExplicit = {
  * - **Shorthand**: Write styles directly — `{ opacity: 0.5, transform: [...] }`
  * - **Explicit**: Use `style` and/or `props` buckets — `{ style: { opacity: 0.5 }, props: { intensity: 80 } }`
  */
-export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotExplicit;
+export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
 
 /**
  * Internal normalized slot format used after the backward-compat shim.
@@ -223,7 +206,7 @@ export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotExplicit;
  */
 export type NormalizedTransitionSlotStyle = {
 	style?: StyleProps;
-	props?: Record<string, any>;
+	props?: Record<string, unknown>;
 };
 
 /**
@@ -242,10 +225,10 @@ export type NormalizedTransitionInterpolatedStyle = {
 };
 
 /**
- * Public new-format interpolator result with type-safe style autocomplete.
- * Uses `TransitionSlotStyle` (backed by `AnimatedViewStyle`) for full style autocomplete.
+ * The return type of `screenStyleInterpolator`.
+ * Uses the nested slot format, while still accepting deprecated flat keys.
  */
-export type NewTransitionInterpolatedStyle = {
+export type TransitionInterpolatedStyle = {
 	/** Animated style and props for the main screen content view. */
 	content?: TransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
@@ -254,26 +237,22 @@ export type NewTransitionInterpolatedStyle = {
 	surface?: TransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
 	[id: string]: TransitionSlotStyle | undefined;
-};
-
-/**
- * @deprecated Use the nested format instead: `{ content: { style }, backdrop: { style } }`.
- * This flat format is auto-converted via a backward-compat shim.
- */
-export type LegacyTransitionInterpolatedStyle = {
+	/**
+	 * @deprecated Use `content` instead.
+	 * This flat format is auto-converted via a backward-compat shim.
+	 */
 	contentStyle?: AnimatedViewStyle;
+	/**
+	 * @deprecated Use `backdrop` instead.
+	 * This flat format is auto-converted via a backward-compat shim.
+	 */
 	backdropStyle?: AnimatedViewStyle;
+	/**
+	 * @deprecated Use `backdrop` instead.
+	 * This flat format is auto-converted via a backward-compat shim.
+	 */
 	overlayStyle?: AnimatedViewStyle;
-	[id: string]: AnimatedViewStyle | undefined;
 };
-
-/**
- * The return type of `screenStyleInterpolator`.
- * Accepts both the new nested format and the legacy flat format (auto-converted).
- */
-export type TransitionInterpolatedStyle =
-	| NewTransitionInterpolatedStyle
-	| LegacyTransitionInterpolatedStyle;
 
 /**
  * A Reanimated animation configuration object.

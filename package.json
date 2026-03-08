@@ -14,7 +14,7 @@
 		"build": "bun run --cwd packages/react-native-screen-transitions build",
 		"knip": "bunx knip --workspace packages/react-native-screen-transitions",
 		"lint": "biome check packages/react-native-screen-transitions/src",
-		"typecheck": "tsc --noEmit -p packages/react-native-screen-transitions/tsconfig.json",
+		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",
 		"release": "bun run release:stable",
 		"release:stable": "bun run --cwd packages/react-native-screen-transitions release:stable",
 		"release:beta": "bun run --cwd packages/react-native-screen-transitions release:beta",

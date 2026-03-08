@@ -9,7 +9,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { StackScene } from "../../../hooks/navigation/use-stack";
 import { useScreenAnimation } from "../../../providers/screen/animation";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
-import type { OverlayInterpolationProps } from "../../../types/animation.types";
 import type {
 	OverlayProps,
 	OverlayScreenState,
@@ -19,6 +18,10 @@ type OverlayHostProps = {
 	scene: StackScene;
 	overlayScreenState: OverlayScreenState<BaseDescriptor["navigation"]>;
 };
+
+type OverlayAnimationState = OverlayProps<
+	BaseDescriptor["navigation"]
+>["overlayAnimation"]["value"];
 
 export const OverlayHost = memo(function OverlayHost({
 	scene,
@@ -34,7 +37,7 @@ export const OverlayHost = memo(function OverlayHost({
 		return screenAnimation.value.stackProgress;
 	});
 
-	const overlayAnimation = useDerivedValue<OverlayInterpolationProps>(() => ({
+	const overlayAnimation = useDerivedValue<OverlayAnimationState>(() => ({
 		progress: relativeProgress.value,
 		layouts: { screen },
 		insets,

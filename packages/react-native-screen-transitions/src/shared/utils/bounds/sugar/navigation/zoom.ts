@@ -10,7 +10,7 @@ import {
 	type ResolvedTransitionPair,
 } from "../../../../stores/bounds";
 import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
-import type { ZoomRadiusValue } from "../../../../types/bounds.types";
+import type { BoundsNavigationZoomOptions } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
 import { interpolateClamped } from "../../helpers/interpolate";
 import {
@@ -29,6 +29,8 @@ import {
 import type { BuildNavigationStylesParams } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
+type ZoomMask = NonNullable<BoundsNavigationZoomOptions["mask"]>;
+type ZoomRadiusValue = Exclude<ZoomMask["borderRadius"], undefined>;
 
 const getZoomContentTarget = ({
 	explicitTarget,

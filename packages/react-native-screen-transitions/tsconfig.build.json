@@ -4,8 +4,15 @@
 		"declaration": true,
 		"emitDeclarationOnly": true,
 		"declarationMap": false,
+		"rootDir": "src",
 		"outDir": "lib/typescript",
 		"skipLibCheck": true
 	},
-	"include": ["src"]
+	"include": ["src"],
+	"exclude": [
+		"**/*.typecheck.*",
+		"**/*.test.*",
+		"**/*.spec.*",
+		"**/__tests__/**"
+	]
 }

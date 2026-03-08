@@ -1,10 +1,16 @@
 import type { Route } from "@react-navigation/native";
 import type { DerivedValue } from "react-native-reanimated";
-import type {
-	OverlayInterpolationProps,
-	ScreenInterpolationProps,
-} from "./animation.types";
-import type { ScreenTransitionConfig } from "./screen.types";
+import type { EdgeInsets } from "react-native-safe-area-context";
+import type { ScreenInterpolationProps } from "./animation.types";
+import type { Layout, ScreenTransitionConfig } from "./screen.types";
+
+type DeprecatedOverlayAnimationState = {
+	progress: number;
+	layouts: {
+		screen: Layout;
+	};
+	insets: EdgeInsets;
+};
 
 /**
  * @deprecated Overlay mode is no longer needed. Overlays now always render as "float" mode.
@@ -72,7 +78,7 @@ export type OverlayProps<TNavigation = unknown> = {
 	 * @deprecated Use `progress` prop or `useScreenAnimation()` instead.
 	 * This prop will be removed in a future version.
 	 */
-	overlayAnimation: DerivedValue<OverlayInterpolationProps>;
+	overlayAnimation: DerivedValue<DeprecatedOverlayAnimationState>;
 
 	/**
 	 * Animation values for the screen.

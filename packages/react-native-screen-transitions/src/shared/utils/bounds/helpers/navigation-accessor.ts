@@ -1,6 +1,6 @@
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
-import { buildNavigationStyles } from "../sugar/navigation";
+import { buildZoomNavigationStyles } from "../sugar/navigation/zoom";
 import type { BoundsOptions } from "../types/options";
 import type { ResolveBoundTagParams } from "./resolve-bound-tag";
 
@@ -31,16 +31,14 @@ export const createNavigationAccessor = ({
 
 	const resolvedId = id ?? "";
 
-	const computeNavigationPresetStyles = (
-		preset: "zoom",
+	const computeZoomStyles = (
 		navigationOptions?: BoundsNavigationZoomOptions,
 	) => {
 		"worklet";
 		const frameProps = getProps();
-		return buildNavigationStyles({
+		return buildZoomNavigationStyles({
 			id: resolvedId,
 			group,
-			preset,
 			navigationOptions,
 			props: frameProps,
 			resolveTag: resolveBoundTag,
@@ -67,7 +65,7 @@ export const createNavigationAccessor = ({
 							...(options?.motion ? { motion: options.motion } : {}),
 						}
 					: undefined;
-			return computeNavigationPresetStyles("zoom", mergedOptions);
+			return computeZoomStyles(mergedOptions);
 		},
 	};
 };

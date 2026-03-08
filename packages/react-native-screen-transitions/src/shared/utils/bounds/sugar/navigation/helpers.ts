@@ -1,14 +1,15 @@
 import { BoundStore } from "../../../../stores/bounds";
-import type {
-	BoundsNavigationZoomOptions,
-	ZoomEdgeInsets,
-	ZoomRadiusValue,
-} from "../../../../types/bounds.types";
+import type { BoundsNavigationZoomOptions } from "../../../../types/bounds.types";
 import type { BoundsOptions } from "../../types/options";
 import type { ResolveTag } from "./types";
 
 const DEFAULT_DRAG_RESISTANCE = 0.4;
 const DEFAULT_DRAG_DIRECTIONAL_SCALE_MIN = 0.25;
+
+type ZoomMask = NonNullable<BoundsNavigationZoomOptions["mask"]>;
+type ZoomRadiusValue = Exclude<ZoomMask["borderRadius"], undefined>;
+type ZoomEdgeInsets = ZoomMask["outset"];
+
 const DEFAULT_MASK_BORDER_RADIUS: ZoomRadiusValue = 12;
 
 const ZERO_OUTSET = Object.freeze({

@@ -1,7 +1,6 @@
-import { useEffect, useLayoutEffect } from "react";
+import { useLayoutEffect } from "react";
 import {
 	runOnJS,
-	runOnUI,
 	useAnimatedReaction,
 	useDerivedValue,
 } from "react-native-reanimated";

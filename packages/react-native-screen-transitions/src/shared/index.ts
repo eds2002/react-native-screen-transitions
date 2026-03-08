@@ -3,7 +3,6 @@ import {
 	Boundary,
 	createBoundaryComponent,
 } from "./components/create-boundary-component";
-import { buildBoundaryMatchKey } from "./components/create-boundary-component/utils/build-boundary-match-key";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
 import MaskedView from "./components/integrations/masked-view";
 import { Presets, Specs } from "./configs";
@@ -32,34 +31,21 @@ export {
 	type ScreenState,
 	useScreenState,
 } from "./hooks/navigation/use-screen-state";
-export type { ScreenAnimationTarget } from "./providers/screen/animation";
-export { useScreenAnimation } from "./providers/screen/animation";
-export { buildBoundaryMatchKey };
+export {
+	type ScreenAnimationTarget,
+	useScreenAnimation,
+} from "./providers/screen/animation";
 
 export type {
 	AnimatedViewStyle,
 	AnimationConfig,
-	BoundEntry,
-	BoundsLink,
 	BoundsNavigationAccessor,
-	BoundsNavigationOptions,
-	BoundsNavigationPreset,
 	BoundsNavigationZoomOptions,
-	BoundsStyleOptions,
-	LegacyTransitionInterpolatedStyle,
-	NewTransitionInterpolatedStyle,
-	NormalizedTransitionInterpolatedStyle,
-	NormalizedTransitionSlotStyle,
-	OverlayInterpolationProps,
-	OverlayMode,
 	OverlayProps,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionConfig,
 	TransitionInterpolatedStyle,
-	TransitionSlotExplicit,
 	TransitionSlotStyle,
 	TransitionSpec,
-	ZoomEdgeInsets,
-	ZoomRadiusValue,
 } from "./types";

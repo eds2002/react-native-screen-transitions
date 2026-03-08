@@ -9,21 +9,9 @@ export function buildBoundaryMatchKey(
 	params: BuildBoundaryMatchKeyParams,
 ): string;
 export function buildBoundaryMatchKey(
-	group: string | undefined,
-	id: BoundaryId,
-): string;
-export function buildBoundaryMatchKey(
-	paramsOrGroup: BuildBoundaryMatchKeyParams | string | undefined,
-	legacyId?: BoundaryId,
+	params: BuildBoundaryMatchKeyParams,
 ): string {
 	"worklet";
-
-	if (typeof paramsOrGroup === "object" && paramsOrGroup !== null) {
-		const { group, id } = paramsOrGroup;
-		return group ? `${group}:${id}` : String(id);
-	}
-
-	const group = paramsOrGroup;
-	const id = legacyId;
+	const { group, id } = params;
 	return group ? `${group}:${id}` : String(id);
 }

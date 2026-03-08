@@ -27,28 +27,20 @@ export type BoundsLink = {
 	destination: BoundEntry | null;
 };
 
-export type BoundsStyleOptions = Omit<BoundsOptions, "id" | "group">;
-
-export type BoundsNavigationPreset = "zoom";
-
-export type ZoomEdgeInsets =
-	| number
-	| { top?: number; right?: number; bottom?: number; left?: number };
-
-export type ZoomRadiusValue = number | "auto" | { from?: number; to?: number };
-
 export type BoundsNavigationZoomOptions = {
 	anchor?: BoundsAnchor;
 	scaleMode?: BoundsScaleMode;
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
 	mask?: {
-		borderRadius?: ZoomRadiusValue;
-		borderTopLeftRadius?: ZoomRadiusValue;
-		borderTopRightRadius?: ZoomRadiusValue;
-		borderBottomLeftRadius?: ZoomRadiusValue;
-		borderBottomRightRadius?: ZoomRadiusValue;
+		borderRadius?: number | "auto" | { from?: number; to?: number };
+		borderTopLeftRadius?: number | "auto" | { from?: number; to?: number };
+		borderTopRightRadius?: number | "auto" | { from?: number; to?: number };
+		borderBottomLeftRadius?: number | "auto" | { from?: number; to?: number };
+		borderBottomRightRadius?: number | "auto" | { from?: number; to?: number };
 		borderCurve?: "circular" | "continuous";
-		outset?: ZoomEdgeInsets;
+		outset?:
+			| number
+			| { top?: number; right?: number; bottom?: number; left?: number };
 	};
 	motion?: {
 		dragResistance?: number;
@@ -59,11 +51,6 @@ export type BoundsNavigationZoomOptions = {
 	 */
 	maskBorderRadius?: number;
 };
-
-/**
- * @deprecated Use `BoundsNavigationZoomOptions`.
- */
-export type BoundsNavigationOptions = BoundsNavigationZoomOptions;
 
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => TransitionInterpolatedStyle;
