@@ -7,13 +7,6 @@ import {
 import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
 import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
 import type { Layout } from "../../../types/screen.types";
-import {
-	combineScales,
-	composeCompensatedTranslation,
-	computeCenterScaleShift,
-	normalizedToScale,
-	normalizedToTranslation,
-} from "../helpers/math";
 import type { BoundsOptions } from "../types/options";
 import {
 	type ResolvedZoomOptions,
@@ -23,9 +16,197 @@ import {
 import { ZOOM_CONTAINER_STYLE_ID, ZOOM_MASK_STYLE_ID } from "./constants";
 import type { BuildZoomStylesParams } from "./types";
 
+type CombinedScaleMode = "multiply" | "average" | "max" | "min";
+
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 type ZoomMask = NonNullable<BoundsNavigationZoomOptions["mask"]>;
 type ZoomRadiusValue = Exclude<ZoomMask["borderRadius"], undefined>;
+
+const clamp = (value: number, min: number, max: number): number => {
+	"worklet";
+	const lower = min < max ? min : max;
+	const upper = max > min ? max : min;
+
+	if (value < lower) return lower;
+	if (value > upper) return upper;
+
+	return value;
+};
+
+const clamp01 = (value: number): number => {
+	"worklet";
+	return clamp(value, 0, 1);
+};
+
+const lerp = (from: number, to: number, t: number): number => {
+	"worklet";
+	return from + (to - from) * t;
+};
+
+const safeDivide = (
+	numerator: number,
+	denominator: number,
+	fallback = 0,
+): number => {
+	"worklet";
+	if (denominator === 0) return fallback;
+	return numerator / denominator;
+};
+
+const inverseLerp = (value: number, inMin: number, inMax: number): number => {
+	"worklet";
+	return safeDivide(value - inMin, inMax - inMin, 0);
+};
+
+const mapRangeClamped = (
+	value: number,
+	inMin: number,
+	inMax: number,
+	outMin: number,
+	outMax: number,
+): number => {
+	"worklet";
+	const t = clamp01(inverseLerp(value, inMin, inMax));
+	return lerp(outMin, outMax, t);
+};
+
+const applyPowerCurve = (value: number, exponent: number): number => {
+	"worklet";
+	const safeExponent = exponent > 0 ? exponent : 1;
+	const magnitude = Math.abs(value) ** safeExponent;
+	return value < 0 ? -magnitude : magnitude;
+};
+
+const normalizedToTranslation = ({
+	normalized,
+	dimension,
+	resistance,
+}: {
+	normalized: number;
+	dimension: number;
+	resistance: number;
+}): number => {
+	"worklet";
+	const distance = Math.max(0, dimension) * resistance;
+	return mapRangeClamped(normalized, -1, 1, -distance, distance);
+};
+
+const normalizedToScale = ({
+	normalized,
+	outputRange,
+	exponent = 1,
+	positiveOnly = true,
+}: {
+	normalized: number;
+	outputRange: readonly [number, number];
+	exponent?: number;
+	positiveOnly?: boolean;
+}): number => {
+	"worklet";
+	const [outputStart, outputEnd] = outputRange;
+	const raw = positiveOnly
+		? mapRangeClamped(normalized, 0, 1, outputStart, outputEnd)
+		: mapRangeClamped(normalized, -1, 1, outputStart, outputEnd);
+
+	return applyPowerCurve(raw, exponent);
+};
+
+const combineScales = (
+	scaleX: number,
+	scaleY: number,
+	mode: CombinedScaleMode = "multiply",
+): number => {
+	"worklet";
+
+	switch (mode) {
+		case "average":
+			return (scaleX + scaleY) / 2;
+		case "max":
+			return Math.max(scaleX, scaleY);
+		case "min":
+			return Math.min(scaleX, scaleY);
+		default:
+			return scaleX * scaleY;
+	}
+};
+
+const computeCenterScaleShift = ({
+	center,
+	containerCenter,
+	scale,
+}: {
+	center: number;
+	containerCenter: number;
+	scale: number;
+}): number => {
+	"worklet";
+	return (center - containerCenter) * (scale - 1);
+};
+
+const compensateTranslationForParentScale = ({
+	translation,
+	parentScale,
+	epsilon,
+}: {
+	translation: number;
+	parentScale: number;
+	epsilon: number;
+}): number => {
+	"worklet";
+	const safeParentScale = Math.max(parentScale, epsilon);
+	return safeDivide(translation, safeParentScale, translation);
+};
+
+const composeCompensatedTranslation = ({
+	gesture,
+	parentScale,
+	centerShift = 0,
+	epsilon,
+}: {
+	gesture: number;
+	parentScale: number;
+	centerShift?: number;
+	epsilon: number;
+}): number => {
+	"worklet";
+	return (
+		compensateTranslationForParentScale({
+			translation: gesture,
+			parentScale,
+			epsilon,
+		}) + centerShift
+	);
+};
+
+const resolveDirectionalDragScale = ({
+	normalized,
+	dismissDirection,
+	shrinkMin,
+	growMax,
+	exponent,
+}: {
+	normalized: number;
+	dismissDirection: "positive" | "negative";
+	shrinkMin: number;
+	growMax: number;
+	exponent: number;
+}) => {
+	"worklet";
+
+	const dismissalRelative =
+		dismissDirection === "negative" ? -normalized : normalized;
+
+	if (dismissalRelative >= 0) {
+		return normalizedToScale({
+			normalized: dismissalRelative,
+			outputRange: [1, shrinkMin],
+			exponent,
+		});
+	}
+
+	const oppositeDrag = Math.min(1, Math.abs(dismissalRelative));
+	return interpolate(oppositeDrag, [0, 1], [1, growMax], "clamp");
+};
 
 const getZoomContentTarget = ({
 	explicitTarget,
@@ -296,20 +477,6 @@ export const buildZoomStyles = ({
 	const normX = props.active.gesture.normX;
 	const normY = props.active.gesture.normY;
 	const initialDirection = props.active.gesture.direction;
-	const directionalDragScaleOutput: [number, number] = [
-		1,
-		resolvedZoomOptions.motion.dragDirectionalScaleMin,
-	];
-
-	const xScaleOutput =
-		initialDirection === "horizontal"
-			? directionalDragScaleOutput
-			: IDENTITY_DRAG_SCALE_OUTPUT;
-	const yScaleOutput =
-		initialDirection === "vertical"
-			? directionalDragScaleOutput
-			: IDENTITY_DRAG_SCALE_OUTPUT;
-
 	const dragX = normalizedToTranslation({
 		normalized: normX,
 		dimension: screenLayout.width,
@@ -320,16 +487,31 @@ export const buildZoomStyles = ({
 		dimension: screenLayout.height,
 		resistance: resolvedZoomOptions.motion.dragResistance,
 	});
-	const dragXScale = normalizedToScale({
-		normalized: normX,
-		outputRange: xScaleOutput,
-		exponent: 2,
-	});
-	const dragYScale = normalizedToScale({
-		normalized: normY,
-		outputRange: yScaleOutput,
-		exponent: 2,
-	});
+	const dragXScale =
+		initialDirection === "horizontal" ||
+		initialDirection === "horizontal-inverted"
+			? resolveDirectionalDragScale({
+					normalized: normX,
+					dismissDirection:
+						initialDirection === "horizontal-inverted"
+							? "negative"
+							: "positive",
+					shrinkMin: resolvedZoomOptions.motion.dragDirectionalScaleMin,
+					growMax: resolvedZoomOptions.motion.dragDirectionalScaleMax,
+					exponent: 2,
+				})
+			: IDENTITY_DRAG_SCALE_OUTPUT[0];
+	const dragYScale =
+		initialDirection === "vertical" || initialDirection === "vertical-inverted"
+			? resolveDirectionalDragScale({
+					normalized: normY,
+					dismissDirection:
+						initialDirection === "vertical-inverted" ? "negative" : "positive",
+					shrinkMin: resolvedZoomOptions.motion.dragDirectionalScaleMin,
+					growMax: resolvedZoomOptions.motion.dragDirectionalScaleMax,
+					exponent: 2,
+				})
+			: IDENTITY_DRAG_SCALE_OUTPUT[1];
 	const dragScale = combineScales(dragXScale, dragYScale);
 
 	if (focused) {

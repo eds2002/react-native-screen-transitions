@@ -93,6 +93,21 @@ const createFrameProps = ({
 	isDismissing: active.closing === 1,
 });
 
+const getTransformScale = (
+	styles: ReturnType<typeof buildZoomStyles>,
+	key: string,
+): number | undefined => {
+	const transform = (
+		styles[key] as {
+			style?: {
+				transform?: Array<Record<string, number>>;
+			};
+		}
+	)?.style?.transform;
+
+	return transform?.find((entry) => "scale" in entry)?.scale;
+};
+
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
 });
@@ -177,6 +192,129 @@ describe("bounds navigation zoom", () => {
 		expect(styles["album-art"]).toEqual({
 			style: { opacity: 1 },
 		});
+	});
+
+	it("shrinks in the dismissal direction and slightly lifts in the opposite direction", () => {
+		registerSourceAndDestination({
+			tag: "album-art",
+			sourceScreenKey: "list",
+			destinationScreenKey: "detail",
+			sourceBounds: createBounds(10, 20, 120, 160),
+			destinationBounds: createBounds(0, 0, 300, 400),
+		});
+
+		const previous = createState("list");
+		const makeFocusedStyles = ({
+			direction,
+			normX = 0,
+			normY,
+		}: {
+			direction: ScreenTransitionState["gesture"]["direction"];
+			normX?: number;
+			normY: number;
+		}) => {
+			const current = createState("detail", {
+				gesture: createGesture({
+					direction,
+					normX,
+					normY,
+					normalizedX: normX,
+					normalizedY: normY,
+				}),
+			});
+			const props = createFrameProps({
+				current,
+				previous,
+				focused: true,
+				progress: 0.25,
+				active: current,
+				inactive: previous,
+			});
+
+			return buildZoomStyles({
+				id: "album-art",
+				props,
+				resolveTag,
+				computeRaw: (overrides) => {
+					if (overrides.method === "content") {
+						return {
+							translateX: 0,
+							translateY: 0,
+							scale: 1,
+						};
+					}
+
+					return {
+						width: 120,
+						height: 180,
+						translateX: 0,
+						translateY: 0,
+					};
+				},
+			});
+		};
+
+		const verticalDismiss = makeFocusedStyles({
+			direction: "vertical",
+			normY: 1,
+		});
+		const verticalOpposite = makeFocusedStyles({
+			direction: "vertical",
+			normY: -1,
+		});
+		const verticalInvertedDismiss = makeFocusedStyles({
+			direction: "vertical-inverted",
+			normY: -1,
+		});
+		const verticalInvertedOpposite = makeFocusedStyles({
+			direction: "vertical-inverted",
+			normY: 1,
+		});
+		const horizontalDismiss = makeFocusedStyles({
+			direction: "horizontal",
+			normX: 1,
+			normY: 0,
+		});
+		const horizontalOpposite = makeFocusedStyles({
+			direction: "horizontal",
+			normX: -1,
+			normY: 0,
+		});
+		const horizontalInvertedDismiss = makeFocusedStyles({
+			direction: "horizontal-inverted",
+			normX: -1,
+			normY: 0,
+		});
+		const horizontalInvertedOpposite = makeFocusedStyles({
+			direction: "horizontal-inverted",
+			normX: 1,
+			normY: 0,
+		});
+
+		expect(getTransformScale(verticalDismiss, ZOOM_CONTAINER_STYLE_ID)).toBeLessThan(
+			1,
+		);
+		expect(
+			getTransformScale(verticalOpposite, ZOOM_CONTAINER_STYLE_ID),
+		).toBeGreaterThan(1);
+		expect(
+			getTransformScale(verticalInvertedDismiss, ZOOM_CONTAINER_STYLE_ID),
+		).toBeLessThan(1);
+		expect(
+			getTransformScale(verticalInvertedOpposite, ZOOM_CONTAINER_STYLE_ID),
+		).toBeGreaterThan(1);
+		expect(
+			getTransformScale(horizontalDismiss, ZOOM_CONTAINER_STYLE_ID),
+		).toBeLessThan(1);
+		expect(
+			getTransformScale(horizontalOpposite, ZOOM_CONTAINER_STYLE_ID),
+		).toBeGreaterThan(1);
+		expect(
+			getTransformScale(horizontalInvertedDismiss, ZOOM_CONTAINER_STYLE_ID),
+		).toBeLessThan(1);
+		expect(
+			getTransformScale(horizontalInvertedOpposite, ZOOM_CONTAINER_STYLE_ID),
+		).toBeGreaterThan(1);
 	});
 
 	it("returns content shrink and matched-element transform entries for the unfocused branch", () => {

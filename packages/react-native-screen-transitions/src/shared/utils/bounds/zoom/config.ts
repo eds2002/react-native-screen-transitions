@@ -5,6 +5,7 @@ import type { ResolveTag } from "./types";
 
 const DEFAULT_DRAG_RESISTANCE = 0.4;
 const DEFAULT_DRAG_DIRECTIONAL_SCALE_MIN = 0.25;
+const DEFAULT_DRAG_DIRECTIONAL_SCALE_MAX = 1.06;
 
 type ZoomMask = NonNullable<BoundsNavigationZoomOptions["mask"]>;
 type ZoomRadiusValue = Exclude<ZoomMask["borderRadius"], undefined>;
@@ -39,6 +40,7 @@ export type ResolvedZoomOptions = {
 	motion: {
 		dragResistance: number;
 		dragDirectionalScaleMin: number;
+		dragDirectionalScaleMax: number;
 	};
 };
 
@@ -105,6 +107,7 @@ const normalizeZoomOptions = (
 			)
 				? zoomOptions.motion.dragDirectionalScaleMin
 				: DEFAULT_DRAG_DIRECTIONAL_SCALE_MIN,
+			dragDirectionalScaleMax: DEFAULT_DRAG_DIRECTIONAL_SCALE_MAX,
 		},
 	};
 };
