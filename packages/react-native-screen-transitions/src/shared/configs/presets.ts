@@ -4,11 +4,11 @@ import {
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
-import {
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
-} from "../constants";
 import type { ScreenTransitionConfig } from "../types/screen.types";
+import {
+	ZOOM_CONTAINER_STYLE_ID,
+	ZOOM_MASK_STYLE_ID,
+} from "../utils/bounds/zoom";
 import { normalizeInterpolatedStyle } from "../utils/normalize-interpolated-style";
 import { DefaultSpec } from "./specs";
 
@@ -286,10 +286,10 @@ export const SharedIGImage = ({
 			const sourceStyle = navigationStyles[sharedBoundTag] as
 				| Record<string, unknown>
 				| undefined;
-			const containerStyle = navigationStyles[NAVIGATION_CONTAINER_STYLE_ID] as
+			const containerStyle = navigationStyles[ZOOM_CONTAINER_STYLE_ID] as
 				| Record<string, unknown>
 				| undefined;
-			const maskStyle = navigationStyles[NAVIGATION_MASK_STYLE_ID] as
+			const maskStyle = navigationStyles[ZOOM_MASK_STYLE_ID] as
 				| Record<string, unknown>
 				| undefined;
 
@@ -317,7 +317,7 @@ export const SharedIGImage = ({
 							],
 						},
 					},
-					[NAVIGATION_CONTAINER_STYLE_ID]: containerStyle
+					[ZOOM_CONTAINER_STYLE_ID]: containerStyle
 						? {
 								style: {
 									...containerStyle,
@@ -329,7 +329,7 @@ export const SharedIGImage = ({
 								},
 							}
 						: undefined,
-					[NAVIGATION_MASK_STYLE_ID]: maskStyle
+					[ZOOM_MASK_STYLE_ID]: maskStyle
 						? {
 								style: {
 									...maskStyle,
@@ -623,7 +623,7 @@ export const SharedXImage = ({
 			const navigationStyles = bounds({
 				id: sharedBoundTag,
 			}).navigation.zoom();
-			const maskStyle = navigationStyles[NAVIGATION_MASK_STYLE_ID] as
+			const maskStyle = navigationStyles[ZOOM_MASK_STYLE_ID] as
 				| Record<string, unknown>
 				| undefined;
 
@@ -654,7 +654,7 @@ export const SharedXImage = ({
 
 			return {
 				...normalizedNav,
-				[NAVIGATION_MASK_STYLE_ID]: maskStyle
+				[ZOOM_MASK_STYLE_ID]: maskStyle
 					? {
 							style: {
 								...maskStyle,

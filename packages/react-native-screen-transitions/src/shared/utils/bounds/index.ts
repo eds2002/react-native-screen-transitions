@@ -5,9 +5,9 @@ import { buildBoundsOptions } from "./helpers/build-bounds-options";
 import { computeBoundStyles } from "./helpers/compute-bounds-styles";
 import { createInterpolators } from "./helpers/interpolators";
 import { createLinkAccessor } from "./helpers/link-accessor";
-import { createNavigationAccessor } from "./helpers/navigation-accessor";
 import { resolveBoundTag } from "./helpers/resolve-bound-tag";
 import type { BoundsOptions } from "./types/options";
+import { createZoomAccessor } from "./zoom";
 
 export const createBoundsAccessor = (
 	getProps: () => Omit<ScreenInterpolationProps, "bounds">,
@@ -47,10 +47,8 @@ export const createBoundsAccessor = (
 			resolveBoundTag,
 		});
 
-		const computed = computeForResolvedOptions(resolved, props) as Record<
-			string,
-			unknown
-		>;
+		const computed = computeForResolvedOptions(resolved, props);
+
 		const zoomBaseOptions = {
 			anchor: params?.anchor,
 			scaleMode: params?.scaleMode,
@@ -90,7 +88,7 @@ export const createBoundsAccessor = (
 			return nextPair;
 		};
 
-		const navigation = createNavigationAccessor({
+		const navigation = createZoomAccessor({
 			id: params?.id,
 			group: params?.group,
 			getProps,
@@ -128,7 +126,7 @@ export const createBoundsAccessor = (
 			configurable: true,
 		});
 
-		return target as typeof computed & { navigation: typeof navigation };
+		return target;
 	};
 
 	const { getSnapshot, getLink } = createLinkAccessor(getProps);

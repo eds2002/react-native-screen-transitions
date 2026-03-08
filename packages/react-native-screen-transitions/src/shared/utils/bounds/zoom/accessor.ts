@@ -1,10 +1,10 @@
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
-import { buildZoomNavigationStyles } from "../sugar/navigation/zoom";
+import type { ResolveBoundTagParams } from "../helpers/resolve-bound-tag";
 import type { BoundsOptions } from "../types/options";
-import type { ResolveBoundTagParams } from "./resolve-bound-tag";
+import { buildZoomStyles } from "./build";
 
-type NavigationAccessorParams = {
+type ZoomAccessorParams = {
 	id?: string;
 	group?: string;
 	getProps: () => Omit<ScreenInterpolationProps, "bounds">;
@@ -19,27 +19,25 @@ type NavigationAccessorParams = {
 	>;
 };
 
-export const createNavigationAccessor = ({
+export const createZoomAccessor = ({
 	id,
 	group,
 	getProps,
 	resolveBoundTag,
 	computeRaw,
 	zoomBaseOptions,
-}: NavigationAccessorParams) => {
+}: ZoomAccessorParams) => {
 	"worklet";
 
 	const resolvedId = id ?? "";
 
-	const computeZoomStyles = (
-		navigationOptions?: BoundsNavigationZoomOptions,
-	) => {
+	const computeZoomStyles = (zoomOptions?: BoundsNavigationZoomOptions) => {
 		"worklet";
 		const frameProps = getProps();
-		return buildZoomNavigationStyles({
+		return buildZoomStyles({
 			id: resolvedId,
 			group,
-			navigationOptions,
+			zoomOptions,
 			props: frameProps,
 			resolveTag: resolveBoundTag,
 			computeRaw: (overrides) =>

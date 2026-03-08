@@ -1,32 +1,27 @@
 import { interpolate, type StyleProps } from "react-native-reanimated";
-import {
-	EPSILON,
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
-	NO_STYLES,
-} from "../../../../constants";
+import { EPSILON, NO_STYLES } from "../../../constants";
 import {
 	BoundStore,
 	type ResolvedTransitionPair,
-} from "../../../../stores/bounds";
-import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
-import type { BoundsNavigationZoomOptions } from "../../../../types/bounds.types";
-import type { Layout } from "../../../../types/screen.types";
-import { interpolateClamped } from "../../helpers/interpolate";
+} from "../../../stores/bounds";
+import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
+import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
+import type { Layout } from "../../../types/screen.types";
 import {
 	combineScales,
 	composeCompensatedTranslation,
 	computeCenterScaleShift,
 	normalizedToScale,
 	normalizedToTranslation,
-} from "../../helpers/math";
-import type { BoundsOptions } from "../../types/options";
+} from "../helpers/math";
+import type { BoundsOptions } from "../types/options";
 import {
-	type ResolvedNavigationZoomOptions,
-	resolveNavigationConfig,
+	type ResolvedZoomOptions,
+	resolveZoomConfig,
 	toNumber,
-} from "./helpers";
-import type { BuildNavigationStylesParams } from "./types";
+} from "./config";
+import { ZOOM_CONTAINER_STYLE_ID, ZOOM_MASK_STYLE_ID } from "./constants";
+import type { BuildZoomStylesParams } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 type ZoomMask = NonNullable<BoundsNavigationZoomOptions["mask"]>;
@@ -193,7 +188,7 @@ const resolveMaskRadii = ({
 	resolvedPair,
 }: {
 	progress: number;
-	zoomOptions: ResolvedNavigationZoomOptions;
+	zoomOptions: ResolvedZoomOptions;
 	resolvedPair: ResolvedTransitionPair;
 }) => {
 	"worklet";
@@ -262,14 +257,14 @@ const resolveMaskRadii = ({
 	};
 };
 
-export const buildZoomNavigationStyles = ({
+export const buildZoomStyles = ({
 	id,
 	group,
-	navigationOptions,
+	zoomOptions,
 	props,
 	resolveTag,
 	computeRaw,
-}: BuildNavigationStylesParams): TransitionInterpolatedStyle => {
+}: BuildZoomStylesParams): TransitionInterpolatedStyle => {
 	"worklet";
 
 	const focused = props.focused;
@@ -280,10 +275,10 @@ export const buildZoomNavigationStyles = ({
 	const entering = !props.next;
 	const screenLayout = props.layouts.screen;
 
-	const resolvedConfig = resolveNavigationConfig({
+	const resolvedConfig = resolveZoomConfig({
 		id,
 		group,
-		navigationOptions,
+		zoomOptions,
 		currentRouteKey,
 		resolveTag,
 		defaultAnchor: "top",
@@ -291,15 +286,19 @@ export const buildZoomNavigationStyles = ({
 
 	if (!resolvedConfig) return NO_STYLES;
 
-	const { resolvedTag, sharedOptions, explicitTarget, zoomOptions } =
-		resolvedConfig;
+	const {
+		resolvedTag,
+		sharedOptions,
+		explicitTarget,
+		zoomOptions: resolvedZoomOptions,
+	} = resolvedConfig;
 
 	const normX = props.active.gesture.normX;
 	const normY = props.active.gesture.normY;
 	const initialDirection = props.active.gesture.direction;
 	const directionalDragScaleOutput: [number, number] = [
 		1,
-		zoomOptions.motion.dragDirectionalScaleMin,
+		resolvedZoomOptions.motion.dragDirectionalScaleMin,
 	];
 
 	const xScaleOutput =
@@ -314,12 +313,12 @@ export const buildZoomNavigationStyles = ({
 	const dragX = normalizedToTranslation({
 		normalized: normX,
 		dimension: screenLayout.width,
-		resistance: zoomOptions.motion.dragResistance,
+		resistance: resolvedZoomOptions.motion.dragResistance,
 	});
 	const dragY = normalizedToTranslation({
 		normalized: normY,
 		dimension: screenLayout.height,
-		resistance: zoomOptions.motion.dragResistance,
+		resistance: resolvedZoomOptions.motion.dragResistance,
 	});
 	const dragXScale = normalizedToScale({
 		normalized: normX,
@@ -369,7 +368,7 @@ export const buildZoomNavigationStyles = ({
 		const focusedFade = props.active?.closing
 			? interpolate(progress, [0.6, 1], [0, 1], "clamp")
 			: interpolate(progress, [0, 0.5], [0, 1], "clamp");
-		const { top, right, bottom, left } = zoomOptions.mask.outset;
+		const { top, right, bottom, left } = resolvedZoomOptions.mask.outset;
 		const maskWidth = Math.max(1, toNumber(maskRaw.width) + left + right);
 		const maskHeight = Math.max(1, toNumber(maskRaw.height) + top + bottom);
 		const contentTranslateX = toNumber(contentRaw.translateX) + dragX;
@@ -379,12 +378,12 @@ export const buildZoomNavigationStyles = ({
 		const maskTranslateY = toNumber(maskRaw.translateY) + dragY - top;
 		const maskRadii = resolveMaskRadii({
 			progress,
-			zoomOptions,
+			zoomOptions: resolvedZoomOptions,
 			resolvedPair: focusedPair,
 		});
 
 		return {
-			[NAVIGATION_CONTAINER_STYLE_ID]: {
+			[ZOOM_CONTAINER_STYLE_ID]: {
 				style: {
 					opacity: focusedFade,
 					transform: [
@@ -394,7 +393,7 @@ export const buildZoomNavigationStyles = ({
 					],
 				},
 			},
-			[NAVIGATION_MASK_STYLE_ID]: {
+			[ZOOM_MASK_STYLE_ID]: {
 				style: {
 					width: maskWidth,
 					height: maskHeight,
@@ -408,8 +407,8 @@ export const buildZoomNavigationStyles = ({
 					borderTopRightRadius: maskRadii.borderTopRightRadius,
 					borderBottomLeftRadius: maskRadii.borderBottomLeftRadius,
 					borderBottomRightRadius: maskRadii.borderBottomRightRadius,
-					...(zoomOptions.mask.borderCurve
-						? { borderCurve: zoomOptions.mask.borderCurve }
+					...(resolvedZoomOptions.mask.borderCurve
+						? { borderCurve: resolvedZoomOptions.mask.borderCurve }
 						: {}),
 				},
 			},
@@ -426,7 +425,7 @@ export const buildZoomNavigationStyles = ({
 	const unfocusedFade = props.active?.closing
 		? interpolate(progress, [1.6, 2], [1, 0], "clamp")
 		: interpolate(progress, [1, 1.5], [1, 0], "clamp");
-	const unfocusedScale = interpolateClamped(progress, [1, 2], [1, 0.95]);
+	const unfocusedScale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
 	const isUnfocusedIdle = props.active.settled === 1;
 
 	const elementTarget =

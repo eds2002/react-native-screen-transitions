@@ -1,12 +1,12 @@
 import { memo, useEffect } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import {
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
-	NO_STYLES,
-} from "../../../constants";
+import { NO_STYLES } from "../../../constants";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
+import {
+	ZOOM_CONTAINER_STYLE_ID,
+	ZOOM_MASK_STYLE_ID,
+} from "../../../utils/bounds/zoom";
 import { logger } from "../../../utils/logger";
 
 type Props = {
@@ -29,12 +29,12 @@ export const MaybeMaskedNavigationContainer = memo(
 		const { stylesMap } = useScreenStyles();
 		const animatedNavigationContainerStyle = useAnimatedStyle(() => {
 			"worklet";
-			return stylesMap.value[NAVIGATION_CONTAINER_STYLE_ID]?.style || NO_STYLES;
+			return stylesMap.value[ZOOM_CONTAINER_STYLE_ID]?.style || NO_STYLES;
 		});
 
 		const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 			"worklet";
-			return stylesMap.value[NAVIGATION_MASK_STYLE_ID]?.style || NO_STYLES;
+			return stylesMap.value[ZOOM_MASK_STYLE_ID]?.style || NO_STYLES;
 		});
 
 		useEffect(() => {
