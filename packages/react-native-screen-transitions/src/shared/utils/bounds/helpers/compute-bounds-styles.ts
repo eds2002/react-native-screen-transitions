@@ -66,6 +66,9 @@ const resolveBounds = (params: {
 			start: null,
 			end: null,
 			entering,
+			currentScreenKey,
+			sourceScreenKey: resolvedPair.sourceScreenKey,
+			destinationScreenKey: resolvedPair.destinationScreenKey,
 		};
 	}
 
@@ -75,6 +78,9 @@ const resolveBounds = (params: {
 			start: null,
 			end: null,
 			entering,
+			currentScreenKey,
+			sourceScreenKey: resolvedPair.sourceScreenKey,
+			destinationScreenKey: resolvedPair.destinationScreenKey,
 		};
 	}
 
@@ -94,6 +100,9 @@ const resolveBounds = (params: {
 		start,
 		end,
 		entering,
+		currentScreenKey,
+		sourceScreenKey: resolvedPair.sourceScreenKey,
+		destinationScreenKey: resolvedPair.destinationScreenKey,
 	};
 };
 
@@ -111,7 +120,14 @@ export const computeBoundStyles = (
 		return EMPTY_BOUND_HELPER_RESULT;
 	}
 
-	const { start, end, entering } = resolveBounds({
+	const {
+		start,
+		end,
+		entering,
+		currentScreenKey,
+		sourceScreenKey,
+		destinationScreenKey,
+	} = resolveBounds({
 		id,
 		previous,
 		current,
@@ -131,9 +147,15 @@ export const computeBoundStyles = (
 	const ranges: readonly [number, number] = entering ? ENTER_RANGE : EXIT_RANGE;
 
 	if (computeOptions.method === "content") {
+		const currentOwnsSource =
+			!!currentScreenKey &&
+			currentScreenKey === sourceScreenKey &&
+			currentScreenKey !== destinationScreenKey;
+		const contentStart = currentOwnsSource ? end : start;
+		const contentEnd = currentOwnsSource ? start : end;
 		const geometry = computeContentTransformGeometry({
-			start,
-			end,
+			start: contentStart,
+			end: contentEnd,
 			entering,
 			dimensions,
 			anchor: computeOptions.anchor,
@@ -141,10 +163,10 @@ export const computeBoundStyles = (
 		});
 
 		return composeContentStyle({
-			start,
+			start: contentStart,
 			progress,
 			ranges,
-			end,
+			end: contentEnd,
 			geometry,
 			computeOptions,
 		});

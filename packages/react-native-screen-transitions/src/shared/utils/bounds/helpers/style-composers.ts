@@ -22,9 +22,10 @@ export type ElementComposeParams = {
 };
 
 /**
- * Screen-level content transform params (for aligning destination bound to source).
- * - start/end: absolute window bounds for the shared id (source/destination)
- * - geometry: precomputed screen-level tx/ty/sx/sy plus ranges/entering
+ * Screen-level content transform params.
+ * - start/end: absolute window bounds for the paired target and the current
+ *   screen-owned bound
+ * - geometry: precomputed screen-level tx/ty/scale plus ranges/entering
  * - interp: function to interpolate between numbers using the correct progress range
  */
 type ContentComposeParams = {

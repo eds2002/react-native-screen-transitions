@@ -101,8 +101,8 @@ export type BoundsOptions = {
 	 *
 	 * - "transform": translates and scales (scaleX/scaleY), no width/height size
 	 * - "size": translates and sizes (width/height), no scaleX/scaleY
-	 * - "content": screen-level content transform that aligns the destination screen
-	 *   so the target bound matches the source at progress start
+	 * - "content": screen-level content transform that aligns the current screen
+	 *   so its bound matches the paired target bound during the transition
 	 * @default "transform"
 	 */
 	method?: BoundsMethod;

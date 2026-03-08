@@ -95,8 +95,9 @@ export function computeRelativeGeometry({
 	return { dx, dy, scaleX, scaleY, entering };
 }
 /**
- * Computes the transform to apply to the entire destination screen so that
- * its bound (end) matches the source bound (start) at progress start.
+ * Computes the transform to apply to the current screen so that its owned
+ * bound (`end`) matches the paired target bound (`start`) at the aligned
+ * phase of the transition.
  */
 export function computeContentTransformGeometry({
 	start,
