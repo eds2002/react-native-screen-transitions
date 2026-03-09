@@ -1,5 +1,22 @@
 # Changelog
 
+# [3.4.0-alpha.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.0...v3.4.0-alpha.1) (2026-03-09)
+
+
+### Bug Fixes
+
+* **mask:** align surfaceComponent with masked navigation zoom ([cc5163b](https://github.com/eds2002/react-native-screen-transitions/commit/cc5163b03aa101725f9cff26c94b5cefadf52758))
+* method content not working on the inverse ([96559d2](https://github.com/eds2002/react-native-screen-transitions/commit/96559d268d336d72804228cc82b2f02d912acb81))
+* update example ([261bb9a](https://github.com/eds2002/react-native-screen-transitions/commit/261bb9af2895d27a3e557f6ee384f93f9d393002))
+
+
+### Features
+
+* add ability to get animation via ancestor ([f6da4c2](https://github.com/eds2002/react-native-screen-transitions/commit/f6da4c2ce1ffb105c369ece351756b64b7d80239))
+* added support for auto snap points ([965705d](https://github.com/eds2002/react-native-screen-transitions/commit/965705dd8f5253b9201f54d0e5be40174b81b52f))
+* expand zoom navigation options ([801338f](https://github.com/eds2002/react-native-screen-transitions/commit/801338fdb21f6c56be43ac476a93907543681394))
+* useScreenGesture able to get ancestors ([4b6ad53](https://github.com/eds2002/react-native-screen-transitions/commit/4b6ad53396f8a1bcd8e1e90932517b975e446e2e))
+
 # [3.4.0-alpha.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.2.0...v3.4.0-alpha.0) (2026-03-01)
 
 
