@@ -1,5 +1,6 @@
 import type {
 	BoundsNavigationZoomOptions,
+	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
@@ -62,6 +63,8 @@ const zoomOptions: BoundsNavigationZoomOptions = {
 
 declare const interpolationProps: ScreenInterpolationProps;
 
+const gestureTarget: ScreenGestureTarget = { ancestor: 2 };
+
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
@@ -74,6 +77,7 @@ export const publicApiTypecheck = {
 	slotStyle,
 	nestedInterpolatedStyle,
 	legacyInterpolatedStyle,
+	gestureTarget,
 	numericBoundsResult,
 	zoomOptions,
 };

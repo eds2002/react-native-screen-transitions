@@ -1,7 +1,11 @@
 import { useGestureContext } from "../../providers/gestures";
+import { resolveScreenGestureTarget } from "./resolve-screen-gesture-target";
+import type { ScreenGestureTarget } from "./types";
+
+export type { ScreenGestureTarget } from "./types";
 
 /**
- * Returns a ref to the screen's navigation pan gesture.
+ * Returns a ref to a screen navigation pan gesture.
  * Use this to coordinate child gestures with the navigation gesture.
  *
  * @example
@@ -13,7 +17,10 @@ import { useGestureContext } from "../../providers/gestures";
  *   .onUpdate(...);
  * ```
  */
-export const useScreenGesture = () => {
+export const useScreenGesture = (target?: ScreenGestureTarget) => {
 	const ctx = useGestureContext();
-	return ctx?.panGestureRef ?? null;
+	return resolveScreenGestureTarget({
+		target,
+		self: ctx,
+	});
 };
