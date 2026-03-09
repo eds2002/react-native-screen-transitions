@@ -14,7 +14,7 @@ import type {
 	DirectStackProps,
 	DirectStackScene,
 } from "../../types/providers/direct-stack.types";
-import { isFloatOverlayVisible } from "../../utils/overlay/visibility";
+import { isOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
 import { useStackDerived } from "./helpers/use-stack-derived";
 
@@ -64,10 +64,7 @@ function useDirectStackValue(
 
 			if (!shouldShowFloatOverlay && descriptor) {
 				const options = descriptor.options;
-				if (
-					options?.enableTransitions === true &&
-					isFloatOverlayVisible(options)
-				) {
+				if (options?.enableTransitions === true && isOverlayVisible(options)) {
 					shouldShowFloatOverlay = true;
 				}
 			}

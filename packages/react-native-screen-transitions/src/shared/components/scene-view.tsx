@@ -4,8 +4,6 @@ import {
 } from "@react-navigation/native";
 import * as React from "react";
 import type { BaseStackDescriptor } from "../types/stack.types";
-import { isScreenOverlayVisible } from "../utils/overlay/visibility";
-import { Overlay } from "./overlay";
 
 type SceneViewProps = {
 	descriptor: BaseStackDescriptor;
@@ -24,7 +22,6 @@ export const SceneView = React.memo(function SceneView({
 	return (
 		<NavigationContext.Provider value={navigation as any}>
 			<NavigationRouteContext.Provider value={route}>
-				{isScreenOverlayVisible(descriptor.options) && <Overlay.Screen />}
 				{render?.()}
 			</NavigationRouteContext.Provider>
 		</NavigationContext.Provider>

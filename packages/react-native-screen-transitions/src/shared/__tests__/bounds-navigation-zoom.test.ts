@@ -89,8 +89,6 @@ const createFrameProps = ({
 	snapIndex: -1,
 	active,
 	inactive,
-	isActiveTransitioning: active.animating === 1,
-	isDismissing: active.closing === 1,
 });
 
 const getTransformScale = (

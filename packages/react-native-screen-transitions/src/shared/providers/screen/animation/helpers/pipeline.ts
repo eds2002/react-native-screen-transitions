@@ -212,8 +212,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		focused: true,
 		active: DEFAULT_SCREEN_TRANSITION_STATE,
 		inactive: undefined,
-		isActiveTransitioning: false,
-		isDismissing: false,
 	});
 
 	const boundsAccessor = useMemo(() => {

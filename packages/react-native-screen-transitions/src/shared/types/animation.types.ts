@@ -158,18 +158,6 @@ export interface ScreenInterpolationProps {
 	 * When focused, this is the previous screen. When not focused, this is the current screen.
 	 */
 	inactive: ScreenTransitionState | undefined;
-
-	/**
-	 * Whether the active screen is currently transitioning (either being dragged or animating).
-	 * @deprecated Use `active.animating` instead.
-	 */
-	isActiveTransitioning: boolean;
-
-	/**
-	 * Whether the active screen is in the process of being dismissed/closed.
-	 * @deprecated Use `active.closing` instead.
-	 */
-	isDismissing: boolean;
 }
 
 export type ScreenStyleInterpolator = (

@@ -7,7 +7,7 @@ import type {
 	BaseStackDescriptor,
 	BaseStackScene,
 } from "../../../types/stack.types";
-import { isFloatOverlayVisible } from "../../../utils/overlay/visibility";
+import { isOverlayVisible } from "../../../utils/overlay/visibility";
 
 export interface ProcessedRoutes<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
@@ -52,7 +52,7 @@ export function useProcessedRoutes<
 			animationMaps[i] = AnimationStore.getRouteAnimations(route.key);
 
 			if (!shouldShowFloatOverlay) {
-				shouldShowFloatOverlay = isFloatOverlayVisible(options);
+				shouldShowFloatOverlay = isOverlayVisible(options);
 			}
 
 			if (!stopLimit) {

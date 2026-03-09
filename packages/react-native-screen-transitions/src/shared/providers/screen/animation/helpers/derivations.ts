@@ -24,18 +24,10 @@ export const derivations = ({ previous, current, next }: DerivationsParams) => {
 	// The screen NOT driving the transition
 	const inactive = focused ? previous : current;
 
-	// deprecated
-	const isActiveTransitioning = !!(active.gesture.dragging || active.animating);
-
-	// deprecated
-	const isDismissing = !!(active.gesture.dismissing || active.closing);
-
 	return {
 		progress,
 		focused,
 		active,
 		inactive,
-		isActiveTransitioning,
-		isDismissing,
 	};
 };
