@@ -4,7 +4,10 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { OverlayProps } from "../../../packages/react-native-screen-transitions/src/shared/types/core.types";
+import {
+	type OverlayProps,
+	useScreenAnimation,
+} from "react-native-screen-transitions";
 
 /**
  * A demo tab bar overlay that animates based on screen transitions.
@@ -17,9 +20,9 @@ export function TabBarOverlay({
 	focusedIndex,
 	routes,
 	navigation,
-	screenAnimation,
 }: OverlayProps) {
 	const insets = useSafeAreaInsets();
+	const screenAnimation = useScreenAnimation();
 
 	const containerStyle = useAnimatedStyle(() => {
 		const { stackProgress } = screenAnimation.value;
