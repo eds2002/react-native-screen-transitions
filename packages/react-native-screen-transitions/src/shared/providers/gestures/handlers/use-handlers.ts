@@ -54,6 +54,10 @@ import {
 } from "../helpers/gesture-physics";
 import { resetGestureValues } from "../helpers/gesture-reset";
 import {
+	findNearestSnapPoint,
+	resolveRuntimeSnapPoints,
+} from "../helpers/gesture-snap-points";
+import {
 	determineDismissal,
 	determineSnapTarget,
 } from "../helpers/gesture-targets";
@@ -297,13 +301,17 @@ export const useHandlers = ({
 							return;
 						}
 
-						const resolvedAutoMax =
-							hasAutoSnapPoint && autoSnapPointValue.value > 0
-								? Math.max(maxSnapPoint, autoSnapPointValue.value)
-								: maxSnapPoint;
+						const { resolvedMaxSnapPoint } = resolveRuntimeSnapPoints({
+							snapPoints,
+							hasAutoSnapPoint,
+							autoSnapPoint: autoSnapPointValue.value,
+							minSnapPoint,
+							maxSnapPoint,
+							canDismiss,
+						});
 						const effectiveMaxSnapPoint = gestureSnapLocked
 							? lockedSnapPoint.value
-							: resolvedAutoMax;
+							: resolvedMaxSnapPoint;
 
 						const canExpandMore =
 							animations.progress.value < effectiveMaxSnapPoint - EPSILON &&
@@ -324,36 +332,23 @@ export const useHandlers = ({
 
 	const onStart = useStableCallbackValue(() => {
 		"worklet";
-		// Resolve 'auto' snap point to its current measured value
-		const resolvedAuto =
-			hasAutoSnapPoint && autoSnapPointValue.value > 0
-				? autoSnapPointValue.value
-				: null;
-		const resolvedSnaps =
-			resolvedAuto !== null
-				? [...snapPoints, resolvedAuto].sort((a, b) => a - b)
-				: snapPoints;
-		const resolvedMax =
-			resolvedSnaps.length > 0
-				? resolvedSnaps[resolvedSnaps.length - 1]
-				: maxSnapPoint;
+		const { resolvedSnapPoints, resolvedMaxSnapPoint } =
+			resolveRuntimeSnapPoints({
+				snapPoints,
+				hasAutoSnapPoint,
+				autoSnapPoint: autoSnapPointValue.value,
+				minSnapPoint,
+				maxSnapPoint,
+				canDismiss,
+			});
 
 		if (hasSnapPoints && gestureSnapLocked) {
-			let nearest = resolvedSnaps[0] ?? animations.progress.value;
-			let smallestDistance = Math.abs(animations.progress.value - nearest);
-
-			for (let i = 1; i < resolvedSnaps.length; i++) {
-				const point = resolvedSnaps[i];
-				const distance = Math.abs(animations.progress.value - point);
-				if (distance < smallestDistance) {
-					smallestDistance = distance;
-					nearest = point;
-				}
-			}
-
-			lockedSnapPoint.value = nearest;
+			lockedSnapPoint.value = findNearestSnapPoint(
+				animations.progress.value,
+				resolvedSnapPoints,
+			);
 		} else {
-			lockedSnapPoint.value = resolvedMax;
+			lockedSnapPoint.value = resolvedMaxSnapPoint;
 		}
 
 		gestureAnimationValues.dragging.value = TRUE;
@@ -390,31 +385,24 @@ export const useHandlers = ({
 				const sign = directions.snapAxisInverted ? -baseSign : baseSign;
 				const progressDelta = (sign * translation) / dimension;
 
-				// Resolve 'auto' snap point bounds dynamically
-				const resolvedAutoVal =
-					hasAutoSnapPoint && autoSnapPointValue.value > 0
-						? autoSnapPointValue.value
-						: null;
-				const resolvedMax =
-					resolvedAutoVal !== null
-						? Math.max(maxSnapPoint, resolvedAutoVal)
-						: maxSnapPoint;
-				const resolvedMin =
-					resolvedAutoVal !== null && !canDismiss
-						? Math.min(
-								minSnapPoint === -1 ? resolvedAutoVal : minSnapPoint,
-								resolvedAutoVal,
-							)
-						: minSnapPoint;
+				const { resolvedMinSnapPoint, resolvedMaxSnapPoint } =
+					resolveRuntimeSnapPoints({
+						snapPoints,
+						hasAutoSnapPoint,
+						autoSnapPoint: autoSnapPointValue.value,
+						minSnapPoint,
+						maxSnapPoint,
+						canDismiss,
+					});
 
 				const maxProgressForGesture = gestureSnapLocked
 					? lockedSnapPoint.value
-					: resolvedMax;
+					: resolvedMaxSnapPoint;
 				const minProgressForGesture = gestureSnapLocked
 					? canDismiss
 						? 0
 						: lockedSnapPoint.value
-					: resolvedMin;
+					: resolvedMinSnapPoint;
 
 				animations.progress.value = Math.max(
 					minProgressForGesture,
@@ -474,21 +462,20 @@ export const useHandlers = ({
 					? -axisVelocity
 					: axisVelocity;
 
-				// Resolve 'auto' into a numeric value for snap targeting
-				const resolvedAutoSnap =
-					hasAutoSnapPoint && autoSnapPointValue.value > 0
-						? autoSnapPointValue.value
-						: null;
-				const resolvedSnaps =
-					resolvedAutoSnap !== null
-						? [...snapPoints, resolvedAutoSnap].sort((a, b) => a - b)
-						: snapPoints;
+				const { resolvedSnapPoints } = resolveRuntimeSnapPoints({
+					snapPoints,
+					hasAutoSnapPoint,
+					autoSnapPoint: autoSnapPointValue.value,
+					minSnapPoint,
+					maxSnapPoint,
+					canDismiss,
+				});
 
 				const result = determineSnapTarget({
 					currentProgress: animations.progress.value,
 					snapPoints: gestureSnapLocked
 						? [lockedSnapPoint.value]
-						: resolvedSnaps,
+						: resolvedSnapPoints,
 					velocity: snapVelocity,
 					dimension: axisDimension,
 					velocityFactor: snapVelocityImpact,
