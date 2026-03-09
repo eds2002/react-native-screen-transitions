@@ -63,6 +63,10 @@ export default function BottomSheetLayout() {
 						return {
 							content: {
 								style: {
+									backgroundColor: "#0D0D1A",
+									borderTopLeftRadius: 28,
+									borderTopRightRadius: 28,
+									overflow: "hidden",
 									transform: [{ translateY: y }, { scale }],
 								},
 							},
@@ -253,6 +257,41 @@ export default function BottomSheetLayout() {
 						return {
 							content: {
 								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
+							},
+						};
+					},
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<StackNavigator.Screen
+				name="auto-snap"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					snapPoints: ["auto", 1.0],
+					initialSnapIndex: 0,
+					screenStyleInterpolator: ({
+						layouts: {
+							screen: { height },
+						},
+						progress,
+					}) => {
+						"worklet";
+						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
+						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
+
+						return {
+							content: {
+								style: {
+									backgroundColor: "#0D0D1A",
+									borderTopLeftRadius: 28,
+									borderTopRightRadius: 28,
+									overflow: "hidden",
 									transform: [{ translateY: y }, { scale }],
 								},
 							},

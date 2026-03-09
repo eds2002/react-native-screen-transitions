@@ -31,6 +31,11 @@ const EXAMPLES = [
 		description: "Stress test with 5 snap points (20-100%)",
 	},
 	{
+		id: "auto-snap",
+		title: "Auto Snap",
+		description: "Opens to intrinsic content height, then expands to full screen",
+	},
+	{
 		id: "snap-index-animation",
 		title: "Snap Index Animation",
 		description: "Animate UI based on snapIndex value",
