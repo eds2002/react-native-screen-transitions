@@ -1,10 +1,12 @@
 import { useMemo } from "react";
+import { useWindowDimensions } from "react-native";
 import {
 	type DerivedValue,
 	type SharedValue,
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { NativeStackScreenTransitionConfig } from "../../../../../native-stack/types";
 import {
 	createScreenTransitionState,
@@ -25,7 +27,6 @@ import type { BoundsAccessor } from "../../../../types/bounds.types";
 import type { ScreenTransitionConfig } from "../../../../types/screen.types";
 import type { BaseStackRoute } from "../../../../types/stack.types";
 import { createBoundsAccessor } from "../../../../utils/bounds";
-import { useViewportContext } from "../../../viewport.provider";
 import { type BaseDescriptor, useDescriptors } from "../../descriptors";
 import { derivations } from "./derivations";
 import { toPlainRoute, toPlainValue } from "./worklet";
@@ -153,7 +154,8 @@ const hasTransitionsEnabled = (
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
-	const { dimensions, insets } = useViewportContext();
+	const dimensions = useWindowDimensions();
+	const insets = useSafeAreaInsets();
 	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {
@@ -191,6 +193,10 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const autoSnapPointValue = AnimationStore.getAnimation(
 		currentRouteKey ?? "_",
 		"autoSnapPoint",
+	);
+	const contentLayoutValue = AnimationStore.getAnimation(
+		currentRouteKey ?? "_",
+		"contentLayout",
 	);
 
 	const nextRouteKey = nextDescriptor?.route?.key;
@@ -262,7 +268,10 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		const snapIndex = computeSnapIndex(current.progress, resolvedSnapPoints);
 
 		const nextProps = {
-			layouts: { screen: dimensions },
+			layouts: {
+				screen: dimensions,
+				content: contentLayoutValue.value ?? undefined,
+			},
 			insets,
 			previous,
 			current,

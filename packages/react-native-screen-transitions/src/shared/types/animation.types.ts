@@ -103,6 +103,13 @@ export interface ScreenInterpolationProps {
 		 * The `width` and `height` of the screen container.
 		 */
 		screen: Layout;
+		/**
+		 * The intrinsic measured content wrapper layout when available.
+		 *
+		 * This is currently populated for the measured screen-container path used by
+		 * auto snap-point sizing. It is undefined until a real measurement exists.
+		 */
+		content?: Layout;
 	};
 
 	/**

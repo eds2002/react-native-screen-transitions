@@ -3,10 +3,10 @@ import {
 	type AnimatedRef,
 	type MeasuredDimensions,
 	measure,
+	type SharedValue,
 	type StyleProps,
 } from "react-native-reanimated";
 import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
-import type { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
@@ -43,7 +43,7 @@ export const useBoundaryMeasureAndStore = (params: {
 	ancestorKeys: string[];
 	navigatorKey?: string;
 	ancestorNavigatorKeys?: string[];
-	isAnimating: ReturnType<typeof AnimationStore.getRouteAnimation>;
+	isAnimating: SharedValue<number>;
 	preparedStyles: StyleProps;
 	animatedRef: AnimatedRef<View>;
 	layoutAnchor: LayoutAnchor;

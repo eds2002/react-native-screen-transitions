@@ -5,7 +5,6 @@ import { StyleSheet } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { StackType } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
-import { ViewportProvider } from "../viewport.provider";
 
 export interface StackCoreConfig {
 	TRANSITIONS_ALWAYS_ON?: boolean;
@@ -53,9 +52,7 @@ const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
 						STACK_TYPE === StackType.COMPONENT ? "box-none" : undefined
 					}
 				>
-					<SafeAreaProviderCompat>
-						<ViewportProvider>{children}</ViewportProvider>
-					</SafeAreaProviderCompat>
+					<SafeAreaProviderCompat>{children}</SafeAreaProviderCompat>
 				</GestureHandlerRootView>
 			),
 		};

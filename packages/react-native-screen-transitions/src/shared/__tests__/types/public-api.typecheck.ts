@@ -68,6 +68,7 @@ const gestureTarget: ScreenGestureTarget = { ancestor: 2 };
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
+const maybeContentHeight = interpolationProps.layouts.content?.height;
 
 export const publicApiTypecheck = {
 	navigationSlots: {
@@ -79,5 +80,6 @@ export const publicApiTypecheck = {
 	legacyInterpolatedStyle,
 	gestureTarget,
 	numericBoundsResult,
+	maybeContentHeight,
 	zoomOptions,
 };

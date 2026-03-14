@@ -1,13 +1,12 @@
-import { useAnimatedReaction } from "react-native-reanimated";
+import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { useScrollSettleContext } from "../../../providers/scroll-settle.provider";
-import type { AnimationStore } from "../../../stores/animation.store";
 import type { MaybeMeasureAndStoreParams } from "../types";
 
 export const useScrollSettledMeasurement = (params: {
 	enabled: boolean;
 	group: string | undefined;
 	hasNextScreen: boolean;
-	isAnimating: ReturnType<typeof AnimationStore.getRouteAnimation>;
+	isAnimating: SharedValue<number>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const { enabled, group, hasNextScreen, isAnimating, maybeMeasureAndStore } =

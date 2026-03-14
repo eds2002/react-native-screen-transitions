@@ -3,7 +3,7 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { ScreenKey } from "../types/screen.types";
+import type { Layout, ScreenKey } from "../types/screen.types";
 
 export type AnimationStoreMap = {
 	progress: SharedValue<number>;
@@ -13,6 +13,8 @@ export type AnimationStoreMap = {
 	targetProgress: SharedValue<number>;
 	/** Resolved fraction (contentHeight / screenHeight) for the 'auto' snap point. -1 = not yet measured. */
 	autoSnapPoint: SharedValue<number>;
+	/** Intrinsic content layout measured from the screen container wrapper. */
+	contentLayout: SharedValue<Layout | null>;
 };
 
 const store: Record<ScreenKey, AnimationStoreMap> = {};
@@ -25,6 +27,7 @@ function createAnimationBag(): AnimationStoreMap {
 		entering: makeMutable(0),
 		targetProgress: makeMutable(1),
 		autoSnapPoint: makeMutable(-1),
+		contentLayout: makeMutable<Layout | null>(null),
 	};
 }
 
@@ -43,17 +46,17 @@ function peekRouteAnimations(
 	return store[routeKey];
 }
 
-function getRouteAnimation(
+function getRouteAnimation<K extends keyof AnimationStoreMap>(
 	routeKey: ScreenKey,
-	type: keyof AnimationStoreMap,
-): SharedValue<number> {
+	type: K,
+): AnimationStoreMap[K] {
 	return ensure(routeKey)[type];
 }
 
-function getAnimation(
+function getAnimation<K extends keyof AnimationStoreMap>(
 	routeKey: ScreenKey,
-	type: keyof AnimationStoreMap,
-): SharedValue<number> {
+	type: K,
+): AnimationStoreMap[K] {
 	return getRouteAnimation(routeKey, type);
 }
 
@@ -70,6 +73,7 @@ function clear(routeKey: ScreenKey) {
 		cancelAnimation(bag.entering);
 		cancelAnimation(bag.targetProgress);
 		cancelAnimation(bag.autoSnapPoint);
+		cancelAnimation(bag.contentLayout);
 	}
 	delete store[routeKey];
 }

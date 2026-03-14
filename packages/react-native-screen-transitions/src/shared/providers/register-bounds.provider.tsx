@@ -207,7 +207,7 @@ const useParentSyncReaction = (params: {
 const CloseRemeasureReactionEffect = (params: {
 	sharedBoundTag: string;
 	remeasureOnFocus: boolean;
-	nextClosing: ReturnType<typeof AnimationStore.getRouteAnimation>;
+	nextClosing: SharedValue<number>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {

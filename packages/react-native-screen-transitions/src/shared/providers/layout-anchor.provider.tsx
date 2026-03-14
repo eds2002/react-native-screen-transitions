@@ -1,12 +1,11 @@
 import { type ReactNode, useCallback, useMemo } from "react";
-import type { View } from "react-native";
+import { useWindowDimensions, type View } from "react-native";
 import {
 	type AnimatedRef,
 	type MeasuredDimensions,
 	measure,
 } from "react-native-reanimated";
 import createProvider from "../utils/create-provider";
-import { useViewportContext } from "./viewport.provider";
 
 interface LayoutAnchorProviderProps {
 	anchorRef: AnimatedRef<View>;
@@ -48,9 +47,7 @@ const { LayoutAnchorProvider, useLayoutAnchorContext } = createProvider(
 	{ guarded: false },
 )<LayoutAnchorProviderProps, LayoutAnchorContextValue>(
 	({ anchorRef, children }) => {
-		const {
-			dimensions: { width: screenWidth, height: screenHeight },
-		} = useViewportContext();
+		const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
 		const correctMeasurement = useCallback(
 			(measured: MeasuredDimensions): MeasuredDimensions => {

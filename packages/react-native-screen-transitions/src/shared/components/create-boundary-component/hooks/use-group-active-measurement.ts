@@ -1,5 +1,4 @@
-import { useAnimatedReaction } from "react-native-reanimated";
-import type { AnimationStore } from "../../../stores/animation.store";
+import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
 
@@ -15,7 +14,7 @@ export const useGroupActiveMeasurement = (params: {
 	group: string | undefined;
 	id: BoundaryId;
 	shouldUpdateDestination: boolean;
-	isAnimating: ReturnType<typeof AnimationStore.getRouteAnimation>;
+	isAnimating: SharedValue<number>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {

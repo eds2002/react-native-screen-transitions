@@ -1,5 +1,8 @@
-import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
-import type { AnimationStore } from "../../../stores/animation.store";
+import {
+	type SharedValue,
+	useAnimatedReaction,
+	useSharedValue,
+} from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { MaybeMeasureAndStoreParams } from "../types";
@@ -9,8 +12,8 @@ export const usePendingDestinationRetryMeasurement = (params: {
 	enabled: boolean;
 	currentScreenKey: string;
 	expectedSourceScreenKey?: string;
-	progress: ReturnType<typeof AnimationStore.getRouteAnimation>;
-	animating: ReturnType<typeof AnimationStore.getRouteAnimation>;
+	progress: SharedValue<number>;
+	animating: SharedValue<number>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {
