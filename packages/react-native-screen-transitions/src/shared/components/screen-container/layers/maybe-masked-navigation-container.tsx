@@ -1,5 +1,5 @@
 import { memo, useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type ViewProps } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import {
 	NAVIGATION_CONTAINER_STYLE_ID,
@@ -12,6 +12,7 @@ import { logger } from "../../../utils/logger";
 type Props = {
 	enabled: boolean;
 	children: React.ReactNode;
+	pointerEvents: ViewProps["pointerEvents"];
 };
 
 let LazyMaskedView = View;
@@ -25,7 +26,7 @@ try {
 let hasWarnedMissingMaskedView = false;
 
 export const MaybeMaskedNavigationContainer = memo(
-	({ enabled, children }: Props) => {
+	({ enabled, children, pointerEvents }: Props) => {
 		const { stylesMap } = useScreenStyles();
 		const animatedNavigationContainerStyle = useAnimatedStyle(() => {
 			"worklet";
@@ -67,11 +68,14 @@ export const MaybeMaskedNavigationContainer = memo(
 				maskElement={
 					<Animated.View
 						style={[styles.navigationMaskElement, animatedNavigationMaskStyle]}
+						pointerEvents="none"
 					/>
 				}
+				pointerEvents={pointerEvents}
 			>
 				<Animated.View
 					style={[styles.navigationContainer, animatedNavigationContainerStyle]}
+					pointerEvents={pointerEvents}
 				>
 					{children}
 				</Animated.View>

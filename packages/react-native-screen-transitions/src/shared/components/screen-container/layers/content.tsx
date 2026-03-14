@@ -113,7 +113,10 @@ export const ContentLayer = memo(({ children }: Props) => {
 				animatedProps={animatedContentProps}
 				pointerEvents={contentPointerEvents}
 			>
-				<MaybeMaskedNavigationContainer enabled={isNavigationMaskEnabled}>
+				<MaybeMaskedNavigationContainer
+					pointerEvents={contentPointerEvents}
+					enabled={isNavigationMaskEnabled}
+				>
 					<SurfaceContainer pointerEvents={contentPointerEvents}>
 						{hasAutoSnapPoint ? (
 							<View collapsable={false} onLayout={handleContentLayout}>
