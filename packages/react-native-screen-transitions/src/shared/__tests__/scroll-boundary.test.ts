@@ -64,6 +64,11 @@ describe("checkScrollBoundary", () => {
 				expect(checkScrollBoundary(config, "vertical-inverted")).toBe(true);
 			});
 
+			it("returns true when effectively at bottom within tolerance", () => {
+				const config = createScrollConfig({ y: 499.5 });
+				expect(checkScrollBoundary(config, "vertical-inverted")).toBe(true);
+			});
+
 			it("returns false when not at bottom", () => {
 				const config = createScrollConfig({ y: 200 });
 				expect(checkScrollBoundary(config, "vertical-inverted")).toBe(false);
@@ -119,6 +124,15 @@ describe("checkScrollBoundary", () => {
 				expect(checkScrollBoundary(config, "horizontal-inverted")).toBe(true);
 			});
 
+			it("returns true when effectively at right edge within tolerance", () => {
+				const config = createScrollConfig({
+					x: 624.5,
+					contentWidth: 1000,
+					layoutWidth: 375,
+				});
+				expect(checkScrollBoundary(config, "horizontal-inverted")).toBe(true);
+			});
+
 			it("returns false when not at right edge", () => {
 				const config = createScrollConfig({
 					x: 200,
@@ -162,6 +176,15 @@ describe("checkScrollBoundary", () => {
 			it("returns true when at scroll bottom for both vertical directions", () => {
 				// maxScrollY = 1000 - 500 = 500
 				const config = createScrollConfig({ y: 500 });
+
+				expect(checkScrollBoundary(config, "vertical", true)).toBe(true);
+				expect(checkScrollBoundary(config, "vertical-inverted", true)).toBe(
+					true,
+				);
+			});
+
+			it("returns true near bottom within tolerance for both vertical directions", () => {
+				const config = createScrollConfig({ y: 499.5 });
 
 				expect(checkScrollBoundary(config, "vertical", true)).toBe(true);
 				expect(checkScrollBoundary(config, "vertical-inverted", true)).toBe(

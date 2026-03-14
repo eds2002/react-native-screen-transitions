@@ -67,6 +67,7 @@ const GESTURE_FAIL_TOLERANCE_Y = 20;
 const DEFAULT_EDGE_DISTANCE_HORIZONTAL = 50;
 const DEFAULT_EDGE_DISTANCE_VERTICAL = 135;
 const DEFAULT_ACTIVATION_AREA = "screen" as const;
+const SCROLL_EPILSON = 1;
 
 export function normalizeSides(area?: GestureActivationArea): NormalizedSides {
 	"worklet";
@@ -352,6 +353,10 @@ export function checkScrollBoundary(
 	// Calculate max scroll values
 	const maxScrollX = Math.max(0, contentWidth - layoutWidth);
 	const maxScrollY = Math.max(0, contentHeight - layoutHeight);
+	const atTop = scrollY <= SCROLL_EPILSON;
+	const atBottom = scrollY >= maxScrollY - SCROLL_EPILSON;
+	const atLeft = scrollX <= SCROLL_EPILSON;
+	const atRight = scrollX >= maxScrollX - SCROLL_EPILSON;
 
 	// For snap point sheets (snapAxisInverted is defined), boundary depends on sheet origin
 	// Even if content isn't scrollable, respect bounce/overscroll state
@@ -362,12 +367,12 @@ export function checkScrollBoundary(
 		if (isVerticalDirection) {
 			// Bottom sheet (not inverted): boundary at scroll top
 			// Top sheet (inverted): boundary at scroll bottom
-			return snapAxisInverted ? scrollY >= maxScrollY : scrollY <= 0;
+			return snapAxisInverted ? atBottom : atTop;
 		}
 		// Horizontal direction
 		// Right drawer (not inverted): boundary at scroll left
 		// Left drawer (inverted): boundary at scroll right
-		return snapAxisInverted ? scrollX >= maxScrollX : scrollX <= 0;
+		return snapAxisInverted ? atRight : atLeft;
 	}
 
 	// Non-sheet screens: each direction has its own boundary
@@ -375,22 +380,22 @@ export function checkScrollBoundary(
 		case "vertical":
 			// Swipe down - check if at top of vertical scroll
 			// Even if content isn't scrollable, respect bounce/overscroll state
-			return scrollY <= 0;
+			return atTop;
 
 		case "vertical-inverted":
 			// Swipe up - check if at bottom of vertical scroll
 			// Even if content isn't scrollable, respect bounce/overscroll state
-			return scrollY >= maxScrollY;
+			return atBottom;
 
 		case "horizontal":
 			// Swipe right - check if at left of horizontal scroll
 			// Even if content isn't scrollable, respect bounce/overscroll state
-			return scrollX <= 0;
+			return atLeft;
 
 		case "horizontal-inverted":
 			// Swipe left - check if at right of horizontal scroll
 			// Even if content isn't scrollable, respect bounce/overscroll state
-			return scrollX >= maxScrollX;
+			return atRight;
 
 		default:
 			return true;
