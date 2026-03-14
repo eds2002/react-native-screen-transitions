@@ -23,23 +23,10 @@
 		"web": {
 			"output": "static"
 		},
-		"plugins": [
-			"expo-router",
-			[
-				"expo-splash-screen",
-				{
-					"imageWidth": 200,
-					"resizeMode": "contain",
-					"backgroundColor": "#ffffff",
-					"dark": {
-						"backgroundColor": "#000000"
-					}
-				}
-			]
-		],
+		"plugins": ["expo-router"],
 		"experiments": {
 			"typedRoutes": true,
-			"reactCompiler": false
+			"reactCompiler": true
 		}
 	}
 }

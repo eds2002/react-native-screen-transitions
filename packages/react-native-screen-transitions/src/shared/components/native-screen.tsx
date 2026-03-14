@@ -52,42 +52,74 @@ export const NativeScreen = ({
 	const { activeScreensLimit, backdropBehaviors } = useManagedStackContext();
 
 	const routesLength = routes.length;
+	const topIndex = routesLength - 1;
+	const topRouteKey = routes[topIndex]?.key ?? routeKey;
 	const screenRef = useAnimatedRef<View>();
 
-	const sceneProgress = AnimationStore.getRouteAnimation(routeKey, "progress");
 	const sceneClosing = AnimationStore.getRouteAnimation(routeKey, "closing");
+	const topSceneProgress = AnimationStore.getRouteAnimation(
+		topRouteKey,
+		"progress",
+	);
+	const topSceneClosing = AnimationStore.getRouteAnimation(
+		topRouteKey,
+		"closing",
+	);
 	const screenActivity = useSharedValue<ScreenActivity>(
 		ScreenActivity.TRANSITIONING_OR_BELOW_TOP,
 	);
 
 	useDerivedValue(() => {
-		if (!sceneProgress) {
+		if (!topSceneProgress) {
 			screenActivity.set(ScreenActivity.TRANSITIONING_OR_BELOW_TOP);
 			return;
 		}
 
 		if (index < routesLength - activeScreensLimit - 1 || isPreloaded) {
 			screenActivity.set(ScreenActivity.INACTIVE);
-		} else {
-			const outputValue =
-				index === routesLength - 1
+			return;
+		}
+
+		const focusedIndex = optimisticFocusedIndex.value;
+		const topIsClosing =
+			topSceneClosing.get() > 0 && focusedIndex >= 0 && focusedIndex < topIndex;
+
+		if (topIsClosing) {
+			const postCloseActiveStart = Math.max(
+				0,
+				focusedIndex - activeScreensLimit + 1,
+			);
+			const next =
+				index === topIndex
 					? ScreenActivity.ON_TOP
-					: index >= routesLength - activeScreensLimit
+					: index > focusedIndex || index >= postCloseActiveStart
 						? ScreenActivity.TRANSITIONING_OR_BELOW_TOP
 						: ScreenActivity.INACTIVE;
-
-			const v = interpolate(
-				sceneProgress.get(),
-				[0, 1 - EPSILON, 1],
-				[1, 1, outputValue],
-				Extrapolation.CLAMP,
-			);
-
-			const next = Math.trunc(v) ?? ScreenActivity.TRANSITIONING_OR_BELOW_TOP;
 
 			if (next !== screenActivity.get()) {
 				screenActivity.set(next);
 			}
+			return;
+		}
+
+		const outputValue =
+			index === topIndex
+				? ScreenActivity.ON_TOP
+				: index >= routesLength - activeScreensLimit
+					? ScreenActivity.TRANSITIONING_OR_BELOW_TOP
+					: ScreenActivity.INACTIVE;
+
+		const v = interpolate(
+			topSceneProgress.get(),
+			[0, 1 - EPSILON, 1],
+			[1, 1, outputValue],
+			Extrapolation.CLAMP,
+		);
+
+		const next = Math.trunc(v) ?? ScreenActivity.TRANSITIONING_OR_BELOW_TOP;
+
+		if (next !== screenActivity.get()) {
+			screenActivity.set(next);
 		}
 	});
 
