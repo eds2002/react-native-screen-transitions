@@ -27,6 +27,7 @@ import type { BoundsAccessor } from "../../../../types/bounds.types";
 import type { ScreenTransitionConfig } from "../../../../types/screen.types";
 import type { BaseStackRoute } from "../../../../types/stack.types";
 import { createBoundsAccessor } from "../../../../utils/bounds";
+import type { BoundsFrameProps } from "../../../../utils/bounds/types/frame-props";
 import { type BaseDescriptor, useDescriptors } from "../../descriptors";
 import { derivations } from "./derivations";
 import { toPlainRoute, toPlainValue } from "./worklet";
@@ -204,9 +205,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		!!nextRouteKey &&
 		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
 
-	const framePropsMutable = useSharedValue<
-		Omit<ScreenInterpolationProps, "bounds">
-	>({
+	const framePropsMutable = useSharedValue<BoundsFrameProps>({
 		layouts: { screen: dimensions },
 		insets,
 		previous: undefined,
@@ -215,6 +214,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		progress: 0,
 		stackProgress: 0,
 		snapIndex: -1,
+		navigationMaskEnabled: false,
 		focused: true,
 		active: DEFAULT_SCREEN_TRANSITION_STATE,
 		inactive: undefined,
@@ -267,7 +267,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 		const snapIndex = computeSnapIndex(current.progress, resolvedSnapPoints);
 
-		const nextProps = {
+		const nextProps: Omit<ScreenInterpolationProps, "bounds"> = {
 			layouts: {
 				screen: dimensions,
 				content: contentLayoutValue.value ?? undefined,
@@ -282,7 +282,10 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			...helpers,
 		};
 
-		framePropsMutable.value = nextProps;
+		framePropsMutable.value = {
+			...nextProps,
+			navigationMaskEnabled: !!currentDescriptor?.options?.maskEnabled,
+		};
 		return nextProps;
 	});
 

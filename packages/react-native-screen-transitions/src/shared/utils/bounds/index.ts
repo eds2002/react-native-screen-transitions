@@ -6,11 +6,12 @@ import { computeBoundStyles } from "./helpers/compute-bounds-styles";
 import { createInterpolators } from "./helpers/interpolators";
 import { createLinkAccessor } from "./helpers/link-accessor";
 import { resolveBoundTag } from "./helpers/resolve-bound-tag";
+import type { BoundsFrameProps } from "./types/frame-props";
 import type { BoundsOptions } from "./types/options";
 import { createZoomAccessor } from "./zoom";
 
 export const createBoundsAccessor = (
-	getProps: () => Omit<ScreenInterpolationProps, "bounds">,
+	getProps: () => BoundsFrameProps,
 ): BoundsAccessor => {
 	"worklet";
 
@@ -54,15 +55,13 @@ export const createBoundsAccessor = (
 			scaleMode: params?.scaleMode,
 			target: params?.target,
 		};
-		let cachedNavigationPairProps:
-			| Omit<ScreenInterpolationProps, "bounds">
-			| undefined;
+		let cachedNavigationPairProps: BoundsFrameProps | undefined;
 		let cachedNavigationPairTag = "";
 		let cachedNavigationPair: ResolvedTransitionPair | undefined;
 
 		const resolveNavigationPair = (
 			tag: string,
-			frameProps: Omit<ScreenInterpolationProps, "bounds">,
+			frameProps: BoundsFrameProps,
 		): ResolvedTransitionPair | undefined => {
 			"worklet";
 			if (!tag) return undefined;

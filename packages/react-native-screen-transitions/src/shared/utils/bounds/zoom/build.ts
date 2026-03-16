@@ -567,16 +567,41 @@ export const buildZoomStyles = ({
 			zoomOptions: resolvedZoomOptions,
 			resolvedPair: focusedPair,
 		});
+		const focusedContentStyle = {
+			opacity: focusedFade,
+			transform: [
+				{ translateX: contentTranslateX },
+				{ translateY: contentTranslateY },
+				{ scale: contentScale },
+			],
+		};
+
+		if (!props.navigationMaskEnabled) {
+			return {
+				content: {
+					style: {
+						...focusedContentStyle,
+						overflow: "hidden",
+						borderRadius: maskRadii.borderRadius,
+						borderTopLeftRadius: maskRadii.borderTopLeftRadius,
+						borderTopRightRadius: maskRadii.borderTopRightRadius,
+						borderBottomLeftRadius: maskRadii.borderBottomLeftRadius,
+						borderBottomRightRadius: maskRadii.borderBottomRightRadius,
+						...(resolvedZoomOptions.mask.borderCurve
+							? { borderCurve: resolvedZoomOptions.mask.borderCurve }
+							: {}),
+					},
+				},
+				[resolvedTag]: {
+					style: { opacity: 1 },
+				},
+			};
+		}
 
 		return {
 			[NAVIGATION_CONTAINER_STYLE_ID]: {
 				style: {
-					opacity: focusedFade,
-					transform: [
-						{ translateX: contentTranslateX },
-						{ translateY: contentTranslateY },
-						{ scale: contentScale },
-					],
+					...focusedContentStyle,
 				},
 			},
 			[NAVIGATION_MASK_STYLE_ID]: {

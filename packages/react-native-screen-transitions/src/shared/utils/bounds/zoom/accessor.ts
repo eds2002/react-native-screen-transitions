@@ -1,17 +1,17 @@
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
 import type { ResolveBoundTagParams } from "../helpers/resolve-bound-tag";
+import type { BoundsFrameProps } from "../types/frame-props";
 import type { BoundId, BoundsOptions } from "../types/options";
 import { buildZoomStyles } from "./build";
 
 type ZoomAccessorParams = {
 	id?: BoundId;
 	group?: string;
-	getProps: () => Omit<ScreenInterpolationProps, "bounds">;
+	getProps: () => BoundsFrameProps;
 	resolveBoundTag: (params: ResolveBoundTagParams) => string | undefined;
 	computeRaw: (
 		overrides?: Partial<BoundsOptions>,
-		frameProps?: Omit<ScreenInterpolationProps, "bounds">,
+		frameProps?: BoundsFrameProps,
 	) => Record<string, unknown>;
 	zoomBaseOptions?: Pick<
 		BoundsNavigationZoomOptions,

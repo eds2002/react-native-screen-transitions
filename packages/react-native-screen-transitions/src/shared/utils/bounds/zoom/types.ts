@@ -1,5 +1,5 @@
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
+import type { BoundsFrameProps } from "../types/frame-props";
 import type { BoundId, BoundsOptions } from "../types/options";
 
 export type ResolveTag = (params: {
@@ -9,14 +9,14 @@ export type ResolveTag = (params: {
 
 export type ComputeRaw = (
 	overrides: Partial<BoundsOptions>,
-	frameProps?: Omit<ScreenInterpolationProps, "bounds">,
+	frameProps?: BoundsFrameProps,
 ) => Record<string, unknown>;
 
 export type BuildZoomStylesParams = {
 	id: BoundId;
 	group?: string;
 	zoomOptions?: BoundsNavigationZoomOptions;
-	props: Omit<ScreenInterpolationProps, "bounds">;
+	props: BoundsFrameProps;
 	resolveTag: ResolveTag;
 	computeRaw: ComputeRaw;
 };

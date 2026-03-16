@@ -3,7 +3,7 @@ import {
 	NAVIGATION_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_STYLE_ID,
 } from "../constants";
-import type { ScreenInterpolationProps, ScreenTransitionState } from "../types/animation.types";
+import type { ScreenTransitionState } from "../types/animation.types";
 import { createBoundsAccessor } from "../utils/bounds";
 import { buildZoomStyles } from "../utils/bounds/zoom";
 import { createBounds, registerSourceAndDestination } from "./helpers/bounds-behavior-fixtures";
@@ -51,6 +51,8 @@ const createState = (
 	...overrides,
 });
 
+type ZoomFrameProps = Parameters<typeof buildZoomStyles>[0]["props"];
+
 const createFrameProps = ({
 	current,
 	previous,
@@ -59,6 +61,7 @@ const createFrameProps = ({
 	progress,
 	active,
 	inactive,
+	navigationMaskEnabled = true,
 }: {
 	current: ScreenTransitionState;
 	previous?: ScreenTransitionState;
@@ -67,7 +70,8 @@ const createFrameProps = ({
 	progress: number;
 	active: ScreenTransitionState;
 	inactive?: ScreenTransitionState;
-}): Omit<ScreenInterpolationProps, "bounds"> => ({
+	navigationMaskEnabled?: boolean;
+}): ZoomFrameProps => ({
 	previous,
 	current,
 	next,
@@ -87,6 +91,7 @@ const createFrameProps = ({
 	progress,
 	stackProgress: progress,
 	snapIndex: -1,
+	navigationMaskEnabled,
 	active,
 	inactive,
 });
@@ -187,6 +192,81 @@ describe("bounds navigation zoom", () => {
 				borderBottomRightRadius: 16,
 			},
 		});
+		expect(styles["album-art"]).toEqual({
+			style: { opacity: 1 },
+		});
+	});
+
+	it("falls back to content transforms when navigation masking is disabled", () => {
+		registerSourceAndDestination({
+			tag: "album-art",
+			sourceScreenKey: "list",
+			destinationScreenKey: "detail",
+			sourceBounds: createBounds(10, 20, 120, 160),
+			destinationBounds: createBounds(0, 0, 300, 400),
+		});
+
+		const previous = createState("list");
+		const current = createState("detail", {
+			gesture: createGesture(),
+		});
+		const props = createFrameProps({
+			current,
+			previous,
+			focused: true,
+			progress: 0.25,
+			active: current,
+			inactive: previous,
+			navigationMaskEnabled: false,
+		});
+
+		const styles = buildZoomStyles({
+			id: "album-art",
+			props,
+			resolveTag,
+			zoomOptions: {
+				mask: {
+					borderRadius: 16,
+					borderCurve: "continuous",
+				},
+			},
+			computeRaw: (overrides) => {
+				if (overrides.method === "content") {
+					return {
+						translateX: 12,
+						translateY: 24,
+						scale: 1.1,
+					};
+				}
+
+				return {
+					width: 120,
+					height: 180,
+					translateX: 40,
+					translateY: 50,
+				};
+			},
+		});
+
+		expect(styles.content).toEqual({
+			style: {
+				opacity: 0.5,
+				transform: [
+					{ translateX: 12 },
+					{ translateY: 24 },
+					{ scale: 1.1 },
+				],
+				overflow: "hidden",
+				borderRadius: 16,
+				borderTopLeftRadius: 16,
+				borderTopRightRadius: 16,
+				borderBottomLeftRadius: 16,
+				borderBottomRightRadius: 16,
+				borderCurve: "continuous",
+			},
+		});
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeUndefined();
+		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeUndefined();
 		expect(styles["album-art"]).toEqual({
 			style: { opacity: 1 },
 		});
