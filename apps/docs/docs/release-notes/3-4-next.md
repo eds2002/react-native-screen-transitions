@@ -1,11 +1,12 @@
 ---
-title: 3.4 Next
+title: 3.4
 sidebar_position: 3
+slug: /release-notes/3-4
 ---
 
-# 3.4 Next
+# 3.4
 
-`Next` tracks the current prerelease train. Right now that means the `3.4.0-alpha.*` work.
+This page tracks the current `3.4` work on this branch.
 
 ## Current direction
 
@@ -15,6 +16,4 @@ sidebar_position: 3
 - More snap-point and gesture polish in nested layouts
 - Expanded example coverage in the Expo demo app
 
-## Why this stays in `Next`
-
-These changes are still moving across alpha releases. The goal of the `Next` lane is to document the direction without pretending the API and behavior have settled the way the stable `3.x` line has.
+This is the active docs line for the project right now. There is no separate prerelease lane anymore.

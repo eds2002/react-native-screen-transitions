@@ -7,7 +7,6 @@ This is the Docusaurus app for the `react-native-screen-transitions` documentati
 ```bash
 bun start
 bun run api:generate
-bun run version:docs 3.x
 bun run build
 ```
 

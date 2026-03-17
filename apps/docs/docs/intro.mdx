@@ -6,35 +6,44 @@ hide_title: true
 
 <h1 className="docs-hero-title">Introduction</h1>
 
-<p className="docs-hero-lead">react-native-screen-transitions is a React Native library for gesture-driven stacks, sheets, drawers, overlays, and shared bounds.</p>
+<p className="docs-hero-lead">react-native-screen-transitions exists for the moment default navigation motion stops being enough.</p>
 
-<p className="docs-hero-kicker">This is not another transition preset. It is the layer you build on when transitions become part of the product.</p>
+<p className="docs-hero-kicker">It started with one question: how do we build highly custom, product-grade navigation motion in React Native without being trapped inside a tiny set of canned transitions?</p>
 
-<p className="docs-body-copy">You know how most navigation transitions work: install a navigator, choose a presentation mode, and ship the defaults.</p>
+<p className="docs-body-copy">The stock JS stack can get you far, but it still narrows you toward a specific class of animations. Seeing indie apps like Dropset push motion further made that limitation feel obvious. This library was built to answer that gap with a JS-first transition system for stacks, sheets, drawers, overlays, shared elements, and navigation flows that feel authored for the product.</p>
 
-<p className="docs-body-copy !mt-8">That works until you need interactive sheets, coordinated overlays, shared bounds, or screen-specific interpolation. Then you end up mixing libraries, overriding presentation behavior, and writing one-off animation code to fill the gaps.</p>
+## Why It Exists
 
-## Core Principles
-
-<p className="docs-section-copy">The library is built around a few core ideas:</p>
+<p className="docs-section-copy">This library is for the point where motion becomes part of the experience instead of a default you tolerate.</p>
 
 <ul className="docs-bullets">
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Gesture-first:</strong> Motion can follow user input instead of running on a fixed timeline.</li>
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Open composition:</strong> Navigators, screens, overlays, and bounds primitives are exposed directly.</li>
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Shared bounds:</strong> Elements can move between routes with continuity when the design needs it.</li>
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Layered surfaces:</strong> Stacks, drawers, sheets, and overlays follow the same model.</li>
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Supported surface:</strong> The docs and exports stay focused on the public API.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">You can start high-level:</strong> presets, navigators, and transition-aware primitives get you moving quickly.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">You can drop lower when needed:</strong> custom interpolators, bounds helpers, surfaces, backdrops, and gesture coordination are all first-class.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">You stay in one system:</strong> sheets, shared elements, overlays, and route transitions follow the same mental model instead of being stitched together from unrelated libraries.</li>
 </ul>
 
-## Open Composition
+## What It Is
 
-<p className="docs-section-copy">react-native-screen-transitions gives you access to the moving parts. Start with the higher-level navigators and drop into lower-level primitives when your transition system needs more control.</p>
+<p className="docs-section-copy">At its core, screen transitions is a customizable transition engine centered around <code>blank-stack</code>. It also gives you a <code>native-stack</code> bridge when you want to keep more of that mental model, plus <code>component-stack</code> for embedded or self-contained flows.</p>
 
-<p className="docs-section-copy !mt-8">That gives teams a few practical advantages:</p>
+<p className="docs-section-copy !mt-8">The current 3.4 line adds more of the low-level control that advanced navigation work actually needs: slot-based interpolators, bounds navigation zoom, auto snap points, custom surface layers, and ancestor-target hooks for reading animation or gesture state higher in the tree.</p>
+
+## What It Is Not
+
+<p className="docs-section-copy">This library is powerful, but it is not magic.</p>
 
 <ul className="docs-bullets">
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Direct control:</strong> Tune gestures, interpolation, backdrops, and presentation behavior without forking internals.</li>
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Gradual complexity:</strong> Start with a stack or preset, then drop lower only where you need to.</li>
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Predictable model:</strong> The same concepts show up across sheets, overlays, and route transitions.</li>
-  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Easier maintenance:</strong> Transition code stays in one system instead of being spread across wrappers and overrides.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">It will never beat native-stack on raw performance.</strong> If you want platform-default transitions and maximum native efficiency, native-stack should still be your first choice.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">It does not make expensive screens cheap.</strong> The biggest bottleneck is usually the cost of your own screen tree and the properties you animate.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">It asks you to respect each platform.</strong> Animating width and height, especially on Android, can behave very differently from iOS. Good transition design still means building with each OS in mind.</li>
 </ul>
+
+## Performance Reality
+
+<p className="docs-section-copy">Blank stack should be in the same general performance conversation as React Navigation's JS stack, but the moment you start building ambitious motion systems, the responsibility shifts back to you. Heavy screens, bad animation properties, and platform-insensitive choreography will show up immediately.</p>
+
+<p className="docs-section-copy !mt-8">The goal of this library is not to pretend those tradeoffs do not exist. The goal is to give you enough control to build something special while keeping the tradeoffs understandable.</p>
+
+<div className="docs-callout">
+  Please open an issue if you run into bugs, rough edges, or behavior that feels wrong. I genuinely want to keep pushing this library forward, and I’m excited to see what people build with it. Huge thanks to the teams at Software Mansion and React Navigation. Screen transitions would not exist without the tools they built first.
+</div>

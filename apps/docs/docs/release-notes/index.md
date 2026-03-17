@@ -5,14 +5,10 @@ sidebar_position: 1
 
 # Release Notes
 
-This site keeps release notes in the same two-lane model as the rest of the docs:
+This docs site now tracks the current `3.4` line only.
 
-- stable notes for the frozen `3.x` line
-- unreleased notes in `Next`
+## Current release notes
 
-## Stable line
-
-- [3.3 stable](./3-3-stable.md)
-- [3.4 next](./3-4-next.md)
+- [3.4](/docs/release-notes/3-4)
 
 Release notes here are curated summaries on top of the generated changelog, not a raw mirror of every commit message.

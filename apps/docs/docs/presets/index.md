@@ -41,6 +41,8 @@ options={{
 }}
 ```
 
+You should feel comfortable doing this. The goal is not to preserve preset purity. The goal is to get to the right transition faster.
+
 ## When to stop using a preset
 
 Move to a custom interpolator when:
@@ -48,4 +50,7 @@ Move to a custom interpolator when:
 - the relationship between current and previous screen matters
 - you need `surface` or `backdrop` animated props
 - you want slot-specific choreography with `styleId`
+- you need `Transition.Boundary` or navigation zoom behavior to be the main event
 - a preset gets overridden so heavily that it is no longer telling the truth
+
+At that point, keep the preset open in another tab, steal the parts you still like, and write the transition as your own.

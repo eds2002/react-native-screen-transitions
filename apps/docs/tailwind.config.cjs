@@ -10,7 +10,6 @@ module.exports = {
 		"./src/**/*.{js,jsx,ts,tsx,md,mdx}",
 		"./docs/**/*.{md,mdx}",
 		"./blog/**/*.{md,mdx}",
-		"./versioned_docs/**/*.{md,mdx}",
 	],
 	theme: {
 		extend: {},

@@ -1,11 +1,11 @@
 ---
-title: Quickstart
+title: Quick Start
 sidebar_position: 2
 ---
 
-# Quickstart
+# Quick Start
 
-The fastest path is `blank-stack`: it gives you full transition control without hiding the moving pieces.
+The fastest path is `blank-stack`. It gives you full control and matches the mental model the rest of the docs use.
 
 ## 1. Create a navigator
 
@@ -31,7 +31,9 @@ export function AppStack() {
 }
 ```
 
-## 2. Switch to your own interpolator when presets stop being enough
+That is enough to get a real screen transition on screen.
+
+## 2. When presets stop being enough, switch to your own interpolator
 
 ```tsx
 import { interpolate } from "react-native-reanimated";
@@ -66,7 +68,9 @@ options={{
 }}
 ```
 
-## 3. Expo Router
+This is the 3.4 mental model: return slot styles for the screen content, the backdrop, the surface, or custom `styleId` targets.
+
+## 3. If you use Expo Router, wire the navigator through `withLayoutContext`
 
 ```tsx
 import { withLayoutContext } from "expo-router";
@@ -85,12 +89,18 @@ export const Stack = withLayoutContext<
 
 ## 4. Use the demo app as your recipe book
 
-The repository ships an Expo app under [`apps/e2e`](https://github.com/eds2002/react-native-screen-transitions/tree/main/apps/e2e) with routes for:
+The repository ships an Expo app under [`apps/e2e`](https://github.com/eds2002/react-native-screen-transitions/tree/main/apps/e2e). In the current branch, the main recipe routes are:
 
-- bottom sheets and drawers
-- shared bounds transitions
-- gesture ownership and ScrollView handoff
-- overlays and touch gating
-- stack progress and benchmark scenarios
+- `[stackType]/bottom-sheet/*` for sheets, drawers, snap points, and auto detents
+- `[stackType]/bounds/*` for `Transition.Boundary`, style-targeted bounds, and navigation zoom
+- `[stackType]/custom-backdrop` and `[stackType]/custom-background` for backdrop and surface customization
+- `gestures/*` for ownership, shadowing, nesting, and ScrollView handoff
+- `stack-benchmark/*` for performance comparisons and sanity checks
 
-When a guide here feels high-level, the demo app is the implementation reference.
+`[stackType]` resolves to `blank-stack` or `native-stack`, so you can compare behavior without learning two different example trees.
+
+## What to read next
+
+- [Mental Model →](../core-mental-model)
+- [Stack Variants →](../stack-variants)
+- [Shared Elements & Bounds →](../shared-elements-bounds)

@@ -31,18 +31,6 @@ const config: Config = {
 			{
 				docs: {
 					sidebarPath: "./sidebars.ts",
-					lastVersion: "3.x",
-					versions: {
-						current: {
-							label: "Next",
-							path: "next",
-							banner: "unreleased",
-						},
-						"3.x": {
-							label: "3.x",
-							banner: "none",
-						},
-					},
 					editUrl:
 						"https://github.com/eds2002/react-native-screen-transitions/tree/main/apps/docs/",
 				},
@@ -71,11 +59,6 @@ const config: Config = {
 					sidebarId: "docsSidebar",
 					position: "left",
 					label: "Docs",
-				},
-				{
-					type: "docsVersionDropdown",
-					position: "left",
-					dropdownActiveClassDisabled: true,
 				},
 				{
 					type: "search",
@@ -110,15 +93,15 @@ const config: Config = {
 					],
 				},
 				{
-					title: "Release Flow",
+					title: "Current Release",
 					items: [
 						{
-							label: "Stable 3.x",
-							to: "/docs/release-notes/3-3-stable",
+							label: "3.4 Release Notes",
+							to: "/docs/release-notes/3-4",
 						},
 						{
-							label: "Next Train",
-							to: "/docs/next/release-notes/3-4-next",
+							label: "Upgrade Guide",
+							to: "/docs/migration",
 						},
 					],
 				},

@@ -828,6 +828,26 @@ hr {
   color: #000;
 }
 
+.theme-doc-markdown header h1::before,
+.theme-doc-markdown .doc-content-inner>h1::before,
+.theme-doc-markdown .doc-content-inner>.doc-title-row>h1::before,
+.docs-hero-title::before {
+  content: "v3.4.x";
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: fit-content;
+  margin-bottom: 1rem;
+  padding: 0.4rem 0.75rem;
+  border-radius: 9999px;
+  background: #bbf7d0;
+  color: #000;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  line-height: 1;
+}
+
 /* ─────────────────────────────────────────────────────────
    Scrollbar (subtle)
    ───────────────────────────────────────────────────────── */

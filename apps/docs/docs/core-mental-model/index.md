@@ -1,14 +1,15 @@
 ---
-title: Core Mental Model
+title: Mental Model
 sidebar_position: 1
 ---
 
-# Core Mental Model
+# Mental Model
 
-The package becomes predictable once you anchor on two ideas:
+The package becomes predictable once you anchor on three ideas:
 
 1. every screen exposes transition state
 2. your interpolator returns styles for named visual slots
+3. bounds are measured relationships, not magic
 
 ## Progress is the backbone
 
@@ -28,15 +29,18 @@ Typical navigation behavior:
 That `progress` value is passed into `screenStyleInterpolator` together with:
 
 - `current`, `previous`, `next`
+- `active`, `inactive`
 - `stackProgress`
 - `snapIndex`
 - `layouts.screen` and `layouts.content`
 - `bounds()`
 - safe-area `insets`
 
+You should think of those values as a description of the transition graph, not just a number to interpolate.
+
 ## Return slots, not one giant style blob
 
-The interpolator returns a map of named transition slots:
+The 3.4 interpolator returns a map of named slots:
 
 ```tsx
 return {
@@ -63,6 +67,8 @@ The important slots are:
 - `surface`: the animated surface layer inside the screen
 - custom ids like `"hero-image"`: styles attached to `Transition.View` or other transition-aware components through `styleId`
 
+Each slot can drive `style`, `props`, or both. That is what lets 3.4 support things like animated blur backdrops, custom surface components, and element-specific choreography without forcing everything into one flat style object.
+
 ## The default export is your transition toolkit
 
 The root export gives you the high-level pieces:
@@ -70,10 +76,23 @@ The root export gives you the high-level pieces:
 - `Transition.Presets`
 - `Transition.Specs`
 - `Transition.Boundary`
+- `Transition.MaskedView`
 - `Transition.View`, `Transition.Pressable`, `Transition.ScrollView`, `Transition.FlatList`
+- `createBoundaryComponent`
 - `createTransitionAwareComponent`
 
 That means you do not need to wire separate wrappers for every animated target. The package already exposes transition-aware primitives for common cases.
+
+## Hooks can read beyond the current screen
+
+In 3.4, both `useScreenAnimation()` and `useScreenGesture()` can target other levels in the active hierarchy:
+
+- `"self"` for the current screen
+- `"parent"` for the immediate parent screen
+- `"root"` for the outermost screen in the branch
+- `{ ancestor: number }` for explicit depth targeting
+
+That makes deeply nested gestures and coordinated animation reads much easier to express without plumbing refs through half the tree.
 
 ## Shared bounds are layout-driven, not magic
 

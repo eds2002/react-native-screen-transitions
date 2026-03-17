@@ -16,7 +16,6 @@
 		"docs:build": "bun run --cwd apps/docs build",
 		"docs:typecheck": "bun run --cwd apps/docs typecheck",
 		"docs:api": "bun run --cwd apps/docs api:generate",
-		"docs:version": "bun run --cwd apps/docs version:docs",
 		"knip": "bunx knip --workspace packages/react-native-screen-transitions",
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",
