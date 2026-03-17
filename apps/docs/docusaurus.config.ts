@@ -1,6 +1,6 @@
-import { themes as prismThemes } from "prism-react-renderer";
-import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
+import type { Config } from "@docusaurus/types";
+import { themes as prismThemes } from "prism-react-renderer";
 
 const config: Config = {
 	title: "react-native-screen-transitions",
@@ -25,12 +25,6 @@ const config: Config = {
 		defaultLocale: "en",
 		locales: ["en"],
 	},
-	stylesheets: [
-		{
-			href: "https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap",
-			type: "text/css",
-		},
-	],
 	presets: [
 		[
 			"classic",
@@ -62,7 +56,7 @@ const config: Config = {
 	themeConfig: {
 		colorMode: {
 			defaultMode: "light",
-			respectPrefersColorScheme: false,
+			respectPrefersColorScheme: true,
 		},
 		navbar: {
 			title: "screen transitions",
@@ -83,19 +77,19 @@ const config: Config = {
 					dropdownActiveClassDisabled: true,
 				},
 				{
-					href: "https://www.npmjs.com/package/react-native-screen-transitions",
-					label: "npm",
+					type: "search",
 					position: "right",
 				},
 				{
 					href: "https://github.com/eds2002/react-native-screen-transitions",
-					label: "GitHub",
 					position: "right",
+					className: "header-github-link",
+					"aria-label": "GitHub repository",
 				},
 			],
 		},
 		footer: {
-			style: "dark",
+			style: "light",
 			links: [
 				{
 					title: "Docs",
@@ -131,8 +125,12 @@ const config: Config = {
 					title: "Package",
 					items: [
 						{
-							label: "Repository",
+							label: "GitHub",
 							href: "https://github.com/eds2002/react-native-screen-transitions",
+						},
+						{
+							label: "npm",
+							href: "https://www.npmjs.com/package/react-native-screen-transitions",
 						},
 						{
 							label: "Example App",
@@ -145,7 +143,7 @@ const config: Config = {
 		},
 		docs: {
 			sidebar: {
-				hideable: true,
+				hideable: false,
 				autoCollapseCategories: true,
 			},
 		},

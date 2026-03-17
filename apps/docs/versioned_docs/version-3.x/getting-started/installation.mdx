@@ -3,30 +3,23 @@ title: Installation
 sidebar_position: 1
 ---
 
+import PackageManagerTabs from '@site/src/components/PackageManagerTabs';
+
 # Installation
 
 Install the package itself:
 
-```bash
-npm install react-native-screen-transitions
-```
+<PackageManagerTabs command="npm install react-native-screen-transitions" />
 
 Install the peer dependencies used by the navigators and animation pipeline:
 
-```bash
-npm install react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
-  react-native-safe-area-context
-```
+<PackageManagerTabs command="npm install react-native-reanimated react-native-gesture-handler @react-navigation/native @react-navigation/native-stack @react-navigation/elements react-native-screens react-native-safe-area-context" />
 
 ## Optional dependency
 
 If you use reveal-style shared transitions with `Transition.MaskedView`, also install masked view support:
 
-```bash
-npm install @react-native-masked-view/masked-view
-```
+<PackageManagerTabs command="npm install @react-native-masked-view/masked-view" />
 
 This is not required for normal stack transitions, custom interpolators, or snap-point sheets.
 

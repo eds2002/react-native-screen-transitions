@@ -27,7 +27,7 @@ If you only want platform-native push/pop behavior with minimal customization, `
 
 ## Where to start
 
-- New to the package: go to [Installation](./getting-started/installation.md) and [Quickstart](./getting-started/quickstart.md)
+- New to the package: go to [Installation](./getting-started/installation.mdx) and [Quickstart](./getting-started/quickstart.md)
 - Designing custom motion: go to [Core Mental Model](./core-mental-model/index.md)
 - Picking a navigator surface: go to [Stack Variants](./stack-variants/index.md)
 - Looking for concrete scenarios: go to [Recipes](./recipes/index.md)
