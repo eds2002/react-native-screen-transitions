@@ -393,7 +393,7 @@ h6 {
   background: var(--color-muted);
 }
 
-.menu__link--active:not(.menu__link--sublist) {
+.menu__link--active:not(.menu__link--sublist):not([class*="categoryLink"]) {
   color: var(--color-foreground);
   font-weight: 500;
   /*background: var(--color-muted);*/
@@ -401,30 +401,22 @@ h6 {
 
 /* ── Static section headers (non-collapsible categories) ── */
 
-/* Hide the collapse arrow on non-collapsible categories */
-.menu__list-item-collapsible .menu__link--sublist-caret::after {
-  display: none;
-}
-
-/* Style the top-level category labels as small section headers */
+/* Non-collapsible category wrappers */
 .menu__list-item-collapsible {
-  border-radius: 0;
-  pointer-events: none;
+  @apply rounded-none pointer-events-none bg-transparent;
 }
 
-.menu__link--sublist-caret {
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--color-muted-foreground);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  padding: 0.25rem 0.5rem;
-  cursor: default;
+.menu__list-item-collapsible:hover {
+  @apply bg-transparent;
 }
 
-.menu__link--sublist-caret:hover {
-  background: transparent !important;
-  color: var(--color-muted-foreground) !important;
+/* Category title links (non-collapsible, no href) */
+a[class*="categoryLink"] {
+  @apply text-xs font-medium text-zinc-950 px-2 py-1 cursor-default bg-transparent pointer-events-none dark:text-zinc-50;
+}
+
+a[class*="categoryLink"]:hover {
+  @apply bg-transparent text-zinc-950 dark:text-zinc-50;
 }
 
 /* Spacing between top-level sections */
