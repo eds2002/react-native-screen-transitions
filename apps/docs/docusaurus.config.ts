@@ -53,6 +53,7 @@ const config: Config = {
 			} satisfies Preset.Options,
 		],
 	],
+	plugins: ["./plugins/tailwind-config.cjs"],
 	themeConfig: {
 		colorMode: {
 			defaultMode: "light",

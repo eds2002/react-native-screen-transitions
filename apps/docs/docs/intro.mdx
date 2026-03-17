@@ -1,0 +1,40 @@
+---
+title: Introduction
+sidebar_position: 1
+hide_title: true
+---
+
+<h1 className="docs-hero-title">Introduction</h1>
+
+<p className="docs-hero-lead">react-native-screen-transitions is a React Native library for gesture-driven stacks, sheets, drawers, overlays, and shared bounds.</p>
+
+<p className="docs-hero-kicker">This is not another transition preset. It is the layer you build on when transitions become part of the product.</p>
+
+<p className="docs-body-copy">You know how most navigation transitions work: install a navigator, choose a presentation mode, and ship the defaults.</p>
+
+<p className="docs-body-copy !mt-8">That works until you need interactive sheets, coordinated overlays, shared bounds, or screen-specific interpolation. Then you end up mixing libraries, overriding presentation behavior, and writing one-off animation code to fill the gaps.</p>
+
+## Core Principles
+
+<p className="docs-section-copy">The library is built around a few core ideas:</p>
+
+<ul className="docs-bullets">
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Gesture-first:</strong> Motion can follow user input instead of running on a fixed timeline.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Open composition:</strong> Navigators, screens, overlays, and bounds primitives are exposed directly.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Shared bounds:</strong> Elements can move between routes with continuity when the design needs it.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Layered surfaces:</strong> Stacks, drawers, sheets, and overlays follow the same model.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Supported surface:</strong> The docs and exports stay focused on the public API.</li>
+</ul>
+
+## Open Composition
+
+<p className="docs-section-copy">react-native-screen-transitions gives you access to the moving parts. Start with the higher-level navigators and drop into lower-level primitives when your transition system needs more control.</p>
+
+<p className="docs-section-copy !mt-8">That gives teams a few practical advantages:</p>
+
+<ul className="docs-bullets">
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Direct control:</strong> Tune gestures, interpolation, backdrops, and presentation behavior without forking internals.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Gradual complexity:</strong> Start with a stack or preset, then drop lower only where you need to.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Predictable model:</strong> The same concepts show up across sheets, overlays, and route transitions.</li>
+  <li><strong className="font-semibold text-zinc-950 dark:text-zinc-50">Easier maintenance:</strong> Transition code stays in one system instead of being spread across wrappers and overrides.</li>
+</ul>

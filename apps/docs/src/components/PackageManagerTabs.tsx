@@ -14,7 +14,6 @@ function convertCommand(npmCommand: string, target: PackageManager): string {
 
 	if (target === "npm") return trimmed;
 
-	// Handle "npm install <packages>"
 	if (trimmed.startsWith("npm install ")) {
 		const packages = trimmed
 			.replace("npm install ", "")
@@ -29,7 +28,6 @@ function convertCommand(npmCommand: string, target: PackageManager): string {
 		}
 	}
 
-	// Handle plain "npm install"
 	if (trimmed === "npm install") {
 		switch (target) {
 			case "pnpm":
@@ -41,7 +39,6 @@ function convertCommand(npmCommand: string, target: PackageManager): string {
 		}
 	}
 
-	// Handle "npx <command>"
 	if (trimmed.startsWith("npx ")) {
 		const rest = trimmed.replace("npx ", "");
 		switch (target) {
@@ -58,7 +55,6 @@ function convertCommand(npmCommand: string, target: PackageManager): string {
 }
 
 interface PackageManagerTabsProps {
-	/** The npm command to display (e.g. "npm install react-native-screen-transitions") */
 	command: string;
 }
 
@@ -81,10 +77,12 @@ export default function PackageManagerTabs({
 	}, [currentCommand]);
 
 	return (
-		<div className="pm-tabs-container">
-			<div className="pm-tabs-header">
-				<div className="pm-tabs-icon" aria-hidden="true">
+		<div className="my-4 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-900">
+			<div className="flex items-center gap-1 px-3 py-2">
+				{/* Terminal icon */}
+				<div className="mr-1 flex items-center justify-center rounded-md border border-zinc-400 bg-white p-1 text-zinc-500 dark:border-zinc-700 dark:bg-zinc-800">
 					<svg
+						className="h-3.5 w-3.5"
 						viewBox="0 0 24 24"
 						fill="none"
 						stroke="currentColor"
@@ -97,45 +95,52 @@ export default function PackageManagerTabs({
 						<line x1="12" y1="19" x2="20" y2="19" />
 					</svg>
 				</div>
+
+				{/* Tab buttons */}
 				{MANAGERS.map((pm) => (
 					<button
 						key={pm}
 						type="button"
-						className="pm-tab-button"
-						data-active={pm === packageManager}
+						className={`rounded-md border-0 px-2.5 py-1 font-mono text-sm transition-colors cursor-pointer ${
+							pm === packageManager
+								? "bg-white font-semibold text-zinc-950  ring-0 ring-zinc-200 dark:bg-zinc-800 dark:text-zinc-50 dark:ring-zinc-700"
+								: "bg-transparent text-zinc-500 hover:text-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-50"
+						}`}
 						onClick={() => setPackageManager(pm)}
 					>
 						{pm}
 					</button>
 				))}
+
+				{/* Copy button */}
 				<button
 					type="button"
-					className="pm-tabs-copy"
+					className="ml-auto flex items-center rounded-lg border-0 bg-transparent p-1.5 text-zinc-400 transition-colors cursor-pointer hover:bg-zinc-200 hover:text-zinc-950 dark:hover:bg-zinc-700 dark:hover:text-zinc-50"
 					onClick={handleCopy}
 					title="Copy command"
 				>
 					{copied ? (
 						<svg
+							className="h-4 w-4"
 							viewBox="0 0 24 24"
 							fill="none"
 							stroke="currentColor"
 							strokeWidth="2"
 							strokeLinecap="round"
 							strokeLinejoin="round"
-							aria-hidden="true"
 						>
 							<title>Copied</title>
 							<polyline points="20 6 9 17 4 12" />
 						</svg>
 					) : (
 						<svg
+							className="h-4 w-4"
 							viewBox="0 0 24 24"
 							fill="none"
 							stroke="currentColor"
 							strokeWidth="2"
 							strokeLinecap="round"
 							strokeLinejoin="round"
-							aria-hidden="true"
 						>
 							<title>Copy</title>
 							<rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
@@ -144,7 +149,11 @@ export default function PackageManagerTabs({
 					)}
 				</button>
 			</div>
-			<pre className="pm-tabs-code">{currentCommand}</pre>
+
+			{/* Command output */}
+			<pre className="!m-0 !rounded-none !border-t !border-zinc-200 !bg-transparent !px-4 !py-3.5 font-mono !text-sm !leading-7 !text-zinc-950 dark:!border-zinc-700 dark:!text-zinc-50">
+				{currentCommand}
+			</pre>
 		</div>
 	);
 }

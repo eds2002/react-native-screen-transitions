@@ -16,8 +16,10 @@ function CopyPageInTitle() {
 	const [container, setContainer] = useState<HTMLElement | null>(null);
 
 	useEffect(() => {
-		// Find the h1 inside .theme-doc-markdown header
-		const h1 = document.querySelector(".theme-doc-markdown header h1");
+		// Prefer the synthetic title header, but fall back to a top-level markdown h1.
+		const h1 = document.querySelector(
+			".theme-doc-markdown header h1, .theme-doc-markdown .doc-content-inner > h1",
+		);
 		if (!h1) return;
 
 		// Wrap h1 + portal in a flex row container
