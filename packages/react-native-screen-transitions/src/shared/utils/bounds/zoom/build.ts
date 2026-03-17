@@ -576,28 +576,6 @@ export const buildZoomStyles = ({
 			],
 		};
 
-		if (!props.navigationMaskEnabled) {
-			return {
-				content: {
-					style: {
-						...focusedContentStyle,
-						overflow: "hidden",
-						borderRadius: maskRadii.borderRadius,
-						borderTopLeftRadius: maskRadii.borderTopLeftRadius,
-						borderTopRightRadius: maskRadii.borderTopRightRadius,
-						borderBottomLeftRadius: maskRadii.borderBottomLeftRadius,
-						borderBottomRightRadius: maskRadii.borderBottomRightRadius,
-						...(resolvedZoomOptions.mask.borderCurve
-							? { borderCurve: resolvedZoomOptions.mask.borderCurve }
-							: {}),
-					},
-				},
-				[resolvedTag]: {
-					style: { opacity: 1 },
-				},
-			};
-		}
-
 		return {
 			[NAVIGATION_CONTAINER_STYLE_ID]: {
 				style: {

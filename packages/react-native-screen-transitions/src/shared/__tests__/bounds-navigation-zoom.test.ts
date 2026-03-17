@@ -197,7 +197,7 @@ describe("bounds navigation zoom", () => {
 		});
 	});
 
-	it("falls back to content transforms when navigation masking is disabled", () => {
+	it("keeps navigation container and mask slots when navigation masking is disabled", () => {
 		registerSourceAndDestination({
 			tag: "album-art",
 			sourceScreenKey: "list",
@@ -248,7 +248,7 @@ describe("bounds navigation zoom", () => {
 			},
 		});
 
-		expect(styles.content).toEqual({
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toEqual({
 			style: {
 				opacity: 0.5,
 				transform: [
@@ -256,7 +256,17 @@ describe("bounds navigation zoom", () => {
 					{ translateY: 24 },
 					{ scale: 1.1 },
 				],
-				overflow: "hidden",
+			},
+		});
+		expect(styles[NAVIGATION_MASK_STYLE_ID]).toEqual({
+			style: {
+				width: 120,
+				height: 180,
+				transform: [
+					{ translateX: 40 },
+					{ translateY: 50 },
+					{ scale: 1 },
+				],
 				borderRadius: 16,
 				borderTopLeftRadius: 16,
 				borderTopRightRadius: 16,
@@ -265,8 +275,7 @@ describe("bounds navigation zoom", () => {
 				borderCurve: "continuous",
 			},
 		});
-		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeUndefined();
-		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeUndefined();
+		expect(styles.content).toBeUndefined();
 		expect(styles["album-art"]).toEqual({
 			style: { opacity: 1 },
 		});
