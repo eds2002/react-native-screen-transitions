@@ -1,23 +1,237 @@
-/**
- * CSS files with the .module.css suffix will be treated as CSS modules
- * and scoped locally.
- */
+.page {
+	padding: 0 0 5rem;
+}
 
-.heroBanner {
-  padding: 4rem 0;
-  text-align: center;
-  position: relative;
-  overflow: hidden;
+.hero {
+	position: relative;
+	display: grid;
+	grid-template-columns: minmax(0, 1.45fr) minmax(280px, 0.9fr);
+	gap: 1.5rem;
+	padding: 5rem clamp(1.25rem, 3vw, 3rem) 2.5rem;
+}
+
+.heroGlow {
+	position: absolute;
+	inset: 2rem auto auto 8%;
+	width: min(42rem, 75vw);
+	height: min(42rem, 75vw);
+	border-radius: 999px;
+	background:
+		radial-gradient(circle, rgba(226, 119, 61, 0.22), transparent 58%),
+		radial-gradient(circle at 68% 32%, rgba(241, 208, 168, 0.28), transparent 44%);
+	filter: blur(14px);
+	pointer-events: none;
+}
+
+.heroContent,
+.heroPanel {
+	position: relative;
+	z-index: 1;
+}
+
+.heroContent {
+	padding: clamp(1rem, 2vw, 2rem) 0;
+}
+
+.kicker {
+	margin: 0 0 1rem;
+	font-family: var(--site-font-mono);
+	font-size: 0.74rem;
+	font-weight: 600;
+	letter-spacing: 0.16em;
+	text-transform: uppercase;
+	color: var(--site-color-accent-strong);
+}
+
+.title {
+	max-width: 12ch;
+	margin: 0;
+	font-size: clamp(3.4rem, 8vw, 6.8rem);
+	line-height: 0.9;
+	letter-spacing: -0.06em;
+}
+
+.lead {
+	max-width: 46rem;
+	margin: 1.5rem 0 0;
+	font-size: 1.16rem;
+	line-height: 1.7;
+	color: var(--site-color-text-muted);
+}
+
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 0.9rem;
+	margin-top: 2rem;
+}
+
+.ghostButton {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0.8rem 1.2rem;
+	border: 1px solid var(--site-color-border-strong);
+	border-radius: 999px;
+	color: var(--ifm-font-color-base);
+	background: rgba(255, 255, 255, 0.58);
+	backdrop-filter: blur(14px);
+	transition:
+		transform 180ms ease,
+		border-color 180ms ease,
+		background 180ms ease;
+}
+
+.ghostButton:hover {
+	text-decoration: none;
+	transform: translateY(-1px);
+	border-color: var(--site-color-accent-strong);
+	background: rgba(255, 255, 255, 0.82);
+}
+
+.heroPanel {
+	display: grid;
+	gap: 0.85rem;
+	align-self: end;
+	padding: 1.2rem;
+	border: 1px solid var(--site-color-border);
+	border-radius: 1.6rem;
+	background:
+		linear-gradient(180deg, rgba(255, 248, 242, 0.9), rgba(249, 238, 227, 0.76)),
+		var(--site-color-surface);
+	box-shadow: 0 20px 60px rgba(43, 26, 13, 0.09);
+}
+
+.signalRow {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0.85rem 0 1rem;
+	border-bottom: 1px solid var(--site-color-border);
+	font-size: 0.92rem;
+	text-transform: lowercase;
+}
+
+.signalRow strong {
+	font-family: var(--site-font-display);
+	font-size: 1.3rem;
+	font-weight: 700;
+	letter-spacing: -0.03em;
+}
+
+.commandCard {
+	display: grid;
+	gap: 0.65rem;
+	margin-top: 0.5rem;
+	padding: 1rem;
+	border-radius: 1.1rem;
+	background: rgba(37, 24, 18, 0.96);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.commandLabel {
+	margin: 0;
+	font-family: var(--site-font-mono);
+	font-size: 0.75rem;
+	letter-spacing: 0.1em;
+	text-transform: uppercase;
+	color: rgba(255, 226, 205, 0.68);
+}
+
+.commandCard code {
+	display: block;
+	padding: 0.8rem 0.9rem;
+	border-radius: 0.85rem;
+	background: rgba(255, 255, 255, 0.06);
+	color: rgba(255, 242, 232, 0.94);
+	font-size: 0.9rem;
+}
+
+.trackGrid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
+	padding: 0 clamp(1.25rem, 3vw, 3rem);
+}
+
+.trackCard,
+.laneCard {
+	padding: 1.35rem;
+	border: 1px solid var(--site-color-border);
+	border-radius: 1.35rem;
+	background: rgba(255, 255, 255, 0.78);
+	box-shadow: 0 16px 40px rgba(42, 24, 12, 0.05);
+}
+
+.trackCard h2,
+.laneCard h3 {
+	margin: 0;
+	font-size: 1.4rem;
+	letter-spacing: -0.04em;
+}
+
+.trackCard p,
+.laneCard p {
+	margin: 0.9rem 0 0;
+	color: var(--site-color-text-muted);
+	line-height: 1.65;
+}
+
+.cardEyebrow {
+	margin: 0 0 0.75rem;
+	font-family: var(--site-font-mono);
+	font-size: 0.72rem;
+	font-weight: 600;
+	letter-spacing: 0.13em;
+	text-transform: uppercase;
+	color: var(--site-color-accent-strong);
+}
+
+.inlineLink {
+	display: inline-flex;
+	margin-top: 1rem;
+	font-weight: 600;
+	color: var(--site-color-accent-strong);
+}
+
+.inlineLink:hover {
+	text-decoration: none;
+	color: var(--ifm-color-primary-darkest);
+}
+
+.managementSection {
+	padding: 3.5rem clamp(1.25rem, 3vw, 3rem) 0;
+}
+
+.sectionHeading {
+	margin-bottom: 1.25rem;
+}
+
+.sectionHeading h2 {
+	margin: 0;
+	font-size: clamp(2.1rem, 4vw, 3.2rem);
+	letter-spacing: -0.05em;
+}
+
+.laneGrid {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 1rem;
 }
 
 @media screen and (max-width: 996px) {
-  .heroBanner {
-    padding: 2rem;
-  }
-}
+	.hero,
+	.trackGrid,
+	.laneGrid {
+		grid-template-columns: 1fr;
+	}
 
-.buttons {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+	.hero {
+		padding-top: 3.5rem;
+	}
+
+	.title {
+		max-width: 100%;
+		font-size: clamp(2.8rem, 12vw, 4.7rem);
+	}
 }

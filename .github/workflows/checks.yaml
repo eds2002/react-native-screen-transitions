@@ -30,3 +30,12 @@ jobs:
 
       - name: Run tests
         run: bun test
+
+      - name: Generate API docs
+        run: bun run docs:api
+
+      - name: Ensure generated API docs are committed
+        run: git diff --exit-code -- apps/docs/docs/api/reference
+
+      - name: Build docs
+        run: bun run docs:build

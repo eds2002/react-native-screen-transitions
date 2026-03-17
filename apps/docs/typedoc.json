@@ -1,0 +1,21 @@
+{
+	"$schema": "https://typedoc.org/schema.json",
+	"entryPoints": [
+		"../../packages/react-native-screen-transitions/src/shared/index.ts",
+		"../../packages/react-native-screen-transitions/src/blank-stack/index.ts",
+		"../../packages/react-native-screen-transitions/src/native-stack/index.ts",
+		"../../packages/react-native-screen-transitions/src/component-stack/index.ts"
+	],
+	"entryPointStrategy": "resolve",
+	"tsconfig": "../../packages/react-native-screen-transitions/tsconfig.json",
+	"plugin": ["typedoc-plugin-markdown"],
+	"out": "docs/api/reference",
+	"readme": "none",
+	"hideGenerator": true,
+	"githubPages": false,
+	"cleanOutputDir": true,
+	"excludeExternals": true,
+	"excludeInternal": true,
+	"excludePrivate": true,
+	"excludeProtected": true
+}
