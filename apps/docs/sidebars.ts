@@ -2,62 +2,40 @@ import type { SidebarsConfig } from "@docusaurus/plugin-content-docs";
 
 const sidebars: SidebarsConfig = {
 	docsSidebar: [
-		"intro",
+		// ── Sections ──────────────────────────────────────────
 		{
 			type: "category",
-			label: "Getting Started",
+			label: "Sections",
+			collapsible: false,
+			collapsed: false,
 			items: [
+				"intro",
 				"getting-started/installation",
 				"getting-started/quickstart",
+				"core-mental-model/index",
+				"stack-variants/index",
+				"shared-elements-bounds/index",
+				"gestures-snap-points/index",
+				"recipes/index",
+				"migration/index",
 			],
 		},
-		{
-			type: "category",
-			label: "Core Mental Model",
-			items: ["core-mental-model/index"],
-		},
-		{
-			type: "category",
-			label: "Stack Variants",
-			items: ["stack-variants/index"],
-		},
+
+		// ── Presets ───────────────────────────────────────────
 		{
 			type: "category",
 			label: "Presets",
+			collapsible: false,
+			collapsed: false,
 			items: ["presets/index"],
 		},
+
+		// ── Components ────────────────────────────────────────
 		{
 			type: "category",
-			label: "Shared Elements / Bounds",
-			items: ["shared-elements-bounds/index"],
-		},
-		{
-			type: "category",
-			label: "Gestures / Snap Points",
-			items: ["gestures-snap-points/index"],
-		},
-		{
-			type: "category",
-			label: "Recipes",
-			items: ["recipes/index"],
-		},
-		{
-			type: "category",
-			label: "Migration",
-			items: ["migration/index"],
-		},
-		{
-			type: "category",
-			label: "Release Notes",
-			items: [
-				"release-notes/index",
-				"release-notes/3-3-stable",
-				"release-notes/3-4-next",
-			],
-		},
-		{
-			type: "category",
-			label: "API Reference",
+			label: "Components",
+			collapsible: false,
+			collapsed: false,
 			items: [
 				"api/index",
 				{
