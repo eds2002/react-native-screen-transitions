@@ -3,7 +3,7 @@ import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
 
 /**
- * Apple Maps Style: expandViaScrollView = true
+ * Apple Maps Style: sheetScrollGestureBehavior = "expand-and-collapse"
  *
  * When at scroll boundary, BOTH expand and collapse work via ScrollView.
  * This is the Apple Maps-style behavior.
@@ -19,7 +19,7 @@ export default function AppleMapsLayout() {
 					gestureDirection: "vertical",
 					snapPoints: [0.4, 0.7, 1.0],
 					initialSnapIndex: 0,
-					expandViaScrollView: true,
+					sheetScrollGestureBehavior: "expand-and-collapse",
 					screenStyleInterpolator: ({
 						layouts: {
 							screen: { height },

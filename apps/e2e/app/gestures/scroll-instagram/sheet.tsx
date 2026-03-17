@@ -10,7 +10,7 @@ const COMMENTS = Array.from({ length: 25 }, (_, i) => ({
 }));
 
 /**
- * Instagram-style sheet with expandViaScrollView: false.
+ * Instagram-style sheet with sheetScrollGestureBehavior: "collapse-only".
  *
  * Via handle/header:
  * - ↓ collapses, ↑ expands
@@ -24,7 +24,10 @@ export default function InstagramSheet() {
 		<View style={styles.container}>
 			<View style={styles.sheet}>
 				<View style={styles.handle} />
-				<ScreenHeader title="Comments" subtitle="expandViaScrollView: false" />
+				<ScreenHeader
+					title="Comments"
+					subtitle='sheetScrollGestureBehavior: "collapse-only"'
+				/>
 
 				<View style={styles.deadspaceBox}>
 					<Text style={styles.deadspaceTitle}>Deadspace Zone</Text>

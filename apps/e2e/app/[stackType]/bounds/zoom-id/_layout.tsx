@@ -49,7 +49,7 @@ export default function NavigationZoomIdLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					maskEnabled: true,
+					navigationMaskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.6,

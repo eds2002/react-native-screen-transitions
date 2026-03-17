@@ -1,5 +1,6 @@
 import type {
 	BoundsNavigationZoomOptions,
+	ScreenTransitionConfig,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	TransitionInterpolatedStyle,
@@ -69,6 +70,20 @@ const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
 const maybeContentHeight = interpolationProps.layouts.content?.height;
+const nextNameOptions: ScreenTransitionConfig = {
+	navigationMaskEnabled: true,
+	sheetScrollGestureBehavior: "collapse-only",
+};
+const deprecatedAliasOptions: ScreenTransitionConfig = {
+	maskEnabled: true,
+	expandViaScrollView: false,
+};
+const precedenceOptions: ScreenTransitionConfig = {
+	navigationMaskEnabled: false,
+	maskEnabled: true,
+	sheetScrollGestureBehavior: "expand-and-collapse",
+	expandViaScrollView: false,
+};
 
 export const publicApiTypecheck = {
 	navigationSlots: {
@@ -82,4 +97,7 @@ export const publicApiTypecheck = {
 	numericBoundsResult,
 	maybeContentHeight,
 	zoomOptions,
+	nextNameOptions,
+	deprecatedAliasOptions,
+	precedenceOptions,
 };

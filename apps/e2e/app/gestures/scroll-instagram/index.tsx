@@ -9,14 +9,14 @@ export default function InstagramIndex() {
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
 				title="Instagram Style"
-				subtitle="expandViaScrollView: false"
+				subtitle='sheetScrollGestureBehavior: "collapse-only"'
 			/>
 
 			<ScrollView contentContainerStyle={styles.scrollContent}>
 				<GestureInfo
 					title="Test: Expand via deadspace only"
 					structure={`sheet (snapPoints: [0.4, 0.7, 1.0])
-  expandViaScrollView: false
+  sheetScrollGestureBehavior: "collapse-only"
   └─ Transition.ScrollView`}
 					behaviors={[
 						{

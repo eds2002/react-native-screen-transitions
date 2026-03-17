@@ -9,14 +9,14 @@ export default function AppleMapsIndex() {
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
 				title="Apple Maps Style"
-				subtitle="expandViaScrollView: true"
+				subtitle='sheetScrollGestureBehavior: "expand-and-collapse"'
 			/>
 
 			<ScrollView contentContainerStyle={styles.scrollContent}>
 				<GestureInfo
 					title="Test: Expand AND collapse via ScrollView"
 					structure={`sheet (snapPoints: [0.4, 0.7, 1.0])
-  expandViaScrollView: true
+  sheetScrollGestureBehavior: "expand-and-collapse"
   └─ Transition.ScrollView`}
 					behaviors={[
 						{

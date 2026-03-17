@@ -177,7 +177,7 @@ export default function BottomSheetLayout() {
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
 					backdropBehavior: "block",
-					expandViaScrollView: true,
+					sheetScrollGestureBehavior: "expand-and-collapse",
 
 					screenStyleInterpolator: ({
 						layouts: {
@@ -630,7 +630,7 @@ export default function BottomSheetLayout() {
 					snapPoints: [0.3, 0.6, 1.0],
 					initialSnapIndex: 1,
 					gestureSnapLocked: true,
-					expandViaScrollView: true,
+					sheetScrollGestureBehavior: "expand-and-collapse",
 					screenStyleInterpolator: ({
 						layouts: {
 							screen: { height },

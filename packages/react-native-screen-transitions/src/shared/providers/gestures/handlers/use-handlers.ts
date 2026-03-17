@@ -33,6 +33,7 @@ import type {
 } from "../../../types/ownership.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import type { EffectiveSnapPointsResult } from "../../../utils/gesture/validate-snap-points";
+import { resolveSheetScrollGestureBehavior } from "../../../utils/resolve-screen-transition-options";
 import { useDescriptors } from "../../screen/descriptors";
 import {
 	applyOffsetRules,
@@ -99,7 +100,7 @@ interface UseScreenGestureHandlersProps {
  *      - No → continue
  *   5. OFFSET THRESHOLD: Wait for sufficient touch movement
  *   6. SCROLLVIEW CHECK: If touch is on ScrollView, is it at boundary?
- *   7. EXPAND CHECK (snap sheets): If expanding via ScrollView, is expandViaScrollView enabled?
+ *   7. EXPAND CHECK (snap sheets): If expanding from nested scroll content, does sheetScrollGestureBehavior allow it?
  *   8. ACTIVATE!
  * ```
  *
@@ -144,10 +145,12 @@ export const useHandlers = ({
 		gestureReleaseVelocityMax = DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureSnapLocked = DEFAULT_GESTURE_SNAP_LOCKED,
-		expandViaScrollView = true,
 		gestureResponseDistance,
 		transitionSpec,
 	} = current.options;
+	const sheetScrollGestureBehavior = resolveSheetScrollGestureBehavior(
+		current.options,
+	);
 
 	const dimensions = useWindowDimensions();
 	const routeKey = current.route.key;
@@ -296,7 +299,7 @@ export const useHandlers = ({
 							directions.snapAxisInverted ?? false,
 						)
 					) {
-						if (!expandViaScrollView) {
+						if (sheetScrollGestureBehavior === "collapse-only") {
 							manager.fail();
 							return;
 						}

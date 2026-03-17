@@ -47,7 +47,7 @@ export default function NestedBoundsExampleLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					maskEnabled: true,
+					navigationMaskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.4,

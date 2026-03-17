@@ -45,7 +45,7 @@ export const MaybeMaskedNavigationContainer = memo(
 
 			hasWarnedMissingMaskedView = true;
 			logger.warn(
-				"maskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
+				"navigationMaskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
 			);
 		}, [enabled]);
 

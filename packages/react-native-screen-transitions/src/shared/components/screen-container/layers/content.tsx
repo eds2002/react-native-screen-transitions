@@ -10,6 +10,7 @@ import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useGestureContext } from "../../../providers/gestures";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
+import { resolveNavigationMaskEnabled } from "../../../utils/resolve-screen-transition-options";
 import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
@@ -24,7 +25,7 @@ export const ContentLayer = memo(({ children }: Props) => {
 	const { current } = useDescriptors();
 	const { pointerEvents, isBackdropActive } = useBackdropPointerEvents();
 	const gestureContext = useGestureContext();
-	const isNavigationMaskEnabled = !!current.options.maskEnabled;
+	const isNavigationMaskEnabled = resolveNavigationMaskEnabled(current.options);
 	const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
 	const hasAutoSnapPoint =
 		current.options.snapPoints?.includes("auto") ?? false;

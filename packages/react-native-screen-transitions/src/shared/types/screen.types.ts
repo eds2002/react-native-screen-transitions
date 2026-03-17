@@ -12,6 +12,9 @@ export type Layout = {
 };
 
 export type ScreenKey = string;
+export type SheetScrollGestureBehavior =
+	| "expand-and-collapse"
+	| "collapse-only";
 
 /**
  * A single snap point value. Either a fraction of screen height (0–1) or
@@ -87,6 +90,13 @@ export type ScreenTransitionConfig = {
 	 * (e.g. `bounds().navigation.zoom()`) is ready from the first frame.
 	 *
 	 * Requires `@react-native-masked-view/masked-view` to be installed.
+	 *
+	 * @default false
+	 */
+	navigationMaskEnabled?: boolean;
+
+	/**
+	 * @deprecated Use `navigationMaskEnabled` instead.
 	 */
 	maskEnabled?: boolean;
 
@@ -209,16 +219,25 @@ export type ScreenTransitionConfig = {
 	initialSnapIndex?: number;
 
 	/**
-	 * Controls whether swiping to expand the sheet works from within a ScrollView.
+	 * Controls how nested scroll content hands gestures off to a snap sheet.
 	 *
-	 * - `true` (Apple Maps style): Swiping up at scroll top expands the sheet
-	 * - `false` (Instagram style): Expand only works via deadspace (non-scrollable areas)
-	 *
-	 * Collapse (swipe down at scroll top) always works regardless of this setting.
+	 * - `"expand-and-collapse"` (Apple Maps style): Swiping up at scroll boundary expands the sheet,
+	 *   and swiping down at scroll boundary collapses or dismisses it
+	 * - `"collapse-only"` (Instagram style): Expand only works via deadspace; collapse/dismiss via
+	 *   nested scroll content still works at boundary
 	 *
 	 * Only applies to screens with `snapPoints` configured.
 	 *
-	 * @default true
+	 * @default "expand-and-collapse"
+	 */
+	sheetScrollGestureBehavior?: SheetScrollGestureBehavior;
+
+	/**
+	 * @deprecated Use `sheetScrollGestureBehavior` instead.
+	 *
+	 * Mapping:
+	 * - `true` -> `"expand-and-collapse"`
+	 * - `false` -> `"collapse-only"`
 	 */
 	expandViaScrollView?: boolean;
 

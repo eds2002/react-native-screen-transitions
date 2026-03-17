@@ -28,6 +28,7 @@ import type { ScreenTransitionConfig } from "../../../../types/screen.types";
 import type { BaseStackRoute } from "../../../../types/stack.types";
 import { createBoundsAccessor } from "../../../../utils/bounds";
 import type { BoundsFrameProps } from "../../../../utils/bounds/types/frame-props";
+import { resolveNavigationMaskEnabled } from "../../../../utils/resolve-screen-transition-options";
 import { type BaseDescriptor, useDescriptors } from "../../descriptors";
 import { derivations } from "./derivations";
 import { toPlainRoute, toPlainValue } from "./worklet";
@@ -204,6 +205,9 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const nextHasTransitions =
 		!!nextRouteKey &&
 		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
+	const currentNavigationMaskEnabled = resolveNavigationMaskEnabled(
+		currentDescriptor?.options ?? {},
+	);
 
 	const framePropsMutable = useSharedValue<BoundsFrameProps>({
 		layouts: { screen: dimensions },
@@ -284,7 +288,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 		framePropsMutable.value = {
 			...nextProps,
-			navigationMaskEnabled: !!currentDescriptor?.options?.maskEnabled,
+			navigationMaskEnabled: currentNavigationMaskEnabled,
 		};
 		return nextProps;
 	});

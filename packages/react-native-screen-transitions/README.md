@@ -284,12 +284,14 @@ options={{
 | `snapVelocityImpact`           | How much velocity affects snap targeting (default: 0.1, lower = iOS-like)|
 | `gestureReleaseVelocityScale`  | Multiplier for post-release spring velocity (default: 1)                 |
 | `gestureReleaseVelocityMax`    | Cap on post-release spring velocity (default: 3.2)                       |
-| `expandViaScrollView`          | Allow expansion from ScrollView at boundary (default: true)              |
+| `sheetScrollGestureBehavior`   | Nested scroll handoff for snap sheets (`"expand-and-collapse"` by default) |
 | `gestureSnapLocked`            | Lock gesture-based snap movement to current snap point                   |
 | `backdropBehavior`             | Touch handling for backdrop area                                         |
 | `backdropComponent`            | Custom backdrop component, driven by interpolator `backdrop` slot        |
 | `surfaceComponent`             | Custom surface component, driven by interpolator `surface` slot          |
-| `maskEnabled`                  | Pre-mount masked view wrapper for navigation bounds masking              |
+| `navigationMaskEnabled`        | Pre-mount masked view wrapper for navigation bounds masking              |
+
+Deprecated aliases: `expandViaScrollView` -> `sheetScrollGestureBehavior`, `maskEnabled` -> `navigationMaskEnabled`.
 
 ### Gesture Direction
 
@@ -437,7 +439,7 @@ Use `surfaceComponent` to render a custom surface inside the animated content wr
 - `content` drives container-level transitions (position/scale/opacity)
 - `surface` drives custom surface styles/props
 - Animated props are driven by the `surface` slot in your interpolator
-- When `maskEnabled: true` is active, the surface is rendered inside the masked navigation container so it stays clipped/transformed with zoom transitions
+- When `navigationMaskEnabled: true` is active, the surface is rendered inside the masked navigation container so it stays clipped/transformed with zoom transitions
 
 ```tsx
 import { SquircleView } from "react-native-figma-squircle";
@@ -505,8 +507,8 @@ screenStyleInterpolator: ({ snapIndex }) => {
 ### ScrollView Behavior
 
 With `Transition.ScrollView` inside a snap-enabled sheet:
-- **`expandViaScrollView: true`**: At boundary, swipe up expands and swipe down collapses (or dismisses at min if enabled)
-- **`expandViaScrollView: false`**: Expand works only via deadspace; collapse/dismiss via scroll still works at boundary
+- **`sheetScrollGestureBehavior: "expand-and-collapse"`**: At boundary, swipe up expands and swipe down collapses (or dismisses at min if enabled)
+- **`sheetScrollGestureBehavior: "collapse-only"`**: Expand works only via deadspace; collapse/dismiss via scroll still works at boundary
 - **Scrolled into content**: Normal scroll behavior
 
 ### Snap Animation Specs
@@ -634,7 +636,7 @@ For SwiftUI-like navigation zoom transitions where content expands from a source
 <Stack.Screen
   name="Detail"
   options={{
-    maskEnabled: true,  // Required for masked reveal
+    navigationMaskEnabled: true,  // Required for masked reveal
     screenStyleInterpolator: ({ bounds, progress, focused }) => {
       "worklet";
       if (!focused) return {};
@@ -651,9 +653,9 @@ For SwiftUI-like navigation zoom transitions where content expands from a source
 />
 ```
 
-`bounds().navigation.zoom()` returns a complete interpolator result with content, mask, and container styles. Set `maskEnabled: true` to pre-mount the masked view wrapper so it's ready from the first frame.
+`bounds().navigation.zoom()` returns a complete interpolator result with content, mask, and container styles. Set `navigationMaskEnabled: true` to pre-mount the masked view wrapper so it's ready from the first frame.
 
-When using `surfaceComponent`, it participates in the same masked navigation container path under `maskEnabled: true`, so surface and children animate/clip together during zoom.
+When using `surfaceComponent`, it participates in the same masked navigation container path under `navigationMaskEnabled: true`, so surface and children animate/clip together during zoom.
 
 `navigation.zoom(options?)` accepts optional zoom overrides for mask shape and drag feel.
 
@@ -754,7 +756,7 @@ const TabBar = ({ focusedIndex, progress }) => {
 | `Transition.Pressable`                      | Pressable wrapper. `sharedBoundTag` usage is legacy and planned for next-major deprecation |
 | `Transition.ScrollView`                     | ScrollView with gesture coordination + scroll-settled signaling                |
 | `Transition.FlatList`                       | FlatList with gesture coordination + scroll-settled signaling                  |
-| `Transition.MaskedView`                     | Deprecated legacy masking wrapper. Prefer `maskEnabled` on screen options      |
+| `Transition.MaskedView`                     | Deprecated legacy masking wrapper. Prefer `navigationMaskEnabled` on screen options |
 
 ---
 
@@ -1027,9 +1029,9 @@ options={{
 
 ---
 
-## Masked View Setup (`maskEnabled` Recommended)
+## Masked View Setup (`navigationMaskEnabled` Recommended)
 
-Required for `SharedIGImage`, `SharedAppleMusic` presets, and `bounds().navigation.zoom()` transitions. For new code, prefer `maskEnabled: true` on screen options.
+Required for `SharedIGImage`, `SharedAppleMusic` presets, and `bounds().navigation.zoom()` transitions. For new code, prefer `navigationMaskEnabled: true` on screen options. The deprecated alias `maskEnabled` remains supported for compatibility.
 
 > **Note**: Requires native code. Will not work in Expo Go.
 
@@ -1044,7 +1046,7 @@ npm install @react-native-masked-view/masked-view
 cd ios && pod install
 ```
 
-### Recommended Flow (`maskEnabled`)
+### Recommended Flow (`navigationMaskEnabled`)
 
 **1. Source Screen** – use a boundary pressable:
 
@@ -1091,7 +1093,7 @@ export default function DetailsScreen() {
 }
 ```
 
-**3. Layout** – enable `maskEnabled` and use `bounds().navigation.zoom()`:
+**3. Layout** – enable `navigationMaskEnabled` and use `bounds().navigation.zoom()`:
 
 ```tsx
 // app/_layout.tsx
@@ -1104,7 +1106,7 @@ export default function RootLayout() {
       <Stack.Screen
         name="details"
         options={{
-          maskEnabled: true,
+          navigationMaskEnabled: true,
           screenStyleInterpolator: ({ bounds, focused }) => {
             "worklet";
             if (!focused) return {};
@@ -1119,7 +1121,7 @@ export default function RootLayout() {
 
 ### Legacy Fallback (Deprecated): `Transition.MaskedView`
 
-`Transition.MaskedView` remains available for legacy/manual masking flows, but new implementations should use `maskEnabled`.
+`Transition.MaskedView` remains available for legacy/manual masking flows, but new implementations should use `navigationMaskEnabled`.
 
 ```tsx
 <Transition.MaskedView style={{ flex: 1 }}>
@@ -1131,7 +1133,7 @@ export default function RootLayout() {
 
 1. `Transition.Boundary.Pressable` measures and stores source bounds (legacy fallback: `Transition.Pressable` with `sharedBoundTag`, planned for next-major deprecation).
 2. `Transition.Boundary.View` (or `Transition.View`) on the destination registers the matching target.
-3. `maskEnabled: true` pre-mounts the masked wrapper for zoom/reveal transitions (legacy fallback: `Transition.MaskedView`).
+3. `navigationMaskEnabled: true` pre-mounts the masked wrapper for zoom/reveal transitions (legacy fallback: `Transition.MaskedView`).
 4. The zoom preset interpolates position, size, and mask for a seamless expand/collapse effect.
 
 ---

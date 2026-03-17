@@ -105,15 +105,15 @@ const SCROLLVIEW_EXAMPLES: Example[] = [
 	},
 	{
 		id: "scroll-apple-maps",
-		title: "Apple Maps Style (expandViaScrollView)",
+		title: "Apple Maps Style (expand-and-collapse)",
 		description: "Expand sheet from ScrollView at boundary",
-		scenario: "Sheet (snap points) > expandViaScrollView: true",
+		scenario: 'Sheet (snap points) > sheetScrollGestureBehavior: "expand-and-collapse"',
 	},
 	{
 		id: "scroll-instagram",
-		title: "Instagram Style (no expandViaScrollView)",
+		title: "Instagram Style (collapse-only)",
 		description: "Expand only via deadspace, collapse via scroll",
-		scenario: "Sheet (snap points) > expandViaScrollView: false",
+		scenario: 'Sheet (snap points) > sheetScrollGestureBehavior: "collapse-only"',
 	},
 ];
 

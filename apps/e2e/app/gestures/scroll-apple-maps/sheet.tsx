@@ -9,7 +9,7 @@ const ITEMS = Array.from({ length: 25 }, (_, i) => ({
 }));
 
 /**
- * Apple Maps-style sheet with expandViaScrollView: true.
+ * Apple Maps-style sheet with sheetScrollGestureBehavior: "expand-and-collapse".
  *
  * When at scroll top:
  * - ↓ collapses sheet
@@ -25,7 +25,7 @@ export default function AppleMapsSheet() {
 				<View style={styles.handle} />
 				<ScreenHeader
 					title="Apple Maps Style"
-					subtitle="expandViaScrollView: true"
+					subtitle='sheetScrollGestureBehavior: "expand-and-collapse"'
 				/>
 
 				<View style={styles.instructions}>
