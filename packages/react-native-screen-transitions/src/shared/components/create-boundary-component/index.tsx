@@ -29,10 +29,18 @@ const setGroupActiveIdOnUI = (group: string, id: string) => {
 	BoundStore.setGroupActiveId(group, id);
 };
 
+interface CreateBoundaryComponentOptions {
+	alreadyAnimated?: boolean;
+}
+
 export function createBoundaryComponent<P extends object>(
 	Wrapped: ComponentType<P>,
+	options: CreateBoundaryComponentOptions = {},
 ) {
-	const AnimatedComponent = Animated.createAnimatedComponent(Wrapped);
+	const { alreadyAnimated = false } = options;
+	const AnimatedComponent = alreadyAnimated
+		? Wrapped
+		: Animated.createAnimatedComponent(Wrapped);
 
 	const Inner = forwardRef<
 		React.ComponentRef<typeof AnimatedComponent>,
@@ -258,6 +266,4 @@ export const Boundary = {
 	View: BoundaryView,
 	/** Pressable boundary wrapper with press-priority source capture. */
 	Pressable: BoundaryPressable,
-	/** Factory for custom boundary wrappers. */
-	createBoundaryComponent,
 };

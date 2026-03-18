@@ -17,15 +17,18 @@ import type { TransitionAwareProps } from "../types/screen.types";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
+	alreadyAnimated?: boolean;
 }
 
 export function createTransitionAwareComponent<P extends object>(
 	Wrapped: ComponentType<P>,
 	options: CreateTransitionAwareComponentOptions = {},
 ) {
-	const { isScrollable = false } = options;
+	const { isScrollable = false, alreadyAnimated = false } = options;
 
-	const AnimatedComponent = Animated.createAnimatedComponent(Wrapped);
+	const AnimatedComponent = alreadyAnimated
+		? Wrapped
+		: Animated.createAnimatedComponent(Wrapped);
 
 	const ScrollableInner = forwardRef<
 		React.ComponentRef<typeof Wrapped>,

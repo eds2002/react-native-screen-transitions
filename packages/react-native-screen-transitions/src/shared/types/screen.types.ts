@@ -36,10 +36,13 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * </Transition.View>
 	 *
 	 * // In your screenStyleInterpolator:
-	 * return {
-	 *   'hero-image': {
-	 *     opacity: interpolate(progress, [0, 1], [0, 1]),
-	 *     transform: [{ scale: interpolate(progress, [0, 1], [0.8, 1]) }]
+	 * screenStyleInterpolator: ({ progress }) => {
+	 *   "worklet";
+	 *   return {
+	 *     'hero-image': {
+	 *       opacity: interpolate(progress, [0, 1], [0, 1]),
+	 *       transform: [{ scale: interpolate(progress, [0, 1], [0.8, 1]) }]
+	 *     }
 	 *   }
 	 * }
 	 */
@@ -274,12 +277,15 @@ export type ScreenTransitionConfig = {
 	 *
 	 * @example
 	 * backdropComponent: BlurView,
-	 * screenStyleInterpolator: ({ progress }) => ({
-	 *   backdrop: {
-	 *     style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
-	 *     props: { intensity: interpolate(progress, [0, 1], [0, 80]) },
-	 *   },
-	 * })
+	 * screenStyleInterpolator: ({ progress }) => {
+	 *   "worklet";
+	 *   return {
+	 *     backdrop: {
+	 *       style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+	 *       props: { intensity: interpolate(progress, [0, 1], [0, 80]) },
+	 *     },
+	 *   };
+	 * }
 	 *
 	 * @default undefined
 	 */
@@ -296,12 +302,15 @@ export type ScreenTransitionConfig = {
 	 *
 	 * @example
 	 * surfaceComponent: SquircleView,
-	 * screenStyleInterpolator: ({ progress }) => ({
-	 *   surface: {
-	 *     style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
-	 *     props: { cornerRadius: 24, cornerSmoothing: 0.7 },
-	 *   },
-	 * })
+	 * screenStyleInterpolator: ({ progress }) => {
+	 *   "worklet";
+	 *   return {
+	 *     surface: {
+	 *       style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+	 *       props: { cornerRadius: 24, cornerSmoothing: 0.7 },
+	 *     },
+	 *   };
+	 * }
 	 *
 	 * @default undefined
 	 */

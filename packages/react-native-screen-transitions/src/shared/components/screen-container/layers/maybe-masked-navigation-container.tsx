@@ -49,16 +49,21 @@ export const MaybeMaskedNavigationContainer = memo(
 			);
 		}, [enabled]);
 
-		if (!enabled) return children;
+		const navigationContainer = (
+			<Animated.View
+				style={[styles.navigationContainer, animatedNavigationContainerStyle]}
+				pointerEvents={pointerEvents}
+			>
+				{children}
+			</Animated.View>
+		);
+
+		// Navigation zoom uses the root container transform even when the mask
+		// wrapper is disabled. Only the mask element itself is optional.
+		if (!enabled) return navigationContainer;
 
 		if (LazyMaskedView === View) {
-			return (
-				<Animated.View
-					style={[styles.navigationContainer, animatedNavigationContainerStyle]}
-				>
-					{children}
-				</Animated.View>
-			);
+			return navigationContainer;
 		}
 
 		return (
@@ -73,12 +78,7 @@ export const MaybeMaskedNavigationContainer = memo(
 				}
 				pointerEvents={pointerEvents}
 			>
-				<Animated.View
-					style={[styles.navigationContainer, animatedNavigationContainerStyle]}
-					pointerEvents={pointerEvents}
-				>
-					{children}
-				</Animated.View>
+				{navigationContainer}
 			</LazyMaskedView>
 		);
 	},
