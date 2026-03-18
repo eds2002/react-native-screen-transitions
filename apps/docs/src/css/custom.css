@@ -119,6 +119,7 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
 }
 
 body {
@@ -127,6 +128,7 @@ body {
   font-feature-settings:
     "rlig" 1,
     "calt" 1;
+  overflow-x: hidden;
 }
 
 @layer components {
@@ -293,18 +295,19 @@ h6 {
    Navbar
    ───────────────────────────────────────────────────────── */
 
-/* Constrain page content for ultrawide screens */
-.main-wrapper {
-  max-width: 1440px;
-  /* ~6xl-7xl */
-  margin-left: auto;
-  margin-right: auto;
-}
+/* Constrain page content for ultrawide screens — only on desktop */
+@media (min-width: 997px) {
+  .main-wrapper {
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 
-.navbar__inner {
-  max-width: 1440px;
-  margin-left: auto;
-  margin-right: auto;
+  .navbar__inner {
+    max-width: 1440px;
+    margin-left: auto;
+    margin-right: auto;
+  }
 }
 
 .navbar {
@@ -314,6 +317,30 @@ h6 {
   box-shadow: none;
   padding: 0 1.5rem;
   height: 3.5rem;
+}
+
+/* Mobile sidebar drawer */
+.navbar-sidebar {
+  --ifm-navbar-sidebar-width: 100vw !important;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  background: white !important;
+  overflow-y: auto !important;
+}
+
+[data-theme="dark"] .navbar-sidebar {
+  background: #09090b !important;
+}
+
+/* Hide "Back to main menu" — docs sidebar IS the main menu */
+.navbar-sidebar__back {
+  display: none !important;
+}
+
+.navbar-sidebar__backdrop {
+  display: none;
 }
 
 .navbar__brand {
@@ -986,10 +1013,14 @@ hr {
   transition: background 0.1s ease;
   text-decoration: none;
   color: var(--color-foreground);
+  background: transparent !important;
+  border: none !important;
+  width: 100%;
+  text-align: left;
 }
 
 .search-result-item:hover {
-  background: var(--color-muted);
+  background: var(--color-muted) !important;
   text-decoration: none;
   color: var(--color-foreground);
 }
