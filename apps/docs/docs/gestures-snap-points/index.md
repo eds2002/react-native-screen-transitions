@@ -1,16 +1,26 @@
 ---
-title: Gestures & Snap Points
+title: Gestures
 sidebar_position: 1
 ---
 
-# Gestures & Snap Points
+# Gestures
 
-The gesture system is designed around two jobs:
+The gesture system is not one feature.
 
-- deciding who owns the gesture
-- deciding where the screen should settle
+It is several connected systems:
 
-## Core gesture controls
+- ownership
+- scroll handoff
+- snap sheets and drawers
+- release targeting and programmatic snap
+
+That is why this section is split up:
+
+- [Gesture Ownership](/docs/gesture-ownership)
+- [Scroll Handoff](/docs/scroll-handoff)
+- [Snap Points & Sheets](/docs/snap-points-sheets)
+
+## Core controls
 
 The main per-screen controls are:
 
@@ -21,61 +31,23 @@ The main per-screen controls are:
 - `gestureVelocityImpact`
 - `gestureReleaseVelocityScale`
 - `gestureReleaseVelocityMax`
-
-Use the first group to decide **when a gesture can start**. Use the velocity settings to tune **how decisive the release feels** once the user lets go.
-
-## Snap points turn a screen into a sheet
-
-Once you add `snapPoints`, the screen gets intermediate resting states:
-
-```tsx
-options={{
-  snapPoints: ["auto", 1],
-  initialSnapIndex: 0,
-  backdropBehavior: "collapse",
-}}
-```
-
-Important sheet controls:
-
 - `snapPoints`
 - `initialSnapIndex`
 - `snapVelocityImpact`
-- `gestureSnapLocked`
 - `sheetScrollGestureBehavior`
-- `backdropBehavior`
-- `backdropComponent`
-- `surfaceComponent`
+- `gestureSnapLocked`
 
-## Auto snap is now part of the model
+The first group decides when a gesture can start. The velocity settings decide how decisive the release feels. `snapPoints` and `sheetScrollGestureBehavior` move the screen into sheet behavior instead of plain dismissal behavior.
 
-3.4 adds intrinsic snap points through `"auto"`:
+## Mental model
 
-```tsx
-options={{
-  snapPoints: ["auto", 1],
-  initialSnapIndex: 0,
-}}
-```
+Keep these rules in your head:
 
-That means the sheet can start at its measured content height instead of forcing you to hard-code a detent.
-
-## Scroll handoff policy
-
-The sheet/scroll relationship is controlled by `sheetScrollGestureBehavior`:
-
-- `"expand-and-collapse"`: scroll boundaries can expand upward and collapse downward
-- `"collapse-only"`: upward expansion is more conservative, but collapse still works at the boundary
-
-This is the difference between a broad Apple Maps-style feel and a tighter Instagram-style feel.
-
-`expandViaScrollView` still exists as a deprecated boolean alias, but `sheetScrollGestureBehavior` is the clearer 3.4 API.
-
-## Programmatic control
-
-Use `snapTo()` when the UI needs to drive the sheet instead of waiting for user input.
-
-That keeps transition logic in one place: the screen still participates in the same animation system, but the trigger is now imperative.
+- gestures dismiss stacks, not isolated components
+- ownership is per direction
+- child claims shadow ancestors for that same direction
+- ScrollViews must reach their boundary before they yield
+- snap sheets claim both directions on their axis
 
 ## Nested gesture coordination
 

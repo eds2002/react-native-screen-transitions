@@ -17,15 +17,36 @@ const sidebars: SidebarsConfig = {
 		},
 		{
 			type: "category",
-			label: "Building Transitions",
+			label: "Animation",
 			collapsible: false,
 			collapsed: false,
 			items: [
 				"presets/index",
 				"custom-transitions/index",
-				"shared-elements-bounds/index",
-				"gestures-snap-points/index",
 				"hooks-and-coordination/index",
+			],
+		},
+		{
+			type: "category",
+			label: "Bounds",
+			collapsible: false,
+			collapsed: false,
+			items: [
+				"shared-elements-bounds/index",
+				"bounds-helper/index",
+				"navigation-zoom/index",
+			],
+		},
+		{
+			type: "category",
+			label: "Gestures",
+			collapsible: false,
+			collapsed: false,
+			items: [
+				"gestures-snap-points/index",
+				"gesture-ownership/index",
+				"scroll-handoff/index",
+				"snap-points-sheets/index",
 			],
 		},
 		{

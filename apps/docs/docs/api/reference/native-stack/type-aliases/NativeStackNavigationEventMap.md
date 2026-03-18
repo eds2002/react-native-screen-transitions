@@ -8,7 +8,7 @@
 
 > **NativeStackNavigationEventMap** = `object`
 
-Defined in: [native-stack/types.ts:29](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L29)
+Defined in: [native-stack/types.ts:29](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L29)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [native-stack/types.ts:29](https://github.com/eds2002/react-native-s
 
 > **gestureCancel**: `object`
 
-Defined in: [native-stack/types.ts:41](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L41)
+Defined in: [native-stack/types.ts:41](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L41)
 
 Event which fires when a swipe back is canceled on iOS.
 
@@ -30,7 +30,7 @@ Event which fires when a swipe back is canceled on iOS.
 
 > **sheetDetentChange**: `object`
 
-Defined in: [native-stack/types.ts:50](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L50)
+Defined in: [native-stack/types.ts:50](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L50)
 
 Event which fires when screen is in sheet presentation & it's detent changes.
 
@@ -57,7 +57,7 @@ In payload it caries two fields:
 
 > **transitionEnd**: `object`
 
-Defined in: [native-stack/types.ts:37](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L37)
+Defined in: [native-stack/types.ts:37](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L37)
 
 Event which fires when a transition animation ends.
 
@@ -75,7 +75,7 @@ Event which fires when a transition animation ends.
 
 > **transitionStart**: `object`
 
-Defined in: [native-stack/types.ts:33](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L33)
+Defined in: [native-stack/types.ts:33](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L33)
 
 Event which fires when a transition animation starts.
 

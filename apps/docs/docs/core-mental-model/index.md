@@ -38,9 +38,11 @@ That `progress` value is passed into `screenStyleInterpolator` together with:
 
 You should think of those values as a description of the transition graph, not just a number to interpolate.
 
+`screenStyleInterpolator` runs as a worklet, so every interpolator you write should begin with `"worklet"`.
+
 ## Return slots, not one giant style blob
 
-The 3.4 interpolator returns a map of named slots:
+The interpolator returns a map of named slots:
 
 ```tsx
 return {
@@ -64,10 +66,10 @@ The important slots are:
 
 - `content`: the main screen content layer
 - `backdrop`: the layer between screens
-- `surface`: the animated surface layer inside the screen
-- custom ids like `"hero-image"`: styles attached to `Transition.View` or other transition-aware components through `styleId`
+- `surface`: the animated surface layer inside the screen, if you provide a `surfaceComponent`
+- custom ids like `"hero-image"`: styles attached to transition-aware components through `styleId`
 
-Each slot can drive `style`, `props`, or both. That is what lets 3.4 support things like animated blur backdrops, custom surface components, and element-specific choreography without forcing everything into one flat style object.
+Each slot can drive `style`, `props`, or both. That is what lets the system support things like animated blur backdrops, custom surface components, and element-specific choreography without forcing everything into one flat style object.
 
 ## The default export is your transition toolkit
 
@@ -76,16 +78,18 @@ The root export gives you the high-level pieces:
 - `Transition.Presets`
 - `Transition.Specs`
 - `Transition.Boundary`
-- `Transition.MaskedView`
-- `Transition.View`, `Transition.Pressable`, `Transition.ScrollView`, `Transition.FlatList`
+- `Transition.MaskedView` as the deprecated masking path
+- `Transition.View`, `Transition.Pressable` as the legacy shared-bound path, plus `Transition.ScrollView`, `Transition.FlatList`
 - `createBoundaryComponent`
 - `createTransitionAwareComponent`
 
-That means you do not need to wire separate wrappers for every animated target. The package already exposes transition-aware primitives for common cases.
+`Transition.Boundary` is the default bounds path going forward. `Transition.View` and `Transition.Pressable` are still part of the public surface today, but the older shared-bound path built around them is now the legacy path.
+
+If you already have your own building block, you can keep it and make it boundary-aware with `Transition.createBoundaryComponent(MyComponent)`.
 
 ## Hooks can read beyond the current screen
 
-In 3.4, both `useScreenAnimation()` and `useScreenGesture()` can target other levels in the active hierarchy:
+Both `useScreenAnimation()` and `useScreenGesture()` can target other levels in the active hierarchy:
 
 - `"self"` for the current screen
 - `"parent"` for the immediate parent screen
@@ -98,9 +102,16 @@ That makes deeply nested gestures and coordinated animation reads much easier to
 
 For cross-screen choreography, the main inputs are:
 
-- `sharedBoundTag` to pair matching elements
 - `styleId` to target a specific element from the interpolator
-- `Transition.Boundary` to group or isolate measurements
-- `bounds()` helpers for navigation zoom and custom bounds work
+- `Transition.Boundary` to define the actual measured relationship
+- `bounds()` helpers to compute styles from that measured relationship
+- `bounds(...).navigation.zoom()` as a screen-level recipe built on top of the helper
 
 If you approach shared transitions as a layout matching system instead of a preset animation system, the rest of the API starts to make sense quickly.
+
+## Read next
+
+- [Bounds](/docs/shared-elements-bounds) for the primitive and matching rules
+- [bounds(...) Helper](/docs/bounds-helper) for the accessor and lower-level helpers
+- [Navigation Zoom](/docs/navigation-zoom) for fullscreen bound takeovers
+- [Gestures](/docs/gestures-snap-points) for ownership, scroll handoff, and sheet behavior

@@ -8,4 +8,4 @@
 
 > **ScreenAnimationTarget** = `"self"` \| `"parent"` \| `"root"` \| \{ `ancestor`: `number`; \}
 
-Defined in: [shared/providers/screen/animation/types.ts:1](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/providers/screen/animation/types.ts#L1)
+Defined in: [shared/providers/screen/animation/types.ts:1](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/providers/screen/animation/types.ts#L1)

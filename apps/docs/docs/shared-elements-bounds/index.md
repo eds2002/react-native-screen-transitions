@@ -1,54 +1,48 @@
 ---
-title: Shared Elements & Bounds
+title: Bounds
 sidebar_position: 1
 ---
 
-# Shared Elements & Bounds
+# Bounds
 
-The current 3.4 bounds system gives you a few different levels of control. Start as simple as possible, then move lower only when the screen design actually demands it.
+Bounds are now centered around `Transition.Boundary`.
 
-## 1. Use `sharedBoundTag` for simple source and destination pairing
+That is the default path going forward. The older `Transition.View` / `Transition.Pressable` shared-bound system is the legacy path and will be removed in the next major version.
 
-If you just need one element on screen A to animate into one element on screen B, `sharedBoundTag` is still the simplest path.
+## What a boundary actually is
+
+A boundary is a measured element that can be paired with another measured element on a different screen.
+
+The pairing key is:
+
+- `id` when you are doing simple one-to-one matching
+- `group + id` when the same flow can have many candidate items and only one should be considered active at a time
+
+In practice, boundaries are the right tool when:
+
+- the transition needs to lock onto a real element, not just a preset screen animation
+- the same pattern appears many times in a list or grid
+- the destination can move after mount
+- you want navigation zoom to inherit the geometry of a specific source element
+
+The newer boundary system is not route-param driven. It matches by measured presence and tag resolution.
+
+## Choose the right boundary component
+
+`Transition.Boundary` ships with the two built-in variants you will use most often:
+
+- `Transition.Boundary.View` for passive elements
+- `Transition.Boundary.Pressable` for elements that should capture source bounds before starting navigation
+
+Use `Boundary.View` when the element itself is just the measured visual target:
 
 ```tsx
-<Transition.View sharedBoundTag="profile-avatar">
-  <Avatar />
-</Transition.View>
-```
-
-If another screen renders the same tag, the library can interpolate between those measurements during the transition.
-
-## 2. Use `styleId` when the interpolator should drive a specific element
-
-`styleId` is for element-specific choreography inside your slot-based interpolator.
-
-```tsx
-<Transition.View styleId="hero-image">
+<Transition.Boundary.View id="album-art" style={styles.cover}>
   <Image source={photo} />
-</Transition.View>
+</Transition.Boundary.View>
 ```
 
-```tsx
-screenStyleInterpolator: ({ progress }) => {
-  "worklet";
-  return {
-    "hero-image": {
-      style: {
-        opacity: progress,
-      },
-    },
-  };
-};
-```
-
-This is especially useful when the mask, container, and content all need different animation treatment.
-
-## 3. Use `Transition.Boundary` when repeated layouts need deterministic matching
-
-`Transition.Boundary` is the 3.4 answer for complex shared motion.
-
-It gives you explicit, repeatable matching through `id`, optional grouping, and boundary-local configuration such as `anchor`, `scaleMode`, `target`, and `method`.
+Use `Boundary.Pressable` when that same measured element is also the tap target that opens the next screen:
 
 ```tsx
 <Transition.Boundary.Pressable
@@ -62,51 +56,150 @@ It gives you explicit, repeatable matching through `id`, optional grouping, and 
 </Transition.Boundary.Pressable>
 ```
 
-Reach for boundaries when:
+The difference matters. `Boundary.Pressable` prioritizes source measurement before your `onPress` callback runs. That gives push transitions fresher source geometry on the first frame.
 
-- the same visual pattern appears multiple times on screen
-- nested flows make plain tag matching ambiguous
-- you want deterministic shared transitions without pushing route params around just to identify source and destination
+`Boundary.View` can still work fine if you wrap it with some other pressable or handle touches inside it. A few of the examples do exactly that. But if the measured element is the thing that starts navigation, prefer `Boundary.Pressable`.
 
-## 4. Use navigation zoom when the whole screen should inherit the bound
-
-3.4 adds navigation-aware zoom helpers directly off `bounds()`:
+If you already have your own primitive, make that component boundary-aware instead of rewriting your tree around `View`:
 
 ```tsx
-options={{
-  navigationMaskEnabled: true,
-  screenStyleInterpolator: ({ bounds }) => ({
-    ...bounds({ id: "album-art", group: "gallery" }).navigation.zoom(),
-  }),
-}}
+const MotionCard = Transition.createBoundaryComponent(Card);
+
+<MotionCard id="album-art" group="gallery">
+  <Image source={photo} />
+</MotionCard>
 ```
 
-This is the path to full-screen image, card, and media zoom transitions where the destination screen should inherit the geometry of the source bound on the first frame.
+That factory is the escape hatch for design-system components, custom cards, media cells, or any existing wrapper you want to keep.
 
-If you use navigation zoom, install `@react-native-masked-view/masked-view`.
+## Matching rules
 
-## 5. Use `Transition.MaskedView` when you need a custom reveal surface
+The basic rule is simple: matching is tag-based.
 
-`Transition.MaskedView` is still useful when the destination needs a reveal-style clip that is not just the stock navigation container mask.
+- `id="hero"` matches another boundary with `id="hero"`
+- `group="gallery" id="12"` matches another boundary with that same `group` and `id`
+- changing the `group` changes the match
+- changing the `id` changes the match
 
-That usually shows up in more custom transitions where the screen content, a mask, and a container all need to animate independently.
+Grouped tags are internally treated like `group:id`, which is why grouped members stay isolated from each other. A `gallery:1` transition will not accidentally link to `gallery:2`.
 
-## 6. Re-measure when the source can drift
+This is what makes grouped collection flows predictable:
 
-Set `remeasureOnFocus` when the source layout can change while the screen is unfocused. Good examples are lists, galleries, or scroll-driven layouts where the user may come back to a different geometry than the one originally captured.
+- list thumbnail `gallery:1` opens detail page `gallery:1`
+- switching the active detail page to `gallery:2` does not corrupt the old `gallery:1` link
+- the library keeps each member's history separate
 
-## Use the example app aggressively
+If your flow is truly one source and one destination, stick to `id` only. If your flow is a collection, pager, masonry grid, or carousel where the active item can change, use `group`.
+
+## Boundary options live on the boundary itself
+
+`Transition.Boundary` accepts its bounds configuration directly:
+
+- `anchor`
+- `scaleMode`
+- `target`
+- `method`
+
+That lets the source and destination declare how they want to be paired without forcing all of that logic into the interpolator.
+
+Use them like this:
+
+```tsx
+<Transition.Boundary.View
+  id="card-1"
+  anchor="center"
+  scaleMode="uniform"
+  method="transform"
+  style={styles.card}
+>
+  <CardContent />
+</Transition.Boundary.View>
+```
+
+The high-level intent is:
+
+- `anchor`: which point should stay aligned between source and destination
+- `scaleMode`: how source and destination scale relative to each other
+- `method`: whether the transition is expressed through transforms, explicit size changes, or content alignment
+- `target`: whether you are targeting the bound itself, fullscreen, or a custom measured target
+
+The sync harness under `[stackType]/bounds/sync` is the best place to study `anchor`, `scaleMode`, `target`, and `method` in isolation.
+
+## Use group for active-item flows
+
+The `group` prop exists for cases where one logical transition family contains many items.
+
+That usually means:
+
+- a feed opening detail screens
+- a gallery where the detail screen can page between items
+- a list that scrolls to keep the active item visible
+- a grid where multiple members share one transition recipe
+
+In those flows, `group` gives you two things:
+
+- isolated matching per member
+- an active member concept the library can refresh as the user moves around
+
+The gallery and grouped navigation zoom examples are the clearest reference:
+
+- `[stackType]/bounds/gallery`
+- `[stackType]/bounds/zoom`
+
+## Transition.MaskedView is the legacy masking path
+
+Older bounds flows often used `Transition.MaskedView` directly. That path is being deprecated in favor of `navigationMaskEnabled` plus the public style ids you can target from your interpolator:
+
+- `NAVIGATION_CONTAINER_STYLE_ID`
+- `NAVIGATION_MASK_STYLE_ID`
+- `NAVIGATION_MASK_HOST_FLAG_STYLE_ID`
+
+That is the path to build against going forward.
+
+## Legacy path vs boundary path
+
+The old shared-bound system was built around `Transition.View` and `Transition.Pressable` using `sharedBoundTag`.
+
+That legacy path is still in the package today, but new work should use `Transition.Boundary`.
+
+The important differences are:
+
+- `Transition.Boundary` is the modern bounds API
+- `Transition.View` / `Transition.Pressable` shared-bound flows are legacy
+- `Transition.MaskedView` is legacy
+- `remeasureOnFocus` belongs to the older transition-aware shared-bound path, not to `Transition.Boundary`
+
+Boundary freshness now comes from the newer behavior:
+
+- press-priority source capture
+- pending destination capture and retry
+- group-active remeasurement
+- scroll-settled source remeasurement in grouped flows
+
+That is why you should not be looking for `remeasureOnFocus` on `Transition.Boundary`.
+
+## Where the next layer lives
+
+Keep this page about the primitive itself:
+
+- `Transition.Boundary` defines the measured participants
+- `group` decides collection scoping
+- boundary props like `anchor`, `scaleMode`, `target`, and `method` live on the primitive
+
+When you want the computed styles or zoom recipe, move to the next layer:
+
+- [bounds(...) Helper](/docs/bounds-helper) for style computation and lower-level access
+- [Navigation Zoom](/docs/navigation-zoom) for full-screen bound takeovers
+
+## Use the examples aggressively
 
 The current branch has a dedicated bounds hub under:
 
-- `[stackType]/bounds/active`
-- `[stackType]/bounds/gesture`
-- `[stackType]/bounds/style-id`
-- `[stackType]/bounds/zoom`
-- `[stackType]/bounds/zoom-id`
-- `[stackType]/bounds/gallery`
-- `[stackType]/bounds/sync`
-- `[stackType]/bounds/example`
-- `[stackType]/bounds/spam`
+- `[stackType]/bounds/active` for id-only matching
+- `[stackType]/bounds/gesture` for gesture-synced bounds behavior
+- `[stackType]/bounds/style-id` for legacy shared-bound plus styleId choreography
+- `[stackType]/bounds/sync` for `anchor` / `scaleMode` / `target` / `method`
+- `[stackType]/bounds/example` for nested-flow bounds usage
+- `[stackType]/bounds/spam` for rapid interaction stress testing
 
-If the written docs ever feel too abstract here, those routes are the real source of truth.
+Use the dedicated zoom pages for `zoom-id`, `zoom`, and `gallery`.

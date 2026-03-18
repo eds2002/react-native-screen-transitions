@@ -8,7 +8,7 @@
 
 > **NativeStackOptionsArgs**\<`ParamList`, `RouteName`, `NavigatorID`\> = [`NativeStackScreenProps`](NativeStackScreenProps.md)\<`ParamList`, `RouteName`, `NavigatorID`\> & `object`
 
-Defined in: [native-stack/types.ts:76](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L76)
+Defined in: [native-stack/types.ts:76](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L76)
 
 ## Type Declaration
 

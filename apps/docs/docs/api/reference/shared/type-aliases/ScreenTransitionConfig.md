@@ -8,7 +8,7 @@
 
 > **ScreenTransitionConfig** = `object`
 
-Defined in: [shared/types/screen.types.ts:77](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L77)
+Defined in: [shared/types/screen.types.ts:80](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L80)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [shared/types/screen.types.ts:77](https://github.com/eds2002/react-n
 
 > `optional` **backdropBehavior**: `"block"` \| `"passthrough"` \| `"dismiss"` \| `"collapse"`
 
-Defined in: [shared/types/screen.types.ts:265](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L265)
+Defined in: [shared/types/screen.types.ts:268](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L268)
 
 Controls how touches interact with the backdrop area (outside the screen content).
 
@@ -37,7 +37,7 @@ Controls how touches interact with the backdrop area (outside the screen content
 
 > `optional` **backdropComponent**: `React.ComponentType`\<`any`\>
 
-Defined in: [shared/types/screen.types.ts:286](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L286)
+Defined in: [shared/types/screen.types.ts:292](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L292)
 
 Custom component to render as the backdrop layer (between screens).
 
@@ -50,12 +50,15 @@ Animated styles and props are driven by the `backdrop` slot in the interpolator 
 
 ```ts
 backdropComponent: BlurView,
-screenStyleInterpolator: ({ progress }) => ({
-  backdrop: {
-    style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
-    props: { intensity: interpolate(progress, [0, 1], [0, 80]) },
-  },
-})
+screenStyleInterpolator: ({ progress }) => {
+  "worklet";
+  return {
+    backdrop: {
+      style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+      props: { intensity: interpolate(progress, [0, 1], [0, 80]) },
+    },
+  };
+}
 ```
 
 #### Default
@@ -70,7 +73,7 @@ undefined
 
 > `optional` **expandViaScrollView**: `boolean`
 
-Defined in: [shared/types/screen.types.ts:242](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L242)
+Defined in: [shared/types/screen.types.ts:245](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L245)
 
 #### Deprecated
 
@@ -86,7 +89,7 @@ Mapping:
 
 > `optional` **experimental\_enableHighRefreshRate**: `boolean`
 
-Defined in: [shared/types/screen.types.ts:195](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L195)
+Defined in: [shared/types/screen.types.ts:198](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L198)
 
 **`Experimental`**
 
@@ -110,7 +113,7 @@ false
 
 > `optional` **gestureActivationArea**: `GestureActivationArea`
 
-Defined in: [shared/types/screen.types.ts:164](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L164)
+Defined in: [shared/types/screen.types.ts:167](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L167)
 
 The area of the screen where the gesture is activated.
 
@@ -120,7 +123,7 @@ The area of the screen where the gesture is activated.
 
 > `optional` **gestureDirection**: `GestureDirection` \| `GestureDirection`[]
 
-Defined in: [shared/types/screen.types.ts:114](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L114)
+Defined in: [shared/types/screen.types.ts:117](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L117)
 
 The direction of the swipe gesture used to dismiss the screen.
 
@@ -130,7 +133,7 @@ The direction of the swipe gesture used to dismiss the screen.
 
 > `optional` **gestureDrivesProgress**: `boolean`
 
-Defined in: [shared/types/screen.types.ts:159](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L159)
+Defined in: [shared/types/screen.types.ts:162](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L162)
 
 Whether the gesture drives the progress.
 
@@ -140,7 +143,7 @@ Whether the gesture drives the progress.
 
 > `optional` **gestureEnabled**: `boolean`
 
-Defined in: [shared/types/screen.types.ts:109](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L109)
+Defined in: [shared/types/screen.types.ts:112](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L112)
 
 Controls whether swipe-to-dismiss is enabled.
 
@@ -153,7 +156,7 @@ snap points remains available even when this is `false`.
 
 > `optional` **gestureReleaseVelocityMax**: `number`
 
-Defined in: [shared/types/screen.types.ts:149](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L149)
+Defined in: [shared/types/screen.types.ts:152](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L152)
 
 Caps the absolute post-scale release velocity used by spring animations.
 
@@ -173,7 +176,7 @@ animation intensity after `gestureReleaseVelocityScale` is applied.
 
 > `optional` **gestureReleaseVelocityScale**: `number`
 
-Defined in: [shared/types/screen.types.ts:138](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L138)
+Defined in: [shared/types/screen.types.ts:141](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L141)
 
 Multiplies gesture release velocity used for spring animation energy.
 
@@ -193,7 +196,7 @@ the post-release animation feels.
 
 > `optional` **gestureResponseDistance**: `number`
 
-Defined in: [shared/types/screen.types.ts:154](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L154)
+Defined in: [shared/types/screen.types.ts:157](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L157)
 
 Distance threshold for gesture recognition throughout the screen.
 
@@ -203,7 +206,7 @@ Distance threshold for gesture recognition throughout the screen.
 
 > `optional` **gestureSnapLocked**: `boolean`
 
-Defined in: [shared/types/screen.types.ts:253](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L253)
+Defined in: [shared/types/screen.types.ts:256](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L256)
 
 Locks gesture-based snap movement to the current snap point.
 
@@ -223,7 +226,7 @@ false
 
 > `optional` **gestureVelocityImpact**: `number`
 
-Defined in: [shared/types/screen.types.ts:120](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L120)
+Defined in: [shared/types/screen.types.ts:123](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L123)
 
 How much the gesture's final velocity impacts the dismiss decision.
 
@@ -239,7 +242,7 @@ How much the gesture's final velocity impacts the dismiss decision.
 
 > `optional` **initialSnapIndex**: `number`
 
-Defined in: [shared/types/screen.types.ts:219](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L219)
+Defined in: [shared/types/screen.types.ts:222](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L222)
 
 The initial snap point index when the screen opens.
 
@@ -255,7 +258,7 @@ The initial snap point index when the screen opens.
 
 > `optional` **maskEnabled**: `boolean`
 
-Defined in: [shared/types/screen.types.ts:101](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L101)
+Defined in: [shared/types/screen.types.ts:104](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L104)
 
 #### Deprecated
 
@@ -267,7 +270,7 @@ Use `navigationMaskEnabled` instead.
 
 > `optional` **meta**: `Record`\<`string`, `unknown`\>
 
-Defined in: [shared/types/screen.types.ts:172](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L172)
+Defined in: [shared/types/screen.types.ts:175](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L175)
 
 Custom metadata passed through to animation props.
 
@@ -283,7 +286,7 @@ options={{ meta: { scalesOthers: true } }}
 
 > `optional` **navigationMaskEnabled**: `boolean`
 
-Defined in: [shared/types/screen.types.ts:96](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L96)
+Defined in: [shared/types/screen.types.ts:99](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L99)
 
 Pre-mounts the masked view wrapper so navigation bounds masking
 (e.g. `bounds().navigation.zoom()`) is ready from the first frame.
@@ -302,7 +305,7 @@ false
 
 > `optional` **overlay**: (`props`) => `React.ReactNode`
 
-Defined in: [shared/types/screen.types.ts:177](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L177)
+Defined in: [shared/types/screen.types.ts:180](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L180)
 
 Function that returns a React Element to display as an overlay.
 
@@ -322,7 +325,7 @@ Function that returns a React Element to display as an overlay.
 
 > `optional` **overlayShown**: `boolean`
 
-Defined in: [shared/types/screen.types.ts:183](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L183)
+Defined in: [shared/types/screen.types.ts:186](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L186)
 
 Whether to show the overlay. The overlay is shown by default when `overlay` is provided.
 Setting this to `false` hides the overlay.
@@ -333,7 +336,7 @@ Setting this to `false` hides the overlay.
 
 > `optional` **screenStyleInterpolator**: [`ScreenStyleInterpolator`](ScreenStyleInterpolator.md)
 
-Defined in: [shared/types/screen.types.ts:81](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L81)
+Defined in: [shared/types/screen.types.ts:84](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L84)
 
 The user-provided function to calculate styles based on animation progress.
 
@@ -343,7 +346,7 @@ The user-provided function to calculate styles based on animation progress.
 
 > `optional` **sheetScrollGestureBehavior**: `SheetScrollGestureBehavior`
 
-Defined in: [shared/types/screen.types.ts:233](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L233)
+Defined in: [shared/types/screen.types.ts:236](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L236)
 
 Controls how nested scroll content hands gestures off to a snap sheet.
 
@@ -366,7 +369,7 @@ Only applies to screens with `snapPoints` configured.
 
 > `optional` **snapPoints**: `SnapPoint`[]
 
-Defined in: [shared/types/screen.types.ts:212](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L212)
+Defined in: [shared/types/screen.types.ts:215](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L215)
 
 Describes heights where a screen can rest, as fractions of screen height,
 or `'auto'` to snap to the intrinsic height of the screen content.
@@ -395,7 +398,7 @@ snapPoints={['auto', 1.0]}  // content height or full screen
 
 > `optional` **snapVelocityImpact**: `number`
 
-Defined in: [shared/types/screen.types.ts:127](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L127)
+Defined in: [shared/types/screen.types.ts:130](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L130)
 
 How much velocity affects snap point targeting. Lower values make snapping
 feel more deliberate (iOS-like), higher values make it more responsive to flicks.
@@ -412,7 +415,7 @@ feel more deliberate (iOS-like), higher values make it more responsive to flicks
 
 > `optional` **surfaceComponent**: `React.ComponentType`\<`any`\>
 
-Defined in: [shared/types/screen.types.ts:308](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L308)
+Defined in: [shared/types/screen.types.ts:317](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L317)
 
 Custom component to render as the screen's surface layer.
 
@@ -426,12 +429,15 @@ Animated styles and props are driven by the `surface` slot in the interpolator r
 
 ```ts
 surfaceComponent: SquircleView,
-screenStyleInterpolator: ({ progress }) => ({
-  surface: {
-    style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
-    props: { cornerRadius: 24, cornerSmoothing: 0.7 },
-  },
-})
+screenStyleInterpolator: ({ progress }) => {
+  "worklet";
+  return {
+    surface: {
+      style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+      props: { cornerRadius: 24, cornerSmoothing: 0.7 },
+    },
+  };
+}
 ```
 
 #### Default
@@ -446,6 +452,6 @@ undefined
 
 > `optional` **transitionSpec**: [`TransitionSpec`](../interfaces/TransitionSpec.md)
 
-Defined in: [shared/types/screen.types.ts:86](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L86)
+Defined in: [shared/types/screen.types.ts:89](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/screen.types.ts#L89)
 
 The Reanimated animation config for opening and closing transitions.

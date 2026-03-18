@@ -26,6 +26,8 @@ The common performance problems are usually:
 
 Width and height animation in particular can feel very different on Android versus iOS. That is not a docs footnote. It is a real product consideration.
 
+That is also part of why both masked and unmasked navigation zoom paths exist. `navigation.zoom()` works without `navigationMaskEnabled`, but the masked path is important because Android can show the tradeoffs of width and height animation much more clearly.
+
 ## Platform respect matters
 
 Good transition design still means building with each OS in mind.
@@ -34,7 +36,7 @@ What feels smooth and elegant on iOS can feel heavy on Android if the properties
 
 ## Bounds and gesture-heavy screens
 
-`3.4` adds a lot more power around:
+The current branch adds a lot more power around:
 
 - `Transition.Boundary`
 - navigation zoom

@@ -19,7 +19,7 @@ Start with `blank-stack` if your thought process is: "stock navigation is close,
 
 It is the surface that most clearly reflects what this library is trying to do: give you direct control over motion, layout-driven transitions, and gesture coordination without constantly pushing against the abstraction.
 
-## When to choose `native-stack`
+## When to choose native-stack
 
 Use `native-stack` when your app is already committed to that mental model and you only want to opt into custom transitions where it matters.
 
@@ -29,7 +29,7 @@ This is usually the better fit when:
 - you only need custom motion on a subset of screens
 - you want a more incremental path instead of going full JS-first
 
-## When to choose `component-stack`
+## When to choose component-stack
 
 Use `component-stack` when the navigator itself is part of the product UI, not the global app shell.
 

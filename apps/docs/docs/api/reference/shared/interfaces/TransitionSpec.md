@@ -6,7 +6,7 @@
 
 # Interface: TransitionSpec
 
-Defined in: [shared/types/animation.types.ts:260](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L260)
+Defined in: [shared/types/animation.types.ts:260](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L260)
 
 Defines separate animation configurations for screen transitions and snap point changes.
 
@@ -16,7 +16,7 @@ Defines separate animation configurations for screen transitions and snap point 
 
 > `optional` **close**: [`AnimationConfig`](../type-aliases/AnimationConfig.md)
 
-Defined in: [shared/types/animation.types.ts:268](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L268)
+Defined in: [shared/types/animation.types.ts:268](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L268)
 
 Animation config for closing/exiting a screen.
 
@@ -26,7 +26,7 @@ Animation config for closing/exiting a screen.
 
 > `optional` **collapse**: [`AnimationConfig`](../type-aliases/AnimationConfig.md)
 
-Defined in: [shared/types/animation.types.ts:278](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L278)
+Defined in: [shared/types/animation.types.ts:278](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L278)
 
 Animation config for collapsing to a lower snap point.
 Uses lower intensity than `close` to match smaller movement distances.
@@ -37,7 +37,7 @@ Uses lower intensity than `close` to match smaller movement distances.
 
 > `optional` **expand**: [`AnimationConfig`](../type-aliases/AnimationConfig.md)
 
-Defined in: [shared/types/animation.types.ts:273](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L273)
+Defined in: [shared/types/animation.types.ts:273](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L273)
 
 Animation config for expanding to a higher snap point.
 Uses lower intensity than `open` to match smaller movement distances.
@@ -48,6 +48,6 @@ Uses lower intensity than `open` to match smaller movement distances.
 
 > `optional` **open**: [`AnimationConfig`](../type-aliases/AnimationConfig.md)
 
-Defined in: [shared/types/animation.types.ts:264](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L264)
+Defined in: [shared/types/animation.types.ts:264](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L264)
 
 Animation config for opening/entering a screen.

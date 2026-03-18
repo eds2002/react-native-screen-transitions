@@ -6,7 +6,7 @@
 
 # Interface: ScreenState\<TNavigation\>
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:13](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L13)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:13](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L13)
 
 ## Type Parameters
 
@@ -20,7 +20,7 @@ Defined in: [shared/hooks/navigation/use-screen-state.ts:13](https://github.com/
 
 > **focusedIndex**: `number`
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:39](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L39)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:39](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L39)
 
 Index of the focused route in the stack.
 
@@ -30,7 +30,7 @@ Index of the focused route in the stack.
 
 > **focusedRoute**: `Route`\<`string`\>
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:34](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L34)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:34](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L34)
 
 Route of the currently focused screen in the stack.
 
@@ -40,7 +40,7 @@ Route of the currently focused screen in the stack.
 
 > **index**: `number`
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:19](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L19)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:19](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L19)
 
 The index of this screen in the stack.
 
@@ -50,7 +50,7 @@ The index of this screen in the stack.
 
 > `optional` **meta**: `Record`\<`string`, `unknown`\>
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:44](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L44)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:44](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L44)
 
 Custom metadata from the focused screen's options.
 
@@ -60,7 +60,7 @@ Custom metadata from the focused screen's options.
 
 > **navigation**: `TNavigation`
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:49](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L49)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:49](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L49)
 
 Navigation object for this screen.
 
@@ -70,7 +70,7 @@ Navigation object for this screen.
 
 > **options**: [`ScreenTransitionConfig`](../type-aliases/ScreenTransitionConfig.md)
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:24](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L24)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:24](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L24)
 
 Screen options for the currently focused screen.
 
@@ -80,7 +80,7 @@ Screen options for the currently focused screen.
 
 > **routes**: `Route`\<`string`\>[]
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:29](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L29)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:29](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L29)
 
 All routes currently in the stack.
 
@@ -90,7 +90,7 @@ All routes currently in the stack.
 
 > **snapTo**: (`index`) => `void`
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:56](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L56)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:56](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L56)
 
 Programmatically snap the focused screen to a snap point index.
 

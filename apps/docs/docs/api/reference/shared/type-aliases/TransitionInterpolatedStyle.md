@@ -8,7 +8,7 @@
 
 > **TransitionInterpolatedStyle** = `object`
 
-Defined in: [shared/types/animation.types.ts:226](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L226)
+Defined in: [shared/types/animation.types.ts:226](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L226)
 
 The return type of `screenStyleInterpolator`.
 Uses the nested slot format, while still accepting deprecated flat keys.
@@ -25,7 +25,7 @@ Custom styles/props by id for Transition.View components.
 
 > `optional` **backdrop**: [`TransitionSlotStyle`](TransitionSlotStyle.md)
 
-Defined in: [shared/types/animation.types.ts:230](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L230)
+Defined in: [shared/types/animation.types.ts:230](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L230)
 
 Animated style and props for the backdrop layer between screens.
 
@@ -35,7 +35,7 @@ Animated style and props for the backdrop layer between screens.
 
 > `optional` **backdropStyle**: [`AnimatedViewStyle`](AnimatedViewStyle.md)
 
-Defined in: [shared/types/animation.types.ts:244](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L244)
+Defined in: [shared/types/animation.types.ts:244](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L244)
 
 #### Deprecated
 
@@ -48,7 +48,7 @@ This flat format is auto-converted via a backward-compat shim.
 
 > `optional` **content**: [`TransitionSlotStyle`](TransitionSlotStyle.md)
 
-Defined in: [shared/types/animation.types.ts:228](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L228)
+Defined in: [shared/types/animation.types.ts:228](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L228)
 
 Animated style and props for the main screen content view.
 
@@ -58,7 +58,7 @@ Animated style and props for the main screen content view.
 
 > `optional` **contentStyle**: [`AnimatedViewStyle`](AnimatedViewStyle.md)
 
-Defined in: [shared/types/animation.types.ts:239](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L239)
+Defined in: [shared/types/animation.types.ts:239](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L239)
 
 #### Deprecated
 
@@ -71,7 +71,7 @@ This flat format is auto-converted via a backward-compat shim.
 
 > `optional` **overlayStyle**: [`AnimatedViewStyle`](AnimatedViewStyle.md)
 
-Defined in: [shared/types/animation.types.ts:249](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L249)
+Defined in: [shared/types/animation.types.ts:249](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L249)
 
 #### Deprecated
 
@@ -84,6 +84,6 @@ This flat format is auto-converted via a backward-compat shim.
 
 > `optional` **surface**: [`TransitionSlotStyle`](TransitionSlotStyle.md)
 
-Defined in: [shared/types/animation.types.ts:232](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L232)
+Defined in: [shared/types/animation.types.ts:232](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L232)
 
 Animated style and props for the surface component layer within the screen.

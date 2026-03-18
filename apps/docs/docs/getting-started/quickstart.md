@@ -35,6 +35,8 @@ That is enough to get a real screen transition on screen.
 
 ## 2. When presets stop being enough, switch to your own interpolator
 
+Every `screenStyleInterpolator` must include `"worklet"` at the top of the function body.
+
 ```tsx
 import { interpolate } from "react-native-reanimated";
 
@@ -68,9 +70,9 @@ options={{
 }}
 ```
 
-This is the 3.4 mental model: return slot styles for the screen content, the backdrop, the surface, or custom `styleId` targets.
+This is the current mental model: return slot styles for the screen content, the backdrop, the surface, or custom `styleId` targets.
 
-## 3. If you use Expo Router, wire the navigator through `withLayoutContext`
+## 3. If you use Expo Router, wire the navigator through withLayoutContext
 
 ```tsx
 import { withLayoutContext } from "expo-router";
@@ -103,4 +105,7 @@ The repository ships an Expo app under [`apps/e2e`](https://github.com/eds2002/r
 
 - [Mental Model →](../core-mental-model)
 - [Stack Variants →](../stack-variants)
-- [Shared Elements & Bounds →](../shared-elements-bounds)
+- [Bounds →](../shared-elements-bounds)
+- [bounds(...) Helper →](../bounds-helper)
+- [Navigation Zoom →](../navigation-zoom)
+- [Gestures →](/docs/gestures-snap-points)

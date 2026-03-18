@@ -8,7 +8,7 @@
 
 > **useHistory**(): `UseHistoryReturn`
 
-Defined in: [shared/hooks/navigation/use-history.ts:44](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-history.ts#L44)
+Defined in: [shared/hooks/navigation/use-history.ts:44](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-history.ts#L44)
 
 Subscribe to history store changes.
 Returns the full history map and helper methods.

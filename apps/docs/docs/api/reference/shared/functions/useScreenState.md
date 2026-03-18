@@ -8,7 +8,7 @@
 
 > **useScreenState**\<`TNavigation`\>(): [`ScreenState`](../interfaces/ScreenState.md)\<`TNavigation`\>
 
-Defined in: [shared/hooks/navigation/use-screen-state.ts:64](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L64)
+Defined in: [shared/hooks/navigation/use-screen-state.ts:64](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/hooks/navigation/use-screen-state.ts#L64)
 
 Hook to access screen state information.
 

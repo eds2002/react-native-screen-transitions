@@ -8,7 +8,7 @@
 
 > **BoundsNavigationZoomOptions** = `object`
 
-Defined in: [shared/types/bounds.types.ts:31](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L31)
+Defined in: [shared/types/bounds.types.ts:31](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L31)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [shared/types/bounds.types.ts:31](https://github.com/eds2002/react-n
 
 > `optional` **anchor**: `BoundsAnchor`
 
-Defined in: [shared/types/bounds.types.ts:32](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L32)
+Defined in: [shared/types/bounds.types.ts:32](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L32)
 
 ***
 
@@ -24,7 +24,7 @@ Defined in: [shared/types/bounds.types.ts:32](https://github.com/eds2002/react-n
 
 > `optional` **mask**: `object`
 
-Defined in: [shared/types/bounds.types.ts:35](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L35)
+Defined in: [shared/types/bounds.types.ts:35](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L35)
 
 #### borderBottomLeftRadius?
 
@@ -60,7 +60,7 @@ Defined in: [shared/types/bounds.types.ts:35](https://github.com/eds2002/react-n
 
 > `optional` **maskBorderRadius**: `number`
 
-Defined in: [shared/types/bounds.types.ts:53](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L53)
+Defined in: [shared/types/bounds.types.ts:53](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L53)
 
 #### Deprecated
 
@@ -72,7 +72,7 @@ Use `mask.borderRadius` instead.
 
 > `optional` **motion**: `object`
 
-Defined in: [shared/types/bounds.types.ts:46](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L46)
+Defined in: [shared/types/bounds.types.ts:46](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L46)
 
 #### dragDirectionalScaleMin?
 
@@ -88,7 +88,7 @@ Defined in: [shared/types/bounds.types.ts:46](https://github.com/eds2002/react-n
 
 > `optional` **scaleMode**: `BoundsScaleMode`
 
-Defined in: [shared/types/bounds.types.ts:33](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L33)
+Defined in: [shared/types/bounds.types.ts:33](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L33)
 
 ***
 
@@ -96,4 +96,4 @@ Defined in: [shared/types/bounds.types.ts:33](https://github.com/eds2002/react-n
 
 > `optional` **target**: `"bound"` \| `"fullscreen"` \| `MeasuredDimensions`
 
-Defined in: [shared/types/bounds.types.ts:34](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L34)
+Defined in: [shared/types/bounds.types.ts:34](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L34)

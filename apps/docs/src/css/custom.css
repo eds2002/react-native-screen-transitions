@@ -267,6 +267,21 @@ body {
   @apply text-sm font-semibold;
 }
 
+.theme-doc-markdown h1 code,
+.theme-doc-markdown h2 code,
+.theme-doc-markdown h3 code,
+.theme-doc-markdown h4 code,
+.theme-doc-markdown h5 code,
+.theme-doc-markdown h6 code {
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
 /* ── Code block text — normal weight ── */
 .theme-doc-markdown pre code {
   @apply font-normal;

@@ -8,4 +8,4 @@
 
 > **ComponentStackNavigatorProps** = `DefaultNavigatorOptions`\<`ParamListBase`, `string` \| `undefined`, `StackNavigationState`\<`ParamListBase`\>, [`ComponentStackNavigationOptions`](ComponentStackNavigationOptions.md), [`ComponentStackNavigationEventMap`](ComponentStackNavigationEventMap.md), [`ComponentStackNavigationProp`](ComponentStackNavigationProp.md)\<`ParamListBase`\>\> & `StackRouterOptions` & `ComponentStackNavigationConfig`
 
-Defined in: [component-stack/types.ts:76](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/component-stack/types.ts#L76)
+Defined in: [component-stack/types.ts:76](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/component-stack/types.ts#L76)

@@ -7,7 +7,7 @@ sidebar_position: 5
 
 The hooks are how you read the transition system from inside your own UI.
 
-## `useScreenAnimation()`
+## useScreenAnimation()
 
 Use `useScreenAnimation()` when you need live transition values inside a component.
 
@@ -29,7 +29,7 @@ const style = useAnimatedStyle(() => ({
 }));
 ```
 
-## `useScreenGesture()`
+## useScreenGesture()
 
 Use `useScreenGesture()` when you need to coordinate your own pan gesture with the screen navigation gesture.
 
@@ -43,7 +43,7 @@ const pan = Gesture.Pan()
   });
 ```
 
-## `3.4` adds target selection
+## Target selection
 
 Both hooks can now read from somewhere other than the current screen:
 
@@ -60,13 +60,13 @@ const grandparentAnimation = useScreenAnimation({ ancestor: 2 });
 
 This matters in nested stacks, sheets inside flows, and gesture-heavy layouts where a child needs to coordinate with something higher in the branch.
 
-## `useScreenState()`
+## useScreenState()
 
 Use `useScreenState()` when you need navigation state without the animated values.
 
 That is usually the right tool for route-aware UI, overlays, and screen metadata where a worklet-driven animation object would just be overkill.
 
-## `useHistory()`
+## useHistory()
 
 Use `useHistory()` when transitions depend on how the user arrived at the current screen instead of only where they are now.
 

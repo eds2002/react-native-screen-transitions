@@ -7,7 +7,9 @@ sidebar_position: 2
 
 Presets get you moving fast, but custom transitions are where this library actually earns its keep.
 
-In `3.4`, the core model is slot-based interpolation. Instead of returning one giant style blob, you return a map of visual layers and targeted elements.
+The core model is slot-based interpolation. Instead of returning one giant style blob, you return a map of visual layers and targeted elements.
+
+Every `screenStyleInterpolator` must include `"worklet"` at the top of the function body.
 
 ## The main slots
 
@@ -15,7 +17,7 @@ The built-in slots are:
 
 - `content` for the main screen content
 - `backdrop` for the layer between screens
-- `surface` for a custom animated surface inside the screen
+- `surface` for a custom animated surface, if you provide a `surfaceComponent`
 
 You can also return your own keys for any transition-aware component using `styleId`.
 
@@ -60,27 +62,29 @@ options={{
 }}
 ```
 
-## `styleId` is your element channel
+## styleId is your element channel
 
 Use `styleId` when one element needs animation treatment separate from the rest of the screen.
 
 ```tsx
-<Transition.View styleId="hero-image">
+const MotionView = Transition.createTransitionAwareComponent(View);
+
+<MotionView styleId="hero-image">
   <Image source={photo} />
-</Transition.View>
+</MotionView>
 ```
 
 This is what lets you animate masks, cards, labels, and media independently without breaking the rest of the transition model.
 
-## `surfaceComponent` is the new background story
+## surfaceComponent is the new background story
 
-`3.4` makes the render layers clearer:
+The render layers are:
 
 - `content` drives the screen content motion
 - `surfaceComponent` renders a custom animated shell inside that motion layer
 - `surface` drives the styles and props for that shell
 
-Use this when the screen should move as one thing, but its visual skin needs its own animation language.
+If you do not provide a `surfaceComponent`, the `surface` slot is not a big deal. It only matters when you actually want a separate animated surface layer.
 
 ## Slots can animate props too
 

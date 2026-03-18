@@ -8,7 +8,7 @@
 
 > **BlankStackScreenProps**\<`ParamList`, `RouteName`, `NavigatorID`\> = `object`
 
-Defined in: [blank-stack/types.ts:32](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/blank-stack/types.ts#L32)
+Defined in: [blank-stack/types.ts:32](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/blank-stack/types.ts#L32)
 
 ## Type Parameters
 
@@ -30,7 +30,7 @@ Defined in: [blank-stack/types.ts:32](https://github.com/eds2002/react-native-sc
 
 > **navigation**: [`BlankStackNavigationProp`](BlankStackNavigationProp.md)\<`ParamList`, `RouteName`, `NavigatorID`\>
 
-Defined in: [blank-stack/types.ts:37](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/blank-stack/types.ts#L37)
+Defined in: [blank-stack/types.ts:37](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/blank-stack/types.ts#L37)
 
 ***
 
@@ -38,4 +38,4 @@ Defined in: [blank-stack/types.ts:37](https://github.com/eds2002/react-native-sc
 
 > **route**: `RouteProp`\<`ParamList`, `RouteName`\>
 
-Defined in: [blank-stack/types.ts:38](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/blank-stack/types.ts#L38)
+Defined in: [blank-stack/types.ts:38](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/blank-stack/types.ts#L38)

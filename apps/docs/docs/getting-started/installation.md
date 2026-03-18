@@ -21,11 +21,13 @@ These are the packages the navigators, gestures, screen containers, and animatio
 
 ## 3. Optional masking support
 
-If you use `Transition.MaskedView` or navigation zoom transitions through `bounds().navigation.zoom()`, install masked view support as an extra dependency.
+If you use navigation zoom transitions through `bounds().navigation.zoom()`, install masked view support as an extra dependency.
 
 <PackageManagerTabs command="npm install @react-native-masked-view/masked-view" />
 
 This is not required for normal stack transitions, slot-based interpolators, or snap-point sheets.
+
+`navigation.zoom()` still works without `navigationMaskEnabled`, but the animation will not behave exactly the same. Supporting both paths is intentional, especially because Android can struggle more when a transition leans heavily on width and height animation.
 
 ## Supported entry points
 

@@ -8,7 +8,7 @@
 
 > **BoundsNavigationAccessor** = `object`
 
-Defined in: [shared/types/bounds.types.ts:56](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L56)
+Defined in: [shared/types/bounds.types.ts:56](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L56)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [shared/types/bounds.types.ts:56](https://github.com/eds2002/react-n
 
 > **zoom**: (`options?`) => [`TransitionInterpolatedStyle`](TransitionInterpolatedStyle.md)
 
-Defined in: [shared/types/bounds.types.ts:57](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L57)
+Defined in: [shared/types/bounds.types.ts:57](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/bounds.types.ts#L57)
 
 #### Parameters
 

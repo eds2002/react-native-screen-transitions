@@ -8,7 +8,7 @@
 
 > **NativeStackNavigationOptions** = `NativeStackScreenTransitionConfig` & `object`
 
-Defined in: [native-stack/types.ts:158](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L158)
+Defined in: [native-stack/types.ts:158](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L158)
 
 ## Type Declaration
 

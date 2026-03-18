@@ -8,7 +8,7 @@
 
 > **NativeStackHeaderProps** = `object`
 
-Defined in: [native-stack/types.ts:92](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L92)
+Defined in: [native-stack/types.ts:92](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L92)
 
 ## Properties
 
@@ -16,7 +16,7 @@ Defined in: [native-stack/types.ts:92](https://github.com/eds2002/react-native-s
 
 > `optional` **back**: `object`
 
-Defined in: [native-stack/types.ts:96](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L96)
+Defined in: [native-stack/types.ts:96](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L96)
 
 Options for the back button.
 
@@ -38,7 +38,7 @@ Title of the previous screen.
 
 > **navigation**: [`NativeStackNavigationProp`](NativeStackNavigationProp.md)\<`ParamListBase`\>
 
-Defined in: [native-stack/types.ts:117](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L117)
+Defined in: [native-stack/types.ts:117](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L117)
 
 Navigation prop for the header.
 
@@ -48,7 +48,7 @@ Navigation prop for the header.
 
 > **options**: [`NativeStackNavigationOptions`](NativeStackNavigationOptions.md)
 
-Defined in: [native-stack/types.ts:109](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L109)
+Defined in: [native-stack/types.ts:109](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L109)
 
 Options for the current screen.
 
@@ -58,6 +58,6 @@ Options for the current screen.
 
 > **route**: `Route`\<`string`\>
 
-Defined in: [native-stack/types.ts:113](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/native-stack/types.ts#L113)
+Defined in: [native-stack/types.ts:113](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/native-stack/types.ts#L113)
 
 Route object for the current screen.

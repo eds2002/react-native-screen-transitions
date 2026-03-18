@@ -6,7 +6,7 @@
 
 # Interface: ScreenInterpolationProps
 
-Defined in: [shared/types/animation.types.ts:82](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L82)
+Defined in: [shared/types/animation.types.ts:82](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L82)
 
 ## Properties
 
@@ -14,7 +14,7 @@ Defined in: [shared/types/animation.types.ts:82](https://github.com/eds2002/reac
 
 > **active**: `ScreenTransitionState`
 
-Defined in: [shared/types/animation.types.ts:161](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L161)
+Defined in: [shared/types/animation.types.ts:161](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L161)
 
 The screen state that is currently driving the transition (either current or next, whichever is focused).
 
@@ -24,7 +24,7 @@ The screen state that is currently driving the transition (either current or nex
 
 > **bounds**: `BoundsAccessor`
 
-Defined in: [shared/types/animation.types.ts:156](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L156)
+Defined in: [shared/types/animation.types.ts:156](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L156)
 
 Function that provides access to bounds helpers for shared screen transitions.
 
@@ -34,7 +34,7 @@ Function that provides access to bounds helpers for shared screen transitions.
 
 > **current**: `ScreenTransitionState`
 
-Defined in: [shared/types/animation.types.ts:91](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L91)
+Defined in: [shared/types/animation.types.ts:91](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L91)
 
 Values for the current screen being interpolated.
 
@@ -44,7 +44,7 @@ Values for the current screen being interpolated.
 
 > **focused**: `boolean`
 
-Defined in: [shared/types/animation.types.ts:123](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L123)
+Defined in: [shared/types/animation.types.ts:123](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L123)
 
 Whether the current screen is the focused (topmost) screen in the stack.
 
@@ -54,7 +54,7 @@ Whether the current screen is the focused (topmost) screen in the stack.
 
 > **inactive**: `ScreenTransitionState` \| `undefined`
 
-Defined in: [shared/types/animation.types.ts:167](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L167)
+Defined in: [shared/types/animation.types.ts:167](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L167)
 
 The screen state that is NOT driving the transition.
 When focused, this is the previous screen. When not focused, this is the current screen.
@@ -65,7 +65,7 @@ When focused, this is the previous screen. When not focused, this is the current
 
 > **insets**: `EdgeInsets`
 
-Defined in: [shared/types/animation.types.ts:118](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L118)
+Defined in: [shared/types/animation.types.ts:118](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L118)
 
 The safe area insets for the screen.
 
@@ -75,7 +75,7 @@ The safe area insets for the screen.
 
 > **layouts**: `object`
 
-Defined in: [shared/types/animation.types.ts:101](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L101)
+Defined in: [shared/types/animation.types.ts:101](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L101)
 
 Layout measurements for the screen.
 
@@ -100,7 +100,7 @@ The `width` and `height` of the screen container.
 
 > **next**: `ScreenTransitionState` \| `undefined`
 
-Defined in: [shared/types/animation.types.ts:96](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L96)
+Defined in: [shared/types/animation.types.ts:96](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L96)
 
 Values for the screen that comes after the current one in the navigation stack.
 
@@ -110,7 +110,7 @@ Values for the screen that comes after the current one in the navigation stack.
 
 > **previous**: `ScreenTransitionState` \| `undefined`
 
-Defined in: [shared/types/animation.types.ts:86](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L86)
+Defined in: [shared/types/animation.types.ts:86](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L86)
 
 Values for the screen that came before the current one in the navigation stack.
 
@@ -120,7 +120,7 @@ Values for the screen that came before the current one in the navigation stack.
 
 > **progress**: `number`
 
-Defined in: [shared/types/animation.types.ts:128](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L128)
+Defined in: [shared/types/animation.types.ts:128](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L128)
 
 Combined progress of current and next screen transitions, ranging from 0-2.
 
@@ -130,7 +130,7 @@ Combined progress of current and next screen transitions, ranging from 0-2.
 
 > **snapIndex**: `number`
 
-Defined in: [shared/types/animation.types.ts:151](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L151)
+Defined in: [shared/types/animation.types.ts:151](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L151)
 
 Animated index of the current snap point.
 Interpolates between indices during gestures/animations.
@@ -145,7 +145,7 @@ Interpolates between indices during gestures/animations.
 
 > **stackProgress**: `number`
 
-Defined in: [shared/types/animation.types.ts:141](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L141)
+Defined in: [shared/types/animation.types.ts:141](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L141)
 
 Accumulated progress from the current screen's position onwards in the stack.
 Unlike `progress` (0-2), this ranges from 0-N where N is the number of screens

@@ -8,7 +8,7 @@
 
 > **snapTo**(`index`): `void`
 
-Defined in: [shared/animation/snap-to.ts:79](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/animation/snap-to.ts#L79)
+Defined in: [shared/animation/snap-to.ts:79](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/animation/snap-to.ts#L79)
 
 Programmatically snap the currently focused screen to a specific snap point.
 

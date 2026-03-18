@@ -8,7 +8,7 @@
 
 > **TransitionSlotStyle** = [`AnimatedViewStyle`](AnimatedViewStyle.md) \| `TransitionSlotDefinition`
 
-Defined in: [shared/types/animation.types.ts:196](https://github.com/eds2002/react-native-screen-transitions/blob/7c21934e69c463261a586dc76c94041c42963d31/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L196)
+Defined in: [shared/types/animation.types.ts:196](https://github.com/eds2002/react-native-screen-transitions/blob/0a86764a47b6f7832cf444be574f082a36db7fac/packages/react-native-screen-transitions/src/shared/types/animation.types.ts#L196)
 
 A slot in the interpolated style map.
 
