@@ -4,20 +4,11 @@ import {
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import {
-	EPSILON,
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
-	NO_STYLES,
-} from "../../constants";
+import { NO_STYLES } from "../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../types/animation.types";
 import createProvider from "../../utils/create-provider";
 import { logger } from "../../utils/logger";
 import { normalizeInterpolatedStyle } from "../../utils/normalize-interpolated-style";
-import {
-	reconcileRootSlotProps,
-	reconcileRootSlotStyle,
-} from "../../utils/reconcile-root-slot-entry";
 import { useScreenAnimationContext } from "./animation";
 
 type Props = {
@@ -28,14 +19,6 @@ type ScreenStylesContextValue = {
 	stylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 	ancestorStylesMaps: SharedValue<NormalizedTransitionInterpolatedStyle>[];
 };
-
-const ROOT_SCREEN_SLOT_IDS = [
-	"content",
-	"backdrop",
-	"surface",
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
-] as const;
 
 const {
 	ScreenStylesProvider,
@@ -60,26 +43,14 @@ const {
 		 */
 		const isGesturingDuringCloseAnimation = useSharedValue(false);
 		const hasWarnedLegacy = useSharedValue(false);
-		const previousRootStyleKeys = useSharedValue<
-			Record<string, Record<string, true>>
-		>({});
-		const previousRootPropKeys = useSharedValue<
-			Record<string, Record<string, true>>
-		>({});
-		const lastResolvedRootStyles = useSharedValue<
-			Record<string, Record<string, any> | null>
-		>({});
-		const lastResolvedRootProps = useSharedValue<
-			Record<string, Record<string, any> | null>
-		>({});
 
 		const stylesMap = useDerivedValue<NormalizedTransitionInterpolatedStyle>(
 			() => {
 				"worklet";
 				const props = screenInterpolatorProps.value;
-				const { current, next, progress, active } = props;
-				const isDragging = Boolean(current.gesture.dragging);
-				const isNextClosing = Boolean(next?.closing);
+				const { current, next, progress } = props;
+				const isDragging = current.gesture.dragging;
+				const isNextClosing = !!next?.closing;
 
 				if (isDragging && isNextClosing) {
 					isGesturingDuringCloseAnimation.value = true;
@@ -92,13 +63,6 @@ const {
 				const isInGestureMode =
 					isDragging || isGesturingDuringCloseAnimation.value;
 
-				const isTransitionInFlight = Boolean(
-					isInGestureMode ||
-						active.animating ||
-						active.closing ||
-						progress < 1 - EPSILON,
-				);
-
 				// Select interpolator
 				//  - If in gesture mode, use current screen's interpolator since we're driving
 				//    the animation from this screen (dragging back to dismiss next).
@@ -106,8 +70,8 @@ const {
 					? currentInterpolator
 					: (nextInterpolator ?? currentInterpolator);
 
-				let normalizedResult =
-					NO_STYLES as NormalizedTransitionInterpolatedStyle;
+				if (!interpolator)
+					return NO_STYLES as NormalizedTransitionInterpolatedStyle;
 
 				// Build effective props with corrected progress
 				//  - Gesture mode: use current.progress only (avoids jumps during drag)
@@ -121,93 +85,36 @@ const {
 					effectiveNext = undefined;
 				}
 
-				if (interpolator) {
-					try {
-						const raw = interpolator({
-							...props,
-							progress: effectiveProgress,
-							next: effectiveNext,
-							bounds: boundsAccessor,
-						});
+				try {
+					const raw = interpolator({
+						...props,
+						progress: effectiveProgress,
+						next: effectiveNext,
+						bounds: boundsAccessor,
+					});
 
-						const { result, wasLegacy } = normalizeInterpolatedStyle(
-							raw as Record<string, any>,
+					const { result, wasLegacy } = normalizeInterpolatedStyle(
+						raw as Record<string, any>,
+					);
+
+					if (__DEV__ && wasLegacy && !hasWarnedLegacy.value) {
+						hasWarnedLegacy.value = true;
+						logger.warn(
+							"Flat interpolator return shape (contentStyle/backdropStyle) is deprecated. " +
+								"Use the nested format instead: { content: { style }, backdrop: { style } }.",
 						);
-
-						if (__DEV__ && wasLegacy && !hasWarnedLegacy.value) {
-							hasWarnedLegacy.value = true;
-							logger.warn(
-								"Flat interpolator return shape (contentStyle/backdropStyle) is deprecated. " +
-									"Use the nested format instead: { content: { style }, backdrop: { style } }.",
-							);
-						}
-
-						normalizedResult = result;
-					} catch (err) {
-						if (__DEV__) {
-							console.warn(
-								"[react-native-screen-transitions] screenStyleInterpolator must be a worklet",
-								err,
-							);
-						}
-						normalizedResult =
-							NO_STYLES as NormalizedTransitionInterpolatedStyle;
-					}
-				}
-
-				const nextRootStyleKeys: Record<string, Record<string, true>> = {};
-				const nextRootPropKeys: Record<string, Record<string, true>> = {};
-				const nextLastResolvedRootStyles: Record<
-					string,
-					Record<string, any> | null
-				> = {};
-				const nextLastResolvedRootProps: Record<
-					string,
-					Record<string, any> | null
-				> = {};
-				const reconciledResult = {
-					...normalizedResult,
-				} as NormalizedTransitionInterpolatedStyle;
-
-				for (const slotId of ROOT_SCREEN_SLOT_IDS) {
-					const currentSlot = normalizedResult[slotId];
-					const styleResult = reconcileRootSlotStyle({
-						current: currentSlot?.style,
-						previousKeys: previousRootStyleKeys.value[slotId],
-						lastResolved: lastResolvedRootStyles.value[slotId],
-						isTransitionInFlight,
-					});
-
-					const propsResult = reconcileRootSlotProps({
-						current: currentSlot?.props,
-						previousKeys: previousRootPropKeys.value[slotId],
-						lastResolved: lastResolvedRootProps.value[slotId],
-						isTransitionInFlight,
-					});
-
-					nextRootStyleKeys[slotId] = styleResult.nextKeys;
-					nextRootPropKeys[slotId] = propsResult.nextKeys;
-					nextLastResolvedRootStyles[slotId] = styleResult.nextLastResolved;
-					nextLastResolvedRootProps[slotId] = propsResult.nextLastResolved;
-
-					if (!styleResult.hasValue && !propsResult.hasValue) {
-						reconciledResult[slotId] = undefined;
-						continue;
 					}
 
-					reconciledResult[slotId] = {
-						...currentSlot,
-						...(styleResult.hasValue ? { style: styleResult.value } : {}),
-						...(propsResult.hasValue ? { props: propsResult.value } : {}),
-					};
+					return result;
+				} catch (err) {
+					if (__DEV__) {
+						console.warn(
+							"[react-native-screen-transitions] screenStyleInterpolator must be a worklet",
+							err,
+						);
+					}
+					return NO_STYLES as NormalizedTransitionInterpolatedStyle;
 				}
-
-				previousRootStyleKeys.value = nextRootStyleKeys;
-				previousRootPropKeys.value = nextRootPropKeys;
-				lastResolvedRootStyles.value = nextLastResolvedRootStyles;
-				lastResolvedRootProps.value = nextLastResolvedRootProps;
-
-				return reconciledResult;
 			},
 		);
 
