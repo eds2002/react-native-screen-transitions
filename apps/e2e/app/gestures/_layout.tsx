@@ -113,6 +113,10 @@ export default function GesturesLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<BlankStack.Screen
+				name="scroll-direction-propagation-horizontal"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
 				name="scroll-boundary"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>

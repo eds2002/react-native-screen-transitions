@@ -98,6 +98,12 @@ const SCROLLVIEW_EXAMPLES: Example[] = [
 		scenario: "Outer/ (vertical) > Settings/ (vertical-inverted) > ScrollView",
 	},
 	{
+		id: "scroll-direction-propagation-horizontal",
+		title: "Scroll Direction Propagation (Horizontal)",
+		description: "Horizontal ScrollView coordinates with two owners on same axis",
+		scenario: "Outer/ (horizontal) > Drawer/ (horizontal-inverted) > ScrollView",
+	},
+	{
 		id: "scroll-boundary",
 		title: "ScrollView Boundary",
 		description: "Dismiss only works at scroll top",
