@@ -18,7 +18,12 @@ export const NativeScreenContainer = ({ children }: Props) => {
 			<ScreenContainer style={styles.container}>{children}</ScreenContainer>
 		);
 	}
-	return <View style={styles.container}>{children}</View>;
+	return (
+		// Mirror ScreenContainer's native boundary when screens are disabled.
+		<View collapsable={false} style={styles.container}>
+			{children}
+		</View>
+	);
 };
 
 const styles = StyleSheet.create({

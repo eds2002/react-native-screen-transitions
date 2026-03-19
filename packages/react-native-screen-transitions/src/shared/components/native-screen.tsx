@@ -158,12 +158,25 @@ export const NativeScreen = ({
 		};
 	});
 
-	const NativeScreenComponent = !DISABLE_NATIVE_SCREENS
-		? AnimatedNativeScreen
-		: Animated.View;
+	if (DISABLE_NATIVE_SCREENS) {
+		return (
+			<Animated.View
+				ref={screenRef}
+				// Keep a native boundary per screen when falling back to plain views.
+				// Android release builds can otherwise flatten sibling screens together.
+				collapsable={false}
+				style={StyleSheet.absoluteFill}
+				animatedProps={animatedProps}
+			>
+				<LayoutAnchorProvider anchorRef={screenRef}>
+					{children}
+				</LayoutAnchorProvider>
+			</Animated.View>
+		);
+	}
 
 	return (
-		<NativeScreenComponent
+		<AnimatedNativeScreen
 			enabled
 			ref={screenRef}
 			style={StyleSheet.absoluteFill}
@@ -173,6 +186,6 @@ export const NativeScreen = ({
 			<LayoutAnchorProvider anchorRef={screenRef}>
 				{children}
 			</LayoutAnchorProvider>
-		</NativeScreenComponent>
+		</AnimatedNativeScreen>
 	);
 };
