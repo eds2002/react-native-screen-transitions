@@ -73,6 +73,70 @@ describe('bounds({ method: "content" }) ownership', () => {
 		expect(styles.scale).toBeCloseTo(4, 5);
 	});
 
+	it("supports custom source-owned content targets without a destination bound", () => {
+		const styles = computeBoundStyles(
+			{
+				id: "card",
+				current: makeState("screen-a"),
+				next: makeState("screen-b"),
+				progress: 2,
+				dimensions: screenLayout,
+			},
+			{
+				id: "card",
+				method: "content",
+				target: createBounds(50, 100, 200, 400),
+				raw: true,
+				scaleMode: "uniform",
+			},
+			{
+				sourceBounds: createBounds(10, 20, 100, 200),
+				destinationBounds: null,
+				sourceStyles: null,
+				destinationStyles: null,
+				sourceScreenKey: "screen-a",
+				destinationScreenKey: null,
+				usedPending: false,
+				usedSnapshotSource: false,
+				usedSnapshotDestination: false,
+			},
+		);
+
+		expect(styles.scale).toBeCloseTo(2, 5);
+	});
+
+	it("does not invert targeted content when destination fallback reuses the current screen snapshot", () => {
+		const styles = computeBoundStyles(
+			{
+				id: "card",
+				current: makeState("screen-a"),
+				next: makeState("screen-b"),
+				progress: 2,
+				dimensions: screenLayout,
+			},
+			{
+				id: "card",
+				method: "content",
+				target: "fullscreen",
+				raw: true,
+				scaleMode: "uniform",
+			},
+			{
+				sourceBounds: createBounds(10, 20, 100, 200),
+				destinationBounds: createBounds(10, 20, 100, 200),
+				sourceStyles: null,
+				destinationStyles: null,
+				sourceScreenKey: "screen-a",
+				destinationScreenKey: "screen-a",
+				usedPending: false,
+				usedSnapshotSource: false,
+				usedSnapshotDestination: true,
+			},
+		);
+
+		expect(styles.scale).toBeCloseTo(4, 5);
+	});
+
 	it("keeps destination-owned close behavior shrinking back toward the source", () => {
 		const styles = computeBoundStyles(
 			{
