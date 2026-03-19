@@ -23,7 +23,7 @@ export const buildBoundsOptions = ({
 }: BuildBoundsOptionsParams): BoundsOptions => {
 	"worklet";
 
-	const tag = resolveBoundTag({ id, group });
+	const tag = resolveBoundTag({ id, group, mode });
 	const currentScreenKey = props.current?.route.key;
 	const boundaryConfig =
 		tag && currentScreenKey

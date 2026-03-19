@@ -3,10 +3,12 @@ import {
 	getBoundaryConfig,
 	getBoundaryPresence,
 	getGroupActiveId,
+	getGroupSettledActiveId,
 	getGroups,
 	hasBoundaryPresence,
 	registerBoundaryPresence,
 	setGroupActiveId,
+	setGroupSettledActiveId,
 	unregisterBoundaryPresence,
 } from "./internals/presence";
 import {
@@ -52,7 +54,9 @@ export const BoundStore = {
 	getSnapshot,
 	resolveTransitionPair,
 	setGroupActiveId,
+	setGroupSettledActiveId,
 	getGroupActiveId,
+	getGroupSettledActiveId,
 	clear,
 	clearByAncestor,
 	clearByBranch,

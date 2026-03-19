@@ -64,6 +64,7 @@ export const useBoundaryMeasureAndStore = (params: {
 
 	return useStableCallbackValue(
 		({
+			shouldRegisterSnapshot,
 			shouldSetSource,
 			shouldSetDestination,
 			shouldUpdateSource,
@@ -120,8 +121,10 @@ export const useBoundaryMeasureAndStore = (params: {
 			const canUpdateSource = !!shouldUpdateSource && hasSourceLink;
 			const canUpdateDestination =
 				!!shouldUpdateDestination && (hasDestinationLink || hasPendingLink);
+			const canRegisterSnapshot = !!shouldRegisterSnapshot;
 
 			if (
+				!canRegisterSnapshot &&
 				!canSetSource &&
 				!canSetDestination &&
 				!canUpdateSource &&
@@ -155,6 +158,13 @@ export const useBoundaryMeasureAndStore = (params: {
 			const hasSnapshotChanged =
 				!existingSnapshot ||
 				!areMeasurementsEqual(existingSnapshot.bounds, correctedMeasured);
+			const shouldWriteSnapshot =
+				hasSnapshotChanged &&
+				(canRegisterSnapshot ||
+					canSetSource ||
+					canSetDestination ||
+					canUpdateSource ||
+					canUpdateDestination);
 
 			applyMeasuredBoundsWrites({
 				sharedBoundTag,
@@ -165,7 +175,7 @@ export const useBoundaryMeasureAndStore = (params: {
 				navigatorKey,
 				ancestorNavigatorKeys,
 				expectedSourceScreenKey,
-				shouldRegisterSnapshot: hasSnapshotChanged,
+				shouldRegisterSnapshot: shouldWriteSnapshot,
 				shouldSetSource: canSetSource,
 				shouldUpdateSource: canUpdateSource && hasSnapshotChanged,
 				shouldUpdateDestination:

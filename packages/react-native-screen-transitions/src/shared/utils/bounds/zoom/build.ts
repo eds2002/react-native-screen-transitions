@@ -459,6 +459,27 @@ export const buildZoomStyles = ({
 	const nextRouteKey = props.next?.route.key;
 	const entering = !props.next;
 	const screenLayout = props.layouts.screen;
+	const liveResolvedTag = resolveTag({ id, group, mode: "style" });
+	const isNavigationTransitionInFlight =
+		props.current.animating === 1 ||
+		props.current.closing === 1 ||
+		props.current.gesture.dragging === 1 ||
+		props.next?.animating === 1 ||
+		props.next?.closing === 1 ||
+		props.next?.gesture.dragging === 1;
+
+	if (
+		group &&
+		id !== undefined &&
+		id !== null &&
+		id !== "" &&
+		!isNavigationTransitionInFlight
+	) {
+		const normalizedId = String(id);
+		if (BoundStore.getGroupSettledActiveId(group) !== normalizedId) {
+			BoundStore.setGroupSettledActiveId(group, normalizedId);
+		}
+	}
 
 	const resolvedConfig = resolveZoomConfig({
 		id,
@@ -477,6 +498,29 @@ export const buildZoomStyles = ({
 		explicitTarget,
 		zoomOptions: resolvedZoomOptions,
 	} = resolvedConfig;
+	const resolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
+		currentScreenKey: currentRouteKey,
+		previousScreenKey: previousRouteKey,
+		nextScreenKey: nextRouteKey,
+		entering,
+	});
+	const visibilityTag = liveResolvedTag ?? resolvedTag;
+	const focusedVisibilityStyles = {
+		[resolvedTag]: {
+			style: { opacity: 1 },
+		},
+		...(visibilityTag !== resolvedTag
+			? {
+					[visibilityTag]: {
+						style: { opacity: 1 },
+					},
+				}
+			: {}),
+	} satisfies TransitionInterpolatedStyle;
+
+	if (!resolvedPair.sourceBounds) {
+		return focused ? focusedVisibilityStyles : NO_STYLES;
+	}
 
 	const normX = props.active.gesture.normX;
 	const normY = props.active.gesture.normY;
@@ -519,13 +563,6 @@ export const buildZoomStyles = ({
 	const dragScale = combineScales(dragXScale, dragYScale);
 
 	if (focused) {
-		const focusedPair = BoundStore.resolveTransitionPair(resolvedTag, {
-			currentScreenKey: currentRouteKey,
-			previousScreenKey: previousRouteKey,
-			nextScreenKey: nextRouteKey,
-			entering,
-		});
-
 		const contentTarget = getZoomContentTarget({
 			explicitTarget,
 			resolvedTag,
@@ -535,7 +572,7 @@ export const buildZoomStyles = ({
 			entering,
 			screenLayout,
 			anchor: sharedOptions.anchor,
-			resolvedPair: focusedPair,
+			resolvedPair,
 		});
 
 		const contentRaw = computeRaw({
@@ -565,7 +602,7 @@ export const buildZoomStyles = ({
 		const maskRadii = resolveMaskRadii({
 			progress,
 			zoomOptions: resolvedZoomOptions,
-			resolvedPair: focusedPair,
+			resolvedPair,
 		});
 		const focusedContentStyle = {
 			opacity: focusedFade,
@@ -601,13 +638,7 @@ export const buildZoomStyles = ({
 						: {}),
 				},
 			},
-			// Signal the destination boundary to stay visible during the transition.
-			// Without this, useAssociatedStyles enters "waiting-first-style" mode
-			// (opacity: 0) because it detects previous-screen evidence but never
-			// receives a resolved style for this tag.
-			[resolvedTag]: {
-				style: { opacity: 1 },
-			},
+			...focusedVisibilityStyles,
 		};
 	}
 
@@ -629,6 +660,7 @@ export const buildZoomStyles = ({
 					entering,
 					screenLayout,
 					anchor: sharedOptions.anchor,
+					resolvedPair,
 				});
 
 	const elementRaw = computeRaw({

@@ -46,21 +46,24 @@ export const useInitialLayoutHandler = (params: {
 			}
 		}
 
-		if (!isAnyAnimating) return;
-		const resolvedSourceKey = resolvePendingSourceKey(
-			sharedBoundTag,
-			expectedSourceScreenKey,
-		);
-		if (!resolvedSourceKey) return;
-		if (
-			!BoundStore.hasPendingLinkFromSource(sharedBoundTag, resolvedSourceKey)
-		) {
-			return;
+		let shouldSetDestination = false;
+
+		if (isAnyAnimating) {
+			const resolvedSourceKey = resolvePendingSourceKey(
+				sharedBoundTag,
+				expectedSourceScreenKey,
+			);
+			if (
+				resolvedSourceKey &&
+				BoundStore.hasPendingLinkFromSource(sharedBoundTag, resolvedSourceKey)
+			) {
+				shouldSetDestination = true;
+			}
 		}
 
 		maybeMeasureAndStore({
-			shouldSetSource: false,
-			shouldSetDestination: true,
+			shouldRegisterSnapshot: true,
+			shouldSetDestination,
 		});
 
 		hasMeasuredOnLayout.set(true);

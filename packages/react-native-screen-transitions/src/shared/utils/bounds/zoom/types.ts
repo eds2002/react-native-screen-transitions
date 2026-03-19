@@ -5,6 +5,7 @@ import type { BoundId, BoundsOptions } from "../types/options";
 export type ResolveTag = (params: {
 	id?: BoundId;
 	group?: string;
+	mode?: "style" | "navigation";
 }) => string | undefined;
 
 export type ComputeRaw = (

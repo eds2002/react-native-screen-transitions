@@ -17,6 +17,7 @@ import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
 import { useBoundaryMeasureAndStore } from "./hooks/use-boundary-measure-and-store";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
 import { useGroupActiveMeasurement } from "./hooks/use-group-active-measurement";
+import { useGroupSettledMeasurement } from "./hooks/use-group-settled-measurement";
 import { useInitialLayoutHandler } from "./hooks/use-initial-layout-handler";
 import { usePendingDestinationMeasurement } from "./hooks/use-pending-destination-measurement";
 import { usePendingDestinationRetryMeasurement } from "./hooks/use-pending-destination-retry-measurement";
@@ -24,9 +25,10 @@ import { useScrollSettledMeasurement } from "./hooks/use-scroll-settled-measurem
 import type { BoundaryComponentProps, BoundaryConfigProps } from "./types";
 import { buildBoundaryMatchKey } from "./utils/build-boundary-match-key";
 
-const setGroupActiveIdOnUI = (group: string, id: string) => {
+const setGroupSelectionOnUI = (group: string, id: string) => {
 	"worklet";
 	BoundStore.setGroupActiveId(group, id);
+	BoundStore.setGroupSettledActiveId(group, id);
 };
 
 interface CreateBoundaryComponentOptions {
@@ -179,6 +181,18 @@ export function createBoundaryComponent<P extends object>(
 			maybeMeasureAndStore,
 		});
 
+		// Destination-side commit path: when scroll settles, the live group member
+		// becomes authoritative for navigation zoom and destination bounds are
+		// re-measured for the committed item.
+		useGroupSettledMeasurement({
+			enabled: runtimeEnabled,
+			group,
+			id,
+			shouldUpdateDestination,
+			isAnimating,
+			maybeMeasureAndStore,
+		});
+
 		// While idle on source screens, re-measure after scroll settles so a later
 		// close transition starts from up-to-date source geometry.
 		useScrollSettledMeasurement({
@@ -204,7 +218,7 @@ export function createBoundaryComponent<P extends object>(
 			(...args: unknown[]) => {
 				// Press path has priority: capture source before user onPress/navigation.
 				if (group) {
-					runOnUI(setGroupActiveIdOnUI)(group, String(id));
+					runOnUI(setGroupSelectionOnUI)(group, String(id));
 				}
 				runOnUI(maybeMeasureAndStore)({ shouldSetSource: true });
 

@@ -3,6 +3,7 @@ import {
 	NAVIGATION_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_STYLE_ID,
 } from "../constants";
+import { BoundStore } from "../stores/bounds";
 import type { ScreenTransitionState } from "../types/animation.types";
 import { createBoundsAccessor } from "../utils/bounds";
 import { buildZoomStyles } from "../utils/bounds/zoom";
@@ -502,5 +503,153 @@ describe("bounds navigation zoom", () => {
 				}
 			).style?.borderRadius,
 		).toBe(18);
+	});
+
+	it("keeps grouped navigation zoom pinned to the settled member while active changes are provisional", () => {
+		registerSourceAndDestination({
+			tag: "photos:a",
+			sourceScreenKey: "list",
+			destinationScreenKey: "detail",
+			sourceBounds: createBounds(10, 20, 120, 160),
+			destinationBounds: createBounds(0, 0, 300, 400),
+		});
+		registerSourceAndDestination({
+			tag: "photos:b",
+			sourceScreenKey: "list",
+			destinationScreenKey: "detail",
+			sourceBounds: createBounds(40, 60, 140, 180),
+			destinationBounds: createBounds(0, 0, 300, 400),
+		});
+
+		BoundStore.setGroupActiveId("photos", "a");
+		BoundStore.setGroupSettledActiveId("photos", "a");
+
+		const previous = createState("list");
+		const current = createState("detail", {
+			gesture: createGesture(),
+		});
+		const props = createFrameProps({
+			current,
+			previous,
+			focused: true,
+			progress: 0.25,
+			active: current,
+			inactive: previous,
+		});
+
+		const bounds = createBoundsAccessor(() => props);
+
+		BoundStore.setGroupActiveId("photos", "b");
+
+		const provisional = bounds({
+			id: "b",
+			group: "photos",
+			target: "fullscreen",
+		}).navigation.zoom();
+
+		expect(provisional["photos:a"]).toBeDefined();
+		expect(provisional["photos:b"]).toBeDefined();
+		expect(
+			(
+				provisional[NAVIGATION_MASK_STYLE_ID] as {
+					style?: { width?: number };
+				}
+			).style?.width,
+		).toBeGreaterThan(1);
+
+		BoundStore.setGroupSettledActiveId("photos", "b");
+
+		const committed = bounds({
+			id: "b",
+			group: "photos",
+			target: "fullscreen",
+		}).navigation.zoom();
+
+		expect(committed["photos:b"]).toBeDefined();
+	});
+
+	it("supports source-only grouped fullscreen zoom after retargeting to a committed snapshot", () => {
+		BoundStore.registerSnapshot(
+			"photos:a",
+			"list",
+			createBounds(10, 20, 120, 160),
+		);
+		BoundStore.registerSnapshot(
+			"photos:b",
+			"list",
+			createBounds(40, 60, 140, 180),
+		);
+
+		BoundStore.setGroupActiveId("photos", "a");
+		BoundStore.setGroupSettledActiveId("photos", "a");
+
+		const current = createState("detail", {
+			closing: 1,
+			entering: 0,
+			gesture: createGesture(),
+		});
+		const next = createState("list", {
+			entering: 0,
+			animating: 0,
+			settled: 1,
+		});
+		const props = createFrameProps({
+			current,
+			next,
+			focused: true,
+			progress: 1.75,
+			active: current,
+			inactive: next,
+		});
+
+		const bounds = createBoundsAccessor(() => props);
+
+		BoundStore.setGroupActiveId("photos", "b");
+		BoundStore.setGroupSettledActiveId("photos", "b");
+
+		const styles = bounds({
+			id: "b",
+			group: "photos",
+			target: "fullscreen",
+		}).navigation.zoom();
+
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeDefined();
+		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeDefined();
+		expect(styles["photos:b"]).toBeDefined();
+	});
+
+	it("falls back to a plain close when grouped fullscreen zoom cannot resolve source geometry", () => {
+		BoundStore.setGroupActiveId("photos", "missing");
+		BoundStore.setGroupSettledActiveId("photos", "missing");
+
+		const current = createState("detail", {
+			closing: 1,
+			entering: 0,
+			gesture: createGesture(),
+		});
+		const next = createState("list", {
+			entering: 0,
+			animating: 0,
+			settled: 1,
+		});
+		const props = createFrameProps({
+			current,
+			next,
+			focused: true,
+			progress: 1.75,
+			active: current,
+			inactive: next,
+		});
+
+		const bounds = createBoundsAccessor(() => props);
+		const styles = bounds({
+			id: "missing",
+			group: "photos",
+			target: "fullscreen",
+		}).navigation.zoom();
+
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeUndefined();
+		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeUndefined();
+		expect(styles["photos:missing"]).toBeDefined();
 	});
 });

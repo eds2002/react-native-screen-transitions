@@ -4,11 +4,13 @@ import type { BoundId } from "../types/options";
 export type ResolveBoundTagParams = {
 	id?: BoundId;
 	group?: string;
+	mode?: "style" | "navigation";
 };
 
 export const resolveBoundTag = ({
 	id,
 	group,
+	mode = "style",
 }: ResolveBoundTagParams): string | undefined => {
 	"worklet";
 
@@ -25,5 +27,10 @@ export const resolveBoundTag = ({
 		BoundStore.setGroupActiveId(group, normalizedId);
 	}
 
-	return `${group}:${normalizedId}`;
+	const resolvedId =
+		mode === "navigation"
+			? (BoundStore.getGroupSettledActiveId(group) ?? normalizedId)
+			: normalizedId;
+
+	return `${group}:${resolvedId}`;
 };

@@ -2,26 +2,42 @@
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
-import {
-	useResolvedStackType,
-} from "@/components/stack-examples/stack-routing";
+import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { activeZoomId, ZOOM_GROUP } from "./constants";
+import { activeZoomId, navigationZoomId, ZOOM_GROUP } from "./constants";
 
 const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, progress }) => {
+	({ bounds, progress, current, next }) => {
 		"worklet";
-		const id = activeZoomId.value;
+		const liveId = activeZoomId.value;
 
-		if (!id) {
+		if (!liveId) {
 			return {};
 		}
+
+		const isTransitionInFlight =
+			current.animating === 1 ||
+			current.closing === 1 ||
+			current.gesture.dragging === 1 ||
+			next?.animating === 1 ||
+			next?.closing === 1 ||
+			next?.gesture.dragging === 1;
+
+		if (!navigationZoomId.value) {
+			navigationZoomId.value = liveId;
+		}
+
+		if (!isTransitionInFlight && navigationZoomId.value !== liveId) {
+			navigationZoomId.value = liveId;
+		}
+
+		const id = isTransitionInFlight ? navigationZoomId.value : liveId;
 
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
-			target: "bound",
+			target: "fullscreen",
 		}).navigation.zoom();
 
 		return {

@@ -17,6 +17,7 @@ import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
+	navigationZoomId,
 	ZOOM_GROUP,
 } from "./constants";
 
@@ -34,9 +35,8 @@ function ZoomSourceCard({
 	const cardWidth = item.cols === 2 ? colWidth * 2 + GAP : colWidth;
 
 	return (
-		<Transition.Boundary.View
+		<Transition.Boundary.Pressable
 			group={ZOOM_GROUP}
-			scaleMode="uniform"
 			id={item.id}
 			style={[
 				styles.card,
@@ -46,21 +46,17 @@ function ZoomSourceCard({
 					height: item.height,
 				},
 			]}
-			pointerEvents="box-none"
+			onPress={() => {
+				activeZoomId.value = item.id;
+				navigationZoomId.value = item.id;
+				router.push(
+					buildStackPath(stackType, `bounds/zoom/${item.id}`) as never,
+				);
+			}}
 		>
-			<Pressable
-				onPress={() => {
-					activeZoomId.value = item.id;
-					router.push(
-						buildStackPath(stackType, `bounds/zoom/${item.id}`) as never,
-					);
-				}}
-				style={{ flex: 1 }}
-			>
-				<Text style={styles.title}>{item.title}</Text>
-				<Text style={styles.subtitle}>{item.subtitle}</Text>
-			</Pressable>
-		</Transition.Boundary.View>
+			<Text style={styles.title}>{item.title}</Text>
+			<Text style={styles.subtitle}>{item.subtitle}</Text>
+		</Transition.Boundary.Pressable>
 	);
 }
 

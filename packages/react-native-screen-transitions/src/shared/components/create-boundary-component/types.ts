@@ -40,6 +40,7 @@ export type BoundaryComponentProps<P extends object> = Omit<P, "id"> &
 export type BoundaryProps = BoundaryComponentProps<ViewProps>;
 
 export interface MaybeMeasureAndStoreParams {
+	shouldRegisterSnapshot?: boolean;
 	shouldSetSource?: boolean;
 	shouldSetDestination?: boolean;
 	shouldUpdateSource?: boolean;

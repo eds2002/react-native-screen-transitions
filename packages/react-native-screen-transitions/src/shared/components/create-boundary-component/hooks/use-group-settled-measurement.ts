@@ -3,17 +3,11 @@ import {
 	useAnimatedReaction,
 	useSharedValue,
 } from "react-native-reanimated";
+import { useScrollSettleContext } from "../../../providers/scroll-settle.provider";
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
 
-/**
- * Watches the group's active id in the BoundStore.
- * When this boundary becomes the active member of its group,
- * re-measures itself and updates the link destination with fresh bounds.
- * This handles the case where a boundary scrolled into view after initial mount
- * (e.g., paging ScrollView in a detail screen).
- */
-export const useGroupActiveMeasurement = (params: {
+export const useGroupSettledMeasurement = (params: {
 	enabled: boolean;
 	group: string | undefined;
 	id: BoundaryId;
@@ -29,42 +23,46 @@ export const useGroupActiveMeasurement = (params: {
 		isAnimating,
 		maybeMeasureAndStore,
 	} = params;
-	const idStr = String(id);
-
+	const scrollSettle = useScrollSettleContext();
+	const settledSignal = scrollSettle?.settledSignal;
 	const allGroups = BoundStore.getGroups();
+	const idStr = String(id);
 	const hasPendingDestinationRefresh = useSharedValue(false);
 
 	useAnimatedReaction(
-		() => {
-			"worklet";
-			if (!enabled) return null;
-			if (!group) return null;
-			return allGroups.value[group]?.activeId ?? null;
-		},
-		(activeId, previousActiveId) => {
+		() => settledSignal?.value ?? 0,
+		(signal, previousSignal) => {
 			"worklet";
 			if (!enabled) return;
-			if (!group || !shouldUpdateDestination) return;
+			if (!group || !shouldUpdateDestination || !settledSignal) return;
+			if (signal === 0 || signal === previousSignal) return;
+
+			const activeId = BoundStore.getGroupActiveId(group);
+			if (!activeId) return;
+
+			if (BoundStore.getGroupSettledActiveId(group) !== activeId) {
+				BoundStore.setGroupSettledActiveId(group, activeId);
+			}
+
 			if (activeId !== idStr) {
 				hasPendingDestinationRefresh.value = false;
 				return;
 			}
 
-			if (activeId === idStr && activeId !== previousActiveId) {
-				if (isAnimating.value) {
-					hasPendingDestinationRefresh.value = true;
-					return;
-				}
-
-				hasPendingDestinationRefresh.value = false;
-				maybeMeasureAndStore({ shouldUpdateDestination: true });
+			if (isAnimating.value) {
+				hasPendingDestinationRefresh.value = true;
+				return;
 			}
+
+			hasPendingDestinationRefresh.value = false;
+			maybeMeasureAndStore({ shouldUpdateDestination: true });
 		},
 		[
 			enabled,
 			group,
 			idStr,
 			shouldUpdateDestination,
+			settledSignal,
 			isAnimating,
 			hasPendingDestinationRefresh,
 			maybeMeasureAndStore,
@@ -75,15 +73,15 @@ export const useGroupActiveMeasurement = (params: {
 		() => {
 			"worklet";
 			if (!enabled) return false;
-			if (!group || !shouldUpdateDestination) return false;
+			if (!group || !shouldUpdateDestination || !settledSignal) return false;
 			if (!hasPendingDestinationRefresh.value) return false;
 			if (isAnimating.value) return false;
-			return allGroups.value[group]?.activeId === idStr;
+			return allGroups.value[group]?.settledActiveId === idStr;
 		},
 		(shouldFlush, previousShouldFlush) => {
 			"worklet";
 			if (!enabled) return;
-			if (!group || !shouldUpdateDestination) return;
+			if (!group || !shouldUpdateDestination || !settledSignal) return;
 			if (!shouldFlush || shouldFlush === previousShouldFlush) return;
 
 			hasPendingDestinationRefresh.value = false;
@@ -94,6 +92,7 @@ export const useGroupActiveMeasurement = (params: {
 			group,
 			idStr,
 			shouldUpdateDestination,
+			settledSignal,
 			isAnimating,
 			allGroups,
 			hasPendingDestinationRefresh,
