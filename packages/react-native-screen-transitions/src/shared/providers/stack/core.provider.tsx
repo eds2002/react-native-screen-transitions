@@ -84,12 +84,16 @@ export function withStackCore<TProps extends object>(
 		STACK_TYPE,
 		...props
 	}: TProps & StackCoreConfig) {
+		// Start from defaults, then apply explicit overrides from the caller.
 		const config: StackCoreConfig = {
-			DISABLE_NATIVE_SCREENS,
-			DISABLE_NATIVE_SCREEN_CONTAINER,
-			TRANSITIONS_ALWAYS_ON,
-			STACK_TYPE,
-			...defaultConfig,
+			TRANSITIONS_ALWAYS_ON:
+				TRANSITIONS_ALWAYS_ON ?? defaultConfig.TRANSITIONS_ALWAYS_ON,
+			STACK_TYPE: STACK_TYPE ?? defaultConfig.STACK_TYPE,
+			DISABLE_NATIVE_SCREENS:
+				DISABLE_NATIVE_SCREENS ?? defaultConfig.DISABLE_NATIVE_SCREENS,
+			DISABLE_NATIVE_SCREEN_CONTAINER:
+				DISABLE_NATIVE_SCREEN_CONTAINER ??
+				defaultConfig.DISABLE_NATIVE_SCREEN_CONTAINER,
 		};
 		return (
 			<InternalStackCoreProvider config={config}>
