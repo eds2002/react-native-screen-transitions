@@ -1,5 +1,6 @@
 export { createBlankStackNavigator } from "../blank-stack/navigators/create-blank-stack-navigator";
 export type {
+	BlankStackFactoryOptions,
 	BlankStackNavigationEventMap,
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp,

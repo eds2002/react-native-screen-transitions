@@ -8,9 +8,12 @@ interface Props {
 
 export const NativeScreenContainer = ({ children }: Props) => {
 	const {
-		flags: { DISABLE_NATIVE_SCREENS = false },
+		flags: {
+			DISABLE_NATIVE_SCREENS = false,
+			DISABLE_NATIVE_SCREEN_CONTAINER = false,
+		},
 	} = useStack();
-	if (!DISABLE_NATIVE_SCREENS) {
+	if (!DISABLE_NATIVE_SCREENS && !DISABLE_NATIVE_SCREEN_CONTAINER) {
 		return (
 			<ScreenContainer style={styles.container}>{children}</ScreenContainer>
 		);

@@ -10,6 +10,10 @@ import {
 	NAVIGATION_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_STYLE_ID,
 } from "../..";
+import {
+	createBlankStackNavigator,
+	type BlankStackFactoryOptions,
+} from "../../../blank-stack";
 
 const slotStyle: TransitionSlotStyle = {
 	style: {
@@ -85,6 +89,23 @@ const precedenceOptions: ScreenTransitionConfig = {
 	expandViaScrollView: false,
 };
 
+const blankStackFactoryOptions: BlankStackFactoryOptions = {
+	independent: true,
+	enableNativeScreens: false,
+};
+
+const defaultBlankStack = createBlankStackNavigator();
+const viewBlankStack = createBlankStackNavigator({
+	enableNativeScreens: false,
+});
+const independentBlankStack = createBlankStackNavigator({
+	independent: true,
+});
+const independentViewBlankStack = createBlankStackNavigator({
+	independent: true,
+	enableNativeScreens: false,
+});
+
 export const publicApiTypecheck = {
 	navigationSlots: {
 		container: NAVIGATION_CONTAINER_STYLE_ID,
@@ -100,4 +121,9 @@ export const publicApiTypecheck = {
 	nextNameOptions,
 	deprecatedAliasOptions,
 	precedenceOptions,
+	blankStackFactoryOptions,
+	defaultBlankStack,
+	viewBlankStack,
+	independentBlankStack,
+	independentViewBlankStack,
 };

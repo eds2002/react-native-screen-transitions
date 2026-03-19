@@ -78,11 +78,24 @@ const TEST_FLOWS = [
 	},
 ];
 
+const BLANK_STACK_ONLY_FLOWS = [
+	{
+		id: "embedded-flow",
+		title: "Embedded Blank Stack",
+		description:
+			"Compare isolated blank-stack mode with native screens on and off",
+	},
+];
+
 export default function BlankStackIndex() {
 	const stackType = useResolvedStackType();
 	const stackLabel =
 		stackType === "native-stack" ? "Native Stack" : "Blank Stack";
 	const testPrefix = stackType === "native-stack" ? "native" : "blank";
+	const flows =
+		stackType === "blank-stack"
+			? [...BLANK_STACK_ONLY_FLOWS, ...TEST_FLOWS]
+			: TEST_FLOWS;
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
@@ -95,7 +108,7 @@ export default function BlankStackIndex() {
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
 				<View style={styles.list}>
-					{TEST_FLOWS.map((flow) => (
+					{flows.map((flow) => (
 						<Pressable
 							key={flow.id}
 							testID={`${testPrefix}-${flow.id}`}

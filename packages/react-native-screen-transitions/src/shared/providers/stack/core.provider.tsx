@@ -10,6 +10,7 @@ export interface StackCoreConfig {
 	TRANSITIONS_ALWAYS_ON?: boolean;
 	STACK_TYPE?: StackType;
 	DISABLE_NATIVE_SCREENS?: boolean;
+	DISABLE_NATIVE_SCREEN_CONTAINER?: boolean;
 }
 
 interface StackCoreProviderProps {
@@ -22,6 +23,7 @@ export interface StackCoreContextValue {
 		TRANSITIONS_ALWAYS_ON: boolean;
 		STACK_TYPE?: StackType;
 		DISABLE_NATIVE_SCREENS: boolean;
+		DISABLE_NATIVE_SCREEN_CONTAINER: boolean;
 	};
 }
 
@@ -33,18 +35,27 @@ const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
 		const {
 			TRANSITIONS_ALWAYS_ON = false,
 			DISABLE_NATIVE_SCREENS = false,
+			DISABLE_NATIVE_SCREEN_CONTAINER = false,
 			STACK_TYPE = StackType.BLANK,
 		} = config;
 
 		const flags = useMemo(
-			() => ({ TRANSITIONS_ALWAYS_ON, STACK_TYPE, DISABLE_NATIVE_SCREENS }),
-			[TRANSITIONS_ALWAYS_ON, STACK_TYPE, DISABLE_NATIVE_SCREENS],
+			() => ({
+				TRANSITIONS_ALWAYS_ON,
+				STACK_TYPE,
+				DISABLE_NATIVE_SCREENS,
+				DISABLE_NATIVE_SCREEN_CONTAINER,
+			}),
+			[
+				TRANSITIONS_ALWAYS_ON,
+				STACK_TYPE,
+				DISABLE_NATIVE_SCREENS,
+				DISABLE_NATIVE_SCREEN_CONTAINER,
+			],
 		);
 
-		const value = useMemo(() => ({ flags }), [flags]);
-
 		return {
-			value,
+			value: { flags },
 			children: (
 				<GestureHandlerRootView
 					style={styles.container}
@@ -68,15 +79,16 @@ export function withStackCore<TProps extends object>(
 ): React.FC<TProps & StackCoreConfig> {
 	return function StackCoreWrapper({
 		DISABLE_NATIVE_SCREENS,
+		DISABLE_NATIVE_SCREEN_CONTAINER,
 		TRANSITIONS_ALWAYS_ON,
 		STACK_TYPE,
 		...props
 	}: TProps & StackCoreConfig) {
-		// User props first, then defaultConfig overrides (config takes priority)
 		const config: StackCoreConfig = {
-			...(DISABLE_NATIVE_SCREENS !== undefined && { DISABLE_NATIVE_SCREENS }),
-			...(TRANSITIONS_ALWAYS_ON !== undefined && { TRANSITIONS_ALWAYS_ON }),
-			...(STACK_TYPE !== undefined && { STACK_TYPE }),
+			DISABLE_NATIVE_SCREENS,
+			DISABLE_NATIVE_SCREEN_CONTAINER,
+			TRANSITIONS_ALWAYS_ON,
+			STACK_TYPE,
 			...defaultConfig,
 		};
 		return (
