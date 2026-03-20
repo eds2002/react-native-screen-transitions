@@ -167,9 +167,14 @@ export interface ScreenInterpolationProps {
 	inactive: ScreenTransitionState | undefined;
 }
 
+/**
+ * Returning `null` explicitly defers rendering of the screen's visual subtree
+ * for the current frame. Returning an object applies transition styles
+ * immediately.
+ */
 export type ScreenStyleInterpolator = (
 	props: ScreenInterpolationProps,
-) => TransitionInterpolatedStyle;
+) => TransitionInterpolatedStyle | null;
 
 /**
  * Animated style properties with full autocomplete.

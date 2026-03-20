@@ -4,7 +4,7 @@ import {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
-import { EPSILON, NO_PROPS, NO_STYLES } from "../../constants";
+import { NO_PROPS, NO_STYLES } from "../../constants";
 import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles.provider";
 import { AnimationStore } from "../../stores/animation.store";
@@ -14,11 +14,9 @@ type Props = {
 	id?: string;
 	style?: StyleProps;
 	resetTransformOnUnset?: boolean;
-	waitForFirstResolvedStyle?: boolean;
 };
 
 const TRANSIENT_EMPTY_GRACE_FRAMES = 2;
-const TRANSITION_PROGRESS_COMPLETE = 1 - EPSILON;
 const IDENTITY_TRANSFORM = [
 	{ translateX: 0 },
 	{ translateY: 0 },
@@ -30,7 +28,7 @@ const ALWAYS_RESET_STYLE_VALUES = {
 	elevation: 0,
 } as const;
 
-type AssociatedStyleMode = "waiting-first-style" | "hold-last-style" | "live";
+type AssociatedStyleMode = "hold-last-style" | "live";
 
 type GroupTagParts = {
 	group: string;
@@ -126,33 +124,27 @@ const buildUnsetPatch = ({
 
 /**
  * Resolves the animated style associated with an `id` (styleId/bound tag), while
- * guarding against one-frame glitches during shared-boundary transitions.
+ * guarding against transient glitches during shared-boundary transitions.
  *
  * Why this exists:
  * - During push/pop, links and style maps can be briefly out of sync.
- * - Without guards, boundaries can flash raw layout for one frame.
+ * - Without guards, boundaries can briefly drop back to raw local layout.
  * - Cleanup must be deterministic so stale transform keys do not linger.
  *
- * Visual model (worklet state machine):
+ * Local style model (worklet state machine):
  *
- *   expected transition + no resolved style yet -> waiting-first-style
- *   expected transition + transient empty style map -> hold-last-style
+ *   transient empty style map -> hold-last-style
  *   otherwise -> live
  *
- * - `waiting-first-style`: return `opacity: 0` until first resolved style arrives.
  * - `hold-last-style`: reuse last resolved style through short empty-map gaps.
  * - `live`: apply current resolved style directly.
  *
  * For grouped tags (`group:id`), previous-screen transition evidence is only
  * considered for the group's active member to avoid hiding non-active siblings.
- *
- * Set `waitForFirstResolvedStyle` to `false` for generic shared-bound-tag usage
- * where the transition can be driven by other style ids.
  */
 export const useAssociatedStyles = ({
 	id,
 	resetTransformOnUnset = false,
-	waitForFirstResolvedStyle = true,
 }: Props = {}) => {
 	const { stylesMap, ancestorStylesMaps } = useScreenStyles();
 	const { previousScreenKey, currentScreenKey, hasConfiguredInterpolator } =
@@ -160,10 +152,6 @@ export const useAssociatedStyles = ({
 	const isAnimating = AnimationStore.getRouteAnimation(
 		currentScreenKey,
 		"animating",
-	);
-	const progress = AnimationStore.getRouteAnimation(
-		currentScreenKey,
-		"progress",
 	);
 	const isClosing = AnimationStore.getRouteAnimation(
 		currentScreenKey,
@@ -195,12 +183,7 @@ export const useAssociatedStyles = ({
 		);
 
 		const hasPreviousKeys = hasAnyKeys(previousAppliedKeys.value);
-
 		const isTransitioning = isAnimating.get() !== 0 || isClosing.get() !== 0;
-		const isTransitionProgressInFlight =
-			progress.get() < TRANSITION_PROGRESS_COMPLETE;
-		const isTransitionInFlight =
-			isTransitioning || isTransitionProgressInFlight;
 
 		const canUsePreviousTransitionEvidence =
 			resetTransformOnUnset && allowPreviousTransitionEvidence(id);
@@ -218,14 +201,6 @@ export const useAssociatedStyles = ({
 			(!!BoundStore.getSnapshot(id, previousScreenKey) ||
 				BoundStore.hasBoundaryPresence(id, previousScreenKey));
 
-		// Split intent:
-		// - incoming: strict signal for first-style hiding
-		// - in-flight: broad signal to keep existing styles from resetting
-		const shouldExpectIncomingStyle =
-			resetTransformOnUnset &&
-			((hasActiveLink && canUsePreviousTransitionEvidence) ||
-				hasPreviousTransitionEvidence);
-
 		const shouldProtectInFlightStyles =
 			resetTransformOnUnset && (hasActiveLink || hasPreviousTransitionEvidence);
 
@@ -234,7 +209,6 @@ export const useAssociatedStyles = ({
 		}
 
 		const hasPersistedResolvedStyle = !!lastResolvedBase.value;
-		const hasResolvedStyle = hasCurrentKeys || hasPersistedResolvedStyle;
 
 		const isTransientEmptyGap =
 			hasConfiguredInterpolator &&
@@ -255,32 +229,18 @@ export const useAssociatedStyles = ({
 			isTransientEmptyGap &&
 			emptyGraceFrameCount.value <= TRANSIENT_EMPTY_GRACE_FRAMES;
 
-		const shouldDeferUnset =
+		const shouldDelayUnset =
 			resetTransformOnUnset &&
 			shouldProtectInFlightStyles &&
 			(isTransitioning || isWithinGapGrace);
 
 		/**
 		 * Associated-style state machine:
-		 * - waiting-first-style: transition is expected but no style has resolved yet.
 		 * - hold-last-style: transient empty frame; reuse last resolved style.
 		 * - live: apply current resolved style normally.
 		 */
 		let mode: AssociatedStyleMode = "live";
-		if (
-			waitForFirstResolvedStyle &&
-			resetTransformOnUnset &&
-			hasConfiguredInterpolator &&
-			shouldExpectIncomingStyle &&
-			isTransitionInFlight &&
-			!hasResolvedStyle
-		) {
-			mode = "waiting-first-style";
-		} else if (
-			shouldDeferUnset &&
-			!hasCurrentKeys &&
-			hasPersistedResolvedStyle
-		) {
+		if (shouldDelayUnset && !hasCurrentKeys && hasPersistedResolvedStyle) {
 			mode = "hold-last-style";
 		}
 
@@ -292,11 +252,11 @@ export const useAssociatedStyles = ({
 		const unsetPatch = buildUnsetPatch({
 			previousKeys: previousAppliedKeys.value,
 			currentKeys,
-			shouldDeferUnset,
+			shouldDeferUnset: shouldDelayUnset,
 			resetTransformOnUnset,
 		});
 
-		if (shouldDeferUnset) {
+		if (shouldDelayUnset) {
 			previousAppliedKeys.value = {
 				...previousAppliedKeys.value,
 				...currentKeys,
@@ -309,10 +269,6 @@ export const useAssociatedStyles = ({
 			if (!hasCurrentKeys && !shouldProtectInFlightStyles && !isTransitioning) {
 				lastResolvedBase.value = null;
 			}
-		}
-
-		if (mode === "waiting-first-style") {
-			return { ...unsetPatch, opacity: 0 };
 		}
 
 		const mergedBase = { ...unsetPatch, ...resolvedBase };

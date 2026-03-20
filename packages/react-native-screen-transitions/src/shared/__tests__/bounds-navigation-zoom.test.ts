@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import {
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
-} from "../constants";
 import { BoundStore } from "../stores/bounds";
 import type { ScreenTransitionState } from "../types/animation.types";
 import { createBoundsAccessor } from "../utils/bounds";
 import { buildZoomStyles } from "../utils/bounds/zoom";
 import { createBounds, registerSourceAndDestination } from "./helpers/bounds-behavior-fixtures";
+
+const NAVIGATION_CONTAINER_STYLE_ID = "_NAVIGATION_ROOT_CONTAINER";
+const NAVIGATION_MASK_HOST_FLAG_STYLE_ID = "_NAVIGATION_MASK_HOST";
+const NAVIGATION_MASK_STYLE_ID = "_NAVIGATION_ROOT_MASK";
 
 const resolveTag = ({
 	id,
@@ -194,7 +194,7 @@ describe("bounds navigation zoom", () => {
 			},
 		});
 		expect(styles["album-art"]).toEqual({
-			style: { opacity: 1 },
+			style: { opacity: 0.5 },
 		});
 	});
 
@@ -278,8 +278,47 @@ describe("bounds navigation zoom", () => {
 		});
 		expect(styles.content).toBeUndefined();
 		expect(styles["album-art"]).toEqual({
-			style: { opacity: 1 },
+			style: { opacity: 0.5 },
 		});
+	});
+
+	it("requests nav-host hide during early focused open frames with no zoom pair evidence", () => {
+		const current = createState("", {
+			entering: 1,
+			animating: 1,
+			settled: 0,
+			gesture: createGesture(),
+			route: {
+				key: "",
+				name: "",
+			},
+		});
+		const props = createFrameProps({
+			current,
+			focused: true,
+			progress: 0.2,
+			active: current,
+			navigationMaskEnabled: false,
+		});
+
+		const styles = buildZoomStyles({
+			id: "missing",
+			props,
+			resolveTag,
+			computeRaw: () => ({
+				width: 120,
+				height: 180,
+				translateX: 40,
+				translateY: 50,
+			}),
+		});
+
+		expect(styles[NAVIGATION_MASK_HOST_FLAG_STYLE_ID]).toEqual({
+			style: { opacity: 0 },
+		});
+		expect(styles[NAVIGATION_CONTAINER_STYLE_ID]).toBeUndefined();
+		expect(styles[NAVIGATION_MASK_STYLE_ID]).toBeUndefined();
+		expect(styles.missing).toBeUndefined();
 	});
 
 	it("shrinks in the dismissal direction and slightly lifts in the opposite direction", () => {

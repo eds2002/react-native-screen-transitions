@@ -88,6 +88,9 @@ const precedenceOptions: ScreenTransitionConfig = {
 	sheetScrollGestureBehavior: "expand-and-collapse",
 	expandViaScrollView: false,
 };
+const deferredInterpolatorOptions: ScreenTransitionConfig = {
+	screenStyleInterpolator: () => null,
+};
 
 const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
@@ -121,6 +124,7 @@ export const publicApiTypecheck = {
 	nextNameOptions,
 	deprecatedAliasOptions,
 	precedenceOptions,
+	deferredInterpolatorOptions,
 	blankStackFactoryOptions,
 	defaultBlankStack,
 	viewBlankStack,

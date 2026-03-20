@@ -21,7 +21,7 @@ const navigationZoomIdInterpolator: ScreenTransitionConfig["screenStyleInterpola
 		const id = currentId ?? activeId;
 
 		if (!id) {
-			return {};
+			return null;
 		}
 
 		const navigationStyles = bounds({
@@ -49,7 +49,7 @@ export default function NavigationZoomIdLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					navigationMaskEnabled: true,
+					navigationMaskEnabled: false,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.6,

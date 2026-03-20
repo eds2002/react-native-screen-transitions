@@ -108,7 +108,6 @@ export function createBoundaryComponent<P extends object>(
 		const { associatedStyles } = useAssociatedStyles({
 			id: sharedBoundTag,
 			resetTransformOnUnset: true,
-			waitForFirstResolvedStyle: true,
 		});
 
 		const maybeMeasureAndStore = useBoundaryMeasureAndStore({

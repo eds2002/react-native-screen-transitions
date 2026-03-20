@@ -1,11 +1,7 @@
 import { memo, useEffect } from "react";
-import { Platform, StyleSheet, View, type ViewProps } from "react-native";
+import { StyleSheet, View, type ViewProps } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import {
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
-	NO_STYLES,
-} from "../../../constants";
+import { NAVIGATION_MASK_STYLE_ID, NO_STYLES } from "../../../constants";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
 import { logger } from "../../../utils/logger";
 
@@ -24,16 +20,10 @@ try {
 }
 
 let hasWarnedMissingMaskedView = false;
-const IS_ANDROID = Platform.OS === "android";
 
 export const MaybeMaskedNavigationContainer = memo(
 	({ enabled, children, pointerEvents }: Props) => {
 		const { stylesMap } = useScreenStyles();
-		const animatedNavigationContainerStyle = useAnimatedStyle(() => {
-			"worklet";
-			return stylesMap.value[NAVIGATION_CONTAINER_STYLE_ID]?.style || NO_STYLES;
-		});
-
 		const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 			"worklet";
 			return stylesMap.value[NAVIGATION_MASK_STYLE_ID]?.style || NO_STYLES;
@@ -49,25 +39,10 @@ export const MaybeMaskedNavigationContainer = memo(
 				"navigationMaskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
 			);
 		}, [enabled]);
-
-		const navigationContainer = (
-			<Animated.View
-				style={[styles.navigationContainer, animatedNavigationContainerStyle]}
-				pointerEvents={pointerEvents}
-				collapsable={false}
-				renderToHardwareTextureAndroid={IS_ANDROID && !enabled}
-				needsOffscreenAlphaCompositing={IS_ANDROID && !enabled}
-			>
-				{children}
-			</Animated.View>
-		);
-
-		// Navigation zoom uses the root container transform even when the mask
-		// wrapper is disabled. Only the mask element itself is optional.
-		if (!enabled) return navigationContainer;
+		if (!enabled) return children;
 
 		if (LazyMaskedView === View) {
-			return navigationContainer;
+			return children;
 		}
 
 		return (
@@ -82,7 +57,7 @@ export const MaybeMaskedNavigationContainer = memo(
 				}
 				pointerEvents={pointerEvents}
 			>
-				{navigationContainer}
+				{children}
 			</LazyMaskedView>
 		);
 	},
@@ -94,8 +69,5 @@ const styles = StyleSheet.create({
 	},
 	navigationMaskElement: {
 		backgroundColor: "white",
-	},
-	navigationContainer: {
-		flex: 1,
 	},
 });

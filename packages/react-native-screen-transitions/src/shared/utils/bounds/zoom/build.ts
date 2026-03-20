@@ -1,15 +1,20 @@
 import { interpolate, type StyleProps } from "react-native-reanimated";
 import {
 	EPSILON,
+	HIDDEN_STYLE,
 	NAVIGATION_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
 	NAVIGATION_MASK_STYLE_ID,
-	NO_STYLES,
+	VISIBLE_STYLE,
 } from "../../../constants";
 import {
 	BoundStore,
 	type ResolvedTransitionPair,
 } from "../../../stores/bounds";
-import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
+import type {
+	ScreenStyleInterpolator,
+	TransitionInterpolatedStyle,
+} from "../../../types/animation.types";
 import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
 import type { Layout } from "../../../types/screen.types";
 import type { BoundsOptions } from "../types/options";
@@ -449,7 +454,7 @@ export const buildZoomStyles = ({
 	props,
 	resolveTag,
 	computeRaw,
-}: BuildZoomStylesParams): TransitionInterpolatedStyle => {
+}: BuildZoomStylesParams): ReturnType<ScreenStyleInterpolator> => {
 	"worklet";
 
 	const focused = props.focused;
@@ -475,7 +480,7 @@ export const buildZoomStyles = ({
 		defaultAnchor: "top",
 	});
 
-	if (!resolvedConfig) return NO_STYLES;
+	if (!resolvedConfig) return null;
 
 	const {
 		resolvedTag,
@@ -483,18 +488,20 @@ export const buildZoomStyles = ({
 		explicitTarget,
 		zoomOptions: resolvedZoomOptions,
 	} = resolvedConfig;
+
 	const resolvedPair = BoundStore.resolveTransitionPair(
 		resolvedTag,
 		transitionContext,
 	);
+
 	const focusedVisibilityStyles = {
-		[resolvedTag]: {
-			style: { opacity: 1 },
-		},
+		[resolvedTag]: VISIBLE_STYLE,
 	} satisfies TransitionInterpolatedStyle;
 
 	if (!resolvedPair.sourceBounds) {
-		return focused ? focusedVisibilityStyles : NO_STYLES;
+		return {
+			[NAVIGATION_MASK_HOST_FLAG_STYLE_ID]: HIDDEN_STYLE,
+		};
 	}
 
 	const normX = props.active.gesture.normX;

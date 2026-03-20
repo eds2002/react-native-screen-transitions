@@ -80,6 +80,11 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 export type ScreenTransitionConfig = {
 	/**
 	 * The user-provided function to calculate styles based on animation progress.
+	 *
+	 * Return `null` to explicitly defer rendering of the screen's visual subtree
+	 * until a later frame. This is useful for transitions such as
+	 * `bounds().navigation.zoom()` where the screen should stay hidden until the
+	 * interpolator has enough state to produce a safe first frame.
 	 */
 	screenStyleInterpolator?: ScreenStyleInterpolator;
 
