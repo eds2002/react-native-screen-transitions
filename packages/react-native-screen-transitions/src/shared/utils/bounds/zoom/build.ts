@@ -459,27 +459,12 @@ export const buildZoomStyles = ({
 	const nextRouteKey = props.next?.route.key;
 	const entering = !props.next;
 	const screenLayout = props.layouts.screen;
-	const liveResolvedTag = resolveTag({ id, group, mode: "style" });
-	const isNavigationTransitionInFlight =
-		props.current.animating === 1 ||
-		props.current.closing === 1 ||
-		props.current.gesture.dragging === 1 ||
-		props.next?.animating === 1 ||
-		props.next?.closing === 1 ||
-		props.next?.gesture.dragging === 1;
-
-	if (
-		group &&
-		id !== undefined &&
-		id !== null &&
-		id !== "" &&
-		!isNavigationTransitionInFlight
-	) {
-		const normalizedId = String(id);
-		if (BoundStore.getGroupSettledActiveId(group) !== normalizedId) {
-			BoundStore.setGroupSettledActiveId(group, normalizedId);
-		}
-	}
+	const transitionContext = {
+		currentScreenKey: currentRouteKey,
+		previousScreenKey: previousRouteKey,
+		nextScreenKey: nextRouteKey,
+		entering,
+	};
 
 	const resolvedConfig = resolveZoomConfig({
 		id,
@@ -498,24 +483,14 @@ export const buildZoomStyles = ({
 		explicitTarget,
 		zoomOptions: resolvedZoomOptions,
 	} = resolvedConfig;
-	const resolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
-		currentScreenKey: currentRouteKey,
-		previousScreenKey: previousRouteKey,
-		nextScreenKey: nextRouteKey,
-		entering,
-	});
-	const visibilityTag = liveResolvedTag ?? resolvedTag;
+	const resolvedPair = BoundStore.resolveTransitionPair(
+		resolvedTag,
+		transitionContext,
+	);
 	const focusedVisibilityStyles = {
 		[resolvedTag]: {
 			style: { opacity: 1 },
 		},
-		...(visibilityTag !== resolvedTag
-			? {
-					[visibilityTag]: {
-						style: { opacity: 1 },
-					},
-				}
-			: {}),
 	} satisfies TransitionInterpolatedStyle;
 
 	if (!resolvedPair.sourceBounds) {

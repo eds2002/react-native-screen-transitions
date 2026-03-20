@@ -118,39 +118,17 @@ function setGroupActiveId(group: string, id: string) {
 	groups.modify(<T extends GroupsState>(state: T): T => {
 		"worklet";
 		const mutableState = state as GroupsState;
-		const currentGroupState = mutableState[group];
 		mutableState[group] = {
 			activeId: id,
-			settledActiveId: currentGroupState?.settledActiveId ?? id,
 		};
 		return state;
 	});
 	debugStoreSizeLog(`setGroupActiveId(${group},${id})`);
 }
 
-function setGroupSettledActiveId(group: string, id: string) {
-	"worklet";
-	groups.modify(<T extends GroupsState>(state: T): T => {
-		"worklet";
-		const mutableState = state as GroupsState;
-		const currentGroupState = mutableState[group];
-		mutableState[group] = {
-			activeId: currentGroupState?.activeId ?? id,
-			settledActiveId: id,
-		};
-		return state;
-	});
-	debugStoreSizeLog(`setGroupSettledActiveId(${group},${id})`);
-}
-
 function getGroupActiveId(group: string): string | null {
 	"worklet";
 	return groups.value[group]?.activeId ?? null;
-}
-
-function getGroupSettledActiveId(group: string): string | null {
-	"worklet";
-	return groups.value[group]?.settledActiveId ?? null;
 }
 
 function getGroups() {
@@ -165,8 +143,6 @@ export {
 	getBoundaryPresence,
 	getBoundaryConfig,
 	setGroupActiveId,
-	setGroupSettledActiveId,
 	getGroupActiveId,
-	getGroupSettledActiveId,
 	getGroups,
 };

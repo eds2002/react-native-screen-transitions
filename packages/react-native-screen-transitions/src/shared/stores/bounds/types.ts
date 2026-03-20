@@ -75,5 +75,4 @@ export type PresenceState = Record<TagID, Record<ScreenKey, PresenceEntry>>;
 
 export type GroupState = {
 	activeId: string;
-	settledActiveId: string | null;
 };

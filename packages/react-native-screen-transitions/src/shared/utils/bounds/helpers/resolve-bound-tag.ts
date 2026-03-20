@@ -10,7 +10,7 @@ export type ResolveBoundTagParams = {
 export const resolveBoundTag = ({
 	id,
 	group,
-	mode = "style",
+	mode: _mode = "style",
 }: ResolveBoundTagParams): string | undefined => {
 	"worklet";
 
@@ -27,10 +27,5 @@ export const resolveBoundTag = ({
 		BoundStore.setGroupActiveId(group, normalizedId);
 	}
 
-	const resolvedId =
-		mode === "navigation"
-			? (BoundStore.getGroupSettledActiveId(group) ?? normalizedId)
-			: normalizedId;
-
-	return `${group}:${resolvedId}`;
+	return `${group}:${normalizedId}`;
 };

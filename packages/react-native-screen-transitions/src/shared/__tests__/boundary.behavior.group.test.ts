@@ -19,20 +19,9 @@ describe("Group Flow", () => {
 	it("tracks and updates the active group member id", () => {
 		BoundStore.setGroupActiveId("photos", "1");
 		expect(BoundStore.getGroupActiveId("photos")).toBe("1");
-		expect(BoundStore.getGroupSettledActiveId("photos")).toBe("1");
 
 		BoundStore.setGroupActiveId("photos", "2");
 		expect(BoundStore.getGroupActiveId("photos")).toBe("2");
-		expect(BoundStore.getGroupSettledActiveId("photos")).toBe("1");
-	});
-
-	it("commits the settled group member independently", () => {
-		BoundStore.setGroupActiveId("photos", "1");
-		BoundStore.setGroupActiveId("photos", "2");
-		BoundStore.setGroupSettledActiveId("photos", "2");
-
-		expect(BoundStore.getGroupActiveId("photos")).toBe("2");
-		expect(BoundStore.getGroupSettledActiveId("photos")).toBe("2");
 	});
 
 	it("isolates links between group members", () => {

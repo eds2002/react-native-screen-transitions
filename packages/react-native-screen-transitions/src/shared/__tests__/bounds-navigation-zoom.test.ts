@@ -505,7 +505,7 @@ describe("bounds navigation zoom", () => {
 		).toBe(18);
 	});
 
-	it("keeps grouped navigation zoom pinned to the settled member while active changes are provisional", () => {
+	it("resolves grouped navigation zoom against the current active member", () => {
 		registerSourceAndDestination({
 			tag: "photos:a",
 			sourceScreenKey: "list",
@@ -522,7 +522,6 @@ describe("bounds navigation zoom", () => {
 		});
 
 		BoundStore.setGroupActiveId("photos", "a");
-		BoundStore.setGroupSettledActiveId("photos", "a");
 
 		const previous = createState("list");
 		const current = createState("detail", {
@@ -547,7 +546,6 @@ describe("bounds navigation zoom", () => {
 			target: "fullscreen",
 		}).navigation.zoom();
 
-		expect(provisional["photos:a"]).toBeDefined();
 		expect(provisional["photos:b"]).toBeDefined();
 		expect(
 			(
@@ -556,19 +554,9 @@ describe("bounds navigation zoom", () => {
 				}
 			).style?.width,
 		).toBeGreaterThan(1);
-
-		BoundStore.setGroupSettledActiveId("photos", "b");
-
-		const committed = bounds({
-			id: "b",
-			group: "photos",
-			target: "fullscreen",
-		}).navigation.zoom();
-
-		expect(committed["photos:b"]).toBeDefined();
 	});
 
-	it("supports source-only grouped fullscreen zoom after retargeting to a committed snapshot", () => {
+	it("supports source-only grouped fullscreen zoom after retargeting to an active snapshot", () => {
 		BoundStore.registerSnapshot(
 			"photos:a",
 			"list",
@@ -581,7 +569,6 @@ describe("bounds navigation zoom", () => {
 		);
 
 		BoundStore.setGroupActiveId("photos", "a");
-		BoundStore.setGroupSettledActiveId("photos", "a");
 
 		const current = createState("detail", {
 			closing: 1,
@@ -605,7 +592,6 @@ describe("bounds navigation zoom", () => {
 		const bounds = createBoundsAccessor(() => props);
 
 		BoundStore.setGroupActiveId("photos", "b");
-		BoundStore.setGroupSettledActiveId("photos", "b");
 
 		const styles = bounds({
 			id: "b",
@@ -620,7 +606,6 @@ describe("bounds navigation zoom", () => {
 
 	it("falls back to a plain close when grouped fullscreen zoom cannot resolve source geometry", () => {
 		BoundStore.setGroupActiveId("photos", "missing");
-		BoundStore.setGroupSettledActiveId("photos", "missing");
 
 		const current = createState("detail", {
 			closing: 1,

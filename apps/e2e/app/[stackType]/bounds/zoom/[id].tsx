@@ -1,19 +1,17 @@
 import { useLocalSearchParams } from "expo-router";
-import { useState } from "react";
-import type { ListRenderItemInfo } from "react-native";
+import type {
+	ListRenderItemInfo,
+	NativeScrollEvent,
+	NativeSyntheticEvent,
+} from "react-native";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
-import Animated, {
-	runOnJS,
-	useAnimatedReaction,
-	useAnimatedScrollHandler,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
-	getBoundsSyncZoomItemById,
 	ZOOM_GROUP,
 } from "./constants";
 
@@ -70,39 +68,6 @@ const PALETTES = [
 	{ name: "Earth", colors: ["#C4A882", "#8B7355", "#D4C5A9", "#A0826D"] },
 ];
 
-function Boundary({
-	item,
-	insets,
-}: {
-	item: BoundsSyncZoomItem;
-	insets: { top: number; bottom: number };
-}) {
-	return (
-		<View pointerEvents="none" accessible={false} style={styles.warmupOverlay}>
-			<View
-				style={[
-					styles.warmupContent,
-					{
-						paddingTop: insets.top + 20,
-						paddingBottom: insets.bottom + 32,
-					},
-				]}
-			>
-				<View style={styles.warmupHeroSpacer} />
-				<View style={styles.swatchSection}>
-					<Transition.Boundary.View
-						id={item.id}
-						group={ZOOM_GROUP}
-						style={[styles.swatch, { backgroundColor: item.color }]}
-					>
-						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>
-					</Transition.Boundary.View>
-				</View>
-			</View>
-		</View>
-	);
-}
-
 function DetailPage({
 	item,
 	width,
@@ -135,9 +100,13 @@ function DetailPage({
 				<Text style={styles.description}>{item.description}</Text>
 
 				<View style={styles.swatchSection}>
-					<View style={[styles.swatch, { backgroundColor: item.color }]}>
+					<Transition.Boundary.View
+						id={item.id}
+						group={ZOOM_GROUP}
+						style={[styles.swatch, { backgroundColor: item.color }]}
+					>
 						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>
-					</View>
+					</Transition.Boundary.View>
 				</View>
 
 				<View style={styles.propertiesGrid}>
@@ -243,34 +212,17 @@ export default function NavigationZoomGroupTransitionsDetail() {
 		BOUNDS_SYNC_ZOOM_ITEMS[initialIndex] ??
 		BOUNDS_SYNC_ZOOM_ITEMS.find((item) => item.id === id) ??
 		BOUNDS_SYNC_ZOOM_ITEMS[0];
-	const [visibleBoundaryId, setVisibleBoundaryId] = useState(selectedItem.id);
 
-	useAnimatedReaction(
-		() => activeZoomId.value,
-		(nextId, previousId) => {
-			"worklet";
-			if (!nextId || nextId === previousId) return;
-			runOnJS(setVisibleBoundaryId)(nextId);
-		},
-	);
+	const handleMomentumScrollEnd = (
+		event: NativeSyntheticEvent<NativeScrollEvent>,
+	) => {
+		const offsetX = event.nativeEvent.contentOffset.x;
+		const pageIndex = Math.round(offsetX / width);
+		const item = BOUNDS_SYNC_ZOOM_ITEMS[pageIndex];
+		if (!item) return;
 
-	const visibleBoundaryItem = getBoundsSyncZoomItemById(visibleBoundaryId);
-
-	const handleScroll = useAnimatedScrollHandler({
-		onScroll: (event) => {
-			if (width <= 0) return;
-
-			const pageIndex = Math.round(event.contentOffset.x / width);
-			const clampedPageIndex = Math.max(
-				0,
-				Math.min(pageIndex, BOUNDS_SYNC_ZOOM_ITEMS.length - 1),
-			);
-			const item = BOUNDS_SYNC_ZOOM_ITEMS[clampedPageIndex];
-			if (!item || activeZoomId.value === item.id) return;
-
-			activeZoomId.value = item.id;
-		},
-	});
+		activeZoomId.value = item.id;
+	};
 
 	const getItemLayout = (_: unknown, index: number) => ({
 		length: width,
@@ -295,7 +247,12 @@ export default function NavigationZoomGroupTransitionsDetail() {
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
-				onScroll={handleScroll}
+				onMomentumScrollEnd={handleMomentumScrollEnd}
+				windowSize={3}
+				maxToRenderPerBatch={1}
+				initialNumToRender={1}
+				updateCellsBatchingPeriod={100}
+				scrollEventThrottle={16}
 				decelerationRate="fast"
 				overScrollMode="never"
 				style={styles.flatList}
