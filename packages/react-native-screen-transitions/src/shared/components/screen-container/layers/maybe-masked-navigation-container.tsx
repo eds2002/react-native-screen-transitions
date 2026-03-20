@@ -1,7 +1,10 @@
 import { memo, useEffect } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { NAVIGATION_MASK_STYLE_ID, NO_STYLES } from "../../../constants";
+import {
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+	NO_STYLES,
+} from "../../../constants";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
 import { logger } from "../../../utils/logger";
 
@@ -26,7 +29,9 @@ export const MaybeMaskedNavigationContainer = memo(
 		const { stylesMap } = useScreenStyles();
 		const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 			"worklet";
-			return stylesMap.value[NAVIGATION_MASK_STYLE_ID]?.style || NO_STYLES;
+			return (
+				stylesMap.value[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style || NO_STYLES
+			);
 		});
 
 		useEffect(() => {

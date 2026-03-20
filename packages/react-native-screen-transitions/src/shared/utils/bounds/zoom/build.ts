@@ -2,9 +2,8 @@ import { interpolate, type StyleProps } from "react-native-reanimated";
 import {
 	EPSILON,
 	HIDDEN_STYLE,
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
 } from "../../../constants";
 import {
@@ -500,7 +499,7 @@ export const buildZoomStyles = ({
 
 	if (!resolvedPair.sourceBounds) {
 		return {
-			[NAVIGATION_MASK_HOST_FLAG_STYLE_ID]: HIDDEN_STYLE,
+			[NAVIGATION_MASK_CONTAINER_STYLE_ID]: HIDDEN_STYLE,
 		};
 	}
 
@@ -596,12 +595,10 @@ export const buildZoomStyles = ({
 		};
 
 		return {
-			[NAVIGATION_CONTAINER_STYLE_ID]: {
-				style: {
-					...focusedContentStyle,
-				},
+			[NAVIGATION_MASK_CONTAINER_STYLE_ID]: {
+				style: focusedContentStyle,
 			},
-			[NAVIGATION_MASK_STYLE_ID]: {
+			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
 				style: {
 					width: maskWidth,
 					height: maskHeight,

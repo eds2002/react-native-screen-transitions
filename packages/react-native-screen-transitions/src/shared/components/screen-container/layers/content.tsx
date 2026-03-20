@@ -1,14 +1,13 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
 import { memo } from "react";
-import { Platform, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	useAnimatedProps,
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import {
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_HOST_FLAG_STYLE_ID,
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NO_PROPS,
 	NO_STYLES,
 } from "../../../constants";
@@ -25,8 +24,6 @@ type Props = {
 	children: React.ReactNode;
 };
 
-const IS_ANDROID = Platform.OS === "android";
-
 export const ContentLayer = memo(({ children }: Props) => {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useDescriptors();
@@ -36,6 +33,7 @@ export const ContentLayer = memo(({ children }: Props) => {
 	const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
 	const hasAutoSnapPoint =
 		current.options.snapPoints?.includes("auto") ?? false;
+
 	const handleContentLayout = useContentLayout();
 
 	const animatedContentStyle = useAnimatedStyle(() => {
@@ -45,13 +43,8 @@ export const ContentLayer = memo(({ children }: Props) => {
 
 	const animatedNavigationContainerStyle = useAnimatedStyle(() => {
 		"worklet";
-		return stylesMap.value[NAVIGATION_CONTAINER_STYLE_ID]?.style || NO_STYLES;
-	});
-
-	const animatedNavigationHostGateStyle = useAnimatedStyle(() => {
-		"worklet";
 		return (
-			stylesMap.value[NAVIGATION_MASK_HOST_FLAG_STYLE_ID]?.style || NO_STYLES
+			stylesMap.value[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style || NO_STYLES
 		);
 	});
 
@@ -74,15 +67,9 @@ export const ContentLayer = memo(({ children }: Props) => {
 
 	const navigationContainer = (
 		<Animated.View
-			style={[
-				styles.navigationContainer,
-				animatedNavigationContainerStyle,
-				animatedNavigationHostGateStyle,
-			]}
+			style={[styles.navigationContainer, animatedNavigationContainerStyle]}
 			pointerEvents={contentPointerEvents}
 			collapsable={false}
-			renderToHardwareTextureAndroid={IS_ANDROID && !isNavigationMaskEnabled}
-			needsOffscreenAlphaCompositing={IS_ANDROID && !isNavigationMaskEnabled}
 		>
 			{surfaceChildren}
 		</Animated.View>

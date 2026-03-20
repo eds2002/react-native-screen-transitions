@@ -7,8 +7,8 @@ import type {
 	TransitionSlotStyle,
 } from "../..";
 import {
-	NAVIGATION_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_STYLE_ID,
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../..";
 import {
 	createBlankStackNavigator,
@@ -111,8 +111,8 @@ const independentViewBlankStack = createBlankStackNavigator({
 
 export const publicApiTypecheck = {
 	navigationSlots: {
-		container: NAVIGATION_CONTAINER_STYLE_ID,
-		mask: NAVIGATION_MASK_STYLE_ID,
+		container: NAVIGATION_MASK_CONTAINER_STYLE_ID,
+		mask: NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	},
 	slotStyle,
 	nestedInterpolatedStyle,
