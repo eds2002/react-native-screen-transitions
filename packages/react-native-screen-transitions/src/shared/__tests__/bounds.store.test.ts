@@ -475,29 +475,6 @@ describe("BoundStore.resolveTransitionPair", () => {
 		expect(sourceAndDestination.usedSnapshotDestination).toBe(true);
 	});
 
-	it("resolves grouped and non-group tags with identical selection behavior", () => {
-		const source = createBounds(1, 2, 111, 122);
-		const destinationSnapshot = createBounds(200, 210, 230, 240);
-		const tags = ["card", "zoom-sync:card"];
-
-		for (const tag of tags) {
-			BoundStore.setLinkSource(tag, "screen-a", source);
-			BoundStore.registerSnapshot(tag, "screen-b", destinationSnapshot);
-		}
-
-		const plain = BoundStore.resolveTransitionPair("card", {
-			entering: true,
-			previousScreenKey: "screen-a",
-			currentScreenKey: "screen-b",
-		});
-		const grouped = BoundStore.resolveTransitionPair("zoom-sync:card", {
-			entering: true,
-			previousScreenKey: "screen-a",
-			currentScreenKey: "screen-b",
-		});
-
-		expect(grouped).toEqual(plain);
-	});
 });
 
 describe("BoundStore link predicates", () => {

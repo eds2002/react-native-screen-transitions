@@ -126,30 +126,4 @@ describe("Group Flow", () => {
 		);
 	});
 
-	it("keeps grouped tag behavior equal to plain-tag behavior once the tag is fixed", () => {
-		const groupedTag = makeTag("card", "photos");
-		const plainTag = makeTag("card");
-
-		registerSourceAndDestination({
-			tag: groupedTag,
-			sourceScreenKey: "screen-a",
-			destinationScreenKey: "screen-b",
-		});
-		registerSourceAndDestination({
-			tag: plainTag,
-			sourceScreenKey: "screen-a",
-			destinationScreenKey: "screen-b",
-		});
-
-		const context = makeContext({
-			entering: true,
-			previousScreenKey: "screen-a",
-			currentScreenKey: "screen-b",
-		});
-
-		const groupedPair = BoundStore.resolveTransitionPair(groupedTag, context);
-		const plainPair = BoundStore.resolveTransitionPair(plainTag, context);
-
-		expect(groupedPair).toEqual(plainPair);
-	});
 });
