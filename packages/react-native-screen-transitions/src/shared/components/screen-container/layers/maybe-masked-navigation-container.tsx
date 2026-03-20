@@ -1,5 +1,5 @@
 import { memo, useEffect } from "react";
-import { StyleSheet, View, type ViewProps } from "react-native";
+import { Platform, StyleSheet, View, type ViewProps } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import {
 	NAVIGATION_CONTAINER_STYLE_ID,
@@ -24,6 +24,7 @@ try {
 }
 
 let hasWarnedMissingMaskedView = false;
+const IS_ANDROID = Platform.OS === "android";
 
 export const MaybeMaskedNavigationContainer = memo(
 	({ enabled, children, pointerEvents }: Props) => {
@@ -53,6 +54,9 @@ export const MaybeMaskedNavigationContainer = memo(
 			<Animated.View
 				style={[styles.navigationContainer, animatedNavigationContainerStyle]}
 				pointerEvents={pointerEvents}
+				collapsable={false}
+				renderToHardwareTextureAndroid={IS_ANDROID && !enabled}
+				needsOffscreenAlphaCompositing={IS_ANDROID && !enabled}
 			>
 				{children}
 			</Animated.View>
