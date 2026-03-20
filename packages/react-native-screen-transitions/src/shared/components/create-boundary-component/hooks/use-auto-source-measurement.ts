@@ -37,7 +37,7 @@ export const useAutoSourceMeasurement = (params: {
 			if (!enabled) return;
 			if (!nextScreenKey) return;
 			if (!captureSignal || captureSignal === previousCaptureSignal) return;
-			maybeMeasureAndStore({ shouldSetSource: true });
+			maybeMeasureAndStore({ intent: "capture-source" });
 		},
 		[
 			enabled,

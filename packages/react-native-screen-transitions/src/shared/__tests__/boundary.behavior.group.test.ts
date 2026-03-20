@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { BoundStore } from "../stores/bounds";
+import { resolveBoundTag } from "../utils/bounds/helpers/resolve-bound-tag";
 import {
 	expectResolvedPair,
 	makeContext,
@@ -22,6 +23,13 @@ describe("Group Flow", () => {
 
 		BoundStore.setGroupActiveId("photos", "2");
 		expect(BoundStore.getGroupActiveId("photos")).toBe("2");
+	});
+
+	it("resolves grouped tags without mutating the active member", () => {
+		BoundStore.setGroupActiveId("photos", "1");
+
+		expect(resolveBoundTag({ id: "2", group: "photos" })).toBe("photos:2");
+		expect(BoundStore.getGroupActiveId("photos")).toBe("1");
 	});
 
 	it("isolates links between group members", () => {

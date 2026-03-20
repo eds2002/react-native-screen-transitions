@@ -62,8 +62,9 @@ export const useInitialLayoutHandler = (params: {
 		}
 
 		maybeMeasureAndStore({
-			shouldRegisterSnapshot: true,
-			shouldSetDestination,
+			intent: shouldSetDestination
+				? ["snapshot-only", "complete-destination"]
+				: "snapshot-only",
 		});
 
 		hasMeasuredOnLayout.set(true);

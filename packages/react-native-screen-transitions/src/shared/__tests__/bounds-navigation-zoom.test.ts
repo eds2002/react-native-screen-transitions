@@ -556,6 +556,28 @@ describe("bounds navigation zoom", () => {
 		).toBeGreaterThan(1);
 	});
 
+	it("syncs the grouped active member from the bounds accessor entrypoint", () => {
+		BoundStore.setGroupActiveId("photos", "a");
+
+		const current = createState("detail", {
+			gesture: createGesture(),
+		});
+		const props = createFrameProps({
+			current,
+			focused: true,
+			progress: 0.25,
+			active: current,
+		});
+
+		const bounds = createBoundsAccessor(() => props);
+		bounds({
+			id: "b",
+			group: "photos",
+		});
+
+		expect(BoundStore.getGroupActiveId("photos")).toBe("b");
+	});
+
 	it("supports source-only grouped fullscreen zoom after retargeting to an active snapshot", () => {
 		BoundStore.registerSnapshot(
 			"photos:a",

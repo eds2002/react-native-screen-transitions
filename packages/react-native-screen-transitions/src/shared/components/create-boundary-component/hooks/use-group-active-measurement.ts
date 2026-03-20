@@ -1,10 +1,7 @@
-import {
-	type SharedValue,
-	useAnimatedReaction,
-	useSharedValue,
-} from "react-native-reanimated";
+import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
+import { useDeferredMeasurementTrigger } from "./use-deferred-measurement-trigger";
 
 /**
  * Watches the group's active id in the BoundStore.
@@ -32,7 +29,20 @@ export const useGroupActiveMeasurement = (params: {
 	const idStr = String(id);
 
 	const allGroups = BoundStore.getGroups();
-	const hasPendingDestinationRefresh = useSharedValue(false);
+	const { clearPendingMeasurement, queueOrFlushMeasurement } =
+		useDeferredMeasurementTrigger({
+			enabled,
+			isAnimating,
+			canFlush: () => {
+				"worklet";
+				if (!group || !shouldUpdateDestination) return false;
+				return allGroups.value[group]?.activeId === idStr;
+			},
+			onFlush: () => {
+				"worklet";
+				maybeMeasureAndStore({ intent: "refresh-destination" });
+			},
+		});
 
 	useAnimatedReaction(
 		() => {
@@ -46,18 +56,12 @@ export const useGroupActiveMeasurement = (params: {
 			if (!enabled) return;
 			if (!group || !shouldUpdateDestination) return;
 			if (activeId !== idStr) {
-				hasPendingDestinationRefresh.value = false;
+				clearPendingMeasurement();
 				return;
 			}
 
 			if (activeId === idStr && activeId !== previousActiveId) {
-				if (isAnimating.value) {
-					hasPendingDestinationRefresh.value = true;
-					return;
-				}
-
-				hasPendingDestinationRefresh.value = false;
-				maybeMeasureAndStore({ shouldUpdateDestination: true });
+				queueOrFlushMeasurement();
 			}
 		},
 		[
@@ -65,39 +69,8 @@ export const useGroupActiveMeasurement = (params: {
 			group,
 			idStr,
 			shouldUpdateDestination,
-			isAnimating,
-			hasPendingDestinationRefresh,
-			maybeMeasureAndStore,
-		],
-	);
-
-	useAnimatedReaction(
-		() => {
-			"worklet";
-			if (!enabled) return false;
-			if (!group || !shouldUpdateDestination) return false;
-			if (!hasPendingDestinationRefresh.value) return false;
-			if (isAnimating.value) return false;
-			return allGroups.value[group]?.activeId === idStr;
-		},
-		(shouldFlush, previousShouldFlush) => {
-			"worklet";
-			if (!enabled) return;
-			if (!group || !shouldUpdateDestination) return;
-			if (!shouldFlush || shouldFlush === previousShouldFlush) return;
-
-			hasPendingDestinationRefresh.value = false;
-			maybeMeasureAndStore({ shouldUpdateDestination: true });
-		},
-		[
-			enabled,
-			group,
-			idStr,
-			shouldUpdateDestination,
-			isAnimating,
-			allGroups,
-			hasPendingDestinationRefresh,
-			maybeMeasureAndStore,
+			clearPendingMeasurement,
+			queueOrFlushMeasurement,
 		],
 	);
 };

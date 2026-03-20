@@ -10,12 +10,30 @@ import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
 import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
-import type { MaybeMeasureAndStoreParams } from "../types";
+import type { MaybeMeasureAndStoreParams, MeasurementIntent } from "../types";
 
 type LayoutAnchor = {
 	correctMeasurement: (measured: MeasuredDimensions) => MeasuredDimensions;
 	isMeasurementInViewport?: (measured: MeasuredDimensions) => boolean;
 } | null;
+
+type MeasurementIntentFlags = {
+	captureSource: boolean;
+	completeDestination: boolean;
+	refreshSource: boolean;
+	refreshDestination: boolean;
+	snapshotOnly: boolean;
+};
+
+type MeasurementWritePlan = {
+	captureSource: boolean;
+	completeDestination: boolean;
+	refreshSource: boolean;
+	refreshDestination: boolean;
+	registerSnapshot: boolean;
+	writesAny: boolean;
+	wantsDestinationWrite: boolean;
+};
 
 const SNAPSHOT_EPSILON = 0.5;
 
@@ -33,6 +51,80 @@ const areMeasurementsEqual = (
 		Math.abs(a.width - b.width) <= SNAPSHOT_EPSILON &&
 		Math.abs(a.height - b.height) <= SNAPSHOT_EPSILON
 	);
+};
+
+const getMeasurementIntentFlags = (
+	intent?: MeasurementIntent | readonly MeasurementIntent[],
+): MeasurementIntentFlags => {
+	"worklet";
+	const flags: MeasurementIntentFlags = {
+		captureSource: false,
+		completeDestination: false,
+		refreshSource: false,
+		refreshDestination: false,
+		snapshotOnly: false,
+	};
+
+	if (!intent) {
+		return flags;
+	}
+
+	const intents = Array.isArray(intent) ? intent : [intent];
+
+	for (let i = 0; i < intents.length; i++) {
+		switch (intents[i]) {
+			case "capture-source":
+				flags.captureSource = true;
+				break;
+			case "complete-destination":
+				flags.completeDestination = true;
+				break;
+			case "refresh-source":
+				flags.refreshSource = true;
+				break;
+			case "refresh-destination":
+				flags.refreshDestination = true;
+				break;
+			case "snapshot-only":
+				flags.snapshotOnly = true;
+				break;
+		}
+	}
+
+	return flags;
+};
+
+const resolveMeasurementWritePlan = (params: {
+	intents: MeasurementIntentFlags;
+	hasPendingLink: boolean;
+	hasSourceLink: boolean;
+	hasDestinationLink: boolean;
+}): MeasurementWritePlan => {
+	"worklet";
+	const { intents, hasPendingLink, hasSourceLink, hasDestinationLink } = params;
+
+	const captureSource = intents.captureSource;
+	const completeDestination = intents.completeDestination && hasPendingLink;
+	const refreshSource = intents.refreshSource && hasSourceLink;
+	const refreshDestination =
+		intents.refreshDestination && (hasDestinationLink || hasPendingLink);
+	const registerSnapshot = intents.snapshotOnly;
+	const writesAny =
+		registerSnapshot ||
+		captureSource ||
+		completeDestination ||
+		refreshSource ||
+		refreshDestination;
+
+	return {
+		captureSource,
+		completeDestination,
+		refreshSource,
+		refreshDestination,
+		registerSnapshot,
+		writesAny,
+		wantsDestinationWrite: completeDestination || refreshDestination,
+	};
 };
 
 export const useBoundaryMeasureAndStore = (params: {
@@ -63,21 +155,17 @@ export const useBoundaryMeasureAndStore = (params: {
 	} = params;
 
 	return useStableCallbackValue(
-		({
-			shouldRegisterSnapshot,
-			shouldSetSource,
-			shouldSetDestination,
-			shouldUpdateSource,
-			shouldUpdateDestination,
-		}: MaybeMeasureAndStoreParams = {}) => {
+		({ intent }: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
 			if (!enabled) return;
+
+			const intents = getMeasurementIntentFlags(intent);
 
 			const expectedSourceScreenKey: string | undefined =
 				resolvePendingSourceKey(sharedBoundTag, preferredSourceScreenKey) ||
 				undefined;
 
-			if (shouldSetSource && isAnimating.get()) {
+			if (intents.captureSource && isAnimating.get()) {
 				const existing = BoundStore.getSnapshot(
 					sharedBoundTag,
 					currentScreenKey,
@@ -116,20 +204,14 @@ export const useBoundaryMeasureAndStore = (params: {
 				currentScreenKey,
 			);
 
-			const canSetSource = !!shouldSetSource;
-			const canSetDestination = !!shouldSetDestination && hasPendingLink;
-			const canUpdateSource = !!shouldUpdateSource && hasSourceLink;
-			const canUpdateDestination =
-				!!shouldUpdateDestination && (hasDestinationLink || hasPendingLink);
-			const canRegisterSnapshot = !!shouldRegisterSnapshot;
+			const writePlan = resolveMeasurementWritePlan({
+				intents,
+				hasPendingLink,
+				hasSourceLink,
+				hasDestinationLink,
+			});
 
-			if (
-				!canRegisterSnapshot &&
-				!canSetSource &&
-				!canSetDestination &&
-				!canUpdateSource &&
-				!canUpdateDestination
-			) {
+			if (!writePlan.writesAny) {
 				return;
 			}
 
@@ -140,14 +222,17 @@ export const useBoundaryMeasureAndStore = (params: {
 				? layoutAnchor.correctMeasurement(measured)
 				: measured;
 
-			const wantsDestinationWrite = canSetDestination || canUpdateDestination;
 			const destinationInViewport =
-				!wantsDestinationWrite ||
+				!writePlan.wantsDestinationWrite ||
 				!layoutAnchor ||
 				!layoutAnchor.isMeasurementInViewport ||
 				layoutAnchor.isMeasurementInViewport(correctedMeasured);
 
-			if (!destinationInViewport && !canSetSource && !canUpdateSource) {
+			if (
+				!destinationInViewport &&
+				!writePlan.captureSource &&
+				!writePlan.refreshSource
+			) {
 				return;
 			}
 
@@ -160,11 +245,11 @@ export const useBoundaryMeasureAndStore = (params: {
 				!areMeasurementsEqual(existingSnapshot.bounds, correctedMeasured);
 			const shouldWriteSnapshot =
 				hasSnapshotChanged &&
-				(canRegisterSnapshot ||
-					canSetSource ||
-					canSetDestination ||
-					canUpdateSource ||
-					canUpdateDestination);
+				(writePlan.registerSnapshot ||
+					writePlan.captureSource ||
+					writePlan.completeDestination ||
+					writePlan.refreshSource ||
+					writePlan.refreshDestination);
 
 			applyMeasuredBoundsWrites({
 				sharedBoundTag,
@@ -176,11 +261,14 @@ export const useBoundaryMeasureAndStore = (params: {
 				ancestorNavigatorKeys,
 				expectedSourceScreenKey,
 				shouldRegisterSnapshot: shouldWriteSnapshot,
-				shouldSetSource: canSetSource,
-				shouldUpdateSource: canUpdateSource && hasSnapshotChanged,
+				shouldSetSource: writePlan.captureSource,
+				shouldUpdateSource: writePlan.refreshSource && hasSnapshotChanged,
 				shouldUpdateDestination:
-					canUpdateDestination && destinationInViewport && hasSnapshotChanged,
-				shouldSetDestination: canSetDestination && destinationInViewport,
+					writePlan.refreshDestination &&
+					destinationInViewport &&
+					hasSnapshotChanged,
+				shouldSetDestination:
+					writePlan.completeDestination && destinationInViewport,
 			});
 		},
 	);

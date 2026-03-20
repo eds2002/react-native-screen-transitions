@@ -133,7 +133,7 @@ export const resolveZoomConfig = ({
 	zoomOptions: ResolvedZoomOptions;
 } | null => {
 	"worklet";
-	const resolvedTag = resolveTag({ id, group, mode: "navigation" });
+	const resolvedTag = resolveTag({ id, group });
 	if (!resolvedTag) return null;
 
 	// Try direct boundary config for the current screen first.

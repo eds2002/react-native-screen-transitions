@@ -219,7 +219,7 @@ export function createBoundaryComponent<P extends object>(
 				if (group) {
 					runOnUI(setGroupSelectionOnUI)(group, String(id));
 				}
-				runOnUI(maybeMeasureAndStore)({ shouldSetSource: true });
+				runOnUI(maybeMeasureAndStore)({ intent: "capture-source" });
 
 				if (typeof onPress === "function") {
 					onPress(...args);

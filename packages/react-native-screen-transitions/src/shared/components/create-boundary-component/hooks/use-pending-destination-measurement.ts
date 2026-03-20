@@ -40,7 +40,7 @@ export const usePendingDestinationMeasurement = (params: {
 				return;
 			}
 
-			maybeMeasureAndStore({ shouldSetDestination: true });
+			maybeMeasureAndStore({ intent: "complete-destination" });
 		},
 		[enabled, sharedBoundTag, expectedSourceScreenKey, maybeMeasureAndStore],
 	);

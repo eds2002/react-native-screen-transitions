@@ -70,7 +70,7 @@ export const usePendingDestinationRetryMeasurement = (params: {
 
 			if (retryCount.get() >= MAX_RETRIES) return;
 			retryCount.set(retryCount.get() + 1);
-			maybeMeasureAndStore({ shouldSetDestination: true });
+			maybeMeasureAndStore({ intent: "complete-destination" });
 		},
 		[
 			enabled,

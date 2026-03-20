@@ -1,10 +1,7 @@
-import {
-	type SharedValue,
-	useAnimatedReaction,
-	useSharedValue,
-} from "react-native-reanimated";
+import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
+import { useDeferredMeasurementTrigger } from "./use-deferred-measurement-trigger";
 
 export const useGroupActiveSourceMeasurement = (params: {
 	enabled: boolean;
@@ -24,7 +21,20 @@ export const useGroupActiveSourceMeasurement = (params: {
 	} = params;
 	const idStr = String(id);
 	const allGroups = BoundStore.getGroups();
-	const hasPendingSourceRefresh = useSharedValue(false);
+	const { clearPendingMeasurement, queueOrFlushMeasurement } =
+		useDeferredMeasurementTrigger({
+			enabled,
+			isAnimating,
+			canFlush: () => {
+				"worklet";
+				if (!group || !hasNextScreen) return false;
+				return allGroups.value[group]?.activeId === idStr;
+			},
+			onFlush: () => {
+				"worklet";
+				maybeMeasureAndStore({ intent: "refresh-source" });
+			},
+		});
 
 	useAnimatedReaction(
 		() => {
@@ -39,21 +49,12 @@ export const useGroupActiveSourceMeasurement = (params: {
 			if (!group || !hasNextScreen) return;
 
 			if (activeId !== idStr) {
-				hasPendingSourceRefresh.value = false;
+				clearPendingMeasurement();
 				return;
 			}
 
 			if (activeId === idStr && activeId !== previousActiveId) {
-				if (isAnimating.value) {
-					hasPendingSourceRefresh.value = true;
-					return;
-				}
-
-				hasPendingSourceRefresh.value = false;
-				maybeMeasureAndStore({
-					shouldRegisterSnapshot: true,
-					shouldUpdateSource: true,
-				});
+				queueOrFlushMeasurement();
 			}
 		},
 		[
@@ -61,43 +62,8 @@ export const useGroupActiveSourceMeasurement = (params: {
 			group,
 			idStr,
 			hasNextScreen,
-			isAnimating,
-			allGroups,
-			hasPendingSourceRefresh,
-			maybeMeasureAndStore,
-		],
-	);
-
-	useAnimatedReaction(
-		() => {
-			"worklet";
-			if (!enabled) return false;
-			if (!group || !hasNextScreen) return false;
-			if (!hasPendingSourceRefresh.value) return false;
-			if (isAnimating.value) return false;
-			return allGroups.value[group]?.activeId === idStr;
-		},
-		(shouldFlush, previousShouldFlush) => {
-			"worklet";
-			if (!enabled) return;
-			if (!group || !hasNextScreen) return;
-			if (!shouldFlush || shouldFlush === previousShouldFlush) return;
-
-			hasPendingSourceRefresh.value = false;
-			maybeMeasureAndStore({
-				shouldRegisterSnapshot: true,
-				shouldUpdateSource: true,
-			});
-		},
-		[
-			enabled,
-			group,
-			idStr,
-			hasNextScreen,
-			isAnimating,
-			allGroups,
-			hasPendingSourceRefresh,
-			maybeMeasureAndStore,
+			clearPendingMeasurement,
+			queueOrFlushMeasurement,
 		],
 	);
 };

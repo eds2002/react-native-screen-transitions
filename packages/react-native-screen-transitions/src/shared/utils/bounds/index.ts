@@ -10,6 +10,17 @@ import type { BoundsFrameProps } from "./types/frame-props";
 import type { BoundsOptions } from "./types/options";
 import { createZoomAccessor } from "./zoom";
 
+const syncGroupActiveMember = (group?: string, id?: string | number) => {
+	"worklet";
+	if (!group) return;
+	if (id === undefined || id === null || id === "") return;
+
+	const normalizedId = String(id);
+	if (BoundStore.getGroupActiveId(group) === normalizedId) return;
+
+	BoundStore.setGroupActiveId(group, normalizedId);
+};
+
 export const createBoundsAccessor = (
 	getProps: () => BoundsFrameProps,
 ): BoundsAccessor => {
@@ -38,6 +49,7 @@ export const createBoundsAccessor = (
 	const computeElementBoundsStyles = (params?: BoundsOptions) => {
 		"worklet";
 		const props = getProps();
+		syncGroupActiveMember(params?.group, params?.id);
 
 		const resolved = buildBoundsOptions({
 			props,
