@@ -1,5 +1,30 @@
 # Changelog
 
+# [3.4.0-alpha.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.1...v3.4.0-alpha.2) (2026-03-20)
+
+
+### Bug Fixes
+
+* **android:** prevent release flicker when native screens are disabled ([3b0db64](https://github.com/eds2002/react-native-screen-transitions/commit/3b0db64ab6b1599662f0661d26ec82af0646bff0))
+* **blank-stack:** delay inactive screen detachment until transition end ([a494b4b](https://github.com/eds2002/react-native-screen-transitions/commit/a494b4b1fd05172732b2438176c90e1880221ee7))
+* **bounds:** preserve content target direction when destination falls back to source snapshot ([8f53fa3](https://github.com/eds2002/react-native-screen-transitions/commit/8f53fa3c9d2841ab228d891eddb2edcc57e11675))
+* dst screens do NOT need a boundary component to work ([af5b0b1](https://github.com/eds2002/react-native-screen-transitions/commit/af5b0b1a3e6848ec1bb380da36d92e40687a74de))
+* flags regression ([201e48e](https://github.com/eds2002/react-native-screen-transitions/commit/201e48eb5b682f4cbada03f51ebd2ae33c3df53f))
+* **gestures:** improve scroll boundary handoff across platforms ([77af400](https://github.com/eds2002/react-native-screen-transitions/commit/77af400588d9886559fbfdc1b2592e3ecefd1be3))
+* masked screens not respecting pointer events based on backdropBehavior ([2d993e8](https://github.com/eds2002/react-native-screen-transitions/commit/2d993e8aecc48ee793d8dc53cebb8b4a99ccc041))
+* **mask:** flickering when navigation mask is off ([6972aa3](https://github.com/eds2002/react-native-screen-transitions/commit/6972aa31aea2b214812cb326186ee5a7dc365400))
+* **styles:** revert style resetter, post pone till v4 ([8c6b263](https://github.com/eds2002/react-native-screen-transitions/commit/8c6b263fdcd28df0e57fe3ffd0d21d60c0fa9496))
+* **transitions:** clear stale root slot styles after screen removal ([96c0599](https://github.com/eds2002/react-native-screen-transitions/commit/96c0599a42a9d6ca560061032e9085a0d6174d15))
+* zoom navigation should work with mask enabled or not mask enabled ([95cb695](https://github.com/eds2002/react-native-screen-transitions/commit/95cb695810a328c685ea7342a7ba7407d8bf94b5))
+
+
+### Features
+
+* add new layouts.content for snapPoints auto scenarios ([aac13d6](https://github.com/eds2002/react-native-screen-transitions/commit/aac13d6c9430eb02b789d5873ff0be31c6a65739))
+* **bounds:** activeId should remeasure unfocused component when it changes ([0a51432](https://github.com/eds2002/react-native-screen-transitions/commit/0a51432888bdc92fab1449d335d6c3ee36287c83))
+* expose alreadyAnimated option for creator hoc ([22e516c](https://github.com/eds2002/react-native-screen-transitions/commit/22e516ccfd1c7e34b81c4e11237e228d1ad909af))
+* make blank stack support ability to use reg views for screens & support independent navigation ([ac7ee0c](https://github.com/eds2002/react-native-screen-transitions/commit/ac7ee0c0e7a1f8723c9205aae88b921ab367f8db))
+
 # [3.4.0-alpha.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.0...v3.4.0-alpha.1) (2026-03-09)
 
 
