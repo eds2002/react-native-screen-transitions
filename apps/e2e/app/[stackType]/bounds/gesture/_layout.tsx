@@ -55,7 +55,6 @@ export default function GestureBoundsLayout() {
 						return {
 							[boundTag]: {
 								...boundStyles,
-								opacity: withTiming(current.gesture.dragging ? 0.5 : 1),
 							},
 						};
 					},

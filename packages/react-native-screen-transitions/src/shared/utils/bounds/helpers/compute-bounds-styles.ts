@@ -5,6 +5,7 @@ import {
 	ENTER_RANGE,
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
+	HIDDEN_STYLE,
 } from "../../../constants";
 import {
 	BoundStore,
@@ -127,7 +128,7 @@ export const computeBoundStyles = (
 		if (computeOptions.raw) {
 			return EMPTY_BOUND_HELPER_RESULT_RAW;
 		}
-		return EMPTY_BOUND_HELPER_RESULT;
+		return HIDDEN_STYLE;
 	}
 
 	const {
@@ -153,7 +154,7 @@ export const computeBoundStyles = (
 		if (computeOptions.raw) {
 			return EMPTY_BOUND_HELPER_RESULT_RAW;
 		}
-		return EMPTY_BOUND_HELPER_RESULT;
+		return HIDDEN_STYLE;
 	}
 
 	const ranges: readonly [number, number] = entering ? ENTER_RANGE : EXIT_RANGE;
