@@ -4,6 +4,7 @@ import { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { MaybeMeasureAndStoreParams } from "../types";
+import { resolveInitialLayoutMeasurementIntent } from "./helpers/measurement-rules";
 
 export const useInitialLayoutHandler = (params: {
 	enabled: boolean;
@@ -46,7 +47,7 @@ export const useInitialLayoutHandler = (params: {
 			}
 		}
 
-		let shouldSetDestination = false;
+		let hasPendingLinkFromSource = false;
 
 		if (isAnyAnimating) {
 			const resolvedSourceKey = resolvePendingSourceKey(
@@ -57,14 +58,21 @@ export const useInitialLayoutHandler = (params: {
 				resolvedSourceKey &&
 				BoundStore.hasPendingLinkFromSource(sharedBoundTag, resolvedSourceKey)
 			) {
-				shouldSetDestination = true;
+				hasPendingLinkFromSource = true;
 			}
 		}
 
+		const intent = resolveInitialLayoutMeasurementIntent({
+			enabled,
+			hasSharedBoundTag: !!sharedBoundTag,
+			hasMeasuredOnLayout: hasMeasuredOnLayout.get(),
+			isAnyAnimating: !!isAnyAnimating,
+			hasPendingLinkFromSource,
+		});
+		if (!intent) return;
+
 		maybeMeasureAndStore({
-			intent: shouldSetDestination
-				? ["snapshot-only", "complete-destination"]
-				: "snapshot-only",
+			intent,
 		});
 
 		hasMeasuredOnLayout.set(true);

@@ -6,6 +6,7 @@ import {
 import { BoundStore } from "../../../stores/bounds";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { MaybeMeasureAndStoreParams } from "../types";
+import { resolvePendingDestinationRetrySignal } from "./helpers/measurement-rules";
 
 export const usePendingDestinationRetryMeasurement = (params: {
 	sharedBoundTag: string;
@@ -34,31 +35,30 @@ export const usePendingDestinationRetryMeasurement = (params: {
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			if (!enabled) return 0;
-			if (retryCount.get() >= MAX_RETRIES) return 0;
-			if (!animating.get()) return 0;
-			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey))
-				return 0;
-
-			const currentProgress = progress.get();
-			if (currentProgress <= 0 || currentProgress >= RETRY_PROGRESS_MAX) {
-				return 0;
-			}
-
 			const resolvedSourceKey = resolvePendingSourceKey(
 				sharedBoundTag,
 				expectedSourceScreenKey,
 			);
-
-			if (!resolvedSourceKey) return 0;
-			if (
-				!BoundStore.hasPendingLinkFromSource(sharedBoundTag, resolvedSourceKey)
-			) {
-				return 0;
-			}
-
-			const bucket = Math.floor(currentProgress * RETRY_PROGRESS_BUCKETS) + 1;
-			return bucket;
+			return resolvePendingDestinationRetrySignal({
+				enabled,
+				retryCount: retryCount.get(),
+				maxRetries: MAX_RETRIES,
+				isAnimating: !!animating.get(),
+				hasDestinationLink: BoundStore.hasDestinationLink(
+					sharedBoundTag,
+					currentScreenKey,
+				),
+				progress: progress.get(),
+				retryProgressMax: RETRY_PROGRESS_MAX,
+				retryProgressBuckets: RETRY_PROGRESS_BUCKETS,
+				resolvedSourceKey,
+				hasPendingLinkFromSource: resolvedSourceKey
+					? BoundStore.hasPendingLinkFromSource(
+							sharedBoundTag,
+							resolvedSourceKey,
+						)
+					: false,
+			});
 		},
 		(captureSignal) => {
 			"worklet";

@@ -1,6 +1,10 @@
 import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
+import {
+	canFlushGroupActiveMeasurement,
+	resolveGroupActiveMeasurementAction,
+} from "./helpers/measurement-rules";
 import { useDeferredMeasurementTrigger } from "./use-deferred-measurement-trigger";
 
 /**
@@ -35,8 +39,12 @@ export const useGroupActiveMeasurement = (params: {
 			isAnimating,
 			canFlush: () => {
 				"worklet";
-				if (!group || !shouldUpdateDestination) return false;
-				return allGroups.value[group]?.activeId === idStr;
+				return canFlushGroupActiveMeasurement({
+					enabled,
+					isEligible: !!group && shouldUpdateDestination,
+					memberId: idStr,
+					activeId: group ? (allGroups.value[group]?.activeId ?? null) : null,
+				});
 			},
 			onFlush: () => {
 				"worklet";
@@ -53,14 +61,20 @@ export const useGroupActiveMeasurement = (params: {
 		},
 		(activeId, previousActiveId) => {
 			"worklet";
-			if (!enabled) return;
-			if (!group || !shouldUpdateDestination) return;
-			if (activeId !== idStr) {
+			const action = resolveGroupActiveMeasurementAction({
+				enabled,
+				isEligible: !!group && shouldUpdateDestination,
+				memberId: idStr,
+				activeId,
+				previousActiveId,
+			});
+
+			if (action === "clear-pending") {
 				clearPendingMeasurement();
 				return;
 			}
 
-			if (activeId === idStr && activeId !== previousActiveId) {
+			if (action === "queue-or-flush") {
 				queueOrFlushMeasurement();
 			}
 		},

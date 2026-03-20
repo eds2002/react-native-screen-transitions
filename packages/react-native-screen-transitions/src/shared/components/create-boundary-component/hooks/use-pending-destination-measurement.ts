@@ -2,6 +2,7 @@ import { useAnimatedReaction } from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { MaybeMeasureAndStoreParams } from "../types";
+import { resolvePendingDestinationCaptureSignal } from "./helpers/measurement-rules";
 
 export const usePendingDestinationMeasurement = (params: {
 	sharedBoundTag: string;
@@ -19,19 +20,20 @@ export const usePendingDestinationMeasurement = (params: {
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			if (!enabled) return 0;
 			const resolvedSourceKey = resolvePendingSourceKey(
 				sharedBoundTag,
 				expectedSourceScreenKey,
 			);
-			if (!resolvedSourceKey) return 0;
-
-			return BoundStore.hasPendingLinkFromSource(
-				sharedBoundTag,
+			return resolvePendingDestinationCaptureSignal({
+				enabled,
 				resolvedSourceKey,
-			)
-				? resolvedSourceKey
-				: 0;
+				hasPendingLinkFromSource: resolvedSourceKey
+					? BoundStore.hasPendingLinkFromSource(
+							sharedBoundTag,
+							resolvedSourceKey,
+						)
+					: false,
+			});
 		},
 		(captureSignal, previousCaptureSignal) => {
 			"worklet";

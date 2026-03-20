@@ -1,6 +1,7 @@
 import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { useScrollSettleContext } from "../../../providers/scroll-settle.provider";
 import type { MaybeMeasureAndStoreParams } from "../types";
+import { shouldTriggerScrollSettledRefresh } from "./helpers/measurement-rules";
 import { useDeferredMeasurementTrigger } from "./use-deferred-measurement-trigger";
 
 export const useScrollSettledMeasurement = (params: {
@@ -27,9 +28,18 @@ export const useScrollSettledMeasurement = (params: {
 		() => settledSignal?.value ?? 0,
 		(signal, previousSignal) => {
 			"worklet";
-			if (!enabled) return;
-			if (!group || !hasNextScreen || !settledSignal) return;
-			if (signal === 0 || signal === previousSignal) return;
+			if (
+				!shouldTriggerScrollSettledRefresh({
+					enabled,
+					group,
+					hasNextScreen,
+					hasSettledSignal: !!settledSignal,
+					signal,
+					previousSignal,
+				})
+			) {
+				return;
+			}
 			// Re-measure source bounds after scroll settles while idle.
 			// This captures post-scroll positions before close transition starts.
 			queueOrFlushMeasurement();

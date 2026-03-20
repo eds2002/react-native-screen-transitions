@@ -1,4 +1,5 @@
 import { mock } from "bun:test";
+import React from "react";
 
 /**
  * Shared test setup for mocking React Native dependencies.
@@ -8,17 +9,44 @@ import { mock } from "bun:test";
 // Track all mutable objects with their initial values for reset
 const mutableObjects: Array<{ obj: { value: unknown }; initial: unknown }> = [];
 
+const cloneMutableInitialValue = <T>(value: T): T => {
+	return typeof value === "object" && value !== null
+		? JSON.parse(JSON.stringify(value))
+		: value;
+};
+
+const createTestMutable = <T>(initial: T) => {
+	const mutable = {
+		value: cloneMutableInitialValue(initial),
+		modify(fn: (v: T) => T) {
+			this.value = fn(this.value);
+		},
+		get() {
+			return this.value;
+		},
+		set(v: T) {
+			this.value = v;
+		},
+	};
+
+	mutableObjects.push({
+		obj: mutable as { value: unknown },
+		initial: cloneMutableInitialValue(initial),
+	});
+
+	return mutable;
+};
+
 // Expose reset function globally for tests that need isolated mutable state
 declare global {
 	var resetMutableRegistry: () => void;
+	var __reanimatedMeasureSpy:
+		| ((ref: { current?: { tag?: string } }) => void)
+		| undefined;
 }
 globalThis.resetMutableRegistry = () => {
 	for (const { obj, initial } of mutableObjects) {
-		// Deep copy the initial value to reset
-		obj.value =
-			typeof initial === "object" && initial !== null
-				? JSON.parse(JSON.stringify(initial))
-				: initial;
+		obj.value = cloneMutableInitialValue(initial);
 	}
 };
 
@@ -31,22 +59,8 @@ mock.module("react-native", () => ({
 }));
 mock.module("react-native-gesture-handler", () => ({}));
 mock.module("react-native-reanimated", () => ({
-	makeMutable: <T>(initial: T) => {
-		const mutable = {
-			value: initial,
-			modify(fn: (v: T) => T) {
-				this.value = fn(this.value);
-			},
-			get() {
-				return this.value;
-			},
-			set(v: T) {
-				this.value = v;
-			},
-		};
-		mutableObjects.push({ obj: mutable as { value: unknown }, initial });
-		return mutable;
-	},
+	makeMutable: createTestMutable,
+	createAnimatedComponent: <T>(component: T) => component,
 	Extrapolation: { CLAMP: "clamp", EXTEND: "extend", IDENTITY: "identity" },
 	interpolate: (
 		value: number,
@@ -75,8 +89,29 @@ mock.module("react-native-reanimated", () => ({
 		return outputMin + t * (outputMax - outputMin);
 	},
 	cancelAnimation: () => {},
+	isWorkletFunction: () => true,
 	clamp: (value: number, lower: number, upper: number) =>
 		Math.min(Math.max(value, lower), upper),
+	measure: (ref: { current?: { measurement?: unknown; tag?: string } }) => {
+		globalThis.__reanimatedMeasureSpy?.(ref);
+		return ref.current?.measurement ?? null;
+	},
+	runOnJS: <T extends (...args: any[]) => any>(callback: T) => callback,
+	runOnUI: <T extends (...args: any[]) => any>(callback: T) => callback,
+	useAnimatedReaction: (
+		prepare: () => unknown,
+		react: (value: unknown, previousValue: unknown) => void,
+	) => {
+		const previousValue = React.useRef<unknown>(null);
+
+		React.useEffect(() => {
+			const nextValue = prepare();
+			react(nextValue, previousValue.current);
+			previousValue.current = nextValue;
+		});
+	},
+	useSharedValue: <T>(initial: T) =>
+		React.useRef(createTestMutable(initial)).current,
 	withTiming: (
 		toValue: number,
 		config?: { __finished?: boolean },

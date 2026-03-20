@@ -84,6 +84,7 @@
 	},
 	"devDependencies": {
 		"@release-it/conventional-changelog": "^10.0.1",
+		"@testing-library/react-native": "13.3.3",
 		"@types/react": "~19.1.10",
 		"react-native-builder-bob": "0.39.0",
 		"release-it": "^19.0.4",

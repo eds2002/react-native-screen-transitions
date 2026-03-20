@@ -10,30 +10,16 @@ import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
 import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
-import type { MaybeMeasureAndStoreParams, MeasurementIntent } from "../types";
+import type { MaybeMeasureAndStoreParams } from "../types";
+import {
+	getMeasurementIntentFlags,
+	resolveMeasurementWritePlan,
+} from "./helpers/measurement-rules";
 
 type LayoutAnchor = {
 	correctMeasurement: (measured: MeasuredDimensions) => MeasuredDimensions;
 	isMeasurementInViewport?: (measured: MeasuredDimensions) => boolean;
 } | null;
-
-type MeasurementIntentFlags = {
-	captureSource: boolean;
-	completeDestination: boolean;
-	refreshSource: boolean;
-	refreshDestination: boolean;
-	snapshotOnly: boolean;
-};
-
-type MeasurementWritePlan = {
-	captureSource: boolean;
-	completeDestination: boolean;
-	refreshSource: boolean;
-	refreshDestination: boolean;
-	registerSnapshot: boolean;
-	writesAny: boolean;
-	wantsDestinationWrite: boolean;
-};
 
 const SNAPSHOT_EPSILON = 0.5;
 
@@ -51,80 +37,6 @@ const areMeasurementsEqual = (
 		Math.abs(a.width - b.width) <= SNAPSHOT_EPSILON &&
 		Math.abs(a.height - b.height) <= SNAPSHOT_EPSILON
 	);
-};
-
-const getMeasurementIntentFlags = (
-	intent?: MeasurementIntent | readonly MeasurementIntent[],
-): MeasurementIntentFlags => {
-	"worklet";
-	const flags: MeasurementIntentFlags = {
-		captureSource: false,
-		completeDestination: false,
-		refreshSource: false,
-		refreshDestination: false,
-		snapshotOnly: false,
-	};
-
-	if (!intent) {
-		return flags;
-	}
-
-	const intents = Array.isArray(intent) ? intent : [intent];
-
-	for (let i = 0; i < intents.length; i++) {
-		switch (intents[i]) {
-			case "capture-source":
-				flags.captureSource = true;
-				break;
-			case "complete-destination":
-				flags.completeDestination = true;
-				break;
-			case "refresh-source":
-				flags.refreshSource = true;
-				break;
-			case "refresh-destination":
-				flags.refreshDestination = true;
-				break;
-			case "snapshot-only":
-				flags.snapshotOnly = true;
-				break;
-		}
-	}
-
-	return flags;
-};
-
-const resolveMeasurementWritePlan = (params: {
-	intents: MeasurementIntentFlags;
-	hasPendingLink: boolean;
-	hasSourceLink: boolean;
-	hasDestinationLink: boolean;
-}): MeasurementWritePlan => {
-	"worklet";
-	const { intents, hasPendingLink, hasSourceLink, hasDestinationLink } = params;
-
-	const captureSource = intents.captureSource;
-	const completeDestination = intents.completeDestination && hasPendingLink;
-	const refreshSource = intents.refreshSource && hasSourceLink;
-	const refreshDestination =
-		intents.refreshDestination && (hasDestinationLink || hasPendingLink);
-	const registerSnapshot = intents.snapshotOnly;
-	const writesAny =
-		registerSnapshot ||
-		captureSource ||
-		completeDestination ||
-		refreshSource ||
-		refreshDestination;
-
-	return {
-		captureSource,
-		completeDestination,
-		refreshSource,
-		refreshDestination,
-		registerSnapshot,
-		writesAny,
-		wantsDestinationWrite: completeDestination || refreshDestination,
-	};
 };
 
 export const useBoundaryMeasureAndStore = (params: {
