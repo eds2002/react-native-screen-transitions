@@ -37,10 +37,22 @@ const BOUNDS_EXAMPLES = [
 			"bounds({ id, group }).navigation.zoom() with grouped source/destination",
 	},
 	{
+		id: "zoom-nested",
+		title: "Nested Navigation Zoom Group",
+		description:
+			"Grouped zoom with nested [id]/index and [id]/plan routes plus retargeting inside dst",
+	},
+	{
 		id: "zoom-id",
 		title: "Navigation Zoom ID Transition",
 		description:
 			"bounds({ id }).navigation.zoom() with simple id-only matching",
+	},
+	{
+		id: "zoom-id-nested",
+		title: "Nested Navigation Zoom ID",
+		description:
+			"Push the same [id] detail route again from inside dst using related cards",
 	},
 	{
 		id: "sync",

@@ -34,7 +34,15 @@ export default function BoundsLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<StackNavigator.Screen
+				name="zoom-nested"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
 				name="zoom-id"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
+				name="zoom-id-nested"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<StackNavigator.Screen
