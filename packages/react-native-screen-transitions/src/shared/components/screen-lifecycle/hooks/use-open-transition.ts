@@ -42,10 +42,15 @@ export function useOpenTransition(
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
-		const { snapPoints, initialSnapIndex = 0 } = current.options;
+		const {
+			snapPoints,
+			initialSnapIndex = 0,
+			experimental_animateOnInitialMount,
+		} = current.options;
+
 		const targetProgress = getInitialProgress({ snapPoints, initialSnapIndex });
 
-		if (isFirstKey) {
+		if (isFirstKey && !experimental_animateOnInitialMount) {
 			if (targetProgress === "auto") {
 				animations.targetProgress.set(0);
 				animations.progress.set(0);

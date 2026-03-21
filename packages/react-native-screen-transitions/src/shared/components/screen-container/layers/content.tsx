@@ -6,11 +6,7 @@ import Animated, {
 	useAnimatedProps,
 	useAnimatedStyle,
 } from "react-native-reanimated";
-import {
-	NAVIGATION_MASK_CONTAINER_STYLE_ID,
-	NO_PROPS,
-	NO_STYLES,
-} from "../../../constants";
+import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useGestureContext } from "../../../providers/gestures";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";

@@ -78,6 +78,9 @@ const nextNameOptions: ScreenTransitionConfig = {
 	navigationMaskEnabled: true,
 	sheetScrollGestureBehavior: "collapse-only",
 };
+const initialMountAnimationOptions: ScreenTransitionConfig = {
+	experimental_animateOnInitialMount: true,
+};
 const deprecatedAliasOptions: ScreenTransitionConfig = {
 	maskEnabled: true,
 	expandViaScrollView: false,
@@ -122,6 +125,7 @@ export const publicApiTypecheck = {
 	maybeContentHeight,
 	zoomOptions,
 	nextNameOptions,
+	initialMountAnimationOptions,
 	deprecatedAliasOptions,
 	precedenceOptions,
 	deferredInterpolatorOptions,

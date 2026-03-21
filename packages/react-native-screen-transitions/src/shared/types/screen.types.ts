@@ -203,6 +203,18 @@ export type ScreenTransitionConfig = {
 	experimental_enableHighRefreshRate?: boolean;
 
 	/**
+	 * Animates the first screen in a navigator from its closed state on initial mount
+	 * instead of snapping directly to its settled progress.
+	 *
+	 * Useful for launch/onboarding flows where the initial screen should participate
+	 * in the same transition system as pushed screens.
+	 *
+	 * @experimental This API may change in future versions.
+	 * @default false
+	 */
+	experimental_animateOnInitialMount?: boolean;
+
+	/**
 	 * Describes heights where a screen can rest, as fractions of screen height,
 	 * or `'auto'` to snap to the intrinsic height of the screen content.
 	 *

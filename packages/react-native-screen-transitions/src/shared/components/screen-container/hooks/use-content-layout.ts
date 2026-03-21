@@ -22,6 +22,9 @@ export function useContentLayout() {
 		routeKey,
 		"contentLayout",
 	);
+	const experimental_animateOnInitialMount =
+		current.options.experimental_animateOnInitialMount;
+	const transitionSpec = current.options.transitionSpec;
 
 	return useCallback(
 		(event: LayoutChangeEvent) => {
@@ -29,54 +32,46 @@ export function useContentLayout() {
 			if (width <= 0 || height <= 0) return;
 
 			const fraction = Math.min(height / screenHeight, 1);
-			const transitionSpec = current.options.transitionSpec;
 
-			runOnUI(
-				(
-					nextWidth: number,
-					nextHeight: number,
-					nextFraction: number,
-					isInitialScreen: boolean,
-					spec: typeof transitionSpec,
-				) => {
-					"worklet";
-					contentLayoutValue.value = {
-						width: nextWidth,
-						height: nextHeight,
-					};
+			runOnUI((nextWidth: number, nextHeight: number, nextFraction: number) => {
+				"worklet";
+				contentLayoutValue.value = {
+					width: nextWidth,
+					height: nextHeight,
+				};
 
-					const isFirstMeasurement = autoSnapPointValue.value <= 0;
-					autoSnapPointValue.value = nextFraction;
+				const isFirstMeasurement = autoSnapPointValue.value <= 0;
+				autoSnapPointValue.value = nextFraction;
 
-					if (
-						!isFirstMeasurement ||
-						animations.progress.value !== 0 ||
-						animations.animating.value !== 0
-					) {
-						return;
-					}
+				if (
+					!isFirstMeasurement ||
+					animations.progress.value !== 0 ||
+					animations.animating.value !== 0
+				) {
+					return;
+				}
 
-					if (isInitialScreen) {
-						animations.targetProgress.value = nextFraction;
-						animations.progress.value = nextFraction;
-						return;
-					}
+				if (isFirstKey && !experimental_animateOnInitialMount) {
+					animations.targetProgress.value = nextFraction;
+					animations.progress.value = nextFraction;
+					return;
+				}
 
-					animateToProgress({
-						target: nextFraction,
-						spec,
-						animations,
-					});
-				},
-			)(width, height, fraction, isFirstKey, transitionSpec);
+				animateToProgress({
+					target: nextFraction,
+					spec: transitionSpec,
+					animations,
+				});
+			})(width, height, fraction);
 		},
 		[
 			animations,
 			autoSnapPointValue,
 			contentLayoutValue,
-			current.options.transitionSpec,
 			isFirstKey,
 			screenHeight,
+			experimental_animateOnInitialMount,
+			transitionSpec,
 		],
 	);
 }
