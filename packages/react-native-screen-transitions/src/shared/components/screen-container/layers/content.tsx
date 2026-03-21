@@ -28,9 +28,11 @@ export const ContentLayer = memo(({ children }: Props) => {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useDescriptors();
 	const { pointerEvents, isBackdropActive } = useBackdropPointerEvents();
+
 	const gestureContext = useGestureContext();
 	const isNavigationMaskEnabled = resolveNavigationMaskEnabled(current.options);
 	const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
+
 	const hasAutoSnapPoint =
 		current.options.snapPoints?.includes("auto") ?? false;
 
@@ -41,50 +43,10 @@ export const ContentLayer = memo(({ children }: Props) => {
 		return stylesMap.value.content?.style || NO_STYLES;
 	});
 
-	const animatedNavigationContainerStyle = useAnimatedStyle(() => {
-		"worklet";
-		return (
-			stylesMap.value[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style || NO_STYLES
-		);
-	});
-
 	const animatedContentProps = useAnimatedProps(() => {
 		"worklet";
 		return stylesMap.value.content?.props ?? NO_PROPS;
 	});
-
-	const surfaceChildren = (
-		<SurfaceContainer pointerEvents={contentPointerEvents}>
-			{hasAutoSnapPoint ? (
-				<View collapsable={false} onLayout={handleContentLayout}>
-					{children}
-				</View>
-			) : (
-				children
-			)}
-		</SurfaceContainer>
-	);
-
-	const navigationContainer = (
-		<Animated.View
-			style={[styles.navigationContainer, animatedNavigationContainerStyle]}
-			pointerEvents={contentPointerEvents}
-			collapsable={false}
-		>
-			{surfaceChildren}
-		</Animated.View>
-	);
-
-	const navigationScopedChildren = isNavigationMaskEnabled ? (
-		<MaybeMaskedNavigationContainer
-			pointerEvents={contentPointerEvents}
-			enabled={isNavigationMaskEnabled}
-		>
-			{navigationContainer}
-		</MaybeMaskedNavigationContainer>
-	) : (
-		navigationContainer
-	);
 
 	return (
 		<GestureDetector gesture={gestureContext!.panGesture}>
@@ -93,7 +55,20 @@ export const ContentLayer = memo(({ children }: Props) => {
 				animatedProps={animatedContentProps}
 				pointerEvents={contentPointerEvents}
 			>
-				{navigationScopedChildren}
+				<MaybeMaskedNavigationContainer
+					pointerEvents={contentPointerEvents}
+					enabled={isNavigationMaskEnabled}
+				>
+					<SurfaceContainer pointerEvents={contentPointerEvents}>
+						{hasAutoSnapPoint ? (
+							<View collapsable={false} onLayout={handleContentLayout}>
+								{children}
+							</View>
+						) : (
+							children
+						)}
+					</SurfaceContainer>
+				</MaybeMaskedNavigationContainer>
 			</Animated.View>
 		</GestureDetector>
 	);
@@ -101,9 +76,6 @@ export const ContentLayer = memo(({ children }: Props) => {
 
 const styles = StyleSheet.create({
 	content: {
-		flex: 1,
-	},
-	navigationContainer: {
 		flex: 1,
 	},
 });

@@ -1,7 +1,8 @@
-import { memo, useEffect } from "react";
+import { memo, useCallback } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	NO_STYLES,
 } from "../../../constants";
@@ -27,6 +28,7 @@ let hasWarnedMissingMaskedView = false;
 export const MaybeMaskedNavigationContainer = memo(
 	({ enabled, children, pointerEvents }: Props) => {
 		const { stylesMap } = useScreenStyles();
+
 		const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 			"worklet";
 			return (
@@ -34,7 +36,14 @@ export const MaybeMaskedNavigationContainer = memo(
 			);
 		});
 
-		useEffect(() => {
+		const animatedNavigationMaskContainerStyle = useAnimatedStyle(() => {
+			"worklet";
+			return (
+				stylesMap.value[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style || NO_STYLES
+			);
+		});
+
+		const maybeLogWarning = useCallback(() => {
 			if (!enabled) return;
 			if (LazyMaskedView !== View) return;
 			if (hasWarnedMissingMaskedView) return;
@@ -44,9 +53,8 @@ export const MaybeMaskedNavigationContainer = memo(
 				"navigationMaskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
 			);
 		}, [enabled]);
-		if (!enabled) return children;
 
-		if (LazyMaskedView === View) {
+		if (!enabled || LazyMaskedView === View) {
 			return children;
 		}
 
@@ -61,8 +69,18 @@ export const MaybeMaskedNavigationContainer = memo(
 					/>
 				}
 				pointerEvents={pointerEvents}
+				onLayout={maybeLogWarning}
 			>
-				{children}
+				<Animated.View
+					style={[
+						styles.navigationContainer,
+						animatedNavigationMaskContainerStyle,
+					]}
+					pointerEvents={pointerEvents}
+					collapsable={false}
+				>
+					{children}
+				</Animated.View>
 			</LazyMaskedView>
 		);
 	},
@@ -70,6 +88,9 @@ export const MaybeMaskedNavigationContainer = memo(
 
 const styles = StyleSheet.create({
 	navigationMaskedRoot: {
+		flex: 1,
+	},
+	navigationContainer: {
 		flex: 1,
 	},
 	navigationMaskElement: {
