@@ -7,7 +7,10 @@ import type {
 	BoundsOptionsResult,
 	BoundsScaleMode,
 } from "../utils/bounds/types/options";
-import type { TransitionInterpolatedStyle } from "./animation.types";
+import type {
+	ScreenInterpolationProps,
+	TransitionInterpolatedStyle,
+} from "./animation.types";
 
 /**
  * Target style computation.
@@ -79,4 +82,11 @@ export type BoundsAccessor = {
 		fallbackOrTargetKey?: number | string,
 		fallback?: number,
 	) => number;
+};
+
+export type BoundsInterpolationProps = Omit<
+	ScreenInterpolationProps,
+	"bounds"
+> & {
+	navigationMaskEnabled?: boolean;
 };

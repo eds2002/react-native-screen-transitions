@@ -12,10 +12,12 @@ import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 } from "../../../../types/animation.types";
-import type { BoundsAccessor } from "../../../../types/bounds.types";
+import type {
+	BoundsAccessor,
+	BoundsInterpolationProps,
+} from "../../../../types/bounds.types";
 
 import { createBoundsAccessor } from "../../../../utils/bounds";
-import type { BoundsFrameProps } from "../../../../utils/bounds/types/frame-props";
 import { resolveNavigationMaskEnabled } from "../../../../utils/resolve-screen-transition-options";
 import { useDescriptors } from "../../descriptors";
 import { derivations } from "./derivations";
@@ -60,7 +62,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		currDescriptor?.options ?? {},
 	);
 
-	const boundsFrameProps = useSharedValue<BoundsFrameProps>({
+	const boundsFrameProps = useSharedValue<BoundsInterpolationProps>({
 		layouts: { screen: dimensions },
 		insets,
 		previous: undefined,
@@ -69,9 +71,9 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		progress: 0,
 		stackProgress: 0,
 		snapIndex: -1,
-		navigationMaskEnabled: false,
 		focused: true,
 		active: DEFAULT_SCREEN_TRANSITION_STATE,
+		navigationMaskEnabled: currentNavigationMaskEnabled,
 		inactive: undefined,
 	});
 

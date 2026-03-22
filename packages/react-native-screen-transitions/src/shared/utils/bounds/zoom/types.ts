@@ -1,5 +1,7 @@
-import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
-import type { BoundsFrameProps } from "../types/frame-props";
+import type {
+	BoundsInterpolationProps,
+	BoundsNavigationZoomOptions,
+} from "../../../types/bounds.types";
 import type { BoundId, BoundsOptions } from "../types/options";
 
 export type ResolveTag = (params: {
@@ -9,14 +11,14 @@ export type ResolveTag = (params: {
 
 export type ComputeRaw = (
 	overrides: Partial<BoundsOptions>,
-	frameProps?: BoundsFrameProps,
+	frameProps?: BoundsInterpolationProps,
 ) => Record<string, unknown>;
 
 export type BuildZoomStylesParams = {
 	id: BoundId;
 	group?: string;
 	zoomOptions?: BoundsNavigationZoomOptions;
-	props: BoundsFrameProps;
+	props: BoundsInterpolationProps;
 	resolveTag: ResolveTag;
 	computeRaw: ComputeRaw;
 };

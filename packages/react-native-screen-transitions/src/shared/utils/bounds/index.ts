@@ -1,12 +1,14 @@
 import { BoundStore, type ResolvedTransitionPair } from "../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../types/animation.types";
-import type { BoundsAccessor } from "../../types/bounds.types";
+import type {
+	BoundsAccessor,
+	BoundsInterpolationProps,
+} from "../../types/bounds.types";
 import { buildBoundsOptions } from "./helpers/build-bounds-options";
 import { computeBoundStyles } from "./helpers/compute-bounds-styles";
 import { createInterpolators } from "./helpers/interpolators";
 import { createLinkAccessor } from "./helpers/link-accessor";
 import { resolveBoundTag } from "./helpers/resolve-bound-tag";
-import type { BoundsFrameProps } from "./types/frame-props";
 import type { BoundsOptions } from "./types/options";
 import { createZoomAccessor } from "./zoom";
 
@@ -22,7 +24,7 @@ const syncGroupActiveMember = (group?: string, id?: string | number) => {
 };
 
 export const createBoundsAccessor = (
-	getProps: () => BoundsFrameProps,
+	getProps: () => BoundsInterpolationProps,
 ): BoundsAccessor => {
 	"worklet";
 
@@ -67,13 +69,13 @@ export const createBoundsAccessor = (
 			scaleMode: params?.scaleMode,
 			target: params?.target,
 		};
-		let cachedNavigationPairProps: BoundsFrameProps | undefined;
+		let cachedNavigationPairProps: BoundsInterpolationProps | undefined;
 		let cachedNavigationPairTag = "";
 		let cachedNavigationPair: ResolvedTransitionPair | undefined;
 
 		const resolveNavigationPair = (
 			tag: string,
-			frameProps: BoundsFrameProps,
+			frameProps: BoundsInterpolationProps,
 		): ResolvedTransitionPair | undefined => {
 			"worklet";
 			if (!tag) return undefined;
