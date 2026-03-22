@@ -3,7 +3,8 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { Layout, ScreenKey } from "../types/screen.types";
+import type { Layout } from "../types/screen.types";
+import { createStore } from "./create-store";
 
 export type AnimationStoreMap = {
 	progress: SharedValue<number>;
@@ -17,8 +18,6 @@ export type AnimationStoreMap = {
 	contentLayout: SharedValue<Layout | null>;
 };
 
-const store: Record<ScreenKey, AnimationStoreMap> = {};
-
 function createAnimationBag(): AnimationStoreMap {
 	return {
 		progress: makeMutable(0),
@@ -31,42 +30,9 @@ function createAnimationBag(): AnimationStoreMap {
 	};
 }
 
-function ensure(routeKey: ScreenKey): AnimationStoreMap {
-	let bag = store[routeKey];
-	if (!bag) {
-		bag = createAnimationBag();
-		store[routeKey] = bag;
-	}
-	return bag;
-}
-
-function peekRouteAnimations(
-	routeKey: ScreenKey,
-): AnimationStoreMap | undefined {
-	return store[routeKey];
-}
-
-function getRouteAnimation<K extends keyof AnimationStoreMap>(
-	routeKey: ScreenKey,
-	type: K,
-): AnimationStoreMap[K] {
-	return ensure(routeKey)[type];
-}
-
-function getAnimation<K extends keyof AnimationStoreMap>(
-	routeKey: ScreenKey,
-	type: K,
-): AnimationStoreMap[K] {
-	return getRouteAnimation(routeKey, type);
-}
-
-function getRouteAnimations(routeKey: ScreenKey): AnimationStoreMap {
-	return ensure(routeKey);
-}
-
-function clear(routeKey: ScreenKey) {
-	const bag = store[routeKey];
-	if (bag) {
+export const AnimationStore = createStore<AnimationStoreMap>({
+	createBag: createAnimationBag,
+	disposeBag: (bag) => {
 		cancelAnimation(bag.progress);
 		cancelAnimation(bag.animating);
 		cancelAnimation(bag.closing);
@@ -74,14 +40,5 @@ function clear(routeKey: ScreenKey) {
 		cancelAnimation(bag.targetProgress);
 		cancelAnimation(bag.autoSnapPoint);
 		cancelAnimation(bag.contentLayout);
-	}
-	delete store[routeKey];
-}
-
-export const AnimationStore = {
-	getAnimation,
-	peekRouteAnimations,
-	getRouteAnimation,
-	getRouteAnimations,
-	clear,
-};
+	},
+});

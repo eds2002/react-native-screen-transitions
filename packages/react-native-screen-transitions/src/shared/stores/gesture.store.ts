@@ -4,7 +4,7 @@ import {
 	type SharedValue,
 } from "react-native-reanimated";
 import type { GestureDirection } from "../types/gesture.types";
-import type { ScreenKey } from "../types/screen.types";
+import { createStore } from "./create-store";
 
 export type GestureStoreMap = {
 	x: SharedValue<number>;
@@ -24,9 +24,6 @@ export type GestureStoreMap = {
 	/** @deprecated Use `dragging` instead. */
 	isDragging: SharedValue<number>;
 };
-
-const store: Record<ScreenKey, GestureStoreMap> = {};
-let neutralGestures: GestureStoreMap | undefined;
 
 function createGestureBag(): GestureStoreMap {
 	const normX = makeMutable(0);
@@ -53,33 +50,9 @@ function createGestureBag(): GestureStoreMap {
 	};
 }
 
-function ensure(routeKey: ScreenKey): GestureStoreMap {
-	let bag = store[routeKey];
-	if (!bag) {
-		bag = createGestureBag();
-		store[routeKey] = bag;
-	}
-	return bag;
-}
-
-function peekRouteGestures(routeKey: ScreenKey): GestureStoreMap | undefined {
-	return store[routeKey];
-}
-
-function getRouteGestures(routeKey: ScreenKey) {
-	return ensure(routeKey);
-}
-
-function getNeutralGestures(): GestureStoreMap {
-	if (!neutralGestures) {
-		neutralGestures = createGestureBag();
-	}
-	return neutralGestures;
-}
-
-function clear(routeKey: ScreenKey) {
-	const bag = store[routeKey];
-	if (bag) {
+const baseGestureStore = createStore<GestureStoreMap>({
+	createBag: createGestureBag,
+	disposeBag: (bag) => {
 		cancelAnimation(bag.x);
 		cancelAnimation(bag.y);
 		cancelAnimation(bag.normX);
@@ -87,13 +60,19 @@ function clear(routeKey: ScreenKey) {
 		cancelAnimation(bag.dismissing);
 		cancelAnimation(bag.dragging);
 		cancelAnimation(bag.direction);
+	},
+});
+
+let neutralGestures: GestureStoreMap | undefined;
+
+function getNeutralGestures(): GestureStoreMap {
+	if (!neutralGestures) {
+		neutralGestures = baseGestureStore.getBaseBag();
 	}
-	delete store[routeKey];
+	return neutralGestures;
 }
 
 export const GestureStore = {
-	peekRouteGestures,
-	getRouteGestures,
+	...baseGestureStore,
 	getNeutralGestures,
-	clear,
 };

@@ -15,7 +15,7 @@ const POINT_NONE = "none" as const;
 const POINT_BOX_NONE = "box-none" as const;
 
 export const ComponentScreen = ({ routeKey, children }: ScreenProps) => {
-	const sceneClosing = AnimationStore.getRouteAnimation(routeKey, "closing");
+	const sceneClosing = AnimationStore.getValue(routeKey, "closing");
 	const screenRef = useAnimatedRef<View>();
 
 	const animatedProps = useAnimatedProps(() => {

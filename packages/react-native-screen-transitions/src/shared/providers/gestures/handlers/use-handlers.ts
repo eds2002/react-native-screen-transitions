@@ -154,8 +154,8 @@ export const useHandlers = ({
 
 	const dimensions = useWindowDimensions();
 	const routeKey = current.route.key;
-	const animations = AnimationStore.getRouteAnimations(routeKey);
-	const gestureAnimationValues = GestureStore.getRouteGestures(routeKey);
+	const animations = AnimationStore.getBag(routeKey);
+	const gestureAnimationValues = GestureStore.getBag(routeKey);
 	const {
 		hasSnapPoints,
 		hasAutoSnapPoint,
@@ -165,10 +165,7 @@ export const useHandlers = ({
 	} = effectiveSnapPoints;
 
 	// Read the measured "auto" snap point reactively inside worklets.
-	const autoSnapPointValue = AnimationStore.getAnimation(
-		routeKey,
-		"autoSnapPoint",
-	);
+	const autoSnapPointValue = AnimationStore.getValue(routeKey, "autoSnapPoint");
 
 	const directions = useMemo(() => {
 		warnOnSnapDirectionArray({ gestureDirection, hasSnapPoints });

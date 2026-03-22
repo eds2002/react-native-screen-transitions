@@ -24,11 +24,8 @@ export const BackdropLayer = memo(function BackdropLayer() {
 
 	const BackdropComponent = current.options.backdropComponent;
 	const routeKey = current.route.key;
-	const animations = AnimationStore.getRouteAnimations(routeKey);
-	const autoSnapPointValue = AnimationStore.getAnimation(
-		routeKey,
-		"autoSnapPoint",
-	);
+	const animations = AnimationStore.getBag(routeKey);
+	const autoSnapPointValue = AnimationStore.getValue(routeKey, "autoSnapPoint");
 
 	const AnimatedBackdropComponent = useMemo(
 		() =>
@@ -53,7 +50,7 @@ export const BackdropLayer = memo(function BackdropLayer() {
 				return;
 			}
 
-			const gestures = GestureStore.getRouteGestures(routeKey);
+			const gestures = GestureStore.getBag(routeKey);
 			const transitionSpec = current.options.transitionSpec;
 
 			runOnUI(() => {

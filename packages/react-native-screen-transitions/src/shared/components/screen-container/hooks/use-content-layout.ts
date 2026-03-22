@@ -13,15 +13,9 @@ export function useContentLayout() {
 	const { isFirstKey } = useDescriptorDerivations();
 	const { height: screenHeight } = useWindowDimensions();
 	const routeKey = current.route.key;
-	const animations = AnimationStore.getRouteAnimations(routeKey);
-	const autoSnapPointValue = AnimationStore.getAnimation(
-		routeKey,
-		"autoSnapPoint",
-	);
-	const contentLayoutValue = AnimationStore.getAnimation(
-		routeKey,
-		"contentLayout",
-	);
+	const animations = AnimationStore.getBag(routeKey);
+	const autoSnapPointValue = AnimationStore.getValue(routeKey, "autoSnapPoint");
+	const contentLayoutValue = AnimationStore.getValue(routeKey, "contentLayout");
 	const experimental_animateOnInitialMount =
 		current.options.experimental_animateOnInitialMount;
 	const transitionSpec = current.options.transitionSpec;

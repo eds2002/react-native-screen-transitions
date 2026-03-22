@@ -13,7 +13,7 @@ const getSortedSnapPoints = (
 	if (!snapPoints || snapPoints.length === 0) return null;
 
 	// Resolve 'auto' to the measured fraction stored in AnimationStore
-	const autoVal = AnimationStore.getAnimation(
+	const autoVal = AnimationStore.getValue(
 		descriptor.route.key,
 		"autoSnapPoint",
 	).value;
@@ -43,7 +43,7 @@ export function snapDescriptorToIndex(
 	}
 
 	const targetProgress = sorted[index];
-	const animations = AnimationStore.getRouteAnimations(descriptor.route.key);
+	const animations = AnimationStore.getBag(descriptor.route.key);
 
 	runOnUI(() => {
 		"worklet";

@@ -8,8 +8,8 @@ export const resetStoresForScreen = (
 	isBranchScreen: boolean,
 	branchNavigatorKey?: string,
 ) => {
-	AnimationStore.clear(routeKey);
-	GestureStore.clear(routeKey);
+	AnimationStore.clearBag(routeKey);
+	GestureStore.clearBag(routeKey);
 
 	runOnUI(() => {
 		"worklet";

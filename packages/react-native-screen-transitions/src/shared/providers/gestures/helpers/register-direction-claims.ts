@@ -25,7 +25,7 @@ export function useRegisterDirectionClaims(
 			return;
 		}
 
-		const gestureValues = GestureStore.getRouteGestures(routeKey);
+		const gestureValues = GestureStore.getBag(routeKey);
 		const isDismissing = gestureValues.dismissing;
 
 		const claimedAncestors: Array<{

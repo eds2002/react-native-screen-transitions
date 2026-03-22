@@ -149,14 +149,8 @@ export const useAssociatedStyles = ({
 	const { stylesMap, ancestorStylesMaps } = useScreenStyles();
 	const { previousScreenKey, currentScreenKey, hasConfiguredInterpolator } =
 		useDescriptorDerivations();
-	const isAnimating = AnimationStore.getRouteAnimation(
-		currentScreenKey,
-		"animating",
-	);
-	const isClosing = AnimationStore.getRouteAnimation(
-		currentScreenKey,
-		"closing",
-	);
+	const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
+	const isClosing = AnimationStore.getValue(currentScreenKey, "closing");
 	const previousAppliedKeys = useSharedValue<Record<string, true>>({});
 	const emptyGraceFrameCount = useSharedValue(0);
 	const lastResolvedBase = useSharedValue<Record<string, any> | null>(null);

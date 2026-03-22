@@ -83,9 +83,7 @@ export const useBuildGestures = ({
 	const { dismissScreen } = useNavigationHelpers();
 
 	const panGestureRef = useRef<GestureType | undefined>(undefined);
-	const gestureAnimationValues = GestureStore.getRouteGestures(
-		current.route.key,
-	);
+	const gestureAnimationValues = GestureStore.getBag(current.route.key);
 
 	const { snapPoints: rawSnapPoints } = current.options;
 	const canDismiss = Boolean(

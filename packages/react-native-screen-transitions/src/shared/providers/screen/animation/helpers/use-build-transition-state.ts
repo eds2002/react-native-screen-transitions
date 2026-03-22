@@ -57,18 +57,17 @@ export const useBuildTransitionState = (
 			.sort((a, b) => a - b);
 
 		return {
-			progress: AnimationStore.getRouteAnimation(key, "progress"),
-			closing: AnimationStore.getRouteAnimation(key, "closing"),
-			entering: AnimationStore.getRouteAnimation(key, "entering"),
-			animating: AnimationStore.getRouteAnimation(key, "animating"),
-			autoSnapPoint: AnimationStore.getRouteAnimation(key, "autoSnapPoint"),
-			contentLayout: AnimationStore.getRouteAnimation(key, "contentLayout"),
+			progress: AnimationStore.getValue(key, "progress"),
+			closing: AnimationStore.getValue(key, "closing"),
+			entering: AnimationStore.getValue(key, "entering"),
+			animating: AnimationStore.getValue(key, "animating"),
+			autoSnapPoint: AnimationStore.getValue(key, "autoSnapPoint"),
+			contentLayout: AnimationStore.getValue(key, "contentLayout"),
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
 			sortedNumericSnapPoints,
 			gesture: shouldUseNeutralNextGestures
-				? (GestureStore.peekRouteGestures(key) ??
-					GestureStore.getNeutralGestures())
-				: GestureStore.getRouteGestures(key),
+				? (GestureStore.peekBag(key) ?? GestureStore.getNeutralGestures())
+				: GestureStore.getBag(key),
 			route: plainRoute,
 			meta: plainMeta,
 			unwrapped: createScreenTransitionState(plainRoute, plainMeta),

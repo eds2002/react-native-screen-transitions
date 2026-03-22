@@ -23,8 +23,8 @@ const resetStoresForScreenForTest = (
 	isBranchScreen: boolean,
 	branchNavigatorKey?: string,
 ) => {
-	AnimationStore.clear(routeKey);
-	GestureStore.clear(routeKey);
+	AnimationStore.clearBag(routeKey);
+	GestureStore.clearBag(routeKey);
 
 	if (!isBranchScreen) return;
 
@@ -47,8 +47,8 @@ describe("close transition cleanup", () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
-		const animationBefore = AnimationStore.getRouteAnimations(routeKey);
-		const gestureBefore = GestureStore.getRouteGestures(routeKey);
+		const animationBefore = AnimationStore.getBag(routeKey);
+		const gestureBefore = GestureStore.getBag(routeKey);
 
 		BoundStore.registerSnapshot("card", routeKey, bounds);
 		BoundStore.setLinkSource("card", routeKey, bounds);
@@ -65,8 +65,8 @@ describe("close transition cleanup", () => {
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(false);
 		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(false);
 
-		const animationAfter = AnimationStore.getRouteAnimations(routeKey);
-		const gestureAfter = GestureStore.getRouteGestures(routeKey);
+		const animationAfter = AnimationStore.getBag(routeKey);
+		const gestureAfter = GestureStore.getBag(routeKey);
 
 		expect(animationAfter).not.toBe(animationBefore);
 		expect(gestureAfter).not.toBe(gestureBefore);
@@ -80,14 +80,14 @@ describe("close transition cleanup", () => {
 		BoundStore.setLinkSource("card", routeKey, bounds);
 		BoundStore.registerBoundaryPresence("card", routeKey, [routeKey]);
 
-		const animationBefore = AnimationStore.getRouteAnimations(routeKey);
-		const gestureBefore = GestureStore.getRouteGestures(routeKey);
+		const animationBefore = AnimationStore.getBag(routeKey);
+		const gestureBefore = GestureStore.getBag(routeKey);
 
 		resetStoresForScreenForTest(routeKey, false);
 
 		// Animation and gesture stores are still cleared
-		const animationAfter = AnimationStore.getRouteAnimations(routeKey);
-		const gestureAfter = GestureStore.getRouteGestures(routeKey);
+		const animationAfter = AnimationStore.getBag(routeKey);
+		const gestureAfter = GestureStore.getBag(routeKey);
 		expect(animationAfter).not.toBe(animationBefore);
 		expect(gestureAfter).not.toBe(gestureBefore);
 

@@ -94,14 +94,8 @@ export function createBoundaryComponent<P extends object>(
 			};
 		}, [anchor, scaleMode, target, method]);
 
-		const isAnimating = AnimationStore.getRouteAnimation(
-			currentScreenKey,
-			"animating",
-		);
-		const progress = AnimationStore.getRouteAnimation(
-			currentScreenKey,
-			"progress",
-		);
+		const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
+		const progress = AnimationStore.getValue(currentScreenKey, "progress");
 
 		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 

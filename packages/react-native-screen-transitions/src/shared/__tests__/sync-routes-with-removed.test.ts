@@ -47,8 +47,8 @@ const setRouteState = (
 		dismissing?: number;
 	},
 ) => {
-	const animations = AnimationStore.getRouteAnimations(routeKey);
-	const gestures = GestureStore.getRouteGestures(routeKey);
+	const animations = AnimationStore.getBag(routeKey);
+	const gestures = GestureStore.getBag(routeKey);
 
 	if (state.progress !== undefined) animations.progress.value = state.progress;
 	if (state.closing !== undefined) animations.closing.value = state.closing;
