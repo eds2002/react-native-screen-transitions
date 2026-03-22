@@ -10,6 +10,7 @@ export function createStore<TBag>({
 	disposeBag,
 }: CreateStoreOptions<TBag>) {
 	const store: Record<ScreenKey, TBag> = {};
+	let cachedBag: TBag | undefined;
 
 	function peekBag(routeKey: ScreenKey): TBag | undefined {
 		return store[routeKey];
@@ -31,8 +32,16 @@ export function createStore<TBag>({
 		return getBag(routeKey)[key];
 	}
 
-	function getBaseBag(): TBag {
-		return createBag();
+	/**
+	 * Returns a lazily-created singleton bag that is not keyed to a route. This is
+	 * useful for stable fallback state, such as neutral gesture values for screens
+	 * that should not own live route-specific state.
+	 */
+	function getCachedBag(): TBag {
+		if (!cachedBag) {
+			cachedBag = createBag();
+		}
+		return cachedBag;
 	}
 
 	function clearBag(routeKey: ScreenKey) {
@@ -47,7 +56,7 @@ export function createStore<TBag>({
 		peekBag,
 		getBag,
 		getValue,
-		getBaseBag,
+		getCachedBag,
 		clearBag,
 	};
 }

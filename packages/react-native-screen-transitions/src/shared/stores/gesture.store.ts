@@ -15,13 +15,21 @@ export type GestureStoreMap = {
 	dragging: SharedValue<number>;
 	direction: SharedValue<Omit<GestureDirection, "bidirectional"> | null>;
 
-	/** @deprecated Use `normX` instead. */
+	/**
+	 * @deprecated Use `normX` instead.
+	 */
 	normalizedX: SharedValue<number>;
-	/** @deprecated Use `normY` instead. */
+	/**
+	 * @deprecated Use `normY` instead.
+	 */
 	normalizedY: SharedValue<number>;
-	/** @deprecated Use `dismissing` instead. */
+	/**
+	 * @deprecated Use `dismissing` instead.
+	 */
 	isDismissing: SharedValue<number>;
-	/** @deprecated Use `dragging` instead. */
+	/**
+	 * @deprecated Use `dragging` instead.
+	 */
 	isDragging: SharedValue<number>;
 };
 
@@ -50,7 +58,14 @@ function createGestureBag(): GestureStoreMap {
 	};
 }
 
-const baseGestureStore = createStore<GestureStoreMap>({
+/**
+ * Route-keyed gesture state used by the transition system while a screen is
+ * being dragged or dismissed. It stores raw and normalized gesture values,
+ * dismissal flags, and the active gesture direction. `getCachedBag()` provides
+ * a stable neutral fallback bag for cases where a route should not own live
+ * gesture state.
+ */
+export const GestureStore = createStore<GestureStoreMap>({
 	createBag: createGestureBag,
 	disposeBag: (bag) => {
 		cancelAnimation(bag.x);
@@ -62,17 +77,3 @@ const baseGestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.direction);
 	},
 });
-
-let neutralGestures: GestureStoreMap | undefined;
-
-function getNeutralGestures(): GestureStoreMap {
-	if (!neutralGestures) {
-		neutralGestures = baseGestureStore.getBaseBag();
-	}
-	return neutralGestures;
-}
-
-export const GestureStore = {
-	...baseGestureStore,
-	getNeutralGestures,
-};

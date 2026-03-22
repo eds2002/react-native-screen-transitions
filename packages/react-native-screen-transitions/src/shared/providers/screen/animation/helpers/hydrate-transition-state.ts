@@ -12,8 +12,8 @@ type BuiltState = {
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
-	autoSnapPoint: SharedValue<number>;
-	contentLayout: SharedValue<Layout | null>;
+	resolvedAutoSnapPoint: SharedValue<number>;
+	measuredContentLayout: SharedValue<Layout | null>;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
 	unwrapped: ScreenTransitionState;
@@ -76,7 +76,7 @@ export const hydrateTransitionState = (
 	out.layouts.screen.width = dimensions.width;
 	out.layouts.screen.height = dimensions.height;
 
-	const content = s.contentLayout.value;
+	const content = s.measuredContentLayout.value;
 	if (content) {
 		if (!out.layouts.content) {
 			out.layouts.content = {
@@ -92,8 +92,8 @@ export const hydrateTransitionState = (
 	}
 
 	const resolvedAutoSnap =
-		s.hasAutoSnapPoint && s.autoSnapPoint.value > 0
-			? s.autoSnapPoint.value
+		s.hasAutoSnapPoint && s.resolvedAutoSnapPoint.value > 0
+			? s.resolvedAutoSnapPoint.value
 			: null;
 
 	const resolvedSnapPoints =

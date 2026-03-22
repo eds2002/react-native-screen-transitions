@@ -25,6 +25,7 @@ import {
 import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
+import { SystemStore } from "../../../stores/system.store";
 import { GestureOffsetState } from "../../../types/gesture.types";
 import type {
 	ClaimedDirections,
@@ -156,6 +157,7 @@ export const useHandlers = ({
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
 	const gestureAnimationValues = GestureStore.getBag(routeKey);
+	const targetProgressValue = SystemStore.getValue(routeKey, "targetProgress");
 	const {
 		hasSnapPoints,
 		hasAutoSnapPoint,
@@ -165,7 +167,10 @@ export const useHandlers = ({
 	} = effectiveSnapPoints;
 
 	// Read the measured "auto" snap point reactively inside worklets.
-	const autoSnapPointValue = AnimationStore.getValue(routeKey, "autoSnapPoint");
+	const resolvedAutoSnapPointValue = SystemStore.getValue(
+		routeKey,
+		"resolvedAutoSnapPoint",
+	);
 
 	const directions = useMemo(() => {
 		warnOnSnapDirectionArray({ gestureDirection, hasSnapPoints });
@@ -304,7 +309,7 @@ export const useHandlers = ({
 						const { resolvedMaxSnapPoint } = resolveRuntimeSnapPoints({
 							snapPoints,
 							hasAutoSnapPoint,
-							autoSnapPoint: autoSnapPointValue.value,
+							resolvedAutoSnapPoint: resolvedAutoSnapPointValue.value,
 							minSnapPoint,
 							maxSnapPoint,
 							canDismiss,
@@ -315,7 +320,7 @@ export const useHandlers = ({
 
 						const canExpandMore =
 							animations.progress.value < effectiveMaxSnapPoint - EPSILON &&
-							animations.targetProgress.value < effectiveMaxSnapPoint - EPSILON;
+							targetProgressValue.value < effectiveMaxSnapPoint - EPSILON;
 
 						if (!canExpandMore) {
 							manager.fail();
@@ -336,7 +341,7 @@ export const useHandlers = ({
 			resolveRuntimeSnapPoints({
 				snapPoints,
 				hasAutoSnapPoint,
-				autoSnapPoint: autoSnapPointValue.value,
+				resolvedAutoSnapPoint: resolvedAutoSnapPointValue.value,
 				minSnapPoint,
 				maxSnapPoint,
 				canDismiss,
@@ -389,7 +394,7 @@ export const useHandlers = ({
 					resolveRuntimeSnapPoints({
 						snapPoints,
 						hasAutoSnapPoint,
-						autoSnapPoint: autoSnapPointValue.value,
+						resolvedAutoSnapPoint: resolvedAutoSnapPointValue.value,
 						minSnapPoint,
 						maxSnapPoint,
 						canDismiss,
@@ -465,7 +470,7 @@ export const useHandlers = ({
 				const { resolvedSnapPoints } = resolveRuntimeSnapPoints({
 					snapPoints,
 					hasAutoSnapPoint,
-					autoSnapPoint: autoSnapPointValue.value,
+					resolvedAutoSnapPoint: resolvedAutoSnapPointValue.value,
 					minSnapPoint,
 					maxSnapPoint,
 					canDismiss,
@@ -532,6 +537,7 @@ export const useHandlers = ({
 					onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
 					spec: effectiveSpec,
 					animations,
+					targetProgress: targetProgressValue,
 					initialVelocity,
 				});
 			} else {
@@ -573,6 +579,7 @@ export const useHandlers = ({
 					onAnimationFinish: shouldDismiss ? handleDismiss : undefined,
 					spec: transitionSpec,
 					animations,
+					targetProgress: targetProgressValue,
 					initialVelocity: scaledInitialVelocity,
 				});
 			}

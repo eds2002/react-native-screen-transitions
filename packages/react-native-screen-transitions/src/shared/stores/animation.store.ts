@@ -3,7 +3,6 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { Layout } from "../types/screen.types";
 import { createStore } from "./create-store";
 
 export type AnimationStoreMap = {
@@ -11,11 +10,6 @@ export type AnimationStoreMap = {
 	animating: SharedValue<number>;
 	closing: SharedValue<number>;
 	entering: SharedValue<number>;
-	targetProgress: SharedValue<number>;
-	/** Resolved fraction (contentHeight / screenHeight) for the 'auto' snap point. -1 = not yet measured. */
-	autoSnapPoint: SharedValue<number>;
-	/** Intrinsic content layout measured from the screen container wrapper. */
-	contentLayout: SharedValue<Layout | null>;
 };
 
 function createAnimationBag(): AnimationStoreMap {
@@ -24,12 +18,14 @@ function createAnimationBag(): AnimationStoreMap {
 		closing: makeMutable(0),
 		animating: makeMutable(0),
 		entering: makeMutable(0),
-		targetProgress: makeMutable(1),
-		autoSnapPoint: makeMutable(-1),
-		contentLayout: makeMutable<Layout | null>(null),
 	};
 }
 
+/**
+ * Route-keyed screen transition state for the public animation lifecycle. These
+ * shared values track the current progress and whether a screen is entering,
+ * closing, or actively animating.
+ */
 export const AnimationStore = createStore<AnimationStoreMap>({
 	createBag: createAnimationBag,
 	disposeBag: (bag) => {
@@ -37,8 +33,5 @@ export const AnimationStore = createStore<AnimationStoreMap>({
 		cancelAnimation(bag.animating);
 		cancelAnimation(bag.closing);
 		cancelAnimation(bag.entering);
-		cancelAnimation(bag.targetProgress);
-		cancelAnimation(bag.autoSnapPoint);
-		cancelAnimation(bag.contentLayout);
 	},
 });

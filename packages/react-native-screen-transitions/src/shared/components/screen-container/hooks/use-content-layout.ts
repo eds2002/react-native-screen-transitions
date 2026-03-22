@@ -6,6 +6,7 @@ import {
 	useDescriptors,
 } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
+import { SystemStore } from "../../../stores/system.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 
 export function useContentLayout() {
@@ -14,8 +15,15 @@ export function useContentLayout() {
 	const { height: screenHeight } = useWindowDimensions();
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
-	const autoSnapPointValue = AnimationStore.getValue(routeKey, "autoSnapPoint");
-	const contentLayoutValue = AnimationStore.getValue(routeKey, "contentLayout");
+	const targetProgressValue = SystemStore.getValue(routeKey, "targetProgress");
+	const resolvedAutoSnapPointValue = SystemStore.getValue(
+		routeKey,
+		"resolvedAutoSnapPoint",
+	);
+	const measuredContentLayoutValue = SystemStore.getValue(
+		routeKey,
+		"measuredContentLayout",
+	);
 	const experimental_animateOnInitialMount =
 		current.options.experimental_animateOnInitialMount;
 	const transitionSpec = current.options.transitionSpec;
@@ -29,13 +37,13 @@ export function useContentLayout() {
 
 			runOnUI((nextWidth: number, nextHeight: number, nextFraction: number) => {
 				"worklet";
-				contentLayoutValue.value = {
+				measuredContentLayoutValue.value = {
 					width: nextWidth,
 					height: nextHeight,
 				};
 
-				const isFirstMeasurement = autoSnapPointValue.value <= 0;
-				autoSnapPointValue.value = nextFraction;
+				const isFirstMeasurement = resolvedAutoSnapPointValue.value <= 0;
+				resolvedAutoSnapPointValue.value = nextFraction;
 
 				if (
 					!isFirstMeasurement ||
@@ -46,7 +54,7 @@ export function useContentLayout() {
 				}
 
 				if (isFirstKey && !experimental_animateOnInitialMount) {
-					animations.targetProgress.value = nextFraction;
+					targetProgressValue.value = nextFraction;
 					animations.progress.value = nextFraction;
 					return;
 				}
@@ -55,13 +63,15 @@ export function useContentLayout() {
 					target: nextFraction,
 					spec: transitionSpec,
 					animations,
+					targetProgress: targetProgressValue,
 				});
 			})(width, height, fraction);
 		},
 		[
 			animations,
-			autoSnapPointValue,
-			contentLayoutValue,
+			targetProgressValue,
+			resolvedAutoSnapPointValue,
+			measuredContentLayoutValue,
 			isFirstKey,
 			screenHeight,
 			experimental_animateOnInitialMount,

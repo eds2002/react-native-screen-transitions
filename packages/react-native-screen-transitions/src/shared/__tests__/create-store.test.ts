@@ -55,16 +55,16 @@ describe("createStore", () => {
 		expect(store.peekBag("route-a")).toBeUndefined();
 	});
 
-	it("getBaseBag returns a fresh bag without storing it", () => {
+	it("getCachedBag returns a stable singleton bag", () => {
 		const store = createStore({
 			createBag: () => ({ count: 1 }),
 			disposeBag: () => {},
 		});
 
-		const first = store.getBaseBag();
-		const second = store.getBaseBag();
+		const first = store.getCachedBag();
+		const second = store.getCachedBag();
 
-		expect(second).not.toBe(first);
+		expect(second).toBe(first);
 		expect(store.peekBag("route-a")).toBeUndefined();
 	});
 

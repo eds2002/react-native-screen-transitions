@@ -12,6 +12,7 @@ import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../providers/screen/styles.provider";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
+import { SystemStore } from "../../../stores/system.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../../../utils/gesture/find-collapse-target";
 import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
@@ -25,7 +26,11 @@ export const BackdropLayer = memo(function BackdropLayer() {
 	const BackdropComponent = current.options.backdropComponent;
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
-	const autoSnapPointValue = AnimationStore.getValue(routeKey, "autoSnapPoint");
+	const targetProgressValue = SystemStore.getValue(routeKey, "targetProgress");
+	const resolvedAutoSnapPointValue = SystemStore.getValue(
+		routeKey,
+		"resolvedAutoSnapPoint",
+	);
 
 	const AnimatedBackdropComponent = useMemo(
 		() =>
@@ -56,7 +61,9 @@ export const BackdropLayer = memo(function BackdropLayer() {
 			runOnUI(() => {
 				"worklet";
 				const resolvedSnaps = rawSnapPoints
-					.map((point) => (point === "auto" ? autoSnapPointValue.value : point))
+					.map((point) =>
+						point === "auto" ? resolvedAutoSnapPointValue.value : point,
+					)
 					.filter((point): point is number => typeof point === "number");
 
 				const { target, shouldDismiss } = findCollapseTarget(
@@ -81,13 +88,15 @@ export const BackdropLayer = memo(function BackdropLayer() {
 					target,
 					spec,
 					animations,
+					targetProgress: targetProgressValue,
 					onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				});
 			})();
 		}
 	}, [
 		animations,
-		autoSnapPointValue,
+		targetProgressValue,
+		resolvedAutoSnapPointValue,
 		backdropBehavior,
 		current,
 		dismissScreen,

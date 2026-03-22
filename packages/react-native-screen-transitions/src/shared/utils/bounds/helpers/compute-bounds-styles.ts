@@ -1,6 +1,5 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import {
-	EMPTY_BOUND_HELPER_RESULT,
 	EMPTY_BOUND_HELPER_RESULT_RAW,
 	ENTER_RANGE,
 	EXIT_RANGE,

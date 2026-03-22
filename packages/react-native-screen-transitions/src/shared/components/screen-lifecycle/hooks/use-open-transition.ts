@@ -1,4 +1,5 @@
 import { useLayoutEffect } from "react";
+import type { SharedValue } from "react-native-reanimated";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import type { SnapPoint } from "../../../types/screen.types";
@@ -35,6 +36,7 @@ function getInitialProgress({
 export function useOpenTransition(
 	current: BaseDescriptor,
 	animations: AnimationStoreMap,
+	targetProgressValue: SharedValue<number>,
 	isFirstKey: boolean,
 ) {
 	const { activateHighRefreshRate, deactivateHighRefreshRate } =
@@ -48,15 +50,18 @@ export function useOpenTransition(
 			experimental_animateOnInitialMount,
 		} = current.options;
 
-		const targetProgress = getInitialProgress({ snapPoints, initialSnapIndex });
+		const initialProgress = getInitialProgress({
+			snapPoints,
+			initialSnapIndex,
+		});
 
 		if (isFirstKey && !experimental_animateOnInitialMount) {
-			if (targetProgress === "auto") {
-				animations.targetProgress.set(0);
+			if (initialProgress === "auto") {
+				targetProgressValue.set(0);
 				animations.progress.set(0);
 			} else {
-				const target = targetProgress ?? 1;
-				animations.targetProgress.set(target);
+				const target = initialProgress ?? 1;
+				targetProgressValue.set(target);
 				animations.progress.set(target);
 			}
 			animations.animating.set(0);
@@ -66,16 +71,17 @@ export function useOpenTransition(
 		}
 
 		// When the initial snap point is 'auto', defer the opening animation until
-		// ScreenContainer has measured the content and set autoSnapPoint.
-		if (targetProgress === "auto") {
+		// ScreenContainer has measured the content and set resolvedAutoSnapPoint.
+		if (initialProgress === "auto") {
 			return;
 		}
 
 		activateHighRefreshRate();
 		animateToProgress({
-			target: targetProgress ?? "open",
+			target: initialProgress ?? "open",
 			spec: current.options.transitionSpec,
 			animations,
+			targetProgress: targetProgressValue,
 			onAnimationFinish: deactivateHighRefreshRate,
 		});
 	}, []);

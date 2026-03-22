@@ -2,6 +2,7 @@ import { runOnUI } from "react-native-reanimated";
 import { AnimationStore } from "../../../../../stores/animation.store";
 import { BoundStore } from "../../../../../stores/bounds";
 import { GestureStore } from "../../../../../stores/gesture.store";
+import { SystemStore } from "../../../../../stores/system.store";
 
 export const resetStoresForScreen = (
 	routeKey: string,
@@ -10,6 +11,7 @@ export const resetStoresForScreen = (
 ) => {
 	AnimationStore.clearBag(routeKey);
 	GestureStore.clearBag(routeKey);
+	SystemStore.clearBag(routeKey);
 
 	runOnUI(() => {
 		"worklet";

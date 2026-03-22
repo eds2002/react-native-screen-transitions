@@ -1,7 +1,7 @@
 interface ResolveRuntimeSnapPointsProps {
 	snapPoints: number[];
 	hasAutoSnapPoint: boolean;
-	autoSnapPoint: number;
+	resolvedAutoSnapPoint: number;
 	minSnapPoint: number;
 	maxSnapPoint: number;
 	canDismiss: boolean;
@@ -17,31 +17,33 @@ interface ResolvedRuntimeSnapPointsResult {
 export const resolveRuntimeSnapPoints = ({
 	snapPoints,
 	hasAutoSnapPoint,
-	autoSnapPoint,
+	resolvedAutoSnapPoint,
 	minSnapPoint,
 	maxSnapPoint,
 	canDismiss,
 }: ResolveRuntimeSnapPointsProps): ResolvedRuntimeSnapPointsResult => {
 	"worklet";
 
-	const resolvedAutoSnapPoint =
-		hasAutoSnapPoint && autoSnapPoint > 0 ? autoSnapPoint : null;
+	const nextResolvedAutoSnapPoint =
+		hasAutoSnapPoint && resolvedAutoSnapPoint > 0
+			? resolvedAutoSnapPoint
+			: null;
 
 	const resolvedSnapPoints =
-		resolvedAutoSnapPoint === null
+		nextResolvedAutoSnapPoint === null
 			? snapPoints
-			: [...snapPoints, resolvedAutoSnapPoint].sort((a, b) => a - b);
+			: [...snapPoints, nextResolvedAutoSnapPoint].sort((a, b) => a - b);
 
 	const resolvedMinSnapPoint =
-		resolvedAutoSnapPoint !== null && !canDismiss
+		nextResolvedAutoSnapPoint !== null && !canDismiss
 			? Math.min(
-					minSnapPoint === -1 ? resolvedAutoSnapPoint : minSnapPoint,
-					resolvedAutoSnapPoint,
+					minSnapPoint === -1 ? nextResolvedAutoSnapPoint : minSnapPoint,
+					nextResolvedAutoSnapPoint,
 				)
 			: minSnapPoint;
 
 	return {
-		resolvedAutoSnapPoint,
+		resolvedAutoSnapPoint: nextResolvedAutoSnapPoint,
 		resolvedSnapPoints,
 		resolvedMinSnapPoint,
 		resolvedMaxSnapPoint:

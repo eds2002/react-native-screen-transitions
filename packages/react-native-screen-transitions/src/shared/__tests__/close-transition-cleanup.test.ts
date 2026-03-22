@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
 import { GestureStore } from "../stores/gesture.store";
+import { SystemStore } from "../stores/system.store";
 
 const createMeasured = (
 	x = 0,
@@ -25,6 +26,7 @@ const resetStoresForScreenForTest = (
 ) => {
 	AnimationStore.clearBag(routeKey);
 	GestureStore.clearBag(routeKey);
+	SystemStore.clearBag(routeKey);
 
 	if (!isBranchScreen) return;
 
@@ -49,6 +51,7 @@ describe("close transition cleanup", () => {
 
 		const animationBefore = AnimationStore.getBag(routeKey);
 		const gestureBefore = GestureStore.getBag(routeKey);
+		const systemBefore = SystemStore.getBag(routeKey);
 
 		BoundStore.registerSnapshot("card", routeKey, bounds);
 		BoundStore.setLinkSource("card", routeKey, bounds);
@@ -67,9 +70,11 @@ describe("close transition cleanup", () => {
 
 		const animationAfter = AnimationStore.getBag(routeKey);
 		const gestureAfter = GestureStore.getBag(routeKey);
+		const systemAfter = SystemStore.getBag(routeKey);
 
 		expect(animationAfter).not.toBe(animationBefore);
 		expect(gestureAfter).not.toBe(gestureBefore);
+		expect(systemAfter).not.toBe(systemBefore);
 	});
 
 	it("skips ancestor bound clearing for leaf screens", () => {
@@ -82,14 +87,17 @@ describe("close transition cleanup", () => {
 
 		const animationBefore = AnimationStore.getBag(routeKey);
 		const gestureBefore = GestureStore.getBag(routeKey);
+		const systemBefore = SystemStore.getBag(routeKey);
 
 		resetStoresForScreenForTest(routeKey, false);
 
 		// Animation and gesture stores are still cleared
 		const animationAfter = AnimationStore.getBag(routeKey);
 		const gestureAfter = GestureStore.getBag(routeKey);
+		const systemAfter = SystemStore.getBag(routeKey);
 		expect(animationAfter).not.toBe(animationBefore);
 		expect(gestureAfter).not.toBe(gestureBefore);
+		expect(systemAfter).not.toBe(systemBefore);
 
 		// Bound data registered directly under this key is NOT cleared by
 		// clearByAncestor (which is skipped), so snapshot/source/presence

@@ -6,6 +6,7 @@ import {
 	GestureStore,
 	type GestureStoreMap,
 } from "../../../../stores/gesture.store";
+import { SystemStore } from "../../../../stores/system.store";
 import type {
 	BaseStackRoute,
 	Layout,
@@ -22,8 +23,8 @@ type BuiltState = {
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
-	autoSnapPoint: SharedValue<number>;
-	contentLayout: SharedValue<Layout | null>;
+	resolvedAutoSnapPoint: SharedValue<number>;
+	measuredContentLayout: SharedValue<Layout | null>;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
 	unwrapped: ScreenTransitionState;
@@ -61,12 +62,12 @@ export const useBuildTransitionState = (
 			closing: AnimationStore.getValue(key, "closing"),
 			entering: AnimationStore.getValue(key, "entering"),
 			animating: AnimationStore.getValue(key, "animating"),
-			autoSnapPoint: AnimationStore.getValue(key, "autoSnapPoint"),
-			contentLayout: AnimationStore.getValue(key, "contentLayout"),
+			resolvedAutoSnapPoint: SystemStore.getValue(key, "resolvedAutoSnapPoint"),
+			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
 			sortedNumericSnapPoints,
 			gesture: shouldUseNeutralNextGestures
-				? (GestureStore.peekBag(key) ?? GestureStore.getNeutralGestures())
+				? (GestureStore.peekBag(key) ?? GestureStore.getCachedBag())
 				: GestureStore.getBag(key),
 			route: plainRoute,
 			meta: plainMeta,

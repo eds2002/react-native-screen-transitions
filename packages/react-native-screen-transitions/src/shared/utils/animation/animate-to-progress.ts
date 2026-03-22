@@ -1,4 +1,4 @@
-import { runOnJS } from "react-native-reanimated";
+import { runOnJS, type SharedValue } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
@@ -15,6 +15,7 @@ interface AnimateToProgressProps {
 	spec?: TransitionSpec;
 	onAnimationFinish?: (finished: boolean) => void;
 	animations: AnimationStoreMap;
+	targetProgress: SharedValue<number>;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
 	initialVelocity?: number;
 }
@@ -24,6 +25,7 @@ export const animateToProgress = ({
 	spec,
 	onAnimationFinish,
 	animations,
+	targetProgress,
 	initialVelocity,
 }: AnimateToProgressProps) => {
 	"worklet";
@@ -44,7 +46,7 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, animating, closing, entering, targetProgress } = animations;
+	const { progress, animating, closing, entering } = animations;
 
 	targetProgress.set(value);
 

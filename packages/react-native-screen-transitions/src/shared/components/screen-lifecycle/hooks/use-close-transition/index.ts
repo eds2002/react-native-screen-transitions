@@ -1,6 +1,7 @@
 import { useLayoutEffect } from "react";
 import {
 	runOnJS,
+	type SharedValue,
 	useAnimatedReaction,
 	useDerivedValue,
 } from "react-native-reanimated";
@@ -23,6 +24,7 @@ import { useNavigatorHistoryRegistry } from "./helpers/use-navigator-history-reg
 interface CloseHookParams {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
+	targetProgress: SharedValue<number>;
 	activate: () => void;
 	deactivate: () => void;
 	resetStores: () => void;
@@ -35,6 +37,7 @@ interface CloseHookParams {
 const useManagedClose = ({
 	current,
 	animations,
+	targetProgress,
 	activate,
 	deactivate,
 	resetStores,
@@ -66,6 +69,7 @@ const useManagedClose = ({
 				target: "close",
 				spec: transitionSpec,
 				animations,
+				targetProgress,
 				onAnimationFinish: handleCloseEnd,
 			});
 		},
@@ -78,6 +82,7 @@ const useManagedClose = ({
 const useNativeStackClose = ({
 	current,
 	animations,
+	targetProgress,
 	activate,
 	deactivate,
 	resetStores,
@@ -119,6 +124,7 @@ const useNativeStackClose = ({
 			target: "close",
 			spec: current.options.transitionSpec,
 			animations,
+			targetProgress,
 			onAnimationFinish: (finished: boolean) => {
 				deactivate();
 				if (finished) {
@@ -143,6 +149,7 @@ const useNativeStackClose = ({
 export function useCloseTransition(
 	current: BaseDescriptor,
 	animations: AnimationStoreMap,
+	targetProgress: SharedValue<number>,
 	activate: () => void,
 	deactivate: () => void,
 ) {
@@ -159,6 +166,7 @@ export function useCloseTransition(
 	const closeParams: CloseHookParams = {
 		current,
 		animations,
+		targetProgress,
 		activate,
 		deactivate,
 		resetStores,
