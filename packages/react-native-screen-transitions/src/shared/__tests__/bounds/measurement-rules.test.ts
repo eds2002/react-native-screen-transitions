@@ -49,6 +49,35 @@ describe("bounds measurement rules", () => {
 		});
 	});
 
+	it("refresh-source still snapshots untapped group members", () => {
+		const intents = getMeasurementIntentFlags("refresh-source");
+
+		expect(intents).toEqual({
+			captureSource: false,
+			completeDestination: false,
+			refreshSource: true,
+			refreshDestination: false,
+			snapshotOnly: false,
+		});
+
+		const plan = resolveMeasurementWritePlan({
+			intents,
+			hasPendingLink: false,
+			hasSourceLink: false,
+			hasDestinationLink: false,
+		});
+
+		expect(plan).toEqual({
+			captureSource: false,
+			completeDestination: false,
+			refreshSource: false,
+			refreshDestination: false,
+			registerSnapshot: true,
+			writesAny: true,
+			wantsDestinationWrite: false,
+		});
+	});
+
 	it("only auto-captures source when matching next-screen presence exists", () => {
 		expect(
 			resolveAutoSourceCaptureSignal({

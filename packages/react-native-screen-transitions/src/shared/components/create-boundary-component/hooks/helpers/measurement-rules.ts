@@ -83,7 +83,7 @@ export const resolveMeasurementWritePlan = (params: {
 	const refreshSource = intents.refreshSource && hasSourceLink;
 	const refreshDestination =
 		intents.refreshDestination && (hasDestinationLink || hasPendingLink);
-	const registerSnapshot = intents.snapshotOnly;
+	const registerSnapshot = intents.snapshotOnly || intents.refreshSource;
 	const writesAny =
 		registerSnapshot ||
 		captureSource ||
