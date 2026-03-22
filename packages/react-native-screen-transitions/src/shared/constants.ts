@@ -61,6 +61,13 @@ export const createScreenTransitionState = (
 	gesture: { ...DEFAULT_GESTURE_VALUES },
 	route,
 	meta,
+	layouts: {
+		screen: {
+			width: 0,
+			height: 0,
+		},
+	},
+	snapIndex: -1,
 });
 
 /**
@@ -75,6 +82,13 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		entering: 0,
 		gesture: DEFAULT_GESTURE_VALUES,
 		route: {} as RouteProp<ParamListBase>,
+		layouts: {
+			screen: {
+				width: 0,
+				height: 0,
+			},
+		},
+		snapIndex: -1,
 	});
 
 /**

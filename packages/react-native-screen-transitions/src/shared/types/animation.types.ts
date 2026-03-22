@@ -77,6 +77,33 @@ export type ScreenTransitionState = {
 	 * The route object for this screen.
 	 */
 	route: BaseStackRoute;
+
+	/**
+	 * Layout measurements for this specific screen.
+	 */
+	layouts: {
+		/**
+		 * The `width` and `height` of the screen container.
+		 */
+		screen: Layout;
+		/**
+		 * The intrinsic measured content wrapper layout when available.
+		 *
+		 * This is currently populated for the measured screen-container path used by
+		 * auto snap-point sizing. It is undefined until a real measurement exists.
+		 */
+		content?: Layout;
+	};
+
+	/**
+	 * Animated index of this screen's current snap point.
+	 * Interpolates between indices during gestures/animations.
+	 * - Returns -1 if no snap points are defined
+	 * - Returns 0 when at or below first snap point
+	 * - Returns fractional values between snap points (e.g., 1.5 = halfway between snap 1 and 2)
+	 * - Returns length-1 when at or above last snap point
+	 */
+	snapIndex: number;
 };
 
 export interface ScreenInterpolationProps {
@@ -97,6 +124,8 @@ export interface ScreenInterpolationProps {
 
 	/**
 	 * Layout measurements for the screen.
+	 *
+	 * @deprecated Use `current.layouts` instead.
 	 */
 	layouts: {
 		/**
@@ -142,11 +171,8 @@ export interface ScreenInterpolationProps {
 
 	/**
 	 * Animated index of the current snap point.
-	 * Interpolates between indices during gestures/animations.
-	 * - Returns -1 if no snap points are defined
-	 * - Returns 0 when at or below first snap point
-	 * - Returns fractional values between snap points (e.g., 1.5 = halfway between snap 1 and 2)
-	 * - Returns length-1 when at or above last snap point
+	 *
+	 * @deprecated Use `current.snapIndex` instead.
 	 */
 	snapIndex: number;
 

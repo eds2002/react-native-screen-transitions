@@ -74,6 +74,8 @@ const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
 const maybeContentHeight = interpolationProps.layouts.content?.height;
+const maybeCurrentContentHeight = interpolationProps.current.layouts.content?.height;
+const currentSnapIndex = interpolationProps.current.snapIndex;
 const nextNameOptions: ScreenTransitionConfig = {
 	navigationMaskEnabled: true,
 	sheetScrollGestureBehavior: "collapse-only",
@@ -127,6 +129,8 @@ export const publicApiTypecheck = {
 	gestureTarget,
 	numericBoundsResult,
 	maybeContentHeight,
+	maybeCurrentContentHeight,
+	currentSnapIndex,
 	zoomOptions,
 	nextNameOptions,
 	initialMountAnimationOptions,

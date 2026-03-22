@@ -2,157 +2,35 @@ import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	type DerivedValue,
-	type SharedValue,
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import type { NativeStackScreenTransitionConfig } from "../../../../../native-stack/types";
-import {
-	createScreenTransitionState,
-	DEFAULT_SCREEN_TRANSITION_STATE,
-} from "../../../../constants";
+import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../../../constants";
 import { useStack } from "../../../../hooks/navigation/use-stack";
-import { AnimationStore } from "../../../../stores/animation.store";
-import {
-	GestureStore,
-	type GestureStoreMap,
-} from "../../../../stores/gesture.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
-	ScreenTransitionState,
 } from "../../../../types/animation.types";
 import type { BoundsAccessor } from "../../../../types/bounds.types";
-import type { ScreenTransitionConfig } from "../../../../types/screen.types";
-import type { BaseStackRoute } from "../../../../types/stack.types";
+
 import { createBoundsAccessor } from "../../../../utils/bounds";
 import type { BoundsFrameProps } from "../../../../utils/bounds/types/frame-props";
 import { resolveNavigationMaskEnabled } from "../../../../utils/resolve-screen-transition-options";
-import { type BaseDescriptor, useDescriptors } from "../../descriptors";
+import { useDescriptors } from "../../descriptors";
 import { derivations } from "./derivations";
-import { toPlainRoute, toPlainValue } from "./worklet";
+import { hasTransitionsEnabled } from "./has-transitions-enabled";
+import { hydrateTransitionState } from "./hydrate-transition-state";
+import { useBuildTransitionState } from "./use-build-transition-state";
 
-type BuiltState = {
-	progress: SharedValue<number>;
-	closing: SharedValue<number>;
-	animating: SharedValue<number>;
-	entering: SharedValue<number>;
-	gesture: GestureStoreMap;
-	route: BaseStackRoute;
-	meta?: Record<string, unknown>;
-	unwrapped: ScreenTransitionState;
-};
+type BaseInterpolatorProps = Omit<ScreenInterpolationProps, "bounds">;
 
-export interface ScreenAnimationPipeline {
-	screenInterpolatorProps: DerivedValue<
-		Omit<ScreenInterpolationProps, "bounds">
-	>;
+interface ScreenAnimationPipeline {
+	screenInterpolatorProps: DerivedValue<BaseInterpolatorProps>;
 	nextInterpolator: ScreenStyleInterpolator | undefined;
 	currentInterpolator: ScreenStyleInterpolator | undefined;
 	boundsAccessor: BoundsAccessor;
 }
-
-/**
- * Computes the animated snap index based on progress and snap points.
- * Returns -1 if no snap points, otherwise interpolates between indices.
- */
-const computeSnapIndex = (progress: number, snapPoints: number[]): number => {
-	"worklet";
-	if (snapPoints.length === 0) return -1;
-	if (progress <= snapPoints[0]) return 0;
-	if (progress >= snapPoints[snapPoints.length - 1])
-		return snapPoints.length - 1;
-
-	for (let i = 0; i < snapPoints.length - 1; i++) {
-		if (progress <= snapPoints[i + 1]) {
-			const t =
-				(progress - snapPoints[i]) / (snapPoints[i + 1] - snapPoints[i]);
-			return i + t;
-		}
-	}
-	return snapPoints.length - 1;
-};
-
-const unwrapInto = (s: BuiltState): ScreenTransitionState => {
-	"worklet";
-	const out = s.unwrapped;
-	out.progress = s.progress.value;
-	out.closing = s.closing.value;
-	out.entering = s.entering.value;
-	out.animating = s.animating.value;
-	out.gesture.x = s.gesture.x.value;
-	out.gesture.y = s.gesture.y.value;
-	out.gesture.normX = s.gesture.normX.value;
-	out.gesture.normY = s.gesture.normY.value;
-	out.gesture.dismissing = s.gesture.dismissing.value;
-	out.gesture.dragging = s.gesture.dragging.value;
-	out.gesture.direction = s.gesture.direction.value;
-
-	// Deprecated aliases (kept for backwards compatibility)
-	out.gesture.normalizedX = out.gesture.normX;
-	out.gesture.normalizedY = out.gesture.normY;
-	out.gesture.isDismissing = out.gesture.dismissing;
-	out.gesture.isDragging = out.gesture.dragging;
-
-	out.settled =
-		out.gesture.dragging ||
-		out.animating ||
-		out.gesture.dismissing ||
-		out.closing
-			? 0
-			: 1;
-	out.meta = s.meta;
-
-	return out;
-};
-
-const useBuildScreenTransitionState = (
-	descriptor: BaseDescriptor | undefined,
-	slot: "current" | "next" | "previous",
-): BuiltState | undefined => {
-	const key = descriptor?.route?.key;
-	const meta = descriptor?.options?.meta;
-	const route = descriptor?.route;
-	const gestureEnabled = descriptor?.options?.gestureEnabled;
-	const snapPoints = descriptor?.options?.snapPoints;
-
-	const shouldUseNeutralNextGestures =
-		slot === "next" &&
-		gestureEnabled === false &&
-		(!snapPoints || snapPoints.length === 0);
-
-	return useMemo(() => {
-		if (!key || !route) return undefined;
-
-		const plainRoute = toPlainRoute(route);
-		const plainMeta = meta
-			? (toPlainValue(meta) as Record<string, unknown>)
-			: undefined;
-
-		return {
-			progress: AnimationStore.getRouteAnimation(key, "progress"),
-			closing: AnimationStore.getRouteAnimation(key, "closing"),
-			entering: AnimationStore.getRouteAnimation(key, "entering"),
-			animating: AnimationStore.getRouteAnimation(key, "animating"),
-			gesture: shouldUseNeutralNextGestures
-				? (GestureStore.peekRouteGestures(key) ??
-					GestureStore.getNeutralGestures())
-				: GestureStore.getRouteGestures(key),
-			route: plainRoute,
-			meta: plainMeta,
-			unwrapped: createScreenTransitionState(plainRoute, plainMeta),
-		};
-	}, [key, meta, route, shouldUseNeutralNextGestures]);
-};
-
-const hasTransitionsEnabled = (
-	options: ScreenTransitionConfig | undefined,
-	alwaysOn: boolean,
-) => {
-	if (alwaysOn) return true;
-	return !!(options as NativeStackScreenTransitionConfig)?.enableTransitions;
-};
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
@@ -161,55 +39,28 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {
-		current: currentDescriptor,
+		current: currDescriptor,
 		next: nextDescriptor,
-		previous: previousDescriptor,
+		previous: prevDescriptor,
 	} = useDescriptors();
 
-	const currentAnimation = useBuildScreenTransitionState(
-		currentDescriptor,
-		"current",
-	);
-	const nextAnimation = useBuildScreenTransitionState(nextDescriptor, "next");
-	const prevAnimation = useBuildScreenTransitionState(
-		previousDescriptor,
-		"previous",
-	);
+	const currentAnimation = useBuildTransitionState(currDescriptor, "current");
+	const nextAnimation = useBuildTransitionState(nextDescriptor, "next");
+	const prevAnimation = useBuildTransitionState(prevDescriptor, "previous");
 
-	const currentRouteKey = currentDescriptor?.route?.key;
+	const currentRouteKey = currDescriptor?.route?.key;
 	const currentIndex = routeKeys.indexOf(currentRouteKey);
-
-	const sortedNumericSnapPoints = useMemo(() => {
-		const points = currentDescriptor?.options?.snapPoints;
-		if (!points) return [];
-		return points
-			.filter((p): p is number => typeof p === "number")
-			.sort((a, b) => a - b);
-	}, [currentDescriptor?.options?.snapPoints]);
-
-	const hasAutoSnapPoint = useMemo(
-		() => currentDescriptor?.options?.snapPoints?.includes("auto") ?? false,
-		[currentDescriptor?.options?.snapPoints],
-	);
-
-	const autoSnapPointValue = AnimationStore.getAnimation(
-		currentRouteKey ?? "_",
-		"autoSnapPoint",
-	);
-	const contentLayoutValue = AnimationStore.getAnimation(
-		currentRouteKey ?? "_",
-		"contentLayout",
-	);
 
 	const nextRouteKey = nextDescriptor?.route?.key;
 	const nextHasTransitions =
 		!!nextRouteKey &&
 		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
+
 	const currentNavigationMaskEnabled = resolveNavigationMaskEnabled(
-		currentDescriptor?.options ?? {},
+		currDescriptor?.options ?? {},
 	);
 
-	const framePropsMutable = useSharedValue<BoundsFrameProps>({
+	const boundsFrameProps = useSharedValue<BoundsFrameProps>({
 		layouts: { screen: dimensions },
 		insets,
 		previous: undefined,
@@ -227,24 +78,24 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const boundsAccessor = useMemo(() => {
 		return createBoundsAccessor(() => {
 			"worklet";
-			return framePropsMutable.value;
+			return boundsFrameProps.value;
 		});
-	}, [framePropsMutable]);
+	}, [boundsFrameProps]);
 
-	const screenInterpolatorProps = useDerivedValue<
-		Omit<ScreenInterpolationProps, "bounds">
-	>(() => {
+	const screenInterpolatorProps = useDerivedValue<BaseInterpolatorProps>(() => {
 		"worklet";
 
-		const previous = prevAnimation ? unwrapInto(prevAnimation) : undefined;
+		const previous = prevAnimation
+			? hydrateTransitionState(prevAnimation, dimensions)
+			: undefined;
 
 		const next =
 			nextAnimation && nextHasTransitions
-				? unwrapInto(nextAnimation)
+				? hydrateTransitionState(nextAnimation, dimensions)
 				: undefined;
 
 		const current = currentAnimation
-			? unwrapInto(currentAnimation)
+			? hydrateTransitionState(currentAnimation, dimensions)
 			: DEFAULT_SCREEN_TRANSITION_STATE;
 
 		const { progress, ...helpers } = derivations({
@@ -259,43 +110,28 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		const stackProgress =
 			currentIndex >= 0 ? rootStackProgress.value - currentIndex : progress;
 
-		// Resolve 'auto' snap point reactively so computeSnapIndex stays accurate
-		const resolvedAutoSnap =
-			hasAutoSnapPoint && autoSnapPointValue.value > 0
-				? autoSnapPointValue.value
-				: null;
-		const resolvedSnapPoints =
-			resolvedAutoSnap !== null
-				? [...sortedNumericSnapPoints, resolvedAutoSnap].sort((a, b) => a - b)
-				: sortedNumericSnapPoints;
-
-		const snapIndex = computeSnapIndex(current.progress, resolvedSnapPoints);
-
-		const nextProps: Omit<ScreenInterpolationProps, "bounds"> = {
-			layouts: {
-				screen: dimensions,
-				content: contentLayoutValue.value ?? undefined,
-			},
+		const nextProps: BaseInterpolatorProps = {
+			layouts: current.layouts,
 			insets,
 			previous,
 			current,
 			next,
 			progress,
 			stackProgress,
-			snapIndex,
+			snapIndex: current.snapIndex,
 			...helpers,
 		};
 
-		framePropsMutable.value = {
+		boundsFrameProps.value = {
 			...nextProps,
 			navigationMaskEnabled: currentNavigationMaskEnabled,
 		};
+
 		return nextProps;
 	});
 
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
-	const currentInterpolator =
-		currentDescriptor?.options.screenStyleInterpolator;
+	const currentInterpolator = currDescriptor?.options.screenStyleInterpolator;
 
 	return {
 		screenInterpolatorProps,
