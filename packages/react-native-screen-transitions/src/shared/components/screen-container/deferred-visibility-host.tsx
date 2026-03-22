@@ -1,7 +1,7 @@
 import { memo } from "react";
 import { StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { HIDDEN_STYLE, NO_STYLES } from "../../constants";
+import { HIDDEN_STYLE, VISIBLE_STYLE } from "../../constants";
 import { useScreenStyles } from "../../providers/screen/styles.provider";
 
 type Props = {
@@ -20,7 +20,7 @@ export const DeferredVisibilityHost = memo(({ children }: Props) => {
 
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
-		return resolutionMode.value === "deferred" ? HIDDEN_STYLE : NO_STYLES;
+		return resolutionMode.value === "deferred" ? HIDDEN_STYLE : VISIBLE_STYLE;
 	});
 
 	return (
