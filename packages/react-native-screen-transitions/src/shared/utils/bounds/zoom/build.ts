@@ -496,10 +496,13 @@ export const buildZoomStyles = ({
 	const focusedVisibilityStyles = {
 		[resolvedTag]: VISIBLE_STYLE,
 	} satisfies TransitionInterpolatedStyle;
+	const focusedContainerStyleId = props.navigationMaskEnabled
+		? NAVIGATION_MASK_CONTAINER_STYLE_ID
+		: "content";
 
 	if (!resolvedPair.sourceBounds) {
 		return {
-			[NAVIGATION_MASK_CONTAINER_STYLE_ID]: HIDDEN_STYLE,
+			[focusedContainerStyleId]: HIDDEN_STYLE,
 		};
 	}
 
@@ -594,11 +597,15 @@ export const buildZoomStyles = ({
 			],
 		};
 
-		return {
-			[NAVIGATION_MASK_CONTAINER_STYLE_ID]: {
+		const focusedStyles: TransitionInterpolatedStyle = {
+			[focusedContainerStyleId]: {
 				style: focusedContentStyle,
 			},
-			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
+			...focusedVisibilityStyles,
+		};
+
+		if (props.navigationMaskEnabled) {
+			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
 				style: {
 					width: maskWidth,
 					height: maskHeight,
@@ -616,9 +623,10 @@ export const buildZoomStyles = ({
 						? { borderCurve: resolvedZoomOptions.mask.borderCurve }
 						: {}),
 				},
-			},
-			...focusedVisibilityStyles,
-		};
+			};
+		}
+
+		return focusedStyles;
 	}
 
 	const unfocusedFade = props.active?.closing
