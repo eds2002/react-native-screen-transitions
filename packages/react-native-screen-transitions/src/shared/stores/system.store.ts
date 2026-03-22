@@ -4,7 +4,7 @@ import {
 	type SharedValue,
 } from "react-native-reanimated";
 import type { Layout } from "../types/screen.types";
-import { createStore } from "./create-store";
+import { createStore } from "../utils/create-store";
 
 export type SystemStoreMap = {
 	targetProgress: SharedValue<number>;

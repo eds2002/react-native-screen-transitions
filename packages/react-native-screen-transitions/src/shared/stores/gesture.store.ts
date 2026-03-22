@@ -4,7 +4,7 @@ import {
 	type SharedValue,
 } from "react-native-reanimated";
 import type { GestureDirection } from "../types/gesture.types";
-import { createStore } from "./create-store";
+import { createStore } from "../utils/create-store";
 
 export type GestureStoreMap = {
 	x: SharedValue<number>;

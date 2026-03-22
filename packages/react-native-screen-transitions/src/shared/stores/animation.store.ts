@@ -3,7 +3,7 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import { createStore } from "./create-store";
+import { createStore } from "../utils/create-store";
 
 export type AnimationStoreMap = {
 	progress: SharedValue<number>;
