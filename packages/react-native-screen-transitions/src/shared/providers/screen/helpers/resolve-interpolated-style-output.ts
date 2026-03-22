@@ -1,4 +1,7 @@
-import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
+import type {
+	DeferredScreenStyleSignal,
+	NormalizedTransitionInterpolatedStyle,
+} from "../../../types/animation.types";
 import { normalizeInterpolatedStyle } from "../../../utils/normalize-interpolated-style";
 
 export type ScreenStyleResolutionMode = "pass-through" | "deferred" | "live";
@@ -17,18 +20,35 @@ export const PASS_THROUGH_STYLE_OUTPUT: ResolvedInterpolatedStyleOutput = {
 	wasLegacy: false,
 };
 
+export const resolveEffectiveResolutionMode = ({
+	resolutionMode,
+	isSettled,
+}: {
+	resolutionMode: ScreenStyleResolutionMode;
+	isSettled: boolean;
+}): ScreenStyleResolutionMode => {
+	"worklet";
+	if (resolutionMode === "deferred" && isSettled) {
+		return "pass-through";
+	}
+	return resolutionMode;
+};
+
 export const resolveInterpolatedStyleOutput = (
-	raw: Record<string, any> | null | undefined,
+	raw: Record<string, any> | DeferredScreenStyleSignal | null | undefined,
 ): ResolvedInterpolatedStyleOutput => {
 	"worklet";
 
-	// If raw is null, the user is intentionally asking to defer.
-	if (raw === null) {
+	if (raw === "defer") {
 		return {
 			stylesMap: EMPTY_STYLES,
 			resolutionMode: "deferred",
 			wasLegacy: false,
 		};
+	}
+
+	if (raw == null) {
+		return PASS_THROUGH_STYLE_OUTPUT;
 	}
 
 	const { result, wasLegacy } = normalizeInterpolatedStyle(raw ?? EMPTY_STYLES);

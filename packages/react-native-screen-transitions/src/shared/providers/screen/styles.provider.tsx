@@ -11,6 +11,7 @@ import { logger } from "../../utils/logger";
 import { useScreenAnimationContext } from "./animation";
 import {
 	PASS_THROUGH_STYLE_OUTPUT,
+	resolveEffectiveResolutionMode,
 	resolveInterpolatedStyleOutput,
 	type ScreenStyleResolutionMode,
 } from "./helpers/resolve-interpolated-style-output";
@@ -114,7 +115,10 @@ export const {
 
 				return {
 					stylesMap,
-					resolutionMode,
+					resolutionMode: resolveEffectiveResolutionMode({
+						resolutionMode,
+						isSettled: current.settled === 1,
+					}),
 				};
 			} catch (err) {
 				if (__DEV__) {
