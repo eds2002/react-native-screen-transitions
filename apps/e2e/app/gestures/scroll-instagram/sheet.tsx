@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 const COMMENTS = Array.from({ length: 25 }, (_, i) => ({
 	id: i + 1,
@@ -20,26 +21,48 @@ const COMMENTS = Array.from({ length: 25 }, (_, i) => ({
  * - ↑ ALWAYS scrolls (never expands from ScrollView)
  */
 export default function InstagramSheet() {
+	const theme = useTheme();
+
 	return (
 		<View style={styles.container}>
-			<View style={styles.sheet}>
-				<View style={styles.handle} />
+			<View
+				style={[styles.sheet, { backgroundColor: theme.card }]}
+			>
+				<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 				<ScreenHeader
 					title="Comments"
 					subtitle='sheetScrollGestureBehavior: "collapse-only"'
 				/>
 
-				<View style={styles.deadspaceBox}>
-					<Text style={styles.deadspaceTitle}>Deadspace Zone</Text>
-					<Text style={styles.deadspaceText}>
+				<View
+					style={[
+						styles.deadspaceBox,
+						{ backgroundColor: theme.infoBox },
+					]}
+				>
+					<Text style={[styles.deadspaceTitle, { color: theme.text }]}>
+						Deadspace Zone
+					</Text>
+					<Text
+						style={[styles.deadspaceText, { color: theme.textSecondary }]}
+					>
 						Swipe ↑ from here to expand, ↓ to collapse
 					</Text>
 				</View>
 
-				<View style={styles.divider} />
+				<View
+					style={[styles.divider, { backgroundColor: theme.separator }]}
+				/>
 
-				<View style={styles.scrollLabel}>
-					<Text style={styles.scrollLabelText}>
+				<View
+					style={[
+						styles.scrollLabel,
+						{ backgroundColor: theme.surfaceElevated },
+					]}
+				>
+					<Text
+						style={[styles.scrollLabelText, { color: theme.textSecondary }]}
+					>
 						ScrollView below - ↑ will SCROLL, not expand
 					</Text>
 				</View>
@@ -48,24 +71,63 @@ export default function InstagramSheet() {
 					style={styles.scrollView}
 					contentContainerStyle={styles.scrollContent}
 				>
-					<View style={styles.boundaryMarker}>
-						<Text style={styles.boundaryText}>Scroll Top (boundary)</Text>
-						<Text style={styles.boundarySubtext}>
+					<View
+						style={[
+							styles.boundaryMarker,
+							{ backgroundColor: theme.noteBox },
+						]}
+					>
+						<Text
+							style={[styles.boundaryText, { color: theme.noteText }]}
+						>
+							Scroll Top (boundary)
+						</Text>
+						<Text
+							style={[
+								styles.boundarySubtext,
+								{ color: theme.textSecondary },
+							]}
+						>
 							↓ from here collapses, ↑ scrolls (no expand)
 						</Text>
 					</View>
 
 					{COMMENTS.map((comment) => (
 						<View key={comment.id} style={styles.comment}>
-							<View style={styles.avatar}>
-								<Text style={styles.avatarText}>
+							<View
+								style={[
+									styles.avatar,
+									{ backgroundColor: theme.surfaceElevated },
+								]}
+							>
+								<Text
+									style={[styles.avatarText, { color: theme.activePill }]}
+								>
 									{comment.user.slice(0, 1).toUpperCase()}
 								</Text>
 							</View>
 							<View style={styles.commentContent}>
-								<Text style={styles.commentUser}>{comment.user}</Text>
-								<Text style={styles.commentText}>{comment.text}</Text>
-								<Text style={styles.commentLikes}>♥ {comment.likes} likes</Text>
+								<Text
+									style={[styles.commentUser, { color: theme.text }]}
+								>
+									{comment.user}
+								</Text>
+								<Text
+									style={[
+										styles.commentText,
+										{ color: theme.textSecondary },
+									]}
+								>
+									{comment.text}
+								</Text>
+								<Text
+									style={[
+										styles.commentLikes,
+										{ color: theme.textTertiary },
+									]}
+								>
+									♥ {comment.likes} likes
+								</Text>
 							</View>
 						</View>
 					))}
@@ -81,7 +143,6 @@ const styles = StyleSheet.create({
 		justifyContent: "flex-end",
 	},
 	sheet: {
-		backgroundColor: "#1a1a2e",
 		borderTopLeftRadius: 24,
 		borderTopRightRadius: 24,
 		paddingTop: 12,
@@ -90,7 +151,6 @@ const styles = StyleSheet.create({
 	handle: {
 		width: 40,
 		height: 4,
-		backgroundColor: "rgba(255,255,255,0.3)",
 		borderRadius: 2,
 		alignSelf: "center",
 		marginBottom: 8,
@@ -98,36 +158,27 @@ const styles = StyleSheet.create({
 	deadspaceBox: {
 		marginHorizontal: 16,
 		marginBottom: 12,
-		backgroundColor: "rgba(233, 30, 99, 0.15)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 12,
-		borderWidth: 1,
-		borderColor: "rgba(233, 30, 99, 0.4)",
-		borderStyle: "dashed",
 	},
 	deadspaceTitle: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "#e91e63",
 	},
 	deadspaceText: {
 		fontSize: 11,
-		color: "rgba(233, 30, 99, 0.8)",
 		marginTop: 2,
 	},
 	divider: {
 		height: 1,
-		backgroundColor: "rgba(255, 255, 255, 0.1)",
 		marginHorizontal: 16,
 	},
 	scrollLabel: {
 		paddingHorizontal: 16,
 		paddingVertical: 8,
-		backgroundColor: "rgba(74, 158, 255, 0.1)",
 	},
 	scrollLabelText: {
 		fontSize: 11,
-		color: "#4a9eff",
 		textAlign: "center",
 	},
 	scrollView: {
@@ -138,20 +189,15 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	boundaryMarker: {
-		backgroundColor: "rgba(76, 175, 80, 0.2)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 12,
-		borderWidth: 1,
-		borderColor: "rgba(76, 175, 80, 0.5)",
 	},
 	boundaryText: {
 		fontSize: 13,
 		fontWeight: "600",
-		color: "#4caf50",
 	},
 	boundarySubtext: {
 		fontSize: 11,
-		color: "rgba(76, 175, 80, 0.8)",
 		marginTop: 2,
 	},
 	comment: {
@@ -162,14 +208,12 @@ const styles = StyleSheet.create({
 		width: 36,
 		height: 36,
 		borderRadius: 18,
-		backgroundColor: "rgba(233, 30, 99, 0.3)",
 		justifyContent: "center",
 		alignItems: "center",
 	},
 	avatarText: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#e91e63",
 	},
 	commentContent: {
 		flex: 1,
@@ -177,17 +221,14 @@ const styles = StyleSheet.create({
 	commentUser: {
 		fontSize: 13,
 		fontWeight: "600",
-		color: "#fff",
 	},
 	commentText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.7)",
 		marginTop: 2,
 		lineHeight: 18,
 	},
 	commentLikes: {
 		fontSize: 11,
-		color: "rgba(255, 255, 255, 0.4)",
 		marginTop: 4,
 	},
 });

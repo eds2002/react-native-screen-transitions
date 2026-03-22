@@ -19,6 +19,7 @@ import {
 	NESTED_ZOOM_GROUP_ITEMS,
 	type NestedZoomGroupItem,
 } from "./constants";
+import { useTheme } from "@/theme";
 
 const GAP = 10;
 const PADDING = 16;
@@ -65,17 +66,18 @@ function NestedZoomGroupSourceCard({
 export default function NestedNavigationZoomGroupIndex() {
 	const { width } = useWindowDimensions();
 	const colWidth = (width - PADDING * 2 - GAP) / 2;
+	const theme = useTheme();
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Nested Navigation Zoom Group"
 				subtitle="Grouped zoom plus nested [id]/index and [id]/plan routes"
 			/>
 
-			<View style={styles.noteCard}>
-				<Text style={styles.noteTitle}>What this proves</Text>
-				<Text style={styles.noteBody}>
+			<View style={[styles.noteCard, { backgroundColor: theme.noteBox }]}>
+				<Text style={[styles.noteTitle, { color: theme.noteText }]}>What this proves</Text>
+				<Text style={[styles.noteBody, { color: theme.textSecondary }]}>
 					Open a source card, move into the nested plan screen, then switch to a
 					different destination from inside the subtree. Grouped matching should
 					follow the current active member, not the originally opened one.
@@ -100,21 +102,16 @@ export default function NestedNavigationZoomGroupIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	noteCard: {
 		marginHorizontal: PADDING,
 		marginBottom: 14,
 		padding: 14,
-		borderRadius: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.08)",
-		backgroundColor: "rgba(255,255,255,0.03)",
+		borderRadius: 14,
 	},
 	noteTitle: {
 		fontSize: 12,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.72)",
 		textTransform: "uppercase",
 		letterSpacing: 0.9,
 	},
@@ -122,7 +119,6 @@ const styles = StyleSheet.create({
 		marginTop: 6,
 		fontSize: 14,
 		lineHeight: 21,
-		color: "rgba(255,255,255,0.62)",
 	},
 	scrollContent: {
 		paddingHorizontal: PADDING,

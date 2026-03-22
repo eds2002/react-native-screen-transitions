@@ -3,38 +3,40 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
 import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 
 export default function BlankStackDeepLink() {
 	const stackType = useResolvedStackType();
 	const stackLabel = stackType === "native-stack" ? "Native Stack" : "Blank Stack";
 	const { id } = useLocalSearchParams<{ id: string }>();
+	const theme = useTheme();
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader title={`${stackLabel} Deep Link`} subtitle={`id: ${id}`} />
 			<View style={styles.content}>
-				<Text style={styles.label}>Stack Type</Text>
-				<Text style={styles.value}>{stackLabel}</Text>
+				<Text style={[styles.label, { color: theme.textTertiary }]}>Stack Type</Text>
+				<Text style={[styles.value, { color: theme.text }]}>{stackLabel}</Text>
 
-				<Text style={styles.label}>Route ID</Text>
-				<Text style={styles.value}>{id}</Text>
+				<Text style={[styles.label, { color: theme.textTertiary }]}>Route ID</Text>
+				<Text style={[styles.value, { color: theme.text }]}>{id}</Text>
 
 				<View style={styles.buttons}>
 					<Pressable
 						testID="deep-link-back"
-						style={styles.button}
+						style={({ pressed }) => [styles.button, { backgroundColor: pressed ? theme.secondaryButtonPressed : theme.secondaryButton }]}
 						onPress={() => router.back()}
 					>
-						<Text style={styles.buttonText}>Back</Text>
+						<Text style={[styles.buttonText, { color: theme.secondaryButtonText }]}>Back</Text>
 					</Pressable>
 					<Pressable
 						testID="deep-link-push"
-						style={styles.button}
+						style={({ pressed }) => [styles.button, { backgroundColor: pressed ? theme.secondaryButtonPressed : theme.secondaryButton }]}
 						onPress={() =>
 							router.push(buildStackPath(stackType, "deep-link/beta") as never)
 						}
 					>
-						<Text style={styles.buttonText}>Push "beta"</Text>
+						<Text style={[styles.buttonText, { color: theme.secondaryButtonText }]}>Push "beta"</Text>
 					</Pressable>
 				</View>
 			</View>
@@ -45,7 +47,6 @@ export default function BlankStackDeepLink() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		padding: 24,
@@ -54,13 +55,11 @@ const styles = StyleSheet.create({
 	label: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "#888",
 		textTransform: "uppercase",
 	},
 	value: {
 		fontSize: 18,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 8,
 	},
 	buttons: {
@@ -69,13 +68,11 @@ const styles = StyleSheet.create({
 		marginTop: 12,
 	},
 	button: {
-		backgroundColor: "#333",
 		paddingHorizontal: 20,
 		paddingVertical: 12,
-		borderRadius: 8,
+		borderRadius: 999,
 	},
 	buttonText: {
-		color: "#fff",
 		fontWeight: "600",
 	},
 });

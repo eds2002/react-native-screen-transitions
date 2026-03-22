@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme, type Theme } from "@/theme";
 
 type Example = {
 	id: string;
@@ -123,22 +124,51 @@ const SCROLLVIEW_EXAMPLES: Example[] = [
 	},
 ];
 
-function Section({ title, examples }: { title: string; examples: Example[] }) {
+function Section({
+	title,
+	examples,
+	theme,
+}: { title: string; examples: Example[]; theme: Theme }) {
 	return (
 		<View style={styles.section}>
-			<Text style={styles.sectionTitle}>{title}</Text>
+			<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+				{title}
+			</Text>
 			<View style={styles.list}>
 				{examples.map((example) => (
 					<Pressable
 						key={example.id}
 						testID={`gesture-${example.id}`}
-						style={styles.item}
+						style={({ pressed }) => [
+							styles.item,
+							{
+								backgroundColor: pressed
+									? theme.cardPressed
+									: theme.card,
+							},
+						]}
 						onPress={() => router.push(`/gestures/${example.id}` as never)}
 					>
-						<Text style={styles.itemTitle}>{example.title}</Text>
-						<Text style={styles.itemDescription}>{example.description}</Text>
+						<Text style={[styles.itemTitle, { color: theme.text }]}>
+							{example.title}
+						</Text>
+						<Text
+							style={[
+								styles.itemDescription,
+								{ color: theme.textSecondary },
+							]}
+						>
+							{example.description}
+						</Text>
 						{example.scenario && (
-							<Text style={styles.itemScenario}>{example.scenario}</Text>
+							<Text
+								style={[
+									styles.itemScenario,
+									{ color: theme.scenario },
+								]}
+							>
+								{example.scenario}
+							</Text>
 						)}
 					</Pressable>
 				))}
@@ -148,21 +178,27 @@ function Section({ title, examples }: { title: string; examples: Example[] }) {
 }
 
 export default function GesturesIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="Gesture Ownership"
 				subtitle="Test ownership, inheritance, shadowing, and ScrollView handoff"
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
-				<Section title="Basic Scenarios" examples={BASIC_EXAMPLES} />
+				<Section title="Basic Scenarios" examples={BASIC_EXAMPLES} theme={theme} />
 				<Section
 					title="Intermediate Scenarios"
 					examples={INTERMEDIATE_EXAMPLES}
+					theme={theme}
 				/>
-				<Section title="Snap Points" examples={SNAP_POINT_EXAMPLES} />
-				<Section title="Regression Visuals" examples={REGRESSION_EXAMPLES} />
-				<Section title="ScrollView Handoff" examples={SCROLLVIEW_EXAMPLES} />
+				<Section title="Snap Points" examples={SNAP_POINT_EXAMPLES} theme={theme} />
+				<Section title="Regression Visuals" examples={REGRESSION_EXAMPLES} theme={theme} />
+				<Section title="ScrollView Handoff" examples={SCROLLVIEW_EXAMPLES} theme={theme} />
 			</ScrollView>
 		</SafeAreaView>
 	);
@@ -171,7 +207,6 @@ export default function GesturesIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		padding: 16,
@@ -183,35 +218,28 @@ const styles = StyleSheet.create({
 	sectionTitle: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "#666",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 		marginBottom: 12,
 		marginLeft: 4,
 	},
 	list: {
-		gap: 12,
+		gap: 10,
 	},
 	item: {
-		backgroundColor: "#1e1e1e",
 		padding: 16,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#333",
+		borderRadius: 14,
 	},
 	itemTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	itemDescription: {
 		fontSize: 13,
-		color: "#888",
 	},
 	itemScenario: {
 		fontSize: 11,
-		color: "#4a9eff",
 		marginTop: 8,
 		fontFamily: "monospace",
 	},

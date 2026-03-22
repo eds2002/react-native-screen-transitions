@@ -7,6 +7,7 @@ import Transition from "react-native-screen-transitions";
 import type { ComponentStackScreenProps } from "react-native-screen-transitions/component-stack";
 import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 type ParamList = {
 	list: undefined;
@@ -45,8 +46,10 @@ const slideUpInterpolator = (props: ScreenInterpolationProps) => {
 };
 
 function TrackList({ navigation }: Props) {
+	const theme = useTheme();
+
 	return (
-		<View style={styles.listScreen}>
+		<View style={[styles.listScreen, { backgroundColor: theme.bg }]}>
 			<ScreenHeader
 				title="Music Player"
 				subtitle="Tap a track to open player. Swipe down to close."
@@ -55,17 +58,17 @@ function TrackList({ navigation }: Props) {
 				{TRACKS.map((track, i) => (
 					<Transition.Pressable
 						key={i.toString()}
-						style={styles.trackItem}
+						style={[styles.trackItem, { backgroundColor: theme.card }]}
 						onPress={() => navigation.push("player")}
 					>
-						<View style={styles.trackArt}>
+						<View style={[styles.trackArt, { backgroundColor: theme.actionButton }]}>
 							<Ionicons name="musical-notes" size={24} color="#fff" />
 						</View>
 						<View style={styles.trackInfo}>
-							<Text style={styles.trackTitle}>{track.title}</Text>
-							<Text style={styles.trackArtist}>{track.artist}</Text>
+							<Text style={[styles.trackTitle, { color: theme.text }]}>{track.title}</Text>
+							<Text style={[styles.trackArtist, { color: theme.textTertiary }]}>{track.artist}</Text>
 						</View>
-						<Text style={styles.trackDuration}>{track.duration}</Text>
+						<Text style={[styles.trackDuration, { color: theme.textTertiary }]}>{track.duration}</Text>
 					</Transition.Pressable>
 				))}
 			</View>
@@ -76,49 +79,50 @@ function TrackList({ navigation }: Props) {
 function PlayerScreen({ navigation }: Props) {
 	const insets = useSafeAreaInsets();
 	const track = TRACKS[0];
+	const theme = useTheme();
 
 	return (
 		<View
 			style={[
 				styles.playerScreen,
-				{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16 },
+				{ paddingTop: insets.top + 16, paddingBottom: insets.bottom + 16, backgroundColor: theme.bg },
 			]}
 		>
 			<View style={styles.playerHeader}>
 				<Transition.Pressable onPress={() => navigation.goBack()} hitSlop={8}>
-					<Ionicons name="chevron-down" size={28} color="#fff" />
+					<Ionicons name="chevron-down" size={28} color={theme.text} />
 				</Transition.Pressable>
-				<Text style={styles.playerHeaderTitle}>Now Playing</Text>
+				<Text style={[styles.playerHeaderTitle, { color: theme.textTertiary }]}>Now Playing</Text>
 				<View style={{ width: 28 }} />
 			</View>
 
 			<View style={styles.playerContent}>
-				<View style={styles.albumArt}>
+				<View style={[styles.albumArt, { backgroundColor: theme.actionButton }]}>
 					<Ionicons name="musical-notes" size={80} color="#fff" />
 				</View>
 
-				<Text style={styles.playerTitle}>{track.title}</Text>
-				<Text style={styles.playerArtist}>{track.artist}</Text>
+				<Text style={[styles.playerTitle, { color: theme.text }]}>{track.title}</Text>
+				<Text style={[styles.playerArtist, { color: theme.textTertiary }]}>{track.artist}</Text>
 
 				<View style={styles.progressContainer}>
-					<View style={styles.progressBar}>
-						<View style={[styles.progressFill, { width: "35%" }]} />
+					<View style={[styles.progressBar, { backgroundColor: theme.separator }]}>
+						<View style={[styles.progressFill, { width: "35%", backgroundColor: theme.actionButton }]} />
 					</View>
 					<View style={styles.progressTime}>
-						<Text style={styles.timeText}>2:04</Text>
-						<Text style={styles.timeText}>{track.duration}</Text>
+						<Text style={[styles.timeText, { color: theme.textTertiary }]}>2:04</Text>
+						<Text style={[styles.timeText, { color: theme.textTertiary }]}>{track.duration}</Text>
 					</View>
 				</View>
 
 				<View style={styles.controls}>
 					<Transition.Pressable hitSlop={12}>
-						<Ionicons name="play-skip-back" size={32} color="#fff" />
+						<Ionicons name="play-skip-back" size={32} color={theme.text} />
 					</Transition.Pressable>
-					<Transition.Pressable style={styles.playButton} hitSlop={12}>
-						<Ionicons name="play" size={36} color="#000" />
+					<Transition.Pressable style={[styles.playButton, { backgroundColor: theme.text }]} hitSlop={12}>
+						<Ionicons name="play" size={36} color={theme.bg} />
 					</Transition.Pressable>
 					<Transition.Pressable hitSlop={12}>
-						<Ionicons name="play-skip-forward" size={32} color="#fff" />
+						<Ionicons name="play-skip-forward" size={32} color={theme.text} />
 					</Transition.Pressable>
 				</View>
 			</View>
@@ -127,8 +131,10 @@ function PlayerScreen({ navigation }: Props) {
 }
 
 export default function MusicPlayerDemo() {
+	const theme = useTheme();
+
 	return (
-		<View style={styles.container}>
+		<View style={[styles.container, { backgroundColor: theme.bg }]}>
 			<Stack.Navigator initialRouteName="list">
 				<Stack.Screen
 					name="list"
@@ -153,11 +159,9 @@ export default function MusicPlayerDemo() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	listScreen: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	trackList: {
 		padding: 16,
@@ -166,17 +170,13 @@ const styles = StyleSheet.create({
 	trackItem: {
 		flexDirection: "row",
 		alignItems: "center",
-		backgroundColor: "#1e1e1e",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 12,
-		borderWidth: 1,
-		borderColor: "#333",
 	},
 	trackArt: {
 		width: 48,
 		height: 48,
 		borderRadius: 8,
-		backgroundColor: "#1DB954",
 		justifyContent: "center",
 		alignItems: "center",
 		marginRight: 12,
@@ -187,20 +187,16 @@ const styles = StyleSheet.create({
 	trackTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	trackArtist: {
 		fontSize: 14,
-		color: "#888",
 	},
 	trackDuration: {
 		fontSize: 14,
-		color: "#666",
 	},
 	playerScreen: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	playerHeader: {
 		flexDirection: "row",
@@ -212,7 +208,6 @@ const styles = StyleSheet.create({
 	playerHeaderTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#888",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 	},
@@ -225,7 +220,6 @@ const styles = StyleSheet.create({
 		width: "100%",
 		aspectRatio: 1,
 		borderRadius: 16,
-		backgroundColor: "#1DB954",
 		marginBottom: 32,
 		justifyContent: "center",
 		alignItems: "center",
@@ -233,13 +227,11 @@ const styles = StyleSheet.create({
 	playerTitle: {
 		fontSize: 24,
 		fontWeight: "700",
-		color: "#fff",
 		marginBottom: 8,
 		textAlign: "center",
 	},
 	playerArtist: {
 		fontSize: 18,
-		color: "#888",
 		marginBottom: 32,
 	},
 	progressContainer: {
@@ -248,13 +240,11 @@ const styles = StyleSheet.create({
 	},
 	progressBar: {
 		height: 4,
-		backgroundColor: "#333",
 		borderRadius: 2,
 		marginBottom: 8,
 	},
 	progressFill: {
 		height: "100%",
-		backgroundColor: "#1DB954",
 		borderRadius: 2,
 	},
 	progressTime: {
@@ -263,7 +253,6 @@ const styles = StyleSheet.create({
 	},
 	timeText: {
 		fontSize: 12,
-		color: "#888",
 	},
 	controls: {
 		flexDirection: "row",
@@ -274,7 +263,6 @@ const styles = StyleSheet.create({
 		width: 64,
 		height: 64,
 		borderRadius: 32,
-		backgroundColor: "#fff",
 		justifyContent: "center",
 		alignItems: "center",
 	},

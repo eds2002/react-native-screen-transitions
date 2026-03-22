@@ -1,5 +1,6 @@
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import { snapTo } from "react-native-screen-transitions";
+import { useTheme } from "@/theme";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -10,23 +11,25 @@ const SNAP_TARGETS = [
 ];
 
 export default function SnapLockHorizontalLockedScreen() {
+	const theme = useTheme();
+
 	return (
-		<View style={[styles.container, { maxWidth: SCREEN_WIDTH }]}>
-			<View style={styles.handle} />
-			<Text style={styles.title}>Snap Lock: Horizontal</Text>
-			<Text style={styles.subtitle}>
+		<View style={[styles.container, { maxWidth: SCREEN_WIDTH, backgroundColor: theme.bg }]}>
+			<View style={[styles.handle, { backgroundColor: theme.handle }]} />
+			<Text style={[styles.title, { color: theme.text }]}>Snap Lock: Horizontal</Text>
+			<Text style={[styles.subtitle, { color: theme.textSecondary }]}>
 				Drawer axis validation with lock enabled
 			</Text>
 
-			<View style={styles.card}>
-				<Text style={styles.cardTitle}>Expected</Text>
-				<Text style={styles.item}>
+			<View style={[styles.card, { backgroundColor: theme.card }]}>
+				<Text style={[styles.cardTitle, { color: theme.infoBoxLabel }]}>Expected</Text>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
 					- Horizontal expand/collapse snapping is locked
 				</Text>
-				<Text style={styles.item}>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
 					- Dismiss gesture still works when allowed
 				</Text>
-				<Text style={styles.item}>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
 					- Programmatic snapTo still moves drawer
 				</Text>
 			</View>
@@ -36,10 +39,10 @@ export default function SnapLockHorizontalLockedScreen() {
 					<Pressable
 						key={target.index}
 						testID={`horizontal-locked-snap-to-${target.index}`}
-						style={styles.button}
+						style={({ pressed }) => [styles.button, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
 						onPress={() => snapTo(target.index)}
 					>
-						<Text style={styles.buttonText}>{target.label}</Text>
+						<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>{target.label}</Text>
 					</Pressable>
 				))}
 			</View>
@@ -52,7 +55,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingHorizontal: 20,
 		paddingTop: 12,
-		backgroundColor: "#15241a",
 		borderTopLeftRadius: 28,
 		borderTopRightRadius: 28,
 	},
@@ -61,37 +63,31 @@ const styles = StyleSheet.create({
 		width: 44,
 		height: 5,
 		borderRadius: 3,
-		backgroundColor: "rgba(255,255,255,0.2)",
 		marginBottom: 18,
 	},
 	title: {
 		fontSize: 28,
 		fontWeight: "900",
-		color: "#fff",
 		marginBottom: 6,
 	},
 	subtitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.55)",
 		marginBottom: 16,
 	},
 	card: {
-		backgroundColor: "rgba(255,255,255,0.08)",
-		borderRadius: 16,
+		borderRadius: 14,
 		padding: 14,
 		marginBottom: 16,
 	},
 	cardTitle: {
 		fontSize: 13,
 		fontWeight: "800",
-		color: "#9ff2bf",
 		marginBottom: 8,
 	},
 	item: {
 		fontSize: 13,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.75)",
 		marginBottom: 6,
 	},
 	buttons: {
@@ -100,14 +96,12 @@ const styles = StyleSheet.create({
 		gap: 8,
 	},
 	button: {
-		backgroundColor: "rgba(0,184,148,0.22)",
-		borderRadius: 12,
+		borderRadius: 999,
 		paddingHorizontal: 14,
 		paddingVertical: 9,
 	},
 	buttonText: {
 		fontSize: 12,
 		fontWeight: "800",
-		color: "#d5fff0",
 	},
 });

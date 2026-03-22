@@ -14,6 +14,7 @@ import {
 	type BoundsSyncZoomItem,
 	ZOOM_GROUP,
 } from "./constants";
+import { useTheme } from "@/theme";
 
 const COLOR_SWATCH_RADIUS = 28;
 
@@ -78,6 +79,7 @@ function DetailPage({
 	insets: { top: number; bottom: number };
 }) {
 	const hsl = hexToHSL(item.color);
+	const theme = useTheme();
 
 	return (
 		<View style={[styles.page, { width, backgroundColor: item.bgColor }]}>
@@ -93,11 +95,11 @@ function DetailPage({
 				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.header}>
-					<Text style={styles.title}>{item.title}</Text>
-					<Text style={styles.subtitle}>{item.subtitle}</Text>
+					<Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
+					<Text style={[styles.subtitle, { color: theme.textTertiary }]}>{item.subtitle}</Text>
 				</View>
 
-				<Text style={styles.description}>{item.description}</Text>
+				<Text style={[styles.description, { color: theme.textSecondary }]}>{item.description}</Text>
 
 				<View style={styles.swatchSection}>
 					<Transition.Boundary.View
@@ -123,7 +125,7 @@ function DetailPage({
 							>
 								{prop.label}
 							</Text>
-							<Text style={styles.propertyValue}>
+							<Text style={[styles.propertyValue, { color: theme.text }]}>
 								{getColorProperty(item.color, prop.key)}
 							</Text>
 						</View>
@@ -131,14 +133,14 @@ function DetailPage({
 				</View>
 
 				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>HSL Breakdown</Text>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>HSL Breakdown</Text>
 					{[
 						{ label: "Hue", value: hsl.h, max: 360 },
 						{ label: "Saturation", value: hsl.s, max: 100 },
 						{ label: "Lightness", value: hsl.l, max: 100 },
 					].map((bar) => (
 						<View key={bar.label} style={styles.barRow}>
-							<Text style={styles.barLabel}>{bar.label}</Text>
+							<Text style={[styles.barLabel, { color: theme.textSecondary }]}>{bar.label}</Text>
 							<View style={styles.barTrack}>
 								<View
 									style={[
@@ -150,16 +152,16 @@ function DetailPage({
 									]}
 								/>
 							</View>
-							<Text style={styles.barValue}>{bar.value}</Text>
+							<Text style={[styles.barValue, { color: theme.textSecondary }]}>{bar.value}</Text>
 						</View>
 					))}
 				</View>
 
 				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Companion Palettes</Text>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>Companion Palettes</Text>
 					{PALETTES.map((palette) => (
 						<View key={palette.name} style={styles.paletteRow}>
-							<Text style={styles.paletteLabel}>{palette.name}</Text>
+							<Text style={[styles.paletteLabel, { color: theme.textSecondary }]}>{palette.name}</Text>
 							<View style={styles.paletteSwatches}>
 								{palette.colors.map((c) => (
 									<View
@@ -172,9 +174,9 @@ function DetailPage({
 					))}
 				</View>
 
-				<View style={[styles.section, styles.notesCard]}>
-					<Text style={styles.sectionTitle}>Usage Notes</Text>
-					<Text style={styles.noteText}>
+				<View style={[styles.section, styles.notesCard, { backgroundColor: theme.surface }]}>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>Usage Notes</Text>
+					<Text style={[styles.noteText, { color: theme.textSecondary }]}>
 						This color works best as an accent against dark backgrounds. Pair
 						with neutral greys for UI elements or use at reduced opacity for
 						subtle surface tints. Avoid placing small text directly on this
@@ -293,19 +295,16 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 32,
 		fontWeight: "800",
-		color: "#fff",
 		letterSpacing: -0.8,
 	},
 	subtitle: {
 		marginTop: 4,
 		fontSize: 16,
 		fontWeight: "500",
-		color: "rgba(255,255,255,0.45)",
 	},
 	description: {
 		fontSize: 15,
 		lineHeight: 24,
-		color: "rgba(255,255,255,0.55)",
 		marginBottom: 24,
 	},
 	swatchSection: {
@@ -351,7 +350,6 @@ const styles = StyleSheet.create({
 	propertyValue: {
 		fontSize: 20,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	section: {
 		marginBottom: 28,
@@ -359,7 +357,6 @@ const styles = StyleSheet.create({
 	sectionTitle: {
 		fontSize: 13,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.35)",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 		marginBottom: 14,
@@ -374,7 +371,6 @@ const styles = StyleSheet.create({
 		width: 80,
 		fontSize: 13,
 		fontWeight: "500",
-		color: "rgba(255,255,255,0.5)",
 	},
 	barTrack: {
 		flex: 1,
@@ -391,7 +387,6 @@ const styles = StyleSheet.create({
 		width: 36,
 		fontSize: 13,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.6)",
 		textAlign: "right",
 	},
 	paletteRow: {
@@ -404,7 +399,6 @@ const styles = StyleSheet.create({
 		width: 80,
 		fontSize: 13,
 		fontWeight: "500",
-		color: "rgba(255,255,255,0.5)",
 	},
 	paletteSwatches: {
 		flexDirection: "row",
@@ -416,14 +410,12 @@ const styles = StyleSheet.create({
 		borderRadius: 10,
 	},
 	notesCard: {
-		backgroundColor: "rgba(255,255,255,0.04)",
 		borderRadius: 20,
 		padding: 20,
 	},
 	noteText: {
 		fontSize: 14,
 		lineHeight: 22,
-		color: "rgba(255,255,255,0.45)",
 		marginBottom: 16,
 	},
 	noteTags: {

@@ -7,6 +7,7 @@ import {
 	getBoxPositionStyle,
 	getCaseById,
 } from "./constants";
+import { useTheme } from "@/theme";
 
 const FORCED_TOP_INSET = 59;
 const HEADER_HEIGHT_ESTIMATE = 60;
@@ -15,10 +16,11 @@ export default function BoundsSyncDestination() {
 	const { width, height } = useWindowDimensions();
 	const caseId = activeCaseId.value;
 	const testCase = getCaseById(caseId);
+	const theme = useTheme();
 
 	if (!testCase) {
 		return (
-			<View style={[styles.container, { paddingTop: FORCED_TOP_INSET }]}>
+			<View style={[styles.container, { paddingTop: FORCED_TOP_INSET, backgroundColor: theme.bg }]}>
 				<ScreenHeader title="Unknown Case" />
 			</View>
 		);
@@ -62,19 +64,19 @@ export default function BoundsSyncDestination() {
 	].filter(Boolean);
 
 	return (
-		<View style={[styles.container, { paddingTop: FORCED_TOP_INSET }]}>
+		<View style={[styles.container, { paddingTop: FORCED_TOP_INSET, backgroundColor: theme.bg }]}>
 			<ScreenHeader
 				title={`Dest: ${testCase.title}`}
 				subtitle={`${destination.width}x${destination.height} @ ${destination.position}`}
 			/>
-			<Text style={styles.concernText}>
+			<Text style={[styles.concernText, { color: theme.textSecondary }]}>
 				Concern: Element transition, not navigation transition
 			</Text>
-			<Text style={styles.anchorNoteText}>
+			<Text style={[styles.anchorNoteText, { color: theme.textSecondary }]}>
 				Anchor selects the alignment point (e.g. center), not a fixed top-left
 				lock.
 			</Text>
-			<Text style={styles.anchorPairText}>
+			<Text style={[styles.anchorPairText, { color: theme.textSecondary }]}>
 				sourceAnchor: {sourceAnchor} | destinationAnchor: {destinationAnchor}
 			</Text>
 			<View style={styles.arena}>
@@ -90,11 +92,12 @@ export default function BoundsSyncDestination() {
 							{
 								width: destination.width,
 								height: destination.height,
+								backgroundColor: theme.scenario,
 							},
 							positionStyle,
 						]}
 					>
-						<Text style={styles.boxLabel}>DST</Text>
+						<Text style={[styles.boxLabel, { color: theme.text }]}>DST</Text>
 					</Transition.Boundary.View>
 				)}
 
@@ -121,9 +124,9 @@ export default function BoundsSyncDestination() {
 			</View>
 
 			{/* Debug info */}
-			<View style={styles.infoBar}>
+			<View style={[styles.infoBar, { backgroundColor: theme.surface, borderTopColor: theme.separator }]}>
 				{infoLines.map((line) => (
-					<Text key={line} style={styles.infoText}>
+					<Text key={line} style={[styles.infoText, { color: theme.activePillText }]}>
 						{line}
 					</Text>
 				))}
@@ -144,38 +147,33 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingBottom: 4,
 		fontSize: 11,
-		color: "#7fa5cf",
 		fontFamily: "monospace",
 	},
 	anchorNoteText: {
 		paddingHorizontal: 16,
 		paddingBottom: 4,
 		fontSize: 11,
-		color: "#97abc3",
 		fontFamily: "monospace",
 	},
 	anchorPairText: {
 		paddingHorizontal: 16,
 		paddingBottom: 10,
 		fontSize: 11,
-		color: "#89a4c4",
 		fontFamily: "monospace",
 	},
 	box: {
 		position: "absolute",
-		backgroundColor: "#ff6b35",
-		borderRadius: 12,
+		borderRadius: 14,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	boxLabel: {
-		color: "#fff",
 		fontWeight: "700",
 		fontSize: 14,
 	},
 	ghost: {
 		position: "absolute",
-		borderRadius: 12,
+		borderRadius: 14,
 		borderWidth: 2,
 		borderColor: "rgba(255, 255, 255, 0.15)",
 		borderStyle: "dashed",
@@ -190,16 +188,13 @@ const styles = StyleSheet.create({
 	infoBar: {
 		paddingHorizontal: 16,
 		paddingVertical: 12,
-		backgroundColor: "#1a1a1a",
 		borderTopWidth: 1,
-		borderTopColor: "#333",
 		flexDirection: "row",
 		flexWrap: "wrap",
 		gap: 12,
 	},
 	infoText: {
 		fontSize: 11,
-		color: "#4a9eff",
 		fontFamily: "monospace",
 	},
 });

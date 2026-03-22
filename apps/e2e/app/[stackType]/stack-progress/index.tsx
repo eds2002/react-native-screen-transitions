@@ -7,6 +7,7 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScreenAnimation } from "react-native-screen-transitions";
 import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import { screenTints } from "@/theme";
 
 export default function StackProgressIndex() {
 	const stackType = useResolvedStackType();
@@ -70,7 +71,7 @@ export default function StackProgressIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#6366f1",
+		backgroundColor: screenTints.indigo,
 		overflow: "hidden",
 	},
 	inner: {
@@ -97,7 +98,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "rgba(255,255,255,0.2)",
 		paddingVertical: 16,
 		paddingHorizontal: 32,
-		borderRadius: 12,
+		borderRadius: 999,
 	},
 	buttonText: {
 		fontSize: 16,

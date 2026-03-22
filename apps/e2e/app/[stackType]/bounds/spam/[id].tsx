@@ -3,6 +3,7 @@ import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 const ITEMS = Array.from({ length: 16 }, (_, i) => ({
 	id: `spam-${i}`,
@@ -15,9 +16,10 @@ export default function BoundsSpamDetail() {
 	const { width } = useWindowDimensions();
 	const item = ITEMS.find((i) => i.id === id);
 	const size = width * 0.85;
+	const theme = useTheme();
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader title="Spam Detail" subtitle={id} />
 			<View style={styles.content}>
 				<Transition.Boundary.View
@@ -27,7 +29,7 @@ export default function BoundsSpamDetail() {
 						{
 							width: size,
 							height: size,
-							backgroundColor: item?.color ?? "#333",
+							backgroundColor: item?.color ?? theme.card,
 						},
 					]}
 				>
@@ -41,7 +43,6 @@ export default function BoundsSpamDetail() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		flex: 1,

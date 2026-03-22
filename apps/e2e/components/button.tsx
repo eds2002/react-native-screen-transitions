@@ -9,6 +9,7 @@ import Animated, {
 	useSharedValue,
 	withTiming,
 } from "react-native-reanimated";
+import { useTheme } from "@/theme";
 
 type ButtonProps = {
 	children?: React.ReactNode;
@@ -29,6 +30,7 @@ const Button = ({
 	variant = "solid",
 }: ButtonProps) => {
 	const scale = useSharedValue(1);
+	const theme = useTheme();
 
 	const tap = useMemo(
 		() =>
@@ -72,8 +74,8 @@ const Button = ({
 				disabled={disabled}
 				style={[
 					styles.base,
-					variant === "solid" && styles.solid,
-					variant === "ghost" && styles.ghost,
+					variant === "solid" && { backgroundColor: theme.actionButton },
+					variant === "ghost" && { backgroundColor: theme.secondaryButton },
 					style,
 					animatedStyle,
 				]}
@@ -81,8 +83,8 @@ const Button = ({
 				<Text
 					style={[
 						styles.textBase,
-						variant === "solid" && styles.textSolid,
-						variant === "ghost" && styles.textGhost,
+						variant === "solid" && { color: theme.actionButtonText },
+						variant === "ghost" && { color: theme.secondaryButtonText },
 					]}
 				>
 					{children}
@@ -102,21 +104,7 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		justifyContent: "center",
 	},
-	solid: {
-		backgroundColor: "black",
-	},
-	ghost: {
-		backgroundColor: "transparent",
-		borderWidth: 2,
-		borderColor: "rgba(0,0,0,0.1)",
-	},
 	textBase: {
 		fontWeight: "600",
-	},
-	textSolid: {
-		color: "white",
-	},
-	textGhost: {
-		color: "black",
 	},
 });

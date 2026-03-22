@@ -3,10 +3,16 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function DeepNestingIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="4. Deep Nesting (3 Levels)"
 				subtitle="Multiple nested stacks with gesture resolution"
@@ -35,11 +41,27 @@ export default function DeepNestingIndex() {
 
 				<View style={styles.actions}>
 					<Pressable
-						style={styles.button}
+						style={({ pressed }) => [
+							styles.button,
+							{
+								backgroundColor: pressed
+									? theme.actionButtonPressed
+									: theme.actionButton,
+							},
+						]}
 						onPress={() => router.push("/gestures/deep-nesting/deeper")}
 					>
-						<Text style={styles.buttonText}>Go Deeper (Level 2)</Text>
-						<Text style={styles.buttonSubtext}>
+						<Text
+							style={[styles.buttonText, { color: theme.actionButtonText }]}
+						>
+							Go Deeper (Level 2)
+						</Text>
+						<Text
+							style={[
+								styles.buttonSubtext,
+								{ color: theme.actionButtonText, opacity: 0.7 },
+							]}
+						>
 							Horizontal stack with leaf screen
 						</Text>
 					</Pressable>
@@ -52,7 +74,6 @@ export default function DeepNestingIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	scrollContent: {
 		paddingBottom: 40,
@@ -62,18 +83,15 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#4a9eff",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#fff",
 		fontSize: 16,
 		fontWeight: "600",
 	},
 	buttonSubtext: {
-		color: "rgba(255, 255, 255, 0.7)",
 		fontSize: 12,
 		marginTop: 4,
 	},

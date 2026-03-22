@@ -7,6 +7,7 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 
 const COLUMNS = 4;
 const ROWS = 4;
@@ -19,8 +20,9 @@ const ITEMS = Array.from({ length: COLUMNS * ROWS }, (_, i) => ({
 
 export default function BoundsSpamIndex() {
 	const stackType = useResolvedStackType();
+	const theme = useTheme();
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Bounds Spam"
 				subtitle="Tap rapidly — same item or different items"
@@ -62,7 +64,6 @@ export default function BoundsSpamIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		flex: 1,
@@ -80,7 +81,7 @@ const styles = StyleSheet.create({
 	},
 	boundary: {
 		flex: 1,
-		borderRadius: 12,
+		borderRadius: 14,
 		alignItems: "center",
 		justifyContent: "center",
 	},

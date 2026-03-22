@@ -3,10 +3,16 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function DeeperIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="L2: Deeper (horizontal)"
 				subtitle="Inside snap-deep-nesting (vertical)"
@@ -36,13 +42,29 @@ export default function DeeperIndex() {
 
 			<View style={styles.actions}>
 				<Pressable
-					style={styles.button}
+					style={({ pressed }) => [
+						styles.button,
+						{
+							backgroundColor: pressed
+								? theme.actionButtonPressed
+								: theme.actionButton,
+						},
+					]}
 					onPress={() =>
 						router.push("/gestures/snap-deep-nesting/deeper/sheet")
 					}
 				>
-					<Text style={styles.buttonText}>Open Sheet (L3)</Text>
-					<Text style={styles.buttonSubtext}>
+					<Text
+						style={[styles.buttonText, { color: theme.actionButtonText }]}
+					>
+						Open Sheet (L3)
+					</Text>
+					<Text
+						style={[
+							styles.buttonSubtext,
+							{ color: theme.actionButtonText, opacity: 0.7 },
+						]}
+					>
 						Snap points: [0.5, 0.8] - vertical
 					</Text>
 				</Pressable>
@@ -54,25 +76,21 @@ export default function DeeperIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#3a1b4e",
 	},
 	actions: {
 		padding: 16,
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#ff9eff",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#000",
 		fontSize: 16,
 		fontWeight: "600",
 	},
 	buttonSubtext: {
-		color: "rgba(0, 0, 0, 0.6)",
 		fontSize: 12,
 		marginTop: 4,
 	},

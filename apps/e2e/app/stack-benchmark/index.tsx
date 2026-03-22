@@ -22,6 +22,7 @@ import type {
 	BenchmarkScenario,
 	BenchmarkStackImpl,
 } from "@/components/benchmark/types";
+import { useTheme } from "@/theme";
 
 type Confidence = "Low" | "Medium" | "High";
 
@@ -83,10 +84,12 @@ interface ScenarioSummary {
 }
 
 function MetricLine({ label, value }: { label: string; value: string }) {
+	const theme = useTheme();
+
 	return (
 		<View style={styles.metricLine}>
-			<Text style={styles.metricLabel}>{label}</Text>
-			<Text style={styles.metricValue}>{value}</Text>
+			<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>{label}</Text>
+			<Text style={[styles.metricValue, { color: theme.text }]}>{value}</Text>
 		</View>
 	);
 }
@@ -108,20 +111,22 @@ function LatestResultCard({
 	isRunning: boolean;
 	onRun: (scenario: BenchmarkScenario, impl: BenchmarkStackImpl) => void;
 }) {
+	const theme = useTheme();
+
 	return (
-		<View style={styles.implCard}>
+		<View style={[styles.implCard, { backgroundColor: theme.surfaceElevated }]}>
 			<View style={styles.implHeader}>
-				<Text style={styles.implTitle}>{getImplLabel(impl)}</Text>
-				<Text style={styles.implRuns}>Runs: {runCount}</Text>
+				<Text style={[styles.implTitle, { color: theme.text }]}>{getImplLabel(impl)}</Text>
+				<Text style={[styles.implRuns, { color: theme.textTertiary }]}>Runs: {runCount}</Text>
 			</View>
 
 			<Pressable
 				testID={`benchmark-run-${scenario}-${impl}`}
-				style={[styles.runButton, disabled && styles.runButtonDisabled]}
+				style={({ pressed }) => [styles.runButton, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }, disabled && styles.runButtonDisabled]}
 				disabled={disabled}
 				onPress={() => onRun(scenario, impl)}
 			>
-				<Text style={styles.runButtonText}>
+				<Text style={[styles.runButtonText, { color: theme.actionButtonText }]}>
 					{isRunning ? "Running..." : `Run ${BENCHMARK_CYCLES}-Cycle Benchmark`}
 				</Text>
 			</Pressable>
@@ -146,7 +151,7 @@ function LatestResultCard({
 					/>
 				</View>
 			) : (
-				<Text style={styles.emptyText}>No result captured for this stack yet.</Text>
+				<Text style={[styles.emptyText, { color: theme.textTertiary }]}>No result captured for this stack yet.</Text>
 			)}
 		</View>
 	);
@@ -225,6 +230,7 @@ function QuickAnswerCard({
 }: {
 	summaries: Partial<Record<BenchmarkScenario, ScenarioSummary | null>>;
 }) {
+	const theme = useTheme();
 	const pushPop = summaries["push-pop-loop"];
 	const navigateClose = summaries["navigate-during-close"];
 
@@ -252,7 +258,7 @@ function QuickAnswerCard({
 	) => {
 		if (!summary) {
 			return (
-				<Text style={styles.quickScenarioText}>
+				<Text style={[styles.quickScenarioText, { color: theme.textSecondary }]}>
 					{label}: Need at least 1 run for both stacks.
 				</Text>
 			);
@@ -260,7 +266,7 @@ function QuickAnswerCard({
 
 		if (!summary.fasterImpl || summary.speedPct <= 0) {
 			return (
-				<Text style={styles.quickScenarioText}>
+				<Text style={[styles.quickScenarioText, { color: theme.textSecondary }]}>
 					{label}: Tie in this session.
 				</Text>
 			);
@@ -269,7 +275,7 @@ function QuickAnswerCard({
 		const winner = getImplLabel(summary.fasterImpl);
 		if (summary.confidence === "Low") {
 			return (
-				<Text style={styles.quickScenarioText}>
+				<Text style={[styles.quickScenarioText, { color: theme.textSecondary }]}>
 					{label}: {winner} is currently ahead by {summary.speedPct.toFixed(2)}%
 					(LOW confidence).
 				</Text>
@@ -277,7 +283,7 @@ function QuickAnswerCard({
 		}
 
 		return (
-			<Text style={styles.quickScenarioText}>
+			<Text style={[styles.quickScenarioText, { color: theme.textSecondary }]}>
 				{label}: {winner} is faster by {summary.speedPct.toFixed(2)}% (
 				{summary.confidence} confidence).
 			</Text>
@@ -285,12 +291,12 @@ function QuickAnswerCard({
 	};
 
 	return (
-		<View style={styles.quickAnswerCard}>
-			<Text style={styles.quickAnswerTitle}>Quick Answer</Text>
-			<Text style={styles.quickAnswerVerdict}>{overallVerdict}</Text>
+		<View style={[styles.quickAnswerCard, { backgroundColor: theme.infoBox }]}>
+			<Text style={[styles.quickAnswerTitle, { color: theme.infoBoxLabel }]}>Quick Answer</Text>
+			<Text style={[styles.quickAnswerVerdict, { color: theme.text }]}>{overallVerdict}</Text>
 			{renderScenarioVerdict("Push/Pop Loop", pushPop)}
 			{renderScenarioVerdict("Navigate During Close", navigateClose)}
-			<Text style={styles.quickAnswerHint}>{overallHint}</Text>
+			<Text style={[styles.quickAnswerHint, { color: theme.textTertiary }]}>{overallHint}</Text>
 		</View>
 	);
 }
@@ -318,15 +324,16 @@ function ScenarioSection({
 	jsHistory: BenchmarkRunResult[];
 	onRun: (scenario: BenchmarkScenario, impl: BenchmarkStackImpl) => void;
 }) {
+	const theme = useTheme();
 	const summary = useMemo(
 		() => buildScenarioSummary(blankHistory, jsHistory),
 		[blankHistory, jsHistory],
 	);
 
 	return (
-		<View style={styles.sectionCard}>
-			<Text style={styles.sectionTitle}>{title}</Text>
-			<Text style={styles.sectionDescription}>{description}</Text>
+		<View style={[styles.sectionCard, { backgroundColor: theme.card }]}>
+			<Text style={[styles.sectionTitle, { color: theme.text }]}>{title}</Text>
+			<Text style={[styles.sectionDescription, { color: theme.textTertiary }]}>{description}</Text>
 
 			<LatestResultCard
 				scenario={scenario}
@@ -350,16 +357,16 @@ function ScenarioSection({
 				onRun={onRun}
 			/>
 
-			<View style={styles.summaryCard}>
-				<Text style={styles.summaryTitle}>Scenario Summary</Text>
+			<View style={[styles.summaryCard, { backgroundColor: theme.surfaceElevated }]}>
+				<Text style={[styles.summaryTitle, { color: theme.text }]}>Scenario Summary</Text>
 				{summary ? (
 					<>
-						<Text style={styles.speedSummary}>
+						<Text style={[styles.speedSummary, { color: theme.actionButton }]}>
 							{summary.confidence === "Low"
 								? "Current leader only (not reliable yet)"
 								: "Winner for this scenario"}
 						</Text>
-						<Text style={styles.summaryWinnerText}>
+						<Text style={[styles.summaryWinnerText, { color: theme.text }]}>
 							{summary.fasterImpl
 								? `${getImplLabel(summary.fasterImpl)} (${summary.speedPct.toFixed(2)}% faster)`
 								: "Tie"}
@@ -376,10 +383,10 @@ function ScenarioSection({
 							label="Confidence"
 							value={summary.confidence}
 						/>
-						<Text style={styles.summaryHint}>{summary.confidenceReason}</Text>
+						<Text style={[styles.summaryHint, { color: theme.textTertiary }]}>{summary.confidenceReason}</Text>
 					</>
 				) : (
-					<Text style={styles.summaryHint}>
+					<Text style={[styles.summaryHint, { color: theme.textTertiary }]}>
 						Run both stacks in this scenario to get a winner.
 					</Text>
 				)}
@@ -390,6 +397,7 @@ function ScenarioSection({
 
 export default function StackBenchmarkDashboardScreen() {
 	const isFocused = useIsFocused();
+	const theme = useTheme();
 	const activeRun = useBenchmarkStore((state) => state.activeRun);
 	const fairRunPlan = useBenchmarkStore((state) => state.fairRunPlan);
 	const resultsByScenarioImpl = useBenchmarkStore(
@@ -562,48 +570,49 @@ export default function StackBenchmarkDashboardScreen() {
 	);
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScrollView contentContainerStyle={styles.content}>
-				<View style={styles.headerCard}>
-					<Text style={styles.headerTitle}>Transparent Stack Benchmark</Text>
-					<Text style={styles.headerBody}>{BENCHMARK_TRANSPARENCY_NOTE}</Text>
-					<Text style={styles.headerMuted}>{BENCHMARK_CAVEAT_NOTE}</Text>
-					<View style={styles.statusRow}>
-						<Text style={styles.statusLabel}>Status</Text>
-						<Text style={styles.statusValue}>{statusText}</Text>
+				<View style={[styles.headerCard, { backgroundColor: theme.card }]}>
+					<Text style={[styles.headerTitle, { color: theme.text }]}>Transparent Stack Benchmark</Text>
+					<Text style={[styles.headerBody, { color: theme.textSecondary }]}>{BENCHMARK_TRANSPARENCY_NOTE}</Text>
+					<Text style={[styles.headerMuted, { color: theme.textTertiary }]}>{BENCHMARK_CAVEAT_NOTE}</Text>
+					<View style={[styles.statusRow, { borderTopColor: theme.separator }]}>
+						<Text style={[styles.statusLabel, { color: theme.textTertiary }]}>Status</Text>
+						<Text style={[styles.statusValue, { color: theme.text }]}>{statusText}</Text>
 					</View>
 				</View>
 
-				<View style={styles.fairRunCard}>
-					<Text style={styles.fairRunTitle}>Fair Run (Auto Alternating)</Text>
-					<Text style={styles.fairRunBody}>
+				<View style={[styles.fairRunCard, { backgroundColor: theme.card }]}>
+					<Text style={[styles.fairRunTitle, { color: theme.text }]}>Fair Run (Auto Alternating)</Text>
+					<Text style={[styles.fairRunBody, { color: theme.textTertiary }]}>
 						One tap runs both scenarios with alternating order to reduce warmup/order
 						bias ({BENCHMARK_FAIR_RUNS_PER_IMPL} runs per stack per scenario).
 					</Text>
 					{fairRunProgressText ? (
-						<Text style={styles.fairRunProgress}>{fairRunProgressText}</Text>
+						<Text style={[styles.fairRunProgress, { color: theme.actionButton }]}>{fairRunProgressText}</Text>
 					) : null}
 					<Pressable
 						testID="benchmark-fair-run-start"
-						style={[
+						style={({ pressed }) => [
 							styles.fairRunButton,
+							{ backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton },
 							(activeRun !== null || fairRunPlan !== null) &&
 								styles.runButtonDisabled,
 						]}
 						disabled={activeRun !== null || fairRunPlan !== null}
 						onPress={handleStartFairRun}
 					>
-						<Text style={styles.fairRunButtonText}>
+						<Text style={[styles.fairRunButtonText, { color: theme.actionButtonText }]}>
 							Start Fair Run ({BENCHMARK_FAIR_RUNS_PER_IMPL} each)
 						</Text>
 					</Pressable>
 					{fairRunPlan ? (
 						<Pressable
 							testID="benchmark-fair-run-stop"
-							style={styles.fairRunCancelButton}
+							style={({ pressed }) => [styles.fairRunCancelButton, { backgroundColor: pressed ? theme.secondaryButtonPressed : theme.secondaryButton }]}
 							onPress={handleCancelFairRun}
 						>
-							<Text style={styles.fairRunCancelText}>Stop Fair Run Queue</Text>
+							<Text style={[styles.fairRunCancelText, { color: theme.secondaryButtonText }]}>Stop Fair Run Queue</Text>
 						</Pressable>
 					) : null}
 				</View>
@@ -611,9 +620,9 @@ export default function StackBenchmarkDashboardScreen() {
 				<QuickAnswerCard summaries={scenarioSummaries} />
 
 				{__DEV__ ? (
-					<View style={styles.devWarningCard}>
-						<Text style={styles.devWarningTitle}>Dev Build Warning</Text>
-						<Text style={styles.devWarningBody}>
+					<View style={[styles.devWarningCard, { backgroundColor: theme.noteBox }]}>
+						<Text style={[styles.devWarningTitle, { color: theme.noteText }]}>Dev Build Warning</Text>
+						<Text style={[styles.devWarningBody, { color: theme.noteText }]}>
 							Dev mode timings are noisy; confidence is capped at Low.
 						</Text>
 					</View>
@@ -635,8 +644,11 @@ export default function StackBenchmarkDashboardScreen() {
 					/>
 				))}
 
-				<Pressable style={styles.clearButton} onPress={clearResults}>
-					<Text style={styles.clearButtonText}>Clear Session Results</Text>
+				<Pressable
+					style={({ pressed }) => [styles.clearButton, { backgroundColor: pressed ? theme.secondaryButtonPressed : theme.secondaryButton }]}
+					onPress={clearResults}
+				>
+					<Text style={[styles.clearButtonText, { color: theme.secondaryButtonText }]}>Clear Session Results</Text>
 				</Pressable>
 			</ScrollView>
 		</SafeAreaView>
@@ -646,7 +658,6 @@ export default function StackBenchmarkDashboardScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#0b1220",
 	},
 	content: {
 		padding: 16,
@@ -654,33 +665,26 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	headerCard: {
-		backgroundColor: "#101b2e",
-		borderWidth: 1,
-		borderColor: "#22344d",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 14,
 		gap: 6,
 	},
 	headerTitle: {
 		fontSize: 20,
 		fontWeight: "700",
-		color: "#f1f5f9",
 	},
 	headerBody: {
 		fontSize: 13,
 		lineHeight: 18,
-		color: "#d1d9e7",
 	},
 	headerMuted: {
 		fontSize: 12,
 		lineHeight: 17,
-		color: "#9aaac4",
 	},
 	statusRow: {
 		marginTop: 4,
 		paddingTop: 10,
 		borderTopWidth: 1,
-		borderTopColor: "#22344d",
 		flexDirection: "row",
 		justifyContent: "space-between",
 		alignItems: "center",
@@ -688,127 +692,95 @@ const styles = StyleSheet.create({
 	},
 	statusLabel: {
 		fontSize: 12,
-		color: "#9aaac4",
 	},
 	statusValue: {
 		fontSize: 12,
 		fontWeight: "700",
-		color: "#e2e8f0",
 	},
 	devWarningCard: {
-		backgroundColor: "#2b1c16",
-		borderWidth: 1,
-		borderColor: "#854d0e",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 12,
 		gap: 4,
 	},
 	devWarningTitle: {
 		fontSize: 13,
 		fontWeight: "700",
-		color: "#fdba74",
 	},
 	devWarningBody: {
 		fontSize: 12,
 		lineHeight: 17,
-		color: "#fed7aa",
 	},
 	fairRunCard: {
-		backgroundColor: "#101b2e",
-		borderWidth: 1,
-		borderColor: "#22344d",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 14,
 		gap: 8,
 	},
 	fairRunTitle: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: "#f1f5f9",
 	},
 	fairRunBody: {
 		fontSize: 12,
 		lineHeight: 17,
-		color: "#9aaac4",
 	},
 	fairRunProgress: {
 		fontSize: 12,
 		lineHeight: 17,
-		color: "#bae6fd",
 	},
 	fairRunButton: {
-		backgroundColor: "#0ea5e9",
-		borderRadius: 10,
+		borderRadius: 999,
 		paddingVertical: 10,
 		alignItems: "center",
 	},
 	fairRunButtonText: {
 		fontSize: 13,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	fairRunCancelButton: {
-		backgroundColor: "rgba(255,255,255,0.08)",
-		borderRadius: 10,
+		borderRadius: 999,
 		paddingVertical: 9,
 		alignItems: "center",
 	},
 	fairRunCancelText: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "#e2e8f0",
 	},
 	quickAnswerCard: {
-		backgroundColor: "#0f233e",
-		borderWidth: 1,
-		borderColor: "#1d4ed8",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 14,
 		gap: 8,
 	},
 	quickAnswerTitle: {
 		fontSize: 17,
 		fontWeight: "700",
-		color: "#dbeafe",
 	},
 	quickAnswerVerdict: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: "#ffffff",
 	},
 	quickScenarioText: {
 		fontSize: 13,
 		lineHeight: 19,
-		color: "#cbd5e1",
 	},
 	quickAnswerHint: {
 		fontSize: 12,
 		lineHeight: 17,
-		color: "#93c5fd",
 	},
 	sectionCard: {
-		backgroundColor: "#101b2e",
-		borderWidth: 1,
-		borderColor: "#22344d",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 14,
 		gap: 10,
 	},
 	sectionTitle: {
 		fontSize: 16,
 		fontWeight: "700",
-		color: "#e2e8f0",
 	},
 	sectionDescription: {
 		fontSize: 12,
 		lineHeight: 17,
-		color: "#9aaac4",
 	},
 	implCard: {
-		backgroundColor: "#132139",
-		borderWidth: 1,
-		borderColor: "#2a3f5f",
-		borderRadius: 10,
+		borderRadius: 14,
 		padding: 12,
 		gap: 8,
 	},
@@ -820,15 +792,12 @@ const styles = StyleSheet.create({
 	implTitle: {
 		fontSize: 14,
 		fontWeight: "700",
-		color: "#e2e8f0",
 	},
 	implRuns: {
 		fontSize: 11,
-		color: "#9aaac4",
 	},
 	runButton: {
-		backgroundColor: "#0ea5e9",
-		borderRadius: 9,
+		borderRadius: 999,
 		paddingVertical: 10,
 		alignItems: "center",
 	},
@@ -838,43 +807,34 @@ const styles = StyleSheet.create({
 	runButtonText: {
 		fontSize: 13,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	implMetrics: {
 		gap: 5,
 	},
 	emptyText: {
 		fontSize: 12,
-		color: "#9aaac4",
 	},
 	summaryCard: {
-		backgroundColor: "#132139",
-		borderWidth: 1,
-		borderColor: "#2a3f5f",
-		borderRadius: 10,
+		borderRadius: 14,
 		padding: 12,
 		gap: 6,
 	},
 	summaryTitle: {
 		fontSize: 14,
 		fontWeight: "700",
-		color: "#e2e8f0",
 	},
 	speedSummary: {
 		fontSize: 12,
 		lineHeight: 17,
 		fontWeight: "700",
-		color: "#bae6fd",
 	},
 	summaryWinnerText: {
 		fontSize: 18,
 		fontWeight: "800",
-		color: "#f8fafc",
 	},
 	summaryHint: {
 		fontSize: 12,
 		lineHeight: 17,
-		color: "#9aaac4",
 	},
 	metricLine: {
 		flexDirection: "row",
@@ -884,25 +844,19 @@ const styles = StyleSheet.create({
 	},
 	metricLabel: {
 		fontSize: 12,
-		color: "#9aaac4",
 		flex: 1,
 	},
 	metricValue: {
 		fontSize: 12,
-		color: "#e2e8f0",
 		fontFamily: "monospace",
 	},
 	clearButton: {
-		backgroundColor: "#1b273a",
-		borderWidth: 1,
-		borderColor: "#2a3f5f",
-		borderRadius: 10,
+		borderRadius: 999,
 		paddingVertical: 11,
 		alignItems: "center",
 	},
 	clearButtonText: {
 		fontSize: 13,
 		fontWeight: "700",
-		color: "#dce5f4",
 	},
 });

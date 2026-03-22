@@ -6,6 +6,7 @@ import {
 	type ComponentStackScreenProps,
 	createComponentStackNavigator,
 } from "react-native-screen-transitions/component-stack";
+import { useTheme } from "@/theme";
 import { BoundsIndicator } from "./bounds-indicator";
 import { transitionSpec } from "./interpolator";
 
@@ -83,28 +84,29 @@ const nestedScreenOptions = {
 };
 
 function NestedHome({ navigation }: NestedProps) {
+	const theme = useTheme();
 	return (
 		<BoundsIndicator>
 			<View style={styles.containerBottom}>
 				<Transition.View
 					sharedBoundTag="FLOATING_ELEMENT"
-					style={[styles.card, styles.cardCompact]}
+					style={[styles.card, styles.cardCompact, { backgroundColor: theme.surface }]}
 				>
-					<View style={styles.handle} />
-					<Text style={styles.title}>Nested Home</Text>
-					<Text style={styles.subtitle}>Compact nested screen</Text>
+					<View style={[styles.handle, { backgroundColor: theme.handle }]} />
+					<Text style={[styles.title, { color: theme.text }]}>Nested Home</Text>
+					<Text style={[styles.subtitle, { color: theme.textSecondary }]}>Compact nested screen</Text>
 					<View style={styles.buttonRow}>
 						<Transition.Pressable
-							style={styles.backButton}
+							style={[styles.backButton, { backgroundColor: theme.secondaryButton }]}
 							onPress={() => navigation.goBack()}
 						>
-							<Text style={styles.backButtonText}>Back</Text>
+							<Text style={[styles.backButtonText, { color: theme.secondaryButtonText }]}>Back</Text>
 						</Transition.Pressable>
 						<Transition.Pressable
-							style={styles.expandButton}
+							style={[styles.expandButton, { backgroundColor: theme.actionButton }]}
 							onPress={() => navigation.push("nested-detail")}
 						>
-							<Text style={styles.expandButtonText}>Expand</Text>
+							<Text style={[styles.expandButtonText, { color: theme.actionButtonText }]}>Expand</Text>
 						</Transition.Pressable>
 					</View>
 				</Transition.View>
@@ -114,16 +116,17 @@ function NestedHome({ navigation }: NestedProps) {
 }
 
 function NestedDetail({ navigation }: NestedProps) {
+	const theme = useTheme();
 	return (
 		<BoundsIndicator>
 			<View style={styles.containerBottom}>
 				<Transition.View
 					sharedBoundTag="FLOATING_ELEMENT"
-					style={[styles.card, styles.cardLarge]}
+					style={[styles.card, styles.cardLarge, { backgroundColor: theme.surface }]}
 				>
-					<View style={styles.handle} />
-					<Text style={styles.title}>Nested Detail</Text>
-					<Text style={styles.subtitle}>
+					<View style={[styles.handle, { backgroundColor: theme.handle }]} />
+					<Text style={[styles.title, { color: theme.text }]}>Nested Detail</Text>
+					<Text style={[styles.subtitle, { color: theme.textSecondary }]}>
 						Swipe down to dismiss (gesture test)
 					</Text>
 
@@ -132,9 +135,9 @@ function NestedDetail({ navigation }: NestedProps) {
 						contentContainerStyle={styles.scrollContent}
 					>
 						{[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-							<View key={i} style={styles.scrollCard}>
-								<Text style={styles.scrollCardTitle}>Nested Item {i}</Text>
-								<Text style={styles.scrollCardText}>
+							<View key={i} style={[styles.scrollCard, { backgroundColor: theme.surfaceElevated }]}>
+								<Text style={[styles.scrollCardTitle, { color: theme.text }]}>Nested Item {i}</Text>
+								<Text style={[styles.scrollCardText, { color: theme.textSecondary }]}>
 									Scrollable content inside nested navigator. Gestures should
 									coordinate with scroll position.
 								</Text>
@@ -142,12 +145,12 @@ function NestedDetail({ navigation }: NestedProps) {
 						))}
 					</Transition.ScrollView>
 
-					<View style={styles.bottomActions}>
+					<View style={[styles.bottomActions, { borderTopColor: theme.separator }]}>
 						<Transition.Pressable
-							style={styles.backButton}
+							style={[styles.backButton, { backgroundColor: theme.secondaryButton }]}
 							onPress={() => navigation.goBack()}
 						>
-							<Text style={styles.backButtonText}>Back to Home</Text>
+							<Text style={[styles.backButtonText, { color: theme.secondaryButtonText }]}>Back to Home</Text>
 						</Transition.Pressable>
 					</View>
 				</Transition.View>
@@ -186,11 +189,8 @@ const styles = StyleSheet.create({
 		paddingBottom: 32,
 	},
 	card: {
-		backgroundColor: "#1a1a1a",
 		borderRadius: 24,
 		padding: 20,
-		borderWidth: 1,
-		borderColor: "#444",
 	},
 	cardCompact: {
 		// Similar to compact size
@@ -201,7 +201,6 @@ const styles = StyleSheet.create({
 	handle: {
 		width: 40,
 		height: 4,
-		backgroundColor: "#555",
 		borderRadius: 2,
 		marginBottom: 16,
 		alignSelf: "center",
@@ -209,13 +208,11 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 22,
 		fontWeight: "700",
-		color: "#fff",
 		textAlign: "center",
 		marginBottom: 4,
 	},
 	subtitle: {
 		fontSize: 14,
-		color: "#888",
 		textAlign: "center",
 		marginBottom: 20,
 	},
@@ -225,15 +222,13 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	expandButton: {
-		backgroundColor: "#4a90d9",
 		paddingHorizontal: 24,
 		paddingVertical: 14,
-		borderRadius: 20,
+		borderRadius: 999,
 	},
 	expandButtonText: {
 		fontSize: 15,
 		fontWeight: "600",
-		color: "#fff",
 	},
 	scrollView: {
 		flex: 1,
@@ -243,38 +238,30 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 4,
 	},
 	scrollCard: {
-		backgroundColor: "#252525",
-		borderRadius: 16,
+		borderRadius: 14,
 		padding: 16,
 		marginBottom: 12,
-		borderWidth: 1,
-		borderColor: "#333",
 	},
 	scrollCardTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	scrollCardText: {
 		fontSize: 14,
-		color: "#888",
 		lineHeight: 20,
 	},
 	bottomActions: {
 		paddingTop: 16,
 		borderTopWidth: 1,
-		borderTopColor: "#333",
 	},
 	backButton: {
-		backgroundColor: "#333",
 		paddingHorizontal: 24,
 		paddingVertical: 14,
-		borderRadius: 20,
+		borderRadius: 999,
 	},
 	backButtonText: {
 		fontSize: 15,
 		fontWeight: "600",
-		color: "#fff",
 	},
 });

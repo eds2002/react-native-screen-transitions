@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 const ITEMS = Array.from({ length: 30 }, (_, i) => ({
 	id: i + 1,
@@ -9,8 +10,10 @@ const ITEMS = Array.from({ length: 30 }, (_, i) => ({
 }));
 
 export default function VerticalScrollScreen() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Vertical Scroll"
 				subtitle="Swipe down at scroll top to dismiss"
@@ -21,8 +24,8 @@ export default function VerticalScrollScreen() {
 				contentContainerStyle={styles.scrollContent}
 			>
 				{ITEMS.map((item) => (
-					<View key={item.id} style={styles.item}>
-						<Text style={styles.itemText}>{item.title}</Text>
+					<View key={item.id} style={[styles.item, { backgroundColor: theme.card }]}>
+						<Text style={[styles.itemText, { color: theme.text }]}>{item.title}</Text>
 					</View>
 				))}
 			</Transition.ScrollView>
@@ -33,7 +36,6 @@ export default function VerticalScrollScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	scrollView: {
 		flex: 1,
@@ -43,12 +45,10 @@ const styles = StyleSheet.create({
 		gap: 8,
 	},
 	item: {
-		backgroundColor: "rgba(255,255,255,0.1)",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 14,
 	},
 	itemText: {
 		fontSize: 16,
-		color: "#fff",
 	},
 });

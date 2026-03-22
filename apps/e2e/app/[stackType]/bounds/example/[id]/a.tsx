@@ -8,6 +8,7 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 import { getNestedBoundsItemById } from "../constants";
 
 export default function NestedBoundsScreenA() {
@@ -15,6 +16,7 @@ export default function NestedBoundsScreenA() {
 	const insets = useSafeAreaInsets();
 	const { id } = useLocalSearchParams<{ id?: string }>();
 	const item = getNestedBoundsItemById(id);
+	const theme = useTheme();
 
 	return (
 		<View style={[styles.container, { backgroundColor: item.background }]}>
@@ -37,28 +39,28 @@ export default function NestedBoundsScreenA() {
 				</View>
 
 				<View style={styles.metaRow}>
-					<View style={[styles.metaChip, { borderColor: `${item.accent}66` }]}>
-						<Text style={styles.metaLabel}>Duration</Text>
-						<Text style={styles.metaValue}>{item.duration}</Text>
+					<View style={[styles.metaChip, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textSecondary }]}>Duration</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.duration}</Text>
 					</View>
-					<View style={[styles.metaChip, { borderColor: `${item.accent}66` }]}>
-						<Text style={styles.metaLabel}>Pace</Text>
-						<Text style={styles.metaValue}>{item.pace}</Text>
+					<View style={[styles.metaChip, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textSecondary }]}>Pace</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.pace}</Text>
 					</View>
-					<View style={[styles.metaChip, { borderColor: `${item.accent}66` }]}>
-						<Text style={styles.metaLabel}>Best Time</Text>
-						<Text style={styles.metaValue}>{item.bestTime}</Text>
+					<View style={[styles.metaChip, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textSecondary }]}>Best Time</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.bestTime}</Text>
 					</View>
 				</View>
 
-				<View style={[styles.infoCard, { borderColor: `${item.accent}66` }]}>
+				<View style={[styles.infoCard, { backgroundColor: theme.surfaceElevated }]}>
 					<Text style={[styles.kicker, { color: item.accent }]}>Overview</Text>
-					<Text style={styles.title}>{item.subtitle}</Text>
-					<Text style={styles.body}>{item.overview}</Text>
+					<Text style={[styles.title, { color: theme.text }]}>{item.subtitle}</Text>
+					<Text style={[styles.body, { color: theme.textSecondary }]}>{item.overview}</Text>
 				</View>
 
-				<View style={[styles.infoCard, { borderColor: "rgba(255,255,255,0.16)" }]}>
-					<Text style={styles.kicker}>Highlights</Text>
+				<View style={[styles.infoCard, { backgroundColor: theme.surfaceElevated }]}>
+					<Text style={[styles.kicker, { color: theme.textSecondary }]}>Highlights</Text>
 					{item.highlights.map((highlight) => (
 						<View key={highlight} style={styles.highlightRow}>
 							<View
@@ -67,20 +69,23 @@ export default function NestedBoundsScreenA() {
 									{ backgroundColor: `${item.accent}EE` },
 								]}
 							/>
-							<Text style={styles.highlightText}>{highlight}</Text>
+							<Text style={[styles.highlightText, { color: theme.textSecondary }]}>{highlight}</Text>
 						</View>
 					))}
 				</View>
 
 				<Pressable
-					style={[styles.button, { backgroundColor: item.accent }]}
+					style={({ pressed }) => [
+						styles.button,
+						{ backgroundColor: pressed ? theme.actionButtonPressed : item.accent },
+					]}
 					onPress={() =>
 						router.navigate(
 							buildStackPath(stackType, `bounds/example/${item.id}/b`) as never,
 						)
 					}
 				>
-					<Text style={styles.buttonText}>Open Day Plan</Text>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>Open Day Plan</Text>
 				</Pressable>
 			</Transition.ScrollView>
 		</View>
@@ -100,8 +105,6 @@ const styles = StyleSheet.create({
 		aspectRatio: 1.02,
 		borderRadius: 20,
 		overflow: "hidden",
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.16)",
 	},
 	image: {
 		width: "100%",
@@ -114,47 +117,38 @@ const styles = StyleSheet.create({
 	metaChip: {
 		flex: 1,
 		padding: 10,
-		borderRadius: 12,
-		borderWidth: 1,
-		backgroundColor: "rgba(255,255,255,0.03)",
+		borderRadius: 14,
 	},
 	metaLabel: {
 		fontSize: 10,
 		textTransform: "uppercase",
 		letterSpacing: 0.7,
-		color: "rgba(255,255,255,0.62)",
 		fontWeight: "700",
 	},
 	metaValue: {
 		marginTop: 4,
 		fontSize: 13,
 		fontWeight: "700",
-		color: "#F2F7FE",
 	},
 	infoCard: {
 		padding: 16,
-		borderRadius: 16,
-		borderWidth: 1,
-		backgroundColor: "rgba(0,0,0,0.2)",
+		borderRadius: 14,
 	},
 	kicker: {
 		fontSize: 12,
 		textTransform: "uppercase",
 		letterSpacing: 0.8,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.6)",
 	},
 	title: {
 		marginTop: 6,
 		fontSize: 20,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	body: {
 		marginTop: 8,
 		fontSize: 14,
 		lineHeight: 22,
-		color: "rgba(255,255,255,0.78)",
 	},
 	highlightRow: {
 		marginTop: 9,
@@ -171,16 +165,14 @@ const styles = StyleSheet.create({
 		flex: 1,
 		fontSize: 14,
 		lineHeight: 20,
-		color: "rgba(255,255,255,0.84)",
 	},
 	button: {
 		height: 52,
-		borderRadius: 14,
+		borderRadius: 999,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	buttonText: {
-		color: "#0b111a",
 		fontSize: 17,
 		fontWeight: "700",
 	},

@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 const SECTIONS = [
 	{ id: 1, title: "Featured", color: "#ff6b6b" },
@@ -14,8 +15,10 @@ const SECTIONS = [
 const CARDS_PER_SECTION = 10;
 
 export default function NestedScrollScreen() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Nested ScrollViews"
 				subtitle="Netflix-style: outer vertical, inner horizontal"
@@ -27,7 +30,7 @@ export default function NestedScrollScreen() {
 			>
 				{SECTIONS.map((section) => (
 					<View key={section.id} style={styles.section}>
-						<Text style={styles.sectionTitle}>{section.title}</Text>
+						<Text style={[styles.sectionTitle, { color: theme.text }]}>{section.title}</Text>
 						<Transition.ScrollView
 							horizontal
 							showsHorizontalScrollIndicator={false}
@@ -52,7 +55,6 @@ export default function NestedScrollScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#141414",
 	},
 	outerScroll: {
 		flex: 1,
@@ -66,7 +68,6 @@ const styles = StyleSheet.create({
 	sectionTitle: {
 		fontSize: 18,
 		fontWeight: "600",
-		color: "#fff",
 		marginLeft: 16,
 		marginBottom: 12,
 	},
@@ -77,7 +78,7 @@ const styles = StyleSheet.create({
 	card: {
 		width: 120,
 		height: 160,
-		borderRadius: 8,
+		borderRadius: 14,
 		justifyContent: "center",
 		alignItems: "center",
 	},

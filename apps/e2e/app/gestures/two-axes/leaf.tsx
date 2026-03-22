@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 /**
  * Leaf screen with horizontal gesture.
@@ -13,45 +14,92 @@ import { ScreenHeader } from "@/components/screen-header";
  * - Swipe ← ↑ should do nothing
  */
 export default function LeafScreen() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="Leaf Screen"
 				subtitle="gestureDirection: horizontal"
 			/>
 
 			<View style={styles.content}>
-				<View style={styles.infoBox}>
-					<Text style={styles.infoTitle}>
+				<View
+					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
+				>
+					<Text style={[styles.infoTitle, { color: theme.text }]}>
 						Horizontal gesture on this screen
 					</Text>
-					<Text style={styles.infoText}>
+					<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 						This screen has horizontal gesture. The parent stack has vertical.
 						Both axes work independently!
 					</Text>
 				</View>
 
 				<View style={styles.instructions}>
-					<Text style={styles.instructionTitle}>Try these gestures:</Text>
-					<View style={styles.gestureRow}>
-						<Text style={styles.gestureIcon}>→</Text>
-						<Text style={styles.gestureText}>
+					<Text
+						style={[styles.instructionTitle, { color: theme.textTertiary }]}
+					>
+						Try these gestures:
+					</Text>
+					<View
+						style={[
+							styles.gestureRow,
+							{ backgroundColor: theme.surfaceElevated },
+						]}
+					>
+						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
+							→
+						</Text>
+						<Text style={[styles.gestureText, { color: theme.text }]}>
 							Swipe right → Dismisses this screen only
 						</Text>
 					</View>
-					<View style={styles.gestureRow}>
-						<Text style={styles.gestureIcon}>↓</Text>
-						<Text style={styles.gestureText}>
+					<View
+						style={[
+							styles.gestureRow,
+							{ backgroundColor: theme.surfaceElevated },
+						]}
+					>
+						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
+							↓
+						</Text>
+						<Text style={[styles.gestureText, { color: theme.text }]}>
 							Swipe down → Dismisses entire stack
 						</Text>
 					</View>
-					<View style={[styles.gestureRow, styles.inactive]}>
-						<Text style={styles.gestureIcon}>↑</Text>
-						<Text style={styles.gestureTextInactive}>Swipe up → Nothing</Text>
+					<View
+						style={[
+							styles.gestureRow,
+							{ backgroundColor: theme.surface },
+						]}
+					>
+						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
+							↑
+						</Text>
+						<Text
+							style={[styles.gestureText, { color: theme.textTertiary }]}
+						>
+							Swipe up → Nothing
+						</Text>
 					</View>
-					<View style={[styles.gestureRow, styles.inactive]}>
-						<Text style={styles.gestureIcon}>←</Text>
-						<Text style={styles.gestureTextInactive}>Swipe left → Nothing</Text>
+					<View
+						style={[
+							styles.gestureRow,
+							{ backgroundColor: theme.surface },
+						]}
+					>
+						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
+							←
+						</Text>
+						<Text
+							style={[styles.gestureText, { color: theme.textTertiary }]}
+						>
+							Swipe left → Nothing
+						</Text>
 					</View>
 				</View>
 			</View>
@@ -62,7 +110,6 @@ export default function LeafScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1b4e2d",
 	},
 	content: {
 		flex: 1,
@@ -70,19 +117,16 @@ const styles = StyleSheet.create({
 		gap: 24,
 	},
 	infoBox: {
-		backgroundColor: "rgba(255, 255, 255, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
 	},
 	infoTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 8,
 	},
 	infoText: {
 		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 	instructions: {
@@ -91,7 +135,6 @@ const styles = StyleSheet.create({
 	instructionTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#888",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 	},
@@ -99,27 +142,16 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		gap: 12,
-		backgroundColor: "rgba(255, 255, 255, 0.1)",
 		padding: 12,
 		borderRadius: 8,
 	},
-	inactive: {
-		backgroundColor: "rgba(255, 255, 255, 0.03)",
-	},
 	gestureIcon: {
 		fontSize: 20,
-		color: "#4a9eff",
 		width: 30,
 		textAlign: "center",
 	},
 	gestureText: {
 		fontSize: 14,
-		color: "#fff",
-		flex: 1,
-	},
-	gestureTextInactive: {
-		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.4)",
 		flex: 1,
 	},
 });

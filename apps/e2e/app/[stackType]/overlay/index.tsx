@@ -2,9 +2,11 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import { screenTints, useTheme } from "@/theme";
 
 export default function OverlayIndex() {
 	const stackType = useResolvedStackType();
+	const theme = useTheme();
 	return (
 		<SafeAreaView style={styles.container}>
 			<View style={styles.content}>
@@ -39,7 +41,7 @@ export default function OverlayIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1e3a5f",
+		backgroundColor: screenTints.navy,
 	},
 	content: {
 		flex: 1,
@@ -70,7 +72,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "rgba(255,255,255,0.2)",
 		paddingVertical: 16,
 		paddingHorizontal: 32,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	secondaryButton: {

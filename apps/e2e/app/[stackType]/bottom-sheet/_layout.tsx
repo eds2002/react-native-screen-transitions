@@ -1,6 +1,9 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
-import Transition from "react-native-screen-transitions";
+import Transition, {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
@@ -86,6 +89,7 @@ export default function BottomSheetLayout() {
 					snapPoints: [0.1, 0.5, 0.9],
 					backdropBehavior: "dismiss",
 					initialSnapIndex: 0,
+					navigationMaskEnabled: true,
 					screenStyleInterpolator: ({
 						layouts: {
 							screen: { height },
@@ -151,10 +155,11 @@ export default function BottomSheetLayout() {
 									overflow: "hidden",
 								},
 							},
-							["CONTENT"]: {
+							[NAVIGATION_MASK_CONTAINER_STYLE_ID]: {
 								transform: [{ translateY: maskTop }],
+								backgroundColor: "#0D0D1A",
 							},
-							["MASKED"]: {
+							[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
 								position: "absolute" as const,
 								top: maskTop,
 								left: hMargin,

@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 const ITEMS = Array.from({ length: 30 }, (_, i) => ({
 	id: i + 1,
@@ -23,16 +24,30 @@ const ITEMS = Array.from({ length: 30 }, (_, i) => ({
  * stack's vertical claim entirely.
  */
 export default function SettingsIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["bottom"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["bottom"]}
+		>
 			<ScreenHeader
 				title="Settings"
 				subtitle="Slides from top · vertical-inverted"
 			/>
 
-			<View style={styles.instructionBox}>
-				<Text style={styles.instructionTitle}>Two Boundaries, Two Owners</Text>
-				<Text style={styles.instructionText}>
+			<View
+				style={[
+					styles.instructionBox,
+					{ backgroundColor: theme.infoBox },
+				]}
+			>
+				<Text style={[styles.instructionTitle, { color: theme.text }]}>
+					Two Boundaries, Two Owners
+				</Text>
+				<Text
+					style={[styles.instructionText, { color: theme.textSecondary }]}
+				>
 					1. At top (scrollY = 0) → Swipe ↓ dismisses outer stack{"\n"}
 					2. Scroll to bottom (scrollY = maxY) → Swipe ↑ dismisses settings
 					{"\n"}
@@ -44,24 +59,51 @@ export default function SettingsIndex() {
 				style={styles.scrollView}
 				contentContainerStyle={styles.scrollContent}
 			>
-				<View style={styles.topBoundary}>
-					<Text style={[styles.boundaryText, { color: "#4caf50" }]}>
+				<View
+					style={[
+						styles.topBoundary,
+						{ backgroundColor: theme.noteBox },
+					]}
+				>
+					<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 						← Top boundary (scrollY = 0)
 					</Text>
 				</View>
 
 				{ITEMS.map((item) => (
-					<View key={item.id} style={styles.item}>
-						<Text style={styles.itemTitle}>{item.title}</Text>
-						<Text style={styles.itemDescription}>{item.description}</Text>
+					<View
+						key={item.id}
+						style={[styles.item, { backgroundColor: theme.card }]}
+					>
+						<Text style={[styles.itemTitle, { color: theme.text }]}>
+							{item.title}
+						</Text>
+						<Text
+							style={[
+								styles.itemDescription,
+								{ color: theme.textSecondary },
+							]}
+						>
+							{item.description}
+						</Text>
 					</View>
 				))}
 
-				<View style={styles.bottomBoundary}>
-					<Text style={[styles.boundaryText, { color: "#ff9e4a" }]}>
+				<View
+					style={[
+						styles.bottomBoundary,
+						{ backgroundColor: theme.noteBox },
+					]}
+				>
+					<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 						← Bottom boundary (scrollY = maxY)
 					</Text>
-					<Text style={styles.boundarySubtext}>
+					<Text
+						style={[
+							styles.boundarySubtext,
+							{ color: theme.textSecondary },
+						]}
+					>
 						Swipe ↑ here dismisses the settings stack (vertical-inverted owner)
 					</Text>
 				</View>
@@ -73,26 +115,20 @@ export default function SettingsIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#2e1a3e",
 	},
 	instructionBox: {
 		margin: 16,
 		marginBottom: 0,
-		backgroundColor: "rgba(168, 85, 247, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 12,
-		borderWidth: 1,
-		borderColor: "rgba(168, 85, 247, 0.3)",
 	},
 	instructionTitle: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "#a855f7",
 		marginBottom: 4,
 	},
 	instructionText: {
 		fontSize: 12,
-		color: "rgba(255, 255, 255, 0.8)",
 		lineHeight: 18,
 	},
 	scrollView: {
@@ -103,20 +139,14 @@ const styles = StyleSheet.create({
 		gap: 8,
 	},
 	topBoundary: {
-		backgroundColor: "rgba(76, 175, 80, 0.2)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
 		marginBottom: 8,
-		borderWidth: 1,
-		borderColor: "rgba(76, 175, 80, 0.5)",
 	},
 	bottomBoundary: {
-		backgroundColor: "rgba(255, 158, 74, 0.2)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
 		marginTop: 8,
-		borderWidth: 1,
-		borderColor: "rgba(255, 158, 74, 0.5)",
 	},
 	boundaryText: {
 		fontSize: 14,
@@ -124,22 +154,18 @@ const styles = StyleSheet.create({
 	},
 	boundarySubtext: {
 		fontSize: 12,
-		color: "rgba(255, 255, 255, 0.6)",
 		marginTop: 4,
 	},
 	item: {
-		backgroundColor: "rgba(255, 255, 255, 0.1)",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 14,
 	},
 	itemTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	itemDescription: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.6)",
 	},
 });

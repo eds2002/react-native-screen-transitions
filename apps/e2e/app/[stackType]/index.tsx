@@ -6,6 +6,7 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 
 const TEST_FLOWS = [
 	{
@@ -78,26 +79,18 @@ const TEST_FLOWS = [
 	},
 ];
 
-const BLANK_STACK_ONLY_FLOWS = [
-	{
-		id: "embedded-flow",
-		title: "Embedded Blank Stack",
-		description:
-			"Compare isolated blank-stack mode with native screens on and off",
-	},
-];
-
 export default function BlankStackIndex() {
 	const stackType = useResolvedStackType();
 	const stackLabel =
 		stackType === "native-stack" ? "Native Stack" : "Blank Stack";
 	const testPrefix = stackType === "native-stack" ? "native" : "blank";
-	const flows =
-		stackType === "blank-stack"
-			? [...BLANK_STACK_ONLY_FLOWS, ...TEST_FLOWS]
-			: TEST_FLOWS;
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title={stackLabel}
 				subtitle={
@@ -108,17 +101,33 @@ export default function BlankStackIndex() {
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
 				<View style={styles.list}>
-					{flows.map((flow) => (
+					{TEST_FLOWS.map((flow) => (
 						<Pressable
 							key={flow.id}
 							testID={`${testPrefix}-${flow.id}`}
-							style={styles.item}
+							style={({ pressed }) => [
+								styles.item,
+								{
+									backgroundColor: pressed
+										? theme.cardPressed
+										: theme.card,
+								},
+							]}
 							onPress={() =>
 								router.push(buildStackPath(stackType, `${flow.id}`) as never)
 							}
 						>
-							<Text style={styles.itemTitle}>{flow.title}</Text>
-							<Text style={styles.itemDescription}>{flow.description}</Text>
+							<Text style={[styles.itemTitle, { color: theme.text }]}>
+								{flow.title}
+							</Text>
+							<Text
+								style={[
+									styles.itemDescription,
+									{ color: theme.textSecondary },
+								]}
+							>
+								{flow.description}
+							</Text>
 						</Pressable>
 					))}
 				</View>
@@ -130,29 +139,23 @@ export default function BlankStackIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		padding: 16,
 	},
 	list: {
-		gap: 12,
+		gap: 10,
 	},
 	item: {
-		backgroundColor: "#1e1e1e",
 		padding: 16,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#333",
+		borderRadius: 14,
 	},
 	itemTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	itemDescription: {
 		fontSize: 13,
-		color: "#888",
 	},
 });

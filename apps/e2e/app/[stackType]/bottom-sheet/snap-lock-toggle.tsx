@@ -2,6 +2,7 @@ import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import { snapTo } from "react-native-screen-transitions";
+import { useTheme } from "@/theme";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -15,29 +16,30 @@ const SNAP_TARGETS = [
 export default function SnapLockToggleScreen() {
 	const navigation = useNavigation<any>();
 	const [locked, setLocked] = useState(true);
+	const theme = useTheme();
 
 	useEffect(() => {
 		navigation.setOptions({ gestureSnapLocked: locked });
 	}, [locked, navigation]);
 
 	return (
-		<View style={[styles.container, { maxHeight: SCREEN_HEIGHT }]}>
-			<View style={styles.handle} />
-			<Text style={styles.title}>Snap Lock: Dynamic Toggle</Text>
-			<Text style={styles.subtitle}>
+		<View style={[styles.container, { maxHeight: SCREEN_HEIGHT, backgroundColor: theme.bg }]}>
+			<View style={[styles.handle, { backgroundColor: theme.handle }]} />
+			<Text style={[styles.title, { color: theme.text }]}>Snap Lock: Dynamic Toggle</Text>
+			<Text style={[styles.subtitle, { color: theme.textSecondary }]}>
 				Switch lock ON/OFF while this screen is open
 			</Text>
 
 			<View style={styles.statusRow}>
-				<Text style={styles.statusLabel}>Current lock state:</Text>
+				<Text style={[styles.statusLabel, { color: theme.textSecondary }]}>Current lock state:</Text>
 				<View
 					testID="toggle-lock-status"
 					style={[
 						styles.statusPill,
-						locked ? styles.statusLocked : styles.statusOpen,
+						{ backgroundColor: locked ? theme.activePill : theme.pill },
 					]}
 				>
-					<Text style={styles.statusText}>
+					<Text style={[styles.statusText, { color: locked ? theme.activePillText : theme.pillText }]}>
 						{locked ? "LOCKED" : "UNLOCKED"}
 					</Text>
 				</View>
@@ -46,25 +48,25 @@ export default function SnapLockToggleScreen() {
 			<View style={styles.toggleRow}>
 				<Pressable
 					testID="toggle-lock-on"
-					style={[styles.toggleButton, locked && styles.toggleButtonActive]}
+					style={[styles.toggleButton, { backgroundColor: locked ? theme.activePill : theme.pill }]}
 					onPress={() => setLocked(true)}
 				>
-					<Text style={styles.toggleText}>Lock ON</Text>
+					<Text style={[styles.toggleText, { color: locked ? theme.activePillText : theme.pillText }]}>Lock ON</Text>
 				</Pressable>
 				<Pressable
 					testID="toggle-lock-off"
-					style={[styles.toggleButton, !locked && styles.toggleButtonActive]}
+					style={[styles.toggleButton, { backgroundColor: !locked ? theme.activePill : theme.pill }]}
 					onPress={() => setLocked(false)}
 				>
-					<Text style={styles.toggleText}>Lock OFF</Text>
+					<Text style={[styles.toggleText, { color: !locked ? theme.activePillText : theme.pillText }]}>Lock OFF</Text>
 				</Pressable>
 			</View>
 
-			<View style={styles.card}>
-				<Text style={styles.cardTitle}>Expected</Text>
-				<Text style={styles.item}>- Lock ON: no gesture snap transitions</Text>
-				<Text style={styles.item}>- Lock OFF: normal snap gestures resume</Text>
-				<Text style={styles.item}>
+			<View style={[styles.card, { backgroundColor: theme.card }]}>
+				<Text style={[styles.cardTitle, { color: theme.infoBoxLabel }]}>Expected</Text>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>- Lock ON: no gesture snap transitions</Text>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>- Lock OFF: normal snap gestures resume</Text>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
 					- Dismiss remains available when allowed
 				</Text>
 			</View>
@@ -74,10 +76,10 @@ export default function SnapLockToggleScreen() {
 					<Pressable
 						key={target.index}
 						testID={`toggle-snap-to-${target.index}`}
-						style={styles.button}
+						style={({ pressed }) => [styles.button, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
 						onPress={() => snapTo(target.index)}
 					>
-						<Text style={styles.buttonText}>{target.label}</Text>
+						<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>{target.label}</Text>
 					</Pressable>
 				))}
 			</View>
@@ -90,7 +92,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingHorizontal: 20,
 		paddingTop: 12,
-		backgroundColor: "#1c162c",
 		borderTopLeftRadius: 28,
 		borderTopRightRadius: 28,
 	},
@@ -99,19 +100,16 @@ const styles = StyleSheet.create({
 		width: 44,
 		height: 5,
 		borderRadius: 3,
-		backgroundColor: "rgba(255,255,255,0.2)",
 		marginBottom: 18,
 	},
 	title: {
 		fontSize: 28,
 		fontWeight: "900",
-		color: "#fff",
 		marginBottom: 6,
 	},
 	subtitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.55)",
 		marginBottom: 14,
 	},
 	statusRow: {
@@ -123,23 +121,15 @@ const styles = StyleSheet.create({
 	statusLabel: {
 		fontSize: 13,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.7)",
 	},
 	statusPill: {
 		paddingHorizontal: 10,
 		paddingVertical: 5,
 		borderRadius: 999,
 	},
-	statusLocked: {
-		backgroundColor: "rgba(232,67,147,0.22)",
-	},
-	statusOpen: {
-		backgroundColor: "rgba(116,185,255,0.2)",
-	},
 	statusText: {
 		fontSize: 11,
 		fontWeight: "900",
-		color: "#fff",
 	},
 	toggleRow: {
 		flexDirection: "row",
@@ -148,36 +138,27 @@ const styles = StyleSheet.create({
 	},
 	toggleButton: {
 		flex: 1,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.2)",
+		borderRadius: 999,
 		paddingVertical: 10,
 		alignItems: "center",
-	},
-	toggleButtonActive: {
-		backgroundColor: "rgba(255,255,255,0.12)",
 	},
 	toggleText: {
 		fontSize: 12,
 		fontWeight: "800",
-		color: "#fff",
 	},
 	card: {
-		backgroundColor: "rgba(255,255,255,0.08)",
-		borderRadius: 16,
+		borderRadius: 14,
 		padding: 14,
 		marginBottom: 16,
 	},
 	cardTitle: {
 		fontSize: 13,
 		fontWeight: "800",
-		color: "#d5b4ff",
 		marginBottom: 8,
 	},
 	item: {
 		fontSize: 13,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.75)",
 		marginBottom: 6,
 	},
 	buttons: {
@@ -186,14 +167,12 @@ const styles = StyleSheet.create({
 		gap: 8,
 	},
 	button: {
-		backgroundColor: "rgba(165,120,255,0.24)",
-		borderRadius: 12,
+		borderRadius: 999,
 		paddingHorizontal: 14,
 		paddingVertical: 9,
 	},
 	buttonText: {
 		fontSize: 12,
 		fontWeight: "800",
-		color: "#f1e6ff",
 	},
 });

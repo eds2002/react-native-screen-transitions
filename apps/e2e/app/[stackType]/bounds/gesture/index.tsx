@@ -7,15 +7,17 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 
 export default function GestureBoundsIndex() {
 	const stackType = useResolvedStackType();
+	const theme = useTheme();
 	const pushToDetail = (id: string) => {
 		router.push(buildStackPath(stackType, `bounds/gesture/${id}`) as never);
 	};
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Gesture Bounds"
 				subtitle="Transition.Boundary id-only + gesture syncing"
@@ -62,7 +64,6 @@ export default function GestureBoundsIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		flex: 1,

@@ -8,6 +8,7 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 import { NESTED_BOUNDS_ITEMS } from "./constants";
 
 const GRID_PADDING = 16;
@@ -17,17 +18,18 @@ export default function NestedBoundsExampleIndex() {
 	const stackType = useResolvedStackType();
 	const { width } = useWindowDimensions();
 	const cellSize = (width - GRID_PADDING * 2 - GRID_GAP) / 2;
+	const theme = useTheme();
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Nested Bounds A/B"
 				subtitle="Pick a destination to preview shared zoom into a nested flow"
 			/>
 
-			<View style={styles.descriptionCard}>
-				<Text style={styles.descriptionTitle}>Mini Travel Flow</Text>
-				<Text style={styles.descriptionBody}>
+			<View style={[styles.descriptionCard, { backgroundColor: theme.infoBox }]}>
+				<Text style={[styles.descriptionTitle, { color: theme.infoBoxLabel }]}>Mini Travel Flow</Text>
+				<Text style={[styles.descriptionBody, { color: theme.textSecondary }]}>
 					Open any destination tile, then move between Overview and Day Plan in
 					the nested route.
 				</Text>
@@ -71,9 +73,9 @@ export default function NestedBoundsExampleIndex() {
 				))}
 			</View>
 
-			<View style={styles.noteCard}>
-				<Text style={styles.noteTitle}>Flow</Text>
-				<Text style={styles.noteBody}>
+			<View style={[styles.noteCard, { backgroundColor: theme.noteBox }]}>
+				<Text style={[styles.noteTitle, { color: theme.noteText }]}>Flow</Text>
+				<Text style={[styles.noteBody, { color: theme.textSecondary }]}>
 					Grid card to nested Overview, then switch to Day Plan.
 				</Text>
 			</View>
@@ -84,7 +86,6 @@ export default function NestedBoundsExampleIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#0A1018",
 		paddingHorizontal: GRID_PADDING,
 	},
 	descriptionCard: {
@@ -92,14 +93,10 @@ const styles = StyleSheet.create({
 		marginBottom: 12,
 		padding: 14,
 		borderRadius: 14,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.1)",
-		backgroundColor: "rgba(255,255,255,0.03)",
 	},
 	descriptionTitle: {
 		fontSize: 13,
 		fontWeight: "700",
-		color: "#DAE6F6",
 		textTransform: "uppercase",
 		letterSpacing: 0.9,
 	},
@@ -107,7 +104,6 @@ const styles = StyleSheet.create({
 		marginTop: 6,
 		fontSize: 13,
 		lineHeight: 20,
-		color: "rgba(235,242,250,0.78)",
 	},
 	grid: {
 		flexDirection: "row",
@@ -117,8 +113,6 @@ const styles = StyleSheet.create({
 	card: {
 		borderRadius: 16,
 		overflow: "hidden",
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.14)",
 	},
 	image: {
 		...StyleSheet.absoluteFillObject,
@@ -134,7 +128,6 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 8,
 		paddingVertical: 4,
 		borderRadius: 10,
-		borderWidth: 1,
 		backgroundColor: "rgba(0,0,0,0.35)",
 		marginBottom: 8,
 	},
@@ -159,14 +152,10 @@ const styles = StyleSheet.create({
 		marginTop: 14,
 		padding: 14,
 		borderRadius: 14,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.1)",
-		backgroundColor: "rgba(255,255,255,0.02)",
 	},
 	noteTitle: {
 		fontSize: 12,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.8)",
 		textTransform: "uppercase",
 		letterSpacing: 0.8,
 	},
@@ -174,6 +163,5 @@ const styles = StyleSheet.create({
 		marginTop: 4,
 		fontSize: 13,
 		lineHeight: 19,
-		color: "rgba(255,255,255,0.68)",
 	},
 });

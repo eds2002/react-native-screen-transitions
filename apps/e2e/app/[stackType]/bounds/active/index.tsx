@@ -7,11 +7,13 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 
 export default function ActiveBoundsIndex() {
 	const stackType = useResolvedStackType();
+	const theme = useTheme();
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Active Bounds"
 				subtitle="Transition.Boundary id-only (group optional)"
@@ -62,7 +64,6 @@ export default function ActiveBoundsIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		flex: 1,

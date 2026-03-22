@@ -18,6 +18,7 @@ import {
 	useResolvedBenchmarkScenario,
 } from "@/components/benchmark/impl-routing";
 import { useBenchmarkStore } from "@/components/benchmark/store";
+import { useTheme } from "@/theme";
 
 const NAVIGATE_DURING_CLOSE_DELAY_MS = 8;
 
@@ -32,6 +33,7 @@ export default function BenchmarkRunScreen() {
 	const impl = useResolvedBenchmarkImpl();
 	const scenario = useResolvedBenchmarkScenario();
 	const navigation = useNavigation();
+	const theme = useTheme();
 	const params = useLocalSearchParams<{
 		runId?: string | string[];
 		cycle?: string | string[];
@@ -153,15 +155,15 @@ export default function BenchmarkRunScreen() {
 	}, [cycle, impl, navigation, runId, scenario]);
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<View style={styles.content}>
-				<ActivityIndicator size="small" color="#fff" />
-				<Text style={styles.title}>Running Benchmark Cycle</Text>
-				<Text style={styles.detail}>
+				<ActivityIndicator size="small" color={theme.text} />
+				<Text style={[styles.title, { color: theme.text }]}>Running Benchmark Cycle</Text>
+				<Text style={[styles.detail, { color: theme.textTertiary }]}>
 					{impl} • {scenario} • cycle {Number.isFinite(cycle) ? cycle : "-"}
 				</Text>
-				<View style={styles.track}>
-					<Animated.View style={[styles.pulse, pulseStyle]} />
+				<View style={[styles.track, { backgroundColor: theme.surface }]}>
+					<Animated.View style={[styles.pulse, { backgroundColor: theme.actionButton }, pulseStyle]} />
 				</View>
 			</View>
 		</SafeAreaView>
@@ -171,7 +173,6 @@ export default function BenchmarkRunScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#0b1220",
 	},
 	content: {
 		flex: 1,
@@ -183,11 +184,9 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 19,
 		fontWeight: "700",
-		color: "#e2e8f0",
 	},
 	detail: {
 		fontSize: 13,
-		color: "#94a3b8",
 		textAlign: "center",
 	},
 	track: {
@@ -195,15 +194,11 @@ const styles = StyleSheet.create({
 		width: 220,
 		height: 14,
 		borderRadius: 999,
-		backgroundColor: "rgba(15,23,42,0.95)",
-		borderWidth: 1,
-		borderColor: "rgba(100,116,139,0.5)",
 		paddingHorizontal: 6,
 		justifyContent: "center",
 	},
 	pulse: {
 		height: 6,
 		borderRadius: 999,
-		backgroundColor: "#38bdf8",
 	},
 });

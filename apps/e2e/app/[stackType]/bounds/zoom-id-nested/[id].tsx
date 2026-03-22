@@ -13,6 +13,7 @@ import {
 	getNestedZoomIdRelatedItems,
 	type NestedZoomIdItem,
 } from "./constants";
+import { useTheme } from "@/theme";
 
 function RelatedCard({ item }: { item: NestedZoomIdItem }) {
 	const stackType = useResolvedStackType();
@@ -46,6 +47,7 @@ export default function NestedNavigationZoomIdDetail() {
 	const relatedItems = getNestedZoomIdRelatedItems(id);
 	const imageWidth = width - 40;
 	const imageHeight = imageWidth / item.aspectRatio;
+	const theme = useTheme();
 
 	return (
 		<View style={[styles.container, { backgroundColor: item.bgColor }]}>
@@ -70,29 +72,29 @@ export default function NestedNavigationZoomIdDetail() {
 				/>
 
 				<View style={styles.infoSection}>
-					<Text style={styles.title}>{item.title}</Text>
-					<Text style={styles.subtitle}>{item.subtitle}</Text>
-					<Text style={styles.body}>{item.description}</Text>
+					<Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
+					<Text style={[styles.subtitle, { color: theme.textSecondary }]}>{item.subtitle}</Text>
+					<Text style={[styles.body, { color: theme.textSecondary }]}>{item.description}</Text>
 				</View>
 
 				<View style={styles.metaGrid}>
-					<View style={styles.metaItem}>
-						<Text style={styles.metaLabel}>Location</Text>
-						<Text style={styles.metaValue}>{item.location}</Text>
+					<View style={[styles.metaItem, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textTertiary }]}>Location</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.location}</Text>
 					</View>
-					<View style={styles.metaItem}>
-						<Text style={styles.metaLabel}>Stay</Text>
-						<Text style={styles.metaValue}>{item.stay}</Text>
+					<View style={[styles.metaItem, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textTertiary }]}>Stay</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.stay}</Text>
 					</View>
-					<View style={styles.metaItem}>
-						<Text style={styles.metaLabel}>Best For</Text>
-						<Text style={styles.metaValue}>{item.bestFor}</Text>
+					<View style={[styles.metaItem, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textTertiary }]}>Best For</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.bestFor}</Text>
 					</View>
 				</View>
 
-				<View style={styles.noteCard}>
-					<Text style={styles.noteTitle}>Show Others</Text>
-					<Text style={styles.noteText}>
+				<View style={[styles.noteCard, { backgroundColor: theme.surface }]}>
+					<Text style={[styles.noteTitle, { color: theme.textTertiary }]}>Show Others</Text>
+					<Text style={[styles.noteText, { color: theme.textSecondary }]}>
 						Tap any related card below. It pushes the exact same detail route
 						again with a new id so this example can prove whether id-only
 						navigation zoom survives nested detail-to-detail hops.
@@ -100,8 +102,8 @@ export default function NestedNavigationZoomIdDetail() {
 				</View>
 
 				<View style={styles.relatedHeader}>
-					<Text style={styles.relatedHeaderTitle}>Similar Stops</Text>
-					<Text style={styles.relatedHeaderMeta}>
+					<Text style={[styles.relatedHeaderTitle, { color: theme.text }]}>Similar Stops</Text>
+					<Text style={[styles.relatedHeaderMeta, { color: theme.textSecondary }]}>
 						Same screen, same layout, new data
 					</Text>
 				</View>
@@ -112,9 +114,9 @@ export default function NestedNavigationZoomIdDetail() {
 					))}
 				</View>
 
-				<View style={styles.noteCard}>
-					<Text style={styles.noteTitle}>Current Route</Text>
-					<Text style={styles.noteText}>
+				<View style={[styles.noteCard, { backgroundColor: theme.surface }]}>
+					<Text style={[styles.noteTitle, { color: theme.textTertiary }]}>Current Route</Text>
+					<Text style={[styles.noteText, { color: theme.textSecondary }]}>
 						`bounds/zoom-id-nested/{item.id}`{`\n`}
 						From here, pressing a related item pushes another
 						`bounds/zoom-id-nested/[id]` screen onto the same stack.
@@ -144,18 +146,15 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 30,
 		fontWeight: "800",
-		color: "#fff",
 		letterSpacing: -0.6,
 	},
 	subtitle: {
 		fontSize: 14,
-		color: "rgba(255,255,255,0.48)",
 		fontWeight: "500",
 	},
 	body: {
 		fontSize: 15,
 		lineHeight: 24,
-		color: "rgba(255,255,255,0.76)",
 		marginTop: 8,
 	},
 	metaGrid: {
@@ -164,7 +163,6 @@ const styles = StyleSheet.create({
 	},
 	metaItem: {
 		flex: 1,
-		backgroundColor: "rgba(255,255,255,0.06)",
 		borderRadius: 16,
 		padding: 16,
 		gap: 6,
@@ -172,17 +170,14 @@ const styles = StyleSheet.create({
 	metaLabel: {
 		fontSize: 11,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.34)",
 		textTransform: "uppercase",
 		letterSpacing: 0.8,
 	},
 	metaValue: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	noteCard: {
-		backgroundColor: "rgba(255,255,255,0.04)",
 		borderRadius: 18,
 		padding: 18,
 		gap: 8,
@@ -190,14 +185,12 @@ const styles = StyleSheet.create({
 	noteTitle: {
 		fontSize: 13,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.38)",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 	},
 	noteText: {
 		fontSize: 14,
 		lineHeight: 22,
-		color: "rgba(255,255,255,0.56)",
 	},
 	relatedHeader: {
 		gap: 4,
@@ -205,11 +198,9 @@ const styles = StyleSheet.create({
 	relatedHeaderTitle: {
 		fontSize: 18,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	relatedHeaderMeta: {
 		fontSize: 13,
-		color: "rgba(255,255,255,0.5)",
 	},
 	relatedList: {
 		gap: 14,

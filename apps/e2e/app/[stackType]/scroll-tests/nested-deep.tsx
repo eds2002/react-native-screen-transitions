@@ -2,6 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 const CATEGORIES = [
 	{ id: 1, title: "Category A", color: "#e74c3c" },
@@ -13,8 +14,10 @@ const SUBCATEGORIES = ["Sub 1", "Sub 2", "Sub 3", "Sub 4"];
 const ITEMS_PER_SUB = 8;
 
 export default function NestedDeepScreen() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Deeply Nested"
 				subtitle="3 levels: vertical > horizontal > vertical"
@@ -26,7 +29,7 @@ export default function NestedDeepScreen() {
 			>
 				{CATEGORIES.map((category) => (
 					<View key={category.id} style={styles.category}>
-						<Text style={styles.categoryTitle}>{category.title}</Text>
+						<Text style={[styles.categoryTitle, { color: theme.text }]}>{category.title}</Text>
 
 						<Transition.ScrollView
 							horizontal
@@ -34,8 +37,8 @@ export default function NestedDeepScreen() {
 							contentContainerStyle={styles.horizontalContent}
 						>
 							{SUBCATEGORIES.map((sub, subIndex) => (
-								<View key={subIndex.toString()} style={styles.subcategory}>
-									<Text style={styles.subcategoryTitle}>{sub}</Text>
+								<View key={subIndex.toString()} style={[styles.subcategory, { backgroundColor: theme.card }]}>
+									<Text style={[styles.subcategoryTitle, { color: theme.textSecondary }]}>{sub}</Text>
 
 									<Transition.ScrollView
 										style={styles.innerScroll}
@@ -61,7 +64,7 @@ export default function NestedDeepScreen() {
 				))}
 
 				<View style={styles.footer}>
-					<Text style={styles.footerText}>
+					<Text style={[styles.footerText, { color: theme.textTertiary }]}>
 						Tests ancestor scroll config propagation. Each nested ScrollView
 						syncs its state up the tree.
 					</Text>
@@ -74,7 +77,6 @@ export default function NestedDeepScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	outerScroll: {
 		flex: 1,
@@ -88,7 +90,6 @@ const styles = StyleSheet.create({
 	categoryTitle: {
 		fontSize: 20,
 		fontWeight: "700",
-		color: "#fff",
 		marginLeft: 16,
 		marginBottom: 12,
 	},
@@ -98,14 +99,12 @@ const styles = StyleSheet.create({
 	},
 	subcategory: {
 		width: 160,
-		backgroundColor: "rgba(255,255,255,0.05)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 12,
 	},
 	subcategoryTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.8)",
 		marginBottom: 8,
 	},
 	innerScroll: {
@@ -130,7 +129,6 @@ const styles = StyleSheet.create({
 	},
 	footerText: {
 		fontSize: 13,
-		color: "rgba(255,255,255,0.4)",
 		lineHeight: 20,
 	},
 });

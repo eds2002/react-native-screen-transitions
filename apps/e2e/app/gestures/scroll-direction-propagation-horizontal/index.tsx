@@ -3,10 +3,16 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function ScrollDirectionPropagationHorizontalIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="Scroll Direction Propagation (Horizontal)"
 				subtitle="ScrollView coordinates with two owners on same axis"
@@ -35,15 +41,31 @@ export default function ScrollDirectionPropagationHorizontalIndex() {
 
 			<View style={styles.actions}>
 				<Pressable
-					style={styles.button}
+					style={({ pressed }) => [
+						styles.button,
+						{
+							backgroundColor: pressed
+								? theme.actionButtonPressed
+								: theme.actionButton,
+						},
+					]}
 					onPress={() =>
 						router.push(
 							"/gestures/scroll-direction-propagation-horizontal/session" as any,
 						)
 					}
 				>
-					<Text style={styles.buttonText}>Open Session</Text>
-					<Text style={styles.buttonSubtext}>
+					<Text
+						style={[styles.buttonText, { color: theme.actionButtonText }]}
+					>
+						Open Session
+					</Text>
+					<Text
+						style={[
+							styles.buttonSubtext,
+							{ color: theme.actionButtonText, opacity: 0.7 },
+						]}
+					>
 						Then open the drawer from there
 					</Text>
 				</Pressable>
@@ -55,25 +77,21 @@ export default function ScrollDirectionPropagationHorizontalIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#142033",
 	},
 	actions: {
 		padding: 16,
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#4a9eff",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#fff",
 		fontSize: 16,
 		fontWeight: "600",
 	},
 	buttonSubtext: {
-		color: "rgba(255, 255, 255, 0.6)",
 		fontSize: 12,
 		marginTop: 4,
 	},

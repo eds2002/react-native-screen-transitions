@@ -6,6 +6,7 @@ import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import { useStyleIdBoundsStore } from "./_layout";
 import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 
 const IMAGES = [
 	{
@@ -42,8 +43,9 @@ const IMAGES = [
 
 export default function StyleIdBoundsIndex() {
 	const stackType = useResolvedStackType();
+	const theme = useTheme();
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Style ID Bounds"
 				subtitle="Bounds with styleId masking"
@@ -57,7 +59,7 @@ export default function StyleIdBoundsIndex() {
 								key={tag}
 								testID={tag}
 								sharedBoundTag={tag}
-								style={styles.imageCell}
+								style={[styles.imageCell, { backgroundColor: theme.card }]}
 								onPress={() => {
 									useStyleIdBoundsStore.setState({ boundTag: tag });
 									router.push({
@@ -89,7 +91,6 @@ export default function StyleIdBoundsIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		flex: 1,
@@ -106,7 +107,6 @@ const styles = StyleSheet.create({
 		aspectRatio: 1,
 		borderRadius: 16,
 		overflow: "hidden",
-		backgroundColor: "#2a2a2a",
 	},
 	image: {
 		width: "100%",

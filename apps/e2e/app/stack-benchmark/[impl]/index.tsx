@@ -17,6 +17,7 @@ import {
 import { useBenchmarkStore } from "@/components/benchmark/store";
 import type { BenchmarkStackImpl } from "@/components/benchmark/types";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 const formatMs = (value: number) => `${value.toFixed(2)}ms`;
 
@@ -39,6 +40,7 @@ export default function BenchmarkControllerScreen() {
 	const impl = useResolvedBenchmarkImpl();
 	const scenario = useResolvedBenchmarkScenario();
 	const isFocused = useIsFocused();
+	const theme = useTheme();
 	const params = useLocalSearchParams<{
 		autorun?: string | string[];
 		returnTo?: string | string[];
@@ -239,72 +241,75 @@ export default function BenchmarkControllerScreen() {
 	]);
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title={`${getImplLabel(impl)} • ${getScenarioLabel(scenario)}`}
 				subtitle={`${BENCHMARK_CYCLES}-cycle automated run`}
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
-				<View style={styles.noticeCard}>
-					<Text style={styles.noticeTitle}>Transparency</Text>
-					<Text style={styles.noticeText}>{BENCHMARK_TRANSPARENCY_NOTE}</Text>
-					<Text style={styles.noticeSubtext}>{BENCHMARK_CAVEAT_NOTE}</Text>
+				<View style={[styles.noticeCard, { backgroundColor: theme.card }]}>
+					<Text style={[styles.noticeTitle, { color: theme.text }]}>Transparency</Text>
+					<Text style={[styles.noticeText, { color: theme.textSecondary }]}>{BENCHMARK_TRANSPARENCY_NOTE}</Text>
+					<Text style={[styles.noticeSubtext, { color: theme.textTertiary }]}>{BENCHMARK_CAVEAT_NOTE}</Text>
 				</View>
 
-				<View style={styles.controlsCard}>
-					<Text style={styles.controlsTitle}>Run Status</Text>
+				<View style={[styles.controlsCard, { backgroundColor: theme.card }]}>
+					<Text style={[styles.controlsTitle, { color: theme.text }]}>Run Status</Text>
 					{runForThisContext ? (
-						<Text style={styles.statusText}>
+						<Text style={[styles.statusText, { color: theme.textSecondary }]}>
 							Running cycle {Math.max(1, runForThisContext.currentCycle)}/
 							{runForThisContext.totalCycles} • completed{" "}
 							{runForThisContext.completedCycles}/{BENCHMARK_CYCLES}
 						</Text>
 					) : isBusyWithAnotherRun ? (
-						<Text style={styles.statusText}>
+						<Text style={[styles.statusText, { color: theme.textSecondary }]}>
 							Another benchmark run is currently in progress.
 						</Text>
 					) : result ? (
-						<Text style={styles.statusText}>
+						<Text style={[styles.statusText, { color: theme.textSecondary }]}>
 							Complete • run #{result.runIndex} • {result.buildMode} mode.
 						</Text>
 					) : (
-						<Text style={styles.statusText}>
+						<Text style={[styles.statusText, { color: theme.textSecondary }]}>
 							Ready. Tap Run to execute {BENCHMARK_CYCLES} cycles.
 						</Text>
 					)}
 
 					<Pressable
 						testID={`benchmark-run-${impl}-${scenario}`}
-						style={[styles.button, activeRun !== null && styles.buttonDisabled]}
+						style={({ pressed }) => [styles.button, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }, activeRun !== null && styles.buttonDisabled]}
 						disabled={activeRun !== null}
 						onPress={handleRun}
 					>
-						<Text style={styles.buttonText}>Run Benchmark</Text>
+						<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>Run Benchmark</Text>
 					</Pressable>
 
 					{runForThisContext ? (
-						<Pressable style={styles.secondaryButton} onPress={handleCancel}>
-							<Text style={styles.secondaryButtonText}>Cancel Current Run</Text>
+						<Pressable
+							style={({ pressed }) => [styles.secondaryButton, { backgroundColor: pressed ? theme.secondaryButtonPressed : theme.secondaryButton }]}
+							onPress={handleCancel}
+						>
+							<Text style={[styles.secondaryButtonText, { color: theme.secondaryButtonText }]}>Cancel Current Run</Text>
 						</Pressable>
 					) : null}
 				</View>
 
 				{result ? (
-					<View style={styles.resultCard}>
-						<Text style={styles.resultTitle}>Latest Result</Text>
-						<Text style={styles.metric}>
+					<View style={[styles.resultCard, { backgroundColor: theme.card }]}>
+						<Text style={[styles.resultTitle, { color: theme.text }]}>Latest Result</Text>
+						<Text style={[styles.metric, { color: theme.textSecondary }]}>
 							Push mean {formatMs(result.pushLatencyMs.mean)} · p95{" "}
 							{formatMs(result.pushLatencyMs.p95)}
 						</Text>
-						<Text style={styles.metric}>
+						<Text style={[styles.metric, { color: theme.textSecondary }]}>
 							Pop mean {formatMs(result.popLatencyMs.mean)} · p95{" "}
 							{formatMs(result.popLatencyMs.p95)}
 						</Text>
-						<Text style={styles.metric}>
+						<Text style={[styles.metric, { color: theme.textSecondary }]}>
 							Cycle mean {formatMs(result.cycleDurationMs.mean)} · p95{" "}
 							{formatMs(result.cycleDurationMs.p95)}
 						</Text>
-						<Text style={styles.metric}>
+						<Text style={[styles.metric, { color: theme.textSecondary }]}>
 							JS-loop frame delta mean {formatMs(result.avgFrameMs)} · p95{" "}
 							{formatMs(result.p95FrameMs)}
 						</Text>
@@ -318,7 +323,6 @@ export default function BenchmarkControllerScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#0b1220",
 	},
 	content: {
 		padding: 16,
@@ -326,50 +330,38 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	noticeCard: {
-		backgroundColor: "#101b2e",
 		padding: 14,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#22344d",
+		borderRadius: 14,
 	},
 	noticeTitle: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: "#f1f5f9",
 		marginBottom: 6,
 	},
 	noticeText: {
 		fontSize: 13,
-		color: "#d1d9e7",
 		lineHeight: 19,
 	},
 	noticeSubtext: {
 		fontSize: 12,
-		color: "#9aaac4",
 		marginTop: 8,
 	},
 	controlsCard: {
-		backgroundColor: "#101b2e",
 		padding: 14,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#22344d",
+		borderRadius: 14,
 		gap: 10,
 	},
 	controlsTitle: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: "#f1f5f9",
 	},
 	statusText: {
 		fontSize: 13,
-		color: "#d1d9e7",
 		lineHeight: 18,
 	},
 	button: {
-		backgroundColor: "#0ea5e9",
 		paddingVertical: 12,
-		borderRadius: 10,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonDisabled: {
@@ -378,36 +370,28 @@ const styles = StyleSheet.create({
 	buttonText: {
 		fontSize: 14,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	secondaryButton: {
-		backgroundColor: "rgba(255,255,255,0.08)",
 		paddingVertical: 10,
-		borderRadius: 10,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	secondaryButtonText: {
 		fontSize: 13,
 		fontWeight: "600",
-		color: "#e5e7eb",
 	},
 	resultCard: {
-		backgroundColor: "#101b2e",
 		padding: 14,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#22344d",
+		borderRadius: 14,
 		gap: 6,
 	},
 	resultTitle: {
 		fontSize: 15,
 		fontWeight: "700",
-		color: "#f1f5f9",
 		marginBottom: 4,
 	},
 	metric: {
 		fontSize: 12,
-		color: "#d1d9e7",
 		fontFamily: "monospace",
 	},
 });

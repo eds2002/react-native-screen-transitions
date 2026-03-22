@@ -6,9 +6,11 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { snapTo, useScreenAnimation } from "react-native-screen-transitions";
+import { useTheme } from "@/theme";
 
 export default function AutoSnapScreen() {
 	const animation = useScreenAnimation();
+	const theme = useTheme();
 
 	const heroStyle = useAnimatedStyle(() => {
 		const { snapIndex } = animation.value;
@@ -54,12 +56,12 @@ export default function AutoSnapScreen() {
 
 	return (
 		<View style={styles.container}>
-			<View style={styles.handle} />
+			<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 
 			<View style={styles.header}>
-				<Text style={styles.eyebrow}>Intrinsic Sheet</Text>
-				<Text style={styles.title}>Auto Snap Detent</Text>
-				<Animated.Text style={[styles.subtitle, subtitleStyle]}>
+				<Text style={[styles.eyebrow, { color: theme.actionButton }]}>Intrinsic Sheet</Text>
+				<Text style={[styles.title, { color: theme.text }]}>Auto Snap Detent</Text>
+				<Animated.Text style={[styles.subtitle, { color: theme.textSecondary }, subtitleStyle]}>
 					Starts at content height, then expands to a full-screen detail view.
 				</Animated.Text>
 			</View>
@@ -70,13 +72,13 @@ export default function AutoSnapScreen() {
 				</Animated.Text>
 			</Animated.View>
 
-			<Animated.View style={[styles.heroCard, heroStyle]}>
-				<View style={styles.heroIcon}>
-					<Ionicons name="sparkles" size={26} color="#fff" />
+			<Animated.View style={[styles.heroCard, { backgroundColor: theme.card }, heroStyle]}>
+				<View style={[styles.heroIcon, { backgroundColor: theme.surfaceElevated }]}>
+					<Ionicons name="sparkles" size={26} color={theme.text} />
 				</View>
 				<View style={styles.heroBody}>
-					<Text style={styles.heroTitle}>Review-ready sheet content</Text>
-					<Text style={styles.heroText}>
+					<Text style={[styles.heroTitle, { color: theme.text }]}>Review-ready sheet content</Text>
+					<Text style={[styles.heroText, { color: theme.textSecondary }]}>
 						This card is intentionally tall enough to make the auto detent
 						visible, but not so tall that it looks like a full-screen modal.
 					</Text>
@@ -84,36 +86,36 @@ export default function AutoSnapScreen() {
 			</Animated.View>
 
 			<View style={styles.metrics}>
-				<View style={styles.metricCard}>
-					<Text style={styles.metricValue}>Auto</Text>
-					<Text style={styles.metricLabel}>Initial detent</Text>
+				<View style={[styles.metricCard, { backgroundColor: theme.surfaceElevated }]}>
+					<Text style={[styles.metricValue, { color: theme.text }]}>Auto</Text>
+					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>Initial detent</Text>
 				</View>
-				<View style={styles.metricCard}>
-					<Text style={styles.metricValue}>Full</Text>
-					<Text style={styles.metricLabel}>Expanded detent</Text>
+				<View style={[styles.metricCard, { backgroundColor: theme.surfaceElevated }]}>
+					<Text style={[styles.metricValue, { color: theme.text }]}>Full</Text>
+					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>Expanded detent</Text>
 				</View>
-				<View style={styles.metricCard}>
-					<Text style={styles.metricValue}>2</Text>
-					<Text style={styles.metricLabel}>Snap points</Text>
+				<View style={[styles.metricCard, { backgroundColor: theme.surfaceElevated }]}>
+					<Text style={[styles.metricValue, { color: theme.text }]}>2</Text>
+					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>Snap points</Text>
 				</View>
 			</View>
 
-			<View style={styles.detailBlock}>
+			<View style={[styles.detailBlock, { backgroundColor: theme.infoBox }]}>
 				<View style={styles.detailRow}>
-					<Ionicons name="resize" size={18} color="#74B9FF" />
-					<Text style={styles.detailText}>
+					<Ionicons name="resize" size={18} color={theme.actionButton} />
+					<Text style={[styles.detailText, { color: theme.textSecondary }]}>
 						Auto mode measures this sheet from its intrinsic content height.
 					</Text>
 				</View>
 				<View style={styles.detailRow}>
-					<Ionicons name="expand" size={18} color="#55EFC4" />
-					<Text style={styles.detailText}>
+					<Ionicons name="expand" size={18} color={theme.actionButton} />
+					<Text style={[styles.detailText, { color: theme.textSecondary }]}>
 						Drag upward or tap Full to expand to the 100% detent.
 					</Text>
 				</View>
 				<View style={styles.detailRow}>
-					<Ionicons name="contract" size={18} color="#FDCB6E" />
-					<Text style={styles.detailText}>
+					<Ionicons name="contract" size={18} color={theme.actionButton} />
+					<Text style={[styles.detailText, { color: theme.textSecondary }]}>
 						Drag down or tap Auto to settle back to intrinsic height.
 					</Text>
 				</View>
@@ -122,17 +124,17 @@ export default function AutoSnapScreen() {
 			<View style={styles.controls}>
 				<Pressable
 					testID="auto-snap-to-auto"
-					style={[styles.controlButton, styles.secondaryButton]}
+					style={({ pressed }) => [styles.controlButton, { backgroundColor: pressed ? theme.secondaryButtonPressed : theme.secondaryButton }]}
 					onPress={() => snapTo(0)}
 				>
-					<Text style={styles.secondaryButtonText}>Auto</Text>
+					<Text style={[styles.secondaryButtonText, { color: theme.secondaryButtonText }]}>Auto</Text>
 				</Pressable>
 				<Pressable
 					testID="auto-snap-to-full"
-					style={[styles.controlButton, styles.primaryButton]}
+					style={({ pressed }) => [styles.controlButton, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
 					onPress={() => snapTo(1)}
 				>
-					<Text style={styles.primaryButtonText}>Full</Text>
+					<Text style={[styles.primaryButtonText, { color: theme.actionButtonText }]}>Full</Text>
 				</Pressable>
 			</View>
 		</View>
@@ -149,7 +151,6 @@ const styles = StyleSheet.create({
 	handle: {
 		width: 44,
 		height: 5,
-		backgroundColor: "rgba(255,255,255,0.2)",
 		borderRadius: 3,
 		alignSelf: "center",
 		marginBottom: 18,
@@ -162,20 +163,17 @@ const styles = StyleSheet.create({
 		fontWeight: "800",
 		letterSpacing: 1,
 		textTransform: "uppercase",
-		color: "#6C5CE7",
 		marginBottom: 8,
 	},
 	title: {
 		fontSize: 28,
 		fontWeight: "900",
-		color: "#fff",
 		marginBottom: 8,
 	},
 	subtitle: {
 		fontSize: 15,
 		fontWeight: "600",
 		lineHeight: 22,
-		color: "rgba(255,255,255,0.6)",
 	},
 	detentChip: {
 		alignSelf: "flex-start",
@@ -192,14 +190,11 @@ const styles = StyleSheet.create({
 		borderRadius: 22,
 		padding: 18,
 		marginBottom: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.08)",
 	},
 	heroIcon: {
 		width: 48,
 		height: 48,
 		borderRadius: 24,
-		backgroundColor: "rgba(255,255,255,0.08)",
 		alignItems: "center",
 		justifyContent: "center",
 		marginBottom: 14,
@@ -210,13 +205,11 @@ const styles = StyleSheet.create({
 	heroTitle: {
 		fontSize: 18,
 		fontWeight: "900",
-		color: "#fff",
 	},
 	heroText: {
 		fontSize: 14,
 		fontWeight: "600",
 		lineHeight: 21,
-		color: "rgba(255,255,255,0.62)",
 	},
 	metrics: {
 		flexDirection: "row",
@@ -225,7 +218,6 @@ const styles = StyleSheet.create({
 	},
 	metricCard: {
 		flex: 1,
-		backgroundColor: "rgba(255,255,255,0.05)",
 		borderRadius: 18,
 		paddingVertical: 14,
 		paddingHorizontal: 12,
@@ -233,18 +225,15 @@ const styles = StyleSheet.create({
 	metricValue: {
 		fontSize: 17,
 		fontWeight: "900",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	metricLabel: {
 		fontSize: 11,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.42)",
 		textTransform: "uppercase",
 		letterSpacing: 0.4,
 	},
 	detailBlock: {
-		backgroundColor: "rgba(255,255,255,0.04)",
 		borderRadius: 20,
 		padding: 16,
 		gap: 12,
@@ -260,7 +249,6 @@ const styles = StyleSheet.create({
 		fontSize: 14,
 		fontWeight: "600",
 		lineHeight: 20,
-		color: "rgba(255,255,255,0.58)",
 	},
 	controls: {
 		flexDirection: "row",
@@ -269,26 +257,16 @@ const styles = StyleSheet.create({
 	controlButton: {
 		flex: 1,
 		height: 48,
-		borderRadius: 14,
+		borderRadius: 999,
 		alignItems: "center",
 		justifyContent: "center",
-	},
-	primaryButton: {
-		backgroundColor: "#6C5CE7",
-	},
-	secondaryButton: {
-		backgroundColor: "rgba(255,255,255,0.08)",
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.08)",
 	},
 	primaryButtonText: {
 		fontSize: 15,
 		fontWeight: "900",
-		color: "#fff",
 	},
 	secondaryButtonText: {
 		fontSize: 15,
 		fontWeight: "900",
-		color: "rgba(255,255,255,0.82)",
 	},
 });

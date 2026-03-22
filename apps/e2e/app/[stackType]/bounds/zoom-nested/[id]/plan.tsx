@@ -16,6 +16,7 @@ import {
 	NESTED_ZOOM_GROUP,
 	type NestedZoomGroupItem,
 } from "../constants";
+import { useTheme } from "@/theme";
 
 function RelatedCard({ item }: { item: NestedZoomGroupItem }) {
 	const stackType = useResolvedStackType();
@@ -47,6 +48,7 @@ export default function NestedZoomGroupPlan() {
 	const { id } = useLocalSearchParams<{ id?: string }>();
 	const item = getNestedZoomGroupItemById(id);
 	const relatedItems = getNestedZoomGroupRelatedItems(id);
+	const theme = useTheme();
 
 	useEffect(() => {
 		activeNestedZoomGroupId.value = item.id;
@@ -78,21 +80,21 @@ export default function NestedZoomGroupPlan() {
 					<Image source={item.image} style={styles.heroImage} contentFit="cover" />
 				</Transition.Boundary.View>
 
-				<View style={[styles.card, { borderColor: `${item.accent}66` }]}>
+				<View style={[styles.card, { backgroundColor: theme.surfaceElevated }]}>
 					<Text style={[styles.kicker, { color: item.accent }]}>Plan</Text>
 					{item.plan.map((entry, index) => (
 						<View key={entry} style={styles.planRow}>
-							<View style={[styles.stepBubble, { borderColor: `${item.accent}80` }]}>
-								<Text style={styles.stepText}>{index + 1}</Text>
+							<View style={[styles.stepBubble, { backgroundColor: theme.surface }]}>
+								<Text style={[styles.stepText, { color: theme.text }]}>{index + 1}</Text>
 							</View>
-							<Text style={styles.planText}>{entry}</Text>
+							<Text style={[styles.planText, { color: theme.textSecondary }]}>{entry}</Text>
 						</View>
 					))}
 				</View>
 
-				<View style={styles.card}>
-					<Text style={styles.kicker}>Retarget Inside Nested Route</Text>
-					<Text style={styles.helperText}>
+				<View style={[styles.card, { backgroundColor: theme.surfaceElevated }]}>
+					<Text style={[styles.kicker, { color: theme.textSecondary }]}>Retarget Inside Nested Route</Text>
+					<Text style={[styles.helperText, { color: theme.textSecondary }]}>
 						These related cards live on the nested child screen, not the first
 						destination screen. Pushing one should still move the group to the
 						new active member.
@@ -105,14 +107,17 @@ export default function NestedZoomGroupPlan() {
 				</View>
 
 				<Pressable
-					style={[styles.button, { backgroundColor: item.accent }]}
+					style={({ pressed }) => [
+						styles.button,
+						{ backgroundColor: pressed ? theme.actionButtonPressed : item.accent },
+					]}
 					onPress={() =>
 						router.navigate(
 							buildStackPath(stackType, `bounds/zoom-nested/${item.id}`) as never,
 						)
 					}
 				>
-					<Text style={styles.buttonText}>Back to Overview</Text>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>Back to Overview</Text>
 				</Pressable>
 			</Transition.ScrollView>
 		</View>
@@ -132,8 +137,6 @@ const styles = StyleSheet.create({
 		aspectRatio: 0.86,
 		borderRadius: 22,
 		overflow: "hidden",
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.14)",
 	},
 	heroImage: {
 		width: "100%",
@@ -141,17 +144,13 @@ const styles = StyleSheet.create({
 	},
 	card: {
 		padding: 16,
-		borderRadius: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.12)",
-		backgroundColor: "rgba(0,0,0,0.22)",
+		borderRadius: 14,
 	},
 	kicker: {
 		fontSize: 12,
 		textTransform: "uppercase",
 		letterSpacing: 0.8,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.6)",
 	},
 	planRow: {
 		marginTop: 10,
@@ -162,28 +161,23 @@ const styles = StyleSheet.create({
 		width: 24,
 		height: 24,
 		borderRadius: 99,
-		borderWidth: 1,
 		alignItems: "center",
 		justifyContent: "center",
 		marginRight: 10,
-		backgroundColor: "rgba(0,0,0,0.16)",
 	},
 	stepText: {
 		fontSize: 12,
 		fontWeight: "700",
-		color: "#F4F8FF",
 	},
 	planText: {
 		flex: 1,
 		fontSize: 14,
 		lineHeight: 22,
-		color: "rgba(255,255,255,0.84)",
 	},
 	helperText: {
 		marginTop: 6,
 		fontSize: 14,
 		lineHeight: 21,
-		color: "rgba(255,255,255,0.7)",
 	},
 	relatedList: {
 		marginTop: 14,
@@ -219,12 +213,11 @@ const styles = StyleSheet.create({
 	},
 	button: {
 		height: 52,
-		borderRadius: 14,
+		borderRadius: 999,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	buttonText: {
-		color: "#0b111a",
 		fontSize: 17,
 		fontWeight: "700",
 	},

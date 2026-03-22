@@ -16,6 +16,7 @@ import {
 	NESTED_ZOOM_GROUP,
 	type NestedZoomGroupItem,
 } from "../constants";
+import { useTheme } from "@/theme";
 
 function RelatedCard({ item }: { item: NestedZoomGroupItem }) {
 	const stackType = useResolvedStackType();
@@ -58,6 +59,7 @@ export default function NestedZoomGroupOverview() {
 	const { id } = useLocalSearchParams<{ id?: string }>();
 	const item = getNestedZoomGroupItemById(id);
 	const relatedItems = getNestedZoomGroupRelatedItems(id);
+	const theme = useTheme();
 
 	useEffect(() => {
 		activeNestedZoomGroupId.value = item.id;
@@ -90,41 +92,41 @@ export default function NestedZoomGroupOverview() {
 				</Transition.Boundary.View>
 
 				<View style={styles.metaRow}>
-					<View style={[styles.metaChip, { borderColor: `${item.accent}66` }]}>
-						<Text style={styles.metaLabel}>Location</Text>
-						<Text style={styles.metaValue}>{item.location}</Text>
+					<View style={[styles.metaChip, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textSecondary }]}>Location</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.location}</Text>
 					</View>
-					<View style={[styles.metaChip, { borderColor: `${item.accent}66` }]}>
-						<Text style={styles.metaLabel}>Duration</Text>
-						<Text style={styles.metaValue}>{item.duration}</Text>
+					<View style={[styles.metaChip, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textSecondary }]}>Duration</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.duration}</Text>
 					</View>
-					<View style={[styles.metaChip, { borderColor: `${item.accent}66` }]}>
-						<Text style={styles.metaLabel}>Best For</Text>
-						<Text style={styles.metaValue}>{item.bestFor}</Text>
+					<View style={[styles.metaChip, { backgroundColor: theme.surface }]}>
+						<Text style={[styles.metaLabel, { color: theme.textSecondary }]}>Best For</Text>
+						<Text style={[styles.metaValue, { color: theme.text }]}>{item.bestFor}</Text>
 					</View>
 				</View>
 
-				<View style={[styles.card, { borderColor: `${item.accent}66` }]}>
+				<View style={[styles.card, { backgroundColor: theme.surfaceElevated }]}>
 					<Text style={[styles.kicker, { color: item.accent }]}>Overview</Text>
-					<Text style={styles.headline}>{item.subtitle}</Text>
-					<Text style={styles.body}>{item.overview}</Text>
+					<Text style={[styles.headline, { color: theme.text }]}>{item.subtitle}</Text>
+					<Text style={[styles.body, { color: theme.textSecondary }]}>{item.overview}</Text>
 				</View>
 
-				<View style={styles.card}>
-					<Text style={styles.kicker}>Highlights</Text>
+				<View style={[styles.card, { backgroundColor: theme.surfaceElevated }]}>
+					<Text style={[styles.kicker, { color: theme.textSecondary }]}>Highlights</Text>
 					{item.highlights.map((highlight) => (
 						<View key={highlight} style={styles.highlightRow}>
 							<View
 								style={[styles.highlightDot, { backgroundColor: item.accent }]}
 							/>
-							<Text style={styles.highlightText}>{highlight}</Text>
+							<Text style={[styles.highlightText, { color: theme.textSecondary }]}>{highlight}</Text>
 						</View>
 					))}
 				</View>
 
-				<View style={styles.card}>
-					<Text style={styles.kicker}>Show Others</Text>
-					<Text style={styles.helperText}>
+				<View style={[styles.card, { backgroundColor: theme.surfaceElevated }]}>
+					<Text style={[styles.kicker, { color: theme.textSecondary }]}>Show Others</Text>
+					<Text style={[styles.helperText, { color: theme.textSecondary }]}>
 						These cards push a new grouped destination from inside dst. This is
 						the actual nested retargeting case.
 					</Text>
@@ -136,7 +138,10 @@ export default function NestedZoomGroupOverview() {
 				</View>
 
 				<Pressable
-					style={[styles.button, { backgroundColor: item.accent }]}
+					style={({ pressed }) => [
+						styles.button,
+						{ backgroundColor: pressed ? theme.actionButtonPressed : item.accent },
+					]}
 					onPress={() =>
 						router.navigate(
 							buildStackPath(
@@ -146,7 +151,7 @@ export default function NestedZoomGroupOverview() {
 						)
 					}
 				>
-					<Text style={styles.buttonText}>Open Plan Screen</Text>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>Open Plan Screen</Text>
 				</Pressable>
 			</Transition.ScrollView>
 		</View>
@@ -166,8 +171,6 @@ const styles = StyleSheet.create({
 		aspectRatio: 1.05,
 		borderRadius: 22,
 		overflow: "hidden",
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.14)",
 	},
 	heroImage: {
 		width: "100%",
@@ -180,48 +183,38 @@ const styles = StyleSheet.create({
 	metaChip: {
 		flex: 1,
 		padding: 10,
-		borderRadius: 12,
-		borderWidth: 1,
-		backgroundColor: "rgba(255,255,255,0.03)",
+		borderRadius: 14,
 	},
 	metaLabel: {
 		fontSize: 10,
 		textTransform: "uppercase",
 		letterSpacing: 0.7,
-		color: "rgba(255,255,255,0.62)",
 		fontWeight: "700",
 	},
 	metaValue: {
 		marginTop: 4,
 		fontSize: 13,
 		fontWeight: "700",
-		color: "#F2F7FE",
 	},
 	card: {
 		padding: 16,
-		borderRadius: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.12)",
-		backgroundColor: "rgba(0,0,0,0.22)",
+		borderRadius: 14,
 	},
 	kicker: {
 		fontSize: 12,
 		textTransform: "uppercase",
 		letterSpacing: 0.8,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.6)",
 	},
 	headline: {
 		marginTop: 6,
 		fontSize: 22,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	body: {
 		marginTop: 8,
 		fontSize: 14,
 		lineHeight: 22,
-		color: "rgba(255,255,255,0.78)",
 	},
 	highlightRow: {
 		marginTop: 10,
@@ -238,13 +231,11 @@ const styles = StyleSheet.create({
 		flex: 1,
 		fontSize: 14,
 		lineHeight: 20,
-		color: "rgba(255,255,255,0.84)",
 	},
 	helperText: {
 		marginTop: 6,
 		fontSize: 14,
 		lineHeight: 21,
-		color: "rgba(255,255,255,0.7)",
 	},
 	relatedList: {
 		marginTop: 14,
@@ -280,12 +271,11 @@ const styles = StyleSheet.create({
 	},
 	button: {
 		height: 52,
-		borderRadius: 14,
+		borderRadius: 999,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	buttonText: {
-		color: "#0b111a",
 		fontSize: 17,
 		fontWeight: "700",
 	},

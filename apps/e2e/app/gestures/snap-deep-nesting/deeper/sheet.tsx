@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 /**
  * Level 3: Vertical sheet with snap points [0.5, 0.8].
@@ -16,10 +17,14 @@ import { ScreenHeader } from "@/components/screen-header";
  *   - ← nothing
  */
 export default function SheetScreen() {
+	const theme = useTheme();
+
 	return (
 		<View style={styles.container}>
-			<View style={styles.sheet}>
-				<View style={styles.handle} />
+			<View
+				style={[styles.sheet, { backgroundColor: theme.card }]}
+			>
+				<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 				<ScreenHeader
 					title="L3: Sheet (snap points)"
 					subtitle="Shadows L1 vertical, inherits L2 horizontal"
@@ -52,9 +57,20 @@ export default function SheetScreen() {
 						note="This is the ultimate test! Sheet owns ↓↑ (shadows L1), inherits → from L2."
 					/>
 
-					<View style={styles.keyPoint}>
-						<Text style={styles.keyPointTitle}>Why This Works</Text>
-						<Text style={styles.keyPointText}>
+					<View
+						style={[styles.keyPoint, { backgroundColor: theme.noteBox }]}
+					>
+						<Text
+							style={[styles.keyPointTitle, { color: theme.noteText }]}
+						>
+							Why This Works
+						</Text>
+						<Text
+							style={[
+								styles.keyPointText,
+								{ color: theme.textSecondary },
+							]}
+						>
 							1. Sheet has snap points → claims vertical AND vertical-inverted
 							{"\n"}
 							2. This shadows L1's vertical (L1 is blocked){"\n"}
@@ -74,7 +90,6 @@ const styles = StyleSheet.create({
 		justifyContent: "flex-end",
 	},
 	sheet: {
-		backgroundColor: "#4e1b3a",
 		borderTopLeftRadius: 24,
 		borderTopRightRadius: 24,
 		paddingTop: 12,
@@ -84,7 +99,6 @@ const styles = StyleSheet.create({
 	handle: {
 		width: 40,
 		height: 4,
-		backgroundColor: "rgba(255,255,255,0.3)",
 		borderRadius: 2,
 		alignSelf: "center",
 		marginBottom: 8,
@@ -95,21 +109,16 @@ const styles = StyleSheet.create({
 	},
 	keyPoint: {
 		margin: 16,
-		backgroundColor: "rgba(255, 193, 7, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255, 193, 7, 0.3)",
 	},
 	keyPointTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#ffc107",
 		marginBottom: 8,
 	},
 	keyPointText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 22,
 	},
 });

@@ -18,6 +18,7 @@ import {
 	getBoxPositionStyle,
 	getCaseById,
 } from "./constants";
+import { useTheme } from "@/theme";
 
 const FORCED_TOP_INSET = 59;
 const HEADER_HEIGHT_ESTIMATE = 60;
@@ -27,10 +28,11 @@ export default function BoundsSyncSource() {
 	const { width, height } = useWindowDimensions();
 	const caseId = activeCaseId.value;
 	const testCase = getCaseById(caseId);
+	const theme = useTheme();
 
 	if (!testCase) {
 		return (
-			<View style={[styles.container, { paddingTop: FORCED_TOP_INSET }]}>
+			<View style={[styles.container, { paddingTop: FORCED_TOP_INSET, backgroundColor: theme.bg }]}>
 				<ScreenHeader title="Unknown Case" />
 			</View>
 		);
@@ -60,19 +62,19 @@ export default function BoundsSyncSource() {
 			: (sourceBoundary?.method ?? "transform");
 
 	return (
-		<View style={[styles.container, { paddingTop: FORCED_TOP_INSET }]}>
+		<View style={[styles.container, { paddingTop: FORCED_TOP_INSET, backgroundColor: theme.bg }]}>
 			<ScreenHeader
 				title={`Source: ${testCase.title}`}
 				subtitle={`${source.width}x${source.height} @ ${source.position}`}
 			/>
-			<Text style={styles.concernText}>
+			<Text style={[styles.concernText, { color: theme.textSecondary }]}>
 				Concern: Element transition, not navigation transition
 			</Text>
-			<Text style={styles.anchorNoteText}>
+			<Text style={[styles.anchorNoteText, { color: theme.textSecondary }]}>
 				Anchor selects the alignment point (e.g. center), not a fixed top-left
 				lock.
 			</Text>
-			<Text style={styles.anchorPairText}>
+			<Text style={[styles.anchorPairText, { color: theme.textSecondary }]}>
 				sourceAnchor: {sourceAnchor} | destinationAnchor: {destinationAnchor}
 			</Text>
 			<View style={styles.arena}>
@@ -95,11 +97,12 @@ export default function BoundsSyncSource() {
 							{
 								width: source.width,
 								height: source.height,
+								backgroundColor: theme.actionButton,
 							},
 							positionStyle,
 						]}
 					>
-						<Text style={styles.boxLabel}>SRC</Text>
+						<Text style={[styles.boxLabel, { color: theme.actionButtonText }]}>SRC</Text>
 					</Transition.Boundary.View>
 				</Pressable>
 
@@ -132,7 +135,6 @@ export default function BoundsSyncSource() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	arena: {
 		flex: 1,
@@ -142,38 +144,33 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 16,
 		paddingBottom: 4,
 		fontSize: 11,
-		color: "#7fa5cf",
 		fontFamily: "monospace",
 	},
 	anchorNoteText: {
 		paddingHorizontal: 16,
 		paddingBottom: 4,
 		fontSize: 11,
-		color: "#97abc3",
 		fontFamily: "monospace",
 	},
 	anchorPairText: {
 		paddingHorizontal: 16,
 		paddingBottom: 10,
 		fontSize: 11,
-		color: "#89a4c4",
 		fontFamily: "monospace",
 	},
 	box: {
 		position: "absolute",
-		backgroundColor: "#4a9eff",
-		borderRadius: 12,
+		borderRadius: 14,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	boxLabel: {
-		color: "#fff",
 		fontWeight: "700",
 		fontSize: 14,
 	},
 	ghost: {
 		position: "absolute",
-		borderRadius: 12,
+		borderRadius: 14,
 		borderWidth: 2,
 		borderColor: "rgba(255, 255, 255, 0.15)",
 		borderStyle: "dashed",

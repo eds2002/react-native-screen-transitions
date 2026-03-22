@@ -7,6 +7,7 @@ import {
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
 import { activeCaseId, type BoundsTestCase, CATEGORIES } from "./constants";
+import { useTheme } from "@/theme";
 
 function Section({
 	title,
@@ -17,9 +18,10 @@ function Section({
 	cases: BoundsTestCase[];
 	stackType: "blank-stack" | "native-stack";
 }) {
+	const theme = useTheme();
 	return (
 		<View style={styles.section}>
-			<Text style={styles.sectionTitle}>{title}</Text>
+			<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>{title}</Text>
 			<View style={styles.list}>
 				{cases.map((testCase) => {
 					const destinationBoundary = testCase.destination.boundary;
@@ -40,15 +42,18 @@ function Section({
 						<Pressable
 							key={testCase.id}
 							testID={`sync-${testCase.id}`}
-							style={styles.item}
+							style={({ pressed }) => [
+								styles.item,
+								{ backgroundColor: pressed ? theme.cardPressed : theme.card },
+							]}
 							onPress={() => {
 								activeCaseId.value = testCase.id;
 								router.push(buildStackPath(stackType, "bounds/sync/source") as never);
 							}}
 						>
-							<Text style={styles.itemTitle}>{testCase.title}</Text>
-							<Text style={styles.itemTags}>{tags}</Text>
-							<Text style={styles.itemDetail}>
+							<Text style={[styles.itemTitle, { color: theme.text }]}>{testCase.title}</Text>
+							<Text style={[styles.itemTags, { color: theme.activePillText }]}>{tags}</Text>
+							<Text style={[styles.itemDetail, { color: theme.textTertiary }]}>
 								{testCase.source.width}x{testCase.source.height}{" "}
 								{testCase.source.position} {"\u2192"}{" "}
 								{testCase.destination.width}x{testCase.destination.height}{" "}
@@ -64,8 +69,9 @@ function Section({
 
 export default function BoundsSyncIndex() {
 	const stackType = useResolvedStackType();
+	const theme = useTheme();
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Bounds Sync"
 				subtitle="Element transitions (A/B boundary sync)"
@@ -87,7 +93,6 @@ export default function BoundsSyncIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		padding: 16,
@@ -99,7 +104,6 @@ const styles = StyleSheet.create({
 	sectionTitle: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "#666",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 		marginBottom: 12,
@@ -109,27 +113,21 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	item: {
-		backgroundColor: "#1e1e1e",
 		padding: 16,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#333",
+		borderRadius: 14,
 	},
 	itemTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	itemTags: {
 		fontSize: 11,
-		color: "#4a9eff",
 		fontFamily: "monospace",
 		marginBottom: 4,
 	},
 	itemDetail: {
 		fontSize: 12,
-		color: "#666",
 		fontFamily: "monospace",
 	},
 });

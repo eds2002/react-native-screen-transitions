@@ -1,9 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import MaskedView from "@react-native-masked-view/masked-view";
 import { router } from "expo-router";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
-import Transition from "react-native-screen-transitions";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 const MAX_SNAP = 0.9;
@@ -12,87 +13,71 @@ const MAX_HEIGHT = SCREEN_HEIGHT * MAX_SNAP;
 export default function WithResistanceScreen() {
 	const stackType = useResolvedStackType();
 	return (
-		<MaskedView
-			style={StyleSheet.absoluteFill}
-			maskElement={
-				<Transition.View
-					styleId="MASKED"
-					style={{ flex: 1 }}
-					pointerEvents="none"
-				/>
-			}
-			pointerEvents="box-none"
-		>
-			<Transition.View styleId="CONTENT" style={styles.container}>
-				<View style={{ maxHeight: MAX_HEIGHT }}>
-					<View style={styles.handle} />
+		<View style={{ maxHeight: MAX_HEIGHT }}>
+			<View style={styles.handle} />
 
-					{/* Hero Image Placeholder */}
-					<View style={styles.heroImage}>
-						<Ionicons
-							name="restaurant"
-							size={48}
-							color="rgba(255,255,255,0.3)"
-						/>
-						<View style={styles.heroOverlay}>
-							<View style={styles.ratingBadge}>
-								<Ionicons name="star" size={14} color="#FDCB6E" />
-								<Text style={styles.ratingText}>4.8</Text>
-							</View>
-						</View>
-					</View>
-
-					{/* Place Info */}
-					<View style={styles.infoSection}>
-						<Text style={styles.placeName}>Sakura Omakase</Text>
-						<Text style={styles.placeCategory}>Japanese · $$$$ · 0.3 mi</Text>
-
-						{/* Tags */}
-						<View style={styles.tags}>
-							{["Michelin ⭐", "Omakase", "Date Night"].map((tag) => (
-								<View key={tag} style={styles.tag}>
-									<Text style={styles.tagText}>{tag}</Text>
-								</View>
-							))}
-						</View>
-
-						{/* Quick Actions */}
-						<View style={styles.actions}>
-							<Pressable style={styles.actionPrimary}>
-								<Ionicons name="navigate" size={18} color="#fff" />
-								<Text style={styles.actionPrimaryText}>Directions</Text>
-							</Pressable>
-							<Pressable style={styles.actionSecondary}>
-								<Ionicons name="call" size={18} color="#00B894" />
-							</Pressable>
-							<Pressable style={styles.actionSecondary}>
-								<Ionicons name="share-outline" size={18} color="#74B9FF" />
-							</Pressable>
-						</View>
-
-						{/* Hours */}
-						<View style={styles.hoursRow}>
-							<Ionicons name="time-outline" size={16} color="#00B894" />
-							<Text style={styles.hoursOpen}>Open</Text>
-							<Text style={styles.hoursDetail}>· Closes 10:00 PM</Text>
-						</View>
-
-						{/* Push to full detail */}
-						<Pressable
-							style={styles.detailButton}
-							onPress={() => router.push(buildStackPath(stackType, "bottom-sheet/normal"))}
-						>
-							<Text style={styles.detailButtonText}>View Full Details</Text>
-							<Ionicons
-								name="chevron-forward"
-								size={18}
-								color="rgba(255,255,255,0.5)"
-							/>
-						</Pressable>
+			{/* Hero Image Placeholder */}
+			<View style={styles.heroImage}>
+				<Ionicons name="restaurant" size={48} color="rgba(255,255,255,0.3)" />
+				<View style={styles.heroOverlay}>
+					<View style={styles.ratingBadge}>
+						<Ionicons name="star" size={14} color="#FDCB6E" />
+						<Text style={styles.ratingText}>4.8</Text>
 					</View>
 				</View>
-			</Transition.View>
-		</MaskedView>
+			</View>
+
+			{/* Place Info */}
+			<View style={styles.infoSection}>
+				<Text style={styles.placeName}>Sakura Omakase</Text>
+				<Text style={styles.placeCategory}>Japanese · $$$$ · 0.3 mi</Text>
+
+				{/* Tags */}
+				<View style={styles.tags}>
+					{["Michelin ⭐", "Omakase", "Date Night"].map((tag) => (
+						<View key={tag} style={styles.tag}>
+							<Text style={styles.tagText}>{tag}</Text>
+						</View>
+					))}
+				</View>
+
+				{/* Quick Actions */}
+				<View style={styles.actions}>
+					<Pressable style={styles.actionPrimary}>
+						<Ionicons name="navigate" size={18} color="#fff" />
+						<Text style={styles.actionPrimaryText}>Directions</Text>
+					</Pressable>
+					<Pressable style={styles.actionSecondary}>
+						<Ionicons name="call" size={18} color="#00B894" />
+					</Pressable>
+					<Pressable style={styles.actionSecondary}>
+						<Ionicons name="share-outline" size={18} color="#74B9FF" />
+					</Pressable>
+				</View>
+
+				{/* Hours */}
+				<View style={styles.hoursRow}>
+					<Ionicons name="time-outline" size={16} color="#00B894" />
+					<Text style={styles.hoursOpen}>Open</Text>
+					<Text style={styles.hoursDetail}>· Closes 10:00 PM</Text>
+				</View>
+
+				{/* Push to full detail */}
+				<Pressable
+					style={styles.detailButton}
+					onPress={() =>
+						router.push(buildStackPath(stackType, "bottom-sheet/normal"))
+					}
+				>
+					<Text style={styles.detailButtonText}>View Full Details</Text>
+					<Ionicons
+						name="chevron-forward"
+						size={18}
+						color="rgba(255,255,255,0.5)"
+					/>
+				</Pressable>
+			</View>
+		</View>
 	);
 }
 

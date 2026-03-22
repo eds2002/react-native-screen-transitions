@@ -9,6 +9,7 @@ import {
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
 import { ZOOM_ID_ITEMS, type ZoomIdItem } from "./constants";
+import { useTheme } from "@/theme";
 
 function ZoomIdCard({ item }: { item: ZoomIdItem }) {
 	const stackType = useResolvedStackType();
@@ -42,9 +43,10 @@ function ZoomIdCard({ item }: { item: ZoomIdItem }) {
 
 export default function NavigationZoomIdIndex() {
 	const insets = useSafeAreaInsets();
+	const theme = useTheme();
 
 	return (
-		<View style={styles.container}>
+		<View style={[styles.container, { backgroundColor: theme.bg }]}>
 			<View style={{ paddingTop: insets.top }}>
 				<ScreenHeader
 					title="Navigation Zoom ID Transition"
@@ -70,7 +72,6 @@ export default function NavigationZoomIdIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#0A0A0A",
 	},
 	scrollContent: {
 		paddingHorizontal: 20,

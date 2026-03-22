@@ -10,6 +10,7 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 import {
 	activeGalleryId,
 	GALLERY_GROUP,
@@ -144,6 +145,7 @@ export default function GalleryIndex() {
 		() => buildMasonryLayout(columnWidth),
 		[columnWidth],
 	);
+	const theme = useTheme();
 
 	const scrollToGalleryId = useCallback(
 		(id: string, animated: boolean) => {
@@ -206,7 +208,7 @@ export default function GalleryIndex() {
 	);
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Gallery"
 				subtitle="Image gallery with shared element zoom"
@@ -227,7 +229,6 @@ export default function GalleryIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#000",
 	},
 	scrollContent: {
 		paddingHorizontal: PADDING,

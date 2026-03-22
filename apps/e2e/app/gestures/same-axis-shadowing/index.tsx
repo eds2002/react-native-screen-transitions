@@ -3,10 +3,16 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function SameAxisShadowingIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="3. Same Axis Shadowing"
 				subtitle="Child shadows parent's vertical"
@@ -29,16 +35,44 @@ export default function SameAxisShadowingIndex() {
 				/>
 
 				<View style={styles.comparison}>
-					<View style={styles.comparisonItem}>
-						<Text style={styles.comparisonTitle}>Leaf A (inherits)</Text>
-						<Text style={styles.comparisonText}>
+					<View
+						style={[
+							styles.comparisonItem,
+							{ backgroundColor: theme.card },
+						]}
+					>
+						<Text
+							style={[styles.comparisonTitle, { color: theme.text }]}
+						>
+							Leaf A (inherits)
+						</Text>
+						<Text
+							style={[
+								styles.comparisonText,
+								{ color: theme.textSecondary },
+							]}
+						>
 							No gesture config → inherits from parent. Swipe ↓ dismisses the
 							ENTIRE stack.
 						</Text>
 					</View>
-					<View style={styles.comparisonItem}>
-						<Text style={styles.comparisonTitle}>Leaf B (shadows)</Text>
-						<Text style={styles.comparisonText}>
+					<View
+						style={[
+							styles.comparisonItem,
+							{ backgroundColor: theme.card },
+						]}
+					>
+						<Text
+							style={[styles.comparisonTitle, { color: theme.text }]}
+						>
+							Leaf B (shadows)
+						</Text>
+						<Text
+							style={[
+								styles.comparisonText,
+								{ color: theme.textSecondary },
+							]}
+						>
 							Has vertical gesture → shadows parent. Swipe ↓ dismisses ONLY
 							leaf-b, returning to this index.
 						</Text>
@@ -47,18 +81,57 @@ export default function SameAxisShadowingIndex() {
 
 				<View style={styles.actions}>
 					<Pressable
-						style={styles.button}
+						style={({ pressed }) => [
+							styles.button,
+							{
+								backgroundColor: pressed
+									? theme.actionButtonPressed
+									: theme.actionButton,
+							},
+						]}
 						onPress={() => router.push("/gestures/same-axis-shadowing/leaf-a")}
 					>
-						<Text style={styles.buttonText}>Open Leaf A (inherits)</Text>
-						<Text style={styles.buttonSubtext}>↓ dismisses entire stack</Text>
+						<Text
+							style={[styles.buttonText, { color: theme.actionButtonText }]}
+						>
+							Open Leaf A (inherits)
+						</Text>
+						<Text
+							style={[
+								styles.buttonSubtext,
+								{ color: theme.actionButtonText, opacity: 0.7 },
+							]}
+						>
+							↓ dismisses entire stack
+						</Text>
 					</Pressable>
 					<Pressable
-						style={[styles.button, styles.buttonAlt]}
+						style={({ pressed }) => [
+							styles.button,
+							{
+								backgroundColor: pressed
+									? theme.secondaryButtonPressed
+									: theme.secondaryButton,
+							},
+						]}
 						onPress={() => router.push("/gestures/same-axis-shadowing/leaf-b")}
 					>
-						<Text style={styles.buttonText}>Open Leaf B (shadows)</Text>
-						<Text style={styles.buttonSubtext}>↓ dismisses only leaf-b</Text>
+						<Text
+							style={[
+								styles.buttonText,
+								{ color: theme.secondaryButtonText },
+							]}
+						>
+							Open Leaf B (shadows)
+						</Text>
+						<Text
+							style={[
+								styles.buttonSubtext,
+								{ color: theme.secondaryButtonText, opacity: 0.7 },
+							]}
+						>
+							↓ dismisses only leaf-b
+						</Text>
 					</Pressable>
 				</View>
 			</ScrollView>
@@ -69,7 +142,6 @@ export default function SameAxisShadowingIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	scrollContent: {
 		paddingBottom: 40,
@@ -79,21 +151,16 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	comparisonItem: {
-		backgroundColor: "rgba(255, 255, 255, 0.05)",
 		padding: 16,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "rgba(255, 255, 255, 0.1)",
+		borderRadius: 14,
 	},
 	comparisonTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#4a9eff",
 		marginBottom: 8,
 	},
 	comparisonText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 	actions: {
@@ -101,21 +168,15 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#4a9eff",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
-	buttonAlt: {
-		backgroundColor: "#9e4aff",
-	},
 	buttonText: {
-		color: "#fff",
 		fontSize: 16,
 		fontWeight: "600",
 	},
 	buttonSubtext: {
-		color: "rgba(255, 255, 255, 0.7)",
 		fontSize: 12,
 		marginTop: 4,
 	},

@@ -20,6 +20,7 @@ import {
 	navigationZoomId,
 	ZOOM_GROUP,
 } from "./constants";
+import { useTheme } from "@/theme";
 
 const GAP = 10;
 const PADDING = 16;
@@ -63,9 +64,10 @@ function ZoomSourceCard({
 export default function NavigationZoomGroupTransitionsIndex() {
 	const { width } = useWindowDimensions();
 	const colWidth = (width - PADDING * 2 - GAP) / 2;
+	const theme = useTheme();
 
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
 				title="Navigation Zoom Group Transitions"
 				subtitle="bounds({ id, group }).navigation.zoom()"
@@ -85,7 +87,6 @@ export default function NavigationZoomGroupTransitionsIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	scrollContent: {
 		paddingHorizontal: PADDING,

@@ -6,9 +6,11 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 
 export default function CustomBackgroundScreen() {
 	const stackType = useResolvedStackType();
+	const theme = useTheme();
 	return (
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
@@ -16,19 +18,24 @@ export default function CustomBackgroundScreen() {
 				subtitle="Squircle surface component with animated content transform."
 			/>
 			<View style={styles.content}>
-				<View style={styles.card}>
-					<Text style={styles.cardTitle}>Surface Slot</Text>
-					<Text style={styles.cardBody}>
+				<View style={[styles.card, { backgroundColor: theme.card }]}>
+					<Text style={[styles.cardTitle, { color: theme.text }]}>Surface Slot</Text>
+					<Text style={[styles.cardBody, { color: theme.textSecondary }]}>
 						This route renders `surfaceComponent` and drives styles/props via
 						the `surface` slot while screen motion stays in `content`.
 					</Text>
 				</View>
 				<Pressable
 					testID="push-detail-from-custom-background"
-					style={styles.button}
+					style={({ pressed }) => [
+						styles.button,
+						{ backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton },
+					]}
 					onPress={() => router.push(buildStackPath(stackType, "detail"))}
 				>
-					<Text style={styles.buttonText}>Push Detail Screen</Text>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
+						Push Detail Screen
+					</Text>
 				</Pressable>
 			</View>
 		</SafeAreaView>
@@ -47,33 +54,26 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 	},
 	card: {
-		backgroundColor: "rgba(255,255,255,0.08)",
 		borderRadius: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.18)",
 		padding: 18,
 	},
 	cardTitle: {
-		color: "#fff",
 		fontSize: 18,
 		fontWeight: "700",
 		marginBottom: 8,
 	},
 	cardBody: {
-		color: "#d6deee",
 		fontSize: 14,
 		lineHeight: 21,
 	},
 	button: {
-		backgroundColor: "rgba(255,255,255,0.18)",
 		paddingVertical: 16,
 		paddingHorizontal: 24,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
 		fontSize: 16,
 		fontWeight: "700",
-		color: "#fff",
 	},
 });

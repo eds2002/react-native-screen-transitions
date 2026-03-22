@@ -1,6 +1,7 @@
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { useTheme } from "@/theme";
 
 const STACK_OPTIONS = [
 	{
@@ -15,7 +16,7 @@ const STACK_OPTIONS = [
 	},
 	{
 		id: "component-stack",
-		title: "Component Stack",
+		title: "Component Stack (Deprecated)",
 		description: "Standalone navigator with bounds-based floating animation",
 	},
 ];
@@ -39,24 +40,48 @@ const GESTURE_OPTIONS = [
 ];
 
 export default function HomeScreen() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container}>
+		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
 			<ScrollView contentContainerStyle={styles.scrollContent}>
-				<Text style={styles.title}>Screen Transitions E2E</Text>
-				<Text style={styles.subtitle}>Select a test category</Text>
+				<Text style={[styles.title, { color: theme.text }]}>
+					Screen Transitions E2E
+				</Text>
+				<Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+					Select a test category
+				</Text>
 
 				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Stacks</Text>
+					<Text
+						style={[styles.sectionTitle, { color: theme.textTertiary }]}
+					>
+						Stacks
+					</Text>
 					<View style={styles.buttonContainer}>
 						{STACK_OPTIONS.map((option) => (
 							<Pressable
 								key={option.id}
 								testID={`${option.id}-button`}
-								style={styles.button}
+								style={({ pressed }) => [
+									styles.button,
+									{
+										backgroundColor: pressed
+											? theme.cardPressed
+											: theme.card,
+									},
+								]}
 								onPress={() => router.push(`/${option.id}` as `/${string}`)}
 							>
-								<Text style={styles.buttonTitle}>{option.title}</Text>
-								<Text style={styles.buttonDescription}>
+								<Text style={[styles.buttonTitle, { color: theme.text }]}>
+									{option.title}
+								</Text>
+								<Text
+									style={[
+										styles.buttonDescription,
+										{ color: theme.textSecondary },
+									]}
+								>
 									{option.description}
 								</Text>
 							</Pressable>
@@ -65,17 +90,35 @@ export default function HomeScreen() {
 				</View>
 
 				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Gestures</Text>
+					<Text
+						style={[styles.sectionTitle, { color: theme.textTertiary }]}
+					>
+						Gestures
+					</Text>
 					<View style={styles.buttonContainer}>
 						{GESTURE_OPTIONS.map((option) => (
 							<Pressable
 								key={option.id}
 								testID={`${option.id}-button`}
-								style={styles.button}
+								style={({ pressed }) => [
+									styles.button,
+									{
+										backgroundColor: pressed
+											? theme.cardPressed
+											: theme.card,
+									},
+								]}
 								onPress={() => router.push(`/${option.id}` as `/${string}`)}
 							>
-								<Text style={styles.buttonTitle}>{option.title}</Text>
-								<Text style={styles.buttonDescription}>
+								<Text style={[styles.buttonTitle, { color: theme.text }]}>
+									{option.title}
+								</Text>
+								<Text
+									style={[
+										styles.buttonDescription,
+										{ color: theme.textSecondary },
+									]}
+								>
 									{option.description}
 								</Text>
 							</Pressable>
@@ -84,17 +127,35 @@ export default function HomeScreen() {
 				</View>
 
 				<View style={styles.section}>
-					<Text style={styles.sectionTitle}>Benchmarks</Text>
+					<Text
+						style={[styles.sectionTitle, { color: theme.textTertiary }]}
+					>
+						Benchmarks
+					</Text>
 					<View style={styles.buttonContainer}>
 						{BENCHMARK_OPTIONS.map((option) => (
 							<Pressable
 								key={option.id}
 								testID={`${option.id}-button`}
-								style={styles.button}
+								style={({ pressed }) => [
+									styles.button,
+									{
+										backgroundColor: pressed
+											? theme.cardPressed
+											: theme.card,
+									},
+								]}
 								onPress={() => router.push(`/${option.id}` as `/${string}`)}
 							>
-								<Text style={styles.buttonTitle}>{option.title}</Text>
-								<Text style={styles.buttonDescription}>
+								<Text style={[styles.buttonTitle, { color: theme.text }]}>
+									{option.title}
+								</Text>
+								<Text
+									style={[
+										styles.buttonDescription,
+										{ color: theme.textSecondary },
+									]}
+								>
 									{option.description}
 								</Text>
 							</Pressable>
@@ -109,7 +170,6 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	scrollContent: {
 		padding: 20,
@@ -118,13 +178,11 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 28,
 		fontWeight: "bold",
-		color: "#fff",
 		marginTop: 40,
 		textAlign: "center",
 	},
 	subtitle: {
 		fontSize: 16,
-		color: "#888",
 		marginTop: 8,
 		textAlign: "center",
 		marginBottom: 32,
@@ -135,30 +193,24 @@ const styles = StyleSheet.create({
 	sectionTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#666",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 		marginBottom: 12,
 		marginLeft: 4,
 	},
 	buttonContainer: {
-		gap: 16,
+		gap: 12,
 	},
 	button: {
-		backgroundColor: "#1e1e1e",
-		padding: 24,
-		borderRadius: 16,
-		borderWidth: 1,
-		borderColor: "#333",
+		padding: 20,
+		borderRadius: 14,
 	},
 	buttonTitle: {
-		fontSize: 20,
+		fontSize: 18,
 		fontWeight: "600",
-		color: "#fff",
-		marginBottom: 8,
+		marginBottom: 4,
 	},
 	buttonDescription: {
 		fontSize: 14,
-		color: "#888",
 	},
 });

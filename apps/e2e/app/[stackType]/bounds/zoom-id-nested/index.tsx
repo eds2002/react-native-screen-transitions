@@ -12,6 +12,7 @@ import {
 	NESTED_ZOOM_ID_ITEMS,
 	type NestedZoomIdItem,
 } from "./constants";
+import { useTheme } from "@/theme";
 
 function NestedZoomIdCard({ item }: { item: NestedZoomIdItem }) {
 	const stackType = useResolvedStackType();
@@ -46,9 +47,10 @@ function NestedZoomIdCard({ item }: { item: NestedZoomIdItem }) {
 
 export default function NestedNavigationZoomIdIndex() {
 	const insets = useSafeAreaInsets();
+	const theme = useTheme();
 
 	return (
-		<View style={styles.container}>
+		<View style={[styles.container, { backgroundColor: theme.bg }]}>
 			<View style={{ paddingTop: insets.top }}>
 				<ScreenHeader
 					title="Nested Navigation Zoom ID"
@@ -56,9 +58,9 @@ export default function NestedNavigationZoomIdIndex() {
 				/>
 			</View>
 
-			<View style={styles.descriptionCard}>
-				<Text style={styles.descriptionTitle}>What this tests</Text>
-				<Text style={styles.descriptionBody}>
+			<View style={[styles.descriptionCard, { backgroundColor: theme.infoBox }]}>
+				<Text style={[styles.descriptionTitle, { color: theme.infoBoxLabel }]}>What this tests</Text>
+				<Text style={[styles.descriptionBody, { color: theme.textSecondary }]}>
 					This is the same id-only navigation zoom pattern as `zoom-id`, but the
 					detail screen includes related cards that push the exact same `[id]`
 					route again with new data.
@@ -83,21 +85,16 @@ export default function NestedNavigationZoomIdIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#090A0C",
 	},
 	descriptionCard: {
 		marginHorizontal: 20,
 		marginBottom: 14,
 		padding: 16,
-		borderRadius: 18,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.08)",
-		backgroundColor: "rgba(255,255,255,0.03)",
+		borderRadius: 14,
 	},
 	descriptionTitle: {
 		fontSize: 12,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.72)",
 		textTransform: "uppercase",
 		letterSpacing: 0.9,
 	},
@@ -105,7 +102,6 @@ const styles = StyleSheet.create({
 		marginTop: 6,
 		fontSize: 14,
 		lineHeight: 21,
-		color: "rgba(255,255,255,0.62)",
 	},
 	scrollContent: {
 		paddingHorizontal: 20,

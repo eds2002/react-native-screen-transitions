@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 /**
  * Leaf B - Has vertical gesture (SHADOWS parent)
@@ -10,35 +11,72 @@ import { ScreenHeader } from "@/components/screen-header";
  * NOT the entire stack.
  */
 export default function LeafBScreen() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader title="Leaf B" subtitle="Has vertical (shadows parent)" />
 
 			<View style={styles.content}>
-				<View style={styles.infoBox}>
-					<Text style={styles.infoTitle}>This screen has vertical gesture</Text>
-					<Text style={styles.infoText}>
+				<View
+					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
+				>
+					<Text style={[styles.infoTitle, { color: theme.text }]}>
+						This screen has vertical gesture
+					</Text>
+					<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 						Because it claims the same direction as the parent, it SHADOWS the
 						parent's gesture. The parent's vertical gesture is blocked.
 					</Text>
 				</View>
 
-				<View style={styles.resultBox}>
-					<Text style={styles.resultTitle}>Expected Result</Text>
-					<View style={styles.gestureRow}>
-						<Text style={styles.gestureIcon}>↓</Text>
+				<View
+					style={[styles.resultBox, { backgroundColor: theme.card }]}
+				>
+					<Text
+						style={[styles.resultTitle, { color: theme.textTertiary }]}
+					>
+						Expected Result
+					</Text>
+					<View
+						style={[
+							styles.gestureRow,
+							{ backgroundColor: theme.surfaceElevated },
+						]}
+					>
+						<Text
+							style={[styles.gestureIcon, { color: theme.activePill }]}
+						>
+							↓
+						</Text>
 						<View style={styles.gestureContent}>
-							<Text style={styles.gestureText}>Swipe down</Text>
-							<Text style={styles.gestureResult}>
+							<Text style={[styles.gestureText, { color: theme.text }]}>
+								Swipe down
+							</Text>
+							<Text
+								style={[
+									styles.gestureResult,
+									{ color: theme.textSecondary },
+								]}
+							>
 								Dismisses ONLY this screen (back to index)
 							</Text>
 						</View>
 					</View>
 				</View>
 
-				<View style={styles.shadowBox}>
-					<Text style={styles.shadowTitle}>Shadowing Explained</Text>
-					<Text style={styles.shadowText}>
+				<View
+					style={[styles.shadowBox, { backgroundColor: theme.noteBox }]}
+				>
+					<Text style={[styles.shadowTitle, { color: theme.noteText }]}>
+						Shadowing Explained
+					</Text>
+					<Text
+						style={[styles.shadowText, { color: theme.textSecondary }]}
+					>
 						The parent also has vertical gesture, but this screen "shadows" it
 						by claiming the same direction. Only ONE owner per direction at any
 						given time.
@@ -52,7 +90,6 @@ export default function LeafBScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#4e1b2d",
 	},
 	content: {
 		flex: 1,
@@ -60,32 +97,25 @@ const styles = StyleSheet.create({
 		gap: 24,
 	},
 	infoBox: {
-		backgroundColor: "rgba(158, 74, 255, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(158, 74, 255, 0.3)",
 	},
 	infoTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#9e4aff",
 		marginBottom: 8,
 	},
 	infoText: {
 		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 	resultBox: {
-		backgroundColor: "rgba(255, 255, 255, 0.05)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
 	},
 	resultTitle: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "#888",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 		marginBottom: 12,
@@ -94,13 +124,11 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "flex-start",
 		gap: 12,
-		backgroundColor: "rgba(255, 255, 255, 0.05)",
 		padding: 12,
 		borderRadius: 8,
 	},
 	gestureIcon: {
 		fontSize: 24,
-		color: "#9e4aff",
 		width: 36,
 		textAlign: "center",
 	},
@@ -110,29 +138,22 @@ const styles = StyleSheet.create({
 	gestureText: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#fff",
 	},
 	gestureResult: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.6)",
 		marginTop: 4,
 	},
 	shadowBox: {
-		backgroundColor: "rgba(255, 193, 7, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255, 193, 7, 0.3)",
 	},
 	shadowTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#ffc107",
 		marginBottom: 8,
 	},
 	shadowText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 });

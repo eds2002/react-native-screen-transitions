@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { ScreenHeader } from "@/components/screen-header";
 import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import { screenTints } from "@/theme";
 
 export default function SlideHorizontalScreen() {
 	const stackType = useResolvedStackType();
@@ -29,7 +30,7 @@ export default function SlideHorizontalScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a472a",
+		backgroundColor: screenTints.sage,
 	},
 	content: {
 		flex: 1,
@@ -41,7 +42,7 @@ const styles = StyleSheet.create({
 		backgroundColor: "rgba(255,255,255,0.2)",
 		paddingVertical: 16,
 		paddingHorizontal: 32,
-		borderRadius: 12,
+		borderRadius: 999,
 		marginBottom: 12,
 		minWidth: 200,
 		alignItems: "center",

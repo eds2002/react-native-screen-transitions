@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 /**
  * Leaf A - No gesture config (inherits from parent)
@@ -9,25 +10,56 @@ import { ScreenHeader } from "@/components/screen-header";
  * gesture from the parent layout. Swiping down will dismiss the ENTIRE stack.
  */
 export default function LeafAScreen() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader title="Leaf A" subtitle="Inherits vertical from parent" />
 
 			<View style={styles.content}>
-				<View style={styles.infoBox}>
-					<Text style={styles.infoTitle}>No gesture config on this screen</Text>
-					<Text style={styles.infoText}>
+				<View
+					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
+				>
+					<Text style={[styles.infoTitle, { color: theme.text }]}>
+						No gesture config on this screen
+					</Text>
+					<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 						This screen inherits the vertical gesture from the parent layout.
 					</Text>
 				</View>
 
-				<View style={styles.resultBox}>
-					<Text style={styles.resultTitle}>Expected Result</Text>
-					<View style={styles.gestureRow}>
-						<Text style={styles.gestureIcon}>↓</Text>
+				<View
+					style={[styles.resultBox, { backgroundColor: theme.card }]}
+				>
+					<Text
+						style={[styles.resultTitle, { color: theme.textTertiary }]}
+					>
+						Expected Result
+					</Text>
+					<View
+						style={[
+							styles.gestureRow,
+							{ backgroundColor: theme.surfaceElevated },
+						]}
+					>
+						<Text
+							style={[styles.gestureIcon, { color: theme.activePill }]}
+						>
+							↓
+						</Text>
 						<View style={styles.gestureContent}>
-							<Text style={styles.gestureText}>Swipe down</Text>
-							<Text style={styles.gestureResult}>
+							<Text style={[styles.gestureText, { color: theme.text }]}>
+								Swipe down
+							</Text>
+							<Text
+								style={[
+									styles.gestureResult,
+									{ color: theme.textSecondary },
+								]}
+							>
 								Dismisses ENTIRE stack (back to home)
 							</Text>
 						</View>
@@ -41,7 +73,6 @@ export default function LeafAScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#2d1b4e",
 	},
 	content: {
 		flex: 1,
@@ -49,32 +80,25 @@ const styles = StyleSheet.create({
 		gap: 24,
 	},
 	infoBox: {
-		backgroundColor: "rgba(74, 158, 255, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(74, 158, 255, 0.3)",
 	},
 	infoTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#4a9eff",
 		marginBottom: 8,
 	},
 	infoText: {
 		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 	resultBox: {
-		backgroundColor: "rgba(255, 255, 255, 0.05)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
 	},
 	resultTitle: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "#888",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 		marginBottom: 12,
@@ -83,13 +107,11 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "flex-start",
 		gap: 12,
-		backgroundColor: "rgba(255, 255, 255, 0.05)",
 		padding: 12,
 		borderRadius: 8,
 	},
 	gestureIcon: {
 		fontSize: 24,
-		color: "#4a9eff",
 		width: 36,
 		textAlign: "center",
 	},
@@ -99,11 +121,9 @@ const styles = StyleSheet.create({
 	gestureText: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#fff",
 	},
 	gestureResult: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.6)",
 		marginTop: 4,
 	},
 });

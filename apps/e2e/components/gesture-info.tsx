@@ -1,4 +1,5 @@
 import { StyleSheet, Text, View } from "react-native";
+import { useTheme } from "@/theme";
 
 export type GestureBehavior = {
 	direction: "down" | "up" | "right" | "left";
@@ -14,10 +15,10 @@ interface GestureInfoProps {
 }
 
 const DIRECTION_SYMBOLS: Record<GestureBehavior["direction"], string> = {
-	down: "↓",
-	up: "↑",
-	right: "→",
-	left: "←",
+	down: "\u2193",
+	up: "\u2191",
+	right: "\u2192",
+	left: "\u2190",
 };
 
 export function GestureInfo({
@@ -26,42 +27,50 @@ export function GestureInfo({
 	behaviors,
 	note,
 }: GestureInfoProps) {
+	const theme = useTheme();
+
 	return (
 		<View style={styles.container}>
-			<Text style={styles.title}>{title}</Text>
+			<Text style={[styles.title, { color: theme.text }]}>{title}</Text>
 
-			<View style={styles.structureBox}>
-				<Text style={styles.structureLabel}>Structure</Text>
-				<Text style={styles.structure}>{structure}</Text>
+			<View style={[styles.structureBox, { backgroundColor: theme.infoBox }]}>
+				<Text style={[styles.structureLabel, { color: theme.infoBoxLabel }]}>
+					Structure
+				</Text>
+				<Text style={[styles.structure, { color: theme.text }]}>
+					{structure}
+				</Text>
 			</View>
 
-			<View style={styles.behaviorBox}>
-				<Text style={styles.behaviorLabel}>Expected Behavior</Text>
+			<View style={[styles.behaviorBox, { backgroundColor: theme.infoBox }]}>
+				<Text style={[styles.behaviorLabel, { color: theme.infoBoxLabel }]}>
+					Expected Behavior
+				</Text>
 				<View style={styles.table}>
-					<View style={styles.tableHeader}>
-						<Text style={[styles.tableCell, styles.headerCell, styles.dirCell]}>
+					<View style={[styles.tableHeader, { borderBottomColor: theme.separator }]}>
+						<Text style={[styles.tableCell, styles.headerCell, styles.dirCell, { color: theme.textSecondary }]}>
 							Drag
 						</Text>
 						<Text
-							style={[styles.tableCell, styles.headerCell, styles.ownerCell]}
+							style={[styles.tableCell, styles.headerCell, styles.ownerCell, { color: theme.textSecondary }]}
 						>
 							Owner
 						</Text>
 						<Text
-							style={[styles.tableCell, styles.headerCell, styles.resultCell]}
+							style={[styles.tableCell, styles.headerCell, styles.resultCell, { color: theme.textSecondary }]}
 						>
 							Result
 						</Text>
 					</View>
 					{behaviors.map((b, i) => (
 						<View key={i} style={styles.tableRow}>
-							<Text style={[styles.tableCell, styles.dirCell]}>
+							<Text style={[styles.tableCell, styles.dirCell, { color: theme.text }]}>
 								{DIRECTION_SYMBOLS[b.direction]}
 							</Text>
-							<Text style={[styles.tableCell, styles.ownerCell]}>
-								{b.owner ?? "—"}
+							<Text style={[styles.tableCell, styles.ownerCell, { color: theme.text }]}>
+								{b.owner ?? "\u2014"}
 							</Text>
-							<Text style={[styles.tableCell, styles.resultCell]}>
+							<Text style={[styles.tableCell, styles.resultCell, { color: theme.text }]}>
 								{b.result}
 							</Text>
 						</View>
@@ -70,8 +79,8 @@ export function GestureInfo({
 			</View>
 
 			{note && (
-				<View style={styles.noteBox}>
-					<Text style={styles.note}>{note}</Text>
+				<View style={[styles.noteBox, { backgroundColor: theme.noteBox }]}>
+					<Text style={[styles.note, { color: theme.noteText }]}>{note}</Text>
 				</View>
 			)}
 		</View>
@@ -86,40 +95,30 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 18,
 		fontWeight: "700",
-		color: "#fff",
 	},
 	structureBox: {
-		backgroundColor: "rgba(74, 158, 255, 0.1)",
-		borderRadius: 8,
+		borderRadius: 12,
 		padding: 12,
-		borderWidth: 1,
-		borderColor: "rgba(74, 158, 255, 0.3)",
 	},
 	structureLabel: {
 		fontSize: 10,
 		fontWeight: "600",
-		color: "#4a9eff",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 		marginBottom: 6,
 	},
 	structure: {
 		fontSize: 13,
-		color: "#fff",
 		fontFamily: "monospace",
 		lineHeight: 20,
 	},
 	behaviorBox: {
-		backgroundColor: "rgba(255, 255, 255, 0.05)",
-		borderRadius: 8,
+		borderRadius: 12,
 		padding: 12,
-		borderWidth: 1,
-		borderColor: "rgba(255, 255, 255, 0.1)",
 	},
 	behaviorLabel: {
 		fontSize: 10,
 		fontWeight: "600",
-		color: "#888",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 		marginBottom: 8,
@@ -130,7 +129,6 @@ const styles = StyleSheet.create({
 	tableHeader: {
 		flexDirection: "row",
 		borderBottomWidth: 1,
-		borderBottomColor: "rgba(255, 255, 255, 0.1)",
 		paddingBottom: 6,
 		marginBottom: 4,
 	},
@@ -140,10 +138,8 @@ const styles = StyleSheet.create({
 	},
 	tableCell: {
 		fontSize: 13,
-		color: "#fff",
 	},
 	headerCell: {
-		color: "#888",
 		fontWeight: "600",
 		fontSize: 11,
 		textTransform: "uppercase",
@@ -159,15 +155,11 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	noteBox: {
-		backgroundColor: "rgba(255, 193, 7, 0.1)",
-		borderRadius: 8,
+		borderRadius: 12,
 		padding: 12,
-		borderWidth: 1,
-		borderColor: "rgba(255, 193, 7, 0.3)",
 	},
 	note: {
 		fontSize: 12,
-		color: "#ffc107",
 		lineHeight: 18,
 	},
 });

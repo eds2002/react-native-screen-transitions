@@ -3,18 +3,20 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function GestureBoundsDetail() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const tag = `gesture-bounds-${id}`;
+	const theme = useTheme();
 
 	return (
-		<Transition.Boundary.View id={tag} style={styles.wrapper}>
+		<Transition.Boundary.View id={tag} style={[styles.wrapper, { backgroundColor: theme.bg }]}>
 			<SafeAreaView style={styles.container} edges={["top"]}>
 				<ScreenHeader title="Gesture Bounds" subtitle="Swipe down to dismiss" />
 				<View style={styles.content}>
-					<Text style={styles.text}>{`Transition.Boundary id\n"${tag}"`}</Text>
-					<Text style={styles.hint}>
+					<Text style={[styles.text, { color: theme.text }]}>{`Transition.Boundary id\n"${tag}"`}</Text>
+					<Text style={[styles.hint, { color: theme.textTertiary }]}>
 						Drag around to see the unfocused bound follow the gesture
 					</Text>
 				</View>
@@ -26,7 +28,6 @@ export default function GestureBoundsDetail() {
 const styles = StyleSheet.create({
 	wrapper: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	container: {
 		flex: 1,
@@ -40,13 +41,11 @@ const styles = StyleSheet.create({
 	text: {
 		fontSize: 16,
 		fontWeight: "500",
-		color: "#fff",
 		textAlign: "center",
 		marginBottom: 16,
 	},
 	hint: {
 		fontSize: 13,
-		color: "#888",
 		textAlign: "center",
 	},
 });

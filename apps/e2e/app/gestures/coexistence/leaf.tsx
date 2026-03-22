@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 /**
  * Leaf with vertical gesture, parent has vertical-inverted.
@@ -11,44 +12,91 @@ import { ScreenHeader } from "@/components/screen-header";
  * - Swipe ↑ dismisses ENTIRE stack (inherited from parent)
  */
 export default function LeafScreen() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader title="Leaf Screen" subtitle="Has vertical (↓ dismisses)" />
 
 			<View style={styles.content}>
-				<View style={styles.infoBox}>
-					<Text style={styles.infoTitle}>Two Directions, No Conflict</Text>
-					<Text style={styles.infoText}>
+				<View
+					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
+				>
+					<Text style={[styles.infoTitle, { color: theme.text }]}>
+						Two Directions, No Conflict
+					</Text>
+					<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 						This screen has vertical (↓) and the parent has vertical-inverted
 						(↑). Both work because they are DIFFERENT directions!
 					</Text>
 				</View>
 
 				<View style={styles.instructions}>
-					<Text style={styles.instructionTitle}>Try BOTH gestures:</Text>
-					<View style={styles.gestureRow}>
-						<Text style={styles.gestureIcon}>↓</Text>
+					<Text
+						style={[styles.instructionTitle, { color: theme.textTertiary }]}
+					>
+						Try BOTH gestures:
+					</Text>
+					<View
+						style={[
+							styles.gestureRow,
+							{ backgroundColor: theme.surfaceElevated },
+						]}
+					>
+						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
+							↓
+						</Text>
 						<View style={styles.gestureContent}>
-							<Text style={styles.gestureText}>Swipe down</Text>
-							<Text style={styles.gestureResult}>
+							<Text style={[styles.gestureText, { color: theme.text }]}>
+								Swipe down
+							</Text>
+							<Text
+								style={[
+									styles.gestureResult,
+									{ color: theme.textSecondary },
+								]}
+							>
 								Dismisses ONLY this leaf (back to index)
 							</Text>
 						</View>
 					</View>
-					<View style={styles.gestureRow}>
-						<Text style={styles.gestureIcon}>↑</Text>
+					<View
+						style={[
+							styles.gestureRow,
+							{ backgroundColor: theme.surfaceElevated },
+						]}
+					>
+						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
+							↑
+						</Text>
 						<View style={styles.gestureContent}>
-							<Text style={styles.gestureText}>Swipe up</Text>
-							<Text style={styles.gestureResult}>
+							<Text style={[styles.gestureText, { color: theme.text }]}>
+								Swipe up
+							</Text>
+							<Text
+								style={[
+									styles.gestureResult,
+									{ color: theme.textSecondary },
+								]}
+							>
 								Dismisses ENTIRE stack (back to gestures home)
 							</Text>
 						</View>
 					</View>
 				</View>
 
-				<View style={styles.keyPoint}>
-					<Text style={styles.keyPointTitle}>Key Insight</Text>
-					<Text style={styles.keyPointText}>
+				<View
+					style={[styles.keyPoint, { backgroundColor: theme.noteBox }]}
+				>
+					<Text style={[styles.keyPointTitle, { color: theme.noteText }]}>
+						Key Insight
+					</Text>
+					<Text
+						style={[styles.keyPointText, { color: theme.textSecondary }]}
+					>
 						This is NOT shadowing! Shadowing only happens when a child claims
 						the SAME direction as an ancestor. Here, the child claims vertical
 						(↓) and the parent claims vertical-inverted (↑). They coexist
@@ -63,7 +111,6 @@ export default function LeafScreen() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#2e4e1b",
 	},
 	content: {
 		flex: 1,
@@ -71,21 +118,16 @@ const styles = StyleSheet.create({
 		gap: 24,
 	},
 	infoBox: {
-		backgroundColor: "rgba(158, 255, 74, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(158, 255, 74, 0.3)",
 	},
 	infoTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#9eff4a",
 		marginBottom: 8,
 	},
 	infoText: {
 		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 	instructions: {
@@ -94,7 +136,6 @@ const styles = StyleSheet.create({
 	instructionTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#888",
 		textTransform: "uppercase",
 		letterSpacing: 1,
 	},
@@ -102,13 +143,11 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "flex-start",
 		gap: 12,
-		backgroundColor: "rgba(255, 255, 255, 0.1)",
 		padding: 12,
 		borderRadius: 8,
 	},
 	gestureIcon: {
 		fontSize: 24,
-		color: "#9eff4a",
 		width: 36,
 		textAlign: "center",
 	},
@@ -118,29 +157,22 @@ const styles = StyleSheet.create({
 	gestureText: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#fff",
 	},
 	gestureResult: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.6)",
 		marginTop: 4,
 	},
 	keyPoint: {
-		backgroundColor: "rgba(255, 193, 7, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255, 193, 7, 0.3)",
 	},
 	keyPointTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#ffc107",
 		marginBottom: 8,
 	},
 	keyPointText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 });

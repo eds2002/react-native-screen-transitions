@@ -3,10 +3,16 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function DeeperIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="Level 2: Deeper (horizontal)"
 				subtitle="Nested inside deep-nesting (vertical)"
@@ -37,11 +43,27 @@ export default function DeeperIndex() {
 
 				<View style={styles.actions}>
 					<Pressable
-						style={styles.button}
+						style={({ pressed }) => [
+							styles.button,
+							{
+								backgroundColor: pressed
+									? theme.actionButtonPressed
+									: theme.actionButton,
+							},
+						]}
 						onPress={() => router.push("/gestures/deep-nesting/deeper/leaf")}
 					>
-						<Text style={styles.buttonText}>Open Leaf (Level 3)</Text>
-						<Text style={styles.buttonSubtext}>
+						<Text
+							style={[styles.buttonText, { color: theme.actionButtonText }]}
+						>
+							Open Leaf (Level 3)
+						</Text>
+						<Text
+							style={[
+								styles.buttonSubtext,
+								{ color: theme.actionButtonText, opacity: 0.7 },
+							]}
+						>
 							Vertical gesture (shadows L1)
 						</Text>
 					</Pressable>
@@ -54,7 +76,6 @@ export default function DeeperIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1b3a4e",
 	},
 	scrollContent: {
 		paddingBottom: 40,
@@ -64,18 +85,15 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#4aff9e",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#000",
 		fontSize: 16,
 		fontWeight: "600",
 	},
 	buttonSubtext: {
-		color: "rgba(0, 0, 0, 0.6)",
 		fontSize: 12,
 		marginTop: 4,
 	},

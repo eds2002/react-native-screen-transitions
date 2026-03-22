@@ -8,6 +8,7 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 import { getNestedBoundsItemById } from "../constants";
 
 export default function NestedBoundsScreenB() {
@@ -15,6 +16,7 @@ export default function NestedBoundsScreenB() {
 	const insets = useSafeAreaInsets();
 	const { id } = useLocalSearchParams<{ id?: string }>();
 	const item = getNestedBoundsItemById(id);
+	const theme = useTheme();
 
 	return (
 		<View style={[styles.container, { backgroundColor: item.background }]}>
@@ -36,35 +38,38 @@ export default function NestedBoundsScreenB() {
 					<Image source={item.image} style={styles.image} contentFit="cover" />
 				</View>
 
-				<View style={[styles.infoCard, { borderColor: `${item.accent}66` }]}>
+				<View style={[styles.infoCard, { backgroundColor: theme.surfaceElevated }]}>
 					<Text style={[styles.kicker, { color: item.accent }]}>Day Plan</Text>
 					{item.plan.map((entry, index) => (
 						<View key={entry} style={styles.planRow}>
-							<View style={[styles.stepBubble, { borderColor: `${item.accent}80` }]}>
-								<Text style={styles.stepText}>{index + 1}</Text>
+							<View style={[styles.stepBubble, { backgroundColor: theme.surface }]}>
+								<Text style={[styles.stepText, { color: theme.text }]}>{index + 1}</Text>
 							</View>
-							<Text style={styles.planText}>{entry}</Text>
+							<Text style={[styles.planText, { color: theme.textSecondary }]}>{entry}</Text>
 						</View>
 					))}
 				</View>
 
-				<View style={styles.tipCard}>
-					<Text style={styles.tipTitle}>Why this screen exists</Text>
-					<Text style={styles.tipBody}>
+				<View style={[styles.tipCard, { backgroundColor: theme.noteBox }]}>
+					<Text style={[styles.tipTitle, { color: theme.noteText }]}>Why this screen exists</Text>
+					<Text style={[styles.tipBody, { color: theme.textSecondary }]}>
 						Overview and Day Plan mimic a real app flow while keeping the
 						transition easy to inspect.
 					</Text>
 				</View>
 
 				<Pressable
-					style={[styles.button, { backgroundColor: item.accent }]}
+					style={({ pressed }) => [
+						styles.button,
+						{ backgroundColor: pressed ? theme.actionButtonPressed : item.accent },
+					]}
 					onPress={() =>
 						router.navigate(
 							buildStackPath(stackType, `bounds/example/${item.id}/a`) as never,
 						)
 					}
 				>
-					<Text style={styles.buttonText}>Back to Overview</Text>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>Back to Overview</Text>
 				</Pressable>
 			</Transition.ScrollView>
 		</View>
@@ -84,8 +89,6 @@ const styles = StyleSheet.create({
 		aspectRatio: 1.02,
 		borderRadius: 20,
 		overflow: "hidden",
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.16)",
 	},
 	image: {
 		width: "100%",
@@ -93,16 +96,13 @@ const styles = StyleSheet.create({
 	},
 	infoCard: {
 		padding: 16,
-		borderRadius: 16,
-		borderWidth: 1,
-		backgroundColor: "rgba(0,0,0,0.18)",
+		borderRadius: 14,
 	},
 	kicker: {
 		fontSize: 12,
 		textTransform: "uppercase",
 		letterSpacing: 0.8,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.6)",
 	},
 	planRow: {
 		marginTop: 10,
@@ -113,51 +113,41 @@ const styles = StyleSheet.create({
 		width: 24,
 		height: 24,
 		borderRadius: 99,
-		borderWidth: 1,
 		alignItems: "center",
 		justifyContent: "center",
 		marginRight: 10,
-		backgroundColor: "rgba(0,0,0,0.16)",
 	},
 	stepText: {
 		fontSize: 12,
 		fontWeight: "700",
-		color: "#F4F8FF",
 	},
 	planText: {
 		flex: 1,
 		fontSize: 14,
 		lineHeight: 22,
-		color: "rgba(255,255,255,0.84)",
 	},
 	tipCard: {
 		padding: 14,
 		borderRadius: 14,
-		borderWidth: 1,
-		borderColor: "rgba(255,255,255,0.12)",
-		backgroundColor: "rgba(255,255,255,0.03)",
 	},
 	tipTitle: {
 		fontSize: 12,
 		textTransform: "uppercase",
 		letterSpacing: 0.8,
 		fontWeight: "700",
-		color: "rgba(255,255,255,0.64)",
 	},
 	tipBody: {
 		marginTop: 6,
 		fontSize: 14,
 		lineHeight: 21,
-		color: "rgba(255,255,255,0.78)",
 	},
 	button: {
 		height: 52,
-		borderRadius: 14,
+		borderRadius: 999,
 		alignItems: "center",
 		justifyContent: "center",
 	},
 	buttonText: {
-		color: "#0b111a",
 		fontSize: 17,
 		fontWeight: "700",
 	},

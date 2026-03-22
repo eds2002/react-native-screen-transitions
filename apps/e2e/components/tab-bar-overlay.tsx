@@ -8,6 +8,7 @@ import {
 	type OverlayProps,
 	useScreenAnimation,
 } from "react-native-screen-transitions";
+import { useTheme } from "@/theme";
 
 /**
  * A demo tab bar overlay that animates based on screen transitions.
@@ -23,6 +24,7 @@ export function TabBarOverlay({
 }: OverlayProps) {
 	const insets = useSafeAreaInsets();
 	const screenAnimation = useScreenAnimation();
+	const theme = useTheme();
 
 	const containerStyle = useAnimatedStyle(() => {
 		const { stackProgress } = screenAnimation.value;
@@ -50,25 +52,25 @@ export function TabBarOverlay({
 				containerStyle,
 			]}
 		>
-			<View style={styles.tabBar}>
+			<View style={[styles.tabBar, { backgroundColor: theme.tabBarBg }]}>
 				<Pressable
 					style={[styles.tab, !canGoBack && styles.tabDisabled]}
 					onPress={() => canGoBack && nav.goBack()}
 					disabled={!canGoBack}
 				>
-					<Text style={[styles.tabIcon, !canGoBack && styles.textDisabled]}>
+					<Text style={[styles.tabIcon, { color: theme.tabBarActive }, !canGoBack && { color: theme.textTertiary }]}>
 						{"<"}
 					</Text>
-					<Text style={[styles.tabLabel, !canGoBack && styles.textDisabled]}>
+					<Text style={[styles.tabLabel, { color: theme.textSecondary }, !canGoBack && { color: theme.textTertiary }]}>
 						Back
 					</Text>
 				</Pressable>
 
 				<View style={styles.routeInfo}>
-					<Text style={styles.routeLabel}>
+					<Text style={[styles.routeLabel, { color: theme.text }]}>
 						{focusedRoute.name.split("/").pop()}
 					</Text>
-					<Text style={styles.routeIndex}>
+					<Text style={[styles.routeIndex, { color: theme.textTertiary }]}>
 						{focusedIndex + 1} / {routes.length}
 					</Text>
 				</View>
@@ -78,10 +80,10 @@ export function TabBarOverlay({
 					onPress={() => nav.popToTop?.()}
 					disabled={!canGoBack}
 				>
-					<Text style={[styles.tabIcon, !canGoBack && styles.textDisabled]}>
+					<Text style={[styles.tabIcon, { color: theme.tabBarActive }, !canGoBack && { color: theme.textTertiary }]}>
 						{"^"}
 					</Text>
-					<Text style={[styles.tabLabel, !canGoBack && styles.textDisabled]}>
+					<Text style={[styles.tabLabel, { color: theme.textSecondary }, !canGoBack && { color: theme.textTertiary }]}>
 						Home
 					</Text>
 				</Pressable>
@@ -100,14 +102,11 @@ const styles = StyleSheet.create({
 	},
 	tabBar: {
 		flexDirection: "row",
-		backgroundColor: "rgba(30, 30, 30, 0.95)",
-		borderRadius: 16,
+		borderRadius: 999,
 		paddingVertical: 8,
 		paddingHorizontal: 8,
 		alignItems: "center",
 		justifyContent: "space-between",
-		borderWidth: 1,
-		borderColor: "rgba(255, 255, 255, 0.1)",
 	},
 	tab: {
 		alignItems: "center",
@@ -121,15 +120,10 @@ const styles = StyleSheet.create({
 	tabIcon: {
 		fontSize: 18,
 		fontWeight: "bold",
-		color: "#4a9eff",
 		marginBottom: 2,
 	},
 	tabLabel: {
 		fontSize: 11,
-		color: "#888",
-	},
-	textDisabled: {
-		color: "#555",
 	},
 	routeInfo: {
 		alignItems: "center",
@@ -138,11 +132,9 @@ const styles = StyleSheet.create({
 	routeLabel: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#fff",
 	},
 	routeIndex: {
 		fontSize: 11,
-		color: "#666",
 		marginTop: 2,
 	},
 });

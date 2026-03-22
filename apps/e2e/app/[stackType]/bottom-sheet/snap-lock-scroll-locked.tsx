@@ -1,5 +1,6 @@
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
 import Transition, { snapTo } from "react-native-screen-transitions";
+import { useTheme } from "@/theme";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
@@ -10,45 +11,47 @@ const ITEMS = Array.from({ length: 20 }, (_, index) => ({
 }));
 
 export default function SnapLockScrollLockedScreen() {
+	const theme = useTheme();
+
 	return (
-		<View style={[styles.container, { maxHeight: SCREEN_HEIGHT }]}>
-			<View style={styles.handle} />
-			<Text style={styles.title}>Snap Lock: ScrollView</Text>
-			<Text style={styles.subtitle}>Scroll coordination with lock enabled</Text>
+		<View style={[styles.container, { maxHeight: SCREEN_HEIGHT, backgroundColor: theme.bg }]}>
+			<View style={[styles.handle, { backgroundColor: theme.handle }]} />
+			<Text style={[styles.title, { color: theme.text }]}>Snap Lock: ScrollView</Text>
+			<Text style={[styles.subtitle, { color: theme.textSecondary }]}>Scroll coordination with lock enabled</Text>
 
 			<View style={styles.topActions}>
 				<Pressable
 					testID="scroll-locked-snap-to-min"
-					style={styles.actionButton}
+					style={({ pressed }) => [styles.actionButton, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
 					onPress={() => snapTo(0)}
 				>
-					<Text style={styles.actionText}>Snap 30%</Text>
+					<Text style={[styles.actionText, { color: theme.actionButtonText }]}>Snap 30%</Text>
 				</Pressable>
 				<Pressable
 					testID="scroll-locked-snap-to-mid"
-					style={styles.actionButton}
+					style={({ pressed }) => [styles.actionButton, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
 					onPress={() => snapTo(1)}
 				>
-					<Text style={styles.actionText}>Snap 60%</Text>
+					<Text style={[styles.actionText, { color: theme.actionButtonText }]}>Snap 60%</Text>
 				</Pressable>
 				<Pressable
 					testID="scroll-locked-snap-to-max"
-					style={styles.actionButton}
+					style={({ pressed }) => [styles.actionButton, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
 					onPress={() => snapTo(2)}
 				>
-					<Text style={styles.actionText}>Snap 100%</Text>
+					<Text style={[styles.actionText, { color: theme.actionButtonText }]}>Snap 100%</Text>
 				</Pressable>
 			</View>
 
-			<View style={styles.card}>
-				<Text style={styles.cardTitle}>Expected</Text>
-				<Text style={styles.item}>
+			<View style={[styles.card, { backgroundColor: theme.card }]}>
+				<Text style={[styles.cardTitle, { color: theme.infoBoxLabel }]}>Expected</Text>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
 					- List scroll should still work normally
 				</Text>
-				<Text style={styles.item}>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
 					- Gesture should not snap to other points
 				</Text>
-				<Text style={styles.item}>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
 					- Programmatic snapTo controls still work
 				</Text>
 			</View>
@@ -60,9 +63,9 @@ export default function SnapLockScrollLockedScreen() {
 				showsVerticalScrollIndicator={false}
 			>
 				{ITEMS.map((item) => (
-					<View key={item.id} style={styles.row}>
-						<Text style={styles.rowTitle}>{item.title}</Text>
-						<Text style={styles.rowDescription}>{item.description}</Text>
+					<View key={item.id} style={[styles.row, { backgroundColor: theme.surfaceElevated }]}>
+						<Text style={[styles.rowTitle, { color: theme.text }]}>{item.title}</Text>
+						<Text style={[styles.rowDescription, { color: theme.textSecondary }]}>{item.description}</Text>
 					</View>
 				))}
 			</Transition.ScrollView>
@@ -75,7 +78,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 		paddingHorizontal: 20,
 		paddingTop: 12,
-		backgroundColor: "#1f1a10",
 		borderTopLeftRadius: 28,
 		borderTopRightRadius: 28,
 	},
@@ -84,19 +86,16 @@ const styles = StyleSheet.create({
 		width: 44,
 		height: 5,
 		borderRadius: 3,
-		backgroundColor: "rgba(255,255,255,0.2)",
 		marginBottom: 18,
 	},
 	title: {
 		fontSize: 28,
 		fontWeight: "900",
-		color: "#fff",
 		marginBottom: 6,
 	},
 	subtitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.55)",
 		marginBottom: 14,
 	},
 	topActions: {
@@ -106,32 +105,27 @@ const styles = StyleSheet.create({
 	},
 	actionButton: {
 		flex: 1,
-		borderRadius: 12,
-		backgroundColor: "rgba(253,203,110,0.22)",
+		borderRadius: 999,
 		alignItems: "center",
 		paddingVertical: 9,
 	},
 	actionText: {
 		fontSize: 12,
 		fontWeight: "800",
-		color: "#fff3d6",
 	},
 	card: {
-		backgroundColor: "rgba(255,255,255,0.08)",
-		borderRadius: 16,
+		borderRadius: 14,
 		padding: 14,
 		marginBottom: 12,
 	},
 	cardTitle: {
 		fontSize: 13,
 		fontWeight: "800",
-		color: "#ffde8e",
 		marginBottom: 8,
 	},
 	item: {
 		fontSize: 13,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.75)",
 		marginBottom: 6,
 	},
 	scroll: {
@@ -141,7 +135,6 @@ const styles = StyleSheet.create({
 		paddingBottom: 16,
 	},
 	row: {
-		backgroundColor: "rgba(255,255,255,0.06)",
 		borderRadius: 14,
 		padding: 14,
 		marginBottom: 8,
@@ -149,12 +142,10 @@ const styles = StyleSheet.create({
 	rowTitle: {
 		fontSize: 14,
 		fontWeight: "800",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	rowDescription: {
 		fontSize: 12,
 		fontWeight: "600",
-		color: "rgba(255,255,255,0.55)",
 	},
 });
