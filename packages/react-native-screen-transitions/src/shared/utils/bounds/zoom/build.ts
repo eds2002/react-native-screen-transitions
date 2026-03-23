@@ -251,6 +251,8 @@ export const buildZoomStyles = ({
 				{ translateY: contentTranslateY },
 				{ scale: contentScale },
 			],
+			borderRadius: focusedMaskBorderRadius,
+			overflow: "hidden" as const,
 		};
 
 		const focusedStyles: ZoomInterpolatedStyle = {
