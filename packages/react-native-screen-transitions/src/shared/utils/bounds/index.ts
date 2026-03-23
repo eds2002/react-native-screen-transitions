@@ -64,11 +64,6 @@ export const createBoundsAccessor = (
 
 		const computed = computeForResolvedOptions(resolved, props);
 
-		const zoomBaseOptions = {
-			anchor: params?.anchor,
-			scaleMode: params?.scaleMode,
-			target: params?.target,
-		};
 		let cachedNavigationPairProps: BoundsInterpolationProps | undefined;
 		let cachedNavigationPairTag = "";
 		let cachedNavigationPair: ResolvedTransitionPair | undefined;
@@ -106,7 +101,6 @@ export const createBoundsAccessor = (
 			group: params?.group,
 			getProps,
 			resolveBoundTag,
-			zoomBaseOptions,
 			computeRaw: (overrides, frameProps) =>
 				(() => {
 					const currentProps = frameProps ?? getProps();

@@ -476,7 +476,6 @@ export const buildZoomStyles = ({
 		zoomOptions,
 		currentRouteKey,
 		resolveTag,
-		defaultAnchor: "top",
 	});
 
 	if (!resolvedConfig) return null;
@@ -545,6 +544,8 @@ export const buildZoomStyles = ({
 				})
 			: IDENTITY_DRAG_SCALE_OUTPUT[1];
 	const dragScale = combineScales(dragXScale, dragYScale);
+	const resolvedZoomAnchor =
+		explicitTarget === "bound" ? "center" : sharedOptions.anchor;
 
 	if (focused) {
 		const contentTarget = getZoomContentTarget({
@@ -561,6 +562,7 @@ export const buildZoomStyles = ({
 
 		const contentRaw = computeRaw({
 			...sharedOptions,
+			anchor: resolvedZoomAnchor,
 			method: "content",
 			target: contentTarget,
 		});
@@ -636,9 +638,8 @@ export const buildZoomStyles = ({
 	const isUnfocusedIdle = props.active.settled === 1;
 
 	const elementTarget =
-		sharedOptions.scaleMode === "match"
-			? ("fullscreen" as const)
-			: getZoomContentTarget({
+		explicitTarget !== undefined || resolvedPair.destinationBounds
+			? getZoomContentTarget({
 					explicitTarget,
 					resolvedTag,
 					currentRouteKey,
@@ -648,22 +649,43 @@ export const buildZoomStyles = ({
 					screenLayout,
 					anchor: sharedOptions.anchor,
 					resolvedPair,
-				});
+				})
+			: ("fullscreen" as const);
 
 	const elementRaw = computeRaw({
 		...sharedOptions,
+		anchor: resolvedZoomAnchor,
 		method: "transform",
 		space: "relative",
 		target: elementTarget,
 	});
 
-	// Keep compensation tied to the element target's center. In `scaleMode: "match"`
-	// this target is fullscreen, so the center offset should resolve to zero.
+	const boundTargetCenterX =
+		explicitTarget === "bound" && resolvedPair.destinationBounds
+			? resolvedPair.destinationBounds.pageX +
+				resolvedPair.destinationBounds.width / 2
+			: undefined;
+	const boundTargetCenterY =
+		explicitTarget === "bound" && resolvedPair.destinationBounds
+			? resolvedPair.destinationBounds.pageY +
+				resolvedPair.destinationBounds.height / 2
+			: undefined;
+	const elementCenterX =
+		boundTargetCenterX ??
+		(typeof elementTarget === "object"
+			? elementTarget.pageX + elementTarget.width / 2
+			: screenLayout.width / 2);
 	const elementCenterY =
-		typeof elementTarget === "object"
+		boundTargetCenterY ??
+		(typeof elementTarget === "object"
 			? elementTarget.pageY + elementTarget.height / 2
-			: screenLayout.height / 2;
+			: screenLayout.height / 2);
 
+	const scaleShiftX = computeCenterScaleShift({
+		center: elementCenterX,
+		containerCenter: screenLayout.width / 2,
+		scale: dragScale,
+	});
 	const scaleShiftY = computeCenterScaleShift({
 		center: elementCenterY,
 		containerCenter: screenLayout.height / 2,
@@ -673,6 +695,7 @@ export const buildZoomStyles = ({
 	const compensatedGestureX = composeCompensatedTranslation({
 		gesture: dragX,
 		parentScale: unfocusedScale,
+		centerShift: scaleShiftX,
 		epsilon: EPSILON,
 	});
 	// dragY is measured in screen space and must be unscaled by the parent

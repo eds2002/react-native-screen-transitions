@@ -15,10 +15,6 @@ type ZoomAccessorParams = {
 		overrides?: Partial<BoundsOptions>,
 		frameProps?: BoundsInterpolationProps,
 	) => Record<string, unknown>;
-	zoomBaseOptions?: Pick<
-		BoundsNavigationZoomOptions,
-		"anchor" | "scaleMode" | "target"
-	>;
 };
 
 export const createZoomAccessor = ({
@@ -27,7 +23,6 @@ export const createZoomAccessor = ({
 	getProps,
 	resolveBoundTag,
 	computeRaw,
-	zoomBaseOptions,
 }: ZoomAccessorParams) => {
 	"worklet";
 
@@ -56,16 +51,7 @@ export const createZoomAccessor = ({
 	return {
 		zoom: (options?: BoundsNavigationZoomOptions) => {
 			"worklet";
-			const mergedOptions =
-				zoomBaseOptions || options
-					? {
-							...(zoomBaseOptions ?? {}),
-							...(options ?? {}),
-							...(options?.mask ? { mask: options.mask } : {}),
-							...(options?.motion ? { motion: options.motion } : {}),
-						}
-					: undefined;
-			return computeZoomStyles(mergedOptions);
+			return computeZoomStyles(options);
 		},
 	};
 };

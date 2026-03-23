@@ -279,7 +279,6 @@ export const SharedIGImage = ({
 
 			const navigationStyles = bounds({
 				id: sharedBoundTag,
-				scaleMode: "uniform",
 			}).navigation.zoom();
 
 			// Extract raw style values from bounds result (legacy format)

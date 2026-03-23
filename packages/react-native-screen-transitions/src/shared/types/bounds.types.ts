@@ -2,10 +2,8 @@ import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { Snapshot } from "../stores/bounds";
 import type {
 	BoundId,
-	BoundsAnchor,
 	BoundsOptions,
 	BoundsOptionsResult,
-	BoundsScaleMode,
 } from "../utils/bounds/types/options";
 import type {
 	ScreenInterpolationProps,
@@ -32,8 +30,6 @@ export type BoundsLink = {
 };
 
 export type BoundsNavigationZoomOptions = {
-	anchor?: BoundsAnchor;
-	scaleMode?: BoundsScaleMode;
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
 	mask?: {
 		borderRadius?: number | "auto" | { from?: number; to?: number };

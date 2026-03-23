@@ -118,14 +118,12 @@ export const resolveZoomConfig = ({
 	zoomOptions,
 	currentRouteKey,
 	resolveTag,
-	defaultAnchor,
 }: {
 	id: BoundId;
 	group?: string;
 	zoomOptions?: BoundsNavigationZoomOptions;
 	currentRouteKey?: string;
 	resolveTag: ResolveTag;
-	defaultAnchor: BoundsOptions["anchor"] | undefined;
 }): {
 	resolvedTag: string;
 	sharedOptions: Partial<BoundsOptions>;
@@ -148,7 +146,7 @@ export const resolveZoomConfig = ({
 	if (!effectiveConfig) {
 		// For no-destination navigation zoom, the focused route won't appear in
 		// a completed link yet. Fall back to the latest unscoped link so source
-		// boundary defaults (anchor/scaleMode/target) still propagate.
+		// boundary target defaults still propagate.
 		const scopedLink = currentRouteKey
 			? BoundStore.getActiveLink(resolvedTag, currentRouteKey)
 			: null;
@@ -162,9 +160,8 @@ export const resolveZoomConfig = ({
 	}
 
 	const sharedOptions: Partial<BoundsOptions> = {
-		anchor: zoomOptions?.anchor ?? effectiveConfig?.anchor ?? defaultAnchor,
-		scaleMode:
-			zoomOptions?.scaleMode ?? effectiveConfig?.scaleMode ?? "uniform",
+		anchor: "top",
+		scaleMode: "uniform",
 	};
 
 	const explicitTarget = zoomOptions?.target ?? effectiveConfig?.target;
