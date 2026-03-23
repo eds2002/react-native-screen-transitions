@@ -15,8 +15,17 @@ import type {
 	TransitionInterpolatedStyle,
 } from "../../../types/animation.types";
 import type { Layout } from "../../../types/screen.types";
+import { computeBoundStyles } from "../helpers/compute-bounds-styles";
 import type { BoundsOptions } from "../types/options";
-import { resolveZoomConfig, toNumber } from "./config";
+import {
+	getZoomAnchor,
+	toNumber,
+	ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
+	ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
+	ZOOM_DRAG_RESISTANCE,
+	ZOOM_MASK_OUTSET,
+	ZOOM_SHARED_OPTIONS,
+} from "./config";
 import {
 	combineScales,
 	composeCompensatedTranslation,
@@ -30,38 +39,20 @@ const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 
 const getZoomContentTarget = ({
 	explicitTarget,
-	resolvedTag,
-	currentRouteKey,
-	previousRouteKey,
-	nextRouteKey,
-	entering,
 	screenLayout,
 	anchor,
 	resolvedPair,
 }: {
 	explicitTarget: BoundsOptions["target"] | undefined;
-	resolvedTag: string;
-	currentRouteKey?: string;
-	previousRouteKey?: string;
-	nextRouteKey?: string;
-	entering: boolean;
 	screenLayout: Layout;
 	anchor: BoundsOptions["anchor"] | undefined;
-	resolvedPair?: ResolvedTransitionPair;
+	resolvedPair: ResolvedTransitionPair;
 }) => {
 	"worklet";
+
 	if (explicitTarget !== undefined) return explicitTarget;
 
-	const pair =
-		resolvedPair ??
-		BoundStore.resolveTransitionPair(resolvedTag, {
-			currentScreenKey: currentRouteKey,
-			previousScreenKey: previousRouteKey,
-			nextScreenKey: nextRouteKey,
-			entering,
-		});
-
-	const sourceBounds = pair.sourceBounds;
+	const sourceBounds = resolvedPair.sourceBounds;
 	const screenWidth = screenLayout.width;
 
 	if (!sourceBounds || sourceBounds.width <= 0 || screenWidth <= 0) {
@@ -69,45 +60,14 @@ const getZoomContentTarget = ({
 	}
 
 	const height = (sourceBounds.height / sourceBounds.width) * screenWidth;
-	let horizontalAnchor: "leading" | "center" | "trailing";
-	switch (anchor) {
-		case "topLeading":
-		case "leading":
-		case "bottomLeading":
-			horizontalAnchor = "leading";
-			break;
-		case "topTrailing":
-		case "trailing":
-		case "bottomTrailing":
-			horizontalAnchor = "trailing";
-			break;
-		default:
-			horizontalAnchor = "center";
-			break;
-	}
-
-	let verticalAnchor: "top" | "center" | "bottom";
-	switch (anchor) {
-		case "topLeading":
-		case "top":
-		case "topTrailing":
-			verticalAnchor = "top";
-			break;
-		case "bottomLeading":
-		case "bottom":
-		case "bottomTrailing":
-			verticalAnchor = "bottom";
-			break;
-		default:
-			verticalAnchor = "center";
-			break;
-	}
-	const x =
-		horizontalAnchor === "leading"
-			? 0
-			: horizontalAnchor === "trailing"
-				? screenLayout.width - screenWidth
-				: (screenLayout.width - screenWidth) / 2;
+	const verticalAnchor =
+		anchor === "bottomLeading" ||
+		anchor === "bottom" ||
+		anchor === "bottomTrailing"
+			? "bottom"
+			: anchor === "center" || anchor === "leading" || anchor === "trailing"
+				? "center"
+				: "top";
 	const y =
 		verticalAnchor === "top"
 			? 0
@@ -116,9 +76,9 @@ const getZoomContentTarget = ({
 				: (screenLayout.height - height) / 2;
 
 	return {
-		x,
+		x: 0,
 		y,
-		pageX: x,
+		pageX: 0,
 		pageY: y,
 		width: screenWidth,
 		height,
@@ -126,15 +86,16 @@ const getZoomContentTarget = ({
 };
 
 export const buildZoomStyles = ({
-	id,
-	group,
+	resolvedTag,
 	zoomOptions,
 	props,
-	resolveTag,
-	computeRaw,
 }: BuildZoomStylesParams): ReturnType<ScreenStyleInterpolator> => {
 	"worklet";
 
+	if (!resolvedTag) return null;
+
+	const explicitTarget = zoomOptions?.target;
+	const debug = zoomOptions?.DEBUG === true;
 	const focused = props.focused;
 	const progress = props.progress;
 	const currentRouteKey = props.current?.route.key;
@@ -142,34 +103,27 @@ export const buildZoomStyles = ({
 	const nextRouteKey = props.next?.route.key;
 	const entering = !props.next;
 	const screenLayout = props.layouts.screen;
-	const transitionContext = {
+	const resolvedZoomAnchor = getZoomAnchor(explicitTarget);
+	const zoomComputeParams = {
+		id: resolvedTag,
+		previous: props.previous,
+		current: props.current,
+		next: props.next,
+		progress,
+		dimensions: screenLayout,
+	} as const;
+	const baseRawOptions = {
+		id: resolvedTag,
+		raw: true,
+		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
+	} as const;
+
+	const resolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
 		currentScreenKey: currentRouteKey,
 		previousScreenKey: previousRouteKey,
 		nextScreenKey: nextRouteKey,
 		entering,
-	};
-
-	const resolvedConfig = resolveZoomConfig({
-		id,
-		group,
-		zoomOptions,
-		currentRouteKey,
-		resolveTag,
 	});
-
-	if (!resolvedConfig) return null;
-
-	const {
-		resolvedTag,
-		sharedOptions,
-		explicitTarget,
-		zoomOptions: resolvedZoomOptions,
-	} = resolvedConfig;
-
-	const resolvedPair = BoundStore.resolveTransitionPair(
-		resolvedTag,
-		transitionContext,
-	);
 
 	const focusedVisibilityStyles = {
 		[resolvedTag]: VISIBLE_STYLE,
@@ -190,12 +144,12 @@ export const buildZoomStyles = ({
 	const dragX = normalizedToTranslation({
 		normalized: normX,
 		dimension: screenLayout.width,
-		resistance: resolvedZoomOptions.motion.dragResistance,
+		resistance: ZOOM_DRAG_RESISTANCE,
 	});
 	const dragY = normalizedToTranslation({
 		normalized: normY,
 		dimension: screenLayout.height,
-		resistance: resolvedZoomOptions.motion.dragResistance,
+		resistance: ZOOM_DRAG_RESISTANCE,
 	});
 	const dragXScale =
 		initialDirection === "horizontal" ||
@@ -206,8 +160,8 @@ export const buildZoomStyles = ({
 						initialDirection === "horizontal-inverted"
 							? "negative"
 							: "positive",
-					shrinkMin: resolvedZoomOptions.motion.dragDirectionalScaleMin,
-					growMax: resolvedZoomOptions.motion.dragDirectionalScaleMax,
+					shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
+					growMax: ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
 					exponent: 2,
 				})
 			: IDENTITY_DRAG_SCALE_OUTPUT[0];
@@ -217,46 +171,48 @@ export const buildZoomStyles = ({
 					normalized: normY,
 					dismissDirection:
 						initialDirection === "vertical-inverted" ? "negative" : "positive",
-					shrinkMin: resolvedZoomOptions.motion.dragDirectionalScaleMin,
-					growMax: resolvedZoomOptions.motion.dragDirectionalScaleMax,
+					shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
+					growMax: ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
 					exponent: 2,
 				})
 			: IDENTITY_DRAG_SCALE_OUTPUT[1];
 	const dragScale = combineScales(dragXScale, dragYScale);
-	const resolvedZoomAnchor =
-		explicitTarget === "bound" ? "center" : sharedOptions.anchor;
 
 	if (focused) {
 		const contentTarget = getZoomContentTarget({
 			explicitTarget,
-			resolvedTag,
-			currentRouteKey,
-			previousRouteKey,
-			nextRouteKey,
-			entering,
 			screenLayout,
-			anchor: sharedOptions.anchor,
+			anchor: ZOOM_SHARED_OPTIONS.anchor,
 			resolvedPair,
 		});
 
-		const contentRaw = computeRaw({
-			...sharedOptions,
-			anchor: resolvedZoomAnchor,
-			method: "content",
-			target: contentTarget,
-		});
+		const contentRaw = computeBoundStyles(
+			zoomComputeParams,
+			{
+				...baseRawOptions,
+				anchor: resolvedZoomAnchor,
+				method: "content",
+				target: contentTarget,
+			},
+			resolvedPair,
+		) as Record<string, unknown>;
 
-		const maskRaw = computeRaw({
-			...sharedOptions,
-			method: "size",
-			space: "absolute",
-			target: "fullscreen",
-		});
+		const maskRaw = computeBoundStyles(
+			zoomComputeParams,
+			{
+				...baseRawOptions,
+				anchor: ZOOM_SHARED_OPTIONS.anchor,
+				method: "size",
+				space: "absolute",
+				target: "fullscreen",
+			},
+			resolvedPair,
+		) as Record<string, unknown>;
 
 		const focusedFade = props.active?.closing
-			? interpolate(progress, [0.6, 1], [0, 1], "clamp")
-			: interpolate(progress, [0, 0.5], [0, 1], "clamp");
-		const { top, right, bottom, left } = resolvedZoomOptions.mask.outset;
+			? interpolate(progress, [0.6, 1], [0, debug ? 0.5 : 1], "clamp")
+			: interpolate(progress, [0, 0.5], [0, debug ? 0.5 : 1], "clamp");
+		const { top, right, bottom, left } = ZOOM_MASK_OUTSET;
 		const maskWidth = Math.max(1, toNumber(maskRaw.width) + left + right);
 		const maskHeight = Math.max(1, toNumber(maskRaw.height) + top + bottom);
 		const contentTranslateX = toNumber(contentRaw.translateX) + dragX;
@@ -290,9 +246,6 @@ export const buildZoomStyles = ({
 						{ translateY: maskTranslateY },
 						{ scale: dragScale },
 					],
-					...(resolvedZoomOptions.mask.borderCurve
-						? { borderCurve: resolvedZoomOptions.mask.borderCurve }
-						: {}),
 				},
 			};
 		}
@@ -301,34 +254,31 @@ export const buildZoomStyles = ({
 	}
 
 	const unfocusedFade = props.active?.closing
-		? interpolate(progress, [1.6, 2], [1, 0], "clamp")
-		: interpolate(progress, [1, 1.5], [1, 0], "clamp");
+		? interpolate(progress, [1.6, 2], [1, debug ? 0.5 : 0], "clamp")
+		: interpolate(progress, [1, 1.5], [1, debug ? 0.5 : 0], "clamp");
+
 	const unfocusedScale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
 	const isUnfocusedIdle = props.active.settled === 1;
-
 	const elementTarget =
 		explicitTarget !== undefined || resolvedPair.destinationBounds
 			? getZoomContentTarget({
 					explicitTarget,
-					resolvedTag,
-					currentRouteKey,
-					previousRouteKey,
-					nextRouteKey,
-					entering,
 					screenLayout,
-					anchor: sharedOptions.anchor,
+					anchor: ZOOM_SHARED_OPTIONS.anchor,
 					resolvedPair,
 				})
 			: ("fullscreen" as const);
-
-	const elementRaw = computeRaw({
-		...sharedOptions,
-		anchor: resolvedZoomAnchor,
-		method: "transform",
-		space: "relative",
-		target: elementTarget,
-	});
-
+	const elementRaw = computeBoundStyles(
+		zoomComputeParams,
+		{
+			...baseRawOptions,
+			anchor: resolvedZoomAnchor,
+			method: "transform",
+			space: "relative",
+			target: elementTarget,
+		},
+		resolvedPair,
+	) as Record<string, unknown>;
 	const boundTargetCenterX =
 		explicitTarget === "bound" && resolvedPair.destinationBounds
 			? resolvedPair.destinationBounds.pageX +
@@ -349,7 +299,6 @@ export const buildZoomStyles = ({
 		(typeof elementTarget === "object"
 			? elementTarget.pageY + elementTarget.height / 2
 			: screenLayout.height / 2);
-
 	const scaleShiftX = computeCenterScaleShift({
 		center: elementCenterX,
 		containerCenter: screenLayout.width / 2,
@@ -360,15 +309,12 @@ export const buildZoomStyles = ({
 		containerCenter: screenLayout.height / 2,
 		scale: dragScale,
 	});
-
 	const compensatedGestureX = composeCompensatedTranslation({
 		gesture: dragX,
 		parentScale: unfocusedScale,
 		centerShift: scaleShiftX,
 		epsilon: EPSILON,
 	});
-	// dragY is measured in screen space and must be unscaled by the parent
-	// content shrink, while scaleShiftY is already in the parent's local space.
 	const compensatedGestureY = composeCompensatedTranslation({
 		gesture: dragY,
 		parentScale: unfocusedScale,
@@ -381,7 +327,6 @@ export const buildZoomStyles = ({
 		toNumber(elementRaw.translateY) + compensatedGestureY;
 	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
 	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
-
 	const resolvedElementStyle = isUnfocusedIdle
 		? {
 				transform: [

@@ -31,25 +31,7 @@ export type BoundsLink = {
 
 export type BoundsNavigationZoomOptions = {
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
-	mask?: {
-		borderRadius?: number | "auto" | { from?: number; to?: number };
-		borderTopLeftRadius?: number | "auto" | { from?: number; to?: number };
-		borderTopRightRadius?: number | "auto" | { from?: number; to?: number };
-		borderBottomLeftRadius?: number | "auto" | { from?: number; to?: number };
-		borderBottomRightRadius?: number | "auto" | { from?: number; to?: number };
-		borderCurve?: "circular" | "continuous";
-		outset?:
-			| number
-			| { top?: number; right?: number; bottom?: number; left?: number };
-	};
-	motion?: {
-		dragResistance?: number;
-		dragDirectionalScaleMin?: number;
-	};
-	/**
-	 * @deprecated Use `mask.borderRadius` instead.
-	 */
-	maskBorderRadius?: number;
+	DEBUG?: boolean;
 };
 
 export type BoundsNavigationAccessor = {

@@ -54,16 +54,8 @@ const legacyInterpolatedStyle: TransitionInterpolatedStyle = {
 };
 
 const zoomOptions: BoundsNavigationZoomOptions = {
-	mask: {
-		borderRadius: { from: 24, to: 0 },
-		borderTopLeftRadius: "auto",
-		borderCurve: "continuous",
-		outset: { bottom: 16 },
-	},
-	motion: {
-		dragResistance: 0.32,
-		dragDirectionalScaleMin: 0.2,
-	},
+	target: "bound",
+	DEBUG: true,
 };
 
 declare const interpolationProps: ScreenInterpolationProps;
