@@ -32,6 +32,7 @@ export type BoundsLink = {
 export type BoundsNavigationZoomOptions = {
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
 	DEBUG?: boolean;
+	borderRadius?: number;
 };
 
 export type BoundsNavigationAccessor = {

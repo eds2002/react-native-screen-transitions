@@ -1,4 +1,5 @@
 import type { SharedValue } from "react-native-reanimated";
+import { EPSILON } from "../../../../constants";
 import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
@@ -49,7 +50,6 @@ export const hydrateTransitionState = (
 	out.progress = s.progress.value;
 	out.closing = s.closing.value;
 	out.entering = s.entering.value;
-	out.animating = s.animating.value;
 	out.gesture.x = s.gesture.x.value;
 	out.gesture.y = s.gesture.y.value;
 	out.gesture.normX = s.gesture.normX.value;
@@ -58,19 +58,20 @@ export const hydrateTransitionState = (
 	out.gesture.dragging = s.gesture.dragging.value;
 	out.gesture.direction = s.gesture.direction.value;
 
+	const isGestureSettling =
+		Math.abs(out.gesture.normX) > EPSILON ||
+		Math.abs(out.gesture.normY) > EPSILON;
+
+	out.animating =
+		s.animating.value || out.gesture.dragging || isGestureSettling ? 1 : 0;
+
 	// Deprecated aliases (kept for backwards compatibility)
 	out.gesture.normalizedX = out.gesture.normX;
 	out.gesture.normalizedY = out.gesture.normY;
 	out.gesture.isDismissing = out.gesture.dismissing;
 	out.gesture.isDragging = out.gesture.dragging;
 
-	out.settled =
-		out.gesture.dragging ||
-		out.animating ||
-		out.gesture.dismissing ||
-		out.closing
-			? 0
-			: 1;
+	out.settled = out.animating || out.gesture.dismissing || out.closing ? 0 : 1;
 
 	out.meta = s.meta;
 	out.layouts.screen.width = dimensions.width;

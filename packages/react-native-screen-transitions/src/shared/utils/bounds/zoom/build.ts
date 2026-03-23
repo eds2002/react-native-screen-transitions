@@ -10,10 +10,7 @@ import {
 	BoundStore,
 	type ResolvedTransitionPair,
 } from "../../../stores/bounds";
-import type {
-	ScreenStyleInterpolator,
-	TransitionInterpolatedStyle,
-} from "../../../types/animation.types";
+import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
 import type { Layout } from "../../../types/screen.types";
 import { computeBoundStyles } from "../helpers/compute-bounds-styles";
 import type { BoundsOptions } from "../types/options";
@@ -33,9 +30,19 @@ import {
 	normalizedToTranslation,
 	resolveDirectionalDragScale,
 } from "./math";
-import type { BuildZoomStylesParams } from "./types";
+import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
+
+const getSourceBorderRadius = (
+	resolvedPair: ResolvedTransitionPair,
+): number => {
+	"worklet";
+
+	return typeof resolvedPair.sourceStyles?.borderRadius === "number"
+		? resolvedPair.sourceStyles.borderRadius
+		: 0;
+};
 
 const getZoomContentTarget = ({
 	explicitTarget,
@@ -50,7 +57,7 @@ const getZoomContentTarget = ({
 }) => {
 	"worklet";
 
-	if (explicitTarget !== undefined) return explicitTarget;
+	if (explicitTarget) return explicitTarget;
 
 	const sourceBounds = resolvedPair.sourceBounds;
 	const screenWidth = screenLayout.width;
@@ -89,13 +96,14 @@ export const buildZoomStyles = ({
 	resolvedTag,
 	zoomOptions,
 	props,
-}: BuildZoomStylesParams): ReturnType<ScreenStyleInterpolator> => {
+}: BuildZoomStylesParams): ZoomInterpolatedStyle | null => {
 	"worklet";
 
 	if (!resolvedTag) return null;
 
 	const explicitTarget = zoomOptions?.target;
 	const debug = zoomOptions?.DEBUG === true;
+
 	const focused = props.focused;
 	const progress = props.progress;
 	const currentRouteKey = props.current?.route.key;
@@ -124,6 +132,9 @@ export const buildZoomStyles = ({
 		nextScreenKey: nextRouteKey,
 		entering,
 	});
+
+	const sourceBorderRadius = getSourceBorderRadius(resolvedPair);
+	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
 
 	const focusedVisibilityStyles = {
 		[resolvedTag]: VISIBLE_STYLE,
@@ -212,6 +223,19 @@ export const buildZoomStyles = ({
 		const focusedFade = props.active?.closing
 			? interpolate(progress, [0.6, 1], [0, debug ? 0.5 : 1], "clamp")
 			: interpolate(progress, [0, 0.5], [0, debug ? 0.5 : 1], "clamp");
+
+		/**
+		 * This is also how swiftui handles their navigation zoom.
+		 * They remove clipping as soon as the screen stops animating
+		 */
+		const shouldRemoveClipping = !props.active.animating;
+		const focusedMaskBorderRadius = interpolate(
+			progress,
+			[0, 1],
+			[sourceBorderRadius, shouldRemoveClipping ? 0 : targetBorderRadius],
+			"clamp",
+		);
+
 		const { top, right, bottom, left } = ZOOM_MASK_OUTSET;
 		const maskWidth = Math.max(1, toNumber(maskRaw.width) + left + right);
 		const maskHeight = Math.max(1, toNumber(maskRaw.height) + top + bottom);
@@ -229,7 +253,7 @@ export const buildZoomStyles = ({
 			],
 		};
 
-		const focusedStyles: TransitionInterpolatedStyle = {
+		const focusedStyles: ZoomInterpolatedStyle = {
 			[focusedContainerStyleId]: {
 				style: focusedContentStyle,
 			},
@@ -241,6 +265,7 @@ export const buildZoomStyles = ({
 				style: {
 					width: maskWidth,
 					height: maskHeight,
+					borderRadius: focusedMaskBorderRadius,
 					transform: [
 						{ translateX: maskTranslateX },
 						{ translateY: maskTranslateY },
@@ -268,6 +293,7 @@ export const buildZoomStyles = ({
 					resolvedPair,
 				})
 			: ("fullscreen" as const);
+
 	const elementRaw = computeBoundStyles(
 		zoomComputeParams,
 		{

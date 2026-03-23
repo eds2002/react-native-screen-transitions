@@ -56,6 +56,7 @@ const legacyInterpolatedStyle: TransitionInterpolatedStyle = {
 const zoomOptions: BoundsNavigationZoomOptions = {
 	target: "bound",
 	DEBUG: true,
+	borderRadius: 36,
 };
 
 declare const interpolationProps: ScreenInterpolationProps;

@@ -359,7 +359,6 @@ export const useHandlers = ({
 		gestureAnimationValues.dragging.value = TRUE;
 		gestureAnimationValues.dismissing.value = FALSE;
 		gestureStartProgress.value = animations.progress.value;
-		animations.animating.value = TRUE;
 	});
 
 	const onUpdate = useStableCallbackValue(
