@@ -1,4 +1,4 @@
-import { interpolate, type StyleProps } from "react-native-reanimated";
+import { interpolate } from "react-native-reanimated";
 import {
 	EPSILON,
 	HIDDEN_STYLE,
@@ -14,207 +14,19 @@ import type {
 	ScreenStyleInterpolator,
 	TransitionInterpolatedStyle,
 } from "../../../types/animation.types";
-import type { BoundsNavigationZoomOptions } from "../../../types/bounds.types";
 import type { Layout } from "../../../types/screen.types";
 import type { BoundsOptions } from "../types/options";
+import { resolveZoomConfig, toNumber } from "./config";
 import {
-	type ResolvedZoomOptions,
-	resolveZoomConfig,
-	toNumber,
-} from "./config";
+	combineScales,
+	composeCompensatedTranslation,
+	computeCenterScaleShift,
+	normalizedToTranslation,
+	resolveDirectionalDragScale,
+} from "./math";
 import type { BuildZoomStylesParams } from "./types";
 
-type CombinedScaleMode = "multiply" | "average" | "max" | "min";
-
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
-type ZoomMask = NonNullable<BoundsNavigationZoomOptions["mask"]>;
-type ZoomRadiusValue = Exclude<ZoomMask["borderRadius"], undefined>;
-
-const clamp = (value: number, min: number, max: number): number => {
-	"worklet";
-	const lower = min < max ? min : max;
-	const upper = max > min ? max : min;
-
-	if (value < lower) return lower;
-	if (value > upper) return upper;
-
-	return value;
-};
-
-const clamp01 = (value: number): number => {
-	"worklet";
-	return clamp(value, 0, 1);
-};
-
-const lerp = (from: number, to: number, t: number): number => {
-	"worklet";
-	return from + (to - from) * t;
-};
-
-const safeDivide = (
-	numerator: number,
-	denominator: number,
-	fallback = 0,
-): number => {
-	"worklet";
-	if (denominator === 0) return fallback;
-	return numerator / denominator;
-};
-
-const inverseLerp = (value: number, inMin: number, inMax: number): number => {
-	"worklet";
-	return safeDivide(value - inMin, inMax - inMin, 0);
-};
-
-const mapRangeClamped = (
-	value: number,
-	inMin: number,
-	inMax: number,
-	outMin: number,
-	outMax: number,
-): number => {
-	"worklet";
-	const t = clamp01(inverseLerp(value, inMin, inMax));
-	return lerp(outMin, outMax, t);
-};
-
-const applyPowerCurve = (value: number, exponent: number): number => {
-	"worklet";
-	const safeExponent = exponent > 0 ? exponent : 1;
-	const magnitude = Math.abs(value) ** safeExponent;
-	return value < 0 ? -magnitude : magnitude;
-};
-
-const normalizedToTranslation = ({
-	normalized,
-	dimension,
-	resistance,
-}: {
-	normalized: number;
-	dimension: number;
-	resistance: number;
-}): number => {
-	"worklet";
-	const distance = Math.max(0, dimension) * resistance;
-	return mapRangeClamped(normalized, -1, 1, -distance, distance);
-};
-
-const normalizedToScale = ({
-	normalized,
-	outputRange,
-	exponent = 1,
-	positiveOnly = true,
-}: {
-	normalized: number;
-	outputRange: readonly [number, number];
-	exponent?: number;
-	positiveOnly?: boolean;
-}): number => {
-	"worklet";
-	const [outputStart, outputEnd] = outputRange;
-	const raw = positiveOnly
-		? mapRangeClamped(normalized, 0, 1, outputStart, outputEnd)
-		: mapRangeClamped(normalized, -1, 1, outputStart, outputEnd);
-
-	return applyPowerCurve(raw, exponent);
-};
-
-const combineScales = (
-	scaleX: number,
-	scaleY: number,
-	mode: CombinedScaleMode = "multiply",
-): number => {
-	"worklet";
-
-	switch (mode) {
-		case "average":
-			return (scaleX + scaleY) / 2;
-		case "max":
-			return Math.max(scaleX, scaleY);
-		case "min":
-			return Math.min(scaleX, scaleY);
-		default:
-			return scaleX * scaleY;
-	}
-};
-
-const computeCenterScaleShift = ({
-	center,
-	containerCenter,
-	scale,
-}: {
-	center: number;
-	containerCenter: number;
-	scale: number;
-}): number => {
-	"worklet";
-	return (center - containerCenter) * (scale - 1);
-};
-
-const compensateTranslationForParentScale = ({
-	translation,
-	parentScale,
-	epsilon,
-}: {
-	translation: number;
-	parentScale: number;
-	epsilon: number;
-}): number => {
-	"worklet";
-	const safeParentScale = Math.max(parentScale, epsilon);
-	return safeDivide(translation, safeParentScale, translation);
-};
-
-const composeCompensatedTranslation = ({
-	gesture,
-	parentScale,
-	centerShift = 0,
-	epsilon,
-}: {
-	gesture: number;
-	parentScale: number;
-	centerShift?: number;
-	epsilon: number;
-}): number => {
-	"worklet";
-	return (
-		compensateTranslationForParentScale({
-			translation: gesture,
-			parentScale,
-			epsilon,
-		}) + centerShift
-	);
-};
-
-const resolveDirectionalDragScale = ({
-	normalized,
-	dismissDirection,
-	shrinkMin,
-	growMax,
-	exponent,
-}: {
-	normalized: number;
-	dismissDirection: "positive" | "negative";
-	shrinkMin: number;
-	growMax: number;
-	exponent: number;
-}) => {
-	"worklet";
-
-	const dismissalRelative =
-		dismissDirection === "negative" ? -normalized : normalized;
-
-	if (dismissalRelative >= 0) {
-		return normalizedToScale({
-			normalized: dismissalRelative,
-			outputRange: [1, shrinkMin],
-			exponent,
-		});
-	}
-
-	const oppositeDrag = Math.min(1, Math.abs(dismissalRelative));
-	return interpolate(oppositeDrag, [0, 1], [1, growMax], "clamp");
-};
 
 const getZoomContentTarget = ({
 	explicitTarget,
@@ -310,139 +122,6 @@ const getZoomContentTarget = ({
 		pageY: y,
 		width: screenWidth,
 		height,
-	};
-};
-
-const getStyleRadius = (
-	styles: StyleProps | null,
-	property:
-		| "borderRadius"
-		| "borderTopLeftRadius"
-		| "borderTopRightRadius"
-		| "borderBottomLeftRadius"
-		| "borderBottomRightRadius",
-): number | undefined => {
-	"worklet";
-	if (!styles || typeof styles !== "object") return undefined;
-
-	const styleRecord = styles as Record<string, unknown>;
-	const direct = styleRecord[property];
-	if (typeof direct === "number") return direct;
-
-	if (property !== "borderRadius") {
-		const fallback = styleRecord.borderRadius;
-		if (typeof fallback === "number") return fallback;
-	}
-
-	return undefined;
-};
-
-const resolveRadiusRange = ({
-	value,
-	progress,
-	sourceRadius,
-	destinationRadius,
-	fallback,
-}: {
-	value: ZoomRadiusValue | undefined;
-	progress: number;
-	sourceRadius?: number;
-	destinationRadius?: number;
-	fallback: number;
-}): number => {
-	"worklet";
-
-	if (typeof value === "number") return value;
-
-	if (value === "auto") {
-		const from = sourceRadius ?? fallback;
-		const to = destinationRadius ?? fallback;
-		return interpolate(progress, [0, 1], [from, to], "clamp");
-	}
-
-	if (value && typeof value === "object") {
-		const from = typeof value.from === "number" ? value.from : fallback;
-		const to = typeof value.to === "number" ? value.to : fallback;
-		return interpolate(progress, [0, 1], [from, to], "clamp");
-	}
-
-	const from = sourceRadius ?? fallback;
-	const to = destinationRadius ?? fallback;
-	return interpolate(progress, [0, 1], [from, to], "clamp");
-};
-
-const resolveMaskRadii = ({
-	progress,
-	zoomOptions,
-	resolvedPair,
-}: {
-	progress: number;
-	zoomOptions: ResolvedZoomOptions;
-	resolvedPair: ResolvedTransitionPair;
-}) => {
-	"worklet";
-	const sourceStyles = resolvedPair.sourceStyles;
-	const destinationStyles = resolvedPair.destinationStyles;
-
-	const defaultRadius = resolveRadiusRange({
-		value: zoomOptions.mask.borderRadius,
-		progress,
-		sourceRadius: getStyleRadius(sourceStyles, "borderRadius"),
-		destinationRadius: getStyleRadius(destinationStyles, "borderRadius"),
-		fallback: 12,
-	});
-
-	const topLeftValue =
-		zoomOptions.mask.borderTopLeftRadius ?? zoomOptions.mask.borderRadius;
-	const topRightValue =
-		zoomOptions.mask.borderTopRightRadius ?? zoomOptions.mask.borderRadius;
-	const bottomLeftValue =
-		zoomOptions.mask.borderBottomLeftRadius ?? zoomOptions.mask.borderRadius;
-	const bottomRightValue =
-		zoomOptions.mask.borderBottomRightRadius ?? zoomOptions.mask.borderRadius;
-
-	return {
-		borderRadius: defaultRadius,
-		borderTopLeftRadius: resolveRadiusRange({
-			value: topLeftValue,
-			progress,
-			sourceRadius: getStyleRadius(sourceStyles, "borderTopLeftRadius"),
-			destinationRadius: getStyleRadius(
-				destinationStyles,
-				"borderTopLeftRadius",
-			),
-			fallback: defaultRadius,
-		}),
-		borderTopRightRadius: resolveRadiusRange({
-			value: topRightValue,
-			progress,
-			sourceRadius: getStyleRadius(sourceStyles, "borderTopRightRadius"),
-			destinationRadius: getStyleRadius(
-				destinationStyles,
-				"borderTopRightRadius",
-			),
-			fallback: defaultRadius,
-		}),
-		borderBottomLeftRadius: resolveRadiusRange({
-			value: bottomLeftValue,
-			progress,
-			sourceRadius: getStyleRadius(sourceStyles, "borderBottomLeftRadius"),
-			destinationRadius: getStyleRadius(
-				destinationStyles,
-				"borderBottomLeftRadius",
-			),
-			fallback: defaultRadius,
-		}),
-		borderBottomRightRadius: resolveRadiusRange({
-			value: bottomRightValue,
-			progress,
-			sourceRadius: getStyleRadius(sourceStyles, "borderBottomRightRadius"),
-			destinationRadius: getStyleRadius(
-				destinationStyles,
-				"borderBottomRightRadius",
-			),
-			fallback: defaultRadius,
-		}),
 	};
 };
 
@@ -585,11 +264,6 @@ export const buildZoomStyles = ({
 		const contentScale = toNumber(contentRaw.scale, 1) * dragScale;
 		const maskTranslateX = toNumber(maskRaw.translateX) + dragX - left;
 		const maskTranslateY = toNumber(maskRaw.translateY) + dragY - top;
-		const maskRadii = resolveMaskRadii({
-			progress,
-			zoomOptions: resolvedZoomOptions,
-			resolvedPair,
-		});
 		const focusedContentStyle = {
 			opacity: focusedFade,
 			transform: [
@@ -616,11 +290,6 @@ export const buildZoomStyles = ({
 						{ translateY: maskTranslateY },
 						{ scale: dragScale },
 					],
-					borderRadius: maskRadii.borderRadius,
-					borderTopLeftRadius: maskRadii.borderTopLeftRadius,
-					borderTopRightRadius: maskRadii.borderTopRightRadius,
-					borderBottomLeftRadius: maskRadii.borderBottomLeftRadius,
-					borderBottomRightRadius: maskRadii.borderBottomRightRadius,
 					...(resolvedZoomOptions.mask.borderCurve
 						? { borderCurve: resolvedZoomOptions.mask.borderCurve }
 						: {}),
