@@ -143,7 +143,10 @@ export const buildZoomStyles = ({
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID
 		: "content";
 
-	if (!resolvedPair.sourceBounds) {
+	// To avoid initial flickering, we'll want to hide if there are no source bounds
+	// But to also avoid scenarios where activeId changes in dst and theres a failed measurement,
+	// we should only hide if entering and there is no source bounds.
+	if (!resolvedPair.sourceBounds && props.active.entering) {
 		return {
 			[focusedContainerStyleId]: HIDDEN_STYLE,
 		};
@@ -281,11 +284,12 @@ export const buildZoomStyles = ({
 	}
 
 	const unfocusedFade = props.active?.closing
-		? interpolate(progress, [1.6, 2], [1, debug ? 0.5 : 0], "clamp")
-		: interpolate(progress, [1, 1.5], [1, debug ? 0.5 : 0], "clamp");
+		? interpolate(progress, [1.6, 2], [1, debug ? 1 : 0], "clamp")
+		: interpolate(progress, [1, 1.5], [1, debug ? 1 : 0], "clamp");
 
 	const unfocusedScale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
 	const isUnfocusedIdle = props.active.settled === 1;
+	const shouldHideUnfocusedIdle = isUnfocusedIdle && !debug;
 	const elementTarget =
 		explicitTarget !== undefined || resolvedPair.destinationBounds
 			? getZoomContentTarget({
@@ -355,7 +359,7 @@ export const buildZoomStyles = ({
 		toNumber(elementRaw.translateY) + compensatedGestureY;
 	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
 	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
-	const resolvedElementStyle = isUnfocusedIdle
+	const resolvedElementStyle = shouldHideUnfocusedIdle
 		? {
 				transform: [
 					{ translateX: 0 },
@@ -374,7 +378,7 @@ export const buildZoomStyles = ({
 					{ scaleX: elementScaleX },
 					{ scaleY: elementScaleY },
 				],
-				opacity: unfocusedFade,
+				opacity: debug ? 1 : unfocusedFade,
 				zIndex: 9999,
 				elevation: 9999,
 			};
