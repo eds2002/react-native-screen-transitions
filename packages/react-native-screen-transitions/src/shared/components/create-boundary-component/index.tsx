@@ -17,7 +17,6 @@ import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
 import { useBoundaryMeasureAndStore } from "./hooks/use-boundary-measure-and-store";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
 import { useGroupActiveMeasurement } from "./hooks/use-group-active-measurement";
-import { useGroupActiveSourceMeasurement } from "./hooks/use-group-active-source-measurement";
 import { useInitialLayoutHandler } from "./hooks/use-initial-layout-handler";
 import { usePendingDestinationMeasurement } from "./hooks/use-pending-destination-measurement";
 import { usePendingDestinationRetryMeasurement } from "./hooks/use-pending-destination-retry-measurement";
@@ -168,20 +167,8 @@ export function createBoundaryComponent<P extends object>(
 			enabled: runtimeEnabled,
 			group,
 			id,
+			currentScreenKey,
 			shouldUpdateDestination,
-			isAnimating,
-			maybeMeasureAndStore,
-		});
-
-		// Source-side analog for grouped retargeting: when an unfocused/source
-		// boundary becomes the active member, refresh its snapshot (and source
-		// link when one exists) so close transitions don't use stale geometry.
-		useGroupActiveSourceMeasurement({
-			enabled: runtimeEnabled,
-			group,
-			id,
-			hasNextScreen,
-			isAnimating,
 			maybeMeasureAndStore,
 		});
 
