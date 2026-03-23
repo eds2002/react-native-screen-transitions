@@ -1,5 +1,30 @@
 # Changelog
 
+# [3.4.0-alpha.4](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.2...v3.4.0-alpha.4) (2026-03-23)
+
+
+### Bug Fixes
+
+* **bounds:** fix flickering in individual bound components ([aa14c85](https://github.com/eds2002/react-native-screen-transitions/commit/aa14c8530e5dc059e3b0e9e30c4dcd598df56351))
+* **bounds:** initialize navigation mask state in canonical frame props ([c362c18](https://github.com/eds2002/react-native-screen-transitions/commit/c362c18220d15b8b3e3847e4e5de7e9561a66b73))
+* **bounds:** lessen strictness bounds not measuring on active id change ([0d8ddf7](https://github.com/eds2002/react-native-screen-transitions/commit/0d8ddf7b8357cf11a4a0669d2b4364fb1b142bb8))
+* **bounds:** settle destination group refresh and drop source retarget writes ([bbdf4a2](https://github.com/eds2002/react-native-screen-transitions/commit/bbdf4a2efd631e421070ce9edf77d3ff0da8b7dc))
+* **defer:** flip to opacity 0 to opacity 1 ([c53c23b](https://github.com/eds2002/react-native-screen-transitions/commit/c53c23bd85053b5cd4a0e22e2a65584484a396cc))
+* **screen-interpolator:** make defer explicit and null pass through ([1c7b7b6](https://github.com/eds2002/react-native-screen-transitions/commit/1c7b7b68e513f412ec85765f0c233235d0e9d33a))
+* **shared:** scope navigation mask container styles to masked screens ([a2f1678](https://github.com/eds2002/react-native-screen-transitions/commit/a2f167854421c055f930550a32917f2d25734caa))
+* **zoom:** border radius not applied to non mask screens ([da6bdc2](https://github.com/eds2002/react-native-screen-transitions/commit/da6bdc2a551a786ebdd0a053ddb6e8a8a0b5a16f))
+* **zoom:** fix animation not working with non mask screens ([70da048](https://github.com/eds2002/react-native-screen-transitions/commit/70da0488dc7beda6dec891590271986fa9f7bf3e))
+* **zoom:** mis matched scaling for bound targets, make more opiniated ([a4873e2](https://github.com/eds2002/react-native-screen-transitions/commit/a4873e249d80c57b0a0b37782141cfb0ae98721b))
+* **zoom:** preserve typed navigation slot return ([bc2757d](https://github.com/eds2002/react-native-screen-transitions/commit/bc2757d45626e22a1bf32b5b38ef746d6b9512e2))
+
+
+### Features
+
+* create store helper and refactor animation.store and gesture.store to use this new helper ([46cdbff](https://github.com/eds2002/react-native-screen-transitions/commit/46cdbff6b2ac5ba2e729fba8f44c19b4278b2e6a))
+* **shared:** add deferred reveal and stabilize no-mask navigation zoom flicker ([3437046](https://github.com/eds2002/react-native-screen-transitions/commit/3437046898d18a171e283048b0432bb48a08ef6e))
+* **shared:** add experimental initial mount animation for first screens ([938a1f3](https://github.com/eds2002/react-native-screen-transitions/commit/938a1f39db59b0a57ac12d5b8b1d77844cf68840))
+* **zoom:** add border radius back, fix animating switching off during screen reset ([c6fc14f](https://github.com/eds2002/react-native-screen-transitions/commit/c6fc14f8c6a8a53a58b45e372513ac6268bd00dc))
+
 # [3.4.0-alpha.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.1...v3.4.0-alpha.2) (2026-03-20)
 
 
