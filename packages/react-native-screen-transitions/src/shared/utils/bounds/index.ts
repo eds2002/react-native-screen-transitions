@@ -66,6 +66,10 @@ export const createBoundsAccessor = (
 		});
 
 		const computed = computeForResolvedOptions(resolved, props);
+		// Navigation helpers are intentionally opinionated. Only the resolved
+		// tag from `id`/`group` is allowed to flow into `navigation.zoom()`;
+		// base bounds overrides like `target`, `anchor`, or `scaleMode` must not.
+		const navigationTag = resolveBoundTag({ id, group });
 
 		const target = Object.isExtensible(computed) ? computed : { ...computed };
 
@@ -75,10 +79,7 @@ export const createBoundsAccessor = (
 					"worklet";
 					return buildZoomStyles({
 						props: getProps(),
-						resolvedTag: resolveBoundTag({
-							id,
-							group,
-						}),
+						resolvedTag: navigationTag,
 						zoomOptions: options,
 					});
 				},
