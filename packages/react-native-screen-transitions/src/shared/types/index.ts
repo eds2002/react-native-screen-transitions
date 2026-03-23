@@ -15,6 +15,7 @@ export type {
 	BoundsMethod,
 	BoundsNavigationAccessor,
 	BoundsNavigationZoomOptions,
+	BoundsNavigationZoomStyle,
 } from "./bounds.types";
 export type {
 	ActivationArea,

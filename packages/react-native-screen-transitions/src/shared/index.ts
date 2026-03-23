@@ -48,6 +48,7 @@ export type {
 	AnimationConfig,
 	BoundsNavigationAccessor,
 	BoundsNavigationZoomOptions,
+	BoundsNavigationZoomStyle,
 	DeferredScreenStyleSignal,
 	OverlayProps,
 	ScreenInterpolationProps,

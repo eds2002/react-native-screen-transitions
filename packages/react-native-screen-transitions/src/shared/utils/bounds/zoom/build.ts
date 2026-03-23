@@ -96,10 +96,10 @@ export const buildZoomStyles = ({
 	resolvedTag,
 	zoomOptions,
 	props,
-}: BuildZoomStylesParams): ZoomInterpolatedStyle | null => {
+}: BuildZoomStylesParams): ZoomInterpolatedStyle => {
 	"worklet";
 
-	if (!resolvedTag) return null;
+	if (!resolvedTag) return {};
 
 	const explicitTarget = zoomOptions?.target;
 	const debug = zoomOptions?.DEBUG === true;

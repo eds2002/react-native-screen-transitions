@@ -1,4 +1,5 @@
 import type {
+	BoundsNavigationZoomStyle,
 	BoundsNavigationZoomOptions,
 	ScreenTransitionConfig,
 	ScreenGestureTarget,
@@ -66,6 +67,10 @@ const gestureTarget: ScreenGestureTarget = { ancestor: 2 };
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
+const zoomInterpolatedStyle: BoundsNavigationZoomStyle =
+	interpolationProps.bounds({ id: 42 }).navigation.zoom({
+		target: "bound",
+	});
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight = interpolationProps.current.layouts.content?.height;
 const currentSnapIndex = interpolationProps.current.snapIndex;
@@ -121,6 +126,7 @@ export const publicApiTypecheck = {
 	legacyInterpolatedStyle,
 	gestureTarget,
 	numericBoundsResult,
+	zoomInterpolatedStyle,
 	maybeContentHeight,
 	maybeCurrentContentHeight,
 	currentSnapIndex,

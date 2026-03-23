@@ -1,4 +1,8 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "../constants";
 import type { Snapshot } from "../stores/bounds";
 import type {
 	BoundId,
@@ -8,6 +12,7 @@ import type {
 import type {
 	ScreenInterpolationProps,
 	TransitionInterpolatedStyle,
+	TransitionSlotStyle,
 } from "./animation.types";
 
 /**
@@ -35,8 +40,14 @@ export type BoundsNavigationZoomOptions = {
 	borderRadius?: number;
 };
 
+export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
+	content?: TransitionSlotStyle;
+	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: TransitionSlotStyle;
+	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
+};
+
 export type BoundsNavigationAccessor = {
-	zoom: (options?: BoundsNavigationZoomOptions) => TransitionInterpolatedStyle;
+	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
 };
 
 type BoundsBoundNavigationAccessor = {

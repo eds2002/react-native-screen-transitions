@@ -277,9 +277,10 @@ export const SharedIGImage = ({
 			const dragXScale = interpolate(normX, [0, 1], [1, 0.8]);
 			const dragYScale = interpolate(normY, [0, 1], [1, 0.8]);
 
-			const navigationStyles = bounds({
-				id: sharedBoundTag,
-			}).navigation.zoom();
+			const navigationStyles =
+				bounds({
+					id: sharedBoundTag,
+				}).navigation.zoom() ?? {};
 
 			// Extract raw style values from bounds result (legacy format)
 			const sourceStyle = navigationStyles[sharedBoundTag] as
@@ -619,9 +620,10 @@ export const SharedXImage = ({
 
 			if (!focused) return {};
 
-			const navigationStyles = bounds({
-				id: sharedBoundTag,
-			}).navigation.zoom();
+			const navigationStyles =
+				bounds({
+					id: sharedBoundTag,
+				}).navigation.zoom() ?? {};
 			const maskStyle = navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] as
 				| Record<string, unknown>
 				| undefined;
