@@ -1,7 +1,13 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useCallback, useMemo, useRef } from "react";
-import { Pressable, StyleSheet, useWindowDimensions, View } from "react-native";
+import {
+	Pressable,
+	ScrollView,
+	StyleSheet,
+	useWindowDimensions,
+	View,
+} from "react-native";
 import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
@@ -34,10 +40,10 @@ function GalleryThumbnail({
 	const thumbHeight = columnWidth / aspectRatio;
 
 	return (
-		<Transition.Boundary.View
+		<Transition.Boundary.Pressable
+			id={item.id}
 			group={GALLERY_GROUP}
 			scaleMode="uniform"
-			id={item.id}
 			style={[
 				styles.thumbnail,
 				{
@@ -45,21 +51,16 @@ function GalleryThumbnail({
 					height: thumbHeight,
 				},
 			]}
-			pointerEvents="box-none"
+			onPress={() => {
+				onPressItem(item.id);
+			}}
 		>
-			<Pressable
-				onPress={() => {
-					onPressItem(item.id);
-				}}
-				style={styles.pressable}
-			>
-				<Image
-					source={{ uri: item.uri }}
-					style={styles.image}
-					contentFit="cover"
-				/>
-			</Pressable>
-		</Transition.Boundary.View>
+			<Image
+				source={{ uri: item.uri }}
+				style={styles.image}
+				contentFit="cover"
+			/>
+		</Transition.Boundary.Pressable>
 	);
 }
 
@@ -208,20 +209,23 @@ export default function GalleryIndex() {
 	);
 
 	return (
-		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
-				title="Gallery"
-				subtitle="Image gallery with shared element zoom"
+				title="Vertical Gallery"
+				subtitle="Vertical image gallery with shared element zoom"
 			/>
 
-			<Transition.ScrollView ref={scrollRef}>
+			<ScrollView ref={scrollRef}>
 				<MasonryGrid
 					columnWidth={columnWidth}
 					leftColumn={masonryLayout.leftColumn}
 					rightColumn={masonryLayout.rightColumn}
 					onPressItem={handlePressItem}
 				/>
-			</Transition.ScrollView>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }

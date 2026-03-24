@@ -5,12 +5,15 @@ import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { activeGalleryId, GALLERY_GROUP } from "./constants";
+import {
+	activeHorizontalGalleryId,
+	HORIZONTAL_GALLERY_GROUP,
+} from "./constants";
 
-const galleryZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
+const horizontalGalleryZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
 	({ bounds, progress, focused }) => {
 		"worklet";
-		const id = activeGalleryId.value;
+		const id = activeHorizontalGalleryId.value;
 
 		if (!id) {
 			return {};
@@ -18,7 +21,7 @@ const galleryZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"]
 
 		const navigationStyles = bounds({
 			id,
-			group: GALLERY_GROUP,
+			group: HORIZONTAL_GALLERY_GROUP,
 		}).navigation.zoom({ target: "bound", DEBUG: true });
 
 		if (!focused) {
@@ -39,7 +42,7 @@ const galleryZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"]
 		};
 	};
 
-export default function GalleryLayout() {
+export default function HorizontalGalleryLayout() {
 	const stackType = useResolvedStackType();
 	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
 	const navigatorScreenOptions =
@@ -57,7 +60,7 @@ export default function GalleryLayout() {
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					backdropComponent: BlurView,
-					screenStyleInterpolator: galleryZoomInterpolator,
+					screenStyleInterpolator: horizontalGalleryZoomInterpolator,
 					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,

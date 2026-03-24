@@ -63,8 +63,13 @@ const BOUNDS_EXAMPLES = [
 	},
 	{
 		id: "gallery",
-		title: "Gallery",
-		description: "Image gallery with shared element zoom transitions",
+		title: "Vertical Gallery",
+		description: "Vertical image gallery with shared element zoom transitions",
+	},
+	{
+		id: "gallery-horizontal",
+		title: "Horizontal Gallery",
+		description: "Horizontal image carousel with shared element zoom transitions",
 	},
 	{
 		id: "example",
