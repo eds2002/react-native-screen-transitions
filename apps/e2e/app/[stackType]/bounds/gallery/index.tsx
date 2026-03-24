@@ -2,7 +2,6 @@ import { Image } from "expo-image";
 import { router } from "expo-router";
 import { useCallback, useMemo, useRef } from "react";
 import {
-	Pressable,
 	ScrollView,
 	StyleSheet,
 	useWindowDimensions,
@@ -218,7 +217,7 @@ export default function GalleryIndex() {
 				subtitle="Vertical image gallery with shared element zoom"
 			/>
 
-			<ScrollView ref={scrollRef}>
+			<ScrollView ref={scrollRef} contentContainerStyle={styles.scrollContent}>
 				<MasonryGrid
 					columnWidth={columnWidth}
 					leftColumn={masonryLayout.leftColumn}

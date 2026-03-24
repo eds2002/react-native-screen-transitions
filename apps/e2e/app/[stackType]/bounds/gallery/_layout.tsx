@@ -56,7 +56,7 @@ export default function GalleryLayout() {
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
-					backdropComponent: BlurView,
+					// backdropComponent: BlurView,
 					screenStyleInterpolator: galleryZoomInterpolator,
 					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
