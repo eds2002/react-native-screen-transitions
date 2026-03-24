@@ -32,14 +32,18 @@ export const resetGestureValues = ({
 	shouldDismiss,
 	event,
 	dimensions,
-	gestureReleaseVelocityScale = DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
-	gestureReleaseVelocityMax = DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
+	gestureReleaseVelocityScale,
+	gestureReleaseVelocityMax,
 }: ResetGestureValuesProps) => {
 	"worklet";
+	const resolvedGestureReleaseVelocityScale =
+		gestureReleaseVelocityScale ?? DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE;
+	const resolvedGestureReleaseVelocityMax =
+		gestureReleaseVelocityMax ?? DEFAULT_GESTURE_RELEASE_VELOCITY_MAX;
 
 	const effectiveReleaseVelocityMax = Math.max(
 		0,
-		Math.abs(gestureReleaseVelocityMax),
+		Math.abs(resolvedGestureReleaseVelocityMax),
 	);
 
 	const vxNorm = normalizeVelocity(
@@ -67,11 +71,11 @@ export const resetGestureValues = ({
 	// so the spring carries the gesture's momentum. The spec controls the
 	// spring character — use an underdamped spec (e.g. FlingSpec) for orbit/fling.
 	const resetVX = shouldDismiss
-		? vxNorm * gestureReleaseVelocityScale
+		? vxNorm * resolvedGestureReleaseVelocityScale
 		: vxTowardZero;
 
 	const resetVY = shouldDismiss
-		? vyNorm * gestureReleaseVelocityScale
+		? vyNorm * resolvedGestureReleaseVelocityScale
 		: vyTowardZero;
 
 	animateMany({

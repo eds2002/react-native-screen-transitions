@@ -31,10 +31,12 @@ type GestureAxisCandidate = {
 export const normalizeVelocity = (
 	velocityPixelsPerSecond: number,
 	screenSize: number,
-	maxMagnitude: number = DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
+	maxMagnitude?: number,
 ) => {
 	"worklet";
-	const max = Math.max(0, Math.abs(maxMagnitude));
+	const resolvedMaxMagnitude =
+		maxMagnitude ?? DEFAULT_GESTURE_RELEASE_VELOCITY_MAX;
+	const max = Math.max(0, Math.abs(resolvedMaxMagnitude));
 	return clamp(velocityPixelsPerSecond / Math.max(1, screenSize), -max, max);
 };
 

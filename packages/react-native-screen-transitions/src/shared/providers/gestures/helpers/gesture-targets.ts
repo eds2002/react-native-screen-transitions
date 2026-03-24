@@ -111,22 +111,30 @@ export function determineSnapTarget({
 	snapPoints,
 	velocity,
 	dimension,
-	velocityFactor = DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
-	canDismiss = true,
+	velocityFactor,
+	canDismiss,
 }: DetermineSnapTargetProps): DetermineSnapTargetResult {
 	"worklet";
+	const resolvedVelocityFactor =
+		velocityFactor ?? DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT;
+	const resolvedCanDismiss = canDismiss ?? true;
 
 	// Convert velocity to progress units (positive = toward dismiss = decreasing progress)
-	const velocityInProgress = (velocity / dimension) * velocityFactor;
+	const velocityInProgress = (velocity / dimension) * resolvedVelocityFactor;
 
 	// Project where we'd end up with velocity
 	const projectedProgress = currentProgress - velocityInProgress;
 
-	const sanitizedSnapPoints = sanitizeSnapPoints(snapPoints, canDismiss);
+	const sanitizedSnapPoints = sanitizeSnapPoints(
+		snapPoints,
+		resolvedCanDismiss,
+	);
 
 	// Build all possible targets: dismiss (0) only if allowed, plus all snap points
 	const allTargets = Array.from(
-		new Set(canDismiss ? [0, ...sanitizedSnapPoints] : sanitizedSnapPoints),
+		new Set(
+			resolvedCanDismiss ? [0, ...sanitizedSnapPoints] : sanitizedSnapPoints,
+		),
 	).sort((a, b) => a - b);
 
 	if (allTargets.length === 0) {
@@ -162,6 +170,6 @@ export function determineSnapTarget({
 
 	return {
 		targetProgress,
-		shouldDismiss: canDismiss && targetProgress === 0,
+		shouldDismiss: resolvedCanDismiss && targetProgress === 0,
 	};
 }
