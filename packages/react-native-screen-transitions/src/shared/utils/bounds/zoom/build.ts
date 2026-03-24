@@ -373,10 +373,10 @@ export const buildZoomStyles = ({
 			}
 		: {
 				transform: [
-					{ translateX: elementTranslateX },
-					{ translateY: elementTranslateY },
-					{ scaleX: elementScaleX },
-					{ scaleY: elementScaleY },
+					{ translateX: props.active.settled ? 0 : elementTranslateX },
+					{ translateY: props.active.settled ? 0 : elementTranslateY },
+					{ scaleX: props.active.settled ? 1 : elementScaleX },
+					{ scaleY: props.active.settled ? 1 : elementScaleY },
 				],
 				opacity: debug ? 1 : unfocusedFade,
 				zIndex: 9999,
