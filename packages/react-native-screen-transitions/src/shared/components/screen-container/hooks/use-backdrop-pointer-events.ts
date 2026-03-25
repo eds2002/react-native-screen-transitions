@@ -1,8 +1,7 @@
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useStackCoreContext } from "../../../providers/stack/core.provider";
+import type { BackdropBehavior } from "../../../types/screen.types";
 import { StackType } from "../../../types/stack.types";
-
-type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 
 interface BackdropPointerEventsResult {
 	pointerEvents: "box-none" | undefined;

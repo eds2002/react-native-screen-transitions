@@ -13,15 +13,20 @@ import { useScreenStyles } from "../../../providers/screen/styles.provider";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import { SystemStore } from "../../../stores/system.store";
+import type { BackdropBehavior } from "../../../types/screen.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../../../utils/gesture/find-collapse-target";
-import { useBackdropPointerEvents } from "../hooks/use-backdrop-pointer-events";
 
-export const BackdropLayer = memo(function BackdropLayer() {
+export const BackdropLayer = memo(function BackdropLayer({
+	backdropBehavior,
+	isBackdropActive,
+}: {
+	backdropBehavior: BackdropBehavior;
+	isBackdropActive: boolean;
+}) {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useDescriptors();
 	const { dismissScreen } = useNavigationHelpers();
-	const { isBackdropActive, backdropBehavior } = useBackdropPointerEvents();
 
 	const BackdropComponent = current.options.backdropComponent;
 	const routeKey = current.route.key;
@@ -39,6 +44,7 @@ export const BackdropLayer = memo(function BackdropLayer() {
 				: null,
 		[BackdropComponent],
 	);
+
 	const handleBackdropPress = useCallback(() => {
 		if (backdropBehavior === "dismiss") {
 			dismissScreen();

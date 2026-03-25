@@ -22,6 +22,8 @@ export type SheetScrollGestureBehavior =
  */
 export type SnapPoint = number | "auto";
 
+export type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
+
 export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	/**
 	 * Connects this component to custom animated styles defined in screenStyleInterpolator.
@@ -282,7 +284,7 @@ export type ScreenTransitionConfig = {
 	 *
 	 * @default 'block' (or 'passthrough' for component stacks)
 	 */
-	backdropBehavior?: "block" | "passthrough" | "dismiss" | "collapse";
+	backdropBehavior?: BackdropBehavior;
 
 	/**
 	 * Custom component to render as the backdrop layer (between screens).

@@ -6,6 +6,7 @@ import { useScreenStyles } from "../../providers/screen/styles.provider";
 
 type Props = {
 	children: React.ReactNode;
+	pointerEvents: "box-none" | undefined;
 };
 
 /**
@@ -15,20 +16,26 @@ type Props = {
  * This sits above backdrop/content/mask/surface so a deferred transition does
  * not leak raw first-paint UI from nested layers.
  */
-export const DeferredVisibilityHost = memo(({ children }: Props) => {
-	const { resolutionMode } = useScreenStyles();
+export const DeferredVisibilityHost = memo(
+	({ children, pointerEvents }: Props) => {
+		const { resolutionMode } = useScreenStyles();
 
-	const animatedStyle = useAnimatedStyle(() => {
-		"worklet";
-		return resolutionMode.value === "deferred" ? HIDDEN_STYLE : VISIBLE_STYLE;
-	});
+		const animatedStyle = useAnimatedStyle(() => {
+			"worklet";
+			return resolutionMode.value === "deferred" ? HIDDEN_STYLE : VISIBLE_STYLE;
+		});
 
-	return (
-		<Animated.View collapsable={false} style={[styles.host, animatedStyle]}>
-			{children}
-		</Animated.View>
-	);
-});
+		return (
+			<Animated.View
+				collapsable={false}
+				style={[styles.host, animatedStyle]}
+				pointerEvents={pointerEvents}
+			>
+				{children}
+			</Animated.View>
+		);
+	},
+);
 
 const styles = StyleSheet.create({
 	host: {

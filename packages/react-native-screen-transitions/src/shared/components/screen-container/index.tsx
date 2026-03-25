@@ -10,13 +10,22 @@ type Props = {
 };
 
 export const ScreenContainer = memo(({ children }: Props) => {
-	const { pointerEvents } = useBackdropPointerEvents();
+	const { pointerEvents, isBackdropActive, backdropBehavior } =
+		useBackdropPointerEvents();
 
 	return (
 		<View style={styles.container} pointerEvents={pointerEvents}>
-			<DeferredVisibilityHost>
-				<BackdropLayer />
-				<ContentLayer>{children}</ContentLayer>
+			<DeferredVisibilityHost pointerEvents={pointerEvents}>
+				<BackdropLayer
+					isBackdropActive={isBackdropActive}
+					backdropBehavior={backdropBehavior}
+				/>
+				<ContentLayer
+					pointerEvents={pointerEvents}
+					isBackdropActive={isBackdropActive}
+				>
+					{children}
+				</ContentLayer>
 			</DeferredVisibilityHost>
 		</View>
 	);
