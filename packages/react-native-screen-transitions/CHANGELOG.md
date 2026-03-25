@@ -1,5 +1,22 @@
 # Changelog
 
+# [3.4.0-alpha.6](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.4...v3.4.0-alpha.6) (2026-03-25)
+
+
+### Bug Fixes
+
+* already release alpha 5 ([8a9e847](https://github.com/eds2002/react-native-screen-transitions/commit/8a9e847ed91ab4d25031a4e306c2c956d9ab393d))
+* backdrop behavior passthrough not working ([3f1a68f](https://github.com/eds2002/react-native-screen-transitions/commit/3f1a68fb68a8aac57d688aed2c655a4314709d00))
+* **bounds:** reset element transformation styles to avoid shitty remeasurement ([757ee2b](https://github.com/eds2002/react-native-screen-transitions/commit/757ee2b0957f0671627e093f7b053c8c3de41d63))
+* **bounds:** restore grouped source refresh and narrow zoom hide fallback ([13e0ac9](https://github.com/eds2002/react-native-screen-transitions/commit/13e0ac9c59bfbe23a822defef4d87eb496212254))
+* **docs:** restore old docs ([bcbb3e5](https://github.com/eds2002/react-native-screen-transitions/commit/bcbb3e57a2ad5b851d9cafea9c39ffa12fa146db))
+* harden gesture worklet defaults ([53d350e](https://github.com/eds2002/react-native-screen-transitions/commit/53d350e19d8d794625596dbf44be57be965b982d))
+
+
+### Features
+
+* new logicallySettled prop + fix zoom transition quirks ([149af8c](https://github.com/eds2002/react-native-screen-transitions/commit/149af8cebee459515a5669d15afa1a3baa642623))
+
 # [3.4.0-alpha.4](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.2...v3.4.0-alpha.4) (2026-03-23)
 
 
