@@ -373,12 +373,32 @@ export const buildZoomStyles = ({
 			}
 		: {
 				transform: [
-					{ translateX: props.active.settled ? 0 : elementTranslateX },
-					{ translateY: props.active.settled ? 0 : elementTranslateY },
-					{ scaleX: props.active.settled ? 1 : elementScaleX },
-					{ scaleY: props.active.settled ? 1 : elementScaleY },
+					{
+						translateX:
+							props.active.logicallySettled && !props.active.closing
+								? 0
+								: elementTranslateX,
+					},
+					{
+						translateY:
+							props.active.logicallySettled && !props.active.closing
+								? 0
+								: elementTranslateY,
+					},
+					{
+						scaleX:
+							props.active.logicallySettled && !props.active.closing
+								? 1
+								: elementScaleX,
+					},
+					{
+						scaleY:
+							props.active.logicallySettled && !props.active.closing
+								? 1
+								: elementScaleY,
+					},
 				],
-				opacity: debug ? 1 : unfocusedFade,
+				opacity: debug ? 0.5 : unfocusedFade,
 				zIndex: 9999,
 				elevation: 9999,
 			};

@@ -71,6 +71,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		progress: 0,
 		stackProgress: 0,
 		snapIndex: -1,
+		logicallySettled: 1,
 		focused: true,
 		active: DEFAULT_SCREEN_TRANSITION_STATE,
 		navigationMaskEnabled: currentNavigationMaskEnabled,
@@ -121,6 +122,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			progress,
 			stackProgress,
 			snapIndex: current.snapIndex,
+			logicallySettled: helpers.active.logicallySettled,
 			...helpers,
 		};
 

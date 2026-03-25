@@ -54,6 +54,15 @@ export type ScreenTransitionState = {
 	settled: number;
 
 	/**
+	 * Whether this screen is logically complete for choreography purposes.
+	 * - `0`: The screen is still meaningfully away from its animation target
+	 * - `1`: The screen is visually close enough to its target to be treated as done
+	 *
+	 * Unlike `settled`, this may become `1` before the underlying spring fully stops.
+	 */
+	logicallySettled: number;
+
+	/**
 	 * Live gesture values for this screen.
 	 * Contains translation (x, y), normalized values (-1 to 1),
 	 * and flags for dragging/dismissing state.
@@ -175,6 +184,12 @@ export interface ScreenInterpolationProps {
 	 * @deprecated Use `current.snapIndex` instead.
 	 */
 	snapIndex: number;
+
+	/**
+	 * Whether the active transition is visually close enough to its target to be
+	 * treated as complete, even if the animation is still physically settling.
+	 */
+	logicallySettled: number;
 
 	/**
 	 * Function that provides access to bounds helpers for shared screen transitions.

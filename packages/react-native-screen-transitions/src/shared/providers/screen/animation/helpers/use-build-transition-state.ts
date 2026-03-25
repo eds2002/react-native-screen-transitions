@@ -23,6 +23,7 @@ type BuiltState = {
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
+	targetProgress: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
 	hasAutoSnapPoint: boolean;
@@ -62,6 +63,7 @@ export const useBuildTransitionState = (
 			closing: AnimationStore.getValue(key, "closing"),
 			entering: AnimationStore.getValue(key, "entering"),
 			animating: AnimationStore.getValue(key, "animating"),
+			targetProgress: SystemStore.getValue(key, "targetProgress"),
 			resolvedAutoSnapPoint: SystemStore.getValue(key, "resolvedAutoSnapPoint"),
 			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,

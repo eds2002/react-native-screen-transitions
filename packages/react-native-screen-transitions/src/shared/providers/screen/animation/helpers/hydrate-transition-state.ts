@@ -1,5 +1,10 @@
 import type { SharedValue } from "react-native-reanimated";
-import { EPSILON } from "../../../../constants";
+import {
+	ANIMATION_SNAP_THRESHOLD,
+	EPSILON,
+	FALSE,
+	TRUE,
+} from "../../../../constants";
 import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
@@ -13,12 +18,20 @@ type BuiltState = {
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
+	targetProgress: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
 	unwrapped: ScreenTransitionState;
 };
+
+interface ComputeLogicallySettledParams {
+	progress: number;
+	targetProgress: number;
+	settled: number;
+	dragging: number;
+}
 
 /**
  * Computes the animated snap index based on progress and snap points.
@@ -39,6 +52,35 @@ const computeSnapIndex = (progress: number, snapPoints: number[]): number => {
 		}
 	}
 	return snapPoints.length - 1;
+};
+
+/**
+ * Determines whether the screen transition is logically settled.
+ *
+ * A transition is considered logically settled when:
+ * - The `settled` flag is explicitly set, OR
+ * - The screen is not being dragged AND the progress is within
+ *   {@link ANIMATION_SNAP_THRESHOLD} of the target progress.
+ */
+export const computeLogicallySettled = ({
+	progress,
+	targetProgress,
+	settled,
+	dragging,
+}: ComputeLogicallySettledParams) => {
+	"worklet";
+
+	if (settled) {
+		return TRUE;
+	}
+
+	if (dragging) {
+		return FALSE;
+	}
+
+	return Math.abs(progress - targetProgress) <= ANIMATION_SNAP_THRESHOLD
+		? TRUE
+		: FALSE;
 };
 
 export const hydrateTransitionState = (
@@ -72,6 +114,12 @@ export const hydrateTransitionState = (
 	out.gesture.isDragging = out.gesture.dragging;
 
 	out.settled = out.animating || out.gesture.dismissing || out.closing ? 0 : 1;
+	out.logicallySettled = computeLogicallySettled({
+		progress: out.progress,
+		targetProgress: s.targetProgress.value,
+		settled: out.settled,
+		dragging: out.gesture.dragging,
+	});
 
 	out.meta = s.meta;
 	out.layouts.screen.width = dimensions.width;
