@@ -3,7 +3,7 @@ import {
 	PASS_THROUGH_STYLE_OUTPUT,
 	resolveEffectiveResolutionMode,
 	resolveInterpolatedStyleOutput,
-} from "../providers/screen/helpers/resolve-interpolated-style-output";
+} from "../providers/screen/styles/helpers/resolve-interpolated-style-output";
 
 describe("resolveInterpolatedStyleOutput", () => {
 	it("treats null as pass-through empty styles", () => {

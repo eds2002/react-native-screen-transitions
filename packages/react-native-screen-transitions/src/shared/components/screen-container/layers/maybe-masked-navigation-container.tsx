@@ -6,7 +6,7 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	NO_STYLES,
 } from "../../../constants";
-import { useScreenStyles } from "../../../providers/screen/styles.provider";
+import { useScreenStyles } from "../../../providers/screen/styles";
 import { logger } from "../../../utils/logger";
 
 type Props = {
@@ -27,19 +27,21 @@ let hasWarnedMissingMaskedView = false;
 
 export const MaybeMaskedNavigationContainer = memo(
 	({ enabled, children, pointerEvents }: Props) => {
-		const { stylesMap } = useScreenStyles();
+		const { layerStylesMap } = useScreenStyles();
 
 		const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 			"worklet";
 			return (
-				stylesMap.value[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style || NO_STYLES
+				layerStylesMap.value[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style ||
+				NO_STYLES
 			);
 		});
 
 		const animatedNavigationMaskContainerStyle = useAnimatedStyle(() => {
 			"worklet";
 			return (
-				stylesMap.value[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style || NO_STYLES
+				layerStylesMap.value[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style ||
+				NO_STYLES
 			);
 		});
 

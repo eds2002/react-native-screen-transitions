@@ -6,9 +6,14 @@ import {
 	useMemo,
 } from "react";
 import type { View } from "react-native";
-import Animated, { runOnUI, useAnimatedRef } from "react-native-reanimated";
-import { useAssociatedStyles } from "../../hooks/animation/use-associated-style";
+import Animated, {
+	runOnUI,
+	useAnimatedRef,
+	useAnimatedStyle,
+} from "react-native-reanimated";
+import { NO_STYLES } from "../../constants";
 import { useDescriptorDerivations } from "../../providers/screen/descriptors";
+import { useScreenStyles } from "../../providers/screen/styles";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
@@ -100,10 +105,34 @@ export function createBoundaryComponent<P extends object>(
 		const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
 
 		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
+		const { elementStylesMap } = useScreenStyles();
 
-		const { associatedStyles, associatedStackingStyles } = useAssociatedStyles({
-			id: sharedBoundTag,
-			resetTransformOnUnset: true,
+		const associatedStyles = useAnimatedStyle(() => {
+			"worklet";
+
+			const baseStyle =
+				(elementStylesMap.value[sharedBoundTag]?.style as
+					| Record<string, any>
+					| undefined) ?? (NO_STYLES as Record<string, any>);
+
+			if ("opacity" in baseStyle) {
+				return baseStyle;
+			}
+
+			return { ...baseStyle, opacity: 1 };
+		});
+
+		const associatedStackingStyles = useAnimatedStyle(() => {
+			"worklet";
+			const baseStyle =
+				(elementStylesMap.value[sharedBoundTag]?.style as
+					| Record<string, any>
+					| undefined) ?? (NO_STYLES as Record<string, any>);
+
+			return {
+				zIndex: (baseStyle.zIndex as number | undefined) ?? 0,
+				elevation: (baseStyle.elevation as number | undefined) ?? 0,
+			};
 		});
 
 		const { contextValue, measuredRef, hasActiveTarget } = useBoundaryOwner({

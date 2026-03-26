@@ -4,25 +4,30 @@ import {
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import { NO_STYLES } from "../../constants";
-import type { NormalizedTransitionInterpolatedStyle } from "../../types/animation.types";
-import createProvider from "../../utils/create-provider";
-import { logger } from "../../utils/logger";
-import { useScreenAnimationContext } from "./animation";
+import { NO_STYLES } from "../../../constants";
+import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
+import createProvider from "../../../utils/create-provider";
+import { logger } from "../../../utils/logger";
+import { useScreenAnimationContext } from "../animation";
+import {
+	buildResolvedStyleMap,
+	type StyleKeySet,
+} from "./helpers/build-resolved-style-map";
 import {
 	PASS_THROUGH_STYLE_OUTPUT,
 	resolveEffectiveResolutionMode,
 	resolveInterpolatedStyleOutput,
 	type ScreenStyleResolutionMode,
 } from "./helpers/resolve-interpolated-style-output";
+import { splitNormalizedStyleMaps } from "./helpers/split-normalized-style-maps";
 
 type Props = {
 	children: ReactNode;
 };
 
 type ScreenStylesContextValue = {
-	stylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
-	ancestorStylesMaps: SharedValue<NormalizedTransitionInterpolatedStyle>[];
+	layerStylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
+	elementStylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 	resolutionMode: SharedValue<ScreenStyleResolutionMode>;
 };
 
@@ -34,7 +39,7 @@ export const {
 	guarded: true,
 })<Props, ScreenStylesContextValue>(
 	({ children }): { value: ScreenStylesContextValue; children: ReactNode } => {
-		const parentCtx = useContext(ScreenStylesContext);
+		const parentContext = useContext(ScreenStylesContext);
 
 		const {
 			screenInterpolatorProps,
@@ -43,15 +48,18 @@ export const {
 			boundsAccessor,
 		} = useScreenAnimationContext();
 
-		/**
-		 * Tracks when user starts a gesture while another screen is still closing.
-		 * This persists until both the gesture ends AND the closing animation completes.
-		 */
 		const isGesturingDuringCloseAnimation = useSharedValue(false);
 		const hasWarnedLegacy = useSharedValue(false);
+		const previousLayerStyleKeysBySlot = useSharedValue<
+			Record<string, StyleKeySet>
+		>({});
+		const previousElementStyleKeysBySlot = useSharedValue<
+			Record<string, StyleKeySet>
+		>({});
 
-		const styleResolution = useDerivedValue<{
-			stylesMap: NormalizedTransitionInterpolatedStyle;
+		const rawStyleResolution = useDerivedValue<{
+			layerStylesMap: NormalizedTransitionInterpolatedStyle;
+			elementStylesMap: NormalizedTransitionInterpolatedStyle;
 			resolutionMode: ScreenStyleResolutionMode;
 		}>(() => {
 			"worklet";
@@ -71,20 +79,17 @@ export const {
 			const isInGestureMode =
 				isDragging || isGesturingDuringCloseAnimation.value;
 
-			// Select interpolator
-			//  - If in gesture mode, use current screen's interpolator since we're driving
-			//    the animation from this screen (dragging back to dismiss next).
 			const interpolator = isInGestureMode
 				? currentInterpolator
 				: (nextInterpolator ?? currentInterpolator);
 
 			if (!interpolator) {
-				return PASS_THROUGH_STYLE_OUTPUT;
+				return {
+					layerStylesMap: NO_STYLES,
+					elementStylesMap: NO_STYLES,
+					resolutionMode: PASS_THROUGH_STYLE_OUTPUT.resolutionMode,
+				};
 			}
-
-			// Build effective props with corrected progress
-			//  - Gesture mode: use current.progress only (avoids jumps during drag)
-			//  - Normal: use derived progress as-is
 
 			let effectiveProgress = progress;
 			let effectiveNext = next;
@@ -105,6 +110,9 @@ export const {
 				const { stylesMap, resolutionMode, wasLegacy } =
 					resolveInterpolatedStyleOutput(raw);
 
+				const { layerStylesMap, elementStylesMap } =
+					splitNormalizedStyleMaps(stylesMap);
+
 				if (__DEV__ && wasLegacy && !hasWarnedLegacy.value) {
 					hasWarnedLegacy.value = true;
 					logger.warn(
@@ -114,7 +122,8 @@ export const {
 				}
 
 				return {
-					stylesMap,
+					layerStylesMap,
+					elementStylesMap,
 					resolutionMode: resolveEffectiveResolutionMode({
 						resolutionMode,
 						isSettled: current.settled === 1,
@@ -127,37 +136,57 @@ export const {
 						err,
 					);
 				}
+
 				return {
-					stylesMap: NO_STYLES as NormalizedTransitionInterpolatedStyle,
+					layerStylesMap: NO_STYLES,
+					elementStylesMap: NO_STYLES,
 					resolutionMode: "live" as const,
 				};
 			}
 		});
 
-		const stylesMap = useDerivedValue<NormalizedTransitionInterpolatedStyle>(
-			() => {
+		const layerStylesMap =
+			useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
 				"worklet";
-				return styleResolution.value.stylesMap;
-			},
-		);
+				const { resolvedStylesMap, nextPreviousStyleKeysBySlot } =
+					buildResolvedStyleMap({
+						currentStylesMap: rawStyleResolution.value.layerStylesMap,
+						fallbackStylesMap: NO_STYLES,
+						previousStyleKeysBySlot: previousLayerStyleKeysBySlot.value,
+					});
+
+				previousLayerStyleKeysBySlot.value = nextPreviousStyleKeysBySlot;
+				return resolvedStylesMap;
+			});
+
+		const elementStylesMap =
+			useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
+				"worklet";
+				const { resolvedStylesMap, nextPreviousStyleKeysBySlot } =
+					buildResolvedStyleMap({
+						currentStylesMap: rawStyleResolution.value.elementStylesMap,
+						fallbackStylesMap:
+							parentContext?.elementStylesMap.value ?? NO_STYLES,
+						previousStyleKeysBySlot: previousElementStyleKeysBySlot.value,
+					});
+
+				previousElementStyleKeysBySlot.value = nextPreviousStyleKeysBySlot;
+
+				return resolvedStylesMap;
+			});
 
 		const resolutionMode = useDerivedValue<ScreenStyleResolutionMode>(() => {
 			"worklet";
-			return styleResolution.value.resolutionMode;
+			return rawStyleResolution.value.resolutionMode;
 		});
 
 		const value = useMemo<ScreenStylesContextValue>(() => {
-			// Build ancestor chain: [parent, grandparent, great-grandparent, ...]
-			const ancestorStylesMaps = parentCtx
-				? [parentCtx.stylesMap, ...parentCtx.ancestorStylesMaps]
-				: [];
-
 			return {
-				stylesMap,
-				ancestorStylesMaps,
+				layerStylesMap,
+				elementStylesMap,
 				resolutionMode,
 			};
-		}, [resolutionMode, stylesMap, parentCtx]);
+		}, [elementStylesMap, layerStylesMap, resolutionMode]);
 
 		return { value, children };
 	},

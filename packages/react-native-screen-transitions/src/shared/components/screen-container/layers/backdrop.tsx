@@ -9,7 +9,7 @@ import { DefaultSnapSpec } from "../../../configs/specs";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useScreenStyles } from "../../../providers/screen/styles.provider";
+import { useScreenStyles } from "../../../providers/screen/styles";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import { SystemStore } from "../../../stores/system.store";
@@ -24,7 +24,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior: BackdropBehavior;
 	isBackdropActive: boolean;
 }) {
-	const { stylesMap } = useScreenStyles();
+	const { layerStylesMap } = useScreenStyles();
 	const { current } = useDescriptors();
 	const { dismissScreen } = useNavigationHelpers();
 
@@ -111,12 +111,12 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 	const animatedBackdropStyle = useAnimatedStyle(() => {
 		"worklet";
-		return stylesMap.value.backdrop?.style ?? NO_STYLES;
+		return layerStylesMap.value.backdrop?.style ?? NO_STYLES;
 	});
 
 	const animatedBackdropProps = useAnimatedProps(() => {
 		"worklet";
-		return stylesMap.value.backdrop?.props ?? NO_PROPS;
+		return layerStylesMap.value.backdrop?.props ?? NO_PROPS;
 	});
 
 	return (

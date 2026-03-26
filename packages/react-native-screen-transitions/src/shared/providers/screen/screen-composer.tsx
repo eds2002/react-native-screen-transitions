@@ -4,7 +4,7 @@ import { ScreenLifecycle } from "../../components/screen-lifecycle";
 import { ScreenGestureProvider } from "../gestures";
 import { ScreenAnimationProvider } from "./animation";
 import { type BaseDescriptor, DescriptorsProvider } from "./descriptors";
-import { ScreenStylesProvider } from "./styles.provider";
+import { ScreenStylesProvider } from "./styles";
 
 type Props<TDescriptor extends BaseDescriptor> = {
 	previous?: TDescriptor;

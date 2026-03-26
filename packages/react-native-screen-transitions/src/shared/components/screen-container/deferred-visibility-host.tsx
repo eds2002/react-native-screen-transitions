@@ -2,7 +2,7 @@ import { memo } from "react";
 import { StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { HIDDEN_STYLE, VISIBLE_STYLE } from "../../constants";
-import { useScreenStyles } from "../../providers/screen/styles.provider";
+import { useScreenStyles } from "../../providers/screen/styles";
 
 type Props = {
 	children: React.ReactNode;

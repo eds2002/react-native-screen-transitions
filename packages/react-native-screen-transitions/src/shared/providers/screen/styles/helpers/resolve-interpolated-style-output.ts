@@ -1,8 +1,9 @@
+import { NO_STYLES } from "../../../../constants";
 import type {
 	DeferredScreenStyleSignal,
 	NormalizedTransitionInterpolatedStyle,
-} from "../../../types/animation.types";
-import { normalizeInterpolatedStyle } from "../../../utils/normalize-interpolated-style";
+} from "../../../../types/animation.types";
+import { normalizeInterpolatedStyle } from "../../../../utils/normalize-interpolated-style";
 
 export type ScreenStyleResolutionMode = "pass-through" | "deferred" | "live";
 
@@ -12,10 +13,8 @@ export type ResolvedInterpolatedStyleOutput = {
 	wasLegacy: boolean;
 };
 
-const EMPTY_STYLES = {} as NormalizedTransitionInterpolatedStyle;
-
 export const PASS_THROUGH_STYLE_OUTPUT: ResolvedInterpolatedStyleOutput = {
-	stylesMap: EMPTY_STYLES,
+	stylesMap: NO_STYLES,
 	resolutionMode: "pass-through",
 	wasLegacy: false,
 };
@@ -41,7 +40,7 @@ export const resolveInterpolatedStyleOutput = (
 
 	if (raw === "defer") {
 		return {
-			stylesMap: EMPTY_STYLES,
+			stylesMap: NO_STYLES,
 			resolutionMode: "deferred",
 			wasLegacy: false,
 		};
@@ -51,7 +50,7 @@ export const resolveInterpolatedStyleOutput = (
 		return PASS_THROUGH_STYLE_OUTPUT;
 	}
 
-	const { result, wasLegacy } = normalizeInterpolatedStyle(raw ?? EMPTY_STYLES);
+	const { result, wasLegacy } = normalizeInterpolatedStyle(raw ?? NO_STYLES);
 
 	return {
 		stylesMap: result,

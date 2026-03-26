@@ -5,7 +5,7 @@ import { useStack } from "../../../hooks/navigation/use-stack";
 import { ScreenAnimationProvider } from "../../../providers/screen/animation";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import { DescriptorsProvider } from "../../../providers/screen/descriptors";
-import { ScreenStylesProvider } from "../../../providers/screen/styles.provider";
+import { ScreenStylesProvider } from "../../../providers/screen/styles";
 import type { OverlayScreenState } from "../../../types/overlay.types";
 
 import { getActiveFloatOverlay } from "../helpers/get-active-overlay";

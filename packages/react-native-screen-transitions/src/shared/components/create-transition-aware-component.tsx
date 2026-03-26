@@ -5,13 +5,16 @@ import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	runOnUI,
+	useAnimatedProps,
 	useAnimatedRef,
+	useAnimatedStyle,
 	useComposedEventHandler,
 	useSharedValue,
 } from "react-native-reanimated";
-import { useAssociatedStyles } from "../hooks/animation/use-associated-style";
+import { NO_PROPS, NO_STYLES } from "../constants";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
+import { useScreenStyles } from "../providers/screen/styles";
 import { ScrollSettleProvider } from "../providers/scroll-settle.provider";
 import type { TransitionAwareProps } from "../types/screen.types";
 
@@ -135,11 +138,36 @@ export function createTransitionAwareComponent<P extends object>(
 		} = props as any;
 
 		const animatedRef = useAnimatedRef<View>();
+		const { elementStylesMap } = useScreenStyles();
+		const associatedId = sharedBoundTag || styleId;
 
-		const { associatedStyles, associatedProps } = useAssociatedStyles({
-			id: sharedBoundTag || styleId,
-			style,
-			resetTransformOnUnset: !!sharedBoundTag,
+		const associatedStyles = useAnimatedStyle(() => {
+			"worklet";
+
+			if (!associatedId) {
+				return { opacity: 1 };
+			}
+
+			const baseStyle =
+				(elementStylesMap.value[associatedId]?.style as
+					| Record<string, any>
+					| undefined) ?? (NO_STYLES as Record<string, any>);
+
+			if ("opacity" in baseStyle) {
+				return baseStyle;
+			}
+
+			return { ...baseStyle, opacity: 1 };
+		});
+
+		const associatedProps = useAnimatedProps(() => {
+			"worklet";
+
+			if (!associatedId) {
+				return NO_PROPS;
+			}
+
+			return elementStylesMap.value[associatedId]?.props ?? NO_PROPS;
 		});
 
 		return (

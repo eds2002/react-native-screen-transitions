@@ -9,7 +9,7 @@ import Animated, {
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useGestureContext } from "../../../providers/gestures";
 import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useScreenStyles } from "../../../providers/screen/styles.provider";
+import { useScreenStyles } from "../../../providers/screen/styles";
 import { resolveNavigationMaskEnabled } from "../../../utils/resolve-screen-transition-options";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
@@ -23,7 +23,7 @@ type Props = {
 
 export const ContentLayer = memo(
 	({ children, pointerEvents, isBackdropActive }: Props) => {
-		const { stylesMap } = useScreenStyles();
+		const { layerStylesMap } = useScreenStyles();
 		const { current } = useDescriptors();
 
 		const gestureContext = useGestureContext();
@@ -39,12 +39,12 @@ export const ContentLayer = memo(
 
 		const animatedContentStyle = useAnimatedStyle(() => {
 			"worklet";
-			return stylesMap.value.content?.style || NO_STYLES;
+			return layerStylesMap.value.content?.style || NO_STYLES;
 		});
 
 		const animatedContentProps = useAnimatedProps(() => {
 			"worklet";
-			return stylesMap.value.content?.props ?? NO_PROPS;
+			return layerStylesMap.value.content?.props ?? NO_PROPS;
 		});
 
 		return (
