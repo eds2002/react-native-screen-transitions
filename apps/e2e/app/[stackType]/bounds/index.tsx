@@ -50,6 +50,12 @@ const BOUNDS_EXAMPLES = [
 			"bounds({ id }).navigation.zoom() with simple id-only matching",
 	},
 	{
+		id: "music-player",
+		title: "Music Player Zoom",
+		description:
+			"Playlist row with nested Boundary.Target artwork -> fullscreen Boundary.View artwork",
+	},
+	{
 		id: "zoom-id-nested",
 		title: "Nested Navigation Zoom ID",
 		description:

@@ -36,7 +36,7 @@ function ZoomSourceCard({
 	const cardWidth = item.cols === 2 ? colWidth * 2 + GAP : colWidth;
 
 	return (
-		<Transition.Boundary.Pressable
+		<Transition.Boundary.Trigger
 			group={ZOOM_GROUP}
 			id={item.id}
 			style={[
@@ -57,7 +57,7 @@ function ZoomSourceCard({
 		>
 			<Text style={styles.title}>{item.title}</Text>
 			<Text style={styles.subtitle}>{item.subtitle}</Text>
-		</Transition.Boundary.Pressable>
+		</Transition.Boundary.Trigger>
 	);
 }
 

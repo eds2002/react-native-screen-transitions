@@ -3,6 +3,7 @@ import {
 	useAnimatedReaction,
 	useSharedValue,
 } from "react-native-reanimated";
+import { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { MaybeMeasureAndStoreParams } from "../types";
@@ -13,7 +14,6 @@ export const usePendingDestinationRetryMeasurement = (params: {
 	enabled: boolean;
 	currentScreenKey: string;
 	expectedSourceScreenKey?: string;
-	progress: SharedValue<number>;
 	animating: SharedValue<number>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
@@ -22,10 +22,11 @@ export const usePendingDestinationRetryMeasurement = (params: {
 		enabled,
 		currentScreenKey,
 		expectedSourceScreenKey,
-		progress,
 		animating,
 		maybeMeasureAndStore,
 	} = params;
+
+	const progress = AnimationStore.getValue(currentScreenKey, "progress");
 
 	const retryCount = useSharedValue(0);
 	const MAX_RETRIES = 4;

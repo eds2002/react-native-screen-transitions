@@ -37,7 +37,7 @@ function NestedZoomGroupSourceCard({
 	const cardHeight = isWide ? 172 : 212;
 
 	return (
-		<Transition.Boundary.Pressable
+		<Transition.Boundary.Trigger
 			group={NESTED_ZOOM_GROUP}
 			id={item.id}
 			anchor="center"
@@ -59,7 +59,7 @@ function NestedZoomGroupSourceCard({
 				<Text style={styles.cardTitle}>{item.title}</Text>
 				<Text style={styles.cardSubtitle}>{item.subtitle}</Text>
 			</View>
-		</Transition.Boundary.Pressable>
+		</Transition.Boundary.Trigger>
 	);
 }
 

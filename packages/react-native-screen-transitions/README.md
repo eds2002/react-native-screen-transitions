@@ -19,7 +19,7 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 
 - **Auto snap sizing** with `snapPoints: ["auto"]` and `layouts.content`
 - **Explicit deferred first frames** by returning `"defer"` from `screenStyleInterpolator`
-- **Compound bounds components** via `Transition.Boundary.View` and `Transition.Boundary.Pressable`
+- **Compound bounds components** via `Transition.Boundary.View`, `Transition.Boundary.Trigger`, and `Transition.Boundary.Target`
 - **Custom boundary factories** via `Transition.createBoundaryComponent(..., { alreadyAnimated: true })`
 - **Navigation-style bounds zoom** through `bounds({ id }).navigation.zoom()`
 - **Ancestor targeting** in `useScreenGesture()` and `useScreenAnimation()`
@@ -529,12 +529,31 @@ Animate elements between screens by tagging them. In 3.4, the recommended API is
 ### 1. Tag the Source
 
 ```tsx
-<Transition.Boundary.Pressable
+<Transition.Boundary.Trigger
   id="avatar"
   onPress={() => navigation.navigate("Profile")}
 >
   <Image source={avatar} style={{ width: 50, height: 50 }} />
-</Transition.Boundary.Pressable>
+</Transition.Boundary.Trigger>
+```
+
+If the boundary owner is larger than the visual element you want to match,
+wrap the measured descendant in `Transition.Boundary.Target`:
+
+```tsx
+<Transition.Boundary.Trigger
+  id="avatar"
+  onPress={() => navigation.navigate("Profile")}
+  style={styles.card}
+>
+  <Transition.Boundary.Target>
+    <Image source={avatar} style={styles.image} />
+  </Transition.Boundary.Target>
+
+  <View style={styles.copy}>
+    <Text style={styles.title}>Profile</Text>
+  </View>
+</Transition.Boundary.Trigger>
 ```
 
 ### 2. Tag the Destination
@@ -625,7 +644,8 @@ const TabBar = ({ focusedIndex, progress }) => {
 | `Transition.ScrollView` | ScrollView with gesture coordination   |
 | `Transition.FlatList`   | FlatList with gesture coordination     |
 | `Transition.Boundary.View` | Explicit bounds destination/source registration |
-| `Transition.Boundary.Pressable` | Pressable boundary that captures source bounds on press |
+| `Transition.Boundary.Trigger` | Pressable boundary owner that captures source bounds on press |
+| `Transition.Boundary.Target` | Optional nested measurement target inside a boundary owner |
 | `Transition.MaskedView` | For reveal effects (requires native)   |
 
 Helper exports:

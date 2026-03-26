@@ -8,14 +8,14 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
-import { ZOOM_ID_ITEMS, type ZoomIdItem } from "./constants";
 import { useTheme } from "@/theme";
+import { ZOOM_ID_ITEMS, type ZoomIdItem } from "./constants";
 
 function ZoomIdCard({ item }: { item: ZoomIdItem }) {
 	const stackType = useResolvedStackType();
 
 	return (
-		<Transition.Boundary.Pressable
+		<Transition.Boundary.Trigger
 			id={item.id}
 			scaleMode="uniform"
 			anchor="top"
@@ -37,7 +37,7 @@ function ZoomIdCard({ item }: { item: ZoomIdItem }) {
 					<Text style={styles.cardLocation}>{item.location}</Text>
 				</View>
 			</View>
-		</Transition.Boundary.Pressable>
+		</Transition.Boundary.Trigger>
 	);
 }
 

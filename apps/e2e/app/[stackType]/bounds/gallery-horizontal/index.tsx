@@ -39,7 +39,7 @@ function HorizontalGalleryCard({
 	onPressItem: (id: string) => void;
 }) {
 	return (
-		<Transition.Boundary.Pressable
+		<Transition.Boundary.Trigger
 			group={HORIZONTAL_GALLERY_GROUP}
 			scaleMode="uniform"
 			id={item.id}
@@ -59,7 +59,7 @@ function HorizontalGalleryCard({
 				style={styles.image}
 				contentFit="cover"
 			/>
-		</Transition.Boundary.Pressable>
+		</Transition.Boundary.Trigger>
 	);
 }
 

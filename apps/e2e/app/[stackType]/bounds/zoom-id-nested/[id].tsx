@@ -19,7 +19,7 @@ function RelatedCard({ item }: { item: NestedZoomIdItem }) {
 	const stackType = useResolvedStackType();
 
 	return (
-		<Transition.Boundary.Pressable
+		<Transition.Boundary.Trigger
 			id={item.id}
 			scaleMode="uniform"
 			anchor="top"
@@ -35,7 +35,7 @@ function RelatedCard({ item }: { item: NestedZoomIdItem }) {
 				<Text style={styles.relatedTitle}>{item.title}</Text>
 				<Text style={styles.relatedSubtitle}>{item.subtitle}</Text>
 			</View>
-		</Transition.Boundary.Pressable>
+		</Transition.Boundary.Trigger>
 	);
 }
 

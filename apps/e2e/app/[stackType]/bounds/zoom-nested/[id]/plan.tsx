@@ -22,7 +22,7 @@ function RelatedCard({ item }: { item: NestedZoomGroupItem }) {
 	const stackType = useResolvedStackType();
 
 	return (
-		<Transition.Boundary.Pressable
+		<Transition.Boundary.Trigger
 			group={NESTED_ZOOM_GROUP}
 			id={item.id}
 			anchor="center"
@@ -38,7 +38,7 @@ function RelatedCard({ item }: { item: NestedZoomGroupItem }) {
 				<Text style={styles.relatedTitle}>{item.title}</Text>
 				<Text style={styles.relatedSubtitle}>{item.subtitle}</Text>
 			</View>
-		</Transition.Boundary.Pressable>
+		</Transition.Boundary.Trigger>
 	);
 }
 

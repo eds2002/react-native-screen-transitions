@@ -2,6 +2,7 @@ import {
 	type StyleProps,
 	useAnimatedProps,
 	useAnimatedStyle,
+	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../constants";
@@ -155,11 +156,11 @@ export const useAssociatedStyles = ({
 	const emptyGraceFrameCount = useSharedValue(0);
 	const lastResolvedBase = useSharedValue<Record<string, any> | null>(null);
 
-	const associatedStyles = useAnimatedStyle(() => {
+	const resolvedAssociatedBase = useDerivedValue<Record<string, any>>(() => {
 		"worklet";
 
 		if (!id) {
-			return NO_STYLES;
+			return NO_STYLES as Record<string, any>;
 		}
 
 		// Check local slot first, then fall back to parent
@@ -265,7 +266,12 @@ export const useAssociatedStyles = ({
 			}
 		}
 
-		const mergedBase = { ...unsetPatch, ...resolvedBase };
+		return { ...unsetPatch, ...resolvedBase };
+	});
+
+	const associatedStyles = useAnimatedStyle(() => {
+		"worklet";
+		const mergedBase = resolvedAssociatedBase.value;
 
 		let opacity = 1;
 
@@ -278,6 +284,16 @@ export const useAssociatedStyles = ({
 		}
 
 		return { ...mergedBase, opacity };
+	});
+
+	const associatedStackingStyles = useAnimatedStyle(() => {
+		"worklet";
+		const mergedBase = resolvedAssociatedBase.value;
+
+		return {
+			zIndex: (mergedBase.zIndex as number | undefined) ?? 0,
+			elevation: (mergedBase.elevation as number | undefined) ?? 0,
+		};
 	});
 
 	const associatedProps = useAnimatedProps(() => {
@@ -293,5 +309,5 @@ export const useAssociatedStyles = ({
 		return (ownSlot || ancestorSlot)?.props ?? NO_PROPS;
 	});
 
-	return { associatedStyles, associatedProps };
+	return { associatedStyles, associatedStackingStyles, associatedProps };
 };

@@ -7,6 +7,7 @@ import {
 	type StyleProps,
 } from "react-native-reanimated";
 import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
+import { useLayoutAnchorContext } from "../../../providers/layout-anchor.provider";
 import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
@@ -15,11 +16,6 @@ import {
 	getMeasurementIntentFlags,
 	resolveMeasurementWritePlan,
 } from "./helpers/measurement-rules";
-
-type LayoutAnchor = {
-	correctMeasurement: (measured: MeasuredDimensions) => MeasuredDimensions;
-	isMeasurementInViewport?: (measured: MeasuredDimensions) => boolean;
-} | null;
 
 const SNAPSHOT_EPSILON = 0.5;
 
@@ -49,8 +45,7 @@ export const useBoundaryMeasureAndStore = (params: {
 	ancestorNavigatorKeys?: string[];
 	isAnimating: SharedValue<number>;
 	preparedStyles: StyleProps;
-	animatedRef: AnimatedRef<View>;
-	layoutAnchor: LayoutAnchor;
+	measuredAnimatedRef: AnimatedRef<View>;
 }) => {
 	const {
 		enabled,
@@ -62,9 +57,10 @@ export const useBoundaryMeasureAndStore = (params: {
 		ancestorNavigatorKeys,
 		isAnimating,
 		preparedStyles,
-		animatedRef,
-		layoutAnchor,
+		measuredAnimatedRef,
 	} = params;
+
+	const layoutAnchor = useLayoutAnchorContext();
 
 	return useStableCallbackValue(
 		({ intent }: MaybeMeasureAndStoreParams = {}) => {
@@ -127,7 +123,7 @@ export const useBoundaryMeasureAndStore = (params: {
 				return;
 			}
 
-			const measured = measure(animatedRef);
+			const measured = measure(measuredAnimatedRef);
 			if (!measured) return;
 
 			const correctedMeasured = layoutAnchor

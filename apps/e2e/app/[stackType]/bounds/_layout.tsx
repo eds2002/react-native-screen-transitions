@@ -42,6 +42,10 @@ export default function BoundsLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<StackNavigator.Screen
+				name="music-player"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
 				name="zoom-id-nested"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>

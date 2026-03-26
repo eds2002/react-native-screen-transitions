@@ -39,7 +39,7 @@ function GalleryThumbnail({
 	const thumbHeight = columnWidth / aspectRatio;
 
 	return (
-		<Transition.Boundary.Pressable
+		<Transition.Boundary.Trigger
 			id={item.id}
 			group={GALLERY_GROUP}
 			scaleMode="uniform"
@@ -59,7 +59,7 @@ function GalleryThumbnail({
 				style={styles.image}
 				contentFit="cover"
 			/>
-		</Transition.Boundary.Pressable>
+		</Transition.Boundary.Trigger>
 	);
 }
 

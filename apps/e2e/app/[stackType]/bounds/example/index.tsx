@@ -37,7 +37,7 @@ export default function NestedBoundsExampleIndex() {
 
 			<View style={styles.grid}>
 				{NESTED_BOUNDS_ITEMS.map((item) => (
-					<Transition.Boundary.Pressable
+					<Transition.Boundary.Trigger
 						key={item.id}
 						id={item.id}
 						scaleMode="uniform"
@@ -69,7 +69,7 @@ export default function NestedBoundsExampleIndex() {
 							<Text style={styles.title}>{item.title}</Text>
 							<Text style={styles.subtitle}>{item.subtitle}</Text>
 						</View>
-					</Transition.Boundary.Pressable>
+					</Transition.Boundary.Trigger>
 				))}
 			</View>
 
