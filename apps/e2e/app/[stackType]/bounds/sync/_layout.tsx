@@ -26,15 +26,9 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 	"worklet";
 
 	const testCase = resolveActiveCase();
-	const sourceBoundary = testCase.source.boundary;
 	const destinationBoundary = testCase.destination.boundary;
-	const activeBoundary = focused ? destinationBoundary : sourceBoundary;
 	const activeStyleOptions = {
 		id: BOUNDARY_TAG,
-		method: activeBoundary?.method,
-		anchor: activeBoundary?.anchor,
-		scaleMode: activeBoundary?.scaleMode,
-		target: activeBoundary?.target,
 	};
 
 	if (destinationBoundary?.method === "content") {
@@ -43,7 +37,12 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 
 			return {
 				content: {
-					style: contentStyles,
+					style: {
+						...contentStyles,
+						borderWidth: 3,
+						borderColor: "red",
+						borderStyle: "dashed",
+					},
 				},
 				backdrop: {
 					style: {

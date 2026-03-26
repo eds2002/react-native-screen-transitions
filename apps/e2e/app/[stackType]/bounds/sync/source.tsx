@@ -12,13 +12,13 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 import {
 	activeCaseId,
 	BOUNDARY_TAG,
 	getBoxPositionStyle,
 	getCaseById,
 } from "./constants";
-import { useTheme } from "@/theme";
 
 const FORCED_TOP_INSET = 59;
 const HEADER_HEIGHT_ESTIMATE = 60;
@@ -32,17 +32,19 @@ export default function BoundsSyncSource() {
 
 	if (!testCase) {
 		return (
-			<View style={[styles.container, { paddingTop: FORCED_TOP_INSET, backgroundColor: theme.bg }]}>
+			<View
+				style={[
+					styles.container,
+					{ paddingTop: FORCED_TOP_INSET, backgroundColor: theme.bg },
+				]}
+			>
 				<ScreenHeader title="Unknown Case" />
 			</View>
 		);
 	}
 
 	const { source } = testCase;
-	const destination = testCase.destination;
 	const sourceBoundary = source.boundary;
-	const sourceAnchor = sourceBoundary.anchor ?? "center";
-	const destinationAnchor = destination.boundary.anchor ?? "center";
 	const containerHeight = height - FORCED_TOP_INSET - HEADER_HEIGHT_ESTIMATE;
 	const positionStyle = getBoxPositionStyle(
 		source.position,
@@ -62,49 +64,41 @@ export default function BoundsSyncSource() {
 			: (sourceBoundary?.method ?? "transform");
 
 	return (
-		<View style={[styles.container, { paddingTop: FORCED_TOP_INSET, backgroundColor: theme.bg }]}>
+		<View
+			style={[
+				styles.container,
+				{ paddingTop: FORCED_TOP_INSET, backgroundColor: theme.bg },
+			]}
+		>
 			<ScreenHeader
 				title={`Source: ${testCase.title}`}
 				subtitle={`${source.width}x${source.height} @ ${source.position}`}
 			/>
-			<Text style={[styles.concernText, { color: theme.textSecondary }]}>
-				Concern: Element transition, not navigation transition
-			</Text>
-			<Text style={[styles.anchorNoteText, { color: theme.textSecondary }]}>
-				Anchor selects the alignment point (e.g. center), not a fixed top-left
-				lock.
-			</Text>
-			<Text style={[styles.anchorPairText, { color: theme.textSecondary }]}>
-				sourceAnchor: {sourceAnchor} | destinationAnchor: {destinationAnchor}
+
+			<Text style={[styles.behaviorText, { color: theme.textSecondary }]}>
+				{source.description}
 			</Text>
 			<View style={styles.arena}>
-				<Pressable
-					onPress={() => {
-						router.push(
-							buildStackPath(stackType, "bounds/sync/destination") as never,
-						);
-					}}
+				<Transition.Boundary.View
+					id={BOUNDARY_TAG}
+					method={sourceMethod}
+					target={sourceBoundary?.target}
+					anchor={sourceBoundary?.anchor}
+					scaleMode={sourceBoundary?.scaleMode}
+					style={[
+						styles.box,
+						{
+							width: source.width,
+							height: source.height,
+							backgroundColor: theme.actionButton,
+						},
+						positionStyle,
+					]}
 				>
-					<Transition.Boundary.View
-						id={BOUNDARY_TAG}
-						mode={needsExplicitMode ? "source" : undefined}
-						method={sourceMethod}
-						target={sourceBoundary?.target}
-						anchor={sourceBoundary?.anchor}
-						scaleMode={sourceBoundary?.scaleMode}
-						style={[
-							styles.box,
-							{
-								width: source.width,
-								height: source.height,
-								backgroundColor: theme.actionButton,
-							},
-							positionStyle,
-						]}
-					>
-						<Text style={[styles.boxLabel, { color: theme.actionButtonText }]}>SRC</Text>
-					</Transition.Boundary.View>
-				</Pressable>
+					<Text style={[styles.boxLabel, { color: theme.actionButtonText }]}>
+						SRC
+					</Text>
+				</Transition.Boundary.View>
 
 				{!needsExplicitMode && (
 					<View
@@ -128,6 +122,33 @@ export default function BoundsSyncSource() {
 					</View>
 				)}
 			</View>
+
+			<View style={styles.floatingContainer}>
+				<Pressable
+					onPress={() => {
+						router.push(
+							buildStackPath(stackType, "bounds/sync/destination") as never,
+						);
+					}}
+					style={[
+						styles.floatingButton,
+						{ backgroundColor: theme.actionButton },
+					]}
+				>
+					<Text
+						style={[
+							styles.floatingButtonText,
+							{ color: theme.actionButtonText },
+						]}
+					>
+						Navigate
+					</Text>
+				</Pressable>
+				<Text style={[styles.floatingNote, { color: theme.textTertiary }]}>
+					Bounds can work without a .Trigger. However, for most cases this is
+					not recommended.
+				</Text>
+			</View>
 		</View>
 	);
 }
@@ -140,23 +161,11 @@ const styles = StyleSheet.create({
 		flex: 1,
 		position: "relative",
 	},
-	concernText: {
-		paddingHorizontal: 16,
-		paddingBottom: 4,
-		fontSize: 11,
-		fontFamily: "monospace",
-	},
-	anchorNoteText: {
-		paddingHorizontal: 16,
-		paddingBottom: 4,
-		fontSize: 11,
-		fontFamily: "monospace",
-	},
-	anchorPairText: {
+	behaviorText: {
 		paddingHorizontal: 16,
 		paddingBottom: 10,
-		fontSize: 11,
-		fontFamily: "monospace",
+		fontSize: 12,
+		lineHeight: 17,
 	},
 	box: {
 		position: "absolute",
@@ -181,5 +190,27 @@ const styles = StyleSheet.create({
 		color: "rgba(255, 255, 255, 0.2)",
 		fontWeight: "600",
 		fontSize: 12,
+	},
+	floatingContainer: {
+		position: "absolute",
+		bottom: 40,
+		alignSelf: "center",
+		alignItems: "center",
+		gap: 8,
+	},
+	floatingButton: {
+		paddingVertical: 14,
+		paddingHorizontal: 28,
+		borderRadius: 999,
+	},
+	floatingNote: {
+		fontSize: 11,
+		fontFamily: "monospace",
+		textAlign: "center",
+		paddingHorizontal: 32,
+	},
+	floatingButtonText: {
+		fontWeight: "600",
+		fontSize: 16,
 	},
 });
