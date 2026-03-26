@@ -193,14 +193,9 @@ export const resolveInitialLayoutMeasurementIntent = (params: {
 
 	if (!enabled) return null;
 	if (!hasSharedBoundTag || hasMeasuredOnLayout) return null;
+	if (!isAnyAnimating) return null;
 
-	if (!isAnyAnimating) {
-		return "snapshot-only";
-	}
-
-	return hasPendingLinkFromSource
-		? ["snapshot-only", "complete-destination"]
-		: "snapshot-only";
+	return hasPendingLinkFromSource ? "complete-destination" : null;
 };
 
 export const resolveGroupActiveMeasurementAction = (params: {

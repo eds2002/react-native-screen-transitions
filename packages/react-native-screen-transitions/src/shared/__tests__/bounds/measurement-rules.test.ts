@@ -183,7 +183,7 @@ describe("bounds measurement rules", () => {
 				isAnyAnimating: false,
 				hasPendingLinkFromSource: false,
 			}),
-		).toBe("snapshot-only");
+		).toBeNull();
 
 		expect(
 			resolveInitialLayoutMeasurementIntent({
@@ -193,7 +193,17 @@ describe("bounds measurement rules", () => {
 				isAnyAnimating: true,
 				hasPendingLinkFromSource: true,
 			}),
-		).toEqual(["snapshot-only", "complete-destination"]);
+		).toBe("complete-destination");
+
+		expect(
+			resolveInitialLayoutMeasurementIntent({
+				enabled: true,
+				hasSharedBoundTag: true,
+				hasMeasuredOnLayout: false,
+				isAnyAnimating: true,
+				hasPendingLinkFromSource: false,
+			}),
+		).toBeNull();
 
 		expect(
 			resolveInitialLayoutMeasurementIntent({

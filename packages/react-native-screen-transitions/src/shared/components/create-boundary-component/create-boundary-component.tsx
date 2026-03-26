@@ -33,11 +33,6 @@ import {
 import type { BoundaryComponentProps, BoundaryConfigProps } from "./types";
 import { buildBoundaryMatchKey } from "./utils/build-boundary-match-key";
 
-const setGroupSelectionOnUI = (group: string, id: string) => {
-	"worklet";
-	BoundStore.setGroupActiveId(group, id);
-};
-
 interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;
 }
@@ -244,7 +239,7 @@ export function createBoundaryComponent<P extends object>(
 			(...args: unknown[]) => {
 				// Press path has priority: capture source before user onPress/navigation.
 				if (group) {
-					runOnUI(setGroupSelectionOnUI)(group, String(id));
+					runOnUI(BoundStore.setGroupActiveId)(group, String(id));
 				}
 				runOnUI(maybeMeasureAndStore)({ intent: "capture-source" });
 
