@@ -34,17 +34,19 @@ import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 
-const getSourceBorderRadius = (
-	resolvedPair: ResolvedTransitionPair,
-): number => {
+/* -------------------------------------------------------------------------- */
+/*                               LOCAL HELPERS                                */
+/* -------------------------------------------------------------------------- */
+
+function getSourceBorderRadius(resolvedPair: ResolvedTransitionPair): number {
 	"worklet";
 
 	return typeof resolvedPair.sourceStyles?.borderRadius === "number"
 		? resolvedPair.sourceStyles.borderRadius
 		: 0;
-};
+}
 
-const getZoomContentTarget = ({
+function getZoomContentTarget({
 	explicitTarget,
 	screenLayout,
 	anchor,
@@ -54,7 +56,7 @@ const getZoomContentTarget = ({
 	screenLayout: Layout;
 	anchor: BoundsOptions["anchor"] | undefined;
 	resolvedPair: ResolvedTransitionPair;
-}) => {
+}) {
 	"worklet";
 
 	if (explicitTarget) return explicitTarget;
@@ -90,28 +92,34 @@ const getZoomContentTarget = ({
 		width: screenWidth,
 		height,
 	};
-};
+}
 
-export const buildZoomStyles = ({
+/* -------------------------------------------------------------------------- */
+/*                             BUILD ZOOM STYLES                              */
+/* -------------------------------------------------------------------------- */
+
+export function buildZoomStyles({
 	resolvedTag,
 	zoomOptions,
 	props,
-}: BuildZoomStylesParams): ZoomInterpolatedStyle => {
+}: BuildZoomStylesParams): ZoomInterpolatedStyle {
 	"worklet";
 
 	if (!resolvedTag) return {};
 
+	/* ------------------------------ Shared Setup ------------------------------ */
+
 	const explicitTarget = zoomOptions?.target;
 	const debug = zoomOptions?.DEBUG === true;
-
 	const focused = props.focused;
 	const progress = props.progress;
+	const screenLayout = props.layouts.screen;
+	const isEnteringTransition = !props.next;
 	const currentRouteKey = props.current?.route.key;
 	const previousRouteKey = props.previous?.route.key;
 	const nextRouteKey = props.next?.route.key;
-	const entering = !props.next;
-	const screenLayout = props.layouts.screen;
 	const resolvedZoomAnchor = getZoomAnchor(explicitTarget);
+
 	const zoomComputeParams = {
 		id: resolvedTag,
 		previous: props.previous,
@@ -120,6 +128,7 @@ export const buildZoomStyles = ({
 		progress,
 		dimensions: screenLayout,
 	} as const;
+
 	const baseRawOptions = {
 		id: resolvedTag,
 		raw: true,
@@ -130,31 +139,40 @@ export const buildZoomStyles = ({
 		currentScreenKey: currentRouteKey,
 		previousScreenKey: previousRouteKey,
 		nextScreenKey: nextRouteKey,
-		entering,
+		entering: isEnteringTransition,
 	});
 
 	const sourceBorderRadius = getSourceBorderRadius(resolvedPair);
 	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
-
-	const focusedVisibilityStyles = {
+	const sourceVisibilityStyle = {
 		[resolvedTag]: VISIBLE_STYLE,
 	} satisfies TransitionInterpolatedStyle;
-	const focusedContainerStyleId = props.navigationMaskEnabled
+	const focusedContentSlot = props.navigationMaskEnabled
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID
 		: "content";
+
+	/* --------------------------- Missing Source Guard -------------------------- */
 
 	// To avoid initial flickering, we'll want to hide if there are no source bounds
 	// But to also avoid scenarios where activeId changes in dst and theres a failed measurement,
 	// we should only hide if entering and there is no source bounds.
 	if (!resolvedPair.sourceBounds && props.active.entering) {
 		return {
-			[focusedContainerStyleId]: HIDDEN_STYLE,
+			[focusedContentSlot]: HIDDEN_STYLE,
 		};
 	}
+
+	/* --------------------------- Gesture / Drag Values ------------------------- */
 
 	const normX = props.active.gesture.normX;
 	const normY = props.active.gesture.normY;
 	const initialDirection = props.active.gesture.direction;
+	const isHorizontalDismiss =
+		initialDirection === "horizontal" ||
+		initialDirection === "horizontal-inverted";
+	const isVerticalDismiss =
+		initialDirection === "vertical" || initialDirection === "vertical-inverted";
+
 	const dragX = normalizedToTranslation({
 		normalized: normX,
 		dimension: screenLayout.width,
@@ -165,35 +183,33 @@ export const buildZoomStyles = ({
 		dimension: screenLayout.height,
 		resistance: ZOOM_DRAG_RESISTANCE,
 	});
-	const dragXScale =
-		initialDirection === "horizontal" ||
-		initialDirection === "horizontal-inverted"
-			? resolveDirectionalDragScale({
-					normalized: normX,
-					dismissDirection:
-						initialDirection === "horizontal-inverted"
-							? "negative"
-							: "positive",
-					shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
-					growMax: ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
-					exponent: 2,
-				})
-			: IDENTITY_DRAG_SCALE_OUTPUT[0];
-	const dragYScale =
-		initialDirection === "vertical" || initialDirection === "vertical-inverted"
-			? resolveDirectionalDragScale({
-					normalized: normY,
-					dismissDirection:
-						initialDirection === "vertical-inverted" ? "negative" : "positive",
-					shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
-					growMax: ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
-					exponent: 2,
-				})
-			: IDENTITY_DRAG_SCALE_OUTPUT[1];
+
+	const dragXScale = isHorizontalDismiss
+		? resolveDirectionalDragScale({
+				normalized: normX,
+				dismissDirection:
+					initialDirection === "horizontal-inverted" ? "negative" : "positive",
+				shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
+				growMax: ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
+				exponent: 2,
+			})
+		: IDENTITY_DRAG_SCALE_OUTPUT[0];
+	const dragYScale = isVerticalDismiss
+		? resolveDirectionalDragScale({
+				normalized: normY,
+				dismissDirection:
+					initialDirection === "vertical-inverted" ? "negative" : "positive",
+				shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
+				growMax: ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
+				exponent: 2,
+			})
+		: IDENTITY_DRAG_SCALE_OUTPUT[1];
 	const dragScale = combineScales(dragXScale, dragYScale);
 
+	/* ----------------------------- Focused Screen ----------------------------- */
+
 	if (focused) {
-		const contentTarget = getZoomContentTarget({
+		const focusedContentTarget = getZoomContentTarget({
 			explicitTarget,
 			screenLayout,
 			anchor: ZOOM_SHARED_OPTIONS.anchor,
@@ -206,7 +222,7 @@ export const buildZoomStyles = ({
 				...baseRawOptions,
 				anchor: resolvedZoomAnchor,
 				method: "content",
-				target: contentTarget,
+				target: focusedContentTarget,
 			},
 			resolvedPair,
 		) as Record<string, unknown>;
@@ -247,6 +263,7 @@ export const buildZoomStyles = ({
 		const contentScale = toNumber(contentRaw.scale, 1) * dragScale;
 		const maskTranslateX = toNumber(maskRaw.translateX) + dragX - left;
 		const maskTranslateY = toNumber(maskRaw.translateY) + dragY - top;
+
 		const focusedContentStyle = {
 			opacity: focusedFade,
 			transform: [
@@ -259,10 +276,10 @@ export const buildZoomStyles = ({
 		};
 
 		const focusedStyles: ZoomInterpolatedStyle = {
-			[focusedContainerStyleId]: {
+			[focusedContentSlot]: {
 				style: focusedContentStyle,
 			},
-			...focusedVisibilityStyles,
+			...sourceVisibilityStyle,
 		};
 
 		if (props.navigationMaskEnabled) {
@@ -283,14 +300,18 @@ export const buildZoomStyles = ({
 		return focusedStyles;
 	}
 
+	/* ---------------------------- Unfocused Screen ---------------------------- */
+
 	const unfocusedFade = props.active?.closing
 		? interpolate(progress, [1.6, 2], [1, debug ? 1 : 0], "clamp")
 		: interpolate(progress, [1, 1.5], [1, debug ? 1 : 0], "clamp");
-
 	const unfocusedScale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
 	const isUnfocusedIdle = props.active.settled === 1;
 	const shouldHideUnfocusedIdle = isUnfocusedIdle && !debug;
-	const elementTarget =
+	const shouldFreezeUnfocusedElement =
+		props.active.logicallySettled && !props.active.closing;
+
+	const unfocusedElementTarget =
 		explicitTarget !== undefined || resolvedPair.destinationBounds
 			? getZoomContentTarget({
 					explicitTarget,
@@ -307,10 +328,11 @@ export const buildZoomStyles = ({
 			anchor: resolvedZoomAnchor,
 			method: "transform",
 			space: "relative",
-			target: elementTarget,
+			target: unfocusedElementTarget,
 		},
 		resolvedPair,
 	) as Record<string, unknown>;
+
 	const boundTargetCenterX =
 		explicitTarget === "bound" && resolvedPair.destinationBounds
 			? resolvedPair.destinationBounds.pageX +
@@ -321,16 +343,18 @@ export const buildZoomStyles = ({
 			? resolvedPair.destinationBounds.pageY +
 				resolvedPair.destinationBounds.height / 2
 			: undefined;
+
 	const elementCenterX =
 		boundTargetCenterX ??
-		(typeof elementTarget === "object"
-			? elementTarget.pageX + elementTarget.width / 2
+		(typeof unfocusedElementTarget === "object"
+			? unfocusedElementTarget.pageX + unfocusedElementTarget.width / 2
 			: screenLayout.width / 2);
 	const elementCenterY =
 		boundTargetCenterY ??
-		(typeof elementTarget === "object"
-			? elementTarget.pageY + elementTarget.height / 2
+		(typeof unfocusedElementTarget === "object"
+			? unfocusedElementTarget.pageY + unfocusedElementTarget.height / 2
 			: screenLayout.height / 2);
+
 	const scaleShiftX = computeCenterScaleShift({
 		center: elementCenterX,
 		containerCenter: screenLayout.width / 2,
@@ -341,6 +365,7 @@ export const buildZoomStyles = ({
 		containerCenter: screenLayout.height / 2,
 		scale: dragScale,
 	});
+
 	const compensatedGestureX = composeCompensatedTranslation({
 		gesture: dragX,
 		parentScale: unfocusedScale,
@@ -353,12 +378,14 @@ export const buildZoomStyles = ({
 		centerShift: scaleShiftY,
 		epsilon: EPSILON,
 	});
+
 	const elementTranslateX =
 		toNumber(elementRaw.translateX) + compensatedGestureX;
 	const elementTranslateY =
 		toNumber(elementRaw.translateY) + compensatedGestureY;
 	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
 	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
+
 	const resolvedElementStyle = shouldHideUnfocusedIdle
 		? {
 				transform: [
@@ -374,28 +401,16 @@ export const buildZoomStyles = ({
 		: {
 				transform: [
 					{
-						translateX:
-							props.active.logicallySettled && !props.active.closing
-								? 0
-								: elementTranslateX,
+						translateX: shouldFreezeUnfocusedElement ? 0 : elementTranslateX,
 					},
 					{
-						translateY:
-							props.active.logicallySettled && !props.active.closing
-								? 0
-								: elementTranslateY,
+						translateY: shouldFreezeUnfocusedElement ? 0 : elementTranslateY,
 					},
 					{
-						scaleX:
-							props.active.logicallySettled && !props.active.closing
-								? 1
-								: elementScaleX,
+						scaleX: shouldFreezeUnfocusedElement ? 1 : elementScaleX,
 					},
 					{
-						scaleY:
-							props.active.logicallySettled && !props.active.closing
-								? 1
-								: elementScaleY,
+						scaleY: shouldFreezeUnfocusedElement ? 1 : elementScaleY,
 					},
 				],
 				opacity: debug ? 0.5 : unfocusedFade,
@@ -413,4 +428,4 @@ export const buildZoomStyles = ({
 			style: resolvedElementStyle,
 		},
 	};
-};
+}
