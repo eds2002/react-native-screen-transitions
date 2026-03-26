@@ -18,7 +18,6 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 ## What's New In 3.4
 
 - **Auto snap sizing** with `snapPoints: ["auto"]` and `layouts.content`
-- **Explicit deferred first frames** by returning `"defer"` from `screenStyleInterpolator`
 - **Compound bounds components** via `Transition.Boundary.View`, `Transition.Boundary.Trigger`, and `Transition.Boundary.Target`
 - **Custom boundary factories** via `Transition.createBoundaryComponent(..., { alreadyAnimated: true })`
 - **Navigation-style bounds zoom** through `bounds({ id }).navigation.zoom()`
@@ -218,14 +217,14 @@ return {
 };
 ```
 
-Return `"defer"` to hide the screen's visual subtree until you have a safe first frame:
+Return `null`, `undefined`, or `{}` when you want an interpolator frame to apply no transition styles:
 
 ```tsx
 screenStyleInterpolator: ({ bounds }) => {
   "worklet";
 
   const snapshot = bounds.getSnapshot("hero");
-  if (!snapshot) return "defer";
+  if (!snapshot) return null;
 
   return {
     content: {

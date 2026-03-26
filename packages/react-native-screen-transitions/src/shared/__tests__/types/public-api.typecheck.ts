@@ -91,10 +91,6 @@ const precedenceOptions: ScreenTransitionConfig = {
 	sheetScrollGestureBehavior: "expand-and-collapse",
 	expandViaScrollView: false,
 };
-const deferredInterpolatorOptions: ScreenTransitionConfig = {
-	screenStyleInterpolator: () => "defer",
-};
-
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
 };
@@ -135,7 +131,6 @@ export const publicApiTypecheck = {
 	initialMountAnimationOptions,
 	deprecatedAliasOptions,
 	precedenceOptions,
-	deferredInterpolatorOptions,
 	emptyInterpolatorOptions,
 	blankStackFactoryOptions,
 	defaultBlankStack,

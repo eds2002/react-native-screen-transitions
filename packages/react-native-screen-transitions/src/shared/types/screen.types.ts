@@ -83,10 +83,8 @@ export type ScreenTransitionConfig = {
 	/**
 	 * The user-provided function to calculate styles based on animation progress.
 	 *
-	 * Return `null` to explicitly defer rendering of the screen's visual subtree
-	 * until a later frame. This is useful for transitions such as
-	 * `bounds().navigation.zoom()` where the screen should stay hidden until the
-	 * interpolator has enough state to produce a safe first frame.
+	 * Return `null`, `undefined`, or `{}` to apply no transition styles for the
+	 * current frame.
 	 */
 	screenStyleInterpolator?: ScreenStyleInterpolator;
 

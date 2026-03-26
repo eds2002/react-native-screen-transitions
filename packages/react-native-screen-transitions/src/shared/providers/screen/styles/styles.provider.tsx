@@ -13,12 +13,7 @@ import {
 	buildResolvedStyleMap,
 	type StyleKeySet,
 } from "./helpers/build-resolved-style-map";
-import {
-	PASS_THROUGH_STYLE_OUTPUT,
-	resolveEffectiveResolutionMode,
-	resolveInterpolatedStyleOutput,
-	type ScreenStyleResolutionMode,
-} from "./helpers/resolve-interpolated-style-output";
+import { resolveInterpolatedStyleOutput } from "./helpers/resolve-interpolated-style-output";
 import { splitNormalizedStyleMaps } from "./helpers/split-normalized-style-maps";
 
 type Props = {
@@ -28,7 +23,6 @@ type Props = {
 type ScreenStylesContextValue = {
 	layerStylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 	elementStylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
-	resolutionMode: SharedValue<ScreenStyleResolutionMode>;
 };
 
 export const {
@@ -60,7 +54,6 @@ export const {
 		const rawStyleResolution = useDerivedValue<{
 			layerStylesMap: NormalizedTransitionInterpolatedStyle;
 			elementStylesMap: NormalizedTransitionInterpolatedStyle;
-			resolutionMode: ScreenStyleResolutionMode;
 		}>(() => {
 			"worklet";
 			const props = screenInterpolatorProps.value;
@@ -87,7 +80,6 @@ export const {
 				return {
 					layerStylesMap: NO_STYLES,
 					elementStylesMap: NO_STYLES,
-					resolutionMode: PASS_THROUGH_STYLE_OUTPUT.resolutionMode,
 				};
 			}
 
@@ -107,8 +99,7 @@ export const {
 					bounds: boundsAccessor,
 				});
 
-				const { stylesMap, resolutionMode, wasLegacy } =
-					resolveInterpolatedStyleOutput(raw);
+				const { stylesMap, wasLegacy } = resolveInterpolatedStyleOutput(raw);
 
 				const { layerStylesMap, elementStylesMap } =
 					splitNormalizedStyleMaps(stylesMap);
@@ -124,10 +115,6 @@ export const {
 				return {
 					layerStylesMap,
 					elementStylesMap,
-					resolutionMode: resolveEffectiveResolutionMode({
-						resolutionMode,
-						isSettled: current.settled === 1,
-					}),
 				};
 			} catch (err) {
 				if (__DEV__) {
@@ -140,7 +127,6 @@ export const {
 				return {
 					layerStylesMap: NO_STYLES,
 					elementStylesMap: NO_STYLES,
-					resolutionMode: "live" as const,
 				};
 			}
 		});
@@ -175,18 +161,12 @@ export const {
 				return resolvedStylesMap;
 			});
 
-		const resolutionMode = useDerivedValue<ScreenStyleResolutionMode>(() => {
-			"worklet";
-			return rawStyleResolution.value.resolutionMode;
-		});
-
 		const value = useMemo<ScreenStylesContextValue>(() => {
 			return {
 				layerStylesMap,
 				elementStylesMap,
-				resolutionMode,
 			};
-		}, [elementStylesMap, layerStylesMap, resolutionMode]);
+		}, [elementStylesMap, layerStylesMap]);
 
 		return { value, children };
 	},

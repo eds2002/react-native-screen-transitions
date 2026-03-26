@@ -1,6 +1,5 @@
 import { memo } from "react";
 import { StyleSheet, View } from "react-native";
-import { DeferredVisibilityHost } from "./deferred-visibility-host";
 import { useBackdropPointerEvents } from "./hooks/use-backdrop-pointer-events";
 import { BackdropLayer } from "./layers/backdrop";
 import { ContentLayer } from "./layers/content";
@@ -15,7 +14,6 @@ export const ScreenContainer = memo(({ children }: Props) => {
 
 	return (
 		<View style={styles.container} pointerEvents={pointerEvents}>
-			{/*<DeferredVisibilityHost pointerEvents={pointerEvents}>*/}
 			<BackdropLayer
 				isBackdropActive={isBackdropActive}
 				backdropBehavior={backdropBehavior}
@@ -26,7 +24,6 @@ export const ScreenContainer = memo(({ children }: Props) => {
 			>
 				{children}
 			</ContentLayer>
-			{/*</DeferredVisibilityHost>*/}
 		</View>
 	);
 });

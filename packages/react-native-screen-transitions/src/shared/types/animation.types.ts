@@ -209,19 +209,12 @@ export interface ScreenInterpolationProps {
 }
 
 /**
- * Explicit signal for hiding a screen's visual subtree until the interpolator
- * becomes ready for the current transition frame.
- */
-export type DeferredScreenStyleSignal = "defer";
-
-/**
- * Returning `'defer'` explicitly hides the screen's visual subtree until the
- * transition is ready. Returning `null`, `undefined`, or `{}` applies no
- * transition styles for the current frame.
+ * Returning `null`, `undefined`, or `{}` applies no transition styles for the
+ * current frame.
  */
 export type ScreenStyleInterpolator = (
 	props: ScreenInterpolationProps,
-) => TransitionInterpolatedStyle | DeferredScreenStyleSignal | null | undefined;
+) => TransitionInterpolatedStyle | null | undefined;
 
 /**
  * Animated style properties with full autocomplete.
