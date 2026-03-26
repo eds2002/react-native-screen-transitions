@@ -1,4 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import { VISIBLE_STYLE } from "../../../constants";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
@@ -132,6 +133,7 @@ export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 			height,
 			translateX,
 			translateY,
+			...VISIBLE_STYLE,
 		};
 	}
 
@@ -139,6 +141,7 @@ export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 		width,
 		height,
 		transform: [{ translateX }, { translateY }],
+		...VISIBLE_STYLE,
 	};
 }
 
@@ -175,6 +178,7 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 			translateY,
 			width,
 			height,
+			...VISIBLE_STYLE,
 		};
 	}
 
@@ -182,6 +186,7 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 		transform: [{ translateX }, { translateY }],
 		width,
 		height,
+		...VISIBLE_STYLE,
 	};
 }
 
@@ -210,11 +215,13 @@ export function composeTransformAbsolute(
 			translateY,
 			scaleX,
 			scaleY,
+			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
 		transform: [{ translateX }, { translateY }, { scaleX }, { scaleY }],
+		...VISIBLE_STYLE,
 	};
 }
 
@@ -243,6 +250,7 @@ export function composeTransformRelative(
 			translateY,
 			scaleX,
 			scaleY,
+			...VISIBLE_STYLE,
 		};
 	}
 
@@ -255,6 +263,7 @@ export function composeTransformRelative(
 			{ scaleX },
 			{ scaleY },
 		],
+		...VISIBLE_STYLE,
 	};
 }
 
@@ -283,10 +292,12 @@ export function composeContentStyle(params: ContentComposeParams): StyleProps {
 			translateX,
 			translateY,
 			scale,
+			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
 		transform: [{ translateX }, { translateY }, { scale }],
+		...VISIBLE_STYLE,
 	};
 }

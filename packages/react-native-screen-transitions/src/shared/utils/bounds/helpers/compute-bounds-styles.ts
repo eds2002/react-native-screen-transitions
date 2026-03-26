@@ -5,6 +5,7 @@ import {
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 	HIDDEN_STYLE,
+	NO_STYLES,
 } from "../../../constants";
 import {
 	BoundStore,
@@ -127,7 +128,7 @@ export const computeBoundStyles = (
 		if (computeOptions.raw) {
 			return EMPTY_BOUND_HELPER_RESULT_RAW;
 		}
-		return HIDDEN_STYLE;
+		return NO_STYLES;
 	}
 
 	const {
