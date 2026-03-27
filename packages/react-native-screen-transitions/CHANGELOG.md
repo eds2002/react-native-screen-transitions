@@ -1,5 +1,23 @@
 # Changelog
 
+# [3.4.0-alpha.7](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.6...v3.4.0-alpha.7) (2026-03-27)
+
+
+### Bug Fixes
+
+* avoid breaking static navigation ([913a249](https://github.com/eds2002/react-native-screen-transitions/commit/913a2498242dfd2726cd0a1135bf36d4533bee5d))
+* **bounds:** make helpers return visible styles undoing the initial hidden style request ([47714d0](https://github.com/eds2002/react-native-screen-transitions/commit/47714d0fe137a56d0cce9f0eb8553de84f284765))
+
+
+### Features
+
+* build Transition.Boundary.Target to change the target in nested scenarios ([cb82a6c](https://github.com/eds2002/react-native-screen-transitions/commit/cb82a6c4d14eaa52d9577b3a756843c1f1a49536))
+
+
+### Performance Improvements
+
+* **bounds:** skip idle initial layout snapshots on mount ([34b0d7a](https://github.com/eds2002/react-native-screen-transitions/commit/34b0d7a76618dcea4ff02f7786a51869a24aa856))
+
 # [3.4.0-alpha.6](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.4...v3.4.0-alpha.6) (2026-03-25)
 
 
