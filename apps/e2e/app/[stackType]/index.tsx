@@ -1,12 +1,9 @@
 import { router } from "expo-router";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { ScreenHeader } from "@/components/screen-header";
+import { ListScreen } from "@/components/ui";
 import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
-import { useTheme } from "@/theme";
 
 const TEST_FLOWS = [
 	{
@@ -90,78 +87,20 @@ export default function BlankStackIndex() {
 	const stackLabel =
 		stackType === "native-stack" ? "Native Stack" : "Blank Stack";
 	const testPrefix = stackType === "native-stack" ? "native" : "blank";
-	const theme = useTheme();
 
 	return (
-		<SafeAreaView
-			style={[styles.container, { backgroundColor: theme.bg }]}
-			edges={["top"]}
-		>
-			<ScreenHeader
-				title={stackLabel}
-				subtitle={
-					stackType === "native-stack"
-						? "@react-navigation/native-stack with enableTransitions"
-						: "Pure JS stack with full animation control"
-				}
-			/>
-			<ScrollView contentContainerStyle={styles.content}>
-				<View style={styles.list}>
-					{TEST_FLOWS.map((flow) => (
-						<Pressable
-							key={flow.id}
-							testID={`${testPrefix}-${flow.id}`}
-							style={({ pressed }) => [
-								styles.item,
-								{
-									backgroundColor: pressed
-										? theme.cardPressed
-										: theme.card,
-								},
-							]}
-							onPress={() =>
-								router.push(buildStackPath(stackType, `${flow.id}`) as never)
-							}
-						>
-							<Text style={[styles.itemTitle, { color: theme.text }]}>
-								{flow.title}
-							</Text>
-							<Text
-								style={[
-									styles.itemDescription,
-									{ color: theme.textSecondary },
-								]}
-							>
-								{flow.description}
-							</Text>
-						</Pressable>
-					))}
-				</View>
-			</ScrollView>
-		</SafeAreaView>
+		<ListScreen
+			title={stackLabel}
+			subtitle={
+				stackType === "native-stack"
+					? "@react-navigation/native-stack with enableTransitions"
+					: "Pure JS stack with full animation control"
+			}
+			items={TEST_FLOWS}
+			testIdPrefix={testPrefix}
+			onPress={(id) =>
+				router.push(buildStackPath(stackType, id) as never)
+			}
+		/>
 	);
 }
-
-const styles = StyleSheet.create({
-	container: {
-		flex: 1,
-	},
-	content: {
-		padding: 16,
-	},
-	list: {
-		gap: 10,
-	},
-	item: {
-		padding: 16,
-		borderRadius: 14,
-	},
-	itemTitle: {
-		fontSize: 16,
-		fontWeight: "600",
-		marginBottom: 4,
-	},
-	itemDescription: {
-		fontSize: 13,
-	},
-});

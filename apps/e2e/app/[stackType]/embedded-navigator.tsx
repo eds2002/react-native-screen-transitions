@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
 		paddingBottom: 16,
 	},
 	infoBox: {
-		borderRadius: 14,
+		borderRadius: 20,
 		padding: 14,
 	},
 	infoTitle: {
@@ -401,7 +401,7 @@ const styles = StyleSheet.create({
 		flex: 1,
 		marginHorizontal: 16,
 		marginBottom: 16,
-		borderRadius: 20,
+		borderRadius: 24,
 		overflow: "hidden",
 	},
 
@@ -436,13 +436,13 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		padding: 12,
-		borderRadius: 14,
+		borderRadius: 18,
 		gap: 12,
 	},
 	albumArt: {
 		width: 44,
 		height: 44,
-		borderRadius: 10,
+		borderRadius: 14,
 		alignItems: "center",
 		justifyContent: "center",
 	},
@@ -460,7 +460,7 @@ const styles = StyleSheet.create({
 
 	// Album hero
 	albumHero: {
-		borderRadius: 16,
+		borderRadius: 20,
 		padding: 20,
 		alignItems: "center",
 		gap: 6,
@@ -484,7 +484,7 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "center",
 		padding: 12,
-		borderRadius: 12,
+		borderRadius: 16,
 		gap: 12,
 	},
 	trackNumber: {
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
 	nowPlayingArt: {
 		width: 180,
 		height: 180,
-		borderRadius: 24,
+		borderRadius: 32,
 		alignItems: "center",
 		justifyContent: "center",
 		marginBottom: 12,
