@@ -23,7 +23,10 @@ import type {
 	BlankStackNavigatorProps,
 } from "../types";
 
-type BlankStackNavigatorInnerProps = BlankStackNavigatorProps & {
+type BlankStackNavigatorInnerProps = Omit<
+	BlankStackNavigatorProps,
+	keyof BlankStackFactoryOptions
+> & {
 	DISABLE_NATIVE_SCREENS?: boolean;
 	DISABLE_NATIVE_SCREEN_CONTAINER?: boolean;
 };
@@ -77,49 +80,39 @@ function BlankStackNavigatorInner({
 	);
 }
 
-function createBlankStackNavigatorComponent({
-	independent,
-	enableNativeScreens,
-}: Required<BlankStackFactoryOptions>) {
-	function BlankStackNavigator(props: BlankStackNavigatorProps) {
-		const isNested = React.useContext(BlankStackContext);
+function BlankStackNavigator({
+	independent = false,
+	enableNativeScreens = true,
+	...rest
+}: BlankStackNavigatorProps) {
+	const isNested = React.useContext(BlankStackContext);
 
-		const navigator = (
-			<BlankStackNavigatorInner
-				{...props}
-				{...(!enableNativeScreens && {
-					DISABLE_NATIVE_SCREENS: true,
-				})}
-				DISABLE_NATIVE_SCREEN_CONTAINER={independent}
-			/>
-		);
+	const navigator = (
+		<BlankStackNavigatorInner
+			{...rest}
+			{...(!enableNativeScreens && {
+				DISABLE_NATIVE_SCREENS: true,
+			})}
+			DISABLE_NATIVE_SCREEN_CONTAINER={independent}
+		/>
+	);
 
-		if (!independent || isNested) {
-			return navigator;
-		}
-
-		return (
-			<NavigationIndependentTree>
-				<NavigationContainer>
-					<BlankStackContext.Provider value={true}>
-						{navigator}
-					</BlankStackContext.Provider>
-				</NavigationContainer>
-			</NavigationIndependentTree>
-		);
+	if (!independent || isNested) {
+		return navigator;
 	}
 
-	BlankStackNavigator.displayName = independent
-		? "IndependentBlankStackNavigator"
-		: "BlankStackNavigator";
-
-	return BlankStackNavigator;
+	return (
+		<NavigationIndependentTree>
+			<NavigationContainer>
+				<BlankStackContext.Provider value={true}>
+					{navigator}
+				</BlankStackContext.Provider>
+			</NavigationContainer>
+		</NavigationIndependentTree>
+	);
 }
 
-const BlankStackNavigator = createBlankStackNavigatorComponent({
-	independent: false,
-	enableNativeScreens: true,
-});
+BlankStackNavigator.displayName = "BlankStackNavigator";
 
 type BlankStackTypeBag<
 	ParamList extends ParamListBase,
@@ -147,14 +140,13 @@ type BlankStackTypeBag<
  * it participates in the current navigation tree and uses native screen
  * primitives on supported native platforms.
  *
- * Pass {@link BlankStackFactoryOptions} when you need embedded-flow behavior:
+ * Blank stack also accepts navigator-specific props for embedded-flow behavior:
  * - `independent: true` creates an isolated navigator for nested flows
  * - `enableNativeScreens: false` renders the stack with regular views instead
  *   of `react-native-screens`
  *
- * These options are factory-only. Use screen options for per-screen transition
- * behavior, and use factory options when you need to change how the navigator
- * itself is hosted.
+ * In the dynamic API, pass these to `<Stack.Navigator />`.
+ * In the static API, pass them in the same config object as `screens`.
  */
 export function createBlankStackNavigator<
 	const ParamList extends ParamListBase,
@@ -163,42 +155,7 @@ export function createBlankStackNavigator<
 		ParamList,
 		NavigatorID
 	>,
->(): TypedNavigator<TypeBag, StaticConfig<TypeBag>>;
-export function createBlankStackNavigator<
-	const ParamList extends ParamListBase,
-	const NavigatorID extends string | undefined = undefined,
-	const TypeBag extends NavigatorTypeBagBase = BlankStackTypeBag<
-		ParamList,
-		NavigatorID
-	>,
->(
-	/**
-	 * Factory-level hosting options for the blank stack.
-	 */
-	options: BlankStackFactoryOptions,
-): TypedNavigator<TypeBag, StaticConfig<TypeBag>>;
-export function createBlankStackNavigator<
-	const ParamList extends ParamListBase,
-	const NavigatorID extends string | undefined = undefined,
-	const TypeBag extends NavigatorTypeBagBase = BlankStackTypeBag<
-		ParamList,
-		NavigatorID
-	>,
-	const Config extends StaticConfig<TypeBag> &
-		BlankStackFactoryOptions = StaticConfig<TypeBag> & BlankStackFactoryOptions,
+	const Config extends StaticConfig<TypeBag> = StaticConfig<TypeBag>,
 >(config?: Config): TypedNavigator<TypeBag, Config> {
-	const {
-		independent = false,
-		enableNativeScreens = true,
-		...staticConfig
-	} = (config ?? {}) as StaticConfig<TypeBag> & BlankStackFactoryOptions;
-
-	const Navigator = createBlankStackNavigatorComponent({
-		independent,
-		enableNativeScreens,
-	});
-
-	return createNavigatorFactory(Navigator)(
-		(config ? (staticConfig as StaticConfig<TypeBag>) : undefined) as Config,
-	);
+	return createNavigatorFactory(BlankStackNavigator)(config);
 }

@@ -1,3 +1,4 @@
+import type { ComponentProps } from "react";
 import type {
 	BoundsNavigationZoomStyle,
 	BoundsNavigationZoomOptions,
@@ -14,6 +15,7 @@ import {
 import {
 	createBlankStackNavigator,
 	type BlankStackFactoryOptions,
+	type BlankStackScreenProps,
 } from "../../../blank-stack";
 
 const slotStyle: TransitionSlotStyle = {
@@ -100,16 +102,60 @@ const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	enableNativeScreens: false,
 };
 
+type StaticBlankStackParamList = {
+	Home: undefined;
+	Details: { id: string };
+};
+
+function StaticBlankHomeScreen(
+	_props: BlankStackScreenProps<StaticBlankStackParamList, "Home">,
+) {
+	return null;
+}
+
+function StaticBlankDetailsScreen(
+	_props: BlankStackScreenProps<StaticBlankStackParamList, "Details">,
+) {
+	return null;
+}
+
 const defaultBlankStack = createBlankStackNavigator();
-const viewBlankStack = createBlankStackNavigator({
+type DefaultBlankStackNavigatorProps = ComponentProps<
+	typeof defaultBlankStack.Navigator
+>;
+const viewBlankStackProps: Pick<
+	DefaultBlankStackNavigatorProps,
+	"enableNativeScreens"
+> = {
 	enableNativeScreens: false,
-});
-const independentBlankStack = createBlankStackNavigator({
+};
+const independentBlankStackProps: Pick<
+	DefaultBlankStackNavigatorProps,
+	"independent"
+> = {
 	independent: true,
-});
-const independentViewBlankStack = createBlankStackNavigator({
+};
+const independentViewBlankStackProps: Pick<
+	DefaultBlankStackNavigatorProps,
+	"independent" | "enableNativeScreens"
+> = {
 	independent: true,
 	enableNativeScreens: false,
+};
+const staticBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
+	initialRouteName: "Home",
+	screens: {
+		Home: StaticBlankHomeScreen,
+		Details: StaticBlankDetailsScreen,
+	},
+});
+const staticViewBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
+	initialRouteName: "Home",
+	enableNativeScreens: false,
+	screens: {
+		Home: StaticBlankHomeScreen,
+		Details: StaticBlankDetailsScreen,
+	},
 });
 
 export const publicApiTypecheck = {
@@ -133,8 +179,7 @@ export const publicApiTypecheck = {
 	precedenceOptions,
 	emptyInterpolatorOptions,
 	blankStackFactoryOptions,
-	defaultBlankStack,
-	viewBlankStack,
-	independentBlankStack,
-	independentViewBlankStack,
+	viewBlankStackProps,
+	independentBlankStackProps,
+	independentViewBlankStackProps,
 };

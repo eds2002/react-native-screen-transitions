@@ -98,7 +98,7 @@ function IsolatedComponentStackNavigator(props: ComponentStackNavigatorProps) {
 /**
  * @deprecated Component stack was originally introduced for independent,
  * embedded navigation flows. Blank stack now supports that use case directly
- * via `createBlankStackNavigator({ independent: true })`, with
+ * via navigator props such as `<BlankStack.Navigator independent />`, with
  * `enableNativeScreens` available when you need to switch between native
  * screens and regular views. Prefer blank stack for new work; component stack
  * will be removed in a future release.

@@ -52,10 +52,12 @@ export type BlankStackNavigationHelpers = NavigationHelpers<
 >;
 
 /**
- * Factory-only options for `createBlankStackNavigator`.
+ * Additional props accepted by the blank stack navigator.
  *
- * Use these when you need to change how the blank stack itself is hosted,
- * not how individual screens transition.
+ * These can be passed to `<BlankStack.Navigator />` in the dynamic API, and
+ * they are also supported as top-level keys in static navigator config.
+ *
+ * The exported name is kept for backward compatibility.
  */
 export interface BlankStackFactoryOptions {
 	/**
@@ -120,7 +122,8 @@ export type BlankStackNavigatorProps = DefaultNavigatorOptions<
 	BlankStackNavigationEventMap,
 	BlankStackNavigationProp<ParamListBase>
 > &
-	StackRouterOptions;
+	StackRouterOptions &
+	BlankStackFactoryOptions;
 
 export type BlankStackDescriptor = Descriptor<
 	BlankStackNavigationOptions,
