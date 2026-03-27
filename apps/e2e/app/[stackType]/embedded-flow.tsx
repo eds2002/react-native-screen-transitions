@@ -2,10 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { createContext, useContext, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { interpolate } from "react-native-reanimated";
-import {
-	SafeAreaView,
-	useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { ScreenInterpolationProps } from "react-native-screen-transitions";
 import {
 	type BlankStackScreenProps,
@@ -44,7 +41,7 @@ const MODE_OPTIONS: {
 		title: "Regular Views",
 		description:
 			"Uses plain views for the embedded flow instead of native screens",
-		code: "createBlankStackNavigator({ independent: true, enableNativeScreens: false })",
+		code: "<Flow.Navigator independent enableNativeScreens={false}>",
 		note: "Useful when you want the embedded-flow shape without relying on react-native-screens layering.",
 	},
 ];
@@ -56,15 +53,7 @@ const transitionSpec = {
 	close: { damping: 30, stiffness: 300, mass: 1 },
 };
 
-const IsolatedNativeFlow = createBlankStackNavigator<FlowParamList>({
-	independent: true,
-	enableNativeScreens: true,
-});
-
-const IsolatedViewFlow = createBlankStackNavigator<FlowParamList>({
-	independent: true,
-	enableNativeScreens: false,
-});
+const Flow = createBlankStackNavigator<FlowParamList>();
 
 const slideFromRight = (props: ScreenInterpolationProps) => {
 	"worklet";
@@ -110,21 +99,34 @@ function FlowStep({
 	const mode = useContext(EmbeddedFlowModeContext);
 	const theme = useTheme();
 
-	const badgeConfig = mode === "native"
-		? { label: "Native screens active", detail: "RNSScreen + ScreenContainer" }
-		: { label: "Regular views active", detail: "Animated.View + View" };
+	const badgeConfig =
+		mode === "native"
+			? {
+					label: "Native screens active",
+					detail: "RNSScreen + ScreenContainer",
+				}
+			: { label: "Regular views active", detail: "Animated.View + View" };
 
 	return (
 		<View style={[styles.flowScreen, { backgroundColor: theme.surface }]}>
 			<View style={styles.flowHeader}>
 				{onBack ? (
-					<Pressable onPress={onBack} hitSlop={8} style={[styles.iconButton, { backgroundColor: theme.secondaryButton }]}>
+					<Pressable
+						onPress={onBack}
+						hitSlop={8}
+						style={[
+							styles.iconButton,
+							{ backgroundColor: theme.secondaryButton },
+						]}
+					>
 						<Ionicons name="arrow-back" size={18} color={theme.text} />
 					</Pressable>
 				) : (
 					<View style={styles.iconButtonSpacer} />
 				)}
-				<Text style={[styles.stepLabel, { color: theme.textTertiary }]}>{step}</Text>
+				<Text style={[styles.stepLabel, { color: theme.textTertiary }]}>
+					{step}
+				</Text>
 				<View style={styles.iconButtonSpacer} />
 			</View>
 
@@ -136,10 +138,17 @@ function FlowStep({
 					},
 				]}
 			>
-				<Text style={[styles.modeBadgeLabel, { color: mode === "native" ? theme.infoBoxLabel : theme.noteText }]}>
+				<Text
+					style={[
+						styles.modeBadgeLabel,
+						{ color: mode === "native" ? theme.infoBoxLabel : theme.noteText },
+					]}
+				>
 					{badgeConfig.label}
 				</Text>
-				<Text style={[styles.modeBadgeDetail, { color: theme.textSecondary }]}>{badgeConfig.detail}</Text>
+				<Text style={[styles.modeBadgeDetail, { color: theme.textSecondary }]}>
+					{badgeConfig.detail}
+				</Text>
 			</View>
 
 			<View style={styles.flowBody}>
@@ -154,14 +163,27 @@ function FlowStep({
 					<Ionicons name={iconName} size={28} color={accentColor} />
 				</View>
 				<Text style={[styles.flowTitle, { color: theme.text }]}>{title}</Text>
-				<Text style={[styles.flowSubtitle, { color: theme.textSecondary }]}>{subtitle}</Text>
+				<Text style={[styles.flowSubtitle, { color: theme.textSecondary }]}>
+					{subtitle}
+				</Text>
 			</View>
 
 			<Pressable
-				style={({ pressed }) => [styles.primaryButton, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
+				style={({ pressed }) => [
+					styles.primaryButton,
+					{
+						backgroundColor: pressed
+							? theme.actionButtonPressed
+							: theme.actionButton,
+					},
+				]}
 				onPress={onPrimary}
 			>
-				<Text style={[styles.primaryButtonText, { color: theme.actionButtonText }]}>{primaryLabel}</Text>
+				<Text
+					style={[styles.primaryButtonText, { color: theme.actionButtonText }]}
+				>
+					{primaryLabel}
+				</Text>
 			</Pressable>
 		</View>
 	);
@@ -212,11 +234,14 @@ function DoneScreen({ navigation }: FlowScreenProps) {
 }
 
 function EmbeddedFlowPreview({ mode }: { mode: EmbeddedFlowMode }) {
-	const Flow = mode === "native" ? IsolatedNativeFlow : IsolatedViewFlow;
-
 	return (
 		<EmbeddedFlowModeContext.Provider value={mode}>
-			<Flow.Navigator key={mode} initialRouteName="welcome">
+			<Flow.Navigator
+				key={mode}
+				independent
+				enableNativeScreens={mode === "native"}
+				initialRouteName="welcome"
+			>
 				<Flow.Screen
 					name="welcome"
 					component={WelcomeScreen}
@@ -272,11 +297,20 @@ export default function EmbeddedFlowExample() {
 
 			<View style={styles.content}>
 				<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
-					<Text style={[styles.infoTitle, { color: theme.infoBoxLabel }]}>Navigator-level options</Text>
+					<Text style={[styles.infoTitle, { color: theme.infoBoxLabel }]}>
+						Navigator-level options
+					</Text>
 					<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 						This example keeps the outer screen fixed and remounts an embedded{" "}
-						<Text style={[styles.highlight, { color: theme.text }]}>blank stack</Text> with
-						<Text style={[styles.highlight, { color: theme.text }]}> independent: true</Text>.
+						<Text style={[styles.highlight, { color: theme.text }]}>
+							blank stack
+						</Text>{" "}
+						with
+						<Text style={[styles.highlight, { color: theme.text }]}>
+							{" "}
+							independent: true
+						</Text>
+						.
 					</Text>
 				</View>
 
@@ -304,7 +338,11 @@ export default function EmbeddedFlowExample() {
 								<Text
 									style={[
 										styles.toggleDescription,
-										{ color: isActive ? theme.activePillText : theme.textTertiary },
+										{
+											color: isActive
+												? theme.activePillText
+												: theme.textTertiary,
+										},
 									]}
 								>
 									{option.description}
@@ -315,9 +353,15 @@ export default function EmbeddedFlowExample() {
 				</View>
 
 				<View style={[styles.configBox, { backgroundColor: theme.card }]}>
-					<Text style={[styles.configLabel, { color: theme.textTertiary }]}>Current setup</Text>
-					<Text style={[styles.configCode, { color: theme.text }]}>{selectedMode.code}</Text>
-					<Text style={[styles.configNote, { color: theme.textSecondary }]}>{selectedMode.note}</Text>
+					<Text style={[styles.configLabel, { color: theme.textTertiary }]}>
+						Current setup
+					</Text>
+					<Text style={[styles.configCode, { color: theme.text }]}>
+						{selectedMode.code}
+					</Text>
+					<Text style={[styles.configNote, { color: theme.textSecondary }]}>
+						{selectedMode.note}
+					</Text>
 				</View>
 
 				<View style={[styles.previewCard, { backgroundColor: theme.surface }]}>
@@ -328,7 +372,7 @@ export default function EmbeddedFlowExample() {
 					<Text style={[styles.noteText, { color: theme.noteText }]}>
 						Use this page to compare the same embedded flow with native screens
 						on versus off. The isolation behavior comes from the navigator
-						factory, not from a separate stack type.
+						props, not from a separate stack type.
 					</Text>
 				</View>
 			</View>

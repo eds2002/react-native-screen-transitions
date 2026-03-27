@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/theme";
 
@@ -17,7 +17,8 @@ export function ScreenHeader({
 	light,
 }: ScreenHeaderProps) {
 	const theme = useTheme();
-	const handleBack = onBack ?? (() => router.back());
+	const navigation = useNavigation();
+	const handleBack = onBack ?? (() => navigation.goBack());
 
 	const isLight = light ?? false;
 	const textColor = isLight ? "#000" : theme.text;

@@ -211,6 +211,10 @@ export default function BlankStackLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<StackNavigator.Screen
+				name="embedded-navigator"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
 				name="bounds"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>

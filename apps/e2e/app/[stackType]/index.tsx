@@ -72,6 +72,12 @@ const TEST_FLOWS = [
 		description: "Demonstrates proper touch blocking during transitions",
 	},
 	{
+		id: "embedded-navigator",
+		title: "Embedded Navigator",
+		description:
+			"Independent blank stack with nested album → tracks → player flow",
+	},
+	{
 		id: "bounds",
 		title: "Bounds",
 		description:
