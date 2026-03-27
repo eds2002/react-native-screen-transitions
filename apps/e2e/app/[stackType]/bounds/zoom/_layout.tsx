@@ -43,7 +43,7 @@ export default function NavigationZoomGroupTransitionsLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					navigationMaskEnabled: true,
+					navigationMaskEnabled: Platform.OS === "ios",
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.6,

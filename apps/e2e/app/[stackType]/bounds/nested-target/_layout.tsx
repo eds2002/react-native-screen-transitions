@@ -1,4 +1,6 @@
 // @ts-nocheck
+
+import { Platform } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
@@ -6,22 +8,22 @@ import { useResolvedStackType } from "@/components/stack-examples/stack-routing"
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
 
-const toZoomId = (route: { params?: object }) => {
+const toNestedTargetId = (route: { params?: object }) => {
 	"worklet";
 	const params = route.params as Record<string, unknown> | undefined;
 	const rawId = params?.id;
 	return typeof rawId === "string" ? rawId : null;
 };
 
-const nestedNavigationZoomIdInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
+const nestedTargetInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
 	({ bounds, current, active, progress }) => {
 		"worklet";
-		const currentId = toZoomId(current.route);
-		const activeId = toZoomId(active.route);
+		const currentId = toNestedTargetId(current.route);
+		const activeId = toNestedTargetId(active.route);
 		const id = currentId ?? activeId;
 
 		if (!id) {
-			return {};
+			return null;
 		}
 
 		const navigationStyles = bounds({
@@ -32,12 +34,12 @@ const nestedNavigationZoomIdInterpolator: ScreenTransitionConfig["screenStyleInt
 			...navigationStyles,
 			backdrop: {
 				backgroundColor: "black",
-				opacity: interpolate(progress, [0, 1, 2], [0, 0.55, 0]),
+				opacity: interpolate(progress, [0, 1, 2], [0, 0.5, 0]),
 			},
 		};
 	};
 
-export default function NestedNavigationZoomIdLayout() {
+export default function NestedTargetLayout() {
 	const stackType = useResolvedStackType();
 	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
 	const navigatorScreenOptions =
@@ -54,7 +56,7 @@ export default function NestedNavigationZoomIdLayout() {
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
-					screenStyleInterpolator: nestedNavigationZoomIdInterpolator,
+					screenStyleInterpolator: nestedTargetInterpolator,
 					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
