@@ -1,5 +1,4 @@
-import { View } from "react-native";
-import { Pressable } from "react-native-gesture-handler";
+import { Pressable, View } from "react-native";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
 

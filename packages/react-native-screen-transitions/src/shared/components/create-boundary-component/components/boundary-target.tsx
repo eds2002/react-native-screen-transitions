@@ -15,21 +15,23 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const { style, ...rest } = props;
 	const targetAnimatedRef = useAnimatedRef<View>();
 	const ownerContext = useBoundaryOwnerContext();
+	const registerTargetRef = ownerContext?.registerTargetRef;
+	const unregisterTargetRef = ownerContext?.unregisterTargetRef;
 	const isActiveTarget = ownerContext?.activeTargetRef === targetAnimatedRef;
 
 	useLayoutEffect(() => {
-		if (!ownerContext) {
+		if (!registerTargetRef || !unregisterTargetRef) {
 			if (__DEV__) {
 				console.warn(TARGET_OUTSIDE_OWNER_WARNING);
 			}
 			return;
 		}
 
-		ownerContext.registerTargetRef(targetAnimatedRef);
+		registerTargetRef(targetAnimatedRef);
 		return () => {
-			ownerContext.unregisterTargetRef(targetAnimatedRef);
+			unregisterTargetRef(targetAnimatedRef);
 		};
-	}, [ownerContext, targetAnimatedRef]);
+	}, [registerTargetRef, unregisterTargetRef, targetAnimatedRef]);
 
 	return (
 		<Animated.View

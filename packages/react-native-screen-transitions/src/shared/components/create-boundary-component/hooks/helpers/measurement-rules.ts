@@ -102,28 +102,48 @@ export const resolveMeasurementWritePlan = (params: {
 	};
 };
 
+/**
+ * Temporarily removed destination-match gating for auto source capture.
+ *
+ * For now, any enabled boundary on a source screen will eagerly capture when a
+ * next screen exists, even if no matching destination boundary has registered
+ * presence yet. The previous behavior waited for an explicit destination match
+ * before allowing source capture.
+ */
 export const resolveAutoSourceCaptureSignal = (params: {
 	enabled: boolean;
 	nextScreenKey?: string;
 	tagPresence?: Record<string, PresenceLikeEntry>;
 }): string | 0 => {
 	"worklet";
-	const { enabled, nextScreenKey, tagPresence } = params;
+	const { enabled, nextScreenKey } = params;
 	if (!enabled) return 0;
 	if (!nextScreenKey) return 0;
-	if (!tagPresence) return 0;
 
-	const direct = tagPresence[nextScreenKey];
-	if (direct && direct.count > 0) return nextScreenKey;
+	/**
+	 * Temporarily removed destination-match gating for auto source capture.
+	 *
+	 * For now, any enabled boundary on a source screen will eagerly capture when
+	 * a next screen exists, even if no matching destination boundary has
+	 * registered presence yet. The previous behavior waited for an explicit
+	 * destination match before allowing source capture.
+	 */
+	// const tagPresence = params.tagPresence;
+	// if (!tagPresence) return 0;
+	//
+	// const direct = tagPresence[nextScreenKey];
+	// if (direct && direct.count > 0) return nextScreenKey;
+	//
+	// for (const screenKey in tagPresence) {
+	// 	const entry = tagPresence[screenKey];
+	// 	if (entry.ancestorKeys?.includes(nextScreenKey)) {
+	// 		return nextScreenKey;
+	// 	}
+	// }
+	//
+	// return 0;
 
-	for (const screenKey in tagPresence) {
-		const entry = tagPresence[screenKey];
-		if (entry.ancestorKeys?.includes(nextScreenKey)) {
-			return nextScreenKey;
-		}
-	}
-
-	return 0;
+	return nextScreenKey;
 };
 
 export const resolvePendingDestinationCaptureSignal = (params: {

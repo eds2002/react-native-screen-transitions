@@ -132,7 +132,7 @@ export function createBoundaryComponent<P extends object>(
 
 		const { contextValue, measuredRef, hasActiveTarget } = useBoundaryOwner({
 			ownerRef,
-			associatedTargetStyles: enabled ? associatedStyles : undefined,
+			associatedTargetStyles: runtimeEnabled ? associatedStyles : undefined,
 		});
 
 		const maybeMeasureAndStore = useBoundaryMeasureAndStore({
@@ -260,7 +260,7 @@ export function createBoundaryComponent<P extends object>(
 					ref={ownerRef}
 					style={[
 						style,
-						enabled
+						runtimeEnabled
 							? hasActiveTarget
 								? associatedStackingStyles
 								: associatedStyles

@@ -78,14 +78,14 @@ describe("bounds measurement rules", () => {
 		});
 	});
 
-	it("only auto-captures source when matching next-screen presence exists", () => {
+	it("auto-captures source whenever the next screen exists", () => {
 		expect(
 			resolveAutoSourceCaptureSignal({
 				enabled: true,
 				nextScreenKey: "detail",
 				tagPresence: undefined,
 			}),
-		).toBe(0);
+		).toBe("detail");
 
 		expect(
 			resolveAutoSourceCaptureSignal({
