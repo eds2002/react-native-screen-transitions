@@ -1,7 +1,6 @@
-// @ts-nocheck
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
-import Transition from "react-native-screen-transitions";
+import Transition, { TRANSFORM_RESET } from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
@@ -77,6 +76,35 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 	};
 };
 
+const RETARGET_ID = "retarget";
+
+const retargetInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
+	({ bounds, progress, focused, active }) => {
+		"worklet";
+
+		const elementStyle = bounds({ id: RETARGET_ID });
+
+		if (active.settled) {
+			return {
+				[RETARGET_ID]: {
+					...TRANSFORM_RESET,
+					opacity: focused
+						? interpolate(progress, [0, 1], [0, 1], "clamp")
+						: interpolate(progress, [1, 2], [1, 0.5], "clamp"),
+				},
+			};
+		}
+
+		return {
+			[RETARGET_ID]: {
+				...elementStyle,
+				opacity: focused
+					? interpolate(progress, [0, 1], [0, 1], "clamp")
+					: interpolate(progress, [1, 2], [1, 0.5], "clamp"),
+			},
+		};
+	};
+
 export default function BoundsSyncLayout() {
 	const stackType = useResolvedStackType();
 	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
@@ -98,6 +126,24 @@ export default function BoundsSyncLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["vertical-inverted", "vertical"],
 					screenStyleInterpolator: syncInterpolator,
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<StackNavigator.Screen
+				name="retarget/index"
+				options={{
+					...Transition.Presets.SlideFromBottom(),
+				}}
+			/>
+			<StackNavigator.Screen
+				name="retarget/[id]"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: ["vertical-inverted", "vertical"],
+					screenStyleInterpolator: retargetInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.DefaultSpec,

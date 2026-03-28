@@ -29,10 +29,16 @@ BoundaryTarget.displayName = "Transition.Boundary.Target";
  * - `Boundary.Target` to measure a nested descendant instead of the owner.
  */
 export const Boundary = {
-	/** Passive boundary wrapper (no built-in press semantics). */
+	/**
+	 * Passive boundary wrapper (no built-in press semantics).
+	 */
 	View: BoundaryView,
-	/** Pressable boundary wrapper with press-priority source capture. */
+	/**
+	 * Pressable boundary wrapper with press-priority source capture.
+	 */
 	Trigger: BoundaryTrigger,
-	/** Optional nested measurement override inside a boundary owner. */
+	/**
+	 * Optional nested measurement override inside a boundary owner.
+	 */
 	Target: BoundaryTarget,
 };

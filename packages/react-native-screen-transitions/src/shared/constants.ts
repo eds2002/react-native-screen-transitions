@@ -56,6 +56,7 @@ export const createScreenTransitionState = (
 	progress: 0,
 	closing: 0,
 	animating: 0,
+	willAnimate: 0,
 	settled: 1,
 	logicallySettled: 1,
 	entering: 0,
@@ -79,6 +80,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		progress: 0,
 		closing: 0,
 		animating: 0,
+		willAnimate: 0,
 		settled: 1,
 		logicallySettled: 1,
 		entering: 0,
@@ -106,6 +108,15 @@ export const EMPTY_BOUND_HELPER_RESULT_RAW = Object.freeze({
 	width: 0,
 	height: 0,
 	...HIDDEN_STYLE,
+});
+export const TRANSFORM_RESET = Object.freeze({
+	transform: [
+		{ translateX: 0 },
+		{ translateY: 0 },
+		{ scale: 1 },
+		{ scaleX: 1 },
+		{ scaleY: 1 },
+	],
 });
 export const ENTER_RANGE = [0, 1] as const;
 export const EXIT_RANGE = [1, 2] as const;

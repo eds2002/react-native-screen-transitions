@@ -356,6 +356,7 @@ export const useHandlers = ({
 			lockedSnapPoint.value = resolvedMaxSnapPoint;
 		}
 
+		animations.willAnimate.value = TRUE;
 		gestureAnimationValues.dragging.value = TRUE;
 		gestureAnimationValues.dismissing.value = FALSE;
 		gestureStartProgress.value = animations.progress.value;
@@ -364,6 +365,10 @@ export const useHandlers = ({
 	const onUpdate = useStableCallbackValue(
 		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
+
+			if (animations.willAnimate.value) {
+				animations.willAnimate.value = FALSE;
+			}
 
 			const { translationX, translationY } = event;
 			const { width, height } = dimensions;
@@ -454,6 +459,8 @@ export const useHandlers = ({
 		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
 			"worklet";
 
+			animations.willAnimate.value = FALSE;
+
 			if (hasSnapPoints) {
 				const isHorizontal = snapAxis === "horizontal";
 				const axisVelocity = isHorizontal ? event.velocityX : event.velocityY;
@@ -537,6 +544,7 @@ export const useHandlers = ({
 					spec: effectiveSpec,
 					animations,
 					targetProgress: targetProgressValue,
+					emitWillAnimate: false,
 					initialVelocity,
 				});
 			} else {
@@ -579,6 +587,7 @@ export const useHandlers = ({
 					spec: transitionSpec,
 					animations,
 					targetProgress: targetProgressValue,
+					emitWillAnimate: false,
 					initialVelocity: scaledInitialVelocity,
 				});
 			}

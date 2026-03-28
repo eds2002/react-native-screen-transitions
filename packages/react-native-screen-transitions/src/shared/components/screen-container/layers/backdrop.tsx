@@ -31,11 +31,8 @@ export const BackdropLayer = memo(function BackdropLayer({
 	const BackdropComponent = current.options.backdropComponent;
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
-	const targetProgressValue = SystemStore.getValue(routeKey, "targetProgress");
-	const resolvedAutoSnapPointValue = SystemStore.getValue(
-		routeKey,
-		"resolvedAutoSnapPoint",
-	);
+	const { targetProgress, resolvedAutoSnapPoint } =
+		SystemStore.getBag(routeKey);
 
 	const AnimatedBackdropComponent = useMemo(
 		() =>
@@ -68,7 +65,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 				"worklet";
 				const resolvedSnaps = rawSnapPoints
 					.map((point) =>
-						point === "auto" ? resolvedAutoSnapPointValue.value : point,
+						point === "auto" ? resolvedAutoSnapPoint.value : point,
 					)
 					.filter((point): point is number => typeof point === "number");
 
@@ -94,15 +91,15 @@ export const BackdropLayer = memo(function BackdropLayer({
 					target,
 					spec,
 					animations,
-					targetProgress: targetProgressValue,
+					targetProgress,
 					onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				});
 			})();
 		}
 	}, [
 		animations,
-		targetProgressValue,
-		resolvedAutoSnapPointValue,
+		targetProgress,
+		resolvedAutoSnapPoint,
 		backdropBehavior,
 		current,
 		dismissScreen,

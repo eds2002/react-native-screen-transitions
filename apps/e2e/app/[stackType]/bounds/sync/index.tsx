@@ -9,6 +9,16 @@ import {
 import { activeCaseId, type BoundsTestCase, CATEGORIES } from "./constants";
 import { useTheme } from "@/theme";
 
+const SPECIAL_CASES = [
+	{
+		id: "retarget-dedicated",
+		title: "Dedicated Retarget Route",
+		description:
+			"Single SRC -> DST1. DST1 translates horizontally on the destination screen before dismiss.",
+		path: "bounds/sync/retarget",
+	},
+];
+
 function Section({
 	title,
 	cases,
@@ -77,6 +87,35 @@ export default function BoundsSyncIndex() {
 				subtitle="Element transitions (A/B boundary sync)"
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
+				<View style={styles.section}>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+						Special Cases
+					</Text>
+					<View style={styles.list}>
+						{SPECIAL_CASES.map((item) => (
+							<Pressable
+								key={item.id}
+								testID={`sync-${item.id}`}
+								style={({ pressed }) => [
+									styles.item,
+									{ backgroundColor: pressed ? theme.cardPressed : theme.card },
+								]}
+								onPress={() => {
+									router.push(buildStackPath(stackType, item.path) as never);
+								}}
+							>
+								<Text style={[styles.itemTitle, { color: theme.text }]}>
+									{item.title}
+								</Text>
+								<Text
+									style={[styles.itemDetail, { color: theme.textTertiary }]}
+								>
+									{item.description}
+								</Text>
+							</Pressable>
+						))}
+					</View>
+				</View>
 				{CATEGORIES.map((cat) => (
 					<Section
 						key={cat.title}

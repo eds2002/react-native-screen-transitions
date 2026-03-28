@@ -1,20 +1,27 @@
-import { useLocalSearchParams } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { router, useLocalSearchParams } from "expo-router";
 import type {
 	ListRenderItemInfo,
 	NativeScrollEvent,
 	NativeSyntheticEvent,
 } from "react-native";
-import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import {
+	Pressable,
+	StyleSheet,
+	Text,
+	useWindowDimensions,
+	View,
+} from "react-native";
 import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
+import { useTheme } from "@/theme";
 import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
 	ZOOM_GROUP,
 } from "./constants";
-import { useTheme } from "@/theme";
 
 const COLOR_SWATCH_RADIUS = 28;
 
@@ -95,11 +102,17 @@ function DetailPage({
 				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.header}>
-					<Text style={[styles.title, { color: theme.text }]}>{item.title}</Text>
-					<Text style={[styles.subtitle, { color: theme.textTertiary }]}>{item.subtitle}</Text>
+					<Text style={[styles.title, { color: theme.text }]}>
+						{item.title}
+					</Text>
+					<Text style={[styles.subtitle, { color: theme.textTertiary }]}>
+						{item.subtitle}
+					</Text>
 				</View>
 
-				<Text style={[styles.description, { color: theme.textSecondary }]}>{item.description}</Text>
+				<Text style={[styles.description, { color: theme.textSecondary }]}>
+					{item.description}
+				</Text>
 
 				<View style={styles.swatchSection}>
 					<Transition.Boundary.View
@@ -133,14 +146,18 @@ function DetailPage({
 				</View>
 
 				<View style={styles.section}>
-					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>HSL Breakdown</Text>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+						HSL Breakdown
+					</Text>
 					{[
 						{ label: "Hue", value: hsl.h, max: 360 },
 						{ label: "Saturation", value: hsl.s, max: 100 },
 						{ label: "Lightness", value: hsl.l, max: 100 },
 					].map((bar) => (
 						<View key={bar.label} style={styles.barRow}>
-							<Text style={[styles.barLabel, { color: theme.textSecondary }]}>{bar.label}</Text>
+							<Text style={[styles.barLabel, { color: theme.textSecondary }]}>
+								{bar.label}
+							</Text>
 							<View style={styles.barTrack}>
 								<View
 									style={[
@@ -152,16 +169,24 @@ function DetailPage({
 									]}
 								/>
 							</View>
-							<Text style={[styles.barValue, { color: theme.textSecondary }]}>{bar.value}</Text>
+							<Text style={[styles.barValue, { color: theme.textSecondary }]}>
+								{bar.value}
+							</Text>
 						</View>
 					))}
 				</View>
 
 				<View style={styles.section}>
-					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>Companion Palettes</Text>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+						Companion Palettes
+					</Text>
 					{PALETTES.map((palette) => (
 						<View key={palette.name} style={styles.paletteRow}>
-							<Text style={[styles.paletteLabel, { color: theme.textSecondary }]}>{palette.name}</Text>
+							<Text
+								style={[styles.paletteLabel, { color: theme.textSecondary }]}
+							>
+								{palette.name}
+							</Text>
 							<View style={styles.paletteSwatches}>
 								{palette.colors.map((c) => (
 									<View
@@ -174,8 +199,16 @@ function DetailPage({
 					))}
 				</View>
 
-				<View style={[styles.section, styles.notesCard, { backgroundColor: theme.surface }]}>
-					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>Usage Notes</Text>
+				<View
+					style={[
+						styles.section,
+						styles.notesCard,
+						{ backgroundColor: theme.surface },
+					]}
+				>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+						Usage Notes
+					</Text>
 					<Text style={[styles.noteText, { color: theme.textSecondary }]}>
 						This color works best as an accent against dark backgrounds. Pair
 						with neutral greys for UI elements or use at reduced opacity for
@@ -204,6 +237,7 @@ export default function NavigationZoomGroupTransitionsDetail() {
 	const { width } = useWindowDimensions();
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const insets = useSafeAreaInsets();
+	const theme = useTheme();
 
 	const initialIndex = Math.max(
 		0,
@@ -259,6 +293,19 @@ export default function NavigationZoomGroupTransitionsDetail() {
 				overScrollMode="never"
 				style={styles.flatList}
 			/>
+			<Pressable
+				style={[
+					styles.floatingBack,
+					{
+						top: insets.top + 12,
+						backgroundColor: theme.headerBackButton,
+					},
+				]}
+				onPress={() => router.back()}
+				hitSlop={8}
+			>
+				<Ionicons name="chevron-back" size={24} color={theme.text} />
+			</Pressable>
 		</View>
 	);
 }
@@ -266,6 +313,15 @@ export default function NavigationZoomGroupTransitionsDetail() {
 const styles = StyleSheet.create({
 	root: {
 		flex: 1,
+	},
+	floatingBack: {
+		position: "absolute",
+		left: 16,
+		width: 32,
+		height: 32,
+		borderRadius: 999,
+		justifyContent: "center",
+		alignItems: "center",
 	},
 	flatList: {
 		flex: 1,

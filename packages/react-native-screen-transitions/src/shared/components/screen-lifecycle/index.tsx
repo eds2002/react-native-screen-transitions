@@ -20,10 +20,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 	const { current, previous } = useDescriptors();
 	const { isFirstKey } = useDescriptorDerivations();
 	const animations = AnimationStore.getBag(current.route.key);
-	const targetProgress = SystemStore.getValue(
-		current.route.key,
-		"targetProgress",
-	);
+	const { targetProgress } = SystemStore.getBag(current.route.key);
 
 	const { activateHighRefreshRate, deactivateHighRefreshRate } =
 		useOpenTransition(current, animations, targetProgress, isFirstKey);

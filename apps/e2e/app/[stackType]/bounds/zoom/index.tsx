@@ -13,6 +13,7 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { useTheme } from "@/theme";
 import {
 	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
@@ -20,7 +21,6 @@ import {
 	navigationZoomId,
 	ZOOM_GROUP,
 } from "./constants";
-import { useTheme } from "@/theme";
 
 const GAP = 10;
 const PADDING = 16;
@@ -67,7 +67,10 @@ export default function NavigationZoomGroupTransitionsIndex() {
 	const theme = useTheme();
 
 	return (
-		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="Navigation Zoom Group Transitions"
 				subtitle="bounds({ id, group }).navigation.zoom()"

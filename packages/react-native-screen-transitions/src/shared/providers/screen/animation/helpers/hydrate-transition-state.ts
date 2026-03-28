@@ -12,6 +12,7 @@ import type { BaseStackRoute } from "../../../../types/stack.types";
 
 type BuiltState = {
 	progress: SharedValue<number>;
+	willAnimate: SharedValue<number>;
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	entering: SharedValue<number>;
@@ -90,6 +91,7 @@ export const hydrateTransitionState = (
 	"worklet";
 	const out = s.unwrapped;
 	out.progress = s.progress.value;
+	out.willAnimate = s.willAnimate.value;
 	out.closing = s.closing.value;
 	out.entering = s.entering.value;
 	out.gesture.x = s.gesture.x.value;

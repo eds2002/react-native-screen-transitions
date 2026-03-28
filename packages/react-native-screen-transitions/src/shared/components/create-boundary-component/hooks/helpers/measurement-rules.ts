@@ -218,6 +218,19 @@ export const resolveInitialLayoutMeasurementIntent = (params: {
 	return hasPendingLinkFromSource ? "complete-destination" : null;
 };
 
+export const resolvePrepareSourceMeasurementIntent = (params: {
+	hasSourceLink: boolean;
+}): MeasurementIntent => {
+	"worklet";
+	return params.hasSourceLink ? "refresh-source" : "capture-source";
+};
+
+export const PREPARE_DESTINATION_MEASUREMENT_INTENT = [
+	"complete-destination",
+	"refresh-destination",
+	"snapshot-only",
+] as const satisfies readonly MeasurementIntent[];
+
 export const resolveGroupActiveMeasurementAction = (params: {
 	enabled: boolean;
 	isEligible: boolean;

@@ -26,7 +26,7 @@ import { useGroupActiveSourceMeasurement } from "./hooks/use-group-active-source
 import { useInitialLayoutHandler } from "./hooks/use-initial-layout-handler";
 import { usePendingDestinationMeasurement } from "./hooks/use-pending-destination-measurement";
 import { usePendingDestinationRetryMeasurement } from "./hooks/use-pending-destination-retry-measurement";
-import { useScrollSettledMeasurement } from "./hooks/use-scroll-settled-measurement";
+import { usePrepareTransitionMeasurement } from "./hooks/use-prepare-transition-measurement";
 import {
 	BoundaryOwnerProvider,
 	useBoundaryOwner,
@@ -192,6 +192,18 @@ export function createBoundaryComponent<P extends object>(
 			maybeMeasureAndStore,
 		});
 
+		// Pre-transition measurement path: when this route or its next sibling is
+		// about to animate, capture one clean base measurement before progress or
+		// transform state mutates.
+		usePrepareTransitionMeasurement({
+			enabled: runtimeEnabled,
+			sharedBoundTag,
+			currentScreenKey,
+			nextScreenKey,
+			hasNextScreen,
+			maybeMeasureAndStore,
+		});
+
 		// Grouped boundaries (e.g. paged/detail UIs): re-measure when this boundary
 		// becomes the active member so destination bounds stay accurate.
 		useGroupActiveMeasurement({
@@ -210,16 +222,6 @@ export function createBoundaryComponent<P extends object>(
 			enabled: runtimeEnabled,
 			group,
 			id,
-			hasNextScreen,
-			isAnimating,
-			maybeMeasureAndStore,
-		});
-
-		// While idle on source screens, re-measure after scroll settles so a later
-		// close transition starts from up-to-date source geometry.
-		useScrollSettledMeasurement({
-			enabled: runtimeEnabled,
-			group,
 			hasNextScreen,
 			isAnimating,
 			maybeMeasureAndStore,

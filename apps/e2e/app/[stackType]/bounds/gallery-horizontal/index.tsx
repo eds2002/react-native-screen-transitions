@@ -152,7 +152,7 @@ export default function HorizontalGalleryIndex() {
 				subtitle="Horizontal image carousel with shared element zoom"
 			/>
 
-			<Transition.ScrollView
+			<ScrollView
 				ref={scrollRef}
 				horizontal
 				showsHorizontalScrollIndicator={false}
@@ -169,7 +169,7 @@ export default function HorizontalGalleryIndex() {
 						/>
 					))}
 				</View>
-			</Transition.ScrollView>
+			</ScrollView>
 		</SafeAreaView>
 	);
 }

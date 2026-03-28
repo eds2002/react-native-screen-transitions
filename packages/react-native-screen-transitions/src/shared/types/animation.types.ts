@@ -40,6 +40,19 @@ export type ScreenTransitionState = {
 	entering: number;
 
 	/**
+	 * Whether this screen is about to begin a transition attempt.
+	 * - `0`: No pre-animation handoff is pending
+	 * - `1`: This is the last clean frame before transition-driven motion begins
+	 *
+	 * This phase is intentionally short-lived and emits once per transition attempt.
+	 * For gesture-driven transitions, it rises on gesture start, not on release.
+	 * The release/settle animation is considered part of the same attempt and must
+	 * not re-trigger `willAnimate`.
+	 */
+
+	willAnimate: number;
+
+	/**
 	 * Whether this screen is currently animating.
 	 * - `0`: No animation in progress
 	 * - `1`: Animation or gesture is in progress

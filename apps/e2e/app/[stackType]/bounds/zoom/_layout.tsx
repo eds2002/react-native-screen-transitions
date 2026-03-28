@@ -1,4 +1,4 @@
-// @ts-nocheck
+import { Platform } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
@@ -19,8 +19,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
-			target: "bound",
-		}).navigation.zoom();
+		}).navigation.zoom({ debug: true, target: "bound" });
 
 		return {
 			...navigationStyles,
@@ -51,8 +50,8 @@ export default function NavigationZoomGroupTransitionsLayout() {
 					screenStyleInterpolator: navigationZoomInterpolator,
 					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.FlingSpec,
+						open: { duration: 2500 },
+						close: { duration: 2500 },
 					},
 				}}
 			/>

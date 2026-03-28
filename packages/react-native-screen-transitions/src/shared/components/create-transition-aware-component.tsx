@@ -9,13 +9,11 @@ import Animated, {
 	useAnimatedRef,
 	useAnimatedStyle,
 	useComposedEventHandler,
-	useSharedValue,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../constants";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import { useScreenStyles } from "../providers/screen/styles";
-import { ScrollSettleProvider } from "../providers/scroll-settle.provider";
 import type { TransitionAwareProps } from "../types/screen.types";
 
 interface CreateTransitionAwareComponentOptions {
@@ -45,8 +43,6 @@ export function createTransitionAwareComponent<P extends object>(
 			...scrollableProps
 		} = props;
 
-		const settledSignal = useSharedValue(0);
-
 		// Determine scroll direction from the horizontal prop (standard ScrollView API)
 		const scrollDirection = scrollableProps.horizontal
 			? "horizontal"
@@ -58,7 +54,6 @@ export function createTransitionAwareComponent<P extends object>(
 				onContentSizeChange: scrollableProps.onContentSizeChange,
 				onLayout: scrollableProps.onLayout,
 				direction: scrollDirection,
-				settledSignal,
 			});
 
 		const composedScrollHandler = useComposedEventHandler([
@@ -79,17 +74,15 @@ export function createTransitionAwareComponent<P extends object>(
 			/>
 		);
 
+		if (!nativeGesture) {
+			return scrollableComponent;
+		}
+
 		// If no gesture owner found for this axis, render without GestureDetector
 		return (
-			<ScrollSettleProvider settledSignal={settledSignal}>
-				{!nativeGesture ? (
-					scrollableComponent
-				) : (
-					<GestureDetector gesture={nativeGesture}>
-						{scrollableComponent}
-					</GestureDetector>
-				)}
-			</ScrollSettleProvider>
+			<GestureDetector gesture={nativeGesture}>
+				{scrollableComponent}
+			</GestureDetector>
 		);
 	});
 

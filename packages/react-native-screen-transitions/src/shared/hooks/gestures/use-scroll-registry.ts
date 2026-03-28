@@ -23,7 +23,6 @@ import {
 	useGestureContext,
 } from "../../providers/gestures";
 import type { Direction } from "../../types/ownership.types";
-import { useAnimatedDebounce } from "../reanimated/use-animated-debounce";
 import useStableCallback from "../use-stable-callback";
 
 /** Walks up context tree to find the screen that owns a specific direction. */
@@ -79,7 +78,6 @@ interface ScrollProgressHookProps {
 	onContentSizeChange?: (width: number, height: number) => void;
 	onLayout?: (event: LayoutChangeEvent) => void;
 	direction?: "vertical" | "horizontal";
-	settledSignal?: SharedValue<number>;
 }
 
 /**
@@ -94,14 +92,6 @@ interface ScrollProgressHookProps {
 export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 	const context = useGestureContext();
 	const scrollDirection = props.direction ?? "vertical";
-
-	const { trigger: scheduleScrollSettled } = useAnimatedDebounce(() => {
-		"worklet";
-		if (!props.settledSignal) {
-			return;
-		}
-		props.settledSignal.value = props.settledSignal.value + 1;
-	});
 
 	// Find all owners for both directions on this axis
 	const owners = useMemo(
@@ -168,8 +158,6 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
-			scheduleScrollSettled();
-
 			if (scrollConfigs.length === 0) return;
 
 			const update = (v: any) => {

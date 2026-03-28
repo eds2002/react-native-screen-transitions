@@ -28,6 +28,7 @@ export { snapTo } from "./animation/snap-to";
 export {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+	TRANSFORM_RESET,
 } from "./constants";
 export {
 	type ScreenGestureTarget,

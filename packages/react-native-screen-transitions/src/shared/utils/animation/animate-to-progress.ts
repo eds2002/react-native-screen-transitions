@@ -16,6 +16,7 @@ interface AnimateToProgressProps {
 	onAnimationFinish?: (finished: boolean) => void;
 	animations: AnimationStoreMap;
 	targetProgress: SharedValue<number>;
+	emitWillAnimate?: boolean;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
 	initialVelocity?: number;
 }
@@ -26,6 +27,7 @@ export const animateToProgress = ({
 	onAnimationFinish,
 	animations,
 	targetProgress,
+	emitWillAnimate = true,
 	initialVelocity,
 }: AnimateToProgressProps) => {
 	"worklet";
@@ -46,7 +48,15 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, animating, closing, entering } = animations;
+	const { progress, willAnimate, animating, closing, entering } = animations;
+
+	if (emitWillAnimate) {
+		willAnimate.set(TRUE);
+		requestAnimationFrame(() => {
+			"worklet";
+			willAnimate.set(FALSE);
+		});
+	}
 
 	targetProgress.set(value);
 

@@ -17,6 +17,7 @@ import { toPlainRoute, toPlainValue } from "./worklet";
 
 type BuiltState = {
 	progress: SharedValue<number>;
+	willAnimate: SharedValue<number>;
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	entering: SharedValue<number>;
@@ -60,6 +61,7 @@ export const useBuildTransitionState = (
 
 		return {
 			progress: AnimationStore.getValue(key, "progress"),
+			willAnimate: AnimationStore.getValue(key, "willAnimate"),
 			closing: AnimationStore.getValue(key, "closing"),
 			entering: AnimationStore.getValue(key, "entering"),
 			animating: AnimationStore.getValue(key, "animating"),

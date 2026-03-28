@@ -15,15 +15,8 @@ export function useContentLayout() {
 	const { height: screenHeight } = useWindowDimensions();
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
-	const targetProgressValue = SystemStore.getValue(routeKey, "targetProgress");
-	const resolvedAutoSnapPointValue = SystemStore.getValue(
-		routeKey,
-		"resolvedAutoSnapPoint",
-	);
-	const measuredContentLayoutValue = SystemStore.getValue(
-		routeKey,
-		"measuredContentLayout",
-	);
+	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
+		SystemStore.getBag(routeKey);
 	const experimental_animateOnInitialMount =
 		current.options.experimental_animateOnInitialMount;
 	const transitionSpec = current.options.transitionSpec;
@@ -37,13 +30,13 @@ export function useContentLayout() {
 
 			runOnUI((nextWidth: number, nextHeight: number, nextFraction: number) => {
 				"worklet";
-				measuredContentLayoutValue.value = {
+				measuredContentLayout.value = {
 					width: nextWidth,
 					height: nextHeight,
 				};
 
-				const isFirstMeasurement = resolvedAutoSnapPointValue.value <= 0;
-				resolvedAutoSnapPointValue.value = nextFraction;
+				const isFirstMeasurement = resolvedAutoSnapPoint.value <= 0;
+				resolvedAutoSnapPoint.value = nextFraction;
 
 				if (
 					!isFirstMeasurement ||
@@ -54,7 +47,7 @@ export function useContentLayout() {
 				}
 
 				if (isFirstKey && !experimental_animateOnInitialMount) {
-					targetProgressValue.value = nextFraction;
+					targetProgress.value = nextFraction;
 					animations.progress.value = nextFraction;
 					return;
 				}
@@ -63,15 +56,15 @@ export function useContentLayout() {
 					target: nextFraction,
 					spec: transitionSpec,
 					animations,
-					targetProgress: targetProgressValue,
+					targetProgress,
 				});
 			})(width, height, fraction);
 		},
 		[
 			animations,
-			targetProgressValue,
-			resolvedAutoSnapPointValue,
-			measuredContentLayoutValue,
+			targetProgress,
+			resolvedAutoSnapPoint,
+			measuredContentLayout,
 			isFirstKey,
 			screenHeight,
 			experimental_animateOnInitialMount,

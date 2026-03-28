@@ -22,7 +22,7 @@ const horizontalGalleryZoomInterpolator: ScreenTransitionConfig["screenStyleInte
 		const navigationStyles = bounds({
 			id,
 			group: HORIZONTAL_GALLERY_GROUP,
-		}).navigation.zoom({ target: "bound" });
+		}).navigation.zoom({ target: "bound", debug: true });
 
 		if (!focused) {
 			return navigationStyles;

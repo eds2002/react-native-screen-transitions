@@ -9,6 +9,8 @@ import {
 	resolveMeasurementWritePlan,
 	resolvePendingDestinationCaptureSignal,
 	resolvePendingDestinationRetrySignal,
+	PREPARE_DESTINATION_MEASUREMENT_INTENT,
+	resolvePrepareSourceMeasurementIntent,
 	shouldTriggerScrollSettledRefresh,
 } from "../../components/create-boundary-component/hooks/helpers/measurement-rules";
 
@@ -214,6 +216,20 @@ describe("bounds measurement rules", () => {
 				hasPendingLinkFromSource: true,
 			}),
 		).toBeNull();
+	});
+
+	it("maps prepare-transition source refresh based on link state", () => {
+		expect(resolvePrepareSourceMeasurementIntent({ hasSourceLink: false })).toBe(
+			"capture-source",
+		);
+		expect(resolvePrepareSourceMeasurementIntent({ hasSourceLink: true })).toBe(
+			"refresh-source",
+		);
+		expect(PREPARE_DESTINATION_MEASUREMENT_INTENT).toEqual([
+			"complete-destination",
+			"refresh-destination",
+			"snapshot-only",
+		]);
 	});
 
 	it("gates grouped refresh actions to the active member only", () => {
