@@ -3,6 +3,7 @@ import {
 	forwardRef,
 	memo,
 	useCallback,
+	useImperativeHandle,
 	useMemo,
 } from "react";
 import type { View } from "react-native";
@@ -49,7 +50,7 @@ export function createBoundaryComponent<P extends object>(
 	const Inner = forwardRef<
 		React.ComponentRef<typeof AnimatedComponent>,
 		BoundaryComponentProps<P>
-	>((props, _ref) => {
+	>((props, forwardedRef) => {
 		const ownerRef = useAnimatedRef<View>();
 		const {
 			enabled = true,
@@ -253,6 +254,10 @@ export function createBoundaryComponent<P extends object>(
 		const resolvedOnPress =
 			typeof onPress === "function" ? handlePress : undefined;
 
+		useImperativeHandle(forwardedRef, () => ownerRef.current as any, [
+			ownerRef,
+		]);
+
 		return (
 			<BoundaryOwnerProvider value={contextValue}>
 				<AnimatedComponent
@@ -273,7 +278,9 @@ export function createBoundaryComponent<P extends object>(
 		);
 	});
 
-	return memo(Inner) as unknown as React.MemoExoticComponent<
+	return memo(
+		Animated.createAnimatedComponent(Inner),
+	) as unknown as React.MemoExoticComponent<
 		React.ForwardRefExoticComponent<
 			BoundaryComponentProps<P> &
 				React.RefAttributes<React.ComponentRef<typeof Wrapped>>
