@@ -11,8 +11,8 @@ import Transition from "react-native-screen-transitions";
 import {
 	activeHorizontalGalleryId,
 	GALLERY_ITEMS,
-	HORIZONTAL_GALLERY_GROUP,
 	type GalleryItem,
+	HORIZONTAL_GALLERY_GROUP,
 } from "./constants";
 
 function ImagePage({

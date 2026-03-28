@@ -22,7 +22,7 @@ const horizontalGalleryZoomInterpolator: ScreenTransitionConfig["screenStyleInte
 		const navigationStyles = bounds({
 			id,
 			group: HORIZONTAL_GALLERY_GROUP,
-		}).navigation.zoom({ target: "bound", DEBUG: true });
+		}).navigation.zoom({ target: "bound" });
 
 		if (!focused) {
 			return navigationStyles;
@@ -30,15 +30,6 @@ const horizontalGalleryZoomInterpolator: ScreenTransitionConfig["screenStyleInte
 
 		return {
 			...navigationStyles,
-			backdrop: {
-				style: {
-					backgroundColor: "#FFF",
-					opacity: interpolate(progress, [0, 1], [0, 0.25], "clamp"),
-				},
-				props: {
-					intensity: interpolate(progress, [0, 1], [0, 25], "clamp"),
-				},
-			},
 		};
 	};
 
@@ -59,7 +50,6 @@ export default function HorizontalGalleryLayout() {
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
-					backdropComponent: BlurView,
 					screenStyleInterpolator: horizontalGalleryZoomInterpolator,
 					experimental_enableHighRefreshRate: true,
 					transitionSpec: {

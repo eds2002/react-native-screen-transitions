@@ -1,4 +1,5 @@
 import { interpolate } from "react-native-reanimated";
+import { opacity } from "react-native-reanimated/lib/typescript/Colors";
 import {
 	EPSILON,
 	HIDDEN_STYLE,
@@ -110,7 +111,7 @@ export function buildZoomStyles({
 	/* ------------------------------ Shared Setup ------------------------------ */
 
 	const explicitTarget = zoomOptions?.target;
-	const debug = zoomOptions?.DEBUG === true;
+	const debug = zoomOptions?.debug === true;
 	const focused = props.focused;
 	const progress = props.progress;
 	const screenLayout = props.layouts.screen;
@@ -308,8 +309,12 @@ export function buildZoomStyles({
 	const unfocusedScale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
 	const isUnfocusedIdle = props.active.settled === 1;
 	const shouldHideUnfocusedIdle = isUnfocusedIdle && !debug;
-	const shouldFreezeUnfocusedElement =
-		props.active.logicallySettled && !props.active.closing;
+	const didSourceComponentVisiblyHide =
+		!debug && !props.active.closing && unfocusedFade <= EPSILON;
+
+	const shouldResetUnfocusedElement =
+		!props.active.closing &&
+		(props.active.logicallySettled || didSourceComponentVisiblyHide);
 
 	const unfocusedElementTarget =
 		explicitTarget !== undefined || resolvedPair.destinationBounds
@@ -401,19 +406,19 @@ export function buildZoomStyles({
 		: {
 				transform: [
 					{
-						translateX: shouldFreezeUnfocusedElement ? 0 : elementTranslateX,
+						translateX: shouldResetUnfocusedElement ? 0 : elementTranslateX,
 					},
 					{
-						translateY: shouldFreezeUnfocusedElement ? 0 : elementTranslateY,
+						translateY: shouldResetUnfocusedElement ? 0 : elementTranslateY,
 					},
 					{
-						scaleX: shouldFreezeUnfocusedElement ? 1 : elementScaleX,
+						scaleX: shouldResetUnfocusedElement ? 1 : elementScaleX,
 					},
 					{
-						scaleY: shouldFreezeUnfocusedElement ? 1 : elementScaleY,
+						scaleY: shouldResetUnfocusedElement ? 1 : elementScaleY,
 					},
 				],
-				opacity: debug ? 0.5 : unfocusedFade,
+				opacity: debug ? 1 : unfocusedFade,
 				zIndex: 9999,
 				elevation: 9999,
 			};
