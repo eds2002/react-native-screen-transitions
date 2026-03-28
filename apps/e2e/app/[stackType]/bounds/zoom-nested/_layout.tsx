@@ -1,4 +1,4 @@
-// @ts-nocheck
+import { Platform } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";

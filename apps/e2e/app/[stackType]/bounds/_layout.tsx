@@ -1,4 +1,3 @@
-// @ts-nocheck
 import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";

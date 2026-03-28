@@ -1,7 +1,6 @@
 import { Platform } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
-import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";

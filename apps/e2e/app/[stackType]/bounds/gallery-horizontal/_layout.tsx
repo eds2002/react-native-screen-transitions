@@ -1,5 +1,3 @@
-import { BlurView } from "expo-blur";
-import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
@@ -11,7 +9,7 @@ import {
 } from "./constants";
 
 const horizontalGalleryZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, progress, focused }) => {
+	({ bounds, focused }) => {
 		"worklet";
 		const id = activeHorizontalGalleryId.value;
 
@@ -47,7 +45,7 @@ export default function HorizontalGalleryLayout() {
 				options={{
 					navigationMaskEnabled: true,
 					gestureEnabled: true,
-					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
+					gestureDirection: ["vertical", "vertical-inverted"],
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: horizontalGalleryZoomInterpolator,

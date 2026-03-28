@@ -110,10 +110,16 @@ export default function BoundsSyncDestination() {
 			<View style={styles.floatingContainer}>
 				<Pressable
 					onPress={() => router.back()}
-					style={[styles.floatingButton, { backgroundColor: theme.actionButton }]}
+					style={[
+						styles.floatingButton,
+						{ backgroundColor: theme.actionButton },
+					]}
 				>
 					<Text
-						style={[styles.floatingButtonText, { color: theme.actionButtonText }]}
+						style={[
+							styles.floatingButtonText,
+							{ color: theme.actionButtonText },
+						]}
 					>
 						Go Back
 					</Text>

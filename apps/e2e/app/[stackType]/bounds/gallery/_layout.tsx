@@ -1,4 +1,3 @@
-import { BlurView } from "expo-blur";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
@@ -16,17 +15,17 @@ const galleryZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"]
 			return {};
 		}
 
-		const navigationStyles = bounds({
+		const { content, ...rest } = bounds({
 			id,
 			group: GALLERY_GROUP,
 		}).navigation.zoom({ target: "bound", debug: true });
 
 		if (!focused) {
-			return navigationStyles;
+			return rest;
 		}
 
 		return {
-			...navigationStyles,
+			...rest,
 			backdrop: {
 				style: {
 					backgroundColor: "#FFF",
@@ -53,7 +52,7 @@ export default function GalleryLayout() {
 				options={{
 					navigationMaskEnabled: true,
 					gestureEnabled: true,
-					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
+					gestureDirection: ["vertical", "vertical-inverted"],
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					// backdropComponent: BlurView,

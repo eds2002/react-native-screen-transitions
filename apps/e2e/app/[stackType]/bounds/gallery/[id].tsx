@@ -93,9 +93,9 @@ export default function GalleryDetail() {
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
 				onMomentumScrollEnd={handleMomentumScrollEnd}
-				windowSize={1}
-				maxToRenderPerBatch={1}
-				initialNumToRender={1}
+				windowSize={3}
+				maxToRenderPerBatch={3}
+				initialNumToRender={3}
 				removeClippedSubviews
 				updateCellsBatchingPeriod={100}
 				scrollEventThrottle={16}
