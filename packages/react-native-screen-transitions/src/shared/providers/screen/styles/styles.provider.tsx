@@ -44,9 +44,6 @@ export const {
 
 		const isGesturingDuringCloseAnimation = useSharedValue(false);
 		const hasWarnedLegacy = useSharedValue(false);
-		const previousLayerStyleKeysBySlot = useSharedValue<
-			Record<string, StyleKeySet>
-		>({});
 		const previousElementStyleKeysBySlot = useSharedValue<
 			Record<string, StyleKeySet>
 		>({});
@@ -134,15 +131,7 @@ export const {
 		const layerStylesMap =
 			useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
 				"worklet";
-				const { resolvedStylesMap, nextPreviousStyleKeysBySlot } =
-					buildResolvedStyleMap({
-						currentStylesMap: rawStyleResolution.value.layerStylesMap,
-						fallbackStylesMap: NO_STYLES,
-						previousStyleKeysBySlot: previousLayerStyleKeysBySlot.value,
-					});
-
-				previousLayerStyleKeysBySlot.value = nextPreviousStyleKeysBySlot;
-				return resolvedStylesMap;
+				return rawStyleResolution.value.layerStylesMap;
 			});
 
 		const elementStylesMap =
