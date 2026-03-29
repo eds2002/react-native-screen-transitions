@@ -3,12 +3,14 @@ import { runOnUI, useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
-import type { MaybeMeasureAndStoreParams } from "../types";
+import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
 import { resolveInitialLayoutMeasurementIntent } from "./helpers/measurement-rules";
 
 export const useInitialLayoutHandler = (params: {
 	enabled: boolean;
 	sharedBoundTag: string;
+	id: BoundaryId;
+	group?: string;
 	currentScreenKey: string;
 	ancestorKeys: string[];
 	expectedSourceScreenKey?: string;
@@ -17,6 +19,8 @@ export const useInitialLayoutHandler = (params: {
 	const {
 		enabled,
 		sharedBoundTag,
+		id,
+		group,
 		currentScreenKey,
 		ancestorKeys,
 		expectedSourceScreenKey,
@@ -35,6 +39,10 @@ export const useInitialLayoutHandler = (params: {
 		"worklet";
 		if (!enabled) return;
 		if (!sharedBoundTag || hasMeasuredOnLayout.get()) return;
+		const currentGroupActiveId = group
+			? BoundStore.getGroupActiveId(group)
+			: null;
+		if (group && currentGroupActiveId !== String(id)) return;
 
 		let isAnyAnimating = isAnimating.get();
 		for (let i = 0; i < ancestorAnimations.length; i++) {
@@ -76,6 +84,8 @@ export const useInitialLayoutHandler = (params: {
 	}, [
 		enabled,
 		sharedBoundTag,
+		id,
+		group,
 		hasMeasuredOnLayout,
 		isAnimating,
 		ancestorAnimations,

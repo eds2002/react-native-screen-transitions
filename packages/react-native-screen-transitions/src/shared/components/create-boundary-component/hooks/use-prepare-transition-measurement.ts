@@ -1,7 +1,7 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
-import type { MaybeMeasureAndStoreParams } from "../types";
+import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
 import {
 	PREPARE_DESTINATION_MEASUREMENT_INTENT,
 	resolvePrepareSourceMeasurementIntent,
@@ -10,6 +10,8 @@ import {
 export const usePrepareTransitionMeasurement = (params: {
 	enabled: boolean;
 	sharedBoundTag: string;
+	id: BoundaryId;
+	group?: string;
 	currentScreenKey: string;
 	nextScreenKey?: string;
 	hasNextScreen: boolean;
@@ -18,6 +20,8 @@ export const usePrepareTransitionMeasurement = (params: {
 	const {
 		enabled,
 		sharedBoundTag,
+		id,
+		group,
 		currentScreenKey,
 		nextScreenKey,
 		hasNextScreen,
@@ -39,6 +43,14 @@ export const usePrepareTransitionMeasurement = (params: {
 			if (!enabled || !hasNextScreen) return;
 			if (nextValue === 0 || nextValue === previousValue) return;
 
+			const currentGroupActiveId = group
+				? BoundStore.getGroupActiveId(group)
+				: null;
+
+			if (currentGroupActiveId !== String(id)) {
+				return;
+			}
+
 			const intent = resolvePrepareSourceMeasurementIntent({
 				hasSourceLink: BoundStore.hasSourceLink(
 					sharedBoundTag,
@@ -46,17 +58,8 @@ export const usePrepareTransitionMeasurement = (params: {
 				),
 			});
 
-			maybeMeasureAndStore({ intent });
+			maybeMeasureAndStore({ intent, preferLiveMeasure: true });
 		},
-		[
-			enabled,
-			sharedBoundTag,
-			currentScreenKey,
-			hasNextScreen,
-			nextScreenKey,
-			nextWillAnimate,
-			maybeMeasureAndStore,
-		],
 	);
 
 	useAnimatedReaction(
@@ -65,18 +68,14 @@ export const usePrepareTransitionMeasurement = (params: {
 			"worklet";
 			if (!enabled || hasNextScreen) return;
 			if (nextValue === 0 || nextValue === previousValue) return;
+			const currentGroupActiveId = group
+				? BoundStore.getGroupActiveId(group)
+				: null;
+			if (currentGroupActiveId !== String(id)) return;
 
 			maybeMeasureAndStore({
 				intent: PREPARE_DESTINATION_MEASUREMENT_INTENT,
 			});
 		},
-		[
-			enabled,
-			sharedBoundTag,
-			currentScreenKey,
-			hasNextScreen,
-			currentWillAnimate,
-			maybeMeasureAndStore,
-		],
 	);
 };

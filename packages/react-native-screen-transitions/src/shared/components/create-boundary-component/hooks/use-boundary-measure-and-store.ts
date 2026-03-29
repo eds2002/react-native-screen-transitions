@@ -63,7 +63,10 @@ export const useBoundaryMeasureAndStore = (params: {
 	const layoutAnchor = useLayoutAnchorContext();
 
 	return useStableCallbackValue(
-		({ intent }: MaybeMeasureAndStoreParams = {}) => {
+		({
+			intent,
+			preferLiveMeasure = false,
+		}: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
 			if (!enabled) return;
 
@@ -73,7 +76,7 @@ export const useBoundaryMeasureAndStore = (params: {
 				resolvePendingSourceKey(sharedBoundTag, preferredSourceScreenKey) ||
 				undefined;
 
-			if (intents.captureSource && isAnimating.get()) {
+			if (intents.captureSource && isAnimating.get() && !preferLiveMeasure) {
 				const existing = BoundStore.getSnapshot(
 					sharedBoundTag,
 					currentScreenKey,

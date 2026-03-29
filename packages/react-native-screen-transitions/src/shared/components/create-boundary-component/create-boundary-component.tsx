@@ -25,7 +25,6 @@ import { useGroupActiveMeasurement } from "./hooks/use-group-active-measurement"
 import { useGroupActiveSourceMeasurement } from "./hooks/use-group-active-source-measurement";
 import { useInitialLayoutHandler } from "./hooks/use-initial-layout-handler";
 import { usePendingDestinationMeasurement } from "./hooks/use-pending-destination-measurement";
-import { usePendingDestinationRetryMeasurement } from "./hooks/use-pending-destination-retry-measurement";
 import { usePrepareTransitionMeasurement } from "./hooks/use-prepare-transition-measurement";
 import {
 	BoundaryOwnerProvider,
@@ -168,24 +167,20 @@ export function createBoundaryComponent<P extends object>(
 		useAutoSourceMeasurement({
 			enabled: runtimeEnabled,
 			sharedBoundTag,
+			id,
+			group,
 			nextScreenKey,
 			maybeMeasureAndStore,
 		});
 
-		// Primary destination capture: once a pending source link exists for this tag,
-		// measure destination bounds and complete the pair.
+		// Destination completion path: do one immediate completion attempt when a
+		// pending source link appears, then retry during transition progress if the
+		// first attempt races layout readiness.
 		usePendingDestinationMeasurement({
 			sharedBoundTag,
 			enabled: shouldRunDestinationEffects,
-			expectedSourceScreenKey: preferredSourceScreenKey,
-			maybeMeasureAndStore,
-		});
-
-		// Reliability fallback: retry destination capture during transition progress
-		// when the initial pending-destination attempt happens before layout is ready.
-		usePendingDestinationRetryMeasurement({
-			sharedBoundTag,
-			enabled: shouldRunDestinationEffects,
+			id,
+			group,
 			currentScreenKey,
 			expectedSourceScreenKey: preferredSourceScreenKey,
 			animating: isAnimating,
@@ -198,32 +193,11 @@ export function createBoundaryComponent<P extends object>(
 		usePrepareTransitionMeasurement({
 			enabled: runtimeEnabled,
 			sharedBoundTag,
+			id,
+			group,
 			currentScreenKey,
 			nextScreenKey,
 			hasNextScreen,
-			maybeMeasureAndStore,
-		});
-
-		// Grouped boundaries (e.g. paged/detail UIs): re-measure when this boundary
-		// becomes the active member so destination bounds stay accurate.
-		useGroupActiveMeasurement({
-			enabled: runtimeEnabled,
-			group,
-			id,
-			currentScreenKey,
-			shouldUpdateDestination,
-			maybeMeasureAndStore,
-		});
-
-		// Source-side grouped retargeting: when an unfocused/source boundary
-		// becomes the active member, refresh its snapshot and source link so
-		// close transitions do not use stale pre-scroll geometry.
-		useGroupActiveSourceMeasurement({
-			enabled: runtimeEnabled,
-			group,
-			id,
-			hasNextScreen,
-			isAnimating,
 			maybeMeasureAndStore,
 		});
 
@@ -232,6 +206,8 @@ export function createBoundaryComponent<P extends object>(
 		useInitialLayoutHandler({
 			enabled: runtimeEnabled,
 			sharedBoundTag,
+			id,
+			group,
 			currentScreenKey,
 			ancestorKeys,
 			expectedSourceScreenKey: preferredSourceScreenKey,
