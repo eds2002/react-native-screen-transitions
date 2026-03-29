@@ -35,6 +35,7 @@ import {
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
+const UNFOCUSED_ENTER_FADE_END = 1.6;
 const presentedZoomTagByRoute = makeMutable<Record<string, string>>({});
 
 /* -------------------------------------------------------------------------- */
@@ -390,18 +391,16 @@ export function buildZoomStyles({
 
 		if (props.navigationMaskEnabled) {
 			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
-				style: props.active.entering
-					? {
-							width: maskWidth,
-							height: maskHeight,
-							borderRadius: focusedMaskBorderRadius,
-							transform: [
-								{ translateX: maskTranslateX },
-								{ translateY: maskTranslateY },
-								{ scale: dragScale },
-							],
-						}
-					: {},
+				style: {
+					width: maskWidth,
+					height: maskHeight,
+					borderRadius: focusedMaskBorderRadius,
+					transform: [
+						{ translateX: maskTranslateX },
+						{ translateY: maskTranslateY },
+						{ scale: dragScale },
+					],
+				},
 			};
 		}
 
@@ -411,8 +410,8 @@ export function buildZoomStyles({
 	/* ---------------------------- Unfocused Screen ---------------------------- */
 
 	const unfocusedFade = props.active?.closing
-		? interpolate(progress, [1.6, 2], [1, 0], "clamp")
-		: interpolate(progress, [1, 1.5], [1, 0], "clamp");
+		? interpolate(progress, [1.9, 2], [1, 0], "clamp")
+		: interpolate(progress, [1, 2], [1, 0], "clamp");
 	const unfocusedScale = interpolate(
 		progress,
 		[1, 2],
