@@ -38,6 +38,39 @@ export type BoundsNavigationZoomOptions = {
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
 	debug?: boolean;
 	borderRadius?: number;
+	/**
+	 * Scale applied to the unfocused background content while the focused bound
+	 * animates above it.
+	 */
+	backgroundScale?: number;
+	/**
+	 * Horizontal gesture drag scaling curve, applied when the active dismiss
+	 * direction is horizontal.
+	 *
+	 * Tuple order:
+	 * - `shrinkMin`: minimum scale when dragging toward dismissal
+	 * - `growMax`: maximum scale when dragging opposite dismissal
+	 * - `exponent`: curve exponent controlling how quickly scaling ramps
+	 */
+	horizontalDragScale?: readonly [
+		shrinkMin: number,
+		growMax: number,
+		exponent?: number,
+	];
+	/**
+	 * Vertical gesture drag scaling curve, applied when the active dismiss
+	 * direction is vertical.
+	 *
+	 * Tuple order:
+	 * - `shrinkMin`: minimum scale when dragging toward dismissal
+	 * - `growMax`: maximum scale when dragging opposite dismissal
+	 * - `exponent`: curve exponent controlling how quickly scaling ramps
+	 */
+	verticalDragScale?: readonly [
+		shrinkMin: number,
+		growMax: number,
+		exponent?: number,
+	];
 };
 
 export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {

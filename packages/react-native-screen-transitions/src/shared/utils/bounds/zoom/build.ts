@@ -1,5 +1,4 @@
 import { interpolate } from "react-native-reanimated";
-import { opacity } from "react-native-reanimated/lib/typescript/Colors";
 import {
 	EPSILON,
 	HIDDEN_STYLE,
@@ -18,6 +17,8 @@ import type { BoundsOptions } from "../types/options";
 import {
 	getZoomAnchor,
 	toNumber,
+	ZOOM_BACKGROUND_SCALE,
+	ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
 	ZOOM_DRAG_RESISTANCE,
@@ -93,6 +94,26 @@ function getZoomContentTarget({
 		width: screenWidth,
 		height,
 	};
+}
+
+function resolveDragScaleTuple(
+	value:
+		| readonly [shrinkMin: number, growMax: number, exponent?: number]
+		| undefined,
+) {
+	"worklet";
+
+	return {
+		shrinkMin: value?.[0] ?? ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
+		growMax: value?.[1] ?? ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
+		exponent: value?.[2] ?? ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
+	};
+}
+
+function resolveBackgroundScale(value: number | undefined) {
+	"worklet";
+
+	return value ?? ZOOM_BACKGROUND_SCALE;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -184,15 +205,22 @@ export function buildZoomStyles({
 		dimension: screenLayout.height,
 		resistance: ZOOM_DRAG_RESISTANCE,
 	});
+	const horizontalDragScale = resolveDragScaleTuple(
+		zoomOptions?.horizontalDragScale,
+	);
+	const verticalDragScale = resolveDragScaleTuple(
+		zoomOptions?.verticalDragScale,
+	);
+	const backgroundScale = resolveBackgroundScale(zoomOptions?.backgroundScale);
 
 	const dragXScale = isHorizontalDismiss
 		? resolveDirectionalDragScale({
 				normalized: normX,
 				dismissDirection:
 					initialDirection === "horizontal-inverted" ? "negative" : "positive",
-				shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
-				growMax: ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
-				exponent: 2,
+				shrinkMin: horizontalDragScale.shrinkMin,
+				growMax: horizontalDragScale.growMax,
+				exponent: horizontalDragScale.exponent,
 			})
 		: IDENTITY_DRAG_SCALE_OUTPUT[0];
 	const dragYScale = isVerticalDismiss
@@ -200,9 +228,9 @@ export function buildZoomStyles({
 				normalized: normY,
 				dismissDirection:
 					initialDirection === "vertical-inverted" ? "negative" : "positive",
-				shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
-				growMax: ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
-				exponent: 2,
+				shrinkMin: verticalDragScale.shrinkMin,
+				growMax: verticalDragScale.growMax,
+				exponent: verticalDragScale.exponent,
 			})
 		: IDENTITY_DRAG_SCALE_OUTPUT[1];
 	const dragScale = combineScales(dragXScale, dragYScale);
@@ -306,7 +334,12 @@ export function buildZoomStyles({
 	const unfocusedFade = props.active?.closing
 		? interpolate(progress, [1.6, 2], [1, debug ? 1 : 0], "clamp")
 		: interpolate(progress, [1, 1.5], [1, debug ? 1 : 0], "clamp");
-	const unfocusedScale = interpolate(progress, [1, 2], [1, 0.95], "clamp");
+	const unfocusedScale = interpolate(
+		progress,
+		[1, 2],
+		[1, backgroundScale],
+		"clamp",
+	);
 	const isUnfocusedIdle = props.active.settled === 1;
 	const shouldHideUnfocusedIdle = isUnfocusedIdle && !debug;
 	const didSourceComponentVisiblyHide =
