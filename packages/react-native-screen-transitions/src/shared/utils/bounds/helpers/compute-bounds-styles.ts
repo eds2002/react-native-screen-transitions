@@ -135,7 +135,6 @@ export const computeBoundStyles = (
 		currentScreenKey,
 		sourceScreenKey,
 		destinationScreenKey,
-		hasTargetOverride,
 	} = resolveBounds({
 		id,
 		previous,

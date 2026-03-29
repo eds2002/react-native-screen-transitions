@@ -428,15 +428,12 @@ export function buildZoomStyles({
 		!props.active.closing &&
 		(props.active.logicallySettled || didSourceComponentVisiblyHide);
 
-	const unfocusedElementTarget =
-		explicitTarget !== undefined || resolvedPair.destinationBounds
-			? getZoomContentTarget({
-					explicitTarget,
-					screenLayout,
-					anchor: ZOOM_SHARED_OPTIONS.anchor,
-					resolvedPair,
-				})
-			: ("fullscreen" as const);
+	const unfocusedElementTarget = getZoomContentTarget({
+		explicitTarget,
+		screenLayout,
+		anchor: ZOOM_SHARED_OPTIONS.anchor,
+		resolvedPair,
+	});
 
 	const elementRaw = computeBoundStyles(
 		zoomComputeParams,
