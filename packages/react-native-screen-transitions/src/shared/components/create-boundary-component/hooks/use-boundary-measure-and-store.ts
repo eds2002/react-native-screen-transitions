@@ -3,7 +3,6 @@ import {
 	type AnimatedRef,
 	type MeasuredDimensions,
 	measure,
-	type SharedValue,
 	type StyleProps,
 } from "react-native-reanimated";
 import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
@@ -43,7 +42,6 @@ export const useBoundaryMeasureAndStore = (params: {
 	ancestorKeys: string[];
 	navigatorKey?: string;
 	ancestorNavigatorKeys?: string[];
-	isAnimating: SharedValue<number>;
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
 }) => {
@@ -55,7 +53,6 @@ export const useBoundaryMeasureAndStore = (params: {
 		ancestorKeys,
 		navigatorKey,
 		ancestorNavigatorKeys,
-		isAnimating,
 		preparedStyles,
 		measuredAnimatedRef,
 	} = params;
@@ -63,10 +60,7 @@ export const useBoundaryMeasureAndStore = (params: {
 	const layoutAnchor = useLayoutAnchorContext();
 
 	return useStableCallbackValue(
-		({
-			intent,
-			preferLiveMeasure = false,
-		}: MaybeMeasureAndStoreParams = {}) => {
+		({ intent }: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
 			if (!enabled) return;
 
@@ -75,30 +69,6 @@ export const useBoundaryMeasureAndStore = (params: {
 			const expectedSourceScreenKey: string | undefined =
 				resolvePendingSourceKey(sharedBoundTag, preferredSourceScreenKey) ||
 				undefined;
-
-			if (intents.captureSource && isAnimating.get() && !preferLiveMeasure) {
-				const existing = BoundStore.getSnapshot(
-					sharedBoundTag,
-					currentScreenKey,
-				);
-				if (existing) {
-					applyMeasuredBoundsWrites({
-						sharedBoundTag,
-						ancestorKeys,
-						navigatorKey,
-						ancestorNavigatorKeys,
-						currentScreenKey,
-						measured: existing.bounds,
-						preparedStyles,
-						shouldSetSource: true,
-					});
-					return;
-				}
-
-				// No cached snapshot while animating.
-				// Fall through to a live measurement so rapid retargeting still
-				// captures a valid source link.
-			}
 
 			const hasPendingLink = expectedSourceScreenKey
 				? BoundStore.hasPendingLinkFromSource(

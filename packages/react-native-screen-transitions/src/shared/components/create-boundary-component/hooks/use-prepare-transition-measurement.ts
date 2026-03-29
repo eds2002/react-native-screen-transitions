@@ -76,7 +76,7 @@ export const usePrepareTransitionMeasurement = (params: {
 				),
 			});
 
-			maybeMeasureAndStore({ intent, preferLiveMeasure: true });
+			maybeMeasureAndStore({ intent });
 		},
 	);
 

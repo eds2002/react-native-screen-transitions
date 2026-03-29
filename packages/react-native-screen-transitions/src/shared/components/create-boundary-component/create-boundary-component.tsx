@@ -141,7 +141,6 @@ export function createBoundaryComponent<P extends object>(
 			ancestorKeys,
 			navigatorKey,
 			ancestorNavigatorKeys,
-			isAnimating,
 			preparedStyles,
 			measuredAnimatedRef: measuredRef,
 		});

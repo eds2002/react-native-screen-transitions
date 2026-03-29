@@ -1,4 +1,3 @@
-import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import { matchesScreenKey } from "../helpers/matching";
 import type {
 	ResolvedTransitionPair,
@@ -8,7 +7,6 @@ import type {
 	TagLink,
 	TagState,
 } from "../types";
-import { getSnapshot } from "./registry";
 import { debugResolverLog, registry } from "./state";
 
 const findLatestLink = (
@@ -65,30 +63,6 @@ function findPendingLinkBySource(
 		(link) =>
 			link.destination === null && matchesScreenKey(link.source, screenKey),
 	);
-}
-
-function getSnapshotBoundsByPriority(
-	tag: TagID,
-	keys: (ScreenKey | undefined)[],
-): {
-	bounds: MeasuredDimensions;
-	styles: StyleProps;
-	screenKey: ScreenKey;
-} | null {
-	"worklet";
-	for (let i = 0; i < keys.length; i++) {
-		const key = keys[i];
-		if (!key) continue;
-		const snapshot = getSnapshot(tag, key);
-		if (!snapshot) continue;
-		return {
-			bounds: snapshot.bounds,
-			styles: snapshot.styles,
-			screenKey: key,
-		};
-	}
-
-	return null;
 }
 
 function resolveTransitionPair(
@@ -153,53 +127,14 @@ function resolveTransitionPair(
 		}
 	}
 
-	let sourceBounds = matchedLink?.source?.bounds ?? null;
-	let destinationBounds = matchedLink?.destination?.bounds ?? null;
-	let sourceStyles = matchedLink?.source?.styles ?? null;
-	let destinationStyles = matchedLink?.destination?.styles ?? null;
-	let sourceScreenKey = matchedLink?.source?.screenKey ?? null;
-	let destinationScreenKey = matchedLink?.destination?.screenKey ?? null;
-	let usedSnapshotSource = false;
-	let usedSnapshotDestination = false;
-
-	const sourceFallbackKeys = context.entering
-		? [
-				context.previousScreenKey,
-				context.currentScreenKey,
-				context.nextScreenKey,
-			]
-		: [
-				context.currentScreenKey,
-				context.previousScreenKey,
-				context.nextScreenKey,
-			];
-
-	const destinationFallbackKeys = context.entering
-		? [context.currentScreenKey, context.nextScreenKey]
-		: [context.nextScreenKey, context.currentScreenKey];
-
-	if (!sourceBounds) {
-		const sourceSnapshot = getSnapshotBoundsByPriority(tag, sourceFallbackKeys);
-		if (sourceSnapshot) {
-			sourceBounds = sourceSnapshot.bounds;
-			sourceStyles = sourceSnapshot.styles;
-			sourceScreenKey = sourceSnapshot.screenKey;
-			usedSnapshotSource = true;
-		}
-	}
-
-	if (!destinationBounds) {
-		const destinationSnapshot = getSnapshotBoundsByPriority(
-			tag,
-			destinationFallbackKeys,
-		);
-		if (destinationSnapshot) {
-			destinationBounds = destinationSnapshot.bounds;
-			destinationStyles = destinationSnapshot.styles;
-			destinationScreenKey = destinationSnapshot.screenKey;
-			usedSnapshotDestination = true;
-		}
-	}
+	const sourceBounds = matchedLink?.source?.bounds ?? null;
+	const destinationBounds = matchedLink?.destination?.bounds ?? null;
+	const sourceStyles = matchedLink?.source?.styles ?? null;
+	const destinationStyles = matchedLink?.destination?.styles ?? null;
+	const sourceScreenKey = matchedLink?.source?.screenKey ?? null;
+	const destinationScreenKey = matchedLink?.destination?.screenKey ?? null;
+	const usedSnapshotSource = false;
+	const usedSnapshotDestination = false;
 
 	if (!sourceBounds || !destinationBounds) {
 		debugResolverLog(

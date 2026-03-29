@@ -48,5 +48,4 @@ export type MeasurementIntent =
 
 export interface MaybeMeasureAndStoreParams {
 	intent?: MeasurementIntent | readonly MeasurementIntent[];
-	preferLiveMeasure?: boolean;
 }
