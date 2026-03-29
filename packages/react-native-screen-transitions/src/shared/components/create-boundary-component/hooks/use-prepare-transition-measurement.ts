@@ -76,6 +76,10 @@ export const usePrepareTransitionMeasurement = (params: {
 				),
 			});
 
+			if (!intent) {
+				return;
+			}
+
 			maybeMeasureAndStore({ intent });
 		},
 	);

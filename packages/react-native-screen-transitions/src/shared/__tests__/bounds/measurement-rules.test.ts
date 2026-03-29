@@ -243,12 +243,12 @@ describe("bounds measurement rules", () => {
 		).toBeNull();
 	});
 
-	it("maps prepare-transition source refresh based on link state", () => {
+	it("maps prepare-transition source capture only when no source link exists", () => {
 		expect(resolvePrepareSourceMeasurementIntent({ hasSourceLink: false })).toBe(
 			"capture-source",
 		);
 		expect(resolvePrepareSourceMeasurementIntent({ hasSourceLink: true })).toBe(
-			"refresh-source",
+			null,
 		);
 		expect(PREPARE_DESTINATION_MEASUREMENT_INTENT).toEqual([
 			"complete-destination",

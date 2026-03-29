@@ -2,7 +2,6 @@ import type { MeasuredDimensions } from "react-native-reanimated";
 import {
 	EMPTY_BOUND_HELPER_RESULT_RAW,
 	ENTER_RANGE,
-	EPSILON,
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
 	HIDDEN_STYLE,
@@ -159,20 +158,6 @@ export const computeBoundStyles = (
 	}
 
 	const ranges: readonly [number, number] = entering ? ENTER_RANGE : EXIT_RANGE;
-
-	// For element-level bounds styles, once the exit phase is fully complete we no
-	// longer want to preserve the transformed/size-overridden geometry. Returning an
-	// empty style here lets the element style reconciler clear those keys back to the
-	// base layout before any future source measurement runs.
-	const shouldResetHiddenElementStyles =
-		!computeOptions.raw &&
-		computeOptions.method !== "content" &&
-		!entering &&
-		progress >= ranges[1] - EPSILON;
-
-	if (shouldResetHiddenElementStyles) {
-		return NO_STYLES;
-	}
 
 	if (computeOptions.method === "content") {
 		const ignoresSnapshotDestinationOwnership =

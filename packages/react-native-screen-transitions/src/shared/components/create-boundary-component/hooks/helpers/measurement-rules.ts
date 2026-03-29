@@ -225,9 +225,9 @@ export const resolveInitialLayoutMeasurementIntent = (params: {
 
 export const resolvePrepareSourceMeasurementIntent = (params: {
 	hasSourceLink: boolean;
-}): MeasurementIntent => {
+}): MeasurementIntent | null => {
 	"worklet";
-	return params.hasSourceLink ? "refresh-source" : "capture-source";
+	return params.hasSourceLink ? null : "capture-source";
 };
 
 export const PREPARE_DESTINATION_MEASUREMENT_INTENT = [
