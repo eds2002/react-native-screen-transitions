@@ -1,4 +1,4 @@
-import { interpolate } from "react-native-reanimated";
+import { interpolate, makeMutable } from "react-native-reanimated";
 import {
 	EPSILON,
 	HIDDEN_STYLE,
@@ -35,6 +35,7 @@ import {
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
+const presentedZoomTagByRoute = makeMutable<Record<string, string>>({});
 
 /* -------------------------------------------------------------------------- */
 /*                               LOCAL HELPERS                                */
@@ -116,6 +117,64 @@ function resolveBackgroundScale(value: number | undefined) {
 	return value ?? ZOOM_BACKGROUND_SCALE;
 }
 
+function resolveEffectiveZoomTag(params: {
+	resolvedTag: string;
+	activeRouteKey?: string;
+	entering: boolean;
+	animating: boolean;
+	activeProgress: number;
+	livePairReady: boolean;
+}) {
+	"worklet";
+
+	const {
+		resolvedTag,
+		activeRouteKey,
+		entering,
+		animating,
+		activeProgress,
+		livePairReady,
+	} = params;
+
+	// Only grouped ids need retarget stabilization. Plain ids should keep their
+	// normal behavior with no route-level caching.
+	if (!activeRouteKey || !resolvedTag.includes(":")) {
+		return resolvedTag;
+	}
+
+	const cachedTag = presentedZoomTagByRoute.value[activeRouteKey];
+	const isFreshOpenFrame = entering && activeProgress <= 0.05;
+	const shouldFreezeDuringEnter = entering && animating && !isFreshOpenFrame;
+
+	if (!cachedTag || isFreshOpenFrame) {
+		presentedZoomTagByRoute.modify((state) => ({
+			...state,
+			[activeRouteKey]: resolvedTag,
+		}));
+		return resolvedTag;
+	}
+
+	if (shouldFreezeDuringEnter) {
+		return cachedTag;
+	}
+
+	// After the enter animation, grouped retargeting can still briefly point at a
+	// new active id before that tag has usable bounds. Keep presenting the last
+	// good tag until the next one is transition-ready.
+	if (cachedTag !== resolvedTag && !livePairReady) {
+		return cachedTag;
+	}
+
+	if (cachedTag !== resolvedTag) {
+		presentedZoomTagByRoute.modify((state) => ({
+			...state,
+			[activeRouteKey]: resolvedTag,
+		}));
+	}
+
+	return resolvedTag;
+}
+
 /* -------------------------------------------------------------------------- */
 /*                             BUILD ZOOM STYLES                              */
 /* -------------------------------------------------------------------------- */
@@ -132,18 +191,32 @@ export function buildZoomStyles({
 	/* ------------------------------ Shared Setup ------------------------------ */
 
 	const explicitTarget = zoomOptions?.target;
-	const debug = zoomOptions?.debug === true;
 	const focused = props.focused;
 	const progress = props.progress;
 	const screenLayout = props.layouts.screen;
 	const isEnteringTransition = !props.next;
+	const activeRouteKey = props.active.route.key;
 	const currentRouteKey = props.current?.route.key;
 	const previousRouteKey = props.previous?.route.key;
 	const nextRouteKey = props.next?.route.key;
 	const resolvedZoomAnchor = getZoomAnchor(explicitTarget);
+	const liveResolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
+		currentScreenKey: currentRouteKey,
+		previousScreenKey: previousRouteKey,
+		nextScreenKey: nextRouteKey,
+		entering: isEnteringTransition,
+	});
+	const effectiveTag = resolveEffectiveZoomTag({
+		resolvedTag,
+		activeRouteKey,
+		entering: !!props.active.entering,
+		animating: !!props.active.animating,
+		activeProgress: props.active.progress,
+		livePairReady: !!liveResolvedPair.sourceBounds,
+	});
 
 	const zoomComputeParams = {
-		id: resolvedTag,
+		id: effectiveTag,
 		previous: props.previous,
 		current: props.current,
 		next: props.next,
@@ -152,22 +225,25 @@ export function buildZoomStyles({
 	} as const;
 
 	const baseRawOptions = {
-		id: resolvedTag,
+		id: effectiveTag,
 		raw: true,
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
 	} as const;
 
-	const resolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
-		currentScreenKey: currentRouteKey,
-		previousScreenKey: previousRouteKey,
-		nextScreenKey: nextRouteKey,
-		entering: isEnteringTransition,
-	});
+	const resolvedPair =
+		effectiveTag === resolvedTag
+			? liveResolvedPair
+			: BoundStore.resolveTransitionPair(effectiveTag, {
+					currentScreenKey: currentRouteKey,
+					previousScreenKey: previousRouteKey,
+					nextScreenKey: nextRouteKey,
+					entering: isEnteringTransition,
+				});
 
 	const sourceBorderRadius = getSourceBorderRadius(resolvedPair);
 	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
 	const sourceVisibilityStyle = {
-		[resolvedTag]: VISIBLE_STYLE,
+		[effectiveTag]: VISIBLE_STYLE,
 	} satisfies TransitionInterpolatedStyle;
 	const focusedContentSlot = props.navigationMaskEnabled
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID
@@ -175,10 +251,11 @@ export function buildZoomStyles({
 
 	/* --------------------------- Missing Source Guard -------------------------- */
 
-	// To avoid initial flickering, we'll want to hide if there are no source bounds
-	// But to also avoid scenarios where activeId changes in dst and theres a failed measurement,
-	// we should only hide if entering and there is no source bounds.
-	if (!resolvedPair.sourceBounds && props.active.entering) {
+	// Only the focused entering route should be hidden when source bounds are
+	// missing. During grouped retargeting, the unfocused/source route can still be
+	// styled by the destination interpolator while the new active member is warming
+	// up; hiding there blanks the wrong screen.
+	if (focused && !resolvedPair.sourceBounds && props.active.entering) {
 		return {
 			[focusedContentSlot]: HIDDEN_STYLE,
 		};
@@ -269,8 +346,8 @@ export function buildZoomStyles({
 		) as Record<string, unknown>;
 
 		const focusedFade = props.active?.closing
-			? interpolate(progress, [0.6, 1], [0, debug ? 0.5 : 1], "clamp")
-			: interpolate(progress, [0, 0.5], [0, debug ? 0.5 : 1], "clamp");
+			? interpolate(progress, [0.6, 1], [0, 1], "clamp")
+			: interpolate(progress, [0, 0.5], [0, 1], "clamp");
 
 		/**
 		 * This is also how swiftui handles their navigation zoom.
@@ -313,16 +390,18 @@ export function buildZoomStyles({
 
 		if (props.navigationMaskEnabled) {
 			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
-				style: {
-					width: maskWidth,
-					height: maskHeight,
-					borderRadius: focusedMaskBorderRadius,
-					transform: [
-						{ translateX: maskTranslateX },
-						{ translateY: maskTranslateY },
-						{ scale: dragScale },
-					],
-				},
+				style: props.active.entering
+					? {
+							width: maskWidth,
+							height: maskHeight,
+							borderRadius: focusedMaskBorderRadius,
+							transform: [
+								{ translateX: maskTranslateX },
+								{ translateY: maskTranslateY },
+								{ scale: dragScale },
+							],
+						}
+					: {},
 			};
 		}
 
@@ -332,8 +411,8 @@ export function buildZoomStyles({
 	/* ---------------------------- Unfocused Screen ---------------------------- */
 
 	const unfocusedFade = props.active?.closing
-		? interpolate(progress, [1.6, 2], [1, debug ? 1 : 0], "clamp")
-		: interpolate(progress, [1, 1.5], [1, debug ? 1 : 0], "clamp");
+		? interpolate(progress, [1.6, 2], [1, 0], "clamp")
+		: interpolate(progress, [1, 1.5], [1, 0], "clamp");
 	const unfocusedScale = interpolate(
 		progress,
 		[1, 2],
@@ -341,9 +420,9 @@ export function buildZoomStyles({
 		"clamp",
 	);
 	const isUnfocusedIdle = props.active.settled === 1;
-	const shouldHideUnfocusedIdle = isUnfocusedIdle && !debug;
+	const shouldHideUnfocusedIdle = isUnfocusedIdle;
 	const didSourceComponentVisiblyHide =
-		!debug && !props.active.closing && unfocusedFade <= EPSILON;
+		!props.active.closing && unfocusedFade <= EPSILON;
 
 	const shouldResetUnfocusedElement =
 		!props.active.closing &&
@@ -451,7 +530,7 @@ export function buildZoomStyles({
 						scaleY: shouldResetUnfocusedElement ? 1 : elementScaleY,
 					},
 				],
-				opacity: debug ? 1 : unfocusedFade,
+				opacity: unfocusedFade,
 				zIndex: 9999,
 				elevation: 9999,
 			};
@@ -462,7 +541,7 @@ export function buildZoomStyles({
 				transform: [{ scale: unfocusedScale }],
 			},
 		},
-		[resolvedTag]: {
+		[effectiveTag]: {
 			style: resolvedElementStyle,
 		},
 	};
