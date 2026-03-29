@@ -1,9 +1,9 @@
 import { router } from "expo-router";
-import { ListScreen } from "@/components/ui";
 import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
+import { ListScreen } from "@/components/ui";
 
 const BOUNDS_EXAMPLES = [
 	{
@@ -72,13 +72,19 @@ const BOUNDS_EXAMPLES = [
 	{
 		id: "gallery-horizontal",
 		title: "Horizontal Gallery",
-		description: "Horizontal image carousel with shared element zoom transitions",
+		description:
+			"Horizontal image carousel with shared element zoom transitions",
 	},
 	{
 		id: "example",
 		title: "Nested Bounds A/B",
 		description:
 			"2x2 image grid -> nested [id]/a,b route flow with navigation zoom",
+	},
+	{
+		id: "reels",
+		title: "Reels Grid",
+		description: "Yeah ",
 	},
 ];
 
@@ -93,9 +99,7 @@ export default function BoundsHubIndex() {
 			items={BOUNDS_EXAMPLES}
 			testIdPrefix={`${testPrefix}-bounds`}
 			onPress={(id) =>
-				router.push(
-					buildStackPath(stackType, `bounds/${id}`) as never,
-				)
+				router.push(buildStackPath(stackType, `bounds/${id}`) as never)
 			}
 		/>
 	);

@@ -14,7 +14,7 @@ const toZoomId = (route: { params?: object }) => {
 };
 
 const navigationZoomIdInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, current, active, progress }) => {
+	({ bounds, current, active }) => {
 		"worklet";
 		const currentId = toZoomId(current.route);
 		const activeId = toZoomId(active.route);
@@ -26,15 +26,9 @@ const navigationZoomIdInterpolator: ScreenTransitionConfig["screenStyleInterpola
 
 		const navigationStyles = bounds({
 			id,
-		}).navigation.zoom();
+		}).navigation.zoom({ borderRadius: 48 });
 
-		return {
-			...navigationStyles,
-			backdrop: {
-				backgroundColor: "black",
-				opacity: interpolate(progress, [0, 1, 2], [0, 0.5, 0]),
-			},
-		};
+		return navigationStyles;
 	};
 
 export default function NavigationZoomIdLayout() {

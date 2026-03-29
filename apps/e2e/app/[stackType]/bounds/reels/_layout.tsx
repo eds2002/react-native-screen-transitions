@@ -8,7 +8,6 @@ import { REELS_GROUP, selectedId } from "./constants";
 
 const reelsInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 	bounds,
-	progress,
 }) => {
 	"worklet";
 	const id = selectedId.value;
@@ -24,23 +23,11 @@ const reelsInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 		verticalDragScale: [0.96, 1.01, 2],
 		horizontalDragScale: [0.92, 1.02, 2],
 		borderRadius: 48,
-		debug: true,
 		target: "bound",
 		backgroundScale: 1,
 	});
 
-	return {
-		...zoomAnimation,
-		backdrop: {
-			style: {
-				backgroundColor: "#FFF",
-				opacity: interpolate(progress, [0, 1], [0, 0.25], "clamp"),
-			},
-			props: {
-				intensity: interpolate(progress, [0, 1], [0, 25], "clamp"),
-			},
-		},
-	};
+	return zoomAnimation;
 };
 
 export default function ReelsLayout() {
@@ -55,9 +42,9 @@ export default function ReelsLayout() {
 			<StackNavigator.Screen
 				name="reel"
 				options={{
-					navigationMaskEnabled: false,
+					navigationMaskEnabled: Platform.OS === "ios",
 					gestureEnabled: true,
-					gestureDirection: ["horizontal"],
+					gestureDirection: ["horizontal", "vertical", "vertical-inverted"],
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: reelsInterpolator,
 					experimental_enableHighRefreshRate: true,

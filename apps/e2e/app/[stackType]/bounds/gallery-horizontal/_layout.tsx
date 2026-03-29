@@ -1,3 +1,5 @@
+import { Platform } from "react-native";
+import { interpolate, interpolateColor } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
@@ -9,7 +11,7 @@ import {
 } from "./constants";
 
 const horizontalGalleryZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, focused }) => {
+	({ bounds, focused, progress }) => {
 		"worklet";
 		const id = activeHorizontalGalleryId.value;
 
@@ -20,14 +22,21 @@ const horizontalGalleryZoomInterpolator: ScreenTransitionConfig["screenStyleInte
 		const navigationStyles = bounds({
 			id,
 			group: HORIZONTAL_GALLERY_GROUP,
-		}).navigation.zoom({ target: "bound", debug: true });
+		}).navigation.zoom({ target: "bound" });
 
-		if (!focused) {
-			return navigationStyles;
-		}
+		const backdropColor = interpolateColor(
+			progress - Math.abs(progress - 1),
+			[0, 1],
+			["rgba(0,0,0,0)", "rgba(0,0,0,1)"],
+		);
 
 		return {
 			...navigationStyles,
+			backdrop: focused
+				? {
+						backgroundColor: backdropColor,
+					}
+				: {},
 		};
 	};
 
@@ -43,7 +52,7 @@ export default function HorizontalGalleryLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					navigationMaskEnabled: true,
+					navigationMaskEnabled: Platform.OS === "ios",
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted"],
 					gestureReleaseVelocityScale: 1.6,

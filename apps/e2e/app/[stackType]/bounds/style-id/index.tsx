@@ -4,9 +4,12 @@ import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
-import { useStyleIdBoundsStore } from "./_layout";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 import { useTheme } from "@/theme";
+import { useStyleIdBoundsStore } from "./_layout";
 
 const IMAGES = [
 	{
@@ -45,7 +48,10 @@ export default function StyleIdBoundsIndex() {
 	const stackType = useResolvedStackType();
 	const theme = useTheme();
 	return (
-		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="Style ID Bounds"
 				subtitle="Bounds with styleId masking"
@@ -63,8 +69,10 @@ export default function StyleIdBoundsIndex() {
 								onPress={() => {
 									useStyleIdBoundsStore.setState({ boundTag: tag });
 									router.push({
-										pathname:
-											buildStackPath(stackType, "bounds/style-id/[id]") as never,
+										pathname: buildStackPath(
+											stackType,
+											"bounds/style-id/[id]",
+										) as never,
 										params: {
 											id: tag,
 											image: item.source,
