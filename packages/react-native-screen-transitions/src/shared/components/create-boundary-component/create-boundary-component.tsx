@@ -75,7 +75,6 @@ export function createBoundaryComponent<P extends object>(
 
 		const runtimeEnabled = enabled && hasConfiguredInterpolator;
 		const hasNextScreen = !!nextScreenKey;
-		const shouldUpdateDestination = !hasNextScreen;
 		const boundaryConfig = useMemo<BoundaryConfigProps | undefined>(() => {
 			if (
 				anchor === undefined &&

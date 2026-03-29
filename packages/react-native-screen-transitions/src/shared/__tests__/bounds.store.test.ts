@@ -402,16 +402,12 @@ describe("BoundStore.resolveTransitionPair", () => {
 		expect(resolved.sourceBounds).toEqual(source);
 		expect(resolved.destinationBounds).toEqual(destination);
 		expect(resolved.usedPending).toBe(false);
-		expect(resolved.usedSnapshotSource).toBe(false);
-		expect(resolved.usedSnapshotDestination).toBe(false);
 	});
 
-	it("entering falls back to pending-from-previous and destination snapshot", () => {
+	it("entering falls back to pending-from-previous source without inventing a destination", () => {
 		const source = createBounds(10, 20, 100, 100);
-		const destinationSnapshot = createBounds(200, 220, 240, 260);
 
 		BoundStore.setLinkSource("card", "screen-a", source);
-		BoundStore.registerSnapshot("card", "screen-b", destinationSnapshot);
 
 		const resolved = BoundStore.resolveTransitionPair("card", {
 			entering: true,
@@ -420,10 +416,8 @@ describe("BoundStore.resolveTransitionPair", () => {
 		});
 
 		expect(resolved.sourceBounds).toEqual(source);
-		expect(resolved.destinationBounds).toEqual(destinationSnapshot);
+		expect(resolved.destinationBounds).toBeNull();
 		expect(resolved.usedPending).toBe(true);
-		expect(resolved.usedSnapshotSource).toBe(false);
-		expect(resolved.usedSnapshotDestination).toBe(true);
 	});
 
 	it("exiting prefers completed link whose source matches current", () => {
@@ -444,7 +438,7 @@ describe("BoundStore.resolveTransitionPair", () => {
 		expect(resolved.usedPending).toBe(false);
 	});
 
-	it("uses snapshot fallback for source-only and source+destination recovery", () => {
+	it("ignores snapshot-only recovery when no live link exists", () => {
 		const sourceSnapshot = createBounds(12, 24, 80, 90);
 		const destinationSnapshot = createBounds(40, 50, 200, 210);
 
@@ -456,10 +450,8 @@ describe("BoundStore.resolveTransitionPair", () => {
 			currentScreenKey: "screen-b",
 		});
 
-		expect(sourceOnly.sourceBounds).toEqual(sourceSnapshot);
+		expect(sourceOnly.sourceBounds).toBeNull();
 		expect(sourceOnly.destinationBounds).toBeNull();
-		expect(sourceOnly.usedSnapshotSource).toBe(true);
-		expect(sourceOnly.usedSnapshotDestination).toBe(false);
 
 		BoundStore.registerSnapshot("card", "screen-b", destinationSnapshot);
 
@@ -469,10 +461,8 @@ describe("BoundStore.resolveTransitionPair", () => {
 			currentScreenKey: "screen-b",
 		});
 
-		expect(sourceAndDestination.sourceBounds).toEqual(sourceSnapshot);
-		expect(sourceAndDestination.destinationBounds).toEqual(destinationSnapshot);
-		expect(sourceAndDestination.usedSnapshotSource).toBe(true);
-		expect(sourceAndDestination.usedSnapshotDestination).toBe(true);
+		expect(sourceAndDestination.sourceBounds).toBeNull();
+		expect(sourceAndDestination.destinationBounds).toBeNull();
 	});
 
 });

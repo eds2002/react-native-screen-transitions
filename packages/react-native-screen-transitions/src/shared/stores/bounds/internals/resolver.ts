@@ -133,8 +133,6 @@ function resolveTransitionPair(
 	const destinationStyles = matchedLink?.destination?.styles ?? null;
 	const sourceScreenKey = matchedLink?.source?.screenKey ?? null;
 	const destinationScreenKey = matchedLink?.destination?.screenKey ?? null;
-	const usedSnapshotSource = false;
-	const usedSnapshotDestination = false;
 
 	if (!sourceBounds || !destinationBounds) {
 		debugResolverLog(
@@ -152,8 +150,6 @@ function resolveTransitionPair(
 		sourceScreenKey,
 		destinationScreenKey,
 		usedPending,
-		usedSnapshotSource,
-		usedSnapshotDestination,
 	};
 }
 

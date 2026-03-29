@@ -48,8 +48,6 @@ export type ResolvedTransitionPair = {
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
 	usedPending: boolean;
-	usedSnapshotSource: boolean;
-	usedSnapshotDestination: boolean;
 };
 
 export type SnapshotEntry = Snapshot & {

@@ -75,7 +75,6 @@ const resolveBounds = (params: {
 			sourceScreenKey: resolvedPair.sourceScreenKey,
 			destinationScreenKey: resolvedPair.destinationScreenKey,
 			hasTargetOverride,
-			usedSnapshotDestination: resolvedPair.usedSnapshotDestination,
 		};
 	}
 
@@ -89,7 +88,6 @@ const resolveBounds = (params: {
 			sourceScreenKey: resolvedPair.sourceScreenKey,
 			destinationScreenKey: resolvedPair.destinationScreenKey,
 			hasTargetOverride,
-			usedSnapshotDestination: resolvedPair.usedSnapshotDestination,
 		};
 	}
 
@@ -113,7 +111,6 @@ const resolveBounds = (params: {
 		sourceScreenKey: resolvedPair.sourceScreenKey,
 		destinationScreenKey: resolvedPair.destinationScreenKey,
 		hasTargetOverride,
-		usedSnapshotDestination: resolvedPair.usedSnapshotDestination,
 	};
 };
 
@@ -139,7 +136,6 @@ export const computeBoundStyles = (
 		sourceScreenKey,
 		destinationScreenKey,
 		hasTargetOverride,
-		usedSnapshotDestination,
 	} = resolveBounds({
 		id,
 		previous,
@@ -160,15 +156,10 @@ export const computeBoundStyles = (
 	const ranges: readonly [number, number] = entering ? ENTER_RANGE : EXIT_RANGE;
 
 	if (computeOptions.method === "content") {
-		const ignoresSnapshotDestinationOwnership =
-			hasTargetOverride &&
-			usedSnapshotDestination &&
-			destinationScreenKey === sourceScreenKey;
 		const currentOwnsSource =
 			!!currentScreenKey &&
 			currentScreenKey === sourceScreenKey &&
-			(currentScreenKey !== destinationScreenKey ||
-				ignoresSnapshotDestinationOwnership);
+			currentScreenKey !== destinationScreenKey;
 		const contentStart = currentOwnsSource ? end : start;
 		const contentEnd = currentOwnsSource ? start : end;
 		const geometry = computeContentTransformGeometry({

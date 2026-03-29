@@ -92,8 +92,6 @@ type ExpectedResolvedPair = {
 	sourceBounds?: Snapshot["bounds"] | null;
 	destinationBounds?: Snapshot["bounds"] | null;
 	usedPending?: boolean;
-	usedSnapshotSource?: boolean;
-	usedSnapshotDestination?: boolean;
 };
 
 export const expectResolvedPair = (
@@ -118,15 +116,5 @@ export const expectResolvedPair = (
 
 	if (expected.usedPending !== undefined) {
 		expect(pair.usedPending).toBe(expected.usedPending);
-	}
-
-	if (expected.usedSnapshotSource !== undefined) {
-		expect(pair.usedSnapshotSource).toBe(expected.usedSnapshotSource);
-	}
-
-	if (expected.usedSnapshotDestination !== undefined) {
-		expect(pair.usedSnapshotDestination).toBe(
-			expected.usedSnapshotDestination,
-		);
 	}
 };

@@ -200,29 +200,6 @@ export const resolvePendingDestinationRetrySignal = (params: {
 	return Math.floor(progress * retryProgressBuckets) + 1;
 };
 
-export const resolveInitialLayoutMeasurementIntent = (params: {
-	enabled: boolean;
-	hasSharedBoundTag: boolean;
-	hasMeasuredOnLayout: boolean;
-	isAnyAnimating: boolean;
-	hasPendingLinkFromSource: boolean;
-}): MeasurementIntent | readonly MeasurementIntent[] | null => {
-	"worklet";
-	const {
-		enabled,
-		hasSharedBoundTag,
-		hasMeasuredOnLayout,
-		isAnyAnimating,
-		hasPendingLinkFromSource,
-	} = params;
-
-	if (!enabled) return null;
-	if (!hasSharedBoundTag || hasMeasuredOnLayout) return null;
-	if (!isAnyAnimating) return null;
-
-	return hasPendingLinkFromSource ? "complete-destination" : null;
-};
-
 export const resolvePrepareSourceMeasurementIntent = (params: {
 	hasSourceLink: boolean;
 }): MeasurementIntent | null => {

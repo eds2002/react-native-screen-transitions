@@ -5,7 +5,6 @@ import {
 	getMeasurementIntentFlags,
 	resolveAutoSourceCaptureSignal,
 	resolveGroupActiveMeasurementAction,
-	resolveInitialLayoutMeasurementIntent,
 	resolveMeasurementWritePlan,
 	resolvePendingDestinationCaptureSignal,
 	resolvePendingDestinationRetrySignal,
@@ -199,48 +198,6 @@ describe("bounds measurement rules", () => {
 				hasAttachableSourceLink: true,
 			}),
 		).toBe(0);
-	});
-
-	it("chooses initial layout intent without over-measuring", () => {
-		expect(
-			resolveInitialLayoutMeasurementIntent({
-				enabled: true,
-				hasSharedBoundTag: true,
-				hasMeasuredOnLayout: false,
-				isAnyAnimating: false,
-				hasPendingLinkFromSource: false,
-			}),
-		).toBeNull();
-
-		expect(
-			resolveInitialLayoutMeasurementIntent({
-				enabled: true,
-				hasSharedBoundTag: true,
-				hasMeasuredOnLayout: false,
-				isAnyAnimating: true,
-				hasPendingLinkFromSource: true,
-			}),
-		).toBe("complete-destination");
-
-		expect(
-			resolveInitialLayoutMeasurementIntent({
-				enabled: true,
-				hasSharedBoundTag: true,
-				hasMeasuredOnLayout: false,
-				isAnyAnimating: true,
-				hasPendingLinkFromSource: false,
-			}),
-		).toBeNull();
-
-		expect(
-			resolveInitialLayoutMeasurementIntent({
-				enabled: true,
-				hasSharedBoundTag: false,
-				hasMeasuredOnLayout: false,
-				isAnyAnimating: true,
-				hasPendingLinkFromSource: true,
-			}),
-		).toBeNull();
 	});
 
 	it("maps prepare-transition source capture only when no source link exists", () => {
