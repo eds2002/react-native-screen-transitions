@@ -106,6 +106,9 @@ export const useBoundaryMeasureAndStore = (params: {
 						expectedSourceScreenKey,
 					)
 				: BoundStore.hasPendingLink(sharedBoundTag);
+			const hasAttachableSourceLink = expectedSourceScreenKey
+				? BoundStore.hasSourceLink(sharedBoundTag, expectedSourceScreenKey)
+				: false;
 			const hasSourceLink = BoundStore.hasSourceLink(
 				sharedBoundTag,
 				currentScreenKey,
@@ -120,6 +123,7 @@ export const useBoundaryMeasureAndStore = (params: {
 				hasPendingLink,
 				hasSourceLink,
 				hasDestinationLink,
+				hasAttachableSourceLink,
 			});
 
 			if (!writePlan.writesAny) {

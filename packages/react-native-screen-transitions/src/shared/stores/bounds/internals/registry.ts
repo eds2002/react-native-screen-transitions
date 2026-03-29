@@ -204,6 +204,22 @@ const findLatestPendingIndex = (
 	return -1;
 };
 
+const findLatestSourceIndex = (
+	stack: TagLink[],
+	expectedSourceScreenKey?: ScreenKey,
+): number => {
+	"worklet";
+	if (!expectedSourceScreenKey) return -1;
+
+	for (let i = stack.length - 1; i >= 0; i--) {
+		if (matchesScreenKey(stack[i].source, expectedSourceScreenKey)) {
+			return i;
+		}
+	}
+
+	return -1;
+};
+
 function setLinkDestination(
 	tag: TagID,
 	screenKey: ScreenKey,
@@ -221,12 +237,13 @@ function setLinkDestination(
 		const stack = tagState?.linkStack;
 		if (!stack || stack.length === 0) return state;
 
-		const targetIndex = findLatestPendingIndex(stack, expectedSourceScreenKey);
+		let targetIndex = findLatestPendingIndex(stack, expectedSourceScreenKey);
+		if (targetIndex === -1) {
+			targetIndex = findLatestSourceIndex(stack, expectedSourceScreenKey);
+		}
 		if (targetIndex === -1) return state;
 
 		const targetLink = stack[targetIndex];
-		if (targetLink.destination !== null) return state;
-
 		targetLink.destination = {
 			screenKey,
 			ancestorKeys,
@@ -270,6 +287,10 @@ function updateLinkDestination(
 
 		if (targetIndex === -1) {
 			targetIndex = findLatestPendingIndex(stack, expectedSourceScreenKey);
+		}
+
+		if (targetIndex === -1) {
+			targetIndex = findLatestSourceIndex(stack, expectedSourceScreenKey);
 		}
 
 		if (targetIndex === -1) {

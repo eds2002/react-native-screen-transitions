@@ -243,10 +243,7 @@ export function buildZoomStyles({
 	const sourceBorderRadius = getSourceBorderRadius(resolvedPair);
 	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
 	const sourceVisibilityStyle = {
-		// Keep the currently active boundary visible on the focused screen even if
-		// geometry is temporarily being derived from a stabilized grouped tag. Using
-		// the stale presented tag here can make the previous item linger as a ghost.
-		[resolvedTag]: VISIBLE_STYLE,
+		[effectiveTag]: VISIBLE_STYLE,
 	} satisfies TransitionInterpolatedStyle;
 	const focusedContentSlot = props.navigationMaskEnabled
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID

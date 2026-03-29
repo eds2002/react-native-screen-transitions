@@ -74,15 +74,24 @@ export const resolveMeasurementWritePlan = (params: {
 	hasPendingLink: boolean;
 	hasSourceLink: boolean;
 	hasDestinationLink: boolean;
+	hasAttachableSourceLink: boolean;
 }): MeasurementWritePlan => {
 	"worklet";
-	const { intents, hasPendingLink, hasSourceLink, hasDestinationLink } = params;
+	const {
+		intents,
+		hasPendingLink,
+		hasSourceLink,
+		hasDestinationLink,
+		hasAttachableSourceLink,
+	} = params;
 
 	const captureSource = intents.captureSource;
-	const completeDestination = intents.completeDestination && hasPendingLink;
+	const completeDestination =
+		intents.completeDestination && (hasPendingLink || hasAttachableSourceLink);
 	const refreshSource = intents.refreshSource && hasSourceLink;
 	const refreshDestination =
-		intents.refreshDestination && (hasDestinationLink || hasPendingLink);
+		intents.refreshDestination &&
+		(hasDestinationLink || hasPendingLink || hasAttachableSourceLink);
 	const registerSnapshot = intents.snapshotOnly || intents.refreshSource;
 	const writesAny =
 		registerSnapshot ||
