@@ -16,6 +16,8 @@ type BuiltState = {
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	entering: SharedValue<number>;
+	settled: SharedValue<number>;
+	logicallySettled: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
@@ -33,6 +35,16 @@ interface ComputeLogicallySettledParams {
 	settled: number;
 	dragging: number;
 }
+
+const computeSettled = (params: {
+	animating: number;
+	dismissing: number;
+	closing: number;
+}) => {
+	"worklet";
+	const { animating, dismissing, closing } = params;
+	return animating || dismissing || closing ? FALSE : TRUE;
+};
 
 /**
  * Computes the animated snap index based on progress and snap points.
@@ -115,13 +127,25 @@ export const hydrateTransitionState = (
 	out.gesture.isDismissing = out.gesture.dismissing;
 	out.gesture.isDragging = out.gesture.dragging;
 
-	out.settled = out.animating || out.gesture.dismissing || out.closing ? 0 : 1;
+	out.settled = computeSettled({
+		animating: out.animating,
+		dismissing: out.gesture.dismissing,
+		closing: out.closing,
+	});
 	out.logicallySettled = computeLogicallySettled({
 		progress: out.progress,
 		targetProgress: s.targetProgress.value,
 		settled: out.settled,
 		dragging: out.gesture.dragging,
 	});
+
+	if (s.settled.value !== out.settled) {
+		s.settled.value = out.settled;
+	}
+
+	if (s.logicallySettled.value !== out.logicallySettled) {
+		s.logicallySettled.value = out.logicallySettled;
+	}
 
 	out.meta = s.meta;
 	out.layouts.screen.width = dimensions.width;

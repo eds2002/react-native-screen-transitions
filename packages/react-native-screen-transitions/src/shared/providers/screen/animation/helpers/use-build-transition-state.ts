@@ -21,6 +21,8 @@ type BuiltState = {
 	closing: SharedValue<number>;
 	animating: SharedValue<number>;
 	entering: SharedValue<number>;
+	settled: SharedValue<number>;
+	logicallySettled: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
@@ -65,6 +67,8 @@ export const useBuildTransitionState = (
 			closing: AnimationStore.getValue(key, "closing"),
 			entering: AnimationStore.getValue(key, "entering"),
 			animating: AnimationStore.getValue(key, "animating"),
+			settled: AnimationStore.getValue(key, "settled"),
+			logicallySettled: AnimationStore.getValue(key, "logicallySettled"),
 			targetProgress: SystemStore.getValue(key, "targetProgress"),
 			resolvedAutoSnapPoint: SystemStore.getValue(key, "resolvedAutoSnapPoint"),
 			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),

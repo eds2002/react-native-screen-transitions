@@ -11,6 +11,8 @@ export type AnimationStoreMap = {
 	animating: SharedValue<number>;
 	closing: SharedValue<number>;
 	entering: SharedValue<number>;
+	settled: SharedValue<number>;
+	logicallySettled: SharedValue<number>;
 };
 
 function createAnimationBag(): AnimationStoreMap {
@@ -20,6 +22,8 @@ function createAnimationBag(): AnimationStoreMap {
 		closing: makeMutable(0),
 		animating: makeMutable(0),
 		entering: makeMutable(0),
+		settled: makeMutable(1),
+		logicallySettled: makeMutable(1),
 	};
 }
 
@@ -36,5 +40,7 @@ export const AnimationStore = createStore<AnimationStoreMap>({
 		cancelAnimation(bag.animating);
 		cancelAnimation(bag.closing);
 		cancelAnimation(bag.entering);
+		cancelAnimation(bag.settled);
+		cancelAnimation(bag.logicallySettled);
 	},
 });
