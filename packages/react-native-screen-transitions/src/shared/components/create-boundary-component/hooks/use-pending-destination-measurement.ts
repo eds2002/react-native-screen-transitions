@@ -1,4 +1,6 @@
+import { useLayoutEffect } from "react";
 import {
+	runOnUI,
 	type SharedValue,
 	useAnimatedReaction,
 	useSharedValue,
@@ -41,6 +43,54 @@ export const usePendingDestinationMeasurement = (params: {
 	const RETRY_PROGRESS_BUCKETS = 8;
 	const RETRY_PROGRESS_MAX = 1.05;
 
+	useLayoutEffect(() => {
+		if (!enabled) return;
+
+		runOnUI(() => {
+			"worklet";
+			if (closing.get()) {
+				return;
+			}
+
+			const currentGroupActiveId = group
+				? BoundStore.getGroupActiveId(group)
+				: null;
+			if (group && currentGroupActiveId !== String(id)) {
+				return;
+			}
+
+			const resolvedSourceKey = resolvePendingSourceKey(
+				sharedBoundTag,
+				expectedSourceScreenKey,
+			);
+			const hasAttachableSourceLink = resolvedSourceKey
+				? BoundStore.hasPendingLinkFromSource(
+						sharedBoundTag,
+						resolvedSourceKey,
+					) || BoundStore.hasSourceLink(sharedBoundTag, resolvedSourceKey)
+				: false;
+
+			if (!hasAttachableSourceLink) {
+				return;
+			}
+
+			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey)) {
+				return;
+			}
+
+			maybeMeasureAndStore({ intent: "complete-destination" });
+		})();
+	}, [
+		enabled,
+		id,
+		group,
+		sharedBoundTag,
+		currentScreenKey,
+		expectedSourceScreenKey,
+		closing,
+		maybeMeasureAndStore,
+	]);
+
 	useAnimatedReaction(
 		() => {
 			"worklet";
@@ -54,12 +104,16 @@ export const usePendingDestinationMeasurement = (params: {
 			return resolvePendingDestinationCaptureSignal({
 				enabled,
 				resolvedSourceKey,
-				hasPendingLinkFromSource: resolvedSourceKey
+				hasAttachableSourceLink: resolvedSourceKey
 					? BoundStore.hasPendingLinkFromSource(
 							sharedBoundTag,
 							resolvedSourceKey,
-						)
+						) || BoundStore.hasSourceLink(sharedBoundTag, resolvedSourceKey)
 					: false,
+				hasDestinationLink: BoundStore.hasDestinationLink(
+					sharedBoundTag,
+					currentScreenKey,
+				),
 			});
 		},
 		(captureSignal, previousCaptureSignal) => {
@@ -111,11 +165,11 @@ export const usePendingDestinationMeasurement = (params: {
 				retryProgressMax: RETRY_PROGRESS_MAX,
 				retryProgressBuckets: RETRY_PROGRESS_BUCKETS,
 				resolvedSourceKey,
-				hasPendingLinkFromSource: resolvedSourceKey
+				hasAttachableSourceLink: resolvedSourceKey
 					? BoundStore.hasPendingLinkFromSource(
 							sharedBoundTag,
 							resolvedSourceKey,
-						)
+						) || BoundStore.hasSourceLink(sharedBoundTag, resolvedSourceKey)
 					: false,
 			});
 		},

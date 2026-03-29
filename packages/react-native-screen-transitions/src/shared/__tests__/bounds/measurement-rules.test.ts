@@ -21,7 +21,6 @@ beforeEach(() => {
 describe("bounds measurement rules", () => {
 	it("derives explicit intent flags and write plans", () => {
 		const intents = getMeasurementIntentFlags([
-			"snapshot-only",
 			"complete-destination",
 		] satisfies readonly MeasurementIntent[]);
 
@@ -30,7 +29,6 @@ describe("bounds measurement rules", () => {
 			completeDestination: true,
 			refreshSource: false,
 			refreshDestination: false,
-			snapshotOnly: true,
 		});
 
 		const plan = resolveMeasurementWritePlan({
@@ -38,6 +36,7 @@ describe("bounds measurement rules", () => {
 			hasPendingLink: true,
 			hasSourceLink: false,
 			hasDestinationLink: false,
+			hasAttachableSourceLink: false,
 		});
 
 		expect(plan).toEqual({
@@ -45,13 +44,12 @@ describe("bounds measurement rules", () => {
 			completeDestination: true,
 			refreshSource: false,
 			refreshDestination: false,
-			registerSnapshot: true,
 			writesAny: true,
 			wantsDestinationWrite: true,
 		});
 	});
 
-	it("refresh-source still snapshots untapped group members", () => {
+	it("refresh-source only writes when a source link exists", () => {
 		const intents = getMeasurementIntentFlags("refresh-source");
 
 		expect(intents).toEqual({
@@ -59,22 +57,38 @@ describe("bounds measurement rules", () => {
 			completeDestination: false,
 			refreshSource: true,
 			refreshDestination: false,
-			snapshotOnly: false,
+		});
+
+		expect(
+			resolveMeasurementWritePlan({
+				intents,
+				hasPendingLink: false,
+				hasSourceLink: false,
+				hasDestinationLink: false,
+				hasAttachableSourceLink: false,
+			}),
+		).toEqual({
+			captureSource: false,
+			completeDestination: false,
+			refreshSource: false,
+			refreshDestination: false,
+			writesAny: false,
+			wantsDestinationWrite: false,
 		});
 
 		const plan = resolveMeasurementWritePlan({
 			intents,
 			hasPendingLink: false,
-			hasSourceLink: false,
+			hasSourceLink: true,
 			hasDestinationLink: false,
+			hasAttachableSourceLink: false,
 		});
 
 		expect(plan).toEqual({
 			captureSource: false,
 			completeDestination: false,
-			refreshSource: false,
+			refreshSource: true,
 			refreshDestination: false,
-			registerSnapshot: true,
 			writesAny: true,
 			wantsDestinationWrite: false,
 		});
@@ -111,12 +125,13 @@ describe("bounds measurement rules", () => {
 		).toBe("detail");
 	});
 
-	it("only completes destination when a pending source link exists", () => {
+	it("only completes destination when an attachable source link exists", () => {
 		expect(
 			resolvePendingDestinationCaptureSignal({
 				enabled: true,
 				resolvedSourceKey: "list",
-				hasPendingLinkFromSource: false,
+				hasAttachableSourceLink: false,
+				hasDestinationLink: false,
 			}),
 		).toBe(0);
 
@@ -124,9 +139,19 @@ describe("bounds measurement rules", () => {
 			resolvePendingDestinationCaptureSignal({
 				enabled: true,
 				resolvedSourceKey: "list",
-				hasPendingLinkFromSource: true,
+				hasAttachableSourceLink: true,
+				hasDestinationLink: false,
 			}),
 		).toBe("list");
+
+		expect(
+			resolvePendingDestinationCaptureSignal({
+				enabled: true,
+				resolvedSourceKey: "list",
+				hasAttachableSourceLink: true,
+				hasDestinationLink: true,
+			}),
+		).toBe(0);
 	});
 
 	it("retries destination measurement only inside the valid retry window", () => {
@@ -141,7 +166,7 @@ describe("bounds measurement rules", () => {
 				retryProgressMax: 1.05,
 				retryProgressBuckets: 8,
 				resolvedSourceKey: "list",
-				hasPendingLinkFromSource: true,
+				hasAttachableSourceLink: true,
 			}),
 		).toBe(2);
 
@@ -156,7 +181,7 @@ describe("bounds measurement rules", () => {
 				retryProgressMax: 1.05,
 				retryProgressBuckets: 8,
 				resolvedSourceKey: "list",
-				hasPendingLinkFromSource: true,
+				hasAttachableSourceLink: true,
 			}),
 		).toBe(0);
 
@@ -171,7 +196,7 @@ describe("bounds measurement rules", () => {
 				retryProgressMax: 1.05,
 				retryProgressBuckets: 8,
 				resolvedSourceKey: "list",
-				hasPendingLinkFromSource: true,
+				hasAttachableSourceLink: true,
 			}),
 		).toBe(0);
 	});
@@ -228,7 +253,6 @@ describe("bounds measurement rules", () => {
 		expect(PREPARE_DESTINATION_MEASUREMENT_INTENT).toEqual([
 			"complete-destination",
 			"refresh-destination",
-			"snapshot-only",
 		]);
 	});
 

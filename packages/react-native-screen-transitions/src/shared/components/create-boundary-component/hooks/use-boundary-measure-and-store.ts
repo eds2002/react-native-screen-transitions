@@ -128,13 +128,7 @@ export const useBoundaryMeasureAndStore = (params: {
 			const hasSnapshotChanged =
 				!existingSnapshot ||
 				!areMeasurementsEqual(existingSnapshot.bounds, correctedMeasured);
-			const shouldWriteSnapshot =
-				hasSnapshotChanged &&
-				(writePlan.registerSnapshot ||
-					writePlan.captureSource ||
-					writePlan.completeDestination ||
-					writePlan.refreshSource ||
-					writePlan.refreshDestination);
+			const shouldWriteSnapshot = hasSnapshotChanged;
 
 			applyMeasuredBoundsWrites({
 				sharedBoundTag,

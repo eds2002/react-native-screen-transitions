@@ -10,7 +10,6 @@ export type MeasurementIntentFlags = {
 	completeDestination: boolean;
 	refreshSource: boolean;
 	refreshDestination: boolean;
-	snapshotOnly: boolean;
 };
 
 export type MeasurementWritePlan = {
@@ -18,7 +17,6 @@ export type MeasurementWritePlan = {
 	completeDestination: boolean;
 	refreshSource: boolean;
 	refreshDestination: boolean;
-	registerSnapshot: boolean;
 	writesAny: boolean;
 	wantsDestinationWrite: boolean;
 };
@@ -37,7 +35,6 @@ export const getMeasurementIntentFlags = (
 		completeDestination: false,
 		refreshSource: false,
 		refreshDestination: false,
-		snapshotOnly: false,
 	};
 
 	if (!intent) {
@@ -59,9 +56,6 @@ export const getMeasurementIntentFlags = (
 				break;
 			case "refresh-destination":
 				flags.refreshDestination = true;
-				break;
-			case "snapshot-only":
-				flags.snapshotOnly = true;
 				break;
 		}
 	}
@@ -92,20 +86,14 @@ export const resolveMeasurementWritePlan = (params: {
 	const refreshDestination =
 		intents.refreshDestination &&
 		(hasDestinationLink || hasPendingLink || hasAttachableSourceLink);
-	const registerSnapshot = intents.snapshotOnly || intents.refreshSource;
 	const writesAny =
-		registerSnapshot ||
-		captureSource ||
-		completeDestination ||
-		refreshSource ||
-		refreshDestination;
+		captureSource || completeDestination || refreshSource || refreshDestination;
 
 	return {
 		captureSource,
 		completeDestination,
 		refreshSource,
 		refreshDestination,
-		registerSnapshot,
 		writesAny,
 		wantsDestinationWrite: completeDestination || refreshDestination,
 	};
@@ -158,13 +146,21 @@ export const resolveAutoSourceCaptureSignal = (params: {
 export const resolvePendingDestinationCaptureSignal = (params: {
 	enabled: boolean;
 	resolvedSourceKey?: string | null;
-	hasPendingLinkFromSource: boolean;
+	hasAttachableSourceLink: boolean;
+	hasDestinationLink: boolean;
 }): string | 0 => {
 	"worklet";
-	const { enabled, resolvedSourceKey, hasPendingLinkFromSource } = params;
+	const {
+		enabled,
+		resolvedSourceKey,
+		hasAttachableSourceLink,
+		hasDestinationLink,
+	} = params;
 	if (!enabled) return 0;
 	if (!resolvedSourceKey) return 0;
-	return hasPendingLinkFromSource ? resolvedSourceKey : 0;
+	if (!hasAttachableSourceLink) return 0;
+	if (hasDestinationLink) return 0;
+	return resolvedSourceKey;
 };
 
 export const resolvePendingDestinationRetrySignal = (params: {
@@ -177,7 +173,7 @@ export const resolvePendingDestinationRetrySignal = (params: {
 	retryProgressMax: number;
 	retryProgressBuckets: number;
 	resolvedSourceKey?: string | null;
-	hasPendingLinkFromSource: boolean;
+	hasAttachableSourceLink: boolean;
 }): number => {
 	"worklet";
 	const {
@@ -190,7 +186,7 @@ export const resolvePendingDestinationRetrySignal = (params: {
 		retryProgressMax,
 		retryProgressBuckets,
 		resolvedSourceKey,
-		hasPendingLinkFromSource,
+		hasAttachableSourceLink,
 	} = params;
 
 	if (!enabled) return 0;
@@ -199,7 +195,7 @@ export const resolvePendingDestinationRetrySignal = (params: {
 	if (hasDestinationLink) return 0;
 	if (progress <= 0 || progress >= retryProgressMax) return 0;
 	if (!resolvedSourceKey) return 0;
-	if (!hasPendingLinkFromSource) return 0;
+	if (!hasAttachableSourceLink) return 0;
 
 	return Math.floor(progress * retryProgressBuckets) + 1;
 };
@@ -237,7 +233,6 @@ export const resolvePrepareSourceMeasurementIntent = (params: {
 export const PREPARE_DESTINATION_MEASUREMENT_INTENT = [
 	"complete-destination",
 	"refresh-destination",
-	"snapshot-only",
 ] as const satisfies readonly MeasurementIntent[];
 
 export const resolveGroupActiveMeasurementAction = (params: {

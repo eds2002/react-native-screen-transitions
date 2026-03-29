@@ -43,8 +43,7 @@ export type MeasurementIntent =
 	| "capture-source"
 	| "complete-destination"
 	| "refresh-source"
-	| "refresh-destination"
-	| "snapshot-only";
+	| "refresh-destination";
 
 export interface MaybeMeasureAndStoreParams {
 	intent?: MeasurementIntent | readonly MeasurementIntent[];

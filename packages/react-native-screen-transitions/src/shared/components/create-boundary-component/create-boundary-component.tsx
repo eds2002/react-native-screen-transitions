@@ -21,7 +21,6 @@ import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
 import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
 import { useBoundaryMeasureAndStore } from "./hooks/use-boundary-measure-and-store";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
-import { useInitialLayoutHandler } from "./hooks/use-initial-layout-handler";
 import { usePendingDestinationMeasurement } from "./hooks/use-pending-destination-measurement";
 import { usePrepareTransitionMeasurement } from "./hooks/use-prepare-transition-measurement";
 import {
@@ -195,19 +194,6 @@ export function createBoundaryComponent<P extends object>(
 			currentScreenKey,
 			nextScreenKey,
 			hasNextScreen,
-			maybeMeasureAndStore,
-		});
-
-		// Destination mount-time capture path: onLayout schedules a one-time UI-thread
-		// initial measurement when transitions are active.
-		useInitialLayoutHandler({
-			enabled: runtimeEnabled,
-			sharedBoundTag,
-			id,
-			group,
-			currentScreenKey,
-			ancestorKeys,
-			expectedSourceScreenKey: preferredSourceScreenKey,
 			maybeMeasureAndStore,
 		});
 
