@@ -1,5 +1,29 @@
 # Changelog
 
+# [3.4.0-beta.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.7...v3.4.0-beta.0) (2026-03-30)
+
+
+### Bug Fixes
+
+* **bounds:** align id-only navigation zoom fallback targets ([27defdb](https://github.com/eds2002/react-native-screen-transitions/commit/27defdb94d676d765d22f3a0b7fca5f09b945127))
+* **bounds:** avoid measuring while still in flight ([2dcceec](https://github.com/eds2002/react-native-screen-transitions/commit/2dcceece5ba3227ed86ef8c20b1a295c32c8dd7e))
+* **bounds:** complete retargeted destination links from existing sources ([2574df2](https://github.com/eds2002/react-native-screen-transitions/commit/2574df2162196d17257585953766611c159c3764))
+* **bounds:** prevent grouped zoom retarget ghosting and blanking ([dc72dc6](https://github.com/eds2002/react-native-screen-transitions/commit/dc72dc6674815adeeec1b530eebf88d04905c0eb))
+* **bounds:** stop prepare from refreshing existing source links ([66da2d6](https://github.com/eds2002/react-native-screen-transitions/commit/66da2d600c991b3dd7840309418385ce18ed676e))
+* **e2e:** fallback reel 8 to thumbnail ([d3c7d47](https://github.com/eds2002/react-native-screen-transitions/commit/d3c7d470b18f71c0513ec78331b4474eb9ee6257))
+* mask clipping + animation adjustment ([9eab763](https://github.com/eds2002/react-native-screen-transitions/commit/9eab763fce1d7609a2fdfc02a450440f483b8ed2))
+* reanimated bug when passing animated styles to boundary ([fe06872](https://github.com/eds2002/react-native-screen-transitions/commit/fe06872b9e13a508e7317b57411252cd1bd9435e))
+* revert style reset system for layers ([9bbbcd3](https://github.com/eds2002/react-native-screen-transitions/commit/9bbbcd38c3ba6cc71ab7db582aad2de5f04581d9))
+* **scroll:** debounce settled signal from onScroll ([4ec04f5](https://github.com/eds2002/react-native-screen-transitions/commit/4ec04f538d83ec25ffe8b3adb83765d31c1b0835))
+* wrong pressable used, running animated styles on reg components ([7595bee](https://github.com/eds2002/react-native-screen-transitions/commit/7595bee7ca17092d61e208644c5f45cb597c4710))
+* **zoom:** resolve dst screen hiding on activeId change ([4843ac6](https://github.com/eds2002/react-native-screen-transitions/commit/4843ac6655b7207e04cf11b0052bb507790a005d))
+
+
+### Features
+
+* willAnimate state and remove scroll settled awareness ([589bd05](https://github.com/eds2002/react-native-screen-transitions/commit/589bd05d18dd97c3f2cf77076cbe69082c2b9003))
+* **zoom:** integrate customizable options ([00947b3](https://github.com/eds2002/react-native-screen-transitions/commit/00947b382028a2eb7ae6f8ab58848d7d76b434f3))
+
 # [3.4.0-alpha.7](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.6...v3.4.0-alpha.7) (2026-03-27)
 
 
