@@ -200,13 +200,25 @@ describe("bounds measurement rules", () => {
 		).toBe(0);
 	});
 
-	it("maps prepare-transition source measurement to capture or refresh", () => {
-		expect(resolvePrepareSourceMeasurementIntent({ hasSourceLink: false })).toBe(
-			"capture-source",
-		);
-		expect(resolvePrepareSourceMeasurementIntent({ hasSourceLink: true })).toBe(
-			"refresh-source",
-		);
+	it("maps prepare-transition source measurement by group refresh policy", () => {
+		expect(
+			resolvePrepareSourceMeasurementIntent({
+				hasSourceLink: false,
+				shouldRefreshExistingSource: false,
+			}),
+		).toBe("capture-source");
+		expect(
+			resolvePrepareSourceMeasurementIntent({
+				hasSourceLink: true,
+				shouldRefreshExistingSource: false,
+			}),
+		).toBe(null);
+		expect(
+			resolvePrepareSourceMeasurementIntent({
+				hasSourceLink: true,
+				shouldRefreshExistingSource: true,
+			}),
+		).toBe("refresh-source");
 		expect(PREPARE_DESTINATION_MEASUREMENT_INTENT).toEqual([
 			"complete-destination",
 			"refresh-destination",

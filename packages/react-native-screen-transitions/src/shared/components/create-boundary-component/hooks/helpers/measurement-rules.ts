@@ -202,9 +202,14 @@ export const resolvePendingDestinationRetrySignal = (params: {
 
 export const resolvePrepareSourceMeasurementIntent = (params: {
 	hasSourceLink: boolean;
-}): MeasurementIntent => {
+	shouldRefreshExistingSource: boolean;
+}): MeasurementIntent | null => {
 	"worklet";
-	return params.hasSourceLink ? "refresh-source" : "capture-source";
+	if (!params.hasSourceLink) {
+		return "capture-source";
+	}
+
+	return params.shouldRefreshExistingSource ? "refresh-source" : null;
 };
 
 export const PREPARE_DESTINATION_MEASUREMENT_INTENT = [

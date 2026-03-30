@@ -183,8 +183,9 @@ export function createBoundaryComponent<P extends object>(
 		});
 
 		// Pre-transition measurement path: when this route or its next sibling is
-		// about to animate, refresh the live source/destination measurements before
-		// progress or transform state mutates.
+		// about to animate, capture or refresh the measurements needed before
+		// progress or transform state mutates. Grouped sources refresh existing
+		// links; plain sources only backfill when missing.
 		usePreTransitionMeasurement({
 			enabled: runtimeEnabled,
 			sharedBoundTag,

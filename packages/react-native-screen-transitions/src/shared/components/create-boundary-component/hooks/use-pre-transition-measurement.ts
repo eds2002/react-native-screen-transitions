@@ -69,11 +69,14 @@ export const usePreTransitionMeasurement = (params: {
 				return;
 			}
 
+			const hasSourceLink = BoundStore.hasSourceLink(
+				sharedBoundTag,
+				currentScreenKey,
+			);
+
 			const intent = resolvePrepareSourceMeasurementIntent({
-				hasSourceLink: BoundStore.hasSourceLink(
-					sharedBoundTag,
-					currentScreenKey,
-				),
+				hasSourceLink,
+				shouldRefreshExistingSource: !!group,
 			});
 
 			if (!intent) {
