@@ -22,7 +22,7 @@ import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
 import { useBoundaryMeasureAndStore } from "./hooks/use-boundary-measure-and-store";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
 import { usePendingDestinationMeasurement } from "./hooks/use-pending-destination-measurement";
-import { usePrepareTransitionMeasurement } from "./hooks/use-prepare-transition-measurement";
+import { usePreTransitionMeasurement } from "./hooks/use-pre-transition-measurement";
 import {
 	BoundaryOwnerProvider,
 	useBoundaryOwner,
@@ -183,9 +183,9 @@ export function createBoundaryComponent<P extends object>(
 		});
 
 		// Pre-transition measurement path: when this route or its next sibling is
-		// about to animate, capture one clean base measurement before progress or
-		// transform state mutates.
-		usePrepareTransitionMeasurement({
+		// about to animate, refresh the live source/destination measurements before
+		// progress or transform state mutates.
+		usePreTransitionMeasurement({
 			enabled: runtimeEnabled,
 			sharedBoundTag,
 			id,

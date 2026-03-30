@@ -200,12 +200,12 @@ describe("bounds measurement rules", () => {
 		).toBe(0);
 	});
 
-	it("maps prepare-transition source capture only when no source link exists", () => {
+	it("maps prepare-transition source measurement to capture or refresh", () => {
 		expect(resolvePrepareSourceMeasurementIntent({ hasSourceLink: false })).toBe(
 			"capture-source",
 		);
 		expect(resolvePrepareSourceMeasurementIntent({ hasSourceLink: true })).toBe(
-			null,
+			"refresh-source",
 		);
 		expect(PREPARE_DESTINATION_MEASUREMENT_INTENT).toEqual([
 			"complete-destination",

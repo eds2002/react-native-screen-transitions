@@ -8,7 +8,7 @@ import {
 	resolvePrepareSourceMeasurementIntent,
 } from "./helpers/measurement-rules";
 
-export const usePrepareTransitionMeasurement = (params: {
+export const usePreTransitionMeasurement = (params: {
 	enabled: boolean;
 	sharedBoundTag: string;
 	id: BoundaryId;
