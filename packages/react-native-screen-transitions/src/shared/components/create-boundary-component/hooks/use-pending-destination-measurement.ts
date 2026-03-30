@@ -91,6 +91,17 @@ export const usePendingDestinationMeasurement = (params: {
 		maybeMeasureAndStore,
 	]);
 
+	/**
+	 * This exessive retry for groups with {target:"bound"} will have to change in v4.
+	 * .navigation.zoom() is stable and works great for non groups and groups that are non {target: "bound"}.
+	 *
+	 * The retry logic is needed for dst screen when we do an initialScrollIndex, the system is competing with the (i assume) useLayoutEffect
+	 * in the scrollable, causing a race here and giving us wrong measurements. I believe, in simialr fashion to how
+	 * system.store defers the screen from animating, we could possibly do the same here. Registering it up, once we get valid measurements, we can
+	 * un defer? Is that the word? Undefer the screen, removing this block compeltely, avoiding any potential flickers ( which currently happens.)
+	 *
+	 * You can replicate this bug by dismissing dst, as dst reaches its ending tail (0.01->0.10), if we tap again, we notice a flicker.
+	 */
 	useAnimatedReaction(
 		() => {
 			"worklet";
@@ -125,13 +136,16 @@ export const usePendingDestinationMeasurement = (params: {
 		},
 		(captureSignal, previousCaptureSignal) => {
 			"worklet";
+			if (!group) return;
 			if (!enabled) return;
 			if (!captureSignal || captureSignal === previousCaptureSignal) {
 				return;
 			}
+
 			const currentGroupActiveId = group
 				? BoundStore.getGroupActiveId(group)
 				: null;
+
 			if (group && currentGroupActiveId !== String(id)) {
 				return;
 			}
@@ -152,6 +166,7 @@ export const usePendingDestinationMeasurement = (params: {
 	useAnimatedReaction(
 		() => {
 			"worklet";
+			if (!group) return 0;
 			if (closing.get()) {
 				return 0;
 			}
@@ -182,6 +197,7 @@ export const usePendingDestinationMeasurement = (params: {
 		},
 		(captureSignal) => {
 			"worklet";
+			if (!group) return;
 			if (!enabled) return;
 			if (!captureSignal) {
 				retryCount.set(0);
