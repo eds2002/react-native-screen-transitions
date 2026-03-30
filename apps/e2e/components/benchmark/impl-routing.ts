@@ -1,14 +1,13 @@
 import { useLocalSearchParams, useSegments } from "expo-router";
+import { ALL_BENCHMARK_SCENARIOS } from "./scenarios";
 import type { BenchmarkScenario, BenchmarkStackImpl } from "./types";
 
 const BENCHMARK_IMPLS: readonly BenchmarkStackImpl[] = [
 	"blank-stack",
 	"js-stack",
 ];
-const BENCHMARK_SCENARIOS: readonly BenchmarkScenario[] = [
-	"push-pop-loop",
-	"navigate-during-close",
-];
+const BENCHMARK_SCENARIOS: readonly BenchmarkScenario[] =
+	ALL_BENCHMARK_SCENARIOS;
 
 export function resolveBenchmarkImpl(
 	value: unknown,

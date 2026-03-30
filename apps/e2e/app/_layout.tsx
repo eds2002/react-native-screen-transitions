@@ -11,7 +11,7 @@ export default function RootLayout() {
 			<ExpoStack.Screen name="stack-benchmark" />
 			<ExpoStack.Screen name="gestures" />
 			<ExpoStack.Screen
-				name="stack-benchmark/[impl"
+				name="stack-benchmark/[impl]"
 				options={{
 					animation: "none",
 				}}

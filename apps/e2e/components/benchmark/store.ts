@@ -1,5 +1,9 @@
 import { create } from "zustand";
 import {
+	ALL_BENCHMARK_SCENARIOS,
+	PUBLIC_BENCHMARKS,
+} from "./scenarios";
+import {
 	BENCHMARK_CYCLES,
 	BENCHMARK_MAX_HISTORY_PER_IMPL,
 	BENCHMARK_TRANSITION_DURATION_MS,
@@ -47,6 +51,7 @@ export interface FairRunStep {
 
 export interface FairRunPlan {
 	id: string;
+	scenarios: BenchmarkScenario[];
 	runsPerImpl: number;
 	nextStepIndex: number;
 	steps: FairRunStep[];
@@ -72,7 +77,10 @@ interface BenchmarkStoreState {
 	fairRunPlan: FairRunPlan | null;
 	resultsByScenarioImpl: ScenarioResultsByImpl;
 	historyByScenarioImpl: ScenarioHistoryByImpl;
-	startFairRun: (runsPerImpl: number) => void;
+	startFairRun: (
+		scenarios: BenchmarkScenario[],
+		runsPerImpl: number,
+	) => void;
 	consumeNextFairRunStep: () => FairRunStep | null;
 	cancelFairRun: () => void;
 	beginRun: (impl: BenchmarkStackImpl, scenario: BenchmarkScenario) => string;
@@ -87,6 +95,7 @@ interface BenchmarkStoreState {
 	completeCycleOnFocus: (runId: string, timestamp: number) => CycleCompletion;
 	finishRun: (runId: string) => BenchmarkRunResult | null;
 	abortRun: (runId?: string) => void;
+	clearScenarioResults: (scenario: BenchmarkScenario) => void;
 	clearResults: () => void;
 }
 
@@ -99,27 +108,25 @@ const createRunId = (impl: BenchmarkStackImpl): string =>
 const createFairRunId = (): string =>
 	`fair-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-const createResultsByScenarioImpl = (): ScenarioResultsByImpl => ({
-	"push-pop-loop": {},
-	"navigate-during-close": {},
-});
+const createResultsByScenarioImpl = (): ScenarioResultsByImpl =>
+	ALL_BENCHMARK_SCENARIOS.reduce((acc, scenario) => {
+		acc[scenario] = {};
+		return acc;
+	}, {} as ScenarioResultsByImpl);
 
-const createHistoryByScenarioImpl = (): ScenarioHistoryByImpl => ({
-	"push-pop-loop": {
-		"blank-stack": [],
-		"js-stack": [],
-	},
-	"navigate-during-close": {
-		"blank-stack": [],
-		"js-stack": [],
-	},
-});
+const createHistoryByScenarioImpl = (): ScenarioHistoryByImpl =>
+	ALL_BENCHMARK_SCENARIOS.reduce((acc, scenario) => {
+		acc[scenario] = {
+			"blank-stack": [],
+			"js-stack": [],
+		};
+		return acc;
+	}, {} as ScenarioHistoryByImpl);
 
-const createFairRunSteps = (runsPerImpl: number): FairRunStep[] => {
-	const scenarios: BenchmarkScenario[] = [
-		"push-pop-loop",
-		"navigate-during-close",
-	];
+const createFairRunSteps = (
+	scenarios: BenchmarkScenario[],
+	runsPerImpl: number,
+): FairRunStep[] => {
 	const implOrder: BenchmarkStackImpl[] = ["blank-stack", "js-stack"];
 	const steps: FairRunStep[] = [];
 
@@ -176,14 +183,19 @@ export const useBenchmarkStore = create<BenchmarkStoreState>((set, get) => ({
 	resultsByScenarioImpl: createResultsByScenarioImpl(),
 	historyByScenarioImpl: createHistoryByScenarioImpl(),
 
-	startFairRun: (runsPerImpl) => {
+	startFairRun: (scenarios, runsPerImpl) => {
+		const selectedScenarios =
+			scenarios.length > 0
+				? scenarios
+				: PUBLIC_BENCHMARKS.map((benchmark) => benchmark.id);
 		const normalizedRuns = Math.max(1, Math.floor(runsPerImpl));
 		set({
 			fairRunPlan: {
 				id: createFairRunId(),
+				scenarios: selectedScenarios,
 				runsPerImpl: normalizedRuns,
 				nextStepIndex: 0,
-				steps: createFairRunSteps(normalizedRuns),
+				steps: createFairRunSteps(selectedScenarios, normalizedRuns),
 			},
 		});
 	},
@@ -488,6 +500,28 @@ export const useBenchmarkStore = create<BenchmarkStoreState>((set, get) => ({
 
 		stopFrameSampling();
 		set({ activeRun: null });
+	},
+
+	clearScenarioResults: (scenario) => {
+		if (get().activeRun?.scenario === scenario) {
+			stopFrameSampling();
+		}
+
+		set((state) => ({
+			activeRun:
+				state.activeRun?.scenario === scenario ? null : state.activeRun,
+			resultsByScenarioImpl: {
+				...state.resultsByScenarioImpl,
+				[scenario]: {},
+			},
+			historyByScenarioImpl: {
+				...state.historyByScenarioImpl,
+				[scenario]: {
+					"blank-stack": [],
+					"js-stack": [],
+				},
+			},
+		}));
 	},
 
 	clearResults: () => {

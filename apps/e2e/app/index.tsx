@@ -1,6 +1,10 @@
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+	buildBenchmarkDashboardPath,
+	PUBLIC_BENCHMARKS,
+} from "@/components/benchmark/scenarios";
 import { useTheme } from "@/theme";
 
 const STACK_OPTIONS = [
@@ -21,14 +25,12 @@ const STACK_OPTIONS = [
 	},
 ];
 
-const BENCHMARK_OPTIONS = [
-	{
-		id: "stack-benchmark",
-		title: "Stack Benchmark (Transparency)",
-		description:
-			"Run a 20-cycle benchmark to compare blank-stack and js-stack side-by-side",
-	},
-];
+const BENCHMARK_OPTIONS = PUBLIC_BENCHMARKS.map((benchmark) => ({
+	id: benchmark.id,
+	title: benchmark.title,
+	description: benchmark.description,
+	route: buildBenchmarkDashboardPath(benchmark.id),
+}));
 
 const GESTURE_OPTIONS = [
 	{
@@ -145,7 +147,7 @@ export default function HomeScreen() {
 											: theme.card,
 									},
 								]}
-								onPress={() => router.push(`/${option.id}` as `/${string}`)}
+								onPress={() => router.push(option.route)}
 							>
 								<Text style={[styles.buttonTitle, { color: theme.text }]}>
 									{option.title}

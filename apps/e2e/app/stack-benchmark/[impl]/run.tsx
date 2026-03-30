@@ -11,12 +11,12 @@ import Animated, {
 	withTiming,
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BENCHMARK_TRANSITION_DURATION_MS } from "@/components/benchmark/constants";
 import {
 	buildBenchmarkPath,
 	useResolvedBenchmarkImpl,
 	useResolvedBenchmarkScenario,
 } from "@/components/benchmark/impl-routing";
+import { getBenchmarkDefinition } from "@/components/benchmark/scenarios";
 import { useBenchmarkStore } from "@/components/benchmark/store";
 import { useTheme } from "@/theme";
 
@@ -34,6 +34,7 @@ export default function BenchmarkRunScreen() {
 	const scenario = useResolvedBenchmarkScenario();
 	const navigation = useNavigation();
 	const theme = useTheme();
+	const definition = getBenchmarkDefinition(scenario);
 	const params = useLocalSearchParams<{
 		runId?: string | string[];
 		cycle?: string | string[];
@@ -45,6 +46,11 @@ export default function BenchmarkRunScreen() {
 	const runId = getParamValue(params.runId);
 	const cycleRaw = getParamValue(params.cycle);
 	const cycle = Number(cycleRaw);
+	const isTransparentSurface = definition.appearance !== "opaque-card";
+	const isModalSurface = definition.appearance === "modal-sheet";
+	const title = isModalSurface
+		? "Running Modal Benchmark Cycle"
+		: "Running Benchmark Cycle";
 
 	useEffect(() => {
 		cancelAnimation(pulse);
@@ -88,7 +94,6 @@ export default function BenchmarkRunScreen() {
 		let waitFrameHandle: number | null = null;
 		let popTimeout: ReturnType<typeof setTimeout> | null = null;
 		let navigateTimeout: ReturnType<typeof setTimeout> | null = null;
-		let fallbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
 		const step = () => {
 			if (disposed || hasExecutedRef.current) return;
@@ -135,11 +140,6 @@ export default function BenchmarkRunScreen() {
 						router.navigate(targetPath as never);
 					}, NAVIGATE_DURING_CLOSE_DELAY_MS);
 				}
-
-				fallbackTimeout = setTimeout(() => {
-					const basePath = buildBenchmarkPath(impl);
-					router.replace(`${basePath}?scenario=${scenario}` as never);
-				}, BENCHMARK_TRANSITION_DURATION_MS + 140);
 			}, 0);
 		};
 
@@ -150,20 +150,90 @@ export default function BenchmarkRunScreen() {
 			if (waitFrameHandle !== null) cancelAnimationFrame(waitFrameHandle);
 			if (popTimeout !== null) clearTimeout(popTimeout);
 			if (navigateTimeout !== null) clearTimeout(navigateTimeout);
-			if (fallbackTimeout !== null) clearTimeout(fallbackTimeout);
 		};
 	}, [cycle, impl, navigation, runId, scenario]);
 
 	return (
-		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
-			<View style={styles.content}>
-				<ActivityIndicator size="small" color={theme.text} />
-				<Text style={[styles.title, { color: theme.text }]}>Running Benchmark Cycle</Text>
-				<Text style={[styles.detail, { color: theme.textTertiary }]}>
-					{impl} • {scenario} • cycle {Number.isFinite(cycle) ? cycle : "-"}
-				</Text>
-				<View style={[styles.track, { backgroundColor: theme.surface }]}>
-					<Animated.View style={[styles.pulse, { backgroundColor: theme.actionButton }, pulseStyle]} />
+		<SafeAreaView
+			style={[
+				styles.container,
+				{
+					backgroundColor: isTransparentSurface ? "transparent" : theme.bg,
+				},
+			]}
+			edges={["top", "bottom"]}
+		>
+			{isTransparentSurface ? (
+				<View
+					pointerEvents="none"
+					style={[
+						styles.backdrop,
+						{
+							backgroundColor: isModalSurface
+								? "rgba(15, 23, 42, 0.18)"
+								: "rgba(15, 23, 42, 0.12)",
+						},
+					]}
+				/>
+			) : null}
+			<View
+				style={[
+					styles.surfaceWrapper,
+					isModalSurface
+						? styles.modalWrapper
+						: isTransparentSurface
+							? styles.centerWrapper
+							: null,
+				]}
+			>
+				<View
+					style={[
+						styles.surface,
+						isModalSurface
+							? styles.modalSurface
+							: isTransparentSurface
+								? styles.transparentSurface
+								: styles.opaqueSurface,
+						{
+							backgroundColor: isTransparentSurface
+								? theme.card
+								: theme.bg,
+							borderColor: theme.separator,
+						},
+					]}
+				>
+					{isModalSurface ? (
+						<View
+							style={[
+								styles.modalHandle,
+								{ backgroundColor: theme.separator },
+							]}
+						/>
+					) : null}
+					<ActivityIndicator size="small" color={theme.text} />
+					<Text style={[styles.title, { color: theme.text }]}>{title}</Text>
+					<Text style={[styles.detail, { color: theme.textTertiary }]}>
+						{definition.title} • {impl} • cycle{" "}
+						{Number.isFinite(cycle) ? cycle : "-"}
+					</Text>
+					<View
+						style={[
+							styles.track,
+							{
+								backgroundColor: isTransparentSurface
+									? theme.surface
+									: theme.surfaceElevated,
+							},
+						]}
+					>
+						<Animated.View
+							style={[
+								styles.pulse,
+								{ backgroundColor: theme.actionButton },
+								pulseStyle,
+							]}
+						/>
+					</View>
 				</View>
 			</View>
 		</SafeAreaView>
@@ -174,12 +244,78 @@ const styles = StyleSheet.create({
 	container: {
 		flex: 1,
 	},
-	content: {
+	backdrop: {
+		...StyleSheet.absoluteFillObject,
+	},
+	surfaceWrapper: {
 		flex: 1,
+	},
+	centerWrapper: {
+		alignItems: "center",
+		justifyContent: "center",
+		paddingHorizontal: 18,
+	},
+	modalWrapper: {
+		justifyContent: "flex-end",
+		paddingHorizontal: 18,
+		paddingBottom: 18,
+	},
+	surface: {
+		borderWidth: StyleSheet.hairlineWidth,
+	},
+	opaqueSurface: {
+		flex: 1,
+		borderWidth: 0,
 		alignItems: "center",
 		justifyContent: "center",
 		gap: 10,
 		paddingHorizontal: 28,
+	},
+	transparentSurface: {
+		width: "100%",
+		maxWidth: 360,
+		borderRadius: 28,
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 10,
+		paddingHorizontal: 24,
+		paddingVertical: 30,
+		shadowColor: "#000",
+		shadowOpacity: 0.16,
+		shadowRadius: 28,
+		shadowOffset: {
+			width: 0,
+			height: 10,
+		},
+		elevation: 10,
+	},
+	modalSurface: {
+		width: "100%",
+		minHeight: 280,
+		borderTopLeftRadius: 28,
+		borderTopRightRadius: 28,
+		borderBottomLeftRadius: 18,
+		borderBottomRightRadius: 18,
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 10,
+		paddingHorizontal: 24,
+		paddingTop: 18,
+		paddingBottom: 32,
+		shadowColor: "#000",
+		shadowOpacity: 0.18,
+		shadowRadius: 24,
+		shadowOffset: {
+			width: 0,
+			height: -6,
+		},
+		elevation: 12,
+	},
+	modalHandle: {
+		width: 44,
+		height: 5,
+		borderRadius: 999,
+		marginBottom: 6,
 	},
 	title: {
 		fontSize: 19,

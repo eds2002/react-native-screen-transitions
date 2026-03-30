@@ -42,7 +42,7 @@ export default function ReelsLayout() {
 			<StackNavigator.Screen
 				name="reel"
 				options={{
-					navigationMaskEnabled: Platform.OS === "ios",
+					navigationMaskEnabled: false,
 					gestureEnabled: true,
 					gestureDirection: ["horizontal", "vertical", "vertical-inverted"],
 					gestureDrivesProgress: false,

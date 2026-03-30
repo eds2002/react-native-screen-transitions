@@ -1,5 +1,9 @@
 export type BenchmarkStackImpl = "blank-stack" | "js-stack";
-export type BenchmarkScenario = "push-pop-loop" | "navigate-during-close";
+export type BenchmarkScenario =
+	| "opaque-push-pop-loop"
+	| "push-pop-loop"
+	| "modal-push-pop-loop"
+	| "navigate-during-close";
 export type BenchmarkBuildMode = "dev" | "release";
 
 export interface MetricSummary {

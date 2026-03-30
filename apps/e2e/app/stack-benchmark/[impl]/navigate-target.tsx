@@ -3,7 +3,6 @@ import { useNavigation } from "@react-navigation/native";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { BENCHMARK_TRANSITION_DURATION_MS } from "@/components/benchmark/constants";
 import {
 	buildBenchmarkPath,
 	useResolvedBenchmarkImpl,
@@ -54,7 +53,6 @@ export default function BenchmarkNavigateTargetScreen() {
 		let disposed = false;
 		let waitFrameHandle: number | null = null;
 		let backTimeout: ReturnType<typeof setTimeout> | null = null;
-		let fallbackTimeout: ReturnType<typeof setTimeout> | null = null;
 
 		const step = () => {
 			if (disposed || hasExecutedRef.current) return;
@@ -79,10 +77,6 @@ export default function BenchmarkNavigateTargetScreen() {
 
 			backTimeout = setTimeout(() => {
 				goBackToController();
-				fallbackTimeout = setTimeout(() => {
-					const basePath = buildBenchmarkPath(impl);
-					router.replace(`${basePath}?scenario=${scenario}` as never);
-				}, BENCHMARK_TRANSITION_DURATION_MS + 120);
 			}, 0);
 		};
 
@@ -92,7 +86,6 @@ export default function BenchmarkNavigateTargetScreen() {
 			disposed = true;
 			if (waitFrameHandle !== null) cancelAnimationFrame(waitFrameHandle);
 			if (backTimeout !== null) clearTimeout(backTimeout);
-			if (fallbackTimeout !== null) clearTimeout(fallbackTimeout);
 		};
 	}, [cycle, impl, navigation, runId, scenario]);
 

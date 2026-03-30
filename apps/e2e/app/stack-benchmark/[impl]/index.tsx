@@ -1,7 +1,14 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useCallback, useEffect, useRef } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+	InteractionManager,
+	Pressable,
+	ScrollView,
+	StyleSheet,
+	Text,
+	View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import {
 	BENCHMARK_CAVEAT_NOTE,
@@ -14,6 +21,7 @@ import {
 	useResolvedBenchmarkImpl,
 	useResolvedBenchmarkScenario,
 } from "@/components/benchmark/impl-routing";
+import { getBenchmarkDefinition } from "@/components/benchmark/scenarios";
 import { useBenchmarkStore } from "@/components/benchmark/store";
 import type { BenchmarkStackImpl } from "@/components/benchmark/types";
 import { ScreenHeader } from "@/components/screen-header";
@@ -23,11 +31,6 @@ const formatMs = (value: number) => `${value.toFixed(2)}ms`;
 
 const getImplLabel = (impl: BenchmarkStackImpl) =>
 	impl === "blank-stack" ? "Blank Stack" : "JS Stack";
-
-const getScenarioLabel = (scenario: string) =>
-	scenario === "navigate-during-close"
-		? "Navigate During Close"
-		: "Push/Pop Loop";
 
 const getParamValue = (
 	value: string | string[] | undefined,
@@ -41,6 +44,7 @@ export default function BenchmarkControllerScreen() {
 	const scenario = useResolvedBenchmarkScenario();
 	const isFocused = useIsFocused();
 	const theme = useTheme();
+	const definition = getBenchmarkDefinition(scenario);
 	const params = useLocalSearchParams<{
 		autorun?: string | string[];
 		returnTo?: string | string[];
@@ -115,6 +119,10 @@ export default function BenchmarkControllerScreen() {
 		if (!isFocused) return;
 
 		let cancelled = false;
+		let interactionTask:
+			| ReturnType<typeof InteractionManager.runAfterInteractions>
+			| null = null;
+		let completionFrameHandle: number | null = null;
 
 		const clearPendingRetry = () => {
 			if (pendingCompletionRetryRef.current !== null) {
@@ -152,13 +160,30 @@ export default function BenchmarkControllerScreen() {
 			launchCycle(latestRun.id, completion.completedCycle + 1);
 		};
 
-		tryComplete();
+		interactionTask = InteractionManager.runAfterInteractions(() => {
+			if (cancelled) return;
+			completionFrameHandle = requestAnimationFrame(() => {
+				tryComplete();
+			});
+		});
 
 		return () => {
 			cancelled = true;
 			clearPendingRetry();
+			interactionTask?.cancel();
+			if (completionFrameHandle !== null) {
+				cancelAnimationFrame(completionFrameHandle);
+			}
 		};
-	}, [completeCycleOnFocus, finishRun, isFocused, launchCycle, runForThisContext]);
+		}, [
+			completeCycleOnFocus,
+			finishRun,
+			impl,
+			isFocused,
+			launchCycle,
+			runForThisContext,
+			scenario,
+		]);
 
 	useEffect(() => {
 		if (!runForThisContext) return;
@@ -243,7 +268,7 @@ export default function BenchmarkControllerScreen() {
 	return (
 		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
 			<ScreenHeader
-				title={`${getImplLabel(impl)} • ${getScenarioLabel(scenario)}`}
+				title={`${getImplLabel(impl)} • ${definition.title}`}
 				subtitle={`${BENCHMARK_CYCLES}-cycle automated run`}
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
