@@ -372,8 +372,7 @@ export function buildZoomStyles({
 		const maskTranslateY = toNumber(maskRaw.translateY) + dragY - top;
 
 		const focusedContentStyle = {
-			// opacity: focusedFade,
-			opacity: 0.5,
+			opacity: focusedFade,
 			transform: [
 				{ translateX: contentTranslateX },
 				{ translateY: contentTranslateY },
@@ -508,7 +507,7 @@ export function buildZoomStyles({
 					{ scaleX: 1 },
 					{ scaleY: 1 },
 				],
-				opacity: 1,
+				opacity: 0,
 				zIndex: 0,
 				elevation: 0,
 			}
@@ -527,8 +526,7 @@ export function buildZoomStyles({
 						scaleY: shouldResetUnfocusedElement ? 1 : elementScaleY,
 					},
 				],
-				// opacity: unfocusedFade,
-				opacity: 1,
+				opacity: unfocusedFade,
 				zIndex: 9999,
 				elevation: 9999,
 			};
