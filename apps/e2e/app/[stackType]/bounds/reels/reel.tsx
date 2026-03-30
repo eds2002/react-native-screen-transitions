@@ -42,7 +42,7 @@ function ReelFeedItem({
 	profileName: string;
 	handle: string;
 	caption: string;
-	videoSource: number;
+	videoSource?: number;
 	thumbnailSource: number;
 	isActive: boolean;
 	videoWidth: number;
@@ -65,7 +65,7 @@ function ReelFeedItem({
 						{profileName}
 					</Text>
 					<Text style={[styles.audioMeta, { color: textSecondary }]}>
-						@{handle} • Original audio
+						@{handle} • {videoSource ? "Original audio" : "Still image"}
 					</Text>
 				</View>
 			</View>
@@ -97,7 +97,9 @@ function ReelFeedItem({
 						transition={0}
 						cachePolicy="memory-disk"
 					/>
-					{isActive ? <ActiveReelVideo videoSource={videoSource} /> : null}
+					{isActive && videoSource ? (
+						<ActiveReelVideo videoSource={videoSource} />
+					) : null}
 				</View>
 			</Transition.Boundary.View>
 

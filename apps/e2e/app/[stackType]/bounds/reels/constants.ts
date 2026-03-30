@@ -10,7 +10,7 @@ const REEL_VIDEO_SOURCES = [
 	require("../../../../assets/videos/5.mp4"),
 	require("../../../../assets/videos/6.mp4"),
 	require("../../../../assets/videos/7.mp4"),
-	require("../../../../assets/videos/8.mp4"),
+	null,
 	require("../../../../assets/videos/9.mp4"),
 ] as const;
 
@@ -61,7 +61,7 @@ export const REEL_ITEMS = Array.from({ length: 9 }, (_, index) => ({
 		"Testing the last frame before the drop.",
 		"Archive clip with a little too much grain.",
 	][index],
-	videoSource: REEL_VIDEO_SOURCES[index],
+	videoSource: REEL_VIDEO_SOURCES[index] ?? undefined,
 	thumbnailSource: REEL_THUMBNAIL_SOURCES[index],
 }));
 
