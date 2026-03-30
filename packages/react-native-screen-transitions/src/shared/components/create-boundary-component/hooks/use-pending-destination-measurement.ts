@@ -94,6 +94,13 @@ export const usePendingDestinationMeasurement = (params: {
 	useAnimatedReaction(
 		() => {
 			"worklet";
+			/**
+			 * Non groups seem to work just fine with the useLayoutEffect, so lets avoid
+			 * retrying to avoid any potential performance issues.
+			 */
+			if (!group) {
+				return 0;
+			}
 			if (closing.get()) {
 				return 0;
 			}
@@ -191,18 +198,5 @@ export const usePendingDestinationMeasurement = (params: {
 			retryCount.set(retryCount.get() + 1);
 			maybeMeasureAndStore({ intent: "complete-destination" });
 		},
-		[
-			enabled,
-			id,
-			group,
-			sharedBoundTag,
-			currentScreenKey,
-			expectedSourceScreenKey,
-			progress,
-			animating,
-			closing,
-			maybeMeasureAndStore,
-			retryCount,
-		],
 	);
 };
