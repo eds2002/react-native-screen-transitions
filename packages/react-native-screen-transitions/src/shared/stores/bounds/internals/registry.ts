@@ -8,12 +8,7 @@ import type {
 	TagLink,
 	TagState,
 } from "../types";
-import {
-	createEmptyTagState,
-	debugStoreSizeLog,
-	type RegistryState,
-	registry,
-} from "./state";
+import { createEmptyTagState, type RegistryState, registry } from "./state";
 
 const LINK_HISTORY_LIMIT = 3;
 
@@ -86,7 +81,6 @@ function registerSnapshot(
 		};
 		return state;
 	});
-	debugStoreSizeLog(`registerSnapshot(${tag},${screenKey})`);
 }
 
 function setLinkSource(
@@ -129,7 +123,6 @@ function setLinkSource(
 
 		return state;
 	});
-	debugStoreSizeLog(`setLinkSource(${tag},${screenKey})`);
 }
 
 function updateLinkSource(
@@ -182,7 +175,6 @@ function updateLinkSource(
 
 		return state;
 	});
-	debugStoreSizeLog(`updateLinkSource(${tag},${screenKey})`);
 }
 
 const findLatestPendingIndex = (
@@ -255,7 +247,6 @@ function setLinkDestination(
 
 		return state;
 	});
-	debugStoreSizeLog(`setLinkDestination(${tag},${screenKey})`);
 }
 
 function updateLinkDestination(
@@ -308,7 +299,6 @@ function updateLinkDestination(
 
 		return state;
 	});
-	debugStoreSizeLog(`updateLinkDestination(${tag},${screenKey})`);
 }
 
 function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {

@@ -107,6 +107,36 @@ describe("close transition cleanup", () => {
 		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(true);
 	});
 
+	it("clear removes only the direct presence entry for a route key", () => {
+		const routeKey = "cleanup-route";
+		const descendantRoute = "cleanup-route-descendant";
+
+		BoundStore.registerBoundaryPresence("card", routeKey);
+		BoundStore.registerBoundaryPresence("card", descendantRoute, [routeKey]);
+
+		BoundStore.clear(routeKey);
+
+		expect(BoundStore.hasBoundaryPresence("card", descendantRoute)).toBe(true);
+
+		BoundStore.unregisterBoundaryPresence("card", descendantRoute);
+
+		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(false);
+	});
+
+	it("clearByAncestor removes descendant presence entries and preserves unrelated ones", () => {
+		const ancestorKey = "stack-cleanup";
+		const descendantRoute = "stack-cleanup-child";
+		const unrelatedRoute = "other-stack-child";
+
+		BoundStore.registerBoundaryPresence("card", descendantRoute, [ancestorKey]);
+		BoundStore.registerBoundaryPresence("card", unrelatedRoute, ["other-stack"]);
+
+		BoundStore.clearByAncestor(ancestorKey);
+
+		expect(BoundStore.hasBoundaryPresence("card", descendantRoute)).toBe(false);
+		expect(BoundStore.hasBoundaryPresence("card", unrelatedRoute)).toBe(true);
+	});
+
 	it("clears branch-associated entries when a branch navigator key is provided", () => {
 		const routeKey = "branch-host-screen";
 		const branchNavigatorKey = "nav-branch";

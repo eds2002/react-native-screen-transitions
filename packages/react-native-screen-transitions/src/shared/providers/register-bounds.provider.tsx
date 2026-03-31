@@ -417,6 +417,13 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 	},
 );
 
+/**
+ * Legacy bounds registration provider used by transition-aware components.
+ *
+ * @deprecated Prefer the newer bounds system (`Transition.Boundary`, `bounds()`,
+ * and navigation-style bounds helpers) for new code. This provider remains only
+ * for backwards compatibility with the older shared-bound-tag registration path.
+ */
 const RegisterBoundsProvider = registerBoundsBundle.RegisterBoundsProvider;
 useRegisterBoundsContext = registerBoundsBundle.useRegisterBoundsContext;
 

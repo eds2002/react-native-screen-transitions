@@ -1,18 +1,13 @@
 import { matchesNavigatorKey, matchesScreenKey } from "../helpers/matching";
 import type {
 	NavigatorKey,
+	PresenceEntry,
 	PresenceState,
 	ScreenKey,
 	SnapshotEntry,
 	TagLink,
 } from "../types";
-import {
-	debugClearLog,
-	debugStoreSizeLog,
-	presence,
-	type RegistryState,
-	registry,
-} from "./state";
+import { presence, type RegistryState, registry } from "./state";
 
 const hasAnyKeys = (record: Record<string, unknown>) => {
 	"worklet";
@@ -22,128 +17,23 @@ const hasAnyKeys = (record: Record<string, unknown>) => {
 	return false;
 };
 
-const countRegistryMatches = (
+type SnapshotPredicate = (
 	screenKey: ScreenKey,
-	matchByAncestor: boolean,
-): { snapshots: number; links: number } => {
-	"worklet";
-	const currentRegistry = registry.value;
-	let snapshots = 0;
-	let links = 0;
+	snapshot: SnapshotEntry,
+) => boolean;
 
-	for (const tag in currentRegistry) {
-		const tagState = currentRegistry[tag];
+type LinkPredicate = (link: TagLink) => boolean;
 
-		for (const snapshotKey in tagState.snapshots) {
-			const snapshot = tagState.snapshots[snapshotKey];
-			const matched = matchByAncestor
-				? snapshotKey === screenKey ||
-					(snapshot.ancestorKeys?.includes(screenKey) ?? false)
-				: snapshotKey === screenKey;
-			if (matched) snapshots++;
-		}
-
-		for (let i = 0; i < tagState.linkStack.length; i++) {
-			const link = tagState.linkStack[i];
-			if (
-				matchesScreenKey(link.source, screenKey) ||
-				matchesScreenKey(link.destination, screenKey)
-			) {
-				links++;
-			}
-		}
-	}
-
-	return { snapshots, links };
-};
-
-const countRegistryMatchesByBranch = (
-	branchNavigatorKey: NavigatorKey,
-): { snapshots: number; links: number } => {
-	"worklet";
-	const currentRegistry = registry.value;
-	let snapshots = 0;
-	let links = 0;
-
-	for (const tag in currentRegistry) {
-		const tagState = currentRegistry[tag];
-
-		for (const snapshotKey in tagState.snapshots) {
-			const snapshot = tagState.snapshots[snapshotKey];
-			const matched =
-				snapshot.navigatorKey === branchNavigatorKey ||
-				(snapshot.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
-			if (matched) snapshots++;
-		}
-
-		for (let i = 0; i < tagState.linkStack.length; i++) {
-			const link = tagState.linkStack[i];
-			if (
-				matchesNavigatorKey(link.source, branchNavigatorKey) ||
-				matchesNavigatorKey(link.destination, branchNavigatorKey)
-			) {
-				links++;
-			}
-		}
-	}
-
-	return { snapshots, links };
-};
-
-const countPresenceMatches = (
+type PresencePredicate = (
 	screenKey: ScreenKey,
-	matchByAncestor: boolean,
-): number => {
+	entry: PresenceEntry,
+) => boolean;
+
+const clearRegistry = (
+	shouldClearSnapshot: SnapshotPredicate,
+	shouldClearLink: LinkPredicate,
+) => {
 	"worklet";
-	const currentPresence = presence.value;
-	let matches = 0;
-
-	for (const tag in currentPresence) {
-		const tagEntries = currentPresence[tag];
-		for (const entryScreenKey in tagEntries) {
-			const entry = tagEntries[entryScreenKey];
-			const matched = matchByAncestor
-				? entryScreenKey === screenKey ||
-					(entry.ancestorKeys?.includes(screenKey) ?? false)
-				: entryScreenKey === screenKey;
-			if (matched) matches++;
-		}
-	}
-
-	return matches;
-};
-
-const countPresenceMatchesByBranch = (
-	branchNavigatorKey: NavigatorKey,
-): number => {
-	"worklet";
-	const currentPresence = presence.value;
-	let matches = 0;
-
-	for (const tag in currentPresence) {
-		const tagEntries = currentPresence[tag];
-		for (const entryScreenKey in tagEntries) {
-			const entry = tagEntries[entryScreenKey];
-			const matched =
-				entry.navigatorKey === branchNavigatorKey ||
-				(entry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
-			if (matched) matches++;
-		}
-	}
-
-	return matches;
-};
-
-const clearRegistry = (params: {
-	shouldRemoveSnapshot: (
-		screenKey: ScreenKey,
-		snapshot: SnapshotEntry,
-	) => boolean;
-	shouldRemoveLink: (link: TagLink) => boolean;
-}) => {
-	"worklet";
-	const { shouldRemoveSnapshot, shouldRemoveLink } = params;
-
 	registry.modify(<T extends RegistryState>(state: T): T => {
 		"worklet";
 		for (const tag in state) {
@@ -151,14 +41,14 @@ const clearRegistry = (params: {
 
 			for (const snapshotKey in tagState.snapshots) {
 				const snapshot = tagState.snapshots[snapshotKey];
-				if (shouldRemoveSnapshot(snapshotKey, snapshot)) {
+				if (shouldClearSnapshot(snapshotKey, snapshot)) {
 					delete tagState.snapshots[snapshotKey];
 				}
 			}
 
 			for (let i = tagState.linkStack.length - 1; i >= 0; i--) {
 				const link = tagState.linkStack[i];
-				if (shouldRemoveLink(link)) {
+				if (shouldClearLink(link)) {
 					tagState.linkStack.splice(i, 1);
 				}
 			}
@@ -172,25 +62,7 @@ const clearRegistry = (params: {
 	});
 };
 
-const clearPresenceDirect = (screenKey: ScreenKey) => {
-	"worklet";
-	presence.modify(<T extends PresenceState>(state: T): T => {
-		"worklet";
-		for (const tag in state) {
-			const tagEntries = state[tag];
-			if (!tagEntries[screenKey]) continue;
-
-			delete tagEntries[screenKey];
-
-			if (!hasAnyKeys(tagEntries)) {
-				delete state[tag];
-			}
-		}
-		return state;
-	});
-};
-
-const clearPresenceByAncestor = (ancestorKey: ScreenKey) => {
+const clearPresence = (shouldClearPresence: PresencePredicate) => {
 	"worklet";
 	presence.modify(<T extends PresenceState>(state: T): T => {
 		"worklet";
@@ -199,10 +71,7 @@ const clearPresenceByAncestor = (ancestorKey: ScreenKey) => {
 
 			for (const entryScreenKey in tagEntries) {
 				const entry = tagEntries[entryScreenKey];
-				const shouldRemove =
-					entryScreenKey === ancestorKey ||
-					(entry.ancestorKeys?.includes(ancestorKey) ?? false);
-				if (shouldRemove) {
+				if (shouldClearPresence(entryScreenKey, entry)) {
 					delete tagEntries[entryScreenKey];
 				}
 			}
@@ -211,125 +80,83 @@ const clearPresenceByAncestor = (ancestorKey: ScreenKey) => {
 				delete state[tag];
 			}
 		}
+
 		return state;
 	});
 };
 
-const clearPresenceByBranch = (branchNavigatorKey: NavigatorKey) => {
+const performClear = (
+	shouldClearSnapshot: SnapshotPredicate,
+	shouldClearLink: LinkPredicate,
+	shouldClearPresence: PresencePredicate,
+) => {
 	"worklet";
-	presence.modify(<T extends PresenceState>(state: T): T => {
-		"worklet";
-		for (const tag in state) {
-			const tagEntries = state[tag];
-
-			for (const entryScreenKey in tagEntries) {
-				const entry = tagEntries[entryScreenKey];
-				const shouldRemove =
-					entry.navigatorKey === branchNavigatorKey ||
-					(entry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
-
-				if (shouldRemove) {
-					delete tagEntries[entryScreenKey];
-				}
-			}
-
-			if (!hasAnyKeys(tagEntries)) {
-				delete state[tag];
-			}
-		}
-		return state;
-	});
+	clearRegistry(shouldClearSnapshot, shouldClearLink);
+	clearPresence(shouldClearPresence);
 };
 
 function clear(screenKey: ScreenKey) {
 	"worklet";
-	const beforeMatches = countRegistryMatches(screenKey, false);
-	const beforePresenceMatches = countPresenceMatches(screenKey, false);
-
-	clearRegistry({
-		shouldRemoveSnapshot: (snapshotKey) => snapshotKey === screenKey,
-		shouldRemoveLink: (link) => {
+	performClear(
+		(snapshotKey) => snapshotKey === screenKey,
+		(link) => {
 			return (
 				matchesScreenKey(link.source, screenKey) ||
 				matchesScreenKey(link.destination, screenKey)
 			);
 		},
-	});
-
-	clearPresenceDirect(screenKey);
-
-	const afterMatches = countRegistryMatches(screenKey, false);
-	const afterPresenceMatches = countPresenceMatches(screenKey, false);
-
-	debugClearLog(
-		`clear(${screenKey}) snapshots=${beforeMatches.snapshots}->${afterMatches.snapshots} links=${beforeMatches.links}->${afterMatches.links} presence=${beforePresenceMatches}->${afterPresenceMatches}`,
+		(entryScreenKey) => entryScreenKey === screenKey,
 	);
-	debugStoreSizeLog(`clear(${screenKey})`);
 }
 
 function clearByAncestor(ancestorKey: ScreenKey) {
 	"worklet";
-	const beforeMatches = countRegistryMatches(ancestorKey, true);
-	const beforePresenceMatches = countPresenceMatches(ancestorKey, true);
-
-	clearRegistry({
-		shouldRemoveSnapshot: (snapshotKey, snapshot) => {
+	performClear(
+		(snapshotKey, snapshot) => {
 			return (
 				snapshotKey === ancestorKey ||
 				(snapshot.ancestorKeys?.includes(ancestorKey) ?? false)
 			);
 		},
-		shouldRemoveLink: (link) => {
+		(link) => {
 			return (
 				matchesScreenKey(link.source, ancestorKey) ||
 				matchesScreenKey(link.destination, ancestorKey)
 			);
 		},
-	});
-
-	clearPresenceByAncestor(ancestorKey);
-
-	const afterMatches = countRegistryMatches(ancestorKey, true);
-	const afterPresenceMatches = countPresenceMatches(ancestorKey, true);
-
-	debugClearLog(
-		`clearByAncestor(${ancestorKey}) snapshots=${beforeMatches.snapshots}->${afterMatches.snapshots} links=${beforeMatches.links}->${afterMatches.links} presence=${beforePresenceMatches}->${afterPresenceMatches}`,
+		(entryScreenKey, entry) => {
+			return (
+				entryScreenKey === ancestorKey ||
+				(entry.ancestorKeys?.includes(ancestorKey) ?? false)
+			);
+		},
 	);
-	debugStoreSizeLog(`clearByAncestor(${ancestorKey})`);
 }
 
 function clearByBranch(branchNavigatorKey: NavigatorKey) {
 	"worklet";
 	if (!branchNavigatorKey) return;
 
-	const beforeMatches = countRegistryMatchesByBranch(branchNavigatorKey);
-	const beforePresenceMatches =
-		countPresenceMatchesByBranch(branchNavigatorKey);
-
-	clearRegistry({
-		shouldRemoveSnapshot: (_snapshotKey, snapshot) => {
+	performClear(
+		(_snapshotKey, snapshot) => {
 			return (
 				snapshot.navigatorKey === branchNavigatorKey ||
 				(snapshot.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false)
 			);
 		},
-		shouldRemoveLink: (link) => {
+		(link) => {
 			return (
 				matchesNavigatorKey(link.source, branchNavigatorKey) ||
 				matchesNavigatorKey(link.destination, branchNavigatorKey)
 			);
 		},
-	});
-
-	clearPresenceByBranch(branchNavigatorKey);
-
-	const afterMatches = countRegistryMatchesByBranch(branchNavigatorKey);
-	const afterPresenceMatches = countPresenceMatchesByBranch(branchNavigatorKey);
-
-	debugClearLog(
-		`clearByBranch(${branchNavigatorKey}) snapshots=${beforeMatches.snapshots}->${afterMatches.snapshots} links=${beforeMatches.links}->${afterMatches.links} presence=${beforePresenceMatches}->${afterPresenceMatches}`,
+		(_entryScreenKey, entry) => {
+			return (
+				entry.navigatorKey === branchNavigatorKey ||
+				(entry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false)
+			);
+		},
 	);
-	debugStoreSizeLog(`clearByBranch(${branchNavigatorKey})`);
 }
 
 export { clear, clearByAncestor, clearByBranch };

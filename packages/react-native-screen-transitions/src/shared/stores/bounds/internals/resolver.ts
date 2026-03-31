@@ -7,7 +7,7 @@ import type {
 	TagLink,
 	TagState,
 } from "../types";
-import { debugResolverLog, registry } from "./state";
+import { registry } from "./state";
 
 const findLatestLink = (
 	tagState: TagState,
@@ -133,14 +133,6 @@ function resolveTransitionPair(
 	const destinationStyles = matchedLink?.destination?.styles ?? null;
 	const sourceScreenKey = matchedLink?.source?.screenKey ?? null;
 	const destinationScreenKey = matchedLink?.destination?.screenKey ?? null;
-
-	if (!sourceBounds || !destinationBounds) {
-		debugResolverLog(
-			`unresolved tag=${tag} entering=${context.entering ? 1 : 0} source=${
-				sourceBounds ? 1 : 0
-			} destination=${destinationBounds ? 1 : 0} pending=${usedPending ? 1 : 0}`,
-		);
-	}
 
 	return {
 		sourceBounds,

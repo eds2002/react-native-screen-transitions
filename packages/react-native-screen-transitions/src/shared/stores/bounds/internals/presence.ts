@@ -1,5 +1,5 @@
 import type { BoundaryConfig, PresenceState, ScreenKey, TagID } from "../types";
-import { debugStoreSizeLog, type GroupsState, groups, presence } from "./state";
+import { type GroupsState, groups, presence } from "./state";
 
 function registerBoundaryPresence(
 	tag: TagID,
@@ -31,7 +31,6 @@ function registerBoundaryPresence(
 
 		return state;
 	});
-	debugStoreSizeLog(`registerBoundaryPresence(${tag},${screenKey})`);
 }
 
 function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
@@ -63,7 +62,6 @@ function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
 		delete state[tag];
 		return state;
 	});
-	debugStoreSizeLog(`unregisterBoundaryPresence(${tag},${screenKey})`);
 }
 
 function hasBoundaryPresence(tag: TagID, screenKey: ScreenKey): boolean {
@@ -123,7 +121,6 @@ function setGroupActiveId(group: string, id: string) {
 		};
 		return state;
 	});
-	debugStoreSizeLog(`setGroupActiveId(${group},${id})`);
 }
 
 function getGroupActiveId(group: string): string | null {
