@@ -13,6 +13,8 @@ export type {
 	BoundsAccessor,
 	BoundsMethod,
 	BoundsNavigationAccessor,
+	BoundsNavigationZoomOpacityRange,
+	BoundsNavigationZoomOpacityRanges,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
 } from "./bounds.types";

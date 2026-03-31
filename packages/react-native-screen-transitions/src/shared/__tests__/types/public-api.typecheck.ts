@@ -60,9 +60,19 @@ const zoomOptions: BoundsNavigationZoomOptions = {
 	target: "bound",
 	debug: true,
 	borderRadius: 36,
+	focusedElementOpacity: {
+		open: [0, 0.35, 0, 1],
+		close: [0.65, 1, 0, 1],
+	},
+	unfocusedElementOpacity: {
+		open: [1, 2, 1, 0],
+		close: [1.85, 2, 1, 0],
+	},
 	backgroundScale: 0.97,
 	horizontalDragScale: [0.9, 1.02, 2],
 	verticalDragScale: [0.96, 1.01, 2.25],
+	horizontalDragTranslation: [0.5, 1, 1.5],
+	verticalDragTranslation: [0, 0, 1],
 };
 
 declare const interpolationProps: ScreenInterpolationProps;

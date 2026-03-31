@@ -191,3 +191,60 @@ export const resolveDirectionalDragScale = ({
 	const oppositeDrag = Math.min(1, Math.abs(dismissalRelative));
 	return interpolate(oppositeDrag, [0, 1], [1, growMax], "clamp");
 };
+
+export const resolveDirectionalDragTranslation = ({
+	normalized,
+	dimension,
+	resistance,
+	negativeMax,
+	positiveMax,
+	exponent = 1,
+}: {
+	normalized: number;
+	dimension: number;
+	resistance: number;
+	negativeMax: number;
+	positiveMax: number;
+	exponent?: number;
+}) => {
+	"worklet";
+
+	const clampedMagnitude = Math.min(1, Math.abs(normalized));
+	const curvedMagnitude = clampedMagnitude ** Math.max(1, exponent);
+	const baseDistance = Math.max(0, dimension) * resistance;
+
+	if (normalized < 0) {
+		return -baseDistance * negativeMax * curvedMagnitude;
+	}
+
+	return baseDistance * positiveMax * curvedMagnitude;
+};
+
+export const resolveOpacityRangeTuple = ({
+	value,
+	fallback,
+}: {
+	value:
+		| readonly [
+				inputStart: number,
+				inputEnd: number,
+				outputStart?: number,
+				outputEnd?: number,
+		  ]
+		| undefined;
+	fallback: readonly [
+		inputStart: number,
+		inputEnd: number,
+		outputStart?: number,
+		outputEnd?: number,
+	];
+}) => {
+	"worklet";
+
+	return {
+		inputStart: value?.[0] ?? fallback[0],
+		inputEnd: value?.[1] ?? fallback[1],
+		outputStart: value?.[2] ?? fallback[2] ?? 0,
+		outputEnd: value?.[3] ?? fallback[3] ?? 1,
+	};
+};

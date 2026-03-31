@@ -9,7 +9,16 @@ export const ZOOM_DRAG_RESISTANCE = 0.4;
 export const ZOOM_DRAG_DIRECTIONAL_SCALE_MIN = 0.25;
 export const ZOOM_DRAG_DIRECTIONAL_SCALE_MAX = 1.06;
 export const ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT = 2;
+export const ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX = 1;
+export const ZOOM_DRAG_TRANSLATION_POSITIVE_MAX = 1;
+export const ZOOM_DRAG_TRANSLATION_EXPONENT = 1;
 export const ZOOM_BACKGROUND_SCALE = 0.9375;
+export const ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE = [0, 0.5, 0, 1] as const;
+export const ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE = [0.6, 1, 0, 1] as const;
+export const ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE = [1, 2, 1, 0] as const;
+export const ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE = [
+	1.9, 2, 1, 0,
+] as const;
 
 export const ZOOM_MASK_OUTSET = Object.freeze({
 	top: 0,

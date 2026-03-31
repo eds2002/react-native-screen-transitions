@@ -1,7 +1,6 @@
 import { interpolate, makeMutable } from "react-native-reanimated";
 import {
 	EPSILON,
-	HIDDEN_STYLE,
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
@@ -22,15 +21,23 @@ import {
 	ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
 	ZOOM_DRAG_RESISTANCE,
+	ZOOM_DRAG_TRANSLATION_EXPONENT,
+	ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX,
+	ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
+	ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
+	ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 	ZOOM_MASK_OUTSET,
 	ZOOM_SHARED_OPTIONS,
+	ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
+	ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 } from "./config";
 import {
 	combineScales,
 	composeCompensatedTranslation,
 	computeCenterScaleShift,
-	normalizedToTranslation,
 	resolveDirectionalDragScale,
+	resolveDirectionalDragTranslation,
+	resolveOpacityRangeTuple,
 } from "./math";
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
@@ -111,10 +118,45 @@ function resolveDragScaleTuple(
 	};
 }
 
+function resolveDragTranslationTuple(
+	value:
+		| readonly [negativeMax: number, positiveMax: number, exponent?: number]
+		| undefined,
+) {
+	"worklet";
+
+	return {
+		negativeMax: value?.[0] ?? ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX,
+		positiveMax: value?.[1] ?? ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
+		exponent: value?.[2] ?? ZOOM_DRAG_TRANSLATION_EXPONENT,
+	};
+}
+
 function resolveBackgroundScale(value: number | undefined) {
 	"worklet";
 
 	return value ?? ZOOM_BACKGROUND_SCALE;
+}
+
+function interpolateOpacityRange(params: {
+	progress: number;
+	range: {
+		inputStart: number;
+		inputEnd: number;
+		outputStart: number;
+		outputEnd: number;
+	};
+}) {
+	"worklet";
+
+	const { progress, range } = params;
+
+	return interpolate(
+		progress,
+		[range.inputStart, range.inputEnd],
+		[range.outputStart, range.outputEnd],
+		"clamp",
+	);
 }
 
 function resolveEffectiveZoomTag(params: {
@@ -233,6 +275,26 @@ export function buildZoomStyles({
 
 	const sourceBorderRadius = getSourceBorderRadius(resolvedPair);
 	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
+	const focusedElementOpacity = {
+		open: resolveOpacityRangeTuple({
+			value: zoomOptions?.focusedElementOpacity?.open,
+			fallback: ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
+		}),
+		close: resolveOpacityRangeTuple({
+			value: zoomOptions?.focusedElementOpacity?.close,
+			fallback: ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
+		}),
+	};
+	const unfocusedElementOpacity = {
+		open: resolveOpacityRangeTuple({
+			value: zoomOptions?.unfocusedElementOpacity?.open,
+			fallback: ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
+		}),
+		close: resolveOpacityRangeTuple({
+			value: zoomOptions?.unfocusedElementOpacity?.close,
+			fallback: ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
+		}),
+	};
 	const sourceVisibilityStyle = {
 		[effectiveTag]: VISIBLE_STYLE,
 	} satisfies TransitionInterpolatedStyle;
@@ -261,13 +323,39 @@ export function buildZoomStyles({
 	/* --------------------------- Missing Source Guard -------------------------- */
 
 	// Only the focused entering route should be hidden when source bounds are
-	// missing. During grouped retargeting, the unfocused/source route can still be
-	// styled by the destination interpolator while the new active member is warming
-	// up; hiding there blanks the wrong screen.
+	// missing. During rapid chained pushes, source measurement can briefly race
+	// the focused destination. In that case, degrading to a fullscreen destination
+	// is safer than blanking the entire screen until another gesture/animation
+	// re-runs the pipeline.
 	if (focused && !resolvedPair.sourceBounds && props.active.entering) {
-		return {
-			[focusedContentSlot]: HIDDEN_STYLE,
+		const fallbackStyles: ZoomInterpolatedStyle = {
+			[focusedContentSlot]: {
+				style: {
+					opacity: zoomOptions?.debug ? 0.5 : 1,
+					transform: [{ translateX: 0 }, { translateY: 0 }, { scale: 1 }],
+					borderRadius: 0,
+					overflow: "hidden",
+				},
+			},
 		};
+
+		if (props.navigationMaskEnabled) {
+			const { top, right, bottom, left } = ZOOM_MASK_OUTSET;
+			fallbackStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
+				style: {
+					width: Math.max(1, screenLayout.width + left + right),
+					height: Math.max(1, screenLayout.height + top + bottom),
+					borderRadius: 0,
+					transform: [
+						{ translateX: -left },
+						{ translateY: -top },
+						{ scale: 1 },
+					],
+				},
+			};
+		}
+
+		return fallbackStyles;
 	}
 
 	/* --------------------------- Gesture / Drag Values ------------------------- */
@@ -281,15 +369,27 @@ export function buildZoomStyles({
 	const isVerticalDismiss =
 		initialDirection === "vertical" || initialDirection === "vertical-inverted";
 
-	const dragX = normalizedToTranslation({
+	const horizontalDragTranslation = resolveDragTranslationTuple(
+		zoomOptions?.horizontalDragTranslation,
+	);
+	const verticalDragTranslation = resolveDragTranslationTuple(
+		zoomOptions?.verticalDragTranslation,
+	);
+	const dragX = resolveDirectionalDragTranslation({
 		normalized: normX,
 		dimension: screenLayout.width,
 		resistance: ZOOM_DRAG_RESISTANCE,
+		negativeMax: horizontalDragTranslation.negativeMax,
+		positiveMax: horizontalDragTranslation.positiveMax,
+		exponent: horizontalDragTranslation.exponent,
 	});
-	const dragY = normalizedToTranslation({
+	const dragY = resolveDirectionalDragTranslation({
 		normalized: normY,
 		dimension: screenLayout.height,
 		resistance: ZOOM_DRAG_RESISTANCE,
+		negativeMax: verticalDragTranslation.negativeMax,
+		positiveMax: verticalDragTranslation.positiveMax,
+		exponent: verticalDragTranslation.exponent,
 	});
 	const horizontalDragScale = resolveDragScaleTuple(
 		zoomOptions?.horizontalDragScale,
@@ -347,8 +447,14 @@ export function buildZoomStyles({
 		} as const);
 
 		const focusedFade = props.active?.closing
-			? interpolate(progress, [0.6, 1], [0, 1], "clamp")
-			: interpolate(progress, [0, 0.5], [0, 1], "clamp");
+			? interpolateOpacityRange({
+					progress,
+					range: focusedElementOpacity.close,
+				})
+			: interpolateOpacityRange({
+					progress,
+					range: focusedElementOpacity.open,
+				});
 
 		/**
 		 * This is also how swiftui handles their navigation zoom.
@@ -410,8 +516,14 @@ export function buildZoomStyles({
 	/* ---------------------------- Unfocused Screen ---------------------------- */
 
 	const unfocusedFade = props.active?.closing
-		? interpolate(progress, [1.9, 2], [1, 0], "clamp")
-		: interpolate(progress, [1, 2], [1, 0], "clamp");
+		? interpolateOpacityRange({
+				progress,
+				range: unfocusedElementOpacity.close,
+			})
+		: interpolateOpacityRange({
+				progress,
+				range: unfocusedElementOpacity.open,
+			});
 	const unfocusedScale = interpolate(
 		progress,
 		[1, 2],
@@ -425,7 +537,7 @@ export function buildZoomStyles({
 
 	const shouldResetUnfocusedElement =
 		!props.active.closing &&
-		(props.active.logicallySettled || didSourceComponentVisiblyHide);
+		(!!props.active.logicallySettled || didSourceComponentVisiblyHide);
 
 	const unfocusedElementTarget = getZoomContentTarget({
 		explicitTarget,

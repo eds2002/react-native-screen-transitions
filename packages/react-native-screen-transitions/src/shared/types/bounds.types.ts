@@ -39,6 +39,32 @@ export type BoundsNavigationZoomOptions = {
 	debug?: boolean;
 	borderRadius?: number;
 	/**
+	 * Focused-screen element opacity curve.
+	 *
+	 * `open` is used while presenting the destination screen.
+	 * `close` is used while returning to the source screen.
+	 *
+	 * Tuple order:
+	 * - `inputStart`: transition progress start
+	 * - `inputEnd`: transition progress end
+	 * - `outputStart`: opacity at `inputStart` (defaults to built-in preset)
+	 * - `outputEnd`: opacity at `inputEnd` (defaults to built-in preset)
+	 */
+	focusedElementOpacity?: BoundsNavigationZoomOpacityRanges;
+	/**
+	 * Unfocused-screen matched element opacity curve.
+	 *
+	 * `open` is used while the previous screen animates out during present.
+	 * `close` is used while the previous screen animates back in during dismiss.
+	 *
+	 * Tuple order:
+	 * - `inputStart`: transition progress start
+	 * - `inputEnd`: transition progress end
+	 * - `outputStart`: opacity at `inputStart` (defaults to built-in preset)
+	 * - `outputEnd`: opacity at `inputEnd` (defaults to built-in preset)
+	 */
+	unfocusedElementOpacity?: BoundsNavigationZoomOpacityRanges;
+	/**
 	 * Scale applied to the unfocused background content while the focused bound
 	 * animates above it.
 	 */
@@ -71,6 +97,54 @@ export type BoundsNavigationZoomOptions = {
 		growMax: number,
 		exponent?: number,
 	];
+	/**
+	 * Horizontal gesture drag translation curve.
+	 *
+	 * Tuple order:
+	 * - `negativeMax`: multiplier when dragging left / negative
+	 * - `positiveMax`: multiplier when dragging right / positive
+	 * - `exponent`: curve exponent controlling how quickly translation ramps
+	 *
+	 * Examples:
+	 * - `[0, 0]` disables horizontal drag translation
+	 * - `[0.5, 0.5]` halves horizontal drag travel
+	 * - `[1.2, 1.2]` amplifies horizontal drag travel
+	 */
+	horizontalDragTranslation?: readonly [
+		negativeMax: number,
+		positiveMax: number,
+		exponent?: number,
+	];
+	/**
+	 * Vertical gesture drag translation curve.
+	 *
+	 * Tuple order:
+	 * - `negativeMax`: multiplier when dragging up / negative
+	 * - `positiveMax`: multiplier when dragging down / positive
+	 * - `exponent`: curve exponent controlling how quickly translation ramps
+	 *
+	 * Examples:
+	 * - `[0, 0]` disables vertical drag translation
+	 * - `[0.5, 0.5]` halves vertical drag travel
+	 * - `[1.2, 1.2]` amplifies vertical drag travel
+	 */
+	verticalDragTranslation?: readonly [
+		negativeMax: number,
+		positiveMax: number,
+		exponent?: number,
+	];
+};
+
+export type BoundsNavigationZoomOpacityRange = readonly [
+	inputStart: number,
+	inputEnd: number,
+	outputStart?: number,
+	outputEnd?: number,
+];
+
+export type BoundsNavigationZoomOpacityRanges = {
+	open?: BoundsNavigationZoomOpacityRange;
+	close?: BoundsNavigationZoomOpacityRange;
 };
 
 export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
