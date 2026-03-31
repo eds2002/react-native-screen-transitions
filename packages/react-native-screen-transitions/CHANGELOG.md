@@ -1,5 +1,22 @@
 # Changelog
 
+# [3.4.0-beta.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-beta.0...v3.4.0-beta.1) (2026-03-31)
+
+
+### Bug Fixes
+
+* **bounds:** limit pending destination retries to grouped flows ([1e39b56](https://github.com/eds2002/react-native-screen-transitions/commit/1e39b56e83635e3d2b03c338572562e14b7b7be6))
+* **bounds:** limit pre-transition source refresh to grouped boundaries ([d5c033a](https://github.com/eds2002/react-native-screen-transitions/commit/d5c033add0e0b215eebe163514c575519a45ba32))
+* **bounds:** refresh grouped source before pre-transition measurement ([ec3f4f9](https://github.com/eds2002/react-native-screen-transitions/commit/ec3f4f9da577fe8826037fceaeb7a18431998383))
+* restore hidden fallback for non-raw bounds styles ([c7acee9](https://github.com/eds2002/react-native-screen-transitions/commit/c7acee9a405eb8e327f8df89e2e5715ce6197241))
+* **zoom:** debug mode ([65443af](https://github.com/eds2002/react-native-screen-transitions/commit/65443af7d26eb2e2ba2f13d709355d35f7fc60a3))
+* **zoom:** revert back to old styling ([89fab35](https://github.com/eds2002/react-native-screen-transitions/commit/89fab352343a6e2ab2d1398dc0b09b7f1f397e69))
+
+
+### Features
+
+* **zoom:** add more options ([4c36338](https://github.com/eds2002/react-native-screen-transitions/commit/4c36338158de4bd98bac4ab91d71e62eacc0828d))
+
 # [3.4.0-beta.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-alpha.7...v3.4.0-beta.0) (2026-03-30)
 
 
