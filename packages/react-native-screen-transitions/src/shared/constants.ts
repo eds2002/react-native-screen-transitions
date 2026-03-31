@@ -107,7 +107,6 @@ export const EMPTY_BOUND_HELPER_RESULT_RAW = Object.freeze({
 	translateY: 0,
 	width: 0,
 	height: 0,
-	...HIDDEN_STYLE,
 });
 export const TRANSFORM_RESET = Object.freeze({
 	transform: [
