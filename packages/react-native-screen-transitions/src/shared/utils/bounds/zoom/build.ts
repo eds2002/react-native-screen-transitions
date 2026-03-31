@@ -35,7 +35,6 @@ import {
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
-const UNFOCUSED_ENTER_FADE_END = 1.6;
 const presentedZoomTagByRoute = makeMutable<Record<string, string>>({});
 
 /* -------------------------------------------------------------------------- */
@@ -372,7 +371,7 @@ export function buildZoomStyles({
 		const maskTranslateY = toNumber(maskRaw.translateY) + dragY - top;
 
 		const focusedContentStyle = {
-			opacity: focusedFade,
+			opacity: zoomOptions?.debug ? 0.5 : focusedFade,
 			transform: [
 				{ translateX: contentTranslateX },
 				{ translateY: contentTranslateY },
@@ -507,7 +506,7 @@ export function buildZoomStyles({
 					{ scaleX: 1 },
 					{ scaleY: 1 },
 				],
-				opacity: 0,
+				opacity: zoomOptions?.debug ? 1 : 0,
 				zIndex: 0,
 				elevation: 0,
 			}
@@ -526,7 +525,7 @@ export function buildZoomStyles({
 						scaleY: shouldResetUnfocusedElement ? 1 : elementScaleY,
 					},
 				],
-				opacity: unfocusedFade,
+				opacity: zoomOptions?.debug ? 1 : unfocusedFade,
 				zIndex: 9999,
 				elevation: 9999,
 			};
