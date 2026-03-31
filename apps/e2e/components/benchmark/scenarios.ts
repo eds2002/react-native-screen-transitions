@@ -1,3 +1,4 @@
+import { BENCHMARK_TRANSITION_DURATION_MS } from "./constants";
 import type { BenchmarkScenario } from "./types";
 
 export type BenchmarkScenarioAppearance =
@@ -14,6 +15,7 @@ export interface BenchmarkDefinition {
 	appearance: BenchmarkScenarioAppearance;
 	transitionKind: BenchmarkTransitionKind;
 	detachPreviousScreen: boolean;
+	holdBeforePopMs: number;
 }
 
 export const BENCHMARK_DEFINITIONS: Record<
@@ -29,6 +31,7 @@ export const BENCHMARK_DEFINITIONS: Record<
 		appearance: "opaque-card",
 		transitionKind: "horizontal",
 		detachPreviousScreen: true,
+		holdBeforePopMs: 0,
 	},
 	"push-pop-loop": {
 		id: "push-pop-loop",
@@ -39,6 +42,7 @@ export const BENCHMARK_DEFINITIONS: Record<
 		appearance: "transparent-card",
 		transitionKind: "horizontal",
 		detachPreviousScreen: false,
+		holdBeforePopMs: 0,
 	},
 	"modal-push-pop-loop": {
 		id: "modal-push-pop-loop",
@@ -49,6 +53,18 @@ export const BENCHMARK_DEFINITIONS: Record<
 		appearance: "modal-sheet",
 		transitionKind: "vertical",
 		detachPreviousScreen: false,
+		holdBeforePopMs: 0,
+	},
+	"modal-settled-push-pop-loop": {
+		id: "modal-settled-push-pop-loop",
+		title: "Settled Modal Sheet Loop",
+		description:
+			"Vertical modal-style timing with the previous screen kept visible and the sheet held briefly after it settles before pop.",
+		isPublic: true,
+		appearance: "modal-sheet",
+		transitionKind: "vertical",
+		detachPreviousScreen: false,
+		holdBeforePopMs: BENCHMARK_TRANSITION_DURATION_MS + 120,
 	},
 	"navigate-during-close": {
 		id: "navigate-during-close",
@@ -59,6 +75,7 @@ export const BENCHMARK_DEFINITIONS: Record<
 		appearance: "transparent-card",
 		transitionKind: "horizontal",
 		detachPreviousScreen: false,
+		holdBeforePopMs: 0,
 	},
 };
 

@@ -48,6 +48,7 @@ export default function BenchmarkRunScreen() {
 	const cycle = Number(cycleRaw);
 	const isTransparentSurface = definition.appearance !== "opaque-card";
 	const isModalSurface = definition.appearance === "modal-sheet";
+	const holdBeforePopMs = definition.holdBeforePopMs;
 	const title = isModalSurface
 		? "Running Modal Benchmark Cycle"
 		: "Running Benchmark Cycle";
@@ -140,7 +141,7 @@ export default function BenchmarkRunScreen() {
 						router.navigate(targetPath as never);
 					}, NAVIGATE_DURING_CLOSE_DELAY_MS);
 				}
-			}, 0);
+			}, holdBeforePopMs);
 		};
 
 		step();
@@ -151,7 +152,7 @@ export default function BenchmarkRunScreen() {
 			if (popTimeout !== null) clearTimeout(popTimeout);
 			if (navigateTimeout !== null) clearTimeout(navigateTimeout);
 		};
-	}, [cycle, impl, navigation, runId, scenario]);
+	}, [cycle, holdBeforePopMs, impl, navigation, runId, scenario]);
 
 	return (
 		<SafeAreaView

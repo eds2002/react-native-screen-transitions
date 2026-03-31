@@ -27,6 +27,24 @@ const TEST_FLOWS = [
 		description: "Elastic drag with overlay darkening",
 	},
 	{
+		id: "shared-apple-music",
+		title: "Shared Apple Music",
+		description:
+			"Deprecated SharedAppleMusic preset routed through a nested tab shell",
+	},
+	{
+		id: "shared-x-image",
+		title: "Shared X Image",
+		description:
+			"Deprecated SharedXImage preset for feed card -> fullscreen media",
+	},
+	{
+		id: "shared-instagram",
+		title: "Shared Instagram Preset",
+		description:
+			"Deprecated SharedIGImage preset for profile grid -> post detail",
+	},
+	{
 		id: "stack-progress",
 		title: "Stack Progress",
 		description: "Demonstrates stackProgress accumulating across screens",

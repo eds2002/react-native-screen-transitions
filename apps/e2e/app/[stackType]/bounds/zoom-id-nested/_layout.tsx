@@ -13,12 +13,27 @@ const toZoomId = (route: { params?: object }) => {
 	return typeof rawId === "string" ? rawId : null;
 };
 
+const resolveNavigationZoomId = (params: {
+	currentId: string | null;
+	activeId: string | null;
+	focused: boolean;
+}) => {
+	"worklet";
+
+	const { currentId, activeId, focused } = params;
+	return focused ? currentId ?? activeId : activeId ?? currentId;
+};
+
 const nestedNavigationZoomIdInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, current, active, progress }) => {
+	({ bounds, current, active, progress, focused }) => {
 		"worklet";
 		const currentId = toZoomId(current.route);
 		const activeId = toZoomId(active.route);
-		const id = currentId ?? activeId;
+		const id = resolveNavigationZoomId({
+			currentId,
+			activeId,
+			focused,
+		});
 
 		if (!id) {
 			return {};

@@ -70,6 +70,18 @@ export default function BlankStackLayout() {
 				}}
 			/>
 			<StackNavigator.Screen
+				name="shared-apple-music"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
+				name="shared-x-image"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
+				name="shared-instagram"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
 				name="detail"
 				options={{
 					gestureEnabled: true,
