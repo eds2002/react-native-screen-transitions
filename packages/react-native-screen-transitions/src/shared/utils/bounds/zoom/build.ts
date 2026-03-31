@@ -12,7 +12,7 @@ import {
 } from "../../../stores/bounds";
 import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
 import type { Layout } from "../../../types/screen.types";
-import { computeBoundStyles } from "../helpers/compute-bounds-styles";
+import { prepareBoundStyles } from "../helpers/prepare-bound-styles";
 import type { BoundsOptions } from "../types/options";
 import {
 	getZoomAnchor,
@@ -215,15 +215,6 @@ export function buildZoomStyles({
 		livePairReady: !!liveResolvedPair.sourceBounds,
 	});
 
-	const zoomComputeParams = {
-		id: effectiveTag,
-		previous: props.previous,
-		current: props.current,
-		next: props.next,
-		progress,
-		dimensions: screenLayout,
-	} as const;
-
 	const baseRawOptions = {
 		id: effectiveTag,
 		raw: true,
@@ -248,6 +239,24 @@ export function buildZoomStyles({
 	const focusedContentSlot = props.navigationMaskEnabled
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID
 		: "content";
+
+	/**
+	 * Local bounds compute helper for navigation zoom.
+	 *
+	 * If you're building a custom transition, prefer the public `bounds()` helper.
+	 * We keep a local version here so zoom can share the same low-level compute path
+	 * without re-entering the decorated public accessor.
+	 */
+	const bounds = <T extends BoundsOptions>(options: T) => {
+		"worklet";
+
+		return prepareBoundStyles({
+			props,
+			options,
+			resolvedPair,
+			syncGroupActiveId: false,
+		});
+	};
 
 	/* --------------------------- Missing Source Guard -------------------------- */
 
@@ -322,28 +331,20 @@ export function buildZoomStyles({
 			resolvedPair,
 		});
 
-		const contentRaw = computeBoundStyles(
-			zoomComputeParams,
-			{
-				...baseRawOptions,
-				anchor: resolvedZoomAnchor,
-				method: "content",
-				target: focusedContentTarget,
-			},
-			resolvedPair,
-		) as Record<string, unknown>;
+		const contentRaw = bounds({
+			...baseRawOptions,
+			anchor: resolvedZoomAnchor,
+			method: "content",
+			target: focusedContentTarget,
+		} as const);
 
-		const maskRaw = computeBoundStyles(
-			zoomComputeParams,
-			{
-				...baseRawOptions,
-				anchor: ZOOM_SHARED_OPTIONS.anchor,
-				method: "size",
-				space: "absolute",
-				target: "fullscreen",
-			},
-			resolvedPair,
-		) as Record<string, unknown>;
+		const maskRaw = bounds({
+			...baseRawOptions,
+			anchor: ZOOM_SHARED_OPTIONS.anchor,
+			method: "size",
+			space: "absolute",
+			target: "fullscreen",
+		} as const);
 
 		const focusedFade = props.active?.closing
 			? interpolate(progress, [0.6, 1], [0, 1], "clamp")
@@ -433,17 +434,13 @@ export function buildZoomStyles({
 		resolvedPair,
 	});
 
-	const elementRaw = computeBoundStyles(
-		zoomComputeParams,
-		{
-			...baseRawOptions,
-			anchor: resolvedZoomAnchor,
-			method: "transform",
-			space: "relative",
-			target: unfocusedElementTarget,
-		},
-		resolvedPair,
-	) as Record<string, unknown>;
+	const elementRaw = bounds({
+		...baseRawOptions,
+		anchor: resolvedZoomAnchor,
+		method: "transform",
+		space: "relative",
+		target: unfocusedElementTarget,
+	} as const);
 
 	const boundTargetCenterX =
 		explicitTarget === "bound" && resolvedPair.destinationBounds

@@ -17,7 +17,7 @@ import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
 import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
-import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles";
+import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
 import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
 import { useBoundaryMeasureAndStore } from "./hooks/use-boundary-measure-and-store";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";

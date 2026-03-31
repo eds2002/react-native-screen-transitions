@@ -1,6 +1,6 @@
-import { ENTER_RANGE, EXIT_RANGE } from "../../../constants";
-import type { BoundsLink } from "../../../types/bounds.types";
-import { interpolateClamped } from "./interpolate";
+import { Extrapolation, interpolate } from "react-native-reanimated";
+import { ENTER_RANGE, EXIT_RANGE } from "../../../../constants";
+import type { BoundsLink } from "../../../../types/bounds.types";
 
 type InterpolateStyleOptions = {
 	fallback?: number;
@@ -34,5 +34,10 @@ export function interpolateLinkStyle(
 
 	const range = entering ? ENTER_RANGE : EXIT_RANGE;
 
-	return interpolateClamped(progress, range, [sourceValue, destValue]);
+	return interpolate(
+		progress,
+		range,
+		[sourceValue, destValue],
+		Extrapolation.CLAMP,
+	);
 }

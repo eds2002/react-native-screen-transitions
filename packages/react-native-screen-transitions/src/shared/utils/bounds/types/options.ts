@@ -112,8 +112,9 @@ export type BoundsOptions = {
 	/**
 	 * Coordinate space selection.
 	 *
-	 * For `bounds({ ... })` element styles, space is normalized to `"relative"`.
-	 * `"absolute"` is reserved for internal navigation helpers (e.g. mask geometry).
+	 * - `"relative"` composes movement relative to the current element's layout box
+	 * - `"absolute"` composes movement in screen/window coordinates
+	 *
 	 * @default "relative"
 	 */
 	space?: BoundsSpace;

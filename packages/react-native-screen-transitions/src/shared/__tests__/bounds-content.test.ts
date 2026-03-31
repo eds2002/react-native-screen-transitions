@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { computeBoundStyles } from "../utils/bounds/helpers/compute-bounds-styles";
+import { computeBoundStyles } from "../utils/bounds/helpers/styles/compute";
 import { createBounds } from "./helpers/bounds-behavior-fixtures";
 
 const screenLayout = { width: 400, height: 800, scale: 1, fontScale: 1 };

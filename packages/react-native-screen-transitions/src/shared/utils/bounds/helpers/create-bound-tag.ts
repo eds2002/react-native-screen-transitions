@@ -5,13 +5,13 @@ export type ResolveBoundTagParams = {
 	group?: string;
 };
 
-export const resolveBoundTag = ({
+export const createBoundTag = ({
 	id,
 	group,
 }: ResolveBoundTagParams): string | undefined => {
 	"worklet";
 
-	if (id === undefined || id === null || id === "") return undefined;
+	if (id == null || id === "") return undefined;
 
 	const normalizedId = String(id);
 

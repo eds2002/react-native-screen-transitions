@@ -1,11 +1,14 @@
-import type { MeasuredDimensions } from "react-native-reanimated";
+import {
+	Extrapolation,
+	interpolate,
+	type MeasuredDimensions,
+} from "react-native-reanimated";
 import { ENTER_RANGE, EXIT_RANGE } from "../../../constants";
 import { BoundStore } from "../../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundId } from "../types/options";
-import { interpolateClamped } from "./interpolate";
-import { interpolateLinkStyle } from "./interpolate-style";
-import type { LinkAccessor } from "./link-accessor";
+import type { LinkAccessor } from "./create-link-accessor";
+import { interpolateLinkStyle } from "./styles/interpolate-link-style";
 
 type InterpolatorParams = {
 	getProps: () => Omit<ScreenInterpolationProps, "bounds">;
@@ -55,10 +58,12 @@ export const createInterpolators = ({
 		const currentValue = currentSnapshot?.bounds?.[property] ?? fb;
 		const targetValue = targetSnapshot?.bounds?.[property] ?? fb;
 
-		return interpolateClamped(props.progress, range, [
-			targetValue,
-			currentValue,
-		]);
+		return interpolate(
+			props.progress,
+			range,
+			[targetValue, currentValue],
+			Extrapolation.CLAMP,
+		);
 	};
 
 	const interpolateBoundsFromLink = (
@@ -77,10 +82,12 @@ export const createInterpolators = ({
 		const sourceValue = link?.source?.bounds?.[property] ?? fb;
 		const destinationValue = link?.destination?.bounds?.[property] ?? fb;
 
-		return interpolateClamped(props.progress, range, [
-			sourceValue,
-			destinationValue,
-		]);
+		return interpolate(
+			props.progress,
+			range,
+			[sourceValue, destinationValue],
+			Extrapolation.CLAMP,
+		);
 	};
 
 	const interpolateBounds = (

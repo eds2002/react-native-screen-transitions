@@ -6,22 +6,22 @@ import {
 	FULLSCREEN_DIMENSIONS,
 	HIDDEN_STYLE,
 	NO_STYLES,
-} from "../../../constants";
+} from "../../../../constants";
 import {
 	BoundStore,
 	type ResolvedTransitionPair,
-} from "../../../stores/bounds";
-import type { ScreenTransitionState } from "../../../types/animation.types";
-import type { Layout } from "../../../types/screen.types";
+} from "../../../../stores/bounds";
+import type { ScreenTransitionState } from "../../../../types/animation.types";
+import type { Layout } from "../../../../types/screen.types";
 import type {
 	BoundId,
 	BoundsComputeParams,
 	BoundsOptions,
-} from "../types/options";
+} from "../../types/options";
 import {
 	computeContentTransformGeometry,
 	computeRelativeGeometry,
-} from "./geometry";
+} from "../geometry";
 import {
 	composeContentStyle,
 	composeSizeAbsolute,
@@ -29,9 +29,9 @@ import {
 	composeTransformAbsolute,
 	composeTransformRelative,
 	type ElementComposeParams,
-} from "./style-composers";
+} from "./composers";
 
-const resolveBounds = (params: {
+const resolveStartEnd = (params: {
 	id: BoundId;
 	previous?: ScreenTransitionState;
 	current?: ScreenTransitionState;
@@ -135,7 +135,7 @@ export const computeBoundStyles = (
 		currentScreenKey,
 		sourceScreenKey,
 		destinationScreenKey,
-	} = resolveBounds({
+	} = resolveStartEnd({
 		id,
 		previous,
 		current,

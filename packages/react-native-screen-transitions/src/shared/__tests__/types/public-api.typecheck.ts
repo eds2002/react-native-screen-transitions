@@ -72,10 +72,18 @@ const gestureTarget: ScreenGestureTarget = { ancestor: 2 };
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
+const absoluteRawBoundsResult = interpolationProps.bounds({
+	id: 42,
+	method: "size",
+	space: "absolute",
+	raw: true,
+});
 const zoomInterpolatedStyle: BoundsNavigationZoomStyle =
 	interpolationProps.bounds({ id: 42 }).navigation.zoom({
 		target: "bound",
 	});
+const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
+const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight = interpolationProps.current.layouts.content?.height;
 const currentSnapIndex = interpolationProps.current.snapIndex;
@@ -171,6 +179,9 @@ export const publicApiTypecheck = {
 	legacyInterpolatedStyle,
 	gestureTarget,
 	numericBoundsResult,
+	absoluteRawBoundsResult,
+	absoluteRawBoundsWidth,
+	absoluteRawBoundsTranslateX,
 	zoomInterpolatedStyle,
 	maybeContentHeight,
 	maybeCurrentContentHeight,
