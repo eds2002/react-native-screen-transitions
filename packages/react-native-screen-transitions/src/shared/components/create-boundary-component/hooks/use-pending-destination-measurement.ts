@@ -14,6 +14,20 @@ import {
 	resolvePendingDestinationRetrySignal,
 } from "./helpers/measurement-rules";
 
+/**
+ * The current v3.4 behavior intentionally favors correctness over efficiency:
+ * when destination layout races transition start, this hook may re-measure
+ * multiple times to recover a usable pair for `navigation.zoom()`.
+ *
+ * This works well enough for now, but it is not the ideal architecture. A more
+ * complete v4 solution should allow open-animation deferral and broader
+ * readiness coordination so we can avoid repeated measurement work while still
+ * handling multiple transition scenarios correctly. Until that system exists,
+ * `navigation.zoom()` remains fast in practice, just not as performant as it
+ * could be.
+ *
+ * For now, you may notice a slight stutter towards the end of the animation.
+ */
 export const usePendingDestinationMeasurement = (params: {
 	sharedBoundTag: string;
 	enabled: boolean;
@@ -105,13 +119,6 @@ export const usePendingDestinationMeasurement = (params: {
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			/**
-			 * Non groups seem to work just fine with the useLayoutEffect, so lets avoid
-			 * retrying to avoid any potential performance issues.
-			 */
-			if (!group) {
-				return 0;
-			}
 			if (closing.get()) {
 				return 0;
 			}
@@ -136,7 +143,6 @@ export const usePendingDestinationMeasurement = (params: {
 		},
 		(captureSignal, previousCaptureSignal) => {
 			"worklet";
-			if (!group) return;
 			if (!enabled) return;
 			if (!captureSignal || captureSignal === previousCaptureSignal) {
 				return;
@@ -166,7 +172,6 @@ export const usePendingDestinationMeasurement = (params: {
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			if (!group) return 0;
 			if (closing.get()) {
 				return 0;
 			}
@@ -197,7 +202,7 @@ export const usePendingDestinationMeasurement = (params: {
 		},
 		(captureSignal) => {
 			"worklet";
-			if (!group) return;
+			// if (!group) return;
 			if (!enabled) return;
 			if (!captureSignal) {
 				retryCount.set(0);
