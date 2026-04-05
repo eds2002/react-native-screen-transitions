@@ -23,12 +23,14 @@ Use the notes below as the source of truth when migrating examples or generating
 ### Added / Expanded
 
 - **Auto snap sizing** with `snapPoints: ["auto"]` and `current.layouts.content`
+- **Scoped screen state access** through `previous`, `current`, `next`, `active`, and `inactive`, with `current.layouts` and `current.snapIndex`
 - **Compound bounds components** via `Transition.Boundary.View`, `Transition.Boundary.Trigger`, and `Transition.Boundary.Target`
 - **`Transition.createBoundaryComponent`** for building custom boundary wrappers, including `alreadyAnimated` support
 - **Navigation-style bounds zoom** through `bounds({ id }).navigation.zoom()`
 - **`navigationMaskEnabled`** for library-managed masked navigation transitions
 - **Ancestor targeting** in `useScreenGesture()` and `useScreenAnimation()`
 - **Gesture release tuning** with `gestureReleaseVelocityScale` and `gestureReleaseVelocityMax`
+- **`Transition.Specs.FlingSpec`** for underdamped fling-style release motion
 - **Surface slot support** through `surfaceComponent` and the interpolator `surface` slot
 - **Animated `props` support across all slots** via `{ style, props }` slot returns
 - **Optional first-screen animation** with `experimental_animateOnInitialMount`
@@ -309,6 +311,17 @@ options={{
     collapse: { stiffness: 300, damping: 30 },           // Snap point decreases
   },
 }}
+```
+
+Built-in starting points are available on `Transition.Specs`:
+
+```tsx
+transitionSpec: {
+  open: Transition.Specs.DefaultSpec,
+  close: Transition.Specs.FlingSpec,
+  expand: Transition.Specs.DefaultSnapSpec,
+  collapse: Transition.Specs.DefaultSnapSpec,
+}
 ```
 
 ---
@@ -938,7 +951,7 @@ The Native Stack uses transparent modal presentation to intercept transitions. T
 
 For most apps, Blank Stack avoids these issues entirely.
 
-### Component Stack (Experimental)
+### Component Stack (Deprecated Compatibility)
 
 - **No deep linking** – Routes aren't part of your URL structure
 - **Isolated state** – Doesn't affect parent navigation
@@ -975,6 +988,8 @@ options={{
 `Transition.MaskedView` and `sharedBoundTag` are deprecated for new work.
 
 Prefer `Transition.Boundary.*` for explicit shared-element ownership, and prefer `bounds({ id }).navigation.zoom()` with `navigationMaskEnabled` when you want library-managed navigation-style masked transitions.
+
+If you used early 3.4 prerelease docs or examples, `maskEnabled` remains accepted as a compatibility alias, but new docs and examples should use `navigationMaskEnabled`.
 
 This section is kept for compatibility with legacy presets such as `SharedIGImage` and `SharedAppleMusic`.
 

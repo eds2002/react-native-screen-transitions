@@ -12,10 +12,6 @@
 	"scripts": {
 		"clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
 		"build": "bun run --cwd packages/react-native-screen-transitions build",
-		"docs:dev": "bun run --cwd apps/docs start",
-		"docs:build": "bun run --cwd apps/docs build",
-		"docs:typecheck": "bun run --cwd apps/docs typecheck",
-		"docs:api": "bun run --cwd apps/docs api:generate",
 		"knip": "bunx knip --workspace packages/react-native-screen-transitions",
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",

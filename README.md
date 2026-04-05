@@ -17,15 +17,38 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 
 ## What's New In 3.4
 
-- **Auto snap sizing** with `snapPoints: ["auto"]` and `layouts.content`
-- **Explicit deferred first frames** by returning `"defer"` from `screenStyleInterpolator`
-- **Compound bounds components** via `Transition.Boundary.View` and `Transition.Boundary.Pressable`
-- **Custom boundary factories** via `Transition.createBoundaryComponent(..., { alreadyAnimated: true })`
+3.4 introduces a newer, more explicit path for shared transitions and snap-driven layouts.
+Use the notes below as the source of truth when migrating examples or generating docs.
+
+### Added / Expanded
+
+- **Auto snap sizing** with `snapPoints: ["auto"]` and `current.layouts.content`
+- **Scoped screen state access** through `previous`, `current`, `next`, `active`, and `inactive`, with `current.layouts` and `current.snapIndex`
+- **Compound bounds components** via `Transition.Boundary.View`, `Transition.Boundary.Trigger`, and `Transition.Boundary.Target`
+- **`Transition.createBoundaryComponent`** for building custom boundary wrappers, including `alreadyAnimated` support
 - **Navigation-style bounds zoom** through `bounds({ id }).navigation.zoom()`
+- **`navigationMaskEnabled`** for library-managed masked navigation transitions
 - **Ancestor targeting** in `useScreenGesture()` and `useScreenAnimation()`
 - **Gesture release tuning** with `gestureReleaseVelocityScale` and `gestureReleaseVelocityMax`
+- **`Transition.Specs.FlingSpec`** for underdamped fling-style release motion
 - **Surface slot support** through `surfaceComponent` and the interpolator `surface` slot
+- **Animated `props` support across all slots** via `{ style, props }` slot returns
 - **Optional first-screen animation** with `experimental_animateOnInitialMount`
+- **`logicallySettled`** for choreography that should finish before a spring is fully at rest
+
+### Deprecated / Replaced
+
+- **`sharedBoundTag` on transition-aware components is deprecated for new work.** Prefer `Transition.Boundary.*` for new shared transition flows.
+- **`Transition.MaskedView` is deprecated for new work.** Prefer `Transition.Boundary.*` with `bounds({ id }).navigation.zoom()` and `navigationMaskEnabled` for library-managed shared navigation transitions.
+- **`createComponentStackNavigator` is deprecated.** Prefer blank stack for embedded and independent flows.
+- **`expandViaScrollView` was renamed to `sheetScrollGestureBehavior`.**
+- **Flat interpolator keys are deprecated.** Use `content`, `backdrop`, and `surface` instead of `contentStyle`, `backdropStyle`, and `overlayStyle`.
+- **Legacy interpolator accessors are deprecated.** Use `current.layouts` and `current.snapIndex` instead of top-level `layouts` and `snapIndex`.
+- **If you saw older alpha docs using `backgroundComponent` / `background`, use `surfaceComponent` / `surface`.**
+
+### Removed
+
+- Deprecated screen overlay mode and legacy overlay animation props were removed.
 
 ## When to Use This Library
 
@@ -103,6 +126,41 @@ export const Stack = withLayoutContext<
 >(Navigator);
 ```
 
+### 3. Static Config
+
+Blank stack-specific navigator props follow React Navigation's custom navigator pattern.
+
+For the dynamic API, pass them to `<Stack.Navigator>`:
+
+```tsx
+const Stack = createBlankStackNavigator();
+
+function App() {
+  return (
+    <Stack.Navigator independent enableNativeScreens={false}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Detail" component={DetailScreen} />
+    </Stack.Navigator>
+  );
+}
+```
+
+For the static API, keep them in the same config object:
+
+```tsx
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator({
+  initialRouteName: "Home",
+  screens: {
+    Home: HomeScreen,
+    Detail: DetailScreen,
+  },
+  independent: true,
+  enableNativeScreens: false,
+});
+```
+
 ---
 
 ## Presets
@@ -125,9 +183,9 @@ Use built-in presets for common transitions:
 | `ZoomIn()`                             | Scales in with fade                     |
 | `DraggableCard()`                      | Multi-directional drag with scaling     |
 | `ElasticCard()`                        | Elastic drag with overlay               |
-| `SharedIGImage({ sharedBoundTag })`    | Instagram-style shared image            |
-| `SharedAppleMusic({ sharedBoundTag })` | Apple Music-style shared element        |
-| `SharedXImage({ sharedBoundTag })`     | X (Twitter)-style image transition      |
+| `SharedIGImage({ sharedBoundTag })`    | Legacy Instagram-style shared image preset |
+| `SharedAppleMusic({ sharedBoundTag })` | Legacy Apple Music-style shared element preset |
+| `SharedXImage({ sharedBoundTag })`     | Legacy X (Twitter)-style image transition preset |
 
 ---
 
@@ -167,7 +225,7 @@ options={{
 
 ```tsx
 options={{
-  screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+  screenStyleInterpolator: ({ progress, current: { layouts: { screen } } }) => {
     "worklet";
     return {
       content: {
@@ -190,7 +248,7 @@ options={{
 
 ```tsx
 options={{
-  screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+  screenStyleInterpolator: ({ progress, current: { layouts: { screen } } }) => {
     "worklet";
     return {
       content: {
@@ -211,21 +269,25 @@ Your interpolator can return:
 
 ```tsx
 return {
-  content: { style: { ... } },          // Main screen
-  backdrop: { style: { ... } },         // Backdrop / blur / dimming
-  surface: { style: { ... }, props: { ... } }, // Custom surface layer
-  ["my-id"]: { style: { ... } },        // Specific element via styleId
+  content: { style: { ... }, props: { ... } },   // Main screen slot
+  backdrop: { style: { ... }, props: { ... } },  // Backdrop / blur / dimming
+  surface: { style: { ... }, props: { ... } },   // Custom surface layer
+  ["my-id"]: { style: { ... }, props: { ... } }, // Specific element via styleId
 };
 ```
 
-Return `"defer"` to hide the screen's visual subtree until you have a safe first frame:
+Every slot supports animated `style` and animated `props`.
+Use the shorthand style-only form when you only need styles, or the explicit
+`{ style, props }` form when the wrapped component exposes animatable props.
+
+Return `null`, `undefined`, or `{}` when you want an interpolator frame to apply no transition styles:
 
 ```tsx
 screenStyleInterpolator: ({ bounds }) => {
   "worklet";
 
   const snapshot = bounds.getSnapshot("hero");
-  if (!snapshot) return "defer";
+  if (!snapshot) return null;
 
   return {
     content: {
@@ -249,6 +311,17 @@ options={{
     collapse: { stiffness: 300, damping: 30 },           // Snap point decreases
   },
 }}
+```
+
+Built-in starting points are available on `Transition.Specs`:
+
+```tsx
+transitionSpec: {
+  open: Transition.Specs.DefaultSpec,
+  close: Transition.Specs.FlingSpec,
+  expand: Transition.Specs.DefaultSnapSpec,
+  collapse: Transition.Specs.DefaultSnapSpec,
+}
 ```
 
 ---
@@ -390,18 +463,18 @@ Create multi-stop sheets that snap to defined positions. Works with any gesture 
 
 ### Auto Snap Points
 
-When you use `"auto"`, the library measures the content height and exposes it in `layouts.content`:
+When you use `"auto"`, the library measures the content height and exposes it in `current.layouts.content`:
 
 ```tsx
-screenStyleInterpolator: ({ layouts, snapIndex }) => {
+screenStyleInterpolator: ({ current }) => {
   "worklet";
 
-  const contentHeight = layouts.content?.height ?? 0;
+  const contentHeight = current.layouts.content?.height ?? 0;
 
   return {
     content: {
       style: {
-        opacity: interpolate(snapIndex, [0, 1], [0.8, 1]),
+        opacity: interpolate(current.snapIndex, [0, 1], [0.8, 1]),
       },
     },
     "sheet-height-debug": {
@@ -484,16 +557,16 @@ function BottomSheet() {
 }
 ```
 
-The animated `snapIndex` is available in screen interpolators via `ScreenInterpolationProps`:
+The animated snap point index is available via `current.snapIndex` in `ScreenInterpolationProps`:
 
 ```tsx
-screenStyleInterpolator: ({ snapIndex }) => {
+screenStyleInterpolator: ({ current }) => {
   // snapIndex interpolates between snap point indices
   // e.g., 0.5 means halfway between snap point 0 and 1
   return {
     content: {
       style: {
-        opacity: interpolate(snapIndex, [0, 1], [0.5, 1]),
+        opacity: interpolate(current.snapIndex, [0, 1], [0.5, 1]),
       },
     },
   };
@@ -524,17 +597,38 @@ transitionSpec: {
 
 ## Shared Elements (Bounds API)
 
-Animate elements between screens by tagging them. In 3.4, the recommended API is `Transition.Boundary.*` for explicit bounds ownership, while `sharedBoundTag` on transition-aware components still works for lighter setups.
+Animate elements between screens by tagging them. In 3.4, the recommended and forward-compatible API is `Transition.Boundary.*` for explicit bounds ownership.
+
+`sharedBoundTag` on transition-aware components is deprecated and retained for legacy flows and presets.
 
 ### 1. Tag the Source
 
 ```tsx
-<Transition.Boundary.Pressable
+<Transition.Boundary.Trigger
   id="avatar"
   onPress={() => navigation.navigate("Profile")}
 >
   <Image source={avatar} style={{ width: 50, height: 50 }} />
-</Transition.Boundary.Pressable>
+</Transition.Boundary.Trigger>
+```
+
+If the boundary owner is larger than the visual element you want to match,
+wrap the measured descendant in `Transition.Boundary.Target`:
+
+```tsx
+<Transition.Boundary.Trigger
+  id="avatar"
+  onPress={() => navigation.navigate("Profile")}
+  style={styles.card}
+>
+  <Transition.Boundary.Target>
+    <Image source={avatar} style={styles.image} />
+  </Transition.Boundary.Target>
+
+  <View style={styles.copy}>
+    <Text style={styles.title}>Profile</Text>
+  </View>
+</Transition.Boundary.Trigger>
 ```
 
 ### 2. Tag the Destination
@@ -620,13 +714,14 @@ const TabBar = ({ focusedIndex, progress }) => {
 
 | Component               | Description                            |
 | ----------------------- | -------------------------------------- |
-| `Transition.View`       | Animated view with `sharedBoundTag`    |
-| `Transition.Pressable`  | Pressable that measures bounds         |
+| `Transition.View`       | Animated view; `sharedBoundTag` usage is legacy/deprecated |
+| `Transition.Pressable`  | Pressable; `sharedBoundTag` usage is legacy/deprecated |
 | `Transition.ScrollView` | ScrollView with gesture coordination   |
 | `Transition.FlatList`   | FlatList with gesture coordination     |
 | `Transition.Boundary.View` | Explicit bounds destination/source registration |
-| `Transition.Boundary.Pressable` | Pressable boundary that captures source bounds on press |
-| `Transition.MaskedView` | For reveal effects (requires native)   |
+| `Transition.Boundary.Trigger` | Pressable boundary owner that captures source bounds on press |
+| `Transition.Boundary.Target` | Optional nested measurement target inside a boundary owner |
+| `Transition.MaskedView` | Deprecated legacy reveal helper (requires native) |
 
 Helper exports:
 
@@ -723,17 +818,16 @@ The full `screenStyleInterpolator` receives these props:
 | ---------------- | -------------------------------------------------------- |
 | `progress`       | Combined progress (0-2)                                  |
 | `stackProgress`  | Accumulated progress across entire stack                 |
-| `snapIndex`      | Animated snap point index (-1 if no snap points)         |
 | `focused`        | Whether this screen is the topmost in the stack          |
 | `current`        | Current screen state                                     |
 | `previous`       | Previous screen state                                    |
 | `next`           | Next screen state                                        |
 | `active`         | Screen driving the transition                            |
 | `inactive`       | Screen NOT driving the transition                        |
-| `layouts.screen` | Screen dimensions                                        |
-| `layouts.content` | Measured content dimensions when available (`"auto"` snap points) |
 | `insets`         | Safe area insets                                         |
 | `bounds`         | Shared element bounds function                           |
+
+Prefer `current.snapIndex`, `current.layouts.screen`, and `current.layouts.content` for new code.
 
 ### Screen State Properties
 
@@ -741,12 +835,15 @@ Each screen state (`current`, `previous`, `next`, `active`, `inactive`) contains
 
 | Property    | Description                              |
 | ----------- | ---------------------------------------- |
-| `progress`  | Animation progress (0 or 1)              |
-| `closing`   | Whether closing (0 or 1)                 |
-| `entering`  | Whether entering (0 or 1)                |
-| `animating` | Whether animating (0 or 1)               |
-| `gesture`   | Gesture values (x, y, normalized values) |
-| `meta`      | Custom metadata from options             |
+| `progress`         | Animation progress (0 or 1)                     |
+| `closing`          | Whether closing (0 or 1)                        |
+| `entering`         | Whether entering (0 or 1)                       |
+| `animating`        | Whether animating (0 or 1)                      |
+| `logicallySettled` | Whether choreography can treat the screen as done |
+| `snapIndex`        | Animated snap point index for this screen       |
+| `layouts`          | Screen and measured content layouts             |
+| `gesture`          | Gesture values (x, y, `normX`, `normY`, etc.)   |
+| `meta`             | Custom metadata from options                    |
 
 ### Using `meta` for Conditional Logic
 
@@ -774,7 +871,9 @@ screenStyleInterpolator: ({ progress }) => {
   "worklet";
   return {
     "hero-image": {
-      opacity: interpolate(progress, [0, 1], [0, 1]),
+      style: {
+        opacity: interpolate(progress, [0, 1], [0, 1]),
+      },
     },
   };
 };
@@ -789,13 +888,13 @@ screenStyleInterpolator: ({ progress }) => {
 
 ## Stack Types
 
-All three stacks share the same animation API. Choose based on your needs:
+Blank stack and native stack are the primary APIs. Component stack remains available as a deprecated compatibility API.
 
 | Stack               | Best For                                                  |
 | ------------------- | --------------------------------------------------------- |
 | **Blank Stack**     | Most apps. Full control, all features.                    |
 | **Native Stack**    | When you need native screen primitives.                   |
-| **Component Stack** | Embedded flows, isolated from React Navigation. *(Experimental)* |
+| **Component Stack** | Legacy embedded-flow API. Prefer blank stack instead.     |
 
 ### Blank Stack
 
@@ -821,11 +920,11 @@ import { createNativeStackNavigator } from "react-native-screen-transitions/nati
 />
 ```
 
-### Component Stack (Experimental)
+### Component Stack (Deprecated)
 
-> **Note:** This API is experimental and may change based on community feedback.
+> **Note:** Prefer blank stack for new work. It now covers the embedded and independent flow use case.
 
-Standalone navigator, not connected to React Navigation. Ideal for embedded flows.
+Standalone navigator, not connected to React Navigation. Kept for compatibility with older integrations.
 
 ```tsx
 import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
@@ -852,7 +951,7 @@ The Native Stack uses transparent modal presentation to intercept transitions. T
 
 For most apps, Blank Stack avoids these issues entirely.
 
-### Component Stack (Experimental)
+### Component Stack (Deprecated Compatibility)
 
 - **No deep linking** – Routes aren't part of your URL structure
 - **Isolated state** – Doesn't affect parent navigation
@@ -884,9 +983,15 @@ options={{
 
 ---
 
-## Masked View Setup
+## Legacy Masked View Setup (Deprecated)
 
-Required for `SharedIGImage` and `SharedAppleMusic` presets. The masked view creates the "reveal" effect where content expands from the shared element.
+`Transition.MaskedView` and `sharedBoundTag` are deprecated for new work.
+
+Prefer `Transition.Boundary.*` for explicit shared-element ownership, and prefer `bounds({ id }).navigation.zoom()` with `navigationMaskEnabled` when you want library-managed navigation-style masked transitions.
+
+If you used early 3.4 prerelease docs or examples, `maskEnabled` remains accepted as a compatibility alias, but new docs and examples should use `navigationMaskEnabled`.
+
+This section is kept for compatibility with legacy presets such as `SharedIGImage` and `SharedAppleMusic`.
 
 > **Note**: Requires native code. Will not work in Expo Go.
 
