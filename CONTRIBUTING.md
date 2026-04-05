@@ -8,7 +8,6 @@ This repo is a monorepo managed with Bun workspaces.
 
 - `packages/react-native-screen-transitions` – the published library (built with `react-native-builder-bob`).
 - `apps/e2e` – Expo app for interactive transition demos and e2e testing with Maestro.
-- `apps/docs` – Docusaurus docs site for guides, versioned docs, and generated API reference.
 
 ## Development workflow
 
@@ -44,8 +43,6 @@ We use TypeScript, Biome (lint + format), Bun tests, and Maestro for e2e. Make s
 bun run lint       # biome check
 bun run typecheck  # tsc --noEmit
 bun test           # unit tests
-bun run docs:api   # regenerate API markdown from public entrypoints
-bun run docs:build # verify the docs site builds
 
 # E2e tests (requires Maestro CLI + iOS simulator)
 cd apps/e2e
@@ -66,10 +63,6 @@ From the repo root:
 | Script | Description |
 |--------|-------------|
 | `build` | Compiles the library via bob |
-| `docs:dev` | Starts the Docusaurus docs site |
-| `docs:build` | Builds the docs site |
-| `docs:api` | Regenerates markdown API reference from TypeScript |
-| `docs:version` | Creates a versioned docs snapshot (for example `bun run docs:version 3.x`) |
 | `lint` | Runs Biome on the library |
 | `typecheck` | Type-checks the library |
 | `clean` | Removes node_modules and lockfiles |
@@ -94,18 +87,13 @@ We follow [conventional commits](https://www.conventionalcommits.org/en):
 - `test`: adding or updating tests
 - `chore`: tooling changes
 
-## Docs and release flow
+## Docs
 
-- `3.x` is the stable docs lane
-- `Next` is the unreleased docs lane for alpha, beta, and rc work
-- Regenerate API docs with `bun run docs:api` whenever the public export surface changes
-- Snapshot a stable docs line with `bun run docs:version 3.x` when a stable release is ready to freeze
-- GitHub Pages deployment happens through `.github/workflows/docs.yml`
+Docs are maintained in Mintlify outside this repository.
 
 ## Sending a pull request
 
 - Prefer small PRs focused on one change
-- Verify lint, typecheck, tests, and docs build pass
-- If your PR changes public behavior, update at least one guide, release note, or migration note
-- If your PR changes the public API surface, regenerate `apps/docs/docs/api/reference`
+- Verify lint, typecheck, tests, and relevant e2e checks pass
+- If your PR changes public behavior, update the corresponding Mintlify docs before release
 - Breaking changes must update migration docs before release
