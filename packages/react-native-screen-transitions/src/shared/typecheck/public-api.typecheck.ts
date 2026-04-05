@@ -1,22 +1,22 @@
 import type { ComponentProps } from "react";
+import {
+	type BlankStackFactoryOptions,
+	type BlankStackScreenProps,
+	createBlankStackNavigator,
+} from "../../blank-stack";
 import type {
-	BoundsNavigationZoomStyle,
 	BoundsNavigationZoomOptions,
-	ScreenTransitionConfig,
+	BoundsNavigationZoomStyle,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
+	ScreenTransitionConfig,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
-} from "../..";
+} from "..";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-} from "../..";
-import {
-	createBlankStackNavigator,
-	type BlankStackFactoryOptions,
-	type BlankStackScreenProps,
-} from "../../../blank-stack";
+} from "..";
 
 const slotStyle: TransitionSlotStyle = {
 	style: {
@@ -88,14 +88,16 @@ const absoluteRawBoundsResult = interpolationProps.bounds({
 	space: "absolute",
 	raw: true,
 });
-const zoomInterpolatedStyle: BoundsNavigationZoomStyle =
-	interpolationProps.bounds({ id: 42 }).navigation.zoom({
+const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
+	.bounds({ id: 42 })
+	.navigation.zoom({
 		target: "bound",
 	});
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
-const maybeCurrentContentHeight = interpolationProps.current.layouts.content?.height;
+const maybeCurrentContentHeight =
+	interpolationProps.current.layouts.content?.height;
 const currentSnapIndex = interpolationProps.current.snapIndex;
 const nextNameOptions: ScreenTransitionConfig = {
 	navigationMaskEnabled: true,
@@ -170,16 +172,17 @@ const staticBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
 		Details: StaticBlankDetailsScreen,
 	},
 });
-const staticViewBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
-	initialRouteName: "Home",
-	enableNativeScreens: false,
-	screens: {
-		Home: StaticBlankHomeScreen,
-		Details: StaticBlankDetailsScreen,
-	},
-});
+const staticViewBlankStack =
+	createBlankStackNavigator<StaticBlankStackParamList>({
+		initialRouteName: "Home",
+		enableNativeScreens: false,
+		screens: {
+			Home: StaticBlankHomeScreen,
+			Details: StaticBlankDetailsScreen,
+		},
+	});
 
-export const publicApiTypecheck = {
+const publicApiTypecheck = {
 	navigationSlots: {
 		container: NAVIGATION_MASK_CONTAINER_STYLE_ID,
 		mask: NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -206,4 +209,8 @@ export const publicApiTypecheck = {
 	viewBlankStackProps,
 	independentBlankStackProps,
 	independentViewBlankStackProps,
+	staticBlankStack,
+	staticViewBlankStack,
 };
+
+void publicApiTypecheck;

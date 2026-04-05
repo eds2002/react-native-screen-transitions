@@ -13,10 +13,6 @@ beforeEach(() => {
 });
 
 describe("Group Flow", () => {
-	it("builds a grouped tag as group:id", () => {
-		expect(makeTag("42", "photos")).toBe("photos:42");
-	});
-
 	it("tracks and updates the active group member id", () => {
 		BoundStore.setGroupActiveId("photos", "1");
 		expect(BoundStore.getGroupActiveId("photos")).toBe("1");

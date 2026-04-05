@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
+import { resetStoresForScreen } from "../components/screen-lifecycle/hooks/use-close-transition/helpers/reset-stores-for-screen";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
 import { GestureStore } from "../stores/gesture.store";
@@ -18,27 +19,6 @@ const createMeasured = (
 	width,
 	height,
 });
-
-const resetStoresForScreenForTest = (
-	routeKey: string,
-	isBranchScreen: boolean,
-	branchNavigatorKey?: string,
-) => {
-	AnimationStore.clearBag(routeKey);
-	GestureStore.clearBag(routeKey);
-	SystemStore.clearBag(routeKey);
-
-	if (!isBranchScreen) return;
-
-	BoundStore.clear(routeKey);
-
-	if (branchNavigatorKey) {
-		BoundStore.clearByBranch(branchNavigatorKey);
-		return;
-	}
-
-	BoundStore.clearByAncestor(routeKey);
-};
 
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
@@ -61,8 +41,8 @@ describe("close transition cleanup", () => {
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(true);
 		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(true);
 
-		resetStoresForScreenForTest(routeKey, true);
-		resetStoresForScreenForTest(routeKey, true);
+		resetStoresForScreen(routeKey, true);
+		resetStoresForScreen(routeKey, true);
 
 		expect(BoundStore.getSnapshot("card", routeKey)).toBeNull();
 		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(false);
@@ -89,7 +69,7 @@ describe("close transition cleanup", () => {
 		const gestureBefore = GestureStore.getBag(routeKey);
 		const systemBefore = SystemStore.getBag(routeKey);
 
-		resetStoresForScreenForTest(routeKey, false);
+		resetStoresForScreen(routeKey, false);
 
 		// Animation and gesture stores are still cleared
 		const animationAfter = AnimationStore.getBag(routeKey);
@@ -213,7 +193,7 @@ describe("close transition cleanup", () => {
 			"nav-other",
 		);
 
-		resetStoresForScreenForTest(routeKey, true, branchNavigatorKey);
+		resetStoresForScreen(routeKey, true, branchNavigatorKey);
 
 		expect(BoundStore.getSnapshot("card", directBranchRoute)).toBeNull();
 		expect(BoundStore.hasSourceLink("card", directBranchRoute)).toBe(false);
