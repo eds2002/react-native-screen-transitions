@@ -1,5 +1,7 @@
 # Changelog
 
+# [3.4.0-rc.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-beta.2...v3.4.0-rc.0) (2026-04-05)
+
 # [3.4.0-beta.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-beta.1...v3.4.0-beta.2) (2026-04-03)
 
 # [3.4.0-beta.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-beta.0...v3.4.0-beta.1) (2026-03-31)
