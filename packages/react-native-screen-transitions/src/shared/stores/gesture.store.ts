@@ -14,23 +14,6 @@ export type GestureStoreMap = {
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
 	direction: SharedValue<Omit<GestureDirection, "bidirectional"> | null>;
-
-	/**
-	 * @deprecated Use `normX` instead.
-	 */
-	normalizedX: SharedValue<number>;
-	/**
-	 * @deprecated Use `normY` instead.
-	 */
-	normalizedY: SharedValue<number>;
-	/**
-	 * @deprecated Use `dismissing` instead.
-	 */
-	isDismissing: SharedValue<number>;
-	/**
-	 * @deprecated Use `dragging` instead.
-	 */
-	isDragging: SharedValue<number>;
 };
 
 function createGestureBag(): GestureStoreMap {
@@ -49,12 +32,6 @@ function createGestureBag(): GestureStoreMap {
 		direction: makeMutable<Omit<GestureDirection, "bidirectional"> | null>(
 			null,
 		),
-
-		// Deprecated aliases (same underlying SharedValue)
-		normalizedX: normX,
-		normalizedY: normY,
-		isDismissing: dismissing,
-		isDragging: dragging,
 	};
 }
 

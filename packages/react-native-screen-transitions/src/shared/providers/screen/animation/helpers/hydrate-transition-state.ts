@@ -121,12 +121,6 @@ export const hydrateTransitionState = (
 	out.animating =
 		s.animating.value || out.gesture.dragging || isGestureSettling ? 1 : 0;
 
-	// Deprecated aliases (kept for backwards compatibility)
-	out.gesture.normalizedX = out.gesture.normX;
-	out.gesture.normalizedY = out.gesture.normY;
-	out.gesture.isDismissing = out.gesture.dismissing;
-	out.gesture.isDragging = out.gesture.dragging;
-
 	out.settled = computeSettled({
 		animating: out.animating,
 		dismissing: out.gesture.dismissing,

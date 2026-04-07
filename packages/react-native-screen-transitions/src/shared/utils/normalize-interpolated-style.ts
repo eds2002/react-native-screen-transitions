@@ -7,43 +7,19 @@ import type {
  * Normalizes an interpolator result into the canonical `{ style, props }` slot format.
  *
  * Handles three cases per key:
- * 1. Legacy renamed keys (`contentStyle` → `content`, `backdropStyle` → `backdrop`)
- * 2. Proper `TransitionSlotStyle` values (has `style` or `props` key) — pass through
- * 3. Style shorthand (plain StyleProps without wrapping) — auto-wrapped as `{ style: value }`
- *
- * Mixed-format objects (e.g. new-format spread + a legacy `backdropStyle` key) are
- * handled correctly because each key is processed individually.
+ * 1. Proper `TransitionSlotStyle` values (has `style` or `props` key) — pass through
+ * 2. Style shorthand (plain StyleProps without wrapping) — auto-wrapped as `{ style: value }`
  */
-export function normalizeInterpolatedStyle(raw: Record<string, any>): {
-	result: NormalizedTransitionInterpolatedStyle;
-	wasLegacy: boolean;
-} {
+export function normalizeInterpolatedStyle(
+	raw: Record<string, any>,
+): NormalizedTransitionInterpolatedStyle {
 	"worklet";
-
-	const hasLegacyKeys =
-		"contentStyle" in raw || "backdropStyle" in raw || "overlayStyle" in raw;
 
 	const normalized: Record<string, NormalizedTransitionSlotStyle | undefined> =
 		{};
 
 	for (const key in raw) {
 		const value = raw[key];
-
-		// ── Legacy key renames ──
-		if (key === "contentStyle") {
-			if (value !== undefined) normalized.content = { style: value };
-			continue;
-		}
-		if (key === "backdropStyle") {
-			if (value !== undefined) normalized.backdrop = { style: value };
-			continue;
-		}
-		if (key === "overlayStyle") {
-			if (value !== undefined && !normalized.backdrop) {
-				normalized.backdrop = { style: value };
-			}
-			continue;
-		}
 
 		// ── All other keys ──
 		if (value === undefined) {
@@ -60,8 +36,5 @@ export function normalizeInterpolatedStyle(raw: Record<string, any>): {
 		}
 	}
 
-	return {
-		result: normalized as NormalizedTransitionInterpolatedStyle,
-		wasLegacy: hasLegacyKeys,
-	};
+	return normalized as NormalizedTransitionInterpolatedStyle;
 }

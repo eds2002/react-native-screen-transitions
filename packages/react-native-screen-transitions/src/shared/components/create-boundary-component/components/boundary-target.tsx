@@ -1,6 +1,5 @@
 import type React from "react";
 import { memo, useLayoutEffect } from "react";
-import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import {
 	TARGET_OUTSIDE_OWNER_WARNING,
@@ -13,7 +12,7 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	props: BoundaryTargetProps,
 ) {
 	const { style, ...rest } = props;
-	const targetAnimatedRef = useAnimatedRef<View>();
+	const targetAnimatedRef = useAnimatedRef<Animated.View>();
 	const ownerContext = useBoundaryOwnerContext();
 	const registerTargetRef = ownerContext?.registerTargetRef;
 	const unregisterTargetRef = ownerContext?.unregisterTargetRef;

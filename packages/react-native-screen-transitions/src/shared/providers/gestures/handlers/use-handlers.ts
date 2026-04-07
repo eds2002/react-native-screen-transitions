@@ -18,6 +18,7 @@ import {
 	DEFAULT_GESTURE_SNAP_LOCKED,
 	DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
 	DEFAULT_GESTURE_VELOCITY_IMPACT,
+	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 	EPSILON,
 	FALSE,
 	TRUE,
@@ -34,7 +35,6 @@ import type {
 } from "../../../types/ownership.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import type { EffectiveSnapPointsResult } from "../../../utils/gesture/validate-snap-points";
-import { resolveSheetScrollGestureBehavior } from "../../../utils/resolve-screen-transition-options";
 import { useDescriptors } from "../../screen/descriptors";
 import {
 	applyOffsetRules,
@@ -146,12 +146,10 @@ export const useHandlers = ({
 		gestureReleaseVelocityMax = DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 		gestureActivationArea = DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureSnapLocked = DEFAULT_GESTURE_SNAP_LOCKED,
+		sheetScrollGestureBehavior = DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 		gestureResponseDistance,
 		transitionSpec,
 	} = current.options;
-	const sheetScrollGestureBehavior = resolveSheetScrollGestureBehavior(
-		current.options,
-	);
 
 	const dimensions = useWindowDimensions();
 	const routeKey = current.route.key;

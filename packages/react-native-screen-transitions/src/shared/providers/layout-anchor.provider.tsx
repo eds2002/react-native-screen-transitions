@@ -1,6 +1,6 @@
 import { type ReactNode, useCallback, useMemo } from "react";
-import { useWindowDimensions, type View } from "react-native";
-import {
+import { useWindowDimensions } from "react-native";
+import Animated, {
 	type AnimatedRef,
 	type MeasuredDimensions,
 	measure,
@@ -8,7 +8,7 @@ import {
 import createProvider from "../utils/create-provider";
 
 interface LayoutAnchorProviderProps {
-	anchorRef: AnimatedRef<View>;
+	anchorRef: AnimatedRef<Animated.View>;
 	children: ReactNode;
 }
 

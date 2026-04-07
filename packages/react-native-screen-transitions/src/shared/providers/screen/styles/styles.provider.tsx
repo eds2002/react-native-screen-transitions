@@ -7,13 +7,12 @@ import {
 import { NO_STYLES } from "../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
-import { logger } from "../../../utils/logger";
+import { normalizeInterpolatedStyle } from "../../../utils/normalize-interpolated-style";
 import { useScreenAnimationContext } from "../animation";
 import {
 	buildResolvedStyleMap,
 	type StyleKeySet,
 } from "./helpers/build-resolved-style-map";
-import { resolveInterpolatedStyleOutput } from "./helpers/resolve-interpolated-style-output";
 import { splitNormalizedStyleMaps } from "./helpers/split-normalized-style-maps";
 
 type Props = {
@@ -43,7 +42,6 @@ export const {
 		} = useScreenAnimationContext();
 
 		const isGesturingDuringCloseAnimation = useSharedValue(false);
-		const hasWarnedLegacy = useSharedValue(false);
 		const previousElementStyleKeysBySlot = useSharedValue<
 			Record<string, StyleKeySet>
 		>({});
@@ -96,18 +94,13 @@ export const {
 					bounds: boundsAccessor,
 				});
 
-				const { stylesMap, wasLegacy } = resolveInterpolatedStyleOutput(raw);
+				const stylesMap =
+					typeof raw !== "object" || raw == null
+						? NO_STYLES
+						: normalizeInterpolatedStyle(raw);
 
 				const { layerStylesMap, elementStylesMap } =
 					splitNormalizedStyleMaps(stylesMap);
-
-				if (__DEV__ && wasLegacy && !hasWarnedLegacy.value) {
-					hasWarnedLegacy.value = true;
-					logger.warn(
-						"Flat interpolator return shape (contentStyle/backdropStyle) is deprecated. " +
-							"Use the nested format instead: { content: { style }, backdrop: { style } }.",
-					);
-				}
 
 				return {
 					layerStylesMap,

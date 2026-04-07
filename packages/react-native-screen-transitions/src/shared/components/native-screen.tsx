@@ -1,5 +1,5 @@
 import type * as React from "react";
-import { StyleSheet, type View } from "react-native";
+import { StyleSheet } from "react-native";
 import Animated, {
 	Extrapolation,
 	interpolate,
@@ -54,7 +54,7 @@ export const NativeScreen = ({
 	const routesLength = routes.length;
 	const topIndex = routesLength - 1;
 	const topRouteKey = routes[topIndex]?.key ?? routeKey;
-	const screenRef = useAnimatedRef<View>();
+	const screenRef = useAnimatedRef<Animated.View>();
 
 	const sceneClosing = AnimationStore.getValue(routeKey, "closing");
 	const topSceneProgress = AnimationStore.getValue(topRouteKey, "progress");

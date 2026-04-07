@@ -8,7 +8,10 @@ import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
-import type { ScreenTransitionConfig } from "../types/screen.types";
+import type {
+	ScreenTransitionConfig,
+	TransitionInterpolatedStyle,
+} from "../types";
 import { normalizeInterpolatedStyle } from "../utils/normalize-interpolated-style";
 import { DefaultSpec } from "./specs";
 
@@ -296,7 +299,14 @@ export const SharedIGImage = ({
 			// Normalize bounds result to new slot format for spreading
 			const normalizedNav = normalizeInterpolatedStyle(
 				navigationStyles as Record<string, any>,
-			).result;
+			) as unknown as TransitionInterpolatedStyle;
+
+			const normalizedContentStyle =
+				typeof normalizedNav.content === "object" &&
+				normalizedNav.content &&
+				"style" in normalizedNav.content
+					? (normalizedNav.content.style ?? {})
+					: (normalizedNav.content ?? {});
 
 			if (focused) {
 				return {
@@ -344,7 +354,7 @@ export const SharedIGImage = ({
 				...normalizedNav,
 				content: {
 					style: {
-						...(normalizedNav.content?.style ?? {}),
+						...normalizedContentStyle,
 						pointerEvents: current.gesture.dismissing ? "none" : "auto",
 					},
 				},
@@ -631,7 +641,7 @@ export const SharedXImage = ({
 			// Normalize bounds result to new slot format for spreading
 			const normalizedNav = normalizeInterpolatedStyle(
 				navigationStyles as Record<string, any>,
-			).result;
+			) as unknown as TransitionInterpolatedStyle;
 
 			const dragY = interpolate(
 				current.gesture.normY,

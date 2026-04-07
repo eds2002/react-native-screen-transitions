@@ -18,7 +18,6 @@ import type {
 } from "../../../../types/bounds.types";
 
 import { createBoundsAccessor } from "../../../../utils/bounds";
-import { resolveNavigationMaskEnabled } from "../../../../utils/resolve-screen-transition-options";
 import { useDescriptors } from "../../descriptors";
 import { derivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
@@ -58,9 +57,8 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		!!nextRouteKey &&
 		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
 
-	const currentNavigationMaskEnabled = resolveNavigationMaskEnabled(
-		currDescriptor?.options ?? {},
-	);
+	const currentNavigationMaskEnabled =
+		currDescriptor.options.navigationMaskEnabled;
 
 	const boundsFrameProps = useSharedValue<BoundsInterpolationProps>({
 		layouts: { screen: dimensions },

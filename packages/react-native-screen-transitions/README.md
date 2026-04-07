@@ -38,17 +38,16 @@ Use the notes below as the source of truth when migrating examples or generating
 
 ### Deprecated / Replaced
 
-- **`sharedBoundTag` on transition-aware components is deprecated for new work.** Prefer `Transition.Boundary.*` for new shared transition flows.
-- **`Transition.MaskedView` is deprecated for new work.** Prefer `Transition.Boundary.*` with `bounds({ id }).navigation.zoom()` and `navigationMaskEnabled` for library-managed shared navigation transitions.
-- **`createComponentStackNavigator` is deprecated.** Prefer blank stack for embedded and independent flows.
-- **`expandViaScrollView` was renamed to `sheetScrollGestureBehavior`.**
-- **Flat interpolator keys are deprecated.** Use `content`, `backdrop`, and `surface` instead of `contentStyle`, `backdropStyle`, and `overlayStyle`.
 - **Legacy interpolator accessors are deprecated.** Use `current.layouts` and `current.snapIndex` instead of top-level `layouts` and `snapIndex`.
 - **If you saw older alpha docs using `backgroundComponent` / `background`, use `surfaceComponent` / `surface`.**
 
 ### Removed
 
 - Deprecated screen overlay mode and legacy overlay animation props were removed.
+- Legacy transition-aware shared-bound registration (`sharedBoundTag` / `Transition.MaskedView`) was removed. Use `Transition.Boundary.*` with `bounds({ id }).navigation.zoom()` and `navigationMaskEnabled`.
+- `createComponentStackNavigator` was removed. Use blank stack for embedded and independent flows.
+- `maskEnabled`, `expandViaScrollView`, and flat interpolator keys (`contentStyle`, `backdropStyle`, `overlayStyle`) were removed.
+- Deprecated Android edge-to-edge bar props on native stack were removed.
 
 ## When to Use This Library
 
@@ -599,8 +598,6 @@ transitionSpec: {
 
 Animate elements between screens by tagging them. In 3.4, the recommended and forward-compatible API is `Transition.Boundary.*` for explicit bounds ownership.
 
-`sharedBoundTag` on transition-aware components is deprecated and retained for legacy flows and presets.
-
 ### 1. Tag the Source
 
 ```tsx
@@ -714,14 +711,13 @@ const TabBar = ({ focusedIndex, progress }) => {
 
 | Component               | Description                            |
 | ----------------------- | -------------------------------------- |
-| `Transition.View`       | Animated view; `sharedBoundTag` usage is legacy/deprecated |
-| `Transition.Pressable`  | Pressable; `sharedBoundTag` usage is legacy/deprecated |
+| `Transition.View`       | Animated view                          |
+| `Transition.Pressable`  | Pressable                              |
 | `Transition.ScrollView` | ScrollView with gesture coordination   |
 | `Transition.FlatList`   | FlatList with gesture coordination     |
 | `Transition.Boundary.View` | Explicit bounds destination/source registration |
 | `Transition.Boundary.Trigger` | Pressable boundary owner that captures source bounds on press |
 | `Transition.Boundary.Target` | Optional nested measurement target inside a boundary owner |
-| `Transition.MaskedView` | Deprecated legacy reveal helper (requires native) |
 
 Helper exports:
 
@@ -920,25 +916,6 @@ import { createNativeStackNavigator } from "react-native-screen-transitions/nati
 />
 ```
 
-### Component Stack (Deprecated)
-
-> **Note:** Prefer blank stack for new work. It now covers the embedded and independent flow use case.
-
-Standalone navigator, not connected to React Navigation. Kept for compatibility with older integrations.
-
-```tsx
-import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
-
-const Stack = createComponentStackNavigator();
-
-<Stack.Navigator initialRouteName="step1">
-  <Stack.Screen name="step1" component={Step1} />
-  <Stack.Screen name="step2" component={Step2} />
-</Stack.Navigator>
-```
-
----
-
 ## Caveats & Trade-offs
 
 ### Native Stack
@@ -950,12 +927,6 @@ The Native Stack uses transparent modal presentation to intercept transitions. T
 - **Rapid navigation** – Some edge cases with very fast navigation sequences
 
 For most apps, Blank Stack avoids these issues entirely.
-
-### Component Stack (Deprecated Compatibility)
-
-- **No deep linking** – Routes aren't part of your URL structure
-- **Isolated state** – Doesn't affect parent navigation
-- **Touch pass-through** – Uses `pointerEvents="box-none"` by default
 
 ---
 
@@ -980,123 +951,6 @@ options={{
   experimental_animateOnInitialMount: true,
 }}
 ```
-
----
-
-## Legacy Masked View Setup (Deprecated)
-
-`Transition.MaskedView` and `sharedBoundTag` are deprecated for new work.
-
-Prefer `Transition.Boundary.*` for explicit shared-element ownership, and prefer `bounds({ id }).navigation.zoom()` with `navigationMaskEnabled` when you want library-managed navigation-style masked transitions.
-
-If you used early 3.4 prerelease docs or examples, `maskEnabled` remains accepted as a compatibility alias, but new docs and examples should use `navigationMaskEnabled`.
-
-This section is kept for compatibility with legacy presets such as `SharedIGImage` and `SharedAppleMusic`.
-
-> **Note**: Requires native code. Will not work in Expo Go.
-
-### Installation
-
-```bash
-# Expo
-npx expo install @react-native-masked-view/masked-view
-
-# Bare React Native
-npm install @react-native-masked-view/masked-view
-cd ios && pod install
-```
-
-### Full Example
-
-**1. Source Screen** – Tag pressable elements:
-
-```tsx
-// app/index.tsx
-import { router } from "expo-router";
-import { View } from "react-native";
-import Transition from "react-native-screen-transitions";
-
-export default function HomeScreen() {
-  return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <Transition.Pressable
-        sharedBoundTag="album-art"
-        style={{
-          width: 200,
-          height: 200,
-          backgroundColor: "#1DB954",
-          borderRadius: 12,
-        }}
-        onPress={() => {
-          router.push({
-            pathname: "/details",
-            params: { sharedBoundTag: "album-art" },
-          });
-        }}
-      />
-    </View>
-  );
-}
-```
-
-**2. Destination Screen** – Wrap with MaskedView and match the tag:
-
-```tsx
-// app/details.tsx
-import { useLocalSearchParams } from "expo-router";
-import Transition from "react-native-screen-transitions";
-
-export default function DetailsScreen() {
-  const { sharedBoundTag } = useLocalSearchParams<{ sharedBoundTag: string }>();
-
-  return (
-    <Transition.MaskedView style={{ flex: 1, backgroundColor: "#121212" }}>
-      <Transition.View
-        sharedBoundTag={sharedBoundTag}
-        style={{
-          backgroundColor: "#1DB954",
-          width: 400,
-          height: 400,
-          alignSelf: "center",
-          borderRadius: 12,
-        }}
-      />
-      {/* Additional screen content */}
-    </Transition.MaskedView>
-  );
-}
-```
-
-**3. Layout** – Apply the preset with dynamic tag:
-
-```tsx
-// app/_layout.tsx
-import Transition from "react-native-screen-transitions";
-import { Stack } from "./stack";
-
-export default function RootLayout() {
-  return (
-    <Stack>
-      <Stack.Screen name="index" />
-      <Stack.Screen
-        name="details"
-        options={({ route }) => ({
-          ...Transition.Presets.SharedAppleMusic({
-            sharedBoundTag: route.params?.sharedBoundTag ?? "",
-          }),
-        })}
-      />
-    </Stack>
-  );
-}
-```
-
-### How It Works
-
-1. `Transition.Pressable` measures its bounds on press and stores them with the tag
-2. `Transition.View` on the destination registers as the target for that tag
-3. `Transition.MaskedView` clips content to the animating shared element bounds
-4. The preset interpolates position, size, and mask for a seamless expand/collapse effect
 
 ---
 

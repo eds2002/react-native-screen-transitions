@@ -47,7 +47,7 @@ export function createBoundaryComponent<P extends object>(
 		React.ComponentRef<typeof AnimatedComponent>,
 		BoundaryComponentProps<P>
 	>((props, forwardedRef) => {
-		const ownerRef = useAnimatedRef<View>();
+		const ownerRef = useAnimatedRef<Animated.View>();
 		const {
 			enabled = true,
 			group,

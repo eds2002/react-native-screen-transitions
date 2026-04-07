@@ -44,18 +44,6 @@ const nestedInterpolatedStyle: TransitionInterpolatedStyle = {
 	},
 };
 
-const legacyInterpolatedStyle: TransitionInterpolatedStyle = {
-	contentStyle: {
-		opacity: 1,
-	},
-	backdropStyle: {
-		opacity: 0.5,
-	},
-	overlayStyle: {
-		opacity: 0.25,
-	},
-};
-
 const zoomOptions: BoundsNavigationZoomOptions = {
 	target: "bound",
 	debug: true,
@@ -105,16 +93,6 @@ const nextNameOptions: ScreenTransitionConfig = {
 };
 const initialMountAnimationOptions: ScreenTransitionConfig = {
 	experimental_animateOnInitialMount: true,
-};
-const deprecatedAliasOptions: ScreenTransitionConfig = {
-	maskEnabled: true,
-	expandViaScrollView: false,
-};
-const precedenceOptions: ScreenTransitionConfig = {
-	navigationMaskEnabled: false,
-	maskEnabled: true,
-	sheetScrollGestureBehavior: "expand-and-collapse",
-	expandViaScrollView: false,
 };
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
@@ -189,7 +167,6 @@ const publicApiTypecheck = {
 	},
 	slotStyle,
 	nestedInterpolatedStyle,
-	legacyInterpolatedStyle,
 	gestureTarget,
 	numericBoundsResult,
 	absoluteRawBoundsResult,
@@ -202,8 +179,6 @@ const publicApiTypecheck = {
 	zoomOptions,
 	nextNameOptions,
 	initialMountAnimationOptions,
-	deprecatedAliasOptions,
-	precedenceOptions,
 	emptyInterpolatorOptions,
 	blankStackFactoryOptions,
 	viewBlankStackProps,

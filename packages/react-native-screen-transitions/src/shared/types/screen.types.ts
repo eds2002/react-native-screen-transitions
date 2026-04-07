@@ -49,34 +49,6 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * }
 	 */
 	styleId?: string;
-
-	/**
-	 * Marks this component for measurement to enable shared element transitions.
-	 * Components with the same tag across different screens will animate between each other.
-	 *
-	 * @example
-	 * // Screen A:
-	 * <Transition.View sharedBoundTag="profile-avatar">
-	 *   <Avatar size="small" />
-	 * </Transition.View>
-	 *
-	 * // Screen B:
-	 * <Transition.View sharedBoundTag="profile-avatar">
-	 *   <Avatar size="large" />
-	 * </Transition.View>
-	 */
-	sharedBoundTag?: string;
-
-	/**
-	 * Re-measures this component when the screen regains focus and updates
-	 * any matching shared-bound source link in place.
-	 *
-	 * Useful when layout can change while unfocused (for example, programmatic
-	 * ScrollView/FlatList scrolling triggered from another screen).
-	 *
-	 * @default false
-	 */
-	remeasureOnFocus?: boolean;
 };
 
 export type ScreenTransitionConfig = {
@@ -102,11 +74,6 @@ export type ScreenTransitionConfig = {
 	 * @default false
 	 */
 	navigationMaskEnabled?: boolean;
-
-	/**
-	 * @deprecated Use `navigationMaskEnabled` instead.
-	 */
-	maskEnabled?: boolean;
 
 	/**
 	 * Controls whether swipe-to-dismiss is enabled.
@@ -251,15 +218,6 @@ export type ScreenTransitionConfig = {
 	 * @default "expand-and-collapse"
 	 */
 	sheetScrollGestureBehavior?: SheetScrollGestureBehavior;
-
-	/**
-	 * @deprecated Use `sheetScrollGestureBehavior` instead.
-	 *
-	 * Mapping:
-	 * - `true` -> `"expand-and-collapse"`
-	 * - `false` -> `"collapse-only"`
-	 */
-	expandViaScrollView?: boolean;
 
 	/**
 	 * Locks gesture-based snap movement to the current snap point.

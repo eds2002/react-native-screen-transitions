@@ -3,15 +3,8 @@ import { Platform } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "./types/animation.types";
 import type { ActivationArea } from "./types/gesture.types";
-import type { Layout } from "./types/screen.types";
+import type { Layout, SheetScrollGestureBehavior } from "./types/screen.types";
 import type { BaseStackRoute } from "./types/stack.types";
-
-/**
- * Masked view integration
- * @deprecated No longer in use. Use {@link NAVIGATION_MASK_ELEMENT_STYLE_ID} and {@link NAVIGATION_MASK_CONTAINER_STYLE_ID} instead.
- */
-export const MASK_STYLE_ID = "_ROOT_MASKED";
-export const CONTAINER_STYLE_ID = "_ROOT_CONTAINER";
 
 /**
  * Navigation mask integration
@@ -38,12 +31,6 @@ const DEFAULT_GESTURE_VALUES = {
 	dismissing: 0,
 	dragging: 0,
 	direction: null,
-
-	// Deprecated aliases
-	normalizedX: 0,
-	normalizedY: 0,
-	isDismissing: 0,
-	isDragging: 0,
 } as const;
 
 /**
@@ -142,6 +129,8 @@ export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
 export const DEFAULT_GESTURE_SNAP_LOCKED = false;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
+export const DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR: SheetScrollGestureBehavior =
+	"expand-and-collapse";
 
 export const IS_WEB = Platform.OS === "web";
 

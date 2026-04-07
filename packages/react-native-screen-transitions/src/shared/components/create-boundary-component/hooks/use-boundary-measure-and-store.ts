@@ -1,5 +1,4 @@
-import type { View } from "react-native";
-import {
+import Animated, {
 	type AnimatedRef,
 	type MeasuredDimensions,
 	measure,
@@ -43,7 +42,7 @@ export const useBoundaryMeasureAndStore = (params: {
 	navigatorKey?: string;
 	ancestorNavigatorKeys?: string[];
 	preparedStyles: StyleProps;
-	measuredAnimatedRef: AnimatedRef<View>;
+	measuredAnimatedRef: AnimatedRef<Animated.View>;
 }) => {
 	const {
 		enabled,

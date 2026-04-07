@@ -254,7 +254,7 @@ type TransitionSlotDefinition = {
 export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
 
 /**
- * Internal normalized slot format used after the backward-compat shim.
+ * Internal normalized slot format.
  * Always uses the explicit `{ style, props }` shape (with Reanimated's full StyleProps).
  */
 export type NormalizedTransitionSlotStyle = {
@@ -263,7 +263,7 @@ export type NormalizedTransitionSlotStyle = {
 };
 
 /**
- * Normalized interpolated style map used internally after the backward-compat shim.
+ * Normalized interpolated style map used internally.
  * All slots use the explicit `{ style, props }` shape.
  */
 export type NormalizedTransitionInterpolatedStyle = {
@@ -279,7 +279,6 @@ export type NormalizedTransitionInterpolatedStyle = {
 
 /**
  * The return type of `screenStyleInterpolator`.
- * Uses the nested slot format, while still accepting deprecated flat keys.
  */
 export type TransitionInterpolatedStyle = {
 	/** Animated style and props for the main screen content view. */
@@ -290,21 +289,6 @@ export type TransitionInterpolatedStyle = {
 	surface?: TransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
 	[id: string]: TransitionSlotStyle | undefined;
-	/**
-	 * @deprecated Use `content` instead.
-	 * This flat format is auto-converted via a backward-compat shim.
-	 */
-	contentStyle?: AnimatedViewStyle;
-	/**
-	 * @deprecated Use `backdrop` instead.
-	 * This flat format is auto-converted via a backward-compat shim.
-	 */
-	backdropStyle?: AnimatedViewStyle;
-	/**
-	 * @deprecated Use `backdrop` instead.
-	 * This flat format is auto-converted via a backward-compat shim.
-	 */
-	overlayStyle?: AnimatedViewStyle;
 };
 
 /**

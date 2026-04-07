@@ -1,18 +1,14 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <This helper is usually being used inside a transitionable stack> */
 import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
-import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-	runOnUI,
 	useAnimatedProps,
-	useAnimatedRef,
 	useAnimatedStyle,
 	useComposedEventHandler,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../constants";
 import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
-import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import { useScreenStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
 
@@ -36,7 +32,6 @@ export function createTransitionAwareComponent<P extends object>(
 		TransitionAwareProps<P>
 	>((props: any, ref) => {
 		const {
-			remeasureOnFocus: _remeasureOnFocus,
 			onScroll: userOnScroll,
 			onMomentumScrollEnd: userOnMomentumScrollEnd,
 			onScrollEndDrag: userOnScrollEndDrag,
@@ -90,19 +85,9 @@ export function createTransitionAwareComponent<P extends object>(
 		React.ComponentRef<typeof AnimatedComponent>,
 		TransitionAwareProps<P>
 	>((props, _) => {
-		const {
-			children,
-			style,
-			sharedBoundTag,
-			styleId,
-			onPress,
-			remeasureOnFocus,
-			...rest
-		} = props as any;
-
-		const animatedRef = useAnimatedRef<View>();
+		const { children, style, styleId, ...rest } = props as any;
 		const { elementStylesMap } = useScreenStyles();
-		const associatedId = sharedBoundTag || styleId;
+		const associatedId = styleId;
 
 		const associatedStyles = useAnimatedStyle(() => {
 			"worklet";
@@ -134,27 +119,13 @@ export function createTransitionAwareComponent<P extends object>(
 		});
 
 		return (
-			<RegisterBoundsProvider
-				animatedRef={animatedRef}
-				style={style}
-				onPress={onPress}
-				sharedBoundTag={sharedBoundTag}
-				remeasureOnFocus={remeasureOnFocus}
+			<AnimatedComponent
+				{...(rest as any)}
+				style={[style, associatedStyles]}
+				animatedProps={associatedProps}
 			>
-				{({ captureActiveOnPress, handleInitialLayout }) => (
-					<AnimatedComponent
-						{...(rest as any)}
-						ref={animatedRef}
-						style={[style, associatedStyles]}
-						animatedProps={associatedProps}
-						onPress={captureActiveOnPress}
-						onLayout={runOnUI(handleInitialLayout)}
-						collapsable={!sharedBoundTag}
-					>
-						{children}
-					</AnimatedComponent>
-				)}
-			</RegisterBoundsProvider>
+				{children}
+			</AnimatedComponent>
 		);
 	});
 

@@ -63,13 +63,4 @@ export type GestureValues = {
 	 * The initial direction that activated the gesture.
 	 */
 	direction: Omit<GestureDirection, "bidirectional"> | null;
-
-	/** @deprecated Use `normX` instead. */
-	normalizedX: number;
-	/** @deprecated Use `normY` instead. */
-	normalizedY: number;
-	/** @deprecated Use `dismissing` instead. */
-	isDismissing: number;
-	/** @deprecated Use `dragging` instead. */
-	isDragging: number;
 };

@@ -8,7 +8,6 @@ import {
 	useRef,
 	useState,
 } from "react";
-import type { View } from "react-native";
 import type Animated from "react-native-reanimated";
 import type { AnimatedRef } from "react-native-reanimated";
 
@@ -17,10 +16,10 @@ type BoundaryAssociatedStyle = React.ComponentProps<
 >["style"];
 
 interface BoundaryOwnerContextValue {
-	ownerRef: AnimatedRef<View>;
-	registerTargetRef: (targetRef: AnimatedRef<View>) => void;
-	unregisterTargetRef: (targetRef: AnimatedRef<View>) => void;
-	activeTargetRef: AnimatedRef<View> | null;
+	ownerRef: AnimatedRef<Animated.View>;
+	registerTargetRef: (targetRef: AnimatedRef<Animated.View>) => void;
+	unregisterTargetRef: (targetRef: AnimatedRef<Animated.View>) => void;
+	activeTargetRef: AnimatedRef<Animated.View> | null;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
 }
 
@@ -52,37 +51,45 @@ export const useBoundaryOwnerContext = () => {
 };
 
 export const useBoundaryOwner = (params: {
-	ownerRef: AnimatedRef<View>;
+	ownerRef: AnimatedRef<Animated.View>;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
 }) => {
 	const { ownerRef, associatedTargetStyles } = params;
 	const warnedAboutMultipleTargetsRef = useRef(false);
-	const [targetRefs, setTargetRefs] = useState<AnimatedRef<View>[]>([]);
+	const [targetRefs, setTargetRefs] = useState<AnimatedRef<Animated.View>[]>(
+		[],
+	);
 
-	const registerTargetRef = useCallback((targetRef: AnimatedRef<View>) => {
-		setTargetRefs((prev) => {
-			if (prev.includes(targetRef)) {
-				return prev;
-			}
+	const registerTargetRef = useCallback(
+		(targetRef: AnimatedRef<Animated.View>) => {
+			setTargetRefs((prev) => {
+				if (prev.includes(targetRef)) {
+					return prev;
+				}
 
-			if (
-				__DEV__ &&
-				prev.length > 0 &&
-				!warnedAboutMultipleTargetsRef.current
-			) {
-				warnedAboutMultipleTargetsRef.current = true;
-				console.warn(MULTIPLE_TARGETS_WARNING);
-			}
+				if (
+					__DEV__ &&
+					prev.length > 0 &&
+					!warnedAboutMultipleTargetsRef.current
+				) {
+					warnedAboutMultipleTargetsRef.current = true;
+					console.warn(MULTIPLE_TARGETS_WARNING);
+				}
 
-			return [...prev, targetRef];
-		});
-	}, []);
+				return [...prev, targetRef];
+			});
+		},
+		[],
+	);
 
-	const unregisterTargetRef = useCallback((targetRef: AnimatedRef<View>) => {
-		setTargetRefs((prev) =>
-			prev.filter((existingRef) => existingRef !== targetRef),
-		);
-	}, []);
+	const unregisterTargetRef = useCallback(
+		(targetRef: AnimatedRef<Animated.View>) => {
+			setTargetRefs((prev) =>
+				prev.filter((existingRef) => existingRef !== targetRef),
+			);
+		},
+		[],
+	);
 
 	const contextValue = useMemo(
 		() => ({
