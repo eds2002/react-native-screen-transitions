@@ -18,11 +18,6 @@ const STACK_OPTIONS = [
 		title: "Blank Stack",
 		description: "Pure JS stack with full control over transitions",
 	},
-	{
-		id: "component-stack",
-		title: "Component Stack (Deprecated)",
-		description: "Standalone navigator with bounds-based floating animation",
-	},
 ];
 
 const BENCHMARK_OPTIONS = PUBLIC_BENCHMARKS.map((benchmark) => ({
@@ -55,9 +50,7 @@ export default function HomeScreen() {
 				</Text>
 
 				<View style={styles.section}>
-					<Text
-						style={[styles.sectionTitle, { color: theme.textTertiary }]}
-					>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
 						Stacks
 					</Text>
 					<View style={styles.buttonContainer}>
@@ -68,9 +61,7 @@ export default function HomeScreen() {
 								style={({ pressed }) => [
 									styles.button,
 									{
-										backgroundColor: pressed
-											? theme.cardPressed
-											: theme.card,
+										backgroundColor: pressed ? theme.cardPressed : theme.card,
 									},
 								]}
 								onPress={() => router.push(`/${option.id}` as `/${string}`)}
@@ -92,9 +83,7 @@ export default function HomeScreen() {
 				</View>
 
 				<View style={styles.section}>
-					<Text
-						style={[styles.sectionTitle, { color: theme.textTertiary }]}
-					>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
 						Gestures
 					</Text>
 					<View style={styles.buttonContainer}>
@@ -105,9 +94,7 @@ export default function HomeScreen() {
 								style={({ pressed }) => [
 									styles.button,
 									{
-										backgroundColor: pressed
-											? theme.cardPressed
-											: theme.card,
+										backgroundColor: pressed ? theme.cardPressed : theme.card,
 									},
 								]}
 								onPress={() => router.push(`/${option.id}` as `/${string}`)}
@@ -129,9 +116,7 @@ export default function HomeScreen() {
 				</View>
 
 				<View style={styles.section}>
-					<Text
-						style={[styles.sectionTitle, { color: theme.textTertiary }]}
-					>
+					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
 						Benchmarks
 					</Text>
 					<View style={styles.buttonContainer}>
@@ -142,9 +127,7 @@ export default function HomeScreen() {
 								style={({ pressed }) => [
 									styles.button,
 									{
-										backgroundColor: pressed
-											? theme.cardPressed
-											: theme.card,
+										backgroundColor: pressed ? theme.cardPressed : theme.card,
 									},
 								]}
 								onPress={() => router.push(option.route)}
