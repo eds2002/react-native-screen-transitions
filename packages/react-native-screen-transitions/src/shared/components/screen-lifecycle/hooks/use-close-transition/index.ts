@@ -3,10 +3,8 @@ import {
 	runOnJS,
 	type SharedValue,
 	useAnimatedReaction,
-	useDerivedValue,
 } from "react-native-reanimated";
 import { useStack } from "../../../../hooks/navigation/use-stack";
-import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import {
 	type BaseDescriptor,
@@ -95,13 +93,6 @@ const useNativeStackClose = ({
 		return GestureStore.peekBag(parentScreenKey)?.dismissing ?? null;
 	}, [parentScreenKey]);
 
-	const isAncestorDismissingViaGesture = useSharedValueState(
-		useDerivedValue(() => {
-			"worklet";
-			return nearestAncestorDismissing?.value ?? false;
-		}),
-	);
-
 	const handleBeforeRemove = useStableCallback((e: any) => {
 		const options = current.options as { enableTransitions?: boolean };
 		const isEnabled = options.enableTransitions;
@@ -113,7 +104,7 @@ const useNativeStackClose = ({
 		);
 		const isFirstScreen = routeIndex <= 0;
 
-		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
+		if (!isEnabled || nearestAncestorDismissing?.get() || isFirstScreen) {
 			animations.closing.set(1);
 			resetStores();
 			return;
