@@ -13,23 +13,20 @@
 
 import { useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
-import { StackType } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
-import { computeClaimedDirections } from "../../utils/gesture/compute-claimed-directions";
-import { validateSnapPoints } from "../../utils/gesture/validate-snap-points";
 import {
 	useDescriptorDerivations,
 	useDescriptors,
 } from "../screen/descriptors";
-import { useStackCoreContext } from "../stack/core.provider";
-import { useRegisterDirectionClaims } from "./helpers/register-direction-claims";
+import { useBuildPanGesture } from "./builders/use-build-pan-gesture";
+import { useScreenGestureConfig } from "./config/use-screen-gesture-config";
+import { useRegisterDirectionClaims } from "./ownership/use-register-direction-claims";
 import {
 	type DirectionClaimMap,
 	type GestureContextType,
 	NO_CLAIMS,
 	type ScrollConfig,
 } from "./types";
-import { useBuildGestures } from "./use-build-gestures";
 
 interface ScreenGestureProviderProps {
 	children: React.ReactNode;
@@ -42,83 +39,45 @@ export const {
 	ScreenGestureProviderProps,
 	GestureContextType
 >(({ children }): { value: GestureContextType; children: React.ReactNode } => {
-	const { current } = useDescriptors();
-	const { isFirstKey, isTopMostScreen } = useDescriptorDerivations();
-	const { flags } = useStackCoreContext();
-
 	const ancestorContext: GestureContextType | null = useGestureContext();
-	const isIsolated = flags.STACK_TYPE === StackType.COMPONENT;
-	const routeKey = current.route.key;
 
-	const canDismiss = Boolean(
-		isFirstKey ? false : current.options.gestureEnabled,
-	);
-
-	const { hasSnapPoints } = useMemo(
-		() =>
-			validateSnapPoints({
-				snapPoints: current.options.snapPoints,
-				canDismiss,
-			}),
-		[current.options.snapPoints, canDismiss],
-	);
-
-	const gestureEnabled = canDismiss || hasSnapPoints;
-
-	const claimedDirections = useMemo(
-		() =>
-			computeClaimedDirections(
-				gestureEnabled,
-				current.options.gestureDirection,
-				hasSnapPoints,
-			),
-		[gestureEnabled, current.options.gestureDirection, hasSnapPoints],
-	);
+	const config = useScreenGestureConfig({
+		ancestorContext,
+	});
 
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 	const childDirectionClaims = useSharedValue<DirectionClaimMap>(NO_CLAIMS);
 
-	useRegisterDirectionClaims(
+	const { panGesture, panGestureRef } = useBuildPanGesture({
+		scrollConfig,
 		ancestorContext,
-		claimedDirections,
-		routeKey,
-		isIsolated,
-		isTopMostScreen,
-	);
-
-	const { panGesture, panGestureRef, gestureAnimationValues } =
-		useBuildGestures({
-			scrollConfig,
-			ancestorContext,
-			claimedDirections,
-			childDirectionClaims,
-			isIsolated,
-		});
+		config,
+		childDirectionClaims,
+	});
 
 	const value = useMemo<GestureContextType>(
 		() => ({
 			panGesture,
 			panGestureRef,
 			scrollConfig,
-			gestureAnimationValues,
 			ancestorContext,
-			gestureEnabled,
-			isIsolated,
-			claimedDirections,
+			gestureEnabled: config.gestureEnabled,
+			isIsolated: false,
+			claimedDirections: config.claimedDirections,
 			childDirectionClaims,
 		}),
 		[
 			panGesture,
 			panGestureRef,
 			scrollConfig,
-			gestureAnimationValues,
 			ancestorContext,
-			gestureEnabled,
-			isIsolated,
-			claimedDirections,
+			config.gestureEnabled,
+			config.claimedDirections,
 			childDirectionClaims,
 		],
 	);
+
+	useRegisterDirectionClaims(ancestorContext, config.claimedDirections);
 
 	return {
 		value,

@@ -1,7 +1,19 @@
 import type { GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
+import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { GestureStoreMap } from "../../stores/gesture.store";
-import type { ClaimedDirections } from "../../types/ownership.types";
+import type { SystemStoreMap } from "../../stores/system.store";
+import type { TransitionSpec } from "../../types/animation.types";
+import type {
+	GestureActivationArea,
+	GestureDirections,
+} from "../../types/gesture.types";
+import type {
+	ClaimedDirections,
+	DirectionOwnership,
+} from "../../types/ownership.types";
+import type { ScreenTransitionConfig } from "../../types/screen.types";
+import type { EffectiveSnapPointsResult } from "../../utils/gesture/validate-snap-points";
 
 export type ScrollConfig = {
 	x: number;
@@ -36,10 +48,56 @@ export interface GestureContextType {
 	panGesture: GestureType;
 	panGestureRef: React.MutableRefObject<GestureType | undefined>;
 	scrollConfig: SharedValue<ScrollConfig | null>;
-	gestureAnimationValues: GestureStoreMap;
 	ancestorContext: GestureContextType | null;
 	gestureEnabled: boolean;
 	isIsolated: boolean;
 	claimedDirections: ClaimedDirections;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
+}
+
+export interface ScreenGestureConfig {
+	routeKey: string;
+	canDismiss: boolean;
+	gestureEnabled: boolean;
+	effectiveSnapPoints: EffectiveSnapPointsResult;
+	claimedDirections: ClaimedDirections;
+	ownershipStatus: DirectionOwnership;
+}
+
+export interface PanGesturePolicy {
+	gestureDirection: ScreenTransitionConfig["gestureDirection"];
+	directions: GestureDirections;
+	snapAxis: "horizontal" | "vertical";
+	gestureDrivesProgress: boolean;
+	gestureVelocityImpact: number;
+	snapVelocityImpact: number;
+	gestureReleaseVelocityScale: number;
+	gestureReleaseVelocityMax: number;
+	gestureActivationArea: GestureActivationArea;
+	gestureSnapLocked: boolean;
+	sheetScrollGestureBehavior: NonNullable<
+		ScreenTransitionConfig["sheetScrollGestureBehavior"]
+	>;
+	gestureResponseDistance: ScreenTransitionConfig["gestureResponseDistance"];
+	transitionSpec: TransitionSpec | undefined;
+}
+
+export interface PanGestureStores {
+	animations: AnimationStoreMap;
+	gestureAnimationValues: GestureStoreMap;
+	targetProgressValue: SystemStoreMap["targetProgress"];
+	resolvedAutoSnapPointValue: SystemStoreMap["resolvedAutoSnapPoint"];
+}
+
+export interface PanGestureSharedValues {
+	gestureStartProgress: SharedValue<number>;
+	lockedSnapPoint: SharedValue<number>;
+}
+
+export interface PanGestureRuntime {
+	config: ScreenGestureConfig;
+	policy: PanGesturePolicy;
+	stores: PanGestureStores;
+	gestureStartProgress: SharedValue<number>;
+	lockedSnapPoint: SharedValue<number>;
 }

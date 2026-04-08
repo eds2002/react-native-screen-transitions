@@ -87,6 +87,12 @@ const TEST_FLOWS = [
 		description: "Demonstrates proper touch blocking during transitions",
 	},
 	{
+		id: "nested/a",
+		title: "Nested Stack Gestures",
+		description:
+			"Outer A/B stays horizontal while nested-b opens as a vertical child stack",
+	},
+	{
 		id: "embedded-navigator",
 		title: "Embedded Navigator",
 		description:

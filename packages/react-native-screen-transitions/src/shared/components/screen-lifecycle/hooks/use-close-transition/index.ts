@@ -1,4 +1,4 @@
-import { useLayoutEffect } from "react";
+import { useLayoutEffect, useMemo } from "react";
 import {
 	runOnJS,
 	type SharedValue,
@@ -8,7 +8,6 @@ import {
 import { useStack } from "../../../../hooks/navigation/use-stack";
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../../../hooks/use-stable-callback";
-import { useGestureContext } from "../../../../providers/gestures";
 import {
 	type BaseDescriptor,
 	useDescriptorDerivations,
@@ -16,6 +15,7 @@ import {
 import { useStackCoreContext } from "../../../../providers/stack/core.provider";
 import { useManagedStackContext } from "../../../../providers/stack/managed.provider";
 import type { AnimationStoreMap } from "../../../../stores/animation.store";
+import { GestureStore } from "../../../../stores/gesture.store";
 import { StackType } from "../../../../types/stack.types";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
@@ -87,15 +87,18 @@ const useNativeStackClose = ({
 	deactivate,
 	resetStores,
 }: CloseHookParams) => {
-	const gestureCtx = useGestureContext();
+	const { parentScreenKey } = useDescriptorDerivations();
+
+	const nearestAncestorDismissing = useMemo(() => {
+		if (!parentScreenKey) return null;
+
+		return GestureStore.peekBag(parentScreenKey)?.dismissing ?? null;
+	}, [parentScreenKey]);
 
 	const isAncestorDismissingViaGesture = useSharedValueState(
 		useDerivedValue(() => {
 			"worklet";
-			return (
-				gestureCtx?.ancestorContext?.gestureAnimationValues.dismissing?.value ??
-				false
-			);
+			return nearestAncestorDismissing?.value ?? false;
 		}),
 	);
 
@@ -110,7 +113,6 @@ const useNativeStackClose = ({
 		);
 		const isFirstScreen = routeIndex <= 0;
 
-		// If transitions are disabled, ancestor is dismissing, or first screen - let native handle it
 		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
 			animations.closing.set(1);
 			resetStores();
@@ -137,7 +139,7 @@ const useNativeStackClose = ({
 		});
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: Only re-subscribe when navigation changes
+	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
 	useLayoutEffect(() => {
 		return current.navigation.addListener?.("beforeRemove", handleBeforeRemove);
 	}, [current.navigation]);
