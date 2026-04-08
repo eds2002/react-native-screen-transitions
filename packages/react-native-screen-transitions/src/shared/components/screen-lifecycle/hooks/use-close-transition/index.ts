@@ -76,6 +76,9 @@ const useManagedClose = ({
 
 /**
  * Native stack close - listens to beforeRemove navigation event.
+ * KNOWN BUG:
+ * In deeply nested stacks, when removing the outermost stack,
+ * whilst it will close, future animations are broken.
  */
 const useNativeStackClose = ({
 	current,
