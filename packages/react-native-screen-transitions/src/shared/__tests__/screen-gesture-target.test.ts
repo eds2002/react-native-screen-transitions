@@ -1,29 +1,22 @@
 import { describe, expect, it } from "bun:test";
-import type { GestureType } from "react-native-gesture-handler";
+import type { PanGesture } from "react-native-gesture-handler";
 import { NO_CLAIMS } from "../types/ownership.types";
 import { resolveScreenGestureTarget } from "../hooks/gestures/resolve-screen-gesture-target";
 import type { GestureContextType } from "../providers/gestures";
 
-const createGestureRef = (label: string) =>
-	({ current: label as unknown as GestureType }) as GestureContextType["panGestureRef"];
-
 const createContext = ({
 	label,
-	ancestorContext = null,
-	isIsolated = false,
+	gestureContext = null,
 }: {
 	label: string;
-	ancestorContext?: GestureContextType | null;
-	isIsolated?: boolean;
+	gestureContext?: GestureContextType | null;
 }): GestureContextType => ({
-	panGesture: label as unknown as GestureType,
-	panGestureRef: createGestureRef(label),
+	detectorGesture: label as unknown as PanGesture,
+	panGesture: label as unknown as PanGesture,
+	pinchGesture: undefined,
 	scrollConfig: {} as GestureContextType["scrollConfig"],
-	gestureAnimationValues:
-		{} as GestureContextType["gestureAnimationValues"],
-	ancestorContext,
+	gestureContext,
 	gestureEnabled: true,
-	isIsolated,
 	claimedDirections: NO_CLAIMS,
 	childDirectionClaims:
 		{} as GestureContextType["childDirectionClaims"],
@@ -31,8 +24,8 @@ const createContext = ({
 
 describe("resolveScreenGestureTarget", () => {
 	const root = createContext({ label: "root" });
-	const parent = createContext({ label: "parent", ancestorContext: root });
-	const self = createContext({ label: "self", ancestorContext: parent });
+	const parent = createContext({ label: "parent", gestureContext: root });
+	const self = createContext({ label: "self", gestureContext: parent });
 
 	it("returns self by default", () => {
 		const resolved = resolveScreenGestureTarget({
@@ -40,7 +33,7 @@ describe("resolveScreenGestureTarget", () => {
 			self,
 		});
 
-		expect(resolved).toBe(self.panGestureRef);
+		expect(resolved).toBe(self.panGesture);
 	});
 
 	it("returns parent when requested", () => {
@@ -49,7 +42,7 @@ describe("resolveScreenGestureTarget", () => {
 			self,
 		});
 
-		expect(resolved).toBe(parent.panGestureRef);
+		expect(resolved).toBe(parent.panGesture);
 	});
 
 	it("returns root when requested", () => {
@@ -58,7 +51,7 @@ describe("resolveScreenGestureTarget", () => {
 			self,
 		});
 
-		expect(resolved).toBe(root.panGestureRef);
+		expect(resolved).toBe(root.panGesture);
 	});
 
 	it("resolves explicit ancestor depth", () => {
@@ -67,7 +60,7 @@ describe("resolveScreenGestureTarget", () => {
 			self,
 		});
 
-		expect(resolved).toBe(root.panGestureRef);
+		expect(resolved).toBe(root.panGesture);
 	});
 
 	it("returns null for missing or invalid ancestors", () => {
@@ -97,34 +90,5 @@ describe("resolveScreenGestureTarget", () => {
 		expect(zero).toBeNull();
 		expect(negative).toBeNull();
 		expect(nonInteger).toBeNull();
-	});
-
-	it("stops resolving at isolation boundaries", () => {
-		const isolatedRoot = createContext({
-			label: "isolated-root",
-			isIsolated: true,
-		});
-		const isolatedParent = createContext({
-			label: "isolated-parent",
-			ancestorContext: isolatedRoot,
-			isIsolated: true,
-		});
-		const screen = createContext({
-			label: "screen",
-			ancestorContext: isolatedParent,
-			isIsolated: false,
-		});
-
-		const parentResolved = resolveScreenGestureTarget({
-			target: "parent",
-			self: screen,
-		});
-		const rootResolved = resolveScreenGestureTarget({
-			target: "root",
-			self: screen,
-		});
-
-		expect(parentResolved).toBeNull();
-		expect(rootResolved).toBeNull();
 	});
 });

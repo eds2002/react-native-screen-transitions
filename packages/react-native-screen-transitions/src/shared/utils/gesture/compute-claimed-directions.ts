@@ -1,4 +1,7 @@
-import type { GestureDirection } from "../../types/gesture.types";
+import type {
+	GestureDirection,
+	PanGestureDirection,
+} from "../../types/gesture.types";
 import {
 	type ClaimedDirections,
 	type Direction,
@@ -34,9 +37,16 @@ export function computeClaimedDirections(
 	const direction = gestureDirection ?? "vertical";
 
 	// Normalize to array
-	const directions: GestureDirection[] = Array.isArray(direction)
-		? direction
-		: [direction];
+	const directions: PanGestureDirection[] = (
+		Array.isArray(direction) ? direction : [direction]
+	).filter(
+		(dir): dir is PanGestureDirection =>
+			dir !== "pinch-in" && dir !== "pinch-out",
+	);
+
+	if (directions.length === 0) {
+		return NO_CLAIMS;
+	}
 
 	// Start with no claims
 	const claims: ClaimedDirections = {

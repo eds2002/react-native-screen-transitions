@@ -1,6 +1,7 @@
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
+import { PINCH_PROBE_OPTIONS } from "./pinch-shadowing/shared";
 
 export default function GesturesLayout() {
 	return (
@@ -78,6 +79,7 @@ export default function GesturesLayout() {
 					},
 				}}
 			/>
+			<BlankStack.Screen name="pinch-shadowing" options={PINCH_PROBE_OPTIONS} />
 			{/* Snap Point Examples */}
 			<BlankStack.Screen
 				name="snap-shadows-axis"

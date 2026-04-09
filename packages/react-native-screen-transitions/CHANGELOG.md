@@ -307,7 +307,7 @@
 - fix(gestures): enable axis-isolated ScrollView coordination with ancestor gesture owners
 - fix: register direction claims only for the current route to avoid stale ownership
 - feat: add `backdropBehavior: "collapse"`
-- feat: add `snapVelocityImpact` and improve snap targeting
+- feat: add `gestureSnapVelocityImpact` and improve snap targeting
 - fix: respect ScrollView bounce state in gesture activation
 - chore: tests/docs updates and dead code cleanup
 

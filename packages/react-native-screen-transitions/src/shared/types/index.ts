@@ -23,6 +23,8 @@ export type {
 	GestureActivationArea,
 	GestureDirection,
 	GestureValues,
+	PanGestureDirection,
+	PinchGestureDirection,
 	SideActivation,
 } from "./gesture.types";
 export type { OverlayProps } from "./overlay.types";

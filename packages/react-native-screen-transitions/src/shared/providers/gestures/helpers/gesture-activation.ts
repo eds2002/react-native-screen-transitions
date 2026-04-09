@@ -1,10 +1,9 @@
-import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
 import type { SharedValue } from "react-native-reanimated";
 import type { GestureDirections } from "../../../types/gesture.types";
 import {
 	type ActivationArea,
 	type GestureActivationArea,
-	GestureOffsetState,
+	GestureActivationState,
 	type SideActivation,
 } from "../../../types/gesture.types";
 import type { Direction } from "../../../types/ownership.types";
@@ -15,8 +14,7 @@ interface CheckGestureActivationProps {
 	initialTouch: { x: number; y: number };
 	touch: { x: number; y: number };
 	directions: GestureDirections;
-	manager?: GestureStateManagerType;
-	gestureOffsetState: SharedValue<GestureOffsetState>;
+	gestureActivationState: SharedValue<GestureActivationState>;
 	activationArea?: GestureActivationArea;
 	dimensions: Layout;
 	responseDistance?: number;
@@ -224,8 +222,7 @@ export const applyOffsetRules = ({
 	initialTouch,
 	touch,
 	directions,
-	manager,
-	gestureOffsetState,
+	gestureActivationState,
 	activationArea,
 	dimensions,
 	responseDistance,
@@ -252,7 +249,7 @@ export const applyOffsetRules = ({
 		isHorizontalSwipe,
 	} = calculateSwipeDirs(deltaX, deltaY);
 
-	if (gestureOffsetState.value !== GestureOffsetState.PENDING) {
+	if (gestureActivationState.get() !== GestureActivationState.PENDING) {
 		return {
 			isSwipingDown,
 			isSwipingUp,
@@ -292,10 +289,9 @@ export const applyOffsetRules = ({
 	});
 
 	if (shouldActivate) {
-		gestureOffsetState.value = GestureOffsetState.PASSED;
+		gestureActivationState.set(GestureActivationState.PASSED);
 	} else if (shouldFail) {
-		gestureOffsetState.value = GestureOffsetState.FAILED;
-		manager?.fail();
+		gestureActivationState.set(GestureActivationState.FAILED);
 	}
 
 	return {

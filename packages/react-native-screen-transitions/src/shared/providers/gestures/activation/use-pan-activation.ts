@@ -1,12 +1,15 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import type { GestureTouchEvent } from "react-native-gesture-handler";
-import type { GestureStateManagerType } from "react-native-gesture-handler/lib/typescript/handlers/gestures/gestureStateManager";
+import {
+	GestureStateManager,
+	type GestureTouchEvent,
+} from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { EPSILON } from "../../../constants";
-import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
+import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
-import { GestureOffsetState } from "../../../types/gesture.types";
+import { SystemStore } from "../../../stores/system.store";
+import { GestureActivationState } from "../../../types/gesture.types";
 import type { Direction } from "../../../types/ownership.types";
 import { useDescriptorDerivations } from "../../screen/descriptors";
 import {
@@ -33,7 +36,7 @@ export const usePanActivation = ({
 	childDirectionClaims,
 	runtime,
 }: UsePanActivationProps) => {
-	const { config, policy, stores, lockedSnapPoint } = runtime;
+	const { config, policy, lockedSnapPoint } = runtime;
 	const { parentScreenKey } = useDescriptorDerivations();
 	const {
 		hasSnapPoints,
@@ -43,33 +46,52 @@ export const usePanActivation = ({
 		maxSnapPoint,
 	} = config.effectiveSnapPoints;
 
+	const animations = AnimationStore.getBag(runtime.config.routeKey);
+	const gestures = GestureStore.getBag(runtime.config.routeKey);
+	const system = SystemStore.getBag(runtime.config.routeKey);
+
 	const dimensions = useWindowDimensions();
+
 	const ancestorDismissing = useMemo(() => {
 		if (!parentScreenKey) return null;
 		return GestureStore.peekBag(parentScreenKey)?.dismissing ?? null;
 	}, [parentScreenKey]);
 
 	const initialTouch = useSharedValue({ x: 0, y: 0 });
-	const gestureOffsetState = useSharedValue<GestureOffsetState>(
-		GestureOffsetState.PENDING,
+
+	const gestureActivationState = useSharedValue<GestureActivationState>(
+		GestureActivationState.PENDING,
 	);
 
-	const onTouchesDown = useStableCallbackValue<
-		(event: GestureTouchEvent) => void
-	>((event) => {
-		"worklet";
-		const firstTouch = event.changedTouches[0];
-		initialTouch.value = { x: firstTouch.x, y: firstTouch.y };
-		gestureOffsetState.value = GestureOffsetState.PENDING;
-	});
-
-	const onTouchesMove = useStableCallbackValue(
-		(event: GestureTouchEvent, manager: GestureStateManagerType) => {
+	const onTouchesDown = useCallback(
+		(event: GestureTouchEvent) => {
 			"worklet";
+			if (event.numberOfTouches !== 1) {
+				gestureActivationState.set(GestureActivationState.FAILED);
+				return;
+			}
 
-			if (ancestorDismissing?.value) {
-				gestureOffsetState.value = GestureOffsetState.FAILED;
-				manager.fail();
+			const firstTouch = event.changedTouches[0];
+			initialTouch.set({ x: firstTouch.x, y: firstTouch.y });
+			gestureActivationState.set(GestureActivationState.PENDING);
+		},
+		[gestureActivationState, initialTouch],
+	);
+
+	const onTouchesMove = useCallback(
+		(event: GestureTouchEvent) => {
+			"worklet";
+			const handlerTag = event.handlerTag;
+
+			if (event.numberOfTouches !== 1) {
+				gestureActivationState.set(GestureActivationState.FAILED);
+				GestureStateManager.fail(handlerTag);
+				return;
+			}
+
+			if (ancestorDismissing?.get()) {
+				gestureActivationState.set(GestureActivationState.FAILED);
+				GestureStateManager.fail(handlerTag);
 				return;
 			}
 
@@ -79,21 +101,20 @@ export const usePanActivation = ({
 				applyOffsetRules({
 					touch,
 					directions: policy.directions,
-					manager,
 					dimensions,
-					gestureOffsetState,
-					initialTouch: initialTouch.value,
+					gestureActivationState,
+					initialTouch: initialTouch.get(),
 					activationArea: policy.gestureActivationArea,
 					responseDistance: policy.gestureResponseDistance,
 				});
 
-			if (gestureOffsetState.value === GestureOffsetState.FAILED) {
-				manager.fail();
+			if (gestureActivationState.get() === GestureActivationState.FAILED) {
+				GestureStateManager.fail(handlerTag);
 				return;
 			}
 
-			if (stores.gestureAnimationValues.dragging.value) {
-				manager.activate();
+			if (gestures.dragging.get()) {
+				GestureStateManager.activate(handlerTag);
 				return;
 			}
 
@@ -108,17 +129,17 @@ export const usePanActivation = ({
 			}
 
 			if (config.ownershipStatus[swipeDirection] !== "self") {
-				manager.fail();
+				GestureStateManager.fail(handlerTag);
 				return;
 			}
 
-			const childClaim = childDirectionClaims.value[swipeDirection];
+			const childClaim = childDirectionClaims.get()[swipeDirection];
 			if (shouldDeferToChildClaim(childClaim, config.routeKey)) {
-				manager.fail();
+				GestureStateManager.fail(handlerTag);
 				return;
 			}
 
-			if (gestureOffsetState.value !== GestureOffsetState.PASSED) {
+			if (gestureActivationState.get() !== GestureActivationState.PASSED) {
 				return;
 			}
 
@@ -131,15 +152,15 @@ export const usePanActivation = ({
 					policy.directions.snapAxisInverted ?? false,
 				)
 			) {
-				manager.fail();
+				GestureStateManager.fail(handlerTag);
 				return;
 			}
 
-			if (!hasSnapPoints && stores.gestureAnimationValues.dismissing.value) {
+			if (!hasSnapPoints && gestures.dismissing.get()) {
 				return;
 			}
 
-			const scrollCfg = scrollConfig.value;
+			const scrollCfg = scrollConfig.get();
 			const isTouchingScrollView = scrollCfg?.isTouched ?? false;
 
 			if (isTouchingScrollView) {
@@ -150,7 +171,7 @@ export const usePanActivation = ({
 				);
 
 				if (!atBoundary) {
-					manager.fail();
+					GestureStateManager.fail(handlerTag);
 					return;
 				}
 
@@ -163,38 +184,67 @@ export const usePanActivation = ({
 					)
 				) {
 					if (policy.sheetScrollGestureBehavior === "collapse-only") {
-						manager.fail();
+						GestureStateManager.fail(handlerTag);
 						return;
 					}
 
 					const { resolvedMaxSnapPoint } = resolveRuntimeSnapPoints({
 						snapPoints,
 						hasAutoSnapPoint,
-						resolvedAutoSnapPoint: stores.resolvedAutoSnapPointValue.value,
+						resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 						minSnapPoint,
 						maxSnapPoint,
 						canDismiss: config.canDismiss,
 					});
 
 					const effectiveMaxSnapPoint = policy.gestureSnapLocked
-						? lockedSnapPoint.value
+						? lockedSnapPoint.get()
 						: resolvedMaxSnapPoint;
 
 					const canExpandMore =
-						stores.animations.progress.value <
-							effectiveMaxSnapPoint - EPSILON &&
-						stores.targetProgressValue.value < effectiveMaxSnapPoint - EPSILON;
+						animations.progress.get() < effectiveMaxSnapPoint - EPSILON &&
+						system.targetProgress.get() < effectiveMaxSnapPoint - EPSILON;
 
 					if (!canExpandMore) {
-						manager.fail();
+						GestureStateManager.fail(handlerTag);
 						return;
 					}
 				}
 			}
 
-			stores.gestureAnimationValues.direction.value = swipeDirection;
-			manager.activate();
+			gestures.direction.set(swipeDirection);
+			GestureStateManager.activate(handlerTag);
 		},
+		[
+			ancestorDismissing,
+			animations.progress,
+			childDirectionClaims,
+			config.canDismiss,
+			config.ownershipStatus,
+			config.routeKey,
+			dimensions,
+			gestureActivationState,
+			gestures.direction,
+			gestures.dismissing,
+			gestures.dragging,
+			hasAutoSnapPoint,
+			hasSnapPoints,
+			initialTouch,
+			lockedSnapPoint,
+			maxSnapPoint,
+			minSnapPoint,
+			policy.directions,
+			policy.gestureActivationArea,
+			policy.gestureResponseDistance,
+			policy.gestureSnapLocked,
+			policy.sheetScrollGestureBehavior,
+			policy.snapAxis,
+			policy.directions.snapAxisInverted,
+			scrollConfig,
+			snapPoints,
+			system.resolvedAutoSnapPoint,
+			system.targetProgress,
+		],
 	);
 
 	return { onTouchesDown, onTouchesMove };

@@ -1,4 +1,8 @@
-import type { GestureType } from "react-native-gesture-handler";
+import type {
+	ComposedGesture,
+	PanGesture,
+	PinchGesture,
+} from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { GestureStoreMap } from "../../stores/gesture.store";
@@ -45,14 +49,20 @@ export const NO_CLAIMS: DirectionClaimMap = {
 };
 
 export interface GestureContextType {
-	panGesture: GestureType;
-	panGestureRef: React.MutableRefObject<GestureType | undefined>;
+	detectorGesture: PanGesture | ComposedGesture;
+	panGesture: PanGesture;
+	pinchGesture?: PinchGesture;
 	scrollConfig: SharedValue<ScrollConfig | null>;
-	ancestorContext: GestureContextType | null;
+	gestureContext: GestureContextType | null;
 	gestureEnabled: boolean;
-	isIsolated: boolean;
 	claimedDirections: ClaimedDirections;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
+}
+
+export interface ScreenGestureBundle {
+	detectorGesture: PanGesture | ComposedGesture;
+	panGesture: PanGesture;
+	pinchGesture?: PinchGesture;
 }
 
 export interface ScreenGestureConfig {
@@ -65,14 +75,15 @@ export interface ScreenGestureConfig {
 }
 
 export interface PanGesturePolicy {
+	enabled: boolean;
 	gestureDirection: ScreenTransitionConfig["gestureDirection"];
 	directions: GestureDirections;
 	snapAxis: "horizontal" | "vertical";
 	gestureDrivesProgress: boolean;
+	gestureSensitivity: number;
 	gestureVelocityImpact: number;
-	snapVelocityImpact: number;
+	gestureSnapVelocityImpact: number;
 	gestureReleaseVelocityScale: number;
-	gestureReleaseVelocityMax: number;
 	gestureActivationArea: GestureActivationArea;
 	gestureSnapLocked: boolean;
 	sheetScrollGestureBehavior: NonNullable<
@@ -82,11 +93,18 @@ export interface PanGesturePolicy {
 	transitionSpec: TransitionSpec | undefined;
 }
 
-export interface PanGestureStores {
-	animations: AnimationStoreMap;
-	gestureAnimationValues: GestureStoreMap;
-	targetProgressValue: SystemStoreMap["targetProgress"];
-	resolvedAutoSnapPointValue: SystemStoreMap["resolvedAutoSnapPoint"];
+export interface PinchGesturePolicy {
+	enabled: boolean;
+	gestureDirection: ScreenTransitionConfig["gestureDirection"];
+	pinchInEnabled: boolean;
+	pinchOutEnabled: boolean;
+	gestureDrivesProgress: boolean;
+	gestureSensitivity: number;
+	gestureVelocityImpact: number;
+	gestureSnapVelocityImpact: number;
+	gestureSnapLocked: boolean;
+	gestureReleaseVelocityScale: number;
+	transitionSpec: TransitionSpec | undefined;
 }
 
 export interface PanGestureSharedValues {
@@ -97,7 +115,13 @@ export interface PanGestureSharedValues {
 export interface PanGestureRuntime {
 	config: ScreenGestureConfig;
 	policy: PanGesturePolicy;
-	stores: PanGestureStores;
+	gestureStartProgress: SharedValue<number>;
+	lockedSnapPoint: SharedValue<number>;
+}
+
+export interface PinchGestureRuntime {
+	config: ScreenGestureConfig;
+	policy: PinchGesturePolicy;
 	gestureStartProgress: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }

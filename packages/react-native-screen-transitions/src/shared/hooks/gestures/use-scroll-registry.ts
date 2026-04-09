@@ -14,7 +14,11 @@
 
 import { useMemo } from "react";
 import type { LayoutChangeEvent } from "react-native";
-import { Gesture, type GestureType } from "react-native-gesture-handler";
+import {
+	type NativeGesture,
+	type PanGesture,
+	useNativeGesture,
+} from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import {
@@ -27,22 +31,17 @@ import useStableCallback from "../use-stable-callback";
 
 /** Walks up context tree to find the screen that owns a specific direction. */
 function findGestureOwnerForDirection(
-	context: GestureContextType | null | undefined,
+	context: GestureContextType | null,
 	direction: Direction,
 ): GestureContextType | null {
-	let current = context;
-	const startIsolated = context?.isIsolated;
+	let ancestor = context;
 
-	while (current) {
-		if (startIsolated !== undefined && current.isIsolated !== startIsolated) {
-			break;
+	while (ancestor) {
+		if (ancestor.claimedDirections?.[direction]) {
+			return ancestor;
 		}
 
-		if (current.claimedDirections?.[direction]) {
-			return current;
-		}
-
-		current = current.ancestorContext;
+		ancestor = ancestor.gestureContext;
 	}
 
 	return null;
@@ -54,7 +53,7 @@ function findGestureOwnerForDirection(
  * directions will only appear once.
  */
 function findGestureOwnersForAxis(
-	context: GestureContextType | null | undefined,
+	context: GestureContextType | null,
 	axis: "vertical" | "horizontal",
 ): GestureContextType[] {
 	const directions: [Direction, Direction] =
@@ -112,49 +111,45 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		() =>
 			owners
 				.map((o) => o.panGesture)
-				.filter((g): g is GestureType => g !== null),
+				.filter((g): g is PanGesture => g !== null),
 		[owners],
 	);
 
-	const nativeGesture = useMemo(() => {
-		if (panGestures.length === 0 || scrollConfigs.length === 0) return null;
-
-		// Update isTouched on ALL registered scrollConfigs
-		const setIsTouched = () => {
-			"worklet";
-			for (const scrollConfig of scrollConfigs) {
-				scrollConfig.modify((v) => {
-					"worklet";
-					if (v) v.isTouched = true;
-					return v;
-				});
-			}
-		};
-
-		const clearIsTouched = () => {
-			"worklet";
-			for (const scrollConfig of scrollConfigs) {
-				scrollConfig.modify((v) => {
-					"worklet";
-					if (v) v.isTouched = false;
-					return v;
-				});
-			}
-		};
-
-		// Native gesture must require ALL pan gestures to fail
-		// This allows any direction owner to take control at the appropriate boundary
-		let gesture = Gesture.Native()
-			.onTouchesDown(setIsTouched)
-			.onTouchesUp(clearIsTouched)
-			.onTouchesCancelled(clearIsTouched);
-
-		for (const panGesture of panGestures) {
-			gesture = gesture.requireExternalGestureToFail(panGesture);
+	// Update isTouched on ALL registered scrollConfigs
+	const setIsTouched = () => {
+		"worklet";
+		for (const scrollConfig of scrollConfigs) {
+			scrollConfig.modify((v) => {
+				"worklet";
+				if (v) v.isTouched = true;
+				return v;
+			});
 		}
+	};
 
-		return gesture;
-	}, [panGestures, scrollConfigs]);
+	const clearIsTouched = () => {
+		"worklet";
+		for (const scrollConfig of scrollConfigs) {
+			scrollConfig.modify((v) => {
+				"worklet";
+				if (v) v.isTouched = false;
+				return v;
+			});
+		}
+	};
+
+	const nativeGestureHandle = useNativeGesture({
+		enabled: panGestures.length > 0 && scrollConfigs.length > 0,
+		onTouchesDown: setIsTouched,
+		onTouchesUp: clearIsTouched,
+		onTouchesCancel: clearIsTouched,
+		requireToFail: panGestures.length > 0 ? panGestures : undefined,
+	});
+
+	const nativeGesture: NativeGesture | null =
+		panGestures.length > 0 && scrollConfigs.length > 0
+			? nativeGestureHandle
+			: null;
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {

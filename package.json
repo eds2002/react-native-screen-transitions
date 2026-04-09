@@ -6,7 +6,7 @@
 			"apps/*"
 		],
 		"catalog": {
-			"typescript": "~5.8.3"
+			"typescript": "~6.0.0"
 		}
 	},
 	"scripts": {
@@ -28,7 +28,7 @@
 		"release:react-native-screen-transitions:beta": "bun run release:beta"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "2.3.5",
+		"@biomejs/biome": "2.3.12",
 		"@commitlint/config-conventional": "^19.8.1",
 		"@types/bun": "^1.2.19",
 		"commitlint": "^19.8.1",

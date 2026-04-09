@@ -28,6 +28,10 @@ const DEFAULT_GESTURE_VALUES = {
 	y: 0,
 	normX: 0,
 	normY: 0,
+	scale: 1,
+	normScale: 0,
+	focalX: 0,
+	focalY: 0,
 	dismissing: 0,
 	dragging: 0,
 	direction: null,
@@ -123,7 +127,7 @@ export const FULLSCREEN_DIMENSIONS = (
 
 export const DEFAULT_GESTURE_VELOCITY_IMPACT = 0.3;
 export const DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT = 0.1;
-export const DEFAULT_GESTURE_RELEASE_VELOCITY_MAX = 3.2;
+export const DEFAULT_GESTURE_SENSITIVITY = 1;
 export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;

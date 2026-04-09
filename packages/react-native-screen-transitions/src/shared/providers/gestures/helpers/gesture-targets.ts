@@ -1,14 +1,7 @@
 import { DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT } from "../../../constants";
 import type { GestureDirections } from "../../../types/gesture.types";
 import { sanitizeSnapPoints } from "../../../utils/gesture/validate-snap-points";
-import { shouldDismissFromTranslationAndVelocity } from "./gesture-physics";
-
-interface GetAxisThresholdProps {
-	translation: number;
-	velocity: number;
-	screenSize: number;
-	gestureVelocityImpact: number;
-}
+import { shouldDismissFromProjection } from "./gesture-physics";
 
 interface DetermineDismissalProps {
 	event: {
@@ -44,21 +37,6 @@ interface DetermineSnapTargetResult {
 	shouldDismiss: boolean;
 }
 
-const getAxisThreshold = ({
-	translation,
-	velocity,
-	screenSize,
-	gestureVelocityImpact,
-}: GetAxisThresholdProps) => {
-	"worklet";
-	return shouldDismissFromTranslationAndVelocity(
-		translation,
-		velocity,
-		screenSize,
-		gestureVelocityImpact,
-	);
-};
-
 export const determineDismissal = ({
 	event,
 	directions,
@@ -73,12 +51,12 @@ export const determineDismissal = ({
 		(directions.vertical && event.translationY > 0) ||
 		(directions.verticalInverted && event.translationY < 0)
 	) {
-		const dismiss = getAxisThreshold({
-			translation: event.translationY,
-			velocity: event.velocityY,
-			screenSize: dimensions.height,
+		const dismiss = shouldDismissFromProjection(
+			event.translationY,
+			event.velocityY,
+			dimensions.height,
 			gestureVelocityImpact,
-		});
+		);
 		if (dismiss) shouldDismiss = true;
 	}
 
@@ -86,12 +64,12 @@ export const determineDismissal = ({
 		(directions.horizontal && event.translationX > 0) ||
 		(directions.horizontalInverted && event.translationX < 0)
 	) {
-		const dismiss = getAxisThreshold({
-			translation: event.translationX,
-			velocity: event.velocityX,
-			screenSize: dimensions.width,
+		const dismiss = shouldDismissFromProjection(
+			event.translationX,
+			event.velocityX,
+			dimensions.width,
 			gestureVelocityImpact,
-		});
+		);
 
 		if (dismiss) shouldDismiss = true;
 	}

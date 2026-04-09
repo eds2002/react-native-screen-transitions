@@ -29,7 +29,7 @@ Use the notes below as the source of truth when migrating examples or generating
 - **Navigation-style bounds zoom** through `bounds({ id }).navigation.zoom()`
 - **`navigationMaskEnabled`** for library-managed masked navigation transitions
 - **Ancestor targeting** in `useScreenGesture()` and `useScreenAnimation()`
-- **Gesture release tuning** with `gestureReleaseVelocityScale` and `gestureReleaseVelocityMax`
+- **Gesture release tuning** with `gestureReleaseVelocityScale`
 - **`Transition.Specs.FlingSpec`** for underdamped fling-style release motion
 - **Surface slot support** through `surfaceComponent` and the interpolator `surface` slot
 - **Animated `props` support across all slots** via `{ style, props }` slot returns
@@ -345,11 +345,11 @@ options={{
 | `gestureDirection`        | Direction(s) for swipe gesture                                           |
 | `gestureActivationArea`   | Where gesture can start                                                  |
 | `gestureResponseDistance` | Pixel threshold for activation                                           |
+| `gestureSensitivity`      | How directly live gesture movement maps to progress (default: 1)         |
 | `gestureVelocityImpact`   | How much velocity affects dismissal (default: 0.3)                       |
 | `gestureDrivesProgress`   | Whether gesture controls animation progress (default: true)              |
-| `snapVelocityImpact`      | How much velocity affects snap targeting (default: 0.1, lower = iOS-like)|
-| `gestureReleaseVelocityScale` | Multiplier for release velocity used by post-release spring animations |
-| `gestureReleaseVelocityMax` | Max absolute normalized release velocity used by spring animations      |
+| `gestureSnapVelocityImpact` | How much velocity affects snap targeting (default: 0.1, lower = iOS-like)|
+| `gestureReleaseVelocityScale` | Multiplier for post-release spring handoff velocity                    |
 | `sheetScrollGestureBehavior` | Nested scroll handoff mode: `"expand-and-collapse"` or `"collapse-only"` |
 | `gestureSnapLocked`       | Lock gesture-based snap movement to current snap point                   |
 | `backdropBehavior`        | Touch handling for backdrop area                                         |

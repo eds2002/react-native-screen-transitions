@@ -3,7 +3,7 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { GestureDirection } from "../types/gesture.types";
+import type { PanGestureDirection } from "../types/gesture.types";
 import { createStore } from "../utils/create-store";
 
 export type GestureStoreMap = {
@@ -11,14 +11,20 @@ export type GestureStoreMap = {
 	y: SharedValue<number>;
 	normX: SharedValue<number>;
 	normY: SharedValue<number>;
+	scale: SharedValue<number>;
+	normScale: SharedValue<number>;
+	focalX: SharedValue<number>;
+	focalY: SharedValue<number>;
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
-	direction: SharedValue<Omit<GestureDirection, "bidirectional"> | null>;
+	direction: SharedValue<Omit<PanGestureDirection, "bidirectional"> | null>;
 };
 
 function createGestureBag(): GestureStoreMap {
 	const normX = makeMutable(0);
 	const normY = makeMutable(0);
+	const scale = makeMutable(1);
+	const normScale = makeMutable(0);
 	const dismissing = makeMutable(0);
 	const dragging = makeMutable(0);
 
@@ -27,9 +33,13 @@ function createGestureBag(): GestureStoreMap {
 		y: makeMutable(0),
 		normX,
 		normY,
+		scale,
+		normScale,
+		focalX: makeMutable(0),
+		focalY: makeMutable(0),
 		dismissing,
 		dragging,
-		direction: makeMutable<Omit<GestureDirection, "bidirectional"> | null>(
+		direction: makeMutable<Omit<PanGestureDirection, "bidirectional"> | null>(
 			null,
 		),
 	};
@@ -37,10 +47,10 @@ function createGestureBag(): GestureStoreMap {
 
 /**
  * Route-keyed gesture state used by the transition system while a screen is
- * being dragged or dismissed. It stores raw and normalized gesture values,
- * dismissal flags, and the active gesture direction. `getCachedBag()` provides
- * a stable neutral fallback bag for cases where a route should not own live
- * gesture state.
+ * being dragged or dismissed. It stores the effective gesture values exposed
+ * to interpolators, dismissal flags, and the active gesture direction.
+ * `getCachedBag()` provides a stable neutral fallback bag for cases where a
+ * route should not own live gesture state.
  */
 export const GestureStore = createStore<GestureStoreMap>({
 	createBag: createGestureBag,
@@ -49,6 +59,10 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.y);
 		cancelAnimation(bag.normX);
 		cancelAnimation(bag.normY);
+		cancelAnimation(bag.scale);
+		cancelAnimation(bag.normScale);
+		cancelAnimation(bag.focalX);
+		cancelAnimation(bag.focalY);
 		cancelAnimation(bag.dismissing);
 		cancelAnimation(bag.dragging);
 		cancelAnimation(bag.direction);

@@ -7,8 +7,8 @@ import {
 	cancelAnimation,
 	isWorkletFunction,
 	makeMutable,
-	runOnJS,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 
 type AnyFunction = (...args: Array<any>) => any;
 
@@ -39,7 +39,7 @@ const wrap = <C extends AnyFunction>(callback: C): WrappedCallback<C> => {
 	return {
 		call: ((...args: Parameters<C>) => {
 			"worklet";
-			runOnJS(callback)(...args);
+			scheduleOnRN(callback, ...args);
 		}) as C,
 	};
 };
@@ -60,16 +60,16 @@ export default function useStableCallbackValue<C extends AnyFunction>(
 
 	useEffect(() => {
 		if (callback) {
-			stableCallback.value = wrap(callback);
+			stableCallback.set(wrap(callback));
 		} else {
-			stableCallback.value = null;
+			stableCallback.set(null);
 		}
 	}, [callback, stableCallback]);
 
 	return useCallback(
 		(...args: Parameters<C>) => {
 			"worklet";
-			stableCallback.value?.call(...args);
+			stableCallback.get()?.call(...args);
 		},
 		[stableCallback],
 	);

@@ -1,18 +1,18 @@
+import { useCallback } from "react";
 import { useWindowDimensions } from "react-native";
-import type {
-	GestureStateChangeEvent,
-	GestureUpdateEvent,
-	PanGestureHandlerEventPayload,
-} from "react-native-gesture-handler";
+import type { PanGestureEvent } from "react-native-gesture-handler";
+import { clamp } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { TRUE } from "../../../constants";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
-import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
+import { AnimationStore } from "../../../stores/animation.store";
+import { GestureStore } from "../../../stores/gesture.store";
+import { SystemStore } from "../../../stores/system.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { clampVelocity } from "../helpers/gesture-directions";
 import {
+	applyGestureSensitivity,
+	getPanReleaseHandoffVelocity,
 	normalizeGestureTranslation,
-	normalizeVelocity,
 } from "../helpers/gesture-physics";
 import { resetGestureValues } from "../helpers/gesture-reset";
 import {
@@ -25,71 +25,84 @@ import type { PanGestureRuntime } from "../types";
 export const useSnapPanBehavior = ({
 	config,
 	policy,
-	stores,
 	gestureStartProgress,
 	lockedSnapPoint,
 }: PanGestureRuntime) => {
 	const { dismissScreen } = useNavigationHelpers();
 	const dimensions = useWindowDimensions();
 
+	const gestures = GestureStore.getBag(config.routeKey);
+	const animations = AnimationStore.getBag(config.routeKey);
+	const system = SystemStore.getBag(config.routeKey);
+
 	const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 		config.effectiveSnapPoints;
 
-	const onStart = useStableCallbackValue(() => {
+	const onStart = useCallback(() => {
 		"worklet";
 		const { resolvedSnapPoints, resolvedMaxSnapPoint } =
 			resolveRuntimeSnapPoints({
 				snapPoints,
 				hasAutoSnapPoint,
-				resolvedAutoSnapPoint: stores.resolvedAutoSnapPointValue.value,
+				resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 				minSnapPoint,
 				maxSnapPoint,
 				canDismiss: config.canDismiss,
 			});
 
 		if (policy.gestureSnapLocked) {
-			lockedSnapPoint.value = findNearestSnapPoint(
-				stores.animations.progress.value,
-				resolvedSnapPoints,
+			lockedSnapPoint.set(
+				findNearestSnapPoint(animations.progress.get(), resolvedSnapPoints),
 			);
 		} else {
-			lockedSnapPoint.value = resolvedMaxSnapPoint;
+			lockedSnapPoint.set(resolvedMaxSnapPoint);
 		}
 
-		stores.animations.willAnimate.value = TRUE;
-		stores.gestureAnimationValues.dragging.value = TRUE;
-		stores.gestureAnimationValues.dismissing.value = 0;
-		gestureStartProgress.value = stores.animations.progress.value;
-	});
+		animations.willAnimate.set(TRUE);
+		gestures.dragging.set(TRUE);
+		gestures.dismissing.set(0);
+		gestureStartProgress.set(animations.progress.get());
+	}, [
+		config.canDismiss,
+		animations,
+		gestures,
+		system,
+		gestureStartProgress,
+		policy.gestureSnapLocked,
+		hasAutoSnapPoint,
+		lockedSnapPoint,
+		maxSnapPoint,
+		minSnapPoint,
+		snapPoints,
+	]);
 
-	const onUpdate = useStableCallbackValue(
-		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
+	const onUpdate = useCallback(
+		(event: PanGestureEvent) => {
 			"worklet";
 
-			if (stores.animations.willAnimate.value) {
-				stores.animations.willAnimate.value = 0;
+			if (animations.willAnimate.get()) {
+				animations.willAnimate.set(0);
 			}
 
-			const { translationX, translationY } = event;
+			const { translationX: rawTX, translationY: rawTY } = event;
 			const { width, height } = dimensions;
+			const x = applyGestureSensitivity(rawTX, policy.gestureSensitivity);
+			const y = applyGestureSensitivity(rawTY, policy.gestureSensitivity);
+			const normX = clamp(normalizeGestureTranslation(x, width), -1, 1);
+			const normY = clamp(normalizeGestureTranslation(y, height), -1, 1);
 
-			stores.gestureAnimationValues.x.value = translationX;
-			stores.gestureAnimationValues.y.value = translationY;
-			stores.gestureAnimationValues.normX.value = normalizeGestureTranslation(
-				translationX,
-				width,
-			);
-			stores.gestureAnimationValues.normY.value = normalizeGestureTranslation(
-				translationY,
-				height,
-			);
+			gestures.x.set(x);
+			gestures.y.set(y);
+			gestures.normX.set(normX);
+			gestures.normY.set(normY);
 
 			if (!policy.gestureDrivesProgress) {
 				return;
 			}
 
 			const isHorizontal = policy.snapAxis === "horizontal";
-			const translation = isHorizontal ? translationX : translationY;
+			const translation = isHorizontal ? x : y;
+
 			const dimension = isHorizontal ? width : height;
 			const baseSign = -1;
 			const sign = policy.directions.snapAxisInverted ? -baseSign : baseSign;
@@ -99,36 +112,50 @@ export const useSnapPanBehavior = ({
 				resolveRuntimeSnapPoints({
 					snapPoints,
 					hasAutoSnapPoint,
-					resolvedAutoSnapPoint: stores.resolvedAutoSnapPointValue.value,
+					resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 					minSnapPoint,
 					maxSnapPoint,
 					canDismiss: config.canDismiss,
 				});
 
 			const maxProgressForGesture = policy.gestureSnapLocked
-				? lockedSnapPoint.value
+				? lockedSnapPoint.get()
 				: resolvedMaxSnapPoint;
 			const minProgressForGesture = policy.gestureSnapLocked
 				? config.canDismiss
 					? 0
-					: lockedSnapPoint.value
+					: lockedSnapPoint.get()
 				: resolvedMinSnapPoint;
 
-			stores.animations.progress.value = Math.max(
-				minProgressForGesture,
-				Math.min(
-					maxProgressForGesture,
-					gestureStartProgress.value + progressDelta,
+			animations.progress.set(
+				Math.max(
+					minProgressForGesture,
+					Math.min(
+						maxProgressForGesture,
+						gestureStartProgress.get() + progressDelta,
+					),
 				),
 			);
 		},
+		[
+			config.canDismiss,
+			dimensions,
+			gestureStartProgress,
+			gestures,
+			animations,
+			hasAutoSnapPoint,
+			lockedSnapPoint,
+			maxSnapPoint,
+			minSnapPoint,
+			policy,
+			snapPoints,
+			system,
+		],
 	);
 
-	const onEnd = useStableCallbackValue(
-		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
+	const onEnd = useCallback(
+		(event: PanGestureEvent) => {
 			"worklet";
-
-			stores.animations.willAnimate.value = 0;
 
 			const isHorizontal = policy.snapAxis === "horizontal";
 			const axisVelocity = isHorizontal ? event.velocityX : event.velocityY;
@@ -140,30 +167,32 @@ export const useSnapPanBehavior = ({
 			const { resolvedSnapPoints } = resolveRuntimeSnapPoints({
 				snapPoints,
 				hasAutoSnapPoint,
-				resolvedAutoSnapPoint: stores.resolvedAutoSnapPointValue.value,
+				resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 				minSnapPoint,
 				maxSnapPoint,
 				canDismiss: config.canDismiss,
 			});
 
 			const result = determineSnapTarget({
-				currentProgress: stores.animations.progress.value,
+				currentProgress: animations.progress.get(),
 				snapPoints: policy.gestureSnapLocked
-					? [lockedSnapPoint.value]
+					? [lockedSnapPoint.get()]
 					: resolvedSnapPoints,
 				velocity: snapVelocity,
 				dimension: axisDimension,
-				velocityFactor: policy.snapVelocityImpact,
+				velocityFactor: policy.gestureSnapVelocityImpact,
 				canDismiss: config.canDismiss,
 			});
 
 			const shouldDismiss = result.shouldDismiss;
-			const targetProgress = result.targetProgress;
+			const shouldTarget = result.targetProgress;
+
 			const isSnapping = !shouldDismiss;
 
 			const spec = shouldDismiss
 				? policy.transitionSpec?.close
 				: policy.transitionSpec?.open;
+
 			const effectiveSpec = isSnapping
 				? {
 						open: policy.transitionSpec?.expand ?? DefaultSnapSpec,
@@ -173,43 +202,50 @@ export const useSnapPanBehavior = ({
 
 			resetGestureValues({
 				spec,
-				gestures: stores.gestureAnimationValues,
+				gestures,
 				shouldDismiss,
 				event,
 				dimensions,
 				gestureReleaseVelocityScale: policy.gestureReleaseVelocityScale,
-				gestureReleaseVelocityMax: policy.gestureReleaseVelocityMax,
 			});
 
-			const snapDirection = Math.sign(
-				targetProgress - stores.animations.progress.value,
-			);
-			const normalizedAxisVelocity = Math.abs(
-				normalizeVelocity(
-					axisVelocity,
-					axisDimension,
-					policy.gestureReleaseVelocityMax,
-				),
-			);
-			const signedSnapVelocity =
-				snapDirection *
-				normalizedAxisVelocity *
-				policy.gestureReleaseVelocityScale;
+			const snapDirection = Math.sign(shouldTarget - animations.progress.get());
 			const initialVelocity =
 				snapDirection === 0
 					? 0
-					: clampVelocity(signedSnapVelocity, policy.gestureReleaseVelocityMax);
+					: snapDirection *
+						Math.abs(
+							getPanReleaseHandoffVelocity(
+								axisVelocity,
+								axisDimension,
+								policy.gestureReleaseVelocityScale,
+							),
+						);
 
 			animateToProgress({
-				target: targetProgress,
+				target: shouldTarget,
 				onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				spec: effectiveSpec,
-				animations: stores.animations,
-				targetProgress: stores.targetProgressValue,
+				animations,
+				targetProgress: system.targetProgress,
 				emitWillAnimate: false,
 				initialVelocity,
 			});
 		},
+		[
+			animations,
+			config.canDismiss,
+			dimensions,
+			dismissScreen,
+			gestures,
+			hasAutoSnapPoint,
+			lockedSnapPoint,
+			maxSnapPoint,
+			minSnapPoint,
+			policy,
+			snapPoints,
+			system,
+		],
 	);
 
 	return { onStart, onUpdate, onEnd };

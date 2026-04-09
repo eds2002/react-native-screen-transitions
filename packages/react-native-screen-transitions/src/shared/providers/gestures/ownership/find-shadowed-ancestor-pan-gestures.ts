@@ -1,4 +1,4 @@
-import type { GestureType } from "react-native-gesture-handler";
+import type { PanGesture } from "react-native-gesture-handler";
 import {
 	type ClaimedDirections,
 	DIRECTIONS,
@@ -11,10 +11,10 @@ import type { GestureContextType } from "../types";
  */
 export function findShadowedAncestorPanGestures(
 	selfClaims: ClaimedDirections,
-	ancestorContext: GestureContextType | null | undefined,
-): GestureType[] {
-	const shadowedGestures: GestureType[] = [];
-	let ancestor = ancestorContext;
+	gestureContext: GestureContextType | null | undefined,
+): PanGesture[] {
+	const shadowedGestures: PanGesture[] = [];
+	let ancestor = gestureContext;
 
 	while (ancestor) {
 		const shadowsAncestor = DIRECTIONS.some(
@@ -25,7 +25,7 @@ export function findShadowedAncestorPanGestures(
 			shadowedGestures.push(ancestor.panGesture);
 		}
 
-		ancestor = ancestor.ancestorContext;
+		ancestor = ancestor.gestureContext;
 	}
 
 	return shadowedGestures;

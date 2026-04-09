@@ -1,7 +1,7 @@
 import type { GestureContextType } from "../../providers/gestures";
 import type { ScreenGestureTarget } from "./types";
 
-type ScreenGestureRef = GestureContextType["panGestureRef"] | null;
+type ScreenGesture = GestureContextType["panGesture"] | null;
 
 type Params = {
 	target: ScreenGestureTarget | undefined;
@@ -16,16 +16,12 @@ const isAncestorTarget = (
 
 function getGestureAncestors(self: GestureContextType): GestureContextType[] {
 	const ancestors: GestureContextType[] = [];
-	const startIsolated = self.isIsolated;
-	let current = self.ancestorContext;
+
+	let current = self.gestureContext;
 
 	while (current) {
-		if (current.isIsolated !== startIsolated) {
-			break;
-		}
-
 		ancestors.push(current);
-		current = current.ancestorContext;
+		current = current.gestureContext;
 	}
 
 	return ancestors;
@@ -34,23 +30,23 @@ function getGestureAncestors(self: GestureContextType): GestureContextType[] {
 export function resolveScreenGestureTarget({
 	target,
 	self,
-}: Params): ScreenGestureRef {
+}: Params): ScreenGesture {
 	if (!self) {
 		return null;
 	}
 
 	if (!target || target === "self") {
-		return self.panGestureRef ?? null;
+		return self.panGesture ?? null;
 	}
 
 	const ancestors = getGestureAncestors(self);
 
 	if (target === "parent") {
-		return ancestors[0]?.panGestureRef ?? null;
+		return ancestors[0]?.panGesture ?? null;
 	}
 
 	if (target === "root") {
-		return ancestors[ancestors.length - 1]?.panGestureRef ?? null;
+		return ancestors[ancestors.length - 1]?.panGesture ?? null;
 	}
 
 	if (!isAncestorTarget(target)) {
@@ -62,5 +58,5 @@ export function resolveScreenGestureTarget({
 		return null;
 	}
 
-	return ancestors[depth - 1]?.panGestureRef ?? null;
+	return ancestors[depth - 1]?.panGesture ?? null;
 }

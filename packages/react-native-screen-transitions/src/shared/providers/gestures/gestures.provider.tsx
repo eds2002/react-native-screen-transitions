@@ -12,13 +12,11 @@
  */
 
 import { useMemo } from "react";
+import { useSimultaneousGestures } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import createProvider from "../../utils/create-provider";
-import {
-	useDescriptorDerivations,
-	useDescriptors,
-} from "../screen/descriptors";
 import { useBuildPanGesture } from "./builders/use-build-pan-gesture";
+import { useBuildPinchGesture } from "./builders/use-build-pinch-gesture";
 import { useScreenGestureConfig } from "./config/use-screen-gesture-config";
 import { useRegisterDirectionClaims } from "./ownership/use-register-direction-claims";
 import {
@@ -39,45 +37,50 @@ export const {
 	ScreenGestureProviderProps,
 	GestureContextType
 >(({ children }): { value: GestureContextType; children: React.ReactNode } => {
-	const ancestorContext: GestureContextType | null = useGestureContext();
-
-	const config = useScreenGestureConfig({
-		ancestorContext,
-	});
+	const gestureContext = useGestureContext();
+	const config = useScreenGestureConfig();
 
 	const scrollConfig = useSharedValue<ScrollConfig | null>(null);
 	const childDirectionClaims = useSharedValue<DirectionClaimMap>(NO_CLAIMS);
 
-	const { panGesture, panGestureRef } = useBuildPanGesture({
+	const panGesture = useBuildPanGesture({
 		scrollConfig,
-		ancestorContext,
 		config,
 		childDirectionClaims,
 	});
 
+	const pinchGesture = useBuildPinchGesture({
+		config,
+	});
+
+	const detectorGesture = useSimultaneousGestures(
+		...(pinchGesture ? [panGesture, pinchGesture] : [panGesture]),
+	);
+
 	const value = useMemo<GestureContextType>(
 		() => ({
+			detectorGesture,
 			panGesture,
-			panGestureRef,
+			pinchGesture,
 			scrollConfig,
-			ancestorContext,
+			gestureContext,
 			gestureEnabled: config.gestureEnabled,
-			isIsolated: false,
 			claimedDirections: config.claimedDirections,
 			childDirectionClaims,
 		}),
 		[
+			detectorGesture,
 			panGesture,
-			panGestureRef,
+			pinchGesture,
 			scrollConfig,
-			ancestorContext,
+			gestureContext,
 			config.gestureEnabled,
 			config.claimedDirections,
 			childDirectionClaims,
 		],
 	);
 
-	useRegisterDirectionClaims(ancestorContext, config.claimedDirections);
+	useRegisterDirectionClaims(config.claimedDirections);
 
 	return {
 		value,

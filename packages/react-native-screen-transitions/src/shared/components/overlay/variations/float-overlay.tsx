@@ -15,7 +15,7 @@ import { OverlayHost } from "./overlay-host";
  * Float overlay component that renders above all screens.
  * Gets routes and descriptors from stack context.
  */
-export function FloatOverlay() {
+export default function FloatOverlay() {
 	const { scenes, optimisticFocusedIndex, flags, routes, routeKeys } =
 		useStack();
 	const focusedIndex = useOptimisticFocusedIndex(

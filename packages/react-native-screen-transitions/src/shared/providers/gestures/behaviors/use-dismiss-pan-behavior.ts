@@ -1,16 +1,16 @@
+import { useCallback } from "react";
 import { useWindowDimensions } from "react-native";
-import type {
-	GestureStateChangeEvent,
-	GestureUpdateEvent,
-	PanGestureHandlerEventPayload,
-} from "react-native-gesture-handler";
+import type { PanGestureEvent } from "react-native-gesture-handler";
+import { clamp } from "react-native-reanimated";
 import { TRUE } from "../../../constants";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
-import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
+import { AnimationStore } from "../../../stores/animation.store";
+import { GestureStore } from "../../../stores/gesture.store";
+import { SystemStore } from "../../../stores/system.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { clampVelocity } from "../helpers/gesture-directions";
 import {
-	calculateProgressSpringVelocity,
+	applyGestureSensitivity,
+	getPanReleaseProgressVelocity,
 	mapGestureToProgress,
 	normalizeGestureTranslation,
 } from "../helpers/gesture-physics";
@@ -19,41 +19,45 @@ import { determineDismissal } from "../helpers/gesture-targets";
 import type { PanGestureRuntime } from "../types";
 
 export const useDismissPanBehavior = ({
+	config,
 	policy,
-	stores,
 	gestureStartProgress,
 }: PanGestureRuntime) => {
 	const { dismissScreen } = useNavigationHelpers();
 	const dimensions = useWindowDimensions();
-	const onStart = useStableCallbackValue(() => {
-		"worklet";
-		stores.animations.willAnimate.value = TRUE;
-		stores.gestureAnimationValues.dragging.value = TRUE;
-		stores.gestureAnimationValues.dismissing.value = 0;
-		gestureStartProgress.value = stores.animations.progress.value;
-	});
 
-	const onUpdate = useStableCallbackValue(
-		(event: GestureUpdateEvent<PanGestureHandlerEventPayload>) => {
+	const gestures = GestureStore.getBag(config.routeKey);
+	const animations = AnimationStore.getBag(config.routeKey);
+	const system = SystemStore.getBag(config.routeKey);
+
+	const onStart = useCallback(() => {
+		"worklet";
+		animations.willAnimate.set(TRUE);
+		gestures.dragging.set(TRUE);
+		gestures.dismissing.set(0);
+		gestureStartProgress.set(animations.progress.get());
+	}, [gestureStartProgress, animations, gestures]);
+
+	const onUpdate = useCallback(
+		(event: PanGestureEvent) => {
 			"worklet";
 
-			if (stores.animations.willAnimate.value) {
-				stores.animations.willAnimate.value = 0;
+			if (animations.willAnimate.get()) {
+				animations.willAnimate.set(0);
 			}
 
-			const { translationX, translationY } = event;
+			const { translationX: rawTX, translationY: rawTY } = event;
 			const { width, height } = dimensions;
 
-			stores.gestureAnimationValues.x.value = translationX;
-			stores.gestureAnimationValues.y.value = translationY;
-			stores.gestureAnimationValues.normX.value = normalizeGestureTranslation(
-				translationX,
-				width,
-			);
-			stores.gestureAnimationValues.normY.value = normalizeGestureTranslation(
-				translationY,
-				height,
-			);
+			const x = applyGestureSensitivity(rawTX, policy.gestureSensitivity);
+			const y = applyGestureSensitivity(rawTY, policy.gestureSensitivity);
+			const normX = clamp(normalizeGestureTranslation(x, width), -1, 1);
+			const normY = clamp(normalizeGestureTranslation(y, height), -1, 1);
+
+			gestures.x.set(x);
+			gestures.y.set(y);
+			gestures.normX.set(normX);
+			gestures.normY.set(normY);
 
 			if (!policy.gestureDrivesProgress) {
 				return;
@@ -61,46 +65,32 @@ export const useDismissPanBehavior = ({
 
 			let maxProgress = 0;
 
-			if (policy.directions.horizontal && translationX > 0) {
-				maxProgress = Math.max(
-					maxProgress,
-					mapGestureToProgress(translationX, width),
-				);
+			if (policy.directions.horizontal && x > 0) {
+				maxProgress = Math.max(maxProgress, mapGestureToProgress(x, width));
 			}
 
-			if (policy.directions.horizontalInverted && translationX < 0) {
-				maxProgress = Math.max(
-					maxProgress,
-					mapGestureToProgress(-translationX, width),
-				);
+			if (policy.directions.horizontalInverted && x < 0) {
+				maxProgress = Math.max(maxProgress, mapGestureToProgress(-x, width));
 			}
 
-			if (policy.directions.vertical && translationY > 0) {
-				maxProgress = Math.max(
-					maxProgress,
-					mapGestureToProgress(translationY, height),
-				);
+			if (policy.directions.vertical && y > 0) {
+				maxProgress = Math.max(maxProgress, mapGestureToProgress(y, height));
 			}
 
-			if (policy.directions.verticalInverted && translationY < 0) {
-				maxProgress = Math.max(
-					maxProgress,
-					mapGestureToProgress(-translationY, height),
-				);
+			if (policy.directions.verticalInverted && y < 0) {
+				maxProgress = Math.max(maxProgress, mapGestureToProgress(-y, height));
 			}
 
-			stores.animations.progress.value = Math.max(
-				0,
-				Math.min(1, gestureStartProgress.value - maxProgress),
+			animations.progress.set(
+				clamp(gestureStartProgress.get() - maxProgress, 0, 1),
 			);
 		},
+		[dimensions, gestureStartProgress, animations, gestures, policy],
 	);
 
-	const onEnd = useStableCallbackValue(
-		(event: GestureStateChangeEvent<PanGestureHandlerEventPayload>) => {
+	const onEnd = useCallback(
+		(event: PanGestureEvent) => {
 			"worklet";
-
-			stores.animations.willAnimate.value = 0;
 
 			const result = determineDismissal({
 				event,
@@ -110,43 +100,38 @@ export const useDismissPanBehavior = ({
 			});
 
 			const shouldDismiss = result.shouldDismiss;
-			const targetProgress = shouldDismiss ? 0 : 1;
+			const adjustedTargetProgress = shouldDismiss ? 0 : 1;
+			const initialVelocity = getPanReleaseProgressVelocity({
+				animations,
+				shouldDismiss,
+				event,
+				dimensions,
+				directions: policy.directions,
+				gestureReleaseVelocityScale: policy.gestureReleaseVelocityScale,
+			});
 
 			resetGestureValues({
 				spec: shouldDismiss
 					? policy.transitionSpec?.close
 					: policy.transitionSpec?.open,
-				gestures: stores.gestureAnimationValues,
+				gestures,
 				shouldDismiss,
 				event,
 				dimensions,
 				gestureReleaseVelocityScale: policy.gestureReleaseVelocityScale,
-				gestureReleaseVelocityMax: policy.gestureReleaseVelocityMax,
 			});
-
-			const initialVelocity = calculateProgressSpringVelocity({
-				animations: stores.animations,
-				shouldDismiss,
-				event,
-				dimensions,
-				directions: policy.directions,
-			});
-
-			const scaledInitialVelocity = clampVelocity(
-				initialVelocity * policy.gestureReleaseVelocityScale,
-				policy.gestureReleaseVelocityMax,
-			);
 
 			animateToProgress({
-				target: targetProgress,
+				target: adjustedTargetProgress,
 				onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				spec: policy.transitionSpec,
-				animations: stores.animations,
-				targetProgress: stores.targetProgressValue,
 				emitWillAnimate: false,
-				// initialVelocity: scaledInitialVelocity,
+				targetProgress: system.targetProgress,
+				animations,
+				initialVelocity,
 			});
 		},
+		[animations, dimensions, dismissScreen, gestures, policy, system],
 	);
 
 	return { onStart, onUpdate, onEnd };

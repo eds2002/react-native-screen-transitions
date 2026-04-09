@@ -6,37 +6,32 @@ import {
 	type Direction,
 } from "../../../types/ownership.types";
 import { useDescriptorDerivations } from "../../screen/descriptors";
+import { useGestureContext } from "../gestures.provider";
 import type { GestureContextType } from "../types";
 
 /**
  * Registers direction claims on ancestors shadowed by the current screen.
  */
 export function useRegisterDirectionClaims(
-	ancestorContext: GestureContextType | null | undefined,
 	claimedDirections: ClaimedDirections,
 ) {
+	const gestureContext = useGestureContext();
 	const { isTopMostScreen, currentScreenKey } = useDescriptorDerivations();
+
 	useEffect(() => {
-		if (!isTopMostScreen || !ancestorContext) {
+		if (!isTopMostScreen || !gestureContext) {
 			return;
 		}
 
-		const isDismissing = GestureStore.getBag(currentScreenKey).dismissing;
+		const isDismissing = GestureStore.getValue(currentScreenKey, "dismissing");
 
 		const claimedAncestors: Array<{
 			ancestor: GestureContextType;
 			directions: Direction[];
 		}> = [];
 
-		let ancestor: GestureContextType | null = ancestorContext;
+		let ancestor: GestureContextType | null = gestureContext;
 		while (ancestor) {
-			/**
-			 * NOTE:
-			 * Blank stack can now handle itself as isolated, I think react navigation handles itself correctly in this scenario?
-			 * Is this check even needed anymore?
-			 */
-			// if (ancestor.isIsolated !== isIsolated) break;
-
 			const shadowedDirections: Direction[] = [];
 			for (const dir of DIRECTIONS) {
 				if (claimedDirections[dir] && ancestor.claimedDirections?.[dir]) {
@@ -46,19 +41,19 @@ export function useRegisterDirectionClaims(
 
 			if (shadowedDirections.length > 0) {
 				claimedAncestors.push({ ancestor, directions: shadowedDirections });
-				const newClaims = { ...ancestor.childDirectionClaims.value };
+				const newClaims = { ...ancestor.childDirectionClaims.get() };
 				for (const dir of shadowedDirections) {
 					newClaims[dir] = { routeKey: currentScreenKey, isDismissing };
 				}
-				ancestor.childDirectionClaims.value = newClaims;
+				ancestor.childDirectionClaims.set(newClaims);
 			}
 
-			ancestor = ancestor.ancestorContext;
+			ancestor = ancestor.gestureContext;
 		}
 
 		return () => {
 			for (const { ancestor, directions } of claimedAncestors) {
-				const currentClaims = ancestor.childDirectionClaims.value;
+				const currentClaims = ancestor.childDirectionClaims.get();
 				const newClaims = { ...currentClaims };
 				let needsUpdate = false;
 
@@ -70,9 +65,9 @@ export function useRegisterDirectionClaims(
 				}
 
 				if (needsUpdate) {
-					ancestor.childDirectionClaims.value = newClaims;
+					ancestor.childDirectionClaims.set(newClaims);
 				}
 			}
 		};
-	}, [ancestorContext, claimedDirections, currentScreenKey, isTopMostScreen]);
+	}, [gestureContext, claimedDirections, currentScreenKey, isTopMostScreen]);
 }

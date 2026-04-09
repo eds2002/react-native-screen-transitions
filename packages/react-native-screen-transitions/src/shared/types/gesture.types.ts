@@ -1,9 +1,13 @@
-export type GestureDirection =
+export type PanGestureDirection =
 	| "horizontal"
 	| "horizontal-inverted"
 	| "vertical"
 	| "vertical-inverted"
 	| "bidirectional";
+
+export type PinchGestureDirection = "pinch-in" | "pinch-out";
+
+export type GestureDirection = PanGestureDirection | PinchGestureDirection;
 
 export type ActivationArea = "edge" | "screen";
 
@@ -14,7 +18,7 @@ export type SideActivation = {
 	bottom?: ActivationArea;
 };
 
-export enum GestureOffsetState {
+export enum GestureActivationState {
 	PENDING,
 	PASSED,
 	FAILED,
@@ -52,6 +56,23 @@ export type GestureValues = {
 	 */
 	normY: number;
 	/**
+	 * The live pinch scale. Idle is 1.
+	 */
+	scale: number;
+	/**
+	 * The live normalized pinch scale delta (-1 to 1).
+	 * Negative values represent pinch-in, positive values represent pinch-out.
+	 */
+	normScale: number;
+	/**
+	 * The live pinch focal point x-position.
+	 */
+	focalX: number;
+	/**
+	 * The live pinch focal point y-position.
+	 */
+	focalY: number;
+	/**
 	 * A flag indicating if the screen is in the process of dismissing (0 or 1).
 	 */
 	dismissing: number;
@@ -60,7 +81,7 @@ export type GestureValues = {
 	 */
 	dragging: number;
 	/**
-	 * The initial direction that activated the gesture.
+	 * The initial pan direction that activated the gesture.
 	 */
-	direction: Omit<GestureDirection, "bidirectional"> | null;
+	direction: Omit<PanGestureDirection, "bidirectional"> | null;
 };

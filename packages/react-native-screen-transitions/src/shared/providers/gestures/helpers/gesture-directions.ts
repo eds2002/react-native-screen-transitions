@@ -1,6 +1,8 @@
 import type {
 	GestureDirection,
 	GestureDirections,
+	PanGestureDirection,
+	PinchGestureDirection,
 } from "../../../types/gesture.types";
 import type { Direction } from "../../../types/ownership.types";
 import { logger } from "../../../utils/logger";
@@ -10,15 +12,49 @@ interface ResolveGestureDirectionsProps {
 	hasSnapPoints: boolean;
 }
 
+export const isPinchGestureDirection = (
+	direction: GestureDirection,
+): direction is PinchGestureDirection => {
+	return direction === "pinch-in" || direction === "pinch-out";
+};
+
+export const isPanGestureDirection = (
+	direction: GestureDirection,
+): direction is PanGestureDirection => {
+	return !isPinchGestureDirection(direction);
+};
+
+export const getPanGestureDirections = (
+	gestureDirection: GestureDirection | GestureDirection[],
+): PanGestureDirection[] => {
+	const directions = Array.isArray(gestureDirection)
+		? gestureDirection
+		: [gestureDirection];
+
+	return directions.filter(isPanGestureDirection);
+};
+
+export const getPinchGestureDirections = (
+	gestureDirection: GestureDirection | GestureDirection[],
+): PinchGestureDirection[] => {
+	const directions = Array.isArray(gestureDirection)
+		? gestureDirection
+		: [gestureDirection];
+
+	return directions.filter(isPinchGestureDirection);
+};
+
 export const warnOnSnapDirectionArray = ({
 	gestureDirection,
 	hasSnapPoints,
 }: ResolveGestureDirectionsProps) => {
-	if (!hasSnapPoints || !Array.isArray(gestureDirection)) return;
+	const panDirections = getPanGestureDirections(gestureDirection);
+
+	if (!hasSnapPoints || panDirections.length <= 1) return;
 
 	logger.warn(
 		`gestureDirection array is not supported with snapPoints. ` +
-			`Only the first direction "${gestureDirection[0]}" will be used. ` +
+			`Only the first pan direction "${panDirections[0]}" will be used. ` +
 			`Snap points define a single axis of movement, so only one gesture direction is needed.`,
 	);
 };
@@ -27,15 +63,15 @@ export const resolveGestureDirections = ({
 	gestureDirection,
 	hasSnapPoints,
 }: ResolveGestureDirectionsProps): GestureDirections => {
-	const effectiveDirection = hasSnapPoints
-		? Array.isArray(gestureDirection)
-			? gestureDirection[0]
-			: gestureDirection
-		: gestureDirection;
+	const panDirections = getPanGestureDirections(gestureDirection);
+	const firstPanDirection = panDirections[0];
+	const effectiveDirection = hasSnapPoints ? firstPanDirection : panDirections;
 
 	const directionsArray = Array.isArray(effectiveDirection)
 		? effectiveDirection
-		: [effectiveDirection];
+		: effectiveDirection
+			? [effectiveDirection]
+			: [];
 
 	const isBidirectional = directionsArray.includes("bidirectional");
 
@@ -88,10 +124,4 @@ export const isExpandGestureForDirection = (
 	return snapAxisInverted
 		? swipeDirection === "vertical"
 		: swipeDirection === "vertical-inverted";
-};
-
-export const clampVelocity = (value: number, maxMagnitude: number) => {
-	"worklet";
-	const max = Math.max(0, Math.abs(maxMagnitude));
-	return Math.max(-max, Math.min(max, value));
 };

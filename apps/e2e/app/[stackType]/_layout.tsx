@@ -219,6 +219,10 @@ export default function BlankStackLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<StackNavigator.Screen
+				name="gestures"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
 				name="nested"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>

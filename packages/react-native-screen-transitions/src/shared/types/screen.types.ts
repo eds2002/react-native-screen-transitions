@@ -84,9 +84,19 @@ export type ScreenTransitionConfig = {
 	gestureEnabled?: boolean;
 
 	/**
-	 * The direction of the swipe gesture used to dismiss the screen.
+	 * The direction(s) of the screen gesture used to dismiss the screen.
+	 *
+	 * Supports pan directions (`horizontal`, `vertical`, etc.) and pinch
+	 * directions (`pinch-in`, `pinch-out`).
 	 */
 	gestureDirection?: GestureDirection | GestureDirection[];
+
+	/**
+	 * Controls how directly live gesture movement maps into transition progress.
+	 * Lower values feel less sensitive, higher values feel more responsive.
+	 * @default 1
+	 */
+	gestureSensitivity?: number;
 
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.
@@ -99,29 +109,18 @@ export type ScreenTransitionConfig = {
 	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
 	 * @default 0.1
 	 */
-	snapVelocityImpact?: number;
+	gestureSnapVelocityImpact?: number;
 
 	/**
 	 * Multiplies gesture release velocity used for spring animation energy.
 	 *
 	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
-	 * or snap target selection (`snapVelocityImpact`). It only changes how fast
+	 * or snap target selection (`gestureSnapVelocityImpact`). It only changes how fast
 	 * the post-release animation feels.
 	 *
 	 * @default 1
 	 */
 	gestureReleaseVelocityScale?: number;
-
-	/**
-	 * Caps the absolute post-scale release velocity used by spring animations.
-	 *
-	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
-	 * or snap target selection (`snapVelocityImpact`). It only bounds release
-	 * animation intensity after `gestureReleaseVelocityScale` is applied.
-	 *
-	 * @default 3.2
-	 */
-	gestureReleaseVelocityMax?: number;
 
 	/**
 	 * Distance threshold for gesture recognition throughout the screen.

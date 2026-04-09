@@ -6,15 +6,11 @@ import {
 	useDescriptorDerivations,
 	useDescriptors,
 } from "../../screen/descriptors";
-import type { GestureContextType, ScreenGestureConfig } from "../types";
+import { useGestureContext } from "../gestures.provider";
+import type { ScreenGestureConfig } from "../types";
 
-interface UseScreenGestureConfigProps {
-	ancestorContext: GestureContextType | null;
-}
-
-export function useScreenGestureConfig({
-	ancestorContext,
-}: UseScreenGestureConfigProps): ScreenGestureConfig {
+export function useScreenGestureConfig(): ScreenGestureConfig {
+	const gestureContext = useGestureContext();
 	const {
 		current: {
 			options: { gestureEnabled, gestureDirection, snapPoints },
@@ -46,7 +42,7 @@ export function useScreenGestureConfig({
 			gestureEnabled: nextGestureEnabled,
 			effectiveSnapPoints,
 			claimedDirections,
-			ownershipStatus: resolveOwnership(claimedDirections, ancestorContext),
+			ownershipStatus: resolveOwnership(claimedDirections, gestureContext),
 		};
 	}, [
 		currentScreenKey,
@@ -54,6 +50,6 @@ export function useScreenGestureConfig({
 		gestureEnabled,
 		gestureDirection,
 		snapPoints,
-		ancestorContext,
+		gestureContext,
 	]);
 }

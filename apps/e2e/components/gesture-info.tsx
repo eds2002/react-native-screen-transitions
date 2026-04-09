@@ -2,7 +2,7 @@ import { StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/theme";
 
 export type GestureBehavior = {
-	direction: "down" | "up" | "right" | "left";
+	direction: "down" | "up" | "right" | "left" | "pinch";
 	owner: string | null;
 	result: string;
 };
@@ -19,6 +19,7 @@ const DIRECTION_SYMBOLS: Record<GestureBehavior["direction"], string> = {
 	up: "\u2191",
 	right: "\u2192",
 	left: "\u2190",
+	pinch: "\u2922",
 };
 
 export function GestureInfo({
@@ -47,30 +48,70 @@ export function GestureInfo({
 					Expected Behavior
 				</Text>
 				<View style={styles.table}>
-					<View style={[styles.tableHeader, { borderBottomColor: theme.separator }]}>
-						<Text style={[styles.tableCell, styles.headerCell, styles.dirCell, { color: theme.textSecondary }]}>
-							Drag
+					<View
+						style={[styles.tableHeader, { borderBottomColor: theme.separator }]}
+					>
+						<Text
+							style={[
+								styles.tableCell,
+								styles.headerCell,
+								styles.dirCell,
+								{ color: theme.textSecondary },
+							]}
+						>
+							Gesture
 						</Text>
 						<Text
-							style={[styles.tableCell, styles.headerCell, styles.ownerCell, { color: theme.textSecondary }]}
+							style={[
+								styles.tableCell,
+								styles.headerCell,
+								styles.ownerCell,
+								{ color: theme.textSecondary },
+							]}
 						>
 							Owner
 						</Text>
 						<Text
-							style={[styles.tableCell, styles.headerCell, styles.resultCell, { color: theme.textSecondary }]}
+							style={[
+								styles.tableCell,
+								styles.headerCell,
+								styles.resultCell,
+								{ color: theme.textSecondary },
+							]}
 						>
 							Result
 						</Text>
 					</View>
-					{behaviors.map((b, i) => (
-						<View key={i} style={styles.tableRow}>
-							<Text style={[styles.tableCell, styles.dirCell, { color: theme.text }]}>
+					{behaviors.map((b) => (
+						<View
+							key={`${b.direction}:${b.owner ?? "none"}:${b.result}`}
+							style={styles.tableRow}
+						>
+							<Text
+								style={[
+									styles.tableCell,
+									styles.dirCell,
+									{ color: theme.text },
+								]}
+							>
 								{DIRECTION_SYMBOLS[b.direction]}
 							</Text>
-							<Text style={[styles.tableCell, styles.ownerCell, { color: theme.text }]}>
+							<Text
+								style={[
+									styles.tableCell,
+									styles.ownerCell,
+									{ color: theme.text },
+								]}
+							>
 								{b.owner ?? "\u2014"}
 							</Text>
-							<Text style={[styles.tableCell, styles.resultCell, { color: theme.text }]}>
+							<Text
+								style={[
+									styles.tableCell,
+									styles.resultCell,
+									{ color: theme.text },
+								]}
+							>
 								{b.result}
 							</Text>
 						</View>

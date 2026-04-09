@@ -1,9 +1,5 @@
-import type {
-	GestureStateChangeEvent,
-	PanGestureHandlerEventPayload,
-} from "react-native-gesture-handler";
+import type { PanGestureEvent } from "react-native-gesture-handler";
 import {
-	DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	FALSE,
 	TRUE,
@@ -13,17 +9,16 @@ import type { AnimationConfig } from "../../../types/animation.types";
 import { animateMany } from "../../../utils/animation/animate-many";
 import {
 	calculateRestoreVelocityTowardZero,
-	normalizeVelocity,
+	getPanReleaseHandoffVelocity,
 } from "./gesture-physics";
 
 interface ResetGestureValuesProps {
 	spec?: AnimationConfig;
 	gestures: GestureStoreMap;
 	shouldDismiss: boolean;
-	event: GestureStateChangeEvent<PanGestureHandlerEventPayload>;
+	event: PanGestureEvent;
 	dimensions: { width: number; height: number };
 	gestureReleaseVelocityScale?: number;
-	gestureReleaseVelocityMax?: number;
 }
 
 export const resetGestureValues = ({
@@ -33,80 +28,103 @@ export const resetGestureValues = ({
 	event,
 	dimensions,
 	gestureReleaseVelocityScale,
-	gestureReleaseVelocityMax,
 }: ResetGestureValuesProps) => {
 	"worklet";
 	const resolvedGestureReleaseVelocityScale =
 		gestureReleaseVelocityScale ?? DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE;
-	const resolvedGestureReleaseVelocityMax =
-		gestureReleaseVelocityMax ?? DEFAULT_GESTURE_RELEASE_VELOCITY_MAX;
-
-	const effectiveReleaseVelocityMax = Math.max(
-		0,
-		Math.abs(resolvedGestureReleaseVelocityMax),
-	);
-
-	const vxNorm = normalizeVelocity(
+	const vxProgress = getPanReleaseHandoffVelocity(
 		event.velocityX,
 		dimensions.width,
-		effectiveReleaseVelocityMax,
+		resolvedGestureReleaseVelocityScale,
 	);
-	const vyNorm = normalizeVelocity(
+	const vyProgress = getPanReleaseHandoffVelocity(
 		event.velocityY,
 		dimensions.height,
-		effectiveReleaseVelocityMax,
+		resolvedGestureReleaseVelocityScale,
 	);
 
 	// Ensure spring starts moving toward zero using normalized gesture values for direction.
 	const nx =
-		gestures.normX.value || event.translationX / Math.max(1, dimensions.width);
+		gestures.normX.get() || event.translationX / Math.max(1, dimensions.width);
 
 	const ny =
-		gestures.normY.value || event.translationY / Math.max(1, dimensions.height);
+		gestures.normY.get() || event.translationY / Math.max(1, dimensions.height);
 
-	const vxTowardZero = calculateRestoreVelocityTowardZero(nx, vxNorm);
-	const vyTowardZero = calculateRestoreVelocityTowardZero(ny, vyNorm);
+	const vxTowardZero = calculateRestoreVelocityTowardZero(nx, vxProgress);
+	const vyTowardZero = calculateRestoreVelocityTowardZero(ny, vyProgress);
 
-	// When dismissing, use raw fling velocity (scaled by gestureReleaseVelocityScale)
-	// so the spring carries the gesture's momentum. The spec controls the
-	// spring character — use an underdamped spec (e.g. FlingSpec) for orbit/fling.
-	const resetVX = shouldDismiss
-		? vxNorm * resolvedGestureReleaseVelocityScale
-		: vxTowardZero;
-
-	const resetVY = shouldDismiss
-		? vyNorm * resolvedGestureReleaseVelocityScale
-		: vyTowardZero;
+	const resetNormVX = shouldDismiss ? vxProgress : vxTowardZero;
+	const resetNormVY = shouldDismiss ? vyProgress : vyTowardZero;
+	const resetPixelVX = resetNormVX * dimensions.width;
+	const resetPixelVY = resetNormVY * dimensions.height;
 
 	animateMany({
 		items: [
 			{
 				value: gestures.x,
 				toValue: 0,
-				config: { ...spec, velocity: resetVX },
+				config: { ...spec, velocity: resetPixelVX },
 			},
 			{
 				value: gestures.y,
 				toValue: 0,
-				config: { ...spec, velocity: resetVY },
+				config: { ...spec, velocity: resetPixelVY },
 			},
 			{
 				value: gestures.normX,
 				toValue: 0,
-				config: { ...spec, velocity: resetVX },
+				config: { ...spec, velocity: resetNormVX },
 			},
 			{
 				value: gestures.normY,
 				toValue: 0,
-				config: { ...spec, velocity: resetVY },
+				config: { ...spec, velocity: resetNormVY },
 			},
 		],
 		onAllFinished: () => {
 			"worklet";
-			gestures.direction.value = null;
+			gestures.direction.set(null);
 		},
 	});
 
-	gestures.dragging.value = FALSE;
-	gestures.dismissing.value = shouldDismiss ? TRUE : FALSE;
+	gestures.dragging.set(FALSE);
+	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
+};
+
+interface ResetPinchGestureValuesProps {
+	spec?: AnimationConfig;
+	gestures: GestureStoreMap;
+	shouldDismiss: boolean;
+}
+
+export const resetPinchGestureValues = ({
+	spec,
+	gestures,
+	shouldDismiss,
+}: ResetPinchGestureValuesProps) => {
+	"worklet";
+
+	animateMany({
+		items: [
+			{
+				value: gestures.scale,
+				toValue: 1,
+				config: { ...spec },
+			},
+			{
+				value: gestures.normScale,
+				toValue: 0,
+				config: { ...spec },
+			},
+		],
+		onAllFinished: () => {
+			"worklet";
+			gestures.focalX.set(0);
+			gestures.focalY.set(0);
+			gestures.direction.set(null);
+		},
+	});
+
+	gestures.dragging.set(FALSE);
+	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
 };

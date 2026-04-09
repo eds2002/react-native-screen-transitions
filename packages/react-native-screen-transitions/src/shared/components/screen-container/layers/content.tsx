@@ -47,7 +47,7 @@ export const ContentLayer = memo(
 		});
 
 		return (
-			<GestureDetector gesture={gestureContext!.panGesture}>
+			<GestureDetector gesture={gestureContext!.detectorGesture}>
 				<Animated.View
 					style={[styles.content, animatedContentStyle]}
 					animatedProps={animatedContentProps}

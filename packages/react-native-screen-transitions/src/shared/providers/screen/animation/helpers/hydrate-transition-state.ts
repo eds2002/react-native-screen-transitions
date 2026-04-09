@@ -110,13 +110,18 @@ export const hydrateTransitionState = (
 	out.gesture.y = s.gesture.y.value;
 	out.gesture.normX = s.gesture.normX.value;
 	out.gesture.normY = s.gesture.normY.value;
+	out.gesture.scale = s.gesture.scale.value;
+	out.gesture.normScale = s.gesture.normScale.value;
+	out.gesture.focalX = s.gesture.focalX.value;
+	out.gesture.focalY = s.gesture.focalY.value;
 	out.gesture.dismissing = s.gesture.dismissing.value;
 	out.gesture.dragging = s.gesture.dragging.value;
 	out.gesture.direction = s.gesture.direction.value;
 
 	const isGestureSettling =
 		Math.abs(out.gesture.normX) > EPSILON ||
-		Math.abs(out.gesture.normY) > EPSILON;
+		Math.abs(out.gesture.normY) > EPSILON ||
+		Math.abs(out.gesture.normScale) > EPSILON;
 
 	out.animating =
 		s.animating.value || out.gesture.dragging || isGestureSettling ? 1 : 0;

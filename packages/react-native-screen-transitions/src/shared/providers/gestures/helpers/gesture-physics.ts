@@ -1,22 +1,16 @@
-import type {
-	GestureStateChangeEvent,
-	PanGestureHandlerEventPayload,
-} from "react-native-gesture-handler";
+import type { PanGestureEvent } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
-import {
-	ANIMATION_SNAP_THRESHOLD,
-	DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
-	EPSILON,
-} from "../../../constants";
+import { ANIMATION_SNAP_THRESHOLD, EPSILON } from "../../../constants";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import type { GestureDirections } from "../../../types/gesture.types";
 
 interface CalculateProgressProps {
 	animations: AnimationStoreMap;
 	shouldDismiss: boolean;
-	event: GestureStateChangeEvent<PanGestureHandlerEventPayload>;
+	event: PanGestureEvent;
 	dimensions: { width: number; height: number };
 	directions: GestureDirections;
+	gestureReleaseVelocityScale?: number;
 }
 
 type GestureAxisCandidate = {
@@ -25,19 +19,58 @@ type GestureAxisCandidate = {
 };
 
 /**
- * Converts velocity from pixels/second to normalized units/second (0-1 range)
- * and caps the result for stability
+ * Private safety cap for spring handoff in progress-space.
+ * This primarily protects against pathological simulator spikes.
  */
-export const normalizeVelocity = (
+const MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY = 3.2;
+
+/**
+ * Converts a pan velocity from pixels/second into progress/second.
+ */
+export const toProgressVelocity = (
 	velocityPixelsPerSecond: number,
 	screenSize: number,
-	maxMagnitude?: number,
 ) => {
 	"worklet";
-	const resolvedMaxMagnitude =
-		maxMagnitude ?? DEFAULT_GESTURE_RELEASE_VELOCITY_MAX;
-	const max = Math.max(0, Math.abs(resolvedMaxMagnitude));
-	return clamp(velocityPixelsPerSecond / Math.max(1, screenSize), -max, max);
+	return velocityPixelsPerSecond / Math.max(1, screenSize);
+};
+
+/**
+ * Converts pan release velocity into a spring handoff in progress units/second.
+ */
+export const getPanReleaseHandoffVelocity = (
+	velocityPixelsPerSecond: number,
+	screenSize: number,
+	gestureReleaseVelocityScale: number = 1,
+) => {
+	"worklet";
+	const scaledVelocity =
+		toProgressVelocity(velocityPixelsPerSecond, screenSize) *
+		Math.max(0, gestureReleaseVelocityScale);
+
+	return clamp(
+		scaledVelocity,
+		-MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY,
+		MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY,
+	);
+};
+
+/**
+ * Converts pinch scale velocity into a spring handoff in progress units/second.
+ */
+export const getPinchReleaseHandoffVelocity = (
+	velocityScalePerSecond: number,
+	gestureReleaseVelocityScale: number = 1,
+) => {
+	"worklet";
+	const scaledVelocity =
+		velocityScalePerSecond * Math.max(0, gestureReleaseVelocityScale);
+
+	return clamp(
+		scaledVelocity,
+		-MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY,
+		MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY,
+	);
 };
 
 /**
@@ -70,16 +103,21 @@ export const calculateRestoreVelocityTowardZero = (
 	return -directionTowardZero * clampedVelocity;
 };
 
-export const calculateProgressSpringVelocity = ({
+/**
+ * Picks the dominant active pan axis and returns a release handoff velocity
+ * in progress units/second oriented toward the animation target.
+ */
+export const getPanReleaseProgressVelocity = ({
 	animations,
 	shouldDismiss,
 	event,
 	dimensions,
 	directions,
+	gestureReleaseVelocityScale,
 }: CalculateProgressProps) => {
 	"worklet";
 
-	const currentProgress = animations.progress.value;
+	const currentProgress = animations.progress.get();
 	const targetProgress = shouldDismiss ? 0 : 1;
 	const progressDelta = targetProgress - currentProgress;
 
@@ -90,9 +128,10 @@ export const calculateProgressSpringVelocity = ({
 	if (directions.horizontal && event.translationX > 0) {
 		candidates.push({
 			progressContribution: event.translationX / Math.max(1, dimensions.width),
-			velocityContribution: normalizeVelocity(
+			velocityContribution: getPanReleaseHandoffVelocity(
 				event.velocityX,
 				dimensions.width,
+				gestureReleaseVelocityScale,
 			),
 		});
 	}
@@ -100,9 +139,10 @@ export const calculateProgressSpringVelocity = ({
 	if (directions.horizontalInverted && event.translationX < 0) {
 		candidates.push({
 			progressContribution: -event.translationX / Math.max(1, dimensions.width),
-			velocityContribution: normalizeVelocity(
+			velocityContribution: getPanReleaseHandoffVelocity(
 				-event.velocityX,
 				dimensions.width,
+				gestureReleaseVelocityScale,
 			),
 		});
 	}
@@ -110,9 +150,10 @@ export const calculateProgressSpringVelocity = ({
 	if (directions.vertical && event.translationY > 0) {
 		candidates.push({
 			progressContribution: event.translationY / Math.max(1, dimensions.height),
-			velocityContribution: normalizeVelocity(
+			velocityContribution: getPanReleaseHandoffVelocity(
 				event.velocityY,
 				dimensions.height,
+				gestureReleaseVelocityScale,
 			),
 		});
 	}
@@ -121,9 +162,10 @@ export const calculateProgressSpringVelocity = ({
 		candidates.push({
 			progressContribution:
 				-event.translationY / Math.max(1, dimensions.height),
-			velocityContribution: normalizeVelocity(
+			velocityContribution: getPanReleaseHandoffVelocity(
 				-event.velocityY,
 				dimensions.height,
+				gestureReleaseVelocityScale,
 			),
 		});
 	}
@@ -140,13 +182,15 @@ export const calculateProgressSpringVelocity = ({
 		}
 		progressVelocityMagnitude = Math.abs(dominant.velocityContribution);
 	} else {
-		const normalizedVelocityX = normalizeVelocity(
+		const normalizedVelocityX = getPanReleaseHandoffVelocity(
 			event.velocityX,
 			dimensions.width,
+			gestureReleaseVelocityScale,
 		);
-		const normalizedVelocityY = normalizeVelocity(
+		const normalizedVelocityY = getPanReleaseHandoffVelocity(
 			event.velocityY,
 			dimensions.height,
+			gestureReleaseVelocityScale,
 		);
 		progressVelocityMagnitude = Math.max(
 			Math.abs(normalizedVelocityX),
@@ -154,20 +198,16 @@ export const calculateProgressSpringVelocity = ({
 		);
 	}
 
-	// Apply direction and clamp to prevent overly energetic springs
-	return (
-		progressDirection *
-		clamp(progressVelocityMagnitude, 0, DEFAULT_GESTURE_RELEASE_VELOCITY_MAX)
-	);
+	return progressDirection * progressVelocityMagnitude;
 };
 
 /**
  * Determines if a gesture should trigger dismissal based on combined
  * translation and velocity in normalized screen units (0-1 range).
  *
- * Formula: |translation/screen + clamp(velocity/screen, ±1) * velocityWeight| > 0.5
+ * Formula: |translation/screen + velocity/screen * velocityWeight| > 0.5
  */
-export const shouldDismissFromTranslationAndVelocity = (
+export const shouldDismissFromProjection = (
 	translationPixels: number,
 	velocityPixelsPerSecond: number,
 	screenSize: number,
@@ -183,7 +223,7 @@ export const shouldDismissFromTranslationAndVelocity = (
 		return false;
 	}
 
-	const normalizedVelocity = normalizeVelocity(
+	const normalizedVelocity = toProgressVelocity(
 		velocityPixelsPerSecond,
 		screenSize,
 	);
@@ -211,4 +251,46 @@ export const mapGestureToProgress = (
 	"worklet";
 	const rawProgress = translation / dimension;
 	return Math.max(0, Math.min(1, rawProgress));
+};
+
+/**
+ * Scales live gesture movement before it is applied to transition progress.
+ * Lower values reduce sensitivity, higher values increase it.
+ */
+export const applyGestureSensitivity = (
+	progressDelta: number,
+	gestureSensitivity: number = 1,
+) => {
+	"worklet";
+	return progressDelta * Math.max(0, gestureSensitivity);
+};
+
+/**
+ * Normalizes pinch scale so idle is 0, pinch-in is negative, and pinch-out is positive.
+ * The value is clamped to [-1, 1] where:
+ * - 0.5 scale => -0.5
+ * - 1.0 scale => 0
+ * - 1.5 scale => 0.5
+ * - 2.0 scale => 1
+ */
+export const normalizePinchScale = (scale: number) => {
+	"worklet";
+	return clamp(scale - 1, -1, 1);
+};
+
+export const shouldDismissFromPinch = (
+	normalizedScale: number,
+	pinchInEnabled: boolean,
+	pinchOutEnabled: boolean,
+) => {
+	"worklet";
+	if (normalizedScale < 0 && !pinchInEnabled) {
+		return false;
+	}
+
+	if (normalizedScale > 0 && !pinchOutEnabled) {
+		return false;
+	}
+
+	return Math.abs(normalizedScale) > 0.5;
 };

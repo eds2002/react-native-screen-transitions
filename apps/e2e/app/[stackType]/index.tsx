@@ -87,6 +87,12 @@ const TEST_FLOWS = [
 		description: "Demonstrates proper touch blocking during transitions",
 	},
 	{
+		id: "gestures",
+		title: "Gestures",
+		description:
+			"One focused route per gesture direction, including pinch-in and pinch-out",
+	},
+	{
 		id: "nested/a",
 		title: "Nested Stack Gestures",
 		description:
