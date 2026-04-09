@@ -14,11 +14,7 @@
 
 import { useMemo } from "react";
 import type { LayoutChangeEvent } from "react-native";
-import {
-	type NativeGesture,
-	type PanGesture,
-	useNativeGesture,
-} from "react-native-gesture-handler";
+import { Gesture, type GestureType } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useAnimatedScrollHandler } from "react-native-reanimated";
 import {
@@ -111,45 +107,60 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		() =>
 			owners
 				.map((o) => o.panGesture)
-				.filter((g): g is PanGesture => g !== null),
+				.filter((g): g is GestureContextType["panGesture"] => g !== null),
 		[owners],
 	);
 
-	// Update isTouched on ALL registered scrollConfigs
-	const setIsTouched = () => {
-		"worklet";
-		for (const scrollConfig of scrollConfigs) {
-			scrollConfig.modify((v) => {
-				"worklet";
-				if (v) v.isTouched = true;
-				return v;
+	/**
+	 * Intentionally stays on the legacy builder `Gesture.Native()` path.
+	 *
+	 * After migrating screen gestures to RNGH v3 hooks, the equivalent
+	 * `useNativeGesture({ requireToFail })` relation regressed for wrapped
+	 * `Transition.ScrollView` components: the scroll view would keep winning at
+	 * the boundary instead of yielding to the screen pan gesture.
+	 *
+	 * The builder-based native gesture below still matches the working
+	 * `release/v3.4` behavior, so we keep this one seam on the old API until the
+	 * v3 native gesture path behaves equivalently in our wrapper architecture.
+	 */
+	const nativeGesture = useMemo(() => {
+		if (panGestures.length === 0 || scrollConfigs.length === 0) return null;
+
+		const setIsTouched = () => {
+			"worklet";
+			for (const scrollConfig of scrollConfigs) {
+				scrollConfig.modify((v) => {
+					"worklet";
+					if (v) v.isTouched = true;
+					return v;
+				});
+			}
+		};
+
+		const clearIsTouched = () => {
+			"worklet";
+			for (const scrollConfig of scrollConfigs) {
+				scrollConfig.modify((v) => {
+					"worklet";
+					if (v) v.isTouched = false;
+					return v;
+				});
+			}
+		};
+
+		let gesture = Gesture.Native()
+			.onTouchesDown(setIsTouched)
+			.onTouchesUp(clearIsTouched)
+			.onTouchesCancelled(clearIsTouched);
+
+		for (const panGesture of panGestures) {
+			gesture = gesture.requireExternalGestureToFail({
+				current: panGesture as unknown as GestureType,
 			});
 		}
-	};
 
-	const clearIsTouched = () => {
-		"worklet";
-		for (const scrollConfig of scrollConfigs) {
-			scrollConfig.modify((v) => {
-				"worklet";
-				if (v) v.isTouched = false;
-				return v;
-			});
-		}
-	};
-
-	const nativeGestureHandle = useNativeGesture({
-		enabled: panGestures.length > 0 && scrollConfigs.length > 0,
-		onTouchesDown: setIsTouched,
-		onTouchesUp: clearIsTouched,
-		onTouchesCancel: clearIsTouched,
-		requireToFail: panGestures.length > 0 ? panGestures : undefined,
-	});
-
-	const nativeGesture: NativeGesture | null =
-		panGestures.length > 0 && scrollConfigs.length > 0
-			? nativeGestureHandle
-			: null;
+		return gesture;
+	}, [panGestures, scrollConfigs]);
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
