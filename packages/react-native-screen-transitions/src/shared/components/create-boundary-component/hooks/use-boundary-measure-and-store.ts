@@ -1,10 +1,10 @@
+import { useCallback } from "react";
 import Animated, {
 	type AnimatedRef,
 	type MeasuredDimensions,
 	measure,
 	type StyleProps,
 } from "react-native-reanimated";
-import useStableCallbackValue from "../../../hooks/use-stable-callback-value";
 import { useLayoutAnchorContext } from "../../../providers/layout-anchor.provider";
 import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
@@ -58,7 +58,7 @@ export const useBoundaryMeasureAndStore = (params: {
 
 	const layoutAnchor = useLayoutAnchorContext();
 
-	return useStableCallbackValue(
+	return useCallback(
 		({ intent }: MaybeMeasureAndStoreParams = {}) => {
 			"worklet";
 			if (!enabled) return;
@@ -149,5 +149,17 @@ export const useBoundaryMeasureAndStore = (params: {
 					writePlan.completeDestination && destinationInViewport,
 			});
 		},
+		[
+			enabled,
+			sharedBoundTag,
+			preferredSourceScreenKey,
+			currentScreenKey,
+			ancestorKeys,
+			navigatorKey,
+			ancestorNavigatorKeys,
+			preparedStyles,
+			measuredAnimatedRef,
+			layoutAnchor,
+		],
 	);
 };

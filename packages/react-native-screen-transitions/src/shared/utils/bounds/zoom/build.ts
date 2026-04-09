@@ -184,15 +184,16 @@ function resolveEffectiveZoomTag(params: {
 		return resolvedTag;
 	}
 
-	const cachedTag = presentedZoomTagByRoute.value[activeRouteKey];
+	const cachedTag = presentedZoomTagByRoute.get()[activeRouteKey];
 	const isFreshOpenFrame = entering && activeProgress <= 0.05;
 	const shouldFreezeDuringEnter = entering && animating && !isFreshOpenFrame;
 
 	if (!cachedTag || isFreshOpenFrame) {
-		presentedZoomTagByRoute.modify((state) => ({
-			...state,
-			[activeRouteKey]: resolvedTag,
-		}));
+		presentedZoomTagByRoute.modify((state) => {
+			"worklet";
+			state[activeRouteKey] = resolvedTag;
+			return state;
+		});
 		return resolvedTag;
 	}
 
@@ -208,10 +209,11 @@ function resolveEffectiveZoomTag(params: {
 	}
 
 	if (cachedTag !== resolvedTag) {
-		presentedZoomTagByRoute.modify((state) => ({
-			...state,
-			[activeRouteKey]: resolvedTag,
-		}));
+		presentedZoomTagByRoute.modify((state) => {
+			"worklet";
+			state[activeRouteKey] = resolvedTag;
+			return state;
+		});
 	}
 
 	return resolvedTag;
