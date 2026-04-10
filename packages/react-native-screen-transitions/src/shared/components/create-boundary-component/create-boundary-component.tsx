@@ -6,7 +6,6 @@ import {
 	useImperativeHandle,
 	useMemo,
 } from "react";
-import type { View } from "react-native";
 import Animated, {
 	runOnUI,
 	useAnimatedRef,
@@ -15,7 +14,6 @@ import Animated, {
 import { NO_STYLES } from "../../constants";
 import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
-import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
 import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
@@ -93,8 +91,6 @@ export function createBoundaryComponent<P extends object>(
 			};
 		}, [anchor, scaleMode, target, method]);
 
-		const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
-
 		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 		const { elementStylesMap } = useScreenStyles();
 
@@ -168,9 +164,8 @@ export function createBoundaryComponent<P extends object>(
 			maybeMeasureAndStore,
 		});
 
-		// Destination completion path: do one immediate completion attempt when a
-		// pending source link appears, then retry during transition progress if the
-		// first attempt races layout readiness.
+		// Destination completion path: hold lifecycle start until the first valid
+		// destination measurement attaches, then release the pending transition.
 		usePendingDestinationMeasurement({
 			sharedBoundTag,
 			enabled: shouldRunDestinationEffects,
@@ -178,7 +173,6 @@ export function createBoundaryComponent<P extends object>(
 			group,
 			currentScreenKey,
 			expectedSourceScreenKey: preferredSourceScreenKey,
-			animating: isAnimating,
 			maybeMeasureAndStore,
 		});
 

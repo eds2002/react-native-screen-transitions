@@ -1,5 +1,8 @@
 import type { ScreenKey } from "../types/screen.types";
 
+type BagWithActions<TBag, TActions extends object = never> = TBag &
+	([TActions] extends [never] ? {} : { actions: TActions });
+
 export interface StoreApi<TBag> {
 	peekBag(routeKey: ScreenKey): TBag | undefined;
 	getBag(routeKey: ScreenKey): TBag;
@@ -8,31 +11,37 @@ export interface StoreApi<TBag> {
 	clearBag(routeKey: ScreenKey): void;
 }
 
-interface CreateStoreOptions<TBag, THelpers extends object = {}> {
+interface CreateStoreOptions<TBag, TActions extends object = never> {
 	createBag: () => TBag;
-	disposeBag: (bag: TBag & THelpers) => void;
-	helpers?: (bag: TBag) => THelpers;
+	disposeBag: (bag: TBag) => void;
+	actions?: (bag: TBag) => TActions;
 }
 
-export function createStore<TBag, THelpers extends object = {}>({
+export function createStore<TBag, TActions extends object = never>({
 	createBag,
 	disposeBag,
-	helpers: createHelpers,
-}: CreateStoreOptions<TBag, THelpers>): StoreApi<TBag & THelpers> {
-	const store: Record<ScreenKey, TBag & THelpers> = {};
-	let cachedBag: (TBag & THelpers) | undefined;
+	actions: createActions,
+}: CreateStoreOptions<TBag, TActions>): StoreApi<
+	BagWithActions<TBag, TActions>
+> {
+	const store: Record<ScreenKey, BagWithActions<TBag, TActions>> = {};
+	let cachedBag: BagWithActions<TBag, TActions> | undefined;
 
-	function createFullBag(): TBag & THelpers {
+	function createFullBag(): BagWithActions<TBag, TActions> {
 		const bag = createBag();
-		const helpers = createHelpers?.(bag) ?? ({} as THelpers);
-		return Object.assign({}, bag, helpers);
+		const actions = createActions?.(bag);
+		return (
+			actions ? Object.assign({}, bag, { actions }) : Object.assign({}, bag)
+		) as BagWithActions<TBag, TActions>;
 	}
 
-	function peekBag(routeKey: ScreenKey): (TBag & THelpers) | undefined {
+	function peekBag(
+		routeKey: ScreenKey,
+	): BagWithActions<TBag, TActions> | undefined {
 		return store[routeKey];
 	}
 
-	function getBag(routeKey: ScreenKey): TBag & THelpers {
+	function getBag(routeKey: ScreenKey): BagWithActions<TBag, TActions> {
 		let bag = store[routeKey];
 		if (!bag) {
 			bag = createFullBag();
@@ -41,10 +50,10 @@ export function createStore<TBag, THelpers extends object = {}>({
 		return bag;
 	}
 
-	function getValue<K extends keyof (TBag & THelpers)>(
+	function getValue<K extends keyof BagWithActions<TBag, TActions>>(
 		routeKey: ScreenKey,
 		key: K,
-	): (TBag & THelpers)[K] {
+	): BagWithActions<TBag, TActions>[K] {
 		return getBag(routeKey)[key];
 	}
 
@@ -53,7 +62,7 @@ export function createStore<TBag, THelpers extends object = {}>({
 	 * useful for stable fallback state, such as neutral gesture values for screens
 	 * that should not own live route-specific state.
 	 */
-	function getCachedBag(): TBag & THelpers {
+	function getCachedBag(): BagWithActions<TBag, TActions> {
 		if (!cachedBag) {
 			cachedBag = createFullBag();
 		}
@@ -68,7 +77,7 @@ export function createStore<TBag, THelpers extends object = {}>({
 		delete store[routeKey];
 	}
 
-	const baseStore: StoreApi<TBag & THelpers> = {
+	const baseStore: StoreApi<BagWithActions<TBag, TActions>> = {
 		peekBag,
 		getBag,
 		getValue,

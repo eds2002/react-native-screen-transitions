@@ -1,33 +1,25 @@
-import { useLayoutEffect } from "react";
 import {
-	runOnUI,
-	type SharedValue,
+	cancelAnimation,
 	useAnimatedReaction,
 	useSharedValue,
+	withDelay,
+	withTiming,
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
+import { SystemStore } from "../../../stores/system.store";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
-import {
-	resolvePendingDestinationCaptureSignal,
-	resolvePendingDestinationRetrySignal,
-} from "./helpers/measurement-rules";
+import { resolvePendingDestinationCaptureSignal } from "./helpers/measurement-rules";
 
 /**
- * The current v3.4 behavior intentionally favors correctness over efficiency:
- * when destination layout races transition start, this hook may re-measure
- * multiple times to recover a usable pair for `navigation.zoom()`.
- *
- * This works well enough for now, but it is not the ideal architecture. A more
- * complete v4 solution should allow open-animation deferral and broader
- * readiness coordination so we can avoid repeated measurement work while still
- * handling multiple transition scenarios correctly. Until that system exists,
- * `navigation.zoom()` remains fast in practice, just not as performant as it
- * could be.
- *
- * For now, you may notice a slight stutter towards the end of the animation.
+ * Blocks lifecycle start while a destination boundary still needs its first
+ * valid measurement pair. If the first destination measure is still outside the
+ * viewport, it keeps retrying on a short UI-thread delay until a valid
+ * destination link attaches, then releases the pending lifecycle request.
  */
+const VIEWPORT_RETRY_DELAY_MS = 16;
+
 export const usePendingDestinationMeasurement = (params: {
 	sharedBoundTag: string;
 	enabled: boolean;
@@ -35,7 +27,6 @@ export const usePendingDestinationMeasurement = (params: {
 	group?: string;
 	currentScreenKey: string;
 	expectedSourceScreenKey?: string;
-	animating: SharedValue<number>;
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
 	const {
@@ -45,32 +36,51 @@ export const usePendingDestinationMeasurement = (params: {
 		group,
 		currentScreenKey,
 		expectedSourceScreenKey,
-		animating,
 		maybeMeasureAndStore,
 	} = params;
 
-	const progress = AnimationStore.getValue(currentScreenKey, "progress");
 	const closing = AnimationStore.getValue(currentScreenKey, "closing");
+	const system = SystemStore.getBag(currentScreenKey);
+	const { blockLifecycleStart, unblockLifecycleStart } = system.actions;
+	const isBlockingLifecycleStart = useSharedValue(0);
+	const retryToken = useSharedValue(0);
 
-	const retryCount = useSharedValue(0);
-	const MAX_RETRIES = 4;
-	const RETRY_PROGRESS_BUCKETS = 8;
-	const RETRY_PROGRESS_MAX = 1.05;
+	const ensureLifecycleStartBlocked = () => {
+		"worklet";
+		if (isBlockingLifecycleStart.get()) {
+			return;
+		}
 
-	useLayoutEffect(() => {
-		if (!enabled) return;
+		blockLifecycleStart();
+		isBlockingLifecycleStart.set(1);
+	};
 
-		runOnUI(() => {
+	const releaseLifecycleStartBlock = () => {
+		"worklet";
+		cancelAnimation(retryToken);
+		if (!isBlockingLifecycleStart.get()) {
+			return;
+		}
+
+		unblockLifecycleStart();
+		isBlockingLifecycleStart.set(0);
+	};
+
+	const scheduleViewportRetry = () => {
+		"worklet";
+		cancelAnimation(retryToken);
+		retryToken.value = withDelay(
+			VIEWPORT_RETRY_DELAY_MS,
+			withTiming(retryToken.get() + 1, { duration: 0 }),
+		);
+	};
+
+	useAnimatedReaction(
+		() => {
 			"worklet";
+			const retryTick = retryToken.get();
 			if (closing.get()) {
-				return;
-			}
-
-			const currentGroupActiveId = group
-				? BoundStore.getGroupActiveId(group)
-				: null;
-			if (group && currentGroupActiveId !== String(id)) {
-				return;
+				return [0, retryTick] as const;
 			}
 
 			const resolvedSourceKey = resolvePendingSourceKey(
@@ -84,140 +94,42 @@ export const usePendingDestinationMeasurement = (params: {
 					) || BoundStore.hasSourceLink(sharedBoundTag, resolvedSourceKey)
 				: false;
 
-			if (!hasAttachableSourceLink) {
+			const shouldBlock = !!resolvePendingDestinationCaptureSignal({
+				enabled,
+				resolvedSourceKey,
+				hasAttachableSourceLink,
+				hasDestinationLink: BoundStore.hasDestinationLink(
+					sharedBoundTag,
+					currentScreenKey,
+				),
+			});
+
+			if (!shouldBlock) {
+				return [0, retryTick] as const;
+			}
+
+			if (group && BoundStore.getGroupActiveId(group) !== String(id)) {
+				return [0, retryTick] as const;
+			}
+
+			return [1, retryTick] as const;
+		},
+		([shouldBlock]) => {
+			"worklet";
+			if (!shouldBlock) {
+				releaseLifecycleStartBlock();
 				return;
 			}
+
+			ensureLifecycleStartBlocked();
+			maybeMeasureAndStore({ intent: "complete-destination" });
 
 			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey)) {
+				releaseLifecycleStartBlock();
 				return;
 			}
 
-			maybeMeasureAndStore({ intent: "complete-destination" });
-		})();
-	}, [
-		enabled,
-		id,
-		group,
-		sharedBoundTag,
-		currentScreenKey,
-		expectedSourceScreenKey,
-		closing,
-		maybeMeasureAndStore,
-	]);
-
-	/**
-	 * This exessive retry for groups with {target:"bound"} will have to change in v4.
-	 * .navigation.zoom() is stable and works great for non groups and groups that are non {target: "bound"}.
-	 *
-	 * The retry logic is needed for dst screen when we do an initialScrollIndex, the system is competing with the (i assume) useLayoutEffect
-	 * in the scrollable, causing a race here and giving us wrong measurements. I believe, in simialr fashion to how
-	 * system.store defers the screen from animating, we could possibly do the same here. Registering it up, once we get valid measurements, we can
-	 * un defer? Is that the word? Undefer the screen, removing this block compeltely, avoiding any potential flickers ( which currently happens.)
-	 *
-	 * You can replicate this bug by dismissing dst, as dst reaches its ending tail (0.01->0.10), if we tap again, we notice a flicker.
-	 */
-	useAnimatedReaction(
-		() => {
-			"worklet";
-			if (closing.get()) {
-				return 0;
-			}
-			const resolvedSourceKey = resolvePendingSourceKey(
-				sharedBoundTag,
-				expectedSourceScreenKey,
-			);
-			return resolvePendingDestinationCaptureSignal({
-				enabled,
-				resolvedSourceKey,
-				hasAttachableSourceLink: resolvedSourceKey
-					? BoundStore.hasPendingLinkFromSource(
-							sharedBoundTag,
-							resolvedSourceKey,
-						) || BoundStore.hasSourceLink(sharedBoundTag, resolvedSourceKey)
-					: false,
-				hasDestinationLink: BoundStore.hasDestinationLink(
-					sharedBoundTag,
-					currentScreenKey,
-				),
-			});
-		},
-		(captureSignal, previousCaptureSignal) => {
-			"worklet";
-			if (!enabled) return;
-			if (!captureSignal || captureSignal === previousCaptureSignal) {
-				return;
-			}
-
-			const currentGroupActiveId = group
-				? BoundStore.getGroupActiveId(group)
-				: null;
-
-			if (group && currentGroupActiveId !== String(id)) {
-				return;
-			}
-
-			maybeMeasureAndStore({ intent: "complete-destination" });
-		},
-		[
-			enabled,
-			id,
-			group,
-			sharedBoundTag,
-			expectedSourceScreenKey,
-			closing,
-			maybeMeasureAndStore,
-		],
-	);
-
-	useAnimatedReaction(
-		() => {
-			"worklet";
-			if (closing.get()) {
-				return 0;
-			}
-			const resolvedSourceKey = resolvePendingSourceKey(
-				sharedBoundTag,
-				expectedSourceScreenKey,
-			);
-			return resolvePendingDestinationRetrySignal({
-				enabled,
-				retryCount: retryCount.get(),
-				maxRetries: MAX_RETRIES,
-				isAnimating: !!animating.get(),
-				hasDestinationLink: BoundStore.hasDestinationLink(
-					sharedBoundTag,
-					currentScreenKey,
-				),
-				progress: progress.get(),
-				retryProgressMax: RETRY_PROGRESS_MAX,
-				retryProgressBuckets: RETRY_PROGRESS_BUCKETS,
-				resolvedSourceKey,
-				hasAttachableSourceLink: resolvedSourceKey
-					? BoundStore.hasPendingLinkFromSource(
-							sharedBoundTag,
-							resolvedSourceKey,
-						) || BoundStore.hasSourceLink(sharedBoundTag, resolvedSourceKey)
-					: false,
-			});
-		},
-		(captureSignal) => {
-			"worklet";
-			// if (!group) return;
-			if (!enabled) return;
-			if (!captureSignal) {
-				retryCount.set(0);
-				return;
-			}
-			const currentGroupActiveId = group
-				? BoundStore.getGroupActiveId(group)
-				: null;
-			if (group && currentGroupActiveId !== String(id)) {
-				return;
-			}
-
-			if (retryCount.get() >= MAX_RETRIES) return;
-			retryCount.set(retryCount.get() + 1);
-			maybeMeasureAndStore({ intent: "complete-destination" });
+			scheduleViewportRetry();
 		},
 	);
 };

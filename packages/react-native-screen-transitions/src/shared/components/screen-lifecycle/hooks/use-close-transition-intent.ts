@@ -12,7 +12,7 @@ import type { AnimationStoreMap } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import {
 	LifecycleTransitionRequestKind,
-	type SystemStoreHelpers,
+	type SystemStoreActions,
 	type SystemStoreMap,
 } from "../../../stores/system.store";
 import { StackType } from "../../../types/stack.types";
@@ -21,7 +21,7 @@ import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
 interface CloseHookParams {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
-	requestLifecycleTransition: SystemStoreHelpers["requestLifecycleTransition"];
+	requestLifecycleTransition: SystemStoreActions["requestLifecycleTransition"];
 	resetStores: () => void;
 }
 
@@ -139,7 +139,7 @@ export function useCloseTransitionIntent(
 	const { flags } = useStackCoreContext();
 	const { isBranchScreen, branchNavigatorKey } = useDescriptorDerivations();
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
-	const { requestLifecycleTransition } = system;
+	const { requestLifecycleTransition } = system.actions;
 
 	const resetStores = useStableCallback(() => {
 		resetStoresForScreen(routeKey, isBranchScreen, branchNavigatorKey);

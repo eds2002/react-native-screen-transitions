@@ -22,30 +22,30 @@ export const useTransitionStartController = ({
 }) => {
 	const {
 		targetProgress,
-		pendingLifecycleRequestId,
 		pendingLifecycleRequestKind,
 		pendingLifecycleRequestTarget,
-		clearLifecycleTransitionRequest,
+		pendingLifecycleStartBlockCount,
 	} = system;
+	const { clearLifecycleTransitionRequest } = system.actions;
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 			return [
-				pendingLifecycleRequestId.get(),
 				pendingLifecycleRequestKind.get(),
 				pendingLifecycleRequestTarget.get(),
+				pendingLifecycleStartBlockCount.get(),
 			] as const;
 		},
-		(next, previous) => {
+		(next) => {
 			"worklet";
-			const [requestId, kind, target] = next;
+			const [kind, target, blockCount] = next;
 
-			if (kind === LifecycleTransitionRequestKind.None || requestId === 0) {
+			if (kind === LifecycleTransitionRequestKind.None) {
 				return;
 			}
 
-			if (previous && requestId === previous[0]) {
+			if (blockCount > 0) {
 				return;
 			}
 
@@ -64,7 +64,7 @@ export const useTransitionStartController = ({
 				onAnimationFinish,
 			});
 
-			clearLifecycleTransitionRequest(requestId);
+			clearLifecycleTransitionRequest();
 		},
 	);
 };

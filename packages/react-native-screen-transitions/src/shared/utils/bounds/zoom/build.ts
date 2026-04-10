@@ -532,14 +532,11 @@ export function buildZoomStyles({
 		[1, backgroundScale],
 		"clamp",
 	);
-	const isUnfocusedIdle = props.active.settled === 1;
-	const shouldHideUnfocusedIdle = isUnfocusedIdle;
 	const didSourceComponentVisiblyHide =
 		!props.active.closing && unfocusedFade <= EPSILON;
 
 	const shouldResetUnfocusedElement =
-		!props.active.closing &&
-		(!!props.active.logicallySettled || didSourceComponentVisiblyHide);
+		!props.active.closing && didSourceComponentVisiblyHide;
 
 	const unfocusedElementTarget = getZoomContentTarget({
 		explicitTarget,
@@ -609,7 +606,7 @@ export function buildZoomStyles({
 	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
 	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
 
-	const resolvedElementStyle = shouldHideUnfocusedIdle
+	const resolvedElementStyle = shouldResetUnfocusedElement
 		? {
 				transform: [
 					{ translateX: 0 },
@@ -624,16 +621,16 @@ export function buildZoomStyles({
 		: {
 				transform: [
 					{
-						translateX: shouldResetUnfocusedElement ? 0 : elementTranslateX,
+						translateX: elementTranslateX,
 					},
 					{
-						translateY: shouldResetUnfocusedElement ? 0 : elementTranslateY,
+						translateY: elementTranslateY,
 					},
 					{
-						scaleX: shouldResetUnfocusedElement ? 1 : elementScaleX,
+						scaleX: elementScaleX,
 					},
 					{
-						scaleY: shouldResetUnfocusedElement ? 1 : elementScaleY,
+						scaleY: elementScaleY,
 					},
 				],
 				opacity: zoomOptions?.debug ? 1 : unfocusedFade,

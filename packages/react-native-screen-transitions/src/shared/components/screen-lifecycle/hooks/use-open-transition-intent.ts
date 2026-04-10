@@ -42,7 +42,7 @@ export function useOpenTransitionIntent(
 	system: SystemStoreMap,
 ) {
 	const { isFirstKey } = useDescriptorDerivations();
-	const { requestLifecycleTransition } = system;
+	const { requestLifecycleTransition } = system.actions;
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {

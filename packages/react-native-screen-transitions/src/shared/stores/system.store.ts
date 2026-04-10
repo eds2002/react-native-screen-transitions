@@ -27,11 +27,6 @@ type SystemStoreState = {
 	measuredContentLayout: SharedValue<Layout | null>;
 
 	/**
-	 * Monotonic lifecycle request id so repeated requests still trigger reactions.
-	 */
-	pendingLifecycleRequestId: SharedValue<number>;
-
-	/**
 	 * The currently pending lifecycle transition request.
 	 */
 	pendingLifecycleRequestKind: SharedValue<LifecycleTransitionRequestKind>;
@@ -40,17 +35,27 @@ type SystemStoreState = {
 	 * Progress target for the pending lifecycle transition request.
 	 */
 	pendingLifecycleRequestTarget: SharedValue<number>;
+
+	/**
+	 * Number of active blockers preventing a pending lifecycle request from
+	 * starting immediately.
+	 */
+	pendingLifecycleStartBlockCount: SharedValue<number>;
 };
 
-export interface SystemStoreHelpers {
+export interface SystemStoreActions {
 	requestLifecycleTransition(
 		kind: LifecycleTransitionRequestKind,
 		target: number,
 	): void;
-	clearLifecycleTransitionRequest(requestId: number): void;
+	clearLifecycleTransitionRequest(): void;
+	blockLifecycleStart(): void;
+	unblockLifecycleStart(): void;
 }
 
-export type SystemStoreMap = SystemStoreState & SystemStoreHelpers;
+export type SystemStoreMap = SystemStoreState & {
+	actions: SystemStoreActions;
+};
 
 /**
  * Route-keyed internal engine state that should not be treated as public screen
@@ -58,43 +63,50 @@ export type SystemStoreMap = SystemStoreState & SystemStoreHelpers;
  * such as resolved auto snap points, measured content layout, and the current
  * animation target progress. This could possibly grow in the future.
  */
-export const SystemStore = createStore<SystemStoreState, SystemStoreHelpers>({
+export const SystemStore = createStore<SystemStoreState, SystemStoreActions>({
 	createBag: () => ({
 		targetProgress: makeMutable(1),
 		resolvedAutoSnapPoint: makeMutable(-1),
 		measuredContentLayout: makeMutable<Layout | null>(null),
-		pendingLifecycleRequestId: makeMutable<number>(0),
 		pendingLifecycleRequestKind: makeMutable<LifecycleTransitionRequestKind>(
 			LifecycleTransitionRequestKind.None,
 		),
 		pendingLifecycleRequestTarget: makeMutable<number>(0),
+		pendingLifecycleStartBlockCount: makeMutable<number>(0),
 	}),
 	disposeBag: (bag) => {
 		cancelAnimation(bag.targetProgress);
 		cancelAnimation(bag.resolvedAutoSnapPoint);
 		cancelAnimation(bag.measuredContentLayout);
-		cancelAnimation(bag.pendingLifecycleRequestId);
 		cancelAnimation(bag.pendingLifecycleRequestKind);
 		cancelAnimation(bag.pendingLifecycleRequestTarget);
+		cancelAnimation(bag.pendingLifecycleStartBlockCount);
 	},
-	helpers: (bag) => ({
+	actions: (bag) => ({
 		requestLifecycleTransition(kind, target) {
 			"worklet";
 			bag.pendingLifecycleRequestTarget.set(target);
 			bag.pendingLifecycleRequestKind.set(kind);
-			bag.pendingLifecycleRequestId.set(
-				bag.pendingLifecycleRequestId.get() + 1,
+		},
+
+		clearLifecycleTransitionRequest() {
+			"worklet";
+			bag.pendingLifecycleRequestKind.set(LifecycleTransitionRequestKind.None);
+			bag.pendingLifecycleRequestTarget.set(0);
+		},
+
+		blockLifecycleStart() {
+			"worklet";
+			bag.pendingLifecycleStartBlockCount.set(
+				bag.pendingLifecycleStartBlockCount.get() + 1,
 			);
 		},
 
-		clearLifecycleTransitionRequest(requestId) {
+		unblockLifecycleStart() {
 			"worklet";
-			if (bag.pendingLifecycleRequestId.get() !== requestId) {
-				return;
-			}
-
-			bag.pendingLifecycleRequestKind.set(LifecycleTransitionRequestKind.None);
-			bag.pendingLifecycleRequestTarget.set(0);
+			bag.pendingLifecycleStartBlockCount.set(
+				Math.max(0, bag.pendingLifecycleStartBlockCount.get() - 1),
+			);
 		},
 	}),
 });

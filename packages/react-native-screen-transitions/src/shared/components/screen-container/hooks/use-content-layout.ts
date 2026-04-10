@@ -19,12 +19,9 @@ export function useContentLayout() {
 	const animations = AnimationStore.getBag(routeKey);
 	const system = SystemStore.getBag(routeKey);
 
-	const {
-		targetProgress,
-		resolvedAutoSnapPoint,
-		measuredContentLayout,
-		requestLifecycleTransition,
-	} = system;
+	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
+		system;
+	const { requestLifecycleTransition } = system.actions;
 
 	const experimental_animateOnInitialMount =
 		current.options.experimental_animateOnInitialMount;

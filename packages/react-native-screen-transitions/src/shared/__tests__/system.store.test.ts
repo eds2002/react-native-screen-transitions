@@ -41,22 +41,39 @@ describe("SystemStore", () => {
 		expect(second).not.toBe(first);
 	});
 
-	it("exposes lifecycle helpers on the store object", () => {
+	it("exposes lifecycle actions on the store object", () => {
 		const bag = SystemStore.getBag("route-a");
 
-		bag.requestLifecycleTransition(LifecycleTransitionRequestKind.Open, 0.4);
+		bag.actions.requestLifecycleTransition(
+			LifecycleTransitionRequestKind.Open,
+			0.4,
+		);
 
-		expect(bag.pendingLifecycleRequestId.get()).toBe(1);
 		expect(bag.pendingLifecycleRequestKind.get()).toBe(
 			LifecycleTransitionRequestKind.Open,
 		);
 		expect(bag.pendingLifecycleRequestTarget.get()).toBe(0.4);
 
-		bag.clearLifecycleTransitionRequest(1);
+		bag.actions.clearLifecycleTransitionRequest();
 
 		expect(bag.pendingLifecycleRequestKind.get()).toBe(
 			LifecycleTransitionRequestKind.None,
 		);
 		expect(bag.pendingLifecycleRequestTarget.get()).toBe(0);
+	});
+
+	it("tracks lifecycle start blocks on the bag", () => {
+		const bag = SystemStore.getBag("route-a");
+
+		bag.actions.blockLifecycleStart();
+		bag.actions.blockLifecycleStart();
+		expect(bag.pendingLifecycleStartBlockCount.get()).toBe(2);
+
+		bag.actions.unblockLifecycleStart();
+		expect(bag.pendingLifecycleStartBlockCount.get()).toBe(1);
+
+		bag.actions.unblockLifecycleStart();
+		bag.actions.unblockLifecycleStart();
+		expect(bag.pendingLifecycleStartBlockCount.get()).toBe(0);
 	});
 });
