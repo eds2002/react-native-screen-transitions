@@ -1,12 +1,10 @@
-import {
-	useDescriptorDerivations,
-	useDescriptors,
-} from "../../providers/screen/descriptors";
+import { useDescriptors } from "../../providers/screen/descriptors";
 import { AnimationStore } from "../../stores/animation.store";
 import { SystemStore } from "../../stores/system.store";
-import { useCloseTransition } from "./hooks/use-close-transition";
-import { useOpenTransition } from "./hooks/use-open-transition";
-import { useScreenEvents } from "./hooks/use-screen-events";
+import { useScreenHistory } from "./hooks/history/use-screen-history";
+import { useCloseTransitionIntent } from "./hooks/use-close-transition-intent";
+import { useOpenTransitionIntent } from "./hooks/use-open-transition-intent";
+import { useTransitionStartController } from "./hooks/use-transition-start-controller";
 
 interface Props {
 	children: React.ReactNode;
@@ -18,22 +16,24 @@ interface Props {
  */
 export const ScreenLifecycle = ({ children }: Props) => {
 	const { current, previous } = useDescriptors();
-	const { isFirstKey } = useDescriptorDerivations();
+
 	const animations = AnimationStore.getBag(current.route.key);
-	const { targetProgress } = SystemStore.getBag(current.route.key);
+	const system = SystemStore.getBag(current.route.key);
 
-	const { activateHighRefreshRate, deactivateHighRefreshRate } =
-		useOpenTransition(current, animations, targetProgress, isFirstKey);
+	const { handleManagedCloseEnd, handleNativeCloseEnd } =
+		useCloseTransitionIntent(current, animations, system);
 
-	useCloseTransition(
+	useOpenTransitionIntent(current, animations, system);
+
+	useTransitionStartController({
 		current,
 		animations,
-		targetProgress,
-		activateHighRefreshRate,
-		deactivateHighRefreshRate,
-	);
+		system,
+		onManagedCloseFinish: handleManagedCloseEnd,
+		onNativeCloseFinish: handleNativeCloseEnd,
+	});
 
-	useScreenEvents(current, previous, animations);
+	useScreenHistory(current, previous, animations);
 
 	return children;
 };

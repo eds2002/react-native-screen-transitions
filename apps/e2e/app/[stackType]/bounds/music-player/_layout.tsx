@@ -57,7 +57,6 @@ export default function MusicPlayerBoundsLayout() {
 					gestureReleaseVelocityScale: 1.5,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: musicPlayerInterpolator,
-					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,

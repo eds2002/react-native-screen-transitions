@@ -1,34 +1,50 @@
 import type { ScreenKey } from "../types/screen.types";
 
-interface CreateStoreOptions<TBag> {
-	createBag: () => TBag;
-	disposeBag: (bag: TBag) => void;
+export interface StoreApi<TBag> {
+	peekBag(routeKey: ScreenKey): TBag | undefined;
+	getBag(routeKey: ScreenKey): TBag;
+	getValue<K extends keyof TBag>(routeKey: ScreenKey, key: K): TBag[K];
+	getCachedBag(): TBag;
+	clearBag(routeKey: ScreenKey): void;
 }
 
-export function createStore<TBag>({
+interface CreateStoreOptions<TBag, THelpers extends object = {}> {
+	createBag: () => TBag;
+	disposeBag: (bag: TBag & THelpers) => void;
+	helpers?: (bag: TBag) => THelpers;
+}
+
+export function createStore<TBag, THelpers extends object = {}>({
 	createBag,
 	disposeBag,
-}: CreateStoreOptions<TBag>) {
-	const store: Record<ScreenKey, TBag> = {};
-	let cachedBag: TBag | undefined;
+	helpers: createHelpers,
+}: CreateStoreOptions<TBag, THelpers>): StoreApi<TBag & THelpers> {
+	const store: Record<ScreenKey, TBag & THelpers> = {};
+	let cachedBag: (TBag & THelpers) | undefined;
 
-	function peekBag(routeKey: ScreenKey): TBag | undefined {
+	function createFullBag(): TBag & THelpers {
+		const bag = createBag();
+		const helpers = createHelpers?.(bag) ?? ({} as THelpers);
+		return Object.assign({}, bag, helpers);
+	}
+
+	function peekBag(routeKey: ScreenKey): (TBag & THelpers) | undefined {
 		return store[routeKey];
 	}
 
-	function getBag(routeKey: ScreenKey): TBag {
+	function getBag(routeKey: ScreenKey): TBag & THelpers {
 		let bag = store[routeKey];
 		if (!bag) {
-			bag = createBag();
+			bag = createFullBag();
 			store[routeKey] = bag;
 		}
 		return bag;
 	}
 
-	function getValue<K extends keyof TBag>(
+	function getValue<K extends keyof (TBag & THelpers)>(
 		routeKey: ScreenKey,
 		key: K,
-	): TBag[K] {
+	): (TBag & THelpers)[K] {
 		return getBag(routeKey)[key];
 	}
 
@@ -37,9 +53,9 @@ export function createStore<TBag>({
 	 * useful for stable fallback state, such as neutral gesture values for screens
 	 * that should not own live route-specific state.
 	 */
-	function getCachedBag(): TBag {
+	function getCachedBag(): TBag & THelpers {
 		if (!cachedBag) {
-			cachedBag = createBag();
+			cachedBag = createFullBag();
 		}
 		return cachedBag;
 	}
@@ -52,11 +68,12 @@ export function createStore<TBag>({
 		delete store[routeKey];
 	}
 
-	return {
+	const baseStore: StoreApi<TBag & THelpers> = {
 		peekBag,
 		getBag,
 		getValue,
 		getCachedBag,
 		clearBag,
 	};
+	return baseStore;
 }

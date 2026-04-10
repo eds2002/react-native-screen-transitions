@@ -21,7 +21,7 @@ const resolveNavigationZoomId = (params: {
 	"worklet";
 
 	const { currentId, activeId, focused } = params;
-	return focused ? currentId ?? activeId : activeId ?? currentId;
+	return focused ? (currentId ?? activeId) : (activeId ?? currentId);
 };
 
 const nestedNavigationZoomIdInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
@@ -70,7 +70,6 @@ export default function NestedNavigationZoomIdLayout() {
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: nestedNavigationZoomIdInterpolator,
-					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,

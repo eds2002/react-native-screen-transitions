@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 
-import { resetStoresForScreen } from "../components/screen-lifecycle/hooks/use-close-transition/helpers/reset-stores-for-screen";
+import { resetStoresForScreen } from "../components/screen-lifecycle/hooks/helpers/reset-stores-for-screen";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
 import { GestureStore } from "../stores/gesture.store";

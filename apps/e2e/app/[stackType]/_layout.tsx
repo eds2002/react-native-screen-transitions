@@ -20,7 +20,6 @@ export default function BlankStackLayout() {
 				options={{
 					gestureEnabled: true,
 					gestureDirection: "horizontal",
-					experimental_enableHighRefreshRate: true,
 					screenStyleInterpolator: ({
 						progress,
 						layouts: {
@@ -126,7 +125,7 @@ export default function BlankStackLayout() {
 					gestureEnabled: true,
 					gestureDirection: "vertical",
 					backdropComponent: BlurView,
-					screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+					screenStyleInterpolator: ({ progress }) => {
 						"worklet";
 						return {
 							backdrop: {
@@ -162,11 +161,7 @@ export default function BlankStackLayout() {
 					gestureEnabled: true,
 					gestureDirection: "vertical",
 					surfaceComponent: SquircleView,
-					screenStyleInterpolator: ({
-						progress,
-						active,
-						layouts: { screen },
-					}) => {
+					screenStyleInterpolator: ({ progress, active }) => {
 						"worklet";
 						return {
 							content: {

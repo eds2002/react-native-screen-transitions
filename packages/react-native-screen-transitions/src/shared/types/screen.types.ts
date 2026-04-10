@@ -157,18 +157,6 @@ export type ScreenTransitionConfig = {
 	overlayShown?: boolean;
 
 	/**
-	 * Forces the display to run at its maximum refresh rate during screen transitions.
-	 * Prevents iOS/Android from throttling to 60fps for battery savings.
-	 *
-	 * Useful for smoother animations on high refresh rate displays (90/120/144Hz).
-	 * Note: Increases battery usage while active.
-	 *
-	 * @experimental This API may change in future versions.
-	 * @default false
-	 */
-	experimental_enableHighRefreshRate?: boolean;
-
-	/**
 	 * Animates the first screen in a navigator from its closed state on initial mount
 	 * instead of snapping directly to its settled progress.
 	 *

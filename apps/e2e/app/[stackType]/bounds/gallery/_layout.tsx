@@ -57,7 +57,6 @@ export default function GalleryLayout() {
 					gestureDrivesProgress: false,
 					// backdropComponent: BlurView,
 					screenStyleInterpolator: galleryZoomInterpolator,
-					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,

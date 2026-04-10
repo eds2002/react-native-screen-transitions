@@ -932,16 +932,6 @@ For most apps, Blank Stack avoids these issues entirely.
 
 ## Experimental Features
 
-### High Refresh Rate
-
-Force maximum refresh rate during transitions (for 90Hz/120Hz displays):
-
-```tsx
-options={{
-  experimental_enableHighRefreshRate: true,
-}}
-```
-
 ### Animate On Initial Mount
 
 Animate the first screen in a navigator instead of snapping it directly to the settled state:

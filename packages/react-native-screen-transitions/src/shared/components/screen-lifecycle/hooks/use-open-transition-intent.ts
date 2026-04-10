@@ -1,10 +1,14 @@
 import { useLayoutEffect } from "react";
-import type { SharedValue } from "react-native-reanimated";
-import type { BaseDescriptor } from "../../../providers/screen/descriptors";
+import {
+	type BaseDescriptor,
+	useDescriptorDerivations,
+} from "../../../providers/screen/descriptors";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
+import {
+	LifecycleTransitionRequestKind,
+	type SystemStoreMap,
+} from "../../../stores/system.store";
 import type { SnapPoint } from "../../../types/screen.types";
-import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { useHighRefreshRate } from "./use-high-refresh-rate";
 
 /**
  * Calculates the initial progress value based on snap points configuration.
@@ -30,17 +34,15 @@ function getInitialProgress({
 }
 
 /**
- * Handles opening animation on mount.
- * Returns activate/deactivate functions for high refresh rate.
+ * Handles opening transition intent on mount.
  */
-export function useOpenTransition(
+export function useOpenTransitionIntent(
 	current: BaseDescriptor,
 	animations: AnimationStoreMap,
-	targetProgressValue: SharedValue<number>,
-	isFirstKey: boolean,
+	system: SystemStoreMap,
 ) {
-	const { activateHighRefreshRate, deactivateHighRefreshRate } =
-		useHighRefreshRate(current);
+	const { isFirstKey } = useDescriptorDerivations();
+	const { requestLifecycleTransition } = system;
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
@@ -57,11 +59,11 @@ export function useOpenTransition(
 
 		if (isFirstKey && !experimental_animateOnInitialMount) {
 			if (initialProgress === "auto") {
-				targetProgressValue.set(0);
+				system.targetProgress.set(0);
 				animations.progress.set(0);
 			} else {
 				const target = initialProgress ?? 1;
-				targetProgressValue.set(target);
+				system.targetProgress.set(target);
 				animations.progress.set(target);
 			}
 			animations.animating.set(0);
@@ -76,15 +78,9 @@ export function useOpenTransition(
 			return;
 		}
 
-		activateHighRefreshRate();
-		animateToProgress({
-			target: initialProgress ?? "open",
-			spec: current.options.transitionSpec,
-			animations,
-			targetProgress: targetProgressValue,
-			onAnimationFinish: deactivateHighRefreshRate,
-		});
+		requestLifecycleTransition(
+			LifecycleTransitionRequestKind.Open,
+			initialProgress ?? 1,
+		);
 	}, []);
-
-	return { activateHighRefreshRate, deactivateHighRefreshRate };
 }

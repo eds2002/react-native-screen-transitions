@@ -1,30 +1,27 @@
-import { useLayoutEffect, useMemo } from "react";
-import {
-	runOnJS,
-	type SharedValue,
-	useAnimatedReaction,
-} from "react-native-reanimated";
-import { useStack } from "../../../../hooks/navigation/use-stack";
-import useStableCallback from "../../../../hooks/use-stable-callback";
+/** biome-ignore-all lint/correctness/useHookAtTopLevel: <STACK_TYPE is stable per navigator> */
+import { useLayoutEffect, useMemo, useRef } from "react";
+import { useAnimatedReaction } from "react-native-reanimated";
+import useStableCallback from "../../../hooks/use-stable-callback";
 import {
 	type BaseDescriptor,
 	useDescriptorDerivations,
-} from "../../../../providers/screen/descriptors";
-import { useStackCoreContext } from "../../../../providers/stack/core.provider";
-import { useManagedStackContext } from "../../../../providers/stack/managed.provider";
-import type { AnimationStoreMap } from "../../../../stores/animation.store";
-import { GestureStore } from "../../../../stores/gesture.store";
-import { StackType } from "../../../../types/stack.types";
-import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
+} from "../../../providers/screen/descriptors";
+import { useStackCoreContext } from "../../../providers/stack/core.provider";
+import { useManagedStackContext } from "../../../providers/stack/managed.provider";
+import type { AnimationStoreMap } from "../../../stores/animation.store";
+import { GestureStore } from "../../../stores/gesture.store";
+import {
+	LifecycleTransitionRequestKind,
+	type SystemStoreHelpers,
+	type SystemStoreMap,
+} from "../../../stores/system.store";
+import { StackType } from "../../../types/stack.types";
 import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
-import { useNavigatorHistoryRegistry } from "./helpers/use-navigator-history-registry";
 
 interface CloseHookParams {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
-	targetProgress: SharedValue<number>;
-	activate: () => void;
-	deactivate: () => void;
+	requestLifecycleTransition: SystemStoreHelpers["requestLifecycleTransition"];
 	resetStores: () => void;
 }
 
@@ -34,25 +31,19 @@ interface CloseHookParams {
  */
 const useManagedClose = ({
 	current,
-	animations,
-	targetProgress,
-	activate,
-	deactivate,
 	resetStores,
+	requestLifecycleTransition,
 }: CloseHookParams) => {
 	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
 	const routeKey = current.route.key;
 
-	const handleCloseEnd = useStableCallback((finished: boolean) => {
+	const handleManagedCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished) return;
 		handleCloseRoute({ route: current.route });
 		requestAnimationFrame(() => {
-			deactivate();
 			resetStores();
 		});
 	});
-
-	const transitionSpec = current.options.transitionSpec;
 
 	useAnimatedReaction(
 		() => {
@@ -62,16 +53,14 @@ const useManagedClose = ({
 		(isClosing, wasClosing) => {
 			if (!isClosing || wasClosing) return;
 
-			runOnJS(activate)();
-			animateToProgress({
-				target: "close",
-				spec: transitionSpec,
-				animations,
-				targetProgress,
-				onAnimationFinish: handleCloseEnd,
-			});
+			requestLifecycleTransition(
+				LifecycleTransitionRequestKind.ManagedClose,
+				0,
+			);
 		},
 	);
+
+	return { handleManagedCloseEnd };
 };
 
 /**
@@ -83,18 +72,30 @@ const useManagedClose = ({
 const useNativeStackClose = ({
 	current,
 	animations,
-	targetProgress,
-	activate,
-	deactivate,
 	resetStores,
+	requestLifecycleTransition,
 }: CloseHookParams) => {
 	const { parentScreenKey } = useDescriptorDerivations();
+	const pendingActionRef = useRef<any>(null);
 
 	const nearestAncestorDismissing = useMemo(() => {
 		if (!parentScreenKey) return null;
 
 		return GestureStore.peekBag(parentScreenKey)?.dismissing ?? null;
 	}, [parentScreenKey]);
+
+	const handleNativeCloseEnd = useStableCallback((finished: boolean) => {
+		if (!finished || !pendingActionRef.current) {
+			pendingActionRef.current = null;
+			return;
+		}
+
+		current.navigation.dispatch(pendingActionRef.current);
+		pendingActionRef.current = null;
+		requestAnimationFrame(() => {
+			resetStores();
+		});
+	});
 
 	const handleBeforeRemove = useStableCallback((e: any) => {
 		const options = current.options as { enableTransitions?: boolean };
@@ -114,46 +115,31 @@ const useNativeStackClose = ({
 		}
 
 		e.preventDefault();
-		activate();
-
-		animateToProgress({
-			target: "close",
-			spec: current.options.transitionSpec,
-			animations,
-			targetProgress,
-			onAnimationFinish: (finished: boolean) => {
-				deactivate();
-				if (finished) {
-					navigation.dispatch(e.data.action);
-					requestAnimationFrame(() => {
-						resetStores();
-					});
-				}
-			},
-		});
+		pendingActionRef.current = e.data.action;
+		requestLifecycleTransition(LifecycleTransitionRequestKind.NativeClose, 0);
 	});
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+	// biome-ignore lint/correctness/useExhaustiveDependencies: navigation listener should only rebind when the navigator instance changes
 	useLayoutEffect(() => {
 		return current.navigation.addListener?.("beforeRemove", handleBeforeRemove);
 	}, [current.navigation]);
+
+	return { handleNativeCloseEnd };
 };
 
 /**
- * Unified close handler that branches on stack type.
+ * Handles close transition intent and returns finish callbacks for cleanup.
  */
-export function useCloseTransition(
+export function useCloseTransitionIntent(
 	current: BaseDescriptor,
 	animations: AnimationStoreMap,
-	targetProgress: SharedValue<number>,
-	activate: () => void,
-	deactivate: () => void,
+	system: SystemStoreMap,
 ) {
 	const routeKey = current.route.key;
-	const { navigatorKey } = useStack();
 	const { flags } = useStackCoreContext();
 	const { isBranchScreen, branchNavigatorKey } = useDescriptorDerivations();
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
+	const { requestLifecycleTransition } = system;
 
 	const resetStores = useStableCallback(() => {
 		resetStoresForScreen(routeKey, isBranchScreen, branchNavigatorKey);
@@ -162,18 +148,15 @@ export function useCloseTransition(
 	const closeParams: CloseHookParams = {
 		current,
 		animations,
-		targetProgress,
-		activate,
-		deactivate,
+		requestLifecycleTransition,
 		resetStores,
 	};
 
-	useNavigatorHistoryRegistry(navigatorKey, routeKey);
 	if (isNativeStack) {
-		// biome-ignore lint/correctness/useHookAtTopLevel: STACK_TYPE is stable per screen instance
-		useNativeStackClose(closeParams);
+		const { handleNativeCloseEnd } = useNativeStackClose(closeParams);
+		return { handleNativeCloseEnd };
 	} else {
-		// biome-ignore lint/correctness/useHookAtTopLevel: STACK_TYPE is stable per screen instance
-		useManagedClose(closeParams);
+		const { handleManagedCloseEnd } = useManagedClose(closeParams);
+		return { handleManagedCloseEnd };
 	}
 }

@@ -1,5 +1,5 @@
 import { Platform } from "react-native";
-import { interpolate, interpolateColor } from "react-native-reanimated";
+import { interpolateColor } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
@@ -58,7 +58,6 @@ export default function HorizontalGalleryLayout() {
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: horizontalGalleryZoomInterpolator,
-					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,

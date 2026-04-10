@@ -1,5 +1,3 @@
-import { Platform } from "react-native";
-import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
@@ -47,7 +45,6 @@ export default function ReelsLayout() {
 					gestureDirection: ["horizontal", "vertical", "vertical-inverted"],
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: reelsInterpolator,
-					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: {
 							stiffness: 1000,

@@ -6,8 +6,10 @@ import {
 	useDescriptors,
 } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
-import { SystemStore } from "../../../stores/system.store";
-import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import {
+	LifecycleTransitionRequestKind,
+	SystemStore,
+} from "../../../stores/system.store";
 
 export function useContentLayout() {
 	const { current } = useDescriptors();
@@ -15,11 +17,17 @@ export function useContentLayout() {
 	const { height: screenHeight } = useWindowDimensions();
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
-	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
-		SystemStore.getBag(routeKey);
+	const system = SystemStore.getBag(routeKey);
+
+	const {
+		targetProgress,
+		resolvedAutoSnapPoint,
+		measuredContentLayout,
+		requestLifecycleTransition,
+	} = system;
+
 	const experimental_animateOnInitialMount =
 		current.options.experimental_animateOnInitialMount;
-	const transitionSpec = current.options.transitionSpec;
 
 	return useCallback(
 		(event: LayoutChangeEvent) => {
@@ -30,34 +38,32 @@ export function useContentLayout() {
 
 			runOnUI((nextWidth: number, nextHeight: number, nextFraction: number) => {
 				"worklet";
-				measuredContentLayout.value = {
+				measuredContentLayout.set({
 					width: nextWidth,
 					height: nextHeight,
-				};
+				});
 
-				const isFirstMeasurement = resolvedAutoSnapPoint.value <= 0;
-				resolvedAutoSnapPoint.value = nextFraction;
+				const isFirstMeasurement = resolvedAutoSnapPoint.get() <= 0;
+				resolvedAutoSnapPoint.set(nextFraction);
 
 				if (
 					!isFirstMeasurement ||
-					animations.progress.value !== 0 ||
-					animations.animating.value !== 0
+					animations.progress.get() !== 0 ||
+					animations.animating.get() !== 0
 				) {
 					return;
 				}
 
 				if (isFirstKey && !experimental_animateOnInitialMount) {
-					targetProgress.value = nextFraction;
-					animations.progress.value = nextFraction;
+					targetProgress.set(nextFraction);
+					animations.progress.set(nextFraction);
 					return;
 				}
 
-				animateToProgress({
-					target: nextFraction,
-					spec: transitionSpec,
-					animations,
-					targetProgress,
-				});
+				requestLifecycleTransition(
+					LifecycleTransitionRequestKind.Open,
+					nextFraction,
+				);
 			})(width, height, fraction);
 		},
 		[
@@ -68,7 +74,7 @@ export function useContentLayout() {
 			isFirstKey,
 			screenHeight,
 			experimental_animateOnInitialMount,
-			transitionSpec,
+			requestLifecycleTransition,
 		],
 	);
 }
