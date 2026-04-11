@@ -1,184 +1,233 @@
-import { StyleSheet } from "react-native";
+import { Activity, type ReactNode } from "react";
+import {
+	type HostComponent,
+	NativeComponentRegistry,
+	Platform,
+	type StyleProp,
+	StyleSheet,
+	View,
+	type ViewProps,
+	type ViewStyle,
+} from "react-native";
 import Animated, {
-	Extrapolation,
-	interpolate,
 	useAnimatedProps,
 	useAnimatedRef,
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import { Screen as RNSScreen } from "react-native-screens";
-import { EPSILON } from "../constants";
 import { useStack } from "../hooks/navigation/use-stack";
+import { useSharedValueState } from "../hooks/reanimated/use-shared-value-state";
 import { LayoutAnchorProvider } from "../providers/layout-anchor.provider";
 import { useManagedStackContext } from "../providers/stack/managed.provider";
 import { AnimationStore } from "../stores/animation.store";
+import type { BackdropBehavior } from "../types/screen.types";
+import {
+	type ActivityMode,
+	type InactiveBehavior,
+	POINTER_EVENTS_BOX_NONE,
+	POINTER_EVENTS_NONE,
+	resolveNativeScreenLifecycle,
+	resolveNativeScreenPointerEvents,
+	shouldUnmountNativeScreen,
+} from "./native-screen-lifecycle";
 
 const PASSTHROUGH = "passthrough";
+const ACTIVITY_CONTENTS_DISPLAY = "contents" as const;
+const DISPLAY_FLEX = "flex" as const;
+const DISPLAY_NONE = "none" as const;
 
 interface ScreenProps {
 	routeKey: string;
 	index: number;
 	isPreloaded: boolean;
-	children: React.ReactNode;
-	freezeOnBlur?: boolean;
-	shouldFreeze?: boolean;
+	inactiveBehavior?: InactiveBehavior;
+	children: ReactNode;
 }
-enum ScreenActivity {
-	INACTIVE = 0,
-	TRANSITIONING_OR_BELOW_TOP = 1,
-	ON_TOP = 2,
-}
-
-const POINT_NONE = "none" as const;
-const POINT_BOX_NONE = "box-none" as const;
-
-const AnimatedNativeScreen = Animated.createAnimatedComponent(RNSScreen);
 
 export const NativeScreen = ({
 	routeKey,
 	index,
 	isPreloaded,
+	inactiveBehavior = "pause",
 	children,
-	freezeOnBlur,
-	shouldFreeze,
 }: ScreenProps) => {
-	const {
-		flags: { DISABLE_NATIVE_SCREENS = false },
-		routes,
-		optimisticFocusedIndex,
-	} = useStack();
-	const { activeScreensLimit, backdropBehaviors } = useManagedStackContext();
+	const { routes, optimisticFocusedIndex } = useStack();
+	const { backdropBehaviors } = useManagedStackContext();
 
 	const routesLength = routes.length;
-	const topIndex = routesLength - 1;
-	const topRouteKey = routes[topIndex]?.key ?? routeKey;
 	const screenRef = useAnimatedRef<Animated.View>();
 
 	const sceneClosing = AnimationStore.getValue(routeKey, "closing");
-	const topSceneProgress = AnimationStore.getValue(topRouteKey, "progress");
-	const topSceneClosing = AnimationStore.getValue(topRouteKey, "closing");
-	const screenActivity = useSharedValue<ScreenActivity>(
-		ScreenActivity.TRANSITIONING_OR_BELOW_TOP,
-	);
+	const contentVisible = useSharedValue(true);
+	const contentMode = useSharedValue<ActivityMode>("inert");
+
+	const route = routes[index] as
+		| ({ state?: unknown } & (typeof routes)[number])
+		| undefined;
+	const hasNestedState = Boolean(route?.state);
+	const nextBackdropBehavior = backdropBehaviors[index + 1] as
+		| BackdropBehavior
+		| undefined;
 
 	useDerivedValue(() => {
-		if (!topSceneProgress) {
-			screenActivity.set(ScreenActivity.TRANSITIONING_OR_BELOW_TOP);
-			return;
+		const nextLifecycle = resolveNativeScreenLifecycle({
+			index,
+			routesLength,
+			isPreloaded,
+			focusedIndex: optimisticFocusedIndex.value,
+			isClosing: sceneClosing.get(),
+			nextBackdropBehavior,
+			inactiveBehavior,
+		});
+
+		if (nextLifecycle.visible !== contentVisible.get()) {
+			contentVisible.set(nextLifecycle.visible);
 		}
 
-		if (index < routesLength - activeScreensLimit - 1 || isPreloaded) {
-			screenActivity.set(ScreenActivity.INACTIVE);
-			return;
+		if (nextLifecycle.mode !== contentMode.get()) {
+			contentMode.set(nextLifecycle.mode);
 		}
+	});
 
-		const focusedIndex = optimisticFocusedIndex.value;
-		const topIsClosing =
-			topSceneClosing.get() > 0 && focusedIndex >= 0 && focusedIndex < topIndex;
-
-		if (topIsClosing) {
-			const postCloseActiveStart = Math.max(
-				0,
-				focusedIndex - activeScreensLimit + 1,
-			);
-			const next =
-				index === topIndex
-					? ScreenActivity.ON_TOP
-					: index > focusedIndex || index >= postCloseActiveStart
-						? ScreenActivity.TRANSITIONING_OR_BELOW_TOP
-						: ScreenActivity.INACTIVE;
-
-			if (next !== screenActivity.get()) {
-				screenActivity.set(next);
-			}
-			return;
-		}
-
-		const outputValue =
-			index === topIndex
-				? ScreenActivity.ON_TOP
-				: index >= routesLength - activeScreensLimit
-					? ScreenActivity.TRANSITIONING_OR_BELOW_TOP
-					: ScreenActivity.INACTIVE;
-
-		const v = interpolate(
-			topSceneProgress.get(),
-			[0, 1 - EPSILON, 1],
-			[1, 1, outputValue],
-			Extrapolation.CLAMP,
-		);
-
-		const next = Math.trunc(v) ?? ScreenActivity.TRANSITIONING_OR_BELOW_TOP;
-
-		if (next !== screenActivity.get()) {
-			screenActivity.set(next);
-		}
+	const visible = useSharedValueState(contentVisible);
+	const mode = useSharedValueState(contentMode);
+	const shouldUnmount = shouldUnmountNativeScreen({
+		inactiveBehavior,
+		visible,
+		hasNestedState,
 	});
 
 	const animatedProps = useAnimatedProps(() => {
-		const activity = screenActivity.get();
 		const isClosing = sceneClosing.get() > 0;
 		const activeIndex = optimisticFocusedIndex.value;
-		const isActive = index === activeIndex;
-
-		// Check if the active screen allows passthrough to the screen below
 		const activeBackdrop = backdropBehaviors[activeIndex] ?? "block";
-		const activeAllowsPassthrough = activeBackdrop === PASSTHROUGH;
 		const isAllowedPassthroughBelow =
-			activeAllowsPassthrough && index === activeIndex - 1;
-
-		// Determine pointer events:
-		// - "none" if closing (immediately disable touches)
-		// - "box-none" if this is the active screen
-		// - "box-none" if the active screen allows passthrough and we're immediately below
-		// - "none" otherwise (block touches to non-active screens)
-		const pointerEvents =
-			isClosing || (!isActive && !isAllowedPassthroughBelow)
-				? POINT_NONE
-				: POINT_BOX_NONE;
-
-		if (!DISABLE_NATIVE_SCREENS) {
-			return {
-				activityState: activity,
-				shouldFreeze: activity === ScreenActivity.INACTIVE && shouldFreeze,
-				pointerEvents,
-			};
-		}
+			activeBackdrop === PASSTHROUGH && index === activeIndex - 1;
 
 		return {
-			pointerEvents,
+			pointerEvents: resolveNativeScreenPointerEvents({
+				isClosing,
+				isActive: index === activeIndex,
+				isAllowedPassthroughBelow,
+			}),
 		};
 	});
 
-	if (DISABLE_NATIVE_SCREENS) {
-		return (
-			<Animated.View
-				ref={screenRef}
-				// Keep a native boundary per screen when falling back to plain views.
-				// Android release builds can otherwise flatten sibling screens together.
-				collapsable={false}
-				style={StyleSheet.absoluteFill}
-				animatedProps={animatedProps}
-			>
-				<LayoutAnchorProvider anchorRef={screenRef}>
+	if (shouldUnmount) {
+		return null;
+	}
+
+	return (
+		<Animated.View
+			ref={screenRef}
+			collapsable={false}
+			style={StyleSheet.absoluteFill}
+			animatedProps={animatedProps}
+		>
+			<LayoutAnchorProvider anchorRef={screenRef}>
+				<ActivityWrapper mode={mode} visible={visible} style={styles.content}>
 					{children}
-				</LayoutAnchorProvider>
-			</Animated.View>
+				</ActivityWrapper>
+			</LayoutAnchorProvider>
+		</Animated.View>
+	);
+};
+
+interface ActivityWrapperProps {
+	mode: ActivityMode;
+	visible: boolean;
+	style?: StyleProp<ViewStyle>;
+	children: ReactNode;
+}
+
+const ActivityWrapper = ({
+	mode,
+	visible,
+	style,
+	children,
+}: ActivityWrapperProps) => {
+	const display = visible ? DISPLAY_FLEX : DISPLAY_NONE;
+	const reactActivityMode = mode === "paused" ? "hidden" : "visible";
+
+	if (Platform.OS === "web") {
+		return (
+			<ActivityContainer inert={mode !== "normal"} style={[style, { display }]}>
+				{children}
+			</ActivityContainer>
 		);
 	}
 
 	return (
-		<AnimatedNativeScreen
-			enabled
-			ref={screenRef}
-			style={StyleSheet.absoluteFill}
-			freezeOnBlur={freezeOnBlur}
-			animatedProps={animatedProps}
-		>
-			<LayoutAnchorProvider anchorRef={screenRef}>
-				{children}
-			</LayoutAnchorProvider>
-		</AnimatedNativeScreen>
+		<Activity mode={reactActivityMode}>
+			<ActivityContentView style={{ display: ACTIVITY_CONTENTS_DISPLAY }}>
+				<ActivityContainer
+					inert={mode !== "normal"}
+					style={[style, { display }]}
+				>
+					{children}
+				</ActivityContainer>
+			</ActivityContentView>
+		</Activity>
 	);
 };
+
+interface ActivityContainerProps {
+	inert?: boolean;
+	style?: StyleProp<ViewStyle>;
+	children: ReactNode;
+}
+
+const ActivityContainer = ({
+	inert,
+	style,
+	children,
+}: ActivityContainerProps) => {
+	return (
+		<View
+			aria-hidden={inert}
+			pointerEvents={inert ? POINTER_EVENTS_NONE : POINTER_EVENTS_BOX_NONE}
+			style={style}
+			collapsable={false}
+		>
+			{children}
+		</View>
+	);
+};
+
+const ACTIVITY_CONTENT_STYLE: Record<
+	string,
+	true | { process?: (value: unknown) => unknown }
+> = {
+	display: {
+		// React Activity hides its subtree with display:none when paused.
+		// We keep the outer shell at display:contents so visibility can be driven separately.
+		process: () => ACTIVITY_CONTENTS_DISPLAY,
+	},
+};
+
+const ACTIVITY_CONTENT_VIEW_CONFIG = {
+	uiViewClassName: "RCTView",
+	validAttributes: {
+		style: ACTIVITY_CONTENT_STYLE,
+	},
+};
+
+type ActivityContentViewProps = Omit<ViewProps, "style"> & {
+	style?:
+		| {
+				display?: typeof ACTIVITY_CONTENTS_DISPLAY | undefined;
+		  }
+		| undefined;
+};
+
+const ActivityContentView: HostComponent<ActivityContentViewProps> =
+	NativeComponentRegistry.get<ActivityContentViewProps>(
+		"ScreenTransitionsActivityContentView",
+		() => ACTIVITY_CONTENT_VIEW_CONFIG,
+	);
+
+const styles = StyleSheet.create({
+	content: {
+		flex: 1,
+	},
+});

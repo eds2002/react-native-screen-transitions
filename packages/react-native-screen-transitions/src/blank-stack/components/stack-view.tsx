@@ -10,7 +10,6 @@ import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { resolveSceneNeighbors } from "../../shared/utils/navigation/resolve-scene-neighbors";
-import { isFabric } from "../../shared/utils/platform";
 import type {
 	BlankStackDescriptor,
 	BlankStackNavigationHelpers,
@@ -19,13 +18,7 @@ import type {
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: true },
 	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
-		({
-			descriptors,
-			focusedIndex,
-			scenes,
-			shouldShowFloatOverlay,
-			closingRouteMap,
-		}) => {
+		({ descriptors, scenes, shouldShowFloatOverlay, closingRouteMap }) => {
 			const isRouteClosing = (routeKey: string) =>
 				Boolean(closingRouteMap.current[routeKey]);
 
@@ -37,27 +30,19 @@ export const StackView = withStackCore(
 						{scenes.map((scene, sceneIndex) => {
 							const descriptor = scene.descriptor;
 							const route = scene.route;
-							const isFocused = focusedIndex === sceneIndex;
-							const isBelowFocused = focusedIndex - 1 === sceneIndex;
 
 							const { previousDescriptor, nextDescriptor } =
 								resolveSceneNeighbors(scenes, sceneIndex, isRouteClosing);
 
 							const isPreloaded = descriptors[route.key] === undefined;
 
-							// On Fabric, when screen is frozen, animated and reanimated values are not updated
-							// due to component being unmounted. To avoid this, we don't freeze the previous screen there
-							const shouldFreeze = isFabric()
-								? !isPreloaded && !isFocused && !isBelowFocused
-								: !isPreloaded && !isFocused;
 							return (
 								<NativeScreen
 									key={route.key}
 									isPreloaded={isPreloaded}
 									index={sceneIndex}
 									routeKey={route.key}
-									shouldFreeze={shouldFreeze}
-									freezeOnBlur={descriptor.options.freezeOnBlur}
+									inactiveBehavior={descriptor.options.inactiveBehavior}
 								>
 									<ScreenComposer
 										previous={previousDescriptor}

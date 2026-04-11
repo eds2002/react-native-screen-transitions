@@ -94,16 +94,7 @@ export type BlankStackOverlayProps = OverlayProps<
 	BlankStackNavigationProp<ParamListBase>
 >;
 
-type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
-	/**
-	 * Whether to detach the previous screen from the view hierarchy to save memory.
-	 * Set it to `false` if you need the previous screen to be seen through the active screen.
-	 * Only applicable if `detachInactiveScreens` isn't set to `false`.
-	 */
-	detachPreviousScreen?: boolean;
-};
-
-export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
+export type BlankStackNavigationOptions = ScreenTransitionConfig & {
 	/**
 	 * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
 	 * Defaults to `true` when `enableFreeze()` is run at the top of the application.
@@ -112,6 +103,16 @@ export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
 	 * Only supported on iOS and Android.
 	 */
 	freezeOnBlur?: boolean;
+	/**
+	 * What should happen when screens become inactive.
+	 *
+	 * - `pause`: Effects are paused when the screen falls outside the visible activity window
+	 * - `unmount`: Off-window screens unmount unless they hold nested navigator state
+	 * - `none`: Inactive screens stay mounted and continue running effects
+	 *
+	 * Defaults to `pause`.
+	 */
+	inactiveBehavior?: "pause" | "unmount" | "none";
 };
 
 export type BlankStackNavigatorProps = DefaultNavigatorOptions<

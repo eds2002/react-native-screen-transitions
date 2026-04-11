@@ -14,7 +14,6 @@ export interface BenchmarkDefinition {
 	isPublic: boolean;
 	appearance: BenchmarkScenarioAppearance;
 	transitionKind: BenchmarkTransitionKind;
-	detachPreviousScreen: boolean;
 	holdBeforePopMs: number;
 }
 
@@ -25,12 +24,10 @@ export const BENCHMARK_DEFINITIONS: Record<
 	"opaque-push-pop-loop": {
 		id: "opaque-push-pop-loop",
 		title: "Opaque Push/Pop Loop",
-		description:
-			"Baseline full-screen push/pop timing with the previous screen detached.",
+		description: "Baseline full-screen push/pop timing.",
 		isPublic: true,
 		appearance: "opaque-card",
 		transitionKind: "horizontal",
-		detachPreviousScreen: true,
 		holdBeforePopMs: 0,
 	},
 	"push-pop-loop": {
@@ -41,7 +38,6 @@ export const BENCHMARK_DEFINITIONS: Record<
 		isPublic: true,
 		appearance: "transparent-card",
 		transitionKind: "horizontal",
-		detachPreviousScreen: false,
 		holdBeforePopMs: 0,
 	},
 	"modal-push-pop-loop": {
@@ -52,7 +48,6 @@ export const BENCHMARK_DEFINITIONS: Record<
 		isPublic: true,
 		appearance: "modal-sheet",
 		transitionKind: "vertical",
-		detachPreviousScreen: false,
 		holdBeforePopMs: 0,
 	},
 	"modal-settled-push-pop-loop": {
@@ -63,7 +58,6 @@ export const BENCHMARK_DEFINITIONS: Record<
 		isPublic: true,
 		appearance: "modal-sheet",
 		transitionKind: "vertical",
-		detachPreviousScreen: false,
 		holdBeforePopMs: BENCHMARK_TRANSITION_DURATION_MS + 120,
 	},
 	"navigate-during-close": {
@@ -74,7 +68,6 @@ export const BENCHMARK_DEFINITIONS: Record<
 		isPublic: false,
 		appearance: "transparent-card",
 		transitionKind: "horizontal",
-		detachPreviousScreen: false,
 		holdBeforePopMs: 0,
 	},
 };
