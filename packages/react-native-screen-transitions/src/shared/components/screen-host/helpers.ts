@@ -1,7 +1,14 @@
 export const POINTER_EVENTS_NONE = "none" as const;
 export const POINTER_EVENTS_BOX_NONE = "box-none" as const;
 
-export type ActivityMode = "normal" | "inert" | "paused";
+/**
+ * Structural screen state within the stack.
+ *
+ * - `interactive`: the top/focused screen, fully active
+ * - `inert`: still part of the visible keep-alive window, but not interactive
+ * - `inactive`: deeper than the inert screen unless another rule keeps it alive
+ */
+export type NativeScreenState = "interactive" | "inert" | "inactive";
 export type InactiveBehavior = "pause" | "unmount" | "none";
 export type PointerEventsMode =
 	| typeof POINTER_EVENTS_NONE
@@ -14,17 +21,11 @@ export interface NativeScreenLifecycleInput {
 	focusedIndex: number;
 	isClosing: number;
 	nextBackdropBehavior?: "block" | "passthrough" | "dismiss" | "collapse";
-	inactiveBehavior: InactiveBehavior;
-}
-
-export interface NativeScreenLifecycle {
-	visible: boolean;
-	mode: ActivityMode;
 }
 
 interface NativeScreenUnmountInput {
 	inactiveBehavior: InactiveBehavior;
-	visible: boolean;
+	state: NativeScreenState;
 	hasNestedState: boolean;
 }
 
@@ -34,9 +35,9 @@ interface NativeScreenPointerEventsInput {
 	isAllowedPassthroughBelow: boolean;
 }
 
-export function resolveNativeScreenLifecycle(
+export function resolveNativeScreenState(
 	input: NativeScreenLifecycleInput,
-): NativeScreenLifecycle {
+): NativeScreenState {
 	"worklet";
 
 	const {
@@ -46,7 +47,6 @@ export function resolveNativeScreenLifecycle(
 		focusedIndex,
 		isClosing,
 		nextBackdropBehavior,
-		inactiveBehavior,
 	} = input;
 	const topIndex = routesLength - 1;
 	const isTop = index === topIndex;
@@ -62,33 +62,24 @@ export function resolveNativeScreenLifecycle(
 		isClosing > 0;
 
 	if (isTop || isFocused) {
-		return {
-			visible: true,
-			mode: "normal",
-		};
+		return "interactive";
 	}
 
 	if (shouldStayVisible) {
-		return {
-			visible: true,
-			mode: "inert",
-		};
+		return "inert";
 	}
 
-	const mode: ActivityMode = inactiveBehavior === "none" ? "inert" : "paused";
-
-	return {
-		visible: false,
-		mode,
-	};
+	return "inactive";
 }
 
 export function shouldUnmountNativeScreen({
 	inactiveBehavior,
-	visible,
+	state,
 	hasNestedState,
 }: NativeScreenUnmountInput): boolean {
-	return inactiveBehavior === "unmount" && !visible && !hasNestedState;
+	return (
+		inactiveBehavior === "unmount" && state === "inactive" && !hasNestedState
+	);
 }
 
 export function resolveNativeScreenPointerEvents({

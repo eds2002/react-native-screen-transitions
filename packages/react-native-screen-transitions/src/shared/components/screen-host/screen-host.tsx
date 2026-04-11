@@ -11,30 +11,26 @@ import {
 } from "react-native";
 import Animated, {
 	useAnimatedProps,
-	useAnimatedRef,
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
-import { useStack } from "../hooks/navigation/use-stack";
-import { useSharedValueState } from "../hooks/reanimated/use-shared-value-state";
-import { LayoutAnchorProvider } from "../providers/layout-anchor.provider";
-import { useManagedStackContext } from "../providers/stack/managed.provider";
-import { AnimationStore } from "../stores/animation.store";
-import type { BackdropBehavior } from "../types/screen.types";
+import { useStack } from "../../hooks/navigation/use-stack";
+import { useSharedValueState } from "../../hooks/reanimated/use-shared-value-state";
+import { useManagedStackContext } from "../../providers/stack/managed.provider";
+import { AnimationStore } from "../../stores/animation.store";
+import type { BackdropBehavior } from "../../types/screen.types";
 import {
-	type ActivityMode,
 	type InactiveBehavior,
+	type NativeScreenState,
 	POINTER_EVENTS_BOX_NONE,
 	POINTER_EVENTS_NONE,
-	resolveNativeScreenLifecycle,
 	resolveNativeScreenPointerEvents,
+	resolveNativeScreenState,
 	shouldUnmountNativeScreen,
-} from "./native-screen-lifecycle";
+} from "./helpers";
 
 const PASSTHROUGH = "passthrough";
 const ACTIVITY_CONTENTS_DISPLAY = "contents" as const;
-const DISPLAY_FLEX = "flex" as const;
-const DISPLAY_NONE = "none" as const;
 
 interface ScreenProps {
 	routeKey: string;
@@ -44,7 +40,7 @@ interface ScreenProps {
 	children: ReactNode;
 }
 
-export const NativeScreen = ({
+export const ScreenHost = ({
 	routeKey,
 	index,
 	isPreloaded,
@@ -55,49 +51,42 @@ export const NativeScreen = ({
 	const { backdropBehaviors } = useManagedStackContext();
 
 	const routesLength = routes.length;
-	const screenRef = useAnimatedRef<Animated.View>();
 
 	const sceneClosing = AnimationStore.getValue(routeKey, "closing");
-	const contentVisible = useSharedValue(true);
-	const contentMode = useSharedValue<ActivityMode>("inert");
+	const contentState = useSharedValue<NativeScreenState>("inert");
 
 	const route = routes[index] as
 		| ({ state?: unknown } & (typeof routes)[number])
 		| undefined;
+
 	const hasNestedState = Boolean(route?.state);
 	const nextBackdropBehavior = backdropBehaviors[index + 1] as
 		| BackdropBehavior
 		| undefined;
 
 	useDerivedValue(() => {
-		const nextLifecycle = resolveNativeScreenLifecycle({
+		const nextState = resolveNativeScreenState({
 			index,
 			routesLength,
 			isPreloaded,
 			focusedIndex: optimisticFocusedIndex.value,
 			isClosing: sceneClosing.get(),
 			nextBackdropBehavior,
-			inactiveBehavior,
 		});
 
-		if (nextLifecycle.visible !== contentVisible.get()) {
-			contentVisible.set(nextLifecycle.visible);
-		}
-
-		if (nextLifecycle.mode !== contentMode.get()) {
-			contentMode.set(nextLifecycle.mode);
+		if (nextState !== contentState.get()) {
+			contentState.set(nextState);
 		}
 	});
 
-	const visible = useSharedValueState(contentVisible);
-	const mode = useSharedValueState(contentMode);
+	const state = useSharedValueState(contentState);
 	const shouldUnmount = shouldUnmountNativeScreen({
 		inactiveBehavior,
-		visible,
+		state,
 		hasNestedState,
 	});
 
-	const animatedProps = useAnimatedProps(() => {
+	const animatedPointerEvents = useAnimatedProps(() => {
 		const isClosing = sceneClosing.get() > 0;
 		const activeIndex = optimisticFocusedIndex.value;
 		const activeBackdrop = backdropBehaviors[activeIndex] ?? "block";
@@ -119,39 +108,42 @@ export const NativeScreen = ({
 
 	return (
 		<Animated.View
-			ref={screenRef}
 			collapsable={false}
 			style={StyleSheet.absoluteFill}
-			animatedProps={animatedProps}
+			animatedProps={animatedPointerEvents}
 		>
-			<LayoutAnchorProvider anchorRef={screenRef}>
-				<ActivityWrapper mode={mode} visible={visible} style={styles.content}>
-					{children}
-				</ActivityWrapper>
-			</LayoutAnchorProvider>
+			<ActivityWrapper
+				state={state}
+				inactiveBehavior={inactiveBehavior}
+				style={styles.content}
+			>
+				{children}
+			</ActivityWrapper>
 		</Animated.View>
 	);
 };
 
 interface ActivityWrapperProps {
-	mode: ActivityMode;
-	visible: boolean;
+	state: NativeScreenState;
+	inactiveBehavior: InactiveBehavior;
 	style?: StyleProp<ViewStyle>;
 	children: ReactNode;
 }
 
 const ActivityWrapper = ({
-	mode,
-	visible,
+	state,
+	inactiveBehavior,
 	style,
 	children,
 }: ActivityWrapperProps) => {
-	const display = visible ? DISPLAY_FLEX : DISPLAY_NONE;
-	const reactActivityMode = mode === "paused" ? "hidden" : "visible";
+	const inert = state !== "interactive";
+	const shouldPauseEffects =
+		state === "inactive" && inactiveBehavior !== "none";
+	const reactActivityMode = shouldPauseEffects ? "hidden" : "visible";
 
 	if (Platform.OS === "web") {
 		return (
-			<ActivityContainer inert={mode !== "normal"} style={[style, { display }]}>
+			<ActivityContainer inert={inert} style={[style]}>
 				{children}
 			</ActivityContainer>
 		);
@@ -160,12 +152,7 @@ const ActivityWrapper = ({
 	return (
 		<Activity mode={reactActivityMode}>
 			<ActivityContentView style={{ display: ACTIVITY_CONTENTS_DISPLAY }}>
-				<ActivityContainer
-					inert={mode !== "normal"}
-					style={[style, { display }]}
-				>
-					{children}
-				</ActivityContainer>
+				{children}
 			</ActivityContentView>
 		</Activity>
 	);
@@ -199,8 +186,8 @@ const ACTIVITY_CONTENT_STYLE: Record<
 	true | { process?: (value: unknown) => unknown }
 > = {
 	display: {
-		// React Activity hides its subtree with display:none when paused.
-		// We keep the outer shell at display:contents so visibility can be driven separately.
+		// React Activity hides its subtree with display:none when effects are paused.
+		// We remap the wrapper to display:contents so inactive screens can stay painted.
 		process: () => ACTIVITY_CONTENTS_DISPLAY,
 	},
 };

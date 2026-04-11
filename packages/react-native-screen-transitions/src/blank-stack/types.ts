@@ -106,9 +106,13 @@ export type BlankStackNavigationOptions = ScreenTransitionConfig & {
 	/**
 	 * What should happen when screens become inactive.
 	 *
-	 * - `pause`: Effects are paused when the screen falls outside the visible activity window
-	 * - `unmount`: Off-window screens unmount unless they hold nested navigator state
-	 * - `none`: Inactive screens stay mounted and continue running effects
+	 * A screen becomes inactive once it falls deeper than the inert screen in the
+	 * stack, unless another rule keeps it alive (for example a preloaded route or
+	 * a non-blocking backdrop above it).
+	 *
+	 * - `pause`: Keep the screen mounted, but pause its effects while inactive
+	 * - `unmount`: Remove inactive screens unless they hold nested navigator state
+	 * - `none`: Keep inactive screens mounted and let their effects continue running
 	 *
 	 * Defaults to `pause`.
 	 */

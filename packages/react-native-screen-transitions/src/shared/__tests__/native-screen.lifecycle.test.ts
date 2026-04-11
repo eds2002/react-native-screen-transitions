@@ -1,67 +1,62 @@
 import { describe, expect, it } from "bun:test";
 import {
-	resolveNativeScreenLifecycle,
+	resolveNativeScreenState,
 	resolveNativeScreenPointerEvents,
 	shouldUnmountNativeScreen,
-} from "../components/native-screen-lifecycle";
+} from "../components/screen-host/helpers";
 
 const createLifecycleInput = (
-	overrides: Partial<Parameters<typeof resolveNativeScreenLifecycle>[0]> = {},
-): Parameters<typeof resolveNativeScreenLifecycle>[0] => ({
+	overrides: Partial<Parameters<typeof resolveNativeScreenState>[0]> = {},
+): Parameters<typeof resolveNativeScreenState>[0] => ({
 	index: 2,
 	routesLength: 3,
 	isPreloaded: false,
 	focusedIndex: 2,
 	isClosing: 0,
-	inactiveBehavior: "pause",
 	...overrides,
 });
 
-describe("resolveNativeScreenLifecycle", () => {
-	it("keeps the focused top screen normal and visible", () => {
-		const lifecycle = resolveNativeScreenLifecycle(createLifecycleInput());
+describe("resolveNativeScreenState", () => {
+	it("keeps the focused top screen interactive", () => {
+		const state = resolveNativeScreenState(createLifecycleInput());
 
-		expect(lifecycle.visible).toBe(true);
-		expect(lifecycle.mode).toBe("normal");
+		expect(state).toBe("interactive");
 	});
 
-	it("keeps a closing top screen normal while it animates out", () => {
-		const lifecycle = resolveNativeScreenLifecycle(
+	it("keeps a closing top screen interactive while it animates out", () => {
+		const state = resolveNativeScreenState(
 			createLifecycleInput({
 				focusedIndex: 1,
 				isClosing: 1,
 			}),
 		);
 
-		expect(lifecycle.visible).toBe(true);
-		expect(lifecycle.mode).toBe("normal");
+		expect(state).toBe("interactive");
 	});
 
-	it("keeps the screen before the top route inert and visible", () => {
-		const lifecycle = resolveNativeScreenLifecycle(
+	it("keeps the screen before the top route inert", () => {
+		const state = resolveNativeScreenState(
 			createLifecycleInput({
 				index: 1,
 			}),
 		);
 
-		expect(lifecycle.visible).toBe(true);
-		expect(lifecycle.mode).toBe("inert");
+		expect(state).toBe("inert");
 	});
 
-	it("keeps preloaded screens inert and visible", () => {
-		const lifecycle = resolveNativeScreenLifecycle(
+	it("keeps preloaded screens inert", () => {
+		const state = resolveNativeScreenState(
 			createLifecycleInput({
 				index: 0,
 				isPreloaded: true,
 			}),
 		);
 
-		expect(lifecycle.visible).toBe(true);
-		expect(lifecycle.mode).toBe("inert");
+		expect(state).toBe("inert");
 	});
 
-	it("keeps the screen below a non-blocking backdrop inert and visible", () => {
-		const lifecycle = resolveNativeScreenLifecycle(
+	it("keeps the screen below a non-blocking backdrop inert", () => {
+		const state = resolveNativeScreenState(
 			createLifecycleInput({
 				index: 0,
 				routesLength: 4,
@@ -70,42 +65,27 @@ describe("resolveNativeScreenLifecycle", () => {
 			}),
 		);
 
-		expect(lifecycle.visible).toBe(true);
-		expect(lifecycle.mode).toBe("inert");
+		expect(state).toBe("inert");
 	});
 
-	it("pauses off-window screens by default", () => {
-		const lifecycle = resolveNativeScreenLifecycle(
+	it("marks off-window screens inactive", () => {
+		const state = resolveNativeScreenState(
 			createLifecycleInput({
 				index: 0,
 				focusedIndex: 2,
 			}),
 		);
 
-		expect(lifecycle.visible).toBe(false);
-		expect(lifecycle.mode).toBe("paused");
-	});
-
-	it("keeps off-window screens inert when inactiveBehavior is none", () => {
-		const lifecycle = resolveNativeScreenLifecycle(
-			createLifecycleInput({
-				index: 0,
-				focusedIndex: 2,
-				inactiveBehavior: "none",
-			}),
-		);
-
-		expect(lifecycle.visible).toBe(false);
-		expect(lifecycle.mode).toBe("inert");
+		expect(state).toBe("inactive");
 	});
 });
 
 describe("shouldUnmountNativeScreen", () => {
-	it("unmounts invisible screens when configured to do so", () => {
+	it("unmounts inactive screens when configured to do so", () => {
 		expect(
 			shouldUnmountNativeScreen({
 				inactiveBehavior: "unmount",
-				visible: false,
+				state: "inactive",
 				hasNestedState: false,
 			}),
 		).toBe(true);
@@ -115,8 +95,18 @@ describe("shouldUnmountNativeScreen", () => {
 		expect(
 			shouldUnmountNativeScreen({
 				inactiveBehavior: "unmount",
-				visible: false,
+				state: "inactive",
 				hasNestedState: true,
+			}),
+		).toBe(false);
+	});
+
+	it("keeps inert screens mounted even when unmount is configured", () => {
+		expect(
+			shouldUnmountNativeScreen({
+				inactiveBehavior: "unmount",
+				state: "inert",
+				hasNestedState: false,
 			}),
 		).toBe(false);
 	});
