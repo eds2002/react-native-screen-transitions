@@ -1,8 +1,11 @@
+import {
+	NavigationContext,
+	NavigationRouteContext,
+} from "@react-navigation/native";
 import { Fragment } from "react";
 import { NativeScreen } from "../../shared/components/native-screen";
 import { NativeScreenContainer } from "../../shared/components/native-screen-container";
 import { Overlay } from "../../shared/components/overlay";
-import { SceneView } from "../../shared/components/scene-view";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
@@ -61,7 +64,11 @@ export const StackView = withStackCore(
 										current={descriptor}
 										next={nextDescriptor}
 									>
-										<SceneView key={route.key} descriptor={descriptor} />
+										<NavigationContext.Provider value={descriptor.navigation}>
+											<NavigationRouteContext.Provider value={route}>
+												{descriptor.render?.()}
+											</NavigationRouteContext.Provider>
+										</NavigationContext.Provider>
 									</ScreenComposer>
 								</NativeScreen>
 							);
