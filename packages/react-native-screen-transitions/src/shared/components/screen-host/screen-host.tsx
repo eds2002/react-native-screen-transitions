@@ -1,14 +1,5 @@
-import { Activity, type ReactNode } from "react";
-import {
-	type HostComponent,
-	NativeComponentRegistry,
-	Platform,
-	type StyleProp,
-	StyleSheet,
-	View,
-	type ViewProps,
-	type ViewStyle,
-} from "react-native";
+import type { ReactNode } from "react";
+import { StyleSheet } from "react-native";
 import Animated, {
 	useAnimatedProps,
 	useDerivedValue,
@@ -22,15 +13,13 @@ import type { BackdropBehavior } from "../../types/screen.types";
 import {
 	type InactiveBehavior,
 	type NativeScreenState,
-	POINTER_EVENTS_BOX_NONE,
-	POINTER_EVENTS_NONE,
 	resolveNativeScreenPointerEvents,
 	resolveNativeScreenState,
 	shouldUnmountNativeScreen,
 } from "./helpers";
+import { ScreenHostProvider } from "./screen-host.provider";
 
 const PASSTHROUGH = "passthrough";
-const ACTIVITY_CONTENTS_DISPLAY = "contents" as const;
 
 interface ScreenProps {
 	routeKey: string;
@@ -86,6 +75,11 @@ export const ScreenHost = ({
 		hasNestedState,
 	});
 
+	const isInert = state !== "interactive";
+	const shouldPauseEffects =
+		state === "inactive" && inactiveBehavior !== "none";
+	const activityMode = shouldPauseEffects ? "hidden" : "visible";
+
 	const animatedPointerEvents = useAnimatedProps(() => {
 		const isClosing = sceneClosing.get() > 0;
 		const activeIndex = optimisticFocusedIndex.value;
@@ -112,106 +106,16 @@ export const ScreenHost = ({
 			style={StyleSheet.absoluteFill}
 			animatedProps={animatedPointerEvents}
 		>
-			<ActivityWrapper
-				state={state}
-				inactiveBehavior={inactiveBehavior}
-				style={styles.content}
+			<ScreenHostProvider
+				activityMode={activityMode}
+				isInert={isInert}
+				contentStyle={styles.content}
 			>
 				{children}
-			</ActivityWrapper>
+			</ScreenHostProvider>
 		</Animated.View>
 	);
 };
-
-interface ActivityWrapperProps {
-	state: NativeScreenState;
-	inactiveBehavior: InactiveBehavior;
-	style?: StyleProp<ViewStyle>;
-	children: ReactNode;
-}
-
-const ActivityWrapper = ({
-	state,
-	inactiveBehavior,
-	style,
-	children,
-}: ActivityWrapperProps) => {
-	const inert = state !== "interactive";
-	const shouldPauseEffects =
-		state === "inactive" && inactiveBehavior !== "none";
-	const reactActivityMode = shouldPauseEffects ? "hidden" : "visible";
-
-	if (Platform.OS === "web") {
-		return (
-			<ActivityContainer inert={inert} style={[style]}>
-				{children}
-			</ActivityContainer>
-		);
-	}
-
-	return (
-		<Activity mode={reactActivityMode}>
-			<ActivityContentView style={{ display: ACTIVITY_CONTENTS_DISPLAY }}>
-				{children}
-			</ActivityContentView>
-		</Activity>
-	);
-};
-
-interface ActivityContainerProps {
-	inert?: boolean;
-	style?: StyleProp<ViewStyle>;
-	children: ReactNode;
-}
-
-const ActivityContainer = ({
-	inert,
-	style,
-	children,
-}: ActivityContainerProps) => {
-	return (
-		<View
-			aria-hidden={inert}
-			pointerEvents={inert ? POINTER_EVENTS_NONE : POINTER_EVENTS_BOX_NONE}
-			style={style}
-			collapsable={false}
-		>
-			{children}
-		</View>
-	);
-};
-
-const ACTIVITY_CONTENT_STYLE: Record<
-	string,
-	true | { process?: (value: unknown) => unknown }
-> = {
-	display: {
-		// React Activity hides its subtree with display:none when effects are paused.
-		// We remap the wrapper to display:contents so inactive screens can stay painted.
-		process: () => ACTIVITY_CONTENTS_DISPLAY,
-	},
-};
-
-const ACTIVITY_CONTENT_VIEW_CONFIG = {
-	uiViewClassName: "RCTView",
-	validAttributes: {
-		style: ACTIVITY_CONTENT_STYLE,
-	},
-};
-
-type ActivityContentViewProps = Omit<ViewProps, "style"> & {
-	style?:
-		| {
-				display?: typeof ACTIVITY_CONTENTS_DISPLAY | undefined;
-		  }
-		| undefined;
-};
-
-const ActivityContentView: HostComponent<ActivityContentViewProps> =
-	NativeComponentRegistry.get<ActivityContentViewProps>(
-		"ScreenTransitionsActivityContentView",
-		() => ACTIVITY_CONTENT_VIEW_CONFIG,
-	);
 
 const styles = StyleSheet.create({
 	content: {

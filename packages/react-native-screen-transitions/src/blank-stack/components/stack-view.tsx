@@ -5,7 +5,10 @@ import {
 import { Fragment } from "react";
 import { StyleSheet, View } from "react-native";
 import { Overlay } from "../../shared/components/overlay";
-import { ScreenHost } from "../../shared/components/screen-host/screen-host";
+import {
+	ScreenHost,
+	ScreenHostActivity,
+} from "../../shared/components/screen-host";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
@@ -50,7 +53,9 @@ export const StackView = withStackCore(
 									>
 										<NavigationContext.Provider value={descriptor.navigation}>
 											<NavigationRouteContext.Provider value={route}>
-												{descriptor.render?.()}
+												<ScreenHostActivity>
+													{descriptor.render?.()}
+												</ScreenHostActivity>
 											</NavigationRouteContext.Provider>
 										</NavigationContext.Provider>
 									</ScreenComposer>
