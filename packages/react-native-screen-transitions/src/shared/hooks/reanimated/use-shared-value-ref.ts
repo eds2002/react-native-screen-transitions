@@ -9,11 +9,11 @@ import { IS_WEB } from "../../constants";
 
 export function readInitialValue<T>(sharedValue: SharedValue<T>): T {
 	if (IS_WEB) {
-		return sharedValue.value;
+		return sharedValue.get();
 	}
 	const readOnUI = executeOnUIRuntimeSync((sv: SharedValue<T>) => {
 		"worklet";
-		return sv.value;
+		return sv.get();
 	});
 	return readOnUI(sharedValue);
 }
@@ -32,7 +32,7 @@ export function useSharedValueRef<T>(
 	}, []);
 
 	useAnimatedReaction(
-		() => sharedValue.value,
+		() => sharedValue.get(),
 		(value, previousValue) => {
 			if (Object.is(value, previousValue)) return;
 			runOnJS(updateRef)(value);
