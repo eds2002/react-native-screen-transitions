@@ -8,10 +8,12 @@ import {
 	type ViewProps,
 	type ViewStyle,
 } from "react-native";
-import { POINTER_EVENTS_BOX_NONE, POINTER_EVENTS_NONE } from "../helpers";
+import {
+	ACTIVITY_CONTENTS_DISPLAY,
+	POINTER_EVENTS_BOX_NONE,
+	POINTER_EVENTS_NONE,
+} from "../constants";
 import { useScreenHostContext } from "../screen-host.provider";
-
-const ACTIVITY_CONTENTS_DISPLAY = "contents" as const;
 
 interface ScreenHostActivityProps {
 	children: ReactNode;

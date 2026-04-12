@@ -68,6 +68,18 @@ describe("resolveNativeScreenState", () => {
 		expect(state).toBe("inert");
 	});
 
+	it("keeps the nearest non-closing screen below a closing block inert", () => {
+		const state = resolveNativeScreenState(
+			createLifecycleInput({
+				index: 0,
+				focusedIndex: 2,
+				shouldRetainAcrossClosingGap: true,
+			}),
+		);
+
+		expect(state).toBe("inert");
+	});
+
 	it("marks off-window screens inactive", () => {
 		const state = resolveNativeScreenState(
 			createLifecycleInput({

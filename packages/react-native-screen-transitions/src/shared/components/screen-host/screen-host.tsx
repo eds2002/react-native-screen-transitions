@@ -1,31 +1,22 @@
 import type { ReactNode } from "react";
 import { StyleSheet } from "react-native";
-import Animated, {
-	useAnimatedProps,
-	useDerivedValue,
-	useSharedValue,
-} from "react-native-reanimated";
+import Animated, { useAnimatedProps } from "react-native-reanimated";
 import { useStack } from "../../hooks/navigation/use-stack";
-import { useSharedValueState } from "../../hooks/reanimated/use-shared-value-state";
 import { useManagedStackContext } from "../../providers/stack/managed.provider";
 import { AnimationStore } from "../../stores/animation.store";
-import type { BackdropBehavior } from "../../types/screen.types";
 import {
-	type InactiveBehavior,
-	type NativeScreenState,
-	resolveNativeScreenPointerEvents,
-	resolveNativeScreenState,
-	shouldUnmountNativeScreen,
-} from "./helpers";
+	PASSTHROUGH,
+	POINTER_EVENTS_BOX_NONE,
+	POINTER_EVENTS_NONE,
+} from "./constants";
+import { useScreenActivityState } from "./hooks/use-screen-activity-state";
 import { ScreenHostProvider } from "./screen-host.provider";
-
-const PASSTHROUGH = "passthrough";
 
 interface ScreenProps {
 	routeKey: string;
 	index: number;
 	isPreloaded: boolean;
-	inactiveBehavior?: InactiveBehavior;
+	inactiveBehavior?: "pause" | "unmount" | "none";
 	children: ReactNode;
 }
 
@@ -36,63 +27,43 @@ export const ScreenHost = ({
 	inactiveBehavior = "pause",
 	children,
 }: ScreenProps) => {
-	const { routes, optimisticFocusedIndex } = useStack();
+	const { routes, routeKeys, optimisticFocusedIndex } = useStack();
 	const { backdropBehaviors } = useManagedStackContext();
 
-	const routesLength = routes.length;
-
 	const sceneClosing = AnimationStore.getValue(routeKey, "closing");
-	const contentState = useSharedValue<NativeScreenState>("inert");
 
-	const route = routes[index] as
-		| ({ state?: unknown } & (typeof routes)[number])
-		| undefined;
+	const route = routes[index];
 
-	const hasNestedState = Boolean(route?.state);
-	const nextBackdropBehavior = backdropBehaviors[index + 1] as
-		| BackdropBehavior
-		| undefined;
+	const hasNestedState = "state" in route;
 
-	useDerivedValue(() => {
-		const nextState = resolveNativeScreenState({
-			index,
-			routesLength,
-			isPreloaded,
-			focusedIndex: optimisticFocusedIndex.value,
-			isClosing: sceneClosing.get(),
-			nextBackdropBehavior,
-		});
-
-		if (nextState !== contentState.get()) {
-			contentState.set(nextState);
-		}
+	const state = useScreenActivityState({
+		routeKey,
+		routeKeys,
+		index,
+		isPreloaded,
 	});
 
-	const state = useSharedValueState(contentState);
-	const shouldUnmount = shouldUnmountNativeScreen({
-		inactiveBehavior,
-		state,
-		hasNestedState,
-	});
-
+	const shouldUnmount =
+		inactiveBehavior === "unmount" && state === "inactive" && !hasNestedState;
 	const isInert = state !== "interactive";
 	const shouldPauseEffects =
 		state === "inactive" && inactiveBehavior !== "none";
+
 	const activityMode = shouldPauseEffects ? "hidden" : "visible";
 
-	const animatedPointerEvents = useAnimatedProps(() => {
-		const isClosing = sceneClosing.get() > 0;
-		const activeIndex = optimisticFocusedIndex.value;
+	const containerProps = useAnimatedProps(() => {
+		const isClosing = sceneClosing.get();
+		const activeIndex = optimisticFocusedIndex.get();
 		const activeBackdrop = backdropBehaviors[activeIndex] ?? "block";
 		const isAllowedPassthroughBelow =
 			activeBackdrop === PASSTHROUGH && index === activeIndex - 1;
+		const isActive = index === activeIndex;
 
 		return {
-			pointerEvents: resolveNativeScreenPointerEvents({
-				isClosing,
-				isActive: index === activeIndex,
-				isAllowedPassthroughBelow,
-			}),
+			pointerEvents:
+				isClosing || (!isActive && !isAllowedPassthroughBelow)
+					? POINTER_EVENTS_NONE
+					: POINTER_EVENTS_BOX_NONE,
 		};
 	});
 
@@ -104,7 +75,7 @@ export const ScreenHost = ({
 		<Animated.View
 			collapsable={false}
 			style={StyleSheet.absoluteFill}
-			animatedProps={animatedPointerEvents}
+			animatedProps={containerProps}
 		>
 			<ScreenHostProvider
 				activityMode={activityMode}
