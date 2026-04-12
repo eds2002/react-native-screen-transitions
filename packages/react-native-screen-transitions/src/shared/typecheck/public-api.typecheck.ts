@@ -44,6 +44,11 @@ const nestedInterpolatedStyle: TransitionInterpolatedStyle = {
 	},
 };
 
+const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
+	[NAVIGATION_MASK_CONTAINER_STYLE_ID]: slotStyle,
+	[NAVIGATION_MASK_ELEMENT_STYLE_ID]: slotStyle,
+};
+
 const legacyInterpolatedStyle: TransitionInterpolatedStyle = {
 	contentStyle: {
 		opacity: 1,
@@ -189,6 +194,7 @@ const publicApiTypecheck = {
 	},
 	slotStyle,
 	nestedInterpolatedStyle,
+	navigationMaskInterpolatedStyle,
 	legacyInterpolatedStyle,
 	gestureTarget,
 	numericBoundsResult,
