@@ -45,6 +45,11 @@ const nestedInterpolatedStyle: TransitionInterpolatedStyle = {
 	},
 };
 
+const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
+	[NAVIGATION_MASK_CONTAINER_STYLE_ID]: slotStyle,
+	[NAVIGATION_MASK_ELEMENT_STYLE_ID]: slotStyle,
+};
+
 const zoomOptions: BoundsNavigationZoomOptions = {
 	target: "bound",
 	debug: true,
@@ -181,6 +186,7 @@ const publicApiTypecheck = {
 	maybeCurrentContentHeight,
 	currentSnapIndex,
 	zoomOptions,
+	navigationMaskInterpolatedStyle,
 	nextNameOptions,
 	initialMountAnimationOptions,
 	emptyInterpolatorOptions,

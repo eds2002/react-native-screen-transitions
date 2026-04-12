@@ -162,6 +162,8 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 		return gesture;
 	}, [panGestures, scrollConfigs]);
 
+	const isHorizontal = scrollDirection === "horizontal";
+
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
 			if (scrollConfigs.length === 0) return;
@@ -170,8 +172,8 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 				"worklet";
 				if (v === null) {
 					return {
-						x: event.contentOffset.x,
-						y: event.contentOffset.y,
+						x: isHorizontal ? event.contentOffset.x : 0,
+						y: isHorizontal ? 0 : event.contentOffset.y,
 						contentHeight: 0,
 						contentWidth: 0,
 						layoutHeight: 0,
@@ -179,8 +181,11 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 						isTouched: true,
 					};
 				}
-				v.x = event.contentOffset.x;
-				v.y = event.contentOffset.y;
+				if (isHorizontal) {
+					v.x = event.contentOffset.x;
+				} else {
+					v.y = event.contentOffset.y;
+				}
 				return v;
 			};
 
@@ -204,13 +209,16 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 						y: 0,
 						layoutHeight: 0,
 						layoutWidth: 0,
-						contentWidth: width,
-						contentHeight: height,
+						contentWidth: isHorizontal ? width : 0,
+						contentHeight: isHorizontal ? 0 : height,
 						isTouched: false,
 					};
 				}
-				v.contentWidth = width;
-				v.contentHeight = height;
+				if (isHorizontal) {
+					v.contentWidth = width;
+				} else {
+					v.contentHeight = height;
+				}
 				return v;
 			};
 
@@ -235,13 +243,16 @@ export const useScrollRegistry = (props: ScrollProgressHookProps) => {
 					y: 0,
 					contentHeight: 0,
 					contentWidth: 0,
-					layoutHeight: height,
-					layoutWidth: width,
+					layoutHeight: isHorizontal ? 0 : height,
+					layoutWidth: isHorizontal ? width : 0,
 					isTouched: false,
 				};
 			}
-			v.layoutHeight = height;
-			v.layoutWidth = width;
+			if (isHorizontal) {
+				v.layoutWidth = width;
+			} else {
+				v.layoutHeight = height;
+			}
 			return v;
 		};
 

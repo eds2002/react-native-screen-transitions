@@ -5,6 +5,10 @@ import type {
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
+import {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "../constants";
 import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";
 import type { Layout } from "./screen.types";
@@ -273,6 +277,10 @@ export type NormalizedTransitionInterpolatedStyle = {
 	backdrop?: NormalizedTransitionSlotStyle;
 	/** Animated style and props for the surface component layer within the screen. */
 	surface?: NormalizedTransitionSlotStyle;
+	/** Animated style and props for the navigation mask container layer. */
+	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: NormalizedTransitionSlotStyle;
+	/** Animated style and props for the navigation mask element layer. */
+	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: NormalizedTransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
 	[id: string]: NormalizedTransitionSlotStyle | undefined;
 };
@@ -287,6 +295,10 @@ export type TransitionInterpolatedStyle = {
 	backdrop?: TransitionSlotStyle;
 	/** Animated style and props for the surface component layer within the screen. */
 	surface?: TransitionSlotStyle;
+	/** Animated style and props for the navigation mask container layer. */
+	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: TransitionSlotStyle;
+	/** Animated style and props for the navigation mask element layer. */
+	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
 	[id: string]: TransitionSlotStyle | undefined;
 };
