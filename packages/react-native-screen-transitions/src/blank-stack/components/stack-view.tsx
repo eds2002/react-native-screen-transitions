@@ -1,13 +1,18 @@
+import {
+	NavigationContext,
+	NavigationRouteContext,
+} from "@react-navigation/native";
 import { Fragment } from "react";
-import { NativeScreen } from "../../shared/components/native-screen";
-import { NativeScreenContainer } from "../../shared/components/native-screen-container";
+import { StyleSheet, View } from "react-native";
 import { Overlay } from "../../shared/components/overlay";
-import { SceneView } from "../../shared/components/scene-view";
+import {
+	ScreenHost,
+	ScreenHostActivity,
+} from "../../shared/components/screen-host";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { resolveSceneNeighbors } from "../../shared/utils/navigation/resolve-scene-neighbors";
-import { isFabric } from "../../shared/utils/platform";
 import type {
 	BlankStackDescriptor,
 	BlankStackNavigationHelpers,
@@ -16,59 +21,54 @@ import type {
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: true },
 	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
-		({
-			descriptors,
-			focusedIndex,
-			scenes,
-			shouldShowFloatOverlay,
-			closingRouteMap,
-		}) => {
+		({ descriptors, scenes, shouldShowFloatOverlay, closingRouteMap }) => {
 			const isRouteClosing = (routeKey: string) =>
 				Boolean(closingRouteMap.current[routeKey]);
 
 			return (
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
-
-					<NativeScreenContainer>
+					<View collapsable={false} style={styles.container}>
 						{scenes.map((scene, sceneIndex) => {
 							const descriptor = scene.descriptor;
 							const route = scene.route;
-							const isFocused = focusedIndex === sceneIndex;
-							const isBelowFocused = focusedIndex - 1 === sceneIndex;
 
 							const { previousDescriptor, nextDescriptor } =
 								resolveSceneNeighbors(scenes, sceneIndex, isRouteClosing);
 
 							const isPreloaded = descriptors[route.key] === undefined;
 
-							// On Fabric, when screen is frozen, animated and reanimated values are not updated
-							// due to component being unmounted. To avoid this, we don't freeze the previous screen there
-							const shouldFreeze = isFabric()
-								? !isPreloaded && !isFocused && !isBelowFocused
-								: !isPreloaded && !isFocused;
 							return (
-								<NativeScreen
+								<ScreenHost
 									key={route.key}
 									isPreloaded={isPreloaded}
 									index={sceneIndex}
 									routeKey={route.key}
-									shouldFreeze={shouldFreeze}
-									freezeOnBlur={descriptor.options.freezeOnBlur}
+									inactiveBehavior={descriptor.options.inactiveBehavior}
 								>
 									<ScreenComposer
 										previous={previousDescriptor}
 										current={descriptor}
 										next={nextDescriptor}
 									>
-										<SceneView key={route.key} descriptor={descriptor} />
+										<NavigationContext.Provider value={descriptor.navigation}>
+											<NavigationRouteContext.Provider value={route}>
+												<ScreenHostActivity>
+													{descriptor.render?.()}
+												</ScreenHostActivity>
+											</NavigationRouteContext.Provider>
+										</NavigationContext.Provider>
 									</ScreenComposer>
-								</NativeScreen>
+								</ScreenHost>
 							);
 						})}
-					</NativeScreenContainer>
+					</View>
 				</Fragment>
 			);
 		},
 	),
 );
+
+const styles = StyleSheet.create({
+	container: { flex: 1 },
+});

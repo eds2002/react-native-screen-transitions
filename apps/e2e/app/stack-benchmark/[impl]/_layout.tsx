@@ -81,7 +81,6 @@ function getBlankStackScreenOptions(scenario: BenchmarkScenario) {
 	if (definition.transitionKind === "vertical") {
 		return {
 			...baseBlankStackScreenOptions,
-			detachPreviousScreen: definition.detachPreviousScreen,
 			gestureDirection: "vertical" as const,
 			screenStyleInterpolator: blankVerticalInterpolator,
 		};
@@ -89,7 +88,6 @@ function getBlankStackScreenOptions(scenario: BenchmarkScenario) {
 
 	return {
 		...baseBlankStackScreenOptions,
-		detachPreviousScreen: definition.detachPreviousScreen,
 		gestureDirection: "horizontal" as const,
 		screenStyleInterpolator: blankHorizontalInterpolator,
 	};
@@ -104,7 +102,6 @@ function getJsStackScreenOptions(scenario: BenchmarkScenario) {
 			...baseJsStackScreenOptions,
 			cardStyle: { backgroundColor: "transparent" as const },
 			cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
-			detachPreviousScreen: definition.detachPreviousScreen,
 			gestureDirection: "vertical" as const,
 			presentation: "transparentModal" as const,
 		};
@@ -118,7 +115,6 @@ function getJsStackScreenOptions(scenario: BenchmarkScenario) {
 				}
 			: {}),
 		cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-		detachPreviousScreen: definition.detachPreviousScreen,
 		gestureDirection: "horizontal" as const,
 		presentation: "card" as const,
 	};

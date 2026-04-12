@@ -1,6 +1,7 @@
 import type { ComponentProps } from "react";
 import {
 	type BlankStackFactoryOptions,
+	type BlankStackNavigationOptions,
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
 } from "../../blank-stack";
@@ -102,6 +103,9 @@ const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
 	enableNativeScreens: false,
 };
+const blankStackNavigationOptions: BlankStackNavigationOptions = {
+	inactiveBehavior: "unmount",
+};
 
 type StaticBlankStackParamList = {
 	Home: undefined;
@@ -181,6 +185,7 @@ const publicApiTypecheck = {
 	initialMountAnimationOptions,
 	emptyInterpolatorOptions,
 	blankStackFactoryOptions,
+	blankStackNavigationOptions,
 	viewBlankStackProps,
 	independentBlankStackProps,
 	independentViewBlankStackProps,

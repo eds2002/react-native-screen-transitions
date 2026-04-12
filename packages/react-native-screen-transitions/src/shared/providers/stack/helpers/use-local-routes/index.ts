@@ -1,5 +1,5 @@
 import { StackActions } from "@react-navigation/native";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useState } from "react";
 import { useClosingRouteKeys } from "../../../../hooks/navigation/use-closing-route-keys";
 import { usePrevious } from "../../../../hooks/navigation/use-previous";
 import useStableCallback from "../../../../hooks/use-stable-callback";
@@ -31,77 +31,65 @@ export const useLocalRoutes = <
 		routes: props.state.routes as TRoute[],
 		descriptors: props.descriptors as TDescriptorMap,
 	}));
-	const localStateRef = useRef(localState);
 
 	useLayoutEffect(() => {
 		const nextRoutesSnapshot = props.state.routes;
 		const previousRoutesSnapshot = previousRoutes;
-		const current = localStateRef.current;
 
-		const alreadyAligned =
-			routesAreIdentical(current.routes, nextRoutesSnapshot as TRoute[]) &&
-			areDescriptorsEqual(
-				current.descriptors,
-				props.descriptors as TDescriptorMap,
-			);
-		if (alreadyAligned) {
-			return;
-		}
-
-		const routeKeysUnchanged = haveSameRouteKeys(
-			previousRoutesSnapshot,
-			nextRoutesSnapshot,
-		);
-
-		let derivedRoutes: TRoute[];
-		let derivedDescriptors: TDescriptorMap;
-
-		if (routeKeysUnchanged) {
-			const result = alignRoutesWithLatest(
-				current.routes,
-				current.descriptors,
+		setLocalState((current) => {
+			const routeKeysUnchanged = haveSameRouteKeys(
+				previousRoutesSnapshot,
 				nextRoutesSnapshot,
-				props.descriptors,
 			);
 
-			derivedRoutes = result.routes as TRoute[];
-			derivedDescriptors = result.descriptors as TDescriptorMap;
-		} else {
-			const fallbackRoutes =
-				previousRoutesSnapshot.length > 0
-					? previousRoutesSnapshot
-					: current.routes;
+			let derivedRoutes: TRoute[];
+			let derivedDescriptors: TDescriptorMap;
 
-			const result = syncRoutesWithRemoved({
-				prevRoutes: fallbackRoutes,
-				prevDescriptors: current.descriptors,
-				nextRoutes: nextRoutesSnapshot,
-				nextDescriptors: props.descriptors,
-				closingRouteKeys,
-			});
+			if (routeKeysUnchanged) {
+				const result = alignRoutesWithLatest(
+					current.routes,
+					current.descriptors,
+					nextRoutesSnapshot,
+					props.descriptors,
+				);
 
-			derivedRoutes = result.routes as TRoute[];
-			derivedDescriptors = result.descriptors as TDescriptorMap;
-		}
+				derivedRoutes = result.routes as TRoute[];
+				derivedDescriptors = result.descriptors as TDescriptorMap;
+			} else {
+				const fallbackRoutes =
+					previousRoutesSnapshot.length > 0
+						? previousRoutesSnapshot
+						: current.routes;
 
-		const routesChanged = !routesAreIdentical(current.routes, derivedRoutes);
-		const descriptorsChanged = !areDescriptorsEqual(
-			current.descriptors,
-			derivedDescriptors,
-		);
+				const result = syncRoutesWithRemoved({
+					prevRoutes: fallbackRoutes,
+					prevDescriptors: current.descriptors,
+					nextRoutes: nextRoutesSnapshot,
+					nextDescriptors: props.descriptors,
+					closingRouteKeys,
+				});
 
-		if (!routesChanged && !descriptorsChanged) {
-			return;
-		}
+				derivedRoutes = result.routes as TRoute[];
+				derivedDescriptors = result.descriptors as TDescriptorMap;
+			}
 
-		const nextLocalState = {
-			routes: routesChanged ? derivedRoutes : current.routes,
-			descriptors: descriptorsChanged
-				? derivedDescriptors
-				: current.descriptors,
-		};
-		localStateRef.current = nextLocalState;
-		setLocalState(nextLocalState);
+			const routesChanged = !routesAreIdentical(current.routes, derivedRoutes);
+			const descriptorsChanged = !areDescriptorsEqual(
+				current.descriptors,
+				derivedDescriptors,
+			);
+
+			if (!routesChanged && !descriptorsChanged) {
+				return current;
+			}
+
+			return {
+				routes: routesChanged ? derivedRoutes : current.routes,
+				descriptors: descriptorsChanged
+					? derivedDescriptors
+					: current.descriptors,
+			};
+		});
 	}, [props.state.routes, props.descriptors, previousRoutes, closingRouteKeys]);
 
 	const handleCloseRoute = useStableCallback(
@@ -129,12 +117,10 @@ export const useLocalRoutes = <
 				const nextDescriptors = { ...current.descriptors };
 				delete nextDescriptors[route.key];
 
-				const nextState = {
+				return {
 					routes: nextRoutes,
 					descriptors: nextDescriptors,
 				};
-				localStateRef.current = nextState;
-				return nextState;
 			});
 		},
 	);

@@ -105,7 +105,7 @@ function buildPinchOptions(
 	return {
 		gestureEnabled: true,
 		gestureDirection: direction,
-		gestureSensitivity: 0.1,
+		gestureSensitivity: 0.75,
 		snapPoints: isPinchIn ? [0.5, 1.0] : undefined,
 		screenStyleInterpolator: ({ progress }) => {
 			"worklet";

@@ -1,5 +1,6 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { StackContextValue } from "../../hooks/navigation/use-stack";
+import type { BackdropBehavior } from "../screen.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
@@ -27,10 +28,9 @@ export interface ManagedStackProps<
  * Shared fields (routes, scenes, etc.) live in StackContext.
  */
 export interface ManagedStackContextValue {
-	activeScreensLimit: number;
 	closingRouteKeysShared: SharedValue<string[]>;
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
-	backdropBehaviors: string[];
+	backdropBehaviors: BackdropBehavior[];
 }
 
 /**

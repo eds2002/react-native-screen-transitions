@@ -1,11 +1,11 @@
 import { useCallback } from "react";
+import { useWindowDimensions } from "react-native";
 import Animated, {
 	type AnimatedRef,
 	type MeasuredDimensions,
 	measure,
 	type StyleProps,
 } from "react-native-reanimated";
-import { useLayoutAnchorContext } from "../../../providers/layout-anchor.provider";
 import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
@@ -33,6 +33,30 @@ const areMeasurementsEqual = (
 	);
 };
 
+const isMeasurementInViewport = (
+	measured: MeasuredDimensions,
+	viewportWidth: number,
+	viewportHeight: number,
+): boolean => {
+	"worklet";
+
+	if (measured.width <= 0 || measured.height <= 0) {
+		return false;
+	}
+
+	const toleranceX = viewportWidth * 0.15;
+	const toleranceY = viewportHeight * 0.15;
+	const centerX = measured.pageX + measured.width / 2;
+	const centerY = measured.pageY + measured.height / 2;
+
+	return (
+		centerX >= -toleranceX &&
+		centerX <= viewportWidth + toleranceX &&
+		centerY >= -toleranceY &&
+		centerY <= viewportHeight + toleranceY
+	);
+};
+
 export const useBoundaryMeasureAndStore = (params: {
 	enabled: boolean;
 	sharedBoundTag: string;
@@ -55,8 +79,8 @@ export const useBoundaryMeasureAndStore = (params: {
 		preparedStyles,
 		measuredAnimatedRef,
 	} = params;
-
-	const layoutAnchor = useLayoutAnchorContext();
+	const { width: viewportWidth, height: viewportHeight } =
+		useWindowDimensions();
 
 	return useCallback(
 		({ intent }: MaybeMeasureAndStoreParams = {}) => {
@@ -102,15 +126,9 @@ export const useBoundaryMeasureAndStore = (params: {
 			const measured = measure(measuredAnimatedRef);
 			if (!measured) return;
 
-			const correctedMeasured = layoutAnchor
-				? layoutAnchor.correctMeasurement(measured)
-				: measured;
-
 			const destinationInViewport =
 				!writePlan.wantsDestinationWrite ||
-				!layoutAnchor ||
-				!layoutAnchor.isMeasurementInViewport ||
-				layoutAnchor.isMeasurementInViewport(correctedMeasured);
+				isMeasurementInViewport(measured, viewportWidth, viewportHeight);
 
 			if (
 				!destinationInViewport &&
@@ -126,13 +144,13 @@ export const useBoundaryMeasureAndStore = (params: {
 			);
 			const hasSnapshotChanged =
 				!existingSnapshot ||
-				!areMeasurementsEqual(existingSnapshot.bounds, correctedMeasured);
+				!areMeasurementsEqual(existingSnapshot.bounds, measured);
 			const shouldWriteSnapshot = hasSnapshotChanged;
 
 			applyMeasuredBoundsWrites({
 				sharedBoundTag,
 				currentScreenKey,
-				measured: correctedMeasured,
+				measured,
 				preparedStyles,
 				ancestorKeys,
 				navigatorKey,
@@ -159,7 +177,8 @@ export const useBoundaryMeasureAndStore = (params: {
 			ancestorNavigatorKeys,
 			preparedStyles,
 			measuredAnimatedRef,
-			layoutAnchor,
+			viewportWidth,
+			viewportHeight,
 		],
 	);
 };

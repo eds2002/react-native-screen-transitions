@@ -3,6 +3,7 @@ import {
 	AnimationStore,
 	type AnimationStoreMap,
 } from "../../../stores/animation.store";
+import type { BackdropBehavior } from "../../../types/screen.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackScene,
@@ -14,16 +15,15 @@ export interface ProcessedRoutes<
 > {
 	scenes: BaseStackScene<TDescriptor>[];
 	routeKeys: string[];
-	backdropBehaviors: string[];
+	backdropBehaviors: BackdropBehavior[];
 	animationMaps: AnimationStoreMap[];
 	shouldShowFloatOverlay: boolean;
-	activeScreensLimit: number;
 }
 
 /**
  * Processes raw routes + descriptors into derived arrays needed by the stack.
  * Single reverse pass computes: scenes, routeKeys, backdropBehaviors,
- * animationMaps, shouldShowFloatOverlay, and activeScreensLimit.
+ * animationMaps, and shouldShowFloatOverlay.
  */
 export function useProcessedRoutes<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
@@ -34,12 +34,10 @@ export function useProcessedRoutes<
 	return useMemo(() => {
 		const scenes: BaseStackScene<TDescriptor>[] = [];
 		const routeKeys: string[] = [];
-		const backdropBehaviors: string[] = [];
+		const backdropBehaviors: BackdropBehavior[] = [];
 		const animationMaps: AnimationStoreMap[] = [];
 
 		let shouldShowFloatOverlay = false;
-		let limit = 1;
-		let stopLimit = false;
 
 		for (let i = routes.length - 1; i >= 0; i--) {
 			const route = routes[i];
@@ -54,24 +52,7 @@ export function useProcessedRoutes<
 			if (!shouldShowFloatOverlay) {
 				shouldShowFloatOverlay = isOverlayVisible(options);
 			}
-
-			if (!stopLimit) {
-				const shouldKeepPrevious =
-					(options as { detachPreviousScreen?: boolean })
-						?.detachPreviousScreen !== true;
-
-				if (shouldKeepPrevious) {
-					limit += 1;
-				} else {
-					stopLimit = true;
-				}
-			}
 		}
-
-		const activeScreensLimit = Math.min(
-			limit,
-			routes.length === 0 ? 1 : routes.length,
-		);
 
 		return {
 			scenes,
@@ -79,7 +60,6 @@ export function useProcessedRoutes<
 			backdropBehaviors,
 			animationMaps,
 			shouldShowFloatOverlay,
-			activeScreensLimit,
 		};
 	}, [routes, descriptors]);
 }

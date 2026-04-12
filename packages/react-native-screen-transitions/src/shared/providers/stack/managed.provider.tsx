@@ -82,17 +82,11 @@ function useManagedStackValue<
 	// Managed-specific context (consumed by useManagedStackContext())
 	const managedContextValue = useMemo<ManagedStackContextValue>(
 		() => ({
-			activeScreensLimit: processed.activeScreensLimit,
 			closingRouteKeysShared: closingRouteKeys.shared,
 			handleCloseRoute,
 			backdropBehaviors: processed.backdropBehaviors,
 		}),
-		[
-			processed.activeScreensLimit,
-			closingRouteKeys.shared,
-			handleCloseRoute,
-			processed.backdropBehaviors,
-		],
+		[closingRouteKeys.shared, handleCloseRoute, processed.backdropBehaviors],
 	);
 
 	// Combined props for render children (stack-view components)

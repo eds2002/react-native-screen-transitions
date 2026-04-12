@@ -94,24 +94,21 @@ export type BlankStackOverlayProps = OverlayProps<
 	BlankStackNavigationProp<ParamListBase>
 >;
 
-type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
+export type BlankStackNavigationOptions = ScreenTransitionConfig & {
 	/**
-	 * Whether to detach the previous screen from the view hierarchy to save memory.
-	 * Set it to `false` if you need the previous screen to be seen through the active screen.
-	 * Only applicable if `detachInactiveScreens` isn't set to `false`.
-	 */
-	detachPreviousScreen?: boolean;
-};
-
-export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
-	/**
-	 * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
-	 * Defaults to `true` when `enableFreeze()` is run at the top of the application.
-	 * Requires `react-native-screens` version >=3.16.0.
+	 * What should happen when screens become inactive.
 	 *
-	 * Only supported on iOS and Android.
+	 * A screen becomes inactive once it falls deeper than the inert screen in the
+	 * stack, unless another rule keeps it alive (for example a preloaded route or
+	 * a non-blocking backdrop above it).
+	 *
+	 * - `pause`: Keep the screen mounted, but pause its effects while inactive
+	 * - `unmount`: Remove inactive screens unless they hold nested navigator state
+	 * - `none`: Keep inactive screens mounted and let their effects continue running
+	 *
+	 * Defaults to `pause`.
 	 */
-	freezeOnBlur?: boolean;
+	inactiveBehavior?: "pause" | "unmount" | "none";
 };
 
 export type BlankStackNavigatorProps = DefaultNavigatorOptions<

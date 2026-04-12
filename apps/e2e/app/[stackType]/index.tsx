@@ -50,6 +50,12 @@ const TEST_FLOWS = [
 		description: "Demonstrates stackProgress accumulating across screens",
 	},
 	{
+		id: "activity-probe",
+		title: "Activity Probe",
+		description:
+			"Compares inert vs paused hidden-screen behavior with a live JS heartbeat",
+	},
+	{
 		id: "overlay",
 		title: "Floating Overlay",
 		description: "Tab bar overlay that animates with screen transitions",
@@ -128,9 +134,7 @@ export default function BlankStackIndex() {
 			}
 			items={TEST_FLOWS}
 			testIdPrefix={testPrefix}
-			onPress={(id) =>
-				router.push(buildStackPath(stackType, id) as never)
-			}
+			onPress={(id) => router.push(buildStackPath(stackType, id) as never)}
 		/>
 	);
 }
