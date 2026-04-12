@@ -1,5 +1,12 @@
 # Changelog
 
+# [3.4.0-rc.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-rc.0...v3.4.0-rc.1) (2026-04-12)
+
+
+### Features
+
+* type navigation mask slots ([7e6f262](https://github.com/eds2002/react-native-screen-transitions/commit/7e6f2622596efa94f8dd0c3229a7fd7e7a4b2373))
+
 # [3.4.0-rc.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-beta.2...v3.4.0-rc.0) (2026-04-05)
 
 # [3.4.0-beta.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-beta.1...v3.4.0-beta.2) (2026-04-03)
