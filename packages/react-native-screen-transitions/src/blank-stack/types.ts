@@ -96,14 +96,6 @@ export type BlankStackOverlayProps = OverlayProps<
 
 export type BlankStackNavigationOptions = ScreenTransitionConfig & {
 	/**
-	 * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
-	 * Defaults to `true` when `enableFreeze()` is run at the top of the application.
-	 * Requires `react-native-screens` version >=3.16.0.
-	 *
-	 * Only supported on iOS and Android.
-	 */
-	freezeOnBlur?: boolean;
-	/**
 	 * What should happen when screens become inactive.
 	 *
 	 * A screen becomes inactive once it falls deeper than the inert screen in the
