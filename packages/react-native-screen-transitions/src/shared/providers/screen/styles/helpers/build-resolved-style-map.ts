@@ -3,51 +3,48 @@ import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
 } from "../../../../types/animation.types";
+import { ALWAYS_RESET_STYLE_VALUES, IDENTITY_TRANSFORM } from "../constants";
 
-export type StyleKeySet = Record<string, true>;
+export type ResettableStyleKeySet = Record<string, true>;
 
-type StyleKeyMeta = {
-	keys: StyleKeySet;
-	hasAny: boolean;
+type ResettableStyleKeyMeta = {
+	resettableKeys: ResettableStyleKeySet;
+	hasAnyStyleKeys: boolean;
 };
 
-const IDENTITY_TRANSFORM = [
-	{ translateX: 0 },
-	{ translateY: 0 },
-	{ scaleX: 1 },
-	{ scaleY: 1 },
-] as const;
-
-const ALWAYS_RESET_STYLE_VALUES = {
-	zIndex: 0,
-	elevation: 0,
-} as const;
-
-const hasAnyKeys = (record: Record<string, unknown>) => {
+const isResettableStyleKey = (key: string) => {
 	"worklet";
-	for (const _key in record) {
+	return key === "transform" || key in ALWAYS_RESET_STYLE_VALUES;
+};
+
+const hasResettableStyleKeys = (keys: ResettableStyleKeySet) => {
+	"worklet";
+	for (const _key in keys) {
 		return true;
 	}
 	return false;
 };
 
-const collectStyleKeyMeta = (
+const collectResettableStyleKeyMeta = (
 	record?: Record<string, unknown>,
-): StyleKeyMeta => {
+): ResettableStyleKeyMeta => {
 	"worklet";
-	const keys: StyleKeySet = {};
-	let hasAny = false;
+	const resettableKeys: ResettableStyleKeySet = {};
+	let hasAnyStyleKeys = false;
 
 	if (!record) {
-		return { keys, hasAny };
+		return { resettableKeys, hasAnyStyleKeys };
 	}
 
 	for (const key in record) {
-		keys[key] = true;
-		hasAny = true;
+		hasAnyStyleKeys = true;
+
+		if (isResettableStyleKey(key)) {
+			resettableKeys[key] = true;
+		}
 	}
 
-	return { keys, hasAny };
+	return { resettableKeys, hasAnyStyleKeys };
 };
 
 const collectRelevantSlotIds = ({
@@ -57,7 +54,7 @@ const collectRelevantSlotIds = ({
 }: {
 	currentStylesMap: NormalizedTransitionInterpolatedStyle;
 	fallbackStylesMap: NormalizedTransitionInterpolatedStyle;
-	previousStyleKeysBySlot: Record<string, StyleKeySet>;
+	previousStyleKeysBySlot: Record<string, ResettableStyleKeySet>;
 }) => {
 	"worklet";
 	const slotIds: Record<string, true> = {};
@@ -81,17 +78,19 @@ const buildUnsetPatch = ({
 	previousKeys,
 	currentKeys,
 }: {
-	previousKeys: StyleKeySet;
-	currentKeys: StyleKeySet;
+	previousKeys: ResettableStyleKeySet;
+	currentKeys: ResettableStyleKeySet;
 }) => {
 	"worklet";
 	const unsetPatch: Record<string, any> = {};
+	let hasUnsetPatch = false;
 
 	for (const key in previousKeys) {
 		if (currentKeys[key]) continue;
 
 		if (key === "transform") {
 			unsetPatch.transform = IDENTITY_TRANSFORM;
+			hasUnsetPatch = true;
 			continue;
 		}
 
@@ -100,13 +99,14 @@ const buildUnsetPatch = ({
 				ALWAYS_RESET_STYLE_VALUES[
 					key as keyof typeof ALWAYS_RESET_STYLE_VALUES
 				];
-			continue;
+			hasUnsetPatch = true;
 		}
-
-		unsetPatch[key] = undefined;
 	}
 
-	return unsetPatch;
+	return {
+		unsetPatch,
+		hasUnsetPatch,
+	};
 };
 
 export const buildResolvedStyleMap = ({
@@ -116,14 +116,11 @@ export const buildResolvedStyleMap = ({
 }: {
 	currentStylesMap: NormalizedTransitionInterpolatedStyle;
 	fallbackStylesMap: NormalizedTransitionInterpolatedStyle;
-	previousStyleKeysBySlot: Record<string, StyleKeySet>;
-}): {
-	resolvedStylesMap: NormalizedTransitionInterpolatedStyle;
-	nextPreviousStyleKeysBySlot: Record<string, StyleKeySet>;
-} => {
+	previousStyleKeysBySlot: Record<string, ResettableStyleKeySet>;
+}) => {
 	"worklet";
 	const resolvedStylesMap: NormalizedTransitionInterpolatedStyle = {};
-	const nextPreviousStyleKeysBySlot: Record<string, StyleKeySet> = {};
+	const nextPreviousStyleKeysBySlot: Record<string, ResettableStyleKeySet> = {};
 
 	const slotIds = collectRelevantSlotIds({
 		currentStylesMap,
@@ -134,15 +131,15 @@ export const buildResolvedStyleMap = ({
 	for (const slotId in slotIds) {
 		const slot = currentStylesMap[slotId] ?? fallbackStylesMap[slotId];
 		const baseStyle = slot?.style as Record<string, unknown> | undefined;
-		const { keys: currentKeys, hasAny: hasCurrentStyleKeys } =
-			collectStyleKeyMeta(baseStyle);
+		const { resettableKeys: currentKeys, hasAnyStyleKeys } =
+			collectResettableStyleKeyMeta(baseStyle);
 
-		const unsetPatch = buildUnsetPatch({
+		// Only reset transition-owned keys that can strand visual state on the
+		// view. Everything else should fall back to the component's own styles.
+		const { unsetPatch, hasUnsetPatch } = buildUnsetPatch({
 			previousKeys: previousStyleKeysBySlot[slotId] ?? {},
 			currentKeys,
 		});
-
-		const hasUnsetPatch = hasAnyKeys(unsetPatch);
 		const hasProps = slot?.props !== undefined;
 
 		if (!slot && !hasUnsetPatch) {
@@ -150,7 +147,7 @@ export const buildResolvedStyleMap = ({
 		}
 
 		const resolvedStyle =
-			hasCurrentStyleKeys || hasUnsetPatch
+			hasAnyStyleKeys || hasUnsetPatch
 				? {
 						...unsetPatch,
 						...(slot?.style ?? NO_STYLES),
@@ -173,7 +170,7 @@ export const buildResolvedStyleMap = ({
 
 		resolvedStylesMap[slotId] = resolvedSlot;
 
-		if (hasCurrentStyleKeys) {
+		if (hasResettableStyleKeys(currentKeys)) {
 			nextPreviousStyleKeysBySlot[slotId] = currentKeys;
 		}
 	}

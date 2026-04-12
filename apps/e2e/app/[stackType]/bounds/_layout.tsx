@@ -25,6 +25,10 @@ export default function BoundsLayout() {
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<StackNavigator.Screen
+				name="opening-transform"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<StackNavigator.Screen
 				name="spam"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>

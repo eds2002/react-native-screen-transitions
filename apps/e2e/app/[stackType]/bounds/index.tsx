@@ -23,6 +23,12 @@ const BOUNDS_EXAMPLES = [
 		description: "Combine bounds with styleId mask/container choreography",
 	},
 	{
+		id: "opening-transform",
+		title: "Opening Transform Probe",
+		description:
+			"Destination opens translated/scaled so captured bounds can be compared against the final settled layout",
+	},
+	{
 		id: "spam",
 		title: "Bounds Spam",
 		description:

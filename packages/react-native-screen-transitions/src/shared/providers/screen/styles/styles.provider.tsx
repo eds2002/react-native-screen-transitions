@@ -1,19 +1,14 @@
-import { type ReactNode, useContext, useMemo } from "react";
-import {
+import { type ReactNode, useContext } from "react";
+import { StyleSheet } from "react-native";
+import Animated, {
 	type SharedValue,
 	useDerivedValue,
-	useSharedValue,
 } from "react-native-reanimated";
-import { NO_STYLES } from "../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
-import { normalizeInterpolatedStyle } from "../../../utils/normalize-interpolated-style";
-import { useScreenAnimationContext } from "../animation";
-import {
-	buildResolvedStyleMap,
-	type StyleKeySet,
-} from "./helpers/build-resolved-style-map";
-import { splitNormalizedStyleMaps } from "./helpers/split-normalized-style-maps";
+import { useInterpolatedStyleMaps } from "./hooks/use-interpolated-style-maps";
+import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
+import { useResolvedSlotStyleMap } from "./hooks/use-resolved-slot-style-map";
 
 type Props = {
 	children: ReactNode;
@@ -34,122 +29,46 @@ export const {
 	({ children }): { value: ScreenStylesContextValue; children: ReactNode } => {
 		const parentContext = useContext(ScreenStylesContext);
 
-		const {
-			screenInterpolatorProps,
-			nextInterpolator,
-			currentInterpolator,
-			boundsAccessor,
-		} = useScreenAnimationContext();
+		const styleMaps = useInterpolatedStyleMaps();
 
-		const isGesturingDuringCloseAnimation = useSharedValue(false);
-		const previousElementStyleKeysBySlot = useSharedValue<
-			Record<string, StyleKeySet>
-		>({});
-
-		const rawStyleResolution = useDerivedValue<{
-			layerStylesMap: NormalizedTransitionInterpolatedStyle;
-			elementStylesMap: NormalizedTransitionInterpolatedStyle;
-		}>(() => {
+		const rawLayerStylesMap = useDerivedValue(() => {
 			"worklet";
-			const props = screenInterpolatorProps.value;
-			const { current, next, progress } = props;
-			const isDragging = current.gesture.dragging;
-			const isNextClosing = !!next?.closing;
-
-			if (isDragging && isNextClosing) {
-				isGesturingDuringCloseAnimation.value = true;
-			}
-
-			if (!isDragging && !isNextClosing) {
-				isGesturingDuringCloseAnimation.value = false;
-			}
-
-			const isInGestureMode =
-				isDragging || isGesturingDuringCloseAnimation.value;
-
-			const interpolator = isInGestureMode
-				? currentInterpolator
-				: (nextInterpolator ?? currentInterpolator);
-
-			if (!interpolator) {
-				return {
-					layerStylesMap: NO_STYLES,
-					elementStylesMap: NO_STYLES,
-				};
-			}
-
-			let effectiveProgress = progress;
-			let effectiveNext = next;
-
-			if (isInGestureMode) {
-				effectiveProgress = current.progress;
-				effectiveNext = undefined;
-			}
-
-			try {
-				const raw = interpolator({
-					...props,
-					progress: effectiveProgress,
-					next: effectiveNext,
-					bounds: boundsAccessor,
-				});
-
-				const stylesMap =
-					typeof raw !== "object" || raw == null
-						? NO_STYLES
-						: normalizeInterpolatedStyle(raw);
-
-				const { layerStylesMap, elementStylesMap } =
-					splitNormalizedStyleMaps(stylesMap);
-
-				return {
-					layerStylesMap,
-					elementStylesMap,
-				};
-			} catch (err) {
-				if (__DEV__) {
-					console.warn(
-						"[react-native-screen-transitions] screenStyleInterpolator must be a worklet",
-						err,
-					);
-				}
-
-				return {
-					layerStylesMap: NO_STYLES,
-					elementStylesMap: NO_STYLES,
-				};
-			}
+			return styleMaps.get().layerStylesMap;
 		});
 
-		const layerStylesMap =
-			useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
-				"worklet";
-				return rawStyleResolution.value.layerStylesMap;
-			});
+		const rawElementStylesMap = useDerivedValue(() => {
+			"worklet";
+			return styleMaps.get().elementStylesMap;
+		});
 
-		const elementStylesMap =
-			useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
-				"worklet";
-				const { resolvedStylesMap, nextPreviousStyleKeysBySlot } =
-					buildResolvedStyleMap({
-						currentStylesMap: rawStyleResolution.value.elementStylesMap,
-						fallbackStylesMap:
-							parentContext?.elementStylesMap.value ?? NO_STYLES,
-						previousStyleKeysBySlot: previousElementStyleKeysBySlot.value,
-					});
+		const layerStylesMap = useResolvedSlotStyleMap({
+			currentStylesMap: rawLayerStylesMap,
+		});
 
-				previousElementStyleKeysBySlot.value = nextPreviousStyleKeysBySlot;
+		const elementStylesMap = useResolvedSlotStyleMap({
+			currentStylesMap: rawElementStylesMap,
+			fallbackStylesMap: parentContext?.elementStylesMap,
+		});
 
-				return resolvedStylesMap;
-			});
+		const { animatedStyle, animatedProps } = useMaybeBlockVisibility();
 
-		const value = useMemo<ScreenStylesContextValue>(() => {
-			return {
+		return {
+			value: {
 				layerStylesMap,
 				elementStylesMap,
-			};
-		}, [elementStylesMap, layerStylesMap]);
-
-		return { value, children };
+			},
+			children: (
+				<Animated.View
+					style={[styles.container, animatedStyle]}
+					animatedProps={animatedProps}
+				>
+					{children}
+				</Animated.View>
+			),
+		};
 	},
 );
+
+const styles = StyleSheet.create({
+	container: { flex: 1 },
+});
