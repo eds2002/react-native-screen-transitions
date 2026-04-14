@@ -86,36 +86,16 @@ export function createTransitionAwareComponent<P extends object>(
 		TransitionAwareProps<P>
 	>((props, _) => {
 		const { children, style, styleId, ...rest } = props as any;
-		const { elementStylesMap } = useScreenStyles();
-		const associatedId = styleId;
+		const { stylesMap } = useScreenStyles();
 
 		const associatedStyles = useAnimatedStyle(() => {
 			"worklet";
-
-			if (!associatedId) {
-				return { opacity: 1 };
-			}
-
-			const baseStyle =
-				(elementStylesMap.value[associatedId]?.style as
-					| Record<string, any>
-					| undefined) ?? (NO_STYLES as Record<string, any>);
-
-			if ("opacity" in baseStyle) {
-				return baseStyle;
-			}
-
-			return { ...baseStyle, opacity: 1 };
+			return stylesMap.get()[styleId]?.style ?? NO_STYLES;
 		});
 
 		const associatedProps = useAnimatedProps(() => {
 			"worklet";
-
-			if (!associatedId) {
-				return NO_PROPS;
-			}
-
-			return elementStylesMap.value[associatedId]?.props ?? NO_PROPS;
+			return stylesMap.get()[styleId]?.props ?? NO_PROPS;
 		});
 
 		return (

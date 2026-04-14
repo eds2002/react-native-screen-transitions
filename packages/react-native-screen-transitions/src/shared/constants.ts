@@ -43,6 +43,7 @@ const DEFAULT_GESTURE_VALUES = {
 export const createScreenTransitionState = (
 	route: BaseStackRoute,
 	meta?: Record<string, unknown>,
+	navigationMaskEnabled = false,
 ): ScreenTransitionState => ({
 	progress: 0,
 	closing: 0,
@@ -59,6 +60,7 @@ export const createScreenTransitionState = (
 			width: 0,
 			height: 0,
 		},
+		navigationMaskEnabled,
 	},
 	snapIndex: -1,
 });
@@ -82,6 +84,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 				width: 0,
 				height: 0,
 			},
+			navigationMaskEnabled: false,
 		},
 		snapIndex: -1,
 	});

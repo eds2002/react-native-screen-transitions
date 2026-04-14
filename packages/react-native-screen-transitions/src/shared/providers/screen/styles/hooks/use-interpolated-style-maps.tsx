@@ -3,18 +3,12 @@ import { NO_STYLES } from "../../../../constants";
 import { SystemStore } from "../../../../stores/system.store";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
-import { normalizeInterpolatedStyle } from "../../../../utils/normalize-interpolated-style";
 import { useScreenAnimationContext } from "../../animation";
 import { useDescriptorDerivations } from "../../descriptors";
-import { splitNormalizedStyleMaps } from "../helpers/split-normalized-style-maps";
-
-type InterpolatedStyleMaps = {
-	layerStylesMap: NormalizedTransitionInterpolatedStyle;
-	elementStylesMap: NormalizedTransitionInterpolatedStyle;
-};
+import { normalizeSlots } from "../helpers/normalize-slots";
 
 /**
- * Builds the raw interpolated style maps for the current screen pass.
+ * Builds the raw interpolated styles map for the current screen pass.
  *
  * This hook exists to stabilize style ownership during rapid navigation,
  * especially when an interactive close gesture overlaps with a new navigation
@@ -34,12 +28,11 @@ type InterpolatedStyleMaps = {
  * neutral until the system has a usable viewport measurement, then allows the
  * interpolator to take over once the blocker clears.
  *
- * The result stays split into layer and element slots because they have
- * different resolution rules downstream: element slots may inherit from a
- * parent styles provider, while layer slots must stay local to the owning
- * screen container.
+ * The result stays as a single slot map. Resolution happens downstream, where
+ * slot ids determine whether a slot may inherit from ancestors or must remain
+ * local to the owning screen container.
  */
-export const useInterpolatedStyleMaps = () => {
+export const useInterpolatedStylesMap = () => {
 	const { currentScreenKey } = useDescriptorDerivations();
 	const {
 		screenInterpolatorProps,
@@ -55,13 +48,10 @@ export const useInterpolatedStyleMaps = () => {
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
-	return useDerivedValue<InterpolatedStyleMaps>(() => {
+	return useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
 		"worklet";
 		if (pendingLifecycleStartBlockCount.get() > 0) {
-			return {
-				layerStylesMap: NO_STYLES,
-				elementStylesMap: NO_STYLES,
-			};
+			return NO_STYLES;
 		}
 
 		const props = screenInterpolatorProps.value;
@@ -87,10 +77,7 @@ export const useInterpolatedStyleMaps = () => {
 			: (nextInterpolator ?? currentInterpolator);
 
 		if (!interpolator) {
-			return {
-				layerStylesMap: NO_STYLES,
-				elementStylesMap: NO_STYLES,
-			};
+			return NO_STYLES;
 		}
 
 		let effectiveProgress = progress;
@@ -112,24 +99,15 @@ export const useInterpolatedStyleMaps = () => {
 			const stylesMap =
 				typeof raw !== "object" || raw == null
 					? NO_STYLES
-					: normalizeInterpolatedStyle(raw);
+					: normalizeSlots(raw);
 
-			const { layerStylesMap, elementStylesMap } =
-				splitNormalizedStyleMaps(stylesMap);
-
-			return {
-				layerStylesMap,
-				elementStylesMap,
-			};
+			return stylesMap;
 		} catch (_) {
 			if (__DEV__) {
 				logger.warn("screenStyleInterpolator must be a worklet");
 			}
 
-			return {
-				layerStylesMap: NO_STYLES,
-				elementStylesMap: NO_STYLES,
-			};
+			return NO_STYLES;
 		}
 	});
 };

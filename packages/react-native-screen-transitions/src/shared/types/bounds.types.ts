@@ -180,10 +180,3 @@ export type BoundsAccessor = {
 		fallback?: number,
 	) => number;
 };
-
-export type BoundsInterpolationProps = Omit<
-	ScreenInterpolationProps,
-	"bounds"
-> & {
-	navigationMaskEnabled?: boolean;
-};

@@ -1,4 +1,5 @@
 import { runOnJS, type SharedValue } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
@@ -75,7 +76,7 @@ export const animateToProgress = ({
 		}
 
 		if (onAnimationFinish) {
-			runOnJS(onAnimationFinish)(true);
+			scheduleOnRN(onAnimationFinish, true);
 		}
 		return;
 	}

@@ -42,6 +42,7 @@ export const useBuildTransitionState = (
 	const meta = descriptor?.options?.meta;
 	const route = descriptor?.route;
 	const gestureEnabled = descriptor?.options?.gestureEnabled;
+	const navigationMaskEnabled = !!descriptor?.options?.navigationMaskEnabled;
 	const snapPoints = descriptor?.options?.snapPoints;
 
 	const shouldUseNeutralNextGestures =
@@ -79,7 +80,18 @@ export const useBuildTransitionState = (
 				: GestureStore.getBag(key),
 			route: plainRoute,
 			meta: plainMeta,
-			unwrapped: createScreenTransitionState(plainRoute, plainMeta),
+			unwrapped: createScreenTransitionState(
+				plainRoute,
+				plainMeta,
+				navigationMaskEnabled,
+			),
 		};
-	}, [key, meta, route, shouldUseNeutralNextGestures, snapPoints]);
+	}, [
+		key,
+		meta,
+		route,
+		shouldUseNeutralNextGestures,
+		snapPoints,
+		navigationMaskEnabled,
+	]);
 };

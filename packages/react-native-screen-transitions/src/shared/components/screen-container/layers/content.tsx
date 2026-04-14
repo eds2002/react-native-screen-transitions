@@ -22,7 +22,7 @@ type Props = {
 
 export const ContentLayer = memo(
 	({ children, pointerEvents, isBackdropActive }: Props) => {
-		const { layerStylesMap } = useScreenStyles();
+		const { stylesMap } = useScreenStyles();
 		const { current } = useDescriptors();
 
 		const gestureContext = useGestureContext();
@@ -38,12 +38,12 @@ export const ContentLayer = memo(
 
 		const animatedContentStyle = useAnimatedStyle(() => {
 			"worklet";
-			return layerStylesMap.value.content?.style || NO_STYLES;
+			return stylesMap.get().content?.style || NO_STYLES;
 		});
 
 		const animatedContentProps = useAnimatedProps(() => {
 			"worklet";
-			return layerStylesMap.value.content?.props ?? NO_PROPS;
+			return stylesMap.get().content?.props ?? NO_PROPS;
 		});
 
 		return (

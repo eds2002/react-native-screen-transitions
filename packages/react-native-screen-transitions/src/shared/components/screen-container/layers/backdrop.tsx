@@ -24,7 +24,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior: BackdropBehavior;
 	isBackdropActive: boolean;
 }) {
-	const { layerStylesMap } = useScreenStyles();
+	const { stylesMap } = useScreenStyles();
 	const { current } = useDescriptors();
 	const { dismissScreen } = useNavigationHelpers();
 
@@ -108,12 +108,12 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 	const animatedBackdropStyle = useAnimatedStyle(() => {
 		"worklet";
-		return layerStylesMap.value.backdrop?.style ?? NO_STYLES;
+		return stylesMap.get().backdrop?.style ?? NO_STYLES;
 	});
 
 	const animatedBackdropProps = useAnimatedProps(() => {
 		"worklet";
-		return layerStylesMap.value.backdrop?.props ?? NO_PROPS;
+		return stylesMap.get().backdrop?.props ?? NO_PROPS;
 	});
 
 	return (

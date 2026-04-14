@@ -1,22 +1,18 @@
 import { type ReactNode, useContext } from "react";
 import { StyleSheet } from "react-native";
-import Animated, {
-	type SharedValue,
-	useDerivedValue,
-} from "react-native-reanimated";
+import Animated, { type SharedValue } from "react-native-reanimated";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
-import { useInterpolatedStyleMaps } from "./hooks/use-interpolated-style-maps";
+import { useInterpolatedStylesMap } from "./hooks/use-interpolated-style-maps";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
-import { useResolvedSlotStyleMap } from "./hooks/use-resolved-slot-style-map";
+import { useResolvedStylesMap } from "./hooks/use-resolved-slot-style-map";
 
 type Props = {
 	children: ReactNode;
 };
 
 type ScreenStylesContextValue = {
-	layerStylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
-	elementStylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
+	stylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
 
 export const {
@@ -29,33 +25,18 @@ export const {
 	({ children }): { value: ScreenStylesContextValue; children: ReactNode } => {
 		const parentContext = useContext(ScreenStylesContext);
 
-		const styleMaps = useInterpolatedStyleMaps();
+		const rawStylesMap = useInterpolatedStylesMap();
 
-		const rawLayerStylesMap = useDerivedValue(() => {
-			"worklet";
-			return styleMaps.get().layerStylesMap;
-		});
-
-		const rawElementStylesMap = useDerivedValue(() => {
-			"worklet";
-			return styleMaps.get().elementStylesMap;
-		});
-
-		const layerStylesMap = useResolvedSlotStyleMap({
-			currentStylesMap: rawLayerStylesMap,
-		});
-
-		const elementStylesMap = useResolvedSlotStyleMap({
-			currentStylesMap: rawElementStylesMap,
-			fallbackStylesMap: parentContext?.elementStylesMap,
+		const stylesMap = useResolvedStylesMap({
+			currentStylesMap: rawStylesMap,
+			ancestorStylesMap: parentContext?.stylesMap,
 		});
 
 		const { animatedStyle, animatedProps } = useMaybeBlockVisibility();
 
 		return {
 			value: {
-				layerStylesMap,
-				elementStylesMap,
+				stylesMap,
 			},
 			children: (
 				<Animated.View

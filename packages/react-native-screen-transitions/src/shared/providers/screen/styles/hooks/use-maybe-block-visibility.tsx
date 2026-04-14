@@ -4,17 +4,14 @@ import {
 	useDerivedValue,
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
-import {
-	LifecycleTransitionRequestKind,
-	SystemStore,
-} from "../../../../stores/system.store";
+import { SystemStore } from "../../../../stores/system.store";
 import { useDescriptorDerivations } from "../../descriptors";
 
 export const useMaybeBlockVisibility = () => {
 	const { currentScreenKey } = useDescriptorDerivations();
 	const progress = AnimationStore.getValue(currentScreenKey, "progress");
 
-	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =
+	const { pendingLifecycleStartBlockCount } =
 		SystemStore.getBag(currentScreenKey);
 
 	const shouldBlockVisibility = useDerivedValue(() => {
@@ -26,15 +23,14 @@ export const useMaybeBlockVisibility = () => {
 		// The destination measurement blocker can be registered one frame after
 		// mount, which would otherwise flash the reset state before the block
 		// count turns visible to this provider.
-		const isWaitingForOpenToStart =
-			pendingLifecycleRequestKind.get() ===
-				LifecycleTransitionRequestKind.Open && progress.get() <= 0;
+		const isWaitingForOpenToStart = progress.get() <= 0;
 
 		return hasPendingLifecycleBlock || isWaitingForOpenToStart;
 	});
 
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
+
 		return {
 			opacity: shouldBlockVisibility.get() ? 0 : 1,
 		};

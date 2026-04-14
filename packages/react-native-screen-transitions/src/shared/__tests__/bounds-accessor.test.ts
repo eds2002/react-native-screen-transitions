@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { createScreenTransitionState } from "../constants";
-import type { BoundsInterpolationProps } from "../types/bounds.types";
+import type { ScreenInterpolationProps } from "../types/animation.types";
 import type { Layout } from "../types/screen.types";
 import { createBoundsAccessor } from "../utils/bounds";
 import {
@@ -25,10 +25,10 @@ const zeroInsets = {
 const makeState = (key: string) => ({
 	...createScreenTransitionState({ key } as any),
 	route: { key } as any,
-	layouts: { screen: screenLayout },
+	layouts: { screen: screenLayout, navigationMaskEnabled: false },
 });
 
-const makeProps = (): BoundsInterpolationProps => {
+const makeProps = (): Omit<ScreenInterpolationProps, "bounds"> => {
 	const previous = makeState("screen-a");
 	const current = {
 		...makeState("screen-b"),
@@ -40,7 +40,7 @@ const makeProps = (): BoundsInterpolationProps => {
 		previous,
 		current,
 		next: undefined,
-		layouts: { screen: screenLayout },
+		layouts: { screen: screenLayout, navigationMaskEnabled: false },
 		insets: zeroInsets,
 		focused: true,
 		progress: 0,
@@ -49,7 +49,6 @@ const makeProps = (): BoundsInterpolationProps => {
 		logicallySettled: current.logicallySettled,
 		active: current,
 		inactive: previous,
-		navigationMaskEnabled: false,
 	};
 };
 

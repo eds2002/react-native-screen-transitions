@@ -1,14 +1,14 @@
 import { describe, expect, it } from "bun:test";
-import { normalizeInterpolatedStyle } from "../utils/normalize-interpolated-style";
+import { normalizeSlots } from "../providers/screen/styles/helpers/normalize-slots";
 
-describe("normalizeInterpolatedStyle", () => {
+describe("normalizeSlots", () => {
 	it("wraps shorthand slot styles", () => {
 		const content = {
 			opacity: 0.5,
 			transform: [{ scale: 0.9 }],
 		};
 
-		const normalized = normalizeInterpolatedStyle({
+		const normalized = normalizeSlots({
 			content,
 		});
 
@@ -29,11 +29,27 @@ describe("normalizeInterpolatedStyle", () => {
 			},
 		};
 
-		const normalized = normalizeInterpolatedStyle({
+		const normalized = normalizeSlots({
 			backdrop,
 		});
 
 		expect(normalized.backdrop).toBe(backdrop);
+	});
+
+	it("returns the raw map when every slot is already explicit", () => {
+		const raw = {
+			content: {
+				style: { opacity: 1 },
+			},
+			backdrop: {
+				props: { intensity: 40 },
+			},
+			hero: undefined,
+		};
+
+		const normalized = normalizeSlots(raw);
+
+		expect(normalized).toBe(raw);
 	});
 
 	it("handles canonical and shorthand keys together", () => {
@@ -46,7 +62,7 @@ describe("normalizeInterpolatedStyle", () => {
 			transform: [{ translateY: 20 }],
 		};
 
-		const normalized = normalizeInterpolatedStyle({
+		const normalized = normalizeSlots({
 			content,
 			backdrop,
 			hero,

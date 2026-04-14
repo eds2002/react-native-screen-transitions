@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
+import { useAnimatedReaction } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import type { BaseDescriptor } from "../../../../providers/screen/descriptors";
 import type { AnimationStoreMap } from "../../../../stores/animation.store";
@@ -85,7 +86,7 @@ export function useScreenHistory(
 		() => animations.closing.get(),
 		(closing, prevClosing) => {
 			if (closing && !prevClosing) {
-				runOnJS(handleBlur)();
+				scheduleOnRN(handleBlur);
 			}
 		},
 	);

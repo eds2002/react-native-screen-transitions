@@ -27,21 +27,19 @@ let hasWarnedMissingMaskedView = false;
 
 export const MaybeMaskedNavigationContainer = memo(
 	({ enabled, children, pointerEvents }: Props) => {
-		const { layerStylesMap } = useScreenStyles();
+		const { stylesMap } = useScreenStyles();
 
 		const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 			"worklet";
 			return (
-				layerStylesMap.value[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style ||
-				NO_STYLES
+				stylesMap.get()[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style || NO_STYLES
 			);
 		});
 
 		const animatedNavigationMaskContainerStyle = useAnimatedStyle(() => {
 			"worklet";
 			return (
-				layerStylesMap.value[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style ||
-				NO_STYLES
+				stylesMap.get()[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style || NO_STYLES
 			);
 		});
 

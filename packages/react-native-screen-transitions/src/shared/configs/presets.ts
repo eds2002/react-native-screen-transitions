@@ -12,7 +12,6 @@ import type {
 	ScreenTransitionConfig,
 	TransitionInterpolatedStyle,
 } from "../types";
-import { normalizeInterpolatedStyle } from "../utils/normalize-interpolated-style";
 import { DefaultSpec } from "./specs";
 
 const platform = Platform.OS;
@@ -284,33 +283,44 @@ export const SharedIGImage = ({
 				bounds({
 					id: sharedBoundTag,
 				}).navigation.zoom() ?? {};
-
-			// Extract raw style values from bounds result (legacy format)
-			const sourceStyle = navigationStyles[sharedBoundTag] as
-				| Record<string, unknown>
-				| undefined;
-			const containerStyle = navigationStyles[
-				NAVIGATION_MASK_CONTAINER_STYLE_ID
-			] as Record<string, unknown> | undefined;
-			const maskStyle = navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] as
-				| Record<string, unknown>
-				| undefined;
-
-			// Normalize bounds result to new slot format for spreading
-			const normalizedNav = normalizeInterpolatedStyle(
-				navigationStyles as Record<string, any>,
-			) as unknown as TransitionInterpolatedStyle;
-
-			const normalizedContentStyle =
-				typeof normalizedNav.content === "object" &&
-				normalizedNav.content &&
-				"style" in normalizedNav.content
-					? (normalizedNav.content.style ?? {})
-					: (normalizedNav.content ?? {});
+			const sourceStyle =
+				typeof navigationStyles[sharedBoundTag] === "object" &&
+				navigationStyles[sharedBoundTag] &&
+				"style" in navigationStyles[sharedBoundTag]
+					? (navigationStyles[sharedBoundTag].style as
+							| Record<string, unknown>
+							| undefined)
+					: undefined;
+			const containerStyle =
+				typeof navigationStyles[NAVIGATION_MASK_CONTAINER_STYLE_ID] ===
+					"object" &&
+				navigationStyles[NAVIGATION_MASK_CONTAINER_STYLE_ID] &&
+				"style" in navigationStyles[NAVIGATION_MASK_CONTAINER_STYLE_ID]
+					? (navigationStyles[NAVIGATION_MASK_CONTAINER_STYLE_ID].style as
+							| Record<string, unknown>
+							| undefined)
+					: undefined;
+			const maskStyle =
+				typeof navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] ===
+					"object" &&
+				navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] &&
+				"style" in navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
+					? (navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID].style as
+							| Record<string, unknown>
+							| undefined)
+					: undefined;
+			const contentStyle =
+				typeof navigationStyles.content === "object" &&
+				navigationStyles.content &&
+				"style" in navigationStyles.content
+					? ((navigationStyles.content.style as
+							| Record<string, unknown>
+							| undefined) ?? {})
+					: {};
 
 			if (focused) {
 				return {
-					...normalizedNav,
+					...navigationStyles,
 					backdrop: {
 						style: {
 							backgroundColor: "black",
@@ -351,10 +361,10 @@ export const SharedIGImage = ({
 			}
 
 			return {
-				...normalizedNav,
+				...navigationStyles,
 				content: {
 					style: {
-						...normalizedContentStyle,
+						...contentStyle,
 						pointerEvents: current.gesture.dismissing ? "none" : "auto",
 					},
 				},
@@ -634,14 +644,15 @@ export const SharedXImage = ({
 				bounds({
 					id: sharedBoundTag,
 				}).navigation.zoom() ?? {};
-			const maskStyle = navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] as
-				| Record<string, unknown>
-				| undefined;
-
-			// Normalize bounds result to new slot format for spreading
-			const normalizedNav = normalizeInterpolatedStyle(
-				navigationStyles as Record<string, any>,
-			) as unknown as TransitionInterpolatedStyle;
+			const maskStyle =
+				typeof navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] ===
+					"object" &&
+				navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] &&
+				"style" in navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
+					? (navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID].style as
+							| Record<string, unknown>
+							| undefined)
+					: undefined;
 
 			const dragY = interpolate(
 				current.gesture.normY,
@@ -664,7 +675,7 @@ export const SharedXImage = ({
 			const borderRadius = interpolate(current.progress, [0, 1], [12, 0]);
 
 			return {
-				...normalizedNav,
+				...navigationStyles,
 				[NAVIGATION_MASK_ELEMENT_STYLE_ID]: maskStyle
 					? {
 							style: {

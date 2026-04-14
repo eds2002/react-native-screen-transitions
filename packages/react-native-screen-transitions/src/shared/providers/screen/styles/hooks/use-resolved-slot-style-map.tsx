@@ -6,34 +6,34 @@ import {
 import { NO_STYLES } from "../../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 import {
-	buildResolvedStyleMap,
-	type ResettableStyleKeySet,
-} from "../helpers/build-resolved-style-map";
+	type ResettableStyleStatesBySlot,
+	resolveSlotStyles,
+} from "../helpers/resolve-slot-styles";
 
-interface UseResolvedSlotStyleMapParams {
+interface UseResolvedStylesMapParams {
 	currentStylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
-	fallbackStylesMap?: SharedValue<NormalizedTransitionInterpolatedStyle>;
+	ancestorStylesMap?: SharedValue<NormalizedTransitionInterpolatedStyle>;
 }
 
-export const useResolvedSlotStyleMap = ({
+export const useResolvedStylesMap = ({
 	currentStylesMap,
-	fallbackStylesMap,
-}: UseResolvedSlotStyleMapParams) => {
-	const previousStyleKeysBySlot = useSharedValue<
-		Record<string, ResettableStyleKeySet>
-	>({});
+	ancestorStylesMap,
+}: UseResolvedStylesMapParams) => {
+	const previousStyleStatesBySlot = useSharedValue<ResettableStyleStatesBySlot>(
+		{},
+	);
 
 	return useDerivedValue(() => {
 		"worklet";
 
-		const { resolvedStylesMap, nextPreviousStyleKeysBySlot } =
-			buildResolvedStyleMap({
+		const { resolvedStylesMap, nextPreviousStyleStatesBySlot } =
+			resolveSlotStyles({
 				currentStylesMap: currentStylesMap.get(),
-				fallbackStylesMap: fallbackStylesMap?.get() ?? NO_STYLES,
-				previousStyleKeysBySlot: previousStyleKeysBySlot.get(),
+				ancestorStylesMap: ancestorStylesMap?.get() ?? NO_STYLES,
+				previousStyleStatesBySlot: previousStyleStatesBySlot.get(),
 			});
 
-		previousStyleKeysBySlot.set(nextPreviousStyleKeysBySlot);
+		previousStyleStatesBySlot.set(nextPreviousStyleStatesBySlot);
 
 		return resolvedStylesMap;
 	});

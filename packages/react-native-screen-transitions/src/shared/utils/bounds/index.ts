@@ -1,6 +1,6 @@
+import type { ScreenInterpolationProps } from "../../types/animation.types";
 import type {
 	BoundsAccessor,
-	BoundsInterpolationProps,
 	BoundsNavigationZoomOptions,
 } from "../../types/bounds.types";
 import { createBoundTag } from "./helpers/create-bound-tag";
@@ -11,7 +11,7 @@ import type { BoundsOptions } from "./types/options";
 import { buildZoomStyles } from "./zoom/build";
 
 export const createBoundsAccessor = (
-	getProps: () => BoundsInterpolationProps,
+	getProps: () => Omit<ScreenInterpolationProps, "bounds">,
 ): BoundsAccessor => {
 	"worklet";
 

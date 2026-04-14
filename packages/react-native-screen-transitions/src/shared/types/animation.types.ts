@@ -11,7 +11,7 @@ import {
 } from "../constants";
 import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";
-import type { Layout } from "./screen.types";
+import type { ScreenLayouts } from "./screen.types";
 import type { BaseStackRoute } from "./stack.types";
 
 export type ScreenTransitionState = {
@@ -107,19 +107,7 @@ export type ScreenTransitionState = {
 	/**
 	 * Layout measurements for this specific screen.
 	 */
-	layouts: {
-		/**
-		 * The `width` and `height` of the screen container.
-		 */
-		screen: Layout;
-		/**
-		 * The intrinsic measured content wrapper layout when available.
-		 *
-		 * This is currently populated for the measured screen-container path used by
-		 * auto snap-point sizing. It is undefined until a real measurement exists.
-		 */
-		content?: Layout;
-	};
+	layouts: ScreenLayouts;
 
 	/**
 	 * Animated index of this screen's current snap point.
@@ -153,19 +141,7 @@ export interface ScreenInterpolationProps {
 	 *
 	 * @deprecated Use `current.layouts` instead.
 	 */
-	layouts: {
-		/**
-		 * The `width` and `height` of the screen container.
-		 */
-		screen: Layout;
-		/**
-		 * The intrinsic measured content wrapper layout when available.
-		 *
-		 * This is currently populated for the measured screen-container path used by
-		 * auto snap-point sizing. It is undefined until a real measurement exists.
-		 */
-		content?: Layout;
-	};
+	layouts: ScreenLayouts;
 
 	/**
 	 * The safe area insets for the screen.
