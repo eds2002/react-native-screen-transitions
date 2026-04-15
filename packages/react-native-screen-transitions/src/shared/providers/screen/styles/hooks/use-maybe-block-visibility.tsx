@@ -7,7 +7,7 @@ import { AnimationStore } from "../../../../stores/animation.store";
 import { SystemStore } from "../../../../stores/system.store";
 import { useDescriptorDerivations } from "../../descriptors";
 
-export const useMaybeBlockVisibility = () => {
+export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { currentScreenKey } = useDescriptorDerivations();
 	const progress = AnimationStore.getValue(currentScreenKey, "progress");
 
@@ -16,6 +16,10 @@ export const useMaybeBlockVisibility = () => {
 
 	const shouldBlockVisibility = useDerivedValue(() => {
 		"worklet";
+
+		if (isFloatingOverlay) {
+			return false;
+		}
 
 		const hasPendingLifecycleBlock = pendingLifecycleStartBlockCount.get() > 0;
 

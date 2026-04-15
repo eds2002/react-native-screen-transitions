@@ -27,7 +27,7 @@ export const StackView = withStackCore(
 
 			return (
 				<Fragment>
-					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
+					{shouldShowFloatOverlay ? <Overlay /> : null}
 					<View collapsable={false} style={styles.container}>
 						{scenes.map((scene, sceneIndex) => {
 							const descriptor = scene.descriptor;

@@ -496,7 +496,7 @@ export const NativeStackView = withStackCore(
 
 		return (
 			<>
-				{shouldShowFloatOverlay ? <Overlay.Float /> : null}
+				{shouldShowFloatOverlay ? <Overlay /> : null}
 				<ScreenStack style={styles.container}>
 					{scenes.map((scene, index) => {
 						const { route, descriptor, isPreloaded } = scene;

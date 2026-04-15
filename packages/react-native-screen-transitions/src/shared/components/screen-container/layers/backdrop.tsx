@@ -1,7 +1,6 @@
 import { memo, useCallback, useMemo } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated, {
-	runOnUI,
 	useAnimatedProps,
 	useAnimatedStyle,
 } from "react-native-reanimated";
