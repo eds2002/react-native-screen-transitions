@@ -41,7 +41,7 @@ const trimLinkHistory = (tagState: TagState) => {
 
 function getSnapshot(tag: TagID, key: ScreenKey): Snapshot | null {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	if (!tagState) return null;
 
 	if (tagState.snapshots[key]) {
@@ -303,7 +303,7 @@ function updateLinkDestination(
 
 function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
 	if (!stack || stack.length === 0) {
 		return null;
@@ -330,7 +330,7 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
 
 function hasPendingLink(tag: TagID): boolean {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
 	if (!stack || stack.length === 0) return false;
 
@@ -348,7 +348,7 @@ function hasPendingLinkFromSource(
 	sourceScreenKey: ScreenKey,
 ): boolean {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
 	if (!stack || stack.length === 0) return false;
 
@@ -363,7 +363,7 @@ function hasPendingLinkFromSource(
 
 function getLatestPendingSourceScreenKey(tag: TagID): ScreenKey | null {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
 	if (!stack || stack.length === 0) return null;
 
@@ -379,7 +379,7 @@ function getLatestPendingSourceScreenKey(tag: TagID): ScreenKey | null {
 
 function hasSourceLink(tag: TagID, screenKey: ScreenKey): boolean {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
 	if (!stack || stack.length === 0) return false;
 
@@ -392,7 +392,7 @@ function hasSourceLink(tag: TagID, screenKey: ScreenKey): boolean {
 
 function hasDestinationLink(tag: TagID, screenKey: ScreenKey): boolean {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
 	if (!stack || stack.length === 0) return false;
 

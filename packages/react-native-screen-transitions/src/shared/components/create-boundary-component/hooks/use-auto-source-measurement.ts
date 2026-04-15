@@ -27,7 +27,7 @@ export const useAutoSourceMeasurement = (params: {
 			return resolveAutoSourceCaptureSignal({
 				enabled,
 				nextScreenKey,
-				tagPresence: boundaryPresence.value[sharedBoundTag],
+				tagPresence: boundaryPresence.get()[sharedBoundTag],
 			});
 		},
 		(captureSignal, previousCaptureSignal) => {

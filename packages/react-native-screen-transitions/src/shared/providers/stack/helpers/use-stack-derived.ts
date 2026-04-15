@@ -23,7 +23,7 @@ export function useStackDerived(
 		"worklet";
 		let total = 0;
 		for (let i = 0; i < animationMaps.length; i++) {
-			total += animationMaps[i].progress.value;
+			total += animationMaps[i].progress.get();
 		}
 		return total;
 	});
@@ -33,7 +33,7 @@ export function useStackDerived(
 		const lastIndex = animationMaps.length - 1;
 		let closingFromTop = 0;
 		for (let i = lastIndex; i >= 0; i--) {
-			if (animationMaps[i].closing.value > 0) closingFromTop++;
+			if (animationMaps[i].closing.get() > 0) closingFromTop++;
 			else break;
 		}
 		return lastIndex - closingFromTop;

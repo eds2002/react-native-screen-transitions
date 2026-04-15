@@ -7,10 +7,10 @@ import {
 	useMemo,
 } from "react";
 import Animated, {
-	runOnUI,
 	useAnimatedRef,
 	useAnimatedStyle,
 } from "react-native-reanimated";
+import { runOnUISync } from "react-native-worklets";
 import { NO_STYLES } from "../../constants";
 import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
@@ -177,9 +177,9 @@ export function createBoundaryComponent<P extends object>(
 			(...args: unknown[]) => {
 				// Press path has priority: capture source before user onPress/navigation.
 				if (group) {
-					runOnUI(BoundStore.setGroupActiveId)(group, String(id));
+					runOnUISync(BoundStore.setGroupActiveId, group, String(id));
 				}
-				runOnUI(maybeMeasureAndStore)({ intent: "capture-source" });
+				runOnUISync(maybeMeasureAndStore, { intent: "capture-source" });
 
 				if (typeof onPress === "function") {
 					onPress(...args);

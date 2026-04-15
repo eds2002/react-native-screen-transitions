@@ -27,14 +27,16 @@ export const animateMany = ({ items, onAllFinished }: AnimateManyProps) => {
 	let remaining = items.length;
 
 	for (const item of items) {
-		item.value.value = animate(item.toValue, item.config, (finished) => {
-			"worklet";
-			if (!finished) return;
+		item.value.set(
+			animate(item.toValue, item.config, (finished) => {
+				"worklet";
+				if (!finished) return;
 
-			remaining -= 1;
-			if (remaining === 0) {
-				onAllFinished?.();
-			}
-		});
+				remaining -= 1;
+				if (remaining === 0) {
+					onAllFinished?.();
+				}
+			}),
+		);
 	}
 };

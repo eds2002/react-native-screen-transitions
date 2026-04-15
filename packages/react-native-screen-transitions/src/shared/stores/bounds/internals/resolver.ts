@@ -70,7 +70,7 @@ function resolveTransitionPair(
 	context: ResolveTransitionContext,
 ): ResolvedTransitionPair {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
 
 	let matchedLink: TagLink | null = null;

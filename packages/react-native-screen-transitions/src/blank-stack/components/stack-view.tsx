@@ -39,27 +39,29 @@ export const StackView = withStackCore(
 							const isPreloaded = descriptors[route.key] === undefined;
 
 							return (
-								<ScreenHost
+								<NavigationContext.Provider
+									value={descriptor.navigation}
 									key={route.key}
-									isPreloaded={isPreloaded}
-									index={sceneIndex}
-									routeKey={route.key}
-									inactiveBehavior={descriptor.options.inactiveBehavior}
 								>
-									<ScreenComposer
-										previous={previousDescriptor}
-										current={descriptor}
-										next={nextDescriptor}
-									>
-										<NavigationContext.Provider value={descriptor.navigation}>
-											<NavigationRouteContext.Provider value={route}>
+									<NavigationRouteContext.Provider value={route}>
+										<ScreenHost
+											isPreloaded={isPreloaded}
+											index={sceneIndex}
+											routeKey={route.key}
+											inactiveBehavior={descriptor.options.inactiveBehavior}
+										>
+											<ScreenComposer
+												previous={previousDescriptor}
+												current={descriptor}
+												next={nextDescriptor}
+											>
 												<ScreenHostActivity>
 													{descriptor.render?.()}
 												</ScreenHostActivity>
-											</NavigationRouteContext.Provider>
-										</NavigationContext.Provider>
-									</ScreenComposer>
-								</ScreenHost>
+											</ScreenComposer>
+										</ScreenHost>
+									</NavigationRouteContext.Provider>
+								</NavigationContext.Provider>
 							);
 						})}
 					</View>

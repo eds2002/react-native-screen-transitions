@@ -16,7 +16,7 @@ export default function StackProgressLayout() {
 			<StackNavigator.Screen
 				name="index"
 				options={{
-					inactiveBehavior: "none",
+					inactiveBehavior: "pause",
 				}}
 			/>
 			<StackNavigator.Screen

@@ -5,6 +5,7 @@ import Animated, {
 	useAnimatedProps,
 	useAnimatedStyle,
 } from "react-native-reanimated";
+import { runOnUISync } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
@@ -17,13 +18,15 @@ import type { BackdropBehavior } from "../../../types/screen.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../../../utils/gesture/find-collapse-target";
 
+interface BackdropLayerProps {
+	backdropBehavior: BackdropBehavior;
+	isBackdropActive: boolean;
+}
+
 export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior,
 	isBackdropActive,
-}: {
-	backdropBehavior: BackdropBehavior;
-	isBackdropActive: boolean;
-}) {
+}: BackdropLayerProps) {
 	const { stylesMap } = useScreenStyles();
 	const { current } = useDescriptors();
 	const { dismissScreen } = useNavigationHelpers();
@@ -61,24 +64,24 @@ export const BackdropLayer = memo(function BackdropLayer({
 			const gestures = GestureStore.getBag(routeKey);
 			const transitionSpec = current.options.transitionSpec;
 
-			runOnUI(() => {
+			runOnUISync(() => {
 				"worklet";
 				const resolvedSnaps = rawSnapPoints
 					.map((point) =>
-						point === "auto" ? resolvedAutoSnapPoint.value : point,
+						point === "auto" ? resolvedAutoSnapPoint.get() : point,
 					)
 					.filter((point): point is number => typeof point === "number");
 
 				const { target, shouldDismiss } = findCollapseTarget(
-					animations.progress.value,
+					animations.progress.get(),
 					resolvedSnaps,
 					canDismiss,
 				);
 
 				// If already dismissing, skip
-				if (gestures.dismissing.value) return;
+				if (gestures.dismissing.get()) return;
 
-				gestures.dismissing.value = shouldDismiss ? 1 : 0;
+				gestures.dismissing.set(shouldDismiss ? 1 : 0);
 
 				const spec = shouldDismiss
 					? transitionSpec
@@ -94,7 +97,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 					targetProgress,
 					onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				});
-			})();
+			});
 		}
 	}, [
 		animations,

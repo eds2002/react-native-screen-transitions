@@ -1,4 +1,4 @@
-import { runOnUI } from "react-native-reanimated";
+import { runOnUISync } from "react-native-worklets";
 import { DefaultSnapSpec } from "../configs/specs";
 import { AnimationStore } from "../stores/animation.store";
 import type { HistoryEntry } from "../stores/history.store";
@@ -17,7 +17,7 @@ const getSortedSnapPoints = (
 	const autoVal = SystemStore.getValue(
 		descriptor.route.key,
 		"resolvedAutoSnapPoint",
-	).value;
+	).get();
 
 	const resolved = snapPoints
 		.map((p) => (p === "auto" ? autoVal : p))
@@ -50,7 +50,7 @@ export function snapDescriptorToIndex(
 		"targetProgress",
 	);
 
-	runOnUI(() => {
+	runOnUISync(() => {
 		"worklet";
 		animateToProgress({
 			target: targetProgress,
@@ -61,7 +61,7 @@ export function snapDescriptorToIndex(
 				close: descriptor.options.transitionSpec?.collapse ?? DefaultSnapSpec,
 			},
 		});
-	})();
+	});
 
 	return true;
 }

@@ -69,9 +69,11 @@ export const usePendingDestinationMeasurement = (params: {
 	const scheduleViewportRetry = () => {
 		"worklet";
 		cancelAnimation(retryToken);
-		retryToken.value = withDelay(
-			VIEWPORT_RETRY_DELAY_MS,
-			withTiming(retryToken.get() + 1, { duration: 0 }),
+		retryToken.set(
+			withDelay(
+				VIEWPORT_RETRY_DELAY_MS,
+				withTiming(retryToken.get() + 1, { duration: 0 }),
+			),
 		);
 	};
 

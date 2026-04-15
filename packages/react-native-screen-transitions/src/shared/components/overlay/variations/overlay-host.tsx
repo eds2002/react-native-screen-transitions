@@ -27,7 +27,7 @@ export const OverlayHost = memo(function OverlayHost({
 	const screenAnimation = useScreenAnimation();
 	const relativeProgress = useDerivedValue(() => {
 		"worklet";
-		return screenAnimation.value.stackProgress;
+		return screenAnimation.get().stackProgress;
 	});
 
 	const overlayProps: OverlayProps<BaseDescriptor["navigation"]> = useMemo(

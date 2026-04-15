@@ -47,7 +47,7 @@ const useManagedClose = ({
 
 	useAnimatedReaction(
 		() => {
-			const keys = closingRouteKeysShared.value;
+			const keys = closingRouteKeysShared.get();
 			return keys?.includes(routeKey) ?? false;
 		},
 		(isClosing, wasClosing) => {

@@ -35,7 +35,7 @@ function registerBoundaryPresence(
 
 function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
 	"worklet";
-	const tagEntries = presence.value[tag];
+	const tagEntries = presence.get()[tag];
 	if (!tagEntries) return;
 
 	const currentEntry = tagEntries[screenKey];
@@ -66,7 +66,7 @@ function unregisterBoundaryPresence(tag: TagID, screenKey: ScreenKey) {
 
 function hasBoundaryPresence(tag: TagID, screenKey: ScreenKey): boolean {
 	"worklet";
-	const tagEntries = presence.value[tag];
+	const tagEntries = presence.get()[tag];
 	if (!tagEntries) return false;
 
 	const direct = tagEntries[screenKey];
@@ -92,7 +92,7 @@ function getBoundaryConfig(
 	screenKey: ScreenKey,
 ): BoundaryConfig | null {
 	"worklet";
-	const tagEntries = presence.value[tag];
+	const tagEntries = presence.get()[tag];
 	if (!tagEntries) return null;
 
 	const direct = tagEntries[screenKey];
@@ -125,7 +125,7 @@ function setGroupActiveId(group: string, id: string) {
 
 function getGroupActiveId(group: string): string | null {
 	"worklet";
-	return groups.value[group]?.activeId ?? null;
+	return groups.get()[group]?.activeId ?? null;
 }
 
 function getGroups() {

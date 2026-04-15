@@ -1,5 +1,5 @@
 import { useLayoutEffect } from "react";
-import { runOnUI } from "react-native-reanimated";
+import { runOnUISync } from "react-native-worklets";
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryConfigProps } from "../types";
 
@@ -28,7 +28,8 @@ export const useBoundaryPresence = (params: {
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUI(BoundStore.registerBoundaryPresence)(
+		runOnUISync(
+			BoundStore.registerBoundaryPresence,
 			sharedBoundTag,
 			currentScreenKey,
 			ancestorKeys,
@@ -38,7 +39,8 @@ export const useBoundaryPresence = (params: {
 		);
 
 		return () => {
-			runOnUI(BoundStore.unregisterBoundaryPresence)(
+			runOnUISync(
+				BoundStore.unregisterBoundaryPresence,
 				sharedBoundTag,
 				currentScreenKey,
 			);
