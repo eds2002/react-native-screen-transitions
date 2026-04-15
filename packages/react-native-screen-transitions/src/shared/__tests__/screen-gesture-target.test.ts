@@ -1,8 +1,15 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, mock } from "bun:test";
 import type { PanGesture } from "react-native-gesture-handler";
 import { NO_CLAIMS } from "../types/ownership.types";
-import { resolveScreenGestureTarget } from "../hooks/gestures/resolve-screen-gesture-target";
-import type { GestureContextType } from "../providers/gestures";
+import type { GestureContextType } from "../providers/screen/gestures";
+
+mock.module("../providers/screen/gestures/gestures.provider", () => ({
+	useGestureContext: () => null,
+}));
+
+const { resolveScreenGestureTarget } = await import(
+	"../providers/screen/gestures/hooks/use-screen-gesture"
+);
 
 const createContext = ({
 	label,
@@ -14,7 +21,7 @@ const createContext = ({
 	detectorGesture: label as unknown as PanGesture,
 	panGesture: label as unknown as PanGesture,
 	pinchGesture: undefined,
-	scrollConfig: {} as GestureContextType["scrollConfig"],
+	scrollState: {} as GestureContextType["scrollState"],
 	gestureContext,
 	gestureEnabled: true,
 	claimedDirections: NO_CLAIMS,

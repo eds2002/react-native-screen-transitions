@@ -1,0 +1,153 @@
+import { DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT } from "../../../../constants";
+import type { GestureDirections } from "../../../../types/gesture.types";
+import { sanitizeSnapPoints } from "../../../../utils/gesture/validate-snap-points";
+import { shouldDismissFromProjection } from "./gesture-physics";
+
+interface DetermineDismissalProps {
+	event: {
+		translationX: number;
+		translationY: number;
+		velocityX: number;
+		velocityY: number;
+	};
+	directions: GestureDirections;
+	dimensions: { width: number; height: number };
+	gestureVelocityImpact: number;
+}
+
+interface DetermineSnapTargetProps {
+	currentProgress: number;
+	snapPoints: number[];
+	/** Velocity along the snap axis (positive = toward dismiss) */
+	velocity: number;
+	/** Screen dimension along the snap axis (width or height) */
+	dimension: number;
+	/**
+	 * How much velocity affects the snap decision.
+	 * Lower values = more deliberate/iOS-like, higher values = more responsive to flicks.
+	 * @default 0.1
+	 */
+	velocityFactor?: number;
+	/** Whether dismiss (progress=0) is allowed. Default true */
+	canDismiss?: boolean;
+}
+
+interface DetermineSnapTargetResult {
+	targetProgress: number;
+	shouldDismiss: boolean;
+}
+
+export const determineDismissal = ({
+	event,
+	directions,
+	dimensions,
+	gestureVelocityImpact,
+}: DetermineDismissalProps) => {
+	"worklet";
+
+	let shouldDismiss: boolean = false;
+
+	if (
+		(directions.vertical && event.translationY > 0) ||
+		(directions.verticalInverted && event.translationY < 0)
+	) {
+		const dismiss = shouldDismissFromProjection(
+			event.translationY,
+			event.velocityY,
+			dimensions.height,
+			gestureVelocityImpact,
+		);
+		if (dismiss) shouldDismiss = true;
+	}
+
+	if (
+		(directions.horizontal && event.translationX > 0) ||
+		(directions.horizontalInverted && event.translationX < 0)
+	) {
+		const dismiss = shouldDismissFromProjection(
+			event.translationX,
+			event.velocityX,
+			dimensions.width,
+			gestureVelocityImpact,
+		);
+
+		if (dismiss) shouldDismiss = true;
+	}
+
+	return { shouldDismiss };
+};
+
+/**
+ * Determines which snap point to animate to based on current progress and velocity.
+ *
+ * Logic: Snap to whichever point is closest, factoring in velocity.
+ * The "zones" between snap points are split at midpoints.
+ * Velocity can push you into the next zone.
+ */
+export function determineSnapTarget({
+	currentProgress,
+	snapPoints,
+	velocity,
+	dimension,
+	velocityFactor,
+	canDismiss,
+}: DetermineSnapTargetProps): DetermineSnapTargetResult {
+	"worklet";
+	const resolvedVelocityFactor =
+		velocityFactor ?? DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT;
+	const resolvedCanDismiss = canDismiss ?? true;
+
+	// Convert velocity to progress units (positive = toward dismiss = decreasing progress)
+	const velocityInProgress = (velocity / dimension) * resolvedVelocityFactor;
+
+	// Project where we'd end up with velocity
+	const projectedProgress = currentProgress - velocityInProgress;
+
+	const sanitizedSnapPoints = sanitizeSnapPoints(
+		snapPoints,
+		resolvedCanDismiss,
+	);
+
+	// Build all possible targets: dismiss (0) only if allowed, plus all snap points
+	const allTargets = Array.from(
+		new Set(
+			resolvedCanDismiss ? [0, ...sanitizedSnapPoints] : sanitizedSnapPoints,
+		),
+	).sort((a, b) => a - b);
+
+	if (allTargets.length === 0) {
+		return {
+			targetProgress: currentProgress,
+			shouldDismiss: false,
+		};
+	}
+
+	// Find the target whose zone contains the projected progress
+	// Zones are split at midpoints between adjacent targets
+	let targetProgress = allTargets[0];
+
+	for (let i = 0; i < allTargets.length; i++) {
+		const current = allTargets[i];
+		const next = allTargets[i + 1];
+
+		if (next === undefined) {
+			// Last target - if we're above the midpoint to here, snap to it
+			targetProgress = current;
+			break;
+		}
+
+		const midpoint = (current + next) / 2;
+
+		if (projectedProgress < midpoint) {
+			targetProgress = current;
+			break;
+		}
+
+		targetProgress = next;
+	}
+
+	return {
+		targetProgress,
+		shouldDismiss: resolvedCanDismiss && targetProgress === 0,
+	};
+}

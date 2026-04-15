@@ -1,338 +1,206 @@
 import { describe, expect, it } from "bun:test";
-import type { ScrollConfig } from "../providers/gestures";
-import { checkScrollBoundary } from "../providers/gestures/helpers/gesture-activation";
+import type {
+	ScrollGestureAxisState,
+	ScrollGestureState,
+} from "../providers/screen/gestures";
+import { checkScrollBoundary } from "../providers/screen/gestures/helpers/gesture-activation";
 
-/**
- * Tests for ScrollView boundary detection.
- *
- * Per the spec:
- * - ScrollView must be at boundary before yielding to gestures
- * - A vertical ScrollView never yields to horizontal gestures (axis isolation)
- * - Boundary conditions differ by direction and sheet type
- */
+type ScrollStateOverrides = Partial<
+	Omit<ScrollGestureState, "vertical" | "horizontal">
+> & {
+	vertical?: Partial<ScrollGestureAxisState>;
+	horizontal?: Partial<ScrollGestureAxisState>;
+};
 
-/** Helper to create ScrollConfig with sensible defaults */
-function createScrollConfig(overrides: Partial<ScrollConfig> = {}): ScrollConfig {
+function createScrollState(
+	overrides: ScrollStateOverrides = {},
+): ScrollGestureState {
+	const { vertical, horizontal, ...rest } = overrides;
+
 	return {
-		x: 0,
-		y: 0,
-		contentWidth: 375,
-		contentHeight: 1000,
-		layoutWidth: 375,
-		layoutHeight: 500,
+		vertical: {
+			offset: 0,
+			contentSize: 1000,
+			layoutSize: 500,
+			...vertical,
+		},
+		horizontal: {
+			offset: 0,
+			contentSize: 375,
+			layoutSize: 375,
+			...horizontal,
+		},
 		isTouched: true,
-		...overrides,
+		...rest,
 	};
 }
 
 describe("checkScrollBoundary", () => {
-	describe("null scrollConfig (no ScrollView)", () => {
-		it("returns true for all directions when no ScrollView", () => {
-			expect(checkScrollBoundary(null, "vertical")).toBe(true);
-			expect(checkScrollBoundary(null, "vertical-inverted")).toBe(true);
-			expect(checkScrollBoundary(null, "horizontal")).toBe(true);
-			expect(checkScrollBoundary(null, "horizontal-inverted")).toBe(true);
+	it("returns true for all directions when no ScrollView is coordinated", () => {
+		expect(checkScrollBoundary(null, "vertical")).toBe(true);
+		expect(checkScrollBoundary(null, "vertical-inverted")).toBe(true);
+		expect(checkScrollBoundary(null, "horizontal")).toBe(true);
+		expect(checkScrollBoundary(null, "horizontal-inverted")).toBe(true);
+	});
+
+	describe("non-sheet screens", () => {
+		it("treats vertical start as the boundary for swipe down", () => {
+			expect(
+				checkScrollBoundary(createScrollState({ vertical: { offset: 0 } }), "vertical"),
+			).toBe(true);
+
+			expect(
+				checkScrollBoundary(
+					createScrollState({ vertical: { offset: 100 } }),
+					"vertical",
+				),
+			).toBe(false);
+		});
+
+		it("treats vertical end as the boundary for swipe up", () => {
+			expect(
+				checkScrollBoundary(
+					createScrollState({ vertical: { offset: 500 } }),
+					"vertical-inverted",
+				),
+			).toBe(true);
+
+			expect(
+				checkScrollBoundary(
+					createScrollState({ vertical: { offset: 200 } }),
+					"vertical-inverted",
+				),
+			).toBe(false);
+		});
+
+		it("treats horizontal start as the boundary for swipe right", () => {
+			expect(
+				checkScrollBoundary(
+					createScrollState({
+						horizontal: { offset: 0, contentSize: 1000, layoutSize: 375 },
+					}),
+					"horizontal",
+				),
+			).toBe(true);
+
+			expect(
+				checkScrollBoundary(
+					createScrollState({
+						horizontal: { offset: 100, contentSize: 1000, layoutSize: 375 },
+					}),
+					"horizontal",
+				),
+			).toBe(false);
+		});
+
+		it("treats horizontal end as the boundary for swipe left", () => {
+			expect(
+				checkScrollBoundary(
+					createScrollState({
+						horizontal: { offset: 625, contentSize: 1000, layoutSize: 375 },
+					}),
+					"horizontal-inverted",
+				),
+			).toBe(true);
+
+			expect(
+				checkScrollBoundary(
+					createScrollState({
+						horizontal: { offset: 200, contentSize: 1000, layoutSize: 375 },
+					}),
+					"horizontal-inverted",
+				),
+			).toBe(false);
 		});
 	});
 
-	describe("Non-sheet screens (snapAxisInverted undefined)", () => {
-		describe("vertical direction (swipe down)", () => {
-			it("returns true when at scroll top (y=0)", () => {
-				const config = createScrollConfig({ y: 0 });
-				expect(checkScrollBoundary(config, "vertical")).toBe(true);
-			});
+	describe("snap point sheets", () => {
+		it("uses start boundary for non-inverted sheets", () => {
+			const state = createScrollState({ vertical: { offset: 0 } });
+			const shiftedState = createScrollState({ vertical: { offset: 100 } });
 
-			it("returns false when scrolled down", () => {
-				const config = createScrollConfig({ y: 100 });
-				expect(checkScrollBoundary(config, "vertical")).toBe(false);
-			});
-
-			it("returns true when content fits in viewport (not scrollable)", () => {
-				const config = createScrollConfig({
-					y: 0,
-					contentHeight: 400, // Less than layout
-					layoutHeight: 500,
-				});
-				expect(checkScrollBoundary(config, "vertical")).toBe(true);
-			});
+			expect(checkScrollBoundary(state, "vertical", false)).toBe(true);
+			expect(checkScrollBoundary(state, "vertical-inverted", false)).toBe(true);
+			expect(checkScrollBoundary(shiftedState, "vertical", false)).toBe(false);
+			expect(checkScrollBoundary(shiftedState, "vertical-inverted", false)).toBe(
+				false,
+			);
 		});
 
-		describe("vertical-inverted direction (swipe up)", () => {
-			it("returns true when at scroll bottom", () => {
-				// maxScrollY = contentHeight - layoutHeight = 1000 - 500 = 500
-				const config = createScrollConfig({ y: 500 });
-				expect(checkScrollBoundary(config, "vertical-inverted")).toBe(true);
-			});
+		it("uses end boundary for inverted sheets", () => {
+			const state = createScrollState({ vertical: { offset: 500 } });
+			const shiftedState = createScrollState({ vertical: { offset: 200 } });
 
-			it("returns true when effectively at bottom within tolerance", () => {
-				const config = createScrollConfig({ y: 499.5 });
-				expect(checkScrollBoundary(config, "vertical-inverted")).toBe(true);
-			});
-
-			it("returns false when not at bottom", () => {
-				const config = createScrollConfig({ y: 200 });
-				expect(checkScrollBoundary(config, "vertical-inverted")).toBe(false);
-			});
-
-			it("returns true when content fits in viewport (not scrollable)", () => {
-				const config = createScrollConfig({
-					y: 0,
-					contentHeight: 400,
-					layoutHeight: 500,
-				});
-				expect(checkScrollBoundary(config, "vertical-inverted")).toBe(true);
-			});
+			expect(checkScrollBoundary(state, "vertical", true)).toBe(true);
+			expect(checkScrollBoundary(state, "vertical-inverted", true)).toBe(true);
+			expect(checkScrollBoundary(shiftedState, "vertical", true)).toBe(false);
+			expect(checkScrollBoundary(shiftedState, "vertical-inverted", true)).toBe(
+				false,
+			);
 		});
 
-		describe("horizontal direction (swipe right)", () => {
-			it("returns true when at scroll left (x=0)", () => {
-				const config = createScrollConfig({
-					x: 0,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-				expect(checkScrollBoundary(config, "horizontal")).toBe(true);
+		it("uses the same start/end rule for drawers on the horizontal axis", () => {
+			const rightDrawerState = createScrollState({
+				horizontal: { offset: 0, contentSize: 1000, layoutSize: 375 },
+			});
+			const leftDrawerState = createScrollState({
+				horizontal: { offset: 625, contentSize: 1000, layoutSize: 375 },
 			});
 
-			it("returns false when scrolled right", () => {
-				const config = createScrollConfig({
-					x: 100,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-				expect(checkScrollBoundary(config, "horizontal")).toBe(false);
-			});
-
-			it("returns true when content fits in viewport (not scrollable)", () => {
-				const config = createScrollConfig({
-					x: 0,
-					contentWidth: 300,
-					layoutWidth: 375,
-				});
-				expect(checkScrollBoundary(config, "horizontal")).toBe(true);
-			});
-		});
-
-		describe("horizontal-inverted direction (swipe left)", () => {
-			it("returns true when at scroll right edge", () => {
-				// maxScrollX = contentWidth - layoutWidth = 1000 - 375 = 625
-				const config = createScrollConfig({
-					x: 625,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-				expect(checkScrollBoundary(config, "horizontal-inverted")).toBe(true);
-			});
-
-			it("returns true when effectively at right edge within tolerance", () => {
-				const config = createScrollConfig({
-					x: 624.5,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-				expect(checkScrollBoundary(config, "horizontal-inverted")).toBe(true);
-			});
-
-			it("returns false when not at right edge", () => {
-				const config = createScrollConfig({
-					x: 200,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-				expect(checkScrollBoundary(config, "horizontal-inverted")).toBe(false);
-			});
+			expect(checkScrollBoundary(rightDrawerState, "horizontal", false)).toBe(
+				true,
+			);
+			expect(
+				checkScrollBoundary(rightDrawerState, "horizontal-inverted", false),
+			).toBe(true);
+			expect(checkScrollBoundary(leftDrawerState, "horizontal", true)).toBe(true);
+			expect(
+				checkScrollBoundary(leftDrawerState, "horizontal-inverted", true),
+			).toBe(true);
 		});
 	});
 
-	describe("Snap point sheets (snapAxisInverted defined)", () => {
-		describe("Bottom sheet (vertical, not inverted)", () => {
-			/**
-			 * Bottom sheet: originates from bottom, boundary at scrollY = 0 (top)
-			 */
-			it("returns true when at scroll top for both vertical directions", () => {
-				const config = createScrollConfig({ y: 0 });
-
-				// Both collapse (vertical) and expand (vertical-inverted) check same boundary
-				expect(checkScrollBoundary(config, "vertical", false)).toBe(true);
-				expect(checkScrollBoundary(config, "vertical-inverted", false)).toBe(
-					true,
-				);
+	describe("non-scrollable content", () => {
+		it("passes vertical gestures when content fits in the viewport", () => {
+			const state = createScrollState({
+				vertical: { contentSize: 400, layoutSize: 500 },
 			});
 
-			it("returns false when scrolled down for both directions", () => {
-				const config = createScrollConfig({ y: 100 });
-
-				expect(checkScrollBoundary(config, "vertical", false)).toBe(false);
-				expect(checkScrollBoundary(config, "vertical-inverted", false)).toBe(
-					false,
-				);
-			});
+			expect(checkScrollBoundary(state, "vertical")).toBe(true);
+			expect(checkScrollBoundary(state, "vertical-inverted")).toBe(true);
 		});
 
-		describe("Top sheet (vertical-inverted, inverted)", () => {
-			/**
-			 * Top sheet: originates from top, boundary at scrollY = maxY (bottom)
-			 */
-			it("returns true when at scroll bottom for both vertical directions", () => {
-				// maxScrollY = 1000 - 500 = 500
-				const config = createScrollConfig({ y: 500 });
-
-				expect(checkScrollBoundary(config, "vertical", true)).toBe(true);
-				expect(checkScrollBoundary(config, "vertical-inverted", true)).toBe(
-					true,
-				);
+		it("passes horizontal gestures when content fits in the viewport", () => {
+			const state = createScrollState({
+				horizontal: { contentSize: 300, layoutSize: 375 },
 			});
 
-			it("returns true near bottom within tolerance for both vertical directions", () => {
-				const config = createScrollConfig({ y: 499.5 });
-
-				expect(checkScrollBoundary(config, "vertical", true)).toBe(true);
-				expect(checkScrollBoundary(config, "vertical-inverted", true)).toBe(
-					true,
-				);
-			});
-
-			it("returns false when not at bottom for both directions", () => {
-				const config = createScrollConfig({ y: 200 });
-
-				expect(checkScrollBoundary(config, "vertical", true)).toBe(false);
-				expect(checkScrollBoundary(config, "vertical-inverted", true)).toBe(
-					false,
-				);
-			});
-		});
-
-		describe("Right drawer (horizontal, not inverted)", () => {
-			/**
-			 * Right drawer: originates from right, boundary at scrollX = 0 (left)
-			 */
-			it("returns true when at scroll left for both horizontal directions", () => {
-				const config = createScrollConfig({
-					x: 0,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-
-				expect(checkScrollBoundary(config, "horizontal", false)).toBe(true);
-				expect(checkScrollBoundary(config, "horizontal-inverted", false)).toBe(
-					true,
-				);
-			});
-
-			it("returns false when scrolled right for both directions", () => {
-				const config = createScrollConfig({
-					x: 100,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-
-				expect(checkScrollBoundary(config, "horizontal", false)).toBe(false);
-				expect(checkScrollBoundary(config, "horizontal-inverted", false)).toBe(
-					false,
-				);
-			});
-		});
-
-		describe("Left drawer (horizontal-inverted, inverted)", () => {
-			/**
-			 * Left drawer: originates from left, boundary at scrollX = maxX (right)
-			 */
-			it("returns true when at scroll right for both horizontal directions", () => {
-				// maxScrollX = 1000 - 375 = 625
-				const config = createScrollConfig({
-					x: 625,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-
-				expect(checkScrollBoundary(config, "horizontal", true)).toBe(true);
-				expect(checkScrollBoundary(config, "horizontal-inverted", true)).toBe(
-					true,
-				);
-			});
-
-			it("returns false when not at right for both directions", () => {
-				const config = createScrollConfig({
-					x: 200,
-					contentWidth: 1000,
-					layoutWidth: 375,
-				});
-
-				expect(checkScrollBoundary(config, "horizontal", true)).toBe(false);
-				expect(checkScrollBoundary(config, "horizontal-inverted", true)).toBe(
-					false,
-				);
-			});
-		});
-
-		describe("Non-scrollable content in sheets", () => {
-			it("returns true when vertical content fits in viewport", () => {
-				const config = createScrollConfig({
-					contentHeight: 400,
-					layoutHeight: 500,
-				});
-
-				// Both inverted and non-inverted should pass
-				expect(checkScrollBoundary(config, "vertical", false)).toBe(true);
-				expect(checkScrollBoundary(config, "vertical", true)).toBe(true);
-			});
-
-			it("returns true when horizontal content fits in viewport", () => {
-				const config = createScrollConfig({
-					contentWidth: 300,
-					layoutWidth: 375,
-				});
-
-				expect(checkScrollBoundary(config, "horizontal", false)).toBe(true);
-				expect(checkScrollBoundary(config, "horizontal", true)).toBe(true);
-			});
+			expect(checkScrollBoundary(state, "horizontal")).toBe(true);
+			expect(checkScrollBoundary(state, "horizontal-inverted")).toBe(true);
 		});
 	});
 
-	describe("Axis isolation", () => {
-		/**
-		 * Per spec: A vertical ScrollView never yields to horizontal gestures.
-		 * This is handled by the non-scrollable check - if horizontal content
-		 * doesn't exceed viewport, horizontal gestures pass through.
-		 */
-		it("vertical scroll does not block horizontal gestures", () => {
-			// Vertical scrollable (contentHeight > layoutHeight)
-			// Horizontal NOT scrollable (contentWidth <= layoutWidth)
-			const config = createScrollConfig({
-				x: 0,
-				y: 100, // Scrolled down
-				contentHeight: 1000,
-				layoutHeight: 500,
-				contentWidth: 375,
-				layoutWidth: 375,
+	describe("axis isolation", () => {
+		it("vertical scrolling does not block horizontal gestures without horizontal overflow", () => {
+			const state = createScrollState({
+				vertical: { offset: 100, contentSize: 1000, layoutSize: 500 },
+				horizontal: { offset: 0, contentSize: 375, layoutSize: 375 },
 			});
 
-			// Vertical should be blocked (not at boundary)
-			expect(checkScrollBoundary(config, "vertical")).toBe(false);
-
-			// Horizontal should pass (not scrollable horizontally)
-			expect(checkScrollBoundary(config, "horizontal")).toBe(true);
-			expect(checkScrollBoundary(config, "horizontal-inverted")).toBe(true);
+			expect(checkScrollBoundary(state, "vertical")).toBe(false);
+			expect(checkScrollBoundary(state, "horizontal")).toBe(true);
+			expect(checkScrollBoundary(state, "horizontal-inverted")).toBe(true);
 		});
 
-		it("horizontal scroll does not block vertical gestures", () => {
-			// Horizontal scrollable
-			// Vertical NOT scrollable
-			const config = createScrollConfig({
-				x: 100, // Scrolled right
-				y: 0,
-				contentHeight: 400,
-				layoutHeight: 500,
-				contentWidth: 1000,
-				layoutWidth: 375,
+		it("horizontal scrolling does not block vertical gestures without vertical overflow", () => {
+			const state = createScrollState({
+				vertical: { offset: 0, contentSize: 400, layoutSize: 500 },
+				horizontal: { offset: 100, contentSize: 1000, layoutSize: 375 },
 			});
 
-			// Horizontal should be blocked (not at boundary)
-			expect(checkScrollBoundary(config, "horizontal")).toBe(false);
-
-			// Vertical should pass (not scrollable vertically)
-			expect(checkScrollBoundary(config, "vertical")).toBe(true);
-			expect(checkScrollBoundary(config, "vertical-inverted")).toBe(true);
+			expect(checkScrollBoundary(state, "horizontal")).toBe(false);
+			expect(checkScrollBoundary(state, "vertical")).toBe(true);
+			expect(checkScrollBoundary(state, "vertical-inverted")).toBe(true);
 		});
 	});
 });

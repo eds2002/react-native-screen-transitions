@@ -5,7 +5,7 @@ import {
 	getPinchReleaseHandoffVelocity,
 	shouldDismissFromProjection,
 	toProgressVelocity,
-} from "../providers/gestures/helpers/gesture-physics";
+} from "../providers/screen/gestures/helpers/gesture-physics";
 
 type Directions = {
 	horizontal: boolean;

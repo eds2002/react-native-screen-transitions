@@ -7,8 +7,8 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
-import { useGestureContext } from "../../../providers/gestures";
 import { useDescriptors } from "../../../providers/screen/descriptors";
+import { useGestureContext } from "../../../providers/screen/gestures";
 import { useScreenStyles } from "../../../providers/screen/styles";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
