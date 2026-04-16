@@ -1,12 +1,20 @@
+import { useMemo } from "react";
 import {
 	type PinchGesture,
 	usePinchGesture,
 } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
+import { AnimationStore } from "../../../../stores/animation.store";
+import { GestureStore } from "../../../../stores/gesture.store";
+import { SystemStore } from "../../../../stores/system.store";
 import { useDismissPinchBehavior } from "../behaviors/use-dismiss-pinch-behavior";
 import { useSnapPinchBehavior } from "../behaviors/use-snap-pinch-behavior";
 import { usePinchPolicy } from "../config/use-pinch-policy";
-import type { PinchGestureRuntime, ScreenGestureConfig } from "../types";
+import type {
+	GestureRuntimeStores,
+	PinchGestureRuntime,
+	ScreenGestureConfig,
+} from "../types";
 
 interface BuildPinchGestureHookProps {
 	config: ScreenGestureConfig;
@@ -24,10 +32,19 @@ export const useBuildPinchGesture = ({
 	const lockedSnapPoint = useSharedValue(
 		config.effectiveSnapPoints.maxSnapPoint,
 	);
+	const stores = useMemo<GestureRuntimeStores>(
+		() => ({
+			gestures: GestureStore.getBag(config.routeKey),
+			animations: AnimationStore.getBag(config.routeKey),
+			system: SystemStore.getBag(config.routeKey),
+		}),
+		[config.routeKey],
+	);
 
 	const runtime: PinchGestureRuntime = {
 		config,
 		policy,
+		stores,
 		gestureStartProgress,
 		lockedSnapPoint,
 	};

@@ -2,12 +2,10 @@ import { useCallback } from "react";
 import type { PinchGestureEvent } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../../configs/specs";
-import { TRUE } from "../../../../constants";
+import { FALSE, TRUE } from "../../../../constants";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
-import { AnimationStore } from "../../../../stores/animation.store";
-import { GestureStore } from "../../../../stores/gesture.store";
-import { SystemStore } from "../../../../stores/system.store";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
+import { emit } from "../../../../utils/animation/emit";
 import {
 	applyGestureSensitivity,
 	getPinchReleaseHandoffVelocity,
@@ -24,16 +22,13 @@ import type { PinchGestureRuntime } from "../types";
 export const useSnapPinchBehavior = ({
 	config,
 	policy,
+	stores: { gestures, animations, system },
 	gestureStartProgress,
 	lockedSnapPoint,
 }: PinchGestureRuntime) => {
 	const { dismissScreen } = useNavigationHelpers();
 	const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 		config.effectiveSnapPoints;
-
-	const gestures = GestureStore.getBag(config.routeKey);
-	const animations = AnimationStore.getBag(config.routeKey);
-	const system = SystemStore.getBag(config.routeKey);
 
 	const onStart = useCallback(
 		(event: PinchGestureEvent) => {
@@ -43,7 +38,7 @@ export const useSnapPinchBehavior = ({
 				resolveRuntimeSnapPoints({
 					snapPoints,
 					hasAutoSnapPoint,
-					resolvedAutoSnapPoint: lockedSnapPoint.get(),
+					resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 					minSnapPoint,
 					maxSnapPoint,
 					canDismiss: config.canDismiss,
@@ -57,7 +52,7 @@ export const useSnapPinchBehavior = ({
 				lockedSnapPoint.set(resolvedMaxSnapPoint);
 			}
 
-			animations.willAnimate.set(TRUE);
+			emit(animations.willAnimate, TRUE, FALSE);
 			gestures.dragging.set(TRUE);
 			gestures.dismissing.set(0);
 			gestures.direction.set(null);
@@ -85,16 +80,13 @@ export const useSnapPinchBehavior = ({
 			minSnapPoint,
 			policy.gestureSnapLocked,
 			snapPoints,
+			system.resolvedAutoSnapPoint,
 		],
 	);
 
 	const onUpdate = useCallback(
 		(event: PinchGestureEvent) => {
 			"worklet";
-
-			if (animations.willAnimate.get()) {
-				animations.willAnimate.set(0);
-			}
 
 			const normScale = clamp(
 				applyGestureSensitivity(
@@ -153,7 +145,6 @@ export const useSnapPinchBehavior = ({
 		},
 		[
 			animations.progress,
-			animations.willAnimate,
 			config.canDismiss,
 			gestureStartProgress,
 			gestures.focalX,

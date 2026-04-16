@@ -6,9 +6,7 @@ import {
 } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
-import { AnimationStore } from "../../../../stores/animation.store";
 import { GestureStore } from "../../../../stores/gesture.store";
-import { SystemStore } from "../../../../stores/system.store";
 import { GestureActivationState } from "../../../../types/gesture.types";
 import type { Direction } from "../../../../types/ownership.types";
 import { useDescriptorDerivations } from "../../descriptors";
@@ -36,7 +34,12 @@ export const usePanActivation = ({
 	childDirectionClaims,
 	runtime,
 }: UsePanActivationProps) => {
-	const { config, policy, lockedSnapPoint } = runtime;
+	const {
+		config,
+		policy,
+		lockedSnapPoint,
+		stores: { animations, gestures, system },
+	} = runtime;
 	const { parentScreenKey } = useDescriptorDerivations();
 	const {
 		hasSnapPoints,
@@ -45,10 +48,6 @@ export const usePanActivation = ({
 		minSnapPoint,
 		maxSnapPoint,
 	} = config.effectiveSnapPoints;
-
-	const animations = AnimationStore.getBag(runtime.config.routeKey);
-	const gestures = GestureStore.getBag(runtime.config.routeKey);
-	const system = SystemStore.getBag(runtime.config.routeKey);
 
 	const dimensions = useWindowDimensions();
 

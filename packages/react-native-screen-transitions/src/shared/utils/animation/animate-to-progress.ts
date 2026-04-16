@@ -4,6 +4,7 @@ import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
 import { animate } from "./animate";
+import { emit } from "./emit";
 
 interface AnimateToProgressProps {
 	/**
@@ -36,6 +37,7 @@ export const animateToProgress = ({
 	// Determine target value and direction
 	const isClosing =
 		target === "close" || (typeof target === "number" && target === 0);
+
 	const value = typeof target === "number" ? target : target === "open" ? 1 : 0;
 
 	// Select spec based on direction (closing uses close spec, otherwise open)
@@ -52,11 +54,7 @@ export const animateToProgress = ({
 	const { progress, willAnimate, animating, closing, entering } = animations;
 
 	if (emitWillAnimate) {
-		willAnimate.set(TRUE);
-		requestAnimationFrame(() => {
-			"worklet";
-			willAnimate.set(FALSE);
-		});
+		emit(willAnimate, TRUE, FALSE);
 	}
 
 	targetProgress.set(value);

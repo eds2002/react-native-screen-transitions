@@ -4,6 +4,9 @@ import type {
 	PinchGesture,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
+import type { AnimationStoreMap } from "../../../stores/animation.store";
+import type { GestureStoreMap } from "../../../stores/gesture.store";
+import type { SystemStoreMap } from "../../../stores/system.store";
 import type { TransitionSpec } from "../../../types/animation.types";
 import type {
 	GestureActivationArea,
@@ -113,9 +116,16 @@ export interface PanGestureSharedValues {
 	lockedSnapPoint: SharedValue<number>;
 }
 
+export interface GestureRuntimeStores {
+	gestures: GestureStoreMap;
+	animations: AnimationStoreMap;
+	system: SystemStoreMap;
+}
+
 export interface PanGestureRuntime {
 	config: ScreenGestureConfig;
 	policy: PanGesturePolicy;
+	stores: GestureRuntimeStores;
 	gestureStartProgress: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }
@@ -123,6 +133,7 @@ export interface PanGestureRuntime {
 export interface PinchGestureRuntime {
 	config: ScreenGestureConfig;
 	policy: PinchGesturePolicy;
+	stores: GestureRuntimeStores;
 	gestureStartProgress: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }

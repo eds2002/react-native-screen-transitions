@@ -2,12 +2,10 @@ import { useCallback } from "react";
 import { useWindowDimensions } from "react-native";
 import type { PanGestureEvent } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
-import { TRUE } from "../../../../constants";
+import { FALSE, TRUE } from "../../../../constants";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
-import { AnimationStore } from "../../../../stores/animation.store";
-import { GestureStore } from "../../../../stores/gesture.store";
-import { SystemStore } from "../../../../stores/system.store";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
+import { emit } from "../../../../utils/animation/emit";
 import {
 	applyGestureSensitivity,
 	getPanReleaseProgressVelocity,
@@ -19,20 +17,16 @@ import { determineDismissal } from "../helpers/gesture-targets";
 import type { PanGestureRuntime } from "../types";
 
 export const useDismissPanBehavior = ({
-	config,
 	policy,
+	stores: { gestures, animations, system },
 	gestureStartProgress,
 }: PanGestureRuntime) => {
 	const { dismissScreen } = useNavigationHelpers();
 	const dimensions = useWindowDimensions();
 
-	const gestures = GestureStore.getBag(config.routeKey);
-	const animations = AnimationStore.getBag(config.routeKey);
-	const system = SystemStore.getBag(config.routeKey);
-
 	const onStart = useCallback(() => {
 		"worklet";
-		animations.willAnimate.set(TRUE);
+		emit(animations.willAnimate, TRUE, FALSE);
 		gestures.dragging.set(TRUE);
 		gestures.dismissing.set(0);
 		gestureStartProgress.set(animations.progress.get());
@@ -41,10 +35,6 @@ export const useDismissPanBehavior = ({
 	const onUpdate = useCallback(
 		(event: PanGestureEvent) => {
 			"worklet";
-
-			if (animations.willAnimate.get()) {
-				animations.willAnimate.set(0);
-			}
 
 			const { translationX: rawTX, translationY: rawTY } = event;
 			const { width, height } = dimensions;

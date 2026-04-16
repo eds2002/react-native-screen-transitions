@@ -3,12 +3,10 @@ import { useWindowDimensions } from "react-native";
 import type { PanGestureEvent } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../../configs/specs";
-import { TRUE } from "../../../../constants";
+import { FALSE, TRUE } from "../../../../constants";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
-import { AnimationStore } from "../../../../stores/animation.store";
-import { GestureStore } from "../../../../stores/gesture.store";
-import { SystemStore } from "../../../../stores/system.store";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
+import { emit } from "../../../../utils/animation/emit";
 import {
 	applyGestureSensitivity,
 	getPanReleaseHandoffVelocity,
@@ -25,15 +23,12 @@ import type { PanGestureRuntime } from "../types";
 export const useSnapPanBehavior = ({
 	config,
 	policy,
+	stores: { gestures, animations, system },
 	gestureStartProgress,
 	lockedSnapPoint,
 }: PanGestureRuntime) => {
 	const { dismissScreen } = useNavigationHelpers();
 	const dimensions = useWindowDimensions();
-
-	const gestures = GestureStore.getBag(config.routeKey);
-	const animations = AnimationStore.getBag(config.routeKey);
-	const system = SystemStore.getBag(config.routeKey);
 
 	const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 		config.effectiveSnapPoints;
@@ -58,7 +53,7 @@ export const useSnapPanBehavior = ({
 			lockedSnapPoint.set(resolvedMaxSnapPoint);
 		}
 
-		animations.willAnimate.set(TRUE);
+		emit(animations.willAnimate, TRUE, FALSE);
 		gestures.dragging.set(TRUE);
 		gestures.dismissing.set(0);
 		gestureStartProgress.set(animations.progress.get());
@@ -79,10 +74,6 @@ export const useSnapPanBehavior = ({
 	const onUpdate = useCallback(
 		(event: PanGestureEvent) => {
 			"worklet";
-
-			if (animations.willAnimate.get()) {
-				animations.willAnimate.set(0);
-			}
 
 			const { translationX: rawTX, translationY: rawTY } = event;
 			const { width, height } = dimensions;
@@ -224,8 +215,8 @@ export const useSnapPanBehavior = ({
 
 			animateToProgress({
 				target: shouldTarget,
-				onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				spec: effectiveSpec,
+				onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				animations,
 				targetProgress: system.targetProgress,
 				emitWillAnimate: false,

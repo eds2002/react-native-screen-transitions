@@ -2,6 +2,9 @@ import { useMemo } from "react";
 import { type PanGesture, usePanGesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
+import { AnimationStore } from "../../../../stores/animation.store";
+import { GestureStore } from "../../../../stores/gesture.store";
+import { SystemStore } from "../../../../stores/system.store";
 import { claimsAnyDirection } from "../../../../utils/gesture/compute-claimed-directions";
 import { usePanActivation } from "../activation/use-pan-activation";
 import { useDismissPanBehavior } from "../behaviors/use-dismiss-pan-behavior";
@@ -11,6 +14,7 @@ import { useGestureContext } from "../gestures.provider";
 import { findShadowedAncestorPanGestures } from "../ownership/find-shadowed-ancestor-pan-gestures";
 import type {
 	DirectionClaimMap,
+	GestureRuntimeStores,
 	PanGestureRuntime,
 	ScreenGestureConfig,
 	ScrollGestureState,
@@ -36,12 +40,21 @@ export const useBuildPanGesture = ({
 	const lockedSnapPoint = useSharedValue(
 		config.effectiveSnapPoints.maxSnapPoint,
 	);
+	const stores = useMemo<GestureRuntimeStores>(
+		() => ({
+			gestures: GestureStore.getBag(config.routeKey),
+			animations: AnimationStore.getBag(config.routeKey),
+			system: SystemStore.getBag(config.routeKey),
+		}),
+		[config.routeKey],
+	);
 
 	const selfClaimsAny = claimsAnyDirection(config.claimedDirections);
 
 	const runtime: PanGestureRuntime = {
 		config,
 		policy,
+		stores,
 		gestureStartProgress,
 		lockedSnapPoint,
 	};
