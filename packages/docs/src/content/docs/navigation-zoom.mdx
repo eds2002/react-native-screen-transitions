@@ -1,0 +1,201 @@
+---
+title: "Navigation Zoom"
+pageTitle: "Navigation Zoom"
+summary: "Use bounds({ id }).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
+description: "Use bounds({ id }).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 11
+to: /navigation-zoom
+---
+
+## What This Helper Is
+
+`navigation.zoom()` is the high-level bounds helper for navigation-driven zoom transitions.
+
+It sits on top of the same boundary link system as `bounds()`, but instead of manually composing slot output yourself, it builds the main layer map for you.
+
+Use it when you want a source-to-destination handoff that feels like a navigation zoom without building the transition from raw bounds primitives.
+
+## Recommended Setup
+
+### 1. Mark the source with Boundary.Trigger
+
+Always use `Transition.Boundary.Trigger` on the source side.
+
+`Boundary.Trigger` is the recommended owner because it captures source bounds before your navigation callback runs.
+
+```tsx
+<Transition.Boundary.Trigger
+  id={item.id}
+  anchor="leading"
+  scaleMode="uniform"
+  style={styles.row}
+  onPress={() => navigation.navigate("Detail", { id: item.id })}
+>
+  <Image source={item.image} style={styles.artwork} />
+</Transition.Boundary.Trigger>
+```
+
+### 2. Narrow measurement with Boundary.Target when needed
+
+If the pressable owner is larger than the visual element you actually want to measure, keep the trigger as the owner and move measurement to a nested `Transition.Boundary.Target`.
+
+`Boundary.Target` does not define its own `id`. It inherits the surrounding boundary owner and only changes which descendant gets measured.
+
+```tsx
+<Transition.Boundary.Trigger
+  id={item.id}
+  anchor="leading"
+  scaleMode="uniform"
+  style={styles.row}
+  onPress={() => navigation.navigate("Detail", { id: item.id })}
+>
+  <Transition.Boundary.Target style={styles.artTarget}>
+    <Image source={item.image} style={styles.artwork} />
+  </Transition.Boundary.Target>
+
+  <View style={styles.copy}>
+    <Text>{item.title}</Text>
+  </View>
+</Transition.Boundary.Trigger>
+```
+
+### 3. Run navigation.zoom() in the destination screen options
+
+Put the helper inside the destination screen's `screenStyleInterpolator`.
+
+```tsx
+import { makeMutable } from "react-native-reanimated";
+
+const navigationZoomId = makeMutable<string | null>(null);
+
+<Transition.Boundary.Trigger
+  id={item.id}
+  onPress={() => {
+    navigationZoomId.value = item.id;
+    navigation.navigate("Detail");
+  }}
+>
+  <Image source={item.image} style={styles.artwork} />
+</Transition.Boundary.Trigger>
+
+<Stack.Screen
+  name="[id]"
+  options={{
+    navigationMaskEnabled: Platform.OS === "ios",
+    gestureEnabled: true,
+    gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
+    gestureDrivesProgress: false,
+    screenStyleInterpolator: ({ bounds }) => {
+      "worklet";
+      const id = navigationZoomId.value;
+
+      if (!id) {
+        return null;
+      }
+
+      return bounds({ id }).navigation.zoom({
+        borderRadius: 48,
+      });
+    },
+  }}
+/>
+```
+
+The id does not have to come from route params. You can resolve it from route params, a Reanimated shared value created with `makeMutable`, Zustand-backed state, or any other source, as long as the interpolator can read the active boundary id.
+
+## Destination Setup
+
+The destination screen does not need a `Transition.Boundary.View` for `navigation.zoom()` to work.
+
+If all you need is a source-driven navigation zoom into the detail screen, the source `Boundary.Trigger` plus the interpolator lookup is enough.
+
+This is the simpler setup and is often all you need for id-based list-to-detail flows.
+
+## zoom() Options
+
+`navigation.zoom()` accepts an optional configuration object:
+
+```tsx
+return bounds({ id }).navigation.zoom({
+  borderRadius: 48,
+  target: "bound",
+  backgroundScale: 0.96,
+});
+```
+
+| Option | Type | Notes |
+| --- | --- | --- |
+| `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Controls the destination target for the matched element. |
+| `debug` | `boolean` | Shows the helper's internal layers more explicitly while you tune the transition. |
+| `borderRadius` | `number` | Overrides the destination corner radius used by the helper. |
+| `focusedElementOpacity` | `object` | Controls the focused-screen matched element opacity curves. |
+| `unfocusedElementOpacity` | `object` | Controls the unfocused-screen matched element opacity curves. |
+| `backgroundScale` | `number` | Scales the unfocused background content while the focused bound animates above it. |
+| `horizontalDragScale` | `[number, number, number?]` | Horizontal gesture drag scaling tuple in the form `[shrinkMin, growMax, exponent?]`. |
+| `verticalDragScale` | `[number, number, number?]` | Vertical gesture drag scaling tuple in the form `[shrinkMin, growMax, exponent?]`. |
+| `horizontalDragTranslation` | `[number, number, number?]` | Horizontal gesture drag translation tuple in the form `[negativeMax, positiveMax, exponent?]`. |
+| `verticalDragTranslation` | `[number, number, number?]` | Vertical gesture drag translation tuple in the form `[negativeMax, positiveMax, exponent?]`. |
+
+Opacity tuples use `[inputStart, inputEnd, outputStart?, outputEnd?]`. Drag scale tuples use `[shrinkMin, growMax, exponent?]`. Drag translation tuples use `[negativeMax, positiveMax, exponent?]`.
+
+## Navigation Mask
+
+`navigationMaskEnabled` is optional for `navigation.zoom()` itself.
+
+Enable it when you want masked reveal behavior during the navigation handoff:
+
+```tsx
+<Stack.Screen
+  name="[id]"
+  options={{
+    navigationMaskEnabled: Platform.OS === "ios",
+    screenStyleInterpolator: ({ bounds }) => {
+      "worklet";
+      return bounds({ id: "hero" }).navigation.zoom();
+    },
+  }}
+/>
+```
+
+Install `@react-native-masked-view/masked-view` when you enable `navigationMaskEnabled`.
+
+Masked navigation transitions can cost more on Android. If you do not specifically need the masked reveal there, prefer leaving `navigationMaskEnabled` off on Android.
+
+## Groups
+
+Most navigation zoom flows do not need groups.
+
+If each source item navigates to its own destination route and the handoff is simply `id -> route`, plain `id` matching is enough.
+
+Use `group` when the active matched member can change while the destination flow stays mounted, such as a paged gallery or a retargeted collection detail flow.
+
+```tsx
+<Transition.Boundary.Trigger group="gallery" id={item.id} onPress={openItem}>
+  <Image source={item.image} />
+</Transition.Boundary.Trigger>
+
+<Transition.Boundary.View group="gallery" id={item.id}>
+  <Image source={item.image} />
+</Transition.Boundary.View>
+```
+
+In that setup, some shared state usually tracks which id is currently active inside the group so `navigation.zoom()` knows which member to resolve against.
+
+## Performance
+
+The current 3.4 architecture favors correctness over measurement efficiency.
+
+Measurement runs through Reanimated, but v3.4 still over-measures in some `navigation.zoom()` flows because the entering animation cannot yet be fully postponed until destination measurement is ready.
+
+When destination layout races transition start, the system may measure more than once to recover a usable pair for `navigation.zoom()`. In practice this is still fast enough for normal use, but you may notice slight stutter toward the end of an animation in heavier cases.
+
+The next major version is expected to change this architecture so the entering animation can be postponed until measurement is ready. That should remove a lot of the repeated measurement work that v3.4 still needs today.
+
+## Related Reading
+
+- [Bounds Transitions](/shared-elements)
+- [Custom Animations](/custom-animations)
+- [Layers](/surface-slots)
+- [Gestures](/gestures)

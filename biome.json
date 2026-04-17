@@ -9,6 +9,7 @@
 			"!**/build",
 			"!**/dist",
 			"!**/expo-env.d.ts",
+			"!**/routeTree.gen.ts",
 			"!**/__tests__",
 			"!**/*.test.*"
 		],

@@ -1,0 +1,149 @@
+---
+title: "Introduction"
+pageTitle: "Introduction"
+summary: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the 3.4 API."
+description: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the 3.4 API."
+eyebrow: "Get Started"
+group: "Get Started"
+order: 1
+to: /
+image: "/media/overview-demo.webp"
+imageAlt: "A still from the example app used as a motion reference."
+imageCaption: "A frame from the example app, used as lightweight motion context."
+---
+
+`react-native-screen-transitions` is a React Navigation transition toolkit for apps that need more control than the platform defaults.
+
+Use it when you want to build:
+
+- custom push and dismiss animations
+- gesture-driven cards and sheets
+- snap-point flows
+- floating overlays
+- bounds-driven navigation zoom and shared-transition style motion
+
+## See It In Action
+
+My friend Brian made a great video explaining screen transitions and its basics. If you're a visual learner, I'd suggest watching this really quick to get a feel for the package.
+
+<VideoEmbed
+  src="https://www.youtube.com/embed/lKLXLY_nGHo"
+  title="Expo Screen Transitions Are Insane"
+/>
+
+## Why This Was Built
+
+I was inspired by gorgeous apps like Dropset and Family, and I noticed something: beautiful apps were almost always iOS-only. It felt like SwiftUI was the language for beautiful apps.
+
+While learning SwiftUI and UIKit is still on my radar, I love React, I love React Native, and I felt a package like this was missing from the ecosystem. Apps that put real craft and style into their transitions and motion, that obsession is what started this.
+
+This would not have been possible without the amazing work from the React Navigation team. Their JS stack and its super customizable API is what made the whole idea viable. And the incredible tools from Software Mansion, Reanimated and Gesture Handler, are what really put it all together.
+
+We can now achieve gorgeous, 60 fps transitions in React Native. The gap between beautiful apps made in SwiftUI and what's possible in React Native is closing. You can make beautiful apps for Android and iOS, and that's the beauty of React Native.
+
+I'm super happy to present Screen Transitions: a highly customizable package that makes building the kind of transitions that used to feel out of reach accessible to everyone.
+
+## The Main API Surface
+
+The library has three main pieces:
+
+1. navigator creators from subpath exports
+2. the default `Transition` export for transition-aware components and presets
+3. screen options where you define gestures, snap points, overlays, masking, and `screenStyleInterpolator`
+
+```tsx
+import Transition from "react-native-screen-transitions";
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
+```
+
+## Choose A Stack
+
+### Blank Stack
+
+`createBlankStackNavigator()` is the default recommendation.
+
+It is the best fit for:
+
+- custom interpolators
+- snap sheets
+- overlays
+- bounds transitions
+- embedded and independent flows
+
+### Native Stack
+
+`createNativeStackNavigator()` is the native-stack integration path.
+
+Use it when you already have a stack built around `@react-navigation/native-stack` and you want to opt a specific flow into this library's transition system.
+
+That path requires `enableTransitions` on the screens or navigator where you want the library to take over transition rendering.
+
+Under the hood, this is still a compatibility layer. The transitioned native-stack screen is switched into a transparent modal-style presentation, native animation is disabled, and the library drives the transition visuals with Reanimated on top of that container.
+
+So while native-stack integration keeps you in the native-stack world for things like existing headers and screen primitives, it is not the path to the most flexible or most powerful custom animations.
+
+Use native stack when you already rely on native-stack behavior and you want a one-off custom transition inside that setup. If you want the full transition model and more control over the animation surface itself, choose blank stack.
+
+### Component Stack
+
+`createComponentStackNavigator()` still exists, but it is now the legacy path. New work should prefer blank stack.
+
+## How A Transition Is Authored
+
+At runtime, the navigator handles routing and each screen's `options` describe how that screen behaves:
+
+```tsx
+import Transition from "react-native-screen-transitions";
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator();
+
+function RootNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Detail"
+        component={DetailScreen}
+        options={{
+          ...Transition.Presets.SlideFromBottom(),
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+```
+
+The same screen options surface holds:
+
+- `screenStyleInterpolator`
+- `transitionSpec`
+- `gestureEnabled`
+- `gestureDirection`
+- `snapPoints`
+- `overlay`
+- `navigationMaskEnabled`
+
+## What 3.4 Centers
+
+3.4 is organized around the current transition model:
+
+- explicit bounds ownership with `Transition.Boundary.Trigger`, `Transition.Boundary.View`, and `Transition.Boundary.Target`
+- a layer-based interpolator output with `content`, `backdrop`, `surface`, and `styleId` targets
+- scoped screen state through `previous`, `current`, `next`, `active`, and `inactive`
+- blank stack as the preferred path for advanced and embedded flows
+
+## Start Here
+
+Start with <a href="/installation">Installation</a> to get the package, peers, Reanimated, and optional masking dependency in place.
+
+Then move to <a href="/quick-start">Quick Start</a> to create a blank stack and write your first custom interpolator.
+
+After that, go deeper with <a href="/custom-animations">Custom Animations</a>, <a href="/gestures">Gestures</a>, <a href="/snap-points">Snap Points</a>, and <a href="/shared-elements">Bounds Transitions</a>.
+
+If your app uses file-based routing, wire it up through <a href="/expo-router">Expo Router</a>.
+
+## Special Thanks
+
+A special thanks to the teams at [React Navigation](https://reactnavigation.org/) and [Software Mansion](https://swmansion.com/) - none of this would exist without them. React Navigation's JS stack and its deeply customizable API laid the foundation that made Screen Transitions possible. And Software Mansion's [Reanimated](https://docs.swmansion.com/react-native-reanimated/) and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) are the engines that power every 60 fps transition under the hood. Thank you for building such incredible tools for the React Native community.

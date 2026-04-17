@@ -1,0 +1,165 @@
+---
+title: "Stack Types"
+pageTitle: "Stack Types"
+summary: "Choose between blank stack, native stack, and the legacy component stack."
+description: "Choose between blank stack, native stack, and the legacy component stack."
+eyebrow: "Components"
+group: "Components"
+order: 2
+to: /stack-types
+---
+
+## Recommendation Order
+
+For 3.4:
+
+1. `createBlankStackNavigator()` for most work
+2. `createNativeStackNavigator()` when you specifically need native-stack integration
+3. `createComponentStackNavigator()` only for legacy compatibility
+
+```tsx
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
+import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
+```
+
+## Blank Stack
+
+This is the default stack for new work.
+
+```tsx
+const Stack = createBlankStackNavigator();
+
+<Stack.Navigator>
+  <Stack.Screen name="Home" component={HomeScreen} />
+  <Stack.Screen
+    name="Detail"
+    component={DetailScreen}
+    options={{
+      ...Transition.Presets.SlideFromBottom(),
+      gestureEnabled: true,
+    }}
+  />
+</Stack.Navigator>
+```
+
+Use blank stack when you want the full transition system without native-stack constraints:
+
+- custom screen interpolators
+- gestures
+- snap sheets
+- bounds transitions
+- navigation zoom
+- overlays
+
+### Embedded and Independent Flows
+
+Blank stack now covers the embedded-flow use case that originally pushed people to component stack.
+
+It supports first-class navigator props:
+
+- `independent`
+- `enableNativeScreens`
+
+```tsx
+const Stack = createBlankStackNavigator();
+
+<Stack.Navigator independent enableNativeScreens={false}>
+  {/* embedded flow */}
+</Stack.Navigator>
+```
+
+`independent` creates an isolated navigation tree.
+
+`enableNativeScreens={false}` renders with regular views instead of `react-native-screens`, which is often the right choice for embedded UI.
+
+The static API supports the same idea:
+
+```tsx
+const Stack = createBlankStackNavigator({
+  independent: true,
+  enableNativeScreens: false,
+  screens: {
+    Home: HomeScreen,
+    Detail: DetailScreen,
+  },
+});
+```
+
+Blank stack is now the preferred path for new embedded and independent flows.
+
+## Native Stack
+
+Use this when you want `@react-navigation/native-stack` behavior while opting into the transition system.
+
+```tsx
+const Stack = createNativeStackNavigator();
+
+<Stack.Navigator>
+  <Stack.Screen
+    name="Detail"
+    component={DetailScreen}
+    options={{
+      enableTransitions: true,
+      ...Transition.Presets.SlideFromBottom(),
+    }}
+  />
+</Stack.Navigator>
+```
+
+Custom transitions are active only on screens with `enableTransitions: true`.
+
+This is an integration path, not the default recommendation for custom motion work.
+
+Under the hood, the transitioned native-stack screen is switched into a transparent modal-style presentation, native animation is disabled, and the library drives the transition visuals with Reanimated on top of that container.
+
+That makes native stack useful when you already depend on native-stack behavior, native headers, or existing native-stack screen primitives and only want to opt a specific screen or flow into a custom transition.
+
+If you want the most control over interpolators, gestures, snap sheets, overlays, and bounds-driven motion, blank stack is the better fit.
+
+## Component Stack
+
+This still exists, but it is the legacy path.
+
+It originally existed for independent embedded navigation flows. Blank stack now covers that through `independent` and `enableNativeScreens`.
+
+It is deprecated for new work and planned for removal in a future release.
+
+Use it only when you are maintaining an existing component-stack integration.
+
+## Shared Screen Options
+
+All three stack types still use screen options.
+
+Common options include:
+
+- `screenStyleInterpolator`
+- `transitionSpec`
+- `gestureEnabled`
+- `gestureDirection`
+- `snapPoints`
+- `navigationMaskEnabled`
+- `overlay`
+- `overlayShown`
+
+Blank stack and component stack also support `detachPreviousScreen`.
+
+Native stack adds native-stack options, but transition behavior only participates when `enableTransitions` is turned on.
+
+## Overlays and Stack Scope
+
+Overlays are stack-relative.
+
+If a screen defines an overlay, it floats through the rest of that stack until a higher owner takes over or the stack unwinds.
+
+The stack choice matters:
+
+- blank stack supports overlays directly and is the default place to start
+- native stack supports overlays on transitioned screens
+- component stack still supports overlays, but new overlay work should start on blank stack
+
+## Which One to Pick
+
+- blank stack: the default for nearly everything, including embedded and independent flows
+- native stack: when you need native-stack integration and can opt into `enableTransitions`
+- component stack: legacy compatibility only
