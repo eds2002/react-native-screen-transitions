@@ -25,7 +25,9 @@ export default defineConfig({
 		port: 3000,
 	},
 	plugins: [
-		tanstackStart(),
+		tanstackStart({
+			target: "netlify",
+		} as Parameters<typeof tanstackStart>[0] & { target: "netlify" }),
 		mdxPlugin,
 		react({
 			include: /\.(mdx|js|jsx|ts|tsx)$/,
