@@ -1,0 +1,205 @@
+---
+title: "Custom Animations"
+pageTitle: "Custom Animations"
+summary: "Write screen interpolators against the v3.4 transition model: per-screen state, derived helpers, and slot or styleId output."
+description: "Write screen interpolators against the v3.4 transition model: per-screen state, derived helpers, and slot or styleId output."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 5
+to: /custom-animations
+---
+
+## Where the Interpolator Lives
+
+Custom animations are created inside `screenStyleInterpolator`, where each screen returns the animated styles for its built-in layers and any `styleId` targets it owns.
+
+```tsx
+import { interpolate } from "react-native-reanimated";
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator();
+
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "horizontal",
+    screenStyleInterpolator: ({ progress, current }) => {
+      "worklet";
+      const width = current.layouts.screen.width;
+
+      return {
+        content: {
+          style: {
+            transform: [
+              {
+                translateX: interpolate(progress, [0, 1, 2], [width, 0, -width * 0.3]),
+              },
+            ],
+          },
+        },
+      };
+    },
+  }}
+/>
+```
+
+## Derived Helpers
+
+The top-level helper props are derived in `derivations.ts`:
+
+```tsx
+const progress = current.progress + (next?.progress ?? 0);
+const focused = !next;
+const active = focused ? current : (next ?? current);
+const inactive = focused ? previous : current;
+```
+
+Use the top-level `progress` value when you want to choreograph the overall transition state. Use `current.progress`, `previous?.progress`, or `next?.progress` when you want the motion of one specific screen.
+
+In practice:
+
+- `current.progress` animates `0 -> 1` when the current screen enters and `1 -> 0` when it exits
+- top-level `progress` is often `0 -> 1` for the focused entering screen
+- top-level `progress` is often `1 -> 2` for the screen underneath while a `next` screen is covering it
+- when that top screen dismisses, those values move back toward the settled state
+
+## Interpolator Props
+
+| Prop | Meaning |
+| --- | --- |
+| `current` | The screen whose `options.screenStyleInterpolator` is being evaluated |
+| `previous` | The screen immediately below `current`, when one exists |
+| `next` | The screen immediately above `current`, when one exists |
+| `active` | The transition driver: `current` when focused, otherwise `next` |
+| `inactive` | The non-driver: `previous` when focused, otherwise `current` |
+| `progress` | Derived helper from `current.progress + (next?.progress ?? 0)` |
+| `stackProgress` | Accumulated progress from this screen upward through the stack |
+| `focused` | `true` when there is no `next` screen above `current` |
+| `bounds` | Bounds accessor for shared-element and navigation zoom helpers |
+| `insets` | Safe-area insets |
+| `logicallySettled` | Mirrors `active.logicallySettled` |
+| `layouts` | Deprecated alias for `current.layouts` |
+| `snapIndex` | Deprecated alias for `current.snapIndex` |
+
+Each screen state object contains the same fields:
+
+| Field | Meaning |
+| --- | --- |
+| `progress` | This screen's own progress value |
+| `closing` | `1` while this screen is dismissing |
+| `entering` | `1` while this screen is opening |
+| `willAnimate` | One-frame pre-animation handoff signal |
+| `animating` | `1` while animation or gesture motion is active |
+| `settled` | `1` when the screen is idle and not dismissing |
+| `logicallySettled` | `1` when the screen is close enough to its target for choreography |
+| `gesture` | Live gesture values for this screen |
+| `meta` | The value from `options.meta` |
+| `route` | The route object for this screen |
+| `layouts.screen` | Screen container size |
+| `layouts.content` | Measured content size when available |
+| `snapIndex` | This screen's animated snap index |
+
+<Note>
+  Prefer `current.layouts` and `current.snapIndex` in new code. The top-level `layouts` and `snapIndex` props still exist only as deprecated aliases.
+</Note>
+
+## Returning Styles
+
+Return built-in layer slots or any custom key that matches a `styleId` on a transition-aware component:
+
+```tsx
+return {
+  content: {
+    style: { opacity: 1 },
+  },
+  backdrop: {
+    style: { opacity: 0.4 },
+  },
+  surface: {
+    style: { borderRadius: 24 },
+    props: { pointerEvents: "none" },
+  },
+  "hero-title": {
+    style: { transform: [{ translateY: -8 }] },
+  },
+};
+```
+
+Reserved layer slots are:
+
+- `content`
+- `backdrop`
+- `surface`
+
+Any other key is treated as a `styleId` target. Each slot accepts either shorthand style output or the explicit `{ style, props }` form.
+
+<Note>
+  Return `null`, `undefined`, or `{}` when a frame should apply no transition styling.
+</Note>
+
+## Example: Screen Motion
+
+```tsx
+screenStyleInterpolator: ({ progress, current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+        transform: [
+          {
+            translateY: interpolate(
+              progress,
+              [0, 1, 2],
+              [current.layouts.screen.height, 0, -current.layouts.screen.height * 0.18]
+            ),
+          },
+        ],
+      },
+    },
+    backdrop: {
+      style: {
+        opacity: interpolate(progress, [0, 1, 2], [0, 0.5, 0]),
+      },
+    },
+  };
+};
+```
+
+If you only care about the current screen's own lifecycle, use `current.progress` instead of the derived top-level `progress`.
+
+## Example: `styleId`
+
+Register a transition-aware component inside the screen:
+
+```tsx
+<Transition.View styleId="hero-title">
+  <Text>Details</Text>
+</Transition.View>
+```
+
+Animate it by returning a matching key from the interpolator:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    "hero-title": {
+      style: {
+        opacity: current.progress,
+        transform: [
+          {
+            translateY: interpolate(current.progress, [0, 1], [12, 0]),
+          },
+        ],
+      },
+    },
+  };
+};
+```
+
+For a deeper slot breakdown, see [Surface Slots](/surface-slots). For bounds-driven animation, see [Bounds Transitions](/shared-elements).

@@ -1,0 +1,127 @@
+---
+title: "Caveats & Trade-offs"
+pageTitle: "Caveats & Trade-offs"
+summary: "What you gain, what you give up, and which rough edges still matter in 3.4."
+description: "What you gain, what you give up, and which rough edges still matter in 3.4."
+eyebrow: "Guides"
+group: "Guides"
+order: 1
+to: /caveats
+---
+
+## Blank Stack vs Native Stack
+
+The main trade-off in this library is not features versus no features. It is blank stack versus native stack.
+
+## Native Stack Trade-offs
+
+Native stack transition support is a compatibility layer.
+
+Under the hood, transitioned native-stack screens are switched into `containedTransparentModal` with native animation disabled, and the transition visuals are driven from the library on top of that.
+
+That works, but it comes with real trade-offs:
+
+- visually, a background screen may look tappable while still being blocked by the transparent modal layer
+- dismissal can feel worse than blank stack because native removal and JS state synchronization are coordinated separately
+- platform-specific edge cases are more likely here than on blank stack
+
+Use native stack when you need native-stack integration. Do not choose it because you expect it to be the best place for advanced custom transitions.
+
+## Blank Stack Trade-offs
+
+Blank stack gives you the most features and the most control.
+
+It is the default recommendation for:
+
+- custom interpolators
+- gestures
+- snap sheets
+- overlays
+- bounds transitions
+- navigation zoom
+- embedded flows
+
+The trade-off is that blank stack is still a JavaScript navigator. When people compare performance, the fair comparison is a JS stack, not a fully native presentation stack.
+
+In practice, blank stack is where the library works best. Just keep the runtime model in mind when you design ambitious transitions.
+
+Internal release-build testing has shown that simple settled transitions, such as an opaque page push/pop loop or a settled modal sheet loop, can be competitive with the baseline React Navigation JS stack on tested devices.
+
+That does not mean every benchmark will show blank stack as faster. More callback-sensitive push/pop measurements can differ because transition completion is coordinated differently, even when the visual motion feels just as smooth or smoother in practice.
+
+Choose blank stack because you want the richer transition model, gesture control, and motion flexibility. Do not choose it because you expect every timing benchmark to come out lower.
+
+## Deep Linking
+
+Deep linking is supported.
+
+These navigators still sit on top of React Navigation, so normal deep-linking flows are very much possible. The caveat is that the more complex the transition choreography becomes, the more opportunities there are for a deep link to land in a visually bad or unexpected transition state.
+
+If you hit a deep-link-specific bug with a complex animation flow, open an issue on GitHub with a reproduction.
+
+## Android Native Screens Caveat
+
+Blank stack supports `enableNativeScreens` because native screen primitives are not always the best fit for every flow.
+
+One practical Android caveat is pointer-event behavior during dismissal. In flows where you want the dismissing screen to feel transparent to touches and let interaction move through to the unfocused screen below, native screens can be more restrictive than the plain-view fallback.
+
+If that behavior matters for your flow, opt out:
+
+```tsx
+const Stack = createBlankStackNavigator();
+
+<Stack.Navigator enableNativeScreens={false}>
+  {/* screens */}
+</Stack.Navigator>
+```
+
+That renders the blank stack with regular views instead of `react-native-screens`.
+
+## First Screen Does Not Animate by Default
+
+By default, the first screen in a stack does not animate from its closed state on initial mount. It starts already settled.
+
+That is intentional. Most apps do not want the initial route animating in on first render.
+
+If you do want that behavior, there is an experimental escape hatch:
+
+```tsx
+<Stack.Screen
+  name="Home"
+  component={HomeScreen}
+  options={{
+    experimental_animateOnInitialMount: true,
+  }}
+/>
+```
+
+`experimental_animateOnInitialMount` is experimental and may change.
+
+## Component Stack
+
+`createComponentStackNavigator()` still exists, but it is a legacy path.
+
+It was originally the answer for independent embedded flows. Blank stack now handles that directly with:
+
+- `independent`
+- `enableNativeScreens`
+
+For new work, prefer blank stack.
+
+## Masking Dependency
+
+`navigationMaskEnabled` still depends on `@react-native-masked-view/masked-view`.
+
+Without that dependency, the app still runs, but navigation masking does not activate.
+
+## Compatibility
+
+The current peer-version floor is:
+
+- `@react-navigation/native >= 6.0.0`
+- `@react-navigation/native-stack >= 7.0.0` if you use native stack
+- `react-native-reanimated >= 3.16.0` or `4.x`
+- `react-native-gesture-handler >= 2.16.1`
+- `react-native-screens >= 4.4.0`
+
+If your environment is older than that, debug compatibility before you debug transitions.

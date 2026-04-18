@@ -1,0 +1,237 @@
+---
+title: "Gesture Ownership"
+pageTitle: "Gesture Ownership"
+summary: "Understand how gesture directions are claimed across nested navigators, snap sheets, and scroll boundaries."
+description: "Understand how gesture directions are claimed across nested navigators, snap sheets, and scroll boundaries."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 6
+to: /gesture-ownership
+---
+
+## What Ownership Means
+
+When more than one transition-enabled screen could respond to the same drag, the library resolves ownership before the pan gesture activates.
+
+## Ownership Is Per Direction
+
+The gesture system tracks these directions independently:
+
+- `vertical`
+- `vertical-inverted`
+- `horizontal`
+- `horizontal-inverted`
+
+That means:
+
+- horizontal and vertical never compete with each other
+- vertical and vertical-inverted are different claims
+- horizontal and horizontal-inverted are different claims
+- `bidirectional` expands to all four directions
+
+## Resolution Order
+
+For a given drag direction, ownership resolves in this order:
+
+1. If the current screen claims that direction, it owns the gesture.
+2. Otherwise, the library walks up the ancestor chain and finds the nearest ancestor that claims it.
+3. If no one claims it, the gesture does nothing.
+
+This is why a screen can own one direction locally and still inherit another from an ancestor.
+
+## Shadowing
+
+If a child screen and an ancestor both claim the same direction, the child wins for that direction.
+
+Two implementation details matter here:
+
+- only the topmost route in the child navigator registers a shadowing claim
+- once that child starts dismissing, the ancestor is allowed to activate again
+
+In practice, shadowing is what prevents two nested navigators from reacting to the same drag at the same time.
+
+## Snap Sheets Claim Both Directions on Their Axis
+
+A screen with `snapPoints` claims both directions on its axis.
+
+```tsx
+<Stack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.5, 0.8],
+    initialSnapIndex: 0,
+  }}
+/>
+```
+
+A vertical sheet above owns:
+
+- `vertical`
+- `vertical-inverted`
+
+A horizontal sheet above owns:
+
+- `horizontal`
+- `horizontal-inverted`
+
+This is why the same sheet can expand in one direction and collapse or dismiss in the other.
+
+`gestureEnabled: false` only disables dismiss at the minimum detent. If `snapPoints` still exist, the sheet can continue to own its axis for snap navigation.
+
+## Scroll Boundary Handoff
+
+Use `Transition.ScrollView` or `Transition.FlatList` when scroll content needs to cooperate with navigator gestures.
+
+For non-sheet screens, a scrollable yields only at the boundary for the active direction:
+
+| Direction | Boundary |
+| --- | --- |
+| `vertical` | top (`scrollY <= 0`) |
+| `vertical-inverted` | bottom (`scrollY >= maxY`) |
+| `horizontal` | left (`scrollX <= 0`) |
+| `horizontal-inverted` | right (`scrollX >= maxX`) |
+
+Axis isolation still applies:
+
+- a vertical scroll view does not hand off to horizontal gestures
+- a horizontal scroll view does not hand off to vertical gestures
+
+For snap sheets, the handoff is controlled by `sheetScrollGestureBehavior`:
+
+- `"expand-and-collapse"`: boundary drags can expand and collapse the sheet
+- `"collapse-only"`: boundary drags can collapse or dismiss, but expansion must start from dead space outside the scrollable
+
+```tsx
+<Stack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.4, 0.7, 1],
+    sheetScrollGestureBehavior: "collapse-only",
+  }}
+/>
+
+function SheetScreen() {
+  return (
+    <Transition.ScrollView>
+      <LongContent />
+    </Transition.ScrollView>
+  );
+}
+```
+
+If no screen in the current ownership chain claims that direction, the scroll view just keeps the gesture.
+
+## Real Nested Navigator Patterns
+
+### Different Directions Coexist
+
+This is the cleanest setup: the parent owns one direction, the child screen owns another.
+
+```tsx
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const RootStack = createBlankStackNavigator();
+const DetailsStack = createBlankStackNavigator();
+
+function DetailsNavigator() {
+  return (
+    <DetailsStack.Navigator>
+      <DetailsStack.Screen name="List" component={ListScreen} />
+      <DetailsStack.Screen
+        name="Card"
+        component={CardScreen}
+        options={{
+          gestureEnabled: true,
+          gestureDirection: "horizontal",
+        }}
+      />
+    </DetailsStack.Navigator>
+  );
+}
+
+function AppNavigator() {
+  return (
+    <RootStack.Navigator>
+      <RootStack.Screen name="Home" component={HomeScreen} />
+      <RootStack.Screen
+        name="Details"
+        component={DetailsNavigator}
+        options={{
+          gestureEnabled: true,
+          gestureDirection: "vertical",
+        }}
+      />
+    </RootStack.Navigator>
+  );
+}
+```
+
+On `Card`:
+
+- horizontal is owned locally by `Card`
+- vertical can still resolve to the ancestor `Details` route
+
+### Same Direction Shadows the Ancestor
+
+If the child screen also claims vertical, it shadows the ancestor's vertical claim while that child is active.
+
+```tsx
+<DetailsStack.Screen
+  name="Card"
+  component={CardScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+  }}
+/>
+```
+
+Now the active child screen owns vertical itself, so the ancestor does not handle the same swipe.
+
+### Snap Sheet Shadows Its Axis
+
+If the child screen is a vertical snap sheet, it owns both `vertical` and `vertical-inverted`, so a same-axis ancestor no longer receives either direction while the sheet is active.
+
+```tsx
+<DetailsStack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.5, 0.8],
+  }}
+/>
+```
+
+If the sheet instead uses `gestureDirection: "horizontal"`, it owns the horizontal axis and can still inherit vertical ownership from an ancestor.
+
+## useScreenGesture()
+
+`useScreenGesture()` returns a gesture ref so you can coordinate your own Gesture Handler gestures with the navigator gesture.
+
+Valid targets are:
+
+- `useScreenGesture()`
+- `useScreenGesture("self")`
+- `useScreenGesture("parent")`
+- `useScreenGesture("root")`
+- `useScreenGesture({ ancestor: 2 })`
+
+```tsx
+const parentGesture = useScreenGesture("parent");
+
+const pan = Gesture.Pan().requireExternalGestureToFail(parentGesture);
+```
+
+Ancestor targeting stops at isolation boundaries. In an `independent` nested stack, `"parent"`, `"root"`, or `{ ancestor: number }` may resolve to `null` once the lookup reaches that isolated tree edge.
+
+## Related Reading
+
+- [Gestures](/gestures)

@@ -1,0 +1,179 @@
+---
+title: "Migrating to 3.4"
+pageTitle: "Migrating to 3.4"
+summary: "Move older setups onto the current 3.4 surface."
+description: "Move older setups onto the current 3.4 surface."
+eyebrow: "Guides"
+group: "Guides"
+order: 3
+to: /migrating-to-3-4
+---
+
+## The 3.4 Direction
+
+If you are cleaning up an older setup, these are the migrations that matter:
+
+1. prefer `Transition.Boundary.*` for new bounds flows
+2. return layered interpolator output with `content`, `backdrop`, and `surface`
+3. prefer scoped interpolator state like `current.layouts` and `current.snapIndex`
+4. rename `maskEnabled` to `navigationMaskEnabled`
+5. rename `expandViaScrollView` to `sheetScrollGestureBehavior`
+6. move new embedded flows to blank stack instead of component stack
+
+## Move New Bounds Flows To Transition.Boundary.*
+
+`sharedBoundTag` on transition-aware components still exists, but it is the legacy path.
+
+For new work, use explicit boundary ownership:
+
+```tsx
+<Transition.Boundary.Trigger id="hero" onPress={openDetail}>
+  <Card />
+</Transition.Boundary.Trigger>
+
+<Transition.Boundary.View id="hero">
+  <CardDetail />
+</Transition.Boundary.View>
+```
+
+Add `Transition.Boundary.Target` when the measured element is nested inside the owner:
+
+```tsx
+<Transition.Boundary.Trigger id="hero" onPress={openDetail}>
+  <View>
+    <Transition.Boundary.Target>
+      <Image source={image} />
+    </Transition.Boundary.Target>
+  </View>
+</Transition.Boundary.Trigger>
+```
+
+## Return Layered Interpolator Output
+
+3.4 treats the screen container as a layer system. Return slot objects instead of the old flat style keys:
+
+```tsx
+screenStyleInterpolator: () => ({
+  content: {
+    style: { opacity: 1 },
+  },
+  backdrop: {
+    style: { opacity: 0.4 },
+  },
+  surface: {
+    style: { borderRadius: 24 },
+  },
+});
+```
+
+The older flat keys still exist for compatibility, but they are deprecated:
+
+- `contentStyle`
+- `backdropStyle`
+- `overlayStyle`
+
+If you used older `background` or `backgroundComponent` naming from earlier docs, move to `surface` and `surfaceComponent`.
+
+## Prefer Scoped Interpolator State
+
+In 3.4, the interpolator gives you the full screen states directly:
+
+- `previous`
+- `current`
+- `next`
+- `active`
+- `inactive`
+
+Prefer reading screen-specific data from those objects:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  const contentHeight = current.layouts.content?.height ?? 0;
+
+  return {
+    content: {
+      style: {
+        opacity: interpolate(current.snapIndex, [0, 1], [0.8, 1]),
+        transform: [{ translateY: contentHeight * (1 - current.progress) }],
+      },
+    },
+  };
+};
+```
+
+The top-level aliases still exist for compatibility, but new code should prefer:
+
+- `current.layouts`
+- `current.snapIndex`
+
+## Rename Old Option Names
+
+Use the 3.4 names:
+
+```tsx
+options={{
+  navigationMaskEnabled: true,
+  sheetScrollGestureBehavior: "expand-and-collapse",
+}}
+```
+
+Instead of:
+
+```tsx
+options={{
+  maskEnabled: true,
+  expandViaScrollView: true,
+}}
+```
+
+3.4 also adds the current snap-sheet surface:
+
+- `snapPoints: ["auto", 1]`
+- `gestureReleaseVelocityScale`
+- `gestureReleaseVelocityMax`
+- `gestureSnapLocked`
+
+## Prefer Blank Stack For Embedded Flows
+
+`createComponentStackNavigator()` is now the legacy path.
+
+If you previously used component stack for embedded or independent flows, move that work to blank stack:
+
+```tsx
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator();
+
+<Stack.Navigator independent enableNativeScreens={false}>
+  {/* embedded flow */}
+</Stack.Navigator>
+```
+
+Blank stack now covers that use case directly and is the preferred path going forward.
+
+For the v3 blank-stack model, including when to use `independent` and `enableNativeScreens={false}`, see [Independent Stacks](/independent-stacks).
+
+## Hooks Now Target Ancestors Only
+
+`useScreenAnimation()` and `useScreenGesture()` accept a target only:
+
+```tsx
+const selfAnimation = useScreenAnimation();
+const parentAnimation = useScreenAnimation("parent");
+
+const selfGesture = useScreenGesture();
+const rootGesture = useScreenGesture("root");
+```
+
+`useScreenGesture()` returns a gesture ref for coordination with Gesture Handler. It does not configure `gestureEnabled`, `gestureDirection`, or other screen options.
+
+## Migration Checklist
+
+- move new bounds work to `Transition.Boundary.Trigger`, `Transition.Boundary.View`, and `Transition.Boundary.Target`
+- replace flat interpolator keys with `content`, `backdrop`, and `surface`
+- move `layouts` and `snapIndex` reads to `current.layouts` and `current.snapIndex`
+- rename `maskEnabled` to `navigationMaskEnabled`
+- rename `expandViaScrollView` to `sheetScrollGestureBehavior`
+- move new embedded flows from component stack to blank stack
