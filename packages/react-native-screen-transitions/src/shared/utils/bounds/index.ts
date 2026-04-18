@@ -51,14 +51,14 @@ export const createBoundsAccessor = (
 		return target;
 	};
 
-	const { getSnapshot, getLink } = createLinkAccessor(getProps);
+	const { getMeasured, getLink } = createLinkAccessor(getProps);
 	const { interpolateStyle, interpolateBounds } = createInterpolators({
 		getProps,
 		getLink,
 	});
 
 	return Object.assign(computeBounds, {
-		getSnapshot,
+		getMeasured,
 		getLink,
 		interpolateStyle,
 		interpolateBounds,

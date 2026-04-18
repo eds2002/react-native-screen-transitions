@@ -2,62 +2,23 @@ import { useCallback } from "react";
 import { useWindowDimensions } from "react-native";
 import Animated, {
 	type AnimatedRef,
-	type MeasuredDimensions,
 	measure,
 	type StyleProps,
 } from "react-native-reanimated";
 import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
-import type { MaybeMeasureAndStoreParams } from "../types";
+import type { MeasureParams } from "../types";
 import {
-	getMeasurementIntentFlags,
-	resolveMeasurementWritePlan,
+	areMeasurementsEqual,
+	isMeasurementInViewport,
+} from "./helpers/measurement";
+import {
+	getMeasureIntentFlags,
+	resolveMeasureWritePlan,
 } from "./helpers/measurement-rules";
 
-const SNAPSHOT_EPSILON = 0.5;
-
-const areMeasurementsEqual = (
-	a: MeasuredDimensions,
-	b: MeasuredDimensions,
-): boolean => {
-	"worklet";
-
-	return (
-		Math.abs(a.x - b.x) <= SNAPSHOT_EPSILON &&
-		Math.abs(a.y - b.y) <= SNAPSHOT_EPSILON &&
-		Math.abs(a.pageX - b.pageX) <= SNAPSHOT_EPSILON &&
-		Math.abs(a.pageY - b.pageY) <= SNAPSHOT_EPSILON &&
-		Math.abs(a.width - b.width) <= SNAPSHOT_EPSILON &&
-		Math.abs(a.height - b.height) <= SNAPSHOT_EPSILON
-	);
-};
-
-const isMeasurementInViewport = (
-	measured: MeasuredDimensions,
-	viewportWidth: number,
-	viewportHeight: number,
-): boolean => {
-	"worklet";
-
-	if (measured.width <= 0 || measured.height <= 0) {
-		return false;
-	}
-
-	const toleranceX = viewportWidth * 0.15;
-	const toleranceY = viewportHeight * 0.15;
-	const centerX = measured.pageX + measured.width / 2;
-	const centerY = measured.pageY + measured.height / 2;
-
-	return (
-		centerX >= -toleranceX &&
-		centerX <= viewportWidth + toleranceX &&
-		centerY >= -toleranceY &&
-		centerY <= viewportHeight + toleranceY
-	);
-};
-
-export const useBoundaryMeasureAndStore = (params: {
+interface UseMeasurerParams {
 	enabled: boolean;
 	sharedBoundTag: string;
 	preferredSourceScreenKey?: string;
@@ -67,51 +28,50 @@ export const useBoundaryMeasureAndStore = (params: {
 	ancestorNavigatorKeys?: string[];
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<Animated.View>;
-}) => {
-	const {
-		enabled,
-		sharedBoundTag,
-		preferredSourceScreenKey,
-		currentScreenKey,
-		ancestorKeys,
-		navigatorKey,
-		ancestorNavigatorKeys,
-		preparedStyles,
-		measuredAnimatedRef,
-	} = params;
+}
+
+export const useMeasurer = ({
+	enabled,
+	sharedBoundTag,
+	preferredSourceScreenKey,
+	currentScreenKey,
+	ancestorKeys,
+	navigatorKey,
+	ancestorNavigatorKeys,
+	preparedStyles,
+	measuredAnimatedRef,
+}: UseMeasurerParams) => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
 
 	return useCallback(
-		({ intent }: MaybeMeasureAndStoreParams = {}) => {
+		({ intent }: MeasureParams = {}) => {
 			"worklet";
 			if (!enabled) return;
 
-			const intents = getMeasurementIntentFlags(intent);
+			const intents = getMeasureIntentFlags(intent);
 
 			const expectedSourceScreenKey: string | undefined =
 				resolvePendingSourceKey(sharedBoundTag, preferredSourceScreenKey) ||
 				undefined;
 
-			const hasPendingLink = expectedSourceScreenKey
-				? BoundStore.hasPendingLinkFromSource(
-						sharedBoundTag,
-						expectedSourceScreenKey,
-					)
-				: BoundStore.hasPendingLink(sharedBoundTag);
+			const pendingLink = expectedSourceScreenKey
+				? BoundStore.link.getPending(sharedBoundTag, expectedSourceScreenKey)
+				: BoundStore.link.getPending(sharedBoundTag);
+			const hasPendingLink = pendingLink !== null;
 			const hasAttachableSourceLink = expectedSourceScreenKey
-				? BoundStore.hasSourceLink(sharedBoundTag, expectedSourceScreenKey)
+				? BoundStore.link.hasSource(sharedBoundTag, expectedSourceScreenKey)
 				: false;
-			const hasSourceLink = BoundStore.hasSourceLink(
+			const hasSourceLink = BoundStore.link.hasSource(
 				sharedBoundTag,
 				currentScreenKey,
 			);
-			const hasDestinationLink = BoundStore.hasDestinationLink(
+			const hasDestinationLink = BoundStore.link.hasDestination(
 				sharedBoundTag,
 				currentScreenKey,
 			);
 
-			const writePlan = resolveMeasurementWritePlan({
+			const writePlan = resolveMeasureWritePlan({
 				intents,
 				hasPendingLink,
 				hasSourceLink,
@@ -138,14 +98,14 @@ export const useBoundaryMeasureAndStore = (params: {
 				return;
 			}
 
-			const existingSnapshot = BoundStore.getSnapshot(
+			const existingMeasuredEntry = BoundStore.entry.getMeasured(
 				sharedBoundTag,
 				currentScreenKey,
 			);
-			const hasSnapshotChanged =
-				!existingSnapshot ||
-				!areMeasurementsEqual(existingSnapshot.bounds, measured);
-			const shouldWriteSnapshot = hasSnapshotChanged;
+			const hasMeasuredEntryChanged =
+				!existingMeasuredEntry ||
+				!areMeasurementsEqual(existingMeasuredEntry.bounds, measured);
+			const shouldWriteEntry = hasMeasuredEntryChanged;
 
 			applyMeasuredBoundsWrites({
 				sharedBoundTag,
@@ -156,13 +116,13 @@ export const useBoundaryMeasureAndStore = (params: {
 				navigatorKey,
 				ancestorNavigatorKeys,
 				expectedSourceScreenKey,
-				shouldRegisterSnapshot: shouldWriteSnapshot,
+				shouldWriteEntry,
 				shouldSetSource: writePlan.captureSource,
-				shouldUpdateSource: writePlan.refreshSource && hasSnapshotChanged,
+				shouldUpdateSource: writePlan.refreshSource && hasMeasuredEntryChanged,
 				shouldUpdateDestination:
 					writePlan.refreshDestination &&
 					destinationInViewport &&
-					hasSnapshotChanged,
+					hasMeasuredEntryChanged,
 				shouldSetDestination:
 					writePlan.completeDestination && destinationInViewport,
 			});

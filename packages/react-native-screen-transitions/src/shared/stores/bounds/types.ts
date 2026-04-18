@@ -16,9 +16,26 @@ export type BoundaryConfig = {
 	method?: BoundsMethod;
 };
 
-export type Snapshot = {
-	bounds: MeasuredDimensions;
+export type Entry = {
+	bounds: MeasuredDimensions | null;
 	styles: StyleProps;
+	boundaryConfig?: BoundaryConfig;
+	ancestorKeys?: ScreenKey[];
+	navigatorKey?: NavigatorKey;
+	ancestorNavigatorKeys?: NavigatorKey[];
+};
+
+export type MeasuredEntry = Entry & {
+	bounds: MeasuredDimensions;
+};
+
+export type EntryPatch = {
+	bounds?: MeasuredDimensions | null;
+	styles?: StyleProps | null;
+	boundaryConfig?: BoundaryConfig | null;
+	ancestorKeys?: ScreenKey[] | null;
+	navigatorKey?: NavigatorKey | null;
+	ancestorNavigatorKeys?: NavigatorKey[] | null;
 };
 
 export type ScreenIdentifier = {
@@ -29,8 +46,8 @@ export type ScreenIdentifier = {
 };
 
 export type TagLink = {
-	source: ScreenIdentifier & Snapshot;
-	destination: (ScreenIdentifier & Snapshot) | null;
+	source: ScreenIdentifier & MeasuredEntry;
+	destination: (ScreenIdentifier & MeasuredEntry) | null;
 };
 
 export type ResolveTransitionContext = {
@@ -47,29 +64,14 @@ export type ResolvedTransitionPair = {
 	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
-	usedPending: boolean;
 };
 
-export type SnapshotEntry = Snapshot & {
-	ancestorKeys?: ScreenKey[];
-	navigatorKey?: NavigatorKey;
-	ancestorNavigatorKeys?: NavigatorKey[];
-};
+export type ScreenEntry = Entry;
 
 export type TagState = {
-	snapshots: Record<ScreenKey, SnapshotEntry>;
+	screens: Record<ScreenKey, ScreenEntry>;
 	linkStack: TagLink[];
 };
-
-export type PresenceEntry = {
-	count: number;
-	ancestorKeys?: ScreenKey[];
-	navigatorKey?: NavigatorKey;
-	ancestorNavigatorKeys?: NavigatorKey[];
-	boundaryConfig?: BoundaryConfig;
-};
-
-export type PresenceState = Record<TagID, Record<ScreenKey, PresenceEntry>>;
 
 export type GroupState = {
 	activeId: string;

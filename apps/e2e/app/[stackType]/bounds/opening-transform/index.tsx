@@ -32,8 +32,8 @@ export default function OpeningTransformBoundsIndex() {
 					<Text style={[styles.noteBody, { color: theme.textSecondary }]}>
 						The destination screen intentionally opens with a strong content
 						transform. If the destination boundary is measured before those
-						styles are suppressed, the stored destination snapshot will differ
-						from the final settled layout.
+						styles are suppressed, the stored destination measurement will
+						differ from the final settled layout.
 					</Text>
 				</View>
 

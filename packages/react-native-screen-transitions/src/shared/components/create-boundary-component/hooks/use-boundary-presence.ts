@@ -3,7 +3,7 @@ import { runOnUISync } from "react-native-worklets";
 import { BoundStore } from "../../../stores/bounds";
 import type { BoundaryConfigProps } from "../types";
 
-export const useBoundaryPresence = (params: {
+interface UseBoundaryPresenceParams {
 	enabled: boolean;
 	sharedBoundTag: string;
 	currentScreenKey: string;
@@ -11,16 +11,17 @@ export const useBoundaryPresence = (params: {
 	navigatorKey?: string;
 	ancestorNavigatorKeys?: string[];
 	boundaryConfig?: BoundaryConfigProps;
-}) => {
-	const {
-		enabled,
-		sharedBoundTag,
-		currentScreenKey,
-		ancestorKeys,
-		navigatorKey,
-		ancestorNavigatorKeys,
-		boundaryConfig,
-	} = params;
+}
+
+export const useBoundaryPresence = ({
+	enabled,
+	sharedBoundTag,
+	currentScreenKey,
+	ancestorKeys,
+	navigatorKey,
+	ancestorNavigatorKeys,
+	boundaryConfig,
+}: UseBoundaryPresenceParams) => {
 	const ancestorKeysSignature = ancestorKeys.join("|");
 	const ancestorNavigatorKeysSignature = ancestorNavigatorKeys?.join("|");
 
@@ -28,22 +29,15 @@ export const useBoundaryPresence = (params: {
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUISync(
-			BoundStore.registerBoundaryPresence,
-			sharedBoundTag,
-			currentScreenKey,
+		runOnUISync(BoundStore.entry.set, sharedBoundTag, currentScreenKey, {
 			ancestorKeys,
 			boundaryConfig,
 			navigatorKey,
 			ancestorNavigatorKeys,
-		);
+		});
 
 		return () => {
-			runOnUISync(
-				BoundStore.unregisterBoundaryPresence,
-				sharedBoundTag,
-				currentScreenKey,
-			);
+			runOnUISync(BoundStore.entry.remove, sharedBoundTag, currentScreenKey);
 		};
 	}, [
 		enabled,

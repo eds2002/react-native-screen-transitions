@@ -244,7 +244,7 @@ export function buildZoomStyles({
 	const previousRouteKey = props.previous?.route.key;
 	const nextRouteKey = props.next?.route.key;
 	const resolvedZoomAnchor = getZoomAnchor(explicitTarget);
-	const liveResolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
+	const liveResolvedPair = BoundStore.link.getPair(resolvedTag, {
 		currentScreenKey: currentRouteKey,
 		previousScreenKey: previousRouteKey,
 		nextScreenKey: nextRouteKey,
@@ -268,7 +268,7 @@ export function buildZoomStyles({
 	const resolvedPair =
 		effectiveTag === resolvedTag
 			? liveResolvedPair
-			: BoundStore.resolveTransitionPair(effectiveTag, {
+			: BoundStore.link.getPair(effectiveTag, {
 					currentScreenKey: currentRouteKey,
 					previousScreenKey: previousRouteKey,
 					nextScreenKey: nextRouteKey,

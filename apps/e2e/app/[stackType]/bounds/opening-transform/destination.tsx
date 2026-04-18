@@ -14,7 +14,7 @@ import { ScreenHeader } from "@/components/screen-header";
 import { useTheme } from "@/theme";
 import {
 	BoundStore,
-	type Snapshot,
+	type MeasuredEntry,
 } from "../../../../../../packages/react-native-screen-transitions/src/shared/stores/bounds";
 import { OPENING_TRANSFORM_BOUNDARY_ID } from "./constants";
 
@@ -25,7 +25,7 @@ type WindowMeasurement = {
 	height: number;
 };
 
-const SNAPSHOT_POLL_MS = 40;
+const ENTRY_POLL_MS = 40;
 const STABLE_MEASURE_DELAY_MS = 900;
 
 const formatMeasurement = (measurement: WindowMeasurement | null) => {
@@ -38,12 +38,12 @@ const formatMeasurement = (measurement: WindowMeasurement | null) => {
 	)} | w ${measurement.width.toFixed(1)} | h ${measurement.height.toFixed(1)}`;
 };
 
-const formatSnapshot = (snapshot: Snapshot | null) => {
-	if (!snapshot) {
+const formatMeasuredEntry = (entry: MeasuredEntry | null) => {
+	if (!entry) {
 		return "waiting";
 	}
 
-	const { bounds } = snapshot;
+	const { bounds } = entry;
 	return `x ${bounds.pageX.toFixed(1)} | y ${bounds.pageY.toFixed(
 		1,
 	)} | w ${bounds.width.toFixed(1)} | h ${bounds.height.toFixed(1)}`;
@@ -53,7 +53,7 @@ export default function OpeningTransformBoundsDestination() {
 	const theme = useTheme();
 	const route = useRoute();
 	const boundaryRef = useRef<RNView>(null);
-	const [capturedSnapshot, setCapturedSnapshot] = useState<Snapshot | null>(
+	const [capturedEntry, setCapturedEntry] = useState<MeasuredEntry | null>(
 		null,
 	);
 	const [stableMeasurement, setStableMeasurement] =
@@ -72,14 +72,17 @@ export default function OpeningTransformBoundsDestination() {
 
 	useEffect(() => {
 		const interval = setInterval(() => {
-			setCapturedSnapshot((previous) => {
+			setCapturedEntry((previous) => {
 				if (previous) {
 					return previous;
 				}
 
-				return BoundStore.getSnapshot(OPENING_TRANSFORM_BOUNDARY_ID, route.key);
+				return BoundStore.entry.getMeasured(
+					OPENING_TRANSFORM_BOUNDARY_ID,
+					route.key,
+				);
 			});
-		}, SNAPSHOT_POLL_MS);
+		}, ENTRY_POLL_MS);
 
 		return () => clearInterval(interval);
 	}, [route.key]);
@@ -93,17 +96,17 @@ export default function OpeningTransformBoundsDestination() {
 	}, [captureStableMeasurement]);
 
 	const delta = useMemo(() => {
-		if (!capturedSnapshot || !stableMeasurement) {
+		if (!capturedEntry || !stableMeasurement) {
 			return null;
 		}
 
 		return {
-			pageX: stableMeasurement.pageX - capturedSnapshot.bounds.pageX,
-			pageY: stableMeasurement.pageY - capturedSnapshot.bounds.pageY,
-			width: stableMeasurement.width - capturedSnapshot.bounds.width,
-			height: stableMeasurement.height - capturedSnapshot.bounds.height,
+			pageX: stableMeasurement.pageX - capturedEntry.bounds.pageX,
+			pageY: stableMeasurement.pageY - capturedEntry.bounds.pageY,
+			width: stableMeasurement.width - capturedEntry.bounds.width,
+			height: stableMeasurement.height - capturedEntry.bounds.height,
 		};
-	}, [capturedSnapshot, stableMeasurement]);
+	}, [capturedEntry, stableMeasurement]);
 
 	const mismatchSummary = useMemo(() => {
 		if (!delta) {
@@ -128,8 +131,8 @@ export default function OpeningTransformBoundsDestination() {
 		);
 
 		return maxDelta <= 1
-			? "Snapshot matches settled layout"
-			: "Snapshot drift detected";
+			? "Stored measurement matches settled layout"
+			: "Stored measurement drift detected";
 	}, [delta]);
 
 	return (
@@ -139,7 +142,7 @@ export default function OpeningTransformBoundsDestination() {
 		>
 			<ScreenHeader
 				title="Opening Transform Probe"
-				subtitle="Captured destination snapshot vs settled destination layout"
+				subtitle="Stored destination measurement vs settled destination layout"
 			/>
 
 			<View style={styles.content}>
@@ -166,13 +169,13 @@ export default function OpeningTransformBoundsDestination() {
 				<View style={styles.metricsColumn}>
 					<View style={[styles.metricCard, { backgroundColor: theme.card }]}>
 						<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>
-							Captured snapshot
+							Stored measurement
 						</Text>
 						<Text
-							testID="opening-transform-snapshot"
+							testID="opening-transform-measured-entry"
 							style={[styles.metricValue, { color: theme.text }]}
 						>
-							{formatSnapshot(capturedSnapshot)}
+							{formatMeasuredEntry(capturedEntry)}
 						</Text>
 					</View>
 
@@ -250,9 +253,9 @@ export default function OpeningTransformBoundsDestination() {
 					<Text style={[styles.noteBody, { color: theme.textSecondary }]}>
 						If the destination boundary was measured while the opening screen
 						still owned its translated and scaled content styles, the captured
-						snapshot will drift away from the settled layout. If blocked opens
-						hide content and reset styles before measurement, this delta should
-						collapse back toward zero.
+						measurement will drift away from the settled layout. If blocked
+						opens hide content and reset styles before measurement, this delta
+						should collapse back toward zero.
 					</Text>
 				</View>
 			</View>

@@ -1,6 +1,7 @@
-import { beforeEach, describe, expect, it } from "bun:test";
-import { BoundStore, type Snapshot } from "../stores/bounds";
+import { afterEach, beforeEach, describe, expect, it } from "bun:test";
+import { BoundStore, type Entry } from "../stores/bounds";
 
+const originalConsoleWarn = console.warn;
 
 // Helper to create mock bounds
 const createBounds = (
@@ -8,7 +9,7 @@ const createBounds = (
 	y = 0,
 	width = 100,
 	height = 100,
-): Snapshot["bounds"] => ({
+): Entry["bounds"] => ({
 	x,
 	y,
 	pageX: x,
@@ -22,69 +23,80 @@ beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
 });
 
+afterEach(() => {
+	console.warn = originalConsoleWarn;
+});
+
 // =============================================================================
-// Unit Tests - registerSnapshot
+// Unit Tests - entry.set / entry.getMeasured
 // =============================================================================
 
-describe("BoundStore.registerSnapshot", () => {
+describe("BoundStore.entry.set", () => {
 	it("registers new tag with bounds and styles", () => {
 		const bounds = createBounds(10, 20, 200, 300);
 		const styles = { backgroundColor: "red" };
 
-		BoundStore.registerSnapshot("card", "screen-a", bounds, styles);
+		BoundStore.entry.set("card", "screen-a", { bounds, styles });
 
-		const snapshot = BoundStore.getSnapshot("card", "screen-a");
-		expect(snapshot).not.toBeNull();
-		expect(snapshot?.bounds).toEqual(bounds);
-		expect(snapshot?.styles).toEqual(styles);
+		const measuredEntry = BoundStore.entry.getMeasured("card", "screen-a");
+		expect(measuredEntry).not.toBeNull();
+		expect(measuredEntry?.bounds).toEqual(bounds);
+		expect(measuredEntry?.styles).toEqual(styles);
 	});
 
-	it("adds snapshot to existing tag", () => {
+	it("adds a measured entry to an existing tag", () => {
 		const boundsA = createBounds(0, 0, 100, 100);
 		const boundsB = createBounds(50, 50, 150, 150);
 
-		BoundStore.registerSnapshot("card", "screen-a", boundsA);
-		BoundStore.registerSnapshot("card", "screen-b", boundsB);
+		BoundStore.entry.set("card", "screen-a", { bounds: boundsA });
+		BoundStore.entry.set("card", "screen-b", { bounds: boundsB });
 
-		expect(BoundStore.getSnapshot("card", "screen-a")?.bounds).toEqual(boundsA);
-		expect(BoundStore.getSnapshot("card", "screen-b")?.bounds).toEqual(boundsB);
+		expect(BoundStore.entry.getMeasured("card", "screen-a")?.bounds).toEqual(
+			boundsA,
+		);
+		expect(BoundStore.entry.getMeasured("card", "screen-b")?.bounds).toEqual(
+			boundsB,
+		);
 	});
 
 	it("stores ancestorKeys correctly", () => {
 		const bounds = createBounds();
 		const ancestors = ["stack-a", "tab-nav"];
 
-		BoundStore.registerSnapshot("card", "screen-a", bounds, {}, ancestors);
+		BoundStore.entry.set("card", "screen-a", {
+			bounds,
+			ancestorKeys: ancestors,
+		});
 
 		// Verify ancestor matching works
-		const viaAncestor = BoundStore.getSnapshot("card", "stack-a");
+		const viaAncestor = BoundStore.entry.getMeasured("card", "stack-a");
 		expect(viaAncestor).not.toBeNull();
 		expect(viaAncestor?.bounds).toEqual(bounds);
 	});
 
-	it("updates existing snapshot on re-measurement", () => {
+	it("updates an existing measured entry on re-measurement", () => {
 		const initialBounds = createBounds(0, 0, 100, 100);
 		const updatedBounds = createBounds(10, 10, 200, 200);
 
-		BoundStore.registerSnapshot("card", "screen-a", initialBounds);
-		BoundStore.registerSnapshot("card", "screen-a", updatedBounds);
+		BoundStore.entry.set("card", "screen-a", { bounds: initialBounds });
+		BoundStore.entry.set("card", "screen-a", { bounds: updatedBounds });
 
-		const snapshot = BoundStore.getSnapshot("card", "screen-a");
-		expect(snapshot?.bounds).toEqual(updatedBounds);
+		const measuredEntry = BoundStore.entry.getMeasured("card", "screen-a");
+		expect(measuredEntry?.bounds).toEqual(updatedBounds);
 	});
 });
 
 // =============================================================================
-// Unit Tests - setLinkSource / setLinkDestination
+// Unit Tests - setSource / setDestination
 // =============================================================================
 
-describe("BoundStore.setLinkSource", () => {
+describe("BoundStore.link.setSource", () => {
 	it("creates new tag if it does not exist", () => {
 		const bounds = createBounds();
 
-		BoundStore.setLinkSource("card", "screen-a", bounds);
+		BoundStore.link.setSource("capture", "card", "screen-a", bounds);
 
-		const link = BoundStore.getActiveLink("card");
+		const link = BoundStore.link.getActive("card");
 		expect(link).not.toBeNull();
 		expect(link?.source.screenKey).toBe("screen-a");
 	});
@@ -92,9 +104,9 @@ describe("BoundStore.setLinkSource", () => {
 	it("pushes link with source and null destination", () => {
 		const bounds = createBounds();
 
-		BoundStore.setLinkSource("card", "screen-a", bounds);
+		BoundStore.link.setSource("capture", "card", "screen-a", bounds);
 
-		const link = BoundStore.getActiveLink("card");
+		const link = BoundStore.link.getActive("card");
 		expect(link?.source.screenKey).toBe("screen-a");
 		expect(link?.destination).toBeNull();
 	});
@@ -103,11 +115,11 @@ describe("BoundStore.setLinkSource", () => {
 		const boundsA = createBounds(0, 0);
 		const boundsB = createBounds(100, 100);
 
-		BoundStore.setLinkSource("card", "screen-a", boundsA);
-		BoundStore.setLinkSource("card", "screen-b", boundsB);
+		BoundStore.link.setSource("capture", "card", "screen-a", boundsA);
+		BoundStore.link.setSource("capture", "card", "screen-b", boundsB);
 
 		// Most recent link should be from screen-b
-		const link = BoundStore.getActiveLink("card");
+		const link = BoundStore.link.getActive("card");
 		expect(link?.source.screenKey).toBe("screen-b");
 	});
 
@@ -115,30 +127,30 @@ describe("BoundStore.setLinkSource", () => {
 		const first = createBounds(0, 0, 100, 100);
 		const second = createBounds(20, 30, 120, 130);
 
-		BoundStore.setLinkSource("card", "screen-a", first);
-		BoundStore.setLinkSource("card", "screen-a", second);
+		BoundStore.link.setSource("capture", "card", "screen-a", first);
+		BoundStore.link.setSource("capture", "card", "screen-a", second);
 
 		// Completing destination once should finalize the single coalesced pending link.
-		BoundStore.setLinkDestination("card", "screen-b", createBounds(200, 200));
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds(200, 200));
 
-		const link = BoundStore.getActiveLink("card", "screen-b");
+		const link = BoundStore.link.getActive("card", "screen-b");
 		expect(link?.source.screenKey).toBe("screen-a");
 		expect(link?.source.bounds).toEqual(second);
 		expect(link?.destination?.screenKey).toBe("screen-b");
 	});
 });
 
-describe("BoundStore.updateLinkSource", () => {
+describe("BoundStore.link.setSource(refresh)", () => {
 	it("updates source in place and preserves destination", () => {
 		const initialSource = createBounds(0, 0, 100, 100);
 		const destination = createBounds(100, 100, 200, 200);
 		const updatedSource = createBounds(20, 30, 120, 120);
 
-		BoundStore.setLinkSource("card", "screen-a", initialSource);
-		BoundStore.setLinkDestination("card", "screen-b", destination);
-		BoundStore.updateLinkSource("card", "screen-a", updatedSource);
+		BoundStore.link.setSource("capture", "card", "screen-a", initialSource);
+		BoundStore.link.setDestination("attach", "card", "screen-b", destination);
+		BoundStore.link.setSource("refresh", "card", "screen-a", updatedSource);
 
-		const link = BoundStore.getActiveLink("card", "screen-a");
+		const link = BoundStore.link.getActive("card", "screen-a");
 		expect(link?.source.bounds).toEqual(updatedSource);
 		expect(link?.destination?.screenKey).toBe("screen-b");
 		expect(link?.destination?.bounds).toEqual(destination);
@@ -150,18 +162,18 @@ describe("BoundStore.updateLinkSource", () => {
 		const destination = createBounds(100, 100, 150, 150);
 		const updatedSource = createBounds(10, 10, 110, 110);
 
-		BoundStore.setLinkSource("card", "screen-a", completedSource);
-		BoundStore.setLinkDestination("card", "screen-b", destination);
+		BoundStore.link.setSource("capture", "card", "screen-a", completedSource);
+		BoundStore.link.setDestination("attach", "card", "screen-b", destination);
 
 		// Newer pending link with same source screen.
-		BoundStore.setLinkSource("card", "screen-a", pendingSource);
+		BoundStore.link.setSource("capture", "card", "screen-a", pendingSource);
 
-		BoundStore.updateLinkSource("card", "screen-a", updatedSource);
+		BoundStore.link.setSource("refresh", "card", "screen-a", updatedSource);
 
-		const completed = BoundStore.getActiveLink("card", "screen-b");
+		const completed = BoundStore.link.getActive("card", "screen-b");
 		expect(completed?.source.bounds).toEqual(updatedSource);
 
-		const latest = BoundStore.getActiveLink("card");
+		const latest = BoundStore.link.getActive("card");
 		expect(latest?.destination).toBeNull();
 		expect(latest?.source.bounds).toEqual(pendingSource);
 	});
@@ -170,10 +182,10 @@ describe("BoundStore.updateLinkSource", () => {
 		const pendingSource = createBounds(25, 25, 100, 100);
 		const updatedSource = createBounds(30, 35, 110, 115);
 
-		BoundStore.setLinkSource("card", "screen-a", pendingSource);
-		BoundStore.updateLinkSource("card", "screen-a", updatedSource);
+		BoundStore.link.setSource("capture", "card", "screen-a", pendingSource);
+		BoundStore.link.setSource("refresh", "card", "screen-a", updatedSource);
 
-		const latest = BoundStore.getActiveLink("card");
+		const latest = BoundStore.link.getActive("card");
 		expect(latest?.destination).toBeNull();
 		expect(latest?.source.bounds).toEqual(updatedSource);
 	});
@@ -182,24 +194,68 @@ describe("BoundStore.updateLinkSource", () => {
 		const source = createBounds(0, 0, 100, 100);
 		const destination = createBounds(100, 100, 120, 120);
 
-		BoundStore.setLinkSource("card", "screen-a", source);
-		BoundStore.setLinkDestination("card", "screen-b", destination);
-		BoundStore.updateLinkSource("card", "screen-x", createBounds(999, 999));
+		BoundStore.link.setSource("capture", "card", "screen-a", source);
+		BoundStore.link.setDestination("attach", "card", "screen-b", destination);
+		BoundStore.link.setSource("refresh", "card", "screen-x", createBounds(999, 999));
 
-		const link = BoundStore.getActiveLink("card", "screen-a");
+		const link = BoundStore.link.getActive("card", "screen-a");
 		expect(link?.source.bounds).toEqual(source);
 	});
 });
 
-describe("BoundStore.setLinkDestination", () => {
+describe("BoundStore.link.setDestination(refresh)", () => {
+	it("updates destination in place and preserves source", () => {
+		const source = createBounds(0, 0, 100, 100);
+		const initialDestination = createBounds(100, 100, 200, 200);
+		const updatedDestination = createBounds(120, 130, 220, 230);
+
+		BoundStore.link.setSource("capture", "card", "screen-a", source);
+		BoundStore.link.setDestination("attach", "card", "screen-b", initialDestination);
+		BoundStore.link.setDestination("refresh", "card", "screen-b", updatedDestination);
+
+		const link = BoundStore.link.getActive("card", "screen-b");
+		expect(link?.source.screenKey).toBe("screen-a");
+		expect(link?.source.bounds).toEqual(source);
+		expect(link?.destination?.bounds).toEqual(updatedDestination);
+	});
+
+	it("falls back to pending source when no completed destination exists", () => {
+		const boundsA = createBounds(0, 0);
+		const boundsB = createBounds(50, 50);
+		const destination = createBounds(200, 200);
+
+		BoundStore.link.setSource("capture", "card", "screen-a", boundsA);
+		BoundStore.link.setSource("capture", "card", "screen-b", boundsB);
+
+		BoundStore.link.setDestination("refresh", 
+			"card",
+			"screen-detail",
+			destination,
+			{},
+			undefined,
+			"screen-a",
+		);
+
+		const fromDetail = BoundStore.link.getActive("card", "screen-detail");
+		expect(fromDetail?.source.screenKey).toBe("screen-a");
+		expect(fromDetail?.destination?.screenKey).toBe("screen-detail");
+		expect(fromDetail?.destination?.bounds).toEqual(destination);
+
+		const latest = BoundStore.link.getActive("card");
+		expect(latest?.source.screenKey).toBe("screen-b");
+		expect(latest?.destination).toBeNull();
+	});
+});
+
+describe("BoundStore.link.setDestination", () => {
 	it("fills topmost link with null destination", () => {
 		const srcBounds = createBounds(0, 0);
 		const dstBounds = createBounds(100, 100);
 
-		BoundStore.setLinkSource("card", "screen-a", srcBounds);
-		BoundStore.setLinkDestination("card", "screen-b", dstBounds);
+		BoundStore.link.setSource("capture", "card", "screen-a", srcBounds);
+		BoundStore.link.setDestination("attach", "card", "screen-b", dstBounds);
 
-		const link = BoundStore.getActiveLink("card");
+		const link = BoundStore.link.getActive("card");
 		expect(link?.source.screenKey).toBe("screen-a");
 		expect(link?.destination?.screenKey).toBe("screen-b");
 	});
@@ -208,9 +264,9 @@ describe("BoundStore.setLinkDestination", () => {
 		const bounds = createBounds();
 
 		// No source set, destination should be ignored
-		BoundStore.setLinkDestination("card", "screen-b", bounds);
+		BoundStore.link.setDestination("attach", "card", "screen-b", bounds);
 
-		const link = BoundStore.getActiveLink("card");
+		const link = BoundStore.link.getActive("card");
 		expect(link).toBeNull();
 	});
 
@@ -220,12 +276,12 @@ describe("BoundStore.setLinkDestination", () => {
 		const boundsC = createBounds(100, 100);
 
 		// Two sources, one destination
-		BoundStore.setLinkSource("card", "screen-a", boundsA);
-		BoundStore.setLinkSource("card", "screen-b", boundsB);
-		BoundStore.setLinkDestination("card", "screen-c", boundsC);
+		BoundStore.link.setSource("capture", "card", "screen-a", boundsA);
+		BoundStore.link.setSource("capture", "card", "screen-b", boundsB);
+		BoundStore.link.setDestination("attach", "card", "screen-c", boundsC);
 
 		// Most recent link (from screen-b) should have destination
-		const link = BoundStore.getActiveLink("card");
+		const link = BoundStore.link.getActive("card");
 		expect(link?.source.screenKey).toBe("screen-b");
 		expect(link?.destination?.screenKey).toBe("screen-c");
 	});
@@ -235,10 +291,10 @@ describe("BoundStore.setLinkDestination", () => {
 		const boundsB = createBounds(50, 50);
 		const destination = createBounds(200, 200);
 
-		BoundStore.setLinkSource("card", "screen-a", boundsA);
-		BoundStore.setLinkSource("card", "screen-b", boundsB);
+		BoundStore.link.setSource("capture", "card", "screen-a", boundsA);
+		BoundStore.link.setSource("capture", "card", "screen-b", boundsB);
 
-		BoundStore.setLinkDestination(
+		BoundStore.link.setDestination("attach", 
 			"card",
 			"screen-detail",
 			destination,
@@ -247,19 +303,19 @@ describe("BoundStore.setLinkDestination", () => {
 			"screen-a",
 		);
 
-		const fromDetail = BoundStore.getActiveLink("card", "screen-detail");
+		const fromDetail = BoundStore.link.getActive("card", "screen-detail");
 		expect(fromDetail?.source.screenKey).toBe("screen-a");
 		expect(fromDetail?.destination?.screenKey).toBe("screen-detail");
 
-		const latest = BoundStore.getActiveLink("card");
+		const latest = BoundStore.link.getActive("card");
 		expect(latest?.source.screenKey).toBe("screen-b");
 		expect(latest?.destination).toBeNull();
 	});
 
 	it("no-ops in expected source mode when no matching pending source exists", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
 
-		BoundStore.setLinkDestination(
+		BoundStore.link.setDestination("attach", 
 			"card",
 			"screen-detail",
 			createBounds(200, 200),
@@ -268,19 +324,19 @@ describe("BoundStore.setLinkDestination", () => {
 			"screen-x",
 		);
 
-		const link = BoundStore.getActiveLink("card");
+		const link = BoundStore.link.getActive("card");
 		expect(link?.source.screenKey).toBe("screen-a");
 		expect(link?.destination).toBeNull();
 	});
 });
 
 // =============================================================================
-// Unit Tests - getSnapshot
+// Unit Tests - entry.getMeasured
 // =============================================================================
 
-describe("BoundStore.getSnapshot", () => {
+describe("BoundStore.entry.getMeasured", () => {
 	it("returns null for unknown tag", () => {
-		const result = BoundStore.getSnapshot("unknown", "screen-a");
+		const result = BoundStore.entry.getMeasured("unknown", "screen-a");
 		expect(result).toBeNull();
 	});
 
@@ -288,20 +344,24 @@ describe("BoundStore.getSnapshot", () => {
 		const bounds = createBounds(10, 20, 300, 400);
 		const styles = { borderRadius: 8 };
 
-		BoundStore.registerSnapshot("card", "screen-a", bounds, styles);
+		BoundStore.entry.set("card", "screen-a", { bounds, styles });
 
-		const result = BoundStore.getSnapshot("card", "screen-a");
-		expect(result).toEqual({ bounds, styles });
+		const result = BoundStore.entry.getMeasured("card", "screen-a");
+		expect(result?.bounds).toEqual(bounds);
+		expect(result?.styles).toEqual(styles);
 	});
 
 	it("returns bounds via ancestor match", () => {
 		const bounds = createBounds();
 		const ancestors = ["stack-a", "root"];
 
-		BoundStore.registerSnapshot("card", "screen-a", bounds, {}, ancestors);
+		BoundStore.entry.set("card", "screen-a", {
+			bounds,
+			ancestorKeys: ancestors,
+		});
 
 		// Query by ancestor key
-		const result = BoundStore.getSnapshot("card", "stack-a");
+		const result = BoundStore.entry.getMeasured("card", "stack-a");
 		expect(result).not.toBeNull();
 		expect(result?.bounds).toEqual(bounds);
 	});
@@ -311,13 +371,14 @@ describe("BoundStore.getSnapshot", () => {
 		const ancestorBounds = createBounds(200, 200, 50, 50);
 
 		// Register with ancestor that matches another screen's key
-		BoundStore.registerSnapshot("card", "screen-a", ancestorBounds, {}, [
-			"stack-a",
-		]);
-		BoundStore.registerSnapshot("card", "stack-a", directBounds);
+		BoundStore.entry.set("card", "screen-a", {
+			bounds: ancestorBounds,
+			ancestorKeys: ["stack-a"],
+		});
+		BoundStore.entry.set("card", "stack-a", { bounds: directBounds });
 
 		// Direct match should win
-		const result = BoundStore.getSnapshot("card", "stack-a");
+		const result = BoundStore.entry.getMeasured("card", "stack-a");
 		expect(result?.bounds).toEqual(directBounds);
 	});
 });
@@ -326,74 +387,74 @@ describe("BoundStore.getSnapshot", () => {
 // Unit Tests - getActiveLink
 // =============================================================================
 
-describe("BoundStore.getActiveLink", () => {
+describe("BoundStore.link.getActive", () => {
 	it("returns null for unknown tag", () => {
-		const result = BoundStore.getActiveLink("unknown");
+		const result = BoundStore.link.getActive("unknown");
 		expect(result).toBeNull();
 	});
 
 	it("returns null for empty linkStack", () => {
-		// Register snapshot but no links
-		BoundStore.registerSnapshot("card", "screen-a", createBounds());
+		// Register entry but no links
+		BoundStore.entry.set("card", "screen-a", { bounds: createBounds() });
 
-		const result = BoundStore.getActiveLink("card");
+		const result = BoundStore.link.getActive("card");
 		expect(result).toBeNull();
 	});
 
 	it("returns most recent link when no screenKey provided", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkDestination("card", "screen-b", createBounds());
-		BoundStore.setLinkSource("card", "screen-b", createBounds());
-		BoundStore.setLinkDestination("card", "screen-c", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-b", createBounds());
+		BoundStore.link.setDestination("attach", "card", "screen-c", createBounds());
 
-		const link = BoundStore.getActiveLink("card");
+		const link = BoundStore.link.getActive("card");
 		expect(link?.source.screenKey).toBe("screen-b");
 		expect(link?.destination?.screenKey).toBe("screen-c");
 	});
 
 	it("infers isClosing when screenKey matches source", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkDestination("card", "screen-b", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
 		// Query from source screen = closing (going back)
-		const linkFromSource = BoundStore.getActiveLink("card", "screen-a");
+		const linkFromSource = BoundStore.link.getActive("card", "screen-a");
 		expect(linkFromSource?.source.screenKey).toBe("screen-a");
 
 		// Query from destination screen = opening
-		const linkFromDest = BoundStore.getActiveLink("card", "screen-b");
+		const linkFromDest = BoundStore.link.getActive("card", "screen-b");
 		expect(linkFromDest?.destination?.screenKey).toBe("screen-b");
 	});
 
 	it("ancestor matching works in link lookup", () => {
 		const ancestors = ["stack-a"];
 
-		BoundStore.setLinkSource("card", "screen-a", createBounds(), {}, ancestors);
-		BoundStore.setLinkDestination("card", "screen-b", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds(), {}, ancestors);
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
 		// Query by ancestor key (matches source)
-		const link = BoundStore.getActiveLink("card", "stack-a");
+		const link = BoundStore.link.getActive("card", "stack-a");
 		expect(link).not.toBeNull();
 		expect(link?.source.screenKey).toBe("screen-a");
 	});
 
 	it("returns null when screenKey does not match any link", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkDestination("card", "screen-b", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
-		const link = BoundStore.getActiveLink("card", "screen-x");
+		const link = BoundStore.link.getActive("card", "screen-x");
 		expect(link).toBeNull();
 	});
 });
 
-describe("BoundStore.resolveTransitionPair", () => {
+describe("BoundStore.link.getPair", () => {
 	it("entering prefers completed link whose destination matches current", () => {
 		const source = createBounds(0, 0, 100, 100);
 		const destination = createBounds(100, 120, 220, 240);
 
-		BoundStore.setLinkSource("card", "screen-a", source);
-		BoundStore.setLinkDestination("card", "screen-b", destination);
+		BoundStore.link.setSource("capture", "card", "screen-a", source);
+		BoundStore.link.setDestination("attach", "card", "screen-b", destination);
 
-		const resolved = BoundStore.resolveTransitionPair("card", {
+		const resolved = BoundStore.link.getPair("card", {
 			entering: true,
 			currentScreenKey: "screen-b",
 			previousScreenKey: "screen-a",
@@ -401,15 +462,14 @@ describe("BoundStore.resolveTransitionPair", () => {
 
 		expect(resolved.sourceBounds).toEqual(source);
 		expect(resolved.destinationBounds).toEqual(destination);
-		expect(resolved.usedPending).toBe(false);
 	});
 
 	it("entering falls back to pending-from-previous source without inventing a destination", () => {
 		const source = createBounds(10, 20, 100, 100);
 
-		BoundStore.setLinkSource("card", "screen-a", source);
+		BoundStore.link.setSource("capture", "card", "screen-a", source);
 
-		const resolved = BoundStore.resolveTransitionPair("card", {
+		const resolved = BoundStore.link.getPair("card", {
 			entering: true,
 			currentScreenKey: "screen-b",
 			previousScreenKey: "screen-a",
@@ -417,17 +477,16 @@ describe("BoundStore.resolveTransitionPair", () => {
 
 		expect(resolved.sourceBounds).toEqual(source);
 		expect(resolved.destinationBounds).toBeNull();
-		expect(resolved.usedPending).toBe(true);
 	});
 
 	it("exiting prefers completed link whose source matches current", () => {
 		const source = createBounds(100, 120, 220, 240);
 		const destination = createBounds(0, 0, 100, 100);
 
-		BoundStore.setLinkSource("card", "screen-b", source);
-		BoundStore.setLinkDestination("card", "screen-a", destination);
+		BoundStore.link.setSource("capture", "card", "screen-b", source);
+		BoundStore.link.setDestination("attach", "card", "screen-a", destination);
 
-		const resolved = BoundStore.resolveTransitionPair("card", {
+		const resolved = BoundStore.link.getPair("card", {
 			entering: false,
 			currentScreenKey: "screen-b",
 			nextScreenKey: "screen-a",
@@ -435,16 +494,15 @@ describe("BoundStore.resolveTransitionPair", () => {
 
 		expect(resolved.sourceBounds).toEqual(source);
 		expect(resolved.destinationBounds).toEqual(destination);
-		expect(resolved.usedPending).toBe(false);
 	});
 
-	it("ignores snapshot-only recovery when no live link exists", () => {
-		const sourceSnapshot = createBounds(12, 24, 80, 90);
-		const destinationSnapshot = createBounds(40, 50, 200, 210);
+	it("ignores measured-entry-only recovery when no live link exists", () => {
+		const sourceEntryBounds = createBounds(12, 24, 80, 90);
+		const destinationEntryBounds = createBounds(40, 50, 200, 210);
 
-		BoundStore.registerSnapshot("card", "screen-a", sourceSnapshot);
+		BoundStore.entry.set("card", "screen-a", { bounds: sourceEntryBounds });
 
-		const sourceOnly = BoundStore.resolveTransitionPair("card", {
+		const sourceOnly = BoundStore.link.getPair("card", {
 			entering: true,
 			previousScreenKey: "screen-a",
 			currentScreenKey: "screen-b",
@@ -453,9 +511,9 @@ describe("BoundStore.resolveTransitionPair", () => {
 		expect(sourceOnly.sourceBounds).toBeNull();
 		expect(sourceOnly.destinationBounds).toBeNull();
 
-		BoundStore.registerSnapshot("card", "screen-b", destinationSnapshot);
+		BoundStore.entry.set("card", "screen-b", { bounds: destinationEntryBounds });
 
-		const sourceAndDestination = BoundStore.resolveTransitionPair("card", {
+		const sourceAndDestination = BoundStore.link.getPair("card", {
 			entering: true,
 			previousScreenKey: "screen-a",
 			currentScreenKey: "screen-b",
@@ -467,122 +525,143 @@ describe("BoundStore.resolveTransitionPair", () => {
 
 });
 
-describe("BoundStore link predicates", () => {
-	it("hasPendingLink returns true when destination is missing", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
+describe("BoundStore.link.getPending", () => {
+	it("returns the latest pending link when destination is missing", () => {
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
 
-		expect(BoundStore.hasPendingLink("card")).toBe(true);
+		expect(BoundStore.link.getPending("card")?.source.screenKey).toBe("screen-a");
 	});
 
-	it("hasPendingLink returns false when latest links are complete", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkDestination("card", "screen-b", createBounds());
+	it("returns null when latest links are complete", () => {
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
-		expect(BoundStore.hasPendingLink("card")).toBe(false);
+		expect(BoundStore.link.getPending("card")).toBeNull();
 	});
 
-	it("hasPendingLinkFromSource matches pending source screen", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkSource("card", "screen-b", createBounds());
+	it("filters the latest pending link by source screen", () => {
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-b", createBounds());
 
-		expect(BoundStore.hasPendingLinkFromSource("card", "screen-a")).toBe(true);
-		expect(BoundStore.hasPendingLinkFromSource("card", "screen-b")).toBe(true);
-		expect(BoundStore.hasPendingLinkFromSource("card", "screen-x")).toBe(
-			false,
+		expect(BoundStore.link.getPending("card", "screen-a")?.source.screenKey).toBe(
+			"screen-a",
+		);
+		expect(BoundStore.link.getPending("card", "screen-b")?.source.screenKey).toBe(
+			"screen-b",
+		);
+		expect(BoundStore.link.getPending("card", "screen-x")).toBeNull();
+	});
+
+	it("supports ancestor matching when filtering by source screen", () => {
+		BoundStore.link.setSource(
+			"capture",
+			"card",
+			"screen-a",
+			createBounds(),
+			{},
+			["stack-a"],
+		);
+
+		expect(BoundStore.link.getPending("card", "stack-a")?.source.screenKey).toBe(
+			"screen-a",
 		);
 	});
 
-	it("hasPendingLinkFromSource supports ancestor matching", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds(), {}, ["stack-a"]);
+	it("returns the most recent pending link by default", () => {
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-b", createBounds());
 
-		expect(BoundStore.hasPendingLinkFromSource("card", "stack-a")).toBe(true);
+		expect(BoundStore.link.getPending("card")?.source.screenKey).toBe("screen-b");
+
+		BoundStore.link.setDestination("attach", "card", "screen-c", createBounds());
+		expect(BoundStore.link.getPending("card")?.source.screenKey).toBe("screen-a");
 	});
 
-	it("getLatestPendingSourceScreenKey returns most recent pending source", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkSource("card", "screen-b", createBounds());
+});
 
-		expect(BoundStore.getLatestPendingSourceScreenKey("card")).toBe("screen-b");
-
-		BoundStore.setLinkDestination("card", "screen-c", createBounds());
-		expect(BoundStore.getLatestPendingSourceScreenKey("card")).toBe("screen-a");
-	});
-
+describe("BoundStore link predicates", () => {
 	it("hasSourceLink matches direct source screen", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
 
-		expect(BoundStore.hasSourceLink("card", "screen-a")).toBe(true);
-		expect(BoundStore.hasSourceLink("card", "screen-x")).toBe(false);
+		expect(BoundStore.link.hasSource("card", "screen-a")).toBe(true);
+		expect(BoundStore.link.hasSource("card", "screen-x")).toBe(false);
 	});
 
 	it("hasSourceLink matches source ancestor chain", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds(), {}, ["stack-a"]);
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds(), {}, ["stack-a"]);
 
-		expect(BoundStore.hasSourceLink("card", "stack-a")).toBe(true);
+		expect(BoundStore.link.hasSource("card", "stack-a")).toBe(true);
 	});
 
 	it("hasDestinationLink matches direct destination screen", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkDestination("card", "screen-b", createBounds());
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
-		expect(BoundStore.hasDestinationLink("card", "screen-b")).toBe(true);
-		expect(BoundStore.hasDestinationLink("card", "screen-x")).toBe(false);
+		expect(BoundStore.link.hasDestination("card", "screen-b")).toBe(true);
+		expect(BoundStore.link.hasDestination("card", "screen-x")).toBe(false);
 	});
 
 	it("hasDestinationLink matches destination ancestor chain", () => {
-		BoundStore.setLinkSource("card", "screen-a", createBounds());
-		BoundStore.setLinkDestination("card", "screen-b", createBounds(), {}, [
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds(), {}, [
 			"stack-b",
 		]);
 
-		expect(BoundStore.hasDestinationLink("card", "stack-b")).toBe(true);
+		expect(BoundStore.link.hasDestination("card", "stack-b")).toBe(true);
 	});
 });
 
-describe("BoundStore boundary presence", () => {
-	it("tracks boundary presence by tag and screen", () => {
-		BoundStore.registerBoundaryPresence("card", "screen-a");
+describe("BoundStore.entry", () => {
+	it("tracks entries by tag and screen", () => {
+		BoundStore.entry.set("card", "screen-a", {});
 
-		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(true);
-		expect(BoundStore.hasBoundaryPresence("card", "screen-b")).toBe(false);
+		expect(BoundStore.entry.get("card", "screen-a")).not.toBeNull();
+		expect(BoundStore.entry.get("card", "screen-b")).toBeNull();
 	});
 
-	it("supports ancestor matching for boundary presence", () => {
-		BoundStore.registerBoundaryPresence("card", "screen-a", ["stack-a"]);
+	it("supports ancestor matching for entry lookup", () => {
+		BoundStore.entry.set("card", "screen-a", {
+			ancestorKeys: ["stack-a"],
+		});
 
-		expect(BoundStore.hasBoundaryPresence("card", "stack-a")).toBe(true);
+		expect(BoundStore.entry.get("card", "stack-a")).not.toBeNull();
 	});
 
-	it("keeps presence alive until all duplicates unmount", () => {
-		BoundStore.registerBoundaryPresence("card", "screen-a");
-		BoundStore.registerBoundaryPresence("card", "screen-a");
-		BoundStore.unregisterBoundaryPresence("card", "screen-a");
+	it("remove drops the entire entry", () => {
+		const bounds = createBounds(10, 20, 200, 300);
 
-		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(true);
+		BoundStore.entry.set("card", "screen-a", {
+			bounds,
+			boundaryConfig: { anchor: "top" },
+		});
+		BoundStore.entry.remove("card", "screen-a");
 
-		BoundStore.unregisterBoundaryPresence("card", "screen-a");
-		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(false);
+		expect(BoundStore.entry.get("card", "screen-a")).toBeNull();
+		expect(BoundStore.entry.getMeasured("card", "screen-a")).toBeNull();
+		expect(BoundStore.entry.getConfig("card", "screen-a")).toBeNull();
 	});
 
-	it("clear removes boundary presence for a screen", () => {
-		BoundStore.registerBoundaryPresence("card", "screen-a");
-		BoundStore.registerBoundaryPresence("card", "screen-b");
+	it("clear removes entries for a screen", () => {
+		BoundStore.entry.set("card", "screen-a", {});
+		BoundStore.entry.set("card", "screen-b", {});
 
-		BoundStore.clear("screen-a");
+		BoundStore.cleanup.byScreen("screen-a");
 
-		expect(BoundStore.hasBoundaryPresence("card", "screen-a")).toBe(false);
-		expect(BoundStore.hasBoundaryPresence("card", "screen-b")).toBe(true);
+		expect(BoundStore.entry.get("card", "screen-a")).toBeNull();
+		expect(BoundStore.entry.get("card", "screen-b")).not.toBeNull();
 	});
 
 	it("stores boundary config and retrieves it by direct screen key", () => {
-		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
-			anchor: "top",
-			scaleMode: "uniform",
-			target: "fullscreen",
-			method: "content",
+		BoundStore.entry.set("card", "screen-a", {
+			boundaryConfig: {
+				anchor: "top",
+				scaleMode: "uniform",
+				target: "fullscreen",
+				method: "content",
+			},
 		});
 
-		expect(BoundStore.getBoundaryConfig("card", "screen-a")).toEqual({
+		expect(BoundStore.entry.getConfig("card", "screen-a")).toEqual({
 			anchor: "top",
 			scaleMode: "uniform",
 			target: "fullscreen",
@@ -590,47 +669,58 @@ describe("BoundStore boundary presence", () => {
 		});
 	});
 
-	it("updates boundary config when re-registering same screen", () => {
-		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
-			anchor: "center",
-			method: "transform",
+	it("updates boundary config when setting the same screen again", () => {
+		BoundStore.entry.set("card", "screen-a", {
+			boundaryConfig: {
+				anchor: "center",
+				method: "transform",
+			},
 		});
 
-		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
-			anchor: "bottom",
-			method: "size",
+		BoundStore.entry.set("card", "screen-a", {
+			boundaryConfig: {
+				anchor: "bottom",
+				method: "size",
+			},
 		});
 
-		expect(BoundStore.getBoundaryConfig("card", "screen-a")).toEqual({
+		expect(BoundStore.entry.getConfig("card", "screen-a")).toEqual({
 			anchor: "bottom",
 			method: "size",
 		});
 	});
 
 	it("supports ancestor matching for boundary config", () => {
-		BoundStore.registerBoundaryPresence("card", "screen-a", ["stack-a"], {
-			anchor: "topLeading",
-			scaleMode: "match",
+		BoundStore.entry.set("card", "screen-a", {
+			ancestorKeys: ["stack-a"],
+			boundaryConfig: {
+				anchor: "topLeading",
+				scaleMode: "match",
+			},
 		});
 
-		expect(BoundStore.getBoundaryConfig("card", "stack-a")).toEqual({
+		expect(BoundStore.entry.getConfig("card", "stack-a")).toEqual({
 			anchor: "topLeading",
 			scaleMode: "match",
 		});
 	});
 
 	it("clear removes boundary config for the cleared screen", () => {
-		BoundStore.registerBoundaryPresence("card", "screen-a", undefined, {
-			anchor: "top",
+		BoundStore.entry.set("card", "screen-a", {
+			boundaryConfig: {
+				anchor: "top",
+			},
 		});
-		BoundStore.registerBoundaryPresence("card", "screen-b", undefined, {
-			anchor: "bottom",
+		BoundStore.entry.set("card", "screen-b", {
+			boundaryConfig: {
+				anchor: "bottom",
+			},
 		});
 
-		BoundStore.clear("screen-a");
+		BoundStore.cleanup.byScreen("screen-a");
 
-		expect(BoundStore.getBoundaryConfig("card", "screen-a")).toBeNull();
-		expect(BoundStore.getBoundaryConfig("card", "screen-b")).toEqual({
+		expect(BoundStore.entry.getConfig("card", "screen-a")).toBeNull();
+		expect(BoundStore.entry.getConfig("card", "screen-b")).toEqual({
 			anchor: "bottom",
 		});
 	});
@@ -646,18 +736,18 @@ describe("Scenario: Simple push/pop navigation", () => {
 		const dstBounds = createBounds(0, 0, 400, 400);
 
 		// 1. User presses card on Screen A (source captured)
-		BoundStore.setLinkSource("card", "screen-a", srcBounds);
+		BoundStore.link.setSource("capture", "card", "screen-a", srcBounds);
 
 		// 2. Screen B mounts, measures card (destination captured)
-		BoundStore.setLinkDestination("card", "screen-b", dstBounds);
+		BoundStore.link.setDestination("attach", "card", "screen-b", dstBounds);
 
 		// Verify link is complete - query from destination (opening)
-		const openingLink = BoundStore.getActiveLink("card", "screen-b");
+		const openingLink = BoundStore.link.getActive("card", "screen-b");
 		expect(openingLink?.source.bounds).toEqual(srcBounds);
 		expect(openingLink?.destination?.bounds).toEqual(dstBounds);
 
 		// 3. Query from source (closing - going back)
-		const closingLink = BoundStore.getActiveLink("card", "screen-a");
+		const closingLink = BoundStore.link.getActive("card", "screen-a");
 		expect(closingLink?.source.screenKey).toBe("screen-a");
 		expect(closingLink?.destination?.screenKey).toBe("screen-b");
 	});
@@ -666,22 +756,22 @@ describe("Scenario: Simple push/pop navigation", () => {
 describe("Scenario: Multiple bounds, only one matches", () => {
 	it("establishes link only for matching bound", () => {
 		// Screen A has header, card, footer
-		BoundStore.registerSnapshot("header", "screen-a", createBounds(0, 0));
-		BoundStore.registerSnapshot("card", "screen-a", createBounds(0, 100));
-		BoundStore.registerSnapshot("footer", "screen-a", createBounds(0, 500));
+		BoundStore.entry.set("header", "screen-a", { bounds: createBounds(0, 0) });
+		BoundStore.entry.set("card", "screen-a", { bounds: createBounds(0, 100) });
+		BoundStore.entry.set("footer", "screen-a", { bounds: createBounds(0, 500) });
 
 		// Only card triggers navigation
-		BoundStore.setLinkSource("card", "screen-a", createBounds(0, 100));
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds(0, 100));
 
 		// Screen B only has card
-		BoundStore.setLinkDestination("card", "screen-b", createBounds(0, 0));
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds(0, 0));
 
 		// Card link exists
-		expect(BoundStore.getActiveLink("card")).not.toBeNull();
+		expect(BoundStore.link.getActive("card")).not.toBeNull();
 
-		// Header and footer have no links (only snapshots)
-		expect(BoundStore.getActiveLink("header")).toBeNull();
-		expect(BoundStore.getActiveLink("footer")).toBeNull();
+		// Header and footer have no links (only measured entries)
+		expect(BoundStore.link.getActive("header")).toBeNull();
+		expect(BoundStore.link.getActive("footer")).toBeNull();
 	});
 });
 
@@ -694,29 +784,35 @@ describe("Scenario: Nested navigator with ancestor keys", () => {
 		const boundsA = createBounds(10, 10, 80, 80);
 		const boundsB = createBounds(20, 20, 100, 100);
 
-		// Register snapshot in Stack A
-		BoundStore.registerSnapshot("profile", "a1", boundsA, {}, ["stack-a"]);
+		// Register measured entry in Stack A
+		BoundStore.entry.set("profile", "a1", {
+			bounds: boundsA,
+			ancestorKeys: ["stack-a"],
+		});
 
-		// Register snapshot in Stack B
-		BoundStore.registerSnapshot("profile", "b1", boundsB, {}, ["stack-b"]);
+		// Register measured entry in Stack B
+		BoundStore.entry.set("profile", "b1", {
+			bounds: boundsB,
+			ancestorKeys: ["stack-b"],
+		});
 
 		// Query by stack key should return correct bounds
-		const fromStackA = BoundStore.getSnapshot("profile", "stack-a");
+		const fromStackA = BoundStore.entry.getMeasured("profile", "stack-a");
 		expect(fromStackA?.bounds).toEqual(boundsA);
 
-		const fromStackB = BoundStore.getSnapshot("profile", "stack-b");
+		const fromStackB = BoundStore.entry.getMeasured("profile", "stack-b");
 		expect(fromStackB?.bounds).toEqual(boundsB);
 	});
 
 	it("getActiveLink respects ancestor chain", () => {
 		// Navigation from Stack A to detail screen
-		BoundStore.setLinkSource("profile", "a1", createBounds(10, 10), {}, [
+		BoundStore.link.setSource("capture", "profile", "a1", createBounds(10, 10), {}, [
 			"stack-a",
 		]);
-		BoundStore.setLinkDestination("profile", "detail", createBounds(0, 0));
+		BoundStore.link.setDestination("attach", "profile", "detail", createBounds(0, 0));
 
 		// Query by ancestor should find the link
-		const link = BoundStore.getActiveLink("profile", "stack-a");
+		const link = BoundStore.link.getActive("profile", "stack-a");
 		expect(link?.source.screenKey).toBe("a1");
 	});
 });
@@ -724,24 +820,24 @@ describe("Scenario: Nested navigator with ancestor keys", () => {
 describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 	it("link stack grows and getActiveLink finds correct link for each screen", () => {
 		// A → B
-		BoundStore.setLinkSource("card", "screen-a", createBounds(0, 0));
-		BoundStore.setLinkDestination("card", "screen-b", createBounds(100, 100));
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds(0, 0));
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds(100, 100));
 
 		// B → C
-		BoundStore.setLinkSource("card", "screen-b", createBounds(100, 100));
-		BoundStore.setLinkDestination("card", "screen-c", createBounds(200, 200));
+		BoundStore.link.setSource("capture", "card", "screen-b", createBounds(100, 100));
+		BoundStore.link.setDestination("attach", "card", "screen-c", createBounds(200, 200));
 
 		// Most recent link is B → C
-		const latest = BoundStore.getActiveLink("card");
+		const latest = BoundStore.link.getActive("card");
 		expect(latest?.source.screenKey).toBe("screen-b");
 		expect(latest?.destination?.screenKey).toBe("screen-c");
 
 		// Query from C (destination of B→C) = opening
-		const fromC = BoundStore.getActiveLink("card", "screen-c");
+		const fromC = BoundStore.link.getActive("card", "screen-c");
 		expect(fromC?.destination?.screenKey).toBe("screen-c");
 
 		// Query from B - B is source of B→C link, so isClosing=true
-		const fromB = BoundStore.getActiveLink("card", "screen-b");
+		const fromB = BoundStore.link.getActive("card", "screen-b");
 		expect(fromB?.source.screenKey).toBe("screen-b");
 	});
 });
@@ -749,19 +845,19 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 describe("Scenario: Global bounds (fullscreen target)", () => {
 	it("getActiveLink with no screenKey returns most recent for fullscreen", () => {
 		// Source exists, destination will be fullscreen (no specific screenKey needed)
-		BoundStore.setLinkSource(
+		BoundStore.link.setSource("capture", 
 			"image",
 			"gallery",
 			createBounds(50, 50, 100, 100),
 		);
-		BoundStore.setLinkDestination(
+		BoundStore.link.setDestination("attach", 
 			"image",
 			"fullscreen-viewer",
 			createBounds(0, 0, 400, 800),
 		);
 
 		// Fullscreen target can get link without knowing screenKey
-		const link = BoundStore.getActiveLink("image");
+		const link = BoundStore.link.getActive("image");
 		expect(link).not.toBeNull();
 		expect(link?.destination?.screenKey).toBe("fullscreen-viewer");
 	});

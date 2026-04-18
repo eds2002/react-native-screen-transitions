@@ -41,7 +41,7 @@ export const buildBoundsOptions = ({
 
 	const boundaryConfig =
 		tag && currentScreenKey
-			? BoundStore.getBoundaryConfig(tag, currentScreenKey)
+			? BoundStore.entry.getConfig(tag, currentScreenKey)
 			: null;
 
 	const resolved = {
@@ -61,9 +61,9 @@ const syncGroupActiveMember = (group?: string, id?: BoundId) => {
 
 	const normalizedId = String(id);
 
-	if (BoundStore.getGroupActiveId(group) === normalizedId) return;
+	if (BoundStore.group.getActiveId(group) === normalizedId) return;
 
-	BoundStore.setGroupActiveId(group, normalizedId);
+	BoundStore.group.setActiveId(group, normalizedId);
 };
 
 export const prepareBoundStyles = <T extends BoundsOptions>({

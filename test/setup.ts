@@ -43,7 +43,10 @@ declare global {
 	var __reanimatedMeasureSpy:
 		| ((ref: { current?: { tag?: string } }) => void)
 		| undefined;
+	var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
+
+globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 globalThis.resetMutableRegistry = () => {
 	for (const { obj, initial } of mutableObjects) {
 		obj.value = cloneMutableInitialValue(initial);
@@ -58,6 +61,16 @@ mock.module("react-native", () => ({
 	},
 }));
 mock.module("react-native-gesture-handler", () => ({}));
+mock.module("react-native-worklets", () => ({
+	runOnUISync: <T, A extends unknown[]>(
+		worklet: (...args: A) => T,
+		...args: A
+	): T => worklet(...args),
+	scheduleOnRN: <A extends unknown[]>(
+		callback: (...args: A) => void,
+		...args: A
+	) => callback(...args),
+}));
 mock.module("react-native-reanimated", () => ({
 	makeMutable: createTestMutable,
 	createAnimatedComponent: <T>(component: T) => component,
@@ -120,6 +133,7 @@ mock.module("react-native-reanimated", () => ({
 		callback?.(config?.__finished ?? true);
 		return toValue;
 	},
+	withDelay: (_delayMs: number, value: unknown) => value,
 	withSpring: (
 		toValue: number,
 		config?: { __finished?: boolean },

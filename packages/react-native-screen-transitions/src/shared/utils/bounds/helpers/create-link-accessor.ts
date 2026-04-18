@@ -1,4 +1,4 @@
-import { BoundStore, type Snapshot } from "../../../stores/bounds";
+import { BoundStore, type MeasuredEntry } from "../../../stores/bounds";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundsLink } from "../../../types/bounds.types";
 import type { BoundId } from "../types/options";
@@ -6,23 +6,23 @@ import type { BoundId } from "../types/options";
 type GetProps = () => Omit<ScreenInterpolationProps, "bounds">;
 
 export type LinkAccessor = {
-	getSnapshot: (tag: BoundId, key?: string) => Snapshot | null;
+	getMeasured: (tag: BoundId, key?: string) => MeasuredEntry | null;
 	getLink: (tag: BoundId) => BoundsLink | null;
 };
 
 export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
 	"worklet";
 
-	const getSnapshot = (tag: BoundId, key?: string): Snapshot | null => {
+	const getMeasured = (tag: BoundId, key?: string): MeasuredEntry | null => {
 		"worklet";
 		if (!key) return null;
-		return BoundStore.getSnapshot(String(tag), key);
+		return BoundStore.entry.getMeasured(String(tag), key);
 	};
 
 	const getLink = (tag: BoundId): BoundsLink | null => {
 		"worklet";
 		const props = getProps();
-		const link = BoundStore.getActiveLink(
+		const link = BoundStore.link.getActive(
 			String(tag),
 			props.current?.route.key,
 		);
@@ -38,7 +38,7 @@ export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
 	};
 
 	return {
-		getSnapshot,
+		getMeasured,
 		getLink,
 	};
 };

@@ -7,14 +7,11 @@ export const resolvePendingSourceKey = (
 	"worklet";
 	if (
 		expectedSourceScreenKey &&
-		(BoundStore.hasPendingLinkFromSource(
-			sharedBoundTag,
-			expectedSourceScreenKey,
-		) ||
-			BoundStore.hasSourceLink(sharedBoundTag, expectedSourceScreenKey))
+		(BoundStore.link.getPending(sharedBoundTag, expectedSourceScreenKey) ||
+			BoundStore.link.hasSource(sharedBoundTag, expectedSourceScreenKey))
 	) {
 		return expectedSourceScreenKey;
 	}
 
-	return BoundStore.getLatestPendingSourceScreenKey(sharedBoundTag);
+	return BoundStore.link.getPending(sharedBoundTag)?.source.screenKey ?? null;
 };

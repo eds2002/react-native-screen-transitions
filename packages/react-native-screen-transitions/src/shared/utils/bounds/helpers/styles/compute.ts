@@ -56,7 +56,7 @@ const resolveStartEnd = (params: {
 
 	const resolvedPair =
 		params.resolvedPair ??
-		BoundStore.resolveTransitionPair(String(params.id), {
+		BoundStore.link.getPair(String(params.id), {
 			currentScreenKey,
 			previousScreenKey,
 			nextScreenKey,

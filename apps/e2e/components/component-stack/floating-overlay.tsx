@@ -40,7 +40,7 @@ const Stack = createComponentStackNavigator<ScreenParamList>();
  * Both changes cause the final transform to "snap" unexpectedly.
  *
  * The fix: when a screen is stable (progress=1, not closing), bypass the
- * interpolation entirely and return the screen's own snapshot bounds with
+ * interpolation entirely and return the screen's own measured entry bounds with
  * zero transform. The element just sits at its natural position.
  */
 const boundsInterpolator = (props: ScreenInterpolationProps) => {
@@ -56,11 +56,11 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 	//
 	// ━━━ STABLE SCREEN (or initial with no link) ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 	// When progress=1 and not closing, OR when there's no link data (initial screen),
-	// return snapshot bounds directly - no interpolation, no transforms.
+	// return measured entry bounds directly - no interpolation, no transforms.
 	//
 	if ((progress === 1 && !isClosing) || !hasLink) {
-		const snapshot = bounds.getSnapshot("FLOATING_ELEMENT", screenKey);
-		const myBounds = snapshot?.bounds;
+		const measuredEntry = bounds.getMeasured("FLOATING_ELEMENT", screenKey);
+		const myBounds = measuredEntry?.bounds;
 		return {
 			BOUNDS_INDICATOR: {
 				height: myBounds?.height ?? 0,

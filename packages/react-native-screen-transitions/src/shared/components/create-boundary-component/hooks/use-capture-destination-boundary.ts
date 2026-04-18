@@ -1,3 +1,4 @@
+import { useLayoutEffect } from "react";
 import {
 	cancelAnimation,
 	useAnimatedReaction,
@@ -5,12 +6,12 @@ import {
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
+import { runOnUISync } from "react-native-worklets";
 import { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
 import { SystemStore } from "../../../stores/system.store";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
-import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
-import { resolvePendingDestinationCaptureSignal } from "./helpers/measurement-rules";
+import type { BoundaryId, MeasureParams } from "../types";
 
 /**
  * Blocks lifecycle start while a destination boundary still needs its first
@@ -20,25 +21,26 @@ import { resolvePendingDestinationCaptureSignal } from "./helpers/measurement-ru
  */
 const VIEWPORT_RETRY_DELAY_MS = 16;
 
-export const usePendingDestinationMeasurement = (params: {
+interface UseCaptureDestinationBoundaryParams {
 	sharedBoundTag: string;
 	enabled: boolean;
 	id: BoundaryId;
 	group?: string;
 	currentScreenKey: string;
 	expectedSourceScreenKey?: string;
-	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
-}) => {
-	const {
-		sharedBoundTag,
-		enabled,
-		id,
-		group,
-		currentScreenKey,
-		expectedSourceScreenKey,
-		maybeMeasureAndStore,
-	} = params;
+	measureBoundary: (options: MeasureParams) => void;
+}
 
+export const useCaptureDestinationBoundary = ({
+	sharedBoundTag,
+	enabled,
+	id,
+	group,
+	currentScreenKey,
+	expectedSourceScreenKey,
+	measureBoundary,
+}: UseCaptureDestinationBoundaryParams) => {
+	const animating = AnimationStore.getValue(currentScreenKey, "animating");
 	const closing = AnimationStore.getValue(currentScreenKey, "closing");
 	const system = SystemStore.getBag(currentScreenKey);
 	const { blockLifecycleStart, unblockLifecycleStart } = system.actions;
@@ -81,7 +83,7 @@ export const usePendingDestinationMeasurement = (params: {
 		() => {
 			"worklet";
 			const retryTick = retryToken.get();
-			if (closing.get()) {
+			if (closing.get() || animating.get()) {
 				return [0, retryTick] as const;
 			}
 
@@ -89,28 +91,28 @@ export const usePendingDestinationMeasurement = (params: {
 				sharedBoundTag,
 				expectedSourceScreenKey,
 			);
+
 			const hasAttachableSourceLink = resolvedSourceKey
-				? BoundStore.hasPendingLinkFromSource(
-						sharedBoundTag,
-						resolvedSourceKey,
-					) || BoundStore.hasSourceLink(sharedBoundTag, resolvedSourceKey)
+				? BoundStore.link.getPending(sharedBoundTag, resolvedSourceKey) !==
+						null || BoundStore.link.hasSource(sharedBoundTag, resolvedSourceKey)
 				: false;
 
-			const shouldBlock = !!resolvePendingDestinationCaptureSignal({
-				enabled,
-				resolvedSourceKey,
-				hasAttachableSourceLink,
-				hasDestinationLink: BoundStore.hasDestinationLink(
-					sharedBoundTag,
-					currentScreenKey,
-				),
-			});
+			const hasDestinationLink = BoundStore.link.hasDestination(
+				sharedBoundTag,
+				currentScreenKey,
+			);
+
+			const shouldBlock =
+				enabled &&
+				!!resolvedSourceKey &&
+				hasAttachableSourceLink &&
+				!hasDestinationLink;
 
 			if (!shouldBlock) {
 				return [0, retryTick] as const;
 			}
 
-			if (group && BoundStore.getGroupActiveId(group) !== String(id)) {
+			if (group && BoundStore.group.getActiveId(group) !== String(id)) {
 				return [0, retryTick] as const;
 			}
 
@@ -124,9 +126,9 @@ export const usePendingDestinationMeasurement = (params: {
 			}
 
 			ensureLifecycleStartBlocked();
-			maybeMeasureAndStore({ intent: "complete-destination" });
+			measureBoundary({ intent: "complete-destination" });
 
-			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey)) {
+			if (BoundStore.link.hasDestination(sharedBoundTag, currentScreenKey)) {
 				releaseLifecycleStartBlock();
 				return;
 			}
@@ -134,4 +136,19 @@ export const usePendingDestinationMeasurement = (params: {
 			scheduleViewportRetry();
 		},
 	);
+
+	useLayoutEffect(() => {
+		return () => {
+			runOnUISync(() => {
+				"worklet";
+				cancelAnimation(retryToken);
+				if (!isBlockingLifecycleStart.get()) {
+					return;
+				}
+
+				unblockLifecycleStart();
+				isBlockingLifecycleStart.set(0);
+			});
+		};
+	}, [isBlockingLifecycleStart, retryToken, unblockLifecycleStart]);
 };

@@ -14,18 +14,18 @@ beforeEach(() => {
 
 describe("Group Flow", () => {
 	it("tracks and updates the active group member id", () => {
-		BoundStore.setGroupActiveId("photos", "1");
-		expect(BoundStore.getGroupActiveId("photos")).toBe("1");
+		BoundStore.group.setActiveId("photos", "1");
+		expect(BoundStore.group.getActiveId("photos")).toBe("1");
 
-		BoundStore.setGroupActiveId("photos", "2");
-		expect(BoundStore.getGroupActiveId("photos")).toBe("2");
+		BoundStore.group.setActiveId("photos", "2");
+		expect(BoundStore.group.getActiveId("photos")).toBe("2");
 	});
 
 	it("resolves grouped tags without mutating the active member", () => {
-		BoundStore.setGroupActiveId("photos", "1");
+		BoundStore.group.setActiveId("photos", "1");
 
 		expect(createBoundTag({ id: "2", group: "photos" })).toBe("photos:2");
-		expect(BoundStore.getGroupActiveId("photos")).toBe("1");
+		expect(BoundStore.group.getActiveId("photos")).toBe("1");
 	});
 
 	it("isolates links between group members", () => {
@@ -43,33 +43,33 @@ describe("Group Flow", () => {
 			destinationScreenKey: "detail-2",
 		});
 
-		expect(BoundStore.getActiveLink(memberOneTag, "detail-1")?.source.screenKey).toBe(
+		expect(BoundStore.link.getActive(memberOneTag, "detail-1")?.source.screenKey).toBe(
 			"list-1",
 		);
-		expect(BoundStore.getActiveLink(memberTwoTag, "detail-2")?.source.screenKey).toBe(
+		expect(BoundStore.link.getActive(memberTwoTag, "detail-2")?.source.screenKey).toBe(
 			"list-2",
 		);
-		expect(BoundStore.getActiveLink(memberOneTag, "detail-2")).toBeNull();
-		expect(BoundStore.getActiveLink(memberTwoTag, "detail-1")).toBeNull();
+		expect(BoundStore.link.getActive(memberOneTag, "detail-2")).toBeNull();
+		expect(BoundStore.link.getActive(memberTwoTag, "detail-1")).toBeNull();
 	});
 
 	it("isolates presence between group members", () => {
 		const memberOneTag = makeTag("1", "photos");
 		const memberTwoTag = makeTag("2", "photos");
 
-		BoundStore.registerBoundaryPresence(memberOneTag, "screen-a");
-		BoundStore.registerBoundaryPresence(memberTwoTag, "screen-a");
-		BoundStore.unregisterBoundaryPresence(memberOneTag, "screen-a");
+		BoundStore.entry.set(memberOneTag, "screen-a", {});
+		BoundStore.entry.set(memberTwoTag, "screen-a", {});
+		BoundStore.entry.remove(memberOneTag, "screen-a");
 
-		expect(BoundStore.hasBoundaryPresence(memberOneTag, "screen-a")).toBe(false);
-		expect(BoundStore.hasBoundaryPresence(memberTwoTag, "screen-a")).toBe(true);
+		expect(BoundStore.entry.get(memberOneTag, "screen-a")).toBeNull();
+		expect(BoundStore.entry.get(memberTwoTag, "screen-a")).not.toBeNull();
 	});
 
 	it("resolves transitions correctly for the active member tag", () => {
 		const activeTag = makeTag("2", "photos");
 		const inactiveTag = makeTag("1", "photos");
 
-		BoundStore.setGroupActiveId("photos", "2");
+		BoundStore.group.setActiveId("photos", "2");
 		registerSourceAndDestination({
 			tag: inactiveTag,
 			sourceScreenKey: "list-1",
@@ -81,7 +81,7 @@ describe("Group Flow", () => {
 			destinationScreenKey: "detail-2",
 		});
 
-		const pair = BoundStore.resolveTransitionPair(
+		const pair = BoundStore.link.getPair(
 			activeTag,
 			makeContext({
 				entering: true,
@@ -100,24 +100,24 @@ describe("Group Flow", () => {
 		const memberOneTag = makeTag("1", "photos");
 		const memberTwoTag = makeTag("2", "photos");
 
-		BoundStore.setGroupActiveId("photos", "1");
+		BoundStore.group.setActiveId("photos", "1");
 		registerSourceAndDestination({
 			tag: memberOneTag,
 			sourceScreenKey: "list-1",
 			destinationScreenKey: "detail-1",
 		});
 
-		BoundStore.setGroupActiveId("photos", "2");
+		BoundStore.group.setActiveId("photos", "2");
 		registerSourceAndDestination({
 			tag: memberTwoTag,
 			sourceScreenKey: "list-2",
 			destinationScreenKey: "detail-2",
 		});
 
-		expect(BoundStore.getActiveLink(memberOneTag, "detail-1")?.source.screenKey).toBe(
+		expect(BoundStore.link.getActive(memberOneTag, "detail-1")?.source.screenKey).toBe(
 			"list-1",
 		);
-		expect(BoundStore.getActiveLink(memberTwoTag, "detail-2")?.source.screenKey).toBe(
+		expect(BoundStore.link.getActive(memberTwoTag, "detail-2")?.source.screenKey).toBe(
 			"list-2",
 		);
 	});

@@ -14,12 +14,12 @@ export function resetStoresForScreen(
 
 	if (!isBranchScreen) return;
 
-	BoundStore.clear(routeKey);
+	BoundStore.cleanup.byScreen(routeKey);
 
 	if (branchNavigatorKey) {
-		BoundStore.clearByBranch(branchNavigatorKey);
+		BoundStore.cleanup.byBranch(branchNavigatorKey);
 		return;
 	}
 
-	BoundStore.clearByAncestor(routeKey);
+	BoundStore.cleanup.byAncestor(routeKey);
 }

@@ -1,9 +1,9 @@
 import { expect } from "bun:test";
 import {
 	BoundStore,
+	type Entry,
 	type ResolveTransitionContext,
 	type ResolvedTransitionPair,
-	type Snapshot,
 } from "../../stores/bounds";
 
 export const createBounds = (
@@ -11,7 +11,7 @@ export const createBounds = (
 	y = 0,
 	width = 100,
 	height = 100,
-): Snapshot["bounds"] => ({
+): Entry["bounds"] => ({
 	x,
 	y,
 	pageX: x,
@@ -39,8 +39,8 @@ type RegisterSourceAndDestinationParams = {
 	tag: string;
 	sourceScreenKey: string;
 	destinationScreenKey: string;
-	sourceBounds?: Snapshot["bounds"];
-	destinationBounds?: Snapshot["bounds"];
+	sourceBounds?: Entry["bounds"];
+	destinationBounds?: Entry["bounds"];
 	sourceAncestorKeys?: string[];
 	destinationAncestorKeys?: string[];
 	expectedSourceScreenKey?: string;
@@ -64,7 +64,7 @@ export const registerSourceAndDestination = ({
 	destinationNavigatorKey,
 	destinationAncestorNavigatorKeys,
 }: RegisterSourceAndDestinationParams) => {
-	BoundStore.setLinkSource(
+	BoundStore.link.setSource("capture", 
 		tag,
 		sourceScreenKey,
 		sourceBounds,
@@ -74,7 +74,7 @@ export const registerSourceAndDestination = ({
 		sourceAncestorNavigatorKeys,
 	);
 
-	BoundStore.setLinkDestination(
+	BoundStore.link.setDestination("attach", 
 		tag,
 		destinationScreenKey,
 		destinationBounds,
@@ -89,9 +89,8 @@ export const registerSourceAndDestination = ({
 type ExpectedResolvedPair = {
 	sourceScreenKey?: string | null;
 	destinationScreenKey?: string | null;
-	sourceBounds?: Snapshot["bounds"] | null;
-	destinationBounds?: Snapshot["bounds"] | null;
-	usedPending?: boolean;
+	sourceBounds?: Entry["bounds"] | null;
+	destinationBounds?: Entry["bounds"] | null;
 };
 
 export const expectResolvedPair = (
@@ -112,9 +111,5 @@ export const expectResolvedPair = (
 
 	if (expected.destinationBounds !== undefined) {
 		expect(pair.destinationBounds).toEqual(expected.destinationBounds);
-	}
-
-	if (expected.usedPending !== undefined) {
-		expect(pair.usedPending).toBe(expected.usedPending);
 	}
 };

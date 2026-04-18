@@ -39,12 +39,12 @@ export type BoundaryComponentProps<P extends object> = Omit<P, "id"> &
 /** Convenience alias for a View-based boundary (the most common case). */
 export type BoundaryProps = BoundaryComponentProps<ViewProps>;
 
-export type MeasurementIntent =
+export type MeasureIntent =
 	| "capture-source"
 	| "complete-destination"
 	| "refresh-source"
 	| "refresh-destination";
 
-export interface MaybeMeasureAndStoreParams {
-	intent?: MeasurementIntent | readonly MeasurementIntent[];
+export interface MeasureParams {
+	intent?: MeasureIntent | readonly MeasureIntent[];
 }

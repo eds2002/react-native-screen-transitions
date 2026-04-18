@@ -35,7 +35,7 @@ export const createInterpolators = ({
 		});
 	};
 
-	const interpolateBoundsFromSnapshot = (
+	const interpolateBoundsFromMeasuredEntry = (
 		tag: BoundId,
 		property: keyof MeasuredDimensions,
 		targetKey: string,
@@ -50,13 +50,16 @@ export const createInterpolators = ({
 		const fb = fallback ?? 0;
 		const normalizedTag = String(tag);
 
-		const currentSnapshot = currentKey
-			? BoundStore.getSnapshot(normalizedTag, currentKey)
+		const currentMeasuredEntry = currentKey
+			? BoundStore.entry.getMeasured(normalizedTag, currentKey)
 			: null;
-		const targetSnapshot = BoundStore.getSnapshot(normalizedTag, targetKey);
+		const targetMeasuredEntry = BoundStore.entry.getMeasured(
+			normalizedTag,
+			targetKey,
+		);
 
-		const currentValue = currentSnapshot?.bounds?.[property] ?? fb;
-		const targetValue = targetSnapshot?.bounds?.[property] ?? fb;
+		const currentValue = currentMeasuredEntry?.bounds?.[property] ?? fb;
+		const targetValue = targetMeasuredEntry?.bounds?.[property] ?? fb;
 
 		return interpolate(
 			props.progress,
@@ -99,7 +102,7 @@ export const createInterpolators = ({
 		"worklet";
 
 		if (typeof fallbackOrTargetKey === "string") {
-			return interpolateBoundsFromSnapshot(
+			return interpolateBoundsFromMeasuredEntry(
 				tag,
 				property,
 				fallbackOrTargetKey,

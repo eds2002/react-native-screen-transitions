@@ -1,14 +1,7 @@
+import { hasAnyKeys } from "../helpers/keys";
 import { matchesNavigatorKey, matchesScreenKey } from "../helpers/matching";
-import type { NavigatorKey, PresenceState, ScreenKey } from "../types";
-import { presence, type RegistryState, registry } from "./state";
-
-const hasAnyKeys = (record: Record<string, unknown>) => {
-	"worklet";
-	for (const _key in record) {
-		return true;
-	}
-	return false;
-};
+import type { NavigatorKey, ScreenKey } from "../types";
+import { type RegistryState, registry } from "./state";
 
 const clearByScreenKey = (
 	screenKey: ScreenKey,
@@ -21,15 +14,15 @@ const clearByScreenKey = (
 		for (const tag in state) {
 			const tagState = state[tag];
 
-			for (const snapshotKey in tagState.snapshots) {
-				const snapshot = tagState.snapshots[snapshotKey];
-				const shouldClearSnapshot =
-					snapshotKey === screenKey ||
+			for (const entryScreenKey in tagState.screens) {
+				const screenEntry = tagState.screens[entryScreenKey];
+				const shouldClearEntry =
+					entryScreenKey === screenKey ||
 					(includeDescendants &&
-						(snapshot.ancestorKeys?.includes(screenKey) ?? false));
+						(screenEntry.ancestorKeys?.includes(screenKey) ?? false));
 
-				if (shouldClearSnapshot) {
-					delete tagState.snapshots[snapshotKey];
+				if (shouldClearEntry) {
+					delete tagState.screens[entryScreenKey];
 				}
 			}
 
@@ -44,32 +37,7 @@ const clearByScreenKey = (
 				}
 			}
 
-			if (!hasAnyKeys(tagState.snapshots) && tagState.linkStack.length === 0) {
-				delete state[tag];
-			}
-		}
-
-		return state;
-	});
-
-	presence.modify(<T extends PresenceState>(state: T): T => {
-		"worklet";
-		for (const tag in state) {
-			const tagEntries = state[tag];
-
-			for (const entryScreenKey in tagEntries) {
-				const entry = tagEntries[entryScreenKey];
-				const shouldClearPresence =
-					entryScreenKey === screenKey ||
-					(includeDescendants &&
-						(entry.ancestorKeys?.includes(screenKey) ?? false));
-
-				if (shouldClearPresence) {
-					delete tagEntries[entryScreenKey];
-				}
-			}
-
-			if (!hasAnyKeys(tagEntries)) {
+			if (!hasAnyKeys(tagState.screens) && tagState.linkStack.length === 0) {
 				delete state[tag];
 			}
 		}
@@ -86,15 +54,15 @@ const clearByNavigator = (branchNavigatorKey: NavigatorKey) => {
 		for (const tag in state) {
 			const tagState = state[tag];
 
-			for (const snapshotKey in tagState.snapshots) {
-				const snapshot = tagState.snapshots[snapshotKey];
-				const shouldClearSnapshot =
-					snapshot.navigatorKey === branchNavigatorKey ||
-					(snapshot.ancestorNavigatorKeys?.includes(branchNavigatorKey) ??
+			for (const entryScreenKey in tagState.screens) {
+				const screenEntry = tagState.screens[entryScreenKey];
+				const shouldClearEntry =
+					screenEntry.navigatorKey === branchNavigatorKey ||
+					(screenEntry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ??
 						false);
 
-				if (shouldClearSnapshot) {
-					delete tagState.snapshots[snapshotKey];
+				if (shouldClearEntry) {
+					delete tagState.screens[entryScreenKey];
 				}
 			}
 
@@ -109,31 +77,7 @@ const clearByNavigator = (branchNavigatorKey: NavigatorKey) => {
 				}
 			}
 
-			if (!hasAnyKeys(tagState.snapshots) && tagState.linkStack.length === 0) {
-				delete state[tag];
-			}
-		}
-
-		return state;
-	});
-
-	presence.modify(<T extends PresenceState>(state: T): T => {
-		"worklet";
-		for (const tag in state) {
-			const tagEntries = state[tag];
-
-			for (const entryScreenKey in tagEntries) {
-				const entry = tagEntries[entryScreenKey];
-				const shouldClearPresence =
-					entry.navigatorKey === branchNavigatorKey ||
-					(entry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ?? false);
-
-				if (shouldClearPresence) {
-					delete tagEntries[entryScreenKey];
-				}
-			}
-
-			if (!hasAnyKeys(tagEntries)) {
+			if (!hasAnyKeys(tagState.screens) && tagState.linkStack.length === 0) {
 				delete state[tag];
 			}
 		}
