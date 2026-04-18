@@ -1,0 +1,175 @@
+---
+title: "Installation"
+pageTitle: "Installation"
+summary: "Install the package, its peer dependencies, and the optional masking dependency when needed."
+description: "Install the package, its peer dependencies, and the optional masking dependency when needed."
+eyebrow: "Get Started"
+group: "Get Started"
+order: 2
+to: /installation
+---
+
+## 1. Install The Package
+
+<CodeBlock
+  variant="terminal"
+  defaultTab="npm"
+  syncKey="package-manager"
+  tabs={[
+    {
+      label: "npm",
+      value: "npm",
+      code: `npm install react-native-screen-transitions`,
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      code: `yarn add react-native-screen-transitions`,
+    },
+    {
+      label: "pnpm",
+      value: "pnpm",
+      code: `pnpm add react-native-screen-transitions`,
+    },
+    {
+      label: "bun",
+      value: "bun",
+      code: `bun add react-native-screen-transitions`,
+    },
+  ]}
+/>
+
+## 2. Install The Peer Dependencies
+
+3.4 expects the peer surface declared by the package:
+
+<CodeBlock
+  variant="terminal"
+  defaultTab="npm"
+  syncKey="package-manager"
+  tabs={[
+    {
+      label: "npm",
+      value: "npm",
+      code: `npm install react-native-reanimated react-native-gesture-handler \
+  @react-navigation/native @react-navigation/native-stack \
+  @react-navigation/elements react-native-screens \
+  react-native-safe-area-context`,
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      code: `yarn add react-native-reanimated react-native-gesture-handler \
+  @react-navigation/native @react-navigation/native-stack \
+  @react-navigation/elements react-native-screens \
+  react-native-safe-area-context`,
+    },
+    {
+      label: "pnpm",
+      value: "pnpm",
+      code: `pnpm add react-native-reanimated react-native-gesture-handler \
+  @react-navigation/native @react-navigation/native-stack \
+  @react-navigation/elements react-native-screens \
+  react-native-safe-area-context`,
+    },
+    {
+      label: "bun",
+      value: "bun",
+      code: `bun add react-native-reanimated react-native-gesture-handler \
+  @react-navigation/native @react-navigation/native-stack \
+  @react-navigation/elements react-native-screens \
+  react-native-safe-area-context`,
+    },
+  ]}
+/>
+
+If you use Expo, prefer `expo install`:
+
+```bash
+npx expo install react-native-reanimated react-native-gesture-handler \
+  @react-navigation/native @react-navigation/native-stack \
+  @react-navigation/elements react-native-screens \
+  react-native-safe-area-context
+```
+
+The important version floors are:
+
+- `@react-navigation/native >= 6.0.0`
+- `@react-navigation/native-stack >= 7.0.0`
+- `react-native-reanimated >= 3.16.0 or 4.x`
+- `react-native-gesture-handler >= 2.16.1`
+- `react-native-screens >= 4.4.0`
+
+For project-level setup such as the Reanimated import, Babel plugin ordering, Gesture Handler wiring, and any native React Navigation requirements, follow the official installation guides for the underlying packages in your app.
+
+## 3. Optional Masking Dependency
+
+Install `@react-native-masked-view/masked-view` if you use:
+
+- `navigationMaskEnabled`
+- library-managed navigation zoom masking
+- the legacy `Transition.MaskedView`
+
+<CodeBlock
+  variant="terminal"
+  defaultTab="npm"
+  syncKey="package-manager"
+  tabs={[
+    {
+      label: "npm",
+      value: "npm",
+      code: `npm install @react-native-masked-view/masked-view`,
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      code: `yarn add @react-native-masked-view/masked-view`,
+    },
+    {
+      label: "pnpm",
+      value: "pnpm",
+      code: `pnpm add @react-native-masked-view/masked-view`,
+    },
+    {
+      label: "bun",
+      value: "bun",
+      code: `bun add @react-native-masked-view/masked-view`,
+    },
+  ]}
+/>
+
+## 4. Native Project Step
+
+For bare React Native projects, install iOS pods after changing dependencies:
+
+```bash
+cd ios && pod install
+```
+
+## 5. Verify The Setup
+
+If this renders and navigates without Reanimated or Gesture Handler errors, the base setup is correct:
+
+```tsx
+import Transition from "react-native-screen-transitions";
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator();
+
+export function RootNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Detail"
+        component={DetailScreen}
+        options={{
+          ...Transition.Presets.SlideFromBottom(),
+        }}
+      />
+    </Stack.Navigator>
+  );
+}
+```
+
+Then continue to [Quick Start](/quick-start).

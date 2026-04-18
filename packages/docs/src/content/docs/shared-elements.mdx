@@ -1,0 +1,240 @@
+---
+title: "Bounds Transitions"
+pageTitle: "Bounds Transitions"
+summary: "Use Boundary components and the bounds accessor to sync geometry across screens, build navigation zoom, and manage grouped handoff."
+description: "Use Boundary components and the bounds accessor to sync geometry across screens, build navigation zoom, and manage grouped handoff."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 10
+to: /shared-elements
+image: "/media/shared-elements-demo.webp"
+imageAlt: "A still from the example app used as a second motion reference."
+imageCaption: "Another example-app frame, used here to keep the docs visually grounded without adding a hero section."
+---
+
+## What This System Is
+
+Bounds Transitions animate matched geometry across screens by measuring a source boundary and a destination boundary, then moving screen A and screen B together so the result reads like shared element motion.
+
+> If you are specifically looking for true shared element transitions, wait for Reanimated Shared Element Transitions to become production-ready. This package's bounds system is a different approach.
+
+## Recommended Boundary Pattern
+
+For most flows, the source should be a `Transition.Boundary.Trigger` and the destination should be a `Transition.Boundary.View`.
+
+```tsx
+// Source screen
+<Transition.Boundary.Trigger
+  id="hero"
+  onPress={() => navigation.navigate("Detail")}
+>
+  <Image source={heroImage} style={{ width: 120, height: 160 }} />
+</Transition.Boundary.Trigger>
+
+// Destination screen
+<Transition.Boundary.View id="hero">
+  <Image source={heroImage} style={{ width: "100%", height: 360 }} />
+</Transition.Boundary.View>
+```
+
+`Boundary.Trigger` is the recommended source owner because it captures bounds before your `onPress` callback runs.
+
+`Boundary.View` can be used on both sides and the system can auto-measure, but that is a lower-level path and not the default recommendation for navigation-driven flows.
+
+For the high-level `bounds({ id }).navigation.zoom()` helper, the destination can also be source-only. See [Navigation Zoom](/navigation-zoom).
+
+## Nested Measurement with Boundary.Target
+
+Use `Transition.Boundary.Target` when the tappable owner is larger than the visual element you want to measure.
+
+```tsx
+<Transition.Boundary.Trigger
+  id={item.id}
+  anchor="leading"
+  scaleMode="uniform"
+  style={styles.row}
+  onPress={() => navigation.navigate("Playlist")}
+>
+  <Transition.Boundary.Target style={styles.artTarget}>
+    <Image source={item.image} style={styles.artwork} />
+  </Transition.Boundary.Target>
+
+  <View style={styles.copy}>
+    <Text>{item.title}</Text>
+  </View>
+</Transition.Boundary.Trigger>
+```
+
+This keeps the row as the interaction owner while limiting measurement to the nested artwork.
+
+## The bounds() Accessor
+
+Inside `screenStyleInterpolator`, `bounds({ ... })` returns style props you can spread directly into a slot.
+
+```tsx
+screenStyleInterpolator: ({ bounds, progress, focused }) => {
+  "worklet";
+
+  return {
+    hero: {
+      ...bounds({
+        id: "hero",
+        method: "transform",
+      }),
+      opacity: focused
+        ? interpolate(progress, [0, 1], [0, 1], "clamp")
+        : interpolate(progress, [1, 2], [1, 0], "clamp"),
+    },
+  };
+};
+```
+
+That is the low-level API: measure a matching boundary pair, ask `bounds()` for the transform, then combine it with whatever extra styles you want.
+
+## bounds() Options
+
+| Option | Values | Notes |
+| --- | --- | --- |
+| `id` | `string \| number` | Boundary member id |
+| `group` | `string` | Tracks the active member inside a group |
+| `method` | `"transform" \| "size" \| "content"` | Matching strategy |
+| `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Destination target |
+| `anchor` | `"topLeading"` through `"bottomTrailing"` | Matching anchor point |
+| `scaleMode` | `"match" \| "none" \| "uniform"` | Aspect-ratio behavior |
+| `gestures` | `{ x?: number; y?: number }` | Inject live gesture offsets |
+| `raw` | `boolean` | Return raw values instead of style props |
+| `space` | `"relative" \| "absolute"` | `absolute` is mainly for internal navigation helpers |
+
+## Raw Bounds
+
+```tsx
+const raw = bounds({
+  id: "hero",
+  method: "transform",
+  raw: true,
+});
+```
+
+By default, `bounds()` returns style props.
+
+When you pass `raw: true`, it returns low-level geometry instead:
+
+- `"transform"` returns `translateX`, `translateY`, `scaleX`, and `scaleY`
+- `"size"` returns `translateX`, `translateY`, `width`, and `height`
+- `"content"` returns `translateX`, `translateY`, and `scale`
+
+## Navigation Zoom
+
+For navigation-style bounds transitions, use `navigation.zoom()`:
+
+```tsx
+screenStyleInterpolator: ({ bounds }) => {
+  "worklet";
+
+  return bounds({ id: "hero" }).navigation.zoom();
+};
+```
+
+`navigation.zoom()` builds an opinionated layer map for you. It can work with only a source `Transition.Boundary.Trigger`, or with a destination `Transition.Boundary.View` when you want tighter bound-to-bound matching.
+
+For the recommended setup, optional destination patterns, groups guidance, and current caveats, see [Navigation Zoom](/navigation-zoom).
+
+## Navigation Mask
+
+If the zoom needs masked reveal behavior, enable `navigationMaskEnabled` on the screen:
+
+```tsx
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    navigationMaskEnabled: true,
+    screenStyleInterpolator: ({ bounds }) => {
+      "worklet";
+      return bounds({ id: "hero" }).navigation.zoom();
+    },
+  }}
+/>
+```
+
+Install `@react-native-masked-view/masked-view` when you use `navigationMaskEnabled`.
+
+## Groups
+
+`group` is for flows where the active member can change inside the same collection, such as galleries, paged detail screens, or retargeted list/detail flows.
+
+```tsx
+// Source
+<Transition.Boundary.Trigger group="gallery" id={item.id} onPress={openItem}>
+  <Image source={item.image} />
+</Transition.Boundary.Trigger>
+
+// Destination
+<Transition.Boundary.View group="gallery" id={item.id}>
+  <Image source={item.image} />
+</Transition.Boundary.View>
+```
+
+The group keeps track of the active member id so the handoff stays aligned as focus moves between items in the same collection.
+
+## Bounds with Gestures
+
+Because `bounds()` accepts a `gestures` option, you can feed live drag offsets into the matched transform.
+
+```tsx
+screenStyleInterpolator: ({ bounds, active }) => {
+  "worklet";
+
+  return {
+    hero: bounds({
+      id: "hero",
+      gestures: {
+        x: active.gesture.x,
+        y: active.gesture.y,
+      },
+      target: "fullscreen",
+    }),
+  };
+};
+```
+
+This is the pattern used for the gesture-driven bounds example in the e2e app.
+
+## Snapshots and Low-Level Helpers
+
+You can read a stored measurement snapshot directly:
+
+```tsx
+const snapshot = bounds.getSnapshot("hero");
+```
+
+The accessor also exposes:
+
+- `getLink(id)` to inspect the current source and destination pair
+- `interpolateStyle(id, property, fallback?)`
+- `interpolateBounds(id, property, fallbackOrTargetKey?, fallback?)`
+
+Use those helpers when you want to build custom bounds-driven choreography on top of the same source/destination link data.
+
+## Troubleshooting
+
+### Bounds Mismatch
+
+Source, destination, and interpolator lookups must all resolve to the same boundary identity.
+
+```tsx
+// Source
+<Transition.Boundary.Trigger id="hero">...</Transition.Boundary.Trigger>
+
+// Destination
+<Transition.Boundary.View id="hero">...</Transition.Boundary.View>
+
+// Interpolator
+bounds({ id: "hero" })
+```
+
+If you use groups, the same rule applies to the `group` + `id` pair.
+
+## Legacy Flows
+
+`sharedBoundTag` still exists for older setups, but new work should use the Boundary API.

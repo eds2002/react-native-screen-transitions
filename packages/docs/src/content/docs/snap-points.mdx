@@ -1,0 +1,212 @@
+---
+title: "Snap Points"
+pageTitle: "Snap Points"
+summary: "Define real sheet detents, auto sizing, release targeting, and scroll handoff."
+description: "Define real sheet detents, auto sizing, release targeting, and scroll handoff."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 8
+to: /snap-points
+---
+
+## What Snap Points Do
+
+```tsx
+<Stack.Screen
+  name="sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.4, 0.7, 1],
+    initialSnapIndex: 0,
+  }}
+/>
+```
+
+`snapPoints` turns a screen into a detented sheet or drawer. Each numeric value is a fraction of the screen size on the active gesture axis.
+
+`gestureEnabled` controls whether the sheet can dismiss past its minimum detent. It does not disable snapping between non-dismiss detents.
+
+## Allowed Values
+
+Pass snap points in ascending order. The supported values are:
+
+- fractions such as `0.4`, `0.7`, or `1`
+- `"auto"` for intrinsic content sizing
+
+Numbers are not pixels. They are fractions on the sheet axis.
+
+For most sheets, you do not need to include `0` yourself. The closed state is already used as the dismiss target when dismissal is allowed.
+
+## Initial Detent
+
+`initialSnapIndex` selects which detent the screen opens at:
+
+```tsx
+<Stack.Screen
+  name="sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.25, 0.5, 0.75, 1],
+    initialSnapIndex: 1,
+  }}
+/>
+```
+
+This screen opens at the second detent, `0.5`.
+
+## Auto Snap Points
+
+`"auto"` measures the content and resolves that detent from the intrinsic content size:
+
+```tsx
+<Stack.Screen
+  name="composer"
+  component={ComposerScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: ["auto", 1],
+    initialSnapIndex: 0,
+  }}
+/>
+```
+
+If you need that measurement inside the interpolator, read it from `current.layouts.content`:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  const contentHeight = current.layouts.content?.height ?? 0;
+
+  return {
+    content: {
+      style: {
+        opacity: contentHeight > 0 ? 1 : 0,
+      },
+    },
+  };
+};
+```
+
+Use `current.layouts.content` for new code. The top-level `layouts` prop is a deprecated alias.
+
+## Reading Snap State
+
+The active detent lives on `current.snapIndex`:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        borderTopLeftRadius: interpolate(
+          current.snapIndex,
+          [0, 1, 2],
+          [28, 20, 0],
+          "clamp"
+        ),
+        borderTopRightRadius: interpolate(
+          current.snapIndex,
+          [0, 1, 2],
+          [28, 20, 0],
+          "clamp"
+        ),
+      },
+    },
+  };
+};
+```
+
+`current.snapIndex` is animated and can be fractional between detents. The top-level `snapIndex` interpolator prop is deprecated.
+
+## Release Targeting
+
+When the user releases the gesture, the library projects the current progress with the release velocity, then snaps to the target zone that projected value lands in.
+
+These options shape that behavior:
+
+```tsx
+options={{
+  snapPoints: [0.3, 0.7, 1],
+  snapVelocityImpact: 0.15,
+  gestureReleaseVelocityScale: 1.2,
+  gestureReleaseVelocityMax: 2.4,
+}}
+```
+
+- `snapVelocityImpact` changes how much the release velocity nudges the chosen detent
+- `gestureReleaseVelocityScale` changes the post-release spring energy
+- `gestureReleaseVelocityMax` caps that normalized release velocity
+
+`gestureReleaseVelocityScale` and `gestureReleaseVelocityMax` affect how the sheet settles after the target is chosen. They do not replace `snapVelocityImpact`.
+
+## Snap Locking
+
+`gestureSnapLocked` locks gesture-driven movement to the current detent:
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureDirection: "vertical",
+  snapPoints: [0.25, 0.5, 0.75, 1],
+  initialSnapIndex: 1,
+  gestureSnapLocked: true,
+}}
+```
+
+With locking enabled, users cannot drag between detents. If dismissal is still enabled, swipe-to-dismiss remains available.
+
+Because this is a screen option, you can toggle it at runtime with `navigation.setOptions({ gestureSnapLocked: true })`.
+
+## Scroll Handoff
+
+If a snap sheet contains scrollable content, use the transition-aware scrollables and choose a handoff mode with `sheetScrollGestureBehavior`:
+
+```tsx
+function SheetScreen() {
+  return (
+    <Transition.ScrollView>
+      <LongContent />
+    </Transition.ScrollView>
+  );
+}
+
+<Stack.Screen
+  name="sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.4, 0.7, 1],
+    sheetScrollGestureBehavior: "collapse-only",
+  }}
+/>
+```
+
+Modes:
+
+- `"expand-and-collapse"`: boundary drags from scroll content can expand and collapse the sheet
+- `"collapse-only"`: boundary drags from scroll content can collapse, but expansion must start from dead space outside the scrollable area
+
+The older `expandViaScrollView` boolean still maps to these modes, but it is deprecated.
+
+## Axis Rules
+
+Snap sheets are single-axis:
+
+- use `vertical` or `vertical-inverted` for bottom or top sheets
+- use `horizontal` or `horizontal-inverted` for drawers
+
+If you pass a direction array with `snapPoints`, the sheet resolves to the first direction only.
+
+## Related Reading
+
+- [Gestures](/gestures)
+- [Gesture Ownership](/gesture-ownership)

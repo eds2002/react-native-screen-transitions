@@ -1,0 +1,154 @@
+---
+title: "Quick Start"
+pageTitle: "Quick Start"
+summary: "Create a blank stack, add a custom interpolator, and wire up a bounds-driven detail transition."
+description: "Create a blank stack, add a custom interpolator, and wire up a bounds-driven detail transition."
+eyebrow: "Get Started"
+group: "Get Started"
+order: 3
+to: /quick-start
+---
+
+<Steps>
+  <Step
+    title="Create A Blank Stack"
+    description="Blank stack is the default starting point for 3.4:"
+  >
+    <CodeBlock
+      code={`import Transition from "react-native-screen-transitions";
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator();
+
+export function RootNavigator() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen
+        name="Detail"
+        component={DetailScreen}
+        options={{
+          ...Transition.Presets.SlideFromBottom(),
+        }}
+      />
+    </Stack.Navigator>
+  );
+}`}
+      language="tsx"
+      title="App.tsx"
+    />
+
+    That gives you a working stack immediately, with the detail screen using a built-in preset.
+  </Step>
+
+  <Step
+    title="Replace The Preset With Your Own Interpolator"
+    description="When you want full control, move the animation into `screenStyleInterpolator`:"
+  >
+    <CodeBlock
+      code={`import { interpolate } from "react-native-reanimated";
+
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    transitionSpec: {
+      open: Transition.Specs.DefaultSpec,
+      close: Transition.Specs.DefaultSpec,
+    },
+    screenStyleInterpolator: ({
+      progress,
+      layouts: {
+        screen: { height },
+      },
+    }) => {
+      "worklet";
+      return {
+        content: {
+          style: {
+            opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+            transform: [
+              {
+                translateY: interpolate(progress, [0, 1, 2], [height, 0, -height * 0.2]),
+              },
+            ],
+          },
+        },
+        backdrop: {
+          style: {
+            opacity: interpolate(progress, [0, 1, 2], [0, 0.45, 0]),
+          },
+        },
+      };
+    },
+  }}
+/>`}
+      language="tsx"
+      title="detail-screen.tsx"
+    />
+
+    The interpolator returns layer output. The most common slots are:
+
+    - `content`
+    - `backdrop`
+    - `surface`
+    - any `styleId` you attach to `Transition.View` or `Transition.Pressable`
+  </Step>
+
+  <Step
+    title="Add A Bounds-Driven Detail Transition"
+    description="Use the boundary API to connect a source element to its destination:"
+  >
+    <CodeBlock
+      code={`// Home screen
+<Transition.Boundary.Trigger
+  id="hero"
+  onPress={() => navigation.navigate("Detail")}
+>
+  <Image source={heroImage} style={{ width: 120, height: 160 }} />
+</Transition.Boundary.Trigger>
+
+// Detail screen
+<Transition.Boundary.View id="hero">
+  <Image source={heroImage} style={{ width: "100%", height: 360 }} />
+</Transition.Boundary.View>`}
+      language="tsx"
+      title="bounds-link.tsx"
+    />
+
+    Then let the detail screen read that bounds link:
+
+    <CodeBlock
+      code={`<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    navigationMaskEnabled: true,
+    screenStyleInterpolator: ({ bounds }) => {
+      "worklet";
+      return bounds({ id: "hero" }).navigation.zoom();
+    },
+  }}
+/>`}
+      language="tsx"
+      title="detail-options.tsx"
+    />
+
+    `navigationMaskEnabled` is what lets the library manage the reveal mask for navigation zoom. It requires `@react-native-masked-view/masked-view`, which is covered in [Installation](/installation).
+  </Step>
+
+  <Step
+    title="Keep Going"
+    description="From here, the next pages depend on what you want to build."
+  >
+    <ul>
+      <li><a href="/custom-animations">Custom Animations</a> for the interpolator model</li>
+      <li><a href="/gestures">Gestures</a> for dismissal and drag behavior</li>
+      <li><a href="/snap-points">Snap Points</a> for sheets and detents</li>
+      <li><a href="/shared-elements">Bounds Transitions</a> for the bounds system</li>
+      <li><a href="/expo-router">Expo Router</a> if your app uses file-based routing</li>
+    </ul>
+  </Step>
+</Steps>
