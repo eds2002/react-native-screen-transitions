@@ -181,9 +181,4 @@ export type BoundsAccessor = {
 	) => number;
 };
 
-export type BoundsInterpolationProps = Omit<
-	ScreenInterpolationProps,
-	"bounds"
-> & {
-	navigationMaskEnabled?: boolean;
-};
+export type BoundsInterpolationProps = Omit<ScreenInterpolationProps, "bounds">;

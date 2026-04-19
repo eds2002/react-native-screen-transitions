@@ -11,6 +11,27 @@ export type Layout = {
 	height: number;
 };
 
+export type ScreenLayouts = {
+	/**
+	 * The `width` and `height` of the screen container.
+	 */
+	screen: Layout;
+	/**
+	 * The intrinsic measured content wrapper layout when available.
+	 *
+	 * This is currently populated for the measured screen-container path used by
+	 * auto snap-point sizing. It is undefined until a real measurement exists.
+	 */
+	content?: Layout;
+	/**
+	 * Whether navigation bounds masking is enabled for this screen.
+	 *
+	 * When enabled, navigation zoom helpers target the masked container path
+	 * instead of the plain content slot.
+	 */
+	navigationMaskEnabled: boolean;
+};
+
 export type ScreenKey = string;
 export type SheetScrollGestureBehavior =
 	| "expand-and-collapse"

@@ -1,7 +1,7 @@
-import { createContext, type ReactNode, useContext, useMemo } from "react";
-import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
+import { type ReactNode, useContext } from "react";
+import createProvider from "../../../utils/create-provider";
 import { useScreenAnimationPipeline } from "./helpers/pipeline";
+import type { ScreenAnimationSource } from "./types";
 
 type Props = {
 	children: ReactNode;
@@ -10,15 +10,20 @@ type Props = {
 export type ScreenAnimationContextValue = ReturnType<
 	typeof useScreenAnimationPipeline
 > & {
-	screenAnimation: DerivedValue<ScreenInterpolationProps>;
-	ancestorScreenAnimations: DerivedValue<ScreenInterpolationProps>[];
+	ancestorScreenAnimationSources: ScreenAnimationSource[];
 };
 
-const ScreenAnimationContext =
-	createContext<ScreenAnimationContextValue | null>(null);
-ScreenAnimationContext.displayName = "ScreenAnimation";
+export type ScreenAnimationContextResult = {
+	value: ScreenAnimationContextValue;
+};
 
-function ScreenAnimationProvider({ children }: Props) {
+export const {
+	ScreenAnimationProvider,
+	ScreenAnimationContext,
+	useScreenAnimationContext,
+} = createProvider("ScreenAnimation", {
+	guarded: true,
+})<Props, ScreenAnimationContextValue>((): ScreenAnimationContextResult => {
 	const parentContext = useContext(ScreenAnimationContext);
 
 	const {
@@ -28,66 +33,23 @@ function ScreenAnimationProvider({ children }: Props) {
 		boundsAccessor,
 	} = useScreenAnimationPipeline();
 
-	const screenAnimation = useDerivedValue<ScreenInterpolationProps>(() => {
-		"worklet";
-		const props = screenInterpolatorProps.value;
-		return {
-			...props,
-			bounds: boundsAccessor,
-		};
-	});
+	const ancestorScreenAnimationSources = parentContext
+		? [
+				{
+					screenInterpolatorProps: parentContext.screenInterpolatorProps,
+					boundsAccessor: parentContext.boundsAccessor,
+				},
+				...parentContext.ancestorScreenAnimationSources,
+			]
+		: [];
 
-	const ancestorScreenAnimations = useMemo(() => {
-		if (!parentContext) {
-			return [];
-		}
-
-		return [
-			parentContext.screenAnimation,
-			...parentContext.ancestorScreenAnimations,
-		];
-	}, [parentContext]);
-
-	const value = useMemo(
-		() => ({
+	return {
+		value: {
 			screenInterpolatorProps,
 			nextInterpolator,
 			currentInterpolator,
 			boundsAccessor,
-			screenAnimation,
-			ancestorScreenAnimations,
-		}),
-		[
-			screenInterpolatorProps,
-			nextInterpolator,
-			currentInterpolator,
-			boundsAccessor,
-			screenAnimation,
-			ancestorScreenAnimations,
-		],
-	);
-
-	return (
-		<ScreenAnimationContext.Provider value={value}>
-			{children}
-		</ScreenAnimationContext.Provider>
-	);
-}
-
-function useScreenAnimationContext(): ScreenAnimationContextValue {
-	const context = useContext(ScreenAnimationContext);
-
-	if (!context) {
-		throw new Error(
-			"ScreenAnimation context must be used within a ScreenAnimationProvider",
-		);
-	}
-
-	return context;
-}
-
-export {
-	ScreenAnimationContext,
-	ScreenAnimationProvider,
-	useScreenAnimationContext,
-};
+			ancestorScreenAnimationSources,
+		},
+	};
+});

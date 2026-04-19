@@ -301,7 +301,7 @@ export function buildZoomStyles({
 	const sourceVisibilityStyle = {
 		[effectiveTag]: VISIBLE_STYLE,
 	} satisfies TransitionInterpolatedStyle;
-	const focusedContentSlot = props.navigationMaskEnabled
+	const focusedContentSlot = props.current.layouts.navigationMaskEnabled
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID
 		: "content";
 
@@ -342,7 +342,7 @@ export function buildZoomStyles({
 			},
 		};
 
-		if (props.navigationMaskEnabled) {
+		if (props.current.layouts.navigationMaskEnabled) {
 			const { top, right, bottom, left } = ZOOM_MASK_OUTSET;
 			fallbackStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
 				style: {
@@ -498,7 +498,7 @@ export function buildZoomStyles({
 			...sourceVisibilityStyle,
 		};
 
-		if (props.navigationMaskEnabled) {
+		if (props.current.layouts.navigationMaskEnabled) {
 			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
 				style: {
 					width: maskWidth,

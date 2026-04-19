@@ -46,10 +46,6 @@ const computeSettled = (params: {
 	return animating || dismissing || closing ? FALSE : TRUE;
 };
 
-/**
- * Computes the animated snap index based on progress and snap points.
- * Returns -1 if no snap points, otherwise interpolates between indices.
- */
 const computeSnapIndex = (progress: number, snapPoints: number[]): number => {
 	"worklet";
 	if (snapPoints.length === 0) return -1;
@@ -67,14 +63,6 @@ const computeSnapIndex = (progress: number, snapPoints: number[]): number => {
 	return snapPoints.length - 1;
 };
 
-/**
- * Determines whether the screen transition is logically settled.
- *
- * A transition is considered logically settled when:
- * - The `settled` flag is explicitly set, OR
- * - The screen is not being dragged AND the progress is within
- *   {@link ANIMATION_SNAP_THRESHOLD} of the target progress.
- */
 export const computeLogicallySettled = ({
 	progress,
 	targetProgress,
@@ -102,26 +90,25 @@ export const hydrateTransitionState = (
 ): ScreenTransitionState => {
 	"worklet";
 	const out = s.unwrapped;
-	out.progress = s.progress.value;
-	out.willAnimate = s.willAnimate.value;
-	out.closing = s.closing.value;
-	out.entering = s.entering.value;
-	out.gesture.x = s.gesture.x.value;
-	out.gesture.y = s.gesture.y.value;
-	out.gesture.normX = s.gesture.normX.value;
-	out.gesture.normY = s.gesture.normY.value;
-	out.gesture.dismissing = s.gesture.dismissing.value;
-	out.gesture.dragging = s.gesture.dragging.value;
-	out.gesture.direction = s.gesture.direction.value;
+	out.progress = s.progress.get();
+	out.willAnimate = s.willAnimate.get();
+	out.closing = s.closing.get();
+	out.entering = s.entering.get();
+	out.gesture.x = s.gesture.x.get();
+	out.gesture.y = s.gesture.y.get();
+	out.gesture.normX = s.gesture.normX.get();
+	out.gesture.normY = s.gesture.normY.get();
+	out.gesture.dismissing = s.gesture.dismissing.get();
+	out.gesture.dragging = s.gesture.dragging.get();
+	out.gesture.direction = s.gesture.direction.get();
 
 	const isGestureSettling =
 		Math.abs(out.gesture.normX) > EPSILON ||
 		Math.abs(out.gesture.normY) > EPSILON;
 
 	out.animating =
-		s.animating.value || out.gesture.dragging || isGestureSettling ? 1 : 0;
+		s.animating.get() || out.gesture.dragging || isGestureSettling ? 1 : 0;
 
-	// Deprecated aliases (kept for backwards compatibility)
 	out.gesture.normalizedX = out.gesture.normX;
 	out.gesture.normalizedY = out.gesture.normY;
 	out.gesture.isDismissing = out.gesture.dismissing;
@@ -134,24 +121,24 @@ export const hydrateTransitionState = (
 	});
 	out.logicallySettled = computeLogicallySettled({
 		progress: out.progress,
-		targetProgress: s.targetProgress.value,
+		targetProgress: s.targetProgress.get(),
 		settled: out.settled,
 		dragging: out.gesture.dragging,
 	});
 
-	if (s.settled.value !== out.settled) {
-		s.settled.value = out.settled;
+	if (s.settled.get() !== out.settled) {
+		s.settled.set(out.settled);
 	}
 
-	if (s.logicallySettled.value !== out.logicallySettled) {
-		s.logicallySettled.value = out.logicallySettled;
+	if (s.logicallySettled.get() !== out.logicallySettled) {
+		s.logicallySettled.set(out.logicallySettled);
 	}
 
 	out.meta = s.meta;
 	out.layouts.screen.width = dimensions.width;
 	out.layouts.screen.height = dimensions.height;
 
-	const content = s.measuredContentLayout.value;
+	const content = s.measuredContentLayout.get();
 	if (content) {
 		if (!out.layouts.content) {
 			out.layouts.content = {
@@ -167,8 +154,8 @@ export const hydrateTransitionState = (
 	}
 
 	const resolvedAutoSnap =
-		s.hasAutoSnapPoint && s.resolvedAutoSnapPoint.value > 0
-			? s.resolvedAutoSnapPoint.value
+		s.hasAutoSnapPoint && s.resolvedAutoSnapPoint.get() > 0
+			? s.resolvedAutoSnapPoint.get()
 			: null;
 
 	const resolvedSnapPoints =

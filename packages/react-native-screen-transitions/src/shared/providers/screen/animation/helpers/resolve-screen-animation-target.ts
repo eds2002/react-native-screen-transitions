@@ -1,11 +1,9 @@
-import type { DerivedValue } from "react-native-reanimated";
-import type { ScreenInterpolationProps } from "../../../../types/animation.types";
 import type { ScreenAnimationTarget } from "../types";
 
-type Params = {
+type Params<T> = {
 	target: ScreenAnimationTarget | undefined;
-	self: DerivedValue<ScreenInterpolationProps>;
-	ancestors: DerivedValue<ScreenInterpolationProps>[];
+	self: T;
+	ancestors: T[];
 };
 
 const isAncestorTarget = (
@@ -14,11 +12,11 @@ const isAncestorTarget = (
 	return typeof target === "object" && target !== null && "ancestor" in target;
 };
 
-export function resolveScreenAnimationTarget({
+export function resolveScreenAnimationTarget<T>({
 	target,
 	self,
 	ancestors,
-}: Params): DerivedValue<ScreenInterpolationProps> {
+}: Params<T>): T {
 	if (!target || target === "self") {
 		return self;
 	}
