@@ -13,7 +13,7 @@ export function AppleMusicTabPlaceholder({
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
 				light
-				title="Shared Apple Music"
+				title="Deprecated Shared Apple Music"
 				subtitle={`${tabLabel} tab in the restored deprecated preset demo`}
 			/>
 

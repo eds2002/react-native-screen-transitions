@@ -26,7 +26,7 @@ export default function SharedXImageIndex() {
 				<ScreenHeader
 					light
 					title="Shared X Image"
-					subtitle="Deprecated SharedXImage feed -> fullscreen media"
+					subtitle="SharedXImage feed -> fullscreen media"
 				/>
 
 				<View style={styles.brandRow}>

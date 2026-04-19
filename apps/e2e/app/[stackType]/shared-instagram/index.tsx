@@ -38,8 +38,8 @@ export default function SharedInstagramIndex() {
 			>
 				<ScreenHeader
 					light
-					title="Shared Instagram Preset"
-					subtitle="Deprecated SharedIGImage grid -> post detail"
+					title="Deprecated Shared Instagram Preset"
+					subtitle="Legacy SharedIGImage grid -> post detail"
 				/>
 
 				<View style={styles.profileHeader}>

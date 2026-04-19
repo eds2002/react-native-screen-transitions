@@ -45,7 +45,7 @@ export default function SharedAppleMusicDetail() {
 				>
 					<ScreenHeader
 						light
-						title="Shared Apple Music"
+						title="Deprecated Shared Apple Music"
 						subtitle={playlist.title}
 					/>
 

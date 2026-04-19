@@ -28,21 +28,20 @@ const TEST_FLOWS = [
 	},
 	{
 		id: "shared-apple-music",
-		title: "Shared Apple Music",
+		title: "Deprecated Shared Apple Music",
 		description:
-			"Deprecated SharedAppleMusic preset routed through a nested tab shell",
+			"Legacy SharedAppleMusic preset routed through a nested tab shell",
 	},
 	{
 		id: "shared-x-image",
 		title: "Shared X Image",
-		description:
-			"Deprecated SharedXImage preset for feed card -> fullscreen media",
+		description: "SharedXImage preset for feed card -> fullscreen media",
 	},
 	{
 		id: "shared-instagram",
-		title: "Shared Instagram Preset",
+		title: "Deprecated Shared Instagram Preset",
 		description:
-			"Deprecated SharedIGImage preset for profile grid -> post detail",
+			"Legacy SharedIGImage preset for profile grid -> post detail",
 	},
 	{
 		id: "stack-progress",

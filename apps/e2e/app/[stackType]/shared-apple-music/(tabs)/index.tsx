@@ -31,8 +31,8 @@ export default function SharedAppleMusicHome() {
 			>
 				<ScreenHeader
 					light
-					title="Shared Apple Music"
-					subtitle="Deprecated SharedAppleMusic preset inside nested tabs"
+					title="Deprecated Shared Apple Music"
+					subtitle="Legacy SharedAppleMusic preset inside nested tabs"
 				/>
 
 				<MusicSection title="Top picks for you">
