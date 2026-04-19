@@ -1,9 +1,7 @@
 /** biome-ignore-all lint/correctness/useHookAtTopLevel: STACK_TYPE is stable per navigator */
-import { useLayoutEffect, useRef } from "react";
-import { useAnimatedReaction, useDerivedValue } from "react-native-reanimated";
-import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
+import { useLayoutEffect, useMemo, useRef } from "react";
+import { useAnimatedReaction } from "react-native-reanimated";
 import useStableCallback from "../../../hooks/use-stable-callback";
-import { useGestureContext } from "../../../providers/gestures";
 import {
 	type BaseDescriptor,
 	useDescriptorDerivations,
@@ -11,6 +9,7 @@ import {
 import { useStackCoreContext } from "../../../providers/stack/core.provider";
 import { useManagedStackContext } from "../../../providers/stack/managed.provider";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
+import { GestureStore } from "../../../stores/gesture.store";
 import {
 	LifecycleTransitionRequestKind,
 	type SystemStoreActions,
@@ -73,18 +72,14 @@ const useNativeStackClose = ({
 	requestLifecycleTransition,
 	resetStores,
 }: CloseHookParams) => {
-	const gestureContext = useGestureContext();
+	const { parentScreenKey } = useDescriptorDerivations();
 	const pendingActionRef = useRef<any>(null);
 
-	const isAncestorDismissingViaGesture = useSharedValueState(
-		useDerivedValue(() => {
-			"worklet";
-			return (
-				gestureContext?.ancestorContext?.gestureAnimationValues.dismissing
-					?.value ?? false
-			);
-		}),
-	);
+	const nearestAncestorDismissing = useMemo(() => {
+		if (!parentScreenKey) return null;
+
+		return GestureStore.peekBag(parentScreenKey)?.dismissing ?? null;
+	}, [parentScreenKey]);
 
 	const handleNativeCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished || !pendingActionRef.current) {
@@ -110,7 +105,7 @@ const useNativeStackClose = ({
 		);
 		const isFirstScreen = routeIndex <= 0;
 
-		if (!isEnabled || isAncestorDismissingViaGesture || isFirstScreen) {
+		if (!isEnabled || nearestAncestorDismissing?.get() || isFirstScreen) {
 			animations.closing.set(1);
 			resetStores();
 			return;
