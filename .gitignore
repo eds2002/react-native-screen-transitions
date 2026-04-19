@@ -5,6 +5,8 @@
 .expo/
 dist/
 lib/
+!packages/docs/src/lib/
+!packages/docs/src/lib/**
 web-build/
 expo-env.d.ts
 

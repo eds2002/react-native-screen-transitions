@@ -1,0 +1,223 @@
+---
+title: "Layers"
+pageTitle: "Layers"
+summary: "Understand the screen-container layering system: backdrop, content, surface, element targets, and navigation masks."
+description: "Understand the screen-container layering system: backdrop, content, surface, element targets, and navigation masks."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 9
+to: /surface-slots
+---
+
+## Mental Model
+
+`screenStyleInterpolator` returns a keyed style map. Some keys target screen-container layers. Everything else targets transition-aware elements inside the screen tree.
+
+The layer keys are:
+
+- `backdrop`
+- `content`
+- `surface`
+- `NAVIGATION_MASK_CONTAINER_STYLE_ID`
+- `NAVIGATION_MASK_ELEMENT_STYLE_ID`
+
+Any other key is treated as an element target and matched against a `styleId` or `sharedBoundTag` on a transition-aware component such as `Transition.View` or `Transition.Pressable`.
+
+## Layer Map
+
+```tsx
+import {
+  NAVIGATION_MASK_CONTAINER_STYLE_ID,
+  NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "react-native-screen-transitions";
+
+return {
+  backdrop: { style: { ... }, props: { ... } },
+  content: { style: { ... }, props: { ... } },
+  surface: { style: { ... }, props: { ... } },
+  [NAVIGATION_MASK_CONTAINER_STYLE_ID]: { style: { ... } },
+  [NAVIGATION_MASK_ELEMENT_STYLE_ID]: { style: { ... } },
+  ["hero-card"]: { style: { ... }, props: { ... } },
+};
+```
+
+Each slot also supports shorthand style-only output:
+
+```tsx
+return {
+  backdrop: { opacity: 0.4 },
+  content: { transform: [{ translateY: 12 }] },
+  "hero-card": { scale: 0.98 },
+};
+```
+
+## Render Order
+
+Inside `screen-container`, layers are resolved in this order:
+
+1. `backdrop`
+2. `content`
+3. optional navigation mask wrapper when `navigationMaskEnabled` is enabled
+4. optional surface wrapper when `surfaceComponent` is provided
+5. screen children and any matching `styleId` or `sharedBoundTag` targets
+
+That gives you two levels of control:
+
+- screen-level layers for the overall container structure
+- element-level targets for individual transition-aware components inside the screen
+
+## backdrop
+
+`backdrop` controls the full-screen layer behind the active screen content.
+
+```tsx
+backdrop: {
+  style: {
+    opacity: interpolate(progress, [0, 1, 2], [0, 0.4, 0]),
+  },
+}
+```
+
+If you provide `backdropComponent`, the library wraps it with `Animated.createAnimatedComponent` and feeds it the `backdrop` slot's animated props.
+
+```tsx
+options={{
+  backdropBehavior: "dismiss",
+  backdropComponent: BlurView,
+}}
+```
+
+Use backdrop for dimming, blur intensity, tint, or any visual treatment outside the screen itself. `backdropBehavior` still controls how taps are handled.
+
+## content
+
+`content` targets the root animated container for the screen itself.
+
+```tsx
+content: {
+  style: {
+    transform: [{ translateY: interpolate(progress, [0, 1], [40, 0]) }],
+  },
+}
+```
+
+This is the slot that usually carries the main screen motion: translate, scale, opacity, rotation, and overall clipping styles.
+
+## surface
+
+`surface` targets the optional wrapper created by `surfaceComponent`.
+
+```tsx
+options={{
+  surfaceComponent: SquircleView,
+}}
+
+surface: {
+  style: {
+    borderRadius: interpolate(progress, [0, 1], [28, 0]),
+  },
+  props: {
+    cornerRadius: interpolate(progress, [0, 1], [28, 0]),
+  },
+}
+```
+
+Use this when the screen needs a custom shell layer such as a squircle, glass panel, or other container component that moves with the screen.
+
+## Element Targets
+
+Any non-layer key is routed to transition-aware elements inside the screen tree.
+
+```tsx
+<Transition.View styleId="hero-card">
+  <Card />
+</Transition.View>
+
+return {
+  "hero-card": {
+    style: {
+      opacity: interpolate(progress, [0, 1], [0, 1]),
+      transform: [{ scale: interpolate(progress, [0, 1], [0.94, 1]) }],
+    },
+  },
+};
+```
+
+These keys apply only to transition-aware components created by the library such as `Transition.View`, `Transition.Pressable`, `Transition.ScrollView`, and `Transition.FlatList`.
+
+The same lookup path also works for `sharedBoundTag`, because the screen style system routes element styles by the component's associated id.
+
+## Navigation Mask Layers
+
+When `navigationMaskEnabled` is enabled and `@react-native-masked-view/masked-view` is installed, the content layer is wrapped in a masked container.
+
+Two exported reserved ids control that wrapper:
+
+- `NAVIGATION_MASK_CONTAINER_STYLE_ID`
+- `NAVIGATION_MASK_ELEMENT_STYLE_ID`
+
+Use them directly in the interpolator:
+
+```tsx
+import {
+  NAVIGATION_MASK_CONTAINER_STYLE_ID,
+  NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "react-native-screen-transitions";
+
+<Stack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    navigationMaskEnabled: true,
+    screenStyleInterpolator: ({ current, progress }) => {
+      "worklet";
+
+      const { height } = current.layouts.screen;
+      const sheetHeight = interpolate(progress, [0, 1], [height * 0.6, height]);
+
+      return {
+        [NAVIGATION_MASK_CONTAINER_STYLE_ID]: {
+          style: {
+            transform: [{ translateY: height - sheetHeight }],
+          },
+        },
+        [NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
+          style: {
+            width: "100%",
+            height: sheetHeight,
+            borderRadius: interpolate(progress, [0, 1], [32, 0]),
+            backgroundColor: "white",
+          },
+        },
+      };
+    },
+  }}
+/>
+```
+
+`NAVIGATION_MASK_CONTAINER_STYLE_ID` styles the masked content container. `NAVIGATION_MASK_ELEMENT_STYLE_ID` styles the mask element itself.
+
+Treat both ids as reserved layer keys. Do not reuse them as custom `styleId` values.
+
+## Props vs Style
+
+Every slot supports both animated styles and animated props:
+
+```tsx
+return {
+  backdrop: {
+    style: { opacity: 1 },
+    props: { intensity: 80 },
+  },
+  surface: {
+    props: { cornerRadius: 24 },
+  },
+};
+```
+
+Use style for visual layout and transforms. Use props when the wrapped layer or target component exposes animatable props such as blur intensity or a custom surface API.
+
+## Related Reading
+
+- [Custom Animations](/custom-animations)
+- [Bounds Transitions](/shared-elements)

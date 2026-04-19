@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
+
+@font-face {
+	font-family: "Geist Sans";
+	src: url("/fonts/Geist-Variable.woff2") format("woff2");
+	font-display: swap;
+	font-style: normal;
+	font-weight: 100 900;
+}
+
+@font-face {
+	font-family: "Geist Mono";
+	src: url("/fonts/GeistMono-Variable.woff2") format("woff2");
+	font-display: swap;
+	font-style: normal;
+	font-weight: 100 900;
+}
+
+@theme {
+	--font-sans: "Geist Sans", ui-sans-serif, system-ui, sans-serif;
+	--font-mono: "Geist Mono", ui-monospace, monospace;
+}
+
+:root {
+	color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+	color-scheme: dark;
+}
+
+* {
+	box-sizing: border-box;
+}
+
+html {
+	scroll-behavior: smooth;
+	min-height: 100%;
+	overscroll-behavior-y: none;
+}
+
+body {
+	min-height: 100%;
+	overscroll-behavior-y: none;
+	text-rendering: optimizeLegibility;
+}
+
+code,
+pre {
+	font-family: var(--font-mono);
+}
+
+a {
+	color: inherit;
+	text-decoration: none;
+}
+
+img {
+	display: block;
+	max-width: 100%;
+}
+
+.scrollbar-none {
+	-ms-overflow-style: none;
+	scrollbar-width: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+	display: none;
+}
+
+::selection {
+	background: rgba(125, 240, 215, 0.28);
+	color: #111a16;
+}

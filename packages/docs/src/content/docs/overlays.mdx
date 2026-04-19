@@ -1,0 +1,169 @@
+---
+title: "Overlays"
+pageTitle: "Overlays"
+summary: "Use screen overlays as floating stack-relative UI that persists from the owning screen upward through the rest of that stack."
+description: "Use screen overlays as floating stack-relative UI that persists from the owning screen upward through the rest of that stack."
+eyebrow: "Components"
+group: "Components"
+order: 1
+to: /overlays
+---
+
+## Mental Model
+
+An overlay is a floating screen layer owned by a screen in a stack.
+
+Configure it on screen options with `overlay` and `overlayShown`.
+
+```tsx
+<Stack.Screen
+  name="index"
+  component={HomeScreen}
+  options={{
+    overlay: TabBarOverlay,
+    overlayShown: true,
+  }}
+/>
+```
+
+The overlay belongs to the screen that defines it, not the whole app.
+
+## How Overlay Ownership Works
+
+An overlay starts floating when its owner screen becomes active and stays active while you push screens above that owner.
+
+- if `index` defines an overlay, it can float from `index` through the rest of the stack
+- if screen 3 defines an overlay, it does not appear on screens 1 or 2
+- once you reach screen 3, that overlay can float from screen 3 through any screens above it
+- if a higher screen defines a visible overlay, that higher screen becomes the new overlay owner
+
+This is stack-relative, not a global portal.
+
+## Basic Example
+
+```tsx
+<Stack.Navigator>
+  <Stack.Screen
+    name="index"
+    component={IndexScreen}
+    options={{
+      overlay: TabBarOverlay,
+      overlayShown: true,
+    }}
+  />
+
+  <Stack.Screen
+    name="second"
+    component={SecondScreen}
+    options={{
+      overlay: TabBarOverlay,
+      overlayShown: true,
+    }}
+  />
+
+  <Stack.Screen
+    name="third"
+    component={ThirdScreen}
+    options={{
+      overlay: TabBarOverlay,
+      overlayShown: true,
+    }}
+  />
+</Stack.Navigator>
+```
+
+The same overlay can keep floating deeper through the stack.
+
+If you push a screen with `overlayShown: false`, the system skips that screen and keeps scanning downward for the highest visible overlay owner.
+
+## Overlay Component Example
+
+```tsx
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+} from "react-native-reanimated";
+import {
+  type OverlayProps,
+  useScreenAnimation,
+} from "react-native-screen-transitions";
+
+function TabBarOverlay({
+  focusedRoute,
+  focusedIndex,
+  routes,
+  navigation,
+}: OverlayProps) {
+  const animation = useScreenAnimation();
+
+  const style = useAnimatedStyle(() => {
+    const { stackProgress } = animation.value;
+
+    return {
+      opacity: interpolate(stackProgress, [1, 2], [1, 0.3], "clamp"),
+    };
+  });
+
+  return (
+    <Animated.View style={style}>
+      <Text>{focusedRoute.name}</Text>
+      <Text>
+        {focusedIndex + 1} / {routes.length}
+      </Text>
+    </Animated.View>
+  );
+}
+```
+
+`stackProgress` is relative to the overlay owner's position in the stack.
+
+## Overlay Props
+
+| Prop | Purpose |
+| --- | --- |
+| `focusedRoute` | Focused route in the current stack |
+| `focusedIndex` | Focused route index |
+| `routes` | All routes in the current stack |
+| `meta` | `meta` from the focused screen options |
+| `navigation` | Navigation object for the overlay's owning stack |
+| `options` | Focused screen transition options |
+| `progress` | Overlay-relative stack progress |
+
+Many overlay components read animation state through `useScreenAnimation()` instead of consuming `progress` directly.
+
+## Showing and Hiding
+
+```tsx
+<Stack.Screen
+  name="no-overlay"
+  component={NoOverlayScreen}
+  options={{
+    overlay: TabBarOverlay,
+    overlayShown: false,
+  }}
+/>
+```
+
+This does not destroy the overlay system. It just means that screen is not the active visible overlay owner.
+
+## Where Overlays Work
+
+Overlays are a stack feature. They work with:
+
+- blank stack
+- native stack when transitions are enabled
+- component stack
+
+A nested stack overlay floats inside that nested stack, not outside it.
+
+## Relationship to Stack Types
+
+If you are choosing a stack for floating overlay UI:
+
+- use blank stack for new work
+- use native stack when you need native-stack integration and `enableTransitions: true`
+- avoid new work on component stack
+
+Blank stack is now the preferred embedded-flow stack too.
+
+Related reading: [Stack Types](/stack-types) and [Transition Components](/transition-components).

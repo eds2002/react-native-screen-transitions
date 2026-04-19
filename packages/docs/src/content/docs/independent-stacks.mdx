@@ -1,0 +1,149 @@
+---
+title: "Independent Stacks"
+pageTitle: "Independent Stacks"
+summary: "Use `independent` to isolate a blank stack, and `enableNativeScreens` to choose between native screen primitives and regular views."
+description: "Use `independent` to isolate a blank stack, and `enableNativeScreens` to choose between native screen primitives and regular views."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 12
+to: /independent-stacks
+---
+
+## Why This Exists
+
+In v3, blank stack covers the old embedded-flow use case that originally pushed people toward component stack.
+
+The two options that matter are:
+
+- `independent`
+- `enableNativeScreens`
+
+They solve different problems.
+
+## `independent`
+
+`independent` creates an isolated navigation tree for the blank stack.
+
+Use it when the stack lives inside another screen, sheet, host app surface, or any embedded flow that should not join the parent React Navigation tree.
+
+```tsx
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator();
+
+<Stack.Navigator independent>
+  <Stack.Screen name="Home" component={HomeScreen} />
+  <Stack.Screen name="Detail" component={DetailScreen} />
+</Stack.Navigator>
+```
+
+When `independent` is enabled, the navigator wraps itself in its own `NavigationIndependentTree` and `NavigationContainer`.
+
+Leave this off for normal app-level stacks.
+
+## `enableNativeScreens`
+
+`enableNativeScreens` controls whether blank stack renders with native screen primitives from `react-native-screens` or with regular views.
+
+```tsx
+const Stack = createBlankStackNavigator();
+
+<Stack.Navigator enableNativeScreens={false}>
+  <Stack.Screen name="Home" component={HomeScreen} />
+</Stack.Navigator>
+```
+
+With the default `true` value, blank stack keeps `react-native-screens` behavior such as native activity state and freezing.
+
+With `false`, blank stack renders with regular views instead of native screen primitives.
+
+This is often the better fit for embedded flows where plain view layering behaves more naturally than native screen containers.
+
+## How They Work Together
+
+These options are independent from each other:
+
+- `independent` decides whether the stack joins the parent navigation tree
+- `enableNativeScreens` decides whether the stack uses native screen primitives
+
+That means you can combine them:
+
+```tsx
+const Stack = createBlankStackNavigator();
+
+<Stack.Navigator independent enableNativeScreens={false}>
+  <Stack.Screen name="Home" component={HomeScreen} />
+  <Stack.Screen name="Detail" component={DetailScreen} />
+</Stack.Navigator>
+```
+
+This is the common embedded-flow setup:
+
+- isolated navigation state
+- regular view rendering
+
+## When To Use Each Setup
+
+### Default Blank Stack
+
+Use the defaults when the stack is part of your main app navigation:
+
+```tsx
+<Stack.Navigator>
+  <Stack.Screen name="Home" component={HomeScreen} />
+</Stack.Navigator>
+```
+
+### Independent Embedded Flow
+
+Use `independent` when the flow must manage its own navigation state:
+
+```tsx
+<Stack.Navigator independent>
+  <Stack.Screen name="Home" component={HomeScreen} />
+</Stack.Navigator>
+```
+
+### Embedded Flow With Regular Views
+
+Use `independent` together with `enableNativeScreens={false}` when the flow is embedded and you want regular view layering instead of native screen primitives:
+
+```tsx
+<Stack.Navigator independent enableNativeScreens={false}>
+  <Stack.Screen name="Home" component={HomeScreen} />
+</Stack.Navigator>
+```
+
+This is usually the most predictable setup for nested flows, custom containers, and surfaces where native screen layering gets in the way.
+
+## Static API
+
+The same options are available in the static factory form:
+
+```tsx
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator({
+  independent: true,
+  enableNativeScreens: false,
+  screens: {
+    Home: HomeScreen,
+    Detail: DetailScreen,
+  },
+});
+```
+
+## Practical Guidance
+
+- choose blank stack first for new work
+- add `independent` when the flow should not join the parent navigation tree
+- set `enableNativeScreens={false}` when embedded view behavior is a better fit than native screen primitives
+- keep `enableNativeScreens` on when you want the normal `react-native-screens` behavior inside blank stack
+
+If you are deciding between this and component stack, choose blank stack. Component stack is now the legacy path.
+
+## Related Reading
+
+- [Stack Types](/stack-types)
+- [Caveats & Trade-offs](/caveats)
+- [Expo Router](/expo-router)

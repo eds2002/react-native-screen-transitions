@@ -1,0 +1,33 @@
+---
+title: "Components"
+pageTitle: "Render the docs primitives in one place and tune them in context."
+summary: "A live gallery for the shell, prose, code, and navigation pieces."
+description: "This page is the working surface for the docs UI. The shell and page header are already live around it, and the sections below render the reusable pieces directly so they can be tuned without hopping between docs."
+eyebrow: "Components"
+group: "Components"
+hidden: true
+order: 99
+to: /components
+---
+
+<Section
+  title="Structural components"
+  description="The page-level pieces are already active here, so this view doubles as their test surface."
+>
+  <InfoGrid
+    items={[
+      {
+        title: "DocsShell",
+        copy: "The sticky header, sidebar, version switcher, and mobile dialog around this page come from the shell component.",
+      },
+      {
+        title: "PageIntro",
+        copy: "The eyebrow, title, and description at the top of this page are rendered by the shared page intro component.",
+      },
+      {
+        title: "MarkdownDocPage",
+        copy: "The MDX renderer for prose, links, code, and custom components is what makes this page itself work.",
+      },
+    ]}
+  />
+</Section>

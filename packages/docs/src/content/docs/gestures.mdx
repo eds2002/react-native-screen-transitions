@@ -1,0 +1,290 @@
+---
+title: "Gestures"
+pageTitle: "Gestures"
+summary: "Configure dismiss gestures, snap-sheet handoff, backdrops, and gesture hooks from real screen options."
+description: "Configure dismiss gestures, snap-sheet handoff, backdrops, and gesture hooks from real screen options."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 7
+to: /gestures
+---
+
+## Where Gesture Config Lives
+
+```tsx
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    screenStyleInterpolator,
+  }}
+/>
+```
+
+Gesture options belong on a screen's `options`, not on a navigator component prop.
+
+## Supported Directions
+
+`gestureDirection` accepts:
+
+- `"horizontal"`
+- `"horizontal-inverted"`
+- `"vertical"`
+- `"vertical-inverted"`
+- `"bidirectional"`
+- an array of directions for non-snap screens
+
+For screens with `snapPoints`, pass a single axis direction. If you pass an array, only the first direction is used and the sheet still resolves to a single axis.
+
+## Gesture Options
+
+| Option | Type | Notes |
+| --- | --- | --- |
+| `gestureEnabled` | `boolean` | Enables swipe-to-dismiss. For screens with `snapPoints`, snapping between non-dismiss detents can still work when this is `false`. |
+| `gestureDirection` | `GestureDirection \| GestureDirection[]` | Dismiss direction or axis. For `snapPoints`, prefer a single axis direction. |
+| `gestureActivationArea` | `"edge" \| "screen" \| { left?: "edge" \| "screen"; right?: "edge" \| "screen"; top?: "edge" \| "screen"; bottom?: "edge" \| "screen" }` | Where the gesture may start. Defaults to `"screen"`. |
+| `gestureResponseDistance` | `number` | Single numeric edge-distance override. |
+| `gestureVelocityImpact` | `number` | Release velocity influence on dismiss decisions. Default `0.3`. |
+| `gestureDrivesProgress` | `boolean` | Whether dragging directly updates progress. Default `true`. |
+| `snapVelocityImpact` | `number` | Release velocity influence on snap-target selection. Default `0.1`. |
+| `gestureSnapLocked` | `boolean` | Locks gesture-driven snap movement to the current detent. Default `false`. |
+| `gestureReleaseVelocityScale` | `number` | Multiplies normalized release velocity before the spring runs. Default `1`. |
+| `gestureReleaseVelocityMax` | `number` | Caps normalized release velocity after scaling. Default `3.2`. |
+| `sheetScrollGestureBehavior` | `"expand-and-collapse" \| "collapse-only"` | Scroll-boundary handoff mode for snap sheets. Default `"expand-and-collapse"`. |
+| `backdropBehavior` | `"block" \| "passthrough" \| "dismiss" \| "collapse"` | How taps on the backdrop are handled. |
+| `backdropComponent` | `React.ComponentType<any>` | Custom backdrop component type. Pass a stable component such as `BlurView` or `MyBackdrop`. |
+
+## Gesture Activation Area
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureActivationArea: "edge",
+}}
+```
+
+Or configure each side independently:
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureActivationArea: {
+    left: "edge",
+    right: "screen",
+    top: "screen",
+    bottom: "edge",
+  },
+}}
+```
+
+The per-side object only accepts `"edge"` and `"screen"`. This API does not take numeric edge distances.
+
+## Gesture Response Distance
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureActivationArea: "edge",
+  gestureResponseDistance: 24,
+}}
+```
+
+When you leave it undefined, the gesture system uses its internal edge defaults. In practice, this prop is mainly useful when a side uses `"edge"` activation and you want a wider or narrower hit area.
+
+## Release Tuning
+
+These options control how release velocity affects the outcome and the spring feel:
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureVelocityImpact: 0.3,
+  snapVelocityImpact: 0.1,
+  gestureReleaseVelocityScale: 1.5,
+  gestureReleaseVelocityMax: 2.4,
+}}
+```
+
+- use `gestureVelocityImpact` to change whether a fling dismisses
+- use `snapVelocityImpact` to change which snap point a sheet settles to
+- use `gestureReleaseVelocityScale` to make the post-release spring feel faster or slower
+- use `gestureReleaseVelocityMax` to cap normalized release velocity after screen-size normalization, not raw px/s
+
+## Snap Sheets
+
+Snap sheets are regular screens with `snapPoints`:
+
+```tsx
+<Stack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.4, 0.7, 1],
+    initialSnapIndex: 0,
+  }}
+/>
+```
+
+Two behaviors matter here:
+
+- `gestureEnabled: false` disables dismiss at the minimum detent, but the screen can still snap between non-dismiss detents
+- `gestureSnapLocked` locks gesture-driven snap movement to the current detent, while programmatic changes such as `navigation.setOptions()` or `snapTo()` can still change behavior
+
+If you want to toggle snap locking at runtime:
+
+```tsx
+const navigation = useNavigation();
+
+navigation.setOptions({
+  gestureSnapLocked: true,
+});
+```
+
+## Scroll Handoff for Snap Sheets
+
+When a snap sheet contains scroll content, use the transition-aware scrollables:
+
+```tsx
+function SheetScreen() {
+  return (
+    <Transition.ScrollView>
+      <LongContent />
+    </Transition.ScrollView>
+  );
+}
+```
+
+`sheetScrollGestureBehavior` controls what happens when that scroll view reaches its boundary:
+
+### expand-and-collapse
+
+At the sheet boundary:
+
+- dragging toward expand can expand the sheet
+- dragging toward collapse can collapse or dismiss the sheet
+
+This is the Apple Maps-style behavior.
+
+### collapse-only
+
+At the sheet boundary:
+
+- dragging toward collapse can collapse or dismiss the sheet
+- dragging from the scrollable content does not expand the sheet
+
+Expansion must start from dead space outside the scrollable content. This is the Instagram-style behavior.
+
+```tsx
+<Stack.Screen
+  name="Sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: [0.4, 0.7, 1],
+    sheetScrollGestureBehavior: "collapse-only",
+  }}
+/>
+```
+
+## Backdrop Interaction
+
+The supported values are:
+
+- `"block"`
+- `"passthrough"`
+- `"dismiss"`
+- `"collapse"`
+
+Use `backdropBehavior: "dismiss"` when tapping the backdrop should close the screen, or `backdropBehavior: "collapse"` when a snap sheet should step down to the next lower detent first.
+
+For a custom backdrop renderer, pass a component type:
+
+```tsx
+import { BlurView } from "expo-blur";
+
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    backdropBehavior: "dismiss",
+    backdropComponent: BlurView,
+    screenStyleInterpolator: ({ progress }) => {
+      "worklet";
+
+      return {
+        backdrop: {
+          style: {
+            opacity: interpolate(progress, [0, 1, 2], [0, 0.2, 0]),
+          },
+          props: {
+            intensity: interpolate(progress, [0, 1, 2], [0, 80, 0]),
+          },
+        },
+      };
+    },
+  }}
+/>
+```
+
+The library wraps the backdrop component with `Animated.createAnimatedComponent` internally and drives it from the `backdrop` slot.
+
+## Reading Gesture State
+
+Gesture values are exposed inside the interpolator on `current.gesture`:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        transform: [
+          { translateX: current.gesture.x },
+          { translateY: current.gesture.y },
+        ],
+      },
+    },
+  };
+};
+```
+
+Useful values include:
+
+- `x`, `y`
+- `normX`, `normY`
+- `dragging`
+- `dismissing`
+- `direction`
+
+## Hook Targeting
+
+```tsx
+const selfGestureRef = useScreenGesture();
+const parentGestureRef = useScreenGesture("parent");
+const rootGestureRef = useScreenGesture("root");
+const grandparentGestureRef = useScreenGesture({ ancestor: 2 });
+
+const parentAnimation = useScreenAnimation("parent");
+const rootAnimation = useScreenAnimation("root");
+```
+
+`useScreenGesture()` returns a navigator pan-gesture ref for Gesture Handler relations:
+
+```tsx
+const parentGestureRef = useScreenGesture("parent");
+
+const customPan = Gesture.Pan().requireExternalGestureToFail(parentGestureRef);
+```
+
+Ancestor targeting stops at isolation boundaries. In an `independent` nested stack, `"parent"`, `"root"`, or `{ ancestor: number }` can resolve to `null` when the lookup reaches that isolated tree edge.
+
+## Related Reading
+
+- [Gesture Ownership](/gesture-ownership)
+- [Snap Points](/snap-points)
