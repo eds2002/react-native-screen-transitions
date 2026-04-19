@@ -1,14 +1,14 @@
 import { runOnUI } from "react-native-reanimated";
-import { AnimationStore } from "../../../../../stores/animation.store";
-import { BoundStore } from "../../../../../stores/bounds";
-import { GestureStore } from "../../../../../stores/gesture.store";
-import { SystemStore } from "../../../../../stores/system.store";
+import { AnimationStore } from "../../../../stores/animation.store";
+import { BoundStore } from "../../../../stores/bounds";
+import { GestureStore } from "../../../../stores/gesture.store";
+import { SystemStore } from "../../../../stores/system.store";
 
-export const resetStoresForScreen = (
+export function resetStoresForScreen(
 	routeKey: string,
 	isBranchScreen: boolean,
 	branchNavigatorKey?: string,
-) => {
+) {
 	AnimationStore.clearBag(routeKey);
 	GestureStore.clearBag(routeKey);
 	SystemStore.clearBag(routeKey);
@@ -26,4 +26,4 @@ export const resetStoresForScreen = (
 
 		BoundStore.clearByAncestor(routeKey);
 	})();
-};
+}

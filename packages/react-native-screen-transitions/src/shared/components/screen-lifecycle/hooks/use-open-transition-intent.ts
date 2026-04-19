@@ -1,10 +1,14 @@
 import { useLayoutEffect } from "react";
-import type { SharedValue } from "react-native-reanimated";
-import type { BaseDescriptor } from "../../../providers/screen/descriptors";
+import { useFrameCallback } from "react-native-reanimated";
+import useStableCallback from "../../../hooks/use-stable-callback";
+import {
+	type BaseDescriptor,
+	useDescriptorDerivations,
+} from "../../../providers/screen/descriptors";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
+import type { SystemStoreMap } from "../../../stores/system.store";
 import type { SnapPoint } from "../../../types/screen.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { useHighRefreshRate } from "./use-high-refresh-rate";
 
 /**
  * Calculates the initial progress value based on snap points configuration.
@@ -30,17 +34,32 @@ function getInitialProgress({
 }
 
 /**
- * Handles opening animation on mount.
- * Returns activate/deactivate functions for high refresh rate.
+ * Handles opening transition intent on mount.
+ *
+ * Phase 1 keeps the existing v3 immediate-start behavior while moving this logic
+ * into the same hook boundary used by `next`.
  */
-export function useOpenTransition(
+export function useOpenTransitionIntent(
 	current: BaseDescriptor,
 	animations: AnimationStoreMap,
-	targetProgressValue: SharedValue<number>,
-	isFirstKey: boolean,
+	system: SystemStoreMap,
 ) {
-	const { activateHighRefreshRate, deactivateHighRefreshRate } =
-		useHighRefreshRate(current);
+	const { isFirstKey } = useDescriptorDerivations();
+	const enableHighRefreshRate =
+		current.options.experimental_enableHighRefreshRate ?? false;
+	const frameCallback = useFrameCallback(() => {}, false);
+
+	const activateHighRefreshRate = useStableCallback(() => {
+		if (enableHighRefreshRate) {
+			frameCallback.setActive(true);
+		}
+	});
+
+	const deactivateHighRefreshRate = useStableCallback(() => {
+		if (enableHighRefreshRate) {
+			frameCallback.setActive(false);
+		}
+	});
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useLayoutEffect(() => {
@@ -57,11 +76,11 @@ export function useOpenTransition(
 
 		if (isFirstKey && !experimental_animateOnInitialMount) {
 			if (initialProgress === "auto") {
-				targetProgressValue.set(0);
+				system.targetProgress.set(0);
 				animations.progress.set(0);
 			} else {
 				const target = initialProgress ?? 1;
-				targetProgressValue.set(target);
+				system.targetProgress.set(target);
 				animations.progress.set(target);
 			}
 			animations.animating.set(0);
@@ -70,8 +89,6 @@ export function useOpenTransition(
 			return;
 		}
 
-		// When the initial snap point is 'auto', defer the opening animation until
-		// ScreenContainer has measured the content and set resolvedAutoSnapPoint.
 		if (initialProgress === "auto") {
 			return;
 		}
@@ -81,10 +98,8 @@ export function useOpenTransition(
 			target: initialProgress ?? "open",
 			spec: current.options.transitionSpec,
 			animations,
-			targetProgress: targetProgressValue,
+			targetProgress: system.targetProgress,
 			onAnimationFinish: deactivateHighRefreshRate,
 		});
 	}, []);
-
-	return { activateHighRefreshRate, deactivateHighRefreshRate };
 }

@@ -1,9 +1,14 @@
 import { useEffect } from "react";
-import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
-import useStableCallback from "../../../hooks/use-stable-callback";
-import type { BaseDescriptor } from "../../../providers/screen/descriptors";
-import type { AnimationStoreMap } from "../../../stores/animation.store";
-import { HistoryStore } from "../../../stores/history.store";
+import { useAnimatedReaction } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
+import useStableCallback from "../../../../hooks/use-stable-callback";
+import type { BaseDescriptor } from "../../../../providers/screen/descriptors";
+import type { AnimationStoreMap } from "../../../../stores/animation.store";
+import { HistoryStore } from "../../../../stores/history.store";
+import {
+	registerMountedRoute,
+	unregisterMountedRoute,
+} from "./navigator-route-registry";
 
 function hasSnapPoints(descriptor: BaseDescriptor): boolean {
 	const snapPoints = descriptor.options?.snapPoints;
@@ -27,24 +32,37 @@ function shouldTrackInHistory(descriptor: BaseDescriptor): boolean {
 }
 
 /**
- * Updates the HistoryStore for navigation history tracking.
+ * Keeps navigator route registration and screen history in sync.
  */
-export function useScreenEvents(
+export function useScreenHistory(
 	current: BaseDescriptor,
 	previous: BaseDescriptor | undefined,
 	animations: AnimationStoreMap,
 ) {
 	const navigatorKey = current.navigation.getState()?.key ?? "";
+	const routeKey = current.route.key;
+
+	useEffect(() => {
+		registerMountedRoute(navigatorKey, routeKey);
+
+		return () => {
+			const shouldClearNavigator = unregisterMountedRoute(
+				navigatorKey,
+				routeKey,
+			);
+			if (shouldClearNavigator) {
+				HistoryStore.clearNavigator(navigatorKey);
+			}
+		};
+	}, [navigatorKey, routeKey]);
 
 	// Track history via focus listener - waits for nested navigators to initialize
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
 	useEffect(() => {
-		// Check on mount (after paint, nested navs initialized)
 		if (shouldTrackInHistory(current)) {
 			HistoryStore.focus(current, navigatorKey);
 		}
 
-		// Also listen for focus events
 		const unsubscribe = current.navigation.addListener?.("focus", () => {
 			if (shouldTrackInHistory(current)) {
 				HistoryStore.focus(current, navigatorKey);
@@ -54,7 +72,6 @@ export function useScreenEvents(
 		return () => unsubscribe?.();
 	}, []);
 
-	// When closing starts, focus previous in history
 	const handleBlur = useStableCallback(() => {
 		if (previous && shouldTrackInHistory(previous)) {
 			const prevNavigatorKey = previous.navigation.getState()?.key ?? "";
@@ -66,7 +83,7 @@ export function useScreenEvents(
 		() => animations.closing.get(),
 		(closing, prevClosing) => {
 			if (closing && !prevClosing) {
-				runOnJS(handleBlur)();
+				scheduleOnRN(handleBlur);
 			}
 		},
 	);
