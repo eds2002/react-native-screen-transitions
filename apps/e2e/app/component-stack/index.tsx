@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 const DEMOS = [
 	{
@@ -38,8 +39,13 @@ const DEMOS = [
 ];
 
 export default function ComponentStackIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="Component Stack"
 				subtitle="Standalone navigators isolated from React Navigation"
@@ -50,15 +56,31 @@ export default function ComponentStackIndex() {
 						<Pressable
 							key={demo.id}
 							testID={`component-${demo.id}`}
-							style={styles.item}
+							style={({ pressed }) => [
+								styles.item,
+								{
+									backgroundColor: pressed
+										? theme.cardPressed
+										: theme.card,
+								},
+							]}
 							onPress={() =>
 								router.push(
 									`/component-stack/${demo.id}` as `/component-stack/${string}`,
 								)
 							}
 						>
-							<Text style={styles.itemTitle}>{demo.title}</Text>
-							<Text style={styles.itemDescription}>{demo.description}</Text>
+							<Text style={[styles.itemTitle, { color: theme.text }]}>
+								{demo.title}
+							</Text>
+							<Text
+								style={[
+									styles.itemDescription,
+									{ color: theme.textSecondary },
+								]}
+							>
+								{demo.description}
+							</Text>
 						</Pressable>
 					))}
 				</View>
@@ -70,29 +92,23 @@ export default function ComponentStackIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	content: {
 		padding: 16,
 	},
 	list: {
-		gap: 12,
+		gap: 10,
 	},
 	item: {
-		backgroundColor: "#1e1e1e",
 		padding: 16,
-		borderRadius: 12,
-		borderWidth: 1,
-		borderColor: "#333",
+		borderRadius: 14,
 	},
 	itemTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	itemDescription: {
 		fontSize: 13,
-		color: "#888",
 	},
 });

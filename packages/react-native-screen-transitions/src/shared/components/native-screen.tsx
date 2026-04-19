@@ -46,52 +46,74 @@ export const NativeScreen = ({
 }: ScreenProps) => {
 	const {
 		flags: { DISABLE_NATIVE_SCREENS = false },
-	} = useStack();
-
-	const {
-		activeScreensLimit,
 		routes,
 		optimisticFocusedIndex,
-		backdropBehaviors,
-	} = useManagedStackContext();
+	} = useStack();
+	const { activeScreensLimit, backdropBehaviors } = useManagedStackContext();
 
 	const routesLength = routes.length;
+	const topIndex = routesLength - 1;
+	const topRouteKey = routes[topIndex]?.key ?? routeKey;
 	const screenRef = useAnimatedRef<View>();
 
-	const sceneProgress = AnimationStore.getAnimation(routeKey, "progress");
-	const sceneClosing = AnimationStore.getAnimation(routeKey, "closing");
+	const sceneClosing = AnimationStore.getValue(routeKey, "closing");
+	const topSceneProgress = AnimationStore.getValue(topRouteKey, "progress");
+	const topSceneClosing = AnimationStore.getValue(topRouteKey, "closing");
 	const screenActivity = useSharedValue<ScreenActivity>(
 		ScreenActivity.TRANSITIONING_OR_BELOW_TOP,
 	);
 
 	useDerivedValue(() => {
-		if (!sceneProgress) {
+		if (!topSceneProgress) {
 			screenActivity.set(ScreenActivity.TRANSITIONING_OR_BELOW_TOP);
 			return;
 		}
 
 		if (index < routesLength - activeScreensLimit - 1 || isPreloaded) {
 			screenActivity.set(ScreenActivity.INACTIVE);
-		} else {
-			const outputValue =
-				index === routesLength - 1
+			return;
+		}
+
+		const focusedIndex = optimisticFocusedIndex.value;
+		const topIsClosing =
+			topSceneClosing.get() > 0 && focusedIndex >= 0 && focusedIndex < topIndex;
+
+		if (topIsClosing) {
+			const postCloseActiveStart = Math.max(
+				0,
+				focusedIndex - activeScreensLimit + 1,
+			);
+			const next =
+				index === topIndex
 					? ScreenActivity.ON_TOP
-					: index >= routesLength - activeScreensLimit
+					: index > focusedIndex || index >= postCloseActiveStart
 						? ScreenActivity.TRANSITIONING_OR_BELOW_TOP
 						: ScreenActivity.INACTIVE;
-
-			const v = interpolate(
-				sceneProgress.get(),
-				[0, 1 - EPSILON, 1],
-				[1, 1, outputValue],
-				Extrapolation.CLAMP,
-			);
-
-			const next = Math.trunc(v) ?? ScreenActivity.TRANSITIONING_OR_BELOW_TOP;
 
 			if (next !== screenActivity.get()) {
 				screenActivity.set(next);
 			}
+			return;
+		}
+
+		const outputValue =
+			index === topIndex
+				? ScreenActivity.ON_TOP
+				: index >= routesLength - activeScreensLimit
+					? ScreenActivity.TRANSITIONING_OR_BELOW_TOP
+					: ScreenActivity.INACTIVE;
+
+		const v = interpolate(
+			topSceneProgress.get(),
+			[0, 1 - EPSILON, 1],
+			[1, 1, outputValue],
+			Extrapolation.CLAMP,
+		);
+
+		const next = Math.trunc(v) ?? ScreenActivity.TRANSITIONING_OR_BELOW_TOP;
+
+		if (next !== screenActivity.get()) {
+			screenActivity.set(next);
 		}
 	});
 
@@ -130,12 +152,25 @@ export const NativeScreen = ({
 		};
 	});
 
-	const NativeScreenComponent = !DISABLE_NATIVE_SCREENS
-		? AnimatedNativeScreen
-		: Animated.View;
+	if (DISABLE_NATIVE_SCREENS) {
+		return (
+			<Animated.View
+				ref={screenRef}
+				// Keep a native boundary per screen when falling back to plain views.
+				// Android release builds can otherwise flatten sibling screens together.
+				collapsable={false}
+				style={StyleSheet.absoluteFill}
+				animatedProps={animatedProps}
+			>
+				<LayoutAnchorProvider anchorRef={screenRef}>
+					{children}
+				</LayoutAnchorProvider>
+			</Animated.View>
+		);
+	}
 
 	return (
-		<NativeScreenComponent
+		<AnimatedNativeScreen
 			enabled
 			ref={screenRef}
 			style={StyleSheet.absoluteFill}
@@ -145,6 +180,6 @@ export const NativeScreen = ({
 			<LayoutAnchorProvider anchorRef={screenRef}>
 				{children}
 			</LayoutAnchorProvider>
-		</NativeScreenComponent>
+		</AnimatedNativeScreen>
 	);
 };

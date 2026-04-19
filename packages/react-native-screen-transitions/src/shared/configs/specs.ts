@@ -14,3 +14,11 @@ export const DefaultSnapSpec: WithSpringConfig = {
 	damping: 50,
 	mass: 1,
 };
+
+export const FlingSpec: WithSpringConfig = {
+	damping: 23.5,
+	stiffness: 170,
+	mass: 1,
+	overshootClamping: false,
+	energyThreshold: 6e-9,
+};

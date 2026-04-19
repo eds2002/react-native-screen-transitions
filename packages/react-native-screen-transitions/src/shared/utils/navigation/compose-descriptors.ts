@@ -1,6 +1,4 @@
-interface RouteWithKey {
-	key: string;
-}
+import type { RouteWithKey } from "../../types/stack.types";
 
 export const composeDescriptors = <
 	Route extends RouteWithKey,

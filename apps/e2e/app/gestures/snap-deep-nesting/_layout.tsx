@@ -40,8 +40,10 @@ export default function SnapDeepNestingLayout() {
 							[width, 0, -width * 0.3],
 						);
 						return {
-							contentStyle: {
-								transform: [{ translateX: x }],
+							content: {
+								style: {
+									transform: [{ translateX: x }],
+								},
 							},
 						};
 					},

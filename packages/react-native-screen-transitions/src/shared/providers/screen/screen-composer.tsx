@@ -1,9 +1,10 @@
 import type React from "react";
 import { ScreenContainer } from "../../components/screen-container";
 import { ScreenLifecycle } from "../../components/screen-lifecycle";
-import { ScreenGestureProvider } from "../gestures.provider";
-import { type BaseDescriptor, KeysProvider } from "./keys.provider";
-import { ScreenStylesProvider } from "./styles.provider";
+import { ScreenGestureProvider } from "../gestures";
+import { ScreenAnimationProvider } from "./animation";
+import { type BaseDescriptor, DescriptorsProvider } from "./descriptors";
+import { ScreenStylesProvider } from "./styles";
 
 type Props<TDescriptor extends BaseDescriptor> = {
 	previous?: TDescriptor;
@@ -19,14 +20,16 @@ export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 	children,
 }: Props<TDescriptor>) {
 	return (
-		<ScreenLifecycle current={current} previous={previous}>
-			<KeysProvider previous={previous} current={current} next={next}>
+		<DescriptorsProvider previous={previous} current={current} next={next}>
+			<ScreenLifecycle>
 				<ScreenGestureProvider>
-					<ScreenStylesProvider>
-						<ScreenContainer>{children}</ScreenContainer>
-					</ScreenStylesProvider>
+					<ScreenAnimationProvider>
+						<ScreenStylesProvider>
+							<ScreenContainer>{children}</ScreenContainer>
+						</ScreenStylesProvider>
+					</ScreenAnimationProvider>
 				</ScreenGestureProvider>
-			</KeysProvider>
-		</ScreenLifecycle>
+			</ScreenLifecycle>
+		</DescriptorsProvider>
 	);
 }

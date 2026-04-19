@@ -1,10 +1,10 @@
 import {
 	createNavigatorFactory,
-	type EventArg,
+	NavigationContainer,
+	NavigationIndependentTree,
 	type NavigatorTypeBagBase,
 	type ParamListBase,
 	type StackActionHelpers,
-	StackActions,
 	type StackNavigationState,
 	StackRouter,
 	type StackRouterOptions,
@@ -13,15 +13,28 @@ import {
 	useNavigationBuilder,
 } from "@react-navigation/native";
 import * as React from "react";
+import { useTabPressReset } from "../../shared/hooks/navigation/use-tab-press-reset";
 import { StackView } from "../components/stack-view";
 import type {
+	BlankStackFactoryOptions,
 	BlankStackNavigationEventMap,
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp,
 	BlankStackNavigatorProps,
 } from "../types";
 
-function BlankStackNavigator({
+type BlankStackNavigatorInnerProps = Omit<
+	BlankStackNavigatorProps,
+	keyof BlankStackFactoryOptions
+> & {
+	DISABLE_NATIVE_SCREENS?: boolean;
+	DISABLE_NATIVE_SCREEN_CONTAINER?: boolean;
+};
+
+const BlankStackContext = React.createContext<boolean>(false);
+BlankStackContext.displayName = "BlankStackContext";
+
+function BlankStackNavigatorInner({
 	id,
 	initialRouteName,
 	children,
@@ -29,8 +42,10 @@ function BlankStackNavigator({
 	screenListeners,
 	screenOptions,
 	screenLayout,
+	DISABLE_NATIVE_SCREENS,
+	DISABLE_NATIVE_SCREEN_CONTAINER,
 	...rest
-}: BlankStackNavigatorProps) {
+}: BlankStackNavigatorInnerProps) {
 	const { state, describe, descriptors, navigation, NavigationContent } =
 		useNavigationBuilder<
 			StackNavigationState<ParamListBase>,
@@ -48,36 +63,14 @@ function BlankStackNavigator({
 			screenLayout,
 		});
 
-	React.useEffect(
-		() =>
-			// @ts-expect-error: there may not be a tab navigator in parent
-			navigation?.addListener?.("tabPress", (e: any) => {
-				const isFocused = navigation.isFocused();
-
-				// Run the operation in the next frame so we're sure all listeners have been run
-				// This is necessary to know if preventDefault() has been called
-				requestAnimationFrame(() => {
-					if (
-						state.index > 0 &&
-						isFocused &&
-						!(e as EventArg<"tabPress", true>).defaultPrevented
-					) {
-						// When user taps on already focused tab and we're inside the tab,
-						// reset the stack to replicate native behaviour
-						navigation.dispatch({
-							...StackActions.popToTop(),
-							target: state.key,
-						});
-					}
-				});
-			}),
-		[navigation, state.index, state.key],
-	);
+	useTabPressReset(navigation, state.index, state.key);
 
 	return (
 		<NavigationContent>
 			<StackView
 				{...rest}
+				DISABLE_NATIVE_SCREENS={DISABLE_NATIVE_SCREENS}
+				DISABLE_NATIVE_SCREEN_CONTAINER={DISABLE_NATIVE_SCREEN_CONTAINER}
 				state={state}
 				navigation={navigation}
 				descriptors={descriptors}
@@ -87,24 +80,81 @@ function BlankStackNavigator({
 	);
 }
 
+function BlankStackNavigator({
+	independent = false,
+	enableNativeScreens = true,
+	...rest
+}: BlankStackNavigatorProps) {
+	const isNested = React.useContext(BlankStackContext);
+
+	const navigator = (
+		<BlankStackNavigatorInner
+			{...rest}
+			{...(!enableNativeScreens && {
+				DISABLE_NATIVE_SCREENS: true,
+			})}
+			DISABLE_NATIVE_SCREEN_CONTAINER={independent}
+		/>
+	);
+
+	if (!independent || isNested) {
+		return navigator;
+	}
+
+	return (
+		<NavigationIndependentTree>
+			<NavigationContainer>
+				<BlankStackContext.Provider value={true}>
+					{navigator}
+				</BlankStackContext.Provider>
+			</NavigationContainer>
+		</NavigationIndependentTree>
+	);
+}
+
+BlankStackNavigator.displayName = "BlankStackNavigator";
+
+type BlankStackTypeBag<
+	ParamList extends ParamListBase,
+	NavigatorID extends string | undefined,
+> = {
+	ParamList: ParamList;
+	NavigatorID: NavigatorID;
+	State: StackNavigationState<ParamList>;
+	ScreenOptions: BlankStackNavigationOptions;
+	EventMap: BlankStackNavigationEventMap;
+	NavigationList: {
+		[RouteName in keyof ParamList]: BlankStackNavigationProp<
+			ParamList,
+			RouteName,
+			NavigatorID
+		>;
+	};
+	Navigator: typeof BlankStackNavigator;
+};
+
+/**
+ * Creates a blank stack navigator with gesture-driven transitions.
+ *
+ * By default, blank stack behaves like the existing top-level blank stack:
+ * it participates in the current navigation tree and uses native screen
+ * primitives on supported native platforms.
+ *
+ * Blank stack also accepts navigator-specific props for embedded-flow behavior:
+ * - `independent: true` creates an isolated navigator for nested flows
+ * - `enableNativeScreens: false` renders the stack with regular views instead
+ *   of `react-native-screens`
+ *
+ * In the dynamic API, pass these to `<Stack.Navigator />`.
+ * In the static API, pass them in the same config object as `screens`.
+ */
 export function createBlankStackNavigator<
 	const ParamList extends ParamListBase,
 	const NavigatorID extends string | undefined = undefined,
-	const TypeBag extends NavigatorTypeBagBase = {
-		ParamList: ParamList;
-		NavigatorID: NavigatorID;
-		State: StackNavigationState<ParamList>;
-		ScreenOptions: BlankStackNavigationOptions;
-		EventMap: BlankStackNavigationEventMap;
-		NavigationList: {
-			[RouteName in keyof ParamList]: BlankStackNavigationProp<
-				ParamList,
-				RouteName,
-				NavigatorID
-			>;
-		};
-		Navigator: typeof BlankStackNavigator;
-	},
+	const TypeBag extends NavigatorTypeBagBase = BlankStackTypeBag<
+		ParamList,
+		NavigatorID
+	>,
 	const Config extends StaticConfig<TypeBag> = StaticConfig<TypeBag>,
 >(config?: Config): TypedNavigator<TypeBag, Config> {
 	return createNavigatorFactory(BlankStackNavigator)(config);

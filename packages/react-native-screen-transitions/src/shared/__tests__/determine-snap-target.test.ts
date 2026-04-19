@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { determineSnapTarget } from "../utils/gesture/determine-snap-target";
+import { determineSnapTarget } from "../providers/gestures/helpers/gesture-targets";
 
 describe("determineSnapTarget", () => {
 	const dimension = 800; // screen height

@@ -1,18 +1,22 @@
 export { FALSE, TRUE } from "../constants";
 export type {
+	AnimatedViewStyle,
 	AnimationConfig,
-	OverlayInterpolationProps,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionState,
 	TransitionInterpolatedStyle,
+	TransitionSlotStyle,
 	TransitionSpec,
 } from "./animation.types";
 export type {
-	BoundEntry,
 	BoundsAccessor,
-	BoundsLink,
 	BoundsMethod,
+	BoundsNavigationAccessor,
+	BoundsNavigationZoomOpacityRange,
+	BoundsNavigationZoomOpacityRanges,
+	BoundsNavigationZoomOptions,
+	BoundsNavigationZoomStyle,
 } from "./bounds.types";
 export type {
 	ActivationArea,
@@ -21,10 +25,7 @@ export type {
 	GestureValues,
 	SideActivation,
 } from "./gesture.types";
-export type {
-	OverlayMode,
-	OverlayProps,
-} from "./overlay.types";
+export type { OverlayProps } from "./overlay.types";
 export type {
 	Layout,
 	ScreenKey,

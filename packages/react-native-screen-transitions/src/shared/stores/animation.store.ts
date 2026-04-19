@@ -1,49 +1,46 @@
-import { makeMutable, type SharedValue } from "react-native-reanimated";
-import type { ScreenKey } from "../types/screen.types";
+import {
+	cancelAnimation,
+	makeMutable,
+	type SharedValue,
+} from "react-native-reanimated";
+import { createStore } from "../utils/create-store";
 
 export type AnimationStoreMap = {
 	progress: SharedValue<number>;
+	willAnimate: SharedValue<number>;
 	animating: SharedValue<number>;
 	closing: SharedValue<number>;
 	entering: SharedValue<number>;
-	targetProgress: SharedValue<number>;
+	settled: SharedValue<number>;
+	logicallySettled: SharedValue<number>;
 };
 
-const store: Record<ScreenKey, AnimationStoreMap> = {};
-
-const ensure = (key: ScreenKey) => {
-	let bag = store[key];
-	if (!bag) {
-		bag = {
-			progress: makeMutable(0),
-			closing: makeMutable(0),
-			animating: makeMutable(0),
-			entering: makeMutable(1),
-			targetProgress: makeMutable(1),
-		} satisfies AnimationStoreMap;
-		store[key] = bag;
-	}
-	return bag;
-};
-
-function getAnimation(
-	key: ScreenKey,
-	type: keyof AnimationStoreMap,
-): SharedValue<number> {
-	return ensure(key)[type];
+function createAnimationBag(): AnimationStoreMap {
+	return {
+		progress: makeMutable(0),
+		willAnimate: makeMutable(0),
+		closing: makeMutable(0),
+		animating: makeMutable(0),
+		entering: makeMutable(0),
+		settled: makeMutable(1),
+		logicallySettled: makeMutable(1),
+	};
 }
 
-function getAll(key: ScreenKey) {
-	return ensure(key);
-}
-
-function clear(routeKey: ScreenKey) {
-	"worklet";
-	delete store[routeKey];
-}
-
-export const AnimationStore = {
-	getAnimation,
-	clear,
-	getAll,
-};
+/**
+ * Route-keyed screen transition state for the public animation lifecycle. These
+ * shared values track the current progress, whether a transition is about to
+ * begin, and whether a screen is entering, closing, or actively animating.
+ */
+export const AnimationStore = createStore<AnimationStoreMap>({
+	createBag: createAnimationBag,
+	disposeBag: (bag) => {
+		cancelAnimation(bag.progress);
+		cancelAnimation(bag.willAnimate);
+		cancelAnimation(bag.animating);
+		cancelAnimation(bag.closing);
+		cancelAnimation(bag.entering);
+		cancelAnimation(bag.settled);
+		cancelAnimation(bag.logicallySettled);
+	},
+});

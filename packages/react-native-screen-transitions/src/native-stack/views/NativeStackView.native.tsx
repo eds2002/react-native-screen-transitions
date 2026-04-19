@@ -36,6 +36,7 @@ import {
 	withDirectStack,
 } from "../../shared/providers/stack/direct.provider";
 import { StackType } from "../../shared/types/stack.types";
+import { isFabric } from "../../shared/utils/platform";
 import type { NativeStackDescriptor } from "../types";
 import { debounce } from "../utils/debounce";
 import { getModalRouteKeys } from "../utils/getModalRoutesKeys";
@@ -45,10 +46,6 @@ import { useInvalidPreventRemoveError } from "../utils/useInvalidPreventRemoveEr
 import { useHeaderConfigProps } from "./useHeaderConfigProps";
 
 const ANDROID_DEFAULT_HEADER_HEIGHT = 56;
-
-function isFabric() {
-	return "nativeFabricUIManager" in global;
-}
 
 type SceneViewProps = {
 	index: number;

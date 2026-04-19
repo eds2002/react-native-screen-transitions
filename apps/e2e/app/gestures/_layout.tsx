@@ -38,8 +38,10 @@ export default function GesturesLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [-height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},
@@ -63,8 +65,10 @@ export default function GesturesLayout() {
 						"worklet";
 						const y = interpolate(progress, [0, 1], [-height, 0], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }],
+							content: {
+								style: {
+									transform: [{ translateY: y }],
+								},
 							},
 						};
 					},
@@ -106,6 +110,10 @@ export default function GesturesLayout() {
 			{/* ScrollView Examples */}
 			<BlankStack.Screen
 				name="scroll-direction-propagation"
+				options={{ ...Transition.Presets.SlideFromBottom() }}
+			/>
+			<BlankStack.Screen
+				name="scroll-direction-propagation-horizontal"
 				options={{ ...Transition.Presets.SlideFromBottom() }}
 			/>
 			<BlankStack.Screen

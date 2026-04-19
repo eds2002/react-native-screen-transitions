@@ -4,7 +4,12 @@ import {
 	interpolate,
 	interpolateColor,
 } from "react-native-reanimated";
+import {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "../constants";
 import type { ScreenTransitionConfig } from "../types/screen.types";
+import { normalizeInterpolatedStyle } from "../utils/normalize-interpolated-style";
 import { DefaultSpec } from "./specs";
 
 const platform = Platform.OS;
@@ -28,8 +33,10 @@ export const SlideFromTop = (
 			const y = interpolate(progress, [0, 1, 2], [-height, 0, height]);
 
 			return {
-				contentStyle: {
-					transform: [{ translateY: y }],
+				content: {
+					style: {
+						transform: [{ translateY: y }],
+					},
 				},
 			};
 		},
@@ -67,9 +74,11 @@ export const ZoomIn = (
 			);
 
 			return {
-				contentStyle: {
-					transform: [{ scale }],
-					opacity,
+				content: {
+					style: {
+						transform: [{ scale }],
+						opacity,
+					},
 				},
 			};
 		},
@@ -100,8 +109,10 @@ export const SlideFromBottom = (
 			const y = interpolate(progress, [0, 1, 2], [height, 0, -height]);
 
 			return {
-				contentStyle: {
-					transform: [{ translateY: y }],
+				content: {
+					style: {
+						transform: [{ translateY: y }],
+					},
 				},
 			};
 		},
@@ -129,29 +140,29 @@ export const DraggableCard = (
 
 			/** Vertical */
 			const translateY = interpolate(
-				current.gesture.normalizedY,
+				current.gesture.normY,
 				[-1, 1],
 				[-screen.height * 0.5, screen.height * 0.5],
-				"clamp",
 			);
 
 			/** Horizontal */
 			const translateX = interpolate(
-				current.gesture.normalizedX,
+				current.gesture.normX,
 				[-1, 1],
 				[-screen.width * 0.5, screen.width * 0.5],
-				"clamp",
 			);
 
 			return {
-				contentStyle: {
-					transform: [{ scale }, { translateY: translateY }, { translateX }],
+				content: {
+					style: {
+						transform: [{ scale }, { translateY: translateY }, { translateX }],
+					},
 				},
 			};
 		},
 		transitionSpec: {
-			open: DefaultSpec,
-			close: DefaultSpec,
+			open: { ...DefaultSpec, overshootClamping: false },
+			close: { ...DefaultSpec, overshootClamping: false },
 		},
 		...config,
 	};
@@ -184,14 +195,14 @@ export const ElasticCard = (
 			const maxElasticityX = screen.width * (config.elasticFactor ?? 0.5);
 			const maxElasticityY = screen.height * (config.elasticFactor ?? 0.5);
 			const translateX = interpolate(
-				current.gesture.normalizedX,
+				current.gesture.normX,
 				[-1, 0, 1],
 				[-maxElasticityX, 0, maxElasticityX],
 				"clamp",
 			);
 
 			const translateY = interpolate(
-				current.gesture.normalizedY,
+				current.gesture.normY,
 				[-1, 0, 1],
 				[-maxElasticityY, 0, maxElasticityY],
 				"clamp",
@@ -205,17 +216,21 @@ export const ElasticCard = (
 			);
 
 			return {
-				contentStyle: {
-					transform: [{ scale }, { translateX }, { translateY }],
+				content: {
+					style: {
+						transform: [{ scale }, { translateX }, { translateY }],
+					},
 				},
-				backdropStyle: {
-					backgroundColor: !next ? overlayColor : "rgba(0,0,0,0)",
+				backdrop: {
+					style: {
+						backgroundColor: !next ? overlayColor : "rgba(0,0,0,0)",
+					},
 				},
 			};
 		},
 		transitionSpec: {
-			open: DefaultSpec,
-			close: DefaultSpec,
+			open: { ...DefaultSpec, overshootClamping: false },
+			close: { ...DefaultSpec, overshootClamping: false },
 		},
 		...config,
 	};
@@ -244,10 +259,9 @@ export const SharedIGImage = ({
 		}) => {
 			"worklet";
 
-			const normX = active.gesture.normalizedX;
-			const normY = active.gesture.normalizedY;
+			const normX = active.gesture.normX;
+			const normY = active.gesture.normY;
 
-			// animations for both bounds
 			const dragX = interpolate(
 				normX,
 				[-1, 0, 1],
@@ -263,72 +277,88 @@ export const SharedIGImage = ({
 			const dragXScale = interpolate(normX, [0, 1], [1, 0.8]);
 			const dragYScale = interpolate(normY, [0, 1], [1, 0.8]);
 
-			const boundValues = bounds({
-				id: sharedBoundTag,
-				method: focused ? "content" : "transform",
-				scaleMode: "uniform",
-				raw: true,
-			});
-
-			// focused specific animations
-			if (focused) {
-				const maskedValues = bounds({
+			const navigationStyles =
+				bounds({
 					id: sharedBoundTag,
-					space: "absolute",
-					target: "fullscreen",
-					method: "size",
-					raw: true,
-				});
+				}).navigation.zoom() ?? {};
 
+			// Extract raw style values from bounds result (legacy format)
+			const sourceStyle = navigationStyles[sharedBoundTag] as
+				| Record<string, unknown>
+				| undefined;
+			const containerStyle = navigationStyles[
+				NAVIGATION_MASK_CONTAINER_STYLE_ID
+			] as Record<string, unknown> | undefined;
+			const maskStyle = navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] as
+				| Record<string, unknown>
+				| undefined;
+
+			// Normalize bounds result to new slot format for spreading
+			const normalizedNav = normalizeInterpolatedStyle(
+				navigationStyles as Record<string, any>,
+			).result;
+
+			if (focused) {
 				return {
-					backdropStyle: {
-						backgroundColor: "black",
-						opacity: interpolate(progress, [0, 1], [0, 0.5]),
+					...normalizedNav,
+					backdrop: {
+						style: {
+							backgroundColor: "black",
+							opacity: interpolate(progress, [0, 1], [0, 0.5]),
+						},
 					},
-					contentStyle: {
-						transform: [
-							{ translateX: dragX },
-							{ translateY: dragY },
-							{ scale: dragXScale },
-							{ scale: dragYScale },
-						],
+					content: {
+						style: {
+							transform: [
+								{ translateX: dragX },
+								{ translateY: dragY },
+								{ scale: dragXScale },
+								{ scale: dragYScale },
+							],
+						},
 					},
-
-					_ROOT_CONTAINER: {
-						transform: [
-							{ translateX: boundValues.translateX || 0 },
-							{ translateY: boundValues.translateY || 0 },
-							//@ts-expect-error
-							{ scale: boundValues.scale || 1 },
-						],
-					},
-					_ROOT_MASKED: {
-						width: maskedValues.width,
-						height: maskedValues.height,
-						transform: [
-							{ translateX: maskedValues.translateX || 0 },
-							{ translateY: maskedValues.translateY || 0 },
-						],
-						borderRadius: interpolate(progress, [0, 1], [0, 24]),
-					},
+					[NAVIGATION_MASK_CONTAINER_STYLE_ID]: containerStyle
+						? {
+								style: {
+									...containerStyle,
+									transform: [
+										...(((containerStyle.transform as any[]) ?? []) as any[]),
+										{ translateX: dragX * 0.2 },
+										{ translateY: dragY * 0.2 },
+									],
+								},
+							}
+						: undefined,
+					[NAVIGATION_MASK_ELEMENT_STYLE_ID]: maskStyle
+						? {
+								style: {
+									...maskStyle,
+									borderRadius: interpolate(progress, [0, 1], [0, 24]),
+								},
+							}
+						: undefined,
 				};
 			}
 
 			return {
-				contentStyle: {
-					pointerEvents: current.gesture.isDismissing ? "none" : "auto",
+				...normalizedNav,
+				content: {
+					style: {
+						...(normalizedNav.content?.style ?? {}),
+						pointerEvents: current.gesture.dismissing ? "none" : "auto",
+					},
 				},
 				[sharedBoundTag]: {
-					transform: [
-						{ translateX: dragX || 0 },
-						{ translateY: dragY || 0 },
-						{ translateX: boundValues.translateX || 0 },
-						{ translateY: boundValues.translateY || 0 },
-						{ scaleX: boundValues.scaleX || 1 },
-						{ scaleY: boundValues.scaleY || 1 },
-						{ scale: dragXScale },
-						{ scale: dragYScale },
-					],
+					style: {
+						...(sourceStyle ?? {}),
+						transform: [
+							{ translateX: dragX || 0 },
+							{ translateY: dragY || 0 },
+							...(((sourceStyle?.transform as any[]) ?? []) as any[]),
+							{ scale: dragXScale },
+							{ scale: dragYScale },
+						],
+					},
 				},
 			};
 		},
@@ -375,8 +405,8 @@ export const SharedAppleMusic = ({
 		}) => {
 			"worklet";
 
-			const normX = active.gesture.normalizedX;
-			const normY = active.gesture.normalizedY;
+			const normX = active.gesture.normX;
+			const normY = active.gesture.normY;
 			const initialDirection = active.gesture.direction;
 
 			/**
@@ -469,33 +499,39 @@ export const SharedAppleMusic = ({
 				};
 
 				return {
-					contentStyle: {
-						pointerEvents: current.animating ? "none" : "auto",
-						transform: [
-							{ translateX: dragX || 0 },
-							{ translateY: dragY || 0 },
-							{ scale: dragXScale },
-							{ scale: dragYScale },
-						],
-						opacity,
-						...(platform === "ios" ? IOSShadowStyle : AndroidShadowStyle),
+					content: {
+						style: {
+							pointerEvents: current.animating ? "none" : "auto",
+							transform: [
+								{ translateX: dragX || 0 },
+								{ translateY: dragY || 0 },
+								{ scale: dragXScale },
+								{ scale: dragYScale },
+							],
+							opacity,
+							...(platform === "ios" ? IOSShadowStyle : AndroidShadowStyle),
+						},
 					},
 					_ROOT_CONTAINER: {
-						transform: [
-							{ translateX: boundValues.translateX || 0 },
-							{ translateY: boundValues.translateY || 0 },
-							//@ts-expect-error
-							{ scale: boundValues.scale || 1 },
-						],
+						style: {
+							transform: [
+								{ translateX: boundValues.translateX || 0 },
+								{ translateY: boundValues.translateY || 0 },
+								//@ts-expect-error
+								{ scale: boundValues.scale || 1 },
+							],
+						},
 					},
 					_ROOT_MASKED: {
-						width: maskedValues.width,
-						height: maskedValues.height,
-						transform: [
-							{ translateX: maskedValues.translateX || 0 },
-							{ translateY: maskedValues.translateY || 0 },
-						],
-						borderRadius: interpolate(progress, [0, 1], [0, 24]),
+						style: {
+							width: maskedValues.width,
+							height: maskedValues.height,
+							transform: [
+								{ translateX: maskedValues.translateX || 0 },
+								{ translateY: maskedValues.translateY || 0 },
+							],
+							borderRadius: interpolate(progress, [0, 1], [0, 24]),
+						},
 					},
 				};
 			}
@@ -515,22 +551,26 @@ export const SharedAppleMusic = ({
 
 			return {
 				[sharedBoundTag]: {
-					transform: [
-						{ translateX: dragX || 0 },
-						{ translateY: dragY || 0 },
-						{ translateX: scaledBoundTranslateX },
-						{ translateY: scaledBoundTranslateY },
-						{ scale: dragXScale },
-						{ scale: dragYScale },
-						{ scaleX: scaledBoundScaleX },
-						{ scaleY: scaledBoundScaleY },
-					],
-					opacity,
-					zIndex: current.animating ? 999 : -1,
-					position: "relative",
+					style: {
+						transform: [
+							{ translateX: dragX || 0 },
+							{ translateY: dragY || 0 },
+							{ translateX: scaledBoundTranslateX },
+							{ translateY: scaledBoundTranslateY },
+							{ scale: dragXScale },
+							{ scale: dragYScale },
+							{ scaleX: scaledBoundScaleX },
+							{ scaleY: scaledBoundScaleY },
+						],
+						opacity,
+						zIndex: current.animating ? 999 : -1,
+						position: "relative",
+					},
 				},
-				contentStyle: {
-					transform: [{ scale: contentScale }],
+				content: {
+					style: {
+						transform: [{ scale: contentScale }],
+					},
 				},
 			};
 		},
@@ -578,23 +618,27 @@ export const SharedXImage = ({
 		}) => {
 			"worklet";
 
-			// twitter doesn't animate the unfocused screen
 			if (!focused) return {};
 
-			const boundValues = bounds({
-				id: sharedBoundTag,
-				method: "transform",
-				raw: true,
-			});
+			const navigationStyles =
+				bounds({
+					id: sharedBoundTag,
+				}).navigation.zoom() ?? {};
+			const maskStyle = navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] as
+				| Record<string, unknown>
+				| undefined;
 
-			// content styles
+			// Normalize bounds result to new slot format for spreading
+			const normalizedNav = normalizeInterpolatedStyle(
+				navigationStyles as Record<string, any>,
+			).result;
+
 			const dragY = interpolate(
-				current.gesture.normalizedY,
+				current.gesture.normY,
 				[-1, 0, 1],
 				[-screen.height, 0, screen.height],
 			);
 
-			// dynamically changes direction based on the drag direction
 			const contentY = interpolate(
 				progress,
 				[0, 1],
@@ -602,40 +646,33 @@ export const SharedXImage = ({
 			);
 
 			const overlayClr = interpolateColor(
-				current.progress - Math.abs(current.gesture.normalizedY),
+				current.progress - Math.abs(current.gesture.normY),
 				[0, 1],
 				["rgba(0,0,0,0)", "rgba(0,0,0,1)"],
 			);
 
 			const borderRadius = interpolate(current.progress, [0, 1], [12, 0]);
 
-			// bound styles - only enter animation
-			const x = !current.closing ? boundValues.translateX : 0;
-			const y = !current.closing ? boundValues.translateY : 0;
-			const scaleX = !current.closing ? boundValues.scaleX : 1;
-			const scaleY = !current.closing ? boundValues.scaleY : 1;
-
 			return {
-				[sharedBoundTag]: {
-					transform: [
-						{
-							translateX: x,
-						},
-						{
-							translateY: y,
-						},
-						{ scaleX: scaleX },
-						{ scaleY: scaleY },
-					],
-					borderRadius,
-					overflow: "hidden",
+				...normalizedNav,
+				[NAVIGATION_MASK_ELEMENT_STYLE_ID]: maskStyle
+					? {
+							style: {
+								...maskStyle,
+								borderRadius,
+							},
+						}
+					: undefined,
+				content: {
+					style: {
+						transform: [{ translateY: contentY }, { translateY: dragY }],
+						pointerEvents: current.animating ? "none" : "auto",
+					},
 				},
-				contentStyle: {
-					transform: [{ translateY: contentY }, { translateY: dragY }],
-					pointerEvents: current.animating ? "none" : "auto",
-				},
-				backdropStyle: {
-					backgroundColor: overlayClr,
+				backdrop: {
+					style: {
+						backgroundColor: overlayClr,
+					},
 				},
 			};
 		},

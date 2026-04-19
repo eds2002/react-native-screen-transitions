@@ -86,12 +86,12 @@ describe("computeContentTransformGeometry", () => {
 			entering: true,
 			dimensions,
 			anchor: "center",
-			// match mode uses the average of sx and sy
+			// match mode uses the larger scale (cover strategy) so content fills the mask
 			scaleMode: "match",
 		});
 
-		// sx = 100/200 = 0.5, sy = 100/50 = 2 -> (0.5 + 2) / 2 = 1.25
-		expect(result.s).toBeCloseTo(1.25, 5);
+		// sx = 100/200 = 0.5, sy = 100/50 = 2 -> max(0.5, 2) = 2
+		expect(result.s).toBeCloseTo(2, 5);
 	});
 
 	it("uniform chooses max scale when aspect ratios are similar", () => {

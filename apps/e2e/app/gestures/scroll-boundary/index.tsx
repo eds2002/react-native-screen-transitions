@@ -3,10 +3,16 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function ScrollBoundaryIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="ScrollView Boundary"
 				subtitle="Dismiss only works at scroll top"
@@ -26,9 +32,13 @@ export default function ScrollBoundaryIndex() {
 				note="The ScrollView must be at its boundary (scrollY = 0 for vertical) before yielding to the gesture. If mid-scroll, the ScrollView handles the gesture instead."
 			/>
 
-			<View style={styles.ruleBox}>
-				<Text style={styles.ruleTitle}>The Golden Rule</Text>
-				<Text style={styles.ruleText}>
+			<View
+				style={[styles.ruleBox, { backgroundColor: theme.noteBox }]}
+			>
+				<Text style={[styles.ruleTitle, { color: theme.noteText }]}>
+					The Golden Rule
+				</Text>
+				<Text style={[styles.ruleText, { color: theme.textSecondary }]}>
 					A ScrollView must be at its boundary before it yields control to
 					gestures.
 				</Text>
@@ -36,10 +46,21 @@ export default function ScrollBoundaryIndex() {
 
 			<View style={styles.actions}>
 				<Pressable
-					style={styles.button}
+					style={({ pressed }) => [
+						styles.button,
+						{
+							backgroundColor: pressed
+								? theme.actionButtonPressed
+								: theme.actionButton,
+						},
+					]}
 					onPress={() => router.push("/gestures/scroll-boundary/screen")}
 				>
-					<Text style={styles.buttonText}>Open Screen with ScrollView</Text>
+					<Text
+						style={[styles.buttonText, { color: theme.actionButtonText }]}
+					>
+						Open Screen with ScrollView
+					</Text>
 				</Pressable>
 			</View>
 		</SafeAreaView>
@@ -49,25 +70,19 @@ export default function ScrollBoundaryIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	ruleBox: {
 		margin: 16,
-		backgroundColor: "rgba(255, 193, 7, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255, 193, 7, 0.3)",
 	},
 	ruleTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#ffc107",
 		marginBottom: 8,
 	},
 	ruleText: {
 		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.8)",
 		lineHeight: 20,
 	},
 	actions: {
@@ -75,13 +90,11 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#4a9eff",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#fff",
 		fontSize: 16,
 		fontWeight: "600",
 	},

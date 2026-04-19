@@ -10,7 +10,7 @@ import {
  * Minimal interface for ancestor context needed for ownership resolution.
  * This allows the function to be used without importing the full GestureContextType.
  */
-export interface AncestorClaimsContext {
+interface AncestorClaimsContext {
 	claimedDirections: ClaimedDirections;
 	ancestorContext: AncestorClaimsContext | null;
 }
@@ -71,40 +71,4 @@ function resolveDirectionOwnership(
 
 	// No one claims this direction
 	return "none";
-}
-
-/**
- * Finds the nearest ancestor (or self if isCurrentOwner) that claims any direction.
- * Used for setting up native gesture relationships.
- *
- * @param selfClaimsAny - Whether the current screen claims any direction
- * @param ancestorContext - The ancestor context chain
- * @returns The nearest context that claims a direction, or null
- */
-export function findNearestOwner(
-	selfClaimsAny: boolean,
-	ancestorContext: AncestorClaimsContext | null,
-): AncestorClaimsContext | null {
-	// If self claims any direction, self is the nearest owner
-	// (but we return null since this is used for finding ANCESTOR owners)
-	if (selfClaimsAny) {
-		return null;
-	}
-
-	// Walk ancestors looking for one that claims any direction
-	let ancestor = ancestorContext;
-	while (ancestor) {
-		const claims = ancestor.claimedDirections;
-		if (
-			claims?.vertical ||
-			claims?.["vertical-inverted"] ||
-			claims?.horizontal ||
-			claims?.["horizontal-inverted"]
-		) {
-			return ancestor;
-		}
-		ancestor = ancestor.ancestorContext;
-	}
-
-	return null;
 }

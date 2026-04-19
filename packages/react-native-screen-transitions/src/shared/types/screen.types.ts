@@ -4,7 +4,7 @@ import type {
 	TransitionSpec,
 } from "./animation.types";
 import type { GestureActivationArea, GestureDirection } from "./gesture.types";
-import type { OverlayMode, OverlayProps } from "./overlay.types";
+import type { OverlayProps } from "./overlay.types";
 
 export type Layout = {
 	width: number;
@@ -12,6 +12,17 @@ export type Layout = {
 };
 
 export type ScreenKey = string;
+export type SheetScrollGestureBehavior =
+	| "expand-and-collapse"
+	| "collapse-only";
+
+/**
+ * A single snap point value. Either a fraction of screen height (0–1) or
+ * `'auto'` to snap to the intrinsic height of the screen content.
+ */
+export type SnapPoint = number | "auto";
+
+export type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 
 export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	/**
@@ -27,10 +38,13 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * </Transition.View>
 	 *
 	 * // In your screenStyleInterpolator:
-	 * return {
-	 *   'hero-image': {
-	 *     opacity: interpolate(progress, [0, 1], [0, 1]),
-	 *     transform: [{ scale: interpolate(progress, [0, 1], [0.8, 1]) }]
+	 * screenStyleInterpolator: ({ progress }) => {
+	 *   "worklet";
+	 *   return {
+	 *     'hero-image': {
+	 *       opacity: interpolate(progress, [0, 1], [0, 1]),
+	 *       transform: [{ scale: interpolate(progress, [0, 1], [0.8, 1]) }]
+	 *     }
 	 *   }
 	 * }
 	 */
@@ -68,6 +82,9 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 export type ScreenTransitionConfig = {
 	/**
 	 * The user-provided function to calculate styles based on animation progress.
+	 *
+	 * Return `null`, `undefined`, or `{}` to apply no transition styles for the
+	 * current frame.
 	 */
 	screenStyleInterpolator?: ScreenStyleInterpolator;
 
@@ -75,6 +92,21 @@ export type ScreenTransitionConfig = {
 	 * The Reanimated animation config for opening and closing transitions.
 	 */
 	transitionSpec?: TransitionSpec;
+
+	/**
+	 * Pre-mounts the masked view wrapper so navigation bounds masking
+	 * (e.g. `bounds().navigation.zoom()`) is ready from the first frame.
+	 *
+	 * Requires `@react-native-masked-view/masked-view` to be installed.
+	 *
+	 * @default false
+	 */
+	navigationMaskEnabled?: boolean;
+
+	/**
+	 * @deprecated Use `navigationMaskEnabled` instead.
+	 */
+	maskEnabled?: boolean;
 
 	/**
 	 * Controls whether swipe-to-dismiss is enabled.
@@ -103,6 +135,28 @@ export type ScreenTransitionConfig = {
 	snapVelocityImpact?: number;
 
 	/**
+	 * Multiplies gesture release velocity used for spring animation energy.
+	 *
+	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
+	 * or snap target selection (`snapVelocityImpact`). It only changes how fast
+	 * the post-release animation feels.
+	 *
+	 * @default 1
+	 */
+	gestureReleaseVelocityScale?: number;
+
+	/**
+	 * Caps the absolute post-scale release velocity used by spring animations.
+	 *
+	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
+	 * or snap target selection (`snapVelocityImpact`). It only bounds release
+	 * animation intensity after `gestureReleaseVelocityScale` is applied.
+	 *
+	 * @default 3.2
+	 */
+	gestureReleaseVelocityMax?: number;
+
+	/**
 	 * Distance threshold for gesture recognition throughout the screen.
 	 */
 	gestureResponseDistance?: number;
@@ -127,19 +181,8 @@ export type ScreenTransitionConfig = {
 
 	/**
 	 * Function that returns a React Element to display as an overlay.
-	 * For container overlays (overlayMode: 'container'), use ContainerOverlayProps which includes children.
 	 */
 	overlay?: (props: OverlayProps) => React.ReactNode;
-
-	/**
-	 * How the overlay is positioned relative to screens.
-	 *
-	 * @deprecated This option is no longer needed. Overlays now always render as "float" mode
-	 * (single persistent overlay above all screens). For per-screen overlays, render an
-	 * absolute-positioned view directly in your screen component and use `useScreenAnimation()`
-	 * to access animation values.
-	 */
-	overlayMode?: OverlayMode;
 
 	/**
 	 * Whether to show the overlay. The overlay is shown by default when `overlay` is provided.
@@ -160,15 +203,33 @@ export type ScreenTransitionConfig = {
 	experimental_enableHighRefreshRate?: boolean;
 
 	/**
-	 * Describes heights where a screen can rest, as fractions of screen height.
-	 * Pass an array of ascending values from 0 to 1.
+	 * Animates the first screen in a navigator from its closed state on initial mount
+	 * instead of snapping directly to its settled progress.
+	 *
+	 * Useful for launch/onboarding flows where the initial screen should participate
+	 * in the same transition system as pushed screens.
+	 *
+	 * @experimental This API may change in future versions.
+	 * @default false
+	 */
+	experimental_animateOnInitialMount?: boolean;
+
+	/**
+	 * Describes heights where a screen can rest, as fractions of screen height,
+	 * or `'auto'` to snap to the intrinsic height of the screen content.
+	 *
+	 * Pass an array of ascending values from 0 to 1, or `'auto'`.
+	 * The `'auto'` value measures the content's natural height after layout and
+	 * converts it to the equivalent fraction of the screen height.
 	 *
 	 * @example
-	 * snapPoints={[0.5, 1.0]} // 50% and 100% of screen height
+	 * snapPoints={[0.5, 1.0]}     // 50% and 100% of screen height
+	 * snapPoints={['auto']}       // snap to content height
+	 * snapPoints={['auto', 1.0]}  // content height or full screen
 	 *
 	 * @default [1.0]
 	 */
-	snapPoints?: number[];
+	snapPoints?: SnapPoint[];
 
 	/**
 	 * The initial snap point index when the screen opens.
@@ -178,16 +239,25 @@ export type ScreenTransitionConfig = {
 	initialSnapIndex?: number;
 
 	/**
-	 * Controls whether swiping to expand the sheet works from within a ScrollView.
+	 * Controls how nested scroll content hands gestures off to a snap sheet.
 	 *
-	 * - `true` (Apple Maps style): Swiping up at scroll top expands the sheet
-	 * - `false` (Instagram style): Expand only works via deadspace (non-scrollable areas)
-	 *
-	 * Collapse (swipe down at scroll top) always works regardless of this setting.
+	 * - `"expand-and-collapse"` (Apple Maps style): Swiping up at scroll boundary expands the sheet,
+	 *   and swiping down at scroll boundary collapses or dismisses it
+	 * - `"collapse-only"` (Instagram style): Expand only works via deadspace; collapse/dismiss via
+	 *   nested scroll content still works at boundary
 	 *
 	 * Only applies to screens with `snapPoints` configured.
 	 *
-	 * @default true
+	 * @default "expand-and-collapse"
+	 */
+	sheetScrollGestureBehavior?: SheetScrollGestureBehavior;
+
+	/**
+	 * @deprecated Use `sheetScrollGestureBehavior` instead.
+	 *
+	 * Mapping:
+	 * - `true` -> `"expand-and-collapse"`
+	 * - `false` -> `"collapse-only"`
 	 */
 	expandViaScrollView?: boolean;
 
@@ -212,18 +282,54 @@ export type ScreenTransitionConfig = {
 	 *
 	 * @default 'block' (or 'passthrough' for component stacks)
 	 */
-	backdropBehavior?: "block" | "passthrough" | "dismiss" | "collapse";
+	backdropBehavior?: BackdropBehavior;
 
 	/**
-	 * Custom component to render as the backdrop layer.
-	 * When provided, replaces the default backdrop entirely — including press handling.
+	 * Custom component to render as the backdrop layer (between screens).
 	 *
-	 * Use `useScreenAnimation()` inside the component to access animation values.
-	 * Use your navigation method of choice (e.g. `router.back()`) to handle dismissal.
+	 * The library wraps this component with `Animated.createAnimatedComponent` internally.
+	 * Animated styles and props are driven by the `backdrop` slot in the interpolator return value.
 	 *
-	 * `backdropBehavior` still controls container-level pointer events when this is set.
+	 * `backdropBehavior` still controls the wrapping Pressable for dismiss/collapse handling.
+	 *
+	 * @example
+	 * backdropComponent: BlurView,
+	 * screenStyleInterpolator: ({ progress }) => {
+	 *   "worklet";
+	 *   return {
+	 *     backdrop: {
+	 *       style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+	 *       props: { intensity: interpolate(progress, [0, 1], [0, 80]) },
+	 *     },
+	 *   };
+	 * }
 	 *
 	 * @default undefined
 	 */
-	backdropComponent?: React.FC;
+	backdropComponent?: React.ComponentType<any>;
+
+	/**
+	 * Custom component to render as the screen's surface layer.
+	 *
+	 * Renders inside the content animation scope (moves with the screen) as an
+	 * absolutely-positioned layer behind the screen's children.
+	 *
+	 * The library wraps this component with `Animated.createAnimatedComponent` internally.
+	 * Animated styles and props are driven by the `surface` slot in the interpolator return value.
+	 *
+	 * @example
+	 * surfaceComponent: SquircleView,
+	 * screenStyleInterpolator: ({ progress }) => {
+	 *   "worklet";
+	 *   return {
+	 *     surface: {
+	 *       style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
+	 *       props: { cornerRadius: 24, cornerSmoothing: 0.7 },
+	 *     },
+	 *   };
+	 * }
+	 *
+	 * @default undefined
+	 */
+	surfaceComponent?: React.ComponentType<any>;
 };

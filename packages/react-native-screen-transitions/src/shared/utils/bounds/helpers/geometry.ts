@@ -1,10 +1,10 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { Layout } from "../../../types/screen.types";
-import type { BoundsAnchor, BoundsScaleMode } from "../types/builder";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
 } from "../types/geometry";
+import type { BoundsAnchor, BoundsScaleMode } from "../types/options";
 
 /**
  * Get the anchor point coordinates for a given bound
@@ -95,8 +95,9 @@ export function computeRelativeGeometry({
 	return { dx, dy, scaleX, scaleY, entering };
 }
 /**
- * Computes the transform to apply to the entire destination screen so that
- * its bound (end) matches the source bound (start) at progress start.
+ * Computes the transform to apply to the current screen so that its owned
+ * bound (`end`) matches the paired target bound (`start`) at the aligned
+ * phase of the transition.
  */
 export function computeContentTransformGeometry({
 	start,
@@ -131,10 +132,11 @@ export function computeContentTransformGeometry({
 
 		s = aspectDifference < 0.1 ? Math.max(sx, sy) : Math.min(sx, sy);
 	} else {
-		// For "match" mode on full screen, we need uniform scale
+		// "match" mode: use a cover strategy so the scaled content always
+		// fills the mask area. max() ensures no gaps inside the mask clip.
 		const sx = start.width / end.width;
 		const sy = start.height / end.height;
-		s = (sx + sy) / 2;
+		s = Math.max(sx, sy);
 	}
 
 	// Get anchor points

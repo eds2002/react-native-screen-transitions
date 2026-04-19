@@ -1,5 +1,6 @@
 import { StyleSheet, Text, View } from "react-native";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 /**
  * Bottom sheet with snap points [0.5, 0.8].
@@ -16,51 +17,110 @@ import { ScreenHeader } from "@/components/screen-header";
  *   - ↑ does nothing (already at max)
  */
 export default function SheetScreen() {
+	const theme = useTheme();
+
 	return (
 		<View style={styles.container}>
-			<View style={styles.sheet}>
-				<View style={styles.handle} />
+			<View
+				style={[styles.sheet, { backgroundColor: theme.card }]}
+			>
+				<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 				<ScreenHeader title="Bottom Sheet" subtitle="snapPoints: [0.5, 0.8]" />
 
 				<View style={styles.content}>
-					<View style={styles.infoBox}>
-						<Text style={styles.infoTitle}>Sheet Claims Both Directions</Text>
-						<Text style={styles.infoText}>
+					<View
+						style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
+					>
+						<Text style={[styles.infoTitle, { color: theme.text }]}>
+							Sheet Claims Both Directions
+						</Text>
+						<Text
+							style={[styles.infoText, { color: theme.textSecondary }]}
+						>
 							This sheet has snapPoints, so it claims BOTH vertical and
 							vertical-inverted. The parent's vertical gesture is completely
 							shadowed.
 						</Text>
 					</View>
 
-					<View style={styles.snapInfo}>
-						<Text style={styles.snapTitle}>Current Snap: 0.5 (50%)</Text>
-						<Text style={styles.snapText}>
+					<View
+						style={[
+							styles.snapInfo,
+							{ backgroundColor: theme.surfaceElevated },
+						]}
+					>
+						<Text style={[styles.snapTitle, { color: theme.text }]}>
+							Current Snap: 0.5 (50%)
+						</Text>
+						<Text
+							style={[styles.snapText, { color: theme.textSecondary }]}
+						>
 							Starting position. Try gestures:
 						</Text>
 					</View>
 
 					<View style={styles.instructions}>
-						<View style={styles.gestureRow}>
-							<Text style={styles.gestureIcon}>↓</Text>
+						<View
+							style={[
+								styles.gestureRow,
+								{ backgroundColor: theme.surfaceElevated },
+							]}
+						>
+							<Text
+								style={[styles.gestureIcon, { color: theme.activePill }]}
+							>
+								↓
+							</Text>
 							<View style={styles.gestureContent}>
-								<Text style={styles.gestureText}>Swipe down</Text>
-								<Text style={styles.gestureResult}>
+								<Text style={[styles.gestureText, { color: theme.text }]}>
+									Swipe down
+								</Text>
+								<Text
+									style={[
+										styles.gestureResult,
+										{ color: theme.textSecondary },
+									]}
+								>
 									Dismiss sheet (back to index)
 								</Text>
 							</View>
 						</View>
-						<View style={styles.gestureRow}>
-							<Text style={styles.gestureIcon}>↑</Text>
+						<View
+							style={[
+								styles.gestureRow,
+								{ backgroundColor: theme.surfaceElevated },
+							]}
+						>
+							<Text
+								style={[styles.gestureIcon, { color: theme.activePill }]}
+							>
+								↑
+							</Text>
 							<View style={styles.gestureContent}>
-								<Text style={styles.gestureText}>Swipe up</Text>
-								<Text style={styles.gestureResult}>Expand to 0.8 (80%)</Text>
+								<Text style={[styles.gestureText, { color: theme.text }]}>
+									Swipe up
+								</Text>
+								<Text
+									style={[
+										styles.gestureResult,
+										{ color: theme.textSecondary },
+									]}
+								>
+									Expand to 0.8 (80%)
+								</Text>
 							</View>
 						</View>
 					</View>
 
-					<View style={styles.noteBox}>
-						<Text style={styles.noteTitle}>Parent is Shadowed</Text>
-						<Text style={styles.noteText}>
+					<View
+						style={[styles.noteBox, { backgroundColor: theme.noteBox }]}
+					>
+						<Text style={[styles.noteTitle, { color: theme.noteText }]}>
+							Parent is Shadowed
+						</Text>
+						<Text
+							style={[styles.noteText, { color: theme.textSecondary }]}
+						>
 							The parent stack has vertical gesture, but this sheet shadows it.
 							Swiping ↓ affects the sheet, NOT the parent stack.
 						</Text>
@@ -77,7 +137,6 @@ const styles = StyleSheet.create({
 		justifyContent: "flex-end",
 	},
 	sheet: {
-		backgroundColor: "#2e1b4e",
 		borderTopLeftRadius: 24,
 		borderTopRightRadius: 24,
 		paddingTop: 12,
@@ -87,7 +146,6 @@ const styles = StyleSheet.create({
 	handle: {
 		width: 40,
 		height: 4,
-		backgroundColor: "rgba(255,255,255,0.3)",
 		borderRadius: 2,
 		alignSelf: "center",
 		marginBottom: 8,
@@ -98,37 +156,29 @@ const styles = StyleSheet.create({
 		gap: 16,
 	},
 	infoBox: {
-		backgroundColor: "rgba(255, 74, 158, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255, 74, 158, 0.3)",
 	},
 	infoTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#ff4a9e",
 		marginBottom: 8,
 	},
 	infoText: {
 		fontSize: 14,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 	snapInfo: {
-		backgroundColor: "rgba(255, 255, 255, 0.05)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
 	},
 	snapTitle: {
 		fontSize: 16,
 		fontWeight: "600",
-		color: "#fff",
 		marginBottom: 4,
 	},
 	snapText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.6)",
 	},
 	instructions: {
 		gap: 8,
@@ -137,13 +187,11 @@ const styles = StyleSheet.create({
 		flexDirection: "row",
 		alignItems: "flex-start",
 		gap: 12,
-		backgroundColor: "rgba(255, 255, 255, 0.1)",
 		padding: 12,
 		borderRadius: 8,
 	},
 	gestureIcon: {
 		fontSize: 24,
-		color: "#ff4a9e",
 		width: 36,
 		textAlign: "center",
 	},
@@ -153,29 +201,22 @@ const styles = StyleSheet.create({
 	gestureText: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#fff",
 	},
 	gestureResult: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.6)",
 		marginTop: 2,
 	},
 	noteBox: {
-		backgroundColor: "rgba(255, 193, 7, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255, 193, 7, 0.3)",
 	},
 	noteTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#ffc107",
 		marginBottom: 8,
 	},
 	noteText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.7)",
 		lineHeight: 20,
 	},
 });

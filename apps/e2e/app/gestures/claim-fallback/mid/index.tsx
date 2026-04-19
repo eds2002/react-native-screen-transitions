@@ -3,11 +3,14 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function ClaimFallbackMidIndex() {
+	const theme = useTheme();
+
 	return (
 		<SafeAreaView
-			style={styles.container}
+			style={[styles.container, { backgroundColor: theme.bg }]}
 			edges={["top"]}
 			testID="claim-fallback-l2-index"
 		>
@@ -37,13 +40,29 @@ export default function ClaimFallbackMidIndex() {
 			<View style={styles.actions}>
 				<Pressable
 					testID="claim-fallback-open-top"
-					style={styles.button}
+					style={({ pressed }) => [
+						styles.button,
+						{
+							backgroundColor: pressed
+								? theme.actionButtonPressed
+								: theme.actionButton,
+						},
+					]}
 					onPress={() =>
 						router.push("/gestures/claim-fallback/mid/top" as never)
 					}
 				>
-					<Text style={styles.buttonText}>Open L3 (Top)</Text>
-					<Text style={styles.buttonSubtext}>
+					<Text
+						style={[styles.buttonText, { color: theme.actionButtonText }]}
+					>
+						Open L3 (Top)
+					</Text>
+					<Text
+						style={[
+							styles.buttonSubtext,
+							{ color: theme.actionButtonText, opacity: 0.7 },
+						]}
+					>
 						Dismiss L3, then test this screen
 					</Text>
 				</Pressable>
@@ -55,24 +74,20 @@ export default function ClaimFallbackMidIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1e2a3f",
 	},
 	actions: {
 		padding: 16,
 	},
 	button: {
-		backgroundColor: "#4aff9e",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#0f1a2b",
 		fontSize: 16,
 		fontWeight: "700",
 	},
 	buttonSubtext: {
-		color: "rgba(15, 26, 43, 0.7)",
 		fontSize: 12,
 		marginTop: 4,
 	},

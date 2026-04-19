@@ -4,11 +4,10 @@ We want this community to be friendly and respectful to each other. Please follo
 
 ## Repository layout
 
-This repo is a monorepo managed with Bun workspaces and Changesets.
+This repo is a monorepo managed with Bun workspaces.
 
 - `packages/react-native-screen-transitions` – the published library (built with `react-native-builder-bob`).
-- `examples/tray` – example app demonstrating tray/drawer patterns.
-- `apps/e2e` – Expo app for e2e testing with Maestro.
+- `apps/e2e` – Expo app for interactive transition demos and e2e testing with Maestro.
 
 ## Development workflow
 
@@ -22,16 +21,16 @@ bun install
 
 ### 2. Build the library
 
-Compile the library before running an example app:
+Compile the library before running the e2e app:
 
 ```sh
 bun run build
 ```
 
-### 3. Run an example app
+### 3. Run the e2e app
 
 ```sh
-cd examples/tray
+cd apps/e2e
 npx expo run:ios   # or expo run:android
 ```
 
@@ -67,10 +66,7 @@ From the repo root:
 | `lint` | Runs Biome on the library |
 | `typecheck` | Type-checks the library |
 | `clean` | Removes node_modules and lockfiles |
-| `changeset` | Create a new changeset |
-| `changeset:version` | Version packages from changesets |
-| `changeset:publish` | Publish to npm |
-| `release` | Build + publish |
+| `release` | Publishes the package using `release-it` |
 
 Inside `packages/react-native-screen-transitions`:
 
@@ -91,15 +87,13 @@ We follow [conventional commits](https://www.conventionalcommits.org/en):
 - `test`: adding or updating tests
 - `chore`: tooling changes
 
-## Changesets & releases
+## Docs
 
-- Run `bun run changeset` if your change affects user-facing behavior
-- Changesets live under `.changeset/` and describe the change + bump type
-- Docs-only or chore changes don't need a changeset
+Docs are maintained in Mintlify outside this repository.
 
 ## Sending a pull request
 
 - Prefer small PRs focused on one change
-- Verify lint, typecheck, and tests pass
-- Include a changeset when the public package needs a version bump
-- For API changes, open an issue first to discuss
+- Verify lint, typecheck, tests, and relevant e2e checks pass
+- If your PR changes public behavior, update the corresponding Mintlify docs before release
+- Breaking changes must update migration docs before release

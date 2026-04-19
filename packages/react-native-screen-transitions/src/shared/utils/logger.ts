@@ -10,6 +10,3 @@ export const logger = {
 		console.warn(`[${LIBRARY_NAME}] ${message}`);
 	},
 };
-
-export const error = (message: string) =>
-	new Error(`[${LIBRARY_NAME}] ${message}`);

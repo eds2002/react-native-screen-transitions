@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
+import { useNavigation } from "@react-navigation/native";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "@/theme";
 
 interface ScreenHeaderProps {
 	title: string;
@@ -13,28 +14,31 @@ export function ScreenHeader({
 	title,
 	subtitle,
 	onBack,
-	light = false,
+	light,
 }: ScreenHeaderProps) {
-	const handleBack = onBack ?? (() => router.back());
+	const theme = useTheme();
+	const navigation = useNavigation();
+	const handleBack = onBack ?? (() => navigation.goBack());
+
+	const isLight = light ?? false;
+	const textColor = isLight ? "#000" : theme.text;
+	const subtitleColor = isLight ? "rgba(0,0,0,0.5)" : theme.textSecondary;
+	const backBg = isLight ? "rgba(0,0,0,0.06)" : theme.headerBackButton;
 
 	return (
 		<View style={styles.container}>
 			<Pressable
 				testID="header-back"
-				style={styles.backButton}
+				style={[styles.backButton, { backgroundColor: backBg }]}
 				onPress={handleBack}
 				hitSlop={8}
 			>
-				<Ionicons
-					name="chevron-back"
-					size={24}
-					color={light ? "#000" : "#fff"}
-				/>
+				<Ionicons name="chevron-back" size={24} color={textColor} />
 			</Pressable>
 			<View style={styles.titleContainer}>
-				<Text style={[styles.title, light && styles.titleLight]}>{title}</Text>
+				<Text style={[styles.title, { color: textColor }]}>{title}</Text>
 				{subtitle && (
-					<Text style={[styles.subtitle, light && styles.subtitleLight]}>
+					<Text style={[styles.subtitle, { color: subtitleColor }]}>
 						{subtitle}
 					</Text>
 				)}
@@ -54,8 +58,7 @@ const styles = StyleSheet.create({
 	backButton: {
 		width: 32,
 		height: 32,
-		borderRadius: 16,
-		backgroundColor: "rgba(255,255,255,0.1)",
+		borderRadius: 999,
 		justifyContent: "center",
 		alignItems: "center",
 	},
@@ -65,17 +68,9 @@ const styles = StyleSheet.create({
 	title: {
 		fontSize: 18,
 		fontWeight: "600",
-		color: "#fff",
-	},
-	titleLight: {
-		color: "#000",
 	},
 	subtitle: {
 		fontSize: 13,
-		color: "rgba(255,255,255,0.6)",
 		marginTop: 2,
-	},
-	subtitleLight: {
-		color: "rgba(0,0,0,0.6)",
 	},
 });

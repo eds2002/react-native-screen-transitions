@@ -3,10 +3,16 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function SimpleInheritanceIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="1. Simple Inheritance"
 				subtitle="Child inherits parent's gesture"
@@ -27,10 +33,19 @@ export default function SimpleInheritanceIndex() {
 
 			<View style={styles.actions}>
 				<Pressable
-					style={styles.button}
+					style={({ pressed }) => [
+						styles.button,
+						{
+							backgroundColor: pressed
+								? theme.actionButtonPressed
+								: theme.actionButton,
+						},
+					]}
 					onPress={() => router.push("/gestures/simple-inheritance/leaf")}
 				>
-					<Text style={styles.buttonText}>Open Leaf Screen</Text>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
+						Open Leaf Screen
+					</Text>
 				</Pressable>
 			</View>
 		</SafeAreaView>
@@ -40,20 +55,17 @@ export default function SimpleInheritanceIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	actions: {
 		padding: 16,
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#4a9eff",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#fff",
 		fontSize: 16,
 		fontWeight: "600",
 	},

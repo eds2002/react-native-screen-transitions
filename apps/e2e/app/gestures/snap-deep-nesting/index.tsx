@@ -3,10 +3,16 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function SnapDeepNestingIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="9. Deep Nesting with Snap Points"
 				subtitle="3 levels: vertical > horizontal > sheet"
@@ -28,9 +34,15 @@ export default function SnapDeepNestingIndex() {
 					note="Navigate to deeper/ to see the full 3-level hierarchy with snap points."
 				/>
 
-				<View style={styles.conceptBox}>
-					<Text style={styles.conceptTitle}>What Makes This Complex</Text>
-					<Text style={styles.conceptText}>
+				<View
+					style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}
+				>
+					<Text style={[styles.conceptTitle, { color: theme.text }]}>
+						What Makes This Complex
+					</Text>
+					<Text
+						style={[styles.conceptText, { color: theme.textSecondary }]}
+					>
 						L1 has vertical, L2 has horizontal, L3 (sheet) has vertical snap
 						points.{"\n\n"}
 						On the sheet:{"\n"}• ↓ ↑ are owned by sheet (shadows L1){"\n"}• → is
@@ -40,11 +52,27 @@ export default function SnapDeepNestingIndex() {
 
 				<View style={styles.actions}>
 					<Pressable
-						style={styles.button}
+						style={({ pressed }) => [
+							styles.button,
+							{
+								backgroundColor: pressed
+									? theme.actionButtonPressed
+									: theme.actionButton,
+							},
+						]}
 						onPress={() => router.push("/gestures/snap-deep-nesting/deeper")}
 					>
-						<Text style={styles.buttonText}>Go Deeper (L2)</Text>
-						<Text style={styles.buttonSubtext}>
+						<Text
+							style={[styles.buttonText, { color: theme.actionButtonText }]}
+						>
+							Go Deeper (L2)
+						</Text>
+						<Text
+							style={[
+								styles.buttonSubtext,
+								{ color: theme.actionButtonText, opacity: 0.7 },
+							]}
+						>
 							Horizontal stack with sheet
 						</Text>
 					</Pressable>
@@ -57,28 +85,22 @@ export default function SnapDeepNestingIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	scrollContent: {
 		paddingBottom: 40,
 	},
 	conceptBox: {
 		margin: 16,
-		backgroundColor: "rgba(255, 158, 255, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(255, 158, 255, 0.3)",
 	},
 	conceptTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#ff9eff",
 		marginBottom: 8,
 	},
 	conceptText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.8)",
 		lineHeight: 20,
 	},
 	actions: {
@@ -86,18 +108,15 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#ff9eff",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#000",
 		fontSize: 16,
 		fontWeight: "600",
 	},
 	buttonSubtext: {
-		color: "rgba(0, 0, 0, 0.6)",
 		fontSize: 12,
 		marginTop: 4,
 	},

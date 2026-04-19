@@ -23,6 +23,7 @@ import Transition from "react-native-screen-transitions";
 import type { ComponentStackScreenProps } from "react-native-screen-transitions/component-stack";
 import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 type ParamList = {
 	list: undefined;
@@ -85,15 +86,19 @@ const storyInterpolator = (props: ScreenInterpolationProps) => {
 	const scale = interpolate(progress, [1, 2], [1, 0.9], "clamp");
 
 	return {
-		contentStyle: {
-			transform: [{ translateY }, { scale }],
+		content: {
+			style: {
+				transform: [{ translateY }, { scale }],
+			},
 		},
 	};
 };
 
 function StoryList({ navigation }: ListProps) {
+	const theme = useTheme();
+
 	return (
-		<View style={styles.listContainer}>
+		<View style={[styles.listContainer, { backgroundColor: theme.bg }]}>
 			<ScreenHeader
 				title="Story Viewer"
 				subtitle="Tap a story to open. Swipe down to close. Tap sides to navigate."
@@ -105,10 +110,10 @@ function StoryList({ navigation }: ListProps) {
 						style={styles.storyItem}
 						onPress={() => navigation.push("story", { userId: user.id })}
 					>
-						<View style={styles.storyRing}>
+						<View style={[styles.storyRing, { borderColor: theme.actionButton }]}>
 							<Image source={{ uri: user.avatar }} style={styles.avatar} />
 						</View>
-						<Text style={styles.userName}>{user.name}</Text>
+						<Text style={[styles.userName, { color: theme.text }]}>{user.name}</Text>
 					</Pressable>
 				))}
 			</View>
@@ -235,8 +240,10 @@ function ProgressBar({ progress }: { progress: SharedValue<number> }) {
 }
 
 export default function StoryViewerDemo() {
+	const theme = useTheme();
+
 	return (
-		<View style={styles.container}>
+		<View style={[styles.container, { backgroundColor: theme.bg }]}>
 			<Stack.Navigator initialRouteName="list">
 				<Stack.Screen
 					name="list"
@@ -266,11 +273,9 @@ export default function StoryViewerDemo() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	listContainer: {
 		flex: 1,
-		backgroundColor: "#121212",
 	},
 	storiesRow: {
 		flexDirection: "row",
@@ -287,7 +292,6 @@ const styles = StyleSheet.create({
 		borderRadius: 36,
 		padding: 3,
 		borderWidth: 2,
-		borderColor: "#E1306C",
 		marginBottom: 8,
 	},
 	avatar: {
@@ -297,7 +301,6 @@ const styles = StyleSheet.create({
 	},
 	userName: {
 		fontSize: 13,
-		color: "#fff",
 		fontWeight: "500",
 	},
 	storyContainer: {
@@ -341,8 +344,6 @@ const styles = StyleSheet.create({
 		width: 36,
 		height: 36,
 		borderRadius: 18,
-		borderWidth: 1,
-		borderColor: "#fff",
 	},
 	storyUserName: {
 		fontSize: 15,

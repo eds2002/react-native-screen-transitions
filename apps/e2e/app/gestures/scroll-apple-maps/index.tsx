@@ -3,20 +3,26 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function AppleMapsIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="Apple Maps Style"
-				subtitle="expandViaScrollView: true"
+				subtitle='sheetScrollGestureBehavior: "expand-and-collapse"'
 			/>
 
 			<ScrollView contentContainerStyle={styles.scrollContent}>
 				<GestureInfo
 					title="Test: Expand AND collapse via ScrollView"
 					structure={`sheet (snapPoints: [0.4, 0.7, 1.0])
-  expandViaScrollView: true
+  sheetScrollGestureBehavior: "expand-and-collapse"
   └─ Transition.ScrollView`}
 					behaviors={[
 						{
@@ -33,9 +39,15 @@ export default function AppleMapsIndex() {
 					note="When at scroll top (scrollY = 0), BOTH ↓ collapse AND ↑ expand work. This is the Apple Maps behavior."
 				/>
 
-				<View style={styles.conceptBox}>
-					<Text style={styles.conceptTitle}>Apple Maps Behavior</Text>
-					<Text style={styles.conceptText}>
+				<View
+					style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}
+				>
+					<Text style={[styles.conceptTitle, { color: theme.text }]}>
+						Apple Maps Behavior
+					</Text>
+					<Text
+						style={[styles.conceptText, { color: theme.textSecondary }]}
+					>
 						At scroll boundary (scrollY = 0):{"\n\n"}• ↓ Swipe down → Collapse
 						sheet{"\n"}• ↑ Swipe up → Expand sheet{"\n\n"}
 						When scrolled (scrollY {">"} 0):{"\n\n"}• ↓ ↑ → ScrollView handles
@@ -47,11 +59,27 @@ export default function AppleMapsIndex() {
 
 				<View style={styles.actions}>
 					<Pressable
-						style={styles.button}
+						style={({ pressed }) => [
+							styles.button,
+							{
+								backgroundColor: pressed
+									? theme.actionButtonPressed
+									: theme.actionButton,
+							},
+						]}
 						onPress={() => router.push("/gestures/scroll-apple-maps/sheet")}
 					>
-						<Text style={styles.buttonText}>Open Apple Maps Sheet</Text>
-						<Text style={styles.buttonSubtext}>
+						<Text
+							style={[styles.buttonText, { color: theme.actionButtonText }]}
+						>
+							Open Apple Maps Sheet
+						</Text>
+						<Text
+							style={[
+								styles.buttonSubtext,
+								{ color: theme.actionButtonText, opacity: 0.7 },
+							]}
+						>
 							snapPoints: [0.4, 0.7, 1.0]
 						</Text>
 					</Pressable>
@@ -64,28 +92,22 @@ export default function AppleMapsIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	scrollContent: {
 		paddingBottom: 40,
 	},
 	conceptBox: {
 		margin: 16,
-		backgroundColor: "rgba(76, 175, 80, 0.1)",
-		borderRadius: 12,
+		borderRadius: 14,
 		padding: 16,
-		borderWidth: 1,
-		borderColor: "rgba(76, 175, 80, 0.3)",
 	},
 	conceptTitle: {
 		fontSize: 14,
 		fontWeight: "600",
-		color: "#4caf50",
 		marginBottom: 8,
 	},
 	conceptText: {
 		fontSize: 13,
-		color: "rgba(255, 255, 255, 0.8)",
 		lineHeight: 20,
 	},
 	actions: {
@@ -93,18 +115,15 @@ const styles = StyleSheet.create({
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#4caf50",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#fff",
 		fontSize: 16,
 		fontWeight: "600",
 	},
 	buttonSubtext: {
-		color: "rgba(255, 255, 255, 0.7)",
 		fontSize: 12,
 		marginTop: 4,
 	},

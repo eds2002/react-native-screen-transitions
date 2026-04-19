@@ -1,5 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import { velocity } from "../utils/gesture/velocity";
+import {
+	calculateProgressSpringVelocity,
+	normalizeVelocity,
+	shouldDismissFromTranslationAndVelocity,
+} from "../providers/gestures/helpers/gesture-physics";
 
 type Directions = {
 	horizontal: boolean;
@@ -38,14 +42,25 @@ const createDirections = (overrides: Partial<Directions> = {}) => ({
 	...overrides,
 });
 
-describe("velocity.normalize", () => {
+describe("normalizeVelocity", () => {
 	it("clamps values to the configured range", () => {
-		expect(velocity.normalize(6400, 320)).toBeCloseTo(3.2, 5);
-		expect(velocity.normalize(-6400, 320)).toBeCloseTo(-3.2, 5);
+		expect(normalizeVelocity(6400, 320)).toBeCloseTo(3.2, 5);
+		expect(normalizeVelocity(-6400, 320)).toBeCloseTo(-3.2, 5);
+	});
+
+	it("respects a custom max magnitude", () => {
+		expect(normalizeVelocity(6400, 320, 10)).toBeCloseTo(10, 5);
+		expect(normalizeVelocity(-6400, 320, 10)).toBeCloseTo(-10, 5);
+		expect(normalizeVelocity(6400, 320, 1.5)).toBeCloseTo(1.5, 5);
+	});
+
+	it("returns zero when max magnitude is zero", () => {
+		expect(normalizeVelocity(6400, 320, 0)).toBeCloseTo(0, 5);
+		expect(normalizeVelocity(-6400, 320, 0)).toBeCloseTo(0, 5);
 	});
 });
 
-describe("velocity.calculateProgressVelocity", () => {
+describe("calculateProgressSpringVelocity", () => {
 	const dimensions = { width: 320, height: 640 };
 
 	it("returns positive magnitude when progressing toward open target", () => {
@@ -56,7 +71,7 @@ describe("velocity.calculateProgressVelocity", () => {
 			velocityX: 800,
 		});
 
-		const result = velocity.calculateProgressVelocity({
+		const result = calculateProgressSpringVelocity({
 			animations: animations as any,
 			shouldDismiss: false,
 			event,
@@ -76,7 +91,7 @@ describe("velocity.calculateProgressVelocity", () => {
 			velocityY: -900,
 		});
 
-		const result = velocity.calculateProgressVelocity({
+		const result = calculateProgressSpringVelocity({
 			animations: animations as any,
 			shouldDismiss: true,
 			event,
@@ -98,7 +113,7 @@ describe("velocity.calculateProgressVelocity", () => {
 			velocityX: 5000,
 		});
 
-		const result = velocity.calculateProgressVelocity({
+		const result = calculateProgressSpringVelocity({
 			animations: animations as any,
 			shouldDismiss: false,
 			event,
@@ -108,24 +123,52 @@ describe("velocity.calculateProgressVelocity", () => {
 
 		expect(result).toBeCloseTo(3.2, 5);
 	});
+
+	it("ignores axis movement that could not have driven gesture progress", () => {
+		const animations = createAnimations(0.8);
+		const event = createEvent({
+			translationX: -220, // opposite of horizontal dismiss direction
+			translationY: 96, // valid vertical dismiss direction
+			velocityX: -2200,
+			velocityY: 640,
+		});
+
+		const result = calculateProgressSpringVelocity({
+			animations: animations as any,
+			shouldDismiss: true,
+			event,
+			dimensions,
+			directions: createDirections({
+				horizontal: true,
+				vertical: true,
+			}),
+		});
+
+		// Uses vertical candidate (96/640), not unsupported horizontal movement.
+		expect(result).toBeCloseTo(-1, 5);
+	});
 });
 
-describe("velocity.shouldPassDismissalThreshold", () => {
+describe("shouldDismissFromTranslationAndVelocity", () => {
 	const width = 320;
 
 	it("returns true once translation alone crosses half the screen", () => {
-		expect(velocity.shouldPassDismissalThreshold(170, 0, width, 0.3)).toBe(
+		expect(shouldDismissFromTranslationAndVelocity(170, 0, width, 0.3)).toBe(
 			true,
 		);
 	});
 
 	it("combines translation with weighted velocity", () => {
-		expect(velocity.shouldPassDismissalThreshold(40, 2500, width, 0.5)).toBe(
+		expect(
+			shouldDismissFromTranslationAndVelocity(40, 2500, width, 0.5),
+		).toBe(
 			true,
 		);
 	});
 
 	it("returns false when movement is negligible", () => {
-		expect(velocity.shouldPassDismissalThreshold(0, 0, width, 0.3)).toBe(false);
+		expect(shouldDismissFromTranslationAndVelocity(0, 0, width, 0.3)).toBe(
+			false,
+		);
 	});
 });

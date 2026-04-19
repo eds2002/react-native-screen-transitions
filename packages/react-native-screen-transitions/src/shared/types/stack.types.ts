@@ -1,6 +1,14 @@
 import type { ScreenTransitionConfig } from "./screen.types";
 
 /**
+ * Minimal route shape for navigation utilities.
+ * Used as a generic constraint across route comparison functions.
+ */
+export interface RouteWithKey {
+	key: string;
+}
+
+/**
  * Base route interface - minimal contract all stacks satisfy.
  * Uses `object` for params to be compatible with React Navigation's `Readonly<object | undefined>`.
  */

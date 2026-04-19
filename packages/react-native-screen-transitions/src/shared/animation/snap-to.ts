@@ -2,6 +2,7 @@ import { runOnUI } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../configs/specs";
 import { AnimationStore } from "../stores/animation.store";
 import type { HistoryEntry } from "../stores/history.store";
+import { SystemStore } from "../stores/system.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
 import { logger } from "../utils/logger";
 import { resolveSnapTargetEntry } from "./resolve-snap-target";
@@ -11,7 +12,18 @@ const getSortedSnapPoints = (
 ): number[] | null => {
 	const snapPoints = descriptor.options?.snapPoints;
 	if (!snapPoints || snapPoints.length === 0) return null;
-	return [...snapPoints].sort((a, b) => a - b);
+
+	// Resolve 'auto' to the measured fraction stored in SystemStore
+	const autoVal = SystemStore.getValue(
+		descriptor.route.key,
+		"resolvedAutoSnapPoint",
+	).value;
+
+	const resolved = snapPoints
+		.map((p) => (p === "auto" ? autoVal : p))
+		.filter((p): p is number => typeof p === "number" && p > 0);
+
+	return resolved.length > 0 ? resolved.sort((a, b) => a - b) : null;
 };
 
 export function snapDescriptorToIndex(
@@ -32,13 +44,18 @@ export function snapDescriptorToIndex(
 	}
 
 	const targetProgress = sorted[index];
-	const animations = AnimationStore.getAll(descriptor.route.key);
+	const animations = AnimationStore.getBag(descriptor.route.key);
+	const targetProgressValue = SystemStore.getValue(
+		descriptor.route.key,
+		"targetProgress",
+	);
 
 	runOnUI(() => {
 		"worklet";
 		animateToProgress({
 			target: targetProgress,
 			animations,
+			targetProgress: targetProgressValue,
 			spec: {
 				open: descriptor.options.transitionSpec?.expand ?? DefaultSnapSpec,
 				close: descriptor.options.transitionSpec?.collapse ?? DefaultSnapSpec,

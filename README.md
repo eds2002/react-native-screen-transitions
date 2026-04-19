@@ -9,10 +9,46 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 ## Features
 
 - **Full Animation Control** – Define exactly how screens enter, exit, and respond to gestures
-- **Shared Elements** – Smooth transitions between screens using the Bounds API
-- **Gesture Support** – Swipe-to-dismiss with edge or full-screen activation
-- **Stack Progress** – Track animation progress across the entire stack
+- **Bounds API + Navigation Zoom** – Build shared element and fullscreen zoom transitions with one bounds helper
+- **Auto Snap Points** – Use `snapPoints: ["auto"]` and read measured content layout inside your interpolator
+- **Gesture-Aware Scrollables** – Transition-aware `ScrollView` and `FlatList` coordinate with dismiss and snap gestures
+- **Backdrop + Surface Slots** – Animate screen content, backdrops, surfaces, and per-element slots from one interpolator
 - **Ready-Made Presets** – Instagram, Apple Music, X (Twitter) style transitions included
+
+## What's New In 3.4
+
+3.4 introduces a newer, more explicit path for shared transitions and snap-driven layouts.
+Use the notes below as the source of truth when migrating examples or generating docs.
+
+### Added / Expanded
+
+- **Auto snap sizing** with `snapPoints: ["auto"]` and `current.layouts.content`
+- **Scoped screen state access** through `previous`, `current`, `next`, `active`, and `inactive`, with `current.layouts` and `current.snapIndex`
+- **Compound bounds components** via `Transition.Boundary.View`, `Transition.Boundary.Trigger`, and `Transition.Boundary.Target`
+- **`Transition.createBoundaryComponent`** for building custom boundary wrappers, including `alreadyAnimated` support
+- **Navigation-style bounds zoom** through `bounds({ id }).navigation.zoom()`
+- **`navigationMaskEnabled`** for library-managed masked navigation transitions
+- **Ancestor targeting** in `useScreenGesture()` and `useScreenAnimation()`
+- **Gesture release tuning** with `gestureReleaseVelocityScale` and `gestureReleaseVelocityMax`
+- **`Transition.Specs.FlingSpec`** for underdamped fling-style release motion
+- **Surface slot support** through `surfaceComponent` and the interpolator `surface` slot
+- **Animated `props` support across all slots** via `{ style, props }` slot returns
+- **Optional first-screen animation** with `experimental_animateOnInitialMount`
+- **`logicallySettled`** for choreography that should finish before a spring is fully at rest
+
+### Deprecated / Replaced
+
+- **`sharedBoundTag` on transition-aware components is deprecated for new work.** Prefer `Transition.Boundary.*` for new shared transition flows.
+- **`Transition.MaskedView` is deprecated for new work.** Prefer `Transition.Boundary.*` with `bounds({ id }).navigation.zoom()` and `navigationMaskEnabled` for library-managed shared navigation transitions.
+- **`createComponentStackNavigator` is deprecated.** Prefer blank stack for embedded and independent flows.
+- **`expandViaScrollView` was renamed to `sheetScrollGestureBehavior`.**
+- **Flat interpolator keys are deprecated.** Use `content`, `backdrop`, and `surface` instead of `contentStyle`, `backdropStyle`, and `overlayStyle`.
+- **Legacy interpolator accessors are deprecated.** Use `current.layouts` and `current.snapIndex` instead of top-level `layouts` and `snapIndex`.
+- **If you saw older alpha docs using `backgroundComponent` / `background`, use `surfaceComponent` / `surface`.**
+
+### Removed
+
+- Deprecated screen overlay mode and legacy overlay animation props were removed.
 
 ## When to Use This Library
 
@@ -90,6 +126,41 @@ export const Stack = withLayoutContext<
 >(Navigator);
 ```
 
+### 3. Static Config
+
+Blank stack-specific navigator props follow React Navigation's custom navigator pattern.
+
+For the dynamic API, pass them to `<Stack.Navigator>`:
+
+```tsx
+const Stack = createBlankStackNavigator();
+
+function App() {
+  return (
+    <Stack.Navigator independent enableNativeScreens={false}>
+      <Stack.Screen name="Home" component={HomeScreen} />
+      <Stack.Screen name="Detail" component={DetailScreen} />
+    </Stack.Navigator>
+  );
+}
+```
+
+For the static API, keep them in the same config object:
+
+```tsx
+import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+
+const Stack = createBlankStackNavigator({
+  initialRouteName: "Home",
+  screens: {
+    Home: HomeScreen,
+    Detail: DetailScreen,
+  },
+  independent: true,
+  enableNativeScreens: false,
+});
+```
+
 ---
 
 ## Presets
@@ -112,9 +183,9 @@ Use built-in presets for common transitions:
 | `ZoomIn()`                             | Scales in with fade                     |
 | `DraggableCard()`                      | Multi-directional drag with scaling     |
 | `ElasticCard()`                        | Elastic drag with overlay               |
-| `SharedIGImage({ sharedBoundTag })`    | Instagram-style shared image            |
-| `SharedAppleMusic({ sharedBoundTag })` | Apple Music-style shared element        |
-| `SharedXImage({ sharedBoundTag })`     | X (Twitter)-style image transition      |
+| `SharedIGImage({ sharedBoundTag })`    | Legacy Instagram-style shared image preset |
+| `SharedAppleMusic({ sharedBoundTag })` | Legacy Apple Music-style shared element preset |
+| `SharedXImage({ sharedBoundTag })`     | Legacy X (Twitter)-style image transition preset |
 
 ---
 
@@ -140,8 +211,10 @@ options={{
   screenStyleInterpolator: ({ progress }) => {
     "worklet";
     return {
-      contentStyle: {
-        opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+      content: {
+        style: {
+          opacity: interpolate(progress, [0, 1, 2], [0, 1, 0]),
+        },
       },
     };
   },
@@ -152,17 +225,19 @@ options={{
 
 ```tsx
 options={{
-  screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+  screenStyleInterpolator: ({ progress, current: { layouts: { screen } } }) => {
     "worklet";
     return {
-      contentStyle: {
-        transform: [{
-          translateX: interpolate(
-            progress,
-            [0, 1, 2],
-            [screen.width, 0, -screen.width * 0.3]
-          ),
-        }],
+      content: {
+        style: {
+          transform: [{
+            translateX: interpolate(
+              progress,
+              [0, 1, 2],
+              [screen.width, 0, -screen.width * 0.3]
+            ),
+          }],
+        },
       },
     };
   },
@@ -173,13 +248,15 @@ options={{
 
 ```tsx
 options={{
-  screenStyleInterpolator: ({ progress, layouts: { screen } }) => {
+  screenStyleInterpolator: ({ progress, current: { layouts: { screen } } }) => {
     "worklet";
     return {
-      contentStyle: {
-        transform: [{
-          translateY: interpolate(progress, [0, 1], [screen.height, 0]),
-        }],
+      content: {
+        style: {
+          transform: [{
+            translateY: interpolate(progress, [0, 1], [screen.height, 0]),
+          }],
+        },
       },
     };
   },
@@ -192,9 +269,31 @@ Your interpolator can return:
 
 ```tsx
 return {
-  contentStyle: { ... },   // Main screen
-  backdropStyle: { ... },  // Semi-transparent backdrop
-  ["my-id"]: { ... },      // Specific element via styleId
+  content: { style: { ... }, props: { ... } },   // Main screen slot
+  backdrop: { style: { ... }, props: { ... } },  // Backdrop / blur / dimming
+  surface: { style: { ... }, props: { ... } },   // Custom surface layer
+  ["my-id"]: { style: { ... }, props: { ... } }, // Specific element via styleId
+};
+```
+
+Every slot supports animated `style` and animated `props`.
+Use the shorthand style-only form when you only need styles, or the explicit
+`{ style, props }` form when the wrapped component exposes animatable props.
+
+Return `null`, `undefined`, or `{}` when you want an interpolator frame to apply no transition styles:
+
+```tsx
+screenStyleInterpolator: ({ bounds }) => {
+  "worklet";
+
+  const snapshot = bounds.getSnapshot("hero");
+  if (!snapshot) return null;
+
+  return {
+    content: {
+      style: { opacity: 1 },
+    },
+  };
 };
 ```
 
@@ -212,6 +311,17 @@ options={{
     collapse: { stiffness: 300, damping: 30 },           // Snap point decreases
   },
 }}
+```
+
+Built-in starting points are available on `Transition.Specs`:
+
+```tsx
+transitionSpec: {
+  open: Transition.Specs.DefaultSpec,
+  close: Transition.Specs.FlingSpec,
+  expand: Transition.Specs.DefaultSnapSpec,
+  collapse: Transition.Specs.DefaultSnapSpec,
+}
 ```
 
 ---
@@ -239,7 +349,9 @@ options={{
 | `gestureVelocityImpact`   | How much velocity affects dismissal (default: 0.3)                       |
 | `gestureDrivesProgress`   | Whether gesture controls animation progress (default: true)              |
 | `snapVelocityImpact`      | How much velocity affects snap targeting (default: 0.1, lower = iOS-like)|
-| `expandViaScrollView`     | Allow expansion from ScrollView at boundary (default: true)               |
+| `gestureReleaseVelocityScale` | Multiplier for release velocity used by post-release spring animations |
+| `gestureReleaseVelocityMax` | Max absolute normalized release velocity used by spring animations      |
+| `sheetScrollGestureBehavior` | Nested scroll handoff mode: `"expand-and-collapse"` or `"collapse-only"` |
 | `gestureSnapLocked`       | Lock gesture-based snap movement to current snap point                   |
 | `backdropBehavior`        | Touch handling for backdrop area                                         |
 | `backdropComponent`       | Custom backdrop component (replaces default backdrop + press behavior)   |
@@ -294,7 +406,7 @@ Gesture rules with scrollables:
 
 ## Snap Points
 
-Create multi-stop sheets that snap to defined positions. Works with any gesture direction (bottom sheets, top sheets, side sheets):
+Create multi-stop sheets that snap to defined positions. Works with any gesture direction (bottom sheets, top sheets, side sheets), and supports intrinsic content sizing with `"auto"` snap points.
 
 ### Basic Configuration
 
@@ -323,17 +435,56 @@ Create multi-stop sheets that snap to defined positions. Works with any gesture 
     // Add a horizontal screenStyleInterpolator for drawer-style motion
   }}
 />
+
+// Auto-sized sheet
+<Stack.Screen
+  name="Composer"
+  options={{
+    gestureEnabled: true,
+    gestureDirection: "vertical",
+    snapPoints: ["auto", 1],
+    initialSnapIndex: 0,
+    backdropBehavior: "collapse",
+    ...Transition.Presets.SlideFromBottom(),
+  }}
+/>
 ```
 
 ### Options
 
 | Option             | Description                                                          |
 | ------------------ | -------------------------------------------------------------------- |
-| `snapPoints`       | Array of fractions (0-1) where sheet can rest                        |
+| `snapPoints`       | Array of fractions (0-1) or `"auto"` values where sheet can rest     |
 | `initialSnapIndex` | Index of initial snap point (default: 0)                             |
 | `gestureSnapLocked` | Locks gesture snapping to current point (programmatic `snapTo` still works) |
+| `sheetScrollGestureBehavior` | Nested scroll handoff mode for snap sheets                    |
 | `backdropBehavior` | Touch handling: `"block"`, `"passthrough"`, `"dismiss"`, `"collapse"`|
 | `backdropComponent` | Custom backdrop component; replaces default backdrop + tap handling    |
+
+### Auto Snap Points
+
+When you use `"auto"`, the library measures the content height and exposes it in `current.layouts.content`:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  const contentHeight = current.layouts.content?.height ?? 0;
+
+  return {
+    content: {
+      style: {
+        opacity: interpolate(current.snapIndex, [0, 1], [0.8, 1]),
+      },
+    },
+    "sheet-height-debug": {
+      style: {
+        opacity: contentHeight > 0 ? 1 : 0,
+      },
+    },
+  };
+}
+```
 
 #### backdropBehavior Values
 
@@ -406,15 +557,17 @@ function BottomSheet() {
 }
 ```
 
-The animated `snapIndex` is available in screen interpolators via `ScreenInterpolationProps`:
+The animated snap point index is available via `current.snapIndex` in `ScreenInterpolationProps`:
 
 ```tsx
-screenStyleInterpolator: ({ snapIndex }) => {
+screenStyleInterpolator: ({ current }) => {
   // snapIndex interpolates between snap point indices
   // e.g., 0.5 means halfway between snap point 0 and 1
   return {
-    contentStyle: {
-      opacity: interpolate(snapIndex, [0, 1], [0.5, 1]),
+    content: {
+      style: {
+        opacity: interpolate(current.snapIndex, [0, 1], [0.5, 1]),
+      },
     },
   };
 }
@@ -423,8 +576,8 @@ screenStyleInterpolator: ({ snapIndex }) => {
 ### ScrollView Behavior
 
 With `Transition.ScrollView` inside a snap-enabled sheet:
-- **`expandViaScrollView: true`**: At boundary, swipe up expands and swipe down collapses (or dismisses at min if enabled)
-- **`expandViaScrollView: false`**: Expand works only via deadspace; collapse/dismiss via scroll still works at boundary
+- **`sheetScrollGestureBehavior: "expand-and-collapse"`**: At boundary, swipe up expands and swipe down collapses (or dismisses at min if enabled)
+- **`sheetScrollGestureBehavior: "collapse-only"`**: Expand works only via deadspace; collapse/dismiss via scroll still works at boundary
 - **Scrolled into content**: Normal scroll behavior
 
 ### Snap Animation Specs
@@ -444,25 +597,46 @@ transitionSpec: {
 
 ## Shared Elements (Bounds API)
 
-Animate elements between screens by tagging them.
+Animate elements between screens by tagging them. In 3.4, the recommended and forward-compatible API is `Transition.Boundary.*` for explicit bounds ownership.
+
+`sharedBoundTag` on transition-aware components is deprecated and retained for legacy flows and presets.
 
 ### 1. Tag the Source
 
 ```tsx
-<Transition.Pressable
-  sharedBoundTag="avatar"
+<Transition.Boundary.Trigger
+  id="avatar"
   onPress={() => navigation.navigate("Profile")}
 >
   <Image source={avatar} style={{ width: 50, height: 50 }} />
-</Transition.Pressable>
+</Transition.Boundary.Trigger>
+```
+
+If the boundary owner is larger than the visual element you want to match,
+wrap the measured descendant in `Transition.Boundary.Target`:
+
+```tsx
+<Transition.Boundary.Trigger
+  id="avatar"
+  onPress={() => navigation.navigate("Profile")}
+  style={styles.card}
+>
+  <Transition.Boundary.Target>
+    <Image source={avatar} style={styles.image} />
+  </Transition.Boundary.Target>
+
+  <View style={styles.copy}>
+    <Text style={styles.title}>Profile</Text>
+  </View>
+</Transition.Boundary.Trigger>
 ```
 
 ### 2. Tag the Destination
 
 ```tsx
-<Transition.View sharedBoundTag="avatar">
+<Transition.Boundary.View id="avatar">
   <Image source={avatar} style={{ width: 200, height: 200 }} />
-</Transition.View>
+</Transition.Boundary.View>
 ```
 
 ### 3. Use in Interpolator
@@ -476,11 +650,25 @@ screenStyleInterpolator: ({ bounds }) => {
 };
 ```
 
+### Navigation Zoom
+
+For fullscreen, navigation-style shared transitions:
+
+```tsx
+screenStyleInterpolator: ({ bounds }) => {
+  "worklet";
+  return bounds({ id: "avatar" }).navigation.zoom({
+    target: "fullscreen",
+  });
+};
+```
+
 ### Bounds Options
 
 | Option      | Values                             | Description                   |
 | ----------- | ---------------------------------- | ----------------------------- |
-| `id`        | string                             | The `sharedBoundTag` to match |
+| `id`        | string                             | The boundary id to match      |
+| `group`     | string                             | Optional group key for paged/detail flows |
 | `method`    | `"transform"` `"size"` `"content"` | How to animate                |
 | `space`     | `"relative"` `"absolute"`          | Coordinate space              |
 | `scaleMode` | `"match"` `"none"` `"uniform"`     | Aspect ratio handling         |
@@ -526,11 +714,19 @@ const TabBar = ({ focusedIndex, progress }) => {
 
 | Component               | Description                            |
 | ----------------------- | -------------------------------------- |
-| `Transition.View`       | Animated view with `sharedBoundTag`    |
-| `Transition.Pressable`  | Pressable that measures bounds         |
+| `Transition.View`       | Animated view; `sharedBoundTag` usage is legacy/deprecated |
+| `Transition.Pressable`  | Pressable; `sharedBoundTag` usage is legacy/deprecated |
 | `Transition.ScrollView` | ScrollView with gesture coordination   |
 | `Transition.FlatList`   | FlatList with gesture coordination     |
-| `Transition.MaskedView` | For reveal effects (requires native)   |
+| `Transition.Boundary.View` | Explicit bounds destination/source registration |
+| `Transition.Boundary.Trigger` | Pressable boundary owner that captures source bounds on press |
+| `Transition.Boundary.Target` | Optional nested measurement target inside a boundary owner |
+| `Transition.MaskedView` | Deprecated legacy reveal helper (requires native) |
+
+Helper exports:
+
+- `Transition.createBoundaryComponent(Component, { alreadyAnimated?: boolean })`
+- `Transition.createTransitionAwareComponent(Component, { isScrollable?: boolean, alreadyAnimated?: boolean })`
 
 ---
 
@@ -545,9 +741,10 @@ import { useScreenAnimation } from "react-native-screen-transitions";
 
 function DetailScreen() {
   const animation = useScreenAnimation();
+  const parentAnimation = useScreenAnimation("parent");
 
   const style = useAnimatedStyle(() => ({
-    opacity: animation.value.current.progress,
+    opacity: parentAnimation.value.current.progress,
   }));
 
   return <Animated.View style={style}>...</Animated.View>;
@@ -592,9 +789,10 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 function MyScreen() {
   const screenGesture = useScreenGesture();
+  const parentGesture = useScreenGesture("parent");
 
   const myPanGesture = Gesture.Pan()
-    .simultaneousWithExternalGesture(screenGesture)
+    .simultaneousWithExternalGesture(screenGesture, parentGesture)
     .onUpdate((e) => {
       // Your gesture logic
     });
@@ -608,6 +806,7 @@ function MyScreen() {
 ```
 
 Use this when you have custom pan gestures that need to work alongside screen dismiss gestures.
+You can target `"self"`, `"parent"`, `"root"`, or `{ ancestor: number }`.
 
 ---
 
@@ -619,16 +818,16 @@ The full `screenStyleInterpolator` receives these props:
 | ---------------- | -------------------------------------------------------- |
 | `progress`       | Combined progress (0-2)                                  |
 | `stackProgress`  | Accumulated progress across entire stack                 |
-| `snapIndex`      | Animated snap point index (-1 if no snap points)         |
 | `focused`        | Whether this screen is the topmost in the stack          |
 | `current`        | Current screen state                                     |
 | `previous`       | Previous screen state                                    |
 | `next`           | Next screen state                                        |
 | `active`         | Screen driving the transition                            |
 | `inactive`       | Screen NOT driving the transition                        |
-| `layouts.screen` | Screen dimensions                                        |
 | `insets`         | Safe area insets                                         |
 | `bounds`         | Shared element bounds function                           |
+
+Prefer `current.snapIndex`, `current.layouts.screen`, and `current.layouts.content` for new code.
 
 ### Screen State Properties
 
@@ -636,12 +835,15 @@ Each screen state (`current`, `previous`, `next`, `active`, `inactive`) contains
 
 | Property    | Description                              |
 | ----------- | ---------------------------------------- |
-| `progress`  | Animation progress (0 or 1)              |
-| `closing`   | Whether closing (0 or 1)                 |
-| `entering`  | Whether entering (0 or 1)                |
-| `animating` | Whether animating (0 or 1)               |
-| `gesture`   | Gesture values (x, y, normalized values) |
-| `meta`      | Custom metadata from options             |
+| `progress`         | Animation progress (0 or 1)                     |
+| `closing`          | Whether closing (0 or 1)                        |
+| `entering`         | Whether entering (0 or 1)                       |
+| `animating`        | Whether animating (0 or 1)                      |
+| `logicallySettled` | Whether choreography can treat the screen as done |
+| `snapIndex`        | Animated snap point index for this screen       |
+| `layouts`          | Screen and measured content layouts             |
+| `gesture`          | Gesture values (x, y, `normX`, `normY`, etc.)   |
+| `meta`             | Custom metadata from options                    |
 
 ### Using `meta` for Conditional Logic
 
@@ -669,7 +871,9 @@ screenStyleInterpolator: ({ progress }) => {
   "worklet";
   return {
     "hero-image": {
-      opacity: interpolate(progress, [0, 1], [0, 1]),
+      style: {
+        opacity: interpolate(progress, [0, 1], [0, 1]),
+      },
     },
   };
 };
@@ -684,13 +888,13 @@ screenStyleInterpolator: ({ progress }) => {
 
 ## Stack Types
 
-All three stacks share the same animation API. Choose based on your needs:
+Blank stack and native stack are the primary APIs. Component stack remains available as a deprecated compatibility API.
 
 | Stack               | Best For                                                  |
 | ------------------- | --------------------------------------------------------- |
 | **Blank Stack**     | Most apps. Full control, all features.                    |
 | **Native Stack**    | When you need native screen primitives.                   |
-| **Component Stack** | Embedded flows, isolated from React Navigation. *(Experimental)* |
+| **Component Stack** | Legacy embedded-flow API. Prefer blank stack instead.     |
 
 ### Blank Stack
 
@@ -716,11 +920,11 @@ import { createNativeStackNavigator } from "react-native-screen-transitions/nati
 />
 ```
 
-### Component Stack (Experimental)
+### Component Stack (Deprecated)
 
-> **Note:** This API is experimental and may change based on community feedback.
+> **Note:** Prefer blank stack for new work. It now covers the embedded and independent flow use case.
 
-Standalone navigator, not connected to React Navigation. Ideal for embedded flows.
+Standalone navigator, not connected to React Navigation. Kept for compatibility with older integrations.
 
 ```tsx
 import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
@@ -747,7 +951,7 @@ The Native Stack uses transparent modal presentation to intercept transitions. T
 
 For most apps, Blank Stack avoids these issues entirely.
 
-### Component Stack (Experimental)
+### Component Stack (Deprecated Compatibility)
 
 - **No deep linking** – Routes aren't part of your URL structure
 - **Isolated state** – Doesn't affect parent navigation
@@ -767,11 +971,27 @@ options={{
 }}
 ```
 
+### Animate On Initial Mount
+
+Animate the first screen in a navigator instead of snapping it directly to the settled state:
+
+```tsx
+options={{
+  experimental_animateOnInitialMount: true,
+}}
+```
+
 ---
 
-## Masked View Setup
+## Legacy Masked View Setup (Deprecated)
 
-Required for `SharedIGImage` and `SharedAppleMusic` presets. The masked view creates the "reveal" effect where content expands from the shared element.
+`Transition.MaskedView` and `sharedBoundTag` are deprecated for new work.
+
+Prefer `Transition.Boundary.*` for explicit shared-element ownership, and prefer `bounds({ id }).navigation.zoom()` with `navigationMaskEnabled` when you want library-managed navigation-style masked transitions.
+
+If you used early 3.4 prerelease docs or examples, `maskEnabled` remains accepted as a compatibility alias, but new docs and examples should use `navigationMaskEnabled`.
+
+This section is kept for compatibility with legacy presets such as `SharedIGImage` and `SharedAppleMusic`.
 
 > **Note**: Requires native code. Will not work in Expo Go.
 

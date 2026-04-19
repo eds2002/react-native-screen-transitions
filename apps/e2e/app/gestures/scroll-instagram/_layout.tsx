@@ -3,7 +3,7 @@ import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
 
 /**
- * Instagram Style: expandViaScrollView = false (default)
+ * Instagram Style: sheetScrollGestureBehavior = "collapse-only"
  *
  * Expand only works via deadspace (handle/header).
  * Collapse still works via ScrollView at boundary.
@@ -19,7 +19,7 @@ export default function InstagramLayout() {
 					gestureDirection: "vertical",
 					snapPoints: [0.4, 0.7, 1.0],
 					initialSnapIndex: 0,
-					expandViaScrollView: false,
+					sheetScrollGestureBehavior: "collapse-only",
 					screenStyleInterpolator: ({
 						layouts: {
 							screen: { height },
@@ -30,8 +30,10 @@ export default function InstagramLayout() {
 						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
 						const scale = interpolate(progress, [1.5, 2], [1, 0.95], "clamp");
 						return {
-							contentStyle: {
-								transform: [{ translateY: y }, { scale }],
+							content: {
+								style: {
+									transform: [{ translateY: y }, { scale }],
+								},
 							},
 						};
 					},

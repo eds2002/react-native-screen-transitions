@@ -8,14 +8,26 @@ import type { BaseStackRoute } from "./types/stack.types";
 
 /**
  * Masked view integration
+ * @deprecated No longer in use. Use {@link NAVIGATION_MASK_ELEMENT_STYLE_ID} and {@link NAVIGATION_MASK_CONTAINER_STYLE_ID} instead.
  */
 export const MASK_STYLE_ID = "_ROOT_MASKED";
 export const CONTAINER_STYLE_ID = "_ROOT_CONTAINER";
 
 /**
+ * Navigation mask integration
+ */
+export const NAVIGATION_MASK_ELEMENT_STYLE_ID =
+	"NAVIGATION_MASK_ELEMENT_STYLE_ID";
+export const NAVIGATION_MASK_CONTAINER_STYLE_ID =
+	"NAVIGATION_MASK_CONTAINER_STYLE_ID";
+
+/**
  * Styles
  */
 export const NO_STYLES = Object.freeze({});
+export const HIDDEN_STYLE = Object.freeze({ opacity: 0 });
+export const VISIBLE_STYLE = Object.freeze({ opacity: 1 });
+export const NO_PROPS = Object.freeze({});
 
 /**
  * Default gesture values
@@ -23,11 +35,17 @@ export const NO_STYLES = Object.freeze({});
 const DEFAULT_GESTURE_VALUES = {
 	x: 0,
 	y: 0,
+	normX: 0,
+	normY: 0,
+	dismissing: 0,
+	dragging: 0,
+	direction: null,
+
+	// Deprecated aliases
 	normalizedX: 0,
 	normalizedY: 0,
 	isDismissing: 0,
 	isDragging: 0,
-	direction: null,
 } as const;
 
 /**
@@ -40,10 +58,20 @@ export const createScreenTransitionState = (
 	progress: 0,
 	closing: 0,
 	animating: 0,
-	entering: 1,
+	willAnimate: 0,
+	settled: 1,
+	logicallySettled: 1,
+	entering: 0,
 	gesture: { ...DEFAULT_GESTURE_VALUES },
 	route,
 	meta,
+	layouts: {
+		screen: {
+			width: 0,
+			height: 0,
+		},
+	},
+	snapIndex: -1,
 });
 
 /**
@@ -54,9 +82,19 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		progress: 0,
 		closing: 0,
 		animating: 0,
-		entering: 1,
+		willAnimate: 0,
+		settled: 1,
+		logicallySettled: 1,
+		entering: 0,
 		gesture: DEFAULT_GESTURE_VALUES,
 		route: {} as RouteProp<ParamListBase>,
+		layouts: {
+			screen: {
+				width: 0,
+				height: 0,
+			},
+		},
+		snapIndex: -1,
 	});
 
 /**
@@ -71,6 +109,15 @@ export const EMPTY_BOUND_HELPER_RESULT_RAW = Object.freeze({
 	translateY: 0,
 	width: 0,
 	height: 0,
+});
+export const TRANSFORM_RESET = Object.freeze({
+	transform: [
+		{ translateX: 0 },
+		{ translateY: 0 },
+		{ scale: 1 },
+		{ scaleX: 1 },
+		{ scaleY: 1 },
+	],
 });
 export const ENTER_RANGE = [0, 1] as const;
 export const EXIT_RANGE = [1, 2] as const;
@@ -89,13 +136,13 @@ export const FULLSCREEN_DIMENSIONS = (
 	};
 };
 
-/**
- * Default gesture config
- */
-export const GESTURE_VELOCITY_IMPACT = 0.3;
-export const SNAP_VELOCITY_IMPACT = 0.1;
+export const DEFAULT_GESTURE_VELOCITY_IMPACT = 0.3;
+export const DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT = 0.1;
+export const DEFAULT_GESTURE_RELEASE_VELOCITY_MAX = 3.2;
+export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
+export const DEFAULT_GESTURE_SNAP_LOCKED = false;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 
 export const IS_WEB = Platform.OS === "web";

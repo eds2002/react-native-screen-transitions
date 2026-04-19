@@ -1,24 +1,18 @@
+import type { TextStyle, ViewStyle } from "react-native";
 import type {
 	StyleProps,
 	WithSpringConfig,
 	WithTimingConfig,
 } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
+import {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "../constants";
 import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";
 import type { Layout } from "./screen.types";
 import type { BaseStackRoute } from "./stack.types";
-
-export interface OverlayInterpolationProps {
-	progress: number;
-	layouts: {
-		/**
-		 * The `width` and `height` of the screen container.
-		 */
-		screen: Layout;
-	};
-	insets: EdgeInsets;
-}
 
 export type ScreenTransitionState = {
 	/**
@@ -41,13 +35,26 @@ export type ScreenTransitionState = {
 	closing: number;
 
 	/**
-	 * Whether this screen is in the process of entering.
-	 * - `0`: Screen is closing or inactive
-	 * - `1`: Screen is opening/entering
+	 * Whether this screen is actively in its opening phase.
+	 * - `0`: Screen is settled, inactive, or closing
+	 * - `1`: Screen is currently opening/entering
 	 *
-	 * Use this to trigger different animations when navigating back vs forward.
+	 * This flips back to `0` once the open animation finishes.
 	 */
 	entering: number;
+
+	/**
+	 * Whether this screen is about to begin a transition attempt.
+	 * - `0`: No pre-animation handoff is pending
+	 * - `1`: This is the last clean frame before transition-driven motion begins
+	 *
+	 * This phase is intentionally short-lived and emits once per transition attempt.
+	 * For gesture-driven transitions, it rises on gesture start, not on release.
+	 * The release/settle animation is considered part of the same attempt and must
+	 * not re-trigger `willAnimate`.
+	 */
+
+	willAnimate: number;
 
 	/**
 	 * Whether this screen is currently animating.
@@ -55,6 +62,22 @@ export type ScreenTransitionState = {
 	 * - `1`: Animation or gesture is in progress
 	 */
 	animating: number;
+
+	/**
+	 * Whether this screen is fully settled (not transitioning and not dismissing).
+	 * - `0`: Transition/gesture is active or dismissing
+	 * - `1`: Screen is fully settled/idle
+	 */
+	settled: number;
+
+	/**
+	 * Whether this screen is logically complete for choreography purposes.
+	 * - `0`: The screen is still meaningfully away from its animation target
+	 * - `1`: The screen is visually close enough to its target to be treated as done
+	 *
+	 * Unlike `settled`, this may become `1` before the underlying spring fully stops.
+	 */
+	logicallySettled: number;
 
 	/**
 	 * Live gesture values for this screen.
@@ -80,6 +103,33 @@ export type ScreenTransitionState = {
 	 * The route object for this screen.
 	 */
 	route: BaseStackRoute;
+
+	/**
+	 * Layout measurements for this specific screen.
+	 */
+	layouts: {
+		/**
+		 * The `width` and `height` of the screen container.
+		 */
+		screen: Layout;
+		/**
+		 * The intrinsic measured content wrapper layout when available.
+		 *
+		 * This is currently populated for the measured screen-container path used by
+		 * auto snap-point sizing. It is undefined until a real measurement exists.
+		 */
+		content?: Layout;
+	};
+
+	/**
+	 * Animated index of this screen's current snap point.
+	 * Interpolates between indices during gestures/animations.
+	 * - Returns -1 if no snap points are defined
+	 * - Returns 0 when at or below first snap point
+	 * - Returns fractional values between snap points (e.g., 1.5 = halfway between snap 1 and 2)
+	 * - Returns length-1 when at or above last snap point
+	 */
+	snapIndex: number;
 };
 
 export interface ScreenInterpolationProps {
@@ -100,24 +150,27 @@ export interface ScreenInterpolationProps {
 
 	/**
 	 * Layout measurements for the screen.
+	 *
+	 * @deprecated Use `current.layouts` instead.
 	 */
 	layouts: {
 		/**
 		 * The `width` and `height` of the screen container.
 		 */
 		screen: Layout;
+		/**
+		 * The intrinsic measured content wrapper layout when available.
+		 *
+		 * This is currently populated for the measured screen-container path used by
+		 * auto snap-point sizing. It is undefined until a real measurement exists.
+		 */
+		content?: Layout;
 	};
 
 	/**
 	 * The safe area insets for the screen.
 	 */
 	insets: EdgeInsets;
-
-	/**
-	 * The ID of the currently active shared bound (e.g., 'a' when Transition.Pressable has sharedBoundTag='a').
-	 * @deprecated
-	 */
-	activeBoundId?: never;
 
 	/**
 	 * Whether the current screen is the focused (topmost) screen in the stack.
@@ -144,16 +197,19 @@ export interface ScreenInterpolationProps {
 
 	/**
 	 * Animated index of the current snap point.
-	 * Interpolates between indices during gestures/animations.
-	 * - Returns -1 if no snap points are defined
-	 * - Returns 0 when at or below first snap point
-	 * - Returns fractional values between snap points (e.g., 1.5 = halfway between snap 1 and 2)
-	 * - Returns length-1 when at or above last snap point
+	 *
+	 * @deprecated Use `current.snapIndex` instead.
 	 */
 	snapIndex: number;
 
 	/**
-	 * Function that provides access to bounds builders for creating shared element transitions.
+	 * Whether the active transition is visually close enough to its target to be
+	 * treated as complete, even if the animation is still physically settling.
+	 */
+	logicallySettled: number;
+
+	/**
+	 * Function that provides access to bounds helpers for shared screen transitions.
 	 */
 	bounds: BoundsAccessor;
 
@@ -167,50 +223,100 @@ export interface ScreenInterpolationProps {
 	 * When focused, this is the previous screen. When not focused, this is the current screen.
 	 */
 	inactive: ScreenTransitionState | undefined;
-
-	/**
-	 * Whether the active screen is currently transitioning (either being dragged or animating).
-	 * @deprecated Use `active.animating` instead.
-	 */
-	isActiveTransitioning: boolean;
-
-	/**
-	 * Whether the active screen is in the process of being dismissed/closed.
-	 * @deprecated Use `active.closing` instead.
-	 */
-	isDismissing: boolean;
 }
 
+/**
+ * Returning `null`, `undefined`, or `{}` applies no transition styles for the
+ * current frame.
+ */
 export type ScreenStyleInterpolator = (
 	props: ScreenInterpolationProps,
-) => TransitionInterpolatedStyle;
+) => TransitionInterpolatedStyle | null | undefined;
 
+/**
+ * Animated style properties with full autocomplete.
+ *
+ * Uses React Native's `ViewStyle & TextStyle` instead of Reanimated's `StyleProps`
+ * (which has `[key: string]: any`) so TypeScript can provide autocomplete and catch typos.
+ */
+export type AnimatedViewStyle = ViewStyle & TextStyle;
+
+type TransitionSlotDefinition = {
+	/** Animated styles applied via `useAnimatedStyle`. */
+	style?: AnimatedViewStyle;
+	/** Animated props applied via `useAnimatedProps`. */
+	props?: Record<string, unknown>;
+};
+
+/**
+ * A slot in the interpolated style map.
+ *
+ * Can be written in two forms:
+ * - **Shorthand**: Write styles directly — `{ opacity: 0.5, transform: [...] }`
+ * - **Explicit**: Use `style` and/or `props` buckets — `{ style: { opacity: 0.5 }, props: { intensity: 80 } }`
+ */
+export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
+
+/**
+ * Internal normalized slot format used after the backward-compat shim.
+ * Always uses the explicit `{ style, props }` shape (with Reanimated's full StyleProps).
+ */
+export type NormalizedTransitionSlotStyle = {
+	style?: StyleProps;
+	props?: Record<string, unknown>;
+};
+
+/**
+ * Normalized interpolated style map used internally after the backward-compat shim.
+ * All slots use the explicit `{ style, props }` shape.
+ */
+export type NormalizedTransitionInterpolatedStyle = {
+	/** Animated style and props for the main screen content view. */
+	content?: NormalizedTransitionSlotStyle;
+	/** Animated style and props for the backdrop layer between screens. */
+	backdrop?: NormalizedTransitionSlotStyle;
+	/** Animated style and props for the surface component layer within the screen. */
+	surface?: NormalizedTransitionSlotStyle;
+	/** Animated style and props for the navigation mask container layer. */
+	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: NormalizedTransitionSlotStyle;
+	/** Animated style and props for the navigation mask element layer. */
+	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: NormalizedTransitionSlotStyle;
+	/** Custom styles/props by id for Transition.View components. */
+	[id: string]: NormalizedTransitionSlotStyle | undefined;
+};
+
+/**
+ * The return type of `screenStyleInterpolator`.
+ * Uses the nested slot format, while still accepting deprecated flat keys.
+ */
 export type TransitionInterpolatedStyle = {
+	/** Animated style and props for the main screen content view. */
+	content?: TransitionSlotStyle;
+	/** Animated style and props for the backdrop layer between screens. */
+	backdrop?: TransitionSlotStyle;
+	/** Animated style and props for the surface component layer within the screen. */
+	surface?: TransitionSlotStyle;
+	/** Animated style and props for the navigation mask container layer. */
+	[NAVIGATION_MASK_CONTAINER_STYLE_ID]?: TransitionSlotStyle;
+	/** Animated style and props for the navigation mask element layer. */
+	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
+	/** Custom styles/props by id for Transition.View components. */
+	[id: string]: TransitionSlotStyle | undefined;
 	/**
-	 * Animated style for the main screen view. Styles are only applied when Transition.View is present.
+	 * @deprecated Use `content` instead.
+	 * This flat format is auto-converted via a backward-compat shim.
 	 */
-	contentStyle?: StyleProps;
-
+	contentStyle?: AnimatedViewStyle;
 	/**
-	 * Animated style for the semi-transparent backdrop layer behind screen content.
-	 *
-	 * @example
-	 * backdropStyle: {
-	 *   backgroundColor: "black",
-	 *   opacity: interpolate(progress, [0, 1], [0, 0.5]),
-	 * }
+	 * @deprecated Use `backdrop` instead.
+	 * This flat format is auto-converted via a backward-compat shim.
 	 */
-	backdropStyle?: StyleProps;
-
+	backdropStyle?: AnimatedViewStyle;
 	/**
-	 * @deprecated Use `backdropStyle` instead. Will be removed in next major version.
+	 * @deprecated Use `backdrop` instead.
+	 * This flat format is auto-converted via a backward-compat shim.
 	 */
-	overlayStyle?: StyleProps;
-
-	/**
-	 * Define your own custom styles by using an id as the key: [id]: StyleProps
-	 */
-	[id: string]: StyleProps | undefined;
+	overlayStyle?: AnimatedViewStyle;
 };
 
 /**

@@ -1,4 +1,4 @@
-import { runOnJS } from "react-native-reanimated";
+import { runOnJS, type SharedValue } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
@@ -15,6 +15,8 @@ interface AnimateToProgressProps {
 	spec?: TransitionSpec;
 	onAnimationFinish?: (finished: boolean) => void;
 	animations: AnimationStoreMap;
+	targetProgress: SharedValue<number>;
+	emitWillAnimate?: boolean;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
 	initialVelocity?: number;
 }
@@ -24,6 +26,8 @@ export const animateToProgress = ({
 	spec,
 	onAnimationFinish,
 	animations,
+	targetProgress,
+	emitWillAnimate = true,
 	initialVelocity,
 }: AnimateToProgressProps) => {
 	"worklet";
@@ -44,7 +48,15 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, animating, closing, entering, targetProgress } = animations;
+	const { progress, willAnimate, animating, closing, entering } = animations;
+
+	if (emitWillAnimate) {
+		willAnimate.set(TRUE);
+		requestAnimationFrame(() => {
+			"worklet";
+			willAnimate.set(FALSE);
+		});
+	}
 
 	targetProgress.set(value);
 
@@ -58,6 +70,9 @@ export const animateToProgress = ({
 	if (!config) {
 		animating.set(FALSE);
 		progress.set(value);
+		if (!isClosing) {
+			entering.set(FALSE);
+		}
 
 		if (onAnimationFinish) {
 			runOnJS(onAnimationFinish)(true);
@@ -70,6 +85,10 @@ export const animateToProgress = ({
 		animate(value, effectiveConfig, (finished) => {
 			"worklet";
 			if (!finished) return;
+
+			if (!isClosing) {
+				entering.set(FALSE);
+			}
 
 			if (onAnimationFinish) {
 				runOnJS(onAnimationFinish)(finished);

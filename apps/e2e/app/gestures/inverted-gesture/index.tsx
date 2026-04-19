@@ -3,10 +3,16 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { GestureInfo } from "@/components/gesture-info";
 import { ScreenHeader } from "@/components/screen-header";
+import { useTheme } from "@/theme";
 
 export default function InvertedGestureIndex() {
+	const theme = useTheme();
+
 	return (
-		<SafeAreaView style={styles.container} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title="5. Inverted Gesture"
 				subtitle="Swipe UP to dismiss instead of down"
@@ -35,11 +41,27 @@ export default function InvertedGestureIndex() {
 
 			<View style={styles.actions}>
 				<Pressable
-					style={styles.button}
+					style={({ pressed }) => [
+						styles.button,
+						{
+							backgroundColor: pressed
+								? theme.actionButtonPressed
+								: theme.actionButton,
+						},
+					]}
 					onPress={() => router.push("/gestures/inverted-gesture/leaf")}
 				>
-					<Text style={styles.buttonText}>Open Leaf Screen</Text>
-					<Text style={styles.buttonSubtext}>Swipe UP to dismiss</Text>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
+						Open Leaf Screen
+					</Text>
+					<Text
+						style={[
+							styles.buttonSubtext,
+							{ color: theme.actionButtonText, opacity: 0.7 },
+						]}
+					>
+						Swipe UP to dismiss
+					</Text>
 				</Pressable>
 			</View>
 		</SafeAreaView>
@@ -49,25 +71,21 @@ export default function InvertedGestureIndex() {
 const styles = StyleSheet.create({
 	container: {
 		flex: 1,
-		backgroundColor: "#1a1a2e",
 	},
 	actions: {
 		padding: 16,
 		gap: 12,
 	},
 	button: {
-		backgroundColor: "#ff9e4a",
 		padding: 16,
-		borderRadius: 12,
+		borderRadius: 999,
 		alignItems: "center",
 	},
 	buttonText: {
-		color: "#000",
 		fontSize: 16,
 		fontWeight: "600",
 	},
 	buttonSubtext: {
-		color: "rgba(0, 0, 0, 0.6)",
 		fontSize: 12,
 		marginTop: 4,
 	},
