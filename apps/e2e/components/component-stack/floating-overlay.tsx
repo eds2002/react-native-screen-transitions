@@ -59,8 +59,8 @@ const boundsInterpolator = (props: ScreenInterpolationProps) => {
 	// return snapshot bounds directly - no interpolation, no transforms.
 	//
 	if ((progress === 1 && !isClosing) || !hasLink) {
-		const snapshot = bounds.getSnapshot("FLOATING_ELEMENT", screenKey);
-		const myBounds = snapshot?.bounds;
+		const measuredEntry = bounds.getMeasured("FLOATING_ELEMENT", screenKey);
+		const myBounds = measuredEntry?.bounds;
 		return {
 			BOUNDS_INDICATOR: {
 				height: myBounds?.height ?? 0,

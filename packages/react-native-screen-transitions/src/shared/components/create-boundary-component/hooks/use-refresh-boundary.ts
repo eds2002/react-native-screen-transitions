@@ -52,7 +52,7 @@ export const useRefreshBoundary = ({
 			if (nextValue === 0 || nextValue === previousValue) return;
 
 			const currentGroupActiveId = group
-				? BoundStore.getGroupActiveId(group)
+				? BoundStore.group.getActiveId(group)
 				: null;
 
 			if (group && currentGroupActiveId !== String(id)) {
@@ -66,7 +66,7 @@ export const useRefreshBoundary = ({
 				return;
 			}
 
-			const hasSourceLink = BoundStore.hasSourceLink(
+			const hasSourceLink = BoundStore.link.hasSource(
 				sharedBoundTag,
 				currentScreenKey,
 			);
@@ -93,7 +93,7 @@ export const useRefreshBoundary = ({
 			if (nextValue === 0 || nextValue === previousValue) return;
 
 			const currentGroupActiveId = group
-				? BoundStore.getGroupActiveId(group)
+				? BoundStore.group.getActiveId(group)
 				: null;
 
 			if (group && currentGroupActiveId !== String(id)) {

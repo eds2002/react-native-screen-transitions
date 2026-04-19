@@ -88,12 +88,10 @@ export const useCaptureDestinationBoundary = ({
 				expectedSourceScreenKey,
 			);
 			const hasAttachableSourceLink = resolvedSourceKey
-				? BoundStore.hasPendingLinkFromSource(
-						sharedBoundTag,
-						resolvedSourceKey,
-					) || BoundStore.hasSourceLink(sharedBoundTag, resolvedSourceKey)
+				? BoundStore.link.getPending(sharedBoundTag, resolvedSourceKey) !==
+						null || BoundStore.link.hasSource(sharedBoundTag, resolvedSourceKey)
 				: false;
-			const hasDestinationLink = BoundStore.hasDestinationLink(
+			const hasDestinationLink = BoundStore.link.hasDestination(
 				sharedBoundTag,
 				currentScreenKey,
 			);
@@ -108,7 +106,7 @@ export const useCaptureDestinationBoundary = ({
 				return [0, retryTick] as const;
 			}
 
-			if (group && BoundStore.getGroupActiveId(group) !== String(id)) {
+			if (group && BoundStore.group.getActiveId(group) !== String(id)) {
 				return [0, retryTick] as const;
 			}
 
@@ -124,7 +122,7 @@ export const useCaptureDestinationBoundary = ({
 			ensureLifecycleStartBlocked();
 			measureBoundary({ intent: "complete-destination" });
 
-			if (BoundStore.hasDestinationLink(sharedBoundTag, currentScreenKey)) {
+			if (BoundStore.link.hasDestination(sharedBoundTag, currentScreenKey)) {
 				releaseLifecycleStartBlock();
 				return;
 			}

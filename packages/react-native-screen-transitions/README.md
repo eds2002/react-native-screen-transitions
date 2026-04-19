@@ -286,8 +286,8 @@ Return `null`, `undefined`, or `{}` when you want an interpolator frame to apply
 screenStyleInterpolator: ({ bounds }) => {
   "worklet";
 
-  const snapshot = bounds.getSnapshot("hero");
-  if (!snapshot) return null;
+  const measuredEntry = bounds.getMeasured("hero");
+  if (!measuredEntry) return null;
 
   return {
     content: {
@@ -296,6 +296,9 @@ screenStyleInterpolator: ({ bounds }) => {
   };
 };
 ```
+
+`bounds.getSnapshot()` remains available as a deprecated alias for `bounds.getMeasured()`
+and will be removed in the next major version.
 
 ### Animation Specs
 

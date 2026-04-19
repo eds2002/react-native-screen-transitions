@@ -28,7 +28,7 @@ export const useCaptureSourceBoundary = (params: {
 			if (!captureSignal || captureSignal === previousCaptureSignal) return;
 
 			const currentGroupActiveId = group
-				? BoundStore.getGroupActiveId(group)
+				? BoundStore.group.getActiveId(group)
 				: null;
 
 			if (group && currentGroupActiveId !== String(id)) {

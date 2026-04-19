@@ -183,7 +183,7 @@ export function createBoundaryComponent<P extends object>(
 			(...args: unknown[]) => {
 				// Press path has priority: capture source before user onPress/navigation.
 				if (group) {
-					runOnUI(BoundStore.setGroupActiveId)(group, String(id));
+					runOnUI(BoundStore.group.setActiveId)(group, String(id));
 				}
 				runOnUI(measureBoundary)({ intent: "capture-source" });
 

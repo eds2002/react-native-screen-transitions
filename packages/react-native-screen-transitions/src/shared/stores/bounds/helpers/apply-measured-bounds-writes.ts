@@ -9,7 +9,7 @@ type ApplyMeasuredBoundsWritesParams = {
 	ancestorKeys: string[];
 	navigatorKey?: string;
 	ancestorNavigatorKeys?: string[];
-	shouldRegisterSnapshot?: boolean;
+	shouldWriteEntry?: boolean;
 	shouldSetSource?: boolean;
 	shouldUpdateSource?: boolean;
 	shouldSetDestination?: boolean;
@@ -29,7 +29,7 @@ export const applyMeasuredBoundsWrites = (
 		ancestorKeys,
 		navigatorKey,
 		ancestorNavigatorKeys,
-		shouldRegisterSnapshot,
+		shouldWriteEntry,
 		shouldSetSource,
 		shouldUpdateSource,
 		shouldSetDestination,
@@ -37,20 +37,19 @@ export const applyMeasuredBoundsWrites = (
 		expectedSourceScreenKey,
 	} = params;
 
-	if (shouldRegisterSnapshot) {
-		BoundStore.registerSnapshot(
-			sharedBoundTag,
-			currentScreenKey,
-			measured,
-			preparedStyles,
+	if (shouldWriteEntry) {
+		BoundStore.entry.set(sharedBoundTag, currentScreenKey, {
+			bounds: measured,
+			styles: preparedStyles,
 			ancestorKeys,
 			navigatorKey,
 			ancestorNavigatorKeys,
-		);
+		});
 	}
 
 	if (shouldSetSource) {
-		BoundStore.setLinkSource(
+		BoundStore.link.setSource(
+			"capture",
 			sharedBoundTag,
 			currentScreenKey,
 			measured,
@@ -62,7 +61,8 @@ export const applyMeasuredBoundsWrites = (
 	}
 
 	if (shouldUpdateSource) {
-		BoundStore.updateLinkSource(
+		BoundStore.link.setSource(
+			"refresh",
 			sharedBoundTag,
 			currentScreenKey,
 			measured,
@@ -74,7 +74,8 @@ export const applyMeasuredBoundsWrites = (
 	}
 
 	if (shouldUpdateDestination) {
-		BoundStore.updateLinkDestination(
+		BoundStore.link.setDestination(
+			"refresh",
 			sharedBoundTag,
 			currentScreenKey,
 			measured,
@@ -87,7 +88,8 @@ export const applyMeasuredBoundsWrites = (
 	}
 
 	if (shouldSetDestination) {
-		BoundStore.setLinkDestination(
+		BoundStore.link.setDestination(
+			"attach",
 			sharedBoundTag,
 			currentScreenKey,
 			measured,

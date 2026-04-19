@@ -15,8 +15,8 @@ import {
 	isMeasurementInViewport,
 } from "./helpers/measurement";
 import {
-	getMeasurementIntentFlags,
-	resolveMeasurementWritePlan,
+	getMeasureIntentFlags,
+	resolveMeasureWritePlan,
 } from "./helpers/measurement-rules";
 
 interface UseMeasurerParams {
@@ -49,31 +49,29 @@ export const useMeasurer = ({
 		"worklet";
 		if (!enabled) return;
 
-		const intents = getMeasurementIntentFlags(intent);
+		const intents = getMeasureIntentFlags(intent);
 
 		const expectedSourceScreenKey: string | undefined =
 			resolvePendingSourceKey(sharedBoundTag, preferredSourceScreenKey) ||
 			undefined;
 
-		const hasPendingLink = expectedSourceScreenKey
-			? BoundStore.hasPendingLinkFromSource(
-					sharedBoundTag,
-					expectedSourceScreenKey,
-				)
-			: BoundStore.hasPendingLink(sharedBoundTag);
+		const pendingLink = expectedSourceScreenKey
+			? BoundStore.link.getPending(sharedBoundTag, expectedSourceScreenKey)
+			: BoundStore.link.getPending(sharedBoundTag);
+		const hasPendingLink = pendingLink !== null;
 		const hasAttachableSourceLink = expectedSourceScreenKey
-			? BoundStore.hasSourceLink(sharedBoundTag, expectedSourceScreenKey)
+			? BoundStore.link.hasSource(sharedBoundTag, expectedSourceScreenKey)
 			: false;
-		const hasSourceLink = BoundStore.hasSourceLink(
+		const hasSourceLink = BoundStore.link.hasSource(
 			sharedBoundTag,
 			currentScreenKey,
 		);
-		const hasDestinationLink = BoundStore.hasDestinationLink(
+		const hasDestinationLink = BoundStore.link.hasDestination(
 			sharedBoundTag,
 			currentScreenKey,
 		);
 
-		const writePlan = resolveMeasurementWritePlan({
+		const writePlan = resolveMeasureWritePlan({
 			intents,
 			hasPendingLink,
 			hasSourceLink,
@@ -100,13 +98,13 @@ export const useMeasurer = ({
 			return;
 		}
 
-		const existingSnapshot = BoundStore.getSnapshot(
+		const existingMeasuredEntry = BoundStore.entry.getMeasured(
 			sharedBoundTag,
 			currentScreenKey,
 		);
-		const hasSnapshotChanged =
-			!existingSnapshot ||
-			!areMeasurementsEqual(existingSnapshot.bounds, measured);
+		const hasMeasuredEntryChanged =
+			!existingMeasuredEntry ||
+			!areMeasurementsEqual(existingMeasuredEntry.bounds, measured);
 
 		applyMeasuredBoundsWrites({
 			sharedBoundTag,
@@ -117,13 +115,13 @@ export const useMeasurer = ({
 			navigatorKey,
 			ancestorNavigatorKeys,
 			expectedSourceScreenKey,
-			shouldRegisterSnapshot: hasSnapshotChanged,
+			shouldWriteEntry: hasMeasuredEntryChanged,
 			shouldSetSource: writePlan.captureSource,
-			shouldUpdateSource: writePlan.refreshSource && hasSnapshotChanged,
+			shouldUpdateSource: writePlan.refreshSource && hasMeasuredEntryChanged,
 			shouldUpdateDestination:
 				writePlan.refreshDestination &&
 				destinationInViewport &&
-				hasSnapshotChanged,
+				hasMeasuredEntryChanged,
 			shouldSetDestination:
 				writePlan.completeDestination && destinationInViewport,
 		});
