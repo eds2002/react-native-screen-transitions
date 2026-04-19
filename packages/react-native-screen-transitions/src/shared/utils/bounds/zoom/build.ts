@@ -44,6 +44,15 @@ import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 const presentedZoomTagByRoute = makeMutable<Record<string, string>>({});
 
+function cachePresentedZoomTag(routeKey: string, resolvedTag: string) {
+	"worklet";
+
+	presentedZoomTagByRoute.value = {
+		...presentedZoomTagByRoute.value,
+		[routeKey]: resolvedTag,
+	};
+}
+
 /* -------------------------------------------------------------------------- */
 /*                               LOCAL HELPERS                                */
 /* -------------------------------------------------------------------------- */
@@ -189,10 +198,7 @@ function resolveEffectiveZoomTag(params: {
 	const shouldFreezeDuringEnter = entering && animating && !isFreshOpenFrame;
 
 	if (!cachedTag || isFreshOpenFrame) {
-		presentedZoomTagByRoute.modify((state) => ({
-			...state,
-			[activeRouteKey]: resolvedTag,
-		}));
+		cachePresentedZoomTag(activeRouteKey, resolvedTag);
 		return resolvedTag;
 	}
 
@@ -208,10 +214,7 @@ function resolveEffectiveZoomTag(params: {
 	}
 
 	if (cachedTag !== resolvedTag) {
-		presentedZoomTagByRoute.modify((state) => ({
-			...state,
-			[activeRouteKey]: resolvedTag,
-		}));
+		cachePresentedZoomTag(activeRouteKey, resolvedTag);
 	}
 
 	return resolvedTag;
