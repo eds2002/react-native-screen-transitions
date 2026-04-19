@@ -13,7 +13,7 @@ export function PageLinks({
 }) {
 	return (
 		<div className="grid gap-4 sm:grid-cols-2">
-			{items.map((item, index) => {
+			{items.map((item) => {
 				const reverse = item.direction === "next";
 				const soloNext = items.length === 1 && item.direction === "next";
 

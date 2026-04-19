@@ -365,9 +365,10 @@ function SearchDialog({
 }
 
 export function DocsShell({ children }: { children: ReactNode }) {
-	const pathname = useRouterState({
-		select: (state) => state.location.pathname,
-	});
+	const pathname =
+		useRouterState({
+			select: (state) => state.location.pathname,
+		}) ?? "/";
 	const currentDoc = findDoc(pathname);
 	const currentVersion = getDocVersion(currentDoc.versionId);
 	const groups = getDocsGroups(currentVersion.id);
