@@ -1,5 +1,23 @@
 # Changelog
 
+# [3.4.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-rc.1...v3.4.0) (2026-04-19)
+
+
+### Bug Fixes
+
+* **bounds:** make grouped zoom tag cache worklet-safe ([8ab021c](https://github.com/eds2002/react-native-screen-transitions/commit/8ab021cca7194b123524dabc6773bc3ea35bcac8))
+* **docs:** include docs helpers and netlify config ([#88](https://github.com/eds2002/react-native-screen-transitions/issues/88)) ([403cff5](https://github.com/eds2002/react-native-screen-transitions/commit/403cff56e321f21d688345af4d8bb77a1802a40d))
+* **docs:** ship docs as static netlify site ([#89](https://github.com/eds2002/react-native-screen-transitions/issues/89)) ([e91472a](https://github.com/eds2002/react-native-screen-transitions/commit/e91472a03d2b1d7df000059e753272a74c5eb4cc))
+* **docs:** sync docs hosting updates to release/v3.4 ([d3e7d06](https://github.com/eds2002/react-native-screen-transitions/commit/d3e7d06dda1c9dc225f1e082b148e9e8f0d56a89))
+* isolate scroll axis writes in useScrollRegistry ([#85](https://github.com/eds2002/react-native-screen-transitions/issues/85)) ([88e6589](https://github.com/eds2002/react-native-screen-transitions/commit/88e6589decee7d01f9b2bddfcff05f31795a0b20))
+* **screen-container:** prevent masked navigation dead space from dismissing sheets ([69290f4](https://github.com/eds2002/react-native-screen-transitions/commit/69290f45ef39dae61d4d79c612ca33cdaf52b58c))
+
+
+### Features
+
+* **docs:** build out new doc site ([31bd748](https://github.com/eds2002/react-native-screen-transitions/commit/31bd7487809d140b338c47a7a038a2f42fe566e7))
+* **docs:** lift docs site onto main ([#87](https://github.com/eds2002/react-native-screen-transitions/issues/87)) ([935985c](https://github.com/eds2002/react-native-screen-transitions/commit/935985c8a0904d1128ab9b3abc2dbe13b3951177))
+
 # [3.4.0-rc.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-rc.0...v3.4.0-rc.1) (2026-04-12)
 
 
