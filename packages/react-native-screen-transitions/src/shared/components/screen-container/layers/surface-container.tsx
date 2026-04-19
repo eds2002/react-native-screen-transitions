@@ -14,7 +14,7 @@ type Props = {
 };
 
 export const SurfaceContainer = memo(({ children, pointerEvents }: Props) => {
-	const { layerStylesMap } = useScreenStyles();
+	const { stylesMap } = useScreenStyles();
 	const { current } = useDescriptors();
 
 	const SurfaceComponent = current.options.surfaceComponent;
@@ -27,12 +27,12 @@ export const SurfaceContainer = memo(({ children, pointerEvents }: Props) => {
 
 	const animatedSurfaceStyle = useAnimatedStyle(() => {
 		"worklet";
-		return layerStylesMap.value.surface?.style ?? NO_STYLES;
+		return stylesMap.get().surface?.style ?? NO_STYLES;
 	});
 
 	const animatedSurfaceProps = useAnimatedProps(() => {
 		"worklet";
-		return layerStylesMap.value.surface?.props ?? NO_PROPS;
+		return stylesMap.get().surface?.props ?? NO_PROPS;
 	});
 
 	if (!AnimatedSurfaceComponent) return children;

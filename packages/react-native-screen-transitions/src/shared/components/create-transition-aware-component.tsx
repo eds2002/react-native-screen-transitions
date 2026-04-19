@@ -101,26 +101,17 @@ export function createTransitionAwareComponent<P extends object>(
 		} = props as any;
 
 		const animatedRef = useAnimatedRef<View>();
-		const { elementStylesMap } = useScreenStyles();
+		const { stylesMap } = useScreenStyles();
 		const associatedId = sharedBoundTag || styleId;
 
 		const associatedStyles = useAnimatedStyle(() => {
 			"worklet";
 
 			if (!associatedId) {
-				return { opacity: 1 };
+				return NO_STYLES;
 			}
 
-			const baseStyle =
-				(elementStylesMap.value[associatedId]?.style as
-					| Record<string, any>
-					| undefined) ?? (NO_STYLES as Record<string, any>);
-
-			if ("opacity" in baseStyle) {
-				return baseStyle;
-			}
-
-			return { ...baseStyle, opacity: 1 };
+			return stylesMap.get()[associatedId]?.style ?? NO_STYLES;
 		});
 
 		const associatedProps = useAnimatedProps(() => {
@@ -130,7 +121,7 @@ export function createTransitionAwareComponent<P extends object>(
 				return NO_PROPS;
 			}
 
-			return elementStylesMap.value[associatedId]?.props ?? NO_PROPS;
+			return stylesMap.get()[associatedId]?.props ?? NO_PROPS;
 		});
 
 		return (

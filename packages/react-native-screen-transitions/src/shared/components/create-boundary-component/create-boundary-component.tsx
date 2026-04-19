@@ -96,33 +96,20 @@ export function createBoundaryComponent<P extends object>(
 		const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
 
 		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
-		const { elementStylesMap } = useScreenStyles();
+		const { stylesMap } = useScreenStyles();
 
 		const associatedStyles = useAnimatedStyle(() => {
 			"worklet";
-
-			const baseStyle =
-				(elementStylesMap.value[sharedBoundTag]?.style as
-					| Record<string, any>
-					| undefined) ?? (NO_STYLES as Record<string, any>);
-
-			if ("opacity" in baseStyle) {
-				return baseStyle;
-			}
-
-			return { ...baseStyle, opacity: 1 };
+			return stylesMap.get()[sharedBoundTag]?.style ?? NO_STYLES;
 		});
 
 		const associatedStackingStyles = useAnimatedStyle(() => {
 			"worklet";
-			const baseStyle =
-				(elementStylesMap.value[sharedBoundTag]?.style as
-					| Record<string, any>
-					| undefined) ?? (NO_STYLES as Record<string, any>);
+			const baseStyle = stylesMap.get()[sharedBoundTag]?.style;
 
 			return {
-				zIndex: (baseStyle.zIndex as number | undefined) ?? 0,
-				elevation: (baseStyle.elevation as number | undefined) ?? 0,
+				zIndex: baseStyle?.zIndex ?? 0,
+				elevation: baseStyle?.elevation ?? 0,
 			};
 		});
 
