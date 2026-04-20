@@ -1,6 +1,6 @@
 import { useMemo, useRef } from "react";
 import { useSharedValue } from "react-native-reanimated";
-import useStableCallback from "../use-stable-callback";
+import useStableCallback from "../../../hooks/use-stable-callback";
 
 export const useClosingRouteKeys = () => {
 	const keysRef = useRef<Set<string>>(new Set());

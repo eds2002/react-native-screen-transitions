@@ -9,8 +9,6 @@ import createProvider from "../../utils/create-provider";
 export interface StackCoreConfig {
 	TRANSITIONS_ALWAYS_ON?: boolean;
 	STACK_TYPE?: StackType;
-	DISABLE_NATIVE_SCREENS?: boolean;
-	DISABLE_NATIVE_SCREEN_CONTAINER?: boolean;
 }
 
 interface StackCoreProviderProps {
@@ -22,8 +20,6 @@ export interface StackCoreContextValue {
 	flags: {
 		TRANSITIONS_ALWAYS_ON: boolean;
 		STACK_TYPE?: StackType;
-		DISABLE_NATIVE_SCREENS: boolean;
-		DISABLE_NATIVE_SCREEN_CONTAINER: boolean;
 	};
 }
 
@@ -32,26 +28,15 @@ const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
 		StackCoreProviderProps,
 		StackCoreContextValue
 	>(({ config, children }) => {
-		const {
-			TRANSITIONS_ALWAYS_ON = false,
-			DISABLE_NATIVE_SCREENS = false,
-			DISABLE_NATIVE_SCREEN_CONTAINER = false,
-			STACK_TYPE = StackType.BLANK,
-		} = config;
+		const { TRANSITIONS_ALWAYS_ON = false, STACK_TYPE = StackType.BLANK } =
+			config;
 
 		const flags = useMemo(
 			() => ({
 				TRANSITIONS_ALWAYS_ON,
 				STACK_TYPE,
-				DISABLE_NATIVE_SCREENS,
-				DISABLE_NATIVE_SCREEN_CONTAINER,
 			}),
-			[
-				TRANSITIONS_ALWAYS_ON,
-				STACK_TYPE,
-				DISABLE_NATIVE_SCREENS,
-				DISABLE_NATIVE_SCREEN_CONTAINER,
-			],
+			[TRANSITIONS_ALWAYS_ON, STACK_TYPE],
 		);
 
 		return {
@@ -78,8 +63,6 @@ export function withStackCore<TProps extends object>(
 	Component: React.ComponentType<TProps>,
 ): React.FC<TProps & StackCoreConfig> {
 	return function StackCoreWrapper({
-		DISABLE_NATIVE_SCREENS,
-		DISABLE_NATIVE_SCREEN_CONTAINER,
 		TRANSITIONS_ALWAYS_ON,
 		STACK_TYPE,
 		...props
@@ -89,11 +72,6 @@ export function withStackCore<TProps extends object>(
 			TRANSITIONS_ALWAYS_ON:
 				TRANSITIONS_ALWAYS_ON ?? defaultConfig.TRANSITIONS_ALWAYS_ON,
 			STACK_TYPE: STACK_TYPE ?? defaultConfig.STACK_TYPE,
-			DISABLE_NATIVE_SCREENS:
-				DISABLE_NATIVE_SCREENS ?? defaultConfig.DISABLE_NATIVE_SCREENS,
-			DISABLE_NATIVE_SCREEN_CONTAINER:
-				DISABLE_NATIVE_SCREEN_CONTAINER ??
-				defaultConfig.DISABLE_NATIVE_SCREEN_CONTAINER,
 		};
 		return (
 			<InternalStackCoreProvider config={config}>

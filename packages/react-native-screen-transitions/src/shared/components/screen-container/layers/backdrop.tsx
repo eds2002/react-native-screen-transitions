@@ -15,7 +15,7 @@ import { GestureStore } from "../../../stores/gesture.store";
 import { SystemStore } from "../../../stores/system.store";
 import type { BackdropBehavior } from "../../../types/screen.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { findCollapseTarget } from "../../../utils/gesture/find-collapse-target";
+import { findCollapseTarget } from "../helpers/find-collapse-target";
 
 interface BackdropLayerProps {
 	backdropBehavior: BackdropBehavior;

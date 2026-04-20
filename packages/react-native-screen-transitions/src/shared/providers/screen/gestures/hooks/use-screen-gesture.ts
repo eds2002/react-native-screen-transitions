@@ -1,24 +1,11 @@
+import {
+	type ChainTarget,
+	resolveChainTarget,
+} from "../../../../utils/resolve-chain-target";
 import { useGestureContext } from "../gestures.provider";
 import type { GestureContextType } from "../types";
 
-export type ScreenGestureTarget =
-	| "self"
-	| "parent"
-	| "root"
-	| { ancestor: number };
-
-type ScreenGesture = GestureContextType["panGesture"] | null;
-
-type ResolveScreenGestureTargetParams = {
-	target: ScreenGestureTarget | undefined;
-	self: GestureContextType | null | undefined;
-};
-
-const isAncestorTarget = (
-	target: ScreenGestureTarget,
-): target is { ancestor: number } => {
-	return typeof target === "object" && target !== null && "ancestor" in target;
-};
+export type ScreenGestureTarget = ChainTarget;
 
 const getGestureAncestors = (
 	self: GestureContextType,
@@ -33,40 +20,6 @@ const getGestureAncestors = (
 	}
 
 	return ancestors;
-};
-
-export const resolveScreenGestureTarget = ({
-	target,
-	self,
-}: ResolveScreenGestureTargetParams): ScreenGesture => {
-	if (!self) {
-		return null;
-	}
-
-	if (!target || target === "self") {
-		return self.panGesture ?? null;
-	}
-
-	const ancestors = getGestureAncestors(self);
-
-	if (target === "parent") {
-		return ancestors[0]?.panGesture ?? null;
-	}
-
-	if (target === "root") {
-		return ancestors[ancestors.length - 1]?.panGesture ?? null;
-	}
-
-	if (!isAncestorTarget(target)) {
-		return null;
-	}
-
-	const depth = target.ancestor;
-	if (!Number.isInteger(depth) || depth < 1) {
-		return null;
-	}
-
-	return ancestors[depth - 1]?.panGesture ?? null;
 };
 
 /**
@@ -85,8 +38,11 @@ export const resolveScreenGestureTarget = ({
  */
 export const useScreenGesture = (target?: ScreenGestureTarget) => {
 	const ctx = useGestureContext();
-	return resolveScreenGestureTarget({
-		target,
-		self: ctx,
-	});
+	return (
+		resolveChainTarget({
+			target,
+			self: ctx,
+			ancestors: ctx ? getGestureAncestors(ctx) : [],
+		})?.panGesture ?? null
+	);
 };

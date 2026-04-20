@@ -45,7 +45,6 @@ const makeProps = (): Omit<ScreenInterpolationProps, "bounds"> => {
 		focused: true,
 		progress: 0,
 		stackProgress: 0,
-		snapIndex: current.snapIndex,
 		logicallySettled: current.logicallySettled,
 		active: current,
 		inactive: previous,

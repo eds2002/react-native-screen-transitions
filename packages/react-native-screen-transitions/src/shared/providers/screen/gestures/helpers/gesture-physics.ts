@@ -267,15 +267,19 @@ export const applyGestureSensitivity = (
 
 /**
  * Normalizes pinch scale so idle is 0, pinch-in is negative, and pinch-out is positive.
- * The value is clamped to [-1, 1] where:
+ * This intentionally returns the raw delta so sensitivity can be applied before
+ * the live gesture is clamped into progress space.
+ *
+ * Examples:
  * - 0.5 scale => -0.5
  * - 1.0 scale => 0
  * - 1.5 scale => 0.5
  * - 2.0 scale => 1
+ * - 3.0 scale => 2
  */
 export const normalizePinchScale = (scale: number) => {
 	"worklet";
-	return clamp(scale - 1, -1, 1);
+	return scale - 1;
 };
 
 export const shouldDismissFromPinch = (

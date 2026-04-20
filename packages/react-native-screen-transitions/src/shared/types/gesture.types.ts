@@ -5,6 +5,11 @@ export type PanGestureDirection =
 	| "vertical-inverted"
 	| "bidirectional";
 
+export type ResolvedPanGestureDirection = Exclude<
+	PanGestureDirection,
+	"bidirectional"
+>;
+
 export type PinchGestureDirection = "pinch-in" | "pinch-out";
 
 export type GestureDirection = PanGestureDirection | PinchGestureDirection;
@@ -83,5 +88,5 @@ export type GestureValues = {
 	/**
 	 * The initial pan direction that activated the gesture.
 	 */
-	direction: Omit<PanGestureDirection, "bidirectional"> | null;
+	direction: ResolvedPanGestureDirection | null;
 };

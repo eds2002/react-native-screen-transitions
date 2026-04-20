@@ -5,12 +5,12 @@ import {
 import { memo, useMemo } from "react";
 import { useDerivedValue } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../animation/snap-to";
-import { useOptimisticFocusedIndex } from "../../hooks/navigation/use-optimistic-focused-index";
 import { useStack } from "../../hooks/navigation/use-stack";
 import { ScreenAnimationProvider } from "../../providers/screen/animation";
 import type { BaseDescriptor } from "../../providers/screen/descriptors";
 import { DescriptorsProvider } from "../../providers/screen/descriptors";
 import { ScreenStylesProvider } from "../../providers/screen/styles";
+import { useOptimisticFocusedIndex } from "../../providers/stack/helpers/use-optimistic-focused-index";
 import type {
 	OverlayProps,
 	OverlayScreenState,

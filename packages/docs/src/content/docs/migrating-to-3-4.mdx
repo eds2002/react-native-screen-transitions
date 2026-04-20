@@ -167,6 +167,8 @@ const selfGesture = useScreenGesture();
 const rootGesture = useScreenGesture("root");
 ```
 
+Ancestor targets now resolve to `null` when the requested screen chain does not exist. They no longer fall back to the current screen automatically.
+
 `useScreenGesture()` returns a gesture ref for coordination with Gesture Handler. It does not configure `gestureEnabled`, `gestureDirection`, or other screen options.
 
 ## Migration Checklist

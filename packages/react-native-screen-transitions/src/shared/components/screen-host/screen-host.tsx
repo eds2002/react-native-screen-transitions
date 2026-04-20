@@ -4,11 +4,12 @@ import Animated, { useAnimatedProps } from "react-native-reanimated";
 import { useStack } from "../../hooks/navigation/use-stack";
 import { useManagedStackContext } from "../../providers/stack/managed.provider";
 import { AnimationStore } from "../../stores/animation.store";
+import { PASSTHROUGH } from "./constants";
 import {
-	PASSTHROUGH,
-	POINTER_EVENTS_BOX_NONE,
-	POINTER_EVENTS_NONE,
-} from "./constants";
+	type InactiveBehavior,
+	resolveNativeScreenPointerEvents,
+	shouldUnmountNativeScreen,
+} from "./helpers";
 import { useScreenActivityState } from "./hooks/use-screen-activity-state";
 import { ScreenHostProvider } from "./screen-host.provider";
 
@@ -16,7 +17,7 @@ interface ScreenProps {
 	routeKey: string;
 	index: number;
 	isPreloaded: boolean;
-	inactiveBehavior?: "pause" | "unmount" | "none";
+	inactiveBehavior?: InactiveBehavior;
 	children: ReactNode;
 }
 
@@ -43,8 +44,11 @@ export const ScreenHost = ({
 		isPreloaded,
 	});
 
-	const shouldUnmount =
-		inactiveBehavior === "unmount" && state === "inactive" && !hasNestedState;
+	const shouldUnmount = shouldUnmountNativeScreen({
+		inactiveBehavior,
+		state,
+		hasNestedState,
+	});
 	const isInert = state !== "interactive";
 	const shouldPauseEffects =
 		state === "inactive" && inactiveBehavior !== "none";
@@ -60,10 +64,11 @@ export const ScreenHost = ({
 		const isActive = index === activeIndex;
 
 		return {
-			pointerEvents:
-				isClosing || (!isActive && !isAllowedPassthroughBelow)
-					? POINTER_EVENTS_NONE
-					: POINTER_EVENTS_BOX_NONE,
+			pointerEvents: resolveNativeScreenPointerEvents({
+				isClosing: isClosing > 0,
+				isActive,
+				isAllowedPassthroughBelow,
+			}),
 		};
 	});
 

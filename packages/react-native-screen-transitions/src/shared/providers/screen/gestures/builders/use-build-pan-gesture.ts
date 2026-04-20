@@ -5,12 +5,11 @@ import { useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { SystemStore } from "../../../../stores/system.store";
-import { claimsAnyDirection } from "../../../../utils/gesture/compute-claimed-directions";
 import { usePanActivation } from "../activation/use-pan-activation";
-import { useDismissPanBehavior } from "../behaviors/use-dismiss-pan-behavior";
-import { useSnapPanBehavior } from "../behaviors/use-snap-pan-behavior";
+import { usePanBehavior } from "../behaviors/use-pan-behavior";
 import { usePanPolicy } from "../config/use-pan-policy";
 import { useGestureContext } from "../gestures.provider";
+import { claimsAnyDirection } from "../ownership/compute-claimed-directions";
 import { findShadowedAncestorPanGestures } from "../ownership/find-shadowed-ancestor-pan-gestures";
 import type {
 	DirectionClaimMap,
@@ -65,12 +64,7 @@ export const useBuildPanGesture = ({
 		runtime,
 	});
 
-	const dismissBehavior = useDismissPanBehavior(runtime);
-	const snapBehavior = useSnapPanBehavior(runtime);
-
-	const behavior = config.effectiveSnapPoints.hasSnapPoints
-		? snapBehavior
-		: dismissBehavior;
+	const behavior = usePanBehavior(runtime);
 
 	const shadowedAncestorGestures = useMemo(
 		() =>

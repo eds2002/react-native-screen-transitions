@@ -26,8 +26,10 @@ export const SlideFromTop = (
 		gestureDirection: "vertical-inverted",
 		screenStyleInterpolator: ({
 			progress,
-			layouts: {
-				screen: { height },
+			current: {
+				layouts: {
+					screen: { height },
+				},
 			},
 		}) => {
 			"worklet";
@@ -101,8 +103,10 @@ export const SlideFromBottom = (
 		gestureEnabled: true,
 		gestureDirection: "vertical",
 		screenStyleInterpolator: ({
-			layouts: {
-				screen: { height },
+			current: {
+				layouts: {
+					screen: { height },
+				},
 			},
 			progress,
 		}) => {
@@ -134,8 +138,9 @@ export const DraggableCard = (
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["horizontal", "vertical"],
-		screenStyleInterpolator: ({ current, progress, layouts: { screen } }) => {
+		screenStyleInterpolator: ({ current, progress }) => {
 			"worklet";
+			const { screen } = current.layouts;
 
 			/** Combined */
 			const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.75]);
@@ -180,13 +185,9 @@ export const ElasticCard = (
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "bidirectional",
-		screenStyleInterpolator: ({
-			current,
-			next,
-			layouts: { screen },
-			progress,
-		}) => {
+		screenStyleInterpolator: ({ current, next, progress }) => {
 			"worklet";
+			const { screen } = current.layouts;
 
 			/**
 			 * Applies to both screens ( previous and incoming)
@@ -251,15 +252,15 @@ export const SharedIGImage = ({
 		gestureDrivesProgress: false,
 		screenStyleInterpolator: ({
 			current,
-			layouts: {
-				screen: { height, width },
-			},
 			bounds,
 			progress,
 			focused,
 			active,
 		}) => {
 			"worklet";
+			const {
+				screen: { height, width },
+			} = current.layouts;
 
 			const normX = active.gesture.normX;
 			const normY = active.gesture.normY;
@@ -419,11 +420,11 @@ export const SharedAppleMusic = ({
 			bounds,
 			focused,
 			progress,
-			layouts: { screen },
 			current,
 			active,
 		}) => {
 			"worklet";
+			const { screen } = current.layouts;
 
 			const normX = active.gesture.normX;
 			const normY = active.gesture.normY;
@@ -629,14 +630,9 @@ export const SharedXImage = ({
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "vertical-inverted"],
 		gestureDrivesProgress: false,
-		screenStyleInterpolator: ({
-			focused,
-			bounds,
-			current,
-			layouts: { screen },
-			progress,
-		}) => {
+		screenStyleInterpolator: ({ focused, bounds, current, progress }) => {
 			"worklet";
+			const { screen } = current.layouts;
 
 			if (!focused) return {};
 

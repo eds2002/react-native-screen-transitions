@@ -4,8 +4,8 @@ import { NO_CLAIMS } from "../types/ownership.types";
 import {
 	claimsAnyDirection,
 	computeClaimedDirections,
-} from "../utils/gesture/compute-claimed-directions";
-import { resolveOwnership } from "../utils/gesture/resolve-ownership";
+} from "../providers/screen/gestures/ownership/compute-claimed-directions";
+import { resolveOwnership } from "../providers/screen/gestures/ownership/resolve-ownership";
 
 /** Minimal shape matching resolve-ownership's internal AncestorClaimsContext */
 interface MockAncestorContext {

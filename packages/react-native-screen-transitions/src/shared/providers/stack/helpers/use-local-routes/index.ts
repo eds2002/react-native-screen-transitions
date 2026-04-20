@@ -1,6 +1,5 @@
 import { StackActions } from "@react-navigation/native";
 import { useLayoutEffect, useState } from "react";
-import { useClosingRouteKeys } from "../../../../hooks/navigation/use-closing-route-keys";
 import { usePrevious } from "../../../../hooks/navigation/use-previous";
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import type {
@@ -10,6 +9,7 @@ import type {
 } from "../../../../types/stack.types";
 import { syncRoutesWithRemoved } from "../../../../utils/navigation/sync-routes-with-removed";
 import type { ManagedStackProps } from "../../managed.provider";
+import { useClosingRouteKeys } from "../use-closing-route-keys";
 import { alignRoutesWithLatest } from "./helpers/align-routes-with-latest";
 import { areDescriptorsEqual } from "./helpers/are-descriptors-equal";
 import { haveSameRouteKeys } from "./helpers/have-same-route-keys";

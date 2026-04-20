@@ -282,7 +282,7 @@ const parentGestureRef = useScreenGesture("parent");
 const customPan = Gesture.Pan().requireExternalGestureToFail(parentGestureRef);
 ```
 
-Ancestor targeting stops at isolation boundaries. In an `independent` nested stack, `"parent"`, `"root"`, or `{ ancestor: number }` can resolve to `null` when the lookup reaches that isolated tree edge.
+Ancestor targeting stops at isolation boundaries. In an `independent` nested stack, `"parent"`, `"root"`, or `{ ancestor: number }` can resolve to `null` when the lookup reaches that isolated tree edge. The same nullable behavior applies to `useScreenAnimation()` when an ancestor target is missing.
 
 ## Related Reading
 

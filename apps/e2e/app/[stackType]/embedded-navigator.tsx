@@ -291,11 +291,7 @@ function PlayingScreen({ navigation, route }: PlayingScreenProps) {
 
 function MiniPlayer() {
 	return (
-		<PlayerStack.Navigator
-			independent
-			enableNativeScreens
-			initialRouteName="albums"
-		>
+		<PlayerStack.Navigator independent initialRouteName="albums">
 			<PlayerStack.Screen
 				name="albums"
 				component={AlbumsScreen}

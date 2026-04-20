@@ -1,4 +1,4 @@
-import { runOnJS, type SharedValue } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
@@ -90,7 +90,7 @@ export const animateToProgress = ({
 			}
 
 			if (onAnimationFinish) {
-				runOnJS(onAnimationFinish)(finished);
+				scheduleOnRN(onAnimationFinish, finished);
 			}
 
 			// Delay setting animating=FALSE by one frame to ensure final frame is painted

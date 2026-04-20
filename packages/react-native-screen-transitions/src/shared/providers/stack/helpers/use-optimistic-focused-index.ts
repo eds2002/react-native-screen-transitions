@@ -1,5 +1,5 @@
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
-import { useSharedValueState } from "../reanimated/use-shared-value-state";
+import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
 
 /**
  * Returns a JS-focused index derived from optimisticFocusedIndex and clamped to route count.

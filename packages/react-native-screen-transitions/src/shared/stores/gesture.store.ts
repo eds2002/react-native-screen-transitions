@@ -3,7 +3,7 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { PanGestureDirection } from "../types/gesture.types";
+import type { ResolvedPanGestureDirection } from "../types/gesture.types";
 import { createStore } from "../utils/create-store";
 
 export type GestureStoreMap = {
@@ -17,7 +17,7 @@ export type GestureStoreMap = {
 	focalY: SharedValue<number>;
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
-	direction: SharedValue<Omit<PanGestureDirection, "bidirectional"> | null>;
+	direction: SharedValue<ResolvedPanGestureDirection | null>;
 };
 
 function createGestureBag(): GestureStoreMap {
@@ -39,9 +39,7 @@ function createGestureBag(): GestureStoreMap {
 		focalY: makeMutable(0),
 		dismissing,
 		dragging,
-		direction: makeMutable<Omit<PanGestureDirection, "bidirectional"> | null>(
-			null,
-		),
+		direction: makeMutable<ResolvedPanGestureDirection | null>(null),
 	};
 }
 

@@ -1,4 +1,4 @@
-import type { SnapPoint } from "../../types/screen.types";
+import type { SnapPoint } from "../../../../types/screen.types";
 
 /**
  * Filters snap points to only valid, finite numeric values.

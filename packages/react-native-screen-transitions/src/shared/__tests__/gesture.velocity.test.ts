@@ -1,8 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import {
+	applyGestureSensitivity,
 	getPanReleaseHandoffVelocity,
 	getPanReleaseProgressVelocity,
 	getPinchReleaseHandoffVelocity,
+	normalizePinchScale,
 	shouldDismissFromProjection,
 	toProgressVelocity,
 } from "../providers/screen/gestures/helpers/gesture-physics";
@@ -67,6 +69,22 @@ describe("getPinchReleaseHandoffVelocity", () => {
 	it("treats pinch velocity as scale velocity and caps privately", () => {
 		expect(getPinchReleaseHandoffVelocity(1.2)).toBeCloseTo(1.2, 5);
 		expect(getPinchReleaseHandoffVelocity(8)).toBeCloseTo(3.2, 5);
+	});
+});
+
+describe("normalizePinchScale", () => {
+	it("returns the raw pinch delta before sensitivity or progress clamping", () => {
+		expect(normalizePinchScale(0.5)).toBeCloseTo(-0.5, 5);
+		expect(normalizePinchScale(1)).toBeCloseTo(0, 5);
+		expect(normalizePinchScale(2)).toBeCloseTo(1, 5);
+		expect(normalizePinchScale(3)).toBeCloseTo(2, 5);
+	});
+
+	it("allows sensitivity to reduce travel without hard-capping pinch-out early", () => {
+		expect(applyGestureSensitivity(normalizePinchScale(3), 0.75)).toBeCloseTo(
+			1.5,
+			5,
+		);
 	});
 });
 

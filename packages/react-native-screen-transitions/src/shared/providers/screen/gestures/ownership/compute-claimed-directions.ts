@@ -1,12 +1,12 @@
 import type {
 	GestureDirection,
 	PanGestureDirection,
-} from "../../types/gesture.types";
+} from "../../../../types/gesture.types";
 import {
 	type ClaimedDirections,
 	type Direction,
 	NO_CLAIMS,
-} from "../../types/ownership.types";
+} from "../../../../types/ownership.types";
 
 /**
  * Computes which directions a screen claims ownership of.

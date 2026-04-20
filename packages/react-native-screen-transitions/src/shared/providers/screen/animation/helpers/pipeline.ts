@@ -33,20 +33,26 @@ interface ScreenAnimationPipeline {
 const createInitialBaseInterpolatorProps = (
 	dimensions: ScreenInterpolatorFrame["layouts"]["screen"],
 	insets: ScreenInterpolatorFrame["insets"],
-): ScreenInterpolatorFrame => ({
-	layouts: { screen: dimensions, navigationMaskEnabled: false },
-	insets,
-	previous: undefined,
-	current: DEFAULT_SCREEN_TRANSITION_STATE,
-	next: undefined,
-	progress: 0,
-	stackProgress: 0,
-	snapIndex: -1,
-	logicallySettled: 1,
-	focused: true,
-	active: DEFAULT_SCREEN_TRANSITION_STATE,
-	inactive: undefined,
-});
+): ScreenInterpolatorFrame => {
+	const current = {
+		...DEFAULT_SCREEN_TRANSITION_STATE,
+		layouts: { screen: dimensions, navigationMaskEnabled: false },
+	};
+
+	return {
+		layouts: current.layouts,
+		insets,
+		previous: undefined,
+		current,
+		next: undefined,
+		progress: 0,
+		stackProgress: 0,
+		logicallySettled: 1,
+		focused: true,
+		active: current,
+		inactive: undefined,
+	};
+};
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
@@ -115,7 +121,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			const focused = helpers.focused;
 			const active = helpers.active;
 			const inactive = helpers.inactive;
-			const snapIndex = current.snapIndex;
 			const logicallySettled = active.logicallySettled;
 
 			return {
@@ -124,7 +129,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				next,
 				progress,
 				stackProgress,
-				snapIndex,
 				logicallySettled,
 				focused,
 				active,
@@ -137,7 +141,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			next,
 			progress,
 			stackProgress,
-			snapIndex,
 			logicallySettled,
 			focused,
 			active,
@@ -154,7 +157,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				frame.next = next;
 				frame.progress = progress;
 				frame.stackProgress = stackProgress;
-				frame.snapIndex = snapIndex;
 				frame.logicallySettled = logicallySettled;
 				frame.focused = focused;
 				frame.active = active;

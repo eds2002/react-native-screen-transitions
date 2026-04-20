@@ -1,12 +1,12 @@
 import { useMemo } from "react";
-import { computeClaimedDirections } from "../../../../utils/gesture/compute-claimed-directions";
-import { resolveOwnership } from "../../../../utils/gesture/resolve-ownership";
-import { validateSnapPoints } from "../../../../utils/gesture/validate-snap-points";
 import {
 	useDescriptorDerivations,
 	useDescriptors,
 } from "../../../screen/descriptors";
 import { useGestureContext } from "../gestures.provider";
+import { validateSnapPoints } from "../helpers/validate-snap-points";
+import { computeClaimedDirections } from "../ownership/compute-claimed-directions";
+import { resolveOwnership } from "../ownership/resolve-ownership";
 import type { ScreenGestureConfig } from "../types";
 
 export function useScreenGestureConfig(): ScreenGestureConfig {

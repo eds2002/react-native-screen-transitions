@@ -1,4 +1,5 @@
 import type { ComponentProps } from "react";
+import type { DerivedValue } from "react-native-reanimated";
 import {
 	type BlankStackFactoryOptions,
 	type BlankStackNavigationOptions,
@@ -8,6 +9,7 @@ import {
 import type {
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
+	ScreenAnimationTarget,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	ScreenTransitionConfig,
@@ -17,6 +19,8 @@ import type {
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+	useScreenAnimation,
+	useScreenGesture,
 } from "..";
 
 const slotStyle: TransitionSlotStyle = {
@@ -72,6 +76,28 @@ const zoomOptions: BoundsNavigationZoomOptions = {
 declare const interpolationProps: ScreenInterpolationProps;
 
 const gestureTarget: ScreenGestureTarget = { ancestor: 2 };
+const animationTarget: ScreenAnimationTarget = { ancestor: 2 };
+
+function usePublicApiHooksTypecheck() {
+	const selfAnimation: DerivedValue<ScreenInterpolationProps> =
+		useScreenAnimation();
+	const selfTargetAnimation: DerivedValue<ScreenInterpolationProps> =
+		useScreenAnimation("self");
+	const ancestorAnimation: DerivedValue<ScreenInterpolationProps> | null =
+		useScreenAnimation("parent");
+	const inheritedGesture = useScreenGesture();
+	const ancestorGesture = useScreenGesture("parent");
+
+	return {
+		selfAnimation,
+		selfTargetAnimation,
+		ancestorAnimation,
+		inheritedGesture,
+		ancestorGesture,
+	};
+}
+
+void usePublicApiHooksTypecheck;
 
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
@@ -106,7 +132,6 @@ const emptyInterpolatorOptions: ScreenTransitionConfig = {
 
 const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
-	enableNativeScreens: false,
 };
 const blankStackNavigationOptions: BlankStackNavigationOptions = {
 	inactiveBehavior: "unmount",
@@ -133,24 +158,11 @@ const defaultBlankStack = createBlankStackNavigator();
 type DefaultBlankStackNavigatorProps = ComponentProps<
 	typeof defaultBlankStack.Navigator
 >;
-const viewBlankStackProps: Pick<
-	DefaultBlankStackNavigatorProps,
-	"enableNativeScreens"
-> = {
-	enableNativeScreens: false,
-};
 const independentBlankStackProps: Pick<
 	DefaultBlankStackNavigatorProps,
 	"independent"
 > = {
 	independent: true,
-};
-const independentViewBlankStackProps: Pick<
-	DefaultBlankStackNavigatorProps,
-	"independent" | "enableNativeScreens"
-> = {
-	independent: true,
-	enableNativeScreens: false,
 };
 const staticBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
 	initialRouteName: "Home",
@@ -159,15 +171,6 @@ const staticBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
 		Details: StaticBlankDetailsScreen,
 	},
 });
-const staticViewBlankStack =
-	createBlankStackNavigator<StaticBlankStackParamList>({
-		initialRouteName: "Home",
-		enableNativeScreens: false,
-		screens: {
-			Home: StaticBlankHomeScreen,
-			Details: StaticBlankDetailsScreen,
-		},
-	});
 
 const publicApiTypecheck = {
 	navigationSlots: {
@@ -177,6 +180,7 @@ const publicApiTypecheck = {
 	slotStyle,
 	nestedInterpolatedStyle,
 	gestureTarget,
+	animationTarget,
 	numericBoundsResult,
 	absoluteRawBoundsResult,
 	absoluteRawBoundsWidth,
@@ -192,11 +196,8 @@ const publicApiTypecheck = {
 	emptyInterpolatorOptions,
 	blankStackFactoryOptions,
 	blankStackNavigationOptions,
-	viewBlankStackProps,
 	independentBlankStackProps,
-	independentViewBlankStackProps,
 	staticBlankStack,
-	staticViewBlankStack,
 };
 
 void publicApiTypecheck;

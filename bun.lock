@@ -39,7 +39,7 @@
         "react-dom": "19.2.0",
         "react-native": "0.83.4",
         "react-native-fast-squircle": "^1.1.1",
-        "react-native-gesture-handler": "3.0.0-beta.2",
+        "react-native-gesture-handler": "3.0.0-beta.3",
         "react-native-reanimated": "4.3.0",
         "react-native-safe-area-context": "~5.6.0",
         "react-native-screen-transitions": "workspace:*",
@@ -918,6 +918,8 @@
     "@types/react-dom": ["@types/react-dom@19.2.3", "", { "peerDependencies": { "@types/react": "^19.2.0" } }, "sha512-jp2L/eY6fn+KgVVQAOqYItbF0VY/YApe5Mz2F0aykSO8gx31bYCZyvSeYxCHKvzHG5eZjc+zyaS5BrBWya2+kQ=="],
 
     "@types/react-native": ["@types/react-native@0.73.0", "", { "dependencies": { "react-native": "*" } }, "sha512-6ZRPQrYM72qYKGWidEttRe6M5DZBEV5F+MHMHqd4TTYx0tfkcdrUFGdef6CCxY0jXU7wldvd/zA/b0A/kTeJmA=="],
+
+    "@types/react-test-renderer": ["@types/react-test-renderer@19.1.0", "", { "dependencies": { "@types/react": "*" } }, "sha512-XD0WZrHqjNrxA/MaR9O22w/RNidWR9YZmBdRGI7wcnWGrv/3dA8wKCJ8m63Sn+tLJhcjmuhOi629N66W6kgWzQ=="],
 
     "@types/stack-utils": ["@types/stack-utils@2.0.3", "", {}, "sha512-9aEbYZ3TbYMznPdcdr3SmIrLXwC/AKZXQeCf9Pgao5CKb8CyHuEX5jzWPTkvregvhRJHcpRO6BFoGW9ycaOkYw=="],
 
@@ -2311,7 +2313,7 @@
 
     "react-native-fast-squircle": ["react-native-fast-squircle@1.1.2", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-TsRRH2u4GwBeGtngIigrl/JqhGr531Q56W9l7z24JHiV8c4e1YPkhnyNLu3HT66ydiIwsIcy+To40aqxe6wCiw=="],
 
-    "react-native-gesture-handler": ["react-native-gesture-handler@3.0.0-beta.2", "", { "dependencies": { "invariant": "^2.2.4" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-naMQknkhjjpDhouEE62qbH6sKTTs2+B1Or01QcpAaF+TAk7PSb6bxcsv4zBiLhoqY0iwH4No6Ib4W3nbdFPtEw=="],
+    "react-native-gesture-handler": ["react-native-gesture-handler@3.0.0-beta.3", "", { "dependencies": { "@types/react-test-renderer": "^19.1.0", "invariant": "^2.2.4" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-HasVC2kUggDUsJcVD5SWIngkW/FXfeqL9tVAmXQZ6bgg4yNY6A1hGOO8PxSu99iOEocG0O51xZeKzF06HhMepQ=="],
 
     "react-native-is-edge-to-edge": ["react-native-is-edge-to-edge@1.3.1", "", { "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-NIXU/iT5+ORyCc7p0z2nnlkouYKX425vuU1OEm6bMMtWWR9yvb+Xg5AZmImTKoF9abxCPqrKC3rOZsKzUYgYZA=="],
 
@@ -2909,6 +2911,8 @@
 
     "@react-native/metro-config/metro-runtime": ["metro-runtime@0.84.2", "", { "dependencies": { "@babel/runtime": "^7.25.0", "flow-enums-runtime": "^0.0.6" } }, "sha512-NzzORY2+mmN3tLhsZ7N4GDOBERusalyM1o1k36euulUIEe8UkDhwzcsRexvxKaSkrGLiRQ9PYDLp9uxPkQ+A0Q=="],
 
+    "@react-navigation/stack/react-native-gesture-handler": ["react-native-gesture-handler@3.0.0-beta.2", "", { "dependencies": { "invariant": "^2.2.4" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-naMQknkhjjpDhouEE62qbH6sKTTs2+B1Or01QcpAaF+TAk7PSb6bxcsv4zBiLhoqY0iwH4No6Ib4W3nbdFPtEw=="],
+
     "@release-it/conventional-changelog/conventional-changelog-conventionalcommits": ["conventional-changelog-conventionalcommits@9.3.1", "", { "dependencies": { "compare-func": "^2.0.0" } }, "sha512-dTYtpIacRpcZgrvBYvBfArMmK2xvIpv2TaxM0/ZI5CBtNUzvF2x0t15HsbRABWprS6UPmvj+PzHVjSx4qAVKyw=="],
 
     "@release-it/conventional-changelog/semver": ["semver@7.7.4", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-vFKC2IEtQnVhpT78h1Yp8wzwrf8CM+MzKMHGJZfBtzhZNycRFnXsHk6E5TxIkkMsgNS7mdX3AGB7x2QM2di4lA=="],
@@ -3004,6 +3008,8 @@
     "expo/react-refresh": ["react-refresh@0.14.2", "", {}, "sha512-jCvmsr+1IUSMUyzOkRcvnVbX3ZYC6g9TDrDbFuFmRDq7PD4yaGbLKNQL6k2jnArV8hjYxh7hVhAZB6s9HDGpZA=="],
 
     "expo-modules-autolinking/commander": ["commander@7.2.0", "", {}, "sha512-QrWXB+ZQSVPmIWIhtEO9H+gwHaMGYiF5ChvoJ+K9ZGHG/sVsa6yiesAD1GC/x46sET00Xlwo1u49RVVVzvcSkw=="],
+
+    "expo-router/react-native-gesture-handler": ["react-native-gesture-handler@3.0.0-beta.2", "", { "dependencies": { "invariant": "^2.2.4" }, "peerDependencies": { "react": "*", "react-native": "*" } }, "sha512-naMQknkhjjpDhouEE62qbH6sKTTs2+B1Or01QcpAaF+TAk7PSb6bxcsv4zBiLhoqY0iwH4No6Ib4W3nbdFPtEw=="],
 
     "fast-glob/glob-parent": ["glob-parent@5.1.2", "", { "dependencies": { "is-glob": "^4.0.1" } }, "sha512-AOIgSQCepiJYwP3ARnGx+5VnTu2HBYdzbGP45eLw1vr3zB3vZLeyed1sC9hnbcOc9/SrMyM5RPQrkGz4aS9Zow=="],
 

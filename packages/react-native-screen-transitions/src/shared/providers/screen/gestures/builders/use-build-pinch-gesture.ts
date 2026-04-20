@@ -7,8 +7,7 @@ import { useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { SystemStore } from "../../../../stores/system.store";
-import { useDismissPinchBehavior } from "../behaviors/use-dismiss-pinch-behavior";
-import { useSnapPinchBehavior } from "../behaviors/use-snap-pinch-behavior";
+import { usePinchBehavior } from "../behaviors/use-pinch-behavior";
 import { usePinchPolicy } from "../config/use-pinch-policy";
 import type {
 	GestureRuntimeStores,
@@ -49,12 +48,7 @@ export const useBuildPinchGesture = ({
 		lockedSnapPoint,
 	};
 
-	const dismissBehavior = useDismissPinchBehavior(runtime);
-	const snapBehavior = useSnapPinchBehavior(runtime);
-
-	const behavior = runtime.config.effectiveSnapPoints.hasSnapPoints
-		? snapBehavior
-		: dismissBehavior;
+	const behavior = usePinchBehavior(runtime);
 
 	const pinchGesture = usePinchGesture({
 		enabled: policy.enabled,

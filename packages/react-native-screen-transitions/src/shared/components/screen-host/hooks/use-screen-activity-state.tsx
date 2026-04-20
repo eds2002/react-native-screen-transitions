@@ -3,6 +3,7 @@ import { useStack } from "../../../hooks/navigation/use-stack";
 import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
 import { useManagedStackContext } from "../../../providers/stack/managed.provider";
 import { AnimationStore } from "../../../stores/animation.store";
+import { type NativeScreenState, resolveNativeScreenState } from "../helpers";
 
 interface Props {
 	routeKey: string;
@@ -28,9 +29,7 @@ export const useScreenActivityState = ({
 		AnimationStore.getValue(key, "closing"),
 	);
 
-	const contentState = useSharedValue<"interactive" | "inert" | "inactive">(
-		"inert",
-	);
+	const contentState = useSharedValue<NativeScreenState>("inert");
 
 	const nextBackdropBehavior = backdropBehaviors[index + 1];
 
@@ -40,13 +39,6 @@ export const useScreenActivityState = ({
 
 			const focusedIndex = optimisticFocusedIndex.get();
 
-			const topIndex = routesLength - 1;
-			const isClosing = sceneClosing.get();
-			const isTop = index === topIndex;
-			const isFocused = index === focusedIndex;
-			const isBeforeLast = index === topIndex - 1;
-			const keepsScreenBelowVisible =
-				nextBackdropBehavior !== undefined && nextBackdropBehavior !== "block";
 			let shouldRetainAcrossClosingGap = false;
 
 			// When the stack becomes `A / B(closing) / C`, `A` is still the previous
@@ -65,21 +57,15 @@ export const useScreenActivityState = ({
 				}
 			}
 
-			const shouldStayVisible =
-				isFocused ||
-				isPreloaded ||
-				keepsScreenBelowVisible ||
-				isBeforeLast ||
-				shouldRetainAcrossClosingGap ||
-				isClosing;
-
-			return (
-				isTop || isFocused
-					? "interactive"
-					: shouldStayVisible
-						? "inert"
-						: "inactive"
-			) as "interactive" | "inert" | "inactive";
+			return resolveNativeScreenState({
+				index,
+				routesLength,
+				isPreloaded,
+				focusedIndex,
+				isClosing: sceneClosing.get(),
+				shouldRetainAcrossClosingGap,
+				nextBackdropBehavior,
+			});
 		},
 		(nextState, previousState) => {
 			"worklet";

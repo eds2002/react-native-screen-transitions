@@ -13,6 +13,7 @@ const createLifecycleInput = (
 	isPreloaded: false,
 	focusedIndex: 2,
 	isClosing: 0,
+	shouldRetainAcrossClosingGap: false,
 	...overrides,
 });
 

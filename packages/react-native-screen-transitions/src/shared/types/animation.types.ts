@@ -138,8 +138,6 @@ export interface ScreenInterpolationProps {
 
 	/**
 	 * Layout measurements for the screen.
-	 *
-	 * @deprecated Use `current.layouts` instead.
 	 */
 	layouts: ScreenLayouts;
 
@@ -170,13 +168,6 @@ export interface ScreenInterpolationProps {
 	 * Falls back to `progress` when not in blank-stack.
 	 */
 	stackProgress: number;
-
-	/**
-	 * Animated index of the current snap point.
-	 *
-	 * @deprecated Use `current.snapIndex` instead.
-	 */
-	snapIndex: number;
 
 	/**
 	 * Whether the active transition is visually close enough to its target to be

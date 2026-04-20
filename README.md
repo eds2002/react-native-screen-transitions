@@ -137,7 +137,7 @@ const Stack = createBlankStackNavigator();
 
 function App() {
   return (
-    <Stack.Navigator independent enableNativeScreens={false}>
+    <Stack.Navigator independent>
       <Stack.Screen name="Home" component={HomeScreen} />
       <Stack.Screen name="Detail" component={DetailScreen} />
     </Stack.Navigator>
@@ -157,7 +157,6 @@ const Stack = createBlankStackNavigator({
     Detail: DetailScreen,
   },
   independent: true,
-  enableNativeScreens: false,
 });
 ```
 
@@ -744,12 +743,14 @@ function DetailScreen() {
   const parentAnimation = useScreenAnimation("parent");
 
   const style = useAnimatedStyle(() => ({
-    opacity: parentAnimation.value.current.progress,
+    opacity: parentAnimation?.value.current.progress ?? animation.value.current.progress,
   }));
 
   return <Animated.View style={style}>...</Animated.View>;
 }
 ```
+
+Ancestor targets like `"parent"`, `"root"`, and `{ ancestor: number }` return `null` when that screen chain does not exist.
 
 ### useScreenState
 

@@ -1,7 +1,7 @@
 import { DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT } from "../../../../constants";
 import type { GestureDirections } from "../../../../types/gesture.types";
-import { sanitizeSnapPoints } from "../../../../utils/gesture/validate-snap-points";
 import { shouldDismissFromProjection } from "./gesture-physics";
+import { sanitizeSnapPoints } from "./validate-snap-points";
 
 interface DetermineDismissalProps {
 	event: {

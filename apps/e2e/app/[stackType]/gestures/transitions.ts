@@ -113,8 +113,7 @@ function buildPinchOptions(
 			const baseScale = interpolate(
 				progress,
 				[0, 1, 2],
-				isPinchIn ? [0, 1, 0.92] : [2, 1, 0.92],
-				"clamp",
+				isPinchIn ? [0, 1, 0.92] : [2, 1, 0],
 			);
 
 			return {

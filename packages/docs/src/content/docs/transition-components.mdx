@@ -281,6 +281,8 @@ const animation = useScreenAnimation();
 const parentAnimation = useScreenAnimation("parent");
 ```
 
+Ancestor targets like `"parent"`, `"root"`, and `{ ancestor: number }` return `null` when that screen chain is unavailable.
+
 ### useScreenGesture
 
 Read the screen navigation pan-gesture ref.

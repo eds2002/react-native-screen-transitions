@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { createContext, useContext, useState } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -12,8 +11,6 @@ import { ScreenHeader } from "@/components/screen-header";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { useTheme } from "@/theme";
 
-type EmbeddedFlowMode = "native" | "views";
-
 type FlowParamList = {
 	welcome: undefined;
 	permissions: undefined;
@@ -21,32 +18,6 @@ type FlowParamList = {
 };
 
 type FlowScreenProps = BlankStackScreenProps<FlowParamList>;
-
-const MODE_OPTIONS: {
-	id: EmbeddedFlowMode;
-	title: string;
-	description: string;
-	code: string;
-	note: string;
-}[] = [
-	{
-		id: "native",
-		title: "Native Screens",
-		description: "Uses RNSScreen and ScreenContainer inside the isolated flow",
-		code: "createBlankStackNavigator({ independent: true, enableNativeScreens: true })",
-		note: "Best when you want native freezing and activity state inside the embedded flow.",
-	},
-	{
-		id: "views",
-		title: "Regular Views",
-		description:
-			"Uses plain views for the embedded flow instead of native screens",
-		code: "<Flow.Navigator independent enableNativeScreens={false}>",
-		note: "Useful when you want the embedded-flow shape without relying on react-native-screens layering.",
-	},
-];
-
-const EmbeddedFlowModeContext = createContext<EmbeddedFlowMode>("native");
 
 const transitionSpec = {
 	open: { damping: 30, stiffness: 300, mass: 1 },
@@ -96,16 +67,7 @@ function FlowStep({
 	onPrimary: () => void;
 	onBack?: () => void;
 }) {
-	const mode = useContext(EmbeddedFlowModeContext);
 	const theme = useTheme();
-
-	const badgeConfig =
-		mode === "native"
-			? {
-					label: "Native screens active",
-					detail: "RNSScreen + ScreenContainer",
-				}
-			: { label: "Regular views active", detail: "Animated.View + View" };
 
 	return (
 		<View style={[styles.flowScreen, { backgroundColor: theme.surface }]}>
@@ -130,26 +92,19 @@ function FlowStep({
 				<View style={styles.iconButtonSpacer} />
 			</View>
 
-			<View
-				style={[
-					styles.modeBadge,
-					{
-						backgroundColor: mode === "native" ? theme.infoBox : theme.noteBox,
-					},
-				]}
-			>
-				<Text
+				<View
 					style={[
-						styles.modeBadgeLabel,
-						{ color: mode === "native" ? theme.infoBoxLabel : theme.noteText },
+						styles.modeBadge,
+						{ backgroundColor: theme.infoBox },
 					]}
 				>
-					{badgeConfig.label}
-				</Text>
-				<Text style={[styles.modeBadgeDetail, { color: theme.textSecondary }]}>
-					{badgeConfig.detail}
-				</Text>
-			</View>
+					<Text style={[styles.modeBadgeLabel, { color: theme.infoBoxLabel }]}>
+						View-based host active
+					</Text>
+					<Text style={[styles.modeBadgeDetail, { color: theme.textSecondary }]}>
+						Independent blank stack + shared screen host
+					</Text>
+				</View>
 
 			<View style={styles.flowBody}>
 				<View
@@ -233,15 +188,9 @@ function DoneScreen({ navigation }: FlowScreenProps) {
 	);
 }
 
-function EmbeddedFlowPreview({ mode }: { mode: EmbeddedFlowMode }) {
+function EmbeddedFlowPreview() {
 	return (
-		<EmbeddedFlowModeContext.Provider value={mode}>
-			<Flow.Navigator
-				key={mode}
-				independent
-				enableNativeScreens={mode === "native"}
-				initialRouteName="welcome"
-			>
+		<Flow.Navigator independent initialRouteName="welcome">
 				<Flow.Screen
 					name="welcome"
 					component={WelcomeScreen}
@@ -267,16 +216,12 @@ function EmbeddedFlowPreview({ mode }: { mode: EmbeddedFlowMode }) {
 						gestureDirection: "horizontal",
 					}}
 				/>
-			</Flow.Navigator>
-		</EmbeddedFlowModeContext.Provider>
+		</Flow.Navigator>
 	);
 }
 
 export default function EmbeddedFlowExample() {
 	const stackType = useResolvedStackType();
-	const [mode, setMode] = useState<EmbeddedFlowMode>("native");
-	const selectedMode =
-		MODE_OPTIONS.find((option) => option.id === mode) ?? MODE_OPTIONS[0];
 	const outerStackLabel =
 		stackType === "native-stack" ? "Native Stack" : "Blank Stack";
 	const theme = useTheme();
@@ -311,70 +256,32 @@ export default function EmbeddedFlowExample() {
 							independent: true
 						</Text>
 						.
-					</Text>
-				</View>
+						</Text>
+					</View>
 
-				<View style={styles.toggleRow}>
-					{MODE_OPTIONS.map((option) => {
-						const isActive = option.id === mode;
-						return (
-							<Pressable
-								key={option.id}
-								testID={`embedded-flow-${option.id}`}
-								style={[
-									styles.toggleButton,
-									{ backgroundColor: isActive ? theme.activePill : theme.pill },
-								]}
-								onPress={() => setMode(option.id)}
-							>
-								<Text
-									style={[
-										styles.toggleTitle,
-										{ color: isActive ? theme.activePillText : theme.pillText },
-									]}
-								>
-									{option.title}
-								</Text>
-								<Text
-									style={[
-										styles.toggleDescription,
-										{
-											color: isActive
-												? theme.activePillText
-												: theme.textTertiary,
-										},
-									]}
-								>
-									{option.description}
-								</Text>
-							</Pressable>
-						);
-					})}
-				</View>
+					<View style={[styles.configBox, { backgroundColor: theme.card }]}>
+						<Text style={[styles.configLabel, { color: theme.textTertiary }]}>
+							Current setup
+						</Text>
+						<Text style={[styles.configCode, { color: theme.text }]}>
+							{"<Flow.Navigator independent>"}
+						</Text>
+						<Text style={[styles.configNote, { color: theme.textSecondary }]}>
+							Isolation now comes from `independent`; blank stack always uses the shared view-based host.
+						</Text>
+					</View>
 
-				<View style={[styles.configBox, { backgroundColor: theme.card }]}>
-					<Text style={[styles.configLabel, { color: theme.textTertiary }]}>
-						Current setup
-					</Text>
-					<Text style={[styles.configCode, { color: theme.text }]}>
-						{selectedMode.code}
-					</Text>
-					<Text style={[styles.configNote, { color: theme.textSecondary }]}>
-						{selectedMode.note}
-					</Text>
-				</View>
+					<View style={[styles.previewCard, { backgroundColor: theme.surface }]}>
+						<EmbeddedFlowPreview />
+					</View>
 
-				<View style={[styles.previewCard, { backgroundColor: theme.surface }]}>
-					<EmbeddedFlowPreview mode={mode} />
-				</View>
-
-				<View style={[styles.noteBox, { backgroundColor: theme.noteBox }]}>
-					<Text style={[styles.noteText, { color: theme.noteText }]}>
-						Use this page to compare the same embedded flow with native screens
-						on versus off. The isolation behavior comes from the navigator
-						props, not from a separate stack type.
-					</Text>
-				</View>
+					<View style={[styles.noteBox, { backgroundColor: theme.noteBox }]}>
+						<Text style={[styles.noteText, { color: theme.noteText }]}>
+							Use this page to inspect an isolated embedded flow. The isolation
+							behavior comes from the navigator prop, not from a separate stack
+							type.
+						</Text>
+					</View>
 			</View>
 		</ScrollView>
 	);

@@ -1,13 +1,18 @@
 import type {
 	ComposedGesture,
 	PanGesture,
+	PanGestureEvent,
 	PinchGesture,
+	PinchGestureEvent,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import type { GestureStoreMap } from "../../../stores/gesture.store";
 import type { SystemStoreMap } from "../../../stores/system.store";
-import type { TransitionSpec } from "../../../types/animation.types";
+import type {
+	AnimationConfig,
+	TransitionSpec,
+} from "../../../types/animation.types";
 import type {
 	GestureActivationArea,
 	GestureDirections,
@@ -17,7 +22,7 @@ import type {
 	DirectionOwnership,
 } from "../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
-import type { EffectiveSnapPointsResult } from "../../../utils/gesture/validate-snap-points";
+import type { EffectiveSnapPointsResult } from "./helpers/validate-snap-points";
 
 export type ScrollGestureAxis = "vertical" | "horizontal";
 
@@ -136,4 +141,77 @@ export interface PinchGestureRuntime {
 	stores: GestureRuntimeStores;
 	gestureStartProgress: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
+}
+
+export interface GestureDimensions {
+	width: number;
+	height: number;
+}
+
+export interface PanTrackState {
+	x: number;
+	y: number;
+	normX: number;
+	normY: number;
+}
+
+export interface PinchTrackState {
+	scale: number;
+	normScale: number;
+}
+
+export interface PanReleaseResult {
+	target: number;
+	shouldDismiss: boolean;
+	initialVelocity: number;
+	transitionSpec: TransitionSpec | undefined;
+	resetSpec: AnimationConfig | undefined;
+}
+
+export interface PinchReleaseResult {
+	target: number;
+	shouldDismiss: boolean;
+	initialVelocity: number;
+	transitionSpec: TransitionSpec | undefined;
+	resetSpec: AnimationConfig | undefined;
+}
+
+export interface PanBehaviorStrategy {
+	primeStart: (runtime: PanGestureRuntime) => void;
+	resolveProgress: (
+		event: PanGestureEvent,
+		runtime: PanGestureRuntime,
+		dimensions: GestureDimensions,
+		track: PanTrackState,
+	) => number;
+	resolveRelease: (
+		event: PanGestureEvent,
+		runtime: PanGestureRuntime,
+		dimensions: GestureDimensions,
+	) => PanReleaseResult;
+}
+
+export interface PinchBehaviorStrategy {
+	primeStart: (runtime: PinchGestureRuntime, event: PinchGestureEvent) => void;
+	resolveProgress: (
+		event: PinchGestureEvent,
+		runtime: PinchGestureRuntime,
+		track: PinchTrackState,
+	) => number;
+	resolveRelease: (
+		event: PinchGestureEvent,
+		runtime: PinchGestureRuntime,
+	) => PinchReleaseResult;
+}
+
+export interface PanBehavior {
+	onStart: () => void;
+	onUpdate: (event: PanGestureEvent) => void;
+	onEnd: (event: PanGestureEvent) => void;
+}
+
+export interface PinchBehavior {
+	onStart: (event: PinchGestureEvent) => void;
+	onUpdate: (event: PinchGestureEvent) => void;
+	onEnd: (event: PinchGestureEvent) => void;
 }

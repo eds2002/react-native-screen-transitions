@@ -5,9 +5,9 @@ import {
 	type BaseDescriptor,
 	useDescriptors,
 } from "../../providers/screen/descriptors";
+import { useOptimisticFocusedIndex } from "../../providers/stack/helpers/use-optimistic-focused-index";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
-import { useOptimisticFocusedIndex } from "./use-optimistic-focused-index";
 import { type StackContextValue, useStack } from "./use-stack";
 
 export interface ScreenState<

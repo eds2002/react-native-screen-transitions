@@ -1,10 +1,13 @@
-import type { ClaimedDirections, Direction } from "../../types/ownership.types";
+import type {
+	ClaimedDirections,
+	Direction,
+} from "../../../../types/ownership.types";
 import {
 	DIRECTIONS,
 	type DirectionOwnership,
 	NO_OWNERSHIP,
 	type OwnershipStatus,
-} from "../../types/ownership.types";
+} from "../../../../types/ownership.types";
 
 /**
  * Minimal interface for ancestor context needed for ownership resolution.

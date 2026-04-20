@@ -20,6 +20,7 @@ export interface NativeScreenLifecycleInput {
 	isPreloaded: boolean;
 	focusedIndex: number;
 	isClosing: number;
+	shouldRetainAcrossClosingGap?: boolean;
 	nextBackdropBehavior?: "block" | "passthrough" | "dismiss" | "collapse";
 }
 
@@ -46,6 +47,7 @@ export function resolveNativeScreenState(
 		isPreloaded,
 		focusedIndex,
 		isClosing,
+		shouldRetainAcrossClosingGap = false,
 		nextBackdropBehavior,
 	} = input;
 	const topIndex = routesLength - 1;
@@ -59,6 +61,7 @@ export function resolveNativeScreenState(
 		isPreloaded ||
 		keepsScreenBelowVisible ||
 		isBeforeLast ||
+		shouldRetainAcrossClosingGap ||
 		isClosing > 0;
 
 	if (isTop || isFocused) {
