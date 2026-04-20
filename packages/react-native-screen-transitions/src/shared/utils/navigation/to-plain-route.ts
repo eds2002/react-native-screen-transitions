@@ -1,4 +1,4 @@
-import type { BaseStackRoute } from "../../../../types/stack.types";
+import type { BaseStackRoute } from "../../types/stack.types";
 
 /**
  * Deep-clones a value, ensuring every object in the tree has Object.prototype.
@@ -9,11 +9,11 @@ export const toPlainValue = (value: unknown): unknown => {
 	if (value === null || value === undefined) return value;
 
 	const type = typeof value;
-	if (type === "string" || type === "number" || type === "boolean")
+	if (type === "string" || type === "number" || type === "boolean") {
 		return value;
+	}
 
 	if (type === "function" || type === "symbol") return undefined;
-
 	if (type !== "object") return undefined;
 
 	if (Array.isArray(value)) {
@@ -38,10 +38,11 @@ export const toPlainValue = (value: unknown): unknown => {
  * Deep-clones params to ensure all nested objects have Object.prototype
  * (expo-router can produce null-prototype objects during deep linking).
  */
-export const toPlainRoute = (route: BaseStackRoute): BaseStackRoute => {
+export const toPlainRoute = <TRoute extends BaseStackRoute>(
+	route: TRoute,
+): TRoute => {
 	return {
-		key: route.key,
-		name: route.name,
-		params: toPlainValue(route.params) as object | undefined,
+		...route,
+		params: toPlainValue(route.params) as TRoute["params"],
 	};
 };

@@ -12,8 +12,11 @@ import type {
 	Layout,
 	ScreenTransitionState,
 } from "../../../../types";
+import {
+	toPlainRoute,
+	toPlainValue,
+} from "../../../../utils/navigation/to-plain-route";
 import type { BaseDescriptor } from "../../descriptors";
-import { toPlainRoute, toPlainValue } from "./worklet";
 
 type BuiltState = {
 	progress: SharedValue<number>;
