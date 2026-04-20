@@ -27,6 +27,7 @@ export const useTransitionStartController = ({
 		pendingLifecycleStartBlockCount,
 	} = system;
 	const { clearLifecycleTransitionRequest } = system.actions;
+	const transitionSpec = current.options.transitionSpec;
 
 	useAnimatedReaction(
 		() => {
@@ -58,7 +59,7 @@ export const useTransitionStartController = ({
 
 			animateToProgress({
 				target,
-				spec: current.options.transitionSpec,
+				spec: transitionSpec,
 				animations,
 				targetProgress,
 				onAnimationFinish,
