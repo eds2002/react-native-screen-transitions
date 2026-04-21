@@ -16,7 +16,6 @@ export const NAVIGATION_MASK_CONTAINER_STYLE_ID = "_NAVIGATION_ROOT_CONTAINER";
  * Styles
  */
 export const NO_STYLES = Object.freeze({});
-export const HIDDEN_STYLE = Object.freeze({ opacity: 0 });
 export const VISIBLE_STYLE = Object.freeze({ opacity: 1 });
 export const NO_PROPS = Object.freeze({});
 
@@ -92,16 +91,6 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 /**
  * Bounds API Defaults
  */
-export const EMPTY_BOUND_HELPER_RESULT = Object.freeze({});
-export const EMPTY_BOUND_HELPER_RESULT_RAW = Object.freeze({
-	scaleX: 1,
-	scaleY: 1,
-	scale: 1,
-	translateX: 0,
-	translateY: 0,
-	width: 0,
-	height: 0,
-});
 export const TRANSFORM_RESET = Object.freeze({
 	transform: [
 		{ translateX: 0 },
