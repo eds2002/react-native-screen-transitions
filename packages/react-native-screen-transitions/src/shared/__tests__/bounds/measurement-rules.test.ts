@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import type { MeasurementIntent } from "../../components/create-boundary-component/types";
+import type { MeasureIntent } from "../../components/create-boundary-component/types";
 import {
 	canFlushGroupActiveMeasurement,
-	getMeasurementIntentFlags,
+	getMeasureIntentFlags,
 	resolveAutoSourceCaptureSignal,
 	resolveGroupActiveMeasurementAction,
-	resolveMeasurementWritePlan,
+	resolveMeasureWritePlan,
 	resolvePendingDestinationCaptureSignal,
 	resolvePendingDestinationRetrySignal,
 	PREPARE_DESTINATION_MEASUREMENT_INTENT,
@@ -19,9 +19,9 @@ beforeEach(() => {
 
 describe("bounds measurement rules", () => {
 	it("derives explicit intent flags and write plans", () => {
-		const intents = getMeasurementIntentFlags([
+		const intents = getMeasureIntentFlags([
 			"complete-destination",
-		] satisfies readonly MeasurementIntent[]);
+		] satisfies readonly MeasureIntent[]);
 
 		expect(intents).toEqual({
 			captureSource: false,
@@ -30,7 +30,7 @@ describe("bounds measurement rules", () => {
 			refreshDestination: false,
 		});
 
-		const plan = resolveMeasurementWritePlan({
+		const plan = resolveMeasureWritePlan({
 			intents,
 			hasPendingLink: true,
 			hasSourceLink: false,
@@ -49,7 +49,7 @@ describe("bounds measurement rules", () => {
 	});
 
 	it("refresh-source only writes when a source link exists", () => {
-		const intents = getMeasurementIntentFlags("refresh-source");
+		const intents = getMeasureIntentFlags("refresh-source");
 
 		expect(intents).toEqual({
 			captureSource: false,
@@ -59,7 +59,7 @@ describe("bounds measurement rules", () => {
 		});
 
 		expect(
-			resolveMeasurementWritePlan({
+			resolveMeasureWritePlan({
 				intents,
 				hasPendingLink: false,
 				hasSourceLink: false,
@@ -75,7 +75,7 @@ describe("bounds measurement rules", () => {
 			wantsDestinationWrite: false,
 		});
 
-		const plan = resolveMeasurementWritePlan({
+		const plan = resolveMeasureWritePlan({
 			intents,
 			hasPendingLink: false,
 			hasSourceLink: true,
