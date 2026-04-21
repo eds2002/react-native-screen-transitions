@@ -15,17 +15,17 @@ const galleryZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"]
 			return {};
 		}
 
-		const { content, ...rest } = bounds({
+		const zoom = bounds({
 			id,
 			group: GALLERY_GROUP,
-		}).navigation.zoom({ target: "bound", debug: true });
+		}).navigation.zoom({ target: "bound" });
 
 		if (!focused) {
-			return rest;
+			return zoom;
 		}
 
 		return {
-			...rest,
+			...zoom,
 			backdrop: {
 				style: {
 					backgroundColor: "#FFF",
@@ -50,17 +50,23 @@ export default function GalleryLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					navigationMaskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted"],
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
-					// backdropComponent: BlurView,
 					screenStyleInterpolator: galleryZoomInterpolator,
 					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.FlingSpec,
+						open: {
+							...Transition.Specs.DefaultSpec,
+							mass: 2,
+							overshootClamping: false,
+						},
+						close: {
+							...Transition.Specs.DefaultSpec,
+							mass: 2,
+							overshootClamping: false,
+						},
 					},
 				}}
 			/>

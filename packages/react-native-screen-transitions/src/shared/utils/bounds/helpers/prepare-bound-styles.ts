@@ -70,13 +70,10 @@ export const prepareBoundStyles = <T extends BoundsOptions>({
 	props,
 	options,
 	resolvedPair,
-	syncGroupActiveId = true,
 }: ComputeResolvedBoundsStylesParams<T>): BoundsOptionsResult<T> => {
 	"worklet";
 
-	if (syncGroupActiveId) {
-		syncGroupActiveMember(options.group, options.id);
-	}
+	syncGroupActiveMember(options.group, options.id);
 
 	const resolved = buildBoundsOptions({
 		props,
