@@ -10,8 +10,14 @@ import {
 	toProgressVelocity,
 } from "../providers/screen/gestures/helpers/gesture-physics";
 import { determineDismissal } from "../providers/screen/gestures/helpers/gesture-targets";
-import { resolveSensitivePanGestureEvent } from "../providers/screen/gestures/helpers/pan-phases";
-import { resolveSensitivePinchGestureEvent } from "../providers/screen/gestures/helpers/pinch-phases";
+import {
+	applyGestureSensitivityToPanEvent,
+	trackPanGesture,
+} from "../providers/screen/gestures/helpers/pan-phases";
+import {
+	applyGestureSensitivityToPinchEvent,
+	trackPinchGesture,
+} from "../providers/screen/gestures/helpers/pinch-phases";
 
 type Directions = {
 	horizontal: boolean;
@@ -49,6 +55,51 @@ const createDirections = (overrides: Partial<Directions> = {}) => ({
 	verticalInverted: false,
 	...overrides,
 });
+
+const createGestureRuntime = (
+	gestureSensitivity: number,
+	runtimeSensitivity: number | null = null,
+) =>
+	({
+		policy: { gestureSensitivity },
+		runtimeOverrides: {
+			gestureSensitivity: { get: () => runtimeSensitivity },
+		},
+	}) as any;
+
+const createSharedValue = <T>(initialValue: T) => {
+	let value = initialValue;
+
+	return {
+		get: () => value,
+		set: (nextValue: T) => {
+			value = nextValue;
+		},
+	};
+};
+
+const createGestureStore = () =>
+	({
+		x: createSharedValue(0),
+		y: createSharedValue(0),
+		normX: createSharedValue(0),
+		normY: createSharedValue(0),
+		scale: createSharedValue(1),
+		normScale: createSharedValue(0),
+		focalX: createSharedValue(0),
+		focalY: createSharedValue(0),
+		raw: {
+			x: createSharedValue(0),
+			y: createSharedValue(0),
+			normX: createSharedValue(0),
+			normY: createSharedValue(0),
+			scale: createSharedValue(1),
+			normScale: createSharedValue(0),
+		},
+		dismissing: createSharedValue(0),
+		dragging: createSharedValue(0),
+		direction: createSharedValue(null),
+	}) as any;
 
 describe("toProgressVelocity", () => {
 	it("converts pixels per second into progress units per second", () => {
@@ -185,7 +236,7 @@ describe("getPanReleaseProgressVelocity", () => {
 	});
 });
 
-describe("resolveSensitivePanGestureEvent", () => {
+describe("applyGestureSensitivityToPanEvent", () => {
 	it("scales pan translation and velocity before release consumers read them", () => {
 		const event = createEvent({
 			translationX: 200,
@@ -194,9 +245,10 @@ describe("resolveSensitivePanGestureEvent", () => {
 			velocityY: -500,
 		});
 
-		const sensitiveEvent = resolveSensitivePanGestureEvent(event, {
-			gestureSensitivity: 0.1,
-		} as any);
+		const sensitiveEvent = applyGestureSensitivityToPanEvent(
+			event,
+			createGestureRuntime(0.1),
+		);
 
 		expect(sensitiveEvent.translationX).toBeCloseTo(20, 5);
 		expect(sensitiveEvent.translationY).toBeCloseTo(-8, 5);
@@ -220,9 +272,10 @@ describe("resolveSensitivePanGestureEvent", () => {
 			}).shouldDismiss,
 		).toBe(true);
 
-		const sensitiveEvent = resolveSensitivePanGestureEvent(event, {
-			gestureSensitivity: 0.1,
-		} as any);
+		const sensitiveEvent = applyGestureSensitivityToPanEvent(
+			event,
+			createGestureRuntime(0.1),
+		);
 
 		expect(
 			determineDismissal({
@@ -233,18 +286,59 @@ describe("resolveSensitivePanGestureEvent", () => {
 			}).shouldDismiss,
 		).toBe(false);
 	});
+
+	it("prefers runtime config sensitivity over the route option", () => {
+		const event = createEvent({
+			translationX: 200,
+			velocityX: 1000,
+		});
+
+		const sensitiveEvent = applyGestureSensitivityToPanEvent(
+			event,
+			createGestureRuntime(1, 0.25),
+		);
+
+		expect(sensitiveEvent.translationX).toBeCloseTo(50, 5);
+		expect(sensitiveEvent.velocityX).toBeCloseTo(250, 5);
+	});
 });
 
-describe("resolveSensitivePinchGestureEvent", () => {
+describe("trackPanGesture", () => {
+	it("stores sensitivity-adjusted and raw pan values separately", () => {
+		const gestures = createGestureStore();
+		const event = createEvent({
+			translationX: 50,
+			translationY: -20,
+		});
+		const rawEvent = createEvent({
+			translationX: 200,
+			translationY: -80,
+		});
+
+		trackPanGesture(event, rawEvent, gestures, { width: 400, height: 200 });
+
+		expect(gestures.x.get()).toBeCloseTo(50, 5);
+		expect(gestures.y.get()).toBeCloseTo(-20, 5);
+		expect(gestures.normX.get()).toBeCloseTo(0.125, 5);
+		expect(gestures.normY.get()).toBeCloseTo(-0.1, 5);
+		expect(gestures.raw.x.get()).toBeCloseTo(200, 5);
+		expect(gestures.raw.y.get()).toBeCloseTo(-80, 5);
+		expect(gestures.raw.normX.get()).toBeCloseTo(0.5, 5);
+		expect(gestures.raw.normY.get()).toBeCloseTo(-0.4, 5);
+	});
+});
+
+describe("applyGestureSensitivityToPinchEvent", () => {
 	it("scales pinch scale delta and velocity before release consumers read them", () => {
 		const event = {
 			scale: 2,
 			velocity: 4,
 		} as any;
 
-		const sensitiveEvent = resolveSensitivePinchGestureEvent(event, {
-			gestureSensitivity: 0.25,
-		} as any);
+		const sensitiveEvent = applyGestureSensitivityToPinchEvent(
+			event,
+			createGestureRuntime(0.25),
+		);
 
 		expect(sensitiveEvent.scale).toBeCloseTo(1.25, 5);
 		expect(sensitiveEvent.velocity).toBeCloseTo(1, 5);
@@ -260,9 +354,10 @@ describe("resolveSensitivePinchGestureEvent", () => {
 			shouldDismissFromPinch(normalizePinchScale(event.scale), true, false),
 		).toBe(true);
 
-		const sensitiveEvent = resolveSensitivePinchGestureEvent(event, {
-			gestureSensitivity: 0.5,
-		} as any);
+		const sensitiveEvent = applyGestureSensitivityToPinchEvent(
+			event,
+			createGestureRuntime(0.5),
+		);
 
 		expect(
 			shouldDismissFromPinch(
@@ -270,7 +365,30 @@ describe("resolveSensitivePinchGestureEvent", () => {
 				true,
 				false,
 			),
-		).toBe(false);
+			).toBe(false);
+	});
+});
+
+describe("trackPinchGesture", () => {
+	it("stores sensitivity-adjusted and raw pinch values separately", () => {
+		const gestures = createGestureStore();
+		const event = {
+			scale: 1.25,
+			focalX: 12,
+			focalY: 24,
+		} as any;
+		const rawEvent = {
+			scale: 2,
+			focalX: 12,
+			focalY: 24,
+		} as any;
+
+		trackPinchGesture(event, rawEvent, gestures);
+
+		expect(gestures.scale.get()).toBeCloseTo(1.25, 5);
+		expect(gestures.normScale.get()).toBeCloseTo(0.25, 5);
+		expect(gestures.raw.scale.get()).toBeCloseTo(2, 5);
+		expect(gestures.raw.normScale.get()).toBeCloseTo(1, 5);
 	});
 });
 

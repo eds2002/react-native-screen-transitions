@@ -74,6 +74,7 @@ export interface GestureContextType {
 	panGesture: PanGesture;
 	pinchGesture?: PinchGesture;
 	scrollState: SharedValue<ScrollGestureState | null>;
+	runtimeOverrides: GestureRuntimeOverrides;
 	gestureContext: GestureContextType | null;
 	gestureEnabled: boolean;
 	claimedDirections: ClaimedDirections;
@@ -101,7 +102,7 @@ export interface PanGesturePolicy {
 	directions: GestureDirections;
 	snapAxis: "horizontal" | "vertical";
 	gestureDrivesProgress: boolean;
-	gestureSensitivity: number;
+	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureVelocityImpact: number;
 	gestureSnapVelocityImpact: number;
 	gestureReleaseVelocityScale: number;
@@ -120,7 +121,7 @@ export interface PinchGesturePolicy {
 	pinchInEnabled: boolean;
 	pinchOutEnabled: boolean;
 	gestureDrivesProgress: boolean;
-	gestureSensitivity: number;
+	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureVelocityImpact: number;
 	gestureSnapVelocityImpact: number;
 	gestureSnapLocked: boolean;
@@ -139,10 +140,15 @@ export interface GestureRuntimeStores {
 	system: SystemStoreMap;
 }
 
+export interface GestureRuntimeOverrides {
+	gestureSensitivity: SharedValue<number | null>;
+}
+
 export interface PanGestureRuntime {
 	config: ScreenGestureConfig;
 	policy: PanGesturePolicy;
 	stores: GestureRuntimeStores;
+	runtimeOverrides: GestureRuntimeOverrides;
 	gestureStartProgress: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }
@@ -151,6 +157,7 @@ export interface PinchGestureRuntime {
 	config: ScreenGestureConfig;
 	policy: PinchGesturePolicy;
 	stores: GestureRuntimeStores;
+	runtimeOverrides: GestureRuntimeOverrides;
 	gestureStartProgress: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }

@@ -1,8 +1,8 @@
 import { useCallback } from "react";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import {
+	applyGestureSensitivityToPinchEvent,
 	finalizePinchRelease,
-	resolveSensitivePinchGestureEvent,
 	startPinchBase,
 	trackPinchGesture,
 } from "../helpers/pinch-phases";
@@ -34,33 +34,27 @@ export const usePinchBehavior = (
 	);
 
 	const onUpdate = useCallback(
-		(event: PinchGestureEvent) => {
+		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const sensitiveEvent = resolveSensitivePinchGestureEvent(
-				event,
-				runtime.policy,
-			);
-			const track = trackPinchGesture(sensitiveEvent, runtime.stores.gestures);
+			const event = applyGestureSensitivityToPinchEvent(rawEvent, runtime);
+			const track = trackPinchGesture(event, rawEvent, runtime.stores.gestures);
 
 			if (!runtime.policy.gestureDrivesProgress) {
 				return;
 			}
 
 			runtime.stores.animations.progress.set(
-				resolveProgress(sensitiveEvent, runtime, track),
+				resolveProgress(event, runtime, track),
 			);
 		},
 		[runtime, resolveProgress],
 	);
 
 	const onEnd = useCallback(
-		(event: PinchGestureEvent) => {
+		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const sensitiveEvent = resolveSensitivePinchGestureEvent(
-				event,
-				runtime.policy,
-			);
-			const release = resolveRelease(sensitiveEvent, runtime);
+			const event = applyGestureSensitivityToPinchEvent(rawEvent, runtime);
+			const release = resolveRelease(event, runtime);
 			finalizePinchRelease(release, runtime, dismissScreen);
 		},
 		[runtime, dismissScreen, resolveRelease],

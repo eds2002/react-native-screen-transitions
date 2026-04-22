@@ -110,12 +110,21 @@ export type ScreenTransitionState = {
 	layouts: ScreenLayouts;
 
 	/**
-	 * Animated index of this screen's current snap point.
+	 * Live animated index of this screen's current snap point.
 	 * Interpolates between indices during gestures/animations.
 	 * - Returns -1 if no snap points are defined
 	 * - Returns 0 when at or below first snap point
 	 * - Returns fractional values between snap points (e.g., 1.5 = halfway between snap 1 and 2)
 	 * - Returns length-1 when at or above last snap point
+	 */
+	animatedSnapIndex: number;
+
+	/**
+	 * Target snap point index for this screen.
+	 *
+	 * Unlike `animatedSnapIndex`, this follows the current target progress rather
+	 * than live gesture progress. It updates when the transition target changes,
+	 * such as initial mount, `snapTo()`, or gesture release.
 	 */
 	snapIndex: number;
 };
@@ -225,6 +234,25 @@ type TransitionSlotDefinition = {
 export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
 
 /**
+ * Runtime configuration returned by `screenStyleInterpolator`.
+ *
+ * These values are not style slots. They are derived per frame and consumed by
+ * the transition runtime.
+ */
+export type TransitionInterpolatorConfig = {
+	/**
+	 * Overrides how directly live gesture movement maps into transition progress
+	 * and the non-raw gesture values exposed to interpolators for the current
+	 * frame.
+	 *
+	 * If this value is derived from the current gesture, prefer
+	 * `active.gesture.raw` so the sensitivity calculation does not feed back into
+	 * itself.
+	 */
+	gestureSensitivity?: number;
+};
+
+/**
  * Internal normalized slot format.
  * Always uses the explicit `{ style, props }` shape (with Reanimated's full StyleProps).
  */
@@ -256,6 +284,12 @@ export type NormalizedTransitionInterpolatedStyle = {
  * The return type of `screenStyleInterpolator`.
  */
 export type TransitionInterpolatedStyle = {
+	/**
+	 * Runtime configuration for the current frame.
+	 *
+	 * This reserved key is stripped before style slot normalization.
+	 */
+	config?: TransitionInterpolatorConfig;
 	/** Animated style and props for the main screen content view. */
 	content?: TransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
@@ -267,7 +301,7 @@ export type TransitionInterpolatedStyle = {
 	/** Animated style and props for the navigation mask element layer. */
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
-	[id: string]: TransitionSlotStyle | undefined;
+	[id: string]: TransitionSlotStyle | TransitionInterpolatorConfig | undefined;
 };
 
 /**

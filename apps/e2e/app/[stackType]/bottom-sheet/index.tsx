@@ -1,6 +1,9 @@
 import { router } from "expo-router";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 import { ListScreen } from "@/components/ui";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 const EXAMPLES = [
 	{
@@ -31,12 +34,13 @@ const EXAMPLES = [
 	{
 		id: "auto-snap",
 		title: "Auto Snap",
-		description: "Opens to intrinsic content height, then expands to full screen",
+		description:
+			"Opens to intrinsic content height, then expands to full screen",
 	},
 	{
 		id: "snap-index-animation",
 		title: "Snap Index Animation",
-		description: "Animate UI based on snapIndex value",
+		description: "Animate UI based on animatedSnapIndex value",
 	},
 	{
 		id: "snap-lock-unlocked",

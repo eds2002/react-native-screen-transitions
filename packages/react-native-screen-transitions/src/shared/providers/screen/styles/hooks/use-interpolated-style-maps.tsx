@@ -1,11 +1,17 @@
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import { SystemStore } from "../../../../stores/system.store";
-import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
+import type {
+	NormalizedTransitionInterpolatedStyle,
+	TransitionInterpolatedStyle,
+} from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
 import { useScreenAnimationContext } from "../../animation";
 import { useDescriptorDerivations } from "../../descriptors";
+import { useGestureContext } from "../../gestures";
 import { normalizeSlots } from "../helpers/normalize-slots";
+import { stripInterpolatorConfig } from "../helpers/strip-interpolator-config";
+import { syncGestureRuntimeOverrides } from "../helpers/sync-gesture-runtime-overrides";
 
 /**
  * Builds the raw interpolated styles map for the current screen pass.
@@ -34,6 +40,7 @@ import { normalizeSlots } from "../helpers/normalize-slots";
  */
 export const useInterpolatedStylesMap = () => {
 	const { currentScreenKey } = useDescriptorDerivations();
+	const gestureContext = useGestureContext();
 	const {
 		screenInterpolatorProps,
 		nextInterpolator,
@@ -70,7 +77,8 @@ export const useInterpolatedStylesMap = () => {
 			isGesturingDuringCloseAnimation.set(false);
 		}
 
-		const isInGestureMode = isDragging || isGesturingDuringCloseAnimation.get();
+		const isInGestureMode =
+			!!isDragging || isGesturingDuringCloseAnimation.get();
 
 		const interpolator = isInGestureMode
 			? currentInterpolator
@@ -96,10 +104,14 @@ export const useInterpolatedStylesMap = () => {
 				bounds: boundsAccessor,
 			});
 
-			const stylesMap =
-				typeof raw !== "object" || raw == null
-					? NO_STYLES
-					: normalizeSlots(raw);
+			const rawStyleMap: TransitionInterpolatedStyle | undefined =
+				typeof raw === "object" && raw != null ? raw : undefined;
+
+			syncGestureRuntimeOverrides(rawStyleMap, gestureContext);
+
+			const stylesMap = !rawStyleMap
+				? NO_STYLES
+				: normalizeSlots(stripInterpolatorConfig(rawStyleMap));
 
 			return stylesMap;
 		} catch (_) {

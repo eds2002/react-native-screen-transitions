@@ -58,6 +58,11 @@ export const resetGestureValues = ({
 	const resetPixelVX = resetNormVX * dimensions.width;
 	const resetPixelVY = resetNormVY * dimensions.height;
 
+	gestures.raw.x.set(0);
+	gestures.raw.y.set(0);
+	gestures.raw.normX.set(0);
+	gestures.raw.normY.set(0);
+
 	animateMany({
 		items: [
 			{
@@ -103,6 +108,9 @@ export const resetPinchGestureValues = ({
 	shouldDismiss,
 }: ResetPinchGestureValuesProps) => {
 	"worklet";
+
+	gestures.raw.scale.set(1);
+	gestures.raw.normScale.set(0);
 
 	animateMany({
 		items: [

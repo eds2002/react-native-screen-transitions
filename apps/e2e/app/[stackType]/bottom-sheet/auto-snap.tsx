@@ -13,10 +13,10 @@ export default function AutoSnapScreen() {
 	const theme = useTheme();
 
 	const heroStyle = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
-		const scale = interpolate(snapIndex, [0, 1], [1, 1.06], "clamp");
+		const { animatedSnapIndex } = animation.value;
+		const scale = interpolate(animatedSnapIndex, [0, 1], [1, 1.06], "clamp");
 		const backgroundColor = interpolateColor(
-			snapIndex,
+			animatedSnapIndex,
 			[0, 1],
 			["rgba(108,92,231,0.18)", "rgba(232,67,147,0.24)"],
 		);
@@ -28,16 +28,16 @@ export default function AutoSnapScreen() {
 	});
 
 	const subtitleStyle = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
+		const { animatedSnapIndex } = animation.value;
 		return {
-			opacity: interpolate(snapIndex, [0, 1], [0.78, 1], "clamp"),
+			opacity: interpolate(animatedSnapIndex, [0, 1], [0.78, 1], "clamp"),
 		};
 	});
 
 	const detentChipStyle = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
+		const { animatedSnapIndex } = animation.value;
 		const backgroundColor = interpolateColor(
-			snapIndex,
+			animatedSnapIndex,
 			[0, 1],
 			["rgba(255,255,255,0.08)", "rgba(0,184,148,0.18)"],
 		);
@@ -45,9 +45,9 @@ export default function AutoSnapScreen() {
 	});
 
 	const detentLabelStyle = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
+		const { animatedSnapIndex } = animation.value;
 		const color = interpolateColor(
-			snapIndex,
+			animatedSnapIndex,
 			[0, 1],
 			["rgba(255,255,255,0.72)", "#55EFC4"],
 		);
@@ -59,9 +59,19 @@ export default function AutoSnapScreen() {
 			<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 
 			<View style={styles.header}>
-				<Text style={[styles.eyebrow, { color: theme.actionButton }]}>Intrinsic Sheet</Text>
-				<Text style={[styles.title, { color: theme.text }]}>Auto Snap Detent</Text>
-				<Animated.Text style={[styles.subtitle, { color: theme.textSecondary }, subtitleStyle]}>
+				<Text style={[styles.eyebrow, { color: theme.actionButton }]}>
+					Intrinsic Sheet
+				</Text>
+				<Text style={[styles.title, { color: theme.text }]}>
+					Auto Snap Detent
+				</Text>
+				<Animated.Text
+					style={[
+						styles.subtitle,
+						{ color: theme.textSecondary },
+						subtitleStyle,
+					]}
+				>
 					Starts at content height, then expands to a full-screen detail view.
 				</Animated.Text>
 			</View>
@@ -72,12 +82,18 @@ export default function AutoSnapScreen() {
 				</Animated.Text>
 			</Animated.View>
 
-			<Animated.View style={[styles.heroCard, { backgroundColor: theme.card }, heroStyle]}>
-				<View style={[styles.heroIcon, { backgroundColor: theme.surfaceElevated }]}>
+			<Animated.View
+				style={[styles.heroCard, { backgroundColor: theme.card }, heroStyle]}
+			>
+				<View
+					style={[styles.heroIcon, { backgroundColor: theme.surfaceElevated }]}
+				>
 					<Ionicons name="sparkles" size={26} color={theme.text} />
 				</View>
 				<View style={styles.heroBody}>
-					<Text style={[styles.heroTitle, { color: theme.text }]}>Review-ready sheet content</Text>
+					<Text style={[styles.heroTitle, { color: theme.text }]}>
+						Review-ready sheet content
+					</Text>
 					<Text style={[styles.heroText, { color: theme.textSecondary }]}>
 						This card is intentionally tall enough to make the auto detent
 						visible, but not so tall that it looks like a full-screen modal.
@@ -86,17 +102,38 @@ export default function AutoSnapScreen() {
 			</Animated.View>
 
 			<View style={styles.metrics}>
-				<View style={[styles.metricCard, { backgroundColor: theme.surfaceElevated }]}>
+				<View
+					style={[
+						styles.metricCard,
+						{ backgroundColor: theme.surfaceElevated },
+					]}
+				>
 					<Text style={[styles.metricValue, { color: theme.text }]}>Auto</Text>
-					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>Initial detent</Text>
+					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>
+						Initial detent
+					</Text>
 				</View>
-				<View style={[styles.metricCard, { backgroundColor: theme.surfaceElevated }]}>
+				<View
+					style={[
+						styles.metricCard,
+						{ backgroundColor: theme.surfaceElevated },
+					]}
+				>
 					<Text style={[styles.metricValue, { color: theme.text }]}>Full</Text>
-					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>Expanded detent</Text>
+					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>
+						Expanded detent
+					</Text>
 				</View>
-				<View style={[styles.metricCard, { backgroundColor: theme.surfaceElevated }]}>
+				<View
+					style={[
+						styles.metricCard,
+						{ backgroundColor: theme.surfaceElevated },
+					]}
+				>
 					<Text style={[styles.metricValue, { color: theme.text }]}>2</Text>
-					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>Snap points</Text>
+					<Text style={[styles.metricLabel, { color: theme.textTertiary }]}>
+						Snap points
+					</Text>
 				</View>
 			</View>
 
@@ -124,17 +161,45 @@ export default function AutoSnapScreen() {
 			<View style={styles.controls}>
 				<Pressable
 					testID="auto-snap-to-auto"
-					style={({ pressed }) => [styles.controlButton, { backgroundColor: pressed ? theme.secondaryButtonPressed : theme.secondaryButton }]}
+					style={({ pressed }) => [
+						styles.controlButton,
+						{
+							backgroundColor: pressed
+								? theme.secondaryButtonPressed
+								: theme.secondaryButton,
+						},
+					]}
 					onPress={() => snapTo(0)}
 				>
-					<Text style={[styles.secondaryButtonText, { color: theme.secondaryButtonText }]}>Auto</Text>
+					<Text
+						style={[
+							styles.secondaryButtonText,
+							{ color: theme.secondaryButtonText },
+						]}
+					>
+						Auto
+					</Text>
 				</Pressable>
 				<Pressable
 					testID="auto-snap-to-full"
-					style={({ pressed }) => [styles.controlButton, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
+					style={({ pressed }) => [
+						styles.controlButton,
+						{
+							backgroundColor: pressed
+								? theme.actionButtonPressed
+								: theme.actionButton,
+						},
+					]}
 					onPress={() => snapTo(1)}
 				>
-					<Text style={[styles.primaryButtonText, { color: theme.actionButtonText }]}>Full</Text>
+					<Text
+						style={[
+							styles.primaryButtonText,
+							{ color: theme.actionButtonText },
+						]}
+					>
+						Full
+					</Text>
 				</Pressable>
 			</View>
 		</View>

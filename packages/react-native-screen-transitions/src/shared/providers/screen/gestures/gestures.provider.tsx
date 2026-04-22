@@ -19,6 +19,7 @@ import createProvider from "../../../utils/create-provider";
 import { useBuildPanGesture } from "./builders/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./builders/use-build-pinch-gesture";
 import { useScreenGestureConfig } from "./config/use-screen-gesture-config";
+import { useGestureRuntimeOverrides } from "./hooks/use-gesture-runtime-overrides";
 import { useRegisterDirectionClaims } from "./ownership/use-register-direction-claims";
 import {
 	type DirectionClaimMap,
@@ -43,15 +44,18 @@ export const {
 
 	const scrollState = useSharedValue<ScrollGestureState | null>(null);
 	const childDirectionClaims = useSharedValue<DirectionClaimMap>(NO_CLAIMS);
+	const runtimeOverrides = useGestureRuntimeOverrides();
 
 	const panGesture = useBuildPanGesture({
 		scrollState,
 		config,
 		childDirectionClaims,
+		runtimeOverrides,
 	});
 
 	const pinchGesture = useBuildPinchGesture({
 		config,
+		runtimeOverrides,
 	});
 
 	const detectorGesture = useMemo(
@@ -68,6 +72,7 @@ export const {
 			panGesture,
 			pinchGesture,
 			scrollState,
+			runtimeOverrides,
 			gestureContext,
 			gestureEnabled: config.gestureEnabled,
 			claimedDirections: config.claimedDirections,
@@ -78,6 +83,7 @@ export const {
 			panGesture,
 			pinchGesture,
 			scrollState,
+			runtimeOverrides,
 			gestureContext,
 			config.gestureEnabled,
 			config.claimedDirections,

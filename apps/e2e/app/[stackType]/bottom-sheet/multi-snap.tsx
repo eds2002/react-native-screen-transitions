@@ -18,15 +18,20 @@ export default function MultiSnapScreen() {
 	const animation = useScreenAnimation();
 
 	const albumArtStyle = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
+		const { animatedSnapIndex } = animation.value;
 		const size = interpolate(
-			snapIndex,
+			animatedSnapIndex,
 			[0, 1, 2, 3, 4],
 			[48, 80, 180, 260, 300],
 			"clamp",
 		);
-		const radius = interpolate(snapIndex, [0, 2, 4], [14, 32, 48], "clamp");
-		const opacity = interpolate(snapIndex, [0, 1], [0.7, 1], "clamp");
+		const radius = interpolate(
+			animatedSnapIndex,
+			[0, 2, 4],
+			[14, 32, 48],
+			"clamp",
+		);
+		const opacity = interpolate(animatedSnapIndex, [0, 1], [0.7, 1], "clamp");
 		return {
 			width: size,
 			height: size,
@@ -36,25 +41,32 @@ export default function MultiSnapScreen() {
 	});
 
 	const titleStyle = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
-		const fontSize = interpolate(snapIndex, [0, 2, 4], [15, 22, 28], "clamp");
+		const { animatedSnapIndex } = animation.value;
+		const fontSize = interpolate(
+			animatedSnapIndex,
+			[0, 2, 4],
+			[15, 22, 28],
+			"clamp",
+		);
 		return { fontSize };
 	});
 
 	const controlsOpacity = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
-		return { opacity: interpolate(snapIndex, [0, 1.5], [0, 1], "clamp") };
+		const { animatedSnapIndex } = animation.value;
+		return {
+			opacity: interpolate(animatedSnapIndex, [0, 1.5], [0, 1], "clamp"),
+		};
 	});
 
 	const extrasOpacity = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
-		return { opacity: interpolate(snapIndex, [2, 3], [0, 1], "clamp") };
+		const { animatedSnapIndex } = animation.value;
+		return { opacity: interpolate(animatedSnapIndex, [2, 3], [0, 1], "clamp") };
 	});
 
 	const bgStyle = useAnimatedStyle(() => {
-		const { snapIndex } = animation.value;
+		const { animatedSnapIndex } = animation.value;
 		const backgroundColor = interpolateColor(
-			snapIndex,
+			animatedSnapIndex,
 			[0, 2, 4],
 			["#0D0D1A", "#1A0D2E", "#2E0D1A"],
 		);

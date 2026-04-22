@@ -1,4 +1,4 @@
-import type { AnimatedProps } from "react-native-reanimated";
+import type { AnimatedProps, SharedValue } from "react-native-reanimated";
 import type {
 	ScreenStyleInterpolator,
 	TransitionSpec,
@@ -113,11 +113,16 @@ export type ScreenTransitionConfig = {
 	gestureDirection?: GestureDirection | GestureDirection[];
 
 	/**
-	 * Controls how directly live gesture movement maps into transition progress.
-	 * Lower values feel less sensitive, higher values feel more responsive.
+	 * Controls how directly live gesture movement maps into transition progress
+	 * and the non-raw gesture values exposed to interpolators.
+	 *
+	 * Lower values feel less sensitive, higher values feel more responsive. If
+	 * an interpolator needs physical gesture input before sensitivity is applied,
+	 * read from `active.gesture.raw`.
+	 *
 	 * @default 1
 	 */
-	gestureSensitivity?: number;
+	gestureSensitivity?: number | SharedValue<number>;
 
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.

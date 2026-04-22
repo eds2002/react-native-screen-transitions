@@ -4,7 +4,6 @@ import { animateToProgress } from "../../../../utils/animation/animate-to-progre
 import { emit } from "../../../../utils/animation/emit";
 import type {
 	PinchGestureEvent,
-	PinchGesturePolicy,
 	PinchGestureRuntime,
 	PinchReleaseResult,
 	PinchTrackState,
@@ -14,6 +13,7 @@ import {
 	normalizePinchScale,
 } from "./gesture-physics";
 import { resetPinchGestureValues } from "./gesture-reset";
+import { resolveGestureSensitivity } from "./gesture-sensitivity";
 
 export const startPinchBase = (
 	runtime: PinchGestureRuntime,
@@ -31,43 +31,51 @@ export const startPinchBase = (
 	gestures.direction.set(null);
 	gestures.scale.set(1);
 	gestures.normScale.set(0);
+	gestures.raw.scale.set(1);
+	gestures.raw.normScale.set(0);
 	gestures.focalX.set(event.focalX);
 	gestures.focalY.set(event.focalY);
 	gestureStartProgress.set(animations.progress.get());
 };
 
-export const resolveSensitivePinchGestureEvent = (
+export const applyGestureSensitivityToPinchEvent = (
 	event: PinchGestureEvent,
-	policy: PinchGesturePolicy,
+	runtime: PinchGestureRuntime,
 ): PinchGestureEvent => {
 	"worklet";
+	const sensitivity = resolveGestureSensitivity(
+		runtime.policy.gestureSensitivity,
+		runtime.runtimeOverrides,
+	);
 	const normScale = applyGestureSensitivity(
 		normalizePinchScale(event.scale),
-		policy.gestureSensitivity,
+		sensitivity,
 	);
 
 	return {
 		...event,
 		scale: 1 + normScale,
-		velocity: applyGestureSensitivity(
-			event.velocity,
-			policy.gestureSensitivity,
-		),
+		velocity: applyGestureSensitivity(event.velocity, sensitivity),
 	};
 };
 
 export const trackPinchGesture = (
 	event: PinchGestureEvent,
+	rawEvent: PinchGestureEvent,
 	gestures: PinchGestureRuntime["stores"]["gestures"],
 ): PinchTrackState => {
 	"worklet";
 	const normScale = clamp(normalizePinchScale(event.scale), -1, 1);
 	const scale = clamp(1 + normScale, 0, 2);
+	const rawNormScale = clamp(normalizePinchScale(rawEvent.scale), -1, 1);
+	const rawScale = clamp(1 + rawNormScale, 0, 2);
 
 	gestures.scale.set(scale);
 	gestures.normScale.set(normScale);
 	gestures.focalX.set(event.focalX);
 	gestures.focalY.set(event.focalY);
+	gestures.raw.scale.set(rawScale);
+	gestures.raw.normScale.set(rawNormScale);
 
 	return {
 		scale,

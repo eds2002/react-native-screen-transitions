@@ -2,8 +2,8 @@ import { useCallback } from "react";
 import { useWindowDimensions } from "react-native";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import {
+	applyGestureSensitivityToPanEvent,
 	finalizePanRelease,
-	resolveSensitivePanGestureEvent,
 	startPanBase,
 	trackPanGesture,
 } from "../helpers/pan-phases";
@@ -29,8 +29,13 @@ export const usePanBehavior = (runtime: PanGestureRuntime): PanBehavior => {
 	const onUpdate = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const event = resolveSensitivePanGestureEvent(rawEvent, runtime.policy);
-			const track = trackPanGesture(event, runtime.stores.gestures, dimensions);
+			const event = applyGestureSensitivityToPanEvent(rawEvent, runtime);
+			const track = trackPanGesture(
+				event,
+				rawEvent,
+				runtime.stores.gestures,
+				dimensions,
+			);
 
 			if (!runtime.policy.gestureDrivesProgress) {
 				return;
@@ -46,7 +51,7 @@ export const usePanBehavior = (runtime: PanGestureRuntime): PanBehavior => {
 	const onEnd = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const event = resolveSensitivePanGestureEvent(rawEvent, runtime.policy);
+			const event = applyGestureSensitivityToPanEvent(rawEvent, runtime);
 			const release = resolveRelease(event, runtime, dimensions);
 			finalizePanRelease(release, runtime, event, dimensions, dismissScreen);
 		},

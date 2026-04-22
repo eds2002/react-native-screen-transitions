@@ -10,15 +10,17 @@ const DEFAULT_SPEC = {
 	close: Transition.Specs.DefaultSpec,
 };
 
-function buildHorizontalOptions(inverted: boolean) {
+function buildHorizontalOptions(inverted: boolean): ScreenTransitionConfig {
 	return {
 		gestureEnabled: true,
 		gestureDirection: inverted ? "horizontal-inverted" : "horizontal",
+
 		screenStyleInterpolator: ({
 			progress,
 			layouts: {
 				screen: { width },
 			},
+			active,
 		}) => {
 			"worklet";
 			const enterX = inverted ? -width : width;
@@ -31,6 +33,14 @@ function buildHorizontalOptions(inverted: boolean) {
 			);
 
 			return {
+				config: {
+					gestureSensitivity: interpolate(
+						active.gesture.raw.normX,
+						[0, 0.25],
+						[1, 0.5],
+						"clamp",
+					),
+				},
 				content: {
 					style: {
 						transform: [{ translateX }],

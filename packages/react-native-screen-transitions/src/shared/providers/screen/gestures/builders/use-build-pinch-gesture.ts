@@ -7,6 +7,7 @@ import { SystemStore } from "../../../../stores/system.store";
 import { usePinchBehavior } from "../behaviors/use-pinch-behavior";
 import { usePinchPolicy } from "../config/use-pinch-policy";
 import type {
+	GestureRuntimeOverrides,
 	GestureRuntimeStores,
 	PinchGesture,
 	PinchGestureRuntime,
@@ -15,10 +16,12 @@ import type {
 
 interface BuildPinchGestureHookProps {
 	config: ScreenGestureConfig;
+	runtimeOverrides: GestureRuntimeOverrides;
 }
 
 export const useBuildPinchGesture = ({
 	config,
+	runtimeOverrides,
 }: BuildPinchGestureHookProps): PinchGesture | undefined => {
 	const policy = usePinchPolicy({
 		canDismiss: config.canDismiss,
@@ -42,6 +45,7 @@ export const useBuildPinchGesture = ({
 		config,
 		policy,
 		stores,
+		runtimeOverrides,
 		gestureStartProgress,
 		lockedSnapPoint,
 	};

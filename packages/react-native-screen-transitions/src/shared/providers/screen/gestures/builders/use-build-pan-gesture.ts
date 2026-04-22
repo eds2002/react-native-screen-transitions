@@ -13,6 +13,7 @@ import { claimsAnyDirection } from "../ownership/compute-claimed-directions";
 import { findShadowedAncestorPanGestures } from "../ownership/find-shadowed-ancestor-pan-gestures";
 import type {
 	DirectionClaimMap,
+	GestureRuntimeOverrides,
 	GestureRuntimeStores,
 	PanGesture,
 	PanGestureRuntime,
@@ -24,12 +25,14 @@ interface BuildPanGestureHookProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
 	config: ScreenGestureConfig;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
+	runtimeOverrides: GestureRuntimeOverrides;
 }
 
 export const useBuildPanGesture = ({
 	scrollState,
 	config,
 	childDirectionClaims,
+	runtimeOverrides,
 }: BuildPanGestureHookProps): PanGesture => {
 	const gestureContext = useGestureContext();
 	const policy = usePanPolicy({
@@ -55,6 +58,7 @@ export const useBuildPanGesture = ({
 		config,
 		policy,
 		stores,
+		runtimeOverrides,
 		gestureStartProgress,
 		lockedSnapPoint,
 	};

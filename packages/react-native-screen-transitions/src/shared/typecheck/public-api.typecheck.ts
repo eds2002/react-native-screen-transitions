@@ -118,10 +118,22 @@ const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;
+const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
+const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
+const configInterpolatedStyle: TransitionInterpolatedStyle = {
+	config: {
+		gestureSensitivity: 0.5,
+	},
+};
+void currentRawGestureNormX;
+void currentAnimatedSnapIndex;
+void currentSnapIndex;
+void configInterpolatedStyle;
 const nextNameOptions: ScreenTransitionConfig = {
 	navigationMaskEnabled: true,
 	sheetScrollGestureBehavior: "collapse-only",
+	gestureSensitivity: 0.75,
 };
 const initialMountAnimationOptions: ScreenTransitionConfig = {
 	experimental_animateOnInitialMount: true,
