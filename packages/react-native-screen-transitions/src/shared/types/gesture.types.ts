@@ -45,73 +45,111 @@ export type GestureDirections = {
 
 export type RawGestureValues = {
 	/**
-	 * The horizontal translation before gesture sensitivity is applied.
+	 * The physical horizontal pan translation in pixels before `gestureSensitivity`
+	 * is applied. Positive values represent movement to the right, negative
+	 * values represent movement to the left, and idle is `0`.
 	 */
 	x: number;
 	/**
-	 * The vertical translation before gesture sensitivity is applied.
+	 * The physical vertical pan translation in pixels before `gestureSensitivity`
+	 * is applied. Positive values represent movement down, negative values
+	 * represent movement up, and idle is `0`.
 	 */
 	y: number;
 	/**
-	 * The normalized horizontal translation before gesture sensitivity is applied.
+	 * The physical horizontal pan translation normalized by screen width before
+	 * `gestureSensitivity` is applied. Values are clamped to `-1...1`; idle is
+	 * `0`.
 	 */
 	normX: number;
 	/**
-	 * The normalized vertical translation before gesture sensitivity is applied.
+	 * The physical vertical pan translation normalized by screen height before
+	 * `gestureSensitivity` is applied. Values are clamped to `-1...1`; idle is
+	 * `0`.
 	 */
 	normY: number;
 	/**
-	 * The pinch scale before gesture sensitivity is applied. Idle is 1.
+	 * The physical pinch scale before `gestureSensitivity` is applied. Idle is
+	 * `1`, values below `1` represent pinch-in, and values above `1` represent
+	 * pinch-out.
 	 */
 	scale: number;
 	/**
-	 * The normalized pinch scale delta before gesture sensitivity is applied.
+	 * The physical pinch scale delta before `gestureSensitivity` is applied.
+	 * Values are clamped to `-1...1`; idle is `0`, negative values represent
+	 * pinch-in, and positive values represent pinch-out.
 	 */
 	normScale: number;
 };
 
 export type GestureValues = {
 	/**
-	 * The live horizontal translation of the gesture after gesture sensitivity is
-	 * applied.
+	 * The live horizontal pan translation in pixels after `gestureSensitivity` is
+	 * applied. Positive values represent movement to the right, negative values
+	 * represent movement to the left, and idle is `0`.
+	 *
+	 * Use `raw.x` when you need the physical translation before sensitivity.
 	 */
 	x: number;
 	/**
-	 * The live vertical translation of the gesture after gesture sensitivity is
-	 * applied.
+	 * The live vertical pan translation in pixels after `gestureSensitivity` is
+	 * applied. Positive values represent movement down, negative values represent
+	 * movement up, and idle is `0`.
+	 *
+	 * Use `raw.y` when you need the physical translation before sensitivity.
 	 */
 	y: number;
 	/**
-	 * The live normalized horizontal translation of the gesture after gesture
-	 * sensitivity is applied (-1 to 1).
+	 * The live horizontal pan translation normalized by screen width after
+	 * `gestureSensitivity` is applied. Values are clamped to `-1...1`; idle is
+	 * `0`.
+	 *
+	 * Use `raw.normX` when you need the physical normalized translation before
+	 * sensitivity.
 	 */
 	normX: number;
 	/**
-	 * The live normalized vertical translation of the gesture after gesture
-	 * sensitivity is applied (-1 to 1).
+	 * The live vertical pan translation normalized by screen height after
+	 * `gestureSensitivity` is applied. Values are clamped to `-1...1`; idle is
+	 * `0`.
+	 *
+	 * Use `raw.normY` when you need the physical normalized translation before
+	 * sensitivity.
 	 */
 	normY: number;
 	/**
-	 * The live pinch scale after gesture sensitivity is applied. Idle is 1.
+	 * The live pinch scale after `gestureSensitivity` is applied. Idle is `1`,
+	 * values below `1` represent pinch-in, and values above `1` represent
+	 * pinch-out.
+	 *
+	 * Use `raw.scale` when you need the physical pinch scale before sensitivity.
 	 */
 	scale: number;
 	/**
-	 * The live normalized pinch scale delta after gesture sensitivity is applied
-	 * (-1 to 1).
-	 * Negative values represent pinch-in, positive values represent pinch-out.
+	 * The live normalized pinch scale delta after `gestureSensitivity` is applied.
+	 * Values are clamped to `-1...1`; idle is `0`, negative values represent
+	 * pinch-in, and positive values represent pinch-out.
+	 *
+	 * Use `raw.normScale` when you need the physical normalized pinch delta before
+	 * sensitivity.
 	 */
 	normScale: number;
 	/**
-	 * The live pinch focal point x-position.
+	 * The live pinch focal point x-position in screen coordinates. This value is
+	 * not affected by `gestureSensitivity`.
 	 */
 	focalX: number;
 	/**
-	 * The live pinch focal point y-position.
+	 * The live pinch focal point y-position in screen coordinates. This value is
+	 * not affected by `gestureSensitivity`.
 	 */
 	focalY: number;
 	/**
-	 * Pre-sensitivity gesture values. Use these when deriving dynamic gesture
-	 * config from the physical gesture input.
+	 * Physical gesture values before `gestureSensitivity` is applied.
+	 *
+	 * Use these when deriving dynamic gesture config from gesture input, or when
+	 * an animation needs the user's actual pan/pinch movement instead of the
+	 * sensitivity-adjusted values exposed on the parent gesture object.
 	 */
 	raw: RawGestureValues;
 	/**
