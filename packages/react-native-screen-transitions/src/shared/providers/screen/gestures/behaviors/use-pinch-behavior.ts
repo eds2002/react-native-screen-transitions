@@ -1,12 +1,16 @@
 import { useCallback } from "react";
-import type { PinchGestureEvent } from "react-native-gesture-handler";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import {
 	finalizePinchRelease,
+	resolveSensitivePinchGestureEvent,
 	startPinchBase,
 	trackPinchGesture,
 } from "../helpers/pinch-phases";
-import type { PinchBehavior, PinchGestureRuntime } from "../types";
+import type {
+	PinchBehavior,
+	PinchGestureEvent,
+	PinchGestureRuntime,
+} from "../types";
 import { PinchStrategy } from "./strategies/pinch.strategy";
 import { SnapPinchStrategy } from "./strategies/pinch-snap.strategy";
 
@@ -15,10 +19,10 @@ export const usePinchBehavior = (
 ): PinchBehavior => {
 	const { dismissScreen } = useNavigationHelpers();
 
-	const strategy = runtime.config.effectiveSnapPoints.hasSnapPoints
+	const { primeStart, resolveProgress, resolveRelease } = runtime.config
+		.effectiveSnapPoints.hasSnapPoints
 		? SnapPinchStrategy
 		: PinchStrategy;
-	const { primeStart, resolveProgress, resolveRelease } = strategy;
 
 	const onStart = useCallback(
 		(event: PinchGestureEvent) => {
@@ -32,18 +36,18 @@ export const usePinchBehavior = (
 	const onUpdate = useCallback(
 		(event: PinchGestureEvent) => {
 			"worklet";
-			const track = trackPinchGesture(
+			const sensitiveEvent = resolveSensitivePinchGestureEvent(
 				event,
 				runtime.policy,
-				runtime.stores.gestures,
 			);
+			const track = trackPinchGesture(sensitiveEvent, runtime.stores.gestures);
 
 			if (!runtime.policy.gestureDrivesProgress) {
 				return;
 			}
 
 			runtime.stores.animations.progress.set(
-				resolveProgress(event, runtime, track),
+				resolveProgress(sensitiveEvent, runtime, track),
 			);
 		},
 		[runtime, resolveProgress],
@@ -52,7 +56,11 @@ export const usePinchBehavior = (
 	const onEnd = useCallback(
 		(event: PinchGestureEvent) => {
 			"worklet";
-			const release = resolveRelease(event, runtime);
+			const sensitiveEvent = resolveSensitivePinchGestureEvent(
+				event,
+				runtime.policy,
+			);
+			const release = resolveRelease(sensitiveEvent, runtime);
 			finalizePinchRelease(release, runtime, dismissScreen);
 		},
 		[runtime, dismissScreen, resolveRelease],

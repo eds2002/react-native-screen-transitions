@@ -1,10 +1,10 @@
-import type { PanGestureEvent } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../../../constants";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../utils/animation/emit";
 import type {
 	GestureDimensions,
+	PanGestureEvent,
 	PanGesturePolicy,
 	PanGestureRuntime,
 	PanReleaseResult,
@@ -29,18 +29,41 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	gestureStartProgress.set(animations.progress.get());
 };
 
-export const trackPanGesture = (
+export const resolveSensitivePanGestureEvent = (
 	event: PanGestureEvent,
 	policy: PanGesturePolicy,
+): PanGestureEvent => {
+	"worklet";
+	return {
+		...event,
+		translationX: applyGestureSensitivity(
+			event.translationX,
+			policy.gestureSensitivity,
+		),
+		translationY: applyGestureSensitivity(
+			event.translationY,
+			policy.gestureSensitivity,
+		),
+		velocityX: applyGestureSensitivity(
+			event.velocityX,
+			policy.gestureSensitivity,
+		),
+		velocityY: applyGestureSensitivity(
+			event.velocityY,
+			policy.gestureSensitivity,
+		),
+	};
+};
+
+export const trackPanGesture = (
+	event: PanGestureEvent,
 	gestures: PanGestureRuntime["stores"]["gestures"],
 	dimensions: GestureDimensions,
 ): PanTrackState => {
 	"worklet";
-	const { translationX: rawTX, translationY: rawTY } = event;
+	const { translationX: x, translationY: y } = event;
 	const { width, height } = dimensions;
 
-	const x = applyGestureSensitivity(rawTX, policy.gestureSensitivity);
-	const y = applyGestureSensitivity(rawTY, policy.gestureSensitivity);
 	const normX = clamp(normalizeGestureTranslation(x, width), -1, 1);
 	const normY = clamp(normalizeGestureTranslation(y, height), -1, 1);
 

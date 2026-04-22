@@ -1,13 +1,13 @@
 import { useCallback } from "react";
 import { useWindowDimensions } from "react-native";
-import type { PanGestureEvent } from "react-native-gesture-handler";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import {
 	finalizePanRelease,
+	resolveSensitivePanGestureEvent,
 	startPanBase,
 	trackPanGesture,
 } from "../helpers/pan-phases";
-import type { PanBehavior, PanGestureRuntime } from "../types";
+import type { PanBehavior, PanGestureEvent, PanGestureRuntime } from "../types";
 import { PanStrategy } from "./strategies/pan.strategy";
 import { SnapPanStrategy } from "./strategies/pan-snap.strategy";
 
@@ -15,10 +15,10 @@ export const usePanBehavior = (runtime: PanGestureRuntime): PanBehavior => {
 	const { dismissScreen } = useNavigationHelpers();
 	const dimensions = useWindowDimensions();
 
-	const strategy = runtime.config.effectiveSnapPoints.hasSnapPoints
+	const { primeStart, resolveProgress, resolveRelease } = runtime.config
+		.effectiveSnapPoints.hasSnapPoints
 		? SnapPanStrategy
 		: PanStrategy;
-	const { primeStart, resolveProgress, resolveRelease } = strategy;
 
 	const onStart = useCallback(() => {
 		"worklet";
@@ -27,14 +27,10 @@ export const usePanBehavior = (runtime: PanGestureRuntime): PanBehavior => {
 	}, [runtime, primeStart]);
 
 	const onUpdate = useCallback(
-		(event: PanGestureEvent) => {
+		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const track = trackPanGesture(
-				event,
-				runtime.policy,
-				runtime.stores.gestures,
-				dimensions,
-			);
+			const event = resolveSensitivePanGestureEvent(rawEvent, runtime.policy);
+			const track = trackPanGesture(event, runtime.stores.gestures, dimensions);
 
 			if (!runtime.policy.gestureDrivesProgress) {
 				return;
@@ -48,8 +44,9 @@ export const usePanBehavior = (runtime: PanGestureRuntime): PanBehavior => {
 	);
 
 	const onEnd = useCallback(
-		(event: PanGestureEvent) => {
+		(rawEvent: PanGestureEvent) => {
 			"worklet";
+			const event = resolveSensitivePanGestureEvent(rawEvent, runtime.policy);
 			const release = resolveRelease(event, runtime, dimensions);
 			finalizePanRelease(release, runtime, event, dimensions, dismissScreen);
 		},

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { type PanGesture, usePanGesture } from "react-native-gesture-handler";
+import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
@@ -14,6 +14,7 @@ import { findShadowedAncestorPanGestures } from "../ownership/find-shadowed-ance
 import type {
 	DirectionClaimMap,
 	GestureRuntimeStores,
+	PanGesture,
 	PanGestureRuntime,
 	ScreenGestureConfig,
 	ScrollGestureState,
@@ -77,17 +78,32 @@ export const useBuildPanGesture = ({
 		[config.claimedDirections, selfClaimsAny, gestureContext],
 	);
 
-	const panGesture = usePanGesture({
-		enabled: config.gestureEnabled && policy.enabled,
-		manualActivation: true,
-		maxPointers: 1,
-		onTouchesDown: activation.onTouchesDown,
-		onTouchesMove: activation.onTouchesMove,
-		onActivate: behavior.onStart,
-		onUpdate: behavior.onUpdate,
-		onDeactivate: behavior.onEnd,
-		block: shadowedAncestorGestures,
-	});
+	const panGesture = useMemo(() => {
+		let gesture = Gesture.Pan()
+			.enabled(config.gestureEnabled && policy.enabled)
+			.manualActivation(true)
+			.maxPointers(1)
+			.onTouchesDown(activation.onTouchesDown)
+			.onTouchesMove(activation.onTouchesMove)
+			.onStart(behavior.onStart)
+			.onUpdate(behavior.onUpdate)
+			.onEnd(behavior.onEnd);
+
+		if (shadowedAncestorGestures?.length) {
+			gesture = gesture.blocksExternalGesture(...shadowedAncestorGestures);
+		}
+
+		return gesture;
+	}, [
+		config.gestureEnabled,
+		policy.enabled,
+		activation.onTouchesDown,
+		activation.onTouchesMove,
+		behavior.onStart,
+		behavior.onUpdate,
+		behavior.onEnd,
+		shadowedAncestorGestures,
+	]);
 
 	return panGesture;
 };

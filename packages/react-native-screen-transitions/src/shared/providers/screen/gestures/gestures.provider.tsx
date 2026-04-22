@@ -13,7 +13,7 @@
  */
 
 import { useMemo } from "react";
-import { useSimultaneousGestures } from "react-native-gesture-handler";
+import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import createProvider from "../../../utils/create-provider";
 import { useBuildPanGesture } from "./builders/use-build-pan-gesture";
@@ -54,8 +54,12 @@ export const {
 		config,
 	});
 
-	const detectorGesture = useSimultaneousGestures(
-		...(pinchGesture ? [panGesture, pinchGesture] : [panGesture]),
+	const detectorGesture = useMemo(
+		() =>
+			pinchGesture
+				? Gesture.Simultaneous(panGesture, pinchGesture)
+				: panGesture,
+		[panGesture, pinchGesture],
 	);
 
 	const value = useMemo<GestureContextType>(

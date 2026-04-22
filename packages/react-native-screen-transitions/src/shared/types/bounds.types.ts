@@ -10,7 +10,6 @@ import type {
 	BoundsOptionsResult,
 } from "../utils/bounds/types/options";
 import type {
-	ScreenInterpolationProps,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "./animation.types";

@@ -1,6 +1,5 @@
 import { clamp } from "react-native-reanimated";
 import {
-	applyGestureSensitivity,
 	getPinchReleaseHandoffVelocity,
 	normalizePinchScale,
 	shouldDismissFromPinch,
@@ -37,14 +36,7 @@ export const PinchStrategy: PinchBehaviorStrategy = {
 			gestureStartProgress,
 			stores: { animations },
 		} = runtime;
-		const normalizedScale = clamp(
-			applyGestureSensitivity(
-				normalizePinchScale(event.scale),
-				policy.gestureSensitivity,
-			),
-			-1,
-			1,
-		);
+		const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
 		const currentProgress = animations.progress.get();
 		const shouldDismiss = shouldDismissFromPinch(
 			normalizedScale,

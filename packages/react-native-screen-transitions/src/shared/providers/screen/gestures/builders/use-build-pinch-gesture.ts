@@ -1,8 +1,5 @@
 import { useMemo } from "react";
-import {
-	type PinchGesture,
-	usePinchGesture,
-} from "react-native-gesture-handler";
+import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { GestureStore } from "../../../../stores/gesture.store";
@@ -11,6 +8,7 @@ import { usePinchBehavior } from "../behaviors/use-pinch-behavior";
 import { usePinchPolicy } from "../config/use-pinch-policy";
 import type {
 	GestureRuntimeStores,
+	PinchGesture,
 	PinchGestureRuntime,
 	ScreenGestureConfig,
 } from "../types";
@@ -50,12 +48,15 @@ export const useBuildPinchGesture = ({
 
 	const behavior = usePinchBehavior(runtime);
 
-	const pinchGesture = usePinchGesture({
-		enabled: policy.enabled,
-		onActivate: behavior.onStart,
-		onUpdate: behavior.onUpdate,
-		onDeactivate: behavior.onEnd,
-	});
+	const pinchGesture = useMemo(() => {
+		if (!policy.enabled) return undefined;
 
-	return policy.enabled ? pinchGesture : undefined;
+		return Gesture.Pinch()
+			.enabled(policy.enabled)
+			.onStart(behavior.onStart)
+			.onUpdate(behavior.onUpdate)
+			.onEnd(behavior.onEnd);
+	}, [policy.enabled, behavior.onStart, behavior.onUpdate, behavior.onEnd]);
+
+	return pinchGesture;
 };

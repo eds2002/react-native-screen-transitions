@@ -1,9 +1,9 @@
-import type { PinchGestureEvent } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../../../constants";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../utils/animation/emit";
 import type {
+	PinchGestureEvent,
 	PinchGesturePolicy,
 	PinchGestureRuntime,
 	PinchReleaseResult,
@@ -36,20 +36,32 @@ export const startPinchBase = (
 	gestureStartProgress.set(animations.progress.get());
 };
 
-export const trackPinchGesture = (
+export const resolveSensitivePinchGestureEvent = (
 	event: PinchGestureEvent,
 	policy: PinchGesturePolicy,
+): PinchGestureEvent => {
+	"worklet";
+	const normScale = applyGestureSensitivity(
+		normalizePinchScale(event.scale),
+		policy.gestureSensitivity,
+	);
+
+	return {
+		...event,
+		scale: 1 + normScale,
+		velocity: applyGestureSensitivity(
+			event.velocity,
+			policy.gestureSensitivity,
+		),
+	};
+};
+
+export const trackPinchGesture = (
+	event: PinchGestureEvent,
 	gestures: PinchGestureRuntime["stores"]["gestures"],
 ): PinchTrackState => {
 	"worklet";
-	const normScale = clamp(
-		applyGestureSensitivity(
-			normalizePinchScale(event.scale),
-			policy.gestureSensitivity,
-		),
-		-1,
-		1,
-	);
+	const normScale = clamp(normalizePinchScale(event.scale), -1, 1);
 	const scale = clamp(1 + normScale, 0, 2);
 
 	gestures.scale.set(scale);

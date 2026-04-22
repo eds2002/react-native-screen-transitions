@@ -1,9 +1,6 @@
 import { useCallback, useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import {
-	GestureStateManager,
-	type GestureTouchEvent,
-} from "react-native-gesture-handler";
+import type { GestureTouchEvent } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
 import { GestureStore } from "../../../../stores/gesture.store";
@@ -22,6 +19,11 @@ import type {
 	PanGestureRuntime,
 	ScrollGestureState,
 } from "../types";
+
+type LegacyGestureStateManager = {
+	activate: () => void;
+	fail: () => void;
+};
 
 interface UsePanActivationProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
@@ -78,19 +80,18 @@ export const usePanActivation = ({
 	);
 
 	const onTouchesMove = useCallback(
-		(event: GestureTouchEvent) => {
+		(event: GestureTouchEvent, stateManager: LegacyGestureStateManager) => {
 			"worklet";
-			const handlerTag = event.handlerTag;
 
 			if (event.numberOfTouches !== 1) {
 				gestureActivationState.set(GestureActivationState.FAILED);
-				GestureStateManager.fail(handlerTag);
+				stateManager.fail();
 				return;
 			}
 
 			if (ancestorDismissing?.get()) {
 				gestureActivationState.set(GestureActivationState.FAILED);
-				GestureStateManager.fail(handlerTag);
+				stateManager.fail();
 				return;
 			}
 
@@ -108,12 +109,12 @@ export const usePanActivation = ({
 				});
 
 			if (gestureActivationState.get() === GestureActivationState.FAILED) {
-				GestureStateManager.fail(handlerTag);
+				stateManager.fail();
 				return;
 			}
 
 			if (gestures.dragging.get()) {
-				GestureStateManager.activate(handlerTag);
+				stateManager.activate();
 				return;
 			}
 
@@ -128,13 +129,13 @@ export const usePanActivation = ({
 			}
 
 			if (config.ownershipStatus[swipeDirection] !== "self") {
-				GestureStateManager.fail(handlerTag);
+				stateManager.fail();
 				return;
 			}
 
 			const childClaim = childDirectionClaims.get()[swipeDirection];
 			if (shouldDeferToChildClaim(childClaim, config.routeKey)) {
-				GestureStateManager.fail(handlerTag);
+				stateManager.fail();
 				return;
 			}
 
@@ -151,7 +152,7 @@ export const usePanActivation = ({
 					policy.directions.snapAxisInverted ?? false,
 				)
 			) {
-				GestureStateManager.fail(handlerTag);
+				stateManager.fail();
 				return;
 			}
 
@@ -170,7 +171,7 @@ export const usePanActivation = ({
 				);
 
 				if (!atBoundary) {
-					GestureStateManager.fail(handlerTag);
+					stateManager.fail();
 					return;
 				}
 
@@ -183,7 +184,7 @@ export const usePanActivation = ({
 					)
 				) {
 					if (policy.sheetScrollGestureBehavior === "collapse-only") {
-						GestureStateManager.fail(handlerTag);
+						stateManager.fail();
 						return;
 					}
 
@@ -205,14 +206,14 @@ export const usePanActivation = ({
 						system.targetProgress.get() < effectiveMaxSnapPoint - EPSILON;
 
 					if (!canExpandMore) {
-						GestureStateManager.fail(handlerTag);
+						stateManager.fail();
 						return;
 					}
 				}
 			}
 
 			gestures.direction.set(swipeDirection);
-			GestureStateManager.activate(handlerTag);
+			stateManager.activate();
 		},
 		[
 			ancestorDismissing,

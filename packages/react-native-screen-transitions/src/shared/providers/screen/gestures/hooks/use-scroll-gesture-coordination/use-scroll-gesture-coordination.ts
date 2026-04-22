@@ -33,18 +33,6 @@ export const useScrollGestureCoordination = (
 		return walkUpScrollGestureCoordination(context, scrollDirection);
 	}, [context, scrollDirection]);
 
-	/**
-	 * Intentionally stays on the legacy builder `Gesture.Native()` path.
-	 *
-	 * After migrating screen gestures to RNGH v3 hooks, the equivalent
-	 * `useNativeGesture({ requireToFail })` relation regressed for wrapped
-	 * `Transition.ScrollView` components: the scroll view would keep winning at
-	 * the boundary instead of yielding to the screen pan gesture.
-	 *
-	 * The builder-based native gesture below still matches the working
-	 * `release/v3.4` behavior, so we keep this one seam on the old API until the
-	 * v3 native gesture path behaves equivalently in our wrapper architecture.
-	 */
 	const nativeGesture = useMemo(() => {
 		if (panGestures.length === 0 || scrollStates.length === 0) return null;
 

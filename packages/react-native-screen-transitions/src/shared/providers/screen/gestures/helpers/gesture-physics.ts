@@ -1,8 +1,8 @@
-import type { PanGestureEvent } from "react-native-gesture-handler";
 import { clamp } from "react-native-reanimated";
 import { ANIMATION_SNAP_THRESHOLD, EPSILON } from "../../../../constants";
 import type { AnimationStoreMap } from "../../../../stores/animation.store";
 import type { GestureDirections } from "../../../../types/gesture.types";
+import type { PanGestureEvent } from "../types";
 
 interface CalculateProgressProps {
 	animations: AnimationStoreMap;

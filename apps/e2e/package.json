@@ -37,7 +37,7 @@
 		"react-dom": "19.2.0",
 		"react-native": "0.83.4",
 		"react-native-fast-squircle": "^1.1.1",
-		"react-native-gesture-handler": "3.0.0-beta.3",
+		"react-native-gesture-handler": "~2.31.1",
 		"react-native-reanimated": "4.3.0",
 		"react-native-safe-area-context": "~5.6.0",
 		"react-native-screen-transitions": "workspace:*",

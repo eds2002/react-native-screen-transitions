@@ -1,7 +1,6 @@
 import { clamp } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../../../configs/specs";
 import {
-	applyGestureSensitivity,
 	getPinchReleaseHandoffVelocity,
 	normalizePinchScale,
 } from "../../helpers/gesture-physics";
@@ -102,14 +101,7 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 			config.effectiveSnapPoints;
-		const normalizedScale = clamp(
-			applyGestureSensitivity(
-				normalizePinchScale(event.scale),
-				policy.gestureSensitivity,
-			),
-			-1,
-			1,
-		);
+		const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
 		const currentProgress = animations.progress.get();
 
 		const { resolvedSnapPoints } = resolveRuntimeSnapPoints({

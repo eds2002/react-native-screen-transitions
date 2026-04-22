@@ -5,9 +5,13 @@ import {
 	getPanReleaseProgressVelocity,
 	getPinchReleaseHandoffVelocity,
 	normalizePinchScale,
+	shouldDismissFromPinch,
 	shouldDismissFromProjection,
 	toProgressVelocity,
 } from "../providers/screen/gestures/helpers/gesture-physics";
+import { determineDismissal } from "../providers/screen/gestures/helpers/gesture-targets";
+import { resolveSensitivePanGestureEvent } from "../providers/screen/gestures/helpers/pan-phases";
+import { resolveSensitivePinchGestureEvent } from "../providers/screen/gestures/helpers/pinch-phases";
 
 type Directions = {
 	horizontal: boolean;
@@ -178,6 +182,95 @@ describe("getPanReleaseProgressVelocity", () => {
 
 		// Uses vertical candidate (96/640), not unsupported horizontal movement.
 		expect(result).toBeCloseTo(-1, 5);
+	});
+});
+
+describe("resolveSensitivePanGestureEvent", () => {
+	it("scales pan translation and velocity before release consumers read them", () => {
+		const event = createEvent({
+			translationX: 200,
+			translationY: -80,
+			velocityX: 1000,
+			velocityY: -500,
+		});
+
+		const sensitiveEvent = resolveSensitivePanGestureEvent(event, {
+			gestureSensitivity: 0.1,
+		} as any);
+
+		expect(sensitiveEvent.translationX).toBeCloseTo(20, 5);
+		expect(sensitiveEvent.translationY).toBeCloseTo(-8, 5);
+		expect(sensitiveEvent.velocityX).toBeCloseTo(100, 5);
+		expect(sensitiveEvent.velocityY).toBeCloseTo(-50, 5);
+	});
+
+	it("makes dismissal projection respect gesture sensitivity", () => {
+		const dimensions = { width: 320, height: 640 };
+		const event = createEvent({
+			translationX: 170,
+			velocityX: 0,
+		});
+
+		expect(
+			determineDismissal({
+				event,
+				directions: createDirections({ horizontal: true }),
+				dimensions,
+				gestureVelocityImpact: 0,
+			}).shouldDismiss,
+		).toBe(true);
+
+		const sensitiveEvent = resolveSensitivePanGestureEvent(event, {
+			gestureSensitivity: 0.1,
+		} as any);
+
+		expect(
+			determineDismissal({
+				event: sensitiveEvent,
+				directions: createDirections({ horizontal: true }),
+				dimensions,
+				gestureVelocityImpact: 0,
+			}).shouldDismiss,
+		).toBe(false);
+	});
+});
+
+describe("resolveSensitivePinchGestureEvent", () => {
+	it("scales pinch scale delta and velocity before release consumers read them", () => {
+		const event = {
+			scale: 2,
+			velocity: 4,
+		} as any;
+
+		const sensitiveEvent = resolveSensitivePinchGestureEvent(event, {
+			gestureSensitivity: 0.25,
+		} as any);
+
+		expect(sensitiveEvent.scale).toBeCloseTo(1.25, 5);
+		expect(sensitiveEvent.velocity).toBeCloseTo(1, 5);
+	});
+
+	it("makes pinch dismissal threshold respect gesture sensitivity", () => {
+		const event = {
+			scale: 0.4,
+			velocity: -4,
+		} as any;
+
+		expect(
+			shouldDismissFromPinch(normalizePinchScale(event.scale), true, false),
+		).toBe(true);
+
+		const sensitiveEvent = resolveSensitivePinchGestureEvent(event, {
+			gestureSensitivity: 0.5,
+		} as any);
+
+		expect(
+			shouldDismissFromPinch(
+				normalizePinchScale(sensitiveEvent.scale),
+				true,
+				false,
+			),
+		).toBe(false);
 	});
 });
 

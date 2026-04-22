@@ -1,9 +1,9 @@
 import type {
-	ComposedGesture,
-	PanGesture,
-	PanGestureEvent,
-	PinchGesture,
-	PinchGestureEvent,
+	Gesture,
+	GestureStateChangeEvent,
+	GestureUpdateEvent,
+	PanGestureHandlerEventPayload,
+	PinchGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
@@ -23,6 +23,18 @@ import type {
 } from "../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
 import type { EffectiveSnapPointsResult } from "./helpers/validate-snap-points";
+
+export type PanGesture = ReturnType<typeof Gesture.Pan>;
+export type PinchGesture = ReturnType<typeof Gesture.Pinch>;
+export type ComposedGesture = ReturnType<typeof Gesture.Simultaneous>;
+
+export type PanGestureEvent =
+	| GestureUpdateEvent<PanGestureHandlerEventPayload>
+	| GestureStateChangeEvent<PanGestureHandlerEventPayload>;
+
+export type PinchGestureEvent =
+	| GestureUpdateEvent<PinchGestureHandlerEventPayload>
+	| GestureStateChangeEvent<PinchGestureHandlerEventPayload>;
 
 export type ScrollGestureAxis = "vertical" | "horizontal";
 

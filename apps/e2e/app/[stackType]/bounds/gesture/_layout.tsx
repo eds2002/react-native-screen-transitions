@@ -33,6 +33,7 @@ export default function GestureBoundsLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["vertical"],
 					gestureDrivesProgress: false,
+					gestureSensitivity: 0.1,
 					screenStyleInterpolator: ({ bounds, current, active }) => {
 						"worklet";
 						const currentTag = toGestureBoundaryId(current.route);

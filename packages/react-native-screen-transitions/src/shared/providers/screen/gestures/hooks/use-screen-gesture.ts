@@ -30,10 +30,9 @@ const getGestureAncestors = (
  * ```tsx
  * const screenGesture = useScreenGesture();
  *
- * const myPanGesture = usePanGesture({
- *   requireToFail: screenGesture,
- *   onUpdate: (...) => {},
- * });
+ * const myPanGesture = Gesture.Pan()
+ *   .requireExternalGestureToFail(screenGesture)
+ *   .onUpdate((...) => {});
  * ```
  */
 export const useScreenGesture = (target?: ScreenGestureTarget) => {

@@ -8,10 +8,7 @@ import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
-import type {
-	ScreenTransitionConfig,
-	TransitionInterpolatedStyle,
-} from "../types";
+import type { ScreenTransitionConfig } from "../types";
 import { DefaultSpec } from "./specs";
 
 const platform = Platform.OS;

@@ -1,4 +1,3 @@
-import type { PanGestureEvent } from "react-native-gesture-handler";
 import {
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	FALSE,
@@ -7,6 +6,7 @@ import {
 import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type { AnimationConfig } from "../../../../types/animation.types";
 import { animateMany } from "../../../../utils/animation/animate-many";
+import type { PanGestureEvent } from "../types";
 import {
 	calculateRestoreVelocityTowardZero,
 	getPanReleaseHandoffVelocity,
