@@ -1,5 +1,9 @@
 import { useMemo } from "react";
-import { Gesture } from "react-native-gesture-handler";
+import {
+	Gesture,
+	type GestureStateManager,
+	type GestureTouchEvent,
+} from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { GestureStore } from "../../../../stores/gesture.store";
@@ -55,8 +59,39 @@ export const useBuildPinchGesture = ({
 	const pinchGesture = useMemo(() => {
 		if (!policy.enabled) return undefined;
 
+		const activateWhenTwoTouchesStart = (
+			event: GestureTouchEvent,
+			stateManager: GestureStateManager,
+		) => {
+			"worklet";
+			if (event.numberOfTouches === 2) {
+				stateManager.activate();
+				return;
+			}
+
+			if (event.numberOfTouches > 2) {
+				stateManager.fail();
+			}
+		};
+
+		const activatePinchOrReleaseScroll = (
+			event: GestureTouchEvent,
+			stateManager: GestureStateManager,
+		) => {
+			"worklet";
+			if (event.numberOfTouches === 2) {
+				stateManager.activate();
+				return;
+			}
+
+			stateManager.fail();
+		};
+
 		return Gesture.Pinch()
 			.enabled(policy.enabled)
+			.manualActivation(true)
+			.onTouchesDown(activateWhenTwoTouchesStart)
+			.onTouchesMove(activatePinchOrReleaseScroll)
 			.onStart(behavior.onStart)
 			.onUpdate(behavior.onUpdate)
 			.onEnd(behavior.onEnd);

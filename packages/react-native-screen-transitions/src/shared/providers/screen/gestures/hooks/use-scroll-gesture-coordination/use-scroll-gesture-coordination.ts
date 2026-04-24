@@ -29,12 +29,12 @@ export const useScrollGestureCoordination = (
 	const context = useGestureContext();
 	const scrollDirection = props.direction ?? "vertical";
 
-	const { scrollStates, panGestures } = useMemo(() => {
+	const { scrollStates, panGestures, pinchGestures } = useMemo(() => {
 		return walkUpScrollGestureCoordination(context, scrollDirection);
 	}, [context, scrollDirection]);
 
 	const nativeGesture = useMemo(() => {
-		if (panGestures.length === 0 || scrollStates.length === 0) return null;
+		if (panGestures.length === 0 && pinchGestures.length === 0) return null;
 
 		const setIsTouched = () => {
 			"worklet";
@@ -71,8 +71,14 @@ export const useScrollGestureCoordination = (
 			});
 		}
 
+		for (const pinchGesture of pinchGestures) {
+			gesture = gesture.requireExternalGestureToFail({
+				current: pinchGesture as unknown as GestureType,
+			});
+		}
+
 		return gesture;
-	}, [panGestures, scrollStates, scrollDirection]);
+	}, [panGestures, pinchGestures, scrollStates, scrollDirection]);
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {

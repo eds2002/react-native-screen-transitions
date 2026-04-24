@@ -5,7 +5,6 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { runOnUISync } from "react-native-worklets";
-import { DefaultSnapSpec } from "../../../configs/specs";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import { useDescriptors } from "../../../providers/screen/descriptors";
@@ -15,6 +14,7 @@ import { GestureStore } from "../../../stores/gesture.store";
 import { SystemStore } from "../../../stores/system.store";
 import type { BackdropBehavior } from "../../../types/screen.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import { resolveSnapTransitionSpec } from "../../../utils/animation/resolve-snap-transition-spec";
 import { findCollapseTarget } from "../helpers/find-collapse-target";
 
 interface BackdropLayerProps {
@@ -84,10 +84,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 				const spec = shouldDismiss
 					? transitionSpec
-					: {
-							open: transitionSpec?.expand ?? DefaultSnapSpec,
-							close: transitionSpec?.collapse ?? DefaultSnapSpec,
-						};
+					: resolveSnapTransitionSpec(transitionSpec, "collapse");
 
 				animateToProgress({
 					target,

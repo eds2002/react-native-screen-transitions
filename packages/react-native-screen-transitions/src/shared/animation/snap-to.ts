@@ -1,9 +1,9 @@
 import { runOnUISync } from "react-native-worklets";
-import { DefaultSnapSpec } from "../configs/specs";
 import { AnimationStore } from "../stores/animation.store";
 import type { HistoryEntry } from "../stores/history.store";
 import { SystemStore } from "../stores/system.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
+import { resolveSnapTransitionSpec } from "../utils/animation/resolve-snap-transition-spec";
 import { logger } from "../utils/logger";
 import { resolveSnapTargetEntry } from "./resolve-snap-target";
 
@@ -52,14 +52,16 @@ export function snapDescriptorToIndex(
 
 	runOnUISync(() => {
 		"worklet";
+		const currentProgress = animations.progress.get();
+
 		animateToProgress({
 			target: targetProgress,
 			animations,
 			targetProgress: targetProgressValue,
-			spec: {
-				open: descriptor.options.transitionSpec?.expand ?? DefaultSnapSpec,
-				close: descriptor.options.transitionSpec?.collapse ?? DefaultSnapSpec,
-			},
+			spec: resolveSnapTransitionSpec(
+				descriptor.options.transitionSpec,
+				targetProgress < currentProgress ? "collapse" : "expand",
+			),
 		});
 	});
 

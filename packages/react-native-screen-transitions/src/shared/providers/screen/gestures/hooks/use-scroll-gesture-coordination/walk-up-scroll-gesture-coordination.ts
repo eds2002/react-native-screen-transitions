@@ -1,8 +1,9 @@
-import type { PanGesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { Direction } from "../../../../../types/ownership.types";
 import type {
 	GestureContextType,
+	PanGesture,
+	PinchGesture,
 	ScrollGestureAxis,
 	ScrollGestureState,
 } from "../../types";
@@ -24,6 +25,7 @@ function findGestureOwnerForDirection(
 
 interface WalkUpScrollGestureCoordinationResult {
 	panGestures: PanGesture[];
+	pinchGestures: PinchGesture[];
 	scrollStates: SharedValue<ScrollGestureState | null>[];
 }
 
@@ -38,7 +40,20 @@ export function walkUpScrollGestureCoordination(
 
 	const seenOwners: GestureContextType[] = [];
 	const panGestures: GestureContextType["panGesture"][] = [];
+	const pinchGestures: NonNullable<GestureContextType["pinchGesture"]>[] = [];
 	const scrollStates: GestureContextType["scrollState"][] = [];
+	let ancestor = context;
+
+	while (ancestor) {
+		if (
+			ancestor.pinchGesture &&
+			!pinchGestures.includes(ancestor.pinchGesture)
+		) {
+			pinchGestures.push(ancestor.pinchGesture);
+		}
+
+		ancestor = ancestor.gestureContext;
+	}
 
 	for (const direction of directions) {
 		const owner = findGestureOwnerForDirection(context, direction);
@@ -54,6 +69,7 @@ export function walkUpScrollGestureCoordination(
 
 	return {
 		panGestures,
+		pinchGestures,
 		scrollStates,
 	};
 }

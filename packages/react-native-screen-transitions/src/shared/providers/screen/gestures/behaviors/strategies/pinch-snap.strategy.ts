@@ -1,5 +1,5 @@
 import { clamp } from "react-native-reanimated";
-import { DefaultSnapSpec } from "../../../../../configs/specs";
+import { resolveSnapTransitionSpec } from "../../../../../utils/animation/resolve-snap-transition-spec";
 import {
 	getPinchReleaseHandoffVelocity,
 	normalizePinchScale,
@@ -135,10 +135,10 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 		const target = result.targetProgress;
 		const isSnapping = !shouldDismiss;
 		const transitionSpec = isSnapping
-			? {
-					open: policy.transitionSpec?.expand ?? DefaultSnapSpec,
-					close: policy.transitionSpec?.collapse ?? DefaultSnapSpec,
-				}
+			? resolveSnapTransitionSpec(
+					policy.transitionSpec,
+					target < currentProgress ? "collapse" : "expand",
+				)
 			: policy.transitionSpec;
 		const progressDirection = Math.sign(target - currentProgress);
 		const initialVelocity =

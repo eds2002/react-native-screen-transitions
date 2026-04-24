@@ -1,4 +1,4 @@
-import { DefaultSnapSpec } from "../../../../../configs/specs";
+import { resolveSnapTransitionSpec } from "../../../../../utils/animation/resolve-snap-transition-spec";
 import { getPanReleaseHandoffVelocity } from "../../helpers/gesture-physics";
 import {
 	findNearestSnapPoint,
@@ -128,14 +128,15 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 		const shouldDismiss = result.shouldDismiss;
 		const target = result.targetProgress;
 		const isSnapping = !shouldDismiss;
+		const currentProgress = animations.progress.get();
 		const transitionSpec = isSnapping
-			? {
-					open: policy.transitionSpec?.expand ?? DefaultSnapSpec,
-					close: policy.transitionSpec?.collapse ?? DefaultSnapSpec,
-				}
+			? resolveSnapTransitionSpec(
+					policy.transitionSpec,
+					target < currentProgress ? "collapse" : "expand",
+				)
 			: policy.transitionSpec;
 
-		const snapDirection = Math.sign(target - animations.progress.get());
+		const snapDirection = Math.sign(target - currentProgress);
 		const initialVelocity =
 			snapDirection === 0
 				? 0
