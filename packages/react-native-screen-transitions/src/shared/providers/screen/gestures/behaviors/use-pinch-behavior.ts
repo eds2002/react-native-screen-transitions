@@ -1,4 +1,5 @@
 import { useCallback } from "react";
+import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import {
 	applyGestureSensitivityToPinchEvent,
@@ -8,56 +9,77 @@ import {
 } from "../helpers/pinch-phases";
 import type {
 	PinchBehavior,
+	PinchBehaviorStrategy,
 	PinchGestureEvent,
 	PinchGestureRuntime,
 } from "../types";
 import { PinchStrategy } from "./strategies/pinch.strategy";
 import { SnapPinchStrategy } from "./strategies/pinch-snap.strategy";
 
-export const usePinchBehavior = (
+const getPinchStrategy = (
 	runtime: PinchGestureRuntime,
-): PinchBehavior => {
-	const { dismissScreen } = useNavigationHelpers();
-
-	const { primeStart, resolveProgress, resolveRelease } = runtime.config
-		.effectiveSnapPoints.hasSnapPoints
+): PinchBehaviorStrategy => {
+	"worklet";
+	return runtime.config.effectiveSnapPoints.hasSnapPoints
 		? SnapPinchStrategy
 		: PinchStrategy;
+};
+
+export const usePinchBehavior = (
+	runtime: SharedValue<PinchGestureRuntime>,
+): PinchBehavior => {
+	const { dismissScreen } = useNavigationHelpers();
 
 	const onStart = useCallback(
 		(event: PinchGestureEvent) => {
 			"worklet";
-			primeStart(runtime, event);
-			startPinchBase(runtime, event);
+			const latestRuntime = runtime.get();
+			const strategy = getPinchStrategy(latestRuntime);
+			strategy.primeStart(latestRuntime, event);
+			startPinchBase(latestRuntime, event);
 		},
-		[runtime, primeStart],
+		[runtime],
 	);
 
 	const onUpdate = useCallback(
 		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const event = applyGestureSensitivityToPinchEvent(rawEvent, runtime);
-			const track = trackPinchGesture(event, rawEvent, runtime.stores.gestures);
+			const latestRuntime = runtime.get();
+			const strategy = getPinchStrategy(latestRuntime);
+			const event = applyGestureSensitivityToPinchEvent(
+				rawEvent,
+				latestRuntime,
+			);
+			const track = trackPinchGesture(
+				event,
+				rawEvent,
+				latestRuntime.stores.gestures,
+			);
 
-			if (!runtime.policy.gestureDrivesProgress) {
+			if (!latestRuntime.policy.gestureDrivesProgress) {
 				return;
 			}
 
-			runtime.stores.animations.progress.set(
-				resolveProgress(event, runtime, track),
+			latestRuntime.stores.animations.progress.set(
+				strategy.resolveProgress(event, latestRuntime, track),
 			);
 		},
-		[runtime, resolveProgress],
+		[runtime],
 	);
 
 	const onEnd = useCallback(
 		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const event = applyGestureSensitivityToPinchEvent(rawEvent, runtime);
-			const release = resolveRelease(event, runtime);
-			finalizePinchRelease(release, runtime, dismissScreen);
+			const latestRuntime = runtime.get();
+			const strategy = getPinchStrategy(latestRuntime);
+			const event = applyGestureSensitivityToPinchEvent(
+				rawEvent,
+				latestRuntime,
+			);
+			const release = strategy.resolveRelease(event, latestRuntime);
+			finalizePinchRelease(release, latestRuntime, dismissScreen);
 		},
-		[runtime, dismissScreen, resolveRelease],
+		[runtime, dismissScreen],
 	);
 
 	return {

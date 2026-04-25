@@ -3,24 +3,9 @@ import {
 	resolveChainTarget,
 } from "../../../../utils/resolve-chain-target";
 import { useGestureContext } from "../gestures.provider";
-import type { GestureContextType } from "../types";
+import { walkGestureAncestors } from "../helpers/walk-gesture-ancestors";
 
 export type ScreenGestureTarget = ChainTarget;
-
-const getGestureAncestors = (
-	self: GestureContextType,
-): GestureContextType[] => {
-	const ancestors: GestureContextType[] = [];
-
-	let current = self.gestureContext;
-
-	while (current) {
-		ancestors.push(current);
-		current = current.gestureContext;
-	}
-
-	return ancestors;
-};
 
 /**
  * Returns a screen navigation pan gesture.
@@ -41,7 +26,7 @@ export const useScreenGesture = (target?: ScreenGestureTarget) => {
 		resolveChainTarget({
 			target,
 			self: ctx,
-			ancestors: ctx ? getGestureAncestors(ctx) : [],
+			ancestors: walkGestureAncestors(ctx?.gestureContext),
 		})?.panGesture ?? null
 	);
 };

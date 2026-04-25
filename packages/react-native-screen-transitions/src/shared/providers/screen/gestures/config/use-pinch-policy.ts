@@ -10,20 +10,17 @@ import {
 } from "../../../../constants";
 import { useDescriptors } from "../../../screen/descriptors";
 import { getPinchGestureDirections } from "../helpers/gesture-directions";
-import type { PinchGesturePolicy } from "../types";
+import type { PinchGesturePolicy, ScreenGestureConfig } from "../types";
 
-interface UsePinchPolicyProps {
-	canDismiss: boolean;
-	hasSnapPoints: boolean;
-}
-
-export function usePinchPolicy({
-	canDismiss,
-	hasSnapPoints,
-}: UsePinchPolicyProps): PinchGesturePolicy {
+export function usePinchPolicy(
+	config: ScreenGestureConfig,
+): PinchGesturePolicy {
 	const {
 		current: { options },
 	} = useDescriptors();
+
+	const { canDismiss } = config;
+	const { hasSnapPoints } = config.effectiveSnapPoints;
 
 	return useMemo(() => {
 		const gestureDirection =

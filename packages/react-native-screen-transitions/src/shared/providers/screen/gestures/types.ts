@@ -26,7 +26,7 @@ import type { EffectiveSnapPointsResult } from "./helpers/validate-snap-points";
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
 export type PinchGesture = ReturnType<typeof Gesture.Pinch>;
-export type ComposedGesture = ReturnType<typeof Gesture.Simultaneous>;
+export type ComposedGesture = ReturnType<typeof Gesture.Race>;
 
 export type PanGestureEvent =
 	| GestureUpdateEvent<PanGestureHandlerEventPayload>
@@ -70,9 +70,9 @@ export const NO_CLAIMS: DirectionClaimMap = {
 };
 
 export interface GestureContextType {
-	detectorGesture: PanGesture | ComposedGesture;
+	detectorGesture: ComposedGesture;
 	panGesture: PanGesture;
-	pinchGesture?: PinchGesture;
+	pinchGesture: PinchGesture;
 	scrollState: SharedValue<ScrollGestureState | null>;
 	runtimeOverrides: GestureRuntimeOverrides;
 	gestureContext: GestureContextType | null;
@@ -82,9 +82,9 @@ export interface GestureContextType {
 }
 
 export interface ScreenGestureBundle {
-	detectorGesture: PanGesture | ComposedGesture;
+	detectorGesture: ComposedGesture;
 	panGesture: PanGesture;
-	pinchGesture?: PinchGesture;
+	pinchGesture: PinchGesture;
 }
 
 export interface ScreenGestureConfig {

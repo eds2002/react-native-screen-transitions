@@ -19,18 +19,12 @@ import {
 } from "../helpers/gesture-directions";
 import type { PanGesturePolicy, ScreenGestureConfig } from "../types";
 
-interface UsePanPolicyProps {
-	effectiveSnapPoints: ScreenGestureConfig["effectiveSnapPoints"];
-}
-
-export function usePanPolicy({
-	effectiveSnapPoints,
-}: UsePanPolicyProps): PanGesturePolicy {
+export function usePanPolicy(config: ScreenGestureConfig): PanGesturePolicy {
 	const {
 		current: { options },
 	} = useDescriptors();
 
-	const { hasSnapPoints } = effectiveSnapPoints;
+	const { hasSnapPoints } = config.effectiveSnapPoints;
 
 	return useMemo(() => {
 		const gestureDirection =

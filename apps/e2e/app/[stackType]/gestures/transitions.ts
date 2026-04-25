@@ -114,7 +114,7 @@ function buildPinchOptions(
 
 	return {
 		gestureEnabled: true,
-		gestureDirection: direction,
+		gestureDirection: [direction, "horizontal", "vertical"],
 		gestureSensitivity: 0.75,
 		snapPoints: isPinchIn ? [0.5, 1.0] : undefined,
 		screenStyleInterpolator: ({ progress }) => {
@@ -139,6 +139,39 @@ function buildPinchOptions(
 	};
 }
 
+function buildDynamicRuntimeOptions(): ScreenTransitionConfig {
+	return {
+		gestureEnabled: true,
+		gestureDirection: "horizontal",
+		screenStyleInterpolator: ({ current, progress }) => {
+			"worklet";
+
+			const translateX = current.gesture.x * 0.85;
+			const translateY = current.gesture.y * 0.85;
+			const pinchScale = 1 - Math.abs(current.gesture.normScale) * 0.25;
+			const progressScale = interpolate(
+				progress,
+				[0, 1, 2],
+				[0.95, 1, 0.96],
+				"clamp",
+			);
+
+			return {
+				content: {
+					style: {
+						transform: [
+							{ translateX },
+							{ translateY },
+							{ scale: progressScale * pinchScale },
+						],
+					},
+				},
+			};
+		},
+		transitionSpec: DEFAULT_SPEC,
+	};
+}
+
 export const GESTURE_SCREEN_OPTIONS: Record<GestureExampleId, any> = {
 	horizontal: buildHorizontalOptions(false),
 	"horizontal-inverted": buildHorizontalOptions(true),
@@ -147,4 +180,5 @@ export const GESTURE_SCREEN_OPTIONS: Record<GestureExampleId, any> = {
 	bidirectional: buildBidirectionalOptions(),
 	"pinch-in": buildPinchOptions("pinch-in"),
 	"pinch-out": buildPinchOptions("pinch-out"),
+	"dynamic-runtime": buildDynamicRuntimeOptions(),
 };

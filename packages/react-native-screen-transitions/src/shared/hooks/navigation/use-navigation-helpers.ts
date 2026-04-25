@@ -3,17 +3,19 @@ import { useCallback } from "react";
 import { useDescriptors } from "../../providers/screen/descriptors";
 
 export function useNavigationHelpers() {
-	const { current } = useDescriptors();
+	const {
+		current: { navigation, route },
+	} = useDescriptors();
 
 	const dismissScreen = useCallback(() => {
-		const state = current.navigation.getState();
+		const state = navigation.getState();
 
-		current.navigation.dispatch({
+		navigation.dispatch({
 			...StackActions.pop(),
-			source: current.route.key,
+			source: route.key,
 			target: state.key,
 		});
-	}, [current]);
+	}, [navigation, route.key]);
 
 	return { dismissScreen };
 }

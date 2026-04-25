@@ -1,5 +1,4 @@
 import { useCallback, useMemo } from "react";
-import { useWindowDimensions } from "react-native";
 import type { GestureTouchEvent } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
@@ -16,6 +15,7 @@ import { resolveRuntimeSnapPoints } from "../helpers/gesture-snap-points";
 import { shouldDeferToChildClaim } from "../ownership/should-defer-to-child-claim";
 import type {
 	DirectionClaimMap,
+	GestureDimensions,
 	PanGestureRuntime,
 	ScrollGestureState,
 } from "../types";
@@ -28,30 +28,17 @@ type LegacyGestureStateManager = {
 interface UsePanActivationProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
-	runtime: PanGestureRuntime;
+	runtime: SharedValue<PanGestureRuntime>;
+	dimensions: GestureDimensions;
 }
 
 export const usePanActivation = ({
 	scrollState,
 	childDirectionClaims,
 	runtime,
+	dimensions,
 }: UsePanActivationProps) => {
-	const {
-		config,
-		policy,
-		lockedSnapPoint,
-		stores: { animations, gestures, system },
-	} = runtime;
 	const { parentScreenKey } = useDescriptorDerivations();
-	const {
-		hasSnapPoints,
-		hasAutoSnapPoint,
-		snapPoints,
-		minSnapPoint,
-		maxSnapPoint,
-	} = config.effectiveSnapPoints;
-
-	const dimensions = useWindowDimensions();
 
 	const ancestorDismissing = useMemo(() => {
 		if (!parentScreenKey) return null;
@@ -65,10 +52,20 @@ export const usePanActivation = ({
 	);
 
 	const onTouchesDown = useCallback(
-		(event: GestureTouchEvent) => {
+		(
+			event: GestureTouchEvent,
+			stateManager: LegacyGestureStateManager | undefined,
+		) => {
 			"worklet";
-			if (event.numberOfTouches !== 1) {
+			const { config, policy } = runtime.get();
+
+			if (
+				!config.gestureEnabled ||
+				!policy.enabled ||
+				event.numberOfTouches !== 1
+			) {
 				gestureActivationState.set(GestureActivationState.FAILED);
+				stateManager?.fail();
 				return;
 			}
 
@@ -76,7 +73,7 @@ export const usePanActivation = ({
 			initialTouch.set({ x: firstTouch.x, y: firstTouch.y });
 			gestureActivationState.set(GestureActivationState.PENDING);
 		},
-		[gestureActivationState, initialTouch],
+		[gestureActivationState, initialTouch, runtime],
 	);
 
 	const onTouchesMove = useCallback(
@@ -90,6 +87,26 @@ export const usePanActivation = ({
 			}
 
 			if (ancestorDismissing?.get()) {
+				gestureActivationState.set(GestureActivationState.FAILED);
+				stateManager.fail();
+				return;
+			}
+
+			const {
+				config,
+				policy,
+				lockedSnapPoint,
+				stores: { animations, gestures, system },
+			} = runtime.get();
+			const {
+				hasSnapPoints,
+				hasAutoSnapPoint,
+				snapPoints,
+				minSnapPoint,
+				maxSnapPoint,
+			} = config.effectiveSnapPoints;
+
+			if (!config.gestureEnabled || !policy.enabled) {
 				gestureActivationState.set(GestureActivationState.FAILED);
 				stateManager.fail();
 				return;
@@ -133,6 +150,7 @@ export const usePanActivation = ({
 				return;
 			}
 
+			// A nested screen shadowing this direction gets priority while it is active.
 			const childClaim = childDirectionClaims.get()[swipeDirection];
 			if (shouldDeferToChildClaim(childClaim, config.routeKey)) {
 				stateManager.fail();
@@ -217,22 +235,12 @@ export const usePanActivation = ({
 		},
 		[
 			ancestorDismissing,
-			animations.progress,
 			childDirectionClaims,
-			config,
 			dimensions,
 			gestureActivationState,
-			gestures,
-			hasAutoSnapPoint,
-			hasSnapPoints,
 			initialTouch,
-			lockedSnapPoint,
-			maxSnapPoint,
-			minSnapPoint,
-			policy,
+			runtime,
 			scrollState,
-			snapPoints,
-			system,
 		],
 	);
 

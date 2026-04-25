@@ -41,6 +41,10 @@ export default function GesturesSuiteLayout() {
 				name="pinch-out"
 				options={GESTURE_SCREEN_OPTIONS["pinch-out"]}
 			/>
+			<StackNavigator.Screen
+				name="dynamic-runtime"
+				options={GESTURE_SCREEN_OPTIONS["dynamic-runtime"]}
+			/>
 		</StackNavigator>
 	);
 }

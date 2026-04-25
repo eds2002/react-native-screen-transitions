@@ -1,5 +1,6 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { Direction } from "../../../../../types/ownership.types";
+import { walkGestureAncestors } from "../../helpers/walk-gesture-ancestors";
 import type {
 	GestureContextType,
 	PanGesture,
@@ -10,14 +11,11 @@ import type {
 
 /** Walks up the gesture tree until it finds the owner for a specific direction. */
 function findGestureOwnerForDirection(
-	context: GestureContextType | null,
+	ancestors: GestureContextType[],
 	direction: Direction,
 ): GestureContextType | null {
-	let ancestor = context;
-
-	while (ancestor) {
+	for (const ancestor of ancestors) {
 		if (ancestor.claimedDirections?.[direction]) return ancestor;
-		ancestor = ancestor.gestureContext;
 	}
 
 	return null;
@@ -40,23 +38,18 @@ export function walkUpScrollGestureCoordination(
 
 	const seenOwners: GestureContextType[] = [];
 	const panGestures: GestureContextType["panGesture"][] = [];
-	const pinchGestures: NonNullable<GestureContextType["pinchGesture"]>[] = [];
+	const pinchGestures: GestureContextType["pinchGesture"][] = [];
 	const scrollStates: GestureContextType["scrollState"][] = [];
-	let ancestor = context;
+	const ancestors = walkGestureAncestors(context);
 
-	while (ancestor) {
-		if (
-			ancestor.pinchGesture &&
-			!pinchGestures.includes(ancestor.pinchGesture)
-		) {
+	for (const ancestor of ancestors) {
+		if (!pinchGestures.includes(ancestor.pinchGesture)) {
 			pinchGestures.push(ancestor.pinchGesture);
 		}
-
-		ancestor = ancestor.gestureContext;
 	}
 
 	for (const direction of directions) {
-		const owner = findGestureOwnerForDirection(context, direction);
+		const owner = findGestureOwnerForDirection(ancestors, direction);
 
 		if (!owner || seenOwners.includes(owner)) {
 			continue;

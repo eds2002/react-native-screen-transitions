@@ -15,7 +15,8 @@ export type GestureExampleId =
 	| "vertical-inverted"
 	| "bidirectional"
 	| "pinch-in"
-	| "pinch-out";
+	| "pinch-out"
+	| "dynamic-runtime";
 
 type GestureExampleDefinition = {
 	id: GestureExampleId;
@@ -117,6 +118,19 @@ export const GESTURE_EXAMPLES: GestureExampleDefinition[] = [
 			"Use two fingers and pinch outward to dismiss this screen.",
 			"Outward growth should feel deliberate instead of triggering pan.",
 			"Compare this directly against pinch-in to verify both directions.",
+		],
+	},
+	{
+		id: "dynamic-runtime",
+		title: "Dynamic Runtime",
+		description: "Flip gesture direction and enabled state while mounted.",
+		subtitle: "setOptions updates without rebuilding gesture handlers",
+		routeLabel: "dynamic gestureEnabled + gestureDirection",
+		tint: "#3C4F35",
+		notes: [
+			"Toggle gestures off, then drag to confirm the screen does not dismiss.",
+			"Toggle back on and switch between horizontal, vertical, and pinch-in.",
+			"Each enabled mode should dismiss without needing to remount the screen.",
 		],
 	},
 ];

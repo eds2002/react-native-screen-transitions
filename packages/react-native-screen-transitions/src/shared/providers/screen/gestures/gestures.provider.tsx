@@ -1,17 +1,3 @@
-/**
- * Gesture System - Core Provider
- *
- * Each screen gets a GestureContext containing:
- * - panGesture: Pan gesture handler for dismiss/snap
- * - scrollState: Scroll coordination state for boundary detection
- * - claimedDirections: Which directions this screen handles
- * - childDirectionClaims: Claims registered by descendant screens
- *
- * ScrollView coordination is handled by useScrollGestureCoordination, which
- * finds the gesture owner for the scroll axis and creates appropriate Native
- * gestures.
- */
-
 import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
@@ -20,7 +6,7 @@ import { useBuildPanGesture } from "./builders/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./builders/use-build-pinch-gesture";
 import { useScreenGestureConfig } from "./config/use-screen-gesture-config";
 import { useGestureRuntimeOverrides } from "./hooks/use-gesture-runtime-overrides";
-import { useRegisterDirectionClaims } from "./ownership/use-register-direction-claims";
+import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and-register-shadowing-claims";
 import {
 	type DirectionClaimMap,
 	type GestureContextType,
@@ -43,14 +29,23 @@ export const {
 	const config = useScreenGestureConfig();
 
 	const scrollState = useSharedValue<ScrollGestureState | null>(null);
+
+	// Ancestors read this before activating. If a nested screen claims the same
+	// direction, it writes here so the ancestor can fail and let it take priority.
 	const childDirectionClaims = useSharedValue<DirectionClaimMap>(NO_CLAIMS);
+
 	const runtimeOverrides = useGestureRuntimeOverrides();
+
+	const { ancestorPanGesturesToBlock } = useWalkUpAndRegisterShadowingClaims(
+		config.claimedDirections,
+	);
 
 	const panGesture = useBuildPanGesture({
 		scrollState,
 		config,
 		childDirectionClaims,
 		runtimeOverrides,
+		ancestorPanGesturesToBlock,
 	});
 
 	const pinchGesture = useBuildPinchGesture({
@@ -59,10 +54,7 @@ export const {
 	});
 
 	const detectorGesture = useMemo(
-		() =>
-			pinchGesture
-				? Gesture.Simultaneous(panGesture, pinchGesture)
-				: panGesture,
+		() => Gesture.Race(panGesture, pinchGesture),
 		[panGesture, pinchGesture],
 	);
 
@@ -90,8 +82,6 @@ export const {
 			childDirectionClaims,
 		],
 	);
-
-	useRegisterDirectionClaims(config.claimedDirections);
 
 	return {
 		value,

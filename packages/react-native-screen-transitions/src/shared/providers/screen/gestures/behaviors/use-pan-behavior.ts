@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { useWindowDimensions } from "react-native";
+import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import {
 	applyGestureSensitivityToPanEvent,
@@ -7,55 +7,77 @@ import {
 	startPanBase,
 	trackPanGesture,
 } from "../helpers/pan-phases";
-import type { PanBehavior, PanGestureEvent, PanGestureRuntime } from "../types";
+import type {
+	GestureDimensions,
+	PanBehavior,
+	PanBehaviorStrategy,
+	PanGestureEvent,
+	PanGestureRuntime,
+} from "../types";
 import { PanStrategy } from "./strategies/pan.strategy";
 import { SnapPanStrategy } from "./strategies/pan-snap.strategy";
 
-export const usePanBehavior = (runtime: PanGestureRuntime): PanBehavior => {
-	const { dismissScreen } = useNavigationHelpers();
-	const dimensions = useWindowDimensions();
-
-	const { primeStart, resolveProgress, resolveRelease } = runtime.config
-		.effectiveSnapPoints.hasSnapPoints
+const getPanStrategy = (runtime: PanGestureRuntime): PanBehaviorStrategy => {
+	"worklet";
+	return runtime.config.effectiveSnapPoints.hasSnapPoints
 		? SnapPanStrategy
 		: PanStrategy;
+};
+
+export const usePanBehavior = (
+	runtime: SharedValue<PanGestureRuntime>,
+	dimensions: GestureDimensions,
+): PanBehavior => {
+	const { dismissScreen } = useNavigationHelpers();
 
 	const onStart = useCallback(() => {
 		"worklet";
-		primeStart(runtime);
-		startPanBase(runtime);
-	}, [runtime, primeStart]);
+		const latestRuntime = runtime.get();
+		const strategy = getPanStrategy(latestRuntime);
+		strategy.primeStart(latestRuntime);
+		startPanBase(latestRuntime);
+	}, [runtime]);
 
 	const onUpdate = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const event = applyGestureSensitivityToPanEvent(rawEvent, runtime);
+			const latestRuntime = runtime.get();
+			const strategy = getPanStrategy(latestRuntime);
+			const event = applyGestureSensitivityToPanEvent(rawEvent, latestRuntime);
 			const track = trackPanGesture(
 				event,
 				rawEvent,
-				runtime.stores.gestures,
+				latestRuntime.stores.gestures,
 				dimensions,
 			);
 
-			if (!runtime.policy.gestureDrivesProgress) {
+			if (!latestRuntime.policy.gestureDrivesProgress) {
 				return;
 			}
 
-			runtime.stores.animations.progress.set(
-				resolveProgress(event, runtime, dimensions, track),
+			latestRuntime.stores.animations.progress.set(
+				strategy.resolveProgress(event, latestRuntime, dimensions, track),
 			);
 		},
-		[runtime, dimensions, resolveProgress],
+		[runtime, dimensions],
 	);
 
 	const onEnd = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const event = applyGestureSensitivityToPanEvent(rawEvent, runtime);
-			const release = resolveRelease(event, runtime, dimensions);
-			finalizePanRelease(release, runtime, event, dimensions, dismissScreen);
+			const latestRuntime = runtime.get();
+			const strategy = getPanStrategy(latestRuntime);
+			const event = applyGestureSensitivityToPanEvent(rawEvent, latestRuntime);
+			const release = strategy.resolveRelease(event, latestRuntime, dimensions);
+			finalizePanRelease(
+				release,
+				latestRuntime,
+				event,
+				dimensions,
+				dismissScreen,
+			);
 		},
-		[runtime, dimensions, dismissScreen, resolveRelease],
+		[runtime, dimensions, dismissScreen],
 	);
 
 	return {
