@@ -1,5 +1,5 @@
 import { clamp } from "react-native-reanimated";
-import { ANIMATION_SNAP_THRESHOLD, EPSILON } from "../../../../constants";
+import { EPSILON } from "../../../../constants";
 import type { AnimationStoreMap } from "../../../../stores/animation.store";
 import type { GestureDirections } from "../../../../types/gesture.types";
 import type { PanGestureEvent } from "../types";
@@ -17,12 +17,6 @@ type GestureAxisCandidate = {
 	progressContribution: number;
 	velocityContribution: number;
 };
-
-/**
- * Private safety cap for spring handoff in progress-space.
- * This primarily protects against pathological simulator spikes.
- */
-const MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY = 3.2;
 
 /**
  * Converts a pan velocity from pixels/second into progress/second.
@@ -44,14 +38,9 @@ export const getPanReleaseHandoffVelocity = (
 	gestureReleaseVelocityScale: number = 1,
 ) => {
 	"worklet";
-	const scaledVelocity =
+	return (
 		toProgressVelocity(velocityPixelsPerSecond, screenSize) *
-		Math.max(0, gestureReleaseVelocityScale);
-
-	return clamp(
-		scaledVelocity,
-		-MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY,
-		MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY,
+		Math.max(0, gestureReleaseVelocityScale)
 	);
 };
 
@@ -63,14 +52,7 @@ export const getPinchReleaseHandoffVelocity = (
 	gestureReleaseVelocityScale: number = 1,
 ) => {
 	"worklet";
-	const scaledVelocity =
-		velocityScalePerSecond * Math.max(0, gestureReleaseVelocityScale);
-
-	return clamp(
-		scaledVelocity,
-		-MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY,
-		MAX_RELEASE_HANDOFF_PROGRESS_VELOCITY,
-	);
+	return velocityScalePerSecond * Math.max(0, gestureReleaseVelocityScale);
 };
 
 /**
@@ -83,24 +65,6 @@ export const normalizeGestureTranslation = (
 ) => {
 	"worklet";
 	return clamp(translation / Math.max(1, dimension), -1, 1);
-};
-
-/**
- * Calculates a normalized velocity that moves the current value toward zero.
- * Used for spring-back animations when dismissing gestures.
- */
-export const calculateRestoreVelocityTowardZero = (
-	currentValueNormalized: number,
-	baseVelocityNormalized: number,
-) => {
-	"worklet";
-
-	if (Math.abs(currentValueNormalized) < ANIMATION_SNAP_THRESHOLD) return 0;
-
-	const directionTowardZero = Math.sign(currentValueNormalized) || 1;
-	const clampedVelocity = Math.min(Math.abs(baseVelocityNormalized), 1);
-
-	return -directionTowardZero * clampedVelocity;
 };
 
 /**

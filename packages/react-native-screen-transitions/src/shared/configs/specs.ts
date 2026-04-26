@@ -4,9 +4,7 @@ export const DefaultSpec: WithSpringConfig = {
 	stiffness: 1000,
 	damping: 500,
 	mass: 3,
-	overshootClamping: true,
-	// @ts-expect-error
-	restSpeedThreshold: 0.02,
+	overshootClamping: false,
 };
 
 export const DefaultSnapSpec: WithSpringConfig = {

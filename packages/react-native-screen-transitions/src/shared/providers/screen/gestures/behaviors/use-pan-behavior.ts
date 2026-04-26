@@ -69,13 +69,7 @@ export const usePanBehavior = (
 			const strategy = getPanStrategy(latestRuntime);
 			const event = applyGestureSensitivityToPanEvent(rawEvent, latestRuntime);
 			const release = strategy.resolveRelease(event, latestRuntime, dimensions);
-			finalizePanRelease(
-				release,
-				latestRuntime,
-				event,
-				dimensions,
-				dismissScreen,
-			);
+			finalizePanRelease(release, latestRuntime, dismissScreen);
 		},
 		[runtime, dimensions, dismissScreen],
 	);

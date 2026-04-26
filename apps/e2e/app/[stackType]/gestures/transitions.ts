@@ -90,7 +90,7 @@ function buildBidirectionalOptions() {
 	return {
 		gestureEnabled: true,
 		gestureDirection: "bidirectional" as const,
-		screenStyleInterpolator: ({ current, progress }) => {
+		screenStyleInterpolator: ({ progress }) => {
 			"worklet";
 			const baseScale = interpolate(progress, [0, 1, 2], [0, 1, 0.92], "clamp");
 			const translateX = current.gesture.x * 0.9;
@@ -237,7 +237,6 @@ function buildSnapPinchPanOptions(): ScreenTransitionConfig {
 			const translateX =
 				baseTranslateX + current.gesture.x * GESTURE_RESISTANCE;
 			const translateY = current.gesture.y * GESTURE_RESISTANCE;
-			const pinchScale = 1 + current.gesture.normScale * GESTURE_RESISTANCE;
 			const progressScale = interpolate(
 				progress,
 				[0, 1, 2],
@@ -253,7 +252,7 @@ function buildSnapPinchPanOptions(): ScreenTransitionConfig {
 						transform: [
 							{ translateX },
 							{ translateY },
-							{ scale: progressScale * pinchScale },
+							{ scale: progressScale },
 						],
 					},
 				},
@@ -270,11 +269,9 @@ function buildSnapPinchOnlyOptions(): ScreenTransitionConfig {
 		gestureReleaseVelocityScale: 0,
 		snapPoints: [0.45, 0.75, 1],
 		gestureSensitivity: 0.75,
-		screenStyleInterpolator: ({ current, progress }) => {
+		screenStyleInterpolator: ({ progress }) => {
 			"worklet";
 
-			const pinchScale =
-				1 - Math.abs(current.gesture.normScale) * GESTURE_RESISTANCE;
 			const progressScale = interpolate(
 				progress,
 				[0, 1, 2],
@@ -287,7 +284,7 @@ function buildSnapPinchOnlyOptions(): ScreenTransitionConfig {
 				content: {
 					style: {
 						opacity,
-						transform: [{ scale: progressScale * pinchScale }],
+						transform: [{ scale: progressScale }],
 					},
 				},
 			};

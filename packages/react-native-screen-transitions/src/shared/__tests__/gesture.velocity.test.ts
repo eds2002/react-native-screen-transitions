@@ -109,21 +109,22 @@ describe("toProgressVelocity", () => {
 });
 
 describe("getPanReleaseHandoffVelocity", () => {
-	it("applies the private safety cap after conversion", () => {
-		expect(getPanReleaseHandoffVelocity(6400, 320)).toBeCloseTo(3.2, 5);
-		expect(getPanReleaseHandoffVelocity(-6400, 320)).toBeCloseTo(-3.2, 5);
+	it("normalizes pan release velocity into progress units per second", () => {
+		expect(getPanReleaseHandoffVelocity(6400, 320)).toBeCloseTo(20, 5);
+		expect(getPanReleaseHandoffVelocity(-6400, 320)).toBeCloseTo(-20, 5);
 	});
 
-	it("scales the release handoff before capping", () => {
+	it("applies release velocity scale without capping", () => {
 		expect(getPanReleaseHandoffVelocity(800, 320, 0.5)).toBeCloseTo(1.25, 5);
-		expect(getPanReleaseHandoffVelocity(800, 320, 2)).toBeCloseTo(3.2, 5);
+		expect(getPanReleaseHandoffVelocity(800, 320, 2)).toBeCloseTo(5, 5);
 	});
 });
 
 describe("getPinchReleaseHandoffVelocity", () => {
-	it("treats pinch velocity as scale velocity and caps privately", () => {
+	it("treats pinch velocity as scale velocity and applies release velocity scale", () => {
 		expect(getPinchReleaseHandoffVelocity(1.2)).toBeCloseTo(1.2, 5);
-		expect(getPinchReleaseHandoffVelocity(8)).toBeCloseTo(3.2, 5);
+		expect(getPinchReleaseHandoffVelocity(8)).toBeCloseTo(8, 5);
+		expect(getPinchReleaseHandoffVelocity(8, 0.5)).toBeCloseTo(4, 5);
 	});
 });
 
@@ -191,7 +192,7 @@ describe("getPanReleaseProgressVelocity", () => {
 		expect(Math.abs(result)).toBeCloseTo(1.406, 3);
 	});
 
-	it("caps the returned magnitude using the private safety cap", () => {
+	it("returns uncapped normalized velocity for the selected axis", () => {
 		const animations = createAnimations(0.5);
 		const event = createEvent({
 			translationX: 10,
@@ -207,7 +208,7 @@ describe("getPanReleaseProgressVelocity", () => {
 			gestureReleaseVelocityScale: 1,
 		});
 
-		expect(result).toBeCloseTo(3.2, 5);
+		expect(result).toBeCloseTo(15.625, 5);
 	});
 
 	it("ignores axis movement that could not have driven gesture progress", () => {

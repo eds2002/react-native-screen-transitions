@@ -92,8 +92,6 @@ export const trackPanGesture = (
 export const finalizePanRelease = (
 	release: PanReleaseResult,
 	runtime: PanGestureRuntime,
-	event: PanGestureEvent,
-	dimensions: GestureDimensions,
 	dismissScreen: (() => void) | undefined,
 ) => {
 	"worklet";
@@ -105,9 +103,6 @@ export const finalizePanRelease = (
 		spec: release.resetSpec,
 		gestures,
 		shouldDismiss: release.shouldDismiss,
-		event,
-		dimensions,
-		gestureReleaseVelocityScale: runtime.policy.gestureReleaseVelocityScale,
 	});
 
 	animateToProgress({
