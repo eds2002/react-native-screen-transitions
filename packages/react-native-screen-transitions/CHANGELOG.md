@@ -1,5 +1,27 @@
 # Changelog
 
+# [3.5.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.0-beta.0...v3.5.0) (2026-04-26)
+
+# [3.5.0-beta.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.2.0...v3.5.0-beta.0) (2026-04-21)
+
+
+### Bug Fixes
+
+* **bounds:** stabilize grouped zoom measurements ([0ed8b82](https://github.com/eds2002/react-native-screen-transitions/commit/0ed8b82560187710a67cb39af421b9b9e2147a6a))
+* deep linking bug fix ([1464618](https://github.com/eds2002/react-native-screen-transitions/commit/1464618ac05c52edd0d2a44a2064fec52522e034))
+* **docs:** include docs helpers and netlify config ([#88](https://github.com/eds2002/react-native-screen-transitions/issues/88)) ([403cff5](https://github.com/eds2002/react-native-screen-transitions/commit/403cff56e321f21d688345af4d8bb77a1802a40d))
+* **docs:** ship docs as static netlify site ([#89](https://github.com/eds2002/react-native-screen-transitions/issues/89)) ([e91472a](https://github.com/eds2002/react-native-screen-transitions/commit/e91472a03d2b1d7df000059e753272a74c5eb4cc))
+* group bounds retargetting bug ([319d965](https://github.com/eds2002/react-native-screen-transitions/commit/319d9654e283529b158a2acc7a6848490d319bde))
+* **history:** keep v3 close tracking on reanimated ([7f6dcf8](https://github.com/eds2002/react-native-screen-transitions/commit/7f6dcf89066942f3c474d06d117e0f48a19ad80f))
+* isolate scroll axis writes in useScrollRegistry ([#85](https://github.com/eds2002/react-native-screen-transitions/issues/85)) ([88e6589](https://github.com/eds2002/react-native-screen-transitions/commit/88e6589decee7d01f9b2bddfcff05f31795a0b20))
+* **lifecycle:** align close and history flow with next ([f7f8ba7](https://github.com/eds2002/react-native-screen-transitions/commit/f7f8ba70e09fa27c3f778e90f5fcabfbd47371ec))
+* previous screen not animating during flight ([#74](https://github.com/eds2002/react-native-screen-transitions/issues/74)) ([071512c](https://github.com/eds2002/react-native-screen-transitions/commit/071512c292e81986efdffe7e7b40ebbd220670a2))
+
+
+### Features
+
+* **docs:** lift docs site onto main ([#87](https://github.com/eds2002/react-native-screen-transitions/issues/87)) ([935985c](https://github.com/eds2002/react-native-screen-transitions/commit/935985c8a0904d1128ab9b3abc2dbe13b3951177))
+
 # [3.4.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.4.0-rc.1...v3.4.0) (2026-04-19)
 
 

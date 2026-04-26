@@ -6,8 +6,10 @@ import {
 	useDescriptors,
 } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
-import { SystemStore } from "../../../stores/system.store";
-import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import {
+	LifecycleTransitionRequestKind,
+	SystemStore,
+} from "../../../stores/system.store";
 
 export function useContentLayout() {
 	const { current } = useDescriptors();
@@ -15,11 +17,14 @@ export function useContentLayout() {
 	const { height: screenHeight } = useWindowDimensions();
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
+	const system = SystemStore.getBag(routeKey);
+
 	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
-		SystemStore.getBag(routeKey);
+		system;
+	const { requestLifecycleTransition } = system.actions;
+
 	const experimental_animateOnInitialMount =
 		current.options.experimental_animateOnInitialMount;
-	const transitionSpec = current.options.transitionSpec;
 
 	return useCallback(
 		(event: LayoutChangeEvent) => {
@@ -52,12 +57,10 @@ export function useContentLayout() {
 					return;
 				}
 
-				animateToProgress({
-					target: nextFraction,
-					spec: transitionSpec,
-					animations,
-					targetProgress,
-				});
+				requestLifecycleTransition(
+					LifecycleTransitionRequestKind.Open,
+					nextFraction,
+				);
 			})(width, height, fraction);
 		},
 		[
@@ -68,7 +71,7 @@ export function useContentLayout() {
 			isFirstKey,
 			screenHeight,
 			experimental_animateOnInitialMount,
-			transitionSpec,
+			requestLifecycleTransition,
 		],
 	);
 }

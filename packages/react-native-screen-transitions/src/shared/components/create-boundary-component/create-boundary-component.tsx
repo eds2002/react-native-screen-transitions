@@ -15,14 +15,13 @@ import Animated, {
 import { NO_STYLES } from "../../constants";
 import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
-import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
-import { useAutoSourceMeasurement } from "./hooks/use-auto-source-measurement";
-import { useBoundaryMeasureAndStore } from "./hooks/use-boundary-measure-and-store";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
-import { usePendingDestinationMeasurement } from "./hooks/use-pending-destination-measurement";
-import { usePreTransitionMeasurement } from "./hooks/use-pre-transition-measurement";
+import { useCaptureDestinationBoundary } from "./hooks/use-capture-destination-boundary";
+import { useCaptureSourceBoundary } from "./hooks/use-capture-source-boundary";
+import { useMeasurer } from "./hooks/use-measurer";
+import { useRefreshBoundary } from "./hooks/use-refresh-boundary";
 import {
 	BoundaryOwnerProvider,
 	useBoundaryOwner,
@@ -93,36 +92,21 @@ export function createBoundaryComponent<P extends object>(
 			};
 		}, [anchor, scaleMode, target, method]);
 
-		const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
-
 		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
-		const { elementStylesMap } = useScreenStyles();
+		const { stylesMap } = useScreenStyles();
 
 		const associatedStyles = useAnimatedStyle(() => {
 			"worklet";
-
-			const baseStyle =
-				(elementStylesMap.value[sharedBoundTag]?.style as
-					| Record<string, any>
-					| undefined) ?? (NO_STYLES as Record<string, any>);
-
-			if ("opacity" in baseStyle) {
-				return baseStyle;
-			}
-
-			return { ...baseStyle, opacity: 1 };
+			return stylesMap.get()[sharedBoundTag]?.style ?? NO_STYLES;
 		});
 
 		const associatedStackingStyles = useAnimatedStyle(() => {
 			"worklet";
-			const baseStyle =
-				(elementStylesMap.value[sharedBoundTag]?.style as
-					| Record<string, any>
-					| undefined) ?? (NO_STYLES as Record<string, any>);
+			const baseStyle = stylesMap.get()[sharedBoundTag]?.style;
 
 			return {
-				zIndex: (baseStyle.zIndex as number | undefined) ?? 0,
-				elevation: (baseStyle.elevation as number | undefined) ?? 0,
+				zIndex: baseStyle?.zIndex ?? 0,
+				elevation: baseStyle?.elevation ?? 0,
 			};
 		});
 
@@ -131,7 +115,7 @@ export function createBoundaryComponent<P extends object>(
 			associatedTargetStyles: runtimeEnabled ? associatedStyles : undefined,
 		});
 
-		const maybeMeasureAndStore = useBoundaryMeasureAndStore({
+		const measureBoundary = useMeasurer({
 			enabled,
 			sharedBoundTag,
 			preferredSourceScreenKey,
@@ -159,34 +143,32 @@ export function createBoundaryComponent<P extends object>(
 
 		// On the source screen, capture source bounds when a matching destination
 		// appears on the next screen.
-		useAutoSourceMeasurement({
+		useCaptureSourceBoundary({
 			enabled: runtimeEnabled,
 			sharedBoundTag,
 			id,
 			group,
 			nextScreenKey,
-			maybeMeasureAndStore,
+			measureBoundary,
 		});
 
-		// Destination completion path: do one immediate completion attempt when a
-		// pending source link appears, then retry during transition progress if the
-		// first attempt races layout readiness.
-		usePendingDestinationMeasurement({
+		// Destination completion path: hold lifecycle start until the first valid
+		// destination measurement attaches, then release the pending transition.
+		useCaptureDestinationBoundary({
 			sharedBoundTag,
 			enabled: shouldRunDestinationEffects,
 			id,
 			group,
 			currentScreenKey,
 			expectedSourceScreenKey: preferredSourceScreenKey,
-			animating: isAnimating,
-			maybeMeasureAndStore,
+			measureBoundary,
 		});
 
 		// Pre-transition measurement path: when this route or its next sibling is
 		// about to animate, capture or refresh the measurements needed before
 		// progress or transform state mutates. Grouped sources refresh existing
 		// links; plain sources only backfill when missing.
-		usePreTransitionMeasurement({
+		useRefreshBoundary({
 			enabled: runtimeEnabled,
 			sharedBoundTag,
 			id,
@@ -194,22 +176,22 @@ export function createBoundaryComponent<P extends object>(
 			currentScreenKey,
 			nextScreenKey,
 			hasNextScreen,
-			maybeMeasureAndStore,
+			measureBoundary,
 		});
 
 		const handlePress = useCallback(
 			(...args: unknown[]) => {
 				// Press path has priority: capture source before user onPress/navigation.
 				if (group) {
-					runOnUI(BoundStore.setGroupActiveId)(group, String(id));
+					runOnUI(BoundStore.group.setActiveId)(group, String(id));
 				}
-				runOnUI(maybeMeasureAndStore)({ intent: "capture-source" });
+				runOnUI(measureBoundary)({ intent: "capture-source" });
 
 				if (typeof onPress === "function") {
 					onPress(...args);
 				}
 			},
-			[group, id, maybeMeasureAndStore, onPress],
+			[group, id, measureBoundary, onPress],
 		);
 
 		const resolvedOnPress =

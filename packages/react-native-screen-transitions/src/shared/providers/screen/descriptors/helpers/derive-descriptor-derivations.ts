@@ -4,6 +4,7 @@ export interface DescriptorDerivations {
 	previousScreenKey?: string;
 	currentScreenKey: string;
 	nextScreenKey?: string;
+	parentScreenKey?: string;
 	isFirstKey: boolean;
 	isTopMostScreen: boolean;
 	ancestorKeys: string[];
@@ -55,6 +56,7 @@ export function deriveDescriptorDerivations({
 		previousScreenKey,
 		currentScreenKey,
 		nextScreenKey,
+		parentScreenKey: ancestorKeys[0],
 		isFirstKey,
 		isTopMostScreen,
 		ancestorKeys,

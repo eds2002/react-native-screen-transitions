@@ -2,13 +2,9 @@ import { useAnimatedReaction } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
 import { BoundStore } from "../../../stores/bounds";
 import { GestureStore } from "../../../stores/gesture.store";
-import type { BoundaryId, MaybeMeasureAndStoreParams } from "../types";
-import {
-	PREPARE_DESTINATION_MEASUREMENT_INTENT,
-	resolvePrepareSourceMeasurementIntent,
-} from "./helpers/measurement-rules";
+import type { BoundaryId, MeasureParams } from "../types";
 
-export const usePreTransitionMeasurement = (params: {
+interface UseRefreshBoundaryParams {
 	enabled: boolean;
 	sharedBoundTag: string;
 	id: BoundaryId;
@@ -16,19 +12,19 @@ export const usePreTransitionMeasurement = (params: {
 	currentScreenKey: string;
 	nextScreenKey?: string;
 	hasNextScreen: boolean;
-	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
-}) => {
-	const {
-		enabled,
-		sharedBoundTag,
-		id,
-		group,
-		currentScreenKey,
-		nextScreenKey,
-		hasNextScreen,
-		maybeMeasureAndStore,
-	} = params;
+	measureBoundary: (options: MeasureParams) => void;
+}
 
+export const useRefreshBoundary = ({
+	enabled,
+	sharedBoundTag,
+	id,
+	group,
+	currentScreenKey,
+	nextScreenKey,
+	hasNextScreen,
+	measureBoundary,
+}: UseRefreshBoundaryParams) => {
 	const currentWillAnimate = AnimationStore.getValue(
 		currentScreenKey,
 		"willAnimate",
@@ -56,7 +52,7 @@ export const usePreTransitionMeasurement = (params: {
 			if (nextValue === 0 || nextValue === previousValue) return;
 
 			const currentGroupActiveId = group
-				? BoundStore.getGroupActiveId(group)
+				? BoundStore.group.getActiveId(group)
 				: null;
 
 			if (group && currentGroupActiveId !== String(id)) {
@@ -65,25 +61,27 @@ export const usePreTransitionMeasurement = (params: {
 
 			const shouldCancelMeasurement =
 				!!nextAnimating?.get() && !!nextDragging?.get();
+
 			if (shouldCancelMeasurement) {
 				return;
 			}
 
-			const hasSourceLink = BoundStore.hasSourceLink(
+			const hasSourceLink = BoundStore.link.hasSource(
 				sharedBoundTag,
 				currentScreenKey,
 			);
 
-			const intent = resolvePrepareSourceMeasurementIntent({
-				hasSourceLink,
-				shouldRefreshExistingSource: !!group,
-			});
+			const intent = !hasSourceLink
+				? "capture-source"
+				: group
+					? "refresh-source"
+					: null;
 
 			if (!intent) {
 				return;
 			}
 
-			maybeMeasureAndStore({ intent });
+			measureBoundary({ intent });
 		},
 	);
 
@@ -93,17 +91,24 @@ export const usePreTransitionMeasurement = (params: {
 			"worklet";
 			if (!enabled || hasNextScreen) return;
 			if (nextValue === 0 || nextValue === previousValue) return;
+
 			const currentGroupActiveId = group
-				? BoundStore.getGroupActiveId(group)
+				? BoundStore.group.getActiveId(group)
 				: null;
-			if (group && currentGroupActiveId !== String(id)) return;
+
+			if (group && currentGroupActiveId !== String(id)) {
+				return;
+			}
 
 			const shouldCancelMeasurement =
 				!!currentAnimating.get() && !!currentDragging.get();
-			if (shouldCancelMeasurement) return;
 
-			maybeMeasureAndStore({
-				intent: PREPARE_DESTINATION_MEASUREMENT_INTENT,
+			if (shouldCancelMeasurement) {
+				return;
+			}
+
+			measureBoundary({
+				intent: ["complete-destination", "refresh-destination"] as const,
 			});
 		},
 	);

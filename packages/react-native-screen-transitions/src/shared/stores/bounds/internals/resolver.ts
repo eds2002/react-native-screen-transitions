@@ -70,11 +70,10 @@ function resolveTransitionPair(
 	context: ResolveTransitionContext,
 ): ResolvedTransitionPair {
 	"worklet";
-	const tagState = registry.value[tag];
+	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
 
 	let matchedLink: TagLink | null = null;
-	let usedPending = false;
 
 	if (tagState && stack && stack.length > 0) {
 		if (context.entering) {
@@ -88,7 +87,6 @@ function resolveTransitionPair(
 					tagState,
 					context.previousScreenKey,
 				);
-				usedPending = !!matchedLink;
 			}
 
 			if (!matchedLink) {
@@ -122,7 +120,6 @@ function resolveTransitionPair(
 					tagState,
 					context.currentScreenKey,
 				);
-				usedPending = !!matchedLink;
 			}
 		}
 	}
@@ -133,6 +130,7 @@ function resolveTransitionPair(
 	const destinationStyles = matchedLink?.destination?.styles ?? null;
 	const sourceScreenKey = matchedLink?.source?.screenKey ?? null;
 	const destinationScreenKey = matchedLink?.destination?.screenKey ?? null;
+	const usedPending = matchedLink ? matchedLink.destination === null : false;
 
 	return {
 		sourceBounds,

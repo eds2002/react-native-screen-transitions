@@ -18,7 +18,6 @@ import { BoundStore } from "../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../stores/bounds/helpers/apply-measured-bounds-writes";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles/styles";
 import createProvider from "../utils/create-provider";
-import { useLayoutAnchorContext } from "./layout-anchor.provider";
 import { useDescriptorDerivations, useDescriptors } from "./screen/descriptors";
 
 interface MaybeMeasureAndStoreParams {
@@ -246,7 +245,6 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 			useDescriptorDerivations();
 		const currentScreenKey = current.route.key;
 		const selectedNextRouteId = getRouteParamId(next?.route);
-		const layoutAnchor = useLayoutAnchorContext();
 
 		// Context & signals
 		const parentContext = useRegisterBoundsContext();
@@ -278,7 +276,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 				}
 
 				if (shouldSetSource && isAnimating.get()) {
-					const existing = BoundStore.getSnapshot(
+					const existing = BoundStore.entry.getMeasured(
 						sharedBoundTag,
 						currentScreenKey,
 					);
@@ -299,12 +297,13 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					return;
 				}
 
-				const hasPendingLink = BoundStore.hasPendingLink(sharedBoundTag);
-				const hasSourceLink = BoundStore.hasSourceLink(
+				const hasPendingLink =
+					BoundStore.link.getPending(sharedBoundTag) !== null;
+				const hasSourceLink = BoundStore.link.hasSource(
 					sharedBoundTag,
 					currentScreenKey,
 				);
-				const hasDestinationLink = BoundStore.hasDestinationLink(
+				const hasDestinationLink = BoundStore.link.hasDestination(
 					sharedBoundTag,
 					currentScreenKey,
 				);
@@ -338,21 +337,17 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					return;
 				}
 
-				const correctedMeasured = layoutAnchor
-					? layoutAnchor.correctMeasurement(measured)
-					: measured;
-
 				emitUpdate();
 
 				applyMeasuredBoundsWrites({
 					sharedBoundTag,
 					currentScreenKey,
-					measured: correctedMeasured,
+					measured,
 					preparedStyles,
 					ancestorKeys,
 					navigatorKey,
 					ancestorNavigatorKeys,
-					shouldRegisterSnapshot: true,
+					shouldWriteEntry: true,
 					shouldSetSource: canSetSource,
 					shouldUpdateSource: canUpdateSource,
 					shouldSetDestination: canSetDestination,

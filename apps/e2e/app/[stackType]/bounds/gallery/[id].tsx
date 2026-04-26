@@ -1,12 +1,8 @@
 import { Image } from "expo-image";
 import { useLocalSearchParams } from "expo-router";
-import type {
-	ListRenderItemInfo,
-	NativeScrollEvent,
-	NativeSyntheticEvent,
-} from "react-native";
+import type { ListRenderItemInfo } from "react-native";
 import { StyleSheet, useWindowDimensions, View } from "react-native";
-import Animated from "react-native-reanimated";
+import Animated, { useAnimatedScrollHandler } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import {
 	activeGalleryId,
@@ -14,6 +10,8 @@ import {
 	GALLERY_ITEMS,
 	type GalleryItem,
 } from "./constants";
+
+const GALLERY_ITEM_IDS = GALLERY_ITEMS.map((item) => item.id);
 
 function ImagePage({
 	item,
@@ -58,16 +56,28 @@ export default function GalleryDetail() {
 		GALLERY_ITEMS.findIndex((item) => item.id === id),
 	);
 
-	const handleMomentumScrollEnd = (
-		event: NativeSyntheticEvent<NativeScrollEvent>,
-	) => {
-		const offsetX = event.nativeEvent.contentOffset.x;
-		const pageIndex = Math.round(offsetX / width);
-		const item = GALLERY_ITEMS[pageIndex];
-		if (!item) return;
+	const scrollHandler = useAnimatedScrollHandler(
+		{
+			onScroll: (event) => {
+				"worklet";
+				if (width <= 0) return;
 
-		activeGalleryId.value = item.id;
-	};
+				const pageIndex = Math.max(
+					0,
+					Math.min(
+						GALLERY_ITEM_IDS.length - 1,
+						Math.round(event.contentOffset.x / width),
+					),
+				);
+				const nextId = GALLERY_ITEM_IDS[pageIndex];
+
+				if (!nextId || activeGalleryId.value === nextId) return;
+
+				activeGalleryId.value = nextId;
+			},
+		},
+		[width],
+	);
 
 	const getItemLayout = (_: unknown, index: number) => ({
 		length: width,
@@ -92,7 +102,7 @@ export default function GalleryDetail() {
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
-				onMomentumScrollEnd={handleMomentumScrollEnd}
+				onScroll={scrollHandler}
 				windowSize={3}
 				maxToRenderPerBatch={3}
 				initialNumToRender={3}

@@ -1,10 +1,8 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import {
-	EMPTY_BOUND_HELPER_RESULT_RAW,
 	ENTER_RANGE,
 	EXIT_RANGE,
 	FULLSCREEN_DIMENSIONS,
-	HIDDEN_STYLE,
 	NO_STYLES,
 } from "../../../../constants";
 import {
@@ -56,7 +54,7 @@ const resolveStartEnd = (params: {
 
 	const resolvedPair =
 		params.resolvedPair ??
-		BoundStore.resolveTransitionPair(String(params.id), {
+		BoundStore.link.getPair(String(params.id), {
 			currentScreenKey,
 			previousScreenKey,
 			nextScreenKey,
@@ -122,9 +120,6 @@ export const computeBoundStyles = (
 	"worklet";
 
 	if (!id) {
-		if (computeOptions.raw) {
-			return EMPTY_BOUND_HELPER_RESULT_RAW;
-		}
 		return NO_STYLES;
 	}
 
@@ -146,10 +141,7 @@ export const computeBoundStyles = (
 	});
 
 	if (!start || !end) {
-		if (computeOptions.raw) {
-			return EMPTY_BOUND_HELPER_RESULT_RAW;
-		}
-		return HIDDEN_STYLE;
+		return NO_STYLES;
 	}
 
 	const ranges: readonly [number, number] = entering ? ENTER_RANGE : EXIT_RANGE;

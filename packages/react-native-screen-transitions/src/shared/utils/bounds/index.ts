@@ -26,7 +26,7 @@ export const createBoundsAccessor = (
 		// Navigation helpers are intentionally opinionated. Only the resolved
 		// tag from `id`/`group` is allowed to flow into `navigation.zoom()`;
 		// base bounds overrides like `target`, `anchor`, or `scaleMode` must not.
-		const navigationTag = createBoundTag({
+		const tag = createBoundTag({
 			id: options.id,
 			group: options.group,
 		});
@@ -35,12 +35,12 @@ export const createBoundsAccessor = (
 
 		Object.defineProperty(target, "navigation", {
 			value: {
-				zoom: (options?: BoundsNavigationZoomOptions) => {
+				zoom: (zoomOptions?: BoundsNavigationZoomOptions) => {
 					"worklet";
 					return buildZoomStyles({
-						props: getProps(),
-						resolvedTag: navigationTag,
-						zoomOptions: options,
+						props,
+						tag,
+						zoomOptions,
 					});
 				},
 			},
@@ -51,13 +51,14 @@ export const createBoundsAccessor = (
 		return target;
 	};
 
-	const { getSnapshot, getLink } = createLinkAccessor(getProps);
+	const { getMeasured, getSnapshot, getLink } = createLinkAccessor(getProps);
 	const { interpolateStyle, interpolateBounds } = createInterpolators({
 		getProps,
 		getLink,
 	});
 
 	return Object.assign(computeBounds, {
+		getMeasured,
 		getSnapshot,
 		getLink,
 		interpolateStyle,

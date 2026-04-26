@@ -10,7 +10,6 @@ import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useGestureContext } from "../../../providers/gestures";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../providers/screen/styles";
-import { resolveNavigationMaskEnabled } from "../../../utils/resolve-screen-transition-options";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
 import { SurfaceContainer } from "./surface-container";
@@ -23,13 +22,11 @@ type Props = {
 
 export const ContentLayer = memo(
 	({ children, pointerEvents, isBackdropActive }: Props) => {
-		const { layerStylesMap } = useScreenStyles();
+		const { stylesMap } = useScreenStyles();
 		const { current } = useDescriptors();
 
 		const gestureContext = useGestureContext();
-		const isNavigationMaskEnabled = resolveNavigationMaskEnabled(
-			current.options,
-		);
+		const isNavigationMaskEnabled = !!current.options.navigationMaskEnabled;
 		const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
 
 		const hasAutoSnapPoint =
@@ -39,12 +36,12 @@ export const ContentLayer = memo(
 
 		const animatedContentStyle = useAnimatedStyle(() => {
 			"worklet";
-			return layerStylesMap.value.content?.style || NO_STYLES;
+			return stylesMap.get().content?.style || NO_STYLES;
 		});
 
 		const animatedContentProps = useAnimatedProps(() => {
 			"worklet";
-			return layerStylesMap.value.content?.props ?? NO_PROPS;
+			return stylesMap.get().content?.props ?? NO_PROPS;
 		});
 
 		return (

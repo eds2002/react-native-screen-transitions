@@ -1,4 +1,4 @@
-import { interpolate, makeMutable } from "react-native-reanimated";
+import { interpolate } from "react-native-reanimated";
 import {
 	EPSILON,
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
@@ -14,7 +14,6 @@ import type { Layout } from "../../../types/screen.types";
 import { prepareBoundStyles } from "../helpers/prepare-bound-styles";
 import type { BoundsOptions } from "../types/options";
 import {
-	getZoomAnchor,
 	toNumber,
 	ZOOM_BACKGROUND_SCALE,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
@@ -42,16 +41,6 @@ import {
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
-const presentedZoomTagByRoute = makeMutable<Record<string, string>>({});
-
-function cachePresentedZoomTag(routeKey: string, resolvedTag: string) {
-	"worklet";
-
-	presentedZoomTagByRoute.value = {
-		...presentedZoomTagByRoute.value,
-		[routeKey]: resolvedTag,
-	};
-}
 
 /* -------------------------------------------------------------------------- */
 /*                               LOCAL HELPERS                                */
@@ -168,115 +157,58 @@ function interpolateOpacityRange(params: {
 	);
 }
 
-function resolveEffectiveZoomTag(params: {
-	resolvedTag: string;
-	activeRouteKey?: string;
-	entering: boolean;
-	animating: boolean;
-	activeProgress: number;
-	livePairReady: boolean;
-}) {
-	"worklet";
-
-	const {
-		resolvedTag,
-		activeRouteKey,
-		entering,
-		animating,
-		activeProgress,
-		livePairReady,
-	} = params;
-
-	// Only grouped ids need retarget stabilization. Plain ids should keep their
-	// normal behavior with no route-level caching.
-	if (!activeRouteKey || !resolvedTag.includes(":")) {
-		return resolvedTag;
-	}
-
-	const cachedTag = presentedZoomTagByRoute.value[activeRouteKey];
-	const isFreshOpenFrame = entering && activeProgress <= 0.05;
-	const shouldFreezeDuringEnter = entering && animating && !isFreshOpenFrame;
-
-	if (!cachedTag || isFreshOpenFrame) {
-		cachePresentedZoomTag(activeRouteKey, resolvedTag);
-		return resolvedTag;
-	}
-
-	if (shouldFreezeDuringEnter) {
-		return cachedTag;
-	}
-
-	// After the enter animation, grouped retargeting can still briefly point at a
-	// new active id before that tag has usable bounds. Keep presenting the last
-	// good tag until the next one is transition-ready.
-	if (cachedTag !== resolvedTag && !livePairReady) {
-		return cachedTag;
-	}
-
-	if (cachedTag !== resolvedTag) {
-		cachePresentedZoomTag(activeRouteKey, resolvedTag);
-	}
-
-	return resolvedTag;
-}
-
 /* -------------------------------------------------------------------------- */
 /*                             BUILD ZOOM STYLES                              */
 /* -------------------------------------------------------------------------- */
 
 export function buildZoomStyles({
-	resolvedTag,
+	tag,
 	zoomOptions,
 	props,
 }: BuildZoomStylesParams): ZoomInterpolatedStyle {
 	"worklet";
 
-	if (!resolvedTag) return {};
+	if (!tag) {
+		return {};
+	}
+
+	const isGroup = tag.includes(":");
+	let buildEffectiveTag = tag;
+	if (isGroup) {
+		const group = tag.split(":")[0];
+		const groupActiveTag = BoundStore.group.getActiveId(group)?.split(":")[0];
+		buildEffectiveTag = `${group}:${groupActiveTag ?? tag.split(":")[1]}`;
+	}
 
 	/* ------------------------------ Shared Setup ------------------------------ */
 
-	const explicitTarget = zoomOptions?.target;
-	const focused = props.focused;
-	const progress = props.progress;
-	const screenLayout = props.layouts.screen;
+	const target = zoomOptions?.target;
+	const {
+		focused,
+		progress,
+		layouts: { screen: screenLayout },
+	} = props;
 	const isEnteringTransition = !props.next;
-	const activeRouteKey = props.active.route.key;
 	const currentRouteKey = props.current?.route.key;
 	const previousRouteKey = props.previous?.route.key;
 	const nextRouteKey = props.next?.route.key;
-	const resolvedZoomAnchor = getZoomAnchor(explicitTarget);
-	const liveResolvedPair = BoundStore.resolveTransitionPair(resolvedTag, {
+
+	const zoomAnchor = target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor;
+
+	const baseRawOptions = {
+		id: buildEffectiveTag,
+		raw: true,
+		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
+	} as const;
+
+	const linkPair = BoundStore.link.getPair(buildEffectiveTag, {
 		currentScreenKey: currentRouteKey,
 		previousScreenKey: previousRouteKey,
 		nextScreenKey: nextRouteKey,
 		entering: isEnteringTransition,
 	});
-	const effectiveTag = resolveEffectiveZoomTag({
-		resolvedTag,
-		activeRouteKey,
-		entering: !!props.active.entering,
-		animating: !!props.active.animating,
-		activeProgress: props.active.progress,
-		livePairReady: !!liveResolvedPair.sourceBounds,
-	});
 
-	const baseRawOptions = {
-		id: effectiveTag,
-		raw: true,
-		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
-	} as const;
-
-	const resolvedPair =
-		effectiveTag === resolvedTag
-			? liveResolvedPair
-			: BoundStore.resolveTransitionPair(effectiveTag, {
-					currentScreenKey: currentRouteKey,
-					previousScreenKey: previousRouteKey,
-					nextScreenKey: nextRouteKey,
-					entering: isEnteringTransition,
-				});
-
-	const sourceBorderRadius = getSourceBorderRadius(resolvedPair);
+	const sourceBorderRadius = getSourceBorderRadius(linkPair);
 	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
 	const focusedElementOpacity = {
 		open: resolveOpacityRangeTuple({
@@ -299,9 +231,11 @@ export function buildZoomStyles({
 		}),
 	};
 	const sourceVisibilityStyle = {
-		[effectiveTag]: VISIBLE_STYLE,
+		[buildEffectiveTag]: {
+			style: VISIBLE_STYLE,
+		},
 	} satisfies TransitionInterpolatedStyle;
-	const focusedContentSlot = props.navigationMaskEnabled
+	const focusedContentSlot = props.current.layouts.navigationMaskEnabled
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID
 		: "content";
 
@@ -318,48 +252,9 @@ export function buildZoomStyles({
 		return prepareBoundStyles({
 			props,
 			options,
-			resolvedPair,
-			syncGroupActiveId: false,
+			resolvedPair: linkPair,
 		});
 	};
-
-	/* --------------------------- Missing Source Guard -------------------------- */
-
-	// Only the focused entering route should be hidden when source bounds are
-	// missing. During rapid chained pushes, source measurement can briefly race
-	// the focused destination. In that case, degrading to a fullscreen destination
-	// is safer than blanking the entire screen until another gesture/animation
-	// re-runs the pipeline.
-	if (focused && !resolvedPair.sourceBounds && props.active.entering) {
-		const fallbackStyles: ZoomInterpolatedStyle = {
-			[focusedContentSlot]: {
-				style: {
-					opacity: zoomOptions?.debug ? 0.5 : 1,
-					transform: [{ translateX: 0 }, { translateY: 0 }, { scale: 1 }],
-					borderRadius: 0,
-					overflow: "hidden",
-				},
-			},
-		};
-
-		if (props.navigationMaskEnabled) {
-			const { top, right, bottom, left } = ZOOM_MASK_OUTSET;
-			fallbackStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
-				style: {
-					width: Math.max(1, screenLayout.width + left + right),
-					height: Math.max(1, screenLayout.height + top + bottom),
-					borderRadius: 0,
-					transform: [
-						{ translateX: -left },
-						{ translateY: -top },
-						{ scale: 1 },
-					],
-				},
-			};
-		}
-
-		return fallbackStyles;
-	}
 
 	/* --------------------------- Gesture / Drag Values ------------------------- */
 
@@ -428,15 +323,15 @@ export function buildZoomStyles({
 
 	if (focused) {
 		const focusedContentTarget = getZoomContentTarget({
-			explicitTarget,
+			explicitTarget: target,
 			screenLayout,
 			anchor: ZOOM_SHARED_OPTIONS.anchor,
-			resolvedPair,
+			resolvedPair: linkPair,
 		});
 
 		const contentRaw = bounds({
 			...baseRawOptions,
-			anchor: resolvedZoomAnchor,
+			anchor: zoomAnchor,
 			method: "content",
 			target: focusedContentTarget,
 		} as const);
@@ -474,6 +369,7 @@ export function buildZoomStyles({
 		const { top, right, bottom, left } = ZOOM_MASK_OUTSET;
 		const maskWidth = Math.max(1, toNumber(maskRaw.width) + left + right);
 		const maskHeight = Math.max(1, toNumber(maskRaw.height) + top + bottom);
+
 		const contentTranslateX = toNumber(contentRaw.translateX) + dragX;
 		const contentTranslateY = toNumber(contentRaw.translateY) + dragY;
 		const contentScale = toNumber(contentRaw.scale, 1) * dragScale;
@@ -498,7 +394,7 @@ export function buildZoomStyles({
 			...sourceVisibilityStyle,
 		};
 
-		if (props.navigationMaskEnabled) {
+		if (props.current.layouts.navigationMaskEnabled) {
 			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
 				style: {
 					width: maskWidth,
@@ -533,39 +429,34 @@ export function buildZoomStyles({
 		[1, backgroundScale],
 		"clamp",
 	);
-	const isUnfocusedIdle = props.active.settled === 1;
-	const shouldHideUnfocusedIdle = isUnfocusedIdle;
 	const didSourceComponentVisiblyHide =
 		!props.active.closing && unfocusedFade <= EPSILON;
 
 	const shouldResetUnfocusedElement =
-		!props.active.closing &&
-		(!!props.active.logicallySettled || didSourceComponentVisiblyHide);
+		!props.active.closing && didSourceComponentVisiblyHide;
 
 	const unfocusedElementTarget = getZoomContentTarget({
-		explicitTarget,
+		explicitTarget: target,
 		screenLayout,
 		anchor: ZOOM_SHARED_OPTIONS.anchor,
-		resolvedPair,
+		resolvedPair: linkPair,
 	});
 
 	const elementRaw = bounds({
 		...baseRawOptions,
-		anchor: resolvedZoomAnchor,
+		anchor: zoomAnchor,
 		method: "transform",
 		space: "relative",
 		target: unfocusedElementTarget,
 	} as const);
 
 	const boundTargetCenterX =
-		explicitTarget === "bound" && resolvedPair.destinationBounds
-			? resolvedPair.destinationBounds.pageX +
-				resolvedPair.destinationBounds.width / 2
+		target === "bound" && linkPair.destinationBounds
+			? linkPair.destinationBounds.pageX + linkPair.destinationBounds.width / 2
 			: undefined;
 	const boundTargetCenterY =
-		explicitTarget === "bound" && resolvedPair.destinationBounds
-			? resolvedPair.destinationBounds.pageY +
-				resolvedPair.destinationBounds.height / 2
+		target === "bound" && linkPair.destinationBounds
+			? linkPair.destinationBounds.pageY + linkPair.destinationBounds.height / 2
 			: undefined;
 
 	const elementCenterX =
@@ -610,7 +501,7 @@ export function buildZoomStyles({
 	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
 	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
 
-	const resolvedElementStyle = shouldHideUnfocusedIdle
+	const resolvedElementStyle = shouldResetUnfocusedElement
 		? {
 				transform: [
 					{ translateX: 0 },
@@ -625,16 +516,16 @@ export function buildZoomStyles({
 		: {
 				transform: [
 					{
-						translateX: shouldResetUnfocusedElement ? 0 : elementTranslateX,
+						translateX: elementTranslateX,
 					},
 					{
-						translateY: shouldResetUnfocusedElement ? 0 : elementTranslateY,
+						translateY: elementTranslateY,
 					},
 					{
-						scaleX: shouldResetUnfocusedElement ? 1 : elementScaleX,
+						scaleX: elementScaleX,
 					},
 					{
-						scaleY: shouldResetUnfocusedElement ? 1 : elementScaleY,
+						scaleY: elementScaleY,
 					},
 				],
 				opacity: zoomOptions?.debug ? 1 : unfocusedFade,
@@ -648,7 +539,7 @@ export function buildZoomStyles({
 				transform: [{ scale: unfocusedScale }],
 			},
 		},
-		[effectiveTag]: {
+		[buildEffectiveTag]: {
 			style: resolvedElementStyle,
 		},
 	};

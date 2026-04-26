@@ -14,7 +14,7 @@ export type ZoomInterpolatedStyle = BoundsNavigationZoomStyle & {
 };
 
 export type BuildZoomStylesParams = {
-	resolvedTag?: string;
+	tag?: string;
 	zoomOptions?: BoundsNavigationZoomOptions;
 	props: BoundsInterpolationProps;
 };

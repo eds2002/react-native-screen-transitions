@@ -1,18 +1,18 @@
-import type { MeasurementIntent } from "../../types";
+import type { MeasureIntent } from "../../types";
 
 type PresenceLikeEntry = {
 	count: number;
 	ancestorKeys?: string[];
 };
 
-export type MeasurementIntentFlags = {
+export type MeasureIntentFlags = {
 	captureSource: boolean;
 	completeDestination: boolean;
 	refreshSource: boolean;
 	refreshDestination: boolean;
 };
 
-export type MeasurementWritePlan = {
+export type MeasureWritePlan = {
 	captureSource: boolean;
 	completeDestination: boolean;
 	refreshSource: boolean;
@@ -26,11 +26,11 @@ export type DeferredMeasurementAction =
 	| "queue-or-flush"
 	| "noop";
 
-export const getMeasurementIntentFlags = (
-	intent?: MeasurementIntent | readonly MeasurementIntent[],
-): MeasurementIntentFlags => {
+export const getMeasureIntentFlags = (
+	intent?: MeasureIntent | readonly MeasureIntent[],
+): MeasureIntentFlags => {
 	"worklet";
-	const flags: MeasurementIntentFlags = {
+	const flags: MeasureIntentFlags = {
 		captureSource: false,
 		completeDestination: false,
 		refreshSource: false,
@@ -63,13 +63,13 @@ export const getMeasurementIntentFlags = (
 	return flags;
 };
 
-export const resolveMeasurementWritePlan = (params: {
-	intents: MeasurementIntentFlags;
+export const resolveMeasureWritePlan = (params: {
+	intents: MeasureIntentFlags;
 	hasPendingLink: boolean;
 	hasSourceLink: boolean;
 	hasDestinationLink: boolean;
 	hasAttachableSourceLink: boolean;
-}): MeasurementWritePlan => {
+}): MeasureWritePlan => {
 	"worklet";
 	const {
 		intents,
@@ -203,7 +203,7 @@ export const resolvePendingDestinationRetrySignal = (params: {
 export const resolvePrepareSourceMeasurementIntent = (params: {
 	hasSourceLink: boolean;
 	shouldRefreshExistingSource: boolean;
-}): MeasurementIntent | null => {
+}): MeasureIntent | null => {
 	"worklet";
 	if (!params.hasSourceLink) {
 		return "capture-source";
@@ -215,7 +215,7 @@ export const resolvePrepareSourceMeasurementIntent = (params: {
 export const PREPARE_DESTINATION_MEASUREMENT_INTENT = [
 	"complete-destination",
 	"refresh-destination",
-] as const satisfies readonly MeasurementIntent[];
+] as const satisfies readonly MeasureIntent[];
 
 export const resolveGroupActiveMeasurementAction = (params: {
 	enabled: boolean;

@@ -3,7 +3,7 @@ import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
-import type { Snapshot } from "../stores/bounds";
+import type { MeasuredEntry } from "../stores/bounds";
 import type {
 	BoundId,
 	BoundsOptions,
@@ -166,7 +166,11 @@ type BoundsCallResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
 
 export type BoundsAccessor = {
 	<T extends BoundsOptions>(options: T): BoundsCallResult<T>;
-	getSnapshot: (id: BoundId, key?: string) => Snapshot | null;
+	getMeasured: (id: BoundId, key?: string) => MeasuredEntry | null;
+	/**
+	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
+	 */
+	getSnapshot: (id: BoundId, key?: string) => MeasuredEntry | null;
 	getLink: (id: BoundId) => BoundsLink | null;
 	interpolateStyle: (
 		id: BoundId,
@@ -181,9 +185,4 @@ export type BoundsAccessor = {
 	) => number;
 };
 
-export type BoundsInterpolationProps = Omit<
-	ScreenInterpolationProps,
-	"bounds"
-> & {
-	navigationMaskEnabled?: boolean;
-};
+export type BoundsInterpolationProps = Omit<ScreenInterpolationProps, "bounds">;

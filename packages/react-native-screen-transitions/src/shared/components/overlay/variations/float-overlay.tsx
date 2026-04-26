@@ -71,7 +71,7 @@ export function FloatOverlay() {
 	return (
 		<DescriptorsProvider current={current} previous={previous} next={next}>
 			<ScreenAnimationProvider>
-				<ScreenStylesProvider>
+				<ScreenStylesProvider isFloatingOverlay>
 					<OverlayHost scene={scene} overlayScreenState={overlayScreenState} />
 				</ScreenStylesProvider>
 			</ScreenAnimationProvider>

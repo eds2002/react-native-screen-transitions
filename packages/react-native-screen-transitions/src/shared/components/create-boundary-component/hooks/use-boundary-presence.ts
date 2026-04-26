@@ -28,20 +28,15 @@ export const useBoundaryPresence = (params: {
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUI(BoundStore.registerBoundaryPresence)(
-			sharedBoundTag,
-			currentScreenKey,
+		runOnUI(BoundStore.entry.set)(sharedBoundTag, currentScreenKey, {
 			ancestorKeys,
 			boundaryConfig,
 			navigatorKey,
 			ancestorNavigatorKeys,
-		);
+		});
 
 		return () => {
-			runOnUI(BoundStore.unregisterBoundaryPresence)(
-				sharedBoundTag,
-				currentScreenKey,
-			);
+			runOnUI(BoundStore.entry.remove)(sharedBoundTag, currentScreenKey);
 		};
 	}, [
 		enabled,
