@@ -12,10 +12,9 @@ import {
 } from "../../../../constants";
 import { useDescriptors } from "../../../screen/descriptors";
 import {
+	getActivationGestureDirections,
 	getPanGestureDirections,
-	getSnapAxis,
-	resolveGestureDirections,
-	warnOnSnapDirectionArray,
+	getSnapPanDirectionConfig,
 } from "../helpers/gesture-directions";
 import type { PanGesturePolicy, ScreenGestureConfig } from "../types";
 
@@ -30,23 +29,18 @@ export function usePanPolicy(config: ScreenGestureConfig): PanGesturePolicy {
 		const gestureDirection =
 			options.gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
 
-		warnOnSnapDirectionArray({
+		const panActivationDirections = getActivationGestureDirections({
 			gestureDirection,
 			hasSnapPoints,
 		});
-
-		const directions = resolveGestureDirections({
-			gestureDirection,
-			hasSnapPoints,
-		});
-		const panDirections = getPanGestureDirections(gestureDirection);
-		const enabled = hasSnapPoints || panDirections.length > 0;
+		const hasPanDirection =
+			getPanGestureDirections(gestureDirection).length > 0;
 
 		return {
-			enabled,
+			enabled: hasPanDirection,
 			gestureDirection,
-			directions,
-			snapAxis: getSnapAxis(directions),
+			directions: panActivationDirections,
+			snapDirections: getSnapPanDirectionConfig(gestureDirection),
 			gestureDrivesProgress:
 				options.gestureDrivesProgress ?? DEFAULT_GESTURE_DRIVES_PROGRESS,
 			gestureSensitivity:

@@ -18,7 +18,10 @@ export default function MultiSnapScreen() {
 	const animation = useScreenAnimation();
 
 	const albumArtStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const size = interpolate(
 			animatedSnapIndex,
 			[0, 1, 2, 3, 4],
@@ -41,7 +44,10 @@ export default function MultiSnapScreen() {
 	});
 
 	const titleStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const fontSize = interpolate(
 			animatedSnapIndex,
 			[0, 2, 4],
@@ -52,19 +58,28 @@ export default function MultiSnapScreen() {
 	});
 
 	const controlsOpacity = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		return {
 			opacity: interpolate(animatedSnapIndex, [0, 1.5], [0, 1], "clamp"),
 		};
 	});
 
 	const extrasOpacity = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		return { opacity: interpolate(animatedSnapIndex, [2, 3], [0, 1], "clamp") };
 	});
 
 	const bgStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const backgroundColor = interpolateColor(
 			animatedSnapIndex,
 			[0, 2, 4],

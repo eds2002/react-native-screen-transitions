@@ -3,11 +3,15 @@ import type {
 	GestureDirections,
 	PanGestureDirection,
 	PinchGestureDirection,
+	ResolvedPanGestureDirection,
+	SnapPanAxis,
+	SnapPanAxisConfig,
+	SnapPanDirectionConfig,
+	SnapPinchDirectionConfig,
 } from "../../../../types/gesture.types";
 import type { Direction } from "../../../../types/ownership.types";
-import { logger } from "../../../../utils/logger";
 
-interface ResolveGestureDirectionsProps {
+interface GetActivationGestureDirectionsProps {
 	gestureDirection: GestureDirection | GestureDirection[];
 	hasSnapPoints: boolean;
 }
@@ -44,84 +48,136 @@ export const getPinchGestureDirections = (
 	return directions.filter(isPinchGestureDirection);
 };
 
-export const warnOnSnapDirectionArray = ({
-	gestureDirection,
-	hasSnapPoints,
-}: ResolveGestureDirectionsProps) => {
-	const panDirections = getPanGestureDirections(gestureDirection);
-
-	if (!hasSnapPoints || panDirections.length <= 1) return;
-
-	logger.warn(
-		`gestureDirection array is not supported with snapPoints. ` +
-			`Only the first pan direction "${panDirections[0]}" will be used. ` +
-			`Snap points define a single axis of movement, so only one gesture direction is needed.`,
-	);
+export const getOppositePanDirection = (
+	direction: ResolvedPanGestureDirection,
+): ResolvedPanGestureDirection => {
+	"worklet";
+	switch (direction) {
+		case "horizontal":
+			return "horizontal-inverted";
+		case "horizontal-inverted":
+			return "horizontal";
+		case "vertical":
+			return "vertical-inverted";
+		case "vertical-inverted":
+			return "vertical";
+	}
 };
 
-export const resolveGestureDirections = ({
-	gestureDirection,
-	hasSnapPoints,
-}: ResolveGestureDirectionsProps): GestureDirections => {
-	const panDirections = getPanGestureDirections(gestureDirection);
-	const firstPanDirection = panDirections[0];
-	const effectiveDirection = hasSnapPoints ? firstPanDirection : panDirections;
-
-	const directionsArray = Array.isArray(effectiveDirection)
-		? effectiveDirection
-		: effectiveDirection
-			? [effectiveDirection]
-			: [];
-
-	const isBidirectional = directionsArray.includes("bidirectional");
-
-	const hasHorizontalDirection =
-		directionsArray.includes("horizontal") ||
-		directionsArray.includes("horizontal-inverted");
-
-	const isSnapAxisInverted = hasHorizontalDirection
-		? directionsArray.includes("horizontal-inverted") &&
-			!directionsArray.includes("horizontal")
-		: directionsArray.includes("vertical-inverted") &&
-			!directionsArray.includes("vertical");
-
-	const enableBothVertical =
-		isBidirectional || (hasSnapPoints && !hasHorizontalDirection);
-	const enableBothHorizontal =
-		isBidirectional || (hasSnapPoints && hasHorizontalDirection);
-
-	return {
-		vertical: directionsArray.includes("vertical") || enableBothVertical,
-		verticalInverted:
-			directionsArray.includes("vertical-inverted") || enableBothVertical,
-		horizontal: directionsArray.includes("horizontal") || enableBothHorizontal,
-		horizontalInverted:
-			directionsArray.includes("horizontal-inverted") || enableBothHorizontal,
-		snapAxisInverted: hasSnapPoints && isSnapAxisInverted,
-	};
-};
-
-export const getSnapAxis = (
-	directions: GestureDirections,
-): "horizontal" | "vertical" => {
-	return directions.horizontal || directions.horizontalInverted
+export const getPanDirectionAxis = (
+	direction: ResolvedPanGestureDirection,
+): SnapPanAxis => {
+	"worklet";
+	return direction === "horizontal" || direction === "horizontal-inverted"
 		? "horizontal"
 		: "vertical";
 };
 
-export const isExpandGestureForDirection = (
-	swipeDirection: Direction,
-	snapAxis: "horizontal" | "vertical",
-	snapAxisInverted: boolean,
-): boolean => {
-	"worklet";
-	if (snapAxis === "horizontal") {
-		return snapAxisInverted
-			? swipeDirection === "horizontal"
-			: swipeDirection === "horizontal-inverted";
+const setSnapPanAxisConfig = (
+	config: SnapPanDirectionConfig,
+	direction: ResolvedPanGestureDirection,
+) => {
+	const axis = getPanDirectionAxis(direction);
+
+	if (config[axis]) return;
+
+	config[axis] = {
+		collapse: direction,
+		expand: getOppositePanDirection(direction),
+		inverted:
+			direction === "horizontal-inverted" || direction === "vertical-inverted",
+		progressSign:
+			direction === "horizontal-inverted" || direction === "vertical-inverted"
+				? 1
+				: -1,
+	};
+};
+
+export const getSnapPanDirectionConfig = (
+	gestureDirection: GestureDirection | GestureDirection[],
+): SnapPanDirectionConfig => {
+	const config: SnapPanDirectionConfig = {
+		horizontal: null,
+		vertical: null,
+	};
+
+	for (const direction of getPanGestureDirections(gestureDirection)) {
+		if (direction === "bidirectional") {
+			setSnapPanAxisConfig(config, "horizontal");
+			setSnapPanAxisConfig(config, "vertical");
+			continue;
+		}
+
+		setSnapPanAxisConfig(config, direction);
 	}
 
-	return snapAxisInverted
-		? swipeDirection === "vertical"
-		: swipeDirection === "vertical-inverted";
+	return config;
+};
+
+export const getSnapPinchDirectionConfig = (
+	gestureDirection: GestureDirection | GestureDirection[],
+): SnapPinchDirectionConfig => {
+	const pinchDirection = getPinchGestureDirections(gestureDirection)[0];
+
+	if (!pinchDirection) return null;
+
+	return {
+		collapse: pinchDirection,
+		expand: pinchDirection === "pinch-in" ? "pinch-out" : "pinch-in",
+	};
+};
+
+export const getActivationGestureDirections = ({
+	gestureDirection,
+	hasSnapPoints,
+}: GetActivationGestureDirectionsProps): GestureDirections => {
+	const panDirections = getPanGestureDirections(gestureDirection);
+
+	if (hasSnapPoints) {
+		const snapDirections = getSnapPanDirectionConfig(gestureDirection);
+
+		return {
+			vertical: !!snapDirections.vertical,
+			verticalInverted: !!snapDirections.vertical,
+			horizontal: !!snapDirections.horizontal,
+			horizontalInverted: !!snapDirections.horizontal,
+		};
+	}
+
+	const isBidirectional = panDirections.includes("bidirectional");
+
+	return {
+		vertical: panDirections.includes("vertical") || isBidirectional,
+		verticalInverted:
+			panDirections.includes("vertical-inverted") || isBidirectional,
+		horizontal: panDirections.includes("horizontal") || isBidirectional,
+		horizontalInverted:
+			panDirections.includes("horizontal-inverted") || isBidirectional,
+	};
+};
+
+export const getSnapPanAxisConfigForDirection = (
+	snapDirections: SnapPanDirectionConfig,
+	direction: Direction,
+): { axis: SnapPanAxis; config: SnapPanAxisConfig } | null => {
+	"worklet";
+	const axis = getPanDirectionAxis(direction);
+	const config = snapDirections[axis];
+
+	if (!config) return null;
+
+	return { axis, config };
+};
+
+export const isExpandGestureForDirection = (
+	swipeDirection: Direction,
+	snapDirections: SnapPanDirectionConfig,
+): boolean => {
+	"worklet";
+	const axisConfig = getSnapPanAxisConfigForDirection(
+		snapDirections,
+		swipeDirection,
+	);
+
+	return axisConfig?.config.expand === swipeDirection;
 };

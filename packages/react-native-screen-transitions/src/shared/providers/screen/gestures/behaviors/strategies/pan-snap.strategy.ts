@@ -1,4 +1,5 @@
 import { resolveSnapTransitionSpec } from "../../../../../utils/animation/resolve-snap-transition-spec";
+import { getSnapPanAxisConfigForDirection } from "../../helpers/gesture-directions";
 import { getPanReleaseHandoffVelocity } from "../../helpers/gesture-physics";
 import {
 	findNearestSnapPoint,
@@ -48,16 +49,24 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 			gestureStartProgress,
 			lockedSnapPoint,
 		} = runtime;
+		const activeDirection = runtime.stores.gestures.direction.get();
+		const activeAxis = activeDirection
+			? getSnapPanAxisConfigForDirection(policy.snapDirections, activeDirection)
+			: null;
+
+		if (!activeAxis) {
+			return gestureStartProgress.get();
+		}
+
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 			config.effectiveSnapPoints;
 		const { x, y } = track;
 
-		const isHorizontal = policy.snapAxis === "horizontal";
+		const isHorizontal = activeAxis.axis === "horizontal";
 		const translation = isHorizontal ? x : y;
 		const dimension = isHorizontal ? dimensions.width : dimensions.height;
-		const baseSign = -1;
-		const sign = policy.directions.snapAxisInverted ? -baseSign : baseSign;
-		const progressDelta = (sign * translation) / dimension;
+		const progressDelta =
+			(activeAxis.config.progressSign * translation) / dimension;
 
 		const { resolvedMinSnapPoint, resolvedMaxSnapPoint } =
 			resolveRuntimeSnapPoints({
@@ -97,11 +106,25 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 			config.effectiveSnapPoints;
+		const activeDirection = runtime.stores.gestures.direction.get();
+		const activeAxis = activeDirection
+			? getSnapPanAxisConfigForDirection(policy.snapDirections, activeDirection)
+			: null;
 
-		const isHorizontal = policy.snapAxis === "horizontal";
+		if (!activeAxis) {
+			return {
+				target: animations.progress.get(),
+				shouldDismiss: false,
+				initialVelocity: 0,
+				transitionSpec: policy.transitionSpec,
+				resetSpec: policy.transitionSpec?.open,
+			};
+		}
+
+		const isHorizontal = activeAxis.axis === "horizontal";
 		const axisVelocity = isHorizontal ? event.velocityX : event.velocityY;
 		const axisDimension = isHorizontal ? dimensions.width : dimensions.height;
-		const snapVelocity = policy.directions.snapAxisInverted
+		const snapVelocity = activeAxis.config.inverted
 			? -axisVelocity
 			: axisVelocity;
 

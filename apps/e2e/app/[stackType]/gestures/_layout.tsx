@@ -42,6 +42,22 @@ export default function GesturesSuiteLayout() {
 				options={GESTURE_SCREEN_OPTIONS["pinch-out"]}
 			/>
 			<StackNavigator.Screen
+				name="snap-multi-axis"
+				options={GESTURE_SCREEN_OPTIONS["snap-multi-axis"]}
+			/>
+			<StackNavigator.Screen
+				name="snap-order-axis"
+				options={GESTURE_SCREEN_OPTIONS["snap-order-axis"]}
+			/>
+			<StackNavigator.Screen
+				name="snap-pinch-pan"
+				options={GESTURE_SCREEN_OPTIONS["snap-pinch-pan"]}
+			/>
+			<StackNavigator.Screen
+				name="snap-pinch-only"
+				options={GESTURE_SCREEN_OPTIONS["snap-pinch-only"]}
+			/>
+			<StackNavigator.Screen
 				name="dynamic-runtime"
 				options={GESTURE_SCREEN_OPTIONS["dynamic-runtime"]}
 			/>

@@ -55,12 +55,16 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 			config.effectiveSnapPoints;
 		const { normScale } = track;
+		const pinchDirection =
+			normScale < 0 ? "pinch-in" : normScale > 0 ? "pinch-out" : null;
 
-		const progressDelta =
-			(normScale < 0 && policy.pinchInEnabled) ||
-			(normScale > 0 && policy.pinchOutEnabled)
-				? normScale
-				: 0;
+		let progressDelta = 0;
+		if (pinchDirection && policy.snapDirections) {
+			progressDelta =
+				policy.snapDirections.collapse === pinchDirection
+					? -Math.abs(normScale)
+					: Math.abs(normScale);
+		}
 
 		const { resolvedMinSnapPoint, resolvedMaxSnapPoint } =
 			resolveRuntimeSnapPoints({
@@ -103,6 +107,12 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 			config.effectiveSnapPoints;
 		const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
 		const currentProgress = animations.progress.get();
+		const pinchDirection =
+			normalizedScale < 0
+				? "pinch-in"
+				: normalizedScale > 0
+					? "pinch-out"
+					: null;
 
 		const { resolvedSnapPoints } = resolveRuntimeSnapPoints({
 			snapPoints,
@@ -114,10 +124,11 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 		});
 
 		let snapVelocity = 0;
-		if (normalizedScale < 0 && policy.pinchInEnabled) {
-			snapVelocity = Math.abs(event.velocity);
-		} else if (normalizedScale > 0 && policy.pinchOutEnabled) {
-			snapVelocity = -Math.abs(event.velocity);
+		if (pinchDirection && policy.snapDirections) {
+			snapVelocity =
+				policy.snapDirections.collapse === pinchDirection
+					? Math.abs(event.velocity)
+					: -Math.abs(event.velocity);
 		}
 
 		const result = determineSnapTarget({

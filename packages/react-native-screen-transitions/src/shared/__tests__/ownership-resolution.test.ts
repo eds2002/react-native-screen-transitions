@@ -101,6 +101,18 @@ describe("computeClaimedDirections", () => {
 		expect(result.vertical).toBe(true);
 		expect(result["vertical-inverted"]).toBe(true);
 	});
+
+	it("snap points claim both directions on every configured pan axis", () => {
+		const result = computeClaimedDirections(
+			true,
+			["horizontal", "vertical-inverted", "pinch-in"],
+			true,
+		);
+		expect(result.vertical).toBe(true);
+		expect(result["vertical-inverted"]).toBe(true);
+		expect(result.horizontal).toBe(true);
+		expect(result["horizontal-inverted"]).toBe(true);
+	});
 });
 
 describe("claimsAnyDirection", () => {

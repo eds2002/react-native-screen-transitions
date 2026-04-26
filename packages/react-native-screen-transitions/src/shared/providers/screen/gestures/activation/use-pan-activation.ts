@@ -10,7 +10,10 @@ import {
 	applyOffsetRules,
 	checkScrollBoundary,
 } from "../helpers/gesture-activation";
-import { isExpandGestureForDirection } from "../helpers/gesture-directions";
+import {
+	getSnapPanAxisConfigForDirection,
+	isExpandGestureForDirection,
+} from "../helpers/gesture-directions";
 import { resolveRuntimeSnapPoints } from "../helpers/gesture-snap-points";
 import { shouldDeferToChildClaim } from "../ownership/should-defer-to-child-claim";
 import type {
@@ -161,14 +164,17 @@ export const usePanActivation = ({
 				return;
 			}
 
+			const activeSnapAxis = hasSnapPoints
+				? getSnapPanAxisConfigForDirection(
+						policy.snapDirections,
+						swipeDirection,
+					)
+				: null;
+
 			if (
 				hasSnapPoints &&
 				policy.gestureSnapLocked &&
-				isExpandGestureForDirection(
-					swipeDirection,
-					policy.snapAxis,
-					policy.directions.snapAxisInverted ?? false,
-				)
+				isExpandGestureForDirection(swipeDirection, policy.snapDirections)
 			) {
 				stateManager.fail();
 				return;
@@ -185,7 +191,7 @@ export const usePanActivation = ({
 				const atBoundary = checkScrollBoundary(
 					currentScrollState,
 					swipeDirection,
-					hasSnapPoints ? policy.directions.snapAxisInverted : undefined,
+					activeSnapAxis?.config.inverted,
 				);
 
 				if (!atBoundary) {
@@ -195,11 +201,7 @@ export const usePanActivation = ({
 
 				if (
 					hasSnapPoints &&
-					isExpandGestureForDirection(
-						swipeDirection,
-						policy.snapAxis,
-						policy.directions.snapAxisInverted ?? false,
-					)
+					isExpandGestureForDirection(swipeDirection, policy.snapDirections)
 				) {
 					if (policy.sheetScrollGestureBehavior === "collapse-only") {
 						stateManager.fail();

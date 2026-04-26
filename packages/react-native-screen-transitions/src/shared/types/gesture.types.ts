@@ -14,6 +14,25 @@ export type PinchGestureDirection = "pinch-in" | "pinch-out";
 
 export type GestureDirection = PanGestureDirection | PinchGestureDirection;
 
+export type SnapPanAxis = "horizontal" | "vertical";
+
+export type SnapPanAxisConfig = {
+	collapse: ResolvedPanGestureDirection;
+	expand: ResolvedPanGestureDirection;
+	inverted: boolean;
+	progressSign: -1 | 1;
+};
+
+export type SnapPanDirectionConfig = Record<
+	SnapPanAxis,
+	SnapPanAxisConfig | null
+>;
+
+export type SnapPinchDirectionConfig = {
+	collapse: PinchGestureDirection;
+	expand: PinchGestureDirection;
+} | null;
+
 export type ActivationArea = "edge" | "screen";
 
 export type SideActivation = {
@@ -40,7 +59,6 @@ export type GestureDirections = {
 	horizontalInverted: boolean;
 	vertical: boolean;
 	verticalInverted: boolean;
-	snapAxisInverted?: boolean;
 };
 
 export type RawGestureValues = {

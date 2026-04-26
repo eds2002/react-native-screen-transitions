@@ -17,7 +17,10 @@ export default function SnapIndexAnimationScreen() {
 	const animation = useScreenAnimation();
 
 	const bgStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const backgroundColor = interpolateColor(
 			animatedSnapIndex,
 			[0, 1, 2, 3],
@@ -27,7 +30,10 @@ export default function SnapIndexAnimationScreen() {
 	});
 
 	const tempStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const fontSize = interpolate(animatedSnapIndex, [0, 3], [48, 96], "clamp");
 		const color = interpolateColor(
 			animatedSnapIndex,
@@ -38,28 +44,40 @@ export default function SnapIndexAnimationScreen() {
 	});
 
 	const iconScale = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const scale = interpolate(animatedSnapIndex, [0, 3], [0.6, 1.4], "clamp");
 		const rotate = `${interpolate(animatedSnapIndex, [0, 3], [0, 360], "clamp")}deg`;
 		return { transform: [{ scale }, { rotate }] };
 	});
 
 	const detailsOpacity = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		return {
 			opacity: interpolate(animatedSnapIndex, [0.8, 1.5], [0, 1], "clamp"),
 		};
 	});
 
 	const forecastOpacity = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		return {
 			opacity: interpolate(animatedSnapIndex, [1.5, 2.5], [0, 1], "clamp"),
 		};
 	});
 
 	const extrasOpacity = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		return { opacity: interpolate(animatedSnapIndex, [2, 3], [0, 1], "clamp") };
 	});
 

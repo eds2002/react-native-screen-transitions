@@ -16,6 +16,8 @@ import type {
 import type {
 	GestureActivationArea,
 	GestureDirections,
+	SnapPanDirectionConfig,
+	SnapPinchDirectionConfig,
 } from "../../../types/gesture.types";
 import type {
 	ClaimedDirections,
@@ -100,7 +102,7 @@ export interface PanGesturePolicy {
 	enabled: boolean;
 	gestureDirection: ScreenTransitionConfig["gestureDirection"];
 	directions: GestureDirections;
-	snapAxis: "horizontal" | "vertical";
+	snapDirections: SnapPanDirectionConfig;
 	gestureDrivesProgress: boolean;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureVelocityImpact: number;
@@ -118,6 +120,7 @@ export interface PanGesturePolicy {
 export interface PinchGesturePolicy {
 	enabled: boolean;
 	gestureDirection: ScreenTransitionConfig["gestureDirection"];
+	snapDirections: SnapPinchDirectionConfig;
 	pinchInEnabled: boolean;
 	pinchOutEnabled: boolean;
 	gestureDrivesProgress: boolean;

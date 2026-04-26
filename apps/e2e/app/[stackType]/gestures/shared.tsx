@@ -16,6 +16,10 @@ export type GestureExampleId =
 	| "bidirectional"
 	| "pinch-in"
 	| "pinch-out"
+	| "snap-multi-axis"
+	| "snap-order-axis"
+	| "snap-pinch-pan"
+	| "snap-pinch-only"
 	| "dynamic-runtime";
 
 type GestureExampleDefinition = {
@@ -118,6 +122,58 @@ export const GESTURE_EXAMPLES: GestureExampleDefinition[] = [
 			"Use two fingers and pinch outward to dismiss this screen.",
 			"Outward growth should feel deliberate instead of triggering pan.",
 			"Compare this directly against pinch-in to verify both directions.",
+		],
+	},
+	{
+		id: "snap-multi-axis",
+		title: "Snap Multi Axis",
+		description: "Snap sheet with horizontal and vertical collapse axes.",
+		subtitle: "gestureDirection: [horizontal, vertical-inverted]",
+		routeLabel: "snapPoints + horizontal + vertical-inverted",
+		tint: "#365A68",
+		notes: [
+			"Drag right or up to collapse toward the lower snap point.",
+			"Drag left or down to expand toward the higher snap point.",
+			"Both axes should move the same snap sheet instead of fighting each other.",
+		],
+	},
+	{
+		id: "snap-order-axis",
+		title: "Snap Order Axis",
+		description: "Same-axis snap sheet where the first direction wins.",
+		subtitle: "gestureDirection: [vertical-inverted, vertical]",
+		routeLabel: "snapPoints + first vertical-inverted",
+		tint: "#5B4A72",
+		notes: [
+			"Drag up to collapse because vertical-inverted is listed first.",
+			"Drag down to expand because it is the inverse direction.",
+			"This checks that array order, not just axis, controls snap polarity.",
+		],
+	},
+	{
+		id: "snap-pinch-pan",
+		title: "Snap Pinch + Pan",
+		description: "Snap sheet combining pinch and multiple pan axes.",
+		subtitle: "gestureDirection: [pinch-out, horizontal, vertical-inverted]",
+		routeLabel: "snapPoints + pinch-out + two pan axes",
+		tint: "#6A3D4F",
+		notes: [
+			"Pinch out, drag right, or drag up to collapse.",
+			"Pinch in, drag left, or drag down to expand.",
+			"Pan and pinch should remain separate gestures while driving one snap state.",
+		],
+	},
+	{
+		id: "snap-pinch-only",
+		title: "Snap Pinch Only",
+		description: "Snap sheet controlled only by pinch gestures.",
+		subtitle: "gestureDirection: pinch-in",
+		routeLabel: "snapPoints + pinch-in only",
+		tint: "#724636",
+		notes: [
+			"Pinch in should collapse and pinch out should expand.",
+			"Single-finger pan gestures should not drive this snap sheet.",
+			"This catches accidental pan enablement from snapPoints alone.",
 		],
 	},
 	{

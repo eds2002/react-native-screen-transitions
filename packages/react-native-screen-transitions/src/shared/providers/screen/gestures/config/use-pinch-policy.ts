@@ -9,7 +9,10 @@ import {
 	DEFAULT_GESTURE_VELOCITY_IMPACT,
 } from "../../../../constants";
 import { useDescriptors } from "../../../screen/descriptors";
-import { getPinchGestureDirections } from "../helpers/gesture-directions";
+import {
+	getPinchGestureDirections,
+	getSnapPinchDirectionConfig,
+} from "../helpers/gesture-directions";
 import type { PinchGesturePolicy, ScreenGestureConfig } from "../types";
 
 export function usePinchPolicy(
@@ -26,18 +29,21 @@ export function usePinchPolicy(
 		const gestureDirection =
 			options.gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
 		const pinchDirections = getPinchGestureDirections(gestureDirection);
-		const hasPinchDirection = pinchDirections.length > 0;
-		const pinchInEnabled =
-			pinchDirections.includes("pinch-in") ||
-			(hasSnapPoints && hasPinchDirection);
-		const pinchOutEnabled =
-			pinchDirections.includes("pinch-out") ||
-			(hasSnapPoints && hasPinchDirection);
+		const snapDirections = hasSnapPoints
+			? getSnapPinchDirectionConfig(gestureDirection)
+			: null;
+		const pinchInEnabled = snapDirections
+			? true
+			: pinchDirections.includes("pinch-in");
+		const pinchOutEnabled = snapDirections
+			? true
+			: pinchDirections.includes("pinch-out");
 
 		return {
 			enabled:
 				(canDismiss || hasSnapPoints) && (pinchInEnabled || pinchOutEnabled),
 			gestureDirection,
+			snapDirections,
 			pinchInEnabled,
 			pinchOutEnabled,
 			gestureDrivesProgress:

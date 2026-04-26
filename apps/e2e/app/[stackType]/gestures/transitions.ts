@@ -10,6 +10,8 @@ const DEFAULT_SPEC = {
 	close: Transition.Specs.DefaultSpec,
 };
 
+const GESTURE_RESISTANCE = 0.45;
+
 function buildHorizontalOptions(inverted: boolean): ScreenTransitionConfig {
 	return {
 		gestureEnabled: true,
@@ -139,6 +141,161 @@ function buildPinchOptions(
 	};
 }
 
+function buildSnapMultiAxisOptions(): ScreenTransitionConfig {
+	return {
+		gestureEnabled: true,
+		gestureDirection: ["horizontal", "vertical-inverted"],
+		gestureReleaseVelocityScale: 0,
+		snapPoints: [0.45, 0.75, 1],
+		gestureSensitivity: 0.85,
+		screenStyleInterpolator: ({
+			current,
+			progress,
+			layouts: {
+				screen: { width },
+			},
+		}) => {
+			"worklet";
+
+			const baseTranslateX = interpolate(progress, [0, 1], [width, 0], "clamp");
+			const translateX =
+				baseTranslateX + current.gesture.x * GESTURE_RESISTANCE;
+			const translateY = current.gesture.y * GESTURE_RESISTANCE;
+			const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.94], "clamp");
+			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
+
+			return {
+				content: {
+					style: {
+						opacity,
+						transform: [{ translateX }, { translateY }, { scale }],
+					},
+				},
+			};
+		},
+		transitionSpec: DEFAULT_SPEC,
+	};
+}
+
+function buildSnapOrderAxisOptions(): ScreenTransitionConfig {
+	return {
+		gestureEnabled: true,
+		gestureDirection: ["vertical-inverted", "vertical"],
+		gestureReleaseVelocityScale: 0,
+		snapPoints: [0.4, 0.7, 1],
+		gestureSensitivity: 0.85,
+		screenStyleInterpolator: ({
+			current,
+			progress,
+			layouts: {
+				screen: { height },
+			},
+		}) => {
+			"worklet";
+
+			const baseTranslateY = interpolate(
+				progress,
+				[0, 1],
+				[-height, 0],
+				"clamp",
+			);
+			const translateY =
+				baseTranslateY + current.gesture.y * GESTURE_RESISTANCE;
+			const scale = interpolate(progress, [0, 1, 2], [0, 1, 0.94], "clamp");
+			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
+
+			return {
+				content: {
+					style: {
+						opacity,
+						transform: [{ translateY }, { scale }],
+					},
+				},
+			};
+		},
+		transitionSpec: DEFAULT_SPEC,
+	};
+}
+
+function buildSnapPinchPanOptions(): ScreenTransitionConfig {
+	return {
+		gestureEnabled: true,
+		gestureDirection: ["pinch-out", "horizontal", "vertical-inverted"],
+		gestureReleaseVelocityScale: 0,
+		snapPoints: [0.45, 0.72, 1],
+		gestureSensitivity: 0.8,
+		screenStyleInterpolator: ({
+			current,
+			progress,
+			layouts: {
+				screen: { width },
+			},
+		}) => {
+			"worklet";
+
+			const baseTranslateX = interpolate(progress, [0, 1], [width, 0], "clamp");
+			const translateX =
+				baseTranslateX + current.gesture.x * GESTURE_RESISTANCE;
+			const translateY = current.gesture.y * GESTURE_RESISTANCE;
+			const pinchScale = 1 + current.gesture.normScale * GESTURE_RESISTANCE;
+			const progressScale = interpolate(
+				progress,
+				[0, 1, 2],
+				[0, 1, 0.9],
+				"clamp",
+			);
+			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
+
+			return {
+				content: {
+					style: {
+						opacity,
+						transform: [
+							{ translateX },
+							{ translateY },
+							{ scale: progressScale * pinchScale },
+						],
+					},
+				},
+			};
+		},
+		transitionSpec: DEFAULT_SPEC,
+	};
+}
+
+function buildSnapPinchOnlyOptions(): ScreenTransitionConfig {
+	return {
+		gestureEnabled: true,
+		gestureDirection: "pinch-in",
+		gestureReleaseVelocityScale: 0,
+		snapPoints: [0.45, 0.75, 1],
+		gestureSensitivity: 0.75,
+		screenStyleInterpolator: ({ current, progress }) => {
+			"worklet";
+
+			const pinchScale =
+				1 - Math.abs(current.gesture.normScale) * GESTURE_RESISTANCE;
+			const progressScale = interpolate(
+				progress,
+				[0, 1, 2],
+				[0, 1, 1.12],
+				"clamp",
+			);
+			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
+
+			return {
+				content: {
+					style: {
+						opacity,
+						transform: [{ scale: progressScale * pinchScale }],
+					},
+				},
+			};
+		},
+		transitionSpec: DEFAULT_SPEC,
+	};
+}
+
 function buildDynamicRuntimeOptions(): ScreenTransitionConfig {
 	return {
 		gestureEnabled: true,
@@ -180,5 +337,9 @@ export const GESTURE_SCREEN_OPTIONS: Record<GestureExampleId, any> = {
 	bidirectional: buildBidirectionalOptions(),
 	"pinch-in": buildPinchOptions("pinch-in"),
 	"pinch-out": buildPinchOptions("pinch-out"),
+	"snap-multi-axis": buildSnapMultiAxisOptions(),
+	"snap-order-axis": buildSnapOrderAxisOptions(),
+	"snap-pinch-pan": buildSnapPinchPanOptions(),
+	"snap-pinch-only": buildSnapPinchOnlyOptions(),
 	"dynamic-runtime": buildDynamicRuntimeOptions(),
 };

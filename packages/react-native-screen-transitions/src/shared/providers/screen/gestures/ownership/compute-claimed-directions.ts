@@ -15,8 +15,8 @@ import {
  * 1. gestureEnabled is true AND
  * 2. gestureDirection includes that direction
  *
- * For snap points, both directions on the axis are claimed automatically.
- * This is because a snap point sheet handles both expand (inverse) and collapse (primary) gestures.
+ * For snap points, both directions on each configured pan axis are claimed.
+ * The first direction on an axis collapses; its inverse expands.
  *
  * @param gestureEnabled - Whether gestures are enabled for this screen
  * @param gestureDirection - The gesture direction(s) configured for this screen
@@ -70,8 +70,7 @@ export function computeClaimedDirections(
 		}
 	}
 
-	// For snap points, claim both directions on the axis
-	// This enables both expand (inverse) and collapse/dismiss (primary) gestures
+	// Snap points own both directions on every configured pan axis.
 	if (hasSnapPoints) {
 		const hasVerticalAxis = claims.vertical || claims["vertical-inverted"];
 		const hasHorizontalAxis =

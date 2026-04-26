@@ -13,7 +13,10 @@ export default function AutoSnapScreen() {
 	const theme = useTheme();
 
 	const heroStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const scale = interpolate(animatedSnapIndex, [0, 1], [1, 1.06], "clamp");
 		const backgroundColor = interpolateColor(
 			animatedSnapIndex,
@@ -28,14 +31,20 @@ export default function AutoSnapScreen() {
 	});
 
 	const subtitleStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		return {
 			opacity: interpolate(animatedSnapIndex, [0, 1], [0.78, 1], "clamp"),
 		};
 	});
 
 	const detentChipStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const backgroundColor = interpolateColor(
 			animatedSnapIndex,
 			[0, 1],
@@ -45,7 +54,10 @@ export default function AutoSnapScreen() {
 	});
 
 	const detentLabelStyle = useAnimatedStyle(() => {
-		const { animatedSnapIndex } = animation.value;
+		const animatedSnapIndex = Math.max(
+			0,
+			animation.value.current.animatedSnapIndex,
+		);
 		const color = interpolateColor(
 			animatedSnapIndex,
 			[0, 1],
