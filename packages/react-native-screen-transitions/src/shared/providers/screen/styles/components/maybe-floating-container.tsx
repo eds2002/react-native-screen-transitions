@@ -23,7 +23,7 @@ export const MaybeFloatingContainer = memo(function MaybeFloatingContainer({
 
 const styles = StyleSheet.create({
 	float: {
-		...StyleSheet.absoluteFill,
+		...StyleSheet.absoluteFillObject,
 		zIndex: 999,
 	},
 });
