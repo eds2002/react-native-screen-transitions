@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { validateSnapPoints } from "../utils/gesture/validate-snap-points";
+import { validateSnapPoints } from "../providers/screen/gestures/helpers/validate-snap-points";
 
 describe("validateSnapPoints", () => {
 	describe("when no snap points provided", () => {

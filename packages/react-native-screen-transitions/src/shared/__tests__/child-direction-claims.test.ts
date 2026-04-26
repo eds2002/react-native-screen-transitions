@@ -3,15 +3,28 @@ import type { SharedValue } from "react-native-reanimated";
 import type {
 	DirectionClaim,
 	DirectionClaimMap,
-} from "../providers/gestures";
-import { shouldDeferToChildClaim } from "../providers/gestures/helpers/gesture-claims";
+} from "../providers/screen/gestures";
+import { shouldDeferToChildClaim } from "../providers/screen/gestures/ownership/should-defer-to-child-claim";
 
 /**
  * Mock SharedValue for testing - mimics Reanimated's SharedValue interface
  */
 function mockSharedValue<T>(initial: T): SharedValue<T> {
+	let current = initial;
 	return {
-		value: initial,
+		get: () => current,
+		set: (next: T | ((prev: T) => T)) => {
+			current =
+				typeof next === "function"
+					? (next as (prev: T) => T)(current)
+					: next;
+		},
+		get value() {
+			return current;
+		},
+		set value(next: T) {
+			current = next;
+		},
 		addListener: () => -1,
 		removeListener: () => {},
 		modify: () => {},

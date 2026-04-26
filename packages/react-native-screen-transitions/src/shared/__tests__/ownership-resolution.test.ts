@@ -4,8 +4,8 @@ import { NO_CLAIMS } from "../types/ownership.types";
 import {
 	claimsAnyDirection,
 	computeClaimedDirections,
-} from "../utils/gesture/compute-claimed-directions";
-import { resolveOwnership } from "../utils/gesture/resolve-ownership";
+} from "../providers/screen/gestures/ownership/compute-claimed-directions";
+import { resolveOwnership } from "../providers/screen/gestures/ownership/resolve-ownership";
 
 /** Minimal shape matching resolve-ownership's internal AncestorClaimsContext */
 interface MockAncestorContext {
@@ -44,11 +44,11 @@ describe("computeClaimedDirections", () => {
 		expect(result).toEqual(NO_CLAIMS);
 	});
 
-	it("defaults to vertical when gestureDirection is undefined", () => {
+	it("uses the default gesture direction when gestureDirection is undefined", () => {
 		const result = computeClaimedDirections(true, undefined, false);
-		expect(result.vertical).toBe(true);
+		expect(result.vertical).toBe(false);
 		expect(result["vertical-inverted"]).toBe(false);
-		expect(result.horizontal).toBe(false);
+		expect(result.horizontal).toBe(true);
 		expect(result["horizontal-inverted"]).toBe(false);
 	});
 
@@ -100,6 +100,18 @@ describe("computeClaimedDirections", () => {
 		const result = computeClaimedDirections(true, "vertical-inverted", true);
 		expect(result.vertical).toBe(true);
 		expect(result["vertical-inverted"]).toBe(true);
+	});
+
+	it("snap points claim both directions on every configured pan axis", () => {
+		const result = computeClaimedDirections(
+			true,
+			["horizontal", "vertical-inverted", "pinch-in"],
+			true,
+		);
+		expect(result.vertical).toBe(true);
+		expect(result["vertical-inverted"]).toBe(true);
+		expect(result.horizontal).toBe(true);
+		expect(result["horizontal-inverted"]).toBe(true);
 	});
 });
 

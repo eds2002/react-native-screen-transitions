@@ -3,17 +3,31 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { GestureDirection } from "../types/gesture.types";
+import type { ResolvedPanGestureDirection } from "../types/gesture.types";
 import { createStore } from "../utils/create-store";
+
+type GestureRawStoreMap = {
+	x: SharedValue<number>;
+	y: SharedValue<number>;
+	normX: SharedValue<number>;
+	normY: SharedValue<number>;
+	scale: SharedValue<number>;
+	normScale: SharedValue<number>;
+};
 
 export type GestureStoreMap = {
 	x: SharedValue<number>;
 	y: SharedValue<number>;
 	normX: SharedValue<number>;
 	normY: SharedValue<number>;
+	scale: SharedValue<number>;
+	normScale: SharedValue<number>;
+	focalX: SharedValue<number>;
+	focalY: SharedValue<number>;
+	raw: GestureRawStoreMap;
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
-	direction: SharedValue<Omit<GestureDirection, "bidirectional"> | null>;
+	direction: SharedValue<ResolvedPanGestureDirection | null>;
 
 	/**
 	 * @deprecated Use `normX` instead.
@@ -36,6 +50,8 @@ export type GestureStoreMap = {
 function createGestureBag(): GestureStoreMap {
 	const normX = makeMutable(0);
 	const normY = makeMutable(0);
+	const scale = makeMutable(1);
+	const normScale = makeMutable(0);
 	const dismissing = makeMutable(0);
 	const dragging = makeMutable(0);
 
@@ -44,11 +60,21 @@ function createGestureBag(): GestureStoreMap {
 		y: makeMutable(0),
 		normX,
 		normY,
+		scale,
+		normScale,
+		focalX: makeMutable(0),
+		focalY: makeMutable(0),
+		raw: {
+			x: makeMutable(0),
+			y: makeMutable(0),
+			normX: makeMutable(0),
+			normY: makeMutable(0),
+			scale: makeMutable(1),
+			normScale: makeMutable(0),
+		},
 		dismissing,
 		dragging,
-		direction: makeMutable<Omit<GestureDirection, "bidirectional"> | null>(
-			null,
-		),
+		direction: makeMutable<ResolvedPanGestureDirection | null>(null),
 
 		// Deprecated aliases (same underlying SharedValue)
 		normalizedX: normX,
@@ -72,6 +98,16 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.y);
 		cancelAnimation(bag.normX);
 		cancelAnimation(bag.normY);
+		cancelAnimation(bag.scale);
+		cancelAnimation(bag.normScale);
+		cancelAnimation(bag.focalX);
+		cancelAnimation(bag.focalY);
+		cancelAnimation(bag.raw.x);
+		cancelAnimation(bag.raw.y);
+		cancelAnimation(bag.raw.normX);
+		cancelAnimation(bag.raw.normY);
+		cancelAnimation(bag.raw.scale);
+		cancelAnimation(bag.raw.normScale);
 		cancelAnimation(bag.dismissing);
 		cancelAnimation(bag.dragging);
 		cancelAnimation(bag.direction);

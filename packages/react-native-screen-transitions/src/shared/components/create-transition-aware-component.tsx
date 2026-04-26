@@ -11,8 +11,8 @@ import Animated, {
 	useComposedEventHandler,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../constants";
-import { useScrollRegistry } from "../hooks/gestures/use-scroll-registry";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
+import { useScrollGestureCoordination } from "../providers/screen/gestures/hooks/use-scroll-gesture-coordination";
 import { useScreenStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
 
@@ -50,7 +50,7 @@ export function createTransitionAwareComponent<P extends object>(
 
 		// Get scroll handlers and the gesture owner's nativeGesture for this axis
 		const { scrollHandler, onContentSizeChange, onLayout, nativeGesture } =
-			useScrollRegistry({
+			useScrollGestureCoordination({
 				onContentSizeChange: scrollableProps.onContentSizeChange,
 				onLayout: scrollableProps.onLayout,
 				direction: scrollDirection,

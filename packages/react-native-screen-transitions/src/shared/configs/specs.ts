@@ -4,8 +4,8 @@ export const DefaultSpec: WithSpringConfig = {
 	stiffness: 1000,
 	damping: 500,
 	mass: 3,
-	overshootClamping: true,
-	// @ts-expect-error
+	overshootClamping: false,
+	// @ts-expect-error Reanimated v3 spring config support.
 	restSpeedThreshold: 0.02,
 };
 

@@ -1,4 +1,4 @@
-import type { AnimatedProps } from "react-native-reanimated";
+import type { AnimatedProps, SharedValue } from "react-native-reanimated";
 import type {
 	ScreenStyleInterpolator,
 	TransitionSpec,
@@ -138,9 +138,24 @@ export type ScreenTransitionConfig = {
 	gestureEnabled?: boolean;
 
 	/**
-	 * The direction of the swipe gesture used to dismiss the screen.
+	 * The direction(s) of the screen gesture used to dismiss the screen.
+	 *
+	 * Supports pan directions (`horizontal`, `vertical`, etc.) and pinch
+	 * directions (`pinch-in`, `pinch-out`).
 	 */
 	gestureDirection?: GestureDirection | GestureDirection[];
+
+	/**
+	 * Controls how directly live gesture movement maps into transition progress
+	 * and the non-raw gesture values exposed to interpolators.
+	 *
+	 * Lower values feel less sensitive, higher values feel more responsive. If
+	 * an interpolator needs physical gesture input before sensitivity is applied,
+	 * read from `active.gesture.raw`.
+	 *
+	 * @default 1
+	 */
+	gestureSensitivity?: number | SharedValue<number>;
 
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.
@@ -154,6 +169,14 @@ export type ScreenTransitionConfig = {
 	 * @default 0.1
 	 */
 	snapVelocityImpact?: number;
+
+	/**
+	 * How much velocity affects snap point targeting. Lower values make snapping
+	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
+	 *
+	 * @default 0.1
+	 */
+	gestureSnapVelocityImpact?: number;
 
 	/**
 	 * Multiplies gesture release velocity used for spring animation energy.

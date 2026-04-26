@@ -46,7 +46,10 @@ const computeSettled = (params: {
 	return animating || dismissing || closing ? FALSE : TRUE;
 };
 
-const computeSnapIndex = (progress: number, snapPoints: number[]): number => {
+const computeAnimatedSnapIndex = (
+	progress: number,
+	snapPoints: number[],
+): number => {
 	"worklet";
 	if (snapPoints.length === 0) return -1;
 	if (progress <= snapPoints[0]) return 0;
@@ -61,6 +64,32 @@ const computeSnapIndex = (progress: number, snapPoints: number[]): number => {
 		}
 	}
 	return snapPoints.length - 1;
+};
+
+const computeTargetSnapIndex = (
+	targetProgress: number,
+	snapPoints: number[],
+): number => {
+	"worklet";
+	if (snapPoints.length === 0) return -1;
+
+	if (targetProgress <= 0 && Math.abs(snapPoints[0]) > EPSILON) {
+		return -1;
+	}
+
+	let nearestIndex = 0;
+	let smallestDistance = Math.abs(targetProgress - snapPoints[0]);
+
+	for (let i = 1; i < snapPoints.length; i++) {
+		const distance = Math.abs(targetProgress - snapPoints[i]);
+
+		if (distance < smallestDistance) {
+			smallestDistance = distance;
+			nearestIndex = i;
+		}
+	}
+
+	return nearestIndex;
 };
 
 export const computeLogicallySettled = ({
@@ -98,13 +127,24 @@ export const hydrateTransitionState = (
 	out.gesture.y = s.gesture.y.get();
 	out.gesture.normX = s.gesture.normX.get();
 	out.gesture.normY = s.gesture.normY.get();
+	out.gesture.scale = s.gesture.scale.get();
+	out.gesture.normScale = s.gesture.normScale.get();
+	out.gesture.focalX = s.gesture.focalX.get();
+	out.gesture.focalY = s.gesture.focalY.get();
+	out.gesture.raw.x = s.gesture.raw.x.get();
+	out.gesture.raw.y = s.gesture.raw.y.get();
+	out.gesture.raw.normX = s.gesture.raw.normX.get();
+	out.gesture.raw.normY = s.gesture.raw.normY.get();
+	out.gesture.raw.scale = s.gesture.raw.scale.get();
+	out.gesture.raw.normScale = s.gesture.raw.normScale.get();
 	out.gesture.dismissing = s.gesture.dismissing.get();
 	out.gesture.dragging = s.gesture.dragging.get();
 	out.gesture.direction = s.gesture.direction.get();
 
 	const isGestureSettling =
 		Math.abs(out.gesture.normX) > EPSILON ||
-		Math.abs(out.gesture.normY) > EPSILON;
+		Math.abs(out.gesture.normY) > EPSILON ||
+		Math.abs(out.gesture.normScale) > EPSILON;
 
 	out.animating =
 		s.animating.get() || out.gesture.dragging || isGestureSettling ? 1 : 0;
@@ -163,7 +203,14 @@ export const hydrateTransitionState = (
 			? [...s.sortedNumericSnapPoints, resolvedAutoSnap].sort((a, b) => a - b)
 			: s.sortedNumericSnapPoints;
 
-	out.snapIndex = computeSnapIndex(out.progress, resolvedSnapPoints);
+	out.animatedSnapIndex = computeAnimatedSnapIndex(
+		out.progress,
+		resolvedSnapPoints,
+	);
+	out.snapIndex = computeTargetSnapIndex(
+		s.targetProgress.get(),
+		resolvedSnapPoints,
+	);
 
 	return out;
 };

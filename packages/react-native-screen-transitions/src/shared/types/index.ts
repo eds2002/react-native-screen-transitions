@@ -6,6 +6,7 @@ export type {
 	ScreenStyleInterpolator,
 	ScreenTransitionState,
 	TransitionInterpolatedStyle,
+	TransitionInterpolatorConfig,
 	TransitionSlotStyle,
 	TransitionSpec,
 } from "./animation.types";
@@ -23,6 +24,8 @@ export type {
 	GestureActivationArea,
 	GestureDirection,
 	GestureValues,
+	PanGestureDirection,
+	PinchGestureDirection,
 	SideActivation,
 } from "./gesture.types";
 export type { OverlayProps } from "./overlay.types";

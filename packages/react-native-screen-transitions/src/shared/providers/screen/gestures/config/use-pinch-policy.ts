@@ -1,0 +1,71 @@
+import { useMemo } from "react";
+import {
+	DEFAULT_GESTURE_DIRECTION,
+	DEFAULT_GESTURE_DRIVES_PROGRESS,
+	DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
+	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+	DEFAULT_GESTURE_SENSITIVITY,
+	DEFAULT_GESTURE_SNAP_LOCKED,
+	DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
+	DEFAULT_GESTURE_VELOCITY_IMPACT,
+} from "../../../../constants";
+import { useDescriptors } from "../../../screen/descriptors";
+import {
+	getPinchGestureDirections,
+	getSnapPinchDirectionConfig,
+} from "../helpers/gesture-directions";
+import type { PinchGesturePolicy, ScreenGestureConfig } from "../types";
+
+export function usePinchPolicy(
+	config: ScreenGestureConfig,
+): PinchGesturePolicy {
+	const {
+		current: { options },
+	} = useDescriptors();
+
+	const { canDismiss } = config;
+	const { hasSnapPoints } = config.effectiveSnapPoints;
+
+	return useMemo(() => {
+		const gestureDirection =
+			options.gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
+		const pinchDirections = getPinchGestureDirections(gestureDirection);
+		const snapDirections = hasSnapPoints
+			? getSnapPinchDirectionConfig(gestureDirection)
+			: null;
+		const pinchInEnabled = snapDirections
+			? true
+			: pinchDirections.includes("pinch-in");
+		const pinchOutEnabled = snapDirections
+			? true
+			: pinchDirections.includes("pinch-out");
+
+		return {
+			enabled:
+				(canDismiss || hasSnapPoints) && (pinchInEnabled || pinchOutEnabled),
+			gestureDirection,
+			snapDirections,
+			pinchInEnabled,
+			pinchOutEnabled,
+			gestureDrivesProgress:
+				options.gestureDrivesProgress ?? DEFAULT_GESTURE_DRIVES_PROGRESS,
+			gestureSensitivity:
+				options.gestureSensitivity ?? DEFAULT_GESTURE_SENSITIVITY,
+			gestureVelocityImpact:
+				options.gestureVelocityImpact ?? DEFAULT_GESTURE_VELOCITY_IMPACT,
+			gestureSnapVelocityImpact:
+				options.gestureSnapVelocityImpact ??
+				options.snapVelocityImpact ??
+				DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
+			gestureSnapLocked:
+				options.gestureSnapLocked ?? DEFAULT_GESTURE_SNAP_LOCKED,
+			gestureReleaseVelocityScale:
+				options.gestureReleaseVelocityScale ??
+				DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+			gestureReleaseVelocityMax:
+				options.gestureReleaseVelocityMax ??
+				DEFAULT_GESTURE_RELEASE_VELOCITY_MAX,
+			transitionSpec: options.transitionSpec,
+		};
+	}, [canDismiss, hasSnapPoints, options]);
+}

@@ -112,7 +112,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			const focused = helpers.focused;
 			const active = helpers.active;
 			const inactive = helpers.inactive;
-			const snapIndex = current.snapIndex;
+			const snapIndex = current.animatedSnapIndex ?? current.snapIndex;
 			const logicallySettled = active.logicallySettled;
 
 			return {

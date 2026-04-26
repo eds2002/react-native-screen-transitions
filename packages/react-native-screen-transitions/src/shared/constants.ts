@@ -3,7 +3,7 @@ import { Platform } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
 import type { ScreenTransitionState } from "./types/animation.types";
 import type { ActivationArea } from "./types/gesture.types";
-import type { Layout } from "./types/screen.types";
+import type { Layout, SheetScrollGestureBehavior } from "./types/screen.types";
 import type { BaseStackRoute } from "./types/stack.types";
 
 /**
@@ -31,11 +31,20 @@ export const NO_PROPS = Object.freeze({});
 /**
  * Default gesture values
  */
-const DEFAULT_GESTURE_VALUES = {
+const DEFAULT_RAW_GESTURE_VALUES = {
 	x: 0,
 	y: 0,
 	normX: 0,
 	normY: 0,
+	scale: 1,
+	normScale: 0,
+} as const;
+
+const DEFAULT_GESTURE_VALUES = {
+	...DEFAULT_RAW_GESTURE_VALUES,
+	focalX: 0,
+	focalY: 0,
+	raw: DEFAULT_RAW_GESTURE_VALUES,
 	dismissing: 0,
 	dragging: 0,
 	direction: null,
@@ -46,6 +55,11 @@ const DEFAULT_GESTURE_VALUES = {
 	isDismissing: 0,
 	isDragging: 0,
 } as const;
+
+const createDefaultGestureValues = () => ({
+	...DEFAULT_GESTURE_VALUES,
+	raw: { ...DEFAULT_RAW_GESTURE_VALUES },
+});
 
 /**
  * Creates a new screen transition state object
@@ -62,7 +76,7 @@ export const createScreenTransitionState = (
 	settled: 1,
 	logicallySettled: 1,
 	entering: 0,
-	gesture: { ...DEFAULT_GESTURE_VALUES },
+	gesture: createDefaultGestureValues(),
 	route,
 	meta,
 	layouts: {
@@ -72,6 +86,7 @@ export const createScreenTransitionState = (
 		},
 		navigationMaskEnabled,
 	},
+	animatedSnapIndex: -1,
 	snapIndex: -1,
 });
 
@@ -87,7 +102,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		settled: 1,
 		logicallySettled: 1,
 		entering: 0,
-		gesture: DEFAULT_GESTURE_VALUES,
+		gesture: createDefaultGestureValues(),
 		route: {} as RouteProp<ParamListBase>,
 		layouts: {
 			screen: {
@@ -96,6 +111,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 			},
 			navigationMaskEnabled: false,
 		},
+		animatedSnapIndex: -1,
 		snapIndex: -1,
 	});
 
@@ -131,11 +147,14 @@ export const FULLSCREEN_DIMENSIONS = (
 export const DEFAULT_GESTURE_VELOCITY_IMPACT = 0.3;
 export const DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT = 0.1;
 export const DEFAULT_GESTURE_RELEASE_VELOCITY_MAX = 3.2;
+export const DEFAULT_GESTURE_SENSITIVITY = 1;
 export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
 export const DEFAULT_GESTURE_SNAP_LOCKED = false;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
+export const DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR: SheetScrollGestureBehavior =
+	"expand-and-collapse";
 
 export const IS_WEB = Platform.OS === "web";
 

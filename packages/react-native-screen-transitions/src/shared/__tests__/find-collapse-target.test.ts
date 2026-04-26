@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { findCollapseTarget } from "../utils/gesture/find-collapse-target";
+import { findCollapseTarget } from "../components/screen-container/helpers/find-collapse-target";
 
 describe("findCollapseTarget", () => {
 	it("returns the next lower snap point when one exists", () => {

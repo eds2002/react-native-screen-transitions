@@ -30,10 +30,6 @@ export {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	TRANSFORM_RESET,
 } from "./constants";
-export {
-	type ScreenGestureTarget,
-	useScreenGesture,
-} from "./hooks/gestures/use-screen-gesture";
 export { useHistory } from "./hooks/navigation/use-history";
 export {
 	type ScreenState,
@@ -43,6 +39,10 @@ export {
 	type ScreenAnimationTarget,
 	useScreenAnimation,
 } from "./providers/screen/animation";
+export {
+	type ScreenGestureTarget,
+	useScreenGesture,
+} from "./providers/screen/gestures/hooks/use-screen-gesture";
 
 export type {
 	AnimatedViewStyle,
