@@ -1,5 +1,7 @@
 # Changelog
 
+# [3.5.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.0-beta.0...v3.5.0) (2026-04-26)
+
 # [3.5.0-beta.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.2.0...v3.5.0-beta.0) (2026-04-21)
 
 
