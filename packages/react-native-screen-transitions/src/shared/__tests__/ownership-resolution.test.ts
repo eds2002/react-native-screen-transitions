@@ -44,11 +44,11 @@ describe("computeClaimedDirections", () => {
 		expect(result).toEqual(NO_CLAIMS);
 	});
 
-	it("defaults to vertical when gestureDirection is undefined", () => {
+	it("uses the default gesture direction when gestureDirection is undefined", () => {
 		const result = computeClaimedDirections(true, undefined, false);
-		expect(result.vertical).toBe(true);
+		expect(result.vertical).toBe(false);
 		expect(result["vertical-inverted"]).toBe(false);
-		expect(result.horizontal).toBe(false);
+		expect(result.horizontal).toBe(true);
 		expect(result["horizontal-inverted"]).toBe(false);
 	});
 

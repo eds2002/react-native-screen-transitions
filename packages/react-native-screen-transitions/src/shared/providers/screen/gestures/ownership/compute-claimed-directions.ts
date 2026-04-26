@@ -1,3 +1,4 @@
+import { DEFAULT_GESTURE_DIRECTION } from "../../../../constants";
 import type {
 	GestureDirection,
 	PanGestureDirection,
@@ -33,8 +34,7 @@ export function computeClaimedDirections(
 		return NO_CLAIMS;
 	}
 
-	// Default to vertical if no direction specified
-	const direction = gestureDirection ?? "vertical";
+	const direction = gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
 
 	// Normalize to array
 	const directions: PanGestureDirection[] = (
