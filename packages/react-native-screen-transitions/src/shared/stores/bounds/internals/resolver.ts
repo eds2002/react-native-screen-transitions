@@ -130,6 +130,7 @@ function resolveTransitionPair(
 	const destinationStyles = matchedLink?.destination?.styles ?? null;
 	const sourceScreenKey = matchedLink?.source?.screenKey ?? null;
 	const destinationScreenKey = matchedLink?.destination?.screenKey ?? null;
+	const usedPending = matchedLink ? matchedLink.destination === null : false;
 
 	return {
 		sourceBounds,
@@ -138,6 +139,7 @@ function resolveTransitionPair(
 		destinationStyles,
 		sourceScreenKey,
 		destinationScreenKey,
+		usedPending,
 	};
 }
 

@@ -102,6 +102,14 @@ const applyEntryPatch = (entry: ScreenEntry, patch: EntryPatch) => {
 			entry.ancestorNavigatorKeys = patch.ancestorNavigatorKeys;
 		}
 	}
+
+	if (patch.presenceCount !== undefined) {
+		if (patch.presenceCount === null) {
+			delete entry.presenceCount;
+		} else {
+			entry.presenceCount = patch.presenceCount;
+		}
+	}
 };
 
 const findMatchingScreenEntry = (

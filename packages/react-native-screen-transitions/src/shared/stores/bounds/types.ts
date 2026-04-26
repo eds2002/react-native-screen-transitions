@@ -23,6 +23,7 @@ export type Entry = {
 	ancestorKeys?: ScreenKey[];
 	navigatorKey?: NavigatorKey;
 	ancestorNavigatorKeys?: NavigatorKey[];
+	presenceCount?: number;
 };
 
 export type MeasuredEntry = Entry & {
@@ -36,6 +37,7 @@ export type EntryPatch = {
 	ancestorKeys?: ScreenKey[] | null;
 	navigatorKey?: NavigatorKey | null;
 	ancestorNavigatorKeys?: NavigatorKey[] | null;
+	presenceCount?: number | null;
 };
 
 export type ScreenIdentifier = {
@@ -64,6 +66,7 @@ export type ResolvedTransitionPair = {
 	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
+	usedPending: boolean;
 };
 
 export type ScreenEntry = Entry;
