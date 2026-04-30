@@ -1,10 +1,17 @@
 import { useMemo } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
-import { useAnimatedScrollHandler } from "react-native-reanimated";
+import {
+	type SharedValue,
+	useAnimatedScrollHandler,
+} from "react-native-reanimated";
 import useStableCallback from "../../../../../hooks/use-stable-callback";
 import { useGestureContext } from "../../gestures.provider";
-import type { ScrollGestureAxis } from "../../types";
+import type {
+	ScrollGestureAxis,
+	ScrollGestureAxisState,
+	ScrollGestureState,
+} from "../../types";
 import { updateScrollGestureAxisState } from "./update-scroll-gesture-state";
 import { walkUpScrollGestureCoordination } from "./walk-up-scroll-gesture-coordination";
 
@@ -13,6 +20,23 @@ interface ScrollGestureCoordinationProps {
 	onLayout?: (event: LayoutChangeEvent) => void;
 	direction?: ScrollGestureAxis;
 }
+
+type ScrollGesturePatch = Partial<ScrollGestureAxisState> & {
+	isTouched?: boolean;
+};
+
+const modifyScrollGestureAxisState = (
+	scrollState: SharedValue<ScrollGestureState | null>,
+	axis: ScrollGestureAxis,
+	patch: ScrollGesturePatch,
+) => {
+	"worklet";
+
+	scrollState.modify(<T extends ScrollGestureState | null>(state: T): T => {
+		"worklet";
+		return updateScrollGestureAxisState(state, axis, patch) as T;
+	});
+};
 
 /**
  * Returns scroll handlers and a native gesture for ScrollView coordination.
@@ -39,11 +63,8 @@ export const useScrollGestureCoordination = (
 		const setIsTouched = () => {
 			"worklet";
 			for (const scrollState of scrollStates) {
-				scrollState.modify((state) => {
-					"worklet";
-					return updateScrollGestureAxisState(state, scrollDirection, {
-						isTouched: true,
-					});
+				modifyScrollGestureAxisState(scrollState, scrollDirection, {
+					isTouched: true,
 				});
 			}
 		};
@@ -51,11 +72,8 @@ export const useScrollGestureCoordination = (
 		const clearIsTouched = () => {
 			"worklet";
 			for (const scrollState of scrollStates) {
-				scrollState.modify((state) => {
-					"worklet";
-					return updateScrollGestureAxisState(state, scrollDirection, {
-						isTouched: false,
-					});
+				modifyScrollGestureAxisState(scrollState, scrollDirection, {
+					isTouched: false,
 				});
 			}
 		};
@@ -90,12 +108,9 @@ export const useScrollGestureCoordination = (
 					: event.contentOffset.y;
 
 			for (const scrollState of scrollStates) {
-				scrollState.modify((state) => {
-					"worklet";
-					return updateScrollGestureAxisState(state, scrollDirection, {
-						offset,
-						isTouched: state?.isTouched ?? true,
-					});
+				modifyScrollGestureAxisState(scrollState, scrollDirection, {
+					offset,
+					isTouched: scrollState.get()?.isTouched ?? true,
 				});
 			}
 		},
@@ -109,11 +124,8 @@ export const useScrollGestureCoordination = (
 			const contentSize = scrollDirection === "horizontal" ? width : height;
 
 			for (const scrollState of scrollStates) {
-				scrollState.modify((state) => {
-					"worklet";
-					return updateScrollGestureAxisState(state, scrollDirection, {
-						contentSize,
-					});
+				modifyScrollGestureAxisState(scrollState, scrollDirection, {
+					contentSize,
 				});
 			}
 		},
@@ -127,11 +139,8 @@ export const useScrollGestureCoordination = (
 		const layoutSize = scrollDirection === "horizontal" ? width : height;
 
 		for (const scrollState of scrollStates) {
-			scrollState.modify((state) => {
-				"worklet";
-				return updateScrollGestureAxisState(state, scrollDirection, {
-					layoutSize,
-				});
+			modifyScrollGestureAxisState(scrollState, scrollDirection, {
+				layoutSize,
 			});
 		}
 	});

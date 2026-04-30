@@ -17,7 +17,6 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
-    "ignoreDeprecations": "6.0",
     "noEmit": false
   },
   "include": ["src/**/*"],
