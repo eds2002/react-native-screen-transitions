@@ -9,18 +9,14 @@ import type {
 	PanReleaseResult,
 	PanTrackState,
 } from "../types";
-import {
-	applyGestureSensitivity,
-	normalizeGestureTranslation,
-} from "./gesture-physics";
+import { normalizeGestureTranslation } from "./gesture-physics";
 import { resetGestureValues } from "./gesture-reset";
-import { resolveGestureSensitivity } from "./gesture-sensitivity";
 
 export const startPanBase = (runtime: PanGestureRuntime) => {
 	"worklet";
 	const {
 		stores: { gestures, animations },
-		gestureStartProgress,
+		gestureProgressBaseline,
 	} = runtime;
 
 	emit(animations.willAnimate, TRUE, FALSE);
@@ -34,26 +30,7 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	gestures.raw.y.set(0);
 	gestures.raw.normX.set(0);
 	gestures.raw.normY.set(0);
-	gestureStartProgress.set(animations.progress.get());
-};
-
-export const applyGestureSensitivityToPanEvent = (
-	event: PanGestureEvent,
-	runtime: PanGestureRuntime,
-): PanGestureEvent => {
-	"worklet";
-	const sensitivity = resolveGestureSensitivity(
-		runtime.policy.gestureSensitivity,
-		runtime.runtimeOverrides,
-	);
-
-	return {
-		...event,
-		translationX: applyGestureSensitivity(event.translationX, sensitivity),
-		translationY: applyGestureSensitivity(event.translationY, sensitivity),
-		velocityX: applyGestureSensitivity(event.velocityX, sensitivity),
-		velocityY: applyGestureSensitivity(event.velocityY, sensitivity),
-	};
+	gestureProgressBaseline.set(animations.progress.get());
 };
 
 export const trackPanGesture = (

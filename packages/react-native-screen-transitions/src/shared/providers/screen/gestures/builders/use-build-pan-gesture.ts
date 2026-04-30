@@ -1,54 +1,43 @@
-import { useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import { Gesture, type GestureType } from "react-native-gesture-handler";
+import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
-import { useSharedValue } from "react-native-reanimated";
 import { usePanActivation } from "../activation/use-pan-activation";
 import { usePanBehavior } from "../behaviors/use-pan-behavior";
-import { usePanPolicy } from "../config/use-pan-policy";
+import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
 	DirectionClaimMap,
 	GestureRuntimeOverrides,
 	PanGesture,
-	PanGestureRef,
 	ScreenGestureConfig,
 	ScrollGestureState,
 } from "../types";
 
 interface BuildPanGestureHookProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
-	config: ScreenGestureConfig;
+	gestureConfig: ScreenGestureConfig;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
 	runtimeOverrides: GestureRuntimeOverrides;
-	ancestorPanGesturesToBlock: PanGesture[];
 }
 
 export const useBuildPanGesture = ({
 	scrollState,
-	config,
+	gestureConfig,
 	childDirectionClaims,
 	runtimeOverrides,
-	ancestorPanGesturesToBlock,
-}: BuildPanGestureHookProps): {
-	panGesture: PanGesture;
-	panGestureRef: PanGestureRef;
-} => {
+}: BuildPanGestureHookProps): PanGesture => {
 	const dimensions = useWindowDimensions();
-	const panGestureRef = useRef<GestureType | undefined>(undefined);
+	const { participation, pan: policy } = gestureConfig;
 
-	const gestureStartProgress = useSharedValue(1);
-	const lockedSnapPoint = useSharedValue(
-		config.effectiveSnapPoints.maxSnapPoint,
-	);
-
-	const policy = usePanPolicy(config);
+	const { gestureProgressBaseline, lockedSnapPoint } =
+		useGestureBuilderState(participation);
 
 	const runtime = useStableRuntimeConfig({
-		config,
+		participation,
 		policy,
 		runtimeOverrides,
-		gestureStartProgress,
+		gestureProgressBaseline,
 		lockedSnapPoint,
 	});
 
@@ -62,8 +51,7 @@ export const useBuildPanGesture = ({
 	const behavior = usePanBehavior(runtime, dimensions);
 
 	const panGesture = useMemo(() => {
-		let gesture = Gesture.Pan()
-			.withRef(panGestureRef)
+		return Gesture.Pan()
 			.enabled(true)
 			.manualActivation(true)
 			.maxPointers(1)
@@ -72,15 +60,7 @@ export const useBuildPanGesture = ({
 			.onStart(behavior.onStart)
 			.onUpdate(behavior.onUpdate)
 			.onEnd(behavior.onEnd);
+	}, [activation, behavior]);
 
-		// If this screen claims the same direction as an ancestor,
-		// block the ancestor so this one takes priority.
-		if (ancestorPanGesturesToBlock.length) {
-			gesture = gesture.blocksExternalGesture(...ancestorPanGesturesToBlock);
-		}
-
-		return gesture;
-	}, [activation, behavior, ancestorPanGesturesToBlock]);
-
-	return { panGesture, panGestureRef };
+	return panGesture;
 };

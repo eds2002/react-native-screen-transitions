@@ -14,9 +14,9 @@ export const usePinchActivation = ({ runtime }: UsePinchActivationProps) => {
 	const onTouchesDown = useCallback(
 		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
 			"worklet";
-			const { config, policy } = runtime.get();
+			const { participation, policy } = runtime.get();
 
-			if (!config.gestureEnabled || !policy.enabled) {
+			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager.fail();
 				return;
 			}
@@ -36,9 +36,9 @@ export const usePinchActivation = ({ runtime }: UsePinchActivationProps) => {
 	const onTouchesMove = useCallback(
 		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
 			"worklet";
-			const { config, policy } = runtime.get();
+			const { participation, policy } = runtime.get();
 
-			if (!config.gestureEnabled || !policy.enabled) {
+			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager.fail();
 				return;
 			}

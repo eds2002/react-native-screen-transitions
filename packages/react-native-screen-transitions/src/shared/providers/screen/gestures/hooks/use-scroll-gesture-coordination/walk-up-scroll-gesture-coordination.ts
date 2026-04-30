@@ -40,7 +40,7 @@ export function walkUpScrollGestureCoordination(
 	const panGestures: GestureContextType["panGesture"][] = [];
 	const pinchGestures: GestureContextType["pinchGesture"][] = [];
 	const scrollStates: GestureContextType["scrollState"][] = [];
-	const ancestors = walkGestureAncestors(context, context?.isIsolated);
+	const ancestors = walkGestureAncestors(context);
 
 	for (const ancestor of ancestors) {
 		if (!pinchGestures.includes(ancestor.pinchGesture)) {

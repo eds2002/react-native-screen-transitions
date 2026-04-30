@@ -1,7 +1,6 @@
 import type {
 	Gesture,
 	GestureStateChangeEvent,
-	GestureType,
 	GestureUpdateEvent,
 	PanGestureHandlerEventPayload,
 	PinchGestureHandlerEventPayload,
@@ -30,7 +29,6 @@ import type { EffectiveSnapPointsResult } from "./helpers/validate-snap-points";
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
 export type PinchGesture = ReturnType<typeof Gesture.Pinch>;
 export type ComposedGesture = ReturnType<typeof Gesture.Race>;
-export type PanGestureRef = React.MutableRefObject<GestureType | undefined>;
 
 export type PanGestureEvent =
 	| GestureUpdateEvent<PanGestureHandlerEventPayload>
@@ -76,37 +74,34 @@ export const NO_CLAIMS: DirectionClaimMap = {
 export interface GestureContextType {
 	detectorGesture: ComposedGesture;
 	panGesture: PanGesture;
-	panGestureRef: PanGestureRef;
 	pinchGesture: PinchGesture;
 	scrollState: SharedValue<ScrollGestureState | null>;
 	runtimeOverrides: GestureRuntimeOverrides;
 	gestureContext: GestureContextType | null;
-	gestureEnabled: boolean;
-	isIsolated: boolean;
 	claimedDirections: ClaimedDirections;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
 }
 
-export interface ScreenGestureBundle {
-	detectorGesture: ComposedGesture;
-	panGesture: PanGesture;
-	pinchGesture: PinchGesture;
-}
-
-export interface ScreenGestureConfig {
-	routeKey: string;
+export interface ScreenGestureParticipation {
+	/** Whether this route can dismiss to progress 0 from a gesture release. */
 	canDismiss: boolean;
-	gestureEnabled: boolean;
+	/** Whether recognizers can activate to expose gesture values to interpolators. */
+	canTrackGesture: boolean;
 	effectiveSnapPoints: EffectiveSnapPointsResult;
 	claimedDirections: ClaimedDirections;
 	ownershipStatus: DirectionOwnership;
 }
 
+export interface ScreenGestureConfig {
+	participation: ScreenGestureParticipation;
+	pan: PanGesturePolicy;
+	pinch: PinchGesturePolicy;
+}
+
 export interface PanGesturePolicy {
 	enabled: boolean;
-	gestureDirection: ScreenTransitionConfig["gestureDirection"];
-	directions: GestureDirections;
-	snapDirections: SnapPanDirectionConfig;
+	panActivationDirections: GestureDirections;
+	snapAxisDirections: SnapPanDirectionConfig;
 	gestureDrivesProgress: boolean;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureVelocityImpact: number;
@@ -124,23 +119,16 @@ export interface PanGesturePolicy {
 
 export interface PinchGesturePolicy {
 	enabled: boolean;
-	gestureDirection: ScreenTransitionConfig["gestureDirection"];
 	snapDirections: SnapPinchDirectionConfig;
 	pinchInEnabled: boolean;
 	pinchOutEnabled: boolean;
 	gestureDrivesProgress: boolean;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
-	gestureVelocityImpact: number;
 	gestureSnapVelocityImpact: number;
 	gestureSnapLocked: boolean;
 	gestureReleaseVelocityScale: number;
 	gestureReleaseVelocityMax: number;
 	transitionSpec: TransitionSpec | undefined;
-}
-
-export interface PanGestureSharedValues {
-	gestureStartProgress: SharedValue<number>;
-	lockedSnapPoint: SharedValue<number>;
 }
 
 export interface GestureRuntimeStores {
@@ -154,20 +142,20 @@ export interface GestureRuntimeOverrides {
 }
 
 export interface PanGestureRuntime {
-	config: ScreenGestureConfig;
+	participation: ScreenGestureParticipation;
 	policy: PanGesturePolicy;
 	stores: GestureRuntimeStores;
 	runtimeOverrides: GestureRuntimeOverrides;
-	gestureStartProgress: SharedValue<number>;
+	gestureProgressBaseline: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }
 
 export interface PinchGestureRuntime {
-	config: ScreenGestureConfig;
+	participation: ScreenGestureParticipation;
 	policy: PinchGesturePolicy;
 	stores: GestureRuntimeStores;
 	runtimeOverrides: GestureRuntimeOverrides;
-	gestureStartProgress: SharedValue<number>;
+	gestureProgressBaseline: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }
 
@@ -207,7 +195,6 @@ export interface PinchReleaseResult {
 export interface PanBehaviorStrategy {
 	primeStart: (runtime: PanGestureRuntime) => void;
 	resolveProgress: (
-		event: PanGestureEvent,
 		runtime: PanGestureRuntime,
 		dimensions: GestureDimensions,
 		track: PanTrackState,
@@ -220,9 +207,8 @@ export interface PanBehaviorStrategy {
 }
 
 export interface PinchBehaviorStrategy {
-	primeStart: (runtime: PinchGestureRuntime, event: PinchGestureEvent) => void;
+	primeStart: (runtime: PinchGestureRuntime) => void;
 	resolveProgress: (
-		event: PinchGestureEvent,
 		runtime: PinchGestureRuntime,
 		track: PinchTrackState,
 	) => number;

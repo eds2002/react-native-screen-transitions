@@ -4,6 +4,7 @@ export type {
 	AnimationConfig,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
+	ScreenTransitionOptions,
 	ScreenTransitionState,
 	TransitionInterpolatedStyle,
 	TransitionInterpolatorConfig,

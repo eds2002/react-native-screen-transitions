@@ -8,7 +8,7 @@ import type { ScrollGestureAxis } from "../../types";
 import { updateScrollGestureAxisState } from "./update-scroll-gesture-state";
 import { walkUpScrollGestureCoordination } from "./walk-up-scroll-gesture-coordination";
 
-interface ScrollProgressHookProps {
+interface ScrollGestureCoordinationProps {
 	onContentSizeChange?: (width: number, height: number) => void;
 	onLayout?: (event: LayoutChangeEvent) => void;
 	direction?: ScrollGestureAxis;
@@ -24,7 +24,7 @@ interface ScrollProgressHookProps {
  * - Both work correctly with the same ScrollView
  */
 export const useScrollGestureCoordination = (
-	props: ScrollProgressHookProps,
+	props: ScrollGestureCoordinationProps,
 ) => {
 	const context = useGestureContext();
 	const scrollDirection = props.direction ?? "vertical";

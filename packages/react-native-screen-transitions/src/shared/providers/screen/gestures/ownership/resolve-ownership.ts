@@ -16,7 +16,6 @@ import {
 interface AncestorClaimsContext {
 	claimedDirections: ClaimedDirections;
 	gestureContext: AncestorClaimsContext | null;
-	ancestorContext?: AncestorClaimsContext | null;
 }
 
 /**
@@ -70,7 +69,7 @@ function resolveDirectionOwnership(
 		if (ancestor.claimedDirections?.[direction]) {
 			return "ancestor";
 		}
-		ancestor = ancestor.gestureContext ?? ancestor.ancestorContext ?? null;
+		ancestor = ancestor.gestureContext;
 	}
 
 	// No one claims this direction

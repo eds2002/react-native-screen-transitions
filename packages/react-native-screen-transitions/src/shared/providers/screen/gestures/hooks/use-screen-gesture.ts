@@ -22,11 +22,16 @@ export type ScreenGestureTarget = ChainTarget;
  */
 export const useScreenGesture = (target?: ScreenGestureTarget) => {
 	const ctx = useGestureContext();
+
+	if (!target || target === "self") {
+		return ctx?.panGesture ?? null;
+	}
+
 	return (
 		resolveChainTarget({
 			target,
 			self: ctx,
-			ancestors: walkGestureAncestors(ctx?.gestureContext, ctx?.isIsolated),
-		})?.panGestureRef ?? null
+			ancestors: walkGestureAncestors(ctx?.gestureContext),
+		})?.panGesture ?? null
 	);
 };

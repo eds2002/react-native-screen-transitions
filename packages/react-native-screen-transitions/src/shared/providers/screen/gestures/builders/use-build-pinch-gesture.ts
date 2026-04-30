@@ -1,9 +1,8 @@
 import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
-import { useSharedValue } from "react-native-reanimated";
 import { usePinchActivation } from "../activation/use-pinch-activation";
 import { usePinchBehavior } from "../behaviors/use-pinch-behavior";
-import { usePinchPolicy } from "../config/use-pinch-policy";
+import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
 	GestureRuntimeOverrides,
@@ -12,26 +11,23 @@ import type {
 } from "../types";
 
 interface BuildPinchGestureHookProps {
-	config: ScreenGestureConfig;
+	gestureConfig: ScreenGestureConfig;
 	runtimeOverrides: GestureRuntimeOverrides;
 }
 
 export const useBuildPinchGesture = ({
-	config,
+	gestureConfig,
 	runtimeOverrides,
 }: BuildPinchGestureHookProps): PinchGesture => {
-	const gestureStartProgress = useSharedValue(1);
-	const lockedSnapPoint = useSharedValue(
-		config.effectiveSnapPoints.maxSnapPoint,
-	);
-
-	const policy = usePinchPolicy(config);
+	const { participation, pinch: policy } = gestureConfig;
+	const { gestureProgressBaseline, lockedSnapPoint } =
+		useGestureBuilderState(participation);
 
 	const runtime = useStableRuntimeConfig({
-		config,
+		participation,
 		policy,
 		runtimeOverrides,
-		gestureStartProgress,
+		gestureProgressBaseline,
 		lockedSnapPoint,
 	});
 

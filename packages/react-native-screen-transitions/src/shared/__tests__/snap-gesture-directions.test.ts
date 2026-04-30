@@ -2,8 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { SnapPanStrategy } from "../providers/screen/gestures/behaviors/strategies/pan-snap.strategy";
 import { SnapPinchStrategy } from "../providers/screen/gestures/behaviors/strategies/pinch-snap.strategy";
 import {
-	getActivationGestureDirections,
-	getSnapPanDirectionConfig,
+	getPanActivationDirections,
+	getPanSnapAxisDirections,
 	getSnapPinchDirectionConfig,
 } from "../providers/screen/gestures/helpers/gesture-directions";
 import type { GestureDirection } from "../types/gesture.types";
@@ -21,7 +21,7 @@ function sharedValue<T>(initial: T) {
 
 function createSnapRuntimeBase(startProgress: number) {
 	return {
-		config: {
+		participation: {
 			canDismiss: true,
 			effectiveSnapPoints: {
 				hasAutoSnapPoint: false,
@@ -35,7 +35,7 @@ function createSnapRuntimeBase(startProgress: number) {
 				resolvedAutoSnapPoint: sharedValue(0),
 			},
 		},
-		gestureStartProgress: sharedValue(startProgress),
+		gestureProgressBaseline: sharedValue(startProgress),
 		lockedSnapPoint: sharedValue(1),
 	};
 }
@@ -50,7 +50,7 @@ function createPanSnapRuntime(
 	return {
 		...base,
 		policy: {
-			snapDirections: getSnapPanDirectionConfig(gestureDirection),
+			snapAxisDirections: getPanSnapAxisDirections(gestureDirection),
 			gestureSnapLocked: false,
 		},
 		stores: {
@@ -77,7 +77,7 @@ function createPinchSnapRuntime(
 
 describe("snap gesture directions", () => {
 	it("enables both activation directions for every configured snap pan axis", () => {
-		const directions = getActivationGestureDirections({
+		const directions = getPanActivationDirections({
 			gestureDirection: ["horizontal", "vertical"],
 			hasSnapPoints: true,
 		});
@@ -89,16 +89,16 @@ describe("snap gesture directions", () => {
 	});
 
 	it("uses the first direction on each pan axis as collapse", () => {
-		const snapDirections = getSnapPanDirectionConfig([
+		const snapAxisDirections = getPanSnapAxisDirections([
 			"horizontal",
 			"vertical-inverted",
 			"vertical",
 		]);
 
-		expect(snapDirections.horizontal?.collapse).toBe("horizontal");
-		expect(snapDirections.horizontal?.expand).toBe("horizontal-inverted");
-		expect(snapDirections.vertical?.collapse).toBe("vertical-inverted");
-		expect(snapDirections.vertical?.expand).toBe("vertical");
+		expect(snapAxisDirections.horizontal?.collapse).toBe("horizontal");
+		expect(snapAxisDirections.horizontal?.expand).toBe("horizontal-inverted");
+		expect(snapAxisDirections.vertical?.collapse).toBe("vertical-inverted");
+		expect(snapAxisDirections.vertical?.expand).toBe("vertical");
 	});
 
 	it("maps each active pan snap direction to collapse or expand progress", () => {
@@ -106,7 +106,6 @@ describe("snap gesture directions", () => {
 
 		expect(
 			SnapPanStrategy.resolveProgress(
-				{} as any,
 				createPanSnapRuntime(
 					["horizontal", "vertical-inverted"],
 					"horizontal",
@@ -119,7 +118,6 @@ describe("snap gesture directions", () => {
 
 		expect(
 			SnapPanStrategy.resolveProgress(
-				{} as any,
 				createPanSnapRuntime(
 					["horizontal", "vertical-inverted"],
 					"vertical-inverted",
@@ -141,7 +139,6 @@ describe("snap gesture directions", () => {
 	it("maps first pinch snap direction to collapse and the inverse to expand", () => {
 		expect(
 			SnapPinchStrategy.resolveProgress(
-				{} as any,
 				createPinchSnapRuntime("pinch-out", 1),
 				{ scale: 1.2, normScale: 0.2 },
 			),
@@ -149,7 +146,6 @@ describe("snap gesture directions", () => {
 
 		expect(
 			SnapPinchStrategy.resolveProgress(
-				{} as any,
 				createPinchSnapRuntime("pinch-out", 0.5),
 				{ scale: 0.8, normScale: -0.2 },
 			),

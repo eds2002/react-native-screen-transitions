@@ -10,14 +10,12 @@ import {
 	toProgressVelocity,
 } from "../providers/screen/gestures/helpers/gesture-physics";
 import { determineDismissal } from "../providers/screen/gestures/helpers/gesture-targets";
-import {
-	applyGestureSensitivityToPanEvent,
-	trackPanGesture,
-} from "../providers/screen/gestures/helpers/pan-phases";
-import {
-	applyGestureSensitivityToPinchEvent,
-	trackPinchGesture,
-} from "../providers/screen/gestures/helpers/pinch-phases";
+import { trackPanGesture } from "../providers/screen/gestures/helpers/pan-phases";
+import { trackPinchGesture } from "../providers/screen/gestures/helpers/pinch-phases";
+import { resolveGestureSensitivity } from "../providers/screen/gestures/helpers/gesture-sensitivity";
+import { applyGestureSensitivityToRawChange } from "../providers/screen/gestures/hooks/use-gesture-sensitivity";
+import { PanStrategy } from "../providers/screen/gestures/behaviors/strategies/pan.strategy";
+import { PinchStrategy } from "../providers/screen/gestures/behaviors/strategies/pinch.strategy";
 
 type Directions = {
 	horizontal: boolean;
@@ -63,8 +61,39 @@ const createGestureRuntime = (
 	({
 		policy: { gestureSensitivity },
 		runtimeOverrides: {
-			gestureSensitivity: { get: () => runtimeSensitivity },
+			gestureSensitivity: createSharedValue(runtimeSensitivity),
 		},
+		stores: {
+			gestures: createGestureStore(),
+		},
+	}) as any;
+
+const createPanStrategyRuntime = (canDismiss: boolean, progress: number = 0.3) =>
+	({
+		participation: { canDismiss },
+		policy: {
+			panActivationDirections: createDirections({ horizontal: true }),
+			gestureVelocityImpact: 0,
+			gestureReleaseVelocityScale: 1,
+			transitionSpec: undefined,
+		},
+		stores: { animations: createAnimations(progress) },
+	}) as any;
+
+const createPinchStrategyRuntime = (
+	canDismiss: boolean,
+	progress: number = 0.3,
+) =>
+	({
+		participation: { canDismiss },
+		policy: {
+			pinchInEnabled: true,
+			pinchOutEnabled: false,
+			gestureReleaseVelocityScale: 1,
+			transitionSpec: undefined,
+		},
+		gestureProgressBaseline: { get: () => 1 },
+		stores: { animations: createAnimations(progress) },
 	}) as any;
 
 const createSharedValue = <T>(initialValue: T) => {
@@ -100,6 +129,78 @@ const createGestureStore = () =>
 		dragging: createSharedValue(0),
 		direction: createSharedValue(null),
 	}) as any;
+
+const createSensitivityRawChangeState = () => ({
+	previousRawValue: createSharedValue(0),
+	adjustedValue: createSharedValue(0),
+});
+
+const createPanSensitivityStates = () => ({
+	x: createSensitivityRawChangeState(),
+	y: createSensitivityRawChangeState(),
+});
+
+const createPinchSensitivityStates = () => ({
+	normScale: createSensitivityRawChangeState(),
+});
+
+const applyAndTrackPanEvent = (
+	runtime: any,
+	sensitivityStates: any,
+	rawEvent: any,
+) => {
+	const sensitivity = resolveGestureSensitivity(
+		runtime.policy.gestureSensitivity,
+		runtime.runtimeOverrides,
+	);
+	const event = {
+		...rawEvent,
+		translationX: applyGestureSensitivityToRawChange(
+			rawEvent.translationX,
+			sensitivity,
+			sensitivityStates.x,
+		),
+		translationY: applyGestureSensitivityToRawChange(
+			rawEvent.translationY,
+			sensitivity,
+			sensitivityStates.y,
+		),
+		velocityX: applyGestureSensitivity(rawEvent.velocityX, sensitivity),
+		velocityY: applyGestureSensitivity(rawEvent.velocityY, sensitivity),
+	};
+
+	trackPanGesture(event, rawEvent, runtime.stores.gestures, {
+		width: 400,
+		height: 800,
+	});
+
+	return event;
+};
+
+const applyAndTrackPinchEvent = (
+	runtime: any,
+	sensitivityStates: any,
+	rawEvent: any,
+) => {
+	const sensitivity = resolveGestureSensitivity(
+		runtime.policy.gestureSensitivity,
+		runtime.runtimeOverrides,
+	);
+	const normScale = applyGestureSensitivityToRawChange(
+		normalizePinchScale(rawEvent.scale),
+		sensitivity,
+		sensitivityStates.normScale,
+	);
+	const event = {
+		...rawEvent,
+		scale: 1 + normScale,
+		velocity: applyGestureSensitivity(rawEvent.velocity, sensitivity),
+	};
+
+	trackPinchGesture(event, rawEvent, runtime.stores.gestures);
+
+	return event;
+};
 
 describe("toProgressVelocity", () => {
 	it("converts pixels per second into progress units per second", () => {
@@ -253,18 +354,48 @@ describe("getPanReleaseProgressVelocity", () => {
 	});
 });
 
-describe("applyGestureSensitivityToPanEvent", () => {
-	it("scales pan translation and velocity before release consumers read them", () => {
-		const event = createEvent({
-			translationX: 200,
-			translationY: -80,
-			velocityX: 1000,
-			velocityY: -500,
-		});
+describe("PanStrategy.resolveRelease", () => {
+	const dimensions = { width: 320, height: 640 };
 
-		const sensitiveEvent = applyGestureSensitivityToPanEvent(
+	it("prevents dismissal when the screen cannot dismiss", () => {
+		const event = createEvent({ translationX: 200, velocityX: 0 });
+		const release = PanStrategy.resolveRelease(
 			event,
-			createGestureRuntime(0.1),
+			createPanStrategyRuntime(false),
+			dimensions,
+		);
+
+		expect(release.shouldDismiss).toBe(false);
+		expect(release.target).toBe(1);
+	});
+
+	it("allows dismissal when the screen can dismiss", () => {
+		const event = createEvent({ translationX: 200, velocityX: 0 });
+		const release = PanStrategy.resolveRelease(
+			event,
+			createPanStrategyRuntime(true),
+			dimensions,
+		);
+
+		expect(release.shouldDismiss).toBe(true);
+		expect(release.target).toBe(0);
+	});
+});
+
+describe("pan gesture sensitivity", () => {
+	it("scales pan translation and velocity before release consumers read them", () => {
+		const runtime = createGestureRuntime(0.1);
+		const sensitivityStates = createPanSensitivityStates();
+
+		const sensitiveEvent = applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({
+				translationX: 200,
+				translationY: -80,
+				velocityX: 1000,
+				velocityY: -500,
+			}),
 		);
 
 		expect(sensitiveEvent.translationX).toBeCloseTo(20, 5);
@@ -289,9 +420,10 @@ describe("applyGestureSensitivityToPanEvent", () => {
 			}).shouldDismiss,
 		).toBe(true);
 
-		const sensitiveEvent = applyGestureSensitivityToPanEvent(
-			event,
+		const sensitiveEvent = applyAndTrackPanEvent(
 			createGestureRuntime(0.1),
+			createPanSensitivityStates(),
+			event,
 		);
 
 		expect(
@@ -310,13 +442,95 @@ describe("applyGestureSensitivityToPanEvent", () => {
 			velocityX: 1000,
 		});
 
-		const sensitiveEvent = applyGestureSensitivityToPanEvent(
-			event,
+		const sensitiveEvent = applyAndTrackPanEvent(
 			createGestureRuntime(1, 0.25),
+			createPanSensitivityStates(),
+			event,
 		);
 
 		expect(sensitiveEvent.translationX).toBeCloseTo(50, 5);
 		expect(sensitiveEvent.velocityX).toBeCloseTo(250, 5);
+	});
+
+	it("applies lower runtime sensitivity only to future pan deltas", () => {
+		const runtime = createGestureRuntime(1, 1);
+		const sensitivityStates = createPanSensitivityStates();
+
+		const firstEvent = applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({ translationX: 100, velocityX: 500 }),
+		);
+		runtime.runtimeOverrides.gestureSensitivity.set(0.1);
+		const secondEvent = applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({ translationX: 120, velocityX: 500 }),
+		);
+
+		expect(firstEvent.translationX).toBeCloseTo(100, 5);
+		expect(secondEvent.translationX).toBeCloseTo(102, 5);
+		expect(secondEvent.velocityX).toBeCloseTo(50, 5);
+	});
+
+	it("applies higher runtime sensitivity only to future pan deltas", () => {
+		const runtime = createGestureRuntime(1, 0.1);
+		const sensitivityStates = createPanSensitivityStates();
+
+		const firstEvent = applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({ translationX: 100 }),
+		);
+		runtime.runtimeOverrides.gestureSensitivity.set(1);
+		const secondEvent = applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({ translationX: 200 }),
+		);
+
+		expect(firstEvent.translationX).toBeCloseTo(10, 5);
+		expect(secondEvent.translationX).toBeCloseTo(110, 5);
+	});
+
+	it("freezes new pan movement while runtime sensitivity is zero", () => {
+		const runtime = createGestureRuntime(1, 1);
+		const sensitivityStates = createPanSensitivityStates();
+
+		applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({ translationX: 100 }),
+		);
+		runtime.runtimeOverrides.gestureSensitivity.set(0);
+		const frozenEvent = applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({ translationX: 200, velocityX: 500 }),
+		);
+
+		expect(frozenEvent.translationX).toBeCloseTo(100, 5);
+		expect(frozenEvent.velocityX).toBeCloseTo(0, 5);
+	});
+
+	it("applies current runtime sensitivity to reverse pan deltas", () => {
+		const runtime = createGestureRuntime(1, 1);
+		const sensitivityStates = createPanSensitivityStates();
+
+		applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({ translationX: 100 }),
+		);
+		runtime.runtimeOverrides.gestureSensitivity.set(0.1);
+		const reverseEvent = applyAndTrackPanEvent(
+			runtime,
+			sensitivityStates,
+			createEvent({ translationX: 80, velocityX: -300 }),
+		);
+
+		expect(reverseEvent.translationX).toBeCloseTo(98, 5);
+		expect(reverseEvent.velocityX).toBeCloseTo(-30, 5);
 	});
 });
 
@@ -345,16 +559,18 @@ describe("trackPanGesture", () => {
 	});
 });
 
-describe("applyGestureSensitivityToPinchEvent", () => {
+describe("pinch gesture sensitivity", () => {
 	it("scales pinch scale delta and velocity before release consumers read them", () => {
-		const event = {
-			scale: 2,
-			velocity: 4,
-		} as any;
+		const runtime = createGestureRuntime(0.25);
+		const sensitivityStates = createPinchSensitivityStates();
 
-		const sensitiveEvent = applyGestureSensitivityToPinchEvent(
-			event,
-			createGestureRuntime(0.25),
+		const sensitiveEvent = applyAndTrackPinchEvent(
+			runtime,
+			sensitivityStates,
+			{
+				scale: 2,
+				velocity: 4,
+			} as any,
 		);
 
 		expect(sensitiveEvent.scale).toBeCloseTo(1.25, 5);
@@ -371,9 +587,10 @@ describe("applyGestureSensitivityToPinchEvent", () => {
 			shouldDismissFromPinch(normalizePinchScale(event.scale), true, false),
 		).toBe(true);
 
-		const sensitiveEvent = applyGestureSensitivityToPinchEvent(
-			event,
+		const sensitiveEvent = applyAndTrackPinchEvent(
 			createGestureRuntime(0.5),
+			createPinchSensitivityStates(),
+			event,
 		);
 
 		expect(
@@ -383,6 +600,58 @@ describe("applyGestureSensitivityToPinchEvent", () => {
 				false,
 			),
 			).toBe(false);
+	});
+
+	it("applies lower runtime sensitivity only to future pinch scale deltas", () => {
+		const runtime = createGestureRuntime(1, 1);
+		const sensitivityStates = createPinchSensitivityStates();
+
+		const firstEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
+			scale: 2,
+			velocity: 4,
+		});
+		runtime.runtimeOverrides.gestureSensitivity.set(0.1);
+		const secondEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
+			scale: 2.2,
+			velocity: 4,
+		});
+
+		expect(firstEvent.scale).toBeCloseTo(2, 5);
+		expect(secondEvent.scale).toBeCloseTo(2.02, 5);
+		expect(secondEvent.velocity).toBeCloseTo(0.4, 5);
+	});
+
+	it("applies higher runtime sensitivity only to future pinch scale deltas", () => {
+		const runtime = createGestureRuntime(1, 0.1);
+		const sensitivityStates = createPinchSensitivityStates();
+
+		const firstEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
+			scale: 2,
+		});
+		runtime.runtimeOverrides.gestureSensitivity.set(1);
+		const secondEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
+			scale: 2.2,
+		});
+
+		expect(firstEvent.scale).toBeCloseTo(1.1, 5);
+		expect(secondEvent.scale).toBeCloseTo(1.3, 5);
+	});
+
+	it("freezes new pinch movement while runtime sensitivity is zero", () => {
+		const runtime = createGestureRuntime(1, 1);
+		const sensitivityStates = createPinchSensitivityStates();
+
+		applyAndTrackPinchEvent(runtime, sensitivityStates, {
+			scale: 2,
+		});
+		runtime.runtimeOverrides.gestureSensitivity.set(0);
+		const frozenEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
+			scale: 2.5,
+			velocity: 4,
+		});
+
+		expect(frozenEvent.scale).toBeCloseTo(2, 5);
+		expect(frozenEvent.velocity).toBeCloseTo(0, 5);
 	});
 });
 
@@ -406,6 +675,28 @@ describe("trackPinchGesture", () => {
 		expect(gestures.normScale.get()).toBeCloseTo(0.25, 5);
 		expect(gestures.raw.scale.get()).toBeCloseTo(2, 5);
 		expect(gestures.raw.normScale.get()).toBeCloseTo(1, 5);
+	});
+});
+
+describe("PinchStrategy.resolveRelease", () => {
+	it("prevents dismissal when the screen cannot dismiss", () => {
+		const release = PinchStrategy.resolveRelease(
+			{ scale: 0.4, velocity: -2 } as any,
+			createPinchStrategyRuntime(false),
+		);
+
+		expect(release.shouldDismiss).toBe(false);
+		expect(release.target).toBe(1);
+	});
+
+	it("allows dismissal when the screen can dismiss", () => {
+		const release = PinchStrategy.resolveRelease(
+			{ scale: 0.4, velocity: -2 } as any,
+			createPinchStrategyRuntime(true),
+		);
+
+		expect(release.shouldDismiss).toBe(true);
+		expect(release.target).toBe(0);
 	});
 });
 

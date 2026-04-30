@@ -8,23 +8,17 @@ import {
 import { useDescriptorDerivations } from "../../../screen/descriptors";
 import { useGestureContext } from "../gestures.provider";
 import { walkGestureAncestors } from "../helpers/walk-gesture-ancestors";
-import type { GestureContextType, PanGesture } from "../types";
+import type { GestureContextType } from "../types";
 
 type ShadowedAncestor = {
 	ancestor: GestureContextType;
 	directions: Direction[];
 };
 
-interface ShadowingClaimsResult {
-	ancestorPanGesturesToBlock: PanGesture[];
-}
-
 const NO_SHADOWED_ANCESTORS: ShadowedAncestor[] = [];
-const NO_ANCESTOR_PAN_GESTURES_TO_BLOCK: PanGesture[] = [];
 
 /**
  * Registers this screen with ancestors that claim the same direction.
- * It also returns those ancestor pan gestures so the current pan can block them.
  *
  * Example, when C is top-most:
  * A claims vertical
@@ -36,8 +30,7 @@ const NO_ANCESTOR_PAN_GESTURES_TO_BLOCK: PanGesture[] = [];
  */
 export function useWalkUpAndRegisterShadowingClaims(
 	claimedDirections: ClaimedDirections,
-	isIsolated: boolean,
-): ShadowingClaimsResult {
+): void {
 	const parentContext = useGestureContext();
 	const { isTopMostScreen, currentScreenKey } = useDescriptorDerivations();
 
@@ -45,7 +38,7 @@ export function useWalkUpAndRegisterShadowingClaims(
 		if (!parentContext) return NO_SHADOWED_ANCESTORS;
 
 		const ancestors: ShadowedAncestor[] = [];
-		for (const ancestor of walkGestureAncestors(parentContext, isIsolated)) {
+		for (const ancestor of walkGestureAncestors(parentContext)) {
 			const shadowedDirections: Direction[] = [];
 
 			for (const dir of DIRECTIONS) {
@@ -60,15 +53,7 @@ export function useWalkUpAndRegisterShadowingClaims(
 		}
 
 		return ancestors.length ? ancestors : NO_SHADOWED_ANCESTORS;
-	}, [parentContext, claimedDirections, isIsolated]);
-
-	const ancestorPanGesturesToBlock = useMemo(() => {
-		if (!shadowedAncestors.length) {
-			return NO_ANCESTOR_PAN_GESTURES_TO_BLOCK;
-		}
-
-		return shadowedAncestors.map(({ ancestor }) => ancestor.panGesture);
-	}, [shadowedAncestors]);
+	}, [parentContext, claimedDirections]);
 
 	useEffect(() => {
 		if (!isTopMostScreen || !shadowedAncestors.length) {
@@ -105,6 +90,4 @@ export function useWalkUpAndRegisterShadowingClaims(
 			}
 		};
 	}, [shadowedAncestors, currentScreenKey, isTopMostScreen]);
-
-	return { ancestorPanGesturesToBlock };
 }

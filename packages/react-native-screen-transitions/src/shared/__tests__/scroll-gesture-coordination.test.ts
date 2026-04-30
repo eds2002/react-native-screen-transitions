@@ -16,20 +16,15 @@ const createContext = (
 	overrides: Partial<GestureContextType> = {},
 ): GestureContextType => {
 	const panGesture = { kind: "pan" } as GestureContextType["panGesture"];
-	const pinchGesture = { kind: "pinch" } as GestureContextType["pinchGesture"];
 
 	return {
 		detectorGesture: panGesture,
 		panGesture,
-		panGestureRef: { current: undefined },
-		pinchGesture,
 		scrollState: createScrollState("scroll"),
 		runtimeOverrides: {
 			gestureSensitivity: { value: null } as GestureContextType["runtimeOverrides"]["gestureSensitivity"],
 		},
 		gestureContext: null,
-		gestureEnabled: true,
-		isIsolated: false,
 		claimedDirections: NO_CLAIMS,
 		childDirectionClaims: { value: {} } as GestureContextType["childDirectionClaims"],
 		...overrides,
@@ -78,25 +73,5 @@ describe("walkUpScrollGestureCoordination", () => {
 		expect(result.panGestures).toEqual([parent.panGesture]);
 		expect(result.pinchGestures).toEqual([childPinch, parentPinch]);
 		expect(result.scrollStates).toEqual([parent.scrollState]);
-	});
-
-	it("stops at stack isolation boundaries", () => {
-		const parent = createContext({
-			isIsolated: true,
-			claimedDirections: {
-				...NO_CLAIMS,
-				vertical: true,
-			},
-			scrollState: createScrollState("parent-scroll"),
-		});
-		const child = createContext({
-			isIsolated: false,
-			gestureContext: parent,
-		});
-
-		const result = walkUpScrollGestureCoordination(child, "vertical");
-
-		expect(result.panGestures).toEqual([]);
-		expect(result.scrollStates).toEqual([]);
 	});
 });

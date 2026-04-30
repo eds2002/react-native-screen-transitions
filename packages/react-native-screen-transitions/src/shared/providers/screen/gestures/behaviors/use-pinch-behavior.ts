@@ -2,11 +2,11 @@ import { useCallback } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import {
-	applyGestureSensitivityToPinchEvent,
 	finalizePinchRelease,
 	startPinchBase,
 	trackPinchGesture,
 } from "../helpers/pinch-phases";
+import { usePinchGestureSensitivity } from "../hooks/use-gesture-sensitivity";
 import type {
 	PinchBehavior,
 	PinchBehaviorStrategy,
@@ -20,7 +20,7 @@ const getPinchStrategy = (
 	runtime: PinchGestureRuntime,
 ): PinchBehaviorStrategy => {
 	"worklet";
-	return runtime.config.effectiveSnapPoints.hasSnapPoints
+	return runtime.participation.effectiveSnapPoints.hasSnapPoints
 		? SnapPinchStrategy
 		: PinchStrategy;
 };
@@ -29,16 +29,19 @@ export const usePinchBehavior = (
 	runtime: SharedValue<PinchGestureRuntime>,
 ): PinchBehavior => {
 	const { dismissScreen } = useNavigationHelpers();
+	const { withSensitivity, resetSensitivity } =
+		usePinchGestureSensitivity(runtime);
 
 	const onStart = useCallback(
 		(event: PinchGestureEvent) => {
 			"worklet";
 			const latestRuntime = runtime.get();
 			const strategy = getPinchStrategy(latestRuntime);
-			strategy.primeStart(latestRuntime, event);
+			strategy.primeStart(latestRuntime);
 			startPinchBase(latestRuntime, event);
+			resetSensitivity();
 		},
-		[runtime],
+		[runtime, resetSensitivity],
 	);
 
 	const onUpdate = useCallback(
@@ -46,10 +49,7 @@ export const usePinchBehavior = (
 			"worklet";
 			const latestRuntime = runtime.get();
 			const strategy = getPinchStrategy(latestRuntime);
-			const event = applyGestureSensitivityToPinchEvent(
-				rawEvent,
-				latestRuntime,
-			);
+			const event = withSensitivity(rawEvent);
 			const track = trackPinchGesture(
 				event,
 				rawEvent,
@@ -61,10 +61,10 @@ export const usePinchBehavior = (
 			}
 
 			latestRuntime.stores.animations.progress.set(
-				strategy.resolveProgress(event, latestRuntime, track),
+				strategy.resolveProgress(latestRuntime, track),
 			);
 		},
-		[runtime],
+		[runtime, withSensitivity],
 	);
 
 	const onEnd = useCallback(
@@ -72,14 +72,11 @@ export const usePinchBehavior = (
 			"worklet";
 			const latestRuntime = runtime.get();
 			const strategy = getPinchStrategy(latestRuntime);
-			const event = applyGestureSensitivityToPinchEvent(
-				rawEvent,
-				latestRuntime,
-			);
+			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime);
 			finalizePinchRelease(release, latestRuntime, dismissScreen);
 		},
-		[runtime, dismissScreen],
+		[runtime, dismissScreen, withSensitivity],
 	);
 
 	return {

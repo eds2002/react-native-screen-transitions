@@ -78,7 +78,6 @@ export function createTransitionAwareComponent<P extends object>(
 			return scrollableComponent;
 		}
 
-		// If no gesture owner found for this axis, render without GestureDetector
 		return (
 			<GestureDetector gesture={nativeGesture}>
 				{scrollableComponent}

@@ -8,7 +8,6 @@ interface ResolveRuntimeSnapPointsProps {
 }
 
 interface ResolvedRuntimeSnapPointsResult {
-	resolvedAutoSnapPoint: number | null;
 	resolvedSnapPoints: number[];
 	resolvedMinSnapPoint: number;
 	resolvedMaxSnapPoint: number;
@@ -43,7 +42,6 @@ export const resolveRuntimeSnapPoints = ({
 			: minSnapPoint;
 
 	return {
-		resolvedAutoSnapPoint: nextResolvedAutoSnapPoint,
 		resolvedSnapPoints,
 		resolvedMinSnapPoint,
 		resolvedMaxSnapPoint:

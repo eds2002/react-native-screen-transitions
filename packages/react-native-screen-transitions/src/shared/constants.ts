@@ -1,7 +1,10 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import { Platform } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
-import type { ScreenTransitionState } from "./types/animation.types";
+import type {
+	ScreenTransitionOptions,
+	ScreenTransitionState,
+} from "./types/animation.types";
 import type { ActivationArea } from "./types/gesture.types";
 import type { Layout, SheetScrollGestureBehavior } from "./types/screen.types";
 import type { BaseStackRoute } from "./types/stack.types";
@@ -61,6 +64,9 @@ const createDefaultGestureValues = () => ({
 	raw: { ...DEFAULT_RAW_GESTURE_VALUES },
 });
 
+export const DEFAULT_SCREEN_TRANSITION_OPTIONS: ScreenTransitionOptions =
+	Object.freeze({});
+
 /**
  * Creates a new screen transition state object
  */
@@ -68,6 +74,7 @@ export const createScreenTransitionState = (
 	route: BaseStackRoute,
 	meta?: Record<string, unknown>,
 	navigationMaskEnabled = false,
+	options: ScreenTransitionOptions = DEFAULT_SCREEN_TRANSITION_OPTIONS,
 ): ScreenTransitionState => ({
 	progress: 0,
 	closing: 0,
@@ -79,6 +86,7 @@ export const createScreenTransitionState = (
 	gesture: createDefaultGestureValues(),
 	route,
 	meta,
+	options,
 	layouts: {
 		screen: {
 			width: 0,
@@ -104,6 +112,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		entering: 0,
 		gesture: createDefaultGestureValues(),
 		route: {} as RouteProp<ParamListBase>,
+		options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
 		layouts: {
 			screen: {
 				width: 0,

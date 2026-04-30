@@ -12,6 +12,7 @@ import type {
 	Layout,
 	ScreenTransitionState,
 } from "../../../../types";
+import type { ScreenTransitionOptions } from "../../../../types/animation.types";
 import type { BaseDescriptor } from "../../descriptors";
 import { toPlainRoute, toPlainValue } from "./worklet";
 
@@ -26,6 +27,7 @@ type BuiltState = {
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
+	options: ScreenTransitionOptions;
 	targetProgress: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
@@ -36,19 +38,12 @@ type BuiltState = {
 
 export const useBuildTransitionState = (
 	descriptor: BaseDescriptor | undefined,
-	slot: "current" | "next" | "previous",
 ): BuiltState | undefined => {
 	const key = descriptor?.route?.key;
 	const meta = descriptor?.options?.meta;
 	const route = descriptor?.route;
-	const gestureEnabled = descriptor?.options?.gestureEnabled;
 	const navigationMaskEnabled = !!descriptor?.options?.navigationMaskEnabled;
 	const snapPoints = descriptor?.options?.snapPoints;
-
-	const shouldUseNeutralNextGestures =
-		slot === "next" &&
-		gestureEnabled === false &&
-		(!snapPoints || snapPoints.length === 0);
 
 	return useMemo(() => {
 		if (!key || !route) return undefined;
@@ -61,6 +56,14 @@ export const useBuildTransitionState = (
 		const sortedNumericSnapPoints = (snapPoints ?? [])
 			.filter((p): p is number => typeof p === "number")
 			.sort((a, b) => a - b);
+
+		const transitionOptions: ScreenTransitionOptions = {
+			gestureEnabled: descriptor.options.gestureEnabled,
+			gestureDirection: descriptor?.options?.gestureDirection,
+			gestureSnapLocked: descriptor.options.gestureSnapLocked,
+			experimental_allowDisabledGestureTracking:
+				descriptor.options.experimental_allowDisabledGestureTracking,
+		};
 
 		return {
 			progress: AnimationStore.getValue(key, "progress"),
@@ -75,23 +78,23 @@ export const useBuildTransitionState = (
 			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
 			sortedNumericSnapPoints,
-			gesture: shouldUseNeutralNextGestures
-				? (GestureStore.peekBag(key) ?? GestureStore.getCachedBag())
-				: GestureStore.getBag(key),
+			gesture: GestureStore.getBag(key),
 			route: plainRoute,
 			meta: plainMeta,
+			options: transitionOptions,
 			unwrapped: createScreenTransitionState(
 				plainRoute,
 				plainMeta,
 				navigationMaskEnabled,
+				transitionOptions,
 			),
 		};
 	}, [
 		key,
 		meta,
 		route,
-		shouldUseNeutralNextGestures,
 		snapPoints,
 		navigationMaskEnabled,
+		descriptor?.options,
 	]);
 };

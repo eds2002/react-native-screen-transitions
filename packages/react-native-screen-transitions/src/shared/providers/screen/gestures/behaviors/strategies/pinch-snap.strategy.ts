@@ -12,16 +12,16 @@ import { determineSnapTarget } from "../../helpers/gesture-targets";
 import type { PinchBehaviorStrategy } from "../../types";
 
 export const SnapPinchStrategy: PinchBehaviorStrategy = {
-	primeStart(runtime, _event) {
+	primeStart(runtime) {
 		"worklet";
 		const {
-			config,
+			participation,
 			policy,
 			stores: { animations, system },
 			lockedSnapPoint,
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
-			config.effectiveSnapPoints;
+			participation.effectiveSnapPoints;
 
 		const { resolvedSnapPoints, resolvedMaxSnapPoint } =
 			resolveRuntimeSnapPoints({
@@ -30,7 +30,7 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 				resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 				minSnapPoint,
 				maxSnapPoint,
-				canDismiss: config.canDismiss,
+				canDismiss: participation.canDismiss,
 			});
 
 		if (policy.gestureSnapLocked) {
@@ -43,17 +43,17 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 		lockedSnapPoint.set(resolvedMaxSnapPoint);
 	},
 
-	resolveProgress(_event, runtime, track) {
+	resolveProgress(runtime, track) {
 		"worklet";
 		const {
-			config,
+			participation,
 			policy,
 			stores: { system },
-			gestureStartProgress,
+			gestureProgressBaseline,
 			lockedSnapPoint,
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
-			config.effectiveSnapPoints;
+			participation.effectiveSnapPoints;
 		const { normScale } = track;
 		const pinchDirection =
 			normScale < 0 ? "pinch-in" : normScale > 0 ? "pinch-out" : null;
@@ -73,7 +73,7 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 				resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 				minSnapPoint,
 				maxSnapPoint,
-				canDismiss: config.canDismiss,
+				canDismiss: participation.canDismiss,
 			});
 
 		const maxProgressForGesture = policy.gestureSnapLocked
@@ -81,15 +81,15 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 			: resolvedMaxSnapPoint;
 
 		const minProgressForGesture = policy.gestureSnapLocked
-			? config.canDismiss
+			? participation.canDismiss
 				? 0
 				: lockedSnapPoint.get()
-			: config.canDismiss
+			: participation.canDismiss
 				? 0
 				: resolvedMinSnapPoint;
 
 		return clamp(
-			gestureStartProgress.get() + progressDelta,
+			gestureProgressBaseline.get() + progressDelta,
 			minProgressForGesture,
 			maxProgressForGesture,
 		);
@@ -98,13 +98,13 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 	resolveRelease(event, runtime) {
 		"worklet";
 		const {
-			config,
+			participation,
 			policy,
 			stores: { animations, system },
 			lockedSnapPoint,
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
-			config.effectiveSnapPoints;
+			participation.effectiveSnapPoints;
 		const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
 		const currentProgress = animations.progress.get();
 		const pinchDirection =
@@ -120,7 +120,7 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 			resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 			minSnapPoint,
 			maxSnapPoint,
-			canDismiss: config.canDismiss,
+			canDismiss: participation.canDismiss,
 		});
 
 		let snapVelocity = 0;
@@ -139,11 +139,11 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 			velocity: snapVelocity,
 			dimension: 1,
 			velocityFactor: policy.gestureSnapVelocityImpact,
-			canDismiss: config.canDismiss,
+			canDismiss: participation.canDismiss,
 		});
 
-		const shouldDismiss = result.shouldDismiss;
-		const target = result.targetProgress;
+		const shouldDismiss = participation.canDismiss && result.shouldDismiss;
+		const target = shouldDismiss ? 0 : result.targetProgress;
 		const isSnapping = !shouldDismiss;
 		const transitionSpec = isSnapping
 			? resolveSnapTransitionSpec(

@@ -2,11 +2,11 @@ import { useCallback } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import {
-	applyGestureSensitivityToPanEvent,
 	finalizePanRelease,
 	startPanBase,
 	trackPanGesture,
 } from "../helpers/pan-phases";
+import { usePanGestureSensitivity } from "../hooks/use-gesture-sensitivity";
 import type {
 	GestureDimensions,
 	PanBehavior,
@@ -19,7 +19,7 @@ import { SnapPanStrategy } from "./strategies/pan-snap.strategy";
 
 const getPanStrategy = (runtime: PanGestureRuntime): PanBehaviorStrategy => {
 	"worklet";
-	return runtime.config.effectiveSnapPoints.hasSnapPoints
+	return runtime.participation.effectiveSnapPoints.hasSnapPoints
 		? SnapPanStrategy
 		: PanStrategy;
 };
@@ -29,6 +29,8 @@ export const usePanBehavior = (
 	dimensions: GestureDimensions,
 ): PanBehavior => {
 	const { dismissScreen } = useNavigationHelpers();
+	const { withSensitivity, resetSensitivity } =
+		usePanGestureSensitivity(runtime);
 
 	const onStart = useCallback(() => {
 		"worklet";
@@ -36,14 +38,15 @@ export const usePanBehavior = (
 		const strategy = getPanStrategy(latestRuntime);
 		strategy.primeStart(latestRuntime);
 		startPanBase(latestRuntime);
-	}, [runtime]);
+		resetSensitivity();
+	}, [runtime, resetSensitivity]);
 
 	const onUpdate = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
 			const latestRuntime = runtime.get();
 			const strategy = getPanStrategy(latestRuntime);
-			const event = applyGestureSensitivityToPanEvent(rawEvent, latestRuntime);
+			const event = withSensitivity(rawEvent);
 			const track = trackPanGesture(
 				event,
 				rawEvent,
@@ -56,10 +59,10 @@ export const usePanBehavior = (
 			}
 
 			latestRuntime.stores.animations.progress.set(
-				strategy.resolveProgress(event, latestRuntime, dimensions, track),
+				strategy.resolveProgress(latestRuntime, dimensions, track),
 			);
 		},
-		[runtime, dimensions],
+		[runtime, dimensions, withSensitivity],
 	);
 
 	const onEnd = useCallback(
@@ -67,11 +70,11 @@ export const usePanBehavior = (
 			"worklet";
 			const latestRuntime = runtime.get();
 			const strategy = getPanStrategy(latestRuntime);
-			const event = applyGestureSensitivityToPanEvent(rawEvent, latestRuntime);
+			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime, dimensions);
 			finalizePanRelease(release, latestRuntime, dismissScreen);
 		},
-		[runtime, dimensions, dismissScreen],
+		[runtime, dimensions, dismissScreen, withSensitivity],
 	);
 
 	return {

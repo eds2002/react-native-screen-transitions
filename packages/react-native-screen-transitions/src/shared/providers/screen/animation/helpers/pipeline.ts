@@ -41,7 +41,6 @@ const createInitialBaseInterpolatorProps = (
 	next: undefined,
 	progress: 0,
 	stackProgress: 0,
-	snapIndex: -1,
 	logicallySettled: 1,
 	focused: true,
 	active: DEFAULT_SCREEN_TRANSITION_STATE,
@@ -60,9 +59,9 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		previous: prevDescriptor,
 	} = useDescriptors();
 
-	const currentAnimation = useBuildTransitionState(currDescriptor, "current");
-	const nextAnimation = useBuildTransitionState(nextDescriptor, "next");
-	const prevAnimation = useBuildTransitionState(prevDescriptor, "previous");
+	const currentAnimation = useBuildTransitionState(currDescriptor);
+	const nextAnimation = useBuildTransitionState(nextDescriptor);
+	const prevAnimation = useBuildTransitionState(prevDescriptor);
 
 	const currentRouteKey = currDescriptor?.route?.key;
 	const currentIndex = routeKeys.indexOf(currentRouteKey);
@@ -112,7 +111,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			const focused = helpers.focused;
 			const active = helpers.active;
 			const inactive = helpers.inactive;
-			const snapIndex = current.animatedSnapIndex ?? current.snapIndex;
 			const logicallySettled = active.logicallySettled;
 
 			return {
@@ -121,7 +119,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				next,
 				progress,
 				stackProgress,
-				snapIndex,
 				logicallySettled,
 				focused,
 				active,
@@ -134,7 +131,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			next,
 			progress,
 			stackProgress,
-			snapIndex,
 			logicallySettled,
 			focused,
 			active,
@@ -151,7 +147,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				frame.next = next;
 				frame.progress = progress;
 				frame.stackProgress = stackProgress;
-				frame.snapIndex = snapIndex;
 				frame.logicallySettled = logicallySettled;
 				frame.focused = focused;
 				frame.active = active;

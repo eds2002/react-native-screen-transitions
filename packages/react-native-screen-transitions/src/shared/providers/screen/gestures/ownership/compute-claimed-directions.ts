@@ -13,24 +13,23 @@ import {
  * Computes which directions a screen claims ownership of.
  *
  * A screen claims a direction when:
- * 1. gestureEnabled is true AND
+ * 1. direction claiming is enabled AND
  * 2. gestureDirection includes that direction
  *
  * For snap points, both directions on each configured pan axis are claimed.
  * The first direction on an axis collapses; its inverse expands.
  *
- * @param gestureEnabled - Whether gestures are enabled for this screen
+ * @param canClaimDirections - Whether this screen can own gesture directions
  * @param gestureDirection - The gesture direction(s) configured for this screen
  * @param hasSnapPoints - Whether this screen has snap points configured
  * @returns The claimed directions for this screen
  */
 export function computeClaimedDirections(
-	gestureEnabled: boolean,
+	canClaimDirections: boolean,
 	gestureDirection: GestureDirection | GestureDirection[] | undefined,
 	hasSnapPoints: boolean,
 ): ClaimedDirections {
-	// If gestures are not enabled, claim nothing
-	if (!gestureEnabled) {
+	if (!canClaimDirections) {
 		return NO_CLAIMS;
 	}
 
@@ -87,16 +86,4 @@ export function computeClaimedDirections(
 	}
 
 	return claims;
-}
-
-/**
- * Checks if any direction is claimed.
- */
-export function claimsAnyDirection(claims: ClaimedDirections): boolean {
-	return (
-		claims.vertical ||
-		claims["vertical-inverted"] ||
-		claims.horizontal ||
-		claims["horizontal-inverted"]
-	);
 }

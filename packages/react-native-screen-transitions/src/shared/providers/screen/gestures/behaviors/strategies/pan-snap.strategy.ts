@@ -1,5 +1,5 @@
 import { resolveSnapTransitionSpec } from "../../../../../utils/animation/resolve-snap-transition-spec";
-import { getSnapPanAxisConfigForDirection } from "../../helpers/gesture-directions";
+import { getPanSnapAxisConfigForDirection } from "../../helpers/gesture-directions";
 import { getPanReleaseHandoffVelocity } from "../../helpers/gesture-physics";
 import {
 	findNearestSnapPoint,
@@ -12,13 +12,13 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 	primeStart(runtime) {
 		"worklet";
 		const {
-			config,
+			participation,
 			policy,
 			stores: { animations, system },
 			lockedSnapPoint,
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
-			config.effectiveSnapPoints;
+			participation.effectiveSnapPoints;
 
 		const { resolvedSnapPoints, resolvedMaxSnapPoint } =
 			resolveRuntimeSnapPoints({
@@ -27,7 +27,7 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 				resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 				minSnapPoint,
 				maxSnapPoint,
-				canDismiss: config.canDismiss,
+				canDismiss: participation.canDismiss,
 			});
 
 		if (policy.gestureSnapLocked) {
@@ -40,26 +40,29 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 		lockedSnapPoint.set(resolvedMaxSnapPoint);
 	},
 
-	resolveProgress(_event, runtime, dimensions, track) {
+	resolveProgress(runtime, dimensions, track) {
 		"worklet";
 		const {
-			config,
+			participation,
 			policy,
 			stores: { system },
-			gestureStartProgress,
+			gestureProgressBaseline,
 			lockedSnapPoint,
 		} = runtime;
 		const activeDirection = runtime.stores.gestures.direction.get();
 		const activeAxis = activeDirection
-			? getSnapPanAxisConfigForDirection(policy.snapDirections, activeDirection)
+			? getPanSnapAxisConfigForDirection(
+					policy.snapAxisDirections,
+					activeDirection,
+				)
 			: null;
 
 		if (!activeAxis) {
-			return gestureStartProgress.get();
+			return gestureProgressBaseline.get();
 		}
 
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
-			config.effectiveSnapPoints;
+			participation.effectiveSnapPoints;
 		const { x, y } = track;
 
 		const isHorizontal = activeAxis.axis === "horizontal";
@@ -75,14 +78,14 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 				resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 				minSnapPoint,
 				maxSnapPoint,
-				canDismiss: config.canDismiss,
+				canDismiss: participation.canDismiss,
 			});
 
 		const maxProgressForGesture = policy.gestureSnapLocked
 			? lockedSnapPoint.get()
 			: resolvedMaxSnapPoint;
 		const minProgressForGesture = policy.gestureSnapLocked
-			? config.canDismiss
+			? participation.canDismiss
 				? 0
 				: lockedSnapPoint.get()
 			: resolvedMinSnapPoint;
@@ -91,7 +94,7 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 			minProgressForGesture,
 			Math.min(
 				maxProgressForGesture,
-				gestureStartProgress.get() + progressDelta,
+				gestureProgressBaseline.get() + progressDelta,
 			),
 		);
 	},
@@ -99,16 +102,19 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 	resolveRelease(event, runtime, dimensions) {
 		"worklet";
 		const {
-			config,
+			participation,
 			policy,
 			stores: { animations, system },
 			lockedSnapPoint,
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
-			config.effectiveSnapPoints;
+			participation.effectiveSnapPoints;
 		const activeDirection = runtime.stores.gestures.direction.get();
 		const activeAxis = activeDirection
-			? getSnapPanAxisConfigForDirection(policy.snapDirections, activeDirection)
+			? getPanSnapAxisConfigForDirection(
+					policy.snapAxisDirections,
+					activeDirection,
+				)
 			: null;
 
 		if (!activeAxis) {
@@ -134,7 +140,7 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 			resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
 			minSnapPoint,
 			maxSnapPoint,
-			canDismiss: config.canDismiss,
+			canDismiss: participation.canDismiss,
 		});
 
 		const result = determineSnapTarget({
@@ -145,11 +151,11 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 			velocity: snapVelocity,
 			dimension: axisDimension,
 			velocityFactor: policy.gestureSnapVelocityImpact,
-			canDismiss: config.canDismiss,
+			canDismiss: participation.canDismiss,
 		});
 
-		const shouldDismiss = result.shouldDismiss;
-		const target = result.targetProgress;
+		const shouldDismiss = participation.canDismiss && result.shouldDismiss;
+		const target = shouldDismiss ? 0 : result.targetProgress;
 		const isSnapping = !shouldDismiss;
 		const currentProgress = animations.progress.get();
 		const transitionSpec = isSnapping

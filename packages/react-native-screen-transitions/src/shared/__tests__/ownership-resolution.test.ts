@@ -1,16 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import type { ClaimedDirections } from "../types/ownership.types";
 import { NO_CLAIMS } from "../types/ownership.types";
-import {
-	claimsAnyDirection,
-	computeClaimedDirections,
-} from "../providers/screen/gestures/ownership/compute-claimed-directions";
+import { computeClaimedDirections } from "../providers/screen/gestures/ownership/compute-claimed-directions";
 import { resolveOwnership } from "../providers/screen/gestures/ownership/resolve-ownership";
 
 /** Minimal shape matching resolve-ownership's internal AncestorClaimsContext */
 interface MockAncestorContext {
 	claimedDirections: ClaimedDirections;
-	ancestorContext: MockAncestorContext | null;
+	gestureContext: MockAncestorContext | null;
 }
 
 /**
@@ -22,7 +19,7 @@ function createContext(
 ): MockAncestorContext {
 	return {
 		claimedDirections: claims,
-		ancestorContext: parent,
+		gestureContext: parent,
 	};
 }
 
@@ -39,7 +36,7 @@ function claims(...directions: string[]): ClaimedDirections {
 }
 
 describe("computeClaimedDirections", () => {
-	it("returns NO_CLAIMS when gestureEnabled is false", () => {
+	it("returns NO_CLAIMS when direction claiming is disabled", () => {
 		const result = computeClaimedDirections(false, "vertical", false);
 		expect(result).toEqual(NO_CLAIMS);
 	});
@@ -112,17 +109,6 @@ describe("computeClaimedDirections", () => {
 		expect(result["vertical-inverted"]).toBe(true);
 		expect(result.horizontal).toBe(true);
 		expect(result["horizontal-inverted"]).toBe(true);
-	});
-});
-
-describe("claimsAnyDirection", () => {
-	it("returns false for NO_CLAIMS", () => {
-		expect(claimsAnyDirection(NO_CLAIMS)).toBe(false);
-	});
-
-	it("returns true if any direction is claimed", () => {
-		expect(claimsAnyDirection(claims("vertical"))).toBe(true);
-		expect(claimsAnyDirection(claims("horizontal-inverted"))).toBe(true);
 	});
 });
 

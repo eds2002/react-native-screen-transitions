@@ -7,13 +7,13 @@ import {
 import type { PinchBehaviorStrategy } from "../../types";
 
 export const PinchStrategy: PinchBehaviorStrategy = {
-	primeStart(_runtime, _event) {
+	primeStart(_runtime) {
 		"worklet";
 	},
 
-	resolveProgress(_event, runtime, track) {
+	resolveProgress(runtime, track) {
 		"worklet";
-		const { policy, gestureStartProgress } = runtime;
+		const { policy, gestureProgressBaseline } = runtime;
 		const { normScale } = track;
 
 		const progressDelta =
@@ -23,27 +23,30 @@ export const PinchStrategy: PinchBehaviorStrategy = {
 				: 0;
 
 		return clamp(
-			gestureStartProgress.get() - progressDelta,
+			gestureProgressBaseline.get() - progressDelta,
 			0,
-			gestureStartProgress.get(),
+			gestureProgressBaseline.get(),
 		);
 	},
 
 	resolveRelease(event, runtime) {
 		"worklet";
 		const {
+			participation,
 			policy,
-			gestureStartProgress,
+			gestureProgressBaseline,
 			stores: { animations },
 		} = runtime;
 		const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
 		const currentProgress = animations.progress.get();
-		const shouldDismiss = shouldDismissFromPinch(
-			normalizedScale,
-			policy.pinchInEnabled,
-			policy.pinchOutEnabled,
-		);
-		const target = shouldDismiss ? 0 : gestureStartProgress.get();
+		const shouldDismiss =
+			participation.canDismiss &&
+			shouldDismissFromPinch(
+				normalizedScale,
+				policy.pinchInEnabled,
+				policy.pinchOutEnabled,
+			);
+		const target = shouldDismiss ? 0 : gestureProgressBaseline.get();
 		const progressDirection = Math.sign(target - currentProgress);
 		const initialVelocity =
 			progressDirection === 0

@@ -138,6 +138,23 @@ export type ScreenTransitionConfig = {
 	gestureEnabled?: boolean;
 
 	/**
+	 * Allows screens with `gestureEnabled={false}` to still activate gestures for
+	 * live gesture values while preventing gesture dismissal.
+	 *
+	 * This is a v3 compatibility bridge for the next gesture behavior. Direction
+	 * ownership/claims participate while this is enabled so nested screens can
+	 * intentionally shadow parent gestures for resistance-style animations.
+	 *
+	 * Screens with `snapPoints` already keep gesture tracking when
+	 * `gestureEnabled={false}`; this flag mainly affects disabled non-snap
+	 * gestures.
+	 *
+	 * @experimental This API may change in future versions.
+	 * @default false
+	 */
+	experimental_allowDisabledGestureTracking?: boolean;
+
+	/**
 	 * The direction(s) of the screen gesture used to dismiss the screen.
 	 *
 	 * Supports pan directions (`horizontal`, `vertical`, etc.) and pinch

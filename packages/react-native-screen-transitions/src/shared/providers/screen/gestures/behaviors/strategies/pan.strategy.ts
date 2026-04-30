@@ -11,48 +11,49 @@ export const PanStrategy: PanBehaviorStrategy = {
 		"worklet";
 	},
 
-	resolveProgress(_event, runtime, dimensions, track) {
+	resolveProgress(runtime, dimensions, track) {
 		"worklet";
-		const { policy, gestureStartProgress } = runtime;
+		const { policy, gestureProgressBaseline } = runtime;
 		const { x, y } = track;
 		const { width, height } = dimensions;
 
 		let maxProgress = 0;
 
-		if (policy.directions.horizontal && x > 0) {
+		if (policy.panActivationDirections.horizontal && x > 0) {
 			maxProgress = Math.max(maxProgress, mapGestureToProgress(x, width));
 		}
 
-		if (policy.directions.horizontalInverted && x < 0) {
+		if (policy.panActivationDirections.horizontalInverted && x < 0) {
 			maxProgress = Math.max(maxProgress, mapGestureToProgress(-x, width));
 		}
 
-		if (policy.directions.vertical && y > 0) {
+		if (policy.panActivationDirections.vertical && y > 0) {
 			maxProgress = Math.max(maxProgress, mapGestureToProgress(y, height));
 		}
 
-		if (policy.directions.verticalInverted && y < 0) {
+		if (policy.panActivationDirections.verticalInverted && y < 0) {
 			maxProgress = Math.max(maxProgress, mapGestureToProgress(-y, height));
 		}
 
-		return clamp(gestureStartProgress.get() - maxProgress, 0, 1);
+		return clamp(gestureProgressBaseline.get() - maxProgress, 0, 1);
 	},
 
 	resolveRelease(event, runtime, dimensions) {
 		"worklet";
 		const {
+			participation,
 			policy,
 			stores: { animations },
 		} = runtime;
 
 		const result = determineDismissal({
 			event,
-			directions: policy.directions,
+			directions: policy.panActivationDirections,
 			dimensions,
 			gestureVelocityImpact: policy.gestureVelocityImpact,
 		});
 
-		const shouldDismiss = result.shouldDismiss;
+		const shouldDismiss = participation.canDismiss && result.shouldDismiss;
 
 		return {
 			target: shouldDismiss ? 0 : 1,
@@ -62,7 +63,7 @@ export const PanStrategy: PanBehaviorStrategy = {
 				shouldDismiss,
 				event,
 				dimensions,
-				directions: policy.directions,
+				directions: policy.panActivationDirections,
 				gestureReleaseVelocityScale: policy.gestureReleaseVelocityScale,
 				gestureReleaseVelocityMax: policy.gestureReleaseVelocityMax,
 			}),

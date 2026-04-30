@@ -6,7 +6,10 @@ import {
 	TRUE,
 } from "../../../../constants";
 import type { GestureStoreMap } from "../../../../stores/gesture.store";
-import type { ScreenTransitionState } from "../../../../types/animation.types";
+import type {
+	ScreenTransitionOptions,
+	ScreenTransitionState,
+} from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
 import type { BaseStackRoute } from "../../../../types/stack.types";
 
@@ -21,6 +24,7 @@ type BuiltState = {
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
+	options: ScreenTransitionOptions;
 	targetProgress: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
@@ -175,6 +179,7 @@ export const hydrateTransitionState = (
 	}
 
 	out.meta = s.meta;
+	out.options = s.options;
 	out.layouts.screen.width = dimensions.width;
 	out.layouts.screen.height = dimensions.height;
 

@@ -10,9 +10,23 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
 import type { BoundsAccessor } from "./bounds.types";
-import type { GestureValues } from "./gesture.types";
+import type { GestureDirection, GestureValues } from "./gesture.types";
 import type { ScreenLayouts } from "./screen.types";
 import type { BaseStackRoute } from "./stack.types";
+
+/**
+ * Public screen option values exposed to `screenStyleInterpolator`.
+ *
+ * These are the values we consider useful to change dynamically with
+ * `navigation.setOptions()`. If you need another existing screen option here,
+ * open a request with the use case and why the interpolator needs it.
+ */
+export type ScreenTransitionOptions = {
+	gestureEnabled?: boolean;
+	gestureDirection?: GestureDirection | GestureDirection[];
+	gestureSnapLocked?: boolean;
+	experimental_allowDisabledGestureTracking?: boolean;
+};
 
 export type ScreenTransitionState = {
 	/**
@@ -100,6 +114,15 @@ export type ScreenTransitionState = {
 	meta?: Record<string, unknown>;
 
 	/**
+	 * Public screen option values exposed to `screenStyleInterpolator`.
+	 *
+	 * These are the values we consider useful to change dynamically with
+	 * `navigation.setOptions()`. If you need another existing screen option here,
+	 * open a request with the use case and why the interpolator needs it.
+	 */
+	options: ScreenTransitionOptions;
+
+	/**
 	 * The route object for this screen.
 	 */
 	route: BaseStackRoute;
@@ -117,13 +140,14 @@ export type ScreenTransitionState = {
 	 * - Returns fractional values between snap points (e.g., 1.5 = halfway between snap 1 and 2)
 	 * - Returns length-1 when at or above last snap point
 	 */
-	animatedSnapIndex?: number;
+	animatedSnapIndex: number;
 
 	/**
-	 * Target index of this screen's current snap point.
+	 * Target snap point index for this screen.
 	 *
-	 * This follows the v4/next semantics. Use `animatedSnapIndex` when you need
-	 * the live fractional index during movement.
+	 * Unlike `animatedSnapIndex`, this follows the current target progress rather
+	 * than live gesture progress. It updates when the transition target changes,
+	 * such as initial mount, `snapTo()`, or gesture release.
 	 */
 	snapIndex: number;
 };
@@ -146,14 +170,8 @@ export interface ScreenInterpolationProps {
 
 	/**
 	 * Layout measurements for the screen.
-	 *
-	 * @deprecated Use `current.layouts` instead.
 	 */
-	layouts: {
-		screen: ScreenLayouts["screen"];
-		content?: ScreenLayouts["content"];
-		navigationMaskEnabled: ScreenLayouts["navigationMaskEnabled"];
-	};
+	layouts: ScreenLayouts;
 
 	/**
 	 * The safe area insets for the screen.
@@ -182,14 +200,6 @@ export interface ScreenInterpolationProps {
 	 * Falls back to `progress` when not in blank-stack.
 	 */
 	stackProgress: number;
-
-	/**
-	 * Animated fractional index of the current snap point.
-	 *
-	 * @deprecated Use `current.animatedSnapIndex` instead. `current.snapIndex`
-	 * follows the v4 target-index semantics.
-	 */
-	snapIndex: number;
 
 	/**
 	 * Whether the active transition is visually close enough to its target to be
@@ -247,12 +257,12 @@ type TransitionSlotDefinition = {
 export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
 
 /**
- * Runtime configuration returned by `screenStyleInterpolator`.
+ * Runtime gesture options returned by `screenStyleInterpolator`.
  *
  * These values are not style slots. They are derived per frame and consumed by
  * the transition runtime.
  */
-export type TransitionInterpolatorConfig = {
+export type TransitionInterpolatorGestureOptions = {
 	/**
 	 * Overrides how directly live gesture movement maps into transition progress
 	 * and the non-raw gesture values exposed to interpolators for the current
@@ -266,7 +276,22 @@ export type TransitionInterpolatorConfig = {
 };
 
 /**
- * Internal normalized slot format used after the backward-compat shim.
+ * Runtime options returned by `screenStyleInterpolator`.
+ *
+ * These values are not style slots. They are derived per frame and consumed by
+ * the transition runtime.
+ */
+export type TransitionInterpolatorOptions = {
+	gestures?: TransitionInterpolatorGestureOptions;
+};
+
+/**
+ * @deprecated Use `TransitionInterpolatorOptions`.
+ */
+export type TransitionInterpolatorConfig = TransitionInterpolatorGestureOptions;
+
+/**
+ * Internal normalized slot format.
  * Always uses the explicit `{ style, props }` shape (with Reanimated's full StyleProps).
  */
 export type NormalizedTransitionSlotStyle = {
@@ -275,7 +300,7 @@ export type NormalizedTransitionSlotStyle = {
 };
 
 /**
- * Normalized interpolated style map used internally after the backward-compat shim.
+ * Normalized interpolated style map used internally.
  * All slots use the explicit `{ style, props }` shape.
  */
 export type NormalizedTransitionInterpolatedStyle = {
@@ -295,15 +320,14 @@ export type NormalizedTransitionInterpolatedStyle = {
 
 /**
  * The return type of `screenStyleInterpolator`.
- * Uses the nested slot format, while still accepting deprecated flat keys.
  */
 export type TransitionInterpolatedStyle = {
 	/**
-	 * Runtime configuration for the current frame.
+	 * Runtime options for the current frame.
 	 *
 	 * This reserved key is stripped before style slot normalization.
 	 */
-	config?: TransitionInterpolatorConfig | TransitionSlotStyle;
+	options?: TransitionInterpolatorOptions;
 	/** Animated style and props for the main screen content view. */
 	content?: TransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */
@@ -315,22 +339,7 @@ export type TransitionInterpolatedStyle = {
 	/** Animated style and props for the navigation mask element layer. */
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 	/** Custom styles/props by id for Transition.View components. */
-	[id: string]: TransitionSlotStyle | TransitionInterpolatorConfig | undefined;
-	/**
-	 * @deprecated Use `content` instead.
-	 * This flat format is auto-converted via a backward-compat shim.
-	 */
-	contentStyle?: AnimatedViewStyle;
-	/**
-	 * @deprecated Use `backdrop` instead.
-	 * This flat format is auto-converted via a backward-compat shim.
-	 */
-	backdropStyle?: AnimatedViewStyle;
-	/**
-	 * @deprecated Use `backdrop` instead.
-	 * This flat format is auto-converted via a backward-compat shim.
-	 */
-	overlayStyle?: AnimatedViewStyle;
+	[id: string]: TransitionSlotStyle | TransitionInterpolatorOptions | undefined;
 };
 
 /**

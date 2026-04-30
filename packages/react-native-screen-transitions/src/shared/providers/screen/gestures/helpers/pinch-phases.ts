@@ -8,12 +8,8 @@ import type {
 	PinchReleaseResult,
 	PinchTrackState,
 } from "../types";
-import {
-	applyGestureSensitivity,
-	normalizePinchScale,
-} from "./gesture-physics";
+import { normalizePinchScale } from "./gesture-physics";
 import { resetPinchGestureValues } from "./gesture-reset";
-import { resolveGestureSensitivity } from "./gesture-sensitivity";
 
 export const startPinchBase = (
 	runtime: PinchGestureRuntime,
@@ -22,7 +18,7 @@ export const startPinchBase = (
 	"worklet";
 	const {
 		stores: { gestures, animations },
-		gestureStartProgress,
+		gestureProgressBaseline,
 	} = runtime;
 
 	emit(animations.willAnimate, TRUE, FALSE);
@@ -35,28 +31,7 @@ export const startPinchBase = (
 	gestures.raw.normScale.set(0);
 	gestures.focalX.set(event.focalX);
 	gestures.focalY.set(event.focalY);
-	gestureStartProgress.set(animations.progress.get());
-};
-
-export const applyGestureSensitivityToPinchEvent = (
-	event: PinchGestureEvent,
-	runtime: PinchGestureRuntime,
-): PinchGestureEvent => {
-	"worklet";
-	const sensitivity = resolveGestureSensitivity(
-		runtime.policy.gestureSensitivity,
-		runtime.runtimeOverrides,
-	);
-	const normScale = applyGestureSensitivity(
-		normalizePinchScale(event.scale),
-		sensitivity,
-	);
-
-	return {
-		...event,
-		scale: 1 + normScale,
-		velocity: applyGestureSensitivity(event.velocity, sensitivity),
-	};
+	gestureProgressBaseline.set(animations.progress.get());
 };
 
 export const trackPinchGesture = (
