@@ -5,24 +5,13 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
 } from "../../../constants";
-import {
-	BoundStore,
-	type ResolvedTransitionPair,
-} from "../../../stores/bounds";
+import { BoundStore } from "../../../stores/bounds";
 import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
-import type { Layout } from "../../../types/screen.types";
 import { prepareBoundStyles } from "../helpers/prepare-bound-styles";
 import type { BoundsOptions } from "../types/options";
 import {
 	toNumber,
-	ZOOM_BACKGROUND_SCALE,
-	ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
-	ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
-	ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
 	ZOOM_DRAG_RESISTANCE,
-	ZOOM_DRAG_TRANSLATION_EXPONENT,
-	ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX,
-	ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
 	ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
 	ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 	ZOOM_MASK_OUTSET,
@@ -30,6 +19,15 @@ import {
 	ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
 	ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 } from "./config";
+import {
+	getSourceBorderRadius,
+	getZoomContentTarget,
+	interpolateOpacityRange,
+	resolveBackgroundScale,
+	resolveDragScaleTuple,
+	resolveDragTranslationTuple,
+	resolvePresentedZoomTag,
+} from "./helpers";
 import {
 	combineScales,
 	composeCompensatedTranslation,
@@ -41,121 +39,6 @@ import {
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
-
-/* -------------------------------------------------------------------------- */
-/*                               LOCAL HELPERS                                */
-/* -------------------------------------------------------------------------- */
-
-function getSourceBorderRadius(resolvedPair: ResolvedTransitionPair): number {
-	"worklet";
-
-	return typeof resolvedPair.sourceStyles?.borderRadius === "number"
-		? resolvedPair.sourceStyles.borderRadius
-		: 0;
-}
-
-function getZoomContentTarget({
-	explicitTarget,
-	screenLayout,
-	anchor,
-	resolvedPair,
-}: {
-	explicitTarget: BoundsOptions["target"] | undefined;
-	screenLayout: Layout;
-	anchor: BoundsOptions["anchor"] | undefined;
-	resolvedPair: ResolvedTransitionPair;
-}) {
-	"worklet";
-
-	if (explicitTarget) return explicitTarget;
-
-	const sourceBounds = resolvedPair.sourceBounds;
-	const screenWidth = screenLayout.width;
-
-	if (!sourceBounds || sourceBounds.width <= 0 || screenWidth <= 0) {
-		return "fullscreen" as const;
-	}
-
-	const height = (sourceBounds.height / sourceBounds.width) * screenWidth;
-	const verticalAnchor =
-		anchor === "bottomLeading" ||
-		anchor === "bottom" ||
-		anchor === "bottomTrailing"
-			? "bottom"
-			: anchor === "center" || anchor === "leading" || anchor === "trailing"
-				? "center"
-				: "top";
-	const y =
-		verticalAnchor === "top"
-			? 0
-			: verticalAnchor === "bottom"
-				? screenLayout.height - height
-				: (screenLayout.height - height) / 2;
-
-	return {
-		x: 0,
-		y,
-		pageX: 0,
-		pageY: y,
-		width: screenWidth,
-		height,
-	};
-}
-
-function resolveDragScaleTuple(
-	value:
-		| readonly [shrinkMin: number, growMax: number, exponent?: number]
-		| undefined,
-) {
-	"worklet";
-
-	return {
-		shrinkMin: value?.[0] ?? ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
-		growMax: value?.[1] ?? ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
-		exponent: value?.[2] ?? ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
-	};
-}
-
-function resolveDragTranslationTuple(
-	value:
-		| readonly [negativeMax: number, positiveMax: number, exponent?: number]
-		| undefined,
-) {
-	"worklet";
-
-	return {
-		negativeMax: value?.[0] ?? ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX,
-		positiveMax: value?.[1] ?? ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
-		exponent: value?.[2] ?? ZOOM_DRAG_TRANSLATION_EXPONENT,
-	};
-}
-
-function resolveBackgroundScale(value: number | undefined) {
-	"worklet";
-
-	return value ?? ZOOM_BACKGROUND_SCALE;
-}
-
-function interpolateOpacityRange(params: {
-	progress: number;
-	range: {
-		inputStart: number;
-		inputEnd: number;
-		outputStart: number;
-		outputEnd: number;
-	};
-}) {
-	"worklet";
-
-	const { progress, range } = params;
-
-	return interpolate(
-		progress,
-		[range.inputStart, range.inputEnd],
-		[range.outputStart, range.outputEnd],
-		"clamp",
-	);
-}
 
 /* -------------------------------------------------------------------------- */
 /*                             BUILD ZOOM STYLES                              */
@@ -192,8 +75,29 @@ export function buildZoomStyles({
 	const currentRouteKey = props.current?.route.key;
 	const previousRouteKey = props.previous?.route.key;
 	const nextRouteKey = props.next?.route.key;
+	const activeRouteKey = props.active.route.key;
 
 	const zoomAnchor = target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor;
+
+	const requestedPair = BoundStore.link.getPair(buildEffectiveTag, {
+		currentScreenKey: currentRouteKey,
+		previousScreenKey: previousRouteKey,
+		nextScreenKey: nextRouteKey,
+		entering: isEnteringTransition,
+	});
+	const presented = resolvePresentedZoomTag({
+		requestedTag: buildEffectiveTag,
+		activeRouteKey,
+		requestedPair,
+		currentScreenKey: currentRouteKey,
+		previousScreenKey: previousRouteKey,
+		nextScreenKey: nextRouteKey,
+		entering: isEnteringTransition,
+	});
+
+	// Grouped zoom can retarget before the new active member has measured.
+	// Keep presenting the last measured tag so mask/content styles stay stable.
+	buildEffectiveTag = presented.tag;
 
 	const baseRawOptions = {
 		id: buildEffectiveTag,
@@ -201,12 +105,7 @@ export function buildZoomStyles({
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
 	} as const;
 
-	const linkPair = BoundStore.link.getPair(buildEffectiveTag, {
-		currentScreenKey: currentRouteKey,
-		previousScreenKey: previousRouteKey,
-		nextScreenKey: nextRouteKey,
-		entering: isEnteringTransition,
-	});
+	const linkPair = presented.pair;
 
 	const sourceBorderRadius = getSourceBorderRadius(linkPair);
 	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
