@@ -22,16 +22,3 @@ export const resolveSheetScrollGestureBehavior = (
 
 	return DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR;
 };
-
-export const resolveNavigationMaskEnabled = (
-	options: Pick<
-		ScreenTransitionConfig,
-		"navigationMaskEnabled" | "maskEnabled"
-	>,
-): boolean => {
-	if (options.navigationMaskEnabled !== undefined) {
-		return options.navigationMaskEnabled;
-	}
-
-	return options.maskEnabled ?? false;
-};

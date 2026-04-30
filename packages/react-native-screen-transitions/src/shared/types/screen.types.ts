@@ -125,11 +125,6 @@ export type ScreenTransitionConfig = {
 	navigationMaskEnabled?: boolean;
 
 	/**
-	 * @deprecated Use `navigationMaskEnabled` instead.
-	 */
-	maskEnabled?: boolean;
-
-	/**
 	 * Controls whether swipe-to-dismiss is enabled.
 	 *
 	 * For screens with `snapPoints`, gesture-driven snapping between non-dismiss
