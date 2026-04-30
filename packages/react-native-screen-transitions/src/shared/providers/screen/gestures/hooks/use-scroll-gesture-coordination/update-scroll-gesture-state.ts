@@ -13,13 +13,11 @@ const createScrollGestureState = (): ScrollGestureState => {
 	};
 };
 
-export const updateScrollGestureAxisState = <
-	T extends ScrollGestureState | null,
->(
-	state: T,
+export const updateScrollGestureAxisState = (
+	state: ScrollGestureState | null,
 	axis: ScrollGestureAxis,
 	patch: Partial<ScrollGestureAxisState> & { isTouched?: boolean },
-): T => {
+): ScrollGestureState => {
 	"worklet";
 
 	const nextState = state ?? createScrollGestureState();
@@ -42,5 +40,5 @@ export const updateScrollGestureAxisState = <
 		nextState.isTouched = patch.isTouched;
 	}
 
-	return nextState as T;
+	return nextState;
 };

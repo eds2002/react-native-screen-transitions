@@ -213,6 +213,8 @@ export type ScreenTransitionConfig = {
 	 * or snap target selection (`snapVelocityImpact`). It only bounds release
 	 * animation intensity after `gestureReleaseVelocityScale` is applied.
 	 *
+	 * @deprecated v3 compatibility only. This option is removed in the next
+	 * gesture runtime.
 	 * @default 3.2
 	 */
 	gestureReleaseVelocityMax?: number;

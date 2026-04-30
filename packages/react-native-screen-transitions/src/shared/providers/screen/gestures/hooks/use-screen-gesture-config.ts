@@ -9,9 +9,9 @@ import {
 	DEFAULT_GESTURE_SNAP_LOCKED,
 	DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
 	DEFAULT_GESTURE_VELOCITY_IMPACT,
-	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 } from "../../../../constants";
 import type { ScreenTransitionConfig } from "../../../../types";
+import { resolveSheetScrollGestureBehavior } from "../../../../utils/resolve-screen-transition-options";
 import { useDescriptorDerivations, useDescriptors } from "../../descriptors";
 import { useGestureContext } from "../gestures.provider";
 import {
@@ -63,9 +63,7 @@ function resolvePanPolicy(
 		gestureActivationArea:
 			options.gestureActivationArea ?? DEFAULT_GESTURE_ACTIVATION_AREA,
 		gestureSnapLocked: options.gestureSnapLocked ?? DEFAULT_GESTURE_SNAP_LOCKED,
-		sheetScrollGestureBehavior:
-			options.sheetScrollGestureBehavior ??
-			DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
+		sheetScrollGestureBehavior: resolveSheetScrollGestureBehavior(options),
 		gestureResponseDistance: options.gestureResponseDistance,
 		transitionSpec: options.transitionSpec,
 	};

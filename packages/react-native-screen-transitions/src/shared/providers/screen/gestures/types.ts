@@ -107,6 +107,7 @@ export interface PanGesturePolicy {
 	gestureVelocityImpact: number;
 	gestureSnapVelocityImpact: number;
 	gestureReleaseVelocityScale: number;
+	/** @deprecated v3 compatibility only. Removed in the next gesture runtime. */
 	gestureReleaseVelocityMax: number;
 	gestureActivationArea: GestureActivationArea;
 	gestureSnapLocked: boolean;
@@ -127,6 +128,7 @@ export interface PinchGesturePolicy {
 	gestureSnapVelocityImpact: number;
 	gestureSnapLocked: boolean;
 	gestureReleaseVelocityScale: number;
+	/** @deprecated v3 compatibility only. Removed in the next gesture runtime. */
 	gestureReleaseVelocityMax: number;
 	transitionSpec: TransitionSpec | undefined;
 }

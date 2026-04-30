@@ -8,7 +8,7 @@ import { walkGestureAncestors } from "../helpers/walk-gesture-ancestors";
 export type ScreenGestureTarget = ChainTarget;
 
 /**
- * Returns a ref to a screen navigation pan gesture.
+ * Returns a screen navigation pan gesture.
  * Use this to coordinate child gestures with the navigation gesture.
  *
  * @example
