@@ -76,7 +76,6 @@ export const MaybeMaskedNavigationContainer = memo(
 						styles.navigationContainer,
 						animatedNavigationMaskContainerStyle,
 					]}
-					pointerEvents={pointerEvents}
 					collapsable={false}
 				>
 					{children}
