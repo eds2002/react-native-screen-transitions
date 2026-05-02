@@ -24,9 +24,7 @@ export default function AppleMapsSheet() {
 
 	return (
 		<View style={styles.container}>
-			<View
-				style={[styles.sheet, { backgroundColor: theme.card }]}
-			>
+			<View style={[styles.sheet, { backgroundColor: theme.card }]}>
 				<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 				<ScreenHeader
 					title="Apple Maps Style"
@@ -35,15 +33,8 @@ export default function AppleMapsSheet() {
 
 				<View style={styles.instructions}>
 					<View style={styles.instructionRow}>
-						<View
-							style={[
-								styles.badge,
-								{ backgroundColor: theme.activePill },
-							]}
-						>
-							<Text
-								style={[styles.badgeText, { color: theme.activePillText }]}
-							>
+						<View style={[styles.badge, { backgroundColor: theme.activePill }]}>
+							<Text style={[styles.badgeText, { color: theme.activePillText }]}>
 								At Top
 							</Text>
 						</View>
@@ -54,9 +45,7 @@ export default function AppleMapsSheet() {
 						</Text>
 					</View>
 					<View style={styles.instructionRow}>
-						<View
-							style={[styles.badge, { backgroundColor: theme.pill }]}
-						>
+						<View style={[styles.badge, { backgroundColor: theme.pill }]}>
 							<Text style={[styles.badgeText, { color: theme.pillText }]}>
 								Scrolled
 							</Text>
@@ -74,21 +63,13 @@ export default function AppleMapsSheet() {
 					contentContainerStyle={styles.scrollContent}
 				>
 					<View
-						style={[
-							styles.boundaryMarker,
-							{ backgroundColor: theme.noteBox },
-						]}
+						style={[styles.boundaryMarker, { backgroundColor: theme.noteBox }]}
 					>
-						<Text
-							style={[styles.boundaryText, { color: theme.noteText }]}
-						>
+						<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 							Scroll Boundary (scrollY = 0)
 						</Text>
 						<Text
-							style={[
-								styles.boundarySubtext,
-								{ color: theme.textSecondary },
-							]}
+							style={[styles.boundarySubtext, { color: theme.textSecondary }]}
 						>
 							Swipe ↑ from here to expand, ↓ to collapse
 						</Text>
@@ -97,16 +78,10 @@ export default function AppleMapsSheet() {
 					{ITEMS.map((item) => (
 						<View
 							key={item.id}
-							style={[
-								styles.item,
-								{ backgroundColor: theme.surfaceElevated },
-							]}
+							style={[styles.item, { backgroundColor: theme.surfaceElevated }]}
 						>
 							<View
-								style={[
-									styles.itemIcon,
-									{ backgroundColor: theme.surface },
-								]}
+								style={[styles.itemIcon, { backgroundColor: theme.surface }]}
 							>
 								<Text style={styles.itemIconText}>📍</Text>
 							</View>
@@ -115,10 +90,7 @@ export default function AppleMapsSheet() {
 									{item.title}
 								</Text>
 								<Text
-									style={[
-										styles.itemDistance,
-										{ color: theme.textTertiary },
-									]}
+									style={[styles.itemDistance, { color: theme.textTertiary }]}
 								>
 									{item.distance}
 								</Text>

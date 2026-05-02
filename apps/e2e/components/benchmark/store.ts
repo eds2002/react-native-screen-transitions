@@ -1,13 +1,10 @@
 import { create } from "zustand";
 import {
-	ALL_BENCHMARK_SCENARIOS,
-	PUBLIC_BENCHMARKS,
-} from "./scenarios";
-import {
 	BENCHMARK_CYCLES,
 	BENCHMARK_MAX_HISTORY_PER_IMPL,
 	BENCHMARK_TRANSITION_DURATION_MS,
 } from "./constants";
+import { ALL_BENCHMARK_SCENARIOS, PUBLIC_BENCHMARKS } from "./scenarios";
 import { computeFrameStats, computeMetricSummary } from "./stats";
 import type {
 	BenchmarkRunResult,
@@ -77,10 +74,7 @@ interface BenchmarkStoreState {
 	fairRunPlan: FairRunPlan | null;
 	resultsByScenarioImpl: ScenarioResultsByImpl;
 	historyByScenarioImpl: ScenarioHistoryByImpl;
-	startFairRun: (
-		scenarios: BenchmarkScenario[],
-		runsPerImpl: number,
-	) => void;
+	startFairRun: (scenarios: BenchmarkScenario[], runsPerImpl: number) => void;
 	consumeNextFairRunStep: () => FairRunStep | null;
 	cancelFairRun: () => void;
 	beginRun: (impl: BenchmarkStackImpl, scenario: BenchmarkScenario) => string;
@@ -449,8 +443,7 @@ export const useBenchmarkStore = create<BenchmarkStoreState>((set, get) => ({
 
 		const frameDeltas = stopFrameSampling();
 		const frameStats = computeFrameStats(frameDeltas);
-		const history =
-			get().historyByScenarioImpl[run.scenario][run.impl];
+		const history = get().historyByScenarioImpl[run.scenario][run.impl];
 		const runIndex = history.length + 1;
 
 		const result: BenchmarkRunResult = {

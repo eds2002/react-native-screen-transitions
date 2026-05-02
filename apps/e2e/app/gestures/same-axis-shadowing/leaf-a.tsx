@@ -20,9 +20,7 @@ export default function LeafAScreen() {
 			<ScreenHeader title="Leaf A" subtitle="Inherits vertical from parent" />
 
 			<View style={styles.content}>
-				<View
-					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.infoTitle, { color: theme.text }]}>
 						No gesture config on this screen
 					</Text>
@@ -31,12 +29,8 @@ export default function LeafAScreen() {
 					</Text>
 				</View>
 
-				<View
-					style={[styles.resultBox, { backgroundColor: theme.card }]}
-				>
-					<Text
-						style={[styles.resultTitle, { color: theme.textTertiary }]}
-					>
+				<View style={[styles.resultBox, { backgroundColor: theme.card }]}>
+					<Text style={[styles.resultTitle, { color: theme.textTertiary }]}>
 						Expected Result
 					</Text>
 					<View
@@ -45,9 +39,7 @@ export default function LeafAScreen() {
 							{ backgroundColor: theme.surfaceElevated },
 						]}
 					>
-						<Text
-							style={[styles.gestureIcon, { color: theme.activePill }]}
-						>
+						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 							↓
 						</Text>
 						<View style={styles.gestureContent}>
@@ -55,10 +47,7 @@ export default function LeafAScreen() {
 								Swipe down
 							</Text>
 							<Text
-								style={[
-									styles.gestureResult,
-									{ color: theme.textSecondary },
-								]}
+								style={[styles.gestureResult, { color: theme.textSecondary }]}
 							>
 								Dismisses ENTIRE stack (back to home)
 							</Text>

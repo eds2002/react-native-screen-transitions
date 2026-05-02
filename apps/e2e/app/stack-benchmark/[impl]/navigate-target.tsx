@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -57,7 +57,8 @@ export default function BenchmarkNavigateTargetScreen() {
 		const step = () => {
 			if (disposed || hasExecutedRef.current) return;
 
-			const { activeRun, recordNavigateTargetMounted } = useBenchmarkStore.getState();
+			const { activeRun, recordNavigateTargetMounted } =
+				useBenchmarkStore.getState();
 			if (!activeRun) {
 				waitFrameHandle = requestAnimationFrame(step);
 				return;
@@ -90,10 +91,15 @@ export default function BenchmarkNavigateTargetScreen() {
 	}, [cycle, impl, navigation, runId, scenario]);
 
 	return (
-		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<View style={styles.content}>
 				<ActivityIndicator size="small" color={theme.text} />
-				<Text style={[styles.title, { color: theme.text }]}>Navigating During Close</Text>
+				<Text style={[styles.title, { color: theme.text }]}>
+					Navigating During Close
+				</Text>
 				<Text style={[styles.detail, { color: theme.textTertiary }]}>
 					{impl} • cycle {Number.isFinite(cycle) ? cycle : "-"}
 				</Text>

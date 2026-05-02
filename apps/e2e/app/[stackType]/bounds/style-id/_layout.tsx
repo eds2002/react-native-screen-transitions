@@ -1,21 +1,25 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
-import Transition from "react-native-screen-transitions";
-import { create } from "zustand";
+import Transition, {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
 
-export const useStyleIdBoundsStore = create<{ boundTag: string }>(() => ({
-	boundTag: "",
-}));
+const toStyleIdBoundTag = (route?: { params?: object }) => {
+	"worklet";
+	const params = route?.params as Record<string, unknown> | undefined;
+	const rawId = params?.id;
+	return typeof rawId === "string" ? rawId : "";
+};
 
 export default function StyleIdBoundsLayout() {
 	const stackType = useResolvedStackType();
 	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
 	const navigatorScreenOptions =
 		stackType === "native-stack" ? { enableTransitions: true } : undefined;
-	const boundTag = useStyleIdBoundsStore((s) => s.boundTag);
 
 	return (
 		<StackNavigator screenOptions={navigatorScreenOptions}>
@@ -23,6 +27,7 @@ export default function StyleIdBoundsLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
+					navigationMaskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical"],
 					screenStyleInterpolator: ({
@@ -32,8 +37,17 @@ export default function StyleIdBoundsLayout() {
 						progress,
 						focused,
 						next,
+						active,
 					}) => {
 						"worklet";
+						const boundTag =
+							toStyleIdBoundTag(current.route) ||
+							toStyleIdBoundTag(active.route) ||
+							toStyleIdBoundTag(next?.route);
+
+						if (!boundTag) {
+							return {};
+						}
 
 						const x = interpolate(
 							focused ? current.gesture.normX : (next?.gesture.normX ?? 0),
@@ -75,8 +89,8 @@ export default function StyleIdBoundsLayout() {
 										transform: [{ translateX: x }, { translateY: y }],
 									},
 								},
-								"container-view": focusedBoundStyles,
-								"masked-view": {
+								_NAVIGATION_ROOT_CONTAINER: focusedBoundStyles,
+								_NAVIGATION_ROOT_MASK: {
 									...focusMaskStyles,
 									borderRadius: interpolate(progress, [0, 1], [24, 24]),
 								},
@@ -102,8 +116,8 @@ export default function StyleIdBoundsLayout() {
 						};
 					},
 					transitionSpec: {
-						open: Transition.Specs.FlingSpec,
-						close: Transition.Specs.FlingSpec,
+						open: { ...Transition.Specs.DefaultSpec, mass: 2 },
+						close: { ...Transition.Specs.DefaultSpec, mass: 2 },
 					},
 				}}
 			/>

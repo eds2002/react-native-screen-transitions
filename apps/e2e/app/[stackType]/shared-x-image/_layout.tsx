@@ -19,10 +19,7 @@ export default function SharedXImageLayout() {
 
 	return (
 		<StackNavigator screenOptions={navigatorScreenOptions}>
-			<StackNavigator.Screen
-				name="index"
-				options={{ headerShown: false }}
-			/>
+			<StackNavigator.Screen name="index" options={{ headerShown: false }} />
 			<StackNavigator.Screen
 				name="[id]"
 				options={{

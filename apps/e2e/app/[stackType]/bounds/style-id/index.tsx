@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
@@ -9,7 +9,6 @@ import {
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
 import { useTheme } from "@/theme";
-import { useStyleIdBoundsStore } from "./_layout";
 
 const IMAGES = [
 	{
@@ -53,21 +52,20 @@ export default function StyleIdBoundsIndex() {
 			edges={["top"]}
 		>
 			<ScreenHeader
-				title="Style ID Bounds"
-				subtitle="Bounds with styleId masking"
+				title="Custom Bounds Mask"
+				subtitle="Custom bounds styles for the navigation mask"
 			/>
 			<View style={styles.content}>
 				<View style={styles.grid}>
 					{IMAGES.map((item) => {
 						const tag = `shared-image-${item.id}`;
 						return (
-							<Transition.Pressable
+							<Transition.Boundary.Trigger
 								key={tag}
 								testID={tag}
-								sharedBoundTag={tag}
+								id={tag}
 								style={[styles.imageCell, { backgroundColor: theme.card }]}
 								onPress={() => {
-									useStyleIdBoundsStore.setState({ boundTag: tag });
 									router.push({
 										pathname: buildStackPath(
 											stackType,
@@ -87,7 +85,7 @@ export default function StyleIdBoundsIndex() {
 									style={styles.image}
 									contentFit="cover"
 								/>
-							</Transition.Pressable>
+							</Transition.Boundary.Trigger>
 						);
 					})}
 				</View>

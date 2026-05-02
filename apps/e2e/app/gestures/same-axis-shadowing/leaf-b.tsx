@@ -21,9 +21,7 @@ export default function LeafBScreen() {
 			<ScreenHeader title="Leaf B" subtitle="Has vertical (shadows parent)" />
 
 			<View style={styles.content}>
-				<View
-					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.infoTitle, { color: theme.text }]}>
 						This screen has vertical gesture
 					</Text>
@@ -33,12 +31,8 @@ export default function LeafBScreen() {
 					</Text>
 				</View>
 
-				<View
-					style={[styles.resultBox, { backgroundColor: theme.card }]}
-				>
-					<Text
-						style={[styles.resultTitle, { color: theme.textTertiary }]}
-					>
+				<View style={[styles.resultBox, { backgroundColor: theme.card }]}>
+					<Text style={[styles.resultTitle, { color: theme.textTertiary }]}>
 						Expected Result
 					</Text>
 					<View
@@ -47,9 +41,7 @@ export default function LeafBScreen() {
 							{ backgroundColor: theme.surfaceElevated },
 						]}
 					>
-						<Text
-							style={[styles.gestureIcon, { color: theme.activePill }]}
-						>
+						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 							↓
 						</Text>
 						<View style={styles.gestureContent}>
@@ -57,10 +49,7 @@ export default function LeafBScreen() {
 								Swipe down
 							</Text>
 							<Text
-								style={[
-									styles.gestureResult,
-									{ color: theme.textSecondary },
-								]}
+								style={[styles.gestureResult, { color: theme.textSecondary }]}
 							>
 								Dismisses ONLY this screen (back to index)
 							</Text>
@@ -68,15 +57,11 @@ export default function LeafBScreen() {
 					</View>
 				</View>
 
-				<View
-					style={[styles.shadowBox, { backgroundColor: theme.noteBox }]}
-				>
+				<View style={[styles.shadowBox, { backgroundColor: theme.noteBox }]}>
 					<Text style={[styles.shadowTitle, { color: theme.noteText }]}>
 						Shadowing Explained
 					</Text>
-					<Text
-						style={[styles.shadowText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.shadowText, { color: theme.textSecondary }]}>
 						The parent also has vertical gesture, but this screen "shadows" it
 						by claiming the same direction. Only ONE owner per direction at any
 						given time.

@@ -25,9 +25,7 @@ export default function SnapLockedNoBubbleSheet() {
 				This sheet owns the vertical axis but cannot move or dismiss.
 			</Text>
 
-			<View
-				style={[styles.card, { backgroundColor: theme.surfaceElevated }]}
-			>
+			<View style={[styles.card, { backgroundColor: theme.surfaceElevated }]}>
 				<Text style={[styles.cardTitle, { color: theme.textTertiary }]}>
 					Manual verification
 				</Text>
@@ -54,9 +52,7 @@ export default function SnapLockedNoBubbleSheet() {
 				]}
 				onPress={() => setProbeTaps((count) => count + 1)}
 			>
-				<Text
-					style={[styles.probeTitle, { color: theme.secondaryButtonText }]}
-				>
+				<Text style={[styles.probeTitle, { color: theme.secondaryButtonText }]}>
 					Interaction Probe
 				</Text>
 				<Text style={[styles.probeCount, { color: theme.text }]}>
@@ -76,9 +72,7 @@ export default function SnapLockedNoBubbleSheet() {
 				]}
 				onPress={() => router.back()}
 			>
-				<Text
-					style={[styles.backText, { color: theme.secondaryButtonText }]}
-				>
+				<Text style={[styles.backText, { color: theme.secondaryButtonText }]}>
 					Back
 				</Text>
 			</Pressable>

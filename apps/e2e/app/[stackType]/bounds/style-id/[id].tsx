@@ -1,4 +1,3 @@
-import MaskedView from "@react-native-masked-view/masked-view";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
@@ -29,9 +28,12 @@ function SharedImage({
 }) {
 	const theme = useTheme();
 	return (
-		<Transition.View
-			sharedBoundTag={id}
-			style={[styles.sharedImage, { width: size, height: size, backgroundColor: theme.card }]}
+		<Transition.Boundary.View
+			id={id}
+			style={[
+				styles.sharedImage,
+				{ width: size, height: size, backgroundColor: theme.card },
+			]}
 			onTouchStart={router.back}
 		>
 			<Image
@@ -40,7 +42,7 @@ function SharedImage({
 				style={styles.imageContent}
 				contentFit="cover"
 			/>
-		</Transition.View>
+		</Transition.Boundary.View>
 	);
 }
 
@@ -56,60 +58,48 @@ export default function StyleIdBoundsDetail() {
 	const theme = useTheme();
 
 	return (
-		<MaskedView
-			style={styles.maskedView}
-			maskElement={
-				<Transition.View styleId="masked-view" style={styles.maskElement} />
-			}
+		<Transition.ScrollView
+			contentContainerStyle={styles.scrollContent}
+			style={[styles.scroll, { backgroundColor: theme.bg }]}
 		>
-			<Transition.View styleId="container-view">
-				<Transition.ScrollView
-					contentContainerStyle={styles.scrollContent}
-					style={[styles.scroll, { backgroundColor: theme.bg }]}
-				>
-					<DragHandle />
-					<SharedImage
-						id={id}
-						image={image}
-						placeholder={placeholder}
-						size={imageSize}
-					/>
-					<View style={styles.section}>
-						<Text style={[styles.title, { color: theme.text }]}>Image Detail</Text>
-						<Text style={[styles.subtitle, { color: theme.textTertiary }]}>{`sharedBoundTag: "${id}"`}</Text>
-						<Text style={[styles.description, { color: theme.textSecondary }]}>
-							This example combines bounds animations with styleId to animate
-							multiple elements independently. The masked view clips the content
-							during transition, while the container view scales the content to
-							fit.
-						</Text>
-						<View style={[styles.card, { backgroundColor: theme.card }]}>
-							<Text style={[styles.cardTitle, { color: theme.text }]}>Bounds + StyleId</Text>
-							<Text style={[styles.cardDescription, { color: theme.textTertiary }]}>
-								Two separate bounds() calls drive the mask and the content
-								container independently.
-							</Text>
-						</View>
-						<Text style={[styles.description, { color: theme.textSecondary }]}>
-							Swipe down to dismiss and watch the reverse animation. The gesture
-							values are passed through to the unfocused screen's bound element,
-							creating a connected drag feel.
-						</Text>
-					</View>
-				</Transition.ScrollView>
-			</Transition.View>
-		</MaskedView>
+			<DragHandle />
+			<SharedImage
+				id={id}
+				image={image}
+				placeholder={placeholder}
+				size={imageSize}
+			/>
+			<View style={styles.section}>
+				<Text style={[styles.title, { color: theme.text }]}>Image Detail</Text>
+				<Text
+					style={[styles.subtitle, { color: theme.textTertiary }]}
+				>{`sharedBoundTag: "${id}"`}</Text>
+				<Text style={[styles.description, { color: theme.textSecondary }]}>
+					This example combines bounds animations with navigationMaskEnabled to
+					animate the mask and content container independently.
+				</Text>
+				<View style={[styles.card, { backgroundColor: theme.card }]}>
+					<Text style={[styles.cardTitle, { color: theme.text }]}>
+						Custom Bounds Mask
+					</Text>
+					<Text style={[styles.cardDescription, { color: theme.textTertiary }]}>
+						Two separate bounds() calls drive the navigation mask and content
+						container independently.
+					</Text>
+				</View>
+				<Text style={[styles.description, { color: theme.textSecondary }]}>
+					Swipe down to dismiss and watch the reverse animation. The gesture
+					values are passed through to the unfocused screen bound element,
+					creating a connected drag feel.
+				</Text>
+			</View>
+		</Transition.ScrollView>
 	);
 }
 
 const styles = StyleSheet.create({
-	maskedView: {
-		flex: 1,
-	},
-	maskElement: {
-		backgroundColor: "black",
-	},
 	scroll: {
+		flex: 1,
 	},
 	scrollContent: {
 		alignItems: "center",

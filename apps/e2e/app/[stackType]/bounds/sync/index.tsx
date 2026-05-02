@@ -6,10 +6,17 @@ import {
 	buildStackPath,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
-import { activeCaseId, type BoundsTestCase, CATEGORIES } from "./constants";
 import { useTheme } from "@/theme";
+import { activeCaseId, type BoundsTestCase, CATEGORIES } from "./constants";
 
 const SPECIAL_CASES = [
+	{
+		id: "opening-transform",
+		title: "Screen Transform Sync",
+		description:
+			"The destination screen slides up while bounds receives the same Y offset, keeping the shared element visually attached.",
+		path: "bounds/sync/opening-transform",
+	},
 	{
 		id: "retarget-dedicated",
 		title: "Dedicated Retarget Route",
@@ -31,7 +38,9 @@ function Section({
 	const theme = useTheme();
 	return (
 		<View style={styles.section}>
-			<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>{title}</Text>
+			<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+				{title}
+			</Text>
 			<View style={styles.list}>
 				{cases.map((testCase) => {
 					const destinationBoundary = testCase.destination.boundary;
@@ -58,11 +67,17 @@ function Section({
 							]}
 							onPress={() => {
 								activeCaseId.value = testCase.id;
-								router.push(buildStackPath(stackType, "bounds/sync/source") as never);
+								router.push(
+									buildStackPath(stackType, "bounds/sync/source") as never,
+								);
 							}}
 						>
-							<Text style={[styles.itemTitle, { color: theme.text }]}>{testCase.title}</Text>
-							<Text style={[styles.itemTags, { color: theme.activePillText }]}>{tags}</Text>
+							<Text style={[styles.itemTitle, { color: theme.text }]}>
+								{testCase.title}
+							</Text>
+							<Text style={[styles.itemTags, { color: theme.activePillText }]}>
+								{tags}
+							</Text>
 							<Text style={[styles.itemDetail, { color: theme.textTertiary }]}>
 								{testCase.source.width}x{testCase.source.height}{" "}
 								{testCase.source.position} {"\u2192"}{" "}
@@ -81,15 +96,18 @@ export default function BoundsSyncIndex() {
 	const stackType = useResolvedStackType();
 	const theme = useTheme();
 	return (
-		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
-				title="Bounds Sync"
-				subtitle="Element transitions (A/B boundary sync)"
+				title="Shared Element Sync"
+				subtitle="Shared element transitions powered by bounds synchronization"
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
 				<View style={styles.section}>
 					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
-						Special Cases
+						Combined Examples
 					</Text>
 					<View style={styles.list}>
 						{SPECIAL_CASES.map((item) => (

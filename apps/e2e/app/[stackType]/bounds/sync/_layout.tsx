@@ -4,7 +4,9 @@ import Transition, { TRANSFORM_RESET } from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
+import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 import { ALL_CASES, activeCaseId, BOUNDARY_TAG } from "./constants";
+import { OPENING_TRANSFORM_BOUNDARY_ID } from "./opening-transform/constants";
 
 const resolveActiveCase = () => {
 	"worklet";
@@ -78,6 +80,30 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 
 const RETARGET_ID = "retarget";
 
+const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
+	({ progress, bounds, layouts, focused }) => {
+		"worklet";
+
+		const y = interpolate(
+			progress,
+			[0, 1],
+			[layouts.screen.height, 0],
+			"clamp",
+		);
+
+		return {
+			content: {
+				style: {
+					transform: [{ translateY: y }],
+				},
+			},
+			[OPENING_TRANSFORM_BOUNDARY_ID]: bounds({
+				id: OPENING_TRANSFORM_BOUNDARY_ID,
+				gestures: { y: focused ? -y : undefined },
+			}) as any,
+		};
+	};
+
 const retargetInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
 	({ bounds, progress, focused, active }) => {
 		"worklet";
@@ -117,7 +143,7 @@ export default function BoundsSyncLayout() {
 			<StackNavigator.Screen
 				name="source"
 				options={{
-					...Transition.Presets.SlideFromBottom(),
+					...IOSSlide(),
 				}}
 			/>
 			<StackNavigator.Screen
@@ -135,7 +161,7 @@ export default function BoundsSyncLayout() {
 			<StackNavigator.Screen
 				name="retarget/index"
 				options={{
-					...Transition.Presets.SlideFromBottom(),
+					...IOSSlide(),
 				}}
 			/>
 			<StackNavigator.Screen
@@ -144,6 +170,24 @@ export default function BoundsSyncLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["vertical-inverted", "vertical"],
 					screenStyleInterpolator: retargetInterpolator,
+					transitionSpec: {
+						open: Transition.Specs.DefaultSpec,
+						close: Transition.Specs.DefaultSpec,
+					},
+				}}
+			/>
+			<StackNavigator.Screen
+				name="opening-transform/index"
+				options={{
+					...IOSSlide(),
+				}}
+			/>
+			<StackNavigator.Screen
+				name="opening-transform/destination"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: ["vertical", "vertical-inverted"],
+					screenStyleInterpolator: openingTransformInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.DefaultSpec,

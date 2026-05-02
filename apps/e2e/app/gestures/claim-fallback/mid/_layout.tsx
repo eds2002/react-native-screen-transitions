@@ -1,5 +1,5 @@
-import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
+import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 
 /**
  * L2 stack in claim-fallback scenario.
@@ -13,9 +13,7 @@ export default function ClaimFallbackMidLayout() {
 			<BlankStack.Screen
 				name="top"
 				options={{
-					...Transition.Presets.SlideFromBottom(),
-					gestureEnabled: true,
-					gestureDirection: "vertical",
+					...IOSSlide(),
 				}}
 			/>
 		</BlankStack>

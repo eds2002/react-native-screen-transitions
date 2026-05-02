@@ -1,6 +1,8 @@
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
+import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
+import { PINCH_PROBE_OPTIONS } from "./pinch-shadowing/shared";
 
 export default function GesturesLayout() {
 	return (
@@ -9,21 +11,15 @@ export default function GesturesLayout() {
 			{/* Basic Examples */}
 			<BlankStack.Screen
 				name="simple-inheritance"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={{ ...IOSSlide() }}
 			/>
-			<BlankStack.Screen
-				name="two-axes"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
+			<BlankStack.Screen name="two-axes" options={{ ...IOSSlide() }} />
 			<BlankStack.Screen
 				name="same-axis-shadowing"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={{ ...IOSSlide() }}
 			/>
 			{/* Intermediate Examples */}
-			<BlankStack.Screen
-				name="deep-nesting"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
+			<BlankStack.Screen name="deep-nesting" options={{ ...IOSSlide() }} />
 			<BlankStack.Screen
 				name="inverted-gesture"
 				options={{
@@ -78,56 +74,38 @@ export default function GesturesLayout() {
 					},
 				}}
 			/>
+			<BlankStack.Screen name="pinch-shadowing" options={PINCH_PROBE_OPTIONS} />
 			{/* Snap Point Examples */}
-			<BlankStack.Screen
-				name="snap-shadows-axis"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
+			<BlankStack.Screen name="snap-shadows-axis" options={{ ...IOSSlide() }} />
 			<BlankStack.Screen
 				name="snap-different-axis"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={{ ...IOSSlide() }}
 			/>
-			<BlankStack.Screen
-				name="snap-deep-nesting"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
+			<BlankStack.Screen name="snap-deep-nesting" options={{ ...IOSSlide() }} />
 			<BlankStack.Screen
 				name="claim-fallback"
 				options={{
-					...Transition.Presets.SlideFromBottom(),
-					gestureEnabled: true,
-					gestureDirection: "vertical",
+					...IOSSlide(),
 				}}
 			/>
 			<BlankStack.Screen
 				name="snap-locked-no-bubble"
 				options={{
-					...Transition.Presets.SlideFromBottom(),
-					gestureEnabled: true,
-					gestureDirection: "vertical",
+					...IOSSlide(),
 				}}
 			/>
 			{/* ScrollView Examples */}
 			<BlankStack.Screen
 				name="scroll-direction-propagation"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={{ ...IOSSlide() }}
 			/>
 			<BlankStack.Screen
 				name="scroll-direction-propagation-horizontal"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={{ ...IOSSlide() }}
 			/>
-			<BlankStack.Screen
-				name="scroll-boundary"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<BlankStack.Screen
-				name="scroll-apple-maps"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<BlankStack.Screen
-				name="scroll-instagram"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
+			<BlankStack.Screen name="scroll-boundary" options={{ ...IOSSlide() }} />
+			<BlankStack.Screen name="scroll-apple-maps" options={{ ...IOSSlide() }} />
+			<BlankStack.Screen name="scroll-instagram" options={{ ...IOSSlide() }} />
 		</BlankStack>
 	);
 }

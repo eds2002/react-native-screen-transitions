@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { interpolate } from "react-native-reanimated";
+import { interpolate, makeMutable } from "react-native-reanimated";
 import Transition, {
 	type ScreenTransitionConfig,
 } from "react-native-screen-transitions";
@@ -12,18 +12,63 @@ const DEFAULT_SPEC = {
 
 const GESTURE_RESISTANCE = 0.45;
 
+type DynamicSensitivityDriver = "x" | "y" | "xy" | "pinch";
+
+type DynamicSensitivityConfig = {
+	driver: DynamicSensitivityDriver;
+	base?: number;
+	min?: number;
+	distance?: number;
+};
+
+export const gestureSensitivityMultiplier = makeMutable(1);
+
+function resolveDynamicGestureSensitivity(
+	rawGesture: any,
+	config: DynamicSensitivityConfig,
+) {
+	"worklet";
+	const driver = config.driver;
+	const multiplier = gestureSensitivityMultiplier.get();
+	const min = multiplier;
+	const distance = config.distance ?? 0.25;
+	let amount = 0;
+
+	if (driver === "x") {
+		amount = Math.abs(rawGesture.normX);
+	} else if (driver === "y") {
+		amount = Math.abs(rawGesture.normY);
+	} else if (driver === "xy") {
+		amount = Math.max(Math.abs(rawGesture.normX), Math.abs(rawGesture.normY));
+	} else {
+		amount = Math.abs(rawGesture.normScale);
+	}
+
+	return interpolate(amount, [0, distance], [1, min], "clamp");
+}
+
+function gestureRuntimeOptions(
+	rawGesture: any,
+	config: DynamicSensitivityConfig,
+) {
+	"worklet";
+	return {
+		gestures: {
+			gestureSensitivity: resolveDynamicGestureSensitivity(rawGesture, config),
+		},
+	};
+}
+
 function buildHorizontalOptions(inverted: boolean): ScreenTransitionConfig {
 	return {
 		gestureEnabled: true,
 		gestureDirection: inverted ? "horizontal-inverted" : "horizontal",
-		gestureReleaseVelocityScale: 0,
 		screenStyleInterpolator: ({
 			progress,
 			layouts: {
 				screen: { width },
 			},
 			active,
-			focused,
 		}) => {
 			"worklet";
 			const enterX = inverted ? -width : width;
@@ -35,19 +80,8 @@ function buildHorizontalOptions(inverted: boolean): ScreenTransitionConfig {
 				"clamp",
 			);
 
-			const t = interpolate(
-				active.gesture.raw.normX,
-				[0, 0.25],
-				[1, 0.1],
-				"clamp",
-			);
-
 			return {
-				options: {
-					gestures: {
-						gestureSensitivity: t,
-					},
-				},
+				options: gestureRuntimeOptions(active.gesture.raw, { driver: "x" }),
 				content: {
 					style: {
 						transform: [{ translateX }],
@@ -64,6 +98,7 @@ function buildVerticalOptions(inverted: boolean) {
 		gestureEnabled: true,
 		gestureDirection: inverted ? "vertical-inverted" : "vertical",
 		screenStyleInterpolator: ({
+			active,
 			progress,
 			layouts: {
 				screen: { height },
@@ -80,6 +115,7 @@ function buildVerticalOptions(inverted: boolean) {
 			);
 
 			return {
+				options: gestureRuntimeOptions(active.gesture.raw, { driver: "y" }),
 				content: {
 					style: {
 						transform: [{ translateY }],
@@ -92,6 +128,13 @@ function buildVerticalOptions(inverted: boolean) {
 }
 
 function buildNestedOptions(): ScreenTransitionConfig {
+	const disabledSensitivity = {
+		driver: "y",
+		base: 0.16,
+		min: 0.02,
+		distance: 0.3,
+	} as const;
+
 	return {
 		gestureEnabled: true,
 		gestureDirection: "vertical",
@@ -104,11 +147,9 @@ function buildNestedOptions(): ScreenTransitionConfig {
 			},
 		}) => {
 			"worklet";
-			const disabledGestureSensitivity = interpolate(
-				active.gesture.raw.normY,
-				[0, 0.3],
-				[0.16, 0.02],
-				"clamp",
+			const disabledGestureSensitivity = resolveDynamicGestureSensitivity(
+				active.gesture.raw,
+				disabledSensitivity,
 			);
 			const gestureSensitivity =
 				active.options.gestureEnabled === false
@@ -142,7 +183,7 @@ function buildBidirectionalOptions() {
 	return {
 		gestureEnabled: true,
 		gestureDirection: "bidirectional" as const,
-		screenStyleInterpolator: ({ current, progress }) => {
+		screenStyleInterpolator: ({ active, current, progress }) => {
 			"worklet";
 			const baseScale = interpolate(progress, [0, 1, 2], [0, 1, 0.92], "clamp");
 			const translateX = current.gesture.x * 0.9;
@@ -150,6 +191,7 @@ function buildBidirectionalOptions() {
 			const translateY = current.gesture.y * 0.9;
 
 			return {
+				options: gestureRuntimeOptions(active.gesture.raw, { driver: "xy" }),
 				content: {
 					style: {
 						transform: [{ translateX }, { translateY }, { scale: baseScale }],
@@ -165,13 +207,19 @@ function buildPinchOptions(
 	direction: "pinch-in" | "pinch-out",
 ): ScreenTransitionConfig {
 	const isPinchIn = direction === "pinch-in";
+	const gestureSensitivity = {
+		driver: "pinch",
+		base: 0.75,
+		min: 0.12,
+		distance: 0.22,
+	} as const;
 
 	return {
 		gestureEnabled: true,
 		gestureDirection: [direction, "horizontal", "vertical"],
-		gestureSensitivity: 0.75,
+		gestureSensitivity: gestureSensitivity.base,
 		snapPoints: isPinchIn ? [0.5, 1.0] : undefined,
-		screenStyleInterpolator: ({ progress }) => {
+		screenStyleInterpolator: ({ active, progress }) => {
 			"worklet";
 
 			const baseScale = interpolate(
@@ -181,6 +229,7 @@ function buildPinchOptions(
 			);
 
 			return {
+				options: gestureRuntimeOptions(active.gesture.raw, gestureSensitivity),
 				content: {
 					style: {
 						opacity: interpolate(progress, [0, 1, 2], [0, 1, 0.92], "clamp"),
@@ -194,13 +243,20 @@ function buildPinchOptions(
 }
 
 function buildSnapMultiAxisOptions(): ScreenTransitionConfig {
+	const gestureSensitivity = {
+		driver: "xy",
+		base: 0.85,
+		min: 0.12,
+	} as const;
+
 	return {
 		gestureEnabled: true,
 		gestureDirection: ["horizontal", "vertical-inverted"],
 		gestureReleaseVelocityScale: 0,
 		snapPoints: [0.45, 0.75, 1],
-		gestureSensitivity: 0.85,
+		gestureSensitivity: gestureSensitivity.base,
 		screenStyleInterpolator: ({
+			active,
 			current,
 			progress,
 			layouts: {
@@ -217,6 +273,7 @@ function buildSnapMultiAxisOptions(): ScreenTransitionConfig {
 			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
 
 			return {
+				options: gestureRuntimeOptions(active.gesture.raw, gestureSensitivity),
 				content: {
 					style: {
 						opacity,
@@ -230,13 +287,20 @@ function buildSnapMultiAxisOptions(): ScreenTransitionConfig {
 }
 
 function buildSnapOrderAxisOptions(): ScreenTransitionConfig {
+	const gestureSensitivity = {
+		driver: "y",
+		base: 0.85,
+		min: 0.12,
+	} as const;
+
 	return {
 		gestureEnabled: true,
 		gestureDirection: ["vertical-inverted", "vertical"],
 		gestureReleaseVelocityScale: 0,
 		snapPoints: [0.4, 0.7, 1],
-		gestureSensitivity: 0.85,
+		gestureSensitivity: gestureSensitivity.base,
 		screenStyleInterpolator: ({
+			active,
 			current,
 			progress,
 			layouts: {
@@ -257,6 +321,7 @@ function buildSnapOrderAxisOptions(): ScreenTransitionConfig {
 			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
 
 			return {
+				options: gestureRuntimeOptions(active.gesture.raw, gestureSensitivity),
 				content: {
 					style: {
 						opacity,
@@ -270,13 +335,20 @@ function buildSnapOrderAxisOptions(): ScreenTransitionConfig {
 }
 
 function buildSnapPinchPanOptions(): ScreenTransitionConfig {
+	const gestureSensitivity = {
+		driver: "xy",
+		base: 0.8,
+		min: 0.12,
+	} as const;
+
 	return {
 		gestureEnabled: true,
 		gestureDirection: ["pinch-out", "horizontal", "vertical-inverted"],
 		gestureReleaseVelocityScale: 0,
 		snapPoints: [0.45, 0.72, 1],
-		gestureSensitivity: 0.8,
+		gestureSensitivity: gestureSensitivity.base,
 		screenStyleInterpolator: ({
+			active,
 			current,
 			progress,
 			layouts: {
@@ -298,6 +370,7 @@ function buildSnapPinchPanOptions(): ScreenTransitionConfig {
 			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
 
 			return {
+				options: gestureRuntimeOptions(active.gesture.raw, gestureSensitivity),
 				content: {
 					style: {
 						opacity,
@@ -315,13 +388,20 @@ function buildSnapPinchPanOptions(): ScreenTransitionConfig {
 }
 
 function buildSnapPinchOnlyOptions(): ScreenTransitionConfig {
+	const gestureSensitivity = {
+		driver: "pinch",
+		base: 0.75,
+		min: 0.12,
+		distance: 0.22,
+	} as const;
+
 	return {
 		gestureEnabled: true,
 		gestureDirection: "pinch-in",
 		gestureReleaseVelocityScale: 0,
 		snapPoints: [0.45, 0.75, 1],
-		gestureSensitivity: 0.75,
-		screenStyleInterpolator: ({ progress }) => {
+		gestureSensitivity: gestureSensitivity.base,
+		screenStyleInterpolator: ({ active, progress }) => {
 			"worklet";
 
 			const progressScale = interpolate(
@@ -333,6 +413,7 @@ function buildSnapPinchOnlyOptions(): ScreenTransitionConfig {
 			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
 
 			return {
+				options: gestureRuntimeOptions(active.gesture.raw, gestureSensitivity),
 				content: {
 					style: {
 						opacity,
@@ -349,7 +430,7 @@ function buildDynamicRuntimeOptions(): ScreenTransitionConfig {
 	return {
 		gestureEnabled: true,
 		gestureDirection: "horizontal",
-		screenStyleInterpolator: ({ current, progress }) => {
+		screenStyleInterpolator: ({ active, current, progress }) => {
 			"worklet";
 
 			const translateX = current.gesture.x * 0.85;
@@ -363,6 +444,7 @@ function buildDynamicRuntimeOptions(): ScreenTransitionConfig {
 			);
 
 			return {
+				options: gestureRuntimeOptions(active.gesture.raw, { driver: "xy" }),
 				content: {
 					style: {
 						transform: [
@@ -378,18 +460,49 @@ function buildDynamicRuntimeOptions(): ScreenTransitionConfig {
 	};
 }
 
+export function buildGestureScreenOptions(id: GestureExampleId) {
+	switch (id) {
+		case "horizontal":
+			return buildHorizontalOptions(false);
+		case "horizontal-inverted":
+			return buildHorizontalOptions(true);
+		case "vertical":
+			return buildVerticalOptions(false);
+		case "vertical-inverted":
+			return buildVerticalOptions(true);
+		case "bidirectional":
+			return buildBidirectionalOptions();
+		case "pinch-in":
+			return buildPinchOptions("pinch-in");
+		case "pinch-out":
+			return buildPinchOptions("pinch-out");
+		case "snap-multi-axis":
+			return buildSnapMultiAxisOptions();
+		case "snap-order-axis":
+			return buildSnapOrderAxisOptions();
+		case "snap-pinch-pan":
+			return buildSnapPinchPanOptions();
+		case "snap-pinch-only":
+			return buildSnapPinchOnlyOptions();
+		case "dynamic-runtime":
+			return buildDynamicRuntimeOptions();
+		case "nested":
+			return buildNestedOptions();
+	}
+}
+
 export const GESTURE_SCREEN_OPTIONS: Record<GestureExampleId, any> = {
-	horizontal: buildHorizontalOptions(false),
-	"horizontal-inverted": buildHorizontalOptions(true),
-	vertical: buildVerticalOptions(false),
-	"vertical-inverted": buildVerticalOptions(true),
-	bidirectional: buildBidirectionalOptions(),
-	"pinch-in": buildPinchOptions("pinch-in"),
-	"pinch-out": buildPinchOptions("pinch-out"),
-	"snap-multi-axis": buildSnapMultiAxisOptions(),
-	"snap-order-axis": buildSnapOrderAxisOptions(),
-	"snap-pinch-pan": buildSnapPinchPanOptions(),
-	"snap-pinch-only": buildSnapPinchOnlyOptions(),
-	"dynamic-runtime": buildDynamicRuntimeOptions(),
-	nested: buildNestedOptions(),
+	horizontal: buildGestureScreenOptions("horizontal"),
+	"horizontal-inverted": buildGestureScreenOptions("horizontal-inverted"),
+	vertical: buildGestureScreenOptions("vertical"),
+	"vertical-inverted": buildGestureScreenOptions("vertical-inverted"),
+	bidirectional: buildGestureScreenOptions("bidirectional"),
+	"pinch-in": buildGestureScreenOptions("pinch-in"),
+	"pinch-out": buildGestureScreenOptions("pinch-out"),
+	"snap-multi-axis": buildGestureScreenOptions("snap-multi-axis"),
+	"snap-order-axis": buildGestureScreenOptions("snap-order-axis"),
+	"snap-pinch-pan": buildGestureScreenOptions("snap-pinch-pan"),
+	"snap-pinch-only": buildGestureScreenOptions("snap-pinch-only"),
+	"dynamic-runtime": buildGestureScreenOptions("dynamic-runtime"),
+	nested: buildGestureScreenOptions("nested"),
 };

@@ -19,7 +19,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
-		}).navigation.zoom({ debug: false, target: "bound" });
+		}).navigation.zoom({ target: "bound" });
 
 		return {
 			...navigationStyles,
@@ -45,10 +45,9 @@ export default function NavigationZoomGroupTransitionsLayout() {
 					navigationMaskEnabled: Platform.OS === "ios",
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
-					gestureReleaseVelocityScale: 1.6,
+					gestureReleaseVelocityScale: 2,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: navigationZoomInterpolator,
-					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,

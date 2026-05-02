@@ -1,5 +1,5 @@
-import { router, useLocalSearchParams } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
+import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import {
 	InteractionManager,
@@ -67,9 +67,9 @@ export default function BenchmarkControllerScreen() {
 	const autoStartedRef = useRef(false);
 	const autoReturnedRef = useRef(false);
 	const autoRunIdRef = useRef<string | null>(null);
-	const pendingCompletionRetryRef = useRef<ReturnType<typeof setTimeout> | null>(
-		null,
-	);
+	const pendingCompletionRetryRef = useRef<ReturnType<
+		typeof setTimeout
+	> | null>(null);
 	const cycleLaunchRetriesRef = useRef<Record<string, number>>({});
 
 	const autorunParam = getParamValue(params.autorun);
@@ -82,9 +82,7 @@ export default function BenchmarkControllerScreen() {
 			: ("/stack-benchmark" as const);
 
 	const runForThisContext =
-		activeRun &&
-		activeRun.impl === impl &&
-		activeRun.scenario === scenario
+		activeRun && activeRun.impl === impl && activeRun.scenario === scenario
 			? activeRun
 			: null;
 	const isBusyWithAnotherRun = activeRun !== null && !runForThisContext;
@@ -119,9 +117,9 @@ export default function BenchmarkControllerScreen() {
 		if (!isFocused) return;
 
 		let cancelled = false;
-		let interactionTask:
-			| ReturnType<typeof InteractionManager.runAfterInteractions>
-			| null = null;
+		let interactionTask: ReturnType<
+			typeof InteractionManager.runAfterInteractions
+		> | null = null;
 		let completionFrameHandle: number | null = null;
 
 		const clearPendingRetry = () => {
@@ -175,15 +173,15 @@ export default function BenchmarkControllerScreen() {
 				cancelAnimationFrame(completionFrameHandle);
 			}
 		};
-		}, [
-			completeCycleOnFocus,
-			finishRun,
-			impl,
-			isFocused,
-			launchCycle,
-			runForThisContext,
-			scenario,
-		]);
+	}, [
+		completeCycleOnFocus,
+		finishRun,
+		impl,
+		isFocused,
+		launchCycle,
+		runForThisContext,
+		scenario,
+	]);
 
 	useEffect(() => {
 		if (!runForThisContext) return;
@@ -256,30 +254,34 @@ export default function BenchmarkControllerScreen() {
 
 		autoReturnedRef.current = true;
 		router.replace(returnToPath as never);
-	}, [
-		activeRun,
-		impl,
-		result,
-		returnToPath,
-		scenario,
-		shouldAutoRun,
-	]);
+	}, [activeRun, impl, result, returnToPath, scenario, shouldAutoRun]);
 
 	return (
-		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]} edges={["top"]}>
+		<SafeAreaView
+			style={[styles.container, { backgroundColor: theme.bg }]}
+			edges={["top"]}
+		>
 			<ScreenHeader
 				title={`${getImplLabel(impl)} • ${definition.title}`}
 				subtitle={`${BENCHMARK_CYCLES}-cycle automated run`}
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
 				<View style={[styles.noticeCard, { backgroundColor: theme.card }]}>
-					<Text style={[styles.noticeTitle, { color: theme.text }]}>Transparency</Text>
-					<Text style={[styles.noticeText, { color: theme.textSecondary }]}>{BENCHMARK_TRANSPARENCY_NOTE}</Text>
-					<Text style={[styles.noticeSubtext, { color: theme.textTertiary }]}>{BENCHMARK_CAVEAT_NOTE}</Text>
+					<Text style={[styles.noticeTitle, { color: theme.text }]}>
+						Transparency
+					</Text>
+					<Text style={[styles.noticeText, { color: theme.textSecondary }]}>
+						{BENCHMARK_TRANSPARENCY_NOTE}
+					</Text>
+					<Text style={[styles.noticeSubtext, { color: theme.textTertiary }]}>
+						{BENCHMARK_CAVEAT_NOTE}
+					</Text>
 				</View>
 
 				<View style={[styles.controlsCard, { backgroundColor: theme.card }]}>
-					<Text style={[styles.controlsTitle, { color: theme.text }]}>Run Status</Text>
+					<Text style={[styles.controlsTitle, { color: theme.text }]}>
+						Run Status
+					</Text>
 					{runForThisContext ? (
 						<Text style={[styles.statusText, { color: theme.textSecondary }]}>
 							Running cycle {Math.max(1, runForThisContext.currentCycle)}/
@@ -302,26 +304,54 @@ export default function BenchmarkControllerScreen() {
 
 					<Pressable
 						testID={`benchmark-run-${impl}-${scenario}`}
-						style={({ pressed }) => [styles.button, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }, activeRun !== null && styles.buttonDisabled]}
+						style={({ pressed }) => [
+							styles.button,
+							{
+								backgroundColor: pressed
+									? theme.actionButtonPressed
+									: theme.actionButton,
+							},
+							activeRun !== null && styles.buttonDisabled,
+						]}
 						disabled={activeRun !== null}
 						onPress={handleRun}
 					>
-						<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>Run Benchmark</Text>
+						<Text
+							style={[styles.buttonText, { color: theme.actionButtonText }]}
+						>
+							Run Benchmark
+						</Text>
 					</Pressable>
 
 					{runForThisContext ? (
 						<Pressable
-							style={({ pressed }) => [styles.secondaryButton, { backgroundColor: pressed ? theme.secondaryButtonPressed : theme.secondaryButton }]}
+							style={({ pressed }) => [
+								styles.secondaryButton,
+								{
+									backgroundColor: pressed
+										? theme.secondaryButtonPressed
+										: theme.secondaryButton,
+								},
+							]}
 							onPress={handleCancel}
 						>
-							<Text style={[styles.secondaryButtonText, { color: theme.secondaryButtonText }]}>Cancel Current Run</Text>
+							<Text
+								style={[
+									styles.secondaryButtonText,
+									{ color: theme.secondaryButtonText },
+								]}
+							>
+								Cancel Current Run
+							</Text>
 						</Pressable>
 					) : null}
 				</View>
 
 				{result ? (
 					<View style={[styles.resultCard, { backgroundColor: theme.card }]}>
-						<Text style={[styles.resultTitle, { color: theme.text }]}>Latest Result</Text>
+						<Text style={[styles.resultTitle, { color: theme.text }]}>
+							Latest Result
+						</Text>
 						<Text style={[styles.metric, { color: theme.textSecondary }]}>
 							Push mean {formatMs(result.pushLatencyMs.mean)} · p95{" "}
 							{formatMs(result.pushLatencyMs.p95)}
