@@ -11,6 +11,7 @@ export function useScreenAnimation(
 ): DerivedValue<ScreenInterpolationProps> {
 	const {
 		screenInterpolatorProps,
+		screenInterpolatorVersion,
 		boundsAccessor,
 		ancestorScreenAnimationSources,
 	} = useScreenAnimationContext();
@@ -19,6 +20,7 @@ export function useScreenAnimation(
 		target,
 		self: {
 			screenInterpolatorProps,
+			screenInterpolatorVersion,
 			boundsAccessor,
 		},
 		ancestors: ancestorScreenAnimationSources,
@@ -27,6 +29,7 @@ export function useScreenAnimation(
 	return useDerivedValue<ScreenInterpolationProps>(() => {
 		"worklet";
 
+		source.screenInterpolatorVersion.get();
 		const props = source.screenInterpolatorProps.get();
 
 		return {

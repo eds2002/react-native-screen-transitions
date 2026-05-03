@@ -28,9 +28,11 @@ type BuiltState = {
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
 	options: ScreenTransitionOptions;
+	navigationMaskEnabled: boolean;
 	targetProgress: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
+	contentLayoutSlot: Layout;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
 	unwrapped: ScreenTransitionState;
@@ -76,12 +78,14 @@ export const useBuildTransitionState = (
 			targetProgress: SystemStore.getValue(key, "targetProgress"),
 			resolvedAutoSnapPoint: SystemStore.getValue(key, "resolvedAutoSnapPoint"),
 			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),
+			contentLayoutSlot: { width: 0, height: 0 },
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
 			sortedNumericSnapPoints,
 			gesture: GestureStore.getBag(key),
 			route: plainRoute,
 			meta: plainMeta,
 			options: transitionOptions,
+			navigationMaskEnabled,
 			unwrapped: createScreenTransitionState(
 				plainRoute,
 				plainMeta,

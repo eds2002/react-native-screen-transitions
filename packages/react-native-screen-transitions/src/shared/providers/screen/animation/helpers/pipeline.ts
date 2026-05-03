@@ -1,8 +1,9 @@
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
+	type DerivedValue,
 	type SharedValue,
-	useAnimatedReaction,
+	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -16,7 +17,7 @@ import type { BoundsAccessor } from "../../../../types/bounds.types";
 
 import { createBoundsAccessor } from "../../../../utils/bounds";
 import { useDescriptors } from "../../descriptors";
-import { derivations } from "./derivations";
+import { updateDerivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
 import { hydrateTransitionState } from "./hydrate-transition-state";
 import { useBuildTransitionState } from "./use-build-transition-state";
@@ -25,6 +26,7 @@ export type ScreenInterpolatorFrame = Omit<ScreenInterpolationProps, "bounds">;
 
 interface ScreenAnimationPipeline {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
+	screenInterpolatorVersion: DerivedValue<number>;
 	nextInterpolator: ScreenStyleInterpolator | undefined;
 	currentInterpolator: ScreenStyleInterpolator | undefined;
 	boundsAccessor: BoundsAccessor;
@@ -71,9 +73,45 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		!!nextRouteKey &&
 		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
 
-	const screenInterpolatorProps = useSharedValue<ScreenInterpolatorFrame>(
+	const screenInterpolatorProps = useSharedValue(
 		createInitialBaseInterpolatorProps(dimensions, insets),
 	);
+
+	const screenInterpolatorVersionState = useSharedValue({ value: 0 });
+
+	const screenInterpolatorVersion = useDerivedValue<number>(() => {
+		"worklet";
+
+		const frame = screenInterpolatorProps.get();
+		const versionState = screenInterpolatorVersionState.get();
+
+		frame.previous = prevAnimation
+			? hydrateTransitionState(prevAnimation, dimensions)
+			: undefined;
+
+		frame.current = currentAnimation
+			? hydrateTransitionState(currentAnimation, dimensions)
+			: DEFAULT_SCREEN_TRANSITION_STATE;
+
+		frame.next =
+			nextAnimation && nextHasTransitions
+				? hydrateTransitionState(nextAnimation, dimensions)
+				: undefined;
+
+		frame.layouts = frame.current.layouts;
+		frame.insets = insets;
+
+		updateDerivations(frame);
+
+		frame.stackProgress =
+			currentIndex >= 0
+				? rootStackProgress.get() - currentIndex
+				: frame.progress;
+		frame.logicallySettled = frame.active.logicallySettled;
+
+		versionState.value += 1;
+		return versionState.value;
+	});
 
 	const boundsAccessor = useMemo(() => {
 		return createBoundsAccessor(() => {
@@ -82,85 +120,12 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		});
 	}, [screenInterpolatorProps]);
 
-	useAnimatedReaction(
-		() => {
-			"worklet";
-
-			const previous = prevAnimation
-				? hydrateTransitionState(prevAnimation, dimensions)
-				: undefined;
-
-			const next =
-				nextAnimation && nextHasTransitions
-					? hydrateTransitionState(nextAnimation, dimensions)
-					: undefined;
-
-			const current = currentAnimation
-				? hydrateTransitionState(currentAnimation, dimensions)
-				: DEFAULT_SCREEN_TRANSITION_STATE;
-
-			const { progress, ...helpers } = derivations({
-				previous,
-				current,
-				next,
-			});
-
-			const stackProgress =
-				currentIndex >= 0 ? rootStackProgress.get() - currentIndex : progress;
-
-			const focused = helpers.focused;
-			const active = helpers.active;
-			const inactive = helpers.inactive;
-			const logicallySettled = active.logicallySettled;
-
-			return {
-				previous,
-				current,
-				next,
-				progress,
-				stackProgress,
-				logicallySettled,
-				focused,
-				active,
-				inactive,
-			};
-		},
-		({
-			previous,
-			current,
-			next,
-			progress,
-			stackProgress,
-			logicallySettled,
-			focused,
-			active,
-			inactive,
-		}) => {
-			"worklet";
-
-			screenInterpolatorProps.modify((frame) => {
-				"worklet";
-				frame.layouts = current.layouts;
-				frame.insets = insets;
-				frame.previous = previous;
-				frame.current = current;
-				frame.next = next;
-				frame.progress = progress;
-				frame.stackProgress = stackProgress;
-				frame.logicallySettled = logicallySettled;
-				frame.focused = focused;
-				frame.active = active;
-				frame.inactive = inactive;
-				return frame;
-			});
-		},
-	);
-
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
 	const currentInterpolator = currDescriptor?.options.screenStyleInterpolator;
 
 	return {
 		screenInterpolatorProps,
+		screenInterpolatorVersion,
 		nextInterpolator,
 		currentInterpolator,
 		boundsAccessor,

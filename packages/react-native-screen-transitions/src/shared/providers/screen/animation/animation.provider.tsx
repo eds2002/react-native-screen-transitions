@@ -28,6 +28,7 @@ export const {
 
 	const {
 		screenInterpolatorProps,
+		screenInterpolatorVersion,
 		nextInterpolator,
 		currentInterpolator,
 		boundsAccessor,
@@ -37,6 +38,7 @@ export const {
 		? [
 				{
 					screenInterpolatorProps: parentContext.screenInterpolatorProps,
+					screenInterpolatorVersion: parentContext.screenInterpolatorVersion,
 					boundsAccessor: parentContext.boundsAccessor,
 				},
 				...parentContext.ancestorScreenAnimationSources,
@@ -46,6 +48,7 @@ export const {
 	return {
 		value: {
 			screenInterpolatorProps,
+			screenInterpolatorVersion,
 			nextInterpolator,
 			currentInterpolator,
 			boundsAccessor,

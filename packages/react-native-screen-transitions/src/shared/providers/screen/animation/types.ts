@@ -2,6 +2,8 @@ import type { SharedValue } from "react-native-reanimated";
 import type { BoundsAccessor } from "../../../types/bounds.types";
 import type { ScreenInterpolatorFrame } from "./helpers/pipeline";
 
+export type ScreenInterpolatorSignal = Pick<SharedValue<number>, "get">;
+
 export type ScreenAnimationTarget =
 	| "self"
 	| "parent"
@@ -10,5 +12,6 @@ export type ScreenAnimationTarget =
 
 export type ScreenAnimationSource = {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
+	screenInterpolatorVersion: ScreenInterpolatorSignal;
 	boundsAccessor: BoundsAccessor;
 };

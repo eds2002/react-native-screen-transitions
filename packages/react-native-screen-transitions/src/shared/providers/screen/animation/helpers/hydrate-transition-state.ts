@@ -25,9 +25,11 @@ type BuiltState = {
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
 	options: ScreenTransitionOptions;
+	navigationMaskEnabled: boolean;
 	targetProgress: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
+	contentLayoutSlot: Layout;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
 	unwrapped: ScreenTransitionState;
@@ -40,52 +42,154 @@ interface ComputeLogicallySettledParams {
 	dragging: number;
 }
 
-const computeSettled = (params: {
-	animating: number;
-	dismissing: number;
-	closing: number;
-}) => {
+const computeSettled = (
+	animating: number,
+	dismissing: number,
+	closing: number,
+) => {
 	"worklet";
-	const { animating, dismissing, closing } = params;
 	return animating || dismissing || closing ? FALSE : TRUE;
+};
+
+const getResolvedSnapPointCount = (
+	snapPoints: number[],
+	resolvedAutoSnap: number | null,
+) => {
+	"worklet";
+	return snapPoints.length + (resolvedAutoSnap !== null ? 1 : 0);
+};
+
+const getAutoSnapPointIndex = (
+	snapPoints: number[],
+	resolvedAutoSnap: number,
+) => {
+	"worklet";
+	let index = 0;
+
+	while (index < snapPoints.length && snapPoints[index] <= resolvedAutoSnap) {
+		index++;
+	}
+
+	return index;
+};
+
+const getResolvedSnapPointAt = (
+	snapPoints: number[],
+	resolvedAutoSnap: number | null,
+	autoSnapPointIndex: number,
+	index: number,
+) => {
+	"worklet";
+	if (resolvedAutoSnap === null) {
+		return snapPoints[index];
+	}
+
+	if (index < autoSnapPointIndex) {
+		return snapPoints[index];
+	}
+
+	if (index === autoSnapPointIndex) {
+		return resolvedAutoSnap;
+	}
+
+	return snapPoints[index - 1];
 };
 
 const computeAnimatedSnapIndex = (
 	progress: number,
 	snapPoints: number[],
+	resolvedAutoSnap: number | null,
 ): number => {
 	"worklet";
-	if (snapPoints.length === 0) return -1;
-	if (progress <= snapPoints[0]) return 0;
-	if (progress >= snapPoints[snapPoints.length - 1])
-		return snapPoints.length - 1;
+	const snapPointCount = getResolvedSnapPointCount(
+		snapPoints,
+		resolvedAutoSnap,
+	);
 
-	for (let i = 0; i < snapPoints.length - 1; i++) {
-		if (progress <= snapPoints[i + 1]) {
+	if (snapPointCount === 0) return -1;
+
+	const autoSnapPointIndex =
+		resolvedAutoSnap === null
+			? -1
+			: getAutoSnapPointIndex(snapPoints, resolvedAutoSnap);
+	const firstSnapPoint = getResolvedSnapPointAt(
+		snapPoints,
+		resolvedAutoSnap,
+		autoSnapPointIndex,
+		0,
+	);
+	const lastSnapPoint = getResolvedSnapPointAt(
+		snapPoints,
+		resolvedAutoSnap,
+		autoSnapPointIndex,
+		snapPointCount - 1,
+	);
+
+	if (progress <= firstSnapPoint) return 0;
+	if (progress >= lastSnapPoint) return snapPointCount - 1;
+
+	for (let i = 0; i < snapPointCount - 1; i++) {
+		const currentSnapPoint = getResolvedSnapPointAt(
+			snapPoints,
+			resolvedAutoSnap,
+			autoSnapPointIndex,
+			i,
+		);
+		const nextSnapPoint = getResolvedSnapPointAt(
+			snapPoints,
+			resolvedAutoSnap,
+			autoSnapPointIndex,
+			i + 1,
+		);
+
+		if (progress <= nextSnapPoint) {
 			const t =
-				(progress - snapPoints[i]) / (snapPoints[i + 1] - snapPoints[i]);
+				(progress - currentSnapPoint) / (nextSnapPoint - currentSnapPoint);
 			return i + t;
 		}
 	}
-	return snapPoints.length - 1;
+	return snapPointCount - 1;
 };
 
 const computeTargetSnapIndex = (
 	targetProgress: number,
 	snapPoints: number[],
+	resolvedAutoSnap: number | null,
 ): number => {
 	"worklet";
-	if (snapPoints.length === 0) return -1;
+	const snapPointCount = getResolvedSnapPointCount(
+		snapPoints,
+		resolvedAutoSnap,
+	);
 
-	if (targetProgress <= 0 && Math.abs(snapPoints[0]) > EPSILON) {
+	if (snapPointCount === 0) return -1;
+
+	const autoSnapPointIndex =
+		resolvedAutoSnap === null
+			? -1
+			: getAutoSnapPointIndex(snapPoints, resolvedAutoSnap);
+	const firstSnapPoint = getResolvedSnapPointAt(
+		snapPoints,
+		resolvedAutoSnap,
+		autoSnapPointIndex,
+		0,
+	);
+
+	if (targetProgress <= 0 && Math.abs(firstSnapPoint) > EPSILON) {
 		return -1;
 	}
 
 	let nearestIndex = 0;
-	let smallestDistance = Math.abs(targetProgress - snapPoints[0]);
+	let smallestDistance = Math.abs(targetProgress - firstSnapPoint);
 
-	for (let i = 1; i < snapPoints.length; i++) {
-		const distance = Math.abs(targetProgress - snapPoints[i]);
+	for (let i = 1; i < snapPointCount; i++) {
+		const snapPoint = getResolvedSnapPointAt(
+			snapPoints,
+			resolvedAutoSnap,
+			autoSnapPointIndex,
+			i,
+		);
+		const distance = Math.abs(targetProgress - snapPoint);
 
 		if (distance < smallestDistance) {
 			smallestDistance = distance;
@@ -96,12 +200,12 @@ const computeTargetSnapIndex = (
 	return nearestIndex;
 };
 
-export const computeLogicallySettled = ({
-	progress,
-	targetProgress,
-	settled,
-	dragging,
-}: ComputeLogicallySettledParams) => {
+const computeLogicallySettledValue = (
+	progress: number,
+	targetProgress: number,
+	settled: number,
+	dragging: number,
+) => {
 	"worklet";
 
 	if (settled) {
@@ -115,6 +219,18 @@ export const computeLogicallySettled = ({
 	return Math.abs(progress - targetProgress) <= ANIMATION_SNAP_THRESHOLD
 		? TRUE
 		: FALSE;
+};
+
+export const computeLogicallySettled = (
+	params: ComputeLogicallySettledParams,
+) => {
+	"worklet";
+	return computeLogicallySettledValue(
+		params.progress,
+		params.targetProgress,
+		params.settled,
+		params.dragging,
+	);
 };
 
 export const hydrateTransitionState = (
@@ -158,17 +274,18 @@ export const hydrateTransitionState = (
 	out.gesture.isDismissing = out.gesture.dismissing;
 	out.gesture.isDragging = out.gesture.dragging;
 
-	out.settled = computeSettled({
-		animating: out.animating,
-		dismissing: out.gesture.dismissing,
-		closing: out.closing,
-	});
-	out.logicallySettled = computeLogicallySettled({
-		progress: out.progress,
-		targetProgress: s.targetProgress.get(),
-		settled: out.settled,
-		dragging: out.gesture.dragging,
-	});
+	out.settled = computeSettled(
+		out.animating,
+		out.gesture.dismissing,
+		out.closing,
+	);
+	const targetProgress = s.targetProgress.get();
+	out.logicallySettled = computeLogicallySettledValue(
+		out.progress,
+		targetProgress,
+		out.settled,
+		out.gesture.dragging,
+	);
 
 	if (s.settled.get() !== out.settled) {
 		s.settled.set(out.settled);
@@ -180,41 +297,33 @@ export const hydrateTransitionState = (
 
 	out.meta = s.meta;
 	out.options = s.options;
+	out.route = s.route;
 	out.layouts.screen.width = dimensions.width;
 	out.layouts.screen.height = dimensions.height;
+	out.layouts.navigationMaskEnabled = s.navigationMaskEnabled;
 
 	const content = s.measuredContentLayout.get();
 	if (content) {
-		if (!out.layouts.content) {
-			out.layouts.content = {
-				width: content.width,
-				height: content.height,
-			};
-		} else {
-			out.layouts.content.width = content.width;
-			out.layouts.content.height = content.height;
-		}
+		s.contentLayoutSlot.width = content.width;
+		s.contentLayoutSlot.height = content.height;
+		out.layouts.content = s.contentLayoutSlot;
 	} else {
 		out.layouts.content = undefined;
 	}
 
+	const autoSnapPoint = s.resolvedAutoSnapPoint.get();
 	const resolvedAutoSnap =
-		s.hasAutoSnapPoint && s.resolvedAutoSnapPoint.get() > 0
-			? s.resolvedAutoSnapPoint.get()
-			: null;
-
-	const resolvedSnapPoints =
-		resolvedAutoSnap !== null
-			? [...s.sortedNumericSnapPoints, resolvedAutoSnap].sort((a, b) => a - b)
-			: s.sortedNumericSnapPoints;
+		s.hasAutoSnapPoint && autoSnapPoint > 0 ? autoSnapPoint : null;
 
 	out.animatedSnapIndex = computeAnimatedSnapIndex(
 		out.progress,
-		resolvedSnapPoints,
+		s.sortedNumericSnapPoints,
+		resolvedAutoSnap,
 	);
 	out.snapIndex = computeTargetSnapIndex(
-		s.targetProgress.get(),
-		resolvedSnapPoints,
+		targetProgress,
+		s.sortedNumericSnapPoints,
+		resolvedAutoSnap,
 	);
 
 	return out;

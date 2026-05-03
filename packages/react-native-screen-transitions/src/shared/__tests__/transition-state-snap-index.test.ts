@@ -1,6 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import type { SharedValue } from "react-native-reanimated";
-import { createScreenTransitionState } from "../constants";
+import {
+	createScreenTransitionState,
+	DEFAULT_SCREEN_TRANSITION_OPTIONS,
+} from "../constants";
 import type { GestureStoreMap } from "../stores/gesture.store";
 import { hydrateTransitionState } from "../providers/screen/animation/helpers/hydrate-transition-state";
 
@@ -59,9 +62,12 @@ describe("hydrateTransitionState snap indices", () => {
 				logicallySettled: shared(1),
 				gesture: createGestureStore(),
 				route: state.route,
+				options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
+				navigationMaskEnabled: false,
 				targetProgress: shared(0.8),
 				resolvedAutoSnapPoint: shared(-1),
 				measuredContentLayout: shared(null),
+				contentLayoutSlot: { width: 0, height: 0 },
 				hasAutoSnapPoint: false,
 				sortedNumericSnapPoints: [0.2, 0.8],
 				unwrapped: state,
@@ -71,5 +77,86 @@ describe("hydrateTransitionState snap indices", () => {
 
 		expect(hydrated.animatedSnapIndex).toBeCloseTo(0.5);
 		expect(hydrated.snapIndex).toBe(1);
+	});
+
+	it("merges the resolved auto snap point without changing snap index ordering", () => {
+		const state = createScreenTransitionState({
+			key: "route-a",
+			name: "RouteA",
+		});
+
+		const hydrated = hydrateTransitionState(
+			{
+				progress: shared(0.45),
+				willAnimate: shared(0),
+				closing: shared(0),
+				animating: shared(0),
+				entering: shared(0),
+				settled: shared(1),
+				logicallySettled: shared(1),
+				gesture: createGestureStore(),
+				route: state.route,
+				options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
+				navigationMaskEnabled: false,
+				targetProgress: shared(0.45),
+				resolvedAutoSnapPoint: shared(0.45),
+				measuredContentLayout: shared(null),
+				contentLayoutSlot: { width: 0, height: 0 },
+				hasAutoSnapPoint: true,
+				sortedNumericSnapPoints: [0.2, 0.8],
+				unwrapped: state,
+			},
+			{ width: 390, height: 844 },
+		);
+
+		expect(hydrated.animatedSnapIndex).toBe(1);
+		expect(hydrated.snapIndex).toBe(1);
+	});
+
+	it("reuses the measured content layout slot across hydration frames", () => {
+		const state = createScreenTransitionState({
+			key: "route-a",
+			name: "RouteA",
+		});
+		const measuredContentLayout = shared({ width: 320, height: 400 });
+		const builtState = {
+			progress: shared(0.45),
+			willAnimate: shared(0),
+			closing: shared(0),
+			animating: shared(0),
+			entering: shared(0),
+			settled: shared(1),
+			logicallySettled: shared(1),
+			gesture: createGestureStore(),
+			route: state.route,
+			options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
+			navigationMaskEnabled: false,
+			targetProgress: shared(0.45),
+			resolvedAutoSnapPoint: shared(0.45),
+			measuredContentLayout,
+			contentLayoutSlot: { width: 0, height: 0 },
+			hasAutoSnapPoint: true,
+			sortedNumericSnapPoints: [0.2, 0.8],
+			unwrapped: state,
+		};
+
+		const firstHydration = hydrateTransitionState(builtState, {
+			width: 390,
+			height: 844,
+		});
+		const firstContent = firstHydration.layouts.content;
+
+		measuredContentLayout.set({ width: 300, height: 360 });
+
+		const secondHydration = hydrateTransitionState(builtState, {
+			width: 390,
+			height: 844,
+		});
+
+		expect(secondHydration.layouts.content).toBe(firstContent);
+		expect(secondHydration.layouts.content).toEqual({
+			width: 300,
+			height: 360,
+		});
 	});
 });
