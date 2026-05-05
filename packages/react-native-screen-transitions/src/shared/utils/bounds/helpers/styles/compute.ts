@@ -5,10 +5,8 @@ import {
 	FULLSCREEN_DIMENSIONS,
 	NO_STYLES,
 } from "../../../../constants";
-import {
-	BoundStore,
-	type ResolvedTransitionPair,
-} from "../../../../stores/bounds";
+import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
+import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
 import type { Layout } from "../../../../types/screen.types";
 import type {
@@ -54,7 +52,7 @@ const resolveStartEnd = (params: {
 
 	const resolvedPair =
 		params.resolvedPair ??
-		BoundStore.link.getPair(String(params.id), {
+		resolveTransitionPair(String(params.id), {
 			currentScreenKey,
 			previousScreenKey,
 			nextScreenKey,

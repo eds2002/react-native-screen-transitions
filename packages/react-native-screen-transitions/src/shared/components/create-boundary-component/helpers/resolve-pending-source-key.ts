@@ -1,4 +1,7 @@
-import { BoundStore } from "../../../stores/bounds";
+import {
+	getPendingLink,
+	hasSourceLink,
+} from "../../../stores/bounds/internals/registry";
 
 export const resolvePendingSourceKey = (
 	sharedBoundTag: string,
@@ -7,11 +10,11 @@ export const resolvePendingSourceKey = (
 	"worklet";
 	if (
 		expectedSourceScreenKey &&
-		(BoundStore.link.getPending(sharedBoundTag, expectedSourceScreenKey) ||
-			BoundStore.link.hasSource(sharedBoundTag, expectedSourceScreenKey))
+		(getPendingLink(sharedBoundTag, expectedSourceScreenKey) ||
+			hasSourceLink(sharedBoundTag, expectedSourceScreenKey))
 	) {
 		return expectedSourceScreenKey;
 	}
 
-	return BoundStore.link.getPending(sharedBoundTag)?.source.screenKey ?? null;
+	return getPendingLink(sharedBoundTag)?.source.screenKey ?? null;
 };
