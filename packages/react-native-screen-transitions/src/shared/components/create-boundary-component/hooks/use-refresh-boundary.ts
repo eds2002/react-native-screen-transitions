@@ -1,6 +1,7 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
-import { BoundStore } from "../../../stores/bounds";
+import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
+import { hasSourceLink } from "../../../stores/bounds/internals/registry";
 import { GestureStore } from "../../../stores/gesture.store";
 import type { BoundaryId, MeasureParams } from "../types";
 
@@ -51,9 +52,7 @@ export const useRefreshBoundary = ({
 			if (!enabled || !hasNextScreen) return;
 			if (nextValue === 0 || nextValue === previousValue) return;
 
-			const currentGroupActiveId = group
-				? BoundStore.group.getActiveId(group)
-				: null;
+			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
 
 			if (group && currentGroupActiveId !== String(id)) {
 				return;
@@ -66,12 +65,9 @@ export const useRefreshBoundary = ({
 				return;
 			}
 
-			const hasSourceLink = BoundStore.link.hasSource(
-				sharedBoundTag,
-				currentScreenKey,
-			);
+			const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
 
-			const intent = !hasSourceLink
+			const intent = !hasSource
 				? "capture-source"
 				: group
 					? "refresh-source"
@@ -92,9 +88,7 @@ export const useRefreshBoundary = ({
 			if (!enabled || hasNextScreen) return;
 			if (nextValue === 0 || nextValue === previousValue) return;
 
-			const currentGroupActiveId = group
-				? BoundStore.group.getActiveId(group)
-				: null;
+			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
 
 			if (group && currentGroupActiveId !== String(id)) {
 				return;

@@ -1,6 +1,6 @@
 {
 	"name": "react-native-screen-transitions",
-	"version": "3.5.0",
+	"version": "3.5.1",
 	"description": "Easy screen transitions for React Native and Expo",
 	"author": "Ed",
 	"license": "MIT",
@@ -43,16 +43,7 @@
 		"build": "bob build",
 		"lint": "biome check ./src",
 		"typecheck": "tsc -p tsconfig.typecheck.json",
-		"prepublishOnly": "bun run build",
-		"release": "release-it",
-		"release:stable": "release-it",
-		"release:beta": "release-it --preRelease=beta",
-		"release:alpha": "release-it --preRelease=alpha",
-		"release:rc": "release-it --preRelease=rc",
-		"release:dry-run": "release-it --dry-run",
-		"release:alpha:dry-run": "release-it --preRelease=alpha --dry-run",
-		"release:beta:dry-run": "release-it --preRelease=beta --dry-run",
-		"release:rc:dry-run": "release-it --preRelease=rc --dry-run"
+		"prepublishOnly": "bun run build"
 	},
 	"keywords": [
 		"react-native",
@@ -83,11 +74,9 @@
 		"react-native-screens": ">=4.4.0"
 	},
 	"devDependencies": {
-		"@release-it/conventional-changelog": "^10.0.1",
 		"@testing-library/react-native": "13.3.3",
 		"@types/react": "~19.1.10",
 		"react-native-builder-bob": "0.39.0",
-		"release-it": "^19.0.4",
 		"typescript": "catalog:"
 	},
 	"react-native-builder-bob": {
@@ -103,30 +92,6 @@
 				}
 			]
 		]
-	},
-	"release-it": {
-		"git": {
-			"commitMessage": "chore: release ${version}",
-			"tagName": "v${version}",
-			"commitArgs": [
-				"-n"
-			]
-		},
-		"npm": {
-			"publish": true
-		},
-		"github": {
-			"release": true
-		},
-		"plugins": {
-			"@release-it/conventional-changelog": {
-				"infile": "CHANGELOG.md",
-				"preset": {
-					"name": "angular"
-				},
-				"path": "."
-			}
-		}
 	},
 	"gitHead": "888d4df9936ec0e3b8221bea7cd81115e6301693"
 }

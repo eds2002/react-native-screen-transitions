@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.5.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.0...v3.5.1) (2026-05-05)
+
+
+### Bug Fixes
+
+* fix bounds worklet imports ([#94](https://github.com/eds2002/react-native-screen-transitions/issues/94)) ([6260b8f](https://github.com/eds2002/react-native-screen-transitions/commit/6260b8fd0669096ef764476abe7b18dc1ff9a1c0))
+
 # [3.5.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.0-beta.0...v3.5.0) (2026-04-26)
 
 # [3.5.0-beta.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.2.0...v3.5.0-beta.0) (2026-04-21)

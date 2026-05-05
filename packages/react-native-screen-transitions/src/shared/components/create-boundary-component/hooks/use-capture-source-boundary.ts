@@ -1,5 +1,5 @@
 import { useAnimatedReaction } from "react-native-reanimated";
-import { BoundStore } from "../../../stores/bounds";
+import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
 import type { BoundaryId, MeasureParams } from "../types";
 
 export const useCaptureSourceBoundary = (params: {
@@ -27,9 +27,7 @@ export const useCaptureSourceBoundary = (params: {
 			if (!nextScreenKey) return;
 			if (!captureSignal || captureSignal === previousCaptureSignal) return;
 
-			const currentGroupActiveId = group
-				? BoundStore.group.getActiveId(group)
-				: null;
+			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
 
 			if (group && currentGroupActiveId !== String(id)) {
 				return;

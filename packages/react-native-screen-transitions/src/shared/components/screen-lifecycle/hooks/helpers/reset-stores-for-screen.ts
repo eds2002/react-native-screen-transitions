@@ -1,6 +1,10 @@
 import { runOnUI } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
-import { BoundStore } from "../../../../stores/bounds";
+import {
+	clear,
+	clearByAncestor,
+	clearByBranch,
+} from "../../../../stores/bounds/internals/clear";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { SystemStore } from "../../../../stores/system.store";
 
@@ -17,13 +21,13 @@ export function resetStoresForScreen(
 		"worklet";
 		if (!isBranchScreen) return;
 
-		BoundStore.cleanup.byScreen(routeKey);
+		clear(routeKey);
 
 		if (branchNavigatorKey) {
-			BoundStore.cleanup.byBranch(branchNavigatorKey);
+			clearByBranch(branchNavigatorKey);
 			return;
 		}
 
-		BoundStore.cleanup.byAncestor(routeKey);
+		clearByAncestor(routeKey);
 	})();
 }

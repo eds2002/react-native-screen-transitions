@@ -5,7 +5,8 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
 } from "../../../constants";
-import { BoundStore } from "../../../stores/bounds";
+import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
+import { resolveTransitionPair } from "../../../stores/bounds/internals/resolver";
 import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
 import { prepareBoundStyles } from "../helpers/prepare-bound-styles";
 import type { BoundsOptions } from "../types/options";
@@ -59,7 +60,7 @@ export function buildZoomStyles({
 	let buildEffectiveTag = tag;
 	if (isGroup) {
 		const group = tag.split(":")[0];
-		const groupActiveTag = BoundStore.group.getActiveId(group)?.split(":")[0];
+		const groupActiveTag = getGroupActiveId(group)?.split(":")[0];
 		buildEffectiveTag = `${group}:${groupActiveTag ?? tag.split(":")[1]}`;
 	}
 
@@ -79,7 +80,7 @@ export function buildZoomStyles({
 
 	const zoomAnchor = target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor;
 
-	const requestedPair = BoundStore.link.getPair(buildEffectiveTag, {
+	const requestedPair = resolveTransitionPair(buildEffectiveTag, {
 		currentScreenKey: currentRouteKey,
 		previousScreenKey: previousRouteKey,
 		nextScreenKey: nextRouteKey,

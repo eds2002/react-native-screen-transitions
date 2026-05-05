@@ -1,8 +1,6 @@
 import { interpolate, makeMutable } from "react-native-reanimated";
-import {
-	BoundStore,
-	type ResolvedTransitionPair,
-} from "../../../stores/bounds";
+import { resolveTransitionPair } from "../../../stores/bounds/internals/resolver";
+import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
 import type { Layout } from "../../../types/screen.types";
 import type { BoundsOptions } from "../types/options";
 import {
@@ -180,7 +178,7 @@ export function resolvePresentedZoomTag(params: {
 		};
 	}
 
-	const cachedPair = BoundStore.link.getPair(cachedTag, {
+	const cachedPair = resolveTransitionPair(cachedTag, {
 		currentScreenKey,
 		previousScreenKey,
 		nextScreenKey,
