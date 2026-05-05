@@ -25,6 +25,11 @@ on:
           - patch
           - minor
           - major
+      source_ref:
+        description: "Git ref to build for prereleases, such as release/v3.6."
+        required: true
+        default: main
+        type: string
       dry_run:
         description: "Prepare the prerelease without publishing it."
         required: true
@@ -92,6 +97,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
