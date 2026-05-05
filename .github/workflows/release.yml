@@ -97,8 +97,6 @@ jobs:
     steps:
       - name: Checkout automation
         uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.source_ref }}
 
       - name: Checkout source
         uses: actions/checkout@v4
@@ -131,7 +129,22 @@ jobs:
 
       - name: Set package version
         working-directory: source/packages/react-native-screen-transitions
-        run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node --input-type=module <<'EOF'
+          import { readFileSync, writeFileSync } from "node:fs";
+
+          const packageJsonPath = "package.json";
+          const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+
+          packageJson.version = process.env.PACKAGE_VERSION;
+
+          writeFileSync(
+            packageJsonPath,
+            `${JSON.stringify(packageJson, null, "\t")}\n`,
+          );
+          EOF
 
       - name: Build
         working-directory: source
