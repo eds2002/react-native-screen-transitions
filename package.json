@@ -19,6 +19,7 @@
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",
 		"release": "bun run release:stable",
+		"release:patch": "bun run --cwd packages/react-native-screen-transitions release:patch",
 		"release:stable": "bun run --cwd packages/react-native-screen-transitions release:stable",
 		"release:beta": "bun run --cwd packages/react-native-screen-transitions release:beta",
 		"release:alpha": "bun run --cwd packages/react-native-screen-transitions release:alpha",
@@ -28,6 +29,7 @@
 		"release:beta:dry-run": "bun run --cwd packages/react-native-screen-transitions release:beta:dry-run",
 		"release:rc:dry-run": "bun run --cwd packages/react-native-screen-transitions release:rc:dry-run",
 		"release:react-native-screen-transitions": "bun run release:stable",
+		"release:react-native-screen-transitions:patch": "bun run release:patch",
 		"release:react-native-screen-transitions:beta": "bun run release:beta"
 	},
 	"devDependencies": {

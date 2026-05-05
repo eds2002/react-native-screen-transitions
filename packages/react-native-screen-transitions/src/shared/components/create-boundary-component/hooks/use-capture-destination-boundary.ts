@@ -8,7 +8,12 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
-import { BoundStore } from "../../../stores/bounds";
+import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
+import {
+	getPendingLink,
+	hasDestinationLink,
+	hasSourceLink,
+} from "../../../stores/bounds/internals/registry";
 import { SystemStore } from "../../../stores/system.store";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { BoundaryId, MeasureParams } from "../types";
@@ -88,10 +93,10 @@ export const useCaptureDestinationBoundary = ({
 				expectedSourceScreenKey,
 			);
 			const hasAttachableSourceLink = resolvedSourceKey
-				? BoundStore.link.getPending(sharedBoundTag, resolvedSourceKey) !==
-						null || BoundStore.link.hasSource(sharedBoundTag, resolvedSourceKey)
+				? getPendingLink(sharedBoundTag, resolvedSourceKey) !== null ||
+					hasSourceLink(sharedBoundTag, resolvedSourceKey)
 				: false;
-			const hasDestinationLink = BoundStore.link.hasDestination(
+			const hasDestination = hasDestinationLink(
 				sharedBoundTag,
 				currentScreenKey,
 			);
@@ -100,13 +105,13 @@ export const useCaptureDestinationBoundary = ({
 				enabled &&
 				!!resolvedSourceKey &&
 				hasAttachableSourceLink &&
-				!hasDestinationLink;
+				!hasDestination;
 
 			if (!shouldBlock) {
 				return [0, retryTick] as const;
 			}
 
-			if (group && BoundStore.group.getActiveId(group) !== String(id)) {
+			if (group && getGroupActiveId(group) !== String(id)) {
 				return [0, retryTick] as const;
 			}
 
@@ -122,7 +127,7 @@ export const useCaptureDestinationBoundary = ({
 			ensureLifecycleStartBlocked();
 			measureBoundary({ intent: "complete-destination" });
 
-			if (BoundStore.link.hasDestination(sharedBoundTag, currentScreenKey)) {
+			if (hasDestinationLink(sharedBoundTag, currentScreenKey)) {
 				releaseLifecycleStartBlock();
 				return;
 			}

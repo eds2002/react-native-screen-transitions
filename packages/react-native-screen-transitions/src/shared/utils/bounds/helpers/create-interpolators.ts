@@ -4,7 +4,7 @@ import {
 	type MeasuredDimensions,
 } from "react-native-reanimated";
 import { ENTER_RANGE, EXIT_RANGE } from "../../../constants";
-import { BoundStore } from "../../../stores/bounds";
+import { getMeasuredEntry } from "../../../stores/bounds/internals/registry";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundId } from "../types/options";
 import type { LinkAccessor } from "./create-link-accessor";
@@ -51,12 +51,9 @@ export const createInterpolators = ({
 		const normalizedTag = String(tag);
 
 		const currentMeasuredEntry = currentKey
-			? BoundStore.entry.getMeasured(normalizedTag, currentKey)
+			? getMeasuredEntry(normalizedTag, currentKey)
 			: null;
-		const targetMeasuredEntry = BoundStore.entry.getMeasured(
-			normalizedTag,
-			targetKey,
-		);
+		const targetMeasuredEntry = getMeasuredEntry(normalizedTag, targetKey);
 
 		const currentValue = currentMeasuredEntry?.bounds?.[property] ?? fb;
 		const targetValue = targetMeasuredEntry?.bounds?.[property] ?? fb;

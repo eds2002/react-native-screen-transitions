@@ -15,7 +15,7 @@ import Animated, {
 import { NO_STYLES } from "../../constants";
 import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
-import { BoundStore } from "../../stores/bounds";
+import { setGroupActiveId } from "../../stores/bounds/internals/groups";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
 import { useCaptureDestinationBoundary } from "./hooks/use-capture-destination-boundary";
@@ -183,7 +183,7 @@ export function createBoundaryComponent<P extends object>(
 			(...args: unknown[]) => {
 				// Press path has priority: capture source before user onPress/navigation.
 				if (group) {
-					runOnUI(BoundStore.group.setActiveId)(group, String(id));
+					runOnUI(setGroupActiveId)(group, String(id));
 				}
 				runOnUI(measureBoundary)({ intent: "capture-source" });
 

@@ -1,7 +1,9 @@
 import {
-	BoundStore,
-	type ResolvedTransitionPair,
-} from "../../../stores/bounds";
+	getGroupActiveId,
+	setGroupActiveId,
+} from "../../../stores/bounds/internals/groups";
+import { getEntryConfig } from "../../../stores/bounds/internals/registry";
+import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
 import type {
@@ -40,9 +42,7 @@ export const buildBoundsOptions = ({
 	const currentScreenKey = props.current?.route.key;
 
 	const boundaryConfig =
-		tag && currentScreenKey
-			? BoundStore.entry.getConfig(tag, currentScreenKey)
-			: null;
+		tag && currentScreenKey ? getEntryConfig(tag, currentScreenKey) : null;
 
 	const resolved = {
 		...DEFAULT_BOUNDS_OPTIONS,
@@ -61,9 +61,9 @@ const syncGroupActiveMember = (group?: string, id?: BoundId) => {
 
 	const normalizedId = String(id);
 
-	if (BoundStore.group.getActiveId(group) === normalizedId) return;
+	if (getGroupActiveId(group) === normalizedId) return;
 
-	BoundStore.group.setActiveId(group, normalizedId);
+	setGroupActiveId(group, normalizedId);
 };
 
 export const prepareBoundStyles = <T extends BoundsOptions>({

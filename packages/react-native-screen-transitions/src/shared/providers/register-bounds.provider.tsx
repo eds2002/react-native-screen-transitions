@@ -14,8 +14,13 @@ import type { SharedValue } from "react-native-reanimated/lib/typescript/commonT
 import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
-import { BoundStore } from "../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../stores/bounds/helpers/apply-measured-bounds-writes";
+import {
+	getMeasuredEntry,
+	getPendingLink,
+	hasDestinationLink,
+	hasSourceLink,
+} from "../stores/bounds/internals/registry";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles/styles";
 import createProvider from "../utils/create-provider";
 import { useDescriptorDerivations, useDescriptors } from "./screen/descriptors";
@@ -276,10 +281,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 				}
 
 				if (shouldSetSource && isAnimating.get()) {
-					const existing = BoundStore.entry.getMeasured(
-						sharedBoundTag,
-						currentScreenKey,
-					);
+					const existing = getMeasuredEntry(sharedBoundTag, currentScreenKey);
 					if (existing) {
 						applyMeasuredBoundsWrites({
 							sharedBoundTag,
@@ -297,13 +299,9 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					return;
 				}
 
-				const hasPendingLink =
-					BoundStore.link.getPending(sharedBoundTag) !== null;
-				const hasSourceLink = BoundStore.link.hasSource(
-					sharedBoundTag,
-					currentScreenKey,
-				);
-				const hasDestinationLink = BoundStore.link.hasDestination(
+				const hasPending = getPendingLink(sharedBoundTag) !== null;
+				const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
+				const hasDestination = hasDestinationLink(
 					sharedBoundTag,
 					currentScreenKey,
 				);
@@ -315,11 +313,10 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					!wantsSetSource && !wantsSetDestination && !wantsUpdateSource;
 
 				const canSetSource = wantsSetSource;
-				const canSetDestination = wantsSetDestination && hasPendingLink;
-				const canUpdateSource = wantsUpdateSource && hasSourceLink;
+				const canSetDestination = wantsSetDestination && hasPending;
+				const canUpdateSource = wantsUpdateSource && hasSource;
 				const canSnapshotOnly =
-					wantsSnapshotOnly &&
-					(hasPendingLink || hasSourceLink || hasDestinationLink);
+					wantsSnapshotOnly && (hasPending || hasSource || hasDestination);
 
 				if (
 					!canSetSource &&

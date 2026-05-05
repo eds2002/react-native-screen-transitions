@@ -1,5 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import { BoundStore } from "..";
+import { setDestination, setEntry, setSource } from "../internals/registry";
 
 type ApplyMeasuredBoundsWritesParams = {
 	sharedBoundTag: string;
@@ -38,7 +38,7 @@ export const applyMeasuredBoundsWrites = (
 	} = params;
 
 	if (shouldWriteEntry) {
-		BoundStore.entry.set(sharedBoundTag, currentScreenKey, {
+		setEntry(sharedBoundTag, currentScreenKey, {
 			bounds: measured,
 			styles: preparedStyles,
 			ancestorKeys,
@@ -48,7 +48,7 @@ export const applyMeasuredBoundsWrites = (
 	}
 
 	if (shouldSetSource) {
-		BoundStore.link.setSource(
+		setSource(
 			"capture",
 			sharedBoundTag,
 			currentScreenKey,
@@ -61,7 +61,7 @@ export const applyMeasuredBoundsWrites = (
 	}
 
 	if (shouldUpdateSource) {
-		BoundStore.link.setSource(
+		setSource(
 			"refresh",
 			sharedBoundTag,
 			currentScreenKey,
@@ -74,7 +74,7 @@ export const applyMeasuredBoundsWrites = (
 	}
 
 	if (shouldUpdateDestination) {
-		BoundStore.link.setDestination(
+		setDestination(
 			"refresh",
 			sharedBoundTag,
 			currentScreenKey,
@@ -88,7 +88,7 @@ export const applyMeasuredBoundsWrites = (
 	}
 
 	if (shouldSetDestination) {
-		BoundStore.link.setDestination(
+		setDestination(
 			"attach",
 			sharedBoundTag,
 			currentScreenKey,

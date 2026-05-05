@@ -1,6 +1,9 @@
 import { useLayoutEffect } from "react";
 import { runOnUI } from "react-native-reanimated";
-import { BoundStore } from "../../../stores/bounds";
+import {
+	removeEntry,
+	setEntry,
+} from "../../../stores/bounds/internals/registry";
 import type { BoundaryConfigProps } from "../types";
 
 export const useBoundaryPresence = (params: {
@@ -28,7 +31,7 @@ export const useBoundaryPresence = (params: {
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUI(BoundStore.entry.set)(sharedBoundTag, currentScreenKey, {
+		runOnUI(setEntry)(sharedBoundTag, currentScreenKey, {
 			ancestorKeys,
 			boundaryConfig,
 			navigatorKey,
@@ -36,7 +39,7 @@ export const useBoundaryPresence = (params: {
 		});
 
 		return () => {
-			runOnUI(BoundStore.entry.remove)(sharedBoundTag, currentScreenKey);
+			runOnUI(removeEntry)(sharedBoundTag, currentScreenKey);
 		};
 	}, [
 		enabled,

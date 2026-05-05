@@ -6,8 +6,13 @@ import {
 	measure,
 	type StyleProps,
 } from "react-native-reanimated";
-import { BoundStore } from "../../../stores/bounds";
 import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
+import {
+	getMeasuredEntry,
+	getPendingLink,
+	hasDestinationLink,
+	hasSourceLink,
+} from "../../../stores/bounds/internals/registry";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { MeasureParams } from "../types";
 import {
@@ -57,17 +62,14 @@ export const useMeasurer = ({
 				undefined;
 
 			const pendingLink = expectedSourceScreenKey
-				? BoundStore.link.getPending(sharedBoundTag, expectedSourceScreenKey)
-				: BoundStore.link.getPending(sharedBoundTag);
+				? getPendingLink(sharedBoundTag, expectedSourceScreenKey)
+				: getPendingLink(sharedBoundTag);
 			const hasPendingLink = pendingLink !== null;
 			const hasAttachableSourceLink = expectedSourceScreenKey
-				? BoundStore.link.hasSource(sharedBoundTag, expectedSourceScreenKey)
+				? hasSourceLink(sharedBoundTag, expectedSourceScreenKey)
 				: false;
-			const hasSourceLink = BoundStore.link.hasSource(
-				sharedBoundTag,
-				currentScreenKey,
-			);
-			const hasDestinationLink = BoundStore.link.hasDestination(
+			const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
+			const hasDestination = hasDestinationLink(
 				sharedBoundTag,
 				currentScreenKey,
 			);
@@ -75,8 +77,8 @@ export const useMeasurer = ({
 			const writePlan = resolveMeasureWritePlan({
 				intents,
 				hasPendingLink,
-				hasSourceLink,
-				hasDestinationLink,
+				hasSourceLink: hasSource,
+				hasDestinationLink: hasDestination,
 				hasAttachableSourceLink,
 			});
 
@@ -99,7 +101,7 @@ export const useMeasurer = ({
 				return;
 			}
 
-			const existingMeasuredEntry = BoundStore.entry.getMeasured(
+			const existingMeasuredEntry = getMeasuredEntry(
 				sharedBoundTag,
 				currentScreenKey,
 			);
