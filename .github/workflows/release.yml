@@ -1,52 +1,56 @@
-name: Release
+name: Release Please
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
-    inputs:
-      dry-run:
-        description: "Dry run (no actual release)"
-        required: false
-        default: false
-        type: boolean
 
 jobs:
-  release:
-    name: Release
+  release-please:
+    name: Release Please
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      pull-requests: write
+      issues: write
       id-token: write
+
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - name: Release Please
+        id: release
+        uses: googleapis/release-please-action@v4
         with:
-          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+      - name: Checkout
+        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
+        uses: actions/checkout@v4
 
       - name: Setup Bun
+        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: 1.2.20
 
       - name: Setup Node (for npm provenance)
+        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
-      - name: Setup Git
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
       - name: Install deps
+        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
         run: bun install --frozen-lockfile
 
       - name: Build
+        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
         run: bun run build
 
-      - name: Release
-        run: bun run release:react-native-screen-transitions --ci ${{ inputs.dry-run && '--dry-run' || '' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NPM_CONFIG_PROVENANCE: true
+      - name: Publish to npm
+        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
+        working-directory: packages/react-native-screen-transitions
+        run: npm publish --access public
