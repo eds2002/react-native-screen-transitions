@@ -95,10 +95,16 @@ jobs:
       id-token: write
 
     steps:
-      - name: Checkout
+      - name: Checkout automation
         uses: actions/checkout@v4
         with:
           ref: ${{ inputs.source_ref }}
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          path: source
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
@@ -112,29 +118,32 @@ jobs:
           registry-url: "https://registry.npmjs.org"
 
       - name: Install deps
+        working-directory: source
         run: bun install --frozen-lockfile
 
       - name: Resolve prerelease version
         id: version
         env:
+          PACKAGE_DIR: source/packages/react-native-screen-transitions
           PRERELEASE_CHANNEL: ${{ inputs.channel }}
           PRERELEASE_BUMP: ${{ inputs.bump }}
         run: node .github/scripts/resolve-prerelease-version.mjs
 
       - name: Set package version
-        working-directory: packages/react-native-screen-transitions
+        working-directory: source/packages/react-native-screen-transitions
         run: npm version "${{ steps.version.outputs.version }}" --no-git-tag-version
 
       - name: Build
+        working-directory: source
         run: bun run build
 
       - name: Pack preview
-        working-directory: packages/react-native-screen-transitions
+        working-directory: source/packages/react-native-screen-transitions
         run: npm pack --dry-run
 
       - name: Publish prerelease to npm
         if: ${{ inputs.dry_run == false }}
-        working-directory: packages/react-native-screen-transitions
+        working-directory: source/packages/react-native-screen-transitions
         run: npm publish --access public --tag "${{ inputs.channel }}"
 
       - name: Dry run summary
