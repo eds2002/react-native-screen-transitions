@@ -5,10 +5,41 @@ on:
     branches:
       - main
   workflow_dispatch:
+    inputs:
+      channel:
+        description: "Release channel. stable opens/updates the Release Please PR; alpha/beta/rc publish an npm prerelease."
+        required: true
+        default: stable
+        type: choice
+        options:
+          - stable
+          - alpha
+          - beta
+          - rc
+      bump:
+        description: "Base version bump for prereleases."
+        required: true
+        default: patch
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+      source_ref:
+        description: "Git ref to build for prereleases, such as release/v3.6."
+        required: true
+        default: main
+        type: string
+      dry_run:
+        description: "Prepare the prerelease without publishing it."
+        required: true
+        default: true
+        type: boolean
 
 jobs:
   release-please:
     name: Release Please
+    if: ${{ github.event_name == 'push' || inputs.channel == 'stable' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -54,3 +85,80 @@ jobs:
         if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
         working-directory: packages/react-native-screen-transitions
         run: npm publish --access public
+
+  prerelease:
+    name: Prerelease
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.channel != 'stable' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout automation
+        uses: actions/checkout@v4
+
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          path: source
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.20
+
+      - name: Setup Node (for npm trusted publishing)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install deps
+        working-directory: source
+        run: bun install --frozen-lockfile
+
+      - name: Resolve prerelease version
+        id: version
+        env:
+          PACKAGE_DIR: source/packages/react-native-screen-transitions
+          PRERELEASE_CHANNEL: ${{ inputs.channel }}
+          PRERELEASE_BUMP: ${{ inputs.bump }}
+        run: node .github/scripts/resolve-prerelease-version.mjs
+
+      - name: Set package version
+        working-directory: source/packages/react-native-screen-transitions
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node --input-type=module <<'EOF'
+          import { readFileSync, writeFileSync } from "node:fs";
+
+          const packageJsonPath = "package.json";
+          const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+
+          packageJson.version = process.env.PACKAGE_VERSION;
+
+          writeFileSync(
+            packageJsonPath,
+            `${JSON.stringify(packageJson, null, "\t")}\n`,
+          );
+          EOF
+
+      - name: Build
+        working-directory: source
+        run: bun run build
+
+      - name: Pack preview
+        working-directory: source/packages/react-native-screen-transitions
+        run: npm pack --dry-run
+
+      - name: Publish prerelease to npm
+        if: ${{ inputs.dry_run == false }}
+        working-directory: source/packages/react-native-screen-transitions
+        run: npm publish --access public --tag "${{ inputs.channel }}"
+
+      - name: Dry run summary
+        if: ${{ inputs.dry_run != false }}
+        run: echo "Prepared react-native-screen-transitions@${{ steps.version.outputs.version }} for npm tag ${{ inputs.channel }}. Re-run with dry_run=false to publish."

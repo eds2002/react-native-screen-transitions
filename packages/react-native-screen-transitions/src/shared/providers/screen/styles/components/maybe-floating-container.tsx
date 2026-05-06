@@ -13,7 +13,10 @@ export const MaybeFloatingContainer = memo(function MaybeFloatingContainer({
 		return children;
 	}
 	return (
-		<View style={styles.float} pointerEvents="box-none">
+		<View
+			style={[StyleSheet.absoluteFill, styles.float]}
+			pointerEvents="box-none"
+		>
 			{children}
 		</View>
 	);
@@ -21,7 +24,6 @@ export const MaybeFloatingContainer = memo(function MaybeFloatingContainer({
 
 const styles = StyleSheet.create({
 	float: {
-		...StyleSheet.absoluteFillObject,
 		zIndex: 999,
 	},
 });

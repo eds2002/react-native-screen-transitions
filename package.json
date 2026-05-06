@@ -19,7 +19,13 @@
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",
 		"release": "bun run release:please",
-		"release:please": "gh workflow run release.yml --ref main",
+		"release:please": "gh workflow run release.yml --ref main -f channel=stable",
+		"release:alpha": "gh workflow run release.yml --ref main -f channel=alpha -f bump=patch -f source_ref=main -f dry_run=false",
+		"release:alpha:dry-run": "gh workflow run release.yml --ref main -f channel=alpha -f bump=patch -f source_ref=main -f dry_run=true",
+		"release:beta": "gh workflow run release.yml --ref main -f channel=beta -f bump=patch -f source_ref=main -f dry_run=false",
+		"release:beta:dry-run": "gh workflow run release.yml --ref main -f channel=beta -f bump=patch -f source_ref=main -f dry_run=true",
+		"release:rc": "gh workflow run release.yml --ref main -f channel=rc -f bump=patch -f source_ref=main -f dry_run=false",
+		"release:rc:dry-run": "gh workflow run release.yml --ref main -f channel=rc -f bump=patch -f source_ref=main -f dry_run=true",
 		"release:status": "gh run list --workflow release.yml --limit 5"
 	},
 	"devDependencies": {

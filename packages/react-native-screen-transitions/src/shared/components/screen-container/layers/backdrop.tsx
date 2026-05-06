@@ -118,7 +118,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 	return (
 		<Pressable
-			style={StyleSheet.absoluteFillObject}
+			style={StyleSheet.absoluteFill}
 			pointerEvents={isBackdropActive ? "auto" : "none"}
 			onPress={isBackdropActive ? handleBackdropPress : undefined}
 		>
@@ -127,13 +127,11 @@ export const BackdropLayer = memo(function BackdropLayer({
 			 * animated style with animatedProps can break intensity updates. */}
 			{AnimatedBackdropComponent && (
 				<AnimatedBackdropComponent
-					style={[StyleSheet.absoluteFillObject]}
+					style={[StyleSheet.absoluteFill]}
 					animatedProps={animatedBackdropProps}
 				/>
 			)}
-			<Animated.View
-				style={[StyleSheet.absoluteFillObject, animatedBackdropStyle]}
-			/>
+			<Animated.View style={[StyleSheet.absoluteFill, animatedBackdropStyle]} />
 		</Pressable>
 	);
 });
