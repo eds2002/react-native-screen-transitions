@@ -45,11 +45,14 @@ export const OverlayHost = memo(function OverlayHost({
 	return (
 		<Animated.View
 			pointerEvents="box-none"
-			style={[styles.container, styles.floating, styles.absolute]}
+			style={[styles.container, styles.floating, StyleSheet.absoluteFill]}
 		>
 			<NavigationContext.Provider value={scene.descriptor.navigation as any}>
 				<NavigationRouteContext.Provider value={scene.route}>
-					<View pointerEvents="box-none" style={styles.overlay}>
+					<View
+						pointerEvents="box-none"
+						style={[StyleSheet.absoluteFill, styles.overlay]}
+					>
 						<OverlayComponent {...overlayProps} />
 					</View>
 				</NavigationRouteContext.Provider>
@@ -60,13 +63,11 @@ export const OverlayHost = memo(function OverlayHost({
 
 const styles = StyleSheet.create({
 	overlay: {
-		...StyleSheet.absoluteFillObject,
 		zIndex: 1,
 	},
 	container: {
 		flex: 1,
 	},
-	absolute: StyleSheet.absoluteFillObject,
 	floating: {
 		zIndex: 1000,
 	},
