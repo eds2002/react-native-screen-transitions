@@ -22,6 +22,11 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 		}
 
 		const hasPendingLifecycleBlock = pendingLifecycleStartBlockCount.get() > 0;
+
+		// Hide the screen during the tiny pre-animation open window as well.
+		// The destination measurement blocker can be registered one frame after
+		// mount, which would otherwise flash the reset state before the block
+		// count turns visible to this provider.
 		const isWaitingForOpenToStart = progress.get() <= 0;
 
 		return hasPendingLifecycleBlock || isWaitingForOpenToStart;

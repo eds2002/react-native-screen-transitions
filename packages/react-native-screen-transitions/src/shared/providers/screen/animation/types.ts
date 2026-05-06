@@ -1,17 +1,14 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { BoundsAccessor } from "../../../types/bounds.types";
+import type { ChainTarget } from "../../../utils/resolve-chain-target";
 import type { ScreenInterpolatorFrame } from "./helpers/pipeline";
 
-export type ScreenInterpolatorSignal = Pick<SharedValue<number>, "get">;
+export type ScreenInterpolatorFrameUpdater = Pick<SharedValue<number>, "get">;
 
-export type ScreenAnimationTarget =
-	| "self"
-	| "parent"
-	| "root"
-	| { ancestor: number };
+export type ScreenAnimationTarget = ChainTarget;
 
 export type ScreenAnimationSource = {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
-	screenInterpolatorVersion: ScreenInterpolatorSignal;
+	screenInterpolatorFrameUpdater: ScreenInterpolatorFrameUpdater;
 	boundsAccessor: BoundsAccessor;
 };

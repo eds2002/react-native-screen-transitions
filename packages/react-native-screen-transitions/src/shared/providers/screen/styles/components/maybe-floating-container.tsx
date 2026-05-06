@@ -5,7 +5,6 @@ interface MaybeFloatingContainerProps {
 	children: React.ReactNode;
 	isFloatingOverlay?: boolean;
 }
-
 export const MaybeFloatingContainer = memo(function MaybeFloatingContainer({
 	children,
 	isFloatingOverlay,
@@ -13,7 +12,6 @@ export const MaybeFloatingContainer = memo(function MaybeFloatingContainer({
 	if (!isFloatingOverlay) {
 		return children;
 	}
-
 	return (
 		<View style={styles.float} pointerEvents="box-none">
 			{children}

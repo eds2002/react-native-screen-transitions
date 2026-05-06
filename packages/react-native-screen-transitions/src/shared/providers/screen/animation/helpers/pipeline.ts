@@ -26,7 +26,7 @@ export type ScreenInterpolatorFrame = Omit<ScreenInterpolationProps, "bounds">;
 
 interface ScreenAnimationPipeline {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
-	screenInterpolatorVersion: DerivedValue<number>;
+	screenInterpolatorFrameUpdater: DerivedValue<number>;
 	nextInterpolator: ScreenStyleInterpolator | undefined;
 	currentInterpolator: ScreenStyleInterpolator | undefined;
 	boundsAccessor: BoundsAccessor;
@@ -35,19 +35,26 @@ interface ScreenAnimationPipeline {
 const createInitialBaseInterpolatorProps = (
 	dimensions: ScreenInterpolatorFrame["layouts"]["screen"],
 	insets: ScreenInterpolatorFrame["insets"],
-): ScreenInterpolatorFrame => ({
-	layouts: { screen: dimensions, navigationMaskEnabled: false },
-	insets,
-	previous: undefined,
-	current: DEFAULT_SCREEN_TRANSITION_STATE,
-	next: undefined,
-	progress: 0,
-	stackProgress: 0,
-	logicallySettled: 1,
-	focused: true,
-	active: DEFAULT_SCREEN_TRANSITION_STATE,
-	inactive: undefined,
-});
+): ScreenInterpolatorFrame => {
+	const current = {
+		...DEFAULT_SCREEN_TRANSITION_STATE,
+		layouts: { screen: dimensions, navigationMaskEnabled: false },
+	};
+
+	return {
+		layouts: current.layouts,
+		insets,
+		previous: undefined,
+		current,
+		next: undefined,
+		progress: 0,
+		stackProgress: 0,
+		logicallySettled: 1,
+		focused: true,
+		active: current,
+		inactive: undefined,
+	};
+};
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
@@ -77,40 +84,51 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		createInitialBaseInterpolatorProps(dimensions, insets),
 	);
 
-	const screenInterpolatorVersionState = useSharedValue({ value: 0 });
-
-	const screenInterpolatorVersion = useDerivedValue<number>(() => {
+	const screenInterpolatorFrameRevisionState = useSharedValue({ value: 0 });
+	const screenInterpolatorFrameUpdater = useDerivedValue<number>(() => {
 		"worklet";
 
-		const frame = screenInterpolatorProps.get();
-		const versionState = screenInterpolatorVersionState.get();
-
-		frame.previous = prevAnimation
-			? hydrateTransitionState(prevAnimation, dimensions)
-			: undefined;
-
-		frame.current = currentAnimation
-			? hydrateTransitionState(currentAnimation, dimensions)
-			: DEFAULT_SCREEN_TRANSITION_STATE;
-
-		frame.next =
-			nextAnimation && nextHasTransitions
-				? hydrateTransitionState(nextAnimation, dimensions)
+		screenInterpolatorProps.modify((frame) => {
+			"worklet";
+			frame.previous = prevAnimation
+				? hydrateTransitionState(prevAnimation, dimensions)
 				: undefined;
 
-		frame.layouts = frame.current.layouts;
-		frame.insets = insets;
+			frame.current = currentAnimation
+				? hydrateTransitionState(currentAnimation, dimensions)
+				: DEFAULT_SCREEN_TRANSITION_STATE;
 
-		updateDerivations(frame);
+			frame.next =
+				nextAnimation && nextHasTransitions
+					? hydrateTransitionState(nextAnimation, dimensions)
+					: undefined;
 
-		frame.stackProgress =
-			currentIndex >= 0
-				? rootStackProgress.get() - currentIndex
-				: frame.progress;
-		frame.logicallySettled = frame.active.logicallySettled;
+			frame.layouts = frame.current.layouts;
+			frame.insets = insets;
 
-		versionState.value += 1;
-		return versionState.value;
+			updateDerivations(frame);
+
+			frame.stackProgress =
+				currentIndex >= 0
+					? rootStackProgress.get() - currentIndex
+					: frame.progress;
+			frame.logicallySettled = frame.active.logicallySettled;
+
+			return frame;
+		}, false);
+
+		// MAINTAINER NOTE: We increment a revision counter instead of returning a
+		// new frame object so consumers can subscribe to in-place frame updates.
+		//
+		// Since we mutate the frame in place for performance reasons, readers must
+		// call `screenInterpolatorFrameUpdater.get()` before reading the frame.
+		screenInterpolatorFrameRevisionState.modify((revision) => {
+			"worklet";
+			revision.value += 1;
+			return revision;
+		}, false);
+
+		return screenInterpolatorFrameRevisionState.get().value;
 	});
 
 	const boundsAccessor = useMemo(() => {
@@ -125,7 +143,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 	return {
 		screenInterpolatorProps,
-		screenInterpolatorVersion,
+		screenInterpolatorFrameUpdater,
 		nextInterpolator,
 		currentInterpolator,
 		boundsAccessor,

@@ -5,8 +5,7 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
 } from "../../../constants";
-import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
-import { resolveTransitionPair } from "../../../stores/bounds/internals/resolver";
+import { BoundStore } from "../../../stores/bounds";
 import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
 import { prepareBoundStyles } from "../helpers/prepare-bound-styles";
 import type { BoundsOptions } from "../types/options";
@@ -60,7 +59,7 @@ export function buildZoomStyles({
 	let buildEffectiveTag = tag;
 	if (isGroup) {
 		const group = tag.split(":")[0];
-		const groupActiveTag = getGroupActiveId(group)?.split(":")[0];
+		const groupActiveTag = BoundStore.group.getActiveId(group)?.split(":")[0];
 		buildEffectiveTag = `${group}:${groupActiveTag ?? tag.split(":")[1]}`;
 	}
 
@@ -80,7 +79,7 @@ export function buildZoomStyles({
 
 	const zoomAnchor = target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor;
 
-	const requestedPair = resolveTransitionPair(buildEffectiveTag, {
+	const requestedPair = BoundStore.link.getPair(buildEffectiveTag, {
 		currentScreenKey: currentRouteKey,
 		previousScreenKey: previousRouteKey,
 		nextScreenKey: nextRouteKey,
@@ -332,7 +331,7 @@ export function buildZoomStyles({
 	const didSourceComponentVisiblyHide =
 		!props.active.closing && unfocusedFade <= EPSILON;
 
-	const shouldResetUnfocusedElement =
+	const shouldHideUnfocusedElement =
 		!props.active.closing && didSourceComponentVisiblyHide;
 
 	const unfocusedElementTarget = getZoomContentTarget({
@@ -401,7 +400,7 @@ export function buildZoomStyles({
 	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
 	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
 
-	const resolvedElementStyle = shouldResetUnfocusedElement
+	const resolvedElementStyle = shouldHideUnfocusedElement
 		? {
 				transform: [
 					{ translateX: 0 },

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import type { TransitionInterpolatedStyle } from "../types/animation.types";
-import { stripInterpolatorOptions } from "../providers/screen/styles/helpers/strip-interpolator-options";
-import { syncGestureRuntimeOverrides } from "../providers/screen/styles/helpers/sync-gesture-runtime-overrides";
+import type { TransitionInterpolatedStyle } from "../../types/animation.types";
+import { stripInterpolatorOptions } from "../../providers/screen/styles/helpers/strip-interpolator-options";
+import { syncGestureRuntimeOverrides } from "../../providers/screen/styles/helpers/sync-gesture-runtime-overrides";
 
 const createSharedValue = <T>(initialValue: T) => {
 	let value = initialValue;

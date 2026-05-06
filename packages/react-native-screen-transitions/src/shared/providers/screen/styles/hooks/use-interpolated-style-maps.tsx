@@ -43,7 +43,7 @@ export const useInterpolatedStylesMap = () => {
 	const gestureContext = useGestureContext();
 	const {
 		screenInterpolatorProps,
-		screenInterpolatorVersion,
+		screenInterpolatorFrameUpdater,
 		nextInterpolator,
 		currentInterpolator,
 		boundsAccessor,
@@ -62,7 +62,7 @@ export const useInterpolatedStylesMap = () => {
 			return NO_STYLES;
 		}
 
-		screenInterpolatorVersion.get();
+		screenInterpolatorFrameUpdater.get();
 		const props = screenInterpolatorProps.get();
 		const { current, next, progress } = props;
 		const isDragging = current.gesture.dragging;
