@@ -4,11 +4,18 @@ import { AnimationStore } from "../../../../stores/animation.store";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { SystemStore } from "../../../../stores/system.store";
 import { useDescriptorDerivations } from "../../descriptors";
+import { useScreenOptionsContext } from "../../options";
 import type { PanGestureRuntime, PinchGestureRuntime } from "../types";
 
 type StableRuntimeConfig = PanGestureRuntime | PinchGestureRuntime;
-type PanRuntimeConfigInput = Omit<PanGestureRuntime, "stores">;
-type PinchRuntimeConfigInput = Omit<PinchGestureRuntime, "stores">;
+type PanRuntimeConfigInput = Omit<
+	PanGestureRuntime,
+	"stores" | "screenOptions"
+>;
+type PinchRuntimeConfigInput = Omit<
+	PinchGestureRuntime,
+	"stores" | "screenOptions"
+>;
 type StableRuntimeConfigInput = PanRuntimeConfigInput | PinchRuntimeConfigInput;
 
 export function useStableRuntimeConfig(
@@ -21,13 +28,10 @@ export function useStableRuntimeConfig(
 	runtimeConfigInput: StableRuntimeConfigInput,
 ): SharedValue<PanGestureRuntime> | SharedValue<PinchGestureRuntime> {
 	const { currentScreenKey } = useDescriptorDerivations();
-	const {
-		participation,
-		policy,
-		runtimeOverrides,
-		gestureProgressBaseline,
-		lockedSnapPoint,
-	} = runtimeConfigInput;
+	const { participation, policy, gestureProgressBaseline, lockedSnapPoint } =
+		runtimeConfigInput;
+
+	const screenOptions = useScreenOptionsContext();
 
 	const stores = useMemo(() => {
 		return {
@@ -42,7 +46,7 @@ export function useStableRuntimeConfig(
 			participation,
 			policy,
 			stores,
-			runtimeOverrides,
+			screenOptions,
 			gestureProgressBaseline,
 			lockedSnapPoint,
 		} as StableRuntimeConfig;
@@ -50,7 +54,7 @@ export function useStableRuntimeConfig(
 		participation,
 		policy,
 		stores,
-		runtimeOverrides,
+		screenOptions,
 		gestureProgressBaseline,
 		lockedSnapPoint,
 	]);

@@ -90,7 +90,7 @@ export default function GesturesSuiteIndex() {
 						style={[styles.sliderDescription, { color: theme.textSecondary }]}
 					>
 						Shared makeMutable value read by each screenStyleInterpolator when
-						it returns options.gestures.gestureSensitivity.
+						it returns options.gestureSensitivity.
 					</Text>
 					<View
 						testID="gesture-sensitivity-slider"

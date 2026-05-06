@@ -6,6 +6,7 @@ import {
 	startPanBase,
 	trackPanGesture,
 } from "../helpers/pan-phases";
+import { resolvePanRuntime } from "../helpers/runtime-options";
 import { usePanGestureSensitivity } from "../hooks/use-gesture-sensitivity";
 import type {
 	GestureDimensions,
@@ -34,7 +35,7 @@ export const usePanBehavior = (
 
 	const onStart = useCallback(() => {
 		"worklet";
-		const latestRuntime = runtime.get();
+		const latestRuntime = resolvePanRuntime(runtime.get());
 		const strategy = getPanStrategy(latestRuntime);
 		strategy.primeStart(latestRuntime);
 		startPanBase(latestRuntime);
@@ -44,7 +45,7 @@ export const usePanBehavior = (
 	const onUpdate = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const latestRuntime = runtime.get();
+			const latestRuntime = resolvePanRuntime(runtime.get());
 			const strategy = getPanStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const track = trackPanGesture(
@@ -68,7 +69,7 @@ export const usePanBehavior = (
 	const onEnd = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const latestRuntime = runtime.get();
+			const latestRuntime = resolvePanRuntime(runtime.get());
 			const strategy = getPanStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime, dimensions);

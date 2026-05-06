@@ -53,9 +53,7 @@ function gestureRuntimeOptions(
 ) {
 	"worklet";
 	return {
-		gestures: {
-			gestureSensitivity: resolveDynamicGestureSensitivity(rawGesture, config),
-		},
+		gestureSensitivity: resolveDynamicGestureSensitivity(rawGesture, config),
 	};
 }
 
@@ -164,9 +162,7 @@ function buildNestedOptions(): ScreenTransitionConfig {
 
 			return {
 				options: {
-					gestures: {
-						gestureSensitivity,
-					},
+					gestureSensitivity,
 				},
 				content: {
 					style: {

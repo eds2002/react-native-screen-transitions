@@ -123,9 +123,9 @@ const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
 const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 	options: {
-		gestures: {
-			gestureSensitivity: 0.5,
-		},
+		gestureSensitivity: 0.5,
+		gestureSnapLocked: true,
+		gestureReleaseVelocityScale: 1.2,
 	},
 };
 void currentRawGestureNormX;
@@ -139,7 +139,7 @@ const nextNameOptions: ScreenTransitionConfig = {
 };
 declare const gestureSensitivitySharedValue: SharedValue<number>;
 const sharedGestureSensitivityOptions: ScreenTransitionConfig = {
-	// @ts-expect-error Dynamic gesture sensitivity belongs in screenStyleInterpolator options.gestures.
+	// @ts-expect-error Dynamic gesture sensitivity belongs in screenStyleInterpolator options.
 	gestureSensitivity: gestureSensitivitySharedValue,
 };
 const initialMountAnimationOptions: ScreenTransitionConfig = {

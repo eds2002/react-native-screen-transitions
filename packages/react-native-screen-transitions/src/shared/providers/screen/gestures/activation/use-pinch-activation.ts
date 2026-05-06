@@ -4,6 +4,7 @@ import type {
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
+import { resolvePinchRuntime } from "../helpers/runtime-options";
 import type { PinchGestureRuntime } from "../types";
 
 interface UsePinchActivationProps {
@@ -14,7 +15,7 @@ export const usePinchActivation = ({ runtime }: UsePinchActivationProps) => {
 	const onTouchesDown = useCallback(
 		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
 			"worklet";
-			const { participation, policy } = runtime.get();
+			const { participation, policy } = resolvePinchRuntime(runtime.get());
 
 			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager.fail();
@@ -36,7 +37,7 @@ export const usePinchActivation = ({ runtime }: UsePinchActivationProps) => {
 	const onTouchesMove = useCallback(
 		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
 			"worklet";
-			const { participation, policy } = runtime.get();
+			const { participation, policy } = resolvePinchRuntime(runtime.get());
 
 			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager.fail();

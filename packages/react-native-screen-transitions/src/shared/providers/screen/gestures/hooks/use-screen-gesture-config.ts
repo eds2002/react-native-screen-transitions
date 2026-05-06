@@ -42,6 +42,7 @@ function resolvePanPolicy(
 
 	return {
 		enabled: hasPanDirection,
+		gestureDirection,
 		panActivationDirections: getPanActivationDirections({
 			gestureDirection,
 			hasSnapPoints,
@@ -88,6 +89,7 @@ function resolvePinchPolicy(
 
 	return {
 		enabled: pinchInEnabled || pinchOutEnabled,
+		gestureDirection,
 		snapDirections,
 		pinchInEnabled,
 		pinchOutEnabled,
@@ -141,6 +143,7 @@ export function useScreenGestureConfig(): ScreenGestureConfig {
 		);
 
 		const participation: ScreenGestureParticipation = {
+			isFirstKey,
 			canDismiss,
 			canTrackGesture,
 			effectiveSnapPoints,

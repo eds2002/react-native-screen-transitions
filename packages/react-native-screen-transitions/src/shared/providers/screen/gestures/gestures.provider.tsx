@@ -4,7 +4,6 @@ import { useSharedValue } from "react-native-reanimated";
 import createProvider from "../../../utils/create-provider";
 import { useBuildPanGesture } from "./builders/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./builders/use-build-pinch-gesture";
-import { useGestureRuntimeOverrides } from "./hooks/use-gesture-runtime-overrides";
 import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
 import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and-register-shadowing-claims";
 import {
@@ -34,18 +33,14 @@ export const {
 	// direction, it writes here so the ancestor can fail and let it take priority.
 	const childDirectionClaims = useSharedValue<DirectionClaimMap>(NO_CLAIMS);
 
-	const runtimeOverrides = useGestureRuntimeOverrides();
-
 	const panGesture = useBuildPanGesture({
 		scrollState,
 		gestureConfig,
 		childDirectionClaims,
-		runtimeOverrides,
 	});
 
 	const pinchGesture = useBuildPinchGesture({
 		gestureConfig,
-		runtimeOverrides,
 	});
 
 	const detectorGesture = useMemo(
@@ -59,7 +54,6 @@ export const {
 			panGesture,
 			pinchGesture,
 			scrollState,
-			runtimeOverrides,
 			gestureContext,
 			claimedDirections: gestureConfig.participation.claimedDirections,
 			childDirectionClaims,
@@ -69,7 +63,6 @@ export const {
 			panGesture,
 			pinchGesture,
 			scrollState,
-			runtimeOverrides,
 			gestureContext,
 			gestureConfig.participation.claimedDirections,
 			childDirectionClaims,

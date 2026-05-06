@@ -24,6 +24,7 @@ import type {
 	DirectionOwnership,
 } from "../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
+import type { ScreenOptionsContextValue } from "../options";
 import type { EffectiveSnapPointsResult } from "./helpers/validate-snap-points";
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
@@ -76,13 +77,14 @@ export interface GestureContextType {
 	panGesture: PanGesture;
 	pinchGesture: PinchGesture;
 	scrollState: SharedValue<ScrollGestureState | null>;
-	runtimeOverrides: GestureRuntimeOverrides;
 	gestureContext: GestureContextType | null;
 	claimedDirections: ClaimedDirections;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
 }
 
 export interface ScreenGestureParticipation {
+	/** Whether this route is the first route in its stack. First routes never track gestures. */
+	isFirstKey: boolean;
 	/** Whether this route can dismiss to progress 0 from a gesture release. */
 	canDismiss: boolean;
 	/** Whether recognizers can activate to expose gesture values to interpolators. */
@@ -100,6 +102,7 @@ export interface ScreenGestureConfig {
 
 export interface PanGesturePolicy {
 	enabled: boolean;
+	gestureDirection: NonNullable<ScreenTransitionConfig["gestureDirection"]>;
 	panActivationDirections: GestureDirections;
 	snapAxisDirections: SnapPanDirectionConfig;
 	gestureDrivesProgress: boolean;
@@ -120,6 +123,7 @@ export interface PanGesturePolicy {
 
 export interface PinchGesturePolicy {
 	enabled: boolean;
+	gestureDirection: NonNullable<ScreenTransitionConfig["gestureDirection"]>;
 	snapDirections: SnapPinchDirectionConfig;
 	pinchInEnabled: boolean;
 	pinchOutEnabled: boolean;
@@ -139,15 +143,11 @@ export interface GestureRuntimeStores {
 	system: SystemStoreMap;
 }
 
-export interface GestureRuntimeOverrides {
-	gestureSensitivity: SharedValue<number | null>;
-}
-
 export interface PanGestureRuntime {
 	participation: ScreenGestureParticipation;
 	policy: PanGesturePolicy;
 	stores: GestureRuntimeStores;
-	runtimeOverrides: GestureRuntimeOverrides;
+	screenOptions: ScreenOptionsContextValue;
 	gestureProgressBaseline: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }
@@ -156,7 +156,7 @@ export interface PinchGestureRuntime {
 	participation: ScreenGestureParticipation;
 	policy: PinchGesturePolicy;
 	stores: GestureRuntimeStores;
-	runtimeOverrides: GestureRuntimeOverrides;
+	screenOptions: ScreenOptionsContextValue;
 	gestureProgressBaseline: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }

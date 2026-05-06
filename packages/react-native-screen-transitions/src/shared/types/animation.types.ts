@@ -267,38 +267,21 @@ type TransitionSlotDefinition = {
 export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
 
 /**
- * Runtime gesture options returned by `screenStyleInterpolator`.
- *
- * These values are not style slots. They are derived per frame and consumed by
- * the transition runtime.
- */
-export type TransitionInterpolatorGestureOptions = {
-	/**
-	 * Overrides how directly live gesture movement maps into transition progress
-	 * and the non-raw gesture values exposed to interpolators for the current
-	 * frame.
-	 *
-	 * If this value is derived from the current gesture, prefer
-	 * `active.gesture.raw` so the sensitivity calculation does not feed back into
-	 * itself.
-	 */
-	gestureSensitivity?: number;
-};
-
-/**
  * Runtime options returned by `screenStyleInterpolator`.
  *
  * These values are not style slots. They are derived per frame and consumed by
  * the transition runtime.
+ *
+ * If `gestureSensitivity` is derived from the current gesture, prefer
+ * `active.gesture.raw` so the sensitivity calculation does not feed back into
+ * itself.
  */
-export type TransitionInterpolatorOptions = {
-	gestures?: TransitionInterpolatorGestureOptions;
-};
+export type TransitionInterpolatorOptions = ScreenTransitionOptions;
 
 /**
  * @deprecated Use `TransitionInterpolatorOptions`.
  */
-export type TransitionInterpolatorConfig = TransitionInterpolatorGestureOptions;
+export type TransitionInterpolatorConfig = TransitionInterpolatorOptions;
 
 /**
  * Internal normalized slot format.

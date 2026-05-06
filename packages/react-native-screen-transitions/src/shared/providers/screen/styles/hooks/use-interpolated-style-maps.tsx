@@ -8,10 +8,12 @@ import type {
 import { logger } from "../../../../utils/logger";
 import { useScreenAnimationContext } from "../../animation";
 import { useDescriptorDerivations } from "../../descriptors";
-import { useGestureContext } from "../../gestures";
+import {
+	syncScreenOptionsOverrides,
+	useScreenOptionsContext,
+} from "../../options";
 import { normalizeSlots } from "../helpers/normalize-slots";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
-import { syncGestureRuntimeOverrides } from "../helpers/sync-gesture-runtime-overrides";
 
 /**
  * Builds the raw interpolated styles map for the current screen pass.
@@ -40,7 +42,7 @@ import { syncGestureRuntimeOverrides } from "../helpers/sync-gesture-runtime-ove
  */
 export const useInterpolatedStylesMap = () => {
 	const { currentScreenKey } = useDescriptorDerivations();
-	const gestureContext = useGestureContext();
+	const screenOptions = useScreenOptionsContext();
 	const {
 		screenInterpolatorProps,
 		screenInterpolatorFrameUpdater,
@@ -59,6 +61,7 @@ export const useInterpolatedStylesMap = () => {
 	return useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
 		"worklet";
 		if (pendingLifecycleStartBlockCount.get() > 0) {
+			syncScreenOptionsOverrides(undefined, screenOptions);
 			return NO_STYLES;
 		}
 
@@ -87,6 +90,7 @@ export const useInterpolatedStylesMap = () => {
 			: (nextInterpolator ?? currentInterpolator);
 
 		if (!interpolator) {
+			syncScreenOptionsOverrides(undefined, screenOptions);
 			return NO_STYLES;
 		}
 
@@ -109,7 +113,7 @@ export const useInterpolatedStylesMap = () => {
 			const rawStyleMap: TransitionInterpolatedStyle | undefined =
 				typeof raw === "object" && raw != null ? raw : undefined;
 
-			syncGestureRuntimeOverrides(rawStyleMap, gestureContext);
+			syncScreenOptionsOverrides(rawStyleMap, screenOptions);
 
 			const stylesMap = !rawStyleMap
 				? NO_STYLES
@@ -121,6 +125,7 @@ export const useInterpolatedStylesMap = () => {
 				logger.warn("screenStyleInterpolator must be a worklet");
 			}
 
+			syncScreenOptionsOverrides(undefined, screenOptions);
 			return NO_STYLES;
 		}
 	});

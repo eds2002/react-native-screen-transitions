@@ -8,7 +8,6 @@ import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
 	DirectionClaimMap,
-	GestureRuntimeOverrides,
 	PanGesture,
 	ScreenGestureConfig,
 	ScrollGestureState,
@@ -18,14 +17,12 @@ interface BuildPanGestureHookProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
 	gestureConfig: ScreenGestureConfig;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
-	runtimeOverrides: GestureRuntimeOverrides;
 }
 
 export const useBuildPanGesture = ({
 	scrollState,
 	gestureConfig,
 	childDirectionClaims,
-	runtimeOverrides,
 }: BuildPanGestureHookProps): PanGesture => {
 	const dimensions = useWindowDimensions();
 	const { participation, pan: policy } = gestureConfig;
@@ -36,7 +33,6 @@ export const useBuildPanGesture = ({
 	const runtime = useStableRuntimeConfig({
 		participation,
 		policy,
-		runtimeOverrides,
 		gestureProgressBaseline,
 		lockedSnapPoint,
 	});

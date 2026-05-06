@@ -8,6 +8,7 @@ export type {
 	ScreenTransitionState,
 	TransitionInterpolatedStyle,
 	TransitionInterpolatorConfig,
+	TransitionInterpolatorOptions,
 	TransitionSlotStyle,
 	TransitionSpec,
 } from "./animation.types";

@@ -16,14 +16,13 @@ const createContext = (
 	overrides: Partial<GestureContextType> = {},
 ): GestureContextType => {
 	const panGesture = { kind: "pan" } as GestureContextType["panGesture"];
+	const pinchGesture = { kind: "pinch" } as GestureContextType["pinchGesture"];
 
 	return {
 		detectorGesture: panGesture,
 		panGesture,
+		pinchGesture,
 		scrollState: createScrollState("scroll"),
-		runtimeOverrides: {
-			gestureSensitivity: { value: null } as GestureContextType["runtimeOverrides"]["gestureSensitivity"],
-		},
 		gestureContext: null,
 		claimedDirections: NO_CLAIMS,
 		childDirectionClaims: { value: {} } as GestureContextType["childDirectionClaims"],

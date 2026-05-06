@@ -4,20 +4,14 @@ import { usePinchActivation } from "../activation/use-pinch-activation";
 import { usePinchBehavior } from "../behaviors/use-pinch-behavior";
 import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
-import type {
-	GestureRuntimeOverrides,
-	PinchGesture,
-	ScreenGestureConfig,
-} from "../types";
+import type { PinchGesture, ScreenGestureConfig } from "../types";
 
 interface BuildPinchGestureHookProps {
 	gestureConfig: ScreenGestureConfig;
-	runtimeOverrides: GestureRuntimeOverrides;
 }
 
 export const useBuildPinchGesture = ({
 	gestureConfig,
-	runtimeOverrides,
 }: BuildPinchGestureHookProps): PinchGesture => {
 	const { participation, pinch: policy } = gestureConfig;
 	const { gestureProgressBaseline, lockedSnapPoint } =
@@ -26,7 +20,6 @@ export const useBuildPinchGesture = ({
 	const runtime = useStableRuntimeConfig({
 		participation,
 		policy,
-		runtimeOverrides,
 		gestureProgressBaseline,
 		lockedSnapPoint,
 	});

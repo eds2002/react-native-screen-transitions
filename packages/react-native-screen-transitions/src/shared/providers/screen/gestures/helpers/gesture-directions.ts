@@ -31,6 +31,7 @@ const isPanGestureDirection = (
 export const getPanGestureDirections = (
 	gestureDirection: GestureDirection | GestureDirection[],
 ): PanGestureDirection[] => {
+	"worklet";
 	const directions = Array.isArray(gestureDirection)
 		? gestureDirection
 		: [gestureDirection];
@@ -41,6 +42,7 @@ export const getPanGestureDirections = (
 export const getPinchGestureDirections = (
 	gestureDirection: GestureDirection | GestureDirection[],
 ): PinchGestureDirection[] => {
+	"worklet";
 	const directions = Array.isArray(gestureDirection)
 		? gestureDirection
 		: [gestureDirection];
@@ -77,6 +79,7 @@ const setSnapPanAxisConfig = (
 	config: SnapPanDirectionConfig,
 	direction: ResolvedPanGestureDirection,
 ) => {
+	"worklet";
 	const axis = getPanDirectionAxis(direction);
 
 	if (config[axis]) return;
@@ -96,6 +99,7 @@ const setSnapPanAxisConfig = (
 export const getPanSnapAxisDirections = (
 	gestureDirection: GestureDirection | GestureDirection[],
 ): SnapPanDirectionConfig => {
+	"worklet";
 	const config: SnapPanDirectionConfig = {
 		horizontal: null,
 		vertical: null,
@@ -117,6 +121,7 @@ export const getPanSnapAxisDirections = (
 export const getSnapPinchDirectionConfig = (
 	gestureDirection: GestureDirection | GestureDirection[],
 ): SnapPinchDirectionConfig => {
+	"worklet";
 	const pinchDirection = getPinchGestureDirections(gestureDirection)[0];
 
 	if (!pinchDirection) return null;
@@ -131,6 +136,7 @@ export const getPanActivationDirections = ({
 	gestureDirection,
 	hasSnapPoints,
 }: GetPanActivationDirectionsProps): GestureDirections => {
+	"worklet";
 	const panDirections = getPanGestureDirections(gestureDirection);
 
 	if (hasSnapPoints) {

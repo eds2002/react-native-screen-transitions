@@ -12,10 +12,10 @@ import {
 import { determineDismissal } from "../providers/screen/gestures/helpers/gesture-targets";
 import { trackPanGesture } from "../providers/screen/gestures/helpers/pan-phases";
 import { trackPinchGesture } from "../providers/screen/gestures/helpers/pinch-phases";
-import { resolveGestureSensitivity } from "../providers/screen/gestures/helpers/gesture-sensitivity";
 import { applyGestureSensitivityToRawChange } from "../providers/screen/gestures/hooks/use-gesture-sensitivity";
 import { PanStrategy } from "../providers/screen/gestures/behaviors/strategies/pan.strategy";
 import { PinchStrategy } from "../providers/screen/gestures/behaviors/strategies/pinch.strategy";
+import type { ScreenOptionsContextValue } from "../providers/screen/options";
 
 type Directions = {
 	horizontal: boolean;
@@ -60,9 +60,7 @@ const createGestureRuntime = (
 ) =>
 	({
 		policy: { gestureSensitivity },
-		runtimeOverrides: {
-			gestureSensitivity: createSharedValue(runtimeSensitivity),
-		},
+		screenOptions: createScreenOptions(runtimeSensitivity ?? gestureSensitivity),
 		stores: {
 			gestures: createGestureStore(),
 		},
@@ -107,6 +105,28 @@ const createSharedValue = <T>(initialValue: T) => {
 	};
 };
 
+const createScreenOption = () => createSharedValue<unknown>(null);
+
+const createScreenOptions = (
+	gestureSensitivity: number | null,
+): ScreenOptionsContextValue =>
+	({
+		gestureEnabled: createScreenOption(),
+		experimental_allowDisabledGestureTracking: createScreenOption(),
+		gestureDirection: createScreenOption(),
+		gestureSensitivity: createSharedValue(gestureSensitivity ?? 1),
+		gestureVelocityImpact: createScreenOption(),
+		gestureSnapVelocityImpact: createScreenOption(),
+		gestureReleaseVelocityScale: createScreenOption(),
+		gestureResponseDistance: createScreenOption(),
+		gestureDrivesProgress: createScreenOption(),
+		gestureActivationArea: createScreenOption(),
+		gestureSnapLocked: createScreenOption(),
+		sheetScrollGestureBehavior: createScreenOption(),
+		backdropBehavior: createScreenOption(),
+		baseOptions: createScreenOption(),
+	}) as ScreenOptionsContextValue;
+
 const createGestureStore = () =>
 	({
 		x: createSharedValue(0),
@@ -149,10 +169,7 @@ const applyAndTrackPanEvent = (
 	sensitivityStates: any,
 	rawEvent: any,
 ) => {
-	const sensitivity = resolveGestureSensitivity(
-		runtime.policy.gestureSensitivity,
-		runtime.runtimeOverrides,
-	);
+	const sensitivity = runtime.screenOptions.gestureSensitivity.get();
 	const event = {
 		...rawEvent,
 		translationX: applyGestureSensitivityToRawChange(
@@ -182,10 +199,7 @@ const applyAndTrackPinchEvent = (
 	sensitivityStates: any,
 	rawEvent: any,
 ) => {
-	const sensitivity = resolveGestureSensitivity(
-		runtime.policy.gestureSensitivity,
-		runtime.runtimeOverrides,
-	);
+	const sensitivity = runtime.screenOptions.gestureSensitivity.get();
 	const normScale = applyGestureSensitivityToRawChange(
 		normalizePinchScale(rawEvent.scale),
 		sensitivity,
@@ -461,7 +475,7 @@ describe("pan gesture sensitivity", () => {
 			sensitivityStates,
 			createEvent({ translationX: 100, velocityX: 500 }),
 		);
-		runtime.runtimeOverrides.gestureSensitivity.set(0.1);
+		runtime.screenOptions.gestureSensitivity.set(0.1);
 		const secondEvent = applyAndTrackPanEvent(
 			runtime,
 			sensitivityStates,
@@ -482,7 +496,7 @@ describe("pan gesture sensitivity", () => {
 			sensitivityStates,
 			createEvent({ translationX: 100 }),
 		);
-		runtime.runtimeOverrides.gestureSensitivity.set(1);
+		runtime.screenOptions.gestureSensitivity.set(1);
 		const secondEvent = applyAndTrackPanEvent(
 			runtime,
 			sensitivityStates,
@@ -502,7 +516,7 @@ describe("pan gesture sensitivity", () => {
 			sensitivityStates,
 			createEvent({ translationX: 100 }),
 		);
-		runtime.runtimeOverrides.gestureSensitivity.set(0);
+		runtime.screenOptions.gestureSensitivity.set(0);
 		const frozenEvent = applyAndTrackPanEvent(
 			runtime,
 			sensitivityStates,
@@ -522,7 +536,7 @@ describe("pan gesture sensitivity", () => {
 			sensitivityStates,
 			createEvent({ translationX: 100 }),
 		);
-		runtime.runtimeOverrides.gestureSensitivity.set(0.1);
+		runtime.screenOptions.gestureSensitivity.set(0.1);
 		const reverseEvent = applyAndTrackPanEvent(
 			runtime,
 			sensitivityStates,
@@ -610,7 +624,7 @@ describe("pinch gesture sensitivity", () => {
 			scale: 2,
 			velocity: 4,
 		});
-		runtime.runtimeOverrides.gestureSensitivity.set(0.1);
+		runtime.screenOptions.gestureSensitivity.set(0.1);
 		const secondEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
 			scale: 2.2,
 			velocity: 4,
@@ -628,7 +642,7 @@ describe("pinch gesture sensitivity", () => {
 		const firstEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
 			scale: 2,
 		});
-		runtime.runtimeOverrides.gestureSensitivity.set(1);
+		runtime.screenOptions.gestureSensitivity.set(1);
 		const secondEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
 			scale: 2.2,
 		});
@@ -644,7 +658,7 @@ describe("pinch gesture sensitivity", () => {
 		applyAndTrackPinchEvent(runtime, sensitivityStates, {
 			scale: 2,
 		});
-		runtime.runtimeOverrides.gestureSensitivity.set(0);
+		runtime.screenOptions.gestureSensitivity.set(0);
 		const frozenEvent = applyAndTrackPinchEvent(runtime, sensitivityStates, {
 			scale: 2.5,
 			velocity: 4,

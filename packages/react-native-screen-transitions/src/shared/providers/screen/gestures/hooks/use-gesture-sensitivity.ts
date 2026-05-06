@@ -5,7 +5,6 @@ import {
 	applyGestureSensitivity,
 	normalizePinchScale,
 } from "../helpers/gesture-physics";
-import { resolveGestureSensitivity } from "../helpers/gesture-sensitivity";
 
 import type {
 	PanGestureEvent,
@@ -73,10 +72,7 @@ export const usePanGestureSensitivity = (
 		(event: PanGestureEvent): PanGestureEvent => {
 			"worklet";
 			const latestRuntime = runtime.get();
-			const sensitivity = resolveGestureSensitivity(
-				latestRuntime.policy.gestureSensitivity,
-				latestRuntime.runtimeOverrides,
-			);
+			const sensitivity = latestRuntime.screenOptions.gestureSensitivity.get();
 
 			return {
 				...event,
@@ -120,10 +116,7 @@ export const usePinchGestureSensitivity = (
 		(event: PinchGestureEvent): PinchGestureEvent => {
 			"worklet";
 			const latestRuntime = runtime.get();
-			const sensitivity = resolveGestureSensitivity(
-				latestRuntime.policy.gestureSensitivity,
-				latestRuntime.runtimeOverrides,
-			);
+			const sensitivity = latestRuntime.screenOptions.gestureSensitivity.get();
 			const normScale = applyGestureSensitivityToRawChange(
 				normalizePinchScale(event.scale),
 				sensitivity,

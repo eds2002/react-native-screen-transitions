@@ -6,6 +6,7 @@ import {
 	startPinchBase,
 	trackPinchGesture,
 } from "../helpers/pinch-phases";
+import { resolvePinchRuntime } from "../helpers/runtime-options";
 import { usePinchGestureSensitivity } from "../hooks/use-gesture-sensitivity";
 import type {
 	PinchBehavior,
@@ -35,7 +36,7 @@ export const usePinchBehavior = (
 	const onStart = useCallback(
 		(event: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = runtime.get();
+			const latestRuntime = resolvePinchRuntime(runtime.get());
 			const strategy = getPinchStrategy(latestRuntime);
 			strategy.primeStart(latestRuntime);
 			startPinchBase(latestRuntime, event);
@@ -47,7 +48,7 @@ export const usePinchBehavior = (
 	const onUpdate = useCallback(
 		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = runtime.get();
+			const latestRuntime = resolvePinchRuntime(runtime.get());
 			const strategy = getPinchStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const track = trackPinchGesture(
@@ -70,7 +71,7 @@ export const usePinchBehavior = (
 	const onEnd = useCallback(
 		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = runtime.get();
+			const latestRuntime = resolvePinchRuntime(runtime.get());
 			const strategy = getPinchStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime);

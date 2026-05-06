@@ -1,7 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import type { TransitionInterpolatedStyle } from "../../types/animation.types";
+import {
+	syncScreenOptionsOverrides,
+	type ScreenOptionsContextValue,
+} from "../../providers/screen/options";
 import { stripInterpolatorOptions } from "../../providers/screen/styles/helpers/strip-interpolator-options";
-import { syncGestureRuntimeOverrides } from "../../providers/screen/styles/helpers/sync-gesture-runtime-overrides";
 
 const createSharedValue = <T>(initialValue: T) => {
 	let value = initialValue;
@@ -14,19 +17,67 @@ const createSharedValue = <T>(initialValue: T) => {
 	};
 };
 
-const createGestureContext = () => ({
-	runtimeOverrides: {
-		gestureSensitivity: createSharedValue<number | null>(null),
-	},
-});
+const BASE_SCREEN_OPTIONS = {
+	gestureEnabled: true,
+	experimental_allowDisabledGestureTracking: false,
+	gestureDirection: "horizontal",
+	gestureSensitivity: 1,
+	gestureVelocityImpact: 0.3,
+	gestureSnapVelocityImpact: 0.1,
+	gestureReleaseVelocityScale: 1,
+	gestureResponseDistance: undefined,
+	gestureDrivesProgress: true,
+	gestureActivationArea: "screen",
+	gestureSnapLocked: false,
+	sheetScrollGestureBehavior: "expand-and-collapse",
+	backdropBehavior: "block",
+} as const;
+
+const createScreenOptionsContext = (): ScreenOptionsContextValue =>
+	({
+		gestureEnabled: createSharedValue(BASE_SCREEN_OPTIONS.gestureEnabled),
+		experimental_allowDisabledGestureTracking: createSharedValue(
+			BASE_SCREEN_OPTIONS.experimental_allowDisabledGestureTracking,
+		),
+		gestureDirection: createSharedValue(BASE_SCREEN_OPTIONS.gestureDirection),
+		gestureSensitivity: createSharedValue(
+			BASE_SCREEN_OPTIONS.gestureSensitivity,
+		),
+		gestureVelocityImpact: createSharedValue(
+			BASE_SCREEN_OPTIONS.gestureVelocityImpact,
+		),
+		gestureSnapVelocityImpact: createSharedValue(
+			BASE_SCREEN_OPTIONS.gestureSnapVelocityImpact,
+		),
+		gestureReleaseVelocityScale: createSharedValue(
+			BASE_SCREEN_OPTIONS.gestureReleaseVelocityScale,
+		),
+		gestureResponseDistance: createSharedValue(
+			BASE_SCREEN_OPTIONS.gestureResponseDistance,
+		),
+		gestureDrivesProgress: createSharedValue(
+			BASE_SCREEN_OPTIONS.gestureDrivesProgress,
+		),
+		gestureActivationArea: createSharedValue(
+			BASE_SCREEN_OPTIONS.gestureActivationArea,
+		),
+		gestureSnapLocked: createSharedValue(
+			BASE_SCREEN_OPTIONS.gestureSnapLocked,
+		),
+		sheetScrollGestureBehavior: createSharedValue(
+			BASE_SCREEN_OPTIONS.sheetScrollGestureBehavior,
+		),
+		backdropBehavior: createSharedValue(BASE_SCREEN_OPTIONS.backdropBehavior),
+		baseOptions: createSharedValue(BASE_SCREEN_OPTIONS),
+	}) as ScreenOptionsContextValue;
 
 describe("stripInterpolatorOptions", () => {
 	it("removes reserved options before style slot normalization", () => {
 		const raw = {
 			options: {
-				gestures: {
-					gestureSensitivity: 0.5,
-				},
+				gestureSensitivity: 0.5,
+				gestureSnapLocked: true,
+				gestureReleaseVelocityScale: 1.2,
 			},
 			content: {
 				style: {
@@ -67,64 +118,125 @@ describe("stripInterpolatorOptions", () => {
 	});
 });
 
-describe("syncGestureRuntimeOverrides", () => {
-	it("sets gesture sensitivity from interpolator gesture options", () => {
-		const gestureContext = createGestureContext();
+describe("syncScreenOptionsOverrides", () => {
+	it("sets flat interpolator options", () => {
+		const screenOptions = createScreenOptionsContext();
 		const raw: TransitionInterpolatedStyle = {
 			options: {
-				gestures: {
-					gestureSensitivity: 0.25,
+				gestureEnabled: false,
+				experimental_allowDisabledGestureTracking: true,
+				gestureDirection: ["horizontal", "pinch-out"],
+				gestureSensitivity: 0.25,
+				gestureVelocityImpact: 0.4,
+				gestureSnapVelocityImpact: 0.2,
+				gestureReleaseVelocityScale: 1.5,
+				gestureResponseDistance: 24,
+				gestureDrivesProgress: false,
+				gestureActivationArea: {
+					left: "edge",
+					right: "screen",
 				},
+				gestureSnapLocked: true,
+				sheetScrollGestureBehavior: "collapse-only",
+				backdropBehavior: "dismiss",
 			},
 		};
 
-		syncGestureRuntimeOverrides(raw, gestureContext as any);
+		syncScreenOptionsOverrides(raw, screenOptions);
 
-		expect(gestureContext.runtimeOverrides.gestureSensitivity.get()).toBe(0.25);
+		expect(screenOptions.gestureEnabled.get()).toBe(false);
+		expect(
+			screenOptions.experimental_allowDisabledGestureTracking.get(),
+		).toBe(true);
+		expect(screenOptions.gestureDirection.get()).toEqual([
+			"horizontal",
+			"pinch-out",
+		]);
+		expect(screenOptions.gestureSensitivity.get()).toBe(0.25);
+		expect(screenOptions.gestureVelocityImpact.get()).toBe(0.4);
+		expect(screenOptions.gestureSnapVelocityImpact.get()).toBe(0.2);
+		expect(screenOptions.gestureReleaseVelocityScale.get()).toBe(1.5);
+		expect(screenOptions.gestureResponseDistance.get()).toBe(24);
+		expect(screenOptions.gestureDrivesProgress.get()).toBe(false);
+		expect(screenOptions.gestureActivationArea.get()).toEqual({
+			left: "edge",
+			right: "screen",
+		});
+		expect(screenOptions.gestureSnapLocked.get()).toBe(true);
+		expect(screenOptions.sheetScrollGestureBehavior.get()).toBe(
+			"collapse-only",
+		);
+		expect(screenOptions.backdropBehavior.get()).toBe("dismiss");
 	});
 
-	it("clears gesture sensitivity when options are missing", () => {
-		const gestureContext = createGestureContext();
+	it("resets screen options to their base values when options are missing", () => {
+		const screenOptions = createScreenOptionsContext();
 
-		syncGestureRuntimeOverrides(
+		syncScreenOptionsOverrides(
 			{
 				options: {
-					gestures: {
-						gestureSensitivity: 0.25,
-					},
+					gestureSensitivity: 0.25,
+					gestureSnapLocked: true,
+					backdropBehavior: "dismiss",
 				},
 			},
-			gestureContext as any,
+			screenOptions,
 		);
-		syncGestureRuntimeOverrides({}, gestureContext as any);
+		syncScreenOptionsOverrides({}, screenOptions);
 
-		expect(gestureContext.runtimeOverrides.gestureSensitivity.get()).toBeNull();
+		expect(screenOptions.gestureSensitivity.get()).toBe(
+			BASE_SCREEN_OPTIONS.gestureSensitivity,
+		);
+		expect(screenOptions.gestureSnapLocked.get()).toBe(
+			BASE_SCREEN_OPTIONS.gestureSnapLocked,
+		);
+		expect(screenOptions.backdropBehavior.get()).toBe(
+			BASE_SCREEN_OPTIONS.backdropBehavior,
+		);
 	});
 
-	it("clears gesture sensitivity when it is invalid", () => {
-		const gestureContext = createGestureContext();
+	it("resets invalid screen options to their base values", () => {
+		const screenOptions = createScreenOptionsContext();
 
-		syncGestureRuntimeOverrides(
+		syncScreenOptionsOverrides(
 			{
 				options: {
-					gestures: {
-						gestureSensitivity: 0.25,
-					},
+					gestureDirection: "vertical",
+					gestureSensitivity: 0.25,
+					gestureActivationArea: "edge",
+					sheetScrollGestureBehavior: "collapse-only",
+					backdropBehavior: "dismiss",
 				},
 			},
-			gestureContext as any,
+			screenOptions,
 		);
-		syncGestureRuntimeOverrides(
+		syncScreenOptionsOverrides(
 			{
 				options: {
-					gestures: {
-						gestureSensitivity: "fast",
-					},
+					gestureDirection: "diagonal",
+					gestureSensitivity: "fast",
+					gestureActivationArea: { left: "corner" },
+					sheetScrollGestureBehavior: "expand-only",
+					backdropBehavior: "fade",
 				},
 			} as any,
-			gestureContext as any,
+			screenOptions,
 		);
 
-		expect(gestureContext.runtimeOverrides.gestureSensitivity.get()).toBeNull();
+		expect(screenOptions.gestureDirection.get()).toBe(
+			BASE_SCREEN_OPTIONS.gestureDirection,
+		);
+		expect(screenOptions.gestureSensitivity.get()).toBe(
+			BASE_SCREEN_OPTIONS.gestureSensitivity,
+		);
+		expect(screenOptions.gestureActivationArea.get()).toBe(
+			BASE_SCREEN_OPTIONS.gestureActivationArea,
+		);
+		expect(screenOptions.sheetScrollGestureBehavior.get()).toBe(
+			BASE_SCREEN_OPTIONS.sheetScrollGestureBehavior,
+		);
+		expect(screenOptions.backdropBehavior.get()).toBe(
+			BASE_SCREEN_OPTIONS.backdropBehavior,
+		);
 	});
 });

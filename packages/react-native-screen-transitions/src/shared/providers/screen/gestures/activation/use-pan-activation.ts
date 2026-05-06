@@ -15,6 +15,7 @@ import {
 } from "../helpers/gesture-activation";
 import { getPanSnapAxisConfigForDirection } from "../helpers/gesture-directions";
 import { resolveRuntimeSnapPoints } from "../helpers/gesture-snap-points";
+import { resolvePanRuntime } from "../helpers/runtime-options";
 import { shouldDeferToChildClaim } from "../ownership/should-defer-to-child-claim";
 import type {
 	DirectionClaimMap,
@@ -55,7 +56,7 @@ export const usePanActivation = ({
 			stateManager: GestureStateManager | undefined,
 		) => {
 			"worklet";
-			const { participation, policy } = runtime.get();
+			const { participation, policy } = resolvePanRuntime(runtime.get());
 
 			if (
 				!participation.canTrackGesture ||
@@ -94,7 +95,7 @@ export const usePanActivation = ({
 				participation,
 				policy,
 				stores: { animations, gestures, system },
-			} = runtime.get();
+			} = resolvePanRuntime(runtime.get());
 			const {
 				hasSnapPoints,
 				hasAutoSnapPoint,
