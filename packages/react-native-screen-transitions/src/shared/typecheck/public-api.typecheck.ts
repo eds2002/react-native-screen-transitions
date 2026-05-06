@@ -1,5 +1,5 @@
 import type { ComponentProps } from "react";
-import type { DerivedValue } from "react-native-reanimated";
+import type { DerivedValue, SharedValue } from "react-native-reanimated";
 import {
 	type BlankStackFactoryOptions,
 	type BlankStackNavigationOptions,
@@ -137,6 +137,11 @@ const nextNameOptions: ScreenTransitionConfig = {
 	sheetScrollGestureBehavior: "collapse-only",
 	gestureSensitivity: 0.75,
 };
+declare const gestureSensitivitySharedValue: SharedValue<number>;
+const sharedGestureSensitivityOptions: ScreenTransitionConfig = {
+	// @ts-expect-error Dynamic gesture sensitivity belongs in screenStyleInterpolator options.gestures.
+	gestureSensitivity: gestureSensitivitySharedValue,
+};
 const initialMountAnimationOptions: ScreenTransitionConfig = {
 	experimental_animateOnInitialMount: true,
 };
@@ -210,6 +215,7 @@ const publicApiTypecheck = {
 	zoomOptions,
 	navigationMaskInterpolatedStyle,
 	nextNameOptions,
+	sharedGestureSensitivityOptions,
 	initialMountAnimationOptions,
 	disabledGestureTrackingOptions,
 	emptyInterpolatorOptions,

@@ -14,6 +14,7 @@ import type {
 } from "../../../../types";
 import type { ScreenTransitionOptions } from "../../../../types/animation.types";
 import type { BaseDescriptor } from "../../descriptors";
+import { buildScreenTransitionOptions } from "./build-screen-transition-options";
 import { toPlainRoute, toPlainValue } from "./worklet";
 
 type BuiltState = {
@@ -59,13 +60,7 @@ export const useBuildTransitionState = (
 			.filter((p): p is number => typeof p === "number")
 			.sort((a, b) => a - b);
 
-		const transitionOptions: ScreenTransitionOptions = {
-			gestureEnabled: descriptor.options.gestureEnabled,
-			gestureDirection: descriptor?.options?.gestureDirection,
-			gestureSnapLocked: descriptor.options.gestureSnapLocked,
-			experimental_allowDisabledGestureTracking:
-				descriptor.options.experimental_allowDisabledGestureTracking,
-		};
+		const transitionOptions = buildScreenTransitionOptions(descriptor.options);
 
 		return {
 			progress: AnimationStore.getValue(key, "progress"),

@@ -1,4 +1,4 @@
-import type { AnimatedProps, SharedValue } from "react-native-reanimated";
+import type { AnimatedProps } from "react-native-reanimated";
 import type {
 	ScreenStyleInterpolator,
 	TransitionSpec,
@@ -167,7 +167,7 @@ export type ScreenTransitionConfig = {
 	 *
 	 * @default 1
 	 */
-	gestureSensitivity?: number | SharedValue<number>;
+	gestureSensitivity?: number;
 
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.

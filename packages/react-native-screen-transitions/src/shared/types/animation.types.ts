@@ -10,8 +10,8 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
 import type { BoundsAccessor } from "./bounds.types";
-import type { GestureDirection, GestureValues } from "./gesture.types";
-import type { ScreenLayouts } from "./screen.types";
+import type { GestureValues } from "./gesture.types";
+import type { ScreenLayouts, ScreenTransitionConfig } from "./screen.types";
 import type { BaseStackRoute } from "./stack.types";
 
 /**
@@ -21,12 +21,22 @@ import type { BaseStackRoute } from "./stack.types";
  * `navigation.setOptions()`. If you need another existing screen option here,
  * open a request with the use case and why the interpolator needs it.
  */
-export type ScreenTransitionOptions = {
-	gestureEnabled?: boolean;
-	gestureDirection?: GestureDirection | GestureDirection[];
-	gestureSnapLocked?: boolean;
-	experimental_allowDisabledGestureTracking?: boolean;
-};
+export type ScreenTransitionOptions = Pick<
+	ScreenTransitionConfig,
+	| "gestureEnabled"
+	| "experimental_allowDisabledGestureTracking"
+	| "gestureDirection"
+	| "gestureSensitivity"
+	| "gestureVelocityImpact"
+	| "gestureSnapVelocityImpact"
+	| "gestureReleaseVelocityScale"
+	| "gestureResponseDistance"
+	| "gestureDrivesProgress"
+	| "gestureActivationArea"
+	| "gestureSnapLocked"
+	| "sheetScrollGestureBehavior"
+	| "backdropBehavior"
+>;
 
 export type ScreenTransitionState = {
 	/**
