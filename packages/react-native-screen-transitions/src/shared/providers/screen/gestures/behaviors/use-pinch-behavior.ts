@@ -38,7 +38,10 @@ export const usePinchBehavior = (
 	const onStart = useCallback(
 		(event: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePinchRuntime(runtime.get(), screenOptions);
+			const latestRuntime = resolvePinchRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
 			const strategy = getPinchStrategy(latestRuntime);
 			strategy.primeStart(latestRuntime);
 			startPinchBase(latestRuntime, event);
@@ -50,7 +53,10 @@ export const usePinchBehavior = (
 	const onUpdate = useCallback(
 		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePinchRuntime(runtime.get(), screenOptions);
+			const latestRuntime = resolvePinchRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
 			const strategy = getPinchStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const track = trackPinchGesture(
@@ -73,7 +79,10 @@ export const usePinchBehavior = (
 	const onEnd = useCallback(
 		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePinchRuntime(runtime.get(), screenOptions);
+			const latestRuntime = resolvePinchRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
 			const strategy = getPinchStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime);

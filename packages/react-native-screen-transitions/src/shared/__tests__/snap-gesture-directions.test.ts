@@ -56,6 +56,7 @@ function createPanSnapRuntime(
 		stores: {
 			...base.stores,
 			gestures: {
+				gesture: sharedValue(activeDirection),
 				direction: sharedValue(activeDirection),
 			},
 		},

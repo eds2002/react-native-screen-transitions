@@ -24,6 +24,7 @@ export const startPinchBase = (
 	emit(animations.willAnimate, TRUE, FALSE);
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
+	gestures.gesture.set(null);
 	gestures.direction.set(null);
 	gestures.scale.set(1);
 	gestures.normScale.set(0);
@@ -51,6 +52,9 @@ export const trackPinchGesture = (
 	gestures.focalY.set(event.focalY);
 	gestures.raw.scale.set(rawScale);
 	gestures.raw.normScale.set(rawNormScale);
+	gestures.gesture.set(
+		normScale < 0 ? "pinch-in" : normScale > 0 ? "pinch-out" : null,
+	);
 
 	return {
 		scale,

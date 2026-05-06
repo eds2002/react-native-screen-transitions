@@ -1,5 +1,8 @@
 import { resolveSnapTransitionSpec } from "../../../../../utils/animation/resolve-snap-transition-spec";
-import { getPanSnapAxisConfigForDirection } from "../../helpers/gesture-directions";
+import {
+	getPanSnapAxisConfigForDirection,
+	isResolvedPanGestureDirection,
+} from "../../helpers/gesture-directions";
 import { getPanReleaseHandoffVelocity } from "../../helpers/gesture-physics";
 import {
 	findNearestSnapPoint,
@@ -49,11 +52,11 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 			gestureProgressBaseline,
 			lockedSnapPoint,
 		} = runtime;
-		const activeDirection = runtime.stores.gestures.direction.get();
-		const activeAxis = activeDirection
+		const activeGesture = runtime.stores.gestures.gesture.get();
+		const activeAxis = isResolvedPanGestureDirection(activeGesture)
 			? getPanSnapAxisConfigForDirection(
 					policy.snapAxisDirections,
-					activeDirection,
+					activeGesture,
 				)
 			: null;
 
@@ -109,11 +112,11 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 			participation.effectiveSnapPoints;
-		const activeDirection = runtime.stores.gestures.direction.get();
-		const activeAxis = activeDirection
+		const activeGesture = runtime.stores.gestures.gesture.get();
+		const activeAxis = isResolvedPanGestureDirection(activeGesture)
 			? getPanSnapAxisConfigForDirection(
 					policy.snapAxisDirections,
-					activeDirection,
+					activeGesture,
 				)
 			: null;
 

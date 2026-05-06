@@ -1,4 +1,4 @@
-import type { ScreenOptionsContextValue } from "../../options";
+import type { ScreenOptionsSnapshot } from "../../options";
 import type {
 	PanGesturePolicy,
 	PanGestureRuntime,
@@ -15,7 +15,7 @@ import {
 
 export const resolveRuntimeCanTrackGesture = (
 	runtime: PanGestureRuntime | PinchGestureRuntime,
-	screenOptions: ScreenOptionsContextValue,
+	screenOptions: ScreenOptionsSnapshot,
 ) => {
 	"worklet";
 	const { participation } = runtime;
@@ -24,11 +24,11 @@ export const resolveRuntimeCanTrackGesture = (
 		return false;
 	}
 
-	if (screenOptions.experimental_allowDisabledGestureTracking.get() === true) {
+	if (screenOptions.experimental_allowDisabledGestureTracking === true) {
 		return true;
 	}
 
-	const gestureEnabled = screenOptions.gestureEnabled.get();
+	const gestureEnabled = screenOptions.gestureEnabled;
 	if (gestureEnabled === true) {
 		return true;
 	}
@@ -42,7 +42,7 @@ export const resolveRuntimeCanTrackGesture = (
 
 export const resolveRuntimeCanDismiss = (
 	runtime: PanGestureRuntime | PinchGestureRuntime,
-	screenOptions: ScreenOptionsContextValue,
+	screenOptions: ScreenOptionsSnapshot,
 ) => {
 	"worklet";
 	const { participation } = runtime;
@@ -51,7 +51,7 @@ export const resolveRuntimeCanDismiss = (
 		return false;
 	}
 
-	const gestureEnabled = screenOptions.gestureEnabled.get();
+	const gestureEnabled = screenOptions.gestureEnabled;
 	if (gestureEnabled === false) {
 		return false;
 	}
@@ -65,11 +65,11 @@ export const resolveRuntimeCanDismiss = (
 
 export const resolvePanRuntimePolicy = (
 	runtime: PanGestureRuntime,
-	screenOptions: ScreenOptionsContextValue,
+	screenOptions: ScreenOptionsSnapshot,
 ): PanGesturePolicy => {
 	"worklet";
 	const { policy, participation } = runtime;
-	const gestureDirection = screenOptions.gestureDirection.get();
+	const gestureDirection = screenOptions.gestureDirection;
 	const hasSnapPoints = participation.effectiveSnapPoints.hasSnapPoints;
 
 	return {
@@ -81,26 +81,25 @@ export const resolvePanRuntimePolicy = (
 			hasSnapPoints,
 		}),
 		snapAxisDirections: getPanSnapAxisDirections(gestureDirection),
-		gestureDrivesProgress: screenOptions.gestureDrivesProgress.get(),
-		gestureSensitivity: screenOptions.gestureSensitivity.get(),
-		gestureVelocityImpact: screenOptions.gestureVelocityImpact.get(),
-		gestureSnapVelocityImpact: screenOptions.gestureSnapVelocityImpact.get(),
-		gestureReleaseVelocityScale:
-			screenOptions.gestureReleaseVelocityScale.get(),
-		gestureResponseDistance: screenOptions.gestureResponseDistance.get(),
-		gestureActivationArea: screenOptions.gestureActivationArea.get(),
-		gestureSnapLocked: screenOptions.gestureSnapLocked.get(),
-		sheetScrollGestureBehavior: screenOptions.sheetScrollGestureBehavior.get(),
+		gestureDrivesProgress: screenOptions.gestureDrivesProgress,
+		gestureSensitivity: screenOptions.gestureSensitivity,
+		gestureVelocityImpact: screenOptions.gestureVelocityImpact,
+		gestureSnapVelocityImpact: screenOptions.gestureSnapVelocityImpact,
+		gestureReleaseVelocityScale: screenOptions.gestureReleaseVelocityScale,
+		gestureResponseDistance: screenOptions.gestureResponseDistance,
+		gestureActivationArea: screenOptions.gestureActivationArea,
+		gestureSnapLocked: screenOptions.gestureSnapLocked,
+		sheetScrollGestureBehavior: screenOptions.sheetScrollGestureBehavior,
 	};
 };
 
 export const resolvePinchRuntimePolicy = (
 	runtime: PinchGestureRuntime,
-	screenOptions: ScreenOptionsContextValue,
+	screenOptions: ScreenOptionsSnapshot,
 ): PinchGesturePolicy => {
 	"worklet";
 	const { policy, participation } = runtime;
-	const gestureDirection = screenOptions.gestureDirection.get();
+	const gestureDirection = screenOptions.gestureDirection;
 	const pinchDirections = getPinchGestureDirections(gestureDirection);
 	const snapDirections = participation.effectiveSnapPoints.hasSnapPoints
 		? getSnapPinchDirectionConfig(gestureDirection)
@@ -119,18 +118,17 @@ export const resolvePinchRuntimePolicy = (
 		snapDirections,
 		pinchInEnabled,
 		pinchOutEnabled,
-		gestureDrivesProgress: screenOptions.gestureDrivesProgress.get(),
-		gestureSensitivity: screenOptions.gestureSensitivity.get(),
-		gestureSnapVelocityImpact: screenOptions.gestureSnapVelocityImpact.get(),
-		gestureReleaseVelocityScale:
-			screenOptions.gestureReleaseVelocityScale.get(),
-		gestureSnapLocked: screenOptions.gestureSnapLocked.get(),
+		gestureDrivesProgress: screenOptions.gestureDrivesProgress,
+		gestureSensitivity: screenOptions.gestureSensitivity,
+		gestureSnapVelocityImpact: screenOptions.gestureSnapVelocityImpact,
+		gestureReleaseVelocityScale: screenOptions.gestureReleaseVelocityScale,
+		gestureSnapLocked: screenOptions.gestureSnapLocked,
 	};
 };
 
 export const resolvePanRuntime = (
 	runtime: PanGestureRuntime,
-	screenOptions: ScreenOptionsContextValue,
+	screenOptions: ScreenOptionsSnapshot,
 ): PanGestureRuntime => {
 	"worklet";
 	return {
@@ -146,7 +144,7 @@ export const resolvePanRuntime = (
 
 export const resolvePinchRuntime = (
 	runtime: PinchGestureRuntime,
-	screenOptions: ScreenOptionsContextValue,
+	screenOptions: ScreenOptionsSnapshot,
 ): PinchGestureRuntime => {
 	"worklet";
 	return {

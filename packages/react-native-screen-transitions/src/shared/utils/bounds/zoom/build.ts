@@ -159,12 +159,12 @@ export function buildZoomStyles({
 
 	const normX = props.active.gesture.normX;
 	const normY = props.active.gesture.normY;
-	const initialDirection = props.active.gesture.direction;
+	const initialGesture =
+		props.active.gesture.gesture ?? props.active.gesture.direction;
 	const isHorizontalDismiss =
-		initialDirection === "horizontal" ||
-		initialDirection === "horizontal-inverted";
+		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
 	const isVerticalDismiss =
-		initialDirection === "vertical" || initialDirection === "vertical-inverted";
+		initialGesture === "vertical" || initialGesture === "vertical-inverted";
 
 	const horizontalDragTranslation = resolveDragTranslationTuple(
 		zoomOptions?.horizontalDragTranslation,
@@ -200,7 +200,7 @@ export function buildZoomStyles({
 		? resolveDirectionalDragScale({
 				normalized: normX,
 				dismissDirection:
-					initialDirection === "horizontal-inverted" ? "negative" : "positive",
+					initialGesture === "horizontal-inverted" ? "negative" : "positive",
 				shrinkMin: horizontalDragScale.shrinkMin,
 				growMax: horizontalDragScale.growMax,
 				exponent: horizontalDragScale.exponent,
@@ -210,7 +210,7 @@ export function buildZoomStyles({
 		? resolveDirectionalDragScale({
 				normalized: normY,
 				dismissDirection:
-					initialDirection === "vertical-inverted" ? "negative" : "positive",
+					initialGesture === "vertical-inverted" ? "negative" : "positive",
 				shrinkMin: verticalDragScale.shrinkMin,
 				growMax: verticalDragScale.growMax,
 				exponent: verticalDragScale.exponent,

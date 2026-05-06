@@ -61,7 +61,7 @@ export const usePanActivation = ({
 			"worklet";
 			const { participation, policy } = resolvePanRuntime(
 				runtime.get(),
-				screenOptions,
+				screenOptions.get(),
 			);
 
 			if (
@@ -101,7 +101,7 @@ export const usePanActivation = ({
 				participation,
 				policy,
 				stores: { animations, gestures, system },
-			} = resolvePanRuntime(runtime.get(), screenOptions);
+			} = resolvePanRuntime(runtime.get(), screenOptions.get());
 			const {
 				hasSnapPoints,
 				hasAutoSnapPoint,
@@ -223,6 +223,7 @@ export const usePanActivation = ({
 				}
 			}
 
+			gestures.gesture.set(swipeDirection);
 			gestures.direction.set(swipeDirection);
 			stateManager.activate();
 		},

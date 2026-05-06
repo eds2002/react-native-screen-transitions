@@ -50,6 +50,7 @@ const DEFAULT_GESTURE_VALUES = {
 	raw: DEFAULT_RAW_GESTURE_VALUES,
 	dismissing: 0,
 	dragging: 0,
+	gesture: null,
 	direction: null,
 
 	// Deprecated aliases

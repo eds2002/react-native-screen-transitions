@@ -34,41 +34,9 @@ const BASE_SCREEN_OPTIONS = {
 } as const;
 
 const createScreenOptionsContext = (): ScreenOptionsContextValue =>
-	({
-		gestureEnabled: createSharedValue(BASE_SCREEN_OPTIONS.gestureEnabled),
-		experimental_allowDisabledGestureTracking: createSharedValue(
-			BASE_SCREEN_OPTIONS.experimental_allowDisabledGestureTracking,
-		),
-		gestureDirection: createSharedValue(BASE_SCREEN_OPTIONS.gestureDirection),
-		gestureSensitivity: createSharedValue(
-			BASE_SCREEN_OPTIONS.gestureSensitivity,
-		),
-		gestureVelocityImpact: createSharedValue(
-			BASE_SCREEN_OPTIONS.gestureVelocityImpact,
-		),
-		gestureSnapVelocityImpact: createSharedValue(
-			BASE_SCREEN_OPTIONS.gestureSnapVelocityImpact,
-		),
-		gestureReleaseVelocityScale: createSharedValue(
-			BASE_SCREEN_OPTIONS.gestureReleaseVelocityScale,
-		),
-		gestureResponseDistance: createSharedValue(
-			BASE_SCREEN_OPTIONS.gestureResponseDistance,
-		),
-		gestureDrivesProgress: createSharedValue(
-			BASE_SCREEN_OPTIONS.gestureDrivesProgress,
-		),
-		gestureActivationArea: createSharedValue(
-			BASE_SCREEN_OPTIONS.gestureActivationArea,
-		),
-		gestureSnapLocked: createSharedValue(
-			BASE_SCREEN_OPTIONS.gestureSnapLocked,
-		),
-		sheetScrollGestureBehavior: createSharedValue(
-			BASE_SCREEN_OPTIONS.sheetScrollGestureBehavior,
-		),
-		backdropBehavior: createSharedValue(BASE_SCREEN_OPTIONS.backdropBehavior),
-		baseOptions: createSharedValue(BASE_SCREEN_OPTIONS),
+	createSharedValue({
+		...BASE_SCREEN_OPTIONS,
+		baseOptions: BASE_SCREEN_OPTIONS,
 	}) as ScreenOptionsContextValue;
 
 describe("stripInterpolatorOptions", () => {
@@ -143,30 +111,27 @@ describe("syncScreenOptionsOverrides", () => {
 		};
 
 		syncScreenOptionsOverrides(raw, screenOptions);
+		const next = screenOptions.get();
 
-		expect(screenOptions.gestureEnabled.get()).toBe(false);
-		expect(
-			screenOptions.experimental_allowDisabledGestureTracking.get(),
-		).toBe(true);
-		expect(screenOptions.gestureDirection.get()).toEqual([
+		expect(next.gestureEnabled).toBe(false);
+		expect(next.experimental_allowDisabledGestureTracking).toBe(true);
+		expect(next.gestureDirection).toEqual([
 			"horizontal",
 			"pinch-out",
 		]);
-		expect(screenOptions.gestureSensitivity.get()).toBe(0.25);
-		expect(screenOptions.gestureVelocityImpact.get()).toBe(0.4);
-		expect(screenOptions.gestureSnapVelocityImpact.get()).toBe(0.2);
-		expect(screenOptions.gestureReleaseVelocityScale.get()).toBe(1.5);
-		expect(screenOptions.gestureResponseDistance.get()).toBe(24);
-		expect(screenOptions.gestureDrivesProgress.get()).toBe(false);
-		expect(screenOptions.gestureActivationArea.get()).toEqual({
+		expect(next.gestureSensitivity).toBe(0.25);
+		expect(next.gestureVelocityImpact).toBe(0.4);
+		expect(next.gestureSnapVelocityImpact).toBe(0.2);
+		expect(next.gestureReleaseVelocityScale).toBe(1.5);
+		expect(next.gestureResponseDistance).toBe(24);
+		expect(next.gestureDrivesProgress).toBe(false);
+		expect(next.gestureActivationArea).toEqual({
 			left: "edge",
 			right: "screen",
 		});
-		expect(screenOptions.gestureSnapLocked.get()).toBe(true);
-		expect(screenOptions.sheetScrollGestureBehavior.get()).toBe(
-			"collapse-only",
-		);
-		expect(screenOptions.backdropBehavior.get()).toBe("dismiss");
+		expect(next.gestureSnapLocked).toBe(true);
+		expect(next.sheetScrollGestureBehavior).toBe("collapse-only");
+		expect(next.backdropBehavior).toBe("dismiss");
 	});
 
 	it("resets screen options to their base values when options are missing", () => {
@@ -183,14 +148,15 @@ describe("syncScreenOptionsOverrides", () => {
 			screenOptions,
 		);
 		syncScreenOptionsOverrides({}, screenOptions);
+		const next = screenOptions.get();
 
-		expect(screenOptions.gestureSensitivity.get()).toBe(
+		expect(next.gestureSensitivity).toBe(
 			BASE_SCREEN_OPTIONS.gestureSensitivity,
 		);
-		expect(screenOptions.gestureSnapLocked.get()).toBe(
+		expect(next.gestureSnapLocked).toBe(
 			BASE_SCREEN_OPTIONS.gestureSnapLocked,
 		);
-		expect(screenOptions.backdropBehavior.get()).toBe(
+		expect(next.backdropBehavior).toBe(
 			BASE_SCREEN_OPTIONS.backdropBehavior,
 		);
 	});
@@ -222,20 +188,21 @@ describe("syncScreenOptionsOverrides", () => {
 			} as any,
 			screenOptions,
 		);
+		const next = screenOptions.get();
 
-		expect(screenOptions.gestureDirection.get()).toBe(
+		expect(next.gestureDirection).toBe(
 			BASE_SCREEN_OPTIONS.gestureDirection,
 		);
-		expect(screenOptions.gestureSensitivity.get()).toBe(
+		expect(next.gestureSensitivity).toBe(
 			BASE_SCREEN_OPTIONS.gestureSensitivity,
 		);
-		expect(screenOptions.gestureActivationArea.get()).toBe(
+		expect(next.gestureActivationArea).toBe(
 			BASE_SCREEN_OPTIONS.gestureActivationArea,
 		);
-		expect(screenOptions.sheetScrollGestureBehavior.get()).toBe(
+		expect(next.sheetScrollGestureBehavior).toBe(
 			BASE_SCREEN_OPTIONS.sheetScrollGestureBehavior,
 		);
-		expect(screenOptions.backdropBehavior.get()).toBe(
+		expect(next.backdropBehavior).toBe(
 			BASE_SCREEN_OPTIONS.backdropBehavior,
 		);
 	});

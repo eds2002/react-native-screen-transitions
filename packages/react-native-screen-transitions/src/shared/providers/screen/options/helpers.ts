@@ -22,6 +22,7 @@ import type {
 	RequiredScreenOption,
 	ScreenOptionsContextValue,
 	ScreenOptionsSnapshot,
+	ScreenOptionsState,
 } from "./types";
 
 const cloneGestureDirection = (
@@ -192,28 +193,14 @@ export const syncScreenOptionsBase = (
 	base: ScreenOptionsSnapshot,
 ) => {
 	"worklet";
-	screenOptions.baseOptions.set(base);
-	screenOptions.gestureEnabled.set(base.gestureEnabled);
-	screenOptions.experimental_allowDisabledGestureTracking.set(
-		base.experimental_allowDisabledGestureTracking,
-	);
-	screenOptions.gestureDirection.set(
-		cloneGestureDirection(base.gestureDirection),
-	);
-	screenOptions.gestureSensitivity.set(base.gestureSensitivity);
-	screenOptions.gestureVelocityImpact.set(base.gestureVelocityImpact);
-	screenOptions.gestureSnapVelocityImpact.set(base.gestureSnapVelocityImpact);
-	screenOptions.gestureReleaseVelocityScale.set(
-		base.gestureReleaseVelocityScale,
-	);
-	screenOptions.gestureResponseDistance.set(base.gestureResponseDistance);
-	screenOptions.gestureDrivesProgress.set(base.gestureDrivesProgress);
-	screenOptions.gestureActivationArea.set(
-		cloneGestureActivationArea(base.gestureActivationArea),
-	);
-	screenOptions.gestureSnapLocked.set(base.gestureSnapLocked);
-	screenOptions.sheetScrollGestureBehavior.set(base.sheetScrollGestureBehavior);
-	screenOptions.backdropBehavior.set(base.backdropBehavior);
+	screenOptions.set({
+		...base,
+		gestureDirection: cloneGestureDirection(base.gestureDirection),
+		gestureActivationArea: cloneGestureActivationArea(
+			base.gestureActivationArea,
+		),
+		baseOptions: base,
+	});
 };
 
 export const syncScreenOptionsOverrides = (
@@ -222,75 +209,63 @@ export const syncScreenOptionsOverrides = (
 ) => {
 	"worklet";
 	const options = raw?.options;
-	const base = screenOptions.baseOptions.get();
+	const base = screenOptions.get().baseOptions;
 
-	screenOptions.gestureEnabled.set(
-		resolveBooleanOption(options?.gestureEnabled, base.gestureEnabled),
-	);
-	screenOptions.experimental_allowDisabledGestureTracking.set(
-		resolveBooleanOption(
+	const next: ScreenOptionsState = {
+		gestureEnabled: resolveBooleanOption(
+			options?.gestureEnabled,
+			base.gestureEnabled,
+		),
+		experimental_allowDisabledGestureTracking: resolveBooleanOption(
 			options?.experimental_allowDisabledGestureTracking,
 			base.experimental_allowDisabledGestureTracking,
 		),
-	);
-	screenOptions.gestureDirection.set(
-		resolveGestureDirectionOption(
+		gestureDirection: resolveGestureDirectionOption(
 			options?.gestureDirection,
 			base.gestureDirection,
 		),
-	);
-	screenOptions.gestureSensitivity.set(
-		resolveNumberOption(options?.gestureSensitivity, base.gestureSensitivity),
-	);
-	screenOptions.gestureVelocityImpact.set(
-		resolveNumberOption(
+		gestureSensitivity: resolveNumberOption(
+			options?.gestureSensitivity,
+			base.gestureSensitivity,
+		),
+		gestureVelocityImpact: resolveNumberOption(
 			options?.gestureVelocityImpact,
 			base.gestureVelocityImpact,
 		),
-	);
-	screenOptions.gestureSnapVelocityImpact.set(
-		resolveNumberOption(
+		gestureSnapVelocityImpact: resolveNumberOption(
 			options?.gestureSnapVelocityImpact,
 			base.gestureSnapVelocityImpact,
 		),
-	);
-	screenOptions.gestureReleaseVelocityScale.set(
-		resolveNumberOption(
+		gestureReleaseVelocityScale: resolveNumberOption(
 			options?.gestureReleaseVelocityScale,
 			base.gestureReleaseVelocityScale,
 		),
-	);
-	screenOptions.gestureResponseDistance.set(
-		resolveNumberOption(
+		gestureResponseDistance: resolveNumberOption(
 			options?.gestureResponseDistance,
 			base.gestureResponseDistance,
 		),
-	);
-	screenOptions.gestureDrivesProgress.set(
-		resolveBooleanOption(
+		gestureDrivesProgress: resolveBooleanOption(
 			options?.gestureDrivesProgress,
 			base.gestureDrivesProgress,
 		),
-	);
-	screenOptions.gestureActivationArea.set(
-		resolveGestureActivationAreaOption(
+		gestureActivationArea: resolveGestureActivationAreaOption(
 			options?.gestureActivationArea,
 			base.gestureActivationArea,
 		),
-	);
-	screenOptions.gestureSnapLocked.set(
-		resolveBooleanOption(options?.gestureSnapLocked, base.gestureSnapLocked),
-	);
-	screenOptions.sheetScrollGestureBehavior.set(
-		resolveSheetScrollGestureBehaviorOption(
+		gestureSnapLocked: resolveBooleanOption(
+			options?.gestureSnapLocked,
+			base.gestureSnapLocked,
+		),
+		sheetScrollGestureBehavior: resolveSheetScrollGestureBehaviorOption(
 			options?.sheetScrollGestureBehavior,
 			base.sheetScrollGestureBehavior,
 		),
-	);
-	screenOptions.backdropBehavior.set(
-		resolveBackdropBehaviorOption(
+		backdropBehavior: resolveBackdropBehaviorOption(
 			options?.backdropBehavior,
 			base.backdropBehavior,
 		),
-	);
+		baseOptions: base,
+	};
+
+	screenOptions.set(next);
 };

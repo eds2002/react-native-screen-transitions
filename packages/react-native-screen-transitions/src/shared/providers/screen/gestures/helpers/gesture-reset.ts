@@ -60,6 +60,7 @@ export const resetGestureValues = ({
 		],
 		onAllFinished: () => {
 			"worklet";
+			gestures.gesture.set(null);
 			gestures.direction.set(null);
 		},
 	});
@@ -102,6 +103,7 @@ export const resetPinchGestureValues = ({
 			"worklet";
 			gestures.focalX.set(0);
 			gestures.focalY.set(0);
+			gestures.gesture.set(null);
 			gestures.direction.set(null);
 		},
 	});

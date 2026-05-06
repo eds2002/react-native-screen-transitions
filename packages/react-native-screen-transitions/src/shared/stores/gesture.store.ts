@@ -3,7 +3,10 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
-import type { ResolvedPanGestureDirection } from "../types/gesture.types";
+import type {
+	ActiveGesture,
+	ResolvedPanGestureDirection,
+} from "../types/gesture.types";
 import { createStore } from "../utils/create-store";
 
 type GestureRawStoreMap = {
@@ -27,6 +30,8 @@ export type GestureStoreMap = {
 	raw: GestureRawStoreMap;
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
+	gesture: SharedValue<ActiveGesture | null>;
+	/** @deprecated Use `gesture` instead. */
 	direction: SharedValue<ResolvedPanGestureDirection | null>;
 
 	/**
@@ -54,6 +59,7 @@ function createGestureBag(): GestureStoreMap {
 	const normScale = makeMutable(0);
 	const dismissing = makeMutable(0);
 	const dragging = makeMutable(0);
+	const gesture = makeMutable<ActiveGesture | null>(null);
 
 	return {
 		x: makeMutable(0),
@@ -74,6 +80,7 @@ function createGestureBag(): GestureStoreMap {
 		},
 		dismissing,
 		dragging,
+		gesture,
 		direction: makeMutable<ResolvedPanGestureDirection | null>(null),
 
 		// Deprecated aliases (same underlying SharedValue)
@@ -110,6 +117,7 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.raw.normScale);
 		cancelAnimation(bag.dismissing);
 		cancelAnimation(bag.dragging);
+		cancelAnimation(bag.gesture);
 		cancelAnimation(bag.direction);
 	},
 });

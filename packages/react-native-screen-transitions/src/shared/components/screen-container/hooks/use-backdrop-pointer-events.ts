@@ -29,14 +29,14 @@ export function useBackdropPointerEvents(): BackdropPointerEventsResult {
 	>(undefined);
 
 	useAnimatedReaction(
-		() => screenOptions.backdropBehavior.get(),
+		() => screenOptions.get().backdropBehavior,
 		(next, previous) => {
 			"worklet";
 			if (next !== previous) {
 				runOnJS(setRuntimeBackdropBehavior)(next);
 			}
 		},
-		[screenOptions.backdropBehavior],
+		[screenOptions],
 	);
 
 	const isComponentStack = flags.STACK_TYPE === StackType.COMPONENT;

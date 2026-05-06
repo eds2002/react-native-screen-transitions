@@ -66,7 +66,7 @@ export const usePanGestureSensitivity = (
 	const withSensitivity = useCallback(
 		(event: PanGestureEvent): PanGestureEvent => {
 			"worklet";
-			const sensitivity = screenOptions.gestureSensitivity.get();
+			const sensitivity = screenOptions.get().gestureSensitivity;
 
 			return {
 				...event,
@@ -109,7 +109,7 @@ export const usePinchGestureSensitivity = (
 	const withSensitivity = useCallback(
 		(event: PinchGestureEvent): PinchGestureEvent => {
 			"worklet";
-			const sensitivity = screenOptions.gestureSensitivity.get();
+			const sensitivity = screenOptions.get().gestureSensitivity;
 			const normScale = applyGestureSensitivityToRawChange(
 				normalizePinchScale(event.scale),
 				sensitivity,

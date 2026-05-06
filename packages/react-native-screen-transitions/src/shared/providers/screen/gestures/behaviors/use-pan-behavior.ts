@@ -37,7 +37,7 @@ export const usePanBehavior = (
 
 	const onStart = useCallback(() => {
 		"worklet";
-		const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions);
+		const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions.get());
 		const strategy = getPanStrategy(latestRuntime);
 		strategy.primeStart(latestRuntime);
 		startPanBase(latestRuntime);
@@ -47,7 +47,10 @@ export const usePanBehavior = (
 	const onUpdate = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions);
+			const latestRuntime = resolvePanRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
 			const strategy = getPanStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const track = trackPanGesture(
@@ -71,7 +74,10 @@ export const usePanBehavior = (
 	const onEnd = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions);
+			const latestRuntime = resolvePanRuntime(
+				runtime.get(),
+				screenOptions.get(),
+			);
 			const strategy = getPanStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime, dimensions);

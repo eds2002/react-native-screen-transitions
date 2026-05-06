@@ -24,40 +24,11 @@ export type ScreenOptionsSnapshot = {
 	backdropBehavior: OptionalScreenOption<"backdropBehavior">;
 };
 
-export type ScreenOptionsContextValue = {
-	gestureEnabled: RuntimeOption<ScreenOptionsSnapshot["gestureEnabled"]>;
-	experimental_allowDisabledGestureTracking: RuntimeOption<
-		ScreenOptionsSnapshot["experimental_allowDisabledGestureTracking"]
-	>;
-	gestureDirection: RuntimeOption<ScreenOptionsSnapshot["gestureDirection"]>;
-	gestureSensitivity: RuntimeOption<
-		ScreenOptionsSnapshot["gestureSensitivity"]
-	>;
-	gestureVelocityImpact: RuntimeOption<
-		ScreenOptionsSnapshot["gestureVelocityImpact"]
-	>;
-	gestureSnapVelocityImpact: RuntimeOption<
-		ScreenOptionsSnapshot["gestureSnapVelocityImpact"]
-	>;
-	gestureReleaseVelocityScale: RuntimeOption<
-		ScreenOptionsSnapshot["gestureReleaseVelocityScale"]
-	>;
-	gestureResponseDistance: RuntimeOption<
-		ScreenOptionsSnapshot["gestureResponseDistance"]
-	>;
-	gestureDrivesProgress: RuntimeOption<
-		ScreenOptionsSnapshot["gestureDrivesProgress"]
-	>;
-	gestureActivationArea: RuntimeOption<
-		ScreenOptionsSnapshot["gestureActivationArea"]
-	>;
-	gestureSnapLocked: RuntimeOption<ScreenOptionsSnapshot["gestureSnapLocked"]>;
-	sheetScrollGestureBehavior: RuntimeOption<
-		ScreenOptionsSnapshot["sheetScrollGestureBehavior"]
-	>;
-	backdropBehavior: RuntimeOption<ScreenOptionsSnapshot["backdropBehavior"]>;
-	baseOptions: RuntimeOption<ScreenOptionsSnapshot>;
+export type ScreenOptionsState = ScreenOptionsSnapshot & {
+	baseOptions: ScreenOptionsSnapshot;
 };
+
+export type ScreenOptionsContextValue = RuntimeOption<ScreenOptionsState>;
 
 export interface ScreenOptionsProviderProps {
 	children: ReactNode;

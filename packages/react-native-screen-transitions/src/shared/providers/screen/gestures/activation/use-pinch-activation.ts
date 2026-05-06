@@ -25,7 +25,7 @@ export const usePinchActivation = ({
 			"worklet";
 			const { participation, policy } = resolvePinchRuntime(
 				runtime.get(),
-				screenOptions,
+				screenOptions.get(),
 			);
 
 			if (!participation.canTrackGesture || !policy.enabled) {
@@ -50,7 +50,7 @@ export const usePinchActivation = ({
 			"worklet";
 			const { participation, policy } = resolvePinchRuntime(
 				runtime.get(),
-				screenOptions,
+				screenOptions.get(),
 			);
 
 			if (!participation.canTrackGesture || !policy.enabled) {

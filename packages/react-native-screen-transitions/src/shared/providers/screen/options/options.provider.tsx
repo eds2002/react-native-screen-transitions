@@ -6,6 +6,7 @@ import { resolveBaseScreenOptions, syncScreenOptionsBase } from "./helpers";
 import type {
 	ScreenOptionsContextValue,
 	ScreenOptionsProviderProps,
+	ScreenOptionsState,
 } from "./types";
 
 export const { ScreenOptionsProvider, useScreenOptionsContext } =
@@ -22,75 +23,15 @@ export const { ScreenOptionsProvider, useScreenOptionsContext } =
 			[options],
 		);
 
-		const gestureEnabled = useSharedValue(baseScreenOptions.gestureEnabled);
-		const experimental_allowDisabledGestureTracking = useSharedValue(
-			baseScreenOptions.experimental_allowDisabledGestureTracking,
-		);
-		const gestureDirection = useSharedValue(baseScreenOptions.gestureDirection);
-		const gestureSensitivity = useSharedValue(
-			baseScreenOptions.gestureSensitivity,
-		);
-		const gestureVelocityImpact = useSharedValue(
-			baseScreenOptions.gestureVelocityImpact,
-		);
-		const gestureSnapVelocityImpact = useSharedValue(
-			baseScreenOptions.gestureSnapVelocityImpact,
-		);
-		const gestureReleaseVelocityScale = useSharedValue(
-			baseScreenOptions.gestureReleaseVelocityScale,
-		);
-		const gestureResponseDistance = useSharedValue(
-			baseScreenOptions.gestureResponseDistance,
-		);
-		const gestureDrivesProgress = useSharedValue(
-			baseScreenOptions.gestureDrivesProgress,
-		);
-		const gestureActivationArea = useSharedValue(
-			baseScreenOptions.gestureActivationArea,
-		);
-		const gestureSnapLocked = useSharedValue(
-			baseScreenOptions.gestureSnapLocked,
-		);
-		const sheetScrollGestureBehavior = useSharedValue(
-			baseScreenOptions.sheetScrollGestureBehavior,
-		);
-		const backdropBehavior = useSharedValue(baseScreenOptions.backdropBehavior);
-		const baseOptions = useSharedValue(baseScreenOptions);
-
-		const value = useMemo<ScreenOptionsContextValue>(
+		const initialScreenOptions = useMemo<ScreenOptionsState>(
 			() => ({
-				gestureEnabled,
-				experimental_allowDisabledGestureTracking,
-				gestureDirection,
-				gestureSensitivity,
-				gestureVelocityImpact,
-				gestureSnapVelocityImpact,
-				gestureReleaseVelocityScale,
-				gestureResponseDistance,
-				gestureDrivesProgress,
-				gestureActivationArea,
-				gestureSnapLocked,
-				sheetScrollGestureBehavior,
-				backdropBehavior,
-				baseOptions,
+				...baseScreenOptions,
+				baseOptions: baseScreenOptions,
 			}),
-			[
-				gestureEnabled,
-				experimental_allowDisabledGestureTracking,
-				gestureDirection,
-				gestureSensitivity,
-				gestureVelocityImpact,
-				gestureSnapVelocityImpact,
-				gestureReleaseVelocityScale,
-				gestureResponseDistance,
-				gestureDrivesProgress,
-				gestureActivationArea,
-				gestureSnapLocked,
-				sheetScrollGestureBehavior,
-				backdropBehavior,
-				baseOptions,
-			],
+			[baseScreenOptions],
 		);
+
+		const value = useSharedValue(initialScreenOptions);
 
 		useLayoutEffect(() => {
 			syncScreenOptionsBase(value, baseScreenOptions);

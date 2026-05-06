@@ -14,6 +14,8 @@ export type PinchGestureDirection = "pinch-in" | "pinch-out";
 
 export type GestureDirection = PanGestureDirection | PinchGestureDirection;
 
+export type ActiveGesture = ResolvedPanGestureDirection | PinchGestureDirection;
+
 export type SnapPanAxis = "horizontal" | "vertical";
 
 export type SnapPanAxisConfig = {
@@ -118,7 +120,13 @@ export type GestureValues = {
 	 */
 	dragging: number;
 	/**
-	 * The initial direction that activated the gesture.
+	 * The gesture that is currently active.
+	 */
+	gesture: ActiveGesture | null;
+	/**
+	 * The initial pan direction that activated the gesture.
+	 *
+	 * @deprecated Use `gesture` instead.
 	 */
 	direction: ResolvedPanGestureDirection | null;
 

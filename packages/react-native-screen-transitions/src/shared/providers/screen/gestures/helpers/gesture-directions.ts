@@ -1,4 +1,5 @@
 import type {
+	ActiveGesture,
 	GestureDirection,
 	GestureDirections,
 	PanGestureDirection,
@@ -19,13 +20,27 @@ interface GetPanActivationDirectionsProps {
 const isPinchGestureDirection = (
 	direction: GestureDirection,
 ): direction is PinchGestureDirection => {
+	"worklet";
 	return direction === "pinch-in" || direction === "pinch-out";
 };
 
 const isPanGestureDirection = (
 	direction: GestureDirection,
 ): direction is PanGestureDirection => {
+	"worklet";
 	return !isPinchGestureDirection(direction);
+};
+
+export const isResolvedPanGestureDirection = (
+	gesture: ActiveGesture | null,
+): gesture is ResolvedPanGestureDirection => {
+	"worklet";
+	return (
+		gesture === "horizontal" ||
+		gesture === "horizontal-inverted" ||
+		gesture === "vertical" ||
+		gesture === "vertical-inverted"
+	);
 };
 
 export const getPanGestureDirections = (
@@ -35,8 +50,15 @@ export const getPanGestureDirections = (
 	const directions = Array.isArray(gestureDirection)
 		? gestureDirection
 		: [gestureDirection];
+	const panDirections: PanGestureDirection[] = [];
 
-	return directions.filter(isPanGestureDirection);
+	for (const direction of directions) {
+		if (isPanGestureDirection(direction)) {
+			panDirections.push(direction);
+		}
+	}
+
+	return panDirections;
 };
 
 export const getPinchGestureDirections = (
@@ -46,8 +68,15 @@ export const getPinchGestureDirections = (
 	const directions = Array.isArray(gestureDirection)
 		? gestureDirection
 		: [gestureDirection];
+	const pinchDirections: PinchGestureDirection[] = [];
 
-	return directions.filter(isPinchGestureDirection);
+	for (const direction of directions) {
+		if (isPinchGestureDirection(direction)) {
+			pinchDirections.push(direction);
+		}
+	}
+
+	return pinchDirections;
 };
 
 const getOppositePanDirection = (
