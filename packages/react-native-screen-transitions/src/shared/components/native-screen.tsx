@@ -74,7 +74,7 @@ export const NativeScreen = ({
 			return;
 		}
 
-		const focusedIndex = optimisticFocusedIndex.value;
+		const focusedIndex = optimisticFocusedIndex.get();
 		const topIsClosing =
 			topSceneClosing.get() > 0 && focusedIndex >= 0 && focusedIndex < topIndex;
 
@@ -120,7 +120,7 @@ export const NativeScreen = ({
 	const animatedProps = useAnimatedProps(() => {
 		const activity = screenActivity.get();
 		const isClosing = sceneClosing.get() > 0;
-		const activeIndex = optimisticFocusedIndex.value;
+		const activeIndex = optimisticFocusedIndex.get();
 		const isActive = index === activeIndex;
 
 		// Check if the active screen allows passthrough to the screen below

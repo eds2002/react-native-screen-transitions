@@ -80,7 +80,7 @@ describe("Child Direction Claims", () => {
 			expect(shouldDeferToChildClaim(claim, selfRouteKey)).toBe(true);
 
 			// Child starts dismissing
-			isDismissing.value = 1;
+			isDismissing.set(1);
 
 			// Now parent should NOT defer (can activate)
 			expect(shouldDeferToChildClaim(claim, selfRouteKey)).toBe(false);
@@ -136,7 +136,7 @@ describe("Child Direction Claims", () => {
 			).toBe(true);
 
 			// When child starts dismissing, parent can take over BOTH directions
-			isDismissing.value = 1;
+			isDismissing.set(1);
 			expect(shouldDeferToChildClaim(claims.vertical, selfRouteKey)).toBe(
 				false,
 			);
@@ -204,7 +204,7 @@ describe("Child Direction Claims", () => {
 			).toBe(true);
 
 			// Step 2: User dismisses child
-			childIsDismissing.value = 1;
+			childIsDismissing.set(1);
 
 			// Step 3: Parent should now be able to activate
 			expect(
@@ -245,7 +245,7 @@ describe("Child Direction Claims", () => {
 			);
 
 			// Child 2 starts dismissing
-			claims.vertical!.isDismissing.value = 1;
+			claims.vertical!.isDismissing.set(1);
 			expect(shouldDeferToChildClaim(claims.vertical, parentRouteKey)).toBe(
 				false,
 			);

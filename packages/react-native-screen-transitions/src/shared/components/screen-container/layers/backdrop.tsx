@@ -65,20 +65,20 @@ export const BackdropLayer = memo(function BackdropLayer({
 				"worklet";
 				const resolvedSnaps = rawSnapPoints
 					.map((point) =>
-						point === "auto" ? resolvedAutoSnapPoint.value : point,
+						point === "auto" ? resolvedAutoSnapPoint.get() : point,
 					)
 					.filter((point): point is number => typeof point === "number");
 
 				const { target, shouldDismiss } = findCollapseTarget(
-					animations.progress.value,
+					animations.progress.get(),
 					resolvedSnaps,
 					canDismiss,
 				);
 
 				// If already dismissing, skip
-				if (gestures.dismissing.value) return;
+				if (gestures.dismissing.get()) return;
 
-				gestures.dismissing.value = shouldDismiss ? 1 : 0;
+				gestures.dismissing.set(shouldDismiss ? 1 : 0);
 
 				const spec = shouldDismiss
 					? transitionSpec

@@ -28,10 +28,7 @@ export function useAnimatedDebounce(
 	const trigger = () => {
 		"worklet";
 		cancelAnimation(token);
-		token.value = withDelay(
-			delayMs,
-			withTiming(token.value + 1, { duration: 0 }),
-		);
+		token.set(withDelay(delayMs, withTiming(token.get() + 1, { duration: 0 })));
 	};
 
 	const cancel = () => {
@@ -40,7 +37,7 @@ export function useAnimatedDebounce(
 	};
 
 	useAnimatedReaction(
-		() => token.value,
+		() => token.get(),
 		(nextToken, previousToken) => {
 			"worklet";
 			if (nextToken === 0 || nextToken === previousToken) {

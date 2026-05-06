@@ -1,7 +1,15 @@
 import { describe, expect, it } from "bun:test";
 import { animateMany } from "../utils/animation/animate-many";
 
-const createShared = (value = 0) => ({ value });
+const createShared = (initialValue = 0) => {
+	let current = initialValue;
+	return {
+		get: () => current,
+		set: (nextValue: number) => {
+			current = nextValue;
+		},
+	};
+};
 
 describe("animateMany", () => {
 	it("calls onAllFinished once when all animations finish true", () => {
@@ -67,7 +75,7 @@ describe("animateMany", () => {
 			],
 		});
 
-		expect(a.value).toBe(1);
-		expect(b.value).toBe(0);
+		expect(a.get()).toBe(1);
+		expect(b.get()).toBe(0);
 	});
 });
