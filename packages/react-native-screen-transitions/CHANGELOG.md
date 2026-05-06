@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.5.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.1...v3.5.2) (2026-05-06)
+
+
+### Bug Fixes
+
+* replace removed absolute fill alias ([#104](https://github.com/eds2002/react-native-screen-transitions/issues/104)) ([007eb42](https://github.com/eds2002/react-native-screen-transitions/commit/007eb4273f5bacd1a19600dbfef03135829acbbe))
+
 ## [3.5.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.0...v3.5.1) (2026-05-05)
 
 
