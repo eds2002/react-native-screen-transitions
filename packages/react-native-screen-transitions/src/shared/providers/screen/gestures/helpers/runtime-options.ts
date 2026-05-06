@@ -1,3 +1,4 @@
+import type { ScreenOptionsContextValue } from "../../options";
 import type {
 	PanGesturePolicy,
 	PanGestureRuntime,
@@ -14,9 +15,10 @@ import {
 
 export const resolveRuntimeCanTrackGesture = (
 	runtime: PanGestureRuntime | PinchGestureRuntime,
+	screenOptions: ScreenOptionsContextValue,
 ) => {
 	"worklet";
-	const { participation, screenOptions } = runtime;
+	const { participation } = runtime;
 
 	if (participation.isFirstKey) {
 		return false;
@@ -40,9 +42,10 @@ export const resolveRuntimeCanTrackGesture = (
 
 export const resolveRuntimeCanDismiss = (
 	runtime: PanGestureRuntime | PinchGestureRuntime,
+	screenOptions: ScreenOptionsContextValue,
 ) => {
 	"worklet";
-	const { participation, screenOptions } = runtime;
+	const { participation } = runtime;
 
 	if (participation.isFirstKey) {
 		return false;
@@ -62,9 +65,10 @@ export const resolveRuntimeCanDismiss = (
 
 export const resolvePanRuntimePolicy = (
 	runtime: PanGestureRuntime,
+	screenOptions: ScreenOptionsContextValue,
 ): PanGesturePolicy => {
 	"worklet";
-	const { policy, participation, screenOptions } = runtime;
+	const { policy, participation } = runtime;
 	const gestureDirection = screenOptions.gestureDirection.get();
 	const hasSnapPoints = participation.effectiveSnapPoints.hasSnapPoints;
 
@@ -92,9 +96,10 @@ export const resolvePanRuntimePolicy = (
 
 export const resolvePinchRuntimePolicy = (
 	runtime: PinchGestureRuntime,
+	screenOptions: ScreenOptionsContextValue,
 ): PinchGesturePolicy => {
 	"worklet";
-	const { policy, participation, screenOptions } = runtime;
+	const { policy, participation } = runtime;
 	const gestureDirection = screenOptions.gestureDirection.get();
 	const pinchDirections = getPinchGestureDirections(gestureDirection);
 	const snapDirections = participation.effectiveSnapPoints.hasSnapPoints
@@ -125,30 +130,32 @@ export const resolvePinchRuntimePolicy = (
 
 export const resolvePanRuntime = (
 	runtime: PanGestureRuntime,
+	screenOptions: ScreenOptionsContextValue,
 ): PanGestureRuntime => {
 	"worklet";
 	return {
 		...runtime,
 		participation: {
 			...runtime.participation,
-			canDismiss: resolveRuntimeCanDismiss(runtime),
-			canTrackGesture: resolveRuntimeCanTrackGesture(runtime),
+			canDismiss: resolveRuntimeCanDismiss(runtime, screenOptions),
+			canTrackGesture: resolveRuntimeCanTrackGesture(runtime, screenOptions),
 		},
-		policy: resolvePanRuntimePolicy(runtime),
+		policy: resolvePanRuntimePolicy(runtime, screenOptions),
 	};
 };
 
 export const resolvePinchRuntime = (
 	runtime: PinchGestureRuntime,
+	screenOptions: ScreenOptionsContextValue,
 ): PinchGestureRuntime => {
 	"worklet";
 	return {
 		...runtime,
 		participation: {
 			...runtime.participation,
-			canDismiss: resolveRuntimeCanDismiss(runtime),
-			canTrackGesture: resolveRuntimeCanTrackGesture(runtime),
+			canDismiss: resolveRuntimeCanDismiss(runtime, screenOptions),
+			canTrackGesture: resolveRuntimeCanTrackGesture(runtime, screenOptions),
 		},
-		policy: resolvePinchRuntimePolicy(runtime),
+		policy: resolvePinchRuntimePolicy(runtime, screenOptions),
 	};
 };

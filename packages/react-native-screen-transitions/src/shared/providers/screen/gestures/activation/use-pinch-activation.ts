@@ -4,40 +4,54 @@ import type {
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
+import type { ScreenOptionsContextValue } from "../../options";
 import { resolvePinchRuntime } from "../helpers/runtime-options";
 import type { PinchGestureRuntime } from "../types";
 
 interface UsePinchActivationProps {
 	runtime: SharedValue<PinchGestureRuntime>;
+	screenOptions: ScreenOptionsContextValue;
 }
 
-export const usePinchActivation = ({ runtime }: UsePinchActivationProps) => {
+export const usePinchActivation = ({
+	runtime,
+	screenOptions,
+}: UsePinchActivationProps) => {
 	const onTouchesDown = useCallback(
-		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
+		(
+			event: GestureTouchEvent,
+			stateManager: GestureStateManager | undefined,
+		) => {
 			"worklet";
-			const { participation, policy } = resolvePinchRuntime(runtime.get());
+			const { participation, policy } = resolvePinchRuntime(
+				runtime.get(),
+				screenOptions,
+			);
 
 			if (!participation.canTrackGesture || !policy.enabled) {
-				stateManager.fail();
+				stateManager?.fail();
 				return;
 			}
 
 			if (event.numberOfTouches === 2) {
-				stateManager.activate();
+				stateManager?.activate();
 				return;
 			}
 
 			if (event.numberOfTouches > 2) {
-				stateManager.fail();
+				stateManager?.fail();
 			}
 		},
-		[runtime],
+		[runtime, screenOptions],
 	);
 
 	const onTouchesMove = useCallback(
 		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
 			"worklet";
-			const { participation, policy } = resolvePinchRuntime(runtime.get());
+			const { participation, policy } = resolvePinchRuntime(
+				runtime.get(),
+				screenOptions,
+			);
 
 			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager.fail();
@@ -51,7 +65,7 @@ export const usePinchActivation = ({ runtime }: UsePinchActivationProps) => {
 
 			stateManager.fail();
 		},
-		[runtime],
+		[runtime, screenOptions],
 	);
 
 	return { onTouchesDown, onTouchesMove };

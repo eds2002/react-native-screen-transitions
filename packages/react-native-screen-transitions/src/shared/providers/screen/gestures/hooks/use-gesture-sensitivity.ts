@@ -1,17 +1,12 @@
 import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useSharedValue } from "react-native-reanimated";
+import type { ScreenOptionsContextValue } from "../../options";
 import {
 	applyGestureSensitivity,
 	normalizePinchScale,
 } from "../helpers/gesture-physics";
-
-import type {
-	PanGestureEvent,
-	PanGestureRuntime,
-	PinchGestureEvent,
-	PinchGestureRuntime,
-} from "../types";
+import type { PanGestureEvent, PinchGestureEvent } from "../types";
 
 export interface GestureSensitivityRawChangeState {
 	previousRawValue: SharedValue<number>;
@@ -57,7 +52,7 @@ const useBuildSensitivityChangeState = () => {
 };
 
 export const usePanGestureSensitivity = (
-	runtime: SharedValue<PanGestureRuntime>,
+	screenOptions: ScreenOptionsContextValue,
 ) => {
 	const xSensitivityState = useBuildSensitivityChangeState();
 	const ySensitivityState = useBuildSensitivityChangeState();
@@ -71,8 +66,7 @@ export const usePanGestureSensitivity = (
 	const withSensitivity = useCallback(
 		(event: PanGestureEvent): PanGestureEvent => {
 			"worklet";
-			const latestRuntime = runtime.get();
-			const sensitivity = latestRuntime.screenOptions.gestureSensitivity.get();
+			const sensitivity = screenOptions.gestureSensitivity.get();
 
 			return {
 				...event,
@@ -90,7 +84,7 @@ export const usePanGestureSensitivity = (
 				velocityY: applyGestureSensitivity(event.velocityY, sensitivity),
 			};
 		},
-		[runtime, xSensitivityState, ySensitivityState],
+		[screenOptions, xSensitivityState, ySensitivityState],
 	);
 
 	return useMemo(
@@ -103,7 +97,7 @@ export const usePanGestureSensitivity = (
 };
 
 export const usePinchGestureSensitivity = (
-	runtime: SharedValue<PinchGestureRuntime>,
+	screenOptions: ScreenOptionsContextValue,
 ) => {
 	const scaleSensitivityState = useBuildSensitivityChangeState();
 
@@ -115,8 +109,7 @@ export const usePinchGestureSensitivity = (
 	const withSensitivity = useCallback(
 		(event: PinchGestureEvent): PinchGestureEvent => {
 			"worklet";
-			const latestRuntime = runtime.get();
-			const sensitivity = latestRuntime.screenOptions.gestureSensitivity.get();
+			const sensitivity = screenOptions.gestureSensitivity.get();
 			const normScale = applyGestureSensitivityToRawChange(
 				normalizePinchScale(event.scale),
 				sensitivity,
@@ -129,7 +122,7 @@ export const usePinchGestureSensitivity = (
 				velocity: applyGestureSensitivity(event.velocity, sensitivity),
 			};
 		},
-		[runtime, scaleSensitivityState],
+		[screenOptions, scaleSensitivityState],
 	);
 
 	return useMemo(

@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
+import { useScreenOptionsContext } from "../../options";
 import { usePinchActivation } from "../activation/use-pinch-activation";
 import { usePinchBehavior } from "../behaviors/use-pinch-behavior";
 import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
@@ -14,6 +15,7 @@ export const useBuildPinchGesture = ({
 	gestureConfig,
 }: BuildPinchGestureHookProps): PinchGesture => {
 	const { participation, pinch: policy } = gestureConfig;
+	const screenOptions = useScreenOptionsContext();
 	const { gestureProgressBaseline, lockedSnapPoint } =
 		useGestureBuilderState(participation);
 
@@ -26,9 +28,10 @@ export const useBuildPinchGesture = ({
 
 	const activation = usePinchActivation({
 		runtime,
+		screenOptions,
 	});
 
-	const behavior = usePinchBehavior(runtime);
+	const behavior = usePinchBehavior(runtime, screenOptions);
 
 	const pinchGesture = useMemo(() => {
 		return Gesture.Pinch()

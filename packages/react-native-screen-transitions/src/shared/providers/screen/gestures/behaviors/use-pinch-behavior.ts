@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
+import type { ScreenOptionsContextValue } from "../../options";
 import {
 	finalizePinchRelease,
 	startPinchBase,
@@ -28,27 +29,28 @@ const getPinchStrategy = (
 
 export const usePinchBehavior = (
 	runtime: SharedValue<PinchGestureRuntime>,
+	screenOptions: ScreenOptionsContextValue,
 ): PinchBehavior => {
 	const { dismissScreen } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
-		usePinchGestureSensitivity(runtime);
+		usePinchGestureSensitivity(screenOptions);
 
 	const onStart = useCallback(
 		(event: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePinchRuntime(runtime.get());
+			const latestRuntime = resolvePinchRuntime(runtime.get(), screenOptions);
 			const strategy = getPinchStrategy(latestRuntime);
 			strategy.primeStart(latestRuntime);
 			startPinchBase(latestRuntime, event);
 			resetSensitivity();
 		},
-		[runtime, resetSensitivity],
+		[runtime, screenOptions, resetSensitivity],
 	);
 
 	const onUpdate = useCallback(
 		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePinchRuntime(runtime.get());
+			const latestRuntime = resolvePinchRuntime(runtime.get(), screenOptions);
 			const strategy = getPinchStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const track = trackPinchGesture(
@@ -65,19 +67,19 @@ export const usePinchBehavior = (
 				strategy.resolveProgress(latestRuntime, track),
 			);
 		},
-		[runtime, withSensitivity],
+		[runtime, screenOptions, withSensitivity],
 	);
 
 	const onEnd = useCallback(
 		(rawEvent: PinchGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePinchRuntime(runtime.get());
+			const latestRuntime = resolvePinchRuntime(runtime.get(), screenOptions);
 			const strategy = getPinchStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime);
 			finalizePinchRelease(release, latestRuntime, dismissScreen);
 		},
-		[runtime, dismissScreen, withSensitivity],
+		[runtime, screenOptions, dismissScreen, withSensitivity],
 	);
 
 	return {

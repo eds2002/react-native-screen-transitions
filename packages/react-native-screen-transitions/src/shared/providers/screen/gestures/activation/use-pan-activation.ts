@@ -9,6 +9,7 @@ import { GestureStore } from "../../../../stores/gesture.store";
 import { GestureActivationState } from "../../../../types/gesture.types";
 import type { Direction } from "../../../../types/ownership.types";
 import { useDescriptorDerivations } from "../../descriptors";
+import type { ScreenOptionsContextValue } from "../../options";
 import {
 	applyOffsetRules,
 	checkScrollBoundary,
@@ -28,6 +29,7 @@ interface UsePanActivationProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
 	runtime: SharedValue<PanGestureRuntime>;
+	screenOptions: ScreenOptionsContextValue;
 	dimensions: GestureDimensions;
 }
 
@@ -35,6 +37,7 @@ export const usePanActivation = ({
 	scrollState,
 	childDirectionClaims,
 	runtime,
+	screenOptions,
 	dimensions,
 }: UsePanActivationProps) => {
 	const { currentScreenKey, parentScreenKey } = useDescriptorDerivations();
@@ -56,7 +59,10 @@ export const usePanActivation = ({
 			stateManager: GestureStateManager | undefined,
 		) => {
 			"worklet";
-			const { participation, policy } = resolvePanRuntime(runtime.get());
+			const { participation, policy } = resolvePanRuntime(
+				runtime.get(),
+				screenOptions,
+			);
 
 			if (
 				!participation.canTrackGesture ||
@@ -72,7 +78,7 @@ export const usePanActivation = ({
 			initialTouch.set({ x: firstTouch.x, y: firstTouch.y });
 			gestureActivationState.set(GestureActivationState.PENDING);
 		},
-		[gestureActivationState, initialTouch, runtime],
+		[gestureActivationState, initialTouch, runtime, screenOptions],
 	);
 
 	const onTouchesMove = useCallback(
@@ -95,7 +101,7 @@ export const usePanActivation = ({
 				participation,
 				policy,
 				stores: { animations, gestures, system },
-			} = resolvePanRuntime(runtime.get());
+			} = resolvePanRuntime(runtime.get(), screenOptions);
 			const {
 				hasSnapPoints,
 				hasAutoSnapPoint,
@@ -228,6 +234,7 @@ export const usePanActivation = ({
 			gestureActivationState,
 			initialTouch,
 			runtime,
+			screenOptions,
 			scrollState,
 		],
 	);

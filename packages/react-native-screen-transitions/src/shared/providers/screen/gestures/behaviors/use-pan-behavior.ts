@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
+import type { ScreenOptionsContextValue } from "../../options";
 import {
 	finalizePanRelease,
 	startPanBase,
@@ -27,25 +28,26 @@ const getPanStrategy = (runtime: PanGestureRuntime): PanBehaviorStrategy => {
 
 export const usePanBehavior = (
 	runtime: SharedValue<PanGestureRuntime>,
+	screenOptions: ScreenOptionsContextValue,
 	dimensions: GestureDimensions,
 ): PanBehavior => {
 	const { dismissScreen } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
-		usePanGestureSensitivity(runtime);
+		usePanGestureSensitivity(screenOptions);
 
 	const onStart = useCallback(() => {
 		"worklet";
-		const latestRuntime = resolvePanRuntime(runtime.get());
+		const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions);
 		const strategy = getPanStrategy(latestRuntime);
 		strategy.primeStart(latestRuntime);
 		startPanBase(latestRuntime);
 		resetSensitivity();
-	}, [runtime, resetSensitivity]);
+	}, [runtime, screenOptions, resetSensitivity]);
 
 	const onUpdate = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePanRuntime(runtime.get());
+			const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions);
 			const strategy = getPanStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const track = trackPanGesture(
@@ -63,19 +65,19 @@ export const usePanBehavior = (
 				strategy.resolveProgress(latestRuntime, dimensions, track),
 			);
 		},
-		[runtime, dimensions, withSensitivity],
+		[runtime, screenOptions, dimensions, withSensitivity],
 	);
 
 	const onEnd = useCallback(
 		(rawEvent: PanGestureEvent) => {
 			"worklet";
-			const latestRuntime = resolvePanRuntime(runtime.get());
+			const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions);
 			const strategy = getPanStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime, dimensions);
 			finalizePanRelease(release, latestRuntime, dismissScreen);
 		},
-		[runtime, dimensions, dismissScreen, withSensitivity],
+		[runtime, screenOptions, dimensions, dismissScreen, withSensitivity],
 	);
 
 	return {

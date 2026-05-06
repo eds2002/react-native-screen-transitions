@@ -24,7 +24,6 @@ import type {
 	DirectionOwnership,
 } from "../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
-import type { ScreenOptionsContextValue } from "../options";
 import type { EffectiveSnapPointsResult } from "./helpers/validate-snap-points";
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
@@ -147,7 +146,6 @@ export interface PanGestureRuntime {
 	participation: ScreenGestureParticipation;
 	policy: PanGesturePolicy;
 	stores: GestureRuntimeStores;
-	screenOptions: ScreenOptionsContextValue;
 	gestureProgressBaseline: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }
@@ -156,7 +154,6 @@ export interface PinchGestureRuntime {
 	participation: ScreenGestureParticipation;
 	policy: PinchGesturePolicy;
 	stores: GestureRuntimeStores;
-	screenOptions: ScreenOptionsContextValue;
 	gestureProgressBaseline: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }
