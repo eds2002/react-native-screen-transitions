@@ -170,6 +170,7 @@ const createGestureStore = () =>
 		},
 		dismissing: createSharedValue(0),
 		dragging: createSharedValue(0),
+		settling: createSharedValue(0),
 		gesture: createSharedValue(null),
 		direction: createSharedValue(null),
 	}) as any;
@@ -206,8 +207,6 @@ const applyAndTrackPanEvent = (
 			sensitivity,
 			sensitivityStates.y,
 		),
-		velocityX: applyGestureSensitivity(rawEvent.velocityX, sensitivity),
-		velocityY: applyGestureSensitivity(rawEvent.velocityY, sensitivity),
 	};
 
 	trackPanGesture(event, rawEvent, runtime.stores.gestures, {
@@ -232,7 +231,6 @@ const applyAndTrackPinchEvent = (
 	const event = {
 		...rawEvent,
 		scale: 1 + normScale,
-		velocity: applyGestureSensitivity(rawEvent.velocity, sensitivity),
 	};
 
 	trackPinchGesture(event, rawEvent, runtime.stores.gestures);
@@ -421,7 +419,7 @@ describe("PanStrategy.resolveRelease", () => {
 });
 
 describe("pan gesture sensitivity", () => {
-	it("scales pan translation and velocity before release consumers read them", () => {
+	it("scales pan translation while preserving release velocity", () => {
 		const runtime = createGestureRuntime(0.1);
 		const sensitivityStates = createPanSensitivityStates();
 
@@ -438,8 +436,8 @@ describe("pan gesture sensitivity", () => {
 
 		expect(sensitiveEvent.translationX).toBeCloseTo(20, 5);
 		expect(sensitiveEvent.translationY).toBeCloseTo(-8, 5);
-		expect(sensitiveEvent.velocityX).toBeCloseTo(100, 5);
-		expect(sensitiveEvent.velocityY).toBeCloseTo(-50, 5);
+		expect(sensitiveEvent.velocityX).toBeCloseTo(1000, 5);
+		expect(sensitiveEvent.velocityY).toBeCloseTo(-500, 5);
 	});
 
 	it("makes dismissal projection respect gesture sensitivity", () => {
@@ -487,7 +485,7 @@ describe("pan gesture sensitivity", () => {
 		);
 
 		expect(sensitiveEvent.translationX).toBeCloseTo(50, 5);
-		expect(sensitiveEvent.velocityX).toBeCloseTo(250, 5);
+		expect(sensitiveEvent.velocityX).toBeCloseTo(1000, 5);
 	});
 
 	it("applies lower runtime sensitivity only to future pan deltas", () => {
@@ -508,7 +506,7 @@ describe("pan gesture sensitivity", () => {
 
 		expect(firstEvent.translationX).toBeCloseTo(100, 5);
 		expect(secondEvent.translationX).toBeCloseTo(102, 5);
-		expect(secondEvent.velocityX).toBeCloseTo(50, 5);
+		expect(secondEvent.velocityX).toBeCloseTo(500, 5);
 	});
 
 	it("applies higher runtime sensitivity only to future pan deltas", () => {
@@ -548,7 +546,7 @@ describe("pan gesture sensitivity", () => {
 		);
 
 		expect(frozenEvent.translationX).toBeCloseTo(100, 5);
-		expect(frozenEvent.velocityX).toBeCloseTo(0, 5);
+		expect(frozenEvent.velocityX).toBeCloseTo(500, 5);
 	});
 
 	it("applies current runtime sensitivity to reverse pan deltas", () => {
@@ -568,7 +566,7 @@ describe("pan gesture sensitivity", () => {
 		);
 
 		expect(reverseEvent.translationX).toBeCloseTo(98, 5);
-		expect(reverseEvent.velocityX).toBeCloseTo(-30, 5);
+		expect(reverseEvent.velocityX).toBeCloseTo(-300, 5);
 	});
 });
 
@@ -598,7 +596,7 @@ describe("trackPanGesture", () => {
 });
 
 describe("pinch gesture sensitivity", () => {
-	it("scales pinch scale delta and velocity before release consumers read them", () => {
+	it("scales pinch scale delta while preserving release velocity", () => {
 		const runtime = createGestureRuntime(0.25);
 		const sensitivityStates = createPinchSensitivityStates();
 
@@ -612,7 +610,7 @@ describe("pinch gesture sensitivity", () => {
 		);
 
 		expect(sensitiveEvent.scale).toBeCloseTo(1.25, 5);
-		expect(sensitiveEvent.velocity).toBeCloseTo(1, 5);
+		expect(sensitiveEvent.velocity).toBeCloseTo(4, 5);
 	});
 
 	it("makes pinch dismissal threshold respect gesture sensitivity", () => {
@@ -656,7 +654,7 @@ describe("pinch gesture sensitivity", () => {
 
 		expect(firstEvent.scale).toBeCloseTo(2, 5);
 		expect(secondEvent.scale).toBeCloseTo(2.02, 5);
-		expect(secondEvent.velocity).toBeCloseTo(0.4, 5);
+		expect(secondEvent.velocity).toBeCloseTo(4, 5);
 	});
 
 	it("applies higher runtime sensitivity only to future pinch scale deltas", () => {
@@ -689,7 +687,7 @@ describe("pinch gesture sensitivity", () => {
 		});
 
 		expect(frozenEvent.scale).toBeCloseTo(2, 5);
-		expect(frozenEvent.velocity).toBeCloseTo(0, 5);
+		expect(frozenEvent.velocity).toBeCloseTo(4, 5);
 	});
 });
 

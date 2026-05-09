@@ -16,6 +16,9 @@ import type {
 import type {
 	GestureActivationArea,
 	GestureDirections,
+	ScrollGestureAxis,
+	ScrollGestureAxisState,
+	ScrollGestureState,
 	SnapPanDirectionConfig,
 	SnapPinchDirectionConfig,
 } from "../../../types/gesture.types";
@@ -38,19 +41,7 @@ export type PinchGestureEvent =
 	| GestureUpdateEvent<PinchGestureHandlerEventPayload>
 	| GestureStateChangeEvent<PinchGestureHandlerEventPayload>;
 
-export type ScrollGestureAxis = "vertical" | "horizontal";
-
-export type ScrollGestureAxisState = {
-	offset: number;
-	contentSize: number;
-	layoutSize: number;
-};
-
-export type ScrollGestureState = {
-	vertical: ScrollGestureAxisState;
-	horizontal: ScrollGestureAxisState;
-	isTouched: boolean;
-};
+export type { ScrollGestureAxis, ScrollGestureAxisState, ScrollGestureState };
 
 export type DirectionClaim = {
 	routeKey: string;
@@ -72,6 +63,7 @@ export const NO_CLAIMS: DirectionClaimMap = {
 };
 
 export interface GestureContextType {
+	routeKey: string;
 	detectorGesture: ComposedGesture;
 	panGesture: PanGesture;
 	pinchGesture: PinchGesture;

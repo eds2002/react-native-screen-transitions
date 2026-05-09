@@ -5,6 +5,7 @@ import {
 	expectResolvedPair,
 	makeContext,
 	makeTag,
+	registerMeasuredEntry,
 	registerSourceAndDestination,
 } from "./helpers/bounds-behavior-fixtures";
 
@@ -22,7 +23,7 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "screen-detail",
 		});
 
-		const destinationLink = BoundStore.getActiveLink(tag, "screen-detail");
+		const destinationLink = BoundStore.link.getActive(tag, "screen-detail");
 		expect(destinationLink?.source.screenKey).toBe("screen-list");
 		expect(destinationLink?.destination?.screenKey).toBe("screen-detail");
 	});
@@ -36,8 +37,8 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "screen-b",
 		});
 
-		const openingLookup = BoundStore.getActiveLink(tag, "screen-b");
-		const closingLookup = BoundStore.getActiveLink(tag, "screen-a");
+		const openingLookup = BoundStore.link.getActive(tag, "screen-b");
+		const closingLookup = BoundStore.link.getActive(tag, "screen-a");
 
 		expect(openingLookup?.source.screenKey).toBe("screen-a");
 		expect(openingLookup?.destination?.screenKey).toBe("screen-b");
@@ -63,9 +64,9 @@ describe("Non-Group Flow", () => {
 			destinationBounds: createBounds(300, 320, 180, 180),
 		});
 
-		const latest = BoundStore.getActiveLink(tag, "screen-c");
-		const screenBLookup = BoundStore.getActiveLink(tag, "screen-b");
-		const prior = BoundStore.getActiveLink(tag, "screen-a");
+		const latest = BoundStore.link.getActive(tag, "screen-c");
+		const screenBLookup = BoundStore.link.getActive(tag, "screen-b");
+		const prior = BoundStore.link.getActive(tag, "screen-a");
 
 		expect(latest?.source.screenKey).toBe("screen-b");
 		expect(latest?.destination?.screenKey).toBe("screen-c");
@@ -85,8 +86,8 @@ describe("Non-Group Flow", () => {
 			sourceAncestorKeys: ["stack-a"],
 		});
 
-		expect(BoundStore.hasSourceLink(tag, "stack-a")).toBe(true);
-		expect(BoundStore.getActiveLink(tag, "stack-a")?.source.screenKey).toBe(
+		expect(BoundStore.link.hasSource(tag, "stack-a")).toBe(true);
+		expect(BoundStore.link.getActive(tag, "stack-a")?.source.screenKey).toBe(
 			"screen-a",
 		);
 	});
@@ -106,10 +107,10 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "detail-b",
 		});
 
-		BoundStore.clear("screen-a");
+		BoundStore.cleanup.byScreen("screen-a");
 
-		expect(BoundStore.getActiveLink(firstTag, "detail-a")).toBeNull();
-		expect(BoundStore.getActiveLink(secondTag, "detail-b")).not.toBeNull();
+		expect(BoundStore.link.getActive(firstTag, "detail-a")).toBeNull();
+		expect(BoundStore.link.getActive(secondTag, "detail-b")).not.toBeNull();
 	});
 
 	it("retains style snapshot metadata alongside bounds for matched tags", () => {
@@ -117,16 +118,16 @@ describe("Non-Group Flow", () => {
 		const bounds = createBounds(5, 10, 80, 90);
 		const styles = { opacity: 0.5, zIndex: 2 };
 
-		BoundStore.registerSnapshot(tag, "screen-a", bounds, styles);
+		registerMeasuredEntry(tag, "screen-a", bounds, styles);
 
-		const snapshot = BoundStore.getSnapshot(tag, "screen-a");
+		const snapshot = BoundStore.entry.get(tag, "screen-a");
 		expect(snapshot?.bounds).toEqual(bounds);
 		expect(snapshot?.styles).toEqual(styles);
 	});
 
 	it("keeps non-group matching unaffected by group active-id state", () => {
 		const nonGroupTag = makeTag("avatar");
-		BoundStore.setGroupActiveId("photos", "99");
+		BoundStore.group.setActiveId("photos", "99");
 
 		registerSourceAndDestination({
 			tag: nonGroupTag,
@@ -134,7 +135,7 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "screen-detail",
 		});
 
-		const pair = BoundStore.resolveTransitionPair(
+		const pair = BoundStore.link.getPair(
 			nonGroupTag,
 			makeContext({
 				entering: true,

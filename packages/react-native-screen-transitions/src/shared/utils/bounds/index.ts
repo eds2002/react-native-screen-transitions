@@ -3,6 +3,7 @@ import type {
 	BoundsInterpolationProps,
 	BoundsNavigationZoomOptions,
 } from "../../types/bounds.types";
+import { buildContainerRevealStyles } from "./container-reveal/build";
 import { createBoundTag } from "./helpers/create-bound-tag";
 import { createInterpolators } from "./helpers/create-interpolators";
 import { createLinkAccessor } from "./helpers/create-link-accessor";
@@ -41,6 +42,13 @@ export const createBoundsAccessor = (
 						props,
 						tag,
 						zoomOptions,
+					});
+				},
+				containerReveal: () => {
+					"worklet";
+					return buildContainerRevealStyles({
+						props,
+						tag,
 					});
 				},
 			},

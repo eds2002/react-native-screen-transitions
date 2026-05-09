@@ -259,6 +259,7 @@ export const hydrateTransitionState = (
 	out.gesture.raw.normScale = s.gesture.raw.normScale.get();
 	out.gesture.dismissing = s.gesture.dismissing.get();
 	out.gesture.dragging = s.gesture.dragging.get();
+	out.gesture.settling = s.gesture.settling.get();
 	out.gesture.gesture = s.gesture.gesture.get();
 	out.gesture.direction = s.gesture.direction.get();
 
@@ -268,7 +269,12 @@ export const hydrateTransitionState = (
 		Math.abs(out.gesture.normScale) > EPSILON;
 
 	out.animating =
-		s.animating.get() || out.gesture.dragging || isGestureSettling ? 1 : 0;
+		s.animating.get() ||
+		out.gesture.dragging ||
+		out.gesture.settling ||
+		isGestureSettling
+			? 1
+			: 0;
 
 	out.gesture.normalizedX = out.gesture.normX;
 	out.gesture.normalizedY = out.gesture.normY;

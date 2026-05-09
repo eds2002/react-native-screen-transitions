@@ -1,7 +1,9 @@
 import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
+import { ScrollStore } from "../../../stores/scroll.store";
 import createProvider from "../../../utils/create-provider";
+import { useDescriptorDerivations } from "../descriptors";
 import { useBuildPanGesture } from "./builders/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./builders/use-build-pinch-gesture";
 import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
@@ -10,7 +12,6 @@ import {
 	type DirectionClaimMap,
 	type GestureContextType,
 	NO_CLAIMS,
-	type ScrollGestureState,
 } from "./types";
 
 interface ScreenGestureProviderProps {
@@ -26,8 +27,9 @@ export const {
 >(({ children }): { value: GestureContextType; children: React.ReactNode } => {
 	const gestureContext = useGestureContext();
 	const gestureConfig = useScreenGestureConfig();
+	const { currentScreenKey } = useDescriptorDerivations();
 
-	const scrollState = useSharedValue<ScrollGestureState | null>(null);
+	const scrollState = ScrollStore.getValue(currentScreenKey, "state");
 
 	// Ancestors read this before activating. If a nested screen claims the same
 	// direction, it writes here so the ancestor can fail and let it take priority.
@@ -50,6 +52,7 @@ export const {
 
 	const value = useMemo<GestureContextType>(
 		() => ({
+			routeKey: currentScreenKey,
 			detectorGesture,
 			panGesture,
 			pinchGesture,
@@ -59,6 +62,7 @@ export const {
 			childDirectionClaims,
 		}),
 		[
+			currentScreenKey,
 			detectorGesture,
 			panGesture,
 			pinchGesture,

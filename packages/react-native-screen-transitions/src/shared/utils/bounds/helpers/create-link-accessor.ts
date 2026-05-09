@@ -1,6 +1,6 @@
 import {
 	getActiveLink,
-	getMeasuredEntry,
+	getEntry,
 } from "../../../stores/bounds/internals/registry";
 import type { MeasuredEntry } from "../../../stores/bounds/types";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
@@ -21,7 +21,8 @@ export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
 	const getMeasured = (tag: BoundId, key?: string): MeasuredEntry | null => {
 		"worklet";
 		if (!key) return null;
-		return getMeasuredEntry(String(tag), key);
+		const entry = getEntry(String(tag), key);
+		return entry?.bounds ? (entry as MeasuredEntry) : null;
 	};
 
 	const getSnapshot = (tag: BoundId, key?: string): MeasuredEntry | null => {

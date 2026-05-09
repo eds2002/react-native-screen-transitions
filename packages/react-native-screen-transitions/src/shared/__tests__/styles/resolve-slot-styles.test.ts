@@ -242,6 +242,38 @@ describe("resolveSlotStyles", () => {
 		});
 	});
 
+	it("does not reset dropped layout sizing props to zero", () => {
+		const firstPass = resolveSlotStyles({
+			currentStylesMap: {
+				card: {
+					style: {
+						width: 120,
+						height: 80,
+						translateX: 20,
+						translateY: 30,
+						opacity: 0.5,
+					},
+				},
+			},
+			ancestorStylesMap: {},
+			previousStyleStatesBySlot: {},
+			deferLocalSlotResets: true,
+		});
+
+		const droppedPass = resolveSlotStyles({
+			currentStylesMap: {},
+			ancestorStylesMap: {},
+			previousStyleStatesBySlot: firstPass.nextPreviousStyleStatesBySlot,
+			deferLocalSlotResets: true,
+		});
+
+		expect(droppedPass.resolvedStylesMap.card?.style).toEqual({
+			translateX: 0,
+			translateY: 0,
+			opacity: 1,
+		});
+	});
+
 	it("emits reset patches once for disappeared custom style ids", () => {
 		const firstPass = resolveSlotStyles({
 			currentStylesMap: {

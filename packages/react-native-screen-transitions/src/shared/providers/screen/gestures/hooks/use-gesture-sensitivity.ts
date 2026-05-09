@@ -80,8 +80,6 @@ export const usePanGestureSensitivity = (
 					sensitivity,
 					ySensitivityState,
 				),
-				velocityX: applyGestureSensitivity(event.velocityX, sensitivity),
-				velocityY: applyGestureSensitivity(event.velocityY, sensitivity),
 			};
 		},
 		[screenOptions, xSensitivityState, ySensitivityState],
@@ -119,7 +117,6 @@ export const usePinchGestureSensitivity = (
 			return {
 				...event,
 				scale: 1 + normScale,
-				velocity: applyGestureSensitivity(event.velocity, sensitivity),
 			};
 		},
 		[screenOptions, scaleSensitivityState],

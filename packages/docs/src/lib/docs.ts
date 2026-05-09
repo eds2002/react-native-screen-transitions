@@ -47,7 +47,13 @@ const docModules = import.meta.glob<DocModule>("../content/docs/**/*.mdx", {
 	eager: true,
 });
 
-const groupOrder = ["Get Started", "Core Concepts", "Components", "Guides"];
+const groupOrder = [
+	"Get Started",
+	"Core Concepts",
+	"Navigation Transitions",
+	"Components",
+	"Guides",
+];
 const groupOrderIndex = new Map(
 	groupOrder.map((group, index) => [group, index] as const),
 );

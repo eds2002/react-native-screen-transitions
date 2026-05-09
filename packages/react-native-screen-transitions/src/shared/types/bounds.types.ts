@@ -153,8 +153,11 @@ export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 };
 
+export type BoundsNavigationContainerRevealStyle = BoundsNavigationZoomStyle;
+
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
+	containerReveal: () => BoundsNavigationContainerRevealStyle;
 };
 
 type BoundsBoundNavigationAccessor = {

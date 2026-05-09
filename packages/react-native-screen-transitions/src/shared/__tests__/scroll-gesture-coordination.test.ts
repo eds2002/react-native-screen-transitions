@@ -19,6 +19,7 @@ const createContext = (
 	const pinchGesture = { kind: "pinch" } as GestureContextType["pinchGesture"];
 
 	return {
+		routeKey: "route",
 		detectorGesture: panGesture,
 		panGesture,
 		pinchGesture,
@@ -45,6 +46,7 @@ describe("walkUpScrollGestureCoordination", () => {
 		expect(result.panGestures).toEqual([]);
 		expect(result.pinchGestures).toEqual([pinchGesture]);
 		expect(result.scrollStates).toEqual([]);
+		expect(result.ownerRouteKeys).toEqual([]);
 	});
 
 	it("keeps pan axis ownership and adds pinch gestures from ancestors", () => {
@@ -55,6 +57,7 @@ describe("walkUpScrollGestureCoordination", () => {
 			GestureContextType["pinchGesture"]
 		>;
 		const parent = createContext({
+			routeKey: "parent",
 			pinchGesture: parentPinch,
 			claimedDirections: {
 				...NO_CLAIMS,
@@ -63,6 +66,7 @@ describe("walkUpScrollGestureCoordination", () => {
 			scrollState: createScrollState("parent-scroll"),
 		});
 		const child = createContext({
+			routeKey: "child",
 			pinchGesture: childPinch,
 			gestureContext: parent,
 		});
@@ -72,5 +76,6 @@ describe("walkUpScrollGestureCoordination", () => {
 		expect(result.panGestures).toEqual([parent.panGesture]);
 		expect(result.pinchGestures).toEqual([childPinch, parentPinch]);
 		expect(result.scrollStates).toEqual([parent.scrollState]);
+		expect(result.ownerRouteKeys).toEqual(["parent"]);
 	});
 });

@@ -5,12 +5,36 @@ import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { activeZoomId, ZOOM_GROUP } from "./constants";
+import { ZOOM_GROUP, type ZoomExampleMode } from "./constants";
+
+const getRouteParam = (route: { params?: object } | undefined, key: string) => {
+	"worklet";
+	const params = route?.params as Record<string, unknown> | undefined;
+	const value = params?.[key];
+	return typeof value === "string" ? value : "";
+};
+
+const getRouteModeParam = (
+	route: { params?: object } | undefined,
+): ZoomExampleMode | "" => {
+	"worklet";
+	const mode = getRouteParam(route, "mode");
+	if (mode === "single" || mode === "group") return mode;
+	return "";
+};
 
 const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, progress }) => {
+	({ active, bounds, current, next, progress }) => {
 		"worklet";
-		const id = activeZoomId.value;
+		const id =
+			getRouteParam(active.route, "id") ||
+			getRouteParam(next?.route, "id") ||
+			getRouteParam(current.route, "id");
+		const mode =
+			getRouteModeParam(active.route) ||
+			getRouteModeParam(next?.route) ||
+			getRouteModeParam(current.route) ||
+			"group";
 
 		if (!id) {
 			return {};
@@ -18,7 +42,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 
 		const navigationStyles = bounds({
 			id,
-			group: ZOOM_GROUP,
+			group: mode === "group" ? ZOOM_GROUP : undefined,
 		}).navigation.zoom({ target: "bound" });
 
 		return {

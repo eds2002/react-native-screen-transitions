@@ -11,12 +11,12 @@ import {
 	useSharedValue,
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
+import { applyMeasuredBoundsWrites } from "../components/create-boundary-component/helpers/apply-measured-bounds-writes";
 import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
-import { applyMeasuredBoundsWrites } from "../stores/bounds/helpers/apply-measured-bounds-writes";
 import {
-	getMeasuredEntry,
+	getEntry,
 	getPendingLink,
 	hasDestinationLink,
 	hasSourceLink,
@@ -281,8 +281,8 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 				}
 
 				if (shouldSetSource && isAnimating.get()) {
-					const existing = getMeasuredEntry(sharedBoundTag, currentScreenKey);
-					if (existing) {
+					const existing = getEntry(sharedBoundTag, currentScreenKey);
+					if (existing?.bounds) {
 						applyMeasuredBoundsWrites({
 							sharedBoundTag,
 							ancestorKeys,
@@ -344,7 +344,6 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					ancestorKeys,
 					navigatorKey,
 					ancestorNavigatorKeys,
-					shouldWriteEntry: true,
 					shouldSetSource: canSetSource,
 					shouldUpdateSource: canUpdateSource,
 					shouldSetDestination: canSetDestination,

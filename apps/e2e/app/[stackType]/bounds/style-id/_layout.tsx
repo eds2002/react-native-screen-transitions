@@ -1,18 +1,25 @@
-// @ts-nocheck
+import { BlurView } from "expo-blur";
 import { interpolate } from "react-native-reanimated";
-import Transition, {
-	NAVIGATION_MASK_CONTAINER_STYLE_ID,
-	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-} from "react-native-screen-transitions";
+import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
+import { STYLE_ID_GROUP, type StyleIdMode } from "./constants";
 
-const toStyleIdBoundTag = (route?: { params?: object }) => {
+const getRouteParam = (route: { params?: object } | undefined, key: string) => {
 	"worklet";
 	const params = route?.params as Record<string, unknown> | undefined;
-	const rawId = params?.id;
-	return typeof rawId === "string" ? rawId : "";
+	const value = params?.[key];
+	return typeof value === "string" ? value : "";
+};
+
+const getRouteModeParam = (
+	route: { params?: object } | undefined,
+): StyleIdMode | "" => {
+	"worklet";
+	const mode = getRouteParam(route, "mode");
+	if (mode === "single" || mode === "group") return mode;
+	return "";
 };
 
 export default function StyleIdBoundsLayout() {
@@ -29,94 +36,59 @@ export default function StyleIdBoundsLayout() {
 				options={{
 					navigationMaskEnabled: true,
 					gestureEnabled: true,
-					gestureDirection: ["vertical"],
+					gestureDirection: ["vertical", "horizontal", "vertical-inverted"],
+					backdropComponent: BlurView,
 					screenStyleInterpolator: ({
 						current,
-						layouts: { screen },
 						bounds,
-						progress,
 						focused,
 						next,
 						active,
 					}) => {
 						"worklet";
 						const boundTag =
-							toStyleIdBoundTag(current.route) ||
-							toStyleIdBoundTag(active.route) ||
-							toStyleIdBoundTag(next?.route);
+							getRouteParam(active.route, "id") ||
+							getRouteParam(next?.route, "id") ||
+							getRouteParam(current.route, "id");
+						const mode =
+							getRouteModeParam(active.route) ||
+							getRouteModeParam(next?.route) ||
+							getRouteModeParam(current.route) ||
+							"group";
 
 						if (!boundTag) {
 							return {};
 						}
 
-						const x = interpolate(
-							focused ? current.gesture.normX : (next?.gesture.normX ?? 0),
-							[-1, 1],
-							[-screen.width * 0.5, screen.width * 0.5],
-							"clamp",
-						);
-						const y = interpolate(
-							focused ? current.gesture.normY : (next?.gesture.normY ?? 0),
-							[-1, 1],
-							[-screen.height * 0.5, screen.height * 0.5],
-							"clamp",
-						);
+						const revealStyles = bounds({
+							id: boundTag,
+							group: mode === "group" ? STYLE_ID_GROUP : undefined,
+						}).navigation.containerReveal();
 
 						if (focused) {
-							const focusedBoundStyles = bounds({
-								id: boundTag,
-								method: "content",
-								anchor: "top",
-								scaleMode: "uniform",
-							});
-
-							const focusMaskStyles = bounds({
-								id: boundTag,
-								space: "absolute",
-								target: "fullscreen",
-								method: "size",
-							});
-
 							return {
+								...revealStyles,
 								backdrop: {
-									style: {
-										backgroundColor: "black",
-										opacity: interpolate(progress, [0, 1], [0, 0.75]),
+									props: {
+										intensity: interpolate(
+											active.progress - active.gesture.normY,
+											[0, 1],
+											[0, 50],
+										),
 									},
-								},
-								content: {
-									style: {
-										transform: [{ translateX: x }, { translateY: y }],
-									},
-								},
-								_NAVIGATION_ROOT_CONTAINER: focusedBoundStyles,
-								_NAVIGATION_ROOT_MASK: {
-									...focusMaskStyles,
-									borderRadius: interpolate(progress, [0, 1], [24, 24]),
 								},
 							};
 						}
 
-						const unfocusedBound = bounds({
-							id: boundTag,
-							gestures: { x, y },
-						});
-
-						return {
-							content: {
-								style: {
-									transform: [
-										{
-											scale: interpolate(progress, [1, 2], [1, 0.9]),
-										},
-									],
-								},
-							},
-							[boundTag]: unfocusedBound,
-						};
+						return revealStyles;
 					},
 					transitionSpec: {
-						open: { ...Transition.Specs.DefaultSpec, mass: 2 },
+						open: {
+							stiffness: 750,
+							damping: 1000,
+							mass: 3,
+							overshootClamping: false,
+						},
 						close: { ...Transition.Specs.DefaultSpec, mass: 2 },
 					},
 				}}

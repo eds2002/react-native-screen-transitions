@@ -1,4 +1,3 @@
-import type { ViewProps } from "react-native";
 import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
@@ -36,19 +35,12 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 export type BoundaryComponentProps<P extends object> = Omit<P, "id"> &
 	BoundaryOwnProps;
 
-/** Convenience alias for a View-based boundary (the most common case). */
-export type BoundaryProps = BoundaryComponentProps<ViewProps>;
-
 export type MeasureIntent =
 	| "capture-source"
 	| "complete-destination"
 	| "refresh-source"
 	| "refresh-destination";
 
-export type MeasurementIntent = MeasureIntent;
-
 export interface MeasureParams {
 	intent?: MeasureIntent | readonly MeasureIntent[];
 }
-
-export interface MaybeMeasureAndStoreParams extends MeasureParams {}

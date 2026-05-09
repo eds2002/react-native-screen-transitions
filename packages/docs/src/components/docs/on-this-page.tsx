@@ -162,8 +162,8 @@ export function OnThisPage({ articleId }: { articleId: string }) {
 								key={item.id}
 								className={
 									isActive
-										? "text-neutral-950 dark:text-neutral-50 font-medium"
-										: "text-neutral-600 hover:text-neutral-900 dark:hover:text-neutral-50 dark:text-neutral-400"
+										? "text-neutral-950 dark:text-neutral-50"
+										: "text-neutral-400 hover:text-neutral-900 dark:hover:text-neutral-50 dark:text-neutral-600"
 								}
 							>
 								<a

@@ -30,6 +30,7 @@ export type GestureStoreMap = {
 	raw: GestureRawStoreMap;
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
+	settling: SharedValue<number>;
 	gesture: SharedValue<ActiveGesture | null>;
 	/** @deprecated Use `gesture` instead. */
 	direction: SharedValue<ResolvedPanGestureDirection | null>;
@@ -59,6 +60,7 @@ function createGestureBag(): GestureStoreMap {
 	const normScale = makeMutable(0);
 	const dismissing = makeMutable(0);
 	const dragging = makeMutable(0);
+	const settling = makeMutable(0);
 	const gesture = makeMutable<ActiveGesture | null>(null);
 
 	return {
@@ -80,6 +82,7 @@ function createGestureBag(): GestureStoreMap {
 		},
 		dismissing,
 		dragging,
+		settling,
 		gesture,
 		direction: makeMutable<ResolvedPanGestureDirection | null>(null),
 
@@ -117,6 +120,7 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.raw.normScale);
 		cancelAnimation(bag.dismissing);
 		cancelAnimation(bag.dragging);
+		cancelAnimation(bag.settling);
 		cancelAnimation(bag.gesture);
 		cancelAnimation(bag.direction);
 	},

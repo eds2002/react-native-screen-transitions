@@ -77,10 +77,11 @@ export default function OpeningTransformBoundsDestination() {
 					return previous;
 				}
 
-				return BoundStore.entry.getMeasured(
+				const entry = BoundStore.entry.get(
 					OPENING_TRANSFORM_BOUNDARY_ID,
 					route.key,
 				);
+				return entry?.bounds ? (entry as MeasuredEntry) : null;
 			});
 		}, ENTRY_POLL_MS);
 

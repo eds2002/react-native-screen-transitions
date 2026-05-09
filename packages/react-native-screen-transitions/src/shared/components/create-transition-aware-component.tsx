@@ -49,12 +49,17 @@ export function createTransitionAwareComponent<P extends object>(
 			: "vertical";
 
 		// Get scroll handlers and the gesture owner's nativeGesture for this axis
-		const { scrollHandler, onContentSizeChange, onLayout, nativeGesture } =
-			useScrollGestureCoordination({
-				onContentSizeChange: scrollableProps.onContentSizeChange,
-				onLayout: scrollableProps.onLayout,
-				direction: scrollDirection,
-			});
+		const {
+			scrollHandler,
+			scrollEventsEnabled,
+			onContentSizeChange,
+			onLayout,
+			nativeGesture,
+		} = useScrollGestureCoordination({
+			onContentSizeChange: scrollableProps.onContentSizeChange,
+			onLayout: scrollableProps.onLayout,
+			direction: scrollDirection,
+		});
 
 		const composedScrollHandler = useComposedEventHandler([
 			scrollHandler,
@@ -65,12 +70,22 @@ export function createTransitionAwareComponent<P extends object>(
 			<AnimatedComponent
 				{...(scrollableProps as any)}
 				ref={ref}
-				onScroll={composedScrollHandler}
+				/**
+				 * Keep the scroll listener detached while the owning gesture screen is
+				 * closing. On iOS, a bounced ScrollView can keep sending native scroll
+				 * events after the transition gesture activates, which competes with
+				 * close animation work on the UI thread.
+				 */
+				onScroll={scrollEventsEnabled ? composedScrollHandler : undefined}
 				onMomentumScrollEnd={userOnMomentumScrollEnd}
 				onScrollEndDrag={userOnScrollEndDrag}
 				onContentSizeChange={onContentSizeChange}
 				onLayout={onLayout}
-				scrollEventThrottle={scrollableProps.scrollEventThrottle || 16}
+				scrollEventThrottle={
+					scrollEventsEnabled
+						? scrollableProps.scrollEventThrottle || 16
+						: undefined
+				}
 			/>
 		);
 

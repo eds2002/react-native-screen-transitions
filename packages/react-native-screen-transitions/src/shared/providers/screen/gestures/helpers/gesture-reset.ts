@@ -7,66 +7,82 @@ interface ResetGestureValuesProps {
 	spec?: AnimationConfig;
 	gestures: GestureStoreMap;
 	shouldDismiss: boolean;
+	velocityX?: number;
+	velocityY?: number;
+	velocityNormX?: number;
+	velocityNormY?: number;
 }
 
 const getGestureResetSpec = (
 	spec?: AnimationConfig,
+	velocity?: number,
 ): AnimationConfig | undefined => {
 	"worklet";
 
-	if (!spec || !("velocity" in spec)) {
+	const isSpring =
+		typeof spec === "object" && !("duration" in spec) && !("easing" in spec);
+
+	if (!isSpring) {
 		return spec;
 	}
 
-	const { velocity: _velocity, ...resetSpec } = spec;
-	return resetSpec as AnimationConfig;
+	const { velocity: _velocity, ...resetSpec } = spec as AnimationConfig & {
+		velocity?: number;
+	};
+	return (
+		typeof velocity === "number" ? { ...resetSpec, velocity } : resetSpec
+	) as AnimationConfig;
 };
 
 export const resetGestureValues = ({
 	spec,
 	gestures,
 	shouldDismiss,
+	velocityX,
+	velocityY,
+	velocityNormX,
+	velocityNormY,
 }: ResetGestureValuesProps) => {
 	"worklet";
-	const resetSpec = getGestureResetSpec(spec);
 
 	gestures.raw.x.set(0);
 	gestures.raw.y.set(0);
 	gestures.raw.normX.set(0);
 	gestures.raw.normY.set(0);
+	gestures.dragging.set(FALSE);
+	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
+	gestures.settling.set(shouldDismiss ? FALSE : TRUE);
 
 	animateMany({
 		items: [
 			{
 				value: gestures.x,
 				toValue: 0,
-				config: resetSpec,
+				config: getGestureResetSpec(spec, velocityX),
 			},
 			{
 				value: gestures.y,
 				toValue: 0,
-				config: resetSpec,
+				config: getGestureResetSpec(spec, velocityY),
 			},
 			{
 				value: gestures.normX,
 				toValue: 0,
-				config: resetSpec,
+				config: getGestureResetSpec(spec, velocityNormX),
 			},
 			{
 				value: gestures.normY,
 				toValue: 0,
-				config: resetSpec,
+				config: getGestureResetSpec(spec, velocityNormY),
 			},
 		],
 		onAllFinished: () => {
 			"worklet";
 			gestures.gesture.set(null);
 			gestures.direction.set(null);
+			gestures.settling.set(FALSE);
 		},
 	});
-
-	gestures.dragging.set(FALSE);
-	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
 };
 
 interface ResetPinchGestureValuesProps {
@@ -85,6 +101,9 @@ export const resetPinchGestureValues = ({
 
 	gestures.raw.scale.set(1);
 	gestures.raw.normScale.set(0);
+	gestures.dragging.set(FALSE);
+	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
+	gestures.settling.set(shouldDismiss ? FALSE : TRUE);
 
 	animateMany({
 		items: [
@@ -105,9 +124,7 @@ export const resetPinchGestureValues = ({
 			gestures.focalY.set(0);
 			gestures.gesture.set(null);
 			gestures.direction.set(null);
+			gestures.settling.set(FALSE);
 		},
 	});
-
-	gestures.dragging.set(FALSE);
-	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
 };

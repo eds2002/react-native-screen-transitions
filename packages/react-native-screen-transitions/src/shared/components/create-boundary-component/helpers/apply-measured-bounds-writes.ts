@@ -1,5 +1,9 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import { setDestination, setEntry, setSource } from "../internals/registry";
+import {
+	setDestination,
+	setEntry,
+	setSource,
+} from "../../../stores/bounds/internals/registry";
 
 type ApplyMeasuredBoundsWritesParams = {
 	sharedBoundTag: string;
@@ -9,7 +13,6 @@ type ApplyMeasuredBoundsWritesParams = {
 	ancestorKeys: string[];
 	navigatorKey?: string;
 	ancestorNavigatorKeys?: string[];
-	shouldWriteEntry?: boolean;
 	shouldSetSource?: boolean;
 	shouldUpdateSource?: boolean;
 	shouldSetDestination?: boolean;
@@ -29,7 +32,6 @@ export const applyMeasuredBoundsWrites = (
 		ancestorKeys,
 		navigatorKey,
 		ancestorNavigatorKeys,
-		shouldWriteEntry,
 		shouldSetSource,
 		shouldUpdateSource,
 		shouldSetDestination,
@@ -37,15 +39,11 @@ export const applyMeasuredBoundsWrites = (
 		expectedSourceScreenKey,
 	} = params;
 
-	if (shouldWriteEntry) {
-		setEntry(sharedBoundTag, currentScreenKey, {
-			bounds: measured,
-			styles: preparedStyles,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
-		});
-	}
+	// Set the bounds entry on every measure to avoid any stale measurements
+	// for the public read API.
+	setEntry(sharedBoundTag, currentScreenKey, {
+		bounds: measured,
+	});
 
 	if (shouldSetSource) {
 		setSource(

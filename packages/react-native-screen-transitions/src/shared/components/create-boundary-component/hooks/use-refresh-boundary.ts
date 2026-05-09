@@ -30,63 +30,61 @@ export const useRefreshBoundary = ({
 		currentScreenKey,
 		"willAnimate",
 	);
-	const currentAnimating = AnimationStore.getValue(
-		currentScreenKey,
-		"animating",
-	);
+	const currentClosing = AnimationStore.getValue(currentScreenKey, "closing");
 	const currentDragging = GestureStore.getValue(currentScreenKey, "dragging");
+	const currentEntering = AnimationStore.getValue(currentScreenKey, "entering");
 	const nextWillAnimate = nextScreenKey
 		? AnimationStore.getValue(nextScreenKey, "willAnimate")
 		: null;
-	const nextAnimating = nextScreenKey
-		? AnimationStore.getValue(nextScreenKey, "animating")
+
+	const nextClosing = nextScreenKey
+		? AnimationStore.getValue(nextScreenKey, "closing")
 		: null;
 	const nextDragging = nextScreenKey
 		? GestureStore.getValue(nextScreenKey, "dragging")
 		: null;
+	const nextEntering = nextScreenKey
+		? AnimationStore.getValue(nextScreenKey, "entering")
+		: null;
 
 	useAnimatedReaction(
-		() => (hasNextScreen ? (nextWillAnimate?.get() ?? 0) : 0),
-		(nextValue, previousValue) => {
+		() => {
 			"worklet";
-			if (!enabled || !hasNextScreen) return;
-			if (nextValue === 0 || nextValue === previousValue) return;
 
-			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
+			const shouldRefresh = hasNextScreen
+				? (nextWillAnimate?.get() ?? 0)
+				: currentWillAnimate.get();
+			const closing = hasNextScreen
+				? (nextClosing?.get() ?? 0)
+				: currentClosing.get();
+			const dragging = hasNextScreen
+				? (nextDragging?.get() ?? 0)
+				: currentDragging.get();
+			const entering = hasNextScreen
+				? (nextEntering?.get() ?? 0)
+				: currentEntering.get();
 
-			if (group && currentGroupActiveId !== String(id)) {
-				return;
+			/*
+	      This guard is here to essentially avoid remeasuring when the initial animation has not finished.
+	      If we don't have this guard, we allow the user to measure a malformed
+	      screen. (e.g. measuring a screen that is still being applied transformation styles). This
+        guard should only apply when entering and dragging is true.
+
+        NOTE: Could there possibly be an edge case where if we repeat this same flow, but instead of dragging a user presses a dismiss button?
+        Could this guard possibly fail in this scenario?
+			 */
+			const hasUserInterruptedInitialAnimation = entering && dragging;
+
+			if (shouldRefresh && !closing && !hasUserInterruptedInitialAnimation) {
+				return 1;
 			}
 
-			const shouldCancelMeasurement =
-				!!nextAnimating?.get() && !!nextDragging?.get();
-
-			if (shouldCancelMeasurement) {
-				return;
-			}
-
-			const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
-
-			const intent = !hasSource
-				? "capture-source"
-				: group
-					? "refresh-source"
-					: null;
-
-			if (!intent) {
-				return;
-			}
-
-			measureBoundary({ intent });
+			return 0;
 		},
-	);
-
-	useAnimatedReaction(
-		() => (!hasNextScreen ? currentWillAnimate.get() : 0),
-		(nextValue, previousValue) => {
+		(shouldRefresh) => {
 			"worklet";
-			if (!enabled || hasNextScreen) return;
-			if (nextValue === 0 || nextValue === previousValue) return;
+
+			if (!enabled || !shouldRefresh) return;
 
 			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
 
@@ -94,10 +92,20 @@ export const useRefreshBoundary = ({
 				return;
 			}
 
-			const shouldCancelMeasurement =
-				!!currentAnimating.get() && !!currentDragging.get();
+			if (hasNextScreen) {
+				const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
 
-			if (shouldCancelMeasurement) {
+				const intent = !hasSource
+					? "capture-source"
+					: group
+						? "refresh-source"
+						: null;
+
+				if (!intent) {
+					return;
+				}
+
+				measureBoundary({ intent });
 				return;
 			}
 

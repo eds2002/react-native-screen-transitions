@@ -18,6 +18,20 @@ export type ActiveGesture = ResolvedPanGestureDirection | PinchGestureDirection;
 
 export type SnapPanAxis = "horizontal" | "vertical";
 
+export type ScrollGestureAxis = "vertical" | "horizontal";
+
+export type ScrollGestureAxisState = {
+	offset: number;
+	contentSize: number;
+	layoutSize: number;
+};
+
+export type ScrollGestureState = {
+	vertical: ScrollGestureAxisState;
+	horizontal: ScrollGestureAxisState;
+	isTouched: boolean;
+};
+
 export type SnapPanAxisConfig = {
 	collapse: ResolvedPanGestureDirection;
 	expand: ResolvedPanGestureDirection;
@@ -119,6 +133,10 @@ export type GestureValues = {
 	 * A flag indicating if the user's finger is on the screen (0 or 1).
 	 */
 	dragging: number;
+	/**
+	 * A flag indicating if released gesture values are animating back to neutral.
+	 */
+	settling: number;
 	/**
 	 * The gesture that is currently active.
 	 */

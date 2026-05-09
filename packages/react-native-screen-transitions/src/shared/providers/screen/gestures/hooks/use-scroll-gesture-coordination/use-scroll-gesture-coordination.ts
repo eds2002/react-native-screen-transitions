@@ -4,8 +4,11 @@ import { Gesture, type GestureType } from "react-native-gesture-handler";
 import {
 	type SharedValue,
 	useAnimatedScrollHandler,
+	useDerivedValue,
 } from "react-native-reanimated";
+import { useSharedValueState } from "../../../../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../../../../hooks/use-stable-callback";
+import { AnimationStore } from "../../../../../stores/animation.store";
 import { useGestureContext } from "../../gestures.provider";
 import type {
 	ScrollGestureAxis,
@@ -53,9 +56,31 @@ export const useScrollGestureCoordination = (
 	const context = useGestureContext();
 	const scrollDirection = props.direction ?? "vertical";
 
-	const { scrollStates, panGestures, pinchGestures } = useMemo(() => {
-		return walkUpScrollGestureCoordination(context, scrollDirection);
-	}, [context, scrollDirection]);
+	const { scrollStates, panGestures, pinchGestures, ownerRouteKeys } = useMemo(
+		() => walkUpScrollGestureCoordination(context, scrollDirection),
+		[context, scrollDirection],
+	);
+
+	const ownerClosingValues = useMemo(
+		() =>
+			ownerRouteKeys.map((routeKey) =>
+				AnimationStore.getValue(routeKey, "closing"),
+			),
+		[ownerRouteKeys],
+	);
+
+	const scrollEventsEnabled = useSharedValueState(
+		useDerivedValue(() => {
+			"worklet";
+			for (let i = 0; i < ownerClosingValues.length; i++) {
+				if (ownerClosingValues[i].get()) {
+					return false;
+				}
+			}
+
+			return true;
+		}),
+	);
 
 	const nativeGesture = useMemo(() => {
 		if (panGestures.length === 0 && pinchGestures.length === 0) return null;
@@ -147,6 +172,7 @@ export const useScrollGestureCoordination = (
 
 	return {
 		scrollHandler,
+		scrollEventsEnabled,
 		onContentSizeChange,
 		onLayout,
 		nativeGesture,

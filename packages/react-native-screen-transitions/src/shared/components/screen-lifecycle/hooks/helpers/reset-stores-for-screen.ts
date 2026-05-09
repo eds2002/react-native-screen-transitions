@@ -6,6 +6,7 @@ import {
 	clearByBranch,
 } from "../../../../stores/bounds/internals/clear";
 import { GestureStore } from "../../../../stores/gesture.store";
+import { ScrollStore } from "../../../../stores/scroll.store";
 import { SystemStore } from "../../../../stores/system.store";
 
 export function resetStoresForScreen(
@@ -15,6 +16,7 @@ export function resetStoresForScreen(
 ) {
 	AnimationStore.clearBag(routeKey);
 	GestureStore.clearBag(routeKey);
+	ScrollStore.clearBag(routeKey);
 	SystemStore.clearBag(routeKey);
 
 	runOnUI(() => {

@@ -27,31 +27,35 @@ Gesture options belong on a screen's `options`, not on a navigator component pro
 
 ## Supported Directions
 
-`gestureDirection` accepts:
+`gestureDirection` accepts pan and pinch directions:
 
 - `"horizontal"`
 - `"horizontal-inverted"`
 - `"vertical"`
 - `"vertical-inverted"`
 - `"bidirectional"`
-- an array of directions for non-snap screens
+- `"pinch-in"`
+- `"pinch-out"`
+- an array of pan and pinch directions
 
-For screens with `snapPoints`, pass a single axis direction. If you pass an array, only the first direction is used and the sheet still resolves to a single axis.
+For non-snap screens, each direction in the array can activate dismissal. For screens with `snapPoints`, the array defines which pan axes and pinch direction can drive the same snap state. The first direction on a pan axis controls that axis's collapse polarity, and the first pinch direction controls whether pinch-in or pinch-out collapses.
 
 ## Gesture Options
 
 | Option | Type | Notes |
 | --- | --- | --- |
 | `gestureEnabled` | `boolean` | Enables swipe-to-dismiss. For screens with `snapPoints`, snapping between non-dismiss detents can still work when this is `false`. |
-| `gestureDirection` | `GestureDirection \| GestureDirection[]` | Dismiss direction or axis. For `snapPoints`, prefer a single axis direction. |
+| `gestureDirection` | `GestureDirection \| GestureDirection[]` | Dismiss direction, pan axis, pinch direction, or ordered direction list. |
+| `experimental_allowDisabledGestureTracking` | `boolean` | Allows disabled non-snap gestures to keep producing live gesture values without allowing dismiss. |
 | `gestureActivationArea` | `"edge" \| "screen" \| { left?: "edge" \| "screen"; right?: "edge" \| "screen"; top?: "edge" \| "screen"; bottom?: "edge" \| "screen" }` | Where the gesture may start. Defaults to `"screen"`. |
 | `gestureResponseDistance` | `number` | Single numeric edge-distance override. |
+| `gestureSensitivity` | `number` | Multiplies live gesture movement before it drives progress and non-raw gesture values. Default `1`. |
 | `gestureVelocityImpact` | `number` | Release velocity influence on dismiss decisions. Default `0.3`. |
 | `gestureDrivesProgress` | `boolean` | Whether dragging directly updates progress. Default `true`. |
-| `snapVelocityImpact` | `number` | Release velocity influence on snap-target selection. Default `0.1`. |
+| `gestureSnapVelocityImpact` | `number` | Release velocity influence on snap-target selection. Default `0.1`. |
 | `gestureSnapLocked` | `boolean` | Locks gesture-driven snap movement to the current detent. Default `false`. |
 | `gestureReleaseVelocityScale` | `number` | Multiplies normalized release velocity before the spring runs. Default `1`. |
-| `gestureReleaseVelocityMax` | `number` | Caps normalized release velocity after scaling. Default `3.2`. |
+| `gestureReleaseVelocityMax` | `number` | Caps normalized release velocity after scaling. Default `3.2`. Deprecated v3 compatibility option. |
 | `sheetScrollGestureBehavior` | `"expand-and-collapse" \| "collapse-only"` | Scroll-boundary handoff mode for snap sheets. Default `"expand-and-collapse"`. |
 | `backdropBehavior` | `"block" \| "passthrough" \| "dismiss" \| "collapse"` | How taps on the backdrop are handled. |
 | `backdropComponent` | `React.ComponentType<any>` | Custom backdrop component type. Pass a stable component such as `BlurView` or `MyBackdrop`. |
@@ -101,16 +105,91 @@ These options control how release velocity affects the outcome and the spring fe
 options={{
   gestureEnabled: true,
   gestureVelocityImpact: 0.3,
-  snapVelocityImpact: 0.1,
+  gestureSnapVelocityImpact: 0.1,
   gestureReleaseVelocityScale: 1.5,
   gestureReleaseVelocityMax: 2.4,
 }}
 ```
 
 - use `gestureVelocityImpact` to change whether a fling dismisses
-- use `snapVelocityImpact` to change which snap point a sheet settles to
+- use `gestureSnapVelocityImpact` to change which snap point a sheet settles to
 - use `gestureReleaseVelocityScale` to make the post-release spring feel faster or slower
 - use `gestureReleaseVelocityMax` to cap normalized release velocity after screen-size normalization, not raw px/s
+
+## Pinch Gestures
+
+Use `pinch-in` or `pinch-out` when two-finger scale should drive dismissal:
+
+```tsx
+<Stack.Screen
+  name="Photo"
+  component={PhotoScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: ["pinch-in", "horizontal", "vertical"],
+    screenStyleInterpolator: ({ active, progress }) => {
+      "worklet";
+
+      return {
+        content: {
+          style: {
+            transform: [{ scale: 1 - Math.abs(active.gesture.normScale) * 0.2 }],
+          },
+        },
+      };
+    },
+  }}
+/>
+```
+
+`active.gesture.scale`, `active.gesture.normScale`, `active.gesture.focalX`, and `active.gesture.focalY` are available inside the interpolator. Use `active.gesture.raw.normScale` when computing dynamic `gestureSensitivity`, so the sensitivity calculation does not feed back into itself.
+
+## Dynamic Gesture Options
+
+React-side option changes can be applied while the screen stays mounted:
+
+```tsx
+const navigation = useNavigation();
+
+navigation.setOptions({
+  gestureEnabled: false,
+  gestureDirection: "pinch-in",
+});
+```
+
+For per-frame changes from a worklet, return runtime options from the interpolator:
+
+```tsx
+screenStyleInterpolator: ({ active }) => {
+  "worklet";
+
+  return {
+    options: {
+      gestureSensitivity: interpolate(
+        Math.abs(active.gesture.raw.normY),
+        [0, 0.25],
+        [1, 0.5],
+        "clamp"
+      ),
+    },
+  };
+};
+```
+
+`active.options` exposes the resolved option state back to the interpolator, so animation logic can react to values changed by `navigation.setOptions()` or by previous runtime overrides.
+
+## Disabled Gesture Tracking
+
+Set `experimental_allowDisabledGestureTracking: true` when a screen should keep receiving live gesture values while `gestureEnabled` is `false`:
+
+```tsx
+options={{
+  gestureEnabled: false,
+  experimental_allowDisabledGestureTracking: true,
+}}
+```
+
+This is useful for resistance or shadowing effects where the screen should visually respond to a gesture but must not dismiss. Screens with `snapPoints` already keep tracking gestures for non-dismiss snap movement when `gestureEnabled` is `false`.
 
 ## Snap Sheets
 
@@ -258,9 +337,13 @@ Useful values include:
 
 - `x`, `y`
 - `normX`, `normY`
+- `scale`, `normScale`
+- `focalX`, `focalY`
+- `raw`
 - `dragging`
 - `dismissing`
-- `direction`
+- `gesture`
+- `direction` (deprecated pan-only alias)
 
 ## Hook Targeting
 

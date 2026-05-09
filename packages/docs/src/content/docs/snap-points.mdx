@@ -135,17 +135,17 @@ These options shape that behavior:
 ```tsx
 options={{
   snapPoints: [0.3, 0.7, 1],
-  snapVelocityImpact: 0.15,
+  gestureSnapVelocityImpact: 0.15,
   gestureReleaseVelocityScale: 1.2,
   gestureReleaseVelocityMax: 2.4,
 }}
 ```
 
-- `snapVelocityImpact` changes how much the release velocity nudges the chosen detent
+- `gestureSnapVelocityImpact` changes how much the release velocity nudges the chosen detent
 - `gestureReleaseVelocityScale` changes the post-release spring energy
-- `gestureReleaseVelocityMax` caps that normalized release velocity
+- `gestureReleaseVelocityMax` caps that normalized release velocity for v3 compatibility
 
-`gestureReleaseVelocityScale` and `gestureReleaseVelocityMax` affect how the sheet settles after the target is chosen. They do not replace `snapVelocityImpact`.
+`gestureReleaseVelocityScale` and `gestureReleaseVelocityMax` affect how the sheet settles after the target is chosen. They do not replace `gestureSnapVelocityImpact`.
 
 ## Snap Locking
 
@@ -197,14 +197,54 @@ Modes:
 
 The older `expandViaScrollView` boolean still maps to these modes, but it is deprecated.
 
-## Axis Rules
+## Axis And Pinch Rules
 
-Snap sheets are single-axis:
+Snap sheets can be driven by one or more pan axes and by pinch:
 
 - use `vertical` or `vertical-inverted` for bottom or top sheets
 - use `horizontal` or `horizontal-inverted` for drawers
+- use `pinch-in` or `pinch-out` for two-finger detent changes
 
-If you pass a direction array with `snapPoints`, the sheet resolves to the first direction only.
+When you pass an array, the first direction on each pan axis controls that axis's collapse polarity. For pinch, the first pinch direction controls collapse and the opposite pinch direction expands.
+
+```tsx
+<Stack.Screen
+  name="sheet"
+  component={SheetScreen}
+  options={{
+    gestureEnabled: true,
+    gestureDirection: ["pinch-out", "horizontal", "vertical-inverted"],
+    snapPoints: [0.45, 0.72, 1],
+  }}
+/>
+```
+
+In this example, pinch-out, dragging right, or dragging up collapses the sheet. Pinch-in, dragging left, or dragging down expands it.
+
+## Reading Live And Target Detents
+
+Use `current.animatedSnapIndex` when the UI should follow the live gesture position, including fractional values between detents:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        borderRadius: interpolate(
+          current.animatedSnapIndex,
+          [0, 1, 2],
+          [28, 16, 0],
+          "clamp"
+        ),
+      },
+    },
+  };
+};
+```
+
+Use `current.snapIndex` when you need the current target detent after mount, `snapTo()`, or gesture release.
 
 ## Related Reading
 

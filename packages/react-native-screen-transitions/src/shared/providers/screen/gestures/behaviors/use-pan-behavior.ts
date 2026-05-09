@@ -81,7 +81,13 @@ export const usePanBehavior = (
 			const strategy = getPanStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
 			const release = strategy.resolveRelease(event, latestRuntime, dimensions);
-			finalizePanRelease(release, latestRuntime, dismissScreen);
+			finalizePanRelease(
+				release,
+				latestRuntime,
+				dismissScreen,
+				dimensions,
+				rawEvent,
+			);
 		},
 		[runtime, screenOptions, dimensions, dismissScreen, withSensitivity],
 	);

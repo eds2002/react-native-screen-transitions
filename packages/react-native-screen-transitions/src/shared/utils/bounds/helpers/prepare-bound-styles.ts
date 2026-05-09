@@ -2,7 +2,7 @@ import {
 	getGroupActiveId,
 	setGroupActiveId,
 } from "../../../stores/bounds/internals/groups";
-import { getEntryConfig } from "../../../stores/bounds/internals/registry";
+import { getEntry } from "../../../stores/bounds/internals/registry";
 import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
@@ -42,7 +42,9 @@ export const buildBoundsOptions = ({
 	const currentScreenKey = props.current?.route.key;
 
 	const boundaryConfig =
-		tag && currentScreenKey ? getEntryConfig(tag, currentScreenKey) : null;
+		tag && currentScreenKey
+			? (getEntry(tag, currentScreenKey)?.boundaryConfig ?? null)
+			: null;
 
 	const resolved = {
 		...DEFAULT_BOUNDS_OPTIONS,

@@ -25,6 +25,7 @@ interface WalkUpScrollGestureCoordinationResult {
 	panGestures: PanGesture[];
 	pinchGestures: PinchGesture[];
 	scrollStates: SharedValue<ScrollGestureState | null>[];
+	ownerRouteKeys: string[];
 }
 
 export function walkUpScrollGestureCoordination(
@@ -40,6 +41,7 @@ export function walkUpScrollGestureCoordination(
 	const panGestures: GestureContextType["panGesture"][] = [];
 	const pinchGestures: GestureContextType["pinchGesture"][] = [];
 	const scrollStates: GestureContextType["scrollState"][] = [];
+	const ownerRouteKeys: string[] = [];
 	const ancestors = walkGestureAncestors(context);
 
 	for (const ancestor of ancestors) {
@@ -58,11 +60,13 @@ export function walkUpScrollGestureCoordination(
 		seenOwners.push(owner);
 		panGestures.push(owner.panGesture);
 		scrollStates.push(owner.scrollState);
+		ownerRouteKeys.push(owner.routeKey);
 	}
 
 	return {
 		panGestures,
 		pinchGestures,
 		scrollStates,
+		ownerRouteKeys,
 	};
 }

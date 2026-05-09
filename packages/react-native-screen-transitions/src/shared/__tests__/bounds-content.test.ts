@@ -32,7 +32,6 @@ describe('bounds({ method: "content" }) ownership', () => {
 				destinationStyles: null,
 				sourceScreenKey: "screen-a",
 				destinationScreenKey: "screen-b",
-				usedPending: false,
 			},
 		);
 
@@ -62,7 +61,6 @@ describe('bounds({ method: "content" }) ownership', () => {
 				destinationStyles: null,
 				sourceScreenKey: "screen-a",
 				destinationScreenKey: null,
-				usedPending: false,
 			},
 		);
 
@@ -92,7 +90,6 @@ describe('bounds({ method: "content" }) ownership', () => {
 				destinationStyles: null,
 				sourceScreenKey: "screen-a",
 				destinationScreenKey: null,
-				usedPending: false,
 			},
 		);
 
@@ -121,7 +118,6 @@ describe('bounds({ method: "content" }) ownership', () => {
 				destinationStyles: null,
 				sourceScreenKey: "screen-a",
 				destinationScreenKey: "screen-b",
-				usedPending: false,
 			},
 		);
 

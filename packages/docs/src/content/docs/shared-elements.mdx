@@ -41,7 +41,7 @@ For most flows, the source should be a `Transition.Boundary.Trigger` and the des
 
 `Boundary.View` can be used on both sides and the system can auto-measure, but that is a lower-level path and not the default recommendation for navigation-driven flows.
 
-For the high-level `bounds({ id }).navigation.zoom()` helper, the destination can also be source-only. See [Navigation Zoom](/navigation-zoom).
+For the high-level `bounds({ id }).navigation.zoom()` helper, the destination can also be source-only. See [Zoom](/navigation-zoom).
 
 ## Nested Measurement with Boundary.Target
 
@@ -123,7 +123,7 @@ When you pass `raw: true`, it returns low-level geometry instead:
 - `"size"` returns `translateX`, `translateY`, `width`, and `height`
 - `"content"` returns `translateX`, `translateY`, and `scale`
 
-## Navigation Zoom
+## Zoom
 
 For navigation-style bounds transitions, use `navigation.zoom()`:
 
@@ -137,7 +137,7 @@ screenStyleInterpolator: ({ bounds }) => {
 
 `navigation.zoom()` builds an opinionated layer map for you. It can work with only a source `Transition.Boundary.Trigger`, or with a destination `Transition.Boundary.View` when you want tighter bound-to-bound matching.
 
-For the recommended setup, optional destination patterns, groups guidance, and current caveats, see [Navigation Zoom](/navigation-zoom).
+For the recommended setup, optional destination patterns, groups guidance, and current caveats, see [Zoom](/navigation-zoom).
 
 ## Navigation Mask
 
@@ -205,12 +205,13 @@ This is the pattern used for the gesture-driven bounds example in the e2e app.
 You can read a stored measurement snapshot directly:
 
 ```tsx
-const snapshot = bounds.getSnapshot("hero");
+const measured = bounds.getMeasured("hero");
 ```
 
 The accessor also exposes:
 
 - `getLink(id)` to inspect the current source and destination pair
+- `getSnapshot(id)` as a deprecated alias for `getMeasured(id)`
 - `interpolateStyle(id, property, fallback?)`
 - `interpolateBounds(id, property, fallbackOrTargetKey?, fallback?)`
 

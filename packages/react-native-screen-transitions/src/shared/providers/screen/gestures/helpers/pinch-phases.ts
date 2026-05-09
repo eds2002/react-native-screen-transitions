@@ -21,9 +21,15 @@ export const startPinchBase = (
 		gestureProgressBaseline,
 	} = runtime;
 
-	emit(animations.willAnimate, TRUE, FALSE);
+	const wasSettling = gestures.settling.get();
+
+	if (!wasSettling) {
+		emit(animations.willAnimate, TRUE, FALSE);
+	}
+
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
+	gestures.settling.set(0);
 	gestures.gesture.set(null);
 	gestures.direction.set(null);
 	gestures.scale.set(1);
@@ -83,6 +89,7 @@ export const finalizePinchRelease = (
 		onAnimationFinish: release.shouldDismiss ? dismissScreen : undefined,
 		spec: release.transitionSpec,
 		emitWillAnimate: false,
+		markEntering: false,
 		animations,
 		targetProgress: system.targetProgress,
 		initialVelocity: release.initialVelocity,

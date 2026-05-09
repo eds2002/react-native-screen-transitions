@@ -19,9 +19,15 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 		gestureProgressBaseline,
 	} = runtime;
 
-	emit(animations.willAnimate, TRUE, FALSE);
+	const wasSettling = gestures.settling.get();
+
+	if (!wasSettling) {
+		emit(animations.willAnimate, TRUE, FALSE);
+	}
+
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
+	gestures.settling.set(0);
 	gestures.x.set(0);
 	gestures.y.set(0);
 	gestures.normX.set(0);
@@ -70,16 +76,27 @@ export const finalizePanRelease = (
 	release: PanReleaseResult,
 	runtime: PanGestureRuntime,
 	dismissScreen: (() => void) | undefined,
+	dimensions: GestureDimensions,
+	rawEvent: PanGestureEvent,
 ) => {
 	"worklet";
 	const {
+		policy,
 		stores: { gestures, animations, system },
 	} = runtime;
+	const { width, height } = dimensions;
+	const releaseVelocityScale = Math.max(0, policy.gestureReleaseVelocityScale);
+	const resetVelocityX = rawEvent.velocityX * releaseVelocityScale;
+	const resetVelocityY = rawEvent.velocityY * releaseVelocityScale;
 
 	resetGestureValues({
 		spec: release.resetSpec,
 		gestures,
 		shouldDismiss: release.shouldDismiss,
+		velocityX: resetVelocityX,
+		velocityY: resetVelocityY,
+		velocityNormX: resetVelocityX / Math.max(1, width),
+		velocityNormY: resetVelocityY / Math.max(1, height),
 	});
 
 	animateToProgress({
@@ -87,6 +104,7 @@ export const finalizePanRelease = (
 		onAnimationFinish: release.shouldDismiss ? dismissScreen : undefined,
 		spec: release.transitionSpec,
 		emitWillAnimate: false,
+		markEntering: false,
 		targetProgress: system.targetProgress,
 		animations,
 		initialVelocity: release.initialVelocity,

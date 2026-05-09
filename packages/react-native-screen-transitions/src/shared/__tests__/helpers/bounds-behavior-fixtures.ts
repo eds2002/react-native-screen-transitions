@@ -1,6 +1,7 @@
 import { expect } from "bun:test";
 import {
 	BoundStore,
+	type BoundaryConfig,
 	type ResolveTransitionContext,
 	type ResolvedTransitionPair,
 	type Snapshot,
@@ -35,6 +36,44 @@ export const makeTag = (
 	group?: string,
 ): string => (group ? `${group}:${id}` : String(id));
 
+export const registerMeasuredEntry = (
+	tag: string,
+	screenKey: string,
+	bounds: Snapshot["bounds"],
+	styles: Snapshot["styles"] = {},
+	ancestorKeys?: string[],
+	navigatorKey?: string,
+	ancestorNavigatorKeys?: string[],
+) => {
+	BoundStore.entry.set(tag, screenKey, {
+		bounds,
+		styles,
+		ancestorKeys,
+		navigatorKey,
+		ancestorNavigatorKeys,
+	});
+};
+
+export const registerBoundaryPresence = (
+	tag: string,
+	screenKey: string,
+	ancestorKeys?: string[],
+	boundaryConfig?: BoundaryConfig,
+	navigatorKey?: string,
+	ancestorNavigatorKeys?: string[],
+) => {
+	BoundStore.entry.set(tag, screenKey, {
+		ancestorKeys,
+		boundaryConfig,
+		navigatorKey,
+		ancestorNavigatorKeys,
+	});
+};
+
+export const hasBoundaryPresence = (tag: string, screenKey: string) => {
+	return BoundStore.entry.get(tag, screenKey) !== null;
+};
+
 type RegisterSourceAndDestinationParams = {
 	tag: string;
 	sourceScreenKey: string;
@@ -64,7 +103,8 @@ export const registerSourceAndDestination = ({
 	destinationNavigatorKey,
 	destinationAncestorNavigatorKeys,
 }: RegisterSourceAndDestinationParams) => {
-	BoundStore.setLinkSource(
+	BoundStore.link.setSource(
+		"capture",
 		tag,
 		sourceScreenKey,
 		sourceBounds,
@@ -74,7 +114,8 @@ export const registerSourceAndDestination = ({
 		sourceAncestorNavigatorKeys,
 	);
 
-	BoundStore.setLinkDestination(
+	BoundStore.link.setDestination(
+		"attach",
 		tag,
 		destinationScreenKey,
 		destinationBounds,
@@ -91,7 +132,6 @@ type ExpectedResolvedPair = {
 	destinationScreenKey?: string | null;
 	sourceBounds?: Snapshot["bounds"] | null;
 	destinationBounds?: Snapshot["bounds"] | null;
-	usedPending?: boolean;
 };
 
 export const expectResolvedPair = (
@@ -114,7 +154,4 @@ export const expectResolvedPair = (
 		expect(pair.destinationBounds).toEqual(expected.destinationBounds);
 	}
 
-	if (expected.usedPending !== undefined) {
-		expect(pair.usedPending).toBe(expected.usedPending);
-	}
 };
