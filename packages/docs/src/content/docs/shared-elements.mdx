@@ -208,16 +208,22 @@ This is the pattern used for the gesture-driven bounds example in the e2e app.
 You can read a stored measurement snapshot directly:
 
 ```tsx
-const measured = bounds.getMeasured("hero");
+const hero = bounds({ id: "hero" });
+const measured = hero.getMeasured(current.route.key);
+const link = hero.getLink();
+const initialLink = hero.getLink({ snapshot: "initial" });
 ```
 
-The accessor also exposes:
+Scoped bounds results expose:
 
-- `getLink(id)` to inspect the current source and destination pair
-- `getLink(id, { snapshot: "initial" })` to inspect the first truthy source and destination pair captured for that link
-- `getSnapshot(id)` as a deprecated alias for `getMeasured(id)`
-- `interpolateStyle(id, property, fallback?)`
-- `interpolateBounds(id, property, fallbackOrTargetKey?, fallback?)`
+- `getMeasured(key)` to inspect a measured entry for this bound
+- `getLink()` to inspect the current source and destination pair
+- `getLink({ snapshot: "initial" })` to inspect the first truthy source and destination pair captured for that link
+- `getSnapshot(key)` as a deprecated alias for `getMeasured(key)`
+- `interpolateStyle(property, fallback?)`
+- `interpolateBounds(property, fallbackOrTargetKey?, fallback?)`
+
+The root accessor still exposes the same helpers with an explicit id, such as `bounds.getLink("hero")`, when that reads better.
 
 Use those helpers when you want to build custom bounds-driven choreography on top of the same source/destination link data.
 

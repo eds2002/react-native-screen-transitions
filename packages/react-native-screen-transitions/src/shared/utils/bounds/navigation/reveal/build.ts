@@ -5,10 +5,7 @@ import {
 	VISIBLE_STYLE,
 } from "../../../../constants";
 import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
-import type { BoundsLink } from "../../../../types/bounds.types";
-import { createLinkAccessor } from "../../helpers/create-link-accessor";
-import { prepareBoundStyles } from "../../helpers/prepare-bound-styles";
-import type { BoundsOptions, BoundsOptionsResult } from "../../types/options";
+import { createNavigationBoundsAccessor } from "../helpers";
 import {
 	REVEAL_BORDER_RADIUS,
 	toNumber,
@@ -32,39 +29,6 @@ import {
 import type { BuildRevealStylesParams, RevealInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
-
-type LocalBoundsAccessor = {
-	<T extends BoundsOptions>(options: T): BoundsOptionsResult<T>;
-	getMeasured: ReturnType<typeof createLinkAccessor>["getMeasured"];
-	getLink: ReturnType<typeof createLinkAccessor>["getLink"];
-};
-
-const createLocalBoundsAccessor = (
-	props: BuildRevealStylesParams["props"],
-	link: BoundsLink,
-): LocalBoundsAccessor => {
-	"worklet";
-
-	const { getMeasured, getLink } = createLinkAccessor(() => props);
-	return Object.assign(
-		<T extends BoundsOptions>(options: T): BoundsOptionsResult<T> => {
-			"worklet";
-			return prepareBoundStyles({
-				props,
-				options,
-				resolvedPair: {
-					sourceBounds: link.source?.bounds ?? null,
-					destinationBounds: link.destination?.bounds ?? null,
-					sourceStyles: link.source?.styles ?? null,
-					destinationStyles: link.destination?.styles ?? null,
-					sourceScreenKey: null,
-					destinationScreenKey: null,
-				},
-			});
-		},
-		{ getMeasured, getLink },
-	);
-};
 
 /* -------------------------------------------------------------------------- */
 /*                              BUILD REVEAL STYLES                           */
@@ -94,31 +58,47 @@ export function buildRevealStyles({
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
 	} as const;
 
-	const { getLink } = createLinkAccessor(() => props);
-	const currentLink = getLink(tag);
+	const boundsAccessor = createNavigationBoundsAccessor(() => {
+		"worklet";
+		return props;
+	});
+	const bounds = boundsAccessor(baseRawOptions);
+	const currentLink = bounds.getLink();
 
 	if (!currentLink?.source?.bounds || !currentLink.destination?.bounds) {
 		return {};
 	}
-	const initialLink = getLink(tag, { snapshot: "initial" });
+
+	const snapshotLink =
+		focused && props.active.closing
+			? bounds.getLink({ snapshot: "initial" })
+			: null;
 	const link =
-		focused && props.active.closing && initialLink?.destination?.bounds
-			? initialLink
+		focused && props.active.closing && snapshotLink?.destination?.bounds
+			? snapshotLink
 			: currentLink;
+
 	if (!link.destination) {
 		return {};
 	}
-	const bounds = createLocalBoundsAccessor(props, link);
+
+	const frozenDestinationTarget =
+		focused && props.active.closing && snapshotLink?.destination?.bounds
+			? snapshotLink.destination.bounds
+			: undefined;
 
 	const sourceBorderRadius = getSourceBorderRadius(link);
+
 	const focusedElementOffsetX =
 		focused && props.active.closing && currentLink.destination?.bounds
 			? link.destination.bounds.pageX - currentLink.destination.bounds.pageX
 			: 0;
+
 	const focusedElementOffsetY =
 		focused && props.active.closing && currentLink.destination?.bounds
 			? link.destination.bounds.pageY - currentLink.destination.bounds.pageY
 			: 0;
+
 	const focusedElementTranslateX = props.active.closing
 		? interpolate(
 				props.active.progress,
@@ -127,6 +107,7 @@ export function buildRevealStyles({
 				"clamp",
 			)
 		: focusedElementOffsetX;
+
 	const focusedElementTranslateY = props.active.closing
 		? interpolate(
 				props.active.progress,
@@ -161,6 +142,7 @@ export function buildRevealStyles({
 		: isVerticalDismiss
 			? Math.abs(rawNormY)
 			: 0;
+
 	const gestureSensitivity = interpolate(
 		rawDrag,
 		[0, 0.5],
@@ -182,6 +164,7 @@ export function buildRevealStyles({
 		positiveMax: ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
 		exponent: ZOOM_DRAG_TRANSLATION_EXPONENT,
 	});
+
 	const dragXScale = isHorizontalDismiss
 		? resolveDirectionalDragScale({
 				normalized: normX,
@@ -192,6 +175,7 @@ export function buildRevealStyles({
 				exponent: ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
 			})
 		: IDENTITY_DRAG_SCALE_OUTPUT[0];
+
 	const dragYScale = isVerticalDismiss
 		? resolveDirectionalDragScale({
 				normalized: normY,
@@ -202,17 +186,19 @@ export function buildRevealStyles({
 				exponent: ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
 			})
 		: IDENTITY_DRAG_SCALE_OUTPUT[1];
+
 	const dragScale = combineScales(dragXScale, dragYScale);
 
 	/* ----------------------------- Focused Screen ----------------------------- */
 
 	if (focused) {
-		const contentRaw = bounds({
+		const contentRaw = boundsAccessor({
 			...baseRawOptions,
 			method: "content",
+			...(frozenDestinationTarget ? { target: frozenDestinationTarget } : {}),
 		} as const);
 
-		const maskRaw = bounds({
+		const maskRaw = boundsAccessor({
 			...baseRawOptions,
 			method: "size",
 			space: "absolute",
@@ -324,10 +310,11 @@ export function buildRevealStyles({
 		"clamp",
 	);
 
-	const elementRaw = bounds({
+	const elementRaw = boundsAccessor({
 		...baseRawOptions,
 		method: "transform",
 		space: "relative",
+		...(frozenDestinationTarget ? { target: frozenDestinationTarget } : {}),
 	} as const);
 
 	const destinationBounds = link.destination.bounds;

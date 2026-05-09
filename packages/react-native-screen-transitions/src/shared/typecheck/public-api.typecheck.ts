@@ -130,8 +130,25 @@ const currentLink = interpolationProps.bounds.getLink(42);
 const initialLink = interpolationProps.bounds.getLink(42, {
 	snapshot: "initial",
 });
+const scopedBounds = interpolationProps.bounds({ id: 42 });
+const scopedCurrentLink = scopedBounds.getLink();
+const scopedInitialLink = scopedBounds.getLink({
+	snapshot: "initial",
+});
+const scopedMeasured = scopedBounds.getMeasured("screen-key");
+const scopedInitialSnapshot = scopedBounds.getSnapshot("screen-key");
+const scopedInterpolatedStyle: number =
+	scopedBounds.interpolateStyle("opacity");
+const scopedInterpolatedBounds: number =
+	scopedBounds.interpolateBounds("pageX");
 void currentLink;
 void initialLink;
+void scopedCurrentLink;
+void scopedInitialLink;
+void scopedMeasured;
+void scopedInitialSnapshot;
+void scopedInterpolatedStyle;
+void scopedInterpolatedBounds;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;

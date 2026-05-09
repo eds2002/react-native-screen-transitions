@@ -168,8 +168,24 @@ type BoundsBoundNavigationAccessor = {
 	navigation: BoundsNavigationAccessor;
 };
 
+export type BoundsScopedAccessors = {
+	getMeasured: (key?: string) => MeasuredEntry | null;
+	/**
+	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
+	 */
+	getSnapshot: (key?: string) => MeasuredEntry | null;
+	getLink: (options?: BoundsLinkOptions) => BoundsLink | null;
+	interpolateStyle: (property: keyof StyleProps, fallback?: number) => number;
+	interpolateBounds: (
+		property: keyof MeasuredDimensions,
+		fallbackOrTargetKey?: number | string,
+		fallback?: number,
+	) => number;
+};
+
 type BoundsCallResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
-	BoundsBoundNavigationAccessor;
+	BoundsBoundNavigationAccessor &
+	BoundsScopedAccessors;
 
 export type BoundsAccessor = {
 	<T extends BoundsOptions>(options: T): BoundsCallResult<T>;

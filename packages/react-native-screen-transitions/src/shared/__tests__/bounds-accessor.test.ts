@@ -5,6 +5,7 @@ import type { Layout } from "../types/screen.types";
 import { createBoundsAccessor } from "../utils/bounds";
 import {
 	createBounds,
+	registerMeasuredEntry,
 	registerSourceAndDestination,
 	refreshDestination,
 } from "./helpers/bounds-behavior-fixtures";
@@ -141,5 +142,33 @@ describe("bounds accessor", () => {
 
 		expect(current?.destination?.bounds.pageX).toBe(70);
 		expect(initial?.destination?.bounds.pageX).toBe(50);
+	});
+
+	it("scopes low-level helpers to a computed bounds result", () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(50, 100, 200, 400),
+		});
+		registerMeasuredEntry("card", "screen-b", createBounds(4, 8, 16, 32));
+		refreshDestination({
+			tag: "card",
+			destinationScreenKey: "screen-b",
+			destinationBounds: createBounds(70, 120, 200, 400),
+		});
+
+		const bounds = createBoundsAccessor(makeProps);
+		const card = bounds({ id: "card" });
+
+		expect(card.getLink()?.destination?.bounds.pageX).toBe(70);
+		expect(card.getLink({ snapshot: "initial" })?.destination?.bounds.pageX).toBe(
+			50,
+		);
+		expect(card.getMeasured("screen-b")?.bounds.pageX).toBe(4);
+		expect(card.getSnapshot("screen-b")?.bounds.pageX).toBe(4);
+		expect(typeof card.interpolateStyle).toBe("function");
+		expect(typeof card.interpolateBounds).toBe("function");
 	});
 });
