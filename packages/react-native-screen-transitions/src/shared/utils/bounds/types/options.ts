@@ -120,7 +120,14 @@ export type BoundsOptions = {
 	space?: BoundsSpace;
 
 	/**
-	 * The gesture offsets to apply to the bounds.
+	 * The x/y offsets to apply to the bounds.
+	 */
+	offset?: { x?: number; y?: number };
+
+	/**
+	 * The x/y offsets to apply to the bounds.
+	 *
+	 * @deprecated Use `offset` instead.
 	 */
 	gestures?: { x?: number; y?: number };
 

@@ -177,9 +177,9 @@ Install `@react-native-masked-view/masked-view` when you use `navigationMaskEnab
 
 The group keeps track of the active member id so the handoff stays aligned as focus moves between items in the same collection.
 
-## Bounds with Gestures
+## Bounds with Offsets
 
-Because `bounds()` accepts a `gestures` option, you can feed live drag offsets into the matched transform.
+Because `bounds()` accepts an `offset` option, you can feed any live x/y values into the matched transform.
 
 ```tsx
 screenStyleInterpolator: ({ bounds, active }) => {
@@ -188,7 +188,7 @@ screenStyleInterpolator: ({ bounds, active }) => {
   return {
     hero: bounds({
       id: "hero",
-      gestures: {
+      offset: {
         x: active.gesture.x,
         y: active.gesture.y,
       },
@@ -197,6 +197,8 @@ screenStyleInterpolator: ({ bounds, active }) => {
   };
 };
 ```
+
+The older `gestures` option still works as a deprecated alias. Use `offset` for new code because the values can come from gestures, scroll, animation state, or any other x/y source.
 
 This is the pattern used for the gesture-driven bounds example in the e2e app.
 

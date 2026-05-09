@@ -52,7 +52,7 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 			gestureProgressBaseline,
 			lockedSnapPoint,
 		} = runtime;
-		const activeGesture = runtime.stores.gestures.gesture.get();
+		const activeGesture = runtime.stores.gestures.active.get();
 		const activeAxis = isResolvedPanGestureDirection(activeGesture)
 			? getPanSnapAxisConfigForDirection(
 					policy.snapAxisDirections,
@@ -112,7 +112,7 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 		} = runtime;
 		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
 			participation.effectiveSnapPoints;
-		const activeGesture = runtime.stores.gestures.gesture.get();
+		const activeGesture = runtime.stores.gestures.active.get();
 		const activeAxis = isResolvedPanGestureDirection(activeGesture)
 			? getPanSnapAxisConfigForDirection(
 					policy.snapAxisDirections,

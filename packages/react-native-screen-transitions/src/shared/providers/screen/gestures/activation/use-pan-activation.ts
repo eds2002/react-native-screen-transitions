@@ -223,7 +223,7 @@ export const usePanActivation = ({
 				}
 			}
 
-			gestures.gesture.set(swipeDirection);
+			gestures.active.set(swipeDirection);
 			gestures.direction.set(swipeDirection);
 			stateManager.activate();
 		},

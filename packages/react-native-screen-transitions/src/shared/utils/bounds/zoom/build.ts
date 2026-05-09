@@ -160,7 +160,7 @@ export function buildZoomStyles({
 	const normX = props.active.gesture.normX;
 	const normY = props.active.gesture.normY;
 	const initialGesture =
-		props.active.gesture.gesture ?? props.active.gesture.direction;
+		props.active.gesture.active ?? props.active.gesture.direction;
 	const isHorizontalDismiss =
 		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
 	const isVerticalDismiss =

@@ -99,7 +99,7 @@ const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpola
 			},
 			[OPENING_TRANSFORM_BOUNDARY_ID]: bounds({
 				id: OPENING_TRANSFORM_BOUNDARY_ID,
-				gestures: { y: focused ? -y : undefined },
+				offset: { y: focused ? -y : undefined },
 			}) as any,
 		};
 	};

@@ -171,7 +171,7 @@ const createGestureStore = () =>
 		dismissing: createSharedValue(0),
 		dragging: createSharedValue(0),
 		settling: createSharedValue(0),
-		gesture: createSharedValue(null),
+		active: createSharedValue(null),
 		direction: createSharedValue(null),
 	}) as any;
 

@@ -31,8 +31,8 @@ export type GestureStoreMap = {
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
 	settling: SharedValue<number>;
-	gesture: SharedValue<ActiveGesture | null>;
-	/** @deprecated Use `gesture` instead. */
+	active: SharedValue<ActiveGesture | null>;
+	/** @deprecated Use `active` instead. */
 	direction: SharedValue<ResolvedPanGestureDirection | null>;
 
 	/**
@@ -61,7 +61,7 @@ function createGestureBag(): GestureStoreMap {
 	const dismissing = makeMutable(0);
 	const dragging = makeMutable(0);
 	const settling = makeMutable(0);
-	const gesture = makeMutable<ActiveGesture | null>(null);
+	const active = makeMutable<ActiveGesture | null>(null);
 
 	return {
 		x: makeMutable(0),
@@ -83,7 +83,7 @@ function createGestureBag(): GestureStoreMap {
 		dismissing,
 		dragging,
 		settling,
-		gesture,
+		active,
 		direction: makeMutable<ResolvedPanGestureDirection | null>(null),
 
 		// Deprecated aliases (same underlying SharedValue)
@@ -97,7 +97,7 @@ function createGestureBag(): GestureStoreMap {
 /**
  * Route-keyed gesture state used by the transition system while a screen is
  * being dragged or dismissed. It stores raw and normalized gesture values,
- * dismissal flags, and the active gesture direction. `getCachedBag()` provides
+ * dismissal flags, and the active gesture. `getCachedBag()` provides
  * a stable neutral fallback bag for cases where a route should not own live
  * gesture state.
  */
@@ -121,7 +121,7 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.dismissing);
 		cancelAnimation(bag.dragging);
 		cancelAnimation(bag.settling);
-		cancelAnimation(bag.gesture);
+		cancelAnimation(bag.active);
 		cancelAnimation(bag.direction);
 	},
 });

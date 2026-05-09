@@ -407,7 +407,7 @@ export const SharedAppleMusic = ({
 
 			const normX = active.gesture.normX;
 			const normY = active.gesture.normY;
-			const initialGesture = active.gesture.gesture ?? active.gesture.direction;
+			const initialGesture = active.gesture.active ?? active.gesture.direction;
 
 			/**
 			 * ===============================

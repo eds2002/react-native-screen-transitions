@@ -140,11 +140,11 @@ export type GestureValues = {
 	/**
 	 * The gesture that is currently active.
 	 */
-	gesture: ActiveGesture | null;
+	active: ActiveGesture | null;
 	/**
 	 * The initial pan direction that activated the gesture.
 	 *
-	 * @deprecated Use `gesture` instead.
+	 * @deprecated Use `active` instead.
 	 */
 	direction: ResolvedPanGestureDirection | null;
 

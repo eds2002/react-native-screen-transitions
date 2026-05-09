@@ -117,10 +117,10 @@ Each screen state's `gesture` object now includes pan and pinch values:
 | `scale`, `normScale` | Live pinch scale values after `gestureSensitivity` |
 | `focalX`, `focalY` | Pinch focal point in screen coordinates |
 | `raw` | Physical pan and pinch values before `gestureSensitivity` |
-| `gesture` | The active gesture: a resolved pan direction, `pinch-in`, `pinch-out`, or `null` |
+| `active` | The active gesture: a resolved pan direction, `pinch-in`, `pinch-out`, or `null` |
 | `dragging`, `dismissing` | Gesture state flags |
 
-Prefer `gesture.gesture` for new code. The older pan-only `gesture.direction` field still exists for compatibility.
+Prefer `gesture.active` for new code. The older pan-only `gesture.direction` field still exists for compatibility.
 
 ## Runtime Options From An Interpolator
 

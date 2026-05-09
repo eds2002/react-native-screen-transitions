@@ -103,6 +103,14 @@ void usePublicApiHooksTypecheck;
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
+const offsetBoundsResult = interpolationProps.bounds({
+	id: 42,
+	offset: { x: 10, y: -10 },
+});
+const deprecatedGesturesBoundsResult = interpolationProps.bounds({
+	id: 42,
+	gestures: { x: 10, y: -10 },
+});
 const absoluteRawBoundsResult = interpolationProps.bounds({
 	id: 42,
 	method: "size",
@@ -122,6 +130,7 @@ const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;
+const currentActiveGesture = interpolationProps.current.gesture.active;
 const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
 const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
@@ -133,6 +142,7 @@ const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 	},
 };
 void currentRawGestureNormX;
+void currentActiveGesture;
 void currentAnimatedSnapIndex;
 void currentSnapIndex;
 void optionsInterpolatedStyle;
@@ -209,12 +219,15 @@ const publicApiTypecheck = {
 	gestureTarget,
 	animationTarget,
 	numericBoundsResult,
+	offsetBoundsResult,
+	deprecatedGesturesBoundsResult,
 	absoluteRawBoundsResult,
 	absoluteRawBoundsWidth,
 	absoluteRawBoundsTranslateX,
 	zoomInterpolatedStyle,
 	maybeContentHeight,
 	maybeCurrentContentHeight,
+	currentActiveGesture,
 	currentSnapIndex,
 	zoomOptions,
 	navigationMaskInterpolatedStyle,

@@ -320,10 +320,13 @@ export function composeTransformRelative(
 		};
 	}
 
+	const offsetX = computeOptions.offset?.x ?? computeOptions.gestures?.x ?? 0;
+	const offsetY = computeOptions.offset?.y ?? computeOptions.gestures?.y ?? 0;
+
 	return {
 		transform: [
-			{ translateX: computeOptions.gestures?.x ?? 0 },
-			{ translateY: computeOptions.gestures?.y ?? 0 },
+			{ translateX: offsetX },
+			{ translateY: offsetY },
 			{ translateX },
 			{ translateY },
 			{ scaleX },

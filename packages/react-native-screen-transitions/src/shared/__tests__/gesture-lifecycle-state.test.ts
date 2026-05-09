@@ -49,7 +49,7 @@ const createGestureStore = (): GestureStoreMap => {
 		dismissing,
 		dragging,
 		settling: shared(0),
-		gesture: shared(null),
+		active: shared(null),
 		direction: shared(null),
 		normalizedX: normX,
 		normalizedY: normY,

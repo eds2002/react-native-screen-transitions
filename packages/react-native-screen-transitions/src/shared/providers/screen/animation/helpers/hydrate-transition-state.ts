@@ -260,7 +260,7 @@ export const hydrateTransitionState = (
 	out.gesture.dismissing = s.gesture.dismissing.get();
 	out.gesture.dragging = s.gesture.dragging.get();
 	out.gesture.settling = s.gesture.settling.get();
-	out.gesture.gesture = s.gesture.gesture.get();
+	out.gesture.active = s.gesture.active.get();
 	out.gesture.direction = s.gesture.direction.get();
 
 	const isGestureSettling =

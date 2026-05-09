@@ -80,4 +80,43 @@ describe("bounds accessor", () => {
 		expect(styles.width).toBe(100);
 		expect(styles.height).toBe(200);
 	});
+
+	it("keeps deprecated `gestures` as an offset alias", () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(50, 100, 200, 400),
+		});
+
+		const bounds = createBoundsAccessor(makeProps);
+		const styles = bounds({
+			id: "card",
+			gestures: { x: 12, y: -8 },
+		}) as any;
+
+		expect(styles.transform[0]).toEqual({ translateX: 12 });
+		expect(styles.transform[1]).toEqual({ translateY: -8 });
+	});
+
+	it("prefers `offset` over deprecated `gestures` per axis", () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(50, 100, 200, 400),
+		});
+
+		const bounds = createBoundsAccessor(makeProps);
+		const styles = bounds({
+			id: "card",
+			offset: { x: 3 },
+			gestures: { x: 12, y: -8 },
+		}) as any;
+
+		expect(styles.transform[0]).toEqual({ translateX: 3 });
+		expect(styles.transform[1]).toEqual({ translateY: -8 });
+	});
 });
