@@ -3,13 +3,14 @@ import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
-} from "../../../constants";
-import { BoundStore } from "../../../stores/bounds";
-import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
-import { prepareBoundStyles } from "../helpers/prepare-bound-styles";
-import type { BoundsOptions } from "../types/options";
+} from "../../../../constants";
+import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
+import type { BoundsLink } from "../../../../types/bounds.types";
+import { createLinkAccessor } from "../../helpers/create-link-accessor";
+import { prepareBoundStyles } from "../../helpers/prepare-bound-styles";
+import type { BoundsOptions, BoundsOptionsResult } from "../../types/options";
 import {
-	CONTAINER_REVEAL_BORDER_RADIUS,
+	REVEAL_BORDER_RADIUS,
 	toNumber,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
@@ -20,11 +21,7 @@ import {
 	ZOOM_MASK_OUTSET,
 	ZOOM_SHARED_OPTIONS,
 } from "./config";
-import {
-	getSourceBorderRadius,
-	resolveFrozenDestinationPair,
-	resolvePresentedZoomTag,
-} from "./helpers";
+import { getSourceBorderRadius } from "./helpers";
 import {
 	combineScales,
 	composeCompensatedTranslation,
@@ -32,33 +29,55 @@ import {
 	resolveDirectionalDragScale,
 	resolveDirectionalDragTranslation,
 } from "./math";
-import type {
-	BuildContainerRevealStylesParams,
-	ContainerRevealInterpolatedStyle,
-} from "./types";
+import type { BuildRevealStylesParams, RevealInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 
+type LocalBoundsAccessor = {
+	<T extends BoundsOptions>(options: T): BoundsOptionsResult<T>;
+	getMeasured: ReturnType<typeof createLinkAccessor>["getMeasured"];
+	getLink: ReturnType<typeof createLinkAccessor>["getLink"];
+};
+
+const createLocalBoundsAccessor = (
+	props: BuildRevealStylesParams["props"],
+	link: BoundsLink,
+): LocalBoundsAccessor => {
+	"worklet";
+
+	const { getMeasured, getLink } = createLinkAccessor(() => props);
+	return Object.assign(
+		<T extends BoundsOptions>(options: T): BoundsOptionsResult<T> => {
+			"worklet";
+			return prepareBoundStyles({
+				props,
+				options,
+				resolvedPair: {
+					sourceBounds: link.source?.bounds ?? null,
+					destinationBounds: link.destination?.bounds ?? null,
+					sourceStyles: link.source?.styles ?? null,
+					destinationStyles: link.destination?.styles ?? null,
+					sourceScreenKey: null,
+					destinationScreenKey: null,
+				},
+			});
+		},
+		{ getMeasured, getLink },
+	);
+};
+
 /* -------------------------------------------------------------------------- */
-/*                       BUILD CONTAINER REVEAL STYLES                        */
+/*                              BUILD REVEAL STYLES                           */
 /* -------------------------------------------------------------------------- */
 
-export function buildContainerRevealStyles({
+export function buildRevealStyles({
 	tag,
 	props,
-}: BuildContainerRevealStylesParams): ContainerRevealInterpolatedStyle {
+}: BuildRevealStylesParams): RevealInterpolatedStyle {
 	"worklet";
 
 	if (!tag) {
 		return {};
-	}
-
-	const isGroup = tag.includes(":");
-	let buildEffectiveTag = tag;
-	if (isGroup) {
-		const group = tag.split(":")[0];
-		const groupActiveTag = BoundStore.group.getActiveId(group)?.split(":")[0];
-		buildEffectiveTag = `${group}:${groupActiveTag ?? tag.split(":")[1]}`;
 	}
 
 	/* ------------------------------ Shared Setup ------------------------------ */
@@ -68,59 +87,37 @@ export function buildContainerRevealStyles({
 		progress,
 		layouts: { screen: screenLayout },
 	} = props;
-	const isEnteringTransition = !props.next;
-	const currentRouteKey = props.current?.route.key;
-	const previousRouteKey = props.previous?.route.key;
-	const nextRouteKey = props.next?.route.key;
-	const activeRouteKey = props.active.route.key;
-
-	const requestedPair = BoundStore.link.getPair(buildEffectiveTag, {
-		currentScreenKey: currentRouteKey,
-		previousScreenKey: previousRouteKey,
-		nextScreenKey: nextRouteKey,
-		entering: isEnteringTransition,
-	});
-	const presented = resolvePresentedZoomTag({
-		requestedTag: buildEffectiveTag,
-		activeRouteKey,
-		requestedPair,
-		currentScreenKey: currentRouteKey,
-		previousScreenKey: previousRouteKey,
-		nextScreenKey: nextRouteKey,
-		entering: isEnteringTransition,
-	});
-
-	// Grouped zoom can retarget before the new active member has measured.
-	// Keep presenting the last measured tag so mask/content styles stay stable.
-	buildEffectiveTag = presented.tag;
 
 	const baseRawOptions = {
-		id: buildEffectiveTag,
+		id: tag,
 		raw: true,
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
 	} as const;
 
-	const linkPair = focused
-		? resolveFrozenDestinationPair({
-				cacheKey: `${activeRouteKey}:${buildEffectiveTag}`,
-				pair: presented.pair,
-				closing: !!props.active.closing,
-			})
-		: presented.pair;
+	const { getLink } = createLinkAccessor(() => props);
+	const currentLink = getLink(tag);
 
-	if (!linkPair.sourceBounds || !linkPair.destinationBounds) {
+	if (!currentLink?.source?.bounds || !currentLink.destination?.bounds) {
 		return {};
 	}
+	const initialLink = getLink(tag, { snapshot: "initial" });
+	const link =
+		focused && props.active.closing && initialLink?.destination?.bounds
+			? initialLink
+			: currentLink;
+	if (!link.destination) {
+		return {};
+	}
+	const bounds = createLocalBoundsAccessor(props, link);
 
+	const sourceBorderRadius = getSourceBorderRadius(link);
 	const focusedElementOffsetX =
-		focused && props.active.closing && presented.pair.destinationBounds
-			? linkPair.destinationBounds.pageX -
-				presented.pair.destinationBounds.pageX
+		focused && props.active.closing && currentLink.destination?.bounds
+			? link.destination.bounds.pageX - currentLink.destination.bounds.pageX
 			: 0;
 	const focusedElementOffsetY =
-		focused && props.active.closing && presented.pair.destinationBounds
-			? linkPair.destinationBounds.pageY -
-				presented.pair.destinationBounds.pageY
+		focused && props.active.closing && currentLink.destination?.bounds
+			? link.destination.bounds.pageY - currentLink.destination.bounds.pageY
 			: 0;
 	const focusedElementTranslateX = props.active.closing
 		? interpolate(
@@ -139,30 +136,11 @@ export function buildContainerRevealStyles({
 			)
 		: focusedElementOffsetY;
 
-	const sourceBorderRadius = getSourceBorderRadius(linkPair);
-
 	const sourceVisibilityStyle = {
-		[buildEffectiveTag]: {
+		[tag]: {
 			style: VISIBLE_STYLE,
 		},
 	} satisfies TransitionInterpolatedStyle;
-
-	/**
-	 * Local bounds compute helper for container reveal.
-	 *
-	 * If you're building a custom transition, prefer the public `bounds()` helper.
-	 * We keep a local version here so container reveal can share the same
-	 * low-level compute path without re-entering the decorated public accessor.
-	 */
-	const bounds = <T extends BoundsOptions>(options: T) => {
-		"worklet";
-
-		return prepareBoundStyles({
-			props,
-			options,
-			resolvedPair: linkPair,
-		});
-	};
 
 	/* --------------------------- Gesture / Drag Values ------------------------- */
 
@@ -174,10 +152,10 @@ export function buildContainerRevealStyles({
 	const rawNormY = props.active.gesture.raw.normY;
 	const initialGesture =
 		props.active.gesture.active ?? props.active.gesture.direction;
-	const isHorizontalDismiss =
-		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
-	const isVerticalDismiss =
-		initialGesture === "vertical" || initialGesture === "vertical-inverted";
+
+	const isHorizontalDismiss = initialGesture?.includes("horizontal");
+	const isVerticalDismiss = initialGesture?.includes("vertical");
+
 	const rawDrag = isHorizontalDismiss
 		? Math.abs(rawNormX)
 		: isVerticalDismiss
@@ -231,13 +209,11 @@ export function buildContainerRevealStyles({
 	if (focused) {
 		const contentRaw = bounds({
 			...baseRawOptions,
-			anchor: ZOOM_SHARED_OPTIONS.anchor,
 			method: "content",
 		} as const);
 
 		const maskRaw = bounds({
 			...baseRawOptions,
-			anchor: ZOOM_SHARED_OPTIONS.anchor,
 			method: "size",
 			space: "absolute",
 			target: "fullscreen",
@@ -250,10 +226,7 @@ export function buildContainerRevealStyles({
 		const focusedMaskBorderRadius = interpolate(
 			progress,
 			[0, 1],
-			[
-				sourceBorderRadius,
-				props.active.settled ? 0 : CONTAINER_REVEAL_BORDER_RADIUS,
-			],
+			[sourceBorderRadius, props.active.settled ? 0 : REVEAL_BORDER_RADIUS],
 			"clamp",
 		);
 
@@ -278,14 +251,16 @@ export function buildContainerRevealStyles({
 				contentTranslateX +
 				(1 - contentScale) * (maskCenterX - contentCenterX)) /
 			safeContentScale;
+
 		const compensatedMaskTranslateY =
 			(maskTranslateY -
 				contentTranslateY +
 				(1 - contentScale) * (maskCenterY - contentCenterY)) /
 			safeContentScale;
+
 		const compensatedMaskScale = dragScale / safeContentScale;
 
-		const focusedStyles: ContainerRevealInterpolatedStyle = {
+		const focusedStyles: RevealInterpolatedStyle = {
 			content: {
 				style: {
 					transform: [
@@ -322,7 +297,7 @@ export function buildContainerRevealStyles({
 
 		return {
 			...focusedStyles,
-			[buildEffectiveTag]: {
+			[tag]: {
 				style: {
 					...VISIBLE_STYLE,
 					position: "relative",
@@ -355,7 +330,7 @@ export function buildContainerRevealStyles({
 		space: "relative",
 	} as const);
 
-	const destinationBounds = linkPair.destinationBounds;
+	const destinationBounds = link.destination.bounds;
 	const elementCenterX = destinationBounds.pageX + destinationBounds.width / 2;
 	const elementCenterY = destinationBounds.pageY + destinationBounds.height / 2;
 
@@ -426,7 +401,7 @@ export function buildContainerRevealStyles({
 				pointerEvents: "none",
 			},
 		},
-		[buildEffectiveTag]: {
+		[tag]: {
 			style: resolvedElementStyle,
 		},
 	};

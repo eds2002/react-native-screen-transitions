@@ -101,7 +101,8 @@ That is the low-level API: measure a matching boundary pair, ask `bounds()` for 
 | `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Destination target |
 | `anchor` | `"topLeading"` through `"bottomTrailing"` | Matching anchor point |
 | `scaleMode` | `"match" \| "none" \| "uniform"` | Aspect-ratio behavior |
-| `gestures` | `{ x?: number; y?: number }` | Inject live gesture offsets |
+| `offset` | `{ x?: number; y?: number }` | Add live x/y offsets from gestures, scroll, or animation state |
+| `gestures` | `{ x?: number; y?: number }` | Deprecated alias for `offset` |
 | `raw` | `boolean` | Return raw values instead of style props |
 | `space` | `"relative" \| "absolute"` | `absolute` is mainly for internal navigation helpers |
 
@@ -213,6 +214,7 @@ const measured = bounds.getMeasured("hero");
 The accessor also exposes:
 
 - `getLink(id)` to inspect the current source and destination pair
+- `getLink(id, { snapshot: "initial" })` to inspect the first truthy source and destination pair captured for that link
 - `getSnapshot(id)` as a deprecated alias for `getMeasured(id)`
 - `interpolateStyle(id, property, fallback?)`
 - `interpolateBounds(id, property, fallbackOrTargetKey?, fallback?)`

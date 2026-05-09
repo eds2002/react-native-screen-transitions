@@ -5,7 +5,7 @@ import {
 } from "../constants";
 import type { ScreenInterpolationProps } from "../types/animation.types";
 import type { Layout } from "../types/screen.types";
-import { buildZoomStyles } from "../utils/bounds/zoom/build";
+import { buildZoomStyles } from "../utils/bounds/navigation/zoom/build";
 import {
 	createBounds,
 	registerSourceAndDestination,

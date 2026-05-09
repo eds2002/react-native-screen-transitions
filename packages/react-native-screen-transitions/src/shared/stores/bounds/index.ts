@@ -1,16 +1,14 @@
 import { clear, clearByAncestor, clearByBranch } from "./internals/clear";
+import { getEntry, removeEntry, setEntry } from "./internals/entries";
 import { getGroupActiveId, setGroupActiveId } from "./internals/groups";
 import {
 	getActiveLink,
-	getEntry,
 	getPendingLink,
 	hasDestinationLink,
 	hasSourceLink,
-	removeEntry,
 	setDestination,
-	setEntry,
 	setSource,
-} from "./internals/registry";
+} from "./internals/links";
 import { resolveTransitionPair } from "./internals/resolver";
 import type { MeasuredEntry } from "./types";
 

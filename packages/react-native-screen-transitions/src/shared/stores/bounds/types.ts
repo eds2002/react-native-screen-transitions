@@ -48,6 +48,8 @@ export type ScreenIdentifier = {
 export type TagLink = {
 	source: ScreenIdentifier & MeasuredEntry;
 	destination: (ScreenIdentifier & MeasuredEntry) | null;
+	initialSource?: ScreenIdentifier & MeasuredEntry;
+	initialDestination?: ScreenIdentifier & MeasuredEntry;
 };
 
 export type ResolveTransitionContext = {

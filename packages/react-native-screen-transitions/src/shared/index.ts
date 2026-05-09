@@ -48,7 +48,7 @@ export type {
 	AnimatedViewStyle,
 	AnimationConfig,
 	BoundsNavigationAccessor,
-	BoundsNavigationContainerRevealStyle,
+	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOpacityRange,
 	BoundsNavigationZoomOpacityRanges,
 	BoundsNavigationZoomOptions,

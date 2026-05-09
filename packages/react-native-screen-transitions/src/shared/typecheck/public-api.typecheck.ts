@@ -7,7 +7,7 @@ import {
 	createBlankStackNavigator,
 } from "../../blank-stack";
 import type {
-	BoundsNavigationContainerRevealStyle,
+	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
 	ScreenAnimationTarget,
@@ -122,9 +122,16 @@ const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
 	.navigation.zoom({
 		target: "bound",
 	});
-const containerRevealInterpolatedStyle: BoundsNavigationContainerRevealStyle =
-	interpolationProps.bounds({ id: 42 }).navigation.containerReveal();
-void containerRevealInterpolatedStyle;
+const revealInterpolatedStyle: BoundsNavigationRevealStyle = interpolationProps
+	.bounds({ id: 42 })
+	.navigation.reveal();
+void revealInterpolatedStyle;
+const currentLink = interpolationProps.bounds.getLink(42);
+const initialLink = interpolationProps.bounds.getLink(42, {
+	snapshot: "initial",
+});
+void currentLink;
+void initialLink;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;

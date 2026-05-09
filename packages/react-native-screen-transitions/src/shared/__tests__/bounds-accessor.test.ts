@@ -6,6 +6,7 @@ import { createBoundsAccessor } from "../utils/bounds";
 import {
 	createBounds,
 	registerSourceAndDestination,
+	refreshDestination,
 } from "./helpers/bounds-behavior-fixtures";
 
 const screenLayout = {
@@ -118,5 +119,27 @@ describe("bounds accessor", () => {
 
 		expect(styles.transform[0]).toEqual({ translateX: 3 });
 		expect(styles.transform[1]).toEqual({ translateY: -8 });
+	});
+
+	it('returns the first stored link when `snapshot: "initial"` is requested', () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(50, 100, 200, 400),
+		});
+		refreshDestination({
+			tag: "card",
+			destinationScreenKey: "screen-b",
+			destinationBounds: createBounds(70, 120, 200, 400),
+		});
+
+		const bounds = createBoundsAccessor(makeProps);
+		const current = bounds.getLink("card");
+		const initial = bounds.getLink("card", { snapshot: "initial" });
+
+		expect(current?.destination?.bounds.pageX).toBe(70);
+		expect(initial?.destination?.bounds.pageX).toBe(50);
 	});
 });

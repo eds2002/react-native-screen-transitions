@@ -1,7 +1,7 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
 import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
-import { hasSourceLink } from "../../../stores/bounds/internals/registry";
+import { hasSourceLink } from "../../../stores/bounds/internals/links";
 import { GestureStore } from "../../../stores/gesture.store";
 import type { BoundaryId, MeasureParams } from "../types";
 

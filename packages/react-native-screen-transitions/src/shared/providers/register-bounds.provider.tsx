@@ -15,12 +15,12 @@ import { applyMeasuredBoundsWrites } from "../components/create-boundary-compone
 import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
+import { getEntry } from "../stores/bounds/internals/entries";
 import {
-	getEntry,
 	getPendingLink,
 	hasDestinationLink,
 	hasSourceLink,
-} from "../stores/bounds/internals/registry";
+} from "../stores/bounds/internals/links";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles/styles";
 import createProvider from "../utils/create-provider";
 import { useDescriptorDerivations, useDescriptors } from "./screen/descriptors";

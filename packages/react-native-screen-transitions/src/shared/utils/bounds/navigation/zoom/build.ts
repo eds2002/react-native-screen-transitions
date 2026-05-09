@@ -4,11 +4,11 @@ import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
-} from "../../../constants";
-import { BoundStore } from "../../../stores/bounds";
-import type { TransitionInterpolatedStyle } from "../../../types/animation.types";
-import { prepareBoundStyles } from "../helpers/prepare-bound-styles";
-import type { BoundsOptions } from "../types/options";
+} from "../../../../constants";
+import { BoundStore } from "../../../../stores/bounds";
+import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
+import { prepareBoundStyles } from "../../helpers/prepare-bound-styles";
+import type { BoundsOptions } from "../../types/options";
 import {
 	toNumber,
 	ZOOM_DRAG_RESISTANCE,

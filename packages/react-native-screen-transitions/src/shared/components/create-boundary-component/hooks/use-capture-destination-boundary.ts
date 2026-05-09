@@ -13,7 +13,7 @@ import {
 	getPendingLink,
 	hasDestinationLink,
 	hasSourceLink,
-} from "../../../stores/bounds/internals/registry";
+} from "../../../stores/bounds/internals/links";
 import { SystemStore } from "../../../stores/system.store";
 import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
 import type { BoundaryId, MeasureParams } from "../types";

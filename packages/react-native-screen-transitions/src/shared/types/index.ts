@@ -16,7 +16,7 @@ export type {
 	BoundsAccessor,
 	BoundsMethod,
 	BoundsNavigationAccessor,
-	BoundsNavigationContainerRevealStyle,
+	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOpacityRange,
 	BoundsNavigationZoomOpacityRanges,
 	BoundsNavigationZoomOptions,

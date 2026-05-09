@@ -1,8 +1,8 @@
 import { interpolate, makeMutable } from "react-native-reanimated";
-import { resolveTransitionPair } from "../../../stores/bounds/internals/resolver";
-import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
-import type { Layout } from "../../../types/screen.types";
-import type { BoundsOptions } from "../types/options";
+import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
+import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
+import type { Layout } from "../../../../types/screen.types";
+import type { BoundsOptions } from "../../types/options";
 import {
 	ZOOM_BACKGROUND_SCALE,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,

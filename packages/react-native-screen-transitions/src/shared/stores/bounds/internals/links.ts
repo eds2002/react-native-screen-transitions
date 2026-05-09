@@ -1,61 +1,19 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import type {
-	EntryPatch,
-	NavigatorKey,
-	ScreenEntry,
-	ScreenKey,
-	TagID,
-	TagLink,
-} from "../types";
 import {
-	applyEntryPatch,
-	ensureScreenEntry,
-	ensureTagState,
 	findLatestPendingSourceLinkIndex,
 	findLinkIndexForDestinationWrite,
-	findMatchingScreenEntry,
 	hasLinkSide,
 	isCompletedLinkForScreenKey,
 	isSameScreenFamily,
-	pruneTagState,
+	resolveLinkSnapshot,
 	selectSourceUpdateTargetIndex,
-} from "./registry.helpers";
+} from "../helpers/link.helpers";
+import { ensureTagState } from "../helpers/tag-state.helpers";
+import type { NavigatorKey, ScreenKey, TagID, TagLink } from "../types";
 import { type RegistryState, registry } from "./state";
 
 type LinkSourceWriteMode = "capture" | "refresh";
 type LinkDestinationWriteMode = "attach" | "refresh";
-
-function getEntry(tag: TagID, key: ScreenKey): ScreenEntry | null {
-	"worklet";
-	return findMatchingScreenEntry(registry.get()[tag], key);
-}
-
-function setEntry(tag: TagID, screenKey: ScreenKey, patch: EntryPatch) {
-	"worklet";
-	registry.modify(<T extends RegistryState>(state: T): T => {
-		"worklet";
-		const tagState = ensureTagState(state, tag);
-		const entry = ensureScreenEntry(tagState, screenKey);
-		applyEntryPatch(entry, patch);
-		return state;
-	});
-}
-
-function removeEntry(tag: TagID, screenKey: ScreenKey) {
-	"worklet";
-	registry.modify(<T extends RegistryState>(state: T): T => {
-		"worklet";
-		const tagState = state[tag];
-		if (!tagState?.screens[screenKey]) {
-			return state;
-		}
-
-		delete tagState.screens[screenKey];
-		pruneTagState(state, tag);
-
-		return state;
-	});
-}
 
 function setSource(
 	mode: LinkSourceWriteMode,
@@ -91,10 +49,21 @@ function setSource(
 				isSameScreenFamily(topLink.source, source)
 			) {
 				topLink.source = source;
+
+				// Repeated capture can refresh a pending source before a
+				// destination attaches; keep the first usable source for snapshots.
+				if (!topLink.initialSource) {
+					topLink.initialSource = source;
+				}
+
 				return state;
 			}
 
-			stack.push({ source, destination: null });
+			stack.push({
+				source,
+				destination: null,
+				initialSource: source,
+			});
 
 			return state;
 		}
@@ -104,7 +73,15 @@ function setSource(
 		const targetIndex = selectSourceUpdateTargetIndex(stack, screenKey);
 		if (targetIndex === -1) return state;
 
-		stack[targetIndex].source = source;
+		const link = stack[targetIndex];
+
+		link.source = source;
+
+		// Refresh updates the live source, but initial snapshot reads should keep
+		// returning the first captured source for this link.
+		if (!link.initialSource) {
+			link.initialSource = source;
+		}
 
 		return state;
 	});
@@ -126,14 +103,17 @@ function setDestination(
 		"worklet";
 		const stack = state[tag]?.linkStack;
 		if (!stack || stack.length === 0) return state;
+
 		const targetIndex = findLinkIndexForDestinationWrite(
 			stack,
 			mode === "refresh" ? screenKey : undefined,
 			expectedSourceScreenKey,
 		);
+
 		if (targetIndex === -1) return state;
 
-		stack[targetIndex].destination = {
+		const link = stack[targetIndex];
+		const destination = {
 			screenKey,
 			ancestorKeys,
 			navigatorKey,
@@ -142,11 +122,22 @@ function setDestination(
 			styles,
 		};
 
+		link.destination = destination;
+		// Destination bounds can refresh as layout or scroll state settles; keep
+		// the first usable destination for close-time delta calculations.
+		if (!link.initialDestination) {
+			link.initialDestination = destination;
+		}
+
 		return state;
 	});
 }
 
-function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
+function getActiveLink(
+	tag: TagID,
+	screenKey?: ScreenKey,
+	snapshot?: "initial",
+): TagLink | null {
 	"worklet";
 	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
@@ -156,13 +147,13 @@ function getActiveLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
 
 	if (!screenKey) {
 		const lastLink = stack[stack.length - 1];
-		return lastLink ? lastLink : null;
+		return lastLink ? resolveLinkSnapshot(lastLink, snapshot) : null;
 	}
 
 	for (let i = stack.length - 1; i >= 0; i--) {
 		const link = stack[i];
 		if (isCompletedLinkForScreenKey(link, screenKey)) {
-			return link;
+			return resolveLinkSnapshot(link, snapshot);
 		}
 	}
 
@@ -198,12 +189,9 @@ function hasDestinationLink(tag: TagID, screenKey: ScreenKey): boolean {
 
 export {
 	getActiveLink,
-	getEntry,
 	getPendingLink,
 	hasDestinationLink,
 	hasSourceLink,
-	removeEntry,
 	setDestination,
-	setEntry,
 	setSource,
 };

@@ -127,6 +127,23 @@ export const registerSourceAndDestination = ({
 	);
 };
 
+export const refreshDestination = ({
+	tag,
+	destinationScreenKey,
+	destinationBounds,
+}: {
+	tag: string;
+	destinationScreenKey: string;
+	destinationBounds: Snapshot["bounds"];
+}) => {
+	BoundStore.link.setDestination(
+		"refresh",
+		tag,
+		destinationScreenKey,
+		destinationBounds,
+	);
+};
+
 type ExpectedResolvedPair = {
 	sourceScreenKey?: string | null;
 	destinationScreenKey?: string | null;

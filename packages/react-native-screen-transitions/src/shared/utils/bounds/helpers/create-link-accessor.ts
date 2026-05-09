@@ -1,10 +1,11 @@
-import {
-	getActiveLink,
-	getEntry,
-} from "../../../stores/bounds/internals/registry";
+import { getEntry } from "../../../stores/bounds/internals/entries";
+import { getActiveLink } from "../../../stores/bounds/internals/links";
 import type { MeasuredEntry } from "../../../stores/bounds/types";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
-import type { BoundsLink } from "../../../types/bounds.types";
+import type {
+	BoundsLink,
+	BoundsLinkOptions,
+} from "../../../types/bounds.types";
 import type { BoundId } from "../types/options";
 
 type GetProps = () => Omit<ScreenInterpolationProps, "bounds">;
@@ -12,7 +13,7 @@ type GetProps = () => Omit<ScreenInterpolationProps, "bounds">;
 export type LinkAccessor = {
 	getMeasured: (tag: BoundId, key?: string) => MeasuredEntry | null;
 	getSnapshot: (tag: BoundId, key?: string) => MeasuredEntry | null;
-	getLink: (tag: BoundId) => BoundsLink | null;
+	getLink: (tag: BoundId, options?: BoundsLinkOptions) => BoundsLink | null;
 };
 
 export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
@@ -30,10 +31,17 @@ export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
 		return getMeasured(tag, key);
 	};
 
-	const getLink = (tag: BoundId): BoundsLink | null => {
+	const getLink = (
+		tag: BoundId,
+		options?: BoundsLinkOptions,
+	): BoundsLink | null => {
 		"worklet";
 		const props = getProps();
-		const link = getActiveLink(String(tag), props.current?.route.key);
+		const link = getActiveLink(
+			String(tag),
+			props.current?.route.key,
+			options?.snapshot,
+		);
 		if (!link) return null;
 		return {
 			source: link.source

@@ -34,6 +34,10 @@ export type BoundsLink = {
 	destination: BoundEntry | null;
 };
 
+export type BoundsLinkOptions = {
+	snapshot?: "initial";
+};
+
 export type BoundsNavigationZoomOptions = {
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
 	debug?: boolean;
@@ -153,11 +157,11 @@ export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 };
 
-export type BoundsNavigationContainerRevealStyle = BoundsNavigationZoomStyle;
+export type BoundsNavigationRevealStyle = BoundsNavigationZoomStyle;
 
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
-	containerReveal: () => BoundsNavigationContainerRevealStyle;
+	reveal: () => BoundsNavigationRevealStyle;
 };
 
 type BoundsBoundNavigationAccessor = {
@@ -174,7 +178,7 @@ export type BoundsAccessor = {
 	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
 	 */
 	getSnapshot: (id: BoundId, key?: string) => MeasuredEntry | null;
-	getLink: (id: BoundId) => BoundsLink | null;
+	getLink: (id: BoundId, options?: BoundsLinkOptions) => BoundsLink | null;
 	interpolateStyle: (
 		id: BoundId,
 		property: keyof StyleProps,

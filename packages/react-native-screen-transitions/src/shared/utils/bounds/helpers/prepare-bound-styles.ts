@@ -1,8 +1,8 @@
+import { getEntry } from "../../../stores/bounds/internals/entries";
 import {
 	getGroupActiveId,
 	setGroupActiveId,
 } from "../../../stores/bounds/internals/groups";
-import { getEntry } from "../../../stores/bounds/internals/registry";
 import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";

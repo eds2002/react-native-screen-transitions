@@ -1,110 +1,8 @@
-import { findLatestIndex } from "../helpers/find-latest";
-import { hasAnyKeys } from "../helpers/keys";
-import { matchesScreenKey } from "../helpers/matching";
-import type {
-	EntryPatch,
-	ScreenEntry,
-	ScreenKey,
-	TagID,
-	TagLink,
-	TagState,
-} from "../types";
-import type { RegistryState } from "./state";
+import type { ScreenKey, TagLink } from "../types";
+import { findLatestIndex } from "./find-latest";
+import { matchesScreenKey } from "./matching";
 
-type EntryPatchOptionalField =
-	| "boundaryConfig"
-	| "ancestorKeys"
-	| "navigatorKey"
-	| "ancestorNavigatorKeys";
 type LinkSide = "source" | "destination";
-
-const ENTRY_PATCH_OPTIONAL_FIELDS = [
-	"boundaryConfig",
-	"ancestorKeys",
-	"navigatorKey",
-	"ancestorNavigatorKeys",
-] as const satisfies readonly EntryPatchOptionalField[];
-
-export const ensureTagState = (state: RegistryState, tag: TagID): TagState => {
-	"worklet";
-	if (!state[tag]) {
-		state[tag] = {
-			screens: {},
-			linkStack: [],
-		};
-	}
-	return state[tag];
-};
-
-export const ensureScreenEntry = (
-	tagState: TagState,
-	screenKey: ScreenKey,
-): ScreenEntry => {
-	"worklet";
-	if (!tagState.screens[screenKey]) {
-		tagState.screens[screenKey] = {
-			bounds: null,
-			styles: {},
-		};
-	}
-	return tagState.screens[screenKey];
-};
-
-export const pruneTagState = (state: RegistryState, tag: TagID) => {
-	"worklet";
-	const tagState = state[tag];
-	if (!tagState) return;
-
-	if (!hasAnyKeys(tagState.screens) && tagState.linkStack.length === 0) {
-		delete state[tag];
-	}
-};
-
-export const applyEntryPatch = (entry: ScreenEntry, patch: EntryPatch) => {
-	"worklet";
-	if (patch.bounds !== undefined) {
-		entry.bounds = patch.bounds;
-	}
-
-	if (patch.styles !== undefined) {
-		entry.styles = patch.styles ?? {};
-	}
-
-	const target = entry as Record<EntryPatchOptionalField, unknown>;
-	for (let i = 0; i < ENTRY_PATCH_OPTIONAL_FIELDS.length; i++) {
-		const field = ENTRY_PATCH_OPTIONAL_FIELDS[i];
-		const value = patch[field];
-		if (value === undefined) continue;
-
-		if (value === null) {
-			delete target[field];
-		} else {
-			target[field] = value;
-		}
-	}
-};
-
-export const findMatchingScreenEntry = (
-	tagState: TagState | undefined,
-	screenKey: ScreenKey,
-): ScreenEntry | null => {
-	"worklet";
-	if (!tagState) return null;
-
-	const direct = tagState.screens[screenKey];
-	if (direct) {
-		return direct;
-	}
-
-	for (const entryScreenKey in tagState.screens) {
-		const entry = tagState.screens[entryScreenKey];
-		if (entry.ancestorKeys?.includes(screenKey)) {
-			return entry;
-		}
-	}
-
-	return null;
-};
 
 export const isSameScreenFamily = (
 	a: { screenKey: ScreenKey; ancestorKeys?: ScreenKey[] },
@@ -117,6 +15,25 @@ export const isSameScreenFamily = (
 		(b.ancestorKeys?.includes(a.screenKey) ?? false)
 	);
 };
+
+// Link selection still happens against the live stack. Snapshot reads only swap
+// the selected link's measured sides to the first captured source/destination.
+export function resolveLinkSnapshot(
+	link: TagLink,
+	snapshot?: "initial",
+): TagLink {
+	"worklet";
+
+	if (snapshot !== "initial") {
+		return link;
+	}
+
+	return {
+		...link,
+		source: link.initialSource ?? link.source,
+		destination: link.initialDestination ?? link.destination,
+	};
+}
 
 export function findLatestPendingSourceLinkIndex(
 	stack: TagLink[],

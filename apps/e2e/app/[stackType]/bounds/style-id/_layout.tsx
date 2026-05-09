@@ -4,22 +4,12 @@ import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { STYLE_ID_GROUP, type StyleIdMode } from "./constants";
 
-const getRouteParam = (route: { params?: object } | undefined, key: string) => {
+const toStyleIdBoundTag = (route?: { params?: object }) => {
 	"worklet";
 	const params = route?.params as Record<string, unknown> | undefined;
-	const value = params?.[key];
-	return typeof value === "string" ? value : "";
-};
-
-const getRouteModeParam = (
-	route: { params?: object } | undefined,
-): StyleIdMode | "" => {
-	"worklet";
-	const mode = getRouteParam(route, "mode");
-	if (mode === "single" || mode === "group") return mode;
-	return "";
+	const rawId = params?.id;
+	return typeof rawId === "string" ? rawId : "";
 };
 
 export default function StyleIdBoundsLayout() {
@@ -47,14 +37,9 @@ export default function StyleIdBoundsLayout() {
 					}) => {
 						"worklet";
 						const boundTag =
-							getRouteParam(active.route, "id") ||
-							getRouteParam(next?.route, "id") ||
-							getRouteParam(current.route, "id");
-						const mode =
-							getRouteModeParam(active.route) ||
-							getRouteModeParam(next?.route) ||
-							getRouteModeParam(current.route) ||
-							"group";
+							toStyleIdBoundTag(current.route) ||
+							toStyleIdBoundTag(active.route) ||
+							toStyleIdBoundTag(next?.route);
 
 						if (!boundTag) {
 							return {};
@@ -62,8 +47,7 @@ export default function StyleIdBoundsLayout() {
 
 						const revealStyles = bounds({
 							id: boundTag,
-							group: mode === "group" ? STYLE_ID_GROUP : undefined,
-						}).navigation.containerReveal();
+						}).navigation.reveal();
 
 						if (focused) {
 							return {

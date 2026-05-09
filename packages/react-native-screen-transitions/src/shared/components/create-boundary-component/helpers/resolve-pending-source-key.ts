@@ -1,7 +1,7 @@
 import {
 	getPendingLink,
 	hasSourceLink,
-} from "../../../stores/bounds/internals/registry";
+} from "../../../stores/bounds/internals/links";
 
 export const resolvePendingSourceKey = (
 	sharedBoundTag: string,

@@ -4,7 +4,7 @@ import {
 	type MeasuredDimensions,
 } from "react-native-reanimated";
 import { ENTER_RANGE, EXIT_RANGE } from "../../../constants";
-import { getEntry } from "../../../stores/bounds/internals/registry";
+import { getEntry } from "../../../stores/bounds/internals/entries";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type { BoundId } from "../types/options";
 import type { LinkAccessor } from "./create-link-accessor";

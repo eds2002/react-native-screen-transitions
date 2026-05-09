@@ -1,9 +1,9 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import { setEntry } from "../../../stores/bounds/internals/entries";
 import {
 	setDestination,
-	setEntry,
 	setSource,
-} from "../../../stores/bounds/internals/registry";
+} from "../../../stores/bounds/internals/links";
 
 type ApplyMeasuredBoundsWritesParams = {
 	sharedBoundTag: string;
