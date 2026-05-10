@@ -159,7 +159,7 @@ describe("applyMeasuredBoundsWrites", () => {
 			shouldSetSource: true,
 		});
 
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		const snapshot = BoundStore.entry.get("card", "screen-a");
 		expect(link?.source.bounds).toEqual(bounds);
 		expect(link?.source.styles).toEqual(styles);
@@ -178,7 +178,7 @@ describe("BoundStore.link.setSource", () => {
 
 		BoundStore.link.setSource("capture", "card", "screen-a", bounds);
 
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		expect(link).not.toBeNull();
 		expect(link?.source.screenKey).toBe("screen-a");
 	});
@@ -188,7 +188,7 @@ describe("BoundStore.link.setSource", () => {
 
 		BoundStore.link.setSource("capture", "card", "screen-a", bounds);
 
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		expect(link?.source.screenKey).toBe("screen-a");
 		expect(link?.destination).toBeNull();
 	});
@@ -201,7 +201,7 @@ describe("BoundStore.link.setSource", () => {
 		BoundStore.link.setSource("capture", "card", "screen-b", boundsB);
 
 		// Most recent link should be from screen-b
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		expect(link?.source.screenKey).toBe("screen-b");
 	});
 
@@ -215,7 +215,7 @@ describe("BoundStore.link.setSource", () => {
 		// Completing destination once should finalize the single coalesced pending link.
 		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds(200, 200));
 
-		const link = BoundStore.link.getActive("card", "screen-b");
+		const link = BoundStore.link.getMatched("card", "screen-b");
 		expect(link?.source.screenKey).toBe("screen-a");
 		expect(link?.source.bounds).toEqual(second);
 		expect(link?.destination?.screenKey).toBe("screen-b");
@@ -224,15 +224,15 @@ describe("BoundStore.link.setSource", () => {
 
 describe("BoundStore.link.setSource refresh", () => {
 	it("updates source in place and preserves destination", () => {
-		const initialSource = createBounds(0, 0, 100, 100);
+		const sourceBounds = createBounds(0, 0, 100, 100);
 		const destination = createBounds(100, 100, 200, 200);
 		const updatedSource = createBounds(20, 30, 120, 120);
 
-		BoundStore.link.setSource("capture", "card", "screen-a", initialSource);
+		BoundStore.link.setSource("capture", "card", "screen-a", sourceBounds);
 		BoundStore.link.setDestination("attach", "card", "screen-b", destination);
 		BoundStore.link.setSource("refresh", "card", "screen-a", updatedSource);
 
-		const link = BoundStore.link.getActive("card", "screen-a");
+		const link = BoundStore.link.getMatched("card", "screen-a");
 		expect(link?.source.bounds).toEqual(updatedSource);
 		expect(link?.destination?.screenKey).toBe("screen-b");
 		expect(link?.destination?.bounds).toEqual(destination);
@@ -252,10 +252,10 @@ describe("BoundStore.link.setSource refresh", () => {
 
 		BoundStore.link.setSource("refresh", "card", "screen-a", updatedSource);
 
-		const completed = BoundStore.link.getActive("card", "screen-b");
+		const completed = BoundStore.link.getMatched("card", "screen-b");
 		expect(completed?.source.bounds).toEqual(updatedSource);
 
-		const latest = BoundStore.link.getActive("card");
+		const latest = BoundStore.link.getMatched("card");
 		expect(latest?.destination).toBeNull();
 		expect(latest?.source.bounds).toEqual(pendingSource);
 	});
@@ -267,7 +267,7 @@ describe("BoundStore.link.setSource refresh", () => {
 		BoundStore.link.setSource("capture", "card", "screen-a", pendingSource);
 		BoundStore.link.setSource("refresh", "card", "screen-a", updatedSource);
 
-		const latest = BoundStore.link.getActive("card");
+		const latest = BoundStore.link.getMatched("card");
 		expect(latest?.destination).toBeNull();
 		expect(latest?.source.bounds).toEqual(updatedSource);
 	});
@@ -280,7 +280,7 @@ describe("BoundStore.link.setSource refresh", () => {
 		BoundStore.link.setDestination("attach", "card", "screen-b", destination);
 		BoundStore.link.setSource("refresh", "card", "screen-x", createBounds(999, 999));
 
-		const link = BoundStore.link.getActive("card", "screen-a");
+		const link = BoundStore.link.getMatched("card", "screen-a");
 		expect(link?.source.bounds).toEqual(source);
 	});
 });
@@ -293,7 +293,7 @@ describe("BoundStore.link.setDestination", () => {
 		BoundStore.link.setSource("capture", "card", "screen-a", srcBounds);
 		BoundStore.link.setDestination("attach", "card", "screen-b", dstBounds);
 
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		expect(link?.source.screenKey).toBe("screen-a");
 		expect(link?.destination?.screenKey).toBe("screen-b");
 	});
@@ -304,7 +304,7 @@ describe("BoundStore.link.setDestination", () => {
 		// No source set, destination should be ignored
 		BoundStore.link.setDestination("attach", "card", "screen-b", bounds);
 
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		expect(link).toBeNull();
 	});
 
@@ -319,7 +319,7 @@ describe("BoundStore.link.setDestination", () => {
 		BoundStore.link.setDestination("attach", "card", "screen-c", boundsC);
 
 		// Most recent link (from screen-b) should have destination
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		expect(link?.source.screenKey).toBe("screen-b");
 		expect(link?.destination?.screenKey).toBe("screen-c");
 	});
@@ -341,11 +341,11 @@ describe("BoundStore.link.setDestination", () => {
 			"screen-a",
 		);
 
-		const fromDetail = BoundStore.link.getActive("card", "screen-detail");
+		const fromDetail = BoundStore.link.getMatched("card", "screen-detail");
 		expect(fromDetail?.source.screenKey).toBe("screen-a");
 		expect(fromDetail?.destination?.screenKey).toBe("screen-detail");
 
-		const latest = BoundStore.link.getActive("card");
+		const latest = BoundStore.link.getMatched("card");
 		expect(latest?.source.screenKey).toBe("screen-b");
 		expect(latest?.destination).toBeNull();
 	});
@@ -362,7 +362,7 @@ describe("BoundStore.link.setDestination", () => {
 			"screen-x",
 		);
 
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		expect(link?.source.screenKey).toBe("screen-a");
 		expect(link?.destination).toBeNull();
 	});
@@ -417,12 +417,12 @@ describe("BoundStore.entry.get", () => {
 });
 
 // =============================================================================
-// Unit Tests - link.getActive
+// Unit Tests - link.getMatched
 // =============================================================================
 
-describe("BoundStore.link.getActive", () => {
+describe("BoundStore.link.getMatched", () => {
 	it("returns null for unknown tag", () => {
-		const result = BoundStore.link.getActive("unknown");
+		const result = BoundStore.link.getMatched("unknown");
 		expect(result).toBeNull();
 	});
 
@@ -430,7 +430,7 @@ describe("BoundStore.link.getActive", () => {
 		// Register snapshot but no links
 		registerMeasuredEntry("card", "screen-a", createBounds());
 
-		const result = BoundStore.link.getActive("card");
+		const result = BoundStore.link.getMatched("card");
 		expect(result).toBeNull();
 	});
 
@@ -440,7 +440,7 @@ describe("BoundStore.link.getActive", () => {
 		BoundStore.link.setSource("capture", "card", "screen-b", createBounds());
 		BoundStore.link.setDestination("attach", "card", "screen-c", createBounds());
 
-		const link = BoundStore.link.getActive("card");
+		const link = BoundStore.link.getMatched("card");
 		expect(link?.source.screenKey).toBe("screen-b");
 		expect(link?.destination?.screenKey).toBe("screen-c");
 	});
@@ -450,11 +450,11 @@ describe("BoundStore.link.getActive", () => {
 		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
 		// Query from source screen = closing (going back)
-		const linkFromSource = BoundStore.link.getActive("card", "screen-a");
+		const linkFromSource = BoundStore.link.getMatched("card", "screen-a");
 		expect(linkFromSource?.source.screenKey).toBe("screen-a");
 
 		// Query from destination screen = opening
-		const linkFromDest = BoundStore.link.getActive("card", "screen-b");
+		const linkFromDest = BoundStore.link.getMatched("card", "screen-b");
 		expect(linkFromDest?.destination?.screenKey).toBe("screen-b");
 	});
 
@@ -465,7 +465,7 @@ describe("BoundStore.link.getActive", () => {
 		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
 		// Query by ancestor key (matches source)
-		const link = BoundStore.link.getActive("card", "stack-a");
+		const link = BoundStore.link.getMatched("card", "stack-a");
 		expect(link).not.toBeNull();
 		expect(link?.source.screenKey).toBe("screen-a");
 	});
@@ -474,7 +474,7 @@ describe("BoundStore.link.getActive", () => {
 		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
 		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
-		const link = BoundStore.link.getActive("card", "screen-x");
+		const link = BoundStore.link.getMatched("card", "screen-x");
 		expect(link).toBeNull();
 	});
 });
@@ -816,12 +816,12 @@ describe("Scenario: Simple push/pop navigation", () => {
 		BoundStore.link.setDestination("attach", "card", "screen-b", dstBounds);
 
 		// Verify link is complete - query from destination (opening)
-		const openingLink = BoundStore.link.getActive("card", "screen-b");
+		const openingLink = BoundStore.link.getMatched("card", "screen-b");
 		expect(openingLink?.source.bounds).toEqual(srcBounds);
 		expect(openingLink?.destination?.bounds).toEqual(dstBounds);
 
 		// 3. Query from source (closing - going back)
-		const closingLink = BoundStore.link.getActive("card", "screen-a");
+		const closingLink = BoundStore.link.getMatched("card", "screen-a");
 		expect(closingLink?.source.screenKey).toBe("screen-a");
 		expect(closingLink?.destination?.screenKey).toBe("screen-b");
 	});
@@ -841,11 +841,11 @@ describe("Scenario: Multiple bounds, only one matches", () => {
 		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds(0, 0));
 
 		// Card link exists
-		expect(BoundStore.link.getActive("card")).not.toBeNull();
+		expect(BoundStore.link.getMatched("card")).not.toBeNull();
 
 		// Header and footer have no links (only snapshots)
-		expect(BoundStore.link.getActive("header")).toBeNull();
-		expect(BoundStore.link.getActive("footer")).toBeNull();
+		expect(BoundStore.link.getMatched("header")).toBeNull();
+		expect(BoundStore.link.getMatched("footer")).toBeNull();
 	});
 });
 
@@ -872,7 +872,7 @@ describe("Scenario: Nested navigator with ancestor keys", () => {
 		expect(fromStackB?.bounds).toEqual(boundsB);
 	});
 
-	it("link.getActive respects ancestor chain", () => {
+	it("link.getMatched respects ancestor chain", () => {
 		// Navigation from Stack A to detail screen
 		BoundStore.link.setSource("capture", "profile", "a1", createBounds(10, 10), {}, [
 			"stack-a",
@@ -880,13 +880,13 @@ describe("Scenario: Nested navigator with ancestor keys", () => {
 		BoundStore.link.setDestination("attach", "profile", "detail", createBounds(0, 0));
 
 		// Query by ancestor should find the link
-		const link = BoundStore.link.getActive("profile", "stack-a");
+		const link = BoundStore.link.getMatched("profile", "stack-a");
 		expect(link?.source.screenKey).toBe("a1");
 	});
 });
 
 describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
-	it("link stack grows and link.getActive finds correct link for each screen", () => {
+	it("link stack grows and link.getMatched finds correct link for each screen", () => {
 		// A → B
 		BoundStore.link.setSource("capture", "card", "screen-a", createBounds(0, 0));
 		BoundStore.link.setDestination(
@@ -911,16 +911,16 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 		);
 
 		// Most recent link is B → C
-		const latest = BoundStore.link.getActive("card");
+		const latest = BoundStore.link.getMatched("card");
 		expect(latest?.source.screenKey).toBe("screen-b");
 		expect(latest?.destination?.screenKey).toBe("screen-c");
 
 		// Query from C (destination of B→C) = opening
-		const fromC = BoundStore.link.getActive("card", "screen-c");
+		const fromC = BoundStore.link.getMatched("card", "screen-c");
 		expect(fromC?.destination?.screenKey).toBe("screen-c");
 
 		// Query from B - B is source of B→C link, so isClosing=true
-		const fromB = BoundStore.link.getActive("card", "screen-b");
+		const fromB = BoundStore.link.getMatched("card", "screen-b");
 		expect(fromB?.source.screenKey).toBe("screen-b");
 	});
 
@@ -949,23 +949,23 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 			);
 		}
 
-		expect(BoundStore.link.getActive("card", "screen-a")?.source.screenKey).toBe(
+		expect(BoundStore.link.getMatched("card", "screen-a")?.source.screenKey).toBe(
 			"screen-a",
 		);
 		expect(
-			BoundStore.link.getActive("card", "screen-e")?.destination?.screenKey,
+			BoundStore.link.getMatched("card", "screen-e")?.destination?.screenKey,
 		).toBe("screen-e");
 
 		BoundStore.cleanup.byAncestor("nested");
 
-		expect(BoundStore.link.getActive("card", "screen-a")).toBeNull();
-		expect(BoundStore.link.getActive("card", "screen-b")).toBeNull();
-		expect(BoundStore.link.getActive("card", "screen-e")).toBeNull();
+		expect(BoundStore.link.getMatched("card", "screen-a")).toBeNull();
+		expect(BoundStore.link.getMatched("card", "screen-b")).toBeNull();
+		expect(BoundStore.link.getMatched("card", "screen-e")).toBeNull();
 	});
 });
 
 describe("Scenario: Global bounds (fullscreen target)", () => {
-	it("link.getActive with no screenKey returns most recent for fullscreen", () => {
+	it("link.getMatched with no screenKey returns most recent for fullscreen", () => {
 		// Source exists, destination will be fullscreen (no specific screenKey needed)
 		BoundStore.link.setSource("capture",
 			"image",
@@ -979,7 +979,7 @@ describe("Scenario: Global bounds (fullscreen target)", () => {
 		);
 
 		// Fullscreen target can get link without knowing screenKey
-		const link = BoundStore.link.getActive("image");
+		const link = BoundStore.link.getMatched("image");
 		expect(link).not.toBeNull();
 		expect(link?.destination?.screenKey).toBe("fullscreen-viewer");
 	});

@@ -30,13 +30,17 @@ export type BoundEntry = {
 };
 
 export type BoundsLink = {
+	id: string;
 	source: BoundEntry | null;
 	destination: BoundEntry | null;
+	initialSource: BoundEntry | null;
+	initialDestination: BoundEntry | null;
+	compute: <T extends BoundsLinkComputeOptions>(
+		options: T,
+	) => BoundsOptionsResult<T & { id: string }>;
 };
 
-export type BoundsLinkOptions = {
-	snapshot?: "initial";
-};
+export type BoundsLinkComputeOptions = Omit<BoundsOptions, "id" | "group">;
 
 export type BoundsNavigationZoomOptions = {
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
@@ -174,7 +178,7 @@ export type BoundsScopedAccessors = {
 	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
 	 */
 	getSnapshot: (key?: string) => MeasuredEntry | null;
-	getLink: (options?: BoundsLinkOptions) => BoundsLink | null;
+	getLink: () => BoundsLink | null;
 	interpolateStyle: (property: keyof StyleProps, fallback?: number) => number;
 	interpolateBounds: (
 		property: keyof MeasuredDimensions,
@@ -194,7 +198,7 @@ export type BoundsAccessor = {
 	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
 	 */
 	getSnapshot: (id: BoundId, key?: string) => MeasuredEntry | null;
-	getLink: (id: BoundId, options?: BoundsLinkOptions) => BoundsLink | null;
+	getLink: (id: BoundId) => BoundsLink | null;
 	interpolateStyle: (
 		id: BoundId,
 		property: keyof StyleProps,

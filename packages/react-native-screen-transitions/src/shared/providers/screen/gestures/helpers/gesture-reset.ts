@@ -1,7 +1,8 @@
-import { FALSE, TRUE } from "../../../../constants";
+import type { SharedValue } from "react-native-reanimated";
+import { EPSILON, FALSE, TRUE } from "../../../../constants";
 import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type { AnimationConfig } from "../../../../types/animation.types";
-import { animateMany } from "../../../../utils/animation/animate-many";
+import { animate } from "../../../../utils/animation/animate";
 
 interface ResetGestureValuesProps {
 	spec?: AnimationConfig;
@@ -34,6 +35,61 @@ const getGestureResetSpec = (
 	) as AnimationConfig;
 };
 
+const animateResetValue = (
+	value: SharedValue<number>,
+	toValue: number,
+	config: AnimationConfig | undefined,
+	onFinished: () => void,
+) => {
+	"worklet";
+	value.set(
+		animate(toValue, config, (finished) => {
+			"worklet";
+			if (finished) {
+				onFinished();
+			}
+		}),
+	);
+};
+
+const clearPanSettlingIfResting = (gestures: GestureStoreMap) => {
+	"worklet";
+
+	if (
+		gestures.dragging.get() ||
+		gestures.dismissing.get() ||
+		Math.abs(gestures.x.get()) > EPSILON ||
+		Math.abs(gestures.y.get()) > EPSILON ||
+		Math.abs(gestures.normX.get()) > EPSILON ||
+		Math.abs(gestures.normY.get()) > EPSILON
+	) {
+		return;
+	}
+
+	gestures.active.set(null);
+	gestures.direction.set(null);
+	gestures.settling.set(FALSE);
+};
+
+const clearPinchSettlingIfResting = (gestures: GestureStoreMap) => {
+	"worklet";
+
+	if (
+		gestures.dragging.get() ||
+		gestures.dismissing.get() ||
+		Math.abs(gestures.scale.get() - 1) > EPSILON ||
+		Math.abs(gestures.normScale.get()) > EPSILON
+	) {
+		return;
+	}
+
+	gestures.focalX.set(0);
+	gestures.focalY.set(0);
+	gestures.active.set(null);
+	gestures.direction.set(null);
+	gestures.settling.set(FALSE);
+};
+
 export const resetGestureValues = ({
 	spec,
 	gestures,
@@ -53,36 +109,24 @@ export const resetGestureValues = ({
 	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
 	gestures.settling.set(shouldDismiss ? FALSE : TRUE);
 
-	animateMany({
-		items: [
-			{
-				value: gestures.x,
-				toValue: 0,
-				config: getGestureResetSpec(spec, velocityX),
-			},
-			{
-				value: gestures.y,
-				toValue: 0,
-				config: getGestureResetSpec(spec, velocityY),
-			},
-			{
-				value: gestures.normX,
-				toValue: 0,
-				config: getGestureResetSpec(spec, velocityNormX),
-			},
-			{
-				value: gestures.normY,
-				toValue: 0,
-				config: getGestureResetSpec(spec, velocityNormY),
-			},
-		],
-		onAllFinished: () => {
-			"worklet";
-			gestures.active.set(null);
-			gestures.direction.set(null);
-			gestures.settling.set(FALSE);
-		},
-	});
+	animateResetValue(gestures.x, 0, getGestureResetSpec(spec, velocityX), () =>
+		clearPanSettlingIfResting(gestures),
+	);
+	animateResetValue(gestures.y, 0, getGestureResetSpec(spec, velocityY), () =>
+		clearPanSettlingIfResting(gestures),
+	);
+	animateResetValue(
+		gestures.normX,
+		0,
+		getGestureResetSpec(spec, velocityNormX),
+		() => clearPanSettlingIfResting(gestures),
+	);
+	animateResetValue(
+		gestures.normY,
+		0,
+		getGestureResetSpec(spec, velocityNormY),
+		() => clearPanSettlingIfResting(gestures),
+	);
 };
 
 interface ResetPinchGestureValuesProps {
@@ -105,26 +149,10 @@ export const resetPinchGestureValues = ({
 	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
 	gestures.settling.set(shouldDismiss ? FALSE : TRUE);
 
-	animateMany({
-		items: [
-			{
-				value: gestures.scale,
-				toValue: 1,
-				config: resetSpec,
-			},
-			{
-				value: gestures.normScale,
-				toValue: 0,
-				config: resetSpec,
-			},
-		],
-		onAllFinished: () => {
-			"worklet";
-			gestures.focalX.set(0);
-			gestures.focalY.set(0);
-			gestures.active.set(null);
-			gestures.direction.set(null);
-			gestures.settling.set(FALSE);
-		},
-	});
+	animateResetValue(gestures.scale, 1, resetSpec, () =>
+		clearPinchSettlingIfResting(gestures),
+	);
+	animateResetValue(gestures.normScale, 0, resetSpec, () =>
+		clearPinchSettlingIfResting(gestures),
+	);
 };

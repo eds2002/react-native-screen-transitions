@@ -45,14 +45,14 @@ describe("Group Flow", () => {
 			destinationScreenKey: "detail-2",
 		});
 
-		expect(BoundStore.link.getActive(memberOneTag, "detail-1")?.source.screenKey).toBe(
+		expect(BoundStore.link.getMatched(memberOneTag, "detail-1")?.source.screenKey).toBe(
 			"list-1",
 		);
-		expect(BoundStore.link.getActive(memberTwoTag, "detail-2")?.source.screenKey).toBe(
+		expect(BoundStore.link.getMatched(memberTwoTag, "detail-2")?.source.screenKey).toBe(
 			"list-2",
 		);
-		expect(BoundStore.link.getActive(memberOneTag, "detail-2")).toBeNull();
-		expect(BoundStore.link.getActive(memberTwoTag, "detail-1")).toBeNull();
+		expect(BoundStore.link.getMatched(memberOneTag, "detail-2")).toBeNull();
+		expect(BoundStore.link.getMatched(memberTwoTag, "detail-1")).toBeNull();
 	});
 
 	it("isolates presence between group members", () => {
@@ -116,10 +116,10 @@ describe("Group Flow", () => {
 			destinationScreenKey: "detail-2",
 		});
 
-		expect(BoundStore.link.getActive(memberOneTag, "detail-1")?.source.screenKey).toBe(
+		expect(BoundStore.link.getMatched(memberOneTag, "detail-1")?.source.screenKey).toBe(
 			"list-1",
 		);
-		expect(BoundStore.link.getActive(memberTwoTag, "detail-2")?.source.screenKey).toBe(
+		expect(BoundStore.link.getMatched(memberTwoTag, "detail-2")?.source.screenKey).toBe(
 			"list-2",
 		);
 	});

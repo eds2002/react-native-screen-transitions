@@ -1,12 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useNavigation } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
-import { useEffect, useRef } from "react";
 import type {
 	ListRenderItemInfo,
 	NativeScrollEvent,
 	NativeSyntheticEvent,
-	FlatList as RNFlatList,
 } from "react-native";
 import {
 	Pressable,
@@ -15,25 +13,14 @@ import {
 	useWindowDimensions,
 	View,
 } from "react-native";
-import Animated, {
-	runOnUI,
-	useAnimatedReaction,
-} from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import Transition, {
-	useScreenAnimation,
-} from "react-native-screen-transitions";
-import {
-	buildStackPath,
-	useResolvedStackType,
-} from "@/components/stack-examples/stack-routing";
+import Transition from "react-native-screen-transitions";
 import { useTheme } from "@/theme";
-import { BoundStore } from "../../../../../../packages/react-native-screen-transitions/src/shared/stores/bounds";
 import {
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
 	ZOOM_GROUP,
-	type ZoomExampleMode,
 } from "./constants";
 
 const COLOR_SWATCH_RADIUS = 28;
@@ -89,49 +76,17 @@ const PALETTES = [
 	{ name: "Earth", colors: ["#C4A882", "#8B7355", "#D4C5A9", "#A0826D"] },
 ];
 
-function getZoomItemIndex(id: string | undefined): number {
-	const index = BOUNDS_SYNC_ZOOM_ITEMS.findIndex((item) => item.id === id);
-	return index === -1 ? 0 : index;
-}
-
-function getRelatedZoomItems(id: string): BoundsSyncZoomItem[] {
-	const index = getZoomItemIndex(id);
-	return [1, 2, 3].map((offset) => {
-		const nextIndex = (index + offset) % BOUNDS_SYNC_ZOOM_ITEMS.length;
-		return BOUNDS_SYNC_ZOOM_ITEMS[nextIndex];
-	});
-}
-
-function getRouteMode(mode: string | undefined): ZoomExampleMode {
-	return mode === "single" ? "single" : "group";
-}
-
-function setBoundsGroupActiveId(group: string | undefined, id: string) {
-	if (!group) return;
-
-	runOnUI((nextGroup: string, nextId: string) => {
-		"worklet";
-		BoundStore.group.setActiveId(nextGroup, nextId);
-	})(group, id);
-}
-
 function DetailPage({
 	item,
 	width,
 	insets,
-	group,
-	mode,
 }: {
 	item: BoundsSyncZoomItem;
 	width: number;
 	insets: { top: number; bottom: number };
-	group?: string;
-	mode: ZoomExampleMode;
 }) {
 	const hsl = hexToHSL(item.color);
 	const theme = useTheme();
-	const stackType = useResolvedStackType();
-	const relatedItems = getRelatedZoomItems(item.id);
 
 	return (
 		<View style={[styles.page, { width, backgroundColor: item.bgColor }]}>
@@ -162,7 +117,7 @@ function DetailPage({
 				<View style={styles.swatchSection}>
 					<Transition.Boundary.View
 						id={item.id}
-						group={group}
+						group={ZOOM_GROUP}
 						style={[styles.swatch, { backgroundColor: item.color }]}
 					>
 						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>
@@ -273,42 +228,6 @@ function DetailPage({
 						))}
 					</View>
 				</View>
-
-				<View style={styles.section}>
-					<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
-						Things You Might Like
-					</Text>
-					<View style={styles.relatedGrid}>
-						{relatedItems.map((relatedItem) => (
-							<Transition.Boundary.Trigger
-								key={relatedItem.id}
-								id={relatedItem.id}
-								group={group}
-								style={[
-									styles.relatedCard,
-									{ backgroundColor: relatedItem.color },
-								]}
-								onPress={() => {
-									router.push({
-										pathname: buildStackPath(
-											stackType,
-											"bounds/zoom/[id]",
-										) as never,
-										params: {
-											id: relatedItem.id,
-											mode,
-										},
-									});
-								}}
-							>
-								<Text style={styles.relatedTitle}>{relatedItem.title}</Text>
-								<Text style={styles.relatedSubtitle}>
-									{relatedItem.subtitle}
-								</Text>
-							</Transition.Boundary.Trigger>
-						))}
-					</View>
-				</View>
 			</Transition.ScrollView>
 		</View>
 	);
@@ -316,51 +235,22 @@ function DetailPage({
 
 export default function NavigationZoomGroupTransitionsDetail() {
 	const { width } = useWindowDimensions();
-	const { id, mode: modeParam } = useLocalSearchParams<{
-		id: string;
-		mode?: string;
-	}>();
-	const navigation = useNavigation() as {
-		setParams: (params: { id: string; mode: ZoomExampleMode }) => void;
-	};
+	const { id } = useLocalSearchParams<{ id: string }>();
 	const insets = useSafeAreaInsets();
 	const theme = useTheme();
-	const flatListRef = useRef<RNFlatList<BoundsSyncZoomItem> | null>(null);
-	const mode = getRouteMode(modeParam);
-	const boundaryGroup = mode === "group" ? ZOOM_GROUP : undefined;
-	const animation = useScreenAnimation();
+	const navigation = useNavigation() as {
+		setParams: (params: { id: string }) => void;
+	};
 
-	useAnimatedReaction(
-		() => {
-			const value = animation.get();
-			if (mode !== "group" || !id || !value.focused || value.next) {
-				return null;
-			}
-
-			if (!value.current.logicallySettled && !value.current.settled) {
-				return null;
-			}
-
-			return id;
-		},
-		(nextId, previousId) => {
-			if (!nextId || nextId === previousId) return;
-			BoundStore.group.setActiveId(ZOOM_GROUP, nextId);
-		},
-		[id, mode],
+	const initialIndex = Math.max(
+		0,
+		BOUNDS_SYNC_ZOOM_ITEMS.findIndex((item) => item.id === id),
 	);
 
-	const initialIndex = getZoomItemIndex(id);
-	const selectedItem = BOUNDS_SYNC_ZOOM_ITEMS[initialIndex];
-
-	useEffect(() => {
-		if (mode !== "group") return;
-
-		flatListRef.current?.scrollToIndex({
-			index: initialIndex,
-			animated: false,
-		});
-	}, [initialIndex, mode]);
+	const selectedItem =
+		BOUNDS_SYNC_ZOOM_ITEMS[initialIndex] ??
+		BOUNDS_SYNC_ZOOM_ITEMS.find((item) => item.id === id) ??
+		BOUNDS_SYNC_ZOOM_ITEMS[0];
 
 	const handleMomentumScrollEnd = (
 		event: NativeSyntheticEvent<NativeScrollEvent>,
@@ -371,11 +261,7 @@ export default function NavigationZoomGroupTransitionsDetail() {
 		if (!item) return;
 
 		if (item.id !== id) {
-			setBoundsGroupActiveId(boundaryGroup, item.id);
-			navigation.setParams({
-				id: item.id,
-				mode,
-			});
+			navigation.setParams({ id: item.id });
 		}
 	};
 
@@ -386,67 +272,27 @@ export default function NavigationZoomGroupTransitionsDetail() {
 	});
 
 	const renderItem = ({ item }: ListRenderItemInfo<BoundsSyncZoomItem>) => (
-		<DetailPage
-			item={item}
-			width={width}
-			insets={insets}
-			group={boundaryGroup}
-			mode={mode}
-		/>
+		<DetailPage item={item} width={width} insets={insets} />
 	);
 
 	const keyExtractor = (item: BoundsSyncZoomItem) => item.id;
 
-	if (mode === "single") {
-		return (
-			<View style={styles.root}>
-				<DetailPage
-					item={selectedItem}
-					width={width}
-					insets={insets}
-					group={boundaryGroup}
-					mode={mode}
-				/>
-				<Pressable
-					style={[
-						styles.floatingBack,
-						{
-							top: insets.top + 12,
-							backgroundColor: theme.headerBackButton,
-						},
-					]}
-					onPress={() => router.back()}
-					hitSlop={8}
-				>
-					<Ionicons name="chevron-back" size={24} color={theme.text} />
-				</Pressable>
-			</View>
-		);
-	}
-
 	return (
 		<View style={styles.root}>
 			<Animated.FlatList
-				ref={flatListRef}
 				data={BOUNDS_SYNC_ZOOM_ITEMS}
 				renderItem={renderItem}
 				keyExtractor={keyExtractor}
 				getItemLayout={getItemLayout}
 				initialScrollIndex={initialIndex}
-				onScrollToIndexFailed={({ index }) => {
-					flatListRef.current?.scrollToOffset({
-						offset: width * index,
-						animated: false,
-					});
-				}}
-				bounces={false}
 				horizontal
 				pagingEnabled
 				showsHorizontalScrollIndicator={false}
 				onMomentumScrollEnd={handleMomentumScrollEnd}
-				windowSize={1}
+				windowSize={3}
 				maxToRenderPerBatch={1}
 				initialNumToRender={1}
+				updateCellsBatchingPeriod={100}
 				scrollEventThrottle={16}
 				decelerationRate="fast"
 				overScrollMode="never"
@@ -645,31 +491,6 @@ const styles = StyleSheet.create({
 	},
 	noteTagText: {
 		fontSize: 12,
-		fontWeight: "600",
-	},
-	relatedGrid: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 10,
-	},
-	relatedCard: {
-		width: "47%",
-		flexGrow: 1,
-		height: 124,
-		borderRadius: 18,
-		padding: 14,
-		justifyContent: "flex-end",
-		overflow: "hidden",
-	},
-	relatedTitle: {
-		color: "rgba(255,255,255,0.95)",
-		fontSize: 15,
-		fontWeight: "800",
-	},
-	relatedSubtitle: {
-		marginTop: 3,
-		color: "rgba(255,255,255,0.75)",
-		fontSize: 11,
 		fontWeight: "600",
 	},
 });

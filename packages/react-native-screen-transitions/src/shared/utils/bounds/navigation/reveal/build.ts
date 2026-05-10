@@ -2,33 +2,59 @@ import { interpolate } from "react-native-reanimated";
 import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-	VISIBLE_STYLE,
 } from "../../../../constants";
-import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
-import { createNavigationBoundsAccessor } from "../helpers";
+import { createLinkAccessor } from "../../helpers/create-link-accessor";
+import { getSourceBorderRadius } from "../helpers";
+import {
+	combineScales,
+	composeCompensatedTranslation,
+	computeCenterScaleShift,
+	resolveDirectionalDragScale,
+} from "../math";
 import {
 	REVEAL_BORDER_RADIUS,
-	toNumber,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_MAX,
 	ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
 	ZOOM_DRAG_TRANSLATION_EXPONENT,
 	ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX,
 	ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
-	ZOOM_MASK_OUTSET,
 	ZOOM_SHARED_OPTIONS,
 } from "./config";
-import { getSourceBorderRadius } from "./helpers";
-import {
-	combineScales,
-	composeCompensatedTranslation,
-	computeCenterScaleShift,
-	resolveDirectionalDragScale,
-	resolveDirectionalDragTranslation,
-} from "./math";
+import { resolveDirectionalDragTranslation } from "./math";
 import type { BuildRevealStylesParams, RevealInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
+
+function resolveRevealGestureHandoff(rawDrag: number) {
+	"worklet";
+
+	const gestureSensitivity = interpolate(
+		rawDrag,
+		[0, 0.25, 0.7],
+		[0.9, 0.62, 0.28],
+		"clamp",
+	);
+
+	const releaseBoost = interpolate(
+		rawDrag,
+		[0, 0.35, 1],
+		[1, 1.35, 1.75],
+		"clamp",
+	);
+
+	const releaseSensitivity = interpolate(
+		gestureSensitivity,
+		[0.28, 0.9],
+		[0.7, 1],
+		"clamp",
+	);
+
+	return {
+		gestureSensitivity,
+		gestureReleaseVelocityScale: releaseBoost * releaseSensitivity,
+	};
+}
 
 /* -------------------------------------------------------------------------- */
 /*                              BUILD REVEAL STYLES                           */
@@ -53,84 +79,21 @@ export function buildRevealStyles({
 	} = props;
 
 	const baseRawOptions = {
-		id: tag,
 		raw: true,
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
 	} as const;
 
-	const boundsAccessor = createNavigationBoundsAccessor(() => {
-		"worklet";
-		return props;
-	});
-	const bounds = boundsAccessor(baseRawOptions);
-	const currentLink = bounds.getLink();
+	const boundsAccessor = createLinkAccessor(() => props);
+	const link = boundsAccessor.getLink(tag);
 
-	if (!currentLink?.source?.bounds || !currentLink.destination?.bounds) {
+	if (!link?.source?.bounds || !link.destination?.bounds) {
 		return {};
 	}
-
-	const snapshotLink =
-		focused && props.active.closing
-			? bounds.getLink({ snapshot: "initial" })
-			: null;
-	const link =
-		focused && props.active.closing && snapshotLink?.destination?.bounds
-			? snapshotLink
-			: currentLink;
-
-	if (!link.destination) {
-		return {};
-	}
-
-	const frozenDestinationTarget =
-		focused && props.active.closing && snapshotLink?.destination?.bounds
-			? snapshotLink.destination.bounds
-			: undefined;
 
 	const sourceBorderRadius = getSourceBorderRadius(link);
 
-	const focusedElementOffsetX =
-		focused && props.active.closing && currentLink.destination?.bounds
-			? link.destination.bounds.pageX - currentLink.destination.bounds.pageX
-			: 0;
-
-	const focusedElementOffsetY =
-		focused && props.active.closing && currentLink.destination?.bounds
-			? link.destination.bounds.pageY - currentLink.destination.bounds.pageY
-			: 0;
-
-	const focusedElementTranslateX = props.active.closing
-		? interpolate(
-				props.active.progress,
-				[0, 1],
-				[focusedElementOffsetX, 0],
-				"clamp",
-			)
-		: focusedElementOffsetX;
-
-	const focusedElementTranslateY = props.active.closing
-		? interpolate(
-				props.active.progress,
-				[0, 1],
-				[focusedElementOffsetY, 0],
-				"clamp",
-			)
-		: focusedElementOffsetY;
-
-	const sourceVisibilityStyle = {
-		[tag]: {
-			style: VISIBLE_STYLE,
-		},
-	} satisfies TransitionInterpolatedStyle;
-
 	/* --------------------------- Gesture / Drag Values ------------------------- */
 
-	const normX = props.active.gesture.normX;
-	const normY = props.active.gesture.normY;
-	const gestureX = props.active.gesture.x;
-	const gestureY = props.active.gesture.y;
-	const rawNormX = props.active.gesture.raw.normX;
-	const rawNormY = props.active.gesture.raw.normY;
 	const initialGesture =
 		props.active.gesture.active ?? props.active.gesture.direction;
 
@@ -138,27 +101,21 @@ export function buildRevealStyles({
 	const isVerticalDismiss = initialGesture?.includes("vertical");
 
 	const rawDrag = isHorizontalDismiss
-		? Math.abs(rawNormX)
+		? Math.abs(props.active.gesture.raw.normX)
 		: isVerticalDismiss
-			? Math.abs(rawNormY)
+			? Math.abs(props.active.gesture.raw.normY)
 			: 0;
 
-	const gestureSensitivity = interpolate(
-		rawDrag,
-		[0, 0.5],
-		[0.9, 0.25],
-		"clamp",
-	);
-
 	const dragX = resolveDirectionalDragTranslation({
-		translation: gestureX,
+		translation: props.active.gesture.x,
 		dimension: screenLayout.width,
 		negativeMax: ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX,
 		positiveMax: ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
 		exponent: ZOOM_DRAG_TRANSLATION_EXPONENT,
 	});
+
 	const dragY = resolveDirectionalDragTranslation({
-		translation: gestureY,
+		translation: props.active.gesture.y,
 		dimension: screenLayout.height,
 		negativeMax: ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX,
 		positiveMax: ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
@@ -167,7 +124,7 @@ export function buildRevealStyles({
 
 	const dragXScale = isHorizontalDismiss
 		? resolveDirectionalDragScale({
-				normalized: normX,
+				normalized: props.active.gesture.normX,
 				dismissDirection:
 					initialGesture === "horizontal-inverted" ? "negative" : "positive",
 				shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
@@ -178,7 +135,7 @@ export function buildRevealStyles({
 
 	const dragYScale = isVerticalDismiss
 		? resolveDirectionalDragScale({
-				normalized: normY,
+				normalized: props.active.gesture.normY,
 				dismissDirection:
 					initialGesture === "vertical-inverted" ? "negative" : "positive",
 				shrinkMin: ZOOM_DRAG_DIRECTIONAL_SCALE_MIN,
@@ -189,46 +146,50 @@ export function buildRevealStyles({
 
 	const dragScale = combineScales(dragXScale, dragYScale);
 
+	const initialDestinationTarget =
+		focused && props.active.closing && link.initialDestination?.bounds
+			? link.initialDestination.bounds
+			: undefined;
+
 	/* ----------------------------- Focused Screen ----------------------------- */
 
 	if (focused) {
-		const contentRaw = boundsAccessor({
+		const contentRaw = link.compute({
 			...baseRawOptions,
 			method: "content",
-			...(frozenDestinationTarget ? { target: frozenDestinationTarget } : {}),
-		} as const);
+			target: initialDestinationTarget,
+		});
 
-		const maskRaw = boundsAccessor({
+		const maskRaw = link.compute({
 			...baseRawOptions,
 			method: "size",
 			space: "absolute",
 			target: "fullscreen",
-		} as const);
+		});
 
-		/**
-		 * This is also how swiftui handles their navigation zoom.
-		 * They remove clipping as soon as the screen stops animating
-		 */
-		const focusedMaskBorderRadius = interpolate(
+		const maskBorderRadius = interpolate(
 			progress,
 			[0, 1],
-			[sourceBorderRadius, props.active.settled ? 0 : REVEAL_BORDER_RADIUS],
+			[sourceBorderRadius, REVEAL_BORDER_RADIUS],
 			"clamp",
 		);
 
-		const { top, right, bottom, left } = ZOOM_MASK_OUTSET;
-		const maskWidth = Math.max(1, toNumber(maskRaw.width) + left + right);
-		const maskHeight = Math.max(1, toNumber(maskRaw.height) + top + bottom);
+		const maskWidth = Math.max(1, maskRaw.width);
+		const maskHeight = Math.max(1, maskRaw.height);
 
-		const contentTranslateX = toNumber(contentRaw.translateX) + dragX;
-		const contentTranslateY = toNumber(contentRaw.translateY) + dragY;
-		const contentScale = toNumber(contentRaw.scale, 1) * dragScale;
-		const maskTranslateX = toNumber(maskRaw.translateX) + dragX - left;
-		const maskTranslateY = toNumber(maskRaw.translateY) + dragY - top;
+		const contentTranslateX = contentRaw.translateX + dragX;
+		const contentTranslateY = contentRaw.translateY + dragY;
+		const contentScale = contentRaw.scale * dragScale;
+
+		const maskTranslateX = maskRaw.translateX + dragX;
+		const maskTranslateY = maskRaw.translateY + dragY;
+
 		const safeContentScale =
 			Math.abs(contentScale) > EPSILON ? contentScale : 1;
+
 		const maskCenterX = maskWidth / 2;
 		const maskCenterY = maskHeight / 2;
+
 		const contentCenterX = screenLayout.width / 2;
 		const contentCenterY = screenLayout.height / 2;
 
@@ -246,7 +207,31 @@ export function buildRevealStyles({
 
 		const compensatedMaskScale = dragScale / safeContentScale;
 
-		const focusedStyles: RevealInterpolatedStyle = {
+		const elementOffsetX = initialDestinationTarget
+			? initialDestinationTarget.pageX - link.destination.bounds.pageX
+			: 0;
+
+		const elementOffsetY = initialDestinationTarget
+			? initialDestinationTarget.pageY - link.destination.bounds.pageY
+			: 0;
+
+		const elementTX = props.active.closing
+			? interpolate(props.active.progress, [0, 1], [elementOffsetX, 0], "clamp")
+			: elementOffsetX;
+
+		const elementY = props.active.closing
+			? interpolate(props.active.progress, [0, 1], [elementOffsetY, 0], "clamp")
+			: elementOffsetY;
+
+		const { gestureSensitivity, gestureReleaseVelocityScale } =
+			resolveRevealGestureHandoff(rawDrag);
+
+		return {
+			options: {
+				gestureDrivesProgress: false,
+				gestureSensitivity,
+				gestureReleaseVelocityScale,
+			},
 			content: {
 				style: {
 					transform: [
@@ -262,15 +247,11 @@ export function buildRevealStyles({
 					pointerEvents: props.active.logicallySettled ? "auto" : "none",
 				},
 			},
-			...sourceVisibilityStyle,
-		};
-
-		if (props.current.layouts.navigationMaskEnabled) {
-			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
+			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
 				style: {
 					width: maskWidth,
 					height: maskHeight,
-					borderRadius: focusedMaskBorderRadius,
+					borderRadius: props.active.settled ? 0 : maskBorderRadius,
 					borderCurve: "continuous",
 					transform: [
 						{ translateX: compensatedMaskTranslateX },
@@ -278,25 +259,14 @@ export function buildRevealStyles({
 						{ scale: compensatedMaskScale },
 					],
 				},
-			};
-		}
-
-		return {
-			...focusedStyles,
-			[tag]: {
-				style: {
-					...VISIBLE_STYLE,
-					position: "relative",
-					zIndex: 999,
-					transform: [
-						{ translateX: focusedElementTranslateX },
-						{ translateY: focusedElementTranslateY },
-					],
-				},
 			},
-			options: {
-				gestureDrivesProgress: false,
-				gestureSensitivity,
+			[link.id]: {
+				style: {
+					position: "relative",
+					opacity: 1,
+					zIndex: 999,
+					transform: [{ translateX: elementTX }, { translateY: elementY }],
+				},
 			},
 		};
 	}
@@ -310,12 +280,12 @@ export function buildRevealStyles({
 		"clamp",
 	);
 
-	const elementRaw = boundsAccessor({
+	const elementRaw = link.compute({
 		...baseRawOptions,
 		method: "transform",
 		space: "relative",
-		...(frozenDestinationTarget ? { target: frozenDestinationTarget } : {}),
-	} as const);
+		target: initialDestinationTarget,
+	});
 
 	const destinationBounds = link.destination.bounds;
 	const elementCenterX = destinationBounds.pageX + destinationBounds.width / 2;
@@ -326,6 +296,7 @@ export function buildRevealStyles({
 		containerCenter: screenLayout.width / 2,
 		scale: dragScale,
 	});
+
 	const scaleShiftY = computeCenterScaleShift({
 		center: elementCenterY,
 		containerCenter: screenLayout.height / 2,
@@ -338,6 +309,7 @@ export function buildRevealStyles({
 		centerShift: scaleShiftX,
 		epsilon: EPSILON,
 	});
+
 	const compensatedGestureY = composeCompensatedTranslation({
 		gesture: dragY,
 		parentScale: unfocusedScale,
@@ -345,39 +317,13 @@ export function buildRevealStyles({
 		epsilon: EPSILON,
 	});
 
-	const elementTranslateX =
-		toNumber(elementRaw.translateX) + compensatedGestureX;
-	const elementTranslateY =
-		toNumber(elementRaw.translateY) + compensatedGestureY;
-	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
-	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
+	const elementTranslateX = elementRaw.translateX + compensatedGestureX;
+	const elementTranslateY = elementRaw.translateY + compensatedGestureY;
+	const elementScaleX = elementRaw.scaleX * dragScale;
+	const elementScaleY = elementRaw.scaleY * dragScale;
 
 	const shouldShowUnfocusedElement =
-		props.active.entering ||
-		(props.active.closing && props.active.logicallySettled);
-
-	const resolvedElementStyle = !shouldShowUnfocusedElement
-		? {
-				transform: [
-					{ translateX: 0 },
-					{ translateY: 0 },
-					{ scaleX: 1 },
-					{ scaleY: 1 },
-				],
-				opacity: 0,
-				zIndex: 0,
-				elevation: 0,
-			}
-		: {
-				transform: [
-					{ translateX: elementTranslateX },
-					{ translateY: elementTranslateY },
-					{ scaleX: elementScaleX },
-					{ scaleY: elementScaleY },
-				],
-				zIndex: 9999,
-				elevation: 9999,
-			};
+		props.active.entering || (props.active.closing && !props.active.settled);
 
 	return {
 		content: {
@@ -388,8 +334,18 @@ export function buildRevealStyles({
 				pointerEvents: "none",
 			},
 		},
-		[tag]: {
-			style: resolvedElementStyle,
+		[link.id]: {
+			style: {
+				transform: [
+					{ translateX: !shouldShowUnfocusedElement ? 0 : elementTranslateX },
+					{ translateY: !shouldShowUnfocusedElement ? 0 : elementTranslateY },
+					{ scaleX: !shouldShowUnfocusedElement ? 1 : elementScaleX },
+					{ scaleY: !shouldShowUnfocusedElement ? 1 : elementScaleY },
+				],
+				opacity: !shouldShowUnfocusedElement ? 0 : 1,
+				zIndex: 9999,
+				elevation: 9999,
+			},
 		},
 	};
 }

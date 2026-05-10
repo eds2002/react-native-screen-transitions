@@ -15,11 +15,11 @@ import Animated, {
 import { NO_STYLES } from "../../constants";
 import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
-import { setGroupActiveId } from "../../stores/bounds/internals/groups";
+import { setGroupInitialId } from "../../stores/bounds/internals/groups";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
-import { useCaptureDestinationBoundary } from "./hooks/use-capture-destination-boundary";
-import { useCaptureSourceBoundary } from "./hooks/use-capture-source-boundary";
+import { useInitialDestinationMeasurement } from "./hooks/use-initial-destination-measurement";
+import { useInitialSourceMeasurement } from "./hooks/use-initial-source-measurement";
 import { useMeasurer } from "./hooks/use-measurer";
 import { useRefreshBoundary } from "./hooks/use-refresh-boundary";
 import {
@@ -92,7 +92,10 @@ export function createBoundaryComponent<P extends object>(
 			};
 		}, [anchor, scaleMode, target, method]);
 
-		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
+		const ownerPreparedStyles = useMemo(
+			() => prepareStyleForBounds(style),
+			[style],
+		);
 		const { stylesMap } = useScreenStyles();
 
 		const associatedStyles = useAnimatedStyle(() => {
@@ -110,10 +113,13 @@ export function createBoundaryComponent<P extends object>(
 			};
 		});
 
-		const { contextValue, measuredRef, hasActiveTarget } = useBoundaryOwner({
-			ownerRef,
-			associatedTargetStyles: runtimeEnabled ? associatedStyles : undefined,
-		});
+		const { contextValue, measuredRef, hasActiveTarget, targetPreparedStyles } =
+			useBoundaryOwner({
+				ownerRef,
+				associatedTargetStyles: runtimeEnabled ? associatedStyles : undefined,
+			});
+
+		const preparedStyles = targetPreparedStyles ?? ownerPreparedStyles;
 
 		const measureBoundary = useMeasurer({
 			enabled,
@@ -141,26 +147,20 @@ export function createBoundaryComponent<P extends object>(
 			boundaryConfig,
 		});
 
-		// On the source screen, capture source bounds when a matching destination
-		// appears on the next screen.
-		useCaptureSourceBoundary({
+		// Initial source measurement: capture source bounds when a matching
+		// destination appears on the next screen.
+		useInitialSourceMeasurement({
 			enabled: runtimeEnabled,
-			sharedBoundTag,
-			id,
-			group,
 			nextScreenKey,
 			measureBoundary,
 		});
 
-		// Destination completion path: hold lifecycle start until the first valid
-		// destination measurement attaches, then release the pending transition.
-		useCaptureDestinationBoundary({
+		// Initial destination measurement: hold lifecycle start until the first
+		// valid destination measurement attaches, then release the pending transition.
+		useInitialDestinationMeasurement({
 			sharedBoundTag,
 			enabled: shouldRunDestinationEffects,
-			id,
-			group,
 			currentScreenKey,
-			expectedSourceScreenKey: preferredSourceScreenKey,
 			measureBoundary,
 		});
 
@@ -183,7 +183,7 @@ export function createBoundaryComponent<P extends object>(
 			(...args: unknown[]) => {
 				// Press path has priority: capture source before user onPress/navigation.
 				if (group) {
-					runOnUI(setGroupActiveId)(group, String(id));
+					runOnUI(setGroupInitialId)(group, String(id));
 				}
 				runOnUI(measureBoundary)({ intent: "capture-source" });
 

@@ -39,7 +39,7 @@ interface ComputeLogicallySettledParams {
 	progress: number;
 	targetProgress: number;
 	settled: number;
-	dragging: number;
+	gestureActive: number;
 }
 
 const computeSettled = (
@@ -204,7 +204,7 @@ const computeLogicallySettledValue = (
 	progress: number,
 	targetProgress: number,
 	settled: number,
-	dragging: number,
+	gestureActive: number,
 ) => {
 	"worklet";
 
@@ -212,7 +212,7 @@ const computeLogicallySettledValue = (
 		return TRUE;
 	}
 
-	if (dragging) {
+	if (gestureActive) {
 		return FALSE;
 	}
 
@@ -229,7 +229,7 @@ export const computeLogicallySettled = (
 		params.progress,
 		params.targetProgress,
 		params.settled,
-		params.dragging,
+		params.gestureActive,
 	);
 };
 
@@ -267,14 +267,12 @@ export const hydrateTransitionState = (
 		Math.abs(out.gesture.normX) > EPSILON ||
 		Math.abs(out.gesture.normY) > EPSILON ||
 		Math.abs(out.gesture.normScale) > EPSILON;
+	const isGestureActive =
+		out.gesture.dragging || out.gesture.settling || isGestureSettling
+			? TRUE
+			: FALSE;
 
-	out.animating =
-		s.animating.get() ||
-		out.gesture.dragging ||
-		out.gesture.settling ||
-		isGestureSettling
-			? 1
-			: 0;
+	out.animating = s.animating.get() || isGestureActive ? 1 : 0;
 
 	out.gesture.normalizedX = out.gesture.normX;
 	out.gesture.normalizedY = out.gesture.normY;
@@ -291,7 +289,7 @@ export const hydrateTransitionState = (
 		out.progress,
 		targetProgress,
 		out.settled,
-		out.gesture.dragging,
+		isGestureActive,
 	);
 
 	if (s.settled.get() !== out.settled) {

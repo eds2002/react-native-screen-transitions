@@ -1,6 +1,6 @@
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
@@ -69,6 +69,54 @@ const IMAGES = [
 	},
 ] satisfies StyleImageItem[];
 
+const LIST_ITEMS = [
+	{
+		id: "field-notes",
+		title: "Field Notes",
+		subtitle: "Morning review",
+		description:
+			"A compact row source that checks how style-id bounds retarget from a small nested image into the same detail surface.",
+		source: "https://picsum.photos/id/1056/1000/1000",
+	},
+	{
+		id: "low-clouds",
+		title: "Low Clouds",
+		subtitle: "Weather pass",
+		description:
+			"A soft, muted frame for checking thumbnail-to-detail movement without changing the destination example.",
+		source: "https://picsum.photos/id/1067/1000/1000",
+	},
+	{
+		id: "city-cut",
+		title: "City Cut",
+		subtitle: "Evening route",
+		description:
+			"Sharper vertical contrast makes it easier to spot target measurement errors from a list row.",
+		source: "https://picsum.photos/id/1076/1000/1000",
+	},
+	{
+		id: "quiet-room",
+		title: "Quiet Room",
+		subtitle: "Interior study",
+		description:
+			"A smaller source element with surrounding text, useful for validating nested Boundary.Target behavior.",
+		source: "https://picsum.photos/id/1080/1000/1000",
+	},
+] satisfies StyleImageItem[];
+
+function openDetail(stackType: string, tag: string, item: StyleImageItem) {
+	router.push({
+		pathname: buildStackPath(stackType, "bounds/style-id/[id]") as never,
+		params: {
+			id: tag,
+			image: item.source,
+			title: item.title,
+			subtitle: item.subtitle,
+			description: item.description,
+		},
+	});
+}
+
 export default function StyleIdBoundsIndex() {
 	const stackType = useResolvedStackType();
 	const theme = useTheme();
@@ -91,27 +139,52 @@ export default function StyleIdBoundsIndex() {
 								testID={tag}
 								id={tag}
 								style={[styles.imageCell, { backgroundColor: theme.card }]}
-								onPress={() => {
-									router.push({
-										pathname: buildStackPath(
-											stackType,
-											"bounds/style-id/[id]",
-										) as never,
-										params: {
-											id: tag,
-											image: item.source,
-											title: item.title,
-											subtitle: item.subtitle,
-											description: item.description,
-										},
-									});
-								}}
+								onPress={() => openDetail(stackType, tag, item)}
 							>
 								<Image
 									source={item.source}
 									style={styles.image}
 									contentFit="cover"
 								/>
+							</Transition.Boundary.Trigger>
+						);
+					})}
+				</View>
+				<View style={styles.list}>
+					{LIST_ITEMS.map((item) => {
+						const tag = `shared-list-image-${item.id}`;
+						return (
+							<Transition.Boundary.Trigger
+								key={tag}
+								testID={tag}
+								id={tag}
+								style={styles.listRow}
+								onPress={() => openDetail(stackType, tag, item)}
+							>
+								<Transition.Boundary.Target style={styles.listImageTarget}>
+									<Image
+										source={item.source}
+										style={styles.image}
+										contentFit="cover"
+									/>
+								</Transition.Boundary.Target>
+								<View style={styles.listText}>
+									<Text style={[styles.listTitle, { color: theme.text }]}>
+										{item.title}
+									</Text>
+									<Text
+										numberOfLines={2}
+										style={[
+											styles.listSubtitle,
+											{ color: theme.textSecondary },
+										]}
+									>
+										{item.subtitle}
+									</Text>
+								</View>
+								<Text style={[styles.chevron, { color: theme.textTertiary }]}>
+									&gt;
+								</Text>
 							</Transition.Boundary.Trigger>
 						);
 					})}
@@ -145,5 +218,42 @@ const styles = StyleSheet.create({
 	image: {
 		width: "100%",
 		height: "100%",
+	},
+	list: {
+		marginTop: 28,
+		paddingBottom: 48,
+	},
+	listRow: {
+		minHeight: 88,
+		flexDirection: "row",
+		alignItems: "center",
+		gap: 16,
+		paddingVertical: 12,
+		borderBottomWidth: StyleSheet.hairlineWidth,
+		borderBottomColor: "rgba(142,142,147,0.28)",
+	},
+	listImageTarget: {
+		width: 64,
+		height: 64,
+		borderRadius: 14,
+		borderCurve: "continuous",
+		overflow: "hidden",
+	},
+	listText: {
+		flex: 1,
+		gap: 4,
+	},
+	listTitle: {
+		fontSize: 20,
+		fontWeight: "600",
+	},
+	listSubtitle: {
+		fontSize: 14,
+		lineHeight: 18,
+	},
+	chevron: {
+		fontSize: 32,
+		fontWeight: "300",
+		marginRight: 2,
 	},
 });

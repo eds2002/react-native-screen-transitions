@@ -124,8 +124,6 @@ export const BOUNDS_SYNC_ZOOM_ITEMS: BoundsSyncZoomItem[] = [
 	},
 ];
 
-export type ZoomExampleMode = "group" | "single";
-
 export const getBoundsSyncZoomItemById = (id: string | undefined) => {
 	if (!id) return BOUNDS_SYNC_ZOOM_ITEMS[0];
 	return (

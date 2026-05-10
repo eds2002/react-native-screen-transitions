@@ -1,5 +1,5 @@
 import { clamp } from "react-native-reanimated";
-import { FALSE, TRUE } from "../../../../constants";
+import { EPSILON, FALSE, TRUE } from "../../../../constants";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../utils/animation/emit";
 import type {
@@ -20,8 +20,11 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	} = runtime;
 
 	const wasSettling = gestures.settling.get();
+	const hasResidualGesture =
+		Math.abs(gestures.normX.get()) > EPSILON ||
+		Math.abs(gestures.normY.get()) > EPSILON;
 
-	if (!wasSettling) {
+	if (!wasSettling || !hasResidualGesture) {
 		emit(animations.willAnimate, TRUE, FALSE);
 	}
 
@@ -98,6 +101,15 @@ export const finalizePanRelease = (
 		velocityNormX: resetVelocityX / Math.max(1, width),
 		velocityNormY: resetVelocityY / Math.max(1, height),
 	});
+
+	const progressAlreadyAtTarget =
+		Math.abs(animations.progress.get() - release.target) <= EPSILON;
+
+	if (!release.shouldDismiss && progressAlreadyAtTarget) {
+		system.targetProgress.set(release.target);
+		animations.animating.set(FALSE);
+		return;
+	}
 
 	animateToProgress({
 		target: release.target,

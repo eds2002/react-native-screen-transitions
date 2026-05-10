@@ -23,7 +23,7 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "screen-detail",
 		});
 
-		const destinationLink = BoundStore.link.getActive(tag, "screen-detail");
+		const destinationLink = BoundStore.link.getMatched(tag, "screen-detail");
 		expect(destinationLink?.source.screenKey).toBe("screen-list");
 		expect(destinationLink?.destination?.screenKey).toBe("screen-detail");
 	});
@@ -37,8 +37,8 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "screen-b",
 		});
 
-		const openingLookup = BoundStore.link.getActive(tag, "screen-b");
-		const closingLookup = BoundStore.link.getActive(tag, "screen-a");
+		const openingLookup = BoundStore.link.getMatched(tag, "screen-b");
+		const closingLookup = BoundStore.link.getMatched(tag, "screen-a");
 
 		expect(openingLookup?.source.screenKey).toBe("screen-a");
 		expect(openingLookup?.destination?.screenKey).toBe("screen-b");
@@ -64,9 +64,9 @@ describe("Non-Group Flow", () => {
 			destinationBounds: createBounds(300, 320, 180, 180),
 		});
 
-		const latest = BoundStore.link.getActive(tag, "screen-c");
-		const screenBLookup = BoundStore.link.getActive(tag, "screen-b");
-		const prior = BoundStore.link.getActive(tag, "screen-a");
+		const latest = BoundStore.link.getMatched(tag, "screen-c");
+		const screenBLookup = BoundStore.link.getMatched(tag, "screen-b");
+		const prior = BoundStore.link.getMatched(tag, "screen-a");
 
 		expect(latest?.source.screenKey).toBe("screen-b");
 		expect(latest?.destination?.screenKey).toBe("screen-c");
@@ -87,7 +87,7 @@ describe("Non-Group Flow", () => {
 		});
 
 		expect(BoundStore.link.hasSource(tag, "stack-a")).toBe(true);
-		expect(BoundStore.link.getActive(tag, "stack-a")?.source.screenKey).toBe(
+		expect(BoundStore.link.getMatched(tag, "stack-a")?.source.screenKey).toBe(
 			"screen-a",
 		);
 	});
@@ -109,8 +109,8 @@ describe("Non-Group Flow", () => {
 
 		BoundStore.cleanup.byScreen("screen-a");
 
-		expect(BoundStore.link.getActive(firstTag, "detail-a")).toBeNull();
-		expect(BoundStore.link.getActive(secondTag, "detail-b")).not.toBeNull();
+		expect(BoundStore.link.getMatched(firstTag, "detail-a")).toBeNull();
+		expect(BoundStore.link.getMatched(secondTag, "detail-b")).not.toBeNull();
 	});
 
 	it("retains style snapshot metadata alongside bounds for matched tags", () => {

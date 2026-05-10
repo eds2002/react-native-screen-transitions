@@ -1,19 +1,36 @@
 import { getEntry } from "../../../stores/bounds/internals/entries";
-import { getActiveLink } from "../../../stores/bounds/internals/links";
-import type { MeasuredEntry } from "../../../stores/bounds/types";
+import { resolveGroupLink } from "../../../stores/bounds/internals/groups";
+import type {
+	MeasuredEntry,
+	ResolvedTransitionPair,
+	TagLink,
+} from "../../../stores/bounds/types";
 import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type {
 	BoundsLink,
-	BoundsLinkOptions,
+	BoundsLinkComputeOptions,
 } from "../../../types/bounds.types";
-import type { BoundId } from "../types/options";
+import type { BoundId, BoundsOptionsResult } from "../types/options";
+import { prepareBoundStyles } from "./prepare-bound-styles";
 
 type GetProps = () => Omit<ScreenInterpolationProps, "bounds">;
 
 export type LinkAccessor = {
 	getMeasured: (tag: BoundId, key?: string) => MeasuredEntry | null;
 	getSnapshot: (tag: BoundId, key?: string) => MeasuredEntry | null;
-	getLink: (tag: BoundId, options?: BoundsLinkOptions) => BoundsLink | null;
+	getLink: (tag: BoundId) => BoundsLink | null;
+};
+
+const toResolvedPair = (link: TagLink): ResolvedTransitionPair => {
+	"worklet";
+	return {
+		sourceBounds: link.source.bounds,
+		destinationBounds: link.destination?.bounds ?? null,
+		sourceStyles: link.source.styles,
+		destinationStyles: link.destination?.styles ?? null,
+		sourceScreenKey: link.source.screenKey,
+		destinationScreenKey: link.destination?.screenKey ?? null,
+	};
 };
 
 export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
@@ -31,25 +48,54 @@ export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
 		return getMeasured(tag, key);
 	};
 
-	const getLink = (
-		tag: BoundId,
-		options?: BoundsLinkOptions,
-	): BoundsLink | null => {
+	const getLink = (tag: BoundId): BoundsLink | null => {
 		"worklet";
 		const props = getProps();
-		const link = getActiveLink(
-			String(tag),
-			props.current?.route.key,
-			options?.snapshot,
-		);
+		const stringTag = String(tag);
+		const screenKey = props.current?.route.key;
+		const resolved = resolveGroupLink({
+			tag: stringTag,
+			screenKey,
+		});
+		const selectedTag = resolved.tag;
+		const link = resolved.link;
+
 		if (!link) return null;
+		const resolvedPair = toResolvedPair(link);
+
 		return {
+			id: selectedTag,
 			source: link.source
 				? { bounds: link.source.bounds, styles: link.source.styles }
 				: null,
 			destination: link.destination
 				? { bounds: link.destination.bounds, styles: link.destination.styles }
 				: null,
+			initialSource: link.initialSource
+				? {
+						bounds: link.initialSource.bounds,
+						styles: link.initialSource.styles,
+					}
+				: null,
+			initialDestination: link.initialDestination
+				? {
+						bounds: link.initialDestination.bounds,
+						styles: link.initialDestination.styles,
+					}
+				: null,
+			compute: <T extends BoundsLinkComputeOptions>(
+				computeOptions: T,
+			): BoundsOptionsResult<T & { id: string }> => {
+				"worklet";
+				return prepareBoundStyles({
+					props,
+					options: {
+						...computeOptions,
+						id: selectedTag,
+					} as T & { id: string },
+					resolvedPair,
+				});
+			},
 		};
 	};
 

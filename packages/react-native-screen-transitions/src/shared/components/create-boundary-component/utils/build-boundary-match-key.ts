@@ -7,9 +7,6 @@ type BuildBoundaryMatchKeyParams = {
 
 export function buildBoundaryMatchKey(
 	params: BuildBoundaryMatchKeyParams,
-): string;
-export function buildBoundaryMatchKey(
-	params: BuildBoundaryMatchKeyParams,
 ): string {
 	"worklet";
 	const { group, id } = params;

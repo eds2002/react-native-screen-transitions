@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	createScreenTransitionState,
 } from "../constants";
+import { BoundStore } from "../stores/bounds";
 import type { ScreenInterpolationProps } from "../types/animation.types";
 import type { Layout } from "../types/screen.types";
 import { buildZoomStyles } from "../utils/bounds/navigation/zoom/build";
@@ -59,7 +61,7 @@ beforeEach(() => {
 });
 
 describe("navigation zoom", () => {
-	it("keeps presenting the last measured group member until the requested member has source bounds", () => {
+	it("falls back to the initial group link when the requested zoom link is missing", () => {
 		registerSourceAndDestination({
 			tag: "gallery:a",
 			sourceScreenKey: "list",
@@ -69,23 +71,25 @@ describe("navigation zoom", () => {
 		});
 
 		const props = makeProps();
+		props.active.gesture.x = 12;
+		props.active.gesture.y = 24;
 
-		buildZoomStyles({
-			tag: "gallery:a",
-			props,
-			zoomOptions: { target: "bound" },
-		});
+		BoundStore.group.setInitialId("gallery", "a");
+		BoundStore.group.setActiveId("gallery", "b");
 
 		const retargetedStyles = buildZoomStyles({
-			tag: "gallery:b",
+			tag: "gallery:missing",
 			props,
 			zoomOptions: { target: "bound" },
 		});
 
-		expect(retargetedStyles["gallery:a"]?.style?.opacity).toBe(1);
+		expect(retargetedStyles["gallery:a"]).toBeDefined();
 		expect(retargetedStyles["gallery:b"]).toBeUndefined();
 		expect(
+			retargetedStyles[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style?.transform,
+		).toBeArray();
+		expect(
 			retargetedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style?.width,
-		).toBe(screenLayout.width);
+		).toBe(400);
 	});
 });

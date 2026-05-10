@@ -1,47 +1,36 @@
-import { useLayoutEffect } from "react";
 import {
 	cancelAnimation,
-	runOnUI,
 	useAnimatedReaction,
 	useSharedValue,
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
-import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
+import { hasDestinationLink } from "../../../stores/bounds/internals/links";
 import {
-	getPendingLink,
-	hasDestinationLink,
-	hasSourceLink,
-} from "../../../stores/bounds/internals/links";
-import { SystemStore } from "../../../stores/system.store";
-import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
-import type { BoundaryId, MeasureParams } from "../types";
+	LifecycleTransitionRequestKind,
+	SystemStore,
+} from "../../../stores/system.store";
+import type { MeasureParams } from "../types";
 
 const VIEWPORT_RETRY_DELAY_MS = 16;
 
-interface UseCaptureDestinationBoundaryParams {
+interface UseInitialDestinationMeasurementParams {
 	sharedBoundTag: string;
 	enabled: boolean;
-	id: BoundaryId;
-	group?: string;
 	currentScreenKey: string;
-	expectedSourceScreenKey?: string;
 	measureBoundary: (options: MeasureParams) => void;
 }
 
-export const useCaptureDestinationBoundary = ({
+export const useInitialDestinationMeasurement = ({
 	sharedBoundTag,
 	enabled,
-	id,
-	group,
 	currentScreenKey,
-	expectedSourceScreenKey,
 	measureBoundary,
-}: UseCaptureDestinationBoundaryParams) => {
-	const animating = AnimationStore.getValue(currentScreenKey, "animating");
-	const closing = AnimationStore.getValue(currentScreenKey, "closing");
+}: UseInitialDestinationMeasurementParams) => {
+	const progress = AnimationStore.getValue(currentScreenKey, "progress");
 	const system = SystemStore.getBag(currentScreenKey);
+	const { pendingLifecycleRequestKind } = system;
 	const { blockLifecycleStart, unblockLifecycleStart } = system.actions;
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);
@@ -84,34 +73,24 @@ export const useCaptureDestinationBoundary = ({
 			"worklet";
 			const retryTick = retryToken.get();
 
-			if (closing.get() || animating.get()) {
+			const hasPendingOpenRequest =
+				pendingLifecycleRequestKind.get() ===
+				LifecycleTransitionRequestKind.Open;
+
+			const isWaitingForOpenToStart = progress.get() <= 0;
+
+			if (!hasPendingOpenRequest || !isWaitingForOpenToStart) {
 				return [0, retryTick] as const;
 			}
 
-			const resolvedSourceKey = resolvePendingSourceKey(
-				sharedBoundTag,
-				expectedSourceScreenKey,
-			);
-			const hasAttachableSourceLink = resolvedSourceKey
-				? getPendingLink(sharedBoundTag, resolvedSourceKey) !== null ||
-					hasSourceLink(sharedBoundTag, resolvedSourceKey)
-				: false;
 			const hasDestination = hasDestinationLink(
 				sharedBoundTag,
 				currentScreenKey,
 			);
 
-			const shouldBlock =
-				enabled &&
-				!!resolvedSourceKey &&
-				hasAttachableSourceLink &&
-				!hasDestination;
+			const shouldBlock = enabled && !hasDestination;
 
 			if (!shouldBlock) {
-				return [0, retryTick] as const;
-			}
-
-			if (group && getGroupActiveId(group) !== String(id)) {
 				return [0, retryTick] as const;
 			}
 
@@ -135,20 +114,4 @@ export const useCaptureDestinationBoundary = ({
 			scheduleViewportRetry();
 		},
 	);
-
-	useLayoutEffect(() => {
-		return () => {
-			runOnUI(() => {
-				"worklet";
-				cancelAnimation(retryToken);
-
-				if (!isBlockingLifecycleStart.get()) {
-					return;
-				}
-
-				unblockLifecycleStart();
-				isBlockingLifecycleStart.set(0);
-			})();
-		};
-	}, [isBlockingLifecycleStart, retryToken, unblockLifecycleStart]);
 };

@@ -111,7 +111,7 @@ describe("navigation reveal", () => {
 		);
 	});
 
-	it("uses the initial destination link while closing", () => {
+	it("compensates refreshed destination movement while closing", () => {
 		registerSourceAndDestination({
 			tag: "card",
 			sourceScreenKey: "list",

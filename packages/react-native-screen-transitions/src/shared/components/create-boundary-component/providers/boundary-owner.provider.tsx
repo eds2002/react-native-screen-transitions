@@ -10,7 +10,7 @@ import {
 } from "react";
 import type { View } from "react-native";
 import type Animated from "react-native-reanimated";
-import type { AnimatedRef } from "react-native-reanimated";
+import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 
 type BoundaryAssociatedStyle = React.ComponentProps<
 	typeof Animated.View
@@ -18,11 +18,19 @@ type BoundaryAssociatedStyle = React.ComponentProps<
 
 interface BoundaryOwnerContextValue {
 	ownerRef: AnimatedRef<View>;
-	registerTargetRef: (targetRef: AnimatedRef<View>) => void;
+	registerTargetRef: (
+		targetRef: AnimatedRef<View>,
+		preparedStyles: StyleProps,
+	) => void;
 	unregisterTargetRef: (targetRef: AnimatedRef<View>) => void;
 	activeTargetRef: AnimatedRef<View> | null;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
 }
+
+type BoundaryTargetEntry = {
+	ref: AnimatedRef<View>;
+	preparedStyles: StyleProps;
+};
 
 const BoundaryOwnerContext = createContext<BoundaryOwnerContextValue | null>(
 	null,
@@ -57,31 +65,34 @@ export const useBoundaryOwner = (params: {
 }) => {
 	const { ownerRef, associatedTargetStyles } = params;
 	const warnedAboutMultipleTargetsRef = useRef(false);
-	const [targetRefs, setTargetRefs] = useState<AnimatedRef<View>[]>([]);
+	const [targetEntry, setTargetEntry] = useState<BoundaryTargetEntry | null>(
+		null,
+	);
 
-	const registerTargetRef = useCallback((targetRef: AnimatedRef<View>) => {
-		setTargetRefs((prev) => {
-			if (prev.includes(targetRef)) {
-				return prev;
-			}
+	const registerTargetRef = useCallback(
+		(targetRef: AnimatedRef<View>, preparedStyles: StyleProps) => {
+			setTargetEntry((prev) => {
+				if (prev?.ref === targetRef) {
+					return prev;
+				}
 
-			if (
-				__DEV__ &&
-				prev.length > 0 &&
-				!warnedAboutMultipleTargetsRef.current
-			) {
-				warnedAboutMultipleTargetsRef.current = true;
-				console.warn(MULTIPLE_TARGETS_WARNING);
-			}
+				if (
+					__DEV__ &&
+					prev !== null &&
+					!warnedAboutMultipleTargetsRef.current
+				) {
+					warnedAboutMultipleTargetsRef.current = true;
+					console.warn(MULTIPLE_TARGETS_WARNING);
+				}
 
-			return [...prev, targetRef];
-		});
-	}, []);
+				return prev ?? { ref: targetRef, preparedStyles };
+			});
+		},
+		[],
+	);
 
 	const unregisterTargetRef = useCallback((targetRef: AnimatedRef<View>) => {
-		setTargetRefs((prev) =>
-			prev.filter((existingRef) => existingRef !== targetRef),
-		);
+		setTargetEntry((prev) => (prev?.ref === targetRef ? null : prev));
 	}, []);
 
 	const contextValue = useMemo(
@@ -89,21 +100,22 @@ export const useBoundaryOwner = (params: {
 			ownerRef,
 			registerTargetRef,
 			unregisterTargetRef,
-			activeTargetRef: targetRefs[0] ?? null,
+			activeTargetRef: targetEntry?.ref ?? null,
 			associatedTargetStyles,
 		}),
 		[
 			ownerRef,
 			registerTargetRef,
 			unregisterTargetRef,
-			targetRefs,
+			targetEntry,
 			associatedTargetStyles,
 		],
 	);
 
 	return {
 		contextValue,
-		hasActiveTarget: targetRefs.length > 0,
-		measuredRef: targetRefs[0] ?? ownerRef,
+		hasActiveTarget: targetEntry !== null,
+		measuredRef: targetEntry?.ref ?? ownerRef,
+		targetPreparedStyles: targetEntry?.preparedStyles,
 	};
 };

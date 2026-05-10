@@ -127,13 +127,15 @@ const revealInterpolatedStyle: BoundsNavigationRevealStyle = interpolationProps
 	.navigation.reveal();
 void revealInterpolatedStyle;
 const currentLink = interpolationProps.bounds.getLink(42);
-const initialLink = interpolationProps.bounds.getLink(42, {
-	snapshot: "initial",
-});
+const initialSource = currentLink?.initialSource;
+const initialDestination = currentLink?.initialDestination;
 const scopedBounds = interpolationProps.bounds({ id: 42 });
 const scopedCurrentLink = scopedBounds.getLink();
-const scopedInitialLink = scopedBounds.getLink({
-	snapshot: "initial",
+const scopedLinkRawSize = scopedCurrentLink?.compute({
+	method: "size",
+	space: "absolute",
+	target: "fullscreen",
+	raw: true,
 });
 const scopedMeasured = scopedBounds.getMeasured("screen-key");
 const scopedInitialSnapshot = scopedBounds.getSnapshot("screen-key");
@@ -142,9 +144,10 @@ const scopedInterpolatedStyle: number =
 const scopedInterpolatedBounds: number =
 	scopedBounds.interpolateBounds("pageX");
 void currentLink;
-void initialLink;
+void initialSource;
+void initialDestination;
 void scopedCurrentLink;
-void scopedInitialLink;
+void scopedLinkRawSize;
 void scopedMeasured;
 void scopedInitialSnapshot;
 void scopedInterpolatedStyle;

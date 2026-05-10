@@ -5,12 +5,17 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
 } from "../../../../constants";
-import { BoundStore } from "../../../../stores/bounds";
 import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
-import { prepareBoundStyles } from "../../helpers/prepare-bound-styles";
-import type { BoundsOptions } from "../../types/options";
+import { createLinkAccessor } from "../../helpers/create-link-accessor";
+import { getSourceBorderRadius, toNumber } from "../helpers";
 import {
-	toNumber,
+	combineScales,
+	composeCompensatedTranslation,
+	computeCenterScaleShift,
+	resolveDirectionalDragScale,
+	resolveOpacityRangeTuple,
+} from "../math";
+import {
 	ZOOM_DRAG_RESISTANCE,
 	ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
 	ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
@@ -20,22 +25,13 @@ import {
 	ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 } from "./config";
 import {
-	getSourceBorderRadius,
 	getZoomContentTarget,
 	interpolateOpacityRange,
 	resolveBackgroundScale,
 	resolveDragScaleTuple,
 	resolveDragTranslationTuple,
-	resolvePresentedZoomTag,
 } from "./helpers";
-import {
-	combineScales,
-	composeCompensatedTranslation,
-	computeCenterScaleShift,
-	resolveDirectionalDragScale,
-	resolveDirectionalDragTranslation,
-	resolveOpacityRangeTuple,
-} from "./math";
+import { resolveDirectionalDragTranslation } from "./math";
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
@@ -55,14 +51,6 @@ export function buildZoomStyles({
 		return {};
 	}
 
-	const isGroup = tag.includes(":");
-	let buildEffectiveTag = tag;
-	if (isGroup) {
-		const group = tag.split(":")[0];
-		const groupActiveTag = BoundStore.group.getActiveId(group)?.split(":")[0];
-		buildEffectiveTag = `${group}:${groupActiveTag ?? tag.split(":")[1]}`;
-	}
-
 	/* ------------------------------ Shared Setup ------------------------------ */
 
 	const target = zoomOptions?.target;
@@ -71,43 +59,21 @@ export function buildZoomStyles({
 		progress,
 		layouts: { screen: screenLayout },
 	} = props;
-	const isEnteringTransition = !props.next;
-	const currentRouteKey = props.current?.route.key;
-	const previousRouteKey = props.previous?.route.key;
-	const nextRouteKey = props.next?.route.key;
-	const activeRouteKey = props.active.route.key;
 
 	const zoomAnchor = target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor;
 
-	const requestedPair = BoundStore.link.getPair(buildEffectiveTag, {
-		currentScreenKey: currentRouteKey,
-		previousScreenKey: previousRouteKey,
-		nextScreenKey: nextRouteKey,
-		entering: isEnteringTransition,
-	});
-	const presented = resolvePresentedZoomTag({
-		requestedTag: buildEffectiveTag,
-		activeRouteKey,
-		requestedPair,
-		currentScreenKey: currentRouteKey,
-		previousScreenKey: previousRouteKey,
-		nextScreenKey: nextRouteKey,
-		entering: isEnteringTransition,
-	});
+	const boundsAccessor = createLinkAccessor(() => props);
+	const link = boundsAccessor.getLink(tag);
 
-	// Grouped zoom can retarget before the new active member has measured.
-	// Keep presenting the last measured tag so mask/content styles stay stable.
-	buildEffectiveTag = presented.tag;
+	if (!link) return {};
 
 	const baseRawOptions = {
-		id: buildEffectiveTag,
 		raw: true,
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
 	} as const;
 
-	const linkPair = presented.pair;
-
-	const sourceBorderRadius = getSourceBorderRadius(linkPair);
+	const buildEffectiveTag = link.id;
+	const sourceBorderRadius = getSourceBorderRadius(link);
 	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
 	const focusedElementOpacity = {
 		open: resolveOpacityRangeTuple({
@@ -137,23 +103,6 @@ export function buildZoomStyles({
 	const focusedContentSlot = props.current.layouts.navigationMaskEnabled
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID
 		: "content";
-
-	/**
-	 * Local bounds compute helper for navigation zoom.
-	 *
-	 * If you're building a custom transition, prefer the public `bounds()` helper.
-	 * We keep a local version here so zoom can share the same low-level compute path
-	 * without re-entering the decorated public accessor.
-	 */
-	const bounds = <T extends BoundsOptions>(options: T) => {
-		"worklet";
-
-		return prepareBoundStyles({
-			props,
-			options,
-			resolvedPair: linkPair,
-		});
-	};
 
 	/* --------------------------- Gesture / Drag Values ------------------------- */
 
@@ -225,17 +174,17 @@ export function buildZoomStyles({
 			explicitTarget: target,
 			screenLayout,
 			anchor: ZOOM_SHARED_OPTIONS.anchor,
-			resolvedPair: linkPair,
+			link,
 		});
 
-		const contentRaw = bounds({
+		const contentRaw = link.compute({
 			...baseRawOptions,
 			anchor: zoomAnchor,
 			method: "content",
 			target: focusedContentTarget,
 		} as const);
 
-		const maskRaw = bounds({
+		const maskRaw = link.compute({
 			...baseRawOptions,
 			anchor: ZOOM_SHARED_OPTIONS.anchor,
 			method: "size",
@@ -338,10 +287,10 @@ export function buildZoomStyles({
 		explicitTarget: target,
 		screenLayout,
 		anchor: ZOOM_SHARED_OPTIONS.anchor,
-		resolvedPair: linkPair,
+		link,
 	});
 
-	const elementRaw = bounds({
+	const elementRaw = link.compute({
 		...baseRawOptions,
 		anchor: zoomAnchor,
 		method: "transform",
@@ -350,12 +299,12 @@ export function buildZoomStyles({
 	} as const);
 
 	const boundTargetCenterX =
-		target === "bound" && linkPair.destinationBounds
-			? linkPair.destinationBounds.pageX + linkPair.destinationBounds.width / 2
+		target === "bound" && link.destination?.bounds
+			? link.destination.bounds.pageX + link.destination.bounds.width / 2
 			: undefined;
 	const boundTargetCenterY =
-		target === "bound" && linkPair.destinationBounds
-			? linkPair.destinationBounds.pageY + linkPair.destinationBounds.height / 2
+		target === "bound" && link.destination?.bounds
+			? link.destination.bounds.pageY + link.destination.bounds.height / 2
 			: undefined;
 
 	const elementCenterX =

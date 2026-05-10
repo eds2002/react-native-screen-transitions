@@ -1,5 +1,5 @@
 import { clamp } from "react-native-reanimated";
-import { FALSE, TRUE } from "../../../../constants";
+import { EPSILON, FALSE, TRUE } from "../../../../constants";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../utils/animation/emit";
 import type {
@@ -22,8 +22,9 @@ export const startPinchBase = (
 	} = runtime;
 
 	const wasSettling = gestures.settling.get();
+	const hasResidualGesture = Math.abs(gestures.normScale.get()) > EPSILON;
 
-	if (!wasSettling) {
+	if (!wasSettling || !hasResidualGesture) {
 		emit(animations.willAnimate, TRUE, FALSE);
 	}
 

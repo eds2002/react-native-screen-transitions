@@ -30,7 +30,7 @@ type BuildBoundsOptionsParams = {
 	overrides?: Partial<BoundsOptions>;
 };
 
-export const buildBoundsOptions = ({
+const buildBoundsOptions = ({
 	props,
 	id,
 	group,

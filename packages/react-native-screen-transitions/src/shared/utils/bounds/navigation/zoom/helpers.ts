@@ -1,6 +1,5 @@
-import { interpolate, makeMutable } from "react-native-reanimated";
-import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
-import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
+import { interpolate } from "react-native-reanimated";
+import type { BoundsLink } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
 import type { BoundsOptions } from "../../types/options";
 import {
@@ -13,34 +12,22 @@ import {
 	ZOOM_DRAG_TRANSLATION_POSITIVE_MAX,
 } from "./config";
 
-const presentedZoomTagByRoute = makeMutable<Record<string, string>>({});
-
-export function getSourceBorderRadius(
-	resolvedPair: ResolvedTransitionPair,
-): number {
-	"worklet";
-
-	return typeof resolvedPair.sourceStyles?.borderRadius === "number"
-		? resolvedPair.sourceStyles.borderRadius
-		: 0;
-}
-
 export function getZoomContentTarget({
 	explicitTarget,
 	screenLayout,
 	anchor,
-	resolvedPair,
+	link,
 }: {
 	explicitTarget: BoundsOptions["target"] | undefined;
 	screenLayout: Layout;
 	anchor: BoundsOptions["anchor"] | undefined;
-	resolvedPair: ResolvedTransitionPair;
+	link: BoundsLink;
 }) {
 	"worklet";
 
 	if (explicitTarget) return explicitTarget;
 
-	const sourceBounds = resolvedPair.sourceBounds;
+	const sourceBounds = link.source?.bounds;
 	const screenWidth = screenLayout.width;
 
 	if (!sourceBounds || sourceBounds.width <= 0 || screenWidth <= 0) {
@@ -126,74 +113,4 @@ export function interpolateOpacityRange(params: {
 		[range.outputStart, range.outputEnd],
 		"clamp",
 	);
-}
-
-export function resolvePresentedZoomTag(params: {
-	requestedTag: string;
-	activeRouteKey?: string;
-	requestedPair: ResolvedTransitionPair;
-	currentScreenKey?: string;
-	previousScreenKey?: string;
-	nextScreenKey?: string;
-	entering: boolean;
-}) {
-	"worklet";
-	const {
-		requestedTag,
-		activeRouteKey,
-		requestedPair,
-		currentScreenKey,
-		previousScreenKey,
-		nextScreenKey,
-		entering,
-	} = params;
-
-	if (!activeRouteKey || !requestedTag.includes(":")) {
-		return {
-			tag: requestedTag,
-			pair: requestedPair,
-		};
-	}
-
-	if (requestedPair.sourceBounds) {
-		presentedZoomTagByRoute.modify(
-			<T extends Record<string, string>>(state: T): T => {
-				"worklet";
-				const mutableState = state as Record<string, string>;
-				mutableState[activeRouteKey] = requestedTag;
-				return state;
-			},
-		);
-		return {
-			tag: requestedTag,
-			pair: requestedPair,
-		};
-	}
-
-	const cachedTag = presentedZoomTagByRoute.get()[activeRouteKey];
-	if (!cachedTag || cachedTag === requestedTag) {
-		return {
-			tag: requestedTag,
-			pair: requestedPair,
-		};
-	}
-
-	const cachedPair = resolveTransitionPair(cachedTag, {
-		currentScreenKey,
-		previousScreenKey,
-		nextScreenKey,
-		entering,
-	});
-
-	if (!cachedPair.sourceBounds) {
-		return {
-			tag: requestedTag,
-			pair: requestedPair,
-		};
-	}
-
-	return {
-		tag: cachedTag,
-		pair: cachedPair,
-	};
 }

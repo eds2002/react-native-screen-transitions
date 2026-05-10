@@ -36,10 +36,7 @@ export default function StyleIdBoundsLayout() {
 						active,
 					}) => {
 						"worklet";
-						const boundTag =
-							toStyleIdBoundTag(current.route) ||
-							toStyleIdBoundTag(active.route) ||
-							toStyleIdBoundTag(next?.route);
+						const boundTag = active?.route?.params?.id;
 
 						if (!boundTag) {
 							return {};

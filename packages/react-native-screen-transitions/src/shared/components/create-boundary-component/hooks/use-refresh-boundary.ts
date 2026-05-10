@@ -1,8 +1,10 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
 import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
-import { hasSourceLink } from "../../../stores/bounds/internals/links";
-import { GestureStore } from "../../../stores/gesture.store";
+import {
+	hasDestinationLink,
+	hasSourceLink,
+} from "../../../stores/bounds/internals/links";
 import type { BoundaryId, MeasureParams } from "../types";
 
 interface UseRefreshBoundaryParams {
@@ -31,17 +33,18 @@ export const useRefreshBoundary = ({
 		"willAnimate",
 	);
 	const currentClosing = AnimationStore.getValue(currentScreenKey, "closing");
-	const currentDragging = GestureStore.getValue(currentScreenKey, "dragging");
 	const currentEntering = AnimationStore.getValue(currentScreenKey, "entering");
+	const currentAnimating = AnimationStore.getValue(
+		currentScreenKey,
+		"animating",
+	);
+	const currentProgress = AnimationStore.getValue(currentScreenKey, "progress");
 	const nextWillAnimate = nextScreenKey
 		? AnimationStore.getValue(nextScreenKey, "willAnimate")
 		: null;
 
 	const nextClosing = nextScreenKey
 		? AnimationStore.getValue(nextScreenKey, "closing")
-		: null;
-	const nextDragging = nextScreenKey
-		? GestureStore.getValue(nextScreenKey, "dragging")
 		: null;
 	const nextEntering = nextScreenKey
 		? AnimationStore.getValue(nextScreenKey, "entering")
@@ -57,34 +60,35 @@ export const useRefreshBoundary = ({
 			const closing = hasNextScreen
 				? (nextClosing?.get() ?? 0)
 				: currentClosing.get();
-			const dragging = hasNextScreen
-				? (nextDragging?.get() ?? 0)
-				: currentDragging.get();
 			const entering = hasNextScreen
 				? (nextEntering?.get() ?? 0)
 				: currentEntering.get();
 
-			/*
-	      This guard is here to essentially avoid remeasuring when the initial animation has not finished.
-	      If we don't have this guard, we allow the user to measure a malformed
-	      screen. (e.g. measuring a screen that is still being applied transformation styles). This
-        guard should only apply when entering and dragging is true.
+			// Programmatic close marks `closing` before pulsing `willAnimate`.
+			// This frame is still settled, so destination refresh is valid and
+			// reveal can compute initial/current destination delta before progress moves.
+			const canRefreshPreCloseDestination =
+				!hasNextScreen &&
+				shouldRefresh &&
+				closing &&
+				!entering &&
+				!currentAnimating.get() &&
+				currentProgress.get() >= 1;
 
-        NOTE: Could there possibly be an edge case where if we repeat this same flow, but instead of dragging a user presses a dismiss button?
-        Could this guard possibly fail in this scenario?
-			 */
-			const hasUserInterruptedInitialAnimation = entering && dragging;
-
-			if (shouldRefresh && !closing && !hasUserInterruptedInitialAnimation) {
+			if (
+				canRefreshPreCloseDestination ||
+				(shouldRefresh && !closing && !entering)
+			) {
 				return 1;
 			}
 
 			return 0;
 		},
-		(shouldRefresh) => {
+		(shouldRefresh, prevShouldRefresh) => {
 			"worklet";
 
-			if (!enabled || !shouldRefresh) return;
+			if (!enabled || !shouldRefresh || shouldRefresh === prevShouldRefresh)
+				return;
 
 			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
 
@@ -93,24 +97,20 @@ export const useRefreshBoundary = ({
 			}
 
 			if (hasNextScreen) {
-				const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
-
-				const intent = !hasSource
-					? "capture-source"
-					: group
-						? "refresh-source"
-						: null;
-
-				if (!intent) {
+				if (
+					!nextScreenKey ||
+					!hasSourceLink(sharedBoundTag, currentScreenKey) ||
+					!hasDestinationLink(sharedBoundTag, nextScreenKey)
+				) {
 					return;
 				}
 
-				measureBoundary({ intent });
+				measureBoundary({ intent: "refresh-source" });
 				return;
 			}
 
 			measureBoundary({
-				intent: ["complete-destination", "refresh-destination"] as const,
+				intent: "refresh-destination",
 			});
 		},
 	);

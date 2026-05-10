@@ -5,7 +5,6 @@ import {
 	hasLinkSide,
 	isCompletedLinkForScreenKey,
 	isSameScreenFamily,
-	resolveLinkSnapshot,
 	selectSourceUpdateTargetIndex,
 } from "../helpers/link.helpers";
 import { ensureTagState } from "../helpers/tag-state.helpers";
@@ -49,13 +48,9 @@ function setSource(
 				isSameScreenFamily(topLink.source, source)
 			) {
 				topLink.source = source;
-
-				// Repeated capture can refresh a pending source before a
-				// destination attaches; keep the first usable source for snapshots.
 				if (!topLink.initialSource) {
 					topLink.initialSource = source;
 				}
-
 				return state;
 			}
 
@@ -76,9 +71,6 @@ function setSource(
 		const link = stack[targetIndex];
 
 		link.source = source;
-
-		// Refresh updates the live source, but initial snapshot reads should keep
-		// returning the first captured source for this link.
 		if (!link.initialSource) {
 			link.initialSource = source;
 		}
@@ -123,8 +115,6 @@ function setDestination(
 		};
 
 		link.destination = destination;
-		// Destination bounds can refresh as layout or scroll state settles; keep
-		// the first usable destination for close-time delta calculations.
 		if (!link.initialDestination) {
 			link.initialDestination = destination;
 		}
@@ -133,11 +123,7 @@ function setDestination(
 	});
 }
 
-function getActiveLink(
-	tag: TagID,
-	screenKey?: ScreenKey,
-	snapshot?: "initial",
-): TagLink | null {
+function getMatchedLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
 	"worklet";
 	const tagState = registry.get()[tag];
 	const stack = tagState?.linkStack;
@@ -147,13 +133,13 @@ function getActiveLink(
 
 	if (!screenKey) {
 		const lastLink = stack[stack.length - 1];
-		return lastLink ? resolveLinkSnapshot(lastLink, snapshot) : null;
+		return lastLink ?? null;
 	}
 
 	for (let i = stack.length - 1; i >= 0; i--) {
 		const link = stack[i];
 		if (isCompletedLinkForScreenKey(link, screenKey)) {
-			return resolveLinkSnapshot(link, snapshot);
+			return link;
 		}
 	}
 
@@ -188,7 +174,7 @@ function hasDestinationLink(tag: TagID, screenKey: ScreenKey): boolean {
 }
 
 export {
-	getActiveLink,
+	getMatchedLink,
 	getPendingLink,
 	hasDestinationLink,
 	hasSourceLink,

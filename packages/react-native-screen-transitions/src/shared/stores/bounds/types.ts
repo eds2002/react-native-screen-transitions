@@ -47,8 +47,11 @@ export type ScreenIdentifier = {
 
 export type TagLink = {
 	source: ScreenIdentifier & MeasuredEntry;
+	/** Destination side once attached; null while the source is still pending. */
 	destination: (ScreenIdentifier & MeasuredEntry) | null;
+	/** First captured source side exposed for public link inspection. */
 	initialSource?: ScreenIdentifier & MeasuredEntry;
+	/** First attached destination side, used to compensate reveal closes after destination refreshes. */
 	initialDestination?: ScreenIdentifier & MeasuredEntry;
 };
 
@@ -76,5 +79,8 @@ export type TagState = {
 };
 
 export type GroupState = {
+	/** Latest requested group member id from mounted grouped bounds. */
 	activeId: string;
+	/** Group member id that started the current linked transition. */
+	initialId?: string;
 };

@@ -16,25 +16,6 @@ export const isSameScreenFamily = (
 	);
 };
 
-// Link selection still happens against the live stack. Snapshot reads only swap
-// the selected link's measured sides to the first captured source/destination.
-export function resolveLinkSnapshot(
-	link: TagLink,
-	snapshot?: "initial",
-): TagLink {
-	"worklet";
-
-	if (snapshot !== "initial") {
-		return link;
-	}
-
-	return {
-		...link,
-		source: link.initialSource ?? link.source,
-		destination: link.initialDestination ?? link.destination,
-	};
-}
-
 export function findLatestPendingSourceLinkIndex(
 	stack: TagLink[],
 	expectedSourceScreenKey?: ScreenKey,

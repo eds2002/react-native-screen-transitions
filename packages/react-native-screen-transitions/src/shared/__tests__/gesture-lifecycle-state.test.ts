@@ -9,6 +9,7 @@ import { finalizePanRelease, startPanBase } from "../providers/screen/gestures/h
 import { startPinchBase } from "../providers/screen/gestures/helpers/pinch-phases";
 import type { AnimationStoreMap } from "../stores/animation.store";
 import type { GestureStoreMap } from "../stores/gesture.store";
+import { animateToProgress } from "../utils/animation/animate-to-progress";
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 
@@ -127,6 +128,44 @@ afterEach(() => {
 });
 
 describe("gesture lifecycle state", () => {
+	it("marks opening as entering before the willAnimate pulse is observed", () => {
+		const raf = installDeferredAnimationFrame();
+		const animations = createAnimations();
+		animations.progress.set(0);
+
+		animateToProgress({
+			target: "open",
+			animations,
+			targetProgress: shared(0),
+		});
+
+		expect(animations.willAnimate.get()).toBe(1);
+		expect(animations.entering.get()).toBe(1);
+		expect(animations.closing.get()).toBe(0);
+
+		raf.flush();
+		raf.restore();
+	});
+
+	it("marks closing before the willAnimate pulse is observed", () => {
+		const raf = installDeferredAnimationFrame();
+		const animations = createAnimations();
+		animations.entering.set(1);
+
+		animateToProgress({
+			target: "close",
+			animations,
+			targetProgress: shared(1),
+		});
+
+		expect(animations.willAnimate.get()).toBe(1);
+		expect(animations.closing.get()).toBe(1);
+		expect(animations.entering.get()).toBe(0);
+
+		raf.flush();
+		raf.restore();
+	});
+
 	it("emits willAnimate when a pan starts from idle state", () => {
 		const raf = installDeferredAnimationFrame();
 		const { runtime, gestures, animations } = createRuntime();
@@ -147,6 +186,7 @@ describe("gesture lifecycle state", () => {
 		const raf = installDeferredAnimationFrame();
 		const { runtime, gestures, animations } = createRuntime();
 		gestures.settling.set(1);
+		gestures.normY.set(0.25);
 
 		startPanBase(runtime);
 
@@ -158,10 +198,29 @@ describe("gesture lifecycle state", () => {
 		raf.restore();
 	});
 
+	it("emits willAnimate when a pan restarts after gesture values reached rest", () => {
+		const raf = installDeferredAnimationFrame();
+		const { runtime, gestures, animations } = createRuntime();
+		gestures.settling.set(1);
+		gestures.normY.set(0);
+
+		startPanBase(runtime);
+
+		expect(gestures.dragging.get()).toBe(1);
+		expect(gestures.settling.get()).toBe(0);
+		expect(animations.willAnimate.get()).toBe(1);
+
+		raf.flush();
+		raf.restore();
+
+		expect(animations.willAnimate.get()).toBe(0);
+	});
+
 	it("does not emit willAnimate when a pinch restarts while gesture values are settling", () => {
 		const raf = installDeferredAnimationFrame();
 		const { runtime, gestures, animations } = createRuntime();
 		gestures.settling.set(1);
+		gestures.normScale.set(0.25);
 
 		startPinchBase(runtime, { focalX: 12, focalY: 24 } as any);
 
@@ -242,6 +301,33 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.settling.get()).toBe(0);
 	});
 
+	it("does not start a progress animation for a cancelled no-op pan release", () => {
+		const { runtime, gestures, animations } = createRuntime();
+		animations.progress.set(1);
+		gestures.dragging.set(1);
+
+		finalizePanRelease(
+			{
+				target: 1,
+				shouldDismiss: false,
+				initialVelocity: 0,
+				transitionSpec: {
+					open: { duration: 200, __finished: false } as any,
+					close: { duration: 200 } as any,
+				},
+				resetSpec: undefined,
+			},
+			runtime,
+			undefined,
+			{ width: 390, height: 844 },
+			{ velocityX: 0, velocityY: 0 } as any,
+		);
+
+		expect(gestures.dragging.get()).toBe(0);
+		expect(gestures.dismissing.get()).toBe(0);
+		expect(animations.animating.get()).toBe(0);
+	});
+
 	it("does not mark a dismissing pan release as settling", () => {
 		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);
@@ -298,5 +384,40 @@ describe("gesture lifecycle state", () => {
 		expect(hydrated.gesture.settling).toBe(1);
 		expect(hydrated.animating).toBe(1);
 		expect(hydrated.settled).toBe(0);
+	});
+
+	it("keeps logically settled false while gesture reset is active", () => {
+		const gestures = createGestureStore();
+		gestures.settling.set(1);
+		const state = createScreenTransitionState({
+			key: "route-a",
+			name: "RouteA",
+		});
+
+		const hydrated = hydrateTransitionState(
+			{
+				...createAnimations(),
+				progress: shared(1),
+				animating: shared(0),
+				settled: shared(1),
+				logicallySettled: shared(1),
+				gesture: gestures,
+				route: state.route,
+				options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
+				navigationMaskEnabled: false,
+				targetProgress: shared(1),
+				resolvedAutoSnapPoint: shared(-1),
+				measuredContentLayout: shared(null),
+				contentLayoutSlot: { width: 0, height: 0 },
+				hasAutoSnapPoint: false,
+				sortedNumericSnapPoints: [],
+				unwrapped: state,
+			},
+			{ width: 390, height: 844 },
+		);
+
+		expect(hydrated.animating).toBe(1);
+		expect(hydrated.settled).toBe(0);
+		expect(hydrated.logicallySettled).toBe(0);
 	});
 });

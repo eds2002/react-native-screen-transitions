@@ -102,6 +102,13 @@ export const animateToProgress = ({
 	};
 
 	if (emitWillAnimate) {
+		if (isClosing) {
+			closing.set(TRUE);
+			entering.set(FALSE);
+		} else if (markEntering) {
+			entering.set(TRUE);
+		}
+
 		willAnimate.set(TRUE);
 		requestAnimationFrame(() => {
 			"worklet";

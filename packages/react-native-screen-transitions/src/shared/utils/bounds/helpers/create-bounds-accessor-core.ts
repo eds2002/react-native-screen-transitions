@@ -1,6 +1,5 @@
 import type {
 	BoundsInterpolationProps,
-	BoundsLinkOptions,
 	BoundsScopedAccessors,
 } from "../../../types/bounds.types";
 import type { BoundsOptions, BoundsOptionsResult } from "../types/options";
@@ -9,14 +8,14 @@ import { createInterpolators } from "./create-interpolators";
 import { createLinkAccessor } from "./create-link-accessor";
 import { prepareBoundStyles } from "./prepare-bound-styles";
 
-export type BoundsComputeResult<T extends BoundsOptions> =
-	BoundsOptionsResult<T> & BoundsScopedAccessors;
+type BoundsComputeResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
+	BoundsScopedAccessors;
 
-export type BoundsCompute = <T extends BoundsOptions>(
+type BoundsCompute = <T extends BoundsOptions>(
 	options: T,
 ) => BoundsComputeResult<T>;
 
-export type BoundsAccessorCore = BoundsCompute &
+type BoundsAccessorCore = BoundsCompute &
 	ReturnType<typeof createLinkAccessor> &
 	ReturnType<typeof createInterpolators>;
 
@@ -80,9 +79,9 @@ const createBoundsAccessorParts = ({
 				configurable: true,
 			},
 			getLink: {
-				value: (options?: BoundsLinkOptions) => {
+				value: () => {
 					"worklet";
-					return getLink(scopedTag, options);
+					return getLink(scopedTag);
 				},
 				enumerable: false,
 				configurable: true,
