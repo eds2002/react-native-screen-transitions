@@ -66,7 +66,7 @@ export const createTransitionAccessor = (
 		const source = currentSources[sourceIndex];
 		if (!source) return null;
 
-		source.screenInterpolatorFrameUpdater.get();
+		source.screenInterpolatorPropsRevision.get();
 		const frame = source.screenInterpolatorProps.get();
 
 		return {
@@ -116,7 +116,7 @@ const buildSourceBoundsAccessor = (source: ScreenAnimationSource) => {
 export const useBuildTransitionAccessor = () => {
 	const {
 		screenInterpolatorProps,
-		screenInterpolatorFrameUpdater,
+		screenInterpolatorPropsRevision,
 		ancestorScreenAnimationSources,
 		descendantScreenAnimationSources,
 	} = useScreenAnimationContext();
@@ -124,7 +124,7 @@ export const useBuildTransitionAccessor = () => {
 	return useMemo(() => {
 		const selfSource = {
 			screenInterpolatorProps,
-			screenInterpolatorFrameUpdater,
+			screenInterpolatorPropsRevision,
 		};
 
 		const ancestorTransitionSources = ancestorScreenAnimationSources.map(
@@ -151,7 +151,7 @@ export const useBuildTransitionAccessor = () => {
 		);
 	}, [
 		screenInterpolatorProps,
-		screenInterpolatorFrameUpdater,
+		screenInterpolatorPropsRevision,
 		ancestorScreenAnimationSources,
 		descendantScreenAnimationSources,
 	]);

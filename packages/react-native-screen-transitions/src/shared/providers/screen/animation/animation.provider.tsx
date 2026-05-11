@@ -43,8 +43,8 @@ export const {
 })<Props, ScreenAnimationContextValue>((): ScreenAnimationContextResult => {
 	const parentContext = useContext(ScreenAnimationContext);
 	const parentScreenInterpolatorProps = parentContext?.screenInterpolatorProps;
-	const parentScreenInterpolatorFrameUpdater =
-		parentContext?.screenInterpolatorFrameUpdater;
+	const parentScreenInterpolatorPropsRevision =
+		parentContext?.screenInterpolatorPropsRevision;
 	const parentAncestorScreenAnimationSources =
 		parentContext?.ancestorScreenAnimationSources;
 	const parentRegisterDescendantScreenAnimationSource =
@@ -54,7 +54,7 @@ export const {
 
 	const {
 		screenInterpolatorProps,
-		screenInterpolatorFrameUpdater,
+		screenInterpolatorPropsRevision,
 		nextInterpolator,
 		currentInterpolator,
 	} = useScreenAnimationPipeline();
@@ -62,9 +62,9 @@ export const {
 	const selfScreenAnimationSource = useMemo<ScreenAnimationSource>(
 		() => ({
 			screenInterpolatorProps,
-			screenInterpolatorFrameUpdater,
+			screenInterpolatorPropsRevision,
 		}),
-		[screenInterpolatorProps, screenInterpolatorFrameUpdater],
+		[screenInterpolatorProps, screenInterpolatorPropsRevision],
 	);
 
 	const selfScreenAnimationTransitionSource =
@@ -132,7 +132,7 @@ export const {
 	const ancestorScreenAnimationSources = useMemo(() => {
 		if (
 			!parentScreenInterpolatorProps ||
-			!parentScreenInterpolatorFrameUpdater ||
+			!parentScreenInterpolatorPropsRevision ||
 			!parentAncestorScreenAnimationSources
 		) {
 			return [];
@@ -141,13 +141,13 @@ export const {
 		return [
 			{
 				screenInterpolatorProps: parentScreenInterpolatorProps,
-				screenInterpolatorFrameUpdater: parentScreenInterpolatorFrameUpdater,
+				screenInterpolatorPropsRevision: parentScreenInterpolatorPropsRevision,
 			},
 			...parentAncestorScreenAnimationSources,
 		];
 	}, [
 		parentScreenInterpolatorProps,
-		parentScreenInterpolatorFrameUpdater,
+		parentScreenInterpolatorPropsRevision,
 		parentAncestorScreenAnimationSources,
 	]);
 
@@ -197,7 +197,7 @@ export const {
 	return {
 		value: {
 			screenInterpolatorProps,
-			screenInterpolatorFrameUpdater,
+			screenInterpolatorPropsRevision,
 			nextInterpolator,
 			currentInterpolator,
 			ancestorScreenAnimationSources,

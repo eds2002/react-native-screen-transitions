@@ -7,7 +7,7 @@ import type { ScreenAnimationDescendantSources } from "../providers/screen/anima
 mock.module("../providers/screen/animation/animation.provider", () => ({
 	useScreenAnimationContext: () => ({
 		screenInterpolatorProps: { get: () => ({}) },
-		screenInterpolatorFrameUpdater: { get: () => 0 },
+		screenInterpolatorPropsRevision: { get: () => 0 },
 		ancestorScreenAnimationSources: [],
 		descendantScreenAnimationSources: { get: () => [] },
 	}),
@@ -26,7 +26,7 @@ const createSource = (routeKey: string): TransitionAccessorSource => {
 		screenInterpolatorProps: {
 			get: () => frame,
 		} as TransitionAccessorSource["screenInterpolatorProps"],
-		screenInterpolatorFrameUpdater: {
+		screenInterpolatorPropsRevision: {
 			get: () => 0,
 		},
 		boundsAccessor: {

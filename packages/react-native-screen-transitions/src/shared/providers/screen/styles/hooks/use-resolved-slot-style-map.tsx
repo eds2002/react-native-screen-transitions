@@ -20,7 +20,7 @@ export const useResolvedStylesMap = ({
 	currentStylesMap,
 	ancestorStylesMap,
 }: UseResolvedStylesMapParams) => {
-	const { screenInterpolatorProps, screenInterpolatorFrameUpdater } =
+	const { screenInterpolatorProps, screenInterpolatorPropsRevision } =
 		useScreenAnimationContext();
 	const previousStyleStatesBySlot = useSharedValue<ResettableStyleStatesBySlot>(
 		{},
@@ -28,7 +28,7 @@ export const useResolvedStylesMap = ({
 
 	return useDerivedValue(() => {
 		"worklet";
-		screenInterpolatorFrameUpdater.get();
+		screenInterpolatorPropsRevision.get();
 
 		const props = screenInterpolatorProps.get();
 		// Keep missing local slots alive while another route drives this screen.

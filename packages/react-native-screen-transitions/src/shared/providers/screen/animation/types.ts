@@ -3,7 +3,7 @@ import type { ScreenTransitionTarget } from "../../../types/animation.types";
 import type { BoundsAccessor } from "../../../types/bounds.types";
 import type { ScreenInterpolatorFrame } from "./helpers/pipeline";
 
-export type ScreenInterpolatorFrameUpdater = Pick<SharedValue<number>, "get">;
+export type ScreenInterpolatorPropsRevision = Pick<SharedValue<number>, "get">;
 
 export type ScreenAnimationLegacyTarget =
 	| "self"
@@ -17,7 +17,7 @@ export type ScreenAnimationTarget =
 
 export type ScreenAnimationSource = {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
-	screenInterpolatorFrameUpdater: ScreenInterpolatorFrameUpdater;
+	screenInterpolatorPropsRevision: ScreenInterpolatorPropsRevision;
 };
 
 export type ScreenAnimationTransitionSource = ScreenAnimationSource & {

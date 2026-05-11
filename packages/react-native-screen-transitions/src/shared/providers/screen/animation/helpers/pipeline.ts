@@ -26,7 +26,7 @@ export type ScreenInterpolatorFrame = Omit<
 
 interface ScreenAnimationPipeline {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
-	screenInterpolatorFrameUpdater: DerivedValue<number>;
+	screenInterpolatorPropsRevision: DerivedValue<number>;
 	nextInterpolator: ScreenStyleInterpolator | undefined;
 	currentInterpolator: ScreenStyleInterpolator | undefined;
 }
@@ -83,8 +83,8 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		createInitialBaseInterpolatorProps(dimensions, insets),
 	);
 
-	const screenInterpolatorFrameRevisionState = useSharedValue({ value: 0 });
-	const screenInterpolatorFrameUpdater = useDerivedValue<number>(() => {
+	const propsRevisionState = useSharedValue({ value: 0 });
+	const screenInterpolatorPropsRevision = useDerivedValue<number>(() => {
 		"worklet";
 
 		screenInterpolatorProps.modify((frame) => {
@@ -116,18 +116,19 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 			return frame;
 		}, false);
 
-		// MAINTAINER NOTE: We increment a revision counter instead of returning a
-		// new frame object so consumers can subscribe to in-place frame updates.
+		// Critical reactive dependency for `screenInterpolatorProps`.
 		//
-		// Since we mutate the frame in place for performance reasons, readers must
-		// call `screenInterpolatorFrameUpdater.get()` before reading the frame.
-		screenInterpolatorFrameRevisionState.modify((revision) => {
+		// `screenInterpolatorProps` is mutated in place to avoid allocating a large
+		// interpolator frame every tick. Consumers must read this revision before
+		// reading `screenInterpolatorProps`, otherwise Reanimated may not subscribe
+		// to frame updates and can observe stale transition state.
+		propsRevisionState.modify((revision) => {
 			"worklet";
 			revision.value += 1;
 			return revision;
 		}, false);
 
-		return screenInterpolatorFrameRevisionState.get().value;
+		return propsRevisionState.get().value;
 	});
 
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
@@ -135,7 +136,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 	return {
 		screenInterpolatorProps,
-		screenInterpolatorFrameUpdater,
+		screenInterpolatorPropsRevision,
 		nextInterpolator,
 		currentInterpolator,
 	};
