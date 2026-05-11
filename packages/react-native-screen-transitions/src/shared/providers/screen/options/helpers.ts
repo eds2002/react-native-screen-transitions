@@ -134,6 +134,75 @@ const resolveBackdropBehaviorOption = (
 		: fallback;
 };
 
+const areGestureActivationAreasEqual = (
+	left: RequiredScreenOption<"gestureActivationArea">,
+	right: RequiredScreenOption<"gestureActivationArea">,
+) => {
+	"worklet";
+	if (left === right) return true;
+
+	if (
+		typeof left !== "object" ||
+		left === null ||
+		typeof right !== "object" ||
+		right === null
+	) {
+		return false;
+	}
+
+	return (
+		left.left === right.left &&
+		left.right === right.right &&
+		left.top === right.top &&
+		left.bottom === right.bottom
+	);
+};
+
+const areGestureDirectionsEqual = (
+	left: RequiredScreenOption<"gestureDirection">,
+	right: RequiredScreenOption<"gestureDirection">,
+) => {
+	"worklet";
+	if (left === right) return true;
+	if (!Array.isArray(left) || !Array.isArray(right)) return false;
+	if (left.length !== right.length) return false;
+
+	for (let i = 0; i < left.length; i++) {
+		if (left[i] !== right[i]) {
+			return false;
+		}
+	}
+
+	return true;
+};
+
+const areScreenOptionsEqual = (
+	left: ScreenOptionsState,
+	right: ScreenOptionsState,
+) => {
+	"worklet";
+	return (
+		left.gestureEnabled === right.gestureEnabled &&
+		left.experimental_allowDisabledGestureTracking ===
+			right.experimental_allowDisabledGestureTracking &&
+		areGestureDirectionsEqual(left.gestureDirection, right.gestureDirection) &&
+		left.gestureSensitivity === right.gestureSensitivity &&
+		left.gestureVelocityImpact === right.gestureVelocityImpact &&
+		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
+		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
+		left.gestureResponseDistance === right.gestureResponseDistance &&
+		left.gestureDrivesProgress === right.gestureDrivesProgress &&
+		areGestureActivationAreasEqual(
+			left.gestureActivationArea,
+			right.gestureActivationArea,
+		) &&
+		left.gestureSnapLocked === right.gestureSnapLocked &&
+		left.sheetScrollGestureBehavior === right.sheetScrollGestureBehavior &&
+		left.backdropBehavior === right.backdropBehavior &&
+		left.baseOptions === right.baseOptions
+	);
+};
+
 export const resolveBaseScreenOptions = (
 	options: ScreenTransitionOptions,
 ): ScreenOptionsSnapshot => ({
@@ -193,14 +262,18 @@ export const syncScreenOptionsBase = (
 	base: ScreenOptionsSnapshot,
 ) => {
 	"worklet";
-	screenOptions.set({
+	const next = {
 		...base,
 		gestureDirection: cloneGestureDirection(base.gestureDirection),
 		gestureActivationArea: cloneGestureActivationArea(
 			base.gestureActivationArea,
 		),
 		baseOptions: base,
-	});
+	};
+
+	if (!areScreenOptionsEqual(screenOptions.get(), next)) {
+		screenOptions.set(next);
+	}
 };
 
 export const syncScreenOptionsOverrides = (
@@ -267,5 +340,7 @@ export const syncScreenOptionsOverrides = (
 		baseOptions: base,
 	};
 
-	screenOptions.set(next);
+	if (!areScreenOptionsEqual(screenOptions.get(), next)) {
+		screenOptions.set(next);
+	}
 };
