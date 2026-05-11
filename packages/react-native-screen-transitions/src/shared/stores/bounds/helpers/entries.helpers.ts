@@ -1,16 +1,9 @@
 import type { EntryPatch, ScreenEntry, ScreenKey, TagState } from "../types";
 
-type EntryPatchOptionalField =
-	| "boundaryConfig"
-	| "ancestorKeys"
-	| "navigatorKey"
-	| "ancestorNavigatorKeys";
+type EntryPatchOptionalField = "boundaryConfig";
 
 const ENTRY_PATCH_OPTIONAL_FIELDS = [
 	"boundaryConfig",
-	"ancestorKeys",
-	"navigatorKey",
-	"ancestorNavigatorKeys",
 ] as const satisfies readonly EntryPatchOptionalField[];
 
 export const ensureScreenEntry = (
@@ -58,17 +51,5 @@ export const findMatchingScreenEntry = (
 	"worklet";
 	if (!tagState) return null;
 
-	const direct = tagState.screens[screenKey];
-	if (direct) {
-		return direct;
-	}
-
-	for (const entryScreenKey in tagState.screens) {
-		const entry = tagState.screens[entryScreenKey];
-		if (entry.ancestorKeys?.includes(screenKey)) {
-			return entry;
-		}
-	}
-
-	return null;
+	return tagState.screens[screenKey] ?? null;
 };

@@ -23,10 +23,6 @@ export type ScreenGestureTarget = ChainTarget;
 export const useScreenGesture = (target?: ScreenGestureTarget) => {
 	const ctx = useGestureContext();
 
-	if (!target || target === "self") {
-		return ctx?.panGesture ?? null;
-	}
-
 	return (
 		resolveChainTarget({
 			target,

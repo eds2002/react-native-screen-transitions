@@ -5,7 +5,7 @@ import {
 	createScreenTransitionState,
 } from "../constants";
 import { BoundStore } from "../stores/bounds";
-import type { ScreenInterpolationProps } from "../types/animation.types";
+import type { BoundsInterpolationProps } from "../types/bounds.types";
 import type { Layout } from "../types/screen.types";
 import { buildZoomStyles } from "../utils/bounds/navigation/zoom/build";
 import {
@@ -33,7 +33,7 @@ const makeState = (key: string, navigationMaskEnabled = false) => ({
 	layouts: { screen: screenLayout, navigationMaskEnabled },
 });
 
-const makeProps = (): Omit<ScreenInterpolationProps, "bounds"> => {
+const makeProps = (): BoundsInterpolationProps => {
 	const previous = makeState("list");
 	const current = {
 		...makeState("detail", true),

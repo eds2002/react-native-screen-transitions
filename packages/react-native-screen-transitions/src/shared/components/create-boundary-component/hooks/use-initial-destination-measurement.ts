@@ -12,6 +12,8 @@ import {
 	SystemStore,
 } from "../../../stores/system.store";
 import type { MeasureParams } from "../types";
+import { createLinkContext } from "./helpers/boundary-link-context";
+import { shouldBlockInitialDestinationMeasurement } from "./helpers/measurement-rules";
 
 const VIEWPORT_RETRY_DELAY_MS = 16;
 
@@ -19,6 +21,7 @@ interface UseInitialDestinationMeasurementParams {
 	sharedBoundTag: string;
 	enabled: boolean;
 	currentScreenKey: string;
+	preferredSourceScreenKey?: string;
 	measureBoundary: (options: MeasureParams) => void;
 }
 
@@ -26,6 +29,7 @@ export const useInitialDestinationMeasurement = ({
 	sharedBoundTag,
 	enabled,
 	currentScreenKey,
+	preferredSourceScreenKey,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
 	const progress = AnimationStore.getValue(currentScreenKey, "progress");
@@ -83,12 +87,17 @@ export const useInitialDestinationMeasurement = ({
 				return [0, retryTick] as const;
 			}
 
-			const hasDestination = hasDestinationLink(
+			const linkContext = createLinkContext({
 				sharedBoundTag,
 				currentScreenKey,
-			);
+				preferredSourceScreenKey,
+			});
 
-			const shouldBlock = enabled && !hasDestination;
+			const shouldBlock = shouldBlockInitialDestinationMeasurement({
+				enabled,
+				hasDestinationLink: linkContext.hasDestinationLink,
+				hasAttachableSourceLink: linkContext.hasAttachableSourceLink,
+			});
 
 			if (!shouldBlock) {
 				return [0, retryTick] as const;

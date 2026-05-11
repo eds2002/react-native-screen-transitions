@@ -14,6 +14,8 @@ import type {
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	ScreenTransitionConfig,
+	ScreenTransitionDepthTarget,
+	ScreenTransitionTarget,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "..";
@@ -76,33 +78,65 @@ const zoomOptions: BoundsNavigationZoomOptions = {
 
 declare const interpolationProps: ScreenInterpolationProps;
 
-const gestureTarget: ScreenGestureTarget = { ancestor: 2 };
-const animationTarget: ScreenAnimationTarget = { ancestor: 2 };
+const gestureTarget: ScreenGestureTarget = { depth: -2 };
+const animationTarget: ScreenAnimationTarget = { depth: -2 };
+const legacyAnimationTarget: ScreenAnimationTarget = { ancestor: 2 };
+const transitionTarget: ScreenTransitionTarget = { depth: 2 };
+const transitionDepthTarget: ScreenTransitionDepthTarget = { depth: 0 };
 
 function usePublicApiHooksTypecheck() {
 	const selfAnimation: DerivedValue<ScreenInterpolationProps> =
 		useScreenAnimation();
 	const selfTargetAnimation: DerivedValue<ScreenInterpolationProps> =
+		useScreenAnimation({ depth: 0 });
+	const ancestorAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation({ depth: -1 });
+	const childAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation({ depth: 1 });
+	const legacySelfAnimation: DerivedValue<ScreenInterpolationProps> =
 		useScreenAnimation("self");
-	const ancestorAnimation: DerivedValue<ScreenInterpolationProps> | null =
+	const legacyParentAnimation: DerivedValue<ScreenInterpolationProps | null> =
 		useScreenAnimation("parent");
+	const legacyRootAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation("root");
+	const legacyAncestorAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation({ ancestor: 2 });
 	const inheritedGesture = useScreenGesture();
-	const ancestorGesture = useScreenGesture("parent");
+	const ancestorGesture = useScreenGesture({ depth: -1 });
 
 	return {
 		selfAnimation,
 		selfTargetAnimation,
 		ancestorAnimation,
+		childAnimation,
+		legacySelfAnimation,
+		legacyParentAnimation,
+		legacyRootAnimation,
+		legacyAncestorAnimation,
 		inheritedGesture,
 		ancestorGesture,
 	};
 }
 
 void usePublicApiHooksTypecheck;
+void legacyAnimationTarget;
+void transitionTarget;
+void transitionDepthTarget;
 
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
+const parentTransition = interpolationProps.transition({ depth: -1 });
+const grandparentTransition = interpolationProps.transition({ depth: -2 });
+const selfTransition = interpolationProps.transition({ depth: 0 });
+const childTransition = interpolationProps.transition({ depth: 1 });
+const grandchildTransition = interpolationProps.transition({ depth: 2 });
+const rootTransitionBounds = interpolationProps
+	.transition({ depth: -2 })
+	?.bounds({ id: 42 });
+const leafTransitionBounds = interpolationProps
+	.transition({ depth: 2 })
+	?.bounds({ id: 42 });
 const offsetBoundsResult = interpolationProps.bounds({
 	id: 42,
 	offset: { x: 10, y: -10 },
@@ -146,6 +180,13 @@ const scopedInterpolatedBounds: number =
 void currentLink;
 void initialSource;
 void initialDestination;
+void parentTransition;
+void grandparentTransition;
+void selfTransition;
+void childTransition;
+void grandchildTransition;
+void rootTransitionBounds;
+void leafTransitionBounds;
 void scopedCurrentLink;
 void scopedLinkRawSize;
 void scopedMeasured;

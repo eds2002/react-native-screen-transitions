@@ -1,6 +1,6 @@
 import { hasAnyKeys } from "../helpers/keys";
-import { matchesNavigatorKey, matchesScreenKey } from "../helpers/matching";
-import type { NavigatorKey, ScreenEntry, ScreenKey, TagLink } from "../types";
+import { matchesScreenKey } from "../helpers/matching";
+import type { ScreenEntry, ScreenKey, TagLink } from "../types";
 import { type RegistryState, registry } from "./state";
 
 type LinkPredicate = (link: TagLink) => boolean;
@@ -56,43 +56,4 @@ function clear(screenKey: ScreenKey) {
 	);
 }
 
-function clearByAncestor(ancestorKey: ScreenKey) {
-	"worklet";
-	clearRegistry(
-		(entryScreenKey, screenEntry) => {
-			return (
-				entryScreenKey === ancestorKey ||
-				(screenEntry.ancestorKeys?.includes(ancestorKey) ?? false)
-			);
-		},
-		(link) => {
-			return (
-				matchesScreenKey(link.source, ancestorKey) ||
-				matchesScreenKey(link.destination, ancestorKey)
-			);
-		},
-	);
-}
-
-function clearByBranch(branchNavigatorKey: NavigatorKey) {
-	"worklet";
-	if (!branchNavigatorKey) return;
-
-	clearRegistry(
-		(_entryScreenKey, screenEntry) => {
-			return (
-				screenEntry.navigatorKey === branchNavigatorKey ||
-				(screenEntry.ancestorNavigatorKeys?.includes(branchNavigatorKey) ??
-					false)
-			);
-		},
-		(link) => {
-			return (
-				matchesNavigatorKey(link.source, branchNavigatorKey) ||
-				matchesNavigatorKey(link.destination, branchNavigatorKey)
-			);
-		},
-	);
-}
-
-export { clear, clearByAncestor, clearByBranch };
+export { clear };

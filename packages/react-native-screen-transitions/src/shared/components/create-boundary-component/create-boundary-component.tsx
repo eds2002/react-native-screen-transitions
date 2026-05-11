@@ -66,9 +66,6 @@ export function createBoundaryComponent<P extends object>(
 			previousScreenKey: preferredSourceScreenKey,
 			currentScreenKey,
 			nextScreenKey,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 			hasConfiguredInterpolator,
 		} = useDescriptorDerivations();
 
@@ -126,9 +123,6 @@ export function createBoundaryComponent<P extends object>(
 			sharedBoundTag,
 			preferredSourceScreenKey,
 			currentScreenKey,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 			preparedStyles,
 			measuredAnimatedRef: measuredRef,
 		});
@@ -136,14 +130,11 @@ export function createBoundaryComponent<P extends object>(
 		const shouldRunDestinationEffects = runtimeEnabled && !hasNextScreen;
 
 		// Register/unregister this boundary in the presence map so source/destination
-		// matching can resolve across screens (including ancestor relationships).
+		// matching can resolve across concrete screen keys.
 		useBoundaryPresence({
 			enabled: runtimeEnabled,
 			sharedBoundTag,
 			currentScreenKey,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 			boundaryConfig,
 		});
 
@@ -161,6 +152,7 @@ export function createBoundaryComponent<P extends object>(
 			sharedBoundTag,
 			enabled: shouldRunDestinationEffects,
 			currentScreenKey,
+			preferredSourceScreenKey,
 			measureBoundary,
 		});
 

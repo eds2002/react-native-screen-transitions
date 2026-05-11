@@ -17,9 +17,9 @@ describe("resolveChainTarget", () => {
 		expect(resolved).toBe(self);
 	});
 
-	it("returns self for an explicit self target", () => {
+	it("returns self for depth 0", () => {
 		const resolved = resolveChainTarget({
-			target: "self",
+			target: { depth: 0 },
 			self,
 			ancestors,
 		});
@@ -27,9 +27,9 @@ describe("resolveChainTarget", () => {
 		expect(resolved).toBe(self);
 	});
 
-	it("returns parent when requested", () => {
+	it("returns parent for depth -1", () => {
 		const resolved = resolveChainTarget({
-			target: "parent",
+			target: { depth: -1 },
 			self,
 			ancestors,
 		});
@@ -37,9 +37,9 @@ describe("resolveChainTarget", () => {
 		expect(resolved).toBe(parent);
 	});
 
-	it("returns root when requested", () => {
+	it("returns root for depth -2", () => {
 		const resolved = resolveChainTarget({
-			target: "root",
+			target: { depth: -2 },
 			self,
 			ancestors,
 		});
@@ -47,24 +47,24 @@ describe("resolveChainTarget", () => {
 		expect(resolved).toBe(root);
 	});
 
-	it("resolves an explicit ancestor depth", () => {
+	it("returns null for positive depths because this resolver only walks ancestors", () => {
 		const resolved = resolveChainTarget({
-			target: { ancestor: 2 },
+			target: { depth: 1 },
 			self,
 			ancestors,
 		});
 
-		expect(resolved).toBe(root);
+		expect(resolved).toBeNull();
 	});
 
 	it("returns null for missing ancestors", () => {
 		const missingParent = resolveChainTarget({
-			target: "parent",
+			target: { depth: -1 },
 			self,
 			ancestors: [],
 		});
 		const outOfRange = resolveChainTarget({
-			target: { ancestor: 10 },
+			target: { depth: -10 },
 			self,
 			ancestors,
 		});
@@ -73,25 +73,13 @@ describe("resolveChainTarget", () => {
 		expect(outOfRange).toBeNull();
 	});
 
-	it("returns null for invalid ancestor values", () => {
-		const zero = resolveChainTarget({
-			target: { ancestor: 0 },
-			self,
-			ancestors,
-		});
-		const negative = resolveChainTarget({
-			target: { ancestor: -1 },
-			self,
-			ancestors,
-		});
+	it("returns null for invalid depth values", () => {
 		const nonInteger = resolveChainTarget({
-			target: { ancestor: 1.5 },
+			target: { depth: 1.5 },
 			self,
 			ancestors,
 		});
 
-		expect(zero).toBeNull();
-		expect(negative).toBeNull();
 		expect(nonInteger).toBeNull();
 	});
 

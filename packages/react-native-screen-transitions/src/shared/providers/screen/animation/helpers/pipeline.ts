@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	type DerivedValue,
@@ -13,23 +12,23 @@ import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 } from "../../../../types/animation.types";
-import type { BoundsAccessor } from "../../../../types/bounds.types";
 
-import { createBoundsAccessor } from "../../../../utils/bounds";
 import { useDescriptors } from "../../descriptors";
 import { updateDerivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
 import { hydrateTransitionState } from "./hydrate-transition-state";
 import { useBuildTransitionState } from "./use-build-transition-state";
 
-export type ScreenInterpolatorFrame = Omit<ScreenInterpolationProps, "bounds">;
+export type ScreenInterpolatorFrame = Omit<
+	ScreenInterpolationProps,
+	"bounds" | "transition"
+>;
 
 interface ScreenAnimationPipeline {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
 	screenInterpolatorFrameUpdater: DerivedValue<number>;
 	nextInterpolator: ScreenStyleInterpolator | undefined;
 	currentInterpolator: ScreenStyleInterpolator | undefined;
-	boundsAccessor: BoundsAccessor;
 }
 
 const createInitialBaseInterpolatorProps = (
@@ -131,13 +130,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		return screenInterpolatorFrameRevisionState.get().value;
 	});
 
-	const boundsAccessor = useMemo(() => {
-		return createBoundsAccessor(() => {
-			"worklet";
-			return screenInterpolatorProps.get();
-		});
-	}, [screenInterpolatorProps]);
-
 	const nextInterpolator = nextDescriptor?.options.screenStyleInterpolator;
 	const currentInterpolator = currDescriptor?.options.screenStyleInterpolator;
 
@@ -146,6 +138,5 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		screenInterpolatorFrameUpdater,
 		nextInterpolator,
 		currentInterpolator,
-		boundsAccessor,
 	};
 }

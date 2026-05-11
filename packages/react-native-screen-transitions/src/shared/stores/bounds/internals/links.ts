@@ -8,7 +8,7 @@ import {
 	selectSourceUpdateTargetIndex,
 } from "../helpers/link.helpers";
 import { ensureTagState } from "../helpers/tag-state.helpers";
-import type { NavigatorKey, ScreenKey, TagID, TagLink } from "../types";
+import type { ScreenKey, TagID, TagLink } from "../types";
 import { type RegistryState, registry } from "./state";
 
 type LinkSourceWriteMode = "capture" | "refresh";
@@ -20,18 +20,12 @@ function setSource(
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
-	ancestorKeys?: ScreenKey[],
-	navigatorKey?: NavigatorKey,
-	ancestorNavigatorKeys?: NavigatorKey[],
 ) {
 	"worklet";
 	registry.modify(<T extends RegistryState>(state: T): T => {
 		"worklet";
 		const source = {
 			screenKey,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 			bounds,
 			styles,
 		};
@@ -85,10 +79,7 @@ function setDestination(
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
-	ancestorKeys?: ScreenKey[],
 	expectedSourceScreenKey?: ScreenKey,
-	navigatorKey?: NavigatorKey,
-	ancestorNavigatorKeys?: NavigatorKey[],
 ) {
 	"worklet";
 	registry.modify(<T extends RegistryState>(state: T): T => {
@@ -107,9 +98,6 @@ function setDestination(
 		const link = stack[targetIndex];
 		const destination = {
 			screenKey,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 			bounds,
 			styles,
 		};

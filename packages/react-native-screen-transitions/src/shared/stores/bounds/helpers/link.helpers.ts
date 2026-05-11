@@ -5,15 +5,11 @@ import { matchesScreenKey } from "./matching";
 type LinkSide = "source" | "destination";
 
 export const isSameScreenFamily = (
-	a: { screenKey: ScreenKey; ancestorKeys?: ScreenKey[] },
-	b: { screenKey: ScreenKey; ancestorKeys?: ScreenKey[] },
+	a: { screenKey: ScreenKey },
+	b: { screenKey: ScreenKey },
 ): boolean => {
 	"worklet";
-	return (
-		a.screenKey === b.screenKey ||
-		(a.ancestorKeys?.includes(b.screenKey) ?? false) ||
-		(b.ancestorKeys?.includes(a.screenKey) ?? false)
-	);
+	return a.screenKey === b.screenKey;
 };
 
 export function findLatestPendingSourceLinkIndex(

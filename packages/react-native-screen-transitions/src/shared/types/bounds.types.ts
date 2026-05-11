@@ -212,4 +212,7 @@ export type BoundsAccessor = {
 	) => number;
 };
 
-export type BoundsInterpolationProps = Omit<ScreenInterpolationProps, "bounds">;
+export type BoundsInterpolationProps = Omit<
+	ScreenInterpolationProps,
+	"bounds" | "transition"
+>;

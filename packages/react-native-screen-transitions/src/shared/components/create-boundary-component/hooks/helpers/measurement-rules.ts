@@ -16,6 +16,17 @@ export type MeasureWritePlan = {
 	wantsDestinationWrite: boolean;
 };
 
+export const shouldBlockInitialDestinationMeasurement = (params: {
+	enabled: boolean;
+	hasDestinationLink: boolean;
+	hasAttachableSourceLink: boolean;
+}): boolean => {
+	"worklet";
+	const { enabled, hasDestinationLink, hasAttachableSourceLink } = params;
+
+	return enabled && hasAttachableSourceLink && !hasDestinationLink;
+};
+
 export const getMeasureIntentFlags = (
 	intent?: MeasureIntent | readonly MeasureIntent[],
 ): MeasureIntentFlags => {

@@ -246,8 +246,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 		children,
 	}) => {
 		const { current, next } = useDescriptors();
-		const { ancestorKeys, navigatorKey, ancestorNavigatorKeys } =
-			useDescriptorDerivations();
+		const { ancestorKeys } = useDescriptorDerivations();
 		const currentScreenKey = current.route.key;
 		const selectedNextRouteId = getRouteParamId(next?.route);
 
@@ -285,9 +284,6 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					if (existing?.bounds) {
 						applyMeasuredBoundsWrites({
 							sharedBoundTag,
-							ancestorKeys,
-							navigatorKey,
-							ancestorNavigatorKeys,
 							currentScreenKey,
 							measured: existing.bounds,
 							preparedStyles,
@@ -341,9 +337,6 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					currentScreenKey,
 					measured,
 					preparedStyles,
-					ancestorKeys,
-					navigatorKey,
-					ancestorNavigatorKeys,
 					shouldSetSource: canSetSource,
 					shouldUpdateSource: canUpdateSource,
 					shouldSetDestination: canSetDestination,

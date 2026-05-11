@@ -1,4 +1,4 @@
-import { clear, clearByAncestor, clearByBranch } from "./internals/clear";
+import { clear } from "./internals/clear";
 import { getEntry, removeEntry, setEntry } from "./internals/entries";
 import {
 	getGroupActiveId,
@@ -51,7 +51,5 @@ export const BoundStore = {
 	},
 	cleanup: {
 		byScreen: clear,
-		byAncestor: clearByAncestor,
-		byBranch: clearByBranch,
 	},
 };

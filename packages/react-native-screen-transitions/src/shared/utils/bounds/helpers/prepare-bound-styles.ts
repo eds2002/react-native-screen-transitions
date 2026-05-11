@@ -4,7 +4,7 @@ import {
 	setGroupActiveId,
 } from "../../../stores/bounds/internals/groups";
 import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
+import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
 import type {
 	BoundId,
@@ -14,7 +14,7 @@ import type {
 import { createBoundTag } from "./create-bound-tag";
 import { computeBoundStyles } from "./styles/compute";
 
-type BaseInterpolatorProps = Omit<ScreenInterpolationProps, "bounds">;
+type BaseInterpolatorProps = BoundsInterpolationProps;
 
 type ComputeResolvedBoundsStylesParams<T extends BoundsOptions> = {
 	props: BaseInterpolatorProps;
@@ -24,7 +24,7 @@ type ComputeResolvedBoundsStylesParams<T extends BoundsOptions> = {
 };
 
 type BuildBoundsOptionsParams = {
-	props: Omit<ScreenInterpolationProps, "bounds">;
+	props: BoundsInterpolationProps;
 	id?: BoundId;
 	group?: string;
 	overrides?: Partial<BoundsOptions>;

@@ -41,32 +41,20 @@ export const registerMeasuredEntry = (
 	screenKey: string,
 	bounds: Snapshot["bounds"],
 	styles: Snapshot["styles"] = {},
-	ancestorKeys?: string[],
-	navigatorKey?: string,
-	ancestorNavigatorKeys?: string[],
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		bounds,
 		styles,
-		ancestorKeys,
-		navigatorKey,
-		ancestorNavigatorKeys,
 	});
 };
 
 export const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
-	ancestorKeys?: string[],
 	boundaryConfig?: BoundaryConfig,
-	navigatorKey?: string,
-	ancestorNavigatorKeys?: string[],
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
-		ancestorKeys,
 		boundaryConfig,
-		navigatorKey,
-		ancestorNavigatorKeys,
 	});
 };
 
@@ -80,13 +68,7 @@ type RegisterSourceAndDestinationParams = {
 	destinationScreenKey: string;
 	sourceBounds?: Snapshot["bounds"];
 	destinationBounds?: Snapshot["bounds"];
-	sourceAncestorKeys?: string[];
-	destinationAncestorKeys?: string[];
 	expectedSourceScreenKey?: string;
-	sourceNavigatorKey?: string;
-	sourceAncestorNavigatorKeys?: string[];
-	destinationNavigatorKey?: string;
-	destinationAncestorNavigatorKeys?: string[];
 };
 
 export const registerSourceAndDestination = ({
@@ -95,13 +77,7 @@ export const registerSourceAndDestination = ({
 	destinationScreenKey,
 	sourceBounds = createBounds(0, 0, 120, 120),
 	destinationBounds = createBounds(200, 300, 180, 180),
-	sourceAncestorKeys,
-	destinationAncestorKeys,
 	expectedSourceScreenKey,
-	sourceNavigatorKey,
-	sourceAncestorNavigatorKeys,
-	destinationNavigatorKey,
-	destinationAncestorNavigatorKeys,
 }: RegisterSourceAndDestinationParams) => {
 	BoundStore.link.setSource(
 		"capture",
@@ -109,9 +85,6 @@ export const registerSourceAndDestination = ({
 		sourceScreenKey,
 		sourceBounds,
 		{},
-		sourceAncestorKeys,
-		sourceNavigatorKey,
-		sourceAncestorNavigatorKeys,
 	);
 
 	BoundStore.link.setDestination(
@@ -120,10 +93,7 @@ export const registerSourceAndDestination = ({
 		destinationScreenKey,
 		destinationBounds,
 		{},
-		destinationAncestorKeys,
 		expectedSourceScreenKey,
-		destinationNavigatorKey,
-		destinationAncestorNavigatorKeys,
 	);
 };
 

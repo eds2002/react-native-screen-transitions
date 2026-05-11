@@ -76,20 +76,17 @@ describe("Non-Group Flow", () => {
 		expect(prior?.destination?.screenKey).toBe("screen-b");
 	});
 
-	it("supports ancestor screen-key matching for non-group tags", () => {
+	it("does not implicitly match ancestor screen keys for non-group tags", () => {
 		const tag = makeTag("poster");
 
 		registerSourceAndDestination({
 			tag,
 			sourceScreenKey: "screen-a",
 			destinationScreenKey: "screen-detail",
-			sourceAncestorKeys: ["stack-a"],
 		});
 
-		expect(BoundStore.link.hasSource(tag, "stack-a")).toBe(true);
-		expect(BoundStore.link.getMatched(tag, "stack-a")?.source.screenKey).toBe(
-			"screen-a",
-		);
+		expect(BoundStore.link.hasSource(tag, "stack-a")).toBe(false);
+		expect(BoundStore.link.getMatched(tag, "stack-a")).toBeNull();
 	});
 
 	it("keeps unrelated tags isolated during clear operations", () => {

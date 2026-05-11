@@ -1,4 +1,4 @@
-export type ChainTarget = "self" | "parent" | "root" | { ancestor: number };
+export type ChainTarget = { depth: number };
 
 type ResolveChainTargetParams<T> = {
 	target: ChainTarget | undefined;
@@ -6,41 +6,28 @@ type ResolveChainTargetParams<T> = {
 	ancestors: readonly T[];
 };
 
-const isAncestorTarget = (
-	target: ChainTarget,
-): target is { ancestor: number } => {
-	return typeof target === "object" && target !== null && "ancestor" in target;
-};
-
 export function resolveChainTarget<T>({
 	target,
 	self,
 	ancestors,
 }: ResolveChainTargetParams<T>): T | null {
+	"worklet";
 	if (!self) {
 		return null;
 	}
 
-	if (!target || target === "self") {
+	const depth = target?.depth ?? 0;
+	if (!Number.isInteger(depth)) {
+		return null;
+	}
+
+	if (depth === 0) {
 		return self;
 	}
 
-	if (target === "parent") {
-		return ancestors[0] ?? null;
-	}
-
-	if (target === "root") {
-		return ancestors[ancestors.length - 1] ?? null;
-	}
-
-	if (!isAncestorTarget(target)) {
+	if (depth > 0) {
 		return null;
 	}
 
-	const depth = target.ancestor;
-	if (!Number.isInteger(depth) || depth < 1) {
-		return null;
-	}
-
-	return ancestors[depth - 1] ?? null;
+	return ancestors[Math.abs(depth) - 1] ?? null;
 }

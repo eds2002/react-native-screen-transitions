@@ -10,44 +10,19 @@ export const useBoundaryPresence = (params: {
 	enabled: boolean;
 	sharedBoundTag: string;
 	currentScreenKey: string;
-	ancestorKeys: string[];
-	navigatorKey?: string;
-	ancestorNavigatorKeys?: string[];
 	boundaryConfig?: BoundaryConfigProps;
 }) => {
-	const {
-		enabled,
-		sharedBoundTag,
-		currentScreenKey,
-		ancestorKeys,
-		navigatorKey,
-		ancestorNavigatorKeys,
-		boundaryConfig,
-	} = params;
-	const ancestorKeysSignature = ancestorKeys.join("|");
-	const ancestorNavigatorKeysSignature = ancestorNavigatorKeys?.join("|");
+	const { enabled, sharedBoundTag, currentScreenKey, boundaryConfig } = params;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the ancestory keys signature>
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
 		runOnUI(setEntry)(sharedBoundTag, currentScreenKey, {
-			ancestorKeys,
 			boundaryConfig,
-			navigatorKey,
-			ancestorNavigatorKeys,
 		});
 
 		return () => {
 			runOnUI(removeEntry)(sharedBoundTag, currentScreenKey);
 		};
-	}, [
-		enabled,
-		sharedBoundTag,
-		currentScreenKey,
-		ancestorKeysSignature,
-		navigatorKey,
-		ancestorNavigatorKeysSignature,
-		boundaryConfig,
-	]);
+	}, [enabled, sharedBoundTag, currentScreenKey, boundaryConfig]);
 };

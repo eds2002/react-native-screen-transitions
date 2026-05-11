@@ -137,12 +137,11 @@ export function useCloseTransitionIntent(
 } {
 	const routeKey = current.route.key;
 	const { flags } = useStackCoreContext();
-	const { isBranchScreen, branchNavigatorKey } = useDescriptorDerivations();
 	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
 	const { requestLifecycleTransition } = system.actions;
 
 	const resetStores = useStableCallback(() => {
-		resetStoresForScreen(routeKey, isBranchScreen, branchNavigatorKey);
+		resetStoresForScreen(routeKey);
 	});
 
 	const closeParams: CloseHookParams = {

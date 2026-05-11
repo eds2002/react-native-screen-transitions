@@ -7,6 +7,8 @@ import type {
 } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
 import { useScreenAnimationContext } from "../../animation";
+import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
+import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/use-build-transition-accessor";
 import { useDescriptorDerivations } from "../../descriptors";
 import {
 	syncScreenOptionsOverrides,
@@ -48,8 +50,9 @@ export const useInterpolatedStylesMap = () => {
 		screenInterpolatorFrameUpdater,
 		nextInterpolator,
 		currentInterpolator,
-		boundsAccessor,
 	} = useScreenAnimationContext();
+	const boundsAccessor = useBuildBoundsAccessor();
+	const transition = useBuildTransitionAccessor();
 
 	const pendingLifecycleStartBlockCount = SystemStore.getValue(
 		currentScreenKey,
@@ -108,6 +111,7 @@ export const useInterpolatedStylesMap = () => {
 				progress: effectiveProgress,
 				next: effectiveNext,
 				bounds: boundsAccessor,
+				transition,
 			});
 
 			const rawStyleMap: TransitionInterpolatedStyle | undefined =

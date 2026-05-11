@@ -22,32 +22,20 @@ const registerMeasuredEntry = (
 	screenKey: string,
 	bounds: Snapshot["bounds"],
 	styles: Snapshot["styles"] = {},
-	ancestorKeys?: string[],
-	navigatorKey?: string,
-	ancestorNavigatorKeys?: string[],
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		bounds,
 		styles,
-		ancestorKeys,
-		navigatorKey,
-		ancestorNavigatorKeys,
 	});
 };
 
 const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
-	ancestorKeys?: string[],
 	boundaryConfig?: BoundaryConfig,
-	navigatorKey?: string,
-	ancestorNavigatorKeys?: string[],
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
-		ancestorKeys,
 		boundaryConfig,
-		navigatorKey,
-		ancestorNavigatorKeys,
 	});
 };
 
@@ -100,16 +88,13 @@ describe("BoundStore.entry.set", () => {
 		expect(BoundStore.entry.get("card", "screen-b")?.bounds).toEqual(boundsB);
 	});
 
-	it("stores ancestorKeys correctly", () => {
+	it("does not resolve entries through ancestor screen keys", () => {
 		const bounds = createBounds();
-		const ancestors = ["stack-a", "tab-nav"];
 
-		registerMeasuredEntry("card", "screen-a", bounds, {}, ancestors);
+		registerMeasuredEntry("card", "screen-a", bounds);
 
-		// Verify ancestor matching works
 		const viaAncestor = BoundStore.entry.get("card", "stack-a");
-		expect(viaAncestor).not.toBeNull();
-		expect(viaAncestor?.bounds).toEqual(bounds);
+		expect(viaAncestor).toBeNull();
 	});
 
 	it("updates existing snapshot on re-measurement", () => {
@@ -129,21 +114,18 @@ describe("applyMeasuredBoundsWrites", () => {
 		const bounds = createBounds(10, 20, 120, 140);
 		const styles = { borderRadius: 12 };
 
-		registerBoundaryPresence("card", "screen-a", ["stack-a"]);
+		registerBoundaryPresence("card", "screen-a");
 
 		applyMeasuredBoundsWrites({
 			sharedBoundTag: "card",
 			currentScreenKey: "screen-a",
 			measured: bounds,
 			preparedStyles: styles,
-			ancestorKeys: ["stack-a"],
 		});
 
 		const snapshot = BoundStore.entry.get("card", "screen-a");
-		const ancestorSnapshot = BoundStore.entry.get("card", "stack-a");
 		expect(snapshot?.bounds).toEqual(bounds);
 		expect(snapshot?.styles).toEqual({});
-		expect(ancestorSnapshot?.bounds).toEqual(bounds);
 	});
 
 	it("writes a snapshot when capturing a source link", () => {
@@ -155,7 +137,6 @@ describe("applyMeasuredBoundsWrites", () => {
 			currentScreenKey: "screen-a",
 			measured: bounds,
 			preparedStyles: styles,
-			ancestorKeys: ["stack-a"],
 			shouldSetSource: true,
 		});
 
@@ -337,7 +318,6 @@ describe("BoundStore.link.setDestination", () => {
 			"screen-detail",
 			destination,
 			{},
-			undefined,
 			"screen-a",
 		);
 
@@ -358,7 +338,6 @@ describe("BoundStore.link.setDestination", () => {
 			"screen-detail",
 			createBounds(200, 200),
 			{},
-			undefined,
 			"screen-x",
 		);
 
@@ -388,29 +367,20 @@ describe("BoundStore.entry.get", () => {
 		expect(result).toEqual({ bounds, styles });
 	});
 
-	it("returns bounds via ancestor match", () => {
+	it("returns null for ancestor-only keys", () => {
 		const bounds = createBounds();
-		const ancestors = ["stack-a", "root"];
 
-		registerMeasuredEntry("card", "screen-a", bounds, {}, ancestors);
+		registerMeasuredEntry("card", "screen-a", bounds);
 
-		// Query by ancestor key
 		const result = BoundStore.entry.get("card", "stack-a");
-		expect(result).not.toBeNull();
-		expect(result?.bounds).toEqual(bounds);
+		expect(result).toBeNull();
 	});
 
-	it("prefers direct match over ancestor match", () => {
+	it("keeps direct screen-key entries isolated", () => {
 		const directBounds = createBounds(0, 0, 100, 100);
-		const ancestorBounds = createBounds(200, 200, 50, 50);
 
-		// Register with ancestor that matches another screen's key
-		registerMeasuredEntry("card", "screen-a", ancestorBounds, {}, [
-			"stack-a",
-		]);
 		registerMeasuredEntry("card", "stack-a", directBounds);
 
-		// Direct match should win
 		const result = BoundStore.entry.get("card", "stack-a");
 		expect(result?.bounds).toEqual(directBounds);
 	});
@@ -458,16 +428,12 @@ describe("BoundStore.link.getMatched", () => {
 		expect(linkFromDest?.destination?.screenKey).toBe("screen-b");
 	});
 
-	it("ancestor matching works in link lookup", () => {
-		const ancestors = ["stack-a"];
-
-		BoundStore.link.setSource("capture", "card", "screen-a", createBounds(), {}, ancestors);
+	it("does not use ancestor screen keys in link lookup", () => {
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
 		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
-		// Query by ancestor key (matches source)
 		const link = BoundStore.link.getMatched("card", "stack-a");
-		expect(link).not.toBeNull();
-		expect(link?.source.screenKey).toBe("screen-a");
+		expect(link).toBeNull();
 	});
 
 	it("returns null when screenKey does not match any link", () => {
@@ -650,10 +616,10 @@ describe("BoundStore link predicates", () => {
 		);
 	});
 
-	it("hasPendingLinkFromSource supports ancestor matching", () => {
-		BoundStore.link.setSource("capture", "card", "screen-a", createBounds(), {}, ["stack-a"]);
+	it("hasPendingLinkFromSource ignores ancestor-only keys", () => {
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
 
-		expect(hasPendingLinkFromSource("card", "stack-a")).toBe(true);
+		expect(hasPendingLinkFromSource("card", "stack-a")).toBe(false);
 	});
 
 	it("getLatestPendingSourceScreenKey returns most recent pending source", () => {
@@ -673,10 +639,10 @@ describe("BoundStore link predicates", () => {
 		expect(BoundStore.link.hasSource("card", "screen-x")).toBe(false);
 	});
 
-	it("hasSourceLink matches source ancestor chain", () => {
-		BoundStore.link.setSource("capture", "card", "screen-a", createBounds(), {}, ["stack-a"]);
+	it("hasSourceLink ignores source ancestor-only keys", () => {
+		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
 
-		expect(BoundStore.link.hasSource("card", "stack-a")).toBe(true);
+		expect(BoundStore.link.hasSource("card", "stack-a")).toBe(false);
 	});
 
 	it("hasDestinationLink matches direct destination screen", () => {
@@ -687,13 +653,11 @@ describe("BoundStore link predicates", () => {
 		expect(BoundStore.link.hasDestination("card", "screen-x")).toBe(false);
 	});
 
-	it("hasDestinationLink matches destination ancestor chain", () => {
+	it("hasDestinationLink ignores destination ancestor-only keys", () => {
 		BoundStore.link.setSource("capture", "card", "screen-a", createBounds());
-		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds(), {}, [
-			"stack-b",
-		]);
+		BoundStore.link.setDestination("attach", "card", "screen-b", createBounds());
 
-		expect(BoundStore.link.hasDestination("card", "stack-b")).toBe(true);
+		expect(BoundStore.link.hasDestination("card", "stack-b")).toBe(false);
 	});
 });
 
@@ -705,10 +669,10 @@ describe("BoundStore boundary presence", () => {
 		expect(hasBoundaryPresence("card", "screen-b")).toBe(false);
 	});
 
-	it("supports ancestor matching for boundary presence", () => {
-		registerBoundaryPresence("card", "screen-a", ["stack-a"]);
+	it("does not use ancestor matching for boundary presence", () => {
+		registerBoundaryPresence("card", "screen-a");
 
-		expect(hasBoundaryPresence("card", "stack-a")).toBe(true);
+		expect(hasBoundaryPresence("card", "stack-a")).toBe(false);
 	});
 
 	it("removes boundary presence by tag and screen", () => {
@@ -729,7 +693,7 @@ describe("BoundStore boundary presence", () => {
 	});
 
 	it("stores boundary config and retrieves it by direct screen key", () => {
-		registerBoundaryPresence("card", "screen-a", undefined, {
+		registerBoundaryPresence("card", "screen-a", {
 			anchor: "top",
 			scaleMode: "uniform",
 			target: "fullscreen",
@@ -747,12 +711,12 @@ describe("BoundStore boundary presence", () => {
 	});
 
 	it("updates boundary config when re-registering same screen", () => {
-		registerBoundaryPresence("card", "screen-a", undefined, {
+		registerBoundaryPresence("card", "screen-a", {
 			anchor: "center",
 			method: "transform",
 		});
 
-		registerBoundaryPresence("card", "screen-a", undefined, {
+		registerBoundaryPresence("card", "screen-a", {
 			anchor: "bottom",
 			method: "size",
 		});
@@ -765,25 +729,22 @@ describe("BoundStore boundary presence", () => {
 		});
 	});
 
-	it("supports ancestor matching for boundary config", () => {
-		registerBoundaryPresence("card", "screen-a", ["stack-a"], {
+	it("does not use ancestor matching for boundary config", () => {
+		registerBoundaryPresence("card", "screen-a", {
 			anchor: "topLeading",
 			scaleMode: "match",
 		});
 
 		expect(
 			BoundStore.entry.get("card", "stack-a")?.boundaryConfig ?? null,
-		).toEqual({
-			anchor: "topLeading",
-			scaleMode: "match",
-		});
+		).toBeNull();
 	});
 
 	it("clear removes boundary config for the cleared screen", () => {
-		registerBoundaryPresence("card", "screen-a", undefined, {
+		registerBoundaryPresence("card", "screen-a", {
 			anchor: "top",
 		});
-		registerBoundaryPresence("card", "screen-b", undefined, {
+		registerBoundaryPresence("card", "screen-b", {
 			anchor: "bottom",
 		});
 
@@ -849,39 +810,31 @@ describe("Scenario: Multiple bounds, only one matches", () => {
 	});
 });
 
-describe("Scenario: Nested navigator with ancestor keys", () => {
-	it("supports cross-stack bounds via ancestor matching", () => {
-		// Tab Navigator structure:
-		// - Stack A (key: "stack-a") -> Screen A1 (key: "a1", ancestors: ["stack-a"])
-		// - Stack B (key: "stack-b") -> Screen B1 (key: "b1", ancestors: ["stack-b"])
-
+describe("Scenario: Nested navigators use explicit transition scopes", () => {
+	it("does not resolve cross-stack bounds through implicit ancestor keys", () => {
 		const boundsA = createBounds(10, 10, 80, 80);
 		const boundsB = createBounds(20, 20, 100, 100);
 
-		// Register snapshot in Stack A
-		registerMeasuredEntry("profile", "a1", boundsA, {}, ["stack-a"]);
+		registerMeasuredEntry("profile", "a1", boundsA);
+		registerMeasuredEntry("profile", "b1", boundsB);
 
-		// Register snapshot in Stack B
-		registerMeasuredEntry("profile", "b1", boundsB, {}, ["stack-b"]);
-
-		// Query by stack key should return correct bounds
 		const fromStackA = BoundStore.entry.get("profile", "stack-a");
-		expect(fromStackA?.bounds).toEqual(boundsA);
-
 		const fromStackB = BoundStore.entry.get("profile", "stack-b");
-		expect(fromStackB?.bounds).toEqual(boundsB);
+
+		expect(fromStackA).toBeNull();
+		expect(fromStackB).toBeNull();
+		expect(BoundStore.entry.get("profile", "a1")?.bounds).toEqual(boundsA);
+		expect(BoundStore.entry.get("profile", "b1")?.bounds).toEqual(boundsB);
 	});
 
-	it("link.getMatched respects ancestor chain", () => {
-		// Navigation from Stack A to detail screen
-		BoundStore.link.setSource("capture", "profile", "a1", createBounds(10, 10), {}, [
-			"stack-a",
-		]);
+	it("link.getMatched requires the concrete screen key", () => {
+		BoundStore.link.setSource("capture", "profile", "a1", createBounds(10, 10));
 		BoundStore.link.setDestination("attach", "profile", "detail", createBounds(0, 0));
 
-		// Query by ancestor should find the link
-		const link = BoundStore.link.getMatched("profile", "stack-a");
-		expect(link?.source.screenKey).toBe("a1");
+		expect(BoundStore.link.getMatched("profile", "stack-a")).toBeNull();
+		expect(BoundStore.link.getMatched("profile", "a1")?.source.screenKey).toBe(
+			"a1",
+		);
 	});
 });
 
@@ -924,7 +877,7 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 		expect(fromB?.source.screenKey).toBe("screen-b");
 	});
 
-	it("retains deep nested history until branch cleanup runs", () => {
+	it("clears only links for the unmounted screen key", () => {
 		const screens = ["screen-a", "screen-b", "screen-c", "screen-d", "screen-e"];
 
 		for (let i = 0; i < screens.length - 1; i++) {
@@ -937,7 +890,6 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 				sourceScreenKey,
 				createBounds(i * 100, i * 100),
 				{},
-				["nested"],
 			);
 			BoundStore.link.setDestination(
 				"attach",
@@ -945,7 +897,7 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 				destinationScreenKey,
 				createBounds((i + 1) * 100, (i + 1) * 100),
 				{},
-				["nested"],
+				undefined,
 			);
 		}
 
@@ -956,11 +908,11 @@ describe("Scenario: Rapid navigation A → B → C → pop → pop", () => {
 			BoundStore.link.getMatched("card", "screen-e")?.destination?.screenKey,
 		).toBe("screen-e");
 
-		BoundStore.cleanup.byAncestor("nested");
+		BoundStore.cleanup.byScreen("screen-a");
 
 		expect(BoundStore.link.getMatched("card", "screen-a")).toBeNull();
-		expect(BoundStore.link.getMatched("card", "screen-b")).toBeNull();
-		expect(BoundStore.link.getMatched("card", "screen-e")).toBeNull();
+		expect(BoundStore.link.getMatched("card", "screen-b")).not.toBeNull();
+		expect(BoundStore.link.getMatched("card", "screen-e")).not.toBeNull();
 	});
 });
 

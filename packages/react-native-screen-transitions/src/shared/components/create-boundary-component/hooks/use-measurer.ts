@@ -19,9 +19,6 @@ interface UseMeasurerParams {
 	sharedBoundTag: string;
 	preferredSourceScreenKey?: string;
 	currentScreenKey: string;
-	ancestorKeys: string[];
-	navigatorKey?: string;
-	ancestorNavigatorKeys?: string[];
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
 }
@@ -31,9 +28,6 @@ export const useMeasurer = ({
 	sharedBoundTag,
 	preferredSourceScreenKey,
 	currentScreenKey,
-	ancestorKeys,
-	navigatorKey,
-	ancestorNavigatorKeys,
 	preparedStyles,
 	measuredAnimatedRef,
 }: UseMeasurerParams) => {
@@ -117,9 +111,6 @@ export const useMeasurer = ({
 				currentScreenKey,
 				measured,
 				preparedStyles,
-				ancestorKeys,
-				navigatorKey,
-				ancestorNavigatorKeys,
 				expectedSourceScreenKey: currentLink.expectedSourceScreenKey,
 				...sourceWrites,
 				...destinationWrites,
@@ -130,9 +121,6 @@ export const useMeasurer = ({
 			sharedBoundTag,
 			preferredSourceScreenKey,
 			currentScreenKey,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 			preparedStyles,
 			measuredAnimatedRef,
 			viewportWidth,

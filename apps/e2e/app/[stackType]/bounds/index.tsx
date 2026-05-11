@@ -30,6 +30,12 @@ const BOUNDS_EXAMPLES = [
 		description:
 			"Shared element cases for bounds, anchors, scale modes, and targets",
 	},
+	{
+		id: "transition-scope",
+		title: "Transition Scope Access",
+		description:
+			"Use props.transition({ depth: -1 }) to compute bounds from a nested route",
+	},
 ];
 
 export default function BoundsHubIndex() {

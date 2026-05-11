@@ -5,15 +5,15 @@ import type {
 	ResolvedTransitionPair,
 	TagLink,
 } from "../../../stores/bounds/types";
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
 import type {
+	BoundsInterpolationProps,
 	BoundsLink,
 	BoundsLinkComputeOptions,
 } from "../../../types/bounds.types";
 import type { BoundId, BoundsOptionsResult } from "../types/options";
 import { prepareBoundStyles } from "./prepare-bound-styles";
 
-type GetProps = () => Omit<ScreenInterpolationProps, "bounds">;
+type GetProps = () => BoundsInterpolationProps;
 
 export type LinkAccessor = {
 	getMeasured: (tag: BoundId, key?: string) => MeasuredEntry | null;

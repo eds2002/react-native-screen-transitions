@@ -10,9 +10,6 @@ type ApplyMeasuredBoundsWritesParams = {
 	currentScreenKey: string;
 	measured: MeasuredDimensions;
 	preparedStyles: StyleProps;
-	ancestorKeys: string[];
-	navigatorKey?: string;
-	ancestorNavigatorKeys?: string[];
 	shouldSetSource?: boolean;
 	shouldUpdateSource?: boolean;
 	shouldSetDestination?: boolean;
@@ -29,9 +26,6 @@ export const applyMeasuredBoundsWrites = (
 		currentScreenKey,
 		measured,
 		preparedStyles,
-		ancestorKeys,
-		navigatorKey,
-		ancestorNavigatorKeys,
 		shouldSetSource,
 		shouldUpdateSource,
 		shouldSetDestination,
@@ -52,9 +46,6 @@ export const applyMeasuredBoundsWrites = (
 			currentScreenKey,
 			measured,
 			preparedStyles,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 		);
 	}
 
@@ -65,9 +56,6 @@ export const applyMeasuredBoundsWrites = (
 			currentScreenKey,
 			measured,
 			preparedStyles,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 		);
 	}
 
@@ -78,10 +66,7 @@ export const applyMeasuredBoundsWrites = (
 			currentScreenKey,
 			measured,
 			preparedStyles,
-			ancestorKeys,
 			expectedSourceScreenKey,
-			navigatorKey,
-			ancestorNavigatorKeys,
 		);
 	}
 
@@ -92,10 +77,7 @@ export const applyMeasuredBoundsWrites = (
 			currentScreenKey,
 			measured,
 			preparedStyles,
-			ancestorKeys,
 			expectedSourceScreenKey,
-			navigatorKey,
-			ancestorNavigatorKeys,
 		);
 	}
 };

@@ -5,13 +5,13 @@ import {
 } from "react-native-reanimated";
 import { ENTER_RANGE, EXIT_RANGE } from "../../../constants";
 import { getEntry } from "../../../stores/bounds/internals/entries";
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
+import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import type { BoundId } from "../types/options";
 import type { LinkAccessor } from "./create-link-accessor";
 import { interpolateLinkStyle } from "./styles/interpolate-link-style";
 
 type InterpolatorParams = {
-	getProps: () => Omit<ScreenInterpolationProps, "bounds">;
+	getProps: () => BoundsInterpolationProps;
 	getLink: LinkAccessor["getLink"];
 };
 

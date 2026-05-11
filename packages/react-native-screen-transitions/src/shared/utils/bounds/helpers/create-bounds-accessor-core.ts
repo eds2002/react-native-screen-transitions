@@ -54,6 +54,7 @@ const createBoundsAccessorParts = ({
 			id: options.id,
 			group: options.group,
 		});
+
 		const computed = prepareBoundStyles({
 			props,
 			options,

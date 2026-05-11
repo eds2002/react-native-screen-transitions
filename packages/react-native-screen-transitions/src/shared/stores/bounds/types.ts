@@ -7,7 +7,6 @@ import type {
 
 export type TagID = string;
 export type ScreenKey = string;
-export type NavigatorKey = string;
 
 export type BoundaryConfig = {
 	anchor?: BoundsAnchor;
@@ -20,9 +19,6 @@ export type Entry = {
 	bounds: MeasuredDimensions | null;
 	styles: StyleProps;
 	boundaryConfig?: BoundaryConfig;
-	ancestorKeys?: ScreenKey[];
-	navigatorKey?: NavigatorKey;
-	ancestorNavigatorKeys?: NavigatorKey[];
 };
 
 export type MeasuredEntry = Entry & {
@@ -33,16 +29,10 @@ export type EntryPatch = {
 	bounds?: MeasuredDimensions | null;
 	styles?: StyleProps | null;
 	boundaryConfig?: BoundaryConfig | null;
-	ancestorKeys?: ScreenKey[] | null;
-	navigatorKey?: NavigatorKey | null;
-	ancestorNavigatorKeys?: NavigatorKey[] | null;
 };
 
 export type ScreenIdentifier = {
 	screenKey: ScreenKey;
-	ancestorKeys?: ScreenKey[];
-	navigatorKey?: NavigatorKey;
-	ancestorNavigatorKeys?: NavigatorKey[];
 };
 
 export type TagLink = {

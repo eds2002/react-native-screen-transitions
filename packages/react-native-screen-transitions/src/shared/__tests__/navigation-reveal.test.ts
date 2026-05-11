@@ -3,7 +3,7 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	createScreenTransitionState,
 } from "../constants";
-import type { ScreenInterpolationProps } from "../types/animation.types";
+import type { BoundsInterpolationProps } from "../types/bounds.types";
 import type { Layout } from "../types/screen.types";
 import { buildRevealStyles } from "../utils/bounds/navigation/reveal/build";
 import {
@@ -32,7 +32,7 @@ const makeState = (key: string, navigationMaskEnabled = false) => ({
 	layouts: { screen: screenLayout, navigationMaskEnabled },
 });
 
-const makeProps = (): Omit<ScreenInterpolationProps, "bounds"> => {
+const makeProps = (): BoundsInterpolationProps => {
 	const previous = makeState("list");
 	const current = {
 		...makeState("detail", true),
@@ -55,7 +55,7 @@ const makeProps = (): Omit<ScreenInterpolationProps, "bounds"> => {
 	};
 };
 
-const makeClosingProps = (): Omit<ScreenInterpolationProps, "bounds"> => {
+const makeClosingProps = (): BoundsInterpolationProps => {
 	const current = {
 		...makeState("detail", true),
 		closing: 1,
