@@ -70,7 +70,7 @@ export default function StyleIdBoundsLayout() {
 							mass: 3,
 							overshootClamping: false,
 						},
-						close: { ...Transition.Specs.DefaultSpec, mass: 2 },
+						close: { ...Transition.Specs.DefaultSpec, mass: 2.5 },
 					},
 				}}
 			/>

@@ -13,7 +13,7 @@ import {
 	getSnapPinchDirectionConfig,
 } from "./gesture-directions";
 
-export const resolveRuntimeCanTrackGesture = (
+const resolveRuntimeCanTrackGesture = (
 	runtime: PanGestureRuntime | PinchGestureRuntime,
 	screenOptions: ScreenOptionsSnapshot,
 ) => {
@@ -40,7 +40,7 @@ export const resolveRuntimeCanTrackGesture = (
 	return participation.canTrackGesture;
 };
 
-export const resolveRuntimeCanDismiss = (
+const resolveRuntimeCanDismiss = (
 	runtime: PanGestureRuntime | PinchGestureRuntime,
 	screenOptions: ScreenOptionsSnapshot,
 ) => {
@@ -63,7 +63,7 @@ export const resolveRuntimeCanDismiss = (
 	return participation.canDismiss;
 };
 
-export const resolvePanRuntimePolicy = (
+const resolvePanRuntimePolicy = (
 	runtime: PanGestureRuntime,
 	screenOptions: ScreenOptionsSnapshot,
 ): PanGesturePolicy => {
@@ -93,7 +93,7 @@ export const resolvePanRuntimePolicy = (
 	};
 };
 
-export const resolvePinchRuntimePolicy = (
+const resolvePinchRuntimePolicy = (
 	runtime: PinchGestureRuntime,
 	screenOptions: ScreenOptionsSnapshot,
 ): PinchGesturePolicy => {

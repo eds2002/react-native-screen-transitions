@@ -11,7 +11,7 @@ import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and
 import {
 	type DirectionClaimMap,
 	type GestureContextType,
-	NO_CLAIMS,
+	NO_DIRECTION_CLAIMS,
 } from "./types";
 
 interface ScreenGestureProviderProps {
@@ -33,7 +33,8 @@ export const {
 
 	// Ancestors read this before activating. If a nested screen claims the same
 	// direction, it writes here so the ancestor can fail and let it take priority.
-	const childDirectionClaims = useSharedValue<DirectionClaimMap>(NO_CLAIMS);
+	const childDirectionClaims =
+		useSharedValue<DirectionClaimMap>(NO_DIRECTION_CLAIMS);
 
 	const panGesture = useBuildPanGesture({
 		scrollState,

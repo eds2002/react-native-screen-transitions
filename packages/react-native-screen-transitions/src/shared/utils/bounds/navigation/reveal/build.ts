@@ -29,19 +29,9 @@ const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 function resolveRevealGestureHandoff(rawDrag: number) {
 	"worklet";
 
-	const gestureSensitivity = interpolate(
-		rawDrag,
-		[0, 0.25, 0.7],
-		[0.9, 0.62, 0.28],
-		"clamp",
-	);
+	const gestureSensitivity = interpolate(rawDrag, [0, 1], [0.8, 0.2], "clamp");
 
-	const releaseBoost = interpolate(
-		rawDrag,
-		[0, 0.35, 1],
-		[1, 1.35, 1.75],
-		"clamp",
-	);
+	const releaseBoost = interpolate(rawDrag, [0, 1], [1, 1.6], "clamp");
 
 	const releaseSensitivity = interpolate(
 		gestureSensitivity,
@@ -244,7 +234,7 @@ export function buildRevealStyles({
 					shadowOpacity: interpolate(props.active.progress, [0, 1], [0, 0.25]),
 					shadowRadius: 32,
 					elevation: 5,
-					pointerEvents: props.active.logicallySettled ? "auto" : "none",
+					// pointerEvents: props.active.logicallySettled ? "auto" : "none",
 				},
 			},
 			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
@@ -330,9 +320,9 @@ export function buildRevealStyles({
 			style: {
 				transform: [{ scale: props.active.settled ? 1 : unfocusedScale }],
 			},
-			props: {
-				pointerEvents: "none",
-			},
+			// props: {
+			// 	pointerEvents: "none",
+			// },
 		},
 		[link.id]: {
 			style: {

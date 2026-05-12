@@ -1,12 +1,13 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { BoundsMethod } from "../../types/bounds.types";
+import type { ScreenKey } from "../../types/screen.types";
 import type {
 	BoundsAnchor,
 	BoundsScaleMode,
 } from "../../utils/bounds/types/options";
 
 export type TagID = string;
-export type ScreenKey = string;
+export type { ScreenKey } from "../../types/screen.types";
 
 export type BoundaryConfig = {
 	anchor?: BoundsAnchor;

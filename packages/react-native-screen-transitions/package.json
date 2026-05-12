@@ -40,7 +40,7 @@
 		}
 	},
 	"scripts": {
-		"build": "bob build",
+		"build": "rm -rf lib && bob build",
 		"lint": "biome check ./src",
 		"typecheck": "tsc -p tsconfig.typecheck.json",
 		"prepublishOnly": "bun run build"
@@ -57,6 +57,9 @@
 		"lib",
 		"src",
 		"!src/**/__tests__",
+		"!src/**/typecheck/**",
+		"!lib/**/__tests__",
+		"!lib/**/typecheck/**",
 		"README.md",
 		"LICENSE"
 	],

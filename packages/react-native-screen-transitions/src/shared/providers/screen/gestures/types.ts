@@ -55,7 +55,7 @@ export type DirectionClaimMap = {
 	"horizontal-inverted": DirectionClaim;
 };
 
-export const NO_CLAIMS: DirectionClaimMap = {
+export const NO_DIRECTION_CLAIMS: DirectionClaimMap = {
 	vertical: null,
 	"vertical-inverted": null,
 	horizontal: null,
