@@ -3,6 +3,7 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
+import { LOGICAL_SETTLE_REQUIRED_FRAMES } from "../constants";
 import type { Layout } from "../types/screen.types";
 import { createStore } from "../utils/create-store";
 
@@ -35,6 +36,11 @@ type SystemStoreState = {
 	 * Progress target for the pending lifecycle transition request.
 	 */
 	pendingLifecycleRequestTarget: SharedValue<number>;
+
+	/**
+	 * Number of consecutive frames progress has stayed near its target.
+	 */
+	logicalSettleFrameCount: SharedValue<number>;
 
 	/**
 	 * Number of active blockers preventing a pending lifecycle request from
@@ -72,6 +78,7 @@ export const SystemStore = createStore<SystemStoreState, SystemStoreActions>({
 			LifecycleTransitionRequestKind.None,
 		),
 		pendingLifecycleRequestTarget: makeMutable<number>(0),
+		logicalSettleFrameCount: makeMutable(LOGICAL_SETTLE_REQUIRED_FRAMES),
 		pendingLifecycleStartBlockCount: makeMutable<number>(0),
 	}),
 	disposeBag: (bag) => {
@@ -80,6 +87,7 @@ export const SystemStore = createStore<SystemStoreState, SystemStoreActions>({
 		cancelAnimation(bag.measuredContentLayout);
 		cancelAnimation(bag.pendingLifecycleRequestKind);
 		cancelAnimation(bag.pendingLifecycleRequestTarget);
+		cancelAnimation(bag.logicalSettleFrameCount);
 		cancelAnimation(bag.pendingLifecycleStartBlockCount);
 	},
 	actions: (bag) => ({

@@ -9,6 +9,7 @@ import { useScreenAnimationContext } from "../../animation";
 import {
 	type ResettableStyleStatesBySlot,
 	resolveSlotStyles,
+	reuseEqualResolvedSlots,
 } from "../helpers/resolve-slot-styles";
 
 interface UseResolvedStylesMapParams {
@@ -25,6 +26,8 @@ export const useResolvedStylesMap = ({
 	const previousStyleStatesBySlot = useSharedValue<ResettableStyleStatesBySlot>(
 		{},
 	);
+	const previousResolvedStylesMap =
+		useSharedValue<NormalizedTransitionInterpolatedStyle>(NO_STYLES);
 
 	return useDerivedValue(() => {
 		"worklet";
@@ -44,7 +47,12 @@ export const useResolvedStylesMap = ({
 			});
 
 		previousStyleStatesBySlot.set(nextPreviousStyleStatesBySlot);
+		const stableResolvedStylesMap = reuseEqualResolvedSlots({
+			resolvedStylesMap,
+			previousResolvedStylesMap: previousResolvedStylesMap.get(),
+		});
+		previousResolvedStylesMap.set(stableResolvedStylesMap);
 
-		return resolvedStylesMap;
+		return stableResolvedStylesMap;
 	});
 };

@@ -31,14 +31,25 @@ export function findCollapseTarget(
 			: { target: currentProgress, shouldDismiss: false };
 	}
 
-	const sorted = [...normalized].sort((a, b) => a - b);
-	const minSnap = sorted[0];
+	let minSnap = normalized[0];
+	let nextLowerSnap: number | null = null;
 
-	// Find next lower snap point
-	for (let i = sorted.length - 1; i >= 0; i--) {
-		if (sorted[i] < currentProgress - EPSILON) {
-			return { target: sorted[i], shouldDismiss: false };
+	for (let i = 0; i < normalized.length; i++) {
+		const snap = normalized[i];
+		if (snap < minSnap) {
+			minSnap = snap;
 		}
+
+		if (
+			snap < currentProgress - EPSILON &&
+			(nextLowerSnap === null || snap > nextLowerSnap)
+		) {
+			nextLowerSnap = snap;
+		}
+	}
+
+	if (nextLowerSnap !== null) {
+		return { target: nextLowerSnap, shouldDismiss: false };
 	}
 
 	// At or below min snap → dismiss if allowed

@@ -43,65 +43,6 @@ export const SnapPanStrategy: PanBehaviorStrategy = {
 		lockedSnapPoint.set(resolvedMaxSnapPoint);
 	},
 
-	resolveProgress(runtime, dimensions, track) {
-		"worklet";
-		const {
-			participation,
-			policy,
-			stores: { system },
-			gestureProgressBaseline,
-			lockedSnapPoint,
-		} = runtime;
-		const activeGesture = runtime.stores.gestures.active.get();
-		const activeAxis = isResolvedPanGestureDirection(activeGesture)
-			? getPanSnapAxisConfigForDirection(
-					policy.snapAxisDirections,
-					activeGesture,
-				)
-			: null;
-
-		if (!activeAxis) {
-			return gestureProgressBaseline.get();
-		}
-
-		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
-			participation.effectiveSnapPoints;
-		const { x, y } = track;
-
-		const isHorizontal = activeAxis.axis === "horizontal";
-		const translation = isHorizontal ? x : y;
-		const dimension = isHorizontal ? dimensions.width : dimensions.height;
-		const progressDelta =
-			(activeAxis.config.progressSign * translation) / dimension;
-
-		const { resolvedMinSnapPoint, resolvedMaxSnapPoint } =
-			resolveRuntimeSnapPoints({
-				snapPoints,
-				hasAutoSnapPoint,
-				resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
-				minSnapPoint,
-				maxSnapPoint,
-				canDismiss: participation.canDismiss,
-			});
-
-		const maxProgressForGesture = policy.gestureSnapLocked
-			? lockedSnapPoint.get()
-			: resolvedMaxSnapPoint;
-		const minProgressForGesture = policy.gestureSnapLocked
-			? participation.canDismiss
-				? 0
-				: lockedSnapPoint.get()
-			: resolvedMinSnapPoint;
-
-		return Math.max(
-			minProgressForGesture,
-			Math.min(
-				maxProgressForGesture,
-				gestureProgressBaseline.get() + progressDelta,
-			),
-		);
-	},
-
 	resolveRelease(event, runtime, dimensions) {
 		"worklet";
 		const {

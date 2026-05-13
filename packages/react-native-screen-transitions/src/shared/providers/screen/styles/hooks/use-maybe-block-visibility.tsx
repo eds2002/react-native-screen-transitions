@@ -2,26 +2,33 @@ import {
 	useAnimatedProps,
 	useAnimatedStyle,
 	useDerivedValue,
+	useSharedValue,
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
-import { SystemStore } from "../../../../stores/system.store";
+import {
+	LifecycleTransitionRequestKind,
+	SystemStore,
+} from "../../../../stores/system.store";
 import { useDescriptorDerivations } from "../../descriptors";
 
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { currentScreenKey } = useDescriptorDerivations();
 	const progress = AnimationStore.getValue(currentScreenKey, "progress");
 
-	const { pendingLifecycleStartBlockCount } =
+	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =
 		SystemStore.getBag(currentScreenKey);
 
+	const hasVisibilityGateOpened = useSharedValue(false);
 	const shouldBlockVisibility = useDerivedValue(() => {
 		"worklet";
 
-		if (isFloatingOverlay) {
+		if (isFloatingOverlay || hasVisibilityGateOpened.get()) {
 			return false;
 		}
 
 		const hasPendingLifecycleBlock = pendingLifecycleStartBlockCount.get() > 0;
+		const isPendingOpen =
+			pendingLifecycleRequestKind.get() === LifecycleTransitionRequestKind.Open;
 
 		// Hide the screen during the tiny pre-animation open window as well.
 		// The destination measurement blocker can be registered one frame after
@@ -29,7 +36,14 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 		// count turns visible to this provider.
 		const isWaitingForOpenToStart = progress.get() <= 0;
 
-		return hasPendingLifecycleBlock || isWaitingForOpenToStart;
+		const shouldBlock =
+			(hasPendingLifecycleBlock || isWaitingForOpenToStart) && isPendingOpen;
+
+		if (!shouldBlock) {
+			hasVisibilityGateOpened.set(true);
+		}
+
+		return shouldBlock;
 	});
 
 	const animatedStyle = useAnimatedStyle(() => {

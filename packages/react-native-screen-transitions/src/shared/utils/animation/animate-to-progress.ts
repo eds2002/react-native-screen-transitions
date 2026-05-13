@@ -22,6 +22,24 @@ interface AnimateToProgressProps {
 	initialVelocity?: number;
 }
 
+const setTransitionLifecycleFlags = (
+	animations: AnimationStoreMap,
+	isClosing: boolean,
+	markEntering: boolean,
+) => {
+	"worklet";
+
+	if (isClosing) {
+		animations.closing.set(TRUE);
+		animations.entering.set(FALSE);
+		return;
+	}
+
+	if (markEntering) {
+		animations.entering.set(TRUE);
+	}
+};
+
 export const animateToProgress = ({
 	target,
 	spec,
@@ -50,7 +68,7 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, willAnimate, animating, closing, entering } = animations;
+	const { progress, willAnimate, progressAnimating, entering } = animations;
 
 	const startAnimation = () => {
 		"worklet";
@@ -59,15 +77,10 @@ export const animateToProgress = ({
 		const shouldClearEnteringOnFinish =
 			!isClosing && (markEntering || entering.get());
 
-		if (isClosing) {
-			closing.set(TRUE);
-			entering.set(FALSE);
-		} else if (markEntering) {
-			entering.set(TRUE);
-		}
+		setTransitionLifecycleFlags(animations, isClosing, markEntering);
 
 		if (!config) {
-			animating.set(FALSE);
+			progressAnimating.set(FALSE);
 			progress.set(value);
 			if (shouldClearEnteringOnFinish) {
 				entering.set(FALSE);
@@ -79,7 +92,7 @@ export const animateToProgress = ({
 			return;
 		}
 
-		animating.set(TRUE); //<-- Do not move this into the callback
+		progressAnimating.set(TRUE); //<-- Do not move this into the callback
 		progress.set(
 			animate(value, effectiveConfig, (finished) => {
 				"worklet";
@@ -93,21 +106,16 @@ export const animateToProgress = ({
 					runOnJS(onAnimationFinish)(finished);
 				}
 
-				// Delay setting animating=FALSE by one frame to ensure final frame is painted
+				// Delay clearing progress animation by one frame to ensure final frame is painted
 				requestAnimationFrame(() => {
-					animating.set(FALSE);
+					progressAnimating.set(FALSE);
 				});
 			}),
 		);
 	};
 
 	if (emitWillAnimate) {
-		if (isClosing) {
-			closing.set(TRUE);
-			entering.set(FALSE);
-		} else if (markEntering) {
-			entering.set(TRUE);
-		}
+		setTransitionLifecycleFlags(animations, isClosing, markEntering);
 
 		willAnimate.set(TRUE);
 		requestAnimationFrame(() => {

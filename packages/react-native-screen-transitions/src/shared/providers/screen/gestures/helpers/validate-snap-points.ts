@@ -9,13 +9,22 @@ export function sanitizeSnapPoints(
 	canDismiss: boolean,
 ): number[] {
 	"worklet";
-	return snapPoints.filter(
-		(point): point is number =>
-			typeof point === "number" &&
-			(canDismiss
-				? Number.isFinite(point)
-				: Number.isFinite(point) && point > 0),
-	);
+	const normalized: number[] = [];
+
+	for (let i = 0; i < snapPoints.length; i++) {
+		const point = snapPoints[i];
+		if (typeof point !== "number" || !Number.isFinite(point)) {
+			continue;
+		}
+
+		if (!canDismiss && point <= 0) {
+			continue;
+		}
+
+		normalized.push(point);
+	}
+
+	return normalized;
 }
 
 export interface EffectiveSnapPointsResult {

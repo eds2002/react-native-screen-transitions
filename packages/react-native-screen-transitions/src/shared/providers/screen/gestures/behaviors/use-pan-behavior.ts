@@ -51,21 +51,12 @@ export const usePanBehavior = (
 				runtime.get(),
 				screenOptions.get(),
 			);
-			const strategy = getPanStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
-			const track = trackPanGesture(
+			trackPanGesture(
 				event,
 				rawEvent,
 				latestRuntime.stores.gestures,
 				dimensions,
-			);
-
-			if (!latestRuntime.policy.gestureDrivesProgress) {
-				return;
-			}
-
-			latestRuntime.stores.animations.progress.set(
-				strategy.resolveProgress(latestRuntime, dimensions, track),
 			);
 		},
 		[runtime, screenOptions, dimensions, withSensitivity],

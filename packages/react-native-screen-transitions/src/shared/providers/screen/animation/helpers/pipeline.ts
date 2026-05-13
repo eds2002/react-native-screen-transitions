@@ -17,6 +17,7 @@ import { useDescriptors } from "../../descriptors";
 import { updateDerivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
 import { hydrateTransitionState } from "./hydrate-transition-state";
+import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
 import { useBuildTransitionState } from "./use-build-transition-state";
 
 export type ScreenInterpolatorFrame = Omit<
@@ -27,6 +28,7 @@ export type ScreenInterpolatorFrame = Omit<
 interface ScreenAnimationPipeline {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
 	screenInterpolatorPropsRevision: DerivedValue<number>;
+	selectedInterpolatorOptions: SharedValue<SelectedInterpolatorOptions>;
 	nextInterpolator: ScreenStyleInterpolator | undefined;
 	currentInterpolator: ScreenStyleInterpolator | undefined;
 }
@@ -82,6 +84,10 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const screenInterpolatorProps = useSharedValue(
 		createInitialBaseInterpolatorProps(dimensions, insets),
 	);
+	const selectedInterpolatorOptions =
+		useSharedValue<SelectedInterpolatorOptions>({
+			owner: "current",
+		});
 
 	const propsRevisionState = useSharedValue({ value: 0 });
 	const screenInterpolatorPropsRevision = useDerivedValue<number>(() => {
@@ -89,17 +95,37 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 		screenInterpolatorProps.modify((frame) => {
 			"worklet";
+			const interpolatorOptions = selectedInterpolatorOptions.get();
+			const shouldApplyOptionsToCurrent =
+				interpolatorOptions.owner === "current";
+			const shouldApplyOptionsToNext =
+				interpolatorOptions.owner === "next" &&
+				!!nextAnimation &&
+				nextHasTransitions;
+
 			frame.previous = prevAnimation
 				? hydrateTransitionState(prevAnimation, dimensions)
 				: undefined;
 
 			frame.current = currentAnimation
-				? hydrateTransitionState(currentAnimation, dimensions)
+				? hydrateTransitionState(
+						currentAnimation,
+						dimensions,
+						shouldApplyOptionsToCurrent
+							? interpolatorOptions.options
+							: undefined,
+					)
 				: DEFAULT_SCREEN_TRANSITION_STATE;
 
 			frame.next =
 				nextAnimation && nextHasTransitions
-					? hydrateTransitionState(nextAnimation, dimensions)
+					? hydrateTransitionState(
+							nextAnimation,
+							dimensions,
+							shouldApplyOptionsToNext
+								? interpolatorOptions.options
+								: undefined,
+						)
 					: undefined;
 
 			frame.layouts = frame.current.layouts;
@@ -137,6 +163,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	return {
 		screenInterpolatorProps,
 		screenInterpolatorPropsRevision,
+		selectedInterpolatorOptions,
 		nextInterpolator,
 		currentInterpolator,
 	};

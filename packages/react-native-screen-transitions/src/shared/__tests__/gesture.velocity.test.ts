@@ -35,7 +35,7 @@ const createAnimations = (progress: number) =>
 	({
 		progress: { get: () => progress },
 		closing: { get: () => 0 },
-		animating: { get: () => 0 },
+		progressAnimating: { get: () => 0 },
 	}) as const;
 
 const createEvent = ({
@@ -256,13 +256,13 @@ describe("getPanReleaseHandoffVelocity", () => {
 		expect(getPanReleaseHandoffVelocity(800, 320, 2)).toBeCloseTo(5, 5);
 	});
 
-	it("caps release velocity when gestureReleaseVelocityMax is provided", () => {
+	it("ignores deprecated release velocity max", () => {
 		expect(getPanReleaseHandoffVelocity(6400, 320, 1, 3.2)).toBeCloseTo(
-			3.2,
+			20,
 			5,
 		);
 		expect(getPanReleaseHandoffVelocity(-6400, 320, 1, 3.2)).toBeCloseTo(
-			-3.2,
+			-20,
 			5,
 		);
 	});
@@ -275,9 +275,9 @@ describe("getPinchReleaseHandoffVelocity", () => {
 		expect(getPinchReleaseHandoffVelocity(8, 0.5)).toBeCloseTo(4, 5);
 	});
 
-	it("caps pinch release velocity when gestureReleaseVelocityMax is provided", () => {
-		expect(getPinchReleaseHandoffVelocity(8, 1, 3.2)).toBeCloseTo(3.2, 5);
-		expect(getPinchReleaseHandoffVelocity(-8, 1, 3.2)).toBeCloseTo(-3.2, 5);
+	it("ignores deprecated pinch release velocity max", () => {
+		expect(getPinchReleaseHandoffVelocity(8, 1, 3.2)).toBeCloseTo(8, 5);
+		expect(getPinchReleaseHandoffVelocity(-8, 1, 3.2)).toBeCloseTo(-8, 5);
 	});
 });
 

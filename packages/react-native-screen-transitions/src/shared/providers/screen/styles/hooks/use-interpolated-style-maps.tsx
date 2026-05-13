@@ -1,6 +1,5 @@
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
-import { SystemStore } from "../../../../stores/system.store";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	TransitionInterpolatedStyle,
@@ -9,7 +8,7 @@ import { logger } from "../../../../utils/logger";
 import { useScreenAnimationContext } from "../../animation";
 import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
 import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/use-build-transition-accessor";
-import { useDescriptorDerivations } from "../../descriptors";
+import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selected-interpolator-options";
 import {
 	syncScreenOptionsOverrides,
 	useScreenOptionsContext,
@@ -33,41 +32,31 @@ import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options"
  * normal interpolator selection once the gesture-driven close is no longer in
  * play.
  *
- * The hook also suppresses interpolated styles while lifecycle start is blocked
- * for pending destination measurement. That keeps the opening screen visually
- * neutral until the system has a usable viewport measurement, then allows the
- * interpolator to take over once the blocker clears.
+ * Visibility gating happens downstream while lifecycle start is blocked for
+ * pending destination measurement. We still compute the interpolated style map
+ * during that hidden window so animated props, such as BlurView backdrop props,
+ * are ready before the screen becomes visible.
  *
  * The result stays as a single slot map. Resolution happens downstream, where
  * slot ids determine whether a slot may inherit from ancestors or must remain
  * local to the owning screen container.
  */
 export const useInterpolatedStylesMap = () => {
-	const { currentScreenKey } = useDescriptorDerivations();
 	const screenOptions = useScreenOptionsContext();
 	const {
 		screenInterpolatorProps,
 		screenInterpolatorPropsRevision,
+		selectedInterpolatorOptions,
 		nextInterpolator,
 		currentInterpolator,
 	} = useScreenAnimationContext();
 	const boundsAccessor = useBuildBoundsAccessor();
 	const transition = useBuildTransitionAccessor();
 
-	const pendingLifecycleStartBlockCount = SystemStore.getValue(
-		currentScreenKey,
-		"pendingLifecycleStartBlockCount",
-	);
-
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
 	return useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
 		"worklet";
-		if (pendingLifecycleStartBlockCount.get() > 0) {
-			syncScreenOptionsOverrides(undefined, screenOptions);
-			return NO_STYLES;
-		}
-
 		screenInterpolatorPropsRevision.get();
 		const props = screenInterpolatorProps.get();
 		const { current, next, progress } = props;
@@ -88,11 +77,15 @@ export const useInterpolatedStylesMap = () => {
 		const isInGestureMode =
 			!!isDragging || isGesturingDuringCloseAnimation.get();
 
-		const interpolator = isInGestureMode
-			? currentInterpolator
-			: (nextInterpolator ?? currentInterpolator);
+		const interpolatorOptionsOwner =
+			isInGestureMode || !nextInterpolator ? "current" : "next";
+		const interpolator =
+			interpolatorOptionsOwner === "current"
+				? currentInterpolator
+				: nextInterpolator;
 
 		if (!interpolator) {
+			syncSelectedInterpolatorOptions(selectedInterpolatorOptions, "current");
 			syncScreenOptionsOverrides(undefined, screenOptions);
 			return NO_STYLES;
 		}
@@ -117,7 +110,15 @@ export const useInterpolatedStylesMap = () => {
 			const rawStyleMap: TransitionInterpolatedStyle | undefined =
 				typeof raw === "object" && raw != null ? raw : undefined;
 
-			syncScreenOptionsOverrides(rawStyleMap, screenOptions);
+			syncSelectedInterpolatorOptions(
+				selectedInterpolatorOptions,
+				interpolatorOptionsOwner,
+				rawStyleMap?.options,
+			);
+			syncScreenOptionsOverrides(
+				interpolatorOptionsOwner === "current" ? rawStyleMap : undefined,
+				screenOptions,
+			);
 
 			const stylesMap = !rawStyleMap
 				? NO_STYLES
@@ -129,6 +130,7 @@ export const useInterpolatedStylesMap = () => {
 				logger.warn("screenStyleInterpolator must be a worklet");
 			}
 
+			syncSelectedInterpolatorOptions(selectedInterpolatorOptions, "current");
 			syncScreenOptionsOverrides(undefined, screenOptions);
 			return NO_STYLES;
 		}

@@ -1,12 +1,13 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import type { SharedValue } from "react-native-reanimated";
 import {
-	createScreenTransitionState,
-	DEFAULT_SCREEN_TRANSITION_OPTIONS,
-} from "../constants";
-import { hydrateTransitionState } from "../providers/screen/animation/helpers/hydrate-transition-state";
-import { finalizePanRelease, startPanBase } from "../providers/screen/gestures/helpers/pan-phases";
-import { startPinchBase } from "../providers/screen/gestures/helpers/pinch-phases";
+	finalizePanRelease,
+	startPanBase,
+} from "../providers/screen/gestures/helpers/pan-phases";
+import {
+	finalizePinchRelease,
+	startPinchBase,
+} from "../providers/screen/gestures/helpers/pinch-phases";
 import type { AnimationStoreMap } from "../stores/animation.store";
 import type { GestureStoreMap } from "../stores/gesture.store";
 import { animateToProgress } from "../utils/animation/animate-to-progress";
@@ -62,26 +63,32 @@ const createGestureStore = (): GestureStoreMap => {
 const createAnimations = (): AnimationStoreMap => ({
 	progress: shared(1),
 	willAnimate: shared(0),
-	animating: shared(0),
+	progressAnimating: shared(0),
 	closing: shared(0),
 	entering: shared(0),
-	settled: shared(1),
-	logicallySettled: shared(1),
 });
 
-const createRuntime = () => {
+const createRuntime = (
+	policyOverrides: Partial<{
+		gestureDrivesProgress: boolean;
+		gestureReleaseVelocityScale: number;
+	}> = {},
+) => {
 	const gestures = createGestureStore();
 	const animations = createAnimations();
 	const runtime = {
 		participation: { canDismiss: true, effectiveSnapPoints: {} },
 		policy: {
+			gestureDrivesProgress: true,
 			gestureReleaseVelocityScale: 1,
+			...policyOverrides,
 		},
 		stores: {
 			gestures,
 			animations,
 			system: {
 				targetProgress: shared(1),
+				logicalSettleFrameCount: shared(0),
 			},
 		},
 		gestureProgressBaseline: shared(1),
@@ -325,7 +332,7 @@ describe("gesture lifecycle state", () => {
 
 		expect(gestures.dragging.get()).toBe(0);
 		expect(gestures.dismissing.get()).toBe(0);
-		expect(animations.animating.get()).toBe(0);
+		expect(animations.progressAnimating.get()).toBe(0);
 	});
 
 	it("does not mark a dismissing pan release as settling", () => {
@@ -351,73 +358,128 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.settling.get()).toBe(0);
 	});
 
-	it("hydrates public animating from explicit gesture settling state", () => {
-		const gestures = createGestureStore();
-		gestures.settling.set(1);
-		const state = createScreenTransitionState({
-			key: "route-a",
-			name: "RouteA",
-		});
+	it("keeps raw pan displacement during a dismissing release", () => {
+		const { runtime, gestures } = createRuntime();
+		gestures.dragging.set(1);
+		gestures.raw.y.set(320);
+		gestures.raw.normY.set(0.4);
 
-		const hydrated = hydrateTransitionState(
+		finalizePanRelease(
 			{
-				...createAnimations(),
-				progress: shared(1),
-				animating: shared(0),
-				settled: shared(1),
-				logicallySettled: shared(1),
-				gesture: gestures,
-				route: state.route,
-				options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
-				navigationMaskEnabled: false,
-				targetProgress: shared(1),
-				resolvedAutoSnapPoint: shared(-1),
-				measuredContentLayout: shared(null),
-				contentLayoutSlot: { width: 0, height: 0 },
-				hasAutoSnapPoint: false,
-				sortedNumericSnapPoints: [],
-				unwrapped: state,
+				target: 0,
+				shouldDismiss: true,
+				initialVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: { duration: 200, __finished: false } as any,
 			},
-			{ width: 390, height: 844 },
+			runtime,
+			() => {},
+			{ width: 390, height: 800 },
+			{ velocityX: 0, velocityY: 0 } as any,
 		);
 
-		expect(hydrated.gesture.settling).toBe(1);
-		expect(hydrated.animating).toBe(1);
-		expect(hydrated.settled).toBe(0);
+		expect(gestures.raw.y.get()).toBe(320);
+		expect(gestures.raw.normY.get()).toBe(0.4);
 	});
 
-	it("keeps logically settled false while gesture reset is active", () => {
-		const gestures = createGestureStore();
-		gestures.settling.set(1);
-		const state = createScreenTransitionState({
-			key: "route-a",
-			name: "RouteA",
+	it("keeps live normalized pan displacement during a freeform dismissing release", () => {
+		const { runtime, gestures } = createRuntime({
+			gestureDrivesProgress: false,
 		});
+		gestures.dragging.set(1);
+		gestures.y.set(320);
+		gestures.normY.set(0.4);
 
-		const hydrated = hydrateTransitionState(
+		finalizePanRelease(
 			{
-				...createAnimations(),
-				progress: shared(1),
-				animating: shared(0),
-				settled: shared(1),
-				logicallySettled: shared(1),
-				gesture: gestures,
-				route: state.route,
-				options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
-				navigationMaskEnabled: false,
-				targetProgress: shared(1),
-				resolvedAutoSnapPoint: shared(-1),
-				measuredContentLayout: shared(null),
-				contentLayoutSlot: { width: 0, height: 0 },
-				hasAutoSnapPoint: false,
-				sortedNumericSnapPoints: [],
-				unwrapped: state,
+				target: 0,
+				shouldDismiss: true,
+				initialVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: { duration: 200, __finished: false } as any,
 			},
-			{ width: 390, height: 844 },
+			runtime,
+			() => {},
+			{ width: 390, height: 800 },
+			{ velocityX: 0, velocityY: 0 } as any,
 		);
 
-		expect(hydrated.animating).toBe(1);
-		expect(hydrated.settled).toBe(0);
-		expect(hydrated.logicallySettled).toBe(0);
+		expect(gestures.y.get()).toBe(0);
+		expect(gestures.normY.get()).toBe(0.4);
 	});
+
+	it("resets live normalized pan displacement during a progress-driven dismissing release", () => {
+		const { runtime, gestures } = createRuntime({
+			gestureDrivesProgress: true,
+		});
+		gestures.dragging.set(1);
+		gestures.y.set(320);
+		gestures.normY.set(0.4);
+
+		finalizePanRelease(
+			{
+				target: 0,
+				shouldDismiss: true,
+				initialVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: { duration: 200, __finished: false } as any,
+			},
+			runtime,
+			() => {},
+			{ width: 390, height: 800 },
+			{ velocityX: 0, velocityY: 0 } as any,
+		);
+
+		expect(gestures.y.get()).toBe(0);
+		expect(gestures.normY.get()).toBe(0);
+	});
+
+	it("resets live normalized pan displacement during a cancelled freeform release", () => {
+		const { runtime, gestures } = createRuntime({
+			gestureDrivesProgress: false,
+		});
+		gestures.dragging.set(1);
+		gestures.y.set(320);
+		gestures.normY.set(0.4);
+
+		finalizePanRelease(
+			{
+				target: 1,
+				shouldDismiss: false,
+				initialVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: { duration: 200, __finished: false } as any,
+			},
+			runtime,
+			undefined,
+			{ width: 390, height: 800 },
+			{ velocityX: 0, velocityY: 0 } as any,
+		);
+
+		expect(gestures.y.get()).toBe(0);
+		expect(gestures.normY.get()).toBe(0);
+	});
+
+	it("keeps raw pinch displacement during a dismissing release", () => {
+		const { runtime, gestures } = createRuntime();
+		gestures.dragging.set(1);
+		gestures.raw.scale.set(0.7);
+		gestures.raw.normScale.set(-0.3);
+
+		finalizePinchRelease(
+			{
+				target: 0,
+				shouldDismiss: true,
+				initialVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: { duration: 200, __finished: false } as any,
+			},
+			runtime,
+			() => {},
+		);
+
+		expect(gestures.raw.scale.get()).toBe(0.7);
+		expect(gestures.raw.normScale.get()).toBe(-0.3);
+	});
+
 });

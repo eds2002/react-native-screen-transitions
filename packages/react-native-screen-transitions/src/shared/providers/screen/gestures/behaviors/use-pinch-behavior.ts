@@ -57,21 +57,8 @@ export const usePinchBehavior = (
 				runtime.get(),
 				screenOptions.get(),
 			);
-			const strategy = getPinchStrategy(latestRuntime);
 			const event = withSensitivity(rawEvent);
-			const track = trackPinchGesture(
-				event,
-				rawEvent,
-				latestRuntime.stores.gestures,
-			);
-
-			if (!latestRuntime.policy.gestureDrivesProgress) {
-				return;
-			}
-
-			latestRuntime.stores.animations.progress.set(
-				strategy.resolveProgress(latestRuntime, track),
-			);
+			trackPinchGesture(event, rawEvent, latestRuntime.stores.gestures);
 		},
 		[runtime, screenOptions, withSensitivity],
 	);

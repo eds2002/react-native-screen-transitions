@@ -88,9 +88,28 @@ export const finalizePanRelease = (
 		stores: { gestures, animations, system },
 	} = runtime;
 	const { width, height } = dimensions;
+
+	const gestureDrivesProgress = policy.gestureDrivesProgress;
 	const releaseVelocityScale = Math.max(0, policy.gestureReleaseVelocityScale);
-	const resetVelocityX = rawEvent.velocityX * releaseVelocityScale;
-	const resetVelocityY = rawEvent.velocityY * releaseVelocityScale;
+
+	// When gestures do not drive progress, release velocity must stay off the
+	// progress spring as well. Otherwise gestureDrivesProgress would only decouple
+	// live drag, then recouple the release handoff. In that freeform mode the
+	// gesture reset owns release velocity instead. This may change with more
+	// feedback, but it keeps the current ownership model consistent.
+	const gestureOwnsReset = !gestureDrivesProgress;
+	const shouldResetNormalizedValues =
+		!release.shouldDismiss || gestureDrivesProgress;
+
+	const shouldUseResetVelocity = !release.shouldDismiss || gestureOwnsReset;
+
+	const resetVelocityFactor = shouldUseResetVelocity ? 1 : 0;
+
+	const resetVelocityX =
+		rawEvent.velocityX * releaseVelocityScale * resetVelocityFactor;
+
+	const resetVelocityY =
+		rawEvent.velocityY * releaseVelocityScale * resetVelocityFactor;
 
 	resetGestureValues({
 		spec: release.resetSpec,
@@ -100,6 +119,7 @@ export const finalizePanRelease = (
 		velocityY: resetVelocityY,
 		velocityNormX: resetVelocityX / Math.max(1, width),
 		velocityNormY: resetVelocityY / Math.max(1, height),
+		resetNormalizedValues: shouldResetNormalizedValues,
 	});
 
 	const progressAlreadyAtTarget =
@@ -107,7 +127,7 @@ export const finalizePanRelease = (
 
 	if (!release.shouldDismiss && progressAlreadyAtTarget) {
 		system.targetProgress.set(release.target);
-		animations.animating.set(FALSE);
+		animations.progressAnimating.set(FALSE);
 		return;
 	}
 
@@ -119,6 +139,6 @@ export const finalizePanRelease = (
 		markEntering: false,
 		targetProgress: system.targetProgress,
 		animations,
-		initialVelocity: release.initialVelocity,
+		initialVelocity: gestureDrivesProgress ? release.initialVelocity : 0,
 	});
 };

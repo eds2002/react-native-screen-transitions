@@ -1,41 +1,10 @@
-import { clamp } from "react-native-reanimated";
-import {
-	getPanReleaseProgressVelocity,
-	mapGestureToProgress,
-} from "../../helpers/gesture-physics";
+import { getPanReleaseProgressVelocity } from "../../helpers/gesture-physics";
 import { determineDismissal } from "../../helpers/gesture-targets";
 import type { PanBehaviorStrategy } from "../../types";
 
 export const PanStrategy: PanBehaviorStrategy = {
 	primeStart(_runtime) {
 		"worklet";
-	},
-
-	resolveProgress(runtime, dimensions, track) {
-		"worklet";
-		const { policy, gestureProgressBaseline } = runtime;
-		const { x, y } = track;
-		const { width, height } = dimensions;
-
-		let maxProgress = 0;
-
-		if (policy.panActivationDirections.horizontal && x > 0) {
-			maxProgress = Math.max(maxProgress, mapGestureToProgress(x, width));
-		}
-
-		if (policy.panActivationDirections.horizontalInverted && x < 0) {
-			maxProgress = Math.max(maxProgress, mapGestureToProgress(-x, width));
-		}
-
-		if (policy.panActivationDirections.vertical && y > 0) {
-			maxProgress = Math.max(maxProgress, mapGestureToProgress(y, height));
-		}
-
-		if (policy.panActivationDirections.verticalInverted && y < 0) {
-			maxProgress = Math.max(maxProgress, mapGestureToProgress(-y, height));
-		}
-
-		return clamp(gestureProgressBaseline.get() - maxProgress, 0, 1);
 	},
 
 	resolveRelease(event, runtime, dimensions) {

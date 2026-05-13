@@ -12,6 +12,7 @@ interface ResetGestureValuesProps {
 	velocityY?: number;
 	velocityNormX?: number;
 	velocityNormY?: number;
+	resetNormalizedValues?: boolean;
 }
 
 const getGestureResetSpec = (
@@ -98,13 +99,17 @@ export const resetGestureValues = ({
 	velocityY,
 	velocityNormX,
 	velocityNormY,
+	resetNormalizedValues = true,
 }: ResetGestureValuesProps) => {
 	"worklet";
 
-	gestures.raw.x.set(0);
-	gestures.raw.y.set(0);
-	gestures.raw.normX.set(0);
-	gestures.raw.normY.set(0);
+	if (!shouldDismiss) {
+		gestures.raw.x.set(0);
+		gestures.raw.y.set(0);
+		gestures.raw.normX.set(0);
+		gestures.raw.normY.set(0);
+	}
+
 	gestures.dragging.set(FALSE);
 	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
 	gestures.settling.set(shouldDismiss ? FALSE : TRUE);
@@ -115,6 +120,11 @@ export const resetGestureValues = ({
 	animateResetValue(gestures.y, 0, getGestureResetSpec(spec, velocityY), () =>
 		clearPanSettlingIfResting(gestures),
 	);
+
+	if (!resetNormalizedValues) {
+		return;
+	}
+
 	animateResetValue(
 		gestures.normX,
 		0,
@@ -143,8 +153,11 @@ export const resetPinchGestureValues = ({
 	"worklet";
 	const resetSpec = getGestureResetSpec(spec);
 
-	gestures.raw.scale.set(1);
-	gestures.raw.normScale.set(0);
+	if (!shouldDismiss) {
+		gestures.raw.scale.set(1);
+		gestures.raw.normScale.set(0);
+	}
+
 	gestures.dragging.set(FALSE);
 	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
 	gestures.settling.set(shouldDismiss ? FALSE : TRUE);

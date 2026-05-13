@@ -30,17 +30,6 @@ export const toProgressVelocity = (
 	return velocityPixelsPerSecond / Math.max(1, screenSize);
 };
 
-export const clampReleaseVelocity = (
-	velocity: number,
-	maxMagnitude?: number,
-) => {
-	"worklet";
-	if (maxMagnitude === undefined) return velocity;
-
-	const max = Math.max(0, Math.abs(maxMagnitude));
-	return clamp(velocity, -max, max);
-};
-
 /**
  * Converts pan release velocity into a spring handoff in progress units/second.
  */
@@ -48,14 +37,13 @@ export const getPanReleaseHandoffVelocity = (
 	velocityPixelsPerSecond: number,
 	screenSize: number,
 	gestureReleaseVelocityScale: number = 1,
-	gestureReleaseVelocityMax?: number,
+	_gestureReleaseVelocityMax?: number,
 ) => {
 	"worklet";
-	const velocity =
+	return (
 		toProgressVelocity(velocityPixelsPerSecond, screenSize) *
-		Math.max(0, gestureReleaseVelocityScale);
-
-	return clampReleaseVelocity(velocity, gestureReleaseVelocityMax);
+		Math.max(0, gestureReleaseVelocityScale)
+	);
 };
 
 /**
@@ -64,12 +52,10 @@ export const getPanReleaseHandoffVelocity = (
 export const getPinchReleaseHandoffVelocity = (
 	velocityScalePerSecond: number,
 	gestureReleaseVelocityScale: number = 1,
-	gestureReleaseVelocityMax?: number,
+	_gestureReleaseVelocityMax?: number,
 ) => {
 	"worklet";
-	const velocity =
-		velocityScalePerSecond * Math.max(0, gestureReleaseVelocityScale);
-	return clampReleaseVelocity(velocity, gestureReleaseVelocityMax);
+	return velocityScalePerSecond * Math.max(0, gestureReleaseVelocityScale);
 };
 
 /**
@@ -227,18 +213,6 @@ export const shouldDismissFromProjection = (
 	const exceedsThreshold = projectedInDismissDirection > 0.5;
 
 	return exceedsThreshold;
-};
-
-/**
- * Utility function to map raw gesture translation to a progress value.
- */
-export const mapGestureToProgress = (
-	translation: number,
-	dimension: number,
-) => {
-	"worklet";
-	const rawProgress = translation / dimension;
-	return Math.max(0, Math.min(1, rawProgress));
 };
 
 /**

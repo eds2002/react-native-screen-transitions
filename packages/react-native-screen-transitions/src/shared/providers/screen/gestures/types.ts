@@ -185,11 +185,6 @@ export interface PinchReleaseResult {
 
 export interface PanBehaviorStrategy {
 	primeStart: (runtime: PanGestureRuntime) => void;
-	resolveProgress: (
-		runtime: PanGestureRuntime,
-		dimensions: GestureDimensions,
-		track: PanTrackState,
-	) => number;
 	resolveRelease: (
 		event: PanGestureEvent,
 		runtime: PanGestureRuntime,
@@ -199,10 +194,6 @@ export interface PanBehaviorStrategy {
 
 export interface PinchBehaviorStrategy {
 	primeStart: (runtime: PinchGestureRuntime) => void;
-	resolveProgress: (
-		runtime: PinchGestureRuntime,
-		track: PinchTrackState,
-	) => number;
 	resolveRelease: (
 		event: PinchGestureEvent,
 		runtime: PinchGestureRuntime,

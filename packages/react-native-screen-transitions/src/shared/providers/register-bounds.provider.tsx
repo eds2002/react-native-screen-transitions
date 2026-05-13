@@ -87,11 +87,14 @@ const useInitialLayoutHandler = (params: {
 		maybeMeasureAndStore,
 	} = params;
 
-	const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
+	const isAnimating = AnimationStore.getValue(
+		currentScreenKey,
+		"progressAnimating",
+	);
 
 	// Check if any ancestor is animating
 	const ancestorAnimations = ancestorKeys.map((key) =>
-		AnimationStore.getValue(key, "animating"),
+		AnimationStore.getValue(key, "progressAnimating"),
 	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
@@ -257,7 +260,10 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 		const updateSignal: SharedValue<number> =
 			parentContext?.updateSignal ?? ownSignal;
 
-		const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
+		const isAnimating = AnimationStore.getValue(
+			currentScreenKey,
+			"progressAnimating",
+		);
 		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 		const emitUpdate = useStableCallbackValue(() => {

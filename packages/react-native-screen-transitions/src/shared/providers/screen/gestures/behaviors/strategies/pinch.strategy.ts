@@ -11,24 +11,6 @@ export const PinchStrategy: PinchBehaviorStrategy = {
 		"worklet";
 	},
 
-	resolveProgress(runtime, track) {
-		"worklet";
-		const { policy, gestureProgressBaseline } = runtime;
-		const { normScale } = track;
-
-		const progressDelta =
-			(normScale < 0 && policy.pinchInEnabled) ||
-			(normScale > 0 && policy.pinchOutEnabled)
-				? Math.abs(normScale)
-				: 0;
-
-		return clamp(
-			gestureProgressBaseline.get() - progressDelta,
-			0,
-			gestureProgressBaseline.get(),
-		);
-	},
-
 	resolveRelease(event, runtime) {
 		"worklet";
 		const {

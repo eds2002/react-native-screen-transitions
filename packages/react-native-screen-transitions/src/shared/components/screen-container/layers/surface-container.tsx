@@ -14,7 +14,6 @@ type Props = {
 };
 
 export const SurfaceContainer = memo(({ children, pointerEvents }: Props) => {
-	const { stylesMap } = useScreenStyles();
 	const { current } = useDescriptors();
 
 	const SurfaceComponent = current.options.surfaceComponent;
@@ -25,28 +24,49 @@ export const SurfaceContainer = memo(({ children, pointerEvents }: Props) => {
 			: null;
 	}, [SurfaceComponent]);
 
-	const animatedSurfaceStyle = useAnimatedStyle(() => {
-		"worklet";
-		return stylesMap.get().surface?.style ?? NO_STYLES;
-	});
-
-	const animatedSurfaceProps = useAnimatedProps(() => {
-		"worklet";
-		return stylesMap.get().surface?.props ?? NO_PROPS;
-	});
-
 	if (!AnimatedSurfaceComponent) return children;
 
 	return (
-		<AnimatedSurfaceComponent
-			style={[styles.surface, animatedSurfaceStyle]}
-			animatedProps={animatedSurfaceProps}
+		<AnimatedSurface
+			SurfaceComponent={AnimatedSurfaceComponent}
 			pointerEvents={pointerEvents}
 		>
 			{children}
-		</AnimatedSurfaceComponent>
+		</AnimatedSurface>
 	);
 });
+
+type AnimatedSurfaceProps = {
+	children: React.ReactNode;
+	pointerEvents: ViewProps["pointerEvents"];
+	SurfaceComponent: ComponentType<any>;
+};
+
+const AnimatedSurface = memo(
+	({ children, pointerEvents, SurfaceComponent }: AnimatedSurfaceProps) => {
+		const { stylesMap } = useScreenStyles();
+
+		const animatedSurfaceStyle = useAnimatedStyle(() => {
+			"worklet";
+			return stylesMap.get().surface?.style ?? NO_STYLES;
+		});
+
+		const animatedSurfaceProps = useAnimatedProps(() => {
+			"worklet";
+			return stylesMap.get().surface?.props ?? NO_PROPS;
+		});
+
+		return (
+			<SurfaceComponent
+				style={[styles.surface, animatedSurfaceStyle]}
+				animatedProps={animatedSurfaceProps}
+				pointerEvents={pointerEvents}
+			>
+				{children}
+			</SurfaceComponent>
+		);
+	},
+);
 
 const styles = StyleSheet.create({
 	surface: {

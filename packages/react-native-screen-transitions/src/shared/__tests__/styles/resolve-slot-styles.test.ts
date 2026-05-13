@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { resolveSlotStyles } from "../../providers/screen/styles/helpers/resolve-slot-styles";
+import {
+	resolveSlotStyles,
+	reuseEqualResolvedSlots,
+} from "../../providers/screen/styles/helpers/resolve-slot-styles";
 
 const A_SURFACE_STYLE = {
 	backgroundColor: "#4A90E2",
@@ -311,5 +314,38 @@ describe("resolveSlotStyles", () => {
 		});
 		expect(resetPass.nextPreviousStyleStatesBySlot.card).toBeUndefined();
 		expect(settledPass.resolvedStylesMap.card).toBeUndefined();
+	});
+
+	it("reuses previous resolved slot objects when style and props values are equal", () => {
+		const previousSlot = {
+			style: {
+				opacity: 0.5,
+				transform: [{ translateX: 12 }, { scale: 0.9 }],
+			},
+			props: {
+				pointerEvents: "none",
+			},
+		};
+		const previousMap = {
+			content: previousSlot,
+		};
+
+		const stableMap = reuseEqualResolvedSlots({
+			resolvedStylesMap: {
+				content: {
+					style: {
+						opacity: 0.5,
+						transform: [{ translateX: 12 }, { scale: 0.9 }],
+					},
+					props: {
+						pointerEvents: "none",
+					},
+				},
+			},
+			previousResolvedStylesMap: previousMap,
+		});
+
+		expect(stableMap).toBe(previousMap);
+		expect(stableMap.content).toBe(previousSlot);
 	});
 });

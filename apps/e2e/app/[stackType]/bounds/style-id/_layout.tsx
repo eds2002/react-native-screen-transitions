@@ -1,16 +1,8 @@
 import { BlurView } from "expo-blur";
 import { interpolate } from "react-native-reanimated";
-import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-
-const toStyleIdBoundTag = (route?: { params?: object }) => {
-	"worklet";
-	const params = route?.params as Record<string, unknown> | undefined;
-	const rawId = params?.id;
-	return typeof rawId === "string" ? rawId : "";
-};
 
 export default function StyleIdBoundsLayout() {
 	const stackType = useResolvedStackType();
@@ -28,13 +20,7 @@ export default function StyleIdBoundsLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "horizontal", "vertical-inverted"],
 					backdropComponent: BlurView,
-					screenStyleInterpolator: ({
-						current,
-						bounds,
-						focused,
-						next,
-						active,
-					}) => {
+					screenStyleInterpolator: ({ bounds, focused, active }) => {
 						"worklet";
 						const boundTag = active?.route?.params?.id;
 
@@ -70,7 +56,12 @@ export default function StyleIdBoundsLayout() {
 							mass: 3,
 							overshootClamping: false,
 						},
-						close: { ...Transition.Specs.DefaultSpec, mass: 2.5 },
+						close: {
+							stiffness: 800,
+							damping: 300,
+							mass: 3,
+							overshootClamping: false,
+						},
 					},
 				}}
 			/>

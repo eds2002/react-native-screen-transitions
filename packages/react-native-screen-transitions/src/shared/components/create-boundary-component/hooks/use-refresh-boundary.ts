@@ -36,7 +36,7 @@ export const useRefreshBoundary = ({
 	const currentEntering = AnimationStore.getValue(currentScreenKey, "entering");
 	const currentAnimating = AnimationStore.getValue(
 		currentScreenKey,
-		"animating",
+		"progressAnimating",
 	);
 	const currentProgress = AnimationStore.getValue(currentScreenKey, "progress");
 	const nextWillAnimate = nextScreenKey

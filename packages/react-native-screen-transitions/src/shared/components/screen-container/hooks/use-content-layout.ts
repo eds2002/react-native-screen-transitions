@@ -46,7 +46,7 @@ export function useContentLayout() {
 				if (
 					!isFirstMeasurement ||
 					animations.progress.get() !== 0 ||
-					animations.animating.get() !== 0
+					animations.progressAnimating.get() !== 0
 				) {
 					return;
 				}

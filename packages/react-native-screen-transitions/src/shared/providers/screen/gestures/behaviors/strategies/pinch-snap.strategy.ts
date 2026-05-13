@@ -43,58 +43,6 @@ export const SnapPinchStrategy: PinchBehaviorStrategy = {
 		lockedSnapPoint.set(resolvedMaxSnapPoint);
 	},
 
-	resolveProgress(runtime, track) {
-		"worklet";
-		const {
-			participation,
-			policy,
-			stores: { system },
-			gestureProgressBaseline,
-			lockedSnapPoint,
-		} = runtime;
-		const { hasAutoSnapPoint, snapPoints, minSnapPoint, maxSnapPoint } =
-			participation.effectiveSnapPoints;
-		const { normScale } = track;
-		const pinchDirection =
-			normScale < 0 ? "pinch-in" : normScale > 0 ? "pinch-out" : null;
-
-		let progressDelta = 0;
-		if (pinchDirection && policy.snapDirections) {
-			progressDelta =
-				policy.snapDirections.collapse === pinchDirection
-					? -Math.abs(normScale)
-					: Math.abs(normScale);
-		}
-
-		const { resolvedMinSnapPoint, resolvedMaxSnapPoint } =
-			resolveRuntimeSnapPoints({
-				snapPoints,
-				hasAutoSnapPoint,
-				resolvedAutoSnapPoint: system.resolvedAutoSnapPoint.get(),
-				minSnapPoint,
-				maxSnapPoint,
-				canDismiss: participation.canDismiss,
-			});
-
-		const maxProgressForGesture = policy.gestureSnapLocked
-			? lockedSnapPoint.get()
-			: resolvedMaxSnapPoint;
-
-		const minProgressForGesture = policy.gestureSnapLocked
-			? participation.canDismiss
-				? 0
-				: lockedSnapPoint.get()
-			: participation.canDismiss
-				? 0
-				: resolvedMinSnapPoint;
-
-		return clamp(
-			gestureProgressBaseline.get() + progressDelta,
-			minProgressForGesture,
-			maxProgressForGesture,
-		);
-	},
-
 	resolveRelease(event, runtime) {
 		"worklet";
 		const {

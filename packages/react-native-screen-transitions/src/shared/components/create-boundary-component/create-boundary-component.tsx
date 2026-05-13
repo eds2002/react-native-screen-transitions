@@ -103,11 +103,14 @@ export function createBoundaryComponent<P extends object>(
 		const associatedStackingStyles = useAnimatedStyle(() => {
 			"worklet";
 			const baseStyle = stylesMap.get()[sharedBoundTag]?.style;
+			const zIndex = baseStyle?.zIndex ?? 0;
+			const elevation = baseStyle?.elevation ?? 0;
 
-			return {
-				zIndex: baseStyle?.zIndex ?? 0,
-				elevation: baseStyle?.elevation ?? 0,
-			};
+			if (zIndex === 0 && elevation === 0) {
+				return NO_STYLES;
+			}
+
+			return { zIndex, elevation };
 		});
 
 		const { contextValue, measuredRef, hasActiveTarget, targetPreparedStyles } =

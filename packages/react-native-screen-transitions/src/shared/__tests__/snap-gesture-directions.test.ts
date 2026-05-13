@@ -1,80 +1,65 @@
 import { describe, expect, it } from "bun:test";
-import { SnapPanStrategy } from "../providers/screen/gestures/behaviors/strategies/pan-snap.strategy";
-import { SnapPinchStrategy } from "../providers/screen/gestures/behaviors/strategies/pinch-snap.strategy";
+import { resolveGestureDrivenProgress } from "../providers/screen/animation/helpers/hydrate-transition-state/gesture-progress";
 import {
 	getPanActivationDirections,
 	getPanSnapAxisDirections,
 	getSnapPinchDirectionConfig,
 } from "../providers/screen/gestures/helpers/gesture-directions";
+import type { ScreenTransitionOptions } from "../types/animation.types";
 import type { GestureDirection } from "../types/gesture.types";
 
-function sharedValue<T>(initial: T) {
-	let value = initial;
-
-	return {
-		get: () => value,
-		set: (next: T) => {
-			value = next;
+const createGesture = (
+	overrides: Partial<{
+		normX: number;
+		normY: number;
+		normScale: number;
+		active: string | null;
+	}>,
+) =>
+	({
+		x: 0,
+		y: 0,
+		normX: overrides.normX ?? 0,
+		normY: overrides.normY ?? 0,
+		scale: 1,
+		normScale: overrides.normScale ?? 0,
+		focalX: 0,
+		focalY: 0,
+		raw: {
+			x: 0,
+			y: 0,
+			normX: 0,
+			normY: 0,
+			scale: 1,
+			normScale: 0,
 		},
-	} as any;
-}
+		dismissing: 0,
+		dragging: 0,
+		settling: 0,
+		active: overrides.active ?? null,
+		direction: overrides.active ?? null,
+		normalizedX: overrides.normX ?? 0,
+		normalizedY: overrides.normY ?? 0,
+		isDismissing: 0,
+		isDragging: 0,
+	}) as any;
 
-function createSnapRuntimeBase(startProgress: number) {
-	return {
-		participation: {
-			canDismiss: true,
-			effectiveSnapPoints: {
-				hasAutoSnapPoint: false,
-				snapPoints: [0.5, 1],
-				minSnapPoint: 0,
-				maxSnapPoint: 1,
-			},
-		},
-		stores: {
-			system: {
-				resolvedAutoSnapPoint: sharedValue(0),
-			},
-		},
-		gestureProgressBaseline: sharedValue(startProgress),
-		lockedSnapPoint: sharedValue(1),
-	};
-}
-
-function createPanSnapRuntime(
+const resolveSnapProgress = (
+	baseProgress: number,
 	gestureDirection: GestureDirection | GestureDirection[],
-	activeDirection: string,
-	startProgress: number,
-) {
-	const base = createSnapRuntimeBase(startProgress);
-
-	return {
-		...base,
-		policy: {
-			snapAxisDirections: getPanSnapAxisDirections(gestureDirection),
-			gestureSnapLocked: false,
-		},
-		stores: {
-			...base.stores,
-			gestures: {
-				active: sharedValue(activeDirection),
-				direction: sharedValue(activeDirection),
-			},
-		},
-	} as any;
-}
-
-function createPinchSnapRuntime(
-	gestureDirection: GestureDirection | GestureDirection[],
-	startProgress: number,
-) {
-	return {
-		...createSnapRuntimeBase(startProgress),
-		policy: {
-			snapDirections: getSnapPinchDirectionConfig(gestureDirection),
-			gestureSnapLocked: false,
-		},
-	} as any;
-}
+	gesture: ReturnType<typeof createGesture>,
+	snapBounds = { min: 0, max: 1 },
+) =>
+	resolveGestureDrivenProgress(
+		baseProgress,
+		gesture,
+		{
+			gestureDirection,
+			gestureDrivesProgress: true,
+		} as ScreenTransitionOptions,
+		undefined,
+		snapBounds,
+	);
 
 describe("snap gesture directions", () => {
 	it("enables both activation directions for every configured snap pan axis", () => {
@@ -103,31 +88,41 @@ describe("snap gesture directions", () => {
 	});
 
 	it("maps each active pan snap direction to collapse or expand progress", () => {
-		const dimensions = { width: 1000, height: 1000 };
-
 		expect(
-			SnapPanStrategy.resolveProgress(
-				createPanSnapRuntime(
-					["horizontal", "vertical-inverted"],
-					"horizontal",
-					1,
-				),
-				dimensions,
-				{ x: 100, y: 0, normX: 0.1, normY: 0 },
+			resolveSnapProgress(
+				1,
+				["horizontal", "vertical-inverted"],
+				createGesture({ active: "horizontal", normX: 0.1 }),
 			),
 		).toBe(0.9);
 
 		expect(
-			SnapPanStrategy.resolveProgress(
-				createPanSnapRuntime(
-					["horizontal", "vertical-inverted"],
-					"vertical-inverted",
-					1,
-				),
-				dimensions,
-				{ x: 0, y: -100, normX: 0, normY: -0.1 },
+			resolveSnapProgress(
+				1,
+				["horizontal", "vertical-inverted"],
+				createGesture({ active: "vertical-inverted", normY: -0.1 }),
 			),
 		).toBe(0.9);
+	});
+
+	it("clamps active pan snap progress to the resolved snap bounds", () => {
+		expect(
+			resolveSnapProgress(
+				0.3,
+				"horizontal",
+				createGesture({ active: "horizontal", normX: 0.25 }),
+				{ min: 0.2, max: 0.6 },
+			),
+		).toBe(0.2);
+
+		expect(
+			resolveSnapProgress(
+				0.55,
+				"horizontal",
+				createGesture({ active: "horizontal-inverted", normX: -0.25 }),
+				{ min: 0.2, max: 0.6 },
+			),
+		).toBe(0.6);
 	});
 
 	it("uses the first pinch direction as collapse", () => {
@@ -139,16 +134,18 @@ describe("snap gesture directions", () => {
 
 	it("maps first pinch snap direction to collapse and the inverse to expand", () => {
 		expect(
-			SnapPinchStrategy.resolveProgress(
-				createPinchSnapRuntime("pinch-out", 1),
-				{ scale: 1.2, normScale: 0.2 },
+			resolveSnapProgress(
+				1,
+				"pinch-out",
+				createGesture({ active: "pinch-out", normScale: 0.2 }),
 			),
 		).toBe(0.8);
 
 		expect(
-			SnapPinchStrategy.resolveProgress(
-				createPinchSnapRuntime("pinch-out", 0.5),
-				{ scale: 0.8, normScale: -0.2 },
+			resolveSnapProgress(
+				0.5,
+				"pinch-out",
+				createGesture({ active: "pinch-in", normScale: -0.2 }),
 			),
 		).toBe(0.7);
 	});

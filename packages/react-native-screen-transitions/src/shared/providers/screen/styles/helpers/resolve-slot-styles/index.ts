@@ -149,6 +149,160 @@ const writeResolvedSlotOutput = ({
 	context.resolvedStylesMap[slotId] = resolvedSlot;
 };
 
+const areTransformItemsEqual = (left: unknown, right: unknown): boolean => {
+	"worklet";
+	if (left === right) {
+		return true;
+	}
+
+	if (
+		typeof left !== "object" ||
+		left === null ||
+		typeof right !== "object" ||
+		right === null
+	) {
+		return false;
+	}
+
+	const leftObject = left as Record<string, unknown>;
+	const rightObject = right as Record<string, unknown>;
+
+	for (const key in leftObject) {
+		if (leftObject[key] !== rightObject[key]) {
+			return false;
+		}
+	}
+
+	for (const key in rightObject) {
+		if (!(key in leftObject)) {
+			return false;
+		}
+	}
+
+	return true;
+};
+
+const areTransformArraysEqual = (left: unknown, right: unknown): boolean => {
+	"worklet";
+	if (left === right) {
+		return true;
+	}
+
+	if (!Array.isArray(left) || !Array.isArray(right)) {
+		return false;
+	}
+
+	if (left.length !== right.length) {
+		return false;
+	}
+
+	for (let i = 0; i < left.length; i++) {
+		if (!areTransformItemsEqual(left[i], right[i])) {
+			return false;
+		}
+	}
+
+	return true;
+};
+
+const areFlatObjectsEqual = (left: unknown, right: unknown): boolean => {
+	"worklet";
+	if (left === right) {
+		return true;
+	}
+
+	if (
+		typeof left !== "object" ||
+		left === null ||
+		typeof right !== "object" ||
+		right === null ||
+		Array.isArray(left) ||
+		Array.isArray(right)
+	) {
+		return false;
+	}
+
+	const leftObject = left as Record<string, unknown>;
+	const rightObject = right as Record<string, unknown>;
+
+	for (const key in leftObject) {
+		const leftValue = leftObject[key];
+		const rightValue = rightObject[key];
+
+		if (key === "transform") {
+			if (!areTransformArraysEqual(leftValue, rightValue)) {
+				return false;
+			}
+			continue;
+		}
+
+		if (!areTransformItemsEqual(leftValue, rightValue)) {
+			return false;
+		}
+	}
+
+	for (const key in rightObject) {
+		if (!(key in leftObject)) {
+			return false;
+		}
+	}
+
+	return true;
+};
+
+const areSlotsEqual = (
+	left: NormalizedTransitionSlotStyle | undefined,
+	right: NormalizedTransitionSlotStyle | undefined,
+) => {
+	"worklet";
+	if (left === right) {
+		return true;
+	}
+
+	if (!left || !right) {
+		return false;
+	}
+
+	return (
+		areFlatObjectsEqual(left.style, right.style) &&
+		areFlatObjectsEqual(left.props, right.props)
+	);
+};
+
+export const reuseEqualResolvedSlots = ({
+	resolvedStylesMap,
+	previousResolvedStylesMap,
+}: {
+	resolvedStylesMap: NormalizedTransitionInterpolatedStyle;
+	previousResolvedStylesMap: NormalizedTransitionInterpolatedStyle;
+}): NormalizedTransitionInterpolatedStyle => {
+	"worklet";
+	let changed = false;
+	const stableStylesMap: NormalizedTransitionInterpolatedStyle = {};
+
+	for (const slotId in resolvedStylesMap) {
+		const nextSlot = resolvedStylesMap[slotId];
+		const previousSlot = previousResolvedStylesMap[slotId];
+
+		if (areSlotsEqual(nextSlot, previousSlot)) {
+			stableStylesMap[slotId] = previousSlot;
+			continue;
+		}
+
+		changed = true;
+		stableStylesMap[slotId] = nextSlot;
+	}
+
+	for (const slotId in previousResolvedStylesMap) {
+		if (!(slotId in resolvedStylesMap)) {
+			changed = true;
+			break;
+		}
+	}
+
+	return changed ? stableStylesMap : previousResolvedStylesMap;
+};
+
 const appendResolvedSlot = (
 	context: ResolveSlotStylesContext,
 	slotId: string,

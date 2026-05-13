@@ -13,6 +13,7 @@ mock.module("../providers/screen/animation/helpers/pipeline", () => ({
 		const pipelineRef = useRef<{
 			screenInterpolatorProps: { get: () => ScreenInterpolatorFrame };
 			screenInterpolatorPropsRevision: { get: () => number };
+			selectedInterpolatorOptions: { get: () => { owner: "current" } };
 			nextInterpolator: undefined;
 			currentInterpolator: undefined;
 		} | null>(null);
@@ -33,6 +34,9 @@ mock.module("../providers/screen/animation/helpers/pipeline", () => ({
 				},
 				screenInterpolatorPropsRevision: {
 					get: () => 0,
+				},
+				selectedInterpolatorOptions: {
+					get: () => ({ owner: "current" }),
 				},
 				nextInterpolator: undefined,
 				currentInterpolator: undefined,

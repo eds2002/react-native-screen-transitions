@@ -55,6 +55,7 @@ export const {
 	const {
 		screenInterpolatorProps,
 		screenInterpolatorPropsRevision,
+		selectedInterpolatorOptions,
 		nextInterpolator,
 		currentInterpolator,
 	} = useScreenAnimationPipeline();
@@ -198,6 +199,7 @@ export const {
 		value: {
 			screenInterpolatorProps,
 			screenInterpolatorPropsRevision,
+			selectedInterpolatorOptions,
 			nextInterpolator,
 			currentInterpolator,
 			ancestorScreenAnimationSources,

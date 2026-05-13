@@ -63,11 +63,17 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 			runOnUI(() => {
 				"worklet";
-				const resolvedSnaps = rawSnapPoints
-					.map((point) =>
-						point === "auto" ? resolvedAutoSnapPoint.get() : point,
-					)
-					.filter((point): point is number => typeof point === "number");
+				const resolvedSnaps: number[] = [];
+
+				for (let i = 0; i < rawSnapPoints.length; i++) {
+					const point = rawSnapPoints[i];
+					const resolvedPoint =
+						point === "auto" ? resolvedAutoSnapPoint.get() : point;
+
+					if (typeof resolvedPoint === "number") {
+						resolvedSnaps.push(resolvedPoint);
+					}
+				}
 
 				const { target, shouldDismiss } = findCollapseTarget(
 					animations.progress.get(),

@@ -68,7 +68,6 @@ const useManagedClose = ({
  */
 const useNativeStackClose = ({
 	current,
-	animations,
 	requestLifecycleTransition,
 	resetStores,
 }: CloseHookParams) => {
@@ -106,7 +105,6 @@ const useNativeStackClose = ({
 		const isFirstScreen = routeIndex <= 0;
 
 		if (!isEnabled || nearestAncestorDismissing?.get() || isFirstScreen) {
-			animations.closing.set(1);
 			resetStores();
 			return;
 		}
