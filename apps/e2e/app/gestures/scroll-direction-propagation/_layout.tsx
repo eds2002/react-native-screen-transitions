@@ -1,6 +1,8 @@
-import { interpolate } from "react-native-reanimated";
-import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
+import {
+	verticalInvertedSlideOptions,
+	verticalSlidePresentationOptions,
+} from "../transition-options";
 
 /**
  * Scroll Direction Propagation Example
@@ -23,58 +25,11 @@ export default function ScrollDirectionPropagationLayout() {
 			<BlankStack.Screen name="index" />
 			<BlankStack.Screen
 				name="session"
-				options={{
-					gestureEnabled: true,
-					gestureDirection: "vertical",
-					screenStyleInterpolator: ({
-						layouts: {
-							screen: { height },
-						},
-						progress,
-					}) => {
-						"worklet";
-						const y = interpolate(progress, [0, 1], [height, 0], "clamp");
-						return {
-							content: {
-								style: {
-									transform: [{ translateY: y }],
-								},
-							},
-						};
-					},
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
-				}}
+				options={verticalSlidePresentationOptions()}
 			/>
 			<BlankStack.Screen
 				name="settings"
-				options={{
-					gestureEnabled: true,
-					gestureDirection: "vertical-inverted",
-					screenStyleInterpolator: ({
-						layouts: {
-							screen: { height },
-						},
-						progress,
-					}) => {
-						"worklet";
-						// Inverted: comes from top, dismiss by dragging up
-						const y = interpolate(progress, [0, 1], [-height, 0], "clamp");
-						return {
-							content: {
-								style: {
-									transform: [{ translateY: y }],
-								},
-							},
-						};
-					},
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
-				}}
+				options={verticalInvertedSlideOptions()}
 			/>
 		</BlankStack>
 	);

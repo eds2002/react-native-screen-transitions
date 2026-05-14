@@ -91,16 +91,18 @@ const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpola
 			"clamp",
 		);
 
+		const boundStyles = bounds({
+			id: OPENING_TRANSFORM_BOUNDARY_ID,
+			offset: { y: -y },
+		}) as any;
+
 		return {
 			content: {
 				style: {
 					transform: [{ translateY: y }],
 				},
 			},
-			[OPENING_TRANSFORM_BOUNDARY_ID]: bounds({
-				id: OPENING_TRANSFORM_BOUNDARY_ID,
-				offset: { y: focused ? -y : undefined },
-			}) as any,
+			[OPENING_TRANSFORM_BOUNDARY_ID]: boundStyles,
 		};
 	};
 

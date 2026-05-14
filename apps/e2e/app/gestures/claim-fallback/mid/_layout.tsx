@@ -1,5 +1,5 @@
 import { BlankStack } from "@/layouts/blank-stack";
-import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
+import { verticalSlideOptions } from "../../transition-options";
 
 /**
  * L2 stack in claim-fallback scenario.
@@ -10,12 +10,7 @@ export default function ClaimFallbackMidLayout() {
 	return (
 		<BlankStack>
 			<BlankStack.Screen name="index" />
-			<BlankStack.Screen
-				name="top"
-				options={{
-					...IOSSlide(),
-				}}
-			/>
+			<BlankStack.Screen name="top" options={verticalSlideOptions()} />
 		</BlankStack>
 	);
 }

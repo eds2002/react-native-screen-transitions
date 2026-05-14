@@ -19,7 +19,7 @@ export default function StyleIdBoundsLayout() {
 					navigationMaskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "horizontal", "vertical-inverted"],
-					backdropComponent: BlurView,
+					// backdropComponent: BlurView,
 					screenStyleInterpolator: ({ bounds, focused, active }) => {
 						"worklet";
 						const boundTag = active?.route?.params?.id;
@@ -36,12 +36,9 @@ export default function StyleIdBoundsLayout() {
 							return {
 								...revealStyles,
 								backdrop: {
-									props: {
-										intensity: interpolate(
-											active.progress - active.gesture.normY,
-											[0, 1],
-											[0, 50],
-										),
+									style: {
+										backgroundColor: "#00000025",
+										opacity: active.progress,
 									},
 								},
 							};

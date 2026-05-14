@@ -287,9 +287,10 @@ export default function NavigationZoomGroupTransitionsDetail() {
 				initialScrollIndex={initialIndex}
 				horizontal
 				pagingEnabled
+				scrollEnabled={false}
 				showsHorizontalScrollIndicator={false}
 				onMomentumScrollEnd={handleMomentumScrollEnd}
-				windowSize={3}
+				windowSize={1}
 				maxToRenderPerBatch={1}
 				initialNumToRender={1}
 				updateCellsBatchingPeriod={100}
