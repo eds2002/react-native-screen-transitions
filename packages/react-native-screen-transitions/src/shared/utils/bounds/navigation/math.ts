@@ -1,22 +1,6 @@
-import { interpolate } from "react-native-reanimated";
+import { clamp, interpolate } from "react-native-reanimated";
 
 type CombinedScaleMode = "multiply" | "average" | "max" | "min";
-
-const clamp = (value: number, min: number, max: number): number => {
-	"worklet";
-	const lower = min < max ? min : max;
-	const upper = max > min ? max : min;
-
-	if (value < lower) return lower;
-	if (value > upper) return upper;
-
-	return value;
-};
-
-const clamp01 = (value: number): number => {
-	"worklet";
-	return clamp(value, 0, 1);
-};
 
 const lerp = (from: number, to: number, t: number): number => {
 	"worklet";
@@ -46,7 +30,7 @@ const mapRangeClamped = (
 	outMax: number,
 ): number => {
 	"worklet";
-	const t = clamp01(inverseLerp(value, inMin, inMax));
+	const t = clamp(inverseLerp(value, inMin, inMax), 0, 1);
 	return lerp(outMin, outMax, t);
 };
 

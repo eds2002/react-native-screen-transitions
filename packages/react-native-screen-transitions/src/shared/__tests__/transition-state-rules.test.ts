@@ -290,14 +290,14 @@ describe("transition state rules", () => {
 		expect(hydrated.logicallySettled).toBe(1);
 	});
 
-	it("derives effective progress from gestures when gestureDrivesProgress is enabled", () => {
+	it("derives effective progress from gestures in progress-driven mode", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				progress: 1,
 				gesture: createGestureStore({ normY: 0.25 }),
 				options: {
 					gestureDirection: "vertical",
-					gestureDrivesProgress: true,
+					gestureProgressMode: "progress-driven",
 				},
 			}),
 		);
@@ -312,7 +312,7 @@ describe("transition state rules", () => {
 				gesture: createGestureStore({ normX: 0.25 }),
 				options: {
 					gestureDirection: "vertical",
-					gestureDrivesProgress: true,
+					gestureProgressMode: "progress-driven",
 				},
 			}),
 		);
@@ -320,20 +320,35 @@ describe("transition state rules", () => {
 		expect(hydrated.progress).toBe(1);
 	});
 
-	it("keeps base progress when gestureDrivesProgress is disabled", () => {
+	it("keeps base progress when gestureProgressMode is freeform", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				progress: 1,
 				gesture: createGestureStore({ normY: 0.25 }),
 				options: {
 					gestureDirection: "vertical",
-					gestureDrivesProgress: true,
+					gestureProgressMode: "progress-driven",
 				},
 			}),
 			{
 				gestureDirection: "vertical",
-				gestureDrivesProgress: false,
+				gestureProgressMode: "freeform",
 			},
+		);
+
+		expect(hydrated.progress).toBe(1);
+	});
+
+	it("keeps legacy gestureDrivesProgress as a compatibility alias", () => {
+		const hydrated = hydrate(
+			createBuiltState({
+				progress: 1,
+				gesture: createGestureStore({ normY: 0.25 }),
+				options: {
+					gestureDirection: "vertical",
+					gestureDrivesProgress: false,
+				},
+			}),
 		);
 
 		expect(hydrated.progress).toBe(1);

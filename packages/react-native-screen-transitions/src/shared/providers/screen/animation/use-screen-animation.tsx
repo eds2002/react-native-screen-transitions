@@ -6,7 +6,9 @@ import type {
 import { useScreenAnimationContext } from "./animation.provider";
 import { useBuildTransitionAccessor } from "./helpers/accessors/use-build-transition-accessor";
 import type {
+	ScreenAnimationDescendantSources,
 	ScreenAnimationLegacyTarget,
+	ScreenAnimationSource,
 	ScreenAnimationTarget,
 } from "./types";
 
@@ -32,7 +34,11 @@ export function useScreenAnimation(
 ):
 	| DerivedValue<ScreenInterpolationProps>
 	| DerivedValue<ScreenInterpolationProps | null> {
-	const { ancestorScreenAnimationSources } = useScreenAnimationContext();
+	const {
+		screenInterpolatorPropsRevision,
+		ancestorScreenAnimationSources,
+		descendantScreenAnimationSources,
+	} = useScreenAnimationContext();
 	const transition = useBuildTransitionAccessor();
 	const transitionTarget = normalizeScreenAnimationTarget(
 		target,
@@ -41,11 +47,35 @@ export function useScreenAnimation(
 
 	const animation = useDerivedValue<ScreenInterpolationProps | null>(() => {
 		"worklet";
+		readScreenAnimationRevisions(
+			screenInterpolatorPropsRevision,
+			ancestorScreenAnimationSources,
+			descendantScreenAnimationSources,
+		);
 		return transition(transitionTarget);
 	});
 
 	return animation;
 }
+
+const readScreenAnimationRevisions = (
+	screenInterpolatorPropsRevision: DerivedValue<number>,
+	ancestorScreenAnimationSources: ScreenAnimationSource[],
+	descendantScreenAnimationSources: ScreenAnimationDescendantSources,
+) => {
+	"worklet";
+	screenInterpolatorPropsRevision.get();
+
+	for (let index = 0; index < ancestorScreenAnimationSources.length; index++) {
+		ancestorScreenAnimationSources[
+			index
+		]?.screenInterpolatorPropsRevision.get();
+	}
+
+	// The accessor reads descendant sources through this shared value. Reading it
+	// here makes this derived value rerun when descendants mount or unmount.
+	descendantScreenAnimationSources.get();
+};
 
 const isTransitionTarget = (
 	target: ScreenAnimationTarget,

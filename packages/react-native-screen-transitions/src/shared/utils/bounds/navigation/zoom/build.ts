@@ -5,7 +5,10 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
 } from "../../../../constants";
-import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
+import type {
+	ScreenTransitionOptions,
+	TransitionInterpolatedStyle,
+} from "../../../../types/animation.types";
 import { createLinkAccessor } from "../../helpers/create-link-accessor";
 import { getSourceBorderRadius, toNumber } from "../helpers";
 import {
@@ -16,7 +19,7 @@ import {
 	resolveOpacityRangeTuple,
 } from "../math";
 import {
-	ZOOM_DRAG_RESISTANCE,
+	ZOOM_DISMISS_SCALE_ORBIT_DEPTH,
 	ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
 	ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 	ZOOM_MASK_OUTSET,
@@ -35,6 +38,71 @@ import { resolveDirectionalDragTranslation } from "./math";
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
+
+function resolveZoomGestureHandoff(rawDrag: number) {
+	"worklet";
+
+	const gestureSensitivity = interpolate(rawDrag, [0, 1], [0.7, 0.1], "clamp");
+	const releaseBoost = interpolate(rawDrag, [0, 1], [1, 1.4], "clamp");
+	const releaseSensitivity = interpolate(
+		gestureSensitivity,
+		[0.28, 0.9],
+		[0.7, 1],
+		"clamp",
+	);
+
+	return {
+		gestureSensitivity,
+		gestureReleaseVelocityScale: releaseBoost * releaseSensitivity,
+	};
+}
+
+function resolveZoomGestureOptions({
+	rawDrag,
+	activeOptions,
+}: {
+	rawDrag: number;
+	activeOptions: ScreenTransitionOptions;
+}) {
+	"worklet";
+
+	const { gestureSensitivity, gestureReleaseVelocityScale } =
+		resolveZoomGestureHandoff(rawDrag);
+
+	return {
+		gestureProgressMode: activeOptions.gestureProgressMode ?? "freeform",
+		gestureSensitivity: activeOptions.gestureSensitivity ?? gestureSensitivity,
+		gestureReleaseVelocityScale:
+			activeOptions.gestureReleaseVelocityScale ?? gestureReleaseVelocityScale,
+	};
+}
+
+function resolveZoomDismissScaleHandoff({
+	progress,
+	releaseScale,
+	targetScale,
+	rawDrag,
+}: {
+	progress: number;
+	releaseScale: number;
+	targetScale: number;
+	rawDrag: number;
+}) {
+	"worklet";
+
+	const closeProgress = 1 - progress;
+	const scaleProgress = Math.sin((Math.PI / 2) * closeProgress);
+	const baseScale = releaseScale + (targetScale - releaseScale) * scaleProgress;
+	const orbitDepth = interpolate(
+		rawDrag,
+		[0, 1],
+		[0, ZOOM_DISMISS_SCALE_ORBIT_DEPTH],
+		"clamp",
+	);
+	const orbitScale = 1 - orbitDepth * Math.sin(Math.PI * closeProgress);
+
+	return baseScale * orbitScale;
+}
 
 /* -------------------------------------------------------------------------- */
 /*                             BUILD ZOOM STYLES                              */
@@ -114,6 +182,11 @@ export function buildZoomStyles({
 		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
 	const isVerticalDismiss =
 		initialGesture === "vertical" || initialGesture === "vertical-inverted";
+	const rawDrag = isHorizontalDismiss
+		? Math.abs(props.active.gesture.raw.normX)
+		: isVerticalDismiss
+			? Math.abs(props.active.gesture.raw.normY)
+			: 0;
 
 	const horizontalDragTranslation = resolveDragTranslationTuple(
 		zoomOptions?.horizontalDragTranslation,
@@ -122,17 +195,15 @@ export function buildZoomStyles({
 		zoomOptions?.verticalDragTranslation,
 	);
 	const dragX = resolveDirectionalDragTranslation({
-		normalized: normX,
+		translation: props.active.gesture.x,
 		dimension: screenLayout.width,
-		resistance: ZOOM_DRAG_RESISTANCE,
 		negativeMax: horizontalDragTranslation.negativeMax,
 		positiveMax: horizontalDragTranslation.positiveMax,
 		exponent: horizontalDragTranslation.exponent,
 	});
 	const dragY = resolveDirectionalDragTranslation({
-		normalized: normY,
+		translation: props.active.gesture.y,
 		dimension: screenLayout.height,
-		resistance: ZOOM_DRAG_RESISTANCE,
 		negativeMax: verticalDragTranslation.negativeMax,
 		positiveMax: verticalDragTranslation.positiveMax,
 		exponent: verticalDragTranslation.exponent,
@@ -166,6 +237,18 @@ export function buildZoomStyles({
 			})
 		: IDENTITY_DRAG_SCALE_OUTPUT[1];
 	const dragScale = combineScales(dragXScale, dragYScale);
+	const handoffDragScale = props.active.gesture.dismissing
+		? resolveZoomDismissScaleHandoff({
+				progress: props.active.progress,
+				releaseScale: dragScale,
+				targetScale: 1,
+				rawDrag,
+			})
+		: dragScale;
+	const zoomGestureOptions = resolveZoomGestureOptions({
+		rawDrag,
+		activeOptions: props.active.options,
+	});
 
 	/* ----------------------------- Focused Screen ----------------------------- */
 
@@ -220,9 +303,9 @@ export function buildZoomStyles({
 
 		const contentTranslateX = toNumber(contentRaw.translateX) + dragX;
 		const contentTranslateY = toNumber(contentRaw.translateY) + dragY;
-		const contentScale = toNumber(contentRaw.scale, 1) * dragScale;
-		const maskTranslateX = toNumber(maskRaw.translateX) + dragX - left;
-		const maskTranslateY = toNumber(maskRaw.translateY) + dragY - top;
+		const contentScale = contentRaw.scale * handoffDragScale;
+		const maskTranslateX = maskRaw.translateX + dragX - left;
+		const maskTranslateY = maskRaw.translateY + dragY - top;
 
 		const focusedContentStyle = {
 			opacity: zoomOptions?.debug ? 0.5 : focusedFade,
@@ -251,13 +334,16 @@ export function buildZoomStyles({
 					transform: [
 						{ translateX: maskTranslateX },
 						{ translateY: maskTranslateY },
-						{ scale: dragScale },
+						{ scale: handoffDragScale },
 					],
 				},
 			};
 		}
 
-		return focusedStyles;
+		return {
+			options: zoomGestureOptions,
+			...focusedStyles,
+		};
 	}
 
 	/* ---------------------------- Unfocused Screen ---------------------------- */
@@ -318,26 +404,39 @@ export function buildZoomStyles({
 			? unfocusedElementTarget.pageY + unfocusedElementTarget.height / 2
 			: screenLayout.height / 2);
 
+	const unfocusedContentScale = props.active.logicallySettled
+		? 1
+		: unfocusedScale;
+	const shouldTrackGestureTranslation = !props.active.logicallySettled;
+	const shouldTrackGestureScale = !props.active.logicallySettled;
+	const elementGestureScale = shouldTrackGestureScale ? handoffDragScale : 1;
+	const elementGestureX = shouldTrackGestureTranslation ? dragX : 0;
+	const elementGestureY = shouldTrackGestureTranslation ? dragY : 0;
+	const safeUnfocusedContentScale = Math.max(
+		Math.abs(unfocusedContentScale),
+		EPSILON,
+	);
+
 	const scaleShiftX = computeCenterScaleShift({
 		center: elementCenterX,
 		containerCenter: screenLayout.width / 2,
-		scale: dragScale,
+		scale: elementGestureScale,
 	});
 	const scaleShiftY = computeCenterScaleShift({
 		center: elementCenterY,
 		containerCenter: screenLayout.height / 2,
-		scale: dragScale,
+		scale: elementGestureScale,
 	});
 
 	const compensatedGestureX = composeCompensatedTranslation({
-		gesture: dragX,
-		parentScale: unfocusedScale,
+		gesture: elementGestureX,
+		parentScale: unfocusedContentScale,
 		centerShift: scaleShiftX,
 		epsilon: EPSILON,
 	});
 	const compensatedGestureY = composeCompensatedTranslation({
-		gesture: dragY,
-		parentScale: unfocusedScale,
+		gesture: elementGestureY,
+		parentScale: unfocusedContentScale,
 		centerShift: scaleShiftY,
 		epsilon: EPSILON,
 	});
@@ -346,8 +445,12 @@ export function buildZoomStyles({
 		toNumber(elementRaw.translateX) + compensatedGestureX;
 	const elementTranslateY =
 		toNumber(elementRaw.translateY) + compensatedGestureY;
-	const elementScaleX = toNumber(elementRaw.scaleX, 1) * dragScale;
-	const elementScaleY = toNumber(elementRaw.scaleY, 1) * dragScale;
+	const elementScaleX =
+		(toNumber(elementRaw.scaleX, 1) * elementGestureScale) /
+		safeUnfocusedContentScale;
+	const elementScaleY =
+		(toNumber(elementRaw.scaleY, 1) * elementGestureScale) /
+		safeUnfocusedContentScale;
 
 	const resolvedElementStyle = shouldHideUnfocusedElement
 		? {
@@ -382,9 +485,10 @@ export function buildZoomStyles({
 			};
 
 	return {
+		options: zoomGestureOptions,
 		content: {
 			style: {
-				transform: [{ scale: unfocusedScale }],
+				transform: [{ scale: unfocusedContentScale }],
 			},
 		},
 		[buildEffectiveTag]: {

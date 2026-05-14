@@ -1,5 +1,6 @@
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
+import { SystemStore } from "../../../../stores/system.store";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	TransitionInterpolatedStyle,
@@ -9,11 +10,13 @@ import { useScreenAnimationContext } from "../../animation";
 import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
 import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/use-build-transition-accessor";
 import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selected-interpolator-options";
+import { useDescriptorDerivations } from "../../descriptors";
 import {
 	syncScreenOptionsOverrides,
 	useScreenOptionsContext,
 } from "../../options";
 import { normalizeSlots } from "../helpers/normalize-slots";
+import { preserveAnimatedPropsOnly } from "../helpers/preserve-animated-props-only";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
 
 /**
@@ -33,15 +36,16 @@ import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options"
  * play.
  *
  * Visibility gating happens downstream while lifecycle start is blocked for
- * pending destination measurement. We still compute the interpolated style map
- * during that hidden window so animated props, such as BlurView backdrop props,
- * are ready before the screen becomes visible.
+ * pending destination measurement. We still run the interpolator during that
+ * hidden window so animated props and runtime options stay warm, but defer style
+ * buckets so measurement sees the final untransformed layout.
  *
  * The result stays as a single slot map. Resolution happens downstream, where
  * slot ids determine whether a slot may inherit from ancestors or must remain
  * local to the owning screen container.
  */
 export const useInterpolatedStylesMap = () => {
+	const { currentScreenKey } = useDescriptorDerivations();
 	const screenOptions = useScreenOptionsContext();
 	const {
 		screenInterpolatorProps,
@@ -52,6 +56,10 @@ export const useInterpolatedStylesMap = () => {
 	} = useScreenAnimationContext();
 	const boundsAccessor = useBuildBoundsAccessor();
 	const transition = useBuildTransitionAccessor();
+	const pendingLifecycleStartBlockCount = SystemStore.getValue(
+		currentScreenKey,
+		"pendingLifecycleStartBlockCount",
+	);
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
@@ -59,6 +67,20 @@ export const useInterpolatedStylesMap = () => {
 		"worklet";
 		screenInterpolatorPropsRevision.get();
 		const props = screenInterpolatorProps.get();
+
+		/**
+		 * There is a niche case where bounds can be attached to a view that's styles are out of viewport.
+		 * Due to our blocking mechanism and ensuring accurate measurement, this boundary measurement
+		 * will be blocked and the screen will never be visible. To mitigate this, we:
+		 *
+		 * - Defer the style buckets (props are fine), to ensure we get the correct position of the boundary
+		 *
+		 * Again this is very niche, and since we're not marketing ourselves as a proper shared element transition
+		 * package, we won't spend time finding a better solution for this.
+		 *
+		 */
+		const shouldDeferStyleBuckets = pendingLifecycleStartBlockCount.get() > 0;
+
 		const { current, next, progress } = props;
 		const isDragging = current.gesture.dragging;
 		const isNextClosing = !!next?.closing;
@@ -124,7 +146,9 @@ export const useInterpolatedStylesMap = () => {
 				? NO_STYLES
 				: normalizeSlots(stripInterpolatorOptions(rawStyleMap));
 
-			return stylesMap;
+			return shouldDeferStyleBuckets
+				? preserveAnimatedPropsOnly(stylesMap)
+				: stylesMap;
 		} catch (_) {
 			if (__DEV__) {
 				logger.warn("screenStyleInterpolator must be a worklet");

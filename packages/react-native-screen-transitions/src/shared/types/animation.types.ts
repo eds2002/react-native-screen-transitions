@@ -31,6 +31,7 @@ export type ScreenTransitionOptions = Pick<
 	| "gestureSnapVelocityImpact"
 	| "gestureReleaseVelocityScale"
 	| "gestureResponseDistance"
+	| "gestureProgressMode"
 	| "gestureDrivesProgress"
 	| "gestureActivationArea"
 	| "gestureSnapLocked"

@@ -315,7 +315,7 @@ export function buildRevealStyles({
 
 		return {
 			options: {
-				gestureDrivesProgress: false,
+				gestureProgressMode: "freeform",
 				gestureSensitivity,
 				gestureReleaseVelocityScale,
 			},
@@ -368,7 +368,7 @@ export function buildRevealStyles({
 
 	return {
 		options: {
-			gestureDrivesProgress: false,
+			gestureProgressMode: "freeform",
 		},
 		content: {
 			style: {

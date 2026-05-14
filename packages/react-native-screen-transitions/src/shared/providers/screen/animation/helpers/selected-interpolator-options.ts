@@ -68,6 +68,7 @@ const areInterpolatorOptionsEqual = (
 		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
 		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
 		left.gestureResponseDistance === right.gestureResponseDistance &&
+		left.gestureProgressMode === right.gestureProgressMode &&
 		left.gestureDrivesProgress === right.gestureDrivesProgress &&
 		areGestureActivationAreasEqual(
 			left.gestureActivationArea,

@@ -1,5 +1,5 @@
 import { EPSILON } from "../../../constants";
-import { sanitizeSnapPoints } from "../../../providers/screen/gestures/helpers/validate-snap-points";
+import { sanitizeSnapPoints } from "../../../providers/screen/gestures/shared/snap-points";
 
 interface FindCollapseTargetResult {
 	target: number;

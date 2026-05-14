@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import type { ScreenGestureParticipation } from "../types";
 
@@ -7,12 +6,12 @@ import type { ScreenGestureParticipation } from "../types";
  * recognizer is active.
  *
  * `gestureProgressBaseline` is set to the current animation progress when a
- * gesture starts. Strategies use it as the stable baseline for cumulative
+ * gesture starts. Lifecycle handlers use it as the stable baseline for cumulative
  * pan/pinch deltas so progress can be recalculated from the gesture event
  * instead of repeatedly accumulating into the current animated value.
  *
  * `lockedSnapPoint` is the current snap point chosen when a snap gesture starts.
- * Snap strategies set it during `primeStart`: snap-locked gestures use the
+ * Snap release primers set it on start: snap-locked gestures use the
  * nearest resolved snap point, while unlocked snap gestures use the resolved max
  * snap point. The value stays stable through the active gesture and is used as a
  * progress bound/release target.
@@ -25,11 +24,8 @@ export const useGestureBuilderState = (
 		participation.effectiveSnapPoints.maxSnapPoint,
 	);
 
-	return useMemo(
-		() => ({
-			gestureProgressBaseline,
-			lockedSnapPoint,
-		}),
-		[gestureProgressBaseline, lockedSnapPoint],
-	);
+	return {
+		gestureProgressBaseline,
+		lockedSnapPoint,
+	};
 };

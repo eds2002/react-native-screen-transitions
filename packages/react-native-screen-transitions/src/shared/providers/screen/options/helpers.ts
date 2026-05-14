@@ -1,7 +1,7 @@
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_DRIVES_PROGRESS,
+	DEFAULT_GESTURE_PROGRESS_MODE,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	DEFAULT_GESTURE_SENSITIVITY,
 	DEFAULT_GESTURE_SNAP_LOCKED,
@@ -17,6 +17,11 @@ import type {
 	TransitionInterpolatedStyle,
 } from "../../../types";
 import type { BackdropBehavior } from "../../../types/screen.types";
+import {
+	gestureProgressModeDrivesProgress,
+	isGestureProgressMode,
+	resolveGestureProgressMode,
+} from "../../../utils/gesture-progress-mode";
 import { resolveSheetScrollGestureBehavior } from "../../../utils/resolve-screen-transition-options";
 import type {
 	RequiredScreenOption,
@@ -134,6 +139,25 @@ const resolveBackdropBehaviorOption = (
 		: fallback;
 };
 
+const resolveGestureProgressModeOption = (
+	gestureProgressMode: unknown,
+	gestureDrivesProgress: unknown,
+	fallback: RequiredScreenOption<"gestureProgressMode">,
+): RequiredScreenOption<"gestureProgressMode"> => {
+	"worklet";
+	if (isGestureProgressMode(gestureProgressMode)) {
+		return gestureProgressMode;
+	}
+
+	return resolveGestureProgressMode({
+		gestureDrivesProgress:
+			typeof gestureDrivesProgress === "boolean"
+				? gestureDrivesProgress
+				: undefined,
+		fallback,
+	});
+};
+
 const areGestureActivationAreasEqual = (
 	left: RequiredScreenOption<"gestureActivationArea">,
 	right: RequiredScreenOption<"gestureActivationArea">,
@@ -191,6 +215,7 @@ const areScreenOptionsEqual = (
 		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
 		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
 		left.gestureResponseDistance === right.gestureResponseDistance &&
+		left.gestureProgressMode === right.gestureProgressMode &&
 		left.gestureDrivesProgress === right.gestureDrivesProgress &&
 		areGestureActivationAreasEqual(
 			left.gestureActivationArea,
@@ -205,57 +230,64 @@ const areScreenOptionsEqual = (
 
 export const resolveBaseScreenOptions = (
 	options: ScreenTransitionOptions,
-): ScreenOptionsSnapshot => ({
-	gestureEnabled: resolveBooleanOption(options.gestureEnabled, undefined),
-	experimental_allowDisabledGestureTracking: resolveBooleanOption(
-		options.experimental_allowDisabledGestureTracking,
-		false,
-	),
-	gestureDirection: resolveGestureDirectionOption(
-		options.gestureDirection,
-		DEFAULT_GESTURE_DIRECTION,
-	),
-	gestureSensitivity: resolveNumberOption(
-		options.gestureSensitivity,
-		DEFAULT_GESTURE_SENSITIVITY,
-	),
-	gestureVelocityImpact: resolveNumberOption(
-		options.gestureVelocityImpact,
-		DEFAULT_GESTURE_VELOCITY_IMPACT,
-	),
-	gestureSnapVelocityImpact: resolveNumberOption(
-		options.gestureSnapVelocityImpact,
-		DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
-	),
-	gestureReleaseVelocityScale: resolveNumberOption(
-		options.gestureReleaseVelocityScale,
-		DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
-	),
-	gestureResponseDistance: resolveNumberOption(
-		options.gestureResponseDistance,
-		undefined,
-	),
-	gestureDrivesProgress: resolveBooleanOption(
+): ScreenOptionsSnapshot => {
+	const gestureProgressMode = resolveGestureProgressModeOption(
+		options.gestureProgressMode,
 		options.gestureDrivesProgress,
-		DEFAULT_GESTURE_DRIVES_PROGRESS,
-	),
-	gestureActivationArea: resolveGestureActivationAreaOption(
-		options.gestureActivationArea,
-		DEFAULT_GESTURE_ACTIVATION_AREA,
-	),
-	gestureSnapLocked: resolveBooleanOption(
-		options.gestureSnapLocked,
-		DEFAULT_GESTURE_SNAP_LOCKED,
-	),
-	sheetScrollGestureBehavior: resolveSheetScrollGestureBehaviorOption(
-		resolveSheetScrollGestureBehavior(options),
-		DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
-	),
-	backdropBehavior: resolveBackdropBehaviorOption(
-		options.backdropBehavior,
-		undefined,
-	),
-});
+		DEFAULT_GESTURE_PROGRESS_MODE,
+	);
+
+	return {
+		gestureEnabled: resolveBooleanOption(options.gestureEnabled, undefined),
+		experimental_allowDisabledGestureTracking: resolveBooleanOption(
+			options.experimental_allowDisabledGestureTracking,
+			false,
+		),
+		gestureDirection: resolveGestureDirectionOption(
+			options.gestureDirection,
+			DEFAULT_GESTURE_DIRECTION,
+		),
+		gestureSensitivity: resolveNumberOption(
+			options.gestureSensitivity,
+			DEFAULT_GESTURE_SENSITIVITY,
+		),
+		gestureVelocityImpact: resolveNumberOption(
+			options.gestureVelocityImpact,
+			DEFAULT_GESTURE_VELOCITY_IMPACT,
+		),
+		gestureSnapVelocityImpact: resolveNumberOption(
+			options.gestureSnapVelocityImpact,
+			DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
+		),
+		gestureReleaseVelocityScale: resolveNumberOption(
+			options.gestureReleaseVelocityScale,
+			DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
+		),
+		gestureResponseDistance: resolveNumberOption(
+			options.gestureResponseDistance,
+			undefined,
+		),
+		gestureProgressMode,
+		gestureDrivesProgress:
+			gestureProgressModeDrivesProgress(gestureProgressMode),
+		gestureActivationArea: resolveGestureActivationAreaOption(
+			options.gestureActivationArea,
+			DEFAULT_GESTURE_ACTIVATION_AREA,
+		),
+		gestureSnapLocked: resolveBooleanOption(
+			options.gestureSnapLocked,
+			DEFAULT_GESTURE_SNAP_LOCKED,
+		),
+		sheetScrollGestureBehavior: resolveSheetScrollGestureBehaviorOption(
+			resolveSheetScrollGestureBehavior(options),
+			DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
+		),
+		backdropBehavior: resolveBackdropBehaviorOption(
+			options.backdropBehavior,
+			undefined,
+		),
+	};
+};
 
 export const syncScreenOptionsBase = (
 	screenOptions: ScreenOptionsContextValue,
@@ -283,6 +315,11 @@ export const syncScreenOptionsOverrides = (
 	"worklet";
 	const options = raw?.options;
 	const base = screenOptions.get().baseOptions;
+	const gestureProgressMode = resolveGestureProgressModeOption(
+		options?.gestureProgressMode,
+		options?.gestureDrivesProgress,
+		base.gestureProgressMode,
+	);
 
 	const next: ScreenOptionsState = {
 		gestureEnabled: resolveBooleanOption(
@@ -317,10 +354,9 @@ export const syncScreenOptionsOverrides = (
 			options?.gestureResponseDistance,
 			base.gestureResponseDistance,
 		),
-		gestureDrivesProgress: resolveBooleanOption(
-			options?.gestureDrivesProgress,
-			base.gestureDrivesProgress,
-		),
+		gestureProgressMode,
+		gestureDrivesProgress:
+			gestureProgressModeDrivesProgress(gestureProgressMode),
 		gestureActivationArea: resolveGestureActivationAreaOption(
 			options?.gestureActivationArea,
 			base.gestureActivationArea,

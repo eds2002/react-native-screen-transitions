@@ -5,7 +5,7 @@ import type { ScreenOptionsContextValue } from "../../options";
 import {
 	applyGestureSensitivity,
 	normalizePinchScale,
-} from "../helpers/gesture-physics";
+} from "../shared/physics";
 import type { PanGestureEvent, PinchGestureEvent } from "../types";
 
 export interface GestureSensitivityRawChangeState {

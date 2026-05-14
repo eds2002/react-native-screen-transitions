@@ -246,7 +246,7 @@ export const SharedIGImage = ({
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
 		enableTransitions: true,
-		gestureDrivesProgress: false,
+		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			current,
 			layouts: {
@@ -394,7 +394,7 @@ export const SharedAppleMusic = ({
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
-		gestureDrivesProgress: false,
+		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			bounds,
 			focused,
@@ -608,7 +608,7 @@ export const SharedXImage = ({
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "vertical-inverted"],
-		gestureDrivesProgress: false,
+		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			focused,
 			bounds,

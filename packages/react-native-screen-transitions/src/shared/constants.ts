@@ -5,7 +5,10 @@ import type {
 	ScreenTransitionOptions,
 	ScreenTransitionState,
 } from "./types/animation.types";
-import type { ActivationArea } from "./types/gesture.types";
+import type {
+	ActivationArea,
+	GestureProgressMode,
+} from "./types/gesture.types";
 import type { Layout, SheetScrollGestureBehavior } from "./types/screen.types";
 import type { BaseStackRoute } from "./types/stack.types";
 
@@ -157,11 +160,11 @@ export const FULLSCREEN_DIMENSIONS = (
 
 export const DEFAULT_GESTURE_VELOCITY_IMPACT = 0.3;
 export const DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT = 0.1;
-export const DEFAULT_GESTURE_RELEASE_VELOCITY_MAX = 3.2;
 export const DEFAULT_GESTURE_SENSITIVITY = 1;
 export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
-export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
+export const DEFAULT_GESTURE_PROGRESS_MODE: GestureProgressMode =
+	"progress-driven";
 export const DEFAULT_GESTURE_SNAP_LOCKED = false;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 export const DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR: SheetScrollGestureBehavior =

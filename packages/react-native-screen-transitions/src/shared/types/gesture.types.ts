@@ -16,6 +16,8 @@ export type GestureDirection = PanGestureDirection | PinchGestureDirection;
 
 export type ActiveGesture = ResolvedPanGestureDirection | PinchGestureDirection;
 
+export type GestureProgressMode = "progress-driven" | "freeform";
+
 export type SnapPanAxis = "horizontal" | "vertical";
 
 export type ScrollGestureAxis = "vertical" | "horizontal";

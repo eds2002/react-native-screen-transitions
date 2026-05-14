@@ -16,6 +16,7 @@ import type {
 import type {
 	GestureActivationArea,
 	GestureDirections,
+	GestureProgressMode,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
@@ -27,7 +28,7 @@ import type {
 	DirectionOwnership,
 } from "../../../types/ownership.types";
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
-import type { EffectiveSnapPointsResult } from "./helpers/validate-snap-points";
+import type { EffectiveSnapPointsResult } from "./shared/snap-points";
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
 export type PinchGesture = ReturnType<typeof Gesture.Pinch>;
@@ -41,7 +42,12 @@ export type PinchGestureEvent =
 	| GestureUpdateEvent<PinchGestureHandlerEventPayload>
 	| GestureStateChangeEvent<PinchGestureHandlerEventPayload>;
 
-export type { ScrollGestureAxis, ScrollGestureAxisState, ScrollGestureState };
+export type {
+	GestureProgressMode,
+	ScrollGestureAxis,
+	ScrollGestureAxisState,
+	ScrollGestureState,
+};
 
 export type DirectionClaim = {
 	routeKey: string;
@@ -96,13 +102,11 @@ export interface PanGesturePolicy {
 	gestureDirection: NonNullable<ScreenTransitionConfig["gestureDirection"]>;
 	panActivationDirections: GestureDirections;
 	snapAxisDirections: SnapPanDirectionConfig;
-	gestureDrivesProgress: boolean;
+	gestureProgressMode: GestureProgressMode;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureVelocityImpact: number;
 	gestureSnapVelocityImpact: number;
 	gestureReleaseVelocityScale: number;
-	/** @deprecated v3 compatibility only. Removed in the next gesture runtime. */
-	gestureReleaseVelocityMax: number;
 	gestureActivationArea: GestureActivationArea;
 	gestureSnapLocked: boolean;
 	sheetScrollGestureBehavior: NonNullable<
@@ -118,13 +122,11 @@ export interface PinchGesturePolicy {
 	snapDirections: SnapPinchDirectionConfig;
 	pinchInEnabled: boolean;
 	pinchOutEnabled: boolean;
-	gestureDrivesProgress: boolean;
+	gestureProgressMode: GestureProgressMode;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureSnapVelocityImpact: number;
 	gestureSnapLocked: boolean;
 	gestureReleaseVelocityScale: number;
-	/** @deprecated v3 compatibility only. Removed in the next gesture runtime. */
-	gestureReleaseVelocityMax: number;
 	transitionSpec: TransitionSpec | undefined;
 }
 
@@ -134,21 +136,19 @@ export interface GestureRuntimeStores {
 	system: SystemStoreMap;
 }
 
-export interface PanGestureRuntime {
+export type GesturePolicy = PanGesturePolicy | PinchGesturePolicy;
+
+export interface GestureRuntime<TPolicy extends GesturePolicy> {
 	participation: ScreenGestureParticipation;
-	policy: PanGesturePolicy;
+	policy: TPolicy;
 	stores: GestureRuntimeStores;
 	gestureProgressBaseline: SharedValue<number>;
 	lockedSnapPoint: SharedValue<number>;
 }
 
-export interface PinchGestureRuntime {
-	participation: ScreenGestureParticipation;
-	policy: PinchGesturePolicy;
-	stores: GestureRuntimeStores;
-	gestureProgressBaseline: SharedValue<number>;
-	lockedSnapPoint: SharedValue<number>;
-}
+export type PanGestureRuntime = GestureRuntime<PanGesturePolicy>;
+
+export type PinchGestureRuntime = GestureRuntime<PinchGesturePolicy>;
 
 export interface GestureDimensions {
 	width: number;
@@ -171,6 +171,24 @@ export interface PanReleaseResult {
 	target: number;
 	shouldDismiss: boolean;
 	initialVelocity: number;
+	commitProgress?: number;
+	resetNormalizedValuesImmediately?: boolean;
+	transitionSpec: TransitionSpec | undefined;
+	resetSpec: AnimationConfig | undefined;
+}
+
+export interface PanReleasePlan {
+	target: number;
+	shouldDismiss: boolean;
+	progressVelocity: number;
+	resetVelocityX: number;
+	resetVelocityY: number;
+	resetVelocityNormX: number;
+	resetVelocityNormY: number;
+	resetNormalizedValues: boolean;
+	resetNormalizedValuesImmediately: boolean;
+	preserveRawValues: boolean;
+	commitProgress?: number;
 	transitionSpec: TransitionSpec | undefined;
 	resetSpec: AnimationConfig | undefined;
 }
@@ -179,25 +197,10 @@ export interface PinchReleaseResult {
 	target: number;
 	shouldDismiss: boolean;
 	initialVelocity: number;
+	commitProgress?: number;
+	resetValuesImmediately?: boolean;
 	transitionSpec: TransitionSpec | undefined;
 	resetSpec: AnimationConfig | undefined;
-}
-
-export interface PanBehaviorStrategy {
-	primeStart: (runtime: PanGestureRuntime) => void;
-	resolveRelease: (
-		event: PanGestureEvent,
-		runtime: PanGestureRuntime,
-		dimensions: GestureDimensions,
-	) => PanReleaseResult;
-}
-
-export interface PinchBehaviorStrategy {
-	primeStart: (runtime: PinchGestureRuntime) => void;
-	resolveRelease: (
-		event: PinchGestureEvent,
-		runtime: PinchGestureRuntime,
-	) => PinchReleaseResult;
 }
 
 export interface PanBehavior {

@@ -9,6 +9,54 @@ import {
 	NO_CLAIMS,
 } from "../../../../types/ownership.types";
 
+const createClaimSet = (): ClaimedDirections => ({
+	vertical: false,
+	"vertical-inverted": false,
+	horizontal: false,
+	"horizontal-inverted": false,
+});
+
+const normalizePanGestureDirections = (
+	gestureDirection: GestureDirection | GestureDirection[] | undefined,
+): PanGestureDirection[] => {
+	const direction = gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
+
+	return (Array.isArray(direction) ? direction : [direction]).filter(
+		(dir): dir is PanGestureDirection =>
+			dir !== "pinch-in" && dir !== "pinch-out",
+	);
+};
+
+const claimPanDirection = (
+	claims: ClaimedDirections,
+	direction: PanGestureDirection,
+) => {
+	if (direction === "bidirectional") {
+		claims.vertical = true;
+		claims["vertical-inverted"] = true;
+		claims.horizontal = true;
+		claims["horizontal-inverted"] = true;
+		return;
+	}
+
+	claims[direction as Direction] = true;
+};
+
+const expandSnapPointAxisClaims = (claims: ClaimedDirections) => {
+	const hasVerticalAxis = claims.vertical || claims["vertical-inverted"];
+	const hasHorizontalAxis = claims.horizontal || claims["horizontal-inverted"];
+
+	if (hasVerticalAxis) {
+		claims.vertical = true;
+		claims["vertical-inverted"] = true;
+	}
+
+	if (hasHorizontalAxis) {
+		claims.horizontal = true;
+		claims["horizontal-inverted"] = true;
+	}
+};
+
 /**
  * Computes which directions a screen claims ownership of.
  *
@@ -33,56 +81,20 @@ export function computeClaimedDirections(
 		return NO_CLAIMS;
 	}
 
-	const direction = gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
-
-	// Normalize to array
-	const directions: PanGestureDirection[] = (
-		Array.isArray(direction) ? direction : [direction]
-	).filter(
-		(dir): dir is PanGestureDirection =>
-			dir !== "pinch-in" && dir !== "pinch-out",
-	);
+	const directions = normalizePanGestureDirections(gestureDirection);
 
 	if (directions.length === 0) {
 		return NO_CLAIMS;
 	}
 
-	// Start with no claims
-	const claims: ClaimedDirections = {
-		vertical: false,
-		"vertical-inverted": false,
-		horizontal: false,
-		"horizontal-inverted": false,
-	};
+	const claims = createClaimSet();
 
-	// Process each direction
 	for (const dir of directions) {
-		if (dir === "bidirectional") {
-			// Bidirectional claims all four directions
-			claims.vertical = true;
-			claims["vertical-inverted"] = true;
-			claims.horizontal = true;
-			claims["horizontal-inverted"] = true;
-		} else {
-			// Claim the specific direction
-			claims[dir as Direction] = true;
-		}
+		claimPanDirection(claims, dir);
 	}
 
-	// Snap points own both directions on every configured pan axis.
 	if (hasSnapPoints) {
-		const hasVerticalAxis = claims.vertical || claims["vertical-inverted"];
-		const hasHorizontalAxis =
-			claims.horizontal || claims["horizontal-inverted"];
-
-		if (hasVerticalAxis) {
-			claims.vertical = true;
-			claims["vertical-inverted"] = true;
-		}
-		if (hasHorizontalAxis) {
-			claims.horizontal = true;
-			claims["horizontal-inverted"] = true;
-		}
+		expandSnapPointAxisClaims(claims);
 	}
 
 	return claims;

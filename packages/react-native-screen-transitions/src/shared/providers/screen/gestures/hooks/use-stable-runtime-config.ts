@@ -4,22 +4,16 @@ import { AnimationStore } from "../../../../stores/animation.store";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { SystemStore } from "../../../../stores/system.store";
 import { useDescriptorDerivations } from "../../descriptors";
-import type { PanGestureRuntime, PinchGestureRuntime } from "../types";
+import type { GesturePolicy, GestureRuntime } from "../types";
 
-type StableRuntimeConfig = PanGestureRuntime | PinchGestureRuntime;
-type PanRuntimeConfigInput = Omit<PanGestureRuntime, "stores">;
-type PinchRuntimeConfigInput = Omit<PinchGestureRuntime, "stores">;
-type StableRuntimeConfigInput = PanRuntimeConfigInput | PinchRuntimeConfigInput;
+type RuntimeConfigInput<TPolicy extends GesturePolicy> = Omit<
+	GestureRuntime<TPolicy>,
+	"stores"
+>;
 
-export function useStableRuntimeConfig(
-	runtimeConfigInput: PanRuntimeConfigInput,
-): SharedValue<PanGestureRuntime>;
-export function useStableRuntimeConfig(
-	runtimeConfigInput: PinchRuntimeConfigInput,
-): SharedValue<PinchGestureRuntime>;
-export function useStableRuntimeConfig(
-	runtimeConfigInput: StableRuntimeConfigInput,
-): SharedValue<PanGestureRuntime> | SharedValue<PinchGestureRuntime> {
+export function useStableRuntimeConfig<TPolicy extends GesturePolicy>(
+	runtimeConfigInput: RuntimeConfigInput<TPolicy>,
+): SharedValue<GestureRuntime<TPolicy>> {
 	const { currentScreenKey } = useDescriptorDerivations();
 	const { participation, policy, gestureProgressBaseline, lockedSnapPoint } =
 		runtimeConfigInput;
@@ -32,14 +26,14 @@ export function useStableRuntimeConfig(
 		};
 	}, [currentScreenKey]);
 
-	const runtimeConfig = useMemo<StableRuntimeConfig>(() => {
+	const runtimeConfig = useMemo<GestureRuntime<TPolicy>>(() => {
 		return {
 			participation,
 			policy,
 			stores,
 			gestureProgressBaseline,
 			lockedSnapPoint,
-		} as StableRuntimeConfig;
+		};
 	}, [participation, policy, stores, gestureProgressBaseline, lockedSnapPoint]);
 	const stableRuntimeConfig = useSharedValue(runtimeConfig);
 
@@ -47,7 +41,5 @@ export function useStableRuntimeConfig(
 		stableRuntimeConfig.set(runtimeConfig);
 	}, [stableRuntimeConfig, runtimeConfig]);
 
-	return stableRuntimeConfig as
-		| SharedValue<PanGestureRuntime>
-		| SharedValue<PinchGestureRuntime>;
+	return stableRuntimeConfig;
 }

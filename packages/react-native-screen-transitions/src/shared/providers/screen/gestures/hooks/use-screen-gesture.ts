@@ -3,7 +3,7 @@ import {
 	resolveChainTarget,
 } from "../../../../utils/resolve-chain-target";
 import { useGestureContext } from "../gestures.provider";
-import { walkGestureAncestors } from "../helpers/walk-gesture-ancestors";
+import { walkGestureAncestors } from "../shared/ancestors";
 
 export type ScreenGestureTarget = ChainTarget;
 

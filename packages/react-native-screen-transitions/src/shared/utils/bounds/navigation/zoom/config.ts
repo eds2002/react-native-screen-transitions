@@ -3,13 +3,13 @@ export const ZOOM_SHARED_OPTIONS = Object.freeze({
 	scaleMode: "uniform" as const,
 });
 
-export const ZOOM_DRAG_RESISTANCE = 0.4;
 export const ZOOM_DRAG_DIRECTIONAL_SCALE_MIN = 0.25;
 export const ZOOM_DRAG_DIRECTIONAL_SCALE_MAX = 1.06;
 export const ZOOM_DRAG_DIRECTIONAL_SCALE_EXPONENT = 2;
 export const ZOOM_DRAG_TRANSLATION_NEGATIVE_MAX = 1;
 export const ZOOM_DRAG_TRANSLATION_POSITIVE_MAX = 1;
 export const ZOOM_DRAG_TRANSLATION_EXPONENT = 1;
+export const ZOOM_DISMISS_SCALE_ORBIT_DEPTH = 0.8;
 export const ZOOM_BACKGROUND_SCALE = 0.9375;
 export const ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE = [0, 0.5, 0, 1] as const;
 export const ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE = [0.6, 1, 0, 1] as const;

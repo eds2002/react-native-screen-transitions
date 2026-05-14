@@ -1,54 +1,59 @@
 import {
 	useAnimatedProps,
+	useAnimatedReaction,
 	useAnimatedStyle,
-	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
-import {
-	LifecycleTransitionRequestKind,
-	SystemStore,
-} from "../../../../stores/system.store";
+import { SystemStore } from "../../../../stores/system.store";
 import { useDescriptorDerivations } from "../../descriptors";
+import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { currentScreenKey } = useDescriptorDerivations();
-	const progress = AnimationStore.getValue(currentScreenKey, "progress");
+	const { entering, progress } = AnimationStore.getBag(currentScreenKey);
 
 	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =
 		SystemStore.getBag(currentScreenKey);
 
 	const hasVisibilityGateOpened = useSharedValue(false);
-	const shouldBlockVisibility = useDerivedValue(() => {
-		"worklet";
+	const shouldBlockVisibility = useSharedValue(!isFloatingOverlay);
 
-		if (isFloatingOverlay || hasVisibilityGateOpened.get()) {
-			return false;
-		}
+	/**
+	 * Visibility has to start blocked before the first animated style pass.
+	 *
+	 * `useDerivedValue` can publish its computed value after `useAnimatedStyle`
+	 * has already read the initial one, which briefly exposes an unhydrated
+	 * screen. Keep the visible state in an eagerly initialized shared value, then
+	 * let the reaction open it once the visibility gate allows the first
+	 * transformed frame to render.
+	 */
+	useAnimatedReaction(
+		() => {
+			"worklet";
 
-		const hasPendingLifecycleBlock = pendingLifecycleStartBlockCount.get() > 0;
-		const isPendingOpen =
-			pendingLifecycleRequestKind.get() === LifecycleTransitionRequestKind.Open;
+			return resolveScreenVisibilityGate({
+				isFloatingOverlay,
+				hasVisibilityGateOpened: hasVisibilityGateOpened.get(),
+				pendingLifecycleStartBlockCount: pendingLifecycleStartBlockCount.get(),
+				pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
+				progress: progress.get(),
+				entering: entering.get(),
+			});
+		},
+		(gate) => {
+			"worklet";
 
-		// Hide the screen during the tiny pre-animation open window as well.
-		// The destination measurement blocker can be registered one frame after
-		// mount, which would otherwise flash the reset state before the block
-		// count turns visible to this provider.
-		const isWaitingForOpenToStart = progress.get() <= 0;
+			if (gate.shouldOpenGate) {
+				hasVisibilityGateOpened.set(true);
+			}
 
-		const shouldBlock =
-			(hasPendingLifecycleBlock || isWaitingForOpenToStart) && isPendingOpen;
-
-		if (!shouldBlock) {
-			hasVisibilityGateOpened.set(true);
-		}
-
-		return shouldBlock;
-	});
+			shouldBlockVisibility.set(gate.shouldBlock);
+		},
+	);
 
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
-
 		return {
 			opacity: shouldBlockVisibility.get() ? 0 : 1,
 		};

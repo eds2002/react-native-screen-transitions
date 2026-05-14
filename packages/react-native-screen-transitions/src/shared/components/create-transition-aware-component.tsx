@@ -12,7 +12,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../constants";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
-import { useScrollGestureCoordination } from "../providers/screen/gestures/hooks/use-scroll-gesture-coordination";
+import { useScrollGestureCoordination } from "../providers/screen/gestures/scroll-coordination";
 import { useScreenStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
 

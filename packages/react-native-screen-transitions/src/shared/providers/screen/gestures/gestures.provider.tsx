@@ -4,10 +4,10 @@ import { useSharedValue } from "react-native-reanimated";
 import { ScrollStore } from "../../../stores/scroll.store";
 import createProvider from "../../../utils/create-provider";
 import { useDescriptorDerivations } from "../descriptors";
-import { useBuildPanGesture } from "./builders/use-build-pan-gesture";
-import { useBuildPinchGesture } from "./builders/use-build-pinch-gesture";
 import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
 import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and-register-shadowing-claims";
+import { useBuildPanGesture } from "./pan/build-pan-gesture";
+import { useBuildPinchGesture } from "./pinch/build-pinch-gesture";
 import {
 	type DirectionClaimMap,
 	type GestureContextType,

@@ -3,7 +3,11 @@ import type {
 	ScreenStyleInterpolator,
 	TransitionSpec,
 } from "./animation.types";
-import type { GestureActivationArea, GestureDirection } from "./gesture.types";
+import type {
+	GestureActivationArea,
+	GestureDirection,
+	GestureProgressMode,
+} from "./gesture.types";
 import type { OverlayProps } from "./overlay.types";
 
 export type Layout = {
@@ -220,7 +224,15 @@ export type ScreenTransitionConfig = {
 	gestureResponseDistance?: number;
 
 	/**
+	 * Controls whether live gesture displacement drives transition progress or
+	 * stays available as freeform gesture values for custom interpolators.
+	 */
+	gestureProgressMode?: GestureProgressMode;
+
+	/**
 	 * Whether the gesture drives the progress.
+	 *
+	 * @deprecated Use `gestureProgressMode` instead.
 	 */
 	gestureDrivesProgress?: boolean;
 

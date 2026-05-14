@@ -8,6 +8,7 @@ import {
 	NO_OWNERSHIP,
 	type OwnershipStatus,
 } from "../../../../types/ownership.types";
+import type { DirectionClaim } from "../types";
 
 /**
  * Minimal interface for ancestor context needed for ownership resolution.
@@ -74,4 +75,18 @@ function resolveDirectionOwnership(
 
 	// No one claims this direction
 	return "none";
+}
+
+/**
+ * Returns true when the current screen should fail and defer to a child claim.
+ */
+export function shouldDeferToChildClaim(
+	childClaim: DirectionClaim,
+	selfRouteKey: string,
+): boolean {
+	"worklet";
+	if (!childClaim) return false;
+	if (childClaim.routeKey === selfRouteKey) return false;
+	if (childClaim.isDismissing.get()) return false;
+	return true;
 }
