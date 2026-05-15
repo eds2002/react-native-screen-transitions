@@ -86,15 +86,14 @@ export const syncSelectedInterpolatorOptions = (
 	options?: TransitionInterpolatorOptions,
 ) => {
 	"worklet";
-	state.modify((current) => {
-		"worklet";
-		if (
-			current.owner === owner &&
-			areInterpolatorOptionsEqual(current.options, options)
-		) {
-			return current;
-		}
+	const current = state.get();
 
-		return options ? { owner, options } : { owner };
-	}, false);
+	if (
+		current.owner === owner &&
+		areInterpolatorOptionsEqual(current.options, options)
+	) {
+		return;
+	}
+
+	state.set(options ? { owner, options } : { owner });
 };
