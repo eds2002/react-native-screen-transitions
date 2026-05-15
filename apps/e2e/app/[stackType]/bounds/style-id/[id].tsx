@@ -1,7 +1,8 @@
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import {
-	Button,
+	Pressable,
 	StyleSheet,
 	Text,
 	useWindowDimensions,
@@ -12,14 +13,24 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { useTheme } from "@/theme";
 
-const DETAIL_ROWS = [
-	"overview",
-	"conditions",
-	"timeline",
-	"notes",
-	"location",
-	"metadata",
-] as const;
+const PIN_THUMBS = [
+	"https://picsum.photos/id/1002/600/600",
+	"https://picsum.photos/id/1004/600/600",
+	"https://picsum.photos/id/1009/600/600",
+	"https://picsum.photos/id/1015/600/600",
+	"https://picsum.photos/id/1020/600/600",
+	"https://picsum.photos/id/1023/600/600",
+	"https://picsum.photos/id/1027/600/600",
+	"https://picsum.photos/id/1037/600/600",
+	"https://picsum.photos/id/1048/600/600",
+	"https://picsum.photos/id/1052/600/600",
+	"https://picsum.photos/id/1063/600/600",
+	"https://picsum.photos/id/1070/600/600",
+];
+
+const GRID_HORIZONTAL_PADDING = 24;
+const PIN_COLUMN_GAP = 8;
+const PIN_COLUMNS = 3;
 
 function SharedImage({
 	id,
@@ -41,7 +52,7 @@ function SharedImage({
 					width: size,
 					height: size,
 					backgroundColor: theme.card,
-					marginTop: insets.top + 24,
+					marginTop: insets.top + 16,
 				},
 			]}
 		>
@@ -60,111 +71,133 @@ export default function StyleIdBoundsDetail() {
 	}>();
 
 	const { width } = useWindowDimensions();
-
 	const imageSize = width * 0.8;
+	const pinSize = Math.floor(
+		(width - GRID_HORIZONTAL_PADDING * 2 - PIN_COLUMN_GAP * (PIN_COLUMNS - 1)) /
+			PIN_COLUMNS,
+	);
 	const theme = useTheme();
-	const resolvedTitle = title ?? "Atlas Frame";
-	const resolvedSubtitle = subtitle ?? "Alpine light study";
+	const resolvedTitle = title ?? "Atlas";
+	const resolvedSubtitle = subtitle ?? "142 pins";
 	const resolvedDescription =
 		description ??
-		"Golden light settles across a quiet alpine lake, giving the transition a cleaner landscape subject with strong color and depth.";
+		"Far-away references kept for projects that haven't started yet — mostly cities, mostly mid-century, mostly accidental.";
 
 	return (
 		<Transition.ScrollView
 			contentContainerStyle={styles.scrollContent}
 			style={[styles.scroll, { backgroundColor: theme.bg }]}
 		>
-			<SharedImage id={id} image={image} size={imageSize} />
+			<View style={styles.heroWrap}>
+				<SharedImage id={id} image={image} size={imageSize} />
+			</View>
+
 			<Animated.View style={styles.section}>
-				<View
-					style={{
-						width: "100%",
-						gap: 6,
-					}}
-				>
-					<Text style={[styles.kicker, { color: theme.textSecondary }]}>
+				<Text style={[styles.title, { color: theme.text }]}>
+					{resolvedTitle}
+				</Text>
+				<View style={styles.subtitleRow}>
+					<Text style={[styles.subtitle, { color: theme.textSecondary }]}>
 						{resolvedSubtitle}
 					</Text>
-					<Text style={[styles.title, { color: theme.text }]}>
-						{resolvedTitle}
+					<Text style={[styles.subtitleDot, { color: theme.textTertiary }]}>
+						·
 					</Text>
-					<Text style={[styles.description, { color: theme.textSecondary }]}>
+					<Text style={[styles.subtitle, { color: theme.textSecondary }]}>
+						Since January 2024
+					</Text>
+				</View>
+
+				<View style={styles.actions}>
+					<Pressable
+						style={({ pressed }) => [
+							styles.actionPrimary,
+							{
+								backgroundColor: pressed
+									? theme.actionButtonPressed
+									: theme.actionButton,
+							},
+						]}
+					>
+						<Ionicons
+							name="create-outline"
+							size={20}
+							color={theme.actionButtonText}
+						/>
+						<Text
+							style={[styles.actionPrimaryText, { color: theme.actionButtonText }]}
+						>
+							Add pin
+						</Text>
+					</Pressable>
+					<Pressable
+						style={({ pressed }) => [
+							styles.actionCircle,
+							{
+								backgroundColor: pressed
+									? theme.secondaryButtonPressed
+									: theme.secondaryButton,
+							},
+						]}
+					>
+						<Ionicons name="search" size={20} color={theme.text} />
+					</Pressable>
+					<Pressable
+						style={({ pressed }) => [
+							styles.actionCircle,
+							{
+								backgroundColor: pressed
+									? theme.secondaryButtonPressed
+									: theme.secondaryButton,
+							},
+						]}
+					>
+						<Ionicons name="share-outline" size={20} color={theme.text} />
+					</Pressable>
+				</View>
+
+				<View
+					style={[styles.divider, { backgroundColor: theme.separator }]}
+				/>
+
+				<View style={styles.block}>
+					<Text style={[styles.kicker, { color: theme.textTertiary }]}>
+						About
+					</Text>
+					<Text style={[styles.body, { color: theme.text }]}>
 						{resolvedDescription}
 					</Text>
 				</View>
-				<View
-					style={{
-						width: "100%",
-						height: StyleSheet.hairlineWidth,
-						backgroundColor: "lightgrey",
-						marginVertical: 12,
-					}}
-				/>
-				{DETAIL_ROWS.map((rowId) => (
-					<View
-						key={rowId}
-						style={{ flexDirection: "row", gap: 12, alignItems: "center" }}
-					>
-						<View
-							style={{
-								width: 50,
-								height: 50,
-								backgroundColor: "lightgrey",
-								borderRadius: 20,
-								borderCurve: "continuous",
-							}}
-						/>
-						<View style={{ flex: 1, flexDirection: "column", gap: 4 }}>
-							<Text
-								style={[
-									styles.title,
-									{ color: theme.text, fontSize: 16, textAlign: "left" },
-								]}
-							>
-								Title
-							</Text>
-							<Text
-								style={[
-									styles.description,
-									{ color: theme.textSecondary, textAlign: "left" },
-								]}
-							>
-								A short description goes here.
-							</Text>
-						</View>
-					</View>
-				))}
 
-				<View
-					style={{
-						width: "100%",
-						height: StyleSheet.hairlineWidth,
-						backgroundColor: "lightgrey",
-						marginVertical: 12,
-						gap: 6,
-					}}
-				/>
-				<View
-					style={{
-						width: "100%",
-					}}
-				>
-					<Text
-						style={[styles.title, { color: theme.text, textAlign: "left" }]}
-					>
-						What you&apos;ll do
+				<View style={styles.pinsHeader}>
+					<Text style={[styles.kicker, { color: theme.textTertiary }]}>
+						Pins
 					</Text>
-					<Text
-						style={[
-							styles.description,
-							{ color: theme.textSecondary, textAlign: "left" },
-						]}
-					>
-						This example uses navigation.reveal to keep the destination screen
-						visible while the source boundary expands into place.
+					<Text style={[styles.pinsCount, { color: theme.textSecondary }]}>
+						12 of {resolvedSubtitle.replace(/[^0-9]/g, "") || "142"}
 					</Text>
 				</View>
-				<Button title="Go back" onPress={router.back} />
+				<View style={styles.pinsGrid}>
+					{PIN_THUMBS.map((src) => (
+						<View
+							key={src}
+							style={[
+								styles.pinThumb,
+								{
+									width: pinSize,
+									height: pinSize,
+									backgroundColor: theme.card,
+								},
+							]}
+						>
+							<Image
+								source={src}
+								style={styles.imageContent}
+								contentFit="cover"
+							/>
+						</View>
+					))}
+				</View>
 			</Animated.View>
 		</Transition.ScrollView>
 	);
@@ -175,23 +208,13 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	scrollContent: {
-		alignItems: "center",
-		gap: 16,
-		paddingHorizontal: 24,
 		paddingBottom: 100,
 	},
-	dragHandleContainer: {
-		width: "100%",
+	heroWrap: {
 		alignItems: "center",
-		paddingVertical: 12,
-	},
-	dragHandle: {
-		width: 30,
-		height: 5,
-		borderRadius: 100,
 	},
 	sharedImage: {
-		borderRadius: 32,
+		borderRadius: 44,
 		borderCurve: "continuous",
 		overflow: "hidden",
 	},
@@ -200,42 +223,90 @@ const styles = StyleSheet.create({
 		height: "100%",
 	},
 	section: {
-		width: "100%",
-		gap: 12,
-		// padding: 12,
+		paddingHorizontal: GRID_HORIZONTAL_PADDING,
+		paddingTop: 28,
+		gap: 18,
 	},
 	title: {
-		fontSize: 24,
+		fontSize: 36,
+		lineHeight: 42,
 		fontWeight: "600",
+		letterSpacing: -0.5,
 		textAlign: "center",
 	},
-	kicker: {
-		fontSize: 13,
-		fontWeight: "700",
-		textAlign: "center",
-		textTransform: "uppercase",
-		letterSpacing: 0.8,
+	subtitleRow: {
+		flexDirection: "row",
+		justifyContent: "center",
+		alignItems: "center",
+		gap: 8,
+		marginTop: -6,
 	},
 	subtitle: {
-		fontSize: 14,
-		fontFamily: "monospace",
+		fontSize: 15,
 	},
-	description: {
-		fontSize: 14,
-		lineHeight: 20,
-		textAlign: "center",
-		opacity: 0.7,
+	subtitleDot: {
+		fontSize: 15,
 	},
-	card: {
-		padding: 16,
-		borderRadius: 14,
+	actions: {
+		flexDirection: "row",
+		alignItems: "center",
+		justifyContent: "center",
+		gap: 10,
+		marginTop: 4,
+	},
+	actionPrimary: {
+		flexDirection: "row",
+		alignItems: "center",
 		gap: 8,
+		paddingHorizontal: 22,
+		height: 52,
+		borderRadius: 999,
 	},
-	cardTitle: {
+	actionPrimaryText: {
 		fontSize: 16,
 		fontWeight: "600",
 	},
-	cardDescription: {
+	actionCircle: {
+		width: 52,
+		height: 52,
+		borderRadius: 26,
+		alignItems: "center",
+		justifyContent: "center",
+	},
+	divider: {
+		height: StyleSheet.hairlineWidth,
+		width: "100%",
+		marginTop: 10,
+	},
+	block: {
+		gap: 8,
+	},
+	kicker: {
+		fontSize: 12,
+		fontWeight: "600",
+		textTransform: "uppercase",
+		letterSpacing: 1,
+	},
+	body: {
+		fontSize: 15,
+		lineHeight: 22,
+	},
+	pinsHeader: {
+		flexDirection: "row",
+		alignItems: "flex-end",
+		justifyContent: "space-between",
+	},
+	pinsCount: {
 		fontSize: 13,
+	},
+	pinsGrid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
+		gap: PIN_COLUMN_GAP,
+	},
+	pinThumb: {
+		borderRadius: 22,
+		borderCurve: "continuous",
+		overflow: "hidden",
 	},
 });
