@@ -16,6 +16,7 @@ import {
 	DRAG_MASK_HEIGHT_COLLAPSE_END,
 	HORIZONTAL_DRAG_MASK_COLLAPSE_SCALE,
 	REVEAL_BORDER_RADIUS,
+	REVEAL_USES_TRANSFORM_MASK,
 } from "./config";
 import { resolveDirectionalDragTranslation } from "./math";
 import type { BuildRevealStylesParams, RevealInterpolatedStyle } from "./types";
@@ -406,6 +407,38 @@ export function buildRevealStyles({
 			safeContentBaseScale;
 
 		const compensatedMaskScale = 1 / safeContentBaseScale;
+		const maskBaseWidth = Math.max(1, screenLayout.width);
+		const maskBaseHeight = Math.max(1, screenLayout.height);
+		const maskScaleX = maskWidth / maskBaseWidth;
+		const maskScaleY = renderedMaskHeight / maskBaseHeight;
+		const transformMaskTranslateX =
+			compensatedMaskTranslateX + (maskWidth - maskBaseWidth) / 2;
+		const transformMaskTranslateY =
+			compensatedMaskTranslateY + (renderedMaskHeight - maskBaseHeight) / 2;
+		const maskElementStyle = REVEAL_USES_TRANSFORM_MASK
+			? {
+					width: maskBaseWidth,
+					height: maskBaseHeight,
+					borderRadius: props.active.settled ? 0 : maskBorderRadius,
+					borderCurve: "continuous" as const,
+					transform: [
+						{ translateX: transformMaskTranslateX },
+						{ translateY: transformMaskTranslateY },
+						{ scaleX: maskScaleX * compensatedMaskScale },
+						{ scaleY: maskScaleY * compensatedMaskScale },
+					],
+				}
+			: {
+					width: maskWidth,
+					height: renderedMaskHeight,
+					borderRadius: props.active.settled ? 0 : maskBorderRadius,
+					borderCurve: "continuous" as const,
+					transform: [
+						{ translateX: compensatedMaskTranslateX },
+						{ translateY: compensatedMaskTranslateY },
+						{ scale: compensatedMaskScale },
+					],
+				};
 
 		const elementOffsetX = initialDestinationTarget
 			? initialDestinationTarget.pageX - link.destination.bounds.pageX
@@ -467,17 +500,7 @@ export function buildRevealStyles({
 				},
 			},
 			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
-				style: {
-					width: maskWidth,
-					height: renderedMaskHeight,
-					borderRadius: props.active.settled ? 0 : maskBorderRadius,
-					borderCurve: "continuous",
-					transform: [
-						{ translateX: compensatedMaskTranslateX },
-						{ translateY: compensatedMaskTranslateY },
-						{ scale: compensatedMaskScale },
-					],
-				},
+				style: maskElementStyle,
 			},
 			[link.id]: {
 				style: {
