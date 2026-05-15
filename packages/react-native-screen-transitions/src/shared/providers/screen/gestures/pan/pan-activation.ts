@@ -128,5 +128,8 @@ export const usePanActivation = ({
 		],
 	);
 
-	return { onTouchesDown, onTouchesMove };
+	return useMemo(
+		() => ({ onTouchesDown, onTouchesMove }),
+		[onTouchesDown, onTouchesMove],
+	);
 };

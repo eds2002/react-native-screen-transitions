@@ -1,194 +1,36 @@
-import { interpolate, type MeasuredDimensions } from "react-native-reanimated";
-import {
-	EPSILON,
-	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-} from "../../../../constants";
+import { interpolate } from "react-native-reanimated";
+import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../../../constants";
 import { createLinkAccessor } from "../../helpers/create-link-accessor";
-import { computeContentTransformGeometry } from "../../helpers/geometry";
 import { getSourceBorderRadius } from "../helpers";
-import { combineScales, resolveDirectionalDragScale } from "../math";
 import {
 	CLOSE_SOURCE_HANDOFF_PROGRESS,
-	DISMISS_SCALE_ORBIT_DEPTH,
-	DRAG_DIRECTIONAL_SCALE_EXPONENT,
-	DRAG_DIRECTIONAL_SCALE_MAX,
-	DRAG_DIRECTIONAL_SCALE_MIN,
+	CONTENT_CLOSING_OPACITY_OUTPUT,
+	CONTENT_CLOSING_OPACITY_RANGE,
+	CONTENT_ENTERING_OPACITY_OUTPUT,
+	CONTENT_ENTERING_OPACITY_RANGE,
+	CONTENT_SHADOW_OPACITY_OUTPUT,
 	DRAG_MASK_HEIGHT_COLLAPSE_END,
 	HORIZONTAL_DRAG_MASK_COLLAPSE_SCALE,
+	IDENTITY_DRAG_SCALE_OUTPUT,
 	REVEAL_BORDER_RADIUS,
+	REVEAL_SHADOW_OFFSET,
 	REVEAL_USES_TRANSFORM_MASK,
+	UNFOCUSED_ELEMENT_OPACITY_OUTPUT,
+	ZERO_TO_ONE_RANGE,
 } from "./config";
-import { resolveDirectionalDragTranslation } from "./math";
+import {
+	interpolateClamped,
+	mixUnit,
+	resolveDismissScaleHandoff,
+	resolveRevealContentBaseTransform,
+	resolveRevealDirectionalDragScale,
+	resolveRevealGestureHandoff,
+	resolveSafeScale,
+	resolveTrackedSourceElementTransform,
+	resolveUniformScale,
+	resolveUnitDragTranslation,
+} from "./math";
 import type { BuildRevealStylesParams, RevealInterpolatedStyle } from "./types";
-
-const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
-
-function resolveUniformScale({
-	sourceWidth,
-	sourceHeight,
-	destinationWidth,
-	destinationHeight,
-}: {
-	sourceWidth: number;
-	sourceHeight: number;
-	destinationWidth: number;
-	destinationHeight: number;
-}) {
-	"worklet";
-
-	const sx = sourceWidth / destinationWidth;
-	const sy = sourceHeight / destinationHeight;
-
-	const sourceAspect = sourceWidth / sourceHeight;
-	const destinationAspect = destinationWidth / destinationHeight;
-	const aspectDifference = Math.abs(sourceAspect - destinationAspect);
-
-	return aspectDifference < 0.1 ? Math.max(sx, sy) : Math.min(sx, sy);
-}
-
-function resolveRevealGestureHandoff(rawDrag: number) {
-	"worklet";
-
-	const gestureSensitivity = interpolate(rawDrag, [0, 1], [0.8, 0.1], "clamp");
-
-	const releaseBoost = interpolate(rawDrag, [0, 1], [1, 1.4], "clamp");
-
-	const releaseSensitivity = interpolate(
-		gestureSensitivity,
-		[0.28, 0.9],
-		[0.7, 1],
-		"clamp",
-	);
-
-	return {
-		gestureSensitivity,
-		gestureReleaseVelocityScale: releaseBoost * releaseSensitivity,
-	};
-}
-
-function resolveDismissScaleHandoff({
-	progress,
-	releaseScale,
-	targetScale,
-	rawDrag,
-}: {
-	progress: number;
-	releaseScale: number;
-	targetScale: number;
-	rawDrag: number;
-}) {
-	"worklet";
-
-	const closeProgress = 1 - progress;
-	const scaleProgress = Math.sin((Math.PI / 2) * closeProgress);
-	const baseScale = releaseScale + (targetScale - releaseScale) * scaleProgress;
-	const orbitDepth = interpolate(
-		rawDrag,
-		[0, 1],
-		[0, DISMISS_SCALE_ORBIT_DEPTH],
-		"clamp",
-	);
-	const orbitScale = 1 - orbitDepth * Math.sin(Math.PI * closeProgress);
-
-	return baseScale * orbitScale;
-}
-
-function getBoundsCenterX(bounds: MeasuredDimensions) {
-	"worklet";
-	return bounds.pageX + bounds.width / 2;
-}
-
-function getBoundsCenterY(bounds: MeasuredDimensions) {
-	"worklet";
-	return bounds.pageY + bounds.height / 2;
-}
-
-function resolveRevealContentBaseTransform({
-	progress,
-	sourceBounds,
-	destinationBounds,
-	screenLayout,
-}: {
-	progress: number;
-	sourceBounds: MeasuredDimensions;
-	destinationBounds: MeasuredDimensions;
-	screenLayout: BuildRevealStylesParams["props"]["layouts"]["screen"];
-}) {
-	"worklet";
-
-	const geometry = computeContentTransformGeometry({
-		start: sourceBounds,
-		end: destinationBounds,
-		entering: true,
-		dimensions: screenLayout,
-		scaleMode: "uniform",
-	});
-
-	return {
-		translateX: interpolate(progress, [0, 1], [geometry.tx, 0], "clamp"),
-		translateY: interpolate(progress, [0, 1], [geometry.ty, 0], "clamp"),
-		scale: interpolate(progress, [0, 1], [geometry.s, 1], "clamp"),
-	};
-}
-
-function resolveTrackedSourceElementTransform({
-	sourceBounds,
-	destinationBounds,
-	contentTranslateX,
-	contentTranslateY,
-	contentScale,
-	parentScale,
-	screenWidth,
-	screenHeight,
-}: {
-	sourceBounds: MeasuredDimensions;
-	destinationBounds: MeasuredDimensions;
-	contentTranslateX: number;
-	contentTranslateY: number;
-	contentScale: number;
-	parentScale: number;
-	screenWidth: number;
-	screenHeight: number;
-}) {
-	"worklet";
-
-	const screenCenterX = screenWidth / 2;
-	const screenCenterY = screenHeight / 2;
-	const safeParentScale = Math.max(Math.abs(parentScale), EPSILON);
-	const safeSourceWidth = Math.max(Math.abs(sourceBounds.width), EPSILON);
-	const safeSourceHeight = Math.max(Math.abs(sourceBounds.height), EPSILON);
-
-	const sourceCenterX = getBoundsCenterX(sourceBounds);
-	const sourceCenterY = getBoundsCenterY(sourceBounds);
-	const destinationCenterX = getBoundsCenterX(destinationBounds);
-	const destinationCenterY = getBoundsCenterY(destinationBounds);
-
-	const trackedCenterX =
-		screenCenterX +
-		(destinationCenterX - screenCenterX) * contentScale +
-		contentTranslateX;
-	const trackedCenterY =
-		screenCenterY +
-		(destinationCenterY - screenCenterY) * contentScale +
-		contentTranslateY;
-
-	return {
-		translateX:
-			(trackedCenterX - screenCenterX) / safeParentScale +
-			screenCenterX -
-			sourceCenterX,
-		translateY:
-			(trackedCenterY - screenCenterY) / safeParentScale +
-			screenCenterY -
-			sourceCenterY,
-		scaleX:
-			(destinationBounds.width * contentScale) /
-			(safeSourceWidth * safeParentScale),
-		scaleY:
-			(destinationBounds.height * contentScale) /
-			(safeSourceHeight * safeParentScale),
-	};
-}
 
 /* -------------------------------------------------------------------------- */
 /*                              BUILD REVEAL STYLES                           */
@@ -212,11 +54,6 @@ export function buildRevealStyles({
 		layouts: { screen: screenLayout },
 	} = props;
 
-	const baseRawOptions = {
-		raw: true,
-		scaleMode: "uniform",
-	} as const;
-
 	const boundsAccessor = createLinkAccessor(() => props);
 	const link = boundsAccessor.getLink(tag);
 
@@ -231,8 +68,10 @@ export function buildRevealStyles({
 	const initialGesture =
 		props.active.gesture.active ?? props.active.gesture.direction;
 
-	const isHorizontalDismiss = initialGesture?.includes("horizontal");
-	const isVerticalDismiss = initialGesture?.includes("vertical");
+	const isHorizontalDismiss =
+		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
+	const isVerticalDismiss =
+		initialGesture === "vertical" || initialGesture === "vertical-inverted";
 
 	const rawDrag = isHorizontalDismiss
 		? Math.abs(props.active.gesture.raw.normX)
@@ -240,45 +79,31 @@ export function buildRevealStyles({
 			? Math.abs(props.active.gesture.raw.normY)
 			: 0;
 
-	const dragX = resolveDirectionalDragTranslation({
-		translation: props.active.gesture.x,
-		dimension: screenLayout.width,
-		negativeMax: 1,
-		positiveMax: 1,
-		exponent: 1,
-	});
+	const dragX =
+		props.active.gesture.x === 0
+			? 0
+			: resolveUnitDragTranslation(props.active.gesture.x, screenLayout.width);
 
-	const dragY = resolveDirectionalDragTranslation({
-		translation: props.active.gesture.y,
-		dimension: screenLayout.height,
-		negativeMax: 1,
-		positiveMax: 1,
-		exponent: 1,
-	});
+	const dragY =
+		props.active.gesture.y === 0
+			? 0
+			: resolveUnitDragTranslation(props.active.gesture.y, screenLayout.height);
 
 	const dragXScale = isHorizontalDismiss
-		? resolveDirectionalDragScale({
-				normalized: props.active.gesture.normX,
-				dismissDirection:
-					initialGesture === "horizontal-inverted" ? "negative" : "positive",
-				shrinkMin: DRAG_DIRECTIONAL_SCALE_MIN,
-				growMax: DRAG_DIRECTIONAL_SCALE_MAX,
-				exponent: DRAG_DIRECTIONAL_SCALE_EXPONENT,
-			})
+		? resolveRevealDirectionalDragScale(
+				props.active.gesture.normX,
+				initialGesture === "horizontal-inverted",
+			)
 		: IDENTITY_DRAG_SCALE_OUTPUT[0];
 
 	const dragYScale = isVerticalDismiss
-		? resolveDirectionalDragScale({
-				normalized: props.active.gesture.normY,
-				dismissDirection:
-					initialGesture === "vertical-inverted" ? "negative" : "positive",
-				shrinkMin: DRAG_DIRECTIONAL_SCALE_MIN,
-				growMax: DRAG_DIRECTIONAL_SCALE_MAX,
-				exponent: DRAG_DIRECTIONAL_SCALE_EXPONENT,
-			})
+		? resolveRevealDirectionalDragScale(
+				props.active.gesture.normY,
+				initialGesture === "vertical-inverted",
+			)
 		: IDENTITY_DRAG_SCALE_OUTPUT[1];
 
-	const dragScale = combineScales(dragXScale, dragYScale);
+	const dragScale = dragXScale * dragYScale;
 
 	const initialDestinationTarget =
 		props.active.closing && link.initialDestination?.bounds
@@ -289,52 +114,53 @@ export function buildRevealStyles({
 
 	if (focused) {
 		const contentRaw = link.compute({
-			...baseRawOptions,
+			raw: true,
+			scaleMode: "uniform",
 			method: "content",
 			target: initialDestinationTarget,
-		});
+		} as const);
 
 		const maskRaw = link.compute({
-			...baseRawOptions,
+			raw: true,
+			scaleMode: "uniform",
 			method: "size",
 			space: "absolute",
 			target: "fullscreen",
-		});
+		} as const);
 
-		const maskBorderRadius = interpolate(
+		const maskBorderRadius = mixUnit(
+			sourceBorderRadius,
+			REVEAL_BORDER_RADIUS,
 			progress,
-			[0, 1],
-			[sourceBorderRadius, REVEAL_BORDER_RADIUS],
-			"clamp",
 		);
 
 		const maskSizeMultiplier = props.active.closing
-			? interpolate(props.active.progress, [0, 1], [0.9, 1], "clamp")
+			? mixUnit(0.9, 1, props.active.progress)
 			: 1;
 
 		const maskWidth = Math.max(1, maskRaw.width * maskSizeMultiplier);
 		const maskHeight = Math.max(1, maskRaw.height * maskSizeMultiplier);
 
 		const contentBaseScale = contentRaw.scale;
-		const contentTargetBounds =
-			initialDestinationTarget ?? link.destination.bounds;
-		const sourceContentScale = resolveUniformScale({
-			sourceWidth: link.source.bounds.width,
-			sourceHeight: link.source.bounds.height,
-			destinationWidth: contentTargetBounds.width,
-			destinationHeight: contentTargetBounds.height,
-		});
-		const safeContentBaseScale =
-			Math.abs(contentBaseScale) > EPSILON ? contentBaseScale : 1;
+		const safeContentBaseScale = resolveSafeScale(contentBaseScale);
 
-		const contentScale = props.active.gesture.dismissing
-			? resolveDismissScaleHandoff({
-					progress: props.active.progress,
-					releaseScale: dragScale,
-					targetScale: sourceContentScale,
-					rawDrag,
-				})
-			: contentBaseScale * dragScale;
+		let contentScale = contentBaseScale * dragScale;
+		if (props.active.gesture.dismissing) {
+			const contentTargetBounds =
+				initialDestinationTarget ?? link.destination.bounds;
+			const sourceContentScale = resolveUniformScale({
+				sourceWidth: link.source.bounds.width,
+				sourceHeight: link.source.bounds.height,
+				destinationWidth: contentTargetBounds.width,
+				destinationHeight: contentTargetBounds.height,
+			});
+			contentScale = resolveDismissScaleHandoff({
+				progress: props.active.progress,
+				releaseScale: dragScale,
+				targetScale: sourceContentScale,
+				rawDrag,
+			});
+		}
 		const contentTranslateX = contentRaw.translateX + dragX;
 		const contentTranslateY = contentRaw.translateY + dragY;
 
@@ -369,11 +195,12 @@ export function buildRevealStyles({
 			Math.max(maskWidth, link.source.bounds.height),
 		);
 
-		const renderedMaskHeight = interpolate(
+		const renderedMaskHeight = interpolateClamped(
 			maskHeightCollapseDrag,
-			[0, DRAG_MASK_HEIGHT_COLLAPSE_END],
-			[maskHeight, minMaskHeight],
-			"clamp",
+			0,
+			DRAG_MASK_HEIGHT_COLLAPSE_END,
+			maskHeight,
+			minMaskHeight,
 		);
 
 		const maskCenterX = maskWidth / 2;
@@ -449,19 +276,21 @@ export function buildRevealStyles({
 			: 0;
 
 		const elementTX = props.active.closing
-			? interpolate(
+			? interpolateClamped(
 					props.active.progress,
-					[CLOSE_SOURCE_HANDOFF_PROGRESS, 1],
-					[elementOffsetX, 0],
-					"clamp",
+					CLOSE_SOURCE_HANDOFF_PROGRESS,
+					1,
+					elementOffsetX,
+					0,
 				)
 			: 0;
 		const elementY = props.active.closing
-			? interpolate(
+			? interpolateClamped(
 					props.active.progress,
-					[CLOSE_SOURCE_HANDOFF_PROGRESS, 1],
-					[elementOffsetY, 0],
-					"clamp",
+					CLOSE_SOURCE_HANDOFF_PROGRESS,
+					1,
+					elementOffsetY,
+					0,
 				)
 			: 0;
 
@@ -482,20 +311,24 @@ export function buildRevealStyles({
 						{ scale: contentScale },
 					],
 					shadowColor: "#000",
-					shadowOffset: { width: 0, height: 2 },
-					shadowOpacity: interpolate(props.active.progress, [0, 1], [0, 0.25]),
+					shadowOffset: REVEAL_SHADOW_OFFSET,
+					shadowOpacity: interpolate(
+						props.active.progress,
+						ZERO_TO_ONE_RANGE,
+						CONTENT_SHADOW_OPACITY_OUTPUT,
+					),
 					shadowRadius: 32,
 					elevation: 5,
 					opacity: props.active.entering
 						? interpolate(
 								props.active.progress,
-								[0, CLOSE_SOURCE_HANDOFF_PROGRESS],
-								[0, 1],
+								CONTENT_ENTERING_OPACITY_RANGE,
+								CONTENT_ENTERING_OPACITY_OUTPUT,
 							)
 						: interpolate(
 								props.active.progress,
-								[0, CLOSE_SOURCE_HANDOFF_PROGRESS, 1],
-								[0, 1, 1],
+								CONTENT_CLOSING_OPACITY_RANGE,
+								CONTENT_CLOSING_OPACITY_OUTPUT,
 							),
 				},
 			},
@@ -514,12 +347,7 @@ export function buildRevealStyles({
 
 	/* ---------------------------- Unfocused Screen ---------------------------- */
 
-	const unfocusedScale = interpolate(
-		props.active.progress,
-		[0, 1],
-		[1, 0.9375],
-		"clamp",
-	);
+	const unfocusedScale = mixUnit(1, 0.9375, props.active.progress);
 	const unfocusedContentScale = props.active.logicallySettled
 		? 1
 		: unfocusedScale;
@@ -533,20 +361,21 @@ export function buildRevealStyles({
 		destinationBounds: trackingContentTarget,
 		screenLayout,
 	});
-	const trackingTargetScale = resolveUniformScale({
-		sourceWidth: link.source.bounds.width,
-		sourceHeight: link.source.bounds.height,
-		destinationWidth: trackingContentTarget.width,
-		destinationHeight: trackingContentTarget.height,
-	});
-	const trackingContentScale = props.active.gesture.dismissing
-		? resolveDismissScaleHandoff({
-				progress: props.active.progress,
-				releaseScale: dragScale,
-				targetScale: trackingTargetScale,
-				rawDrag,
-			})
-		: trackingContentBaseTransform.scale * dragScale;
+	let trackingContentScale = trackingContentBaseTransform.scale * dragScale;
+	if (props.active.gesture.dismissing) {
+		const trackingTargetScale = resolveUniformScale({
+			sourceWidth: link.source.bounds.width,
+			sourceHeight: link.source.bounds.height,
+			destinationWidth: trackingContentTarget.width,
+			destinationHeight: trackingContentTarget.height,
+		});
+		trackingContentScale = resolveDismissScaleHandoff({
+			progress: props.active.progress,
+			releaseScale: dragScale,
+			targetScale: trackingTargetScale,
+			rawDrag,
+		});
+	}
 	const trackingContentTranslateX =
 		trackingContentBaseTransform.translateX + dragX;
 	const trackingContentTranslateY =
@@ -581,7 +410,11 @@ export function buildRevealStyles({
 			style: {
 				opacity: props.active.closing
 					? 1
-					: interpolate(props.active.progress, [0, 1], [1, 0], "clamp"),
+					: interpolate(
+							props.active.progress,
+							ZERO_TO_ONE_RANGE,
+							UNFOCUSED_ELEMENT_OPACITY_OUTPUT,
+						),
 
 				zIndex: 9999,
 				elevation: 9999,

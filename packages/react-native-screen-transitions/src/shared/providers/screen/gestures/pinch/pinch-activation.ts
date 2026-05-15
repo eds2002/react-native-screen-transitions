@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type {
 	GestureStateManager,
 	GestureTouchEvent,
@@ -68,5 +68,8 @@ export const usePinchActivation = ({
 		[runtime, screenOptions],
 	);
 
-	return { onTouchesDown, onTouchesMove };
+	return useMemo(
+		() => ({ onTouchesDown, onTouchesMove }),
+		[onTouchesDown, onTouchesMove],
+	);
 };

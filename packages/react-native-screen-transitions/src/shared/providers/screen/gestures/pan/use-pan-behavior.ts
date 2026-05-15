@@ -1,4 +1,4 @@
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
 import type { ScreenOptionsContextValue } from "../../options";
@@ -81,9 +81,12 @@ export const usePanBehavior = (
 		[runtime, screenOptions, dimensions, dismissScreen, withSensitivity],
 	);
 
-	return {
-		onStart,
-		onUpdate,
-		onEnd,
-	};
+	return useMemo(
+		() => ({
+			onStart,
+			onUpdate,
+			onEnd,
+		}),
+		[onStart, onUpdate, onEnd],
+	);
 };
