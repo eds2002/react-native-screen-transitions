@@ -56,6 +56,7 @@ describe("createTransitionAccessor", () => {
 
 		expect(scope?.current.route.key).toBe("self");
 		expect(scope?.bounds).toBe(self.boundsAccessor);
+		expect("transition" in (scope ?? {})).toBe(false);
 		expect(transition({ depth: 0 })?.current.route.key).toBe("self");
 	});
 
@@ -113,23 +114,6 @@ describe("createTransitionAccessor", () => {
 
 		expect(transition({ depth: 1 })?.current.route.key).toBe("child");
 		expect(transition({ depth: 2 })?.current.route.key).toBe("grandchild");
-	});
-
-	it("resolves nested transition calls relative to the current scope", () => {
-		const grandparent = createSource("grandparent");
-		const parent = createSource("parent");
-		const self = createSource("self");
-		const child = createSource("child");
-		const transition = createTransitionAccessor(
-			[grandparent, parent, self, child],
-			2,
-		);
-		const parentScope = transition({ depth: -1 });
-		const grandparentScope = parentScope?.transition({ depth: -1 });
-		const childScope = parentScope?.transition({ depth: 2 });
-
-		expect(grandparentScope?.current.route.key).toBe("grandparent");
-		expect(childScope?.current.route.key).toBe("child");
 	});
 
 	it("returns null for missing or invalid depth targets", () => {

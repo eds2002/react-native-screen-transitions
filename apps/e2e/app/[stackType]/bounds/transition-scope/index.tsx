@@ -26,7 +26,7 @@ export default function TransitionScopeIndex() {
 			style={[styles.container, { backgroundColor: theme.bg }]}
 		>
 			<ScreenHeader
-				title="Transition Scope"
+				title="Nested Bounds"
 				subtitle="Parent-owned bounds into a nested route"
 			/>
 			<ScrollView

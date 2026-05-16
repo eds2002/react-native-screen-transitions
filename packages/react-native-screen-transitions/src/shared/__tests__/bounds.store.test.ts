@@ -810,7 +810,7 @@ describe("Scenario: Multiple bounds, only one matches", () => {
 	});
 });
 
-describe("Scenario: Nested navigators use explicit transition scopes", () => {
+describe("Scenario: Nested navigators keep concrete bounds scoped", () => {
 	it("does not resolve cross-stack bounds through implicit ancestor keys", () => {
 		const boundsA = createBounds(10, 10, 80, 80);
 		const boundsB = createBounds(20, 20, 100, 100);

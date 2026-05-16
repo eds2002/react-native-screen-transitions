@@ -72,20 +72,6 @@ export const createTransitionAccessor = (
 		return {
 			...frame,
 			bounds: source.boundsAccessor,
-			transition: (target?: ScreenTransitionTarget) => {
-				"worklet";
-				const targetIndex = resolveTargetIndex(
-					target,
-					sourceIndex,
-					currentSources.length,
-				);
-
-				if (targetIndex === -1) {
-					return null;
-				}
-
-				return buildScope(targetIndex);
-			},
 		};
 	};
 

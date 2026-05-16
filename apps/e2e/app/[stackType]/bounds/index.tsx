@@ -32,9 +32,9 @@ const BOUNDS_EXAMPLES = [
 	},
 	{
 		id: "transition-scope",
-		title: "Transition Scope Access",
+		title: "Nested Bounds",
 		description:
-			"Use props.transition({ depth: -1 }) to compute bounds from a nested route",
+			"Nested parent and child stacks computing their own bounds handoff",
 	},
 ];
 

@@ -20,10 +20,7 @@ import { hydrateTransitionState } from "./hydrate-transition-state";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
 import { useBuildTransitionState } from "./use-build-transition-state";
 
-export type ScreenInterpolatorFrame = Omit<
-	ScreenInterpolationProps,
-	"bounds" | "transition"
->;
+export type ScreenInterpolatorFrame = Omit<ScreenInterpolationProps, "bounds">;
 
 interface ScreenAnimationPipeline {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
