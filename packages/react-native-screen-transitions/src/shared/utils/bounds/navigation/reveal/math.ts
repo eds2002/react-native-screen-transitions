@@ -9,7 +9,7 @@ import {
 	DRAG_DIRECTIONAL_SCALE_MIN,
 } from "./config";
 
-export function clampUnit(value: number) {
+function clampUnit(value: number) {
 	"worklet";
 	return Math.min(1, Math.max(0, value));
 }

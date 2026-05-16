@@ -292,11 +292,6 @@ export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
 export type TransitionInterpolatorOptions = ScreenTransitionOptions;
 
 /**
- * @deprecated Use `TransitionInterpolatorOptions`.
- */
-export type TransitionInterpolatorConfig = TransitionInterpolatorOptions;
-
-/**
  * Internal normalized slot format.
  * Always uses the explicit `{ style, props }` shape (with Reanimated's full StyleProps).
  */

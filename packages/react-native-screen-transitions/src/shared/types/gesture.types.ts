@@ -66,8 +66,6 @@ export enum GestureActivationState {
 	FAILED,
 }
 
-export { GestureActivationState as GestureOffsetState };
-
 export type GestureActivationArea = ActivationArea | SideActivation;
 
 /**

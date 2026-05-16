@@ -182,12 +182,6 @@ export const FALSE = 0;
 export const EPSILON = 1e-5;
 
 /**
- * Threshold for snapping animations to target when "close enough" (1% of range).
- * Prevents micro-jitter/oscillation near animation endpoints.
- */
-export const ANIMATION_SNAP_THRESHOLD = 0.01;
-
-/**
  * Number of consecutive frames progress must remain near its target before it
  * is treated as logically settled.
  */

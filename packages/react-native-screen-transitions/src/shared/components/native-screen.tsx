@@ -1,17 +1,15 @@
 import type * as React from "react";
-import { StyleSheet, type View } from "react-native";
+import { StyleSheet } from "react-native";
 import Animated, {
 	Extrapolation,
 	interpolate,
 	useAnimatedProps,
-	useAnimatedRef,
 	useDerivedValue,
 	useSharedValue,
 } from "react-native-reanimated";
 import { Screen as RNSScreen } from "react-native-screens";
 import { EPSILON } from "../constants";
 import { useStack } from "../hooks/navigation/use-stack";
-import { LayoutAnchorProvider } from "../providers/layout-anchor.provider";
 import { useManagedStackContext } from "../providers/stack/managed.provider";
 import { AnimationStore } from "../stores/animation.store";
 
@@ -54,7 +52,6 @@ export const NativeScreen = ({
 	const routesLength = routes.length;
 	const topIndex = routesLength - 1;
 	const topRouteKey = routes[topIndex]?.key ?? routeKey;
-	const screenRef = useAnimatedRef<View>();
 
 	const sceneClosing = AnimationStore.getValue(routeKey, "closing");
 	const topSceneProgress = AnimationStore.getValue(topRouteKey, "progress");
@@ -155,16 +152,13 @@ export const NativeScreen = ({
 	if (DISABLE_NATIVE_SCREENS) {
 		return (
 			<Animated.View
-				ref={screenRef}
 				// Keep a native boundary per screen when falling back to plain views.
 				// Android release builds can otherwise flatten sibling screens together.
 				collapsable={false}
 				style={StyleSheet.absoluteFill}
 				animatedProps={animatedProps}
 			>
-				<LayoutAnchorProvider anchorRef={screenRef}>
-					{children}
-				</LayoutAnchorProvider>
+				{children}
 			</Animated.View>
 		);
 	}
@@ -172,14 +166,11 @@ export const NativeScreen = ({
 	return (
 		<AnimatedNativeScreen
 			enabled
-			ref={screenRef}
 			style={StyleSheet.absoluteFill}
 			freezeOnBlur={freezeOnBlur}
 			animatedProps={animatedProps}
 		>
-			<LayoutAnchorProvider anchorRef={screenRef}>
-				{children}
-			</LayoutAnchorProvider>
+			{children}
 		</AnimatedNativeScreen>
 	);
 };

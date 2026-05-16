@@ -18,8 +18,6 @@ import {
 } from "./snap-points";
 import type { BuiltState } from "./types";
 
-export { computeLogicallySettled } from "./settle";
-
 const LOGICAL_SETTLE_STICKY_PROGRESS_THRESHOLD =
 	LOGICAL_SETTLE_PROGRESS_THRESHOLD * 10;
 

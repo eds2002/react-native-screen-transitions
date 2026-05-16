@@ -62,9 +62,7 @@ const resolveGestureDirection = (options: GesturePolicyOptions) => {
 	return options.gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
 };
 
-export function resolveGestureProgressModePolicy(
-	options: GesturePolicyOptions,
-) {
+function resolveGestureProgressModePolicy(options: GesturePolicyOptions) {
 	"worklet";
 	return resolveGestureProgressMode({
 		gestureProgressMode: options.gestureProgressMode,
@@ -131,7 +129,7 @@ const resolvePinchDirections = (
 	};
 };
 
-export const resolveGestureCanDismiss = ({
+const resolveGestureCanDismiss = ({
 	isFirstKey,
 	gestureEnabled,
 }: {
@@ -215,7 +213,7 @@ export const resolvePinchPolicy = (
 	};
 };
 
-export const resolveGestureParticipation = ({
+const resolveGestureParticipation = ({
 	options,
 	isFirstKey,
 	gestureContext,
