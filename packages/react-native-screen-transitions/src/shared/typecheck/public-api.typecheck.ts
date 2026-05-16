@@ -200,6 +200,8 @@ const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;
 const currentActiveGesture = interpolationProps.current.gesture.active;
 const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
+const currentGestureVelocity: number =
+	interpolationProps.current.gesture.velocity;
 const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
 const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
@@ -210,6 +212,7 @@ const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 	},
 };
 void currentRawGestureNormX;
+void currentGestureVelocity;
 void currentActiveGesture;
 void currentAnimatedSnapIndex;
 void currentSnapIndex;

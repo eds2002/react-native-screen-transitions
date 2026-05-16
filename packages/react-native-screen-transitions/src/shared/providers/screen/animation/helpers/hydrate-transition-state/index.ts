@@ -38,6 +38,7 @@ export const hydrateTransitionState = (
 	out.gesture.y = s.gesture.y.get();
 	out.gesture.normX = s.gesture.normX.get();
 	out.gesture.normY = s.gesture.normY.get();
+	out.gesture.velocity = s.gesture.velocity.get();
 	out.gesture.scale = s.gesture.scale.get();
 	out.gesture.normScale = s.gesture.normScale.get();
 	out.gesture.focalX = s.gesture.focalX.get();

@@ -23,6 +23,7 @@ export type GestureStoreMap = {
 	y: SharedValue<number>;
 	normX: SharedValue<number>;
 	normY: SharedValue<number>;
+	velocity: SharedValue<number>;
 	scale: SharedValue<number>;
 	normScale: SharedValue<number>;
 	focalX: SharedValue<number>;
@@ -68,6 +69,7 @@ function createGestureBag(): GestureStoreMap {
 		y: makeMutable(0),
 		normX,
 		normY,
+		velocity: makeMutable(0),
 		scale,
 		normScale,
 		focalX: makeMutable(0),
@@ -108,6 +110,7 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.y);
 		cancelAnimation(bag.normX);
 		cancelAnimation(bag.normY);
+		cancelAnimation(bag.velocity);
 		cancelAnimation(bag.scale);
 		cancelAnimation(bag.normScale);
 		cancelAnimation(bag.focalX);

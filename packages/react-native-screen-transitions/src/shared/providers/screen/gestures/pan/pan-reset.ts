@@ -15,6 +15,7 @@ interface ResetPanGestureValuesProps {
 	velocityY?: number;
 	velocityNormX?: number;
 	velocityNormY?: number;
+	releaseVelocity?: number;
 	resetNormalizedValues?: boolean;
 	resetNormalizedValuesImmediately?: boolean;
 	preserveRawValues?: boolean;
@@ -42,6 +43,7 @@ export const resetPanGestureValues = ({
 	velocityY,
 	velocityNormX,
 	velocityNormY,
+	releaseVelocity,
 	resetNormalizedValues = true,
 	resetNormalizedValuesImmediately = false,
 	preserveRawValues = shouldDismiss,
@@ -58,6 +60,7 @@ export const resetPanGestureValues = ({
 	gestures.dragging.set(FALSE);
 	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
 	gestures.settling.set(shouldDismiss ? FALSE : TRUE);
+	gestures.velocity.set(shouldDismiss ? (releaseVelocity ?? 0) : 0);
 
 	animateResetValue(gestures.x, 0, getGestureResetSpec(spec, velocityX), () =>
 		clearPanSettlingIfResting(gestures),

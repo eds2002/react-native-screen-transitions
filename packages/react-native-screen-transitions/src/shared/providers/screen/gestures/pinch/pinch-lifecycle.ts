@@ -33,6 +33,7 @@ export const startPinchBase = (
 	gestures.settling.set(0);
 	gestures.active.set(null);
 	gestures.direction.set(null);
+	gestures.velocity.set(0);
 	gestures.scale.set(1);
 	gestures.normScale.set(0);
 	gestures.raw.scale.set(1);

@@ -6,6 +6,7 @@ import {
 import {
 	getPanReleaseHandoffVelocity,
 	getPanReleaseProgressVelocity,
+	resolveGestureVelocity,
 } from "../shared/physics";
 import {
 	getProgressVelocityTowardTarget,
@@ -23,6 +24,26 @@ import type {
 	PanReleasePlan,
 	PanReleaseResult,
 } from "../types";
+
+const resolvePanReleaseVelocity = (
+	runtime: PanGestureRuntime,
+	velocityNormX: number,
+	velocityNormY: number,
+) => {
+	"worklet";
+	const activeGesture = runtime.stores.gestures.active.get();
+
+	switch (activeGesture) {
+		case "horizontal":
+		case "horizontal-inverted":
+			return resolveGestureVelocity(velocityNormX, 0);
+		case "vertical":
+		case "vertical-inverted":
+			return resolveGestureVelocity(0, velocityNormY);
+		default:
+			return resolveGestureVelocity(velocityNormX, velocityNormY);
+	}
+};
 
 const resolveActivePanSnapAxis = (runtime: PanGestureRuntime) => {
 	"worklet";
@@ -226,6 +247,17 @@ export const buildPanReleasePlan = (
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityX * resetVelocityScale;
 	const resetVelocityY =
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityY * resetVelocityScale;
+	const releaseVelocityNormX =
+		rawEvent.velocityX / Math.max(1, dimensions.width);
+	const releaseVelocityNormY =
+		rawEvent.velocityY / Math.max(1, dimensions.height);
+	const releaseVelocity = release.shouldDismiss
+		? resolvePanReleaseVelocity(
+				runtime,
+				releaseVelocityNormX,
+				releaseVelocityNormY,
+			)
+		: 0;
 
 	return {
 		target: release.target,
@@ -235,6 +267,7 @@ export const buildPanReleasePlan = (
 		resetVelocityY,
 		resetVelocityNormX: resetVelocityX / Math.max(1, dimensions.width),
 		resetVelocityNormY: resetVelocityY / Math.max(1, dimensions.height),
+		releaseVelocity,
 		resetNormalizedValues: !release.shouldDismiss || progressDriven,
 		resetNormalizedValuesImmediately:
 			release.resetNormalizedValuesImmediately === true,

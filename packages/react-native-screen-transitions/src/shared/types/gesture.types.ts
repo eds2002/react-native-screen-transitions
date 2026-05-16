@@ -108,6 +108,14 @@ export type GestureValues = {
 	 */
 	normY: number;
 	/**
+	 * A 0-1 scalar derived from the pan velocity magnitude, normalized against
+	 * a screen-relative full-flick threshold.
+	 *
+	 * This is live while dragging, frozen at release during dismiss animations,
+	 * and reset to 0 while idle or settling from a cancelled gesture.
+	 */
+	velocity: number;
+	/**
 	 * The live pinch scale after `gestureSensitivity` is applied.
 	 */
 	scale: number;

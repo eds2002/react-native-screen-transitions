@@ -48,6 +48,7 @@ const DEFAULT_RAW_GESTURE_VALUES = {
 
 const DEFAULT_GESTURE_VALUES = {
 	...DEFAULT_RAW_GESTURE_VALUES,
+	velocity: 0,
 	focalX: 0,
 	focalY: 0,
 	raw: DEFAULT_RAW_GESTURE_VALUES,

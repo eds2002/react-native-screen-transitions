@@ -2,7 +2,10 @@ import { clamp } from "react-native-reanimated";
 import { EPSILON, FALSE, TRUE } from "../../../../constants";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../utils/animation/emit";
-import { normalizeGestureTranslation } from "../shared/physics";
+import {
+	normalizeGestureTranslation,
+	resolveGestureVelocity,
+} from "../shared/physics";
 import type {
 	GestureDimensions,
 	PanGestureEvent,
@@ -36,6 +39,7 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	gestures.y.set(0);
 	gestures.normX.set(0);
 	gestures.normY.set(0);
+	gestures.velocity.set(0);
 	gestures.raw.x.set(0);
 	gestures.raw.y.set(0);
 	gestures.raw.normX.set(0);
@@ -51,18 +55,28 @@ export const trackPanGesture = (
 ): PanTrackState => {
 	"worklet";
 	const { translationX: x, translationY: y } = event;
-	const { translationX: rawX, translationY: rawY } = rawEvent;
+	const {
+		translationX: rawX,
+		translationY: rawY,
+		velocityX,
+		velocityY,
+	} = rawEvent;
 	const { width, height } = dimensions;
 
 	const normX = clamp(normalizeGestureTranslation(x, width), -1, 1);
 	const normY = clamp(normalizeGestureTranslation(y, height), -1, 1);
 	const rawNormX = clamp(normalizeGestureTranslation(rawX, width), -1, 1);
 	const rawNormY = clamp(normalizeGestureTranslation(rawY, height), -1, 1);
+	const velocity = resolveGestureVelocity(
+		velocityX / Math.max(1, width),
+		velocityY / Math.max(1, height),
+	);
 
 	gestures.x.set(x);
 	gestures.y.set(y);
 	gestures.normX.set(normX);
 	gestures.normY.set(normY);
+	gestures.velocity.set(velocity);
 	gestures.raw.x.set(rawX);
 	gestures.raw.y.set(rawY);
 	gestures.raw.normX.set(rawNormX);
@@ -73,6 +87,7 @@ export const trackPanGesture = (
 		y,
 		normX,
 		normY,
+		velocity,
 	};
 };
 
@@ -102,6 +117,7 @@ export const finalizePanRelease = (
 		velocityY: plan.resetVelocityY,
 		velocityNormX: plan.resetVelocityNormX,
 		velocityNormY: plan.resetVelocityNormY,
+		releaseVelocity: plan.releaseVelocity,
 		resetNormalizedValues: plan.resetNormalizedValues,
 		resetNormalizedValuesImmediately: plan.resetNormalizedValuesImmediately,
 		preserveRawValues: plan.preserveRawValues,

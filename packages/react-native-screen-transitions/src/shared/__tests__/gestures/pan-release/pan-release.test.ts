@@ -26,6 +26,11 @@ const createRuntime = (
 			gestureProgressMode,
 			gestureReleaseVelocityScale,
 		},
+		stores: {
+			gestures: {
+				active: shared("horizontal" as ActiveGesture),
+			},
+		},
 	}) as PanGestureRuntime;
 
 const shared = <T>(initial: T) => {
@@ -117,6 +122,7 @@ describe("pan release plan", () => {
 		expect(plan.resetVelocityY).toBe(0);
 		expect(plan.resetVelocityNormX).toBe(0);
 		expect(plan.resetVelocityNormY).toBe(0);
+		expect(plan.releaseVelocity).toBeCloseTo(0.075, 5);
 		expect(plan.resetNormalizedValues).toBe(true);
 		expect(plan.preserveRawValues).toBe(true);
 	});
@@ -134,6 +140,7 @@ describe("pan release plan", () => {
 		expect(plan.resetVelocityY).toBe(-240);
 		expect(plan.resetVelocityNormX).toBe(0.3);
 		expect(plan.resetVelocityNormY).toBe(-0.3);
+		expect(plan.releaseVelocity).toBeCloseTo(0.075, 5);
 		expect(plan.resetNormalizedValues).toBe(false);
 		expect(plan.preserveRawValues).toBe(true);
 	});
@@ -149,6 +156,7 @@ describe("pan release plan", () => {
 		expect(plan.progressVelocity).toBe(4);
 		expect(plan.resetVelocityX).toBe(120);
 		expect(plan.resetVelocityY).toBe(-240);
+		expect(plan.releaseVelocity).toBe(0);
 		expect(plan.resetNormalizedValues).toBe(true);
 		expect(plan.preserveRawValues).toBe(false);
 	});

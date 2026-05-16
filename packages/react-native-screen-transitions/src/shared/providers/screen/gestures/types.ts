@@ -160,6 +160,7 @@ export interface PanTrackState {
 	y: number;
 	normX: number;
 	normY: number;
+	velocity: number;
 }
 
 export interface PinchTrackState {
@@ -185,6 +186,7 @@ export interface PanReleasePlan {
 	resetVelocityY: number;
 	resetVelocityNormX: number;
 	resetVelocityNormY: number;
+	releaseVelocity: number;
 	resetNormalizedValues: boolean;
 	resetNormalizedValuesImmediately: boolean;
 	preserveRawValues: boolean;

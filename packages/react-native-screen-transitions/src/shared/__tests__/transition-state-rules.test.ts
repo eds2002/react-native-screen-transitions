@@ -42,6 +42,7 @@ const createGestureStore = (
 		y: shared(0),
 		normX,
 		normY,
+		velocity: shared(0),
 		scale: shared(1),
 		normScale: shared(overrides.normScale ?? 0),
 		focalX: shared(0),

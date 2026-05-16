@@ -158,7 +158,7 @@ export function buildRevealStyles({
 				progress: props.active.progress,
 				releaseScale: dragScale,
 				targetScale: sourceContentScale,
-				rawDrag,
+				velocity: props.active.gesture.velocity,
 			});
 		}
 		const contentTranslateX = contentRaw.translateX + dragX;
@@ -373,7 +373,7 @@ export function buildRevealStyles({
 			progress: props.active.progress,
 			releaseScale: dragScale,
 			targetScale: trackingTargetScale,
-			rawDrag,
+			velocity: props.active.gesture.velocity,
 		});
 	}
 	const trackingContentTranslateX =

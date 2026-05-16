@@ -104,7 +104,7 @@ export function resolveRevealGestureHandoff(rawDrag: number) {
 	const clampedRawDrag = clampUnit(rawDrag);
 	const gestureSensitivity = mixUnit(0.8, 0.1, clampedRawDrag);
 
-	const releaseBoost = mixUnit(1, 1.4, clampedRawDrag);
+	const releaseBoost = mixUnit(1, 1.1, clampedRawDrag);
 
 	const releaseSensitivity = interpolateClamped(
 		gestureSensitivity,
@@ -124,19 +124,20 @@ export function resolveDismissScaleHandoff({
 	progress,
 	releaseScale,
 	targetScale,
-	rawDrag,
+	velocity,
 }: {
 	progress: number;
 	releaseScale: number;
 	targetScale: number;
-	rawDrag: number;
+	velocity: number;
 }) {
 	"worklet";
 
 	const closeProgress = 1 - progress;
 	const scaleProgress = Math.sin((Math.PI / 2) * closeProgress);
 	const baseScale = releaseScale + (targetScale - releaseScale) * scaleProgress;
-	const orbitDepth = DISMISS_SCALE_ORBIT_DEPTH * clampUnit(rawDrag);
+
+	const orbitDepth = DISMISS_SCALE_ORBIT_DEPTH * velocity;
 	const orbitScale = 1 - orbitDepth * Math.sin(Math.PI * closeProgress);
 
 	return baseScale * orbitScale;

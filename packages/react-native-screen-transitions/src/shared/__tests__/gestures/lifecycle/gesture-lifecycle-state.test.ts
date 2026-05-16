@@ -36,6 +36,7 @@ const createGestureStore = (): GestureStoreMap => {
 		y: shared(0),
 		normX,
 		normY,
+		velocity: shared(0),
 		scale: shared(1),
 		normScale: shared(0),
 		focalX: shared(0),
@@ -338,6 +339,7 @@ describe("gesture lifecycle state", () => {
 	it("does not mark a dismissing pan release as settling", () => {
 		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);
+		gestures.active.set("vertical");
 
 		finalizePanRelease(
 			{
@@ -350,12 +352,13 @@ describe("gesture lifecycle state", () => {
 			runtime,
 			() => {},
 			{ width: 390, height: 844 },
-			{ velocityX: 0, velocityY: 0 } as any,
+			{ velocityX: 2400, velocityY: -1688 } as any,
 		);
 
 		expect(gestures.dragging.get()).toBe(0);
 		expect(gestures.dismissing.get()).toBe(1);
 		expect(gestures.settling.get()).toBe(0);
+		expect(gestures.velocity.get()).toBeCloseTo(0.5, 5);
 	});
 
 	it("keeps raw pan displacement during a dismissing release", () => {

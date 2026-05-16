@@ -21,6 +21,7 @@ const createGesture = (
 		y: 0,
 		normX: overrides.normX ?? 0,
 		normY: overrides.normY ?? 0,
+		velocity: 0,
 		scale: 1,
 		normScale: overrides.normScale ?? 0,
 		focalX: 0,

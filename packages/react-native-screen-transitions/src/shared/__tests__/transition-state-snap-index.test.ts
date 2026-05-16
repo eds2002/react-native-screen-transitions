@@ -24,6 +24,7 @@ const createGestureStore = (): GestureStoreMap => ({
 	y: shared(0),
 	normX: shared(0),
 	normY: shared(0),
+	velocity: shared(0),
 	scale: shared(1),
 	normScale: shared(0),
 	focalX: shared(0),

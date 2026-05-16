@@ -5,6 +5,7 @@ import {
 	getPanReleaseProgressVelocity,
 	getPinchReleaseHandoffVelocity,
 	normalizePinchScale,
+	resolveGestureVelocity,
 	shouldDismissFromPinch,
 	shouldDismissFromProjection,
 	toProgressVelocity,
@@ -158,6 +159,7 @@ const createGestureStore = () =>
 		y: createSharedValue(0),
 		normX: createSharedValue(0),
 		normY: createSharedValue(0),
+		velocity: createSharedValue(0),
 		scale: createSharedValue(1),
 		normScale: createSharedValue(0),
 		focalX: createSharedValue(0),
@@ -244,6 +246,15 @@ describe("toProgressVelocity", () => {
 	it("converts pixels per second into progress units per second", () => {
 		expect(toProgressVelocity(6400, 320)).toBeCloseTo(20, 5);
 		expect(toProgressVelocity(-6400, 320)).toBeCloseTo(-20, 5);
+	});
+});
+
+describe("resolveGestureVelocity", () => {
+	it("normalizes dominant velocity into a clamped scalar", () => {
+		expect(resolveGestureVelocity(0, 0)).toBe(0);
+		expect(resolveGestureVelocity(2, 0)).toBeCloseTo(0.5, 5);
+		expect(resolveGestureVelocity(0, -4)).toBe(1);
+		expect(resolveGestureVelocity(8, 1)).toBe(1);
 	});
 });
 
@@ -568,6 +579,8 @@ describe("trackPanGesture", () => {
 		const rawEvent = createEvent({
 			translationX: 200,
 			translationY: -80,
+			velocityX: 800,
+			velocityY: -1200,
 		});
 
 		trackPanGesture(event, rawEvent, gestures, { width: 400, height: 200 });
@@ -576,6 +589,7 @@ describe("trackPanGesture", () => {
 		expect(gestures.y.get()).toBeCloseTo(-20, 5);
 		expect(gestures.normX.get()).toBeCloseTo(0.125, 5);
 		expect(gestures.normY.get()).toBeCloseTo(-0.1, 5);
+		expect(gestures.velocity.get()).toBeCloseTo(1, 5);
 		expect(gestures.raw.x.get()).toBeCloseTo(200, 5);
 		expect(gestures.raw.y.get()).toBeCloseTo(-80, 5);
 		expect(gestures.raw.normX.get()).toBeCloseTo(0.5, 5);

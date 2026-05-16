@@ -18,6 +18,8 @@ type GestureAxisCandidate = {
 	velocityContribution: number;
 };
 
+const FULL_GESTURE_VELOCITY_PROGRESS_PER_SECOND = 4;
+
 /**
  * Converts a pan velocity from pixels/second into progress/second.
  */
@@ -27,6 +29,29 @@ export const toProgressVelocity = (
 ) => {
 	"worklet";
 	return velocityPixelsPerSecond / Math.max(1, screenSize);
+};
+
+/**
+ * Converts normalized pan velocity into a 0-1 scalar for interpolators.
+ *
+ * `1` means the velocity reached or exceeded the library's full-velocity
+ * threshold, not a physical maximum for the device.
+ */
+export const resolveGestureVelocity = (
+	velocityNormX: number,
+	velocityNormY: number,
+) => {
+	"worklet";
+
+	const dominantVelocity = Math.max(
+		Math.abs(velocityNormX),
+		Math.abs(velocityNormY),
+	);
+
+	return Math.min(
+		1,
+		dominantVelocity / FULL_GESTURE_VELOCITY_PROGRESS_PER_SECOND,
+	);
 };
 
 /**
