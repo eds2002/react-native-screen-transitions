@@ -31,13 +31,14 @@ import { buildBoundaryMatchKey } from "./utils/build-boundary-match-key";
 
 interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;
+	shouldAutoMeasure?: boolean;
 }
 
 export function createBoundaryComponent<P extends object>(
 	Wrapped: ComponentType<P>,
 	options: CreateBoundaryComponentOptions = {},
 ) {
-	const { alreadyAnimated = false } = options;
+	const { alreadyAnimated = false, shouldAutoMeasure = false } = options;
 	const AnimatedComponent = alreadyAnimated
 		? Wrapped
 		: Animated.createAnimatedComponent(Wrapped);
@@ -147,6 +148,11 @@ export function createBoundaryComponent<P extends object>(
 			enabled: runtimeEnabled,
 			nextScreenKey,
 			measureBoundary,
+			currentScreenKey,
+			sharedBoundTag,
+			id,
+			group,
+			shouldAutoMeasure,
 		});
 
 		// Initial destination measurement: hold lifecycle start until the first
