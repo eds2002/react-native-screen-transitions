@@ -45,6 +45,15 @@ const GESTURE_OPTIONS = [
 	},
 ];
 
+const MAESTRO_OPTIONS = [
+	{
+		id: "maestro",
+		title: "Maestro Fixtures",
+		description: "Dedicated deterministic e2e fixtures for the Maestro suite",
+		route: "/maestro" as const,
+	},
+];
+
 const STACK_GROUP_OPTIONS = [
 	{
 		id: "presets",
@@ -195,6 +204,39 @@ export default function HomeScreen() {
 								},
 							]}
 							onPress={() => router.push(`/${option.id}` as `/${string}`)}
+						>
+							<Text style={[styles.buttonTitle, { color: theme.text }]}>
+								{option.title}
+							</Text>
+							<Text
+								style={[
+									styles.buttonDescription,
+									{ color: theme.textSecondary },
+								]}
+							>
+								{option.description}
+							</Text>
+						</Pressable>
+					))}
+				</View>
+			</View>
+
+			<View style={styles.section}>
+				<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+					Maestro
+				</Text>
+				<View style={styles.buttonContainer}>
+					{MAESTRO_OPTIONS.map((option) => (
+						<Pressable
+							key={option.id}
+							testID={`${option.id}-button`}
+							style={({ pressed }) => [
+								styles.button,
+								{
+									backgroundColor: pressed ? theme.cardPressed : theme.card,
+								},
+							]}
+							onPress={() => router.push(option.route)}
 						>
 							<Text style={[styles.buttonTitle, { color: theme.text }]}>
 								{option.title}

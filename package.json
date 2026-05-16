@@ -15,6 +15,8 @@
 		"docs:dev": "bun run --cwd packages/docs dev",
 		"docs:build": "bun run --cwd packages/docs build",
 		"docs:typecheck": "bun run --cwd packages/docs typecheck",
+		"maestro": "bun run --cwd apps/e2e maestro",
+		"maestro:verify": "bun run --cwd apps/e2e maestro:verify",
 		"knip": "bunx knip --workspace packages/react-native-screen-transitions",
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",

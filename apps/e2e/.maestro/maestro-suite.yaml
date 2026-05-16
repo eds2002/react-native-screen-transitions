@@ -1,0 +1,577 @@
+appId: "com.eds2002.e2e"
+name: "Dedicated screen transition fixtures"
+tags:
+  - maestro
+  - smoke
+---
+- launchApp:
+    clearState: true
+
+# Suite: navigation-and-dismissal
+- openLink: "e2e:///maestro/navigation"
+- assertVisible:
+    id: "maestro-navigation-home"
+- tapOn:
+    id: "maestro-navigation-push-detail"
+- assertVisible:
+    id: "maestro-navigation-detail"
+- tapOn:
+    id: "maestro-navigation-push-third"
+- assertVisible:
+    id: "maestro-navigation-third"
+- tapOn:
+    id: "maestro-navigation-third-back"
+- assertVisible:
+    id: "maestro-navigation-detail"
+- tapOn:
+    id: "maestro-navigation-back"
+- assertVisible:
+    id: "maestro-navigation-home"
+- tapOn:
+    id: "maestro-navigation-touch-a"
+- assertVisible: "a-count:1"
+
+# Suite: pointer-events-during-transitions
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/pointer-events"
+- assertVisible:
+    id: "maestro-pointer-home"
+- tapOn:
+    id: "maestro-pointer-open-detail"
+- assertVisible:
+    id: "maestro-pointer-detail"
+- tapOn:
+    point: "50%, 29%"
+- assertVisible: "top-count:1"
+- tapOn:
+    point: "50%, 35%"
+- assertVisible:
+    id: "maestro-pointer-home"
+- tapOn:
+    point: "50%, 38%"
+- assertVisible: "underlay-count:1"
+
+# Suite: swipe-dismiss-gestures
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/swipe"
+- assertVisible:
+    id: "maestro-swipe-host"
+- tapOn:
+    point: "50%, 23%"
+- assertVisible:
+    id: "maestro-swipe-horizontal"
+- swipe:
+    start: "2%, 50%"
+    end: "99%, 50%"
+    duration: 250
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "maestro-swipe-horizontal"
+- assertVisible:
+    id: "maestro-swipe-host"
+
+- tapOn:
+    point: "50%, 30%"
+- assertVisible:
+    id: "maestro-swipe-horizontal-inverted"
+- swipe:
+    start: "98%, 50%"
+    end: "4%, 50%"
+    duration: 700
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "maestro-swipe-horizontal-inverted"
+- assertVisible:
+    id: "maestro-swipe-host"
+
+- tapOn:
+    point: "50%, 37%"
+- assertVisible:
+    id: "maestro-swipe-vertical"
+- swipe:
+    start: "50%, 45%"
+    end: "50%, 99%"
+    duration: 250
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "maestro-swipe-vertical"
+- assertVisible:
+    id: "maestro-swipe-host"
+
+- tapOn:
+    point: "50%, 44%"
+- assertVisible:
+    id: "maestro-swipe-vertical-inverted"
+- swipe:
+    start: "50%, 99%"
+    end: "50%, 45%"
+    duration: 250
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "maestro-swipe-vertical-inverted"
+- assertVisible:
+    id: "maestro-swipe-host"
+
+- tapOn:
+    point: "50%, 50%"
+- assertVisible:
+    id: "maestro-swipe-wrong-axis"
+- swipe:
+    start: "50%, 30%"
+    end: "50%, 85%"
+    duration: 350
+- assertVisible:
+    id: "maestro-swipe-wrong-axis"
+- tapOn:
+    id: "maestro-swipe-wrong-axis-close"
+- assertVisible:
+    id: "maestro-swipe-host"
+
+- tapOn:
+    point: "50%, 57%"
+- assertVisible:
+    id: "maestro-swipe-short"
+- swipe:
+    start: "15%, 50%"
+    end: "30%, 50%"
+    duration: 180
+- assertVisible:
+    id: "maestro-swipe-short"
+- tapOn:
+    id: "maestro-swipe-short-close"
+- assertVisible:
+    id: "maestro-swipe-host"
+
+# Suite: pinch-gestures
+- launchApp:
+    clearState: true
+# Maestro 2.0.10 has no pinch command, so this suite verifies that pinch-only
+# screens do not leak to one-finger pan gestures. Real pinch needs a driver with
+# multi-touch support.
+- openLink: "e2e:///maestro/pinch-in"
+- assertVisible:
+    id: "maestro-pinch-in"
+- swipe:
+    start: "15%, 50%"
+    end: "90%, 50%"
+    duration: 350
+- assertVisible:
+    id: "maestro-pinch-in"
+
+- openLink: "e2e:///maestro/pinch-out"
+- assertVisible:
+    id: "maestro-pinch-out"
+- swipe:
+    start: "85%, 50%"
+    end: "10%, 50%"
+    duration: 350
+- assertVisible:
+    id: "maestro-pinch-out"
+
+# Suite: gesture-enablement
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/gesture-enablement"
+- assertVisible:
+    id: "maestro-gesture-enablement-host"
+- tapOn:
+    id: "maestro-gesture-open-disabled"
+- assertVisible:
+    id: "maestro-gesture-disabled"
+- swipe:
+    start: "15%, 50%"
+    end: "90%, 50%"
+    duration: 350
+- assertVisible:
+    id: "maestro-gesture-disabled"
+- tapOn:
+    id: "maestro-gesture-disabled-close"
+- assertVisible:
+    id: "maestro-gesture-enablement-host"
+
+- tapOn:
+    id: "maestro-gesture-open-edge"
+- assertVisible:
+    id: "maestro-gesture-edge"
+- waitForAnimationToEnd
+- swipe:
+    start: "50%, 50%"
+    end: "90%, 50%"
+    duration: 350
+- assertVisible:
+    id: "maestro-gesture-edge"
+- waitForAnimationToEnd
+- swipe:
+    start: "2%, 50%"
+    end: "99%, 50%"
+    duration: 250
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "maestro-gesture-edge"
+- assertVisible:
+    id: "maestro-gesture-enablement-host"
+
+# Suite: snap-points
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/snap-points"
+- assertVisible:
+    id: "maestro-snap-points-host"
+- tapOn:
+    id: "maestro-snap-open-sheet"
+- assertVisible:
+    id: "maestro-snap-sheet"
+- assertVisible: "snap-index:1"
+- waitForAnimationToEnd
+- swipe:
+    start: "50%, 63%"
+    end: "50%, 98%"
+    duration: 250
+- waitForAnimationToEnd
+- assertVisible: "snap-index:0"
+- swipe:
+    start: "35%, 65%"
+    end: "82%, 65%"
+    duration: 350
+- waitForAnimationToEnd
+- assertVisible: "snap-index:0"
+- swipe:
+    start: "50%, 80%"
+    end: "50%, 28%"
+    duration: 450
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-snap-sheet"
+
+# Suite: sheet-directions
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/sheet-directions"
+- assertVisible:
+    id: "maestro-sheet-directions-host"
+- tapOn:
+    id: "maestro-sheet-open-bottom"
+- assertVisible:
+    id: "maestro-sheet-bottom"
+- assertVisible: "snap-index:0"
+- waitForAnimationToEnd
+- swipe:
+    start: "50%, 75%"
+    end: "50%, 99%"
+    duration: 700
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "maestro-sheet-bottom"
+- assertVisible:
+    id: "maestro-sheet-directions-host"
+
+- tapOn:
+    id: "maestro-sheet-open-right"
+- assertVisible:
+    id: "maestro-sheet-right"
+- assertVisible: "snap-index:0"
+- waitForAnimationToEnd
+- swipe:
+    start: "70%, 50%"
+    end: "96%, 50%"
+    duration: 450
+- waitForAnimationToEnd
+- assertNotVisible:
+    id: "maestro-sheet-right"
+
+# Suite: auto-snap
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/auto-snap"
+- assertVisible:
+    id: "maestro-auto-snap-host"
+- tapOn:
+    id: "maestro-auto-open-sheet"
+- assertVisible:
+    id: "maestro-auto-sheet"
+- assertVisible: "snap-index:0"
+- assertVisible: "content-layout:compact"
+- waitForAnimationToEnd
+- tapOn:
+    id: "maestro-auto-toggle-content"
+- assertVisible: "content-layout:expanded"
+- tapOn:
+    id: "maestro-auto-snap-full"
+- waitForAnimationToEnd
+- assertVisible: "snap-index:1"
+- tapOn:
+    id: "maestro-auto-snap-auto"
+- waitForAnimationToEnd
+- assertVisible: "snap-index:0"
+
+# Suite: programmatic-snap-actions
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/programmatic-snap"
+- assertVisible:
+    id: "maestro-programmatic-snap-host"
+- tapOn:
+    id: "maestro-programmatic-open-sheet"
+- assertVisible:
+    id: "maestro-programmatic-sheet"
+- assertVisible: "snap-index:1"
+- waitForAnimationToEnd
+- tapOn:
+    id: "maestro-programmatic-snap-0"
+- waitForAnimationToEnd
+- assertVisible: "snap-index:0"
+- tapOn:
+    id: "maestro-programmatic-snap-2"
+- waitForAnimationToEnd
+- assertVisible: "snap-index:2"
+- tapOn:
+    id: "maestro-programmatic-snap-1"
+- waitForAnimationToEnd
+- assertVisible: "snap-index:1"
+
+# Suite: snap-lock
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/snap-lock"
+- assertVisible:
+    id: "maestro-snap-lock-host"
+- tapOn:
+    id: "maestro-snap-lock-open-sheet"
+- assertVisible:
+    id: "maestro-snap-lock-sheet"
+- assertVisible: "snap-lock:locked"
+- assertVisible: "snap-index:1"
+- waitForAnimationToEnd
+- swipe:
+    start: "50%, 40%"
+    end: "50%, 82%"
+    duration: 450
+- assertVisible: "snap-index:1"
+- tapOn:
+    id: "maestro-snap-lock-snap-2"
+- waitForAnimationToEnd
+- assertVisible: "snap-index:2"
+- tapOn:
+    id: "maestro-snap-lock-toggle"
+- assertVisible: "snap-lock:unlocked"
+- swipe:
+    start: "50%, 40%"
+    end: "50%, 82%"
+    duration: 450
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-snap-lock-sheet"
+
+# Suite: multi-axis-snap
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/multi-axis-snap"
+- assertVisible:
+    id: "maestro-multi-axis-host"
+- tapOn:
+    id: "maestro-multi-axis-open-sheet"
+- assertVisible:
+    id: "maestro-multi-axis-sheet"
+- assertVisible: "snap-index:1"
+- waitForAnimationToEnd
+- swipe:
+    start: "18%, 55%"
+    end: "82%, 55%"
+    duration: 450
+- assertVisible:
+    id: "maestro-multi-axis-sheet"
+
+# Suite: scroll-handoff
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/scroll-handoff"
+- assertVisible:
+    id: "maestro-scroll-handoff-host"
+- tapOn:
+    id: "maestro-scroll-open-sheet"
+- assertVisible:
+    id: "maestro-scroll-sheet"
+- assertVisible:
+    id: "maestro-scroll-row-1"
+- waitForAnimationToEnd
+- swipe:
+    start: "50%, 78%"
+    end: "50%, 38%"
+    duration: 500
+- assertVisible:
+    id: "maestro-scroll-list"
+- swipe:
+    start: "50%, 38%"
+    end: "50%, 78%"
+    duration: 500
+- assertVisible:
+    id: "maestro-scroll-sheet"
+
+# Suite: gesture-ownership
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/gesture-ownership"
+- assertVisible:
+    id: "maestro-ownership-host"
+- assertVisible:
+    id: "maestro-ownership-horizontal-child"
+- waitForAnimationToEnd
+- swipe:
+    start: "80%, 45%"
+    end: "20%, 45%"
+    duration: 450
+- assertVisible:
+    id: "maestro-ownership-host"
+- tapOn:
+    point: "50%, 50%"
+- assertVisible: "child:unmounted"
+- tapOn:
+    id: "maestro-ownership-open-sheet"
+- assertVisible:
+    id: "maestro-owner-sheet"
+- waitForAnimationToEnd
+- swipe:
+    start: "50%, 42%"
+    end: "50%, 82%"
+    duration: 450
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-ownership-host"
+
+# Suite: backdrop-behavior
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/backdrop"
+- assertVisible: "underlay-count:0"
+- tapOn:
+    point: "50%, 39%"
+- assertVisible:
+    id: "maestro-backdrop-dismiss"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 25%"
+- assertVisible:
+    id: "maestro-backdrop-host"
+- assertVisible: "underlay-count:0"
+
+- tapOn:
+    point: "50%, 52%"
+- assertVisible:
+    id: "maestro-backdrop-block"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 20%"
+- assertVisible:
+    id: "maestro-backdrop-block"
+- tapOn:
+    id: "maestro-backdrop-block-close"
+- assertVisible:
+    id: "maestro-backdrop-host"
+- assertVisible: "underlay-count:0"
+
+- tapOn:
+    point: "50%, 45%"
+- assertVisible:
+    id: "maestro-backdrop-collapse"
+- assertVisible: "snap-index:1"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 15%"
+- waitForAnimationToEnd
+- assertVisible: "snap-index:0"
+- tapOn:
+    point: "50%, 15%"
+- assertVisible:
+    id: "maestro-backdrop-host"
+
+- tapOn:
+    point: "50%, 59%"
+- assertVisible:
+    id: "maestro-backdrop-passthrough"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 20%"
+- assertVisible:
+    id: "maestro-backdrop-passthrough"
+- tapOn:
+    id: "maestro-backdrop-passthrough-close"
+- assertVisible:
+    id: "maestro-backdrop-host"
+- assertVisible: "underlay-count:1"
+
+- tapOn:
+    point: "50%, 65%"
+- assertVisible:
+    id: "maestro-backdrop-custom"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 25%"
+- assertVisible:
+    id: "maestro-backdrop-host"
+
+# Suite: overlay-behavior
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/overlay"
+- assertVisible:
+    id: "maestro-overlay-host"
+- assertVisible:
+    id: "maestro-overlay-bar"
+- waitForAnimationToEnd
+- tapOn:
+    id: "maestro-overlay-touch-content"
+- assertVisible: "overlay-count:1"
+- tapOn:
+    id: "maestro-overlay-open-second"
+- assertVisible:
+    id: "maestro-overlay-second"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-overlay-bar"
+- assertVisible: "overlay-route:overlay-second"
+- tapOn:
+    id: "maestro-overlay-second-back"
+- assertVisible:
+    id: "maestro-overlay-host"
+
+# Suite: bounds-and-shared-transitions
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/bounds"
+- assertVisible:
+    id: "maestro-bounds-host"
+- waitForAnimationToEnd
+- tapOn:
+    id: "maestro-bound-open-a"
+- assertVisible:
+    id: "maestro-bounds-detail"
+- waitForAnimationToEnd
+- assertVisible:
+    id: "maestro-bound-destination-a"
+- tapOn:
+    id: "maestro-bounds-back"
+- assertVisible:
+    id: "maestro-bounds-host"
+- tapOn:
+    id: "maestro-bound-open-b"
+- assertVisible:
+    id: "maestro-bound-destination-b"
+- waitForAnimationToEnd
+- tapOn:
+    id: "maestro-bounds-back"
+- assertVisible:
+    id: "maestro-bounds-host"
+- tapOn:
+    id: "maestro-bounds-toggle-layout"
+- assertVisible: "layout:dense"
+- tapOn:
+    id: "maestro-bound-open-a"
+- assertVisible:
+    id: "maestro-bound-destination-a"
+- waitForAnimationToEnd
+- tapOn:
+    id: "maestro-bounds-back"
+- assertVisible:
+    id: "maestro-bounds-host"

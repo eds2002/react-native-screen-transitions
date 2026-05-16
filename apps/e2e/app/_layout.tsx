@@ -1,5 +1,6 @@
 // @ts-nocheck
 import { useState } from "react";
+import { LogBox } from "react-native";
 import SquircleView from "react-native-fast-squircle";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
@@ -8,6 +9,8 @@ import { StackSelectionContext } from "@/components/stack-examples/stack-selecti
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
 import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
+
+LogBox.ignoreAllLogs();
 
 const stackScreen = (name: string) => `[stackType]/${name}`;
 
@@ -131,6 +134,7 @@ export default function RootLayout() {
 					name="presets/index"
 					options={{ ...IOSSlide() }}
 				/>
+				<StackNavigator.Screen name="maestro" options={{ animation: "none" }} />
 				<StackNavigator.Screen name="backdrop" options={{ ...IOSSlide() }} />
 				<StackNavigator.Screen name="stack-benchmark" />
 				<StackNavigator.Screen name="gestures" />
