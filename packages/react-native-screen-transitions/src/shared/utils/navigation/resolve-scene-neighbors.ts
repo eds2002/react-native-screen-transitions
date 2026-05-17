@@ -5,13 +5,37 @@ interface SceneWithKey {
 
 type IsRouteClosing = (routeKey: string) => boolean;
 
+const findPreviousDescriptor = <T extends SceneWithKey>(
+	scenes: T[],
+	sceneIndex: number,
+	isRouteClosing: IsRouteClosing,
+): T["descriptor"] | undefined => {
+	let firstClosingBelow: T["descriptor"] | undefined;
+
+	for (let i = sceneIndex - 1; i >= 0; i--) {
+		const candidate = scenes[i];
+		if (!candidate) continue;
+
+		if (!isRouteClosing(candidate.route.key)) {
+			return candidate.descriptor;
+		}
+
+		if (firstClosingBelow === undefined) {
+			firstClosingBelow = candidate.descriptor;
+		}
+	}
+
+	return firstClosingBelow;
+};
+
 /**
  * Resolves previous/next descriptors while accounting for routes that are
  * visually closing.
  *
  * Rules:
- * - Closing scenes are isolated (no previous/next) so their transition does not
- *   mix with newly pushed screens.
+ * - Closing scenes keep their previous descriptor so their original pair can
+ *   keep resolving while they remain mounted, but they never receive a next
+ *   descriptor.
  * - Non-closing scenes skip over closing neighbors to find the actual active
  *   neighbor.
  * - If there is no non-closing neighbor above/below, we fall back to the first
@@ -35,7 +59,11 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 
 	if (isRouteClosing(current.route.key)) {
 		return {
-			previousDescriptor: undefined,
+			previousDescriptor: findPreviousDescriptor(
+				scenes,
+				sceneIndex,
+				isRouteClosing,
+			),
 			nextDescriptor: undefined,
 		};
 	}
@@ -61,26 +89,11 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 		nextDescriptor = firstClosingAbove;
 	}
 
-	let previousDescriptor: T["descriptor"] | undefined;
-	let firstClosingBelow: T["descriptor"] | undefined;
-
-	for (let i = sceneIndex - 1; i >= 0; i--) {
-		const candidate = scenes[i];
-		if (!candidate) continue;
-
-		if (!isRouteClosing(candidate.route.key)) {
-			previousDescriptor = candidate.descriptor;
-			break;
-		}
-
-		if (firstClosingBelow === undefined) {
-			firstClosingBelow = candidate.descriptor;
-		}
-	}
-
-	if (previousDescriptor === undefined) {
-		previousDescriptor = firstClosingBelow;
-	}
+	const previousDescriptor = findPreviousDescriptor(
+		scenes,
+		sceneIndex,
+		isRouteClosing,
+	);
 
 	return {
 		previousDescriptor,

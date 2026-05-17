@@ -1,7 +1,10 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 import { screenTints, useTheme } from "@/theme";
 
 export default function OverlayIndex() {
@@ -20,7 +23,9 @@ export default function OverlayIndex() {
 					<Pressable
 						testID="push-second"
 						style={styles.button}
-						onPress={() => router.push(buildStackPath(stackType, "overlay/second"))}
+						onPress={() =>
+							router.push(buildStackPath(stackType, "overlay/second"))
+						}
 					>
 						<Text style={styles.buttonText}>Push Second Screen</Text>
 					</Pressable>
@@ -28,7 +33,9 @@ export default function OverlayIndex() {
 					<Pressable
 						testID="push-no-overlay"
 						style={[styles.button, styles.secondaryButton]}
-						onPress={() => router.push(buildStackPath(stackType, "overlay/no-overlay"))}
+						onPress={() =>
+							router.push(buildStackPath(stackType, "overlay/no-overlay"))
+						}
 					>
 						<Text style={styles.buttonText}>Push Without Overlay</Text>
 					</Pressable>

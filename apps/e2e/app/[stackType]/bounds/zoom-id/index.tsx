@@ -167,6 +167,11 @@ function GridRow({
 	}
 }
 
+function getRowKey(row: LayoutRow) {
+	if (row.type === "banner") return `banner-${row.itemId}`;
+	return `${row.type}-${row.itemIds.join("-")}`;
+}
+
 export default function NavigationZoomIdIndex() {
 	const { width } = useWindowDimensions();
 	const insets = useSafeAreaInsets();
@@ -194,8 +199,8 @@ export default function NavigationZoomIdIndex() {
 				style={{ zIndex: 1 }}
 				showsVerticalScrollIndicator={false}
 			>
-				{GRID_LAYOUT.map((row, i) => (
-					<GridRow key={i} row={row} contentWidth={contentWidth} />
+				{GRID_LAYOUT.map((row) => (
+					<GridRow key={getRowKey(row)} row={row} contentWidth={contentWidth} />
 				))}
 			</Transition.ScrollView>
 		</View>

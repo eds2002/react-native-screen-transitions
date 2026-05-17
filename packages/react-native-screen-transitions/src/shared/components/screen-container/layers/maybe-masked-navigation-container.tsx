@@ -27,7 +27,37 @@ let hasWarnedMissingMaskedView = false;
 
 export const MaybeMaskedNavigationContainer = memo(
 	({ enabled, children, pointerEvents }: Props) => {
+		if (!enabled || LazyMaskedView === View) {
+			return children;
+		}
+
+		return (
+			<MaskedNavigationContainer pointerEvents={pointerEvents}>
+				{children}
+			</MaskedNavigationContainer>
+		);
+	},
+);
+
+const MaskedNavigationContainer = memo(
+	({
+		children,
+		pointerEvents,
+	}: {
+		children: React.ReactNode;
+		pointerEvents: ViewProps["pointerEvents"];
+	}) => {
 		const { stylesMap } = useScreenStyles();
+
+		const maybeLogWarning = useCallback(() => {
+			if (LazyMaskedView !== View) return;
+			if (hasWarnedMissingMaskedView) return;
+
+			hasWarnedMissingMaskedView = true;
+			logger.warn(
+				"navigationMaskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
+			);
+		}, []);
 
 		const animatedNavigationMaskStyle = useAnimatedStyle(() => {
 			"worklet";
@@ -42,21 +72,6 @@ export const MaybeMaskedNavigationContainer = memo(
 				stylesMap.get()[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style || NO_STYLES
 			);
 		});
-
-		const maybeLogWarning = useCallback(() => {
-			if (!enabled) return;
-			if (LazyMaskedView !== View) return;
-			if (hasWarnedMissingMaskedView) return;
-
-			hasWarnedMissingMaskedView = true;
-			logger.warn(
-				"navigationMaskEnabled requires @react-native-masked-view/masked-view. Install it to enable navigation bounds masking.",
-			);
-		}, [enabled]);
-
-		if (!enabled || LazyMaskedView === View) {
-			return children;
-		}
 
 		return (
 			<LazyMaskedView
@@ -76,7 +91,6 @@ export const MaybeMaskedNavigationContainer = memo(
 						styles.navigationContainer,
 						animatedNavigationMaskContainerStyle,
 					]}
-					pointerEvents={pointerEvents}
 					collapsable={false}
 				>
 					{children}

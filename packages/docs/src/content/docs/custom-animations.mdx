@@ -1,8 +1,8 @@
 ---
 title: "Custom Animations"
 pageTitle: "Custom Animations"
-summary: "Write screen interpolators against the v3.4 transition model: per-screen state, derived helpers, and slot or styleId output."
-description: "Write screen interpolators against the v3.4 transition model: per-screen state, derived helpers, and slot or styleId output."
+summary: "Write screen interpolators against the v3 transition model: per-screen state, derived helpers, runtime options, and slot output."
+description: "Write screen interpolators against the v3 transition model: per-screen state, derived helpers, runtime options, and slot output."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 5
@@ -80,8 +80,7 @@ In practice:
 | `bounds` | Bounds accessor for shared-element and navigation zoom helpers |
 | `insets` | Safe-area insets |
 | `logicallySettled` | Mirrors `active.logicallySettled` |
-| `layouts` | Deprecated alias for `current.layouts` |
-| `snapIndex` | Deprecated alias for `current.snapIndex` |
+| `layouts` | Layout measurements for the current screen |
 
 Each screen state object contains the same fields:
 
@@ -96,14 +95,79 @@ Each screen state object contains the same fields:
 | `logicallySettled` | `1` when the screen is close enough to its target for choreography |
 | `gesture` | Live gesture values for this screen |
 | `meta` | The value from `options.meta` |
+| `options` | Runtime transition options after base screen options and interpolator overrides are resolved |
 | `route` | The route object for this screen |
 | `layouts.screen` | Screen container size |
 | `layouts.content` | Measured content size when available |
-| `snapIndex` | This screen's animated snap index |
+| `animatedSnapIndex` | Live snap index during gestures and animations, including fractional values between detents |
+| `snapIndex` | Current target snap index, updated by mount, `snapTo()`, and gesture release |
 
 <Note>
-  Prefer `current.layouts` and `current.snapIndex` in new code. The top-level `layouts` and `snapIndex` props still exist only as deprecated aliases.
+  Use `current.animatedSnapIndex` when the visual state should follow the user's finger. Use `current.snapIndex` when the visual state should follow the selected target detent.
 </Note>
+
+## Gesture Values
+
+Each screen state's `gesture` object now includes pan and pinch values:
+
+| Field | Meaning |
+| --- | --- |
+| `x`, `y` | Live pan translation after `gestureSensitivity` |
+| `normX`, `normY` | Normalized pan translation after `gestureSensitivity` |
+| `scale`, `normScale` | Live pinch scale values after `gestureSensitivity` |
+| `focalX`, `focalY` | Pinch focal point in screen coordinates |
+| `raw` | Physical pan and pinch values before `gestureSensitivity` |
+| `active` | The active gesture: a resolved pan direction, `pinch-in`, `pinch-out`, or `null` |
+| `dragging`, `dismissing` | Gesture state flags |
+
+Prefer `gesture.active` for new code. The older pan-only `gesture.direction` field still exists for compatibility.
+
+## Runtime Options From An Interpolator
+
+`screenStyleInterpolator` can return a reserved `options` key alongside layer styles. These values are consumed by the transition runtime and stripped before style slots are applied.
+
+```tsx
+screenStyleInterpolator: ({ active, progress }) => {
+  "worklet";
+
+  const gestureSensitivity = interpolate(
+    Math.abs(active.gesture.raw.normY),
+    [0, 0.25],
+    [1, 0.4],
+    "clamp"
+  );
+
+  return {
+    options: {
+      gestureSensitivity,
+      gestureSnapLocked: active.options.gestureEnabled === false,
+    },
+    content: {
+      style: {
+        opacity: interpolate(progress, [0, 1], [0, 1]),
+      },
+    },
+  };
+};
+```
+
+Use this for values that must change per frame on the UI thread, such as dynamic `gestureSensitivity`. Use `navigation.setOptions()` for React-side option changes such as toggling `gestureEnabled` or switching `gestureDirection` while a screen stays mounted.
+
+Supported runtime option keys are:
+
+- `gestureEnabled`
+- `experimental_allowDisabledGestureTracking`
+- `gestureDirection`
+- `gestureSensitivity`
+- `gestureVelocityImpact`
+- `gestureSnapVelocityImpact`
+- `gestureReleaseVelocityScale`
+- `gestureResponseDistance`
+- `gestureDrivesProgress`
+- `gestureActivationArea`
+- `gestureSnapLocked`
+- `sheetScrollGestureBehavior`
+- `backdropBehavior`
 
 ## Returning Styles
 
@@ -138,6 +202,14 @@ Any other key is treated as a `styleId` target. Each slot accepts either shortha
 <Note>
   Return `null`, `undefined`, or `{}` when a frame should apply no transition styling.
 </Note>
+
+## Style Reset Behavior
+
+The style resolver tracks the keys each slot emitted previously. When a later frame drops a transition-owned key, the library emits a concrete identity reset for that key so Reanimated does not keep stale animated values alive.
+
+This applies to visual transition props such as `transform`, `translateX`, `translateY`, `scale`, `opacity`, `zIndex`, `elevation`, border radius/color, shadow props, `backgroundColor`, `overflow`, and `pointerEvents`.
+
+Layout-owning props such as `width`, `height`, margin, padding, `top`, `left`, `flex`, and `aspectRatio` are not reset to zero. If you animate layout-owned props, keep returning the value while you need it, then let your own component styles own the settled layout.
 
 ## Example: Screen Motion
 

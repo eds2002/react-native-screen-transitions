@@ -1,8 +1,8 @@
 ---
 title: "Introduction"
 pageTitle: "Introduction"
-summary: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the 3.4 API."
-description: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the 3.4 API."
+summary: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the v3 API."
+description: "Build custom screen transitions, snap sheets, overlays, and bounds-driven navigation motion with the v3 API."
 eyebrow: "Get Started"
 group: "Get Started"
 order: 1
@@ -125,13 +125,17 @@ The same screen options surface holds:
 - `overlay`
 - `navigationMaskEnabled`
 
-## What 3.4 Centers
+## What 3.6 Centers
 
-3.4 is organized around the current transition model:
+3.6 keeps the same transition model, but makes the gesture and bounds systems more predictable:
 
 - explicit bounds ownership with `Transition.Boundary.Trigger`, `Transition.Boundary.View`, and `Transition.Boundary.Target`
 - a layer-based interpolator output with `content`, `backdrop`, `surface`, and `styleId` targets
 - scoped screen state through `previous`, `current`, `next`, `active`, and `inactive`
+- runtime gesture options through `navigation.setOptions()` and interpolator-returned `options`
+- pinch gestures, pinch-driven snap points, and mixed pan/pinch snap sheets
+- a reset system that clears dropped transition-owned style and prop keys without collapsing layout-owned styles
+- a dedicated Navigation Transitions section for navigation-specific motion helpers
 - blank stack as the preferred path for advanced and embedded flows
 
 ## Start Here

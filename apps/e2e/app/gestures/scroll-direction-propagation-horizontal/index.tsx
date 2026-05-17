@@ -55,9 +55,7 @@ export default function ScrollDirectionPropagationHorizontalIndex() {
 						)
 					}
 				>
-					<Text
-						style={[styles.buttonText, { color: theme.actionButtonText }]}
-					>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
 						Open Session
 					</Text>
 					<Text

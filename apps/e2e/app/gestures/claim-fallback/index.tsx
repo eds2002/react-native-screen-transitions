@@ -50,9 +50,7 @@ export default function ClaimFallbackIndex() {
 					]}
 					onPress={() => router.push("/gestures/claim-fallback/mid" as never)}
 				>
-					<Text
-						style={[styles.buttonText, { color: theme.actionButtonText }]}
-					>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
 						Open L2 (Mid)
 					</Text>
 					<Text

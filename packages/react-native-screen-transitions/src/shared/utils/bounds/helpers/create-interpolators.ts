@@ -4,14 +4,14 @@ import {
 	type MeasuredDimensions,
 } from "react-native-reanimated";
 import { ENTER_RANGE, EXIT_RANGE } from "../../../constants";
-import { getMeasuredEntry } from "../../../stores/bounds/internals/registry";
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
+import { getEntry } from "../../../stores/bounds/internals/entries";
+import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import type { BoundId } from "../types/options";
 import type { LinkAccessor } from "./create-link-accessor";
 import { interpolateLinkStyle } from "./styles/interpolate-link-style";
 
 type InterpolatorParams = {
-	getProps: () => Omit<ScreenInterpolationProps, "bounds">;
+	getProps: () => BoundsInterpolationProps;
 	getLink: LinkAccessor["getLink"];
 };
 
@@ -50,13 +50,13 @@ export const createInterpolators = ({
 		const fb = fallback ?? 0;
 		const normalizedTag = String(tag);
 
-		const currentMeasuredEntry = currentKey
-			? getMeasuredEntry(normalizedTag, currentKey)
+		const currentEntry = currentKey
+			? getEntry(normalizedTag, currentKey)
 			: null;
-		const targetMeasuredEntry = getMeasuredEntry(normalizedTag, targetKey);
+		const targetEntry = getEntry(normalizedTag, targetKey);
 
-		const currentValue = currentMeasuredEntry?.bounds?.[property] ?? fb;
-		const targetValue = targetMeasuredEntry?.bounds?.[property] ?? fb;
+		const currentValue = currentEntry?.bounds?.[property] ?? fb;
+		const targetValue = targetEntry?.bounds?.[property] ?? fb;
 
 		return interpolate(
 			props.progress,

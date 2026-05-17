@@ -1,11 +1,6 @@
-import { BENCHMARK_TRANSITION_DURATION_MS } from "./constants";
 import type { BenchmarkScenario } from "./types";
 
-export type BenchmarkScenarioAppearance =
-	| "opaque-card"
-	| "transparent-card"
-	| "modal-sheet";
-export type BenchmarkTransitionKind = "horizontal" | "vertical";
+export type BenchmarkScenarioAppearance = "opaque-card" | "transparent-card";
 
 export interface BenchmarkDefinition {
 	id: BenchmarkScenario;
@@ -13,8 +8,6 @@ export interface BenchmarkDefinition {
 	description: string;
 	isPublic: boolean;
 	appearance: BenchmarkScenarioAppearance;
-	transitionKind: BenchmarkTransitionKind;
-	detachPreviousScreen: boolean;
 	holdBeforePopMs: number;
 }
 
@@ -25,12 +18,9 @@ export const BENCHMARK_DEFINITIONS: Record<
 	"opaque-push-pop-loop": {
 		id: "opaque-push-pop-loop",
 		title: "Opaque Push/Pop Loop",
-		description:
-			"Baseline full-screen push/pop timing with the previous screen detached.",
+		description: "Baseline full-screen push/pop timing.",
 		isPublic: true,
 		appearance: "opaque-card",
-		transitionKind: "horizontal",
-		detachPreviousScreen: true,
 		holdBeforePopMs: 0,
 	},
 	"push-pop-loop": {
@@ -40,31 +30,7 @@ export const BENCHMARK_DEFINITIONS: Record<
 			"Translucent push/pop timing with the previous screen kept visible.",
 		isPublic: true,
 		appearance: "transparent-card",
-		transitionKind: "horizontal",
-		detachPreviousScreen: false,
 		holdBeforePopMs: 0,
-	},
-	"modal-push-pop-loop": {
-		id: "modal-push-pop-loop",
-		title: "Modal Sheet Loop",
-		description:
-			"Vertical modal-style push/pop timing with the previous screen kept visible.",
-		isPublic: true,
-		appearance: "modal-sheet",
-		transitionKind: "vertical",
-		detachPreviousScreen: false,
-		holdBeforePopMs: 0,
-	},
-	"modal-settled-push-pop-loop": {
-		id: "modal-settled-push-pop-loop",
-		title: "Settled Modal Sheet Loop",
-		description:
-			"Vertical modal-style timing with the previous screen kept visible and the sheet held briefly after it settles before pop.",
-		isPublic: true,
-		appearance: "modal-sheet",
-		transitionKind: "vertical",
-		detachPreviousScreen: false,
-		holdBeforePopMs: BENCHMARK_TRANSITION_DURATION_MS + 120,
 	},
 	"navigate-during-close": {
 		id: "navigate-during-close",
@@ -73,8 +39,6 @@ export const BENCHMARK_DEFINITIONS: Record<
 			"Internal regression scenario for interrupted navigation during close.",
 		isPublic: false,
 		appearance: "transparent-card",
-		transitionKind: "horizontal",
-		detachPreviousScreen: false,
 		holdBeforePopMs: 0,
 	},
 };
@@ -83,9 +47,9 @@ export const ALL_BENCHMARK_SCENARIOS = Object.keys(
 	BENCHMARK_DEFINITIONS,
 ) as BenchmarkScenario[];
 
-export const PUBLIC_BENCHMARKS = ALL_BENCHMARK_SCENARIOS
-	.map((id) => BENCHMARK_DEFINITIONS[id])
-	.filter((definition) => definition.isPublic);
+export const PUBLIC_BENCHMARKS = ALL_BENCHMARK_SCENARIOS.map(
+	(id) => BENCHMARK_DEFINITIONS[id],
+).filter((definition) => definition.isPublic);
 
 export function getBenchmarkDefinition(
 	scenario: BenchmarkScenario,
@@ -96,5 +60,5 @@ export function getBenchmarkDefinition(
 export function buildBenchmarkDashboardPath(
 	scenario: BenchmarkScenario,
 ): `/${string}` {
-	return (`/stack-benchmark/${scenario}`) as `/${string}`;
+	return `/stack-benchmark/${scenario}` as `/${string}`;
 }

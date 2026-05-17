@@ -1,4 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useNavigation } from "@react-navigation/native";
 import { router, useLocalSearchParams } from "expo-router";
 import type {
 	ListRenderItemInfo,
@@ -17,7 +18,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { useTheme } from "@/theme";
 import {
-	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
 	ZOOM_GROUP,
@@ -238,6 +238,9 @@ export default function NavigationZoomGroupTransitionsDetail() {
 	const { id } = useLocalSearchParams<{ id: string }>();
 	const insets = useSafeAreaInsets();
 	const theme = useTheme();
+	const navigation = useNavigation() as {
+		setParams: (params: { id: string }) => void;
+	};
 
 	const initialIndex = Math.max(
 		0,
@@ -257,7 +260,9 @@ export default function NavigationZoomGroupTransitionsDetail() {
 		const item = BOUNDS_SYNC_ZOOM_ITEMS[pageIndex];
 		if (!item) return;
 
-		activeZoomId.value = item.id;
+		if (item.id !== id) {
+			navigation.setParams({ id: item.id });
+		}
 	};
 
 	const getItemLayout = (_: unknown, index: number) => ({
@@ -282,9 +287,10 @@ export default function NavigationZoomGroupTransitionsDetail() {
 				initialScrollIndex={initialIndex}
 				horizontal
 				pagingEnabled
+				// scrollEnabled={false}
 				showsHorizontalScrollIndicator={false}
 				onMomentumScrollEnd={handleMomentumScrollEnd}
-				windowSize={3}
+				windowSize={1}
 				maxToRenderPerBatch={1}
 				initialNumToRender={1}
 				updateCellsBatchingPeriod={100}

@@ -1,11 +1,11 @@
 ---
-title: "Navigation Zoom"
-pageTitle: "Navigation Zoom"
+title: "Zoom"
+pageTitle: "Zoom"
 summary: "Use bounds({ id }).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
 description: "Use bounds({ id }).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
-eyebrow: "Core Concepts"
-group: "Core Concepts"
-order: 11
+eyebrow: "Navigation Transitions"
+group: "Navigation Transitions"
+order: 1
 to: /navigation-zoom
 ---
 
@@ -185,13 +185,9 @@ In that setup, some shared state usually tracks which id is currently active ins
 
 ## Performance
 
-The current 3.4 architecture favors correctness over measurement efficiency.
+The bounds runtime now avoids several old sources of repeated measurement work. Destination measurement is stabilized before the transition resolves its link, close-time scroll listeners are detached, and overscrolled scroll containers are normalized before their bounds are written.
 
-Measurement runs through Reanimated, but v3.4 still over-measures in some `navigation.zoom()` flows because the entering animation cannot yet be fully postponed until destination measurement is ready.
-
-When destination layout races transition start, the system may measure more than once to recover a usable pair for `navigation.zoom()`. In practice this is still fast enough for normal use, but you may notice slight stutter toward the end of an animation in heavier cases.
-
-The next major version is expected to change this architecture so the entering animation can be postponed until measurement is ready. That should remove a lot of the repeated measurement work that v3.4 still needs today.
+If a layout can change while a screen is unfocused, set `remeasureOnFocus` on the transition-aware boundary owner so the source link refreshes when focus returns.
 
 ## Related Reading
 

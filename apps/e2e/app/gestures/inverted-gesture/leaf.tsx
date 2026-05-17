@@ -19,9 +19,7 @@ export default function LeafScreen() {
 			edges={["bottom"]}
 		>
 			<View style={styles.content}>
-				<View
-					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.infoTitle, { color: theme.text }]}>
 						Vertical-Inverted Gesture
 					</Text>
@@ -50,37 +48,21 @@ export default function LeafScreen() {
 							Swipe up → Dismisses
 						</Text>
 					</View>
-					<View
-						style={[
-							styles.gestureRow,
-							{ backgroundColor: theme.surface },
-						]}
-					>
+					<View style={[styles.gestureRow, { backgroundColor: theme.surface }]}>
 						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 							↓
 						</Text>
-						<Text
-							style={[styles.gestureText, { color: theme.textTertiary }]}
-						>
+						<Text style={[styles.gestureText, { color: theme.textTertiary }]}>
 							Swipe down → Nothing (wrong direction)
 						</Text>
 					</View>
 				</View>
 
-				<View
-					style={[
-						styles.directionBox,
-						{ backgroundColor: theme.card },
-					]}
-				>
-					<Text
-						style={[styles.directionTitle, { color: theme.textTertiary }]}
-					>
+				<View style={[styles.directionBox, { backgroundColor: theme.card }]}>
+					<Text style={[styles.directionTitle, { color: theme.textTertiary }]}>
 						Direction Independence
 					</Text>
-					<Text
-						style={[styles.directionText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.directionText, { color: theme.textSecondary }]}>
 						vertical and vertical-inverted are completely independent. A screen
 						claiming vertical does NOT shadow vertical-inverted, and vice versa.
 					</Text>

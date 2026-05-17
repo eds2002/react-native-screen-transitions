@@ -56,5 +56,5 @@ export function buildBenchmarkPath(
 	childPath = "",
 ): `/${string}` {
 	const normalized = childPath.replace(/^\/+/, "");
-	return (`/stack-benchmark/${impl}${normalized ? `/${normalized}` : ""}`) as `/${string}`;
+	return `/stack-benchmark/${impl}${normalized ? `/${normalized}` : ""}` as `/${string}`;
 }

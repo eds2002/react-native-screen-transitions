@@ -1,108 +1,77 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
-import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
-import { hasSourceLink } from "../../../stores/bounds/internals/registry";
-import { GestureStore } from "../../../stores/gesture.store";
-import type { BoundaryId, MeasureParams } from "../types";
+import { pairs } from "../../../stores/bounds/internals/state";
+import type { MeasureBoundary } from "../types";
+import { getRefreshBoundarySignal } from "../utils/refresh-signals";
 
 interface UseRefreshBoundaryParams {
 	enabled: boolean;
-	sharedBoundTag: string;
-	id: BoundaryId;
-	group?: string;
 	currentScreenKey: string;
+	preferredSourceScreenKey?: string;
 	nextScreenKey?: string;
-	hasNextScreen: boolean;
-	measureBoundary: (options: MeasureParams) => void;
+	linkId: string;
+	group?: string;
+	ancestorScreenKeys: string[];
+	measureBoundary: MeasureBoundary;
 }
 
 export const useRefreshBoundary = ({
 	enabled,
-	sharedBoundTag,
-	id,
-	group,
 	currentScreenKey,
+	preferredSourceScreenKey,
 	nextScreenKey,
-	hasNextScreen,
+	linkId,
+	group,
+	ancestorScreenKeys,
 	measureBoundary,
 }: UseRefreshBoundaryParams) => {
-	const currentWillAnimate = AnimationStore.getValue(
-		currentScreenKey,
+	// Source-side boundaries refresh from the next screen's lifecycle pulse.
+	// Destination-side boundaries have no next screen, so they refresh from self.
+	const refreshScreenKey = nextScreenKey ?? currentScreenKey;
+	const refreshWillAnimate = AnimationStore.getValue(
+		refreshScreenKey,
 		"willAnimate",
 	);
-	const currentAnimating = AnimationStore.getValue(
-		currentScreenKey,
-		"animating",
+	const refreshClosing = AnimationStore.getValue(refreshScreenKey, "closing");
+	const refreshEntering = AnimationStore.getValue(refreshScreenKey, "entering");
+	const refreshAnimating = AnimationStore.getValue(
+		refreshScreenKey,
+		"progressAnimating",
 	);
-	const currentDragging = GestureStore.getValue(currentScreenKey, "dragging");
-	const nextWillAnimate = nextScreenKey
-		? AnimationStore.getValue(nextScreenKey, "willAnimate")
-		: null;
-	const nextAnimating = nextScreenKey
-		? AnimationStore.getValue(nextScreenKey, "animating")
-		: null;
-	const nextDragging = nextScreenKey
-		? GestureStore.getValue(nextScreenKey, "dragging")
-		: null;
+	const refreshProgress = AnimationStore.getValue(refreshScreenKey, "progress");
 
 	useAnimatedReaction(
-		() => (hasNextScreen ? (nextWillAnimate?.get() ?? 0) : 0),
-		(nextValue, previousValue) => {
+		() => {
 			"worklet";
-			if (!enabled || !hasNextScreen) return;
-			if (nextValue === 0 || nextValue === previousValue) return;
-
-			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
-
-			if (group && currentGroupActiveId !== String(id)) {
-				return;
-			}
-
-			const shouldCancelMeasurement =
-				!!nextAnimating?.get() && !!nextDragging?.get();
-
-			if (shouldCancelMeasurement) {
-				return;
-			}
-
-			const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
-
-			const intent = !hasSource
-				? "capture-source"
-				: group
-					? "refresh-source"
-					: null;
-
-			if (!intent) {
-				return;
-			}
-
-			measureBoundary({ intent });
+			return getRefreshBoundarySignal({
+				enabled,
+				currentScreenKey,
+				preferredSourceScreenKey,
+				nextScreenKey,
+				linkId,
+				group,
+				ancestorScreenKeys,
+				shouldRefresh: !!refreshWillAnimate.get(),
+				closing: !!refreshClosing.get(),
+				entering: !!refreshEntering.get(),
+				animating: !!refreshAnimating.get(),
+				progress: refreshProgress.get(),
+				linkState: group || ancestorScreenKeys.length ? pairs.get() : undefined,
+			});
 		},
-	);
-
-	useAnimatedReaction(
-		() => (!hasNextScreen ? currentWillAnimate.get() : 0),
-		(nextValue, previousValue) => {
+		(refreshSignal, prevRefreshSignal) => {
 			"worklet";
-			if (!enabled || hasNextScreen) return;
-			if (nextValue === 0 || nextValue === previousValue) return;
 
-			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
-
-			if (group && currentGroupActiveId !== String(id)) {
-				return;
-			}
-
-			const shouldCancelMeasurement =
-				!!currentAnimating.get() && !!currentDragging.get();
-
-			if (shouldCancelMeasurement) {
+			if (
+				!refreshSignal ||
+				refreshSignal.signal === prevRefreshSignal?.signal
+			) {
 				return;
 			}
 
 			measureBoundary({
-				intent: ["complete-destination", "refresh-destination"] as const,
+				type: refreshSignal.type,
+				pairKey: refreshSignal.pairKey,
 			});
 		},
 	);

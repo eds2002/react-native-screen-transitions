@@ -44,15 +44,11 @@ export default function SnapDifferentAxisIndex() {
 					note="The drawer owns horizontal axis (both directions). Vertical axis is free, so it inherits from the parent stack."
 				/>
 
-				<View
-					style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.conceptTitle, { color: theme.text }]}>
 						Axis Independence
 					</Text>
-					<Text
-						style={[styles.conceptText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.conceptText, { color: theme.textSecondary }]}>
 						A horizontal drawer (with snap points) claims:{"\n"}
 						{"\n"}• → horizontal - collapse/dismiss{"\n"}• ← horizontal-inverted
 						- expand{"\n"}

@@ -30,9 +30,17 @@ export type BoundEntry = {
 };
 
 export type BoundsLink = {
+	id: string;
 	source: BoundEntry | null;
 	destination: BoundEntry | null;
+	initialSource: BoundEntry | null;
+	initialDestination: BoundEntry | null;
+	compute: <T extends BoundsLinkComputeOptions>(
+		options: T,
+	) => BoundsOptionsResult<T & { id: string }>;
 };
+
+export type BoundsLinkComputeOptions = Omit<BoundsOptions, "id" | "group">;
 
 export type BoundsNavigationZoomOptions = {
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
@@ -153,16 +161,35 @@ export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 };
 
+export type BoundsNavigationRevealStyle = BoundsNavigationZoomStyle;
+
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
+	reveal: () => BoundsNavigationRevealStyle;
 };
 
 type BoundsBoundNavigationAccessor = {
 	navigation: BoundsNavigationAccessor;
 };
 
+export type BoundsScopedAccessors = {
+	getMeasured: (key?: string) => MeasuredEntry | null;
+	/**
+	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
+	 */
+	getSnapshot: (key?: string) => MeasuredEntry | null;
+	getLink: () => BoundsLink | null;
+	interpolateStyle: (property: keyof StyleProps, fallback?: number) => number;
+	interpolateBounds: (
+		property: keyof MeasuredDimensions,
+		fallbackOrTargetKey?: number | string,
+		fallback?: number,
+	) => number;
+};
+
 type BoundsCallResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
-	BoundsBoundNavigationAccessor;
+	BoundsBoundNavigationAccessor &
+	BoundsScopedAccessors;
 
 export type BoundsAccessor = {
 	<T extends BoundsOptions>(options: T): BoundsCallResult<T>;
@@ -185,4 +212,7 @@ export type BoundsAccessor = {
 	) => number;
 };
 
-export type BoundsInterpolationProps = Omit<ScreenInterpolationProps, "bounds">;
+export type BoundsInterpolationProps = Omit<
+	ScreenInterpolationProps,
+	"bounds" | "transition"
+>;

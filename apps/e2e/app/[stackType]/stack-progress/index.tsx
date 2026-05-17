@@ -6,7 +6,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScreenAnimation } from "react-native-screen-transitions";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 import { screenTints } from "@/theme";
 
 export default function StackProgressIndex() {
@@ -17,26 +20,7 @@ export default function StackProgressIndex() {
 	const containerStyle = useAnimatedStyle(() => {
 		const { stackProgress } = animation.value;
 		// As more screens are pushed, translate down and scale
-		const translateY = interpolate(
-			stackProgress,
-			[1, 2, 3, 4],
-			[0, 100, 180, 240],
-		);
-		const scale = interpolate(
-			stackProgress,
-			[1, 2, 3, 4],
-			[1, 0.92, 0.85, 0.8],
-		);
-		const borderRadius = interpolate(
-			stackProgress,
-			[1, 2, 3, 4],
-			[0, 16, 24, 32],
-		);
-
-		return {
-			transform: [{ translateY }, { scale }],
-			borderRadius,
-		};
+		return {};
 	});
 
 	return (

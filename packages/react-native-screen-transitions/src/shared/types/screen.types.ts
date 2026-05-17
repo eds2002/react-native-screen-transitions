@@ -3,7 +3,11 @@ import type {
 	ScreenStyleInterpolator,
 	TransitionSpec,
 } from "./animation.types";
-import type { GestureActivationArea, GestureDirection } from "./gesture.types";
+import type {
+	GestureActivationArea,
+	GestureDirection,
+	GestureProgressMode,
+} from "./gesture.types";
 import type { OverlayProps } from "./overlay.types";
 
 export type Layout = {
@@ -125,11 +129,6 @@ export type ScreenTransitionConfig = {
 	navigationMaskEnabled?: boolean;
 
 	/**
-	 * @deprecated Use `navigationMaskEnabled` instead.
-	 */
-	maskEnabled?: boolean;
-
-	/**
 	 * Controls whether swipe-to-dismiss is enabled.
 	 *
 	 * For screens with `snapPoints`, gesture-driven snapping between non-dismiss
@@ -138,9 +137,41 @@ export type ScreenTransitionConfig = {
 	gestureEnabled?: boolean;
 
 	/**
-	 * The direction of the swipe gesture used to dismiss the screen.
+	 * Allows screens with `gestureEnabled={false}` to still activate gestures for
+	 * live gesture values while preventing gesture dismissal.
+	 *
+	 * This is a v3 compatibility bridge for the next gesture behavior. Direction
+	 * ownership/claims participate while this is enabled so nested screens can
+	 * intentionally shadow parent gestures for resistance-style animations.
+	 *
+	 * Screens with `snapPoints` already keep gesture tracking when
+	 * `gestureEnabled={false}`; this flag mainly affects disabled non-snap
+	 * gestures.
+	 *
+	 * @experimental This API may change in future versions.
+	 * @default false
+	 */
+	experimental_allowDisabledGestureTracking?: boolean;
+
+	/**
+	 * The direction(s) of the screen gesture used to dismiss the screen.
+	 *
+	 * Supports pan directions (`horizontal`, `vertical`, etc.) and pinch
+	 * directions (`pinch-in`, `pinch-out`).
 	 */
 	gestureDirection?: GestureDirection | GestureDirection[];
+
+	/**
+	 * Controls how directly live gesture movement maps into transition progress
+	 * and the non-raw gesture values exposed to interpolators.
+	 *
+	 * Lower values feel less sensitive, higher values feel more responsive. If
+	 * an interpolator needs physical gesture input before sensitivity is applied,
+	 * read from `active.gesture.raw`.
+	 *
+	 * @default 1
+	 */
+	gestureSensitivity?: number;
 
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.
@@ -154,6 +185,14 @@ export type ScreenTransitionConfig = {
 	 * @default 0.1
 	 */
 	snapVelocityImpact?: number;
+
+	/**
+	 * How much velocity affects snap point targeting. Lower values make snapping
+	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
+	 *
+	 * @default 0.1
+	 */
+	gestureSnapVelocityImpact?: number;
 
 	/**
 	 * Multiplies gesture release velocity used for spring animation energy.
@@ -173,6 +212,8 @@ export type ScreenTransitionConfig = {
 	 * or snap target selection (`snapVelocityImpact`). It only bounds release
 	 * animation intensity after `gestureReleaseVelocityScale` is applied.
 	 *
+	 * @deprecated v3 compatibility only. This option is removed in the next
+	 * gesture runtime.
 	 * @default 3.2
 	 */
 	gestureReleaseVelocityMax?: number;
@@ -183,7 +224,15 @@ export type ScreenTransitionConfig = {
 	gestureResponseDistance?: number;
 
 	/**
+	 * Controls whether live gesture displacement drives transition progress or
+	 * stays available as freeform gesture values for custom interpolators.
+	 */
+	gestureProgressMode?: GestureProgressMode;
+
+	/**
 	 * Whether the gesture drives the progress.
+	 *
+	 * @deprecated Use `gestureProgressMode` instead.
 	 */
 	gestureDrivesProgress?: boolean;
 

@@ -21,22 +21,16 @@ export default function SheetScreen() {
 
 	return (
 		<View style={styles.container}>
-			<View
-				style={[styles.sheet, { backgroundColor: theme.card }]}
-			>
+			<View style={[styles.sheet, { backgroundColor: theme.card }]}>
 				<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 				<ScreenHeader title="Bottom Sheet" subtitle="snapPoints: [0.5, 0.8]" />
 
 				<View style={styles.content}>
-					<View
-						style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-					>
+					<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 						<Text style={[styles.infoTitle, { color: theme.text }]}>
 							Sheet Claims Both Directions
 						</Text>
-						<Text
-							style={[styles.infoText, { color: theme.textSecondary }]}
-						>
+						<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 							This sheet has snapPoints, so it claims BOTH vertical and
 							vertical-inverted. The parent's vertical gesture is completely
 							shadowed.
@@ -52,9 +46,7 @@ export default function SheetScreen() {
 						<Text style={[styles.snapTitle, { color: theme.text }]}>
 							Current Snap: 0.5 (50%)
 						</Text>
-						<Text
-							style={[styles.snapText, { color: theme.textSecondary }]}
-						>
+						<Text style={[styles.snapText, { color: theme.textSecondary }]}>
 							Starting position. Try gestures:
 						</Text>
 					</View>
@@ -66,9 +58,7 @@ export default function SheetScreen() {
 								{ backgroundColor: theme.surfaceElevated },
 							]}
 						>
-							<Text
-								style={[styles.gestureIcon, { color: theme.activePill }]}
-							>
+							<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 								↓
 							</Text>
 							<View style={styles.gestureContent}>
@@ -76,10 +66,7 @@ export default function SheetScreen() {
 									Swipe down
 								</Text>
 								<Text
-									style={[
-										styles.gestureResult,
-										{ color: theme.textSecondary },
-									]}
+									style={[styles.gestureResult, { color: theme.textSecondary }]}
 								>
 									Dismiss sheet (back to index)
 								</Text>
@@ -91,9 +78,7 @@ export default function SheetScreen() {
 								{ backgroundColor: theme.surfaceElevated },
 							]}
 						>
-							<Text
-								style={[styles.gestureIcon, { color: theme.activePill }]}
-							>
+							<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 								↑
 							</Text>
 							<View style={styles.gestureContent}>
@@ -101,10 +86,7 @@ export default function SheetScreen() {
 									Swipe up
 								</Text>
 								<Text
-									style={[
-										styles.gestureResult,
-										{ color: theme.textSecondary },
-									]}
+									style={[styles.gestureResult, { color: theme.textSecondary }]}
 								>
 									Expand to 0.8 (80%)
 								</Text>
@@ -112,15 +94,11 @@ export default function SheetScreen() {
 						</View>
 					</View>
 
-					<View
-						style={[styles.noteBox, { backgroundColor: theme.noteBox }]}
-					>
+					<View style={[styles.noteBox, { backgroundColor: theme.noteBox }]}>
 						<Text style={[styles.noteTitle, { color: theme.noteText }]}>
 							Parent is Shadowed
 						</Text>
-						<Text
-							style={[styles.noteText, { color: theme.textSecondary }]}
-						>
+						<Text style={[styles.noteText, { color: theme.textSecondary }]}>
 							The parent stack has vertical gesture, but this sheet shadows it.
 							Swiping ↓ affects the sheet, NOT the parent stack.
 						</Text>

@@ -5,12 +5,22 @@ import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { activeZoomId, ZOOM_GROUP } from "./constants";
+import { ZOOM_GROUP } from "./constants";
+
+const getRouteParam = (route: { params?: object } | undefined, key: string) => {
+	"worklet";
+	const params = route?.params as Record<string, unknown> | undefined;
+	const value = params?.[key];
+	return typeof value === "string" ? value : "";
+};
 
 const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, progress }) => {
+	({ active, bounds, current, next, progress }) => {
 		"worklet";
-		const id = activeZoomId.value;
+		const id =
+			getRouteParam(active.route, "id") ||
+			getRouteParam(next?.route, "id") ||
+			getRouteParam(current.route, "id");
 
 		if (!id) {
 			return {};
@@ -19,7 +29,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
-		}).navigation.zoom({ debug: false, target: "bound" });
+		}).navigation.zoom({ target: "bound" });
 
 		return {
 			...navigationStyles,
@@ -42,11 +52,11 @@ export default function NavigationZoomGroupTransitionsLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					navigationMaskEnabled: Platform.OS === "ios",
+					// navigationMaskEnabled: Platform.OS === "ios",
 					gestureEnabled: true,
-					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
-					gestureReleaseVelocityScale: 1.6,
-					gestureDrivesProgress: false,
+					gestureDirection: ["bidirectional"],
+					// gestureReleaseVelocityScale: 1.6,
+					gestureProgressMode: "freeform",
 					screenStyleInterpolator: navigationZoomInterpolator,
 					experimental_enableHighRefreshRate: true,
 					transitionSpec: {

@@ -1,4 +1,4 @@
-import type { ViewProps } from "react-native";
+import type { ScreenPairKey } from "../../stores/bounds/types";
 import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
@@ -16,9 +16,8 @@ export type BoundaryConfigProps = Pick<
 export interface BoundaryOwnProps extends BoundaryConfigProps {
 	/**
 	 * Optional group name for collection/list scenarios.
-	 * When provided, boundaries are tracked as a group and the active member
-	 * re-measures automatically when focus changes within the group.
-	 * The internal tag becomes `group:id`.
+	 * When provided, concrete boundary entries use `group:id`, while transition
+	 * links stay keyed by the member `id` inside the active screen pair.
 	 */
 	group?: string;
 	/**
@@ -36,19 +35,14 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 export type BoundaryComponentProps<P extends object> = Omit<P, "id"> &
 	BoundaryOwnProps;
 
-/** Convenience alias for a View-based boundary (the most common case). */
-export type BoundaryProps = BoundaryComponentProps<ViewProps>;
+export type MeasureTarget =
+	| {
+			type: "source";
+			pairKey: ScreenPairKey;
+	  }
+	| {
+			type: "destination";
+			pairKey: ScreenPairKey;
+	  };
 
-export type MeasureIntent =
-	| "capture-source"
-	| "complete-destination"
-	| "refresh-source"
-	| "refresh-destination";
-
-export type MeasurementIntent = MeasureIntent;
-
-export interface MeasureParams {
-	intent?: MeasureIntent | readonly MeasureIntent[];
-}
-
-export interface MaybeMeasureAndStoreParams extends MeasureParams {}
+export type MeasureBoundary = (target: MeasureTarget) => void;

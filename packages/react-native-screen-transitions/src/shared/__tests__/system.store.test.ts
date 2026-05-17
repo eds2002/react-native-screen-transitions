@@ -24,9 +24,9 @@ describe("SystemStore", () => {
 			"measuredContentLayout",
 		);
 
-		expect(targetProgress.value).toBe(1);
-		expect(resolvedAutoSnapPoint.value).toBe(-1);
-		expect(measuredContentLayout.value).toBeNull();
+		expect(targetProgress.get()).toBe(1);
+		expect(resolvedAutoSnapPoint.get()).toBe(-1);
+		expect(measuredContentLayout.get()).toBeNull();
 	});
 
 	it("recreates a fresh bag after clearBag", () => {

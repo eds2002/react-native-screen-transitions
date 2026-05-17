@@ -26,6 +26,7 @@ import { Route as GesturesRouteImport } from './routes/gestures'
 import { Route as GestureOwnershipRouteImport } from './routes/gesture-ownership'
 import { Route as ExpoRouterRouteImport } from './routes/expo-router'
 import { Route as CustomAnimationsRouteImport } from './routes/custom-animations'
+import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as ComponentsRouteImport } from './routes/components'
 import { Route as CaveatsRouteImport } from './routes/caveats'
 import { Route as IndexRouteImport } from './routes/index'
@@ -116,6 +117,11 @@ const CustomAnimationsRoute = CustomAnimationsRouteImport.update({
   path: '/custom-animations',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RevealRoute = RevealRouteImport.update({
+  id: '/reveal',
+  path: '/reveal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComponentsRoute = ComponentsRouteImport.update({
   id: '/components',
   path: '/components',
@@ -141,6 +147,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
+  '/reveal': typeof RevealRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
@@ -164,6 +171,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
+  '/reveal': typeof RevealRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
@@ -188,6 +196,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
+  '/reveal': typeof RevealRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/'
     | '/caveats'
     | '/components'
+    | '/reveal'
     | '/custom-animations'
     | '/expo-router'
     | '/gesture-ownership'
@@ -236,6 +246,7 @@ export interface FileRouteTypes {
     | '/'
     | '/caveats'
     | '/components'
+    | '/reveal'
     | '/custom-animations'
     | '/expo-router'
     | '/gesture-ownership'
@@ -259,6 +270,7 @@ export interface FileRouteTypes {
     | '/'
     | '/caveats'
     | '/components'
+    | '/reveal'
     | '/custom-animations'
     | '/expo-router'
     | '/gesture-ownership'
@@ -283,6 +295,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   CaveatsRoute: typeof CaveatsRoute
   ComponentsRoute: typeof ComponentsRoute
+  RevealRoute: typeof RevealRoute
   CustomAnimationsRoute: typeof CustomAnimationsRoute
   ExpoRouterRoute: typeof ExpoRouterRoute
   GestureOwnershipRoute: typeof GestureOwnershipRoute
@@ -424,6 +437,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomAnimationsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reveal': {
+      id: '/reveal'
+      path: '/reveal'
+      fullPath: '/reveal'
+      preLoaderRoute: typeof RevealRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/components': {
       id: '/components'
       path: '/components'
@@ -459,6 +479,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   CaveatsRoute: CaveatsRoute,
   ComponentsRoute: ComponentsRoute,
+  RevealRoute: RevealRoute,
   CustomAnimationsRoute: CustomAnimationsRoute,
   ExpoRouterRoute: ExpoRouterRoute,
   GestureOwnershipRoute: GestureOwnershipRoute,

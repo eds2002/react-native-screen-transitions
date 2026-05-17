@@ -5,9 +5,11 @@ import {
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
+import { useScreenAnimationContext } from "../../animation";
 import {
 	type ResettableStyleStatesBySlot,
 	resolveSlotStyles,
+	reuseEqualResolvedSlots,
 } from "../helpers/resolve-slot-styles";
 
 interface UseResolvedStylesMapParams {
@@ -19,22 +21,38 @@ export const useResolvedStylesMap = ({
 	currentStylesMap,
 	ancestorStylesMap,
 }: UseResolvedStylesMapParams) => {
+	const { screenInterpolatorProps, screenInterpolatorPropsRevision } =
+		useScreenAnimationContext();
 	const previousStyleStatesBySlot = useSharedValue<ResettableStyleStatesBySlot>(
 		{},
 	);
+	const previousResolvedStylesMap =
+		useSharedValue<NormalizedTransitionInterpolatedStyle>(NO_STYLES);
 
 	return useDerivedValue(() => {
 		"worklet";
+		screenInterpolatorPropsRevision.get();
+
+		const props = screenInterpolatorProps.get();
+		// Keep missing local slots alive while another route drives this screen.
+		// Custom ids and keys from slots that still exist are still reset.
+		const deferLocalSlotResets = !props.focused && !props.current.closing;
 
 		const { resolvedStylesMap, nextPreviousStyleStatesBySlot } =
 			resolveSlotStyles({
 				currentStylesMap: currentStylesMap.get(),
 				ancestorStylesMap: ancestorStylesMap?.get() ?? NO_STYLES,
 				previousStyleStatesBySlot: previousStyleStatesBySlot.get(),
+				deferLocalSlotResets,
 			});
 
 		previousStyleStatesBySlot.set(nextPreviousStyleStatesBySlot);
+		const stableResolvedStylesMap = reuseEqualResolvedSlots({
+			resolvedStylesMap,
+			previousResolvedStylesMap: previousResolvedStylesMap.get(),
+		});
+		previousResolvedStylesMap.set(stableResolvedStylesMap);
 
-		return resolvedStylesMap;
+		return stableResolvedStylesMap;
 	});
 };

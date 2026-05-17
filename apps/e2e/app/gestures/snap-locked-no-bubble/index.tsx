@@ -55,9 +55,7 @@ export default function SnapLockedNoBubbleIndex() {
 						router.push("/gestures/snap-locked-no-bubble/sheet" as never)
 					}
 				>
-					<Text
-						style={[styles.buttonText, { color: theme.actionButtonText }]}
-					>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
 						Open Locked Sheet
 					</Text>
 					<Text

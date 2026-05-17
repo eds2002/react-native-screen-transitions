@@ -50,12 +50,11 @@ const setRouteState = (
 	const animations = AnimationStore.getBag(routeKey);
 	const gestures = GestureStore.getBag(routeKey);
 
-	if (state.progress !== undefined) animations.progress.value = state.progress;
-	if (state.closing !== undefined) animations.closing.value = state.closing;
-	if (state.dragging !== undefined)
-		gestures.dragging.value = state.dragging;
+	if (state.progress !== undefined) animations.progress.set(state.progress);
+	if (state.closing !== undefined) animations.closing.set(state.closing);
+	if (state.dragging !== undefined) gestures.dragging.set(state.dragging);
 	if (state.dismissing !== undefined)
-		gestures.dismissing.value = state.dismissing;
+		gestures.dismissing.set(state.dismissing);
 };
 
 // Reset stores before each test

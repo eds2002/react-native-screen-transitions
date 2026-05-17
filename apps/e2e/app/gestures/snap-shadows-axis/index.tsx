@@ -40,15 +40,11 @@ export default function SnapShadowsAxisIndex() {
 					note="A snap point sheet claims BOTH directions on its axis. This sheet claims vertical AND vertical-inverted, completely shadowing the parent."
 				/>
 
-				<View
-					style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.conceptTitle, { color: theme.text }]}>
 						Snap Points = Two Gestures
 					</Text>
-					<Text
-						style={[styles.conceptText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.conceptText, { color: theme.textSecondary }]}>
 						A bottom sheet (gestureDirection: vertical) with snap points
 						automatically claims:{"\n"}
 						{"\n"}• ↓ vertical - for collapse/dismiss{"\n"}• ↑ vertical-inverted

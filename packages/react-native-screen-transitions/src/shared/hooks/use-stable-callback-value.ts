@@ -60,16 +60,16 @@ export default function useStableCallbackValue<C extends AnyFunction>(
 
 	useEffect(() => {
 		if (callback) {
-			stableCallback.value = wrap(callback);
+			stableCallback.set(wrap(callback));
 		} else {
-			stableCallback.value = null;
+			stableCallback.set(null);
 		}
 	}, [callback, stableCallback]);
 
 	return useCallback(
 		(...args: Parameters<C>) => {
 			"worklet";
-			stableCallback.value?.call(...args);
+			stableCallback.get()?.call(...args);
 		},
 		[stableCallback],
 	);

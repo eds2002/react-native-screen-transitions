@@ -1,6 +1,5 @@
-import { interpolate } from "react-native-reanimated";
-import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
+import { verticalInvertedSlidePresentationOptions } from "../transition-options";
 
 /**
  * Scenario 5: Inverted Gesture
@@ -20,31 +19,7 @@ export default function InvertedGestureLayout() {
 			<BlankStack.Screen name="index" />
 			<BlankStack.Screen
 				name="leaf"
-				options={{
-					gestureEnabled: true,
-					gestureDirection: "vertical-inverted",
-					screenStyleInterpolator: ({
-						layouts: {
-							screen: { height },
-						},
-						progress,
-					}) => {
-						"worklet";
-						// Inverted: comes from top, dismiss by dragging up
-						const y = interpolate(progress, [0, 1], [-height, 0], "clamp");
-						return {
-							content: {
-								style: {
-									transform: [{ translateY: y }],
-								},
-							},
-						};
-					},
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
-				}}
+				options={verticalInvertedSlidePresentationOptions()}
 			/>
 		</BlankStack>
 	);

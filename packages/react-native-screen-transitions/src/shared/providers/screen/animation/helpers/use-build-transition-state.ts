@@ -12,23 +12,27 @@ import type {
 	Layout,
 	ScreenTransitionState,
 } from "../../../../types";
+import type { ScreenTransitionOptions } from "../../../../types/animation.types";
 import type { BaseDescriptor } from "../../descriptors";
+import { buildScreenTransitionOptions } from "./build-screen-transition-options";
 import { toPlainRoute, toPlainValue } from "./worklet";
 
 type BuiltState = {
 	progress: SharedValue<number>;
 	willAnimate: SharedValue<number>;
 	closing: SharedValue<number>;
-	animating: SharedValue<number>;
+	progressAnimating: SharedValue<number>;
 	entering: SharedValue<number>;
-	settled: SharedValue<number>;
-	logicallySettled: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
+	options: ScreenTransitionOptions;
+	navigationMaskEnabled: boolean;
 	targetProgress: SharedValue<number>;
+	logicalSettleFrameCount: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
+	contentLayoutSlot: Layout;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
 	unwrapped: ScreenTransitionState;
@@ -36,19 +40,12 @@ type BuiltState = {
 
 export const useBuildTransitionState = (
 	descriptor: BaseDescriptor | undefined,
-	slot: "current" | "next" | "previous",
 ): BuiltState | undefined => {
 	const key = descriptor?.route?.key;
 	const meta = descriptor?.options?.meta;
 	const route = descriptor?.route;
-	const gestureEnabled = descriptor?.options?.gestureEnabled;
 	const navigationMaskEnabled = !!descriptor?.options?.navigationMaskEnabled;
 	const snapPoints = descriptor?.options?.snapPoints;
-
-	const shouldUseNeutralNextGestures =
-		slot === "next" &&
-		gestureEnabled === false &&
-		(!snapPoints || snapPoints.length === 0);
 
 	return useMemo(() => {
 		if (!key || !route) return undefined;
@@ -62,36 +59,42 @@ export const useBuildTransitionState = (
 			.filter((p): p is number => typeof p === "number")
 			.sort((a, b) => a - b);
 
+		const transitionOptions = buildScreenTransitionOptions(descriptor.options);
+
 		return {
 			progress: AnimationStore.getValue(key, "progress"),
 			willAnimate: AnimationStore.getValue(key, "willAnimate"),
 			closing: AnimationStore.getValue(key, "closing"),
 			entering: AnimationStore.getValue(key, "entering"),
-			animating: AnimationStore.getValue(key, "animating"),
-			settled: AnimationStore.getValue(key, "settled"),
-			logicallySettled: AnimationStore.getValue(key, "logicallySettled"),
+			progressAnimating: AnimationStore.getValue(key, "progressAnimating"),
 			targetProgress: SystemStore.getValue(key, "targetProgress"),
+			logicalSettleFrameCount: SystemStore.getValue(
+				key,
+				"logicalSettleFrameCount",
+			),
 			resolvedAutoSnapPoint: SystemStore.getValue(key, "resolvedAutoSnapPoint"),
 			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),
+			contentLayoutSlot: { width: 0, height: 0 },
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
 			sortedNumericSnapPoints,
-			gesture: shouldUseNeutralNextGestures
-				? (GestureStore.peekBag(key) ?? GestureStore.getCachedBag())
-				: GestureStore.getBag(key),
+			gesture: GestureStore.getBag(key),
 			route: plainRoute,
 			meta: plainMeta,
+			options: transitionOptions,
+			navigationMaskEnabled,
 			unwrapped: createScreenTransitionState(
 				plainRoute,
 				plainMeta,
 				navigationMaskEnabled,
+				transitionOptions,
 			),
 		};
 	}, [
 		key,
 		meta,
 		route,
-		shouldUseNeutralNextGestures,
 		snapPoints,
 		navigationMaskEnabled,
+		descriptor?.options,
 	]);
 };

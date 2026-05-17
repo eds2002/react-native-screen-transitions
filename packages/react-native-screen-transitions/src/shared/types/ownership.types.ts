@@ -34,7 +34,7 @@ export const DIRECTIONS: Direction[] = [
 /**
  * Map of which directions a screen claims ownership of.
  * A screen claims a direction when:
- * - gestureEnabled is true AND
+ * - direction claiming is enabled AND
  * - gestureDirection includes that direction
  *
  * For snap points, both directions on the axis are claimed automatically.
@@ -42,7 +42,7 @@ export const DIRECTIONS: Direction[] = [
 export type ClaimedDirections = Record<Direction, boolean>;
 
 /**
- * Empty claims - used when gestureEnabled is false.
+ * Empty claims - used when direction claiming is disabled.
  */
 export const NO_CLAIMS: ClaimedDirections = {
 	vertical: false,

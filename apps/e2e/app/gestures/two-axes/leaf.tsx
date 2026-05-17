@@ -27,9 +27,7 @@ export default function LeafScreen() {
 			/>
 
 			<View style={styles.content}>
-				<View
-					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.infoTitle, { color: theme.text }]}>
 						Horizontal gesture on this screen
 					</Text>
@@ -71,33 +69,19 @@ export default function LeafScreen() {
 							Swipe down → Dismisses entire stack
 						</Text>
 					</View>
-					<View
-						style={[
-							styles.gestureRow,
-							{ backgroundColor: theme.surface },
-						]}
-					>
+					<View style={[styles.gestureRow, { backgroundColor: theme.surface }]}>
 						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 							↑
 						</Text>
-						<Text
-							style={[styles.gestureText, { color: theme.textTertiary }]}
-						>
+						<Text style={[styles.gestureText, { color: theme.textTertiary }]}>
 							Swipe up → Nothing
 						</Text>
 					</View>
-					<View
-						style={[
-							styles.gestureRow,
-							{ backgroundColor: theme.surface },
-						]}
-					>
+					<View style={[styles.gestureRow, { backgroundColor: theme.surface }]}>
 						<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 							←
 						</Text>
-						<Text
-							style={[styles.gestureText, { color: theme.textTertiary }]}
-						>
+						<Text style={[styles.gestureText, { color: theme.textTertiary }]}>
 							Swipe left → Nothing
 						</Text>
 					</View>

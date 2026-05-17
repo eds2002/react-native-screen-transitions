@@ -1,13 +1,16 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { BoundsMethod } from "../../types/bounds.types";
+import type { ScreenKey } from "../../types/screen.types";
 import type {
 	BoundsAnchor,
 	BoundsScaleMode,
 } from "../../utils/bounds/types/options";
 
 export type TagID = string;
-export type ScreenKey = string;
-export type NavigatorKey = string;
+export type LinkKey = string;
+export type GroupKey = string;
+export type ScreenPairKey = string;
+export type { ScreenKey } from "../../types/screen.types";
 
 export type BoundaryConfig = {
 	anchor?: BoundsAnchor;
@@ -20,10 +23,6 @@ export type Entry = {
 	bounds: MeasuredDimensions | null;
 	styles: StyleProps;
 	boundaryConfig?: BoundaryConfig;
-	ancestorKeys?: ScreenKey[];
-	navigatorKey?: NavigatorKey;
-	ancestorNavigatorKeys?: NavigatorKey[];
-	presenceCount?: number;
 };
 
 export type MeasuredEntry = Entry & {
@@ -34,22 +33,21 @@ export type EntryPatch = {
 	bounds?: MeasuredDimensions | null;
 	styles?: StyleProps | null;
 	boundaryConfig?: BoundaryConfig | null;
-	ancestorKeys?: ScreenKey[] | null;
-	navigatorKey?: NavigatorKey | null;
-	ancestorNavigatorKeys?: NavigatorKey[] | null;
-	presenceCount?: number | null;
 };
 
 export type ScreenIdentifier = {
 	screenKey: ScreenKey;
-	ancestorKeys?: ScreenKey[];
-	navigatorKey?: NavigatorKey;
-	ancestorNavigatorKeys?: NavigatorKey[];
 };
 
 export type TagLink = {
+	group?: GroupKey;
 	source: ScreenIdentifier & MeasuredEntry;
+	/** Destination side once attached; null while the source is still pending. */
 	destination: (ScreenIdentifier & MeasuredEntry) | null;
+	/** First captured source side exposed for public link inspection. */
+	initialSource?: ScreenIdentifier & MeasuredEntry;
+	/** First attached destination side, used to compensate reveal closes after destination refreshes. */
+	initialDestination?: ScreenIdentifier & MeasuredEntry;
 };
 
 export type ResolveTransitionContext = {
@@ -66,16 +64,24 @@ export type ResolvedTransitionPair = {
 	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
-	usedPending: boolean;
 };
 
 export type ScreenEntry = Entry;
 
-export type TagState = {
+export type BoundaryState = {
 	screens: Record<ScreenKey, ScreenEntry>;
-	linkStack: TagLink[];
 };
 
-export type GroupState = {
-	activeId: string;
+export type LinkGroupState = {
+	activeId: LinkKey;
+	initialId?: LinkKey;
 };
+
+export type LinkPairState = {
+	links: Record<LinkKey, TagLink>;
+	groups: Record<GroupKey, LinkGroupState>;
+};
+
+export type LinkPairsState = Record<ScreenPairKey, LinkPairState>;
+
+export type TagState = BoundaryState;

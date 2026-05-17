@@ -19,7 +19,9 @@ export default function CustomBackgroundScreen() {
 			/>
 			<View style={styles.content}>
 				<View style={[styles.card, { backgroundColor: theme.card }]}>
-					<Text style={[styles.cardTitle, { color: theme.text }]}>Surface Slot</Text>
+					<Text style={[styles.cardTitle, { color: theme.text }]}>
+						Surface Slot
+					</Text>
 					<Text style={[styles.cardBody, { color: theme.textSecondary }]}>
 						This route renders `surfaceComponent` and drives styles/props via
 						the `surface` slot while screen motion stays in `content`.
@@ -29,7 +31,11 @@ export default function CustomBackgroundScreen() {
 					testID="push-detail-from-custom-background"
 					style={({ pressed }) => [
 						styles.button,
-						{ backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton },
+						{
+							backgroundColor: pressed
+								? theme.actionButtonPressed
+								: theme.actionButton,
+						},
 					]}
 					onPress={() => router.push(buildStackPath(stackType, "detail"))}
 				>

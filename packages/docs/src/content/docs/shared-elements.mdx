@@ -41,7 +41,7 @@ For most flows, the source should be a `Transition.Boundary.Trigger` and the des
 
 `Boundary.View` can be used on both sides and the system can auto-measure, but that is a lower-level path and not the default recommendation for navigation-driven flows.
 
-For the high-level `bounds({ id }).navigation.zoom()` helper, the destination can also be source-only. See [Navigation Zoom](/navigation-zoom).
+For the high-level `bounds({ id }).navigation.zoom()` helper, the destination can also be source-only. See [Zoom](/navigation-zoom).
 
 ## Nested Measurement with Boundary.Target
 
@@ -101,7 +101,8 @@ That is the low-level API: measure a matching boundary pair, ask `bounds()` for 
 | `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Destination target |
 | `anchor` | `"topLeading"` through `"bottomTrailing"` | Matching anchor point |
 | `scaleMode` | `"match" \| "none" \| "uniform"` | Aspect-ratio behavior |
-| `gestures` | `{ x?: number; y?: number }` | Inject live gesture offsets |
+| `offset` | `{ x?: number; y?: number }` | Add live x/y offsets from gestures, scroll, or animation state |
+| `gestures` | `{ x?: number; y?: number }` | Deprecated alias for `offset` |
 | `raw` | `boolean` | Return raw values instead of style props |
 | `space` | `"relative" \| "absolute"` | `absolute` is mainly for internal navigation helpers |
 
@@ -123,7 +124,7 @@ When you pass `raw: true`, it returns low-level geometry instead:
 - `"size"` returns `translateX`, `translateY`, `width`, and `height`
 - `"content"` returns `translateX`, `translateY`, and `scale`
 
-## Navigation Zoom
+## Zoom
 
 For navigation-style bounds transitions, use `navigation.zoom()`:
 
@@ -137,7 +138,7 @@ screenStyleInterpolator: ({ bounds }) => {
 
 `navigation.zoom()` builds an opinionated layer map for you. It can work with only a source `Transition.Boundary.Trigger`, or with a destination `Transition.Boundary.View` when you want tighter bound-to-bound matching.
 
-For the recommended setup, optional destination patterns, groups guidance, and current caveats, see [Navigation Zoom](/navigation-zoom).
+For the recommended setup, optional destination patterns, groups guidance, and current caveats, see [Zoom](/navigation-zoom).
 
 ## Navigation Mask
 
@@ -177,9 +178,9 @@ Install `@react-native-masked-view/masked-view` when you use `navigationMaskEnab
 
 The group keeps track of the active member id so the handoff stays aligned as focus moves between items in the same collection.
 
-## Bounds with Gestures
+## Bounds with Offsets
 
-Because `bounds()` accepts a `gestures` option, you can feed live drag offsets into the matched transform.
+Because `bounds()` accepts an `offset` option, you can feed any live x/y values into the matched transform.
 
 ```tsx
 screenStyleInterpolator: ({ bounds, active }) => {
@@ -188,7 +189,7 @@ screenStyleInterpolator: ({ bounds, active }) => {
   return {
     hero: bounds({
       id: "hero",
-      gestures: {
+      offset: {
         x: active.gesture.x,
         y: active.gesture.y,
       },
@@ -198,6 +199,8 @@ screenStyleInterpolator: ({ bounds, active }) => {
 };
 ```
 
+The older `gestures` option still works as a deprecated alias. Use `offset` for new code because the values can come from gestures, scroll, animation state, or any other x/y source.
+
 This is the pattern used for the gesture-driven bounds example in the e2e app.
 
 ## Snapshots and Low-Level Helpers
@@ -205,14 +208,22 @@ This is the pattern used for the gesture-driven bounds example in the e2e app.
 You can read a stored measurement snapshot directly:
 
 ```tsx
-const snapshot = bounds.getSnapshot("hero");
+const hero = bounds({ id: "hero" });
+const measured = hero.getMeasured(current.route.key);
+const link = hero.getLink();
+const initialLink = hero.getLink({ snapshot: "initial" });
 ```
 
-The accessor also exposes:
+Scoped bounds results expose:
 
-- `getLink(id)` to inspect the current source and destination pair
-- `interpolateStyle(id, property, fallback?)`
-- `interpolateBounds(id, property, fallbackOrTargetKey?, fallback?)`
+- `getMeasured(key)` to inspect a measured entry for this bound
+- `getLink()` to inspect the current source and destination pair
+- `getLink({ snapshot: "initial" })` to inspect the first truthy source and destination pair captured for that link
+- `getSnapshot(key)` as a deprecated alias for `getMeasured(key)`
+- `interpolateStyle(property, fallback?)`
+- `interpolateBounds(property, fallbackOrTargetKey?, fallback?)`
+
+The root accessor still exposes the same helpers with an explicit id, such as `bounds.getLink("hero")`, when that reads better.
 
 Use those helpers when you want to build custom bounds-driven choreography on top of the same source/destination link data.
 

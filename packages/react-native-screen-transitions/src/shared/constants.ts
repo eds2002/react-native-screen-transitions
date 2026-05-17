@@ -1,9 +1,15 @@
 import type { ParamListBase, RouteProp } from "@react-navigation/native";
 import { Platform } from "react-native";
 import type { MeasuredDimensions } from "react-native-reanimated";
-import type { ScreenTransitionState } from "./types/animation.types";
-import type { ActivationArea } from "./types/gesture.types";
-import type { Layout } from "./types/screen.types";
+import type {
+	ScreenTransitionOptions,
+	ScreenTransitionState,
+} from "./types/animation.types";
+import type {
+	ActivationArea,
+	GestureProgressMode,
+} from "./types/gesture.types";
+import type { Layout, SheetScrollGestureBehavior } from "./types/screen.types";
 import type { BaseStackRoute } from "./types/stack.types";
 
 /**
@@ -31,13 +37,25 @@ export const NO_PROPS = Object.freeze({});
 /**
  * Default gesture values
  */
-const DEFAULT_GESTURE_VALUES = {
+const DEFAULT_RAW_GESTURE_VALUES = {
 	x: 0,
 	y: 0,
 	normX: 0,
 	normY: 0,
+	scale: 1,
+	normScale: 0,
+} as const;
+
+const DEFAULT_GESTURE_VALUES = {
+	...DEFAULT_RAW_GESTURE_VALUES,
+	velocity: 0,
+	focalX: 0,
+	focalY: 0,
+	raw: DEFAULT_RAW_GESTURE_VALUES,
 	dismissing: 0,
 	dragging: 0,
+	settling: 0,
+	active: null,
 	direction: null,
 
 	// Deprecated aliases
@@ -47,6 +65,14 @@ const DEFAULT_GESTURE_VALUES = {
 	isDragging: 0,
 } as const;
 
+const createDefaultGestureValues = () => ({
+	...DEFAULT_GESTURE_VALUES,
+	raw: { ...DEFAULT_RAW_GESTURE_VALUES },
+});
+
+export const DEFAULT_SCREEN_TRANSITION_OPTIONS: ScreenTransitionOptions =
+	Object.freeze({});
+
 /**
  * Creates a new screen transition state object
  */
@@ -54,6 +80,7 @@ export const createScreenTransitionState = (
 	route: BaseStackRoute,
 	meta?: Record<string, unknown>,
 	navigationMaskEnabled = false,
+	options: ScreenTransitionOptions = DEFAULT_SCREEN_TRANSITION_OPTIONS,
 ): ScreenTransitionState => ({
 	progress: 0,
 	closing: 0,
@@ -62,9 +89,10 @@ export const createScreenTransitionState = (
 	settled: 1,
 	logicallySettled: 1,
 	entering: 0,
-	gesture: { ...DEFAULT_GESTURE_VALUES },
+	gesture: createDefaultGestureValues(),
 	route,
 	meta,
+	options,
 	layouts: {
 		screen: {
 			width: 0,
@@ -72,6 +100,7 @@ export const createScreenTransitionState = (
 		},
 		navigationMaskEnabled,
 	},
+	animatedSnapIndex: -1,
 	snapIndex: -1,
 });
 
@@ -87,8 +116,9 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 		settled: 1,
 		logicallySettled: 1,
 		entering: 0,
-		gesture: DEFAULT_GESTURE_VALUES,
+		gesture: createDefaultGestureValues(),
 		route: {} as RouteProp<ParamListBase>,
+		options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
 		layouts: {
 			screen: {
 				width: 0,
@@ -96,6 +126,7 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 			},
 			navigationMaskEnabled: false,
 		},
+		animatedSnapIndex: -1,
 		snapIndex: -1,
 	});
 
@@ -130,12 +161,15 @@ export const FULLSCREEN_DIMENSIONS = (
 
 export const DEFAULT_GESTURE_VELOCITY_IMPACT = 0.3;
 export const DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT = 0.1;
-export const DEFAULT_GESTURE_RELEASE_VELOCITY_MAX = 3.2;
+export const DEFAULT_GESTURE_SENSITIVITY = 1;
 export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
-export const DEFAULT_GESTURE_DRIVES_PROGRESS = true;
+export const DEFAULT_GESTURE_PROGRESS_MODE: GestureProgressMode =
+	"progress-driven";
 export const DEFAULT_GESTURE_SNAP_LOCKED = false;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
+export const DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR: SheetScrollGestureBehavior =
+	"expand-and-collapse";
 
 export const IS_WEB = Platform.OS === "web";
 
@@ -148,7 +182,12 @@ export const FALSE = 0;
 export const EPSILON = 1e-5;
 
 /**
- * Threshold for snapping animations to target when "close enough" (1% of range).
- * Prevents micro-jitter/oscillation near animation endpoints.
+ * Number of consecutive frames progress must remain near its target before it
+ * is treated as logically settled.
  */
-export const ANIMATION_SNAP_THRESHOLD = 0.01;
+export const LOGICAL_SETTLE_REQUIRED_FRAMES = 5;
+
+/**
+ * Progress distance from target required for logical settle.
+ */
+export const LOGICAL_SETTLE_PROGRESS_THRESHOLD = 0.001;

@@ -1,10 +1,8 @@
+import { DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR } from "../constants";
 import type {
 	ScreenTransitionConfig,
 	SheetScrollGestureBehavior,
 } from "../types/screen.types";
-
-export const DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR: SheetScrollGestureBehavior =
-	"expand-and-collapse";
 
 export const resolveSheetScrollGestureBehavior = (
 	options: Pick<
@@ -21,17 +19,4 @@ export const resolveSheetScrollGestureBehavior = (
 	}
 
 	return DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR;
-};
-
-export const resolveNavigationMaskEnabled = (
-	options: Pick<
-		ScreenTransitionConfig,
-		"navigationMaskEnabled" | "maskEnabled"
-	>,
-): boolean => {
-	if (options.navigationMaskEnabled !== undefined) {
-		return options.navigationMaskEnabled;
-	}
-
-	return options.maskEnabled ?? false;
 };

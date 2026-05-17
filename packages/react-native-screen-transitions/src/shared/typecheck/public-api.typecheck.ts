@@ -1,12 +1,16 @@
 import type { ComponentProps } from "react";
+import type { DerivedValue, SharedValue } from "react-native-reanimated";
 import {
 	type BlankStackFactoryOptions,
+	type BlankStackNavigationOptions,
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
 } from "../../blank-stack";
 import type {
+	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
+	ScreenAnimationTarget,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	ScreenTransitionConfig,
@@ -16,6 +20,8 @@ import type {
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+	useScreenAnimation,
+	useScreenGesture,
 } from "..";
 
 const slotStyle: TransitionSlotStyle = {
@@ -49,18 +55,6 @@ const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]: slotStyle,
 };
 
-const legacyInterpolatedStyle: TransitionInterpolatedStyle = {
-	contentStyle: {
-		opacity: 1,
-	},
-	backdropStyle: {
-		opacity: 0.5,
-	},
-	overlayStyle: {
-		opacity: 0.25,
-	},
-};
-
 const zoomOptions: BoundsNavigationZoomOptions = {
 	target: "bound",
 	debug: true,
@@ -82,10 +76,57 @@ const zoomOptions: BoundsNavigationZoomOptions = {
 
 declare const interpolationProps: ScreenInterpolationProps;
 
-const gestureTarget: ScreenGestureTarget = { ancestor: 2 };
+const gestureTarget: ScreenGestureTarget = { depth: -2 };
+const animationTarget: ScreenAnimationTarget = { depth: -2 };
+const legacyAnimationTarget: ScreenAnimationTarget = { ancestor: 2 };
+
+function usePublicApiHooksTypecheck() {
+	const selfAnimation: DerivedValue<ScreenInterpolationProps> =
+		useScreenAnimation();
+	const selfTargetAnimation: DerivedValue<ScreenInterpolationProps> =
+		useScreenAnimation({ depth: 0 });
+	const ancestorAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation({ depth: -1 });
+	const childAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation({ depth: 1 });
+	const legacySelfAnimation: DerivedValue<ScreenInterpolationProps> =
+		useScreenAnimation("self");
+	const legacyParentAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation("parent");
+	const legacyRootAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation("root");
+	const legacyAncestorAnimation: DerivedValue<ScreenInterpolationProps | null> =
+		useScreenAnimation({ ancestor: 2 });
+	const inheritedGesture = useScreenGesture();
+	const ancestorGesture = useScreenGesture({ depth: -1 });
+
+	return {
+		selfAnimation,
+		selfTargetAnimation,
+		ancestorAnimation,
+		childAnimation,
+		legacySelfAnimation,
+		legacyParentAnimation,
+		legacyRootAnimation,
+		legacyAncestorAnimation,
+		inheritedGesture,
+		ancestorGesture,
+	};
+}
+
+void usePublicApiHooksTypecheck;
+void legacyAnimationTarget;
 
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
+});
+const offsetBoundsResult = interpolationProps.bounds({
+	id: 42,
+	offset: { x: 10, y: -10 },
+});
+const deprecatedGesturesBoundsResult = interpolationProps.bounds({
+	id: 42,
+	gestures: { x: 10, y: -10 },
 });
 const absoluteRawBoundsResult = interpolationProps.bounds({
 	id: 42,
@@ -98,28 +139,76 @@ const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
 	.navigation.zoom({
 		target: "bound",
 	});
+const revealInterpolatedStyle: BoundsNavigationRevealStyle = interpolationProps
+	.bounds({ id: 42 })
+	.navigation.reveal();
+void revealInterpolatedStyle;
+const currentLink = interpolationProps.bounds.getLink(42);
+const initialSource = currentLink?.initialSource;
+const initialDestination = currentLink?.initialDestination;
+const scopedBounds = interpolationProps.bounds({ id: 42 });
+const scopedCurrentLink = scopedBounds.getLink();
+const scopedLinkRawSize = scopedCurrentLink?.compute({
+	method: "size",
+	space: "absolute",
+	target: "fullscreen",
+	raw: true,
+});
+const scopedMeasured = scopedBounds.getMeasured("screen-key");
+const scopedInitialSnapshot = scopedBounds.getSnapshot("screen-key");
+const scopedInterpolatedStyle: number =
+	scopedBounds.interpolateStyle("opacity");
+const scopedInterpolatedBounds: number =
+	scopedBounds.interpolateBounds("pageX");
+void currentLink;
+void initialSource;
+void initialDestination;
+void scopedCurrentLink;
+void scopedLinkRawSize;
+void scopedMeasured;
+void scopedInitialSnapshot;
+void scopedInterpolatedStyle;
+void scopedInterpolatedBounds;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;
+const currentActiveGesture = interpolationProps.current.gesture.active;
+const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
+const currentGestureVelocity: number =
+	interpolationProps.current.gesture.velocity;
+const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
+const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
+	options: {
+		gestureSensitivity: 0.5,
+		gestureSnapLocked: true,
+		gestureReleaseVelocityScale: 1.2,
+	},
+};
+void currentRawGestureNormX;
+void currentGestureVelocity;
+void currentActiveGesture;
+void currentAnimatedSnapIndex;
+void currentSnapIndex;
+void optionsInterpolatedStyle;
 const nextNameOptions: ScreenTransitionConfig = {
 	navigationMaskEnabled: true,
 	sheetScrollGestureBehavior: "collapse-only",
+	gestureSensitivity: 0.75,
+};
+declare const gestureSensitivitySharedValue: SharedValue<number>;
+const sharedGestureSensitivityOptions: ScreenTransitionConfig = {
+	// @ts-expect-error Dynamic gesture sensitivity belongs in screenStyleInterpolator options.
+	gestureSensitivity: gestureSensitivitySharedValue,
 };
 const initialMountAnimationOptions: ScreenTransitionConfig = {
 	experimental_animateOnInitialMount: true,
 };
-const deprecatedAliasOptions: ScreenTransitionConfig = {
-	maskEnabled: true,
-	expandViaScrollView: false,
-};
-const precedenceOptions: ScreenTransitionConfig = {
-	navigationMaskEnabled: false,
-	maskEnabled: true,
-	sheetScrollGestureBehavior: "expand-and-collapse",
-	expandViaScrollView: false,
+const disabledGestureTrackingOptions: ScreenTransitionConfig = {
+	gestureEnabled: false,
+	experimental_allowDisabledGestureTracking: true,
 };
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
@@ -127,7 +216,9 @@ const emptyInterpolatorOptions: ScreenTransitionConfig = {
 
 const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
-	enableNativeScreens: false,
+};
+const blankStackNavigationOptions: BlankStackNavigationOptions = {
+	freezeOnBlur: true,
 };
 
 type StaticBlankStackParamList = {
@@ -151,24 +242,11 @@ const defaultBlankStack = createBlankStackNavigator();
 type DefaultBlankStackNavigatorProps = ComponentProps<
 	typeof defaultBlankStack.Navigator
 >;
-const viewBlankStackProps: Pick<
-	DefaultBlankStackNavigatorProps,
-	"enableNativeScreens"
-> = {
-	enableNativeScreens: false,
-};
 const independentBlankStackProps: Pick<
 	DefaultBlankStackNavigatorProps,
 	"independent"
 > = {
 	independent: true,
-};
-const independentViewBlankStackProps: Pick<
-	DefaultBlankStackNavigatorProps,
-	"independent" | "enableNativeScreens"
-> = {
-	independent: true,
-	enableNativeScreens: false,
 };
 const staticBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
 	initialRouteName: "Home",
@@ -177,15 +255,6 @@ const staticBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
 		Details: StaticBlankDetailsScreen,
 	},
 });
-const staticViewBlankStack =
-	createBlankStackNavigator<StaticBlankStackParamList>({
-		initialRouteName: "Home",
-		enableNativeScreens: false,
-		screens: {
-			Home: StaticBlankHomeScreen,
-			Details: StaticBlankDetailsScreen,
-		},
-	});
 
 const publicApiTypecheck = {
 	navigationSlots: {
@@ -194,29 +263,30 @@ const publicApiTypecheck = {
 	},
 	slotStyle,
 	nestedInterpolatedStyle,
-	navigationMaskInterpolatedStyle,
-	legacyInterpolatedStyle,
 	gestureTarget,
+	animationTarget,
 	numericBoundsResult,
+	offsetBoundsResult,
+	deprecatedGesturesBoundsResult,
 	absoluteRawBoundsResult,
 	absoluteRawBoundsWidth,
 	absoluteRawBoundsTranslateX,
 	zoomInterpolatedStyle,
 	maybeContentHeight,
 	maybeCurrentContentHeight,
+	currentActiveGesture,
 	currentSnapIndex,
 	zoomOptions,
+	navigationMaskInterpolatedStyle,
 	nextNameOptions,
+	sharedGestureSensitivityOptions,
 	initialMountAnimationOptions,
-	deprecatedAliasOptions,
-	precedenceOptions,
+	disabledGestureTrackingOptions,
 	emptyInterpolatorOptions,
 	blankStackFactoryOptions,
-	viewBlankStackProps,
+	blankStackNavigationOptions,
 	independentBlankStackProps,
-	independentViewBlankStackProps,
 	staticBlankStack,
-	staticViewBlankStack,
 };
 
 void publicApiTypecheck;

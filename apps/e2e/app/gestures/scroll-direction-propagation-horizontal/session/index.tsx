@@ -25,9 +25,7 @@ export default function HorizontalSessionScreen() {
 			/>
 
 			<View style={styles.content}>
-				<View
-					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.infoTitle, { color: theme.text }]}>
 						Current Gesture Ownership
 					</Text>
@@ -42,25 +40,14 @@ export default function HorizontalSessionScreen() {
 					</Text>
 				</View>
 
-				<View
-					style={[
-						styles.instructions,
-						{ backgroundColor: theme.card },
-					]}
-				>
+				<View style={[styles.instructions, { backgroundColor: theme.card }]}>
 					<Text
-						style={[
-							styles.instructionTitle,
-							{ color: theme.textTertiary },
-						]}
+						style={[styles.instructionTitle, { color: theme.textTertiary }]}
 					>
 						Next step
 					</Text>
 					<Text
-						style={[
-							styles.instructionText,
-							{ color: theme.textSecondary },
-						]}
+						style={[styles.instructionText, { color: theme.textSecondary }]}
 					>
 						Open the drawer to test horizontal ScrollView coordination with two
 						gesture owners on the same axis.
@@ -84,9 +71,7 @@ export default function HorizontalSessionScreen() {
 						)
 					}
 				>
-					<Text
-						style={[styles.buttonText, { color: theme.actionButtonText }]}
-					>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
 						Open Drawer
 					</Text>
 					<Text

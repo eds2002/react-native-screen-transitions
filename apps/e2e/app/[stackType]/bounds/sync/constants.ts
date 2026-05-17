@@ -180,9 +180,7 @@ const describeTarget = (
 	return `Target is a custom ${target.width}x${target.height} rect at ${target.x},${target.y}.`;
 };
 
-const describeScaleMode = (
-	scaleMode: ResolvedBoundaryConfig["scaleMode"],
-) => {
+const describeScaleMode = (scaleMode: ResolvedBoundaryConfig["scaleMode"]) => {
 	switch (scaleMode) {
 		case "uniform":
 			return "Uniform scale keeps aspect ratio.";
@@ -202,7 +200,10 @@ const buildBoundaryDescription = (
 	node: BoundaryNodeInput,
 ) => {
 	const config = resolveBoundaryConfig(node.boundary);
-	const parts = [describeMethod(role, config.method), describeTarget(role, config.target)];
+	const parts = [
+		describeMethod(role, config.method),
+		describeTarget(role, config.target),
+	];
 
 	if (config.anchor !== "center") {
 		parts.push(describeAnchor(config.anchor));
