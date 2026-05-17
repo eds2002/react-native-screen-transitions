@@ -58,6 +58,7 @@ const createBoundsAccessorParts = ({
 		const computed = prepareBoundStyles({
 			props,
 			options,
+			syncGroupActiveId: true,
 		});
 		const scopedTag = tag ?? "";
 		const target = Object.isExtensible(computed) ? computed : { ...computed };

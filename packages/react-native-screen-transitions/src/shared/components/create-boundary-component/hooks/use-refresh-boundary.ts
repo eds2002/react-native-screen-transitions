@@ -1,116 +1,77 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
-import { getGroupActiveId } from "../../../stores/bounds/internals/groups";
-import {
-	hasDestinationLink,
-	hasSourceLink,
-} from "../../../stores/bounds/internals/links";
-import type { BoundaryId, MeasureParams } from "../types";
+import { pairs } from "../../../stores/bounds/internals/state";
+import type { MeasureBoundary } from "../types";
+import { getRefreshBoundarySignal } from "../utils/refresh-signals";
 
 interface UseRefreshBoundaryParams {
 	enabled: boolean;
-	sharedBoundTag: string;
-	id: BoundaryId;
-	group?: string;
 	currentScreenKey: string;
+	preferredSourceScreenKey?: string;
 	nextScreenKey?: string;
-	hasNextScreen: boolean;
-	measureBoundary: (options: MeasureParams) => void;
+	linkId: string;
+	group?: string;
+	ancestorScreenKeys: string[];
+	measureBoundary: MeasureBoundary;
 }
 
 export const useRefreshBoundary = ({
 	enabled,
-	sharedBoundTag,
-	id,
-	group,
 	currentScreenKey,
+	preferredSourceScreenKey,
 	nextScreenKey,
-	hasNextScreen,
+	linkId,
+	group,
+	ancestorScreenKeys,
 	measureBoundary,
 }: UseRefreshBoundaryParams) => {
-	const currentWillAnimate = AnimationStore.getValue(
-		currentScreenKey,
+	// Source-side boundaries refresh from the next screen's lifecycle pulse.
+	// Destination-side boundaries have no next screen, so they refresh from self.
+	const refreshScreenKey = nextScreenKey ?? currentScreenKey;
+	const refreshWillAnimate = AnimationStore.getValue(
+		refreshScreenKey,
 		"willAnimate",
 	);
-	const currentClosing = AnimationStore.getValue(currentScreenKey, "closing");
-	const currentEntering = AnimationStore.getValue(currentScreenKey, "entering");
-	const currentAnimating = AnimationStore.getValue(
-		currentScreenKey,
+	const refreshClosing = AnimationStore.getValue(refreshScreenKey, "closing");
+	const refreshEntering = AnimationStore.getValue(refreshScreenKey, "entering");
+	const refreshAnimating = AnimationStore.getValue(
+		refreshScreenKey,
 		"progressAnimating",
 	);
-	const currentProgress = AnimationStore.getValue(currentScreenKey, "progress");
-	const nextWillAnimate = nextScreenKey
-		? AnimationStore.getValue(nextScreenKey, "willAnimate")
-		: null;
-
-	const nextClosing = nextScreenKey
-		? AnimationStore.getValue(nextScreenKey, "closing")
-		: null;
-	const nextEntering = nextScreenKey
-		? AnimationStore.getValue(nextScreenKey, "entering")
-		: null;
+	const refreshProgress = AnimationStore.getValue(refreshScreenKey, "progress");
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
-
-			const shouldRefresh = hasNextScreen
-				? (nextWillAnimate?.get() ?? 0)
-				: currentWillAnimate.get();
-			const closing = hasNextScreen
-				? (nextClosing?.get() ?? 0)
-				: currentClosing.get();
-			const entering = hasNextScreen
-				? (nextEntering?.get() ?? 0)
-				: currentEntering.get();
-
-			// Programmatic close marks `closing` before pulsing `willAnimate`.
-			// This frame is still settled, so destination refresh is valid and
-			// reveal can compute initial/current destination delta before progress moves.
-			const canRefreshPreCloseDestination =
-				!hasNextScreen &&
-				shouldRefresh &&
-				closing &&
-				!entering &&
-				!currentAnimating.get() &&
-				currentProgress.get() >= 1;
-
-			if (
-				canRefreshPreCloseDestination ||
-				(shouldRefresh && !closing && !entering)
-			) {
-				return 1;
-			}
-
-			return 0;
+			return getRefreshBoundarySignal({
+				enabled,
+				currentScreenKey,
+				preferredSourceScreenKey,
+				nextScreenKey,
+				linkId,
+				group,
+				ancestorScreenKeys,
+				shouldRefresh: !!refreshWillAnimate.get(),
+				closing: !!refreshClosing.get(),
+				entering: !!refreshEntering.get(),
+				animating: !!refreshAnimating.get(),
+				progress: refreshProgress.get(),
+				linkState: group || ancestorScreenKeys.length ? pairs.get() : undefined,
+			});
 		},
-		(shouldRefresh, prevShouldRefresh) => {
+		(refreshSignal, prevRefreshSignal) => {
 			"worklet";
 
-			if (!enabled || !shouldRefresh || shouldRefresh === prevShouldRefresh)
-				return;
-
-			const currentGroupActiveId = group ? getGroupActiveId(group) : null;
-
-			if (group && currentGroupActiveId !== String(id)) {
-				return;
-			}
-
-			if (hasNextScreen) {
-				if (
-					!nextScreenKey ||
-					!hasSourceLink(sharedBoundTag, currentScreenKey) ||
-					!hasDestinationLink(sharedBoundTag, nextScreenKey)
-				) {
-					return;
-				}
-
-				measureBoundary({ intent: "refresh-source" });
+			if (
+				!refreshSignal ||
+				refreshSignal.signal === prevRefreshSignal?.signal
+			) {
 				return;
 			}
 
 			measureBoundary({
-				intent: "refresh-destination",
+				type: refreshSignal.type,
+				pairKey: refreshSignal.pairKey,
 			});
 		},
 	);

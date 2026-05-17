@@ -15,7 +15,7 @@ import Animated, {
 import { NO_STYLES } from "../../constants";
 import { useDescriptorDerivations } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
-import { setGroupInitialId } from "../../stores/bounds/internals/groups";
+import { createPendingPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
 import { useInitialDestinationMeasurement } from "./hooks/use-initial-destination-measurement";
@@ -27,7 +27,6 @@ import {
 	useBoundaryOwner,
 } from "./providers/boundary-owner.provider";
 import type { BoundaryComponentProps, BoundaryConfigProps } from "./types";
-import { buildBoundaryMatchKey } from "./utils/build-boundary-match-key";
 
 interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;
@@ -61,12 +60,14 @@ export function createBoundaryComponent<P extends object>(
 			...rest
 		} = props as any;
 
-		const sharedBoundTag = buildBoundaryMatchKey({ group, id });
+		const linkId = String(id);
+		const entryTag = group ? `${group}:${linkId}` : linkId;
 
 		const {
 			previousScreenKey: preferredSourceScreenKey,
 			currentScreenKey,
 			nextScreenKey,
+			ancestorKeys,
 			hasConfiguredInterpolator,
 		} = useDescriptorDerivations();
 
@@ -98,12 +99,12 @@ export function createBoundaryComponent<P extends object>(
 
 		const associatedStyles = useAnimatedStyle(() => {
 			"worklet";
-			return stylesMap.get()[sharedBoundTag]?.style ?? NO_STYLES;
+			return stylesMap.get()[entryTag]?.style ?? NO_STYLES;
 		});
 
 		const associatedStackingStyles = useAnimatedStyle(() => {
 			"worklet";
-			const baseStyle = stylesMap.get()[sharedBoundTag]?.style;
+			const baseStyle = stylesMap.get()[entryTag]?.style;
 			const zIndex = baseStyle?.zIndex ?? 0;
 			const elevation = baseStyle?.elevation ?? 0;
 
@@ -124,8 +125,9 @@ export function createBoundaryComponent<P extends object>(
 
 		const measureBoundary = useMeasurer({
 			enabled,
-			sharedBoundTag,
-			preferredSourceScreenKey,
+			entryTag,
+			linkId,
+			group,
 			currentScreenKey,
 			preparedStyles,
 			measuredAnimatedRef: measuredRef,
@@ -137,62 +139,57 @@ export function createBoundaryComponent<P extends object>(
 		// matching can resolve across concrete screen keys.
 		useBoundaryPresence({
 			enabled: runtimeEnabled,
-			sharedBoundTag,
+			entryTag,
 			currentScreenKey,
 			boundaryConfig,
 		});
 
-		// Initial source measurement: capture source bounds when a matching
-		// destination appears on the next screen.
+		const shouldPassivelyMeasureSource =
+			shouldAutoMeasure && typeof onPress !== "function";
+
 		useInitialSourceMeasurement({
 			enabled: runtimeEnabled,
 			nextScreenKey,
 			measureBoundary,
 			currentScreenKey,
-			sharedBoundTag,
-			id,
+			linkId,
 			group,
-			shouldAutoMeasure,
+			shouldAutoMeasure: shouldPassivelyMeasureSource,
 		});
 
-		// Initial destination measurement: hold lifecycle start until the first
-		// valid destination measurement attaches, then release the pending transition.
 		useInitialDestinationMeasurement({
-			sharedBoundTag,
+			linkId,
 			enabled: shouldRunDestinationEffects,
 			currentScreenKey,
 			preferredSourceScreenKey,
+			ancestorScreenKeys: ancestorKeys,
 			measureBoundary,
 		});
 
-		// Pre-transition measurement path: when this route or its next sibling is
-		// about to animate, capture or refresh the measurements needed before
-		// progress or transform state mutates. Grouped sources refresh existing
-		// links; plain sources only backfill when missing.
 		useRefreshBoundary({
 			enabled: runtimeEnabled,
-			sharedBoundTag,
-			id,
-			group,
 			currentScreenKey,
+			preferredSourceScreenKey,
 			nextScreenKey,
-			hasNextScreen,
+			linkId,
+			group,
+			ancestorScreenKeys: ancestorKeys,
 			measureBoundary,
 		});
 
 		const handlePress = useCallback(
 			(...args: unknown[]) => {
 				// Press path has priority: capture source before user onPress/navigation.
-				if (group) {
-					runOnUI(setGroupInitialId)(group, String(id));
-				}
-				runOnUI(measureBoundary)({ intent: "capture-source" });
+				runOnUI(measureBoundary)({
+					type: "source",
+					pairKey: createPendingPairKey(currentScreenKey),
+				});
 
 				if (typeof onPress === "function") {
 					onPress(...args);
 				}
 			},
-			[group, id, measureBoundary, onPress],
+			[measureBoundary, onPress, currentScreenKey],
 		);
 
 		const resolvedOnPress =

@@ -1,77 +1,27 @@
-import { findLatest } from "../helpers/find-latest";
-import { matchesScreenKey } from "../helpers/matching";
+import { createScreenPairKey } from "../helpers/link-pairs.helpers";
 import type {
 	ResolvedTransitionPair,
 	ResolveTransitionContext,
-	ScreenKey,
+	ScreenPairKey,
 	TagID,
-	TagLink,
 } from "../types";
-import { registry } from "./state";
+import { getResolvedLink } from "./links";
 
-function findCompletedLinkByDestination(
-	stack: TagLink[],
-	screenKey?: ScreenKey,
-): TagLink | null {
-	"worklet";
-	if (!screenKey) return null;
-
-	return findLatest(
-		stack,
-		(link) =>
-			!!link.destination && matchesScreenKey(link.destination, screenKey),
-	);
-}
-
-function findCompletedLinkBySource(
-	stack: TagLink[],
-	screenKey?: ScreenKey,
-): TagLink | null {
-	"worklet";
-	if (!screenKey) return null;
-
-	return findLatest(
-		stack,
-		(link) => !!link.destination && matchesScreenKey(link.source, screenKey),
-	);
-}
-
-function findPendingLinkBySource(
-	stack: TagLink[],
-	screenKey?: ScreenKey,
-): TagLink | null {
-	"worklet";
-	if (!screenKey) return null;
-
-	return findLatest(
-		stack,
-		(link) =>
-			link.destination === null && matchesScreenKey(link.source, screenKey),
-	);
-}
-
-function findEnteringTransitionLink(
-	stack: TagLink[],
+function resolvePairKey(
 	context: ResolveTransitionContext,
-): TagLink | null {
+): ScreenPairKey | null {
 	"worklet";
-	return (
-		findCompletedLinkByDestination(stack, context.currentScreenKey) ??
-		findPendingLinkBySource(stack, context.previousScreenKey) ??
-		findCompletedLinkBySource(stack, context.previousScreenKey)
-	);
-}
 
-function findExitingTransitionLink(
-	stack: TagLink[],
-	context: ResolveTransitionContext,
-): TagLink | null {
-	"worklet";
-	return (
-		findCompletedLinkBySource(stack, context.currentScreenKey) ??
-		findCompletedLinkByDestination(stack, context.nextScreenKey) ??
-		findPendingLinkBySource(stack, context.currentScreenKey)
-	);
+	if (context.entering) {
+		if (!context.previousScreenKey || !context.currentScreenKey) return null;
+		return createScreenPairKey(
+			context.previousScreenKey,
+			context.currentScreenKey,
+		);
+	}
+
+	if (!context.currentScreenKey || !context.nextScreenKey) return null;
+	return createScreenPairKey(context.currentScreenKey, context.nextScreenKey);
 }
 
 function resolveTransitionPair(
@@ -79,30 +29,16 @@ function resolveTransitionPair(
 	context: ResolveTransitionContext,
 ): ResolvedTransitionPair {
 	"worklet";
-	const tagState = registry.get()[tag];
-	const stack = tagState?.linkStack;
-
-	const matchedLink =
-		stack && stack.length > 0
-			? context.entering
-				? findEnteringTransitionLink(stack, context)
-				: findExitingTransitionLink(stack, context)
-			: null;
-
-	const sourceBounds = matchedLink?.source?.bounds ?? null;
-	const destinationBounds = matchedLink?.destination?.bounds ?? null;
-	const sourceStyles = matchedLink?.source?.styles ?? null;
-	const destinationStyles = matchedLink?.destination?.styles ?? null;
-	const sourceScreenKey = matchedLink?.source?.screenKey ?? null;
-	const destinationScreenKey = matchedLink?.destination?.screenKey ?? null;
+	const pairKey = resolvePairKey(context);
+	const matchedLink = pairKey ? getResolvedLink(pairKey, tag).link : null;
 
 	return {
-		sourceBounds,
-		destinationBounds,
-		sourceStyles,
-		destinationStyles,
-		sourceScreenKey,
-		destinationScreenKey,
+		sourceBounds: matchedLink?.source.bounds ?? null,
+		destinationBounds: matchedLink?.destination?.bounds ?? null,
+		sourceStyles: matchedLink?.source.styles ?? null,
+		destinationStyles: matchedLink?.destination?.styles ?? null,
+		sourceScreenKey: matchedLink?.source.screenKey ?? null,
+		destinationScreenKey: matchedLink?.destination?.screenKey ?? null,
 	};
 }
 

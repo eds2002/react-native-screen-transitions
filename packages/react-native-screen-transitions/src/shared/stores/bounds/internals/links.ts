@@ -1,72 +1,169 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import {
-	findLatestPendingSourceLinkIndex,
-	findLinkIndexForDestinationWrite,
-	hasLinkSide,
-	isCompletedLinkForScreenKey,
-	isSameScreenFamily,
-	selectSourceUpdateTargetIndex,
-} from "../helpers/link.helpers";
-import { ensureTagState } from "../helpers/tag-state.helpers";
-import type { ScreenKey, TagID, TagLink } from "../types";
-import { type RegistryState, registry } from "./state";
+	createGroupTag,
+	createPendingPairKey,
+	ensurePairGroups,
+	ensurePairLinks,
+	getGroupKeyFromTag,
+	getLinkKeyFromTag,
+	getActiveGroupId as getPairActiveGroupId,
+	getDestination as getPairDestination,
+	getLink as getPairLink,
+	getSource as getPairSource,
+	getSourceScreenKeyFromPairKey,
+	removePairLink,
+} from "../helpers/link-pairs.helpers";
+import type {
+	GroupKey,
+	LinkKey,
+	LinkPairsState,
+	ScreenKey,
+	ScreenPairKey,
+	TagID,
+	TagLink,
+} from "../types";
+import { pairs } from "./state";
 
-type LinkSourceWriteMode = "capture" | "refresh";
-type LinkDestinationWriteMode = "attach" | "refresh";
+const toLinkKey = (tag: TagID): LinkKey => {
+	"worklet";
+	return getLinkKeyFromTag(tag);
+};
+
+const createLinkSide = (
+	screenKey: ScreenKey,
+	bounds: MeasuredDimensions,
+	styles: StyleProps,
+) => {
+	"worklet";
+	return {
+		screenKey,
+		bounds,
+		styles,
+	};
+};
+
+const writePairLink = (
+	state: LinkPairsState,
+	pairKey: ScreenPairKey,
+	linkKey: LinkKey,
+	link: TagLink,
+) => {
+	"worklet";
+	ensurePairLinks(state, pairKey)[linkKey] = link;
+};
+
+const writeGroup = (
+	state: LinkPairsState,
+	pairKey: ScreenPairKey,
+	group: GroupKey,
+	activeId: LinkKey,
+	initialId?: LinkKey,
+) => {
+	"worklet";
+	const previousInitialId = state[pairKey]?.groups?.[group]?.initialId;
+
+	ensurePairGroups(state, pairKey)[group] = {
+		activeId,
+		initialId: previousInitialId ?? initialId ?? activeId,
+	};
+};
+
+const writeDestination = (
+	state: LinkPairsState,
+	pairKey: ScreenPairKey,
+	linkKey: LinkKey,
+	screenKey: ScreenKey,
+	bounds: MeasuredDimensions,
+	styles: StyleProps,
+	group?: GroupKey,
+) => {
+	"worklet";
+	const link = getPairLink(state, pairKey, linkKey);
+	if (!link) return;
+
+	const destination = createLinkSide(screenKey, bounds, styles);
+
+	link.group = group ?? link.group;
+	link.destination = destination;
+	link.initialDestination ??= destination;
+
+	writePairLink(state, pairKey, linkKey, link);
+
+	if (link.group) {
+		writeGroup(state, pairKey, link.group, linkKey);
+	}
+};
+
+const promotePendingSource = (
+	state: LinkPairsState,
+	pairKey: ScreenPairKey,
+	linkKey: LinkKey,
+) => {
+	"worklet";
+	if (getPairLink(state, pairKey, linkKey)) return;
+
+	const sourceScreenKey = getSourceScreenKeyFromPairKey(pairKey);
+	const pendingPairKey = createPendingPairKey(sourceScreenKey);
+	if (pendingPairKey === pairKey) return;
+
+	const pendingLink = getPairLink(state, pendingPairKey, linkKey);
+	if (!pendingLink) return;
+
+	writePairLink(state, pairKey, linkKey, pendingLink);
+
+	if (pendingLink.group) {
+		const pendingGroupState =
+			state[pendingPairKey]?.groups?.[pendingLink.group];
+
+		if (pendingGroupState) {
+			writeGroup(
+				state,
+				pairKey,
+				pendingLink.group,
+				pendingGroupState.activeId,
+				pendingGroupState.initialId,
+			);
+		}
+	}
+
+	removePairLink(state, pendingPairKey, linkKey);
+};
 
 function setSource(
-	mode: LinkSourceWriteMode,
+	pairKey: ScreenPairKey,
 	tag: TagID,
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
+	group?: GroupKey,
 ) {
 	"worklet";
-	registry.modify(<T extends RegistryState>(state: T): T => {
+	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		const source = {
-			screenKey,
-			bounds,
-			styles,
-		};
+		const linkKey = toLinkKey(tag);
+		const source = createLinkSide(screenKey, bounds, styles);
 
-		if (mode === "capture") {
-			const tagState = ensureTagState(state, tag);
-			const stack = tagState.linkStack;
-			const topIndex = stack.length - 1;
-			const topLink = topIndex >= 0 ? stack[topIndex] : null;
+		const pairLinks = ensurePairLinks(state, pairKey);
 
-			if (
-				topLink &&
-				topLink.destination === null &&
-				isSameScreenFamily(topLink.source, source)
-			) {
-				topLink.source = source;
-				if (!topLink.initialSource) {
-					topLink.initialSource = source;
-				}
-				return state;
-			}
-
-			stack.push({
+		const existingLink = pairLinks[linkKey];
+		const link =
+			existingLink ??
+			({
+				group,
 				source,
 				destination: null,
 				initialSource: source,
-			});
+			} satisfies TagLink);
 
-			return state;
-		}
-
-		const stack = state[tag]?.linkStack;
-		if (!stack || stack.length === 0) return state;
-		const targetIndex = selectSourceUpdateTargetIndex(stack, screenKey);
-		if (targetIndex === -1) return state;
-
-		const link = stack[targetIndex];
-
+		link.group = group ?? link.group;
 		link.source = source;
-		if (!link.initialSource) {
-			link.initialSource = source;
+		link.initialSource ??= source;
+
+		pairLinks[linkKey] = link;
+
+		const pendingPairKey = createPendingPairKey(screenKey);
+		if (pendingPairKey !== pairKey) {
+			removePairLink(state, pendingPairKey, linkKey);
 		}
 
 		return state;
@@ -74,98 +171,110 @@ function setSource(
 }
 
 function setDestination(
-	mode: LinkDestinationWriteMode,
+	pairKey: ScreenPairKey,
 	tag: TagID,
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
-	expectedSourceScreenKey?: ScreenKey,
+	group?: GroupKey,
 ) {
 	"worklet";
-	registry.modify(<T extends RegistryState>(state: T): T => {
+	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		const stack = state[tag]?.linkStack;
-		if (!stack || stack.length === 0) return state;
-
-		const targetIndex = findLinkIndexForDestinationWrite(
-			stack,
-			mode === "refresh" ? screenKey : undefined,
-			expectedSourceScreenKey,
-		);
-
-		if (targetIndex === -1) return state;
-
-		const link = stack[targetIndex];
-		const destination = {
-			screenKey,
-			bounds,
-			styles,
-		};
-
-		link.destination = destination;
-		if (!link.initialDestination) {
-			link.initialDestination = destination;
-		}
+		const linkKey = toLinkKey(tag);
+		promotePendingSource(state, pairKey, linkKey);
+		writeDestination(state, pairKey, linkKey, screenKey, bounds, styles, group);
 
 		return state;
 	});
 }
 
-function getMatchedLink(tag: TagID, screenKey?: ScreenKey): TagLink | null {
+function setActiveGroupId(pairKey: ScreenPairKey, group: GroupKey, tag: TagID) {
 	"worklet";
-	const tagState = registry.get()[tag];
-	const stack = tagState?.linkStack;
-	if (!stack || stack.length === 0) {
-		return null;
+	pairs.modify(<T extends LinkPairsState>(state: T): T => {
+		"worklet";
+		writeGroup(state, pairKey, group, toLinkKey(tag));
+		return state;
+	});
+}
+
+function getActiveGroupId(
+	pairKey: ScreenPairKey,
+	group: GroupKey,
+): LinkKey | null {
+	"worklet";
+	return getPairActiveGroupId(pairs.get(), pairKey, group);
+}
+
+function getLink(pairKey: ScreenPairKey, tag: TagID): TagLink | null {
+	"worklet";
+	return getPairLink(pairs.get(), pairKey, toLinkKey(tag));
+}
+
+const isCompletedLink = (link: TagLink | null): link is TagLink => {
+	"worklet";
+	return !!link?.destination;
+};
+
+function getResolvedLink(
+	pairKey: ScreenPairKey,
+	tag: TagID,
+): { tag: TagID; link: TagLink | null } {
+	"worklet";
+	const state = pairs.get();
+	const linkKey = toLinkKey(tag);
+	const group = getGroupKeyFromTag(tag);
+	const requestedLink = getPairLink(state, pairKey, linkKey);
+
+	// Group active ids can update before the new member has a full source/destination
+	// link, so unresolved grouped links fall back to the initial id's measurements.
+	if (!group || isCompletedLink(requestedLink)) {
+		return {
+			tag,
+			link: requestedLink,
+		};
 	}
 
-	if (!screenKey) {
-		const lastLink = stack[stack.length - 1];
-		return lastLink ?? null;
-	}
-
-	for (let i = stack.length - 1; i >= 0; i--) {
-		const link = stack[i];
-		if (isCompletedLinkForScreenKey(link, screenKey)) {
-			return link;
+	const initialId = state[pairKey]?.groups?.[group]?.initialId;
+	if (initialId) {
+		const initialLink = getPairLink(state, pairKey, initialId);
+		if (isCompletedLink(initialLink)) {
+			return {
+				tag: createGroupTag(group, initialId),
+				link: initialLink,
+			};
 		}
 	}
 
-	return null;
+	return {
+		tag,
+		link: requestedLink,
+	};
 }
 
-function getPendingLink(
+function getSource(
+	pairKey: ScreenPairKey,
 	tag: TagID,
-	sourceScreenKey?: ScreenKey,
-): TagLink | null {
+): TagLink["source"] | null {
 	"worklet";
-	const tagState = registry.get()[tag];
-	const stack = tagState?.linkStack;
-	if (!stack || stack.length === 0) return null;
-
-	const pendingSourceLinkIndex = findLatestPendingSourceLinkIndex(
-		stack,
-		sourceScreenKey,
-	);
-	if (pendingSourceLinkIndex === -1) return null;
-	return stack[pendingSourceLinkIndex] ?? null;
+	return getPairSource(pairs.get(), pairKey, toLinkKey(tag));
 }
 
-function hasSourceLink(tag: TagID, screenKey: ScreenKey): boolean {
+function getDestination(
+	pairKey: ScreenPairKey,
+	tag: TagID,
+): TagLink["destination"] | null {
 	"worklet";
-	return hasLinkSide(registry.get()[tag]?.linkStack, screenKey, "source");
-}
-
-function hasDestinationLink(tag: TagID, screenKey: ScreenKey): boolean {
-	"worklet";
-	return hasLinkSide(registry.get()[tag]?.linkStack, screenKey, "destination");
+	return getPairDestination(pairs.get(), pairKey, toLinkKey(tag));
 }
 
 export {
-	getMatchedLink,
-	getPendingLink,
-	hasDestinationLink,
-	hasSourceLink,
+	getActiveGroupId,
+	getDestination,
+	getLink,
+	getResolvedLink,
+	getSource,
+	setActiveGroupId,
 	setDestination,
 	setSource,
 };

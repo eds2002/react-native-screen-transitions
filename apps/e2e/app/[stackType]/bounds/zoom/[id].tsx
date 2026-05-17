@@ -287,7 +287,7 @@ export default function NavigationZoomGroupTransitionsDetail() {
 				initialScrollIndex={initialIndex}
 				horizontal
 				pagingEnabled
-				scrollEnabled={false}
+				// scrollEnabled={false}
 				showsHorizontalScrollIndicator={false}
 				onMomentumScrollEnd={handleMomentumScrollEnd}
 				windowSize={1}

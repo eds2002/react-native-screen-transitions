@@ -1,16 +1,11 @@
 import { clear } from "./internals/clear";
 import { getEntry, removeEntry, setEntry } from "./internals/entries";
 import {
-	getGroupActiveId,
-	getGroupInitialId,
-	setGroupActiveId,
-	setGroupInitialId,
-} from "./internals/groups";
-import {
-	getMatchedLink,
-	getPendingLink,
-	hasDestinationLink,
-	hasSourceLink,
+	getActiveGroupId,
+	getDestination,
+	getLink,
+	getSource,
+	setActiveGroupId,
 	setDestination,
 	setSource,
 } from "./internals/links";
@@ -37,17 +32,12 @@ export const BoundStore = {
 	link: {
 		setSource,
 		setDestination,
-		getMatched: getMatchedLink,
+		setActiveGroupId,
+		getLink,
+		getSource,
+		getDestination,
+		getActiveGroupId,
 		getPair: resolveTransitionPair,
-		getPending: getPendingLink,
-		hasSource: hasSourceLink,
-		hasDestination: hasDestinationLink,
-	},
-	group: {
-		setActiveId: setGroupActiveId,
-		setInitialId: setGroupInitialId,
-		getActiveId: getGroupActiveId,
-		getInitialId: getGroupInitialId,
 	},
 	cleanup: {
 		byScreen: clear,

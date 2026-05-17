@@ -1,14 +1,15 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { createScreenTransitionState } from "../constants";
-import { BoundStore } from "../stores/bounds";
-import type { BoundsInterpolationProps } from "../types/bounds.types";
-import type { Layout } from "../types/screen.types";
-import { createBoundsAccessor } from "../utils/bounds";
+import { createScreenTransitionState } from "../../constants";
+import { BoundStore } from "../../stores/bounds";
+import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
+import type { BoundsInterpolationProps } from "../../types/bounds.types";
+import type { Layout } from "../../types/screen.types";
+import { createBoundsAccessor } from "../../utils/bounds";
 import {
 	createBounds,
 	registerMeasuredEntry,
 	registerSourceAndDestination,
-	refreshDestination,
+	setDestination,
 } from "./helpers/bounds-behavior-fixtures";
 
 const screenLayout = {
@@ -123,7 +124,7 @@ describe("bounds accessor", () => {
 		expect(styles.transform[1]).toEqual({ translateY: -8 });
 	});
 
-	it("resolves grouped links from the requested id before active metadata", () => {
+	it("resolves grouped links only from the requested concrete id", () => {
 		registerSourceAndDestination({
 			tag: "photos:1",
 			sourceScreenKey: "screen-a",
@@ -141,28 +142,32 @@ describe("bounds accessor", () => {
 
 		const bounds = createBoundsAccessor(makeProps);
 
-		BoundStore.group.setActiveId("photos", "1");
 		const initial = bounds.getLink("photos:1");
 
 		expect(initial?.id).toBe("photos:1");
 
-		BoundStore.group.setActiveId("photos", "2");
 		expect(bounds.getLink("photos:1")?.id).toBe("photos:1");
 
-		const active = bounds.getLink("photos:missing");
-		const raw = active?.compute({
-			method: "size",
-			space: "absolute",
-			target: "fullscreen",
-			raw: true,
-		});
-
-		expect(active?.id).toBe("photos:2");
-		expect(raw?.width).toBe(120);
-		expect(raw?.height).toBe(220);
+		expect(bounds.getLink("photos:missing")).toBeNull();
 	});
 
-	it("keeps initial link sides on refreshed links", () => {
+	it("syncs pair-local group active id from bounds options", () => {
+		const bounds = createBoundsAccessor(makeProps);
+
+		bounds({
+			id: "2",
+			group: "photos",
+		});
+
+		expect(
+			BoundStore.link.getActiveGroupId(
+				createScreenPairKey("screen-a", "screen-b"),
+				"photos",
+			),
+		).toBe("2");
+	});
+
+	it("keeps initial destination side on refreshed destination links", () => {
 		registerSourceAndDestination({
 			tag: "card",
 			sourceScreenKey: "screen-a",
@@ -170,45 +175,22 @@ describe("bounds accessor", () => {
 			sourceBounds: createBounds(10, 20, 100, 200),
 			destinationBounds: createBounds(50, 100, 200, 400),
 		});
-		refreshDestination({
+		setDestination({
 			tag: "card",
 			destinationScreenKey: "screen-b",
 			destinationBounds: createBounds(70, 120, 200, 400),
 		});
-		BoundStore.link.setSource(
-			"refresh",
-			"card",
-			"screen-a",
-			createBounds(30, 40, 110, 210),
-		);
 
 		const bounds = createBoundsAccessor(makeProps);
 		const link = bounds.getLink("card");
 
-		expect(link?.source?.bounds.pageX).toBe(30);
+		expect(link?.source?.bounds.pageX).toBe(10);
 		expect(link?.initialSource?.bounds.pageX).toBe(10);
 		expect(link?.destination?.bounds.pageX).toBe(70);
 		expect(link?.initialDestination?.bounds.pageX).toBe(50);
 	});
 
-	it("exposes group active and initial ids from either group names or tags", () => {
-		BoundStore.group.setInitialId("photos", "1");
-		BoundStore.group.setActiveId("photos", "2");
-
-		expect(BoundStore.group.getInitialId("photos")).toBe("1");
-		expect(BoundStore.group.getInitialId("photos:anything")).toBe("1");
-		expect(BoundStore.group.getActiveId("photos")).toBe("2");
-		expect(BoundStore.group.getActiveId("photos:anything")).toBe("2");
-	});
-
-	it("does not make a stray active id become the initial group id", () => {
-		BoundStore.group.setActiveId("photos", "2");
-
-		expect(BoundStore.group.getActiveId("photos")).toBe("2");
-		expect(BoundStore.group.getInitialId("photos")).toBeNull();
-	});
-
-	it("falls back to the initial group member when requested and active links miss", () => {
+	it("does not fall back to the initial group member while group linkage is disabled", () => {
 		registerSourceAndDestination({
 			tag: "photos:1",
 			sourceScreenKey: "screen-a",
@@ -219,13 +201,32 @@ describe("bounds accessor", () => {
 
 		const bounds = createBoundsAccessor(makeProps);
 
-		BoundStore.group.setInitialId("photos", "1");
-		BoundStore.group.setActiveId("photos", "2");
-
 		const fallback = bounds.getLink("photos:missing");
 
+		expect(fallback).toBeNull();
+	});
+
+	it("falls back to the pair-local initial group member for missing requested ids", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20, 100, 200);
+		const destination = createBounds(50, 100, 200, 400);
+
+		BoundStore.link.setSource(pairKey, "1", "screen-a", source, {}, "photos");
+		BoundStore.link.setDestination(
+			pairKey,
+			"1",
+			"screen-b",
+			destination,
+			{},
+			"photos",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "photos", "4");
+
+		const bounds = createBoundsAccessor(makeProps);
+		const fallback = bounds.getLink("photos:4");
+
 		expect(fallback?.id).toBe("photos:1");
-		expect(fallback?.source?.bounds.width).toBe(100);
+		expect(fallback?.source?.bounds.pageX).toBe(10);
 	});
 
 	it("scopes low-level helpers to a computed bounds result", () => {
@@ -237,7 +238,7 @@ describe("bounds accessor", () => {
 			destinationBounds: createBounds(50, 100, 200, 400),
 		});
 		registerMeasuredEntry("card", "screen-b", createBounds(4, 8, 16, 32));
-		refreshDestination({
+		setDestination({
 			tag: "card",
 			destinationScreenKey: "screen-b",
 			destinationBounds: createBounds(70, 120, 200, 400),

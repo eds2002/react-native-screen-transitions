@@ -7,6 +7,9 @@ import type {
 } from "../../utils/bounds/types/options";
 
 export type TagID = string;
+export type LinkKey = string;
+export type GroupKey = string;
+export type ScreenPairKey = string;
 export type { ScreenKey } from "../../types/screen.types";
 
 export type BoundaryConfig = {
@@ -37,6 +40,7 @@ export type ScreenIdentifier = {
 };
 
 export type TagLink = {
+	group?: GroupKey;
 	source: ScreenIdentifier & MeasuredEntry;
 	/** Destination side once attached; null while the source is still pending. */
 	destination: (ScreenIdentifier & MeasuredEntry) | null;
@@ -64,14 +68,20 @@ export type ResolvedTransitionPair = {
 
 export type ScreenEntry = Entry;
 
-export type TagState = {
+export type BoundaryState = {
 	screens: Record<ScreenKey, ScreenEntry>;
-	linkStack: TagLink[];
 };
 
-export type GroupState = {
-	/** Latest requested group member id from mounted grouped bounds. */
-	activeId: string;
-	/** Group member id that started the current linked transition. */
-	initialId?: string;
+export type LinkGroupState = {
+	activeId: LinkKey;
+	initialId?: LinkKey;
 };
+
+export type LinkPairState = {
+	links: Record<LinkKey, TagLink>;
+	groups: Record<GroupKey, LinkGroupState>;
+};
+
+export type LinkPairsState = Record<ScreenPairKey, LinkPairState>;
+
+export type TagState = BoundaryState;

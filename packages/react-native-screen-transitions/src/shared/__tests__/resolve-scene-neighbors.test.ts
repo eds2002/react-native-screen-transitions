@@ -17,13 +17,23 @@ describe("resolveSceneNeighbors", () => {
 		expect(result.nextDescriptor).toEqual({ id: "c" });
 	});
 
-	it("isolates closing current scene", () => {
+	it("keeps previous descriptor for a closing current scene", () => {
 		const scenes = [createScene("a"), createScene("b"), createScene("c")];
 		const isRouteClosing = (routeKey: string) => routeKey === "b";
 
 		const result = resolveSceneNeighbors(scenes, 1, isRouteClosing);
 
-		expect(result.previousDescriptor).toBeUndefined();
+		expect(result.previousDescriptor).toEqual({ id: "a" });
+		expect(result.nextDescriptor).toBeUndefined();
+	});
+
+	it("keeps previous descriptor for the top closing scene", () => {
+		const scenes = [createScene("a"), createScene("b-closing")];
+		const isRouteClosing = (routeKey: string) => routeKey === "b-closing";
+
+		const result = resolveSceneNeighbors(scenes, 1, isRouteClosing);
+
+		expect(result.previousDescriptor).toEqual({ id: "a" });
 		expect(result.nextDescriptor).toBeUndefined();
 	});
 
@@ -58,6 +68,9 @@ describe("resolveSceneNeighbors", () => {
 		const forB2 = resolveSceneNeighbors(scenes, 2, isRouteClosing);
 
 		expect(forA.nextDescriptor).toEqual({ id: "b2" });
+		expect(resolveSceneNeighbors(scenes, 1, isRouteClosing).previousDescriptor).toEqual({
+			id: "a",
+		});
 		expect(forB2.previousDescriptor).toEqual({ id: "a" });
 	});
 });

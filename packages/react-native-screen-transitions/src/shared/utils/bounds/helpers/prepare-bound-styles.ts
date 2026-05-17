@@ -1,8 +1,5 @@
 import { getEntry } from "../../../stores/bounds/internals/entries";
-import {
-	getGroupActiveId,
-	setGroupActiveId,
-} from "../../../stores/bounds/internals/groups";
+import { setActiveGroupId } from "../../../stores/bounds/internals/links";
 import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
 import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
@@ -12,6 +9,7 @@ import type {
 	BoundsOptionsResult,
 } from "../types/options";
 import { createBoundTag } from "./create-bound-tag";
+import { resolveBoundsPairKey } from "./resolve-bounds-pair-key";
 import { computeBoundStyles } from "./styles/compute";
 
 type BaseInterpolatorProps = BoundsInterpolationProps;
@@ -57,25 +55,36 @@ const buildBoundsOptions = ({
 	return resolved;
 };
 
-const syncGroupActiveMember = (group?: string, id?: BoundId) => {
+const syncActiveGroupId = (params: {
+	props: BoundsInterpolationProps;
+	id?: BoundId;
+	group?: string;
+}) => {
 	"worklet";
-	if (!group || id == null || id === "") return;
+	const { props, id, group } = params;
+	if (id == null || id === "" || !group) return;
 
-	const normalizedId = String(id);
+	const pairKey = resolveBoundsPairKey(props);
+	if (!pairKey) return;
 
-	if (getGroupActiveId(group) === normalizedId) return;
-
-	setGroupActiveId(group, normalizedId);
+	setActiveGroupId(pairKey, group, String(id));
 };
 
 export const prepareBoundStyles = <T extends BoundsOptions>({
 	props,
 	options,
 	resolvedPair,
+	syncGroupActiveId = false,
 }: ComputeResolvedBoundsStylesParams<T>): BoundsOptionsResult<T> => {
 	"worklet";
 
-	syncGroupActiveMember(options.group, options.id);
+	if (syncGroupActiveId) {
+		syncActiveGroupId({
+			props,
+			id: options.id,
+			group: options.group,
+		});
+	}
 
 	const resolved = buildBoundsOptions({
 		props,

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import type { MeasuredDimensions } from "react-native-reanimated";
-import { adjustedMeasuredBoundsForOverscrollDeltas } from "../components/create-boundary-component/hooks/helpers/scroll-measurement";
-import type { ScrollGestureState } from "../types/gesture.types";
+import { adjustedMeasuredBoundsForOverscrollDeltas } from "../../components/create-boundary-component/utils/measured-bounds";
+import type { ScrollGestureState } from "../../types/gesture.types";
 
 const measured = (): MeasuredDimensions => ({
 	x: 20,

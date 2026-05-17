@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { BoundStore } from "../stores/bounds";
+import { BoundStore } from "../../stores/bounds";
+import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import {
 	createBounds,
 	expectResolvedPair,
@@ -23,7 +24,8 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "screen-detail",
 		});
 
-		const destinationLink = BoundStore.link.getMatched(tag, "screen-detail");
+		const pairKey = createScreenPairKey("screen-list", "screen-detail");
+		const destinationLink = BoundStore.link.getLink(pairKey, tag);
 		expect(destinationLink?.source.screenKey).toBe("screen-list");
 		expect(destinationLink?.destination?.screenKey).toBe("screen-detail");
 	});
@@ -37,8 +39,9 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "screen-b",
 		});
 
-		const openingLookup = BoundStore.link.getMatched(tag, "screen-b");
-		const closingLookup = BoundStore.link.getMatched(tag, "screen-a");
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const openingLookup = BoundStore.link.getLink(pairKey, tag);
+		const closingLookup = BoundStore.link.getLink(pairKey, tag);
 
 		expect(openingLookup?.source.screenKey).toBe("screen-a");
 		expect(openingLookup?.destination?.screenKey).toBe("screen-b");
@@ -64,9 +67,11 @@ describe("Non-Group Flow", () => {
 			destinationBounds: createBounds(300, 320, 180, 180),
 		});
 
-		const latest = BoundStore.link.getMatched(tag, "screen-c");
-		const screenBLookup = BoundStore.link.getMatched(tag, "screen-b");
-		const prior = BoundStore.link.getMatched(tag, "screen-a");
+		const abPairKey = createScreenPairKey("screen-a", "screen-b");
+		const bcPairKey = createScreenPairKey("screen-b", "screen-c");
+		const latest = BoundStore.link.getLink(bcPairKey, tag);
+		const screenBLookup = BoundStore.link.getLink(bcPairKey, tag);
+		const prior = BoundStore.link.getLink(abPairKey, tag);
 
 		expect(latest?.source.screenKey).toBe("screen-b");
 		expect(latest?.destination?.screenKey).toBe("screen-c");
@@ -85,8 +90,9 @@ describe("Non-Group Flow", () => {
 			destinationScreenKey: "screen-detail",
 		});
 
-		expect(BoundStore.link.hasSource(tag, "stack-a")).toBe(false);
-		expect(BoundStore.link.getMatched(tag, "stack-a")).toBeNull();
+		const ancestorPairKey = createScreenPairKey("stack-a", "screen-detail");
+		expect(BoundStore.link.getSource(ancestorPairKey, tag)).toBeNull();
+		expect(BoundStore.link.getLink(ancestorPairKey, tag)).toBeNull();
 	});
 
 	it("keeps unrelated tags isolated during clear operations", () => {
@@ -106,8 +112,18 @@ describe("Non-Group Flow", () => {
 
 		BoundStore.cleanup.byScreen("screen-a");
 
-		expect(BoundStore.link.getMatched(firstTag, "detail-a")).toBeNull();
-		expect(BoundStore.link.getMatched(secondTag, "detail-b")).not.toBeNull();
+		expect(
+			BoundStore.link.getLink(
+				createScreenPairKey("screen-a", "detail-a"),
+				firstTag,
+			),
+		).toBeNull();
+		expect(
+			BoundStore.link.getLink(
+				createScreenPairKey("screen-b", "detail-b"),
+				secondTag,
+			),
+		).not.toBeNull();
 	});
 
 	it("retains style snapshot metadata alongside bounds for matched tags", () => {
@@ -122,9 +138,8 @@ describe("Non-Group Flow", () => {
 		expect(snapshot?.styles).toEqual(styles);
 	});
 
-	it("keeps non-group matching unaffected by group active-id state", () => {
+	it("keeps non-group matching scoped to the requested tag", () => {
 		const nonGroupTag = makeTag("avatar");
-		BoundStore.group.setActiveId("photos", "99");
 
 		registerSourceAndDestination({
 			tag: nonGroupTag,

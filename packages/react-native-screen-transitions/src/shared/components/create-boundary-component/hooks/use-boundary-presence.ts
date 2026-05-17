@@ -8,21 +8,21 @@ import type { BoundaryConfigProps } from "../types";
 
 export const useBoundaryPresence = (params: {
 	enabled: boolean;
-	sharedBoundTag: string;
+	entryTag: string;
 	currentScreenKey: string;
 	boundaryConfig?: BoundaryConfigProps;
 }) => {
-	const { enabled, sharedBoundTag, currentScreenKey, boundaryConfig } = params;
+	const { enabled, entryTag, currentScreenKey, boundaryConfig } = params;
 
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUI(setEntry)(sharedBoundTag, currentScreenKey, {
+		runOnUI(setEntry)(entryTag, currentScreenKey, {
 			boundaryConfig,
 		});
 
 		return () => {
-			runOnUI(removeEntry)(sharedBoundTag, currentScreenKey);
+			runOnUI(removeEntry)(entryTag, currentScreenKey);
 		};
-	}, [enabled, sharedBoundTag, currentScreenKey, boundaryConfig]);
+	}, [enabled, entryTag, currentScreenKey, boundaryConfig]);
 };

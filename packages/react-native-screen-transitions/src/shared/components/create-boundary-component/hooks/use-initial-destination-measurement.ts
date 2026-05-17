@@ -6,30 +6,32 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../stores/animation.store";
-import { hasDestinationLink } from "../../../stores/bounds/internals/links";
+import { getDestination } from "../../../stores/bounds/internals/links";
+import { pairs } from "../../../stores/bounds/internals/state";
 import {
 	LifecycleTransitionRequestKind,
 	SystemStore,
 } from "../../../stores/system.store";
-import type { MeasureParams } from "../types";
-import { createLinkContext } from "./helpers/boundary-link-context";
-import { shouldBlockInitialDestinationMeasurement } from "./helpers/measurement-rules";
+import type { MeasureBoundary } from "../types";
+import { getInitialDestinationMeasurePairKey } from "../utils/destination-signals";
 
 const VIEWPORT_RETRY_DELAY_MS = 16;
 
 interface UseInitialDestinationMeasurementParams {
-	sharedBoundTag: string;
+	linkId: string;
 	enabled: boolean;
 	currentScreenKey: string;
 	preferredSourceScreenKey?: string;
-	measureBoundary: (options: MeasureParams) => void;
+	ancestorScreenKeys: string[];
+	measureBoundary: MeasureBoundary;
 }
 
 export const useInitialDestinationMeasurement = ({
-	sharedBoundTag,
+	linkId,
 	enabled,
 	currentScreenKey,
 	preferredSourceScreenKey,
+	ancestorScreenKeys,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
 	const progress = AnimationStore.getValue(currentScreenKey, "progress");
@@ -87,35 +89,34 @@ export const useInitialDestinationMeasurement = ({
 				return [0, retryTick] as const;
 			}
 
-			const linkContext = createLinkContext({
-				sharedBoundTag,
+			const destinationPairKey = getInitialDestinationMeasurePairKey({
+				enabled,
 				currentScreenKey,
 				preferredSourceScreenKey,
+				ancestorScreenKeys,
+				linkId,
+				linkState: ancestorScreenKeys.length ? pairs.get() : undefined,
 			});
 
-			const shouldBlock = shouldBlockInitialDestinationMeasurement({
-				enabled,
-				hasDestinationLink: linkContext.hasDestinationLink,
-				hasAttachableSourceLink: linkContext.hasAttachableSourceLink,
-			});
-
-			if (!shouldBlock) {
-				return [0, retryTick] as const;
-			}
-
-			return [1, retryTick] as const;
+			return [destinationPairKey, retryTick] as const;
 		},
-		([shouldBlock]) => {
+		([destinationPairKey]) => {
 			"worklet";
-			if (!shouldBlock) {
+			if (!destinationPairKey) {
 				releaseLifecycleStartBlock();
 				return;
 			}
 
 			ensureLifecycleStartBlocked();
-			measureBoundary({ intent: "complete-destination" });
+			measureBoundary({
+				type: "destination",
+				pairKey: destinationPairKey,
+			});
 
-			if (hasDestinationLink(sharedBoundTag, currentScreenKey)) {
+			const destinationAttached =
+				getDestination(destinationPairKey, linkId) !== null;
+
+			if (destinationAttached) {
 				releaseLifecycleStartBlock();
 				return;
 			}

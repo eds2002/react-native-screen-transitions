@@ -3,13 +3,14 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { resetStoresForScreen } from "../components/screen-lifecycle/hooks/helpers/reset-stores-for-screen";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
+import { createPendingPairKey } from "../stores/bounds/helpers/link-pairs.helpers";
 import { GestureStore } from "../stores/gesture.store";
 import { SystemStore } from "../stores/system.store";
 import {
 	hasBoundaryPresence,
 	registerBoundaryPresence,
 	registerMeasuredEntry,
-} from "./helpers/bounds-behavior-fixtures";
+} from "./bounds/helpers/bounds-behavior-fixtures";
 
 const createMeasured = (
 	x = 0,
@@ -39,18 +40,19 @@ describe("close transition cleanup", () => {
 		const systemBefore = SystemStore.getBag(routeKey);
 
 		registerMeasuredEntry("card", routeKey, bounds);
-		BoundStore.link.setSource("capture", "card", routeKey, bounds);
+		const pairKey = createPendingPairKey(routeKey);
+		BoundStore.link.setSource(pairKey, "card", routeKey, bounds);
 		registerBoundaryPresence("card", routeKey);
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeTruthy();
-		expect(BoundStore.link.hasSource("card", routeKey)).toBe(true);
+		expect(BoundStore.link.getSource(pairKey, "card")).not.toBeNull();
 		expect(hasBoundaryPresence("card", routeKey)).toBe(true);
 
 		resetStoresForScreen(routeKey);
 		resetStoresForScreen(routeKey);
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
-		expect(BoundStore.link.hasSource("card", routeKey)).toBe(false);
+		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
 		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 
 		const animationAfter = AnimationStore.getBag(routeKey);
@@ -67,7 +69,8 @@ describe("close transition cleanup", () => {
 		const bounds = createMeasured(10, 20, 120, 140);
 
 		registerMeasuredEntry("card", routeKey, bounds);
-		BoundStore.link.setSource("capture", "card", routeKey, bounds);
+		const pairKey = createPendingPairKey(routeKey);
+		BoundStore.link.setSource(pairKey, "card", routeKey, bounds);
 		registerBoundaryPresence("card", routeKey);
 
 		const animationBefore = AnimationStore.getBag(routeKey);
@@ -85,7 +88,7 @@ describe("close transition cleanup", () => {
 		expect(systemAfter).not.toBe(systemBefore);
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
-		expect(BoundStore.link.hasSource("card", routeKey)).toBe(false);
+		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
 		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 	});
 
@@ -110,9 +113,12 @@ describe("close transition cleanup", () => {
 		const nestedRoute = "cleanup-route-nested";
 		const unrelatedRoute = "unrelated-route";
 		const bounds = createMeasured(12, 24, 130, 150);
+		const routePairKey = createPendingPairKey(routeKey);
+		const nestedPairKey = createPendingPairKey(nestedRoute);
+		const unrelatedPairKey = createPendingPairKey(unrelatedRoute);
 
 		registerMeasuredEntry("card", routeKey, bounds);
-		BoundStore.link.setSource("capture",
+		BoundStore.link.setSource(routePairKey,
 			"card",
 			routeKey,
 			bounds,
@@ -121,7 +127,7 @@ describe("close transition cleanup", () => {
 		registerBoundaryPresence("card", routeKey);
 
 		registerMeasuredEntry("card", nestedRoute, bounds);
-		BoundStore.link.setSource("capture",
+		BoundStore.link.setSource(nestedPairKey,
 			"card",
 			nestedRoute,
 			bounds,
@@ -130,21 +136,21 @@ describe("close transition cleanup", () => {
 		registerBoundaryPresence("card", nestedRoute);
 
 		registerMeasuredEntry("card", unrelatedRoute, bounds);
-		BoundStore.link.setSource("capture", "card", unrelatedRoute, bounds);
+		BoundStore.link.setSource(unrelatedPairKey, "card", unrelatedRoute, bounds);
 		registerBoundaryPresence("card", unrelatedRoute);
 
 		resetStoresForScreen(routeKey);
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
-		expect(BoundStore.link.hasSource("card", routeKey)).toBe(false);
+		expect(BoundStore.link.getSource(routePairKey, "card")).toBeNull();
 		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 
 		expect(BoundStore.entry.get("card", nestedRoute)).toBeTruthy();
-		expect(BoundStore.link.hasSource("card", nestedRoute)).toBe(true);
+		expect(BoundStore.link.getSource(nestedPairKey, "card")).not.toBeNull();
 		expect(hasBoundaryPresence("card", nestedRoute)).toBe(true);
 
 		expect(BoundStore.entry.get("card", unrelatedRoute)).toBeTruthy();
-		expect(BoundStore.link.hasSource("card", unrelatedRoute)).toBe(true);
+		expect(BoundStore.link.getSource(unrelatedPairKey, "card")).not.toBeNull();
 		expect(hasBoundaryPresence("card", unrelatedRoute)).toBe(true);
 	});
 });

@@ -1,5 +1,5 @@
 import { getEntry } from "../../../stores/bounds/internals/entries";
-import { resolveGroupLink } from "../../../stores/bounds/internals/groups";
+import { getResolvedLink } from "../../../stores/bounds/internals/links";
 import type {
 	MeasuredEntry,
 	ResolvedTransitionPair,
@@ -12,6 +12,7 @@ import type {
 } from "../../../types/bounds.types";
 import type { BoundId, BoundsOptionsResult } from "../types/options";
 import { prepareBoundStyles } from "./prepare-bound-styles";
+import { resolveBoundsPairKey } from "./resolve-bounds-pair-key";
 
 type GetProps = () => BoundsInterpolationProps;
 
@@ -52,11 +53,10 @@ export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
 		"worklet";
 		const props = getProps();
 		const stringTag = String(tag);
-		const screenKey = props.current?.route.key;
-		const resolved = resolveGroupLink({
-			tag: stringTag,
-			screenKey,
-		});
+		const pairKey = resolveBoundsPairKey(props);
+		const resolved = pairKey
+			? getResolvedLink(pairKey, stringTag)
+			: { tag: stringTag, link: null };
 		const selectedTag = resolved.tag;
 		const link = resolved.link;
 

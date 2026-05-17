@@ -5,7 +5,8 @@ import {
 	type ResolveTransitionContext,
 	type ResolvedTransitionPair,
 	type Snapshot,
-} from "../../stores/bounds";
+} from "../../../stores/bounds";
+import { createScreenPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
 
 export const createBounds = (
 	x = 0,
@@ -68,7 +69,6 @@ type RegisterSourceAndDestinationParams = {
 	destinationScreenKey: string;
 	sourceBounds?: Snapshot["bounds"];
 	destinationBounds?: Snapshot["bounds"];
-	expectedSourceScreenKey?: string;
 };
 
 export const registerSourceAndDestination = ({
@@ -77,37 +77,37 @@ export const registerSourceAndDestination = ({
 	destinationScreenKey,
 	sourceBounds = createBounds(0, 0, 120, 120),
 	destinationBounds = createBounds(200, 300, 180, 180),
-	expectedSourceScreenKey,
 }: RegisterSourceAndDestinationParams) => {
-	BoundStore.link.setSource(
-		"capture",
+	const pairKey = createScreenPairKey(sourceScreenKey, destinationScreenKey);
+
+	BoundStore.link.setSource(pairKey,
 		tag,
 		sourceScreenKey,
 		sourceBounds,
 		{},
 	);
 
-	BoundStore.link.setDestination(
-		"attach",
+	BoundStore.link.setDestination(pairKey,
 		tag,
 		destinationScreenKey,
 		destinationBounds,
 		{},
-		expectedSourceScreenKey,
 	);
 };
 
-export const refreshDestination = ({
+export const setDestination = ({
 	tag,
+	sourceScreenKey = "screen-a",
 	destinationScreenKey,
 	destinationBounds,
 }: {
 	tag: string;
+	sourceScreenKey?: string;
 	destinationScreenKey: string;
 	destinationBounds: Snapshot["bounds"];
 }) => {
-	BoundStore.link.setDestination(
-		"refresh",
+	const pairKey = createScreenPairKey(sourceScreenKey, destinationScreenKey);
+	BoundStore.link.setDestination(pairKey,
 		tag,
 		destinationScreenKey,
 		destinationBounds,
