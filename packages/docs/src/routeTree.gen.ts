@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UpdatingTo36RouteImport } from './routes/updating-to-3-6'
 import { Route as TransitionComponentsRouteImport } from './routes/transition-components'
 import { Route as SurfaceSlotsRouteImport } from './routes/surface-slots'
 import { Route as StackTypesRouteImport } from './routes/stack-types'
@@ -32,6 +33,11 @@ import { Route as CaveatsRouteImport } from './routes/caveats'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
 
+const UpdatingTo36Route = UpdatingTo36RouteImport.update({
+  id: '/updating-to-3-6',
+  path: '/updating-to-3-6',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const TransitionComponentsRoute = TransitionComponentsRouteImport.update({
   id: '/transition-components',
   path: '/transition-components',
@@ -165,6 +171,7 @@ export interface FileRoutesByFullPath {
   '/stack-types': typeof StackTypesRoute
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
+  '/updating-to-3-6': typeof UpdatingTo36Route
   '/v4-next/': typeof V4NextIndexRoute
 }
 export interface FileRoutesByTo {
@@ -189,6 +196,7 @@ export interface FileRoutesByTo {
   '/stack-types': typeof StackTypesRoute
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
+  '/updating-to-3-6': typeof UpdatingTo36Route
   '/v4-next': typeof V4NextIndexRoute
 }
 export interface FileRoutesById {
@@ -214,6 +222,7 @@ export interface FileRoutesById {
   '/stack-types': typeof StackTypesRoute
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
+  '/updating-to-3-6': typeof UpdatingTo36Route
   '/v4-next/': typeof V4NextIndexRoute
 }
 export interface FileRouteTypes {
@@ -240,6 +249,7 @@ export interface FileRouteTypes {
     | '/stack-types'
     | '/surface-slots'
     | '/transition-components'
+    | '/updating-to-3-6'
     | '/v4-next/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -264,6 +274,7 @@ export interface FileRouteTypes {
     | '/stack-types'
     | '/surface-slots'
     | '/transition-components'
+    | '/updating-to-3-6'
     | '/v4-next'
   id:
     | '__root__'
@@ -288,6 +299,7 @@ export interface FileRouteTypes {
     | '/stack-types'
     | '/surface-slots'
     | '/transition-components'
+    | '/updating-to-3-6'
     | '/v4-next/'
   fileRoutesById: FileRoutesById
 }
@@ -313,11 +325,19 @@ export interface RootRouteChildren {
   StackTypesRoute: typeof StackTypesRoute
   SurfaceSlotsRoute: typeof SurfaceSlotsRoute
   TransitionComponentsRoute: typeof TransitionComponentsRoute
+  UpdatingTo36Route: typeof UpdatingTo36Route
   V4NextIndexRoute: typeof V4NextIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/updating-to-3-6': {
+      id: '/updating-to-3-6'
+      path: '/updating-to-3-6'
+      fullPath: '/updating-to-3-6'
+      preLoaderRoute: typeof UpdatingTo36RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/transition-components': {
       id: '/transition-components'
       path: '/transition-components'
@@ -497,6 +517,7 @@ const rootRouteChildren: RootRouteChildren = {
   StackTypesRoute: StackTypesRoute,
   SurfaceSlotsRoute: SurfaceSlotsRoute,
   TransitionComponentsRoute: TransitionComponentsRoute,
+  UpdatingTo36Route: UpdatingTo36Route,
   V4NextIndexRoute: V4NextIndexRoute,
 }
 export const routeTree = rootRouteImport

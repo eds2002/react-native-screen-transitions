@@ -274,20 +274,25 @@ For stack-scoped snapping, use `useScreenState().snapTo(index)`.
 
 ### useScreenAnimation
 
-Read the current screen animation derived value, or target an ancestor.
+Read the current screen animation derived value, or target a relative transition scope.
 
 ```tsx
 const animation = useScreenAnimation();
-const parentAnimation = useScreenAnimation("parent");
+const parentAnimation = useScreenAnimation({ depth: -1 });
+const childAnimation = useScreenAnimation({ depth: 1 });
 ```
+
+Legacy string targets such as `"parent"` and `"root"` still work for `useScreenAnimation()`, but new code should use `{ depth }`.
 
 ### useScreenGesture
 
 Read the screen navigation pan-gesture ref.
 
 ```tsx
-const parentGesture = useScreenGesture("parent");
+const parentGesture = useScreenGesture({ depth: -1 });
 ```
+
+`useScreenGesture()` supports the current screen with `depth: 0` and ancestors with negative depths.
 
 ### useScreenState
 

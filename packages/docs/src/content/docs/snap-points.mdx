@@ -95,9 +95,9 @@ screenStyleInterpolator: ({ current }) => {
 
 Use `current.layouts.content` for new code. The top-level `layouts` prop is a deprecated alias.
 
-## Reading Snap State
+## Reading Target Snap State
 
-The active detent lives on `current.snapIndex`:
+The selected target detent lives on `current.snapIndex`:
 
 ```tsx
 screenStyleInterpolator: ({ current }) => {
@@ -124,7 +124,7 @@ screenStyleInterpolator: ({ current }) => {
 };
 ```
 
-`current.snapIndex` is animated and can be fractional between detents. The top-level `snapIndex` interpolator prop is deprecated.
+`current.snapIndex` updates when the target changes, such as initial mount, `snapTo()`, or gesture release. Use `current.animatedSnapIndex` when the visual state should follow the user's finger between detents.
 
 ## Release Targeting
 

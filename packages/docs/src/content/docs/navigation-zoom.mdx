@@ -86,7 +86,7 @@ const navigationZoomId = makeMutable<string | null>(null);
     navigationMaskEnabled: Platform.OS === "ios",
     gestureEnabled: true,
     gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
-    gestureDrivesProgress: false,
+    gestureProgressMode: "freeform",
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
       const id = navigationZoomId.value;

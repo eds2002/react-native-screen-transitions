@@ -20,6 +20,8 @@ If you are cleaning up an older setup, these are the migrations that matter:
 5. rename `expandViaScrollView` to `sheetScrollGestureBehavior`
 6. move new embedded flows to blank stack instead of component stack
 
+If you are already on v3.4 or v3.5 and want the current release changes, read [Updating to 3.6](/updating-to-3-6) after this page.
+
 ## Move New Bounds Flows To Transition.Boundary.*
 
 `sharedBoundTag` on transition-aware components still exists, but it is the legacy path.
@@ -66,7 +68,7 @@ screenStyleInterpolator: () => ({
 });
 ```
 
-The older flat keys still exist for compatibility, but they are deprecated:
+The older flat keys are legacy compatibility input. New typed code should use layer slots instead:
 
 - `contentStyle`
 - `backdropStyle`
@@ -107,6 +109,8 @@ New code should prefer:
 
 - `current.layouts`
 - `current.snapIndex`
+
+In current v3.6 code, use `current.animatedSnapIndex` when the visual state should follow a live gesture between detents. Use `current.snapIndex` for the selected target detent.
 
 ## Rename Old Option Names
 
@@ -161,10 +165,10 @@ For the v3 blank-stack model, including when to use `independent` and `enableNat
 
 ```tsx
 const selfAnimation = useScreenAnimation();
-const parentAnimation = useScreenAnimation("parent");
+const parentAnimation = useScreenAnimation({ depth: -1 });
 
 const selfGesture = useScreenGesture();
-const rootGesture = useScreenGesture("root");
+const parentGesture = useScreenGesture({ depth: -1 });
 ```
 
 `useScreenGesture()` returns a gesture ref for coordination with Gesture Handler. It does not configure `gestureEnabled`, `gestureDirection`, or other screen options.

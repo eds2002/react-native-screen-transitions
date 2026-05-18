@@ -1,14 +1,118 @@
 ---
 title: "Reveal"
 pageTitle: "Reveal"
-summary: "Work-in-progress notes for the reveal navigation transition."
-description: "Work-in-progress notes for the reveal navigation transition."
+summary: "Use bounds({ id }).navigation.reveal() for masked, source-to-container navigation reveal transitions."
+description: "Use bounds({ id }).navigation.reveal() for masked, source-to-container navigation reveal transitions."
 eyebrow: "Navigation Transitions"
 group: "Navigation Transitions"
 order: 2
 to: /reveal
 ---
 
-## WIP
+## What This Helper Is
 
-This page is intentionally a placeholder while the reveal API and recommendations settle.
+`navigation.reveal()` is the high-level bounds helper for container-style navigation transitions.
+
+It uses the same boundary link system as `bounds()` and `navigation.zoom()`, but instead of animating a floating matched element above the screen, it scales and masks the destination content from the source boundary into the destination container.
+
+Use it when the destination screen should feel like it is revealed from the tapped source, especially for card, photo, or media-detail flows.
+
+## Recommended Setup
+
+Mark the source with `Transition.Boundary.Trigger`, then call `navigation.reveal()` from the destination screen's `screenStyleInterpolator`.
+
+```tsx
+import { makeMutable } from "react-native-reanimated";
+import Transition from "react-native-screen-transitions";
+
+const revealId = makeMutable<string | null>(null);
+
+<Transition.Boundary.Trigger
+  id={item.id}
+  onPress={() => {
+    revealId.value = item.id;
+    navigation.navigate("Detail");
+  }}
+>
+  <Image source={item.image} style={styles.thumbnail} />
+</Transition.Boundary.Trigger>
+
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    navigationMaskEnabled: true,
+    gestureEnabled: true,
+    gestureDirection: ["vertical", "horizontal"],
+    gestureProgressMode: "freeform",
+    screenStyleInterpolator: ({ bounds }) => {
+      "worklet";
+
+      const id = revealId.value;
+      if (!id) return null;
+
+      return bounds({ id }).navigation.reveal();
+    },
+  }}
+/>
+```
+
+`navigationMaskEnabled` is strongly recommended for reveal transitions because the helper drives the navigation mask element. Install `@react-native-masked-view/masked-view` when you enable it.
+
+## Destination Boundaries
+
+The destination screen usually needs a matching destination boundary:
+
+```tsx
+function DetailScreen() {
+  return (
+    <Transition.Boundary.View id={item.id}>
+      <Image source={item.image} style={styles.hero} />
+    </Transition.Boundary.View>
+  );
+}
+```
+
+The destination boundary gives the helper a real container target for the reveal. If the target element is nested inside a larger pressable or layout owner, use `Transition.Boundary.Target` inside the boundary owner to narrow the measured region.
+
+## Gesture Behavior
+
+Reveal reads the active gesture state from the transition runtime:
+
+- pan directions can drag the revealed container away from the target
+- `active.gesture.velocity` affects the dismiss handoff scale
+- `gestureProgressMode: "freeform"` is usually the right choice when you want the reveal container to respond to drag without letting drag progress directly own the whole screen transition
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureDirection: ["vertical", "horizontal"],
+  gestureProgressMode: "freeform",
+}}
+```
+
+Use `active.gesture.raw` if you derive dynamic runtime options such as `gestureSensitivity` from gesture movement.
+
+## Platform Notes
+
+On Android, reveal uses a transform-based mask path to avoid masked-size animation issues. That keeps the API the same, but the internal mask output differs from iOS. Test both platforms if you customize mask styles directly through the navigation mask ids.
+
+Reveal also depends on stable source and destination measurements. If the source layout can change while it is unfocused, set `remeasureOnFocus` on the source boundary owner:
+
+```tsx
+<Transition.Boundary.Trigger id={item.id} remeasureOnFocus onPress={open}>
+  <Image source={item.image} />
+</Transition.Boundary.Trigger>
+```
+
+## Reveal vs Zoom
+
+Use [Zoom](/navigation-zoom) when the matched element should float above the transition and the background content should scale behind it.
+
+Use reveal when the destination content itself should grow out of the source and remain clipped by a navigation mask during the handoff.
+
+## Related Reading
+
+- [Zoom](/navigation-zoom)
+- [Bounds Transitions](/shared-elements)
+- [Custom Animations](/custom-animations)

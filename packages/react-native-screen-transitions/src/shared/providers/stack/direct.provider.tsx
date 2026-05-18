@@ -142,5 +142,5 @@ function withDirectStack<TProps extends DirectStackProps>(
 	};
 }
 
-export { withDirectStack };
 export type { DirectStackContextValue, DirectStackProps, DirectStackScene };
+export { withDirectStack };

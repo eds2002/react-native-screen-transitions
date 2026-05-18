@@ -78,8 +78,8 @@
 	},
 	"devDependencies": {
 		"@testing-library/react-native": "13.3.3",
-		"@types/react": "~19.1.10",
-		"react-native-builder-bob": "0.39.0",
+		"@types/react": "~19.2.14",
+		"react-native-builder-bob": "0.41.0",
 		"typescript": "catalog:"
 	},
 	"react-native-builder-bob": {

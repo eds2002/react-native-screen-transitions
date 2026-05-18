@@ -62,7 +62,7 @@ export const docVersions = [
 	{
 		basePath: "",
 		id: "v3-4",
-		label: "v3.4",
+		label: "v3.6",
 	},
 	{
 		basePath: "/v4-next",

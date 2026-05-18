@@ -138,9 +138,9 @@ function withManagedStack<
 	};
 }
 
-export { useManagedStackContext, withManagedStack };
 export type {
 	ManagedStackContextValue,
 	ManagedStackProps,
 	ManagedStackRenderProps,
 };
+export { useManagedStackContext, withManagedStack };

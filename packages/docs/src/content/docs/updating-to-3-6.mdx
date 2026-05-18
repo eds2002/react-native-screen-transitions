@@ -1,0 +1,163 @@
+---
+title: "Updating to 3.6"
+pageTitle: "Updating to 3.6"
+summary: "Move existing v3 apps onto the v3.6 gesture, snap, bounds, and navigation transition surface."
+description: "Move existing v3 apps onto the v3.6 gesture, snap, bounds, and navigation transition surface."
+eyebrow: "Guides"
+group: "Guides"
+order: 2
+to: /updating-to-3-6
+---
+
+## Why This Page Exists
+
+v3.6 keeps the v3 transition model, but it tightens the names and runtime behavior around gestures, snap points, and bounds navigation helpers.
+
+If you already use v3.4 or v3.5, these are the changes worth making in app code and docs.
+
+## Prefer gestureProgressMode
+
+Use `gestureProgressMode` for new code:
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureDirection: ["vertical", "horizontal"],
+  gestureProgressMode: "freeform",
+}}
+```
+
+`gestureDrivesProgress: false` still maps to freeform mode for compatibility, but new examples should use `gestureProgressMode`.
+
+Use `"progress-driven"` when drag movement should directly move screen progress. Use `"freeform"` when the gesture values should drive custom visuals while the transition progress stays controlled by navigation or release.
+
+## Rename Snap Velocity Tuning
+
+Use `gestureSnapVelocityImpact` when tuning snap-point release targeting:
+
+```tsx
+options={{
+  snapPoints: [0.3, 0.7, 1],
+  gestureSnapVelocityImpact: 0.15,
+}}
+```
+
+The older `snapVelocityImpact` name remains in the type surface for compatibility, but the v3.6 gesture runtime reads `gestureSnapVelocityImpact`.
+
+## Read Live vs Target Snap State
+
+Use `current.animatedSnapIndex` when visuals should follow the live gesture:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        borderRadius: interpolate(
+          current.animatedSnapIndex,
+          [0, 1, 2],
+          [28, 16, 0],
+          "clamp"
+        ),
+      },
+    },
+  };
+};
+```
+
+Use `current.snapIndex` when logic should follow the selected target detent after mount, `snapTo()`, or gesture release.
+
+## Use active Gesture State
+
+Gesture state now covers pan and pinch:
+
+```tsx
+screenStyleInterpolator: ({ active }) => {
+  "worklet";
+
+  const gesture = active.gesture.active;
+  const velocity = active.gesture.velocity;
+  const pinchScale = active.gesture.normScale;
+
+  return {
+    content: {
+      style: {
+        opacity: 1 - velocity * 0.2,
+        transform: [{ scale: 1 - Math.abs(pinchScale) * 0.1 }],
+      },
+    },
+  };
+};
+```
+
+Prefer `active.gesture.active` over the older pan-only `active.gesture.direction`. Use `active.gesture.raw` when calculating dynamic `gestureSensitivity` so sensitivity does not feed back into itself.
+
+## Update Hook Targets
+
+Use `{ depth }` for transition and gesture hook targeting:
+
+```tsx
+const selfGesture = useScreenGesture();
+const parentGesture = useScreenGesture({ depth: -1 });
+
+const selfAnimation = useScreenAnimation();
+const parentAnimation = useScreenAnimation({ depth: -1 });
+const childAnimation = useScreenAnimation({ depth: 1 });
+```
+
+`useScreenAnimation()` still accepts legacy string targets such as `"parent"` and `"root"`, but new code should use `{ depth }`. `useScreenGesture()` resolves the current screen and ancestors only.
+
+## Use Reveal for Container-Style Navigation
+
+v3.6 adds `bounds({ id }).navigation.reveal()` for masked source-to-container transitions:
+
+```tsx
+screenStyleInterpolator: ({ bounds }) => {
+  "worklet";
+  return bounds({ id: "hero" }).navigation.reveal();
+};
+```
+
+Use [Reveal](/reveal) when destination content should grow out of a source boundary. Use [Zoom](/navigation-zoom) when a matched element should float above the background during the handoff.
+
+## Use Scoped Bounds Helpers
+
+Scoped bounds results now expose their own helper methods:
+
+```tsx
+const hero = bounds({ id: "hero" });
+const measured = hero.getMeasured(current.route.key);
+const link = hero.getLink();
+const initialSource = link?.initialSource;
+const initialDestination = link?.initialDestination;
+const raw = link?.compute({ method: "size", raw: true });
+```
+
+Prefer `offset` over the older `gestures` option when adding live x/y movement to bounds:
+
+```tsx
+bounds({
+  id: "hero",
+  offset: {
+    x: active.gesture.x,
+    y: active.gesture.y,
+  },
+});
+```
+
+## Compatibility Notes
+
+- `gestureDrivesProgress` still maps to `gestureProgressMode`.
+- `expandViaScrollView` still maps to `sheetScrollGestureBehavior`.
+- `getSnapshot()` still exists as a deprecated alias for `getMeasured()`.
+- `active.gesture.direction` still exists as a deprecated pan-only alias for `active.gesture.active`.
+- Flat interpolator keys such as `contentStyle`, `backdropStyle`, and `overlayStyle` are legacy-only. New code should return layer slots such as `content`, `backdrop`, `surface`, and `styleId` keys.
+
+## Related Reading
+
+- [Gestures](/gestures)
+- [Snap Points](/snap-points)
+- [Reveal](/reveal)
+- [Bounds Transitions](/shared-elements)
