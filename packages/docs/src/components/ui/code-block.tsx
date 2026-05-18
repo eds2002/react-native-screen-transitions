@@ -169,7 +169,7 @@ function toneClass(tone: CodeSegment["tone"]) {
 		case "value":
 			return "text-[#0550ae] dark:text-[#79c0ff]";
 		default:
-			return "text-[#111a16] dark:text-[#eef4f1]";
+			return "text-neutral-950 dark:text-neutral-50";
 	}
 }
 
@@ -283,8 +283,8 @@ function CopyButton({
 			aria-label={copied ? "Code copied" : "Copy code"}
 			className={
 				copied
-					? "flex h-9 w-9 items-center justify-center rounded-md text-[#0fa184] transition-colors duration-150 dark:text-[#7df0d7]"
-					: "flex h-9 w-9 items-center justify-center rounded-md text-[#5c6d66] transition-colors duration-150 hover:bg-black/[0.04] hover:text-[#111a16] dark:text-[#95a49f] dark:hover:bg-white/[0.06] dark:hover:text-[#eef4f1]"
+					? "flex h-9 w-9 items-center justify-center rounded-md text-neutral-950 transition-colors duration-150 dark:text-neutral-50"
+					: "flex h-9 w-9 items-center justify-center rounded-md text-neutral-500 transition-colors duration-150 hover:bg-black/[0.04] hover:text-neutral-950 dark:text-neutral-400 dark:hover:bg-white/[0.06] dark:hover:text-neutral-50"
 			}
 		>
 			{copied ? <CheckIcon /> : <CopyIcon />}
@@ -450,7 +450,7 @@ export function CodeBlock({
 		<div className="min-w-0 max-w-full overflow-hidden rounded-3xl bg-neutral-100/75 dark:bg-neutral-900">
 			{tabs && tabs.length > 0 ? (
 				<div className="flex items-center gap-3 border-b border-neutral-200/75 dark:border-neutral-800  px-3 py-2.5  ">
-					<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md  text-[#5c6d66] dark:text-[#95a49f]">
+					<div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md text-neutral-500 dark:text-neutral-400">
 						<TerminalIcon />
 					</div>
 					<div className="flex min-w-0 flex-1 flex-wrap gap-1.5">
@@ -477,7 +477,7 @@ export function CodeBlock({
 				</div>
 			) : resolvedTitle ? (
 				<div className="flex items-center gap-3 border-b border-neutral-200/75  px-4 py-2 dark:border-white/8 ">
-					<p className="min-w-0 flex-1 truncate text-[#111a16] dark:text-[#eef4f1]">
+					<p className="min-w-0 flex-1 truncate text-neutral-950 dark:text-neutral-50">
 						{resolvedTitle}
 					</p>
 					<CopyButton copied={copied} onClick={() => void handleCopy()} />
@@ -491,8 +491,8 @@ export function CodeBlock({
 				<pre
 					className={
 						hasHeader
-							? "min-w-full py-3 leading-7 text-[#111a16] dark:text-[#eef4f1]"
-							: "min-w-full pb-4 leading-7 text-[#111a16] dark:text-[#eef4f1]"
+							? "min-w-full py-3 leading-7 text-neutral-950 dark:text-neutral-50"
+							: "min-w-full pb-4 leading-7 text-neutral-950 dark:text-neutral-50"
 					}
 				>
 					<code className="block min-w-full w-fit font-mono px-4 gap-12">
@@ -513,7 +513,7 @@ export function CodeBlock({
 										}
 									>
 										{withLineNumbers ? (
-											<span className="select-none pt-0 text-left text-[#5c6d66] dark:text-[#95a49f] text-sm">
+											<span className="select-none pt-0 text-left text-neutral-500 dark:text-neutral-400 text-sm">
 												{lineNumber}
 											</span>
 										) : null}
@@ -524,7 +524,7 @@ export function CodeBlock({
 														key={`${lineNumber}-${segmentIndex.toString()}-${segment.value}`}
 														className={
 															segment.emphasized
-																? `${toneClass(segment.tone)} rounded-[3px] bg-black/[0.08] px-1 text-[#111a16] dark:bg-white/[0.10] dark:text-[#eef4f1] text-sm`
+																? `${toneClass(segment.tone)} rounded-[3px] bg-black/[0.08] px-1 text-neutral-950 dark:bg-white/[0.10] dark:text-neutral-50 text-sm`
 																: `${toneClass(segment.tone)} text-sm`
 														}
 													>

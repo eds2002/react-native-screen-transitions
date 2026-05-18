@@ -138,7 +138,7 @@ function DocsNavigation({
 										className:
 											"bg-neutral-100 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50 self-start text-sm",
 									}}
-									className="block rounded-xl  hover:bg-neutral-100 dark:hover:bg-neutral-900 px-3 py-2 transition-colors duration-150 hover:text-neutral-900 dark:hover:text-neutral-50 self-start text-sm"
+									className="block rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-900 px-3 py-2 hover:text-neutral-900 dark:hover:text-neutral-50 self-start text-sm"
 								>
 									<p>{item.title}</p>
 								</Link>

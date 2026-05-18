@@ -280,7 +280,7 @@ const mdxComponents = {
 		</th>
 	),
 	ul: ({ children }: { children?: ReactNode }) => (
-		<ul className="max-w-[46rem] list-disc pl-[1.4rem] text-[1.05rem] leading-[1.8] text-neutral-600 dark:text-neutral-400">
+		<ul className="max-w-[46rem] list-disc pl-[1.4rem] leading-normal text-neutral-600 dark:text-neutral-400">
 			{children}
 		</ul>
 	),
