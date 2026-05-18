@@ -228,6 +228,9 @@ export interface ScreenInterpolationProps {
 	/**
 	 * Whether the active transition is visually close enough to its target to be
 	 * treated as complete, even if the animation is still physically settling.
+	 *
+	 * @deprecated Use `active.logicallySettled` instead. Screen settlement state
+	 * belongs on the screen state object.
 	 */
 	logicallySettled: number;
 

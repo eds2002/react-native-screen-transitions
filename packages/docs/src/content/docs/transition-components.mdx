@@ -32,7 +32,6 @@ import Transition, {
 
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
 import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
-import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
 ```
 
 Use the subpath exports to build navigators. Use `Transition` for transition-aware primitives, boundary components, factories, presets, and specs. Use the named exports for helpers like `snapTo()`, hooks like `useScreenAnimation()`, and public constants such as the navigation mask ids.
@@ -42,8 +41,6 @@ Use the subpath exports to build navigators. Use `Transition` for transition-awa
 `createBlankStackNavigator()`
 
 `createNativeStackNavigator()`
-
-`createComponentStackNavigator()`
 
 ```tsx
 const Stack = createBlankStackNavigator();

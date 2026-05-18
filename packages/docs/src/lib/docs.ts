@@ -52,6 +52,7 @@ const groupOrder = [
 	"Core Concepts",
 	"Navigation Transitions",
 	"Components",
+	"Changelogs",
 	"Guides",
 ];
 const groupOrderIndex = new Map(
@@ -62,7 +63,7 @@ export const docVersions = [
 	{
 		basePath: "",
 		id: "v3-4",
-		label: "v3.6",
+		label: "v3",
 	},
 	{
 		basePath: "/v4-next",

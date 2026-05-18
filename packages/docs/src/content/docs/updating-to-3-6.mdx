@@ -1,23 +1,17 @@
 ---
-title: "Updating to 3.6"
-pageTitle: "Updating to 3.6"
-summary: "Move existing v3 apps onto the v3.6 gesture, snap, bounds, and navigation transition surface."
-description: "Move existing v3 apps onto the v3.6 gesture, snap, bounds, and navigation transition surface."
-eyebrow: "Guides"
-group: "Guides"
+title: "New in 3.6"
+pageTitle: "New in 3.6"
+summary: "What changed in v3.6 across gestures, snap points, bounds, reveal, and migration compatibility."
+description: "What changed in v3.6 across gestures, snap points, bounds, reveal, and migration compatibility."
+eyebrow: "Changelogs"
+group: "Changelogs"
 order: 2
 to: /updating-to-3-6
 ---
 
-## Why This Page Exists
+## Gesture Progress Mode
 
-v3.6 keeps the v3 transition model, but it tightens the names and runtime behavior around gestures, snap points, and bounds navigation helpers.
-
-If you already use v3.4 or v3.5, these are the changes worth making in app code and docs.
-
-## Prefer gestureProgressMode
-
-Use `gestureProgressMode` for new code:
+v3.6 adds `gestureProgressMode` as the preferred way to describe whether gestures should drive screen progress.
 
 ```tsx
 options={{
@@ -27,51 +21,11 @@ options={{
 }}
 ```
 
-`gestureDrivesProgress: false` still maps to freeform mode for compatibility, but new examples should use `gestureProgressMode`.
+Use `"progress-driven"` when drag movement should directly move screen progress. Use `"freeform"` when gesture values should drive custom visuals while transition progress stays controlled by navigation or release.
 
-Use `"progress-driven"` when drag movement should directly move screen progress. Use `"freeform"` when the gesture values should drive custom visuals while the transition progress stays controlled by navigation or release.
+## Unified Gesture State
 
-## Rename Snap Velocity Tuning
-
-Use `gestureSnapVelocityImpact` when tuning snap-point release targeting:
-
-```tsx
-options={{
-  snapPoints: [0.3, 0.7, 1],
-  gestureSnapVelocityImpact: 0.15,
-}}
-```
-
-The older `snapVelocityImpact` name remains in the type surface for compatibility, but the v3.6 gesture runtime reads `gestureSnapVelocityImpact`.
-
-## Read Live vs Target Snap State
-
-Use `current.animatedSnapIndex` when visuals should follow the live gesture:
-
-```tsx
-screenStyleInterpolator: ({ current }) => {
-  "worklet";
-
-  return {
-    content: {
-      style: {
-        borderRadius: interpolate(
-          current.animatedSnapIndex,
-          [0, 1, 2],
-          [28, 16, 0],
-          "clamp"
-        ),
-      },
-    },
-  };
-};
-```
-
-Use `current.snapIndex` when logic should follow the selected target detent after mount, `snapTo()`, or gesture release.
-
-## Use active Gesture State
-
-Gesture state now covers pan and pinch:
+Gesture state now covers pan and pinch through the same `active.gesture` object:
 
 ```tsx
 screenStyleInterpolator: ({ active }) => {
@@ -92,39 +46,83 @@ screenStyleInterpolator: ({ active }) => {
 };
 ```
 
-Prefer `active.gesture.active` over the older pan-only `active.gesture.direction`. Use `active.gesture.raw` when calculating dynamic `gestureSensitivity` so sensitivity does not feed back into itself.
+Use `active.gesture.raw` when calculating dynamic `gestureSensitivity` so sensitivity does not feed back into itself.
 
-## Update Hook Targets
+## Runtime Options in Interpolators
 
-Use `{ depth }` for transition and gesture hook targeting:
-
-```tsx
-const selfGesture = useScreenGesture();
-const parentGesture = useScreenGesture({ depth: -1 });
-
-const selfAnimation = useScreenAnimation();
-const parentAnimation = useScreenAnimation({ depth: -1 });
-const childAnimation = useScreenAnimation({ depth: 1 });
-```
-
-`useScreenAnimation()` still accepts legacy string targets such as `"parent"` and `"root"`, but new code should use `{ depth }`. `useScreenGesture()` resolves the current screen and ancestors only.
-
-## Use Reveal for Container-Style Navigation
-
-v3.6 adds `bounds({ id }).navigation.reveal()` for masked source-to-container transitions:
+Interpolators can now return an `options` bucket for values that need to change on the UI thread:
 
 ```tsx
-screenStyleInterpolator: ({ bounds }) => {
+screenStyleInterpolator: ({ active }) => {
   "worklet";
-  return bounds({ id: "hero" }).navigation.reveal();
+
+  return {
+    options: {
+      gestureSensitivity: interpolate(
+        Math.abs(active.gesture.raw.normY),
+        [0, 0.25],
+        [1, 0.5],
+        "clamp"
+      ),
+    },
+  };
 };
 ```
 
-Use [Reveal](/reveal) when destination content should grow out of a source boundary. Use [Zoom](/navigation-zoom) when a matched element should float above the background during the handoff.
+Screen states also expose resolved options through `current.options`, `active.options`, and `next?.options`, so animation logic can react to base screen options, `navigation.setOptions()` changes, and runtime overrides.
 
-## Use Scoped Bounds Helpers
+## Dismiss Gesture Persistence
 
-Scoped bounds results now expose their own helper methods:
+v3.6 changes gesture reset behavior on release. When the gesture resolves to dismissal, the runtime keeps the release gesture values available during the dismiss animation. When the gesture does not dismiss, the runtime resets the gesture values as it settles back.
+
+This lets dismissed screens keep using the release drag and velocity for fling-style animations, while cancelled gestures cleanly return to their resting visual state.
+
+## Snap State
+
+Snap state is split into live and target values:
+
+- `current.animatedSnapIndex` follows live gesture and animation movement, including fractional values between detents
+- `current.snapIndex` follows the selected target detent after mount, `snapTo()`, or gesture release
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        borderRadius: interpolate(
+          current.animatedSnapIndex,
+          [0, 1, 2],
+          [28, 16, 0],
+          "clamp"
+        ),
+      },
+    },
+  };
+};
+```
+
+For snap release targeting, use `gestureSnapVelocityImpact`:
+
+```tsx
+options={{
+  snapPoints: [0.3, 0.7, 1],
+  gestureSnapVelocityImpact: 0.15,
+}}
+```
+
+## Reveal Navigation
+
+v3.6 adds `bounds({ id }).navigation.reveal()` for masked source-to-container navigation transitions.
+
+Reveal requires a source boundary, a matching destination boundary, and the navigation mask. The helper exposes tuning options such as `borderRadius`, `borderContinuous`, `maxSensitivity`, `velocityDepth`, `gestureProgressMode`, `disablePointerEventsTillElementTransition`, and `maskSizingMode`.
+
+Read the full setup in [Reveal](/reveal).
+
+## Bounds Runtime
+
+Scoped bounds results expose helper methods directly:
 
 ```tsx
 const hero = bounds({ id: "hero" });
@@ -135,7 +133,11 @@ const initialDestination = link?.initialDestination;
 const raw = link?.compute({ method: "size", raw: true });
 ```
 
-Prefer `offset` over the older `gestures` option when adding live x/y movement to bounds:
+Bounds also gained more stable grouped-link measurement, source/destination snapshot handling, transition-pair resolution, and navigation mask option propagation. These are mostly internal, but they make grouped shared boundaries and navigation helpers less likely to flicker, blank, or retarget against stale measurements.
+
+Internally, bounds links are now keyed by screen pair instead of a single global id. A pair owns its links, group active id, initial source, and initial destination, which keeps the same bound id from leaking between unrelated route pairs and makes retargeted grouped transitions deterministic.
+
+Use `offset` when adding live x/y movement to bounds:
 
 ```tsx
 bounds({
@@ -147,13 +149,42 @@ bounds({
 });
 ```
 
+## Hook Targets
+
+Transition and gesture hooks now prefer depth targets:
+
+```tsx
+const selfGesture = useScreenGesture();
+const parentGesture = useScreenGesture({ depth: -1 });
+
+const selfAnimation = useScreenAnimation();
+const parentAnimation = useScreenAnimation({ depth: -1 });
+const childAnimation = useScreenAnimation({ depth: 1 });
+```
+
+`useScreenGesture()` resolves the current screen and ancestors only. `useScreenAnimation()` still accepts legacy string targets such as `"parent"` and `"root"`, but new code should use `{ depth }`.
+
+## Migration Checklist
+
+- Replace new `gestureDrivesProgress` usage with `gestureProgressMode`.
+- Prefer `active.gesture.active` over the older pan-only `active.gesture.direction`.
+- Use `active.gesture.raw` when deriving dynamic `gestureSensitivity`.
+- Return `options` from `screenStyleInterpolator` for UI-thread option changes, and read resolved values from `active.options` when animation logic depends on them.
+- Use `gestureSnapVelocityImpact` instead of `snapVelocityImpact` for snap release targeting.
+- Use `current.animatedSnapIndex` for live snap visuals and `current.snapIndex` for selected target logic.
+- Use `current.logicallySettled`, `active.logicallySettled`, or `next?.logicallySettled` instead of the deprecated top-level `logicallySettled` alias.
+- Use scoped bounds helpers such as `bounds({ id }).getMeasured()` and `bounds({ id }).getLink()`.
+- Use `offset` instead of the older `gestures` bounds option.
+- Use `getMeasured()` instead of the deprecated `getSnapshot()` alias.
+- Use layer slots such as `content`, `backdrop`, `surface`, and style id keys instead of legacy flat interpolator keys such as `contentStyle`, `backdropStyle`, and `overlayStyle`.
+
 ## Compatibility Notes
 
 - `gestureDrivesProgress` still maps to `gestureProgressMode`.
 - `expandViaScrollView` still maps to `sheetScrollGestureBehavior`.
 - `getSnapshot()` still exists as a deprecated alias for `getMeasured()`.
 - `active.gesture.direction` still exists as a deprecated pan-only alias for `active.gesture.active`.
-- Flat interpolator keys such as `contentStyle`, `backdropStyle`, and `overlayStyle` are legacy-only. New code should return layer slots such as `content`, `backdrop`, `surface`, and `styleId` keys.
+- `gestureReleaseVelocityMax` remains in the static screen option type as deprecated compatibility surface, but it is not read by runtime transition options.
 
 ## Related Reading
 

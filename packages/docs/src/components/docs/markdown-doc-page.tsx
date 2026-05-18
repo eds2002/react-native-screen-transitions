@@ -42,7 +42,7 @@ function MarkdownAnchor({
 		return (
 			<a
 				href={href}
-				className="font-medium text-[#0fa184] underline decoration-[#0fa184]/45 underline-offset-4 transition-colors duration-150 hover:text-[#111a16] dark:text-[#7df0d7] dark:decoration-[#7df0d7]/45 dark:hover:text-[#eef4f1]"
+				className="font-normal text-[#0fa184] underline decoration-[#0fa184]/45 underline-offset-4 transition-colors duration-150 hover:text-[#111a16] dark:text-[#7df0d7] dark:decoration-[#7df0d7]/45 dark:hover:text-[#eef4f1]"
 			>
 				{children}
 			</a>
@@ -53,7 +53,7 @@ function MarkdownAnchor({
 		return (
 			<Link
 				to={href}
-				className="font-medium text-[#0fa184] underline decoration-[#0fa184]/45 underline-offset-4 transition-colors duration-150 hover:text-[#111a16] dark:text-[#7df0d7] dark:decoration-[#7df0d7]/45 dark:hover:text-[#eef4f1]"
+				className="font-normal text-[#0fa184] underline decoration-[#0fa184]/45 underline-offset-4 transition-colors duration-150 hover:text-[#111a16] dark:text-[#7df0d7] dark:decoration-[#7df0d7]/45 dark:hover:text-[#eef4f1]"
 			>
 				{children}
 			</Link>
@@ -65,7 +65,7 @@ function MarkdownAnchor({
 			href={href}
 			target="_blank"
 			rel="noreferrer"
-			className="font-medium text-[#0fa184] underline decoration-[#0fa184]/45 underline-offset-4 transition-colors duration-150 hover:text-[#111a16] dark:text-[#7df0d7] dark:decoration-[#7df0d7]/45 dark:hover:text-[#eef4f1]"
+			className="font-normal text-[#0fa184] underline decoration-[#0fa184]/45 underline-offset-4 transition-colors duration-150 hover:text-[#111a16] dark:text-[#7df0d7] dark:decoration-[#7df0d7]/45 dark:hover:text-[#eef4f1]"
 		>
 			{children}
 		</a>

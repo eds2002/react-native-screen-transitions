@@ -1,8 +1,8 @@
 ---
 title: "Stack Types"
 pageTitle: "Stack Types"
-summary: "Choose between blank stack, native stack, and the legacy component stack."
-description: "Choose between blank stack, native stack, and the legacy component stack."
+summary: "Choose between blank stack and native stack."
+description: "Choose between blank stack and native stack."
 eyebrow: "Components"
 group: "Components"
 order: 2
@@ -15,12 +15,14 @@ For new v3 work:
 
 1. `createBlankStackNavigator()` for most work
 2. `createNativeStackNavigator()` when you specifically need native-stack integration
-3. `createComponentStackNavigator()` only for legacy compatibility
+
+<Note>
+  Component stack is deprecated in favor of blank stack independent mode. See [Independent Stacks](/independent-stacks) for embedded and isolated navigation flows.
+</Note>
 
 ```tsx
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
 import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
-import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
 ```
 
 ## Blank Stack
@@ -54,7 +56,7 @@ Use blank stack when you want the full transition system without native-stack co
 
 ### Embedded and Independent Flows
 
-Blank stack now covers the embedded-flow use case that originally pushed people to component stack.
+Blank stack covers embedded navigation flows through independent mode.
 
 It supports first-class navigator props:
 
@@ -117,19 +119,9 @@ That makes native stack useful when you already depend on native-stack behavior,
 
 If you want the most control over interpolators, gestures, snap sheets, overlays, and bounds-driven motion, blank stack is the better fit.
 
-## Component Stack
-
-This still exists, but it is the legacy path.
-
-It originally existed for independent embedded navigation flows. Blank stack now covers that through `independent` and `enableNativeScreens`.
-
-It is deprecated for new work and planned for removal in a future release.
-
-Use it only when you are maintaining an existing component-stack integration.
-
 ## Shared Screen Options
 
-All three stack types still use screen options.
+Blank stack and native stack both use screen options.
 
 Common options include:
 
@@ -142,8 +134,6 @@ Common options include:
 - `overlay`
 - `overlayShown`
 
-Blank stack and component stack also support `detachPreviousScreen`.
-
 Native stack adds native-stack options, but transition behavior only participates when `enableTransitions` is turned on.
 
 ## Overlays and Stack Scope
@@ -152,14 +142,9 @@ Overlays are stack-relative.
 
 If a screen defines an overlay, it floats through the rest of that stack until a higher owner takes over or the stack unwinds.
 
-The stack choice matters:
-
-- blank stack supports overlays directly and is the default place to start
-- native stack supports overlays on transitioned screens
-- component stack still supports overlays, but new overlay work should start on blank stack
+Blank stack supports overlays directly and is the default place to start. Native stack supports overlays on transitioned screens.
 
 ## Which One to Pick
 
 - blank stack: the default for nearly everything, including embedded and independent flows
 - native stack: when you need native-stack integration and can opt into `enableTransitions`
-- component stack: legacy compatibility only

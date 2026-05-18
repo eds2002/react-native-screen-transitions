@@ -35,10 +35,6 @@ Pass snap points in ascending order. The supported values are:
 - fractions such as `0.4`, `0.7`, or `1`
 - `"auto"` for intrinsic content sizing
 
-Numbers are not pixels. They are fractions on the sheet axis.
-
-For most sheets, you do not need to include `0` yourself. The closed state is already used as the dismiss target when dismissal is allowed.
-
 ## Initial Detent
 
 `initialSnapIndex` selects which detent the screen opens at:
@@ -74,26 +70,6 @@ This screen opens at the second detent, `0.5`.
   }}
 />
 ```
-
-If you need that measurement inside the interpolator, read it from `current.layouts.content`:
-
-```tsx
-screenStyleInterpolator: ({ current }) => {
-  "worklet";
-
-  const contentHeight = current.layouts.content?.height ?? 0;
-
-  return {
-    content: {
-      style: {
-        opacity: contentHeight > 0 ? 1 : 0,
-      },
-    },
-  };
-};
-```
-
-Use `current.layouts.content` for new code. The top-level `layouts` prop is a deprecated alias.
 
 ## Reading Target Snap State
 
@@ -137,15 +113,13 @@ options={{
   snapPoints: [0.3, 0.7, 1],
   gestureSnapVelocityImpact: 0.15,
   gestureReleaseVelocityScale: 1.2,
-  gestureReleaseVelocityMax: 2.4,
 }}
 ```
 
 - `gestureSnapVelocityImpact` changes how much the release velocity nudges the chosen detent
 - `gestureReleaseVelocityScale` changes the post-release spring energy
-- `gestureReleaseVelocityMax` caps that normalized release velocity for v3 compatibility
 
-`gestureReleaseVelocityScale` and `gestureReleaseVelocityMax` affect how the sheet settles after the target is chosen. They do not replace `gestureSnapVelocityImpact`.
+`gestureReleaseVelocityScale` affects how the sheet settles after the target is chosen. It does not replace `gestureSnapVelocityImpact`.
 
 ## Snap Locking
 

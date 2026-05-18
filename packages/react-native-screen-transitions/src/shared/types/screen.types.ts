@@ -199,15 +199,12 @@ export type ScreenTransitionConfig = {
 	gestureReleaseVelocityScale?: number;
 
 	/**
-	 * Caps the absolute post-scale release velocity used by spring animations.
+	 * Deprecated compatibility option.
 	 *
-	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
-	 * or snap target selection (`snapVelocityImpact`). It only bounds release
-	 * animation intensity after `gestureReleaseVelocityScale` is applied.
+	 * This option is no longer read by the runtime transition options. Use
+	 * `gestureReleaseVelocityScale` to tune post-release spring energy.
 	 *
-	 * @deprecated v3 compatibility only. This option is removed in the next
-	 * gesture runtime.
-	 * @default 3.2
+	 * @deprecated v3 compatibility only.
 	 */
 	gestureReleaseVelocityMax?: number;
 
