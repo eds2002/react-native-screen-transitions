@@ -206,6 +206,7 @@ const areScreenOptionsEqual = (
 ) => {
 	"worklet";
 	return (
+		left.navigationMaskEnabled === right.navigationMaskEnabled &&
 		left.gestureEnabled === right.gestureEnabled &&
 		left.experimental_allowDisabledGestureTracking ===
 			right.experimental_allowDisabledGestureTracking &&
@@ -238,6 +239,10 @@ export const resolveBaseScreenOptions = (
 	);
 
 	return {
+		navigationMaskEnabled: resolveBooleanOption(
+			options.navigationMaskEnabled,
+			undefined,
+		),
 		gestureEnabled: resolveBooleanOption(options.gestureEnabled, undefined),
 		experimental_allowDisabledGestureTracking: resolveBooleanOption(
 			options.experimental_allowDisabledGestureTracking,
@@ -322,6 +327,10 @@ export const syncScreenOptionsOverrides = (
 	);
 
 	const next: ScreenOptionsState = {
+		navigationMaskEnabled: resolveBooleanOption(
+			options?.navigationMaskEnabled,
+			base.navigationMaskEnabled,
+		),
 		gestureEnabled: resolveBooleanOption(
 			options?.gestureEnabled,
 			base.gestureEnabled,

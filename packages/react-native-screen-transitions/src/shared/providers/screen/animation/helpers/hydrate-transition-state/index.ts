@@ -21,6 +21,48 @@ import type { BuiltState } from "./types";
 const LOGICAL_SETTLE_STICKY_PROGRESS_THRESHOLD =
 	LOGICAL_SETTLE_PROGRESS_THRESHOLD * 10;
 
+const mergeTransitionOptions = (
+	base: ScreenTransitionOptions,
+	effective: ScreenTransitionOptions | undefined,
+	slot: ScreenTransitionOptions,
+): ScreenTransitionOptions => {
+	"worklet";
+	if (!effective) {
+		return base;
+	}
+
+	slot.navigationMaskEnabled =
+		effective.navigationMaskEnabled ?? base.navigationMaskEnabled;
+	slot.gestureEnabled = effective.gestureEnabled ?? base.gestureEnabled;
+	slot.experimental_allowDisabledGestureTracking =
+		effective.experimental_allowDisabledGestureTracking ??
+		base.experimental_allowDisabledGestureTracking;
+	slot.gestureDirection = effective.gestureDirection ?? base.gestureDirection;
+	slot.gestureSensitivity =
+		effective.gestureSensitivity ?? base.gestureSensitivity;
+	slot.gestureVelocityImpact =
+		effective.gestureVelocityImpact ?? base.gestureVelocityImpact;
+	slot.gestureSnapVelocityImpact =
+		effective.gestureSnapVelocityImpact ?? base.gestureSnapVelocityImpact;
+	slot.gestureReleaseVelocityScale =
+		effective.gestureReleaseVelocityScale ?? base.gestureReleaseVelocityScale;
+	slot.gestureResponseDistance =
+		effective.gestureResponseDistance ?? base.gestureResponseDistance;
+	slot.gestureProgressMode =
+		effective.gestureProgressMode ?? base.gestureProgressMode;
+	slot.gestureDrivesProgress =
+		effective.gestureDrivesProgress ?? base.gestureDrivesProgress;
+	slot.gestureActivationArea =
+		effective.gestureActivationArea ?? base.gestureActivationArea;
+	slot.gestureSnapLocked =
+		effective.gestureSnapLocked ?? base.gestureSnapLocked;
+	slot.sheetScrollGestureBehavior =
+		effective.sheetScrollGestureBehavior ?? base.sheetScrollGestureBehavior;
+	slot.backdropBehavior = effective.backdropBehavior ?? base.backdropBehavior;
+
+	return slot;
+};
+
 export const hydrateTransitionState = (
 	s: BuiltState,
 	dimensions: Layout,
@@ -29,6 +71,11 @@ export const hydrateTransitionState = (
 	"worklet";
 	const out = s.unwrapped;
 	const baseProgress = s.progress.get();
+	const options = mergeTransitionOptions(
+		s.options,
+		effectiveOptions,
+		s.optionsSlot,
+	);
 	out.willAnimate = s.willAnimate.get();
 	out.closing = s.closing.get();
 	out.entering = s.entering.get();
@@ -123,11 +170,10 @@ export const hydrateTransitionState = (
 		computedLogicallySettled || shouldPreserveLogicalSettle ? 1 : 0;
 
 	out.meta = s.meta;
-	out.options = s.options;
+	out.options = options;
 	out.route = s.route;
 	out.layouts.screen.width = dimensions.width;
 	out.layouts.screen.height = dimensions.height;
-	out.layouts.navigationMaskEnabled = s.navigationMaskEnabled;
 
 	const content = s.measuredContentLayout.get();
 

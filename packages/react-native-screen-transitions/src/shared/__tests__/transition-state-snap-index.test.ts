@@ -72,7 +72,6 @@ describe("hydrateTransitionState snap indices", () => {
 				name: "RouteA",
 			},
 			undefined,
-			false,
 			options,
 		);
 
@@ -86,7 +85,7 @@ describe("hydrateTransitionState snap indices", () => {
 				gesture: createGestureStore(),
 				route: state.route,
 				options,
-				navigationMaskEnabled: false,
+				optionsSlot: {},
 				targetProgress: shared(1),
 				logicalSettleFrameCount: shared(0),
 				resolvedAutoSnapPoint: shared(-1),
@@ -100,6 +99,7 @@ describe("hydrateTransitionState snap indices", () => {
 		);
 
 		expect(hydrated.options).toEqual({
+			navigationMaskEnabled: undefined,
 			gestureEnabled: false,
 			experimental_allowDisabledGestureTracking: true,
 			gestureDirection: ["vertical", "pinch-out"],
@@ -116,6 +116,53 @@ describe("hydrateTransitionState snap indices", () => {
 			backdropBehavior: "dismiss",
 		});
 		expect("gestureReleaseVelocityMax" in hydrated.options).toBe(false);
+	});
+
+	it("exposes runtime interpolator option overrides on the hydrated state", () => {
+		const baseOptions = buildScreenTransitionOptions({
+			navigationMaskEnabled: false,
+			gestureSensitivity: 0.5,
+		});
+		const state = createScreenTransitionState(
+			{
+				key: "route-a",
+				name: "RouteA",
+			},
+			undefined,
+			baseOptions,
+		);
+
+		const hydrated = hydrateTransitionState(
+			{
+				progress: shared(1),
+				willAnimate: shared(0),
+				closing: shared(0),
+				progressAnimating: shared(0),
+				entering: shared(0),
+				gesture: createGestureStore(),
+				route: state.route,
+				options: baseOptions,
+				optionsSlot: {},
+				targetProgress: shared(1),
+				logicalSettleFrameCount: shared(0),
+				resolvedAutoSnapPoint: shared(-1),
+				measuredContentLayout: shared(null),
+				contentLayoutSlot: { width: 0, height: 0 },
+				hasAutoSnapPoint: false,
+				sortedNumericSnapPoints: [],
+				unwrapped: state,
+			},
+			{ width: 390, height: 844 },
+			{
+				navigationMaskEnabled: true,
+				gestureProgressMode: "freeform",
+			},
+		);
+
+		expect(hydrated.options.navigationMaskEnabled).toBe(true);
+		expect(hydrated.options.gestureSensitivity).toBe(0.5);
+		expect(hydrated.options.gestureProgressMode).toBe("freeform");
+		expect("navigationMaskEnabled" in hydrated.layouts).toBe(false);
 	});
 
 	it("canonicalizes deprecated sheet scroll behavior aliases", () => {
@@ -150,7 +197,7 @@ describe("hydrateTransitionState snap indices", () => {
 				gesture: createGestureStore(),
 				route: state.route,
 				options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
-				navigationMaskEnabled: false,
+				optionsSlot: {},
 				targetProgress: shared(0.8),
 				logicalSettleFrameCount: shared(0),
 				resolvedAutoSnapPoint: shared(-1),
@@ -183,7 +230,7 @@ describe("hydrateTransitionState snap indices", () => {
 				gesture: createGestureStore(),
 				route: state.route,
 				options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
-				navigationMaskEnabled: false,
+				optionsSlot: {},
 				targetProgress: shared(0.45),
 				logicalSettleFrameCount: shared(0),
 				resolvedAutoSnapPoint: shared(0.45),
@@ -215,7 +262,7 @@ describe("hydrateTransitionState snap indices", () => {
 			gesture: createGestureStore(),
 			route: state.route,
 			options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
-			navigationMaskEnabled: false,
+			optionsSlot: {},
 			targetProgress: shared(0.45),
 			logicalSettleFrameCount: shared(0),
 			resolvedAutoSnapPoint: shared(0.45),

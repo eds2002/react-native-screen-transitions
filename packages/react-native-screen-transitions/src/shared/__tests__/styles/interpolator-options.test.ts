@@ -18,6 +18,7 @@ const createSharedValue = <T>(initialValue: T) => {
 };
 
 const BASE_SCREEN_OPTIONS = {
+	navigationMaskEnabled: undefined,
 	gestureEnabled: true,
 	experimental_allowDisabledGestureTracking: false,
 	gestureDirection: "horizontal",
@@ -92,6 +93,7 @@ describe("syncScreenOptionsOverrides", () => {
 		const screenOptions = createScreenOptionsContext();
 		const raw: TransitionInterpolatedStyle = {
 			options: {
+				navigationMaskEnabled: true,
 				gestureEnabled: false,
 				experimental_allowDisabledGestureTracking: true,
 				gestureDirection: ["horizontal", "pinch-out"],
@@ -114,6 +116,7 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(raw, screenOptions);
 		const next = screenOptions.get();
 
+		expect(next.navigationMaskEnabled).toBe(true);
 		expect(next.gestureEnabled).toBe(false);
 		expect(next.experimental_allowDisabledGestureTracking).toBe(true);
 		expect(next.gestureDirection).toEqual([
@@ -159,6 +162,7 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(
 			{
 				options: {
+					navigationMaskEnabled: true,
 					gestureSensitivity: 0.25,
 					gestureSnapLocked: true,
 					backdropBehavior: "dismiss",
@@ -169,6 +173,9 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides({}, screenOptions);
 		const next = screenOptions.get();
 
+		expect(next.navigationMaskEnabled).toBe(
+			BASE_SCREEN_OPTIONS.navigationMaskEnabled,
+		);
 		expect(next.gestureSensitivity).toBe(
 			BASE_SCREEN_OPTIONS.gestureSensitivity,
 		);
@@ -186,6 +193,7 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(
 			{
 				options: {
+					navigationMaskEnabled: true,
 					gestureDirection: "vertical",
 					gestureSensitivity: 0.25,
 					gestureActivationArea: "edge",
@@ -198,6 +206,7 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(
 			{
 				options: {
+					navigationMaskEnabled: "yes",
 					gestureDirection: "diagonal",
 					gestureSensitivity: "fast",
 					gestureActivationArea: { left: "corner" },
@@ -209,6 +218,9 @@ describe("syncScreenOptionsOverrides", () => {
 		);
 		const next = screenOptions.get();
 
+		expect(next.navigationMaskEnabled).toBe(
+			BASE_SCREEN_OPTIONS.navigationMaskEnabled,
+		);
 		expect(next.gestureDirection).toBe(
 			BASE_SCREEN_OPTIONS.gestureDirection,
 		);

@@ -38,6 +38,7 @@ export const buildScreenTransitionOptions = (
 		: undefined;
 
 	return {
+		navigationMaskEnabled: options.navigationMaskEnabled,
 		gestureEnabled: options.gestureEnabled,
 		experimental_allowDisabledGestureTracking:
 			options.experimental_allowDisabledGestureTracking,

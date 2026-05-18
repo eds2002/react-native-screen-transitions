@@ -79,7 +79,6 @@ export const DEFAULT_SCREEN_TRANSITION_OPTIONS: ScreenTransitionOptions =
 export const createScreenTransitionState = (
 	route: BaseStackRoute,
 	meta?: Record<string, unknown>,
-	navigationMaskEnabled = false,
 	options: ScreenTransitionOptions = DEFAULT_SCREEN_TRANSITION_OPTIONS,
 ): ScreenTransitionState => ({
 	progress: 0,
@@ -98,7 +97,6 @@ export const createScreenTransitionState = (
 			width: 0,
 			height: 0,
 		},
-		navigationMaskEnabled,
 	},
 	animatedSnapIndex: -1,
 	snapIndex: -1,
@@ -124,7 +122,6 @@ export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 				width: 0,
 				height: 0,
 			},
-			navigationMaskEnabled: false,
 		},
 		animatedSnapIndex: -1,
 		snapIndex: -1,

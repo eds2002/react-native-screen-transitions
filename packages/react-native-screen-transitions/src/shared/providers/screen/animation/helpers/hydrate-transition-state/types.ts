@@ -17,7 +17,7 @@ export type BuiltState = {
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
 	options: ScreenTransitionOptions;
-	navigationMaskEnabled: boolean;
+	optionsSlot: ScreenTransitionOptions;
 	targetProgress: SharedValue<number>;
 	logicalSettleFrameCount: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;

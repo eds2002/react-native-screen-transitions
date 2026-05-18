@@ -36,7 +36,7 @@ const createInitialBaseInterpolatorProps = (
 ): ScreenInterpolatorFrame => {
 	const current = {
 		...DEFAULT_SCREEN_TRANSITION_STATE,
-		layouts: { screen: dimensions, navigationMaskEnabled: false },
+		layouts: { screen: dimensions },
 	};
 
 	return {

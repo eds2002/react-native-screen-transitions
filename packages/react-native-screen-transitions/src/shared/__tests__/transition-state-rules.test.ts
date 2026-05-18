@@ -86,7 +86,6 @@ const createBuiltState = (
 			name: "RouteA",
 		},
 		undefined,
-		false,
 		options,
 	);
 
@@ -99,7 +98,7 @@ const createBuiltState = (
 		gesture: overrides.gesture ?? createGestureStore(),
 		route: state.route,
 		options,
-		navigationMaskEnabled: false,
+		optionsSlot: {},
 		targetProgress: shared(overrides.targetProgress ?? 1),
 		logicalSettleFrameCount: shared(overrides.logicalSettleFrameCount ?? 0),
 		resolvedAutoSnapPoint: shared(-1),

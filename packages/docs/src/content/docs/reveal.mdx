@@ -57,7 +57,9 @@ const revealId = makeMutable<string | null>(null);
 />
 ```
 
-`navigationMaskEnabled` is strongly recommended for reveal transitions because the helper drives the navigation mask element. Install `@react-native-masked-view/masked-view` when you enable it.
+`navigation.reveal()` forces `navigationMaskEnabled: true` while the helper is active because reveal depends on the navigation mask element. Keeping `navigationMaskEnabled: true` in screen options is still useful when you want the mask wrapper mounted before the first animated frame.
+
+Install `@react-native-masked-view/masked-view`; without it, navigation mask styles cannot render.
 
 ## Destination Boundaries
 

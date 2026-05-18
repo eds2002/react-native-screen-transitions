@@ -27,7 +27,7 @@ type BuiltState = {
 	route: BaseStackRoute;
 	meta?: Record<string, unknown>;
 	options: ScreenTransitionOptions;
-	navigationMaskEnabled: boolean;
+	optionsSlot: ScreenTransitionOptions;
 	targetProgress: SharedValue<number>;
 	logicalSettleFrameCount: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
@@ -44,7 +44,6 @@ export const useBuildTransitionState = (
 	const key = descriptor?.route?.key;
 	const meta = descriptor?.options?.meta;
 	const route = descriptor?.route;
-	const navigationMaskEnabled = !!descriptor?.options?.navigationMaskEnabled;
 	const snapPoints = descriptor?.options?.snapPoints;
 
 	return useMemo(() => {
@@ -81,20 +80,12 @@ export const useBuildTransitionState = (
 			route: plainRoute,
 			meta: plainMeta,
 			options: transitionOptions,
-			navigationMaskEnabled,
+			optionsSlot: {},
 			unwrapped: createScreenTransitionState(
 				plainRoute,
 				plainMeta,
-				navigationMaskEnabled,
 				transitionOptions,
 			),
 		};
-	}, [
-		key,
-		meta,
-		route,
-		snapPoints,
-		navigationMaskEnabled,
-		descriptor?.options,
-	]);
+	}, [key, meta, route, snapPoints, descriptor?.options]);
 };

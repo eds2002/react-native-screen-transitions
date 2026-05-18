@@ -168,7 +168,7 @@ export function buildZoomStyles({
 			style: VISIBLE_STYLE,
 		},
 	} satisfies TransitionInterpolatedStyle;
-	const focusedContentSlot = props.current.layouts.navigationMaskEnabled
+	const focusedContentSlot = props.current.options.navigationMaskEnabled
 		? NAVIGATION_MASK_CONTAINER_STYLE_ID
 		: "content";
 
@@ -325,7 +325,7 @@ export function buildZoomStyles({
 			...sourceVisibilityStyle,
 		};
 
-		if (props.current.layouts.navigationMaskEnabled) {
+		if (props.current.options.navigationMaskEnabled) {
 			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
 				style: {
 					width: maskWidth,

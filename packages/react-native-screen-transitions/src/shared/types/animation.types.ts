@@ -23,6 +23,7 @@ import type { BaseStackRoute } from "./stack.types";
  */
 export type ScreenTransitionOptions = Pick<
 	ScreenTransitionConfig,
+	| "navigationMaskEnabled"
 	| "gestureEnabled"
 	| "experimental_allowDisabledGestureTracking"
 	| "gestureDirection"

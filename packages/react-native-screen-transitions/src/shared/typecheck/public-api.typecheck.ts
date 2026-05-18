@@ -182,6 +182,7 @@ const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
 const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 	options: {
+		navigationMaskEnabled: true,
 		gestureSensitivity: 0.5,
 		gestureSnapLocked: true,
 		gestureReleaseVelocityScale: 1.2,

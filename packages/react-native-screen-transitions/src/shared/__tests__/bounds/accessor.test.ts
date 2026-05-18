@@ -53,7 +53,6 @@ const makeProps = (): BoundsInterpolationProps => {
 		logicallySettled: current.logicallySettled,
 		active: current,
 		inactive: previous,
-		navigationMaskEnabled: false,
 	};
 };
 
@@ -102,6 +101,22 @@ describe("bounds accessor", () => {
 
 		expect(styles.transform[0]).toEqual({ translateX: 12 });
 		expect(styles.transform[1]).toEqual({ translateY: -8 });
+	});
+
+	it("forces navigation masking for reveal transitions", () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(50, 100, 200, 400),
+		});
+
+		const bounds = createBoundsAccessor(makeProps);
+		const reveal = bounds({ id: "card" }).navigation.reveal();
+
+		expect(reveal.options?.navigationMaskEnabled).toBe(true);
+		expect(reveal.options?.gestureProgressMode).toBe("freeform");
 	});
 
 	it("prefers `offset` over deprecated `gestures` per axis", () => {

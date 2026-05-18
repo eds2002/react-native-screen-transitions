@@ -27,13 +27,6 @@ export type ScreenLayouts = {
 	 * auto snap-point sizing. It is undefined until a real measurement exists.
 	 */
 	content?: Layout;
-	/**
-	 * Whether navigation bounds masking is enabled for this screen.
-	 *
-	 * When enabled, navigation zoom helpers target the masked container path
-	 * instead of the plain content slot.
-	 */
-	navigationMaskEnabled: boolean;
 };
 
 export type ScreenKey = string;
