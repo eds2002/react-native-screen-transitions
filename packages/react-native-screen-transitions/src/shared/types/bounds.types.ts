@@ -14,6 +14,7 @@ import type {
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "./animation.types";
+import type { GestureProgressMode } from "./gesture.types";
 
 /**
  * Target style computation.
@@ -161,11 +162,81 @@ export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]?: TransitionSlotStyle;
 };
 
+export type BoundsNavigationRevealOptions = {
+	/**
+	 * Destination mask border radius.
+	 *
+	 * Reveal interpolates from the measured source border radius to this value.
+	 *
+	 * @default Platform-specific reveal radius
+	 */
+	borderRadius?: number;
+	/**
+	 * Whether the reveal mask should use React Native's continuous border curve.
+	 *
+	 * @default true
+	 */
+	borderContinuous?: boolean;
+	/**
+	 * Maximum dynamic gesture sensitivity applied by reveal.
+	 *
+	 * Reveal lowers gesture sensitivity as the drag gets deeper so the masked
+	 * container can keep its source-to-destination handoff stable. This value
+	 * controls the starting/highest sensitivity in that curve.
+	 *
+	 * @default 0.8
+	 */
+	maxSensitivity?: number;
+	/**
+	 * Velocity-driven depth applied to the dismiss scale handoff.
+	 *
+	 * Higher values make fast releases orbit farther around the final source
+	 * scale. Set to `0` to remove the velocity depth effect.
+	 *
+	 * @default 0.5
+	 */
+	velocityDepth?: number;
+	/**
+	 * Whether gesture displacement should drive transition progress or remain as
+	 * freeform gesture values. Reveal defaults to `"freeform"` so drag can move
+	 * the masked container without owning the whole screen progress.
+	 *
+	 * @default "freeform"
+	 */
+	gestureProgressMode?: GestureProgressMode;
+	/**
+	 * Temporarily blocks pointer-event pass-through on the inactive content until
+	 * the source element transition handoff reaches progress `0.25`.
+	 *
+	 * This is intentional and most users cannot react fast enough to swipe during
+	 * that brief handoff. If it becomes an issue, set this to `false` to disable
+	 * the guard and keep the default behavior that allows pointer events to pass
+	 * through.
+	 *
+	 * @default true
+	 */
+	disablePointerEventsTillElementTransition?: boolean;
+	/**
+	 * How reveal should resize the navigation mask element.
+	 *
+	 * `"auto"` uses the platform default. Android defaults to transform-based
+	 * resizing to avoid masked-size animation cost, while other platforms animate
+	 * width and height. Transform-based resizing can make large border radii look
+	 * less natural on Android; use `"size"` to force width/height animation when
+	 * radius quality is more important than that optimization.
+	 *
+	 * @default "auto"
+	 */
+	maskSizingMode?: "auto" | "transform" | "size";
+};
+
 export type BoundsNavigationRevealStyle = BoundsNavigationZoomStyle;
 
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
-	reveal: () => BoundsNavigationRevealStyle;
+	reveal: (
+		options?: BoundsNavigationRevealOptions,
+	) => BoundsNavigationRevealStyle;
 };
 
 type BoundsBoundNavigationAccessor = {

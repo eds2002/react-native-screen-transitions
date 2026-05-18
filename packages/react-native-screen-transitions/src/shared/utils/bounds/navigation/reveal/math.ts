@@ -3,7 +3,6 @@ import { EPSILON } from "../../../../constants";
 import type { Layout } from "../../../../types/screen.types";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
 import {
-	DISMISS_SCALE_ORBIT_DEPTH,
 	DRAG_DIRECTIONAL_SCALE_EXPONENT,
 	DRAG_DIRECTIONAL_SCALE_MAX,
 	DRAG_DIRECTIONAL_SCALE_MIN,
@@ -98,11 +97,17 @@ export function resolveUniformScale({
 	return aspectDifference < 0.1 ? Math.max(sx, sy) : Math.min(sx, sy);
 }
 
-export function resolveRevealGestureHandoff(rawDrag: number) {
+export function resolveRevealGestureHandoff({
+	rawDrag,
+	maxSensitivity,
+}: {
+	rawDrag: number;
+	maxSensitivity: number;
+}) {
 	"worklet";
 
 	const clampedRawDrag = clampUnit(rawDrag);
-	const gestureSensitivity = mixUnit(0.8, 0.1, clampedRawDrag);
+	const gestureSensitivity = mixUnit(maxSensitivity, 0.1, clampedRawDrag);
 
 	const releaseBoost = mixUnit(1, 1.1, clampedRawDrag);
 
@@ -125,11 +130,13 @@ export function resolveDismissScaleHandoff({
 	releaseScale,
 	targetScale,
 	velocity,
+	velocityDepth,
 }: {
 	progress: number;
 	releaseScale: number;
 	targetScale: number;
 	velocity: number;
+	velocityDepth: number;
 }) {
 	"worklet";
 
@@ -137,7 +144,7 @@ export function resolveDismissScaleHandoff({
 	const scaleProgress = Math.sin((Math.PI / 2) * closeProgress);
 	const baseScale = releaseScale + (targetScale - releaseScale) * scaleProgress;
 
-	const orbitDepth = DISMISS_SCALE_ORBIT_DEPTH * velocity;
+	const orbitDepth = velocityDepth * velocity;
 	const orbitScale = 1 - orbitDepth * Math.sin(Math.PI * closeProgress);
 
 	return baseScale * orbitScale;

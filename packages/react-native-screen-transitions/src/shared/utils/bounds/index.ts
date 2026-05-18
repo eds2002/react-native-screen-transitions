@@ -1,6 +1,7 @@
 import type {
 	BoundsAccessor,
 	BoundsInterpolationProps,
+	BoundsNavigationRevealOptions,
 	BoundsNavigationZoomOptions,
 } from "../../types/bounds.types";
 import { createBoundsAccessorCore } from "./helpers/create-bounds-accessor-core";
@@ -26,11 +27,12 @@ export const createBoundsAccessor = (
 							zoomOptions,
 						});
 					},
-					reveal: () => {
+					reveal: (revealOptions?: BoundsNavigationRevealOptions) => {
 						"worklet";
 						return buildRevealStyles({
 							props,
 							tag,
+							revealOptions,
 						});
 					},
 				},

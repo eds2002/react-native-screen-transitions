@@ -143,6 +143,17 @@ const revealInterpolatedStyle: BoundsNavigationRevealStyle = interpolationProps
 	.bounds({ id: 42 })
 	.navigation.reveal();
 void revealInterpolatedStyle;
+const configuredRevealInterpolatedStyle: BoundsNavigationRevealStyle =
+	interpolationProps.bounds({ id: 42 }).navigation.reveal({
+		borderRadius: 48,
+		borderContinuous: true,
+		maxSensitivity: 0.6,
+		velocityDepth: 0.35,
+		gestureProgressMode: "freeform",
+		disablePointerEventsTillElementTransition: false,
+		maskSizingMode: "size",
+	});
+void configuredRevealInterpolatedStyle;
 const currentLink = interpolationProps.bounds.getLink(42);
 const initialSource = currentLink?.initialSource;
 const initialDestination = currentLink?.initialDestination;

@@ -59,6 +59,22 @@ const makeProps = (): BoundsInterpolationProps => {
 	};
 };
 
+const makeFocusedProgressProps = (progress: number): BoundsInterpolationProps => {
+	const props = makeProps();
+	const current = {
+		...props.current,
+		progress,
+		settled: 0,
+	};
+
+	return {
+		...props,
+		current,
+		active: current,
+		progress,
+	};
+};
+
 const makeVerticalDragProps = (): BoundsInterpolationProps => {
 	const props = makeProps();
 	const current = {
@@ -90,6 +106,29 @@ const makeVerticalDragProps = (): BoundsInterpolationProps => {
 		progress: 1,
 		snapIndex: current.snapIndex,
 		logicallySettled: current.logicallySettled,
+	};
+};
+
+const makeUnfocusedRevealProps = (): BoundsInterpolationProps => {
+	const props = makeProps();
+	const active = {
+		...props.current,
+		progress: 0.1,
+		entering: 1,
+		animating: 1,
+		settled: 0,
+		logicallySettled: 0,
+	};
+
+	return {
+		...props,
+		focused: false,
+		active,
+		current: active,
+		inactive: props.previous,
+		progress: 0.1,
+		snapIndex: active.snapIndex,
+		logicallySettled: active.logicallySettled,
 	};
 };
 
@@ -149,11 +188,77 @@ describe("bounds accessor", () => {
 			destinationBounds: createBounds(50, 100, 200, 400),
 		});
 
-		const bounds = createBoundsAccessor(makeProps);
+		const bounds = createBoundsAccessor(() => makeFocusedProgressProps(1));
 		const reveal = bounds({ id: "card" }).navigation.reveal();
 
 		expect(reveal.options?.navigationMaskEnabled).toBe(true);
 		expect(reveal.options?.gestureProgressMode).toBe("freeform");
+	});
+
+	it("maps reveal options onto runtime transition options", () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(50, 100, 200, 400),
+		});
+
+		const bounds = createBoundsAccessor(makeProps);
+		const reveal = bounds({ id: "card" }).navigation.reveal({
+			maxSensitivity: 0.4,
+			gestureProgressMode: "progress-driven",
+		});
+
+		expect(reveal.options?.gestureSensitivity).toBe(0.4);
+		expect(reveal.options?.gestureProgressMode).toBe("progress-driven");
+	});
+
+	it("applies reveal mask shape options", () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(50, 100, 200, 400),
+		});
+
+		const bounds = createBoundsAccessor(() => makeFocusedProgressProps(1));
+		const reveal = bounds({ id: "card" }).navigation.reveal({
+			borderRadius: 44,
+			borderContinuous: false,
+			maskSizingMode: "size",
+		});
+		const maskStyle = reveal[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style as {
+			borderRadius: number;
+			borderCurve?: "continuous";
+			width: number;
+			height: number;
+		};
+
+		expect(maskStyle.borderRadius).toBe(44);
+		expect(maskStyle.borderCurve).toBeUndefined();
+		expect(maskStyle.width).toBe(screenLayout.width);
+		expect(maskStyle.height).toBe(screenLayout.height);
+	});
+
+	it("can opt out of reveal's pointer-event handoff guard", () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(50, 100, 200, 400),
+		});
+
+		const bounds = createBoundsAccessor(makeUnfocusedRevealProps);
+		const guarded = bounds({ id: "card" }).navigation.reveal();
+		const unguarded = bounds({ id: "card" }).navigation.reveal({
+			disablePointerEventsTillElementTransition: false,
+		});
+
+		expect((guarded.content as any).props.pointerEvents).toBe("auto");
+		expect((unguarded.content as any).props).toBeUndefined();
 	});
 
 	it("collapses reveal navigation masks to the source aspect ratio", () => {

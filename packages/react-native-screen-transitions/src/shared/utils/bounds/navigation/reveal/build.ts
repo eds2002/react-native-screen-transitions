@@ -9,6 +9,7 @@ import {
 	CONTENT_ENTERING_OPACITY_OUTPUT,
 	CONTENT_ENTERING_OPACITY_RANGE,
 	CONTENT_SHADOW_OPACITY_OUTPUT,
+	DISMISS_SCALE_ORBIT_DEPTH,
 	DRAG_MASK_HEIGHT_COLLAPSE_END,
 	HORIZONTAL_DRAG_MASK_COLLAPSE_SCALE,
 	IDENTITY_DRAG_SCALE_OUTPUT,
@@ -40,6 +41,7 @@ import type { BuildRevealStylesParams, RevealInterpolatedStyle } from "./types";
 export function buildRevealStyles({
 	tag,
 	props,
+	revealOptions,
 }: BuildRevealStylesParams): RevealInterpolatedStyle {
 	"worklet";
 
@@ -54,6 +56,19 @@ export function buildRevealStyles({
 		progress,
 		layouts: { screen: screenLayout },
 	} = props;
+	const borderRadius = revealOptions?.borderRadius ?? REVEAL_BORDER_RADIUS;
+	const borderContinuous = revealOptions?.borderContinuous ?? true;
+	const maxSensitivity = revealOptions?.maxSensitivity ?? 0.8;
+	const velocityDepth =
+		revealOptions?.velocityDepth ?? DISMISS_SCALE_ORBIT_DEPTH;
+	const gestureProgressMode = revealOptions?.gestureProgressMode ?? "freeform";
+	const disablePointerEventsTillElementTransition =
+		revealOptions?.disablePointerEventsTillElementTransition ?? true;
+	const maskSizingMode = revealOptions?.maskSizingMode ?? "auto";
+	const usesTransformMask =
+		maskSizingMode === "auto"
+			? REVEAL_USES_TRANSFORM_MASK
+			: maskSizingMode === "transform";
 
 	const boundsAccessor = createLinkAccessor(() => props);
 	const link = boundsAccessor.getLink(tag);
@@ -131,9 +146,12 @@ export function buildRevealStyles({
 
 		const maskBorderRadius = mixUnit(
 			sourceBorderRadius,
-			REVEAL_BORDER_RADIUS,
+			borderRadius,
 			progress,
 		);
+		const maskBorderCurve = borderContinuous
+			? ("continuous" as const)
+			: undefined;
 
 		const maskSizeMultiplier = props.active.closing
 			? mixUnit(0.9, 1, props.active.progress)
@@ -162,6 +180,7 @@ export function buildRevealStyles({
 				releaseScale: dragScale,
 				targetScale: sourceContentScale,
 				velocity: props.active.gesture.velocity,
+				velocityDepth,
 			});
 		}
 
@@ -249,12 +268,12 @@ export function buildRevealStyles({
 			compensatedMaskTranslateX + (maskWidth - maskBaseWidth) / 2;
 		const transformMaskTranslateY =
 			compensatedMaskTranslateY + (renderedMaskHeight - maskBaseHeight) / 2;
-		const maskElementStyle = REVEAL_USES_TRANSFORM_MASK
+		const maskElementStyle = usesTransformMask
 			? {
 					width: maskBaseWidth,
 					height: maskBaseHeight,
 					borderRadius: props.active.settled ? 0 : maskBorderRadius,
-					borderCurve: "continuous" as const,
+					borderCurve: maskBorderCurve,
 					transform: [
 						{ translateX: transformMaskTranslateX },
 						{ translateY: transformMaskTranslateY },
@@ -266,7 +285,7 @@ export function buildRevealStyles({
 					width: maskWidth,
 					height: renderedMaskHeight,
 					borderRadius: props.active.settled ? 0 : maskBorderRadius,
-					borderCurve: "continuous" as const,
+					borderCurve: maskBorderCurve,
 					transform: [
 						{ translateX: compensatedMaskTranslateX },
 						{ translateY: compensatedMaskTranslateY },
@@ -302,12 +321,15 @@ export function buildRevealStyles({
 			: 0;
 
 		const { gestureSensitivity, gestureReleaseVelocityScale } =
-			resolveRevealGestureHandoff(rawDrag);
+			resolveRevealGestureHandoff({
+				rawDrag,
+				maxSensitivity,
+			});
 
 		return {
 			options: {
 				navigationMaskEnabled: true,
-				gestureProgressMode: "freeform",
+				gestureProgressMode,
 				gestureSensitivity,
 				gestureReleaseVelocityScale,
 			},
@@ -382,6 +404,7 @@ export function buildRevealStyles({
 			releaseScale: dragScale,
 			targetScale: trackingTargetScale,
 			velocity: props.active.gesture.velocity,
+			velocityDepth,
 		});
 	}
 	const trackingContentTranslateX =
@@ -402,18 +425,20 @@ export function buildRevealStyles({
 	return {
 		options: {
 			navigationMaskEnabled: true,
-			gestureProgressMode: "freeform",
+			gestureProgressMode,
 		},
 		content: {
 			style: {
 				transform: [{ scale: unfocusedContentScale }],
 			},
-			props: {
-				pointerEvents:
-					props.active.progress <= CLOSE_SOURCE_HANDOFF_PROGRESS
-						? "auto"
-						: "none",
-			},
+			props: disablePointerEventsTillElementTransition
+				? {
+						pointerEvents:
+							props.active.progress <= CLOSE_SOURCE_HANDOFF_PROGRESS
+								? "auto"
+								: "none",
+					}
+				: undefined,
 		},
 		[link.id]: {
 			style: {

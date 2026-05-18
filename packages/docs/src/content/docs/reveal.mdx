@@ -19,55 +19,28 @@ Use it when the destination screen should feel like it is revealed from the tapp
 
 ## Recommended Setup
 
-Mark the source with `Transition.Boundary.Trigger`, then call `navigation.reveal()` from the destination screen's `screenStyleInterpolator`.
+Reveal requires three pieces: a source boundary, a matching destination boundary, and a navigation interpolator that calls `navigation.reveal()`.
+
+### Source Setup
+
+Mark the source with `Transition.Boundary.Trigger` and pass the reveal id through your navigation params.
 
 ```tsx
-import { makeMutable } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
-
-const revealId = makeMutable<string | null>(null);
 
 <Transition.Boundary.Trigger
   id={item.id}
   onPress={() => {
-    revealId.value = item.id;
-    navigation.navigate("Detail");
+    navigation.navigate("Detail", { revealId: item.id });
   }}
 >
   <Image source={item.image} style={styles.thumbnail} />
 </Transition.Boundary.Trigger>
-
-<Stack.Screen
-  name="Detail"
-  component={DetailScreen}
-  options={{
-    navigationMaskEnabled: true,
-    gestureEnabled: true,
-    gestureDirection: ["vertical", "horizontal"],
-    gestureProgressMode: "freeform",
-    screenStyleInterpolator: ({ bounds }) => {
-      "worklet";
-
-      const id = revealId.value;
-      if (!id) return null;
-
-      return bounds({ id }).navigation.reveal();
-    },
-  }}
-/>
 ```
 
-<Note>
-  Reveal is intentionally opinionated: `navigation.reveal()` only works with the navigation mask enabled, and that mask requires `@react-native-masked-view/masked-view`. The helper accounts for Android and iOS mask performance internally, but if you need the lightest possible path, use `navigation.zoom()` instead; zoom does not require masked view.
-</Note>
+### Destination Setup
 
-`navigation.reveal()` forces `navigationMaskEnabled: true` while the helper is active because reveal depends on the navigation mask element. Keeping `navigationMaskEnabled: true` in screen options is still useful when you want the mask wrapper mounted before the first animated frame.
-
-Install `@react-native-masked-view/masked-view`; without it, navigation mask styles cannot render.
-
-## Destination Boundaries
-
-The destination screen usually needs a matching destination boundary:
+The destination screen must render a matching boundary for the same id. That destination boundary is the real container target for the reveal.
 
 ```tsx
 function DetailScreen() {
@@ -79,7 +52,43 @@ function DetailScreen() {
 }
 ```
 
-The destination boundary gives the helper a real container target for the reveal. If the target element is nested inside a larger pressable or layout owner, use `Transition.Boundary.Target` inside the boundary owner to narrow the measured region.
+If the target element is nested inside a larger pressable or layout owner, use `Transition.Boundary.Target` inside the boundary owner to narrow the measured region.
+
+### Navigation Setup
+
+Call `navigation.reveal()` from the destination screen's `screenStyleInterpolator` and read the id from the active route params.
+
+```tsx
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    navigationMaskEnabled: true,
+    gestureEnabled: true,
+    gestureDirection: ["vertical", "horizontal"],
+    gestureProgressMode: "freeform",
+    screenStyleInterpolator: ({ active, bounds }) => {
+      "worklet";
+
+      const id = active.route.params?.revealId;
+      if (!id) return null;
+
+      return bounds({ id }).navigation.reveal({
+        borderRadius: 58,
+        borderContinuous: true,
+        maxSensitivity: 0.8,
+        velocityDepth: 0.5,
+      });
+    },
+  }}
+/>
+```
+
+<Note>
+  Reveal is intentionally opinionated: `navigation.reveal()` only works with the navigation mask enabled, and that mask requires `@react-native-masked-view/masked-view`. The helper accounts for Android and iOS mask performance internally, but if you need the lightest possible path, use `navigation.zoom()` instead; zoom does not require masked view.
+</Note>
+
+Install `@react-native-masked-view/masked-view`; without it, navigation mask styles cannot render.
 
 ## Gesture Behavior
 
@@ -99,17 +108,23 @@ options={{
 
 Use `active.gesture.raw` if you derive dynamic runtime options such as `gestureSensitivity` from gesture movement.
 
+## Options
+
+Pass options directly to `navigation.reveal()` when you need to tune the opinionated defaults:
+
+| Option | Type | Default | Description |
+| --- | --- | --- | --- |
+| `borderRadius` | `number` | Platform-specific reveal radius | Destination mask border radius. Reveal interpolates from the measured source radius to this value. |
+| `borderContinuous` | `boolean` | `true` | Uses React Native's continuous border curve for the reveal mask. |
+| `maxSensitivity` | `number` | `0.8` | Highest gesture sensitivity reveal applies before it reduces sensitivity during deeper drags. |
+| `velocityDepth` | `number` | `0.5` | Velocity-driven depth for the dismiss scale orbit. Set `0` to remove the velocity depth effect. |
+| `gestureProgressMode` | `"progress-driven" \| "freeform"` | `"freeform"` | Controls whether gesture displacement drives transition progress. Reveal defaults to freeform so drag can move the masked container without owning the full screen progress. |
+| `disablePointerEventsTillElementTransition` | `boolean` | `true` | Blocks pointer-event pass-through on the inactive content until the source element handoff reaches progress `0.25`. This is intentional and most users cannot react fast enough to swipe during that brief handoff. Set `false` to disable the guard and keep the default behavior that allows pointer events to pass through. |
+| `maskSizingMode` | `"auto" \| "transform" \| "size"` | `"auto"` | Controls how the navigation mask element resizes. Android defaults to transform-based resizing for performance; use `"size"` if transformed border radii look wrong and radius quality matters more. |
+
 ## Platform Notes
 
-On Android, reveal uses a transform-based mask path to avoid masked-size animation issues. That keeps the API the same, but the internal mask output differs from iOS. Test both platforms if you customize mask styles directly through the navigation mask ids.
-
-Reveal also depends on stable source and destination measurements. If the source layout can change while it is unfocused, set `remeasureOnFocus` on the source boundary owner:
-
-```tsx
-<Transition.Boundary.Trigger id={item.id} remeasureOnFocus onPress={open}>
-  <Image source={item.image} />
-</Transition.Boundary.Trigger>
-```
+On Android, reveal uses a transform-based mask path by default to avoid masked-size animation issues. That keeps the API the same, but transformed masks can make large border radii look less natural. Use `maskSizingMode: "size"` to force width and height animation when border radius quality matters more than the Android optimization.
 
 ## Reveal vs Zoom
 
