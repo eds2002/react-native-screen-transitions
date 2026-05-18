@@ -143,6 +143,29 @@ export function resolveDismissScaleHandoff({
 	return baseScale * orbitScale;
 }
 
+export function resolveAspectRatioMaskHeight({
+	maskWidth,
+	maskHeight,
+	targetWidth,
+	targetHeight,
+}: {
+	maskWidth: number;
+	maskHeight: number;
+	targetWidth: number;
+	targetHeight: number;
+}) {
+	"worklet";
+
+	const safeMaskWidth = Math.max(1, Math.abs(maskWidth));
+	const safeMaskHeight = Math.max(1, Math.abs(maskHeight));
+	const safeTargetWidth = Math.max(Math.abs(targetWidth), EPSILON);
+	const safeTargetHeight = Math.max(Math.abs(targetHeight), EPSILON);
+	const targetAspectHeight =
+		safeMaskWidth * (safeTargetHeight / safeTargetWidth);
+
+	return Math.min(safeMaskHeight, Math.max(1, targetAspectHeight));
+}
+
 function getBoundsCenterX(bounds: MeasuredDimensions) {
 	"worklet";
 	return bounds.pageX + bounds.width / 2;

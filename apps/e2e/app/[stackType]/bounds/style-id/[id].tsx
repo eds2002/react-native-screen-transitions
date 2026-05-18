@@ -31,15 +31,16 @@ const PIN_THUMBS = [
 const GRID_HORIZONTAL_PADDING = 24;
 const PIN_COLUMN_GAP = 8;
 const PIN_COLUMNS = 3;
+const BOARD_ASPECT_RATIO = 16 / 9;
 
 function SharedImage({
 	id,
 	image,
-	size,
+	width,
 }: {
 	id: string;
 	image: string;
-	size: number;
+	width: number;
 }) {
 	const theme = useTheme();
 	const insets = useSafeAreaInsets();
@@ -49,8 +50,8 @@ function SharedImage({
 			style={[
 				styles.sharedImage,
 				{
-					width: size,
-					height: size,
+					width,
+					aspectRatio: BOARD_ASPECT_RATIO,
 					backgroundColor: theme.card,
 					marginTop: insets.top + 16,
 				},
@@ -71,7 +72,7 @@ export default function StyleIdBoundsDetail() {
 	}>();
 
 	const { width } = useWindowDimensions();
-	const imageSize = width * 0.8;
+	const imageWidth = width * 0.8;
 	const pinSize = Math.floor(
 		(width - GRID_HORIZONTAL_PADDING * 2 - PIN_COLUMN_GAP * (PIN_COLUMNS - 1)) /
 			PIN_COLUMNS,
@@ -89,7 +90,7 @@ export default function StyleIdBoundsDetail() {
 			style={[styles.scroll, { backgroundColor: theme.bg }]}
 		>
 			<View style={styles.heroWrap}>
-				<SharedImage id={id} image={image} size={imageSize} />
+				<SharedImage id={id} image={image} width={imageWidth} />
 			</View>
 
 			<Animated.View style={styles.section}>

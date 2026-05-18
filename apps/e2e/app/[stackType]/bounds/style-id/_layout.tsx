@@ -1,5 +1,3 @@
-import { BlurView } from "expo-blur";
-import { interpolate } from "react-native-reanimated";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
@@ -19,10 +17,11 @@ export default function StyleIdBoundsLayout() {
 					navigationMaskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "horizontal", "vertical-inverted"],
-					// backdropComponent: BlurView,
 					screenStyleInterpolator: ({ bounds, focused, active }) => {
 						"worklet";
-						const boundTag = active?.route?.params?.id;
+						const boundTag = (
+							active?.route?.params as { id?: string } | undefined
+						)?.id;
 
 						if (!boundTag) {
 							return {};

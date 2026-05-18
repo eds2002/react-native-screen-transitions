@@ -8,14 +8,12 @@ import {
 	useWindowDimensions,
 	View,
 } from "react-native";
-import {
-	SafeAreaView,
-	useSafeAreaInsets,
-} from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
 import {
 	buildStackPath,
+	type StackType,
 	useResolvedStackType,
 } from "@/components/stack-examples/stack-routing";
 import { useTheme } from "@/theme";
@@ -35,7 +33,7 @@ const BOARDS = [
 		subtitle: "142 pins",
 		description:
 			"Far-away references kept for projects that haven't started yet — mostly cities, mostly mid-century, mostly accidental.",
-		source: "https://picsum.photos/id/1011/1000/1000",
+		source: "https://picsum.photos/id/1011/1600/900",
 	},
 	{
 		id: "coast",
@@ -43,7 +41,7 @@ const BOARDS = [
 		subtitle: "87 pins",
 		description:
 			"Bleached wood, faded blues, salt on glass. The visual quiet of being out of season.",
-		source: "https://picsum.photos/id/1016/1000/1000",
+		source: "https://picsum.photos/id/1016/1600/900",
 	},
 	{
 		id: "drift",
@@ -51,7 +49,7 @@ const BOARDS = [
 		subtitle: "56 pins",
 		description:
 			"Slow gradients and late-evening tones — the in-between colors I keep stealing for backgrounds.",
-		source: "https://picsum.photos/id/1039/1000/1000",
+		source: "https://picsum.photos/id/1039/1600/900",
 	},
 	{
 		id: "grain",
@@ -59,7 +57,7 @@ const BOARDS = [
 		subtitle: "234 pins",
 		description:
 			"Texture-first — paper, burlap, weathered metal. Useful when a clean board feels too clean.",
-		source: "https://picsum.photos/id/1040/1000/1000",
+		source: "https://picsum.photos/id/1040/1600/900",
 	},
 	{
 		id: "summit",
@@ -67,7 +65,7 @@ const BOARDS = [
 		subtitle: "41 pins",
 		description:
 			"Cold light and sharp edges. A working board for a quiet ongoing brief I haven't finished pitching.",
-		source: "https://picsum.photos/id/1036/1000/1000",
+		source: "https://picsum.photos/id/1036/1600/900",
 	},
 	{
 		id: "canopy",
@@ -75,7 +73,7 @@ const BOARDS = [
 		subtitle: "98 pins",
 		description:
 			"Forest greens and the light through them — started for a friend's wedding moodboard, never closed it.",
-		source: "https://picsum.photos/id/1047/1000/1000",
+		source: "https://picsum.photos/id/1047/1600/900",
 	},
 ] satisfies BoardItem[];
 
@@ -86,7 +84,7 @@ const PICK_BACK_UP = [
 		subtitle: "Edited 2h ago",
 		description:
 			"Warm wood, low light, soft wool. Trying to land somewhere between cabin and gallery.",
-		source: "https://picsum.photos/id/1018/1000/1000",
+		source: "https://picsum.photos/id/1018/1600/900",
 	},
 	{
 		id: "fall-fits",
@@ -94,7 +92,7 @@ const PICK_BACK_UP = [
 		subtitle: "Yesterday",
 		description:
 			"Layering ideas before the weather actually commits — heavy on knit, light on logos.",
-		source: "https://picsum.photos/id/1025/1000/1000",
+		source: "https://picsum.photos/id/1025/1600/900",
 	},
 	{
 		id: "trip-planning",
@@ -102,7 +100,7 @@ const PICK_BACK_UP = [
 		subtitle: "Mon · Lisbon",
 		description:
 			"Notes for a slow week in Lisbon — tiles, pastéis, the cheap café with the good view.",
-		source: "https://picsum.photos/id/1043/1000/1000",
+		source: "https://picsum.photos/id/1043/1600/900",
 	},
 	{
 		id: "studio-walls",
@@ -110,7 +108,7 @@ const PICK_BACK_UP = [
 		subtitle: "Sat",
 		description:
 			"Neutral with one risky color. Collecting hung-work shots while I decide on paint.",
-		source: "https://picsum.photos/id/1059/1000/1000",
+		source: "https://picsum.photos/id/1059/1600/900",
 	},
 	{
 		id: "garden-plan",
@@ -118,7 +116,7 @@ const PICK_BACK_UP = [
 		subtitle: "Apr 28",
 		description:
 			"What survived last year, what to swap, what to actually finish. Beans, peas, the failed dahlia experiment.",
-		source: "https://picsum.photos/id/1074/1000/1000",
+		source: "https://picsum.photos/id/1074/1600/900",
 	},
 ] satisfies BoardItem[];
 
@@ -128,46 +126,46 @@ const TEMPLATES = [
 		title: "Mood: warm + low",
 		subtitle: "Starter",
 		description: "A starting palette for cozy, low-light interiors.",
-		source: "https://picsum.photos/id/1019/1000/1000",
+		source: "https://picsum.photos/id/1019/1600/900",
 	},
 	{
 		id: "lookbook",
 		title: "Fashion lookbook",
 		subtitle: "Starter",
 		description: "Season-by-season outfit references, kept loose.",
-		source: "https://picsum.photos/id/1029/1000/1000",
+		source: "https://picsum.photos/id/1029/1600/900",
 	},
 	{
 		id: "trip-board",
 		title: "Trip board",
 		subtitle: "Starter",
 		description: "Places to eat, walks to take, neighborhoods to wander.",
-		source: "https://picsum.photos/id/1045/1000/1000",
+		source: "https://picsum.photos/id/1045/1600/900",
 	},
 	{
 		id: "color-study",
 		title: "Color study",
 		subtitle: "Starter",
 		description: "One color and every surface it shows up on.",
-		source: "https://picsum.photos/id/1062/1000/1000",
+		source: "https://picsum.photos/id/1062/1600/900",
 	},
 	{
 		id: "wedding-palette",
 		title: "Wedding palette",
 		subtitle: "Starter",
 		description: "Florals, fabrics, tablescapes — one shared reference.",
-		source: "https://picsum.photos/id/1071/1000/1000",
+		source: "https://picsum.photos/id/1071/1600/900",
 	},
 	{
 		id: "photo-direction",
 		title: "Photo direction",
 		subtitle: "Starter",
 		description: "References for a single shoot — light, framing, mood.",
-		source: "https://picsum.photos/id/1084/1000/1000",
+		source: "https://picsum.photos/id/1084/1600/900",
 	},
 ] satisfies BoardItem[];
 
-function openDetail(stackType: string, tag: string, item: BoardItem) {
+function openDetail(stackType: StackType, tag: string, item: BoardItem) {
 	router.push({
 		pathname: buildStackPath(stackType, "bounds/style-id/[id]") as never,
 		params: {
@@ -183,6 +181,9 @@ function openDetail(stackType: string, tag: string, item: BoardItem) {
 const GRID_HORIZONTAL_PADDING = 16;
 const GRID_COLUMN_GAP = 16;
 const GRID_COLUMNS = 2;
+const BOARD_ASPECT_RATIO = 16 / 9;
+const PICK_CARD_WIDTH = 140;
+const TRY_COVER_WIDTH = 72;
 
 export default function StyleIdBoundsIndex() {
 	const stackType = useResolvedStackType();
@@ -380,7 +381,7 @@ const styles = StyleSheet.create({
 	},
 	cover: {
 		width: "100%",
-		aspectRatio: 1,
+		aspectRatio: BOARD_ASPECT_RATIO,
 		borderRadius: 24,
 		borderCurve: "continuous",
 		overflow: "hidden",
@@ -445,20 +446,20 @@ const styles = StyleSheet.create({
 		overflow: "visible",
 	},
 	pickCell: {
-		width: 140,
+		width: PICK_CARD_WIDTH,
 		gap: 10,
 	},
 	pickBoundary: {
-		width: 140,
-		height: 140,
+		width: PICK_CARD_WIDTH,
+		aspectRatio: BOARD_ASPECT_RATIO,
 		overflow: "visible",
 		position: "relative",
 		zIndex: 50,
 		elevation: 50,
 	},
 	pickCover: {
-		width: 140,
-		height: 140,
+		width: PICK_CARD_WIDTH,
+		aspectRatio: BOARD_ASPECT_RATIO,
 		borderRadius: 28,
 		borderCurve: "continuous",
 		overflow: "hidden",
@@ -501,8 +502,8 @@ const styles = StyleSheet.create({
 		borderBottomColor: "rgba(142,142,147,0.28)",
 	},
 	tryCover: {
-		width: 72,
-		height: 72,
+		width: TRY_COVER_WIDTH,
+		aspectRatio: BOARD_ASPECT_RATIO,
 		borderRadius: 18,
 		borderCurve: "continuous",
 		overflow: "hidden",

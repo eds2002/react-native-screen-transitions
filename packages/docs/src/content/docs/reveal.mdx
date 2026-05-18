@@ -57,6 +57,10 @@ const revealId = makeMutable<string | null>(null);
 />
 ```
 
+<Note>
+  Reveal is intentionally opinionated: `navigation.reveal()` only works with the navigation mask enabled, and that mask requires `@react-native-masked-view/masked-view`. The helper accounts for Android and iOS mask performance internally, but if you need the lightest possible path, use `navigation.zoom()` instead; zoom does not require masked view.
+</Note>
+
 `navigation.reveal()` forces `navigationMaskEnabled: true` while the helper is active because reveal depends on the navigation mask element. Keeping `navigationMaskEnabled: true` in screen options is still useful when you want the mask wrapper mounted before the first animated frame.
 
 Install `@react-native-masked-view/masked-view`; without it, navigation mask styles cannot render.

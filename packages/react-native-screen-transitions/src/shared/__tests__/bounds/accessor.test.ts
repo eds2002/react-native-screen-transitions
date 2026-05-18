@@ -1,5 +1,8 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { createScreenTransitionState } from "../../constants";
+import {
+	createScreenTransitionState,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "../../constants";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundsInterpolationProps } from "../../types/bounds.types";
@@ -53,6 +56,40 @@ const makeProps = (): BoundsInterpolationProps => {
 		logicallySettled: current.logicallySettled,
 		active: current,
 		inactive: previous,
+	};
+};
+
+const makeVerticalDragProps = (): BoundsInterpolationProps => {
+	const props = makeProps();
+	const current = {
+		...props.current,
+		progress: 1,
+		entering: 0,
+		animating: 1,
+		settled: 0,
+		logicallySettled: 0,
+		gesture: {
+			...props.active.gesture,
+			y: screenLayout.height,
+			normY: 1,
+			raw: {
+				...props.active.gesture.raw,
+				y: screenLayout.height,
+				normY: 1,
+			},
+			dragging: 1,
+			active: "vertical" as const,
+			direction: "vertical" as const,
+		},
+	};
+
+	return {
+		...props,
+		current,
+		active: current,
+		progress: 1,
+		snapIndex: current.snapIndex,
+		logicallySettled: current.logicallySettled,
 	};
 };
 
@@ -117,6 +154,29 @@ describe("bounds accessor", () => {
 
 		expect(reveal.options?.navigationMaskEnabled).toBe(true);
 		expect(reveal.options?.gestureProgressMode).toBe("freeform");
+	});
+
+	it("collapses reveal navigation masks to the source aspect ratio", () => {
+		registerSourceAndDestination({
+			tag: "poster",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 90, 160),
+			destinationBounds: createBounds(50, 100, 320, 568),
+		});
+
+		const bounds = createBoundsAccessor(makeVerticalDragProps);
+		const reveal = bounds({ id: "poster" }).navigation.reveal();
+		const maskStyle = reveal[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style as {
+			width: number;
+			height: number;
+		};
+
+		expect(maskStyle.width).toBe(screenLayout.width);
+		expect(maskStyle.height).toBeCloseTo(
+			screenLayout.width * (160 / 90),
+			5,
+		);
 	});
 
 	it("prefers `offset` over deprecated `gestures` per axis", () => {

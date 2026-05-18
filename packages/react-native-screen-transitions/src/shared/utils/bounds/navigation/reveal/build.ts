@@ -21,6 +21,7 @@ import {
 import {
 	interpolateClamped,
 	mixUnit,
+	resolveAspectRatioMaskHeight,
 	resolveDismissScaleHandoff,
 	resolveRevealContentBaseTransform,
 	resolveRevealDirectionalDragScale,
@@ -79,15 +80,15 @@ export function buildRevealStyles({
 			? Math.abs(props.active.gesture.raw.normY)
 			: 0;
 
-	const dragX =
-		props.active.gesture.x === 0
-			? 0
-			: resolveUnitDragTranslation(props.active.gesture.x, screenLayout.width);
+	const dragX = resolveUnitDragTranslation(
+		props.active.gesture.x,
+		screenLayout.width,
+	);
 
-	const dragY =
-		props.active.gesture.y === 0
-			? 0
-			: resolveUnitDragTranslation(props.active.gesture.y, screenLayout.height);
+	const dragY = resolveUnitDragTranslation(
+		props.active.gesture.y,
+		screenLayout.height,
+	);
 
 	const dragXScale = isHorizontalDismiss
 		? resolveRevealDirectionalDragScale(
@@ -148,12 +149,14 @@ export function buildRevealStyles({
 		if (props.active.gesture.dismissing) {
 			const contentTargetBounds =
 				initialDestinationTarget ?? link.destination.bounds;
+
 			const sourceContentScale = resolveUniformScale({
 				sourceWidth: link.source.bounds.width,
 				sourceHeight: link.source.bounds.height,
 				destinationWidth: contentTargetBounds.width,
 				destinationHeight: contentTargetBounds.height,
 			});
+
 			contentScale = resolveDismissScaleHandoff({
 				progress: props.active.progress,
 				releaseScale: dragScale,
@@ -161,6 +164,7 @@ export function buildRevealStyles({
 				velocity: props.active.gesture.velocity,
 			});
 		}
+
 		const contentTranslateX = contentRaw.translateX + dragX;
 		const contentTranslateY = contentRaw.translateY + dragY;
 
@@ -190,10 +194,13 @@ export function buildRevealStyles({
 					)
 				: 0;
 
-		const minMaskHeight = Math.min(
+		const maskAspectBounds = link.initialSource?.bounds ?? link.source.bounds;
+		const minMaskHeight = resolveAspectRatioMaskHeight({
+			maskWidth,
 			maskHeight,
-			Math.max(maskWidth, link.source.bounds.height),
-		);
+			targetWidth: maskAspectBounds.width,
+			targetHeight: maskAspectBounds.height,
+		});
 
 		const renderedMaskHeight = interpolateClamped(
 			maskHeightCollapseDrag,
