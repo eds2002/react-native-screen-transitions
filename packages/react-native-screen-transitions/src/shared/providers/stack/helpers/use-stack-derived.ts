@@ -1,9 +1,9 @@
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 
+type StackDerivedAnimationMap = Pick<AnimationStoreMap, "closing">;
+
 export interface StackDerived {
-	/** Sum of all individual screen progress values. */
-	stackProgress: DerivedValue<number>;
 	/**
 	 * Focused index that accounts for closing screens.
 	 * Counts consecutive closing screens from the top so that
@@ -13,21 +13,12 @@ export interface StackDerived {
 }
 
 /**
- * Derives aggregated stack progress and an optimistic focused index
- * from animation store maps. Shared between managed and direct providers.
+ * Derives an optimistic focused index from animation store maps.
+ * Shared between managed and direct providers.
  */
 export function useStackDerived(
-	animationMaps: AnimationStoreMap[],
+	animationMaps: StackDerivedAnimationMap[],
 ): StackDerived {
-	const stackProgress = useDerivedValue(() => {
-		"worklet";
-		let total = 0;
-		for (let i = 0; i < animationMaps.length; i++) {
-			total += animationMaps[i].progress.get();
-		}
-		return total;
-	});
-
 	const optimisticFocusedIndex = useDerivedValue(() => {
 		"worklet";
 		const lastIndex = animationMaps.length - 1;
@@ -39,5 +30,5 @@ export function useStackDerived(
 		return lastIndex - closingFromTop;
 	});
 
-	return { stackProgress, optimisticFocusedIndex };
+	return { optimisticFocusedIndex };
 }

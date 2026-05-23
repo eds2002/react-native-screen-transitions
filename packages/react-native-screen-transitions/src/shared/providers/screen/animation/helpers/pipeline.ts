@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	type DerivedValue,
@@ -8,6 +9,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../../../constants";
 import { useStack } from "../../../../hooks/navigation/use-stack";
+import { AnimationStore } from "../../../../stores/animation.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
@@ -18,6 +20,7 @@ import { updateDerivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
 import { hydrateTransitionState } from "./hydrate-transition-state";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
+import { deriveStackProgress } from "./stack-progress";
 import { useBuildTransitionState } from "./use-build-transition-state";
 
 export type ScreenInterpolatorFrame = Omit<ScreenInterpolationProps, "bounds">;
@@ -55,7 +58,7 @@ const createInitialBaseInterpolatorProps = (
 };
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
-	const { flags, stackProgress: rootStackProgress, routeKeys } = useStack();
+	const { flags, routeKeys } = useStack();
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
@@ -72,6 +75,11 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 	const currentRouteKey = currDescriptor?.route?.key;
 	const currentIndex = routeKeys.indexOf(currentRouteKey);
+	const effectiveProgressValues = useMemo(() => {
+		return routeKeys.map((routeKey) =>
+			AnimationStore.getValue(routeKey, "effectiveProgress"),
+		);
+	}, [routeKeys]);
 
 	const nextRouteKey = nextDescriptor?.route?.key;
 	const nextHasTransitions =
@@ -130,10 +138,16 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 			updateDerivations(frame);
 
-			frame.stackProgress =
-				currentIndex >= 0
-					? rootStackProgress.get() - currentIndex
-					: frame.progress;
+			frame.stackProgress = deriveStackProgress(
+				routeKeys,
+				effectiveProgressValues,
+				currentIndex,
+				frame.progress,
+				currentRouteKey,
+				frame.current.progress,
+				nextRouteKey,
+				frame.next?.progress,
+			);
 			frame.logicallySettled = frame.active.logicallySettled;
 
 			return frame;

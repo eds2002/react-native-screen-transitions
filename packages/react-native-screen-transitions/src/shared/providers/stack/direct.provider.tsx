@@ -79,8 +79,7 @@ function useDirectStackValue(
 		};
 	}, [state.routes, state.preloadedRoutes, preloadedDescriptors, descriptors]);
 
-	const { stackProgress, optimisticFocusedIndex } =
-		useStackDerived(animationMaps);
+	const { optimisticFocusedIndex } = useStackDerived(animationMaps);
 
 	const focusedIndex = state.index;
 
@@ -91,18 +90,9 @@ function useDirectStackValue(
 			routeKeys,
 			routes: allRoutes,
 			scenes,
-			stackProgress,
 			optimisticFocusedIndex,
 		}),
-		[
-			flags,
-			navigatorKey,
-			routeKeys,
-			allRoutes,
-			scenes,
-			stackProgress,
-			optimisticFocusedIndex,
-		],
+		[flags, navigatorKey, routeKeys, allRoutes, scenes, optimisticFocusedIndex],
 	);
 
 	// DirectStack context value

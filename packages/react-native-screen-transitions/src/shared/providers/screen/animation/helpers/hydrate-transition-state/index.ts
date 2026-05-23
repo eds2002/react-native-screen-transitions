@@ -110,6 +110,12 @@ export const hydrateTransitionState = (
 		),
 	);
 
+	// Unsure where else to place this if im being honest.
+	// I think for here is fine
+	if (s.effectiveProgress.get() !== out.progress) {
+		s.effectiveProgress.set(out.progress);
+	}
+
 	const hasResidualGestureValues =
 		Math.abs(out.gesture.normX) > EPSILON ||
 		Math.abs(out.gesture.normY) > EPSILON ||

@@ -47,9 +47,7 @@ function useManagedStackValue<
 	const navigatorKey = props.state.key;
 
 	const processed = useProcessedRoutes(state.routes, state.descriptors);
-	const { stackProgress, optimisticFocusedIndex } = useStackDerived(
-		processed.animationMaps,
-	);
+	const { optimisticFocusedIndex } = useStackDerived(processed.animationMaps);
 	const closingRouteMap = useClosingRouteMap(
 		processed.routeKeys,
 		processed.animationMaps,
@@ -65,7 +63,6 @@ function useManagedStackValue<
 			routeKeys: processed.routeKeys,
 			routes: state.routes as Route<string>[],
 			scenes: processed.scenes as BaseStackScene[],
-			stackProgress,
 			optimisticFocusedIndex,
 		}),
 		[
@@ -74,7 +71,6 @@ function useManagedStackValue<
 			processed.routeKeys,
 			state.routes,
 			processed.scenes,
-			stackProgress,
 			optimisticFocusedIndex,
 		],
 	);

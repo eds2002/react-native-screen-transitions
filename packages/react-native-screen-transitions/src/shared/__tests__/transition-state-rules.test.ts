@@ -91,6 +91,7 @@ const createBuiltState = (
 
 	return {
 		progress: shared(overrides.progress ?? 1),
+		effectiveProgress: shared(overrides.progress ?? 1),
 		willAnimate: shared(0),
 		closing: shared(overrides.closing ?? 0),
 		progressAnimating: shared(overrides.progressAnimating ?? 0),
@@ -291,18 +292,18 @@ describe("transition state rules", () => {
 	});
 
 	it("derives effective progress from gestures in progress-driven mode", () => {
-		const hydrated = hydrate(
-			createBuiltState({
-				progress: 1,
-				gesture: createGestureStore({ normY: 0.25 }),
-				options: {
-					gestureDirection: "vertical",
-					gestureProgressMode: "progress-driven",
-				},
-			}),
-		);
+		const state = createBuiltState({
+			progress: 1,
+			gesture: createGestureStore({ normY: 0.25 }),
+			options: {
+				gestureDirection: "vertical",
+				gestureProgressMode: "progress-driven",
+			},
+		});
+		const hydrated = hydrate(state);
 
 		expect(hydrated.progress).toBe(0.75);
+		expect(state.effectiveProgress.get()).toBe(0.75);
 	});
 
 	it("ignores pan gesture progress outside the configured direction", () => {
@@ -321,22 +322,21 @@ describe("transition state rules", () => {
 	});
 
 	it("keeps base progress when gestureProgressMode is freeform", () => {
-		const hydrated = hydrate(
-			createBuiltState({
-				progress: 1,
-				gesture: createGestureStore({ normY: 0.25 }),
-				options: {
-					gestureDirection: "vertical",
-					gestureProgressMode: "progress-driven",
-				},
-			}),
-			{
+		const state = createBuiltState({
+			progress: 1,
+			gesture: createGestureStore({ normY: 0.25 }),
+			options: {
 				gestureDirection: "vertical",
-				gestureProgressMode: "freeform",
+				gestureProgressMode: "progress-driven",
 			},
-		);
+		});
+		const hydrated = hydrate(state, {
+			gestureDirection: "vertical",
+			gestureProgressMode: "freeform",
+		});
 
 		expect(hydrated.progress).toBe(1);
+		expect(state.effectiveProgress.get()).toBe(1);
 	});
 
 	it("keeps legacy gestureDrivesProgress as a compatibility alias", () => {
