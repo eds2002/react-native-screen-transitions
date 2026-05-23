@@ -48,6 +48,7 @@ const getResolvedSnapPointAt = (
 export const getResolvedSnapBounds = (
 	snapPoints: number[],
 	resolvedAutoSnap: number | null,
+	canDismiss = true,
 ): SnapBounds | null => {
 	"worklet";
 	const snapPointCount = getResolvedSnapPointCount(
@@ -77,7 +78,7 @@ export const getResolvedSnapBounds = (
 	);
 
 	return {
-		min: Math.min(0, firstSnapPoint),
+		min: canDismiss ? Math.min(0, firstSnapPoint) : firstSnapPoint,
 		max: lastSnapPoint,
 	};
 };

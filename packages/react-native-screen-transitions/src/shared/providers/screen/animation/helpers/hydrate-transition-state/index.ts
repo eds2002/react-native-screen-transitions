@@ -76,6 +76,7 @@ export const hydrateTransitionState = (
 		effectiveOptions,
 		s.optionsSlot,
 	);
+	const canDismiss = options.gestureEnabled !== false;
 	out.willAnimate = s.willAnimate.get();
 	out.closing = s.closing.get();
 	out.entering = s.entering.get();
@@ -107,6 +108,7 @@ export const hydrateTransitionState = (
 		getResolvedSnapBounds(
 			s.sortedNumericSnapPoints,
 			s.hasAutoSnapPoint ? s.resolvedAutoSnapPoint.get() : null,
+			canDismiss,
 		),
 	);
 

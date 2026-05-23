@@ -77,6 +77,7 @@ const createBuiltState = (
 		logicalSettleFrameCount: number;
 		gesture: ReturnType<typeof createGestureStore>;
 		options: ScreenTransitionOptions;
+		sortedNumericSnapPoints: number[];
 	}> = {},
 ): BuiltState => {
 	const options = overrides.options ?? DEFAULT_SCREEN_TRANSITION_OPTIONS;
@@ -106,7 +107,7 @@ const createBuiltState = (
 		measuredContentLayout: shared(null),
 		contentLayoutSlot: { width: 0, height: 0 },
 		hasAutoSnapPoint: false,
-		sortedNumericSnapPoints: [],
+		sortedNumericSnapPoints: overrides.sortedNumericSnapPoints ?? [],
 		unwrapped: state,
 	};
 };
@@ -337,6 +338,40 @@ describe("transition state rules", () => {
 
 		expect(hydrated.progress).toBe(1);
 		expect(state.effectiveProgress.get()).toBe(1);
+	});
+
+	it("clamps snap gesture progress to the minimum snap point when dismiss is disabled", () => {
+		const state = createBuiltState({
+			progress: 0.3,
+			gesture: createGestureStore({ active: "vertical", normY: 0.25 }),
+			options: {
+				gestureEnabled: false,
+				gestureDirection: "vertical",
+				gestureProgressMode: "progress-driven",
+			},
+			sortedNumericSnapPoints: [0.3, 0.6, 1],
+		});
+		const hydrated = hydrate(state);
+
+		expect(hydrated.progress).toBe(0.3);
+		expect(state.effectiveProgress.get()).toBe(0.3);
+	});
+
+	it("allows snap gesture progress below the minimum snap point when dismiss is enabled", () => {
+		const state = createBuiltState({
+			progress: 0.3,
+			gesture: createGestureStore({ active: "vertical", normY: 0.25 }),
+			options: {
+				gestureEnabled: true,
+				gestureDirection: "vertical",
+				gestureProgressMode: "progress-driven",
+			},
+			sortedNumericSnapPoints: [0.3, 0.6, 1],
+		});
+		const hydrated = hydrate(state);
+
+		expect(hydrated.progress).toBeCloseTo(0.05);
+		expect(state.effectiveProgress.get()).toBeCloseTo(0.05);
 	});
 
 	it("keeps legacy gestureDrivesProgress as a compatibility alias", () => {
