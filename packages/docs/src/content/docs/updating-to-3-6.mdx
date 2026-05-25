@@ -116,7 +116,7 @@ options={{
 
 v3.6 adds `bounds({ id }).navigation.reveal()` for masked source-to-container navigation transitions.
 
-Reveal requires a source boundary, a matching destination boundary, and the navigation mask. The helper exposes tuning options such as `borderRadius`, `borderContinuous`, `maxSensitivity`, `velocityDepth`, `gestureProgressMode`, `disablePointerEventsTillElementTransition`, and `maskSizingMode`.
+Reveal requires a source boundary, a matching destination boundary, and the static `navigationMaskEnabled` screen option. The helper exposes tuning options such as `borderRadius`, `borderContinuous`, `maxSensitivity`, `velocityDepth`, `gestureProgressMode`, `disablePointerEventsTillElementTransition`, and `maskSizingMode`.
 
 Read the full setup in [Reveal](/reveal).
 
@@ -133,7 +133,7 @@ const initialDestination = link?.initialDestination;
 const raw = link?.compute({ method: "size", raw: true });
 ```
 
-Bounds also gained more stable grouped-link measurement, source/destination snapshot handling, transition-pair resolution, and navigation mask option propagation. These are mostly internal, but they make grouped shared boundaries and navigation helpers less likely to flicker, blank, or retarget against stale measurements.
+Bounds also gained more stable grouped-link measurement, source/destination snapshot handling, and transition-pair resolution. These are mostly internal, but they make grouped shared boundaries and navigation helpers less likely to flicker, blank, or retarget against stale measurements.
 
 Internally, bounds links are now keyed by screen pair instead of a single global id. A pair owns its links, group active id, initial source, and initial destination, which keeps the same bound id from leaking between unrelated route pairs and makes retargeted grouped transitions deterministic.
 

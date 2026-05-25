@@ -328,7 +328,6 @@ export function buildRevealStyles({
 
 		return {
 			options: {
-				navigationMaskEnabled: true,
 				gestureProgressMode,
 				gestureSensitivity,
 				gestureReleaseVelocityScale,
@@ -424,7 +423,6 @@ export function buildRevealStyles({
 
 	return {
 		options: {
-			navigationMaskEnabled: true,
 			gestureProgressMode,
 		},
 		content: {

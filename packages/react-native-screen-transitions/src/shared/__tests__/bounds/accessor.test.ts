@@ -179,7 +179,7 @@ describe("bounds accessor", () => {
 		expect(styles.transform[1]).toEqual({ translateY: -8 });
 	});
 
-	it("forces navigation masking for reveal transitions", () => {
+	it("does not enable navigation masking from reveal transitions", () => {
 		registerSourceAndDestination({
 			tag: "card",
 			sourceScreenKey: "screen-a",
@@ -190,8 +190,9 @@ describe("bounds accessor", () => {
 
 		const bounds = createBoundsAccessor(() => makeFocusedProgressProps(1));
 		const reveal = bounds({ id: "card" }).navigation.reveal();
+		const options = (reveal.options ?? {}) as Record<string, unknown>;
 
-		expect(reveal.options?.navigationMaskEnabled).toBe(true);
+		expect("navigationMaskEnabled" in options).toBe(false);
 		expect(reveal.options?.gestureProgressMode).toBe("freeform");
 	});
 

@@ -3,7 +3,10 @@ import {
 	LOGICAL_SETTLE_PROGRESS_THRESHOLD,
 	LOGICAL_SETTLE_REQUIRED_FRAMES,
 } from "../../../../../constants";
-import type { ScreenTransitionOptions } from "../../../../../types/animation.types";
+import type {
+	ScreenTransitionOptions,
+	TransitionInterpolatorOptions,
+} from "../../../../../types/animation.types";
 import type { Layout } from "../../../../../types/screen.types";
 import { resolveGestureDrivenProgress } from "./gesture-progress";
 import {
@@ -23,7 +26,7 @@ const LOGICAL_SETTLE_STICKY_PROGRESS_THRESHOLD =
 
 const mergeTransitionOptions = (
 	base: ScreenTransitionOptions,
-	effective: ScreenTransitionOptions | undefined,
+	effective: TransitionInterpolatorOptions | undefined,
 	slot: ScreenTransitionOptions,
 ): ScreenTransitionOptions => {
 	"worklet";
@@ -31,8 +34,7 @@ const mergeTransitionOptions = (
 		return base;
 	}
 
-	slot.navigationMaskEnabled =
-		effective.navigationMaskEnabled ?? base.navigationMaskEnabled;
+	slot.navigationMaskEnabled = base.navigationMaskEnabled;
 	slot.gestureEnabled = effective.gestureEnabled ?? base.gestureEnabled;
 	slot.experimental_allowDisabledGestureTracking =
 		effective.experimental_allowDisabledGestureTracking ??
@@ -66,7 +68,7 @@ const mergeTransitionOptions = (
 export const hydrateTransitionState = (
 	s: BuiltState,
 	dimensions: Layout,
-	effectiveOptions?: ScreenTransitionOptions,
+	effectiveOptions?: TransitionInterpolatorOptions,
 ) => {
 	"worklet";
 	const out = s.unwrapped;

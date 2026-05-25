@@ -327,10 +327,7 @@ export const syncScreenOptionsOverrides = (
 	);
 
 	const next: ScreenOptionsState = {
-		navigationMaskEnabled: resolveBooleanOption(
-			options?.navigationMaskEnabled,
-			base.navigationMaskEnabled,
-		),
+		navigationMaskEnabled: base.navigationMaskEnabled,
 		gestureEnabled: resolveBooleanOption(
 			options?.gestureEnabled,
 			base.gestureEnabled,

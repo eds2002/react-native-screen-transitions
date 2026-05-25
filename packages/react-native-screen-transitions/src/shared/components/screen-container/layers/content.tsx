@@ -1,17 +1,14 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
-import { memo, useState } from "react";
+import { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-	runOnJS,
 	useAnimatedProps,
-	useAnimatedReaction,
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useGestureContext } from "../../../providers/screen/gestures";
-import { useScreenOptionsContext } from "../../../providers/screen/options";
 import { useScreenStyles } from "../../../providers/screen/styles";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
@@ -29,23 +26,7 @@ export const ContentLayer = memo(
 		const { current } = useDescriptors();
 
 		const gestureContext = useGestureContext();
-		const screenOptions = useScreenOptionsContext();
-		const [runtimeNavigationMaskEnabled, setRuntimeNavigationMaskEnabled] =
-			useState<boolean | undefined>(undefined);
-		useAnimatedReaction(
-			() => screenOptions.get().navigationMaskEnabled,
-			(next, previous) => {
-				"worklet";
-				if (next !== previous) {
-					runOnJS(setRuntimeNavigationMaskEnabled)(next);
-				}
-			},
-			[screenOptions],
-		);
-
-		const isNavigationMaskEnabled = !!(
-			runtimeNavigationMaskEnabled ?? current.options.navigationMaskEnabled
-		);
+		const isNavigationMaskEnabled = !!current.options.navigationMaskEnabled;
 		const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
 
 		const hasAutoSnapPoint =

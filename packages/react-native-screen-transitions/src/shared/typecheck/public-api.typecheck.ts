@@ -193,10 +193,15 @@ const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
 const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 	options: {
-		navigationMaskEnabled: true,
 		gestureSensitivity: 0.5,
 		gestureSnapLocked: true,
 		gestureReleaseVelocityScale: 1.2,
+	},
+};
+const invalidMaskRuntimeOptions: TransitionInterpolatedStyle = {
+	options: {
+		// @ts-expect-error navigationMaskEnabled must be configured as a static screen option.
+		navigationMaskEnabled: true,
 	},
 };
 void currentRawGestureNormX;
@@ -205,6 +210,7 @@ void currentActiveGesture;
 void currentAnimatedSnapIndex;
 void currentSnapIndex;
 void optionsInterpolatedStyle;
+void invalidMaskRuntimeOptions;
 const nextNameOptions: ScreenTransitionConfig = {
 	navigationMaskEnabled: true,
 	sheetScrollGestureBehavior: "collapse-only",

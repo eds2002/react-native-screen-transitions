@@ -150,7 +150,7 @@ screenStyleInterpolator: ({ active, progress }) => {
 };
 ```
 
-Use this for values that must change per frame on the UI thread, such as dynamic `gestureSensitivity`. Use `navigation.setOptions()` for React-side option changes such as toggling `gestureEnabled` or switching `gestureDirection` while a screen stays mounted.
+Use this for values that must change per frame on the UI thread, such as dynamic `gestureSensitivity`. Use `navigation.setOptions()` for React-side option changes such as toggling `gestureEnabled` or switching `gestureDirection` while a screen stays mounted. Structural options such as `navigationMaskEnabled` must stay on the static screen options.
 
 Supported runtime option keys are:
 

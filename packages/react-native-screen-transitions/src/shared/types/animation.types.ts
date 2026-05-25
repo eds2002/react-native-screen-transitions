@@ -287,13 +287,17 @@ export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
  * Runtime options returned by `screenStyleInterpolator`.
  *
  * These values are not style slots. They are derived per frame and consumed by
- * the transition runtime.
+ * the transition runtime. Structural options that change the React tree, such
+ * as `navigationMaskEnabled`, must be configured statically on the screen.
  *
  * If `gestureSensitivity` is derived from the current gesture, prefer
  * `active.gesture.raw` so the sensitivity calculation does not feed back into
  * itself.
  */
-export type TransitionInterpolatorOptions = ScreenTransitionOptions;
+export type TransitionInterpolatorOptions = Omit<
+	ScreenTransitionOptions,
+	"navigationMaskEnabled"
+>;
 
 /**
  * Internal normalized slot format.

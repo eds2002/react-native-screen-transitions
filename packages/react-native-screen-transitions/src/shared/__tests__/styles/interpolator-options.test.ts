@@ -93,7 +93,6 @@ describe("syncScreenOptionsOverrides", () => {
 		const screenOptions = createScreenOptionsContext();
 		const raw: TransitionInterpolatedStyle = {
 			options: {
-				navigationMaskEnabled: true,
 				gestureEnabled: false,
 				experimental_allowDisabledGestureTracking: true,
 				gestureDirection: ["horizontal", "pinch-out"],
@@ -116,7 +115,9 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(raw, screenOptions);
 		const next = screenOptions.get();
 
-		expect(next.navigationMaskEnabled).toBe(true);
+		expect(next.navigationMaskEnabled).toBe(
+			BASE_SCREEN_OPTIONS.navigationMaskEnabled,
+		);
 		expect(next.gestureEnabled).toBe(false);
 		expect(next.experimental_allowDisabledGestureTracking).toBe(true);
 		expect(next.gestureDirection).toEqual([
@@ -137,6 +138,24 @@ describe("syncScreenOptionsOverrides", () => {
 		expect(next.gestureSnapLocked).toBe(true);
 		expect(next.sheetScrollGestureBehavior).toBe("collapse-only");
 		expect(next.backdropBehavior).toBe("dismiss");
+	});
+
+	it("ignores navigation mask runtime overrides", () => {
+		const screenOptions = createScreenOptionsContext();
+
+		syncScreenOptionsOverrides(
+			{
+				options: {
+					navigationMaskEnabled: true,
+				},
+			} as unknown as TransitionInterpolatedStyle,
+			screenOptions,
+		);
+		const next = screenOptions.get();
+
+		expect(next.navigationMaskEnabled).toBe(
+			BASE_SCREEN_OPTIONS.navigationMaskEnabled,
+		);
 	});
 
 	it("maps the deprecated gestureDrivesProgress override onto gestureProgressMode", () => {
@@ -162,7 +181,6 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(
 			{
 				options: {
-					navigationMaskEnabled: true,
 					gestureSensitivity: 0.25,
 					gestureSnapLocked: true,
 					backdropBehavior: "dismiss",
@@ -193,7 +211,6 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(
 			{
 				options: {
-					navigationMaskEnabled: true,
 					gestureDirection: "vertical",
 					gestureSensitivity: 0.25,
 					gestureActivationArea: "edge",
@@ -206,14 +223,13 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(
 			{
 				options: {
-					navigationMaskEnabled: "yes",
 					gestureDirection: "diagonal",
 					gestureSensitivity: "fast",
 					gestureActivationArea: { left: "corner" },
 					sheetScrollGestureBehavior: "expand-only",
 					backdropBehavior: "fade",
 				},
-			} as any,
+			} as unknown as TransitionInterpolatedStyle,
 			screenOptions,
 		);
 		const next = screenOptions.get();

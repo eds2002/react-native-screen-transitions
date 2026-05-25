@@ -59,7 +59,6 @@ const areInterpolatorOptionsEqual = (
 	if (!left || !right) return false;
 
 	return (
-		left.navigationMaskEnabled === right.navigationMaskEnabled &&
 		left.gestureEnabled === right.gestureEnabled &&
 		left.experimental_allowDisabledGestureTracking ===
 			right.experimental_allowDisabledGestureTracking &&

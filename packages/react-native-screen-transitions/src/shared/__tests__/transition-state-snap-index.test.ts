@@ -119,7 +119,7 @@ describe("hydrateTransitionState snap indices", () => {
 		expect("gestureReleaseVelocityMax" in hydrated.options).toBe(false);
 	});
 
-	it("exposes runtime interpolator option overrides on the hydrated state", () => {
+	it("keeps static mask options while applying runtime option overrides", () => {
 		const baseOptions = buildScreenTransitionOptions({
 			navigationMaskEnabled: false,
 			gestureSensitivity: 0.5,
@@ -156,12 +156,11 @@ describe("hydrateTransitionState snap indices", () => {
 			},
 			{ width: 390, height: 844 },
 			{
-				navigationMaskEnabled: true,
 				gestureProgressMode: "freeform",
 			},
 		);
 
-		expect(hydrated.options.navigationMaskEnabled).toBe(true);
+		expect(hydrated.options.navigationMaskEnabled).toBe(false);
 		expect(hydrated.options.gestureSensitivity).toBe(0.5);
 		expect(hydrated.options.gestureProgressMode).toBe("freeform");
 		expect("navigationMaskEnabled" in hydrated.layouts).toBe(false);
