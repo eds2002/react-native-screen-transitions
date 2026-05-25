@@ -70,6 +70,15 @@ const STACK_GROUP_OPTIONS = [
 	},
 ];
 
+const RECIPE_OPTIONS = [
+	{
+		id: "example",
+		title: "Nested Disabled Modal",
+		description: "Basic gesture-tracking modal recipe",
+		route: "/example" as const,
+	},
+];
+
 export default function HomeScreen() {
 	const theme = useTheme();
 	const { stackType, setStackType } = useStackSelection();
@@ -171,6 +180,39 @@ export default function HomeScreen() {
 							onPress={() =>
 								router.push(buildStackPath(stackType, option.id) as never)
 							}
+						>
+							<Text style={[styles.buttonTitle, { color: theme.text }]}>
+								{option.title}
+							</Text>
+							<Text
+								style={[
+									styles.buttonDescription,
+									{ color: theme.textSecondary },
+								]}
+							>
+								{option.description}
+							</Text>
+						</Pressable>
+					))}
+				</View>
+			</View>
+
+			<View style={styles.section}>
+				<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+					Recipes
+				</Text>
+				<View style={styles.buttonContainer}>
+					{RECIPE_OPTIONS.map((option) => (
+						<Pressable
+							key={option.id}
+							testID={`${option.id}-button`}
+							style={({ pressed }) => [
+								styles.button,
+								{
+									backgroundColor: pressed ? theme.cardPressed : theme.card,
+								},
+							]}
+							onPress={() => router.push(option.route)}
 						>
 							<Text style={[styles.buttonTitle, { color: theme.text }]}>
 								{option.title}

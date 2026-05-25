@@ -136,6 +136,7 @@ export default function RootLayout() {
 				/>
 				<StackNavigator.Screen name="maestro" options={{ animation: "none" }} />
 				<StackNavigator.Screen name="backdrop" options={{ ...IOSSlide() }} />
+				<StackNavigator.Screen name="example" options={{ ...IOSSlide() }} />
 				<StackNavigator.Screen name="stack-benchmark" />
 				<StackNavigator.Screen name="gestures" />
 				<StackNavigator.Screen

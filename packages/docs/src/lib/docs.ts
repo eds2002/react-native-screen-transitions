@@ -52,6 +52,7 @@ const groupOrder = [
 	"Core Concepts",
 	"Navigation Transitions",
 	"Components",
+	"Recipes",
 	"Changelogs",
 	"Guides",
 ];

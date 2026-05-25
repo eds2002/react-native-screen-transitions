@@ -1,6 +1,13 @@
+import { Platform } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
+
+export const IOS_SLIDE_BORDER_RADIUS = Platform.select({
+	ios: 58,
+	android: 36,
+	default: 36,
+});
 
 export function IOSSlide(
 	config: Partial<ScreenTransitionConfig> = {},
@@ -14,6 +21,8 @@ export function IOSSlide(
 			layouts: {
 				screen: { width },
 			},
+      focused,
+      active,
 		}) => {
 			"worklet";
 			const translateX = interpolate(
@@ -21,10 +30,17 @@ export function IOSSlide(
 				[0, 1, 2],
 				[width, 0, -width * 0.3],
 			);
-			return {
+      return {
+        backdrop: focused ? {
+          backgroundColor: "#00000025",
+          opacity: progress,
+        } : undefined,
 				content: {
 					style: {
-						transform: [{ translateX }],
+            transform: [{ translateX }],
+            borderRadius: active.logicallySettled ? 0 : IOS_SLIDE_BORDER_RADIUS,
+            overflow: "hidden",
+            borderCurve: "continuous",
 					},
 				},
 			};

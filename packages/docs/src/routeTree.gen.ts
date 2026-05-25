@@ -28,6 +28,7 @@ import { Route as GestureOwnershipRouteImport } from './routes/gesture-ownership
 import { Route as ExpoRouterRouteImport } from './routes/expo-router'
 import { Route as CustomAnimationsRouteImport } from './routes/custom-animations'
 import { Route as RevealRouteImport } from './routes/reveal'
+import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
 import { Route as ComponentsRouteImport } from './routes/components'
 import { Route as CaveatsRouteImport } from './routes/caveats'
 import { Route as IndexRouteImport } from './routes/index'
@@ -128,6 +129,11 @@ const RevealRoute = RevealRouteImport.update({
   path: '/reveal',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesModalRoute = RecipesModalRouteImport.update({
+  id: '/recipes/modal',
+  path: '/recipes/modal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ComponentsRoute = ComponentsRouteImport.update({
   id: '/components',
   path: '/components',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
   '/reference': typeof ReferenceRoute
+  '/recipes/modal': typeof RecipesModalRoute
   '/shared-elements': typeof SharedElementsRoute
   '/snap-points': typeof SnapPointsRoute
   '/stack-types': typeof StackTypesRoute
@@ -191,6 +198,7 @@ export interface FileRoutesByTo {
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
   '/reference': typeof ReferenceRoute
+  '/recipes/modal': typeof RecipesModalRoute
   '/shared-elements': typeof SharedElementsRoute
   '/snap-points': typeof SnapPointsRoute
   '/stack-types': typeof StackTypesRoute
@@ -217,6 +225,7 @@ export interface FileRoutesById {
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
   '/reference': typeof ReferenceRoute
+  '/recipes/modal': typeof RecipesModalRoute
   '/shared-elements': typeof SharedElementsRoute
   '/snap-points': typeof SnapPointsRoute
   '/stack-types': typeof StackTypesRoute
@@ -244,6 +253,7 @@ export interface FileRouteTypes {
     | '/presets'
     | '/quick-start'
     | '/reference'
+    | '/recipes/modal'
     | '/shared-elements'
     | '/snap-points'
     | '/stack-types'
@@ -269,6 +279,7 @@ export interface FileRouteTypes {
     | '/presets'
     | '/quick-start'
     | '/reference'
+    | '/recipes/modal'
     | '/shared-elements'
     | '/snap-points'
     | '/stack-types'
@@ -294,6 +305,7 @@ export interface FileRouteTypes {
     | '/presets'
     | '/quick-start'
     | '/reference'
+    | '/recipes/modal'
     | '/shared-elements'
     | '/snap-points'
     | '/stack-types'
@@ -320,6 +332,7 @@ export interface RootRouteChildren {
   PresetsRoute: typeof PresetsRoute
   QuickStartRoute: typeof QuickStartRoute
   ReferenceRoute: typeof ReferenceRoute
+  RecipesModalRoute: typeof RecipesModalRoute
   SharedElementsRoute: typeof SharedElementsRoute
   SnapPointsRoute: typeof SnapPointsRoute
   StackTypesRoute: typeof StackTypesRoute
@@ -464,6 +477,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RevealRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes/modal': {
+      id: '/recipes/modal'
+      path: '/recipes/modal'
+      fullPath: '/recipes/modal'
+      preLoaderRoute: typeof RecipesModalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/components': {
       id: '/components'
       path: '/components'
@@ -512,6 +532,7 @@ const rootRouteChildren: RootRouteChildren = {
   PresetsRoute: PresetsRoute,
   QuickStartRoute: QuickStartRoute,
   ReferenceRoute: ReferenceRoute,
+  RecipesModalRoute: RecipesModalRoute,
   SharedElementsRoute: SharedElementsRoute,
   SnapPointsRoute: SnapPointsRoute,
   StackTypesRoute: StackTypesRoute,
