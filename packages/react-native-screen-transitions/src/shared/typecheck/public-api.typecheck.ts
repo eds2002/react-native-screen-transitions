@@ -204,6 +204,12 @@ const invalidMaskRuntimeOptions: TransitionInterpolatedStyle = {
 		navigationMaskEnabled: true,
 	},
 };
+const invalidGestureTrackingRuntimeOptions: TransitionInterpolatedStyle = {
+	options: {
+		// @ts-expect-error gestureTracking participates in gesture ownership and must be static.
+		gestureTracking: "always",
+	},
+};
 void currentRawGestureNormX;
 void currentGestureVelocity;
 void currentActiveGesture;
@@ -211,6 +217,7 @@ void currentAnimatedSnapIndex;
 void currentSnapIndex;
 void optionsInterpolatedStyle;
 void invalidMaskRuntimeOptions;
+void invalidGestureTrackingRuntimeOptions;
 const nextNameOptions: ScreenTransitionConfig = {
 	navigationMaskEnabled: true,
 	sheetScrollGestureBehavior: "collapse-only",
@@ -226,7 +233,7 @@ const initialMountAnimationOptions: ScreenTransitionConfig = {
 };
 const disabledGestureTrackingOptions: ScreenTransitionConfig = {
 	gestureEnabled: false,
-	experimental_allowDisabledGestureTracking: true,
+	gestureTracking: "always",
 };
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,

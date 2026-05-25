@@ -46,7 +46,7 @@ For non-snap screens, each direction in the array can activate dismissal. For sc
 | --- | --- | --- |
 | `gestureEnabled` | `boolean` | Enables swipe-to-dismiss. For screens with `snapPoints`, snapping between non-dismiss detents can still work when this is `false`. |
 | `gestureDirection` | `GestureDirection \| GestureDirection[]` | Dismiss direction, pan axis, pinch direction, or ordered direction list. |
-| `experimental_allowDisabledGestureTracking` | `boolean` | Allows disabled non-snap gestures to keep producing live gesture values without allowing dismiss. |
+| `gestureTracking` | `"auto" \| "never" \| "always"` | Controls whether the screen tracks live gesture values. Defaults to `"auto"`. |
 | `gestureActivationArea` | `"edge" \| "screen" \| { left?: "edge" \| "screen"; right?: "edge" \| "screen"; top?: "edge" \| "screen"; bottom?: "edge" \| "screen" }` | Where the gesture may start. Defaults to `"screen"`. |
 | `gestureResponseDistance` | `number` | Single numeric edge-distance override. |
 | `gestureSensitivity` | `number` | Multiplies live gesture movement before it drives progress and non-raw gesture values. Default `1`. |
@@ -142,6 +142,22 @@ Use `pinch-in` or `pinch-out` when two-finger scale should drive dismissal:
 
 `active.gesture.scale`, `active.gesture.normScale`, `active.gesture.focalX`, and `active.gesture.focalY` are available inside the interpolator. Use `active.gesture.raw.normScale` when computing dynamic `gestureSensitivity`, so the sensitivity calculation does not feed back into itself.
 
+## Gesture Progress Mode
+
+v3.6 adds `gestureProgressMode` as the preferred way to describe whether gestures should drive screen progress.
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureDirection: ["vertical", "horizontal"],
+  gestureProgressMode: "freeform",
+}}
+```
+
+Use `"progress-driven"` when drag movement should directly move screen progress. Use `"freeform"` when gesture values should drive custom visuals while transition progress stays controlled by navigation or release.
+
+This deprecates `gestureDrivesProgress` in favor of a more descriptive option name. The older `gestureDrivesProgress: false` form still maps to `"freeform"` for compatibility, but new code should use `gestureProgressMode`.
+
 ## Dynamic Gesture Options
 
 React-side option changes can be applied while the screen stays mounted:
@@ -176,20 +192,18 @@ screenStyleInterpolator: ({ active }) => {
 
 `active.options` exposes the resolved option state back to the interpolator, so animation logic can react to values changed by `navigation.setOptions()` or by previous runtime overrides.
 
-Use `gestureProgressMode: "freeform"` when gesture values should drive custom visuals without directly changing screen progress. The older `gestureDrivesProgress: false` form still maps to freeform mode, but new code should use `gestureProgressMode`.
+## Gesture Tracking
 
-## Disabled Gesture Tracking
-
-Set `experimental_allowDisabledGestureTracking: true` when a screen should keep receiving live gesture values while `gestureEnabled` is `false`:
+Use `gestureTracking` when a screen needs explicit control over live gesture values:
 
 ```tsx
 options={{
   gestureEnabled: false,
-  experimental_allowDisabledGestureTracking: true,
+  gestureTracking: "always",
 }}
 ```
 
-This is useful for resistance or shadowing effects where the screen should visually respond to a gesture but must not dismiss. Screens with `snapPoints` already keep tracking gestures for non-dismiss snap movement when `gestureEnabled` is `false`.
+`"auto"` tracks gestures when dismissal is enabled, or when snap points can move without dismissal. `"always"` keeps tracking while `gestureEnabled` is `false`, which is useful for resistance or shadowing effects where the screen should visually respond to a gesture but must not dismiss. `"never"` disables tracking for the screen, including snap gestures.
 
 ## Snap Sheets
 

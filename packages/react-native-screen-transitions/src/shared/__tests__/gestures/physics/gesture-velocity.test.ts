@@ -111,7 +111,7 @@ const createScreenOptions = (
 ): ScreenOptionsContextValue =>
 	createSharedValue({
 		gestureEnabled: undefined,
-		experimental_allowDisabledGestureTracking: false,
+		gestureTracking: "auto",
 		gestureDirection: "horizontal",
 		gestureSensitivity: gestureSensitivity ?? 1,
 		gestureVelocityImpact: 0.3,
@@ -126,7 +126,7 @@ const createScreenOptions = (
 		backdropBehavior: undefined,
 		baseOptions: {
 			gestureEnabled: undefined,
-			experimental_allowDisabledGestureTracking: false,
+			gestureTracking: "auto",
 			gestureDirection: "horizontal",
 			gestureSensitivity: gestureSensitivity ?? 1,
 			gestureVelocityImpact: 0.3,

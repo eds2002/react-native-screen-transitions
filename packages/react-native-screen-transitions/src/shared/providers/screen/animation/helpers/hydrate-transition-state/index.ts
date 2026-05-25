@@ -36,9 +36,7 @@ const mergeTransitionOptions = (
 
 	slot.navigationMaskEnabled = base.navigationMaskEnabled;
 	slot.gestureEnabled = effective.gestureEnabled ?? base.gestureEnabled;
-	slot.experimental_allowDisabledGestureTracking =
-		effective.experimental_allowDisabledGestureTracking ??
-		base.experimental_allowDisabledGestureTracking;
+	slot.gestureTracking = base.gestureTracking;
 	slot.gestureDirection = effective.gestureDirection ?? base.gestureDirection;
 	slot.gestureSensitivity =
 		effective.gestureSensitivity ?? base.gestureSensitivity;

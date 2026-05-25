@@ -6,6 +6,7 @@ import {
 	DEFAULT_GESTURE_SENSITIVITY,
 	DEFAULT_GESTURE_SNAP_LOCKED,
 	DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
+	DEFAULT_GESTURE_TRACKING,
 	DEFAULT_GESTURE_VELOCITY_IMPACT,
 	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 } from "../../../constants";
@@ -126,6 +127,16 @@ const resolveSheetScrollGestureBehaviorOption = (
 		: fallback;
 };
 
+const resolveGestureTrackingOption = (
+	value: unknown,
+	fallback: RequiredScreenOption<"gestureTracking">,
+): RequiredScreenOption<"gestureTracking"> => {
+	"worklet";
+	return value === "auto" || value === "never" || value === "always"
+		? value
+		: fallback;
+};
+
 const resolveBackdropBehaviorOption = (
 	value: unknown,
 	fallback: BackdropBehavior | undefined,
@@ -208,8 +219,7 @@ const areScreenOptionsEqual = (
 	return (
 		left.navigationMaskEnabled === right.navigationMaskEnabled &&
 		left.gestureEnabled === right.gestureEnabled &&
-		left.experimental_allowDisabledGestureTracking ===
-			right.experimental_allowDisabledGestureTracking &&
+		left.gestureTracking === right.gestureTracking &&
 		areGestureDirectionsEqual(left.gestureDirection, right.gestureDirection) &&
 		left.gestureSensitivity === right.gestureSensitivity &&
 		left.gestureVelocityImpact === right.gestureVelocityImpact &&
@@ -244,9 +254,9 @@ export const resolveBaseScreenOptions = (
 			undefined,
 		),
 		gestureEnabled: resolveBooleanOption(options.gestureEnabled, undefined),
-		experimental_allowDisabledGestureTracking: resolveBooleanOption(
-			options.experimental_allowDisabledGestureTracking,
-			false,
+		gestureTracking: resolveGestureTrackingOption(
+			options.gestureTracking,
+			DEFAULT_GESTURE_TRACKING,
 		),
 		gestureDirection: resolveGestureDirectionOption(
 			options.gestureDirection,
@@ -332,10 +342,7 @@ export const syncScreenOptionsOverrides = (
 			options?.gestureEnabled,
 			base.gestureEnabled,
 		),
-		experimental_allowDisabledGestureTracking: resolveBooleanOption(
-			options?.experimental_allowDisabledGestureTracking,
-			base.experimental_allowDisabledGestureTracking,
-		),
+		gestureTracking: base.gestureTracking,
 		gestureDirection: resolveGestureDirectionOption(
 			options?.gestureDirection,
 			base.gestureDirection,

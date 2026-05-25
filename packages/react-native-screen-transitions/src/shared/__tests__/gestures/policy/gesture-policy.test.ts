@@ -8,7 +8,7 @@ describe("resolveGestureCanTrack", () => {
 				isFirstKey: true,
 				canDismiss: true,
 				hasSnapPoints: true,
-				allowDisabledGestureTracking: true,
+				gestureTracking: "always",
 			}),
 		).toBe(false);
 	});
@@ -33,14 +33,25 @@ describe("resolveGestureCanTrack", () => {
 		).toBe(true);
 	});
 
-	it("opts disabled non-snap gestures into next live tracking behavior", () => {
+	it("opts disabled non-snap gestures into live tracking", () => {
 		expect(
 			resolveGestureCanTrack({
 				isFirstKey: false,
 				canDismiss: false,
 				hasSnapPoints: false,
-				allowDisabledGestureTracking: true,
+				gestureTracking: "always",
 			}),
 		).toBe(true);
+	});
+
+	it("lets never tracking override dismiss and snap gestures", () => {
+		expect(
+			resolveGestureCanTrack({
+				isFirstKey: false,
+				canDismiss: true,
+				hasSnapPoints: true,
+				gestureTracking: "never",
+			}),
+		).toBe(false);
 	});
 });

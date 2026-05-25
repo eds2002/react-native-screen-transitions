@@ -6,6 +6,7 @@ import {
 	DEFAULT_GESTURE_SENSITIVITY,
 	DEFAULT_GESTURE_SNAP_LOCKED,
 	DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT,
+	DEFAULT_GESTURE_TRACKING,
 	DEFAULT_GESTURE_VELOCITY_IMPACT,
 	DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR,
 } from "../../../../constants";
@@ -15,6 +16,7 @@ import type {
 	GestureProgressMode,
 } from "../../../../types/gesture.types";
 import type {
+	GestureTracking,
 	ScreenTransitionConfig,
 	SheetScrollGestureBehavior,
 	SnapPoint,
@@ -39,13 +41,13 @@ import {
 import { validateSnapPoints } from "./snap-points";
 
 export type GesturePolicyOptions = {
-	experimental_allowDisabledGestureTracking?: boolean;
 	expandViaScrollView?: boolean;
 	gestureActivationArea?: GestureActivationArea;
 	gestureDirection?: GestureDirection | GestureDirection[];
 	gestureDrivesProgress?: boolean;
 	gestureEnabled?: boolean;
 	gestureProgressMode?: GestureProgressMode;
+	gestureTracking?: GestureTracking;
 	gestureReleaseVelocityScale?: number;
 	gestureResponseDistance?: number;
 	gestureSensitivity?: number;
@@ -144,16 +146,24 @@ export const resolveGestureCanTrack = ({
 	isFirstKey,
 	canDismiss,
 	hasSnapPoints,
-	allowDisabledGestureTracking,
+	gestureTracking = DEFAULT_GESTURE_TRACKING,
 }: {
 	isFirstKey: boolean;
 	canDismiss: boolean;
 	hasSnapPoints: boolean;
-	allowDisabledGestureTracking?: boolean;
+	gestureTracking?: GestureTracking;
 }) => {
 	"worklet";
 	if (isFirstKey) {
 		return false;
+	}
+
+	if (gestureTracking === "never") {
+		return false;
+	}
+
+	if (gestureTracking === "always") {
+		return true;
 	}
 
 	if (canDismiss) {
@@ -164,7 +174,7 @@ export const resolveGestureCanTrack = ({
 		return true;
 	}
 
-	return allowDisabledGestureTracking === true;
+	return false;
 };
 
 export const resolvePanPolicy = (
@@ -234,8 +244,7 @@ const resolveGestureParticipation = ({
 		isFirstKey,
 		canDismiss,
 		hasSnapPoints: effectiveSnapPoints.hasSnapPoints,
-		allowDisabledGestureTracking:
-			options.experimental_allowDisabledGestureTracking,
+		gestureTracking: options.gestureTracking,
 	});
 	const claimedDirections = computeClaimedDirections(
 		canTrackGesture,
@@ -309,7 +318,11 @@ function resolveRuntimeCanTrackGesture(
 		return false;
 	}
 
-	if (options.experimental_allowDisabledGestureTracking === true) {
+	if (options.gestureTracking === "never") {
+		return false;
+	}
+
+	if (options.gestureTracking === "always") {
 		return true;
 	}
 

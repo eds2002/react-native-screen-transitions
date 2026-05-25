@@ -52,7 +52,7 @@ describe("hydrateTransitionState snap indices", () => {
 	it("hydrates the expanded screen transition options subset", () => {
 		const options = buildScreenTransitionOptions({
 			gestureEnabled: false,
-			experimental_allowDisabledGestureTracking: true,
+			gestureTracking: "always",
 			gestureDirection: ["vertical", "pinch-out"],
 			gestureSensitivity: 0.6,
 			gestureVelocityImpact: 0.45,
@@ -102,7 +102,7 @@ describe("hydrateTransitionState snap indices", () => {
 		expect(hydrated.options).toEqual({
 			navigationMaskEnabled: undefined,
 			gestureEnabled: false,
-			experimental_allowDisabledGestureTracking: true,
+			gestureTracking: "always",
 			gestureDirection: ["vertical", "pinch-out"],
 			gestureSensitivity: 0.6,
 			gestureVelocityImpact: 0.45,
@@ -119,9 +119,10 @@ describe("hydrateTransitionState snap indices", () => {
 		expect("gestureReleaseVelocityMax" in hydrated.options).toBe(false);
 	});
 
-	it("keeps static mask options while applying runtime option overrides", () => {
+	it("keeps static structural options while applying runtime option overrides", () => {
 		const baseOptions = buildScreenTransitionOptions({
 			navigationMaskEnabled: false,
+			gestureTracking: "always",
 			gestureSensitivity: 0.5,
 		});
 		const state = createScreenTransitionState(
@@ -157,10 +158,12 @@ describe("hydrateTransitionState snap indices", () => {
 			{ width: 390, height: 844 },
 			{
 				gestureProgressMode: "freeform",
-			},
+				gestureTracking: "never",
+			} as unknown as Parameters<typeof hydrateTransitionState>[2],
 		);
 
 		expect(hydrated.options.navigationMaskEnabled).toBe(false);
+		expect(hydrated.options.gestureTracking).toBe("always");
 		expect(hydrated.options.gestureSensitivity).toBe(0.5);
 		expect(hydrated.options.gestureProgressMode).toBe("freeform");
 		expect("navigationMaskEnabled" in hydrated.layouts).toBe(false);

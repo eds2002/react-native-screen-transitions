@@ -25,7 +25,7 @@ export type ScreenTransitionOptions = Pick<
 	ScreenTransitionConfig,
 	| "navigationMaskEnabled"
 	| "gestureEnabled"
-	| "experimental_allowDisabledGestureTracking"
+	| "gestureTracking"
 	| "gestureDirection"
 	| "gestureSensitivity"
 	| "gestureVelocityImpact"
@@ -296,7 +296,7 @@ export type TransitionSlotStyle = AnimatedViewStyle | TransitionSlotDefinition;
  */
 export type TransitionInterpolatorOptions = Omit<
 	ScreenTransitionOptions,
-	"navigationMaskEnabled"
+	"navigationMaskEnabled" | "gestureTracking"
 >;
 
 /**

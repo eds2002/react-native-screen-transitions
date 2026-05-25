@@ -33,6 +33,7 @@ export type ScreenKey = string;
 export type SheetScrollGestureBehavior =
 	| "expand-and-collapse"
 	| "collapse-only";
+export type GestureTracking = "auto" | "never" | "always";
 
 /**
  * A single snap point value. Either a fraction of screen height (0–1) or
@@ -130,21 +131,17 @@ export type ScreenTransitionConfig = {
 	gestureEnabled?: boolean;
 
 	/**
-	 * Allows screens with `gestureEnabled={false}` to still activate gestures for
-	 * live gesture values while preventing gesture dismissal.
+	 * Controls whether the screen tracks live gesture values.
 	 *
-	 * This is a v3 compatibility bridge for the next gesture behavior. Direction
-	 * ownership/claims participate while this is enabled so nested screens can
-	 * intentionally shadow parent gestures for resistance-style animations.
+	 * - `"auto"` tracks gestures when dismissal is enabled, or when snap points
+	 *   can move without dismissal.
+	 * - `"never"` disables gesture tracking for the screen.
+	 * - `"always"` keeps tracking live gesture values even when
+	 *   `gestureEnabled` is `false`, without allowing dismiss.
 	 *
-	 * Screens with `snapPoints` already keep gesture tracking when
-	 * `gestureEnabled={false}`; this flag mainly affects disabled non-snap
-	 * gestures.
-	 *
-	 * @experimental This API may change in future versions.
-	 * @default false
+	 * @default "auto"
 	 */
-	experimental_allowDisabledGestureTracking?: boolean;
+	gestureTracking?: GestureTracking;
 
 	/**
 	 * The direction(s) of the screen gesture used to dismiss the screen.

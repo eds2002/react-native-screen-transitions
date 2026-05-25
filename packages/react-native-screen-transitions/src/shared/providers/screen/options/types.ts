@@ -11,7 +11,7 @@ export type OptionalScreenOption<K extends keyof ScreenTransitionOptions> =
 export type ScreenOptionsSnapshot = {
 	navigationMaskEnabled: OptionalScreenOption<"navigationMaskEnabled">;
 	gestureEnabled: OptionalScreenOption<"gestureEnabled">;
-	experimental_allowDisabledGestureTracking: RequiredScreenOption<"experimental_allowDisabledGestureTracking">;
+	gestureTracking: RequiredScreenOption<"gestureTracking">;
 	gestureDirection: RequiredScreenOption<"gestureDirection">;
 	gestureSensitivity: RequiredScreenOption<"gestureSensitivity">;
 	gestureVelocityImpact: RequiredScreenOption<"gestureVelocityImpact">;

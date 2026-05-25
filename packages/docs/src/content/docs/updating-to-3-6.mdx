@@ -23,6 +23,23 @@ options={{
 
 Use `"progress-driven"` when drag movement should directly move screen progress. Use `"freeform"` when gesture values should drive custom visuals while transition progress stays controlled by navigation or release.
 
+This deprecates `gestureDrivesProgress` in favor of a more descriptive option name. The older `gestureDrivesProgress: false` form still maps to `"freeform"` for compatibility, but new code should use `gestureProgressMode`.
+
+## Gesture Tracking
+
+v3.6 adds `gestureTracking` for screens that need explicit control over whether gestures produce live gesture values.
+
+```tsx
+options={{
+  gestureEnabled: false,
+  gestureTracking: "always",
+}}
+```
+
+Use `"auto"` for the default behavior: gestures track when dismissal is enabled, or when snap points can move without dismissal. Use `"always"` when a disabled gesture should still drive custom visuals without allowing dismiss. Use `"never"` when a screen should not track gestures at all, including snap gestures.
+
+`gestureTracking: "always"` replaces the earlier experimental disabled-gesture tracking option.
+
 ## Unified Gesture State
 
 Gesture state now covers pan and pinch through the same `active.gesture` object:
@@ -167,6 +184,7 @@ const childAnimation = useScreenAnimation({ depth: 1 });
 ## Migration Checklist
 
 - Replace new `gestureDrivesProgress` usage with `gestureProgressMode`.
+- Use `gestureTracking: "always"` when disabled gestures should keep producing live gesture values for custom visuals.
 - Prefer `active.gesture.active` over the older pan-only `active.gesture.direction`.
 - Use `active.gesture.raw` when deriving dynamic `gestureSensitivity`.
 - Return `options` from `screenStyleInterpolator` for UI-thread option changes, and read resolved values from `active.options` when animation logic depends on them.
@@ -181,6 +199,7 @@ const childAnimation = useScreenAnimation({ depth: 1 });
 ## Compatibility Notes
 
 - `gestureDrivesProgress` still maps to `gestureProgressMode`.
+- `gestureTracking` is static and is not supported inside interpolator-returned runtime `options`.
 - `expandViaScrollView` still maps to `sheetScrollGestureBehavior`.
 - `getSnapshot()` still exists as a deprecated alias for `getMeasured()`.
 - `active.gesture.direction` still exists as a deprecated pan-only alias for `active.gesture.active`.

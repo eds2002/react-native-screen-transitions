@@ -9,7 +9,11 @@ import type {
 	ActivationArea,
 	GestureProgressMode,
 } from "./types/gesture.types";
-import type { Layout, SheetScrollGestureBehavior } from "./types/screen.types";
+import type {
+	GestureTracking,
+	Layout,
+	SheetScrollGestureBehavior,
+} from "./types/screen.types";
 import type { BaseStackRoute } from "./types/stack.types";
 
 /**
@@ -161,6 +165,7 @@ export const DEFAULT_GESTURE_SNAP_VELOCITY_IMPACT = 0.1;
 export const DEFAULT_GESTURE_SENSITIVITY = 1;
 export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
+export const DEFAULT_GESTURE_TRACKING: GestureTracking = "auto";
 export const DEFAULT_GESTURE_PROGRESS_MODE: GestureProgressMode =
 	"progress-driven";
 export const DEFAULT_GESTURE_SNAP_LOCKED = false;

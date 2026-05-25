@@ -121,6 +121,7 @@ The same screen options surface holds:
 - `transitionSpec`
 - `gestureEnabled`
 - `gestureDirection`
+- `gestureTracking`
 - `snapPoints`
 - `overlay`
 - `navigationMaskEnabled`
@@ -133,6 +134,7 @@ The same screen options surface holds:
 - a layer-based interpolator output with `content`, `backdrop`, `surface`, and `styleId` targets
 - scoped screen state through `previous`, `current`, `next`, `active`, and `inactive`
 - runtime gesture options through `navigation.setOptions()` and interpolator-returned `options`
+- explicit gesture tracking modes with `gestureTracking`
 - pinch gestures, pinch-driven snap points, and mixed pan/pinch snap sheets
 - a reset system that clears dropped transition-owned style and prop keys without collapsing layout-owned styles
 - a dedicated Navigation Transitions section for navigation-specific motion helpers

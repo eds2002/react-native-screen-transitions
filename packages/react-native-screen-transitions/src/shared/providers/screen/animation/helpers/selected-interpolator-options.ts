@@ -60,8 +60,6 @@ const areInterpolatorOptionsEqual = (
 
 	return (
 		left.gestureEnabled === right.gestureEnabled &&
-		left.experimental_allowDisabledGestureTracking ===
-			right.experimental_allowDisabledGestureTracking &&
 		areGestureDirectionsEqual(left.gestureDirection, right.gestureDirection) &&
 		left.gestureSensitivity === right.gestureSensitivity &&
 		left.gestureVelocityImpact === right.gestureVelocityImpact &&

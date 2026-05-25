@@ -40,8 +40,7 @@ export const buildScreenTransitionOptions = (
 	return {
 		navigationMaskEnabled: options.navigationMaskEnabled,
 		gestureEnabled: options.gestureEnabled,
-		experimental_allowDisabledGestureTracking:
-			options.experimental_allowDisabledGestureTracking,
+		gestureTracking: options.gestureTracking,
 		gestureDirection: cloneGestureDirection(options.gestureDirection),
 		gestureSensitivity: options.gestureSensitivity,
 		gestureVelocityImpact: options.gestureVelocityImpact,

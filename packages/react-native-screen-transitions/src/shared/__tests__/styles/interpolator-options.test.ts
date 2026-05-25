@@ -20,7 +20,7 @@ const createSharedValue = <T>(initialValue: T) => {
 const BASE_SCREEN_OPTIONS = {
 	navigationMaskEnabled: undefined,
 	gestureEnabled: true,
-	experimental_allowDisabledGestureTracking: false,
+	gestureTracking: "auto",
 	gestureDirection: "horizontal",
 	gestureSensitivity: 1,
 	gestureVelocityImpact: 0.3,
@@ -94,7 +94,6 @@ describe("syncScreenOptionsOverrides", () => {
 		const raw: TransitionInterpolatedStyle = {
 			options: {
 				gestureEnabled: false,
-				experimental_allowDisabledGestureTracking: true,
 				gestureDirection: ["horizontal", "pinch-out"],
 				gestureSensitivity: 0.25,
 				gestureVelocityImpact: 0.4,
@@ -119,7 +118,6 @@ describe("syncScreenOptionsOverrides", () => {
 			BASE_SCREEN_OPTIONS.navigationMaskEnabled,
 		);
 		expect(next.gestureEnabled).toBe(false);
-		expect(next.experimental_allowDisabledGestureTracking).toBe(true);
 		expect(next.gestureDirection).toEqual([
 			"horizontal",
 			"pinch-out",
@@ -140,13 +138,14 @@ describe("syncScreenOptionsOverrides", () => {
 		expect(next.backdropBehavior).toBe("dismiss");
 	});
 
-	it("ignores navigation mask runtime overrides", () => {
+	it("ignores structural runtime option overrides", () => {
 		const screenOptions = createScreenOptionsContext();
 
 		syncScreenOptionsOverrides(
 			{
 				options: {
 					navigationMaskEnabled: true,
+					gestureTracking: "always",
 				},
 			} as unknown as TransitionInterpolatedStyle,
 			screenOptions,
@@ -156,6 +155,7 @@ describe("syncScreenOptionsOverrides", () => {
 		expect(next.navigationMaskEnabled).toBe(
 			BASE_SCREEN_OPTIONS.navigationMaskEnabled,
 		);
+		expect(next.gestureTracking).toBe(BASE_SCREEN_OPTIONS.gestureTracking);
 	});
 
 	it("maps the deprecated gestureDrivesProgress override onto gestureProgressMode", () => {

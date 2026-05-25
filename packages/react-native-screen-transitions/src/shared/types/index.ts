@@ -33,6 +33,7 @@ export type {
 } from "./gesture.types";
 export type { OverlayProps } from "./overlay.types";
 export type {
+	GestureTracking,
 	Layout,
 	ScreenKey,
 	ScreenTransitionConfig,
