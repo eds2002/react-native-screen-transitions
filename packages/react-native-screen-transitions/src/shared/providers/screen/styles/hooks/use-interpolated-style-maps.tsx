@@ -3,11 +3,13 @@ import { NO_STYLES } from "../../../../constants";
 import { SystemStore } from "../../../../stores/system.store";
 import type {
 	NormalizedTransitionInterpolatedStyle,
+	ScreenStyleInterpolator,
 	TransitionInterpolatedStyle,
 } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
 import { useScreenAnimationContext } from "../../animation";
 import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
+import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
 import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selected-interpolator-options";
 import { useDescriptorDerivations } from "../../descriptors";
 import {
@@ -16,10 +18,93 @@ import {
 } from "../../options";
 import { normalizeSlots } from "../helpers/normalize-slots";
 import { preserveAnimatedPropsOnly } from "../helpers/preserve-animated-props-only";
+import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
 
+const NO_STYLE_LAYERS: LocalStyleLayers = [];
+
+type InterpolatorResult = {
+	stylesMap: NormalizedTransitionInterpolatedStyle;
+	rawStyleMap: TransitionInterpolatedStyle | undefined;
+};
+
+type RunInterpolatorParams = {
+	interpolator: ScreenStyleInterpolator | undefined;
+	props: ScreenInterpolatorFrame;
+	progress: ScreenInterpolatorFrame["progress"];
+	next: ScreenInterpolatorFrame["next"];
+	bounds: Parameters<ScreenStyleInterpolator>[0]["bounds"];
+	shouldDeferStyleBuckets: boolean;
+};
+
+const normalizeRawStyleMap = (
+	rawStyleMap: TransitionInterpolatedStyle | undefined,
+	shouldDeferStyleBuckets: boolean,
+) => {
+	"worklet";
+
+	if (!rawStyleMap) {
+		return NO_STYLES;
+	}
+
+	const stylesMap = normalizeSlots(stripInterpolatorOptions(rawStyleMap));
+
+	return shouldDeferStyleBuckets
+		? preserveAnimatedPropsOnly(stylesMap)
+		: stylesMap;
+};
+
+const runInterpolator = ({
+	interpolator,
+	props,
+	progress,
+	next,
+	bounds,
+	shouldDeferStyleBuckets,
+}: RunInterpolatorParams): InterpolatorResult | undefined => {
+	"worklet";
+
+	if (!interpolator) {
+		return undefined;
+	}
+
+	try {
+		const raw = interpolator({
+			...props,
+			progress,
+			next,
+			bounds,
+		});
+
+		const rawStyleMap: TransitionInterpolatedStyle | undefined =
+			typeof raw === "object" && raw != null ? raw : undefined;
+
+		return {
+			rawStyleMap,
+			stylesMap: normalizeRawStyleMap(rawStyleMap, shouldDeferStyleBuckets),
+		};
+	} catch (_) {
+		if (__DEV__) {
+			logger.warn("screenStyleInterpolator must be a worklet");
+		}
+
+		return undefined;
+	}
+};
+
+const appendLayer = (
+	layers: LocalStyleLayers,
+	result: InterpolatorResult | undefined,
+) => {
+	"worklet";
+
+	if (result) {
+		layers.push(result.stylesMap);
+	}
+};
+
 /**
- * Builds the raw interpolated styles map for the current screen pass.
+ * Builds the raw interpolated style layers for the current screen pass.
  *
  * This hook exists to stabilize style ownership during rapid navigation,
  * especially when an interactive close gesture overlaps with a new navigation
@@ -39,9 +124,9 @@ import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options"
  * hidden window so animated props and runtime options stay warm, but defer style
  * buckets so measurement sees the final untransformed layout.
  *
- * The result stays as a single slot map. Resolution happens downstream, where
- * slot ids determine whether a slot may inherit from ancestors or must remain
- * local to the owning screen container.
+ * The result is ordered from lowest to highest priority. Resolution happens
+ * downstream, where slot ids determine whether slots inherit from ancestors and
+ * where higher owner layers override lower owner layers per key.
  */
 export const useInterpolatedStylesMap = () => {
 	const { currentScreenKey } = useDescriptorDerivations();
@@ -61,7 +146,7 @@ export const useInterpolatedStylesMap = () => {
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
-	return useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
+	return useDerivedValue<LocalStyleLayers>(() => {
 		"worklet";
 		screenInterpolatorPropsRevision.get();
 		const props = screenInterpolatorProps.get();
@@ -99,16 +184,6 @@ export const useInterpolatedStylesMap = () => {
 
 		const interpolatorOptionsOwner =
 			isInGestureMode || !nextInterpolator ? "current" : "next";
-		const interpolator =
-			interpolatorOptionsOwner === "current"
-				? currentInterpolator
-				: nextInterpolator;
-
-		if (!interpolator) {
-			syncSelectedInterpolatorOptions(selectedInterpolatorOptions, "current");
-			syncScreenOptionsOverrides(undefined, screenOptions);
-			return NO_STYLES;
-		}
 
 		let effectiveProgress = progress;
 		let effectiveNext = next;
@@ -118,42 +193,55 @@ export const useInterpolatedStylesMap = () => {
 			effectiveNext = undefined;
 		}
 
-		try {
-			const raw = interpolator({
-				...props,
-				progress: effectiveProgress,
-				next: effectiveNext,
-				bounds: boundsAccessor,
-			});
+		const currentResult = runInterpolator({
+			interpolator: currentInterpolator,
+			props,
+			progress: effectiveProgress,
+			next: effectiveNext,
+			bounds: boundsAccessor,
+			shouldDeferStyleBuckets,
+		});
 
-			const rawStyleMap: TransitionInterpolatedStyle | undefined =
-				typeof raw === "object" && raw != null ? raw : undefined;
-
+		if (interpolatorOptionsOwner === "current") {
 			syncSelectedInterpolatorOptions(
 				selectedInterpolatorOptions,
-				interpolatorOptionsOwner,
-				rawStyleMap?.options,
+				"current",
+				currentResult?.rawStyleMap?.options,
 			);
-			syncScreenOptionsOverrides(
-				interpolatorOptionsOwner === "current" ? rawStyleMap : undefined,
-				screenOptions,
-			);
+			syncScreenOptionsOverrides(currentResult?.rawStyleMap, screenOptions);
 
-			const stylesMap = !rawStyleMap
-				? NO_STYLES
-				: normalizeSlots(stripInterpolatorOptions(rawStyleMap));
-
-			return shouldDeferStyleBuckets
-				? preserveAnimatedPropsOnly(stylesMap)
-				: stylesMap;
-		} catch (_) {
-			if (__DEV__) {
-				logger.warn("screenStyleInterpolator must be a worklet");
+			if (!currentResult) {
+				return NO_STYLE_LAYERS;
 			}
 
-			syncSelectedInterpolatorOptions(selectedInterpolatorOptions, "current");
-			syncScreenOptionsOverrides(undefined, screenOptions);
-			return NO_STYLES;
+			return [currentResult.stylesMap];
 		}
+
+		const nextResult = runInterpolator({
+			interpolator: nextInterpolator,
+			props,
+			progress: effectiveProgress,
+			next: effectiveNext,
+			bounds: boundsAccessor,
+			shouldDeferStyleBuckets,
+		});
+
+		syncSelectedInterpolatorOptions(
+			selectedInterpolatorOptions,
+			"next",
+			nextResult?.rawStyleMap?.options,
+		);
+		syncScreenOptionsOverrides(undefined, screenOptions);
+
+		const layers: LocalStyleLayers = [];
+
+		appendLayer(layers, currentResult);
+		appendLayer(layers, nextResult);
+
+		if (layers.length === 0) {
+			return NO_STYLE_LAYERS;
+		}
+
+		return layers;
 	});
 };

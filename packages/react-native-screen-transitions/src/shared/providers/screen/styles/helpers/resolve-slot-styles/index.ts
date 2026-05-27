@@ -4,16 +4,17 @@ import type {
 } from "../../../../../types/animation.types";
 import { shouldSlotInherit } from "../../constants";
 import { materializeResolvedSlot } from "./materialize-slot";
-import { getResolvedSlotState, hasDisappearedKeys } from "./slot-state";
+import { getResolvedSlotState } from "./slot-state";
 import type {
+	LocalStyleLayers,
 	ResettableStyleState,
 	ResettableStyleStatesBySlot,
 } from "./types";
 
-export type { ResettableStyleStatesBySlot } from "./types";
+export type { LocalStyleLayers, ResettableStyleStatesBySlot } from "./types";
 
 type ResolveSlotStylesContext = {
-	currentStylesMap: NormalizedTransitionInterpolatedStyle;
+	localStylesMaps: LocalStyleLayers;
 	ancestorStylesMap: NormalizedTransitionInterpolatedStyle;
 	previousStyleStatesBySlot: ResettableStyleStatesBySlot;
 	deferLocalSlotResets: boolean;
@@ -42,6 +43,35 @@ const hasEitherResetPatch = (
 	return hasStyleResetPatch || hasPropResetPatch;
 };
 
+const hasDefinedBucketValue = (value: unknown) => {
+	"worklet";
+	return value !== undefined && value !== null;
+};
+
+const hasResettableDisappearedKeys = (
+	previousKeys: Record<string, true> | undefined,
+	previousResetValues: Record<string, unknown> | undefined,
+	currentKeys: Record<string, true> | undefined,
+) => {
+	"worklet";
+
+	if (!previousKeys || !previousResetValues) {
+		return false;
+	}
+
+	for (const key in previousKeys) {
+		if (currentKeys !== undefined && currentKeys[key] === true) {
+			continue;
+		}
+
+		if (previousResetValues[key] !== undefined) {
+			return true;
+		}
+	}
+
+	return false;
+};
+
 const getResolvedSlotOutput = ({
 	slot,
 	previousState,
@@ -58,10 +88,18 @@ const getResolvedSlotOutput = ({
 
 	const hasStyleResetPatch =
 		resetDroppedKeys &&
-		hasDisappearedKeys(previousState?.styleKeys, state.styleKeys);
+		hasResettableDisappearedKeys(
+			previousState?.styleKeys,
+			previousState?.styleResetValues,
+			state.styleKeys,
+		);
 	const hasPropResetPatch =
 		resetDroppedKeys &&
-		hasDisappearedKeys(previousState?.propKeys, state.propKeys);
+		hasResettableDisappearedKeys(
+			previousState?.propKeys,
+			previousState?.propResetValues,
+			state.propKeys,
+		);
 	const hasResetPatch = hasEitherResetPatch(
 		hasStyleResetPatch,
 		hasPropResetPatch,
@@ -92,30 +130,105 @@ const getResolvedSlotOutput = ({
 	};
 };
 
+const hasLocalStyleSource = (context: ResolveSlotStylesContext) => {
+	"worklet";
+	return context.localStylesMaps.length > 0;
+};
+
+const hasLocalSlot = (context: ResolveSlotStylesContext, slotId: string) => {
+	"worklet";
+
+	for (let index = 0; index < context.localStylesMaps.length; index++) {
+		if (context.localStylesMaps[index]?.[slotId] !== undefined) {
+			return true;
+		}
+	}
+
+	return false;
+};
+
 const shouldDeferMissingLocalSlotReset = (
 	context: ResolveSlotStylesContext,
 	slotId: string,
 ) => {
 	"worklet";
 	const canInherit = shouldSlotInherit(slotId);
-	const hasCurrentSlot = context.currentStylesMap[slotId] !== undefined;
+	const localSlotExists = hasLocalSlot(context, slotId);
 	const hasInheritedSlot =
 		canInherit && context.ancestorStylesMap[slotId] !== undefined;
 
 	return (
 		context.deferLocalSlotResets &&
+		!hasLocalStyleSource(context) &&
 		!canInherit &&
-		!hasCurrentSlot &&
+		!localSlotExists &&
 		!hasInheritedSlot
 	);
 };
 
+const mergeBucket = (
+	resolvedBucket: Record<string, unknown> | undefined,
+	source: Record<string, unknown> | undefined,
+) => {
+	"worklet";
+
+	if (!source) {
+		return resolvedBucket;
+	}
+
+	let nextBucket = resolvedBucket;
+
+	for (const key in source) {
+		const value = source[key];
+
+		if (!hasDefinedBucketValue(value)) {
+			continue;
+		}
+
+		nextBucket = nextBucket ?? {};
+		nextBucket[key] = value;
+	}
+
+	return nextBucket;
+};
+
+const getMergedLocalSlot = (
+	context: ResolveSlotStylesContext,
+	slotId: string,
+) => {
+	"worklet";
+	let mergedStyle: Record<string, unknown> | undefined;
+	let mergedProps: Record<string, unknown> | undefined;
+
+	for (let index = 0; index < context.localStylesMaps.length; index++) {
+		const slot = context.localStylesMaps[index]?.[slotId];
+
+		if (slot === undefined) {
+			continue;
+		}
+
+		mergedStyle = mergeBucket(
+			mergedStyle,
+			slot.style as Record<string, unknown> | undefined,
+		);
+		mergedProps = mergeBucket(mergedProps, slot.props);
+	}
+
+	if (!mergedStyle && !mergedProps) {
+		return undefined;
+	}
+
+	return {
+		style: mergedStyle,
+		props: mergedProps,
+	};
+};
+
 const getSlotForId = (context: ResolveSlotStylesContext, slotId: string) => {
 	"worklet";
-	const currentSlot = context.currentStylesMap[slotId];
 
-	if (currentSlot !== undefined) {
-		return currentSlot;
+	if (hasLocalSlot(context, slotId)) {
+		return getMergedLocalSlot(context, slotId);
 	}
 
 	if (shouldSlotInherit(slotId)) {
@@ -326,9 +439,19 @@ const appendResolvedSlot = (
 
 const appendCurrentSlots = (context: ResolveSlotStylesContext) => {
 	"worklet";
+	const appendedSlotIds: Record<string, true> = {};
 
-	for (const slotId in context.currentStylesMap) {
-		appendResolvedSlot(context, slotId);
+	for (let index = 0; index < context.localStylesMaps.length; index++) {
+		const stylesMap = context.localStylesMaps[index];
+
+		for (const slotId in stylesMap) {
+			if (stylesMap[slotId] === undefined || appendedSlotIds[slotId]) {
+				continue;
+			}
+
+			appendedSlotIds[slotId] = true;
+			appendResolvedSlot(context, slotId);
+		}
 	}
 };
 
@@ -337,9 +460,7 @@ const shouldAppendInheritedSlot = (
 	slotId: string,
 ) => {
 	"worklet";
-	return (
-		shouldSlotInherit(slotId) && context.currentStylesMap[slotId] === undefined
-	);
+	return shouldSlotInherit(slotId) && !hasLocalSlot(context, slotId);
 };
 
 const appendInheritedSlots = (context: ResolveSlotStylesContext) => {
@@ -361,7 +482,7 @@ const shouldAppendPreviousSlot = (
 		shouldSlotInherit(slotId) &&
 		context.ancestorStylesMap[slotId] !== undefined;
 
-	return context.currentStylesMap[slotId] === undefined && !inheritedSlotExists;
+	return !hasLocalSlot(context, slotId) && !inheritedSlotExists;
 };
 
 const appendPreviousSlots = (context: ResolveSlotStylesContext) => {
@@ -381,12 +502,12 @@ const appendPreviousSlots = (context: ResolveSlotStylesContext) => {
  * concrete identity values.
  */
 export const resolveSlotStyles = ({
-	currentStylesMap,
+	localStylesMaps,
 	ancestorStylesMap,
 	previousStyleStatesBySlot,
 	deferLocalSlotResets = false,
 }: {
-	currentStylesMap: NormalizedTransitionInterpolatedStyle;
+	localStylesMaps: LocalStyleLayers;
 	ancestorStylesMap: NormalizedTransitionInterpolatedStyle;
 	previousStyleStatesBySlot: ResettableStyleStatesBySlot;
 	deferLocalSlotResets?: boolean;
@@ -395,7 +516,7 @@ export const resolveSlotStyles = ({
 	const resolvedStylesMap: NormalizedTransitionInterpolatedStyle = {};
 	const nextPreviousStyleStatesBySlot: ResettableStyleStatesBySlot = {};
 	const context = {
-		currentStylesMap,
+		localStylesMaps,
 		ancestorStylesMap,
 		previousStyleStatesBySlot,
 		deferLocalSlotResets,

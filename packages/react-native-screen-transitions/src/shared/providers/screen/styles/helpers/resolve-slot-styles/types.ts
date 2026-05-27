@@ -1,3 +1,7 @@
+import type { NormalizedTransitionInterpolatedStyle } from "../../../../../types/animation.types";
+
+export type LocalStyleLayers = NormalizedTransitionInterpolatedStyle[];
+
 export type ResettableStyleState = {
 	styleKeys?: Record<string, true>;
 	styleResetValues?: Record<string, unknown>;

@@ -35,10 +35,14 @@ const materializeResolvedBucket = ({
 		}
 
 		const previousResetValue = previousResetValues?.[key];
-		resolvedBucket[key] =
+		const resetValue =
 			previousResetValue !== undefined
 				? previousResetValue
 				: resetValues?.[key];
+
+		if (resetValue !== undefined) {
+			resolvedBucket[key] = resetValue;
+		}
 	}
 
 	if (source) {

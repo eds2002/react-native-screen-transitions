@@ -575,3 +575,94 @@ tags:
     id: "maestro-bounds-back"
 - assertVisible:
     id: "maestro-bounds-host"
+
+# Suite: style-reset-behavior
+- launchApp:
+    clearState: true
+- openLink: "e2e:///maestro/styles"
+- assertVisible:
+    id: "maestro-styles-host"
+- assertVisible:
+    id: "maestro-style-reset-box"
+
+- tapOn:
+    id: "maestro-styles-open-style-id-override"
+- assertVisible:
+    id: "maestro-styles-destination"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%"
+- assertVisible:
+    id: "maestro-styles-host"
+- assertVisible: "style-case:style-id-override"
+
+- tapOn:
+    id: "maestro-styles-open-style-id-merge"
+- assertVisible:
+    id: "maestro-styles-destination"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%"
+- assertVisible:
+    id: "maestro-styles-host"
+- assertVisible: "style-case:style-id-merge"
+
+- tapOn:
+    id: "maestro-styles-open-style-id-clear"
+- assertVisible:
+    id: "maestro-styles-destination"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%"
+- assertVisible:
+    id: "maestro-styles-host"
+- assertVisible: "style-case:style-id-clear"
+
+- tapOn:
+    id: "maestro-styles-open-layout-values"
+- assertVisible:
+    id: "maestro-styles-destination"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%"
+- assertVisible:
+    id: "maestro-styles-host"
+- assertVisible: "style-case:layout-values"
+
+- tapOn:
+    id: "maestro-styles-open-content-slot"
+- assertVisible:
+    id: "maestro-styles-destination"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%"
+- assertVisible:
+    id: "maestro-styles-host"
+- assertVisible: "style-case:content-slot"
+
+- tapOn:
+    id: "maestro-styles-open-surface-slot"
+- assertVisible:
+    id: "maestro-styles-destination"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%"
+- assertVisible:
+    id: "maestro-styles-host"
+- assertVisible: "style-case:surface-slot"
+
+- scrollUntilVisible:
+    element:
+      id: "maestro-styles-open-z-index-reveal"
+    direction: DOWN
+    speed: 5000
+- tapOn:
+    id: "maestro-styles-open-z-index-reveal"
+- assertVisible:
+    id: "maestro-styles-destination"
+- waitForAnimationToEnd
+- tapOn:
+    point: "50%, 50%"
+- assertVisible:
+    id: "maestro-styles-host"
+- assertVisible: "style-case:z-index-reveal"

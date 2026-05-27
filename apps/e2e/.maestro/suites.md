@@ -133,3 +133,14 @@ Assumptions:
 - [ ] A layout/content change before navigation still transitions from the currently visible item.
 - [ ] Same visual tag in separate transition scopes does not animate to the wrong screen.
 - [ ] Closing a shared transition returns to the scenario's previous screen and leaves it usable.
+
+## Style Reset Behavior
+
+- [ ] The source route renders the half-screen style reset fixture.
+- [ ] Style ID override opens a transparent destination and returns to the source.
+- [ ] Style ID key merge opens a transparent destination and returns to the source.
+- [ ] Explicit identity clear opens a transparent destination and returns to the source.
+- [ ] Layout value layering opens a transparent destination and returns to the source.
+- [ ] Content slot layering opens a transparent destination and returns to the source.
+- [ ] Surface slot layering opens a transparent destination and returns to the source.
+- [ ] zIndex layering reveals the red underlay only while the destination owns the orange box zIndex.

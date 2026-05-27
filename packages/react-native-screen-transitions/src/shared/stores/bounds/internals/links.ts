@@ -216,6 +216,20 @@ const isCompletedLink = (link: TagLink | null): link is TagLink => {
 	return !!link?.destination;
 };
 
+const getPendingSourceLink = (
+	state: LinkPairsState,
+	pairKey: ScreenPairKey,
+	linkKey: LinkKey,
+): TagLink | null => {
+	"worklet";
+	const sourceScreenKey = getSourceScreenKeyFromPairKey(pairKey);
+	const pendingPairKey = createPendingPairKey(sourceScreenKey);
+
+	if (pendingPairKey === pairKey) return null;
+
+	return getPairLink(state, pendingPairKey, linkKey);
+};
+
 function getResolvedLink(
 	pairKey: ScreenPairKey,
 	tag: TagID,
@@ -226,12 +240,22 @@ function getResolvedLink(
 	const group = getGroupKeyFromTag(tag);
 	const requestedLink = getPairLink(state, pairKey, linkKey);
 
+	// Press-triggered zoom captures the source before navigation under a pending
+	// source<> pair. If the destination screen has no Boundary.View, nothing
+	// promotes that source into source<>destination, but zoom can still animate to
+	// its default top target from the pending source bounds.
+	const fallbackPendingLink = requestedLink
+		? null
+		: getPendingSourceLink(state, pairKey, linkKey);
+
+	const link = requestedLink ?? fallbackPendingLink;
+
 	// Group active ids can update before the new member has a full source/destination
 	// link, so unresolved grouped links fall back to the initial id's measurements.
-	if (!group || isCompletedLink(requestedLink)) {
+	if (!group || isCompletedLink(link)) {
 		return {
 			tag,
-			link: requestedLink,
+			link,
 		};
 	}
 
@@ -248,7 +272,7 @@ function getResolvedLink(
 
 	return {
 		tag,
-		link: requestedLink,
+		link,
 	};
 }
 

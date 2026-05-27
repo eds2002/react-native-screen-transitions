@@ -115,13 +115,9 @@ function DetailPage({
 				</Text>
 
 				<View style={styles.swatchSection}>
-					<Transition.Boundary.View
-						id={item.id}
-						group={ZOOM_GROUP}
-						style={[styles.swatch, { backgroundColor: item.color }]}
-					>
-						<Text style={styles.swatchHex}>{item.color.toUpperCase()}</Text>
-					</Transition.Boundary.View>
+					<View style={[styles.swatch, { backgroundColor: item.color }]}>
+						<Text style={[styles.swatchHex]}>{item.color.toUpperCase()}</Text>
+					</View>
 				</View>
 
 				<View style={styles.propertiesGrid}>

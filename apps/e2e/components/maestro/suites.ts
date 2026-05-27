@@ -194,6 +194,21 @@ export const MAESTRO_SUITES = [
 			"Closing a shared transition returns to the scenario's previous screen and leaves it usable.",
 		],
 	},
+	{
+		id: "style-reset-behavior",
+		title: "Style Reset Behavior",
+		description: "Owner-aware layered style reset cases without grouped bounds.",
+		cases: [
+			"The source route renders the half-screen style reset fixture.",
+			"Style ID override opens a transparent destination and returns to the source.",
+			"Style ID key merge opens a transparent destination and returns to the source.",
+			"Explicit identity clear opens a transparent destination and returns to the source.",
+			"Layout value layering opens a transparent destination and returns to the source.",
+			"Content slot layering opens a transparent destination and returns to the source.",
+			"Surface slot layering opens a transparent destination and returns to the source.",
+			"zIndex layering reveals the red underlay only while the destination owns the orange box zIndex.",
+		],
+	},
 ] as const satisfies readonly MaestroSuite[];
 
 export const MAESTRO_SUITE_COUNT = MAESTRO_SUITES.length;

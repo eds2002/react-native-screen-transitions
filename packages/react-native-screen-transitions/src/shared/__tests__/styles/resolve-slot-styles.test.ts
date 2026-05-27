@@ -18,13 +18,26 @@ const A_SURFACE_RESET = {
 
 const resolveAOwnStyles = () =>
 	resolveSlotStyles({
-		currentStylesMap: {
-			surface: {
-				style: A_SURFACE_STYLE,
+		localStylesMaps: [
+			{
+				surface: {
+					style: A_SURFACE_STYLE,
+				},
 			},
-		},
+		],
 		ancestorStylesMap: {},
 		previousStyleStatesBySlot: {},
+	});
+
+const resolveLayeredStyles = (
+	localStylesMaps: Parameters<typeof resolveSlotStyles>[0]["localStylesMaps"],
+	previousStyleStatesBySlot = {},
+) =>
+	resolveSlotStyles({
+		localStylesMaps,
+		ancestorStylesMap: {},
+		previousStyleStatesBySlot,
+		deferLocalSlotResets: true,
 	});
 
 describe("resolveSlotStyles", () => {
@@ -32,7 +45,7 @@ describe("resolveSlotStyles", () => {
 		const aPass = resolveAOwnStyles();
 
 		const bMountedPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: aPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: true,
@@ -47,14 +60,14 @@ describe("resolveSlotStyles", () => {
 	it("resets deferred A interpolator styles when B unmounts", () => {
 		const aPass = resolveAOwnStyles();
 		const bMountedPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: aPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: true,
 		});
 
 		const bUnmountedPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: bMountedPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: false,
@@ -74,7 +87,7 @@ describe("resolveSlotStyles", () => {
 		};
 
 		const bMountedPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {
 				sharedHeader: inheritedSlot,
 			},
@@ -82,7 +95,7 @@ describe("resolveSlotStyles", () => {
 		});
 
 		const bUnmountedPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: bMountedPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: false,
@@ -97,22 +110,24 @@ describe("resolveSlotStyles", () => {
 
 	it("resets dropped custom style ids even while screen resets are deferred", () => {
 		const firstPass = resolveSlotStyles({
-			currentStylesMap: {
-				card: {
-					style: {
-						opacity: 0.1,
-						zIndex: 0,
-						elevation: 0,
+			localStylesMaps: [
+				{
+					card: {
+						style: {
+							opacity: 0.1,
+							zIndex: 0,
+							elevation: 0,
+						},
 					},
 				},
-			},
+			],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: {},
 			deferLocalSlotResets: true,
 		});
 
 		const droppedPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: firstPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: true,
@@ -128,30 +143,34 @@ describe("resolveSlotStyles", () => {
 
 	it("resets the old custom style id when a new custom id replaces it", () => {
 		const boxOnePass = resolveSlotStyles({
-			currentStylesMap: {
-				"zoom:box1": {
-					style: {
-						opacity: 0.1,
-						zIndex: 0,
-						elevation: 0,
+			localStylesMaps: [
+				{
+					"zoom:box1": {
+						style: {
+							opacity: 0.1,
+							zIndex: 0,
+							elevation: 0,
+						},
 					},
 				},
-			},
+			],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: {},
 			deferLocalSlotResets: true,
 		});
 
 		const boxTwoPass = resolveSlotStyles({
-			currentStylesMap: {
-				"zoom:box2": {
-					style: {
-						opacity: 0.1,
-						zIndex: 0,
-						elevation: 0,
+			localStylesMaps: [
+				{
+					"zoom:box2": {
+						style: {
+							opacity: 0.1,
+							zIndex: 0,
+							elevation: 0,
+						},
 					},
 				},
-			},
+			],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: boxOnePass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: true,
@@ -173,20 +192,22 @@ describe("resolveSlotStyles", () => {
 
 	it("does not reset a custom style id while it is still inherited", () => {
 		const boxOnePass = resolveSlotStyles({
-			currentStylesMap: {
-				"zoom:box1": {
-					style: {
-						opacity: 0.1,
+			localStylesMaps: [
+				{
+					"zoom:box1": {
+						style: {
+							opacity: 0.1,
+						},
 					},
 				},
-			},
+			],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: {},
 			deferLocalSlotResets: true,
 		});
 
 		const deferredPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {
 				"zoom:box1": {
 					style: {
@@ -206,28 +227,32 @@ describe("resolveSlotStyles", () => {
 
 	it("resets dropped local slot keys while local missing-slot resets are deferred", () => {
 		const firstPass = resolveSlotStyles({
-			currentStylesMap: {
-				content: {
-					style: {
-						opacity: 0.5,
-						zIndex: 9999,
-						elevation: 9999,
+			localStylesMaps: [
+				{
+					content: {
+						style: {
+							opacity: 0.5,
+							zIndex: 9999,
+							elevation: 9999,
+						},
 					},
 				},
-			},
+			],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: {},
 			deferLocalSlotResets: true,
 		});
 
 		const droppedKeyPass = resolveSlotStyles({
-			currentStylesMap: {
-				content: {
-					style: {
-						opacity: 0.5,
+			localStylesMaps: [
+				{
+					content: {
+						style: {
+							opacity: 0.5,
+						},
 					},
 				},
-			},
+			],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: firstPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: true,
@@ -247,24 +272,26 @@ describe("resolveSlotStyles", () => {
 
 	it("does not reset dropped layout sizing props to zero", () => {
 		const firstPass = resolveSlotStyles({
-			currentStylesMap: {
-				card: {
-					style: {
-						width: 120,
-						height: 80,
-						translateX: 20,
-						translateY: 30,
-						opacity: 0.5,
+			localStylesMaps: [
+				{
+					card: {
+						style: {
+							width: 120,
+							height: 80,
+							translateX: 20,
+							translateY: 30,
+							opacity: 0.5,
+						},
 					},
 				},
-			},
+			],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: {},
 			deferLocalSlotResets: true,
 		});
 
 		const droppedPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: firstPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: true,
@@ -279,29 +306,31 @@ describe("resolveSlotStyles", () => {
 
 	it("emits reset patches once for disappeared custom style ids", () => {
 		const firstPass = resolveSlotStyles({
-			currentStylesMap: {
-				card: {
-					style: {
-						opacity: 0.1,
-						zIndex: 9999,
-						elevation: 9999,
+			localStylesMaps: [
+				{
+					card: {
+						style: {
+							opacity: 0.1,
+							zIndex: 9999,
+							elevation: 9999,
+						},
 					},
 				},
-			},
+			],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: {},
 			deferLocalSlotResets: true,
 		});
 
 		const resetPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: firstPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: true,
 		});
 
 		const settledPass = resolveSlotStyles({
-			currentStylesMap: {},
+			localStylesMaps: [],
 			ancestorStylesMap: {},
 			previousStyleStatesBySlot: resetPass.nextPreviousStyleStatesBySlot,
 			deferLocalSlotResets: true,
@@ -314,6 +343,244 @@ describe("resolveSlotStyles", () => {
 		});
 		expect(resetPass.nextPreviousStyleStatesBySlot.card).toBeUndefined();
 		expect(settledPass.resolvedStylesMap.card).toBeUndefined();
+	});
+
+	it("restores an underlying slot key when the covering layer is removed", () => {
+		const layeredPass = resolveLayeredStyles([
+			{
+				surface: {
+					style: {
+						borderRadius: 20,
+					},
+				},
+			},
+			{
+				surface: {
+					style: {
+						borderRadius: 30,
+					},
+				},
+			},
+		]);
+
+		const uncoveredPass = resolveLayeredStyles(
+			[
+				{
+					surface: {
+						style: {
+							borderRadius: 20,
+						},
+					},
+				},
+			],
+			layeredPass.nextPreviousStyleStatesBySlot,
+		);
+
+		expect(layeredPass.resolvedStylesMap.surface?.style).toEqual({
+			borderRadius: 30,
+		});
+		expect(uncoveredPass.resolvedStylesMap.surface?.style).toEqual({
+			borderRadius: 20,
+		});
+	});
+
+	it("keeps underlying slot keys when a covering layer omits them", () => {
+		const layeredPass = resolveLayeredStyles([
+			{
+				surface: {
+					style: {
+						borderRadius: 20,
+					},
+				},
+			},
+			{
+				surface: {
+					style: {
+						opacity: 0.5,
+					},
+				},
+			},
+		]);
+
+		expect(layeredPass.resolvedStylesMap.surface?.style).toEqual({
+			borderRadius: 20,
+			opacity: 0.5,
+		});
+	});
+
+	it("resets a dropped covering-layer key while keeping the underlying slot key", () => {
+		const layeredPass = resolveLayeredStyles([
+			{
+				surface: {
+					style: {
+						borderRadius: 20,
+					},
+				},
+			},
+			{
+				surface: {
+					style: {
+						opacity: 0.5,
+					},
+				},
+			},
+		]);
+
+		const droppedKeyPass = resolveLayeredStyles(
+			[
+				{
+					surface: {
+						style: {
+							borderRadius: 20,
+						},
+					},
+				},
+				{
+					surface: {
+						style: {},
+					},
+				},
+			],
+			layeredPass.nextPreviousStyleStatesBySlot,
+		);
+
+		expect(droppedKeyPass.resolvedStylesMap.surface?.style).toEqual({
+			opacity: 1,
+			borderRadius: 20,
+		});
+	});
+
+	it("lets a covering layer explicitly clear an underlying slot key", () => {
+		const layeredPass = resolveLayeredStyles([
+			{
+				surface: {
+					style: {
+						borderRadius: 20,
+					},
+				},
+			},
+			{
+				surface: {
+					style: {
+						borderRadius: 0,
+					},
+				},
+			},
+		]);
+
+		const uncoveredPass = resolveLayeredStyles(
+			[
+				{
+					surface: {
+						style: {
+							borderRadius: 20,
+						},
+					},
+				},
+			],
+			layeredPass.nextPreviousStyleStatesBySlot,
+		);
+
+		expect(layeredPass.resolvedStylesMap.surface?.style).toEqual({
+			borderRadius: 0,
+		});
+		expect(uncoveredPass.resolvedStylesMap.surface?.style).toEqual({
+			borderRadius: 20,
+		});
+	});
+
+	it("keeps an underlying custom style id when a covering id changes", () => {
+		const boxOnePass = resolveLayeredStyles([
+			{
+				"zoom:box1": {
+					style: {
+						borderRadius: 20,
+					},
+				},
+			},
+			{
+				"zoom:box1": {
+					style: {
+						opacity: 0.5,
+					},
+				},
+			},
+		]);
+
+		const boxTwoPass = resolveLayeredStyles(
+			[
+				{
+					"zoom:box1": {
+						style: {
+							borderRadius: 20,
+						},
+					},
+				},
+				{
+					"zoom:box2": {
+						style: {
+							opacity: 0.5,
+						},
+					},
+				},
+			],
+			boxOnePass.nextPreviousStyleStatesBySlot,
+		);
+
+		expect(boxTwoPass.resolvedStylesMap["zoom:box1"]?.style).toEqual({
+			opacity: 1,
+			borderRadius: 20,
+		});
+		expect(boxTwoPass.resolvedStylesMap["zoom:box2"]?.style).toEqual({
+			opacity: 0.5,
+		});
+		expect(boxTwoPass.nextPreviousStyleStatesBySlot["zoom:box1"]).toBeDefined();
+		expect(boxTwoPass.nextPreviousStyleStatesBySlot["zoom:box2"]).toBeDefined();
+	});
+
+	it("resets props when no active layer defines them", () => {
+		const blockedPass = resolveLayeredStyles([
+			{
+				content: {
+					props: {
+						pointerEvents: "none",
+					},
+				},
+			},
+		]);
+
+		const resetPass = resolveLayeredStyles(
+			[{}],
+			blockedPass.nextPreviousStyleStatesBySlot,
+		);
+
+		expect(resetPass.resolvedStylesMap.content?.props).toEqual({
+			pointerEvents: "auto",
+		});
+	});
+
+	it("treats undefined and null values as absent covering-layer keys", () => {
+		const layeredPass = resolveLayeredStyles([
+			{
+				surface: {
+					style: {
+						borderRadius: 20,
+					},
+				},
+			},
+			{
+				surface: {
+					style: {
+						borderRadius: undefined,
+						opacity: null,
+					},
+				},
+			},
+		]);
+
+		expect(layeredPass.resolvedStylesMap.surface?.style).toEqual({
+			borderRadius: 20,
+		});
 	});
 
 	it("reuses previous resolved slot objects when style and props values are equal", () => {

@@ -7,6 +7,8 @@ import {
 	pinchOptions,
 	sheetOptions,
 	slideOptions,
+	styleResetDestinationOptions,
+	styleResetSourceOptions,
 } from "@/components/maestro/options";
 
 const hostOptions = slideOptions("horizontal", { gestureEnabled: false });
@@ -210,6 +212,12 @@ export default function MaestroLayout() {
 
 			<BlankStack.Screen name="bounds" options={hostOptions} />
 			<BlankStack.Screen name="bounds-detail" options={boundsOptions} />
+
+			<BlankStack.Screen name="styles" options={styleResetSourceOptions} />
+			<BlankStack.Screen
+				name="styles-destination"
+				options={styleResetDestinationOptions}
+			/>
 		</BlankStack>
 	);
 }

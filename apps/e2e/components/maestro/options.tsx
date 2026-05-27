@@ -16,6 +16,8 @@ const TRANSITION_SPEC = {
 const GESTURE_RESISTANCE = 0.42;
 
 export const activeMaestroBoundId = makeMutable("a");
+export const MAESTRO_STYLE_RESET_ID = "style-reset";
+export const activeMaestroStyleCaseId = makeMutable("style-id-override");
 
 export function slideOptions(
 	direction: "horizontal" | "horizontal-inverted" | "vertical" | "vertical-inverted",
@@ -206,6 +208,143 @@ export const boundsOptions: ScreenTransitionConfig = {
 					: interpolate(progress, [1, 2], [1, 0], "clamp"),
 			},
 		};
+	},
+	transitionSpec: TRANSITION_SPEC,
+};
+
+export const styleResetSourceOptions: ScreenTransitionConfig = {
+	enableTransitions: true,
+	gestureEnabled: false,
+	screenStyleInterpolator: () => {
+		"worklet";
+
+		switch (activeMaestroStyleCaseId.value) {
+			case "style-id-override":
+			case "style-id-merge":
+			case "style-id-clear":
+				return {
+					[MAESTRO_STYLE_RESET_ID]: {
+						style: {
+							borderRadius: 20,
+							overflow: "hidden",
+						},
+					},
+				};
+			case "z-index-reveal":
+				return {
+					[MAESTRO_STYLE_RESET_ID]: {
+						style: {
+							zIndex: 0,
+						},
+					},
+				};
+			case "layout-values":
+				return {
+					[MAESTRO_STYLE_RESET_ID]: {
+						style: {
+							width: 100,
+							height: 100,
+							borderRadius: 20,
+						},
+					},
+				};
+			case "content-slot":
+				return {
+					content: {
+						style: {
+							opacity: 1,
+							transform: [{ scale: 1 }],
+						},
+					},
+				};
+			case "surface-slot":
+				return {
+					surface: {
+						style: {
+							backgroundColor: "transparent",
+							borderRadius: 16,
+							overflow: "hidden",
+						},
+					},
+				};
+			default:
+				return {};
+		}
+	},
+	transitionSpec: TRANSITION_SPEC,
+};
+
+export const styleResetDestinationOptions: ScreenTransitionConfig = {
+	enableTransitions: true,
+	gestureEnabled: false,
+	screenStyleInterpolator: ({ progress }) => {
+		"worklet";
+
+		switch (activeMaestroStyleCaseId.value) {
+			case "style-id-override":
+				return {
+					[MAESTRO_STYLE_RESET_ID]: {
+						style: {
+							borderRadius: 46,
+						},
+					},
+				};
+			case "style-id-merge":
+				return {
+					[MAESTRO_STYLE_RESET_ID]: {
+						style: {
+							opacity: interpolate(progress, [0, 1], [1, 0.42], "clamp"),
+						},
+					},
+				};
+			case "style-id-clear":
+				return {
+					[MAESTRO_STYLE_RESET_ID]: {
+						style: {
+							borderRadius: 0,
+						},
+					},
+				};
+			case "layout-values":
+				return {
+					[MAESTRO_STYLE_RESET_ID]: {
+						style: {
+							width: 150,
+							height: 132,
+							opacity: interpolate(progress, [0, 1], [1, 0.5], "clamp"),
+						},
+					},
+				};
+			case "content-slot":
+				return {
+					content: {
+						style: {
+							opacity: interpolate(progress, [0, 1], [1, 0.72], "clamp"),
+							transform: [{ scale: 0.94 }],
+						},
+					},
+				};
+			case "surface-slot":
+				return {
+					surface: {
+						style: {
+							backgroundColor: "rgba(15, 23, 42, 0.2)",
+							borderRadius: 36,
+							overflow: "hidden",
+						},
+					},
+				};
+			case "z-index-reveal":
+				return {
+					[MAESTRO_STYLE_RESET_ID]: {
+						style: {
+							zIndex: -2,
+						},
+					},
+				};
+			default:
+				return {};
+		}
 	},
 	transitionSpec: TRANSITION_SPEC,
 };

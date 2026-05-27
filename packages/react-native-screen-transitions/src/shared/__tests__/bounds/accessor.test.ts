@@ -4,7 +4,10 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../../constants";
 import { BoundStore } from "../../stores/bounds";
-import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
+import {
+	createPendingPairKey,
+	createScreenPairKey,
+} from "../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundsInterpolationProps } from "../../types/bounds.types";
 import type { Layout } from "../../types/screen.types";
 import { createBoundsAccessor } from "../../utils/bounds";
@@ -213,6 +216,25 @@ describe("bounds accessor", () => {
 
 		expect(reveal.options?.gestureSensitivity).toBe(0.4);
 		expect(reveal.options?.gestureProgressMode).toBe("progress-driven");
+	});
+
+	it("builds zoom navigation styles from a pending source without a destination boundary", () => {
+		const pendingPairKey = createPendingPairKey("screen-a");
+		const source = createBounds(10, 20, 100, 200);
+
+		BoundStore.link.setSource(pendingPairKey, "card", "screen-a", source, {
+			borderRadius: 12,
+		});
+
+		const bounds = createBoundsAccessor(makeProps);
+		const zoom = bounds({ id: "card" }).navigation.zoom();
+		const contentStyle = zoom.content?.style as
+			| { transform?: readonly unknown[]; borderRadius?: number }
+			| undefined;
+
+		expect(contentStyle?.transform).toBeDefined();
+		expect(contentStyle?.borderRadius).toBe(12);
+		expect(zoom.card?.style).toBeDefined();
 	});
 
 	it("applies reveal mask shape options", () => {

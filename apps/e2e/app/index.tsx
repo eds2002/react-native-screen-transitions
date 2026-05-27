@@ -45,6 +45,15 @@ const GESTURE_OPTIONS = [
 	},
 ];
 
+const STYLE_OPTIONS = [
+	{
+		id: "styles",
+		title: "Style Reset Behavior",
+		description: "Owner-aware layered style reset scenarios",
+		route: "/maestro/styles" as const,
+	},
+];
+
 const MAESTRO_OPTIONS = [
 	{
 		id: "maestro",
@@ -246,6 +255,39 @@ export default function HomeScreen() {
 								},
 							]}
 							onPress={() => router.push(`/${option.id}` as `/${string}`)}
+						>
+							<Text style={[styles.buttonTitle, { color: theme.text }]}>
+								{option.title}
+							</Text>
+							<Text
+								style={[
+									styles.buttonDescription,
+									{ color: theme.textSecondary },
+								]}
+							>
+								{option.description}
+							</Text>
+						</Pressable>
+					))}
+				</View>
+			</View>
+
+			<View style={styles.section}>
+				<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
+					Styles
+				</Text>
+				<View style={styles.buttonContainer}>
+					{STYLE_OPTIONS.map((option) => (
+						<Pressable
+							key={option.id}
+							testID={`${option.id}-button`}
+							style={({ pressed }) => [
+								styles.button,
+								{
+									backgroundColor: pressed ? theme.cardPressed : theme.card,
+								},
+							]}
+							onPress={() => router.push(option.route)}
 						>
 							<Text style={[styles.buttonTitle, { color: theme.text }]}>
 								{option.title}

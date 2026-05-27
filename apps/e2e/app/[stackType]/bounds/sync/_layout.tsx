@@ -144,9 +144,9 @@ export default function BoundsSyncLayout() {
 			<StackNavigator.Screen name="index" />
 			<StackNavigator.Screen
 				name="source"
-				options={{
-					...IOSSlide(),
-				}}
+				// options={{
+				// 	...IOSSlide(),
+				// }}
 			/>
 			<StackNavigator.Screen
 				name="destination"

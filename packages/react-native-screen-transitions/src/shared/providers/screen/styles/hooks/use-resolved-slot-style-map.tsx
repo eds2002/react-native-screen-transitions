@@ -7,18 +7,19 @@ import { NO_STYLES } from "../../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 import { useScreenAnimationContext } from "../../animation";
 import {
+	type LocalStyleLayers,
 	type ResettableStyleStatesBySlot,
 	resolveSlotStyles,
 	reuseEqualResolvedSlots,
 } from "../helpers/resolve-slot-styles";
 
 interface UseResolvedStylesMapParams {
-	currentStylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
+	localStylesMaps: SharedValue<LocalStyleLayers>;
 	ancestorStylesMap?: SharedValue<NormalizedTransitionInterpolatedStyle>;
 }
 
 export const useResolvedStylesMap = ({
-	currentStylesMap,
+	localStylesMaps,
 	ancestorStylesMap,
 }: UseResolvedStylesMapParams) => {
 	const { screenInterpolatorProps, screenInterpolatorPropsRevision } =
@@ -34,13 +35,14 @@ export const useResolvedStylesMap = ({
 		screenInterpolatorPropsRevision.get();
 
 		const props = screenInterpolatorProps.get();
-		// Keep missing local slots alive while another route drives this screen.
-		// Custom ids and keys from slots that still exist are still reset.
+		// Keep missing local slots alive only when another route drives this screen
+		// and no active local style layer is available. Once a current/next layer
+		// runs, omitted local slots and dropped keys are intentional reset signals.
 		const deferLocalSlotResets = !props.focused && !props.current.closing;
 
 		const { resolvedStylesMap, nextPreviousStyleStatesBySlot } =
 			resolveSlotStyles({
-				currentStylesMap: currentStylesMap.get(),
+				localStylesMaps: localStylesMaps.get(),
 				ancestorStylesMap: ancestorStylesMap?.get() ?? NO_STYLES,
 				previousStyleStatesBySlot: previousStyleStatesBySlot.get(),
 				deferLocalSlotResets,

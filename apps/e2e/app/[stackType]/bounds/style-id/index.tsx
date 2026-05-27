@@ -2,7 +2,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
 import {
-	ScrollView,
 	StyleSheet,
 	Text,
 	useWindowDimensions,
@@ -210,9 +209,13 @@ export default function StyleIdBoundsIndex() {
 				title="My Boards"
 				subtitle="Visual notes, kept loose"
 			/>
-			<ScrollView
+			<Transition.ScrollView
 				style={styles.content}
-				contentContainerStyle={{ paddingBottom: insets.bottom }}
+				contentContainerStyle={[
+					styles.contentContainer,
+					{ paddingBottom: insets.bottom + 32 },
+				]}
+				showsVerticalScrollIndicator={false}
 			>
 				<View style={styles.grid}>
 					{BOARDS.map((item) => {
@@ -263,11 +266,7 @@ export default function StyleIdBoundsIndex() {
 							See all
 						</Text>
 					</View>
-					<ScrollView
-						horizontal
-						showsHorizontalScrollIndicator={false}
-						contentContainerStyle={[styles.pickScroll, { overflow: "visible" }]}
-					>
+					<View style={styles.pickStrip}>
 						{PICK_BACK_UP.map((item) => {
 							const tag = `shared-image-${item.id}`;
 							return (
@@ -304,7 +303,7 @@ export default function StyleIdBoundsIndex() {
 								</View>
 							);
 						})}
-					</ScrollView>
+					</View>
 				</View>
 				<View style={styles.trySection}>
 					<View style={styles.tryHeader}>
@@ -357,7 +356,7 @@ export default function StyleIdBoundsIndex() {
 						);
 					})}
 				</View>
-			</ScrollView>
+			</Transition.ScrollView>
 		</View>
 	);
 }
@@ -368,7 +367,10 @@ const styles = StyleSheet.create({
 	},
 	content: {
 		flex: 1,
-		padding: 16,
+	},
+	contentContainer: {
+		paddingHorizontal: 16,
+		paddingTop: 16,
 	},
 	grid: {
 		flexDirection: "row",
@@ -419,10 +421,6 @@ const styles = StyleSheet.create({
 	pickSection: {
 		marginTop: 32,
 		marginHorizontal: -16,
-		overflow: "visible",
-		position: "relative",
-		zIndex: 20,
-		elevation: 20,
 	},
 	pickHeader: {
 		flexDirection: "row",
@@ -440,7 +438,8 @@ const styles = StyleSheet.create({
 		fontSize: 15,
 		fontWeight: "500",
 	},
-	pickScroll: {
+	pickStrip: {
+		flexDirection: "row",
 		paddingHorizontal: 16,
 		gap: 14,
 		overflow: "visible",
@@ -452,10 +451,6 @@ const styles = StyleSheet.create({
 	pickBoundary: {
 		width: PICK_CARD_WIDTH,
 		aspectRatio: BOARD_ASPECT_RATIO,
-		overflow: "visible",
-		position: "relative",
-		zIndex: 50,
-		elevation: 50,
 	},
 	pickCover: {
 		width: PICK_CARD_WIDTH,

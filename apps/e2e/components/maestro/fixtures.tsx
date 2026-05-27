@@ -12,7 +12,11 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition, { snapTo } from "react-native-screen-transitions";
 import { SnapIndexProbe } from "@/components/maestro/snap-index-probe";
-import { activeMaestroBoundId } from "./options";
+import {
+	activeMaestroBoundId,
+	activeMaestroStyleCaseId,
+	MAESTRO_STYLE_RESET_ID,
+} from "./options";
 
 type ButtonTone = "primary" | "secondary" | "danger";
 
@@ -136,6 +140,7 @@ export function MaestroIndexFixture() {
 					["backdrop", "Backdrop"],
 					["overlay", "Overlay"],
 					["bounds", "Bounds"],
+					["styles", "Styles"],
 				].map(([route, label]) => (
 					<ActionButton
 						key={route}
@@ -961,6 +966,109 @@ export function OverlaySecondFixture() {
 	);
 }
 
+const styleResetCases = [
+	{
+		id: "style-id-override",
+		title: "Style ID override",
+		description: "A radius 20; B radius 46.",
+	},
+	{
+		id: "style-id-merge",
+		title: "Style ID key merge",
+		description: "A radius 20; B adds opacity.",
+	},
+	{
+		id: "style-id-clear",
+		title: "Explicit identity clear",
+		description: "B radius 0; A restores 20.",
+	},
+	{
+		id: "layout-values",
+		title: "Layout values",
+		description: "A owns size; B changes size.",
+	},
+	{
+		id: "content-slot",
+		title: "Content slot",
+		description: "A content sits under B content.",
+	},
+	{
+		id: "surface-slot",
+		title: "Surface slot",
+		description: "A surface sits under B surface.",
+	},
+	{
+		id: "z-index-reveal",
+		title: "zIndex reveal",
+		description: "B moves orange below the red -1 layer.",
+	},
+] as const;
+
+type StyleResetCaseId = (typeof styleResetCases)[number]["id"];
+
+export function StylesFixture() {
+	const [activeCaseId, setActiveCaseId] =
+		useState<StyleResetCaseId>("style-id-override");
+
+	const openCase = (caseId: StyleResetCaseId) => {
+		activeMaestroStyleCaseId.value = caseId;
+		setActiveCaseId(caseId);
+		pushFixture("styles-destination");
+	};
+
+	return (
+		<SafeAreaView testID="maestro-styles-host" style={styles.stylesScreen}>
+			<View style={styles.stylesPreviewPane}>
+				<View style={styles.styleResetStack}>
+					<View
+						testID="maestro-style-reset-red-box"
+						style={styles.styleResetRedBox}
+					/>
+					<Transition.View
+						testID="maestro-style-reset-box"
+						styleId={MAESTRO_STYLE_RESET_ID}
+						style={styles.styleResetBox}
+					/>
+				</View>
+				<ProbeText
+					id="maestro-styles-active-case"
+					value={`style-case:${activeCaseId}`}
+				/>
+			</View>
+			<ScrollView
+				testID="maestro-styles-list"
+				style={styles.stylesCaseList}
+				contentContainerStyle={styles.stylesCaseListContent}
+			>
+				{styleResetCases.map((testCase) => (
+					<Pressable
+						key={testCase.id}
+						testID={`maestro-styles-open-${testCase.id}`}
+						onPress={() => openCase(testCase.id)}
+						style={({ pressed }) => [
+							styles.styleCaseRow,
+							pressed && styles.buttonPressed,
+						]}
+					>
+						<Text style={styles.cardTitle}>{testCase.title}</Text>
+						<Text style={styles.cardText}>{testCase.description}</Text>
+					</Pressable>
+				))}
+			</ScrollView>
+		</SafeAreaView>
+	);
+}
+
+export function StylesDestinationFixture() {
+	return (
+		<View
+			testID="maestro-styles-destination"
+			onTouchStart={() => router.back()}
+			style={styles.stylesTransparentDestination}
+		/>
+	);
+}
+
 type BoundItem = "a" | "b";
 
 const boundItems: BoundItem[] = ["a", "b"];
@@ -1244,5 +1352,57 @@ const styles = StyleSheet.create({
 		color: "white",
 		fontSize: 28,
 		fontWeight: "900",
+	},
+	stylesScreen: {
+		flex: 1,
+		backgroundColor: "#10141f",
+	},
+	stylesPreviewPane: {
+		alignItems: "center",
+		flex: 1,
+		gap: 16,
+		justifyContent: "center",
+	},
+	styleResetStack: {
+		height: 100,
+		position: "relative",
+		width: 100,
+	},
+	styleResetBox: {
+		backgroundColor: "orange",
+		height: 100,
+		left: 0,
+		position: "absolute",
+		top: 0,
+		width: 100,
+		zIndex: 0,
+	},
+	styleResetRedBox: {
+		backgroundColor: "red",
+		height: 100,
+		left: 0,
+		position: "absolute",
+		top: 0,
+		width: 100,
+		zIndex: -1,
+	},
+	stylesCaseList: {
+		flex: 1,
+	},
+	stylesCaseListContent: {
+		gap: 10,
+		paddingHorizontal: 20,
+		paddingBottom: 34,
+	},
+	styleCaseRow: {
+		backgroundColor: "#1f2937",
+		borderRadius: 10,
+		gap: 5,
+		minHeight: 48,
+		padding: 8,
+	},
+	stylesTransparentDestination: {
+		flex: 1,
+		backgroundColor: "transparent",
 	},
 });

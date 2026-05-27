@@ -364,6 +364,38 @@ describe("BoundStore.link.getPair", () => {
 		expect(resolved.sourceBounds).toEqual(source);
 		expect(resolved.destinationBounds).toEqual(destination);
 	});
+
+	it("resolves entering from a pending source when destination is absent", () => {
+		const pendingPairKey = createPendingPairKey("screen-a");
+		const source = createBounds(10, 20);
+
+		BoundStore.link.setSource(pendingPairKey, "card", "screen-a", source);
+
+		const resolved = BoundStore.link.getPair("card", {
+			entering: true,
+			previousScreenKey: "screen-a",
+			currentScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
+	it("resolves exiting from a pending source when destination is absent", () => {
+		const pendingPairKey = createPendingPairKey("screen-a");
+		const source = createBounds(10, 20);
+
+		BoundStore.link.setSource(pendingPairKey, "card", "screen-a", source);
+
+		const resolved = BoundStore.link.getPair("card", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toBeNull();
+	});
 });
 
 describe("BoundStore.cleanup.byScreen", () => {
