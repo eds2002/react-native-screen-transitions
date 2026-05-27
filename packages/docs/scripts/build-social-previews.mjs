@@ -1,14 +1,28 @@
 import { Resvg } from "@resvg/resvg-js";
 import { mkdir, readFile, readdir, writeFile } from "node:fs/promises";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
+const require = createRequire(import.meta.url);
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const docsRoot = path.resolve(__dirname, "..");
 const contentRoot = path.join(docsRoot, "src/content/docs");
 const publicOgRoot = path.join(docsRoot, "public/og");
 const distRoot = path.join(docsRoot, "dist");
 const distOgRoot = path.join(distRoot, "og");
+const geistPackageRoot = path.resolve(
+	path.dirname(require.resolve("geist/font/sans-non-variable")),
+	"..",
+);
+const geistRegularFontPath = path.join(
+	geistPackageRoot,
+	"dist/fonts/geist-sans/Geist-Regular.ttf",
+);
+const geistBoldFontPath = path.join(
+	geistPackageRoot,
+	"dist/fonts/geist-sans/Geist-Bold.ttf",
+);
 
 const siteName = "Screen Transitions";
 const rootDescription =
@@ -179,8 +193,9 @@ function createPreviewSvg({ description, title }) {
 	return `<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
   <rect width="1200" height="630" fill="white"/>
   <style>
-    .title { fill: #09090B; font-family: Arial, Helvetica, sans-serif; font-size: ${titleFontSize}px; font-weight: 700; }
-    .description { fill: #52525B; font-family: Arial, Helvetica, sans-serif; font-size: 38px; font-weight: 400; }
+    text { font-family: "Geist Sans", sans-serif; font-kerning: normal; letter-spacing: 0; text-rendering: optimizeLegibility; }
+    .title { fill: #09090B; font-size: ${titleFontSize}px; font-weight: 700; }
+    .description { fill: #52525B; font-size: 38px; font-weight: 400; }
   </style>
 ${renderTextLines({ className: "title", lines: titleLines, startY: 190, lineHeight: 78, x: 96 })}
 ${renderTextLines({ className: "description", lines: descriptionLines, startY: descriptionStartY, lineHeight: 54, x: 96 })}
@@ -235,7 +250,9 @@ async function writePreviewImages(docs) {
 				value: 1200,
 			},
 			font: {
-				loadSystemFonts: true,
+				defaultFontFamily: "Geist Sans",
+				fontFiles: [geistRegularFontPath, geistBoldFontPath],
+				loadSystemFonts: false,
 			},
 		});
 		const png = renderer.render().asPng();
