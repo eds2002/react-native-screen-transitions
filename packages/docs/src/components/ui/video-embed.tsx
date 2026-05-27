@@ -10,7 +10,15 @@ function getYoutubeVideoId(src: string) {
 	return watchMatch?.[1];
 }
 
-export function VideoEmbed({ src, title }: { src: string; title: string }) {
+export function VideoEmbed({
+	device,
+	src,
+	title,
+}: {
+	device?: "android" | "ios";
+	src: string;
+	title: string;
+}) {
 	const videoId = getYoutubeVideoId(src);
 	const isLocalVideo = /\.(mp4|webm|mov)(\?.*)?$/i.test(src);
 	const href = videoId ? `https://www.youtube.com/watch?v=${videoId}` : src;
@@ -19,7 +27,7 @@ export function VideoEmbed({ src, title }: { src: string; title: string }) {
 		: undefined;
 
 	if (isLocalVideo) {
-		return <DeviceVideoFrame src={src} title={title} />;
+		return <DeviceVideoFrame device={device} src={src} title={title} />;
 	}
 
 	return (

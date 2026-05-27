@@ -9,7 +9,14 @@ order: 2
 to: /reveal
 ---
 
-<VideoEmbed src="/media/reveal.mp4" title="Reveal transition demo" />
+<div className="grid max-w-[46rem] grid-cols-2 items-center gap-3 sm:gap-6">
+  <div className="min-w-0">
+    <VideoEmbed src="/media/reveal.mp4" title="Reveal transition demo on iOS" />
+  </div>
+  <div className="min-w-0">
+    <VideoEmbed device="android" src="/media/reveal-android.mp4" title="Reveal transition demo on Android" />
+  </div>
+</div>
 
 ## What This Helper Is
 
@@ -114,15 +121,152 @@ Use `active.gesture.raw` if you derive dynamic runtime options such as `gestureS
 
 Pass options directly to `navigation.reveal()` when you need to tune the opinionated defaults:
 
-| Option | Type | Default | Description |
-| --- | --- | --- | --- |
-| `borderRadius` | `number` | Platform-specific reveal radius | Destination mask border radius. Reveal interpolates from the measured source radius to this value. |
-| `borderContinuous` | `boolean` | `true` | Uses React Native's continuous border curve for the reveal mask. |
-| `maxSensitivity` | `number` | `0.8` | Highest gesture sensitivity reveal applies before it reduces sensitivity during deeper drags. |
-| `velocityDepth` | `number` | `0.5` | Velocity-driven depth for the dismiss scale orbit. Set `0` to remove the velocity depth effect. |
-| `gestureProgressMode` | `"progress-driven" \| "freeform"` | `"freeform"` | Controls whether gesture displacement drives transition progress. Reveal defaults to freeform so drag can move the masked container without owning the full screen progress. |
-| `disablePointerEventsTillElementTransition` | `boolean` | `true` | Blocks pointer-event pass-through on the inactive content until the source element handoff reaches progress `0.25`. This is intentional and most users cannot react fast enough to swipe during that brief handoff. Set `false` to disable the guard and keep the default behavior that allows pointer events to pass through. |
-| `maskSizingMode` | `"auto" \| "transform" \| "size"` | `"auto"` | Controls how the navigation mask element resizes. Android defaults to transform-based resizing for performance; use `"size"` if transformed border radii look wrong and radius quality matters more. |
+### `borderRadius`
+
+Destination mask border radius. Reveal interpolates from the measured source radius to this value.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">platform default</td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `borderContinuous`
+
+Uses React Native's continuous border curve for the reveal mask.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>boolean</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>true</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `maxSensitivity`
+
+Highest gesture sensitivity reveal applies before it reduces sensitivity during deeper drags.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>0.8</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `velocityDepth`
+
+Velocity-driven depth for the dismiss scale orbit. Set `0` to remove the velocity depth effect.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>0.5</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureProgressMode`
+
+Controls whether gesture displacement drives transition progress. Reveal defaults to freeform so drag can move the masked container without owning the full screen progress. Valid values are `"progress-driven"` and `"freeform"`.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>GestureProgressMode</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"freeform"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `disablePointerEventsTillElementTransition`
+
+Blocks pointer-event pass-through on the inactive content until the source element handoff reaches progress `0.25`. This is intentional and most users cannot react fast enough to swipe during that brief handoff. Set `false` to disable the guard and keep the default behavior that allows pointer events to pass through.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>boolean</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>true</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `maskSizingMode`
+
+Controls how the navigation mask element resizes. Android defaults to transform-based resizing for performance; use `"size"` if transformed border radii look wrong and radius quality matters more. Valid values are `"auto"`, `"transform"`, and `"size"`.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>MaskSizingMode</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"auto"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Platform Notes
 
@@ -133,6 +277,17 @@ On Android, reveal uses a transform-based mask path by default to avoid masked-s
 Use [Zoom](/navigation-zoom) when the matched element should float above the transition and the background content should scale behind it.
 
 Use reveal when the destination content itself should grow out of the source and remain clipped by a navigation mask during the handoff.
+
+<Note>
+  <span className="font-semibold">Layout clipping caveat.</span> Reveal
+  currently uses z-index layering to lift the source boundary during the
+  handoff. This works well for normal `.map()` rendered content, but layout
+  containers such as `ScrollView` and virtualized lists such as `FlatList` can
+  still clip or recycle children around their own layout bounds. In those cases,
+  the reveal animation may look less seamless. In the next version, we plan to
+  move this through `react-native-teleport` so the handoff can escape those
+  layout constraints with less reliance on z-index behavior.
+</Note>
 
 ## Related Reading
 
