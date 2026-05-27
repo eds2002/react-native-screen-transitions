@@ -135,6 +135,34 @@ const makeUnfocusedRevealProps = (): BoundsInterpolationProps => {
 	};
 };
 
+const makeSettledCloseUnfocusedProps = (): BoundsInterpolationProps => {
+	const current = makeState("screen-a");
+	const next = {
+		...makeState("screen-b"),
+		progress: 0,
+		closing: 1,
+		entering: 0,
+		animating: 0,
+		progressAnimating: 0,
+		logicallySettled: 1,
+	};
+
+	return {
+		previous: undefined,
+		current,
+		next,
+		layouts: { screen: screenLayout },
+		insets: zeroInsets,
+		focused: false,
+		progress: 1,
+		stackProgress: 1,
+		snapIndex: next.snapIndex,
+		logicallySettled: next.logicallySettled,
+		active: next,
+		inactive: current,
+	};
+};
+
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
 });
@@ -235,6 +263,25 @@ describe("bounds accessor", () => {
 		expect(contentStyle?.transform).toBeDefined();
 		expect(contentStyle?.borderRadius).toBe(12);
 		expect(zoom.card?.style).toBeDefined();
+	});
+
+	it("drops source elevation when an unfocused zoom close settles", () => {
+		registerSourceAndDestination({
+			tag: "card",
+			sourceScreenKey: "screen-a",
+			destinationScreenKey: "screen-b",
+			sourceBounds: createBounds(10, 20, 100, 200),
+			destinationBounds: createBounds(0, 0, screenLayout.width, screenLayout.height),
+		});
+
+		const bounds = createBoundsAccessor(makeSettledCloseUnfocusedProps);
+		const zoom = bounds({ id: "card" }).navigation.zoom();
+		const elementStyle = zoom.card?.style as
+			| { zIndex?: number; elevation?: number }
+			| undefined;
+
+		expect(elementStyle?.zIndex).toBe(0);
+		expect(elementStyle?.elevation).toBe(0);
 	});
 
 	it("applies reveal mask shape options", () => {
