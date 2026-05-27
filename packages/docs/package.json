@@ -4,7 +4,7 @@
 	"type": "module",
 	"scripts": {
 		"dev": "vite dev",
-		"build": "vite build",
+		"build": "vite build && node scripts/build-social-previews.mjs",
 		"preview": "vite preview",
 		"typecheck": "tsc --noEmit"
 	},
@@ -15,6 +15,7 @@
 	},
 	"devDependencies": {
 		"@mdx-js/rollup": "^3.1.1",
+		"@resvg/resvg-js": "^2.6.2",
 		"@tailwindcss/vite": "^4.3.0",
 		"@types/node": "^25.9.0",
 		"@types/react": "~19.1.0",
