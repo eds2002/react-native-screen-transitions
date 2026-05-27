@@ -29,7 +29,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
-		}).navigation.zoom({ target: "bound" });
+		}).navigation.zoom();
 
 		return {
 			...navigationStyles,

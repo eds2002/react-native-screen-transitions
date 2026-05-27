@@ -38,7 +38,6 @@ export function IOSSlide(
 				content: {
 					style: {
             transform: [{ translateX }],
-            borderRadius: active.logicallySettled ? 0 : IOS_SLIDE_BORDER_RADIUS,
             overflow: "hidden",
             borderCurve: "continuous",
 					},
