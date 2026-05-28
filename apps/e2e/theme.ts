@@ -30,7 +30,7 @@ export type Theme = {
 	tabBarActive: string;
 	/** Separator lines */
 	separator: string;
-	/** Surface cards (component stack floating cards) */
+	/** Surface cards */
 	surface: string;
 	surfaceElevated: string;
 	/** Handle indicator */

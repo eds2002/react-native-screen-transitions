@@ -8,7 +8,7 @@ import { ListScreen } from "@/components/ui";
 
 export default function BackdropStackIndex() {
 	const stackType = useResolvedStackType();
-	const testPrefix = stackType === "native-stack" ? "native" : "blank";
+	const testPrefix = "blank";
 
 	return (
 		<ListScreen

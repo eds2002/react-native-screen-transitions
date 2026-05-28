@@ -14,11 +14,6 @@ import { useTheme } from "@/theme";
 
 const STACK_OPTIONS = [
 	{
-		id: "native-stack",
-		title: "Native Stack",
-		description: "Uses @react-navigation/native-stack with custom transitions",
-	},
-	{
 		id: "blank-stack",
 		title: "Blank Stack",
 		description: "Pure JS stack with full control over transitions",
@@ -92,7 +87,7 @@ export default function HomeScreen() {
 	const theme = useTheme();
 	const { stackType, setStackType } = useStackSelection();
 	const selectedStack = STACK_OPTIONS.find((option) => option.id === stackType);
-	const stackTestPrefix = stackType === "native-stack" ? "native" : "blank";
+	const stackTestPrefix = "blank";
 
 	return (
 		<ScrollView contentContainerStyle={styles.scrollContent}>

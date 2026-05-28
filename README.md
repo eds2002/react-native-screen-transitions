@@ -13,7 +13,7 @@ Customizable screen transitions for React Native. Build gesture-driven, shared e
 - Snap-point sheets with gesture-aware `ScrollView` and `FlatList` coordination.
 - Transition slots for content, backdrop, surface, and custom tagged elements.
 - Built-in presets for common modal, card, and shared-transition patterns.
-- Blank stack, native stack, and Expo Router integration.
+- Blank stack and Expo Router integration.
 - Written in TypeScript.
 
 ## Getting Started
@@ -28,8 +28,8 @@ Install peer dependencies:
 
 ```bash
 npm install react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
+  react-native-worklets react-native-teleport \
+  @react-navigation/native @react-navigation/elements \
   react-native-safe-area-context
 ```
 
@@ -37,11 +37,11 @@ See [the documentation site](https://screen-transitions.esjr.org).
 
 ## Support
 
-v3 (current) supports Reanimated v3, Reanimated v4, and React Native Gesture Handler v2.
+v4 targets Reanimated v4, React Native Gesture Handler v3, and React 19.2.
 
 | Line | Reanimated | React Native Gesture Handler |
 | ---- | ---------- | ---------------------------- |
-| v3 (current) | v3, v4 | v2 |
+| v4 | v4 | v3 |
 
 ## Author
 

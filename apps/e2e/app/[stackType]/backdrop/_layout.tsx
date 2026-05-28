@@ -3,9 +3,7 @@ import { BlurView } from "expo-blur";
 import { interpolate } from "react-native-reanimated";
 import type { SnapPoint } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
-import { Stack } from "@/layouts/stack";
 
 const sheetOptions = ({
 	backdropBehavior,
@@ -57,13 +55,10 @@ const sheetOptions = ({
 });
 
 export default function BackdropLayout() {
-	const stackType = useResolvedStackType();
-	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
-	const navigatorScreenOptions =
-		stackType === "native-stack" ? { enableTransitions: true } : undefined;
+	const StackNavigator = BlankStack;
 
 	return (
-		<StackNavigator screenOptions={navigatorScreenOptions}>
+		<StackNavigator>
 			<StackNavigator.Screen name="index" />
 			<StackNavigator.Screen
 				name="custom"

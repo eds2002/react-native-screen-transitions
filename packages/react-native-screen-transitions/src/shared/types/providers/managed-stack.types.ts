@@ -27,7 +27,6 @@ export interface ManagedStackProps<
  * Shared fields (routes, scenes, etc.) live in StackContext.
  */
 export interface ManagedStackContextValue {
-	activeScreensLimit: number;
 	closingRouteKeysShared: SharedValue<string[]>;
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 	backdropBehaviors: string[];

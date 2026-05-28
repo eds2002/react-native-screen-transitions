@@ -20,7 +20,7 @@ export interface BaseStackRoute {
 
 /**
  * Base navigation interface - minimal contract for gesture handling.
- * Both React Navigation helpers and ComponentNavigation satisfy this.
+ * React Navigation helpers satisfy this.
  */
 export interface BaseStackNavigation {
 	getState: () => {
@@ -35,7 +35,7 @@ export interface BaseStackNavigation {
 
 /**
  * Base descriptor interface - generic over route, navigation, and options.
- * All stack descriptors (BlankStack, NativeStack) extend this.
+ * All stack descriptors extend this.
  */
 export interface BaseStackDescriptor<
 	TRoute extends BaseStackRoute = BaseStackRoute,
@@ -80,9 +80,3 @@ export type DescriptorMap<
 > = {
 	[key: string]: TDescriptor;
 };
-
-export enum StackType {
-	NATIVE = "native",
-	BLANK = "blank",
-	COMPONENT = "component",
-}

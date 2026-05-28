@@ -52,32 +52,32 @@ The package expects these peer dependencies:
       label: "npm",
       value: "npm",
       code: `npm install react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
+  react-native-worklets react-native-teleport \
+  @react-navigation/native @react-navigation/elements \
   react-native-safe-area-context`,
     },
     {
       label: "yarn",
       value: "yarn",
       code: `yarn add react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
+  react-native-worklets react-native-teleport \
+  @react-navigation/native @react-navigation/elements \
   react-native-safe-area-context`,
     },
     {
       label: "pnpm",
       value: "pnpm",
       code: `pnpm add react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
+  react-native-worklets react-native-teleport \
+  @react-navigation/native @react-navigation/elements \
   react-native-safe-area-context`,
     },
     {
       label: "bun",
       value: "bun",
       code: `bun add react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
+  react-native-worklets react-native-teleport \
+  @react-navigation/native @react-navigation/elements \
   react-native-safe-area-context`,
     },
   ]}
@@ -87,18 +87,19 @@ If you use Expo, prefer `expo install`:
 
 ```bash
 npx expo install react-native-reanimated react-native-gesture-handler \
-  @react-navigation/native @react-navigation/native-stack \
-  @react-navigation/elements react-native-screens \
+  react-native-worklets react-native-teleport \
+  @react-navigation/native @react-navigation/elements \
   react-native-safe-area-context
 ```
 
 The important version floors are:
 
-- `@react-navigation/native >= 6.0.0`
-- `@react-navigation/native-stack >= 7.0.0`
-- `react-native-reanimated >= 3.16.0 or 4.x`
-- `react-native-gesture-handler >= 2.16.1`
-- `react-native-screens >= 4.4.0`
+- `@react-navigation/native >= 7.2.0`
+- `react >= 19.2.0`
+- `react-native >= 0.83.0`
+- `react-native-reanimated >= 4.4.0`
+- `react-native-worklets >= 0.9.0`
+- `react-native-gesture-handler >= 3.0.0`
 
 For project-level setup such as the Reanimated import, Babel plugin ordering, Gesture Handler wiring, and any native React Navigation requirements, follow the official installation guides for the underlying packages in your app.
 

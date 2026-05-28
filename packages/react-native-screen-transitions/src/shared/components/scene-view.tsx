@@ -10,7 +10,7 @@ type SceneViewProps = {
 };
 
 /**
- * Shared scene view for managed stacks (blank-stack, component-stack).
+ * Shared scene view for managed stack screens.
  * Wraps screen render output with navigation context providers
  * and optional screen overlay.
  */

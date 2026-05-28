@@ -1,7 +1,6 @@
 import type { Route } from "@react-navigation/native";
 import { createContext, useContext } from "react";
 import type { DerivedValue } from "react-native-reanimated";
-import type { StackCoreContextValue } from "../../providers/stack/core.provider";
 import type { OverlayProps } from "../../types/overlay.types";
 import type {
 	BaseStackDescriptor,
@@ -18,14 +17,13 @@ export interface StackDescriptor<
 		overlay?: (props: OverlayProps) => React.ReactNode;
 		overlayShown?: boolean;
 		meta?: Record<string, unknown>;
-		enableTransitions?: boolean;
 	};
 }
 
 export type StackScene<TDescriptor extends StackDescriptor = StackDescriptor> =
 	BaseStackScene<TDescriptor>;
 
-export interface StackContextValue extends StackCoreContextValue {
+export interface StackContextValue {
 	navigatorKey: string;
 	routeKeys: string[];
 	routes: Route<string>[];

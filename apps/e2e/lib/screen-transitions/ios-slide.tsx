@@ -13,7 +13,6 @@ export function IOSSlide(
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig {
 	return {
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "horizontal",
 		screenStyleInterpolator: ({

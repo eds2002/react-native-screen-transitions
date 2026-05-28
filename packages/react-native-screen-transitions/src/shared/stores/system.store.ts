@@ -11,7 +11,6 @@ export enum LifecycleTransitionRequestKind {
 	None = 0,
 	Open = 1,
 	ManagedClose = 2,
-	NativeClose = 3,
 }
 
 type SystemStoreState = {

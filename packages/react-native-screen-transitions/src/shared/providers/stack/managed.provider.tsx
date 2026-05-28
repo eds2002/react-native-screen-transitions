@@ -16,7 +16,6 @@ import type {
 	BaseStackNavigation,
 	BaseStackScene,
 } from "../../types/stack.types";
-import { useStackCoreContext } from "./core.provider";
 import { useClosingRouteMap } from "./helpers/use-closing-route-map";
 import { useLocalRoutes } from "./helpers/use-local-routes";
 import { useProcessedRoutes } from "./helpers/use-processed-routes";
@@ -42,7 +41,6 @@ function useManagedStackValue<
 >(
 	props: ManagedStackProps<TDescriptor, TNavigation>,
 ): ManagedStackResult<TDescriptor> {
-	const { flags } = useStackCoreContext();
 	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
 	const navigatorKey = props.state.key;
 
@@ -58,7 +56,6 @@ function useManagedStackValue<
 	// Common stack context (consumed by useStack())
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
-			flags,
 			navigatorKey,
 			routeKeys: processed.routeKeys,
 			routes: state.routes as Route<string>[],
@@ -66,7 +63,6 @@ function useManagedStackValue<
 			optimisticFocusedIndex,
 		}),
 		[
-			flags,
 			navigatorKey,
 			processed.routeKeys,
 			state.routes,
@@ -78,17 +74,11 @@ function useManagedStackValue<
 	// Managed-specific context (consumed by useManagedStackContext())
 	const managedContextValue = useMemo<ManagedStackContextValue>(
 		() => ({
-			activeScreensLimit: processed.activeScreensLimit,
 			closingRouteKeysShared: closingRouteKeys.shared,
 			handleCloseRoute,
 			backdropBehaviors: processed.backdropBehaviors,
 		}),
-		[
-			processed.activeScreensLimit,
-			closingRouteKeys.shared,
-			handleCloseRoute,
-			processed.backdropBehaviors,
-		],
+		[closingRouteKeys.shared, handleCloseRoute, processed.backdropBehaviors],
 	);
 
 	// Combined props for render children (stack-view components)

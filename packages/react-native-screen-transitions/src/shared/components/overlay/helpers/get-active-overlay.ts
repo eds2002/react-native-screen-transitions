@@ -9,7 +9,6 @@ import { isOverlayVisible } from "../../../utils/overlay/visibility";
 export function getActiveFloatOverlay(
 	scenes: StackScene[],
 	index: number,
-	transitionsAlwaysOn: boolean,
 ): { scene: StackScene; overlayIndex: number } | null {
 	if (scenes.length === 0) {
 		return null;
@@ -24,11 +23,6 @@ export function getActiveFloatOverlay(
 	for (let i = startIndex; i >= 0; i--) {
 		const scene = scenes[i];
 		const options = scene?.descriptor?.options;
-
-		// Skip screens without enableTransitions (native-stack only)
-		if (!transitionsAlwaysOn && !options?.enableTransitions) {
-			continue;
-		}
 
 		if (isOverlayVisible(options)) {
 			return { scene, overlayIndex: i };

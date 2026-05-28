@@ -1,8 +1,8 @@
 ---
 title: "Expo Router"
 pageTitle: "Expo Router"
-summary: "Use blank stack or native stack inside Expo Router layouts with withLayoutContext()."
-description: "Use blank stack or native stack inside Expo Router layouts with withLayoutContext()."
+summary: "Use blank stack inside Expo Router layouts with withLayoutContext()."
+description: "Use blank stack inside Expo Router layouts with withLayoutContext()."
 eyebrow: "Guides"
 group: "Guides"
 order: 2
@@ -15,7 +15,7 @@ Expo Router integration is just React Navigation integration through `withLayout
 
 There is no special Expo Router navigator for this package. Create the navigator with `react-native-screen-transitions`, wrap its `Navigator`, then use that wrapper inside your route `_layout.tsx`.
 
-Most work should use blank stack. Reach for native stack only when you specifically want `@react-navigation/native-stack`.
+Use blank stack for custom transition flows.
 
 ## Blank Stack Layout Wrapper
 
@@ -29,8 +29,6 @@ import type {
   StackNavigationState,
 } from "@react-navigation/native";
 import { withLayoutContext } from "expo-router";
-import type { ComponentProps } from "react";
-import { Platform } from "react-native";
 import {
   createBlankStackNavigator,
   type BlankStackNavigationEventMap,
@@ -39,24 +37,17 @@ import {
 
 const { Navigator } = createBlankStackNavigator();
 
-function BlankStackNavigator(props: ComponentProps<typeof Navigator>) {
-  const enableNativeScreens =
-    props.enableNativeScreens ?? Platform.OS === "ios";
-
-  return <Navigator {...props} enableNativeScreens={enableNativeScreens} />;
-}
-
 export const BlankStack = withLayoutContext<
   BlankStackNavigationOptions,
-  typeof BlankStackNavigator,
+  typeof Navigator,
   StackNavigationState<ParamListBase>,
   BlankStackNavigationEventMap
->(BlankStackNavigator);
+>(Navigator);
 ```
 
 This wrapper lets your screens use screen options like `screenStyleInterpolator`, `gestureEnabled`, `snapPoints`, and `overlay`.
 
-The blank-stack navigator wrapper itself also accepts navigator props like `independent` and `enableNativeScreens`.
+The blank-stack navigator wrapper itself also accepts navigator props like `independent`.
 
 ## Using It In Route Layouts
 
@@ -82,51 +73,6 @@ export default function GesturesLayout() {
 
 `router.push()`, `router.replace()`, and `router.back()` still work normally. The transition behavior comes from the options you put on `BlankStack.Screen`.
 
-## Native Stack Layout Wrapper
-
-```tsx
-// layouts/stack.tsx
-import "react-native-reanimated";
-import type {
-  ParamListBase,
-  StackNavigationState,
-} from "@react-navigation/native";
-import { withLayoutContext } from "expo-router";
-import {
-  createNativeStackNavigator,
-  type NativeStackNavigationEventMap,
-  type NativeStackNavigationOptions,
-} from "react-native-screen-transitions/native-stack";
-
-const { Navigator } = createNativeStackNavigator();
-
-export const Stack = withLayoutContext<
-  NativeStackNavigationOptions,
-  typeof Navigator,
-  StackNavigationState<ParamListBase>,
-  NativeStackNavigationEventMap
->(Navigator);
-```
-
-Enable the transition layer only where you want it:
-
-```tsx
-// app/[stackType]/_layout.tsx
-import { BlankStack } from "@/layouts/blank-stack";
-import { Stack } from "@/layouts/stack";
-
-const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
-const navigatorScreenOptions =
-  stackType === "native-stack" ? { enableTransitions: true } : undefined;
-
-<StackNavigator screenOptions={navigatorScreenOptions}>
-  <StackNavigator.Screen name="index" />
-  <StackNavigator.Screen name="detail" />
-</StackNavigator>
-```
-
-Blank stack runs the transition system by default. Native stack only participates when `enableTransitions` is enabled.
-
 ## Bounds And Router Navigation
 
 ```tsx
@@ -146,7 +92,7 @@ The destination still uses `Transition.Boundary.View`, `Transition.Boundary.Targ
 ## Embedded Flows
 
 ```tsx
-<BlankStack independent enableNativeScreens={false}>
+<BlankStack independent>
   <BlankStack.Screen name="index" />
 </BlankStack>
 ```

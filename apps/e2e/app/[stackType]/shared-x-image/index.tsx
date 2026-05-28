@@ -54,7 +54,7 @@ function Post({
 	stackType,
 }: {
 	postId: string;
-	stackType: "blank-stack" | "native-stack";
+	stackType: "blank-stack";
 }) {
 	const boundId = `shared-x-image-${postId}`;
 	const imageUrl = getXPostImageUrl(postId);

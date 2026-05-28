@@ -12,13 +12,11 @@ export const useTransitionStartController = ({
 	animations,
 	system,
 	onManagedCloseFinish,
-	onNativeCloseFinish,
 }: {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
 	system: SystemStoreMap;
 	onManagedCloseFinish?: (finished: boolean) => void;
-	onNativeCloseFinish?: (finished: boolean) => void;
 }) => {
 	const {
 		targetProgress,
@@ -53,9 +51,7 @@ export const useTransitionStartController = ({
 			const onAnimationFinish =
 				kind === LifecycleTransitionRequestKind.ManagedClose
 					? onManagedCloseFinish
-					: kind === LifecycleTransitionRequestKind.NativeClose
-						? onNativeCloseFinish
-						: undefined;
+					: undefined;
 
 			animateToProgress({
 				target,

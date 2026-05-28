@@ -1,9 +1,7 @@
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
-import { Stack } from "@/layouts/stack";
 import {
 	TRANSITION_SCOPE_BOUNDARY_ID,
 	TRANSITION_SCOPE_META_ID,
@@ -41,13 +39,10 @@ const parentPushInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] 
 	};
 
 export default function TransitionScopeLayout() {
-	const stackType = useResolvedStackType();
-	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
-	const navigatorScreenOptions =
-		stackType === "native-stack" ? { enableTransitions: true } : undefined;
+	const StackNavigator = BlankStack;
 
 	return (
-		<StackNavigator screenOptions={navigatorScreenOptions}>
+		<StackNavigator>
 			<StackNavigator.Screen name="index" />
 			<StackNavigator.Screen
 				name="nested"

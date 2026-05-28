@@ -8,18 +8,12 @@ import { ListScreen } from "@/components/ui";
 
 export default function BlankStackIndex() {
 	const stackType = useResolvedStackType();
-	const stackLabel =
-		stackType === "native-stack" ? "Native Stack" : "Blank Stack";
-	const testPrefix = stackType === "native-stack" ? "native" : "blank";
+	const testPrefix = "blank";
 
 	return (
 		<ListScreen
-			title={stackLabel}
-			subtitle={
-				stackType === "native-stack"
-					? "@react-navigation/native-stack with enableTransitions"
-					: "Pure JS stack with full animation control"
-			}
+			title="Blank Stack"
+			subtitle="Pure JS stack with full animation control"
 			items={TEST_FLOWS}
 			testIdPrefix={testPrefix}
 			onPress={(id) => router.push(buildStackPath(stackType, id) as never)}

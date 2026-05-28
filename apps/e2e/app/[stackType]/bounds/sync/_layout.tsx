@@ -1,9 +1,7 @@
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition, { TRANSFORM_RESET } from "react-native-screen-transitions";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
-import { Stack } from "@/layouts/stack";
 import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 import { ALL_CASES, activeCaseId, BOUNDARY_TAG } from "./constants";
 import { OPENING_TRANSFORM_BOUNDARY_ID } from "./opening-transform/constants";
@@ -134,13 +132,10 @@ const retargetInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
 	};
 
 export default function BoundsSyncLayout() {
-	const stackType = useResolvedStackType();
-	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
-	const navigatorScreenOptions =
-		stackType === "native-stack" ? { enableTransitions: true } : undefined;
+	const StackNavigator = BlankStack;
 
 	return (
-		<StackNavigator screenOptions={navigatorScreenOptions}>
+		<StackNavigator>
 			<StackNavigator.Screen name="index" />
 			<StackNavigator.Screen
 				name="source"

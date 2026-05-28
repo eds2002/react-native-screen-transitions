@@ -1,11 +1,9 @@
 import { router } from "expo-router";
-import { useStackSelection } from "@/components/stack-examples/stack-selection";
 import { BACKDROP_FLOWS } from "@/components/stack-examples/test-flows";
 import { ListScreen } from "@/components/ui";
 
 export default function BackdropIndex() {
-	const { stackType } = useStackSelection();
-	const testPrefix = stackType === "native-stack" ? "native" : "blank";
+	const testPrefix = "blank";
 
 	return (
 		<ListScreen

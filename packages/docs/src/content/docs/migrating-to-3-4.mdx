@@ -18,7 +18,7 @@ If you are cleaning up an older setup, these are the migrations that matter:
 3. prefer scoped interpolator state like `current.layouts` and `current.snapIndex`
 4. rename `maskEnabled` to `navigationMaskEnabled`
 5. rename `expandViaScrollView` to `sheetScrollGestureBehavior`
-6. move new embedded flows to blank stack instead of component stack
+6. move embedded flows to blank stack independent mode
 
 If you are already on v3.4 or v3.5 and want the current release changes, read [Updating to 3.6](/updating-to-3-6) after this page.
 
@@ -140,23 +140,21 @@ options={{
 
 ## Prefer Blank Stack For Embedded Flows
 
-`createComponentStackNavigator()` is now the legacy path.
-
-If you previously used component stack for embedded or independent flows, move that work to blank stack:
+Use blank stack for embedded or independent flows:
 
 ```tsx
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
 
 const Stack = createBlankStackNavigator();
 
-<Stack.Navigator independent enableNativeScreens={false}>
+<Stack.Navigator independent>
   {/* embedded flow */}
 </Stack.Navigator>
 ```
 
-Blank stack now covers that use case directly and is the preferred path going forward.
+Blank stack covers that use case directly and is the supported path going forward.
 
-For the v3 blank-stack model, including when to use `independent` and `enableNativeScreens={false}`, see [Independent Stacks](/independent-stacks).
+For the v3 blank-stack model, including when to use `independent`, see [Independent Stacks](/independent-stacks).
 
 ## Hooks Now Target Ancestors Only
 
@@ -179,4 +177,4 @@ const parentGesture = useScreenGesture({ depth: -1 });
 - move `layouts` and `snapIndex` reads to `current.layouts` and `current.snapIndex`
 - rename `maskEnabled` to `navigationMaskEnabled`
 - rename `expandViaScrollView` to `sheetScrollGestureBehavior`
-- move new embedded flows from component stack to blank stack
+- move embedded flows to blank stack independent mode

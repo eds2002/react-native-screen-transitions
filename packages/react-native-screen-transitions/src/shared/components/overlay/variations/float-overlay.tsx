@@ -16,17 +16,15 @@ import { OverlayHost } from "./overlay-host";
  * Gets routes and descriptors from stack context.
  */
 export function FloatOverlay() {
-	const { scenes, optimisticFocusedIndex, flags, routes, routeKeys } =
-		useStack();
+	const { scenes, optimisticFocusedIndex, routes, routeKeys } = useStack();
 	const focusedIndex = useOptimisticFocusedIndex(
 		optimisticFocusedIndex,
 		routeKeys.length,
 	);
 
 	const activeOverlay = useMemo(
-		() =>
-			getActiveFloatOverlay(scenes, focusedIndex, flags.TRANSITIONS_ALWAYS_ON),
-		[scenes, focusedIndex, flags.TRANSITIONS_ALWAYS_ON],
+		() => getActiveFloatOverlay(scenes, focusedIndex),
+		[scenes, focusedIndex],
 	);
 
 	const overlayData = useMemo(() => {

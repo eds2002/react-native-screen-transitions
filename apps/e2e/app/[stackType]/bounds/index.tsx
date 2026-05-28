@@ -40,7 +40,7 @@ const BOUNDS_EXAMPLES = [
 
 export default function BoundsHubIndex() {
 	const stackType = useResolvedStackType();
-	const testPrefix = stackType === "native-stack" ? "native" : "blank";
+	const testPrefix = "blank";
 
 	return (
 		<ListScreen

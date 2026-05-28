@@ -1,8 +1,8 @@
 import { useLocalSearchParams, useSegments } from "expo-router";
 
-export type StackType = "blank-stack" | "native-stack";
+export type StackType = "blank-stack";
 
-const STACK_TYPES: readonly StackType[] = ["blank-stack", "native-stack"];
+const STACK_TYPES: readonly StackType[] = ["blank-stack"];
 
 export function resolveStackType(value: unknown): StackType | null {
 	if (typeof value !== "string") return null;

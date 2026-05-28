@@ -14,7 +14,7 @@ import { useTheme } from "@/theme";
  * A demo tab bar overlay that animates based on screen transitions.
  * Shows the current route name and provides navigation controls.
  *
- * Uses the generic OverlayProps type so it works with both blank-stack and native-stack.
+ * Uses the generic OverlayProps type so it works with blank-stack.
  */
 export function TabBarOverlay({
 	focusedRoute,

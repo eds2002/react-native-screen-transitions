@@ -1,19 +1,14 @@
 // @ts-nocheck
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
-import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { TabBarOverlay } from "@/components/tab-bar-overlay";
 import { BlankStack } from "@/layouts/blank-stack";
-import { Stack } from "@/layouts/stack";
 import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 
 export default function BlankStackOverlayLayout() {
-	const stackType = useResolvedStackType();
-	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
-	const navigatorScreenOptions =
-		stackType === "native-stack" ? { enableTransitions: true } : undefined;
+	const StackNavigator = BlankStack;
 	return (
-		<StackNavigator screenOptions={navigatorScreenOptions}>
+		<StackNavigator>
 			<StackNavigator.Screen
 				name="index"
 				options={{

@@ -6,7 +6,7 @@ import { ListScreen } from "@/components/ui";
 
 export default function PresetsIndex() {
 	const { stackType } = useStackSelection();
-	const testPrefix = stackType === "native-stack" ? "native" : "blank";
+	const testPrefix = "blank";
 
 	return (
 		<ListScreen

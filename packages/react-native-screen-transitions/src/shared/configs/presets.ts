@@ -18,8 +18,6 @@ export const SlideFromTop = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "vertical-inverted",
 		screenStyleInterpolator: ({
@@ -53,8 +51,6 @@ export const ZoomIn = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: false,
 		screenStyleInterpolator: ({ progress }) => {
 			"worklet";
@@ -94,8 +90,6 @@ export const SlideFromBottom = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "vertical",
 		screenStyleInterpolator: ({
@@ -128,8 +122,6 @@ export const DraggableCard = (
 	config: Partial<ScreenTransitionConfig> = {},
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["horizontal", "vertical"],
 		screenStyleInterpolator: ({ current, progress, layouts: { screen } }) => {
@@ -174,8 +166,6 @@ export const ElasticCard = (
 	} = { elasticFactor: 0.5 },
 ): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "bidirectional",
 		screenStyleInterpolator: ({
@@ -245,7 +235,6 @@ export const SharedIGImage = ({
 	return {
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
-		enableTransitions: true,
 		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			current,
@@ -391,7 +380,6 @@ export const SharedAppleMusic = ({
 	sharedBoundTag: string;
 }): ScreenTransitionConfig => {
 	return {
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
 		gestureProgressMode: "freeform",
@@ -604,8 +592,6 @@ export const SharedXImage = ({
 	sharedBoundTag: string;
 }): ScreenTransitionConfig => {
 	return {
-		//@ts-expect-error - Should not lead to any issues
-		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "vertical-inverted"],
 		gestureProgressMode: "freeform",

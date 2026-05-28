@@ -54,12 +54,9 @@ The library has three main pieces:
 ```tsx
 import Transition from "react-native-screen-transitions";
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
-import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
 ```
 
-## Choose A Stack
-
-### Blank Stack
+## Choose The Stack
 
 `createBlankStackNavigator()` is the default recommendation.
 
@@ -70,24 +67,6 @@ It is the best fit for:
 - overlays
 - bounds transitions
 - embedded and independent flows
-
-### Native Stack
-
-`createNativeStackNavigator()` is the native-stack integration path.
-
-Use it when you already have a stack built around `@react-navigation/native-stack` and you want to opt a specific flow into this library's transition system.
-
-That path requires `enableTransitions` on the screens or navigator where you want the library to take over transition rendering.
-
-Under the hood, this is still a compatibility layer. The transitioned native-stack screen is switched into a transparent modal-style presentation, native animation is disabled, and the library drives the transition visuals with Reanimated on top of that container.
-
-So while native-stack integration keeps you in the native-stack world for things like existing headers and screen primitives, it is not the path to the most flexible or most powerful custom animations.
-
-Use native stack when you already rely on native-stack behavior and you want a one-off custom transition inside that setup. If you want the full transition model and more control over the animation surface itself, choose blank stack.
-
-### Component Stack
-
-`createComponentStackNavigator()` still exists, but it is now the legacy path. New work should prefer blank stack.
 
 ## How A Transition Is Authored
 

@@ -17,7 +17,6 @@ import type {
 
 import { useDescriptors } from "../../descriptors";
 import { updateDerivations } from "./derivations";
-import { hasTransitionsEnabled } from "./has-transitions-enabled";
 import { hydrateTransitionState } from "./hydrate-transition-state";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
 import { deriveStackProgress } from "./stack-progress";
@@ -58,10 +57,9 @@ const createInitialBaseInterpolatorProps = (
 };
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
-	const { flags, routeKeys } = useStack();
+	const { routeKeys } = useStack();
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
-	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {
 		current: currDescriptor,
@@ -82,9 +80,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	}, [routeKeys]);
 
 	const nextRouteKey = nextDescriptor?.route?.key;
-	const nextHasTransitions =
-		!!nextRouteKey &&
-		hasTransitionsEnabled(nextDescriptor?.options, transitionsAlwaysOn);
+	const nextHasTransitions = !!nextRouteKey;
 
 	const screenInterpolatorProps = useSharedValue(
 		createInitialBaseInterpolatorProps(dimensions, insets),

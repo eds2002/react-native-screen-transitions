@@ -1,8 +1,8 @@
 ---
 title: "Independent Stacks"
 pageTitle: "Independent Stacks"
-summary: "Use `independent` to isolate a blank stack, and `enableNativeScreens` to choose between native screen primitives and regular views."
-description: "Use `independent` to isolate a blank stack, and `enableNativeScreens` to choose between native screen primitives and regular views."
+summary: "Use `independent` to isolate a blank stack."
+description: "Use `independent` to isolate a blank stack."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 12
@@ -11,14 +11,9 @@ to: /independent-stacks
 
 ## Why This Exists
 
-In v3, blank stack covers the old embedded-flow use case that originally pushed people toward component stack.
+Blank stack supports embedded-flow use cases directly.
 
-The two options that matter are:
-
-- `independent`
-- `enableNativeScreens`
-
-They solve different problems.
+The option that matters is `independent`.
 
 ## `independent`
 
@@ -40,47 +35,6 @@ const Stack = createBlankStackNavigator();
 When `independent` is enabled, the navigator wraps itself in its own `NavigationIndependentTree` and `NavigationContainer`.
 
 Leave this off for normal app-level stacks.
-
-## `enableNativeScreens`
-
-`enableNativeScreens` controls whether blank stack renders with native screen primitives from `react-native-screens` or with regular views.
-
-```tsx
-const Stack = createBlankStackNavigator();
-
-<Stack.Navigator enableNativeScreens={false}>
-  <Stack.Screen name="Home" component={HomeScreen} />
-</Stack.Navigator>
-```
-
-With the default `true` value, blank stack keeps `react-native-screens` behavior such as native activity state and freezing.
-
-With `false`, blank stack renders with regular views instead of native screen primitives.
-
-This is often the better fit for embedded flows where plain view layering behaves more naturally than native screen containers.
-
-## How They Work Together
-
-These options are independent from each other:
-
-- `independent` decides whether the stack joins the parent navigation tree
-- `enableNativeScreens` decides whether the stack uses native screen primitives
-
-That means you can combine them:
-
-```tsx
-const Stack = createBlankStackNavigator();
-
-<Stack.Navigator independent enableNativeScreens={false}>
-  <Stack.Screen name="Home" component={HomeScreen} />
-  <Stack.Screen name="Detail" component={DetailScreen} />
-</Stack.Navigator>
-```
-
-This is the common embedded-flow setup:
-
-- isolated navigation state
-- regular view rendering
 
 ## When To Use Each Setup
 
@@ -104,18 +58,6 @@ Use `independent` when the flow must manage its own navigation state:
 </Stack.Navigator>
 ```
 
-### Embedded Flow With Regular Views
-
-Use `independent` together with `enableNativeScreens={false}` when the flow is embedded and you want regular view layering instead of native screen primitives:
-
-```tsx
-<Stack.Navigator independent enableNativeScreens={false}>
-  <Stack.Screen name="Home" component={HomeScreen} />
-</Stack.Navigator>
-```
-
-This is usually the most predictable setup for nested flows, custom containers, and surfaces where native screen layering gets in the way.
-
 ## Static API
 
 The same options are available in the static factory form:
@@ -125,7 +67,6 @@ import { createBlankStackNavigator } from "react-native-screen-transitions/blank
 
 const Stack = createBlankStackNavigator({
   independent: true,
-  enableNativeScreens: false,
   screens: {
     Home: HomeScreen,
     Detail: DetailScreen,
@@ -137,10 +78,9 @@ const Stack = createBlankStackNavigator({
 
 - choose blank stack first for new work
 - add `independent` when the flow should not join the parent navigation tree
-- set `enableNativeScreens={false}` when embedded view behavior is a better fit than native screen primitives
-- keep `enableNativeScreens` on when you want the normal `react-native-screens` behavior inside blank stack
+- blank stack renders screens with regular React Native views
 
-If you are deciding between this and component stack, choose blank stack. Component stack is now the legacy path.
+Use blank stack for embedded flows instead of adding a separate internal navigator implementation.
 
 ## Related Reading
 

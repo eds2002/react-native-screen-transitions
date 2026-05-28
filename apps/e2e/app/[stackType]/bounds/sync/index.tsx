@@ -33,7 +33,7 @@ function Section({
 }: {
 	title: string;
 	cases: BoundsTestCase[];
-	stackType: "blank-stack" | "native-stack";
+	stackType: "blank-stack";
 }) {
 	const theme = useTheme();
 	return (
