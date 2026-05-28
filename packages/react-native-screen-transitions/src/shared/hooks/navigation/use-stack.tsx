@@ -8,7 +8,6 @@ import {
 	useRef,
 	useSyncExternalStore,
 } from "react";
-import type { DerivedValue } from "react-native-reanimated";
 import type { OverlayProps } from "../../types/overlay.types";
 import type {
 	BaseStackDescriptor,
@@ -39,11 +38,6 @@ export interface StackContextValue {
 	routes: Route<string>[];
 	scenes: StackScene[];
 	focusedIndex: number;
-	/**
-	 * @deprecated Use `focusedIndex` instead. Kept as a DerivedValue for
-	 * compatibility with older internals.
-	 */
-	optimisticFocusedIndex: DerivedValue<number>;
 	requestDismiss: StackDismissRequest;
 }
 

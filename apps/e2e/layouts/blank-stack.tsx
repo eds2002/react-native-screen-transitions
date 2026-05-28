@@ -2,7 +2,7 @@ import "react-native-reanimated";
 import type {
 	ParamListBase,
 	StackNavigationState,
-} from "@react-navigation/native";
+} from "expo-router/react-navigation";
 import { withLayoutContext } from "expo-router";
 import {
 	type BlankStackNavigationEventMap,

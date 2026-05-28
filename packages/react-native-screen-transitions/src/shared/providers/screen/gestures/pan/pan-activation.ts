@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from "react";
 import type {
-	GestureStateManager,
+	LegacyGestureStateManager as GestureStateManager,
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";

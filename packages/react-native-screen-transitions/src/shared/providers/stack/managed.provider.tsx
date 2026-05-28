@@ -15,7 +15,6 @@ import type {
 	BaseStackNavigation,
 } from "../../types/stack.types";
 import { useManagedStackState } from "./helpers/managed-stack-state";
-import { useStackDerived } from "./helpers/use-stack-derived";
 
 const ManagedStackContext =
 	React.createContext<ManagedStackContextValue | null>(null);
@@ -43,11 +42,6 @@ function useManagedStackValue<
 	const navigatorKey = props.state.key;
 	const focusedIndex = props.state.index;
 
-	const { optimisticFocusedIndex } = useStackDerived(
-		state.animationMaps,
-		focusedIndex,
-	);
-
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			navigatorKey,
@@ -55,7 +49,6 @@ function useManagedStackValue<
 			routes: state.routes,
 			scenes: state.scenes,
 			focusedIndex,
-			optimisticFocusedIndex,
 			requestDismiss,
 		}),
 		[
@@ -64,7 +57,6 @@ function useManagedStackValue<
 			state.routes,
 			state.scenes,
 			focusedIndex,
-			optimisticFocusedIndex,
 			requestDismiss,
 		],
 	);

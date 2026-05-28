@@ -1,4 +1,4 @@
-import { CardStyleInterpolators } from "@react-navigation/stack";
+import { Animated } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import { BENCHMARK_TRANSITION_DURATION_MS } from "@/components/benchmark/constants";
 import { useResolvedBenchmarkImpl } from "@/components/benchmark/impl-routing";
@@ -58,6 +58,43 @@ const blankHorizontalInterpolator = ({
 	};
 };
 
+const jsHorizontalInterpolator = ({
+	current,
+	next,
+	inverted,
+	layouts: {
+		screen: { width },
+	},
+}: any) => {
+	const translateFocused = Animated.multiply(
+		current.progress.interpolate({
+			inputRange: [0, 1],
+			outputRange: [width, 0],
+			extrapolate: "clamp",
+		}),
+		inverted,
+	);
+	const translateUnfocused = next
+		? Animated.multiply(
+				next.progress.interpolate({
+					inputRange: [0, 1],
+					outputRange: [0, width * -0.3],
+					extrapolate: "clamp",
+				}),
+				inverted,
+			)
+		: 0;
+
+	return {
+		cardStyle: {
+			transform: [
+				{ translateX: translateFocused },
+				{ translateX: translateUnfocused },
+			],
+		},
+	};
+};
+
 function getBlankStackScreenOptions() {
 	return {
 		...baseBlankStackScreenOptions,
@@ -77,7 +114,7 @@ function getJsStackScreenOptions(scenario: BenchmarkScenario) {
 					cardStyle: { backgroundColor: "transparent" as const },
 				}
 			: {}),
-		cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
+		cardStyleInterpolator: jsHorizontalInterpolator,
 		gestureDirection: "horizontal" as const,
 		presentation: "card" as const,
 	};

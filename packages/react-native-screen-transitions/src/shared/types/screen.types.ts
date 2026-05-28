@@ -375,13 +375,12 @@ export type ScreenTransitionConfig = {
 	 * Animated styles and props are driven by the `surface` slot in the interpolator return value.
 	 *
 	 * @example
-	 * surfaceComponent: SquircleView,
+	 * surfaceComponent: View,
 	 * screenStyleInterpolator: ({ progress }) => {
 	 *   "worklet";
 	 *   return {
 	 *     surface: {
 	 *       style: { opacity: interpolate(progress, [0, 1], [0, 1]) },
-	 *       props: { cornerRadius: 24, cornerSmoothing: 0.7 },
 	 *     },
 	 *   };
 	 * }

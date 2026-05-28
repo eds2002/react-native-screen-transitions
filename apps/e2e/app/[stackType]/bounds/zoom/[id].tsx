@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation } from "@react-navigation/native";
+import { useNavigation } from "expo-router/react-navigation";
 import { router, useLocalSearchParams } from "expo-router";
 import type {
 	ListRenderItemInfo,

@@ -1,4 +1,3 @@
-import type { AnimationStoreMap } from "../../../../../stores/animation.store";
 import type { ManagedStackProps } from "../../../../../types/providers/managed-stack.types";
 import type {
 	BaseStackDescriptor,
@@ -23,7 +22,6 @@ export type LocalRoutesState<TDescriptor extends BaseStackDescriptor> = {
 	sourceDescriptors: ManagedDescriptorSources<TDescriptor>;
 	scenes: BaseStackScene<TDescriptor>[];
 	routeKeys: string[];
-	animationMaps: AnimationStoreMap[];
 	shouldShowFloatOverlay: boolean;
 	closingRouteKeys: ReadonlySet<string>;
 };

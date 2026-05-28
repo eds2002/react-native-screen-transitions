@@ -15,7 +15,7 @@ export default function CustomBackgroundScreen() {
 		<SafeAreaView style={styles.container} edges={["top"]}>
 			<ScreenHeader
 				title="Custom Surface"
-				subtitle="Squircle surface component with animated content transform."
+				subtitle="Custom surface component with animated content transform."
 			/>
 			<View style={styles.content}>
 				<View style={[styles.card, { backgroundColor: theme.card }]}>

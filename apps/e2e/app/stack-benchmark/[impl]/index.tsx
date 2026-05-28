@@ -1,4 +1,4 @@
-import { useIsFocused } from "@react-navigation/native";
+import { useIsFocused } from "expo-router/react-navigation";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import {

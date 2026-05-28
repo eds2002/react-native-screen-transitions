@@ -1,7 +1,3 @@
-import {
-	AnimationStore,
-	type AnimationStoreMap,
-} from "../../../../../stores/animation.store";
 import type { ManagedStackProps } from "../../../../../types/providers/managed-stack.types";
 import type {
 	BaseStackDescriptor,
@@ -37,16 +33,6 @@ const areRouteKeysEqual = (a: string[], b: string[]): boolean => {
 	if (a.length !== b.length) return false;
 
 	return a.every((key, index) => key === b[index]);
-};
-
-const areAnimationMapsEqual = (
-	a: AnimationStoreMap[],
-	b: AnimationStoreMap[],
-): boolean => {
-	if (a === b) return true;
-	if (a.length !== b.length) return false;
-
-	return a.every((map, index) => map === b[index]);
 };
 
 const getSceneActivity = ({
@@ -139,7 +125,6 @@ const buildBaseScenes = <
 	activityWindow: SceneActivityWindow;
 }) => {
 	const routeKeys: string[] = [];
-	const animationMaps: AnimationStoreMap[] = [];
 	const scenes: BaseStackScene<TDescriptor>[] = [];
 	const managedDescriptors = {} as ManagedDescriptors<TDescriptor>;
 	let shouldShowFloatOverlay = false;
@@ -172,7 +157,6 @@ const buildBaseScenes = <
 				: withDescriptorActivityState(sourceDescriptor, activity);
 
 		routeKeys.push(route.key);
-		animationMaps.push(AnimationStore.getBag(route.key));
 		managedDescriptors[route.key] = descriptor;
 
 		if (!shouldShowFloatOverlay) {
@@ -189,7 +173,6 @@ const buildBaseScenes = <
 		scenes,
 		descriptors: managedDescriptors,
 		routeKeys,
-		animationMaps,
 		shouldShowFloatOverlay,
 	};
 };
@@ -278,7 +261,6 @@ export const buildManagedStackState = <
 		scenes: baseScenes,
 		descriptors: managedDescriptors,
 		routeKeys,
-		animationMaps,
 		shouldShowFloatOverlay,
 	} = buildBaseScenes({
 		...params,
@@ -310,11 +292,6 @@ export const buildManagedStackState = <
 			areRouteKeysEqual(params.previousState.routeKeys, routeKeys)
 				? params.previousState.routeKeys
 				: routeKeys,
-		animationMaps:
-			params.previousState &&
-			areAnimationMapsEqual(params.previousState.animationMaps, animationMaps)
-				? params.previousState.animationMaps
-				: animationMaps,
 		shouldShowFloatOverlay,
 		closingRouteKeys:
 			params.previousState &&

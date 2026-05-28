@@ -1,7 +1,6 @@
 // @ts-nocheck
 import { useState } from "react";
-import { LogBox } from "react-native";
-import SquircleView from "react-native-fast-squircle";
+import { LogBox, View } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import type { StackType } from "@/components/stack-examples/stack-routing";
@@ -72,7 +71,7 @@ export default function RootLayout() {
 					options={{
 						gestureEnabled: true,
 						gestureDirection: "vertical",
-						surfaceComponent: SquircleView,
+						surfaceComponent: View,
 						screenStyleInterpolator: ({ progress, active }) => {
 							"worklet";
 							return {
@@ -95,9 +94,6 @@ export default function RootLayout() {
 										backgroundColor: "#4A90E2",
 										borderRadius: active.animating ? 48 : 0,
 										overflow: "hidden",
-									},
-									props: {
-										cornerSmoothing: 1,
 									},
 								},
 							};

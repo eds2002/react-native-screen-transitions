@@ -109,15 +109,12 @@ This is the slot that usually carries the main screen motion: translate, scale, 
 
 ```tsx
 options={{
-  surfaceComponent: SquircleView,
+  surfaceComponent: View,
 }}
 
 surface: {
   style: {
     borderRadius: interpolate(progress, [0, 1], [28, 0]),
-  },
-  props: {
-    cornerRadius: interpolate(progress, [0, 1], [28, 0]),
   },
 }
 ```
