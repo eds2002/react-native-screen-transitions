@@ -34,7 +34,6 @@ const BlankSceneRow = memo(function BlankSceneRow({
 			<NavigationRouteContext.Provider value={route}>
 				<ActivityScreen
 					activity={descriptor.activity}
-					inactiveBehavior="unmount"
 					paintDriverRouteKey={paintDriverRouteKey}
 				>
 					<ScreenComposer
