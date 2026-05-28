@@ -46,4 +46,6 @@ export type {
 	BaseStackScene,
 	BaseStackState,
 	DescriptorMap,
+	StackDescriptorSource,
+	StackSceneActivity,
 } from "./stack.types";

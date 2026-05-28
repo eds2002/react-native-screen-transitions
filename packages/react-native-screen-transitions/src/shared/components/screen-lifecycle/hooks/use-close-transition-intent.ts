@@ -1,4 +1,4 @@
-import { useAnimatedReaction } from "react-native-reanimated";
+import { useLayoutEffect } from "react";
 import useStableCallback from "../../../hooks/use-stable-callback";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import { useManagedStackContext } from "../../../providers/stack/managed.provider";
@@ -16,7 +16,7 @@ interface CloseHookParams {
 }
 
 /**
- * Managed close - reacts to closingRouteKeysShared from ManagedStackContext.
+ * Managed close - reacts to descriptor activity from the managed stack.
  * Used by blank-stack.
  */
 const useManagedClose = ({
@@ -24,8 +24,15 @@ const useManagedClose = ({
 	requestLifecycleTransition,
 	resetStores,
 }: CloseHookParams) => {
-	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
-	const routeKey = current.route.key;
+	const { handleCloseRoute } = useManagedStackContext();
+
+	useLayoutEffect(() => {
+		if (current.activity !== "closing") {
+			return;
+		}
+
+		requestLifecycleTransition(LifecycleTransitionRequestKind.ManagedClose, 0);
+	}, [current.activity, requestLifecycleTransition]);
 
 	const handleManagedCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished) return;
@@ -34,21 +41,6 @@ const useManagedClose = ({
 			resetStores();
 		});
 	});
-
-	useAnimatedReaction(
-		() => {
-			const keys = closingRouteKeysShared.get();
-			return keys?.includes(routeKey) ?? false;
-		},
-		(isClosing, wasClosing) => {
-			if (!isClosing || wasClosing) return;
-
-			requestLifecycleTransition(
-				LifecycleTransitionRequestKind.ManagedClose,
-				0,
-			);
-		},
-	);
 
 	return { handleManagedCloseEnd };
 };

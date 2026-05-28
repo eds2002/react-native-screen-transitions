@@ -1,6 +1,5 @@
 import { useMemo } from "react";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
-import { useOptimisticFocusedIndex } from "../../../hooks/navigation/use-optimistic-focused-index";
 import { useStack } from "../../../hooks/navigation/use-stack";
 import { ScreenAnimationProvider } from "../../../providers/screen/animation";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
@@ -16,11 +15,10 @@ import { OverlayHost } from "./overlay-host";
  * Gets routes and descriptors from stack context.
  */
 export function FloatOverlay() {
-	const { scenes, optimisticFocusedIndex, routes, routeKeys } = useStack();
-	const focusedIndex = useOptimisticFocusedIndex(
-		optimisticFocusedIndex,
-		routeKeys.length,
-	);
+	const scenes = useStack((stack) => stack.scenes);
+	const focusedIndex = useStack((stack) => stack.focusedIndex);
+	const routes = useStack((stack) => stack.routes);
+	const routeKeys = useStack((stack) => stack.routeKeys);
 
 	const activeOverlay = useMemo(
 		() => getActiveFloatOverlay(scenes, focusedIndex),

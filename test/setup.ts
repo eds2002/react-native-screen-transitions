@@ -58,6 +58,15 @@ mock.module("react-native", () => ({
 	},
 }));
 mock.module("react-native-gesture-handler", () => ({}));
+mock.module("react-native-worklets", () => ({
+	runOnJS: <T extends (...args: any[]) => any>(callback: T) => callback,
+	scheduleOnRN: <T extends (...args: any[]) => any>(
+		callback: T,
+		...args: Parameters<T>
+	) => {
+		callback(...args);
+	},
+}));
 mock.module("react-native-reanimated", () => ({
 	makeMutable: createTestMutable,
 	createAnimatedComponent: <T>(component: T) => component,

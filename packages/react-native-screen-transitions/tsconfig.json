@@ -17,6 +17,7 @@
     "allowSyntheticDefaultImports": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
+    "types": ["react/canary"],
     "noEmit": false
   },
   "include": ["src/**/*"],

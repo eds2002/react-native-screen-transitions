@@ -1,4 +1,3 @@
-import type { SharedValue } from "react-native-reanimated";
 import type { StackContextValue } from "../../hooks/navigation/use-stack";
 import type {
 	BaseStackDescriptor,
@@ -6,6 +5,7 @@ import type {
 	BaseStackRoute,
 	BaseStackScene,
 	BaseStackState,
+	StackDescriptorSource,
 } from "../stack.types";
 
 /**
@@ -18,8 +18,11 @@ export interface ManagedStackProps<
 > {
 	state: BaseStackState<TDescriptor["route"]>;
 	navigation: TNavigation;
-	descriptors: Record<string, TDescriptor>;
-	describe: (route: TDescriptor["route"], placeholder: boolean) => TDescriptor;
+	descriptors: Record<string, StackDescriptorSource<TDescriptor>>;
+	describe: (
+		route: TDescriptor["route"],
+		placeholder: boolean,
+	) => StackDescriptorSource<TDescriptor>;
 }
 
 /**
@@ -27,9 +30,7 @@ export interface ManagedStackProps<
  * Shared fields (routes, scenes, etc.) live in StackContext.
  */
 export interface ManagedStackContextValue {
-	closingRouteKeysShared: SharedValue<string[]>;
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
-	backdropBehaviors: string[];
 }
 
 /**
@@ -39,10 +40,8 @@ export interface ManagedStackContextValue {
 export interface ManagedStackRenderProps<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
 > {
-	descriptors: Record<string, TDescriptor>;
 	scenes: BaseStackScene<TDescriptor>[];
 	focusedIndex: number;
-	closingRouteMap: React.RefObject<Readonly<Record<string, true>>>;
 	shouldShowFloatOverlay: boolean;
 }
 

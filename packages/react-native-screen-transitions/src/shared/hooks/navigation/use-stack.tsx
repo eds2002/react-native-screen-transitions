@@ -1,5 +1,13 @@
 import type { Route } from "@react-navigation/native";
-import { createContext, useContext } from "react";
+import {
+	createContext,
+	type ReactNode,
+	useCallback,
+	useContext,
+	useLayoutEffect,
+	useRef,
+	useSyncExternalStore,
+} from "react";
 import type { DerivedValue } from "react-native-reanimated";
 import type { OverlayProps } from "../../types/overlay.types";
 import type {
@@ -9,7 +17,7 @@ import type {
 	BaseStackScene,
 } from "../../types/stack.types";
 
-export interface StackDescriptor<
+interface StackDescriptor<
 	TRoute extends BaseStackRoute = Route<string>,
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
 > extends BaseStackDescriptor<TRoute, TNavigation> {
@@ -23,23 +31,129 @@ export interface StackDescriptor<
 export type StackScene<TDescriptor extends StackDescriptor = StackDescriptor> =
 	BaseStackScene<TDescriptor>;
 
+type StackDismissRequest = (payload: { route: BaseStackRoute }) => boolean;
+
 export interface StackContextValue {
 	navigatorKey: string;
 	routeKeys: string[];
 	routes: Route<string>[];
 	scenes: StackScene[];
+	focusedIndex: number;
+	/**
+	 * @deprecated Use `focusedIndex` instead. Kept as a DerivedValue for
+	 * compatibility with older internals.
+	 */
 	optimisticFocusedIndex: DerivedValue<number>;
+	requestDismiss: StackDismissRequest;
 }
 
-export const StackContext = createContext<StackContextValue | null>(null);
+type StackSelector<T> = (stack: StackContextValue) => T;
+
+interface StackStoreApi {
+	getSnapshot: () => StackContextValue;
+	subscribe: (listener: () => void) => () => void;
+}
+
+interface MutableStackStoreApi extends StackStoreApi {
+	notify: () => void;
+	setSnapshot: (snapshot: StackContextValue) => boolean;
+}
+
+const createStackStore = (
+	initialSnapshot: StackContextValue,
+): MutableStackStoreApi => {
+	let snapshot = initialSnapshot;
+	const listeners = new Set<() => void>();
+
+	return {
+		getSnapshot: () => snapshot,
+		notify: () => {
+			for (const listener of listeners) {
+				listener();
+			}
+		},
+		setSnapshot: (nextSnapshot) => {
+			if (snapshot === nextSnapshot) {
+				return false;
+			}
+
+			snapshot = nextSnapshot;
+			return true;
+		},
+		subscribe: (listener) => {
+			listeners.add(listener);
+			return () => {
+				listeners.delete(listener);
+			};
+		},
+	};
+};
+
+const StackContext = createContext<StackStoreApi | null>(null);
 StackContext.displayName = "Stack";
 
-export function useStack<T extends StackContextValue = StackContextValue>(): T {
-	const context = useContext(StackContext);
+export function StackProvider({
+	children,
+	value,
+}: {
+	children: ReactNode;
+	value: StackContextValue;
+}) {
+	const storeRef = useRef<MutableStackStoreApi | null>(null);
+	const pendingNotifyRef = useRef(false);
 
-	if (context === null) {
+	let store = storeRef.current;
+	if (!store) {
+		store = createStackStore(value);
+		storeRef.current = store;
+	}
+
+	pendingNotifyRef.current =
+		store.setSnapshot(value) || pendingNotifyRef.current;
+
+	useLayoutEffect(() => {
+		if (!pendingNotifyRef.current) {
+			return;
+		}
+
+		pendingNotifyRef.current = false;
+		store.notify();
+	});
+
+	return (
+		<StackContext.Provider value={store}>{children}</StackContext.Provider>
+	);
+}
+
+function useStackStore(): StackStoreApi {
+	const store = useContext(StackContext);
+
+	if (store === null) {
 		throw new Error("useStack must be used within a Stack provider");
 	}
 
-	return context as T;
+	return store;
+}
+
+export function useStack(): StackContextValue;
+export function useStack<T>(selector: StackSelector<T>): T;
+export function useStack<T>(
+	selector?: StackSelector<T>,
+): StackContextValue | T {
+	const store = useStackStore();
+	const selectorRef = useRef<StackSelector<StackContextValue | T>>(
+		selector ?? ((stack) => stack),
+	);
+	selectorRef.current = selector ?? ((stack) => stack);
+
+	const getSelectedSnapshot = useCallback(
+		() => selectorRef.current(store.getSnapshot()),
+		[store],
+	);
+
+	return useSyncExternalStore(
+		store.subscribe,
+		getSelectedSnapshot,
+		getSelectedSnapshot,
+	);
 }

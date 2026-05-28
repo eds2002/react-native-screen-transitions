@@ -1,11 +1,10 @@
-import type { ReactNode } from "react";
 import { StyleSheet, View } from "react-native";
 
 interface Props {
-	children: ReactNode;
+	children: React.ReactNode;
 }
 
-export const ScreenHostContainer = ({ children }: Props) => {
+export const ActivityContainer = ({ children }: Props) => {
 	return (
 		<View collapsable={false} style={styles.container}>
 			{children}

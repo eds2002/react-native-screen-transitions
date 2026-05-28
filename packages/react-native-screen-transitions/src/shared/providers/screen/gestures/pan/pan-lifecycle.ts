@@ -1,4 +1,5 @@
 import { clamp } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { EPSILON, FALSE, TRUE } from "../../../../constants";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../utils/animation/emit";
@@ -94,9 +95,10 @@ export const trackPanGesture = (
 export const finalizePanRelease = (
 	release: PanReleaseResult,
 	runtime: PanGestureRuntime,
-	dismissScreen: (() => void) | undefined,
+	dismissScreen: ((finished: boolean) => void) | undefined,
 	dimensions: GestureDimensions,
 	rawEvent: PanGestureEvent,
+	requestDismiss?: () => void,
 ) => {
 	"worklet";
 	const {
@@ -132,14 +134,18 @@ export const finalizePanRelease = (
 		return;
 	}
 
+	if (plan.shouldDismiss && requestDismiss) {
+		scheduleOnRN(requestDismiss);
+	}
+
 	animateToProgress({
 		target: plan.target,
-		onAnimationFinish: plan.shouldDismiss ? dismissScreen : undefined,
 		spec: plan.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,
 		targetProgress: system.targetProgress,
 		animations,
 		initialVelocity: plan.progressVelocity,
+		onAnimationFinish: plan.shouldDismiss ? dismissScreen : undefined,
 	});
 };

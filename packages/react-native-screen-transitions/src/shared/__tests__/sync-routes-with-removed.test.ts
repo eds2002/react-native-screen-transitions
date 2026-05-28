@@ -1,66 +1,8 @@
-import { beforeEach, describe, expect, it } from "bun:test";
-import { AnimationStore } from "../stores/animation.store";
-import { GestureStore } from "../stores/gesture.store";
+import { describe, expect, it } from "bun:test";
 import { syncRoutesWithRemoved } from "../utils/navigation/sync-routes-with-removed";
 
 const createRoute = (key: string) => ({ key });
-
-const createClosingRouteKeys = () => {
-	const keys = new Set<string>();
-	const sharedValue: string[] = [];
-	return {
-		ref: { current: keys } as React.RefObject<Set<string>>,
-		shared: {
-			value: sharedValue,
-			get: () => sharedValue,
-			set: (v: string[]) => {
-				sharedValue.length = 0;
-				sharedValue.push(...v);
-			},
-			addListener: () => () => {},
-			removeListener: () => {},
-			modify: (fn?: (v: string[]) => string[], _forceUpdate?: boolean) => {
-				if (fn) {
-					const result = fn(sharedValue);
-					sharedValue.length = 0;
-					sharedValue.push(...result);
-				}
-			},
-		},
-		add: (key: string) => {
-			keys.add(key);
-		},
-		remove: (key: string) => {
-			keys.delete(key);
-		},
-		clear: () => keys.clear(),
-	};
-};
-
-// Helper to set up a route's animation state
-const setRouteState = (
-	routeKey: string,
-	state: {
-		progress?: number;
-		closing?: number;
-		dragging?: number;
-		dismissing?: number;
-	},
-) => {
-	const animations = AnimationStore.getBag(routeKey);
-	const gestures = GestureStore.getBag(routeKey);
-
-	if (state.progress !== undefined) animations.progress.set(state.progress);
-	if (state.closing !== undefined) animations.closing.set(state.closing);
-	if (state.dragging !== undefined) gestures.dragging.set(state.dragging);
-	if (state.dismissing !== undefined)
-		gestures.dismissing.set(state.dismissing);
-};
-
-// Reset stores before each test
-beforeEach(() => {
-	(globalThis as any).resetMutableRegistry();
-});
+const createClosingRouteKeys = () => new Set<string>();
 
 describe("syncRoutesWithRemoved", () => {
 	describe("basic routing", () => {
@@ -78,11 +20,6 @@ describe("syncRoutesWithRemoved", () => {
 
 		it("returns nextRoutes unchanged for normal push (A -> B)", () => {
 			const closingRouteKeys = createClosingRouteKeys();
-
-			// Both routes fully visible
-			setRouteState("a", { progress: 1 });
-			setRouteState("b", { progress: 1 });
-
 			const result = syncRoutesWithRemoved({
 				prevRoutes: [createRoute("a")],
 				prevDescriptors: { a: {} },
@@ -96,10 +33,6 @@ describe("syncRoutesWithRemoved", () => {
 		it("returns nextRoutes unchanged for normal stack (A -> B -> C)", () => {
 			const closingRouteKeys = createClosingRouteKeys();
 
-			setRouteState("a", { progress: 1 });
-			setRouteState("b", { progress: 1 });
-			setRouteState("c", { progress: 1 });
-
 			const result = syncRoutesWithRemoved({
 				prevRoutes: [createRoute("a"), createRoute("b")],
 				prevDescriptors: { a: {}, b: {} },
@@ -110,15 +43,9 @@ describe("syncRoutesWithRemoved", () => {
 			expect(result.routes.map((r) => r.key)).toEqual(["a", "b", "c"]);
 		});
 	});
-
-
 	describe("normal back navigation", () => {
 		it("keeps closing route at end for normal back (C -> B)", () => {
 			const closingRouteKeys = createClosingRouteKeys();
-
-			setRouteState("a", { progress: 1 });
-			setRouteState("b", { progress: 1 });
-			setRouteState("c", { progress: 1 });
 
 			const result = syncRoutesWithRemoved({
 				prevRoutes: [createRoute("a"), createRoute("b"), createRoute("c")],
@@ -130,7 +57,7 @@ describe("syncRoutesWithRemoved", () => {
 
 			// c should be added to end for close animation
 			expect(result.routes.map((r) => r.key)).toEqual(["a", "b", "c"]);
-			expect(closingRouteKeys.ref.current.has("c")).toBe(true);
+			expect(closingRouteKeys.has("c")).toBe(true);
 		});
 	});
 });

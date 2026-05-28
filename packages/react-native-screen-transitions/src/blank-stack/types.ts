@@ -12,6 +12,7 @@ import type {
 } from "@react-navigation/native";
 import type { ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
+import type { BaseStackDescriptor } from "../shared/types/stack.types";
 
 export type BlankStackNavigationEventMap = {};
 
@@ -99,4 +100,5 @@ export type BlankStackDescriptor = Descriptor<
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp<ParamListBase>,
 	RouteProp<ParamListBase>
->;
+> &
+	Pick<BaseStackDescriptor, "activity">;

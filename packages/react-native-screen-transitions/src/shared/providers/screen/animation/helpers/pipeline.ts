@@ -57,7 +57,7 @@ const createInitialBaseInterpolatorProps = (
 };
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
-	const { routeKeys } = useStack();
+	const routeKeys = useStack((stack) => stack.routeKeys);
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 

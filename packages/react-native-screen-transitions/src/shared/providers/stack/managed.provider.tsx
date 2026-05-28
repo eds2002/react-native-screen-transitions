@@ -1,9 +1,8 @@
-import type { Route } from "@react-navigation/native";
 import * as React from "react";
 import { useMemo } from "react";
 import {
-	StackContext,
 	type StackContextValue,
+	StackProvider,
 } from "../../hooks/navigation/use-stack";
 import type {
 	ManagedStackContextValue,
@@ -14,11 +13,8 @@ import type {
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
-	BaseStackScene,
 } from "../../types/stack.types";
-import { useClosingRouteMap } from "./helpers/use-closing-route-map";
-import { useLocalRoutes } from "./helpers/use-local-routes";
-import { useProcessedRoutes } from "./helpers/use-processed-routes";
+import { useManagedStackState } from "./helpers/managed-stack-state";
 import { useStackDerived } from "./helpers/use-stack-derived";
 
 const ManagedStackContext =
@@ -41,62 +37,52 @@ function useManagedStackValue<
 >(
 	props: ManagedStackProps<TDescriptor, TNavigation>,
 ): ManagedStackResult<TDescriptor> {
-	const { state, handleCloseRoute, closingRouteKeys } = useLocalRoutes(props);
+	const { state, handleCloseRoute, requestDismiss } =
+		useManagedStackState(props);
+
 	const navigatorKey = props.state.key;
-
-	const processed = useProcessedRoutes(state.routes, state.descriptors);
-	const { optimisticFocusedIndex } = useStackDerived(processed.animationMaps);
-	const closingRouteMap = useClosingRouteMap(
-		processed.routeKeys,
-		processed.animationMaps,
-	);
-
 	const focusedIndex = props.state.index;
 
-	// Common stack context (consumed by useStack())
+	const { optimisticFocusedIndex } = useStackDerived(
+		state.animationMaps,
+		focusedIndex,
+	);
+
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			navigatorKey,
-			routeKeys: processed.routeKeys,
-			routes: state.routes as Route<string>[],
-			scenes: processed.scenes as BaseStackScene[],
+			routeKeys: state.routeKeys,
+			routes: state.routes,
+			scenes: state.scenes,
+			focusedIndex,
 			optimisticFocusedIndex,
+			requestDismiss,
 		}),
 		[
 			navigatorKey,
-			processed.routeKeys,
+			state.routeKeys,
 			state.routes,
-			processed.scenes,
+			state.scenes,
+			focusedIndex,
 			optimisticFocusedIndex,
+			requestDismiss,
 		],
 	);
 
-	// Managed-specific context (consumed by useManagedStackContext())
 	const managedContextValue = useMemo<ManagedStackContextValue>(
 		() => ({
-			closingRouteKeysShared: closingRouteKeys.shared,
 			handleCloseRoute,
-			backdropBehaviors: processed.backdropBehaviors,
 		}),
-		[closingRouteKeys.shared, handleCloseRoute, processed.backdropBehaviors],
+		[handleCloseRoute],
 	);
 
-	// Combined props for render children (stack-view components)
 	const renderProps = useMemo<ManagedStackRenderProps<TDescriptor>>(
 		() => ({
-			descriptors: state.descriptors,
-			scenes: processed.scenes,
+			scenes: state.scenes,
 			focusedIndex,
-			closingRouteMap,
-			shouldShowFloatOverlay: processed.shouldShowFloatOverlay,
+			shouldShowFloatOverlay: state.shouldShowFloatOverlay,
 		}),
-		[
-			state.descriptors,
-			processed.scenes,
-			focusedIndex,
-			closingRouteMap,
-			processed.shouldShowFloatOverlay,
-		],
+		[state.scenes, focusedIndex, state.shouldShowFloatOverlay],
 	);
 
 	return { stackContextValue, managedContextValue, renderProps };
@@ -115,18 +101,13 @@ function withManagedStack<
 			useManagedStackValue<TDescriptor, TNavigation>(props);
 
 		return (
-			<StackContext.Provider value={stackContextValue}>
+			<StackProvider value={stackContextValue}>
 				<ManagedStackContext.Provider value={managedContextValue}>
 					<Component {...renderProps} />
 				</ManagedStackContext.Provider>
-			</StackContext.Provider>
+			</StackProvider>
 		);
 	};
 }
 
-export type {
-	ManagedStackContextValue,
-	ManagedStackProps,
-	ManagedStackRenderProps,
-};
 export { useManagedStackContext, withManagedStack };
