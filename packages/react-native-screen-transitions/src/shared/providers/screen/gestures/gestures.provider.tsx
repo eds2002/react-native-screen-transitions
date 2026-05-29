@@ -3,7 +3,7 @@ import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { ScrollStore } from "../../../stores/scroll.store";
 import createProvider from "../../../utils/create-provider";
-import { useDescriptorDerivations } from "../descriptors";
+import { useDescriptorsStore } from "../descriptors";
 import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
 import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and-register-shadowing-claims";
 import { useBuildPanGesture } from "./pan/build-pan-gesture";
@@ -21,13 +21,16 @@ interface ScreenGestureProviderProps {
 export const {
 	ScreenGestureProvider,
 	useScreenGestureContext: useGestureContext,
+	useScreenGestureStore,
 } = createProvider("ScreenGesture", { guarded: false })<
 	ScreenGestureProviderProps,
 	GestureContextType
 >(({ children }): { value: GestureContextType; children: React.ReactNode } => {
-	const gestureContext = useGestureContext();
+	const gestureContext = useScreenGestureStore();
 	const gestureConfig = useScreenGestureConfig();
-	const { currentScreenKey } = useDescriptorDerivations();
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
 
 	const scrollState = ScrollStore.getValue(currentScreenKey, "state");
 

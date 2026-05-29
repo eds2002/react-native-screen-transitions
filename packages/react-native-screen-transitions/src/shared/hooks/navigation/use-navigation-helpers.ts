@@ -1,10 +1,10 @@
 import { StackActions } from "@react-navigation/native";
 import { useCallback } from "react";
-import { useDescriptors } from "../../providers/screen/descriptors";
+import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import { useStack } from "./use-stack";
 
 export function useNavigationHelpers() {
-	const { current } = useDescriptors();
+	const current = useDescriptorsStore((store) => store.descriptors.current);
 	const requestStackDismiss = useStack((stack) => stack.requestDismiss);
 
 	const requestDismiss = useCallback((): boolean => {

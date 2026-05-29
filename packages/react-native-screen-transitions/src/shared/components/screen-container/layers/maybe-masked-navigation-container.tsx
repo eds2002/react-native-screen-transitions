@@ -6,7 +6,7 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	NO_STYLES,
 } from "../../../constants";
-import { useScreenStyles } from "../../../providers/screen/styles";
+import { useScreenStylesStore } from "../../../providers/screen/styles";
 import { logger } from "../../../utils/logger";
 
 type Props = {
@@ -47,7 +47,7 @@ const MaskedNavigationContainer = memo(
 		children: React.ReactNode;
 		pointerEvents: ViewProps["pointerEvents"];
 	}) => {
-		const { stylesMap } = useScreenStyles();
+		const stylesMap = useScreenStylesStore((store) => store.stylesMap);
 
 		const maybeLogWarning = useCallback(() => {
 			if (LazyMaskedView !== View) return;

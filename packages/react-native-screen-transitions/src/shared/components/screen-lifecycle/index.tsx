@@ -1,4 +1,4 @@
-import { useDescriptors } from "../../providers/screen/descriptors";
+import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import { AnimationStore } from "../../stores/animation.store";
 import { SystemStore } from "../../stores/system.store";
 import { useScreenHistory } from "./hooks/history/use-screen-history";
@@ -15,7 +15,8 @@ interface Props {
  * Reads current/previous descriptors from DescriptorsProvider context.
  */
 export const ScreenLifecycle = ({ children }: Props) => {
-	const { current, previous } = useDescriptors();
+	const current = useDescriptorsStore((store) => store.descriptors.current);
+	const previous = useDescriptorsStore((store) => store.descriptors.previous);
 
 	const animations = AnimationStore.getBag(current.route.key);
 	const system = SystemStore.getBag(current.route.key);

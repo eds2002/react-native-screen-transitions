@@ -5,8 +5,8 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
-import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useScreenStyles } from "../../../providers/screen/styles";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { useScreenStylesStore } from "../../../providers/screen/styles";
 
 type Props = {
 	children: React.ReactNode;
@@ -14,7 +14,7 @@ type Props = {
 };
 
 export const SurfaceContainer = memo(({ children, pointerEvents }: Props) => {
-	const { current } = useDescriptors();
+	const current = useDescriptorsStore((store) => store.descriptors.current);
 
 	const SurfaceComponent = current.options.surfaceComponent;
 
@@ -44,7 +44,7 @@ type AnimatedSurfaceProps = {
 
 const AnimatedSurface = memo(
 	({ children, pointerEvents, SurfaceComponent }: AnimatedSurfaceProps) => {
-		const { stylesMap } = useScreenStyles();
+		const stylesMap = useScreenStylesStore((store) => store.stylesMap);
 
 		const animatedSurfaceStyle = useAnimatedStyle(() => {
 			"worklet";

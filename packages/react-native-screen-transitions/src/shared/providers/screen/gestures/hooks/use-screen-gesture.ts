@@ -2,7 +2,7 @@ import {
 	type ChainTarget,
 	resolveChainTarget,
 } from "../../../../utils/resolve-chain-target";
-import { useGestureContext } from "../gestures.provider";
+import { useScreenGestureStore } from "../gestures.provider";
 import { walkGestureAncestors } from "../shared/ancestors";
 
 export type ScreenGestureTarget = ChainTarget;
@@ -21,7 +21,7 @@ export type ScreenGestureTarget = ChainTarget;
  * ```
  */
 export const useScreenGesture = (target?: ScreenGestureTarget) => {
-	const ctx = useGestureContext();
+	const ctx = useScreenGestureStore();
 
 	return (
 		resolveChainTarget({

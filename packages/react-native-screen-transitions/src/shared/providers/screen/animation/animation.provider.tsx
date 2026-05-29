@@ -1,10 +1,4 @@
-import {
-	type ReactNode,
-	useCallback,
-	useContext,
-	useLayoutEffect,
-	useMemo,
-} from "react";
+import { type ReactNode, useCallback, useLayoutEffect, useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import { createBoundsAccessor } from "../../../utils/bounds";
 import createProvider from "../../../utils/create-provider";
@@ -38,19 +32,28 @@ export const {
 	ScreenAnimationProvider,
 	ScreenAnimationContext,
 	useScreenAnimationContext,
+	useScreenAnimationStore,
+	useScreenAnimationOptionalStore,
 } = createProvider("ScreenAnimation", {
 	guarded: true,
 })<Props, ScreenAnimationContextValue>((): ScreenAnimationContextResult => {
-	const parentContext = useContext(ScreenAnimationContext);
-	const parentScreenInterpolatorProps = parentContext?.screenInterpolatorProps;
-	const parentScreenInterpolatorPropsRevision =
-		parentContext?.screenInterpolatorPropsRevision;
-	const parentAncestorScreenAnimationSources =
-		parentContext?.ancestorScreenAnimationSources;
+	const parentScreenInterpolatorProps = useScreenAnimationOptionalStore(
+		(parent) => parent?.screenInterpolatorProps,
+	);
+	const parentScreenInterpolatorPropsRevision = useScreenAnimationOptionalStore(
+		(parent) => parent?.screenInterpolatorPropsRevision,
+	);
+	const parentAncestorScreenAnimationSources = useScreenAnimationOptionalStore(
+		(parent) => parent?.ancestorScreenAnimationSources,
+	);
 	const parentRegisterDescendantScreenAnimationSource =
-		parentContext?.registerDescendantScreenAnimationSource;
+		useScreenAnimationOptionalStore(
+			(parent) => parent?.registerDescendantScreenAnimationSource,
+		);
 	const parentAncestorDescendantScreenAnimationRegistrars =
-		parentContext?.ancestorDescendantScreenAnimationRegistrars;
+		useScreenAnimationOptionalStore(
+			(parent) => parent?.ancestorDescendantScreenAnimationRegistrars,
+		);
 
 	const {
 		screenInterpolatorProps,
@@ -195,8 +198,8 @@ export const {
 		selfScreenAnimationTransitionSource,
 	]);
 
-	return {
-		value: {
+	const value = useMemo<ScreenAnimationContextValue>(
+		() => ({
 			screenInterpolatorProps,
 			screenInterpolatorPropsRevision,
 			selectedInterpolatorOptions,
@@ -206,6 +209,21 @@ export const {
 			descendantScreenAnimationSources,
 			registerDescendantScreenAnimationSource,
 			ancestorDescendantScreenAnimationRegistrars,
-		},
+		}),
+		[
+			screenInterpolatorProps,
+			screenInterpolatorPropsRevision,
+			selectedInterpolatorOptions,
+			nextInterpolator,
+			currentInterpolator,
+			ancestorScreenAnimationSources,
+			descendantScreenAnimationSources,
+			registerDescendantScreenAnimationSource,
+			ancestorDescendantScreenAnimationRegistrars,
+		],
+	);
+
+	return {
+		value,
 	};
 });

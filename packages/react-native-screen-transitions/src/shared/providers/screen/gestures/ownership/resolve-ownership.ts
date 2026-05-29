@@ -87,6 +87,5 @@ export function shouldDeferToChildClaim(
 	"worklet";
 	if (!childClaim) return false;
 	if (childClaim.routeKey === selfRouteKey) return false;
-	if (childClaim.isDismissing.get()) return false;
 	return true;
 }

@@ -23,6 +23,13 @@ export interface DescriptorsContextValue<
 
 export type DescriptorDerivationsContextValue = DescriptorDerivations;
 
+interface DescriptorStoreValue<
+	TDescriptor extends BaseDescriptor = BaseDescriptor,
+> {
+	descriptors: DescriptorsContextValue<TDescriptor>;
+	derivations: DescriptorDerivationsContextValue;
+}
+
 interface DescriptorsProviderProps<TDescriptor extends BaseDescriptor> {
 	children: ReactNode;
 	previous?: TDescriptor;
@@ -30,35 +37,21 @@ interface DescriptorsProviderProps<TDescriptor extends BaseDescriptor> {
 	next?: TDescriptor;
 }
 
-type InternalProviderProps = DescriptorsProviderProps<BaseDescriptor>;
-
-const {
-	DescriptorsProvider: InternalDescriptorsProvider,
-	useDescriptorsContext,
-} = createProvider("Descriptors", { guarded: true })<
-	InternalProviderProps,
-	DescriptorsContextValue<BaseDescriptor>
->(({ previous, current, next }) => {
-	const value = useMemo(
+export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
+	"Descriptors",
+	{ guarded: true },
+)<
+	DescriptorsProviderProps<BaseDescriptor>,
+	DescriptorStoreValue<BaseDescriptor>
+>(({ previous, current, next, children }) => {
+	const descriptors = useMemo(
 		() => ({ previous, current, next }),
 		[previous, current, next],
 	);
 
-	return {
-		value,
-	};
-});
-
-const {
-	DescriptorDerivationsProvider: InternalDescriptorDerivationsProvider,
-	useDescriptorDerivationsContext,
-} = createProvider("DescriptorDerivations", { guarded: true })<
-	InternalProviderProps,
-	DescriptorDerivationsContextValue
->(({ previous, current, next, children }) => {
 	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 
-	const value = useMemo(
+	const derivations = useMemo(
 		() =>
 			deriveDescriptorDerivations({
 				previous,
@@ -69,39 +62,16 @@ const {
 		[previous, current, next, ancestorKeys],
 	);
 
+	const value = useMemo(
+		() => ({
+			descriptors,
+			derivations,
+		}),
+		[descriptors, derivations],
+	);
+
 	return {
 		value,
 		children,
 	};
 });
-
-export function DescriptorsProvider<TDescriptor extends BaseDescriptor>({
-	children,
-	previous,
-	current,
-	next,
-}: DescriptorsProviderProps<TDescriptor>) {
-	const providerProps = {
-		previous,
-		current,
-		next,
-	};
-
-	return (
-		<InternalDescriptorsProvider {...providerProps}>
-			<InternalDescriptorDerivationsProvider {...providerProps}>
-				{children}
-			</InternalDescriptorDerivationsProvider>
-		</InternalDescriptorsProvider>
-	);
-}
-
-export function useDescriptors<
-	TDescriptor extends BaseDescriptor = BaseDescriptor,
->() {
-	return useDescriptorsContext() as DescriptorsContextValue<TDescriptor>;
-}
-
-export function useDescriptorDerivations(): DescriptorDerivationsContextValue {
-	return useDescriptorDerivationsContext();
-}

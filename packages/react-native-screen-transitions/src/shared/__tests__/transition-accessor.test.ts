@@ -4,13 +4,17 @@ import type { TransitionAccessorSource } from "../providers/screen/animation/hel
 import type { ScreenInterpolatorFrame } from "../providers/screen/animation/helpers/pipeline";
 import type { ScreenAnimationDescendantSources } from "../providers/screen/animation/types";
 
+const animationContext = {
+	screenInterpolatorProps: { get: () => ({}) },
+	screenInterpolatorPropsRevision: { get: () => 0 },
+	ancestorScreenAnimationSources: [],
+	descendantScreenAnimationSources: { get: () => [] },
+};
+
 mock.module("../providers/screen/animation/animation.provider", () => ({
-	useScreenAnimationContext: () => ({
-		screenInterpolatorProps: { get: () => ({}) },
-		screenInterpolatorPropsRevision: { get: () => 0 },
-		ancestorScreenAnimationSources: [],
-		descendantScreenAnimationSources: { get: () => [] },
-	}),
+	useScreenAnimationContext: () => animationContext,
+	useScreenAnimationStore: <T,>(selector: (value: typeof animationContext) => T) =>
+		selector(animationContext),
 }));
 
 let createTransitionAccessor: typeof TransitionAccessorModule.createTransitionAccessor;

@@ -236,12 +236,11 @@ describe("pan activation decision", () => {
 		expect(decision.nextActivationState).toBe(GestureActivationState.PASSED);
 	});
 
-	it("fails while an active child claim shadows the detected direction", () => {
+	it("fails while a child claim shadows the detected direction", () => {
 		const childDirectionClaims = {
 			...NO_DIRECTION_CLAIMS,
 			vertical: {
 				routeKey: "child",
-				isDismissing: shared(0),
 			},
 		} satisfies DirectionClaimMap;
 

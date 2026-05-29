@@ -16,7 +16,17 @@ const { createManagedStackController } = await import(
 	"../providers/stack/helpers/managed-stack-state/managed-stack-controller"
 );
 
+const CHILD_STATE = Symbol("CHILD_STATE");
+
 const createRoute = (key: string): BaseStackRoute => ({ key, name: key });
+
+const setRouteChildState = (route: BaseStackRoute, state: unknown) => {
+	Object.defineProperty(route, CHILD_STATE, {
+		configurable: true,
+		enumerable: false,
+		value: state,
+	});
+};
 
 const createNavigation = (): BaseStackNavigation & { actions: any[] } => {
 	const actions: any[] = [];
@@ -351,6 +361,172 @@ describe("createManagedStackController", () => {
 		expect(afterRemovalScenes[0]).toBe(softCloseScenes[0]);
 		expect(afterRemovalScenes[1]).not.toBe(softCloseScenes[1]);
 		expect(afterRemovalScenes[2]).not.toBe(softCloseScenes[2]);
+	});
+
+	it("skips state updates for fresh equivalent route descriptors", () => {
+		const navigation = createNavigation();
+		const routeA = createRoute("a");
+		const routeB = createRoute("b");
+		const routeC = createRoute("c");
+		const options = {
+			gestureEnabled: true,
+		} as BaseStackDescriptor["options"];
+		const controller = createManagedStackController(
+			createProps(
+				[routeA, routeB, routeC],
+				{
+					a: createDescriptor(routeA, navigation, options),
+					b: createDescriptor(routeB, navigation, options),
+					c: createDescriptor(routeC, navigation, options),
+				},
+				navigation,
+			),
+		);
+
+		const beforeState = controller.getSnapshot().state;
+		const freshRouteA = createRoute("a");
+		const freshRouteB = createRoute("b");
+		const freshRouteC = createRoute("c");
+
+		controller.update(
+			createProps(
+				[freshRouteA, freshRouteB, freshRouteC],
+				{
+					a: createDescriptor(freshRouteA, navigation, options),
+					b: createDescriptor(freshRouteB, navigation, options),
+					c: createDescriptor(freshRouteC, navigation, options),
+				},
+				navigation,
+			),
+		);
+
+		const afterState = controller.getSnapshot().state;
+		expect(afterState).toBe(beforeState);
+		expect(afterState.sourceDescriptors).toBe(beforeState.sourceDescriptors);
+		expect(afterState.scenes).toBe(beforeState.scenes);
+	});
+
+	it("updates scenes when a cached route child state changes", () => {
+		const navigation = createNavigation();
+		const routeA = createRoute("a");
+		const routeB = createRoute("b");
+		const routeC = createRoute("c");
+		const options = {
+			gestureEnabled: true,
+		} as BaseStackDescriptor["options"];
+		const initialChildState = {
+			index: 0,
+			routes: [{ key: "index", name: "index" }],
+		};
+		const nextChildState = {
+			index: 1,
+			routes: [
+				{ key: "index", name: "index" },
+				{ key: "style-id", name: "style-id" },
+			],
+		};
+
+		setRouteChildState(routeC, initialChildState);
+
+		const controller = createManagedStackController(
+			createProps(
+				[routeA, routeB, routeC],
+				{
+					a: createDescriptor(routeA, navigation, options),
+					b: createDescriptor(routeB, navigation, options),
+					c: createDescriptor(routeC, navigation, options),
+				},
+				navigation,
+			),
+		);
+
+		const beforeState = controller.getSnapshot().state;
+
+		setRouteChildState(routeC, nextChildState);
+
+		controller.update(
+			createProps(
+				[routeA, routeB, routeC],
+				{
+					a: createDescriptor(routeA, navigation, options),
+					b: createDescriptor(routeB, navigation, options),
+					c: createDescriptor(routeC, navigation, options),
+				},
+				navigation,
+			),
+		);
+
+		const afterState = controller.getSnapshot().state;
+		expect(afterState).not.toBe(beforeState);
+		expect(afterState.routeChildStates.c).toBe(nextChildState);
+		expect(afterState.scenes[2]).not.toBe(beforeState.scenes[2]);
+	});
+
+	it("preserves unaffected scenes when removal receives fresh equivalent descriptors", () => {
+		const navigation = createNavigation();
+		const routeA = createRoute("a");
+		const routeB = createRoute("b");
+		const routeC = createRoute("c");
+		const routeD = createRoute("d");
+		const descriptorA = createDescriptor(routeA, navigation, {
+			gestureEnabled: true,
+		} as BaseStackDescriptor["options"]);
+		const descriptorB = createDescriptor(routeB, navigation, {
+			gestureEnabled: true,
+		} as BaseStackDescriptor["options"]);
+		const descriptorC = createDescriptor(routeC, navigation, {
+			gestureEnabled: true,
+		} as BaseStackDescriptor["options"]);
+		const descriptorD = createDescriptor(routeD, navigation, {
+			gestureEnabled: true,
+		} as BaseStackDescriptor["options"]);
+		const controller = createManagedStackController(
+			createProps(
+				[routeA, routeB, routeC, routeD],
+				{
+					a: descriptorA,
+					b: descriptorB,
+					c: descriptorC,
+					d: descriptorD,
+				},
+				navigation,
+			),
+		);
+
+		expect(controller.requestDismiss({ route: routeD })).toBe(true);
+		const softCloseState = controller.getSnapshot().state;
+		const freshRouteA = createRoute("a");
+		const freshRouteB = createRoute("b");
+		const freshRouteC = createRoute("c");
+
+		controller.update(
+			createProps(
+				[freshRouteA, freshRouteB, freshRouteC],
+				{
+					a: createDescriptor(freshRouteA, navigation, {
+						gestureEnabled: true,
+					} as BaseStackDescriptor["options"]),
+					b: createDescriptor(freshRouteB, navigation, {
+						gestureEnabled: true,
+					} as BaseStackDescriptor["options"]),
+					c: createDescriptor(freshRouteC, navigation, {
+						gestureEnabled: true,
+					} as BaseStackDescriptor["options"]),
+				},
+				navigation,
+			),
+		);
+
+		const afterRemovalState = controller.getSnapshot().state;
+		expect(afterRemovalState.scenes[0]).toBe(softCloseState.scenes[0]);
+		expect(afterRemovalState.scenes[1]).not.toBe(softCloseState.scenes[1]);
+		expect(afterRemovalState.scenes[2]).not.toBe(softCloseState.scenes[2]);
+		expect(afterRemovalState.sourceDescriptors.a).toBe(
+			softCloseState.sourceDescriptors.a,
+		);
+		expect(afterRemovalState.scenes[0]?.route).toBe(
+			softCloseState.scenes[0]?.route,
+		);
 	});
 
 	it("accepts only the closing routes React Navigation just removed", () => {

@@ -3,7 +3,7 @@ import type {
 	ScreenInterpolationProps,
 	ScreenTransitionTarget,
 } from "../../../types/animation.types";
-import { useScreenAnimationContext } from "./animation.provider";
+import { useScreenAnimationStore } from "./animation.provider";
 import { useBuildTransitionAccessor } from "./helpers/accessors/use-build-transition-accessor";
 import type {
 	ScreenAnimationDescendantSources,
@@ -34,11 +34,15 @@ export function useScreenAnimation(
 ):
 	| DerivedValue<ScreenInterpolationProps>
 	| DerivedValue<ScreenInterpolationProps | null> {
-	const {
-		screenInterpolatorPropsRevision,
-		ancestorScreenAnimationSources,
-		descendantScreenAnimationSources,
-	} = useScreenAnimationContext();
+	const screenInterpolatorPropsRevision = useScreenAnimationStore(
+		(store) => store.screenInterpolatorPropsRevision,
+	);
+	const ancestorScreenAnimationSources = useScreenAnimationStore(
+		(store) => store.ancestorScreenAnimationSources,
+	);
+	const descendantScreenAnimationSources = useScreenAnimationStore(
+		(store) => store.descendantScreenAnimationSources,
+	);
 	const transition = useBuildTransitionAccessor();
 	const transitionTarget = normalizeScreenAnimationTarget(
 		target,

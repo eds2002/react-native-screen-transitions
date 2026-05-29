@@ -1,4 +1,4 @@
-import { type ReactNode, useContext } from "react";
+import { type ReactNode, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import Animated, { type SharedValue } from "react-native-reanimated";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
@@ -20,26 +20,29 @@ type ScreenStylesContextValue = {
 export const {
 	ScreenStylesProvider,
 	ScreenStylesContext,
-	useScreenStylesContext: useScreenStyles,
+	useScreenStylesContext,
+	useScreenStylesStore,
+	useScreenStylesOptionalStore,
 } = createProvider("ScreenStyles", {
 	guarded: true,
 })<Props, ScreenStylesContextValue>(({ children, isFloatingOverlay }) => {
-	const parentContext = useContext(ScreenStylesContext);
+	const ancestorStylesMap = useScreenStylesOptionalStore(
+		(parent) => parent?.stylesMap,
+	);
 
 	const rawStylesMaps = useInterpolatedStylesMap();
 
 	const stylesMap = useResolvedStylesMap({
 		localStylesMaps: rawStylesMaps,
-		ancestorStylesMap: parentContext?.stylesMap,
+		ancestorStylesMap,
 	});
 
 	const { animatedStyle, animatedProps } =
 		useMaybeBlockVisibility(isFloatingOverlay);
+	const value = useMemo(() => ({ stylesMap }), [stylesMap]);
 
 	return {
-		value: {
-			stylesMap,
-		},
+		value,
 		children: (
 			<MaybeFloatingContainer isFloatingOverlay={isFloatingOverlay}>
 				<Animated.View
@@ -56,3 +59,5 @@ export const {
 const styles = StyleSheet.create({
 	container: { flex: 1 },
 });
+
+export const useScreenStyles = useScreenStylesContext;

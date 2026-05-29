@@ -13,8 +13,8 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../constants";
-import { useDescriptorDerivations } from "../../providers/screen/descriptors";
-import { useScreenStyles } from "../../providers/screen/styles";
+import { useDescriptorsStore } from "../../providers/screen/descriptors";
+import { useScreenStylesStore } from "../../providers/screen/styles";
 import { createPendingPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
@@ -63,13 +63,21 @@ export function createBoundaryComponent<P extends object>(
 		const linkId = String(id);
 		const entryTag = group ? `${group}:${linkId}` : linkId;
 
-		const {
-			previousScreenKey: preferredSourceScreenKey,
-			currentScreenKey,
-			nextScreenKey,
-			ancestorKeys,
-			hasConfiguredInterpolator,
-		} = useDescriptorDerivations();
+		const preferredSourceScreenKey = useDescriptorsStore(
+			(store) => store.derivations.previousScreenKey,
+		);
+		const currentScreenKey = useDescriptorsStore(
+			(store) => store.derivations.currentScreenKey,
+		);
+		const nextScreenKey = useDescriptorsStore(
+			(store) => store.derivations.nextScreenKey,
+		);
+		const ancestorKeys = useDescriptorsStore(
+			(store) => store.derivations.ancestorKeys,
+		);
+		const hasConfiguredInterpolator = useDescriptorsStore(
+			(store) => store.derivations.hasConfiguredInterpolator,
+		);
 
 		const runtimeEnabled = enabled && hasConfiguredInterpolator;
 		const hasNextScreen = !!nextScreenKey;
@@ -95,7 +103,7 @@ export function createBoundaryComponent<P extends object>(
 			() => prepareStyleForBounds(style),
 			[style],
 		);
-		const { stylesMap } = useScreenStyles();
+		const stylesMap = useScreenStylesStore((store) => store.stylesMap);
 
 		const associatedStyles = useAnimatedStyle(() => {
 			"worklet";

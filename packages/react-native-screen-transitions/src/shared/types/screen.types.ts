@@ -85,17 +85,6 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * </Transition.View>
 	 */
 	sharedBoundTag?: string;
-
-	/**
-	 * Re-measures this component when the screen regains focus and updates
-	 * any matching shared-bound source link in place.
-	 *
-	 * Useful when layout can change while unfocused (for example, programmatic
-	 * ScrollView/FlatList scrolling triggered from another screen).
-	 *
-	 * @default false
-	 */
-	remeasureOnFocus?: boolean;
 };
 
 export type ScreenTransitionConfig = {

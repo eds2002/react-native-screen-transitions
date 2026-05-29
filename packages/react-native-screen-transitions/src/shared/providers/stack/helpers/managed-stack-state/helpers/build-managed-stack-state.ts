@@ -8,7 +8,13 @@ import type {
 } from "../../../../../types/stack.types";
 import { resolveSceneNeighbors } from "../../../../../utils/navigation/resolve-scene-neighbors";
 import { isOverlayVisible } from "../../../../../utils/overlay/visibility";
-import { areDescriptorsEqual, setsAreEqual } from "./helpers";
+import {
+	areDescriptorSourcesEquivalent,
+	areDescriptorsEqual,
+	areRouteChildStateMapsEqual,
+	getRouteChildState,
+	setsAreEqual,
+} from "./helpers";
 import type {
 	LocalRoutesState,
 	ManagedDescriptorSources,
@@ -33,6 +39,29 @@ const areRouteKeysEqual = (a: string[], b: string[]): boolean => {
 	if (a.length !== b.length) return false;
 
 	return a.every((key, index) => key === b[index]);
+};
+
+const resolveStableDescriptorSource = <
+	TDescriptor extends BaseStackDescriptor,
+>({
+	routeKey,
+	sourceDescriptor,
+	previousState,
+}: {
+	routeKey: string;
+	sourceDescriptor: StackDescriptorSource<TDescriptor>;
+	previousState?: LocalRoutesState<TDescriptor>;
+}): StackDescriptorSource<TDescriptor> => {
+	const previousSourceDescriptor = previousState?.sourceDescriptors[routeKey];
+
+	if (
+		previousSourceDescriptor &&
+		areDescriptorSourcesEquivalent(previousSourceDescriptor, sourceDescriptor)
+	) {
+		return previousSourceDescriptor;
+	}
+
+	return sourceDescriptor;
 };
 
 const getSceneActivity = ({
@@ -126,19 +155,34 @@ const buildBaseScenes = <
 }) => {
 	const routeKeys: string[] = [];
 	const scenes: BaseStackScene<TDescriptor>[] = [];
+	const routeChildStates: Record<string, unknown> = {};
+	const sourceDescriptors = {} as ManagedDescriptorSources<TDescriptor>;
 	const managedDescriptors = {} as ManagedDescriptors<TDescriptor>;
 	let shouldShowFloatOverlay = false;
 
 	for (let sceneIndex = 0; sceneIndex < routes.length; sceneIndex++) {
 		const route = routes[sceneIndex] as TDescriptor["route"];
 
-		const sourceDescriptor = descriptors[route.key] as
+		const rawSourceDescriptor = descriptors[route.key] as
 			| StackDescriptorSource<TDescriptor>
 			| undefined;
 
-		if (!sourceDescriptor) {
+		if (!rawSourceDescriptor) {
 			throw new Error(`Missing descriptor for route "${route.key}"`);
 		}
+
+		const routeChildState = getRouteChildState(route);
+		const childStateUnchanged =
+			!previousState ||
+			Object.is(previousState.routeChildStates[route.key], routeChildState);
+
+		const sourceDescriptor = childStateUnchanged
+			? resolveStableDescriptorSource({
+					routeKey: route.key,
+					sourceDescriptor: rawSourceDescriptor,
+					previousState,
+				})
+			: rawSourceDescriptor;
 
 		const activity = getSceneActivity({
 			...activityWindow,
@@ -149,6 +193,7 @@ const buildBaseScenes = <
 		const previousDescriptor = previousState?.descriptors[route.key];
 		const descriptor =
 			previousDescriptor &&
+			childStateUnchanged &&
 			previousDescriptor.route === sourceDescriptor.route &&
 			previousDescriptor.navigation === sourceDescriptor.navigation &&
 			previousDescriptor.options === sourceDescriptor.options &&
@@ -157,6 +202,8 @@ const buildBaseScenes = <
 				: withDescriptorActivityState(sourceDescriptor, activity);
 
 		routeKeys.push(route.key);
+		routeChildStates[route.key] = routeChildState;
+		sourceDescriptors[route.key] = sourceDescriptor;
 		managedDescriptors[route.key] = descriptor;
 
 		if (!shouldShowFloatOverlay) {
@@ -164,13 +211,15 @@ const buildBaseScenes = <
 		}
 
 		scenes.push({
-			route,
+			route: descriptor.route,
 			descriptor,
 		});
 	}
 
 	return {
 		scenes,
+		routeChildStates,
+		sourceDescriptors,
 		descriptors: managedDescriptors,
 		routeKeys,
 		shouldShowFloatOverlay,
@@ -256,9 +305,13 @@ export const buildManagedStackState = <
 	params: BuildManagedStackStateParams<TDescriptor, TNavigation>,
 ): LocalRoutesState<TDescriptor> => {
 	const activityWindow = getSceneActivityWindow(params);
+	const focusedRouteKey =
+		params.props.state.routes[params.props.state.index]?.key;
 
 	const {
 		scenes: baseScenes,
+		routeChildStates,
+		sourceDescriptors,
 		descriptors: managedDescriptors,
 		routeKeys,
 		shouldShowFloatOverlay,
@@ -269,7 +322,7 @@ export const buildManagedStackState = <
 
 	const scenes = withSceneRelationships({
 		scenes: baseScenes,
-		sourceDescriptors: params.descriptors,
+		sourceDescriptors,
 		closingRouteKeys: params.closingRouteKeys,
 		previousState: params.previousState,
 	});
@@ -285,7 +338,23 @@ export const buildManagedStackState = <
 			areDescriptorsEqual(params.previousState.descriptors, managedDescriptors)
 				? params.previousState.descriptors
 				: managedDescriptors,
-		sourceDescriptors: params.descriptors,
+		sourceDescriptors:
+			params.previousState &&
+			areDescriptorsEqual(
+				params.previousState.sourceDescriptors,
+				sourceDescriptors,
+			)
+				? params.previousState.sourceDescriptors
+				: sourceDescriptors,
+		focusedRouteKey,
+		routeChildStates:
+			params.previousState &&
+			areRouteChildStateMapsEqual(
+				params.previousState.routeChildStates,
+				routeChildStates,
+			)
+				? params.previousState.routeChildStates
+				: routeChildStates,
 		scenes,
 		routeKeys:
 			params.previousState &&

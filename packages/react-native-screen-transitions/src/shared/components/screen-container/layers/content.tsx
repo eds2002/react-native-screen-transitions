@@ -7,9 +7,9 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
-import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useGestureContext } from "../../../providers/screen/gestures";
-import { useScreenStyles } from "../../../providers/screen/styles";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { useScreenGestureStore } from "../../../providers/screen/gestures";
+import { useScreenStylesStore } from "../../../providers/screen/styles";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
 import { SurfaceContainer } from "./surface-container";
@@ -22,10 +22,12 @@ type Props = {
 
 export const ContentLayer = memo(
 	({ children, pointerEvents, isBackdropActive }: Props) => {
-		const { stylesMap } = useScreenStyles();
-		const { current } = useDescriptors();
+		const stylesMap = useScreenStylesStore((store) => store.stylesMap);
+		const current = useDescriptorsStore((store) => store.descriptors.current);
 
-		const gestureContext = useGestureContext();
+		const detectorGesture = useScreenGestureStore(
+			(context) => context?.detectorGesture,
+		);
 		const isNavigationMaskEnabled = !!current.options.navigationMaskEnabled;
 		const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
 
@@ -45,7 +47,7 @@ export const ContentLayer = memo(
 		});
 
 		return (
-			<GestureDetector gesture={gestureContext!.detectorGesture}>
+			<GestureDetector gesture={detectorGesture!}>
 				<Animated.View
 					style={[styles.content, animatedContentStyle]}
 					animatedProps={animatedContentProps}

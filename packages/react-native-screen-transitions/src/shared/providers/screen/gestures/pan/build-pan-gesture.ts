@@ -2,7 +2,7 @@ import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
-import { useScreenOptionsContext } from "../../options";
+import { useScreenOptionsStore } from "../../options";
 import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
@@ -27,7 +27,7 @@ export const useBuildPanGesture = ({
 }: BuildPanGestureHookProps): PanGesture => {
 	const dimensions = useWindowDimensions();
 	const { participation, pan: policy } = gestureConfig;
-	const screenOptions = useScreenOptionsContext();
+	const screenOptions = useScreenOptionsStore((store) => store);
 
 	const { gestureProgressBaseline, lockedSnapPoint } =
 		useGestureBuilderState(participation);

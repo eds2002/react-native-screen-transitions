@@ -51,7 +51,6 @@ export type {
 
 export type DirectionClaim = {
 	routeKey: string;
-	isDismissing: SharedValue<number>;
 } | null;
 
 export type DirectionClaimMap = {

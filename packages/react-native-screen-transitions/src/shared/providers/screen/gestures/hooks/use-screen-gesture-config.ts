@@ -1,16 +1,18 @@
 import { useMemo } from "react";
-import { useDescriptorDerivations, useDescriptors } from "../../descriptors";
-import { useGestureContext } from "../gestures.provider";
+import { useDescriptorsStore } from "../../descriptors";
+import { useScreenGestureStore } from "../gestures.provider";
 import { resolveScreenGestureConfig } from "../shared/policy";
 import type { ScreenGestureConfig } from "../types";
 
 export function useScreenGestureConfig(): ScreenGestureConfig {
-	const gestureContext = useGestureContext();
-	const {
-		current: { options },
-	} = useDescriptors();
+	const gestureContext = useScreenGestureStore();
+	const options = useDescriptorsStore(
+		(store) => store.descriptors.current.options,
+	);
 
-	const { isFirstKey } = useDescriptorDerivations();
+	const isFirstKey = useDescriptorsStore(
+		(store) => store.derivations.isFirstKey,
+	);
 
 	return useMemo(
 		() =>

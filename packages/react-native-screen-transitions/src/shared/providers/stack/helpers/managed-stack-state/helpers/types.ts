@@ -20,6 +20,8 @@ export type LocalRoutesState<TDescriptor extends BaseStackDescriptor> = {
 	routes: ManagedRoutes<TDescriptor>;
 	descriptors: ManagedDescriptors<TDescriptor>;
 	sourceDescriptors: ManagedDescriptorSources<TDescriptor>;
+	focusedRouteKey?: string;
+	routeChildStates: Record<string, unknown>;
 	scenes: BaseStackScene<TDescriptor>[];
 	routeKeys: string[];
 	shouldShowFloatOverlay: boolean;

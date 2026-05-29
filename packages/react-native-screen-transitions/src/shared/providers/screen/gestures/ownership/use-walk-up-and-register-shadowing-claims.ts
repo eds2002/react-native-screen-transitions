@@ -1,12 +1,11 @@
 import { useEffect, useMemo } from "react";
-import { GestureStore } from "../../../../stores/gesture.store";
 import {
 	type ClaimedDirections,
 	DIRECTIONS,
 	type Direction,
 } from "../../../../types/ownership.types";
-import { useDescriptorDerivations } from "../../../screen/descriptors";
-import { useGestureContext } from "../gestures.provider";
+import { useDescriptorsStore } from "../../../screen/descriptors";
+import { useScreenGestureStore } from "../gestures.provider";
 import { walkGestureAncestors } from "../shared/ancestors";
 import type { GestureContextType } from "../types";
 
@@ -59,12 +58,10 @@ const registerShadowingClaims = (
 	shadowedAncestors: ShadowedAncestor[],
 	currentScreenKey: string,
 ) => {
-	const isDismissing = GestureStore.getValue(currentScreenKey, "dismissing");
-
 	for (const { ancestor, directions } of shadowedAncestors) {
 		const newClaims = { ...ancestor.childDirectionClaims.get() };
 		for (const dir of directions) {
-			newClaims[dir] = { routeKey: currentScreenKey, isDismissing };
+			newClaims[dir] = { routeKey: currentScreenKey };
 		}
 		ancestor.childDirectionClaims.set(newClaims);
 	}
@@ -107,8 +104,13 @@ const clearShadowingClaims = (
 export function useWalkUpAndRegisterShadowingClaims(
 	claimedDirections: ClaimedDirections,
 ): void {
-	const parentContext = useGestureContext();
-	const { isTopMostScreen, currentScreenKey } = useDescriptorDerivations();
+	const parentContext = useScreenGestureStore();
+	const isTopMostScreen = useDescriptorsStore(
+		(store) => store.derivations.isTopMostScreen,
+	);
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
 
 	const shadowedAncestors = useMemo(
 		() => findShadowedAncestors(parentContext, claimedDirections),

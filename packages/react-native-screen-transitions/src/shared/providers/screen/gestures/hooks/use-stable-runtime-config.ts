@@ -3,7 +3,7 @@ import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { SystemStore } from "../../../../stores/system.store";
-import { useDescriptorDerivations } from "../../descriptors";
+import { useDescriptorsStore } from "../../descriptors";
 import type { GesturePolicy, GestureRuntime } from "../types";
 
 type RuntimeConfigInput<TPolicy extends GesturePolicy> = Omit<
@@ -14,7 +14,9 @@ type RuntimeConfigInput<TPolicy extends GesturePolicy> = Omit<
 export function useStableRuntimeConfig<TPolicy extends GesturePolicy>(
 	runtimeConfigInput: RuntimeConfigInput<TPolicy>,
 ): SharedValue<GestureRuntime<TPolicy>> {
-	const { currentScreenKey } = useDescriptorDerivations();
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
 	const { participation, policy, gestureProgressBaseline, lockedSnapPoint } =
 		runtimeConfigInput;
 

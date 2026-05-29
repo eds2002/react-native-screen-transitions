@@ -3,7 +3,7 @@ import { useCallback, useMemo } from "react";
 import { snapDescriptorToIndex } from "../../animation/snap-to";
 import {
 	type BaseDescriptor,
-	useDescriptors,
+	useDescriptorsStore,
 } from "../../providers/screen/descriptors";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
@@ -67,7 +67,9 @@ export function useScreenState<
 	const scenes = useStack((stack) => stack.scenes);
 	const routeKeys = useStack((stack) => stack.routeKeys);
 	const focusedIndex = useStack((stack) => stack.focusedIndex);
-	const { current } = useDescriptors<BaseDescriptor>();
+	const current = useDescriptorsStore(
+		(store) => store.descriptors.current as BaseDescriptor,
+	);
 
 	const index = useMemo(
 		() => routeKeys.indexOf(current.route.key),

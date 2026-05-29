@@ -6,11 +6,13 @@ import {
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { SystemStore } from "../../../../stores/system.store";
-import { useDescriptorDerivations } from "../../descriptors";
+import { useDescriptorsStore } from "../../descriptors";
 import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
-	const { currentScreenKey } = useDescriptorDerivations();
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
 	const { entering, progress } = AnimationStore.getBag(currentScreenKey);
 
 	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =

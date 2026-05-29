@@ -1,35 +1,9 @@
 import { describe, expect, it } from "bun:test";
-import type { SharedValue } from "react-native-reanimated";
 import type {
 	DirectionClaim,
 	DirectionClaimMap,
 } from "../../../providers/screen/gestures";
 import { shouldDeferToChildClaim } from "../../../providers/screen/gestures/ownership/resolve-ownership";
-
-/**
- * Mock SharedValue for testing - mimics Reanimated's SharedValue interface
- */
-function mockSharedValue<T>(initial: T): SharedValue<T> {
-	let current = initial;
-	return {
-		get: () => current,
-		set: (next: T | ((prev: T) => T)) => {
-			current =
-				typeof next === "function"
-					? (next as (prev: T) => T)(current)
-					: next;
-		},
-		get value() {
-			return current;
-		},
-		set value(next: T) {
-			current = next;
-		},
-		addListener: () => -1,
-		removeListener: () => {},
-		modify: () => {},
-	} as unknown as SharedValue<T>;
-}
 
 describe("Child Direction Claims", () => {
 	describe("shouldDeferToChildClaim", () => {
@@ -44,46 +18,17 @@ describe("Child Direction Claims", () => {
 		it("returns false when claim is from self (same routeKey)", () => {
 			const claim: DirectionClaim = {
 				routeKey: selfRouteKey,
-				isDismissing: mockSharedValue(0),
 			};
 			const result = shouldDeferToChildClaim(claim, selfRouteKey);
 			expect(result).toBe(false);
 		});
 
-		it("returns true when child has active claim (not dismissing)", () => {
+		it("returns true when child has a claim", () => {
 			const claim: DirectionClaim = {
 				routeKey: childRouteKey,
-				isDismissing: mockSharedValue(0), // 0 = not dismissing
 			};
 			const result = shouldDeferToChildClaim(claim, selfRouteKey);
 			expect(result).toBe(true);
-		});
-
-		it("returns false when child is dismissing (isDismissing = 1)", () => {
-			const claim: DirectionClaim = {
-				routeKey: childRouteKey,
-				isDismissing: mockSharedValue(1), // 1 = dismissing
-			};
-			const result = shouldDeferToChildClaim(claim, selfRouteKey);
-			expect(result).toBe(false);
-		});
-
-		it("allows parent to activate when child starts dismissing", () => {
-			// Simulate: child claimed direction, then started dismissing
-			const isDismissing = mockSharedValue(0);
-			const claim: DirectionClaim = {
-				routeKey: childRouteKey,
-				isDismissing,
-			};
-
-			// Initially, parent should defer
-			expect(shouldDeferToChildClaim(claim, selfRouteKey)).toBe(true);
-
-			// Child starts dismissing
-			isDismissing.set(1);
-
-			// Now parent should NOT defer (can activate)
-			expect(shouldDeferToChildClaim(claim, selfRouteKey)).toBe(false);
 		});
 	});
 
@@ -95,11 +40,9 @@ describe("Child Direction Claims", () => {
 			const claims: DirectionClaimMap = {
 				vertical: {
 					routeKey: childRouteKey,
-					isDismissing: mockSharedValue(0),
 				},
 				"vertical-inverted": {
 					routeKey: childRouteKey,
-					isDismissing: mockSharedValue(0),
 				},
 				horizontal: null, // No claim on horizontal
 				"horizontal-inverted": null,
@@ -121,10 +64,9 @@ describe("Child Direction Claims", () => {
 
 		it("handles snap sheet claiming both directions on axis", () => {
 			// Snap sheet claims both vertical and vertical-inverted
-			const isDismissing = mockSharedValue(0);
 			const claims: DirectionClaimMap = {
-				vertical: { routeKey: childRouteKey, isDismissing },
-				"vertical-inverted": { routeKey: childRouteKey, isDismissing },
+				vertical: { routeKey: childRouteKey },
+				"vertical-inverted": { routeKey: childRouteKey },
 				horizontal: null,
 				"horizontal-inverted": null,
 			};
@@ -134,15 +76,6 @@ describe("Child Direction Claims", () => {
 			expect(
 				shouldDeferToChildClaim(claims["vertical-inverted"], selfRouteKey),
 			).toBe(true);
-
-			// When child starts dismissing, parent can take over BOTH directions
-			isDismissing.set(1);
-			expect(shouldDeferToChildClaim(claims.vertical, selfRouteKey)).toBe(
-				false,
-			);
-			expect(
-				shouldDeferToChildClaim(claims["vertical-inverted"], selfRouteKey),
-			).toBe(false);
 		});
 
 		it("handles multiple children claiming different directions", () => {
@@ -152,12 +85,10 @@ describe("Child Direction Claims", () => {
 			const claims: DirectionClaimMap = {
 				vertical: {
 					routeKey: child1RouteKey,
-					isDismissing: mockSharedValue(0),
 				},
 				"vertical-inverted": null,
 				horizontal: {
 					routeKey: child2RouteKey,
-					isDismissing: mockSharedValue(1), // This one is dismissing
 				},
 				"horizontal-inverted": null,
 			};
@@ -165,9 +96,9 @@ describe("Child Direction Claims", () => {
 			// Should defer for vertical (child1 claimed, not dismissing)
 			expect(shouldDeferToChildClaim(claims.vertical, selfRouteKey)).toBe(true);
 
-			// Should NOT defer for horizontal (child2 is dismissing)
+			// Should defer for horizontal until child2 clears its claim
 			expect(shouldDeferToChildClaim(claims.horizontal, selfRouteKey)).toBe(
-				false,
+				true,
 			);
 		});
 	});
@@ -181,18 +112,17 @@ describe("Child Direction Claims", () => {
 		 *     Child        <- gesture: vertical (shadows parent)
 		 *
 		 * 1. User opens Child (Child claims vertical on Parent)
-		 * 2. User swipes down on Child to dismiss
+		 * 2. User swipes down on Child to dismiss; Child keeps its claim
 		 * 3. While Child is animating out, user swipes down on Parent
-		 * 4. Parent should be able to activate (Child's claim is ignored)
+		 * 4. Parent should keep deferring until Child clears its claim on unmount
 		 */
-		it("parent can activate while shadowing child is dismissing", () => {
+		it("parent stays blocked while shadowing child is dismissing", () => {
 			const parentRouteKey = "parent";
 			const childRouteKey = "child";
 
 			// Child registers claim on parent when mounted
-			const childIsDismissing = mockSharedValue(0);
 			const parentChildClaims: DirectionClaimMap = {
-				vertical: { routeKey: childRouteKey, isDismissing: childIsDismissing },
+				vertical: { routeKey: childRouteKey },
 				"vertical-inverted": null,
 				horizontal: null,
 				"horizontal-inverted": null,
@@ -203,13 +133,10 @@ describe("Child Direction Claims", () => {
 				shouldDeferToChildClaim(parentChildClaims.vertical, parentRouteKey),
 			).toBe(true);
 
-			// Step 2: User dismisses child
-			childIsDismissing.set(1);
-
-			// Step 3: Parent should now be able to activate
+			// Steps 2-3: Dismissal does not change ownership; cleanup does.
 			expect(
 				shouldDeferToChildClaim(parentChildClaims.vertical, parentRouteKey),
-			).toBe(false);
+			).toBe(true);
 		});
 	});
 
@@ -229,7 +156,6 @@ describe("Child Direction Claims", () => {
 			// Child 1 mounts and claims
 			claims.vertical = {
 				routeKey: child1RouteKey,
-				isDismissing: mockSharedValue(0),
 			};
 			expect(shouldDeferToChildClaim(claims.vertical, parentRouteKey)).toBe(
 				true,
@@ -238,16 +164,9 @@ describe("Child Direction Claims", () => {
 			// Child 1 unmounts, child 2 mounts and claims
 			claims.vertical = {
 				routeKey: child2RouteKey,
-				isDismissing: mockSharedValue(0),
 			};
 			expect(shouldDeferToChildClaim(claims.vertical, parentRouteKey)).toBe(
 				true,
-			);
-
-			// Child 2 starts dismissing
-			claims.vertical!.isDismissing.set(1);
-			expect(shouldDeferToChildClaim(claims.vertical, parentRouteKey)).toBe(
-				false,
 			);
 		});
 

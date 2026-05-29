@@ -15,7 +15,7 @@ import type {
 	ScreenStyleInterpolator,
 } from "../../../../types/animation.types";
 
-import { useDescriptors } from "../../descriptors";
+import { useDescriptorsStore } from "../../descriptors";
 import { updateDerivations } from "./derivations";
 import { hydrateTransitionState } from "./hydrate-transition-state";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
@@ -61,11 +61,13 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 
-	const {
-		current: currDescriptor,
-		next: nextDescriptor,
-		previous: prevDescriptor,
-	} = useDescriptors();
+	const currDescriptor = useDescriptorsStore(
+		(store) => store.descriptors.current,
+	);
+	const nextDescriptor = useDescriptorsStore((store) => store.descriptors.next);
+	const prevDescriptor = useDescriptorsStore(
+		(store) => store.descriptors.previous,
+	);
 
 	const currentAnimation = useBuildTransitionState(currDescriptor);
 	const nextAnimation = useBuildTransitionState(nextDescriptor);

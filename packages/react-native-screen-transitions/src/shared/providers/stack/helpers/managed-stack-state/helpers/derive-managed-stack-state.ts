@@ -5,7 +5,13 @@ import type {
 	RouteWithKey,
 } from "../../../../../types/stack.types";
 import { buildManagedStackState } from "./build-managed-stack-state";
-import { areDescriptorsEqual, setsAreEqual } from "./helpers";
+import {
+	areDescriptorSourceMapsEquivalent,
+	areDescriptorsEqual,
+	areRouteChildStateMapsEqual,
+	getRouteChildStateMap,
+	setsAreEqual,
+} from "./helpers";
 import { reconcileManagedRoutes } from "./reconcile-managed-routes";
 import type { LocalRoutesState, ManagedRoutes } from "./types";
 
@@ -29,6 +35,15 @@ const routesAreIdentical = <Route extends RouteWithKey>(
 	return a.every((route, index) => route === b[index]);
 };
 
+const routeKeysAreEqual = <Route extends RouteWithKey>(
+	a: Route[],
+	b: Route[],
+): boolean => {
+	if (a.length !== b.length) return false;
+
+	return a.every((route, index) => route.key === b[index]?.key);
+};
+
 export const deriveManagedStackState = <
 	TDescriptor extends BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation,
@@ -43,14 +58,42 @@ export const deriveManagedStackState = <
 >): LocalRoutesState<TDescriptor> => {
 	const nextRoutesSnapshot = props.state.routes;
 	const nextDescriptors = props.descriptors;
+	const nextRouteChildStates = getRouteChildStateMap(nextRoutesSnapshot);
+	const nextFocusedRouteKey = nextRoutesSnapshot[props.state.index]?.key;
+	const focusedRouteUnchanged = current.focusedRouteKey === nextFocusedRouteKey;
+	const closingRouteKeysUnchanged = setsAreEqual(
+		current.closingRouteKeys,
+		closingRouteKeys,
+	);
+	const routeChildStatesUnchanged = areRouteChildStateMapsEqual(
+		current.routeChildStates,
+		nextRouteChildStates,
+	);
 
 	// When committing a soft dismiss, first check whether local state and
 	// React Navigation's latest route/descriptor shape are already aligned.
 	const alreadyAligned =
+		focusedRouteUnchanged &&
+		closingRouteKeysUnchanged &&
+		routeChildStatesUnchanged &&
 		routesAreIdentical(current.routes, nextRoutesSnapshot) &&
 		areDescriptorsEqual(current.sourceDescriptors, nextDescriptors);
 
 	if (alreadyAligned) {
+		return current;
+	}
+
+	const logicallyAligned =
+		focusedRouteUnchanged &&
+		closingRouteKeysUnchanged &&
+		routeChildStatesUnchanged &&
+		routeKeysAreEqual(current.routes, nextRoutesSnapshot) &&
+		areDescriptorSourceMapsEquivalent(
+			current.sourceDescriptors,
+			nextDescriptors,
+		);
+
+	if (logicallyAligned) {
 		return current;
 	}
 

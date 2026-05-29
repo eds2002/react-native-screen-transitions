@@ -8,8 +8,8 @@ import Animated, {
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
-import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useScreenStyles } from "../../../providers/screen/styles";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { useScreenStylesStore } from "../../../providers/screen/styles";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import { SystemStore } from "../../../stores/system.store";
@@ -24,8 +24,8 @@ export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior: BackdropBehavior;
 	isBackdropActive: boolean;
 }) {
-	const { stylesMap } = useScreenStyles();
-	const { current } = useDescriptors();
+	const stylesMap = useScreenStylesStore((store) => store.stylesMap);
+	const current = useDescriptorsStore((store) => store.descriptors.current);
 	const { dismissScreen } = useNavigationHelpers();
 
 	const BackdropComponent = current.options.backdropComponent;

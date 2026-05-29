@@ -1,10 +1,7 @@
 import { useCallback } from "react";
 import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
 import { runOnUI } from "react-native-reanimated";
-import {
-	useDescriptorDerivations,
-	useDescriptors,
-} from "../../../providers/screen/descriptors";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
 import {
 	LifecycleTransitionRequestKind,
@@ -12,8 +9,10 @@ import {
 } from "../../../stores/system.store";
 
 export function useContentLayout() {
-	const { current } = useDescriptors();
-	const { isFirstKey } = useDescriptorDerivations();
+	const current = useDescriptorsStore((store) => store.descriptors.current);
+	const isFirstKey = useDescriptorsStore(
+		(store) => store.derivations.isFirstKey,
+	);
 	const { height: screenHeight } = useWindowDimensions();
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);

@@ -7,14 +7,14 @@ import type {
 	TransitionInterpolatedStyle,
 } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
-import { useScreenAnimationContext } from "../../animation";
+import { useScreenAnimationStore } from "../../animation";
 import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
 import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
 import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selected-interpolator-options";
-import { useDescriptorDerivations } from "../../descriptors";
+import { useDescriptorsStore } from "../../descriptors";
 import {
 	syncScreenOptionsOverrides,
-	useScreenOptionsContext,
+	useScreenOptionsStore,
 } from "../../options";
 import { normalizeSlots } from "../helpers/normalize-slots";
 import { preserveAnimatedPropsOnly } from "../helpers/preserve-animated-props-only";
@@ -129,15 +129,25 @@ const appendLayer = (
  * where higher owner layers override lower owner layers per key.
  */
 export const useInterpolatedStylesMap = () => {
-	const { currentScreenKey } = useDescriptorDerivations();
-	const screenOptions = useScreenOptionsContext();
-	const {
-		screenInterpolatorProps,
-		screenInterpolatorPropsRevision,
-		selectedInterpolatorOptions,
-		nextInterpolator,
-		currentInterpolator,
-	} = useScreenAnimationContext();
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const screenOptions = useScreenOptionsStore((store) => store);
+	const screenInterpolatorProps = useScreenAnimationStore(
+		(store) => store.screenInterpolatorProps,
+	);
+	const screenInterpolatorPropsRevision = useScreenAnimationStore(
+		(store) => store.screenInterpolatorPropsRevision,
+	);
+	const selectedInterpolatorOptions = useScreenAnimationStore(
+		(store) => store.selectedInterpolatorOptions,
+	);
+	const nextInterpolator = useScreenAnimationStore(
+		(store) => store.nextInterpolator,
+	);
+	const currentInterpolator = useScreenAnimationStore(
+		(store) => store.currentInterpolator,
+	);
 	const boundsAccessor = useBuildBoundsAccessor();
 	const pendingLifecycleStartBlockCount = SystemStore.getValue(
 		currentScreenKey,

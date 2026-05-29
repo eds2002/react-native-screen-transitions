@@ -9,7 +9,7 @@ import {
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import { AnimationStore } from "../../../../stores/animation.store";
-import { useGestureContext } from "../gestures.provider";
+import { useScreenGestureStore } from "../gestures.provider";
 import type {
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
@@ -53,7 +53,7 @@ const modifyScrollGestureAxisState = (
 export const useScrollGestureCoordination = (
 	props: ScrollGestureCoordinationProps,
 ) => {
-	const context = useGestureContext();
+	const context = useScreenGestureStore();
 	const scrollDirection = props.direction ?? "vertical";
 
 	const { scrollStates, panGestures, pinchGestures, ownerRouteKeys } = useMemo(

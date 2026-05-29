@@ -5,7 +5,7 @@ import {
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
-import { useScreenAnimationContext } from "../../animation";
+import { useScreenAnimationStore } from "../../animation";
 import {
 	type LocalStyleLayers,
 	type ResettableStyleStatesBySlot,
@@ -22,8 +22,12 @@ export const useResolvedStylesMap = ({
 	localStylesMaps,
 	ancestorStylesMap,
 }: UseResolvedStylesMapParams) => {
-	const { screenInterpolatorProps, screenInterpolatorPropsRevision } =
-		useScreenAnimationContext();
+	const screenInterpolatorProps = useScreenAnimationStore(
+		(store) => store.screenInterpolatorProps,
+	);
+	const screenInterpolatorPropsRevision = useScreenAnimationStore(
+		(store) => store.screenInterpolatorPropsRevision,
+	);
 	const previousStyleStatesBySlot = useSharedValue<ResettableStyleStatesBySlot>(
 		{},
 	);
