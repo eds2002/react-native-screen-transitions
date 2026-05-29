@@ -1,4 +1,4 @@
-import { runOnUI } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import { AnimationStore } from "../stores/animation.store";
 import type { HistoryEntry } from "../stores/history.store";
 import { SystemStore } from "../stores/system.store";
@@ -50,7 +50,7 @@ export function snapDescriptorToIndex(
 		"targetProgress",
 	);
 
-	runOnUI(() => {
+	scheduleOnUI(() => {
 		"worklet";
 		const currentProgress = animations.progress.get();
 
@@ -63,7 +63,7 @@ export function snapDescriptorToIndex(
 				targetProgress < currentProgress ? "collapse" : "expand",
 			),
 		});
-	})();
+	});
 
 	return true;
 }

@@ -1,4 +1,4 @@
-import { runOnUI } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { clear } from "../../../../stores/bounds/internals/clear";
 import { GestureStore } from "../../../../stores/gesture.store";
@@ -11,5 +11,5 @@ export function resetStoresForScreen(routeKey: string) {
 	ScrollStore.clearBag(routeKey);
 	SystemStore.clearBag(routeKey);
 
-	runOnUI(clear)(routeKey);
+	scheduleOnUI(clear, routeKey);
 }

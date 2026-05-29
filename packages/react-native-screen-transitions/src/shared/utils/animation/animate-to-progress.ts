@@ -1,4 +1,5 @@
-import { runOnJS, type SharedValue } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
@@ -87,7 +88,7 @@ export const animateToProgress = ({
 			}
 
 			if (onAnimationFinish) {
-				runOnJS(onAnimationFinish)(true);
+				scheduleOnRN(onAnimationFinish, true);
 			}
 			return;
 		}
@@ -103,7 +104,7 @@ export const animateToProgress = ({
 				}
 
 				if (onAnimationFinish) {
-					runOnJS(onAnimationFinish)(finished);
+					scheduleOnRN(onAnimationFinish, finished);
 				}
 
 				// Delay clearing progress animation by one frame to ensure final frame is painted

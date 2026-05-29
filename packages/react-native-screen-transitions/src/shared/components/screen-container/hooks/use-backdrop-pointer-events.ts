@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
+import { useAnimatedReaction } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { useScreenOptionsStore } from "../../../providers/screen/options";
 import type { BackdropBehavior } from "../../../types/screen.types";
@@ -29,7 +30,7 @@ export function useBackdropPointerEvents(): BackdropPointerEventsResult {
 		(next, previous) => {
 			"worklet";
 			if (next !== previous) {
-				runOnJS(setRuntimeBackdropBehavior)(next);
+				scheduleOnRN(setRuntimeBackdropBehavior, next);
 			}
 		},
 		[screenOptions],

@@ -1,9 +1,6 @@
 import { useState } from "react";
-import {
-	runOnJS,
-	type SharedValue,
-	useAnimatedReaction,
-} from "react-native-reanimated";
+import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { readInitialValue } from "./use-shared-value-ref";
 
 /**
@@ -17,7 +14,7 @@ export function useSharedValueState<T>(sharedValue: SharedValue<T>): T {
 		() => sharedValue.get(),
 		(value, previousValue) => {
 			if (Object.is(value, previousValue)) return;
-			runOnJS(setState)(value);
+			scheduleOnRN(setState, value);
 		},
 	);
 

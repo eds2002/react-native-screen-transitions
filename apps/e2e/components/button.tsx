@@ -4,11 +4,11 @@ import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	Easing,
-	runOnJS,
 	useAnimatedStyle,
 	useSharedValue,
 	withTiming,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { useTheme } from "@/theme";
 
 type ButtonProps = {
@@ -56,7 +56,7 @@ const Button = ({
 				})
 				.onFinalize((_ev, success) => {
 					if (success && onPress) {
-						runOnJS(onPress)();
+						scheduleOnRN(onPress);
 					}
 				}),
 		[disabled, onPress, scale],

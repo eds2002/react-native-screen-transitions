@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
-import { runOnUI } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
 import {
@@ -32,35 +32,40 @@ export function useContentLayout() {
 
 			const fraction = Math.min(height / screenHeight, 1);
 
-			runOnUI((nextWidth: number, nextHeight: number, nextFraction: number) => {
-				"worklet";
-				measuredContentLayout.set({
-					width: nextWidth,
-					height: nextHeight,
-				});
+			scheduleOnUI(
+				(nextWidth: number, nextHeight: number, nextFraction: number) => {
+					"worklet";
+					measuredContentLayout.set({
+						width: nextWidth,
+						height: nextHeight,
+					});
 
-				const isFirstMeasurement = resolvedAutoSnapPoint.get() <= 0;
-				resolvedAutoSnapPoint.set(nextFraction);
+					const isFirstMeasurement = resolvedAutoSnapPoint.get() <= 0;
+					resolvedAutoSnapPoint.set(nextFraction);
 
-				if (
-					!isFirstMeasurement ||
-					animations.progress.get() !== 0 ||
-					animations.progressAnimating.get() !== 0
-				) {
-					return;
-				}
+					if (
+						!isFirstMeasurement ||
+						animations.progress.get() !== 0 ||
+						animations.progressAnimating.get() !== 0
+					) {
+						return;
+					}
 
-				if (isFirstKey && !experimental_animateOnInitialMount) {
-					targetProgress.set(nextFraction);
-					animations.progress.set(nextFraction);
-					return;
-				}
+					if (isFirstKey && !experimental_animateOnInitialMount) {
+						targetProgress.set(nextFraction);
+						animations.progress.set(nextFraction);
+						return;
+					}
 
-				requestLifecycleTransition(
-					LifecycleTransitionRequestKind.Open,
-					nextFraction,
-				);
-			})(width, height, fraction);
+					requestLifecycleTransition(
+						LifecycleTransitionRequestKind.Open,
+						nextFraction,
+					);
+				},
+				width,
+				height,
+				fraction,
+			);
 		},
 		[
 			animations,

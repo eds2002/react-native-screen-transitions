@@ -1,10 +1,10 @@
 import { memo, useCallback, useMemo } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated, {
-	runOnUI,
 	useAnimatedProps,
 	useAnimatedStyle,
 } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
@@ -61,7 +61,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 			const gestures = GestureStore.getBag(routeKey);
 			const transitionSpec = current.options.transitionSpec;
 
-			runOnUI(() => {
+			scheduleOnUI(() => {
 				"worklet";
 				const resolvedSnaps: number[] = [];
 
@@ -100,7 +100,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 					targetProgress,
 					onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				});
-			})();
+			});
 		}
 	}, [
 		animations,
