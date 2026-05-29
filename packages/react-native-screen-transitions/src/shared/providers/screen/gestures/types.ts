@@ -1,9 +1,9 @@
 import type {
-	Gesture,
-	GestureStateChangeEvent,
-	GestureUpdateEvent,
-	PanGestureHandlerEventPayload,
-	PinchGestureHandlerEventPayload,
+	ComposedGesture,
+	PanGesture,
+	PanGestureActiveEvent,
+	PinchGesture,
+	PinchGestureActiveEvent,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
@@ -30,17 +30,10 @@ import type {
 import type { ScreenTransitionConfig } from "../../../types/screen.types";
 import type { EffectiveSnapPointsResult } from "./shared/snap-points";
 
-export type PanGesture = ReturnType<typeof Gesture.Pan>;
-export type PinchGesture = ReturnType<typeof Gesture.Pinch>;
-export type ComposedGesture = ReturnType<typeof Gesture.Race>;
+export type { ComposedGesture, PanGesture, PinchGesture };
 
-export type PanGestureEvent =
-	| GestureUpdateEvent<PanGestureHandlerEventPayload>
-	| GestureStateChangeEvent<PanGestureHandlerEventPayload>;
-
-export type PinchGestureEvent =
-	| GestureUpdateEvent<PinchGestureHandlerEventPayload>
-	| GestureStateChangeEvent<PinchGestureHandlerEventPayload>;
+export type PanGestureEvent = PanGestureActiveEvent;
+export type PinchGestureEvent = PinchGestureActiveEvent;
 
 export type {
 	GestureProgressMode,

@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
-import type {
-	LegacyGestureStateManager as GestureStateManager,
-	GestureTouchEvent,
+import {
+	GestureStateManager,
+	type GestureTouchEvent,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { ScreenOptionsContextValue } from "../../options";
@@ -18,10 +18,7 @@ export const usePinchActivation = ({
 	screenOptions,
 }: UsePinchActivationProps) => {
 	const onTouchesDown = useCallback(
-		(
-			event: GestureTouchEvent,
-			stateManager: GestureStateManager | undefined,
-		) => {
+		(event: GestureTouchEvent) => {
 			"worklet";
 			const { participation, policy } = resolvePinchRuntime(
 				runtime.get(),
@@ -29,24 +26,24 @@ export const usePinchActivation = ({
 			);
 
 			if (!participation.canTrackGesture || !policy.enabled) {
-				stateManager?.fail();
+				GestureStateManager.fail(event.handlerTag);
 				return;
 			}
 
 			if (event.numberOfTouches === 2) {
-				stateManager?.activate();
+				GestureStateManager.activate(event.handlerTag);
 				return;
 			}
 
 			if (event.numberOfTouches > 2) {
-				stateManager?.fail();
+				GestureStateManager.fail(event.handlerTag);
 			}
 		},
 		[runtime, screenOptions],
 	);
 
 	const onTouchesMove = useCallback(
-		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
+		(event: GestureTouchEvent) => {
 			"worklet";
 			const { participation, policy } = resolvePinchRuntime(
 				runtime.get(),
@@ -54,16 +51,16 @@ export const usePinchActivation = ({
 			);
 
 			if (!participation.canTrackGesture || !policy.enabled) {
-				stateManager.fail();
+				GestureStateManager.fail(event.handlerTag);
 				return;
 			}
 
 			if (event.numberOfTouches === 2) {
-				stateManager.activate();
+				GestureStateManager.activate(event.handlerTag);
 				return;
 			}
 
-			stateManager.fail();
+			GestureStateManager.fail(event.handlerTag);
 		},
 		[runtime, screenOptions],
 	);

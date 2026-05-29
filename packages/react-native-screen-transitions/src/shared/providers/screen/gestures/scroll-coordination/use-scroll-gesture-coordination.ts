@@ -1,6 +1,6 @@
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 import type { LayoutChangeEvent } from "react-native";
-import { Gesture, type GestureType } from "react-native-gesture-handler";
+import { useNativeGesture } from "react-native-gesture-handler";
 import {
 	type SharedValue,
 	useAnimatedScrollHandler,
@@ -82,46 +82,42 @@ export const useScrollGestureCoordination = (
 		}),
 	);
 
-	const nativeGesture = useMemo(() => {
-		if (panGestures.length === 0 && pinchGestures.length === 0) return null;
+	const hasOwnerGestures = panGestures.length > 0 || pinchGestures.length > 0;
+	const ownerGestures = useMemo(
+		() => [...panGestures, ...pinchGestures],
+		[panGestures, pinchGestures],
+	);
 
-		const setIsTouched = () => {
-			"worklet";
-			for (const scrollState of scrollStates) {
-				modifyScrollGestureAxisState(scrollState, scrollDirection, {
-					isTouched: true,
-				});
-			}
-		};
-
-		const clearIsTouched = () => {
-			"worklet";
-			for (const scrollState of scrollStates) {
-				modifyScrollGestureAxisState(scrollState, scrollDirection, {
-					isTouched: false,
-				});
-			}
-		};
-
-		let gesture = Gesture.Native()
-			.onTouchesDown(setIsTouched)
-			.onTouchesUp(clearIsTouched)
-			.onTouchesCancelled(clearIsTouched);
-
-		for (const panGesture of panGestures) {
-			gesture = gesture.requireExternalGestureToFail({
-				current: panGesture as unknown as GestureType,
+	const setIsTouched = useCallback(() => {
+		"worklet";
+		for (const scrollState of scrollStates) {
+			modifyScrollGestureAxisState(scrollState, scrollDirection, {
+				isTouched: true,
 			});
 		}
+	}, [scrollStates, scrollDirection]);
 
-		for (const pinchGesture of pinchGestures) {
-			gesture = gesture.requireExternalGestureToFail({
-				current: pinchGesture as unknown as GestureType,
+	const clearIsTouched = useCallback(() => {
+		"worklet";
+		for (const scrollState of scrollStates) {
+			modifyScrollGestureAxisState(scrollState, scrollDirection, {
+				isTouched: false,
 			});
 		}
+	}, [scrollStates, scrollDirection]);
 
-		return gesture;
-	}, [panGestures, pinchGestures, scrollStates, scrollDirection]);
+	const nativeGestureConfig = useMemo(
+		() => ({
+			enabled: hasOwnerGestures,
+			requireToFail: ownerGestures,
+			onTouchesDown: setIsTouched,
+			onTouchesUp: clearIsTouched,
+			onTouchesCancel: clearIsTouched,
+		}),
+		[hasOwnerGestures, ownerGestures, setIsTouched, clearIsTouched],
+	);
+
+	const nativeGesture = useNativeGesture(nativeGestureConfig);
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
@@ -175,6 +171,6 @@ export const useScrollGestureCoordination = (
 		scrollEventsEnabled,
 		onContentSizeChange,
 		onLayout,
-		nativeGesture,
+		nativeGesture: hasOwnerGestures ? nativeGesture : null,
 	};
 };

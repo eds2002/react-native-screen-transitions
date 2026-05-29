@@ -15,9 +15,10 @@ export type ScreenGestureTarget = ChainTarget;
  * ```tsx
  * const screenGesture = useScreenGesture();
  *
- * const myPanGesture = Gesture.Pan()
- *   .requireExternalGestureToFail(screenGesture)
- *   .onUpdate((...) => {});
+ * const myPanGesture = usePanGesture({
+ *   requireToFail: screenGesture,
+ *   onUpdate: (...) => {},
+ * });
  * ```
  */
 export const useScreenGesture = (target?: ScreenGestureTarget) => {

@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { Gesture } from "react-native-gesture-handler";
+import { useCompetingGestures } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { ScrollStore } from "../../../stores/scroll.store";
 import createProvider from "../../../utils/create-provider";
@@ -49,10 +49,7 @@ export const {
 		gestureConfig,
 	});
 
-	const detectorGesture = useMemo(
-		() => Gesture.Race(panGesture, pinchGesture),
-		[panGesture, pinchGesture],
-	);
+	const detectorGesture = useCompetingGestures(panGesture, pinchGesture);
 
 	const value = useMemo<GestureContextType>(
 		() => ({

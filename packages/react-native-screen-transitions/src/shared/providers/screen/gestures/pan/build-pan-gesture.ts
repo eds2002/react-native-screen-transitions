@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
-import { Gesture } from "react-native-gesture-handler";
+import { usePanGesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsStore } from "../../options";
 import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
@@ -49,17 +49,21 @@ export const useBuildPanGesture = ({
 
 	const behavior = usePanBehavior(runtime, screenOptions, dimensions);
 
-	const panGesture = useMemo(() => {
-		return Gesture.Pan()
-			.enabled(true)
-			.manualActivation(true)
-			.maxPointers(1)
-			.onTouchesDown(activation.onTouchesDown)
-			.onTouchesMove(activation.onTouchesMove)
-			.onStart(behavior.onStart)
-			.onUpdate(behavior.onUpdate)
-			.onEnd(behavior.onEnd);
-	}, [activation, behavior]);
+	const panGestureConfig = useMemo(
+		() => ({
+			enabled: true,
+			manualActivation: true,
+			maxPointers: 1,
+			onTouchesDown: activation.onTouchesDown,
+			onTouchesMove: activation.onTouchesMove,
+			onActivate: behavior.onStart,
+			onUpdate: behavior.onUpdate,
+			onDeactivate: behavior.onEnd,
+		}),
+		[activation, behavior],
+	);
+
+	const panGesture = usePanGesture(panGestureConfig);
 
 	return panGesture;
 };

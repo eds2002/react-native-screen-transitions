@@ -39,11 +39,22 @@ const createTestMutable = <T>(initial: T) => {
 
 // Expose reset function globally for tests that need isolated mutable state
 declare global {
+	var __DEV__: boolean;
+	var RN$Bridgeless: boolean;
+	var __reanimatedModuleProxy: Record<string, unknown>;
 	var resetMutableRegistry: () => void;
 	var __reanimatedMeasureSpy:
 		| ((ref: { current?: { tag?: string } }) => void)
 		| undefined;
 }
+globalThis.__DEV__ = true;
+globalThis.RN$Bridgeless = true;
+globalThis.__reanimatedModuleProxy = new Proxy(
+	{},
+	{
+		get: () => () => false,
+	},
+);
 globalThis.resetMutableRegistry = () => {
 	for (const { obj, initial } of mutableObjects) {
 		obj.value = cloneMutableInitialValue(initial);
@@ -51,14 +62,89 @@ globalThis.resetMutableRegistry = () => {
 };
 
 mock.module("react-native", () => ({
+	View: "View",
+	Text: "Text",
+	Image: "Image",
+	Pressable: "Pressable",
+	ScrollView: "ScrollView",
+	FlatList: "FlatList",
+	TextInput: "TextInput",
+	Switch: "Switch",
+	RefreshControl: "RefreshControl",
 	Platform: {
 		OS: "ios",
 		select: <T>(obj: { ios?: T; android?: T; default?: T }) =>
 			obj.ios ?? obj.default,
 	},
+	StyleSheet: {
+		absoluteFill: {},
+		absoluteFillObject: {},
+		create: <T>(styles: T) => styles,
+	},
+	findNodeHandle: () => null,
+	TurboModuleRegistry: {
+		get: () => null,
+		getEnforcing: () => ({}),
+	},
 }));
-mock.module("react-native-gesture-handler", () => ({}));
-mock.module("react-native-worklets", () => ({
+
+let gestureHandlerTag = 1;
+const createGesture = (type: string, config: Record<string, unknown> = {}) => ({
+	handlerTag: gestureHandlerTag++,
+	type,
+	config,
+	detectorCallbacks: {},
+	gestureRelations: {
+		simultaneousHandlers: [],
+		waitFor: [],
+		blocksHandlers: [],
+	},
+});
+
+mock.module("react-native-gesture-handler", () => ({
+	GestureDetector: ({ children }: { children: React.ReactNode }) => children,
+	GestureHandlerRootView: ({ children }: { children: React.ReactNode }) =>
+		children,
+	GestureStateManager: {
+		activate: () => {},
+		fail: () => {},
+		deactivate: () => {},
+	},
+	usePanGesture: (config: Record<string, unknown> = {}) =>
+		createGesture("PanGestureHandler", config),
+	usePinchGesture: (config: Record<string, unknown> = {}) =>
+		createGesture("PinchGestureHandler", config),
+	useNativeGesture: (config: Record<string, unknown> = {}) =>
+		createGesture("NativeViewGestureHandler", config),
+	useTapGesture: (config: Record<string, unknown> = {}) =>
+		createGesture("TapGestureHandler", config),
+	useCompetingGestures: (...gestures: Array<{ handlerTag: number }>) => ({
+		handlerTags: gestures.map((gesture) => gesture.handlerTag),
+		type: "RaceGesture",
+		config: {},
+		detectorCallbacks: {},
+		externalSimultaneousHandlers: [],
+		gestures,
+	}),
+	useSimultaneousGestures: (...gestures: Array<{ handlerTag: number }>) => ({
+		handlerTags: gestures.map((gesture) => gesture.handlerTag),
+		type: "SimultaneousGesture",
+		config: {},
+		detectorCallbacks: {},
+		externalSimultaneousHandlers: [],
+		gestures,
+	}),
+	useExclusiveGestures: (...gestures: Array<{ handlerTag: number }>) => ({
+		handlerTags: gestures.map((gesture) => gesture.handlerTag),
+		type: "ExclusiveGesture",
+		config: {},
+		detectorCallbacks: {},
+		externalSimultaneousHandlers: [],
+		gestures,
+	}),
+}));
+
+const workletsMock = {
 	runOnJS: <T extends (...args: any[]) => any>(callback: T) => callback,
 	scheduleOnRN: <T extends (...args: any[]) => any>(
 		callback: T,
@@ -66,8 +152,9 @@ mock.module("react-native-worklets", () => ({
 	) => {
 		callback(...args);
 	},
-}));
-mock.module("react-native-reanimated", () => ({
+};
+
+const reanimatedMock = {
 	makeMutable: createTestMutable,
 	createAnimatedComponent: <T>(component: T) => component,
 	Extrapolation: { CLAMP: "clamp", EXTEND: "extend", IDENTITY: "identity" },
@@ -143,4 +230,15 @@ mock.module("react-native-reanimated", () => ({
 	) => {
 		return (...args: A): T => worklet(...args);
 	},
-}));
+};
+
+mock.module("react-native-worklets", () => workletsMock);
+mock.module("react-native-reanimated", () => reanimatedMock);
+mock.module(
+	`${process.cwd()}/packages/react-native-screen-transitions/node_modules/react-native-worklets/lib/module/index.js`,
+	() => workletsMock,
+);
+mock.module(
+	`${process.cwd()}/packages/react-native-screen-transitions/node_modules/react-native-reanimated/lib/module/index.js`,
+	() => reanimatedMock,
+);

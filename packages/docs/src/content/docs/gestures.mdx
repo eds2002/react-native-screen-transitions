@@ -364,20 +364,22 @@ Useful values include:
 ## Hook Targeting
 
 ```tsx
-const selfGestureRef = useScreenGesture();
-const parentGestureRef = useScreenGesture({ depth: -1 });
-const grandparentGestureRef = useScreenGesture({ depth: -2 });
+const selfGesture = useScreenGesture();
+const parentGesture = useScreenGesture({ depth: -1 });
+const grandparentGesture = useScreenGesture({ depth: -2 });
 
 const parentAnimation = useScreenAnimation({ depth: -1 });
 const childAnimation = useScreenAnimation({ depth: 1 });
 ```
 
-`useScreenGesture()` returns a navigator pan-gesture ref for Gesture Handler relations:
+`useScreenGesture()` returns a navigator pan gesture for Gesture Handler relations:
 
 ```tsx
-const parentGestureRef = useScreenGesture({ depth: -1 });
+const parentGesture = useScreenGesture({ depth: -1 });
 
-const customPan = Gesture.Pan().requireExternalGestureToFail(parentGestureRef);
+const customPan = usePanGesture({
+  requireToFail: parentGesture,
+});
 ```
 
 `useScreenGesture()` supports `depth: 0` for the current screen and negative depths for ancestors. `useScreenAnimation()` also supports positive depths for descendant transition scopes. Ancestor targeting stops at isolation boundaries. In an `independent` nested stack, negative depths can resolve to `null` when the lookup reaches that isolated tree edge.

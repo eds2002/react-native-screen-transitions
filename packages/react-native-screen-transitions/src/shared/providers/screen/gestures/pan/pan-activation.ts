@@ -1,7 +1,7 @@
 import { useCallback, useMemo } from "react";
-import type {
-	LegacyGestureStateManager as GestureStateManager,
-	GestureTouchEvent,
+import {
+	GestureStateManager,
+	type GestureTouchEvent,
 } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { GestureStore } from "../../../../stores/gesture.store";
@@ -51,10 +51,7 @@ export const usePanActivation = ({
 	);
 
 	const onTouchesDown = useCallback(
-		(
-			event: GestureTouchEvent,
-			stateManager: GestureStateManager | undefined,
-		) => {
+		(event: GestureTouchEvent) => {
 			"worklet";
 			const { participation, policy } = resolvePanRuntime(
 				runtime.get(),
@@ -67,7 +64,7 @@ export const usePanActivation = ({
 				event.numberOfTouches !== 1
 			) {
 				gestureActivationState.set(GestureActivationState.FAILED);
-				stateManager?.fail();
+				GestureStateManager.fail(event.handlerTag);
 				return;
 			}
 
@@ -79,7 +76,7 @@ export const usePanActivation = ({
 	);
 
 	const onTouchesMove = useCallback(
-		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
+		(event: GestureTouchEvent) => {
 			"worklet";
 
 			const currentActivationState = gestureActivationState.get();
@@ -104,7 +101,7 @@ export const usePanActivation = ({
 			}
 
 			if (decision.action === "fail") {
-				stateManager.fail();
+				GestureStateManager.fail(event.handlerTag);
 				return;
 			}
 
@@ -118,7 +115,7 @@ export const usePanActivation = ({
 				gestures.direction.set(decision.direction);
 			}
 
-			stateManager.activate();
+			GestureStateManager.activate(event.handlerTag);
 		},
 		[
 			ancestorDismissing,

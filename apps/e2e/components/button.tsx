@@ -1,7 +1,11 @@
 import type React from "react";
 import { memo, useMemo } from "react";
 import { Pressable, StyleSheet, Text, type ViewStyle } from "react-native";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import {
+	GestureDetector,
+	type TapGestureConfig,
+	useTapGesture,
+} from "react-native-gesture-handler";
 import Animated, {
 	Easing,
 	useAnimatedStyle,
@@ -32,35 +36,35 @@ const Button = ({
 	const scale = useSharedValue(1);
 	const theme = useTheme();
 
-	const tap = useMemo(
-		() =>
-			Gesture.Tap()
-				.enabled(!disabled)
-				.onBegin(() => {
-					scale.value = withTiming(0.96, {
-						duration: 400,
-						easing: Easing.bezierFn(0.175, 0.885, 0.32, 1.1),
-					});
-				})
-				.onTouchesCancelled(() => {
-					scale.value = withTiming(1, {
-						duration: 400,
-						easing: Easing.bezierFn(0.175, 0.885, 0.32, 1.1),
-					});
-				})
-				.onEnd(() => {
-					scale.value = withTiming(1, {
-						duration: 400,
-						easing: Easing.bezierFn(0.175, 0.885, 0.32, 1.1),
-					});
-				})
-				.onFinalize((_ev, success) => {
-					if (success && onPress) {
-						scheduleOnRN(onPress);
-					}
-				}),
+	const tapConfig = useMemo<TapGestureConfig>(
+		() => ({
+			enabled: !disabled,
+			onBegin: () => {
+				scale.value = withTiming(0.96, {
+					duration: 400,
+					easing: Easing.bezierFn(0.175, 0.885, 0.32, 1.1),
+				});
+			},
+			onTouchesCancel: () => {
+				scale.value = withTiming(1, {
+					duration: 400,
+					easing: Easing.bezierFn(0.175, 0.885, 0.32, 1.1),
+				});
+			},
+			onFinalize: (event) => {
+				scale.value = withTiming(1, {
+					duration: 400,
+					easing: Easing.bezierFn(0.175, 0.885, 0.32, 1.1),
+				});
+				if (!event.canceled && onPress) {
+					scheduleOnRN(onPress);
+				}
+			},
+		}),
 		[disabled, onPress, scale],
 	);
+
+	const tap = useTapGesture(tapConfig);
 
 	const animatedStyle = useAnimatedStyle(() => ({
 		transform: [{ scale: scale.value }],

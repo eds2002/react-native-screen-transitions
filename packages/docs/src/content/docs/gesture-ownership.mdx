@@ -214,7 +214,7 @@ If the sheet instead uses `gestureDirection: "horizontal"`, it owns the horizont
 
 ## useScreenGesture()
 
-`useScreenGesture()` returns a gesture ref so you can coordinate your own Gesture Handler gestures with the navigator gesture.
+`useScreenGesture()` returns a gesture so you can coordinate your own Gesture Handler gestures with the navigator gesture.
 
 Valid targets are:
 
@@ -226,7 +226,9 @@ Valid targets are:
 ```tsx
 const parentGesture = useScreenGesture({ depth: -1 });
 
-const pan = Gesture.Pan().requireExternalGestureToFail(parentGesture);
+const pan = usePanGesture({
+  requireToFail: parentGesture,
+});
 ```
 
 `depth: 0` resolves the current screen gesture. Negative depths walk ancestors. Ancestor targeting stops at isolation boundaries, so a negative depth may resolve to `null` once the lookup reaches an isolated tree edge.
