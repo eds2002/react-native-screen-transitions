@@ -79,6 +79,33 @@ export type BoundsNavigationZoomOptions = {
 	 */
 	backgroundScale?: number;
 	/**
+	 * Maximum dynamic gesture sensitivity applied by zoom.
+	 *
+	 * Zoom lowers gesture sensitivity as the drag gets deeper so the content
+	 * handoff stays stable. This value controls the starting/highest sensitivity
+	 * in that curve.
+	 *
+	 * @default 0.8
+	 */
+	maxSensitivity?: number;
+	/**
+	 * Velocity-driven depth applied to the dismiss scale handoff.
+	 *
+	 * Higher values make fast releases orbit farther around the final scale. Set
+	 * to `0` to remove the velocity depth effect.
+	 *
+	 * @default 0.5
+	 */
+	velocityDepth?: number;
+	/**
+	 * Whether gesture displacement should drive transition progress or remain as
+	 * freeform gesture values. Zoom defaults to `"freeform"` so drag can move the
+	 * content without owning the whole screen progress.
+	 *
+	 * @default "freeform"
+	 */
+	gestureProgressMode?: GestureProgressMode;
+	/**
 	 * Horizontal gesture drag scaling curve, applied when the active dismiss
 	 * direction is horizontal.
 	 *

@@ -1,7 +1,6 @@
 import { interpolate } from "react-native-reanimated";
 import {
 	EPSILON,
-	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
 } from "../../../../constants";
@@ -18,6 +17,10 @@ import {
 	resolveDirectionalDragScale,
 	resolveOpacityRangeTuple,
 } from "../math";
+import {
+	resolveDismissScaleHandoff,
+	resolveRevealGestureHandoff,
+} from "../reveal/math";
 import {
 	ZOOM_DISMISS_SCALE_ORBIT_DEPTH,
 	ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
@@ -39,69 +42,28 @@ import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
 
 const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 
-function resolveZoomGestureHandoff(rawDrag: number) {
-	"worklet";
-
-	const gestureSensitivity = interpolate(rawDrag, [0, 1], [0.7, 0.1], "clamp");
-	const releaseBoost = interpolate(rawDrag, [0, 1], [1, 1.4], "clamp");
-	const releaseSensitivity = interpolate(
-		gestureSensitivity,
-		[0.28, 0.9],
-		[0.7, 1],
-		"clamp",
-	);
-
-	return {
-		gestureSensitivity,
-		gestureReleaseVelocityScale: releaseBoost * releaseSensitivity,
-	};
-}
-
 function resolveZoomGestureOptions({
 	rawDrag,
-	activeOptions,
+	maxSensitivity,
+	gestureProgressMode,
 }: {
 	rawDrag: number;
-	activeOptions: ScreenTransitionOptions;
+	maxSensitivity: number;
+	gestureProgressMode: ScreenTransitionOptions["gestureProgressMode"];
 }) {
 	"worklet";
 
 	const { gestureSensitivity, gestureReleaseVelocityScale } =
-		resolveZoomGestureHandoff(rawDrag);
+		resolveRevealGestureHandoff({
+			rawDrag,
+			maxSensitivity,
+		});
 
 	return {
-		gestureProgressMode: activeOptions.gestureProgressMode ?? "freeform",
-		gestureSensitivity: activeOptions.gestureSensitivity ?? gestureSensitivity,
-		gestureReleaseVelocityScale:
-			activeOptions.gestureReleaseVelocityScale ?? gestureReleaseVelocityScale,
+		gestureProgressMode,
+		gestureSensitivity,
+		gestureReleaseVelocityScale,
 	};
-}
-
-function resolveZoomDismissScaleHandoff({
-	progress,
-	releaseScale,
-	targetScale,
-	rawDrag,
-}: {
-	progress: number;
-	releaseScale: number;
-	targetScale: number;
-	rawDrag: number;
-}) {
-	"worklet";
-
-	const closeProgress = 1 - progress;
-	const scaleProgress = Math.sin((Math.PI / 2) * closeProgress);
-	const baseScale = releaseScale + (targetScale - releaseScale) * scaleProgress;
-	const orbitDepth = interpolate(
-		rawDrag,
-		[0, 1],
-		[0, ZOOM_DISMISS_SCALE_ORBIT_DEPTH],
-		"clamp",
-	);
-	const orbitScale = 1 - orbitDepth * Math.sin(Math.PI * closeProgress);
-
-	return baseScale * orbitScale;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -168,9 +130,11 @@ export function buildZoomStyles({
 			style: VISIBLE_STYLE,
 		},
 	} satisfies TransitionInterpolatedStyle;
-	const focusedContentSlot = props.current.options.navigationMaskEnabled
-		? NAVIGATION_MASK_CONTAINER_STYLE_ID
-		: "content";
+	const navigationMaskEnabled = props.current.options.navigationMaskEnabled;
+	const maxSensitivity = zoomOptions?.maxSensitivity ?? 0.8;
+	const velocityDepth =
+		zoomOptions?.velocityDepth ?? ZOOM_DISMISS_SCALE_ORBIT_DEPTH;
+	const gestureProgressMode = zoomOptions?.gestureProgressMode ?? "freeform";
 
 	/* --------------------------- Gesture / Drag Values ------------------------- */
 
@@ -238,16 +202,18 @@ export function buildZoomStyles({
 		: IDENTITY_DRAG_SCALE_OUTPUT[1];
 	const dragScale = combineScales(dragXScale, dragYScale);
 	const handoffDragScale = props.active.gesture.dismissing
-		? resolveZoomDismissScaleHandoff({
+		? resolveDismissScaleHandoff({
 				progress: props.active.progress,
 				releaseScale: dragScale,
 				targetScale: 1,
-				rawDrag,
+				velocity: props.active.gesture.velocity,
+				velocityDepth,
 			})
 		: dragScale;
 	const zoomGestureOptions = resolveZoomGestureOptions({
 		rawDrag,
-		activeOptions: props.active.options,
+		maxSensitivity,
+		gestureProgressMode,
 	});
 
 	/* ----------------------------- Focused Screen ----------------------------- */
@@ -301,11 +267,32 @@ export function buildZoomStyles({
 		const maskWidth = Math.max(1, toNumber(maskRaw.width) + left + right);
 		const maskHeight = Math.max(1, toNumber(maskRaw.height) + top + bottom);
 
-		const contentTranslateX = toNumber(contentRaw.translateX) + dragX;
-		const contentTranslateY = toNumber(contentRaw.translateY) + dragY;
-		const contentScale = contentRaw.scale * handoffDragScale;
-		const maskTranslateX = maskRaw.translateX + dragX - left;
-		const maskTranslateY = maskRaw.translateY + dragY - top;
+		const contentBaseTranslateX = toNumber(contentRaw.translateX);
+		const contentBaseTranslateY = toNumber(contentRaw.translateY);
+		const contentBaseScale = toNumber(contentRaw.scale, 1);
+		const safeContentBaseScale =
+			Math.abs(contentBaseScale) > EPSILON ? contentBaseScale : 1;
+		const contentTranslateX = contentBaseTranslateX + dragX;
+		const contentTranslateY = contentBaseTranslateY + dragY;
+		const contentScale = contentBaseScale * handoffDragScale;
+
+		const maskBaseTranslateX = toNumber(maskRaw.translateX) - left;
+		const maskBaseTranslateY = toNumber(maskRaw.translateY) - top;
+		const maskCenterX = maskWidth / 2;
+		const maskCenterY = maskHeight / 2;
+		const contentCenterX = screenLayout.width / 2;
+		const contentCenterY = screenLayout.height / 2;
+		const compensatedMaskTranslateX =
+			(maskBaseTranslateX -
+				contentBaseTranslateX +
+				(1 - contentBaseScale) * (maskCenterX - contentCenterX)) /
+			safeContentBaseScale;
+		const compensatedMaskTranslateY =
+			(maskBaseTranslateY -
+				contentBaseTranslateY +
+				(1 - contentBaseScale) * (maskCenterY - contentCenterY)) /
+			safeContentBaseScale;
+		const compensatedMaskScale = 1 / safeContentBaseScale;
 
 		const focusedContentStyle = {
 			opacity: zoomOptions?.debug ? 0.5 : focusedFade,
@@ -314,27 +301,31 @@ export function buildZoomStyles({
 				{ translateY: contentTranslateY },
 				{ scale: contentScale },
 			],
-			borderRadius: focusedMaskBorderRadius,
-			overflow: "hidden" as const,
+			...(navigationMaskEnabled
+				? {}
+				: {
+						borderRadius: focusedMaskBorderRadius,
+						overflow: "hidden" as const,
+					}),
 		};
 
 		const focusedStyles: ZoomInterpolatedStyle = {
-			[focusedContentSlot]: {
+			content: {
 				style: focusedContentStyle,
 			},
 			...sourceVisibilityStyle,
 		};
 
-		if (props.current.options.navigationMaskEnabled) {
+		if (navigationMaskEnabled) {
 			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
 				style: {
 					width: maskWidth,
 					height: maskHeight,
 					borderRadius: focusedMaskBorderRadius,
 					transform: [
-						{ translateX: maskTranslateX },
-						{ translateY: maskTranslateY },
-						{ scale: handoffDragScale },
+						{ translateX: compensatedMaskTranslateX },
+						{ translateY: compensatedMaskTranslateY },
+						{ scale: compensatedMaskScale },
 					],
 				},
 			};
