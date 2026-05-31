@@ -4,8 +4,10 @@ export type {
 	AnimationConfig,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
+	ScreenTransitionOptions,
 	ScreenTransitionState,
 	TransitionInterpolatedStyle,
+	TransitionInterpolatorOptions,
 	TransitionSlotStyle,
 	TransitionSpec,
 } from "./animation.types";
@@ -13,6 +15,8 @@ export type {
 	BoundsAccessor,
 	BoundsMethod,
 	BoundsNavigationAccessor,
+	BoundsNavigationRevealOptions,
+	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOpacityRange,
 	BoundsNavigationZoomOpacityRanges,
 	BoundsNavigationZoomOptions,
@@ -23,10 +27,13 @@ export type {
 	GestureActivationArea,
 	GestureDirection,
 	GestureValues,
+	PanGestureDirection,
+	PinchGestureDirection,
 	SideActivation,
 } from "./gesture.types";
 export type { OverlayProps } from "./overlay.types";
 export type {
+	GestureTracking,
 	Layout,
 	ScreenKey,
 	ScreenTransitionConfig,

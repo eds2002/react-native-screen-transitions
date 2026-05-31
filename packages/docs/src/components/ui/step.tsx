@@ -43,7 +43,7 @@ export function Step({
 					</p>
 				) : null}
 				{children ? (
-					<div className="mt-6 min-w-0 [&>*+*]:mt-5 [&>blockquote]:max-w-[46rem] [&>ol]:max-w-[46rem] [&>ol]:list-decimal [&>ol]:pl-[1.4rem] [&>ol]:text-[1.05rem] [&>ol]:leading-[1.8] [&>ol]:text-[#5c6d66] [&>p]:max-w-[46rem] [&>p]:text-[1.05rem] [&>p]:leading-[1.8] [&>p]:text-[#5c6d66] [&>ul]:max-w-[46rem] [&>ul]:list-disc [&>ul]:pl-[1.4rem] [&>ul]:text-[1.05rem] [&>ul]:leading-[1.8] [&>ul]:text-[#5c6d66] dark:[&>ol]:text-[#95a49f] dark:[&>p]:text-[#95a49f] dark:[&>ul]:text-[#95a49f]">
+					<div className="mt-6 min-w-0 [&>*+*]:mt-5 [&>blockquote]:max-w-[46rem] [&>ol]:max-w-[46rem] [&>ol]:list-decimal [&>ol]:pl-[1.4rem] [&>ol]:text-neutral-600 [&>p]:max-w-[46rem] [&>p]:text-neutral-600 [&>ul]:max-w-[46rem] [&>ul]:list-disc [&>ul]:pl-[1.4rem] [&>ul]:leading-normal [&>ul]:text-neutral-600 dark:[&>ol]:text-neutral-400 dark:[&>p]:text-neutral-400 dark:[&>ul]:text-neutral-400">
 						{children}
 					</div>
 				) : null}

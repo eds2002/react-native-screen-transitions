@@ -1,6 +1,6 @@
 import type { BoundId } from "../types/options";
 
-export type CreateBoundTagParams = {
+type CreateBoundTagParams = {
 	id?: BoundId;
 	group?: string;
 };

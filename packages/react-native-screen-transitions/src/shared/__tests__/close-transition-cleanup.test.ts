@@ -3,8 +3,14 @@ import { beforeEach, describe, expect, it } from "bun:test";
 import { resetStoresForScreen } from "../components/screen-lifecycle/hooks/helpers/reset-stores-for-screen";
 import { AnimationStore } from "../stores/animation.store";
 import { BoundStore } from "../stores/bounds";
+import { createPendingPairKey } from "../stores/bounds/helpers/link-pairs.helpers";
 import { GestureStore } from "../stores/gesture.store";
 import { SystemStore } from "../stores/system.store";
+import {
+	hasBoundaryPresence,
+	registerBoundaryPresence,
+	registerMeasuredEntry,
+} from "./bounds/helpers/bounds-behavior-fixtures";
 
 const createMeasured = (
 	x = 0,
@@ -25,7 +31,7 @@ beforeEach(() => {
 });
 
 describe("close transition cleanup", () => {
-	it("resets animation, gesture, and bounds stores for a branch screen (clears ancestors)", () => {
+	it("resets animation, gesture, system, and bounds stores for a screen", () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
@@ -33,20 +39,21 @@ describe("close transition cleanup", () => {
 		const gestureBefore = GestureStore.getBag(routeKey);
 		const systemBefore = SystemStore.getBag(routeKey);
 
-		BoundStore.registerSnapshot("card", routeKey, bounds);
-		BoundStore.setLinkSource("card", routeKey, bounds);
-		BoundStore.registerBoundaryPresence("card", routeKey, [routeKey]);
+		registerMeasuredEntry("card", routeKey, bounds);
+		const pairKey = createPendingPairKey(routeKey);
+		BoundStore.link.setSource(pairKey, "card", routeKey, bounds);
+		registerBoundaryPresence("card", routeKey);
 
-		expect(BoundStore.getSnapshot("card", routeKey)).toBeTruthy();
-		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(true);
-		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(true);
+		expect(BoundStore.entry.get("card", routeKey)).toBeTruthy();
+		expect(BoundStore.link.getSource(pairKey, "card")).not.toBeNull();
+		expect(hasBoundaryPresence("card", routeKey)).toBe(true);
 
-		resetStoresForScreen(routeKey, true);
-		resetStoresForScreen(routeKey, true);
+		resetStoresForScreen(routeKey);
+		resetStoresForScreen(routeKey);
 
-		expect(BoundStore.getSnapshot("card", routeKey)).toBeNull();
-		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(false);
-		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(false);
+		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
+		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
+		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 
 		const animationAfter = AnimationStore.getBag(routeKey);
 		const gestureAfter = GestureStore.getBag(routeKey);
@@ -57,19 +64,20 @@ describe("close transition cleanup", () => {
 		expect(systemAfter).not.toBe(systemBefore);
 	});
 
-	it("skips ancestor bound clearing for leaf screens", () => {
+	it("clears bounds for leaf screens", () => {
 		const routeKey = "leaf-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
-		BoundStore.registerSnapshot("card", routeKey, bounds);
-		BoundStore.setLinkSource("card", routeKey, bounds);
-		BoundStore.registerBoundaryPresence("card", routeKey, [routeKey]);
+		registerMeasuredEntry("card", routeKey, bounds);
+		const pairKey = createPendingPairKey(routeKey);
+		BoundStore.link.setSource(pairKey, "card", routeKey, bounds);
+		registerBoundaryPresence("card", routeKey);
 
 		const animationBefore = AnimationStore.getBag(routeKey);
 		const gestureBefore = GestureStore.getBag(routeKey);
 		const systemBefore = SystemStore.getBag(routeKey);
 
-		resetStoresForScreen(routeKey, false);
+		resetStoresForScreen(routeKey);
 
 		// Animation and gesture stores are still cleared
 		const animationAfter = AnimationStore.getBag(routeKey);
@@ -79,136 +87,70 @@ describe("close transition cleanup", () => {
 		expect(gestureAfter).not.toBe(gestureBefore);
 		expect(systemAfter).not.toBe(systemBefore);
 
-		// Bound data registered directly under this key is NOT cleared by
-		// clearByAncestor (which is skipped), so snapshot/source/presence
-		// remain intact — only ancestor-based clearing is gated.
-		expect(BoundStore.getSnapshot("card", routeKey)).toBeTruthy();
-		expect(BoundStore.hasSourceLink("card", routeKey)).toBe(true);
-		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(true);
+		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
+		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
+		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 	});
 
 	it("clear removes only the direct presence entry for a route key", () => {
 		const routeKey = "cleanup-route";
 		const descendantRoute = "cleanup-route-descendant";
 
-		BoundStore.registerBoundaryPresence("card", routeKey);
-		BoundStore.registerBoundaryPresence("card", descendantRoute, [routeKey]);
+		registerBoundaryPresence("card", routeKey);
+		registerBoundaryPresence("card", descendantRoute);
 
-		BoundStore.clear(routeKey);
+		BoundStore.cleanup.byScreen(routeKey);
 
-		expect(BoundStore.hasBoundaryPresence("card", descendantRoute)).toBe(true);
+		expect(hasBoundaryPresence("card", descendantRoute)).toBe(true);
 
-		BoundStore.unregisterBoundaryPresence("card", descendantRoute);
+		BoundStore.entry.remove("card", descendantRoute);
 
-		expect(BoundStore.hasBoundaryPresence("card", routeKey)).toBe(false);
+		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 	});
 
-	it("clearByAncestor removes descendant presence entries and preserves unrelated ones", () => {
-		const ancestorKey = "stack-cleanup";
-		const descendantRoute = "stack-cleanup-child";
-		const unrelatedRoute = "other-stack-child";
-
-		BoundStore.registerBoundaryPresence("card", descendantRoute, [ancestorKey]);
-		BoundStore.registerBoundaryPresence("card", unrelatedRoute, ["other-stack"]);
-
-		BoundStore.clearByAncestor(ancestorKey);
-
-		expect(BoundStore.hasBoundaryPresence("card", descendantRoute)).toBe(false);
-		expect(BoundStore.hasBoundaryPresence("card", unrelatedRoute)).toBe(true);
-	});
-
-	it("clears branch-associated entries when a branch navigator key is provided", () => {
-		const routeKey = "branch-host-screen";
-		const branchNavigatorKey = "nav-branch";
-		const directBranchRoute = "direct-branch-route";
-		const descendantBranchRoute = "descendant-branch-route";
+	it("screen cleanup does not clear sibling or nested route keys", () => {
+		const routeKey = "cleanup-route";
+		const nestedRoute = "cleanup-route-nested";
 		const unrelatedRoute = "unrelated-route";
 		const bounds = createMeasured(12, 24, 130, 150);
+		const routePairKey = createPendingPairKey(routeKey);
+		const nestedPairKey = createPendingPairKey(nestedRoute);
+		const unrelatedPairKey = createPendingPairKey(unrelatedRoute);
 
-		BoundStore.registerSnapshot(
+		registerMeasuredEntry("card", routeKey, bounds);
+		BoundStore.link.setSource(routePairKey,
 			"card",
-			directBranchRoute,
+			routeKey,
 			bounds,
 			{},
-			[],
-			branchNavigatorKey,
 		);
-		BoundStore.setLinkSource(
+		registerBoundaryPresence("card", routeKey);
+
+		registerMeasuredEntry("card", nestedRoute, bounds);
+		BoundStore.link.setSource(nestedPairKey,
 			"card",
-			directBranchRoute,
+			nestedRoute,
 			bounds,
 			{},
-			[],
-			branchNavigatorKey,
 		);
-		BoundStore.registerBoundaryPresence(
-			"card",
-			directBranchRoute,
-			[],
-			undefined,
-			branchNavigatorKey,
-		);
+		registerBoundaryPresence("card", nestedRoute);
 
-		BoundStore.registerSnapshot(
-			"card",
-			descendantBranchRoute,
-			bounds,
-			{},
-			[],
-			"nav-child",
-			[branchNavigatorKey],
-		);
-		BoundStore.setLinkSource(
-			"card",
-			descendantBranchRoute,
-			bounds,
-			{},
-			[],
-			"nav-child",
-			[branchNavigatorKey],
-		);
-		BoundStore.registerBoundaryPresence(
-			"card",
-			descendantBranchRoute,
-			[],
-			undefined,
-			"nav-child",
-			[branchNavigatorKey],
-		);
+		registerMeasuredEntry("card", unrelatedRoute, bounds);
+		BoundStore.link.setSource(unrelatedPairKey, "card", unrelatedRoute, bounds);
+		registerBoundaryPresence("card", unrelatedRoute);
 
-		BoundStore.registerSnapshot(
-			"card",
-			unrelatedRoute,
-			bounds,
-			{},
-			[],
-			"nav-other",
-		);
-		BoundStore.setLinkSource("card", unrelatedRoute, bounds, {}, [], "nav-other");
-		BoundStore.registerBoundaryPresence(
-			"card",
-			unrelatedRoute,
-			[],
-			undefined,
-			"nav-other",
-		);
+		resetStoresForScreen(routeKey);
 
-		resetStoresForScreen(routeKey, true, branchNavigatorKey);
+		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
+		expect(BoundStore.link.getSource(routePairKey, "card")).toBeNull();
+		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 
-		expect(BoundStore.getSnapshot("card", directBranchRoute)).toBeNull();
-		expect(BoundStore.hasSourceLink("card", directBranchRoute)).toBe(false);
-		expect(BoundStore.hasBoundaryPresence("card", directBranchRoute)).toBe(
-			false,
-		);
+		expect(BoundStore.entry.get("card", nestedRoute)).toBeTruthy();
+		expect(BoundStore.link.getSource(nestedPairKey, "card")).not.toBeNull();
+		expect(hasBoundaryPresence("card", nestedRoute)).toBe(true);
 
-		expect(BoundStore.getSnapshot("card", descendantBranchRoute)).toBeNull();
-		expect(BoundStore.hasSourceLink("card", descendantBranchRoute)).toBe(false);
-		expect(BoundStore.hasBoundaryPresence("card", descendantBranchRoute)).toBe(
-			false,
-		);
-
-		expect(BoundStore.getSnapshot("card", unrelatedRoute)).toBeTruthy();
-		expect(BoundStore.hasSourceLink("card", unrelatedRoute)).toBe(true);
-		expect(BoundStore.hasBoundaryPresence("card", unrelatedRoute)).toBe(true);
+		expect(BoundStore.entry.get("card", unrelatedRoute)).toBeTruthy();
+		expect(BoundStore.link.getSource(unrelatedPairKey, "card")).not.toBeNull();
+		expect(hasBoundaryPresence("card", unrelatedRoute)).toBe(true);
 	});
 });

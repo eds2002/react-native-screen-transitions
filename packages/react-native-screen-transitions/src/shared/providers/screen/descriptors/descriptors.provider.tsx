@@ -5,7 +5,6 @@ import createProvider from "../../../utils/create-provider";
 import type { DescriptorDerivations } from "./helpers/derive-descriptor-derivations";
 import { deriveDescriptorDerivations } from "./helpers/derive-descriptor-derivations";
 import { getAncestorKeys } from "./helpers/get-ancestor-keys";
-import { getAncestorNavigatorKeys } from "./helpers/get-ancestor-navigator-keys";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
@@ -58,10 +57,6 @@ const {
 	DescriptorDerivationsContextValue
 >(({ previous, current, next, children }) => {
 	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
-	const ancestorNavigatorKeys = useMemo(
-		() => getAncestorNavigatorKeys(current),
-		[current],
-	);
 
 	const value = useMemo(
 		() =>
@@ -70,9 +65,8 @@ const {
 				current,
 				next,
 				ancestorKeys,
-				ancestorNavigatorKeys,
 			}),
-		[previous, current, next, ancestorKeys, ancestorNavigatorKeys],
+		[previous, current, next, ancestorKeys],
 	);
 
 	return {

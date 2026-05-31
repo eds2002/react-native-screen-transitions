@@ -15,7 +15,7 @@ export const useClosingRouteMap = (
 			"worklet";
 			const map: Record<string, true> = {};
 			for (let i = 0; i < animationMaps.length; i++) {
-				if (animationMaps[i].closing.value > 0) {
+				if (animationMaps[i].closing.get() > 0) {
 					const routeKey = routeKeys[i];
 					if (routeKey) {
 						map[routeKey] = true;

@@ -1,87 +1,199 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import { Dimensions, Pressable, StyleSheet, Text, View } from "react-native";
-import { snapTo } from "react-native-screen-transitions";
+import Transition, { snapTo } from "react-native-screen-transitions";
 import { useTheme } from "@/theme";
 
 const { height: SCREEN_HEIGHT } = Dimensions.get("window");
 
 const SNAP_TARGETS = [
-	{ index: 0, label: "25%" },
-	{ index: 1, label: "50%" },
-	{ index: 2, label: "75%" },
-	{ index: 3, label: "100%" },
+	{ index: 0, label: "30%" },
+	{ index: 1, label: "60%" },
+	{ index: 2, label: "100%" },
 ];
+
+const ITEMS = Array.from({ length: 20 }, (_, index) => ({
+	id: index,
+	title: `Feed Row ${index + 1}`,
+	description: "Scroll the list, then drag the sheet to test lock behavior",
+}));
 
 export default function SnapLockToggleScreen() {
 	const navigation = useNavigation<any>();
 	const [locked, setLocked] = useState(true);
+	const [gesturesEnabled, setGesturesEnabled] = useState(true);
 	const theme = useTheme();
 
 	useEffect(() => {
-		navigation.setOptions({ gestureSnapLocked: locked });
-	}, [locked, navigation]);
+		navigation.setOptions({
+			gestureEnabled: gesturesEnabled,
+			gestureSnapLocked: locked,
+		});
+	}, [gesturesEnabled, locked, navigation]);
 
 	return (
-		<View style={[styles.container, { maxHeight: SCREEN_HEIGHT, backgroundColor: theme.bg }]}>
+		<View
+			style={[
+				styles.container,
+				{ maxHeight: SCREEN_HEIGHT, backgroundColor: theme.bg },
+			]}
+		>
 			<View style={[styles.handle, { backgroundColor: theme.handle }]} />
-			<Text style={[styles.title, { color: theme.text }]}>Snap Lock: Dynamic Toggle</Text>
+			<Text style={[styles.title, { color: theme.text }]}>Snap Lock</Text>
 			<Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-				Switch lock ON/OFF while this screen is open
+				Scroll coordination with runtime gesture and lock controls
 			</Text>
 
-			<View style={styles.statusRow}>
-				<Text style={[styles.statusLabel, { color: theme.textSecondary }]}>Current lock state:</Text>
-				<View
-					testID="toggle-lock-status"
-					style={[
-						styles.statusPill,
-						{ backgroundColor: locked ? theme.activePill : theme.pill },
-					]}
-				>
-					<Text style={[styles.statusText, { color: locked ? theme.activePillText : theme.pillText }]}>
-						{locked ? "LOCKED" : "UNLOCKED"}
-					</Text>
-				</View>
+			<View style={styles.statusGrid}>
+				<StatusPill
+					label="Snapping"
+					value={locked ? "LOCKED" : "UNLOCKED"}
+					active={locked}
+				/>
+				<StatusPill
+					label="Gestures"
+					value={gesturesEnabled ? "ENABLED" : "DISABLED"}
+					active={gesturesEnabled}
+				/>
 			</View>
 
 			<View style={styles.toggleRow}>
 				<Pressable
-					testID="toggle-lock-on"
-					style={[styles.toggleButton, { backgroundColor: locked ? theme.activePill : theme.pill }]}
-					onPress={() => setLocked(true)}
+					testID="toggle-lock"
+					style={[
+						styles.toggleButton,
+						{ backgroundColor: locked ? theme.activePill : theme.pill },
+					]}
+					onPress={() => setLocked((value) => !value)}
 				>
-					<Text style={[styles.toggleText, { color: locked ? theme.activePillText : theme.pillText }]}>Lock ON</Text>
+					<Text
+						style={[
+							styles.toggleText,
+							{ color: locked ? theme.activePillText : theme.pillText },
+						]}
+					>
+						{locked ? "Unlock Snap" : "Lock Snap"}
+					</Text>
 				</Pressable>
 				<Pressable
-					testID="toggle-lock-off"
-					style={[styles.toggleButton, { backgroundColor: !locked ? theme.activePill : theme.pill }]}
-					onPress={() => setLocked(false)}
+					testID="toggle-gestures"
+					style={[
+						styles.toggleButton,
+						{
+							backgroundColor: gesturesEnabled ? theme.activePill : theme.pill,
+						},
+					]}
+					onPress={() => setGesturesEnabled((value) => !value)}
 				>
-					<Text style={[styles.toggleText, { color: !locked ? theme.activePillText : theme.pillText }]}>Lock OFF</Text>
+					<Text
+						style={[
+							styles.toggleText,
+							{
+								color: gesturesEnabled ? theme.activePillText : theme.pillText,
+							},
+						]}
+					>
+						{gesturesEnabled ? "Disable Gestures" : "Enable Gestures"}
+					</Text>
 				</Pressable>
 			</View>
 
-			<View style={[styles.card, { backgroundColor: theme.card }]}>
-				<Text style={[styles.cardTitle, { color: theme.infoBoxLabel }]}>Expected</Text>
-				<Text style={[styles.item, { color: theme.textSecondary }]}>- Lock ON: no gesture snap transitions</Text>
-				<Text style={[styles.item, { color: theme.textSecondary }]}>- Lock OFF: normal snap gestures resume</Text>
-				<Text style={[styles.item, { color: theme.textSecondary }]}>
-					- Dismiss remains available when allowed
-				</Text>
-			</View>
-
-			<View style={styles.buttons}>
+			<View style={styles.snapButtons}>
 				{SNAP_TARGETS.map((target) => (
 					<Pressable
 						key={target.index}
-						testID={`toggle-snap-to-${target.index}`}
-						style={({ pressed }) => [styles.button, { backgroundColor: pressed ? theme.actionButtonPressed : theme.actionButton }]}
+						testID={`snap-lock-snap-to-${target.index}`}
+						style={({ pressed }) => [
+							styles.snapButton,
+							{
+								backgroundColor: pressed
+									? theme.actionButtonPressed
+									: theme.actionButton,
+							},
+						]}
 						onPress={() => snapTo(target.index)}
 					>
-						<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>{target.label}</Text>
+						<Text
+							style={[styles.snapButtonText, { color: theme.actionButtonText }]}
+						>
+							Snap {target.label}
+						</Text>
 					</Pressable>
 				))}
+			</View>
+
+			<View style={[styles.card, { backgroundColor: theme.card }]}>
+				<Text style={[styles.cardTitle, { color: theme.infoBoxLabel }]}>
+					Expected
+				</Text>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
+					- Lock enabled: list scroll works, sheet drag cannot change snap
+					points
+				</Text>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
+					- Gestures disabled: no sheet drag or swipe dismiss
+				</Text>
+				<Text style={[styles.item, { color: theme.textSecondary }]}>
+					- Programmatic snap controls always work
+				</Text>
+			</View>
+
+			<Transition.ScrollView
+				testID="snap-lock-scroll"
+				style={styles.scroll}
+				contentContainerStyle={styles.scrollContent}
+				showsVerticalScrollIndicator={false}
+			>
+				{ITEMS.map((item) => (
+					<View
+						key={item.id}
+						style={[styles.row, { backgroundColor: theme.surfaceElevated }]}
+					>
+						<Text style={[styles.rowTitle, { color: theme.text }]}>
+							{item.title}
+						</Text>
+						<Text
+							style={[styles.rowDescription, { color: theme.textSecondary }]}
+						>
+							{item.description}
+						</Text>
+					</View>
+				))}
+			</Transition.ScrollView>
+		</View>
+	);
+}
+
+function StatusPill({
+	label,
+	value,
+	active,
+}: {
+	label: string;
+	value: string;
+	active: boolean;
+}) {
+	const theme = useTheme();
+
+	return (
+		<View style={styles.statusItem}>
+			<Text style={[styles.statusLabel, { color: theme.textSecondary }]}>
+				{label}
+			</Text>
+			<View
+				style={[
+					styles.statusPill,
+					{ backgroundColor: active ? theme.activePill : theme.pill },
+				]}
+			>
+				<Text
+					style={[
+						styles.statusText,
+						{ color: active ? theme.activePillText : theme.pillText },
+					]}
+				>
+					{value}
+				</Text>
 			</View>
 		</View>
 	);
@@ -112,19 +224,23 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		marginBottom: 14,
 	},
-	statusRow: {
+	statusGrid: {
 		flexDirection: "row",
-		alignItems: "center",
-		gap: 8,
+		gap: 10,
 		marginBottom: 12,
 	},
+	statusItem: {
+		flex: 1,
+		gap: 6,
+	},
 	statusLabel: {
-		fontSize: 13,
-		fontWeight: "700",
+		fontSize: 12,
+		fontWeight: "800",
 	},
 	statusPill: {
+		alignItems: "center",
 		paddingHorizontal: 10,
-		paddingVertical: 5,
+		paddingVertical: 7,
 		borderRadius: 999,
 	},
 	statusText: {
@@ -134,7 +250,7 @@ const styles = StyleSheet.create({
 	toggleRow: {
 		flexDirection: "row",
 		gap: 10,
-		marginBottom: 14,
+		marginBottom: 12,
 	},
 	toggleButton: {
 		flex: 1,
@@ -146,10 +262,25 @@ const styles = StyleSheet.create({
 		fontSize: 12,
 		fontWeight: "800",
 	},
+	snapButtons: {
+		flexDirection: "row",
+		gap: 8,
+		marginBottom: 12,
+	},
+	snapButton: {
+		flex: 1,
+		borderRadius: 999,
+		alignItems: "center",
+		paddingVertical: 9,
+	},
+	snapButtonText: {
+		fontSize: 12,
+		fontWeight: "800",
+	},
 	card: {
 		borderRadius: 14,
 		padding: 14,
-		marginBottom: 16,
+		marginBottom: 12,
 	},
 	cardTitle: {
 		fontSize: 13,
@@ -161,18 +292,24 @@ const styles = StyleSheet.create({
 		fontWeight: "600",
 		marginBottom: 6,
 	},
-	buttons: {
-		flexDirection: "row",
-		flexWrap: "wrap",
-		gap: 8,
+	scroll: {
+		flex: 1,
 	},
-	button: {
-		borderRadius: 999,
-		paddingHorizontal: 14,
-		paddingVertical: 9,
+	scrollContent: {
+		paddingBottom: 16,
 	},
-	buttonText: {
-		fontSize: 12,
+	row: {
+		borderRadius: 14,
+		padding: 14,
+		marginBottom: 8,
+	},
+	rowTitle: {
+		fontSize: 14,
 		fontWeight: "800",
+		marginBottom: 4,
+	},
+	rowDescription: {
+		fontSize: 12,
+		fontWeight: "600",
 	},
 });

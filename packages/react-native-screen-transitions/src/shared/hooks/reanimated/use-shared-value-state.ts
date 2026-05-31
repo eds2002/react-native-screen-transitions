@@ -14,7 +14,7 @@ export function useSharedValueState<T>(sharedValue: SharedValue<T>): T {
 	const [state, setState] = useState<T>(() => readInitialValue(sharedValue));
 
 	useAnimatedReaction(
-		() => sharedValue.value,
+		() => sharedValue.get(),
 		(value, previousValue) => {
 			if (Object.is(value, previousValue)) return;
 			runOnJS(setState)(value);

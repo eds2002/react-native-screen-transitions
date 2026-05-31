@@ -14,22 +14,21 @@ import type { SharedValue } from "react-native-reanimated/lib/typescript/commonT
 import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
-import { applyMeasuredBoundsWrites } from "../stores/bounds/helpers/apply-measured-bounds-writes";
 import {
-	getMeasuredEntry,
-	getPendingLink,
-	hasDestinationLink,
-	hasSourceLink,
-} from "../stores/bounds/internals/registry";
+	createPendingPairKey,
+	createScreenPairKey,
+} from "../stores/bounds/helpers/link-pairs.helpers";
+import { getEntry } from "../stores/bounds/internals/entries";
+import { getDestination, getSource } from "../stores/bounds/internals/links";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles/styles";
 import createProvider from "../utils/create-provider";
+import { applyMeasuredBoundsWrites } from "./helpers/measured-bounds-writes";
 import { useDescriptorDerivations, useDescriptors } from "./screen/descriptors";
 
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
 	shouldSetSource?: boolean;
 	shouldSetDestination?: boolean;
-	shouldUpdateSource?: boolean;
 }
 
 interface RegisterBoundsRenderProps {
@@ -87,11 +86,14 @@ const useInitialLayoutHandler = (params: {
 		maybeMeasureAndStore,
 	} = params;
 
-	const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
+	const isAnimating = AnimationStore.getValue(
+		currentScreenKey,
+		"progressAnimating",
+	);
 
 	// Check if any ancestor is animating
 	const ancestorAnimations = ancestorKeys.map((key) =>
-		AnimationStore.getValue(key, "animating"),
+		AnimationStore.getValue(key, "progressAnimating"),
 	);
 
 	const hasMeasuredOnLayout = useSharedValue(false);
@@ -205,49 +207,14 @@ const useParentSyncReaction = (params: {
 	);
 };
 
-const CloseRemeasureReactionEffect = (params: {
-	sharedBoundTag: string;
-	remeasureOnFocus: boolean;
-	nextClosing: SharedValue<number>;
-	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
-}) => {
-	const {
-		sharedBoundTag,
-		remeasureOnFocus,
-		nextClosing,
-		maybeMeasureAndStore,
-	} = params;
-
-	useAnimatedReaction(
-		() => nextClosing.get(),
-		(closing, prevClosing) => {
-			"worklet";
-			if (closing === 1 && (prevClosing === 0 || prevClosing === null)) {
-				maybeMeasureAndStore({ shouldUpdateSource: true });
-			}
-		},
-		[sharedBoundTag, remeasureOnFocus, nextClosing],
-	);
-
-	return null;
-};
-
 let useRegisterBoundsContext: () => RegisterBoundsContextValue | null;
 
 const registerBoundsBundle = createProvider("RegisterBounds", {
 	guarded: false,
 })<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
-	({
-		style,
-		onPress,
-		sharedBoundTag,
-		animatedRef,
-		remeasureOnFocus,
-		children,
-	}) => {
+	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
 		const { current, next } = useDescriptors();
-		const { ancestorKeys, navigatorKey, ancestorNavigatorKeys } =
-			useDescriptorDerivations();
+		const { ancestorKeys, previousScreenKey } = useDescriptorDerivations();
 		const currentScreenKey = current.route.key;
 		const selectedNextRouteId = getRouteParamId(next?.route);
 
@@ -258,7 +225,10 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 		const updateSignal: SharedValue<number> =
 			parentContext?.updateSignal ?? ownSignal;
 
-		const isAnimating = AnimationStore.getValue(currentScreenKey, "animating");
+		const isAnimating = AnimationStore.getValue(
+			currentScreenKey,
+			"progressAnimating",
+		);
 		const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 		const emitUpdate = useStableCallbackValue(() => {
@@ -272,7 +242,6 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 				onPress,
 				shouldSetSource,
 				shouldSetDestination,
-				shouldUpdateSource,
 			}: MaybeMeasureAndStoreParams = {}) => {
 				"worklet";
 				if (!sharedBoundTag) {
@@ -280,18 +249,27 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					return;
 				}
 
+				const sourcePairKey = createPendingPairKey(currentScreenKey);
+				const destinationPairKey = previousScreenKey
+					? createScreenPairKey(previousScreenKey, currentScreenKey)
+					: undefined;
+				const pendingSourcePairKey = previousScreenKey
+					? createPendingPairKey(previousScreenKey)
+					: undefined;
+
 				if (shouldSetSource && isAnimating.get()) {
-					const existing = getMeasuredEntry(sharedBoundTag, currentScreenKey);
-					if (existing) {
+					const existing = getEntry(sharedBoundTag, currentScreenKey);
+					if (existing?.bounds) {
 						applyMeasuredBoundsWrites({
-							sharedBoundTag,
-							ancestorKeys,
-							navigatorKey,
-							ancestorNavigatorKeys,
+							entryTag: sharedBoundTag,
+							linkId: sharedBoundTag,
 							currentScreenKey,
 							measured: existing.bounds,
 							preparedStyles,
-							shouldSetSource: true,
+							linkWrite: {
+								type: "source",
+								pairKey: sourcePairKey,
+							},
 						});
 					}
 
@@ -299,31 +277,30 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					return;
 				}
 
-				const hasPending = getPendingLink(sharedBoundTag) !== null;
-				const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
-				const hasDestination = hasDestinationLink(
-					sharedBoundTag,
-					currentScreenKey,
-				);
+				const hasPendingSource = pendingSourcePairKey
+					? getSource(pendingSourcePairKey, sharedBoundTag) !== null
+					: false;
+				const hasSource =
+					getSource(sourcePairKey, sharedBoundTag) !== null ||
+					(destinationPairKey
+						? getSource(destinationPairKey, sharedBoundTag) !== null
+						: false);
+				const hasDestination = destinationPairKey
+					? getDestination(destinationPairKey, sharedBoundTag) !== null
+					: false;
 
 				const wantsSetSource = !!shouldSetSource;
 				const wantsSetDestination = !!shouldSetDestination;
-				const wantsUpdateSource = !!shouldUpdateSource;
-				const wantsSnapshotOnly =
-					!wantsSetSource && !wantsSetDestination && !wantsUpdateSource;
+				const wantsSnapshotOnly = !wantsSetSource && !wantsSetDestination;
 
 				const canSetSource = wantsSetSource;
-				const canSetDestination = wantsSetDestination && hasPending;
-				const canUpdateSource = wantsUpdateSource && hasSource;
+				const canSetDestination =
+					wantsSetDestination && (hasPendingSource || hasSource);
 				const canSnapshotOnly =
-					wantsSnapshotOnly && (hasPending || hasSource || hasDestination);
+					wantsSnapshotOnly &&
+					(hasPendingSource || hasSource || hasDestination);
 
-				if (
-					!canSetSource &&
-					!canSetDestination &&
-					!canUpdateSource &&
-					!canSnapshotOnly
-				) {
+				if (!canSetSource && !canSetDestination && !canSnapshotOnly) {
 					if (onPress) runOnJS(onPress)();
 					return;
 				}
@@ -337,18 +314,37 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 				emitUpdate();
 
 				applyMeasuredBoundsWrites({
-					sharedBoundTag,
+					entryTag: sharedBoundTag,
+					linkId: sharedBoundTag,
 					currentScreenKey,
 					measured,
 					preparedStyles,
-					ancestorKeys,
-					navigatorKey,
-					ancestorNavigatorKeys,
-					shouldWriteEntry: true,
-					shouldSetSource: canSetSource,
-					shouldUpdateSource: canUpdateSource,
-					shouldSetDestination: canSetDestination,
+					linkWrite: canSetSource
+						? {
+								type: "source",
+								pairKey: sourcePairKey,
+							}
+						: canSetDestination && destinationPairKey
+							? {
+									type: "destination",
+									pairKey: destinationPairKey,
+								}
+							: undefined,
 				});
+
+				if (canSetSource && canSetDestination && destinationPairKey) {
+					applyMeasuredBoundsWrites({
+						entryTag: sharedBoundTag,
+						linkId: sharedBoundTag,
+						currentScreenKey,
+						measured,
+						preparedStyles,
+						linkWrite: {
+							type: "destination",
+							pairKey: destinationPairKey,
+						},
+					});
+				}
 
 				if (onPress) runOnJS(onPress)();
 			},
@@ -370,15 +366,6 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 			ancestorKeys,
 		});
 
-		// Re-measure source bounds when the destination screen (next in stack)
-		// starts closing. This fires at the instant the back animation begins,
-		// unlike useFocusEffect which fires too late (after the screen is removed
-		// from state).
-		const nextScreenKey = next?.route.key;
-		const nextClosing = nextScreenKey
-			? AnimationStore.getValue(nextScreenKey, "closing")
-			: null;
-
 		useParentSyncReaction({ parentContext, maybeMeasureAndStore });
 
 		const captureActiveOnPress = useStableCallback(() => {
@@ -392,19 +379,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 
 		return {
 			value: { updateSignal },
-			children: (
-				<>
-					{sharedBoundTag && remeasureOnFocus && nextClosing ? (
-						<CloseRemeasureReactionEffect
-							sharedBoundTag={sharedBoundTag}
-							remeasureOnFocus={remeasureOnFocus}
-							nextClosing={nextClosing}
-							maybeMeasureAndStore={maybeMeasureAndStore}
-						/>
-					) : null}
-					{children({ handleInitialLayout, captureActiveOnPress })}
-				</>
-			),
+			children: <>{children({ handleInitialLayout, captureActiveOnPress })}</>,
 		};
 	},
 );

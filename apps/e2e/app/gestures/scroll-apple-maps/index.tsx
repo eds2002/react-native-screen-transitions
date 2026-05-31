@@ -39,15 +39,11 @@ export default function AppleMapsIndex() {
 					note="When at scroll top (scrollY = 0), BOTH ↓ collapse AND ↑ expand work. This is the Apple Maps behavior."
 				/>
 
-				<View
-					style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.conceptTitle, { color: theme.text }]}>
 						Apple Maps Behavior
 					</Text>
-					<Text
-						style={[styles.conceptText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.conceptText, { color: theme.textSecondary }]}>
 						At scroll boundary (scrollY = 0):{"\n\n"}• ↓ Swipe down → Collapse
 						sheet{"\n"}• ↑ Swipe up → Expand sheet{"\n\n"}
 						When scrolled (scrollY {">"} 0):{"\n\n"}• ↓ ↑ → ScrollView handles

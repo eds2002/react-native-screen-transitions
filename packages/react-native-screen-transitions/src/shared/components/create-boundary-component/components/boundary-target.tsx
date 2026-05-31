@@ -1,7 +1,8 @@
 import type React from "react";
-import { memo, useLayoutEffect } from "react";
+import { memo, useLayoutEffect, useMemo } from "react";
 import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
+import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import {
 	TARGET_OUTSIDE_OWNER_WARNING,
 	useBoundaryOwnerContext,
@@ -18,6 +19,7 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const registerTargetRef = ownerContext?.registerTargetRef;
 	const unregisterTargetRef = ownerContext?.unregisterTargetRef;
 	const isActiveTarget = ownerContext?.activeTargetRef === targetAnimatedRef;
+	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 	useLayoutEffect(() => {
 		if (!registerTargetRef || !unregisterTargetRef) {
@@ -27,11 +29,16 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 			return;
 		}
 
-		registerTargetRef(targetAnimatedRef);
+		registerTargetRef(targetAnimatedRef, preparedStyles);
 		return () => {
 			unregisterTargetRef(targetAnimatedRef);
 		};
-	}, [registerTargetRef, unregisterTargetRef, targetAnimatedRef]);
+	}, [
+		registerTargetRef,
+		unregisterTargetRef,
+		targetAnimatedRef,
+		preparedStyles,
+	]);
 
 	return (
 		<Animated.View

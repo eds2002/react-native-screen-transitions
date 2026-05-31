@@ -22,9 +22,7 @@ export default function LeafScreen() {
 			<ScreenHeader title="Leaf Screen" subtitle="Has vertical (↓ dismisses)" />
 
 			<View style={styles.content}>
-				<View
-					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.infoTitle, { color: theme.text }]}>
 						Two Directions, No Conflict
 					</Text>
@@ -54,10 +52,7 @@ export default function LeafScreen() {
 								Swipe down
 							</Text>
 							<Text
-								style={[
-									styles.gestureResult,
-									{ color: theme.textSecondary },
-								]}
+								style={[styles.gestureResult, { color: theme.textSecondary }]}
 							>
 								Dismisses ONLY this leaf (back to index)
 							</Text>
@@ -77,10 +72,7 @@ export default function LeafScreen() {
 								Swipe up
 							</Text>
 							<Text
-								style={[
-									styles.gestureResult,
-									{ color: theme.textSecondary },
-								]}
+								style={[styles.gestureResult, { color: theme.textSecondary }]}
 							>
 								Dismisses ENTIRE stack (back to gestures home)
 							</Text>
@@ -88,15 +80,11 @@ export default function LeafScreen() {
 					</View>
 				</View>
 
-				<View
-					style={[styles.keyPoint, { backgroundColor: theme.noteBox }]}
-				>
+				<View style={[styles.keyPoint, { backgroundColor: theme.noteBox }]}>
 					<Text style={[styles.keyPointTitle, { color: theme.noteText }]}>
 						Key Insight
 					</Text>
-					<Text
-						style={[styles.keyPointText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.keyPointText, { color: theme.textSecondary }]}>
 						This is NOT shadowing! Shadowing only happens when a child claims
 						the SAME direction as an ancestor. Here, the child claims vertical
 						(↓) and the parent claims vertical-inverted (↑). They coexist

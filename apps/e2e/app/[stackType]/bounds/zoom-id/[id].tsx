@@ -4,8 +4,8 @@ import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
-import { getZoomIdItemById } from "./constants";
 import { useTheme } from "@/theme";
+import { getZoomIdItemById } from "./constants";
 
 export default function NavigationZoomIdDetail() {
 	const { width } = useWindowDimensions();
@@ -64,9 +64,7 @@ export default function NavigationZoomIdDetail() {
 					</View>
 				</View>
 
-				<View
-					style={[styles.noteCard, { backgroundColor: theme.surface }]}
-				>
+				<View style={[styles.noteCard, { backgroundColor: theme.surface }]}>
 					<Text style={[styles.noteTitle, { color: theme.textTertiary }]}>
 						About This Transition
 					</Text>

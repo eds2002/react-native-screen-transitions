@@ -54,9 +54,7 @@ export default function DeeperIndex() {
 						router.push("/gestures/snap-deep-nesting/deeper/sheet")
 					}
 				>
-					<Text
-						style={[styles.buttonText, { color: theme.actionButtonText }]}
-					>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
 						Open Sheet (L3)
 					</Text>
 					<Text

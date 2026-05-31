@@ -30,7 +30,6 @@ export interface StackContextValue extends StackCoreContextValue {
 	routeKeys: string[];
 	routes: Route<string>[];
 	scenes: StackScene[];
-	stackProgress: DerivedValue<number>;
 	optimisticFocusedIndex: DerivedValue<number>;
 }
 

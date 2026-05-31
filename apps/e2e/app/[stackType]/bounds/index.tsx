@@ -7,26 +7,10 @@ import { ListScreen } from "@/components/ui";
 
 const BOUNDS_EXAMPLES = [
 	{
-		id: "active",
-		title: "Active Bounds",
-		description:
-			"Transition.Boundary id-only matching (no explicit source/destination)",
-	},
-	{
-		id: "gesture",
-		title: "Gesture Bounds",
-		description: "Sync active gesture values into bounds animation",
-	},
-	{
 		id: "style-id",
-		title: "Style ID Bounds",
-		description: "Combine bounds with styleId mask/container choreography",
-	},
-	{
-		id: "spam",
-		title: "Bounds Spam",
+		title: "Custom Bounds Mask",
 		description:
-			"Rapid tap stress test for bound linkage and blank stack behavior",
+			"Custom bounds styles for the navigation mask and content container",
 	},
 	{
 		id: "zoom",
@@ -35,56 +19,22 @@ const BOUNDS_EXAMPLES = [
 			"bounds({ id, group }).navigation.zoom() with grouped source/destination",
 	},
 	{
-		id: "zoom-nested",
-		title: "Nested Navigation Zoom Group",
-		description:
-			"Grouped zoom with nested [id]/index and [id]/plan routes plus retargeting inside dst",
-	},
-	{
 		id: "zoom-id",
 		title: "Navigation Zoom ID Transition",
 		description:
 			"bounds({ id }).navigation.zoom() with simple id-only matching",
 	},
 	{
-		id: "music-player",
-		title: "Music Player Zoom",
-		description:
-			"Playlist row with nested Boundary.Target artwork -> fullscreen Boundary.View artwork",
-	},
-	{
-		id: "zoom-id-nested",
-		title: "Nested Navigation Zoom ID",
-		description:
-			"Push the same [id] detail route again from inside dst using related cards",
-	},
-	{
 		id: "sync",
-		title: "Bounds Sync Harness",
+		title: "Shared Element Sync",
 		description:
-			"Method/anchor/scaleMode/target permutations (source -> destination only)",
+			"Shared element cases for bounds, anchors, scale modes, and targets",
 	},
 	{
-		id: "gallery",
-		title: "Vertical Gallery",
-		description: "Vertical image gallery with shared element zoom transitions",
-	},
-	{
-		id: "gallery-horizontal",
-		title: "Horizontal Gallery",
+		id: "transition-scope",
+		title: "Nested Bounds",
 		description:
-			"Horizontal image carousel with shared element zoom transitions",
-	},
-	{
-		id: "example",
-		title: "Nested Bounds A/B",
-		description:
-			"2x2 image grid -> nested [id]/a,b route flow with navigation zoom",
-	},
-	{
-		id: "reels",
-		title: "Reels Grid",
-		description: "Yeah ",
+			"Nested parent and child stacks computing their own bounds handoff",
 	},
 ];
 

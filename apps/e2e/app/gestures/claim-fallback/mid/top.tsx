@@ -36,15 +36,11 @@ export default function ClaimFallbackTopScreen() {
 				note="After dismissing this screen, swipe down on L2. Expected: L2 dismisses first, then L1 on next swipe."
 			/>
 
-			<View
-				style={[styles.callout, { backgroundColor: theme.noteBox }]}
-			>
+			<View style={[styles.callout, { backgroundColor: theme.noteBox }]}>
 				<Text style={[styles.calloutTitle, { color: theme.noteText }]}>
 					Why this catches the bug
 				</Text>
-				<Text
-					style={[styles.calloutText, { color: theme.textSecondary }]}
-				>
+				<Text style={[styles.calloutText, { color: theme.textSecondary }]}>
 					If claim cleanup clears to null without restoring nearest fallback, L2
 					may lose priority after L3 unmount and downward swipe can jump to L1.
 				</Text>

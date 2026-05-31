@@ -32,7 +32,6 @@ import Transition, {
 
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
 import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
-import { createComponentStackNavigator } from "react-native-screen-transitions/component-stack";
 ```
 
 Use the subpath exports to build navigators. Use `Transition` for transition-aware primitives, boundary components, factories, presets, and specs. Use the named exports for helpers like `snapTo()`, hooks like `useScreenAnimation()`, and public constants such as the navigation mask ids.
@@ -42,8 +41,6 @@ Use the subpath exports to build navigators. Use `Transition` for transition-awa
 `createBlankStackNavigator()`
 
 `createNativeStackNavigator()`
-
-`createComponentStackNavigator()`
 
 ```tsx
 const Stack = createBlankStackNavigator();
@@ -274,20 +271,25 @@ For stack-scoped snapping, use `useScreenState().snapTo(index)`.
 
 ### useScreenAnimation
 
-Read the current screen animation derived value, or target an ancestor.
+Read the current screen animation derived value, or target a relative transition scope.
 
 ```tsx
 const animation = useScreenAnimation();
-const parentAnimation = useScreenAnimation("parent");
+const parentAnimation = useScreenAnimation({ depth: -1 });
+const childAnimation = useScreenAnimation({ depth: 1 });
 ```
+
+Legacy string targets such as `"parent"` and `"root"` still work for `useScreenAnimation()`, but new code should use `{ depth }`.
 
 ### useScreenGesture
 
 Read the screen navigation pan-gesture ref.
 
 ```tsx
-const parentGesture = useScreenGesture("parent");
+const parentGesture = useScreenGesture({ depth: -1 });
 ```
+
+`useScreenGesture()` supports the current screen with `depth: 0` and ancestors with negative depths.
 
 ### useScreenState
 

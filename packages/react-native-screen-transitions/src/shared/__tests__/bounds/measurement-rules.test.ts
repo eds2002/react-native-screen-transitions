@@ -1,312 +1,349 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import type { MeasureIntent } from "../../components/create-boundary-component/types";
+import { getInitialDestinationMeasurePairKey } from "../../components/create-boundary-component/utils/destination-signals";
+import { isMeasurementInViewport } from "../../components/create-boundary-component/utils/measured-bounds";
+import { getRefreshBoundarySignal } from "../../components/create-boundary-component/utils/refresh-signals";
+import { getInitialSourceCaptureSignal } from "../../components/create-boundary-component/utils/source-signals";
+import { BoundStore, type Snapshot } from "../../stores/bounds";
 import {
-	canFlushGroupActiveMeasurement,
-	getMeasureIntentFlags,
-	resolveAutoSourceCaptureSignal,
-	resolveGroupActiveMeasurementAction,
-	resolveMeasureWritePlan,
-	resolvePendingDestinationCaptureSignal,
-	resolvePendingDestinationRetrySignal,
-	PREPARE_DESTINATION_MEASUREMENT_INTENT,
-	resolvePrepareSourceMeasurementIntent,
-	shouldTriggerScrollSettledRefresh,
-} from "../../components/create-boundary-component/hooks/helpers/measurement-rules";
+	createPendingPairKey,
+	createScreenPairKey,
+} from "../../stores/bounds/helpers/link-pairs.helpers";
+import { pairs } from "../../stores/bounds/internals/state";
+
+const createBounds = (): Snapshot["bounds"] => ({
+	x: 0,
+	y: 0,
+	pageX: 0,
+	pageY: 0,
+	width: 100,
+	height: 100,
+});
 
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
 });
 
-describe("bounds measurement rules", () => {
-	it("derives explicit intent flags and write plans", () => {
-		const intents = getMeasureIntentFlags([
-			"complete-destination",
-		] satisfies readonly MeasureIntent[]);
+describe("bounds client measurement contract", () => {
+	it("auto source capture emits once for a stable source flow", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const measuredTargets: Array<{ type: "source"; pairKey: string }> = [];
+		let lastSignal: string | null = null;
 
-		expect(intents).toEqual({
-			captureSource: false,
-			completeDestination: true,
-			refreshSource: false,
-			refreshDestination: false,
+		const runAutoSourceReaction = () => {
+			const captureSignal = getInitialSourceCaptureSignal({
+				enabled: true,
+				currentScreenKey: "screen-a",
+				nextScreenKey: "screen-b",
+				linkId: "card",
+				shouldAutoMeasure: true,
+				linkState: pairs.get(),
+			});
+
+			if (!captureSignal || captureSignal.signal === lastSignal) {
+				return;
+			}
+
+			lastSignal = captureSignal.signal;
+			measuredTargets.push({
+				type: "source",
+				pairKey: captureSignal.pairKey,
+			});
+		};
+
+		runAutoSourceReaction();
+		runAutoSourceReaction();
+
+		expect(measuredTargets).toEqual([{ type: "source", pairKey }]);
+	});
+
+	it("press source capture rewrites the same pending link", () => {
+		const pendingPairKey = createPendingPairKey("screen-a");
+		const first = createBounds();
+		const second = {
+			...createBounds(),
+			x: 20,
+			pageX: 20,
+		};
+
+		BoundStore.link.setSource(pendingPairKey, "card", "screen-a", first);
+		BoundStore.link.setSource(pendingPairKey, "card", "screen-a", second);
+
+		expect(Object.keys(pairs.get()[pendingPairKey].links)).toEqual(["card"]);
+		expect(BoundStore.link.getSource(pendingPairKey, "card")?.bounds).toEqual(
+			second,
+		);
+		expect(
+			BoundStore.link.getLink(pendingPairKey, "card")?.initialSource?.bounds,
+		).toEqual(first);
+	});
+
+	it("destination attach stops after the destination has measured once", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const pendingPairKey = createPendingPairKey("screen-a");
+
+		BoundStore.link.setSource(
+			pendingPairKey,
+			"card",
+			"screen-a",
+			createBounds(),
+		);
+
+		const getDestinationPairKey = () =>
+			getInitialDestinationMeasurePairKey({
+				enabled: true,
+				currentScreenKey: "screen-b",
+				preferredSourceScreenKey: "screen-a",
+				linkId: "card",
+			});
+
+		expect(getDestinationPairKey()).toBe(pairKey);
+
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			createBounds(),
+		);
+
+		expect(getDestinationPairKey()).toBeNull();
+	});
+
+	it("attaches nested initial destinations to the animated ancestor route pair", () => {
+		const pendingPairKey = createPendingPairKey("screen-a");
+		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
+
+		BoundStore.link.setSource(
+			pendingPairKey,
+			"card",
+			"screen-a",
+			createBounds(),
+		);
+
+		const getDestinationPairKey = () =>
+			getInitialDestinationMeasurePairKey({
+				enabled: true,
+				currentScreenKey: "nested-index",
+				ancestorScreenKeys: ["nested-route"],
+				linkId: "card",
+				linkState: pairs.get(),
+			});
+
+		expect(getDestinationPairKey()).toBe(ancestorPairKey);
+
+		BoundStore.link.setDestination(
+			ancestorPairKey,
+			"card",
+			"nested-index",
+			createBounds(),
+		);
+
+		expect(getDestinationPairKey()).toBeNull();
+		expect(
+			BoundStore.link.getLink(ancestorPairKey, "card")?.destination
+				?.screenKey,
+		).toBe("nested-index");
+	});
+
+	it("attaches nested Boundary.View destinations from existing ancestor pair sources", () => {
+		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
+
+		BoundStore.link.setSource(
+			ancestorPairKey,
+			"title",
+			"screen-a",
+			createBounds(),
+		);
+
+		const getDestinationPairKey = () =>
+			getInitialDestinationMeasurePairKey({
+				enabled: true,
+				currentScreenKey: "nested-index",
+				ancestorScreenKeys: ["nested-route"],
+				linkId: "title",
+				linkState: pairs.get(),
+			});
+
+		expect(getDestinationPairKey()).toBe(ancestorPairKey);
+
+		BoundStore.link.setDestination(
+			ancestorPairKey,
+			"title",
+			"nested-index",
+			createBounds(),
+		);
+
+		expect(getDestinationPairKey()).toBeNull();
+		expect(
+			BoundStore.link.getLink(ancestorPairKey, "title")?.destination
+				?.screenKey,
+		).toBe("nested-index");
+	});
+
+	it("blocks destination measurements that are outside the viewport", () => {
+		expect(isMeasurementInViewport(createBounds(), 400, 800)).toBe(true);
+		expect(
+			isMeasurementInViewport(
+				{
+					...createBounds(),
+					pageX: 1000,
+				},
+				400,
+				800,
+			),
+		).toBe(false);
+		expect(
+			isMeasurementInViewport(
+				{
+					...createBounds(),
+					width: 0,
+				},
+				400,
+				800,
+			),
+		).toBe(false);
+	});
+
+	it("refreshes the current active grouped source when it has no source yet", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+
+		const getSignal = (linkId: string) =>
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "screen-a",
+				nextScreenKey: "screen-b",
+				linkId,
+				group: "colors",
+				shouldRefresh: true,
+				closing: false,
+				entering: false,
+				animating: false,
+				progress: 1,
+				linkState: pairs.get(),
+			});
+
+		expect(getSignal("1")).toBeNull();
+		expect(getSignal("2")).toEqual({
+			type: "source",
+			pairKey,
+			signal: "source|screen-a<>screen-b|colors|2|settled",
 		});
 
-		const plan = resolveMeasureWritePlan({
-			intents,
-			hasPendingLink: true,
-			hasSourceLink: false,
-			hasDestinationLink: false,
-			hasAttachableSourceLink: false,
-		});
+		BoundStore.link.setSource(
+			pairKey,
+			"2",
+			"screen-a",
+			createBounds(),
+			{},
+			"colors",
+		);
 
-		expect(plan).toEqual({
-			captureSource: false,
-			completeDestination: true,
-			refreshSource: false,
-			refreshDestination: false,
-			writesAny: true,
-			wantsDestinationWrite: true,
+		expect(getSignal("2")).toBeNull();
+	});
+
+	it("refreshes the current active grouped destination member", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+		BoundStore.link.setSource(
+			pairKey,
+			"2",
+			"screen-a",
+			createBounds(),
+			{},
+			"colors",
+		);
+
+		const getSignal = (linkId: string) =>
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "screen-b",
+				preferredSourceScreenKey: "screen-a",
+				linkId,
+				group: "colors",
+				shouldRefresh: true,
+				closing: true,
+				entering: false,
+				animating: false,
+				progress: 1,
+				linkState: pairs.get(),
+			});
+
+		expect(getSignal("1")).toBeNull();
+		expect(getSignal("2")).toEqual({
+			type: "destination",
+			pairKey,
+			signal: "destination|screen-a<>screen-b|colors|2|closing",
 		});
 	});
 
-	it("refresh-source only writes when a source link exists", () => {
-		const intents = getMeasureIntentFlags("refresh-source");
+	it("refreshes a non-group destination once for a stable close signal", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const measuredTargets: Array<{ type: "destination"; pairKey: string }> = [];
+		let previousSignal: string | null = null;
 
-		expect(intents).toEqual({
-			captureSource: false,
-			completeDestination: false,
-			refreshSource: true,
-			refreshDestination: false,
-		});
+		const runRefreshReaction = () => {
+			const refreshSignal = getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "screen-b",
+				preferredSourceScreenKey: "screen-a",
+				linkId: "card",
+				shouldRefresh: true,
+				closing: true,
+				entering: false,
+				animating: false,
+				progress: 1,
+			});
+
+			if (!refreshSignal || refreshSignal.signal === previousSignal) {
+				return;
+			}
+
+			previousSignal = refreshSignal.signal;
+			measuredTargets.push({
+				type: refreshSignal.type,
+				pairKey: refreshSignal.pairKey,
+			});
+		};
+
+		runRefreshReaction();
+		runRefreshReaction();
+
+		expect(measuredTargets).toEqual([{ type: "destination", pairKey }]);
+	});
+
+	it("refreshes a nested destination through its animated ancestor route pair", () => {
+		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
+
+		BoundStore.link.setSource(
+			ancestorPairKey,
+			"card",
+			"screen-a",
+			createBounds(),
+		);
+		BoundStore.link.setDestination(
+			ancestorPairKey,
+			"card",
+			"nested-index",
+			createBounds(),
+		);
 
 		expect(
-			resolveMeasureWritePlan({
-				intents,
-				hasPendingLink: false,
-				hasSourceLink: false,
-				hasDestinationLink: false,
-				hasAttachableSourceLink: false,
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "nested-index",
+				ancestorScreenKeys: ["nested-route"],
+				linkId: "card",
+				shouldRefresh: true,
+				closing: true,
+				entering: false,
+				animating: false,
+				progress: 1,
+				linkState: pairs.get(),
 			}),
 		).toEqual({
-			captureSource: false,
-			completeDestination: false,
-			refreshSource: false,
-			refreshDestination: false,
-			writesAny: false,
-			wantsDestinationWrite: false,
+			type: "destination",
+			pairKey: ancestorPairKey,
+			signal: "destination|screen-a<>nested-route|nested-index|closing",
 		});
-
-		const plan = resolveMeasureWritePlan({
-			intents,
-			hasPendingLink: false,
-			hasSourceLink: true,
-			hasDestinationLink: false,
-			hasAttachableSourceLink: false,
-		});
-
-		expect(plan).toEqual({
-			captureSource: false,
-			completeDestination: false,
-			refreshSource: true,
-			refreshDestination: false,
-			writesAny: true,
-			wantsDestinationWrite: false,
-		});
-	});
-
-	it("auto-captures source whenever the next screen exists", () => {
-		expect(
-			resolveAutoSourceCaptureSignal({
-				enabled: true,
-				nextScreenKey: "detail",
-				tagPresence: undefined,
-			}),
-		).toBe("detail");
-
-		expect(
-			resolveAutoSourceCaptureSignal({
-				enabled: true,
-				nextScreenKey: "detail",
-				tagPresence: {
-					detail: { count: 1 },
-					list: { count: 1 },
-				},
-			}),
-		).toBe("detail");
-
-		expect(
-			resolveAutoSourceCaptureSignal({
-				enabled: true,
-				nextScreenKey: "detail",
-				tagPresence: {
-					nested: { count: 1, ancestorKeys: ["detail"] },
-				},
-			}),
-		).toBe("detail");
-	});
-
-	it("only completes destination when an attachable source link exists", () => {
-		expect(
-			resolvePendingDestinationCaptureSignal({
-				enabled: true,
-				resolvedSourceKey: "list",
-				hasAttachableSourceLink: false,
-				hasDestinationLink: false,
-			}),
-		).toBe(0);
-
-		expect(
-			resolvePendingDestinationCaptureSignal({
-				enabled: true,
-				resolvedSourceKey: "list",
-				hasAttachableSourceLink: true,
-				hasDestinationLink: false,
-			}),
-		).toBe("list");
-
-		expect(
-			resolvePendingDestinationCaptureSignal({
-				enabled: true,
-				resolvedSourceKey: "list",
-				hasAttachableSourceLink: true,
-				hasDestinationLink: true,
-			}),
-		).toBe(0);
-	});
-
-	it("retries destination measurement only inside the valid retry window", () => {
-		expect(
-			resolvePendingDestinationRetrySignal({
-				enabled: true,
-				retryCount: 0,
-				maxRetries: 4,
-				isAnimating: true,
-				hasDestinationLink: false,
-				progress: 0.24,
-				retryProgressMax: 1.05,
-				retryProgressBuckets: 8,
-				resolvedSourceKey: "list",
-				hasAttachableSourceLink: true,
-			}),
-		).toBe(2);
-
-		expect(
-			resolvePendingDestinationRetrySignal({
-				enabled: true,
-				retryCount: 4,
-				maxRetries: 4,
-				isAnimating: true,
-				hasDestinationLink: false,
-				progress: 0.24,
-				retryProgressMax: 1.05,
-				retryProgressBuckets: 8,
-				resolvedSourceKey: "list",
-				hasAttachableSourceLink: true,
-			}),
-		).toBe(0);
-
-		expect(
-			resolvePendingDestinationRetrySignal({
-				enabled: true,
-				retryCount: 0,
-				maxRetries: 4,
-				isAnimating: true,
-				hasDestinationLink: true,
-				progress: 0.24,
-				retryProgressMax: 1.05,
-				retryProgressBuckets: 8,
-				resolvedSourceKey: "list",
-				hasAttachableSourceLink: true,
-			}),
-		).toBe(0);
-	});
-
-	it("maps prepare-transition source measurement by group refresh policy", () => {
-		expect(
-			resolvePrepareSourceMeasurementIntent({
-				hasSourceLink: false,
-				shouldRefreshExistingSource: false,
-			}),
-		).toBe("capture-source");
-		expect(
-			resolvePrepareSourceMeasurementIntent({
-				hasSourceLink: true,
-				shouldRefreshExistingSource: false,
-			}),
-		).toBe(null);
-		expect(
-			resolvePrepareSourceMeasurementIntent({
-				hasSourceLink: true,
-				shouldRefreshExistingSource: true,
-			}),
-		).toBe("refresh-source");
-		expect(PREPARE_DESTINATION_MEASUREMENT_INTENT).toEqual([
-			"complete-destination",
-			"refresh-destination",
-		]);
-	});
-
-	it("gates grouped refresh actions to the active member only", () => {
-		expect(
-			resolveGroupActiveMeasurementAction({
-				enabled: true,
-				isEligible: true,
-				memberId: "2",
-				activeId: "1",
-				previousActiveId: "2",
-			}),
-		).toBe("clear-pending");
-
-		expect(
-			resolveGroupActiveMeasurementAction({
-				enabled: true,
-				isEligible: true,
-				memberId: "2",
-				activeId: "2",
-				previousActiveId: "1",
-			}),
-		).toBe("queue-or-flush");
-
-		expect(
-			resolveGroupActiveMeasurementAction({
-				enabled: true,
-				isEligible: true,
-				memberId: "2",
-				activeId: "2",
-				previousActiveId: "2",
-			}),
-		).toBe("noop");
-
-		expect(
-			canFlushGroupActiveMeasurement({
-				enabled: true,
-				isEligible: true,
-				memberId: "2",
-				activeId: "2",
-			}),
-		).toBe(true);
-
-		expect(
-			canFlushGroupActiveMeasurement({
-				enabled: true,
-				isEligible: true,
-				memberId: "2",
-				activeId: "1",
-			}),
-		).toBe(false);
-	});
-
-	it("only refreshes from scroll settle on grouped source boundaries", () => {
-		expect(
-			shouldTriggerScrollSettledRefresh({
-				enabled: true,
-				group: "photos",
-				hasNextScreen: true,
-				hasSettledSignal: true,
-				signal: 2,
-				previousSignal: 1,
-			}),
-		).toBe(true);
-
-		expect(
-			shouldTriggerScrollSettledRefresh({
-				enabled: true,
-				group: undefined,
-				hasNextScreen: true,
-				hasSettledSignal: true,
-				signal: 2,
-				previousSignal: 1,
-			}),
-		).toBe(false);
-
-		expect(
-			shouldTriggerScrollSettledRefresh({
-				enabled: true,
-				group: "photos",
-				hasNextScreen: false,
-				hasSettledSignal: true,
-				signal: 2,
-				previousSignal: 1,
-			}),
-		).toBe(false);
 	});
 });

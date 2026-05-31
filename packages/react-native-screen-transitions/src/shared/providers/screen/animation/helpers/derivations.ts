@@ -1,33 +1,20 @@
 import type { ScreenTransitionState } from "../../../../types/animation.types";
 
-interface DerivationsParams {
+interface DerivationsTarget {
 	previous?: ScreenTransitionState;
 	current: ScreenTransitionState;
 	next?: ScreenTransitionState;
+	progress: number;
+	focused: boolean;
+	active: ScreenTransitionState;
+	inactive: ScreenTransitionState | undefined;
 }
 
-/**
- * Additional values to help make defining animations easier.
- */
-export const derivations = ({ previous, current, next }: DerivationsParams) => {
+export const updateDerivations = (frame: DerivationsTarget) => {
 	"worklet";
 
-	// The combined progress (current + next, 0-2 range)
-	const progress = current.progress + (next?.progress ?? 0);
-
-	// Whether the current screen is focused
-	const focused = !next;
-
-	// The screen driving the transition
-	const active = focused ? current : (next ?? current);
-
-	// The screen NOT driving the transition
-	const inactive = focused ? previous : current;
-
-	return {
-		progress,
-		focused,
-		active,
-		inactive,
-	};
+	frame.progress = frame.current.progress + (frame.next?.progress ?? 0);
+	frame.focused = !frame.next;
+	frame.active = frame.focused ? frame.current : (frame.next ?? frame.current);
+	frame.inactive = frame.focused ? frame.previous : frame.current;
 };

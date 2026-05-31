@@ -49,15 +49,11 @@ export default function LeafScreen() {
 					note="↓ is SHADOWED: L3 claims vertical, so L1's vertical is blocked. But → works: inherited from L2."
 				/>
 
-				<View
-					style={[styles.keyPoint, { backgroundColor: theme.noteBox }]}
-				>
+				<View style={[styles.keyPoint, { backgroundColor: theme.noteBox }]}>
 					<Text style={[styles.keyPointTitle, { color: theme.noteText }]}>
 						Key Insight
 					</Text>
-					<Text
-						style={[styles.keyPointText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.keyPointText, { color: theme.textSecondary }]}>
 						This leaf shadows the vertical gesture from Level 1 (deep-nesting).
 						But it still inherits the horizontal gesture from Level 2 (deeper).
 						Shadowing only affects the same direction!

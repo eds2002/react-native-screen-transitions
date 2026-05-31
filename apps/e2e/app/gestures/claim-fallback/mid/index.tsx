@@ -52,9 +52,7 @@ export default function ClaimFallbackMidIndex() {
 						router.push("/gestures/claim-fallback/mid/top" as never)
 					}
 				>
-					<Text
-						style={[styles.buttonText, { color: theme.actionButtonText }]}
-					>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
 						Open L3 (Top)
 					</Text>
 					<Text

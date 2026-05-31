@@ -36,42 +36,26 @@ export default function SameAxisShadowingIndex() {
 
 				<View style={styles.comparison}>
 					<View
-						style={[
-							styles.comparisonItem,
-							{ backgroundColor: theme.card },
-						]}
+						style={[styles.comparisonItem, { backgroundColor: theme.card }]}
 					>
-						<Text
-							style={[styles.comparisonTitle, { color: theme.text }]}
-						>
+						<Text style={[styles.comparisonTitle, { color: theme.text }]}>
 							Leaf A (inherits)
 						</Text>
 						<Text
-							style={[
-								styles.comparisonText,
-								{ color: theme.textSecondary },
-							]}
+							style={[styles.comparisonText, { color: theme.textSecondary }]}
 						>
 							No gesture config → inherits from parent. Swipe ↓ dismisses the
 							ENTIRE stack.
 						</Text>
 					</View>
 					<View
-						style={[
-							styles.comparisonItem,
-							{ backgroundColor: theme.card },
-						]}
+						style={[styles.comparisonItem, { backgroundColor: theme.card }]}
 					>
-						<Text
-							style={[styles.comparisonTitle, { color: theme.text }]}
-						>
+						<Text style={[styles.comparisonTitle, { color: theme.text }]}>
 							Leaf B (shadows)
 						</Text>
 						<Text
-							style={[
-								styles.comparisonText,
-								{ color: theme.textSecondary },
-							]}
+							style={[styles.comparisonText, { color: theme.textSecondary }]}
 						>
 							Has vertical gesture → shadows parent. Swipe ↓ dismisses ONLY
 							leaf-b, returning to this index.
@@ -117,10 +101,7 @@ export default function SameAxisShadowingIndex() {
 						onPress={() => router.push("/gestures/same-axis-shadowing/leaf-b")}
 					>
 						<Text
-							style={[
-								styles.buttonText,
-								{ color: theme.secondaryButtonText },
-							]}
+							style={[styles.buttonText, { color: theme.secondaryButtonText }]}
 						>
 							Open Leaf B (shadows)
 						</Text>

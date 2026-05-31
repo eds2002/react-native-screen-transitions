@@ -39,15 +39,11 @@ export default function InstagramIndex() {
 					note="Expand ONLY works via deadspace (handle/header). From ScrollView, ↑ always scrolls."
 				/>
 
-				<View
-					style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.conceptTitle, { color: theme.text }]}>
 						Instagram Behavior
 					</Text>
-					<Text
-						style={[styles.conceptText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.conceptText, { color: theme.textSecondary }]}>
 						<Text style={[styles.highlight, { color: theme.text }]}>
 							Via Deadspace (handle):
 						</Text>

@@ -58,10 +58,22 @@ export function TabBarOverlay({
 					onPress={() => canGoBack && nav.goBack()}
 					disabled={!canGoBack}
 				>
-					<Text style={[styles.tabIcon, { color: theme.tabBarActive }, !canGoBack && { color: theme.textTertiary }]}>
+					<Text
+						style={[
+							styles.tabIcon,
+							{ color: theme.tabBarActive },
+							!canGoBack && { color: theme.textTertiary },
+						]}
+					>
 						{"<"}
 					</Text>
-					<Text style={[styles.tabLabel, { color: theme.textSecondary }, !canGoBack && { color: theme.textTertiary }]}>
+					<Text
+						style={[
+							styles.tabLabel,
+							{ color: theme.textSecondary },
+							!canGoBack && { color: theme.textTertiary },
+						]}
+					>
 						Back
 					</Text>
 				</Pressable>
@@ -80,10 +92,22 @@ export function TabBarOverlay({
 					onPress={() => nav.popToTop?.()}
 					disabled={!canGoBack}
 				>
-					<Text style={[styles.tabIcon, { color: theme.tabBarActive }, !canGoBack && { color: theme.textTertiary }]}>
+					<Text
+						style={[
+							styles.tabIcon,
+							{ color: theme.tabBarActive },
+							!canGoBack && { color: theme.textTertiary },
+						]}
+					>
 						{"^"}
 					</Text>
-					<Text style={[styles.tabLabel, { color: theme.textSecondary }, !canGoBack && { color: theme.textTertiary }]}>
+					<Text
+						style={[
+							styles.tabLabel,
+							{ color: theme.textSecondary },
+							!canGoBack && { color: theme.textTertiary },
+						]}
+					>
 						Home
 					</Text>
 				</Pressable>

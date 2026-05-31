@@ -1,8 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import {
-	resolveNavigationMaskEnabled,
-	resolveSheetScrollGestureBehavior,
-} from "../utils/resolve-screen-transition-options";
+import { resolveSheetScrollGestureBehavior } from "../utils/resolve-screen-transition-options";
 
 describe("screen transition option aliases", () => {
 	it("defaults sheet scroll gesture behavior to expand-and-collapse", () => {
@@ -27,23 +24,5 @@ describe("screen transition option aliases", () => {
 				expandViaScrollView: true,
 			}),
 		).toBe("collapse-only");
-	});
-
-	it("defaults navigationMaskEnabled to false", () => {
-		expect(resolveNavigationMaskEnabled({})).toBe(false);
-	});
-
-	it("falls back to deprecated maskEnabled when needed", () => {
-		expect(resolveNavigationMaskEnabled({ maskEnabled: true })).toBe(true);
-		expect(resolveNavigationMaskEnabled({ maskEnabled: false })).toBe(false);
-	});
-
-	it("prefers navigationMaskEnabled over deprecated maskEnabled", () => {
-		expect(
-			resolveNavigationMaskEnabled({
-				navigationMaskEnabled: false,
-				maskEnabled: true,
-			}),
-		).toBe(false);
 	});
 });

@@ -9,7 +9,7 @@ import {
 	type ViewStyle,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useTheme, type Theme } from "@/theme";
+import { type Theme, useTheme } from "@/theme";
 import { ScreenHeader } from "./screen-header";
 
 /* ─── ListScreen ─────────────────────────────────────────────────────── */
@@ -43,7 +43,10 @@ export function ListScreen({
 	const theme = useTheme();
 
 	return (
-		<SafeAreaView style={[styles.screen, { backgroundColor: theme.bg }]} edges={edges}>
+		<SafeAreaView
+			style={[styles.screen, { backgroundColor: theme.bg }]}
+			edges={edges}
+		>
 			<ScreenHeader title={title} subtitle={subtitle} />
 			<ScrollView contentContainerStyle={styles.listContent}>
 				<View style={styles.list}>
@@ -60,11 +63,15 @@ export function ListScreen({
 							<Text style={[styles.listItemTitle, { color: theme.text }]}>
 								{item.title}
 							</Text>
-							<Text style={[styles.listItemDesc, { color: theme.textSecondary }]}>
+							<Text
+								style={[styles.listItemDesc, { color: theme.textSecondary }]}
+							>
 								{item.description}
 							</Text>
 							{item.scenario && (
-								<Text style={[styles.listItemScenario, { color: theme.scenario }]}>
+								<Text
+									style={[styles.listItemScenario, { color: theme.scenario }]}
+								>
 									{item.scenario}
 								</Text>
 							)}
@@ -95,7 +102,9 @@ export function InfoCard({
 	return (
 		<View style={[styles.infoCard, { backgroundColor: theme.card }, style]}>
 			{title && (
-				<Text style={[styles.infoCardTitle, { color: theme.text }]}>{title}</Text>
+				<Text style={[styles.infoCardTitle, { color: theme.text }]}>
+					{title}
+				</Text>
 			)}
 			{children}
 		</View>
@@ -126,8 +135,12 @@ export function ActionButton({
 
 	const isPrimary = variant === "primary";
 	const bg = isPrimary ? theme.actionButton : theme.secondaryButton;
-	const bgPressed = isPrimary ? theme.actionButtonPressed : theme.secondaryButtonPressed;
-	const textColor = isPrimary ? theme.actionButtonText : theme.secondaryButtonText;
+	const bgPressed = isPrimary
+		? theme.actionButtonPressed
+		: theme.secondaryButtonPressed;
+	const textColor = isPrimary
+		? theme.actionButtonText
+		: theme.secondaryButtonText;
 
 	return (
 		<Pressable
@@ -141,7 +154,9 @@ export function ActionButton({
 			]}
 			onPress={onPress}
 		>
-			<Text style={[styles.actionButtonText, { color: textColor }]}>{title}</Text>
+			<Text style={[styles.actionButtonText, { color: textColor }]}>
+				{title}
+			</Text>
 		</Pressable>
 	);
 }

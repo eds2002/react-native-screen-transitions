@@ -219,18 +219,17 @@ If the sheet instead uses `gestureDirection: "horizontal"`, it owns the horizont
 Valid targets are:
 
 - `useScreenGesture()`
-- `useScreenGesture("self")`
-- `useScreenGesture("parent")`
-- `useScreenGesture("root")`
-- `useScreenGesture({ ancestor: 2 })`
+- `useScreenGesture({ depth: 0 })`
+- `useScreenGesture({ depth: -1 })`
+- `useScreenGesture({ depth: -2 })`
 
 ```tsx
-const parentGesture = useScreenGesture("parent");
+const parentGesture = useScreenGesture({ depth: -1 });
 
 const pan = Gesture.Pan().requireExternalGestureToFail(parentGesture);
 ```
 
-Ancestor targeting stops at isolation boundaries. In an `independent` nested stack, `"parent"`, `"root"`, or `{ ancestor: number }` may resolve to `null` once the lookup reaches that isolated tree edge.
+`depth: 0` resolves the current screen gesture. Negative depths walk ancestors. Ancestor targeting stops at isolation boundaries, so a negative depth may resolve to `null` once the lookup reaches an isolated tree edge.
 
 ## Related Reading
 

@@ -21,9 +21,7 @@ export default function SheetScreen() {
 
 	return (
 		<View style={styles.container}>
-			<View
-				style={[styles.sheet, { backgroundColor: theme.card }]}
-			>
+			<View style={[styles.sheet, { backgroundColor: theme.card }]}>
 				<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 				<ScreenHeader
 					title="L3: Sheet (snap points)"
@@ -57,20 +55,11 @@ export default function SheetScreen() {
 						note="This is the ultimate test! Sheet owns ↓↑ (shadows L1), inherits → from L2."
 					/>
 
-					<View
-						style={[styles.keyPoint, { backgroundColor: theme.noteBox }]}
-					>
-						<Text
-							style={[styles.keyPointTitle, { color: theme.noteText }]}
-						>
+					<View style={[styles.keyPoint, { backgroundColor: theme.noteBox }]}>
+						<Text style={[styles.keyPointTitle, { color: theme.noteText }]}>
 							Why This Works
 						</Text>
-						<Text
-							style={[
-								styles.keyPointText,
-								{ color: theme.textSecondary },
-							]}
-						>
+						<Text style={[styles.keyPointText, { color: theme.textSecondary }]}>
 							1. Sheet has snap points → claims vertical AND vertical-inverted
 							{"\n"}
 							2. This shadows L1's vertical (L1 is blocked){"\n"}

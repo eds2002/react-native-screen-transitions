@@ -35,25 +35,25 @@ export function useContentLayout() {
 
 			runOnUI((nextWidth: number, nextHeight: number, nextFraction: number) => {
 				"worklet";
-				measuredContentLayout.value = {
+				measuredContentLayout.set({
 					width: nextWidth,
 					height: nextHeight,
-				};
+				});
 
-				const isFirstMeasurement = resolvedAutoSnapPoint.value <= 0;
-				resolvedAutoSnapPoint.value = nextFraction;
+				const isFirstMeasurement = resolvedAutoSnapPoint.get() <= 0;
+				resolvedAutoSnapPoint.set(nextFraction);
 
 				if (
 					!isFirstMeasurement ||
-					animations.progress.value !== 0 ||
-					animations.animating.value !== 0
+					animations.progress.get() !== 0 ||
+					animations.progressAnimating.get() !== 0
 				) {
 					return;
 				}
 
 				if (isFirstKey && !experimental_animateOnInitialMount) {
-					targetProgress.value = nextFraction;
-					animations.progress.value = nextFraction;
+					targetProgress.set(nextFraction);
+					animations.progress.set(nextFraction);
 					return;
 				}
 

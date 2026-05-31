@@ -32,9 +32,7 @@ export default function ScrollBoundaryIndex() {
 				note="The ScrollView must be at its boundary (scrollY = 0 for vertical) before yielding to the gesture. If mid-scroll, the ScrollView handles the gesture instead."
 			/>
 
-			<View
-				style={[styles.ruleBox, { backgroundColor: theme.noteBox }]}
-			>
+			<View style={[styles.ruleBox, { backgroundColor: theme.noteBox }]}>
 				<Text style={[styles.ruleTitle, { color: theme.noteText }]}>
 					The Golden Rule
 				</Text>
@@ -56,9 +54,7 @@ export default function ScrollBoundaryIndex() {
 					]}
 					onPress={() => router.push("/gestures/scroll-boundary/screen")}
 				>
-					<Text
-						style={[styles.buttonText, { color: theme.actionButtonText }]}
-					>
+					<Text style={[styles.buttonText, { color: theme.actionButtonText }]}>
 						Open Screen with ScrollView
 					</Text>
 				</Pressable>

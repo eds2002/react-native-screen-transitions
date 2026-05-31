@@ -3,7 +3,11 @@ import type {
 	ScreenStyleInterpolator,
 	TransitionSpec,
 } from "./animation.types";
-import type { GestureActivationArea, GestureDirection } from "./gesture.types";
+import type {
+	GestureActivationArea,
+	GestureDirection,
+	GestureProgressMode,
+} from "./gesture.types";
 import type { OverlayProps } from "./overlay.types";
 
 export type Layout = {
@@ -23,19 +27,13 @@ export type ScreenLayouts = {
 	 * auto snap-point sizing. It is undefined until a real measurement exists.
 	 */
 	content?: Layout;
-	/**
-	 * Whether navigation bounds masking is enabled for this screen.
-	 *
-	 * When enabled, navigation zoom helpers target the masked container path
-	 * instead of the plain content slot.
-	 */
-	navigationMaskEnabled: boolean;
 };
 
 export type ScreenKey = string;
 export type SheetScrollGestureBehavior =
 	| "expand-and-collapse"
 	| "collapse-only";
+export type GestureTracking = "auto" | "never" | "always";
 
 /**
  * A single snap point value. Either a fraction of screen height (0–1) or
@@ -125,11 +123,6 @@ export type ScreenTransitionConfig = {
 	navigationMaskEnabled?: boolean;
 
 	/**
-	 * @deprecated Use `navigationMaskEnabled` instead.
-	 */
-	maskEnabled?: boolean;
-
-	/**
 	 * Controls whether swipe-to-dismiss is enabled.
 	 *
 	 * For screens with `snapPoints`, gesture-driven snapping between non-dismiss
@@ -138,9 +131,37 @@ export type ScreenTransitionConfig = {
 	gestureEnabled?: boolean;
 
 	/**
-	 * The direction of the swipe gesture used to dismiss the screen.
+	 * Controls whether the screen tracks live gesture values.
+	 *
+	 * - `"auto"` tracks gestures when dismissal is enabled, or when snap points
+	 *   can move without dismissal.
+	 * - `"never"` disables gesture tracking for the screen.
+	 * - `"always"` keeps tracking live gesture values even when
+	 *   `gestureEnabled` is `false`, without allowing dismiss.
+	 *
+	 * @default "auto"
+	 */
+	gestureTracking?: GestureTracking;
+
+	/**
+	 * The direction(s) of the screen gesture used to dismiss the screen.
+	 *
+	 * Supports pan directions (`horizontal`, `vertical`, etc.) and pinch
+	 * directions (`pinch-in`, `pinch-out`).
 	 */
 	gestureDirection?: GestureDirection | GestureDirection[];
+
+	/**
+	 * Controls how directly live gesture movement maps into transition progress
+	 * and the non-raw gesture values exposed to interpolators.
+	 *
+	 * Lower values feel less sensitive, higher values feel more responsive. If
+	 * an interpolator needs physical gesture input before sensitivity is applied,
+	 * read from `active.gesture.raw`.
+	 *
+	 * @default 1
+	 */
+	gestureSensitivity?: number;
 
 	/**
 	 * How much the gesture's final velocity impacts the dismiss decision.
@@ -156,6 +177,14 @@ export type ScreenTransitionConfig = {
 	snapVelocityImpact?: number;
 
 	/**
+	 * How much velocity affects snap point targeting. Lower values make snapping
+	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
+	 *
+	 * @default 0.1
+	 */
+	gestureSnapVelocityImpact?: number;
+
+	/**
 	 * Multiplies gesture release velocity used for spring animation energy.
 	 *
 	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
@@ -167,13 +196,12 @@ export type ScreenTransitionConfig = {
 	gestureReleaseVelocityScale?: number;
 
 	/**
-	 * Caps the absolute post-scale release velocity used by spring animations.
+	 * Deprecated compatibility option.
 	 *
-	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
-	 * or snap target selection (`snapVelocityImpact`). It only bounds release
-	 * animation intensity after `gestureReleaseVelocityScale` is applied.
+	 * This option is no longer read by the runtime transition options. Use
+	 * `gestureReleaseVelocityScale` to tune post-release spring energy.
 	 *
-	 * @default 3.2
+	 * @deprecated v3 compatibility only.
 	 */
 	gestureReleaseVelocityMax?: number;
 
@@ -183,7 +211,15 @@ export type ScreenTransitionConfig = {
 	gestureResponseDistance?: number;
 
 	/**
+	 * Controls whether live gesture displacement drives transition progress or
+	 * stays available as freeform gesture values for custom interpolators.
+	 */
+	gestureProgressMode?: GestureProgressMode;
+
+	/**
 	 * Whether the gesture drives the progress.
+	 *
+	 * @deprecated Use `gestureProgressMode` instead.
 	 */
 	gestureDrivesProgress?: boolean;
 

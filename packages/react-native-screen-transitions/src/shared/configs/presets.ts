@@ -246,7 +246,7 @@ export const SharedIGImage = ({
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
 		enableTransitions: true,
-		gestureDrivesProgress: false,
+		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			current,
 			layouts: {
@@ -394,7 +394,7 @@ export const SharedAppleMusic = ({
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
-		gestureDrivesProgress: false,
+		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			bounds,
 			focused,
@@ -407,18 +407,18 @@ export const SharedAppleMusic = ({
 
 			const normX = active.gesture.normX;
 			const normY = active.gesture.normY;
-			const initialDirection = active.gesture.direction;
+			const initialGesture = active.gesture.active ?? active.gesture.direction;
 
 			/**
 			 * ===============================
 			 * Animations for both bounds
 			 * ===============================
 			 */
-			const xResistance = initialDirection === "horizontal" ? 0.7 : 0.4;
-			const yResistance = initialDirection === "vertical" ? 0.7 : 0.4;
+			const xResistance = initialGesture === "horizontal" ? 0.7 : 0.4;
+			const yResistance = initialGesture === "vertical" ? 0.7 : 0.4;
 
-			const xScaleOuput = initialDirection === "horizontal" ? [1, 0.5] : [1, 1];
-			const yScaleOuput = initialDirection === "vertical" ? [1, 0.5] : [1, 1];
+			const xScaleOuput = initialGesture === "horizontal" ? [1, 0.5] : [1, 1];
+			const yScaleOuput = initialGesture === "vertical" ? [1, 0.5] : [1, 1];
 
 			const dragX = interpolate(
 				normX,
@@ -608,7 +608,7 @@ export const SharedXImage = ({
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "vertical-inverted"],
-		gestureDrivesProgress: false,
+		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			focused,
 			bounds,

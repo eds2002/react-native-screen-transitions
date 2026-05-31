@@ -15,7 +15,7 @@ import { GestureStore } from "../../../stores/gesture.store";
 import { SystemStore } from "../../../stores/system.store";
 import type { BackdropBehavior } from "../../../types/screen.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
-import { findCollapseTarget } from "../../../utils/gesture/find-collapse-target";
+import { findCollapseTarget } from "../helpers/find-collapse-target";
 
 export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior,
@@ -63,22 +63,28 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 			runOnUI(() => {
 				"worklet";
-				const resolvedSnaps = rawSnapPoints
-					.map((point) =>
-						point === "auto" ? resolvedAutoSnapPoint.value : point,
-					)
-					.filter((point): point is number => typeof point === "number");
+				const resolvedSnaps: number[] = [];
+
+				for (let i = 0; i < rawSnapPoints.length; i++) {
+					const point = rawSnapPoints[i];
+					const resolvedPoint =
+						point === "auto" ? resolvedAutoSnapPoint.get() : point;
+
+					if (typeof resolvedPoint === "number") {
+						resolvedSnaps.push(resolvedPoint);
+					}
+				}
 
 				const { target, shouldDismiss } = findCollapseTarget(
-					animations.progress.value,
+					animations.progress.get(),
 					resolvedSnaps,
 					canDismiss,
 				);
 
 				// If already dismissing, skip
-				if (gestures.dismissing.value) return;
+				if (gestures.dismissing.get()) return;
 
-				gestures.dismissing.value = shouldDismiss ? 1 : 0;
+				gestures.dismissing.set(shouldDismiss ? 1 : 0);
 
 				const spec = shouldDismiss
 					? transitionSpec

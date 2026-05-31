@@ -1,6 +1,10 @@
-import { interpolate } from "react-native-reanimated";
-import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
+import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
+import { PINCH_PROBE_OPTIONS } from "./pinch-shadowing/shared";
+import {
+	verticalInvertedSlideOptions,
+	verticalSlideOptions,
+} from "./transition-options";
 
 export default function GesturesLayout() {
 	return (
@@ -9,125 +13,60 @@ export default function GesturesLayout() {
 			{/* Basic Examples */}
 			<BlankStack.Screen
 				name="simple-inheritance"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={verticalSlideOptions()}
 			/>
-			<BlankStack.Screen
-				name="two-axes"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
+			<BlankStack.Screen name="two-axes" options={verticalSlideOptions()} />
 			<BlankStack.Screen
 				name="same-axis-shadowing"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={verticalSlideOptions()}
 			/>
 			{/* Intermediate Examples */}
-			<BlankStack.Screen
-				name="deep-nesting"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
+			<BlankStack.Screen name="deep-nesting" options={verticalSlideOptions()} />
 			<BlankStack.Screen
 				name="inverted-gesture"
-				options={{
-					gestureEnabled: true,
-					gestureDirection: "vertical-inverted",
-					screenStyleInterpolator: ({
-						layouts: {
-							screen: { height },
-						},
-						progress,
-					}) => {
-						"worklet";
-						const y = interpolate(progress, [0, 1], [-height, 0], "clamp");
-						return {
-							content: {
-								style: {
-									transform: [{ translateY: y }],
-								},
-							},
-						};
-					},
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
-				}}
+				options={verticalInvertedSlideOptions()}
 			/>
 			<BlankStack.Screen
 				name="coexistence"
-				options={{
-					gestureEnabled: true,
-					gestureDirection: "vertical-inverted",
-					screenStyleInterpolator: ({
-						layouts: {
-							screen: { height },
-						},
-						progress,
-					}) => {
-						"worklet";
-						const y = interpolate(progress, [0, 1], [-height, 0], "clamp");
-						return {
-							content: {
-								style: {
-									transform: [{ translateY: y }],
-								},
-							},
-						};
-					},
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
-				}}
+				options={verticalInvertedSlideOptions()}
 			/>
+			<BlankStack.Screen name="pinch-shadowing" options={PINCH_PROBE_OPTIONS} />
 			{/* Snap Point Examples */}
 			<BlankStack.Screen
 				name="snap-shadows-axis"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={verticalSlideOptions()}
 			/>
 			<BlankStack.Screen
 				name="snap-different-axis"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={verticalSlideOptions()}
 			/>
 			<BlankStack.Screen
 				name="snap-deep-nesting"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={verticalSlideOptions()}
 			/>
 			<BlankStack.Screen
 				name="claim-fallback"
-				options={{
-					...Transition.Presets.SlideFromBottom(),
-					gestureEnabled: true,
-					gestureDirection: "vertical",
-				}}
+				options={verticalSlideOptions()}
 			/>
 			<BlankStack.Screen
 				name="snap-locked-no-bubble"
-				options={{
-					...Transition.Presets.SlideFromBottom(),
-					gestureEnabled: true,
-					gestureDirection: "vertical",
-				}}
+				options={verticalSlideOptions()}
 			/>
 			{/* ScrollView Examples */}
 			<BlankStack.Screen
 				name="scroll-direction-propagation"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={verticalSlideOptions()}
 			/>
 			<BlankStack.Screen
 				name="scroll-direction-propagation-horizontal"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={{ ...IOSSlide() }}
 			/>
 			<BlankStack.Screen
 				name="scroll-boundary"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
+				options={verticalSlideOptions()}
 			/>
-			<BlankStack.Screen
-				name="scroll-apple-maps"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
-			<BlankStack.Screen
-				name="scroll-instagram"
-				options={{ ...Transition.Presets.SlideFromBottom() }}
-			/>
+			<BlankStack.Screen name="scroll-apple-maps" options={{ ...IOSSlide() }} />
+			<BlankStack.Screen name="scroll-instagram" options={{ ...IOSSlide() }} />
 		</BlankStack>
 	);
 }

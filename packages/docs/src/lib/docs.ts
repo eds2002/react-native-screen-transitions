@@ -47,7 +47,15 @@ const docModules = import.meta.glob<DocModule>("../content/docs/**/*.mdx", {
 	eager: true,
 });
 
-const groupOrder = ["Get Started", "Core Concepts", "Components", "Guides"];
+const groupOrder = [
+	"Get Started",
+	"Core Concepts",
+	"Navigation Transitions",
+	"Components",
+	"Recipes",
+	"Changelogs",
+	"Guides",
+];
 const groupOrderIndex = new Map(
 	groupOrder.map((group, index) => [group, index] as const),
 );
@@ -56,7 +64,7 @@ export const docVersions = [
 	{
 		basePath: "",
 		id: "v3-4",
-		label: "v3.4",
+		label: "v3",
 	},
 	{
 		basePath: "/v4-next",
@@ -284,16 +292,48 @@ export function getVersionSwitchTarget(
 	return getVisibleDocsForVersion(versionId)[0]?.to ?? "/";
 }
 
+function getDocSocialImagePath(doc: Doc) {
+	if (doc.to === "/") {
+		return "/og/index.png";
+	}
+
+	return `/og/${doc.to.replace(/^\//, "").replace(/\/$/, "").replaceAll("/", "-")}.png`;
+}
+
 export function createDocHead(doc: Doc) {
+	const title =
+		doc.to === "/" ? "Screen Transitions" : `${doc.pageTitle} | Screen Transitions`;
+	const socialImage = getDocSocialImagePath(doc);
+	const imageAlt =
+		doc.to === "/" ? "Screen Transitions" : doc.pageTitle;
+
 	return {
 		meta: [
 			{
-				title:
-					doc.to === "/" ? "Screen Transitions" : `${doc.pageTitle} | Screen Transitions`,
+				title,
 			},
 			{
 				content: doc.description,
 				name: "description",
+			},
+			{ property: "og:type", content: "article" },
+			{ property: "og:site_name", content: "Screen Transitions" },
+			{ property: "og:title", content: title },
+			{ property: "og:description", content: doc.description },
+			{ property: "og:image", content: socialImage },
+			{
+				property: "og:image:alt",
+				content: `${imageAlt} documentation preview`,
+			},
+			{ property: "og:image:width", content: "1200" },
+			{ property: "og:image:height", content: "630" },
+			{ name: "twitter:card", content: "summary_large_image" },
+			{ name: "twitter:title", content: title },
+			{ name: "twitter:description", content: doc.description },
+			{ name: "twitter:image", content: socialImage },
+			{
+				name: "twitter:image:alt",
+				content: `${imageAlt} documentation preview`,
 			},
 		],
 	};

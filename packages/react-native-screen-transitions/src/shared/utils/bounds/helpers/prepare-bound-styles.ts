@@ -1,10 +1,7 @@
-import {
-	getGroupActiveId,
-	setGroupActiveId,
-} from "../../../stores/bounds/internals/groups";
-import { getEntryConfig } from "../../../stores/bounds/internals/registry";
+import { getEntry } from "../../../stores/bounds/internals/entries";
+import { setActiveGroupId } from "../../../stores/bounds/internals/links";
 import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
+import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
 import type {
 	BoundId,
@@ -12,9 +9,10 @@ import type {
 	BoundsOptionsResult,
 } from "../types/options";
 import { createBoundTag } from "./create-bound-tag";
+import { resolveBoundsPairKey } from "./resolve-bounds-pair-key";
 import { computeBoundStyles } from "./styles/compute";
 
-type BaseInterpolatorProps = Omit<ScreenInterpolationProps, "bounds">;
+type BaseInterpolatorProps = BoundsInterpolationProps;
 
 type ComputeResolvedBoundsStylesParams<T extends BoundsOptions> = {
 	props: BaseInterpolatorProps;
@@ -24,13 +22,13 @@ type ComputeResolvedBoundsStylesParams<T extends BoundsOptions> = {
 };
 
 type BuildBoundsOptionsParams = {
-	props: Omit<ScreenInterpolationProps, "bounds">;
+	props: BoundsInterpolationProps;
 	id?: BoundId;
 	group?: string;
 	overrides?: Partial<BoundsOptions>;
 };
 
-export const buildBoundsOptions = ({
+const buildBoundsOptions = ({
 	props,
 	id,
 	group,
@@ -42,7 +40,9 @@ export const buildBoundsOptions = ({
 	const currentScreenKey = props.current?.route.key;
 
 	const boundaryConfig =
-		tag && currentScreenKey ? getEntryConfig(tag, currentScreenKey) : null;
+		tag && currentScreenKey
+			? (getEntry(tag, currentScreenKey)?.boundaryConfig ?? null)
+			: null;
 
 	const resolved = {
 		...DEFAULT_BOUNDS_OPTIONS,
@@ -55,25 +55,36 @@ export const buildBoundsOptions = ({
 	return resolved;
 };
 
-const syncGroupActiveMember = (group?: string, id?: BoundId) => {
+const syncActiveGroupId = (params: {
+	props: BoundsInterpolationProps;
+	id?: BoundId;
+	group?: string;
+}) => {
 	"worklet";
-	if (!group || id == null || id === "") return;
+	const { props, id, group } = params;
+	if (id == null || id === "" || !group) return;
 
-	const normalizedId = String(id);
+	const pairKey = resolveBoundsPairKey(props);
+	if (!pairKey) return;
 
-	if (getGroupActiveId(group) === normalizedId) return;
-
-	setGroupActiveId(group, normalizedId);
+	setActiveGroupId(pairKey, group, String(id));
 };
 
 export const prepareBoundStyles = <T extends BoundsOptions>({
 	props,
 	options,
 	resolvedPair,
+	syncGroupActiveId = false,
 }: ComputeResolvedBoundsStylesParams<T>): BoundsOptionsResult<T> => {
 	"worklet";
 
-	syncGroupActiveMember(options.group, options.id);
+	if (syncGroupActiveId) {
+		syncActiveGroupId({
+			props,
+			id: options.id,
+			group: options.group,
+		});
+	}
 
 	const resolved = buildBoundsOptions({
 		props,

@@ -58,38 +58,9 @@ const blankHorizontalInterpolator = ({
 	};
 };
 
-const blankVerticalInterpolator = ({
-	progress,
-	layouts: {
-		screen: { height },
-	},
-}: any) => {
-	"worklet";
-	const translateY = interpolate(progress, [0, 1], [height, 0]);
-	return {
-		content: {
-			style: {
-				transform: [{ translateY }],
-			},
-		},
-	};
-};
-
-function getBlankStackScreenOptions(scenario: BenchmarkScenario) {
-	const definition = getBenchmarkDefinition(scenario);
-
-	if (definition.transitionKind === "vertical") {
-		return {
-			...baseBlankStackScreenOptions,
-			detachPreviousScreen: definition.detachPreviousScreen,
-			gestureDirection: "vertical" as const,
-			screenStyleInterpolator: blankVerticalInterpolator,
-		};
-	}
-
+function getBlankStackScreenOptions() {
 	return {
 		...baseBlankStackScreenOptions,
-		detachPreviousScreen: definition.detachPreviousScreen,
 		gestureDirection: "horizontal" as const,
 		screenStyleInterpolator: blankHorizontalInterpolator,
 	};
@@ -99,17 +70,6 @@ function getJsStackScreenOptions(scenario: BenchmarkScenario) {
 	const definition = getBenchmarkDefinition(scenario);
 	const isTransparent = definition.appearance !== "opaque-card";
 
-	if (definition.transitionKind === "vertical") {
-		return {
-			...baseJsStackScreenOptions,
-			cardStyle: { backgroundColor: "transparent" as const },
-			cardStyleInterpolator: CardStyleInterpolators.forVerticalIOS,
-			detachPreviousScreen: definition.detachPreviousScreen,
-			gestureDirection: "vertical" as const,
-			presentation: "transparentModal" as const,
-		};
-	}
-
 	return {
 		...baseJsStackScreenOptions,
 		...(isTransparent
@@ -118,19 +78,13 @@ function getJsStackScreenOptions(scenario: BenchmarkScenario) {
 				}
 			: {}),
 		cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
-		detachPreviousScreen: definition.detachPreviousScreen,
 		gestureDirection: "horizontal" as const,
 		presentation: "card" as const,
 	};
 }
 
-const blankStackScreenOptions = ({
-	route,
-}: {
-	route: { params?: { scenario?: BenchmarkScenario } };
-}) => {
-	const scenario = route.params?.scenario ?? "push-pop-loop";
-	return getBlankStackScreenOptions(scenario);
+const blankStackScreenOptions = () => {
+	return getBlankStackScreenOptions();
 };
 
 const jsStackScreenOptions = ({

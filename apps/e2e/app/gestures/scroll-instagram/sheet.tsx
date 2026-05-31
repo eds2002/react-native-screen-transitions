@@ -25,34 +25,23 @@ export default function InstagramSheet() {
 
 	return (
 		<View style={styles.container}>
-			<View
-				style={[styles.sheet, { backgroundColor: theme.card }]}
-			>
+			<View style={[styles.sheet, { backgroundColor: theme.card }]}>
 				<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 				<ScreenHeader
 					title="Comments"
 					subtitle='sheetScrollGestureBehavior: "collapse-only"'
 				/>
 
-				<View
-					style={[
-						styles.deadspaceBox,
-						{ backgroundColor: theme.infoBox },
-					]}
-				>
+				<View style={[styles.deadspaceBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.deadspaceTitle, { color: theme.text }]}>
 						Deadspace Zone
 					</Text>
-					<Text
-						style={[styles.deadspaceText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.deadspaceText, { color: theme.textSecondary }]}>
 						Swipe ↑ from here to expand, ↓ to collapse
 					</Text>
 				</View>
 
-				<View
-					style={[styles.divider, { backgroundColor: theme.separator }]}
-				/>
+				<View style={[styles.divider, { backgroundColor: theme.separator }]} />
 
 				<View
 					style={[
@@ -72,21 +61,13 @@ export default function InstagramSheet() {
 					contentContainerStyle={styles.scrollContent}
 				>
 					<View
-						style={[
-							styles.boundaryMarker,
-							{ backgroundColor: theme.noteBox },
-						]}
+						style={[styles.boundaryMarker, { backgroundColor: theme.noteBox }]}
 					>
-						<Text
-							style={[styles.boundaryText, { color: theme.noteText }]}
-						>
+						<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 							Scroll Top (boundary)
 						</Text>
 						<Text
-							style={[
-								styles.boundarySubtext,
-								{ color: theme.textSecondary },
-							]}
+							style={[styles.boundarySubtext, { color: theme.textSecondary }]}
 						>
 							↓ from here collapses, ↑ scrolls (no expand)
 						</Text>
@@ -100,31 +81,21 @@ export default function InstagramSheet() {
 									{ backgroundColor: theme.surfaceElevated },
 								]}
 							>
-								<Text
-									style={[styles.avatarText, { color: theme.activePill }]}
-								>
+								<Text style={[styles.avatarText, { color: theme.activePill }]}>
 									{comment.user.slice(0, 1).toUpperCase()}
 								</Text>
 							</View>
 							<View style={styles.commentContent}>
-								<Text
-									style={[styles.commentUser, { color: theme.text }]}
-								>
+								<Text style={[styles.commentUser, { color: theme.text }]}>
 									{comment.user}
 								</Text>
 								<Text
-									style={[
-										styles.commentText,
-										{ color: theme.textSecondary },
-									]}
+									style={[styles.commentText, { color: theme.textSecondary }]}
 								>
 									{comment.text}
 								</Text>
 								<Text
-									style={[
-										styles.commentLikes,
-										{ color: theme.textTertiary },
-									]}
+									style={[styles.commentLikes, { color: theme.textTertiary }]}
 								>
 									♥ {comment.likes} likes
 								</Text>

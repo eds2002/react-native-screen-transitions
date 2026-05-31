@@ -6,7 +6,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useScreenAnimation } from "react-native-screen-transitions";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 
 export default function StackProgressPushed() {
 	const stackType = useResolvedStackType();
@@ -25,14 +28,17 @@ export default function StackProgressPushed() {
 		};
 	});
 
+	const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 	return (
 		<View style={styles.container}>
 			<SafeAreaView style={styles.inner}>
-				<Animated.View style={[styles.xButton, xButtonStyle]}>
-					<Pressable testID="go-back" onPress={() => router.back()}>
-						<Text style={styles.xButtonText}>X</Text>
-					</Pressable>
-				</Animated.View>
+				<AnimatedPressable
+					testID="go-back"
+					onPress={() => router.back()}
+					style={[styles.xButton, xButtonStyle]}
+				>
+					<Text style={styles.xButtonText}>X</Text>
+				</AnimatedPressable>
 
 				<View style={styles.depthBadge}>
 					<Text style={styles.depthText}>Screen {depth}</Text>

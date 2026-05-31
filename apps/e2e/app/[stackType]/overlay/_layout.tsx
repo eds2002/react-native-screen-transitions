@@ -5,6 +5,7 @@ import { useResolvedStackType } from "@/components/stack-examples/stack-routing"
 import { TabBarOverlay } from "@/components/tab-bar-overlay";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
+import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 
 export default function BlankStackOverlayLayout() {
 	const stackType = useResolvedStackType();
@@ -59,9 +60,7 @@ export default function BlankStackOverlayLayout() {
 			<StackNavigator.Screen
 				name="third"
 				options={{
-					gestureEnabled: true,
-					gestureDirection: "vertical",
-					...Transition.Presets.SlideFromBottom(),
+					...IOSSlide(),
 					// Overlay still visible on this screen
 					overlay: TabBarOverlay,
 					overlayMode: "float",

@@ -1,10 +1,10 @@
-import { router, useLocalSearchParams } from "expo-router";
 import { useNavigation } from "@react-navigation/native";
+import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useRef } from "react";
 import { ActivityIndicator, StyleSheet, Text, View } from "react-native";
 import Animated, {
-	Easing,
 	cancelAnimation,
+	Easing,
 	useAnimatedStyle,
 	useSharedValue,
 	withRepeat,
@@ -47,11 +47,8 @@ export default function BenchmarkRunScreen() {
 	const cycleRaw = getParamValue(params.cycle);
 	const cycle = Number(cycleRaw);
 	const isTransparentSurface = definition.appearance !== "opaque-card";
-	const isModalSurface = definition.appearance === "modal-sheet";
 	const holdBeforePopMs = definition.holdBeforePopMs;
-	const title = isModalSurface
-		? "Running Modal Benchmark Cycle"
-		: "Running Benchmark Cycle";
+	const title = "Running Benchmark Cycle";
 
 	useEffect(() => {
 		cancelAnimation(pulse);
@@ -169,48 +166,28 @@ export default function BenchmarkRunScreen() {
 					pointerEvents="none"
 					style={[
 						styles.backdrop,
-						{
-							backgroundColor: isModalSurface
-								? "rgba(15, 23, 42, 0.18)"
-								: "rgba(15, 23, 42, 0.12)",
-						},
+						{ backgroundColor: "rgba(15, 23, 42, 0.12)" },
 					]}
 				/>
 			) : null}
 			<View
 				style={[
 					styles.surfaceWrapper,
-					isModalSurface
-						? styles.modalWrapper
-						: isTransparentSurface
-							? styles.centerWrapper
-							: null,
+					isTransparentSurface ? styles.centerWrapper : null,
 				]}
 			>
 				<View
 					style={[
 						styles.surface,
-						isModalSurface
-							? styles.modalSurface
-							: isTransparentSurface
-								? styles.transparentSurface
-								: styles.opaqueSurface,
+						isTransparentSurface
+							? styles.transparentSurface
+							: styles.opaqueSurface,
 						{
-							backgroundColor: isTransparentSurface
-								? theme.card
-								: theme.bg,
+							backgroundColor: isTransparentSurface ? theme.card : theme.bg,
 							borderColor: theme.separator,
 						},
 					]}
 				>
-					{isModalSurface ? (
-						<View
-							style={[
-								styles.modalHandle,
-								{ backgroundColor: theme.separator },
-							]}
-						/>
-					) : null}
 					<ActivityIndicator size="small" color={theme.text} />
 					<Text style={[styles.title, { color: theme.text }]}>{title}</Text>
 					<Text style={[styles.detail, { color: theme.textTertiary }]}>
@@ -256,11 +233,6 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 		paddingHorizontal: 18,
 	},
-	modalWrapper: {
-		justifyContent: "flex-end",
-		paddingHorizontal: 18,
-		paddingBottom: 18,
-	},
 	surface: {
 		borderWidth: StyleSheet.hairlineWidth,
 	},
@@ -289,34 +261,6 @@ const styles = StyleSheet.create({
 			height: 10,
 		},
 		elevation: 10,
-	},
-	modalSurface: {
-		width: "100%",
-		minHeight: 280,
-		borderTopLeftRadius: 28,
-		borderTopRightRadius: 28,
-		borderBottomLeftRadius: 18,
-		borderBottomRightRadius: 18,
-		alignItems: "center",
-		justifyContent: "center",
-		gap: 10,
-		paddingHorizontal: 24,
-		paddingTop: 18,
-		paddingBottom: 32,
-		shadowColor: "#000",
-		shadowOpacity: 0.18,
-		shadowRadius: 24,
-		shadowOffset: {
-			width: 0,
-			height: -6,
-		},
-		elevation: 12,
-	},
-	modalHandle: {
-		width: 44,
-		height: 5,
-		borderRadius: 999,
-		marginBottom: 6,
 	},
 	title: {
 		fontSize: 19,

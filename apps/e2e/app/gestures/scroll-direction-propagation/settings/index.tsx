@@ -36,18 +36,11 @@ export default function SettingsIndex() {
 				subtitle="Slides from top · vertical-inverted"
 			/>
 
-			<View
-				style={[
-					styles.instructionBox,
-					{ backgroundColor: theme.infoBox },
-				]}
-			>
+			<View style={[styles.instructionBox, { backgroundColor: theme.infoBox }]}>
 				<Text style={[styles.instructionTitle, { color: theme.text }]}>
 					Two Boundaries, Two Owners
 				</Text>
-				<Text
-					style={[styles.instructionText, { color: theme.textSecondary }]}
-				>
+				<Text style={[styles.instructionText, { color: theme.textSecondary }]}>
 					1. At top (scrollY = 0) → Swipe ↓ dismisses outer stack{"\n"}
 					2. Scroll to bottom (scrollY = maxY) → Swipe ↑ dismisses settings
 					{"\n"}
@@ -59,12 +52,7 @@ export default function SettingsIndex() {
 				style={styles.scrollView}
 				contentContainerStyle={styles.scrollContent}
 			>
-				<View
-					style={[
-						styles.topBoundary,
-						{ backgroundColor: theme.noteBox },
-					]}
-				>
+				<View style={[styles.topBoundary, { backgroundColor: theme.noteBox }]}>
 					<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 						← Top boundary (scrollY = 0)
 					</Text>
@@ -79,10 +67,7 @@ export default function SettingsIndex() {
 							{item.title}
 						</Text>
 						<Text
-							style={[
-								styles.itemDescription,
-								{ color: theme.textSecondary },
-							]}
+							style={[styles.itemDescription, { color: theme.textSecondary }]}
 						>
 							{item.description}
 						</Text>
@@ -90,19 +75,13 @@ export default function SettingsIndex() {
 				))}
 
 				<View
-					style={[
-						styles.bottomBoundary,
-						{ backgroundColor: theme.noteBox },
-					]}
+					style={[styles.bottomBoundary, { backgroundColor: theme.noteBox }]}
 				>
 					<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 						← Bottom boundary (scrollY = maxY)
 					</Text>
 					<Text
-						style={[
-							styles.boundarySubtext,
-							{ color: theme.textSecondary },
-						]}
+						style={[styles.boundarySubtext, { color: theme.textSecondary }]}
 					>
 						Swipe ↑ here dismisses the settings stack (vertical-inverted owner)
 					</Text>

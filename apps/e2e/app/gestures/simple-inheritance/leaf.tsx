@@ -22,9 +22,7 @@ export default function LeafScreen() {
 			<ScreenHeader title="Leaf Screen" subtitle="No gesture config" />
 
 			<View style={styles.content}>
-				<View
-					style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.infoTitle, { color: theme.text }]}>
 						This screen has no gesture config
 					</Text>

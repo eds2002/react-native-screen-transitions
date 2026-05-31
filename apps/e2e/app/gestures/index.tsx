@@ -2,7 +2,7 @@ import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/screen-header";
-import { useTheme, type Theme } from "@/theme";
+import { type Theme, useTheme } from "@/theme";
 
 type Example = {
 	id: string;
@@ -50,6 +50,13 @@ const INTERMEDIATE_EXAMPLES: Example[] = [
 		title: "6. Same Axis, Different Directions",
 		description: "Both vertical and vertical-inverted on same path",
 		scenario: "Nested/ (vertical-inverted) > B leaf (vertical)",
+	},
+	{
+		id: "pinch-shadowing",
+		title: "Pinch Shadowing Probe",
+		description:
+			"Observe raw nested pinch behavior before formal pinch ownership",
+		scenario: "Parent (pinch-in + pinch-out) > child (none / pinch / vertical)",
 	},
 ];
 
@@ -101,8 +108,10 @@ const SCROLLVIEW_EXAMPLES: Example[] = [
 	{
 		id: "scroll-direction-propagation-horizontal",
 		title: "Scroll Direction Propagation (Horizontal)",
-		description: "Horizontal ScrollView coordinates with two owners on same axis",
-		scenario: "Outer/ (horizontal) > Drawer/ (horizontal-inverted) > ScrollView",
+		description:
+			"Horizontal ScrollView coordinates with two owners on same axis",
+		scenario:
+			"Outer/ (horizontal) > Drawer/ (horizontal-inverted) > ScrollView",
 	},
 	{
 		id: "scroll-boundary",
@@ -114,13 +123,15 @@ const SCROLLVIEW_EXAMPLES: Example[] = [
 		id: "scroll-apple-maps",
 		title: "Apple Maps Style (expand-and-collapse)",
 		description: "Expand sheet from ScrollView at boundary",
-		scenario: 'Sheet (snap points) > sheetScrollGestureBehavior: "expand-and-collapse"',
+		scenario:
+			'Sheet (snap points) > sheetScrollGestureBehavior: "expand-and-collapse"',
 	},
 	{
 		id: "scroll-instagram",
 		title: "Instagram Style (collapse-only)",
 		description: "Expand only via deadspace, collapse via scroll",
-		scenario: 'Sheet (snap points) > sheetScrollGestureBehavior: "collapse-only"',
+		scenario:
+			'Sheet (snap points) > sheetScrollGestureBehavior: "collapse-only"',
 	},
 ];
 
@@ -128,7 +139,11 @@ function Section({
 	title,
 	examples,
 	theme,
-}: { title: string; examples: Example[]; theme: Theme }) {
+}: {
+	title: string;
+	examples: Example[];
+	theme: Theme;
+}) {
 	return (
 		<View style={styles.section}>
 			<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
@@ -142,9 +157,7 @@ function Section({
 						style={({ pressed }) => [
 							styles.item,
 							{
-								backgroundColor: pressed
-									? theme.cardPressed
-									: theme.card,
+								backgroundColor: pressed ? theme.cardPressed : theme.card,
 							},
 						]}
 						onPress={() => router.push(`/gestures/${example.id}` as never)}
@@ -153,20 +166,12 @@ function Section({
 							{example.title}
 						</Text>
 						<Text
-							style={[
-								styles.itemDescription,
-								{ color: theme.textSecondary },
-							]}
+							style={[styles.itemDescription, { color: theme.textSecondary }]}
 						>
 							{example.description}
 						</Text>
 						{example.scenario && (
-							<Text
-								style={[
-									styles.itemScenario,
-									{ color: theme.scenario },
-								]}
-							>
+							<Text style={[styles.itemScenario, { color: theme.scenario }]}>
 								{example.scenario}
 							</Text>
 						)}
@@ -190,15 +195,31 @@ export default function GesturesIndex() {
 				subtitle="Test ownership, inheritance, shadowing, and ScrollView handoff"
 			/>
 			<ScrollView contentContainerStyle={styles.content}>
-				<Section title="Basic Scenarios" examples={BASIC_EXAMPLES} theme={theme} />
+				<Section
+					title="Basic Scenarios"
+					examples={BASIC_EXAMPLES}
+					theme={theme}
+				/>
 				<Section
 					title="Intermediate Scenarios"
 					examples={INTERMEDIATE_EXAMPLES}
 					theme={theme}
 				/>
-				<Section title="Snap Points" examples={SNAP_POINT_EXAMPLES} theme={theme} />
-				<Section title="Regression Visuals" examples={REGRESSION_EXAMPLES} theme={theme} />
-				<Section title="ScrollView Handoff" examples={SCROLLVIEW_EXAMPLES} theme={theme} />
+				<Section
+					title="Snap Points"
+					examples={SNAP_POINT_EXAMPLES}
+					theme={theme}
+				/>
+				<Section
+					title="Regression Visuals"
+					examples={REGRESSION_EXAMPLES}
+					theme={theme}
+				/>
+				<Section
+					title="ScrollView Handoff"
+					examples={SCROLLVIEW_EXAMPLES}
+					theme={theme}
+				/>
 			</ScrollView>
 		</SafeAreaView>
 	);

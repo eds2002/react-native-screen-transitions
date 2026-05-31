@@ -1,4 +1,4 @@
-import { useWindowDimensions, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
@@ -34,18 +34,11 @@ export default function HorizontalDrawerScreen() {
 				subtitle="Slides from left · horizontal-inverted"
 			/>
 
-			<View
-				style={[
-					styles.instructionBox,
-					{ backgroundColor: theme.infoBox },
-				]}
-			>
+			<View style={[styles.instructionBox, { backgroundColor: theme.infoBox }]}>
 				<Text style={[styles.instructionTitle, { color: theme.text }]}>
 					Two Boundaries, Two Owners
 				</Text>
-				<Text
-					style={[styles.instructionText, { color: theme.textSecondary }]}
-				>
+				<Text style={[styles.instructionText, { color: theme.textSecondary }]}>
 					1. At left edge (scrollX = 0) → Swipe → dismisses session{"\n"}
 					2. At right edge (scrollX = maxX) → Swipe ← dismisses drawer{"\n"}
 					3. Mid-scroll → ScrollView handles gesture
@@ -77,24 +70,16 @@ export default function HorizontalDrawerScreen() {
 							{panel.title}
 						</Text>
 						<Text
-							style={[
-								styles.panelDescription,
-								{ color: theme.textSecondary },
-							]}
+							style={[styles.panelDescription, { color: theme.textSecondary }]}
 						>
 							{panel.description}
 						</Text>
 
 						{index === 0 ? (
 							<View
-								style={[
-									styles.boundaryBox,
-									{ backgroundColor: theme.noteBox },
-								]}
+								style={[styles.boundaryBox, { backgroundColor: theme.noteBox }]}
 							>
-								<Text
-									style={[styles.boundaryText, { color: theme.noteText }]}
-								>
+								<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 									Left boundary (scrollX = 0)
 								</Text>
 								<Text
@@ -110,14 +95,9 @@ export default function HorizontalDrawerScreen() {
 
 						{index === PANELS.length - 1 ? (
 							<View
-								style={[
-									styles.boundaryBox,
-									{ backgroundColor: theme.noteBox },
-								]}
+								style={[styles.boundaryBox, { backgroundColor: theme.noteBox }]}
 							>
-								<Text
-									style={[styles.boundaryText, { color: theme.noteText }]}
-								>
+								<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 									Right boundary (scrollX = maxX)
 								</Text>
 								<Text
@@ -137,10 +117,7 @@ export default function HorizontalDrawerScreen() {
 								]}
 							>
 								<Text
-									style={[
-										styles.midBoxText,
-										{ color: theme.textTertiary },
-									]}
+									style={[styles.midBoxText, { color: theme.textTertiary }]}
 								>
 									Mid-scroll panels should keep horizontal ownership
 								</Text>

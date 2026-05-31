@@ -3,51 +3,26 @@ import { runOnUI } from "react-native-reanimated";
 import {
 	removeEntry,
 	setEntry,
-} from "../../../stores/bounds/internals/registry";
+} from "../../../stores/bounds/internals/entries";
 import type { BoundaryConfigProps } from "../types";
 
 export const useBoundaryPresence = (params: {
 	enabled: boolean;
-	sharedBoundTag: string;
+	entryTag: string;
 	currentScreenKey: string;
-	ancestorKeys: string[];
-	navigatorKey?: string;
-	ancestorNavigatorKeys?: string[];
 	boundaryConfig?: BoundaryConfigProps;
 }) => {
-	const {
-		enabled,
-		sharedBoundTag,
-		currentScreenKey,
-		ancestorKeys,
-		navigatorKey,
-		ancestorNavigatorKeys,
-		boundaryConfig,
-	} = params;
-	const ancestorKeysSignature = ancestorKeys.join("|");
-	const ancestorNavigatorKeysSignature = ancestorNavigatorKeys?.join("|");
+	const { enabled, entryTag, currentScreenKey, boundaryConfig } = params;
 
-	// biome-ignore lint/correctness/useExhaustiveDependencies: <Depend on the ancestory keys signature>
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUI(setEntry)(sharedBoundTag, currentScreenKey, {
-			ancestorKeys,
+		runOnUI(setEntry)(entryTag, currentScreenKey, {
 			boundaryConfig,
-			navigatorKey,
-			ancestorNavigatorKeys,
 		});
 
 		return () => {
-			runOnUI(removeEntry)(sharedBoundTag, currentScreenKey);
+			runOnUI(removeEntry)(entryTag, currentScreenKey);
 		};
-	}, [
-		enabled,
-		sharedBoundTag,
-		currentScreenKey,
-		ancestorKeysSignature,
-		navigatorKey,
-		ancestorNavigatorKeysSignature,
-		boundaryConfig,
-	]);
+	}, [enabled, entryTag, currentScreenKey, boundaryConfig]);
 };

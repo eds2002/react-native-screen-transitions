@@ -87,9 +87,8 @@ export type BoundsOptions = {
 
 	/**
 	 * Optional group name for collection/list scenarios.
-	 * When provided, boundaries are tracked as a group and the active member id
-	 * is managed automatically. The internal tag becomes `group:id`.
-	 * Without this, `id` is used directly as the tag (backward compatible).
+	 * When provided, concrete boundary entries use `group:id`, while transition
+	 * links stay keyed by the member `id` inside the active screen pair.
 	 */
 	group?: string;
 
@@ -120,7 +119,14 @@ export type BoundsOptions = {
 	space?: BoundsSpace;
 
 	/**
-	 * The gesture offsets to apply to the bounds.
+	 * The x/y offsets to apply to the bounds.
+	 */
+	offset?: { x?: number; y?: number };
+
+	/**
+	 * The x/y offsets to apply to the bounds.
+	 *
+	 * @deprecated Use `offset` instead.
 	 */
 	gestures?: { x?: number; y?: number };
 

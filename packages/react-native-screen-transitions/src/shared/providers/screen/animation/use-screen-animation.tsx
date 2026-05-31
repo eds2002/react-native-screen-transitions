@@ -1,37 +1,111 @@
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
-import type { ScreenInterpolationProps } from "../../../types/animation.types";
+import type {
+	ScreenInterpolationProps,
+	ScreenTransitionTarget,
+} from "../../../types/animation.types";
 import { useScreenAnimationContext } from "./animation.provider";
-import { resolveScreenAnimationTarget } from "./helpers/resolve-screen-animation-target";
-import type { ScreenAnimationSource, ScreenAnimationTarget } from "./types";
+import { useBuildTransitionAccessor } from "./helpers/accessors/use-build-transition-accessor";
+import type {
+	ScreenAnimationDescendantSources,
+	ScreenAnimationLegacyTarget,
+	ScreenAnimationSource,
+	ScreenAnimationTarget,
+} from "./types";
 
 export type { ScreenAnimationTarget } from "./types";
 
+export function useScreenAnimation(): DerivedValue<ScreenInterpolationProps>;
+export function useScreenAnimation(target: {
+	depth: 0;
+}): DerivedValue<ScreenInterpolationProps>;
+/** @deprecated Use `{ depth: 0 }`. */
+export function useScreenAnimation(
+	target: "self",
+): DerivedValue<ScreenInterpolationProps>;
+export function useScreenAnimation(
+	target: ScreenTransitionTarget,
+): DerivedValue<ScreenInterpolationProps | null>;
+/** @deprecated Use `{ depth }`. */
+export function useScreenAnimation(
+	target: Exclude<ScreenAnimationLegacyTarget, "self">,
+): DerivedValue<ScreenInterpolationProps | null>;
 export function useScreenAnimation(
 	target?: ScreenAnimationTarget,
-): DerivedValue<ScreenInterpolationProps> {
+):
+	| DerivedValue<ScreenInterpolationProps>
+	| DerivedValue<ScreenInterpolationProps | null> {
 	const {
-		screenInterpolatorProps,
-		boundsAccessor,
+		screenInterpolatorPropsRevision,
 		ancestorScreenAnimationSources,
+		descendantScreenAnimationSources,
 	} = useScreenAnimationContext();
-
-	const source = resolveScreenAnimationTarget<ScreenAnimationSource>({
+	const transition = useBuildTransitionAccessor();
+	const transitionTarget = normalizeScreenAnimationTarget(
 		target,
-		self: {
-			screenInterpolatorProps,
-			boundsAccessor,
-		},
-		ancestors: ancestorScreenAnimationSources,
-	});
+		ancestorScreenAnimationSources.length,
+	);
 
-	return useDerivedValue<ScreenInterpolationProps>(() => {
+	const animation = useDerivedValue<ScreenInterpolationProps | null>(() => {
 		"worklet";
-
-		const props = source.screenInterpolatorProps.get();
-
-		return {
-			...props,
-			bounds: source.boundsAccessor,
-		};
+		readScreenAnimationRevisions(
+			screenInterpolatorPropsRevision,
+			ancestorScreenAnimationSources,
+			descendantScreenAnimationSources,
+		);
+		return transition(transitionTarget);
 	});
+
+	return animation;
 }
+
+const readScreenAnimationRevisions = (
+	screenInterpolatorPropsRevision: DerivedValue<number>,
+	ancestorScreenAnimationSources: ScreenAnimationSource[],
+	descendantScreenAnimationSources: ScreenAnimationDescendantSources,
+) => {
+	"worklet";
+	screenInterpolatorPropsRevision.get();
+
+	for (let index = 0; index < ancestorScreenAnimationSources.length; index++) {
+		ancestorScreenAnimationSources[
+			index
+		]?.screenInterpolatorPropsRevision.get();
+	}
+
+	// The accessor reads descendant sources through this shared value. Reading it
+	// here makes this derived value rerun when descendants mount or unmount.
+	descendantScreenAnimationSources.get();
+};
+
+const isTransitionTarget = (
+	target: ScreenAnimationTarget,
+): target is ScreenTransitionTarget => {
+	return typeof target === "object" && target !== null && "depth" in target;
+};
+
+const normalizeScreenAnimationTarget = (
+	target: ScreenAnimationTarget | undefined,
+	ancestorCount: number,
+): ScreenTransitionTarget | undefined => {
+	if (target === undefined || isTransitionTarget(target)) {
+		return target;
+	}
+
+	if (target === "self") {
+		return { depth: 0 };
+	}
+
+	if (target === "parent") {
+		return { depth: -1 };
+	}
+
+	if (target === "root") {
+		return { depth: ancestorCount > 0 ? -ancestorCount : -1 };
+	}
+
+	if (!Number.isInteger(target.ancestor) || target.ancestor < 1) {
+		return { depth: Number.NaN };
+	}
+
+	return { depth: -target.ancestor };
+};

@@ -26,10 +26,10 @@ export const {
 })<Props, ScreenStylesContextValue>(({ children, isFloatingOverlay }) => {
 	const parentContext = useContext(ScreenStylesContext);
 
-	const rawStylesMap = useInterpolatedStylesMap();
+	const rawStylesMaps = useInterpolatedStylesMap();
 
 	const stylesMap = useResolvedStylesMap({
-		currentStylesMap: rawStylesMap,
+		localStylesMaps: rawStylesMaps,
 		ancestorStylesMap: parentContext?.stylesMap,
 	});
 

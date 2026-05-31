@@ -1,5 +1,4 @@
 import { Platform } from "react-native";
-import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
@@ -21,7 +20,7 @@ const resolveNavigationZoomId = (params: {
 	"worklet";
 
 	const { currentId, activeId, focused } = params;
-	return focused ? currentId ?? activeId : activeId ?? currentId;
+	return focused ? (currentId ?? activeId) : (activeId ?? currentId);
 };
 
 const navigationZoomIdInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
@@ -64,7 +63,6 @@ export default function NavigationZoomIdLayout() {
 					gestureReleaseVelocityScale: 1.6,
 					gestureDrivesProgress: false,
 					screenStyleInterpolator: navigationZoomIdInterpolator,
-					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,

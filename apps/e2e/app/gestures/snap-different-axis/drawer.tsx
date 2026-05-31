@@ -17,9 +17,7 @@ export default function DrawerScreen() {
 
 	return (
 		<View style={styles.container}>
-			<View
-				style={[styles.drawer, { backgroundColor: theme.card }]}
-			>
+			<View style={[styles.drawer, { backgroundColor: theme.card }]}>
 				<View style={[styles.handle, { backgroundColor: theme.handle }]} />
 				<ScreenHeader
 					title="Right Drawer"
@@ -27,15 +25,11 @@ export default function DrawerScreen() {
 				/>
 
 				<View style={styles.content}>
-					<View
-						style={[styles.infoBox, { backgroundColor: theme.infoBox }]}
-					>
+					<View style={[styles.infoBox, { backgroundColor: theme.infoBox }]}>
 						<Text style={[styles.infoTitle, { color: theme.text }]}>
 							Drawer Owns Horizontal
 						</Text>
-						<Text
-							style={[styles.infoText, { color: theme.textSecondary }]}
-						>
+						<Text style={[styles.infoText, { color: theme.textSecondary }]}>
 							This drawer claims horizontal and horizontal-inverted. But
 							vertical is free, so it inherits from the parent stack.
 						</Text>
@@ -43,10 +37,7 @@ export default function DrawerScreen() {
 
 					<View style={styles.instructions}>
 						<Text
-							style={[
-								styles.instructionTitle,
-								{ color: theme.textTertiary },
-							]}
+							style={[styles.instructionTitle, { color: theme.textTertiary }]}
 						>
 							Drawer gestures (owned):
 						</Text>
@@ -56,9 +47,7 @@ export default function DrawerScreen() {
 								{ backgroundColor: theme.surfaceElevated },
 							]}
 						>
-							<Text
-								style={[styles.gestureIcon, { color: theme.activePill }]}
-							>
+							<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 								→
 							</Text>
 							<View style={styles.gestureContent}>
@@ -66,10 +55,7 @@ export default function DrawerScreen() {
 									Swipe right
 								</Text>
 								<Text
-									style={[
-										styles.gestureResult,
-										{ color: theme.textSecondary },
-									]}
+									style={[styles.gestureResult, { color: theme.textSecondary }]}
 								>
 									Dismiss drawer (back to index)
 								</Text>
@@ -81,9 +67,7 @@ export default function DrawerScreen() {
 								{ backgroundColor: theme.surfaceElevated },
 							]}
 						>
-							<Text
-								style={[styles.gestureIcon, { color: theme.activePill }]}
-							>
+							<Text style={[styles.gestureIcon, { color: theme.activePill }]}>
 								←
 							</Text>
 							<View style={styles.gestureContent}>
@@ -91,10 +75,7 @@ export default function DrawerScreen() {
 									Swipe left
 								</Text>
 								<Text
-									style={[
-										styles.gestureResult,
-										{ color: theme.textSecondary },
-									]}
+									style={[styles.gestureResult, { color: theme.textSecondary }]}
 								>
 									Expand to 0.8
 								</Text>
@@ -104,22 +85,14 @@ export default function DrawerScreen() {
 
 					<View style={styles.instructions}>
 						<Text
-							style={[
-								styles.instructionTitle,
-								{ color: theme.textTertiary },
-							]}
+							style={[styles.instructionTitle, { color: theme.textTertiary }]}
 						>
 							Inherited from parent:
 						</Text>
 						<View
-							style={[
-								styles.gestureRow,
-								{ backgroundColor: theme.noteBox },
-							]}
+							style={[styles.gestureRow, { backgroundColor: theme.noteBox }]}
 						>
-							<Text
-								style={[styles.gestureIcon, { color: theme.noteText }]}
-							>
+							<Text style={[styles.gestureIcon, { color: theme.noteText }]}>
 								↓
 							</Text>
 							<View style={styles.gestureContent}>
@@ -127,10 +100,7 @@ export default function DrawerScreen() {
 									Swipe down
 								</Text>
 								<Text
-									style={[
-										styles.gestureResult,
-										{ color: theme.textSecondary },
-									]}
+									style={[styles.gestureResult, { color: theme.textSecondary }]}
 								>
 									Dismisses ENTIRE parent stack
 								</Text>
@@ -139,19 +109,12 @@ export default function DrawerScreen() {
 					</View>
 
 					<View
-						style={[
-							styles.noteBox,
-							{ backgroundColor: theme.surfaceElevated },
-						]}
+						style={[styles.noteBox, { backgroundColor: theme.surfaceElevated }]}
 					>
-						<Text
-							style={[styles.noteTitle, { color: theme.textTertiary }]}
-						>
+						<Text style={[styles.noteTitle, { color: theme.textTertiary }]}>
 							Key Insight
 						</Text>
-						<Text
-							style={[styles.noteText, { color: theme.textSecondary }]}
-						>
+						<Text style={[styles.noteText, { color: theme.textSecondary }]}>
 							Snap points on horizontal drawer only shadow the horizontal axis.
 							The vertical axis is completely independent and follows normal
 							inheritance rules.

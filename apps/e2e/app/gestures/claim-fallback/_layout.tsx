@@ -1,5 +1,5 @@
-import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
+import { verticalSlideOptions } from "../transition-options";
 
 /**
  * Visual regression: claim fallback chain.
@@ -15,14 +15,7 @@ export default function ClaimFallbackLayout() {
 	return (
 		<BlankStack>
 			<BlankStack.Screen name="index" />
-			<BlankStack.Screen
-				name="mid"
-				options={{
-					...Transition.Presets.SlideFromBottom(),
-					gestureEnabled: true,
-					gestureDirection: "vertical",
-				}}
-			/>
+			<BlankStack.Screen name="mid" options={verticalSlideOptions()} />
 		</BlankStack>
 	);
 }

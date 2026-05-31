@@ -34,15 +34,11 @@ export default function SnapDeepNestingIndex() {
 					note="Navigate to deeper/ to see the full 3-level hierarchy with snap points."
 				/>
 
-				<View
-					style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}
-				>
+				<View style={[styles.conceptBox, { backgroundColor: theme.infoBox }]}>
 					<Text style={[styles.conceptTitle, { color: theme.text }]}>
 						What Makes This Complex
 					</Text>
-					<Text
-						style={[styles.conceptText, { color: theme.textSecondary }]}
-					>
+					<Text style={[styles.conceptText, { color: theme.textSecondary }]}>
 						L1 has vertical, L2 has horizontal, L3 (sheet) has vertical snap
 						points.{"\n\n"}
 						On the sheet:{"\n"}• ↓ ↑ are owned by sheet (shadows L1){"\n"}• → is

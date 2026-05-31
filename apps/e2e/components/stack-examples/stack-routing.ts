@@ -32,5 +32,5 @@ export function buildStackPath(
 	childPath = "",
 ): `/${string}` {
 	const normalized = childPath.replace(/^\/+/, "");
-	return (`/${stackType}${normalized ? `/${normalized}` : ""}`) as `/${string}`;
+	return `/${stackType}${normalized ? `/${normalized}` : ""}` as `/${string}`;
 }

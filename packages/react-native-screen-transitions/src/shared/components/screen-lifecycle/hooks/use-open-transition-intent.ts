@@ -66,7 +66,7 @@ export function useOpenTransitionIntent(
 				system.targetProgress.set(target);
 				animations.progress.set(target);
 			}
-			animations.animating.set(0);
+			animations.progressAnimating.set(0);
 			animations.closing.set(0);
 			animations.entering.set(0);
 			return;

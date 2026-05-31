@@ -1,6 +1,9 @@
 import { router } from "expo-router";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 import { ListScreen } from "@/components/ui";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
 
 const EXAMPLES = [
 	{
@@ -14,89 +17,35 @@ const EXAMPLES = [
 		description: "Sheet slides down from the top edge",
 	},
 	{
-		id: "with-resistance",
-		title: "With Resistance",
-		description: "Apple Maps style with 3 detents and rubber-band",
+		id: "from-right",
+		title: "From Right",
+		description: "Sheet slides in from the right edge",
 	},
 	{
-		id: "horizontal-drawer",
-		title: "Horizontal Drawer",
-		description: "Side panel that slides from the right edge",
-	},
-	{
-		id: "multi-snap",
-		title: "Multi Snap",
-		description: "Stress test with 5 snap points (20-100%)",
+		id: "from-left",
+		title: "From Left",
+		description: "Sheet slides in from the left edge",
 	},
 	{
 		id: "auto-snap",
 		title: "Auto Snap",
-		description: "Opens to intrinsic content height, then expands to full screen",
+		description:
+			"Opens to intrinsic content height, then expands to full screen",
 	},
 	{
 		id: "snap-index-animation",
 		title: "Snap Index Animation",
-		description: "Animate UI based on snapIndex value",
-	},
-	{
-		id: "snap-lock-unlocked",
-		title: "Snap Lock (Unlocked)",
-		description: "Baseline: gestures can move across all snap points",
-	},
-	{
-		id: "snap-lock-locked",
-		title: "Snap Lock (Locked)",
-		description: "Gesture snapping locked; dismiss + snapTo still work",
+		description: "Animate UI based on animatedSnapIndex value",
 	},
 	{
 		id: "snap-lock-toggle",
-		title: "Snap Lock (Dynamic Toggle)",
-		description: "Toggle lock at runtime and verify gesture behavior",
-	},
-	{
-		id: "snap-lock-horizontal-locked",
-		title: "Snap Lock (Horizontal)",
-		description: "Axis check: horizontal drawer with gesture lock",
-	},
-	{
-		id: "snap-lock-scroll-locked",
-		title: "Snap Lock (ScrollView)",
-		description: "Scroll + sheet coordination with snap lock enabled",
-	},
-	{
-		id: "snap-lock-locked-no-dismiss",
-		title: "Snap Lock (No Dismiss)",
-		description: "gestureEnabled=false: no dismiss, no gesture snapping",
-	},
-	{
-		id: "backdrop-dismiss",
-		title: "Backdrop Dismiss",
-		description: "Tap outside the sheet to dismiss",
-	},
-	{
-		id: "passthrough",
-		title: "Passthrough",
-		description: "Interact with content behind the sheet",
+		title: "Snap Lock",
+		description: "Runtime lock and gesture controls with scroll coordination",
 	},
 	{
 		id: "with-scroll",
-		title: "With ScrollView",
-		description: "Scrollable content with gesture coordination",
-	},
-	{
-		id: "with-scroll-inverted",
-		title: "With ScrollView (Inverted)",
-		description: "Top sheet with scrollable content",
-	},
-	{
-		id: "with-scroll-horizontal",
-		title: "Horizontal ScrollView",
-		description: "Right drawer with horizontal scroll",
-	},
-	{
-		id: "with-scroll-horizontal-inverted",
-		title: "Horizontal ScrollView (Inverted)",
-		description: "Left drawer with horizontal scroll",
+		title: "ScrollView Integration",
+		description: "Dynamic scroll handoff behavior and sheet direction",
 	},
 ];
 
@@ -105,8 +54,8 @@ export default function BottomSheetIndex() {
 
 	return (
 		<ListScreen
-			title="Bottom Sheet"
-			subtitle="Sheets with snap points and gesture dismiss"
+			title="Sheets"
+			subtitle="Sheet transitions across vertical and horizontal directions"
 			items={EXAMPLES}
 			testIdPrefix="sheet"
 			onPress={(id) =>

@@ -1,5 +1,5 @@
-import { router } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
+import { router } from "expo-router";
 import { useCallback, useEffect, useMemo, useRef } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -15,13 +15,13 @@ import {
 } from "@/components/benchmark/constants";
 import { buildBenchmarkPath } from "@/components/benchmark/impl-routing";
 import {
-	useBenchmarkStore,
-	type FairRunStep,
-} from "@/components/benchmark/store";
-import {
 	buildBenchmarkDashboardPath,
 	getBenchmarkDefinition,
 } from "@/components/benchmark/scenarios";
+import {
+	type FairRunStep,
+	useBenchmarkStore,
+} from "@/components/benchmark/store";
 import type {
 	BenchmarkRunResult,
 	BenchmarkScenario,
@@ -465,7 +465,10 @@ export function BenchmarkScenarioDashboard({
 			style={[styles.container, { backgroundColor: theme.bg }]}
 			edges={["top"]}
 		>
-			<ScreenHeader title={definition.title} subtitle={definition.description} />
+			<ScreenHeader
+				title={definition.title}
+				subtitle={definition.description}
+			/>
 			<ScrollView contentContainerStyle={styles.content}>
 				<View style={[styles.headerCard, { backgroundColor: theme.card }]}>
 					<Text style={[styles.headerTitle, { color: theme.text }]}>
@@ -477,12 +480,7 @@ export function BenchmarkScenarioDashboard({
 					<Text style={[styles.headerMuted, { color: theme.textTertiary }]}>
 						{BENCHMARK_CAVEAT_NOTE}
 					</Text>
-					<View
-						style={[
-							styles.statusRow,
-							{ borderTopColor: theme.separator },
-						]}
-					>
+					<View style={[styles.statusRow, { borderTopColor: theme.separator }]}>
 						<Text style={[styles.statusLabel, { color: theme.textTertiary }]}>
 							Status
 						</Text>
@@ -558,7 +556,9 @@ export function BenchmarkScenarioDashboard({
 				</View>
 
 				{__DEV__ ? (
-					<View style={[styles.devWarningCard, { backgroundColor: theme.noteBox }]}>
+					<View
+						style={[styles.devWarningCard, { backgroundColor: theme.noteBox }]}
+					>
 						<Text style={[styles.devWarningTitle, { color: theme.noteText }]}>
 							Dev Build Warning
 						</Text>
@@ -595,24 +595,23 @@ export function BenchmarkScenarioDashboard({
 					<Text style={[styles.summaryTitle, { color: theme.text }]}>
 						Benchmark Summary
 					</Text>
-						{summary ? (
-							<>
-								<Text style={[styles.speedSummary, { color: theme.actionButton }]}>
-									{getSummaryHeading(summary)}
+					{summary ? (
+						<>
+							<Text
+								style={[styles.speedSummary, { color: theme.actionButton }]}
+							>
+								{getSummaryHeading(summary)}
+							</Text>
+							<Text style={[styles.summaryWinnerText, { color: theme.text }]}>
+								{getSummaryHeadline(summary)}
+							</Text>
+							{onParDifferenceText ? (
+								<Text
+									style={[styles.summaryDelta, { color: theme.textSecondary }]}
+								>
+									{onParDifferenceText}
 								</Text>
-								<Text style={[styles.summaryWinnerText, { color: theme.text }]}>
-									{getSummaryHeadline(summary)}
-								</Text>
-								{onParDifferenceText ? (
-									<Text
-										style={[
-											styles.summaryDelta,
-											{ color: theme.textSecondary },
-										]}
-									>
-										{onParDifferenceText}
-									</Text>
-								) : null}
+							) : null}
 							<MetricLine
 								label="Median cycle time"
 								value={`${formatMs(summary.cycleMedianBlank)} vs ${formatMs(summary.cycleMedianJs)} · Δ ${formatDeltaPct(summary.cycleDeltaPct)}`}
@@ -648,7 +647,10 @@ export function BenchmarkScenarioDashboard({
 					onPress={() => clearScenarioResults(scenario)}
 				>
 					<Text
-						style={[styles.clearButtonText, { color: theme.secondaryButtonText }]}
+						style={[
+							styles.clearButtonText,
+							{ color: theme.secondaryButtonText },
+						]}
 					>
 						Clear Benchmark Results
 					</Text>

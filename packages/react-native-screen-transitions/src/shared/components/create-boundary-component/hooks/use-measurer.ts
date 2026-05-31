@@ -1,146 +1,117 @@
 import { useCallback } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
+import type { AnimatedRef, StyleProps } from "react-native-reanimated";
+import { setEntry } from "../../../stores/bounds/internals/entries";
 import {
-	type AnimatedRef,
-	measure,
-	type StyleProps,
-} from "react-native-reanimated";
-import { applyMeasuredBoundsWrites } from "../../../stores/bounds/helpers/apply-measured-bounds-writes";
+	setDestination,
+	setSource,
+} from "../../../stores/bounds/internals/links";
+import { ScrollStore } from "../../../stores/scroll.store";
+import { SystemStore } from "../../../stores/system.store";
+import type { MeasureBoundary } from "../types";
 import {
-	getMeasuredEntry,
-	getPendingLink,
-	hasDestinationLink,
-	hasSourceLink,
-} from "../../../stores/bounds/internals/registry";
-import { resolvePendingSourceKey } from "../helpers/resolve-pending-source-key";
-import type { MeasureParams } from "../types";
-import {
-	areMeasurementsEqual,
 	isMeasurementInViewport,
-} from "./helpers/measurement";
-import {
-	getMeasureIntentFlags,
-	resolveMeasureWritePlan,
-} from "./helpers/measurement-rules";
+	measureWithOverscrollAwareness,
+} from "../utils/measured-bounds";
 
 interface UseMeasurerParams {
 	enabled: boolean;
-	sharedBoundTag: string;
-	preferredSourceScreenKey?: string;
+	entryTag: string;
+	linkId: string;
+	group?: string;
 	currentScreenKey: string;
-	ancestorKeys: string[];
-	navigatorKey?: string;
-	ancestorNavigatorKeys?: string[];
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
 }
 
 export const useMeasurer = ({
 	enabled,
-	sharedBoundTag,
-	preferredSourceScreenKey,
+	entryTag,
+	linkId,
+	group,
 	currentScreenKey,
-	ancestorKeys,
-	navigatorKey,
-	ancestorNavigatorKeys,
 	preparedStyles,
 	measuredAnimatedRef,
-}: UseMeasurerParams) => {
+}: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
 
+	const scrollState = ScrollStore.getValue(currentScreenKey, "state");
+	const pendingLifecycleStartBlockCount = SystemStore.getValue(
+		currentScreenKey,
+		"pendingLifecycleStartBlockCount",
+	);
+
 	return useCallback(
-		({ intent }: MeasureParams = {}) => {
+		(target) => {
 			"worklet";
 			if (!enabled) return;
 
-			const intents = getMeasureIntentFlags(intent);
-
-			const expectedSourceScreenKey: string | undefined =
-				resolvePendingSourceKey(sharedBoundTag, preferredSourceScreenKey) ||
-				undefined;
-
-			const pendingLink = expectedSourceScreenKey
-				? getPendingLink(sharedBoundTag, expectedSourceScreenKey)
-				: getPendingLink(sharedBoundTag);
-			const hasPendingLink = pendingLink !== null;
-			const hasAttachableSourceLink = expectedSourceScreenKey
-				? hasSourceLink(sharedBoundTag, expectedSourceScreenKey)
-				: false;
-			const hasSource = hasSourceLink(sharedBoundTag, currentScreenKey);
-			const hasDestination = hasDestinationLink(
-				sharedBoundTag,
-				currentScreenKey,
+			const measured = measureWithOverscrollAwareness(
+				measuredAnimatedRef,
+				scrollState.get(),
 			);
 
-			const writePlan = resolveMeasureWritePlan({
-				intents,
-				hasPendingLink,
-				hasSourceLink: hasSource,
-				hasDestinationLink: hasDestination,
-				hasAttachableSourceLink,
-			});
-
-			if (!writePlan.writesAny) {
-				return;
-			}
-
-			const measured = measure(measuredAnimatedRef);
 			if (!measured) return;
 
-			const destinationInViewport =
-				!writePlan.wantsDestinationWrite ||
+			/**
+			 * - Destination Pass -
+			 * Be strict while lifecycle start is blocked for destination capture.
+			 * This is the initial attach window: the transition has not started yet,
+			 * and malformed off-screen destination measurements should keep the
+			 * lifecycle blocked until a valid retry lands.
+			 */
+			const shouldGuardDestinationViewport =
+				pendingLifecycleStartBlockCount.get() > 0 || !!group;
+
+			const viewportAllowsDestinationWrite =
+				target.type !== "destination" ||
+				!shouldGuardDestinationViewport ||
 				isMeasurementInViewport(measured, viewportWidth, viewportHeight);
 
-			if (
-				!destinationInViewport &&
-				!writePlan.captureSource &&
-				!writePlan.refreshSource
-			) {
-				return;
+			if (!viewportAllowsDestinationWrite) return;
+
+			// Set the bounds entry on every measure to avoid any stale measurements
+			// for the public read API.
+			setEntry(entryTag, currentScreenKey, {
+				bounds: measured,
+			});
+
+			if (target.type === "source") {
+				setSource(
+					target.pairKey,
+					linkId,
+					currentScreenKey,
+					measured,
+					preparedStyles,
+					group,
+				);
 			}
 
-			const existingMeasuredEntry = getMeasuredEntry(
-				sharedBoundTag,
-				currentScreenKey,
-			);
-			const hasMeasuredEntryChanged =
-				!existingMeasuredEntry ||
-				!areMeasurementsEqual(existingMeasuredEntry.bounds, measured);
-
-			applyMeasuredBoundsWrites({
-				sharedBoundTag,
-				currentScreenKey,
-				measured,
-				preparedStyles,
-				ancestorKeys,
-				navigatorKey,
-				ancestorNavigatorKeys,
-				expectedSourceScreenKey,
-				shouldWriteEntry: hasMeasuredEntryChanged,
-				shouldSetSource: writePlan.captureSource,
-				shouldUpdateSource: writePlan.refreshSource && hasMeasuredEntryChanged,
-				shouldUpdateDestination:
-					writePlan.refreshDestination &&
-					destinationInViewport &&
-					hasMeasuredEntryChanged,
-				shouldSetDestination:
-					writePlan.completeDestination && destinationInViewport,
-			});
+			if (target.type === "destination") {
+				setDestination(
+					target.pairKey,
+					linkId,
+					currentScreenKey,
+					measured,
+					preparedStyles,
+					group,
+				);
+			}
 		},
 		[
 			enabled,
-			sharedBoundTag,
-			preferredSourceScreenKey,
+			entryTag,
+			linkId,
+			group,
 			currentScreenKey,
-			ancestorKeys,
-			navigatorKey,
-			ancestorNavigatorKeys,
 			preparedStyles,
 			measuredAnimatedRef,
 			viewportWidth,
 			viewportHeight,
+			scrollState,
+			pendingLifecycleStartBlockCount,
 		],
 	);
 };

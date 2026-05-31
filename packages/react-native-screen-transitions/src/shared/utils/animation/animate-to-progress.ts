@@ -17,9 +17,28 @@ interface AnimateToProgressProps {
 	animations: AnimationStoreMap;
 	targetProgress: SharedValue<number>;
 	emitWillAnimate?: boolean;
+	markEntering?: boolean;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
 	initialVelocity?: number;
 }
+
+const setTransitionLifecycleFlags = (
+	animations: AnimationStoreMap,
+	isClosing: boolean,
+	markEntering: boolean,
+) => {
+	"worklet";
+
+	if (isClosing) {
+		animations.closing.set(TRUE);
+		animations.entering.set(FALSE);
+		return;
+	}
+
+	if (markEntering) {
+		animations.entering.set(TRUE);
+	}
+};
 
 export const animateToProgress = ({
 	target,
@@ -28,6 +47,7 @@ export const animateToProgress = ({
 	animations,
 	targetProgress,
 	emitWillAnimate = true,
+	markEntering = true,
 	initialVelocity,
 }: AnimateToProgressProps) => {
 	"worklet";
@@ -48,56 +68,63 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, willAnimate, animating, closing, entering } = animations;
+	const { progress, willAnimate, progressAnimating, entering } = animations;
 
-	if (emitWillAnimate) {
-		willAnimate.set(TRUE);
-		requestAnimationFrame(() => {
-			"worklet";
-			willAnimate.set(FALSE);
-		});
-	}
+	const startAnimation = () => {
+		"worklet";
+		targetProgress.set(value);
 
-	targetProgress.set(value);
+		const shouldClearEnteringOnFinish =
+			!isClosing && (markEntering || entering.get());
 
-	if (isClosing) {
-		closing.set(TRUE);
-		entering.set(FALSE);
-	} else {
-		entering.set(TRUE);
-	}
+		setTransitionLifecycleFlags(animations, isClosing, markEntering);
 
-	if (!config) {
-		animating.set(FALSE);
-		progress.set(value);
-		if (!isClosing) {
-			entering.set(FALSE);
-		}
-
-		if (onAnimationFinish) {
-			runOnJS(onAnimationFinish)(true);
-		}
-		return;
-	}
-
-	animating.set(TRUE); //<-- Do not move this into the callback
-	progress.set(
-		animate(value, effectiveConfig, (finished) => {
-			"worklet";
-			if (!finished) return;
-
-			if (!isClosing) {
+		if (!config) {
+			progressAnimating.set(FALSE);
+			progress.set(value);
+			if (shouldClearEnteringOnFinish) {
 				entering.set(FALSE);
 			}
 
 			if (onAnimationFinish) {
-				runOnJS(onAnimationFinish)(finished);
+				runOnJS(onAnimationFinish)(true);
 			}
+			return;
+		}
 
-			// Delay setting animating=FALSE by one frame to ensure final frame is painted
-			requestAnimationFrame(() => {
-				animating.set(FALSE);
-			});
-		}),
-	);
+		progressAnimating.set(TRUE); //<-- Do not move this into the callback
+		progress.set(
+			animate(value, effectiveConfig, (finished) => {
+				"worklet";
+				if (!finished) return;
+
+				if (shouldClearEnteringOnFinish) {
+					entering.set(FALSE);
+				}
+
+				if (onAnimationFinish) {
+					runOnJS(onAnimationFinish)(finished);
+				}
+
+				// Delay clearing progress animation by one frame to ensure final frame is painted
+				requestAnimationFrame(() => {
+					progressAnimating.set(FALSE);
+				});
+			}),
+		);
+	};
+
+	if (emitWillAnimate) {
+		setTransitionLifecycleFlags(animations, isClosing, markEntering);
+
+		willAnimate.set(TRUE);
+		requestAnimationFrame(() => {
+			"worklet";
+			willAnimate.set(FALSE);
+			startAnimation();
+		});
+		return;
+	}
+
+	startAnimation();
 };

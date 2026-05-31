@@ -15,10 +15,8 @@ import {
 } from "@/components/stack-examples/stack-routing";
 import { useTheme } from "@/theme";
 import {
-	activeZoomId,
 	BOUNDS_SYNC_ZOOM_ITEMS,
 	type BoundsSyncZoomItem,
-	navigationZoomId,
 	ZOOM_GROUP,
 } from "./constants";
 
@@ -48,8 +46,6 @@ function ZoomSourceCard({
 				},
 			]}
 			onPress={() => {
-				activeZoomId.value = item.id;
-				navigationZoomId.value = item.id;
 				router.push(
 					buildStackPath(stackType, `bounds/zoom/${item.id}`) as never,
 				);

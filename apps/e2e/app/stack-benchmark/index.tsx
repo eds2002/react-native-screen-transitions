@@ -17,7 +17,11 @@ export default function StackBenchmarkIndexScreen() {
 			}))}
 			testIdPrefix="benchmark"
 			onPress={(id) =>
-				router.push(buildBenchmarkDashboardPath(id as (typeof PUBLIC_BENCHMARKS)[number]["id"]))
+				router.push(
+					buildBenchmarkDashboardPath(
+						id as (typeof PUBLIC_BENCHMARKS)[number]["id"],
+					),
+				)
 			}
 		/>
 	);

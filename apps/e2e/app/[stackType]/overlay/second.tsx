@@ -1,7 +1,10 @@
 import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { buildStackPath, useResolvedStackType } from "@/components/stack-examples/stack-routing";
+import {
+	buildStackPath,
+	useResolvedStackType,
+} from "@/components/stack-examples/stack-routing";
 
 export default function OverlaySecond() {
 	const stackType = useResolvedStackType();
@@ -18,7 +21,9 @@ export default function OverlaySecond() {
 					<Pressable
 						testID="push-third"
 						style={styles.button}
-						onPress={() => router.push(buildStackPath(stackType, "overlay/third"))}
+						onPress={() =>
+							router.push(buildStackPath(stackType, "overlay/third"))
+						}
 					>
 						<Text style={styles.buttonText}>Push Third Screen</Text>
 					</Pressable>

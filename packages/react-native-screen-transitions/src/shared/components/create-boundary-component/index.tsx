@@ -4,7 +4,9 @@ import { createBoundaryComponent } from "./create-boundary-component";
 
 export { createBoundaryComponent };
 
-const BoundaryView = createBoundaryComponent(View);
+const BoundaryView = createBoundaryComponent(View, {
+	shouldAutoMeasure: true,
+});
 const BoundaryTrigger = createBoundaryComponent(Pressable);
 BoundaryView.displayName = "Transition.Boundary.View";
 BoundaryTrigger.displayName = "Transition.Boundary.Trigger";

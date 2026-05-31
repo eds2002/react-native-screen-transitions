@@ -138,7 +138,7 @@ function DocsNavigation({
 										className:
 											"bg-neutral-100 text-neutral-900 dark:bg-neutral-900 dark:text-neutral-50 self-start text-sm",
 									}}
-									className="block rounded-xl  hover:bg-neutral-100 dark:hover:bg-neutral-900 px-3 py-2 transition-colors duration-150 hover:text-neutral-900 dark:hover:text-neutral-50 self-start text-sm"
+									className="block rounded-xl hover:bg-neutral-100 dark:hover:bg-neutral-900 px-3 py-2 hover:text-neutral-900 dark:hover:text-neutral-50 self-start text-sm"
 								>
 									<p>{item.title}</p>
 								</Link>
@@ -544,7 +544,7 @@ export function DocsShell({ children }: { children: ReactNode }) {
 				</aside>
 
 				<main className="min-w-0 px-4 py-8 sm:px-6 lg:px-0 lg:py-10">
-					<div className="mx-auto max-w-2xl">{children}</div>
+					<div className="mx-auto max-w-3xl">{children}</div>
 				</main>
 
 				<aside className="scrollbar-none hidden xl:sticky xl:top-21 xl:block xl:h-[calc(100dvh-84px)] xl:self-start xl:overflow-y-auto xl:overscroll-contain">

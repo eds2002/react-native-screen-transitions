@@ -1,0 +1,271 @@
+---
+title: "Modal"
+pageTitle: "Modal Recipe"
+summary: "Replicate the iOS 26 disabled modal pull animation with gestureTracking."
+description: "Replicate the iOS 26 disabled modal pull animation with gestureTracking."
+eyebrow: "Recipes"
+group: "Recipes"
+order: 1
+to: /recipes/modal
+---
+
+<VideoEmbed src="/media/modal-disabled.mp4" title="Disabled modal gesture tracking demo" />
+
+## Goal
+
+This recipe builds a nested modal flow that can turn drag-to-dismiss on and off per nested screen while the modal still reacts to the user's pull gesture.
+
+Use this pattern when a modal represents a flow the user should intentionally finish or exit, such as onboarding, account setup, checkout, or any multi-step setup. The modal can still acknowledge a pull gesture, but the resisted motion communicates that the flow is not casually dismissible.
+
+## Route Shape
+
+```text
+app/
+  example/
+    _layout.tsx
+    index.tsx
+    modal/
+      _layout.tsx
+      index.tsx
+      b.tsx
+```
+
+The parent stack owns the modal presentation. The nested `modal` stack owns the screens inside that modal. Each nested screen can update the parent modal's `gestureEnabled` option when it receives focus.
+
+## Parent Layout
+
+```tsx title="app/example/_layout.tsx" focus="gestureEnabled,gestureTracking,current.options.gestureEnabled,gestureSensitivity,gestureReleaseVelocityScale"
+import { interpolate } from "react-native-reanimated";
+import type { ScreenTransitionConfig } from "react-native-screen-transitions";
+import Transition from "react-native-screen-transitions";
+import { BlankStack } from "@/layouts/blank-stack";
+
+const modalOptions: ScreenTransitionConfig = {
+  gestureEnabled: true,
+  gestureTracking: "always",
+  gestureDirection: "vertical",
+  screenStyleInterpolator: ({
+    layouts: {
+      screen: { height },
+    },
+    progress,
+    focused,
+    active,
+    current,
+  }) => {
+    "worklet";
+
+    const isGestureDisabled = !current.options.gestureEnabled;
+
+    const translateY = focused
+      ? interpolate(progress, [0, 1], [height, 0], "clamp")
+      : 0;
+
+    const gestureSensitivity = isGestureDisabled
+      ? interpolate(progress, [0, 0.25], [1, 0.1], "clamp")
+      : 1;
+
+    const gestureReleaseVelocityScale = isGestureDisabled ? 0 : 1;
+
+    const contentStyle = {
+      transform: [{ translateY }],
+      maxHeight: focused ? height * 0.9 : undefined,
+      marginTop: focused ? "auto" : undefined,
+    } as const;
+
+    const backdropStyle = focused
+      ? {
+          backgroundColor: "#00000050",
+          opacity: active.progress,
+        }
+      : undefined;
+
+    return {
+      options: {
+        gestureSensitivity,
+        gestureReleaseVelocityScale,
+      },
+      content: { style: contentStyle },
+      backdrop: { style: backdropStyle },
+    };
+  },
+  transitionSpec: {
+    open: Transition.Specs.DefaultSpec,
+    close: Transition.Specs.DefaultSpec,
+  },
+};
+
+export default function ExampleLayout() {
+  return (
+    <BlankStack>
+      <BlankStack.Screen name="index" />
+      <BlankStack.Screen name="modal" options={modalOptions} />
+    </BlankStack>
+  );
+}
+```
+
+## What The Animation Is Communicating
+
+There are a couple of moving pieces in this interpolator, so it is worth calling out what each one is doing.
+
+The modal starts with `gestureEnabled: true`, so the first modal screen can be dismissed normally. `gestureTracking: "always"` stays static on the parent modal route, which means gesture values are still tracked after a nested screen disables dismissal.
+
+`gestureSensitivity` is what gives the disabled modal its resistance. When `current.options.gestureEnabled` is `false`, the interpolator lowers sensitivity as the modal gets closer to its settled state. That makes the pull feel damped instead of linear: the user can tug on the modal, but the modal communicates that it does not want to leave.
+
+`gestureReleaseVelocityScale` is more about feel than correctness. Setting it to `0` prevents a quick downward swipe from carrying too much release energy into the disabled state. The modal would still avoid dismissal without this, but the resistance can feel too extreme or springy when the user flings hard.
+
+The `maxHeight` and `marginTop` values make the modal a real bottom-aligned card instead of a full-height screen that only appears offset. That matters because the nested modal screens use the custom `IOSSlide()` animation, which adds border radius during the page slide. If the parent modal content stayed full height and only moved with `translateY`, the rounded bottom edge would sit outside the visible area and the nested slide could look like it is overflowing. Giving the modal an actual `height * 0.9` layout box keeps the rounded card shape visible while the nested pages animate inside it.
+
+## Launcher Screen
+
+```tsx title="app/example/index.tsx"
+import { router } from "expo-router";
+import { Button, View } from "react-native";
+import { useTheme } from "@/theme";
+
+export default function ExampleIndex() {
+  const theme = useTheme();
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme.bg,
+      }}
+    >
+      <Button title="Open Modal" onPress={() => router.push("/example/modal")} />
+    </View>
+  );
+}
+```
+
+## Nested Modal Stack
+
+```tsx title="app/example/modal/_layout.tsx"
+import { View } from "react-native";
+import { BlankStack } from "@/layouts/blank-stack";
+import {
+  IOS_SLIDE_BORDER_RADIUS,
+  IOSSlide,
+} from "@/lib/screen-transitions/ios-slide";
+import { useTheme } from "@/theme";
+
+export default function ModalLayout() {
+  const theme = useTheme();
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: theme.bg,
+        borderRadius: IOS_SLIDE_BORDER_RADIUS,
+        borderCurve: "continuous",
+        overflow: "hidden",
+      }}
+    >
+      <BlankStack>
+        <BlankStack.Screen name="index" />
+        <BlankStack.Screen name="b" options={{ ...IOSSlide() }} />
+      </BlankStack>
+    </View>
+  );
+}
+```
+
+The nested stack is wrapped in the rounded modal surface. The `b` screen uses the regular iOS slide helper so navigation inside the modal stays separate from the parent modal presentation.
+
+## Dismissable Screen
+
+```tsx title="app/example/modal/index.tsx" focus="navigation.getParent().setOptions,gestureEnabled: true"
+import { router, useFocusEffect, useNavigation } from "expo-router";
+import { useCallback } from "react";
+import { Button, Text, View } from "react-native";
+import { useTheme } from "@/theme";
+
+export default function ModalIndex() {
+  const theme = useTheme();
+  const navigation = useNavigation();
+
+  useFocusEffect(
+    useCallback(() => {
+      navigation.getParent().setOptions({
+        gestureEnabled: true,
+      });
+    }, [navigation])
+  );
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <Button title="Go to B" onPress={() => navigation.navigate("b")} />
+      <Text style={{ fontSize: 11, opacity: 0.5, color: theme.text }}>
+        This screen is currently dismissable.
+      </Text>
+    </View>
+  );
+}
+```
+
+When the first modal screen is focused, it enables dismissal on the parent modal route.
+
+## Disabled Screen
+
+```tsx title="app/example/modal/b.tsx" focus="navigation.getParent()?.setOptions,gestureEnabled: false"
+import { router, useFocusEffect, useNavigation } from "expo-router";
+import { useCallback } from "react";
+import { Button, Text, View } from "react-native";
+import { useTheme } from "@/theme";
+
+export default function ModalIndex() {
+  const theme = useTheme();
+  const navigation = useNavigation();
+
+  useFocusEffect(
+    useCallback(() => {
+      navigation.getParent()?.setOptions({
+        gestureEnabled: false,
+      });
+    }, [navigation])
+  );
+
+  return (
+    <View
+      style={{
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+        backgroundColor: theme.bg,
+      }}
+    >
+      <Button title="Go back" onPress={router.back} />
+      <Text style={{ fontSize: 11, opacity: 0.5, color: theme.text }}>
+        This screen is currently not dismissable
+      </Text>
+    </View>
+  );
+}
+```
+
+When `b` is focused, it disables dismissal on the parent modal route. Because the parent route has `gestureTracking: "always"`, the modal can still track the pull and apply the disabled resistance from the parent interpolator.
+
+## Closing Thoughts
+
+And just like that, you've replicated the iOS 26 modal look and behavior for iOS and Android.
+
+The parent modal owns the presentation, gesture tracking, and resistance tuning. The nested screens only decide whether the parent modal can dismiss while they are focused. That split keeps the recipe predictable: screen focus updates `gestureEnabled`, and the parent interpolator turns the resolved option into the enabled or disabled modal feel.
+
+The result is a modal that can be dismissable when it should leave, resistant when it should stay, and responsive to touch the whole time.
+
+## Related Reading
+
+- [Gestures](/gestures)
+- [Custom Animations](/custom-animations)
+- [Expo Router](/expo-router)

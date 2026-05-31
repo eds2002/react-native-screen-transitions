@@ -1,11 +1,8 @@
-import type { ImageStyle, StyleProp, TextStyle, ViewStyle } from "react-native";
 import { isSharedValue } from "react-native-reanimated";
 
-type AnyStyle = ViewStyle | TextStyle | ImageStyle;
-type StyleValue = StyleProp<AnyStyle>;
 type PlainStyleObject = Record<string, any>;
 
-function mergeStyleArrays<T extends StyleValue>(style: T): T {
+function mergeStyleArrays(style: unknown): unknown {
 	"worklet";
 
 	// Early returns for non-objects
@@ -21,12 +18,12 @@ function mergeStyleArrays<T extends StyleValue>(style: T): T {
 	// Merge array of styles into single object
 	const merged: PlainStyleObject = {};
 	for (let i = 0; i < style.length; i++) {
-		const currentStyle = mergeStyleArrays(style[i] as StyleValue);
+		const currentStyle = mergeStyleArrays(style[i]);
 		if (currentStyle && typeof currentStyle === "object") {
 			Object.assign(merged, currentStyle);
 		}
 	}
-	return merged as T;
+	return merged;
 }
 
 function stripNonSerializable<T>(value: T): T | undefined {
@@ -56,9 +53,7 @@ function stripNonSerializable<T>(value: T): T | undefined {
 	return value;
 }
 
-export function prepareStyleForBounds(
-	style: StyleValue | undefined,
-): PlainStyleObject {
+export function prepareStyleForBounds(style: unknown): PlainStyleObject {
 	if (!style) return {};
 
 	const flattened = mergeStyleArrays(style);

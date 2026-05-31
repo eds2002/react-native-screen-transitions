@@ -31,18 +31,11 @@ export default function ScreenWithScroll() {
 				subtitle="Try dismissing at different scroll positions"
 			/>
 
-			<View
-				style={[
-					styles.instructionBox,
-					{ backgroundColor: theme.infoBox },
-				]}
-			>
+			<View style={[styles.instructionBox, { backgroundColor: theme.infoBox }]}>
 				<Text style={[styles.instructionTitle, { color: theme.text }]}>
 					Test Instructions
 				</Text>
-				<Text
-					style={[styles.instructionText, { color: theme.textSecondary }]}
-				>
+				<Text style={[styles.instructionText, { color: theme.textSecondary }]}>
 					1. At top → Swipe down dismisses{"\n"}
 					2. Scroll down, then swipe down → ScrollView scrolls up{"\n"}
 					3. Return to top, then swipe down → Dismisses
@@ -54,21 +47,13 @@ export default function ScreenWithScroll() {
 				contentContainerStyle={styles.scrollContent}
 			>
 				<View
-					style={[
-						styles.boundaryIndicator,
-						{ backgroundColor: theme.noteBox },
-					]}
+					style={[styles.boundaryIndicator, { backgroundColor: theme.noteBox }]}
 				>
-					<Text
-						style={[styles.boundaryText, { color: theme.noteText }]}
-					>
+					<Text style={[styles.boundaryText, { color: theme.noteText }]}>
 						← You are at the boundary (scrollY = 0)
 					</Text>
 					<Text
-						style={[
-							styles.boundarySubtext,
-							{ color: theme.textSecondary },
-						]}
+						style={[styles.boundarySubtext, { color: theme.textSecondary }]}
 					>
 						Swipe down from here to dismiss
 					</Text>
@@ -83,10 +68,7 @@ export default function ScreenWithScroll() {
 							{item.title}
 						</Text>
 						<Text
-							style={[
-								styles.itemDescription,
-								{ color: theme.textSecondary },
-							]}
+							style={[styles.itemDescription, { color: theme.textSecondary }]}
 						>
 							{item.description}
 						</Text>
