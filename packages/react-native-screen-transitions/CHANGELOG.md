@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.6.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.2...v3.6.0) (2026-05-31)
+
+
+### Features
+
+* release v3.6.0 ([#108](https://github.com/eds2002/react-native-screen-transitions/issues/108)) ([fe9b902](https://github.com/eds2002/react-native-screen-transitions/commit/fe9b902d5b2083b5089d9f27140556beae56a706))
+
 ## [3.5.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.1...v3.5.2) (2026-05-06)
 
 
