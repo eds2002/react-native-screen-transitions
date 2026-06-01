@@ -86,6 +86,18 @@ const RECIPE_OPTIONS = [
 		description: "Basic gesture-tracking modal recipe",
 		route: "/example" as const,
 	},
+	{
+		id: "native-stack-adapter",
+		title: "Native Stack Adapter",
+		description: "Official native-stack wrapped with withScreenTransitions",
+		route: "/native-stack-adapter" as const,
+	},
+	{
+		id: "native-stack-adapter-recipe",
+		title: "Native Stack Adapter Profile",
+		description: "Native push into a profile, custom bounds transition for avatar",
+		route: "/native-stack-adapter-recipe" as const,
+	},
 ];
 
 export default function HomeScreen() {

@@ -1,3 +1,7 @@
+import {
+	createNativeStackNavigator,
+	type NativeStackNavigationOptions,
+} from "@react-navigation/native-stack";
 import type { ComponentProps } from "react";
 import type { DerivedValue, SharedValue } from "react-native-reanimated";
 import {
@@ -10,6 +14,7 @@ import type {
 	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
+	NativeStackAdapterOptions,
 	ScreenAnimationTarget,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
@@ -22,6 +27,7 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	useScreenAnimation,
 	useScreenGesture,
+	withScreenTransitions,
 } from "..";
 
 const slotStyle: TransitionSlotStyle = {
@@ -241,6 +247,33 @@ const disabledGestureTrackingOptions: ScreenTransitionConfig = {
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
 };
+
+type NativeStackAdapterParamList = {
+	Profile: undefined;
+	Avatar: { id: string };
+};
+
+const NativeStack = createNativeStackNavigator<NativeStackAdapterParamList>();
+const TransitionNativeStack = withScreenTransitions(NativeStack);
+const nativeStackAdapterOptions: NativeStackAdapterOptions<NativeStackNavigationOptions> =
+	{
+		enableTransitions: true,
+		gestureEnabled: true,
+		gestureDirection: "bidirectional",
+		nativeGestureEnabled: false,
+		nativeGestureDirection: "vertical",
+	};
+function NativeStackAdapterProfileScreen() {
+	return null;
+}
+const nativeStackAdapterScreen = TransitionNativeStack.Screen({
+	name: "Profile",
+	getComponent: () => NativeStackAdapterProfileScreen,
+	options: nativeStackAdapterOptions,
+});
+void TransitionNativeStack;
+void nativeStackAdapterOptions;
+void nativeStackAdapterScreen;
 
 const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
