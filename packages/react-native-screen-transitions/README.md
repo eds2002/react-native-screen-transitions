@@ -47,9 +47,9 @@ v3 (current) supports Reanimated v3, Reanimated v4, and React Native Gesture Han
 
 Ed
 
-## Sponsor & Support
+## Funding
 
-If you'd like to fuel the next release, [buy me a coffee](https://buymeacoffee.com/trpfsu).
+If this library saves your team time, [sponsor it on GitHub](https://github.com/sponsors/eds2002) or [buy me a coffee](https://buymeacoffee.com/trpfsu) to support maintenance.
 
 ## License
 
