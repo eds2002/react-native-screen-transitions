@@ -1,5 +1,7 @@
-# These are supported funding model platforms
+# GitHub uses this file to show the repository Sponsor button.
 
-github: [eds2002]
+github:
+  - eds2002
 buy_me_a_coffee: trpfsu
-custom: ["https://buymeacoffee.com/trpfsu"]
+custom:
+  - https://buymeacoffee.com/trpfsu
