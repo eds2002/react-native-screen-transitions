@@ -87,6 +87,7 @@ export function shouldDeferToChildClaim(
 	"worklet";
 	if (!childClaim) return false;
 	if (childClaim.routeKey === selfRouteKey) return false;
-	if (childClaim.isDismissing.get()) return false;
+	// A closing child still owns its axis until its claim is cleaned up; otherwise
+	// an ancestor can steal the next drag while the previous screen is visible.
 	return true;
 }

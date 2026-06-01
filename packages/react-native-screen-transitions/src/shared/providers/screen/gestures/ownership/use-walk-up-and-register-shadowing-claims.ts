@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo } from "react";
 import { GestureStore } from "../../../../stores/gesture.store";
 import {
 	type ClaimedDirections,
@@ -115,7 +115,7 @@ export function useWalkUpAndRegisterShadowingClaims(
 		[parentContext, claimedDirections],
 	);
 
-	useEffect(() => {
+	useLayoutEffect(() => {
 		if (!isTopMostScreen || !shadowedAncestors.length) {
 			return;
 		}
