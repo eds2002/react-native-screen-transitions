@@ -9,6 +9,16 @@
 		"url": "https://github.com/eds2002/react-native-screen-transitions.git",
 		"directory": "packages/react-native-screen-transitions"
 	},
+	"funding": [
+		{
+			"type": "github",
+			"url": "https://github.com/sponsors/eds2002"
+		},
+		{
+			"type": "individual",
+			"url": "https://buymeacoffee.com/trpfsu"
+		}
+	],
 	"main": "lib/commonjs/shared/index.js",
 	"module": "lib/module/shared/index.js",
 	"types": "lib/typescript/shared/index.d.ts",
