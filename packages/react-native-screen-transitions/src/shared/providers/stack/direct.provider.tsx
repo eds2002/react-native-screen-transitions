@@ -2,8 +2,8 @@ import type * as React from "react";
 import { useMemo } from "react";
 import type { NativeStackDescriptorMap } from "../../../native-stack/types";
 import {
-	StackContext,
 	type StackContextValue,
+	StackProvider,
 } from "../../hooks/navigation/use-stack";
 import {
 	AnimationStore,
@@ -91,8 +91,17 @@ function useDirectStackValue(
 			routes: allRoutes,
 			scenes,
 			optimisticFocusedIndex,
+			focusedIndex,
 		}),
-		[flags, navigatorKey, routeKeys, allRoutes, scenes, optimisticFocusedIndex],
+		[
+			flags,
+			navigatorKey,
+			routeKeys,
+			allRoutes,
+			scenes,
+			optimisticFocusedIndex,
+			focusedIndex,
+		],
 	);
 
 	// DirectStack context value
@@ -125,9 +134,9 @@ function withDirectStack<TProps extends DirectStackProps>(
 		const { stackContextValue, ...lifecycleValue } = useDirectStackValue(props);
 
 		return (
-			<StackContext.Provider value={stackContextValue}>
+			<StackProvider value={stackContextValue}>
 				<Component {...lifecycleValue} />
-			</StackContext.Provider>
+			</StackProvider>
 		);
 	};
 }

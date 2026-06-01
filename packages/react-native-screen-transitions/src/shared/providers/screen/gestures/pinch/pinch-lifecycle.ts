@@ -1,4 +1,4 @@
-import { clamp } from "react-native-reanimated";
+import { clamp, runOnJS } from "react-native-reanimated";
 import { EPSILON, FALSE, TRUE } from "../../../../constants";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../utils/animation/emit";
@@ -73,7 +73,8 @@ export const trackPinchGesture = (
 export const finalizePinchRelease = (
 	release: PinchReleaseResult,
 	runtime: PinchGestureRuntime,
-	dismissScreen: (() => void) | undefined,
+	dismissScreen: ((finished: boolean) => void) | undefined,
+	requestDismiss?: () => void,
 ) => {
 	"worklet";
 	const {
@@ -91,6 +92,10 @@ export const finalizePinchRelease = (
 		shouldDismiss: release.shouldDismiss,
 		resetValuesImmediately: release.resetValuesImmediately,
 	});
+
+	if (release.shouldDismiss && requestDismiss) {
+		runOnJS(requestDismiss)();
+	}
 
 	animateToProgress({
 		target: release.target,

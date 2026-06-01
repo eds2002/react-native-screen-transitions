@@ -61,7 +61,7 @@ export const useLocalRoutes = <
 				current.routes,
 				current.descriptors,
 				nextRoutesSnapshot,
-				props.descriptors,
+				props.descriptors as TDescriptorMap,
 			);
 
 			derivedRoutes = result.routes as TRoute[];
@@ -76,7 +76,7 @@ export const useLocalRoutes = <
 				prevRoutes: fallbackRoutes,
 				prevDescriptors: current.descriptors,
 				nextRoutes: nextRoutesSnapshot,
-				nextDescriptors: props.descriptors,
+				nextDescriptors: props.descriptors as TDescriptorMap,
 				closingRouteKeys,
 			});
 

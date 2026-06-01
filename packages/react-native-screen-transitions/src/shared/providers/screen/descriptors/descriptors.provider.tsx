@@ -8,8 +8,8 @@ import { getAncestorKeys } from "./helpers/get-ancestor-keys";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
- * This allows blank-stack and native-stack to work with the shared
- * providers without tight coupling to React Navigation.
+ * This allows stack implementations to work with the shared providers without
+ * tight coupling to React Navigation.
  */
 export type BaseDescriptor = BaseStackDescriptor;
 
@@ -23,6 +23,13 @@ export interface DescriptorsContextValue<
 
 export type DescriptorDerivationsContextValue = DescriptorDerivations;
 
+interface DescriptorStoreValue<
+	TDescriptor extends BaseDescriptor = BaseDescriptor,
+> {
+	descriptors: DescriptorsContextValue<TDescriptor>;
+	derivations: DescriptorDerivationsContextValue;
+}
+
 interface DescriptorsProviderProps<TDescriptor extends BaseDescriptor> {
 	children: ReactNode;
 	previous?: TDescriptor;
@@ -30,35 +37,21 @@ interface DescriptorsProviderProps<TDescriptor extends BaseDescriptor> {
 	next?: TDescriptor;
 }
 
-type InternalProviderProps = DescriptorsProviderProps<BaseDescriptor>;
-
 const {
 	DescriptorsProvider: InternalDescriptorsProvider,
-	useDescriptorsContext,
+	useDescriptorsStore,
 } = createProvider("Descriptors", { guarded: true })<
-	InternalProviderProps,
-	DescriptorsContextValue<BaseDescriptor>
->(({ previous, current, next }) => {
-	const value = useMemo(
+	DescriptorsProviderProps<BaseDescriptor>,
+	DescriptorStoreValue<BaseDescriptor>
+>(({ previous, current, next, children }) => {
+	const descriptors = useMemo(
 		() => ({ previous, current, next }),
 		[previous, current, next],
 	);
 
-	return {
-		value,
-	};
-});
-
-const {
-	DescriptorDerivationsProvider: InternalDescriptorDerivationsProvider,
-	useDescriptorDerivationsContext,
-} = createProvider("DescriptorDerivations", { guarded: true })<
-	InternalProviderProps,
-	DescriptorDerivationsContextValue
->(({ previous, current, next, children }) => {
 	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
 
-	const value = useMemo(
+	const derivations = useMemo(
 		() =>
 			deriveDescriptorDerivations({
 				previous,
@@ -67,6 +60,14 @@ const {
 				ancestorKeys,
 			}),
 		[previous, current, next, ancestorKeys],
+	);
+
+	const value = useMemo(
+		() => ({
+			descriptors,
+			derivations,
+		}),
+		[descriptors, derivations],
 	);
 
 	return {
@@ -85,23 +86,22 @@ export function DescriptorsProvider<TDescriptor extends BaseDescriptor>({
 		previous,
 		current,
 		next,
+		children,
 	};
 
-	return (
-		<InternalDescriptorsProvider {...providerProps}>
-			<InternalDescriptorDerivationsProvider {...providerProps}>
-				{children}
-			</InternalDescriptorDerivationsProvider>
-		</InternalDescriptorsProvider>
-	);
+	return <InternalDescriptorsProvider {...providerProps} />;
 }
 
 export function useDescriptors<
 	TDescriptor extends BaseDescriptor = BaseDescriptor,
 >() {
-	return useDescriptorsContext() as DescriptorsContextValue<TDescriptor>;
+	return useDescriptorsStore(
+		(store) => store.descriptors,
+	) as DescriptorsContextValue<TDescriptor>;
 }
 
 export function useDescriptorDerivations(): DescriptorDerivationsContextValue {
-	return useDescriptorDerivationsContext();
+	return useDescriptorsStore((store) => store.derivations);
 }
+
+export { useDescriptorsStore };

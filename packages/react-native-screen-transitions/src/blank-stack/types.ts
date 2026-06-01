@@ -12,6 +12,7 @@ import type {
 } from "@react-navigation/native";
 import type { ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
+import type { StackSceneActivity } from "../shared/types/stack.types";
 
 export type BlankStackNavigationEventMap = {};
 
@@ -68,22 +69,10 @@ export interface BlankStackFactoryOptions {
 	 *
 	 * When enabled, the navigator:
 	 * - wraps itself in `NavigationIndependentTree` + `NavigationContainer`
-	 * - skips the shared native `ScreenContainer`
 	 *
 	 * Leave this disabled for normal top-level app stacks.
 	 */
 	independent?: boolean;
-	/**
-	 * Enables native screen primitives on supported native platforms.
-	 *
-	 * Use this when you want the embedded blank stack to keep `react-native-screens`
-	 * behavior such as native activity state and freezing.
-	 *
-	 * Set this to `false` when you want the blank stack to render with regular
-	 * views instead of native screen primitives. This is useful for embedded
-	 * flows where plain views are a better fit than native screen layering.
-	 */
-	enableNativeScreens?: boolean;
 }
 
 /**
@@ -94,25 +83,7 @@ export type BlankStackOverlayProps = OverlayProps<
 	BlankStackNavigationProp<ParamListBase>
 >;
 
-type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
-	/**
-	 * Whether to detach the previous screen from the view hierarchy to save memory.
-	 * Set it to `false` if you need the previous screen to be seen through the active screen.
-	 * Only applicable if `detachInactiveScreens` isn't set to `false`.
-	 */
-	detachPreviousScreen?: boolean;
-};
-
-export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
-	/**
-	 * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
-	 * Defaults to `true` when `enableFreeze()` is run at the top of the application.
-	 * Requires `react-native-screens` version >=3.16.0.
-	 *
-	 * Only supported on iOS and Android.
-	 */
-	freezeOnBlur?: boolean;
-};
+export type BlankStackNavigationOptions = ScreenTransitionConfig;
 
 export type BlankStackNavigatorProps = DefaultNavigatorOptions<
 	ParamListBase,
@@ -129,4 +100,6 @@ export type BlankStackDescriptor = Descriptor<
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp<ParamListBase>,
 	RouteProp<ParamListBase>
->;
+> & {
+	activity: StackSceneActivity;
+};

@@ -21,7 +21,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 	const system = SystemStore.getBag(current.route.key);
 
 	const { handleManagedCloseEnd, handleNativeCloseEnd } =
-		useCloseTransitionIntent(current, animations, system);
+		useCloseTransitionIntent(current, system);
 
 	useOpenTransitionIntent(current, animations, system);
 

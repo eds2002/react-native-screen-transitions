@@ -1,72 +1,76 @@
-import { Fragment } from "react";
-import { NativeScreen } from "../../shared/components/native-screen";
-import { NativeScreenContainer } from "../../shared/components/native-screen-container";
+import {
+	NavigationContext,
+	NavigationRouteContext,
+} from "@react-navigation/native";
+import { Fragment, memo } from "react";
+import {
+	ActivityContainer,
+	ActivityScreen,
+} from "../../shared/components/activity";
 import { Overlay } from "../../shared/components/overlay";
-import { SceneView } from "../../shared/components/scene-view";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
 import { withManagedStack } from "../../shared/providers/stack/managed.provider";
-import { resolveSceneNeighbors } from "../../shared/utils/navigation/resolve-scene-neighbors";
-import { isFabric } from "../../shared/utils/platform";
+import type { BaseStackScene } from "../../shared/types/stack.types";
 import type {
 	BlankStackDescriptor,
 	BlankStackNavigationHelpers,
 } from "../types";
 
+interface BlankSceneRowProps {
+	scene: BaseStackScene<BlankStackDescriptor>;
+	paintDriverRouteKey?: string;
+}
+
+const BlankSceneRow = memo(function BlankSceneRow({
+	scene,
+	paintDriverRouteKey,
+}: BlankSceneRowProps) {
+	const descriptor = scene.descriptor;
+	const route = scene.route;
+
+	return (
+		<NavigationContext.Provider value={descriptor.navigation}>
+			<NavigationRouteContext.Provider value={route}>
+				<ActivityScreen
+					activity={descriptor.activity}
+					paintDriverRouteKey={paintDriverRouteKey}
+				>
+					<ScreenComposer
+						previous={scene.previousDescriptor}
+						current={descriptor}
+						next={scene.nextDescriptor}
+					>
+						{descriptor.render?.()}
+					</ScreenComposer>
+				</ActivityScreen>
+			</NavigationRouteContext.Provider>
+		</NavigationContext.Provider>
+	);
+});
+
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: true },
 	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
-		({
-			descriptors,
-			focusedIndex,
-			scenes,
-			shouldShowFloatOverlay,
-			closingRouteMap,
-		}) => {
-			const isRouteClosing = (routeKey: string) =>
-				Boolean(closingRouteMap.current[routeKey]);
-
+		({ scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
 
-					<NativeScreenContainer>
-						{scenes.map((scene, sceneIndex) => {
-							const descriptor = scene.descriptor;
+					<ActivityContainer>
+						{scenes.map((scene, index) => {
 							const route = scene.route;
-							const isFocused = focusedIndex === sceneIndex;
-							const isBelowFocused = focusedIndex - 1 === sceneIndex;
+							const paintDriverRouteKey = scenes[index + 2]?.route.key;
 
-							const { previousDescriptor, nextDescriptor } =
-								resolveSceneNeighbors(scenes, sceneIndex, isRouteClosing);
-
-							const isPreloaded = descriptors[route.key] === undefined;
-
-							// On Fabric, when screen is frozen, animated and reanimated values are not updated
-							// due to component being unmounted. To avoid this, we don't freeze the previous screen there
-							const shouldFreeze = isFabric()
-								? !isPreloaded && !isFocused && !isBelowFocused
-								: !isPreloaded && !isFocused;
 							return (
-								<NativeScreen
+								<BlankSceneRow
 									key={route.key}
-									isPreloaded={isPreloaded}
-									index={sceneIndex}
-									routeKey={route.key}
-									shouldFreeze={shouldFreeze}
-									freezeOnBlur={descriptor.options.freezeOnBlur}
-								>
-									<ScreenComposer
-										previous={previousDescriptor}
-										current={descriptor}
-										next={nextDescriptor}
-									>
-										<SceneView key={route.key} descriptor={descriptor} />
-									</ScreenComposer>
-								</NativeScreen>
+									scene={scene}
+									paintDriverRouteKey={paintDriverRouteKey}
+								/>
 							);
 						})}
-					</NativeScreenContainer>
+					</ActivityContainer>
 				</Fragment>
 			);
 		},

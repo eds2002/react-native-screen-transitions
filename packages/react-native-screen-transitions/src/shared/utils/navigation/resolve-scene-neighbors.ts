@@ -4,6 +4,7 @@ interface SceneWithKey {
 }
 
 type IsRouteClosing = (routeKey: string) => boolean;
+type GetRouteClosingOrder = (routeKey: string) => number | undefined;
 
 const findPreviousDescriptor = <T extends SceneWithKey>(
 	scenes: T[],
@@ -45,6 +46,7 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 	scenes: T[],
 	sceneIndex: number,
 	isRouteClosing: IsRouteClosing,
+	getRouteClosingOrder?: GetRouteClosingOrder,
 ): {
 	previousDescriptor: T["descriptor"] | undefined;
 	nextDescriptor: T["descriptor"] | undefined;
@@ -69,7 +71,8 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 	}
 
 	let nextDescriptor: T["descriptor"] | undefined;
-	let firstClosingAbove: T["descriptor"] | undefined;
+	let latestClosingAbove: T["descriptor"] | undefined;
+	let latestClosingAboveOrder = Number.NEGATIVE_INFINITY;
 
 	for (let i = sceneIndex + 1; i < scenes.length; i++) {
 		const candidate = scenes[i];
@@ -80,13 +83,15 @@ export function resolveSceneNeighbors<T extends SceneWithKey>(
 			break;
 		}
 
-		if (firstClosingAbove === undefined) {
-			firstClosingAbove = candidate.descriptor;
+		const closeOrder = getRouteClosingOrder?.(candidate.route.key) ?? i;
+		if (closeOrder >= latestClosingAboveOrder) {
+			latestClosingAbove = candidate.descriptor;
+			latestClosingAboveOrder = closeOrder;
 		}
 	}
 
 	if (nextDescriptor === undefined) {
-		nextDescriptor = firstClosingAbove;
+		nextDescriptor = latestClosingAbove;
 	}
 
 	const previousDescriptor = findPreviousDescriptor(
