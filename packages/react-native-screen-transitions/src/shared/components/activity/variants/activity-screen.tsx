@@ -1,7 +1,11 @@
 import type * as React from "react";
 import { memo } from "react";
-import { StyleSheet, View, type ViewProps } from "react-native";
-import { useDerivedValue } from "react-native-reanimated";
+import { StyleSheet, type ViewProps } from "react-native";
+import Animated, {
+	useAnimatedProps,
+	useAnimatedStyle,
+	useDerivedValue,
+} from "react-native-reanimated";
 import { Screen } from "react-native-screens";
 import { IS_WEB } from "../../../constants";
 import { useStack } from "../../../hooks/navigation/use-stack";
@@ -33,6 +37,8 @@ interface ActivityScreenProps {
 	hasNestedState?: boolean;
 }
 
+const AnimatedScreen = Animated.createAnimatedComponent(Screen);
+
 export const ActivityScreen = memo(function ActivityScreen({
 	activity,
 	children,
@@ -40,6 +46,7 @@ export const ActivityScreen = memo(function ActivityScreen({
 	paintDriverRouteKey,
 	hasNestedState,
 }: ActivityScreenProps) {
+	const nativeScreenDisabled = useStack((s) => s.flags.DISABLE_NATIVE_SCREENS);
 	const paintDriverAnimations = paintDriverRouteKey
 		? AnimationStore.getBag(paintDriverRouteKey)
 		: undefined;
@@ -51,64 +58,66 @@ export const ActivityScreen = memo(function ActivityScreen({
 	 * transition. Watching B can still leave a brief blank frame, so we wait for
 	 * C's progress to reach its settled value of 1 before hiding A.
 	 */
-	const isPaintDriverSettled = useSharedValueState(
-		useDerivedValue(() => {
-			"worklet";
+	const isPaintDriverSettled = useDerivedValue(() => {
+		"worklet";
 
-			if (!paintDriverAnimations) {
-				return false;
+		if (!paintDriverAnimations) {
+			return false;
+		}
+
+		return paintDriverAnimations.progress.get() >= 1;
+	});
+
+	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
+
+	const resolvedActivity = useDerivedValue(() => {
+		let activityState: ActivityState = ActivityStateByActivity[activity];
+		let shouldFreeze = false;
+		let visible = activity !== "inactive";
+
+		const shouldWaitForPaintDriver = !isPaintDriverSettled.get();
+
+		if (activity === "inactive") {
+			if (inactiveBehavior === "keep") {
+				activityState = 1;
+				visible = true;
+			} else if (shouldWaitForPaintDriver) {
+				activityState = 1;
+				visible = true;
+			} else if (inactiveBehavior === "freeze") {
+				activityState = 1;
+				shouldFreeze = true;
+				visible = true;
+			} else {
+				activityState = 0;
+				visible = false;
 			}
+		}
 
-			return paintDriverAnimations.progress.get() >= 1;
-		}),
-	);
+		return { activityState, shouldFreeze, visible };
+	});
+
+	const animatedProps = useAnimatedProps(() => {
+		return {
+			activityState: resolvedActivity.get().activityState,
+			shouldFreeze: resolvedActivity.get().shouldFreeze,
+		};
+	});
+	const animatedStyle = useAnimatedStyle(() => {
+		return {
+			display: resolvedActivity.get().visible ? "flex" : "none",
+		};
+	});
 
 	const shouldUnmount =
 		inactiveBehavior === "unmount" &&
 		activity === "inactive" &&
 		!hasNestedState &&
-		isPaintDriverSettled;
-
-	const shouldWaitForPaintDriver = !isPaintDriverSettled;
-
-	let activityState: ActivityState = ActivityStateByActivity[activity];
-	let shouldFreeze = false;
-	let visible = activity !== "inactive";
-
-	if (activity === "inactive") {
-		switch (inactiveBehavior) {
-			case "keep": {
-				activityState = 1;
-				visible = true;
-				break;
-			}
-			case "freeze": {
-				activityState = 1;
-				shouldFreeze = true;
-				visible = true;
-				break;
-			}
-			default: {
-				if (shouldWaitForPaintDriver) {
-					// Delay hiding until the paint driver has settled to avoid
-					// a blank frame during the transition.
-					activityState = 1;
-					visible = true;
-				} else {
-					// Native screens stay in the React tree. `unmount` is web-only later,
-					// and aliases to detach for react-native-screens.
-					activityState = 0;
-					visible = false;
-				}
-				break;
-			}
-		}
-	}
+		isPaintDriverSettledOnJS;
 
 	const pointerEvents = PointerEventsByActivity[activity];
-
-	const nativeScreenDisabled = useStack((s) => s.flags.DISABLE_NATIVE_SCREENS);
-	const Component = IS_WEB || nativeScreenDisabled ? View : Screen;
+	const Component =
+		IS_WEB || nativeScreenDisabled ? Animated.View : AnimatedScreen;
 
 	if (shouldUnmount) {
 		return null;
@@ -116,19 +125,12 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	return (
 		<Component
-			style={[StyleSheet.absoluteFill, !visible && styles.hidden]}
-			activityState={activityState}
-			shouldFreeze={shouldFreeze}
+			style={[StyleSheet.absoluteFill, animatedStyle]}
+			animatedProps={animatedProps}
 			pointerEvents={pointerEvents}
 			collapsable={false}
 		>
 			{children}
 		</Component>
 	);
-});
-
-const styles = StyleSheet.create({
-	hidden: {
-		display: "none",
-	},
 });
