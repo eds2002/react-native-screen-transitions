@@ -52,7 +52,7 @@ const BlankSceneRow = memo(function BlankSceneRow({
 });
 
 export const StackView = withStackCore(
-	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: true },
+	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: false },
 	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
 		({ scenes, shouldShowFloatOverlay }) => {
 			return (

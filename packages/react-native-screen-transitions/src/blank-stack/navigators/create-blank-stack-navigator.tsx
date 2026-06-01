@@ -26,7 +26,9 @@ import type {
 type BlankStackNavigatorInnerProps = Omit<
 	BlankStackNavigatorProps,
 	keyof BlankStackFactoryOptions
->;
+> & {
+	DISABLE_NATIVE_SCREENS?: boolean;
+};
 
 const BlankStackContext = React.createContext<boolean>(false);
 BlankStackContext.displayName = "BlankStackContext";
@@ -74,12 +76,20 @@ function BlankStackNavigatorInner({
 }
 
 function BlankStackNavigator({
+	enableNativeScreens,
 	independent = false,
+	nativeScreens,
 	...rest
 }: BlankStackNavigatorProps) {
 	const isNested = React.useContext(BlankStackContext);
+	const nativeScreensEnabled = nativeScreens ?? enableNativeScreens ?? true;
 
-	const navigator = <BlankStackNavigatorInner {...rest} />;
+	const navigator = (
+		<BlankStackNavigatorInner
+			{...rest}
+			DISABLE_NATIVE_SCREENS={!nativeScreensEnabled}
+		/>
+	);
 
 	if (!independent || isNested) {
 		return navigator;
@@ -122,9 +132,10 @@ type BlankStackTypeBag<
  *
  * By default, blank stack behaves like the existing top-level blank stack:
  * it participates in the current navigation tree and renders screens with
- * regular React Native views.
+ * react-native-screens.
  *
  * Blank stack also accepts navigator-specific props for embedded-flow behavior:
+ * - `nativeScreens: false` renders blank-stack screens as regular React Native views
  * - `independent: true` creates an isolated navigator for nested flows
  * In the dynamic API, pass these to `<Stack.Navigator />`.
  * In the static API, pass them in the same config object as `screens`.

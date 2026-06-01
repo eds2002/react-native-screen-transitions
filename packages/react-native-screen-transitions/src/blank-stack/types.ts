@@ -64,6 +64,24 @@ export type BlankStackNavigationHelpers = NavigationHelpers<
  */
 export interface BlankStackFactoryOptions {
 	/**
+	 * Controls whether blank-stack screens are rendered with react-native-screens.
+	 *
+	 * When enabled, inactive presentation state is backed by
+	 * `ScreenContainer`/`Screen.activityState`. Set this to `false` to render
+	 * screens as regular React Native views.
+	 *
+	 * @default true
+	 */
+	nativeScreens?: boolean;
+
+	/**
+	 * Enables react-native-screens for blank-stack screen retention.
+	 *
+	 * @deprecated Use `nativeScreens` instead.
+	 */
+	enableNativeScreens?: boolean;
+
+	/**
 	 * Creates an isolated navigation tree for embedded flows.
 	 *
 	 * Use this when the blank stack needs to live inside another screen or host
