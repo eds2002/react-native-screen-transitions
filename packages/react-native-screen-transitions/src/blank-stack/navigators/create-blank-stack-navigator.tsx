@@ -28,7 +28,6 @@ type BlankStackNavigatorInnerProps = Omit<
 	keyof BlankStackFactoryOptions
 > & {
 	DISABLE_NATIVE_SCREENS?: boolean;
-	DISABLE_NATIVE_SCREEN_CONTAINER?: boolean;
 };
 
 const BlankStackContext = React.createContext<boolean>(false);
@@ -42,8 +41,6 @@ function BlankStackNavigatorInner({
 	screenListeners,
 	screenOptions,
 	screenLayout,
-	DISABLE_NATIVE_SCREENS,
-	DISABLE_NATIVE_SCREEN_CONTAINER,
 	...rest
 }: BlankStackNavigatorInnerProps) {
 	const { state, describe, descriptors, navigation, NavigationContent } =
@@ -69,8 +66,6 @@ function BlankStackNavigatorInner({
 		<NavigationContent>
 			<StackView
 				{...rest}
-				DISABLE_NATIVE_SCREENS={DISABLE_NATIVE_SCREENS}
-				DISABLE_NATIVE_SCREEN_CONTAINER={DISABLE_NATIVE_SCREEN_CONTAINER}
 				state={state}
 				navigation={navigation}
 				descriptors={descriptors}
@@ -81,19 +76,18 @@ function BlankStackNavigatorInner({
 }
 
 function BlankStackNavigator({
+	enableNativeScreens,
 	independent = false,
-	enableNativeScreens = true,
+	nativeScreens,
 	...rest
 }: BlankStackNavigatorProps) {
 	const isNested = React.useContext(BlankStackContext);
+	const nativeScreensEnabled = nativeScreens ?? enableNativeScreens ?? true;
 
 	const navigator = (
 		<BlankStackNavigatorInner
 			{...rest}
-			{...(!enableNativeScreens && {
-				DISABLE_NATIVE_SCREENS: true,
-			})}
-			DISABLE_NATIVE_SCREEN_CONTAINER={independent}
+			DISABLE_NATIVE_SCREENS={!nativeScreensEnabled}
 		/>
 	);
 
@@ -137,14 +131,12 @@ type BlankStackTypeBag<
  * Creates a blank stack navigator with gesture-driven transitions.
  *
  * By default, blank stack behaves like the existing top-level blank stack:
- * it participates in the current navigation tree and uses native screen
- * primitives on supported native platforms.
+ * it participates in the current navigation tree and renders screens with
+ * react-native-screens.
  *
  * Blank stack also accepts navigator-specific props for embedded-flow behavior:
+ * - `nativeScreens: false` renders blank-stack screens as regular React Native views
  * - `independent: true` creates an isolated navigator for nested flows
- * - `enableNativeScreens: false` renders the stack with regular views instead
- *   of `react-native-screens`
- *
  * In the dynamic API, pass these to `<Stack.Navigator />`.
  * In the static API, pass them in the same config object as `screens`.
  */

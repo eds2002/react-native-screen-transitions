@@ -43,6 +43,31 @@ export type SnapPoint = number | "auto";
 
 export type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 
+/**
+ * Controls how an inactive screen is retained after it is no longer active.
+ *
+ * - `keep`
+ *   keep inactive screen mounted, attached, visible, not interactive
+ *   RNS: activityState=1, visible=true
+ *   React Activity: mode="visible"
+ *
+ * - `freeze`
+ *   keep last painted UI visible but stop/suspend inactive work where platform allows
+ *   RNS: activityState=1, visible=true, maybe freezeOnBlur/shouldFreeze later
+ *   React Activity: mode="hidden" with paint preserved
+ *
+ * - `detach`
+ *   remove inactive screen from native/view presentation after safe paint
+ *   RNS: activityState=0, visible=false
+ *   React Activity: mode="hidden" + display none, or equivalent
+ *
+ * - `unmount`
+ *   actually remove React subtree when the inactive screen is safe to remove
+ *   RNS native: only after safe paint for non-nested screens
+ *   web: return null
+ */
+export type InactiveBehavior = "keep" | "freeze" | "detach" | "unmount";
+
 export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	/**
 	 * Connects this component to custom animated styles defined in screenStyleInterpolator.

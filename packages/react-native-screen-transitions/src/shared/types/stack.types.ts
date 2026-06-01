@@ -18,6 +18,8 @@ export interface BaseStackRoute {
 	params?: object;
 }
 
+export type StackSceneActivity = "active" | "inert" | "inactive" | "closing";
+
 /**
  * Base navigation interface - minimal contract for gesture handling.
  * Both React Navigation helpers and ComponentNavigation satisfy this.
@@ -45,8 +47,15 @@ export interface BaseStackDescriptor<
 	route: TRoute;
 	navigation: TNavigation;
 	options: TOptions;
+	activity?: StackSceneActivity;
 	render?: () => React.JSX.Element | null;
 }
+
+export type StackDescriptorSource<
+	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
+> = Omit<TDescriptor, "activity"> & {
+	activity?: StackSceneActivity;
+};
 
 /**
  * Base scene interface - route + descriptor pair.
@@ -57,6 +66,8 @@ export interface BaseStackScene<
 > {
 	route: TDescriptor["route"];
 	descriptor: TDescriptor;
+	previousDescriptor?: TDescriptor;
+	nextDescriptor?: TDescriptor;
 }
 
 /**

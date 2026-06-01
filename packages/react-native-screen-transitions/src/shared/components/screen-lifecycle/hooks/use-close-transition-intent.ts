@@ -1,6 +1,5 @@
 /** biome-ignore-all lint/correctness/useHookAtTopLevel: STACK_TYPE is stable per navigator */
 import { useLayoutEffect, useMemo, useRef } from "react";
-import { useAnimatedReaction } from "react-native-reanimated";
 import useStableCallback from "../../../hooks/use-stable-callback";
 import {
 	type BaseDescriptor,
@@ -8,7 +7,6 @@ import {
 } from "../../../providers/screen/descriptors";
 import { useStackCoreContext } from "../../../providers/stack/core.provider";
 import { useManagedStackContext } from "../../../providers/stack/managed.provider";
-import type { AnimationStoreMap } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import {
 	LifecycleTransitionRequestKind,
@@ -20,22 +18,24 @@ import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
 
 interface CloseHookParams {
 	current: BaseDescriptor;
-	animations: AnimationStoreMap;
 	requestLifecycleTransition: SystemStoreActions["requestLifecycleTransition"];
 	resetStores: () => void;
 }
 
-/**
- * Managed close - reacts to closingRouteKeysShared from ManagedStackContext.
- * Used by blank-stack and component-stack.
- */
 const useManagedClose = ({
 	current,
 	requestLifecycleTransition,
 	resetStores,
 }: CloseHookParams) => {
-	const { handleCloseRoute, closingRouteKeysShared } = useManagedStackContext();
-	const routeKey = current.route.key;
+	const { handleCloseRoute } = useManagedStackContext();
+
+	useLayoutEffect(() => {
+		if (current.activity !== "closing") {
+			return;
+		}
+
+		requestLifecycleTransition(LifecycleTransitionRequestKind.ManagedClose, 0);
+	}, [current.activity, requestLifecycleTransition]);
 
 	const handleManagedCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished) return;
@@ -44,21 +44,6 @@ const useManagedClose = ({
 			resetStores();
 		});
 	});
-
-	useAnimatedReaction(
-		() => {
-			const keys = closingRouteKeysShared.get();
-			return keys?.includes(routeKey) ?? false;
-		},
-		(isClosing, wasClosing) => {
-			if (!isClosing || wasClosing) return;
-
-			requestLifecycleTransition(
-				LifecycleTransitionRequestKind.ManagedClose,
-				0,
-			);
-		},
-	);
 
 	return { handleManagedCloseEnd };
 };
@@ -127,7 +112,6 @@ const useNativeStackClose = ({
  */
 export function useCloseTransitionIntent(
 	current: BaseDescriptor,
-	animations: AnimationStoreMap,
 	system: SystemStoreMap,
 ): {
 	handleManagedCloseEnd?: (finished: boolean) => void;
@@ -144,7 +128,6 @@ export function useCloseTransitionIntent(
 
 	const closeParams: CloseHookParams = {
 		current,
-		animations,
 		requestLifecycleTransition,
 		resetStores,
 	};

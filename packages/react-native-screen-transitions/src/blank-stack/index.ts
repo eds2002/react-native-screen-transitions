@@ -8,4 +8,5 @@ export type {
 	BlankStackOptionsArgs,
 	BlankStackOverlayProps,
 	BlankStackScreenProps,
+	InactiveBehavior,
 } from "../blank-stack/types";

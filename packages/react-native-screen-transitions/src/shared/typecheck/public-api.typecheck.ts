@@ -245,9 +245,7 @@ const emptyInterpolatorOptions: ScreenTransitionConfig = {
 const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
 };
-const blankStackNavigationOptions: BlankStackNavigationOptions = {
-	freezeOnBlur: true,
-};
+const blankStackNavigationOptions: BlankStackNavigationOptions = {};
 
 type StaticBlankStackParamList = {
 	Home: undefined;

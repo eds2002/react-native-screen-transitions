@@ -15,7 +15,7 @@ import {
 const { Navigator } = createBlankStackNavigator();
 
 function BlankStackNavigator(props: ComponentProps<typeof Navigator>) {
-	return <Navigator {...props} enableNativeScreens={Platform.OS === "ios"} />;
+	return <Navigator {...props} nativeScreens={Platform.OS === "ios"} />;
 }
 
 export const BlankStack = withLayoutContext<

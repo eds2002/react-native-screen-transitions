@@ -26,7 +26,7 @@ export const usePanBehavior = (
 	screenOptions: ScreenOptionsContextValue,
 	dimensions: GestureDimensions,
 ): PanBehavior => {
-	const { dismissScreen } = useNavigationHelpers();
+	const { dismissScreen, requestDismiss } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
 		usePanGestureSensitivity(screenOptions);
 
@@ -76,9 +76,17 @@ export const usePanBehavior = (
 				dismissScreen,
 				dimensions,
 				rawEvent,
+				requestDismiss,
 			);
 		},
-		[runtime, screenOptions, dimensions, dismissScreen, withSensitivity],
+		[
+			runtime,
+			screenOptions,
+			dimensions,
+			dismissScreen,
+			requestDismiss,
+			withSensitivity,
+		],
 	);
 
 	return useMemo(
