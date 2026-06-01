@@ -35,6 +35,7 @@ const BlankSceneRow = memo(function BlankSceneRow({
 				<ActivityScreen
 					activity={descriptor.activity}
 					paintDriverRouteKey={paintDriverRouteKey}
+					hasNestedState={"state" in route}
 				>
 					<ScreenComposer
 						previous={scene.previousDescriptor}

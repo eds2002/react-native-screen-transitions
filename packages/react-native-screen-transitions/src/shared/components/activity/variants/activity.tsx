@@ -1,85 +1,46 @@
 import type { ReactNode } from "react";
-import * as React from "react";
-import {
-	type HostComponent,
-	StyleSheet,
-	View,
-	type ViewProps,
-} from "react-native";
-import * as NativeComponentRegistry from "react-native/Libraries/NativeComponent/NativeComponentRegistry";
+import { StyleSheet, View, type ViewProps } from "react-native";
+import { Screen } from "react-native-screens";
+import { IS_WEB } from "../../../constants";
+import { useStack } from "../../../hooks/navigation/use-stack";
 
-export type ActivityMode = "visible" | "hidden";
-
-const ACTIVITY_CONTENTS_DISPLAY = "contents" as const;
+export type ActivityState = 0 | 1 | 2;
 
 interface ActivityProps {
+	activityState: ActivityState;
 	children: ReactNode;
-	mode: ActivityMode;
+	pointerEvents: ViewProps["pointerEvents"];
+	shouldFreeze: boolean;
 	visible: boolean;
 }
 
-type ReactActivityProps = {
-	children?: ReactNode;
-	mode: ActivityMode;
-};
-
-const ReactActivity = (
-	React as typeof React & {
-		Activity: React.ComponentType<ReactActivityProps>;
-	}
-).Activity;
-
-/**
- * React Activity pauses effects by rendering hidden content. The content view
- * remaps Activity's wrapper to `display: contents` so paused screens can keep
- * their paint when needed for stack transitions.
- */
-export const Activity = ({ children, mode, visible }: ActivityProps) => {
-	const paintDisplay: "flex" | "none" = visible ? "flex" : "none";
+export const Activity = ({
+	activityState,
+	children,
+	pointerEvents,
+	shouldFreeze,
+	visible,
+}: ActivityProps) => {
+	const nativeScreenDisabled = useStack((s) => s.flags.DISABLE_NATIVE_SCREENS);
+	const Component = IS_WEB || nativeScreenDisabled ? View : Screen;
 
 	return (
-		<ReactActivity mode={mode}>
-			<ActivityContentView
-				collapsable={false}
-				style={{ display: ACTIVITY_CONTENTS_DISPLAY }}
-			>
-				<View
-					collapsable={false}
-					style={[StyleSheet.absoluteFill, { display: paintDisplay }]}
-				>
-					{children}
-				</View>
-			</ActivityContentView>
-		</ReactActivity>
+		<Component
+			style={[styles.screen, !visible && styles.hidden]}
+			activityState={activityState}
+			shouldFreeze={shouldFreeze}
+			pointerEvents={pointerEvents}
+			collapsable={false}
+		>
+			{children}
+		</Component>
 	);
 };
 
-const ACTIVITY_CONTENT_STYLE: Record<
-	string,
-	true | { process?: (value: unknown) => unknown }
-> = {
-	display: {
-		process: () => ACTIVITY_CONTENTS_DISPLAY,
+const styles = StyleSheet.create({
+	screen: StyleSheet.absoluteFillObject,
+	content: StyleSheet.absoluteFillObject,
+	hidden: {
+		display: "none",
 	},
-};
-
-const ACTIVITY_CONTENT_VIEW_CONFIG = {
-	uiViewClassName: "RCTView",
-	validAttributes: {
-		style: ACTIVITY_CONTENT_STYLE,
-	},
-};
-
-type ActivityViewProps = Omit<ViewProps, "style"> & {
-	style?:
-		| {
-				display?: typeof ACTIVITY_CONTENTS_DISPLAY | "none" | undefined;
-		  }
-		| undefined;
-};
-
-const ActivityContentView: HostComponent<ActivityViewProps> =
-	NativeComponentRegistry.get<ActivityViewProps>(
-		"ScreenTransitionsActivityContentView",
-		() => ACTIVITY_CONTENT_VIEW_CONFIG,
-	);
+});
