@@ -70,6 +70,10 @@ export default function RootLayout() {
 					options={{ ...IOSSlide() }}
 				/>
 				<StackNavigator.Screen
+					name={stackScreen("inactive-behavior")}
+					options={{ ...IOSSlide() }}
+				/>
+				<StackNavigator.Screen
 					name={stackScreen("overlay")}
 					options={{ ...IOSSlide() }}
 				/>

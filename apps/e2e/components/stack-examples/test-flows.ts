@@ -5,6 +5,11 @@ export const TEST_FLOWS = [
 		description: "Demonstrates stackProgress accumulating across screens",
 	},
 	{
+		id: "inactive-behavior",
+		title: "Inactive Behavior",
+		description: "Retention probes for keep, freeze, detach, and unmount",
+	},
+	{
 		id: "overlay",
 		title: "Floating Overlay",
 		description: "Tab bar overlay that animates with screen transitions",
