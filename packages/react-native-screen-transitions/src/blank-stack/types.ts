@@ -10,9 +10,11 @@ import type {
 	StackRouterOptions,
 	Theme,
 } from "@react-navigation/native";
-import type { ScreenTransitionConfig } from "../shared";
+import type { InactiveBehavior, ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
 import type { StackSceneActivity } from "../shared/types/stack.types";
+
+export type { InactiveBehavior } from "../shared";
 
 export type BlankStackNavigationEventMap = {};
 
@@ -83,7 +85,29 @@ export type BlankStackOverlayProps = OverlayProps<
 	BlankStackNavigationProp<ParamListBase>
 >;
 
-export type BlankStackNavigationOptions = ScreenTransitionConfig;
+export type BlankStackNavigationOptions = ScreenTransitionConfig & {
+	/**
+	 * Controls how inactive blank-stack screens are retained after they are no
+	 * longer active.
+	 *
+	 * For a stack shaped as A(inactive), B(inert), C(active):
+	 *
+	 * - `keep`: keeps A mounted, attached, visible, and non-interactive.
+	 * - `freeze`: keeps A's last painted UI visible and asks the platform to
+	 *   stop or suspend inactive work where possible.
+	 * - `detach`: removes A from native/view presentation after the screen that
+	 *   exposes it has safely painted.
+	 * - `unmount`: removes A's React subtree after safe paint when the route has
+	 *   no nested navigation state.
+	 *
+	 * On web, or when native screens are disabled, `keep`, `freeze`, and
+	 * `detach` currently have no meaningful retention effect. This will change
+	 * once the implementation can use React 19.2's Activity component.
+	 *
+	 * @default "detach" on native, "unmount" on web
+	 */
+	inactiveBehavior?: InactiveBehavior;
+};
 
 export type BlankStackNavigatorProps = DefaultNavigatorOptions<
 	ParamListBase,

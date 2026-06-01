@@ -53,6 +53,7 @@ export type {
 	BoundsNavigationZoomOpacityRanges,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
+	InactiveBehavior,
 	OverlayProps,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,

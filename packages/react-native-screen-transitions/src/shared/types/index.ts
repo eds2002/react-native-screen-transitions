@@ -34,6 +34,7 @@ export type {
 export type { OverlayProps } from "./overlay.types";
 export type {
 	GestureTracking,
+	InactiveBehavior,
 	Layout,
 	ScreenKey,
 	ScreenTransitionConfig,

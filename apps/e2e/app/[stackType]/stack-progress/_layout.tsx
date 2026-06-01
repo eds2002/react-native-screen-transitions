@@ -1,5 +1,3 @@
-// @ts-nocheck
-
 import { interpolate } from "react-native-reanimated";
 import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
@@ -13,7 +11,10 @@ export default function StackProgressLayout() {
 		stackType === "native-stack" ? { enableTransitions: true } : undefined;
 	return (
 		<StackNavigator screenOptions={navigatorScreenOptions}>
-			<StackNavigator.Screen name="index" />
+			<StackNavigator.Screen
+				name="index"
+				options={{ inactiveBehavior: "keep" }}
+			/>
 			<StackNavigator.Screen
 				name="pushed"
 				options={{

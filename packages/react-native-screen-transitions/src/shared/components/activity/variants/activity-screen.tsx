@@ -13,8 +13,8 @@ import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-
 import { AnimationStore } from "../../../stores/animation.store";
 import type { StackSceneActivity } from "../../../types/stack.types";
 import { DEFAULT_INACTIVE_BEHAVIOR, type InactiveBehavior } from "../helpers";
-import type { ActivityState } from "./activity";
 
+type ActivityState = 0 | 1 | 2;
 const ActivityStateByActivity = {
 	active: 2,
 	inert: 1,

@@ -34,6 +34,7 @@ const BlankSceneRow = memo(function BlankSceneRow({
 			<NavigationRouteContext.Provider value={route}>
 				<ActivityScreen
 					activity={descriptor.activity}
+					inactiveBehavior={descriptor.options.inactiveBehavior}
 					paintDriverRouteKey={paintDriverRouteKey}
 					hasNestedState={"state" in route}
 				>
