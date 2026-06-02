@@ -46,6 +46,21 @@ export const adjustedMeasuredBoundsForOverscrollDeltas = (
 	};
 };
 
+export const applyVisibilityBlockOffset = (
+	measured: MeasuredDimensions,
+	offset: number,
+): MeasuredDimensions => {
+	"worklet";
+	if (offset === 0) {
+		return measured;
+	}
+
+	return {
+		...measured,
+		pageY: measured.pageY - offset,
+	};
+};
+
 export const isMeasurementInViewport = (
 	measured: MeasuredDimensions,
 	viewportWidth: number,

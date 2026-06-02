@@ -1,3 +1,4 @@
+import { useWindowDimensions } from "react-native";
 import {
 	useAnimatedProps,
 	useAnimatedReaction,
@@ -6,10 +7,12 @@ import {
 } from "react-native-reanimated";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { SystemStore } from "../../../../stores/system.store";
+import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
 import { useDescriptorDerivations } from "../../descriptors";
 import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
+	const { height } = useWindowDimensions();
 	const { currentScreenKey } = useDescriptorDerivations();
 	const { entering, progress } = AnimationStore.getBag(currentScreenKey);
 
@@ -54,8 +57,21 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
+		/**
+		 * Keep blocked screens physically offscreen. On physical devices,
+		 * opacity: 0 can break Liquid Glass sampling.
+		 *
+		 * See: https://github.com/expo/expo/issues/41024
+		 *
+		 */
+		const offset = getVisibilityBlockOffset(height);
+
 		return {
-			opacity: shouldBlockVisibility.get() ? 0 : 1,
+			transform: [
+				{
+					translateY: shouldBlockVisibility.get() ? offset : 0,
+				},
+			],
 		};
 	});
 
