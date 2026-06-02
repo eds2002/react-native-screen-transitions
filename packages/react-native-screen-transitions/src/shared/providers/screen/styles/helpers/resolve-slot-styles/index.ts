@@ -17,7 +17,6 @@ type ResolveSlotStylesContext = {
 	localStylesMaps: LocalStyleLayers;
 	ancestorStylesMap: NormalizedTransitionInterpolatedStyle;
 	previousStyleStatesBySlot: ResettableStyleStatesBySlot;
-	deferLocalSlotResets: boolean;
 	resolvedStylesMap: NormalizedTransitionInterpolatedStyle;
 	nextPreviousStyleStatesBySlot: ResettableStyleStatesBySlot;
 };
@@ -75,42 +74,32 @@ const hasResettableDisappearedKeys = (
 const getResolvedSlotOutput = ({
 	slot,
 	previousState,
-	resetDroppedKeys,
-	carryPreviousState,
 }: {
 	slot: NormalizedTransitionSlotStyle | undefined;
 	previousState: ResettableStyleState | undefined;
-	resetDroppedKeys: boolean;
-	carryPreviousState: boolean;
 }) => {
 	"worklet";
 	const state = getResolvedSlotState(slot);
 
-	const hasStyleResetPatch =
-		resetDroppedKeys &&
-		hasResettableDisappearedKeys(
-			previousState?.styleKeys,
-			previousState?.styleResetValues,
-			state.styleKeys,
-		);
-	const hasPropResetPatch =
-		resetDroppedKeys &&
-		hasResettableDisappearedKeys(
-			previousState?.propKeys,
-			previousState?.propResetValues,
-			state.propKeys,
-		);
+	const hasStyleResetPatch = hasResettableDisappearedKeys(
+		previousState?.styleKeys,
+		previousState?.styleResetValues,
+		state.styleKeys,
+	);
+	const hasPropResetPatch = hasResettableDisappearedKeys(
+		previousState?.propKeys,
+		previousState?.propResetValues,
+		state.propKeys,
+	);
 	const hasResetPatch = hasEitherResetPatch(
 		hasStyleResetPatch,
 		hasPropResetPatch,
 	);
-	const nextState =
-		state.nextState ?? (carryPreviousState ? previousState : undefined);
 
 	if (!hasResetPatch) {
 		return {
 			resolvedSlot: getForwardedSlot(slot, state.hasAnyKeys),
-			nextState,
+			nextState: state.nextState,
 		};
 	}
 
@@ -126,13 +115,8 @@ const getResolvedSlotOutput = ({
 			hasStyleResetPatch,
 			hasPropResetPatch,
 		}),
-		nextState,
+		nextState: state.nextState,
 	};
-};
-
-const hasLocalStyleSource = (context: ResolveSlotStylesContext) => {
-	"worklet";
-	return context.localStylesMaps.length > 0;
 };
 
 const hasLocalSlot = (context: ResolveSlotStylesContext, slotId: string) => {
@@ -145,25 +129,6 @@ const hasLocalSlot = (context: ResolveSlotStylesContext, slotId: string) => {
 	}
 
 	return false;
-};
-
-const shouldDeferMissingLocalSlotReset = (
-	context: ResolveSlotStylesContext,
-	slotId: string,
-) => {
-	"worklet";
-	const canInherit = shouldSlotInherit(slotId);
-	const localSlotExists = hasLocalSlot(context, slotId);
-	const hasInheritedSlot =
-		canInherit && context.ancestorStylesMap[slotId] !== undefined;
-
-	return (
-		context.deferLocalSlotResets &&
-		!hasLocalStyleSource(context) &&
-		!canInherit &&
-		!localSlotExists &&
-		!hasInheritedSlot
-	);
 };
 
 const mergeBucket = (
@@ -421,12 +386,9 @@ const appendResolvedSlot = (
 	slotId: string,
 ) => {
 	"worklet";
-	const shouldDeferReset = shouldDeferMissingLocalSlotReset(context, slotId);
 	const { resolvedSlot, nextState } = getResolvedSlotOutput({
 		slot: getSlotForId(context, slotId),
 		previousState: context.previousStyleStatesBySlot[slotId],
-		resetDroppedKeys: !shouldDeferReset,
-		carryPreviousState: shouldDeferReset,
 	});
 
 	writeResolvedSlotOutput({
@@ -505,12 +467,10 @@ export const resolveSlotStyles = ({
 	localStylesMaps,
 	ancestorStylesMap,
 	previousStyleStatesBySlot,
-	deferLocalSlotResets = false,
 }: {
 	localStylesMaps: LocalStyleLayers;
 	ancestorStylesMap: NormalizedTransitionInterpolatedStyle;
 	previousStyleStatesBySlot: ResettableStyleStatesBySlot;
-	deferLocalSlotResets?: boolean;
 }) => {
 	"worklet";
 	const resolvedStylesMap: NormalizedTransitionInterpolatedStyle = {};
@@ -519,7 +479,6 @@ export const resolveSlotStyles = ({
 		localStylesMaps,
 		ancestorStylesMap,
 		previousStyleStatesBySlot,
-		deferLocalSlotResets,
 		resolvedStylesMap,
 		nextPreviousStyleStatesBySlot,
 	};
