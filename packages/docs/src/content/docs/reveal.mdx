@@ -226,6 +226,48 @@ Controls whether gesture displacement drives transition progress. Reveal default
   </tbody>
 </table>
 
+### `backgroundScale`
+
+Scales the unfocused background content while the reveal runs above it.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>0.9375</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `shouldBackgroundScaleResetOnSettled`
+
+Restores the unfocused background content to scale `1` once the reveal is logically settled. This keeps the idle screen unmodified, so the next drag or programmatic dismiss can take a fresh measurement from the real screen geometry instead of from a scaled background.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>boolean</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>true</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
 ### `disablePointerEventsTillElementTransition`
 
 Blocks pointer-event pass-through on the inactive content until the source element handoff reaches progress `0.25`. This is intentional and most users cannot react fast enough to swipe during that brief handoff. Set `false` to disable the guard and keep the default behavior that allows pointer events to pass through.

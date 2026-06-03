@@ -159,6 +159,8 @@ const configuredRevealInterpolatedStyle: BoundsNavigationRevealStyle =
 		maxSensitivity: 0.6,
 		velocityDepth: 0.35,
 		gestureProgressMode: "freeform",
+		backgroundScale: 0.96,
+		shouldBackgroundScaleResetOnSettled: true,
 		disablePointerEventsTillElementTransition: false,
 		maskSizingMode: "size",
 	});

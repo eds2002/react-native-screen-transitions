@@ -13,6 +13,7 @@ import {
 	DRAG_MASK_HEIGHT_COLLAPSE_END,
 	HORIZONTAL_DRAG_MASK_COLLAPSE_SCALE,
 	IDENTITY_DRAG_SCALE_OUTPUT,
+	REVEAL_BACKGROUND_SCALE,
 	REVEAL_BORDER_RADIUS,
 	REVEAL_SHADOW_OFFSET,
 	REVEAL_USES_TRANSFORM_MASK,
@@ -65,6 +66,10 @@ export function buildRevealStyles({
 	const disablePointerEventsTillElementTransition =
 		revealOptions?.disablePointerEventsTillElementTransition ?? true;
 	const maskSizingMode = revealOptions?.maskSizingMode ?? "auto";
+	const backgroundScale =
+		revealOptions?.backgroundScale ?? REVEAL_BACKGROUND_SCALE;
+	const shouldBackgroundScaleResetOnSettled =
+		revealOptions?.shouldBackgroundScaleResetOnSettled ?? true;
 	const usesTransformMask =
 		maskSizingMode === "auto"
 			? REVEAL_USES_TRANSFORM_MASK
@@ -374,10 +379,11 @@ export function buildRevealStyles({
 
 	/* ---------------------------- Unfocused Screen ---------------------------- */
 
-	const unfocusedScale = mixUnit(1, 0.9375, props.active.progress);
-	const unfocusedContentScale = props.active.logicallySettled
-		? 1
-		: unfocusedScale;
+	const unfocusedScale = mixUnit(1, backgroundScale, props.active.progress);
+	const unfocusedContentScale =
+		props.active.logicallySettled && shouldBackgroundScaleResetOnSettled
+			? 1
+			: unfocusedScale;
 
 	const trackingContentTarget =
 		initialDestinationTarget ?? link.destination.bounds;
