@@ -366,8 +366,6 @@ export function buildRevealStyles({
 			},
 			[link.id]: {
 				style: {
-					position: "relative",
-					zIndex: 999,
 					transform: [{ translateX: elementTX }, { translateY: elementY }],
 				},
 			},
