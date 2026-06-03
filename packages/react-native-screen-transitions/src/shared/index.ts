@@ -26,11 +26,7 @@ export default {
 	Specs,
 };
 
-export type {
-	NativeStackAdapterOptions,
-	NativeStackNativeGestureOptions,
-	ScreenTransitionDescriptorOptions,
-} from "./adapters/with-screen-transitions";
+export type { NativeStackAdapterOptions } from "./adapters/with-screen-transitions";
 export { withScreenTransitions } from "./adapters/with-screen-transitions";
 export { snapTo } from "./animation/snap-to";
 export {

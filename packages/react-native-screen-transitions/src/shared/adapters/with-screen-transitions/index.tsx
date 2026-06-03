@@ -28,12 +28,7 @@ import type {
 	ScreenLayoutArgs,
 } from "./types";
 
-export type {
-	NativeStackAdapterOptions,
-	NativeStackNativeGestureOptions,
-	ScreenTransitionDescriptorOptions,
-} from "./options";
-export { resolveScreenTransitionOptions } from "./options";
+export type { NativeStackAdapterOptions } from "./options";
 
 type ScreenTransitionsNavigatorProps = {
 	layout?: NavigatorLayout;

@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UpdatingTo37RouteImport } from './routes/updating-to-3-7'
 import { Route as UpdatingTo36RouteImport } from './routes/updating-to-3-6'
 import { Route as TransitionComponentsRouteImport } from './routes/transition-components'
 import { Route as SurfaceSlotsRouteImport } from './routes/surface-slots'
@@ -31,9 +32,15 @@ import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
 import { Route as ComponentsRouteImport } from './routes/components'
 import { Route as CaveatsRouteImport } from './routes/caveats'
+import { Route as AdaptersRouteImport } from './routes/adapters'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
 
+const UpdatingTo37Route = UpdatingTo37RouteImport.update({
+  id: '/updating-to-3-7',
+  path: '/updating-to-3-7',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UpdatingTo36Route = UpdatingTo36RouteImport.update({
   id: '/updating-to-3-6',
   path: '/updating-to-3-6',
@@ -144,6 +151,11 @@ const CaveatsRoute = CaveatsRouteImport.update({
   path: '/caveats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdaptersRoute = AdaptersRouteImport.update({
+  id: '/adapters',
+  path: '/adapters',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -157,6 +169,7 @@ const V4NextIndexRoute = V4NextIndexRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
   '/reveal': typeof RevealRoute
@@ -179,10 +192,12 @@ export interface FileRoutesByFullPath {
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
+  '/updating-to-3-7': typeof UpdatingTo37Route
   '/v4-next/': typeof V4NextIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
   '/reveal': typeof RevealRoute
@@ -205,11 +220,13 @@ export interface FileRoutesByTo {
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
+  '/updating-to-3-7': typeof UpdatingTo37Route
   '/v4-next': typeof V4NextIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
   '/reveal': typeof RevealRoute
@@ -232,12 +249,14 @@ export interface FileRoutesById {
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
+  '/updating-to-3-7': typeof UpdatingTo37Route
   '/v4-next/': typeof V4NextIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/adapters'
     | '/caveats'
     | '/components'
     | '/reveal'
@@ -260,10 +279,12 @@ export interface FileRouteTypes {
     | '/surface-slots'
     | '/transition-components'
     | '/updating-to-3-6'
+    | '/updating-to-3-7'
     | '/v4-next/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/adapters'
     | '/caveats'
     | '/components'
     | '/reveal'
@@ -286,10 +307,12 @@ export interface FileRouteTypes {
     | '/surface-slots'
     | '/transition-components'
     | '/updating-to-3-6'
+    | '/updating-to-3-7'
     | '/v4-next'
   id:
     | '__root__'
     | '/'
+    | '/adapters'
     | '/caveats'
     | '/components'
     | '/reveal'
@@ -312,11 +335,13 @@ export interface FileRouteTypes {
     | '/surface-slots'
     | '/transition-components'
     | '/updating-to-3-6'
+    | '/updating-to-3-7'
     | '/v4-next/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdaptersRoute: typeof AdaptersRoute
   CaveatsRoute: typeof CaveatsRoute
   ComponentsRoute: typeof ComponentsRoute
   RevealRoute: typeof RevealRoute
@@ -339,16 +364,31 @@ export interface RootRouteChildren {
   SurfaceSlotsRoute: typeof SurfaceSlotsRoute
   TransitionComponentsRoute: typeof TransitionComponentsRoute
   UpdatingTo36Route: typeof UpdatingTo36Route
+  UpdatingTo37Route: typeof UpdatingTo37Route
   V4NextIndexRoute: typeof V4NextIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/adapters': {
+      id: '/adapters'
+      path: '/adapters'
+      fullPath: '/adapters'
+      preLoaderRoute: typeof AdaptersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/updating-to-3-6': {
       id: '/updating-to-3-6'
       path: '/updating-to-3-6'
       fullPath: '/updating-to-3-6'
       preLoaderRoute: typeof UpdatingTo36RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/updating-to-3-7': {
+      id: '/updating-to-3-7'
+      path: '/updating-to-3-7'
+      fullPath: '/updating-to-3-7'
+      preLoaderRoute: typeof UpdatingTo37RouteImport
       parentRoute: typeof rootRouteImport
     }
     '/transition-components': {
@@ -517,6 +557,7 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdaptersRoute: AdaptersRoute,
   CaveatsRoute: CaveatsRoute,
   ComponentsRoute: ComponentsRoute,
   RevealRoute: RevealRoute,
@@ -539,6 +580,7 @@ const rootRouteChildren: RootRouteChildren = {
   SurfaceSlotsRoute: SurfaceSlotsRoute,
   TransitionComponentsRoute: TransitionComponentsRoute,
   UpdatingTo36Route: UpdatingTo36Route,
+  UpdatingTo37Route: UpdatingTo37Route,
   V4NextIndexRoute: V4NextIndexRoute,
 }
 export const routeTree = rootRouteImport

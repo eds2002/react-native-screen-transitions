@@ -5,7 +5,7 @@ summary: "Reference for the package surface: navigator creators, Transition prim
 description: "Reference for the package surface: navigator creators, Transition primitives, boundary components, factories, presets, and named helpers."
 eyebrow: "Components"
 group: "Components"
-order: 3
+order: 4
 to: /transition-components
 ---
 
@@ -14,11 +14,13 @@ to: /transition-components
 `react-native-screen-transitions` exposes three main API surfaces:
 
 - navigator creators from subpaths
+- adapter helpers for existing navigators
 - the default `Transition` export from the main package
 - named helpers, hooks, constants, and types from the main package
 
 ```tsx
 import Transition, {
+  withScreenTransitions,
   snapTo,
   useHistory,
   useScreenAnimation,
@@ -31,16 +33,13 @@ import Transition, {
 } from "react-native-screen-transitions";
 
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
-import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
 ```
 
-Use the subpath exports to build navigators. Use `Transition` for transition-aware primitives, boundary components, factories, presets, and specs. Use the named exports for helpers like `snapTo()`, hooks like `useScreenAnimation()`, and public constants such as the navigation mask ids.
+Use the blank-stack subpath export to build the recommended navigator. Use `withScreenTransitions()` to adapt existing native-stack navigators. Use `Transition` for transition-aware primitives, boundary components, factories, presets, and specs. Use the named exports for helpers like `snapTo()`, hooks like `useScreenAnimation()`, and public constants such as the navigation mask ids.
 
 ## Navigator Creators
 
 `createBlankStackNavigator()`
-
-`createNativeStackNavigator()`
 
 ```tsx
 const Stack = createBlankStackNavigator();
@@ -59,7 +58,9 @@ const Stack = createBlankStackNavigator();
 
 All transition configuration still lives on screen `options`.
 
-Related reading: [Stack Types](/stack-types).
+The bundled native-stack creator from `react-native-screen-transitions/native-stack` remains available for compatibility, but is deprecated. For native-stack integration, use `@react-navigation/native-stack` with `withScreenTransitions()`.
+
+Related reading: [Stack Types](/stack-types) and [Adapters](/adapters).
 
 ## Transition-Aware Primitives
 

@@ -24,8 +24,8 @@ import {
 	useScreenTransitionsAdapterContext,
 } from "./context";
 import {
-	resolveScreenTransitionOptions,
-	type ScreenTransitionDescriptorOptions,
+	type AdapterDescriptorOptions,
+	resolveAdapterTransitionOptions,
 } from "./options";
 import type {
 	NavigatorLayout,
@@ -63,8 +63,8 @@ function normalizeDescriptor(
 ): BaseStackDescriptor {
 	return {
 		...descriptor,
-		options: resolveScreenTransitionOptions(
-			descriptor.options as ScreenTransitionDescriptorOptions,
+		options: resolveAdapterTransitionOptions(
+			descriptor.options as AdapterDescriptorOptions,
 		),
 	};
 }
@@ -119,7 +119,7 @@ function buildTransitionStackState({
 
 		if (
 			!shouldShowFloatOverlay &&
-			(normalizedDescriptor.options as ScreenTransitionDescriptorOptions)
+			(normalizedDescriptor.options as AdapterDescriptorOptions)
 				.enableTransitions &&
 			isOverlayVisible(normalizedDescriptor.options)
 		) {

@@ -1,0 +1,81 @@
+---
+title: "Adapters"
+pageTitle: "Adapters"
+summary: "Wrap existing navigators with the screen transition runtime."
+description: "Wrap existing navigators with the screen transition runtime."
+eyebrow: "Components"
+group: "Components"
+order: 3
+to: /adapters
+---
+
+Adapters let an existing navigator use the screen transition runtime without moving to one of this package's bundled navigator creators.
+
+## withScreenTransitions
+
+Use `withScreenTransitions()` when your app primarily uses React Navigation's native stack and you want specific screens to support custom screen transitions without giving up the native-stack behavior your app already depends on.
+
+Wrap the native-stack navigator with the adapter to make its screens transition aware. For longer multi-screen custom-motion flows, prefer [Blank Stack](/stack-types) instead.
+
+```tsx
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Transition, {
+  withScreenTransitions,
+} from "react-native-screen-transitions";
+
+const NativeStack = createNativeStackNavigator();
+const Stack = withScreenTransitions(NativeStack);
+```
+
+<Note>
+  Don't forget to set `enableTransitions` to `true` when you want this screen to use custom transitions.
+</Note>
+
+```tsx {5}
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    enableTransitions: true,
+    gestureEnabled: true,
+    transitionSpec: {
+      open: Transition.Specs.DefaultSpec,
+      close: Transition.Specs.DefaultSpec,
+    },
+    screenStyleInterpolator: () => {
+      "worklet";
+
+      return {
+        content: {
+          style: {
+            // ...
+          },
+        },
+      };
+    },
+  }}
+/>;
+```
+
+## Expo Router
+
+For Expo Router, wrap the adapted native stack with `withLayoutContext()`:
+
+```tsx
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { withLayoutContext } from "expo-router";
+import { withScreenTransitions } from "react-native-screen-transitions";
+
+const NativeStack = createNativeStackNavigator();
+const Stack = withScreenTransitions(NativeStack);
+
+export const ScreenTransitionsStack = withLayoutContext(Stack.Navigator);
+```
+
+Blank stack is still the default recommendation for custom motion. Use the native-stack adapter when the app already depends on native-stack behavior and only needs selected screens or flows to participate in custom transitions.
+
+## Related Reading
+
+- [Stack Types](/stack-types)
+- [Expo Router](/expo-router)
+- [New in 3.7](/updating-to-3-7)

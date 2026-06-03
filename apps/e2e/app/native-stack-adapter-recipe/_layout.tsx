@@ -50,7 +50,6 @@ export default function NativeStackAdapterRecipeLayout() {
 					gestureEnabled: true,
 					gestureDirection: "bidirectional",
 					gestureProgressMode: "freeform",
-					nativeGestureEnabled: false,
 					screenStyleInterpolator: imageDetailInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,

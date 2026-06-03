@@ -1,0 +1,158 @@
+---
+title: "New in 3.7"
+pageTitle: "New in 3.7"
+summary: "What changed in v3.7 across native-stack integration, blank-stack lifecycle, reveal, and transition correctness."
+description: "What changed in v3.7 across native-stack integration, blank-stack lifecycle, reveal, and transition correctness."
+eyebrow: "Changelogs"
+group: "Changelogs"
+order: 1
+to: /updating-to-3-7
+---
+
+v3.7 focuses on making the stack runtime easier to adopt in existing apps and more predictable during complex dismissals.
+
+## Features
+
+### withScreenTransitions Adapter
+
+v3.7 adds `withScreenTransitions()` for teams that already use `@react-navigation/native-stack`.
+
+The forked native-stack version from this package is deprecated so the package can focus on the transition layer while your app continues to benefit from the latest native-stack implementation.
+
+Instead of importing the bundled native-stack navigator from this package, wrap React Navigation's native stack:
+
+```tsx
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { withScreenTransitions } from "react-native-screen-transitions";
+
+const NativeStack = createNativeStackNavigator();
+const Stack = withScreenTransitions(NativeStack);
+```
+
+Transition behavior still opts in per screen or group:
+
+```tsx
+<Stack.Screen
+  name="Profile"
+  component={ProfileScreen}
+  options={{
+    enableTransitions: true,
+    ...Transition.Presets.SlideFromBottom(),
+  }}
+/>
+```
+
+When `enableTransitions` is on, the adapter uses the same transition options as the rest of the package:
+
+- `screenStyleInterpolator`
+- `transitionSpec`
+- `gestureEnabled`
+- `gestureDirection`
+- `gestureResponseDistance`
+- the other `ScreenTransitionConfig` options from the standard screen options surface
+
+### Blank Stack Lifecycle
+
+Blank stack now has explicit inactive-screen lifecycle control through `inactiveBehavior`.
+
+The option name intentionally lines up with [React Navigation 8.x's JS Stack lifecycle option](https://reactnavigation.org/docs/8.x/stack-navigator/#inactivebehavior), so the concept is familiar to people moving between navigators. This package's blank-stack renderer uses its own behavior set, so the API is related by intent rather than copied behavior.
+
+```tsx
+<Stack.Screen
+  name="Details"
+  component={DetailsScreen}
+  options={{
+    inactiveBehavior: "detach",
+  }}
+/>
+```
+
+The supported behaviors are:
+
+- `keep`: keep inactive screens mounted, attached, visible, and non-interactive
+- `freeze`: keep the last painted UI visible and ask the platform to suspend inactive work where possible
+- `detach`: remove inactive screens from native/view presentation after the exposing screen has safely painted
+- `unmount`: remove the React subtree after safe paint when the route has no nested navigation state
+
+The default is `detach` on native and `unmount` on web.
+
+On web, use `unmount` for now. `keep`, `freeze`, and `detach` are accepted so shared configs type-check, but they do not provide distinct inactive-screen behavior on web yet. Once the package can integrate React 19.2's [`<Activity>` component](https://react.dev/blog/2025/10/01/react-19-2#activity), we can experiment with web retention modes that map more closely to the native behaviors.
+
+This release also introduces a managed-stack controller for blank stack route retention. Closing routes are kept around long enough to finish their transition, removed routes can reuse their previous descriptor while closing, and inactive / inert / closing scenes are resolved more deterministically.
+
+The lifecycle work is covered by a new inactive-behavior test suite for keep, freeze, detach, and unmount timing.
+
+### Reveal Background Scaling
+
+`bounds({ id }).navigation.reveal()` now exposes the background scaling that was previously hardcoded.
+
+```tsx
+return bounds({ id }).navigation.reveal({
+  backgroundScale: 0.96,
+  shouldBackgroundScaleResetOnSettled: true,
+});
+```
+
+`backgroundScale` controls the unfocused background content scale while reveal runs above it.
+
+`shouldBackgroundScaleResetOnSettled` defaults to `true`. Reveal restores the background to scale `1` after settle so the next drag or programmatic dismiss can take a fresh measurement from the real screen geometry instead of from a scaled screen.
+
+## Fixes
+
+### Gesture Ownership During Dismiss
+
+Nested gesture ownership is more stable while a child screen is closing.
+
+Previously, a child route could lose its directional claim as soon as it started dismissing. That could let an ancestor with the same gesture direction activate before the child route finished cleaning up. v3.7 keeps the child claim authoritative until cleanup removes it, and registers shadowing claims in a layout effect so ancestors update before the next paint.
+
+This is most visible in nested stacks or overlay flows where a drag begins right after a child route starts dismissing.
+
+### Measurement And Visibility
+
+Blocked destination screens no longer use `opacity: 0` before the first transition frame.
+
+Instead, they are moved offscreen with a shared visibility-block offset, and destination measurements are normalized before viewport guards and bounds writes. This avoids opacity-based visibility blocking while still keeping pre-transition destination capture out of view.
+
+The change was made to avoid platform sampling issues, especially on physical iOS devices with Liquid Glass-style effects.
+
+### Reveal Layering
+
+Reveal no longer applies `position: "relative"` and a focused-screen `zIndex` to the focused source element.
+
+That method is not working as intended today. There are too many cases where a reveal boundary needs to live inside a `FlatList`, list header, sectioned list, or another constrained layout, and `zIndex` is not a reliable way to lift that element above the rest of the transition.
+
+Later versions will use an opt-in `react-native-teleport` path so reveal can avoid those layout constraints without breaking the source layout.
+
+## Migration Notes
+
+### Native Stack Adapter
+
+This release deprecates the bundled native-stack creator from `react-native-screen-transitions/native-stack`.
+
+The bundled `createNativeStackNavigator()` integration remains available for compatibility, but new native-stack usage should prefer `@react-navigation/native-stack` plus `withScreenTransitions()`.
+
+### Native Screen Naming
+
+Blank stack now prefers the navigator prop name `nativeScreens`.
+
+```tsx
+<Stack.Navigator nativeScreens={false}>
+  {/* screens */}
+</Stack.Navigator>
+```
+
+`enableNativeScreens` still works as a deprecated alias. Use `nativeScreens={false}` when a blank stack should render as regular React Native views instead of `react-native-screens` primitives.
+
+- Replace new imports from `react-native-screen-transitions/native-stack` with `@react-navigation/native-stack` plus `withScreenTransitions()`.
+- Use `inactiveBehavior` when a blank-stack screen needs explicit keep / freeze / detach / unmount behavior.
+- Prefer `nativeScreens` over the deprecated `enableNativeScreens` prop.
+- Tune reveal background motion with `backgroundScale`.
+- Leave `shouldBackgroundScaleResetOnSettled` at its default unless you deliberately want the background to remain scaled while idle.
+
+## Related Reading
+
+- [Stack Types](/stack-types)
+- [Adapters](/adapters)
+- [Independent Stacks](/independent-stacks)
+- [Reveal](/reveal)
+- [Caveats & Trade-offs](/caveats)

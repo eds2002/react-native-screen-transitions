@@ -262,8 +262,6 @@ const nativeStackAdapterOptions: NativeStackAdapterOptions<NativeStackNavigation
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: "bidirectional",
-		nativeGestureEnabled: false,
-		nativeGestureDirection: "vertical",
 	};
 function NativeStackAdapterProfileScreen() {
 	return null;

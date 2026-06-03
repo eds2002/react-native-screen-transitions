@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import {
 	adaptNativeStackTransitionOptions,
-	resolveScreenTransitionOptions,
+	resolveAdapterTransitionOptions,
 } from "../adapters/with-screen-transitions/options";
 
 describe("withScreenTransitions options", () => {
@@ -19,42 +19,34 @@ describe("withScreenTransitions options", () => {
 		expect(options).toEqual({
 			title: "Avatar",
 			gestureProgressMode: "freeform",
+			gestureDirection: "bidirectional",
 			screenStyleInterpolator,
 			presentation: "containedTransparentModal",
 			animation: "none",
 			headerShown: false,
 			gestureEnabled: false,
 			enableTransitions: true,
-			screenTransition: {
-				gestureEnabled: true,
-				gestureDirection: "bidirectional",
-			},
 		});
+
+		expect(resolveAdapterTransitionOptions(options).gestureEnabled).toBe(true);
 	});
 
-	it("maps native gesture aliases to official native-stack gesture options", () => {
+	it("leaves native-stack gesture options unchanged when transitions are disabled", () => {
 		const options = adaptNativeStackTransitionOptions({
-			enableTransitions: true,
-			gestureEnabled: true,
-			nativeGestureEnabled: true,
-			nativeGestureDirection: "vertical",
-			nativeGestureResponseDistance: {
-				start: 40,
-			},
-		});
-
-		expect(options).toEqual({
-			presentation: "containedTransparentModal",
-			animation: "none",
-			headerShown: false,
+			title: "Avatar",
 			gestureEnabled: true,
 			gestureDirection: "vertical",
 			gestureResponseDistance: {
 				start: 40,
 			},
-			enableTransitions: true,
-			screenTransition: {
-				gestureEnabled: true,
+		});
+
+		expect(options).toEqual({
+			title: "Avatar",
+			gestureEnabled: true,
+			gestureDirection: "vertical",
+			gestureResponseDistance: {
+				start: 40,
 			},
 		});
 	});
@@ -71,29 +63,46 @@ describe("withScreenTransitions options", () => {
 			headerShown: false,
 			gestureEnabled: false,
 			enableTransitions: true,
-			screenTransition: {
-				gestureDirection: "vertical",
-			},
+			gestureDirection: "vertical",
 		});
 	});
 
-	it("merges namespaced transition options for internal descriptors", () => {
-		const options = resolveScreenTransitionOptions({
-			gestureEnabled: false,
-			screenTransition: {
-				gestureEnabled: true,
-				gestureDirection: "vertical",
-			},
+	it("restores adapted transition options for internal descriptors", () => {
+		const options = adaptNativeStackTransitionOptions({
+			enableTransitions: true,
+			gestureEnabled: true,
+			gestureDirection: "vertical",
 		});
+		const resolvedOptions = resolveAdapterTransitionOptions(options);
 
-		expect(options.gestureEnabled).toBe(true);
-		expect(options.gestureDirection).toBe("vertical");
-		expect(options.enableTransitions).toBe(true);
+		expect(resolvedOptions.gestureEnabled).toBe(true);
+		expect(resolvedOptions.gestureDirection).toBe("vertical");
+		expect(resolvedOptions.enableTransitions).toBe(true);
+	});
+
+	it("does not leak the native gesture reset into transition options", () => {
+		const options = adaptNativeStackTransitionOptions({
+			enableTransitions: true,
+			gestureDirection: "vertical",
+		});
+		const resolvedOptions = resolveAdapterTransitionOptions(options);
+
+		expect(options.gestureEnabled).toBe(false);
+		expect(resolvedOptions.gestureEnabled).toBeUndefined();
+		expect(resolvedOptions.gestureDirection).toBe("vertical");
+	});
+
+	it("leaves unadapted transition options unchanged", () => {
+		const options = {
+			gestureEnabled: false,
+		};
+
+		expect(resolveAdapterTransitionOptions(options)).toBe(options);
 	});
 
 	it("leaves non-transition screens unchanged", () => {
 		const options = { title: "Profile" };
 
-		expect(resolveScreenTransitionOptions(options)).toBe(options);
+		expect(resolveAdapterTransitionOptions(options)).toBe(options);
 	});
 });
