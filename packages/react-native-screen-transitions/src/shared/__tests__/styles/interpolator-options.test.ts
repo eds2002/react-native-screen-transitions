@@ -94,7 +94,10 @@ describe("syncScreenOptionsOverrides", () => {
 		const raw: TransitionInterpolatedStyle = {
 			options: {
 				gestureEnabled: false,
-				gestureDirection: ["horizontal", "pinch-out"],
+				gestureDirection: [
+					{ gesture: "horizontal", area: 28 },
+					{ gesture: "pinch-out", area: "edge" },
+				],
 				gestureSensitivity: 0.25,
 				gestureVelocityImpact: 0.4,
 				gestureSnapVelocityImpact: 0.2,
@@ -119,8 +122,8 @@ describe("syncScreenOptionsOverrides", () => {
 		);
 		expect(next.gestureEnabled).toBe(false);
 		expect(next.gestureDirection).toEqual([
-			"horizontal",
-			"pinch-out",
+			{ gesture: "horizontal", area: 28 },
+			{ gesture: "pinch-out", area: "edge" },
 		]);
 		expect(next.gestureSensitivity).toBe(0.25);
 		expect(next.gestureVelocityImpact).toBe(0.4);
@@ -223,8 +226,8 @@ describe("syncScreenOptionsOverrides", () => {
 		syncScreenOptionsOverrides(
 			{
 				options: {
-					gestureDirection: "diagonal",
 					gestureSensitivity: "fast",
+					gestureDirection: [{ gesture: "vertical", area: -1 }],
 					gestureActivationArea: { left: "corner" },
 					sheetScrollGestureBehavior: "expand-only",
 					backdropBehavior: "fade",

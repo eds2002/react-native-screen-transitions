@@ -14,6 +14,8 @@ import type {
 	ActivationArea,
 	GestureActivationArea,
 	GestureDirection,
+	GestureDirectionActivationArea,
+	GestureDirectionEntry,
 	ScreenTransitionOptions,
 	TransitionInterpolatedStyle,
 } from "../../../types";
@@ -62,16 +64,66 @@ const isGestureDirection = (value: unknown): value is GestureDirection => {
 	);
 };
 
+const isGestureDirectionActivationArea = (
+	value: unknown,
+): value is GestureDirectionActivationArea => {
+	"worklet";
+	return (
+		value === "edge" ||
+		value === "screen" ||
+		(typeof value === "number" && Number.isFinite(value) && value >= 0)
+	);
+};
+
+const isGestureDirectionEntry = (
+	value: unknown,
+): value is GestureDirectionEntry => {
+	"worklet";
+	if (isGestureDirection(value)) {
+		return true;
+	}
+
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		return false;
+	}
+
+	const config = value as Record<string, unknown>;
+	return (
+		isGestureDirection(config.gesture) &&
+		(config.area === undefined || isGestureDirectionActivationArea(config.area))
+	);
+};
+
+const cloneGestureDirectionEntry = (
+	entry: GestureDirectionEntry,
+): GestureDirectionEntry => {
+	"worklet";
+	if (typeof entry === "string") {
+		return entry;
+	}
+
+	return entry.area === undefined
+		? { gesture: entry.gesture }
+		: { gesture: entry.gesture, area: entry.area };
+};
+
 const resolveGestureDirectionOption = (
 	value: unknown,
 	fallback: RequiredScreenOption<"gestureDirection">,
 ): RequiredScreenOption<"gestureDirection"> => {
 	"worklet";
-	if (isGestureDirection(value)) {
-		return value;
+	if (isGestureDirectionEntry(value)) {
+		return cloneGestureDirectionEntry(value);
 	}
-	if (Array.isArray(value) && value.every(isGestureDirection)) {
-		return [...value];
+	if (Array.isArray(value)) {
+		const entries: GestureDirectionEntry[] = [];
+		for (const entry of value) {
+			if (!isGestureDirectionEntry(entry)) {
+				return fallback;
+			}
+			entries.push(cloneGestureDirectionEntry(entry));
+		}
+		return entries;
 	}
 	return fallback;
 };
@@ -177,17 +229,37 @@ const areGestureActivationAreasEqual = (
 	);
 };
 
+const areGestureDirectionEntriesEqual = (
+	left: GestureDirectionEntry,
+	right: GestureDirectionEntry,
+) => {
+	"worklet";
+	if (left === right) return true;
+
+	if (typeof left === "string" || typeof right === "string") {
+		return false;
+	}
+
+	return left.gesture === right.gesture && left.area === right.area;
+};
+
 const areGestureDirectionsEqual = (
 	left: RequiredScreenOption<"gestureDirection">,
 	right: RequiredScreenOption<"gestureDirection">,
 ) => {
 	"worklet";
-	if (left === right) return true;
+	if (
+		!Array.isArray(left) &&
+		!Array.isArray(right) &&
+		areGestureDirectionEntriesEqual(left, right)
+	) {
+		return true;
+	}
 	if (!Array.isArray(left) || !Array.isArray(right)) return false;
 	if (left.length !== right.length) return false;
 
 	for (let i = 0; i < left.length; i++) {
-		if (left[i] !== right[i]) {
+		if (!areGestureDirectionEntriesEqual(left[i], right[i])) {
 			return false;
 		}
 	}

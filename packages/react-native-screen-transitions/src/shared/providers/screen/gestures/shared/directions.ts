@@ -1,6 +1,8 @@
 import type {
 	ActiveGesture,
 	GestureDirection,
+	GestureDirectionEntry,
+	GestureDirectionOption,
 	GestureDirections,
 	PanGestureDirection,
 	PinchGestureDirection,
@@ -13,7 +15,7 @@ import type {
 import type { Direction } from "../../../../types/ownership.types";
 
 interface GetPanActivationDirectionsProps {
-	gestureDirection: GestureDirection | GestureDirection[];
+	gestureDirection: GestureDirectionOption;
 	hasSnapPoints: boolean;
 }
 
@@ -43,16 +45,30 @@ export const isResolvedPanGestureDirection = (
 	);
 };
 
-export const getPanGestureDirections = (
-	gestureDirection: GestureDirection | GestureDirection[],
-): PanGestureDirection[] => {
+export const getGestureDirectionEntryGesture = (
+	entry: GestureDirectionEntry,
+): GestureDirection => {
 	"worklet";
-	const directions = Array.isArray(gestureDirection)
+	return typeof entry === "string" ? entry : entry.gesture;
+};
+
+export const getGestureDirectionEntries = (
+	gestureDirection: GestureDirectionOption,
+): GestureDirectionEntry[] => {
+	"worklet";
+	return Array.isArray(gestureDirection)
 		? gestureDirection
 		: [gestureDirection];
+};
+
+export const getPanGestureDirections = (
+	gestureDirection: GestureDirectionOption,
+): PanGestureDirection[] => {
+	"worklet";
 	const panDirections: PanGestureDirection[] = [];
 
-	for (const direction of directions) {
+	for (const entry of getGestureDirectionEntries(gestureDirection)) {
+		const direction = getGestureDirectionEntryGesture(entry);
 		if (isPanGestureDirection(direction)) {
 			panDirections.push(direction);
 		}
@@ -62,15 +78,13 @@ export const getPanGestureDirections = (
 };
 
 export const getPinchGestureDirections = (
-	gestureDirection: GestureDirection | GestureDirection[],
+	gestureDirection: GestureDirectionOption,
 ): PinchGestureDirection[] => {
 	"worklet";
-	const directions = Array.isArray(gestureDirection)
-		? gestureDirection
-		: [gestureDirection];
 	const pinchDirections: PinchGestureDirection[] = [];
 
-	for (const direction of directions) {
+	for (const entry of getGestureDirectionEntries(gestureDirection)) {
+		const direction = getGestureDirectionEntryGesture(entry);
 		if (isPinchGestureDirection(direction)) {
 			pinchDirections.push(direction);
 		}
@@ -126,7 +140,7 @@ const setSnapPanAxisConfig = (
 };
 
 export const getPanSnapAxisDirections = (
-	gestureDirection: GestureDirection | GestureDirection[],
+	gestureDirection: GestureDirectionOption,
 ): SnapPanDirectionConfig => {
 	"worklet";
 	const config: SnapPanDirectionConfig = {
@@ -148,7 +162,7 @@ export const getPanSnapAxisDirections = (
 };
 
 export const getSnapPinchDirectionConfig = (
-	gestureDirection: GestureDirection | GestureDirection[],
+	gestureDirection: GestureDirectionOption,
 ): SnapPinchDirectionConfig => {
 	"worklet";
 	const pinchDirection = getPinchGestureDirections(gestureDirection)[0];

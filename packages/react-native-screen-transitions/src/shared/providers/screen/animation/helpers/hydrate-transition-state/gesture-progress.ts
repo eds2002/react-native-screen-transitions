@@ -6,7 +6,7 @@ import {
 } from "../../../../../constants";
 import type { ScreenTransitionOptions } from "../../../../../types/animation.types";
 import type {
-	GestureDirection,
+	GestureDirectionOption,
 	GestureValues,
 } from "../../../../../types/gesture.types";
 import { resolveGestureProgressModeFromOptions } from "../../../../../utils/gesture-progress-mode";
@@ -23,7 +23,7 @@ import type { SnapBounds } from "./types";
 const resolvePanGestureDrivenProgress = (
 	baseProgress: number,
 	gesture: GestureValues,
-	gestureDirection: GestureDirection | GestureDirection[],
+	gestureDirection: GestureDirectionOption,
 	hasSnapPoints: boolean,
 	snapBounds: SnapBounds | null,
 ) => {
@@ -77,7 +77,7 @@ const resolvePanGestureDrivenProgress = (
 const resolvePinchGestureDrivenProgress = (
 	baseProgress: number,
 	gesture: GestureValues,
-	gestureDirection: GestureDirection | GestureDirection[],
+	gestureDirection: GestureDirectionOption,
 	hasSnapPoints: boolean,
 	snapBounds: SnapBounds | null,
 ) => {

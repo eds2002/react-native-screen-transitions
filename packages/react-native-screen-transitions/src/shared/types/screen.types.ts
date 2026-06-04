@@ -5,7 +5,7 @@ import type {
 } from "./animation.types";
 import type {
 	GestureActivationArea,
-	GestureDirection,
+	GestureDirectionOption,
 	GestureProgressMode,
 } from "./gesture.types";
 import type { OverlayProps } from "./overlay.types";
@@ -174,8 +174,11 @@ export type ScreenTransitionConfig = {
 	 *
 	 * Supports pan directions (`horizontal`, `vertical`, etc.) and pinch
 	 * directions (`pinch-in`, `pinch-out`).
+	 *
+	 * Pan directions may be configured with an activation area:
+	 * `[{ gesture: "vertical", area: "edge" }]`.
 	 */
-	gestureDirection?: GestureDirection | GestureDirection[];
+	gestureDirection?: GestureDirectionOption;
 
 	/**
 	 * Controls how directly live gesture movement maps into transition progress
@@ -251,6 +254,8 @@ export type ScreenTransitionConfig = {
 
 	/**
 	 * The area of the screen where the gesture is activated.
+	 *
+	 * @deprecated Use `gestureDirection` entries with per-direction `area`.
 	 */
 	gestureActivationArea?: GestureActivationArea;
 

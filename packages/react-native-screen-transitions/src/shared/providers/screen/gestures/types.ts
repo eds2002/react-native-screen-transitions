@@ -15,9 +15,9 @@ import type {
 	TransitionSpec,
 } from "../../../types/animation.types";
 import type {
-	GestureActivationArea,
 	GestureDirections,
 	GestureProgressMode,
+	ResolvedGestureActivationArea,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
@@ -117,7 +117,7 @@ export interface PanGesturePolicy {
 	gestureVelocityImpact: number;
 	gestureSnapVelocityImpact: number;
 	gestureReleaseVelocityScale: number;
-	gestureActivationArea: GestureActivationArea;
+	gestureActivationArea: ResolvedGestureActivationArea;
 	gestureSnapLocked: boolean;
 	sheetScrollGestureBehavior: NonNullable<
 		ScreenTransitionConfig["sheetScrollGestureBehavior"]

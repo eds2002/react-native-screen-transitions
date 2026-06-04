@@ -16,6 +16,7 @@ export type GestureExampleId =
 	| "bidirectional"
 	| "pinch-in"
 	| "pinch-out"
+	| "axis-area"
 	| "snap-multi-axis"
 	| "snap-order-axis"
 	| "snap-pinch-pan"
@@ -123,6 +124,19 @@ export const GESTURE_EXAMPLES: GestureExampleDefinition[] = [
 			"Use two fingers and pinch outward to dismiss this screen.",
 			"Outward growth should feel deliberate instead of triggering pan.",
 			"Compare this directly against pinch-in to verify both directions.",
+		],
+	},
+	{
+		id: "axis-area",
+		title: "Axis Area",
+		description: "Per-axis pan activation using structured gestureDirection.",
+		subtitle: "Vertical top-edge gate with full-screen horizontal pan",
+		routeLabel: "gestureDirection: [{ vertical, area: 96 }, horizontal]",
+		tint: "#315B63",
+		notes: [
+			"Start a downward vertical drag near the top edge: it should activate.",
+			"Start the same vertical drag from the center: it should not activate.",
+			"Horizontal drags should still activate from anywhere on the screen.",
 		],
 	},
 	{

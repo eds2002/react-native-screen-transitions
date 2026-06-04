@@ -1,9 +1,8 @@
 import type { GestureDirections } from "../../../../types/gesture.types";
 import {
-	type ActivationArea,
-	type GestureActivationArea,
 	GestureActivationState,
-	type SideActivation,
+	type GestureDirectionActivationArea,
+	type ResolvedGestureActivationArea,
 } from "../../../../types/gesture.types";
 import type { Direction } from "../../../../types/ownership.types";
 import type { Layout } from "../../../../types/screen.types";
@@ -14,16 +13,16 @@ interface ResolveOffsetRulesProps {
 	touch: { x: number; y: number };
 	directions: GestureDirections;
 	activationState: GestureActivationState;
-	activationArea?: GestureActivationArea;
+	activationArea?: ResolvedGestureActivationArea;
 	dimensions: Layout;
 	responseDistance?: number;
 }
 
 type NormalizedSides = {
-	left: ActivationArea;
-	right: ActivationArea;
-	top: ActivationArea;
-	bottom: ActivationArea;
+	left: GestureDirectionActivationArea;
+	right: GestureDirectionActivationArea;
+	top: GestureDirectionActivationArea;
+	bottom: GestureDirectionActivationArea;
 };
 
 interface ShouldActivateOrFailProps {
@@ -91,39 +90,47 @@ const DEFAULT_EDGE_DISTANCE_VERTICAL = 135;
 const DEFAULT_ACTIVATION_AREA = "screen" as const;
 const SCROLL_EPILSON = 1;
 
-export function normalizeSides(area?: GestureActivationArea): NormalizedSides {
+export function normalizeSides(
+	area?: ResolvedGestureActivationArea,
+): NormalizedSides {
 	"worklet";
-	if (!area || typeof area === "string") {
-		const mode: ActivationArea = area ?? DEFAULT_ACTIVATION_AREA;
+	if (!area || typeof area === "string" || typeof area === "number") {
+		const mode: GestureDirectionActivationArea =
+			area ?? DEFAULT_ACTIVATION_AREA;
 		return { left: mode, right: mode, top: mode, bottom: mode };
 	}
 
-	const s: SideActivation = area as SideActivation;
 	return {
-		left: s.left ?? DEFAULT_ACTIVATION_AREA,
-		right: s.right ?? DEFAULT_ACTIVATION_AREA,
-		top: s.top ?? DEFAULT_ACTIVATION_AREA,
-		bottom: s.bottom ?? DEFAULT_ACTIVATION_AREA,
+		left: area.left ?? DEFAULT_ACTIVATION_AREA,
+		right: area.right ?? DEFAULT_ACTIVATION_AREA,
+		top: area.top ?? DEFAULT_ACTIVATION_AREA,
+		bottom: area.bottom ?? DEFAULT_ACTIVATION_AREA,
 	};
 }
 
 const canActivateFromStartEdge = (
-	mode: ActivationArea,
+	mode: GestureDirectionActivationArea,
 	touchPosition: number,
 	distance: number,
 ) => {
 	"worklet";
-	return mode === "screen" || touchPosition <= distance;
+	if (mode === "screen") return true;
+
+	const edgeDistance = typeof mode === "number" ? mode : distance;
+	return touchPosition <= edgeDistance;
 };
 
 const canActivateFromEndEdge = (
-	mode: ActivationArea,
+	mode: GestureDirectionActivationArea,
 	touchPosition: number,
 	size: number,
 	distance: number,
 ) => {
 	"worklet";
-	return mode === "screen" || touchPosition >= size - distance;
+	if (mode === "screen") return true;
+
+	const edgeDistance = typeof mode === "number" ? mode : distance;
+	return touchPosition >= size - edgeDistance;
 };
 
 export function computeEdgeConstraints(

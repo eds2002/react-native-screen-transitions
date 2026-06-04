@@ -60,11 +60,39 @@ export type SideActivation = {
 	bottom?: ActivationArea;
 };
 
+export type GestureDirectionActivationArea = ActivationArea | number;
+
+export type GestureDirectionConfig = {
+	gesture: GestureDirection;
+	/**
+	 * Pan-only activation area for this gesture direction. Pinch directions
+	 * ignore this field.
+	 *
+	 * A number means an edge distance in points.
+	 */
+	area?: GestureDirectionActivationArea;
+};
+
+export type GestureDirectionEntry = GestureDirection | GestureDirectionConfig;
+
+export type GestureDirectionOption =
+	| GestureDirectionEntry
+	| GestureDirectionEntry[];
+
 export enum GestureActivationState {
 	PENDING,
 	PASSED,
 	FAILED,
 }
+
+export type ResolvedGestureActivationArea =
+	| GestureDirectionActivationArea
+	| {
+			left?: GestureDirectionActivationArea;
+			right?: GestureDirectionActivationArea;
+			top?: GestureDirectionActivationArea;
+			bottom?: GestureDirectionActivationArea;
+	  };
 
 export type GestureActivationArea = ActivationArea | SideActivation;
 

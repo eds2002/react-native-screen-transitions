@@ -238,6 +238,33 @@ function buildPinchOptions(
 	};
 }
 
+function buildAxisAreaOptions(): ScreenTransitionConfig {
+	return {
+		gestureEnabled: true,
+		gestureDirection: [{ gesture: "vertical", area: 96 }, "horizontal"],
+		gestureReleaseVelocityScale: 0.65,
+		screenStyleInterpolator: ({ active, current, progress }) => {
+			"worklet";
+
+			const translateX = current.gesture.x * 0.82;
+			const translateY = current.gesture.y * 0.82;
+			const scale = interpolate(progress, [0, 1, 2], [0.96, 1, 0.94], "clamp");
+			const opacity = interpolate(progress, [0, 1], [0, 1], "clamp");
+
+			return {
+				options: gestureRuntimeOptions(active.gesture.raw, { driver: "xy" }),
+				content: {
+					style: {
+						opacity,
+						transform: [{ translateX }, { translateY }, { scale }],
+					},
+				},
+			};
+		},
+		transitionSpec: DEFAULT_SPEC,
+	};
+}
+
 function buildSnapMultiAxisOptions(): ScreenTransitionConfig {
 	const gestureSensitivity = {
 		driver: "xy",
@@ -472,6 +499,8 @@ export function buildGestureScreenOptions(id: GestureExampleId) {
 			return buildPinchOptions("pinch-in");
 		case "pinch-out":
 			return buildPinchOptions("pinch-out");
+		case "axis-area":
+			return buildAxisAreaOptions();
 		case "snap-multi-axis":
 			return buildSnapMultiAxisOptions();
 		case "snap-order-axis":
@@ -495,6 +524,7 @@ export const GESTURE_SCREEN_OPTIONS: Record<GestureExampleId, any> = {
 	bidirectional: buildGestureScreenOptions("bidirectional"),
 	"pinch-in": buildGestureScreenOptions("pinch-in"),
 	"pinch-out": buildGestureScreenOptions("pinch-out"),
+	"axis-area": buildGestureScreenOptions("axis-area"),
 	"snap-multi-axis": buildGestureScreenOptions("snap-multi-axis"),
 	"snap-order-axis": buildGestureScreenOptions("snap-order-axis"),
 	"snap-pinch-pan": buildGestureScreenOptions("snap-pinch-pan"),

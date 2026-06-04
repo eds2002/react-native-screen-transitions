@@ -1,6 +1,6 @@
 import { DEFAULT_GESTURE_DIRECTION } from "../../../../constants";
 import type {
-	GestureDirection,
+	GestureDirectionOption,
 	PanGestureDirection,
 } from "../../../../types/gesture.types";
 import {
@@ -8,6 +8,7 @@ import {
 	type Direction,
 	NO_CLAIMS,
 } from "../../../../types/ownership.types";
+import { getPanGestureDirections } from "../shared/directions";
 
 const createClaimSet = (): ClaimedDirections => ({
 	vertical: false,
@@ -17,14 +18,10 @@ const createClaimSet = (): ClaimedDirections => ({
 });
 
 const normalizePanGestureDirections = (
-	gestureDirection: GestureDirection | GestureDirection[] | undefined,
-): PanGestureDirection[] => {
+	gestureDirection: GestureDirectionOption | undefined,
+) => {
 	const direction = gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
-
-	return (Array.isArray(direction) ? direction : [direction]).filter(
-		(dir): dir is PanGestureDirection =>
-			dir !== "pinch-in" && dir !== "pinch-out",
-	);
+	return getPanGestureDirections(direction);
 };
 
 const claimPanDirection = (
@@ -74,7 +71,7 @@ const expandSnapPointAxisClaims = (claims: ClaimedDirections) => {
  */
 export function computeClaimedDirections(
 	canClaimDirections: boolean,
-	gestureDirection: GestureDirection | GestureDirection[] | undefined,
+	gestureDirection: GestureDirectionOption | undefined,
 	hasSnapPoints: boolean,
 ): ClaimedDirections {
 	if (!canClaimDirections) {

@@ -269,6 +269,13 @@ const disabledGestureTrackingOptions: ScreenTransitionConfig = {
 	gestureEnabled: false,
 	gestureTracking: "always",
 };
+const scopedGestureDirectionOptions: ScreenTransitionConfig = {
+	gestureDirection: [
+		{ gesture: "vertical", area: "edge" },
+		{ gesture: "horizontal", area: 32 },
+		{ gesture: "pinch-in", area: "screen" },
+	],
+};
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
 };
@@ -371,6 +378,7 @@ const publicApiTypecheck = {
 	sharedGestureSensitivityOptions,
 	initialMountAnimationOptions,
 	disabledGestureTrackingOptions,
+	scopedGestureDirectionOptions,
 	emptyInterpolatorOptions,
 	blankStackFactoryOptions,
 	blankStackNavigationOptions,
