@@ -110,19 +110,20 @@ export type BlankStackNavigationOptions = ScreenTransitionConfig & {
 	 *
 	 * For a stack shaped as A(inactive), B(inert), C(active):
 	 *
-	 * - `keep`: keeps A mounted, attached, visible, and non-interactive.
-	 * - `freeze`: keeps A's last painted UI visible and asks the platform to
-	 *   stop or suspend inactive work where possible.
-	 * - `detach`: removes A from native/view presentation after the screen that
-	 *   exposes it has safely painted.
+	 * - `hide`: keeps A mounted, pauses/freezes inactive work where supported,
+	 *   and hides native/view presentation after the screen that exposes it has
+	 *   safely painted.
+	 * - `pause`: keeps A's last painted UI visible and asks the platform to stop
+	 *   or suspend inactive work where possible.
 	 * - `unmount`: removes A's React subtree after safe paint when the route has
 	 *   no nested navigation state.
+	 * - `keep`: keeps A mounted, attached, visible, non-interactive, and running.
 	 *
-	 * On web, or when native screens are disabled, `keep`, `freeze`, and
-	 * `detach` currently have no meaningful retention effect. This will change
-	 * once the implementation can use React 19.2's Activity component.
+	 * On web, or when native screens are disabled, `hide` and `pause` cannot
+	 * currently suspend React work. This will change once the implementation can
+	 * use React 19.2's Activity component.
 	 *
-	 * @default "detach" on native, "unmount" on web
+	 * @default "hide" on native, "unmount" on web
 	 */
 	inactiveBehavior?: InactiveBehavior;
 };

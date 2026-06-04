@@ -55,32 +55,32 @@ When `enableTransitions` is on, the adapter uses the same transition options as 
 
 Blank stack now has explicit inactive-screen lifecycle control through `inactiveBehavior`.
 
-The option name intentionally lines up with [React Navigation 8.x's JS Stack lifecycle option](https://reactnavigation.org/docs/8.x/stack-navigator/#inactivebehavior), so the concept is familiar to people moving between navigators. This package's blank-stack renderer uses its own behavior set, so the API is related by intent rather than copied behavior.
+The option uses user-facing lifecycle names rather than `react-native-screens` implementation names. The native renderer still uses `Screen.activityState`, `shouldFreeze`, and `freezeOnBlur` internally.
 
 ```tsx
 <Stack.Screen
   name="Details"
   component={DetailsScreen}
   options={{
-    inactiveBehavior: "detach",
+    inactiveBehavior: "hide",
   }}
 />
 ```
 
 The supported behaviors are:
 
-- `keep`: keep inactive screens mounted, attached, visible, and non-interactive
-- `freeze`: keep the last painted UI visible and ask the platform to suspend inactive work where possible
-- `detach`: remove inactive screens from native/view presentation after the exposing screen has safely painted
+- `hide`: keep inactive screens mounted, freeze inactive rendering where supported, and hide presentation after safe paint
+- `pause`: keep the last painted UI visible and freeze inactive rendering where supported
 - `unmount`: remove the React subtree after safe paint when the route has no nested navigation state
+- `keep`: keep inactive screens mounted, visible, non-interactive, and running
 
-The default is `detach` on native and `unmount` on web.
+The default is `hide` on native and `unmount` on web.
 
-On web, use `unmount` for now. `keep`, `freeze`, and `detach` are accepted so shared configs type-check, but they do not provide distinct inactive-screen behavior on web yet. Once the package can integrate React 19.2's [`<Activity>` component](https://react.dev/blog/2025/10/01/react-19-2#activity), we can experiment with web retention modes that map more closely to the native behaviors.
+On web, use `unmount` for now. `hide` can hide paint but cannot pause React work in the current view fallback, and `pause` behaves closest to `keep` until the package can use React Activity.
 
 This release also introduces a managed-stack controller for blank stack route retention. Closing routes are kept around long enough to finish their transition, removed routes can reuse their previous descriptor while closing, and inactive / inert / closing scenes are resolved more deterministically.
 
-The lifecycle work is covered by a new inactive-behavior test suite for keep, freeze, detach, and unmount timing.
+The lifecycle work is covered by a new inactive-behavior test suite for hide, pause, unmount, and keep timing.
 
 ### Reveal Background Scaling
 
@@ -144,7 +144,7 @@ Blank stack now prefers the navigator prop name `nativeScreens`.
 `enableNativeScreens` still works as a deprecated alias. Use `nativeScreens={false}` when a blank stack should render as regular React Native views instead of `react-native-screens` primitives.
 
 - Replace new imports from `react-native-screen-transitions/native-stack` with `@react-navigation/native-stack` plus `withScreenTransitions()`.
-- Use `inactiveBehavior` when a blank-stack screen needs explicit keep / freeze / detach / unmount behavior.
+- Use `inactiveBehavior` when a blank-stack screen needs explicit hide / pause / unmount / keep behavior.
 - Prefer `nativeScreens` over the deprecated `enableNativeScreens` prop.
 - Tune reveal background motion with `backgroundScale`.
 - Leave `shouldBackgroundScaleResetOnSettled` at its default unless you deliberately want the background to remain scaled while idle.

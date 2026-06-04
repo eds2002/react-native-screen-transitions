@@ -18,19 +18,16 @@ export default function InactiveBehaviorLayout() {
 	return (
 		<StackNavigator screenOptions={navigatorScreenOptions}>
 			<StackNavigator.Screen name="index" />
-			<StackNavigator.Screen name="keep" options={inactiveOptions("keep")} />
+			<StackNavigator.Screen name="hide" options={inactiveOptions("hide")} />
 			<StackNavigator.Screen
-				name="freeze"
-				options={inactiveOptions("freeze")}
-			/>
-			<StackNavigator.Screen
-				name="detach"
-				options={inactiveOptions("detach")}
+				name="pause"
+				options={inactiveOptions("pause")}
 			/>
 			<StackNavigator.Screen
 				name="unmount"
 				options={inactiveOptions("unmount")}
 			/>
+			<StackNavigator.Screen name="keep" options={inactiveOptions("keep")} />
 		</StackNavigator>
 	);
 }

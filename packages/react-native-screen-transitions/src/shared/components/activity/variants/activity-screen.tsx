@@ -79,14 +79,15 @@ export const ActivityScreen = memo(function ActivityScreen({
 			// a blank frame during the transition.
 			activityState = 1;
 			visible = true;
-		} else if (inactiveBehavior === "freeze") {
+		} else if (inactiveBehavior === "pause") {
 			activityState = 1;
 			shouldFreeze = true;
 			visible = true;
 		} else {
-			// `detach` hides native presentation. Non-nested `unmount`
-			// removes the React subtree through the JS guard below.
+			// `hide` freezes and hides native presentation. Non-nested
+			// `unmount` removes the React subtree through the JS guard below.
 			activityState = 0;
+			shouldFreeze = true;
 			visible = false;
 		}
 	}

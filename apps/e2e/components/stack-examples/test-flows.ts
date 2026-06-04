@@ -7,7 +7,7 @@ export const TEST_FLOWS = [
 	{
 		id: "inactive-behavior",
 		title: "Inactive Behavior",
-		description: "Retention probes for keep, freeze, detach, and unmount",
+		description: "Lifecycle probes for hide, pause, unmount, and keep",
 	},
 	{
 		id: "overlay",

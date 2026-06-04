@@ -18,47 +18,48 @@ type BehaviorOption = {
 };
 
 const liveInstances = {
-	keep: new Set<number>(),
-	freeze: new Set<number>(),
-	detach: new Set<number>(),
+	hide: new Set<number>(),
+	pause: new Set<number>(),
 	unmount: new Set<number>(),
+	keep: new Set<number>(),
 } satisfies Record<InactiveBehavior, Set<number>>;
 
 const createdInstances = {
-	keep: 0,
-	freeze: 0,
-	detach: 0,
+	hide: 0,
+	pause: 0,
 	unmount: 0,
+	keep: 0,
 } satisfies Record<InactiveBehavior, number>;
+
+const AUTO_PUSH_COUNT = 25;
+const AUTO_PUSH_DELAY_MS = 75;
 
 let nextInstanceId = 1;
 
 export const INACTIVE_BEHAVIOR_OPTIONS: BehaviorOption[] = [
 	{
-		id: "keep",
-		title: "Keep",
-		description: "Mounted, attached, and visible while inactive",
-		scenario: "Expected: highest retention",
+		id: "hide",
+		title: "Hide",
+		description: "Mounted, frozen, and hidden after safe paint",
+		scenario: "Expected: warm state, hidden presentation",
 	},
 	{
-		id: "freeze",
-		title: "Freeze",
-		description:
-			"Mounted and visible, with inactive work suspended where possible",
+		id: "pause",
+		title: "Pause",
+		description: "Mounted and visible, with inactive work suspended",
 		scenario: "Expected: preserved paint, lower update pressure",
-	},
-	{
-		id: "detach",
-		title: "Detach",
-		description:
-			"Mounted in React, hidden from native presentation after paint",
-		scenario: "Expected: lower native view retention",
 	},
 	{
 		id: "unmount",
 		title: "Unmount",
 		description: "Inactive route subtree removed after the next screen settles",
 		scenario: "Expected: lowest retained subtree count",
+	},
+	{
+		id: "keep",
+		title: "Keep",
+		description: "Mounted, visible, and still running while inactive",
+		scenario: "Expected: highest retention",
 	},
 ];
 
@@ -74,6 +75,9 @@ function buildPayload(instanceId: number, depth: number) {
 	}));
 }
 
+const wait = (durationMs: number) =>
+	new Promise((resolve) => setTimeout(resolve, durationMs));
+
 export function InactiveBehaviorProbe({
 	behavior,
 }: {
@@ -85,7 +89,10 @@ export function InactiveBehaviorProbe({
 	const depth = Number(params.depth ?? "1");
 	const renderCount = useRef(0);
 	const instanceId = useRef(0);
+	const mountedRef = useRef(true);
+	const autoPushRunningRef = useRef(false);
 	const [tick, setTick] = useState(0);
+	const [autoPushRunning, setAutoPushRunning] = useState(false);
 	const [mountedCount, setMountedCount] = useState(
 		liveInstances[behavior].size,
 	);
@@ -104,6 +111,14 @@ export function InactiveBehaviorProbe({
 	);
 
 	useEffect(() => {
+		mountedRef.current = true;
+
+		return () => {
+			mountedRef.current = false;
+		};
+	}, []);
+
+	useEffect(() => {
 		const liveSet = liveInstances[behavior];
 		liveSet.add(instanceId.current);
 		setMountedCount(liveSet.size);
@@ -119,17 +134,51 @@ export function InactiveBehaviorProbe({
 		};
 	}, [behavior]);
 
-	const pushNext = () => {
+	const pushInactiveBehaviorRoute = (
+		nextDepth: number,
+		instanceHint: number,
+	) => {
 		router.push({
 			pathname: buildStackPath(
 				stackType,
 				`inactive-behavior/${behavior}`,
 			) as never,
 			params: {
-				depth: String(depth + 1),
-				instance: String(nextInstanceId),
+				depth: String(nextDepth),
+				instance: String(instanceHint),
 			},
 		});
+	};
+
+	const pushNext = () => {
+		pushInactiveBehaviorRoute(depth + 1, nextInstanceId);
+	};
+
+	const pushMany = async () => {
+		if (autoPushRunningRef.current) {
+			return;
+		}
+
+		autoPushRunningRef.current = true;
+		setAutoPushRunning(true);
+
+		const firstInstanceHint = nextInstanceId;
+
+		try {
+			for (let index = 1; index <= AUTO_PUSH_COUNT; index++) {
+				pushInactiveBehaviorRoute(depth + index, firstInstanceHint + index - 1);
+
+				if (index < AUTO_PUSH_COUNT) {
+					await wait(AUTO_PUSH_DELAY_MS);
+				}
+			}
+		} finally {
+			autoPushRunningRef.current = false;
+
+			if (mountedRef.current) {
+				setAutoPushRunning(false);
+			}
+		}
 	};
 
 	const metricItems = [
@@ -158,6 +207,15 @@ export function InactiveBehaviorProbe({
 						title="Push Next"
 						testID={`inactive-behavior-${behavior}-push-next`}
 						onPress={pushNext}
+						style={styles.action}
+					/>
+					<ActionButton
+						title={autoPushRunning ? "Pushing" : "Push 25"}
+						testID={`inactive-behavior-${behavior}-push-25`}
+						onPress={() => {
+							void pushMany();
+						}}
+						disabled={autoPushRunning}
 						style={styles.action}
 					/>
 					<ActionButton
@@ -223,10 +281,12 @@ const styles = StyleSheet.create({
 	},
 	actions: {
 		flexDirection: "row",
+		flexWrap: "wrap",
 		gap: 10,
 	},
 	action: {
 		flex: 1,
+		minWidth: 112,
 	},
 	metricsGrid: {
 		flexDirection: "row",
