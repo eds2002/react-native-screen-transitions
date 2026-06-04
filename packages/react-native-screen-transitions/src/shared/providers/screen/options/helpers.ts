@@ -31,22 +31,6 @@ import type {
 	ScreenOptionsState,
 } from "./types";
 
-const cloneGestureDirection = (
-	direction: RequiredScreenOption<"gestureDirection">,
-) => {
-	"worklet";
-	return Array.isArray(direction) ? [...direction] : direction;
-};
-
-const cloneGestureActivationArea = (
-	activationArea: RequiredScreenOption<"gestureActivationArea">,
-) => {
-	"worklet";
-	return typeof activationArea === "object" && activationArea !== null
-		? { ...activationArea }
-		: activationArea;
-};
-
 const resolveBooleanOption = <T extends boolean | undefined>(
 	value: unknown,
 	fallback: T,
@@ -89,7 +73,7 @@ const resolveGestureDirectionOption = (
 	if (Array.isArray(value) && value.every(isGestureDirection)) {
 		return [...value];
 	}
-	return cloneGestureDirection(fallback);
+	return fallback;
 };
 
 const isActivationArea = (value: unknown): value is ActivationArea => {
@@ -114,7 +98,7 @@ const resolveGestureActivationAreaOption = (
 			(area.bottom === undefined || isActivationArea(area.bottom));
 		return isValid ? (area as GestureActivationArea) : fallback;
 	}
-	return cloneGestureActivationArea(fallback);
+	return fallback;
 };
 
 const resolveSheetScrollGestureBehaviorOption = (
@@ -311,10 +295,8 @@ export const syncScreenOptionsBase = (
 	"worklet";
 	const next = {
 		...base,
-		gestureDirection: cloneGestureDirection(base.gestureDirection),
-		gestureActivationArea: cloneGestureActivationArea(
-			base.gestureActivationArea,
-		),
+		gestureDirection: base.gestureDirection,
+		gestureActivationArea: base.gestureActivationArea,
 		baseOptions: base,
 	};
 
