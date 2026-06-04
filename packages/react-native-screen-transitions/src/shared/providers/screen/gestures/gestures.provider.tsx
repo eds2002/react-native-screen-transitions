@@ -8,8 +8,10 @@ import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
 import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and-register-shadowing-claims";
 import { useBuildPanGesture } from "./pan/build-pan-gesture";
 import { useBuildPinchGesture } from "./pinch/build-pinch-gesture";
+import { useBuildRotationGesture } from "./rotation/build-rotation-gesture";
 import {
 	type DirectionClaimMap,
+	type GestureCompositionActivation,
 	type GestureContextType,
 	NO_DIRECTION_CLAIMS,
 } from "./types";
@@ -36,19 +38,32 @@ export const {
 	const childDirectionClaims =
 		useSharedValue<DirectionClaimMap>(NO_DIRECTION_CLAIMS);
 
+	// Pinch gestures should be simultaneous with pan gestures, but pan gestures should not be simultaneous with pinch gestures.
+	// Since we're using manual gestures, if pinch tries to become activated while pan is already active,
+	// the pinch gesture will be cancelled and the pan gesture will continue to be active.
+	const gestureCompositionActivation =
+		useSharedValue<GestureCompositionActivation>(null);
+
 	const panGesture = useBuildPanGesture({
 		scrollState,
 		gestureConfig,
 		childDirectionClaims,
+		gestureCompositionActivation,
 	});
 
 	const pinchGesture = useBuildPinchGesture({
 		gestureConfig,
+		gestureCompositionActivation,
+	});
+
+	const rotationGesture = useBuildRotationGesture({
+		gestureConfig,
+		gestureCompositionActivation,
 	});
 
 	const detectorGesture = useMemo(
-		() => Gesture.Race(panGesture, pinchGesture),
-		[panGesture, pinchGesture],
+		() => Gesture.Simultaneous(panGesture, pinchGesture, rotationGesture),
+		[panGesture, pinchGesture, rotationGesture],
 	);
 
 	const value = useMemo<GestureContextType>(
@@ -57,6 +72,7 @@ export const {
 			detectorGesture,
 			panGesture,
 			pinchGesture,
+			rotationGesture,
 			scrollState,
 			gestureContext,
 			claimedDirections: gestureConfig.participation.claimedDirections,
@@ -67,6 +83,7 @@ export const {
 			detectorGesture,
 			panGesture,
 			pinchGesture,
+			rotationGesture,
 			scrollState,
 			gestureContext,
 			gestureConfig.participation.claimedDirections,

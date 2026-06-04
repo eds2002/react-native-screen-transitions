@@ -86,6 +86,7 @@ export type RawGestureValues = {
 	normY: number;
 	scale: number;
 	normScale: number;
+	rotation: number;
 };
 
 export type GestureValues = {
@@ -129,6 +130,10 @@ export type GestureValues = {
 	 * The live pinch focal point y-position in screen coordinates.
 	 */
 	focalY: number;
+	/**
+	 * The live two-finger rotation in radians.
+	 */
+	rotation: number;
 	/**
 	 * Physical gesture values before `gestureSensitivity` is applied.
 	 */

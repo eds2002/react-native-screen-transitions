@@ -11,6 +11,7 @@ import type { ScreenOptionsContextValue } from "../../options";
 import { resolvePanRuntime } from "../shared/runtime";
 import type {
 	DirectionClaimMap,
+	GestureCompositionActivation,
 	GestureDimensions,
 	PanGestureRuntime,
 	ScrollGestureState,
@@ -23,6 +24,7 @@ interface UsePanActivationProps {
 	runtime: SharedValue<PanGestureRuntime>;
 	screenOptions: ScreenOptionsContextValue;
 	dimensions: GestureDimensions;
+	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
 }
 
 export const usePanActivation = ({
@@ -31,6 +33,7 @@ export const usePanActivation = ({
 	runtime,
 	screenOptions,
 	dimensions,
+	gestureCompositionActivation,
 }: UsePanActivationProps) => {
 	const { currentScreenKey, parentScreenKey } = useDescriptorDerivations();
 
@@ -51,16 +54,12 @@ export const usePanActivation = ({
 			stateManager: GestureStateManager | undefined,
 		) => {
 			"worklet";
-			const { participation, policy } = resolvePanRuntime(
+			const { participation } = resolvePanRuntime(
 				runtime.get(),
 				screenOptions.get(),
 			);
 
-			if (
-				!participation.canTrackGesture ||
-				!policy.enabled ||
-				event.numberOfTouches !== 1
-			) {
+			if (!participation.canTrackGesture) {
 				gestureActivationState.set(GestureActivationState.FAILED);
 				stateManager?.fail();
 				return;
@@ -82,6 +81,16 @@ export const usePanActivation = ({
 				runtime.get(),
 				screenOptions.get(),
 			);
+
+			if (
+				gestureCompositionActivation.get() === "pinch" &&
+				resolvedRuntime.participation.canTrackGesture &&
+				event.numberOfTouches === 2
+			) {
+				stateManager.activate();
+				return;
+			}
+
 			const decision = resolvePanActivationMoveDecision({
 				event,
 				runtime: resolvedRuntime,
@@ -113,6 +122,7 @@ export const usePanActivation = ({
 				gestures.direction.set(decision.direction);
 			}
 
+			gestureCompositionActivation.set("pan");
 			stateManager.activate();
 		},
 		[
@@ -125,6 +135,7 @@ export const usePanActivation = ({
 			runtime,
 			screenOptions,
 			scrollState,
+			gestureCompositionActivation,
 		],
 	);
 

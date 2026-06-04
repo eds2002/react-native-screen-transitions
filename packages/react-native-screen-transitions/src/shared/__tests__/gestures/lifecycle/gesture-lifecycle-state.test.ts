@@ -41,6 +41,7 @@ const createGestureStore = (): GestureStoreMap => {
 		normScale: shared(0),
 		focalX: shared(0),
 		focalY: shared(0),
+		rotation: shared(0),
 		raw: {
 			x: shared(0),
 			y: shared(0),
@@ -48,6 +49,7 @@ const createGestureStore = (): GestureStoreMap => {
 			normY: shared(0),
 			scale: shared(1),
 			normScale: shared(0),
+			rotation: shared(0),
 		},
 		dismissing,
 		dragging,
@@ -223,6 +225,30 @@ describe("gesture lifecycle state", () => {
 		raf.restore();
 
 		expect(animations.willAnimate.get()).toBe(0);
+	});
+
+	it("clears stale pinch-only state when a pan starts", () => {
+		const { runtime, gestures } = createRuntime();
+		gestures.settling.set(1);
+		gestures.scale.set(0.72);
+		gestures.normScale.set(-0.28);
+		gestures.focalX.set(240);
+		gestures.focalY.set(520);
+		gestures.rotation.set(0.35);
+		gestures.raw.scale.set(0.68);
+		gestures.raw.normScale.set(-0.32);
+		gestures.raw.rotation.set(0.42);
+
+		startPanBase(runtime);
+
+		expect(gestures.scale.get()).toBe(1);
+		expect(gestures.normScale.get()).toBe(0);
+		expect(gestures.focalX.get()).toBe(0);
+		expect(gestures.focalY.get()).toBe(0);
+		expect(gestures.rotation.get()).toBe(0);
+		expect(gestures.raw.scale.get()).toBe(1);
+		expect(gestures.raw.normScale.get()).toBe(0);
+		expect(gestures.raw.rotation.get()).toBe(0);
 	});
 
 	it("does not emit willAnimate when a pinch restarts while gesture values are settling", () => {
@@ -464,11 +490,12 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.normY.get()).toBe(0);
 	});
 
-	it("keeps raw pinch displacement during a dismissing release", () => {
+	it("keeps raw pinch scale and rotation during a dismissing release", () => {
 		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);
 		gestures.raw.scale.set(0.7);
 		gestures.raw.normScale.set(-0.3);
+		gestures.raw.rotation.set(0.2);
 
 		finalizePinchRelease(
 			{
@@ -484,6 +511,7 @@ describe("gesture lifecycle state", () => {
 
 		expect(gestures.raw.scale.get()).toBe(0.7);
 		expect(gestures.raw.normScale.get()).toBe(-0.3);
+		expect(gestures.raw.rotation.get()).toBe(0.2);
 	});
 
 });

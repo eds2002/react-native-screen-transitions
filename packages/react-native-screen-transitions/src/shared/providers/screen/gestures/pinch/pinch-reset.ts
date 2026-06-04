@@ -21,7 +21,8 @@ const clearPinchSettlingIfResting = (gestures: GestureStoreMap) => {
 		!gestures.dragging.get() &&
 		!gestures.dismissing.get() &&
 		Math.abs(gestures.scale.get() - 1) <= EPSILON &&
-		Math.abs(gestures.normScale.get()) <= EPSILON;
+		Math.abs(gestures.normScale.get()) <= EPSILON &&
+		Math.abs(gestures.rotation.get()) <= EPSILON;
 
 	if (isResting) {
 		gestures.focalX.set(0);
@@ -43,6 +44,7 @@ export const resetPinchGestureValues = ({
 	if (!shouldDismiss) {
 		gestures.raw.scale.set(1);
 		gestures.raw.normScale.set(0);
+		gestures.raw.rotation.set(0);
 	}
 
 	gestures.dragging.set(FALSE);
@@ -52,6 +54,7 @@ export const resetPinchGestureValues = ({
 	if (resetValuesImmediately) {
 		gestures.scale.set(1);
 		gestures.normScale.set(0);
+		gestures.rotation.set(0);
 		clearPinchSettlingIfResting(gestures);
 		return;
 	}
@@ -60,6 +63,9 @@ export const resetPinchGestureValues = ({
 		clearPinchSettlingIfResting(gestures),
 	);
 	animateResetValue(gestures.normScale, 0, resetSpec, () =>
+		clearPinchSettlingIfResting(gestures),
+	);
+	animateResetValue(gestures.rotation, 0, resetSpec, () =>
 		clearPinchSettlingIfResting(gestures),
 	);
 };

@@ -4,6 +4,7 @@ import type {
 	GestureUpdateEvent,
 	PanGestureHandlerEventPayload,
 	PinchGestureHandlerEventPayload,
+	RotationGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
@@ -32,7 +33,8 @@ import type { EffectiveSnapPointsResult } from "./shared/snap-points";
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
 export type PinchGesture = ReturnType<typeof Gesture.Pinch>;
-export type ComposedGesture = ReturnType<typeof Gesture.Race>;
+export type RotationGesture = ReturnType<typeof Gesture.Rotation>;
+export type ComposedGesture = ReturnType<typeof Gesture.Simultaneous>;
 
 export type PanGestureEvent =
 	| GestureUpdateEvent<PanGestureHandlerEventPayload>
@@ -41,6 +43,13 @@ export type PanGestureEvent =
 export type PinchGestureEvent =
 	| GestureUpdateEvent<PinchGestureHandlerEventPayload>
 	| GestureStateChangeEvent<PinchGestureHandlerEventPayload>;
+
+export type RotationGestureEvent =
+	| GestureUpdateEvent<RotationGestureHandlerEventPayload>
+	| GestureStateChangeEvent<RotationGestureHandlerEventPayload>;
+
+/** Gesture that initiated the current simultaneous gesture composition. */
+export type GestureCompositionActivation = "pan" | "pinch" | null;
 
 export type {
 	GestureProgressMode,
@@ -73,6 +82,7 @@ export interface GestureContextType {
 	detectorGesture: ComposedGesture;
 	panGesture: PanGesture;
 	pinchGesture: PinchGesture;
+	rotationGesture: RotationGesture;
 	scrollState: SharedValue<ScrollGestureState | null>;
 	gestureContext: GestureContextType | null;
 	claimedDirections: ClaimedDirections;
@@ -150,6 +160,8 @@ export type PanGestureRuntime = GestureRuntime<PanGesturePolicy>;
 
 export type PinchGestureRuntime = GestureRuntime<PinchGesturePolicy>;
 
+export type RotationGestureRuntime = GestureRuntime<PinchGesturePolicy>;
+
 export interface GestureDimensions {
 	width: number;
 	height: number;
@@ -215,4 +227,9 @@ export interface PinchBehavior {
 	onStart: (event: PinchGestureEvent) => void;
 	onUpdate: (event: PinchGestureEvent) => void;
 	onEnd: (event: PinchGestureEvent) => void;
+}
+
+export interface RotationBehavior {
+	onStart: () => void;
+	onUpdate: (event: RotationGestureEvent) => void;
 }

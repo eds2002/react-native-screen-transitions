@@ -217,6 +217,10 @@ const currentActiveGesture = interpolationProps.current.gesture.active;
 const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
 const currentGestureVelocity: number =
 	interpolationProps.current.gesture.velocity;
+const currentGestureRotation: number =
+	interpolationProps.current.gesture.rotation;
+const currentRawGestureRotation: number =
+	interpolationProps.current.gesture.raw.rotation;
 const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
 const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
@@ -240,6 +244,8 @@ const invalidGestureTrackingRuntimeOptions: TransitionInterpolatedStyle = {
 };
 void currentRawGestureNormX;
 void currentGestureVelocity;
+void currentGestureRotation;
+void currentRawGestureRotation;
 void currentActiveGesture;
 void currentAnimatedSnapIndex;
 void currentSnapIndex;

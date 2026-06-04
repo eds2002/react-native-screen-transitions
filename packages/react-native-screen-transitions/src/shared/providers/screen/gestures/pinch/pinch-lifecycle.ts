@@ -22,7 +22,9 @@ export const startPinchBase = (
 	} = runtime;
 
 	const wasSettling = gestures.settling.get();
-	const hasResidualGesture = Math.abs(gestures.normScale.get()) > EPSILON;
+	const hasResidualGesture =
+		Math.abs(gestures.normScale.get()) > EPSILON ||
+		Math.abs(gestures.rotation.get()) > EPSILON;
 
 	if (!wasSettling || !hasResidualGesture) {
 		emit(animations.willAnimate, TRUE, FALSE);
@@ -36,8 +38,10 @@ export const startPinchBase = (
 	gestures.velocity.set(0);
 	gestures.scale.set(1);
 	gestures.normScale.set(0);
+	gestures.rotation.set(0);
 	gestures.raw.scale.set(1);
 	gestures.raw.normScale.set(0);
+	gestures.raw.rotation.set(0);
 	gestures.focalX.set(event.focalX);
 	gestures.focalY.set(event.focalY);
 	gestureProgressBaseline.set(animations.progress.get());
@@ -56,8 +60,6 @@ export const trackPinchGesture = (
 
 	gestures.scale.set(scale);
 	gestures.normScale.set(normScale);
-	gestures.focalX.set(event.focalX);
-	gestures.focalY.set(event.focalY);
 	gestures.raw.scale.set(rawScale);
 	gestures.raw.normScale.set(rawNormScale);
 	gestures.active.set(

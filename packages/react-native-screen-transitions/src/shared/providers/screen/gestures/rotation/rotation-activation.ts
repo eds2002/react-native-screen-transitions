@@ -8,20 +8,20 @@ import type { ScreenOptionsContextValue } from "../../options";
 import { resolvePinchRuntime } from "../shared/runtime";
 import type {
 	GestureCompositionActivation,
-	PinchGestureRuntime,
+	RotationGestureRuntime,
 } from "../types";
 
-interface UsePinchActivationProps {
-	runtime: SharedValue<PinchGestureRuntime>;
+interface UseRotationActivationProps {
+	runtime: SharedValue<RotationGestureRuntime>;
 	screenOptions: ScreenOptionsContextValue;
 	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
 }
 
-export const usePinchActivation = ({
+export const useRotationActivation = ({
 	runtime,
 	screenOptions,
 	gestureCompositionActivation,
-}: UsePinchActivationProps) => {
+}: UseRotationActivationProps) => {
 	const onTouchesDown = useCallback(
 		(
 			event: GestureTouchEvent,

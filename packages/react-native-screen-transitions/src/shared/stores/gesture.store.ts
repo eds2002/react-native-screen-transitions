@@ -16,6 +16,7 @@ type GestureRawStoreMap = {
 	normY: SharedValue<number>;
 	scale: SharedValue<number>;
 	normScale: SharedValue<number>;
+	rotation: SharedValue<number>;
 };
 
 export type GestureStoreMap = {
@@ -28,6 +29,7 @@ export type GestureStoreMap = {
 	normScale: SharedValue<number>;
 	focalX: SharedValue<number>;
 	focalY: SharedValue<number>;
+	rotation: SharedValue<number>;
 	raw: GestureRawStoreMap;
 	dismissing: SharedValue<number>;
 	dragging: SharedValue<number>;
@@ -74,6 +76,7 @@ function createGestureBag(): GestureStoreMap {
 		normScale,
 		focalX: makeMutable(0),
 		focalY: makeMutable(0),
+		rotation: makeMutable(0),
 		raw: {
 			x: makeMutable(0),
 			y: makeMutable(0),
@@ -81,6 +84,7 @@ function createGestureBag(): GestureStoreMap {
 			normY: makeMutable(0),
 			scale: makeMutable(1),
 			normScale: makeMutable(0),
+			rotation: makeMutable(0),
 		},
 		dismissing,
 		dragging,
@@ -115,12 +119,14 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.normScale);
 		cancelAnimation(bag.focalX);
 		cancelAnimation(bag.focalY);
+		cancelAnimation(bag.rotation);
 		cancelAnimation(bag.raw.x);
 		cancelAnimation(bag.raw.y);
 		cancelAnimation(bag.raw.normX);
 		cancelAnimation(bag.raw.normY);
 		cancelAnimation(bag.raw.scale);
 		cancelAnimation(bag.raw.normScale);
+		cancelAnimation(bag.raw.rotation);
 		cancelAnimation(bag.dismissing);
 		cancelAnimation(bag.dragging);
 		cancelAnimation(bag.settling);

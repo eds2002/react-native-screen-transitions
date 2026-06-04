@@ -1,37 +1,28 @@
 import { useMemo } from "react";
-import { useWindowDimensions } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsContext } from "../../options";
 import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
-	DirectionClaimMap,
 	GestureCompositionActivation,
-	PanGesture,
+	RotationGesture,
 	ScreenGestureConfig,
-	ScrollGestureState,
 } from "../types";
-import { usePanActivation } from "./pan-activation";
-import { usePanBehavior } from "./use-pan-behavior";
+import { useRotationActivation } from "./rotation-activation";
+import { useRotationBehavior } from "./use-rotation-behavior";
 
-interface BuildPanGestureHookProps {
-	scrollState: SharedValue<ScrollGestureState | null>;
+interface BuildRotationGestureHookProps {
 	gestureConfig: ScreenGestureConfig;
-	childDirectionClaims: SharedValue<DirectionClaimMap>;
 	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
 }
 
-export const useBuildPanGesture = ({
-	scrollState,
+export const useBuildRotationGesture = ({
 	gestureConfig,
-	childDirectionClaims,
 	gestureCompositionActivation,
-}: BuildPanGestureHookProps): PanGesture => {
-	const dimensions = useWindowDimensions();
-	const { participation, pan: policy } = gestureConfig;
+}: BuildRotationGestureHookProps): RotationGesture => {
+	const { participation, pinch: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
-
 	const { gestureProgressBaseline, lockedSnapPoint } =
 		useGestureBuilderState(participation);
 
@@ -42,33 +33,23 @@ export const useBuildPanGesture = ({
 		lockedSnapPoint,
 	});
 
-	const activation = usePanActivation({
-		scrollState,
-		childDirectionClaims,
+	const activation = useRotationActivation({
 		runtime,
 		screenOptions,
-		dimensions,
 		gestureCompositionActivation,
 	});
 
-	const behavior = usePanBehavior(
-		runtime,
-		screenOptions,
-		dimensions,
-		gestureCompositionActivation,
-	);
+	const behavior = useRotationBehavior(runtime, screenOptions);
 
-	const panGesture = useMemo(() => {
-		return Gesture.Pan()
+	const rotationGesture = useMemo(() => {
+		return Gesture.Rotation()
 			.enabled(true)
 			.manualActivation(true)
-			.averageTouches(true)
 			.onTouchesDown(activation.onTouchesDown)
 			.onTouchesMove(activation.onTouchesMove)
 			.onStart(behavior.onStart)
-			.onUpdate(behavior.onUpdate)
-			.onEnd(behavior.onEnd);
+			.onUpdate(behavior.onUpdate);
 	}, [activation, behavior]);
 
-	return panGesture;
+	return rotationGesture;
 };

@@ -11,6 +11,7 @@ const DEFAULT_SPEC = {
 };
 
 const GESTURE_RESISTANCE = 0.45;
+const GESTURE_EPSILON = 0.001;
 
 type DynamicSensitivityDriver = "x" | "y" | "xy" | "pinch";
 
@@ -230,6 +231,59 @@ function buildPinchOptions(
 					style: {
 						opacity: interpolate(progress, [0, 1, 2], [0, 1, 0.92], "clamp"),
 						transform: [{ scale: baseScale }],
+					},
+				},
+			};
+		},
+		transitionSpec: DEFAULT_SPEC,
+	};
+}
+
+function buildIOSBrowserOptions(): ScreenTransitionConfig {
+	const gestureSensitivity = {
+		driver: "pinch",
+		base: 0.9,
+		min: 0.18,
+		distance: 0.32,
+	} as const;
+
+	return {
+		gestureEnabled: true,
+		gestureDirection: "pinch-in",
+		gestureSensitivity: gestureSensitivity.base,
+		gestureReleaseVelocityScale: 0.75,
+		screenStyleInterpolator: ({
+			active,
+			current,
+			progress,
+			layouts: {
+				screen: { width, height },
+			},
+		}) => {
+			"worklet";
+			const gesture = current.gesture;
+			const scale = progress;
+			const isPinchGesture =
+				gesture.active === "pinch-in" ||
+				gesture.active === "pinch-out" ||
+				Math.abs(gesture.normScale) > GESTURE_EPSILON;
+			const hasGestureFocal =
+				isPinchGesture &&
+				(gesture.dragging || gesture.settling || gesture.dismissing);
+			const focalX = hasGestureFocal ? gesture.focalX : width / 2;
+			const focalY = hasGestureFocal ? gesture.focalY : height / 2;
+			const translateX = gesture.x;
+			const translateY = gesture.y;
+			const opacity = interpolate(progress, [0, 0.4, 1], [0, 0.82, 1], "clamp");
+			const rotateZ = `${gesture.rotation}rad`;
+
+			return {
+				options: gestureRuntimeOptions(active.gesture.raw, gestureSensitivity),
+				content: {
+					style: {
+						opacity,
+						transformOrigin: [focalX, focalY, 0],
+						transform: [{ translateX }, { translateY }, { rotateZ }, { scale }],
 					},
 				},
 			};
@@ -472,6 +526,8 @@ export function buildGestureScreenOptions(id: GestureExampleId) {
 			return buildPinchOptions("pinch-in");
 		case "pinch-out":
 			return buildPinchOptions("pinch-out");
+		case "ios-browser":
+			return buildIOSBrowserOptions();
 		case "snap-multi-axis":
 			return buildSnapMultiAxisOptions();
 		case "snap-order-axis":
@@ -495,6 +551,7 @@ export const GESTURE_SCREEN_OPTIONS: Record<GestureExampleId, any> = {
 	bidirectional: buildGestureScreenOptions("bidirectional"),
 	"pinch-in": buildGestureScreenOptions("pinch-in"),
 	"pinch-out": buildGestureScreenOptions("pinch-out"),
+	"ios-browser": buildGestureScreenOptions("ios-browser"),
 	"snap-multi-axis": buildGestureScreenOptions("snap-multi-axis"),
 	"snap-order-axis": buildGestureScreenOptions("snap-order-axis"),
 	"snap-pinch-pan": buildGestureScreenOptions("snap-pinch-pan"),

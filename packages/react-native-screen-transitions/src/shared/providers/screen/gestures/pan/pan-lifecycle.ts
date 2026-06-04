@@ -26,7 +26,9 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	const wasSettling = gestures.settling.get();
 	const hasResidualGesture =
 		Math.abs(gestures.normX.get()) > EPSILON ||
-		Math.abs(gestures.normY.get()) > EPSILON;
+		Math.abs(gestures.normY.get()) > EPSILON ||
+		Math.abs(gestures.normScale.get()) > EPSILON ||
+		Math.abs(gestures.rotation.get()) > EPSILON;
 
 	if (!wasSettling || !hasResidualGesture) {
 		emit(animations.willAnimate, TRUE, FALSE);
@@ -40,10 +42,18 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	gestures.normX.set(0);
 	gestures.normY.set(0);
 	gestures.velocity.set(0);
+	gestures.scale.set(1);
+	gestures.normScale.set(0);
+	gestures.focalX.set(0);
+	gestures.focalY.set(0);
+	gestures.rotation.set(0);
 	gestures.raw.x.set(0);
 	gestures.raw.y.set(0);
 	gestures.raw.normX.set(0);
 	gestures.raw.normY.set(0);
+	gestures.raw.scale.set(1);
+	gestures.raw.normScale.set(0);
+	gestures.raw.rotation.set(0);
 	gestureProgressBaseline.set(animations.progress.get());
 };
 

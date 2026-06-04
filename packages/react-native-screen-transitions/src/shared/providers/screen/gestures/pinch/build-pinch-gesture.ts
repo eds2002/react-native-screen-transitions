@@ -1,18 +1,25 @@
 import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
+import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsContext } from "../../options";
 import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
-import type { PinchGesture, ScreenGestureConfig } from "../types";
+import type {
+	GestureCompositionActivation,
+	PinchGesture,
+	ScreenGestureConfig,
+} from "../types";
 import { usePinchActivation } from "./pinch-activation";
 import { usePinchBehavior } from "./use-pinch-behavior";
 
 interface BuildPinchGestureHookProps {
 	gestureConfig: ScreenGestureConfig;
+	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
 }
 
 export const useBuildPinchGesture = ({
 	gestureConfig,
+	gestureCompositionActivation,
 }: BuildPinchGestureHookProps): PinchGesture => {
 	const { participation, pinch: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
@@ -29,9 +36,14 @@ export const useBuildPinchGesture = ({
 	const activation = usePinchActivation({
 		runtime,
 		screenOptions,
+		gestureCompositionActivation,
 	});
 
-	const behavior = usePinchBehavior(runtime, screenOptions);
+	const behavior = usePinchBehavior(
+		runtime,
+		screenOptions,
+		gestureCompositionActivation,
+	);
 
 	const pinchGesture = useMemo(() => {
 		return Gesture.Pinch()

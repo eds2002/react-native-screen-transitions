@@ -27,6 +27,7 @@ const createGestureStore = (
 		normX: number;
 		normY: number;
 		normScale: number;
+		rotation: number;
 		active: string | null;
 	}> = {},
 ) => {
@@ -45,6 +46,7 @@ const createGestureStore = (
 		normScale: shared(overrides.normScale ?? 0),
 		focalX: shared(0),
 		focalY: shared(0),
+		rotation: shared(overrides.rotation ?? 0),
 		raw: {
 			x: shared(0),
 			y: shared(0),
@@ -52,6 +54,7 @@ const createGestureStore = (
 			normY: shared(0),
 			scale: shared(1),
 			normScale: shared(0),
+			rotation: shared(0),
 		},
 		dismissing,
 		dragging,
@@ -154,6 +157,23 @@ describe("transition state rules", () => {
 			}),
 		);
 
+		expect(hydrated.animating).toBe(1);
+		expect(hydrated.settled).toBe(0);
+	});
+
+	it("derives public animating from residual rotation without changing progress", () => {
+		const hydrated = hydrate(
+			createBuiltState({
+				progress: 1,
+				gesture: createGestureStore({ rotation: 0.25 }),
+				options: {
+					gestureDirection: "pinch-in",
+					gestureProgressMode: "progress-driven",
+				},
+			}),
+		);
+
+		expect(hydrated.progress).toBe(1);
 		expect(hydrated.animating).toBe(1);
 		expect(hydrated.settled).toBe(0);
 	});

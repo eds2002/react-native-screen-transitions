@@ -77,12 +77,14 @@ export const hydrateTransitionState = (
 	out.gesture.normScale = s.gesture.normScale.get();
 	out.gesture.focalX = s.gesture.focalX.get();
 	out.gesture.focalY = s.gesture.focalY.get();
+	out.gesture.rotation = s.gesture.rotation.get();
 	out.gesture.raw.x = s.gesture.raw.x.get();
 	out.gesture.raw.y = s.gesture.raw.y.get();
 	out.gesture.raw.normX = s.gesture.raw.normX.get();
 	out.gesture.raw.normY = s.gesture.raw.normY.get();
 	out.gesture.raw.scale = s.gesture.raw.scale.get();
 	out.gesture.raw.normScale = s.gesture.raw.normScale.get();
+	out.gesture.raw.rotation = s.gesture.raw.rotation.get();
 	out.gesture.dismissing = s.gesture.dismissing.get();
 	out.gesture.dragging = s.gesture.dragging.get();
 	out.gesture.settling = s.gesture.settling.get();
@@ -109,7 +111,8 @@ export const hydrateTransitionState = (
 	const hasResidualGestureValues =
 		Math.abs(out.gesture.normX) > EPSILON ||
 		Math.abs(out.gesture.normY) > EPSILON ||
-		Math.abs(out.gesture.normScale) > EPSILON;
+		Math.abs(out.gesture.normScale) > EPSILON ||
+		Math.abs(out.gesture.rotation) > EPSILON;
 
 	const isGestureActive =
 		out.gesture.dragging ||

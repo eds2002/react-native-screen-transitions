@@ -48,6 +48,7 @@ const DEFAULT_RAW_GESTURE_VALUES = {
 	normY: 0,
 	scale: 1,
 	normScale: 0,
+	rotation: 0,
 } as const;
 
 const DEFAULT_GESTURE_VALUES = {

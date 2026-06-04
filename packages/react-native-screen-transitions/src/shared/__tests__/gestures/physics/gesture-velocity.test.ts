@@ -15,6 +15,7 @@ import { trackPanGesture } from "../../../providers/screen/gestures/pan/pan-life
 import { resolvePanRelease } from "../../../providers/screen/gestures/pan/pan-release";
 import { trackPinchGesture } from "../../../providers/screen/gestures/pinch/pinch-lifecycle";
 import { resolvePinchRelease } from "../../../providers/screen/gestures/pinch/pinch-release";
+import { trackRotationGesture } from "../../../providers/screen/gestures/rotation/rotation-lifecycle";
 import { applyGestureSensitivityToRawChange } from "../../../providers/screen/gestures/hooks/use-gesture-sensitivity";
 import type { ScreenOptionsContextValue } from "../../../providers/screen/options";
 
@@ -164,6 +165,7 @@ const createGestureStore = () =>
 		normScale: createSharedValue(0),
 		focalX: createSharedValue(0),
 		focalY: createSharedValue(0),
+		rotation: createSharedValue(0),
 		raw: {
 			x: createSharedValue(0),
 			y: createSharedValue(0),
@@ -171,6 +173,7 @@ const createGestureStore = () =>
 			normY: createSharedValue(0),
 			scale: createSharedValue(1),
 			normScale: createSharedValue(0),
+			rotation: createSharedValue(0),
 		},
 		dismissing: createSharedValue(0),
 		dragging: createSharedValue(0),
@@ -696,23 +699,60 @@ describe("pinch gesture sensitivity", () => {
 describe("trackPinchGesture", () => {
 	it("stores sensitivity-adjusted and raw pinch values separately", () => {
 		const gestures = createGestureStore();
+		gestures.x.set(12);
+		gestures.y.set(-16);
+		gestures.normX.set(0.03);
+		gestures.normY.set(-0.02);
+		gestures.raw.x.set(32);
+		gestures.raw.y.set(-48);
+		gestures.raw.normX.set(0.08);
+		gestures.raw.normY.set(-0.06);
+		gestures.focalX.set(30);
+		gestures.focalY.set(50);
 		const event = {
 			scale: 1.25,
-			focalX: 12,
-			focalY: 24,
+			focalX: 44,
+			focalY: 80,
 		} as any;
 		const rawEvent = {
 			scale: 2,
-			focalX: 12,
-			focalY: 24,
+			focalX: 64,
+			focalY: 160,
 		} as any;
 
 		trackPinchGesture(event, rawEvent, gestures);
 
+		expect(gestures.x.get()).toBeCloseTo(12, 5);
+		expect(gestures.y.get()).toBeCloseTo(-16, 5);
+		expect(gestures.normX.get()).toBeCloseTo(0.03, 5);
+		expect(gestures.normY.get()).toBeCloseTo(-0.02, 5);
 		expect(gestures.scale.get()).toBeCloseTo(1.25, 5);
 		expect(gestures.normScale.get()).toBeCloseTo(0.25, 5);
+		expect(gestures.focalX.get()).toBeCloseTo(30, 5);
+		expect(gestures.focalY.get()).toBeCloseTo(50, 5);
+		expect(gestures.raw.x.get()).toBeCloseTo(32, 5);
+		expect(gestures.raw.y.get()).toBeCloseTo(-48, 5);
+		expect(gestures.raw.normX.get()).toBeCloseTo(0.08, 5);
+		expect(gestures.raw.normY.get()).toBeCloseTo(-0.06, 5);
 		expect(gestures.raw.scale.get()).toBeCloseTo(2, 5);
 		expect(gestures.raw.normScale.get()).toBeCloseTo(1, 5);
+	});
+});
+
+describe("trackRotationGesture", () => {
+	it("stores rotation independently from pinch progress values", () => {
+		const gestures = createGestureStore();
+
+		trackRotationGesture(
+			{ rotation: 0.35 } as any,
+			{ rotation: 0.5 } as any,
+			gestures,
+		);
+
+		expect(gestures.rotation.get()).toBeCloseTo(0.35, 5);
+		expect(gestures.raw.rotation.get()).toBeCloseTo(0.5, 5);
+		expect(gestures.normScale.get()).toBe(0);
+		expect(gestures.active.get()).toBe(null);
 	});
 });
 
