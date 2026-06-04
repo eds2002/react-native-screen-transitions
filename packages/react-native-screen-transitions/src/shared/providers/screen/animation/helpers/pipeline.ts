@@ -151,7 +151,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				nextRouteKey,
 				frame.next?.progress,
 			);
-			frame.logicallySettled = frame.active.logicallySettled;
+			frame.logicallySettled = frame.active.settled;
 
 			return frame;
 		}, false);

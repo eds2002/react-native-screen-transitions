@@ -42,9 +42,9 @@ export const animateResetValue = (
 ) => {
 	"worklet";
 	value.set(
-		animate(toValue, config, (finished) => {
+		animate(toValue, config, (state) => {
 			"worklet";
-			if (finished) {
+			if (state.finished) {
 				onFinished();
 			}
 		}),

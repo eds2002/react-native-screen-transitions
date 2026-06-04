@@ -3,8 +3,6 @@ import type { SharedValue } from "react-native-reanimated";
 import {
 	createScreenTransitionState,
 	DEFAULT_SCREEN_TRANSITION_OPTIONS,
-	LOGICAL_SETTLE_PROGRESS_THRESHOLD,
-	LOGICAL_SETTLE_REQUIRED_FRAMES,
 } from "../constants";
 import { hydrateTransitionState } from "../providers/screen/animation/helpers/hydrate-transition-state";
 import type { BuiltState } from "../providers/screen/animation/helpers/hydrate-transition-state/types";
@@ -71,10 +69,10 @@ const createBuiltState = (
 	overrides: Partial<{
 		progress: number;
 		progressAnimating: number;
+		progressSettled: number;
 		closing: number;
 		entering: number;
 		targetProgress: number;
-		logicalSettleFrameCount: number;
 		gesture: ReturnType<typeof createGestureStore>;
 		options: ScreenTransitionOptions;
 		sortedNumericSnapPoints: number[];
@@ -96,13 +94,13 @@ const createBuiltState = (
 		willAnimate: shared(0),
 		closing: shared(overrides.closing ?? 0),
 		progressAnimating: shared(overrides.progressAnimating ?? 0),
+		progressSettled: shared(overrides.progressSettled ?? 1),
 		entering: shared(overrides.entering ?? 0),
 		gesture: overrides.gesture ?? createGestureStore(),
 		route: state.route,
 		options,
 		optionsSlot: {},
 		targetProgress: shared(overrides.targetProgress ?? 1),
-		logicalSettleFrameCount: shared(overrides.logicalSettleFrameCount ?? 0),
 		resolvedAutoSnapPoint: shared(-1),
 		measuredContentLayout: shared(null),
 		contentLayoutSlot: { width: 0, height: 0 },
@@ -140,6 +138,7 @@ describe("transition state rules", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				progressAnimating: 1,
+				progressSettled: 0,
 			}),
 		);
 
@@ -166,7 +165,7 @@ describe("transition state rules", () => {
 		expect(hydrated.settled).toBe(1);
 	});
 
-	it("keeps settled false while closing is active", () => {
+	it("does not block visual settlement while closing is active", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				closing: 1,
@@ -174,10 +173,11 @@ describe("transition state rules", () => {
 		);
 
 		expect(hydrated.animating).toBe(0);
-		expect(hydrated.settled).toBe(0);
+		expect(hydrated.settled).toBe(1);
+		expect(hydrated.logicallySettled).toBe(1);
 	});
 
-	it("keeps settled false while gesture dismissal is active", () => {
+	it("does not block visual settlement while gesture dismissal is active", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				gesture: createGestureStore({ dismissing: 1 }),
@@ -185,84 +185,57 @@ describe("transition state rules", () => {
 		);
 
 		expect(hydrated.animating).toBe(0);
-		expect(hydrated.settled).toBe(0);
+		expect(hydrated.settled).toBe(1);
+		expect(hydrated.logicallySettled).toBe(1);
 	});
 
-	it("requires consecutive near-target frames before logically settling", () => {
+	it("uses the progress animation settle signal", () => {
 		const state = createBuiltState({
 			progress: 1,
 			targetProgress: 1,
+			progressSettled: 0,
 		});
 
-		for (let i = 0; i < LOGICAL_SETTLE_REQUIRED_FRAMES - 1; i++) {
-			expect(hydrate(state).logicallySettled).toBe(0);
-		}
-
-		expect(hydrate(state).logicallySettled).toBe(1);
-	});
-
-	it("resets logical settle counting when progress leaves the target threshold", () => {
-		const state = createBuiltState({
-			progress: 1,
-			targetProgress: 1,
-		});
-
-		hydrate(state);
-		hydrate(state);
-
-		state.progress.set(0.5);
+		expect(hydrate(state).settled).toBe(0);
 		expect(hydrate(state).logicallySettled).toBe(0);
-		expect(state.logicalSettleFrameCount.get()).toBe(0);
 
-		state.progress.set(1);
-		expect(hydrate(state).logicallySettled).toBe(0);
-		expect(state.logicalSettleFrameCount.get()).toBe(1);
+		state.progressSettled.set(1);
+		expect(hydrate(state).settled).toBe(1);
+		expect(hydrate(state).logicallySettled).toBe(1);
 	});
 
-	it("preserves logical settlement across tiny post-settle spring drift", () => {
+	it("allows visual settlement before the progress animation fully finishes", () => {
 		const state = createBuiltState({
 			progress: 1,
-			targetProgress: 1,
-			logicalSettleFrameCount: LOGICAL_SETTLE_REQUIRED_FRAMES,
-		});
-
-		expect(hydrate(state).logicallySettled).toBe(1);
-
-		state.progress.set(1 + LOGICAL_SETTLE_PROGRESS_THRESHOLD * 2);
-
-		expect(hydrate(state).logicallySettled).toBe(1);
-	});
-
-	it("does not preserve logical settlement after meaningful progress movement", () => {
-		const state = createBuiltState({
-			progress: 1,
-			targetProgress: 1,
-			logicalSettleFrameCount: LOGICAL_SETTLE_REQUIRED_FRAMES,
-		});
-
-		expect(hydrate(state).logicallySettled).toBe(1);
-
-		state.progress.set(0.5);
-
-		expect(hydrate(state).logicallySettled).toBe(0);
-	});
-
-	it("does not preserve logical settlement while progress is actively animating", () => {
-		const state = createBuiltState({
-			progress: 1 + LOGICAL_SETTLE_PROGRESS_THRESHOLD * 2,
 			progressAnimating: 1,
 			targetProgress: 1,
-			logicalSettleFrameCount: LOGICAL_SETTLE_REQUIRED_FRAMES,
+			progressSettled: 1,
 		});
 
+		const hydrated = hydrate(state);
+
+		expect(hydrated.animating).toBe(1);
+		expect(hydrated.settled).toBe(1);
+		expect(hydrated.logicallySettled).toBe(1);
+	});
+
+	it("keeps settled false until the progress animation reports settlement", () => {
+		const state = createBuiltState({
+			progress: 0.99,
+			progressAnimating: 1,
+			targetProgress: 1,
+			progressSettled: 0,
+		});
+
+		expect(hydrate(state).settled).toBe(0);
 		expect(hydrate(state).logicallySettled).toBe(0);
 	});
 
-	it("keeps logically settled false while dragging", () => {
+	it("keeps settled false while dragging", () => {
 		const state = createBuiltState({
 			progress: 1,
 			targetProgress: 1,
-			logicalSettleFrameCount: LOGICAL_SETTLE_REQUIRED_FRAMES,
+			progressSettled: 1,
 			gesture: createGestureStore({ dragging: 1 }),
 		});
 
@@ -273,12 +246,12 @@ describe("transition state rules", () => {
 		expect(hydrated.logicallySettled).toBe(0);
 	});
 
-	it("allows logical settlement while a dismissing gesture holds residual values", () => {
+	it("allows visual settlement while a dismissing gesture holds residual values", () => {
 		const state = createBuiltState({
 			progress: 0,
 			targetProgress: 0,
 			closing: 1,
-			logicalSettleFrameCount: LOGICAL_SETTLE_REQUIRED_FRAMES,
+			progressSettled: 1,
 			gesture: createGestureStore({
 				dismissing: 1,
 				normY: 0.4,
@@ -288,7 +261,7 @@ describe("transition state rules", () => {
 		const hydrated = hydrate(state);
 
 		expect(hydrated.animating).toBe(0);
-		expect(hydrated.settled).toBe(0);
+		expect(hydrated.settled).toBe(1);
 		expect(hydrated.logicallySettled).toBe(1);
 	});
 

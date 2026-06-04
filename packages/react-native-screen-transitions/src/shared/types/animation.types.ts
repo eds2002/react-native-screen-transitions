@@ -87,18 +87,19 @@ export type ScreenTransitionState = {
 	animating: number;
 
 	/**
-	 * Whether this screen is fully settled (not transitioning and not dismissing).
-	 * - `0`: Transition/gesture is active or dismissing
-	 * - `1`: Screen is fully settled/idle
+	 * Whether this screen is visually settled for choreography purposes.
+	 * - `0`: The screen is still meaningfully away from its animation target
+	 * - `1`: The screen is close enough to its target to be treated as done
+	 *
+	 * This may become `1` while `animating` is still `1`, since the animation
+	 * driver can keep physically settling after the transition is visually done.
 	 */
 	settled: number;
 
 	/**
-	 * Whether this screen is logically complete for choreography purposes.
-	 * - `0`: The screen is still meaningfully away from its animation target
-	 * - `1`: The screen is visually close enough to its target to be treated as done
+	 * Deprecated alias for `settled`.
 	 *
-	 * Unlike `settled`, this may become `1` before the underlying spring fully stops.
+	 * @deprecated Use `settled` instead.
 	 */
 	logicallySettled: number;
 
@@ -230,7 +231,7 @@ export interface ScreenInterpolationProps {
 	 * Whether the active transition is visually close enough to its target to be
 	 * treated as complete, even if the animation is still physically settling.
 	 *
-	 * @deprecated Use `active.logicallySettled` instead. Screen settlement state
+	 * @deprecated Use `active.settled` instead. Screen settlement state
 	 * belongs on the screen state object.
 	 */
 	logicallySettled: number;

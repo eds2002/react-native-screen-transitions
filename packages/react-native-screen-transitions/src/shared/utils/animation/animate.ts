@@ -1,9 +1,7 @@
-import type {
-	AnimationCallback,
-	WithTimingConfig,
-} from "react-native-reanimated";
+import type { WithTimingConfig } from "react-native-reanimated";
 import { withTiming } from "react-native-reanimated";
 import { type SpringConfig, withInternalSpring } from "./spring";
+import type { AnimationStateCallback } from "./state";
 
 export type TimingAnimationConfig = WithTimingConfig;
 export type SpringAnimationConfig = SpringConfig;
@@ -34,12 +32,19 @@ export const isSpringAnimationConfig = (
 export const animate = (
 	toValue: number,
 	config?: ScreenAnimationConfig,
-	callback?: AnimationCallback,
+	callback?: AnimationStateCallback,
 ) => {
 	"worklet";
 
 	if (!isSpringAnimationConfig(config)) {
-		return withTiming(toValue, config, callback);
+		return withTiming(toValue, config, (finished) => {
+			"worklet";
+			const didFinish = finished === true;
+			callback?.({
+				finished: didFinish,
+				settled: didFinish,
+			});
+		});
 	}
 
 	return withInternalSpring(toValue, config, callback);

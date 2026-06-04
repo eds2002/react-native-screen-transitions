@@ -395,11 +395,9 @@ export function buildZoomStyles({
 			? unfocusedElementTarget.pageY + unfocusedElementTarget.height / 2
 			: screenLayout.height / 2);
 
-	const unfocusedContentScale = props.active.logicallySettled
-		? 1
-		: unfocusedScale;
-	const shouldTrackGestureTranslation = !props.active.logicallySettled;
-	const shouldTrackGestureScale = !props.active.logicallySettled;
+	const unfocusedContentScale = props.active.settled ? 1 : unfocusedScale;
+	const shouldTrackGestureTranslation = !props.active.settled;
+	const shouldTrackGestureScale = !props.active.settled;
 	const elementGestureScale = shouldTrackGestureScale ? handoffDragScale : 1;
 	const elementGestureX = shouldTrackGestureTranslation ? dragX : 0;
 	const elementGestureY = shouldTrackGestureTranslation ? dragY : 0;
@@ -410,7 +408,7 @@ export function buildZoomStyles({
 	// A naturally settled close can leave this as the last emitted style frame,
 	// so drop temporary stacking here instead of waiting for a later reset pass.
 	const shouldElevateUnfocusedElement =
-		!props.active.closing || !props.active.logicallySettled;
+		!props.active.closing || !props.active.settled;
 
 	const scaleShiftX = computeCenterScaleShift({
 		center: elementCenterX,

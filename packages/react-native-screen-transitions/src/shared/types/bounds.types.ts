@@ -240,7 +240,7 @@ export type BoundsNavigationRevealOptions = {
 	backgroundScale?: number;
 	/**
 	 * Whether reveal should reset the unfocused background content scale once the
-	 * transition is logically settled.
+	 * transition is visually settled.
 	 *
 	 * By default, reveal restores the background to scale `1` after settle so the
 	 * next drag or programmatic dismiss starts from a fresh, unmodified layout

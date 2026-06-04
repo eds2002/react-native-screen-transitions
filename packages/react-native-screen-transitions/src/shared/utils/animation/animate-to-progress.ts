@@ -67,7 +67,13 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, willAnimate, progressAnimating, entering } = animations;
+	const {
+		progress,
+		willAnimate,
+		progressAnimating,
+		progressSettled,
+		entering,
+	} = animations;
 
 	const startAnimation = () => {
 		"worklet";
@@ -80,6 +86,7 @@ export const animateToProgress = ({
 
 		if (!config) {
 			progressAnimating.set(FALSE);
+			progressSettled.set(TRUE);
 			progress.set(value);
 			if (shouldClearEnteringOnFinish) {
 				entering.set(FALSE);
@@ -92,17 +99,22 @@ export const animateToProgress = ({
 		}
 
 		progressAnimating.set(TRUE); //<-- Do not move this into the callback
+		progressSettled.set(FALSE);
 		progress.set(
-			animate(value, effectiveConfig, (finished) => {
+			animate(value, effectiveConfig, (state) => {
 				"worklet";
-				if (!finished) return;
+				if (state.settled) {
+					progressSettled.set(TRUE);
+				}
+
+				if (!state.finished) return;
 
 				if (shouldClearEnteringOnFinish) {
 					entering.set(FALSE);
 				}
 
 				if (onAnimationFinish) {
-					runOnJS(onAnimationFinish)(finished);
+					runOnJS(onAnimationFinish)(state.finished);
 				}
 
 				// Delay clearing progress animation by one frame to ensure final frame is painted

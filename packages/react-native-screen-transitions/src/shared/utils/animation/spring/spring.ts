@@ -3,6 +3,7 @@ import type {
 	AnimationCallback,
 	ReduceMotion,
 } from "react-native-reanimated";
+import type { AnimationStateCallback } from "../state";
 import type { SpringConfig } from "./springConfigs";
 import type {
 	DefaultSpringConfig,
@@ -16,6 +17,7 @@ import {
 	criticallyDampedSpringCalculations,
 	getEnergy,
 	initialCalculations,
+	isAnimationSettledCalculation,
 	isAnimationTerminatingCalculation,
 	safeMergeConfigs,
 	scaleZetaToMatchClamps,
@@ -27,6 +29,7 @@ type Timestamp = number;
 const REACT_NATIVE_RUNTIME_KIND = 1;
 const REDUCE_MOTION_SYSTEM = "system";
 const REDUCE_MOTION_ALWAYS = "always";
+const DEFAULT_SPRING_SETTLE_DISTANCE = 0.001;
 
 const DEFAULT_SPRING_CONFIG = {
 	damping: 120,
@@ -95,7 +98,7 @@ const defineSpringAnimation = <TAnimation extends Animation<TAnimation>>(
 type withSpringType = (
 	toValue: number,
 	userConfig?: SpringConfig,
-	callback?: AnimationCallback,
+	callback?: AnimationStateCallback,
 ) => number;
 
 /**
@@ -119,7 +122,7 @@ type withSpringType = (
 export const withInternalSpring = ((
 	toValue: number,
 	userConfig?: SpringConfig,
-	callback?: AnimationCallback,
+	callback?: AnimationStateCallback,
 ): Animation<SpringAnimation> => {
 	"worklet";
 
@@ -132,9 +135,26 @@ export const withInternalSpring = ((
 				...DEFAULT_SPRING_CONFIG,
 				useDuration: !!(userConfig?.duration || userConfig?.dampingRatio),
 				skipAnimation: false,
+				settleDistance: DEFAULT_SPRING_SETTLE_DISTANCE,
 			},
 			userConfig,
 		);
+
+		let settled = false;
+
+		const updateSettled = (animation: SpringAnimation) => {
+			"worklet";
+			if (settled) {
+				return;
+			}
+
+			if (!isAnimationSettledCalculation(animation, config)) {
+				return;
+			}
+
+			settled = true;
+			animation.settled = true;
+		};
 
 		config.skipAnimation = !checkIfConfigIsValid(config);
 
@@ -188,10 +208,14 @@ export const withInternalSpring = ((
 			if (isAnimationTerminatingCalculation(animation, config)) {
 				animation.velocity = 0;
 				animation.current = toValue;
+				settled = true;
+				animation.settled = true;
 				// clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
 				animation.lastTimestamp = 0;
 				return true;
 			}
+
+			updateSettled(animation);
 
 			return false;
 		}
@@ -285,16 +309,26 @@ export const withInternalSpring = ((
 			animation.startTimestamp = triggeredTwice
 				? previousAnimation?.startTimestamp || now
 				: now;
+
+			updateSettled(animation);
 		}
 
-		return {
+		const animation = {
 			onFrame: springOnFrame,
 			onStart,
 			toValue,
 			velocity: config.velocity || 0,
 			current: toValue,
+			settled: false,
 			startValue: 0,
-			callback,
+			callback: ((finished?: boolean) => {
+				"worklet";
+				const didFinish = finished === true;
+				callback?.({
+					finished: didFinish,
+					settled: didFinish || settled,
+				});
+			}) as AnimationCallback,
 			lastTimestamp: 0,
 			startTimestamp: 0,
 			zeta: 0,
@@ -303,5 +337,7 @@ export const withInternalSpring = ((
 			initialEnergy: 0,
 			reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
 		} as SpringAnimation;
+
+		return animation;
 	});
 }) as unknown as withSpringType;

@@ -182,14 +182,3 @@ export const FALSE = 0;
  * Small value for floating-point comparisons to handle animation/interpolation imprecision
  */
 export const EPSILON = 1e-5;
-
-/**
- * Number of consecutive frames progress must remain near its target before it
- * is treated as logically settled.
- */
-export const LOGICAL_SETTLE_REQUIRED_FRAMES = 5;
-
-/**
- * Progress distance from target required for logical settle.
- */
-export const LOGICAL_SETTLE_PROGRESS_THRESHOLD = 0.001;

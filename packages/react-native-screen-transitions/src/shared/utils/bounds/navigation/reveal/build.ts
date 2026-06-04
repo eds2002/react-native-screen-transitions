@@ -381,7 +381,7 @@ export function buildRevealStyles({
 
 	const unfocusedScale = mixUnit(1, backgroundScale, props.active.progress);
 	const unfocusedContentScale =
-		props.active.logicallySettled && shouldBackgroundScaleResetOnSettled
+		props.active.settled && shouldBackgroundScaleResetOnSettled
 			? 1
 			: unfocusedScale;
 
@@ -456,24 +456,20 @@ export function buildRevealStyles({
 				elevation: 9999,
 				transform: [
 					{
-						translateX: props.active.logicallySettled
+						translateX: props.active.settled
 							? 0
 							: trackedSourceElement.translateX,
 					},
 					{
-						translateY: props.active.logicallySettled
+						translateY: props.active.settled
 							? 0
 							: trackedSourceElement.translateY,
 					},
 					{
-						scaleX: props.active.logicallySettled
-							? 1
-							: trackedSourceElement.scaleX,
+						scaleX: props.active.settled ? 1 : trackedSourceElement.scaleX,
 					},
 					{
-						scaleY: props.active.logicallySettled
-							? 1
-							: trackedSourceElement.scaleY,
+						scaleY: props.active.settled ? 1 : trackedSourceElement.scaleY,
 					},
 				],
 			},

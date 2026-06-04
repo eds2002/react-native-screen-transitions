@@ -63,8 +63,10 @@ const createGestureStore = (): GestureStoreMap => {
 
 const createAnimations = (): AnimationStoreMap => ({
 	progress: shared(1),
+	effectiveProgress: shared(1),
 	willAnimate: shared(0),
 	progressAnimating: shared(0),
+	progressSettled: shared(1),
 	closing: shared(0),
 	entering: shared(0),
 });
@@ -89,7 +91,6 @@ const createRuntime = (
 			animations,
 			system: {
 				targetProgress: shared(1),
-				logicalSettleFrameCount: shared(0),
 			},
 		},
 		gestureProgressBaseline: shared(1),

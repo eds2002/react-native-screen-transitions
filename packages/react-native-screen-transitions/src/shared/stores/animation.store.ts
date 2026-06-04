@@ -10,6 +10,7 @@ export type AnimationStoreMap = {
 	effectiveProgress: SharedValue<number>;
 	willAnimate: SharedValue<number>;
 	progressAnimating: SharedValue<number>;
+	progressSettled: SharedValue<number>;
 	closing: SharedValue<number>;
 	entering: SharedValue<number>;
 };
@@ -21,6 +22,7 @@ function createAnimationBag(): AnimationStoreMap {
 		willAnimate: makeMutable(0),
 		closing: makeMutable(0),
 		progressAnimating: makeMutable(0),
+		progressSettled: makeMutable(1),
 		entering: makeMutable(0),
 	};
 }
@@ -37,6 +39,7 @@ export const AnimationStore = createStore<AnimationStoreMap>({
 		cancelAnimation(bag.effectiveProgress);
 		cancelAnimation(bag.willAnimate);
 		cancelAnimation(bag.progressAnimating);
+		cancelAnimation(bag.progressSettled);
 		cancelAnimation(bag.closing);
 		cancelAnimation(bag.entering);
 	},

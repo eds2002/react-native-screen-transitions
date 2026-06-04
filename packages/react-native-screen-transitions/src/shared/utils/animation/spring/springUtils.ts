@@ -14,12 +14,14 @@ export type DefaultSpringConfig = {
 export interface SpringConfigInner {
 	useDuration: boolean;
 	skipAnimation: boolean;
+	settleDistance: number;
 }
 
 export interface SpringAnimation extends Animation<SpringAnimation> {
 	current: number;
 	toValue: number;
 	velocity: number;
+	settled: boolean;
 	lastTimestamp: Timestamp;
 	startTimestamp: Timestamp;
 	startValue: number;
@@ -385,4 +387,32 @@ export function isAnimationTerminatingCalculation(
 		initialEnergy === 0 ||
 		currentEnergy / initialEnergy <= config.energyThreshold
 	);
+}
+
+export function isAnimationSettledCalculation(
+	animation: InnerSpringAnimation,
+	config: DefaultSpringConfig & SpringConfigInner,
+): boolean {
+	"worklet";
+	const { toValue, velocity, current } = animation;
+	const distance = Math.max(0, config.settleDistance);
+
+	if (distance === 0) {
+		return isAnimationTerminatingCalculation(animation, config);
+	}
+
+	const currentEnergy = getEnergy(
+		toValue - current,
+		velocity,
+		config.stiffness,
+		config.mass,
+	);
+	const maxSettledEnergy = getEnergy(
+		distance,
+		0,
+		config.stiffness,
+		config.mass,
+	);
+
+	return currentEnergy <= maxSettledEnergy;
 }

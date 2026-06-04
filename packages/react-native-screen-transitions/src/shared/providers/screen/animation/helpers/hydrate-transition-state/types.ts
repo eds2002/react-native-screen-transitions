@@ -13,6 +13,7 @@ export type BuiltState = {
 	willAnimate: SharedValue<number>;
 	closing: SharedValue<number>;
 	progressAnimating: SharedValue<number>;
+	progressSettled: SharedValue<number>;
 	entering: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
@@ -20,19 +21,12 @@ export type BuiltState = {
 	options: ScreenTransitionOptions;
 	optionsSlot: ScreenTransitionOptions;
 	targetProgress: SharedValue<number>;
-	logicalSettleFrameCount: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
 	contentLayoutSlot: Layout;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
 	unwrapped: ScreenTransitionState;
-};
-
-export type ComputeLogicallySettledParams = {
-	progress: number;
-	targetProgress: number;
-	frameCount: number;
 };
 
 export type SnapBounds = {

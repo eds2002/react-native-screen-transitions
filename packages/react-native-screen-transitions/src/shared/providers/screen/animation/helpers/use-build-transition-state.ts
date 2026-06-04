@@ -23,6 +23,7 @@ type BuiltState = {
 	willAnimate: SharedValue<number>;
 	closing: SharedValue<number>;
 	progressAnimating: SharedValue<number>;
+	progressSettled: SharedValue<number>;
 	entering: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
@@ -30,7 +31,6 @@ type BuiltState = {
 	options: ScreenTransitionOptions;
 	optionsSlot: ScreenTransitionOptions;
 	targetProgress: SharedValue<number>;
-	logicalSettleFrameCount: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
 	contentLayoutSlot: Layout;
@@ -68,11 +68,8 @@ export const useBuildTransitionState = (
 			closing: AnimationStore.getValue(key, "closing"),
 			entering: AnimationStore.getValue(key, "entering"),
 			progressAnimating: AnimationStore.getValue(key, "progressAnimating"),
+			progressSettled: AnimationStore.getValue(key, "progressSettled"),
 			targetProgress: SystemStore.getValue(key, "targetProgress"),
-			logicalSettleFrameCount: SystemStore.getValue(
-				key,
-				"logicalSettleFrameCount",
-			),
 			resolvedAutoSnapPoint: SystemStore.getValue(key, "resolvedAutoSnapPoint"),
 			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),
 			contentLayoutSlot: { width: 0, height: 0 },

@@ -1,8 +1,4 @@
-import {
-	EPSILON,
-	LOGICAL_SETTLE_PROGRESS_THRESHOLD,
-	LOGICAL_SETTLE_REQUIRED_FRAMES,
-} from "../../../../../constants";
+import { EPSILON } from "../../../../../constants";
 import type {
 	ScreenTransitionOptions,
 	TransitionInterpolatorOptions,
@@ -10,19 +6,11 @@ import type {
 import type { Layout } from "../../../../../types/screen.types";
 import { resolveGestureDrivenProgress } from "./gesture-progress";
 import {
-	computeLogicallySettled,
-	computeNextLogicalSettleFrameCount,
-	computeSettled,
-} from "./settle";
-import {
 	computeAnimatedSnapIndex,
 	computeTargetSnapIndex,
 	getResolvedSnapBounds,
 } from "./snap-points";
 import type { BuiltState } from "./types";
-
-const LOGICAL_SETTLE_STICKY_PROGRESS_THRESHOLD =
-	LOGICAL_SETTLE_PROGRESS_THRESHOLD * 10;
 
 const mergeTransitionOptions = (
 	base: ScreenTransitionOptions,
@@ -139,43 +127,8 @@ export const hydrateTransitionState = (
 	out.gesture.isDismissing = out.gesture.dismissing;
 	out.gesture.isDragging = out.gesture.dragging;
 
-	out.settled = computeSettled(
-		out.animating,
-		out.gesture.dismissing,
-		out.closing,
-	);
-	const targetProgress = s.targetProgress.get();
-	const logicalSettleFrameCount = s.logicalSettleFrameCount.get();
-	const nextLogicalSettleFrameCount = computeNextLogicalSettleFrameCount({
-		progress: out.progress,
-		targetProgress,
-		frameCount: logicalSettleFrameCount,
-	});
-
-	if (nextLogicalSettleFrameCount !== logicalSettleFrameCount) {
-		s.logicalSettleFrameCount.set(nextLogicalSettleFrameCount);
-	}
-
-	const progressDistanceFromTarget = Math.abs(out.progress - targetProgress);
-	const computedLogicallySettled =
-		computeLogicallySettled({
-			progress: out.progress,
-			targetProgress,
-			frameCount: nextLogicalSettleFrameCount,
-		}) && !isGestureActive;
-
-	const wasLogicallySettled =
-		out.logicallySettled &&
-		logicalSettleFrameCount >= LOGICAL_SETTLE_REQUIRED_FRAMES;
-
-	const shouldPreserveLogicalSettle =
-		wasLogicallySettled &&
-		!isProgressAnimating &&
-		!isGestureActive &&
-		progressDistanceFromTarget <= LOGICAL_SETTLE_STICKY_PROGRESS_THRESHOLD;
-
-	out.logicallySettled =
-		computedLogicallySettled || shouldPreserveLogicalSettle ? 1 : 0;
+	out.settled = s.progressSettled.get() && !isGestureActive ? 1 : 0;
+	out.logicallySettled = out.settled;
 
 	out.meta = s.meta;
 	out.options = options;
@@ -202,6 +155,8 @@ export const hydrateTransitionState = (
 		s.sortedNumericSnapPoints,
 		resolvedAutoSnap,
 	);
+
+	const targetProgress = s.targetProgress.get();
 
 	out.snapIndex = computeTargetSnapIndex(
 		targetProgress,
