@@ -16,7 +16,6 @@ export type GestureExampleId =
 	| "bidirectional"
 	| "pinch-in"
 	| "pinch-out"
-	| "ios-browser"
 	| "snap-multi-axis"
 	| "snap-order-axis"
 	| "snap-pinch-pan"
@@ -124,19 +123,6 @@ export const GESTURE_EXAMPLES: GestureExampleDefinition[] = [
 			"Use two fingers and pinch outward to dismiss this screen.",
 			"Outward growth should feel deliberate instead of triggering pan.",
 			"Compare this directly against pinch-in to verify both directions.",
-		],
-	},
-	{
-		id: "ios-browser",
-		title: "iOS Browser",
-		description: "Pinch and rotate a browser-style card.",
-		subtitle: "Two-finger card dismissal with focal tracking",
-		routeLabel: "gestureDirection: pinch-in",
-		tint: "#1F4E5F",
-		notes: [
-			"Use two fingers to pinch inward and dismiss the browser card.",
-			"The card scales toward the pinch focal point without adding extra drag.",
-			"Rotate both fingers to verify gesture.rotation is available to interpolation styles.",
 		],
 	},
 	{

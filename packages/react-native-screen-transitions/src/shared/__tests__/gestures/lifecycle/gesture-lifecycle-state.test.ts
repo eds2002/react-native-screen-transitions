@@ -4,6 +4,7 @@ import {
 	finalizePanRelease,
 	startPanBase,
 } from "../../../providers/screen/gestures/pan/pan-lifecycle";
+import type { GestureCompositionActivation } from "../../../providers/screen/gestures/types";
 import {
 	finalizePinchRelease,
 	startPinchBase,
@@ -360,6 +361,61 @@ describe("gesture lifecycle state", () => {
 
 		expect(gestures.dragging.get()).toBe(0);
 		expect(gestures.dismissing.get()).toBe(0);
+		expect(animations.progressAnimating.get()).toBe(0);
+	});
+
+	it("resets pan values without dismissing when pinch owns the composition", () => {
+		const { runtime, gestures, animations } = createRuntime();
+		const composition = shared<GestureCompositionActivation>("pinch");
+		let requestedDismiss = false;
+		animations.progress.set(0.64);
+		animations.progressAnimating.set(0);
+		gestures.dragging.set(1);
+		gestures.dismissing.set(1);
+		gestures.settling.set(0);
+		gestures.x.set(48);
+		gestures.y.set(-36);
+		gestures.normX.set(0.12);
+		gestures.normY.set(-0.08);
+		gestures.raw.x.set(52);
+		gestures.raw.y.set(-40);
+		gestures.raw.normX.set(0.13);
+		gestures.raw.normY.set(-0.09);
+		gestures.velocity.set(0.4);
+
+		finalizePanRelease(
+			{
+				target: 0,
+				shouldDismiss: true,
+				initialVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: undefined,
+			},
+			runtime,
+			() => {},
+			{ width: 400, height: 800 },
+			{ velocityX: 120, velocityY: -80 } as any,
+			() => {
+				requestedDismiss = true;
+			},
+			composition,
+		);
+
+		expect(requestedDismiss).toBe(false);
+		expect(composition.get()).toBe("pinch");
+		expect(gestures.x.get()).toBe(0);
+		expect(gestures.y.get()).toBe(0);
+		expect(gestures.normX.get()).toBe(0);
+		expect(gestures.normY.get()).toBe(0);
+		expect(gestures.raw.x.get()).toBe(0);
+		expect(gestures.raw.y.get()).toBe(0);
+		expect(gestures.raw.normX.get()).toBe(0);
+		expect(gestures.raw.normY.get()).toBe(0);
+		expect(gestures.velocity.get()).toBe(0);
+		expect(gestures.dragging.get()).toBe(1);
+		expect(gestures.dismissing.get()).toBe(1);
+		expect(gestures.settling.get()).toBe(0);
+		expect(animations.progress.get()).toBe(0.64);
 		expect(animations.progressAnimating.get()).toBe(0);
 	});
 

@@ -19,6 +19,7 @@ interface ResetPanGestureValuesProps {
 	resetNormalizedValues?: boolean;
 	resetNormalizedValuesImmediately?: boolean;
 	preserveRawValues?: boolean;
+	updateLifecycle?: boolean;
 }
 
 const clearPanSettlingIfResting = (gestures: GestureStoreMap) => {
@@ -47,8 +48,15 @@ export const resetPanGestureValues = ({
 	resetNormalizedValues = true,
 	resetNormalizedValuesImmediately = false,
 	preserveRawValues = shouldDismiss,
+	updateLifecycle = true,
 }: ResetPanGestureValuesProps) => {
 	"worklet";
+	const clearSettlingIfNeeded = () => {
+		"worklet";
+		if (updateLifecycle) {
+			clearPanSettlingIfResting(gestures);
+		}
+	};
 
 	if (!preserveRawValues) {
 		gestures.raw.x.set(0);
@@ -57,16 +65,18 @@ export const resetPanGestureValues = ({
 		gestures.raw.normY.set(0);
 	}
 
-	gestures.dragging.set(FALSE);
-	gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
-	gestures.settling.set(shouldDismiss ? FALSE : TRUE);
+	if (updateLifecycle) {
+		gestures.dragging.set(FALSE);
+		gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
+		gestures.settling.set(shouldDismiss ? FALSE : TRUE);
+	}
 	gestures.velocity.set(shouldDismiss ? (releaseVelocity ?? 0) : 0);
 
 	animateResetValue(gestures.x, 0, getGestureResetSpec(spec, velocityX), () =>
-		clearPanSettlingIfResting(gestures),
+		clearSettlingIfNeeded(),
 	);
 	animateResetValue(gestures.y, 0, getGestureResetSpec(spec, velocityY), () =>
-		clearPanSettlingIfResting(gestures),
+		clearSettlingIfNeeded(),
 	);
 
 	if (!resetNormalizedValues) {
@@ -76,7 +86,7 @@ export const resetPanGestureValues = ({
 	if (resetNormalizedValuesImmediately) {
 		gestures.normX.set(0);
 		gestures.normY.set(0);
-		clearPanSettlingIfResting(gestures);
+		clearSettlingIfNeeded();
 		return;
 	}
 
@@ -84,12 +94,12 @@ export const resetPanGestureValues = ({
 		gestures.normX,
 		0,
 		getGestureResetSpec(spec, velocityNormX),
-		() => clearPanSettlingIfResting(gestures),
+		() => clearSettlingIfNeeded(),
 	);
 	animateResetValue(
 		gestures.normY,
 		0,
 		getGestureResetSpec(spec, velocityNormY),
-		() => clearPanSettlingIfResting(gestures),
+		() => clearSettlingIfNeeded(),
 	);
 };

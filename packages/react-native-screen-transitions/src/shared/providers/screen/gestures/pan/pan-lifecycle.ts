@@ -1,4 +1,4 @@
-import { clamp, runOnJS } from "react-native-reanimated";
+import { clamp, runOnJS, type SharedValue } from "react-native-reanimated";
 import { EPSILON, FALSE, TRUE } from "../../../../constants";
 import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../utils/animation/emit";
@@ -7,6 +7,7 @@ import {
 	resolveGestureVelocity,
 } from "../shared/physics";
 import type {
+	GestureCompositionActivation,
 	GestureDimensions,
 	PanGestureEvent,
 	PanGestureRuntime,
@@ -108,12 +109,34 @@ export const finalizePanRelease = (
 	dimensions: GestureDimensions,
 	rawEvent: PanGestureEvent,
 	requestDismiss?: () => void,
+	gestureCompositionActivation?: SharedValue<GestureCompositionActivation>,
 ) => {
 	"worklet";
 	const {
+		policy,
 		stores: { gestures, animations, system },
 	} = runtime;
-	const plan = buildPanReleasePlan(release, runtime, dimensions, rawEvent);
+
+	const canDriveRelease =
+		!gestureCompositionActivation ||
+		gestureCompositionActivation.get() === "pan";
+
+	const plan = buildPanReleasePlan(
+		canDriveRelease
+			? release
+			: {
+					target: animations.progress.get(),
+					shouldDismiss: false,
+					initialVelocity: 0,
+					resetNormalizedValuesImmediately:
+						policy.gestureProgressMode === "progress-driven",
+					transitionSpec: undefined,
+					resetSpec: policy.transitionSpec?.open,
+				},
+		runtime,
+		dimensions,
+		rawEvent,
+	);
 
 	if (typeof plan.commitProgress === "number") {
 		animations.progress.set(plan.commitProgress);
@@ -132,7 +155,12 @@ export const finalizePanRelease = (
 		resetNormalizedValues: plan.resetNormalizedValues,
 		resetNormalizedValuesImmediately: plan.resetNormalizedValuesImmediately,
 		preserveRawValues: plan.preserveRawValues,
+		updateLifecycle: canDriveRelease,
 	});
+
+	if (!canDriveRelease) {
+		return;
+	}
 
 	const progressAlreadyAtTarget =
 		Math.abs(animations.progress.get() - plan.target) <= EPSILON;

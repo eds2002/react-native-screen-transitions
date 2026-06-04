@@ -82,23 +82,21 @@ export const usePanBehavior = (
 				runtime.get(),
 				screenOptions.get(),
 			);
-
-			if (gestureCompositionActivation.get() === "pinch") {
-				return;
-			}
-
 			const event = withSensitivity(rawEvent);
-			if (!latestRuntime.policy.enabled) {
-				gestureCompositionActivation.set(null);
-				return;
-			}
 
-			const release = latestRuntime.participation.effectiveSnapPoints
-				.hasSnapPoints
-				? resolveSnapPanRelease(event, latestRuntime, dimensions)
-				: resolvePanRelease(event, latestRuntime, dimensions);
+			const release = !latestRuntime.policy.enabled
+				? {
+						target: latestRuntime.stores.animations.progress.get(),
+						shouldDismiss: false,
+						initialVelocity: 0,
+						transitionSpec: undefined,
+						resetSpec: latestRuntime.policy.transitionSpec?.open,
+					}
+				: latestRuntime.participation.effectiveSnapPoints.hasSnapPoints
+					? resolveSnapPanRelease(event, latestRuntime, dimensions)
+					: resolvePanRelease(event, latestRuntime, dimensions);
+			const isPanComposition = gestureCompositionActivation.get() === "pan";
 
-			gestureCompositionActivation.set(null);
 			finalizePanRelease(
 				release,
 				latestRuntime,
@@ -106,7 +104,12 @@ export const usePanBehavior = (
 				dimensions,
 				rawEvent,
 				requestDismiss,
+				gestureCompositionActivation,
 			);
+
+			if (isPanComposition) {
+				gestureCompositionActivation.set(null);
+			}
 		},
 		[
 			runtime,
