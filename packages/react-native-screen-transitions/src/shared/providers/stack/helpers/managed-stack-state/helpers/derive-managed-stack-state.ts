@@ -10,6 +10,7 @@ import {
 	areDescriptorsEqual,
 	areRouteChildStateMapsEqual,
 	getRouteChildStateMap,
+	routesHaveSameKeys,
 	setsAreEqual,
 } from "./helpers";
 import { reconcileManagedRoutes } from "./reconcile-managed-routes";
@@ -33,15 +34,6 @@ const routesAreIdentical = <Route extends RouteWithKey>(
 	if (a.length !== b.length) return false;
 
 	return a.every((route, index) => route === b[index]);
-};
-
-const routeKeysAreEqual = <Route extends RouteWithKey>(
-	a: Route[],
-	b: Route[],
-): boolean => {
-	if (a.length !== b.length) return false;
-
-	return a.every((route, index) => route.key === b[index]?.key);
 };
 
 export const deriveManagedStackState = <
@@ -85,7 +77,7 @@ export const deriveManagedStackState = <
 		focusedRouteUnchanged &&
 		closingRouteKeysUnchanged &&
 		routeChildStatesUnchanged &&
-		routeKeysAreEqual(current.routes, nextRoutesSnapshot) &&
+		routesHaveSameKeys(current.routes, nextRoutesSnapshot) &&
 		areDescriptorSourceMapsEquivalent(
 			current.sourceDescriptors,
 			nextDescriptors,

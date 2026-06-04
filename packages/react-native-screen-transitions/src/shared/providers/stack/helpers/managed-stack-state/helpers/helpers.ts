@@ -38,6 +38,25 @@ export const setsAreEqual = <T>(
 	return true;
 };
 
+export const routeKeyListsAreEqual = (
+	a: readonly string[],
+	b: readonly string[],
+): boolean => {
+	if (a === b) return true;
+	if (a.length !== b.length) return false;
+
+	return a.every((key, index) => key === b[index]);
+};
+
+export const routesHaveSameKeys = <Route extends RouteWithKey>(
+	a: readonly Route[],
+	b: readonly Route[],
+): boolean => {
+	if (a.length !== b.length) return false;
+
+	return a.every((route, index) => route.key === b[index]?.key);
+};
+
 export const getRouteChildState = (route: RouteWithKey): unknown => {
 	if (!route || typeof route !== "object") {
 		return undefined;

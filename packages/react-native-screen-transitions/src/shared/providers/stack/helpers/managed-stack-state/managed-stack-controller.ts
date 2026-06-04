@@ -30,7 +30,7 @@ export const createManagedStackController = <
 ): ManagedStackControllerType<TDescriptor, TNavigation> => {
 	const closingRouteKeys = new Set<string>();
 	let props = initialProps;
-	let previousPropRoutes = initialProps.state.routes;
+	let previousRoutesSnapshot = initialProps.state.routes;
 	let snapshot: ManagedStackControllerSnapshot<TDescriptor> = {
 		state: buildManagedStackState({
 			props,
@@ -60,16 +60,16 @@ export const createManagedStackController = <
 	};
 
 	const update = (nextProps: ManagedStackProps<TDescriptor, TNavigation>) => {
-		const previousRoutesSnapshot = previousPropRoutes;
+		const lastRoutesSnapshot = previousRoutesSnapshot;
 		props = nextProps;
 
 		const nextState = deriveManagedStackState({
 			props,
 			current: snapshot.state,
-			previousRoutesSnapshot,
+			previousRoutesSnapshot: lastRoutesSnapshot,
 			closingRouteKeys,
 		});
-		previousPropRoutes = nextProps.state.routes;
+		previousRoutesSnapshot = nextProps.state.routes;
 
 		if (nextState === snapshot.state) {
 			return;

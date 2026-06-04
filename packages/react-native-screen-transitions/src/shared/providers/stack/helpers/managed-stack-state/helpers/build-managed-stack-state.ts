@@ -13,6 +13,7 @@ import {
 	areDescriptorsEqual,
 	areRouteChildStateMapsEqual,
 	getRouteChildState,
+	routeKeyListsAreEqual,
 	setsAreEqual,
 } from "./helpers";
 import type {
@@ -32,13 +33,6 @@ type BuildManagedStackStateParams<
 	descriptors: ManagedDescriptorSources<TDescriptor>;
 	closingRouteKeys: ReadonlySet<string>;
 	previousState?: LocalRoutesState<TDescriptor>;
-};
-
-const areRouteKeysEqual = (a: string[], b: string[]): boolean => {
-	if (a === b) return true;
-	if (a.length !== b.length) return false;
-
-	return a.every((key, index) => key === b[index]);
 };
 
 const resolveStableDescriptorSource = <
@@ -106,10 +100,13 @@ const getSceneActivityWindow = <
 >): SceneActivityWindow => {
 	const focusedRouteKey = props.state.routes[props.state.index]?.key;
 
-	let focusedIndex = Math.max(
-		0,
-		routes.findIndex((route) => route.key === focusedRouteKey),
-	);
+	let focusedIndex = routes.findIndex((route) => route.key === focusedRouteKey);
+
+	if (focusedIndex === -1) {
+		throw new Error(
+			`Focused route "${focusedRouteKey}" is missing from routes`,
+		);
+	}
 
 	while (focusedIndex > 0 && closingRouteKeys.has(routes[focusedIndex]?.key)) {
 		focusedIndex--;
@@ -355,7 +352,7 @@ export const buildManagedStackState = <
 		scenes,
 		routeKeys:
 			params.previousState &&
-			areRouteKeysEqual(params.previousState.routeKeys, routeKeys)
+			routeKeyListsAreEqual(params.previousState.routeKeys, routeKeys)
 				? params.previousState.routeKeys
 				: routeKeys,
 		shouldShowFloatOverlay,

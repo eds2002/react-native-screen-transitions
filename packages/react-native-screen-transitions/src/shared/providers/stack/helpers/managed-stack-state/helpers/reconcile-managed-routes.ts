@@ -4,6 +4,7 @@ import type {
 } from "../../../../../types/stack.types";
 import { composeDescriptors } from "../../../../../utils/navigation/compose-descriptors";
 import { syncRoutesWithRemoved } from "../../../../../utils/navigation/sync-routes-with-removed";
+import { routesHaveSameKeys } from "./helpers";
 import type {
 	LocalRoutesState,
 	ManagedDescriptorSources,
@@ -17,17 +18,6 @@ type ReconcileManagedRoutesParams<TDescriptor extends BaseStackDescriptor> = {
 	nextRoutesSnapshot: ManagedRoutes<TDescriptor>;
 	nextDescriptors: ManagedDescriptorSources<TDescriptor>;
 	closingRouteKeys: Set<string>;
-};
-
-const haveSameRouteKeys = <Route extends RouteWithKey>(
-	previous: Route[],
-	next: Route[],
-): boolean => {
-	if (previous.length !== next.length) {
-		return false;
-	}
-
-	return previous.every((route, index) => route?.key === next[index]?.key);
 };
 
 const alignRoutesWithLatest = <
@@ -155,7 +145,7 @@ export const reconcileManagedRoutes = <TDescriptor extends BaseStackDescriptor>(
 		closingRouteKeys,
 	} = params;
 
-	const routeKeysUnchanged = haveSameRouteKeys(
+	const routeKeysUnchanged = routesHaveSameKeys(
 		previousRoutesSnapshot,
 		nextRoutesSnapshot,
 	);
