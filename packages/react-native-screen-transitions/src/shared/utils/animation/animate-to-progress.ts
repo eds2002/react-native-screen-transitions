@@ -2,7 +2,7 @@ import { runOnJS, type SharedValue } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
-import { animate } from "./animate";
+import { animate, isSpringAnimationConfig } from "./animate";
 
 interface AnimateToProgressProps {
 	/**
@@ -60,8 +60,7 @@ export const animateToProgress = ({
 	// Select spec based on direction (closing uses close spec, otherwise open)
 	const config = isClosing ? spec?.close : spec?.open;
 
-	const isSpringConfig =
-		!!config && !("duration" in config) && !("easing" in config);
+	const isSpringConfig = isSpringAnimationConfig(config);
 
 	const effectiveConfig =
 		isSpringConfig && typeof initialVelocity === "number"

@@ -2,25 +2,17 @@ import type { SharedValue } from "react-native-reanimated";
 import { FALSE } from "../../../../constants";
 import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type { AnimationConfig } from "../../../../types/animation.types";
-import { animate } from "../../../../utils/animation/animate";
+import {
+	animate,
+	isSpringAnimationConfig,
+	type SpringAnimationConfig,
+} from "../../../../utils/animation/animate";
 
-type ResetSpringSpec = AnimationConfig & { velocity?: number };
+type ResetSpringSpec = SpringAnimationConfig & { velocity?: number };
 
 const isResetSpringSpec = (spec?: AnimationConfig): spec is ResetSpringSpec => {
 	"worklet";
-	if (typeof spec !== "object") {
-		return false;
-	}
-
-	if ("duration" in spec) {
-		return false;
-	}
-
-	if ("easing" in spec) {
-		return false;
-	}
-
-	return true;
+	return isSpringAnimationConfig(spec);
 };
 
 export const getGestureResetSpec = (

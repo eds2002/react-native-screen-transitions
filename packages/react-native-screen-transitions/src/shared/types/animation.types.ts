@@ -1,14 +1,11 @@
 import type { TextStyle, ViewStyle } from "react-native";
-import type {
-	StyleProps,
-	WithSpringConfig,
-	WithTimingConfig,
-} from "react-native-reanimated";
+import type { StyleProps } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
+import type { ScreenAnimationConfig } from "../utils/animation/animate";
 import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";
 import type { ScreenLayouts, ScreenTransitionConfig } from "./screen.types";
@@ -372,7 +369,7 @@ export type TransitionInterpolatedStyle = {
 /**
  * A Reanimated animation configuration object.
  */
-export type AnimationConfig = WithSpringConfig | WithTimingConfig;
+export type AnimationConfig = ScreenAnimationConfig;
 
 /**
  * Defines separate animation configurations for screen transitions and snap point changes.
