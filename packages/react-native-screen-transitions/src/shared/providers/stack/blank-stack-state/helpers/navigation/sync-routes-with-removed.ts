@@ -1,4 +1,4 @@
-import type { RouteWithKey } from "../../types/stack.types";
+import type { RouteWithKey } from "../../../../../types/stack.types";
 import { composeDescriptors } from "./compose-descriptors";
 
 type SyncRoutesWithRemovedParams<

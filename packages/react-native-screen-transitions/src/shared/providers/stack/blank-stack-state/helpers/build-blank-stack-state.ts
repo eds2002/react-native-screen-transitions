@@ -6,8 +6,8 @@ import type {
 	StackDescriptorSource,
 	StackSceneActivity,
 } from "../../../../types/stack.types";
-import { resolveSceneNeighbors } from "../../../../utils/navigation/resolve-scene-neighbors";
 import { isOverlayVisible } from "../../../../utils/overlay/visibility";
+import { resolveSceneNeighbors } from "./navigation/resolve-scene-neighbors";
 import {
 	areDescriptorSourcesEquivalent,
 	areDescriptorsEqual,

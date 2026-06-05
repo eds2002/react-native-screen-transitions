@@ -2,8 +2,8 @@ import type {
 	BaseStackDescriptor,
 	RouteWithKey,
 } from "../../../../types/stack.types";
-import { composeDescriptors } from "../../../../utils/navigation/compose-descriptors";
-import { syncRoutesWithRemoved } from "../../../../utils/navigation/sync-routes-with-removed";
+import { composeDescriptors } from "./navigation/compose-descriptors";
+import { syncRoutesWithRemoved } from "./navigation/sync-routes-with-removed";
 import { routesHaveSameKeys } from "./state-equality";
 import type {
 	BlankStackDescriptorSources,

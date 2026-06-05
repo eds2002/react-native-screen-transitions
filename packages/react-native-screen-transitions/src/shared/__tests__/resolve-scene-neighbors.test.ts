@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { resolveSceneNeighbors } from "../utils/navigation/resolve-scene-neighbors";
+import { resolveSceneNeighbors } from "../providers/stack/blank-stack-state/helpers/navigation/resolve-scene-neighbors";
 
 const createScene = (key: string) => ({
 	route: { key },

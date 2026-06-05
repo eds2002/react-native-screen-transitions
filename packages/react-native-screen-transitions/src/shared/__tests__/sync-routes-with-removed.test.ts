@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
+import { syncRoutesWithRemoved } from "../providers/stack/blank-stack-state/helpers/navigation/sync-routes-with-removed";
 import { AnimationStore } from "../stores/animation.store";
 import { GestureStore } from "../stores/gesture.store";
-import { syncRoutesWithRemoved } from "../utils/navigation/sync-routes-with-removed";
 
 const createRoute = (key: string) => ({ key });
 
