@@ -5,37 +5,7 @@ import { syncRoutesWithRemoved } from "../utils/navigation/sync-routes-with-remo
 
 const createRoute = (key: string) => ({ key });
 
-const createClosingRouteKeys = () => {
-	const keys = new Set<string>();
-	const sharedValue: string[] = [];
-	return {
-		ref: { current: keys } as React.RefObject<Set<string>>,
-		shared: {
-			value: sharedValue,
-			get: () => sharedValue,
-			set: (v: string[]) => {
-				sharedValue.length = 0;
-				sharedValue.push(...v);
-			},
-			addListener: () => () => {},
-			removeListener: () => {},
-			modify: (fn?: (v: string[]) => string[], _forceUpdate?: boolean) => {
-				if (fn) {
-					const result = fn(sharedValue);
-					sharedValue.length = 0;
-					sharedValue.push(...result);
-				}
-			},
-		},
-		add: (key: string) => {
-			keys.add(key);
-		},
-		remove: (key: string) => {
-			keys.delete(key);
-		},
-		clear: () => keys.clear(),
-	};
-};
+const createClosingRouteKeys = () => new Set<string>();
 
 // Helper to set up a route's animation state
 const setRouteState = (
@@ -111,7 +81,6 @@ describe("syncRoutesWithRemoved", () => {
 		});
 	});
 
-
 	describe("normal back navigation", () => {
 		it("keeps closing route at end for normal back (C -> B)", () => {
 			const closingRouteKeys = createClosingRouteKeys();
@@ -130,7 +99,7 @@ describe("syncRoutesWithRemoved", () => {
 
 			// c should be added to end for close animation
 			expect(result.routes.map((r) => r.key)).toEqual(["a", "b", "c"]);
-			expect(closingRouteKeys.ref.current.has("c")).toBe(true);
+			expect(closingRouteKeys.has("c")).toBe(true);
 		});
 	});
 });
