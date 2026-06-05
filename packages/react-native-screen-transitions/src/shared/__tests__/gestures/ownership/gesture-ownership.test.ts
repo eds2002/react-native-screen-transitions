@@ -5,7 +5,9 @@ import {
 	NO_DIRECTION_CLAIMS,
 } from "../../../providers/screen/gestures/types";
 import { resolvePanActivationMoveDecision } from "../../../providers/screen/gestures/pan/pan-activation-decision";
+import { resolveShadowingClaimDirections } from "../../../providers/screen/gestures/ownership/shadowing-claims";
 import { GestureActivationState } from "../../../types/gesture.types";
+import type { ClaimedDirections } from "../../../types/ownership.types";
 
 const shared = <T>(initialValue: T): SharedValue<T> => {
 	let value = initialValue;
@@ -57,6 +59,13 @@ const createMoveEvent = (x: number, y: number) =>
 		changedTouches: [{ x, y }],
 	}) as any;
 
+const noClaims = (): ClaimedDirections => ({
+	vertical: false,
+	"vertical-inverted": false,
+	horizontal: false,
+	"horizontal-inverted": false,
+});
+
 describe("gesture ownership activation", () => {
 	it("keeps an ancestor from activating while a child owner is dismissing", () => {
 		const childDirectionClaims: DirectionClaimMap = {
@@ -82,5 +91,40 @@ describe("gesture ownership activation", () => {
 		expect(decision.action).toBe("fail");
 		expect(decision.reason).toBe("child-claim");
 		expect(decision.direction).toBe("horizontal");
+	});
+
+	it("uses the visible previous route's claims for retained closing routes", () => {
+		const currentClaimedDirections = {
+			...noClaims(),
+			vertical: true,
+		};
+		const previousClaimedDirections = {
+			...noClaims(),
+			horizontal: true,
+		};
+
+		expect(
+			resolveShadowingClaimDirections({
+				currentActivity: "closing",
+				currentClaimedDirections,
+				previousClaimedDirections,
+			}),
+		).toEqual(previousClaimedDirections);
+	});
+
+	it("drops retained closing route claims when the visible previous route has none", () => {
+		const currentClaimedDirections = {
+			...noClaims(),
+			horizontal: true,
+		};
+		const previousClaimedDirections = noClaims();
+
+		expect(
+			resolveShadowingClaimDirections({
+				currentActivity: "closing",
+				currentClaimedDirections,
+				previousClaimedDirections,
+			}),
+		).toEqual(previousClaimedDirections);
 	});
 });
