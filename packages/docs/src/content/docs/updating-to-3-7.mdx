@@ -69,6 +69,8 @@ On web, use `unmount` for now. `hide` can hide paint but cannot pause React work
 
 This release also introduces a managed-stack controller for blank stack route retention. Closing routes are kept around long enough to finish their transition, removed routes can reuse their previous descriptor while closing, and inactive / inert / closing scenes are resolved more deterministically.
 
+That also fixes a visible lifecycle bug during stacked dismissals. A screen that is already visible again, such as an index route underneath closing detail routes, should stay active and visible while the closing routes finish their exit animations.
+
 The lifecycle work is covered by a new inactive-behavior test suite for hide, pause, unmount, and keep timing.
 
 ### Reveal Background Scaling
@@ -114,6 +116,8 @@ Returned scopes include the same interpolation props as the original call, inclu
 
 This is useful for nested transition choreography where a child interpolator needs to react to a parent gesture, or a parent interpolator needs to read a mounted child's transition state.
 
+This API is experimental in v3.7. It is available for early nested choreography use, but the exact shape may change before it becomes stable.
+
 ## Fixes
 
 ### Gesture Ownership During Dismiss
@@ -123,6 +127,8 @@ Nested gestures are more predictable while screens are closing.
 Previously, quickly dismissing screens in a nested stack could let the wrong gesture win. A parent layout could sometimes steal a drag from the visible child screen, or closing child screens could keep blocking the parent after the user was already back on a screen that should inherit the parent gesture.
 
 v3.7 keeps gesture ownership aligned with the screen the user can actually interact with. Visible child screens keep their own gestures while they are on screen, and parent gestures become available again as soon as the visible child screen no longer owns that direction.
+
+In practice, a child screen that still visibly owns the drag keeps the parent blocked. Once the visible child no longer owns that direction, the parent can respond without waiting for offscreen closing screens to finish.
 
 This is most visible in overlay or nested-stack flows where several child routes are dismissed in sequence.
 
@@ -182,5 +188,7 @@ Blank stack now prefers the navigator prop name `nativeScreens`.
 - [Stack Types](/stack-types)
 - [Adapters](/adapters)
 - [Independent Stacks](/independent-stacks)
+- [Inactive Behavior](/inactive-behavior)
+- [Gesture Ownership](/gesture-ownership)
 - [Reveal](/reveal)
 - [Caveats & Trade-offs](/caveats)
