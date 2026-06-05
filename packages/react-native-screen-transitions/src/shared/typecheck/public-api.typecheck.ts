@@ -19,6 +19,8 @@ import type {
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	ScreenTransitionConfig,
+	ScreenTransitionDepthTarget,
+	ScreenTransitionTarget,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "..";
@@ -88,6 +90,8 @@ declare const interpolationProps: ScreenInterpolationProps;
 const gestureTarget: ScreenGestureTarget = { depth: -2 };
 const animationTarget: ScreenAnimationTarget = { depth: -2 };
 const legacyAnimationTarget: ScreenAnimationTarget = { ancestor: 2 };
+const transitionTarget: ScreenTransitionTarget = { depth: 2 };
+const transitionDepthTarget: ScreenTransitionDepthTarget = { depth: 0 };
 
 function usePublicApiHooksTypecheck() {
 	const selfAnimation: DerivedValue<ScreenInterpolationProps> =
@@ -125,10 +129,23 @@ function usePublicApiHooksTypecheck() {
 
 void usePublicApiHooksTypecheck;
 void legacyAnimationTarget;
+void transitionTarget;
+void transitionDepthTarget;
 
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
+const parentTransition = interpolationProps.transition({ depth: -1 });
+const grandparentTransition = interpolationProps.transition({ depth: -2 });
+const selfTransition = interpolationProps.transition({ depth: 0 });
+const childTransition = interpolationProps.transition({ depth: 1 });
+const grandchildTransition = interpolationProps.transition({ depth: 2 });
+const rootTransitionBounds = interpolationProps
+	.transition({ depth: -2 })
+	?.bounds({ id: 42 });
+const leafTransitionBounds = interpolationProps
+	.transition({ depth: 2 })
+	?.bounds({ id: 42 });
 const offsetBoundsResult = interpolationProps.bounds({
 	id: 42,
 	offset: { x: 10, y: -10 },
@@ -324,6 +341,13 @@ const publicApiTypecheck = {
 	nestedInterpolatedStyle,
 	gestureTarget,
 	animationTarget,
+	parentTransition,
+	grandparentTransition,
+	selfTransition,
+	childTransition,
+	grandchildTransition,
+	rootTransitionBounds,
+	leafTransitionBounds,
 	numericBoundsResult,
 	offsetBoundsResult,
 	deprecatedGesturesBoundsResult,

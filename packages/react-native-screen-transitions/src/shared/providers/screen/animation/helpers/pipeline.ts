@@ -23,7 +23,10 @@ import type { SelectedInterpolatorOptions } from "./selected-interpolator-option
 import { deriveStackProgress } from "./stack-progress";
 import { useBuildTransitionState } from "./use-build-transition-state";
 
-export type ScreenInterpolatorFrame = Omit<ScreenInterpolationProps, "bounds">;
+export type ScreenInterpolatorFrame = Omit<
+	ScreenInterpolationProps,
+	"bounds" | "transition"
+>;
 
 interface ScreenAnimationPipeline {
 	screenInterpolatorProps: SharedValue<ScreenInterpolatorFrame>;
