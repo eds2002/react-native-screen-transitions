@@ -4,18 +4,18 @@ import type {
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
-import { GestureStore } from "../../../../stores/gesture.store";
-import { GestureActivationState } from "../../../../types/gesture.types";
-import { useDescriptorDerivations } from "../../descriptors";
-import type { ScreenOptionsContextValue } from "../../options";
-import { resolvePanRuntime } from "../shared/runtime";
+import { GestureStore } from "../../../../../stores/gesture.store";
+import { GestureActivationState } from "../../../../../types/gesture.types";
+import { useDescriptorDerivations } from "../../../descriptors";
+import type { ScreenOptionsContextValue } from "../../../options";
+import { resolvePanRuntime } from "../../shared/runtime";
 import type {
 	DirectionClaimMap,
 	GestureCompositionActivation,
 	GestureDimensions,
 	PanGestureRuntime,
 	ScrollGestureState,
-} from "../types";
+} from "../../types";
 import { resolvePanActivationMoveDecision } from "./pan-activation-decision";
 
 interface UsePanActivationProps {

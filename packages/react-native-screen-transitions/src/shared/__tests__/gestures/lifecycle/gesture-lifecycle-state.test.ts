@@ -3,12 +3,12 @@ import type { SharedValue } from "react-native-reanimated";
 import {
 	finalizePanRelease,
 	startPanBase,
-} from "../../../providers/screen/gestures/pan/pan-lifecycle";
+} from "../../../providers/screen/gestures/pan/behavior/pan-lifecycle";
 import type { GestureCompositionActivation } from "../../../providers/screen/gestures/types";
 import {
 	finalizePinchRelease,
 	startPinchBase,
-} from "../../../providers/screen/gestures/pinch/pinch-lifecycle";
+} from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import type { GestureStoreMap } from "../../../stores/gesture.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";

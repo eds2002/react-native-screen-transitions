@@ -4,12 +4,12 @@ import type {
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
-import type { ScreenOptionsContextValue } from "../../options";
-import { resolvePinchRuntime } from "../shared/runtime";
+import type { ScreenOptionsContextValue } from "../../../options";
+import { resolvePinchRuntime } from "../../shared/runtime";
 import type {
 	GestureCompositionActivation,
 	RotationGestureRuntime,
-} from "../types";
+} from "../../types";
 
 interface UseRotationActivationProps {
 	runtime: SharedValue<RotationGestureRuntime>;

@@ -4,7 +4,7 @@ import {
 	type DirectionClaimMap,
 	NO_DIRECTION_CLAIMS,
 } from "../../../providers/screen/gestures/types";
-import { resolvePanActivationMoveDecision } from "../../../providers/screen/gestures/pan/pan-activation-decision";
+import { resolvePanActivationMoveDecision } from "../../../providers/screen/gestures/pan/activation/pan-activation-decision";
 import { resolveShadowingClaimDirections } from "../../../providers/screen/gestures/ownership/shadowing-claims";
 import { GestureActivationState } from "../../../types/gesture.types";
 import type { ClaimedDirections } from "../../../types/ownership.types";

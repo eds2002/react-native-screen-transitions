@@ -1,11 +1,11 @@
 import { clamp, runOnJS, type SharedValue } from "react-native-reanimated";
-import { EPSILON, FALSE, TRUE } from "../../../../constants";
-import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
-import { emit } from "../../../../utils/animation/emit";
+import { EPSILON, FALSE, TRUE } from "../../../../../constants";
+import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
+import { emit } from "../../../../../utils/animation/emit";
 import {
 	normalizeGestureTranslation,
 	resolveGestureVelocity,
-} from "../shared/physics";
+} from "../../shared/physics";
 import type {
 	GestureCompositionActivation,
 	GestureDimensions,
@@ -13,7 +13,7 @@ import type {
 	PanGestureRuntime,
 	PanReleaseResult,
 	PanTrackState,
-} from "../types";
+} from "../../types";
 import { buildPanReleasePlan } from "./pan-release";
 import { resetPanGestureValues } from "./pan-reset";
 

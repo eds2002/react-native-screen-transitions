@@ -10,7 +10,7 @@ import type {
 import {
 	buildPanReleasePlan,
 	resolveSnapPanRelease,
-} from "../../../providers/screen/gestures/pan/pan-release";
+} from "../../../providers/screen/gestures/pan/behavior/pan-release";
 
 const dimensions = {
 	width: 400,

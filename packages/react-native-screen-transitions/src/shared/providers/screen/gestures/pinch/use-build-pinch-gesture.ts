@@ -1,37 +1,28 @@
 import { useMemo } from "react";
-import { useWindowDimensions } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsContext } from "../../options";
 import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
-	DirectionClaimMap,
 	GestureCompositionActivation,
-	PanGesture,
+	PinchGesture,
 	ScreenGestureConfig,
-	ScrollGestureState,
 } from "../types";
-import { usePanActivation } from "./pan-activation";
-import { usePanBehavior } from "./use-pan-behavior";
+import { usePinchActivation } from "./activation/use-pinch-activation";
+import { usePinchBehavior } from "./behavior/use-pinch-behavior";
 
-interface BuildPanGestureHookProps {
-	scrollState: SharedValue<ScrollGestureState | null>;
+interface UseBuildPinchGestureProps {
 	gestureConfig: ScreenGestureConfig;
-	childDirectionClaims: SharedValue<DirectionClaimMap>;
 	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
 }
 
-export const useBuildPanGesture = ({
-	scrollState,
+export const useBuildPinchGesture = ({
 	gestureConfig,
-	childDirectionClaims,
 	gestureCompositionActivation,
-}: BuildPanGestureHookProps): PanGesture => {
-	const dimensions = useWindowDimensions();
-	const { participation, pan: policy } = gestureConfig;
+}: UseBuildPinchGestureProps): PinchGesture => {
+	const { participation, pinch: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
-
 	const { gestureProgressBaseline, lockedSnapPoint } =
 		useGestureBuilderState(participation);
 
@@ -42,27 +33,22 @@ export const useBuildPanGesture = ({
 		lockedSnapPoint,
 	});
 
-	const activation = usePanActivation({
-		scrollState,
-		childDirectionClaims,
+	const activation = usePinchActivation({
 		runtime,
 		screenOptions,
-		dimensions,
 		gestureCompositionActivation,
 	});
 
-	const behavior = usePanBehavior(
+	const behavior = usePinchBehavior(
 		runtime,
 		screenOptions,
-		dimensions,
 		gestureCompositionActivation,
 	);
 
-	const panGesture = useMemo(() => {
-		return Gesture.Pan()
+	const pinchGesture = useMemo(() => {
+		return Gesture.Pinch()
 			.enabled(true)
 			.manualActivation(true)
-			.averageTouches(true)
 			.onTouchesDown(activation.onTouchesDown)
 			.onTouchesMove(activation.onTouchesMove)
 			.onStart(behavior.onStart)
@@ -70,5 +56,5 @@ export const useBuildPanGesture = ({
 			.onEnd(behavior.onEnd);
 	}, [activation, behavior]);
 
-	return panGesture;
+	return pinchGesture;
 };

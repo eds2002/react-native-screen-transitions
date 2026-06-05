@@ -1,16 +1,16 @@
 import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
-import type { ScreenOptionsContextValue } from "../../options";
-import { usePanGestureSensitivity } from "../hooks/use-gesture-sensitivity";
-import { resolvePanRuntime } from "../shared/runtime";
+import { useNavigationHelpers } from "../../../../../hooks/navigation/use-navigation-helpers";
+import type { ScreenOptionsContextValue } from "../../../options";
+import { usePanGestureSensitivity } from "../../hooks/use-gesture-sensitivity";
+import { resolvePanRuntime } from "../../shared/runtime";
 import type {
 	GestureCompositionActivation,
 	GestureDimensions,
 	PanBehavior,
 	PanGestureEvent,
 	PanGestureRuntime,
-} from "../types";
+} from "../../types";
 import {
 	finalizePanRelease,
 	startPanBase,

@@ -1,14 +1,14 @@
 import { clamp, runOnJS } from "react-native-reanimated";
-import { EPSILON, FALSE, TRUE } from "../../../../constants";
-import { animateToProgress } from "../../../../utils/animation/animate-to-progress";
-import { emit } from "../../../../utils/animation/emit";
-import { normalizePinchScale } from "../shared/physics";
+import { EPSILON, FALSE, TRUE } from "../../../../../constants";
+import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
+import { emit } from "../../../../../utils/animation/emit";
+import { normalizePinchScale } from "../../shared/physics";
 import type {
 	PinchGestureEvent,
 	PinchGestureRuntime,
 	PinchReleaseResult,
 	PinchTrackState,
-} from "../types";
+} from "../../types";
 import { resetPinchGestureValues } from "./pinch-reset";
 
 export const startPinchBase = (

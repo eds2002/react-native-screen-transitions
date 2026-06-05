@@ -11,11 +11,11 @@ import {
 	toProgressVelocity,
 } from "../../../providers/screen/gestures/shared/physics";
 import { determineDismissal } from "../../../providers/screen/gestures/shared/targets";
-import { trackPanGesture } from "../../../providers/screen/gestures/pan/pan-lifecycle";
-import { resolvePanRelease } from "../../../providers/screen/gestures/pan/pan-release";
-import { trackPinchGesture } from "../../../providers/screen/gestures/pinch/pinch-lifecycle";
-import { resolvePinchRelease } from "../../../providers/screen/gestures/pinch/pinch-release";
-import { trackRotationGesture } from "../../../providers/screen/gestures/rotation/rotation-lifecycle";
+import { trackPanGesture } from "../../../providers/screen/gestures/pan/behavior/pan-lifecycle";
+import { resolvePanRelease } from "../../../providers/screen/gestures/pan/behavior/pan-release";
+import { trackPinchGesture } from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
+import { resolvePinchRelease } from "../../../providers/screen/gestures/pinch/behavior/pinch-release";
+import { trackRotationGesture } from "../../../providers/screen/gestures/rotation/behavior/rotation-lifecycle";
 import { applyGestureSensitivityToRawChange } from "../../../providers/screen/gestures/hooks/use-gesture-sensitivity";
 import type { ScreenOptionsContextValue } from "../../../providers/screen/options";
 

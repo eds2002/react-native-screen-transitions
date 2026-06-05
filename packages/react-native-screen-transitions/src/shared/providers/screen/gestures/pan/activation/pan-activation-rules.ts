@@ -1,12 +1,12 @@
-import type { GestureDirections } from "../../../../types/gesture.types";
+import type { GestureDirections } from "../../../../../types/gesture.types";
 import {
 	GestureActivationState,
 	type GestureDirectionActivationArea,
 	type ResolvedGestureActivationArea,
-} from "../../../../types/gesture.types";
-import type { Direction } from "../../../../types/ownership.types";
-import type { Layout } from "../../../../types/screen.types";
-import type { ScrollGestureState } from "../types";
+} from "../../../../../types/gesture.types";
+import type { Direction } from "../../../../../types/ownership.types";
+import type { Layout } from "../../../../../types/screen.types";
+import type { ScrollGestureState } from "../../types";
 
 interface ResolveOffsetRulesProps {
 	initialTouch: { x: number; y: number };

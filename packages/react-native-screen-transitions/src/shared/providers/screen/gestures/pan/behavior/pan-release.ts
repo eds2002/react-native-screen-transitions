@@ -2,28 +2,28 @@ import { clamp } from "react-native-reanimated";
 import {
 	getPanSnapAxisConfigForDirection,
 	isResolvedPanGestureDirection,
-} from "../shared/directions";
+} from "../../shared/directions";
 import {
 	getPanReleaseHandoffVelocity,
 	getPanReleaseProgressVelocity,
 	resolveGestureVelocity,
-} from "../shared/physics";
+} from "../../shared/physics";
 import {
 	getProgressVelocityTowardTarget,
 	resolveGestureSnapTransitionSpec,
-} from "../shared/release";
+} from "../../shared/release";
 import {
 	primeRuntimeSnapPoint,
 	resolveRuntimeGestureSnapPoints,
-} from "../shared/snap-points";
-import { determineDismissal, determineSnapTarget } from "../shared/targets";
+} from "../../shared/snap-points";
+import { determineDismissal, determineSnapTarget } from "../../shared/targets";
 import type {
 	GestureDimensions,
 	PanGestureEvent,
 	PanGestureRuntime,
 	PanReleasePlan,
 	PanReleaseResult,
-} from "../types";
+} from "../../types";
 
 const resolvePanReleaseVelocity = (
 	runtime: PanGestureRuntime,

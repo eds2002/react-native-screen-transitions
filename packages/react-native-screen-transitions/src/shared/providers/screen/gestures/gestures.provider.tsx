@@ -6,9 +6,9 @@ import createProvider from "../../../utils/create-provider";
 import { useDescriptorDerivations } from "../descriptors";
 import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
 import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and-register-shadowing-claims";
-import { useBuildPanGesture } from "./pan/build-pan-gesture";
-import { useBuildPinchGesture } from "./pinch/build-pinch-gesture";
-import { useBuildRotationGesture } from "./rotation/build-rotation-gesture";
+import { useBuildPanGesture } from "./pan/use-build-pan-gesture";
+import { useBuildPinchGesture } from "./pinch/use-build-pinch-gesture";
+import { useBuildRotationGesture } from "./rotation/use-build-rotation-gesture";
 import {
 	type DirectionClaimMap,
 	type GestureCompositionActivation,

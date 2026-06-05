@@ -6,21 +6,21 @@ import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
 	GestureCompositionActivation,
-	PinchGesture,
+	RotationGesture,
 	ScreenGestureConfig,
 } from "../types";
-import { usePinchActivation } from "./pinch-activation";
-import { usePinchBehavior } from "./use-pinch-behavior";
+import { useRotationActivation } from "./activation/use-rotation-activation";
+import { useRotationBehavior } from "./behavior/use-rotation-behavior";
 
-interface BuildPinchGestureHookProps {
+interface UseBuildRotationGestureProps {
 	gestureConfig: ScreenGestureConfig;
 	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
 }
 
-export const useBuildPinchGesture = ({
+export const useBuildRotationGesture = ({
 	gestureConfig,
 	gestureCompositionActivation,
-}: BuildPinchGestureHookProps): PinchGesture => {
+}: UseBuildRotationGestureProps): RotationGesture => {
 	const { participation, pinch: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
 	const { gestureProgressBaseline, lockedSnapPoint } =
@@ -33,28 +33,23 @@ export const useBuildPinchGesture = ({
 		lockedSnapPoint,
 	});
 
-	const activation = usePinchActivation({
+	const activation = useRotationActivation({
 		runtime,
 		screenOptions,
 		gestureCompositionActivation,
 	});
 
-	const behavior = usePinchBehavior(
-		runtime,
-		screenOptions,
-		gestureCompositionActivation,
-	);
+	const behavior = useRotationBehavior(runtime, screenOptions);
 
-	const pinchGesture = useMemo(() => {
-		return Gesture.Pinch()
+	const rotationGesture = useMemo(() => {
+		return Gesture.Rotation()
 			.enabled(true)
 			.manualActivation(true)
 			.onTouchesDown(activation.onTouchesDown)
 			.onTouchesMove(activation.onTouchesMove)
 			.onStart(behavior.onStart)
-			.onUpdate(behavior.onUpdate)
-			.onEnd(behavior.onEnd);
+			.onUpdate(behavior.onUpdate);
 	}, [activation, behavior]);
 
-	return pinchGesture;
+	return rotationGesture;
 };

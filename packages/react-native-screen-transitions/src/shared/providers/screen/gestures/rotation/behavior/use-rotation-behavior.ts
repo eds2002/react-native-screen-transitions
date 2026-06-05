@@ -1,12 +1,12 @@
 import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import type { ScreenOptionsContextValue } from "../../options";
-import { resolvePinchRuntime } from "../shared/runtime";
+import type { ScreenOptionsContextValue } from "../../../options";
+import { resolvePinchRuntime } from "../../shared/runtime";
 import type {
 	RotationBehavior,
 	RotationGestureEvent,
 	RotationGestureRuntime,
-} from "../types";
+} from "../../types";
 import {
 	startRotationGesture,
 	trackRotationGesture,

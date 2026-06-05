@@ -1,15 +1,15 @@
 import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import { useNavigationHelpers } from "../../../../hooks/navigation/use-navigation-helpers";
-import type { ScreenOptionsContextValue } from "../../options";
-import { usePinchGestureSensitivity } from "../hooks/use-gesture-sensitivity";
-import { resolvePinchRuntime } from "../shared/runtime";
+import { useNavigationHelpers } from "../../../../../hooks/navigation/use-navigation-helpers";
+import type { ScreenOptionsContextValue } from "../../../options";
+import { usePinchGestureSensitivity } from "../../hooks/use-gesture-sensitivity";
+import { resolvePinchRuntime } from "../../shared/runtime";
 import type {
 	GestureCompositionActivation,
 	PinchBehavior,
 	PinchGestureEvent,
 	PinchGestureRuntime,
-} from "../types";
+} from "../../types";
 import {
 	finalizePinchRelease,
 	startPinchBase,

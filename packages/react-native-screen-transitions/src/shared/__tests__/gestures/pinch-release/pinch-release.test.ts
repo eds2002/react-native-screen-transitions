@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { resolveSnapPinchRelease } from "../../../providers/screen/gestures/pinch/pinch-release";
+import { resolveSnapPinchRelease } from "../../../providers/screen/gestures/pinch/behavior/pinch-release";
 import type {
 	PinchGestureEvent,
 	PinchGestureRuntime,

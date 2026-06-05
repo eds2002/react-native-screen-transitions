@@ -3,21 +3,21 @@ import {
 	getPinchReleaseHandoffVelocity,
 	normalizePinchScale,
 	shouldDismissFromPinch,
-} from "../shared/physics";
+} from "../../shared/physics";
 import {
 	getProgressVelocityTowardTarget,
 	resolveGestureSnapTransitionSpec,
-} from "../shared/release";
+} from "../../shared/release";
 import {
 	primeRuntimeSnapPoint,
 	resolveRuntimeGestureSnapPoints,
-} from "../shared/snap-points";
-import { determineSnapTarget } from "../shared/targets";
+} from "../../shared/snap-points";
+import { determineSnapTarget } from "../../shared/targets";
 import type {
 	PinchGestureEvent,
 	PinchGestureRuntime,
 	PinchReleaseResult,
-} from "../types";
+} from "../../types";
 
 const getPinchSnapDirection = (normalizedScale: number) => {
 	"worklet";

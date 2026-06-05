@@ -1,18 +1,18 @@
 import type { GestureTouchEvent } from "react-native-gesture-handler";
-import { EPSILON } from "../../../../constants";
+import { EPSILON } from "../../../../../constants";
 import {
 	GestureActivationState,
 	type ScrollGestureState,
-} from "../../../../types/gesture.types";
-import type { Direction } from "../../../../types/ownership.types";
-import { shouldDeferToChildClaim } from "../ownership/resolve-ownership";
-import { getPanSnapAxisConfigForDirection } from "../shared/directions";
-import { resolveRuntimeSnapPoints } from "../shared/snap-points";
+} from "../../../../../types/gesture.types";
+import type { Direction } from "../../../../../types/ownership.types";
+import { shouldDeferToChildClaim } from "../../ownership/resolve-ownership";
+import { getPanSnapAxisConfigForDirection } from "../../shared/directions";
+import { resolveRuntimeSnapPoints } from "../../shared/snap-points";
 import type {
 	DirectionClaimMap,
 	GestureDimensions,
 	PanGestureRuntime,
-} from "../types";
+} from "../../types";
 import {
 	checkScrollBoundary,
 	resolveOffsetRules,

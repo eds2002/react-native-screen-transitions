@@ -1,4 +1,4 @@
-import type { RotationGestureEvent, RotationGestureRuntime } from "../types";
+import type { RotationGestureEvent, RotationGestureRuntime } from "../../types";
 
 export const startRotationGesture = (
 	gestures: RotationGestureRuntime["stores"]["gestures"],
