@@ -1,13 +1,13 @@
-import type { ManagedStackProps } from "../../../../../types/providers/managed-stack.types";
+import type { BlankStackProviderProps } from "../../../../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
 	BaseStackScene,
 	StackDescriptorSource,
 	StackSceneActivity,
-} from "../../../../../types/stack.types";
-import { resolveSceneNeighbors } from "../../../../../utils/navigation/resolve-scene-neighbors";
-import { isOverlayVisible } from "../../../../../utils/overlay/visibility";
+} from "../../../../types/stack.types";
+import { resolveSceneNeighbors } from "../../../../utils/navigation/resolve-scene-neighbors";
+import { isOverlayVisible } from "../../../../utils/overlay/visibility";
 import {
 	areDescriptorSourcesEquivalent,
 	areDescriptorsEqual,
@@ -15,22 +15,22 @@ import {
 	getRouteChildState,
 	routeKeyListsAreEqual,
 	setsAreEqual,
-} from "./helpers";
+} from "./state-equality";
 import type {
+	BlankStackDescriptorSources,
+	BlankStackDescriptors,
+	BlankStackRoutes,
 	LocalRoutesState,
-	ManagedDescriptorSources,
-	ManagedDescriptors,
-	ManagedRoutes,
 	SceneActivityWindow,
 } from "./types";
 
-type BuildManagedStackStateParams<
+type BuildBlankStackStateParams<
 	TDescriptor extends BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation,
 > = {
-	props: ManagedStackProps<TDescriptor, TNavigation>;
-	routes: ManagedRoutes<TDescriptor>;
-	descriptors: ManagedDescriptorSources<TDescriptor>;
+	props: BlankStackProviderProps<TDescriptor, TNavigation>;
+	routes: BlankStackRoutes<TDescriptor>;
+	descriptors: BlankStackDescriptorSources<TDescriptor>;
 	closingRouteKeys: ReadonlySet<string>;
 	previousState?: LocalRoutesState<TDescriptor>;
 };
@@ -105,7 +105,7 @@ const getSceneActivityWindow = <
 	props,
 	routes,
 	closingRouteKeys,
-}: BuildManagedStackStateParams<
+}: BuildBlankStackStateParams<
 	TDescriptor,
 	TNavigation
 >): SceneActivityWindow => {
@@ -161,14 +161,14 @@ const buildBaseScenes = <
 	closingRouteKeys,
 	previousState,
 	activityWindow,
-}: BuildManagedStackStateParams<TDescriptor, TNavigation> & {
+}: BuildBlankStackStateParams<TDescriptor, TNavigation> & {
 	activityWindow: SceneActivityWindow;
 }) => {
 	const routeKeys: string[] = [];
 	const scenes: BaseStackScene<TDescriptor>[] = [];
 	const routeChildStates: Record<string, unknown> = {};
-	const sourceDescriptors = {} as ManagedDescriptorSources<TDescriptor>;
-	const managedDescriptors = {} as ManagedDescriptors<TDescriptor>;
+	const sourceDescriptors = {} as BlankStackDescriptorSources<TDescriptor>;
+	const blankStackDescriptors = {} as BlankStackDescriptors<TDescriptor>;
 	let shouldShowFloatOverlay = false;
 
 	for (let sceneIndex = 0; sceneIndex < routes.length; sceneIndex++) {
@@ -215,7 +215,7 @@ const buildBaseScenes = <
 		routeKeys.push(route.key);
 		routeChildStates[route.key] = routeChildState;
 		sourceDescriptors[route.key] = sourceDescriptor;
-		managedDescriptors[route.key] = descriptor;
+		blankStackDescriptors[route.key] = descriptor;
 
 		if (!shouldShowFloatOverlay) {
 			shouldShowFloatOverlay = isOverlayVisible(sourceDescriptor?.options);
@@ -231,7 +231,7 @@ const buildBaseScenes = <
 		scenes,
 		routeChildStates,
 		sourceDescriptors,
-		descriptors: managedDescriptors,
+		descriptors: blankStackDescriptors,
 		routeKeys,
 		shouldShowFloatOverlay,
 	};
@@ -244,7 +244,7 @@ const withSceneRelationships = <TDescriptor extends BaseStackDescriptor>({
 	previousState,
 }: {
 	scenes: BaseStackScene<TDescriptor>[];
-	sourceDescriptors: ManagedDescriptorSources<TDescriptor>;
+	sourceDescriptors: BlankStackDescriptorSources<TDescriptor>;
 	closingRouteKeys: ReadonlySet<string>;
 	previousState?: LocalRoutesState<TDescriptor>;
 }): BaseStackScene<TDescriptor>[] => {
@@ -308,11 +308,11 @@ const withSceneRelationships = <TDescriptor extends BaseStackDescriptor>({
 	return nextScenes;
 };
 
-export const buildManagedStackState = <
+export const buildBlankStackState = <
 	TDescriptor extends BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation,
 >(
-	params: BuildManagedStackStateParams<TDescriptor, TNavigation>,
+	params: BuildBlankStackStateParams<TDescriptor, TNavigation>,
 ): LocalRoutesState<TDescriptor> => {
 	const activityWindow = getSceneActivityWindow(params);
 	const focusedRouteKey =
@@ -322,7 +322,7 @@ export const buildManagedStackState = <
 		scenes: baseScenes,
 		routeChildStates,
 		sourceDescriptors,
-		descriptors: managedDescriptors,
+		descriptors: blankStackDescriptors,
 		routeKeys,
 		shouldShowFloatOverlay,
 	} = buildBaseScenes({
@@ -343,9 +343,12 @@ export const buildManagedStackState = <
 		routes: params.routes,
 		descriptors:
 			params.previousState &&
-			areDescriptorsEqual(params.previousState.descriptors, managedDescriptors)
+			areDescriptorsEqual(
+				params.previousState.descriptors,
+				blankStackDescriptors,
+			)
 				? params.previousState.descriptors
-				: managedDescriptors,
+				: blankStackDescriptors,
 		sourceDescriptors:
 			params.previousState &&
 			areDescriptorsEqual(

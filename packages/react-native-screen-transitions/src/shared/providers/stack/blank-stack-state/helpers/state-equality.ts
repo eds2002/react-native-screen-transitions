@@ -2,8 +2,8 @@ import type {
 	BaseStackDescriptor,
 	RouteWithKey,
 	StackDescriptorSource,
-} from "../../../../../types/stack.types";
-import type { ManagedDescriptorSources } from "./types";
+} from "../../../../types/stack.types";
+import type { BlankStackDescriptorSources } from "./types";
 
 export const areDescriptorsEqual = <
 	DescriptorMap extends Record<string, unknown>,
@@ -135,8 +135,8 @@ export const areDescriptorSourcesEquivalent = <
 export const areDescriptorSourceMapsEquivalent = <
 	TDescriptor extends BaseStackDescriptor,
 >(
-	previous: ManagedDescriptorSources<TDescriptor>,
-	next: ManagedDescriptorSources<TDescriptor>,
+	previous: BlankStackDescriptorSources<TDescriptor>,
+	next: BlankStackDescriptorSources<TDescriptor>,
 ): boolean => {
 	if (previous === next) return true;
 

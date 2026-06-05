@@ -8,7 +8,6 @@ import {
 	useRef,
 	useSyncExternalStore,
 } from "react";
-import type { DerivedValue } from "react-native-reanimated";
 import type { StackCoreContextValue } from "../../providers/stack/core.provider";
 import type { OverlayProps } from "../../types/overlay.types";
 import type {
@@ -41,7 +40,6 @@ export interface StackContextValue extends StackCoreContextValue {
 	routeKeys: string[];
 	routes: Route<string>[];
 	scenes: StackScene[];
-	optimisticFocusedIndex: DerivedValue<number>;
 	focusedIndex: number;
 	requestDismiss?: StackDismissRequest;
 }

@@ -1,10 +1,11 @@
-import type { ManagedStackProps } from "../../../../../types/providers/managed-stack.types";
+import type { BlankStackProviderProps } from "../../../../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
 	RouteWithKey,
-} from "../../../../../types/stack.types";
-import { buildManagedStackState } from "./build-managed-stack-state";
+} from "../../../../types/stack.types";
+import { buildBlankStackState } from "./build-blank-stack-state";
+import { reconcileBlankStackRoutes } from "./reconcile-blank-stack-routes";
 import {
 	areDescriptorSourceMapsEquivalent,
 	areDescriptorsEqual,
@@ -12,17 +13,16 @@ import {
 	getRouteChildStateMap,
 	routesHaveSameKeys,
 	setsAreEqual,
-} from "./helpers";
-import { reconcileManagedRoutes } from "./reconcile-managed-routes";
-import type { LocalRoutesState, ManagedRoutes } from "./types";
+} from "./state-equality";
+import type { BlankStackRoutes, LocalRoutesState } from "./types";
 
-type DeriveManagedStackStateParams<
+type DeriveBlankStackStateParams<
 	TDescriptor extends BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation,
 > = {
-	props: ManagedStackProps<TDescriptor, TNavigation>;
+	props: BlankStackProviderProps<TDescriptor, TNavigation>;
 	current: LocalRoutesState<TDescriptor>;
-	previousRoutesSnapshot: ManagedRoutes<TDescriptor>;
+	previousRoutesSnapshot: BlankStackRoutes<TDescriptor>;
 	closingRouteKeys: Set<string>;
 };
 
@@ -36,7 +36,7 @@ const routesAreIdentical = <Route extends RouteWithKey>(
 	return a.every((route, index) => route === b[index]);
 };
 
-export const deriveManagedStackState = <
+export const deriveBlankStackState = <
 	TDescriptor extends BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation,
 >({
@@ -44,7 +44,7 @@ export const deriveManagedStackState = <
 	current,
 	previousRoutesSnapshot,
 	closingRouteKeys,
-}: DeriveManagedStackStateParams<
+}: DeriveBlankStackStateParams<
 	TDescriptor,
 	TNavigation
 >): LocalRoutesState<TDescriptor> => {
@@ -87,7 +87,7 @@ export const deriveManagedStackState = <
 		return current;
 	}
 
-	const result = reconcileManagedRoutes({
+	const result = reconcileBlankStackRoutes({
 		current,
 		previousRoutesSnapshot,
 		nextRoutesSnapshot,
@@ -109,7 +109,7 @@ export const deriveManagedStackState = <
 		return current;
 	}
 
-	return buildManagedStackState({
+	return buildBlankStackState({
 		props,
 		routes: routesChanged ? result.routes : current.routes,
 		descriptors: descriptorsChanged

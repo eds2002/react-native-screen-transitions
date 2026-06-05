@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
-import type { ManagedStackProps } from "../types/providers/managed-stack.types";
+import type { BlankStackProviderProps } from "../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
@@ -12,8 +12,8 @@ mock.module("@react-navigation/native", () => ({
 	},
 }));
 
-const { createManagedStackController } = await import(
-	"../providers/stack/helpers/managed-stack-state/managed-stack-controller"
+const { createBlankStackController } = await import(
+	"../providers/stack/blank-stack-state/blank-stack-controller"
 );
 
 const CHILD_STATE = Symbol("CHILD_STATE");
@@ -54,7 +54,7 @@ const createProps = (
 	routes: BaseStackRoute[],
 	descriptors: Record<string, BaseStackDescriptor>,
 	navigation: BaseStackNavigation,
-): ManagedStackProps<BaseStackDescriptor, BaseStackNavigation> => ({
+): BlankStackProviderProps<BaseStackDescriptor, BaseStackNavigation> => ({
 	state: {
 		key: "stack",
 		index: routes.length - 1,
@@ -69,7 +69,7 @@ beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
 });
 
-describe("createManagedStackController", () => {
+describe("createBlankStackController", () => {
 	it("retains a removed focused route with its previous descriptor synchronously", () => {
 		const navigation = createNavigation();
 		const routeA = createRoute("a");
@@ -79,7 +79,7 @@ describe("createManagedStackController", () => {
 		const descriptorB = createDescriptor(routeB, navigation);
 		const descriptorC = createDescriptor(routeC, navigation);
 
-		const controller = createManagedStackController(
+		const controller = createBlankStackController(
 			createProps(
 				[routeA, routeB, routeC],
 				{ a: descriptorA, b: descriptorB, c: descriptorC },
@@ -122,7 +122,7 @@ describe("createManagedStackController", () => {
 		const routeB = createRoute("b");
 		const descriptorA = createDescriptor(routeA, navigation);
 		const descriptorB = createDescriptor(routeB, navigation);
-		const controller = createManagedStackController(
+		const controller = createBlankStackController(
 			createProps(
 				[routeA, routeB],
 				{ a: descriptorA, b: descriptorB },
@@ -194,7 +194,7 @@ describe("createManagedStackController", () => {
 		const routeB = createRoute("b");
 		const descriptorA = createDescriptor(routeA, navigation);
 		const descriptorB = createDescriptor(routeB, navigation);
-		const controller = createManagedStackController(
+		const controller = createBlankStackController(
 			createProps(
 				[routeA, routeB],
 				{ a: descriptorA, b: descriptorB },
@@ -220,7 +220,7 @@ describe("createManagedStackController", () => {
 		const options = {
 			gestureEnabled: true,
 		} as BaseStackDescriptor["options"];
-		const controller = createManagedStackController(
+		const controller = createBlankStackController(
 			createProps(
 				[routeA, routeB, routeC],
 				{
@@ -277,7 +277,7 @@ describe("createManagedStackController", () => {
 
 		setRouteChildState(routeC, initialChildState);
 
-		const controller = createManagedStackController(
+		const controller = createBlankStackController(
 			createProps(
 				[routeA, routeB, routeC],
 				{

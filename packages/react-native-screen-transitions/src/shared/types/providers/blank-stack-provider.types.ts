@@ -9,10 +9,10 @@ import type {
 } from "../stack.types";
 
 /**
- * Props for managed stack - generic over descriptor and navigation types.
+ * Props for blank stack - generic over descriptor and navigation types.
  * Defaults to base types for backward compatibility.
  */
-export interface ManagedStackProps<
+export interface BlankStackProviderProps<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
 > {
@@ -26,18 +26,18 @@ export interface ManagedStackProps<
 }
 
 /**
- * Context value for managed stack — only fields unique to managed lifecycle.
+ * Context value for blank stack — only fields unique to blank stack lifecycle.
  * Shared fields (routes, scenes, etc.) live in StackContext.
  */
-export interface ManagedStackContextValue {
+export interface BlankStackProviderContextValue {
 	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 }
 
 /**
- * Props passed to the render child of `withManagedStack`.
+ * Props passed to the render child of `withBlankStack`.
  * Only the fields that stack-view components actually consume.
  */
-export interface ManagedStackRenderProps<
+export interface BlankStackProviderRenderProps<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
 > {
 	scenes: BaseStackScene<TDescriptor>[];
@@ -46,12 +46,12 @@ export interface ManagedStackRenderProps<
 }
 
 /**
- * Internal result shape returned by useManagedStackValue.
+ * Internal result shape returned by useBlankStackProviderValue.
  */
-export interface ManagedStackResult<
+export interface BlankStackProviderResult<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
 > {
 	stackContextValue: StackContextValue;
-	managedContextValue: ManagedStackContextValue;
-	renderProps: ManagedStackRenderProps<TDescriptor>;
+	blankStackProviderContextValue: BlankStackProviderContextValue;
+	renderProps: BlankStackProviderRenderProps<TDescriptor>;
 }

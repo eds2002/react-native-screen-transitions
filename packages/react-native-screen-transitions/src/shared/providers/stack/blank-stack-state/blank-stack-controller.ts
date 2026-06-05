@@ -1,42 +1,42 @@
 import { StackActions } from "@react-navigation/native";
-import type { ManagedStackProps } from "../../../../types/providers/managed-stack.types";
+import type { BlankStackProviderProps } from "../../../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
 	BaseStackRoute,
-} from "../../../../types/stack.types";
-import { buildManagedStackState } from "./helpers/build-managed-stack-state";
-import { deriveManagedStackState } from "./helpers/derive-managed-stack-state";
+} from "../../../types/stack.types";
+import { buildBlankStackState } from "./helpers/build-blank-stack-state";
+import { deriveBlankStackState } from "./helpers/derive-blank-stack-state";
 import type {
-	ManagedDescriptorSources,
-	ManagedStackControllerSnapshot,
-	ManagedStackController as ManagedStackControllerType,
+	BlankStackControllerSnapshot,
+	BlankStackController as BlankStackControllerType,
+	BlankStackDescriptorSources,
 } from "./helpers/types";
 
-export type { ManagedStackController } from "./helpers/types";
+export type { BlankStackController } from "./helpers/types";
 
 /**
- * Maintains the stack-local route snapshot used while managed transitions run.
+ * Maintains the stack-local route snapshot used while blank stack transitions run.
  *
  * React Navigation remains the source of truth for settled routes, but it can
  * remove descriptors before our close animation has finished. This controller
  * keeps those closing routes locally until their lifecycle reports completion.
  */
-export const createManagedStackController = <
+export const createBlankStackController = <
 	TDescriptor extends BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation,
 >(
-	initialProps: ManagedStackProps<TDescriptor, TNavigation>,
-): ManagedStackControllerType<TDescriptor, TNavigation> => {
+	initialProps: BlankStackProviderProps<TDescriptor, TNavigation>,
+): BlankStackControllerType<TDescriptor, TNavigation> => {
 	const closingRouteKeys = new Set<string>();
 	let props = initialProps;
 	let previousRoutesSnapshot = initialProps.state.routes;
-	let snapshot: ManagedStackControllerSnapshot<TDescriptor> = {
-		state: buildManagedStackState({
+	let snapshot: BlankStackControllerSnapshot<TDescriptor> = {
+		state: buildBlankStackState({
 			props,
 			routes: initialProps.state.routes,
 			descriptors:
-				initialProps.descriptors as ManagedDescriptorSources<TDescriptor>,
+				initialProps.descriptors as BlankStackDescriptorSources<TDescriptor>,
 			closingRouteKeys,
 		}),
 	};
@@ -55,15 +55,17 @@ export const createManagedStackController = <
 		};
 	};
 
-	const getSnapshot = (): ManagedStackControllerSnapshot<TDescriptor> => {
+	const getSnapshot = (): BlankStackControllerSnapshot<TDescriptor> => {
 		return snapshot;
 	};
 
-	const update = (nextProps: ManagedStackProps<TDescriptor, TNavigation>) => {
+	const update = (
+		nextProps: BlankStackProviderProps<TDescriptor, TNavigation>,
+	) => {
 		const lastRoutesSnapshot = previousRoutesSnapshot;
 		props = nextProps;
 
-		const nextState = deriveManagedStackState({
+		const nextState = deriveBlankStackState({
 			props,
 			current: snapshot.state,
 			previousRoutesSnapshot: lastRoutesSnapshot,
@@ -111,7 +113,7 @@ export const createManagedStackController = <
 		delete nextDescriptors[route.key];
 
 		snapshot = {
-			state: buildManagedStackState({
+			state: buildBlankStackState({
 				props,
 				routes: nextRoutes,
 				descriptors: nextDescriptors,
@@ -138,7 +140,7 @@ export const createManagedStackController = <
 
 		closingRouteKeys.add(route.key);
 		snapshot = {
-			state: buildManagedStackState({
+			state: buildBlankStackState({
 				props,
 				routes: current.routes,
 				descriptors: current.sourceDescriptors,

@@ -5,10 +5,6 @@ import {
 	type StackContextValue,
 	StackProvider,
 } from "../../hooks/navigation/use-stack";
-import {
-	AnimationStore,
-	type AnimationStoreMap,
-} from "../../stores/animation.store";
 import type {
 	DirectStackContextValue,
 	DirectStackProps,
@@ -16,7 +12,6 @@ import type {
 } from "../../types/providers/direct-stack.types";
 import { isOverlayVisible } from "../../utils/overlay/visibility";
 import { useStackCoreContext } from "./core.provider";
-import { useStackDerived } from "./helpers/use-stack-derived";
 
 function useDirectStackValue(
 	props: DirectStackProps,
@@ -35,51 +30,49 @@ function useDirectStackValue(
 		);
 	}, [state.preloadedRoutes, describe]);
 
-	const {
-		scenes,
-		shouldShowFloatOverlay,
-		routeKeys,
-		allRoutes,
-		animationMaps,
-	} = useMemo(() => {
-		const allRoutes = state.routes.concat(state.preloadedRoutes);
-		const scenes: DirectStackScene[] = [];
-		const routeKeys: string[] = [];
-		const animationMaps: AnimationStoreMap[] = [];
-		const allDescriptors: NativeStackDescriptorMap = {
-			...preloadedDescriptors,
-			...descriptors,
-		};
-		let shouldShowFloatOverlay = false;
+	const { scenes, shouldShowFloatOverlay, routeKeys, allRoutes } =
+		useMemo(() => {
+			const allRoutes = state.routes.concat(state.preloadedRoutes);
+			const scenes: DirectStackScene[] = [];
+			const routeKeys: string[] = [];
+			const allDescriptors: NativeStackDescriptorMap = {
+				...preloadedDescriptors,
+				...descriptors,
+			};
+			let shouldShowFloatOverlay = false;
 
-		for (const route of allRoutes) {
-			const descriptor = allDescriptors[route.key];
-			const isPreloaded =
-				preloadedDescriptors[route.key] !== undefined &&
-				descriptors[route.key] === undefined;
+			for (const route of allRoutes) {
+				const descriptor = allDescriptors[route.key];
+				const isPreloaded =
+					preloadedDescriptors[route.key] !== undefined &&
+					descriptors[route.key] === undefined;
 
-			scenes.push({ route, descriptor, isPreloaded });
-			routeKeys.push(route.key);
-			animationMaps.push(AnimationStore.getBag(route.key));
+				scenes.push({ route, descriptor, isPreloaded });
+				routeKeys.push(route.key);
 
-			if (!shouldShowFloatOverlay && descriptor) {
-				const options = descriptor.options;
-				if (options?.enableTransitions === true && isOverlayVisible(options)) {
-					shouldShowFloatOverlay = true;
+				if (!shouldShowFloatOverlay && descriptor) {
+					const options = descriptor.options;
+					if (
+						options?.enableTransitions === true &&
+						isOverlayVisible(options)
+					) {
+						shouldShowFloatOverlay = true;
+					}
 				}
 			}
-		}
 
-		return {
-			scenes,
-			shouldShowFloatOverlay,
-			routeKeys,
-			allRoutes,
-			animationMaps,
-		};
-	}, [state.routes, state.preloadedRoutes, preloadedDescriptors, descriptors]);
-
-	const { optimisticFocusedIndex } = useStackDerived(animationMaps);
+			return {
+				scenes,
+				shouldShowFloatOverlay,
+				routeKeys,
+				allRoutes,
+			};
+		}, [
+			state.routes,
+			state.preloadedRoutes,
+			preloadedDescriptors,
+			descriptors,
+		]);
 
 	const focusedIndex = state.index;
 
@@ -90,18 +83,9 @@ function useDirectStackValue(
 			routeKeys,
 			routes: allRoutes,
 			scenes,
-			optimisticFocusedIndex,
 			focusedIndex,
 		}),
-		[
-			flags,
-			navigatorKey,
-			routeKeys,
-			allRoutes,
-			scenes,
-			optimisticFocusedIndex,
-			focusedIndex,
-		],
+		[flags, navigatorKey, routeKeys, allRoutes, scenes, focusedIndex],
 	);
 
 	// DirectStack context value

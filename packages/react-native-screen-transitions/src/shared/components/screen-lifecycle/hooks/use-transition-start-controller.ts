@@ -11,13 +11,13 @@ export const useTransitionStartController = ({
 	current,
 	animations,
 	system,
-	onManagedCloseFinish,
+	onBlankStackCloseFinish,
 	onNativeCloseFinish,
 }: {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
 	system: SystemStoreMap;
-	onManagedCloseFinish?: (finished: boolean) => void;
+	onBlankStackCloseFinish?: (finished: boolean) => void;
 	onNativeCloseFinish?: (finished: boolean) => void;
 }) => {
 	const {
@@ -51,8 +51,8 @@ export const useTransitionStartController = ({
 			}
 
 			const onAnimationFinish =
-				kind === LifecycleTransitionRequestKind.ManagedClose
-					? onManagedCloseFinish
+				kind === LifecycleTransitionRequestKind.BlankStackClose
+					? onBlankStackCloseFinish
 					: kind === LifecycleTransitionRequestKind.NativeClose
 						? onNativeCloseFinish
 						: undefined;

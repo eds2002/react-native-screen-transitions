@@ -5,8 +5,8 @@ import {
 	type BaseDescriptor,
 	useDescriptorDerivations,
 } from "../../../providers/screen/descriptors";
+import { useBlankStackContext } from "../../../providers/stack/blank-stack.provider";
 import { useStackCoreContext } from "../../../providers/stack/core.provider";
-import { useManagedStackContext } from "../../../providers/stack/managed.provider";
 import { GestureStore } from "../../../stores/gesture.store";
 import {
 	LifecycleTransitionRequestKind,
@@ -22,22 +22,25 @@ interface CloseHookParams {
 	resetStores: () => void;
 }
 
-const useManagedClose = ({
+const useBlankStackClose = ({
 	current,
 	requestLifecycleTransition,
 	resetStores,
 }: CloseHookParams) => {
-	const { handleCloseRoute } = useManagedStackContext();
+	const { handleCloseRoute } = useBlankStackContext();
 
 	useLayoutEffect(() => {
 		if (current.activity !== "closing") {
 			return;
 		}
 
-		requestLifecycleTransition(LifecycleTransitionRequestKind.ManagedClose, 0);
+		requestLifecycleTransition(
+			LifecycleTransitionRequestKind.BlankStackClose,
+			0,
+		);
 	}, [current.activity, requestLifecycleTransition]);
 
-	const handleManagedCloseEnd = useStableCallback((finished: boolean) => {
+	const handleBlankStackCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished) return;
 		handleCloseRoute({ route: current.route });
 		requestAnimationFrame(() => {
@@ -45,7 +48,7 @@ const useManagedClose = ({
 		});
 	});
 
-	return { handleManagedCloseEnd };
+	return { handleBlankStackCloseEnd };
 };
 
 /**
@@ -114,7 +117,7 @@ export function useCloseTransitionIntent(
 	current: BaseDescriptor,
 	system: SystemStoreMap,
 ): {
-	handleManagedCloseEnd?: (finished: boolean) => void;
+	handleBlankStackCloseEnd?: (finished: boolean) => void;
 	handleNativeCloseEnd?: (finished: boolean) => void;
 } {
 	const routeKey = current.route.key;
@@ -136,5 +139,5 @@ export function useCloseTransitionIntent(
 		return useNativeStackClose(closeParams);
 	}
 
-	return useManagedClose(closeParams);
+	return useBlankStackClose(closeParams);
 }
