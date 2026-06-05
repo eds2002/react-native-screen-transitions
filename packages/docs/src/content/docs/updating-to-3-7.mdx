@@ -1,15 +1,15 @@
 ---
 title: "New in 3.7"
 pageTitle: "New in 3.7"
-summary: "What changed in v3.7 across native-stack integration, blank-stack lifecycle, reveal, and transition correctness."
-description: "What changed in v3.7 across native-stack integration, blank-stack lifecycle, reveal, and transition correctness."
+summary: "What changed in v3.7 across native-stack integration, blank-stack lifecycle, reveal, transition scopes, and nested gesture correctness."
+description: "What changed in v3.7 across native-stack integration, blank-stack lifecycle, reveal, transition scopes, and nested gesture correctness."
 eyebrow: "Changelogs"
 group: "Changelogs"
 order: 1
 to: /updating-to-3-7
 ---
 
-v3.7 focuses on making the stack runtime easier to adopt in existing apps and more predictable during complex dismissals.
+v3.7 focuses on making the stack runtime easier to adopt in existing apps and more predictable during complex dismissals, nested gestures, and retained closing routes.
 
 ## Features
 
@@ -42,20 +42,9 @@ Transition behavior still opts in per screen or group:
 />
 ```
 
-When `enableTransitions` is on, the adapter uses the same transition options as the rest of the package:
-
-- `screenStyleInterpolator`
-- `transitionSpec`
-- `gestureEnabled`
-- `gestureDirection`
-- `gestureResponseDistance`
-- the other `ScreenTransitionConfig` options from the standard screen options surface
-
 ### Blank Stack Lifecycle
 
 Blank stack now has explicit inactive-screen lifecycle control through `inactiveBehavior`.
-
-The option uses user-facing lifecycle names rather than `react-native-screens` implementation names. The native renderer still uses `Screen.activityState`, `shouldFreeze`, and `freezeOnBlur` internally.
 
 ```tsx
 <Stack.Screen
@@ -97,15 +86,53 @@ return bounds({ id }).navigation.reveal({
 
 `shouldBackgroundScaleResetOnSettled` defaults to `true`. Reveal restores the background to scale `1` after settle so the next drag or programmatic dismiss can take a fresh measurement from the real screen geometry instead of from a scaled screen.
 
+### Experimental Transition Scopes
+
+`screenStyleInterpolator` now receives an experimental `transition()` accessor for reading animation state from the current screen, ancestors, and descendants.
+
+```tsx
+screenStyleInterpolator: ({ transition }) => {
+  "worklet";
+
+  const parent = transition({ depth: -1 });
+  const child = transition({ depth: 1 });
+
+  return {
+    content: {
+      style: {
+        opacity: parent?.active.gesture.dragging ? 0.92 : 1,
+        transform: [{ scale: child?.active.animating ? 0.98 : 1 }],
+      },
+    },
+  };
+};
+```
+
+Calling `transition()` without a target returns the current transition scope. Negative depths resolve ancestors, positive depths resolve descendants, and `depth: 0` resolves the current scope.
+
+Returned scopes include the same interpolation props as the original call, including `current`, `previous`, `next`, `active`, `inactive`, `progress`, `stackProgress`, `bounds`, and another relative `transition()` function.
+
+This is useful for nested transition choreography where a child interpolator needs to react to a parent gesture, or a parent interpolator needs to read a mounted child's transition state.
+
 ## Fixes
 
 ### Gesture Ownership During Dismiss
 
-Nested gesture ownership is more stable while a child screen is closing.
+Nested gestures are more predictable while screens are closing.
 
-Previously, a child route could lose its directional claim as soon as it started dismissing. That could let an ancestor with the same gesture direction activate before the child route finished cleaning up. v3.7 keeps the child claim authoritative until cleanup removes it, and registers shadowing claims in a layout effect so ancestors update before the next paint.
+Previously, quickly dismissing screens in a nested stack could let the wrong gesture win. A parent layout could sometimes steal a drag from the visible child screen, or closing child screens could keep blocking the parent after the user was already back on a screen that should inherit the parent gesture.
 
-This is most visible in nested stacks or overlay flows where a drag begins right after a child route starts dismissing.
+v3.7 keeps gesture ownership aligned with the screen the user can actually interact with. Visible child screens keep their own gestures while they are on screen, and parent gestures become available again as soon as the visible child screen no longer owns that direction.
+
+This is most visible in overlay or nested-stack flows where several child routes are dismissed in sequence.
+
+### Activity During Retained Closes
+
+Active and inert scene calculations now ignore routes that are retained only because they are closing.
+
+Previously, a closing route could still affect which non-closing screen was marked active or inert. In stacked dismissals, that could make the index screen hide or unmount too early while another closing screen was still animating above it.
+
+v3.7 computes the active/inert window from non-closing routes first, then marks closing routes separately. Closing routes stay mounted for their exit transition, but they no longer displace the visible non-closing route in activity calculations.
 
 ### Measurement And Visibility
 
@@ -148,6 +175,7 @@ Blank stack now prefers the navigator prop name `nativeScreens`.
 - Prefer `nativeScreens` over the deprecated `enableNativeScreens` prop.
 - Tune reveal background motion with `backgroundScale`.
 - Leave `shouldBackgroundScaleResetOnSettled` at its default unless you deliberately want the background to remain scaled while idle.
+- Treat `transition()` in `screenStyleInterpolator` as experimental. It is intended for nested choreography and may tighten before the next stable API pass.
 
 ## Related Reading
 
