@@ -1,15 +1,15 @@
 import { memo } from "react";
 import { StyleSheet, View } from "react-native";
 
-interface MaybeFloatingContainerProps {
+interface FloatingOverlayLayerProps {
 	children: React.ReactNode;
-	isFloatingOverlay?: boolean;
+	enabled?: boolean;
 }
-export const MaybeFloatingContainer = memo(function MaybeFloatingContainer({
+export const FloatingOverlayLayer = memo(function FloatingOverlayLayer({
 	children,
-	isFloatingOverlay,
-}: MaybeFloatingContainerProps) {
-	if (!isFloatingOverlay) {
+	enabled,
+}: FloatingOverlayLayerProps) {
+	if (!enabled) {
 		return children;
 	}
 	return (
