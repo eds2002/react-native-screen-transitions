@@ -51,7 +51,6 @@ export type ReconciledRoutes<TDescriptor extends BaseStackDescriptor> = {
 };
 
 export type SceneActivityWindow = {
-	focusedIndex: number;
-	topIndex: number;
-	topIsClosing: boolean;
+	activeIndex: number;
+	inertIndex: number;
 };

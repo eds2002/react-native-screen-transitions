@@ -59,11 +59,10 @@ const resolveStableDescriptorSource = <
 };
 
 const getSceneActivity = ({
-	focusedIndex,
+	activeIndex,
+	inertIndex,
 	isClosing,
 	sceneIndex,
-	topIndex,
-	topIsClosing,
 }: SceneActivityWindow & {
 	isClosing: boolean;
 	sceneIndex: number;
@@ -72,19 +71,31 @@ const getSceneActivity = ({
 		return "closing";
 	}
 
-	if (topIsClosing) {
-		return sceneIndex === focusedIndex ? "inert" : "inactive";
-	}
-
-	if (sceneIndex === topIndex) {
+	if (sceneIndex === activeIndex) {
 		return "active";
 	}
 
-	if (sceneIndex === topIndex - 1) {
+	if (sceneIndex === inertIndex) {
 		return "inert";
 	}
 
 	return "inactive";
+};
+
+const getNonClosingSceneIndices = <TDescriptor extends BaseStackDescriptor>(
+	routes: ManagedRoutes<TDescriptor>,
+	closingRouteKeys: ReadonlySet<string>,
+) => {
+	const indices: number[] = [];
+
+	for (let index = 0; index < routes.length; index++) {
+		const route = routes[index];
+		if (route && !closingRouteKeys.has(route.key)) {
+			indices.push(index);
+		}
+	}
+
+	return indices;
 };
 
 const getSceneActivityWindow = <
@@ -98,29 +109,32 @@ const getSceneActivityWindow = <
 	TDescriptor,
 	TNavigation
 >): SceneActivityWindow => {
+	const nonClosingIndices = getNonClosingSceneIndices(routes, closingRouteKeys);
+
+	const topNonClosingIndex =
+		nonClosingIndices[nonClosingIndices.length - 1] ?? -1;
+
+	const hasClosingRouteAboveActive =
+		topNonClosingIndex !== -1 && topNonClosingIndex < routes.length - 1;
+
+	const activeIndex = hasClosingRouteAboveActive ? -1 : topNonClosingIndex;
+	const inertIndex = hasClosingRouteAboveActive
+		? topNonClosingIndex
+		: (nonClosingIndices[nonClosingIndices.length - 2] ?? -1);
+
 	const focusedRouteKey = props.state.routes[props.state.index]?.key;
-
-	let focusedIndex = routes.findIndex((route) => route.key === focusedRouteKey);
-
-	if (focusedIndex === -1) {
+	if (
+		focusedRouteKey &&
+		!routes.some((route) => route.key === focusedRouteKey)
+	) {
 		throw new Error(
 			`Focused route "${focusedRouteKey}" is missing from routes`,
 		);
 	}
 
-	while (focusedIndex > 0 && closingRouteKeys.has(routes[focusedIndex]?.key)) {
-		focusedIndex--;
-	}
-
-	const topIndex = routes.length - 1;
-	const topRoute = routes[topIndex];
-	const topIsClosing =
-		topRoute !== undefined && closingRouteKeys.has(topRoute.key);
-
 	return {
-		focusedIndex,
-		topIndex,
-		topIsClosing,
+		activeIndex,
+		inertIndex,
 	};
 };
 

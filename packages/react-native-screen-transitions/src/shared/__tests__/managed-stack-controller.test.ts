@@ -141,6 +141,53 @@ describe("createManagedStackController", () => {
 		expect(navigation.actions).toEqual([]);
 	});
 
+	it("keeps active and inert calculations independent of closing routes", () => {
+		const navigation = createNavigation();
+		const routeIndex = createRoute("index");
+		const routeA = createRoute("dynamic-a");
+		const routeB = createRoute("dynamic-b");
+		const descriptorIndex = createDescriptor(routeIndex, navigation);
+		const descriptorA = createDescriptor(routeA, navigation);
+		const descriptorB = createDescriptor(routeB, navigation);
+		const controller = createManagedStackController(
+			createProps(
+				[routeIndex, routeA],
+				{
+					index: descriptorIndex,
+					"dynamic-a": descriptorA,
+				},
+				navigation,
+			),
+		);
+
+		expect(controller.requestDismiss({ route: routeA })).toBe(true);
+
+		controller.update(
+			createProps(
+				[routeIndex, routeA, routeB],
+				{
+					index: descriptorIndex,
+					"dynamic-a": descriptorA,
+					"dynamic-b": descriptorB,
+				},
+				navigation,
+			),
+		);
+
+		const snapshot = controller.getSnapshot();
+		expect(snapshot.state.routes.map((route) => route.key)).toEqual([
+			"index",
+			"dynamic-a",
+			"dynamic-b",
+		]);
+		expect(snapshot.state.scenes.map((scene) => scene.descriptor.activity)).toEqual(
+			["inert", "closing", "active"],
+		);
+		expect(snapshot.state.scenes[0]?.nextDescriptor?.route).toBe(
+			descriptorB.route,
+		);
+	});
+
 	it("accepts React Navigation removal for a route already marked closing", () => {
 		const navigation = createNavigation();
 		const routeA = createRoute("a");
