@@ -1,5 +1,48 @@
 # Changelog
 
+## [3.9.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0...v3.9.0) (2026-06-06)
+
+
+### Features
+
+* add new 'direction' property  ([#42](https://github.com/eds2002/react-native-screen-transitions/issues/42)) ([bc8f46d](https://github.com/eds2002/react-native-screen-transitions/commit/bc8f46d940aa3763b105b93133041e632cfcee45))
+* Add new store for bounds ( yet to actually include the measuring logic ) ([38195aa](https://github.com/eds2002/react-native-screen-transitions/commit/38195aaa674fbae28e008c6096317d931c74d862))
+* Add new utils, prepare to convert most stores to utilzie the ui thread. ([4e9e160](https://github.com/eds2002/react-native-screen-transitions/commit/4e9e16069a1a2f3ca6ffce1c74deafcc7aaaf858))
+* create helpful bound utilities to simplify shared bound animations ([276f5dc](https://github.com/eds2002/react-native-screen-transitions/commit/276f5dc33536fb6e74b95b3800698028637d0ab4))
+* Expand on existing example, allow users to get bounds if needed, pass route metadata for more customization via useScreenAnimation hook ([01326a0](https://github.com/eds2002/react-native-screen-transitions/commit/01326a09e97c44719199cd919fcb804122546dd9))
+* expose new helper variables for screenStyleInterpolator ([86995d0](https://github.com/eds2002/react-native-screen-transitions/commit/86995d034ece0e8e475cb9b6c40ce6eb753f5700))
+* Integrate ability to disable gesture driving progress via gestureDrivesProgress, ([df8d7be](https://github.com/eds2002/react-native-screen-transitions/commit/df8d7be0408b99d52db050fdd2f9c7ac39030038))
+* integrate measureOnLayout for components that don't need to be pressed to measure. ([#23](https://github.com/eds2002/react-native-screen-transitions/issues/23)) ([22f3470](https://github.com/eds2002/react-native-screen-transitions/commit/22f3470688dc21a836dc80af4f5d00df42ec332b))
+* integrate working example of shared bounds. ([5ef22ee](https://github.com/eds2002/react-native-screen-transitions/commit/5ef22eeb577ca56f480ab15ac58ee4e3c66d3dba))
+* new navigator ([4f3bb3c](https://github.com/eds2002/react-native-screen-transitions/commit/4f3bb3ce8b9bef2193a602154e59a54ec33c497f))
+* release v3.6.0 ([#108](https://github.com/eds2002/react-native-screen-transitions/issues/108)) ([fe9b902](https://github.com/eds2002/react-native-screen-transitions/commit/fe9b902d5b2083b5089d9f27140556beae56a706))
+* **shared,bounds,gestures:** shared presets (IG/Apple Music), bounds(options) API, gestureActivationArea ([#21](https://github.com/eds2002/react-native-screen-transitions/issues/21)) ([e72d51b](https://github.com/eds2002/react-native-screen-transitions/commit/e72d51b3ae8c950534752ea51acd2b365631f00d))
+* Start ability to decide of gesture should drive the progress. ([5179038](https://github.com/eds2002/react-native-screen-transitions/commit/5179038ec348efc8a20a979e97a01413ac39349f))
+
+
+### Bug Fixes
+
+* active bound id ([#25](https://github.com/eds2002/react-native-screen-transitions/issues/25)) ([9dba7df](https://github.com/eds2002/react-native-screen-transitions/commit/9dba7dfe1a1e6e2f4c12082894be22120e54d392))
+* Bug fix in create scrollable causing duplication of screen animations ([a2448e7](https://github.com/eds2002/react-native-screen-transitions/commit/a2448e722536623811c2d120f2c72bb3767ff474))
+* correct import paths and whitespace issues ([#8](https://github.com/eds2002/react-native-screen-transitions/issues/8)) ([5a3a57e](https://github.com/eds2002/react-native-screen-transitions/commit/5a3a57eb983df3195e648f0a06129ee5743e49f3))
+* fix bounds worklet imports ([#94](https://github.com/eds2002/react-native-screen-transitions/issues/94)) ([6260b8f](https://github.com/eds2002/react-native-screen-transitions/commit/6260b8fd0669096ef764476abe7b18dc1ff9a1c0))
+* Fix lingering transparent modals in nested stacks ([c365e37](https://github.com/eds2002/react-native-screen-transitions/commit/c365e37893aab00289d861a5ae0fc1195e621da7))
+* Fix presets not defining timing config ( default timing config is removed ) ([627a765](https://github.com/eds2002/react-native-screen-transitions/commit/627a76530724c5e43fc7b6c92e84ee4f16aefee9))
+* Fix Scrollables inside transitional views that have matching gestures. ([2a3e6fc](https://github.com/eds2002/react-native-screen-transitions/commit/2a3e6fc63b663e6d38daede4f4ee2322e1db7f88))
+* https://github.com/eds2002/react-native-screen-transitions/issues/7 ([#14](https://github.com/eds2002/react-native-screen-transitions/issues/14)) ([2b6aaa4](https://github.com/eds2002/react-native-screen-transitions/commit/2b6aaa4ae888c8e2bed6337127ebb7cb09793fc5))
+* isolate scroll axis writes in useScrollRegistry ([#85](https://github.com/eds2002/react-native-screen-transitions/issues/85)) ([88e6589](https://github.com/eds2002/react-native-screen-transitions/commit/88e6589decee7d01f9b2bddfcff05f31795a0b20))
+* move NEAR_ZERO_THRESHOLD to function body instead ([#46](https://github.com/eds2002/react-native-screen-transitions/issues/46)) ([dd54bb7](https://github.com/eds2002/react-native-screen-transitions/commit/dd54bb78734cceba38d6de62a777c8e20845825f))
+* non transition screen affects previous transition screen ([#31](https://github.com/eds2002/react-native-screen-transitions/issues/31)) ([2c4e476](https://github.com/eds2002/react-native-screen-transitions/commit/2c4e4767de5ae6203121db446a06ca1ca5e1556a))
+* **package:** correct main/module/types paths for npm build ([015d20d](https://github.com/eds2002/react-native-screen-transitions/commit/015d20d91a2f95efc377c764a2b1d9be12610b6f))
+* prevent gesture reactivation during screen dismiss animation + examples  + refactors ([2cdff32](https://github.com/eds2002/react-native-screen-transitions/commit/2cdff32ec6f0638443b1f0e553d1c7c010093bae))
+* prevent on layout measures from running multiple times causing inaccurate measurements ([20d53a5](https://github.com/eds2002/react-native-screen-transitions/commit/20d53a5fcfb2d4b2827e787169e26642837476eb))
+* previous screen not animating during flight ([#74](https://github.com/eds2002/react-native-screen-transitions/issues/74)) ([071512c](https://github.com/eds2002/react-native-screen-transitions/commit/071512c292e81986efdffe7e7b40ebbd220670a2))
+* Readd manual activation for gesture to work ([f8f67a2](https://github.com/eds2002/react-native-screen-transitions/commit/f8f67a25ab0e7bd2c95121550cdfffac6935120f))
+* Remeasure on press, and check if applicable to measure onLayout. Allow users to set the x and y for shared bounds. Create new bound builder to align the bound screen with the previous bound. ([90a77dd](https://github.com/eds2002/react-native-screen-transitions/commit/90a77dddc4a780a98714c87d63556ecb7c3338f1))
+* replace removed absolute fill alias ([#104](https://github.com/eds2002/react-native-screen-transitions/issues/104)) ([007eb42](https://github.com/eds2002/react-native-screen-transitions/commit/007eb4273f5bacd1a19600dbfef03135829acbbe))
+* respect gesture direction in progress mapping. ([3ef296f](https://github.com/eds2002/react-native-screen-transitions/commit/3ef296f252e63196b77a14a28c33fce3625f2903))
+* Set onlayout for scrollables, this fixes the issue where you have to scroll multiple times when setting vertical-inverted. ([45029c2](https://github.com/eds2002/react-native-screen-transitions/commit/45029c270c55c46f44179ecdeab307c8d5fd4a6a))
+
 ## [3.8.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.7.0...v3.8.0) (2026-06-06)
 
 
