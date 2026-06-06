@@ -7,12 +7,13 @@ on:
   workflow_dispatch:
     inputs:
       channel:
-        description: "Release channel. stable opens/updates the Release Please PR; alpha/beta/rc publish an npm prerelease."
+        description: "Release channel. stable opens/updates the Release Please PR; latest publishes a stable npm release manually; alpha/beta/rc publish an npm prerelease."
         required: true
         default: stable
         type: choice
         options:
           - stable
+          - latest
           - alpha
           - beta
           - rc
@@ -88,7 +89,7 @@ jobs:
 
   prerelease:
     name: Prerelease
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.channel != 'stable' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.channel == 'alpha' || inputs.channel == 'beta' || inputs.channel == 'rc') }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -162,3 +163,108 @@ jobs:
       - name: Dry run summary
         if: ${{ inputs.dry_run != false }}
         run: echo "Prepared react-native-screen-transitions@${{ steps.version.outputs.version }} for npm tag ${{ inputs.channel }}. Re-run with dry_run=false to publish."
+
+  manual-stable-release:
+    name: Manual Stable Release
+    if: ${{ github.event_name == 'workflow_dispatch' && inputs.channel == 'latest' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.20
+
+      - name: Setup Node (for npm trusted publishing)
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install deps
+        run: bun install --frozen-lockfile
+
+      - name: Build
+        run: bun run build
+
+      - name: Resolve package version
+        id: version
+        run: |
+          version="$(node -p "require('./packages/react-native-screen-transitions/package.json').version")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
+
+      - name: Pack preview
+        working-directory: packages/react-native-screen-transitions
+        run: npm pack --dry-run
+
+      - name: Extract release notes
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node --input-type=module <<'EOF'
+          import { readFileSync, writeFileSync } from "node:fs";
+
+          const version = process.env.PACKAGE_VERSION;
+          const changelog = readFileSync(
+            "packages/react-native-screen-transitions/CHANGELOG.md",
+            "utf8",
+          );
+          const header = `## [${version}]`;
+          const startIndex = changelog.indexOf(header);
+          const section =
+            startIndex === -1
+              ? `Release ${version}`
+              : (() => {
+                  const rest = changelog.slice(startIndex);
+                  const afterHeader = rest.slice(header.length);
+                  const nextIndex = afterHeader.search(/\n## \[/);
+
+                  return nextIndex === -1
+                    ? rest.trim()
+                    : rest.slice(0, header.length + nextIndex).trim();
+                })();
+
+          writeFileSync("release-notes.md", section);
+          EOF
+
+      - name: Publish stable to npm
+        if: ${{ inputs.dry_run == false }}
+        working-directory: packages/react-native-screen-transitions
+        env:
+          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          if npm view "react-native-screen-transitions@$PACKAGE_VERSION" version >/dev/null 2>&1; then
+            echo "react-native-screen-transitions@$PACKAGE_VERSION is already published; skipping npm publish."
+          else
+            npm publish --access public --tag latest --provenance
+          fi
+
+      - name: Create GitHub release
+        if: ${{ inputs.dry_run == false }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RELEASE_TITLE: v${{ steps.version.outputs.version }}
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "$RELEASE_TAG already exists; skipping GitHub release creation."
+          else
+            gh release create "$RELEASE_TAG" \
+              --target "$GITHUB_SHA" \
+              --title "$RELEASE_TITLE" \
+              --notes-file release-notes.md \
+              --latest
+          fi
+
+      - name: Dry run summary
+        if: ${{ inputs.dry_run != false }}
+        run: echo "Prepared react-native-screen-transitions@${{ steps.version.outputs.version }} for npm tag latest. Re-run with dry_run=false to publish."

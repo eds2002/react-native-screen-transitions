@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.7.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.6.0...v3.7.0) (2026-06-06)
+
+
+### Features
+
+* add inactive screen lifecycle controls ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+* add native-stack screen transitions adapter ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+* add reveal background scale options ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+* expose transition scopes to interpolators ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+
+
+### Bug Fixes
+
+* avoid opacity visibility blocking ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+* isolate adapter gesture options from native-stack options ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+* preserve child gesture ownership while closing ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+* proxy closing route gesture claims ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+* reset missing transition style slots ([#116](https://github.com/eds2002/react-native-screen-transitions/issues/116)) ([2a92d22](https://github.com/eds2002/react-native-screen-transitions/commit/2a92d226c184a84bdc797e65c5f94c895238cac3))
+
 ## [3.6.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.5.2...v3.6.0) (2026-05-31)
 
 
