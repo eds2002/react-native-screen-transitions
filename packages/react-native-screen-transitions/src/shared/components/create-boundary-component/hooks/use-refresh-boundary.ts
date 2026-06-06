@@ -1,4 +1,5 @@
 import { useAnimatedReaction } from "react-native-reanimated";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
 import { pairs } from "../../../stores/bounds/internals/state";
 import type { MeasureBoundary } from "../types";
@@ -6,25 +7,28 @@ import { getRefreshBoundarySignal } from "../utils/refresh-signals";
 
 interface UseRefreshBoundaryParams {
 	enabled: boolean;
-	currentScreenKey: string;
-	preferredSourceScreenKey?: string;
-	nextScreenKey?: string;
 	linkId: string;
 	group?: string;
-	ancestorScreenKeys: string[];
 	measureBoundary: MeasureBoundary;
 }
 
 export const useRefreshBoundary = ({
 	enabled,
-	currentScreenKey,
-	preferredSourceScreenKey,
-	nextScreenKey,
 	linkId,
 	group,
-	ancestorScreenKeys,
 	measureBoundary,
 }: UseRefreshBoundaryParams) => {
+	const currentScreenKey = useDescriptorsStore(
+		(s) => s.derivations.currentScreenKey,
+	);
+	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
+	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
+	const destinationPairKey = useDescriptorsStore(
+		(s) => s.derivations.destinationPairKey,
+	);
+	const ancestorDestinationPairKey = useDescriptorsStore(
+		(s) => s.derivations.ancestorDestinationPairKey,
+	);
 	// Source-side boundaries refresh from the next screen's lifecycle pulse.
 	// Destination-side boundaries have no next screen, so they refresh from self.
 	const refreshScreenKey = nextScreenKey ?? currentScreenKey;
@@ -46,17 +50,18 @@ export const useRefreshBoundary = ({
 			return getRefreshBoundarySignal({
 				enabled,
 				currentScreenKey,
-				preferredSourceScreenKey,
+				sourcePairKey,
+				destinationPairKey,
+				ancestorDestinationPairKey,
 				nextScreenKey,
 				linkId,
 				group,
-				ancestorScreenKeys,
 				shouldRefresh: !!refreshWillAnimate.get(),
 				closing: !!refreshClosing.get(),
 				entering: !!refreshEntering.get(),
 				animating: !!refreshAnimating.get(),
 				progress: refreshProgress.get(),
-				linkState: group || ancestorScreenKeys.length ? pairs.get() : undefined,
+				linkState: group ? pairs.get() : undefined,
 			});
 		},
 		(refreshSignal, prevRefreshSignal) => {

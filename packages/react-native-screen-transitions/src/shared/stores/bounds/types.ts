@@ -12,7 +12,7 @@ export type GroupKey = string;
 export type ScreenPairKey = string;
 export type { ScreenKey } from "../../types/screen.types";
 
-export type BoundaryConfig = {
+type BoundaryConfig = {
 	anchor?: BoundsAnchor;
 	scaleMode?: BoundsScaleMode;
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
@@ -41,7 +41,8 @@ export type ScreenIdentifier = {
 
 export type TagLink = {
 	group?: GroupKey;
-	source: ScreenIdentifier & MeasuredEntry;
+	/** Source side once attached; null while destination captured first. */
+	source: (ScreenIdentifier & MeasuredEntry) | null;
 	/** Destination side once attached; null while the source is still pending. */
 	destination: (ScreenIdentifier & MeasuredEntry) | null;
 	/** First captured source side exposed for public link inspection. */
@@ -66,12 +67,6 @@ export type ResolvedTransitionPair = {
 	destinationScreenKey: ScreenKey | null;
 };
 
-export type ScreenEntry = Entry;
-
-export type BoundaryState = {
-	screens: Record<ScreenKey, ScreenEntry>;
-};
-
 export type LinkGroupState = {
 	activeId: LinkKey;
 	initialId?: LinkKey;
@@ -83,5 +78,3 @@ export type LinkPairState = {
 };
 
 export type LinkPairsState = Record<ScreenPairKey, LinkPairState>;
-
-export type TagState = BoundaryState;

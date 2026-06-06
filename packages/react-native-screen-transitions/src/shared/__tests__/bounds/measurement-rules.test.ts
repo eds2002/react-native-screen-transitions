@@ -28,7 +28,7 @@ beforeEach(() => {
 });
 
 describe("bounds client measurement contract", () => {
-	it("auto source capture emits once for a stable source flow", () => {
+	it("auto source capture waits for destination then emits once", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const measuredTargets: Array<{ type: "source"; pairKey: string }> = [];
 		let lastSignal: string | null = null;
@@ -36,8 +36,7 @@ describe("bounds client measurement contract", () => {
 		const runAutoSourceReaction = () => {
 			const captureSignal = getInitialSourceCaptureSignal({
 				enabled: true,
-				currentScreenKey: "screen-a",
-				nextScreenKey: "screen-b",
+				sourcePairKey: pairKey,
 				linkId: "card",
 				shouldAutoMeasure: true,
 				linkState: pairs.get(),
@@ -53,6 +52,18 @@ describe("bounds client measurement contract", () => {
 				pairKey: captureSignal.pairKey,
 			});
 		};
+
+		runAutoSourceReaction();
+		runAutoSourceReaction();
+
+		expect(measuredTargets).toEqual([]);
+
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			createBounds(),
+		);
 
 		runAutoSourceReaction();
 		runAutoSourceReaction();
@@ -83,21 +94,13 @@ describe("bounds client measurement contract", () => {
 
 	it("destination attach stops after the destination has measured once", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
-		const pendingPairKey = createPendingPairKey("screen-a");
-
-		BoundStore.link.setSource(
-			pendingPairKey,
-			"card",
-			"screen-a",
-			createBounds(),
-		);
 
 		const getDestinationPairKey = () =>
 			getInitialDestinationMeasurePairKey({
 				enabled: true,
-				currentScreenKey: "screen-b",
-				preferredSourceScreenKey: "screen-a",
+				destinationPairKey: pairKey,
 				linkId: "card",
+				linkState: pairs.get(),
 			});
 
 		expect(getDestinationPairKey()).toBe(pairKey);
@@ -112,22 +115,13 @@ describe("bounds client measurement contract", () => {
 		expect(getDestinationPairKey()).toBeNull();
 	});
 
-	it("attaches nested initial destinations to the animated ancestor route pair", () => {
-		const pendingPairKey = createPendingPairKey("screen-a");
+	it("attaches nested initial destinations to the nearest ancestor pair", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
-
-		BoundStore.link.setSource(
-			pendingPairKey,
-			"card",
-			"screen-a",
-			createBounds(),
-		);
 
 		const getDestinationPairKey = () =>
 			getInitialDestinationMeasurePairKey({
 				enabled: true,
-				currentScreenKey: "nested-index",
-				ancestorScreenKeys: ["nested-route"],
+				ancestorDestinationPairKey: ancestorPairKey,
 				linkId: "card",
 				linkState: pairs.get(),
 			});
@@ -148,26 +142,8 @@ describe("bounds client measurement contract", () => {
 		).toBe("nested-index");
 	});
 
-	it("attaches nested Boundary.View destinations from existing ancestor pair sources", () => {
+	it("lets nested destination-first links wake passive ancestor-pair sources", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
-
-		BoundStore.link.setSource(
-			ancestorPairKey,
-			"title",
-			"screen-a",
-			createBounds(),
-		);
-
-		const getDestinationPairKey = () =>
-			getInitialDestinationMeasurePairKey({
-				enabled: true,
-				currentScreenKey: "nested-index",
-				ancestorScreenKeys: ["nested-route"],
-				linkId: "title",
-				linkState: pairs.get(),
-			});
-
-		expect(getDestinationPairKey()).toBe(ancestorPairKey);
 
 		BoundStore.link.setDestination(
 			ancestorPairKey,
@@ -176,11 +152,18 @@ describe("bounds client measurement contract", () => {
 			createBounds(),
 		);
 
-		expect(getDestinationPairKey()).toBeNull();
 		expect(
-			BoundStore.link.getLink(ancestorPairKey, "title")?.destination
-				?.screenKey,
-		).toBe("nested-index");
+			getInitialSourceCaptureSignal({
+				enabled: true,
+				sourcePairKey: ancestorPairKey,
+				linkId: "title",
+				shouldAutoMeasure: true,
+				linkState: pairs.get(),
+			}),
+		).toEqual({
+			pairKey: ancestorPairKey,
+			signal: "source|screen-a<>nested-route|title",
+		});
 	});
 
 	it("blocks destination measurements that are outside the viewport", () => {
@@ -226,15 +209,23 @@ describe("bounds client measurement contract", () => {
 		expect(isMeasurementInViewport(normalized, 400, 800)).toBe(true);
 	});
 
-	it("refreshes the current active grouped source when it has no source yet", () => {
+	it("refreshes the current active grouped source at settled points", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+		BoundStore.link.setSource(
+			pairKey,
+			"2",
+			"screen-a",
+			createBounds(),
+			{},
+			"colors",
+		);
 
 		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "screen-a",
-				nextScreenKey: "screen-b",
+				sourcePairKey: pairKey,
 				linkId,
 				group: "colors",
 				shouldRefresh: true,
@@ -251,17 +242,6 @@ describe("bounds client measurement contract", () => {
 			pairKey,
 			signal: "source|screen-a<>screen-b|colors|2|settled",
 		});
-
-		BoundStore.link.setSource(
-			pairKey,
-			"2",
-			"screen-a",
-			createBounds(),
-			{},
-			"colors",
-		);
-
-		expect(getSignal("2")).toBeNull();
 	});
 
 	it("refreshes the current active grouped destination member", () => {
@@ -280,7 +260,7 @@ describe("bounds client measurement contract", () => {
 			getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "screen-b",
-				preferredSourceScreenKey: "screen-a",
+				destinationPairKey: pairKey,
 				linkId,
 				group: "colors",
 				shouldRefresh: true,
@@ -308,7 +288,7 @@ describe("bounds client measurement contract", () => {
 			const refreshSignal = getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "screen-b",
-				preferredSourceScreenKey: "screen-a",
+				destinationPairKey: pairKey,
 				linkId: "card",
 				shouldRefresh: true,
 				closing: true,
@@ -334,39 +314,46 @@ describe("bounds client measurement contract", () => {
 		expect(measuredTargets).toEqual([{ type: "destination", pairKey }]);
 	});
 
-	it("refreshes a nested destination through its animated ancestor route pair", () => {
+	it("refreshes a nested destination through its ancestor pair", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
-
-		BoundStore.link.setSource(
-			ancestorPairKey,
-			"card",
-			"screen-a",
-			createBounds(),
-		);
-		BoundStore.link.setDestination(
-			ancestorPairKey,
-			"card",
-			"nested-index",
-			createBounds(),
-		);
 
 		expect(
 			getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "nested-index",
-				ancestorScreenKeys: ["nested-route"],
+				ancestorDestinationPairKey: ancestorPairKey,
 				linkId: "card",
 				shouldRefresh: true,
 				closing: true,
 				entering: false,
 				animating: false,
 				progress: 1,
-				linkState: pairs.get(),
 			}),
 		).toEqual({
 			type: "destination",
 			pairKey: ancestorPairKey,
 			signal: "destination|screen-a<>nested-route|nested-index|closing",
 		});
+	});
+
+	it("does not refresh an ancestor destination while the nested screen is a source", () => {
+		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
+		const nestedPairKey = createScreenPairKey("nested-index", "deep-route");
+
+		expect(
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "nested-index",
+				sourcePairKey: nestedPairKey,
+				ancestorDestinationPairKey: ancestorPairKey,
+				nextScreenKey: "deep-route",
+				linkId: "card",
+				shouldRefresh: true,
+				closing: false,
+				entering: false,
+				animating: false,
+				progress: 1,
+			}),
+		).toBeNull();
 	});
 });

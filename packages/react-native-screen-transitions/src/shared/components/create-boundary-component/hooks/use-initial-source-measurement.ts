@@ -1,26 +1,18 @@
 import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { pairs } from "../../../stores/bounds/internals/state";
 import type { MeasureBoundary } from "../types";
 import { getInitialSourceCaptureSignal } from "../utils/source-signals";
 
 export const useInitialSourceMeasurement = (params: {
 	enabled: boolean;
-	nextScreenKey?: string;
-	currentScreenKey?: string;
 	measureBoundary: MeasureBoundary;
 	linkId: string;
 	group?: string;
 	shouldAutoMeasure: boolean;
 }) => {
-	const {
-		enabled,
-		nextScreenKey,
-		measureBoundary,
-		linkId,
-		currentScreenKey,
-		group,
-		shouldAutoMeasure,
-	} = params;
+	const { enabled, measureBoundary, linkId, group, shouldAutoMeasure } = params;
+	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const lastSourceCaptureSignal = useSharedValue<string | null>(null);
 
 	useAnimatedReaction(
@@ -28,12 +20,11 @@ export const useInitialSourceMeasurement = (params: {
 			"worklet";
 			return getInitialSourceCaptureSignal({
 				enabled,
-				nextScreenKey,
-				currentScreenKey,
+				sourcePairKey,
 				linkId,
 				group,
 				shouldAutoMeasure,
-				linkState: group ? pairs.get() : undefined,
+				linkState: shouldAutoMeasure && sourcePairKey ? pairs.get() : undefined,
 			});
 		},
 		(captureSignal) => {

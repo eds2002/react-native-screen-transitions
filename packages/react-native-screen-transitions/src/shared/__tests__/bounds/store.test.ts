@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
-import { BoundStore, type BoundaryConfig, type Snapshot } from "../../stores/bounds";
+import { BoundStore, type Snapshot } from "../../stores/bounds";
 import {
 	createPendingPairKey,
 	createScreenPairKey,
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
+import { createBoundsAccessor } from "../../utils/bounds";
+import type { EntryPatch } from "../../stores/bounds/types";
 
 const createBounds = (
 	x = 0,
@@ -36,7 +38,7 @@ const registerMeasuredEntry = (
 const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
-	boundaryConfig?: BoundaryConfig,
+	boundaryConfig?: NonNullable<EntryPatch["boundaryConfig"]>,
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		boundaryConfig,
@@ -144,17 +146,20 @@ describe("BoundStore.link pair writes", () => {
 		expect(BoundStore.link.getDestination(pairKey, "card")).toBeNull();
 	});
 
-	it("does not attach a destination without an existing pair link", () => {
+	it("sets a destination before the source exists", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const destination = createBounds(200, 200);
 
 		BoundStore.link.setDestination(
 			pairKey,
 			"card",
 			"screen-b",
-			createBounds(200, 200),
+			destination,
 		);
 
-		expect(BoundStore.link.getLink(pairKey, "card")).toBeNull();
+		const link = BoundStore.link.getLink(pairKey, "card");
+		expect(link?.source).toBeNull();
+		expect(link?.destination?.bounds).toEqual(destination);
 	});
 
 	it("promotes a temporary pending source when destination attaches", () => {
@@ -365,6 +370,84 @@ describe("BoundStore.link.getPair", () => {
 		expect(resolved.destinationBounds).toEqual(destination);
 	});
 
+	it("falls back to initial group source while requested source is missing", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+
+		BoundStore.link.setSource(pairKey, "1", "screen-a", source, {}, "colors");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
+	it("falls back to pending initial group source while requested source is missing", () => {
+		const pendingPairKey = createPendingPairKey("screen-a");
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+
+		BoundStore.link.setSource(
+			pendingPairKey,
+			"1",
+			"screen-a",
+			source,
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
+	it("prefers requested group source over initial source when destination is absent", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const initialSource = createBounds(10, 20);
+		const requestedSource = createBounds(80, 120);
+
+		BoundStore.link.setSource(
+			pairKey,
+			"1",
+			"screen-a",
+			initialSource,
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+		BoundStore.link.setSource(
+			pairKey,
+			"2",
+			"screen-a",
+			requestedSource,
+			{},
+			"colors",
+		);
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(requestedSource);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
 	it("resolves entering from a pending source when destination is absent", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const source = createBounds(10, 20);
@@ -395,6 +478,23 @@ describe("BoundStore.link.getPair", () => {
 
 		expect(resolved.sourceBounds).toEqual(source);
 		expect(resolved.destinationBounds).toBeNull();
+	});
+});
+
+describe("BoundsAccessor", () => {
+	it("syncs grouped active id when creating a scoped accessor", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const bounds = createBoundsAccessor(
+			() =>
+				({
+					previous: { route: { key: "screen-a" } },
+					current: { route: { key: "screen-b" } },
+				}) as any,
+		);
+
+		bounds({ id: "2", group: "colors" });
+
+		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("2");
 	});
 });
 

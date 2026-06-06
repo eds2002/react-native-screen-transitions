@@ -1,4 +1,3 @@
-import { createScreenPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
 	LinkPairsState,
 	ScreenPairKey,
@@ -24,8 +23,7 @@ const buildSourceSignal = (
 
 export const getInitialSourceCaptureSignal = (params: {
 	enabled: boolean;
-	nextScreenKey?: string;
-	currentScreenKey?: string;
+	sourcePairKey?: ScreenPairKey;
 	linkId: string;
 	group?: string;
 	shouldAutoMeasure: boolean;
@@ -34,28 +32,31 @@ export const getInitialSourceCaptureSignal = (params: {
 	"worklet";
 	const {
 		enabled,
-		nextScreenKey,
-		currentScreenKey,
+		sourcePairKey,
 		linkId,
 		group,
 		shouldAutoMeasure,
 		linkState,
 	} = params;
 
-	if (!enabled || !nextScreenKey || !currentScreenKey) {
+	if (!enabled || !sourcePairKey) {
 		return null;
 	}
 
-	// Trigger components capture on press. This passive path is for Boundary.View
-	// slots that need a source before navigation starts.
+	// Trigger components capture on press. Passive Boundary.View sources wait for
+	// their destination side to attach, then capture into the same assigned pair.
 	if (!shouldAutoMeasure) {
 		return null;
 	}
 
-	const pairKey = createScreenPairKey(currentScreenKey, nextScreenKey);
+	const link = linkState?.[sourcePairKey]?.links?.[linkId];
+
+	if (!link?.destination || link.source) {
+		return null;
+	}
 
 	if (group) {
-		const activeId = linkState?.[pairKey]?.groups?.[group]?.activeId;
+		const activeId = linkState?.[sourcePairKey]?.groups?.[group]?.activeId;
 
 		// Passive grouped sources should not measure every mounted item. Once a
 		// group has an active id, only that concrete member can auto-capture.
@@ -64,9 +65,7 @@ export const getInitialSourceCaptureSignal = (params: {
 		}
 	}
 
-	const signalParts = group
-		? [currentScreenKey, nextScreenKey, group, linkId]
-		: [currentScreenKey, nextScreenKey, linkId];
+	const signalParts = group ? [group, linkId] : [linkId];
 
-	return buildSourceSignal(pairKey, signalParts.join("|"));
+	return buildSourceSignal(sourcePairKey, signalParts.join("|"));
 };

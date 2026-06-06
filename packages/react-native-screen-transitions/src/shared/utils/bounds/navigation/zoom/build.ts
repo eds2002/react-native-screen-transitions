@@ -8,7 +8,7 @@ import type {
 	ScreenTransitionOptions,
 	TransitionInterpolatedStyle,
 } from "../../../../types/animation.types";
-import { createLinkAccessor } from "../../helpers/create-link-accessor";
+import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { getSourceBorderRadius, toNumber } from "../helpers";
 import {
 	combineScales,
@@ -92,13 +92,15 @@ export function buildZoomStyles({
 
 	const zoomAnchor = target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor;
 
-	const boundsAccessor = createLinkAccessor(() => props);
-	const link = boundsAccessor.getLink(tag);
+	const bounds = createBoundsAccessorCore({
+		getProps: () => props,
+	});
+	const scopedBounds = bounds(tag);
+	const link = scopedBounds.link();
 
 	if (!link) return {};
 
 	const baseRawOptions = {
-		raw: true,
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
 	} as const;
 
@@ -226,20 +228,20 @@ export function buildZoomStyles({
 			link,
 		});
 
-		const contentRaw = link.compute({
+		const contentRaw = scopedBounds.math({
 			...baseRawOptions,
 			anchor: zoomAnchor,
 			method: "content",
 			target: focusedContentTarget,
-		} as const);
+		});
 
-		const maskRaw = link.compute({
+		const maskRaw = scopedBounds.math({
 			...baseRawOptions,
 			anchor: ZOOM_SHARED_OPTIONS.anchor,
 			method: "size",
 			space: "absolute",
 			target: "fullscreen",
-		} as const);
+		});
 
 		const focusedFade = props.active?.closing
 			? interpolateOpacityRange({
@@ -367,13 +369,13 @@ export function buildZoomStyles({
 		link,
 	});
 
-	const elementRaw = link.compute({
+	const elementRaw = scopedBounds.math({
 		...baseRawOptions,
 		anchor: zoomAnchor,
 		method: "transform",
 		space: "relative",
 		target: unfocusedElementTarget,
-	} as const);
+	});
 
 	const boundTargetCenterX =
 		target === "bound" && link.destination?.bounds

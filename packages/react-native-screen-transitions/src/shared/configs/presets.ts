@@ -435,12 +435,10 @@ export const SharedAppleMusic = ({
 			const dragXScale = interpolate(normX, [0, 1], xScaleOuput);
 			const dragYScale = interpolate(normY, [0, 1], yScaleOuput);
 
-			const boundValues = bounds({
-				id: sharedBoundTag,
+			const boundValues = bounds({ id: sharedBoundTag }).math({
 				method: focused ? "content" : "transform",
 				anchor: "top",
 				scaleMode: "uniform",
-				raw: true,
 			});
 
 			const opacity = interpolate(
@@ -456,12 +454,10 @@ export const SharedAppleMusic = ({
 			 * ===============================
 			 */
 			if (focused) {
-				const maskedValues = bounds({
-					id: sharedBoundTag,
+				const maskedValues = bounds({ id: sharedBoundTag }).math({
 					space: "absolute",
 					method: "size",
 					target: "fullscreen",
-					raw: true,
 				});
 
 				// Apple Music style drop shadow that increases with drag magnitude

@@ -13,7 +13,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../constants";
-import { useDescriptorDerivations } from "../../providers/screen/descriptors";
+import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
 import { createPendingPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
@@ -63,26 +63,15 @@ export function createBoundaryComponent<P extends object>(
 		const linkId = String(id);
 		const entryTag = group ? `${group}:${linkId}` : linkId;
 
-		const {
-			previousScreenKey: preferredSourceScreenKey,
-			currentScreenKey,
-			nextScreenKey,
-			ancestorKeys,
-			hasConfiguredInterpolator,
-		} = useDescriptorDerivations();
+		const currentScreenKey = useDescriptorsStore(
+			(s) => s.derivations.currentScreenKey,
+		);
+		const hasConfiguredInterpolator = useDescriptorsStore(
+			(s) => s.derivations.hasConfiguredInterpolator,
+		);
 
 		const runtimeEnabled = enabled && hasConfiguredInterpolator;
-		const hasNextScreen = !!nextScreenKey;
-		const boundaryConfig = useMemo<BoundaryConfigProps | undefined>(() => {
-			if (
-				anchor === undefined &&
-				scaleMode === undefined &&
-				target === undefined &&
-				method === undefined
-			) {
-				return undefined;
-			}
-
+		const boundaryConfig = useMemo<BoundaryConfigProps>(() => {
 			return {
 				anchor,
 				scaleMode,
@@ -133,8 +122,6 @@ export function createBoundaryComponent<P extends object>(
 			measuredAnimatedRef: measuredRef,
 		});
 
-		const shouldRunDestinationEffects = runtimeEnabled && !hasNextScreen;
-
 		// Register/unregister this boundary in the presence map so source/destination
 		// matching can resolve across concrete screen keys.
 		useBoundaryPresence({
@@ -149,9 +136,7 @@ export function createBoundaryComponent<P extends object>(
 
 		useInitialSourceMeasurement({
 			enabled: runtimeEnabled,
-			nextScreenKey,
 			measureBoundary,
-			currentScreenKey,
 			linkId,
 			group,
 			shouldAutoMeasure: shouldPassivelyMeasureSource,
@@ -159,21 +144,14 @@ export function createBoundaryComponent<P extends object>(
 
 		useInitialDestinationMeasurement({
 			linkId,
-			enabled: shouldRunDestinationEffects,
-			currentScreenKey,
-			preferredSourceScreenKey,
-			ancestorScreenKeys: ancestorKeys,
+			enabled: runtimeEnabled,
 			measureBoundary,
 		});
 
 		useRefreshBoundary({
 			enabled: runtimeEnabled,
-			currentScreenKey,
-			preferredSourceScreenKey,
-			nextScreenKey,
 			linkId,
 			group,
-			ancestorScreenKeys: ancestorKeys,
 			measureBoundary,
 		});
 

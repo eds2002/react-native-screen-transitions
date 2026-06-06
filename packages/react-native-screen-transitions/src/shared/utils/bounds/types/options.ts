@@ -148,3 +148,18 @@ export type BoundsOptions = {
 	 */
 	raw?: boolean;
 };
+
+export type BoundsIdentity = {
+	id: BoundId;
+	group?: string;
+};
+
+export type BoundsIdentityInput = BoundId | BoundsIdentity;
+
+export type BoundsComputeOptions = Omit<BoundsOptions, "group" | "id" | "raw">;
+
+export type BoundsStyleResult = StyleProps;
+
+export type BoundsMathResult<
+	T extends BoundsComputeOptions = BoundsComputeOptions,
+> = BoundsOptionsResult<T & { id: BoundId; raw: true }>;

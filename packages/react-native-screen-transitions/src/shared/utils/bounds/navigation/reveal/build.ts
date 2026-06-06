@@ -1,6 +1,6 @@
 import { interpolate } from "react-native-reanimated";
 import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../../../constants";
-import { createLinkAccessor } from "../../helpers/create-link-accessor";
+import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { getSourceBorderRadius } from "../helpers";
 import {
 	CLOSE_SOURCE_HANDOFF_PROGRESS,
@@ -75,10 +75,13 @@ export function buildRevealStyles({
 			? REVEAL_USES_TRANSFORM_MASK
 			: maskSizingMode === "transform";
 
-	const boundsAccessor = createLinkAccessor(() => props);
-	const link = boundsAccessor.getLink(tag);
+	const bounds = createBoundsAccessorCore({
+		getProps: () => props,
+	});
+	const scopedBounds = bounds(tag);
+	const link = scopedBounds.link();
 
-	if (!link?.source?.bounds || !link.destination?.bounds) {
+	if (link?.status !== "complete") {
 		return {};
 	}
 
@@ -127,27 +130,25 @@ export function buildRevealStyles({
 	const dragScale = dragXScale * dragYScale;
 
 	const initialDestinationTarget =
-		props.active.closing && link.initialDestination?.bounds
-			? link.initialDestination.bounds
+		props.active.closing && link.destination.initialBounds
+			? link.destination.initialBounds
 			: undefined;
 
 	/* ----------------------------- Focused Screen ----------------------------- */
 
 	if (focused) {
-		const contentRaw = link.compute({
-			raw: true,
+		const contentRaw = scopedBounds.math({
 			scaleMode: "uniform",
 			method: "content",
 			target: initialDestinationTarget,
-		} as const);
+		});
 
-		const maskRaw = link.compute({
-			raw: true,
+		const maskRaw = scopedBounds.math({
 			scaleMode: "uniform",
 			method: "size",
 			space: "absolute",
 			target: "fullscreen",
-		} as const);
+		});
 
 		const maskBorderRadius = mixUnit(
 			sourceBorderRadius,
@@ -218,7 +219,7 @@ export function buildRevealStyles({
 					)
 				: 0;
 
-		const maskAspectBounds = link.initialSource?.bounds ?? link.source.bounds;
+		const maskAspectBounds = link.source.initialBounds;
 		const minMaskHeight = resolveAspectRatioMaskHeight({
 			maskWidth,
 			maskHeight,

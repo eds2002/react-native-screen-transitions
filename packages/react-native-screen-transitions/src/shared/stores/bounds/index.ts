@@ -13,12 +13,8 @@ import { resolveTransitionPair } from "./internals/resolver";
 import type { MeasuredEntry } from "./types";
 
 export type {
-	BoundaryConfig,
-	Entry,
-	EntryPatch,
 	MeasuredEntry,
 	ResolvedTransitionPair,
-	ResolveTransitionContext,
 } from "./types";
 
 export type Snapshot = MeasuredEntry;

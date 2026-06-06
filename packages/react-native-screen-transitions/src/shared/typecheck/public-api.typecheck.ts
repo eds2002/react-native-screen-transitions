@@ -132,9 +132,9 @@ void legacyAnimationTarget;
 void transitionTarget;
 void transitionDepthTarget;
 
-const numericBoundsResult = interpolationProps.bounds({
-	id: 42,
-});
+const scopedBounds = interpolationProps.bounds({ id: 42 });
+const tagScopedBounds = interpolationProps.bounds("group:hero");
+const numericBoundsResult = scopedBounds.styles();
 const parentTransition = interpolationProps.transition({ depth: -1 });
 const grandparentTransition = interpolationProps.transition({ depth: -2 });
 const selfTransition = interpolationProps.transition({ depth: 0 });
@@ -146,19 +146,15 @@ const rootTransitionBounds = interpolationProps
 const leafTransitionBounds = interpolationProps
 	.transition({ depth: 2 })
 	?.bounds({ id: 42 });
-const offsetBoundsResult = interpolationProps.bounds({
-	id: 42,
+const offsetBoundsResult = scopedBounds.styles({
 	offset: { x: 10, y: -10 },
 });
-const deprecatedGesturesBoundsResult = interpolationProps.bounds({
-	id: 42,
+const deprecatedGesturesBoundsResult = scopedBounds.styles({
 	gestures: { x: 10, y: -10 },
 });
-const absoluteRawBoundsResult = interpolationProps.bounds({
-	id: 42,
+const absoluteRawBoundsResult = scopedBounds.math({
 	method: "size",
 	space: "absolute",
-	raw: true,
 });
 const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
 	.bounds({ id: 42 })
@@ -182,32 +178,24 @@ const configuredRevealInterpolatedStyle: BoundsNavigationRevealStyle =
 		maskSizingMode: "size",
 	});
 void configuredRevealInterpolatedStyle;
-const currentLink = interpolationProps.bounds.getLink(42);
-const initialSource = currentLink?.initialSource;
-const initialDestination = currentLink?.initialDestination;
-const scopedBounds = interpolationProps.bounds({ id: 42 });
-const scopedCurrentLink = scopedBounds.getLink();
-const scopedLinkRawSize = scopedCurrentLink?.compute({
-	method: "size",
-	space: "absolute",
-	target: "fullscreen",
-	raw: true,
-});
-const scopedMeasured = scopedBounds.getMeasured("screen-key");
-const scopedInitialSnapshot = scopedBounds.getSnapshot("screen-key");
-const scopedInterpolatedStyle: number =
-	scopedBounds.interpolateStyle("opacity");
-const scopedInterpolatedBounds: number =
-	scopedBounds.interpolateBounds("pageX");
+const currentLink = scopedBounds.link();
+const tagCurrentLink = tagScopedBounds.link();
+const tagOverrideLink = tagScopedBounds.link("other-group:other-hero");
+const currentLinkStatus = currentLink?.status;
+const initialSourceBounds = currentLink?.source?.initialBounds;
+const initialDestinationBounds = currentLink?.destination?.initialBounds;
+const scopedCurrentLink = scopedBounds.link();
 void currentLink;
-void initialSource;
-void initialDestination;
+void tagCurrentLink;
+void tagOverrideLink;
+void currentLinkStatus;
+void initialSourceBounds;
+void initialDestinationBounds;
 void scopedCurrentLink;
-void scopedLinkRawSize;
-void scopedMeasured;
-void scopedInitialSnapshot;
-void scopedInterpolatedStyle;
-void scopedInterpolatedBounds;
+void numericBoundsResult;
+void offsetBoundsResult;
+void deprecatedGesturesBoundsResult;
+void absoluteRawBoundsResult;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;

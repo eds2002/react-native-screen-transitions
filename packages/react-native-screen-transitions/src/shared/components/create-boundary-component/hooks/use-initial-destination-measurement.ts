@@ -5,6 +5,7 @@ import {
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
 import { getDestination } from "../../../stores/bounds/internals/links";
 import { pairs } from "../../../stores/bounds/internals/state";
@@ -20,20 +21,25 @@ const VIEWPORT_RETRY_DELAY_MS = 16;
 interface UseInitialDestinationMeasurementParams {
 	linkId: string;
 	enabled: boolean;
-	currentScreenKey: string;
-	preferredSourceScreenKey?: string;
-	ancestorScreenKeys: string[];
 	measureBoundary: MeasureBoundary;
 }
 
 export const useInitialDestinationMeasurement = ({
 	linkId,
 	enabled,
-	currentScreenKey,
-	preferredSourceScreenKey,
-	ancestorScreenKeys,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
+	const currentScreenKey = useDescriptorsStore(
+		(s) => s.derivations.currentScreenKey,
+	);
+	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
+	const destinationPairKey = useDescriptorsStore(
+		(s) => s.derivations.destinationPairKey,
+	);
+	const ancestorDestinationPairKey = useDescriptorsStore(
+		(s) => s.derivations.ancestorDestinationPairKey,
+	);
+	const destinationEnabled = enabled && !nextScreenKey;
 	const progress = AnimationStore.getValue(currentScreenKey, "progress");
 	const system = SystemStore.getBag(currentScreenKey);
 	const { pendingLifecycleRequestKind } = system;
@@ -89,20 +95,23 @@ export const useInitialDestinationMeasurement = ({
 				return [0, retryTick] as const;
 			}
 
-			const destinationPairKey = getInitialDestinationMeasurePairKey({
-				enabled,
-				currentScreenKey,
-				preferredSourceScreenKey,
-				ancestorScreenKeys,
+			const measurePairKey = getInitialDestinationMeasurePairKey({
+				enabled: destinationEnabled,
+				destinationPairKey,
+				ancestorDestinationPairKey,
 				linkId,
-				linkState: ancestorScreenKeys.length ? pairs.get() : undefined,
+				linkState:
+					destinationEnabled &&
+					(destinationPairKey || ancestorDestinationPairKey)
+						? pairs.get()
+						: undefined,
 			});
 
-			return [destinationPairKey, retryTick] as const;
+			return [measurePairKey, retryTick] as const;
 		},
-		([destinationPairKey]) => {
+		([measurePairKey]) => {
 			"worklet";
-			if (!destinationPairKey) {
+			if (!measurePairKey) {
 				releaseLifecycleStartBlock();
 				return;
 			}
@@ -110,11 +119,11 @@ export const useInitialDestinationMeasurement = ({
 			ensureLifecycleStartBlocked();
 			measureBoundary({
 				type: "destination",
-				pairKey: destinationPairKey,
+				pairKey: measurePairKey,
 			});
 
 			const destinationAttached =
-				getDestination(destinationPairKey, linkId) !== null;
+				getDestination(measurePairKey, linkId) !== null;
 
 			if (destinationAttached) {
 				releaseLifecycleStartBlock();

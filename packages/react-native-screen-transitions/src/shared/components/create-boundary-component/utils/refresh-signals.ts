@@ -1,8 +1,3 @@
-import {
-	createPendingPairKey,
-	createScreenPairKey,
-	getDestinationScreenKeyFromPairKey,
-} from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
 	LinkPairsState,
 	ScreenPairKey,
@@ -14,28 +9,6 @@ const DESTINATION_SIGNAL_PREFIX = "destination|";
 
 type RefreshBoundarySignal = MeasureTarget & {
 	signal: string;
-};
-
-const findNestedDestinationPairKey = (
-	linkState: LinkPairsState | undefined,
-	linkId: string,
-	ancestorScreenKeys: readonly string[] | undefined,
-): ScreenPairKey | null => {
-	"worklet";
-	const destinationScreenKey = ancestorScreenKeys?.[0];
-	if (!linkState || !destinationScreenKey) return null;
-
-	for (const pairKey in linkState) {
-		if (getDestinationScreenKeyFromPairKey(pairKey) !== destinationScreenKey) {
-			continue;
-		}
-
-		if (linkState[pairKey]?.links?.[linkId]?.destination) {
-			return pairKey;
-		}
-	}
-
-	return null;
 };
 
 const buildRefreshSignal = (
@@ -56,11 +29,12 @@ const buildRefreshSignal = (
 export const getRefreshBoundarySignal = (params: {
 	enabled: boolean;
 	currentScreenKey: string;
-	preferredSourceScreenKey?: string;
+	sourcePairKey?: ScreenPairKey;
+	destinationPairKey?: ScreenPairKey;
+	ancestorDestinationPairKey?: ScreenPairKey;
 	nextScreenKey?: string;
 	linkId: string;
 	group?: string;
-	ancestorScreenKeys?: readonly string[];
 	shouldRefresh: boolean;
 	closing: boolean;
 	entering: boolean;
@@ -72,11 +46,12 @@ export const getRefreshBoundarySignal = (params: {
 	const {
 		enabled,
 		currentScreenKey,
-		preferredSourceScreenKey,
+		sourcePairKey,
+		destinationPairKey,
+		ancestorDestinationPairKey,
 		nextScreenKey,
 		linkId,
 		group,
-		ancestorScreenKeys,
 		shouldRefresh,
 		closing,
 		entering,
@@ -89,76 +64,71 @@ export const getRefreshBoundarySignal = (params: {
 
 	const canRefreshPreCloseDestination =
 		shouldRefresh && closing && !entering && !animating && progress >= 1;
+
 	const canRefreshSettledDestination = shouldRefresh && !closing && !entering;
 
+	// Guards:
+	// 1) A user may dismiss via back button, in this case, we should remeasure.
+	// 2) If a user drags during entering/closing animations we should NOT remeasure.
 	if (!canRefreshPreCloseDestination && !canRefreshSettledDestination) {
 		return null;
 	}
 
-	// Non-group refresh only rewrites destination bounds. Source refresh is a
-	// grouped-only fallback for active ids that do not have source bounds yet.
+	// Non group:
+	// Since in typical group flows we would need to know the src, we don't need to do that for
+	// single a->b flows. So we just trigger the destination refresh.
 	if (!group) {
-		if (nextScreenKey) {
+		const refreshDestinationPairKey =
+			destinationPairKey ??
+			(nextScreenKey ? undefined : ancestorDestinationPairKey);
+
+		if (!refreshDestinationPairKey) {
 			return null;
 		}
 
-		// Nested initial screens have no previous screen in their own navigator,
-		// so recover the pair by looking for a destination on the ancestor route.
-		const pairKey = preferredSourceScreenKey
-			? createScreenPairKey(preferredSourceScreenKey, currentScreenKey)
-			: findNestedDestinationPairKey(linkState, linkId, ancestorScreenKeys);
-
-		if (!pairKey) return null;
-
 		return buildRefreshSignal(
 			"destination",
-			pairKey,
+			refreshDestinationPairKey,
 			[currentScreenKey, closing ? "closing" : "settled"].join("|"),
 		);
 	}
 
-	// Source-side grouped refresh: a new active id may not have source bounds yet,
-	// so the next screen's lifecycle pulse gives that source one chance to capture.
-	if (nextScreenKey) {
-		const pairKey = createScreenPairKey(currentScreenKey, nextScreenKey);
-		const pendingPairKey = createPendingPairKey(currentScreenKey);
-		const activeId = linkState?.[pairKey]?.groups?.[group]?.activeId;
-		const hasSource =
-			!!linkState?.[pairKey]?.links?.[linkId]?.source ||
-			!!linkState?.[pendingPairKey]?.links?.[linkId]?.source;
+	// Source side:
+	// When the activeId changes, trigger a refresh to ensure the source bounds are captured.
+	if (sourcePairKey) {
+		const activeId = linkState?.[sourcePairKey]?.groups?.[group]?.activeId;
 
-		if (activeId !== linkId || hasSource) {
+		if (activeId !== linkId) {
 			return null;
 		}
 
 		return buildRefreshSignal(
 			"source",
-			pairKey,
+			sourcePairKey,
 			[group, linkId, closing ? "closing" : "settled"].join("|"),
 		);
 	}
 
-	if (!preferredSourceScreenKey) return null;
+	const refreshDestinationPairKey =
+		destinationPairKey ??
+		(nextScreenKey ? undefined : ancestorDestinationPairKey);
 
-	// Destination-side grouped refresh: only the active member rewrites the
-	// destination side, keeping inactive grouped members from stealing the link.
-	const pairKey = createScreenPairKey(
-		preferredSourceScreenKey,
-		currentScreenKey,
-	);
-	const activeId = linkState?.[pairKey]?.groups?.[group]?.activeId;
-	const hasSource = !!linkState?.[pairKey]?.links?.[linkId]?.source;
-	const hasDestination = !!linkState?.[pairKey]?.links?.[linkId]?.destination;
+	if (!refreshDestinationPairKey) return null;
+
+	// Destination side:
+	// When the activeId changes, trigger a refresh to ensure the destination bounds are captured.
+	const activeId =
+		linkState?.[refreshDestinationPairKey]?.groups?.[group]?.activeId;
 
 	// Destination retargeting should only measure a concrete member that already
 	// participates in the pair. Missing members fall back to initialId at resolve.
-	if (activeId !== linkId || (!hasSource && !hasDestination)) {
+	if (activeId !== linkId) {
 		return null;
 	}
 
 	return buildRefreshSignal(
 		"destination",
-		pairKey,
+		refreshDestinationPairKey,
 		[group, linkId, closing ? "closing" : "settled"].join("|"),
 	);
 };
