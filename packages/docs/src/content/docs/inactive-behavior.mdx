@@ -88,13 +88,15 @@ That delay prevents blank frames during transitions.
 
 `keep` is the escape hatch for live inactive content and should not be chosen for performance.
 
-## Caveats And Future Plans
+## Native Screen Touch Handoff
 
-One known caveat is platform parity during closing transitions.
+Before v3.7, Android native screens had a closing-transition edge case.
 
-On iOS, `react-native-screens` backs stack presentation with UIKit's `UINavigationController`, which handles closing states more gracefully. In cases where the closing transition exposes content behind the outgoing screen, iOS can allow touches through to that content.
+On iOS, `react-native-screens` backs stack presentation with UIKit's `UINavigationController`, which handles closing states more gracefully. On Android, fragment presentation could keep the outgoing screen in front until the close fully finished, so the screen behind it could appear visible without receiving touch events yet.
 
-Android is built on `Fragment`s. During a closing transition, the outgoing screen can block touch events entirely, which makes the same flow feel less fluid than iOS.
+v3.7 fixes that for blank stack by driving scene activity from the JS-managed stack state. Closing routes are retained for their exit animation, but they are non-interactive, and the visible route below can regain touch handling without waiting for the Android fragment close to finish.
+
+## Future Plans
 
 Longer term, React 19.2's [`<Activity>`](https://react.dev/blog/2025/10/01/react-19-2#activity) is the direction these names are meant to align with. Recent writing from Satyajit Sahoo ([@satya164](https://x.com/satya164)) around Activity prompted experiments in this package, and local testing showed similar retention and memory behavior with an Activity-based approach.
 

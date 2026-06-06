@@ -24,15 +24,21 @@ const NATIVE_STACK_TRANSITION_RESET_OPTIONS: NativeStackTransitionResetOptions =
 		gestureEnabled: false,
 	};
 
-type GestureEnabledRestore = {
-	gestureEnabled: ScreenTransitionConfig["gestureEnabled"];
-	hasGestureEnabled: boolean;
-};
+const ADAPTER_GESTURE_ENABLED_RESTORE = Symbol(
+	"react-native-screen-transitions.adapterGestureEnabledRestore",
+);
+const ADAPTER_GESTURE_DIRECTION_RESTORE = Symbol(
+	"react-native-screen-transitions.adapterGestureDirectionRestore",
+);
+const ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE = Symbol(
+	"react-native-screen-transitions.adapterGestureResponseDistanceRestore",
+);
 
-const gestureEnabledRestoreByAdaptedOptions = new WeakMap<
-	Record<string, unknown>,
-	GestureEnabledRestore
->();
+type OptionsWithTransitionRestore = Record<string, unknown> & {
+	[ADAPTER_GESTURE_ENABLED_RESTORE]?: ScreenTransitionConfig["gestureEnabled"];
+	[ADAPTER_GESTURE_DIRECTION_RESTORE]?: ScreenTransitionConfig["gestureDirection"];
+	[ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE]?: ScreenTransitionConfig["gestureResponseDistance"];
+};
 
 export type NativeStackAdapterOptionInput =
 	| Record<string, unknown>
@@ -40,6 +46,10 @@ export type NativeStackAdapterOptionInput =
 
 function isPlainOptions(value: unknown): value is Record<string, unknown> {
 	return typeof value === "object" && value !== null;
+}
+
+function hasOwnOption(value: object, key: PropertyKey): boolean {
+	return Object.getOwnPropertyDescriptor(value, key) !== undefined;
 }
 
 export function adaptNativeStackTransitionOptions<
@@ -66,11 +76,30 @@ export function adaptNativeStackTransitionOptions<
 		...NATIVE_STACK_TRANSITION_RESET_OPTIONS,
 		enableTransitions: true,
 	};
-	gestureEnabledRestoreByAdaptedOptions.set(adaptedOptions, {
-		gestureEnabled:
-			nativeOptions.gestureEnabled as ScreenTransitionConfig["gestureEnabled"],
-		hasGestureEnabled: "gestureEnabled" in nativeOptions,
-	});
+
+	delete adaptedOptions.gestureDirection;
+	delete adaptedOptions.gestureResponseDistance;
+
+	if (hasOwnOption(nativeOptions, "gestureEnabled")) {
+		(adaptedOptions as OptionsWithTransitionRestore)[
+			ADAPTER_GESTURE_ENABLED_RESTORE
+		] =
+			nativeOptions.gestureEnabled as ScreenTransitionConfig["gestureEnabled"];
+	}
+
+	if (hasOwnOption(nativeOptions, "gestureDirection")) {
+		(adaptedOptions as OptionsWithTransitionRestore)[
+			ADAPTER_GESTURE_DIRECTION_RESTORE
+		] =
+			nativeOptions.gestureDirection as ScreenTransitionConfig["gestureDirection"];
+	}
+
+	if (hasOwnOption(nativeOptions, "gestureResponseDistance")) {
+		(adaptedOptions as OptionsWithTransitionRestore)[
+			ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE
+		] =
+			nativeOptions.gestureResponseDistance as ScreenTransitionConfig["gestureResponseDistance"];
+	}
 
 	return adaptedOptions as TOptions;
 }
@@ -78,11 +107,25 @@ export function adaptNativeStackTransitionOptions<
 export function resolveAdapterTransitionOptions<
 	TOptions extends AdapterDescriptorOptions,
 >(options: TOptions): TOptions & ScreenTransitionConfig {
-	const gestureEnabledRestore = gestureEnabledRestoreByAdaptedOptions.get(
-		options as Record<string, unknown>,
+	const optionRecord = options as OptionsWithTransitionRestore;
+	const hasGestureEnabledRestore = hasOwnOption(
+		optionRecord,
+		ADAPTER_GESTURE_ENABLED_RESTORE,
+	);
+	const hasGestureDirectionRestore = hasOwnOption(
+		optionRecord,
+		ADAPTER_GESTURE_DIRECTION_RESTORE,
+	);
+	const hasGestureResponseDistanceRestore = hasOwnOption(
+		optionRecord,
+		ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE,
 	);
 
-	if (!gestureEnabledRestore) {
+	if (
+		!hasGestureEnabledRestore &&
+		!hasGestureDirectionRestore &&
+		!hasGestureResponseDistanceRestore
+	) {
 		return options;
 	}
 
@@ -90,11 +133,35 @@ export function resolveAdapterTransitionOptions<
 		...options,
 		enableTransitions: true,
 	};
+	delete (resolvedOptions as OptionsWithTransitionRestore)[
+		ADAPTER_GESTURE_ENABLED_RESTORE
+	];
+	delete (resolvedOptions as OptionsWithTransitionRestore)[
+		ADAPTER_GESTURE_DIRECTION_RESTORE
+	];
+	delete (resolvedOptions as OptionsWithTransitionRestore)[
+		ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE
+	];
 
-	if (gestureEnabledRestore.hasGestureEnabled) {
-		resolvedOptions.gestureEnabled = gestureEnabledRestore.gestureEnabled;
+	if (hasGestureEnabledRestore) {
+		resolvedOptions.gestureEnabled =
+			optionRecord[ADAPTER_GESTURE_ENABLED_RESTORE];
 	} else {
 		delete resolvedOptions.gestureEnabled;
+	}
+
+	if (hasGestureDirectionRestore) {
+		resolvedOptions.gestureDirection =
+			optionRecord[ADAPTER_GESTURE_DIRECTION_RESTORE];
+	} else {
+		delete resolvedOptions.gestureDirection;
+	}
+
+	if (hasGestureResponseDistanceRestore) {
+		resolvedOptions.gestureResponseDistance =
+			optionRecord[ADAPTER_GESTURE_RESPONSE_DISTANCE_RESTORE];
+	} else {
+		delete resolvedOptions.gestureResponseDistance;
 	}
 
 	return resolvedOptions;
