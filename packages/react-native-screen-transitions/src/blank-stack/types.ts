@@ -10,8 +10,11 @@ import type {
 	StackRouterOptions,
 	Theme,
 } from "@react-navigation/native";
-import type { ScreenTransitionConfig } from "../shared";
+import type { InactiveBehavior, ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
+import type { StackSceneActivity } from "../shared/types/stack.types";
+
+export type { InactiveBehavior } from "../shared";
 
 export type BlankStackNavigationEventMap = {};
 
@@ -61,6 +64,24 @@ export type BlankStackNavigationHelpers = NavigationHelpers<
  */
 export interface BlankStackFactoryOptions {
 	/**
+	 * Controls whether blank-stack screens are rendered with react-native-screens.
+	 *
+	 * When enabled, inactive presentation state is backed by
+	 * `ScreenContainer`/`Screen.activityState`. Set this to `false` to render
+	 * screens as regular React Native views.
+	 *
+	 * @default true
+	 */
+	nativeScreens?: boolean;
+
+	/**
+	 * Enables react-native-screens for blank-stack screen retention.
+	 *
+	 * @deprecated Use `nativeScreens` instead.
+	 */
+	enableNativeScreens?: boolean;
+
+	/**
 	 * Creates an isolated navigation tree for embedded flows.
 	 *
 	 * Use this when the blank stack needs to live inside another screen or host
@@ -68,22 +89,10 @@ export interface BlankStackFactoryOptions {
 	 *
 	 * When enabled, the navigator:
 	 * - wraps itself in `NavigationIndependentTree` + `NavigationContainer`
-	 * - skips the shared native `ScreenContainer`
 	 *
 	 * Leave this disabled for normal top-level app stacks.
 	 */
 	independent?: boolean;
-	/**
-	 * Enables native screen primitives on supported native platforms.
-	 *
-	 * Use this when you want the embedded blank stack to keep `react-native-screens`
-	 * behavior such as native activity state and freezing.
-	 *
-	 * Set this to `false` when you want the blank stack to render with regular
-	 * views instead of native screen primitives. This is useful for embedded
-	 * flows where plain views are a better fit than native screen layering.
-	 */
-	enableNativeScreens?: boolean;
 }
 
 /**
@@ -94,24 +103,29 @@ export type BlankStackOverlayProps = OverlayProps<
 	BlankStackNavigationProp<ParamListBase>
 >;
 
-type BlankStackScreenTransitionConfig = ScreenTransitionConfig & {
+export type BlankStackNavigationOptions = ScreenTransitionConfig & {
 	/**
-	 * Whether to detach the previous screen from the view hierarchy to save memory.
-	 * Set it to `false` if you need the previous screen to be seen through the active screen.
-	 * Only applicable if `detachInactiveScreens` isn't set to `false`.
-	 */
-	detachPreviousScreen?: boolean;
-};
-
-export type BlankStackNavigationOptions = BlankStackScreenTransitionConfig & {
-	/**
-	 * Whether inactive screens should be suspended from re-rendering. Defaults to `false`.
-	 * Defaults to `true` when `enableFreeze()` is run at the top of the application.
-	 * Requires `react-native-screens` version >=3.16.0.
+	 * Controls how inactive blank-stack screens are retained after they are no
+	 * longer active.
 	 *
-	 * Only supported on iOS and Android.
+	 * For a stack shaped as A(inactive), B(inert), C(active):
+	 *
+	 * - `hide`: keeps A mounted, pauses/freezes inactive work where supported,
+	 *   and hides native/view presentation after the screen that exposes it has
+	 *   safely painted.
+	 * - `pause`: keeps A's last painted UI visible and asks the platform to stop
+	 *   or suspend inactive work where possible.
+	 * - `unmount`: removes A's React subtree after safe paint when the route has
+	 *   no nested navigation state.
+	 * - `keep`: keeps A mounted, attached, visible, non-interactive, and running.
+	 *
+	 * On web, or when native screens are disabled, `hide` and `pause` cannot
+	 * currently suspend React work. This will change once the implementation can
+	 * use React 19.2's Activity component.
+	 *
+	 * @default "hide" on native, "unmount" on web
 	 */
-	freezeOnBlur?: boolean;
+	inactiveBehavior?: InactiveBehavior;
 };
 
 export type BlankStackNavigatorProps = DefaultNavigatorOptions<
@@ -129,4 +143,6 @@ export type BlankStackDescriptor = Descriptor<
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp<ParamListBase>,
 	RouteProp<ParamListBase>
->;
+> & {
+	activity: StackSceneActivity;
+};

@@ -50,6 +50,11 @@ export type NativeStackNavigationEventMap = {
 	sheetDetentChange: { data: { index: number; stable: boolean } };
 };
 
+/**
+ * @deprecated The bundled native-stack integration is deprecated and will be removed in a future major release.
+ * Use `@react-navigation/native-stack` or Expo Router's native stack with
+ * `withScreenTransitions` from `react-native-screen-transitions` instead.
+ */
 export type NativeStackNavigationProp<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
@@ -64,6 +69,11 @@ export type NativeStackNavigationProp<
 > &
 	StackActionHelpers<ParamList>;
 
+/**
+ * @deprecated The bundled native-stack integration is deprecated and will be removed in a future major release.
+ * Use `@react-navigation/native-stack` or Expo Router's native stack with
+ * `withScreenTransitions` from `react-native-screen-transitions` instead.
+ */
 export type NativeStackScreenProps<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
@@ -148,6 +158,11 @@ export type NativeStackOverlayProps = OverlayProps<
 	NativeStackNavigationProp<ParamListBase>
 >;
 
+/**
+ * @deprecated The bundled native-stack integration is deprecated and will be removed in a future major release.
+ * Use `NativeStackAdapterOptions` with `withScreenTransitions` from
+ * `react-native-screen-transitions` instead.
+ */
 export type NativeStackScreenTransitionConfig = ScreenTransitionConfig & {
 	/**
 	 * Whether to enable transitions. It sets the presentation to containedTransparentModal, animation none, and headerShown to false.
@@ -155,6 +170,11 @@ export type NativeStackScreenTransitionConfig = ScreenTransitionConfig & {
 	enableTransitions?: boolean;
 };
 
+/**
+ * @deprecated The bundled native-stack integration is deprecated and will be removed in a future major release.
+ * Use `NativeStackAdapterOptions<NativeStackNavigationOptions>` with
+ * `@react-navigation/native-stack` and `withScreenTransitions` instead.
+ */
 export type NativeStackNavigationOptions = NativeStackScreenTransitionConfig & {
 	/**
 	 * String that can be displayed in the header as a fallback for `headerTitle`.
@@ -701,6 +721,11 @@ export type NativeStackNavigationOptions = NativeStackScreenTransitionConfig & {
 	unstable_sheetFooter?: () => React.ReactNode;
 };
 
+/**
+ * @deprecated The bundled native-stack integration is deprecated and will be removed in a future major release.
+ * Use `@react-navigation/native-stack` or Expo Router's native stack with
+ * `withScreenTransitions` from `react-native-screen-transitions` instead.
+ */
 export type NativeStackNavigatorProps = DefaultNavigatorOptions<
 	ParamListBase,
 	string | undefined,

@@ -47,14 +47,16 @@ I'm super happy to present Screen Transitions: a highly customizable package tha
 
 The library has three main pieces:
 
-1. navigator creators from subpath exports
+1. navigator creators from subpath exports and adapters for existing navigators
 2. the default `Transition` export for transition-aware components and presets
 3. screen options where you define gestures, snap points, overlays, masking, and `screenStyleInterpolator`
 
 ```tsx
-import Transition from "react-native-screen-transitions";
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import Transition, {
+  withScreenTransitions,
+} from "react-native-screen-transitions";
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
-import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
 ```
 
 ## Choose A Stack
@@ -73,7 +75,7 @@ It is the best fit for:
 
 ### Native Stack
 
-`createNativeStackNavigator()` is the native-stack integration path.
+`withScreenTransitions(createNativeStackNavigator())` is the native-stack integration path.
 
 Use it when you already have a stack built around `@react-navigation/native-stack` and you want to opt a specific flow into this library's transition system.
 
@@ -82,6 +84,8 @@ That path requires `enableTransitions` on the screens or navigator where you wan
 Under the hood, this is still a compatibility layer. The transitioned native-stack screen is switched into a transparent modal-style presentation, native animation is disabled, and the library drives the transition visuals with Reanimated on top of that container.
 
 So while native-stack integration keeps you in the native-stack world for things like existing headers and screen primitives, it is not the path to the most flexible or most powerful custom animations.
+
+The bundled native-stack creator from `react-native-screen-transitions/native-stack` is deprecated. Wrap `@react-navigation/native-stack` with `withScreenTransitions()` for new native-stack usage.
 
 Use native stack when you already rely on native-stack behavior and you want a one-off custom transition inside that setup. If you want the full transition model and more control over the animation surface itself, choose blank stack.
 

@@ -9,8 +9,10 @@ import {
 } from "../../../stores/bounds/internals/links";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
+import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import type { MeasureBoundary } from "../types";
 import {
+	applyVisibilityBlockOffset,
 	isMeasurementInViewport,
 	measureWithOverscrollAwareness,
 } from "../utils/measured-bounds";
@@ -55,6 +57,19 @@ export const useMeasurer = ({
 
 			if (!measured) return;
 
+			// Source boundaries do not need offset correction. Only destination
+			// captures can measure while the visibility gate is still blocked.
+			const shouldAdjustBlockedDestination =
+				target.type === "destination" &&
+				pendingLifecycleStartBlockCount.get() > 0;
+
+			const normalizedMeasured = shouldAdjustBlockedDestination
+				? applyVisibilityBlockOffset(
+						measured,
+						getVisibilityBlockOffset(viewportHeight),
+					)
+				: measured;
+
 			/**
 			 * - Destination Pass -
 			 * Be strict while lifecycle start is blocked for destination capture.
@@ -68,14 +83,18 @@ export const useMeasurer = ({
 			const viewportAllowsDestinationWrite =
 				target.type !== "destination" ||
 				!shouldGuardDestinationViewport ||
-				isMeasurementInViewport(measured, viewportWidth, viewportHeight);
+				isMeasurementInViewport(
+					normalizedMeasured,
+					viewportWidth,
+					viewportHeight,
+				);
 
 			if (!viewportAllowsDestinationWrite) return;
 
 			// Set the bounds entry on every measure to avoid any stale measurements
 			// for the public read API.
 			setEntry(entryTag, currentScreenKey, {
-				bounds: measured,
+				bounds: normalizedMeasured,
 			});
 
 			if (target.type === "source") {
@@ -83,7 +102,7 @@ export const useMeasurer = ({
 					target.pairKey,
 					linkId,
 					currentScreenKey,
-					measured,
+					normalizedMeasured,
 					preparedStyles,
 					group,
 				);
@@ -94,7 +113,7 @@ export const useMeasurer = ({
 					target.pairKey,
 					linkId,
 					currentScreenKey,
-					measured,
+					normalizedMeasured,
 					preparedStyles,
 					group,
 				);

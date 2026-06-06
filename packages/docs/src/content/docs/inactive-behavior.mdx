@@ -1,0 +1,120 @@
+---
+title: "Inactive Behavior"
+pageTitle: "Inactive Behavior"
+summary: "Control whether inactive blank-stack screens hide, pause, unmount, or keep running."
+description: "Control whether inactive blank-stack screens hide, pause, unmount, or keep running."
+eyebrow: "Core Concepts"
+group: "Core Concepts"
+order: 11
+to: /inactive-behavior
+---
+
+## What It Controls
+
+`inactiveBehavior` controls what blank stack does with a route after it is no longer active.
+
+It is a lifecycle option. It decides whether an inactive screen stays mounted, stays visible, freezes, unmounts, or keeps running.
+
+```tsx
+const Stack = createBlankStackNavigator();
+
+<Stack.Screen
+  name="Detail"
+  component={DetailScreen}
+  options={{
+    inactiveBehavior: "hide",
+  }}
+/>
+```
+
+The default is:
+
+- native: `"hide"`
+- web: `"unmount"`
+
+## `hide`
+
+`hide` is the native default. It keeps the React subtree mounted, waits until the route above it has safely painted, then hides the inactive screen from presentation and freezes inactive rendering where native screens support it.
+
+With `react-native-screens`, blank stack sets `activityState={0}`, `shouldFreeze={true}`, and `freezeOnBlur={true}` for this mode after safe paint.
+
+`activityState={0}` lets the parent screen container detach the screen from the native view hierarchy. `shouldFreeze` tells `react-native-screens` that the screen should be frozen with `react-freeze`.
+
+Use `hide` when back navigation should stay warm, but inactive views do not need to remain visible or keep rendering. It can reduce inactive React render pressure and native presentation work. It does not release JS memory, because the component tree is still mounted.
+
+## `pause`
+
+`pause` keeps the inactive screen mounted, attached, and visible, but freezes inactive rendering where native screens support it after safe paint.
+
+With `react-native-screens`, blank stack keeps the screen at `activityState={1}` and sets `shouldFreeze={true}` plus `freezeOnBlur={true}`. The last paint stays visible while React rendering below that screen is suspended.
+
+Use `pause` when the previous screen must remain visible behind the current one, such as transparent presentations, overlays, or transitions that intentionally expose older content.
+
+This is still a retention mode. It does not release JS memory or clean up local component state.
+
+## `unmount`
+
+`unmount` removes the inactive screen's React subtree after safe paint, when the route has no nested navigation state.
+
+Use it for memory-sensitive screens where preserving local state is less important than releasing JS objects and native resources.
+
+The trade-off is that returning to the screen is cold. Local component state is lost, effects clean up, and the screen must mount again when it becomes active.
+
+If the route owns nested navigator state, blank stack can retain it instead of dropping that nested navigation tree.
+
+## `keep`
+
+`keep` keeps the inactive screen mounted, attached, visible, non-interactive, and running.
+
+Use it only when inactive content must keep updating while it sits behind the active route.
+
+This has the highest retention cost. React state, JS objects, effects, native views, layout, and accessibility structure can all remain present.
+
+## Safe Paint
+
+Blank stack avoids hiding or removing an inactive screen immediately when another screen appears above it.
+
+For a stack shaped like `A` inactive, `B` inert, and `C` active, `A` may still be needed visually until `C` finishes painting its transition. The library waits for the paint driver to settle before applying `hide`, `pause`, or `unmount`.
+
+That delay prevents blank frames during transitions.
+
+## Performance Shape
+
+`hide` and `pause` are the performance-oriented retention modes. They keep the React subtree mounted, so they do not meaningfully reduce JS memory, but they can reduce inactive rendering work through `react-freeze`.
+
+`hide` can also reduce native presentation work because the inactive screen is removed from the visible native presentation after safe paint.
+
+`unmount` is the cleanup mode. It is the option that directly releases JS component state and objects held by the inactive subtree.
+
+`keep` is the escape hatch for live inactive content and should not be chosen for performance.
+
+## Native Screen Touch Handoff
+
+Before v3.7, Android native screens had a closing-transition edge case.
+
+On iOS, `react-native-screens` backs stack presentation with UIKit's `UINavigationController`, which handles closing states more gracefully. On Android, fragment presentation could keep the outgoing screen in front until the close fully finished, so the screen behind it could appear visible without receiving touch events yet.
+
+v3.7 fixes that for blank stack by driving scene activity from the JS-managed stack state. Closing routes are retained for their exit animation, but they are non-interactive, and the visible route below can regain touch handling without waiting for the Android fragment close to finish.
+
+## Future Plans
+
+Longer term, React 19.2's [`<Activity>`](https://react.dev/blog/2025/10/01/react-19-2#activity) is the direction these names are meant to align with. Recent writing from Satyajit Sahoo ([@satya164](https://x.com/satya164)) around Activity prompted experiments in this package, and local testing showed similar retention and memory behavior with an Activity-based approach.
+
+Later versions can use that path to move `hide`, `pause`, `unmount`, and `keep` toward better parity across platforms.
+
+## Choosing A Mode
+
+Start with the default `"hide"` on native.
+
+Choose another mode when the screen has a specific need:
+
+- choose `"hide"` when inactive screens should stay warm but hidden and frozen
+- choose `"pause"` when preserved paint matters and inactive rendering should pause
+- choose `"unmount"` when JS memory, native resources, or cleanup matter more than warm back navigation
+- choose `"keep"` when inactive screens must stay live and visible
+
+## Related Reading
+
+- [Stack Types](/stack-types)
+- [Independent Stacks](/independent-stacks)
+- [Caveats & Trade-offs](/caveats)

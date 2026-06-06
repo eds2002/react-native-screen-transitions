@@ -1,4 +1,5 @@
 import { FlatList, Pressable, ScrollView, View } from "react-native";
+import { withScreenTransitions } from "./adapters/with-screen-transitions";
 import {
 	Boundary,
 	createBoundaryComponent,
@@ -10,6 +11,7 @@ import { Presets, Specs } from "./configs";
 export default {
 	createTransitionAwareComponent,
 	createBoundaryComponent,
+	withScreenTransitions,
 	Boundary,
 	View: createTransitionAwareComponent(View),
 	Pressable: createTransitionAwareComponent(Pressable),
@@ -24,6 +26,8 @@ export default {
 	Specs,
 };
 
+export type { NativeStackAdapterOptions } from "./adapters/with-screen-transitions";
+export { withScreenTransitions } from "./adapters/with-screen-transitions";
 export { snapTo } from "./animation/snap-to";
 export {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
@@ -53,10 +57,14 @@ export type {
 	BoundsNavigationZoomOpacityRanges,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
+	InactiveBehavior,
 	OverlayProps,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
+	ScreenTransitionAccessor,
 	ScreenTransitionConfig,
+	ScreenTransitionDepthTarget,
+	ScreenTransitionTarget,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 	TransitionSpec,

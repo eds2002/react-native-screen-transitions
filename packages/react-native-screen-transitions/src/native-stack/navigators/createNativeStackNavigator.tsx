@@ -62,6 +62,11 @@ function NativeStackNavigator({
 	);
 }
 
+/**
+ * @deprecated The bundled native-stack integration is deprecated and will be removed in a future major release.
+ * Use `@react-navigation/native-stack` or Expo Router's native stack with
+ * `withScreenTransitions` from `react-native-screen-transitions` instead.
+ */
 export function createNativeStackNavigator<
 	const ParamList extends ParamListBase,
 	const NavigatorID extends string | undefined = undefined,

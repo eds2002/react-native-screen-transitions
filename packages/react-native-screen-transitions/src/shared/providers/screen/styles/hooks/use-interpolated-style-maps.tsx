@@ -9,7 +9,9 @@ import type {
 import { logger } from "../../../../utils/logger";
 import { useScreenAnimationContext } from "../../animation";
 import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
+import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/use-build-transition-accessor";
 import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
+import { readScreenAnimationRevisions } from "../../animation/helpers/read-screen-animation-revisions";
 import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selected-interpolator-options";
 import { useDescriptorDerivations } from "../../descriptors";
 import {
@@ -34,6 +36,7 @@ type RunInterpolatorParams = {
 	progress: ScreenInterpolatorFrame["progress"];
 	next: ScreenInterpolatorFrame["next"];
 	bounds: Parameters<ScreenStyleInterpolator>[0]["bounds"];
+	transition: Parameters<ScreenStyleInterpolator>[0]["transition"];
 	shouldDeferStyleBuckets: boolean;
 };
 
@@ -60,6 +63,7 @@ const runInterpolator = ({
 	progress,
 	next,
 	bounds,
+	transition,
 	shouldDeferStyleBuckets,
 }: RunInterpolatorParams): InterpolatorResult | undefined => {
 	"worklet";
@@ -74,6 +78,7 @@ const runInterpolator = ({
 			progress,
 			next,
 			bounds,
+			transition,
 		});
 
 		const rawStyleMap: TransitionInterpolatedStyle | undefined =
@@ -137,8 +142,11 @@ export const useInterpolatedStylesMap = () => {
 		selectedInterpolatorOptions,
 		nextInterpolator,
 		currentInterpolator,
+		ancestorScreenAnimationSources,
+		descendantScreenAnimationSources,
 	} = useScreenAnimationContext();
 	const boundsAccessor = useBuildBoundsAccessor();
+	const transition = useBuildTransitionAccessor();
 	const pendingLifecycleStartBlockCount = SystemStore.getValue(
 		currentScreenKey,
 		"pendingLifecycleStartBlockCount",
@@ -148,7 +156,11 @@ export const useInterpolatedStylesMap = () => {
 
 	return useDerivedValue<LocalStyleLayers>(() => {
 		"worklet";
-		screenInterpolatorPropsRevision.get();
+		readScreenAnimationRevisions(
+			screenInterpolatorPropsRevision,
+			ancestorScreenAnimationSources,
+			descendantScreenAnimationSources,
+		);
 		const props = screenInterpolatorProps.get();
 
 		/**
@@ -199,6 +211,7 @@ export const useInterpolatedStylesMap = () => {
 			progress: effectiveProgress,
 			next: effectiveNext,
 			bounds: boundsAccessor,
+			transition,
 			shouldDeferStyleBuckets,
 		});
 
@@ -223,6 +236,7 @@ export const useInterpolatedStylesMap = () => {
 			progress: effectiveProgress,
 			next: effectiveNext,
 			bounds: boundsAccessor,
+			transition,
 			shouldDeferStyleBuckets,
 		});
 

@@ -1,8 +1,8 @@
 ---
 title: "Expo Router"
 pageTitle: "Expo Router"
-summary: "Use blank stack or native stack inside Expo Router layouts with withLayoutContext()."
-description: "Use blank stack or native stack inside Expo Router layouts with withLayoutContext()."
+summary: "Use blank stack or native-stack adapter integration inside Expo Router layouts with withLayoutContext()."
+description: "Use blank stack or native-stack adapter integration inside Expo Router layouts with withLayoutContext()."
 eyebrow: "Guides"
 group: "Guides"
 order: 2
@@ -13,7 +13,7 @@ to: /expo-router
 
 Expo Router integration is just React Navigation integration through `withLayoutContext()`.
 
-There is no special Expo Router navigator for this package. Create the navigator with `react-native-screen-transitions`, wrap its `Navigator`, then use that wrapper inside your route `_layout.tsx`.
+There is no special Expo Router navigator for this package. Create the navigator, wrap its `Navigator`, then use that wrapper inside your route `_layout.tsx`.
 
 Most work should use blank stack. Reach for native stack only when you specifically want `@react-navigation/native-stack`.
 
@@ -96,17 +96,24 @@ import {
   createNativeStackNavigator,
   type NativeStackNavigationEventMap,
   type NativeStackNavigationOptions,
-} from "react-native-screen-transitions/native-stack";
+} from "@react-navigation/native-stack";
+import {
+  withScreenTransitions,
+  type NativeStackAdapterOptions,
+} from "react-native-screen-transitions";
 
-const { Navigator } = createNativeStackNavigator();
+const NativeStack = createNativeStackNavigator();
+const { Navigator } = withScreenTransitions(NativeStack);
 
 export const Stack = withLayoutContext<
-  NativeStackNavigationOptions,
+  NativeStackAdapterOptions<NativeStackNavigationOptions>,
   typeof Navigator,
   StackNavigationState<ParamListBase>,
   NativeStackNavigationEventMap
 >(Navigator);
 ```
+
+The older native-stack creator from `react-native-screen-transitions/native-stack` is deprecated. Use `@react-navigation/native-stack` plus `withScreenTransitions()` for new Expo Router native-stack wrappers.
 
 Enable the transition layer only where you want it:
 

@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { getInitialDestinationMeasurePairKey } from "../../components/create-boundary-component/utils/destination-signals";
-import { isMeasurementInViewport } from "../../components/create-boundary-component/utils/measured-bounds";
+import {
+	applyVisibilityBlockOffset,
+	isMeasurementInViewport,
+} from "../../components/create-boundary-component/utils/measured-bounds";
 import { getRefreshBoundarySignal } from "../../components/create-boundary-component/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/create-boundary-component/utils/source-signals";
 import { BoundStore, type Snapshot } from "../../stores/bounds";
@@ -9,6 +12,7 @@ import {
 	createScreenPairKey,
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
+import { getVisibilityBlockOffset } from "../../utils/visibility-block-offset";
 
 const createBounds = (): Snapshot["bounds"] => ({
 	x: 0,
@@ -201,6 +205,25 @@ describe("bounds client measurement contract", () => {
 				800,
 			),
 		).toBe(false);
+	});
+
+	it("normalizes visibility-blocked destination measurements before viewport checks", () => {
+		const offset = getVisibilityBlockOffset(800);
+		const blockedMeasurement = {
+			...createBounds(),
+			pageY: offset,
+		};
+
+		expect(isMeasurementInViewport(blockedMeasurement, 400, 800)).toBe(false);
+
+		const normalized = applyVisibilityBlockOffset(
+			blockedMeasurement,
+			offset,
+		);
+
+		expect(normalized.pageY).toBe(0);
+		expect(normalized.y).toBe(blockedMeasurement.y);
+		expect(isMeasurementInViewport(normalized, 400, 800)).toBe(true);
 	});
 
 	it("refreshes the current active grouped source when it has no source yet", () => {

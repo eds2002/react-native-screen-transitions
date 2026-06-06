@@ -2,6 +2,8 @@ import type { useClosingRouteKeys } from "../../hooks/navigation/use-closing-rou
 import type { RouteWithKey } from "../../types/stack.types";
 import { composeDescriptors } from "./compose-descriptors";
 
+type ClosingRouteKeys = Set<string> | ReturnType<typeof useClosingRouteKeys>;
+
 type SyncRoutesWithRemovedParams<
 	Route extends RouteWithKey,
 	DescriptorMap extends Record<string, unknown>,
@@ -10,7 +12,36 @@ type SyncRoutesWithRemovedParams<
 	prevDescriptors: DescriptorMap;
 	nextRoutes: Route[];
 	nextDescriptors: DescriptorMap;
-	closingRouteKeys: ReturnType<typeof useClosingRouteKeys>;
+	closingRouteKeys: ClosingRouteKeys;
+};
+
+const addClosingRouteKey = (
+	closingRouteKeys: ClosingRouteKeys,
+	key: string,
+) => {
+	closingRouteKeys.add(key);
+};
+
+const deleteClosingRouteKey = (
+	closingRouteKeys: ClosingRouteKeys,
+	key: string,
+) => {
+	if (closingRouteKeys instanceof Set) {
+		closingRouteKeys.delete(key);
+		return;
+	}
+
+	closingRouteKeys.remove(key);
+};
+
+const getClosingRouteKeyValues = (
+	closingRouteKeys: ClosingRouteKeys,
+): Iterable<string> => {
+	if (closingRouteKeys instanceof Set) {
+		return closingRouteKeys;
+	}
+
+	return closingRouteKeys.ref.current;
 };
 
 /**
@@ -60,16 +91,16 @@ export const syncRoutesWithRemoved = <
 
 		if (nextRouteWasPresent && !previousRouteStillPresent) {
 			// Previous route was removed, mark as closing
-			closingRouteKeys.add(previousFocusedRoute.key);
+			addClosingRouteKey(closingRouteKeys, previousFocusedRoute.key);
 
 			derivedRoutes.push(previousFocusedRoute);
 		} else {
 			// Next route is now active, not closing
-			closingRouteKeys.remove(nextFocusedRoute.key);
+			deleteClosingRouteKey(closingRouteKeys, nextFocusedRoute.key);
 
 			if (!previousRouteStillPresent) {
 				// Previous route needs to be inserted for transition
-				closingRouteKeys.remove(previousFocusedRoute.key);
+				deleteClosingRouteKey(closingRouteKeys, previousFocusedRoute.key);
 
 				const insertIndex = Math.max(derivedRoutes.length - 1, 0);
 				derivedRoutes.splice(insertIndex, 0, previousFocusedRoute);
@@ -77,14 +108,14 @@ export const syncRoutesWithRemoved = <
 		}
 	} else if (nextFocusedRoute) {
 		// Same focused route, ensure it's not marked as closing
-		closingRouteKeys.remove(nextFocusedRoute.key);
+		deleteClosingRouteKey(closingRouteKeys, nextFocusedRoute.key);
 	}
 
 	// Clean up closing keys that are no longer in the route list
 	const activeKeys = new Set(derivedRoutes.map((route) => route.key));
-	for (const key of Array.from(closingRouteKeys.ref.current)) {
+	for (const key of Array.from(getClosingRouteKeyValues(closingRouteKeys))) {
 		if (!activeKeys.has(key)) {
-			closingRouteKeys.remove(key);
+			deleteClosingRouteKey(closingRouteKeys, key);
 		}
 	}
 

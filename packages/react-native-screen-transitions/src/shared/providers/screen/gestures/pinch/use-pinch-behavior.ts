@@ -24,7 +24,7 @@ export const usePinchBehavior = (
 	runtime: SharedValue<PinchGestureRuntime>,
 	screenOptions: ScreenOptionsContextValue,
 ): PinchBehavior => {
-	const { dismissScreen } = useNavigationHelpers();
+	const { dismissScreen, requestDismiss } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
 		usePinchGestureSensitivity(screenOptions);
 
@@ -69,9 +69,14 @@ export const usePinchBehavior = (
 				.hasSnapPoints
 				? resolveSnapPinchRelease(event, latestRuntime)
 				: resolvePinchRelease(event, latestRuntime);
-			finalizePinchRelease(release, latestRuntime, dismissScreen);
+			finalizePinchRelease(
+				release,
+				latestRuntime,
+				dismissScreen,
+				requestDismiss,
+			);
 		},
-		[runtime, screenOptions, dismissScreen, withSensitivity],
+		[runtime, screenOptions, dismissScreen, requestDismiss, withSensitivity],
 	);
 
 	return useMemo(

@@ -9,12 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UpdatingTo37RouteImport } from './routes/updating-to-3-7'
 import { Route as UpdatingTo36RouteImport } from './routes/updating-to-3-6'
 import { Route as TransitionComponentsRouteImport } from './routes/transition-components'
 import { Route as SurfaceSlotsRouteImport } from './routes/surface-slots'
 import { Route as StackTypesRouteImport } from './routes/stack-types'
 import { Route as SnapPointsRouteImport } from './routes/snap-points'
 import { Route as SharedElementsRouteImport } from './routes/shared-elements'
+import { Route as RevealRouteImport } from './routes/reveal'
 import { Route as ReferenceRouteImport } from './routes/reference'
 import { Route as QuickStartRouteImport } from './routes/quick-start'
 import { Route as PresetsRouteImport } from './routes/presets'
@@ -23,17 +25,23 @@ import { Route as NavigationZoomRouteImport } from './routes/navigation-zoom'
 import { Route as MigratingTo34RouteImport } from './routes/migrating-to-3-4'
 import { Route as InstallationRouteImport } from './routes/installation'
 import { Route as IndependentStacksRouteImport } from './routes/independent-stacks'
+import { Route as InactiveBehaviorRouteImport } from './routes/inactive-behavior'
 import { Route as GesturesRouteImport } from './routes/gestures'
 import { Route as GestureOwnershipRouteImport } from './routes/gesture-ownership'
 import { Route as ExpoRouterRouteImport } from './routes/expo-router'
 import { Route as CustomAnimationsRouteImport } from './routes/custom-animations'
-import { Route as RevealRouteImport } from './routes/reveal'
-import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
 import { Route as ComponentsRouteImport } from './routes/components'
 import { Route as CaveatsRouteImport } from './routes/caveats'
+import { Route as AdaptersRouteImport } from './routes/adapters'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
+import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
 
+const UpdatingTo37Route = UpdatingTo37RouteImport.update({
+  id: '/updating-to-3-7',
+  path: '/updating-to-3-7',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const UpdatingTo36Route = UpdatingTo36RouteImport.update({
   id: '/updating-to-3-6',
   path: '/updating-to-3-6',
@@ -62,6 +70,11 @@ const SnapPointsRoute = SnapPointsRouteImport.update({
 const SharedElementsRoute = SharedElementsRouteImport.update({
   id: '/shared-elements',
   path: '/shared-elements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RevealRoute = RevealRouteImport.update({
+  id: '/reveal',
+  path: '/reveal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReferenceRoute = ReferenceRouteImport.update({
@@ -104,6 +117,11 @@ const IndependentStacksRoute = IndependentStacksRouteImport.update({
   path: '/independent-stacks',
   getParentRoute: () => rootRouteImport,
 } as any)
+const InactiveBehaviorRoute = InactiveBehaviorRouteImport.update({
+  id: '/inactive-behavior',
+  path: '/inactive-behavior',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const GesturesRoute = GesturesRouteImport.update({
   id: '/gestures',
   path: '/gestures',
@@ -124,16 +142,6 @@ const CustomAnimationsRoute = CustomAnimationsRouteImport.update({
   path: '/custom-animations',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RevealRoute = RevealRouteImport.update({
-  id: '/reveal',
-  path: '/reveal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecipesModalRoute = RecipesModalRouteImport.update({
-  id: '/recipes/modal',
-  path: '/recipes/modal',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const ComponentsRoute = ComponentsRouteImport.update({
   id: '/components',
   path: '/components',
@@ -142,6 +150,11 @@ const ComponentsRoute = ComponentsRouteImport.update({
 const CaveatsRoute = CaveatsRouteImport.update({
   id: '/caveats',
   path: '/caveats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AdaptersRoute = AdaptersRouteImport.update({
+  id: '/adapters',
+  path: '/adapters',
   getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
@@ -154,16 +167,22 @@ const V4NextIndexRoute = V4NextIndexRouteImport.update({
   path: '/v4-next/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RecipesModalRoute = RecipesModalRouteImport.update({
+  id: '/recipes/modal',
+  path: '/recipes/modal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
-  '/reveal': typeof RevealRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
   '/gestures': typeof GesturesRoute
+  '/inactive-behavior': typeof InactiveBehaviorRoute
   '/independent-stacks': typeof IndependentStacksRoute
   '/installation': typeof InstallationRoute
   '/migrating-to-3-4': typeof MigratingTo34Route
@@ -172,24 +191,27 @@ export interface FileRoutesByFullPath {
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
   '/reference': typeof ReferenceRoute
-  '/recipes/modal': typeof RecipesModalRoute
+  '/reveal': typeof RevealRoute
   '/shared-elements': typeof SharedElementsRoute
   '/snap-points': typeof SnapPointsRoute
   '/stack-types': typeof StackTypesRoute
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
+  '/updating-to-3-7': typeof UpdatingTo37Route
+  '/recipes/modal': typeof RecipesModalRoute
   '/v4-next/': typeof V4NextIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
-  '/reveal': typeof RevealRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
   '/gestures': typeof GesturesRoute
+  '/inactive-behavior': typeof InactiveBehaviorRoute
   '/independent-stacks': typeof IndependentStacksRoute
   '/installation': typeof InstallationRoute
   '/migrating-to-3-4': typeof MigratingTo34Route
@@ -198,25 +220,28 @@ export interface FileRoutesByTo {
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
   '/reference': typeof ReferenceRoute
-  '/recipes/modal': typeof RecipesModalRoute
+  '/reveal': typeof RevealRoute
   '/shared-elements': typeof SharedElementsRoute
   '/snap-points': typeof SnapPointsRoute
   '/stack-types': typeof StackTypesRoute
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
+  '/updating-to-3-7': typeof UpdatingTo37Route
+  '/recipes/modal': typeof RecipesModalRoute
   '/v4-next': typeof V4NextIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
   '/components': typeof ComponentsRoute
-  '/reveal': typeof RevealRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
   '/gesture-ownership': typeof GestureOwnershipRoute
   '/gestures': typeof GesturesRoute
+  '/inactive-behavior': typeof InactiveBehaviorRoute
   '/independent-stacks': typeof IndependentStacksRoute
   '/installation': typeof InstallationRoute
   '/migrating-to-3-4': typeof MigratingTo34Route
@@ -225,26 +250,29 @@ export interface FileRoutesById {
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
   '/reference': typeof ReferenceRoute
-  '/recipes/modal': typeof RecipesModalRoute
+  '/reveal': typeof RevealRoute
   '/shared-elements': typeof SharedElementsRoute
   '/snap-points': typeof SnapPointsRoute
   '/stack-types': typeof StackTypesRoute
   '/surface-slots': typeof SurfaceSlotsRoute
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
+  '/updating-to-3-7': typeof UpdatingTo37Route
+  '/recipes/modal': typeof RecipesModalRoute
   '/v4-next/': typeof V4NextIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/adapters'
     | '/caveats'
     | '/components'
-    | '/reveal'
     | '/custom-animations'
     | '/expo-router'
     | '/gesture-ownership'
     | '/gestures'
+    | '/inactive-behavior'
     | '/independent-stacks'
     | '/installation'
     | '/migrating-to-3-4'
@@ -253,24 +281,27 @@ export interface FileRouteTypes {
     | '/presets'
     | '/quick-start'
     | '/reference'
-    | '/recipes/modal'
+    | '/reveal'
     | '/shared-elements'
     | '/snap-points'
     | '/stack-types'
     | '/surface-slots'
     | '/transition-components'
     | '/updating-to-3-6'
+    | '/updating-to-3-7'
+    | '/recipes/modal'
     | '/v4-next/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/adapters'
     | '/caveats'
     | '/components'
-    | '/reveal'
     | '/custom-animations'
     | '/expo-router'
     | '/gesture-ownership'
     | '/gestures'
+    | '/inactive-behavior'
     | '/independent-stacks'
     | '/installation'
     | '/migrating-to-3-4'
@@ -279,24 +310,27 @@ export interface FileRouteTypes {
     | '/presets'
     | '/quick-start'
     | '/reference'
-    | '/recipes/modal'
+    | '/reveal'
     | '/shared-elements'
     | '/snap-points'
     | '/stack-types'
     | '/surface-slots'
     | '/transition-components'
     | '/updating-to-3-6'
+    | '/updating-to-3-7'
+    | '/recipes/modal'
     | '/v4-next'
   id:
     | '__root__'
     | '/'
+    | '/adapters'
     | '/caveats'
     | '/components'
-    | '/reveal'
     | '/custom-animations'
     | '/expo-router'
     | '/gesture-ownership'
     | '/gestures'
+    | '/inactive-behavior'
     | '/independent-stacks'
     | '/installation'
     | '/migrating-to-3-4'
@@ -305,25 +339,28 @@ export interface FileRouteTypes {
     | '/presets'
     | '/quick-start'
     | '/reference'
-    | '/recipes/modal'
+    | '/reveal'
     | '/shared-elements'
     | '/snap-points'
     | '/stack-types'
     | '/surface-slots'
     | '/transition-components'
     | '/updating-to-3-6'
+    | '/updating-to-3-7'
+    | '/recipes/modal'
     | '/v4-next/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AdaptersRoute: typeof AdaptersRoute
   CaveatsRoute: typeof CaveatsRoute
   ComponentsRoute: typeof ComponentsRoute
-  RevealRoute: typeof RevealRoute
   CustomAnimationsRoute: typeof CustomAnimationsRoute
   ExpoRouterRoute: typeof ExpoRouterRoute
   GestureOwnershipRoute: typeof GestureOwnershipRoute
   GesturesRoute: typeof GesturesRoute
+  InactiveBehaviorRoute: typeof InactiveBehaviorRoute
   IndependentStacksRoute: typeof IndependentStacksRoute
   InstallationRoute: typeof InstallationRoute
   MigratingTo34Route: typeof MigratingTo34Route
@@ -332,18 +369,27 @@ export interface RootRouteChildren {
   PresetsRoute: typeof PresetsRoute
   QuickStartRoute: typeof QuickStartRoute
   ReferenceRoute: typeof ReferenceRoute
-  RecipesModalRoute: typeof RecipesModalRoute
+  RevealRoute: typeof RevealRoute
   SharedElementsRoute: typeof SharedElementsRoute
   SnapPointsRoute: typeof SnapPointsRoute
   StackTypesRoute: typeof StackTypesRoute
   SurfaceSlotsRoute: typeof SurfaceSlotsRoute
   TransitionComponentsRoute: typeof TransitionComponentsRoute
   UpdatingTo36Route: typeof UpdatingTo36Route
+  UpdatingTo37Route: typeof UpdatingTo37Route
+  RecipesModalRoute: typeof RecipesModalRoute
   V4NextIndexRoute: typeof V4NextIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/updating-to-3-7': {
+      id: '/updating-to-3-7'
+      path: '/updating-to-3-7'
+      fullPath: '/updating-to-3-7'
+      preLoaderRoute: typeof UpdatingTo37RouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/updating-to-3-6': {
       id: '/updating-to-3-6'
       path: '/updating-to-3-6'
@@ -384,6 +430,13 @@ declare module '@tanstack/react-router' {
       path: '/shared-elements'
       fullPath: '/shared-elements'
       preLoaderRoute: typeof SharedElementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reveal': {
+      id: '/reveal'
+      path: '/reveal'
+      fullPath: '/reveal'
+      preLoaderRoute: typeof RevealRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/reference': {
@@ -442,6 +495,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndependentStacksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/inactive-behavior': {
+      id: '/inactive-behavior'
+      path: '/inactive-behavior'
+      fullPath: '/inactive-behavior'
+      preLoaderRoute: typeof InactiveBehaviorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/gestures': {
       id: '/gestures'
       path: '/gestures'
@@ -470,20 +530,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CustomAnimationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/reveal': {
-      id: '/reveal'
-      path: '/reveal'
-      fullPath: '/reveal'
-      preLoaderRoute: typeof RevealRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recipes/modal': {
-      id: '/recipes/modal'
-      path: '/recipes/modal'
-      fullPath: '/recipes/modal'
-      preLoaderRoute: typeof RecipesModalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/components': {
       id: '/components'
       path: '/components'
@@ -496,6 +542,13 @@ declare module '@tanstack/react-router' {
       path: '/caveats'
       fullPath: '/caveats'
       preLoaderRoute: typeof CaveatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/adapters': {
+      id: '/adapters'
+      path: '/adapters'
+      fullPath: '/adapters'
+      preLoaderRoute: typeof AdaptersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -512,18 +565,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof V4NextIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/recipes/modal': {
+      id: '/recipes/modal'
+      path: '/recipes/modal'
+      fullPath: '/recipes/modal'
+      preLoaderRoute: typeof RecipesModalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AdaptersRoute: AdaptersRoute,
   CaveatsRoute: CaveatsRoute,
   ComponentsRoute: ComponentsRoute,
-  RevealRoute: RevealRoute,
   CustomAnimationsRoute: CustomAnimationsRoute,
   ExpoRouterRoute: ExpoRouterRoute,
   GestureOwnershipRoute: GestureOwnershipRoute,
   GesturesRoute: GesturesRoute,
+  InactiveBehaviorRoute: InactiveBehaviorRoute,
   IndependentStacksRoute: IndependentStacksRoute,
   InstallationRoute: InstallationRoute,
   MigratingTo34Route: MigratingTo34Route,
@@ -532,24 +593,17 @@ const rootRouteChildren: RootRouteChildren = {
   PresetsRoute: PresetsRoute,
   QuickStartRoute: QuickStartRoute,
   ReferenceRoute: ReferenceRoute,
-  RecipesModalRoute: RecipesModalRoute,
+  RevealRoute: RevealRoute,
   SharedElementsRoute: SharedElementsRoute,
   SnapPointsRoute: SnapPointsRoute,
   StackTypesRoute: StackTypesRoute,
   SurfaceSlotsRoute: SurfaceSlotsRoute,
   TransitionComponentsRoute: TransitionComponentsRoute,
   UpdatingTo36Route: UpdatingTo36Route,
+  UpdatingTo37Route: UpdatingTo37Route,
+  RecipesModalRoute: RecipesModalRoute,
   V4NextIndexRoute: V4NextIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

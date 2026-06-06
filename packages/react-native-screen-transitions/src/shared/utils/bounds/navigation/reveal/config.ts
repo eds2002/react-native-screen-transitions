@@ -15,6 +15,7 @@ export const DRAG_MASK_HEIGHT_COLLAPSE_END = 0.7;
 export const HORIZONTAL_DRAG_MASK_COLLAPSE_SCALE = 0.5;
 export const DISMISS_SCALE_ORBIT_DEPTH = 0.5;
 export const CLOSE_SOURCE_HANDOFF_PROGRESS = 0.25;
+export const REVEAL_BACKGROUND_SCALE = 0.9375;
 
 export const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 export const ZERO_TO_ONE_RANGE = [0, 1] as const;

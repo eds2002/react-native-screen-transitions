@@ -1,14 +1,21 @@
-import { useEffect, useMemo } from "react";
+import { useLayoutEffect, useMemo } from "react";
 import { GestureStore } from "../../../../stores/gesture.store";
 import {
 	type ClaimedDirections,
 	DIRECTIONS,
 	type Direction,
+	NO_CLAIMS,
 } from "../../../../types/ownership.types";
-import { useDescriptorDerivations } from "../../../screen/descriptors";
+import {
+	type BaseDescriptor,
+	useDescriptorDerivations,
+	useDescriptors,
+} from "../../../screen/descriptors";
 import { useGestureContext } from "../gestures.provider";
 import { walkGestureAncestors } from "../shared/ancestors";
+import { resolveScreenGestureConfig } from "../shared/policy";
 import type { GestureContextType } from "../types";
+import { resolveShadowingClaimDirections } from "./shadowing-claims";
 
 type ShadowedAncestor = {
 	ancestor: GestureContextType;
@@ -93,6 +100,27 @@ const clearShadowingClaims = (
 	}
 };
 
+const getDescriptorIsFirstKey = (descriptor: BaseDescriptor): boolean => {
+	const navigationState = descriptor.navigation.getState();
+	const routes = navigationState?.routes ?? [];
+	return routes.findIndex((route) => route.key === descriptor.route.key) === 0;
+};
+
+const getDescriptorClaimedDirections = (
+	descriptor: BaseDescriptor | undefined,
+	gestureContext: GestureContextType | null,
+): ClaimedDirections => {
+	if (!descriptor) {
+		return NO_CLAIMS;
+	}
+
+	return resolveScreenGestureConfig({
+		options: descriptor.options,
+		isFirstKey: getDescriptorIsFirstKey(descriptor),
+		gestureContext,
+	}).participation.claimedDirections;
+};
+
 /**
  * Registers this screen with ancestors that claim the same direction.
  *
@@ -108,14 +136,47 @@ export function useWalkUpAndRegisterShadowingClaims(
 	claimedDirections: ClaimedDirections,
 ): void {
 	const parentContext = useGestureContext();
+	const { current, previous } = useDescriptors();
 	const { isTopMostScreen, currentScreenKey } = useDescriptorDerivations();
 
-	const shadowedAncestors = useMemo(
-		() => findShadowedAncestors(parentContext, claimedDirections),
-		[parentContext, claimedDirections],
+	/*
+	 * We want to calculate effective claimed directions as claimedDirections is not enough for us.
+	 * What this solves is lingering claimed directions when a screen is closing.
+	 *
+	 * Overlay claims horizontal
+	 *   └─ A has no local horizontal claim
+	 *   └─ B claims horizontal (closing)
+	 *   └─ C claims horizontal (closing)
+	 *
+	 * Closing screens are still mounted, so they can still block parent gestures.
+	 * But they cannot receive touches anymore.
+	 *
+	 * So when B/C are closing and the user is really touching A, B/C should not
+	 * keep blocking the parent with their own gesture config.
+	 *
+	 * A closing screen should act like the visible screen underneath it:
+	 * - if the screen underneath claims the gesture, keep blocking the parent
+	 * - if the screen underneath does not claim it, let the parent handle it
+	 */
+	const effectiveClaimedDirections = useMemo(
+		() =>
+			resolveShadowingClaimDirections({
+				currentActivity: current.activity,
+				currentClaimedDirections: claimedDirections,
+				previousClaimedDirections: getDescriptorClaimedDirections(
+					previous,
+					parentContext,
+				),
+			}),
+		[current.activity, claimedDirections, previous, parentContext],
 	);
 
-	useEffect(() => {
+	const shadowedAncestors = useMemo(
+		() => findShadowedAncestors(parentContext, effectiveClaimedDirections),
+		[parentContext, effectiveClaimedDirections],
+	);
+
+	useLayoutEffect(() => {
 		if (!isTopMostScreen || !shadowedAncestors.length) {
 			return;
 		}

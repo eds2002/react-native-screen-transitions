@@ -232,6 +232,25 @@ export type BoundsNavigationRevealOptions = {
 	 */
 	gestureProgressMode?: GestureProgressMode;
 	/**
+	 * Scale applied to the unfocused background content while the reveal runs
+	 * above it.
+	 *
+	 * @default 0.9375
+	 */
+	backgroundScale?: number;
+	/**
+	 * Whether reveal should reset the unfocused background content scale once the
+	 * transition is logically settled.
+	 *
+	 * By default, reveal restores the background to scale `1` after settle so the
+	 * next drag or programmatic dismiss starts from a fresh, unmodified layout
+	 * measurement. Keeping the background transformed while idle can make the next
+	 * measurement read the scaled screen instead of the real screen geometry.
+	 *
+	 * @default true
+	 */
+	shouldBackgroundScaleResetOnSettled?: boolean;
+	/**
 	 * Temporarily blocks pointer-event pass-through on the inactive content until
 	 * the source element transition handoff reaches progress `0.25`.
 	 *

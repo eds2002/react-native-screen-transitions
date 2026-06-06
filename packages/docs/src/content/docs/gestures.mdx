@@ -23,8 +23,6 @@ to: /gestures
 />
 ```
 
-Gesture options belong on a screen's `options`, not on a navigator component prop.
-
 ## Supported Directions
 
 `gestureDirection` accepts pan and pinch directions:
@@ -42,23 +40,299 @@ For non-snap screens, each direction in the array can activate dismissal. For sc
 
 ## Gesture Options
 
-| Option | Type | Notes |
-| --- | --- | --- |
-| `gestureEnabled` | `boolean` | Enables swipe-to-dismiss. For screens with `snapPoints`, snapping between non-dismiss detents can still work when this is `false`. |
-| `gestureDirection` | `GestureDirection \| GestureDirection[]` | Dismiss direction, pan axis, pinch direction, or ordered direction list. |
-| `gestureTracking` | `"auto" \| "never" \| "always"` | Controls whether the screen tracks live gesture values. Defaults to `"auto"`. |
-| `gestureActivationArea` | `"edge" \| "screen" \| { left?: "edge" \| "screen"; right?: "edge" \| "screen"; top?: "edge" \| "screen"; bottom?: "edge" \| "screen" }` | Where the gesture may start. Defaults to `"screen"`. |
-| `gestureResponseDistance` | `number` | Single numeric edge-distance override. |
-| `gestureSensitivity` | `number` | Multiplies live gesture movement before it drives progress and non-raw gesture values. Default `1`. |
-| `gestureVelocityImpact` | `number` | Release velocity influence on dismiss decisions. Default `0.3`. |
-| `gestureProgressMode` | `"progress-driven" \| "freeform"` | Whether gesture displacement drives transition progress or stays as freeform gesture values. Default `"progress-driven"`. |
-| `gestureDrivesProgress` | `boolean` | Deprecated compatibility alias for `gestureProgressMode`. |
-| `gestureSnapVelocityImpact` | `number` | Release velocity influence on snap-target selection. Default `0.1`. |
-| `gestureSnapLocked` | `boolean` | Locks gesture-driven snap movement to the current detent. Default `false`. |
-| `gestureReleaseVelocityScale` | `number` | Multiplies normalized release velocity before the spring runs. Default `1`. |
-| `sheetScrollGestureBehavior` | `"expand-and-collapse" \| "collapse-only"` | Scroll-boundary handoff mode for snap sheets. Default `"expand-and-collapse"`. |
-| `backdropBehavior` | `"block" \| "passthrough" \| "dismiss" \| "collapse"` | How taps on the backdrop are handled. |
-| `backdropComponent` | `React.ComponentType<any>` | Custom backdrop component type. Pass a stable component such as `BlurView` or `MyBackdrop`. |
+### `gestureEnabled`
+
+Enables swipe-to-dismiss. For screens with `snapPoints`, snapping between non-dismiss detents can still work when this is `false`.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>boolean</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureDirection`
+
+Dismiss direction, pan axis, pinch direction, or ordered direction list.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>GestureDirection | GestureDirection[]</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"horizontal"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureTracking`
+
+Controls whether the screen tracks live gesture values.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"auto" | "never" | "always"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"auto"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureActivationArea`
+
+Controls where the gesture may start.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>GestureActivationArea</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"screen"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureResponseDistance`
+
+Single numeric edge-distance override for edge activation.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureSensitivity`
+
+Multiplies live gesture movement before it drives progress and non-raw gesture values.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>1</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureVelocityImpact`
+
+Release velocity influence on dismiss decisions.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>0.3</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureProgressMode`
+
+Controls whether gesture displacement drives transition progress or stays available as freeform gesture values.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"progress-driven" | "freeform"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"progress-driven"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureSnapVelocityImpact`
+
+Release velocity influence on snap-target selection.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>0.1</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureSnapLocked`
+
+Locks gesture-driven snap movement to the current detent.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>boolean</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>false</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `gestureReleaseVelocityScale`
+
+Multiplies normalized release velocity before the spring runs.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>1</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `sheetScrollGestureBehavior`
+
+Scroll-boundary handoff mode for snap sheets.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"expand-and-collapse" | "collapse-only"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"expand-and-collapse"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `backdropBehavior`
+
+Controls how taps on the backdrop are handled.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"block" | "passthrough" | "dismiss" | "collapse"</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">stack default</td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `backdropComponent`
+
+Custom backdrop component type. Pass a stable component such as `BlurView` or `MyBackdrop`.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>React.ComponentType&lt;any&gt;</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
 
 ## Gesture Activation Area
 
@@ -155,8 +429,6 @@ options={{
 ```
 
 Use `"progress-driven"` when drag movement should directly move screen progress. Use `"freeform"` when gesture values should drive custom visuals while transition progress stays controlled by navigation or release.
-
-This deprecates `gestureDrivesProgress` in favor of a more descriptive option name. The older `gestureDrivesProgress: false` form still maps to `"freeform"` for compatibility, but new code should use `gestureProgressMode`.
 
 ## Dynamic Gesture Options
 

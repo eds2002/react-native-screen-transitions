@@ -1,33 +1,19 @@
 ---
 title: "Stack Types"
 pageTitle: "Stack Types"
-summary: "Choose between blank stack and native stack."
-description: "Choose between blank stack and native stack."
+summary: "Choose between blank stack and native-stack adapter integration."
+description: "Choose between blank stack and native-stack adapter integration."
 eyebrow: "Components"
 group: "Components"
 order: 2
 to: /stack-types
 ---
 
-## Recommendation Order
-
-For new v3 work:
-
-1. `createBlankStackNavigator()` for most work
-2. `createNativeStackNavigator()` when you specifically need native-stack integration
-
-<Note>
-  Component stack is deprecated in favor of blank stack independent mode. See [Independent Stacks](/independent-stacks) for embedded and isolated navigation flows.
-</Note>
-
-```tsx
-import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
-import { createNativeStackNavigator } from "react-native-screen-transitions/native-stack";
-```
-
 ## Blank Stack
 
-This is the default stack for new work.
+Blank stack is a highly customizable navigator for complex animation and gesture systems. It is intentionally kept blank: the navigator gives you the transition runtime, but leaves the visual language, headers, chrome, and design-system decisions to your app.
+
+Use it when your app should define itself through custom motion instead of adapting platform navigation defaults.
 
 ```tsx
 const Stack = createBlankStackNavigator();
@@ -61,26 +47,26 @@ Blank stack covers embedded navigation flows through independent mode.
 It supports first-class navigator props:
 
 - `independent`
-- `enableNativeScreens`
+- `nativeScreens`
 
 ```tsx
 const Stack = createBlankStackNavigator();
 
-<Stack.Navigator independent enableNativeScreens={false}>
+<Stack.Navigator independent nativeScreens={false}>
   {/* embedded flow */}
 </Stack.Navigator>
 ```
 
 `independent` creates an isolated navigation tree.
 
-`enableNativeScreens={false}` renders with regular views instead of `react-native-screens`, which is often the right choice for embedded UI.
+`nativeScreens={false}` renders with regular views instead of `react-native-screens`, which is often the right choice for embedded UI.
 
 The static API supports the same idea:
 
 ```tsx
 const Stack = createBlankStackNavigator({
   independent: true,
-  enableNativeScreens: false,
+  nativeScreens: false,
   screens: {
     Home: HomeScreen,
     Detail: DetailScreen,
@@ -92,10 +78,15 @@ Blank stack is now the preferred path for new embedded and independent flows.
 
 ## Native Stack
 
-Use this when you want `@react-navigation/native-stack` behavior while opting into the transition system.
+<Note>
+  The bundled native stack from `react-native-screen-transitions/native-stack` is deprecated in favor of the adapter approach. See [Adapters](/adapters) for the `withScreenTransitions()` setup.
+</Note>
+
+Use the adapter when you want `@react-navigation/native-stack` behavior while opting into the transition system.
 
 ```tsx
-const Stack = createNativeStackNavigator();
+const NativeStack = createNativeStackNavigator();
+const Stack = withScreenTransitions(NativeStack);
 
 <Stack.Navigator>
   <Stack.Screen
@@ -121,7 +112,7 @@ If you want the most control over interpolators, gestures, snap sheets, overlays
 
 ## Shared Screen Options
 
-Blank stack and native stack both use screen options.
+Blank stack and the native-stack adapter both use screen options.
 
 Common options include:
 
@@ -134,8 +125,11 @@ Common options include:
 - `navigationMaskEnabled`
 - `overlay`
 - `overlayShown`
+- `inactiveBehavior`
 
-Native stack adds native-stack options, but transition behavior only participates when `enableTransitions` is turned on.
+The native-stack adapter accepts native-stack options alongside transition options, but transition behavior only participates when `enableTransitions` is turned on.
+
+For blank-stack route retention, see [Inactive Behavior](/inactive-behavior).
 
 ## Overlays and Stack Scope
 
@@ -148,4 +142,4 @@ Blank stack supports overlays directly and is the default place to start. Native
 ## Which One to Pick
 
 - blank stack: the default for nearly everything, including embedded and independent flows
-- native stack: when you need native-stack integration and can opt into `enableTransitions`
+- native-stack adapter: when you need `@react-navigation/native-stack` integration and can opt into `enableTransitions`

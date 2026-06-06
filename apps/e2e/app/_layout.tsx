@@ -70,6 +70,10 @@ export default function RootLayout() {
 					options={{ ...IOSSlide() }}
 				/>
 				<StackNavigator.Screen
+					name={stackScreen("inactive-behavior")}
+					options={{ ...IOSSlide() }}
+				/>
+				<StackNavigator.Screen
 					name={stackScreen("overlay")}
 					options={{ ...IOSSlide() }}
 				/>
@@ -137,6 +141,14 @@ export default function RootLayout() {
 				<StackNavigator.Screen name="maestro" options={{ animation: "none" }} />
 				<StackNavigator.Screen name="backdrop" options={{ ...IOSSlide() }} />
 				<StackNavigator.Screen name="example" options={{ ...IOSSlide() }} />
+				<StackNavigator.Screen
+					name="native-stack-adapter"
+					options={{ ...IOSSlide() }}
+				/>
+				<StackNavigator.Screen
+					name="native-stack-adapter-recipe"
+					options={{ ...IOSSlide() }}
+				/>
 				<StackNavigator.Screen name="stack-benchmark" />
 				<StackNavigator.Screen name="gestures" />
 				<StackNavigator.Screen

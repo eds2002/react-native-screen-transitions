@@ -1,3 +1,7 @@
+import {
+	createNativeStackNavigator,
+	type NativeStackNavigationOptions,
+} from "@react-navigation/native-stack";
 import type { ComponentProps } from "react";
 import type { DerivedValue, SharedValue } from "react-native-reanimated";
 import {
@@ -10,10 +14,13 @@ import type {
 	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
+	NativeStackAdapterOptions,
 	ScreenAnimationTarget,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	ScreenTransitionConfig,
+	ScreenTransitionDepthTarget,
+	ScreenTransitionTarget,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "..";
@@ -22,6 +29,7 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	useScreenAnimation,
 	useScreenGesture,
+	withScreenTransitions,
 } from "..";
 
 const slotStyle: TransitionSlotStyle = {
@@ -82,6 +90,8 @@ declare const interpolationProps: ScreenInterpolationProps;
 const gestureTarget: ScreenGestureTarget = { depth: -2 };
 const animationTarget: ScreenAnimationTarget = { depth: -2 };
 const legacyAnimationTarget: ScreenAnimationTarget = { ancestor: 2 };
+const transitionTarget: ScreenTransitionTarget = { depth: 2 };
+const transitionDepthTarget: ScreenTransitionDepthTarget = { depth: 0 };
 
 function usePublicApiHooksTypecheck() {
 	const selfAnimation: DerivedValue<ScreenInterpolationProps> =
@@ -119,10 +129,23 @@ function usePublicApiHooksTypecheck() {
 
 void usePublicApiHooksTypecheck;
 void legacyAnimationTarget;
+void transitionTarget;
+void transitionDepthTarget;
 
 const numericBoundsResult = interpolationProps.bounds({
 	id: 42,
 });
+const parentTransition = interpolationProps.transition({ depth: -1 });
+const grandparentTransition = interpolationProps.transition({ depth: -2 });
+const selfTransition = interpolationProps.transition({ depth: 0 });
+const childTransition = interpolationProps.transition({ depth: 1 });
+const grandchildTransition = interpolationProps.transition({ depth: 2 });
+const rootTransitionBounds = interpolationProps
+	.transition({ depth: -2 })
+	?.bounds({ id: 42 });
+const leafTransitionBounds = interpolationProps
+	.transition({ depth: 2 })
+	?.bounds({ id: 42 });
 const offsetBoundsResult = interpolationProps.bounds({
 	id: 42,
 	offset: { x: 10, y: -10 },
@@ -153,6 +176,8 @@ const configuredRevealInterpolatedStyle: BoundsNavigationRevealStyle =
 		maxSensitivity: 0.6,
 		velocityDepth: 0.35,
 		gestureProgressMode: "freeform",
+		backgroundScale: 0.96,
+		shouldBackgroundScaleResetOnSettled: true,
 		disablePointerEventsTillElementTransition: false,
 		maskSizingMode: "size",
 	});
@@ -242,12 +267,35 @@ const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
 };
 
+type NativeStackAdapterParamList = {
+	Profile: undefined;
+	Avatar: { id: string };
+};
+
+const NativeStack = createNativeStackNavigator<NativeStackAdapterParamList>();
+const TransitionNativeStack = withScreenTransitions(NativeStack);
+const nativeStackAdapterOptions: NativeStackAdapterOptions<NativeStackNavigationOptions> =
+	{
+		enableTransitions: true,
+		gestureEnabled: true,
+		gestureDirection: "bidirectional",
+	};
+function NativeStackAdapterProfileScreen() {
+	return null;
+}
+const nativeStackAdapterScreen = TransitionNativeStack.Screen({
+	name: "Profile",
+	getComponent: () => NativeStackAdapterProfileScreen,
+	options: nativeStackAdapterOptions,
+});
+void TransitionNativeStack;
+void nativeStackAdapterOptions;
+void nativeStackAdapterScreen;
+
 const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
 };
-const blankStackNavigationOptions: BlankStackNavigationOptions = {
-	freezeOnBlur: true,
-};
+const blankStackNavigationOptions: BlankStackNavigationOptions = {};
 
 type StaticBlankStackParamList = {
 	Home: undefined;
@@ -293,6 +341,13 @@ const publicApiTypecheck = {
 	nestedInterpolatedStyle,
 	gestureTarget,
 	animationTarget,
+	parentTransition,
+	grandparentTransition,
+	selfTransition,
+	childTransition,
+	grandchildTransition,
+	rootTransitionBounds,
+	leafTransitionBounds,
 	numericBoundsResult,
 	offsetBoundsResult,
 	deprecatedGesturesBoundsResult,
