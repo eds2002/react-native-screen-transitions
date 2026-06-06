@@ -20,14 +20,16 @@
 		"knip": "bunx knip --workspace packages/react-native-screen-transitions",
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",
-		"release": "bun run release:please",
-		"release:please": "gh workflow run release.yml --ref main -f channel=stable",
-		"release:alpha": "gh workflow run release.yml --ref main -f channel=alpha -f bump=patch -f source_ref=main -f dry_run=false",
-		"release:alpha:dry-run": "gh workflow run release.yml --ref main -f channel=alpha -f bump=patch -f source_ref=main -f dry_run=true",
-		"release:beta": "gh workflow run release.yml --ref main -f channel=beta -f bump=patch -f source_ref=main -f dry_run=false",
-		"release:beta:dry-run": "gh workflow run release.yml --ref main -f channel=beta -f bump=patch -f source_ref=main -f dry_run=true",
-		"release:rc": "gh workflow run release.yml --ref main -f channel=rc -f bump=patch -f source_ref=main -f dry_run=false",
-		"release:rc:dry-run": "gh workflow run release.yml --ref main -f channel=rc -f bump=patch -f source_ref=main -f dry_run=true",
+		"release": "bun run release:latest",
+		"release:latest": "node .github/scripts/dispatch-release.mjs latest prerelease false true",
+		"release:latest:dry-run": "node .github/scripts/dispatch-release.mjs latest prerelease true true",
+		"release:latest:no-npm": "node .github/scripts/dispatch-release.mjs latest prerelease false false",
+		"release:alpha": "node .github/scripts/dispatch-release.mjs alpha preminor false true",
+		"release:alpha:dry-run": "node .github/scripts/dispatch-release.mjs alpha preminor true true",
+		"release:beta": "node .github/scripts/dispatch-release.mjs beta prerelease false true",
+		"release:beta:dry-run": "node .github/scripts/dispatch-release.mjs beta prerelease true true",
+		"release:rc": "node .github/scripts/dispatch-release.mjs rc prerelease false true",
+		"release:rc:dry-run": "node .github/scripts/dispatch-release.mjs rc prerelease true true",
 		"release:status": "gh run list --workflow release.yml --limit 5"
 	},
 	"devDependencies": {
@@ -35,7 +37,8 @@
 		"@commitlint/config-conventional": "^21.0.1",
 		"@types/bun": "^1.3.14",
 		"commitlint": "^21.0.1",
-		"lefthook": "^2.1.6"
+		"lefthook": "^2.1.6",
+		"release-it": "^20.2.0"
 	},
 	"commitlint": {
 		"extends": [

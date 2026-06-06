@@ -1,270 +1,197 @@
-name: Release Please
+name: Release
 
 on:
   push:
     branches:
       - main
+    paths:
+      - "packages/react-native-screen-transitions/package.json"
+      - "packages/react-native-screen-transitions/CHANGELOG.md"
   workflow_dispatch:
     inputs:
       channel:
-        description: "Release channel. stable opens/updates the Release Please PR; latest publishes a stable npm release manually; alpha/beta/rc publish an npm prerelease."
+        description: "Release channel. latest publishes the current package version; alpha/beta/rc create prereleases from the selected branch."
         required: true
-        default: stable
+        default: latest
         type: choice
         options:
-          - stable
           - latest
           - alpha
           - beta
           - rc
-      bump:
-        description: "Base version bump for prereleases."
+      increment:
+        description: "Prerelease increment. Use preminor for the first alpha of the next minor, then prerelease for follow-up beta/rc builds."
         required: true
-        default: patch
+        default: prerelease
         type: choice
         options:
-          - patch
-          - minor
-          - major
-      source_ref:
-        description: "Git ref to build for prereleases, such as release/v3.6."
-        required: true
-        default: main
-        type: string
+          - prerelease
+          - prepatch
+          - preminor
+          - premajor
       dry_run:
-        description: "Prepare the prerelease without publishing it."
+        description: "Run release-it without publishing, tagging, or pushing."
+        required: true
+        default: true
+        type: boolean
+      publish_npm:
+        description: "Publish to npm. Disable this only to repair GitHub tags/releases for a version that is already on npm."
         required: true
         default: true
         type: boolean
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PACKAGE_DIR: packages/react-native-screen-transitions
+
 jobs:
-  release-please:
-    name: Release Please
-    if: ${{ github.event_name == 'push' || inputs.channel == 'stable' }}
+  stable-from-main:
+    name: Stable Release From Main
+    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      pull-requests: write
-      issues: write
       id-token: write
 
     steps:
-      - name: Release Please
-        id: release
-        uses: googleapis/release-please-action@v4
-        with:
-          token: ${{ secrets.RELEASE_PLEASE_TOKEN || secrets.GITHUB_TOKEN }}
-          config-file: release-please-config.json
-          manifest-file: .release-please-manifest.json
-
       - name: Checkout
-        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
-        uses: actions/checkout@v4
-
-      - name: Setup Bun
-        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.2.20
-
-      - name: Setup Node (for npm provenance)
-        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Install deps
-        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
-        run: bun install --frozen-lockfile
-
-      - name: Build
-        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
-        run: bun run build
-
-      - name: Publish to npm
-        if: ${{ steps.release.outputs['packages/react-native-screen-transitions--release_created'] == 'true' }}
-        working-directory: packages/react-native-screen-transitions
-        run: npm publish --access public
-
-  prerelease:
-    name: Prerelease
-    if: ${{ github.event_name == 'workflow_dispatch' && (inputs.channel == 'alpha' || inputs.channel == 'beta' || inputs.channel == 'rc') }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      id-token: write
-
-    steps:
-      - name: Checkout automation
-        uses: actions/checkout@v4
-
-      - name: Checkout source
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_ref }}
-          path: source
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
 
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.2.20
-
-      - name: Setup Node (for npm trusted publishing)
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Install deps
-        working-directory: source
-        run: bun install --frozen-lockfile
-
-      - name: Resolve prerelease version
-        id: version
-        env:
-          PACKAGE_DIR: source/packages/react-native-screen-transitions
-          PRERELEASE_CHANNEL: ${{ inputs.channel }}
-          PRERELEASE_BUMP: ${{ inputs.bump }}
-        run: node .github/scripts/resolve-prerelease-version.mjs
-
-      - name: Set package version
-        working-directory: source/packages/react-native-screen-transitions
-        env:
-          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+      - name: Checkout branch
         run: |
-          node --input-type=module <<'EOF'
-          import { readFileSync, writeFileSync } from "node:fs";
+          git checkout -B "$GITHUB_REF_NAME" "origin/$GITHUB_REF_NAME"
+          git branch --set-upstream-to="origin/$GITHUB_REF_NAME" "$GITHUB_REF_NAME"
 
-          const packageJsonPath = "package.json";
-          const packageJson = JSON.parse(readFileSync(packageJsonPath, "utf8"));
+      - name: Detect releasable version bump
+        id: release
+        env:
+          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
+          PACKAGE_JSON_PATH: ${{ env.PACKAGE_DIR }}/package.json
+        run: node .github/scripts/should-release-stable.mjs
 
-          packageJson.version = process.env.PACKAGE_VERSION;
+      - name: Skip release
+        if: ${{ steps.release.outputs.should_release != 'true' }}
+        run: echo "${{ steps.release.outputs.reason }}"
 
-          writeFileSync(
-            packageJsonPath,
-            `${JSON.stringify(packageJson, null, "\t")}\n`,
-          );
-          EOF
+      - name: Setup Bun
+        if: ${{ steps.release.outputs.should_release == 'true' }}
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: 1.2.20
 
-      - name: Build
-        working-directory: source
-        run: bun run build
+      - name: Setup Node
+        if: ${{ steps.release.outputs.should_release == 'true' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
 
-      - name: Pack preview
-        working-directory: source/packages/react-native-screen-transitions
-        run: npm pack --dry-run
+      - name: Upgrade npm for trusted publishing
+        if: ${{ steps.release.outputs.should_release == 'true' }}
+        run: npm install -g npm@latest
 
-      - name: Publish prerelease to npm
-        if: ${{ inputs.dry_run == false }}
-        working-directory: source/packages/react-native-screen-transitions
-        run: npm publish --access public --tag "${{ inputs.channel }}"
+      - name: Configure git user
+        if: ${{ steps.release.outputs.should_release == 'true' }}
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
 
-      - name: Dry run summary
-        if: ${{ inputs.dry_run != false }}
-        run: echo "Prepared react-native-screen-transitions@${{ steps.version.outputs.version }} for npm tag ${{ inputs.channel }}. Re-run with dry_run=false to publish."
+      - name: Install deps
+        if: ${{ steps.release.outputs.should_release == 'true' }}
+        run: bun install --frozen-lockfile
 
-  manual-stable-release:
-    name: Manual Stable Release
-    if: ${{ github.event_name == 'workflow_dispatch' && inputs.channel == 'latest' }}
+      - name: Publish stable release
+        if: ${{ steps.release.outputs.should_release == 'true' }}
+        working-directory: ${{ env.PACKAGE_DIR }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: bunx release-it --config ../../.release-it.json --ci --no-increment --no-git.commit --npm.tag=latest
+
+  manual-release:
+    name: Manual Release
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
       id-token: write
 
     steps:
-      - name: Checkout source
+      - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_ref }}
+          ref: ${{ github.ref_name }}
+          fetch-depth: 0
+
+      - name: Checkout branch
+        run: |
+          git checkout -B "$GITHUB_REF_NAME" "origin/$GITHUB_REF_NAME"
+          git branch --set-upstream-to="origin/$GITHUB_REF_NAME" "$GITHUB_REF_NAME"
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@v1
         with:
           bun-version: 1.2.20
 
-      - name: Setup Node (for npm trusted publishing)
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
 
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@latest
+
+      - name: Configure git user
+        run: |
+          git config user.name "${GITHUB_ACTOR}"
+          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
+
       - name: Install deps
         run: bun install --frozen-lockfile
 
-      - name: Build
-        run: bun run build
-
-      - name: Resolve package version
-        id: version
-        run: |
-          version="$(node -p "require('./packages/react-native-screen-transitions/package.json').version")"
-          echo "version=$version" >> "$GITHUB_OUTPUT"
-          echo "tag=v$version" >> "$GITHUB_OUTPUT"
-
-      - name: Pack preview
-        working-directory: packages/react-native-screen-transitions
-        run: npm pack --dry-run
-
-      - name: Extract release notes
+      - name: Run release-it
+        working-directory: ${{ env.PACKAGE_DIR }}
         env:
-          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_CHANNEL: ${{ inputs.channel }}
+          RELEASE_DRY_RUN: ${{ inputs.dry_run }}
+          RELEASE_INCREMENT: ${{ inputs.increment }}
+          RELEASE_PUBLISH_NPM: ${{ inputs.publish_npm }}
         run: |
-          node --input-type=module <<'EOF'
-          import { readFileSync, writeFileSync } from "node:fs";
+          set -euo pipefail
 
-          const version = process.env.PACKAGE_VERSION;
-          const changelog = readFileSync(
-            "packages/react-native-screen-transitions/CHANGELOG.md",
-            "utf8",
-          );
-          const header = `## [${version}]`;
-          const startIndex = changelog.indexOf(header);
-          const section =
-            startIndex === -1
-              ? `Release ${version}`
-              : (() => {
-                  const rest = changelog.slice(startIndex);
-                  const afterHeader = rest.slice(header.length);
-                  const nextIndex = afterHeader.search(/\n## \[/);
+          args=(--ci)
 
-                  return nextIndex === -1
-                    ? rest.trim()
-                    : rest.slice(0, header.length + nextIndex).trim();
-                })();
-
-          writeFileSync("release-notes.md", section);
-          EOF
-
-      - name: Publish stable to npm
-        if: ${{ inputs.dry_run == false }}
-        working-directory: packages/react-native-screen-transitions
-        env:
-          PACKAGE_VERSION: ${{ steps.version.outputs.version }}
-        run: |
-          if npm view "react-native-screen-transitions@$PACKAGE_VERSION" version >/dev/null 2>&1; then
-            echo "react-native-screen-transitions@$PACKAGE_VERSION is already published; skipping npm publish."
-          else
-            npm publish --access public --tag latest --provenance
+          if [[ "$RELEASE_DRY_RUN" == "true" ]]; then
+            args+=(--dry-run)
           fi
 
-      - name: Create GitHub release
-        if: ${{ inputs.dry_run == false }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ steps.version.outputs.tag }}
-          RELEASE_TITLE: v${{ steps.version.outputs.version }}
-        run: |
-          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
-            echo "$RELEASE_TAG already exists; skipping GitHub release creation."
+          if [[ "$RELEASE_CHANNEL" == "latest" ]]; then
+            args+=(--no-increment --no-git.commit --npm.tag=latest)
           else
-            gh release create "$RELEASE_TAG" \
-              --target "$GITHUB_SHA" \
-              --title "$RELEASE_TITLE" \
-              --notes-file release-notes.md \
-              --latest
+            case "$RELEASE_INCREMENT" in
+              prerelease)
+                ;;
+              prepatch|preminor|premajor)
+                args+=("$RELEASE_INCREMENT")
+                ;;
+              *)
+                echo "Unsupported prerelease increment: $RELEASE_INCREMENT"
+                exit 1
+                ;;
+            esac
+
+            args+=("--preRelease=$RELEASE_CHANNEL")
           fi
 
-      - name: Dry run summary
-        if: ${{ inputs.dry_run != false }}
-        run: echo "Prepared react-native-screen-transitions@${{ steps.version.outputs.version }} for npm tag latest. Re-run with dry_run=false to publish."
+          if [[ "$RELEASE_PUBLISH_NPM" != "true" ]]; then
+            args+=(--no-npm.publish)
+          fi
+
+          bunx release-it --config ../../.release-it.json "${args[@]}"
