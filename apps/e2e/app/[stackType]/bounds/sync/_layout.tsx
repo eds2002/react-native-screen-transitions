@@ -34,7 +34,10 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 
 	if (destinationBoundary?.method === "content") {
 		if (focused) {
-			const contentStyles = bounds(activeStyleOptions);
+			const contentStyles = bounds(activeStyleOptions).styles() as Record<
+				string,
+				any
+			>;
 
 			return {
 				content: {
@@ -54,7 +57,10 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 			};
 		}
 
-		const elementStyle = bounds(activeStyleOptions) as Record<string, any>;
+		const elementStyle = bounds(activeStyleOptions).styles() as Record<
+			string,
+			any
+		>;
 
 		return {
 			[BOUNDARY_TAG]: {
@@ -66,7 +72,10 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 		};
 	}
 
-	const elementStyle = bounds(activeStyleOptions) as Record<string, any>;
+	const elementStyle = bounds(activeStyleOptions).styles() as Record<
+		string,
+		any
+	>;
 
 	return {
 		[BOUNDARY_TAG]: {
@@ -91,8 +100,7 @@ const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpola
 			"clamp",
 		);
 
-		const boundStyles = bounds({
-			id: OPENING_TRANSFORM_BOUNDARY_ID,
+		const boundStyles = bounds(OPENING_TRANSFORM_BOUNDARY_ID).styles({
 			offset: { y: -y },
 		}) as any;
 
@@ -110,7 +118,7 @@ const retargetInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
 	({ bounds, progress, focused, active }) => {
 		"worklet";
 
-		const elementStyle = bounds({ id: RETARGET_ID });
+		const elementStyle = bounds(RETARGET_ID).styles() as Record<string, any>;
 
 		if (active.settled) {
 			return {
