@@ -83,7 +83,7 @@ const getSceneActivity = ({
 };
 
 const getNonClosingSceneIndices = <TDescriptor extends BaseStackDescriptor>(
-	routes: ManagedRoutes<TDescriptor>,
+	routes: BlankStackRoutes<TDescriptor>,
 	closingRouteKeys: ReadonlySet<string>,
 ) => {
 	const indices: number[] = [];

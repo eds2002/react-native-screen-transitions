@@ -149,7 +149,7 @@ describe("createBlankStackController", () => {
 		const descriptorIndex = createDescriptor(routeIndex, navigation);
 		const descriptorA = createDescriptor(routeA, navigation);
 		const descriptorB = createDescriptor(routeB, navigation);
-		const controller = createManagedStackController(
+		const controller = createBlankStackController(
 			createProps(
 				[routeIndex, routeA],
 				{
