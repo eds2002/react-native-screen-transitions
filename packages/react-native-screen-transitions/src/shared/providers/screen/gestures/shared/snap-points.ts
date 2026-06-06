@@ -144,7 +144,7 @@ export const validateSnapPoints = ({
 		return createEmptySnapPoints();
 	}
 
-	const sortedSnaps = normalizedSnaps.slice().sort((a, b) => a - b);
+	const sortedSnaps = normalizedSnaps.sort((a, b) => a - b);
 
 	return {
 		hasSnapPoints: true,

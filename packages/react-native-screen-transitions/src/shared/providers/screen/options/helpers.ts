@@ -16,7 +16,7 @@ import type {
 	GestureDirection,
 	GestureDirectionActivationArea,
 	GestureDirectionEntry,
-	ScreenTransitionOptions,
+	ScreenTransitionConfig,
 	TransitionInterpolatedStyle,
 } from "../../../types";
 import type { BackdropBehavior } from "../../../types/screen.types";
@@ -291,12 +291,13 @@ const areScreenOptionsEqual = (
 		left.gestureSnapLocked === right.gestureSnapLocked &&
 		left.sheetScrollGestureBehavior === right.sheetScrollGestureBehavior &&
 		left.backdropBehavior === right.backdropBehavior &&
+		left.transitionSpec === right.transitionSpec &&
 		left.baseOptions === right.baseOptions
 	);
 };
 
 export const resolveBaseScreenOptions = (
-	options: ScreenTransitionOptions,
+	options: ScreenTransitionConfig,
 ): ScreenOptionsSnapshot => {
 	const gestureProgressMode = resolveGestureProgressModeOption(
 		options.gestureProgressMode,
@@ -357,6 +358,7 @@ export const resolveBaseScreenOptions = (
 			options.backdropBehavior,
 			undefined,
 		),
+		transitionSpec: options.transitionSpec,
 	};
 };
 
@@ -367,8 +369,6 @@ export const syncScreenOptionsBase = (
 	"worklet";
 	const next = {
 		...base,
-		gestureDirection: base.gestureDirection,
-		gestureActivationArea: base.gestureActivationArea,
 		baseOptions: base,
 	};
 
@@ -440,6 +440,7 @@ export const syncScreenOptionsOverrides = (
 			options?.backdropBehavior,
 			base.backdropBehavior,
 		),
+		transitionSpec: base.transitionSpec,
 		baseOptions: base,
 	};
 

@@ -44,25 +44,30 @@ export const createTransitionAccessor = (
 ) => {
 	"worklet";
 
-	const getSources = (): TransitionAccessorSource[] => {
+	const getSources = (): readonly TransitionAccessorSource[] => {
 		"worklet";
 		if (!descendantSources) {
-			return [...sources];
+			return sources;
 		}
 
 		const descendants = descendantSources.get();
 		if (descendants.length === 0) {
-			return [...sources];
+			return sources;
 		}
 
-		return [...sources, ...descendants.map(({ source }) => source)];
+		const currentSources = sources.slice();
+		for (let index = 0; index < descendants.length; index++) {
+			currentSources.push(descendants[index].source);
+		}
+
+		return currentSources;
 	};
 
 	const buildScope = (
 		sourceIndex: TransitionSourceIndex,
+		currentSources: readonly TransitionAccessorSource[],
 	): ScreenInterpolationProps | null => {
 		"worklet";
-		const currentSources = getSources();
 		const source = currentSources[sourceIndex];
 		if (!source) return null;
 
@@ -84,7 +89,7 @@ export const createTransitionAccessor = (
 					return null;
 				}
 
-				return buildScope(targetIndex);
+				return buildScope(targetIndex, currentSources);
 			},
 		};
 	};
@@ -101,7 +106,7 @@ export const createTransitionAccessor = (
 			return null;
 		}
 
-		return buildScope(targetIndex);
+		return buildScope(targetIndex, currentSources);
 	};
 };
 
@@ -127,26 +132,24 @@ export const useBuildTransitionAccessor = () => {
 			screenInterpolatorPropsRevision,
 		};
 
-		const ancestorTransitionSources = ancestorScreenAnimationSources.map(
-			(source) => ({
+		const transitionSources: TransitionAccessorSource[] =
+			ancestorScreenAnimationSources.map((source) => ({
 				...source,
 				boundsAccessor: buildSourceBoundsAccessor(source),
-			}),
-		);
+			}));
 
 		const selfTransitionSource = {
 			...selfSource,
 			boundsAccessor: buildSourceBoundsAccessor(selfSource),
 		};
 
-		const transitionSources: TransitionAccessorSource[] = [
-			...[...ancestorTransitionSources].reverse(),
-			selfTransitionSource,
-		];
+		transitionSources.reverse();
+		const originIndex = transitionSources.length;
+		transitionSources.push(selfTransitionSource);
 
 		return createTransitionAccessor(
 			transitionSources,
-			ancestorTransitionSources.length,
+			originIndex,
 			descendantScreenAnimationSources,
 		);
 	}, [

@@ -14,18 +14,6 @@ import {
 	resolveRuntimeGestureParticipation,
 } from "./policy";
 
-const resolveRuntimeOptions = (
-	policy: GesturePolicy,
-	screenOptions: ScreenOptionsSnapshot,
-): GesturePolicyOptions => {
-	"worklet";
-
-	return {
-		...screenOptions,
-		transitionSpec: policy.transitionSpec,
-	};
-};
-
 type RuntimePolicyResolver<TPolicy extends GesturePolicy> = (
 	options: GesturePolicyOptions,
 	hasSnapPoints: boolean,
@@ -41,13 +29,12 @@ const resolveRuntime = <TPolicy extends GesturePolicy>(
 		participation: runtime.participation,
 		options: screenOptions,
 	});
-	const options = resolveRuntimeOptions(runtime.policy, screenOptions);
 	const hasSnapPoints = participation.effectiveSnapPoints.hasSnapPoints;
 
 	return {
 		...runtime,
 		participation,
-		policy: resolvePolicy(options, hasSnapPoints),
+		policy: resolvePolicy(screenOptions, hasSnapPoints),
 	};
 };
 

@@ -1,12 +1,12 @@
 import type { ReactNode } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import type { ScreenTransitionOptions } from "../../../types";
+import type { ScreenTransitionConfig } from "../../../types";
 
 export type RuntimeOption<T> = SharedValue<T>;
-export type RequiredScreenOption<K extends keyof ScreenTransitionOptions> =
-	NonNullable<ScreenTransitionOptions[K]>;
-export type OptionalScreenOption<K extends keyof ScreenTransitionOptions> =
-	ScreenTransitionOptions[K];
+export type RequiredScreenOption<K extends keyof ScreenTransitionConfig> =
+	NonNullable<ScreenTransitionConfig[K]>;
+export type OptionalScreenOption<K extends keyof ScreenTransitionConfig> =
+	ScreenTransitionConfig[K];
 
 export type ScreenOptionsSnapshot = {
 	navigationMaskEnabled: OptionalScreenOption<"navigationMaskEnabled">;
@@ -24,6 +24,7 @@ export type ScreenOptionsSnapshot = {
 	gestureSnapLocked: RequiredScreenOption<"gestureSnapLocked">;
 	sheetScrollGestureBehavior: RequiredScreenOption<"sheetScrollGestureBehavior">;
 	backdropBehavior: OptionalScreenOption<"backdropBehavior">;
+	transitionSpec: OptionalScreenOption<"transitionSpec">;
 };
 
 export type ScreenOptionsState = ScreenOptionsSnapshot & {
