@@ -11,6 +11,8 @@ const IDENTITY_TRANSFORM = [
 	{ scaleY: 1 },
 ] as const;
 
+const PORTAL_HOST_NAME_RESET_VALUE = "--";
+
 /**
  * Safe identity resets for transition-owned style props.
  *
@@ -59,6 +61,7 @@ export const STYLE_RESET_VALUES: Record<string, unknown> = {
 };
 
 export const PROP_RESET_VALUES: Record<string, unknown> = {
+	hostName: PORTAL_HOST_NAME_RESET_VALUE,
 	pointerEvents: "auto",
 };
 

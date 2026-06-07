@@ -57,6 +57,7 @@ export function createBoundaryComponent<P extends object>(
 			method,
 			style,
 			onPress,
+			portal,
 			...rest
 		} = props as any;
 
@@ -108,6 +109,8 @@ export function createBoundaryComponent<P extends object>(
 			useBoundaryOwner({
 				ownerRef,
 				associatedTargetStyles: runtimeEnabled ? associatedStyles : undefined,
+				entryTag,
+				portal,
 			});
 
 		const preparedStyles = targetPreparedStyles ?? ownerPreparedStyles;

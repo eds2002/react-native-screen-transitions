@@ -25,6 +25,18 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 	 * @default true
 	 */
 	enabled?: boolean;
+	/**
+	 * Renders this boundary target through a layout-preserving portal when the
+	 * `react-native-teleport` integration is installed.
+	 *
+	 * The target keeps its measured layout space in the original tree, while the
+	 * rendered element is attached to the boundary portal host. Interpolators can
+	 * then update the portal host/style ids to move that rendered element outside
+	 * of its original clipping or layout constraints during a transition.
+	 *
+	 * @default false
+	 */
+	portal?: boolean;
 	id: BoundaryId;
 }
 

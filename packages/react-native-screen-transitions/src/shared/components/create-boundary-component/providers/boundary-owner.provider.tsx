@@ -1,16 +1,10 @@
 import type React from "react";
-import {
-	createContext,
-	type ReactNode,
-	useCallback,
-	useContext,
-	useMemo,
-	useRef,
-	useState,
-} from "react";
+import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
 import type { View } from "react-native";
 import type Animated from "react-native-reanimated";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
+import createProvider from "../../../utils/create-provider";
+import { logger } from "../../../utils/logger";
 
 type BoundaryAssociatedStyle = React.ComponentProps<
 	typeof Animated.View
@@ -25,6 +19,8 @@ interface BoundaryOwnerContextValue {
 	unregisterTargetRef: (targetRef: AnimatedRef<View>) => void;
 	activeTargetRef: AnimatedRef<View> | null;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
+	entryTag: string;
+	portal?: boolean;
 }
 
 type BoundaryTargetEntry = {
@@ -32,38 +28,30 @@ type BoundaryTargetEntry = {
 	preparedStyles: StyleProps;
 };
 
-const BoundaryOwnerContext = createContext<BoundaryOwnerContextValue | null>(
-	null,
-);
-
 const MULTIPLE_TARGETS_WARNING =
 	"[react-native-screen-transitions] Multiple Boundary.Target elements were rendered under the same boundary owner. The first registered target will be measured.";
 
 export const TARGET_OUTSIDE_OWNER_WARNING =
 	"[react-native-screen-transitions] Boundary.Target must be rendered inside a Boundary owner (Boundary.View, Boundary.Trigger, or a component created by createBoundaryComponent).";
 
-export const BoundaryOwnerProvider = (props: {
+interface BoundaryOwnerProps {
 	value: BoundaryOwnerContextValue;
 	children: ReactNode;
-}) => {
-	const { value, children } = props;
+}
 
-	return (
-		<BoundaryOwnerContext.Provider value={value}>
-			{children}
-		</BoundaryOwnerContext.Provider>
-	);
-};
-
-export const useBoundaryOwnerContext = () => {
-	return useContext(BoundaryOwnerContext);
-};
+export const { BoundaryOwnerProvider, useBoundaryOwnerContext } =
+	createProvider("BoundaryOwner", { guarded: false })<
+		BoundaryOwnerProps,
+		BoundaryOwnerContextValue
+	>((props) => props);
 
 export const useBoundaryOwner = (params: {
 	ownerRef: AnimatedRef<View>;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
+	entryTag: string;
+	portal?: boolean;
 }) => {
-	const { ownerRef, associatedTargetStyles } = params;
+	const { ownerRef, associatedTargetStyles, portal } = params;
 	const warnedAboutMultipleTargetsRef = useRef(false);
 	const [targetEntry, setTargetEntry] = useState<BoundaryTargetEntry | null>(
 		null,
@@ -82,7 +70,7 @@ export const useBoundaryOwner = (params: {
 					!warnedAboutMultipleTargetsRef.current
 				) {
 					warnedAboutMultipleTargetsRef.current = true;
-					console.warn(MULTIPLE_TARGETS_WARNING);
+					logger.warn(MULTIPLE_TARGETS_WARNING);
 				}
 
 				return prev ?? { ref: targetRef, preparedStyles };
@@ -102,6 +90,8 @@ export const useBoundaryOwner = (params: {
 			unregisterTargetRef,
 			activeTargetRef: targetEntry?.ref ?? null,
 			associatedTargetStyles,
+			entryTag: params.entryTag,
+			portal,
 		}),
 		[
 			ownerRef,
@@ -109,6 +99,8 @@ export const useBoundaryOwner = (params: {
 			unregisterTargetRef,
 			targetEntry,
 			associatedTargetStyles,
+			params.entryTag,
+			portal,
 		],
 	);
 
@@ -117,5 +109,6 @@ export const useBoundaryOwner = (params: {
 		hasActiveTarget: targetEntry !== null,
 		measuredRef: targetEntry?.ref ?? ownerRef,
 		targetPreparedStyles: targetEntry?.preparedStyles,
+		portal,
 	};
 };

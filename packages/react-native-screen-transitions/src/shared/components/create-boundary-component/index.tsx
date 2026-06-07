@@ -1,4 +1,5 @@
 import { Pressable, View } from "react-native";
+import { PortalHost as BoundaryPortalHost } from "../integrations/teleport";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
 
@@ -43,4 +44,5 @@ export const Boundary = {
 	 * Optional nested measurement override inside a boundary owner.
 	 */
 	Target: BoundaryTarget,
+	PortalHost: BoundaryPortalHost,
 };

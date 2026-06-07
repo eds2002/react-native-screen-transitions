@@ -3,6 +3,7 @@ import { memo, useLayoutEffect, useMemo } from "react";
 import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
+import { Portal } from "../../integrations/teleport/components/portal";
 import {
 	TARGET_OUTSIDE_OWNER_WARNING,
 	useBoundaryOwnerContext,
@@ -41,14 +42,16 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	]);
 
 	return (
-		<Animated.View
-			{...rest}
-			ref={targetAnimatedRef}
-			style={[
-				style,
-				isActiveTarget ? ownerContext.associatedTargetStyles : undefined,
-			]}
-			collapsable={false}
-		/>
+		<Portal enabled={ownerContext?.portal} id={ownerContext?.entryTag}>
+			<Animated.View
+				{...rest}
+				ref={targetAnimatedRef}
+				style={[
+					style,
+					isActiveTarget ? ownerContext.associatedTargetStyles : undefined,
+				]}
+				collapsable={false}
+			/>
+		</Portal>
 	);
 });

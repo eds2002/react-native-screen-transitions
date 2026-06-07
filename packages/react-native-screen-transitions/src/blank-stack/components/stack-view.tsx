@@ -2,11 +2,12 @@ import {
 	NavigationContext,
 	NavigationRouteContext,
 } from "@react-navigation/native";
-import { Fragment, memo } from "react";
+import { memo } from "react";
 import {
 	ActivityContainer,
 	ActivityScreen,
 } from "../../shared/components/activity";
+import { PortalProvider } from "../../shared/components/integrations/teleport";
 import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withBlankStack } from "../../shared/providers/stack/blank-stack.provider";
@@ -56,7 +57,7 @@ export const StackView = withStackCore(
 	withBlankStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
 		({ scenes, shouldShowFloatOverlay }) => {
 			return (
-				<Fragment>
+				<PortalProvider>
 					{shouldShowFloatOverlay ? <Overlay.Float /> : null}
 
 					<ActivityContainer>
@@ -73,7 +74,7 @@ export const StackView = withStackCore(
 							);
 						})}
 					</ActivityContainer>
-				</Fragment>
+				</PortalProvider>
 			);
 		},
 	),

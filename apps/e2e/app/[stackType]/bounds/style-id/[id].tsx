@@ -37,10 +37,12 @@ function SharedImage({
 	id,
 	image,
 	width,
+	height,
 }: {
 	id: string;
 	image: string;
 	width: number;
+	height: number;
 }) {
 	const theme = useTheme();
 	const insets = useSafeAreaInsets();
@@ -51,7 +53,7 @@ function SharedImage({
 				styles.sharedImage,
 				{
 					width,
-					aspectRatio: BOARD_ASPECT_RATIO,
+					height,
 					backgroundColor: theme.card,
 					marginTop: insets.top + 16,
 				},
@@ -73,6 +75,7 @@ export default function StyleIdBoundsDetail() {
 
 	const { width } = useWindowDimensions();
 	const imageWidth = width * 0.8;
+	const imageHeight = imageWidth / BOARD_ASPECT_RATIO;
 	const pinSize = Math.floor(
 		(width - GRID_HORIZONTAL_PADDING * 2 - PIN_COLUMN_GAP * (PIN_COLUMNS - 1)) /
 			PIN_COLUMNS,
@@ -90,7 +93,12 @@ export default function StyleIdBoundsDetail() {
 			style={[styles.scroll, { backgroundColor: theme.bg }]}
 		>
 			<View style={styles.heroWrap}>
-				<SharedImage id={id} image={image} width={imageWidth} />
+				<SharedImage
+					id={id}
+					image={image}
+					width={imageWidth}
+					height={imageHeight}
+				/>
 			</View>
 
 			<Animated.View style={styles.section}>
