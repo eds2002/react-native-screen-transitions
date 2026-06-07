@@ -103,6 +103,7 @@ const createBoundsAccessorParts = ({
 					},
 					applyHostOffsets: (bounds) => {
 						"worklet";
+
 						return {
 							transform: [
 								{ translateY: bounds.pageY },

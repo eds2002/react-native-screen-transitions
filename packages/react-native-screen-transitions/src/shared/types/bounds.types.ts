@@ -322,6 +322,9 @@ export type BoundsPortalAccessor = {
 	getPortalId: () => string;
 	/**
 	 * Returns host offset styles that place the portal host at the measured bounds.
+	 *
+	 * Pass a host id from {@linkcode BoundsPortalAccessor.getHostId} when using a
+	 * host other than the current screen's default host.
 	 */
 	applyHostOffsets: (bounds: MeasuredDimensions) => StyleProps;
 	/**
