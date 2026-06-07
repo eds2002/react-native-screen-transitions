@@ -292,6 +292,46 @@ export type BoundsNavigationRevealOptions = {
 
 export type BoundsNavigationRevealStyle = BoundsNavigationZoomStyle;
 
+export type BoundsPortalSetPropsOptions = {
+	/**
+	 * Whether the portal should be attached to a host.
+	 *
+	 * When `false`, the returned props reset the portal host name back to the
+	 * package's detached sentinel value.
+	 */
+	attach: boolean;
+	/**
+	 * Host id returned by {@linkcode BoundsPortalAccessor.getHostId}.
+	 *
+	 * Defaults to the current screen's portal host id.
+	 */
+	hostId?: string;
+};
+
+export type BoundsPortalAccessor = {
+	/**
+	 * Returns the style id/name for a screen portal host.
+	 *
+	 * Defaults to the current screen route key. Pass another screen route key when
+	 * a portal should attach to a different mounted screen host.
+	 */
+	getHostId: (screenKey?: string) => string;
+	/**
+	 * Returns the style id for this boundary's portal element.
+	 */
+	getPortalId: () => string;
+	/**
+	 * Returns host offset styles that place the portal host at the measured bounds.
+	 */
+	applyHostOffsets: (bounds: MeasuredDimensions) => StyleProps;
+	/**
+	 * Returns animated props for attaching or detaching this boundary's portal.
+	 */
+	setPortalProps: (
+		options: BoundsPortalSetPropsOptions,
+	) => Record<string, unknown>;
+};
+
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
 	reveal: (
@@ -309,6 +349,7 @@ export type BoundsScopedAccessor = BoundsBoundNavigationAccessor & {
 		options?: T,
 	) => BoundsMathResult<T>;
 	link: (id?: BoundsIdentityInput) => BoundsLink | null;
+	portal: () => BoundsPortalAccessor;
 };
 
 export type BoundsAccessor = (

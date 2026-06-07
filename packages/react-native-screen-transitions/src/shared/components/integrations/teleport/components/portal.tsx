@@ -2,10 +2,9 @@ import { memo, type ReactNode, useCallback, useState } from "react";
 import { type LayoutChangeEvent, View } from "react-native";
 import { Portal as NativePortal } from "react-native-teleport";
 import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
+import { createPortalName } from "../utils";
 
 const TransitionAwareTeleport = createTransitionAwareComponent(NativePortal);
-
-export const createPortalName = (id: string) => `${id}-portal`;
 
 interface PortalProps {
 	id?: string;

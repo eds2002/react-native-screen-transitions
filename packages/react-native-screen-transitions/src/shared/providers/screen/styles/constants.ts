@@ -1,3 +1,4 @@
+import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../components/integrations/teleport/utils";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -10,8 +11,6 @@ const IDENTITY_TRANSFORM = [
 	{ scaleX: 1 },
 	{ scaleY: 1 },
 ] as const;
-
-const PORTAL_HOST_NAME_RESET_VALUE = "--";
 
 /**
  * Safe identity resets for transition-owned style props.

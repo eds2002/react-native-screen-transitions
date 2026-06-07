@@ -1,6 +1,12 @@
+import {
+	createPortalHostName,
+	createPortalName,
+	PORTAL_HOST_NAME_RESET_VALUE,
+} from "../../../components/integrations/teleport/utils";
 import type {
 	BoundsAccessor,
 	BoundsInterpolationProps,
+	BoundsPortalAccessor,
 	BoundsScopedAccessor,
 } from "../../../types/bounds.types";
 import type {
@@ -81,6 +87,38 @@ const createBoundsAccessorParts = ({
 						: normalizeBoundIdentity(id, normalizedIdentity.group);
 				const linkTag = createBoundTag(linkIdentity);
 				return getLink(linkTag ?? "");
+			},
+			portal: (): BoundsPortalAccessor => {
+				"worklet";
+				const portalId = createPortalName(tag ?? "");
+
+				return {
+					getHostId: (screenKey?: string) => {
+						"worklet";
+						return createPortalHostName(screenKey ?? props.current.route.key);
+					},
+					getPortalId: () => {
+						"worklet";
+						return portalId;
+					},
+					applyHostOffsets: (bounds) => {
+						"worklet";
+						return {
+							transform: [
+								{ translateY: bounds.pageY },
+								{ translateX: bounds.pageX },
+							],
+						};
+					},
+					setPortalProps: ({ attach, hostId }) => {
+						"worklet";
+						return {
+							hostName: attach
+								? (hostId ?? createPortalHostName(props.current.route.key))
+								: PORTAL_HOST_NAME_RESET_VALUE,
+						};
+					},
+				};
 			},
 		} as BoundsScopedAccessor;
 
