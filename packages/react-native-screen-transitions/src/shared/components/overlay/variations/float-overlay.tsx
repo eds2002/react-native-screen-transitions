@@ -5,6 +5,7 @@ import { useStack } from "../../../hooks/navigation/use-stack";
 import { ScreenAnimationProvider } from "../../../providers/screen/animation";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import { DescriptorsProvider } from "../../../providers/screen/descriptors";
+import { ScreenOptionsProvider } from "../../../providers/screen/options";
 import { ScreenStylesProvider } from "../../../providers/screen/styles";
 import type { OverlayScreenState } from "../../../types/overlay.types";
 
@@ -70,11 +71,16 @@ export function FloatOverlay() {
 
 	return (
 		<DescriptorsProvider current={current} previous={previous} next={next}>
-			<ScreenAnimationProvider>
-				<ScreenStylesProvider isFloatingOverlay>
-					<OverlayHost scene={scene} overlayScreenState={overlayScreenState} />
-				</ScreenStylesProvider>
-			</ScreenAnimationProvider>
+			<ScreenOptionsProvider>
+				<ScreenAnimationProvider>
+					<ScreenStylesProvider isFloatingOverlay>
+						<OverlayHost
+							scene={scene}
+							overlayScreenState={overlayScreenState}
+						/>
+					</ScreenStylesProvider>
+				</ScreenAnimationProvider>
+			</ScreenOptionsProvider>
 		</DescriptorsProvider>
 	);
 }
