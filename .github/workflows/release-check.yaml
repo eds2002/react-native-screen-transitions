@@ -1,0 +1,37 @@
+name: Release Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    paths:
+      - "packages/react-native-screen-transitions/package.json"
+      - "packages/react-native-screen-transitions/CHANGELOG.md"
+
+env:
+  PACKAGE_DIR: packages/react-native-screen-transitions
+
+jobs:
+  release-check:
+    name: Validate Stable Release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fetch base branch
+        run: git fetch --no-tags --depth=1 origin "+refs/heads/${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Validate release
+        env:
+          BASE_REF: origin/${{ github.base_ref }}
+          PACKAGE_JSON_PATH: ${{ env.PACKAGE_DIR }}/package.json
+        run: node .github/scripts/check-release-pr.mjs

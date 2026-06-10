@@ -6,11 +6,13 @@ import {
 	GestureStore,
 	type GestureStoreMap,
 } from "../../../../stores/gesture.store";
+import { ScrollStore } from "../../../../stores/scroll.store";
 import { SystemStore } from "../../../../stores/system.store";
 import type {
 	BaseStackRoute,
 	Layout,
 	ScreenTransitionState,
+	ScrollMetadataState,
 } from "../../../../types";
 import type { ScreenTransitionOptions } from "../../../../types/animation.types";
 import type { BaseDescriptor } from "../../descriptors";
@@ -33,6 +35,7 @@ type BuiltState = {
 	targetProgress: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
+	scrollMetadata: SharedValue<ScrollMetadataState | null>;
 	contentLayoutSlot: Layout;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
@@ -72,6 +75,7 @@ export const useBuildTransitionState = (
 			targetProgress: SystemStore.getValue(key, "targetProgress"),
 			resolvedAutoSnapPoint: SystemStore.getValue(key, "resolvedAutoSnapPoint"),
 			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),
+			scrollMetadata: ScrollStore.getValue(key, "metadata"),
 			contentLayoutSlot: { width: 0, height: 0 },
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
 			sortedNumericSnapPoints,

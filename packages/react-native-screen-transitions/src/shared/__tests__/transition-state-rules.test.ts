@@ -106,6 +106,7 @@ const createBuiltState = (
 		targetProgress: shared(overrides.targetProgress ?? 1),
 		resolvedAutoSnapPoint: shared(-1),
 		measuredContentLayout: shared(null),
+		scrollMetadata: shared(null),
 		contentLayoutSlot: { width: 0, height: 0 },
 		hasAutoSnapPoint: false,
 		sortedNumericSnapPoints: overrides.sortedNumericSnapPoints ?? [],

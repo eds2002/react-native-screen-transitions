@@ -12,7 +12,10 @@ import Animated, {
 } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../constants";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
-import { useScrollGestureCoordination } from "../providers/screen/gestures/scroll-coordination";
+import {
+	ScrollMetadataOwnerProvider,
+	useScrollGestureCoordination,
+} from "../providers/screen/gestures/scroll-coordination";
 import { useScreenStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
 
@@ -55,6 +58,7 @@ export function createTransitionAwareComponent<P extends object>(
 			onContentSizeChange,
 			onLayout,
 			nativeGesture,
+			metadataOwnerProviderValue,
 		} = useScrollGestureCoordination({
 			onContentSizeChange: scrollableProps.onContentSizeChange,
 			onLayout: scrollableProps.onLayout,
@@ -89,14 +93,18 @@ export function createTransitionAwareComponent<P extends object>(
 			/>
 		);
 
-		if (!nativeGesture) {
-			return scrollableComponent;
-		}
-
-		return (
+		const coordinatedScrollableComponent = nativeGesture ? (
 			<GestureDetector gesture={nativeGesture}>
 				{scrollableComponent}
 			</GestureDetector>
+		) : (
+			scrollableComponent
+		);
+
+		return (
+			<ScrollMetadataOwnerProvider value={metadataOwnerProviderValue}>
+				{coordinatedScrollableComponent}
+			</ScrollMetadataOwnerProvider>
 		);
 	});
 

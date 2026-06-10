@@ -20,18 +20,35 @@ export type GestureProgressMode = "progress-driven" | "freeform";
 
 export type SnapPanAxis = "horizontal" | "vertical";
 
+/**
+ * Axis reported by a transition-aware scrollable.
+ */
 export type ScrollGestureAxis = "vertical" | "horizontal";
 
+/**
+ * Scroll geometry for one axis of a transition-aware scrollable.
+ */
 export type ScrollGestureAxisState = {
 	offset: number;
 	contentSize: number;
 	layoutSize: number;
+	isTouched: boolean;
 };
 
+/**
+ * Scroll metadata exposed through screen transition layouts.
+ */
+export type ScrollMetadataState = {
+	vertical: ScrollGestureAxisState | null;
+	horizontal: ScrollGestureAxisState | null;
+};
+
+/**
+ * Scroll geometry used by gesture coordination.
+ */
 export type ScrollGestureState = {
 	vertical: ScrollGestureAxisState;
 	horizontal: ScrollGestureAxisState;
-	isTouched: boolean;
 };
 
 export type SnapPanAxisConfig = {

@@ -149,6 +149,8 @@ export const hydrateTransitionState = (
 		out.layouts.content = undefined;
 	}
 
+	out.layouts.scroll = s.scrollMetadata.get() ?? undefined;
+
 	const autoSnapPoint = s.resolvedAutoSnapPoint.get();
 	const resolvedAutoSnap =
 		s.hasAutoSnapPoint && autoSnapPoint > 0 ? autoSnapPoint : null;

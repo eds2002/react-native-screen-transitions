@@ -21,6 +21,7 @@ import type {
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
+	ScrollMetadataState,
 	SnapPanDirectionConfig,
 	SnapPinchDirectionConfig,
 } from "../../../types/gesture.types";
@@ -56,6 +57,7 @@ export type {
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
+	ScrollMetadataState,
 };
 
 export type DirectionClaim = {

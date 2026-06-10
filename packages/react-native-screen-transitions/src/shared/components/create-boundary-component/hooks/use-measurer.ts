@@ -39,7 +39,7 @@ export const useMeasurer = ({
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
 
-	const scrollState = ScrollStore.getValue(currentScreenKey, "state");
+	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 	const pendingLifecycleStartBlockCount = SystemStore.getValue(
 		currentScreenKey,
 		"pendingLifecycleStartBlockCount",

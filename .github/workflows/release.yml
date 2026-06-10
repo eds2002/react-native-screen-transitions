@@ -7,38 +7,6 @@ on:
     paths:
       - "packages/react-native-screen-transitions/package.json"
       - "packages/react-native-screen-transitions/CHANGELOG.md"
-  workflow_dispatch:
-    inputs:
-      channel:
-        description: "Release channel. latest publishes the current package version; alpha/beta/rc create prereleases from the selected branch."
-        required: true
-        default: latest
-        type: choice
-        options:
-          - latest
-          - alpha
-          - beta
-          - rc
-      increment:
-        description: "Prerelease increment. Use preminor for the first alpha of the next minor, then prerelease for follow-up beta/rc builds."
-        required: true
-        default: prerelease
-        type: choice
-        options:
-          - prerelease
-          - prepatch
-          - preminor
-          - premajor
-      dry_run:
-        description: "Run release-it without publishing, tagging, or pushing."
-        required: true
-        default: true
-        type: boolean
-      publish_npm:
-        description: "Publish to npm. Disable this only to repair GitHub tags/releases for a version that is already on npm."
-        required: true
-        default: true
-        type: boolean
 
 concurrency:
   group: release-${{ github.ref }}
@@ -50,7 +18,6 @@ env:
 jobs:
   stable-from-main:
     name: Stable Release From Main
-    if: ${{ github.event_name == 'push' }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -71,7 +38,6 @@ jobs:
       - name: Detect releasable version bump
         id: release
         env:
-          GITHUB_EVENT_BEFORE: ${{ github.event.before }}
           PACKAGE_JSON_PATH: ${{ env.PACKAGE_DIR }}/package.json
         run: node .github/scripts/should-release-stable.mjs
 
@@ -96,6 +62,10 @@ jobs:
         if: ${{ steps.release.outputs.should_release == 'true' }}
         run: npm install -g npm@latest
 
+      - name: Enable npm provenance
+        if: ${{ steps.release.outputs.should_release == 'true' }}
+        run: npm config set provenance true
+
       - name: Configure git user
         if: ${{ steps.release.outputs.should_release == 'true' }}
         run: |
@@ -111,87 +81,4 @@ jobs:
         working-directory: ${{ env.PACKAGE_DIR }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: bunx release-it --config ../../.release-it.json --ci --no-increment --no-git.commit --npm.tag=latest
-
-  manual-release:
-    name: Manual Release
-    if: ${{ github.event_name == 'workflow_dispatch' }}
-    runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref_name }}
-          fetch-depth: 0
-
-      - name: Checkout branch
-        run: |
-          git checkout -B "$GITHUB_REF_NAME" "origin/$GITHUB_REF_NAME"
-          git branch --set-upstream-to="origin/$GITHUB_REF_NAME" "$GITHUB_REF_NAME"
-
-      - name: Setup Bun
-        uses: oven-sh/setup-bun@v1
-        with:
-          bun-version: 1.2.20
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Upgrade npm for trusted publishing
-        run: npm install -g npm@latest
-
-      - name: Configure git user
-        run: |
-          git config user.name "${GITHUB_ACTOR}"
-          git config user.email "${GITHUB_ACTOR}@users.noreply.github.com"
-
-      - name: Install deps
-        run: bun install --frozen-lockfile
-
-      - name: Run release-it
-        working-directory: ${{ env.PACKAGE_DIR }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_CHANNEL: ${{ inputs.channel }}
-          RELEASE_DRY_RUN: ${{ inputs.dry_run }}
-          RELEASE_INCREMENT: ${{ inputs.increment }}
-          RELEASE_PUBLISH_NPM: ${{ inputs.publish_npm }}
-        run: |
-          set -euo pipefail
-
-          args=(--ci)
-
-          if [[ "$RELEASE_DRY_RUN" == "true" ]]; then
-            args+=(--dry-run)
-          fi
-
-          if [[ "$RELEASE_CHANNEL" == "latest" ]]; then
-            args+=(--no-increment --no-git.commit --npm.tag=latest)
-          else
-            case "$RELEASE_INCREMENT" in
-              prerelease)
-                ;;
-              prepatch|preminor|premajor)
-                args+=("$RELEASE_INCREMENT")
-                ;;
-              *)
-                echo "Unsupported prerelease increment: $RELEASE_INCREMENT"
-                exit 1
-                ;;
-            esac
-
-            args+=("--preRelease=$RELEASE_CHANNEL")
-          fi
-
-          if [[ "$RELEASE_PUBLISH_NPM" != "true" ]]; then
-            args+=(--no-npm.publish)
-          fi
-
-          bunx release-it --config ../../.release-it.json "${args[@]}"
+        run: bunx release-it --config ../../.release-it.json --ci --no-increment --no-git.commit --git.requireBranch=main --npm.tag=latest

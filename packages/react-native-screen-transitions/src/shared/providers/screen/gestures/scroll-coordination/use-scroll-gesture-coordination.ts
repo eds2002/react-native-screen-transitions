@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo, useState } from "react";
 import type { LayoutChangeEvent } from "react-native";
 import { Gesture, type GestureType } from "react-native-gesture-handler";
 import {
@@ -9,13 +9,23 @@ import {
 import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-value-state";
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import { AnimationStore } from "../../../../stores/animation.store";
+import { ScrollStore } from "../../../../stores/scroll.store";
 import { useGestureContext } from "../gestures.provider";
 import type {
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
+	ScrollMetadataState,
 } from "../types";
-import { updateScrollGestureAxisState } from "./update-scroll-gesture-state";
+import {
+	useScrollMetadataOwnerContext,
+	useScrollMetadataOwnerProviderValue,
+} from "./scroll-metadata-owner";
+import {
+	clearScrollMetadataAxisState,
+	updateScrollGestureAxisState,
+	updateScrollMetadataAxisState,
+} from "./update-scroll-gesture-state";
 import { walkUpScrollGestureCoordination } from "./walk-up-scroll-gesture-coordination";
 
 interface ScrollGestureCoordinationProps {
@@ -41,6 +51,31 @@ const modifyScrollGestureAxisState = (
 	});
 };
 
+const modifyScrollMetadataAxisState = (
+	scrollState: SharedValue<ScrollMetadataState | null>,
+	axis: ScrollGestureAxis,
+	patch: ScrollGesturePatch,
+) => {
+	"worklet";
+
+	scrollState.modify(<T extends ScrollMetadataState | null>(state: T): T => {
+		"worklet";
+		return updateScrollMetadataAxisState(state, axis, patch) as T;
+	});
+};
+
+const clearScrollMetadataAxis = (
+	scrollState: SharedValue<ScrollMetadataState | null>,
+	axis: ScrollGestureAxis,
+) => {
+	"worklet";
+
+	scrollState.modify(<T extends ScrollMetadataState | null>(state: T): T => {
+		"worklet";
+		return clearScrollMetadataAxisState(state, axis) as T;
+	});
+};
+
 /**
  * Returns scroll handlers and a native gesture for ScrollView coordination.
  *
@@ -56,10 +91,62 @@ export const useScrollGestureCoordination = (
 	const context = useGestureContext();
 	const scrollDirection = props.direction ?? "vertical";
 
+	const metadataOwnerContext = useScrollMetadataOwnerContext();
+	const metadataOwnerProviderValue =
+		useScrollMetadataOwnerProviderValue(scrollDirection);
+	const isFirstMetadataWriterInTree = !metadataOwnerContext[scrollDirection];
+	const [metadataWriterId] = useState(() =>
+		ScrollStore.createMetadataWriterId(),
+	);
+	const [writesMetadata, setWritesMetadata] = useState(false);
+
 	const { scrollStates, panGestures, pinchGestures, ownerRouteKeys } = useMemo(
 		() => walkUpScrollGestureCoordination(context, scrollDirection),
 		[context, scrollDirection],
 	);
+
+	const routeKey = context?.routeKey;
+	const metadataState = useMemo(
+		() => (routeKey ? ScrollStore.getValue(routeKey, "metadata") : null),
+		[routeKey],
+	);
+
+	useLayoutEffect(() => {
+		if (!routeKey || !isFirstMetadataWriterInTree) {
+			setWritesMetadata(false);
+			return;
+		}
+
+		const claimed = ScrollStore.claimMetadataWriter(
+			routeKey,
+			scrollDirection,
+			metadataWriterId,
+		);
+		setWritesMetadata(claimed);
+
+		return () => {
+			const released = ScrollStore.releaseMetadataWriter(
+				routeKey,
+				scrollDirection,
+				metadataWriterId,
+			);
+
+			if (!released || !metadataState) return;
+
+			if (!ScrollStore.hasMetadataWriters(routeKey)) {
+				metadataState.set(null);
+				return;
+			}
+
+			clearScrollMetadataAxis(metadataState, scrollDirection);
+		};
+	}, [
+		routeKey,
+		scrollDirection,
+		isFirstMetadataWriterInTree,
+		metadataState,
+		metadataWriterId,
+	]);
 
 	const ownerClosingValues = useMemo(
 		() =>
@@ -92,12 +179,24 @@ export const useScrollGestureCoordination = (
 					isTouched: true,
 				});
 			}
+
+			if (writesMetadata && metadataState) {
+				modifyScrollMetadataAxisState(metadataState, scrollDirection, {
+					isTouched: true,
+				});
+			}
 		};
 
 		const clearIsTouched = () => {
 			"worklet";
 			for (const scrollState of scrollStates) {
 				modifyScrollGestureAxisState(scrollState, scrollDirection, {
+					isTouched: false,
+				});
+			}
+
+			if (writesMetadata && metadataState) {
+				modifyScrollMetadataAxisState(metadataState, scrollDirection, {
 					isTouched: false,
 				});
 			}
@@ -121,12 +220,17 @@ export const useScrollGestureCoordination = (
 		}
 
 		return gesture;
-	}, [panGestures, pinchGestures, scrollStates, scrollDirection]);
+	}, [
+		panGestures,
+		pinchGestures,
+		scrollStates,
+		scrollDirection,
+		writesMetadata,
+		metadataState,
+	]);
 
 	const scrollHandler = useAnimatedScrollHandler({
 		onScroll: (event) => {
-			if (scrollStates.length === 0) return;
-
 			const offset =
 				scrollDirection === "horizontal"
 					? event.contentOffset.x
@@ -135,7 +239,14 @@ export const useScrollGestureCoordination = (
 			for (const scrollState of scrollStates) {
 				modifyScrollGestureAxisState(scrollState, scrollDirection, {
 					offset,
-					isTouched: scrollState.get()?.isTouched ?? true,
+					isTouched: scrollState.get()?.[scrollDirection].isTouched ?? true,
+				});
+			}
+
+			if (writesMetadata && metadataState) {
+				modifyScrollMetadataAxisState(metadataState, scrollDirection, {
+					offset,
+					isTouched: metadataState.get()?.[scrollDirection]?.isTouched ?? true,
 				});
 			}
 		},
@@ -144,7 +255,6 @@ export const useScrollGestureCoordination = (
 	const onContentSizeChange = useStableCallback(
 		(width: number, height: number) => {
 			props.onContentSizeChange?.(width, height);
-			if (scrollStates.length === 0) return;
 
 			const contentSize = scrollDirection === "horizontal" ? width : height;
 
@@ -153,18 +263,29 @@ export const useScrollGestureCoordination = (
 					contentSize,
 				});
 			}
+
+			if (writesMetadata && metadataState) {
+				modifyScrollMetadataAxisState(metadataState, scrollDirection, {
+					contentSize,
+				});
+			}
 		},
 	);
 
 	const onLayout = useStableCallback((event: LayoutChangeEvent) => {
 		props.onLayout?.(event);
-		if (scrollStates.length === 0) return;
 
 		const { width, height } = event.nativeEvent.layout;
 		const layoutSize = scrollDirection === "horizontal" ? width : height;
 
 		for (const scrollState of scrollStates) {
 			modifyScrollGestureAxisState(scrollState, scrollDirection, {
+				layoutSize,
+			});
+		}
+
+		if (writesMetadata && metadataState) {
+			modifyScrollMetadataAxisState(metadataState, scrollDirection, {
 				layoutSize,
 			});
 		}
@@ -176,5 +297,6 @@ export const useScrollGestureCoordination = (
 		onContentSizeChange,
 		onLayout,
 		nativeGesture,
+		metadataOwnerProviderValue,
 	};
 };

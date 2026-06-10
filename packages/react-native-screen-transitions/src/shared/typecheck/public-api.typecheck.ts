@@ -21,6 +21,10 @@ import type {
 	ScreenTransitionConfig,
 	ScreenTransitionDepthTarget,
 	ScreenTransitionTarget,
+	ScrollGestureAxis,
+	ScrollGestureAxisState,
+	ScrollGestureState,
+	ScrollMetadataState,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
 } from "..";
@@ -201,6 +205,23 @@ const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;
+const scrollAxis: ScrollGestureAxis = "vertical";
+const scrollAxisState: ScrollGestureAxisState = {
+	offset: 0,
+	contentSize: 100,
+	layoutSize: 80,
+	isTouched: false,
+};
+const scrollState: ScrollGestureState = {
+	vertical: scrollAxisState,
+	horizontal: scrollAxisState,
+};
+const scrollMetadataState: ScrollMetadataState = {
+	vertical: scrollAxisState,
+	horizontal: null,
+};
+const maybeScrollOffset: number | undefined =
+	interpolationProps.current.layouts.scroll?.vertical?.offset;
 const currentActiveGesture = interpolationProps.current.gesture.active;
 const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
 const currentGestureVelocity: number =
@@ -358,6 +379,10 @@ const publicApiTypecheck = {
 	zoomInterpolatedStyle,
 	maybeContentHeight,
 	maybeCurrentContentHeight,
+	scrollAxis,
+	scrollState,
+	scrollMetadataState,
+	maybeScrollOffset,
 	currentActiveGesture,
 	currentSnapIndex,
 	zoomOptions,

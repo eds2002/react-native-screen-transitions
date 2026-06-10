@@ -98,7 +98,12 @@ describe("internal withSpring", () => {
 
 		expect(finished).toBe(false);
 		expect(springAnimation.settled).toBe(true);
-		expect(states).toEqual([]);
+		expect(states).toEqual([
+			{
+				finished: false,
+				settled: true,
+			},
+		]);
 
 		while (!finished && timestamp < 4000) {
 			timestamp += 16;
@@ -106,9 +111,15 @@ describe("internal withSpring", () => {
 		}
 		springAnimation.callback?.(finished);
 
-		expect(states).toContainEqual({
-			finished: true,
-			settled: true,
-		});
+		expect(states).toEqual([
+			{
+				finished: false,
+				settled: true,
+			},
+			{
+				finished: true,
+				settled: true,
+			},
+		]);
 	});
 });
