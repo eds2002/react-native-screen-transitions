@@ -3,6 +3,24 @@ import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
 
+/**
+ * Selects the screen host that should receive an automatically attached portal.
+ */
+export type BoundaryPortalHost = "current-screen" | "paired-screen";
+
+/**
+ * Configures automatic portal attachment for a boundary target.
+ */
+export type BoundaryPortalOptions = {
+	/**
+	 * `current-screen` keeps the portal on this boundary's screen. `paired-screen`
+	 * moves it to the adjacent screen once the source/destination link completes.
+	 */
+	host: BoundaryPortalHost;
+};
+
+export type BoundaryPortal = boolean | BoundaryPortalOptions;
+
 export type BoundaryConfigProps = Pick<
 	BoundsOptions,
 	"anchor" | "scaleMode" | "target" | "method"
@@ -26,17 +44,20 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 	 */
 	enabled?: boolean;
 	/**
-	 * Renders this boundary target through a layout-preserving portal when the
-	 * `react-native-teleport` integration is installed.
+	 * Renders this boundary target through a layout-preserving portal when
+	 * `react-native-teleport` is installed.
 	 *
-	 * The target keeps its measured layout space in the original tree, while the
-	 * rendered element is attached to the boundary portal host. Interpolators can
-	 * then update the portal host/style ids to move that rendered element outside
-	 * of its original clipping or layout constraints during a transition.
+	 * The target keeps its measured layout space in the original tree. Once the
+	 * active source/destination link for this boundary is complete, the screen
+	 * portal layer can render a boundary-specific host and attach this target to
+	 * it so the active matched target escapes local clipping.
+	 *
+	 * Use `true` to attach to the current screen host. Use
+	 * `{ host: "paired-screen" }` to attach to the adjacent linked screen host.
 	 *
 	 * @default false
 	 */
-	portal?: boolean;
+	portal?: BoundaryPortal;
 	id: BoundaryId;
 }
 

@@ -98,6 +98,12 @@ const RECIPE_OPTIONS = [
 		description: "Native push into a profile, custom bounds transition for avatar",
 		route: "/native-stack-adapter-recipe" as const,
 	},
+	{
+		id: "teleport",
+		title: "Teleport",
+		description: "Two shared-element teleport recipes using bounds targets",
+		route: "/teleport" as const,
+	},
 ];
 
 export default function HomeScreen() {

@@ -5,6 +5,7 @@ import type Animated from "react-native-reanimated";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
+import type { BoundaryPortal } from "../types";
 
 type BoundaryAssociatedStyle = React.ComponentProps<
 	typeof Animated.View
@@ -20,7 +21,7 @@ interface BoundaryOwnerContextValue {
 	activeTargetRef: AnimatedRef<View> | null;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
 	entryTag: string;
-	portal?: boolean;
+	portal?: BoundaryPortal;
 }
 
 type BoundaryTargetEntry = {
@@ -49,7 +50,7 @@ export const useBoundaryOwner = (params: {
 	ownerRef: AnimatedRef<View>;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
 	entryTag: string;
-	portal?: boolean;
+	portal?: BoundaryPortal;
 }) => {
 	const { ownerRef, associatedTargetStyles, portal } = params;
 	const warnedAboutMultipleTargetsRef = useRef(false);

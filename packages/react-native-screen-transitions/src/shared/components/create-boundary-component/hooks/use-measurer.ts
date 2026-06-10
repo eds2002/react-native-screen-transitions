@@ -13,6 +13,7 @@ import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset
 import type { MeasureBoundary } from "../types";
 import {
 	applyVisibilityBlockOffset,
+	attachScrollSnapshotToMeasuredBounds,
 	isMeasurementInViewport,
 	measureWithOverscrollAwareness,
 } from "../utils/measured-bounds";
@@ -40,6 +41,7 @@ export const useMeasurer = ({
 		useWindowDimensions();
 
 	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
+	const scrollMetadata = ScrollStore.getValue(currentScreenKey, "metadata");
 	const pendingLifecycleStartBlockCount = SystemStore.getValue(
 		currentScreenKey,
 		"pendingLifecycleStartBlockCount",
@@ -91,10 +93,15 @@ export const useMeasurer = ({
 
 			if (!viewportAllowsDestinationWrite) return;
 
+			const measuredWithScroll = attachScrollSnapshotToMeasuredBounds(
+				normalizedMeasured,
+				scrollMetadata.get(),
+			);
+
 			// Set the bounds entry on every measure to avoid any stale measurements
 			// for the public read API.
 			setEntry(entryTag, currentScreenKey, {
-				bounds: normalizedMeasured,
+				bounds: measuredWithScroll,
 			});
 
 			if (target.type === "source") {
@@ -102,7 +109,7 @@ export const useMeasurer = ({
 					target.pairKey,
 					linkId,
 					currentScreenKey,
-					normalizedMeasured,
+					measuredWithScroll,
 					preparedStyles,
 					group,
 				);
@@ -113,7 +120,7 @@ export const useMeasurer = ({
 					target.pairKey,
 					linkId,
 					currentScreenKey,
-					normalizedMeasured,
+					measuredWithScroll,
 					preparedStyles,
 					group,
 				);
@@ -130,6 +137,7 @@ export const useMeasurer = ({
 			viewportWidth,
 			viewportHeight,
 			scrollState,
+			scrollMetadata,
 			pendingLifecycleStartBlockCount,
 		],
 	);

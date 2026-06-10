@@ -39,16 +39,46 @@ export type ScreenIdentifier = {
 	screenKey: ScreenKey;
 };
 
-export type TagLink = {
+export type BoundsLinkStatus =
+	| "source-incomplete"
+	| "destination-incomplete"
+	| "complete";
+
+export type TagLinkSide = ScreenIdentifier & MeasuredEntry;
+
+type TagLinkBase = {
 	group?: GroupKey;
-	/** Source side once attached; null while destination captured first. */
-	source: (ScreenIdentifier & MeasuredEntry) | null;
-	/** Destination side once attached; null while the source is still pending. */
-	destination: (ScreenIdentifier & MeasuredEntry) | null;
 	/** First captured source side exposed for public link inspection. */
-	initialSource?: ScreenIdentifier & MeasuredEntry;
+	initialSource?: TagLinkSide;
 	/** First attached destination side, used to compensate reveal closes after destination refreshes. */
-	initialDestination?: ScreenIdentifier & MeasuredEntry;
+	initialDestination?: TagLinkSide;
+};
+
+export type TagLink =
+	| (TagLinkBase & {
+			status: "source-incomplete";
+			/** Source side once attached; null while destination captured first. */
+			source: null;
+			/** Destination side once attached; null while the source is still pending. */
+			destination: TagLinkSide | null;
+	  })
+	| (TagLinkBase & {
+			status: "destination-incomplete";
+			/** Source side once attached; null while destination captured first. */
+			source: TagLinkSide;
+			/** Destination side once attached; null while the source is still pending. */
+			destination: null;
+	  })
+	| (TagLinkBase & {
+			status: "complete";
+			/** Source side once attached; null while destination captured first. */
+			source: TagLinkSide;
+			/** Destination side once attached; null while the source is still pending. */
+			destination: TagLinkSide;
+	  });
+
+export type BoundsLink = TagLink & {
+	id: TagID;
 };
 
 export type ResolveTransitionContext = {

@@ -10,7 +10,7 @@ import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useGestureContext } from "../../../providers/screen/gestures";
 import { useScreenStyles } from "../../../providers/screen/styles";
-import { PortalHostProvider } from "../../integrations/teleport";
+import { Host } from "../../integrations/portal/components/host";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
 import { SurfaceContainer } from "./surface-container";
@@ -57,15 +57,14 @@ export const ContentLayer = memo(
 						enabled={isNavigationMaskEnabled}
 					>
 						<SurfaceContainer pointerEvents={contentPointerEvents}>
-							<PortalHostProvider>
-								{hasAutoSnapPoint ? (
-									<View collapsable={false} onLayout={handleContentLayout}>
-										{children}
-									</View>
-								) : (
-									children
-								)}
-							</PortalHostProvider>
+							{hasAutoSnapPoint ? (
+								<View collapsable={false} onLayout={handleContentLayout}>
+									{children}
+								</View>
+							) : (
+								children
+							)}
+							<Host fallback />
 						</SurfaceContainer>
 					</MaybeMaskedNavigationContainer>
 				</Animated.View>

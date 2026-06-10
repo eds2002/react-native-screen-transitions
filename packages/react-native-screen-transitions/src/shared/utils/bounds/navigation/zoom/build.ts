@@ -407,10 +407,6 @@ export function buildZoomStyles({
 		Math.abs(unfocusedContentScale),
 		EPSILON,
 	);
-	// A naturally settled close can leave this as the last emitted style frame,
-	// so drop temporary stacking here instead of waiting for a later reset pass.
-	const shouldElevateUnfocusedElement =
-		!props.active.closing || !props.active.settled;
 
 	const scaleShiftX = computeCenterScaleShift({
 		center: elementCenterX,
@@ -475,8 +471,6 @@ export function buildZoomStyles({
 					},
 				],
 				opacity: zoomOptions?.debug ? 1 : unfocusedFade,
-				zIndex: shouldElevateUnfocusedElement ? 9999 : 0,
-				elevation: shouldElevateUnfocusedElement ? 9999 : 0,
 			};
 
 	return {

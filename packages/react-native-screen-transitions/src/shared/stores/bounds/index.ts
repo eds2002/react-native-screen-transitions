@@ -13,6 +13,8 @@ import { resolveTransitionPair } from "./internals/resolver";
 import type { MeasuredEntry } from "./types";
 
 export type {
+	BoundsLink,
+	BoundsLinkStatus,
 	MeasuredEntry,
 	ResolvedTransitionPair,
 } from "./types";

@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <This helper is usually being used inside a transitionable stack> */
 import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
-import type { View } from "react-native";
+import { StyleSheet, type View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	runOnUI,
@@ -18,17 +18,23 @@ import {
 } from "../providers/screen/gestures/scroll-coordination";
 import { useScreenStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
+import { Host } from "./integrations/portal/components/host";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
 	alreadyAnimated?: boolean;
+	portalHostScope?: boolean;
 }
 
 export function createTransitionAwareComponent<P extends object>(
 	Wrapped: ComponentType<P>,
 	options: CreateTransitionAwareComponentOptions = {},
 ) {
-	const { isScrollable = false, alreadyAnimated = false } = options;
+	const {
+		isScrollable = false,
+		alreadyAnimated = false,
+		portalHostScope = false,
+	} = options;
 
 	const AnimatedComponent = alreadyAnimated
 		? Wrapped
@@ -43,6 +49,8 @@ export function createTransitionAwareComponent<P extends object>(
 			onScroll: userOnScroll,
 			onMomentumScrollEnd: userOnMomentumScrollEnd,
 			onScrollEndDrag: userOnScrollEndDrag,
+			children,
+			contentContainerStyle,
 			...scrollableProps
 		} = props;
 
@@ -69,11 +77,24 @@ export function createTransitionAwareComponent<P extends object>(
 			scrollHandler,
 			userOnScroll ?? null,
 		]);
+		const scrollableChildren = portalHostScope ? (
+			<>
+				{children}
+				<Host />
+			</>
+		) : (
+			children
+		);
 
 		const scrollableComponent = (
 			<AnimatedComponent
 				{...(scrollableProps as any)}
 				ref={ref}
+				contentContainerStyle={
+					portalHostScope
+						? [contentContainerStyle, styles.portalHostScopeContent]
+						: contentContainerStyle
+				}
 				/**
 				 * Keep the scroll listener detached while the owning gesture screen is
 				 * closing. On iOS, a bounced ScrollView can keep sending native scroll
@@ -90,7 +111,9 @@ export function createTransitionAwareComponent<P extends object>(
 						? scrollableProps.scrollEventThrottle || 16
 						: undefined
 				}
-			/>
+			>
+				{scrollableChildren}
+			</AnimatedComponent>
 		);
 
 		const coordinatedScrollableComponent = nativeGesture ? (
@@ -119,6 +142,7 @@ export function createTransitionAwareComponent<P extends object>(
 			styleId,
 			onPress,
 			remeasureOnFocus,
+			animatedProps: userAnimatedProps,
 			...rest
 		} = props as any;
 
@@ -159,7 +183,7 @@ export function createTransitionAwareComponent<P extends object>(
 						{...(rest as any)}
 						ref={animatedRef}
 						style={[style, associatedStyles]}
-						animatedProps={associatedProps}
+						animatedProps={userAnimatedProps ?? associatedProps}
 						onPress={captureActiveOnPress}
 						onLayout={runOnUI(handleInitialLayout)}
 						collapsable={!sharedBoundTag}
@@ -187,3 +211,9 @@ export function createTransitionAwareComponent<P extends object>(
 		>
 	>;
 }
+
+const styles = StyleSheet.create({
+	portalHostScopeContent: {
+		position: "relative",
+	},
+});

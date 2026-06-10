@@ -1,8 +1,9 @@
-import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type { MeasuredDimensions } from "react-native-reanimated";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
+import type { BoundsLink } from "../stores/bounds/types";
 import type {
 	BoundsComputeOptions,
 	BoundsIdentityInput,
@@ -16,6 +17,8 @@ import type {
 } from "./animation.types";
 import type { GestureProgressMode } from "./gesture.types";
 
+export type { BoundsLink, BoundsLinkStatus } from "../stores/bounds/types";
+
 /**
  * Target style computation.
  * - "transform": translates and scales (scaleX/scaleY), no width/height size
@@ -24,38 +27,6 @@ import type { GestureProgressMode } from "./gesture.types";
  *   so the target bound matches the source at progress start
  */
 export type BoundsMethod = "transform" | "size" | "content";
-
-type BoundEntry = {
-	bounds: MeasuredDimensions;
-	initialBounds: MeasuredDimensions;
-	styles: StyleProps;
-};
-
-export type BoundsLinkStatus =
-	| "source-incomplete"
-	| "destination-incomplete"
-	| "complete";
-
-type BoundsLinkBase = {
-	id: string;
-};
-
-export type BoundsLink =
-	| (BoundsLinkBase & {
-			status: "source-incomplete";
-			source: null;
-			destination: BoundEntry | null;
-	  })
-	| (BoundsLinkBase & {
-			status: "destination-incomplete";
-			source: BoundEntry;
-			destination: null;
-	  })
-	| (BoundsLinkBase & {
-			status: "complete";
-			source: BoundEntry;
-			destination: BoundEntry;
-	  });
 
 export type BoundsNavigationZoomOptions = {
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
@@ -292,49 +263,6 @@ export type BoundsNavigationRevealOptions = {
 
 export type BoundsNavigationRevealStyle = BoundsNavigationZoomStyle;
 
-export type BoundsPortalSetPropsOptions = {
-	/**
-	 * Whether the portal should be attached to a host.
-	 *
-	 * When `false`, the returned props reset the portal host name back to the
-	 * package's detached sentinel value.
-	 */
-	attach: boolean;
-	/**
-	 * Host id returned by {@linkcode BoundsPortalAccessor.getHostId}.
-	 *
-	 * Defaults to the current screen's portal host id.
-	 */
-	hostId?: string;
-};
-
-export type BoundsPortalAccessor = {
-	/**
-	 * Returns the style id/name for a screen portal host.
-	 *
-	 * Defaults to the current screen route key. Pass another screen route key when
-	 * a portal should attach to a different mounted screen host.
-	 */
-	getHostId: (screenKey?: string) => string;
-	/**
-	 * Returns the style id for this boundary's portal element.
-	 */
-	getPortalId: () => string;
-	/**
-	 * Returns host offset styles that place the portal host at the measured bounds.
-	 *
-	 * Pass a host id from {@linkcode BoundsPortalAccessor.getHostId} when using a
-	 * host other than the current screen's default host.
-	 */
-	applyHostOffsets: (bounds: MeasuredDimensions) => StyleProps;
-	/**
-	 * Returns animated props for attaching or detaching this boundary's portal.
-	 */
-	setPortalProps: (
-		options: BoundsPortalSetPropsOptions,
-	) => Record<string, unknown>;
-};
-
 export type BoundsNavigationAccessor = {
 	zoom: (options?: BoundsNavigationZoomOptions) => BoundsNavigationZoomStyle;
 	reveal: (
@@ -352,7 +280,6 @@ export type BoundsScopedAccessor = BoundsBoundNavigationAccessor & {
 		options?: T,
 	) => BoundsMathResult<T>;
 	link: (id?: BoundsIdentityInput) => BoundsLink | null;
-	portal: () => BoundsPortalAccessor;
 };
 
 export type BoundsAccessor = (

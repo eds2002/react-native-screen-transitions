@@ -54,13 +54,10 @@ function SharedImage({
 				{
 					width,
 					height,
-					backgroundColor: theme.card,
 					marginTop: insets.top + 16,
 				},
 			]}
-		>
-			<Image source={image} style={styles.imageContent} contentFit="cover" />
-		</Transition.Boundary.View>
+		/>
 	);
 }
 
@@ -90,7 +87,7 @@ export default function StyleIdBoundsDetail() {
 	return (
 		<Transition.ScrollView
 			contentContainerStyle={styles.scrollContent}
-			style={[styles.scroll, { backgroundColor: theme.bg }]}
+			style={[styles.scroll, { backgroundColor: "transparent" }]}
 		>
 			<View style={styles.heroWrap}>
 				<SharedImage
@@ -134,7 +131,10 @@ export default function StyleIdBoundsDetail() {
 							color={theme.actionButtonText}
 						/>
 						<Text
-							style={[styles.actionPrimaryText, { color: theme.actionButtonText }]}
+							style={[
+								styles.actionPrimaryText,
+								{ color: theme.actionButtonText },
+							]}
 						>
 							Add pin
 						</Text>
@@ -165,9 +165,7 @@ export default function StyleIdBoundsDetail() {
 					</Pressable>
 				</View>
 
-				<View
-					style={[styles.divider, { backgroundColor: theme.separator }]}
-				/>
+				<View style={[styles.divider, { backgroundColor: theme.separator }]} />
 
 				<View style={styles.block}>
 					<Text style={[styles.kicker, { color: theme.textTertiary }]}>

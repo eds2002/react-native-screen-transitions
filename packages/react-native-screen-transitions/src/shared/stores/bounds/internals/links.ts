@@ -24,6 +24,15 @@ import type {
 } from "../types";
 import { pairs } from "./state";
 
+const syncLinkStatus = (link: TagLink) => {
+	"worklet";
+	link.status = link.source
+		? link.destination
+			? "complete"
+			: "destination-incomplete"
+		: "source-incomplete";
+};
+
 const createLinkSide = (
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
@@ -80,6 +89,7 @@ const writeDestination = (
 		existingLink ??
 		({
 			group,
+			status: "source-incomplete",
 			source: null,
 			destination,
 			initialDestination: destination,
@@ -88,6 +98,7 @@ const writeDestination = (
 	link.group = group ?? link.group;
 	link.destination = destination;
 	link.initialDestination ??= destination;
+	syncLinkStatus(link);
 
 	writePairLink(state, pairKey, linkKey, link);
 
@@ -152,6 +163,7 @@ function setSource(
 			existingLink ??
 			({
 				group,
+				status: "destination-incomplete",
 				source,
 				destination: null,
 				initialSource: source,
@@ -160,6 +172,7 @@ function setSource(
 		link.group = group ?? link.group;
 		link.source = source;
 		link.initialSource ??= source;
+		syncLinkStatus(link);
 
 		pairLinks[linkKey] = link;
 

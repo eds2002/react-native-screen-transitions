@@ -4,12 +4,18 @@ import {
 	type MeasuredDimensions,
 	measure,
 } from "react-native-reanimated";
+import { cloneScrollMetadataState } from "../../../stores/scroll.store";
 import type {
 	ScrollGestureAxisState,
 	ScrollGestureState,
+	ScrollMetadataState,
 } from "../../../types/gesture.types";
 
 const SCROLL_MEASUREMENT_EPSILON = 1;
+
+export type ScrollMeasuredDimensions = MeasuredDimensions & {
+	scroll?: ScrollMetadataState | null;
+};
 
 const getOverscrollDelta = (axisState: ScrollGestureAxisState): number => {
 	"worklet";
@@ -94,4 +100,16 @@ export const measureWithOverscrollAwareness = (
 	if (!measured) return null;
 
 	return adjustedMeasuredBoundsForOverscrollDeltas(measured, scrollState);
+};
+
+export const attachScrollSnapshotToMeasuredBounds = (
+	measured: MeasuredDimensions,
+	scroll: ScrollMetadataState | null | undefined,
+): ScrollMeasuredDimensions => {
+	"worklet";
+
+	return {
+		...measured,
+		scroll: cloneScrollMetadataState(scroll),
+	};
 };

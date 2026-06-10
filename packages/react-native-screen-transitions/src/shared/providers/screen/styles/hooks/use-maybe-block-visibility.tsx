@@ -87,5 +87,6 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	return {
 		animatedStyle,
 		animatedProps,
+		shouldBlockVisibility,
 	};
 };

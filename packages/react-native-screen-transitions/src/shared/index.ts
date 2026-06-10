@@ -17,6 +17,7 @@ export default {
 	Pressable: createTransitionAwareComponent(Pressable),
 	ScrollView: createTransitionAwareComponent(ScrollView, {
 		isScrollable: true,
+		portalHostScope: true,
 	}),
 	FlatList: createTransitionAwareComponent(FlatList, {
 		isScrollable: true,
@@ -29,6 +30,11 @@ export default {
 export type { NativeStackAdapterOptions } from "./adapters/with-screen-transitions";
 export { withScreenTransitions } from "./adapters/with-screen-transitions";
 export { snapTo } from "./animation/snap-to";
+export type {
+	BoundaryPortal,
+	BoundaryPortalHost,
+	BoundaryPortalOptions,
+} from "./components/create-boundary-component";
 export {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,

@@ -63,8 +63,6 @@ export function buildRevealStyles({
 	const velocityDepth =
 		revealOptions?.velocityDepth ?? DISMISS_SCALE_ORBIT_DEPTH;
 	const gestureProgressMode = revealOptions?.gestureProgressMode ?? "freeform";
-	const disablePointerEventsTillElementTransition =
-		revealOptions?.disablePointerEventsTillElementTransition ?? true;
 	const maskSizingMode = revealOptions?.maskSizingMode ?? "auto";
 	const backgroundScale =
 		revealOptions?.backgroundScale ?? REVEAL_BACKGROUND_SCALE;
@@ -129,10 +127,9 @@ export function buildRevealStyles({
 
 	const dragScale = dragXScale * dragYScale;
 
-	const initialDestinationTarget =
-		props.active.closing && link.destination.initialBounds
-			? link.destination.initialBounds
-			: undefined;
+	const closingDestinationTarget = props.active.closing
+		? link.destination.bounds
+		: undefined;
 
 	/* ----------------------------- Focused Screen ----------------------------- */
 
@@ -140,7 +137,7 @@ export function buildRevealStyles({
 		const contentRaw = scopedBounds.math({
 			scaleMode: "uniform",
 			method: "content",
-			target: initialDestinationTarget,
+			target: closingDestinationTarget,
 		});
 
 		const maskRaw = scopedBounds.math({
@@ -172,7 +169,7 @@ export function buildRevealStyles({
 		let contentScale = contentBaseScale * dragScale;
 		if (props.active.gesture.dismissing) {
 			const contentTargetBounds =
-				initialDestinationTarget ?? link.destination.bounds;
+				closingDestinationTarget ?? link.destination.bounds;
 
 			const sourceContentScale = resolveUniformScale({
 				sourceWidth: link.source.bounds.width,
@@ -219,7 +216,7 @@ export function buildRevealStyles({
 					)
 				: 0;
 
-		const maskAspectBounds = link.source.initialBounds;
+		const maskAspectBounds = link.initialSource?.bounds ?? link.source.bounds;
 		const minMaskHeight = resolveAspectRatioMaskHeight({
 			maskWidth,
 			maskHeight,
@@ -299,12 +296,12 @@ export function buildRevealStyles({
 					],
 				};
 
-		const elementOffsetX = initialDestinationTarget
-			? initialDestinationTarget.pageX - link.destination.bounds.pageX
+		const elementOffsetX = closingDestinationTarget
+			? closingDestinationTarget.pageX - link.destination.bounds.pageX
 			: 0;
 
-		const elementOffsetY = initialDestinationTarget
-			? initialDestinationTarget.pageY - link.destination.bounds.pageY
+		const elementOffsetY = closingDestinationTarget
+			? closingDestinationTarget.pageY - link.destination.bounds.pageY
 			: 0;
 
 		const elementTX = props.active.closing
@@ -338,38 +335,38 @@ export function buildRevealStyles({
 				gestureSensitivity,
 				gestureReleaseVelocityScale,
 			},
-			content: {
-				style: {
-					transform: [
-						{ translateX: contentTranslateX },
-						{ translateY: contentTranslateY },
-						{ scale: contentScale },
-					],
-					shadowColor: "#000",
-					shadowOffset: REVEAL_SHADOW_OFFSET,
-					shadowOpacity: interpolate(
-						props.active.progress,
-						ZERO_TO_ONE_RANGE,
-						CONTENT_SHADOW_OPACITY_OUTPUT,
-					),
-					shadowRadius: 32,
-					elevation: 5,
-					opacity: props.active.entering
-						? interpolate(
-								props.active.progress,
-								CONTENT_ENTERING_OPACITY_RANGE,
-								CONTENT_ENTERING_OPACITY_OUTPUT,
-							)
-						: interpolate(
-								props.active.progress,
-								CONTENT_CLOSING_OPACITY_RANGE,
-								CONTENT_CLOSING_OPACITY_OUTPUT,
-							),
-				},
-			},
-			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
-				style: maskElementStyle,
-			},
+			// content: {
+			// 	style: {
+			// 		transform: [
+			// 			{ translateX: contentTranslateX },
+			// 			{ translateY: contentTranslateY },
+			// 			{ scale: contentScale },
+			// 		],
+			// 		shadowColor: "#000",
+			// 		shadowOffset: REVEAL_SHADOW_OFFSET,
+			// 		shadowOpacity: interpolate(
+			// 			props.active.progress,
+			// 			ZERO_TO_ONE_RANGE,
+			// 			CONTENT_SHADOW_OPACITY_OUTPUT,
+			// 		),
+			// 		shadowRadius: 32,
+			// 		elevation: 5,
+			// 		opacity: props.active.entering
+			// 			? interpolate(
+			// 					props.active.progress,
+			// 					CONTENT_ENTERING_OPACITY_RANGE,
+			// 					CONTENT_ENTERING_OPACITY_OUTPUT,
+			// 				)
+			// 			: interpolate(
+			// 					props.active.progress,
+			// 					CONTENT_CLOSING_OPACITY_RANGE,
+			// 					CONTENT_CLOSING_OPACITY_OUTPUT,
+			// 				),
+			// 	},
+			// },
+			// [NAVIGATION_MASK_ELEMENT_STYLE_ID]: {
+			// 	style: maskElementStyle,
+			// },
 			[link.id]: {
 				style: {
 					transform: [{ translateX: elementTX }, { translateY: elementY }],
@@ -387,7 +384,7 @@ export function buildRevealStyles({
 			: unfocusedScale;
 
 	const trackingContentTarget =
-		initialDestinationTarget ?? link.destination.bounds;
+		closingDestinationTarget ?? link.destination.bounds;
 
 	const trackingContentBaseTransform = resolveRevealContentBaseTransform({
 		progress: props.active.progress,
@@ -434,27 +431,24 @@ export function buildRevealStyles({
 			style: {
 				transform: [{ scale: unfocusedContentScale }],
 			},
-			props: disablePointerEventsTillElementTransition
-				? {
-						pointerEvents:
-							props.active.progress <= CLOSE_SOURCE_HANDOFF_PROGRESS
-								? "auto"
-								: "none",
-					}
-				: undefined,
+			// props: disablePointerEventsTillElementTransition
+			// 	? {
+			// 			pointerEvents:
+			// 				props.active.progress <= CLOSE_SOURCE_HANDOFF_PROGRESS
+			// 					? "auto"
+			// 					: "none",
+			// 		}
+			// 	: undefined,
 		},
 		[link.id]: {
 			style: {
-				opacity: props.active.closing
-					? 1
-					: interpolate(
-							props.active.progress,
-							ZERO_TO_ONE_RANGE,
-							UNFOCUSED_ELEMENT_OPACITY_OUTPUT,
-						),
-
-				zIndex: 9999,
-				elevation: 9999,
+				// opacity: props.active.closing
+				// 	? 1
+				// 	: interpolate(
+				// 			props.active.progress,
+				// 			ZERO_TO_ONE_RANGE,
+				// 			UNFOCUSED_ELEMENT_OPACITY_OUTPUT,
+				// 		),
 				transform: [
 					{
 						translateX: props.active.settled

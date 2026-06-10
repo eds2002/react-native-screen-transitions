@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
+import { setPortalHostBounds } from "../../components/integrations/portal/stores/host-bounds.store";
+import { resolvePortalOffsetStyle } from "../../components/integrations/portal/utils";
 import { BoundStore, type Snapshot } from "../../stores/bounds";
 import {
 	createPendingPairKey,
@@ -21,6 +23,12 @@ const createBounds = (
 	pageY: y,
 	width,
 	height,
+});
+
+const createScrollLayout = (x = 0, y = 0) => ({
+	vertical: { offset: y, contentSize: 1000, layoutSize: 400 },
+	horizontal: { offset: x, contentSize: 1000, layoutSize: 400 },
+	isTouched: false,
 });
 
 const registerMeasuredEntry = (
@@ -175,6 +183,55 @@ describe("BoundStore.link pair writes", () => {
 		expect(link?.source.bounds).toEqual(source);
 		expect(link?.destination?.bounds).toEqual(destination);
 		expect(BoundStore.link.getLink(pendingPairKey, "card")).toBeNull();
+	});
+
+	it("tracks link status in the stored tag link", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+		const destination = createBounds(200, 220);
+
+		expect(BoundStore.link.getLink(pairKey, "card")).toBeNull();
+
+		BoundStore.link.setDestination(pairKey, "card", "screen-b", destination);
+		expect(BoundStore.link.getLink(pairKey, "card")).toEqual({
+			status: "source-incomplete",
+			source: null,
+			destination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+			initialDestination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+		});
+
+		BoundStore.link.setSource(pairKey, "card", "screen-a", source);
+		expect(BoundStore.link.getLink(pairKey, "card")).toEqual({
+			status: "complete",
+			source: {
+				screenKey: "screen-a",
+				bounds: source,
+				styles: {},
+			},
+			destination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+			initialSource: {
+				screenKey: "screen-a",
+				bounds: source,
+				styles: {},
+			},
+			initialDestination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+		});
 	});
 
 	it("sets and updates destination while preserving the initial destination", () => {
@@ -495,6 +552,44 @@ describe("BoundsAccessor", () => {
 		bounds({ id: "2", group: "colors" });
 
 		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("2");
+	});
+
+	it("can resolve portal host offsets without scroll compensation", () => {
+		setPortalHostBounds("screen-a", {
+			...createBounds(4, -102, 370, 0),
+			scroll: createScrollLayout(5, 100),
+		});
+
+		expect(
+			resolvePortalOffsetStyle({
+				hostKey: "screen-a",
+				bounds: {
+					...createBounds(40, 220, 100, 80),
+					scroll: createScrollLayout(20, 150),
+				} as any,
+				currentScroll: createScrollLayout(20, 900),
+				includeScrollOffsets: false,
+			}),
+		).toEqual({
+			transform: [{ translateY: 322 }, { translateX: 36 }],
+		});
+	});
+
+	it("compensates portal host offsets from live host scroll", () => {
+		setPortalHostBounds("screen-b-host", {
+			...createBounds(4, -102, 370, 0),
+			scroll: createScrollLayout(5, 100),
+		});
+
+		expect(
+			resolvePortalOffsetStyle({
+				hostKey: "screen-b-host",
+				bounds: createBounds(40, 220, 100, 80),
+				hostCurrentScroll: createScrollLayout(20, 900),
+			}),
+		).toEqual({
+			transform: [{ translateY: 1122 }, { translateX: 51 }],
+		});
 	});
 });
 

@@ -69,6 +69,35 @@ const clearMetadataWriters = (routeKey: ScreenKey) => {
 	delete metadataWriters[routeKey];
 };
 
+export const cloneScrollMetadataState = (
+	scroll: ScrollMetadataState | null | undefined,
+): ScrollMetadataState | null => {
+	"worklet";
+
+	if (!scroll) {
+		return null;
+	}
+
+	return {
+		vertical: scroll.vertical
+			? {
+					offset: scroll.vertical.offset,
+					contentSize: scroll.vertical.contentSize,
+					layoutSize: scroll.vertical.layoutSize,
+					isTouched: scroll.vertical.isTouched,
+				}
+			: null,
+		horizontal: scroll.horizontal
+			? {
+					offset: scroll.horizontal.offset,
+					contentSize: scroll.horizontal.contentSize,
+					layoutSize: scroll.horizontal.layoutSize,
+					isTouched: scroll.horizontal.isTouched,
+				}
+			: null,
+	};
+};
+
 /**
  * Route-keyed scroll geometry used by gesture activation and bounds measurement.
  * Coordination tracks gesture-owner scoped ScrollView offsets and dimensions;

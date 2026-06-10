@@ -186,8 +186,8 @@ const currentLink = scopedBounds.link();
 const tagCurrentLink = tagScopedBounds.link();
 const tagOverrideLink = tagScopedBounds.link("other-group:other-hero");
 const currentLinkStatus = currentLink?.status;
-const initialSourceBounds = currentLink?.source?.initialBounds;
-const initialDestinationBounds = currentLink?.destination?.initialBounds;
+const initialSourceBounds = currentLink?.initialSource?.bounds;
+const initialDestinationBounds = currentLink?.initialDestination?.bounds;
 const scopedCurrentLink = scopedBounds.link();
 void currentLink;
 void tagCurrentLink;
@@ -232,6 +232,7 @@ const currentRawGestureRotation: number =
 	interpolationProps.current.gesture.raw.rotation;
 const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
+void maybeScrollOffset;
 const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 	options: {
 		gestureSensitivity: 0.5,

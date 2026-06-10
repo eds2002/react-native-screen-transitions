@@ -212,10 +212,13 @@ export default function StyleIdBoundsIndex() {
 		>
 			<ScreenHeader title="My Boards" subtitle="Visual notes, kept loose" />
 			<Transition.ScrollView
-				style={styles.content}
+				style={[styles.content, { position: "relative" }]}
 				contentContainerStyle={[
 					styles.contentContainer,
-					{ paddingBottom: insets.bottom + 32 },
+					{
+						paddingBottom: insets.bottom + 32,
+						position: "relative",
+					},
 				]}
 				showsVerticalScrollIndicator={false}
 			>
@@ -234,7 +237,7 @@ export default function StyleIdBoundsIndex() {
 								style={[styles.gridCell, { width: gridCellWidth }]}
 								onPress={() => openDetail(stackType, tag, item)}
 								id={tag}
-								portal
+								portal={{ host: "paired-screen" }}
 							>
 								<Transition.Boundary.Target
 									style={[
@@ -296,7 +299,7 @@ export default function StyleIdBoundsIndex() {
 										id={tag}
 										style={styles.pickBoundary}
 										onPress={() => openDetail(stackType, tag, item)}
-										// portal
+										portal
 									>
 										<Transition.Boundary.Target
 											style={[

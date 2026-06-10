@@ -15,6 +15,7 @@ type Props = {
 
 type ScreenStylesContextValue = {
 	stylesMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
+	shouldBlockVisibility: SharedValue<boolean>;
 };
 
 export const {
@@ -28,17 +29,18 @@ export const {
 
 	const rawStylesMaps = useInterpolatedStylesMap();
 
+	const { animatedStyle, animatedProps, shouldBlockVisibility } =
+		useMaybeBlockVisibility(isFloatingOverlay);
+
 	const stylesMap = useResolvedStylesMap({
 		localStylesMaps: rawStylesMaps,
 		ancestorStylesMap: parentContext?.stylesMap,
 	});
 
-	const { animatedStyle, animatedProps } =
-		useMaybeBlockVisibility(isFloatingOverlay);
-
 	return {
 		value: {
 			stylesMap,
+			shouldBlockVisibility,
 		},
 		children: (
 			<FloatingOverlayLayer enabled={isFloatingOverlay}>
