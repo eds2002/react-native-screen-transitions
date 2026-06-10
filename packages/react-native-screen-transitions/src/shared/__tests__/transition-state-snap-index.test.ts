@@ -93,6 +93,7 @@ describe("hydrateTransitionState snap indices", () => {
 				progressSettled: shared(1),
 				resolvedAutoSnapPoint: shared(-1),
 				measuredContentLayout: shared(null),
+				scrollMetadata: shared(null),
 				contentLayoutSlot: { width: 0, height: 0 },
 				hasAutoSnapPoint: false,
 				sortedNumericSnapPoints: [],
@@ -152,6 +153,7 @@ describe("hydrateTransitionState snap indices", () => {
 				progressSettled: shared(1),
 				resolvedAutoSnapPoint: shared(-1),
 				measuredContentLayout: shared(null),
+				scrollMetadata: shared(null),
 				contentLayoutSlot: { width: 0, height: 0 },
 				hasAutoSnapPoint: false,
 				sortedNumericSnapPoints: [],
@@ -209,6 +211,7 @@ describe("hydrateTransitionState snap indices", () => {
 				progressSettled: shared(1),
 				resolvedAutoSnapPoint: shared(-1),
 				measuredContentLayout: shared(null),
+				scrollMetadata: shared(null),
 				contentLayoutSlot: { width: 0, height: 0 },
 				hasAutoSnapPoint: false,
 				sortedNumericSnapPoints: [0.2, 0.8],
@@ -243,6 +246,7 @@ describe("hydrateTransitionState snap indices", () => {
 				progressSettled: shared(1),
 				resolvedAutoSnapPoint: shared(0.45),
 				measuredContentLayout: shared(null),
+				scrollMetadata: shared(null),
 				contentLayoutSlot: { width: 0, height: 0 },
 				hasAutoSnapPoint: true,
 				sortedNumericSnapPoints: [0.2, 0.8],
@@ -276,6 +280,7 @@ describe("hydrateTransitionState snap indices", () => {
 			progressSettled: shared(1),
 			resolvedAutoSnapPoint: shared(0.45),
 			measuredContentLayout,
+			scrollMetadata: shared(null),
 			contentLayoutSlot: { width: 0, height: 0 },
 			hasAutoSnapPoint: true,
 			sortedNumericSnapPoints: [0.2, 0.8],
@@ -300,5 +305,58 @@ describe("hydrateTransitionState snap indices", () => {
 			width: 300,
 			height: 360,
 		});
+	});
+
+	it("exposes scroll metadata through layouts", () => {
+		const state = createScreenTransitionState({
+			key: "route-a",
+			name: "RouteA",
+		});
+		const scrollMetadata = {
+			vertical: {
+				offset: 24,
+				contentSize: 1200,
+				layoutSize: 800,
+				isTouched: true,
+			},
+			horizontal: null,
+		};
+		const builtState = {
+			progress: shared(1),
+			effectiveProgress: shared(1),
+			willAnimate: shared(0),
+			closing: shared(0),
+			progressAnimating: shared(0),
+			entering: shared(0),
+			gesture: createGestureStore(),
+			route: state.route,
+			options: DEFAULT_SCREEN_TRANSITION_OPTIONS,
+			optionsSlot: {},
+			targetProgress: shared(1),
+			progressSettled: shared(1),
+			resolvedAutoSnapPoint: shared(-1),
+			measuredContentLayout: shared(null),
+			scrollMetadata: shared(scrollMetadata),
+			contentLayoutSlot: { width: 0, height: 0 },
+			hasAutoSnapPoint: false,
+			sortedNumericSnapPoints: [],
+			unwrapped: state,
+		};
+
+		const hydrated = hydrateTransitionState(builtState, {
+			width: 390,
+			height: 844,
+		});
+
+		expect(hydrated.layouts.scroll).toBe(scrollMetadata);
+
+		builtState.scrollMetadata.set(null);
+
+		expect(
+			hydrateTransitionState(builtState, {
+				width: 390,
+				height: 844,
+			}).layouts.scroll,
+		).toBeUndefined();
 	});
 });

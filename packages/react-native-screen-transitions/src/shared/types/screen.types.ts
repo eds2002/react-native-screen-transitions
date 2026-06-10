@@ -7,6 +7,7 @@ import type {
 	GestureActivationArea,
 	GestureDirectionOption,
 	GestureProgressMode,
+	ScrollMetadataState,
 } from "./gesture.types";
 import type { OverlayProps } from "./overlay.types";
 
@@ -27,6 +28,13 @@ export type ScreenLayouts = {
 	 * auto snap-point sizing. It is undefined until a real measurement exists.
 	 */
 	content?: Layout;
+	/**
+	 * Scroll metadata from the primary transition-aware scrollable on this screen.
+	 *
+	 * For nested same-axis scrollables, the outermost scrollable owns that axis.
+	 * Cross-axis nested scrollables can each publish their own axis.
+	 */
+	scroll?: ScrollMetadataState;
 };
 
 export type ScreenKey = string;

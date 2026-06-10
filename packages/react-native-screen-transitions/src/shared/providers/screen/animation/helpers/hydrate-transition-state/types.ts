@@ -4,6 +4,7 @@ import type {
 	ScreenTransitionOptions,
 	ScreenTransitionState,
 } from "../../../../../types/animation.types";
+import type { ScrollMetadataState } from "../../../../../types/gesture.types";
 import type { Layout } from "../../../../../types/screen.types";
 import type { BaseStackRoute } from "../../../../../types/stack.types";
 
@@ -23,6 +24,7 @@ export type BuiltState = {
 	targetProgress: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
+	scrollMetadata: SharedValue<ScrollMetadataState | null>;
 	contentLayoutSlot: Layout;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];

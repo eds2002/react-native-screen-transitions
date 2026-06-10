@@ -280,13 +280,22 @@ const resolveDismissingDecision = (
 	);
 };
 
+const isVerticalDirection = (direction: Direction) => {
+	"worklet";
+	return direction === "vertical" || direction === "vertical-inverted";
+};
+
 const resolveUntouchedScrollDecision = (
 	scrollState: ScrollGestureState | null,
 	swipeDirection: Direction,
 	nextActivationState: GestureActivationState,
 ): PanActivationDecision | null => {
 	"worklet";
-	if (scrollState?.isTouched ?? false) {
+	const axisState = isVerticalDirection(swipeDirection)
+		? scrollState?.vertical
+		: scrollState?.horizontal;
+
+	if (axisState?.isTouched ?? false) {
 		return null;
 	}
 

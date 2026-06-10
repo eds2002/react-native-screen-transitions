@@ -31,7 +31,7 @@ export const {
 	const gestureConfig = useScreenGestureConfig();
 	const { currentScreenKey } = useDescriptorDerivations();
 
-	const scrollState = ScrollStore.getValue(currentScreenKey, "state");
+	const scrollState = ScrollStore.getValue(currentScreenKey, "coordination");
 
 	// Ancestors read this before activating. If a nested screen claims the same
 	// direction, it writes here so the ancestor can fail and let it take priority.

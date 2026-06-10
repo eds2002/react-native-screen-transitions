@@ -36,6 +36,10 @@ export type {
 	GestureValues,
 	PanGestureDirection,
 	PinchGestureDirection,
+	ScrollGestureAxis,
+	ScrollGestureAxisState,
+	ScrollGestureState,
+	ScrollMetadataState,
 	SideActivation,
 } from "./gesture.types";
 export type { OverlayProps } from "./overlay.types";
