@@ -21,7 +21,7 @@
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",
 		"release": "bun run release:stable",
-		"release:stable": "cd packages/react-native-screen-transitions && bunx --no-install release-it --config ../../.release-it.json --no-npm.publish --no-git.tag --no-git.push --no-github.release",
+		"release:stable": "cd packages/react-native-screen-transitions && bunx --no-install release-it --config ../../.release-it.json --git.requireUpstream=false --no-npm.publish --no-git.tag --no-git.push --no-github.release",
 		"release:alpha": "cd packages/react-native-screen-transitions && RELEASE_PRERELEASE=alpha bunx --no-install release-it --config ../../.release-it.prerelease.json --preRelease=alpha --no-github.release",
 		"release:beta": "cd packages/react-native-screen-transitions && RELEASE_PRERELEASE=beta bunx --no-install release-it --config ../../.release-it.prerelease.json --preRelease=beta --no-github.release",
 		"release:rc": "cd packages/react-native-screen-transitions && RELEASE_PRERELEASE=rc bunx --no-install release-it --config ../../.release-it.prerelease.json --preRelease=rc --no-github.release",
