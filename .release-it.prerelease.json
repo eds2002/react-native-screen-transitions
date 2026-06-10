@@ -25,7 +25,7 @@
 		],
 		"before:git:release": "node ../../.github/scripts/release-notes.mjs ${version} --check",
 		"after:bump": [
-			"bun install --cwd ../.. --lockfile-only",
+			"node ../../.github/scripts/sync-bun-lock-version.mjs",
 			"bun run --cwd ../.. build",
 			"npm pack --dry-run"
 		]
