@@ -142,7 +142,7 @@ export const withInternalSpring = ((
 
 		let settled = false;
 
-		const updateSettled = (animation: SpringAnimation) => {
+		const notifySettled = (animation: SpringAnimation) => {
 			"worklet";
 			if (settled) {
 				return;
@@ -154,6 +154,10 @@ export const withInternalSpring = ((
 
 			settled = true;
 			animation.settled = true;
+			callback?.({
+				finished: false,
+				settled: true,
+			});
 		};
 
 		config.skipAnimation = !checkIfConfigIsValid(config);
@@ -215,7 +219,7 @@ export const withInternalSpring = ((
 				return true;
 			}
 
-			updateSettled(animation);
+			notifySettled(animation);
 
 			return false;
 		}
@@ -310,7 +314,7 @@ export const withInternalSpring = ((
 				? previousAnimation?.startTimestamp || now
 				: now;
 
-			updateSettled(animation);
+			notifySettled(animation);
 		}
 
 		const animation = {
