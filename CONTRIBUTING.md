@@ -66,7 +66,9 @@ From the repo root:
 | `lint` | Runs Biome on the library |
 | `typecheck` | Type-checks the library |
 | `clean` | Removes node_modules and lockfiles |
-| `release` | Publishes the package using `release-it` |
+| `release:alpha` | Publishes a local alpha prerelease from the current branch |
+| `release:beta` | Publishes a local beta prerelease from the current branch |
+| `release:rc` | Publishes a local release candidate from the current branch |
 
 Inside `packages/react-native-screen-transitions`:
 
