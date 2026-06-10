@@ -17,6 +17,9 @@ export type {
 export type {
 	BoundsAccessor,
 	BoundsMethod,
+	BoundsMotion,
+	BoundsMotionFrame,
+	BoundsMotionTransform,
 	BoundsNavigationAccessor,
 	BoundsNavigationRevealOptions,
 	BoundsNavigationRevealStyle,

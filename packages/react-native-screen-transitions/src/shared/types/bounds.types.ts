@@ -6,6 +6,9 @@ import {
 import type { MeasuredEntry } from "../stores/bounds";
 import type {
 	BoundId,
+	BoundsMotion,
+	BoundsMotionFrame,
+	BoundsMotionTransform,
 	BoundsOptions,
 	BoundsOptionsResult,
 } from "../utils/bounds/types/options";
@@ -333,3 +336,5 @@ export type BoundsInterpolationProps = Omit<
 	ScreenInterpolationProps,
 	"bounds" | "transition"
 >;
+
+export type { BoundsMotion, BoundsMotionFrame, BoundsMotionTransform };

@@ -11,6 +11,7 @@ import {
 	createBlankStackNavigator,
 } from "../../blank-stack";
 import type {
+	BoundsMotion,
 	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
@@ -150,6 +151,18 @@ const offsetBoundsResult = interpolationProps.bounds({
 	id: 42,
 	offset: { x: 10, y: -10 },
 });
+const boundsMotion: BoundsMotion = ({ current, progress }) => {
+	"worklet";
+	return {
+		x: current.x,
+		y: current.y - Math.sin(progress * Math.PI) * 24,
+		scale: current.scale,
+	};
+};
+const motionBoundsResult = interpolationProps.bounds({
+	id: 42,
+	motion: boundsMotion,
+});
 const deprecatedGesturesBoundsResult = interpolationProps.bounds({
 	id: 42,
 	gestures: { x: 10, y: -10 },
@@ -158,6 +171,12 @@ const absoluteRawBoundsResult = interpolationProps.bounds({
 	id: 42,
 	method: "size",
 	space: "absolute",
+	raw: true,
+});
+const motionRawBoundsResult = interpolationProps.bounds({
+	id: 42,
+	method: "content",
+	motion: boundsMotion,
 	raw: true,
 });
 const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
@@ -208,8 +227,16 @@ void scopedMeasured;
 void scopedInitialSnapshot;
 void scopedInterpolatedStyle;
 void scopedInterpolatedBounds;
+void numericBoundsResult;
+void offsetBoundsResult;
+void motionBoundsResult;
+void deprecatedGesturesBoundsResult;
+void absoluteRawBoundsResult;
+void motionRawBoundsResult;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
+const motionRawBoundsScale: number = motionRawBoundsResult.scale;
+void motionRawBoundsScale;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;

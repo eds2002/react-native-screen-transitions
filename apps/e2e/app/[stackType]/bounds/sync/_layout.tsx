@@ -6,7 +6,11 @@ import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
 import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 import { ALL_CASES, activeCaseId, BOUNDARY_TAG } from "./constants";
-import { OPENING_TRANSFORM_BOUNDARY_ID } from "./opening-transform/constants";
+import {
+	OPENING_TRANSFORM_ARC_BEND_X,
+	OPENING_TRANSFORM_BOUNDARY_ID,
+	OPENING_TRANSFORM_DEPTH_SCALE,
+} from "./opening-transform/constants";
 
 const resolveActiveCase = () => {
 	"worklet";
@@ -81,10 +85,10 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 const RETARGET_ID = "retarget";
 
 const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ progress, bounds, layouts, focused }) => {
+	({ progress, bounds, layouts }) => {
 		"worklet";
 
-		const y = interpolate(
+		const screenTranslateY = interpolate(
 			progress,
 			[0, 1],
 			[layouts.screen.height, 0],
@@ -93,13 +97,24 @@ const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpola
 
 		const boundStyles = bounds({
 			id: OPENING_TRANSFORM_BOUNDARY_ID,
-			offset: { y: -y },
+			motion: ({ current, progress: motionProgress }) => {
+				"worklet";
+				const depthProgress = Math.sin(motionProgress * Math.PI);
+				const arcX = depthProgress * OPENING_TRANSFORM_ARC_BEND_X;
+				const depthScale = 1 - depthProgress * OPENING_TRANSFORM_DEPTH_SCALE;
+
+				return {
+					x: current.x + arcX,
+					y: current.y - screenTranslateY,
+					scale: current.scale * depthScale,
+				};
+			},
 		}) as any;
 
 		return {
 			content: {
 				style: {
-					transform: [{ translateY: y }],
+					transform: [{ translateY: screenTranslateY }],
 				},
 			},
 			[OPENING_TRANSFORM_BOUNDARY_ID]: boundStyles,

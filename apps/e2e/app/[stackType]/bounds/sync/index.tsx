@@ -12,9 +12,9 @@ import { activeCaseId, type BoundsTestCase, CATEGORIES } from "./constants";
 const SPECIAL_CASES = [
 	{
 		id: "opening-transform",
-		title: "Screen Transform Sync",
+		title: "Bounds Motion Arc",
 		description:
-			"The destination screen slides up while bounds receives the same Y offset, keeping the shared element visually attached.",
+			"The destination screen slides up while bounds({ motion }) bends and depth-scales the shared element path.",
 		path: "bounds/sync/opening-transform",
 	},
 	{
