@@ -154,12 +154,19 @@ const leafTransitionBounds = interpolationProps
 const offsetBoundsResult = scopedBounds.styles({
 	offset: { x: 10, y: -10 },
 });
-const boundsMotion: BoundsMotion = ({ current, progress }) => {
+const boundsMotion: BoundsMotion = ({ current, progress, props, start }) => {
 	"worklet";
+	const velocityDip = props.active.gesture.velocity * 0.1;
+	const screenBias =
+		((start.pageX + start.width / 2) / props.layouts.screen.width) * 2 - 1;
 	return {
 		x: current.x,
 		y: current.y - Math.sin(progress * Math.PI) * 24,
-		scale: current.scale,
+		scale: current.scale * (1 - velocityDip),
+		rotate: screenBias * 4,
+		rotateY: screenBias * 30,
+		perspective: 800,
+		transformOrigin: "center",
 	};
 };
 const motionBoundsResult = scopedBounds.styles({
@@ -221,7 +228,11 @@ void motionRawBoundsResult;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const motionRawBoundsScale: number = motionRawBoundsResult.scale;
+const motionRawBoundsRotate: number = motionRawBoundsResult.rotate;
+const motionRawBoundsRotateY: number = motionRawBoundsResult.rotateY;
 void motionRawBoundsScale;
+void motionRawBoundsRotate;
+void motionRawBoundsRotateY;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;

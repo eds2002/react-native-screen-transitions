@@ -97,6 +97,7 @@ export const prepareBoundStyles = <T extends BoundsOptions>({
 			next: props.next,
 			progress: props.progress,
 			dimensions: props.layouts.screen,
+			interpolationProps: props,
 		},
 		resolved,
 		resolvedPair,

@@ -6,11 +6,7 @@ import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
 import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 import { ALL_CASES, activeCaseId, BOUNDARY_TAG } from "./constants";
-import {
-	OPENING_TRANSFORM_ARC_BEND_X,
-	OPENING_TRANSFORM_BOUNDARY_ID,
-	OPENING_TRANSFORM_DEPTH_SCALE,
-} from "./opening-transform/constants";
+import { OPENING_TRANSFORM_BOUNDARY_ID } from "./opening-transform/constants";
 
 const resolveActiveCase = () => {
 	"worklet";
@@ -105,16 +101,33 @@ const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpola
 		);
 
 		const boundStyles = bounds(OPENING_TRANSFORM_BOUNDARY_ID).styles({
-			motion: ({ current, progress: motionProgress }) => {
+			motion: ({ current, progress: motionProgress, start, props }) => {
 				"worklet";
-				const depthProgress = Math.sin(motionProgress * Math.PI);
-				const arcX = depthProgress * OPENING_TRANSFORM_ARC_BEND_X;
-				const depthScale = 1 - depthProgress * OPENING_TRANSFORM_DEPTH_SCALE;
+				// Half-orbit: apogee peaks mid-flight while the lateral swing runs a
+				// full sine cycle — out, crossing the travel line exactly at apogee
+				// (smallest, deepest), returning from the other side. The crossing is
+				// what reads as "around", not "bent".
+				const apogee = Math.sin(motionProgress * Math.PI);
+				// -1 at the left screen edge, +1 at the right: which way to orbit.
+				const screenBias =
+					((start.pageX + start.width / 2) / props.layouts.screen.width) * 2 -
+					1;
+				const side = screenBias < 0 ? -1 : 1;
+				const swingX = Math.sin(motionProgress * Math.PI * 2) * 110 * side;
+				const liftY = -apogee * 48;
+				const depthScale = 1 - apogee * 0.6;
 
 				return {
-					x: current.x + arcX,
-					y: current.y - screenTranslateY,
+					x: current.x + swingX,
+					y: current.y - screenTranslateY + liftY,
 					scale: current.scale * depthScale,
+					// Full end-over-end flip across the flight — 360° lands upright,
+					// and reversing the gesture unwinds it. Yaw into the orbit
+					// direction with a slight banking roll while it carves the turn.
+					rotateX: motionProgress * 360,
+					rotateY: side * apogee * -40 + screenBias * 12,
+					rotate: side * apogee * -6,
+					perspective: 650,
 				};
 			},
 		}) as any;

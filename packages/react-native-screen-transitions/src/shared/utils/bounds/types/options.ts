@@ -1,6 +1,9 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import type { ScreenTransitionState } from "../../../types/animation.types";
-import type { BoundsMethod } from "../../../types/bounds.types";
+import type {
+	BoundsInterpolationProps,
+	BoundsMethod,
+} from "../../../types/bounds.types";
 import type { Layout } from "../../../types/screen.types";
 
 export type BoundId = string | number;
@@ -28,28 +31,52 @@ type BoundsSpace = "relative" | "absolute";
  * `x` and `y` map to the generated translate values. `scale` is a uniform scale
  * view of the generated transform; non-uniform bounds transforms keep their
  * existing `scaleX`/`scaleY` ratio and apply returned `scale` as a multiplier.
+ *
+ * `rotateX`/`rotateY` are optional 3D tilts in degrees around the element
+ * center. When either is set, a `perspective` entry is prepended to the
+ * transform so the tilt projects in 3D.
  */
 export type BoundsMotionTransform = {
 	x: number;
 	y: number;
 	scale: number;
+	/** Z-axis spin in degrees. */
+	rotate?: number;
+	rotateX?: number;
+	rotateY?: number;
+	/**
+	 * Perspective distance, prepended to the transform when any rotation is
+	 * present or when set explicitly.
+	 * @default 1000
+	 */
+	perspective?: number;
+	/**
+	 * Pivot for the ENTIRE transform stack, including the generated
+	 * translate/scale. Bounds geometry computes its translations assuming the
+	 * default center origin, so non-center origins offset the path — best for
+	 * rotation-dominant motion.
+	 */
+	transformOrigin?: string | Array<string | number>;
 };
 
 /**
- * Frame data passed to a bounds motion resolver.
+ * Frame data passed to a bounds motion resolver: the generated transform
+ * (`current`), the resolved rects it travels between (`start`/`end` — these
+ * include target overrides and are not derivable from `props`), the phase
+ * (`progress`, normalized 0→1 regardless of enter/exit range), and the
+ * invoking interpolator's full `props`.
  *
- * `progress` is normalized to the current bounds phase, from `0` at `from` to
- * `1` at `to`. `transitionProgress` is the screen transition's raw progress.
+ * `props` is screen-relative: the same motion can run under both the focused
+ * and unfocused screen's interpolators, and values like `props.active.gesture`
+ * differ per invocation. Direction is recoverable as `!props.next`; the raw
+ * un-normalized progress as `props.progress`.
  */
 export type BoundsMotionFrame = {
 	progress: number;
-	transitionProgress: number;
-	entering: boolean;
-	from: BoundsMotionTransform;
-	to: BoundsMotionTransform;
 	current: BoundsMotionTransform;
 	start: MeasuredDimensions;
 	end: MeasuredDimensions;
+	props: BoundsInterpolationProps;
 };
 
 /**
@@ -67,37 +94,47 @@ export type BoundsComputeParams = {
 	next?: ScreenTransitionState;
 	progress: number;
 	dimensions: Layout;
+	/** Invoking interpolator's props, surfaced to motion resolvers. */
+	interpolationProps: BoundsInterpolationProps;
 };
 
-type RawSizeAbsoluteReturn = {
+type RawMotionRotation = {
+	/** Degrees; non-zero only when a motion resolver returned a rotation. */
+	rotate: number;
+	rotateX: number;
+	rotateY: number;
+	transformOrigin?: string | Array<string | number>;
+};
+
+type RawSizeAbsoluteReturn = RawMotionRotation & {
 	width: number;
 	height: number;
 	translateX: number;
 	translateY: number;
 };
 
-type RawSizeRelativeReturn = {
+type RawSizeRelativeReturn = RawMotionRotation & {
 	translateX: number;
 	translateY: number;
 	width: number;
 	height: number;
 };
 
-type RawTransformAbsoluteReturn = {
+type RawTransformAbsoluteReturn = RawMotionRotation & {
 	translateX: number;
 	translateY: number;
 	scaleX: number;
 	scaleY: number;
 };
 
-type RawTransformRelativeReturn = {
+type RawTransformRelativeReturn = RawMotionRotation & {
 	translateX: number;
 	translateY: number;
 	scaleX: number;
 	scaleY: number;
 };
 
-type RawContentReturn = {
+type RawContentReturn = RawMotionRotation & {
 	translateX: number;
 	translateY: number;
 	scale: number;

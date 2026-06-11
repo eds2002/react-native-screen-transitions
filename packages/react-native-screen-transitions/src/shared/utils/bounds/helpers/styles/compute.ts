@@ -200,7 +200,15 @@ const resolveStartEnd = (params: {
 };
 
 export const computeBoundStyles = (
-	{ id, previous, current, next, progress, dimensions }: BoundsComputeParams,
+	{
+		id,
+		previous,
+		current,
+		next,
+		progress,
+		dimensions,
+		interpolationProps,
+	}: BoundsComputeParams,
 	computeOptions: BoundsOptions = { id: "bound-id" },
 	resolvedPair?: ResolvedTransitionPair,
 ) => {
@@ -256,6 +264,7 @@ export const computeBoundStyles = (
 			end: contentEnd,
 			geometry,
 			computeOptions,
+			interpolationProps,
 		});
 	}
 
@@ -274,6 +283,7 @@ export const computeBoundStyles = (
 		ranges,
 		geometry,
 		computeOptions,
+		interpolationProps,
 	};
 
 	const isSize = computeOptions.method === "size";

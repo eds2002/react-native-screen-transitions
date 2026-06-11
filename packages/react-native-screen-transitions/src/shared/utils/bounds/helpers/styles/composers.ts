@@ -1,10 +1,12 @@
+import type { TransformsStyle } from "react-native";
 import {
 	Extrapolation,
 	interpolate,
 	type MeasuredDimensions,
 	type StyleProps,
 } from "react-native-reanimated";
-import { EPSILON, VISIBLE_STYLE } from "../../../../constants";
+import { EPSILON } from "../../../../constants";
+import type { BoundsInterpolationProps } from "../../../../types/bounds.types";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
@@ -28,6 +30,7 @@ export type ElementComposeParams = {
 	progress: number;
 	ranges: readonly [number, number];
 	computeOptions: BoundsOptions;
+	interpolationProps: BoundsInterpolationProps;
 };
 
 /**
@@ -44,6 +47,7 @@ type ContentComposeParams = {
 	progress: number;
 	ranges: readonly [number, number];
 	computeOptions: BoundsOptions;
+	interpolationProps: BoundsInterpolationProps;
 };
 
 const getAnchorPoint = (
@@ -146,23 +150,19 @@ const getScaleRatio = (resolvedScale: number, currentScale: number) => {
 
 const resolveMotionTransform = ({
 	computeOptions,
+	interpolationProps,
 	progress,
 	ranges,
-	entering,
 	start,
 	end,
-	from,
-	to,
 	current,
 }: {
 	computeOptions: BoundsOptions;
+	interpolationProps: BoundsInterpolationProps;
 	progress: number;
 	ranges: readonly [number, number];
-	entering: boolean;
 	start: MeasuredDimensions;
 	end: MeasuredDimensions;
-	from: BoundsMotionTransform;
-	to: BoundsMotionTransform;
 	current: BoundsMotionTransform;
 }) => {
 	"worklet";
@@ -173,14 +173,62 @@ const resolveMotionTransform = ({
 
 	return computeOptions.motion({
 		progress: normalizeRangeProgress(progress, ranges),
-		transitionProgress: progress,
-		entering,
-		from,
-		to,
 		current,
 		start,
 		end,
+		props: interpolationProps,
 	});
+};
+
+type MotionTransformEntry = Exclude<
+	TransformsStyle["transform"],
+	string | undefined
+>[number];
+
+/**
+ * Builds the rendered transform stack for a resolved motion: optional
+ * perspective first (so rotations project in 3D), translates, optional
+ * rotations, then the composer's scale entries — rotation happens in
+ * unscaled space around the element center.
+ */
+const composeMotionTransform = (
+	motion: BoundsMotionTransform,
+	scaleTransforms?: MotionTransformEntry[],
+) => {
+	"worklet";
+	const transform: MotionTransformEntry[] = [];
+	const rotate = motion.rotate ?? 0;
+	const rotateX = motion.rotateX ?? 0;
+	const rotateY = motion.rotateY ?? 0;
+
+	if (
+		rotate !== 0 ||
+		rotateX !== 0 ||
+		rotateY !== 0 ||
+		motion.perspective !== undefined
+	) {
+		transform.push({ perspective: motion.perspective ?? 1000 });
+	}
+
+	transform.push({ translateX: motion.x }, { translateY: motion.y });
+
+	if (rotateX !== 0) {
+		transform.push({ rotateX: `${rotateX}deg` });
+	}
+	if (rotateY !== 0) {
+		transform.push({ rotateY: `${rotateY}deg` });
+	}
+	if (rotate !== 0) {
+		transform.push({ rotate: `${rotate}deg` });
+	}
+
+	if (scaleTransforms) {
+		for (const entry of scaleTransforms) {
+			transform.push(entry);
+		}
+	}
+
+	return transform;
 };
 
 export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
@@ -219,33 +267,13 @@ export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 
 	const translateX = anchorX - anchorOffset.x;
 	const translateY = anchorY - anchorOffset.y;
-	const startAnchorOffset = getAnchorOffset({
-		width: start.width,
-		height: start.height,
-		anchor,
-	});
-	const endAnchorOffset = getAnchorOffset({
-		width: end.width,
-		height: end.height,
-		anchor,
-	});
 	const motion = resolveMotionTransform({
 		computeOptions,
+		interpolationProps: params.interpolationProps,
 		progress,
 		ranges,
-		entering: params.geometry.entering,
 		start,
 		end,
-		from: {
-			x: startAnchor.x - startAnchorOffset.x,
-			y: startAnchor.y - startAnchorOffset.y,
-			scale: 1,
-		},
-		to: {
-			x: endAnchor.x - endAnchorOffset.x,
-			y: endAnchor.y - endAnchorOffset.y,
-			scale: 1,
-		},
 		current: {
 			x: translateX,
 			y: translateY,
@@ -261,15 +289,18 @@ export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 			height: resolvedHeight,
 			translateX: motion.x,
 			translateY: motion.y,
-			...VISIBLE_STYLE,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
 		};
 	}
 
 	return {
 		width: resolvedWidth,
 		height: resolvedHeight,
-		transform: [{ translateX: motion.x }, { translateY: motion.y }],
-		...VISIBLE_STYLE,
+		transform: composeMotionTransform(motion),
+		transformOrigin: motion.transformOrigin,
 	};
 }
 
@@ -310,33 +341,13 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 
 	const translateX = anchorX - (baseX + anchorOffset.x);
 	const translateY = anchorY - (baseY + anchorOffset.y);
-	const startAnchorOffset = getAnchorOffset({
-		width: start.width,
-		height: start.height,
-		anchor,
-	});
-	const endAnchorOffset = getAnchorOffset({
-		width: end.width,
-		height: end.height,
-		anchor,
-	});
 	const motion = resolveMotionTransform({
 		computeOptions,
+		interpolationProps: params.interpolationProps,
 		progress,
 		ranges,
-		entering: geometry.entering,
 		start,
 		end,
-		from: {
-			x: startAnchor.x - (baseX + startAnchorOffset.x),
-			y: startAnchor.y - (baseY + startAnchorOffset.y),
-			scale: 1,
-		},
-		to: {
-			x: endAnchor.x - (baseX + endAnchorOffset.x),
-			y: endAnchor.y - (baseY + endAnchorOffset.y),
-			scale: 1,
-		},
 		current: {
 			x: translateX,
 			y: translateY,
@@ -350,17 +361,20 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 		return {
 			translateX: motion.x,
 			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
 			width: resolvedWidth,
 			height: resolvedHeight,
-			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
-		transform: [{ translateX: motion.x }, { translateY: motion.y }],
+		transform: composeMotionTransform(motion),
+		transformOrigin: motion.transformOrigin,
 		width: resolvedWidth,
 		height: resolvedHeight,
-		...VISIBLE_STYLE,
 	};
 }
 
@@ -413,28 +427,14 @@ export function composeTransformAbsolute(
 				Extrapolation.CLAMP,
 			);
 
-	const fromScaleX = geometry.entering ? geometry.scaleX : 1;
-	const fromScaleY = geometry.entering ? geometry.scaleY : 1;
-	const toScaleX = geometry.entering ? 1 : 1 / geometry.scaleX;
-	const toScaleY = geometry.entering ? 1 : 1 / geometry.scaleY;
 	const currentScale = getUniformScale(scaleX, scaleY);
 	const motion = resolveMotionTransform({
 		computeOptions,
+		interpolationProps: params.interpolationProps,
 		progress,
 		ranges,
-		entering: geometry.entering,
 		start,
 		end,
-		from: {
-			x: geometry.entering ? start.pageX : end.pageX,
-			y: geometry.entering ? start.pageY : end.pageY,
-			scale: getUniformScale(fromScaleX, fromScaleY),
-		},
-		to: {
-			x: geometry.entering ? end.pageX : start.pageX,
-			y: geometry.entering ? end.pageY : start.pageY,
-			scale: getUniformScale(toScaleX, toScaleY),
-		},
 		current: {
 			x: translateX,
 			y: translateY,
@@ -449,20 +449,21 @@ export function composeTransformAbsolute(
 		return {
 			translateX: motion.x,
 			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
 			scaleX: resolvedScaleX,
 			scaleY: resolvedScaleY,
-			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
-		transform: [
-			{ translateX: motion.x },
-			{ translateY: motion.y },
+		transform: composeMotionTransform(motion, [
 			{ scaleX: resolvedScaleX },
 			{ scaleY: resolvedScaleY },
-		],
-		...VISIBLE_STYLE,
+		]),
+		transformOrigin: motion.transformOrigin,
 	};
 }
 
@@ -497,28 +498,14 @@ export function composeTransformRelative(
 
 	const offsetX = computeOptions.offset?.x ?? computeOptions.gestures?.x ?? 0;
 	const offsetY = computeOptions.offset?.y ?? computeOptions.gestures?.y ?? 0;
-	const fromScaleX = geometry.entering ? geometry.scaleX : 1;
-	const fromScaleY = geometry.entering ? geometry.scaleY : 1;
-	const toScaleX = geometry.entering ? 1 : 1 / geometry.scaleX;
-	const toScaleY = geometry.entering ? 1 : 1 / geometry.scaleY;
 	const currentScale = getUniformScale(scaleX, scaleY);
 	const motion = resolveMotionTransform({
 		computeOptions,
+		interpolationProps: params.interpolationProps,
 		progress,
 		ranges,
-		entering: geometry.entering,
 		start: params.start,
 		end: params.end,
-		from: {
-			x: geometry.entering ? geometry.dx : 0,
-			y: geometry.entering ? geometry.dy : 0,
-			scale: getUniformScale(fromScaleX, fromScaleY),
-		},
-		to: {
-			x: geometry.entering ? 0 : -geometry.dx,
-			y: geometry.entering ? 0 : -geometry.dy,
-			scale: getUniformScale(toScaleX, toScaleY),
-		},
 		current: {
 			x: translateX,
 			y: translateY,
@@ -533,9 +520,12 @@ export function composeTransformRelative(
 		return {
 			translateX: motion.x,
 			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
 			scaleX: resolvedScaleX,
 			scaleY: resolvedScaleY,
-			...VISIBLE_STYLE,
 		};
 	}
 
@@ -543,12 +533,12 @@ export function composeTransformRelative(
 		transform: [
 			{ translateX: offsetX },
 			{ translateY: offsetY },
-			{ translateX: motion.x },
-			{ translateY: motion.y },
-			{ scaleX: resolvedScaleX },
-			{ scaleY: resolvedScaleY },
+			...composeMotionTransform(motion, [
+				{ scaleX: resolvedScaleX },
+				{ scaleY: resolvedScaleY },
+			]),
 		],
-		...VISIBLE_STYLE,
+		transformOrigin: motion.transformOrigin,
 	};
 }
 
@@ -574,21 +564,11 @@ export function composeContentStyle(params: ContentComposeParams): StyleProps {
 
 	const motion = resolveMotionTransform({
 		computeOptions: params.computeOptions,
+		interpolationProps: params.interpolationProps,
 		progress,
 		ranges,
-		entering,
 		start: params.start,
 		end: params.end,
-		from: {
-			x: entering ? tx : 0,
-			y: entering ? ty : 0,
-			scale: entering ? s : 1,
-		},
-		to: {
-			x: entering ? 0 : tx,
-			y: entering ? 0 : ty,
-			scale: entering ? 1 : s,
-		},
 		current: {
 			x: translateX,
 			y: translateY,
@@ -600,17 +580,16 @@ export function composeContentStyle(params: ContentComposeParams): StyleProps {
 		return {
 			translateX: motion.x,
 			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
 			scale: motion.scale,
-			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
-		transform: [
-			{ translateX: motion.x },
-			{ translateY: motion.y },
-			{ scale: motion.scale },
-		],
-		...VISIBLE_STYLE,
+		transform: composeMotionTransform(motion, [{ scale: motion.scale }]),
+		transformOrigin: motion.transformOrigin,
 	};
 }
