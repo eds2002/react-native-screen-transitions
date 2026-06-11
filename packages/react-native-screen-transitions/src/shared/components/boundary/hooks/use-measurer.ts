@@ -2,11 +2,7 @@ import { useCallback } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
-import { setEntry } from "../../../stores/bounds/internals/entries";
-import {
-	setDestination,
-	setSource,
-} from "../../../stores/bounds/internals/links";
+import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
 import type { BoundsPortalHost } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
@@ -101,34 +97,16 @@ export const useMeasurer = ({
 				scrollMetadata.get(),
 			);
 
-			// Set the bounds entry on every measure to avoid any stale measurements
-			// for the public read API.
-			setEntry(entryTag, currentScreenKey, {
-				bounds: measuredWithScroll,
+			applyMeasuredBoundsWrites({
+				entryTag,
+				linkId,
+				group,
+				currentScreenKey,
+				measured: measuredWithScroll,
+				preparedStyles,
+				linkWrite: target,
+				portalHost,
 			});
-
-			if (target.type === "source") {
-				setSource(
-					target.pairKey,
-					linkId,
-					currentScreenKey,
-					measuredWithScroll,
-					preparedStyles,
-					group,
-					portalHost,
-				);
-			}
-
-			if (target.type === "destination") {
-				setDestination(
-					target.pairKey,
-					linkId,
-					currentScreenKey,
-					measuredWithScroll,
-					preparedStyles,
-					group,
-				);
-			}
 		},
 		[
 			enabled,
