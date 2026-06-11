@@ -53,7 +53,7 @@ export const useBoundaryOwner = (params: {
 	entryTag: string;
 	portal?: BoundaryPortal;
 }) => {
-	const { ownerRef, associatedTargetStyles, portal } = params;
+	const { ownerRef, associatedTargetStyles, entryTag, portal } = params;
 	const warnedAboutMultipleTargetsRef = useRef(false);
 	const [targetEntry, setTargetEntry] = useState<BoundaryTargetEntry | null>(
 		null,
@@ -92,7 +92,7 @@ export const useBoundaryOwner = (params: {
 			unregisterTargetRef,
 			activeTargetRef: targetEntry?.ref ?? null,
 			associatedTargetStyles,
-			entryTag: params.entryTag,
+			entryTag,
 			portal,
 		}),
 		[
@@ -101,7 +101,7 @@ export const useBoundaryOwner = (params: {
 			unregisterTargetRef,
 			targetEntry,
 			associatedTargetStyles,
-			params.entryTag,
+			entryTag,
 			portal,
 		],
 	);

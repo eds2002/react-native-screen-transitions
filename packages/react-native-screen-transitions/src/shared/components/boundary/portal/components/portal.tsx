@@ -5,15 +5,20 @@ import {
 	useLayoutEffect,
 	useState,
 } from "react";
-import { View } from "react-native";
-import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
+import Animated, {
+	runOnJS,
+	useAnimatedProps,
+	useAnimatedReaction,
+	useAnimatedStyle,
+	useSharedValue,
+} from "react-native-reanimated";
 import { Portal as NativePortal } from "react-native-teleport";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
+import { useScreenStyles } from "../../../../providers/screen/styles";
 import { getResolvedLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
 import type { BoundaryPortal } from "../../types";
-import { usePlaceholderLayout } from "../hooks/use-placeholder-layout";
 import {
 	getHostCapturesScroll,
 	useActiveHostKey,
@@ -25,6 +30,7 @@ import {
 import {
 	createPortalBoundaryHostName,
 	createPortalName,
+	PORTAL_HOST_NAME_RESET_VALUE,
 } from "../utils/naming";
 
 const TransitionAwareTeleport = createTransitionAwareComponent(NativePortal);
@@ -55,12 +61,12 @@ export const Portal = memo(function Portal({
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
+	const { stylesMap } = useScreenStyles();
 
 	const [attachment, setAttachment] = useState<PortalAttachment | null>(null);
-	const [attachedHostName, setAttachedHostName] = useState<
-		string | undefined
-	>();
-	const [isAttached, setIsAttached] = useState(false);
+	const attachedHostName = useSharedValue(PORTAL_HOST_NAME_RESET_VALUE);
+	const placeholderWidth = useSharedValue(0);
+	const placeholderHeight = useSharedValue(0);
 
 	const targetScreenKey =
 		portalHostMode === "paired-screen"
@@ -97,16 +103,11 @@ export const Portal = memo(function Portal({
 
 	useLayoutEffect(() => {
 		if (!isPortalEnabled || !attachment || !activeHostKey || !targetScreenKey) {
-			setAttachedHostName(undefined);
-			setIsAttached(false);
+			attachedHostName.set(PORTAL_HOST_NAME_RESET_VALUE);
 			unmountPortalBoundaryHost(id);
 			return;
 		}
 
-		const hostName = createPortalBoundaryHostName(activeHostKey, id);
-
-		setAttachedHostName(undefined);
-		setIsAttached(false);
 		mountPortalBoundaryHost({
 			boundaryId: id,
 			capturesScroll: activeHostCapturesScroll,
@@ -115,51 +116,23 @@ export const Portal = memo(function Portal({
 			screenKey: targetScreenKey,
 		});
 
-		// NOTE:
-		// Right now, this is not my favorite implementation. If we're teleporting to A paired screen,
-		// we'll need a slight buffer to ensure react renders and applies our transformation properly to the
-		// host.
-		//
-		// One proposed shape is changing the blocking system to have a reason for blocking.
-		//
-		// For example, blocking is mostly used in bounds, bounds should specificy why theyre blocking.
-		//
-		// Could be these:
-		// awaiting-measurement <-- for initial boundary mount
-		// invalid-measurement (e.g. offset measurements) < -- this would then apply the offset we have inside useMaybeBlockVisibility
-		// NEW: paired-screen-buffer <-- for paired screen teleportation
-		//
-		//
-		// If we could extend that, then we necessarily wouldn't need this dynamic buffer count we have.
-		const rafCount = portalHostMode === "paired-screen" ? 3 : 2;
-		let isCancelled = false;
-		const attachAfterRafs = (remainingRafs: number) => {
-			if (isCancelled) {
-				return;
-			}
-
-			if (remainingRafs <= 0) {
-				setAttachedHostName(hostName);
-				setIsAttached(true);
-				return;
-			}
-
-			requestAnimationFrame(() => attachAfterRafs(remainingRafs - 1));
-		};
-
-		attachAfterRafs(rafCount);
+		// The native registry parks portals whose host has not registered yet and
+		// re-parents the moment it does, so the host name can be handed over
+		// immediately — ordering belongs to the registry, not to frame counting.
+		// hostName rides animated props, so the handover needs no React commit.
+		attachedHostName.set(createPortalBoundaryHostName(activeHostKey, id));
 
 		return () => {
-			isCancelled = true;
+			attachedHostName.set(PORTAL_HOST_NAME_RESET_VALUE);
 			unmountPortalBoundaryHost(id);
 		};
 	}, [
 		activeHostKey,
 		activeHostCapturesScroll,
+		attachedHostName,
 		attachment,
 		id,
 		isPortalEnabled,
-		portalHostMode,
 		targetScreenKey,
 	]);
 
@@ -172,7 +145,8 @@ export const Portal = memo(function Portal({
 
 			pairs.get();
 			const link = getResolvedLink(sourcePairKey, id).link;
-			if (!link?.source || !link.destination) {
+
+			if (link?.status !== "complete") {
 				return null;
 			}
 
@@ -188,21 +162,49 @@ export const Portal = memo(function Portal({
 		},
 	);
 
-	const { placeholderStyle, handleLayout } = usePlaceholderLayout();
+	const teleportProps = useAnimatedProps(() => {
+		"worklet";
+		return {
+			// Keep the styleId-driven props channel alive (the wrapper's user
+			// animatedProps would otherwise replace it); the portal owns hostName.
+			...stylesMap.get()[styleId]?.props,
+			hostName:
+				attachedHostName.get() === PORTAL_HOST_NAME_RESET_VALUE
+					? (null as any)
+					: attachedHostName.get(),
+		};
+	});
+
+	// Pin the placeholder to its measured size while content lives in the host,
+	// in the same UI frame the host name flips — no commit in between. Until the
+	// first layout lands (dims 0) sizing stays natural so an instant attach
+	// cannot collapse the slot.
+	const placeholderStyle = useAnimatedStyle(() => {
+		"worklet";
+		const isAttached = attachedHostName.get() !== PORTAL_HOST_NAME_RESET_VALUE;
+		const width = placeholderWidth.get();
+		const height = placeholderHeight.get();
+
+		if (!isAttached || width === 0) {
+			return { width: "auto", height: "auto" } as const;
+		}
+
+		return { width, height };
+	});
 
 	if (isPortalEnabled) {
 		return (
-			<View
-				onLayout={handleLayout}
-				style={isAttached ? placeholderStyle : undefined}
+			<Animated.View
+				onLayout={(event) => {
+					placeholderWidth.set(event.nativeEvent.layout.width);
+					placeholderHeight.set(event.nativeEvent.layout.height);
+				}}
+				style={placeholderStyle}
 			>
-				<TransitionAwareTeleport
-					hostName={isAttached ? attachedHostName : undefined} // <-- this can be handled in animated props
-					name={styleId} //<-- this can be handled in animated props
-				>
+				<TransitionAwareTeleport animatedProps={teleportProps} name={styleId}>
 					{children}
 				</TransitionAwareTeleport>
-			</View>
+			</Animated.View>
 		);
 	}
 
