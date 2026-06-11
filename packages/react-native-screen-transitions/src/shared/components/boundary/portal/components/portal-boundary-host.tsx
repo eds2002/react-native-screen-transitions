@@ -2,14 +2,12 @@ import { memo } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { PortalHost as NativePortalHost } from "react-native-teleport";
-import { NO_STYLES } from "../../../../../constants";
-import { getResolvedLink } from "../../../../../stores/bounds/internals/links";
-import { ScrollStore } from "../../../../../stores/scroll.store";
-import type { ActivePortalBoundaryHost } from "../../stores/portal-boundary-host.store";
-import {
-	createPortalBoundaryHostName,
-	resolvePortalOffsetStyle,
-} from "../../utils";
+import { NO_STYLES } from "../../../../constants";
+import { getResolvedLink } from "../../../../stores/bounds/internals/links";
+import { ScrollStore } from "../../../../stores/scroll.store";
+import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
+import { createPortalBoundaryHostName } from "../utils/naming";
+import { resolvePortalOffsetStyle } from "../utils/offset-style";
 
 const AnimatedPortalBoundaryHost =
 	Animated.createAnimatedComponent(NativePortalHost);

@@ -22,7 +22,10 @@ import {
 	mountPortalBoundaryHost,
 	unmountPortalBoundaryHost,
 } from "../stores/portal-boundary-host.store";
-import { createPortalBoundaryHostName, createPortalName } from "../utils";
+import {
+	createPortalBoundaryHostName,
+	createPortalName,
+} from "../utils/naming";
 
 const TransitionAwareTeleport = createTransitionAwareComponent(NativePortal);
 

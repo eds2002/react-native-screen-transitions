@@ -11,7 +11,7 @@ import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
 import { useActivePortalBoundaryHosts } from "../stores/portal-boundary-host.store";
-import { PortalBoundaryHost } from "./boundary-host/portal-boundary-host";
+import { PortalBoundaryHost } from "./portal-boundary-host";
 
 let nextHostId = 0;
 

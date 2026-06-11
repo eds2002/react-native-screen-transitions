@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
 import { setPortalHostBounds } from "../../components/boundary/portal/stores/host-bounds.store";
-import { resolvePortalOffsetStyle } from "../../components/boundary/portal/utils";
+import { resolvePortalOffsetStyle } from "../../components/boundary/portal/utils/offset-style";
 import { BoundStore, type Snapshot } from "../../stores/bounds";
 import {
 	createPendingPairKey,

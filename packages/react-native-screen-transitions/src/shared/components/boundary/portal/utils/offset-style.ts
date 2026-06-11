@@ -1,34 +1,7 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
-import { getClampedScrollAxisDelta } from "../../../stores/scroll.store";
-import type { ScrollMetadataState } from "../../../types/gesture.types";
-import { getPortalHostBounds } from "./stores/host-bounds.store";
-
-export const PORTAL_HOST_NAME_RESET_VALUE = "--";
-const PORTAL_HOST_NAME_SUFFIX = "-portal-host";
-
-export const createPortalBoundaryHostName = (
-	hostKey: string,
-	boundaryId: string,
-) => {
-	"worklet";
-	return `${hostKey}-${boundaryId}${PORTAL_HOST_NAME_SUFFIX}`;
-};
-
-export const createPortalName = (id: string) => {
-	"worklet";
-	return `${id}-portal`;
-};
-
-// Clamped to the layout range: iOS rubber-band offsets are outside the real
-// scroll range and must not become coordinate-space deltas.
-const getScrollDelta = (
-	current: ScrollMetadataState | null,
-	measured: ScrollMetadataState | null | undefined,
-	axis: "horizontal" | "vertical",
-) => {
-	"worklet";
-	return getClampedScrollAxisDelta(current, measured, axis);
-};
+import { getClampedScrollAxisDelta } from "../../../../stores/scroll.store";
+import type { ScrollMetadataState } from "../../../../types/gesture.types";
+import { getPortalHostBounds } from "../stores/host-bounds.store";
 
 type ResolvePortalOffsetStyleParams = {
 	bounds: MeasuredDimensions;
@@ -60,12 +33,14 @@ export const resolvePortalOffsetStyle = ({
 	const hostBoundsScroll = includeScrollOffsets ? hostBounds?.scroll : null;
 	const resolvedHostCurrentScroll =
 		hostCurrentScroll ?? boundsScroll ?? hostBoundsScroll ?? null;
-	const hostScrollDeltaX = getScrollDelta(
+	// Deltas are clamped to the layout range: iOS rubber-band offsets are
+	// outside the real scroll range and must not become coordinate-space deltas.
+	const hostScrollDeltaX = getClampedScrollAxisDelta(
 		resolvedHostCurrentScroll,
 		hostBoundsScroll,
 		"horizontal",
 	);
-	const hostScrollDeltaY = getScrollDelta(
+	const hostScrollDeltaY = getClampedScrollAxisDelta(
 		resolvedHostCurrentScroll,
 		hostBoundsScroll,
 		"vertical",
@@ -77,10 +52,14 @@ export const resolvePortalOffsetStyle = ({
 		? hostBounds.pageY - hostScrollDeltaY
 		: 0;
 	const boundsScrollDeltaX = includeScrollOffsets
-		? getScrollDelta(currentScroll ?? null, boundsScroll, "horizontal")
+		? getClampedScrollAxisDelta(
+				currentScroll ?? null,
+				boundsScroll,
+				"horizontal",
+			)
 		: 0;
 	const boundsScrollDeltaY = includeScrollOffsets
-		? getScrollDelta(currentScroll ?? null, boundsScroll, "vertical")
+		? getClampedScrollAxisDelta(currentScroll ?? null, boundsScroll, "vertical")
 		: 0;
 	const offsetX = hostBounds
 		? bounds.pageX - adjustedHostPageX
