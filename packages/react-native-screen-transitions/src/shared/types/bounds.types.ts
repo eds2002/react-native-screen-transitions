@@ -8,6 +8,9 @@ import type {
 	BoundsComputeOptions,
 	BoundsIdentityInput,
 	BoundsMathResult,
+	BoundsMotion,
+	BoundsMotionFrame,
+	BoundsMotionTransform,
 	BoundsStyleResult,
 } from "../utils/bounds/types/options";
 import type {
@@ -290,3 +293,5 @@ export type BoundsInterpolationProps = Omit<
 	ScreenInterpolationProps,
 	"bounds" | "transition"
 >;
+
+export type { BoundsMotion, BoundsMotionFrame, BoundsMotionTransform };

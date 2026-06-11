@@ -22,6 +22,44 @@ type BoundsTarget = "bound" | "fullscreen" | MeasuredDimensions;
 
 type BoundsSpace = "relative" | "absolute";
 
+/**
+ * Transform values exposed to a bounds motion resolver.
+ *
+ * `x` and `y` map to the generated translate values. `scale` is a uniform scale
+ * view of the generated transform; non-uniform bounds transforms keep their
+ * existing `scaleX`/`scaleY` ratio and apply returned `scale` as a multiplier.
+ */
+export type BoundsMotionTransform = {
+	x: number;
+	y: number;
+	scale: number;
+};
+
+/**
+ * Frame data passed to a bounds motion resolver.
+ *
+ * `progress` is normalized to the current bounds phase, from `0` at `from` to
+ * `1` at `to`. `transitionProgress` is the screen transition's raw progress.
+ */
+export type BoundsMotionFrame = {
+	progress: number;
+	transitionProgress: number;
+	entering: boolean;
+	from: BoundsMotionTransform;
+	to: BoundsMotionTransform;
+	current: BoundsMotionTransform;
+	start: MeasuredDimensions;
+	end: MeasuredDimensions;
+};
+
+/**
+ * Worklet-safe function that can replace the generated bounds transform.
+ *
+ * Use this from `bounds({ motion })` to bend, delay, overshoot, or otherwise
+ * reshape a bounds transform without reimplementing the measurement logic.
+ */
+export type BoundsMotion = (frame: BoundsMotionFrame) => BoundsMotionTransform;
+
 export type BoundsComputeParams = {
 	id?: BoundId;
 	previous?: ScreenTransitionState;
@@ -141,6 +179,15 @@ export type BoundsOptions = {
 	 * @default "center"
 	 */
 	anchor?: BoundsAnchor;
+
+	/**
+	 * Worklet-safe transform resolver for bounds output.
+	 *
+	 * `motion` receives the generated transform and returns the transform that
+	 * should be rendered or returned from raw bounds. For `"size"` methods,
+	 * returned `scale` is applied to the generated width and height.
+	 */
+	motion?: BoundsMotion;
 
 	/**
 	 * If true, the raw values will be returned instead of the computed values.

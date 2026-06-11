@@ -20,9 +20,9 @@
 		"knip": "bunx knip --workspace packages/react-native-screen-transitions",
 		"lint": "biome check packages/react-native-screen-transitions/src",
 		"typecheck": "tsc -p packages/react-native-screen-transitions/tsconfig.typecheck.json",
-		"release:alpha": "cd packages/react-native-screen-transitions && RELEASE_PRERELEASE=alpha bunx --no-install release-it --config ../../.release-it.json --preRelease=alpha --no-github.release",
-		"release:beta": "cd packages/react-native-screen-transitions && RELEASE_PRERELEASE=beta bunx --no-install release-it --config ../../.release-it.json --preRelease=beta --no-github.release",
-		"release:rc": "cd packages/react-native-screen-transitions && RELEASE_PRERELEASE=rc bunx --no-install release-it --config ../../.release-it.json --preRelease=rc --no-github.release",
+		"release:alpha": "RELEASE_PRERELEASE=alpha bun --cwd=packages/react-native-screen-transitions x --no-install release-it --config ../../.release-it.json --preRelease=alpha --no-github.release",
+		"release:beta": "RELEASE_PRERELEASE=beta bun --cwd=packages/react-native-screen-transitions x --no-install release-it --config ../../.release-it.json --preRelease=beta --no-github.release",
+		"release:rc": "RELEASE_PRERELEASE=rc bun --cwd=packages/react-native-screen-transitions x --no-install release-it --config ../../.release-it.json --preRelease=rc --no-github.release",
 		"release:status": "gh run list --workflow release.yml --limit 5"
 	},
 	"devDependencies": {

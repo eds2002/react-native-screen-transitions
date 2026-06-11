@@ -4,12 +4,16 @@ import {
 	type MeasuredDimensions,
 	type StyleProps,
 } from "react-native-reanimated";
-import { VISIBLE_STYLE } from "../../../../constants";
+import { EPSILON, VISIBLE_STYLE } from "../../../../constants";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
 } from "../../types/geometry";
-import type { BoundsAnchor, BoundsOptions } from "../../types/options";
+import type {
+	BoundsAnchor,
+	BoundsMotionTransform,
+	BoundsOptions,
+} from "../../types/options";
 
 /**
  * Element-level (relative) params shared by size/transform composers.
@@ -105,6 +109,80 @@ const getAnchorOffset = ({
 	}
 };
 
+const clampUnit = (value: number) => {
+	"worklet";
+	return Math.min(1, Math.max(0, value));
+};
+
+const normalizeRangeProgress = (
+	progress: number,
+	ranges: readonly [number, number],
+) => {
+	"worklet";
+	const distance = ranges[1] - ranges[0];
+
+	if (Math.abs(distance) <= EPSILON) {
+		return 1;
+	}
+
+	return clampUnit((progress - ranges[0]) / distance);
+};
+
+const getUniformScale = (scaleX: number, scaleY: number) => {
+	"worklet";
+	if (Math.abs(scaleX - scaleY) <= EPSILON) {
+		return scaleX;
+	}
+
+	return Math.sqrt(Math.abs(scaleX * scaleY));
+};
+
+const getScaleRatio = (resolvedScale: number, currentScale: number) => {
+	"worklet";
+	const safeCurrentScale = Math.abs(currentScale) > EPSILON ? currentScale : 1;
+
+	return resolvedScale / safeCurrentScale;
+};
+
+const resolveMotionTransform = ({
+	computeOptions,
+	progress,
+	ranges,
+	entering,
+	start,
+	end,
+	from,
+	to,
+	current,
+}: {
+	computeOptions: BoundsOptions;
+	progress: number;
+	ranges: readonly [number, number];
+	entering: boolean;
+	start: MeasuredDimensions;
+	end: MeasuredDimensions;
+	from: BoundsMotionTransform;
+	to: BoundsMotionTransform;
+	current: BoundsMotionTransform;
+}) => {
+	"worklet";
+
+	if (!computeOptions.motion) {
+		return current;
+	}
+
+	return computeOptions.motion({
+		progress: normalizeRangeProgress(progress, ranges),
+		transitionProgress: progress,
+		entering,
+		from,
+		to,
+		current,
+		start,
+		end,
+	});
+};
+
 export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 	"worklet";
 	const { start, end, progress, ranges, computeOptions } = params;
@@ -141,21 +219,56 @@ export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 
 	const translateX = anchorX - anchorOffset.x;
 	const translateY = anchorY - anchorOffset.y;
+	const startAnchorOffset = getAnchorOffset({
+		width: start.width,
+		height: start.height,
+		anchor,
+	});
+	const endAnchorOffset = getAnchorOffset({
+		width: end.width,
+		height: end.height,
+		anchor,
+	});
+	const motion = resolveMotionTransform({
+		computeOptions,
+		progress,
+		ranges,
+		entering: params.geometry.entering,
+		start,
+		end,
+		from: {
+			x: startAnchor.x - startAnchorOffset.x,
+			y: startAnchor.y - startAnchorOffset.y,
+			scale: 1,
+		},
+		to: {
+			x: endAnchor.x - endAnchorOffset.x,
+			y: endAnchor.y - endAnchorOffset.y,
+			scale: 1,
+		},
+		current: {
+			x: translateX,
+			y: translateY,
+			scale: 1,
+		},
+	});
+	const resolvedWidth = width * motion.scale;
+	const resolvedHeight = height * motion.scale;
 
 	if (computeOptions.raw) {
 		return {
-			width,
-			height,
-			translateX,
-			translateY,
+			width: resolvedWidth,
+			height: resolvedHeight,
+			translateX: motion.x,
+			translateY: motion.y,
 			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
-		width,
-		height,
-		transform: [{ translateX }, { translateY }],
+		width: resolvedWidth,
+		height: resolvedHeight,
+		transform: [{ translateX: motion.x }, { translateY: motion.y }],
 		...VISIBLE_STYLE,
 	};
 }
@@ -197,21 +310,56 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 
 	const translateX = anchorX - (baseX + anchorOffset.x);
 	const translateY = anchorY - (baseY + anchorOffset.y);
+	const startAnchorOffset = getAnchorOffset({
+		width: start.width,
+		height: start.height,
+		anchor,
+	});
+	const endAnchorOffset = getAnchorOffset({
+		width: end.width,
+		height: end.height,
+		anchor,
+	});
+	const motion = resolveMotionTransform({
+		computeOptions,
+		progress,
+		ranges,
+		entering: geometry.entering,
+		start,
+		end,
+		from: {
+			x: startAnchor.x - (baseX + startAnchorOffset.x),
+			y: startAnchor.y - (baseY + startAnchorOffset.y),
+			scale: 1,
+		},
+		to: {
+			x: endAnchor.x - (baseX + endAnchorOffset.x),
+			y: endAnchor.y - (baseY + endAnchorOffset.y),
+			scale: 1,
+		},
+		current: {
+			x: translateX,
+			y: translateY,
+			scale: 1,
+		},
+	});
+	const resolvedWidth = width * motion.scale;
+	const resolvedHeight = height * motion.scale;
 
 	if (computeOptions.raw) {
 		return {
-			translateX,
-			translateY,
-			width,
-			height,
+			translateX: motion.x,
+			translateY: motion.y,
+			width: resolvedWidth,
+			height: resolvedHeight,
 			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
-		transform: [{ translateX }, { translateY }],
-		width,
-		height,
+		transform: [{ translateX: motion.x }, { translateY: motion.y }],
+		width: resolvedWidth,
+		height: resolvedHeight,
 		...VISIBLE_STYLE,
 	};
 }
@@ -265,18 +413,55 @@ export function composeTransformAbsolute(
 				Extrapolation.CLAMP,
 			);
 
+	const fromScaleX = geometry.entering ? geometry.scaleX : 1;
+	const fromScaleY = geometry.entering ? geometry.scaleY : 1;
+	const toScaleX = geometry.entering ? 1 : 1 / geometry.scaleX;
+	const toScaleY = geometry.entering ? 1 : 1 / geometry.scaleY;
+	const currentScale = getUniformScale(scaleX, scaleY);
+	const motion = resolveMotionTransform({
+		computeOptions,
+		progress,
+		ranges,
+		entering: geometry.entering,
+		start,
+		end,
+		from: {
+			x: geometry.entering ? start.pageX : end.pageX,
+			y: geometry.entering ? start.pageY : end.pageY,
+			scale: getUniformScale(fromScaleX, fromScaleY),
+		},
+		to: {
+			x: geometry.entering ? end.pageX : start.pageX,
+			y: geometry.entering ? end.pageY : start.pageY,
+			scale: getUniformScale(toScaleX, toScaleY),
+		},
+		current: {
+			x: translateX,
+			y: translateY,
+			scale: currentScale,
+		},
+	});
+	const scaleRatio = getScaleRatio(motion.scale, currentScale);
+	const resolvedScaleX = scaleX * scaleRatio;
+	const resolvedScaleY = scaleY * scaleRatio;
+
 	if (computeOptions.raw) {
 		return {
-			translateX,
-			translateY,
-			scaleX,
-			scaleY,
+			translateX: motion.x,
+			translateY: motion.y,
+			scaleX: resolvedScaleX,
+			scaleY: resolvedScaleY,
 			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
-		transform: [{ translateX }, { translateY }, { scaleX }, { scaleY }],
+		transform: [
+			{ translateX: motion.x },
+			{ translateY: motion.y },
+			{ scaleX: resolvedScaleX },
+			{ scaleY: resolvedScaleY },
+		],
 		...VISIBLE_STYLE,
 	};
 }
@@ -310,27 +495,58 @@ export function composeTransformRelative(
 				Extrapolation.CLAMP,
 			);
 
+	const offsetX = computeOptions.offset?.x ?? computeOptions.gestures?.x ?? 0;
+	const offsetY = computeOptions.offset?.y ?? computeOptions.gestures?.y ?? 0;
+	const fromScaleX = geometry.entering ? geometry.scaleX : 1;
+	const fromScaleY = geometry.entering ? geometry.scaleY : 1;
+	const toScaleX = geometry.entering ? 1 : 1 / geometry.scaleX;
+	const toScaleY = geometry.entering ? 1 : 1 / geometry.scaleY;
+	const currentScale = getUniformScale(scaleX, scaleY);
+	const motion = resolveMotionTransform({
+		computeOptions,
+		progress,
+		ranges,
+		entering: geometry.entering,
+		start: params.start,
+		end: params.end,
+		from: {
+			x: geometry.entering ? geometry.dx : 0,
+			y: geometry.entering ? geometry.dy : 0,
+			scale: getUniformScale(fromScaleX, fromScaleY),
+		},
+		to: {
+			x: geometry.entering ? 0 : -geometry.dx,
+			y: geometry.entering ? 0 : -geometry.dy,
+			scale: getUniformScale(toScaleX, toScaleY),
+		},
+		current: {
+			x: translateX,
+			y: translateY,
+			scale: currentScale,
+		},
+	});
+	const scaleRatio = getScaleRatio(motion.scale, currentScale);
+	const resolvedScaleX = scaleX * scaleRatio;
+	const resolvedScaleY = scaleY * scaleRatio;
+
 	if (computeOptions.raw) {
 		return {
-			translateX,
-			translateY,
-			scaleX,
-			scaleY,
+			translateX: motion.x,
+			translateY: motion.y,
+			scaleX: resolvedScaleX,
+			scaleY: resolvedScaleY,
 			...VISIBLE_STYLE,
 		};
 	}
-
-	const offsetX = computeOptions.offset?.x ?? computeOptions.gestures?.x ?? 0;
-	const offsetY = computeOptions.offset?.y ?? computeOptions.gestures?.y ?? 0;
 
 	return {
 		transform: [
 			{ translateX: offsetX },
 			{ translateY: offsetY },
-			{ translateX },
-			{ translateY },
-			{ scaleX },
-			{ scaleY },
+			{ translateX: motion.x },
+			{ translateY: motion.y },
+			{ scaleX: resolvedScaleX },
+			{ scaleY: resolvedScaleY },
 		],
 		...VISIBLE_STYLE,
 	};
@@ -356,17 +572,45 @@ export function composeContentStyle(params: ContentComposeParams): StyleProps {
 		? interpolate(progress, ranges, [s, 1], Extrapolation.CLAMP)
 		: interpolate(progress, ranges, [1, s], Extrapolation.CLAMP);
 
+	const motion = resolveMotionTransform({
+		computeOptions: params.computeOptions,
+		progress,
+		ranges,
+		entering,
+		start: params.start,
+		end: params.end,
+		from: {
+			x: entering ? tx : 0,
+			y: entering ? ty : 0,
+			scale: entering ? s : 1,
+		},
+		to: {
+			x: entering ? 0 : tx,
+			y: entering ? 0 : ty,
+			scale: entering ? 1 : s,
+		},
+		current: {
+			x: translateX,
+			y: translateY,
+			scale,
+		},
+	});
+
 	if (raw) {
 		return {
-			translateX,
-			translateY,
-			scale,
+			translateX: motion.x,
+			translateY: motion.y,
+			scale: motion.scale,
 			...VISIBLE_STYLE,
 		};
 	}
 
 	return {
-		transform: [{ translateX }, { translateY }, { scale }],
+		transform: [
+			{ translateX: motion.x },
+			{ translateY: motion.y },
+			{ scale: motion.scale },
+		],
 		...VISIBLE_STYLE,
 	};
 }
