@@ -7,6 +7,7 @@ import {
 	setDestination,
 	setSource,
 } from "../../../stores/bounds/internals/links";
+import type { BoundsPortalHost } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
@@ -26,6 +27,7 @@ interface UseMeasurerParams {
 	currentScreenKey: string;
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
+	portalHost?: BoundsPortalHost;
 }
 
 export const useMeasurer = ({
@@ -36,6 +38,7 @@ export const useMeasurer = ({
 	currentScreenKey,
 	preparedStyles,
 	measuredAnimatedRef,
+	portalHost,
 }: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -112,6 +115,7 @@ export const useMeasurer = ({
 					measuredWithScroll,
 					preparedStyles,
 					group,
+					portalHost,
 				);
 			}
 
@@ -134,6 +138,7 @@ export const useMeasurer = ({
 			currentScreenKey,
 			preparedStyles,
 			measuredAnimatedRef,
+			portalHost,
 			viewportWidth,
 			viewportHeight,
 			scrollState,

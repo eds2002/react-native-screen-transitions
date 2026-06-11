@@ -10,6 +10,7 @@ export type TagID = string;
 export type LinkKey = string;
 export type GroupKey = string;
 export type ScreenPairKey = string;
+export type BoundsPortalHost = "current-screen" | "paired-screen";
 export type { ScreenKey } from "../../types/screen.types";
 
 type BoundaryConfig = {
@@ -45,6 +46,10 @@ export type BoundsLinkStatus =
 	| "complete";
 
 export type TagLinkSide = ScreenIdentifier & MeasuredEntry;
+export type SourceTagLinkSide = TagLinkSide & {
+	/** Where this boundary's portal content renders during the transition. */
+	portalHost?: BoundsPortalHost;
+};
 
 type TagLinkBase = {
 	group?: GroupKey;
@@ -65,14 +70,14 @@ export type TagLink =
 	| (TagLinkBase & {
 			status: "destination-incomplete";
 			/** Source side once attached; null while destination captured first. */
-			source: TagLinkSide;
+			source: SourceTagLinkSide;
 			/** Destination side once attached; null while the source is still pending. */
 			destination: null;
 	  })
 	| (TagLinkBase & {
 			status: "complete";
 			/** Source side once attached; null while destination captured first. */
-			source: TagLinkSide;
+			source: SourceTagLinkSide;
 			/** Destination side once attached; null while the source is still pending. */
 			destination: TagLinkSide;
 	  });
@@ -95,6 +100,7 @@ export type ResolvedTransitionPair = {
 	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
+	sourcePortalHost?: BoundsPortalHost;
 };
 
 export type LinkGroupState = {

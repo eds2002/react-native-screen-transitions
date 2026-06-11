@@ -9,6 +9,7 @@ import {
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
 import { createBoundsAccessor } from "../../utils/bounds";
+import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
 import type { EntryPatch } from "../../stores/bounds/types";
 
 const createBounds = (
@@ -575,12 +576,14 @@ describe("BoundsAccessor", () => {
 		});
 	});
 
-	it("compensates portal host offsets from live host scroll", () => {
+	it("compensates portal host offsets from clamped live host scroll", () => {
 		setPortalHostBounds("screen-b-host", {
 			...createBounds(4, -102, 370, 0),
 			scroll: createScrollLayout(5, 100),
 		});
 
+		// Vertical offset 900 overshoots the 600 layout range (rubber-band) and
+		// clamps before the delta: deltaY = 600 - 100, deltaX = 20 - 5.
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "screen-b-host",
@@ -588,8 +591,90 @@ describe("BoundsAccessor", () => {
 				hostCurrentScroll: createScrollLayout(20, 900),
 			}),
 		).toEqual({
-			transform: [{ translateY: 1122 }, { translateX: 51 }],
+			transform: [{ translateY: 822 }, { translateX: 51 }],
 		});
+	});
+});
+
+describe("teleport portal host links", () => {
+	it("persists the source portal host across refreshes without portal context", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(0, 0),
+			{},
+			undefined,
+			"paired-screen",
+		);
+		// Refresh paths (e.g. provider-driven re-measures) omit portal context.
+		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(0, 4));
+
+		expect(BoundStore.link.getSource(pairKey, "card")?.portalHost).toBe(
+			"paired-screen",
+		);
+		expect(
+			BoundStore.link.getPair("card", {
+				entering: true,
+				previousScreenKey: "screen-a",
+				currentScreenKey: "screen-b",
+			}).sourcePortalHost,
+		).toBe("paired-screen");
+	});
+
+	it("shifts the teleported source path by the clamped destination scroll delta", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const destination = {
+			...createBounds(120, 300, 200, 150),
+			scroll: createScrollLayout(0, 100),
+		} as Snapshot["bounds"];
+
+		const registerLink = (
+			tag: string,
+			sourceY: number,
+			portalHost?: "paired-screen",
+		) => {
+			BoundStore.link.setSource(
+				pairKey,
+				tag,
+				"screen-a",
+				createBounds(0, sourceY, 100, 80),
+				{},
+				undefined,
+				portalHost,
+			);
+			BoundStore.link.setDestination(pairKey, tag, "screen-b", destination);
+		};
+
+		registerLink("classic", 40);
+		registerLink("teleported", 40, "paired-screen");
+		// Live offset 1000 clamps to the 600 layout range, captured offset is
+		// 100, so the teleported source must shift by exactly 500.
+		registerLink("classic-shifted", 540);
+
+		const computeFor = (tag: string) =>
+			computeBoundStyles(
+				{
+					id: tag,
+					current: { route: { key: "screen-a" } },
+					next: {
+						route: { key: "screen-b" },
+						layouts: { scroll: createScrollLayout(0, 1000) },
+					},
+					progress: 1.4,
+					dimensions: { width: 400, height: 800 },
+				} as any,
+				{ id: tag },
+			);
+
+		const classic = computeFor("classic");
+		const teleported = computeFor("teleported");
+		const classicShifted = computeFor("classic-shifted");
+
+		expect(teleported).not.toEqual(classic);
+		expect(teleported).toEqual(classicShifted);
 	});
 });
 

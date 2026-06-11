@@ -1,6 +1,11 @@
 import { useLocalSearchParams } from "expo-router";
-import { ScrollView, ScrollViewBase, StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+	Alert,
+	Pressable,
+	StyleSheet,
+	Text,
+	useWindowDimensions,
+} from "react-native";
 import Transition from "react-native-screen-transitions";
 import {
 	TELEPORT_GHOST_ID,
@@ -15,29 +20,34 @@ function getMode(value: string | string[] | undefined): TeleportMode {
 
 export default function TeleportDestination() {
 	const { mode } = useLocalSearchParams<{ mode?: string | string[] }>();
+	const { height } = useWindowDimensions();
 	const teleportMode = getMode(mode);
+	const minContentHeight = Math.max(height * 1.35, 900);
 
 	return (
 		<Transition.ScrollView
-			style={[styles.container, { height: 1000 }]}
-			contentContainerStyle={{ minHeight: 1000 }}
+			style={styles.container}
+			contentContainerStyle={[styles.content, { minHeight: minContentHeight }]}
 			showsVerticalScrollIndicator
 		>
-			<View style={styles.content}>
-				{teleportMode === "paired" ? (
-					<Transition.Boundary.View
-						id={TELEPORT_PAIRED_ID}
-						testID="teleport-paired-destination"
-						style={styles.orangeCircle}
-					/>
-				) : (
+			{teleportMode === "paired" ? (
+				<Transition.Boundary.View
+					id={TELEPORT_PAIRED_ID}
+					testID="teleport-paired-destination"
+					style={styles.orangeCircle}
+				/>
+			) : (
+				<Pressable
+					testID="teleport-ghost-destination-pressable"
+					onPress={() => Alert.alert("On Screen B")}
+				>
 					<Transition.Boundary.View
 						id={TELEPORT_GHOST_ID}
 						testID="teleport-ghost-destination"
 						style={styles.ghostTarget}
 					/>
-				)}
-			</View>
+				</Pressable>
+			)}
 		</Transition.ScrollView>
 	);
 }
@@ -47,7 +57,6 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	content: {
-		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
 	},
@@ -60,6 +69,14 @@ const styles = StyleSheet.create({
 	ghostTarget: {
 		width: 300,
 		height: 300,
+		alignItems: "center",
+		justifyContent: "center",
 		opacity: 0,
+	},
+	sourceLabel: {
+		color: "white",
+		fontSize: 22,
+		fontWeight: "700",
+		textAlign: "center",
 	},
 });

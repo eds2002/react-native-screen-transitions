@@ -5,6 +5,7 @@ import {
 } from "react-native-reanimated";
 import type {
 	ScrollGestureAxis,
+	ScrollGestureAxisState,
 	ScrollGestureState,
 	ScrollMetadataState,
 } from "../types/gesture.types";
@@ -96,6 +97,44 @@ export const cloneScrollMetadataState = (
 				}
 			: null,
 	};
+};
+
+/**
+ * Offset clamped to the axis layout range, so iOS rubber-band overscroll never
+ * leaks into coordinate-space deltas. Returns null when the axis is untracked.
+ */
+export const clampScrollAxisOffset = (
+	axisState: ScrollGestureAxisState | null | undefined,
+): number | null => {
+	"worklet";
+
+	if (!axisState) {
+		return null;
+	}
+
+	const maxOffset = Math.max(0, axisState.contentSize - axisState.layoutSize);
+	return Math.min(Math.max(axisState.offset, 0), maxOffset);
+};
+
+/**
+ * Clamped scroll travel between a captured snapshot and the current state on
+ * one axis. Returns 0 when either side does not track the axis.
+ */
+export const getClampedScrollAxisDelta = (
+	current: ScrollMetadataState | null | undefined,
+	captured: ScrollMetadataState | null | undefined,
+	axis: ScrollGestureAxis,
+): number => {
+	"worklet";
+
+	const currentOffset = clampScrollAxisOffset(current?.[axis]);
+	const capturedOffset = clampScrollAxisOffset(captured?.[axis]);
+
+	if (currentOffset === null || capturedOffset === null) {
+		return 0;
+	}
+
+	return currentOffset - capturedOffset;
 };
 
 /**

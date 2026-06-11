@@ -115,6 +115,13 @@ export function createBoundaryComponent<P extends object>(
 
 		const preparedStyles = targetPreparedStyles ?? ownerPreparedStyles;
 
+		const portalHost =
+			typeof portal === "object"
+				? portal.host
+				: portal
+					? "current-screen"
+					: undefined;
+
 		const measureBoundary = useMeasurer({
 			enabled,
 			entryTag,
@@ -123,6 +130,7 @@ export function createBoundaryComponent<P extends object>(
 			currentScreenKey,
 			preparedStyles,
 			measuredAnimatedRef: measuredRef,
+			portalHost,
 		});
 
 		// Register/unregister this boundary in the presence map so source/destination

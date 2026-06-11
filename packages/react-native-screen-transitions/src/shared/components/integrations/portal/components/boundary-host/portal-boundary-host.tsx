@@ -32,8 +32,13 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			return NO_STYLES;
 		}
 
-		const shouldCompensateHostScroll =
-			!host.capturesScroll && link.source.screenKey !== host.screenKey;
+		// Cross-screen teleported content is placed at the source rect, which is
+		// fixed in screen space while this host may scroll away with its
+		// ScrollView. Compensating with the clamped scroll travel since the host
+		// measurement keeps the source rect expressed in the host's current
+		// frame. Hosts that do not capture scroll store no scroll snapshot, so
+		// the delta resolves to 0 and they stay untouched.
+		const shouldCompensateHostScroll = link.source.screenKey !== host.screenKey;
 
 		return resolvePortalOffsetStyle({
 			bounds: link.source.bounds,

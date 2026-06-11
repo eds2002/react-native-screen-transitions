@@ -7,7 +7,9 @@ import {
 } from "../../../../constants";
 import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
 import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
+import { getClampedScrollAxisDelta } from "../../../../stores/scroll.store";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
+import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import type { Layout } from "../../../../types/screen.types";
 import type {
 	BoundId,
@@ -26,6 +28,49 @@ import {
 	composeTransformRelative,
 	type ElementComposeParams,
 } from "./composers";
+
+const getBoundsScrollSnapshot = (
+	bounds: MeasuredDimensions | null,
+): ScrollMetadataState | null => {
+	"worklet";
+	return (
+		(bounds as { scroll?: ScrollMetadataState | null } | null)?.scroll ?? null
+	);
+};
+
+const getScreenScrollMetadata = (
+	screenKey: string | null,
+	previous: ScreenTransitionState | undefined,
+	current: ScreenTransitionState | undefined,
+	next: ScreenTransitionState | undefined,
+): ScrollMetadataState | null => {
+	"worklet";
+	if (!screenKey) return null;
+	if (previous?.route.key === screenKey)
+		return previous.layouts?.scroll ?? null;
+	if (current?.route.key === screenKey) return current.layouts?.scroll ?? null;
+	if (next?.route.key === screenKey) return next.layouts?.scroll ?? null;
+	return null;
+};
+
+const shiftBounds = (
+	bounds: MeasuredDimensions,
+	dx: number,
+	dy: number,
+): MeasuredDimensions => {
+	"worklet";
+	if (dx === 0 && dy === 0) {
+		return bounds;
+	}
+
+	return {
+		...bounds,
+		x: bounds.x + dx,
+		y: bounds.y + dy,
+		pageX: bounds.pageX + dx,
+		pageY: bounds.pageY + dy,
+	};
+};
 
 const resolveStartEnd = (params: {
 	id: BoundId;
@@ -87,7 +132,47 @@ const resolveStartEnd = (params: {
 		};
 	}
 
-	const start = sourceBounds;
+	/**
+	 * Teleport continuity: this screen's source content physically renders
+	 * inside the paired screen's portal host, which travels with that screen's
+	 * ScrollView. Screen-fixed rects (the source, fullscreen/custom targets)
+	 * must be expressed in the host's frame by the clamped scroll travel since
+	 * the destination capture. The destination rect rides with the host, so it
+	 * stays untouched. Classic two-component links never set a portal host and
+	 * skip this entirely.
+	 */
+	const isTeleportedSourceElement =
+		resolvedPair.sourcePortalHost === "paired-screen" &&
+		!!currentScreenKey &&
+		currentScreenKey === resolvedPair.sourceScreenKey &&
+		!!resolvedPair.destinationScreenKey &&
+		currentScreenKey !== resolvedPair.destinationScreenKey &&
+		params.computeOptions.method !== "content";
+
+	let teleportShiftX = 0;
+	let teleportShiftY = 0;
+
+	if (isTeleportedSourceElement) {
+		const capturedScroll = getBoundsScrollSnapshot(destinationBounds);
+		const liveScroll = getScreenScrollMetadata(
+			resolvedPair.destinationScreenKey,
+			params.previous,
+			params.current,
+			params.next,
+		);
+		teleportShiftX = getClampedScrollAxisDelta(
+			liveScroll,
+			capturedScroll,
+			"horizontal",
+		);
+		teleportShiftY = getClampedScrollAxisDelta(
+			liveScroll,
+			capturedScroll,
+			"vertical",
+		);
+	}
+
+	const start = shiftBounds(sourceBounds, teleportShiftX, teleportShiftY);
 	let end = destinationBounds ?? fullscreen;
 
 	if (isFullscreenTarget) {
@@ -97,6 +182,10 @@ const resolveStartEnd = (params: {
 	const customTarget = params.computeOptions.target;
 	if (typeof customTarget === "object") {
 		end = customTarget;
+	}
+
+	if (hasTargetOverride) {
+		end = shiftBounds(end, teleportShiftX, teleportShiftY);
 	}
 
 	return {

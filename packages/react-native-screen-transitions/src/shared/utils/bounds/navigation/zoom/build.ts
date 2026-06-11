@@ -312,9 +312,9 @@ export function buildZoomStyles({
 		};
 
 		const focusedStyles: ZoomInterpolatedStyle = {
-			content: {
-				style: focusedContentStyle,
-			},
+			// content: {
+			// 	style: focusedContentStyle,
+			// },
 			...sourceVisibilityStyle,
 		};
 
@@ -350,12 +350,7 @@ export function buildZoomStyles({
 				progress,
 				range: unfocusedElementOpacity.open,
 			});
-	const unfocusedScale = interpolate(
-		progress,
-		[1, 2],
-		[1, backgroundScale],
-		"clamp",
-	);
+	const unfocusedScale = interpolate(progress, [1, 2], [1, 1], "clamp");
 	const didSourceComponentVisiblyHide =
 		!props.active.closing && unfocusedFade <= EPSILON;
 
@@ -374,7 +369,7 @@ export function buildZoomStyles({
 		anchor: zoomAnchor,
 		method: "transform",
 		space: "relative",
-		target: unfocusedElementTarget,
+		// target: unfocusedElementTarget,
 	});
 
 	const boundTargetCenterX =
@@ -443,35 +438,23 @@ export function buildZoomStyles({
 		(toNumber(elementRaw.scaleY, 1) * elementGestureScale) /
 		safeUnfocusedContentScale;
 
-	const resolvedElementStyle = shouldHideUnfocusedElement
-		? {
-				transform: [
-					{ translateX: 0 },
-					{ translateY: 0 },
-					{ scaleX: 1 },
-					{ scaleY: 1 },
-				],
-				opacity: zoomOptions?.debug ? 1 : 0,
-				zIndex: 0,
-				elevation: 0,
-			}
-		: {
-				transform: [
-					{
-						translateX: elementTranslateX,
-					},
-					{
-						translateY: elementTranslateY,
-					},
-					{
-						scaleX: elementScaleX,
-					},
-					{
-						scaleY: elementScaleY,
-					},
-				],
-				opacity: zoomOptions?.debug ? 1 : unfocusedFade,
-			};
+	const resolvedElementStyle = {
+		transform: [
+			{
+				translateX: elementTranslateX,
+			},
+			{
+				translateY: elementTranslateY,
+			},
+			{
+				scaleX: elementScaleX,
+			},
+			{
+				scaleY: elementScaleY,
+			},
+		],
+		// opacity: zoomOptions?.debug ? 1 : unfocusedFade,
+	};
 
 	return {
 		options: zoomGestureOptions,

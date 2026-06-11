@@ -1,4 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import { getClampedScrollAxisDelta } from "../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../types/gesture.types";
 import { getPortalHostBounds } from "./stores/host-bounds.store";
 
@@ -18,20 +19,15 @@ export const createPortalName = (id: string) => {
 	return `${id}-portal`;
 };
 
+// Clamped to the layout range: iOS rubber-band offsets are outside the real
+// scroll range and must not become coordinate-space deltas.
 const getScrollDelta = (
 	current: ScrollMetadataState | null,
 	measured: ScrollMetadataState | null | undefined,
 	axis: "horizontal" | "vertical",
 ) => {
 	"worklet";
-	const currentAxis = current?.[axis];
-	const measuredAxis = measured?.[axis];
-
-	if (!currentAxis || !measuredAxis) {
-		return 0;
-	}
-
-	return currentAxis.offset - measuredAxis.offset;
+	return getClampedScrollAxisDelta(current, measured, axis);
 };
 
 type ResolvePortalOffsetStyleParams = {

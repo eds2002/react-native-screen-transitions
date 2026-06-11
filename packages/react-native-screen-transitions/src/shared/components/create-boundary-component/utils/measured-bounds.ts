@@ -4,7 +4,10 @@ import {
 	type MeasuredDimensions,
 	measure,
 } from "react-native-reanimated";
-import { cloneScrollMetadataState } from "../../../stores/scroll.store";
+import {
+	clampScrollAxisOffset,
+	cloneScrollMetadataState,
+} from "../../../stores/scroll.store";
 import type {
 	ScrollGestureAxisState,
 	ScrollGestureState,
@@ -17,10 +20,15 @@ export type ScrollMeasuredDimensions = MeasuredDimensions & {
 	scroll?: ScrollMetadataState | null;
 };
 
-const getOverscrollDelta = (axisState: ScrollGestureAxisState): number => {
+const getOverscrollDelta = (
+	axisState: ScrollGestureAxisState | null | undefined,
+): number => {
 	"worklet";
-	const maxOffset = Math.max(0, axisState.contentSize - axisState.layoutSize);
-	const clampedOffset = Math.min(Math.max(axisState.offset, 0), maxOffset);
+	const clampedOffset = clampScrollAxisOffset(axisState);
+	if (!axisState || clampedOffset === null) {
+		return 0;
+	}
+
 	const delta = axisState.offset - clampedOffset;
 
 	return Math.abs(delta) > SCROLL_MEASUREMENT_EPSILON ? delta : 0;
@@ -28,7 +36,7 @@ const getOverscrollDelta = (axisState: ScrollGestureAxisState): number => {
 
 export const adjustedMeasuredBoundsForOverscrollDeltas = (
 	measured: MeasuredDimensions,
-	scrollState: ScrollGestureState | null,
+	scrollState: ScrollGestureState | ScrollMetadataState | null,
 ): MeasuredDimensions => {
 	"worklet";
 

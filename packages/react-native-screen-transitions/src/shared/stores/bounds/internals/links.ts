@@ -14,11 +14,13 @@ import {
 	removePairLink,
 } from "../helpers/link-pairs.helpers";
 import type {
+	BoundsPortalHost,
 	GroupKey,
 	LinkKey,
 	LinkPairsState,
 	ScreenKey,
 	ScreenPairKey,
+	SourceTagLinkSide,
 	TagID,
 	TagLink,
 } from "../types";
@@ -149,16 +151,23 @@ function setSource(
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
 	group?: GroupKey,
+	portalHost?: BoundsPortalHost,
 ) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
 		const linkKey = getLinkKeyFromTag(tag);
-		const source = createLinkSide(screenKey, bounds, styles);
 
 		const pairLinks = ensurePairLinks(state, pairKey);
 
 		const existingLink = pairLinks[linkKey];
+
+		// Refresh paths may re-measure the source without portal context;
+		// keep the previously recorded host in that case.
+		const source: SourceTagLinkSide = {
+			...createLinkSide(screenKey, bounds, styles),
+			portalHost: portalHost ?? existingLink?.source?.portalHost,
+		};
 		const link =
 			existingLink ??
 			({

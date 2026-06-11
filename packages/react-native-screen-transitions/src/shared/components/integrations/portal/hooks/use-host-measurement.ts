@@ -9,7 +9,10 @@ import {
 import { useScreenStyles } from "../../../../providers/screen/styles";
 import { ScrollStore } from "../../../../stores/scroll.store";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
-import { applyVisibilityBlockOffset } from "../../../create-boundary-component/utils/measured-bounds";
+import {
+	adjustedMeasuredBoundsForOverscrollDeltas,
+	applyVisibilityBlockOffset,
+} from "../../../create-boundary-component/utils/measured-bounds";
 import {
 	clearPortalHostBounds,
 	setPortalHostBounds,
@@ -48,9 +51,20 @@ export const useHostMeasurement = ({
 					return;
 				}
 
-				const normalizedMeasured = shouldBlockVisibility.get()
-					? applyVisibilityBlockOffset(measured, visibilityBlockOffset)
+				// A measurement taken mid rubber-band would bake the transient
+				// overscroll displacement into the host frame. Store the at-rest
+				// position instead; clamped scroll deltas share that basis.
+				const currentScroll = scrollMetadata.get();
+				const overscrollNormalized = shouldCaptureScroll
+					? adjustedMeasuredBoundsForOverscrollDeltas(measured, currentScroll)
 					: measured;
+
+				const normalizedMeasured = shouldBlockVisibility.get()
+					? applyVisibilityBlockOffset(
+							overscrollNormalized,
+							visibilityBlockOffset,
+						)
+					: overscrollNormalized;
 
 				setPortalHostBounds(key, {
 					x: normalizedMeasured.x,
@@ -59,7 +73,7 @@ export const useHostMeasurement = ({
 					height: normalizedMeasured.height,
 					pageX: normalizedMeasured.pageX,
 					pageY: normalizedMeasured.pageY,
-					scroll: shouldCaptureScroll ? scrollMetadata.get() : null,
+					scroll: shouldCaptureScroll ? currentScroll : null,
 				});
 
 				runOnJS(setCanRenderHosts)(true);
