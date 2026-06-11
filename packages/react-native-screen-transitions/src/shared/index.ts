@@ -2,7 +2,7 @@ import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { withScreenTransitions } from "./adapters/with-screen-transitions";
 import { Boundary, createBoundaryComponent } from "./components/boundary";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
-import MaskedView from "./components/integrations/masked-view";
+import MaskedView from "./components/masked-view";
 import { Presets, Specs } from "./configs";
 
 export default {

@@ -1,6 +1,6 @@
 import { type StyleProp, StyleSheet, View, type ViewStyle } from "react-native";
-import { CONTAINER_STYLE_ID, MASK_STYLE_ID } from "../../constants";
-import { createTransitionAwareComponent } from "../create-transition-aware-component";
+import { CONTAINER_STYLE_ID, MASK_STYLE_ID } from "../constants";
+import { createTransitionAwareComponent } from "./create-transition-aware-component";
 
 const TransitionView = createTransitionAwareComponent(View);
 
