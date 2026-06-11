@@ -1,9 +1,6 @@
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { withScreenTransitions } from "./adapters/with-screen-transitions";
-import {
-	Boundary,
-	createBoundaryComponent,
-} from "./components/create-boundary-component";
+import { Boundary, createBoundaryComponent } from "./components/boundary";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
 import MaskedView from "./components/integrations/masked-view";
 import { Presets, Specs } from "./configs";
@@ -34,7 +31,7 @@ export type {
 	BoundaryPortal,
 	BoundaryPortalHost,
 	BoundaryPortalOptions,
-} from "./components/create-boundary-component";
+} from "./components/boundary";
 export {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
