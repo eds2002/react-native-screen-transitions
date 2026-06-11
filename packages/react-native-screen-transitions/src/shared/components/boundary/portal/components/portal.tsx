@@ -11,8 +11,8 @@ import { Portal as NativePortal } from "react-native-teleport";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { getResolvedLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
-import type { BoundaryPortal } from "../../../boundary/types";
 import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
+import type { BoundaryPortal } from "../../types";
 import { usePlaceholderLayout } from "../hooks/use-placeholder-layout";
 import {
 	getHostCapturesScroll,

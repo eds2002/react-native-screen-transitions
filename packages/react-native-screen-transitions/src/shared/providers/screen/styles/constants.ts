@@ -1,4 +1,4 @@
-import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../components/integrations/portal/utils";
+import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../components/boundary/portal/utils";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,

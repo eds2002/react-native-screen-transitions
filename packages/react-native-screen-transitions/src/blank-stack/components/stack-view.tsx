@@ -7,7 +7,7 @@ import {
 	ActivityContainer,
 	ActivityScreen,
 } from "../../shared/components/activity";
-import { PortalProvider } from "../../shared/components/integrations/portal";
+import { PortalProvider } from "../../shared/components/boundary/portal";
 import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
 import { withBlankStack } from "../../shared/providers/stack/blank-stack.provider";

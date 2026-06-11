@@ -5,7 +5,7 @@ import {
 	registerHost,
 	resetHostRegistry,
 	unregisterHost,
-} from "../../components/integrations/portal/stores/host-registry.store";
+} from "../../components/boundary/portal/stores/host-registry.store";
 
 beforeEach(() => {
 	resetHostRegistry();

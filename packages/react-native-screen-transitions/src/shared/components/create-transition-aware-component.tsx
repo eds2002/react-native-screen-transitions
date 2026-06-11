@@ -18,7 +18,7 @@ import {
 } from "../providers/screen/gestures/scroll-coordination";
 import { useScreenStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
-import { Host } from "./integrations/portal/components/host";
+import { Host } from "./boundary/portal/components/host";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;

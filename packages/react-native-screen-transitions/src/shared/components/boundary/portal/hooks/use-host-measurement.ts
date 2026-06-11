@@ -12,7 +12,7 @@ import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-off
 import {
 	adjustedMeasuredBoundsForOverscrollDeltas,
 	applyVisibilityBlockOffset,
-} from "../../../boundary/utils/measured-bounds";
+} from "../../utils/measured-bounds";
 import {
 	clearPortalHostBounds,
 	setPortalHostBounds,

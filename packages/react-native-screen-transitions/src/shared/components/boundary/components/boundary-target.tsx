@@ -3,7 +3,7 @@ import { memo, useLayoutEffect, useMemo } from "react";
 import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
-import { Portal } from "../../integrations/portal/components/portal";
+import { Portal } from "../portal/components/portal";
 import {
 	TARGET_OUTSIDE_OWNER_WARNING,
 	useBoundaryOwnerContext,
