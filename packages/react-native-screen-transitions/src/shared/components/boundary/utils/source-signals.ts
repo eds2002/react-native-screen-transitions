@@ -10,17 +10,6 @@ type SourceCaptureSignal = {
 	signal: string;
 };
 
-const buildSourceSignal = (
-	pairKey: ScreenPairKey,
-	key: string,
-): SourceCaptureSignal => {
-	"worklet";
-	return {
-		pairKey,
-		signal: `${SOURCE_SIGNAL_PREFIX}${pairKey}|${key}`,
-	};
-};
-
 export const getInitialSourceCaptureSignal = (params: {
 	enabled: boolean;
 	sourcePairKey?: ScreenPairKey;
@@ -67,5 +56,8 @@ export const getInitialSourceCaptureSignal = (params: {
 
 	const signalParts = group ? [group, linkId] : [linkId];
 
-	return buildSourceSignal(sourcePairKey, signalParts.join("|"));
+	return {
+		pairKey: sourcePairKey,
+		signal: `${SOURCE_SIGNAL_PREFIX}${sourcePairKey}|${signalParts.join("|")}`,
+	};
 };

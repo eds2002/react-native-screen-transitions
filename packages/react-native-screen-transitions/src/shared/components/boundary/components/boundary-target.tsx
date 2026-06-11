@@ -3,6 +3,7 @@ import { memo, useLayoutEffect, useMemo } from "react";
 import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
+import { logger } from "../../../utils/logger";
 import { Portal } from "../portal/components/portal";
 import {
 	TARGET_OUTSIDE_OWNER_WARNING,
@@ -25,7 +26,7 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	useLayoutEffect(() => {
 		if (!registerTargetRef || !unregisterTargetRef) {
 			if (__DEV__) {
-				console.warn(TARGET_OUTSIDE_OWNER_WARNING);
+				logger.warn(TARGET_OUTSIDE_OWNER_WARNING);
 			}
 			return;
 		}

@@ -47,16 +47,6 @@ export const useInitialDestinationMeasurement = ({
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);
 
-	const ensureLifecycleStartBlocked = () => {
-		"worklet";
-		if (isBlockingLifecycleStart.get()) {
-			return;
-		}
-
-		blockLifecycleStart();
-		isBlockingLifecycleStart.set(1);
-	};
-
 	const releaseLifecycleStartBlock = () => {
 		"worklet";
 		cancelAnimation(retryToken);
@@ -67,17 +57,6 @@ export const useInitialDestinationMeasurement = ({
 
 		unblockLifecycleStart();
 		isBlockingLifecycleStart.set(0);
-	};
-
-	const scheduleViewportRetry = () => {
-		"worklet";
-		cancelAnimation(retryToken);
-		retryToken.set(
-			withDelay(
-				VIEWPORT_RETRY_DELAY_MS,
-				withTiming(retryToken.get() + 1, { duration: 0 }),
-			),
-		);
 	};
 
 	useAnimatedReaction(
@@ -116,7 +95,11 @@ export const useInitialDestinationMeasurement = ({
 				return;
 			}
 
-			ensureLifecycleStartBlocked();
+			if (!isBlockingLifecycleStart.get()) {
+				blockLifecycleStart();
+				isBlockingLifecycleStart.set(1);
+			}
+
 			measureBoundary({
 				type: "destination",
 				pairKey: measurePairKey,
@@ -130,7 +113,15 @@ export const useInitialDestinationMeasurement = ({
 				return;
 			}
 
-			scheduleViewportRetry();
+			// Destination did not attach (malformed off-screen measurement); retry
+			// on the next tick while the lifecycle stays blocked.
+			cancelAnimation(retryToken);
+			retryToken.set(
+				withDelay(
+					VIEWPORT_RETRY_DELAY_MS,
+					withTiming(retryToken.get() + 1, { duration: 0 }),
+				),
+			);
 		},
 	);
 };

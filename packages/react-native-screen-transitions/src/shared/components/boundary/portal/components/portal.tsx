@@ -42,14 +42,6 @@ type PortalAttachment = {
 	pairKey: string;
 };
 
-const getPortalHostMode = (mode?: BoundaryPortal): PortalHostMode => {
-	if (!mode || mode === true) {
-		return "current-screen";
-	}
-
-	return mode.host;
-};
-
 export const Portal = memo(function Portal({
 	id = "my-id",
 	children,
@@ -57,8 +49,8 @@ export const Portal = memo(function Portal({
 }: PortalProps) {
 	const styleId = createPortalName(id);
 	const isPortalEnabled = !!mode;
-
-	const portalHostMode = getPortalHostMode(mode);
+	const portalHostMode: PortalHostMode =
+		!mode || mode === true ? "current-screen" : mode.host;
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,

@@ -29,11 +29,12 @@ type BoundaryTargetEntry = {
 	preparedStyles: StyleProps;
 };
 
+// logger.warn prepends the library prefix.
 const MULTIPLE_TARGETS_WARNING =
-	"[react-native-screen-transitions] Multiple Boundary.Target elements were rendered under the same boundary owner. The first registered target will be measured.";
+	"Multiple Boundary.Target elements were rendered under the same boundary owner. The first registered target will be measured.";
 
 export const TARGET_OUTSIDE_OWNER_WARNING =
-	"[react-native-screen-transitions] Boundary.Target must be rendered inside a Boundary owner (Boundary.View, Boundary.Trigger, or a component created by createBoundaryComponent).";
+	"Boundary.Target must be rendered inside a Boundary owner (Boundary.View, Boundary.Trigger, or a component created by createBoundaryComponent).";
 
 interface BoundaryOwnerProps {
 	value: BoundaryOwnerContextValue;

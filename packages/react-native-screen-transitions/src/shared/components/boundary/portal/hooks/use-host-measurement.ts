@@ -98,13 +98,11 @@ export const useHostMeasurement = ({
 		};
 	}, [hostKey]);
 
+	// hasBoundaryHosts is a deliberate trigger: re-measure whenever boundary
+	// hosts attach to or detach from this host.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: see above
 	useLayoutEffect(() => {
 		setCanRenderHosts(false);
-		if (!hasBoundaryHosts) {
-			measureHost();
-			return;
-		}
-
 		measureHost();
 	}, [hasBoundaryHosts, measureHost]);
 
