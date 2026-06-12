@@ -1,4 +1,5 @@
 import { interpolate } from "react-native-reanimated";
+import { opacity } from "react-native-reanimated/lib/typescript/Colors";
 import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -297,7 +298,8 @@ export function buildZoomStyles({
 		const compensatedMaskScale = 1 / safeContentBaseScale;
 
 		const focusedContentStyle = {
-			opacity: zoomOptions?.debug ? 0.5 : focusedFade,
+			// opacity: zoomOptions?.debug ? 0.5 : focusedFade,
+			opacity: 0.25,
 			transform: [
 				{ translateX: contentTranslateX },
 				{ translateY: contentTranslateY },
@@ -312,9 +314,9 @@ export function buildZoomStyles({
 		};
 
 		const focusedStyles: ZoomInterpolatedStyle = {
-			// content: {
-			// 	style: focusedContentStyle,
-			// },
+			content: {
+				style: focusedContentStyle,
+			},
 			...sourceVisibilityStyle,
 		};
 
@@ -369,7 +371,7 @@ export function buildZoomStyles({
 		anchor: zoomAnchor,
 		method: "transform",
 		space: "relative",
-		// target: unfocusedElementTarget,
+		target: unfocusedElementTarget,
 	});
 
 	const boundTargetCenterX =
@@ -441,19 +443,19 @@ export function buildZoomStyles({
 	const resolvedElementStyle = {
 		transform: [
 			{
-				translateX: elementTranslateX,
+				translateX: props.active.settled ? 0 : elementTranslateX,
 			},
 			{
-				translateY: elementTranslateY,
+				translateY: props.active.settled ? 0 : elementTranslateY,
 			},
 			{
-				scaleX: elementScaleX,
+				scaleX: props.active.settled ? 1 : elementScaleX,
 			},
 			{
-				scaleY: elementScaleY,
+				scaleY: props.active.settled ? 1 : elementScaleY,
 			},
 		],
-		// opacity: zoomOptions?.debug ? 1 : unfocusedFade,
+		opacity: zoomOptions?.debug ? 1 : unfocusedFade,
 	};
 
 	return {
