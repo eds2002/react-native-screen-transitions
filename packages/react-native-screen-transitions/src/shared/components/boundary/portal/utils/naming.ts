@@ -1,4 +1,4 @@
-export const PORTAL_HOST_NAME_RESET_VALUE = "--";
+export const PORTAL_HOST_NAME_RESET_VALUE = null;
 const PORTAL_HOST_NAME_SUFFIX = "-portal-host";
 
 export const createPortalBoundaryHostName = (
@@ -7,9 +7,4 @@ export const createPortalBoundaryHostName = (
 ) => {
 	"worklet";
 	return `${hostKey}-${boundaryId}${PORTAL_HOST_NAME_SUFFIX}`;
-};
-
-export const createPortalName = (id: string) => {
-	"worklet";
-	return `${id}-portal`;
 };

@@ -1,5 +1,4 @@
 import { interpolate } from "react-native-reanimated";
-import { opacity } from "react-native-reanimated/lib/typescript/Colors";
 import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -298,8 +297,7 @@ export function buildZoomStyles({
 		const compensatedMaskScale = 1 / safeContentBaseScale;
 
 		const focusedContentStyle = {
-			// opacity: zoomOptions?.debug ? 0.5 : focusedFade,
-			opacity: 0.25,
+			opacity: zoomOptions?.debug ? 0.5 : focusedFade,
 			transform: [
 				{ translateX: contentTranslateX },
 				{ translateY: contentTranslateY },
@@ -352,7 +350,12 @@ export function buildZoomStyles({
 				progress,
 				range: unfocusedElementOpacity.open,
 			});
-	const unfocusedScale = interpolate(progress, [1, 2], [1, 1], "clamp");
+	const unfocusedScale = interpolate(
+		progress,
+		[1, 2],
+		[1, backgroundScale],
+		"clamp",
+	);
 	const didSourceComponentVisiblyHide =
 		!props.active.closing && unfocusedFade <= EPSILON;
 
@@ -404,6 +407,10 @@ export function buildZoomStyles({
 		Math.abs(unfocusedContentScale),
 		EPSILON,
 	);
+	// A naturally settled close can leave this as the last emitted style frame,
+	// so drop temporary stacking here instead of waiting for a later reset pass.
+	const shouldElevateUnfocusedElement =
+		!props.active.closing || !props.active.settled;
 
 	const scaleShiftX = computeCenterScaleShift({
 		center: elementCenterX,
@@ -440,23 +447,37 @@ export function buildZoomStyles({
 		(toNumber(elementRaw.scaleY, 1) * elementGestureScale) /
 		safeUnfocusedContentScale;
 
-	const resolvedElementStyle = {
-		transform: [
-			{
-				translateX: props.active.settled ? 0 : elementTranslateX,
-			},
-			{
-				translateY: props.active.settled ? 0 : elementTranslateY,
-			},
-			{
-				scaleX: props.active.settled ? 1 : elementScaleX,
-			},
-			{
-				scaleY: props.active.settled ? 1 : elementScaleY,
-			},
-		],
-		opacity: zoomOptions?.debug ? 1 : unfocusedFade,
-	};
+	const resolvedElementStyle = shouldHideUnfocusedElement
+		? {
+				transform: [
+					{ translateX: 0 },
+					{ translateY: 0 },
+					{ scaleX: 1 },
+					{ scaleY: 1 },
+				],
+				opacity: zoomOptions?.debug ? 1 : 0,
+				zIndex: 0,
+				elevation: 0,
+			}
+		: {
+				transform: [
+					{
+						translateX: elementTranslateX,
+					},
+					{
+						translateY: elementTranslateY,
+					},
+					{
+						scaleX: elementScaleX,
+					},
+					{
+						scaleY: elementScaleY,
+					},
+				],
+				opacity: zoomOptions?.debug ? 1 : unfocusedFade,
+				zIndex: shouldElevateUnfocusedElement ? 9999 : 0,
+				elevation: shouldElevateUnfocusedElement ? 9999 : 0,
+			};
 
 	return {
 		options: zoomGestureOptions,

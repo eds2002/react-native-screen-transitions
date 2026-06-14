@@ -1,11 +1,15 @@
 import {
+	type ComponentProps,
+	type ComponentType,
 	memo,
 	type ReactNode,
 	useCallback,
 	useLayoutEffect,
 	useState,
 } from "react";
+import type { View } from "react-native";
 import Animated, {
+	type AnimatedRef,
 	runOnJS,
 	useAnimatedProps,
 	useAnimatedReaction,
@@ -15,10 +19,12 @@ import Animated, {
 import { Portal as NativePortal } from "react-native-teleport";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../../providers/screen/styles";
-import { getResolvedLink } from "../../../../stores/bounds/internals/links";
+import { AnimationStore } from "../../../../stores/animation.store";
+import { getLinkKeyFromTag } from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
-import type { BoundaryPortal } from "../../types";
+import type { BoundaryPortal, BoundaryPortalAttachTarget } from "../../types";
 import {
 	getHostCapturesScroll,
 	useActiveHostKey,
@@ -28,68 +34,96 @@ import {
 	unmountPortalBoundaryHost,
 } from "../stores/portal-boundary-host.store";
 import {
+	type PortalAttachment,
+	resolvePortalAttachmentTargets,
+} from "../utils/attachment";
+import {
 	createPortalBoundaryHostName,
-	createPortalName,
 	PORTAL_HOST_NAME_RESET_VALUE,
 } from "../utils/naming";
+import { isTeleportEnabled } from "../utils/teleport-control";
 
-const TransitionAwareTeleport = createTransitionAwareComponent(NativePortal);
+type NullableHostNamePortalProps = Omit<
+	ComponentProps<typeof NativePortal>,
+	"hostName"
+> & {
+	hostName?: string | null;
+};
+
+const TransitionAwareTeleport = createTransitionAwareComponent(
+	NativePortal as ComponentType<NullableHostNamePortalProps>,
+);
 
 interface PortalProps {
 	id?: string;
 	children: ReactNode;
 	mode?: BoundaryPortal;
+	/**
+	 * Ref to the layout-preserving placeholder wrapper. Boundaries measure
+	 * this instead of teleported content — the placeholder keeps the source
+	 * slot at home while the content may physically live in another screen's
+	 * host.
+	 */
+	placeholderRef?: AnimatedRef<View>;
 }
-
-type PortalHostMode = "current-screen" | "paired-screen";
-
-type PortalAttachment = {
-	pairedScreenKey: string;
-	pairKey: string;
-};
 
 export const Portal = memo(function Portal({
 	id = "my-id",
 	children,
 	mode = false,
+	placeholderRef,
 }: PortalProps) {
-	const styleId = createPortalName(id);
 	const isPortalEnabled = !!mode;
-	const portalHostMode: PortalHostMode =
-		!mode || mode === true ? "current-screen" : mode.host;
+	const portalAttachTarget: BoundaryPortalAttachTarget =
+		!mode || mode === true
+			? "current-screen"
+			: (mode.attachTo ?? "current-screen");
+	const { stylesMap } = useScreenStyles();
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const { stylesMap } = useScreenStyles();
 
-	const [attachment, setAttachment] = useState<PortalAttachment | null>(null);
-	const attachedHostName = useSharedValue(PORTAL_HOST_NAME_RESET_VALUE);
+	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
+
+	const [attachment, setAttachment] = useState<PortalAttachment | null>(
+		PORTAL_HOST_NAME_RESET_VALUE,
+	);
+	const attachedHostName = useSharedValue<string | null>(
+		PORTAL_HOST_NAME_RESET_VALUE,
+	);
 	const placeholderWidth = useSharedValue(0);
 	const placeholderHeight = useSharedValue(0);
 
-	const targetScreenKey =
-		portalHostMode === "paired-screen"
-			? attachment?.pairedScreenKey
-			: currentScreenKey;
-	const activeHostKey = useActiveHostKey(attachment ? targetScreenKey : null);
+	const { progressScreenKey, targetScreenKey } = resolvePortalAttachmentTargets(
+		{
+			attachment,
+			currentScreenKey,
+			nextScreenKey,
+			portalAttachTarget,
+			sourcePairKey,
+		},
+	);
+	const activeHostKey = useActiveHostKey(targetScreenKey);
 	const activeHostCapturesScroll = activeHostKey
 		? getHostCapturesScroll(activeHostKey)
 		: false;
+	const progress = AnimationStore.getValue(progressScreenKey ?? "", "progress");
+	const closing = AnimationStore.getValue(progressScreenKey ?? "", "closing");
 
 	const updatePortalAttachment = useCallback(
-		(pairedScreenKey: string | null, pairKey?: string) => {
-			if (pairedScreenKey && pairKey) {
+		(matchedScreenKey: string | null, pairKey?: string) => {
+			if (matchedScreenKey && pairKey) {
 				setAttachment((current) => {
 					if (
-						current?.pairedScreenKey === pairedScreenKey &&
+						current?.matchedScreenKey === matchedScreenKey &&
 						current.pairKey === pairKey
 					) {
 						return current;
 					}
 
 					return {
-						pairedScreenKey,
+						matchedScreenKey,
 						pairKey,
 					};
 				});
@@ -104,7 +138,6 @@ export const Portal = memo(function Portal({
 	useLayoutEffect(() => {
 		if (!isPortalEnabled || !attachment || !activeHostKey || !targetScreenKey) {
 			attachedHostName.set(PORTAL_HOST_NAME_RESET_VALUE);
-			unmountPortalBoundaryHost(id);
 			return;
 		}
 
@@ -121,11 +154,6 @@ export const Portal = memo(function Portal({
 		// immediately — ordering belongs to the registry, not to frame counting.
 		// hostName rides animated props, so the handover needs no React commit.
 		attachedHostName.set(createPortalBoundaryHostName(activeHostKey, id));
-
-		return () => {
-			attachedHostName.set(PORTAL_HOST_NAME_RESET_VALUE);
-			unmountPortalBoundaryHost(id);
-		};
 	}, [
 		activeHostKey,
 		activeHostCapturesScroll,
@@ -136,6 +164,13 @@ export const Portal = memo(function Portal({
 		targetScreenKey,
 	]);
 
+	useLayoutEffect(() => {
+		return () => {
+			attachedHostName.set(PORTAL_HOST_NAME_RESET_VALUE);
+			unmountPortalBoundaryHost(id);
+		};
+	}, [attachedHostName, id]);
+
 	useAnimatedReaction(
 		() => {
 			"worklet";
@@ -144,34 +179,59 @@ export const Portal = memo(function Portal({
 			}
 
 			pairs.get();
-			const link = getResolvedLink(sourcePairKey, id).link;
+			// Strict per-member lookup: getResolvedLink's group fallback borrows
+			// the initial member's link for style resolution, which would make
+			// every inactive group member's portal see a "complete" link and
+			// attach. A portal may only teleport on its OWN member's link.
+			const link = getLink(sourcePairKey, id);
 
 			if (link?.status !== "complete") {
 				return null;
 			}
 
+			// Grouped portals teleport only while their member is the group's
+			// active id — retargeting detaches the previous member (its content
+			// returns home) and attaches the new one. Exactly one grouped member
+			// is teleported at a time.
+			if (link.group) {
+				const activeId =
+					pairs.get()[sourcePairKey]?.groups?.[link.group]?.activeId;
+
+				if (activeId && activeId !== getLinkKeyFromTag(id)) {
+					return null;
+				}
+			}
+
 			return link.destination.screenKey;
 		},
-		(pairedScreenKey, previousPairedScreenKey) => {
+		(matchedScreenKey, previousMatchedScreenKey) => {
 			"worklet";
-			if (pairedScreenKey === previousPairedScreenKey) {
+			if (matchedScreenKey === previousMatchedScreenKey) {
 				return;
 			}
 
-			runOnJS(updatePortalAttachment)(pairedScreenKey, sourcePairKey);
+			runOnJS(updatePortalAttachment)(matchedScreenKey, sourcePairKey);
 		},
 	);
 
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
+
+		// Opening waits for the destination transition to start so content is not
+		// re-parented before the host is visually ready. Closing stays attached
+		// through progress 0 so the final frame can land in the matched host.
+		const attachThreshold = closing.get() === 1 ? 0 : 0.001;
+		const { teleport, ...slotProps } = stylesMap.get()[id]?.props ?? {};
+		const shouldTeleport = isTeleportEnabled(teleport);
+
 		return {
-			// Keep the styleId-driven props channel alive (the wrapper's user
-			// animatedProps would otherwise replace it); the portal owns hostName.
-			...stylesMap.get()[styleId]?.props,
+			// Preserve portal slot props from the interpolator while keeping
+			// hostName owned by the attachment gate below.
+			...slotProps,
 			hostName:
-				attachedHostName.get() === PORTAL_HOST_NAME_RESET_VALUE
-					? (null as any)
-					: attachedHostName.get(),
+				shouldTeleport && progress.get() >= attachThreshold
+					? attachedHostName.get()
+					: PORTAL_HOST_NAME_RESET_VALUE,
 		};
 	});
 
@@ -181,7 +241,8 @@ export const Portal = memo(function Portal({
 	// cannot collapse the slot.
 	const placeholderStyle = useAnimatedStyle(() => {
 		"worklet";
-		const isAttached = attachedHostName.get() !== PORTAL_HOST_NAME_RESET_VALUE;
+		const hostName = attachedHostName.get();
+		const isAttached = hostName !== null;
 		const width = placeholderWidth.get();
 		const height = placeholderHeight.get();
 
@@ -195,13 +256,15 @@ export const Portal = memo(function Portal({
 	if (isPortalEnabled) {
 		return (
 			<Animated.View
+				ref={placeholderRef}
 				onLayout={(event) => {
 					placeholderWidth.set(event.nativeEvent.layout.width);
 					placeholderHeight.set(event.nativeEvent.layout.height);
 				}}
 				style={placeholderStyle}
+				collapsable={false}
 			>
-				<TransitionAwareTeleport animatedProps={teleportProps} name={styleId}>
+				<TransitionAwareTeleport animatedProps={teleportProps} name={id}>
 					{children}
 				</TransitionAwareTeleport>
 			</Animated.View>

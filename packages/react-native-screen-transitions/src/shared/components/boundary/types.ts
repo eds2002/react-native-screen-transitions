@@ -3,20 +3,31 @@ import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
 
-/**
- * Selects the screen host that should receive an automatically attached portal.
- */
-export type BoundaryPortalHost = "current-screen" | "paired-screen";
+export type BoundaryPortalAttachTarget = "current-screen" | "matched-screen";
 
 /**
  * Configures automatic portal attachment for a boundary target.
+ *
+ * `attachTo` selects where the portal physically renders. Independently of
+ * that choice, `Transition.Boundary.Host` marks the screen-local coordinate
+ * space the portal should render within.
+ *
+ * - `current-screen`: the portal attaches to this screen's active host — for a
+ *   scroll-hosted screen, place `Transition.Boundary.Host` inside that
+ *   ScrollView to make the content ride with it.
+ * - `matched-screen`: the portal attaches to the matched screen's active host
+ *   for the whole transition (open and close), which avoids re-parenting
+ *   flicker while keeping the source placeholder measured at home.
  */
 export type BoundaryPortalOptions = {
 	/**
-	 * `current-screen` keeps the portal on this boundary's screen. `paired-screen`
-	 * moves it to the adjacent screen once the source/destination link completes.
+	 * `current-screen` keeps the portal on this boundary's screen.
+	 * `matched-screen` moves it to the matched screen once the
+	 * source/destination link completes.
+	 *
+	 * @default "current-screen"
 	 */
-	host: BoundaryPortalHost;
+	attachTo?: BoundaryPortalAttachTarget;
 };
 
 export type BoundaryPortal = boolean | BoundaryPortalOptions;
@@ -53,7 +64,7 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 	 * it so the active matched target escapes local clipping.
 	 *
 	 * Use `true` to attach to the current screen host. Use
-	 * `{ host: "paired-screen" }` to attach to the adjacent linked screen host.
+	 * `{ attachTo: "matched-screen" }` to attach to the matched screen host.
 	 *
 	 * @default false
 	 */

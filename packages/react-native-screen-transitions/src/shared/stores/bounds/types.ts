@@ -10,7 +10,7 @@ export type TagID = string;
 export type LinkKey = string;
 export type GroupKey = string;
 export type ScreenPairKey = string;
-export type BoundsPortalHost = "current-screen" | "paired-screen";
+export type BoundsPortalAttachTarget = "current-screen" | "matched-screen";
 export type { ScreenKey } from "../../types/screen.types";
 
 type BoundaryConfig = {
@@ -46,9 +46,23 @@ export type BoundsLinkStatus =
 	| "complete";
 
 export type TagLinkSide = ScreenIdentifier & MeasuredEntry;
+
+/**
+ * The source screen's active portal host at measure time. Recorded only when
+ * that host captures scroll (a Transition.ScrollView scope) — matched-screen
+ * placement uses it as a coordinate space to express the source rect in the
+ * source ScrollView's live frame. The portal never attaches here.
+ */
+export type SourceHostRef = {
+	hostKey: string;
+	capturesScroll: boolean;
+};
+
 export type SourceTagLinkSide = TagLinkSide & {
 	/** Where this boundary's portal content renders during the transition. */
-	portalHost?: BoundsPortalHost;
+	portalAttachTarget?: BoundsPortalAttachTarget;
+	/** Scroll-scoped host the source originated from, if any. */
+	sourceHost?: SourceHostRef;
 };
 
 type TagLinkBase = {
@@ -100,7 +114,8 @@ export type ResolvedTransitionPair = {
 	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
-	sourcePortalHost?: BoundsPortalHost;
+	sourcePortalAttachTarget?: BoundsPortalAttachTarget;
+	sourceHost?: SourceHostRef;
 };
 
 export type LinkGroupState = {

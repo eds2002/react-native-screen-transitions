@@ -16,6 +16,7 @@ interface BoundaryOwnerContextValue {
 	registerTargetRef: (
 		targetRef: AnimatedRef<View>,
 		preparedStyles: StyleProps,
+		measurementRef?: AnimatedRef<View>,
 	) => void;
 	unregisterTargetRef: (targetRef: AnimatedRef<View>) => void;
 	activeTargetRef: AnimatedRef<View> | null;
@@ -26,6 +27,8 @@ interface BoundaryOwnerContextValue {
 
 type BoundaryTargetEntry = {
 	ref: AnimatedRef<View>;
+	/** Surface to measure — the portal placeholder when content can teleport. */
+	measurementRef: AnimatedRef<View>;
 	preparedStyles: StyleProps;
 };
 
@@ -60,7 +63,11 @@ export const useBoundaryOwner = (params: {
 	);
 
 	const registerTargetRef = useCallback(
-		(targetRef: AnimatedRef<View>, preparedStyles: StyleProps) => {
+		(
+			targetRef: AnimatedRef<View>,
+			preparedStyles: StyleProps,
+			measurementRef?: AnimatedRef<View>,
+		) => {
 			setTargetEntry((prev) => {
 				if (prev?.ref === targetRef) {
 					return prev;
@@ -75,7 +82,13 @@ export const useBoundaryOwner = (params: {
 					logger.warn(MULTIPLE_TARGETS_WARNING);
 				}
 
-				return prev ?? { ref: targetRef, preparedStyles };
+				return (
+					prev ?? {
+						ref: targetRef,
+						measurementRef: measurementRef ?? targetRef,
+						preparedStyles,
+					}
+				);
 			});
 		},
 		[],
@@ -109,7 +122,7 @@ export const useBoundaryOwner = (params: {
 	return {
 		contextValue,
 		hasActiveTarget: targetEntry !== null,
-		measuredRef: targetEntry?.ref ?? ownerRef,
+		measuredRef: targetEntry?.measurementRef ?? ownerRef,
 		targetPreparedStyles: targetEntry?.preparedStyles,
 		portal,
 	};

@@ -607,21 +607,21 @@ describe("teleport portal host links", () => {
 			createBounds(0, 0),
 			{},
 			undefined,
-			"paired-screen",
+			"matched-screen",
 		);
 		// Refresh paths (e.g. provider-driven re-measures) omit portal context.
 		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(0, 4));
 
-		expect(BoundStore.link.getSource(pairKey, "card")?.portalHost).toBe(
-			"paired-screen",
+		expect(BoundStore.link.getSource(pairKey, "card")?.portalAttachTarget).toBe(
+			"matched-screen",
 		);
 		expect(
 			BoundStore.link.getPair("card", {
 				entering: true,
 				previousScreenKey: "screen-a",
 				currentScreenKey: "screen-b",
-			}).sourcePortalHost,
-		).toBe("paired-screen");
+			}).sourcePortalAttachTarget,
+		).toBe("matched-screen");
 	});
 
 	it("shifts the teleported source path by the clamped destination scroll delta", () => {
@@ -634,7 +634,7 @@ describe("teleport portal host links", () => {
 		const registerLink = (
 			tag: string,
 			sourceY: number,
-			portalHost?: "paired-screen",
+			portalAttachTarget?: "matched-screen",
 		) => {
 			BoundStore.link.setSource(
 				pairKey,
@@ -643,13 +643,13 @@ describe("teleport portal host links", () => {
 				createBounds(0, sourceY, 100, 80),
 				{},
 				undefined,
-				portalHost,
+				portalAttachTarget,
 			);
 			BoundStore.link.setDestination(pairKey, tag, "screen-b", destination);
 		};
 
 		registerLink("classic", 40);
-		registerLink("teleported", 40, "paired-screen");
+		registerLink("teleported", 40, "matched-screen");
 		// Live offset 1000 clamps to the 600 layout range, captured offset is
 		// 100, so the teleported source must shift by exactly 500.
 		registerLink("classic-shifted", 540);

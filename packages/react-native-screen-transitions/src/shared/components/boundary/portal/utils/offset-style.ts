@@ -1,4 +1,8 @@
-import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import {
+	interpolate,
+	type MeasuredDimensions,
+	type StyleProps,
+} from "react-native-reanimated";
 import { getClampedScrollAxisDelta } from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { getPortalHostBounds } from "../stores/host-bounds.store";
@@ -6,24 +10,55 @@ import { getPortalHostBounds } from "../stores/host-bounds.store";
 type ResolvePortalOffsetStyleParams = {
 	bounds: MeasuredDimensions;
 	boundsCurrentScroll?: ScrollMetadataState | null;
+	/**
+	 * Express the source rect in its scroll host's live frame: the rect is
+	 * shifted by the clamped travel of `sourceCurrentScroll` since the scroll
+	 * snapshot stored on `bounds`. Independent of the host scroll fallback
+	 * chain below — that chain compensates the attached host's own scrolling.
+	 */
+	compensateSourceScroll?: boolean;
 	currentScroll?: ScrollMetadataState | null;
 	hostCurrentScroll?: ScrollMetadataState | null;
 	hostKey: string;
+	hostProgress?: number;
 	includeScrollOffsets?: boolean;
 	position?: "absolute" | "relative";
+	sourceCurrentScroll?: ScrollMetadataState | null;
 };
 
 export const resolvePortalOffsetStyle = ({
 	bounds,
 	boundsCurrentScroll,
+	compensateSourceScroll = false,
 	currentScroll,
 	hostCurrentScroll,
 	hostKey,
+	hostProgress = 0,
 	includeScrollOffsets = true,
 	position = "relative",
+	sourceCurrentScroll,
 }: ResolvePortalOffsetStyleParams): StyleProps => {
 	"worklet";
 	const hostBounds = getPortalHostBounds(hostKey);
+	const sourceScrollSnapshot = compensateSourceScroll
+		? ((bounds as { scroll?: ScrollMetadataState | null }).scroll ?? null)
+		: null;
+	const sourceScrollDeltaX = compensateSourceScroll
+		? getClampedScrollAxisDelta(
+				sourceCurrentScroll ?? null,
+				sourceScrollSnapshot,
+				"horizontal",
+			)
+		: 0;
+	const sourceScrollDeltaY = compensateSourceScroll
+		? getClampedScrollAxisDelta(
+				sourceCurrentScroll ?? null,
+				sourceScrollSnapshot,
+				"vertical",
+			)
+		: 0;
+	const sourcePageX = bounds.pageX - sourceScrollDeltaX;
+	const sourcePageY = bounds.pageY - sourceScrollDeltaY;
 	const boundsScroll = includeScrollOffsets
 		? ((bounds as { scroll?: ScrollMetadataState | null }).scroll ??
 			boundsCurrentScroll ??
@@ -45,11 +80,14 @@ export const resolvePortalOffsetStyle = ({
 		hostBoundsScroll,
 		"vertical",
 	);
+
 	const adjustedHostPageX = hostBounds
-		? hostBounds.pageX - hostScrollDeltaX
+		? hostBounds.pageX -
+			interpolate(hostProgress, [0, 1], [hostScrollDeltaX, 0])
 		: 0;
 	const adjustedHostPageY = hostBounds
-		? hostBounds.pageY - hostScrollDeltaY
+		? hostBounds.pageY -
+			interpolate(hostProgress, [0, 1], [hostScrollDeltaY, 0])
 		: 0;
 	const boundsScrollDeltaX = includeScrollOffsets
 		? getClampedScrollAxisDelta(
@@ -62,11 +100,11 @@ export const resolvePortalOffsetStyle = ({
 		? getClampedScrollAxisDelta(currentScroll ?? null, boundsScroll, "vertical")
 		: 0;
 	const offsetX = hostBounds
-		? bounds.pageX - adjustedHostPageX
-		: bounds.pageX - boundsScrollDeltaX;
+		? sourcePageX - adjustedHostPageX
+		: sourcePageX - boundsScrollDeltaX;
 	const offsetY = hostBounds
-		? bounds.pageY - adjustedHostPageY
-		: bounds.pageY - boundsScrollDeltaY;
+		? sourcePageY - adjustedHostPageY
+		: sourcePageY - boundsScrollDeltaY;
 	const transform = [{ translateY: offsetY }, { translateX: offsetX }];
 
 	if (position === "absolute") {

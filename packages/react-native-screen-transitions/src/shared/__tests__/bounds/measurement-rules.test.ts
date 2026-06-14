@@ -3,6 +3,7 @@ import { getInitialDestinationMeasurePairKey } from "../../components/boundary/u
 import {
 	applyVisibilityBlockOffset,
 	isMeasurementInViewport,
+	normalizeVisibilityBlockOffset,
 } from "../../components/boundary/utils/measured-bounds";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
@@ -207,6 +208,22 @@ describe("bounds client measurement contract", () => {
 		expect(normalized.pageY).toBe(0);
 		expect(normalized.y).toBe(blockedMeasurement.y);
 		expect(isMeasurementInViewport(normalized, 400, 800)).toBe(true);
+	});
+
+	it("normalizes visibility-blocked measurements from the measured frame", () => {
+		const offset = getVisibilityBlockOffset(800);
+		const blockedMeasurement = {
+			...createBounds(),
+			pageY: offset,
+		};
+		const visibleMeasurement = createBounds();
+
+		expect(
+			normalizeVisibilityBlockOffset(blockedMeasurement, offset).pageY,
+		).toBe(0);
+		expect(
+			normalizeVisibilityBlockOffset(visibleMeasurement, offset),
+		).toBe(visibleMeasurement);
 	});
 
 	it("refreshes the current active grouped source at settled points", () => {

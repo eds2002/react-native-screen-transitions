@@ -1,7 +1,4 @@
-import type {
-	AnimatedViewStyle,
-	ScreenTransitionConfig,
-} from "react-native-screen-transitions";
+import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
 import {
@@ -58,7 +55,7 @@ export default function TeleportLayout() {
 						inactiveBehavior: "keep",
 						transitionSpec: {
 							open: Transition.Specs.DefaultSpec,
-							close: Transition.Specs.FlingSpec,
+							close: { duration: 5000 },
 						},
 					};
 				}}

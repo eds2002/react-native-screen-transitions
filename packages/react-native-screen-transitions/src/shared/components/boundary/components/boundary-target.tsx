@@ -17,11 +17,19 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 ) {
 	const { style, ...rest } = props;
 	const targetAnimatedRef = useAnimatedRef<View>();
+	const placeholderAnimatedRef = useAnimatedRef<View>();
 	const ownerContext = useBoundaryOwnerContext();
 	const registerTargetRef = ownerContext?.registerTargetRef;
 	const unregisterTargetRef = ownerContext?.unregisterTargetRef;
 	const isActiveTarget = ownerContext?.activeTargetRef === targetAnimatedRef;
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
+	// Portal'd content can be teleported into another screen's host; measuring
+	// it there would capture its CURRENT (destination) position as the source
+	// bounds. The portal placeholder keeps the layout slot at home, so it is
+	// the truthful measurement surface whenever a portal is configured.
+	const measurementRef = ownerContext?.portal
+		? placeholderAnimatedRef
+		: targetAnimatedRef;
 
 	useLayoutEffect(() => {
 		if (!registerTargetRef || !unregisterTargetRef) {
@@ -31,7 +39,7 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 			return;
 		}
 
-		registerTargetRef(targetAnimatedRef, preparedStyles);
+		registerTargetRef(targetAnimatedRef, preparedStyles, measurementRef);
 		return () => {
 			unregisterTargetRef(targetAnimatedRef);
 		};
@@ -40,10 +48,15 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 		unregisterTargetRef,
 		targetAnimatedRef,
 		preparedStyles,
+		measurementRef,
 	]);
 
 	return (
-		<Portal id={ownerContext?.entryTag} mode={ownerContext?.portal}>
+		<Portal
+			id={ownerContext?.entryTag}
+			mode={ownerContext?.portal}
+			placeholderRef={placeholderAnimatedRef}
+		>
 			<Animated.View
 				{...rest}
 				ref={targetAnimatedRef}

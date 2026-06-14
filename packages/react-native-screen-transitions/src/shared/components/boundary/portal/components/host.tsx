@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useRef } from "react";
+import { memo, useLayoutEffect, useMemo, useRef } from "react";
 import {
 	type StyleProp,
 	StyleSheet,
@@ -15,13 +15,15 @@ import { PortalBoundaryHost } from "./portal-boundary-host";
 
 let nextHostId = 0;
 
-type HostProps = {
+export type PublicHostProps = {
 	style?: StyleProp<ViewStyle>;
-	/** Internal fallback planted by the screen container. */
+};
+
+type HostImplProps = PublicHostProps & {
 	fallback?: boolean;
 };
 
-export const Host = memo(function Host({ fallback = false, style }: HostProps) {
+function HostImpl({ fallback = false, style }: HostImplProps) {
 	const screenKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
 	const generatedHostKeyRef = useRef<string | null>(null);
 
@@ -32,12 +34,22 @@ export const Host = memo(function Host({ fallback = false, style }: HostProps) {
 	const hostKey = fallback ? screenKey : generatedHostKeyRef.current;
 	const capturesScroll = !fallback;
 	const activeBoundaryHosts = useActivePortalBoundaryHosts(hostKey);
+	const boundaryHostsRevision = useMemo(
+		() =>
+			activeBoundaryHosts
+				.map(
+					(host) =>
+						`${host.boundaryId}:${host.hostKey}:${host.pairKey}:${host.screenKey}:${host.capturesScroll}`,
+				)
+				.join("|"),
+		[activeBoundaryHosts],
+	);
 	const { height: viewportHeight, width: viewportWidth } =
 		useWindowDimensions();
 
 	const measurement = useHostMeasurement({
+		boundaryHostsRevision,
 		capturesScroll,
-		hasBoundaryHosts: activeBoundaryHosts.length > 0,
 		hostKey,
 		screenKey,
 		viewportHeight,
@@ -86,6 +98,14 @@ export const Host = memo(function Host({ fallback = false, style }: HostProps) {
 			{boundaryHosts}
 		</Animated.View>
 	);
+}
+
+export const Host = memo(function Host(props: PublicHostProps) {
+	return <HostImpl {...props} />;
+});
+
+export const ScreenFallbackHost = memo(function ScreenFallbackHost() {
+	return <HostImpl fallback />;
 });
 
 const styles = StyleSheet.create({

@@ -95,7 +95,8 @@ const RECIPE_OPTIONS = [
 	{
 		id: "native-stack-adapter-recipe",
 		title: "Native Stack Adapter Profile",
-		description: "Native push into a profile, custom bounds transition for avatar",
+		description:
+			"Native push into a profile, custom bounds transition for avatar",
 		route: "/native-stack-adapter-recipe" as const,
 	},
 	{
@@ -103,6 +104,13 @@ const RECIPE_OPTIONS = [
 		title: "Teleport",
 		description: "Two shared-element teleport recipes using bounds targets",
 		route: "/teleport" as const,
+	},
+	{
+		id: "reels",
+		title: "Reels",
+		description:
+			"Paged video feed: matched-screen teleport with group retargeting and a mask reveal",
+		route: "/reels" as const,
 	},
 ];
 

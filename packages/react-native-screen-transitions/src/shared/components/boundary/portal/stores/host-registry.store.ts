@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
-import { logger } from "../../../../utils/logger";
+import { makeMutable } from "react-native-reanimated";
+import type { SourceHostRef } from "../../../../stores/bounds/types";
 
 export type HostRegistration = {
 	hostKey: string;
@@ -11,13 +12,19 @@ export type HostRegistration = {
 type HostRegistrySnapshot = Record<string, string>;
 
 const EMPTY_SNAPSHOT: HostRegistrySnapshot = {};
-const MULTIPLE_USER_HOSTS_WARNING =
-	"Multiple portal hosts were registered for the same screen. Only the latest non-fallback host will be used.";
 
 const listeners = new Set<() => void>();
 const hostStacks = new Map<string, HostRegistration[]>();
 
 let snapshot: HostRegistrySnapshot = EMPTY_SNAPSHOT;
+
+/**
+ * UI-readable mirror of each screen's active host, kept only for hosts that
+ * capture scroll. Measurement worklets read it to record which scroll-scoped
+ * host a source boundary originated from — at measure time, without any React
+ * subscription on the boundary itself.
+ */
+const activeScrollHosts = makeMutable<Record<string, SourceHostRef>>({});
 
 const getActiveHostFromStack = (
 	screenKey: string,
@@ -47,8 +54,27 @@ const buildSnapshot = (): HostRegistrySnapshot => {
 	return nextSnapshot;
 };
 
+const buildScrollHostSnapshot = (): Record<string, SourceHostRef> => {
+	const nextSnapshot: Record<string, SourceHostRef> = {};
+
+	for (const [screenKey, stack] of hostStacks) {
+		const activeHostKey = getActiveHostFromStack(screenKey, stack);
+		const activeHost = stack.find((host) => host.hostKey === activeHostKey);
+
+		if (activeHost?.capturesScroll) {
+			nextSnapshot[screenKey] = {
+				hostKey: activeHost.hostKey,
+				capturesScroll: true,
+			};
+		}
+	}
+
+	return nextSnapshot;
+};
+
 const emit = () => {
 	snapshot = buildSnapshot();
+	activeScrollHosts.set(buildScrollHostSnapshot());
 
 	for (const listener of listeners) {
 		listener();
@@ -72,15 +98,6 @@ export const registerHost = (registration: HostRegistration) => {
 	const nextStack = stack.filter(
 		(host) => host.hostKey !== registration.hostKey,
 	);
-
-	const isDev = typeof __DEV__ === "undefined" || __DEV__;
-	if (
-		isDev &&
-		!registration.fallback &&
-		nextStack.some((host) => !host.fallback)
-	) {
-		logger.warn(MULTIPLE_USER_HOSTS_WARNING);
-	}
 
 	if (registration.fallback) {
 		nextStack.unshift(registration);
@@ -126,6 +143,17 @@ export const getActiveHostKey = (screenKey: string) => {
 	return snapshot[screenKey] ?? screenKey;
 };
 
+/**
+ * The screen's active host, if it captures scroll. Worklet-safe: measurement
+ * code calls this on the UI thread while writing source bounds.
+ */
+export const getActiveScrollHost = (
+	screenKey: string,
+): SourceHostRef | null => {
+	"worklet";
+	return activeScrollHosts.get()[screenKey] ?? null;
+};
+
 export const getHostCapturesScroll = (hostKey: string) => {
 	for (const stack of hostStacks.values()) {
 		const host = stack.find((registration) => registration.hostKey === hostKey);
@@ -149,5 +177,6 @@ export const useActiveHostKey = (screenKey?: string | null) => {
 export const resetHostRegistry = () => {
 	hostStacks.clear();
 	snapshot = EMPTY_SNAPSHOT;
+	activeScrollHosts.set({});
 	emit();
 };

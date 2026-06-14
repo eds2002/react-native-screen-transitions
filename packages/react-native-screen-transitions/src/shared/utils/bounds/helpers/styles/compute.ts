@@ -134,7 +134,7 @@ const resolveStartEnd = (params: {
 
 	/**
 	 * Teleport continuity: this screen's source content physically renders
-	 * inside the paired screen's portal host, which travels with that screen's
+	 * inside the matched screen's portal host, which travels with that screen's
 	 * ScrollView. Screen-fixed rects (the source, fullscreen/custom targets)
 	 * must be expressed in the host's frame by the clamped scroll travel since
 	 * the destination capture. The destination rect rides with the host, so it
@@ -142,7 +142,7 @@ const resolveStartEnd = (params: {
 	 * skip this entirely.
 	 */
 	const isTeleportedSourceElement =
-		resolvedPair.sourcePortalHost === "paired-screen" &&
+		resolvedPair.sourcePortalAttachTarget === "matched-screen" &&
 		!!currentScreenKey &&
 		currentScreenKey === resolvedPair.sourceScreenKey &&
 		!!resolvedPair.destinationScreenKey &&
@@ -151,6 +151,8 @@ const resolveStartEnd = (params: {
 
 	let teleportShiftX = 0;
 	let teleportShiftY = 0;
+	let sourceScrollShiftX = 0;
+	let sourceScrollShiftY = 0;
 
 	if (isTeleportedSourceElement) {
 		const capturedScroll = getBoundsScrollSnapshot(destinationBounds);
@@ -170,9 +172,40 @@ const resolveStartEnd = (params: {
 			capturedScroll,
 			"vertical",
 		);
+
+		// A source that lives inside its own scroll host travels with that
+		// ScrollView in page space. Shifting the start rect by the clamped source
+		// scroll travel keeps it aligned with the live placeholder; the host
+		// placement applies the identical shift, so the shifts cancel at full
+		// progress and the open frame is untouched. Screen-fixed rects (the
+		// fullscreen/custom end targets below) are not inside the scroll content
+		// and keep only the destination shift.
+		if (resolvedPair.sourceHost?.capturesScroll) {
+			const capturedSourceScroll = getBoundsScrollSnapshot(sourceBounds);
+			const liveSourceScroll = getScreenScrollMetadata(
+				resolvedPair.sourceScreenKey,
+				params.previous,
+				params.current,
+				params.next,
+			);
+			sourceScrollShiftX = getClampedScrollAxisDelta(
+				liveSourceScroll,
+				capturedSourceScroll,
+				"horizontal",
+			);
+			sourceScrollShiftY = getClampedScrollAxisDelta(
+				liveSourceScroll,
+				capturedSourceScroll,
+				"vertical",
+			);
+		}
 	}
 
-	const start = shiftBounds(sourceBounds, teleportShiftX, teleportShiftY);
+	const start = shiftBounds(
+		sourceBounds,
+		teleportShiftX - sourceScrollShiftX,
+		teleportShiftY - sourceScrollShiftY,
+	);
 	let end = destinationBounds ?? fullscreen;
 
 	if (isFullscreenTarget) {

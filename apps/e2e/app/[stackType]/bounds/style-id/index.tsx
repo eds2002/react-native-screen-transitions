@@ -1,13 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import {
-	FlatList,
-	StyleSheet,
-	Text,
-	useWindowDimensions,
-	View,
-} from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
@@ -183,9 +177,7 @@ const GRID_COLUMN_GAP = 16;
 const GRID_COLUMNS = 2;
 const BOARD_ASPECT_RATIO = 16 / 9;
 const PICK_CARD_WIDTH = 140;
-const PICK_CARD_HEIGHT = PICK_CARD_WIDTH / BOARD_ASPECT_RATIO;
 const TRY_COVER_WIDTH = 72;
-const TRY_COVER_HEIGHT = TRY_COVER_WIDTH / BOARD_ASPECT_RATIO;
 
 export default function StyleIdBoundsIndex() {
 	const stackType = useResolvedStackType();
@@ -198,8 +190,6 @@ export default function StyleIdBoundsIndex() {
 			GRID_COLUMN_GAP * (GRID_COLUMNS - 1)) /
 			GRID_COLUMNS,
 	);
-	const gridCoverHeight = gridCellWidth / BOARD_ASPECT_RATIO;
-
 	return (
 		<View
 			style={[
@@ -212,42 +202,26 @@ export default function StyleIdBoundsIndex() {
 		>
 			<ScreenHeader title="My Boards" subtitle="Visual notes, kept loose" />
 			<Transition.ScrollView
-				style={[styles.content, { position: "relative" }]}
+				style={styles.content}
 				contentContainerStyle={[
 					styles.contentContainer,
-					{
-						paddingBottom: insets.bottom + 32,
-						position: "relative",
-					},
+					{ paddingBottom: insets.bottom + 32 },
 				]}
 				showsVerticalScrollIndicator={false}
 			>
-				<FlatList
-					data={BOARDS}
-					keyExtractor={(item) => item.id}
-					numColumns={GRID_COLUMNS}
-					scrollEnabled={false}
-					contentContainerStyle={styles.grid}
-					columnWrapperStyle={styles.gridRow}
-					renderItem={({ item }) => {
+				<View style={styles.grid}>
+					{BOARDS.map((item) => {
 						const tag = `shared-image-${item.id}`;
 						return (
 							<Transition.Boundary.Trigger
+								key={tag}
 								testID={tag}
 								style={[styles.gridCell, { width: gridCellWidth }]}
 								onPress={() => openDetail(stackType, tag, item)}
 								id={tag}
-								portal={{ host: "paired-screen" }}
 							>
 								<Transition.Boundary.Target
-									style={[
-										styles.cover,
-										{
-											width: gridCellWidth,
-											height: gridCoverHeight,
-											backgroundColor: theme.card,
-										},
-									]}
+									style={[styles.cover, { backgroundColor: theme.card }]}
 								>
 									<Image
 										source={item.source}
@@ -273,8 +247,8 @@ export default function StyleIdBoundsIndex() {
 								</View>
 							</Transition.Boundary.Trigger>
 						);
-					}}
-				/>
+					})}
+				</View>
 				<View style={styles.pickSection}>
 					<View style={styles.pickHeader}>
 						<Text style={[styles.pickTitle, { color: theme.text }]}>
@@ -284,22 +258,16 @@ export default function StyleIdBoundsIndex() {
 							See all
 						</Text>
 					</View>
-					<FlatList
-						data={PICK_BACK_UP}
-						horizontal
-						keyExtractor={(item) => item.id}
-						contentContainerStyle={styles.pickStrip}
-						showsHorizontalScrollIndicator={false}
-						renderItem={({ item }) => {
+					<View style={styles.pickStrip}>
+						{PICK_BACK_UP.map((item) => {
 							const tag = `shared-image-${item.id}`;
 							return (
-								<View style={styles.pickCell}>
+								<View key={tag} style={styles.pickCell}>
 									<Transition.Boundary.Trigger
 										testID={tag}
 										id={tag}
 										style={styles.pickBoundary}
 										onPress={() => openDetail(stackType, tag, item)}
-										portal
 									>
 										<Transition.Boundary.Target
 											style={[
@@ -329,8 +297,8 @@ export default function StyleIdBoundsIndex() {
 									</View>
 								</View>
 							);
-						}}
-					/>
+						})}
+					</View>
 				</View>
 				<View style={styles.trySection}>
 					<View style={styles.tryHeader}>
@@ -400,16 +368,17 @@ const styles = StyleSheet.create({
 		paddingTop: 16,
 	},
 	grid: {
+		flexDirection: "row",
+		flexWrap: "wrap",
 		gap: 16,
 		marginTop: 16,
-	},
-	gridRow: {
-		gap: GRID_COLUMN_GAP,
 	},
 	gridCell: {
 		gap: 10,
 	},
 	cover: {
+		width: "100%",
+		aspectRatio: BOARD_ASPECT_RATIO,
 		borderRadius: 24,
 		borderCurve: "continuous",
 		overflow: "hidden",
@@ -464,25 +433,23 @@ const styles = StyleSheet.create({
 		fontSize: 15,
 		fontWeight: "500",
 	},
-	pickList: {
-		overflow: "visible",
-	},
 	pickStrip: {
+		flexDirection: "row",
 		paddingHorizontal: 16,
 		gap: 14,
 		overflow: "visible",
 	},
 	pickCell: {
-		// width: PICK_CARD_WIDTH,
+		width: PICK_CARD_WIDTH,
 		gap: 10,
 	},
 	pickBoundary: {
 		width: PICK_CARD_WIDTH,
-		height: PICK_CARD_HEIGHT,
+		aspectRatio: BOARD_ASPECT_RATIO,
 	},
 	pickCover: {
 		width: PICK_CARD_WIDTH,
-		height: PICK_CARD_HEIGHT,
+		aspectRatio: BOARD_ASPECT_RATIO,
 		borderRadius: 28,
 		borderCurve: "continuous",
 		overflow: "hidden",
@@ -526,7 +493,7 @@ const styles = StyleSheet.create({
 	},
 	tryCover: {
 		width: TRY_COVER_WIDTH,
-		height: TRY_COVER_HEIGHT,
+		aspectRatio: BOARD_ASPECT_RATIO,
 		borderRadius: 18,
 		borderCurve: "continuous",
 		overflow: "hidden",

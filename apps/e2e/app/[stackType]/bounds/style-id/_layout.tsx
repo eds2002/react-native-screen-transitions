@@ -14,7 +14,7 @@ export default function StyleIdBoundsLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					// navigationMaskEnabled: true,
+					navigationMaskEnabled: true,
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "horizontal", "vertical-inverted"],
 					screenStyleInterpolator: ({ bounds, focused, active }) => {
@@ -53,10 +53,10 @@ export default function StyleIdBoundsLayout() {
 							overshootClamping: false,
 						},
 						close: {
-							stiffness: 150,
-							damping: 30,
-							mass: 1.5,
-							// overshootClamping: true,
+							stiffness: 500,
+							damping: 1000,
+							mass: 3,
+							overshootClamping: false,
 						},
 					},
 				}}

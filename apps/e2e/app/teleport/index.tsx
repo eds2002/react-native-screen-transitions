@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Alert, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { useTheme } from "@/theme";
@@ -7,15 +7,22 @@ import { TELEPORT_GHOST_ID, TELEPORT_PAIRED_ID } from "./constants";
 
 export default function TeleportIndex() {
 	const theme = useTheme();
+	const { height } = useWindowDimensions();
+	const minContentHeight = Math.max(height * 1.35, 900);
 
 	return (
 		<SafeAreaView style={[styles.container, { backgroundColor: theme.bg }]}>
-			<View style={styles.stack}>
+			<Transition.ScrollView
+				style={styles.container}
+				contentContainerStyle={[styles.stack, { minHeight: minContentHeight }]}
+				showsVerticalScrollIndicator
+			>
+				<Transition.Boundary.Host />
 				<View pointerEvents="none" style={styles.occluder} />
 				<Transition.Boundary.Trigger
 					id={TELEPORT_PAIRED_ID}
 					testID="teleport-paired-trigger"
-					portal={{ host: "current-screen" }}
+					portal={{ attachTo: "current-screen" }}
 					onPress={() => router.push("/teleport/paired")}
 				>
 					<Transition.Boundary.Target
@@ -26,7 +33,7 @@ export default function TeleportIndex() {
 				<Transition.Boundary.Trigger
 					id={TELEPORT_GHOST_ID}
 					testID="teleport-ghost-trigger"
-					portal={{ host: "paired-screen" }}
+					portal={{ attachTo: "matched-screen" }}
 					onPress={() => {
 						// Alert.alert("On Screen A");
 						router.navigate("/teleport/ghost");
@@ -38,7 +45,7 @@ export default function TeleportIndex() {
 						<Text style={styles.sourceLabel}>Source component</Text>
 					</Transition.Boundary.Target>
 				</Transition.Boundary.Trigger>
-			</View>
+			</Transition.ScrollView>
 		</SafeAreaView>
 	);
 }
@@ -48,10 +55,10 @@ const styles = StyleSheet.create({
 		flex: 1,
 	},
 	stack: {
-		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
 		gap: 28,
+		position: "relative",
 	},
 	occluder: {
 		width: 400,

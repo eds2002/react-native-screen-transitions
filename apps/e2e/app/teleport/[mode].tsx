@@ -3,7 +3,6 @@ import {
 	Alert,
 	Pressable,
 	StyleSheet,
-	Text,
 	useWindowDimensions,
 } from "react-native";
 import Transition from "react-native-screen-transitions";
@@ -30,6 +29,7 @@ export default function TeleportDestination() {
 			contentContainerStyle={[styles.content, { minHeight: minContentHeight }]}
 			showsVerticalScrollIndicator
 		>
+			<Transition.Boundary.Host />
 			{teleportMode === "paired" ? (
 				<Transition.Boundary.View
 					id={TELEPORT_PAIRED_ID}
@@ -37,16 +37,11 @@ export default function TeleportDestination() {
 					style={styles.orangeCircle}
 				/>
 			) : (
-				<Pressable
-					testID="teleport-ghost-destination-pressable"
-					onPress={() => Alert.alert("On Screen B")}
-				>
-					<Transition.Boundary.View
-						id={TELEPORT_GHOST_ID}
-						testID="teleport-ghost-destination"
-						style={styles.ghostTarget}
-					/>
-				</Pressable>
+				<Transition.Boundary.View
+					id={TELEPORT_GHOST_ID}
+					testID="teleport-ghost-destination"
+					style={styles.ghostTarget}
+				/>
 			)}
 		</Transition.ScrollView>
 	);

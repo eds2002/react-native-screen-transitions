@@ -26,6 +26,19 @@ const buildRefreshSignal = (
 	};
 };
 
+const isMatchedScreenPortalDestinationRefresh = (
+	linkState: LinkPairsState | undefined,
+	pairKey: ScreenPairKey,
+	linkId: string,
+) => {
+	"worklet";
+
+	return (
+		linkState?.[pairKey]?.links?.[linkId]?.source?.portalAttachTarget ===
+		"matched-screen"
+	);
+};
+
 export const getRefreshBoundarySignal = (params: {
 	enabled: boolean;
 	currentScreenKey: string;
@@ -86,6 +99,22 @@ export const getRefreshBoundarySignal = (params: {
 			return null;
 		}
 
+		// NOTE:
+		// Matched-screen portals use the destination as the initial host/anchor.
+		// Once attached, the teleported source is the thing being animated, so a
+		// fresh destination measure would mix in a second coordinate basis. Signals were introduced for scroll view cases + group
+		// cases, but I can't find a case for where a live component ( matched-screen ) would need this complexity. I would just assume
+		// you would want this for a->b | b->a transitions.
+		if (
+			isMatchedScreenPortalDestinationRefresh(
+				linkState,
+				refreshDestinationPairKey,
+				linkId,
+			)
+		) {
+			return null;
+		}
+
 		return buildRefreshSignal(
 			"destination",
 			refreshDestinationPairKey,
@@ -123,6 +152,18 @@ export const getRefreshBoundarySignal = (params: {
 	// Destination retargeting should only measure a concrete member that already
 	// participates in the pair. Missing members fall back to initialId at resolve.
 	if (activeId !== linkId) {
+		return null;
+	}
+
+	// NOTE:
+	// see above for explanation
+	if (
+		isMatchedScreenPortalDestinationRefresh(
+			linkState,
+			refreshDestinationPairKey,
+			linkId,
+		)
+	) {
 		return null;
 	}
 

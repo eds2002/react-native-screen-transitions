@@ -1,7 +1,7 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <This helper is usually being used inside a transitionable stack> */
 import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
-import { StyleSheet, type View } from "react-native";
+import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	runOnUI,
@@ -18,23 +18,17 @@ import {
 } from "../providers/screen/gestures/scroll-coordination";
 import { useScreenStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
-import { Host } from "./boundary/portal/components/host";
 
 interface CreateTransitionAwareComponentOptions {
 	isScrollable?: boolean;
 	alreadyAnimated?: boolean;
-	portalHostScope?: boolean;
 }
 
 export function createTransitionAwareComponent<P extends object>(
 	Wrapped: ComponentType<P>,
 	options: CreateTransitionAwareComponentOptions = {},
 ) {
-	const {
-		isScrollable = false,
-		alreadyAnimated = false,
-		portalHostScope = false,
-	} = options;
+	const { isScrollable = false, alreadyAnimated = false } = options;
 
 	const AnimatedComponent = alreadyAnimated
 		? Wrapped
@@ -77,24 +71,11 @@ export function createTransitionAwareComponent<P extends object>(
 			scrollHandler,
 			userOnScroll ?? null,
 		]);
-		const scrollableChildren = portalHostScope ? (
-			<>
-				{children}
-				<Host />
-			</>
-		) : (
-			children
-		);
-
 		const scrollableComponent = (
 			<AnimatedComponent
 				{...(scrollableProps as any)}
 				ref={ref}
-				contentContainerStyle={
-					portalHostScope
-						? [contentContainerStyle, styles.portalHostScopeContent]
-						: contentContainerStyle
-				}
+				contentContainerStyle={contentContainerStyle}
 				/**
 				 * Keep the scroll listener detached while the owning gesture screen is
 				 * closing. On iOS, a bounced ScrollView can keep sending native scroll
@@ -112,7 +93,7 @@ export function createTransitionAwareComponent<P extends object>(
 						: undefined
 				}
 			>
-				{scrollableChildren}
+				{children}
 			</AnimatedComponent>
 		);
 
@@ -211,9 +192,3 @@ export function createTransitionAwareComponent<P extends object>(
 		>
 	>;
 }
-
-const styles = StyleSheet.create({
-	portalHostScopeContent: {
-		position: "relative",
-	},
-});

@@ -14,7 +14,6 @@ export default {
 	Pressable: createTransitionAwareComponent(Pressable),
 	ScrollView: createTransitionAwareComponent(ScrollView, {
 		isScrollable: true,
-		portalHostScope: true,
 	}),
 	FlatList: createTransitionAwareComponent(FlatList, {
 		isScrollable: true,
@@ -29,7 +28,7 @@ export { withScreenTransitions } from "./adapters/with-screen-transitions";
 export { snapTo } from "./animation/snap-to";
 export type {
 	BoundaryPortal,
-	BoundaryPortalHost,
+	BoundaryPortalAttachTarget,
 	BoundaryPortalOptions,
 } from "./components/boundary";
 export {
@@ -54,6 +53,7 @@ export {
 export type {
 	AnimatedViewStyle,
 	AnimationConfig,
+	BoundaryTeleportControl,
 	BoundsMotion,
 	BoundsMotionFrame,
 	BoundsMotionTransform,
@@ -77,6 +77,7 @@ export type {
 	ScrollGestureState,
 	ScrollMetadataState,
 	TransitionInterpolatedStyle,
+	TransitionSlotProps,
 	TransitionSlotStyle,
 	TransitionSpec,
 } from "./types";

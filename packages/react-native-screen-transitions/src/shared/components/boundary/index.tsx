@@ -1,10 +1,11 @@
 import { Pressable, View } from "react-native";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
+import { Host } from "./portal";
 
 export type {
 	BoundaryPortal,
-	BoundaryPortalHost,
+	BoundaryPortalAttachTarget,
 	BoundaryPortalOptions,
 } from "./types";
 export { createBoundaryComponent };
@@ -16,6 +17,7 @@ const BoundaryTrigger = createBoundaryComponent(Pressable);
 BoundaryView.displayName = "Transition.Boundary.View";
 BoundaryTrigger.displayName = "Transition.Boundary.Trigger";
 BoundaryTarget.displayName = "Transition.Boundary.Target";
+Host.displayName = "Transition.Boundary.Host";
 
 /**
  * Shared-boundary components.
@@ -34,6 +36,7 @@ BoundaryTarget.displayName = "Transition.Boundary.Target";
  * - `Boundary.View` for passive/shared elements.
  * - `Boundary.Trigger` for tappable elements that start navigation.
  * - `Boundary.Target` to measure a nested descendant instead of the owner.
+ * - `Boundary.Host` to make nested portal placement explicit.
  */
 export const Boundary = {
 	/**
@@ -48,4 +51,8 @@ export const Boundary = {
 	 * Optional nested measurement override inside a boundary owner.
 	 */
 	Target: BoundaryTarget,
+	/**
+	 * Explicit portal host for scrollable or otherwise clipped coordinate spaces.
+	 */
+	Host: Host,
 };

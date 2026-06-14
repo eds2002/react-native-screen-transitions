@@ -61,7 +61,7 @@ export const useRefreshBoundary = ({
 				entering: !!refreshEntering.get(),
 				animating: !!refreshAnimating.get(),
 				progress: refreshProgress.get(),
-				linkState: group ? pairs.get() : undefined,
+				linkState: pairs.get(),
 			});
 		},
 		(refreshSignal, prevRefreshSignal) => {

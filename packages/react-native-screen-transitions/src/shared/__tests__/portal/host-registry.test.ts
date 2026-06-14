@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import {
 	getActiveHostKey,
 	getHostCapturesScroll,
@@ -52,36 +52,27 @@ describe("portal host registry", () => {
 		expect(getActiveHostKey("screen-a")).toBe("screen-a");
 	});
 
-	it("uses the latest non-fallback host and warns in development", () => {
-		const warn = mock(() => {});
-		const originalWarn = console.warn;
-		console.warn = warn;
+	it("uses the latest non-fallback host", () => {
+		registerHost({
+			capturesScroll: false,
+			fallback: true,
+			hostKey: "screen-a",
+			screenKey: "screen-a",
+		});
+		registerHost({
+			capturesScroll: true,
+			fallback: false,
+			hostKey: "screen-a-user-host-1",
+			screenKey: "screen-a",
+		});
+		registerHost({
+			capturesScroll: true,
+			fallback: false,
+			hostKey: "screen-a-user-host-2",
+			screenKey: "screen-a",
+		});
 
-		try {
-			registerHost({
-				capturesScroll: false,
-				fallback: true,
-				hostKey: "screen-a",
-				screenKey: "screen-a",
-			});
-			registerHost({
-				capturesScroll: true,
-				fallback: false,
-				hostKey: "screen-a-user-host-1",
-				screenKey: "screen-a",
-			});
-			registerHost({
-				capturesScroll: true,
-				fallback: false,
-				hostKey: "screen-a-user-host-2",
-				screenKey: "screen-a",
-			});
-
-			expect(getActiveHostKey("screen-a")).toBe("screen-a-user-host-2");
-			expect(warn).toHaveBeenCalledTimes(1);
-		} finally {
-			console.warn = originalWarn;
-		}
+		expect(getActiveHostKey("screen-a")).toBe("screen-a-user-host-2");
 	});
 
 	it("tracks whether a host captures scroll", () => {
@@ -101,5 +92,34 @@ describe("portal host registry", () => {
 		expect(getHostCapturesScroll("screen-a")).toBe(false);
 		expect(getHostCapturesScroll("screen-a-scroll-host")).toBe(true);
 		expect(getHostCapturesScroll("missing-host")).toBe(false);
+	});
+
+	it("resolves each screen's active host independently of the other side", () => {
+		registerHost({
+			capturesScroll: false,
+			fallback: true,
+			hostKey: "screen-a",
+			screenKey: "screen-a",
+		});
+		registerHost({
+			capturesScroll: true,
+			fallback: false,
+			hostKey: "screen-a-scroll-host",
+			screenKey: "screen-a",
+		});
+		registerHost({
+			capturesScroll: false,
+			fallback: true,
+			hostKey: "screen-b",
+			screenKey: "screen-b",
+		});
+
+		// A paired transition resolves the source (a) and destination (b) hosts
+		// separately: a scroll-hosted source must not leak into the destination's
+		// resolution and vice versa.
+		expect(getActiveHostKey("screen-a")).toBe("screen-a-scroll-host");
+		expect(getHostCapturesScroll(getActiveHostKey("screen-a"))).toBe(true);
+		expect(getActiveHostKey("screen-b")).toBe("screen-b");
+		expect(getHostCapturesScroll(getActiveHostKey("screen-b"))).toBe(false);
 	});
 });

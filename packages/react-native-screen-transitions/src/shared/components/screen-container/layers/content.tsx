@@ -10,7 +10,7 @@ import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useGestureContext } from "../../../providers/screen/gestures";
 import { useScreenStyles } from "../../../providers/screen/styles";
-import { Host } from "../../boundary/portal/components/host";
+import { ScreenFallbackHost } from "../../boundary/portal/components/host";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
 import { SurfaceContainer } from "./surface-container";
@@ -64,7 +64,7 @@ export const ContentLayer = memo(
 							) : (
 								children
 							)}
-							<Host fallback />
+							<ScreenFallbackHost />
 						</SurfaceContainer>
 					</MaybeMaskedNavigationContainer>
 				</Animated.View>
