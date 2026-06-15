@@ -76,6 +76,18 @@ export const applyVisibilityBlockOffset = (
 	};
 };
 
+export const normalizeMeasuredBoundsToOrigin = (
+	measured: MeasuredDimensions,
+	origin: MeasuredDimensions,
+): MeasuredDimensions => {
+	"worklet";
+	return {
+		...measured,
+		pageX: measured.pageX - origin.pageX,
+		pageY: measured.pageY - origin.pageY,
+	};
+};
+
 const hasVisibilityBlockOffset = (
 	measured: MeasuredDimensions,
 	offset: number,

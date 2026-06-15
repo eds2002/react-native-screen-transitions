@@ -34,25 +34,13 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	const hostKey = fallback ? screenKey : generatedHostKeyRef.current;
 	const capturesScroll = !fallback;
 	const activeBoundaryHosts = useActivePortalBoundaryHosts(hostKey);
-	const boundaryHostsRevision = useMemo(
-		() =>
-			activeBoundaryHosts
-				.map(
-					(host) =>
-						`${host.boundaryId}:${host.hostKey}:${host.pairKey}:${host.screenKey}:${host.capturesScroll}`,
-				)
-				.join("|"),
-		[activeBoundaryHosts],
-	);
 	const { height: viewportHeight, width: viewportWidth } =
 		useWindowDimensions();
 
 	const measurement = useHostMeasurement({
-		boundaryHostsRevision,
 		capturesScroll,
 		hostKey,
 		screenKey,
-		viewportHeight,
 	});
 
 	useLayoutEffect(() => {
@@ -93,7 +81,6 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 				style,
 			]}
 			collapsable={false}
-			onLayout={measurement.onHostLayout}
 		>
 			{boundaryHosts}
 		</Animated.View>

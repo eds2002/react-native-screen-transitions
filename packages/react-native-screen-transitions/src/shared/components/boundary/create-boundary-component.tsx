@@ -115,7 +115,7 @@ export function createBoundaryComponent<P extends object>(
 
 		const preparedStyles = targetPreparedStyles ?? ownerPreparedStyles;
 
-		const portalAttachTarget =
+		const portalHost =
 			typeof portal === "object"
 				? (portal.attachTo ?? "current-screen")
 				: portal
@@ -130,7 +130,7 @@ export function createBoundaryComponent<P extends object>(
 			currentScreenKey,
 			preparedStyles,
 			measuredAnimatedRef: measuredRef,
-			portalAttachTarget,
+			portalHost,
 		});
 
 		// Register/unregister this boundary in the presence map so source/destination

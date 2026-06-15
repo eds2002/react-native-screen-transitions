@@ -1,19 +1,22 @@
 import { useCallback } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
-import type { AnimatedRef, StyleProps } from "react-native-reanimated";
+import {
+	type AnimatedRef,
+	measure,
+	type StyleProps,
+} from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
+import { useOriginContext } from "../../../providers/screen/origin.provider";
 import type { BoundsPortalAttachTarget } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
-import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
-import { getActiveScrollHost } from "../portal/stores/host-registry.store";
 import type { MeasureBoundary } from "../types";
 import {
 	attachScrollSnapshotToMeasuredBounds,
 	isMeasurementInViewport,
 	measureWithOverscrollAwareness,
-	normalizeVisibilityBlockOffset,
+	normalizeMeasuredBoundsToOrigin,
 } from "../utils/measured-bounds";
 
 interface UseMeasurerParams {
@@ -24,7 +27,7 @@ interface UseMeasurerParams {
 	currentScreenKey: string;
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
-	portalAttachTarget?: BoundsPortalAttachTarget;
+	portalHost?: BoundsPortalAttachTarget;
 }
 
 export const useMeasurer = ({
@@ -35,7 +38,7 @@ export const useMeasurer = ({
 	currentScreenKey,
 	preparedStyles,
 	measuredAnimatedRef,
-	portalAttachTarget,
+	portalHost,
 }: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -46,6 +49,7 @@ export const useMeasurer = ({
 		currentScreenKey,
 		"pendingLifecycleStartBlockCount",
 	);
+	const { originRef } = useOriginContext();
 
 	return useCallback(
 		(target) => {
@@ -56,19 +60,14 @@ export const useMeasurer = ({
 				measuredAnimatedRef,
 				scrollState.get(),
 			);
+			const measuredOrigin = measure(originRef);
 
-			if (!measured) return;
+			if (!measured || !measuredOrigin) return;
 
-			// Source captures are user-visible. Destination captures can happen
-			// while the visibility gate is still physically translated offscreen,
-			// so normalize only when the measured frame contains that block offset.
-			const normalizedMeasured =
-				target.type === "destination"
-					? normalizeVisibilityBlockOffset(
-							measured,
-							getVisibilityBlockOffset(viewportHeight),
-						)
-					: measured;
+			const normalizedMeasured = normalizeMeasuredBoundsToOrigin(
+				measured,
+				measuredOrigin,
+			);
 
 			/**
 			 * - Destination Pass -
@@ -96,13 +95,6 @@ export const useMeasurer = ({
 				scrollMetadata.get(),
 			);
 
-			// Resolved at measure time so the recorded host matches the scroll
-			// snapshot baked into these bounds.
-			const sourceHost =
-				target.type === "source"
-					? (getActiveScrollHost(currentScreenKey) ?? undefined)
-					: undefined;
-
 			applyMeasuredBoundsWrites({
 				entryTag,
 				linkId,
@@ -111,8 +103,7 @@ export const useMeasurer = ({
 				measured: measuredWithScroll,
 				preparedStyles,
 				linkWrite: target,
-				portalAttachTarget,
-				sourceHost,
+				portalHost,
 			});
 		},
 		[
@@ -123,12 +114,13 @@ export const useMeasurer = ({
 			currentScreenKey,
 			preparedStyles,
 			measuredAnimatedRef,
-			portalAttachTarget,
+			portalHost,
 			viewportWidth,
 			viewportHeight,
 			scrollState,
 			scrollMetadata,
 			pendingLifecycleStartBlockCount,
+			originRef,
 		],
 	);
 };
