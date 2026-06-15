@@ -15,7 +15,6 @@ import type {
 } from "../../../types/gesture.types";
 
 const SCROLL_MEASUREMENT_EPSILON = 1;
-const VISIBILITY_BLOCK_MEASUREMENT_EPSILON = 1;
 
 export type ScrollMeasuredDimensions = MeasuredDimensions & {
 	scroll?: ScrollMetadataState | null;
@@ -61,21 +60,6 @@ export const adjustedMeasuredBoundsForOverscrollDeltas = (
 	};
 };
 
-export const applyVisibilityBlockOffset = (
-	measured: MeasuredDimensions,
-	offset: number,
-): MeasuredDimensions => {
-	"worklet";
-	if (offset === 0) {
-		return measured;
-	}
-
-	return {
-		...measured,
-		pageY: measured.pageY - offset,
-	};
-};
-
 export const normalizeMeasuredBoundsToOrigin = (
 	measured: MeasuredDimensions,
 	origin: MeasuredDimensions,
@@ -86,27 +70,6 @@ export const normalizeMeasuredBoundsToOrigin = (
 		pageX: measured.pageX - origin.pageX,
 		pageY: measured.pageY - origin.pageY,
 	};
-};
-
-const hasVisibilityBlockOffset = (
-	measured: MeasuredDimensions,
-	offset: number,
-) => {
-	"worklet";
-	return (
-		offset !== 0 &&
-		measured.pageY >= offset - VISIBILITY_BLOCK_MEASUREMENT_EPSILON
-	);
-};
-
-export const normalizeVisibilityBlockOffset = (
-	measured: MeasuredDimensions,
-	offset: number,
-): MeasuredDimensions => {
-	"worklet";
-	return hasVisibilityBlockOffset(measured, offset)
-		? applyVisibilityBlockOffset(measured, offset)
-		: measured;
 };
 
 export const isMeasurementInViewport = (

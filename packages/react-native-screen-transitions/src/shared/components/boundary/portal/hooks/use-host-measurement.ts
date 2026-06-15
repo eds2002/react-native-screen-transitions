@@ -33,23 +33,24 @@ export const useHostMeasurement = ({
 	const hostRef = useAnimatedRef<View>();
 	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
 	const [canRenderHosts, setCanRenderHosts] = useState<boolean>(false);
-	const { originDimensions } = useOriginContext();
+	const { originRef } = useOriginContext();
 	const hasMeasuredHost = useSharedValue(false);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			return originDimensions.get();
+			return hasMeasuredHost.get();
 		},
-		(measuredOrigin) => {
+		(hasAlreadyMeasured) => {
 			"worklet";
-			if (!measuredOrigin || hasMeasuredHost.get()) {
+			if (hasAlreadyMeasured) {
 				return;
 			}
 
 			const measured = measure(hostRef);
+			const measuredOrigin = measure(originRef);
 
-			if (!measured) {
+			if (!measured || !measuredOrigin) {
 				return;
 			}
 

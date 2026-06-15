@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { getInitialDestinationMeasurePairKey } from "../../components/boundary/utils/destination-signals";
 import {
-	applyVisibilityBlockOffset,
 	isMeasurementInViewport,
-	normalizeVisibilityBlockOffset,
+	normalizeMeasuredBoundsToOrigin,
 } from "../../components/boundary/utils/measured-bounds";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
@@ -13,7 +12,6 @@ import {
 	createScreenPairKey,
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
-import { getVisibilityBlockOffset } from "../../utils/visibility-block-offset";
 
 const createBounds = (): Snapshot["bounds"] => ({
 	x: 0,
@@ -191,39 +189,28 @@ describe("bounds client measurement contract", () => {
 		).toBe(false);
 	});
 
-	it("normalizes visibility-blocked destination measurements before viewport checks", () => {
-		const offset = getVisibilityBlockOffset(800);
+	it("normalizes measured bounds against the screen origin", () => {
 		const blockedMeasurement = {
 			...createBounds(),
-			pageY: offset,
+			pageX: 420,
+			pageY: 1749,
+		};
+		const origin = {
+			...createBounds(),
+			pageX: 402,
+			pageY: 1749,
 		};
 
-		expect(isMeasurementInViewport(blockedMeasurement, 400, 800)).toBe(false);
-
-		const normalized = applyVisibilityBlockOffset(
+		const normalized = normalizeMeasuredBoundsToOrigin(
 			blockedMeasurement,
-			offset,
+			origin,
 		);
 
+		expect(normalized.pageX).toBe(18);
 		expect(normalized.pageY).toBe(0);
+		expect(normalized.x).toBe(blockedMeasurement.x);
 		expect(normalized.y).toBe(blockedMeasurement.y);
 		expect(isMeasurementInViewport(normalized, 400, 800)).toBe(true);
-	});
-
-	it("normalizes visibility-blocked measurements from the measured frame", () => {
-		const offset = getVisibilityBlockOffset(800);
-		const blockedMeasurement = {
-			...createBounds(),
-			pageY: offset,
-		};
-		const visibleMeasurement = createBounds();
-
-		expect(
-			normalizeVisibilityBlockOffset(blockedMeasurement, offset).pageY,
-		).toBe(0);
-		expect(
-			normalizeVisibilityBlockOffset(visibleMeasurement, offset),
-		).toBe(visibleMeasurement);
 	});
 
 	it("refreshes the current active grouped source at settled points", () => {
