@@ -4,6 +4,7 @@ import { setDestination, setSource } from "../../stores/bounds/internals/links";
 import type {
 	BoundsPortalAttachTarget,
 	ScreenPairKey,
+	SourceHostRef,
 } from "../../stores/bounds/types";
 
 type LinkWrite =
@@ -25,6 +26,7 @@ type ApplyMeasuredBoundsWritesParams = {
 	preparedStyles: StyleProps;
 	linkWrite?: LinkWrite;
 	portalHost?: BoundsPortalAttachTarget;
+	sourceHost?: SourceHostRef;
 };
 
 export const applyMeasuredBoundsWrites = (
@@ -40,6 +42,7 @@ export const applyMeasuredBoundsWrites = (
 		preparedStyles,
 		linkWrite,
 		portalHost,
+		sourceHost,
 	} = params;
 
 	// Set the bounds entry on every measure to avoid any stale measurements
@@ -57,6 +60,7 @@ export const applyMeasuredBoundsWrites = (
 			preparedStyles,
 			group,
 			portalHost,
+			sourceHost,
 		);
 	}
 

@@ -8,6 +8,7 @@ import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { getPortalHostBounds } from "../stores/host-bounds.store";
 
 type ResolvePortalOffsetStyleParams = {
+	alignHostToBoundsScroll?: boolean;
 	bounds: MeasuredDimensions;
 	boundsCurrentScroll?: ScrollMetadataState | null;
 	/**
@@ -27,6 +28,7 @@ type ResolvePortalOffsetStyleParams = {
 };
 
 export const resolvePortalOffsetStyle = ({
+	alignHostToBoundsScroll = false,
 	bounds,
 	boundsCurrentScroll,
 	compensateSourceScroll = false,
@@ -40,8 +42,10 @@ export const resolvePortalOffsetStyle = ({
 }: ResolvePortalOffsetStyleParams): StyleProps => {
 	"worklet";
 	const hostBounds = getPortalHostBounds(hostKey);
+	const boundsScrollSnapshot =
+		(bounds as { scroll?: ScrollMetadataState | null }).scroll ?? null;
 	const sourceScrollSnapshot = compensateSourceScroll
-		? ((bounds as { scroll?: ScrollMetadataState | null }).scroll ?? null)
+		? boundsScrollSnapshot
 		: null;
 	const sourceScrollDeltaX = compensateSourceScroll
 		? getClampedScrollAxisDelta(
@@ -60,14 +64,30 @@ export const resolvePortalOffsetStyle = ({
 	const sourcePageX = bounds.pageX - sourceScrollDeltaX;
 	const sourcePageY = bounds.pageY - sourceScrollDeltaY;
 	const boundsScroll = includeScrollOffsets
-		? ((bounds as { scroll?: ScrollMetadataState | null }).scroll ??
-			boundsCurrentScroll ??
-			currentScroll ??
-			null)
+		? (boundsScrollSnapshot ?? boundsCurrentScroll ?? currentScroll ?? null)
 		: null;
-	const hostBoundsScroll = includeScrollOffsets ? hostBounds?.scroll : null;
+	const hostBoundsScrollSnapshot = hostBounds?.scroll ?? null;
+	const hostBoundsScroll = includeScrollOffsets
+		? hostBoundsScrollSnapshot
+		: null;
 	const resolvedHostCurrentScroll =
 		hostCurrentScroll ?? boundsScroll ?? hostBoundsScroll ?? null;
+	const hostSnapshotDeltaX =
+		alignHostToBoundsScroll && !includeScrollOffsets
+			? getClampedScrollAxisDelta(
+					boundsScrollSnapshot,
+					hostBoundsScrollSnapshot,
+					"horizontal",
+				)
+			: 0;
+	const hostSnapshotDeltaY =
+		alignHostToBoundsScroll && !includeScrollOffsets
+			? getClampedScrollAxisDelta(
+					boundsScrollSnapshot,
+					hostBoundsScrollSnapshot,
+					"vertical",
+				)
+			: 0;
 	// Deltas are clamped to the layout range: iOS rubber-band offsets are
 	// outside the real scroll range and must not become coordinate-space deltas.
 	const hostScrollDeltaX = getClampedScrollAxisDelta(
@@ -83,10 +103,12 @@ export const resolvePortalOffsetStyle = ({
 
 	const adjustedHostPageX = hostBounds
 		? hostBounds.pageX -
+			hostSnapshotDeltaX -
 			interpolate(hostProgress, [0, 1], [hostScrollDeltaX, 0])
 		: 0;
 	const adjustedHostPageY = hostBounds
 		? hostBounds.pageY -
+			hostSnapshotDeltaY -
 			interpolate(hostProgress, [0, 1], [hostScrollDeltaY, 0])
 		: 0;
 	const boundsScrollDeltaX = includeScrollOffsets

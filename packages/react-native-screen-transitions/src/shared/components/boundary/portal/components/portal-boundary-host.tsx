@@ -62,6 +62,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			isCrossScreenPortal && link.source.sourceHost?.capturesScroll === true;
 
 		return resolvePortalOffsetStyle({
+			alignHostToBoundsScroll: !isCrossScreenPortal,
 			bounds: link.source.bounds,
 			compensateSourceScroll,
 			hostCurrentScroll: shouldCompensateHostScroll

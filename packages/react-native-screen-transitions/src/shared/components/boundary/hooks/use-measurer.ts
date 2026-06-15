@@ -11,6 +11,7 @@ import { useOriginContext } from "../../../providers/screen/origin.provider";
 import type { BoundsPortalAttachTarget } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
+import { getActiveScrollHost } from "../portal/stores/host-registry.store";
 import type { MeasureBoundary } from "../types";
 import {
 	attachScrollSnapshotToMeasuredBounds,
@@ -94,6 +95,10 @@ export const useMeasurer = ({
 				normalizedMeasured,
 				scrollMetadata.get(),
 			);
+			const sourceHost =
+				target.type === "source"
+					? (getActiveScrollHost(currentScreenKey) ?? undefined)
+					: undefined;
 
 			applyMeasuredBoundsWrites({
 				entryTag,
@@ -104,6 +109,7 @@ export const useMeasurer = ({
 				preparedStyles,
 				linkWrite: target,
 				portalHost,
+				sourceHost,
 			});
 		},
 		[
