@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useMemo, useRef } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
 import {
 	type StyleProp,
 	StyleSheet,
@@ -39,6 +39,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 
 	const measurement = useHostMeasurement({
 		capturesScroll,
+		enabled: activeBoundaryHosts.length > 0,
 		hostKey,
 		screenKey,
 	});

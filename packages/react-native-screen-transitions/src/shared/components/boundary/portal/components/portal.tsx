@@ -265,7 +265,7 @@ export const Portal = memo(function Portal({
 				collapsable={false}
 			>
 				<TransitionAwareTeleport animatedProps={teleportProps} name={id}>
-					{children}
+					<Animated.View style={placeholderStyle}>{children}</Animated.View>
 				</TransitionAwareTeleport>
 			</Animated.View>
 		);

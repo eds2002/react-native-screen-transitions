@@ -9,41 +9,69 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { useTheme } from "@/theme";
-import { MATCHED_SCREEN_VIDEO_ID } from "./constants";
+import { MATCHED_SCREEN_VIDEOS } from "./constants";
+
+const PLAYER_SLOT_ASPECT_RATIO = 9 / 16;
+const PLAYER_COLUMN_GAP = 12;
+const PLAYER_ROW_GAP = 14;
+
+type PlayerSlotProps = {
+	video: (typeof MATCHED_SCREEN_VIDEOS)[number];
+	width: number;
+};
+
+function PlayerSlot({ video, width }: PlayerSlotProps) {
+	const theme = useTheme();
+
+	return (
+		<View style={styles.slotWrap}>
+			<View
+				style={[
+					styles.videoSlot,
+					{
+						width,
+						height: width / PLAYER_SLOT_ASPECT_RATIO,
+					},
+				]}
+			>
+				<Transition.Boundary.View
+					id={video.id}
+					testID={`${video.id}-destination`}
+					style={StyleSheet.absoluteFill}
+				/>
+			</View>
+			<Text style={[styles.slotLabel, { color: theme.textSecondary }]}>
+				{video.title}
+			</Text>
+		</View>
+	);
+}
 
 export default function MatchedScreenPlayer() {
 	const theme = useTheme();
 	const { width } = useWindowDimensions();
-	const videoWidth = width;
-	const videoHeight = videoWidth * 1.35;
+	const slotWidth = Math.floor(width / 2);
+	const leadingVideos = MATCHED_SCREEN_VIDEOS.filter(
+		(_, index) => index % 2 === 0,
+	);
+	const trailingVideos = MATCHED_SCREEN_VIDEOS.filter(
+		(_, index) => index % 2 === 1,
+	);
 
 	return (
-		<SafeAreaView
-			style={[
-				styles.container,
-				{
-					borderRadius: 56,
-					overflow: "hidden",
-					borderCurve: "continuous",
-				},
-			]}
-			// edges={["top"]}
-		>
+		<SafeAreaView style={[styles.container]}>
 			<View style={styles.content}>
-				<View
-					style={[
-						styles.videoSlot,
-						{
-							width: videoWidth,
-							height: videoHeight,
-						},
-					]}
-				>
-					<Transition.Boundary.View
-						id={MATCHED_SCREEN_VIDEO_ID}
-						testID="matched-screen-video-destination"
-						style={StyleSheet.absoluteFill}
-					/>
+				<View style={styles.stage}>
+					<View style={styles.column}>
+						{leadingVideos.map((video) => (
+							<PlayerSlot key={video.id} video={video} width={slotWidth} />
+						))}
+					</View>
+					<View style={[styles.column, styles.trailingColumn]}>
+						{trailingVideos.map((video) => (
+							<PlayerSlot key={video.id} video={video} width={slotWidth} />
+						))}
+					</View>
 				</View>
 
 				<Pressable
@@ -71,15 +99,31 @@ const styles = StyleSheet.create({
 		flex: 1,
 		alignItems: "center",
 		justifyContent: "center",
-		gap: 20,
-		// paddingHorizontal: 12,
+		gap: 28,
+		// paddingHorizontal: 18,
+	},
+	stage: {
+		alignItems: "flex-start",
+		flexDirection: "row",
+		gap: PLAYER_COLUMN_GAP,
+		justifyContent: "center",
+	},
+	column: {
+		gap: PLAYER_ROW_GAP,
+	},
+	trailingColumn: {
+		paddingTop: 52,
+	},
+	slotWrap: {
+		alignItems: "center",
+		gap: 10,
 	},
 	videoSlot: {
 		overflow: "hidden",
 	},
-	portalHost: {
-		width: "100%",
-		height: "100%",
+	slotLabel: {
+		fontSize: 13,
+		fontWeight: "700",
 	},
 	closeButton: {
 		borderWidth: 1,

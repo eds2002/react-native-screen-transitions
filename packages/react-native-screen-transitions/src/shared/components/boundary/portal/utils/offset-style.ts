@@ -7,6 +7,11 @@ import { getClampedScrollAxisDelta } from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { getPortalHostBounds } from "../stores/host-bounds.store";
 
+export type PortalOffsetPlacement =
+	| "same-screen"
+	| "cross-screen-open"
+	| "cross-screen-close";
+
 type ResolvePortalOffsetStyleParams = {
 	alignHostToBoundsScroll?: boolean;
 	bounds: MeasuredDimensions;
@@ -23,8 +28,20 @@ type ResolvePortalOffsetStyleParams = {
 	hostKey: string;
 	hostProgress?: number;
 	includeScrollOffsets?: boolean;
+	/**
+	 * The three portal coordinate cases we support:
+	 *
+	 * - same-screen: source and host are on the same screen; align the stored
+	 *   host frame to the source measurement's scroll snapshot once.
+	 * - cross-screen-open: source and host are on different screens; host
+	 *   placement is static during the open/idle portion.
+	 * - cross-screen-close: source and host are on different screens; the
+	 *   dismissal needs the host's live scroll frame until the portal detaches.
+	 */
+	placement?: PortalOffsetPlacement;
 	position?: "absolute" | "relative";
 	sourceCurrentScroll?: ScrollMetadataState | null;
+	trackSourceScroll?: boolean;
 };
 
 export const resolvePortalOffsetStyle = ({
@@ -37,24 +54,34 @@ export const resolvePortalOffsetStyle = ({
 	hostKey,
 	hostProgress = 0,
 	includeScrollOffsets = true,
+	placement,
 	position = "relative",
 	sourceCurrentScroll,
+	trackSourceScroll = false,
 }: ResolvePortalOffsetStyleParams): StyleProps => {
 	"worklet";
 	const hostBounds = getPortalHostBounds(hostKey);
+	const shouldAlignHostToBoundsScroll = placement
+		? placement === "same-screen"
+		: alignHostToBoundsScroll;
+	const shouldCompensateSourceScroll =
+		trackSourceScroll || compensateSourceScroll;
+	const shouldIncludeHostScrollOffsets = placement
+		? placement === "cross-screen-close"
+		: includeScrollOffsets;
 	const boundsScrollSnapshot =
 		(bounds as { scroll?: ScrollMetadataState | null }).scroll ?? null;
-	const sourceScrollSnapshot = compensateSourceScroll
+	const sourceScrollSnapshot = shouldCompensateSourceScroll
 		? boundsScrollSnapshot
 		: null;
-	const sourceScrollDeltaX = compensateSourceScroll
+	const sourceScrollDeltaX = shouldCompensateSourceScroll
 		? getClampedScrollAxisDelta(
 				sourceCurrentScroll ?? null,
 				sourceScrollSnapshot,
 				"horizontal",
 			)
 		: 0;
-	const sourceScrollDeltaY = compensateSourceScroll
+	const sourceScrollDeltaY = shouldCompensateSourceScroll
 		? getClampedScrollAxisDelta(
 				sourceCurrentScroll ?? null,
 				sourceScrollSnapshot,
@@ -63,17 +90,17 @@ export const resolvePortalOffsetStyle = ({
 		: 0;
 	const sourcePageX = bounds.pageX - sourceScrollDeltaX;
 	const sourcePageY = bounds.pageY - sourceScrollDeltaY;
-	const boundsScroll = includeScrollOffsets
+	const boundsScroll = shouldIncludeHostScrollOffsets
 		? (boundsScrollSnapshot ?? boundsCurrentScroll ?? currentScroll ?? null)
 		: null;
 	const hostBoundsScrollSnapshot = hostBounds?.scroll ?? null;
-	const hostBoundsScroll = includeScrollOffsets
+	const hostBoundsScroll = shouldIncludeHostScrollOffsets
 		? hostBoundsScrollSnapshot
 		: null;
 	const resolvedHostCurrentScroll =
 		hostCurrentScroll ?? boundsScroll ?? hostBoundsScroll ?? null;
 	const hostSnapshotDeltaX =
-		alignHostToBoundsScroll && !includeScrollOffsets
+		shouldAlignHostToBoundsScroll && !shouldIncludeHostScrollOffsets
 			? getClampedScrollAxisDelta(
 					boundsScrollSnapshot,
 					hostBoundsScrollSnapshot,
@@ -81,7 +108,7 @@ export const resolvePortalOffsetStyle = ({
 				)
 			: 0;
 	const hostSnapshotDeltaY =
-		alignHostToBoundsScroll && !includeScrollOffsets
+		shouldAlignHostToBoundsScroll && !shouldIncludeHostScrollOffsets
 			? getClampedScrollAxisDelta(
 					boundsScrollSnapshot,
 					hostBoundsScrollSnapshot,
@@ -111,14 +138,14 @@ export const resolvePortalOffsetStyle = ({
 			hostSnapshotDeltaY -
 			interpolate(hostProgress, [0, 1], [hostScrollDeltaY, 0])
 		: 0;
-	const boundsScrollDeltaX = includeScrollOffsets
+	const boundsScrollDeltaX = shouldIncludeHostScrollOffsets
 		? getClampedScrollAxisDelta(
 				currentScroll ?? null,
 				boundsScroll,
 				"horizontal",
 			)
 		: 0;
-	const boundsScrollDeltaY = includeScrollOffsets
+	const boundsScrollDeltaY = shouldIncludeHostScrollOffsets
 		? getClampedScrollAxisDelta(currentScroll ?? null, boundsScroll, "vertical")
 		: 0;
 	const offsetX = hostBounds

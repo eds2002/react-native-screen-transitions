@@ -10,7 +10,10 @@ import { GestureStore } from "../../../../stores/gesture.store";
 import { ScrollStore } from "../../../../stores/scroll.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
 import { createPortalBoundaryHostName } from "../utils/naming";
-import { resolvePortalOffsetStyle } from "../utils/offset-style";
+import {
+	type PortalOffsetPlacement,
+	resolvePortalOffsetStyle,
+} from "../utils/offset-style";
 
 const AnimatedPortalBoundaryHost =
 	Animated.createAnimatedComponent(NativePortalHost);
@@ -45,35 +48,36 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			return NO_STYLES;
 		}
 
-		// Opening/idle placement is resolved once from the host measurement so a
-		// nested host moves with its container instead of behaving like a sticky
-		// overlay. Closing is the opposite: the return path needs the host's live
-		// scroll frame for the whole dismissal.
+		// Make the coordinate case explicit before resolving the host offset.
+		// The resolver owns the math; this component decides which screen/scroll
+		// relationship the active portal is in.
 		const isCrossScreenPortal = link.source.screenKey !== host.screenKey;
 		const isHostClosing =
 			hostClosing.get() === 1 || hostGestureDismissing.get() === 1;
-		const shouldCompensateHostScroll = isCrossScreenPortal && isHostClosing;
+		const placement: PortalOffsetPlacement = !isCrossScreenPortal
+			? "same-screen"
+			: isHostClosing
+				? "cross-screen-close"
+				: "cross-screen-open";
 
 		// A source that originated inside its own scroll host moves with that
 		// ScrollView while this portal stays attached over here. Shifting the
 		// source rect by the clamped source scroll travel keeps the return
 		// landing point on the live placeholder, so the close detach is seamless.
-		const compensateSourceScroll =
+		const trackSourceScroll =
 			isCrossScreenPortal && link.source.sourceHost?.capturesScroll === true;
 
 		return resolvePortalOffsetStyle({
-			alignHostToBoundsScroll: !isCrossScreenPortal,
 			bounds: link.source.bounds,
-			compensateSourceScroll,
-			hostCurrentScroll: shouldCompensateHostScroll
-				? hostScrollMetadata.get()
-				: null,
+			hostCurrentScroll:
+				placement === "cross-screen-close" ? hostScrollMetadata.get() : null,
 			hostKey: host.hostKey,
-			includeScrollOffsets: shouldCompensateHostScroll,
-			sourceCurrentScroll: compensateSourceScroll
+			placement,
+			sourceCurrentScroll: trackSourceScroll
 				? sourceScrollMetadata.get()
 				: null,
 			hostProgress: hostProgress.get(),
+			trackSourceScroll,
 		});
 	});
 

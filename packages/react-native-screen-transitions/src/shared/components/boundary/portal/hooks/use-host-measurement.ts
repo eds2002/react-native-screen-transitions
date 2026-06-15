@@ -21,12 +21,14 @@ import {
 
 type UseHostMeasurementParams = {
 	capturesScroll: boolean;
+	enabled: boolean;
 	hostKey: string;
 	screenKey: string;
 };
 
 export const useHostMeasurement = ({
 	capturesScroll,
+	enabled,
 	hostKey,
 	screenKey,
 }: UseHostMeasurementParams) => {
@@ -39,11 +41,15 @@ export const useHostMeasurement = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
+			if (!enabled) {
+				return null;
+			}
+
 			return hasMeasuredHost.get();
 		},
 		(hasAlreadyMeasured) => {
 			"worklet";
-			if (hasAlreadyMeasured) {
+			if (!enabled || hasAlreadyMeasured) {
 				return;
 			}
 
