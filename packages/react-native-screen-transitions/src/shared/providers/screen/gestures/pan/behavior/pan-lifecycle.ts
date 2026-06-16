@@ -6,6 +6,7 @@ import {
 	normalizeGestureTranslation,
 	resolveGestureVelocity,
 } from "../../shared/physics";
+import { snapshotGestureHandoff } from "../../shared/snapshot";
 import type {
 	GestureCompositionActivation,
 	GestureDimensions,
@@ -21,7 +22,6 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	"worklet";
 	const {
 		stores: { gestures, animations },
-		gestureProgressBaseline,
 	} = runtime;
 
 	const wasSettling = gestures.settling.get();
@@ -55,7 +55,9 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	gestures.raw.scale.set(1);
 	gestures.raw.normScale.set(0);
 	gestures.raw.rotation.set(0);
-	gestureProgressBaseline.set(animations.progress.get());
+	gestures.internal.progressBaseline.set(animations.progress.get());
+	gestures.internal.progressDeltaX.set(0);
+	gestures.internal.progressDeltaY.set(0);
 };
 
 export const trackPanGesture = (
@@ -87,6 +89,8 @@ export const trackPanGesture = (
 	gestures.y.set(y);
 	gestures.normX.set(normX);
 	gestures.normY.set(normY);
+	gestures.internal.progressDeltaX.set(normX);
+	gestures.internal.progressDeltaY.set(normY);
 	gestures.velocity.set(velocity);
 	gestures.raw.x.set(rawX);
 	gestures.raw.y.set(rawY);
@@ -128,8 +132,6 @@ export const finalizePanRelease = (
 					target: animations.progress.get(),
 					shouldDismiss: false,
 					initialVelocity: 0,
-					resetNormalizedValuesImmediately:
-						policy.gestureProgressMode === "progress-driven",
 					transitionSpec: undefined,
 					resetSpec: policy.transitionSpec?.open,
 				},
@@ -143,18 +145,15 @@ export const finalizePanRelease = (
 		system.targetProgress.set(plan.commitProgress);
 	}
 
+	if (canDriveRelease && plan.shouldDismiss) {
+		snapshotGestureHandoff(gestures, {
+			velocity: plan.handoffVelocity,
+		});
+	}
+
 	resetPanGestureValues({
-		spec: plan.resetSpec,
+		plan,
 		gestures,
-		shouldDismiss: plan.shouldDismiss,
-		velocityX: plan.resetVelocityX,
-		velocityY: plan.resetVelocityY,
-		velocityNormX: plan.resetVelocityNormX,
-		velocityNormY: plan.resetVelocityNormY,
-		releaseVelocity: plan.releaseVelocity,
-		resetNormalizedValues: plan.resetNormalizedValues,
-		resetNormalizedValuesImmediately: plan.resetNormalizedValuesImmediately,
-		preserveRawValues: plan.preserveRawValues,
 		updateLifecycle: canDriveRelease,
 	});
 

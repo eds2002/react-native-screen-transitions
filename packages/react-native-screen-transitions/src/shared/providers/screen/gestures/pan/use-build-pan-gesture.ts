@@ -3,7 +3,6 @@ import { useWindowDimensions } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsContext } from "../../options";
-import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
 	DirectionClaimMap,
@@ -32,14 +31,9 @@ export const useBuildPanGesture = ({
 	const { participation, pan: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
 
-	const { gestureProgressBaseline, lockedSnapPoint } =
-		useGestureBuilderState(participation);
-
 	const runtime = useStableRuntimeConfig({
 		participation,
 		policy,
-		gestureProgressBaseline,
-		lockedSnapPoint,
 	});
 
 	const activation = usePanActivation({

@@ -1,105 +1,73 @@
-import { EPSILON, FALSE, TRUE } from "../../../../../constants";
+import { FALSE, TRUE } from "../../../../../constants";
 import type { GestureStoreMap } from "../../../../../stores/gesture.store";
-import type { AnimationConfig } from "../../../../../types/animation.types";
-import {
-	animateResetValue,
-	clearGestureSettlingIfResting,
-	getGestureResetSpec,
-} from "../../shared/reset";
+import { animateMany } from "../../shared/reset";
+import type { PanReleasePlan } from "../../types";
 
 interface ResetPanGestureValuesProps {
-	spec?: AnimationConfig;
+	plan: PanReleasePlan;
 	gestures: GestureStoreMap;
-	shouldDismiss: boolean;
-	velocityX?: number;
-	velocityY?: number;
-	velocityNormX?: number;
-	velocityNormY?: number;
-	releaseVelocity?: number;
-	resetNormalizedValues?: boolean;
-	resetNormalizedValuesImmediately?: boolean;
-	preserveRawValues?: boolean;
 	updateLifecycle?: boolean;
 }
 
-const clearPanSettlingIfResting = (gestures: GestureStoreMap) => {
-	"worklet";
-
-	clearGestureSettlingIfResting(
-		gestures,
-		!gestures.dragging.get() &&
-			!gestures.dismissing.get() &&
-			Math.abs(gestures.x.get()) <= EPSILON &&
-			Math.abs(gestures.y.get()) <= EPSILON &&
-			Math.abs(gestures.normX.get()) <= EPSILON &&
-			Math.abs(gestures.normY.get()) <= EPSILON,
-	);
-};
-
 export const resetPanGestureValues = ({
-	spec,
+	plan,
 	gestures,
-	shouldDismiss,
-	velocityX,
-	velocityY,
-	velocityNormX,
-	velocityNormY,
-	releaseVelocity,
-	resetNormalizedValues = true,
-	resetNormalizedValuesImmediately = false,
-	preserveRawValues = shouldDismiss,
 	updateLifecycle = true,
 }: ResetPanGestureValuesProps) => {
 	"worklet";
-	const clearSettlingIfNeeded = () => {
+	const finishPanReset = () => {
 		"worklet";
-		if (updateLifecycle) {
-			clearPanSettlingIfResting(gestures);
+		if (!updateLifecycle || plan.shouldDismiss) {
+			return;
 		}
+
+		gestures.active.set(null);
+		gestures.direction.set(null);
+		gestures.settling.set(FALSE);
 	};
 
-	if (!preserveRawValues) {
-		gestures.raw.x.set(0);
-		gestures.raw.y.set(0);
-		gestures.raw.normX.set(0);
-		gestures.raw.normY.set(0);
-	}
+	gestures.raw.x.set(0);
+	gestures.raw.y.set(0);
+	gestures.raw.normX.set(0);
+	gestures.raw.normY.set(0);
 
 	if (updateLifecycle) {
 		gestures.dragging.set(FALSE);
-		gestures.dismissing.set(shouldDismiss ? TRUE : FALSE);
-		gestures.settling.set(shouldDismiss ? FALSE : TRUE);
-	}
-	gestures.velocity.set(shouldDismiss ? (releaseVelocity ?? 0) : 0);
-
-	animateResetValue(gestures.x, 0, getGestureResetSpec(spec, velocityX), () =>
-		clearSettlingIfNeeded(),
-	);
-	animateResetValue(gestures.y, 0, getGestureResetSpec(spec, velocityY), () =>
-		clearSettlingIfNeeded(),
-	);
-
-	if (!resetNormalizedValues) {
-		return;
+		gestures.dismissing.set(plan.shouldDismiss ? TRUE : FALSE);
+		gestures.settling.set(plan.shouldDismiss ? FALSE : TRUE);
 	}
 
-	if (resetNormalizedValuesImmediately) {
-		gestures.normX.set(0);
-		gestures.normY.set(0);
-		clearSettlingIfNeeded();
-		return;
+	gestures.velocity.set(0);
+
+	const progressDeltaWasCommitted = typeof plan.commitProgress === "number";
+
+	if (progressDeltaWasCommitted) {
+		gestures.internal.progressDeltaX.set(0);
+		gestures.internal.progressDeltaY.set(0);
 	}
 
-	animateResetValue(
-		gestures.normX,
-		0,
-		getGestureResetSpec(spec, velocityNormX),
-		() => clearSettlingIfNeeded(),
-	);
-	animateResetValue(
-		gestures.normY,
-		0,
-		getGestureResetSpec(spec, velocityNormY),
-		() => clearSettlingIfNeeded(),
+	animateMany(
+		[
+			{ value: gestures.x, toValue: 0, velocity: plan.resetVelocityX },
+			{ value: gestures.y, toValue: 0, velocity: plan.resetVelocityY },
+			{ value: gestures.normX, toValue: 0, velocity: plan.resetVelocityNormX },
+			{ value: gestures.normY, toValue: 0, velocity: plan.resetVelocityNormY },
+			...(progressDeltaWasCommitted
+				? []
+				: [
+						{
+							value: gestures.internal.progressDeltaX,
+							toValue: 0,
+							velocity: plan.resetVelocityNormX,
+						},
+						{
+							value: gestures.internal.progressDeltaY,
+							toValue: 0,
+							velocity: plan.resetVelocityNormY,
+						},
+					]),
+		],
+		plan.resetSpec,
+		finishPanReset,
 	);
 };

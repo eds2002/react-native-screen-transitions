@@ -92,8 +92,39 @@ const createPinchReleaseRuntime = (
 			gestureReleaseVelocityScale: 1,
 			transitionSpec: undefined,
 		},
-		gestureProgressBaseline: { get: () => 1 },
-		stores: { animations: createAnimations(progress) },
+		stores: {
+			animations: createAnimations(progress),
+			gestures: {
+				internal: {
+					progressBaseline: { get: () => 1 },
+					progressDeltaX: { get: () => 0 },
+					progressDeltaY: { get: () => 0 },
+					snapshot: {
+						x: { get: () => 0 },
+						y: { get: () => 0 },
+						normX: { get: () => 0 },
+						normY: { get: () => 0 },
+						velocity: { get: () => 0 },
+						scale: { get: () => 1 },
+						normScale: { get: () => 0 },
+						focalX: { get: () => 0 },
+						focalY: { get: () => 0 },
+						rotation: { get: () => 0 },
+						raw: {
+							x: { get: () => 0 },
+							y: { get: () => 0 },
+							normX: { get: () => 0 },
+							normY: { get: () => 0 },
+							scale: { get: () => 1 },
+							normScale: { get: () => 0 },
+							rotation: { get: () => 0 },
+						},
+						active: { get: () => null },
+						direction: { get: () => null },
+					},
+				},
+			},
+		},
 	}) as any;
 
 const createSharedValue = <T>(initialValue: T) => {
@@ -106,6 +137,30 @@ const createSharedValue = <T>(initialValue: T) => {
 		},
 	};
 };
+
+const createGestureSnapshotStore = () => ({
+	x: createSharedValue(0),
+	y: createSharedValue(0),
+	normX: createSharedValue(0),
+	normY: createSharedValue(0),
+	velocity: createSharedValue(0),
+	scale: createSharedValue(1),
+	normScale: createSharedValue(0),
+	focalX: createSharedValue(0),
+	focalY: createSharedValue(0),
+	rotation: createSharedValue(0),
+	raw: {
+		x: createSharedValue(0),
+		y: createSharedValue(0),
+		normX: createSharedValue(0),
+		normY: createSharedValue(0),
+		scale: createSharedValue(1),
+		normScale: createSharedValue(0),
+		rotation: createSharedValue(0),
+	},
+	active: createSharedValue(null),
+	direction: createSharedValue(null),
+});
 
 const createScreenOptions = (
 	gestureSensitivity: number | null,
@@ -174,6 +229,13 @@ const createGestureStore = () =>
 			scale: createSharedValue(1),
 			normScale: createSharedValue(0),
 			rotation: createSharedValue(0),
+		},
+		internal: {
+			progressBaseline: createSharedValue(0),
+			progressDeltaX: createSharedValue(0),
+			progressDeltaY: createSharedValue(0),
+			lockedSnapPoint: createSharedValue(null),
+			snapshot: createGestureSnapshotStore(),
 		},
 		dismissing: createSharedValue(0),
 		dragging: createSharedValue(0),
@@ -592,6 +654,8 @@ describe("trackPanGesture", () => {
 		expect(gestures.y.get()).toBeCloseTo(-20, 5);
 		expect(gestures.normX.get()).toBeCloseTo(0.125, 5);
 		expect(gestures.normY.get()).toBeCloseTo(-0.1, 5);
+		expect(gestures.internal.progressDeltaX.get()).toBeCloseTo(0.125, 5);
+		expect(gestures.internal.progressDeltaY.get()).toBeCloseTo(-0.1, 5);
 		expect(gestures.velocity.get()).toBeCloseTo(1, 5);
 		expect(gestures.raw.x.get()).toBeCloseTo(200, 5);
 		expect(gestures.raw.y.get()).toBeCloseTo(-80, 5);

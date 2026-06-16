@@ -2,7 +2,6 @@ import { describe, expect, it } from "bun:test";
 import type { ActiveGesture } from "../../../types/gesture.types";
 import type {
 	GestureDimensions,
-	GestureProgressMode,
 	PanGestureEvent,
 	PanGestureRuntime,
 	PanReleaseResult,
@@ -17,13 +16,9 @@ const dimensions = {
 	height: 800,
 } satisfies GestureDimensions;
 
-const createRuntime = (
-	gestureProgressMode: GestureProgressMode,
-	gestureReleaseVelocityScale = 1,
-) =>
+const createRuntime = (gestureReleaseVelocityScale = 1) =>
 	({
 		policy: {
-			gestureProgressMode,
 			gestureReleaseVelocityScale,
 		},
 		stores: {
@@ -44,11 +39,36 @@ const shared = <T>(initial: T) => {
 	};
 };
 
+const createGestureSnapshotStore = () => ({
+	x: shared(0),
+	y: shared(0),
+	normX: shared(0),
+	normY: shared(0),
+	velocity: shared(0),
+	scale: shared(1),
+	normScale: shared(0),
+	focalX: shared(0),
+	focalY: shared(0),
+	rotation: shared(0),
+	raw: {
+		x: shared(0),
+		y: shared(0),
+		normX: shared(0),
+		normY: shared(0),
+		scale: shared(1),
+		normScale: shared(0),
+		rotation: shared(0),
+	},
+	active: shared(null),
+	direction: shared(null),
+});
+
 const createSnapRuntime = ({
 	progress = 0.5,
 	baseline = 0.5,
 	activeGesture = "horizontal-inverted" as ActiveGesture,
-	gestureProgressMode = "progress-driven" as GestureProgressMode,
+	gestureSnapLocked = false,
+	lockedSnapPoint = 1 as number | null,
 } = {}) =>
 	({
 		participation: {
@@ -62,10 +82,9 @@ const createSnapRuntime = ({
 			},
 		},
 		policy: {
-			gestureProgressMode,
 			gestureReleaseVelocityScale: 1,
 			gestureSnapVelocityImpact: 0.1,
-			gestureSnapLocked: false,
+			gestureSnapLocked,
 			snapAxisDirections: {
 				horizontal: {
 					collapse: "horizontal",
@@ -86,10 +105,15 @@ const createSnapRuntime = ({
 			},
 			gestures: {
 				active: shared(activeGesture),
+				internal: {
+					progressBaseline: shared(baseline),
+					progressDeltaX: shared(0),
+					progressDeltaY: shared(0),
+					lockedSnapPoint: shared<number | null>(lockedSnapPoint),
+					snapshot: createGestureSnapshotStore(),
+				},
 			},
 		},
-		gestureProgressBaseline: shared(baseline),
-		lockedSnapPoint: shared(1),
 	}) as unknown as PanGestureRuntime;
 
 const createRelease = (
@@ -109,10 +133,10 @@ const rawEvent = {
 } as PanGestureEvent;
 
 describe("pan release plan", () => {
-	it("hands dismiss velocity to progress and neutralizes normalized values in progress-driven mode", () => {
+	it("hands dismiss velocity to progress and neutralizes gesture reset velocity", () => {
 		const plan = buildPanReleasePlan(
 			createRelease(),
-			createRuntime("progress-driven"),
+			createRuntime(),
 			dimensions,
 			rawEvent,
 		);
@@ -122,33 +146,13 @@ describe("pan release plan", () => {
 		expect(plan.resetVelocityY).toBe(0);
 		expect(plan.resetVelocityNormX).toBe(0);
 		expect(plan.resetVelocityNormY).toBe(0);
-		expect(plan.releaseVelocity).toBeCloseTo(0.075, 5);
-		expect(plan.resetNormalizedValues).toBe(true);
-		expect(plan.preserveRawValues).toBe(true);
+		expect(plan.handoffVelocity).toBeCloseTo(0.075, 5);
 	});
 
-	it("keeps dismiss velocity on gesture reset and preserves normalized values in freeform mode", () => {
-		const plan = buildPanReleasePlan(
-			createRelease(),
-			createRuntime("freeform"),
-			dimensions,
-			rawEvent,
-		);
-
-		expect(plan.progressVelocity).toBe(0);
-		expect(plan.resetVelocityX).toBe(120);
-		expect(plan.resetVelocityY).toBe(-240);
-		expect(plan.resetVelocityNormX).toBe(0.3);
-		expect(plan.resetVelocityNormY).toBe(-0.3);
-		expect(plan.releaseVelocity).toBeCloseTo(0.075, 5);
-		expect(plan.resetNormalizedValues).toBe(false);
-		expect(plan.preserveRawValues).toBe(true);
-	});
-
-	it("resets cancelled gestures in progress-driven mode", () => {
+	it("resets cancelled gestures with release velocity", () => {
 		const plan = buildPanReleasePlan(
 			createRelease({ target: 1, shouldDismiss: false }),
-			createRuntime("progress-driven"),
+			createRuntime(),
 			dimensions,
 			rawEvent,
 		);
@@ -156,30 +160,13 @@ describe("pan release plan", () => {
 		expect(plan.progressVelocity).toBe(4);
 		expect(plan.resetVelocityX).toBe(120);
 		expect(plan.resetVelocityY).toBe(-240);
-		expect(plan.releaseVelocity).toBe(0);
-		expect(plan.resetNormalizedValues).toBe(true);
-		expect(plan.preserveRawValues).toBe(false);
-	});
-
-	it("keeps cancelled freeform velocity off progress and on gesture reset", () => {
-		const plan = buildPanReleasePlan(
-			createRelease({ target: 1, shouldDismiss: false }),
-			createRuntime("freeform"),
-			dimensions,
-			rawEvent,
-		);
-
-		expect(plan.progressVelocity).toBe(0);
-		expect(plan.resetVelocityX).toBe(120);
-		expect(plan.resetVelocityY).toBe(-240);
-		expect(plan.resetNormalizedValues).toBe(true);
-		expect(plan.preserveRawValues).toBe(false);
+		expect(plan.handoffVelocity).toBe(0);
 	});
 
 	it("clamps negative release velocity scale to zero", () => {
 		const plan = buildPanReleasePlan(
 			createRelease(),
-			createRuntime("freeform", -1),
+			createRuntime(-1),
 			dimensions,
 			rawEvent,
 		);
@@ -206,7 +193,6 @@ describe("snap pan release", () => {
 
 		expect(release.target).toBe(1);
 		expect(release.commitProgress).toBe(1);
-		expect(release.resetNormalizedValuesImmediately).toBe(true);
 	});
 
 	it("still snaps back when the live drag has not crossed the midpoint", () => {
@@ -225,7 +211,7 @@ describe("snap pan release", () => {
 		expect(release.commitProgress).toBe(0.725);
 	});
 
-	it("carries committed progress and immediate normalized reset into the release plan", () => {
+	it("carries committed progress into the release plan", () => {
 		const release = resolveSnapPanRelease(
 			{
 				translationX: -200,
@@ -236,9 +222,32 @@ describe("snap pan release", () => {
 			createSnapRuntime(),
 			dimensions,
 		);
-		const plan = buildPanReleasePlan(release, createRuntime("progress-driven"), dimensions, rawEvent);
+		const plan = buildPanReleasePlan(
+			release,
+			createRuntime(),
+			dimensions,
+			rawEvent,
+		);
 
 		expect(plan.commitProgress).toBe(1);
-		expect(plan.resetNormalizedValuesImmediately).toBe(true);
+	});
+
+	it("uses the max snap point when a locked snap point has not been primed", () => {
+		const release = resolveSnapPanRelease(
+			{
+				translationX: -90,
+				translationY: 0,
+				velocityX: 0,
+				velocityY: 0,
+			} as PanGestureEvent,
+			createSnapRuntime({
+				gestureSnapLocked: true,
+				lockedSnapPoint: null,
+			}),
+			dimensions,
+		);
+
+		expect(release.target).toBe(1);
+		expect(release.commitProgress).toBe(0.725);
 	});
 });

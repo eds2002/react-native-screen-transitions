@@ -248,15 +248,24 @@ export type ScreenTransitionConfig = {
 	gestureResponseDistance?: number;
 
 	/**
-	 * Controls whether live gesture displacement drives transition progress or
-	 * stays available as freeform gesture values for custom interpolators.
+	 * Deprecated compatibility option.
+	 *
+	 * Gesture movement now always contributes to `progress`. Use `transitionProgress`
+	 * in interpolators when you need transition progress without live gesture
+	 * contribution.
+	 *
+	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
 	gestureProgressMode?: GestureProgressMode;
 
 	/**
-	 * Whether the gesture drives the progress.
+	 * Deprecated compatibility alias for `gestureProgressMode`.
 	 *
-	 * @deprecated Use `gestureProgressMode` instead.
+	 * Gesture movement now always contributes to `progress`. Use `transitionProgress`
+	 * in interpolators when you need transition progress without live gesture
+	 * contribution.
+	 *
+	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
 	gestureDrivesProgress?: boolean;
 

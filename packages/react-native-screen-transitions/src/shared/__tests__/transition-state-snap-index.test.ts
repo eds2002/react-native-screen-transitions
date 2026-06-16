@@ -19,6 +19,30 @@ const shared = <T>(initial: T): SharedValue<T> => {
 	} as SharedValue<T>;
 };
 
+const createGestureSnapshotStore = () => ({
+	x: shared(0),
+	y: shared(0),
+	normX: shared(0),
+	normY: shared(0),
+	velocity: shared(0),
+	scale: shared(1),
+	normScale: shared(0),
+	focalX: shared(0),
+	focalY: shared(0),
+	rotation: shared(0),
+	raw: {
+		x: shared(0),
+		y: shared(0),
+		normX: shared(0),
+		normY: shared(0),
+		scale: shared(1),
+		normScale: shared(0),
+		rotation: shared(0),
+	},
+	active: shared(null),
+	direction: shared(null),
+});
+
 const createGestureStore = (): GestureStoreMap => ({
 	x: shared(0),
 	y: shared(0),
@@ -38,6 +62,13 @@ const createGestureStore = (): GestureStoreMap => ({
 		scale: shared(1),
 		normScale: shared(0),
 		rotation: shared(0),
+	},
+	internal: {
+		progressBaseline: shared(0),
+		progressDeltaX: shared(0),
+		progressDeltaY: shared(0),
+		lockedSnapPoint: shared(null),
+		snapshot: createGestureSnapshotStore(),
 	},
 	dismissing: shared(0),
 	dragging: shared(0),

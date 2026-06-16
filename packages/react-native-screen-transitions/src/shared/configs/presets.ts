@@ -246,7 +246,6 @@ export const SharedIGImage = ({
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
 		enableTransitions: true,
-		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			current,
 			layouts: {
@@ -259,8 +258,8 @@ export const SharedIGImage = ({
 		}) => {
 			"worklet";
 
-			const normX = active.gesture.normX;
-			const normY = active.gesture.normY;
+			const normX = active.gesture.handoff.normX;
+			const normY = active.gesture.handoff.normY;
 
 			const dragX = interpolate(
 				normX,
@@ -394,7 +393,6 @@ export const SharedAppleMusic = ({
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "horizontal"],
-		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			bounds,
 			focused,
@@ -405,9 +403,10 @@ export const SharedAppleMusic = ({
 		}) => {
 			"worklet";
 
-			const normX = active.gesture.normX;
-			const normY = active.gesture.normY;
-			const initialGesture = active.gesture.active ?? active.gesture.direction;
+			const normX = active.gesture.handoff.normX;
+			const normY = active.gesture.handoff.normY;
+			const initialGesture =
+				active.gesture.handoff.active ?? active.gesture.handoff.direction;
 
 			/**
 			 * ===============================
@@ -608,7 +607,6 @@ export const SharedXImage = ({
 		enableTransitions: true,
 		gestureEnabled: true,
 		gestureDirection: ["vertical", "vertical-inverted"],
-		gestureProgressMode: "freeform",
 		screenStyleInterpolator: ({
 			focused,
 			bounds,

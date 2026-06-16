@@ -14,7 +14,9 @@ import type {
 	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
+	GestureHandoffValues,
 	NativeStackAdapterOptions,
+	RawGestureValues,
 	ScreenAnimationTarget,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
@@ -136,9 +138,8 @@ void legacyAnimationTarget;
 void transitionTarget;
 void transitionDepthTarget;
 
-const numericBoundsResult = interpolationProps.bounds({
-	id: 42,
-});
+const scopedBounds = interpolationProps.bounds({ id: 42 });
+const numericBoundsResult = scopedBounds;
 const parentTransition = interpolationProps.transition({ depth: -1 });
 const grandparentTransition = interpolationProps.transition({ depth: -2 });
 const selfTransition = interpolationProps.transition({ depth: 0 });
@@ -163,6 +164,7 @@ const absoluteRawBoundsResult = interpolationProps.bounds({
 	method: "size",
 	space: "absolute",
 	raw: true,
+	progress: interpolationProps.current.transitionProgress,
 });
 const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
 	.bounds({ id: 42 })
@@ -187,31 +189,17 @@ const configuredRevealInterpolatedStyle: BoundsNavigationRevealStyle =
 	});
 void configuredRevealInterpolatedStyle;
 const currentLink = interpolationProps.bounds.getLink(42);
-const initialSource = currentLink?.initialSource;
-const initialDestination = currentLink?.initialDestination;
-const scopedBounds = interpolationProps.bounds({ id: 42 });
+const initialSourceBounds = currentLink?.initialSource?.bounds;
+const initialDestinationBounds = currentLink?.initialDestination?.bounds;
 const scopedCurrentLink = scopedBounds.getLink();
-const scopedLinkRawSize = scopedCurrentLink?.compute({
-	method: "size",
-	space: "absolute",
-	target: "fullscreen",
-	raw: true,
-});
-const scopedMeasured = scopedBounds.getMeasured("screen-key");
-const scopedInitialSnapshot = scopedBounds.getSnapshot("screen-key");
-const scopedInterpolatedStyle: number =
-	scopedBounds.interpolateStyle("opacity");
-const scopedInterpolatedBounds: number =
-	scopedBounds.interpolateBounds("pageX");
 void currentLink;
-void initialSource;
-void initialDestination;
+void initialSourceBounds;
+void initialDestinationBounds;
 void scopedCurrentLink;
-void scopedLinkRawSize;
-void scopedMeasured;
-void scopedInitialSnapshot;
-void scopedInterpolatedStyle;
-void scopedInterpolatedBounds;
+void numericBoundsResult;
+void offsetBoundsResult;
+void deprecatedGesturesBoundsResult;
+void absoluteRawBoundsResult;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
@@ -234,16 +222,32 @@ const scrollMetadataState: ScrollMetadataState = {
 };
 const maybeScrollOffset: number | undefined =
 	interpolationProps.current.layouts.scroll?.vertical?.offset;
+const currentTransitionProgress: number =
+	interpolationProps.current.transitionProgress;
 const currentActiveGesture = interpolationProps.current.gesture.active;
 const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
 const currentGestureVelocity: number =
 	interpolationProps.current.gesture.velocity;
+const currentGestureHandoffNormX: number =
+	interpolationProps.current.gesture.handoff.normX;
+const currentGestureHandoffRawNormX: number =
+	interpolationProps.current.gesture.handoff.raw.normX;
+const currentGestureHandoff: GestureHandoffValues =
+	interpolationProps.current.gesture.handoff;
+const currentRawGesture: RawGestureValues =
+	interpolationProps.current.gesture.raw;
 const currentGestureRotation: number =
 	interpolationProps.current.gesture.rotation;
 const currentRawGestureRotation: number =
 	interpolationProps.current.gesture.raw.rotation;
 const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
+void maybeScrollOffset;
+void currentTransitionProgress;
+void currentGestureHandoffNormX;
+void currentGestureHandoffRawNormX;
+void currentGestureHandoff;
+void currentRawGesture;
 const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 	options: {
 		gestureSensitivity: 0.5,

@@ -98,11 +98,13 @@ export type BoundsNavigationZoomOptions = {
 	 */
 	velocityDepth?: number;
 	/**
-	 * Whether gesture displacement should drive transition progress or remain as
-	 * freeform gesture values. Zoom defaults to `"freeform"` so drag can move the
-	 * content without owning the whole screen progress.
+	 * Deprecated compatibility option.
 	 *
-	 * @default "freeform"
+	 * Gesture movement now always contributes to `progress`; use `transitionProgress`
+	 * when a recipe needs transition progress without live gesture contribution.
+	 * The zoom helper no longer reads this option.
+	 *
+	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
 	gestureProgressMode?: GestureProgressMode;
 	/**
@@ -224,11 +226,13 @@ export type BoundsNavigationRevealOptions = {
 	 */
 	velocityDepth?: number;
 	/**
-	 * Whether gesture displacement should drive transition progress or remain as
-	 * freeform gesture values. Reveal defaults to `"freeform"` so drag can move
-	 * the masked container without owning the whole screen progress.
+	 * Deprecated compatibility option.
 	 *
-	 * @default "freeform"
+	 * Gesture movement now always contributes to `progress`; use `transitionProgress`
+	 * when a recipe needs transition progress without live gesture contribution.
+	 * The reveal helper no longer reads this option.
+	 *
+	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
 	gestureProgressMode?: GestureProgressMode;
 	/**

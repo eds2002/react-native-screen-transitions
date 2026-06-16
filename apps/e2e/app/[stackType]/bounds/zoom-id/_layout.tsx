@@ -61,7 +61,6 @@ export default function NavigationZoomIdLayout() {
 					gestureEnabled: true,
 					gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
 					gestureReleaseVelocityScale: 1.6,
-					gestureDrivesProgress: false,
 					screenStyleInterpolator: navigationZoomIdInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,

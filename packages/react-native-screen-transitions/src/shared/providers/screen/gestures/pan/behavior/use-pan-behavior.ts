@@ -41,6 +41,8 @@ export const usePanBehavior = (
 			gestures.y.set(0);
 			gestures.normX.set(0);
 			gestures.normY.set(0);
+			gestures.internal.progressDeltaX.set(0);
+			gestures.internal.progressDeltaY.set(0);
 			gestures.velocity.set(0);
 			gestures.raw.x.set(0);
 			gestures.raw.y.set(0);

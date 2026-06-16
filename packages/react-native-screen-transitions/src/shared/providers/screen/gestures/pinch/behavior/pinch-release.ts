@@ -75,7 +75,7 @@ const getPinchSnapReleaseProgress = ({
 			: Math.abs(normalizedScale);
 
 	return clamp(
-		runtime.gestureProgressBaseline.get() + progressDelta,
+		runtime.stores.gestures.internal.progressBaseline.get() + progressDelta,
 		minSnapPoint,
 		maxSnapPoint,
 	);
@@ -94,7 +94,6 @@ export const resolvePinchRelease = (
 	const {
 		participation,
 		policy,
-		gestureProgressBaseline,
 		stores: { animations },
 	} = runtime;
 	const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
@@ -106,7 +105,9 @@ export const resolvePinchRelease = (
 			policy.pinchInEnabled,
 			policy.pinchOutEnabled,
 		);
-	const target = shouldDismiss ? 0 : gestureProgressBaseline.get();
+	const target = shouldDismiss
+		? 0
+		: runtime.stores.gestures.internal.progressBaseline.get();
 
 	return {
 		target,
@@ -131,7 +132,7 @@ export const resolveSnapPinchRelease = (
 	runtime: PinchGestureRuntime,
 ): PinchReleaseResult => {
 	"worklet";
-	const { participation, policy, lockedSnapPoint } = runtime;
+	const { participation, policy } = runtime;
 	const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
 
 	const { resolvedSnapPoints, resolvedMinSnapPoint, resolvedMaxSnapPoint } =
@@ -146,7 +147,10 @@ export const resolveSnapPinchRelease = (
 	const result = determineSnapTarget({
 		currentProgress,
 		snapPoints: policy.gestureSnapLocked
-			? [lockedSnapPoint.get()]
+			? [
+					runtime.stores.gestures.internal.lockedSnapPoint.get() ??
+						resolvedMaxSnapPoint,
+				]
 			: resolvedSnapPoints,
 		velocity: getPinchSnapVelocity(event, runtime, normalizedScale),
 		dimension: 1,
@@ -169,7 +173,7 @@ export const resolveSnapPinchRelease = (
 			currentProgress,
 		}),
 		commitProgress: currentProgress,
-		resetValuesImmediately: policy.gestureProgressMode === "progress-driven",
+		resetValuesImmediately: true,
 		transitionSpec: resolveGestureSnapTransitionSpec({
 			transitionSpec: policy.transitionSpec,
 			shouldDismiss,

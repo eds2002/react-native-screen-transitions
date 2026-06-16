@@ -57,6 +57,15 @@ const DEFAULT_GESTURE_VALUES = {
 	focalX: 0,
 	focalY: 0,
 	raw: DEFAULT_RAW_GESTURE_VALUES,
+	handoff: {
+		...DEFAULT_RAW_GESTURE_VALUES,
+		velocity: 0,
+		focalX: 0,
+		focalY: 0,
+		raw: DEFAULT_RAW_GESTURE_VALUES,
+		active: null,
+		direction: null,
+	},
 	dismissing: 0,
 	dragging: 0,
 	settling: 0,
@@ -73,6 +82,10 @@ const DEFAULT_GESTURE_VALUES = {
 const createDefaultGestureValues = () => ({
 	...DEFAULT_GESTURE_VALUES,
 	raw: { ...DEFAULT_RAW_GESTURE_VALUES },
+	handoff: {
+		...DEFAULT_GESTURE_VALUES.handoff,
+		raw: { ...DEFAULT_RAW_GESTURE_VALUES },
+	},
 });
 
 export const DEFAULT_SCREEN_TRANSITION_OPTIONS: ScreenTransitionOptions =
@@ -87,6 +100,7 @@ export const createScreenTransitionState = (
 	options: ScreenTransitionOptions = DEFAULT_SCREEN_TRANSITION_OPTIONS,
 ): ScreenTransitionState => ({
 	progress: 0,
+	transitionProgress: 0,
 	closing: 0,
 	animating: 0,
 	willAnimate: 0,
@@ -113,6 +127,7 @@ export const createScreenTransitionState = (
 export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 	Object.freeze({
 		progress: 0,
+		transitionProgress: 0,
 		closing: 0,
 		animating: 0,
 		willAnimate: 0,

@@ -16,7 +16,6 @@ import type {
 } from "../../../types/animation.types";
 import type {
 	GestureDirections,
-	GestureProgressMode,
 	ResolvedGestureActivationArea,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
@@ -53,7 +52,6 @@ export type RotationGestureEvent =
 export type GestureCompositionActivation = "pan" | "pinch" | null;
 
 export type {
-	GestureProgressMode,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
@@ -114,7 +112,6 @@ export interface PanGesturePolicy {
 	gestureDirection: NonNullable<ScreenTransitionConfig["gestureDirection"]>;
 	panActivationDirections: GestureDirections;
 	snapAxisDirections: SnapPanDirectionConfig;
-	gestureProgressMode: GestureProgressMode;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureVelocityImpact: number;
 	gestureSnapVelocityImpact: number;
@@ -134,7 +131,6 @@ export interface PinchGesturePolicy {
 	snapDirections: SnapPinchDirectionConfig;
 	pinchInEnabled: boolean;
 	pinchOutEnabled: boolean;
-	gestureProgressMode: GestureProgressMode;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureSnapVelocityImpact: number;
 	gestureSnapLocked: boolean;
@@ -154,8 +150,6 @@ export interface GestureRuntime<TPolicy extends GesturePolicy> {
 	participation: ScreenGestureParticipation;
 	policy: TPolicy;
 	stores: GestureRuntimeStores;
-	gestureProgressBaseline: SharedValue<number>;
-	lockedSnapPoint: SharedValue<number>;
 }
 
 export type PanGestureRuntime = GestureRuntime<PanGesturePolicy>;
@@ -187,7 +181,6 @@ export interface PanReleaseResult {
 	shouldDismiss: boolean;
 	initialVelocity: number;
 	commitProgress?: number;
-	resetNormalizedValuesImmediately?: boolean;
 	transitionSpec: TransitionSpec | undefined;
 	resetSpec: AnimationConfig | undefined;
 }
@@ -200,10 +193,7 @@ export interface PanReleasePlan {
 	resetVelocityY: number;
 	resetVelocityNormX: number;
 	resetVelocityNormY: number;
-	releaseVelocity: number;
-	resetNormalizedValues: boolean;
-	resetNormalizedValuesImmediately: boolean;
-	preserveRawValues: boolean;
+	handoffVelocity: number;
 	commitProgress?: number;
 	transitionSpec: TransitionSpec | undefined;
 	resetSpec: AnimationConfig | undefined;

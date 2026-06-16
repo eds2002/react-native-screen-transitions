@@ -5,8 +5,8 @@ import { NativeStackAdapter } from "@/layouts/native-stack-adapter";
 import { ADAPTER_AVATAR_BOUNDARY_ID } from "./constants";
 
 const avatarInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
+	active,
 	bounds,
-	progress,
 }) => {
 	"worklet";
 
@@ -19,7 +19,7 @@ const avatarInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 		}),
 		backdrop: {
 			backgroundColor: "black",
-			opacity: interpolate(progress, [0, 1, 2], [0, 0.45, 0]),
+			opacity: interpolate(active.transitionProgress, [0, 1, 2], [0, 0.45, 0]),
 		},
 	};
 };
@@ -34,7 +34,6 @@ export default function NativeStackAdapterLayout() {
 					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: "bidirectional",
-					gestureProgressMode: "freeform",
 					screenStyleInterpolator: avatarInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,

@@ -96,7 +96,7 @@ const getPanSnapReleaseProgress = ({
 	const axisDimension = isHorizontal ? dimensions.width : dimensions.height;
 	const axisProgress = axisTranslation / Math.max(1, axisDimension);
 	const progress =
-		runtime.gestureProgressBaseline.get() +
+		runtime.stores.gestures.internal.progressBaseline.get() +
 		activeAxis.config.progressSign * axisProgress;
 
 	return clamp(progress, minSnapPoint, maxSnapPoint);
@@ -167,7 +167,7 @@ export const resolveSnapPanRelease = (
 	dimensions: GestureDimensions,
 ): PanReleaseResult => {
 	"worklet";
-	const { participation, policy, lockedSnapPoint } = runtime;
+	const { participation, policy } = runtime;
 	const activeAxis = resolveActivePanSnapAxis(runtime);
 
 	if (!activeAxis) {
@@ -192,7 +192,10 @@ export const resolveSnapPanRelease = (
 	const result = determineSnapTarget({
 		currentProgress,
 		snapPoints: policy.gestureSnapLocked
-			? [lockedSnapPoint.get()]
+			? [
+					runtime.stores.gestures.internal.lockedSnapPoint.get() ??
+						resolvedMaxSnapPoint,
+				]
 			: resolvedSnapPoints,
 		velocity: snapVelocity,
 		dimension: axisDimension,
@@ -216,8 +219,6 @@ export const resolveSnapPanRelease = (
 			currentProgress,
 		}),
 		commitProgress: currentProgress,
-		resetNormalizedValuesImmediately:
-			policy.gestureProgressMode === "progress-driven",
 		transitionSpec: resolveGestureSnapTransitionSpec({
 			transitionSpec: policy.transitionSpec,
 			shouldDismiss,
@@ -238,40 +239,35 @@ export const buildPanReleasePlan = (
 ): PanReleasePlan => {
 	"worklet";
 	const { policy } = runtime;
-	const progressDriven = policy.gestureProgressMode === "progress-driven";
 	const releaseVelocityScale = Math.max(0, policy.gestureReleaseVelocityScale);
-	const resetUsesReleaseVelocity = !release.shouldDismiss || !progressDriven;
+	const resetUsesReleaseVelocity = !release.shouldDismiss;
 	const resetVelocityFactor = resetUsesReleaseVelocity ? 1 : 0;
 	const resetVelocityScale = releaseVelocityScale * resetVelocityFactor;
 	const resetVelocityX =
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityX * resetVelocityScale;
 	const resetVelocityY =
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityY * resetVelocityScale;
-	const releaseVelocityNormX =
+	const handoffVelocityNormX =
 		rawEvent.velocityX / Math.max(1, dimensions.width);
-	const releaseVelocityNormY =
+	const handoffVelocityNormY =
 		rawEvent.velocityY / Math.max(1, dimensions.height);
-	const releaseVelocity = release.shouldDismiss
+	const handoffVelocity = release.shouldDismiss
 		? resolvePanReleaseVelocity(
 				runtime,
-				releaseVelocityNormX,
-				releaseVelocityNormY,
+				handoffVelocityNormX,
+				handoffVelocityNormY,
 			)
 		: 0;
 
 	return {
 		target: release.target,
 		shouldDismiss: release.shouldDismiss,
-		progressVelocity: progressDriven ? release.initialVelocity : 0,
+		progressVelocity: release.initialVelocity,
 		resetVelocityX,
 		resetVelocityY,
 		resetVelocityNormX: resetVelocityX / Math.max(1, dimensions.width),
 		resetVelocityNormY: resetVelocityY / Math.max(1, dimensions.height),
-		releaseVelocity,
-		resetNormalizedValues: !release.shouldDismiss || progressDriven,
-		resetNormalizedValuesImmediately:
-			release.resetNormalizedValuesImmediately === true,
-		preserveRawValues: release.shouldDismiss,
+		handoffVelocity,
 		commitProgress: release.commitProgress,
 		transitionSpec: release.transitionSpec,
 		resetSpec: release.resetSpec,

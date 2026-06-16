@@ -99,7 +99,7 @@ export const prepareBoundStyles = <T extends BoundsOptions>({
 			previous: props.previous,
 			current: props.current,
 			next: props.next,
-			progress: props.progress,
+			progress: resolved.progress ?? props.progress,
 			dimensions: props.layouts.screen,
 		},
 		resolved,

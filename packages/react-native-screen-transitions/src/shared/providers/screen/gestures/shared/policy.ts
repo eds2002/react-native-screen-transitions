@@ -1,7 +1,6 @@
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_PROGRESS_MODE,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	DEFAULT_GESTURE_SENSITIVITY,
 	DEFAULT_GESTURE_SNAP_LOCKED,
@@ -15,7 +14,6 @@ import type {
 	GestureDirectionActivationArea,
 	GestureDirectionEntry,
 	GestureDirectionOption,
-	GestureProgressMode,
 	ResolvedGestureActivationArea,
 } from "../../../../types/gesture.types";
 import type {
@@ -24,7 +22,6 @@ import type {
 	SheetScrollGestureBehavior,
 	SnapPoint,
 } from "../../../../types/screen.types";
-import { resolveGestureProgressMode } from "../../../../utils/gesture-progress-mode";
 import { computeClaimedDirections } from "../ownership/compute-claimed-directions";
 import { resolveOwnership } from "../ownership/resolve-ownership";
 import type {
@@ -49,9 +46,7 @@ export type GesturePolicyOptions = {
 	expandViaScrollView?: boolean;
 	gestureActivationArea?: GestureActivationArea;
 	gestureDirection?: GestureDirectionOption;
-	gestureDrivesProgress?: boolean;
 	gestureEnabled?: boolean;
-	gestureProgressMode?: GestureProgressMode;
 	gestureTracking?: GestureTracking;
 	gestureReleaseVelocityScale?: number;
 	gestureResponseDistance?: number;
@@ -155,19 +150,9 @@ const resolveGestureActivationArea = (
 	);
 };
 
-function resolveGestureProgressModePolicy(options: GesturePolicyOptions) {
-	"worklet";
-	return resolveGestureProgressMode({
-		gestureProgressMode: options.gestureProgressMode,
-		gestureDrivesProgress: options.gestureDrivesProgress,
-		fallback: DEFAULT_GESTURE_PROGRESS_MODE,
-	});
-}
-
 const resolveCommonGesturePolicy = (options: GesturePolicyOptions) => {
 	"worklet";
 	return {
-		gestureProgressMode: resolveGestureProgressModePolicy(options),
 		gestureSensitivity:
 			options.gestureSensitivity ?? DEFAULT_GESTURE_SENSITIVITY,
 		gestureSnapVelocityImpact:
