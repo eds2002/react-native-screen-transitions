@@ -98,7 +98,7 @@ const createSnapRuntime = ({
 		},
 		stores: {
 			animations: {
-				progress: shared(progress),
+				transitionProgress: shared(progress),
 			},
 			system: {
 				resolvedAutoSnapPoint: shared(0),

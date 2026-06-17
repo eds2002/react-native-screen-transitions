@@ -1,6 +1,5 @@
 import { clamp } from "react-native-reanimated";
 import { DEFAULT_GESTURE_DIRECTION, EPSILON } from "../../../../../constants";
-import type { ScreenTransitionOptions } from "../../../../../types/animation.types";
 import type {
 	GestureDirectionOption,
 	GestureValues,
@@ -20,7 +19,7 @@ type PanProgressDelta = {
 	y: number;
 };
 
-const resolvePanGestureDrivenProgress = (
+const resolvePanGestureAffectedProgress = (
 	transitionProgress: number,
 	gesture: GestureValues,
 	progressDelta: PanProgressDelta,
@@ -79,7 +78,7 @@ const resolvePanGestureDrivenProgress = (
 	return clamp(transitionProgress - progressOffset, 0, transitionProgress);
 };
 
-const resolvePinchGestureDrivenProgress = (
+const resolvePinchGestureAffectedProgress = (
 	transitionProgress: number,
 	gesture: GestureValues,
 	gestureDirection: GestureDirectionOption,
@@ -128,19 +127,16 @@ const resolvePinchGestureDrivenProgress = (
 	);
 };
 
-export const resolveGestureDrivenProgress = (
+export const resolveGestureAffectedProgress = (
 	transitionProgress: number,
 	gesture: GestureValues,
 	panProgressDelta: PanProgressDelta,
-	options: ScreenTransitionOptions,
-	effectiveOptions: ScreenTransitionOptions | undefined,
+	gestureDirection: GestureDirectionOption | undefined,
 	snapBounds: SnapBounds | null,
 ) => {
 	"worklet";
-	const gestureDirection =
-		effectiveOptions?.gestureDirection ??
-		options.gestureDirection ??
-		DEFAULT_GESTURE_DIRECTION;
+	const resolvedGestureDirection =
+		gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
 
 	const hasSnapPoints = snapBounds !== null;
 
@@ -149,20 +145,20 @@ export const resolveGestureDrivenProgress = (
 		gesture.active === "pinch-out" ||
 		Math.abs(gesture.normScale) > EPSILON
 	) {
-		return resolvePinchGestureDrivenProgress(
+		return resolvePinchGestureAffectedProgress(
 			transitionProgress,
 			gesture,
-			gestureDirection,
+			resolvedGestureDirection,
 			hasSnapPoints,
 			snapBounds,
 		);
 	}
 
-	return resolvePanGestureDrivenProgress(
+	return resolvePanGestureAffectedProgress(
 		transitionProgress,
 		gesture,
 		panProgressDelta,
-		gestureDirection,
+		resolvedGestureDirection,
 		hasSnapPoints,
 		snapBounds,
 	);

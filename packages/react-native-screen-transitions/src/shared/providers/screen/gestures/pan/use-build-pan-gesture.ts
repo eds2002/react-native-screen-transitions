@@ -6,7 +6,7 @@ import { useScreenOptionsContext } from "../../options";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
 	DirectionClaimMap,
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	PanGesture,
 	ScreenGestureConfig,
 	ScrollGestureState,
@@ -18,14 +18,14 @@ interface UseBuildPanGestureProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
 	gestureConfig: ScreenGestureConfig;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const useBuildPanGesture = ({
 	scrollState,
 	gestureConfig,
 	childDirectionClaims,
-	gestureCompositionActivation,
+	gestureCompositionOwner,
 }: UseBuildPanGestureProps): PanGesture => {
 	const dimensions = useWindowDimensions();
 	const { participation, pan: policy } = gestureConfig;
@@ -42,14 +42,14 @@ export const useBuildPanGesture = ({
 		runtime,
 		screenOptions,
 		dimensions,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	});
 
 	const behavior = usePanBehavior(
 		runtime,
 		screenOptions,
 		dimensions,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	);
 
 	const panGesture = useMemo(() => {

@@ -5,7 +5,7 @@ import type { ScreenOptionsContextValue } from "../../../options";
 import { usePinchGestureSensitivity } from "../../hooks/use-gesture-sensitivity";
 import { resolvePinchRuntime } from "../../shared/runtime";
 import type {
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	PinchBehavior,
 	PinchGestureEvent,
 	PinchGestureRuntime,
@@ -24,7 +24,7 @@ import {
 export const usePinchBehavior = (
 	runtime: SharedValue<PinchGestureRuntime>,
 	screenOptions: ScreenOptionsContextValue,
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>,
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
 ): PinchBehavior => {
 	const { dismissScreen, requestDismiss } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
@@ -77,7 +77,7 @@ export const usePinchBehavior = (
 				dismissScreen,
 				requestDismiss,
 			);
-			gestureCompositionActivation.set(null);
+			gestureCompositionOwner.set(null);
 		},
 		[
 			runtime,
@@ -85,7 +85,7 @@ export const usePinchBehavior = (
 			dismissScreen,
 			requestDismiss,
 			withSensitivity,
-			gestureCompositionActivation,
+			gestureCompositionOwner,
 		],
 	);
 

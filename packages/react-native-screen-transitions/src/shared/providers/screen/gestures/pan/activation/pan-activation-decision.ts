@@ -246,7 +246,7 @@ const resolveSnapScrollExpansionDecision = (
 	});
 
 	const canExpandMore =
-		animations.progress.get() < resolvedMaxSnapPoint - EPSILON &&
+		animations.transitionProgress.get() < resolvedMaxSnapPoint - EPSILON &&
 		system.targetProgress.get() < resolvedMaxSnapPoint - EPSILON;
 
 	if (canExpandMore) {

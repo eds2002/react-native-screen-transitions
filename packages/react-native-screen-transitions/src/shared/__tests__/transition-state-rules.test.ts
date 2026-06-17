@@ -153,8 +153,8 @@ const createBuiltState = (
 	);
 
 	return {
-		progress: shared(overrides.progress ?? 1),
-		effectiveProgress: shared(overrides.progress ?? 1),
+		transitionProgress: shared(overrides.progress ?? 1),
+		visualProgress: shared(overrides.progress ?? 1),
 		willAnimate: shared(0),
 		closing: shared(overrides.closing ?? 0),
 		progressAnimating: shared(overrides.progressAnimating ?? 0),
@@ -362,7 +362,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.transitionProgress).toBe(1);
 		expect(hydrated.progress).toBe(0.75);
-		expect(state.effectiveProgress.get()).toBe(0.75);
+		expect(state.visualProgress.get()).toBe(0.75);
 	});
 
 	it("does not derive progress from public pan gesture values", () => {
@@ -378,7 +378,7 @@ describe("transition state rules", () => {
 		expect(hydrated.gesture.normY).toBe(0.25);
 		expect(hydrated.transitionProgress).toBe(1);
 		expect(hydrated.progress).toBe(1);
-		expect(state.effectiveProgress.get()).toBe(1);
+		expect(state.visualProgress.get()).toBe(1);
 	});
 
 	it("hydrates gesture handoff from live values while not dismissing", () => {
@@ -452,7 +452,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.transitionProgress).toBe(1);
 		expect(hydrated.progress).toBe(0.75);
-		expect(state.effectiveProgress.get()).toBe(0.75);
+		expect(state.visualProgress.get()).toBe(0.75);
 	});
 
 	it("clamps snap gesture progress to the minimum snap point when dismiss is disabled", () => {
@@ -473,7 +473,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.transitionProgress).toBe(0.3);
 		expect(hydrated.progress).toBe(0.3);
-		expect(state.effectiveProgress.get()).toBe(0.3);
+		expect(state.visualProgress.get()).toBe(0.3);
 	});
 
 	it("allows snap gesture progress below the minimum snap point when dismiss is enabled", () => {
@@ -494,7 +494,7 @@ describe("transition state rules", () => {
 
 		expect(hydrated.transitionProgress).toBe(0.3);
 		expect(hydrated.progress).toBeCloseTo(0.05);
-		expect(state.effectiveProgress.get()).toBeCloseTo(0.05);
+		expect(state.visualProgress.get()).toBeCloseTo(0.05);
 	});
 
 	it("ignores legacy gestureDrivesProgress for derived progress", () => {

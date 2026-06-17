@@ -4,7 +4,7 @@ import {
 	finalizePanRelease,
 	startPanBase,
 } from "../../../providers/screen/gestures/pan/behavior/pan-lifecycle";
-import type { GestureCompositionActivation } from "../../../providers/screen/gestures/types";
+import type { GestureCompositionOwner } from "../../../providers/screen/gestures/types";
 import {
 	finalizePinchRelease,
 	startPinchBase,
@@ -96,8 +96,8 @@ const createGestureStore = (): GestureStoreMap => {
 };
 
 const createAnimations = (): AnimationStoreMap => ({
-	progress: shared(1),
-	effectiveProgress: shared(1),
+	transitionProgress: shared(1),
+	visualProgress: shared(1),
 	willAnimate: shared(0),
 	progressAnimating: shared(0),
 	progressSettled: shared(1),
@@ -170,7 +170,7 @@ describe("gesture lifecycle state", () => {
 	it("marks opening as entering before the willAnimate pulse is observed", () => {
 		const raf = installDeferredAnimationFrame();
 		const animations = createAnimations();
-		animations.progress.set(0);
+		animations.transitionProgress.set(0);
 
 		animateToProgress({
 			target: "open",
@@ -367,7 +367,7 @@ describe("gesture lifecycle state", () => {
 
 	it("does not start a progress animation for a cancelled no-op pan release", () => {
 		const { runtime, gestures, animations } = createRuntime();
-		animations.progress.set(1);
+		animations.transitionProgress.set(1);
 		gestures.dragging.set(1);
 
 		finalizePanRelease(
@@ -394,9 +394,9 @@ describe("gesture lifecycle state", () => {
 
 	it("resets pan values without dismissing when pinch owns the composition", () => {
 		const { runtime, gestures, animations } = createRuntime();
-		const composition = shared<GestureCompositionActivation>("pinch");
+		const composition = shared<GestureCompositionOwner>("pinch");
 		let requestedDismiss = false;
-		animations.progress.set(0.64);
+		animations.transitionProgress.set(0.64);
 		animations.progressAnimating.set(0);
 		gestures.dragging.set(1);
 		gestures.dismissing.set(1);
@@ -447,7 +447,7 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.dragging.get()).toBe(1);
 		expect(gestures.dismissing.get()).toBe(1);
 		expect(gestures.settling.get()).toBe(0);
-		expect(animations.progress.get()).toBe(0.64);
+		expect(animations.transitionProgress.get()).toBe(0.64);
 		expect(animations.progressAnimating.get()).toBe(0);
 	});
 

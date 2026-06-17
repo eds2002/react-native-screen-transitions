@@ -48,8 +48,8 @@ export type RotationGestureEvent =
 	| GestureUpdateEvent<RotationGestureHandlerEventPayload>
 	| GestureStateChangeEvent<RotationGestureHandlerEventPayload>;
 
-/** Gesture that initiated the current simultaneous gesture composition. */
-export type GestureCompositionActivation = "pan" | "pinch" | null;
+/** Gesture that owns navigation release for the current simultaneous composition. */
+export type GestureCompositionOwner = "pan" | "pinch" | null;
 
 export type {
 	ScrollGestureAxis,

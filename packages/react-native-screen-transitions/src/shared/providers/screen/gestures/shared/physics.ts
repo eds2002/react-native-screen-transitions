@@ -221,7 +221,7 @@ export const getPanReleaseProgressVelocity = ({
 }: CalculateProgressProps) => {
 	"worklet";
 
-	const currentProgress = animations.progress.get();
+	const currentProgress = animations.transitionProgress.get();
 	const targetProgress = shouldDismiss ? 0 : 1;
 	const progressDelta = targetProgress - currentProgress;
 

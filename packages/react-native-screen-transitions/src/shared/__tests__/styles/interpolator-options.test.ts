@@ -27,8 +27,6 @@ const BASE_SCREEN_OPTIONS = {
 	gestureSnapVelocityImpact: 0.1,
 	gestureReleaseVelocityScale: 1,
 	gestureResponseDistance: undefined,
-	gestureProgressMode: "progress-driven",
-	gestureDrivesProgress: true,
 	gestureActivationArea: "screen",
 	gestureSnapLocked: false,
 	sheetScrollGestureBehavior: "expand-and-collapse",
@@ -103,7 +101,6 @@ describe("syncScreenOptionsOverrides", () => {
 				gestureSnapVelocityImpact: 0.2,
 				gestureReleaseVelocityScale: 1.5,
 				gestureResponseDistance: 24,
-				gestureProgressMode: "freeform",
 				gestureActivationArea: {
 					left: "edge",
 					right: "screen",
@@ -130,8 +127,6 @@ describe("syncScreenOptionsOverrides", () => {
 		expect(next.gestureSnapVelocityImpact).toBe(0.2);
 		expect(next.gestureReleaseVelocityScale).toBe(1.5);
 		expect(next.gestureResponseDistance).toBe(24);
-		expect(next.gestureProgressMode).toBe("freeform");
-		expect(next.gestureDrivesProgress).toBe(false);
 		expect(next.gestureActivationArea).toEqual({
 			left: "edge",
 			right: "screen",
@@ -161,21 +156,21 @@ describe("syncScreenOptionsOverrides", () => {
 		expect(next.gestureTracking).toBe(BASE_SCREEN_OPTIONS.gestureTracking);
 	});
 
-	it("maps the deprecated gestureDrivesProgress override onto gestureProgressMode", () => {
+	it("ignores deprecated gesture progress mode overrides", () => {
 		const screenOptions = createScreenOptionsContext();
+		const previous = screenOptions.get();
 
 		syncScreenOptionsOverrides(
 			{
 				options: {
+					gestureProgressMode: "freeform",
 					gestureDrivesProgress: false,
 				},
 			},
 			screenOptions,
 		);
-		const next = screenOptions.get();
 
-		expect(next.gestureProgressMode).toBe("freeform");
-		expect(next.gestureDrivesProgress).toBe(false);
+		expect(screenOptions.get()).toBe(previous);
 	});
 
 	it("resets screen options to their base values when options are missing", () => {

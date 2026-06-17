@@ -4,8 +4,9 @@ import { useNavigationHelpers } from "../../../../../hooks/navigation/use-naviga
 import type { ScreenOptionsContextValue } from "../../../options";
 import { usePanGestureSensitivity } from "../../hooks/use-gesture-sensitivity";
 import { resolvePanRuntime } from "../../shared/runtime";
+import { clearPanTrackingValues } from "../../shared/values";
 import type {
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	GestureDimensions,
 	PanBehavior,
 	PanGestureEvent,
@@ -26,7 +27,7 @@ export const usePanBehavior = (
 	runtime: SharedValue<PanGestureRuntime>,
 	screenOptions: ScreenOptionsContextValue,
 	dimensions: GestureDimensions,
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>,
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
 ): PanBehavior => {
 	const { dismissScreen, requestDismiss } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
@@ -35,19 +36,8 @@ export const usePanBehavior = (
 	const onStart = useCallback(() => {
 		"worklet";
 		const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions.get());
-		if (gestureCompositionActivation.get() === "pinch") {
-			const { gestures } = latestRuntime.stores;
-			gestures.x.set(0);
-			gestures.y.set(0);
-			gestures.normX.set(0);
-			gestures.normY.set(0);
-			gestures.internal.progressDeltaX.set(0);
-			gestures.internal.progressDeltaY.set(0);
-			gestures.velocity.set(0);
-			gestures.raw.x.set(0);
-			gestures.raw.y.set(0);
-			gestures.raw.normX.set(0);
-			gestures.raw.normY.set(0);
+		if (gestureCompositionOwner.get() === "pinch") {
+			clearPanTrackingValues(latestRuntime.stores.gestures);
 			resetSensitivity();
 			return;
 		}
@@ -57,7 +47,7 @@ export const usePanBehavior = (
 		}
 		startPanBase(latestRuntime);
 		resetSensitivity();
-	}, [runtime, screenOptions, resetSensitivity, gestureCompositionActivation]);
+	}, [runtime, screenOptions, resetSensitivity, gestureCompositionOwner]);
 
 	const onUpdate = useCallback(
 		(rawEvent: PanGestureEvent) => {
@@ -88,7 +78,7 @@ export const usePanBehavior = (
 
 			const release = !latestRuntime.policy.enabled
 				? {
-						target: latestRuntime.stores.animations.progress.get(),
+						target: latestRuntime.stores.animations.transitionProgress.get(),
 						shouldDismiss: false,
 						initialVelocity: 0,
 						transitionSpec: undefined,
@@ -97,7 +87,7 @@ export const usePanBehavior = (
 				: latestRuntime.participation.effectiveSnapPoints.hasSnapPoints
 					? resolveSnapPanRelease(event, latestRuntime, dimensions)
 					: resolvePanRelease(event, latestRuntime, dimensions);
-			const isPanComposition = gestureCompositionActivation.get() === "pan";
+			const isPanCompositionOwner = gestureCompositionOwner.get() === "pan";
 
 			finalizePanRelease(
 				release,
@@ -106,11 +96,11 @@ export const usePanBehavior = (
 				dimensions,
 				rawEvent,
 				requestDismiss,
-				gestureCompositionActivation,
+				gestureCompositionOwner,
 			);
 
-			if (isPanComposition) {
-				gestureCompositionActivation.set(null);
+			if (isPanCompositionOwner) {
+				gestureCompositionOwner.set(null);
 			}
 		},
 		[
@@ -120,7 +110,7 @@ export const usePanBehavior = (
 			dismissScreen,
 			requestDismiss,
 			withSensitivity,
-			gestureCompositionActivation,
+			gestureCompositionOwner,
 		],
 	);
 

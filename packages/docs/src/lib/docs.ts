@@ -5,6 +5,7 @@ export type DocSlug = string;
 
 type DocFrontmatter = {
 	availability?: string;
+	changelogDate?: string;
 	description: string;
 	eyebrow: string;
 	group: string;
@@ -27,8 +28,9 @@ type DocVersion = {
 	label: string;
 };
 
-type Doc = {
+export type Doc = {
 	availability?: string;
+	changelogDate?: string;
 	Content: ComponentType<Record<string, unknown>>;
 	description: string;
 	eyebrow: string;
@@ -168,6 +170,7 @@ function createDoc(modulePath: string, module: DocModule): Doc {
 
 	return {
 		availability: asString(frontmatter.availability) || undefined,
+		changelogDate: asString(frontmatter.changelogDate) || undefined,
 		Content: module.default,
 		description: asString(frontmatter.description),
 		eyebrow: asString(frontmatter.eyebrow),
@@ -212,6 +215,27 @@ export function getDocByVersionAndSlug(versionId: DocVersionId, slug: DocSlug) {
 
 	if (!doc) {
 		throw new Error(`Unknown doc: ${versionId}/${slug}`);
+	}
+
+	return doc;
+}
+
+function isChangelogDoc(doc: Doc) {
+	return doc.group === "Changelogs";
+}
+
+export function getChangelogDocs(versionId: DocVersionId) {
+	return getDocsForVersion(versionId).filter(isChangelogDoc);
+}
+
+export function getChangelogDocBySlug(
+	versionId: DocVersionId,
+	slug: DocSlug,
+) {
+	const doc = getDocByVersionAndSlug(versionId, slug);
+
+	if (!isChangelogDoc(doc)) {
+		throw new Error(`Unknown changelog doc: ${versionId}/${slug}`);
 	}
 
 	return doc;

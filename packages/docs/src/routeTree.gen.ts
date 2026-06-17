@@ -31,6 +31,8 @@ import { Route as GestureOwnershipRouteImport } from './routes/gesture-ownership
 import { Route as ExpoRouterRouteImport } from './routes/expo-router'
 import { Route as CustomAnimationsRouteImport } from './routes/custom-animations'
 import { Route as ComponentsRouteImport } from './routes/components'
+import { Route as ChangelogSlugRouteImport } from './routes/changelog.$slug'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CaveatsRouteImport } from './routes/caveats'
 import { Route as AdaptersRouteImport } from './routes/adapters'
 import { Route as IndexRouteImport } from './routes/index'
@@ -147,6 +149,16 @@ const ComponentsRoute = ComponentsRouteImport.update({
   path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChangelogSlugRoute = ChangelogSlugRouteImport.update({
+  id: '/changelog/$slug',
+  path: '/changelog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CaveatsRoute = CaveatsRouteImport.update({
   id: '/caveats',
   path: '/caveats',
@@ -177,6 +189,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
+  '/changelog': typeof ChangelogRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -206,6 +220,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
+  '/changelog': typeof ChangelogRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -236,6 +252,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
   '/caveats': typeof CaveatsRoute
+  '/changelog': typeof ChangelogRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -267,6 +285,8 @@ export interface FileRouteTypes {
     | '/'
     | '/adapters'
     | '/caveats'
+    | '/changelog'
+    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -296,6 +316,8 @@ export interface FileRouteTypes {
     | '/'
     | '/adapters'
     | '/caveats'
+    | '/changelog'
+    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -325,6 +347,8 @@ export interface FileRouteTypes {
     | '/'
     | '/adapters'
     | '/caveats'
+    | '/changelog'
+    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -355,6 +379,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdaptersRoute: typeof AdaptersRoute
   CaveatsRoute: typeof CaveatsRoute
+  ChangelogRoute: typeof ChangelogRoute
+  ChangelogSlugRoute: typeof ChangelogSlugRoute
   ComponentsRoute: typeof ComponentsRoute
   CustomAnimationsRoute: typeof CustomAnimationsRoute
   ExpoRouterRoute: typeof ExpoRouterRoute
@@ -544,6 +570,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CaveatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/changelog/$slug': {
+      id: '/changelog/$slug'
+      path: '/changelog/$slug'
+      fullPath: '/changelog/$slug'
+      preLoaderRoute: typeof ChangelogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/adapters': {
       id: '/adapters'
       path: '/adapters'
@@ -579,6 +619,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdaptersRoute: AdaptersRoute,
   CaveatsRoute: CaveatsRoute,
+  ChangelogRoute: ChangelogRoute,
+  ChangelogSlugRoute: ChangelogSlugRoute,
   ComponentsRoute: ComponentsRoute,
   CustomAnimationsRoute: CustomAnimationsRoute,
   ExpoRouterRoute: ExpoRouterRoute,

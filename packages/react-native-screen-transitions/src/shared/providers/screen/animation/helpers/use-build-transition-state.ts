@@ -20,8 +20,8 @@ import { buildScreenTransitionOptions } from "./build-screen-transition-options"
 import { toPlainRoute, toPlainValue } from "./worklet";
 
 type BuiltState = {
-	progress: SharedValue<number>;
-	effectiveProgress: SharedValue<number>;
+	transitionProgress: SharedValue<number>;
+	visualProgress: SharedValue<number>;
 	willAnimate: SharedValue<number>;
 	closing: SharedValue<number>;
 	progressAnimating: SharedValue<number>;
@@ -65,8 +65,8 @@ export const useBuildTransitionState = (
 		const transitionOptions = buildScreenTransitionOptions(descriptor.options);
 
 		return {
-			progress: AnimationStore.getValue(key, "progress"),
-			effectiveProgress: AnimationStore.getValue(key, "effectiveProgress"),
+			transitionProgress: AnimationStore.getValue(key, "transitionProgress"),
+			visualProgress: AnimationStore.getValue(key, "visualProgress"),
 			willAnimate: AnimationStore.getValue(key, "willAnimate"),
 			closing: AnimationStore.getValue(key, "closing"),
 			entering: AnimationStore.getValue(key, "entering"),

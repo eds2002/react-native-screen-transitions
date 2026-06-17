@@ -35,7 +35,7 @@ type GestureEventInit = {
 
 const createAnimations = (progress: number) =>
 	({
-		progress: { get: () => progress },
+		transitionProgress: { get: () => progress },
 		closing: { get: () => 0 },
 		progressAnimating: { get: () => 0 },
 	}) as const;
@@ -179,8 +179,6 @@ const createScreenOptions = (
 		gestureSnapVelocityImpact: 0.1,
 		gestureReleaseVelocityScale: 1,
 		gestureResponseDistance: undefined,
-		gestureProgressMode: "progress-driven",
-		gestureDrivesProgress: true,
 		gestureActivationArea: "screen",
 		gestureSnapLocked: false,
 		sheetScrollGestureBehavior: "expand-and-collapse",
@@ -194,8 +192,6 @@ const createScreenOptions = (
 			gestureSnapVelocityImpact: 0.1,
 			gestureReleaseVelocityScale: 1,
 			gestureResponseDistance: undefined,
-			gestureProgressMode: "progress-driven",
-			gestureDrivesProgress: true,
 			gestureActivationArea: "screen",
 			gestureSnapLocked: false,
 			sheetScrollGestureBehavior: "expand-and-collapse",
@@ -812,8 +808,8 @@ describe("trackPinchGesture", () => {
 		expect(gestures.normY.get()).toBeCloseTo(-0.02, 5);
 		expect(gestures.scale.get()).toBeCloseTo(1.25, 5);
 		expect(gestures.normScale.get()).toBeCloseTo(0.25, 5);
-		expect(gestures.focalX.get()).toBeCloseTo(30, 5);
-		expect(gestures.focalY.get()).toBeCloseTo(50, 5);
+		expect(gestures.focalX.get()).toBeCloseTo(44, 5);
+		expect(gestures.focalY.get()).toBeCloseTo(80, 5);
 		expect(gestures.raw.x.get()).toBeCloseTo(32, 5);
 		expect(gestures.raw.y.get()).toBeCloseTo(-48, 5);
 		expect(gestures.raw.normX.get()).toBeCloseTo(0.08, 5);

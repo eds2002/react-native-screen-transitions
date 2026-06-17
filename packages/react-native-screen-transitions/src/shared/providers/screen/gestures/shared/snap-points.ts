@@ -239,7 +239,10 @@ export const primeRuntimeSnapPoint = (
 
 	if (policy.gestureSnapLocked) {
 		gestures.internal.lockedSnapPoint.set(
-			findNearestSnapPoint(animations.progress.get(), resolvedSnapPoints),
+			findNearestSnapPoint(
+				animations.transitionProgress.get(),
+				resolvedSnapPoints,
+			),
 		);
 		return;
 	}

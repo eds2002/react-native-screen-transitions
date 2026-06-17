@@ -210,7 +210,7 @@ function PreformattedCode({ children }: { children?: ReactNode }) {
 	);
 }
 
-const mdxComponents = {
+export const mdxComponents = {
 	a: MarkdownAnchor,
 	blockquote: ({ children }: { children?: ReactNode }) => (
 		<blockquote className="max-w-184  rounded-3xl bg-neutral-100 p-5  text-neutral-950  dark:bg-neutral-900 dark:text-neutral-50">
@@ -296,7 +296,10 @@ const mdxComponents = {
 	VideoEmbed,
 };
 
-function MarkdownBody({
+export const markdownArticleClassName =
+	"docs-markdown mt-10 min-w-0 [&>*+*]:mt-3 sm:[&>*+*]:mt-4 [&>[data-doc-heading='true']]:mt-12 sm:[&>[data-doc-heading='true']]:mt-14 [&>[data-doc-heading='true']:first-child]:mt-0 [&>[data-doc-heading='true']+*]:mt-3 sm:[&>[data-doc-heading='true']+*]:mt-4";
+
+export function MarkdownBody({
 	versionId,
 	slug,
 }: {
@@ -336,10 +339,7 @@ function MarkdownBody({
 				title={doc.pageTitle}
 				lede={doc.description}
 			/>
-			<article
-				id={articleId}
-				className="docs-markdown mt-10 min-w-0 [&>*+*]:mt-3 sm:[&>*+*]:mt-4 [&>[data-doc-heading='true']]:mt-12 sm:[&>[data-doc-heading='true']]:mt-14 [&>[data-doc-heading='true']:first-child]:mt-0 [&>[data-doc-heading='true']+*]:mt-3 sm:[&>[data-doc-heading='true']+*]:mt-4"
-			>
+			<article id={articleId} className={markdownArticleClassName}>
 				<Content components={mdxComponents} />
 			</article>
 			{pageLinks.length > 0 ? (

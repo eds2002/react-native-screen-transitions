@@ -11,7 +11,7 @@ import { useBuildPinchGesture } from "./pinch/use-build-pinch-gesture";
 import { useBuildRotationGesture } from "./rotation/use-build-rotation-gesture";
 import {
 	type DirectionClaimMap,
-	type GestureCompositionActivation,
+	type GestureCompositionOwner,
 	type GestureContextType,
 	NO_DIRECTION_CLAIMS,
 } from "./types";
@@ -38,27 +38,25 @@ export const {
 	const childDirectionClaims =
 		useSharedValue<DirectionClaimMap>(NO_DIRECTION_CLAIMS);
 
-	// Pinch gestures should be simultaneous with pan gestures, but pan gestures should not be simultaneous with pinch gestures.
-	// Since we're using manual gestures, if pinch tries to become activated while pan is already active,
-	// the pinch gesture will be cancelled and the pan gesture will continue to be active.
-	const gestureCompositionActivation =
-		useSharedValue<GestureCompositionActivation>(null);
+	// The first gesture to activate owns navigation release. Other gestures may
+	// still join as companion trackers during the same simultaneous composition.
+	const gestureCompositionOwner = useSharedValue<GestureCompositionOwner>(null);
 
 	const panGesture = useBuildPanGesture({
 		scrollState,
 		gestureConfig,
 		childDirectionClaims,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	});
 
 	const pinchGesture = useBuildPinchGesture({
 		gestureConfig,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	});
 
 	const rotationGesture = useBuildRotationGesture({
 		gestureConfig,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	});
 
 	const detectorGesture = useMemo(

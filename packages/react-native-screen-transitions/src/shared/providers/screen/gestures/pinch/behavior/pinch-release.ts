@@ -67,7 +67,7 @@ const getPinchSnapReleaseProgress = ({
 	const snapDirections = runtime.policy.snapDirections;
 
 	if (!pinchDirection || !snapDirections) {
-		return runtime.stores.animations.progress.get();
+		return runtime.stores.animations.transitionProgress.get();
 	}
 
 	const progressDelta =
@@ -98,7 +98,7 @@ export const resolvePinchRelease = (
 		stores: { animations },
 	} = runtime;
 	const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
-	const currentProgress = animations.progress.get();
+	const currentProgress = animations.transitionProgress.get();
 	const shouldDismiss =
 		participation.canDismiss &&
 		shouldDismissFromPinch(

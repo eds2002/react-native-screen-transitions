@@ -59,7 +59,7 @@ export const ActivityScreen = memo(function ActivityScreen({
 			return false;
 		}
 
-		return paintDriverAnimations.progress.get() >= 1;
+		return paintDriverAnimations.transitionProgress.get() >= 1;
 	});
 
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);

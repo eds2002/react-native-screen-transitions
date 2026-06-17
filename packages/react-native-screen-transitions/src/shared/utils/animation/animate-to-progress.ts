@@ -68,7 +68,7 @@ export const animateToProgress = ({
 			: config;
 
 	const {
-		progress,
+		transitionProgress,
 		willAnimate,
 		progressAnimating,
 		progressSettled,
@@ -87,7 +87,7 @@ export const animateToProgress = ({
 		if (!config) {
 			progressAnimating.set(FALSE);
 			progressSettled.set(TRUE);
-			progress.set(value);
+			transitionProgress.set(value);
 			if (shouldClearEnteringOnFinish) {
 				entering.set(FALSE);
 			}
@@ -100,7 +100,7 @@ export const animateToProgress = ({
 
 		progressAnimating.set(TRUE); //<-- Do not move this into the callback
 		progressSettled.set(FALSE);
-		progress.set(
+		transitionProgress.set(
 			animate(value, effectiveConfig, (state) => {
 				"worklet";
 				if (state.settled) {

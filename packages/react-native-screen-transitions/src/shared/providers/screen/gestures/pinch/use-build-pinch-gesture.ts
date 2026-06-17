@@ -4,7 +4,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsContext } from "../../options";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	PinchGesture,
 	ScreenGestureConfig,
 } from "../types";
@@ -13,12 +13,12 @@ import { usePinchBehavior } from "./behavior/use-pinch-behavior";
 
 interface UseBuildPinchGestureProps {
 	gestureConfig: ScreenGestureConfig;
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const useBuildPinchGesture = ({
 	gestureConfig,
-	gestureCompositionActivation,
+	gestureCompositionOwner,
 }: UseBuildPinchGestureProps): PinchGesture => {
 	const { participation, pinch: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
@@ -31,13 +31,13 @@ export const useBuildPinchGesture = ({
 	const activation = usePinchActivation({
 		runtime,
 		screenOptions,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	});
 
 	const behavior = usePinchBehavior(
 		runtime,
 		screenOptions,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	);
 
 	const pinchGesture = useMemo(() => {

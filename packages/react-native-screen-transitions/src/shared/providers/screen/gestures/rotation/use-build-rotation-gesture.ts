@@ -4,7 +4,7 @@ import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsContext } from "../../options";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	RotationGesture,
 	ScreenGestureConfig,
 } from "../types";
@@ -13,12 +13,12 @@ import { useRotationBehavior } from "./behavior/use-rotation-behavior";
 
 interface UseBuildRotationGestureProps {
 	gestureConfig: ScreenGestureConfig;
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const useBuildRotationGesture = ({
 	gestureConfig,
-	gestureCompositionActivation,
+	gestureCompositionOwner,
 }: UseBuildRotationGestureProps): RotationGesture => {
 	const { participation, pinch: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
@@ -31,7 +31,7 @@ export const useBuildRotationGesture = ({
 	const activation = useRotationActivation({
 		runtime,
 		screenOptions,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	});
 
 	const behavior = useRotationBehavior(runtime, screenOptions);

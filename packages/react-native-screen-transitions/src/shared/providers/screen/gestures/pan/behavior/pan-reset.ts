@@ -1,6 +1,10 @@
 import { FALSE, TRUE } from "../../../../../constants";
 import type { GestureStoreMap } from "../../../../../stores/gesture.store";
 import { animateMany } from "../../shared/reset";
+import {
+	clearPanProgressDeltaValues,
+	clearRawPanValues,
+} from "../../shared/values";
 import type { PanReleasePlan } from "../../types";
 
 interface ResetPanGestureValuesProps {
@@ -26,10 +30,7 @@ export const resetPanGestureValues = ({
 		gestures.settling.set(FALSE);
 	};
 
-	gestures.raw.x.set(0);
-	gestures.raw.y.set(0);
-	gestures.raw.normX.set(0);
-	gestures.raw.normY.set(0);
+	clearRawPanValues(gestures);
 
 	if (updateLifecycle) {
 		gestures.dragging.set(FALSE);
@@ -42,8 +43,7 @@ export const resetPanGestureValues = ({
 	const progressDeltaWasCommitted = typeof plan.commitProgress === "number";
 
 	if (progressDeltaWasCommitted) {
-		gestures.internal.progressDeltaX.set(0);
-		gestures.internal.progressDeltaY.set(0);
+		clearPanProgressDeltaValues(gestures);
 	}
 
 	animateMany(

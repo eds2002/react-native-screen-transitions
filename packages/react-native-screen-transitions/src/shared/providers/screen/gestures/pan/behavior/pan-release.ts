@@ -109,7 +109,7 @@ const buildInactivePanSnapRelease = (
 	const { policy, stores } = runtime;
 
 	return {
-		target: stores.animations.progress.get(),
+		target: stores.animations.transitionProgress.get(),
 		shouldDismiss: false,
 		initialVelocity: 0,
 		transitionSpec: policy.transitionSpec,

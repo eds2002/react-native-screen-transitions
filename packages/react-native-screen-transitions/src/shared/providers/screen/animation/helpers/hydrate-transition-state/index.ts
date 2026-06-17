@@ -4,7 +4,7 @@ import type {
 	TransitionInterpolatorOptions,
 } from "../../../../../types/animation.types";
 import type { Layout } from "../../../../../types/screen.types";
-import { resolveGestureDrivenProgress } from "./gesture-progress";
+import { resolveGestureAffectedProgress } from "./gesture-progress";
 import {
 	computeAnimatedSnapIndex,
 	computeTargetSnapIndex,
@@ -58,7 +58,7 @@ export const hydrateTransitionState = (
 ) => {
 	"worklet";
 	const out = s.unwrapped;
-	const transitionProgress = s.progress.get();
+	const transitionProgress = s.transitionProgress.get();
 	const options = mergeTransitionOptions(
 		s.options,
 		effectiveOptions,
@@ -151,15 +151,14 @@ export const hydrateTransitionState = (
 	handoff.direction = useHandoffSnapshot
 		? s.gesture.internal.snapshot.direction.get()
 		: out.gesture.direction;
-	out.progress = resolveGestureDrivenProgress(
+	out.progress = resolveGestureAffectedProgress(
 		transitionProgress,
 		out.gesture,
 		{
 			x: s.gesture.internal.progressDeltaX.get(),
 			y: s.gesture.internal.progressDeltaY.get(),
 		},
-		s.options,
-		effectiveOptions,
+		effectiveOptions?.gestureDirection ?? s.options.gestureDirection,
 		getResolvedSnapBounds(
 			s.sortedNumericSnapPoints,
 			s.hasAutoSnapPoint ? s.resolvedAutoSnapPoint.get() : null,
@@ -169,8 +168,8 @@ export const hydrateTransitionState = (
 
 	// Unsure where else to place this if im being honest.
 	// I think for here is fine
-	if (s.effectiveProgress.get() !== out.progress) {
-		s.effectiveProgress.set(out.progress);
+	if (s.visualProgress.get() !== out.progress) {
+		s.visualProgress.set(out.progress);
 	}
 
 	const hasResidualGestureValues =
