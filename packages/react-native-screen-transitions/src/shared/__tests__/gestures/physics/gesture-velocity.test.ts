@@ -68,13 +68,17 @@ const createGestureRuntime = (
 		},
 	}) as any;
 
-const createPanReleaseRuntime = (canDismiss: boolean, progress: number = 0.3) =>
+const createPanReleaseRuntime = (
+	canDismiss: boolean,
+	progress: number = 0.3,
+	gestureReleaseVelocityScale: number = 1,
+) =>
 	({
 		participation: { canDismiss },
 		policy: {
 			panActivationDirections: createDirections({ horizontal: true }),
 			gestureVelocityImpact: 0,
-			gestureReleaseVelocityScale: 1,
+			gestureReleaseVelocityScale,
 			transitionSpec: undefined,
 		},
 		stores: { animations: createAnimations(progress) },
@@ -83,13 +87,14 @@ const createPanReleaseRuntime = (canDismiss: boolean, progress: number = 0.3) =>
 const createPinchReleaseRuntime = (
 	canDismiss: boolean,
 	progress: number = 0.3,
+	gestureReleaseVelocityScale: number = 1,
 ) =>
 	({
 		participation: { canDismiss },
 		policy: {
 			pinchInEnabled: true,
 			pinchOutEnabled: false,
-			gestureReleaseVelocityScale: 1,
+			gestureReleaseVelocityScale,
 			transitionSpec: undefined,
 		},
 		stores: {
@@ -378,7 +383,6 @@ describe("getPanReleaseProgressVelocity", () => {
 			event,
 			dimensions,
 			directions: createDirections({ horizontal: true }),
-			gestureReleaseVelocityScale: 1,
 		});
 
 		expect(result).toBeCloseTo(2.5, 5);
@@ -402,7 +406,6 @@ describe("getPanReleaseProgressVelocity", () => {
 				horizontal: true,
 				verticalInverted: true,
 			}),
-			gestureReleaseVelocityScale: 1,
 		});
 
 		expect(result).toBeLessThan(0);
@@ -422,7 +425,6 @@ describe("getPanReleaseProgressVelocity", () => {
 			event,
 			dimensions,
 			directions: createDirections({ horizontal: true }),
-			gestureReleaseVelocityScale: 1,
 		});
 
 		expect(result).toBeCloseTo(15.625, 5);
@@ -446,7 +448,6 @@ describe("getPanReleaseProgressVelocity", () => {
 				horizontal: true,
 				vertical: true,
 			}),
-			gestureReleaseVelocityScale: 1,
 		});
 
 		// Uses vertical candidate (96/640), not unsupported horizontal movement.
@@ -479,6 +480,25 @@ describe("resolvePanRelease", () => {
 
 		expect(release.shouldDismiss).toBe(true);
 		expect(release.target).toBe(0);
+	});
+
+	it("does not apply release velocity scale to progress velocity", () => {
+		const event = createEvent({ translationX: 200, velocityX: 800 });
+		const baseRelease = resolvePanRelease(
+			event,
+			createPanReleaseRuntime(true, 0.3, 1),
+			dimensions,
+		);
+		const scaledRelease = resolvePanRelease(
+			event,
+			createPanReleaseRuntime(true, 0.3, 100),
+			dimensions,
+		);
+
+		expect(scaledRelease.initialVelocity).toBeCloseTo(
+			baseRelease.initialVelocity,
+			5,
+		);
 	});
 });
 
@@ -839,6 +859,23 @@ describe("resolvePinchRelease", () => {
 
 		expect(release.shouldDismiss).toBe(true);
 		expect(release.target).toBe(0);
+	});
+
+	it("applies release velocity scale only to handoff velocity", () => {
+		const baseRelease = resolvePinchRelease(
+			{ scale: 0.4, velocity: -1 } as any,
+			createPinchReleaseRuntime(true, 0.3, 1),
+		);
+		const scaledRelease = resolvePinchRelease(
+			{ scale: 0.4, velocity: -1 } as any,
+			createPinchReleaseRuntime(true, 0.3, 2),
+		);
+
+		expect(scaledRelease.initialVelocity).toBeCloseTo(
+			baseRelease.initialVelocity,
+			5,
+		);
+		expect(scaledRelease.handoffVelocity).toBeCloseTo(0.5, 5);
 	});
 });
 

@@ -98,6 +98,12 @@ const RECIPE_OPTIONS = [
 		description: "Native push into a profile, custom bounds transition for avatar",
 		route: "/native-stack-adapter-recipe" as const,
 	},
+	{
+		id: "gesture-velocity-recipe",
+		title: "Gesture Velocity Flap",
+		description: "Style-id box driven by live gesture translation and velocity",
+		route: "/gesture-velocity-recipe" as const,
+	},
 ];
 
 export default function HomeScreen() {

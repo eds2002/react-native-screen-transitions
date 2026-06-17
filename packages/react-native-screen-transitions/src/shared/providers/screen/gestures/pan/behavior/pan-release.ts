@@ -152,7 +152,6 @@ export const resolvePanRelease = (
 			event,
 			dimensions,
 			directions: policy.panActivationDirections,
-			gestureReleaseVelocityScale: policy.gestureReleaseVelocityScale,
 		}),
 		transitionSpec: policy.transitionSpec,
 		resetSpec: shouldDismiss
@@ -213,7 +212,6 @@ export const resolveSnapPanRelease = (
 			handoffVelocity: getPanReleaseHandoffVelocity(
 				axisVelocity,
 				axisDimension,
-				policy.gestureReleaseVelocityScale,
 			),
 			target,
 			currentProgress,
@@ -240,17 +238,21 @@ export const buildPanReleasePlan = (
 	"worklet";
 	const { policy } = runtime;
 	const releaseVelocityScale = Math.max(0, policy.gestureReleaseVelocityScale);
-	const resetUsesReleaseVelocity = !release.shouldDismiss;
-	const resetVelocityFactor = resetUsesReleaseVelocity ? 1 : 0;
-	const resetVelocityScale = releaseVelocityScale * resetVelocityFactor;
+	const resetVelocityScale = releaseVelocityScale;
 	const resetVelocityX =
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityX * resetVelocityScale;
 	const resetVelocityY =
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityY * resetVelocityScale;
-	const handoffVelocityNormX =
-		rawEvent.velocityX / Math.max(1, dimensions.width);
-	const handoffVelocityNormY =
-		rawEvent.velocityY / Math.max(1, dimensions.height);
+	const handoffVelocityNormX = getPanReleaseHandoffVelocity(
+		rawEvent.velocityX,
+		dimensions.width,
+		releaseVelocityScale,
+	);
+	const handoffVelocityNormY = getPanReleaseHandoffVelocity(
+		rawEvent.velocityY,
+		dimensions.height,
+		releaseVelocityScale,
+	);
 	const handoffVelocity = release.shouldDismiss
 		? resolvePanReleaseVelocity(
 				runtime,

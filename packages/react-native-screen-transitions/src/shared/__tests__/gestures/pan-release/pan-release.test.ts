@@ -133,7 +133,7 @@ const rawEvent = {
 } as PanGestureEvent;
 
 describe("pan release plan", () => {
-	it("hands dismiss velocity to progress and neutralizes gesture reset velocity", () => {
+	it("hands dismiss velocity to progress and gesture reset", () => {
 		const plan = buildPanReleasePlan(
 			createRelease(),
 			createRuntime(),
@@ -142,11 +142,27 @@ describe("pan release plan", () => {
 		);
 
 		expect(plan.progressVelocity).toBe(4);
-		expect(plan.resetVelocityX).toBe(0);
-		expect(plan.resetVelocityY).toBe(0);
-		expect(plan.resetVelocityNormX).toBe(0);
-		expect(plan.resetVelocityNormY).toBe(0);
+		expect(plan.resetVelocityX).toBe(120);
+		expect(plan.resetVelocityY).toBe(-240);
+		expect(plan.resetVelocityNormX).toBeCloseTo(0.3, 5);
+		expect(plan.resetVelocityNormY).toBeCloseTo(-0.3, 5);
 		expect(plan.handoffVelocity).toBeCloseTo(0.075, 5);
+	});
+
+	it("applies release velocity scale to dismiss reset and handoff velocity", () => {
+		const plan = buildPanReleasePlan(
+			createRelease({ initialVelocity: 4 }),
+			createRuntime(2),
+			dimensions,
+			rawEvent,
+		);
+
+		expect(plan.progressVelocity).toBe(4);
+		expect(plan.resetVelocityX).toBe(240);
+		expect(plan.resetVelocityY).toBe(-480);
+		expect(plan.resetVelocityNormX).toBeCloseTo(0.6, 5);
+		expect(plan.resetVelocityNormY).toBeCloseTo(-0.6, 5);
+		expect(plan.handoffVelocity).toBeCloseTo(0.15, 5);
 	});
 
 	it("resets cancelled gestures with release velocity", () => {

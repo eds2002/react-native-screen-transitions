@@ -2,6 +2,7 @@ import { clamp } from "react-native-reanimated";
 import {
 	getPinchReleaseHandoffVelocity,
 	normalizePinchScale,
+	resolveGestureVelocityMagnitude,
 	shouldDismissFromPinch,
 } from "../../shared/physics";
 import {
@@ -108,18 +109,23 @@ export const resolvePinchRelease = (
 	const target = shouldDismiss
 		? 0
 		: runtime.stores.gestures.internal.progressBaseline.get();
+	const progressVelocity = getPinchReleaseHandoffVelocity(event.velocity);
+	const handoffVelocity = getPinchReleaseHandoffVelocity(
+		event.velocity,
+		policy.gestureReleaseVelocityScale,
+	);
 
 	return {
 		target,
 		shouldDismiss,
 		initialVelocity: getProgressVelocityTowardTarget({
-			handoffVelocity: getPinchReleaseHandoffVelocity(
-				event.velocity,
-				policy.gestureReleaseVelocityScale,
-			),
+			handoffVelocity: progressVelocity,
 			target,
 			currentProgress,
 		}),
+		handoffVelocity: shouldDismiss
+			? resolveGestureVelocityMagnitude(handoffVelocity)
+			: 0,
 		transitionSpec: policy.transitionSpec,
 		resetSpec: shouldDismiss
 			? policy.transitionSpec?.close
@@ -160,18 +166,23 @@ export const resolveSnapPinchRelease = (
 
 	const shouldDismiss = participation.canDismiss && result.shouldDismiss;
 	const target = shouldDismiss ? 0 : result.targetProgress;
+	const progressVelocity = getPinchReleaseHandoffVelocity(event.velocity);
+	const handoffVelocity = getPinchReleaseHandoffVelocity(
+		event.velocity,
+		policy.gestureReleaseVelocityScale,
+	);
 
 	return {
 		target,
 		shouldDismiss,
 		initialVelocity: getProgressVelocityTowardTarget({
-			handoffVelocity: getPinchReleaseHandoffVelocity(
-				event.velocity,
-				policy.gestureReleaseVelocityScale,
-			),
+			handoffVelocity: progressVelocity,
 			target,
 			currentProgress,
 		}),
+		handoffVelocity: shouldDismiss
+			? resolveGestureVelocityMagnitude(handoffVelocity)
+			: 0,
 		commitProgress: currentProgress,
 		resetValuesImmediately: true,
 		transitionSpec: resolveGestureSnapTransitionSpec({

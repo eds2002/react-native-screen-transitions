@@ -222,11 +222,11 @@ export type ScreenTransitionConfig = {
 	gestureSnapVelocityImpact?: number;
 
 	/**
-	 * Multiplies gesture release velocity used for spring animation energy.
+	 * Multiplies gesture release velocity used for gesture reset/handoff energy.
 	 *
 	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
-	 * or snap target selection (`snapVelocityImpact`). It only changes how fast
-	 * the post-release animation feels.
+	 * or snap target selection (`snapVelocityImpact`). It changes the release
+	 * impulse used by gesture values and interpolator handoff values.
 	 *
 	 * @default 1
 	 */

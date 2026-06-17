@@ -304,6 +304,7 @@ describe("gesture lifecycle state", () => {
 				target: 1,
 				shouldDismiss: false,
 				initialVelocity: 0,
+				handoffVelocity: 0,
 				transitionSpec: undefined,
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
@@ -460,6 +461,7 @@ describe("gesture lifecycle state", () => {
 				target: 0,
 				shouldDismiss: true,
 				initialVelocity: 0,
+				handoffVelocity: 0.6,
 				transitionSpec: undefined,
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
@@ -596,6 +598,7 @@ describe("gesture lifecycle state", () => {
 				target: 1,
 				shouldDismiss: false,
 				initialVelocity: 0,
+				handoffVelocity: 0,
 				transitionSpec: undefined,
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
@@ -622,6 +625,7 @@ describe("gesture lifecycle state", () => {
 				target: 0,
 				shouldDismiss: true,
 				initialVelocity: 0,
+				handoffVelocity: 0.6,
 				transitionSpec: undefined,
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
@@ -635,6 +639,7 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.internal.snapshot.raw.scale.get()).toBe(0.7);
 		expect(gestures.internal.snapshot.raw.normScale.get()).toBe(-0.3);
 		expect(gestures.internal.snapshot.raw.rotation.get()).toBe(0.2);
+		expect(gestures.internal.snapshot.velocity.get()).toBe(0.6);
 		expect(gestures.internal.snapshot.focalX.get()).toBe(120);
 		expect(gestures.internal.snapshot.focalY.get()).toBe(240);
 		expect(gestures.focalX.get()).toBe(0);

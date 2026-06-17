@@ -89,7 +89,9 @@ export const finalizePinchRelease = (
 	}
 
 	if (release.shouldDismiss) {
-		snapshotGestureHandoff(gestures);
+		snapshotGestureHandoff(gestures, {
+			velocity: release.handoffVelocity,
+		});
 	}
 
 	resetPinchGestureValues({

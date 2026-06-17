@@ -203,6 +203,7 @@ export interface PinchReleaseResult {
 	target: number;
 	shouldDismiss: boolean;
 	initialVelocity: number;
+	handoffVelocity: number;
 	commitProgress?: number;
 	resetValuesImmediately?: boolean;
 	transitionSpec: TransitionSpec | undefined;
