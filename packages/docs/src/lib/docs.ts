@@ -54,6 +54,7 @@ const groupOrder = [
 	"Core Concepts",
 	"Navigation Transitions",
 	"Components",
+	"API",
 	"Recipes",
 	"Changelogs",
 	"Guides",

@@ -13,7 +13,11 @@ to: /changelog/updating-to-3-6
 
 ## Gesture Progress Mode
 
-v3.6 adds `gestureProgressMode` as the preferred way to describe whether gestures should drive screen progress.
+v3.6 added `gestureProgressMode` to describe whether gestures should drive screen progress.
+
+<Note>
+  In v3.8, `gestureProgressMode` is deprecated. Current code should use `progress` for visual progress and `transitionProgress` when an animation needs transition progress without live gesture movement.
+</Note>
 
 ```tsx
 options={{
@@ -25,7 +29,7 @@ options={{
 
 Use `"progress-driven"` when drag movement should directly move screen progress. Use `"freeform"` when gesture values should drive custom visuals while transition progress stays controlled by navigation or release.
 
-This deprecates `gestureDrivesProgress` in favor of a more descriptive option name. The older `gestureDrivesProgress: false` form still maps to `"freeform"` for compatibility, but new code should use `gestureProgressMode`.
+This deprecated `gestureDrivesProgress` in favor of a more descriptive option name. The older `gestureDrivesProgress: false` form still maps to `"freeform"` for compatibility.
 
 ## Gesture Tracking
 
@@ -135,7 +139,7 @@ options={{
 
 v3.6 adds `bounds({ id }).navigation.reveal()` for masked source-to-container navigation transitions.
 
-Reveal requires a source boundary, a matching destination boundary, and the static `navigationMaskEnabled` screen option. The helper exposes tuning options such as `borderRadius`, `borderContinuous`, `maxSensitivity`, `velocityDepth`, `gestureProgressMode`, `disablePointerEventsTillElementTransition`, and `maskSizingMode`.
+Reveal requires a source boundary, a matching destination boundary, and the static `navigationMaskEnabled` screen option. The helper exposes tuning options such as `borderRadius`, `borderContinuous`, `maxSensitivity`, `velocityDepth`, `disablePointerEventsTillElementTransition`, and `maskSizingMode`.
 
 Read the full setup in [Reveal](/reveal).
 
@@ -185,14 +189,14 @@ const childAnimation = useScreenAnimation({ depth: 1 });
 
 ## Migration Checklist
 
-- Replace new `gestureDrivesProgress` usage with `gestureProgressMode`.
+- For v3.6 projects, replace new `gestureDrivesProgress` usage with `gestureProgressMode`. In v3.8 and later, use `progress` or `transitionProgress` instead.
 - Use `gestureTracking: "always"` when disabled gestures should keep producing live gesture values for custom visuals.
 - Prefer `active.gesture.active` over the older pan-only `active.gesture.direction`.
 - Use `active.gesture.raw` when deriving dynamic `gestureSensitivity`.
 - Return `options` from `screenStyleInterpolator` for UI-thread option changes, and read resolved values from `active.options` when animation logic depends on them.
 - Use `gestureSnapVelocityImpact` instead of `snapVelocityImpact` for snap release targeting.
 - Use `current.animatedSnapIndex` for live snap visuals and `current.snapIndex` for selected target logic.
-- Use `current.logicallySettled`, `active.logicallySettled`, or `next?.logicallySettled` instead of the deprecated top-level `logicallySettled` alias.
+- For v3.6 projects, use `current.logicallySettled`, `active.logicallySettled`, or `next?.logicallySettled` instead of the deprecated top-level `logicallySettled` alias. In v3.8 and later, use `settled`.
 - Use scoped bounds helpers such as `bounds({ id }).getMeasured()` and `bounds({ id }).getLink()`.
 - Use `offset` instead of the older `gestures` bounds option.
 - Use `getMeasured()` instead of the deprecated `getSnapshot()` alias.
@@ -200,7 +204,7 @@ const childAnimation = useScreenAnimation({ depth: 1 });
 
 ## Compatibility Notes
 
-- `gestureDrivesProgress` still maps to `gestureProgressMode`.
+- `gestureDrivesProgress` still maps to `gestureProgressMode`, and both are deprecated in v3.8.
 - `gestureTracking` is static and is not supported inside interpolator-returned runtime `options`.
 - `expandViaScrollView` still maps to `sheetScrollGestureBehavior`.
 - `getSnapshot()` still exists as a deprecated alias for `getMeasured()`.

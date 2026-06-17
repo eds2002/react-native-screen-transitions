@@ -1,0 +1,31 @@
+---
+title: "createTransitionAwareComponent"
+pageTitle: "createTransitionAwareComponent"
+summary: "Wrap custom components so they can receive styleId styles and scroll metadata handling."
+description: "Wrap custom components so they can receive styleId styles and scroll metadata handling."
+eyebrow: "API"
+group: "API"
+order: 4
+to: /api/create-transition-aware-component
+---
+
+`createTransitionAwareComponent()` wraps a component so it can receive `styleId` styles and participate in transition measurement.
+
+```tsx
+import Transition from "react-native-screen-transitions";
+
+const TransitionBlurView = Transition.createTransitionAwareComponent(BlurView, {
+	alreadyAnimated: false,
+});
+
+<TransitionBlurView styleId="blur" intensity={40} />;
+```
+
+Options:
+
+| Option | Meaning |
+| --- | --- |
+| `alreadyAnimated` | Set `true` when the wrapped component is already animated |
+| `isScrollable` | Set `true` for custom scrollables that should coordinate gestures and publish `layouts.scroll` metadata |
+
+When `isScrollable` is `true`, the wrapper composes the scroll handler used by the gesture system. Keep passing your own `onScroll`, `onLayout`, and `onContentSizeChange`; the wrapper composes them with its internal handlers.

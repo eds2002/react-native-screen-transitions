@@ -101,22 +101,17 @@ If you do want that behavior, there is an experimental escape hatch:
 
 `experimental_animateOnInitialMount` is experimental and may change.
 
-## Component Stack
-
-`createComponentStackNavigator()` still exists, but it is a legacy path.
-
-It was originally the answer for independent embedded flows. Blank stack now handles that directly with:
-
-- `independent`
-- `enableNativeScreens`
-
-For new work, prefer blank stack.
-
 ## Masking Dependency
 
 `navigationMaskEnabled` still depends on `@react-native-masked-view/masked-view`.
 
 Without that dependency, the app still runs, but navigation masking does not activate.
+
+## Expo SDK 56
+
+Expo SDK 56 changes Expo Router's navigator internals. This package currently expects the React Navigation imports used by earlier Expo Router integrations.
+
+Because of that, SDK 56 is not supported without changing this package's internals to use Expo Router imports in the adapter layer. If you are on SDK 56, treat Expo Router support as unavailable for now.
 
 ## Compatibility
 

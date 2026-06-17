@@ -1,0 +1,24 @@
+---
+title: "createBoundaryComponent"
+pageTitle: "createBoundaryComponent"
+summary: "Wrap custom components with the boundary system."
+description: "Wrap custom components with the boundary system."
+eyebrow: "API"
+group: "API"
+order: 5
+to: /api/create-boundary-component
+---
+
+`createBoundaryComponent()` wraps a custom component with the boundary system.
+
+```tsx
+import Transition from "react-native-screen-transitions";
+
+const BoundaryImage = Transition.createBoundaryComponent(Image, {
+	alreadyAnimated: false,
+});
+
+<BoundaryImage id="avatar" source={avatar} style={styles.avatar} />;
+```
+
+The wrapped component keeps its original props and accepts boundary props such as `id`, `group`, `anchor`, `scaleMode`, `target`, `method`, and `enabled`.

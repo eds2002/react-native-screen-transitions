@@ -243,7 +243,15 @@ export type ScreenTransitionConfig = {
 	gestureReleaseVelocityMax?: number;
 
 	/**
-	 * Distance threshold for gesture recognition throughout the screen.
+	 * Deprecated compatibility option.
+	 *
+	 * Overrides the default edge-start distance when `gestureDirection` uses
+	 * `area: "edge"`. Prefer a numeric `area` on each `gestureDirection` entry.
+	 *
+	 * @example
+	 * gestureDirection: { gesture: "horizontal", area: 24 }
+	 *
+	 * @deprecated Use numeric `gestureDirection` entry `area` instead.
 	 */
 	gestureResponseDistance?: number;
 

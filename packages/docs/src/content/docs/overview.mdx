@@ -24,7 +24,7 @@ Use it when you want to build:
 
 ## See It In Action
 
-My friend Brian made a great video explaining screen transitions and its basics. If you're a visual learner, I'd suggest watching this really quick to get a feel for the package.
+My friend Brian made a short video explaining screen transitions and the basics. If you prefer a visual walkthrough, it is a good way to get a feel for the package.
 
 <VideoEmbed
   src="https://www.youtube.com/embed/lKLXLY_nGHo"
@@ -33,31 +33,15 @@ My friend Brian made a great video explaining screen transitions and its basics.
 
 ## Why This Was Built
 
-I was inspired by gorgeous apps like Dropset and Family, and I noticed something: beautiful apps were almost always iOS-only. It felt like SwiftUI was the language for beautiful apps.
+I was inspired by apps like Dropset and Family, and I noticed a pattern: many of the most polished transition-heavy apps were iOS-only. It felt like SwiftUI was where that kind of motion work usually happened.
 
-While learning SwiftUI and UIKit is still on my radar, I love React, I love React Native, and I felt a package like this was missing from the ecosystem. Apps that put real craft and style into their transitions and motion, that obsession is what started this.
+While learning SwiftUI and UIKit is still on my radar, I love React, I love React Native, and I wanted this kind of transition system in React Native. Apps that put real craft and style into transitions were the motivation for this package.
 
-This would not have been possible without the amazing work from the React Navigation team. Their JS stack and its super customizable API is what made the whole idea viable. And the incredible tools from Software Mansion, Reanimated and Gesture Handler, are what really put it all together.
+This would not have been possible without React Navigation. Their JS stack and flexible API made the idea viable. Reanimated and Gesture Handler from Software Mansion made the motion work.
 
-We can now achieve gorgeous, 60 fps transitions in React Native. The gap between beautiful apps made in SwiftUI and what's possible in React Native is closing. You can make beautiful apps for Android and iOS, and that's the beauty of React Native.
+React Native can support smooth, 60 fps transition work across Android and iOS. The gap between SwiftUI-style motion and what is practical in React Native is getting smaller.
 
-I'm super happy to present Screen Transitions: a highly customizable package that makes building the kind of transitions that used to feel out of reach accessible to everyone.
-
-## The Main API Surface
-
-The library has three main pieces:
-
-1. navigator creators from subpath exports and adapters for existing navigators
-2. the default `Transition` export for transition-aware components and presets
-3. screen options where you define gestures, snap points, overlays, masking, and `screenStyleInterpolator`
-
-```tsx
-import { createNativeStackNavigator } from "@react-navigation/native-stack";
-import Transition, {
-  withScreenTransitions,
-} from "react-native-screen-transitions";
-import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
-```
+Screen Transitions is a customizable package for building transitions that used to feel out of reach in React Native.
 
 ## Choose A Stack
 
@@ -83,79 +67,10 @@ That path requires `enableTransitions` on the screens or navigator where you wan
 
 Under the hood, this is still a compatibility layer. The transitioned native-stack screen is switched into a transparent modal-style presentation, native animation is disabled, and the library drives the transition visuals with Reanimated on top of that container.
 
-So while native-stack integration keeps you in the native-stack world for things like existing headers and screen primitives, it is not the path to the most flexible or most powerful custom animations.
-
-The bundled native-stack creator from `react-native-screen-transitions/native-stack` is deprecated. Wrap `@react-navigation/native-stack` with `withScreenTransitions()` for new native-stack usage.
+So while native-stack integration keeps you in the native-stack world for things like existing headers and screen primitives, it is not the path with the most control over custom animations.
 
 Use native stack when you already rely on native-stack behavior and you want a one-off custom transition inside that setup. If you want the full transition model and more control over the animation surface itself, choose blank stack.
 
-### Component Stack
-
-`createComponentStackNavigator()` still exists, but it is now the legacy path. New work should prefer blank stack.
-
-## How A Transition Is Authored
-
-At runtime, the navigator handles routing and each screen's `options` describe how that screen behaves:
-
-```tsx
-import Transition from "react-native-screen-transitions";
-import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
-
-const Stack = createBlankStackNavigator();
-
-function RootNavigator() {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="Home" component={HomeScreen} />
-      <Stack.Screen
-        name="Detail"
-        component={DetailScreen}
-        options={{
-          ...Transition.Presets.SlideFromBottom(),
-        }}
-      />
-    </Stack.Navigator>
-  );
-}
-```
-
-The same screen options surface holds:
-
-- `screenStyleInterpolator`
-- `transitionSpec`
-- `gestureEnabled`
-- `gestureDirection`
-- `gestureTracking`
-- `snapPoints`
-- `overlay`
-- `navigationMaskEnabled`
-
-## What 3.6 Centers
-
-3.6 keeps the same transition model, but makes the gesture and bounds systems more predictable:
-
-- explicit bounds ownership with `Transition.Boundary.Trigger`, `Transition.Boundary.View`, and `Transition.Boundary.Target`
-- a layer-based interpolator output with `content`, `backdrop`, `surface`, and `styleId` targets
-- scoped screen state through `previous`, `current`, `next`, `active`, and `inactive`
-- runtime gesture options through `navigation.setOptions()` and interpolator-returned `options`
-- explicit gesture tracking modes with `gestureTracking`
-- pinch gestures, pinch-driven snap points, and mixed pan/pinch snap sheets
-- a reset system that clears dropped transition-owned style and prop keys without collapsing layout-owned styles
-- a dedicated Navigation Transitions section for navigation-specific motion helpers
-- blank stack as the preferred path for advanced and embedded flows
-
-## Start Here
-
-Start with <a href="/installation">Installation</a> to get the package, peers, Reanimated, and optional masking dependency in place.
-
-Then move to <a href="/quick-start">Quick Start</a> to create a blank stack and write your first custom interpolator.
-
-If you are updating an existing v3 app, read <a href="/changelog/updating-to-3-6">Updating to 3.6</a>.
-
-After that, go deeper with <a href="/custom-animations">Custom Animations</a>, <a href="/gestures">Gestures</a>, <a href="/snap-points">Snap Points</a>, and <a href="/shared-elements">Bounds Transitions</a>.
-
-If your app uses file-based routing, wire it up through <a href="/expo-router">Expo Router</a>.
-
 ## Special Thanks
 
-A special thanks to the teams at [React Navigation](https://reactnavigation.org/) and [Software Mansion](https://swmansion.com/) - none of this would exist without them. React Navigation's JS stack and its deeply customizable API laid the foundation that made Screen Transitions possible. And Software Mansion's [Reanimated](https://docs.swmansion.com/react-native-reanimated/) and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) are the engines that power every 60 fps transition under the hood. Thank you for building such incredible tools for the React Native community.
+Special thanks to the teams at [React Navigation](https://reactnavigation.org/) and [Software Mansion](https://swmansion.com/) - none of this would exist without them. React Navigation's JS stack and flexible API made Screen Transitions possible. Software Mansion's [Reanimated](https://docs.swmansion.com/react-native-reanimated/) and [Gesture Handler](https://docs.swmansion.com/react-native-gesture-handler/) power the motion under the hood. Thank you for building these tools for the React Native community.
