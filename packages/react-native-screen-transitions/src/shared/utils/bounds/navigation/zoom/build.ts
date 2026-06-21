@@ -91,8 +91,8 @@ export function buildZoomStyles({
 	const bounds = createBoundsAccessorCore({
 		getProps: () => props,
 	});
-	const scopedBounds = bounds({ id: tag });
-	const link = scopedBounds.getLink();
+	const scopedBounds = bounds(tag);
+	const link = scopedBounds.link();
 
 	if (!link) return {};
 
@@ -223,18 +223,16 @@ export function buildZoomStyles({
 			link,
 		});
 
-		const contentRaw = link.compute({
+		const contentRaw = scopedBounds.math({
 			...baseRawOptions,
-			raw: true,
 			anchor: zoomAnchor,
 			method: "content",
 			target: focusedContentTarget,
 			progress: transitionProgress,
 		});
 
-		const maskRaw = link.compute({
+		const maskRaw = scopedBounds.math({
 			...baseRawOptions,
-			raw: true,
 			anchor: ZOOM_SHARED_OPTIONS.anchor,
 			method: "size",
 			space: "absolute",
@@ -368,9 +366,8 @@ export function buildZoomStyles({
 		link,
 	});
 
-	const elementRaw = link.compute({
+	const elementRaw = scopedBounds.math({
 		...baseRawOptions,
-		raw: true,
 		anchor: zoomAnchor,
 		method: "transform",
 		space: "relative",

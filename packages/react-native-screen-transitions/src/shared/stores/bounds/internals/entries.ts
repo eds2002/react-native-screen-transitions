@@ -1,5 +1,5 @@
 import { hasAnyKeys } from "../helpers/keys";
-import type { EntryPatch, ScreenEntry, ScreenKey, TagID } from "../types";
+import type { Entry, EntryPatch, ScreenKey, TagID } from "../types";
 import { type BoundaryEntriesState, boundaryRegistry } from "./state";
 
 const ensureBoundaryState = (state: BoundaryEntriesState, tag: TagID) => {
@@ -16,7 +16,7 @@ const ensureScreenEntry = (
 	state: BoundaryEntriesState,
 	tag: TagID,
 	screenKey: ScreenKey,
-): ScreenEntry => {
+): Entry => {
 	"worklet";
 	const tagState = ensureBoundaryState(state, tag);
 	if (!tagState.screens[screenKey]) {
@@ -28,7 +28,7 @@ const ensureScreenEntry = (
 	return tagState.screens[screenKey];
 };
 
-const applyEntryPatch = (entry: ScreenEntry, patch: EntryPatch) => {
+const applyEntryPatch = (entry: Entry, patch: EntryPatch) => {
 	"worklet";
 	if (patch.bounds !== undefined) {
 		entry.bounds = patch.bounds;
@@ -49,7 +49,7 @@ const applyEntryPatch = (entry: ScreenEntry, patch: EntryPatch) => {
 	}
 };
 
-function getEntry(tag: TagID, key: ScreenKey): ScreenEntry | null {
+function getEntry(tag: TagID, key: ScreenKey): Entry | null {
 	"worklet";
 	return boundaryRegistry.get()[tag]?.screens[key] ?? null;
 }

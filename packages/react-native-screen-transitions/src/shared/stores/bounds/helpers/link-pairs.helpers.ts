@@ -35,15 +35,6 @@ export const getSourceScreenKeyFromPairKey = (
 	return pairKey.slice(0, separatorIndex);
 };
 
-export const getDestinationScreenKeyFromPairKey = (
-	pairKey: ScreenPairKey,
-): ScreenIdentifier["screenKey"] | "" => {
-	"worklet";
-	const separatorIndex = pairKey.indexOf(PAIR_SEPARATOR);
-	if (separatorIndex === -1) return "";
-	return pairKey.slice(separatorIndex + PAIR_SEPARATOR.length);
-};
-
 export const isScreenPairKeyForScreen = (
 	pairKey: ScreenPairKey,
 	screenKey: ScreenIdentifier["screenKey"],
@@ -75,7 +66,7 @@ export const createGroupTag = (group: GroupKey, linkKey: LinkKey): string => {
 	return `${group}:${linkKey}`;
 };
 
-export const ensurePairState = (
+const ensurePairState = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,
 ): LinkPairState => {

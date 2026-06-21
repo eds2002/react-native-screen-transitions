@@ -9,7 +9,9 @@ import Animated, {
 import { NO_PROPS, NO_STYLES } from "../../../constants";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useGestureContext } from "../../../providers/screen/gestures";
+import { OriginProvider } from "../../../providers/screen/origin.provider";
 import { useScreenStyles } from "../../../providers/screen/styles";
+import { ScreenFallbackHost } from "../../boundary/portal/components/host";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
 import { SurfaceContainer } from "./surface-container";
@@ -56,13 +58,16 @@ export const ContentLayer = memo(
 						enabled={isNavigationMaskEnabled}
 					>
 						<SurfaceContainer pointerEvents={contentPointerEvents}>
-							{hasAutoSnapPoint ? (
-								<View collapsable={false} onLayout={handleContentLayout}>
-									{children}
-								</View>
-							) : (
-								children
-							)}
+							<OriginProvider>
+								{hasAutoSnapPoint ? (
+									<View collapsable={false} onLayout={handleContentLayout}>
+										{children}
+									</View>
+								) : (
+									children
+								)}
+								<ScreenFallbackHost />
+							</OriginProvider>
 						</SurfaceContainer>
 					</MaybeMaskedNavigationContainer>
 				</Animated.View>

@@ -11,6 +11,7 @@ import type {
 	ResettableStyleStatesBySlot,
 } from "./types";
 
+export { areResettableStatesBySlotEqual } from "./are-resettable-states-equal";
 export type { LocalStyleLayers, ResettableStyleStatesBySlot } from "./types";
 
 type ResolveSlotStylesContext = {

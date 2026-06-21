@@ -79,10 +79,10 @@ export function buildRevealStyles({
 	const bounds = createBoundsAccessorCore({
 		getProps: () => props,
 	});
-	const scopedBounds = bounds({ id: tag });
-	const link = scopedBounds.getLink();
+	const scopedBounds = bounds(tag);
+	const link = scopedBounds.link();
 
-	if (!link?.source?.bounds || !link.destination?.bounds) {
+	if (link?.status !== "complete") {
 		return {};
 	}
 
@@ -133,16 +133,14 @@ export function buildRevealStyles({
 	/* ----------------------------- Focused Screen ----------------------------- */
 
 	if (focused) {
-		const contentRaw = link.compute({
-			raw: true,
+		const contentRaw = scopedBounds.math({
 			scaleMode: "uniform",
 			method: "content",
 			target: initialDestinationTarget,
 			progress: transitionProgress,
 		});
 
-		const maskRaw = link.compute({
-			raw: true,
+		const maskRaw = scopedBounds.math({
 			scaleMode: "uniform",
 			method: "size",
 			space: "absolute",

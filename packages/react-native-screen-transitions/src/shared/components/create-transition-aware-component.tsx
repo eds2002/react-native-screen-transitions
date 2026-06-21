@@ -43,6 +43,8 @@ export function createTransitionAwareComponent<P extends object>(
 			onScroll: userOnScroll,
 			onMomentumScrollEnd: userOnMomentumScrollEnd,
 			onScrollEndDrag: userOnScrollEndDrag,
+			children,
+			contentContainerStyle,
 			...scrollableProps
 		} = props;
 
@@ -69,11 +71,11 @@ export function createTransitionAwareComponent<P extends object>(
 			scrollHandler,
 			userOnScroll ?? null,
 		]);
-
 		const scrollableComponent = (
 			<AnimatedComponent
 				{...(scrollableProps as any)}
 				ref={ref}
+				contentContainerStyle={contentContainerStyle}
 				/**
 				 * Keep the scroll listener detached while the owning gesture screen is
 				 * closing. On iOS, a bounced ScrollView can keep sending native scroll
@@ -90,7 +92,9 @@ export function createTransitionAwareComponent<P extends object>(
 						? scrollableProps.scrollEventThrottle || 16
 						: undefined
 				}
-			/>
+			>
+				{children}
+			</AnimatedComponent>
 		);
 
 		const coordinatedScrollableComponent = nativeGesture ? (
@@ -119,6 +123,7 @@ export function createTransitionAwareComponent<P extends object>(
 			styleId,
 			onPress,
 			remeasureOnFocus,
+			animatedProps: userAnimatedProps,
 			...rest
 		} = props as any;
 
@@ -159,7 +164,7 @@ export function createTransitionAwareComponent<P extends object>(
 						{...(rest as any)}
 						ref={animatedRef}
 						style={[style, associatedStyles]}
-						animatedProps={associatedProps}
+						animatedProps={userAnimatedProps ?? associatedProps}
 						onPress={captureActiveOnPress}
 						onLayout={runOnUI(handleInitialLayout)}
 						collapsable={!sharedBoundTag}

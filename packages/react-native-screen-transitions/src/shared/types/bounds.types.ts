@@ -1,13 +1,17 @@
-import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type { MeasuredDimensions } from "react-native-reanimated";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
-import type { MeasuredEntry } from "../stores/bounds";
+import type { BoundsLink } from "../stores/bounds/types";
 import type {
-	BoundId,
-	BoundsOptions,
-	BoundsOptionsResult,
+	BoundsComputeOptions,
+	BoundsIdentityInput,
+	BoundsMathResult,
+	BoundsMotion,
+	BoundsMotionFrame,
+	BoundsMotionTransform,
+	BoundsStyleResult,
 } from "../utils/bounds/types/options";
 import type {
 	ScreenInterpolationProps,
@@ -15,6 +19,8 @@ import type {
 	TransitionSlotStyle,
 } from "./animation.types";
 import type { GestureProgressMode } from "./gesture.types";
+
+export type { BoundsLink, BoundsLinkStatus } from "../stores/bounds/types";
 
 /**
  * Target style computation.
@@ -24,24 +30,6 @@ import type { GestureProgressMode } from "./gesture.types";
  *   so the target bound matches the source at progress start
  */
 export type BoundsMethod = "transform" | "size" | "content";
-
-export type BoundEntry = {
-	bounds: MeasuredDimensions;
-	styles: StyleProps;
-};
-
-export type BoundsLink = {
-	id: string;
-	source: BoundEntry | null;
-	destination: BoundEntry | null;
-	initialSource: BoundEntry | null;
-	initialDestination: BoundEntry | null;
-	compute: <T extends BoundsLinkComputeOptions>(
-		options: T,
-	) => BoundsOptionsResult<T & { id: string }>;
-};
-
-export type BoundsLinkComputeOptions = Omit<BoundsOptions, "id" | "group">;
 
 export type BoundsNavigationZoomOptions = {
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
@@ -293,47 +281,21 @@ type BoundsBoundNavigationAccessor = {
 	navigation: BoundsNavigationAccessor;
 };
 
-export type BoundsScopedAccessors = {
-	getMeasured: (key?: string) => MeasuredEntry | null;
-	/**
-	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
-	 */
-	getSnapshot: (key?: string) => MeasuredEntry | null;
-	getLink: () => BoundsLink | null;
-	interpolateStyle: (property: keyof StyleProps, fallback?: number) => number;
-	interpolateBounds: (
-		property: keyof MeasuredDimensions,
-		fallbackOrTargetKey?: number | string,
-		fallback?: number,
-	) => number;
+export type BoundsScopedAccessor = BoundsBoundNavigationAccessor & {
+	styles: (options?: BoundsComputeOptions) => BoundsStyleResult;
+	math: <T extends BoundsComputeOptions = BoundsComputeOptions>(
+		options?: T,
+	) => BoundsMathResult<T>;
+	link: (id?: BoundsIdentityInput) => BoundsLink | null;
 };
 
-type BoundsCallResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
-	BoundsBoundNavigationAccessor &
-	BoundsScopedAccessors;
-
-export type BoundsAccessor = {
-	<T extends BoundsOptions>(options: T): BoundsCallResult<T>;
-	getMeasured: (id: BoundId, key?: string) => MeasuredEntry | null;
-	/**
-	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
-	 */
-	getSnapshot: (id: BoundId, key?: string) => MeasuredEntry | null;
-	getLink: (id: BoundId) => BoundsLink | null;
-	interpolateStyle: (
-		id: BoundId,
-		property: keyof StyleProps,
-		fallback?: number,
-	) => number;
-	interpolateBounds: (
-		id: BoundId,
-		property: keyof MeasuredDimensions,
-		fallbackOrTargetKey?: number | string,
-		fallback?: number,
-	) => number;
-};
+export type BoundsAccessor = (
+	options: BoundsIdentityInput,
+) => BoundsScopedAccessor;
 
 export type BoundsInterpolationProps = Omit<
 	ScreenInterpolationProps,
 	"bounds" | "transition"
 >;
+
+export type { BoundsMotion, BoundsMotionFrame, BoundsMotionTransform };

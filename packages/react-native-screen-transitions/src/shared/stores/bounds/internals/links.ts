@@ -14,19 +14,26 @@ import {
 	removePairLink,
 } from "../helpers/link-pairs.helpers";
 import type {
+	BoundsPortalAttachTarget,
 	GroupKey,
 	LinkKey,
 	LinkPairsState,
 	ScreenKey,
 	ScreenPairKey,
+	SourceHostRef,
+	SourceTagLinkSide,
 	TagID,
 	TagLink,
 } from "../types";
 import { pairs } from "./state";
 
-const toLinkKey = (tag: TagID): LinkKey => {
+const syncLinkStatus = (link: TagLink) => {
 	"worklet";
-	return getLinkKeyFromTag(tag);
+	link.status = link.source
+		? link.destination
+			? "complete"
+			: "destination-incomplete"
+		: "source-incomplete";
 };
 
 const createLinkSide = (
@@ -78,14 +85,23 @@ const writeDestination = (
 	group?: GroupKey,
 ) => {
 	"worklet";
-	const link = getPairLink(state, pairKey, linkKey);
-	if (!link) return;
+	const existingLink = getPairLink(state, pairKey, linkKey);
 
 	const destination = createLinkSide(screenKey, bounds, styles);
+	const link =
+		existingLink ??
+		({
+			group,
+			status: "source-incomplete",
+			source: null,
+			destination,
+			initialDestination: destination,
+		} satisfies TagLink);
 
 	link.group = group ?? link.group;
 	link.destination = destination;
 	link.initialDestination ??= destination;
+	syncLinkStatus(link);
 
 	writePairLink(state, pairKey, linkKey, link);
 
@@ -136,20 +152,31 @@ function setSource(
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
 	group?: GroupKey,
+	portalAttachTarget?: BoundsPortalAttachTarget,
+	sourceHost?: SourceHostRef,
 ) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		const linkKey = toLinkKey(tag);
-		const source = createLinkSide(screenKey, bounds, styles);
+		const linkKey = getLinkKeyFromTag(tag);
 
 		const pairLinks = ensurePairLinks(state, pairKey);
 
 		const existingLink = pairLinks[linkKey];
+
+		// Refresh paths may re-measure the source without portal context;
+		// keep the previously recorded host in that case.
+		const source: SourceTagLinkSide = {
+			...createLinkSide(screenKey, bounds, styles),
+			portalAttachTarget:
+				portalAttachTarget ?? existingLink?.source?.portalAttachTarget,
+			sourceHost: sourceHost ?? existingLink?.source?.sourceHost,
+		};
 		const link =
 			existingLink ??
 			({
 				group,
+				status: "destination-incomplete",
 				source,
 				destination: null,
 				initialSource: source,
@@ -158,6 +185,7 @@ function setSource(
 		link.group = group ?? link.group;
 		link.source = source;
 		link.initialSource ??= source;
+		syncLinkStatus(link);
 
 		pairLinks[linkKey] = link;
 
@@ -181,7 +209,7 @@ function setDestination(
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		const linkKey = toLinkKey(tag);
+		const linkKey = getLinkKeyFromTag(tag);
 		promotePendingSource(state, pairKey, linkKey);
 		writeDestination(state, pairKey, linkKey, screenKey, bounds, styles, group);
 
@@ -193,7 +221,7 @@ function setActiveGroupId(pairKey: ScreenPairKey, group: GroupKey, tag: TagID) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		writeGroup(state, pairKey, group, toLinkKey(tag));
+		writeGroup(state, pairKey, group, getLinkKeyFromTag(tag));
 		return state;
 	});
 }
@@ -208,12 +236,14 @@ function getActiveGroupId(
 
 function getLink(pairKey: ScreenPairKey, tag: TagID): TagLink | null {
 	"worklet";
-	return getPairLink(pairs.get(), pairKey, toLinkKey(tag));
+	return getPairLink(pairs.get(), pairKey, getLinkKeyFromTag(tag));
 }
 
-const isCompletedLink = (link: TagLink | null): link is TagLink => {
+const hasSourceLink = (
+	link: TagLink | null,
+): link is TagLink & { source: NonNullable<TagLink["source"]> } => {
 	"worklet";
-	return !!link?.destination;
+	return !!link?.source;
 };
 
 const getPendingSourceLink = (
@@ -236,7 +266,7 @@ function getResolvedLink(
 ): { tag: TagID; link: TagLink | null } {
 	"worklet";
 	const state = pairs.get();
-	const linkKey = toLinkKey(tag);
+	const linkKey = getLinkKeyFromTag(tag);
 	const group = getGroupKeyFromTag(tag);
 	const requestedLink = getPairLink(state, pairKey, linkKey);
 
@@ -251,8 +281,9 @@ function getResolvedLink(
 	const link = requestedLink ?? fallbackPendingLink;
 
 	// Group active ids can update before the new member has a full source/destination
-	// link, so unresolved grouped links fall back to the initial id's measurements.
-	if (!group || isCompletedLink(link)) {
+	// link. As soon as the requested member has source bounds, prefer it; only
+	// fall back while the requested member has no source yet.
+	if (!group || hasSourceLink(link)) {
 		return {
 			tag,
 			link,
@@ -261,8 +292,11 @@ function getResolvedLink(
 
 	const initialId = state[pairKey]?.groups?.[group]?.initialId;
 	if (initialId) {
-		const initialLink = getPairLink(state, pairKey, initialId);
-		if (isCompletedLink(initialLink)) {
+		const initialLink =
+			getPairLink(state, pairKey, initialId) ??
+			getPendingSourceLink(state, pairKey, initialId);
+
+		if (hasSourceLink(initialLink)) {
 			return {
 				tag: createGroupTag(group, initialId),
 				link: initialLink,
@@ -281,7 +315,7 @@ function getSource(
 	tag: TagID,
 ): TagLink["source"] | null {
 	"worklet";
-	return getPairSource(pairs.get(), pairKey, toLinkKey(tag));
+	return getPairSource(pairs.get(), pairKey, getLinkKeyFromTag(tag));
 }
 
 function getDestination(
@@ -289,7 +323,7 @@ function getDestination(
 	tag: TagID,
 ): TagLink["destination"] | null {
 	"worklet";
-	return getPairDestination(pairs.get(), pairKey, toLinkKey(tag));
+	return getPairDestination(pairs.get(), pairKey, getLinkKeyFromTag(tag));
 }
 
 export {

@@ -292,11 +292,26 @@ export type ScreenStyleInterpolator = (
  */
 export type AnimatedViewStyle = ViewStyle & TextStyle;
 
+export type BoundaryTeleportControl =
+	| boolean
+	| {
+			enabled?: boolean;
+	  };
+
+export type TransitionSlotProps = Record<string, unknown> & {
+	/**
+	 * Controls whether a portal-enabled boundary should attach for the current
+	 * interpolator frame. `false` detaches the portal while keeping hostName
+	 * ownership internal.
+	 */
+	teleport?: BoundaryTeleportControl;
+};
+
 type TransitionSlotDefinition = {
 	/** Animated styles applied via `useAnimatedStyle`. */
 	style?: AnimatedViewStyle;
 	/** Animated props applied via `useAnimatedProps`. */
-	props?: Record<string, unknown>;
+	props?: TransitionSlotProps;
 };
 
 /**
@@ -330,7 +345,7 @@ export type TransitionInterpolatorOptions = Omit<
  */
 export type NormalizedTransitionSlotStyle = {
 	style?: StyleProps;
-	props?: Record<string, unknown>;
+	props?: TransitionSlotProps;
 };
 
 /**

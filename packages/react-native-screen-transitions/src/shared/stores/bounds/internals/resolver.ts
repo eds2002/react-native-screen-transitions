@@ -33,12 +33,14 @@ function resolveTransitionPair(
 	const matchedLink = pairKey ? getResolvedLink(pairKey, tag).link : null;
 
 	return {
-		sourceBounds: matchedLink?.source.bounds ?? null,
+		sourceBounds: matchedLink?.source?.bounds ?? null,
 		destinationBounds: matchedLink?.destination?.bounds ?? null,
-		sourceStyles: matchedLink?.source.styles ?? null,
+		sourceStyles: matchedLink?.source?.styles ?? null,
 		destinationStyles: matchedLink?.destination?.styles ?? null,
-		sourceScreenKey: matchedLink?.source.screenKey ?? null,
+		sourceScreenKey: matchedLink?.source?.screenKey ?? null,
 		destinationScreenKey: matchedLink?.destination?.screenKey ?? null,
+		sourcePortalAttachTarget: matchedLink?.source?.portalAttachTarget,
+		sourceHost: matchedLink?.source?.sourceHost,
 	};
 }
 

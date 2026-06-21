@@ -142,8 +142,8 @@ export default function OpeningTransformBoundsDestination() {
 			edges={["top"]}
 		>
 			<ScreenHeader
-				title="Screen Transform Sync"
-				subtitle="Bounds receives the screen Y offset during the slide."
+				title="Bounds Motion Arc"
+				subtitle="The bound receives custom path and depth motion."
 			/>
 
 			<View style={styles.content}>
@@ -252,10 +252,10 @@ export default function OpeningTransformBoundsDestination() {
 						Why this matters
 					</Text>
 					<Text style={[styles.noteBody, { color: theme.textSecondary }]}>
-						When the whole screen is moving, the shared element needs that same
-						movement passed into bounds. This example applies the screen Y
-						offset to the bound element so the transition keeps the card
-						aligned.
+						The screen still translates vertically, but the bound style now uses
+						motion to subtract that Y offset, add a small horizontal bend, and
+						scale down through the middle of the flight. The card should settle
+						back into the measured destination at base scale.
 					</Text>
 				</View>
 			</View>

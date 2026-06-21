@@ -1,12 +1,14 @@
 import { expect } from "bun:test";
 import {
 	BoundStore,
-	type BoundaryConfig,
-	type ResolveTransitionContext,
 	type ResolvedTransitionPair,
 	type Snapshot,
 } from "../../../stores/bounds";
 import { createScreenPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
+import type {
+	EntryPatch,
+	ResolveTransitionContext,
+} from "../../../stores/bounds/types";
 
 export const createBounds = (
 	x = 0,
@@ -52,7 +54,7 @@ export const registerMeasuredEntry = (
 export const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
-	boundaryConfig?: BoundaryConfig,
+	boundaryConfig?: NonNullable<EntryPatch["boundaryConfig"]>,
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		boundaryConfig,

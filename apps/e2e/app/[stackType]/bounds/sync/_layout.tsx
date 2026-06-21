@@ -34,7 +34,10 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 
 	if (destinationBoundary?.method === "content") {
 		if (focused) {
-			const contentStyles = bounds(activeStyleOptions);
+			const contentStyles = bounds(activeStyleOptions).styles() as Record<
+				string,
+				any
+			>;
 
 			return {
 				content: {
@@ -54,7 +57,10 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 			};
 		}
 
-		const elementStyle = bounds(activeStyleOptions) as Record<string, any>;
+		const elementStyle = bounds(activeStyleOptions).styles() as Record<
+			string,
+			any
+		>;
 
 		return {
 			[BOUNDARY_TAG]: {
@@ -66,7 +72,10 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 		};
 	}
 
-	const elementStyle = bounds(activeStyleOptions) as Record<string, any>;
+	const elementStyle = bounds(activeStyleOptions).styles() as Record<
+		string,
+		any
+	>;
 
 	return {
 		[BOUNDARY_TAG]: {
@@ -81,25 +90,52 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 const RETARGET_ID = "retarget";
 
 const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ progress, bounds, layouts, focused }) => {
+	({ progress, bounds, layouts }) => {
 		"worklet";
 
-		const y = interpolate(
+		const screenTranslateY = interpolate(
 			progress,
 			[0, 1],
 			[layouts.screen.height, 0],
 			"clamp",
 		);
 
-		const boundStyles = bounds({
-			id: OPENING_TRANSFORM_BOUNDARY_ID,
-			offset: { y: -y },
+		const boundStyles = bounds(OPENING_TRANSFORM_BOUNDARY_ID).styles({
+			motion: ({ current, progress: motionProgress, start, props }) => {
+				"worklet";
+				// Half-orbit: apogee peaks mid-flight while the lateral swing runs a
+				// full sine cycle — out, crossing the travel line exactly at apogee
+				// (smallest, deepest), returning from the other side. The crossing is
+				// what reads as "around", not "bent".
+				const apogee = Math.sin(motionProgress * Math.PI);
+				// -1 at the left screen edge, +1 at the right: which way to orbit.
+				const screenBias =
+					((start.pageX + start.width / 2) / props.layouts.screen.width) * 2 -
+					1;
+				const side = screenBias < 0 ? -1 : 1;
+				const swingX = Math.sin(motionProgress * Math.PI * 2) * 110 * side;
+				const liftY = -apogee * 48;
+				const depthScale = 1 - apogee * 0.6;
+
+				return {
+					x: current.x + swingX,
+					y: current.y - screenTranslateY + liftY,
+					scale: current.scale * depthScale,
+					// Full end-over-end flip across the flight — 360° lands upright,
+					// and reversing the gesture unwinds it. Yaw into the orbit
+					// direction with a slight banking roll while it carves the turn.
+					rotateX: motionProgress * 360,
+					rotateY: side * apogee * -40 + screenBias * 12,
+					rotate: side * apogee * -6,
+					perspective: 650,
+				};
+			},
 		}) as any;
 
 		return {
 			content: {
 				style: {
-					transform: [{ translateY: y }],
+					transform: [{ translateY: screenTranslateY }],
 				},
 			},
 			[OPENING_TRANSFORM_BOUNDARY_ID]: boundStyles,
@@ -110,7 +146,7 @@ const retargetInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
 	({ bounds, progress, focused, active }) => {
 		"worklet";
 
-		const elementStyle = bounds({ id: RETARGET_ID });
+		const elementStyle = bounds(RETARGET_ID).styles() as Record<string, any>;
 
 		if (active.settled) {
 			return {
