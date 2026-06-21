@@ -19,7 +19,16 @@ There is also a lot of store work under that. Bounds links now handle destinatio
 
 ### Teleport boundaries
 
-Add `portal` to a boundary to render it through the portal path.
+v3.9 brings `react-native-teleport` into `react-native-screen-transitions`.
+It fills a gap that the bounds system has had for a while: measured bounds work
+well when the source and destination sit in ordinary layouts, but complex screens
+often add clipping, nested stacks, scroll containers, headers, or local stacking
+contexts. A shared element can measure correctly and still be visually trapped by
+the view tree around it.
+
+Teleport boundaries solve that by keeping the placeholder where it belongs and
+moving only the animated element into a screen-level portal host during the
+handoff. Add `portal` to a boundary to use that path.
 
 ```tsx
 <Transition.Boundary.Trigger
@@ -78,6 +87,10 @@ screenStyleInterpolator: ({ bounds, current }) => {
 ```
 
 Omitting `teleport` keeps teleport enabled. Set it to `false`, or `{ enabled: false }`, when a recipe needs the boundary to detach for part of the transition.
+
+This control is still subject to change while the portal API settles. Treat it as
+a low-level escape hatch for custom recipes, not the main way to use boundary
+portals.
 
 ### Scoped bounds API
 
