@@ -1,7 +1,6 @@
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_PROGRESS_MODE,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	DEFAULT_GESTURE_SENSITIVITY,
 	DEFAULT_GESTURE_SNAP_LOCKED,
@@ -20,11 +19,6 @@ import type {
 	TransitionInterpolatedStyle,
 } from "../../../types";
 import type { BackdropBehavior } from "../../../types/screen.types";
-import {
-	gestureProgressModeDrivesProgress,
-	isGestureProgressMode,
-	resolveGestureProgressMode,
-} from "../../../utils/gesture-progress-mode";
 import { resolveSheetScrollGestureBehavior } from "../../../utils/resolve-screen-transition-options";
 import type {
 	RequiredScreenOption,
@@ -186,25 +180,6 @@ const resolveBackdropBehaviorOption = (
 		: fallback;
 };
 
-const resolveGestureProgressModeOption = (
-	gestureProgressMode: unknown,
-	gestureDrivesProgress: unknown,
-	fallback: RequiredScreenOption<"gestureProgressMode">,
-): RequiredScreenOption<"gestureProgressMode"> => {
-	"worklet";
-	if (isGestureProgressMode(gestureProgressMode)) {
-		return gestureProgressMode;
-	}
-
-	return resolveGestureProgressMode({
-		gestureDrivesProgress:
-			typeof gestureDrivesProgress === "boolean"
-				? gestureDrivesProgress
-				: undefined,
-		fallback,
-	});
-};
-
 const areGestureActivationAreasEqual = (
 	left: RequiredScreenOption<"gestureActivationArea">,
 	right: RequiredScreenOption<"gestureActivationArea">,
@@ -282,8 +257,6 @@ const areScreenOptionsEqual = (
 		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
 		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
 		left.gestureResponseDistance === right.gestureResponseDistance &&
-		left.gestureProgressMode === right.gestureProgressMode &&
-		left.gestureDrivesProgress === right.gestureDrivesProgress &&
 		areGestureActivationAreasEqual(
 			left.gestureActivationArea,
 			right.gestureActivationArea,
@@ -299,12 +272,6 @@ const areScreenOptionsEqual = (
 export const resolveBaseScreenOptions = (
 	options: ScreenTransitionConfig,
 ): ScreenOptionsSnapshot => {
-	const gestureProgressMode = resolveGestureProgressModeOption(
-		options.gestureProgressMode,
-		options.gestureDrivesProgress,
-		DEFAULT_GESTURE_PROGRESS_MODE,
-	);
-
 	return {
 		navigationMaskEnabled: resolveBooleanOption(
 			options.navigationMaskEnabled,
@@ -339,9 +306,6 @@ export const resolveBaseScreenOptions = (
 			options.gestureResponseDistance,
 			undefined,
 		),
-		gestureProgressMode,
-		gestureDrivesProgress:
-			gestureProgressModeDrivesProgress(gestureProgressMode),
 		gestureActivationArea: resolveGestureActivationAreaOption(
 			options.gestureActivationArea,
 			DEFAULT_GESTURE_ACTIVATION_AREA,
@@ -384,11 +348,6 @@ export const syncScreenOptionsOverrides = (
 	"worklet";
 	const options = raw?.options;
 	const base = screenOptions.get().baseOptions;
-	const gestureProgressMode = resolveGestureProgressModeOption(
-		options?.gestureProgressMode,
-		options?.gestureDrivesProgress,
-		base.gestureProgressMode,
-	);
 
 	const next: ScreenOptionsState = {
 		navigationMaskEnabled: base.navigationMaskEnabled,
@@ -421,9 +380,6 @@ export const syncScreenOptionsOverrides = (
 			options?.gestureResponseDistance,
 			base.gestureResponseDistance,
 		),
-		gestureProgressMode,
-		gestureDrivesProgress:
-			gestureProgressModeDrivesProgress(gestureProgressMode),
 		gestureActivationArea: resolveGestureActivationAreaOption(
 			options?.gestureActivationArea,
 			base.gestureActivationArea,

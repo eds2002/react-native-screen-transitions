@@ -222,11 +222,11 @@ export type ScreenTransitionConfig = {
 	gestureSnapVelocityImpact?: number;
 
 	/**
-	 * Multiplies gesture release velocity used for spring animation energy.
+	 * Multiplies gesture release velocity used for gesture reset/handoff energy.
 	 *
 	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
-	 * or snap target selection (`snapVelocityImpact`). It only changes how fast
-	 * the post-release animation feels.
+	 * or snap target selection (`snapVelocityImpact`). It changes the release
+	 * impulse used by gesture values and interpolator handoff values.
 	 *
 	 * @default 1
 	 */
@@ -243,20 +243,37 @@ export type ScreenTransitionConfig = {
 	gestureReleaseVelocityMax?: number;
 
 	/**
-	 * Distance threshold for gesture recognition throughout the screen.
+	 * Deprecated compatibility option.
+	 *
+	 * Overrides the default edge-start distance when `gestureDirection` uses
+	 * `area: "edge"`. Prefer a numeric `area` on each `gestureDirection` entry.
+	 *
+	 * @example
+	 * gestureDirection: { gesture: "horizontal", area: 24 }
+	 *
+	 * @deprecated Use numeric `gestureDirection` entry `area` instead.
 	 */
 	gestureResponseDistance?: number;
 
 	/**
-	 * Controls whether live gesture displacement drives transition progress or
-	 * stays available as freeform gesture values for custom interpolators.
+	 * Deprecated compatibility option.
+	 *
+	 * Gesture movement now always contributes to `progress`. Use `transitionProgress`
+	 * in interpolators when you need transition progress without live gesture
+	 * contribution.
+	 *
+	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
 	gestureProgressMode?: GestureProgressMode;
 
 	/**
-	 * Whether the gesture drives the progress.
+	 * Deprecated compatibility alias for `gestureProgressMode`.
 	 *
-	 * @deprecated Use `gestureProgressMode` instead.
+	 * Gesture movement now always contributes to `progress`. Use `transitionProgress`
+	 * in interpolators when you need transition progress without live gesture
+	 * contribution.
+	 *
+	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
 	gestureDrivesProgress?: boolean;
 

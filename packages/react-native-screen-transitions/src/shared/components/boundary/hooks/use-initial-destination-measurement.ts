@@ -47,7 +47,10 @@ export const useInitialDestinationMeasurement = ({
 		(s) => s.derivations.ancestorDestinationPairKey,
 	);
 	const destinationEnabled = enabled && !nextScreenKey;
-	const progress = AnimationStore.getValue(currentScreenKey, "progress");
+	const progress = AnimationStore.getValue(
+		currentScreenKey,
+		"transitionProgress",
+	);
 	const system = SystemStore.getBag(currentScreenKey);
 	const { pendingLifecycleRequestKind } = system;
 	const { blockLifecycleStart, unblockLifecycleStart } = system.actions;

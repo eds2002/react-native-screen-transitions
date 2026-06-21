@@ -1,0 +1,41 @@
+---
+title: "useScreenAnimation"
+pageTitle: "useScreenAnimation"
+summary: "Read transition interpolation props from a component."
+description: "Read transition interpolation props from a component."
+eyebrow: "API"
+group: "API"
+order: 1
+to: /api/use-screen-animation
+---
+
+`useScreenAnimation()` returns a Reanimated derived value with the same interpolation props passed to `screenStyleInterpolator`.
+
+```tsx
+import { useScreenAnimation } from "react-native-screen-transitions";
+
+const animation = useScreenAnimation();
+
+const style = useAnimatedStyle(() => {
+	const { current } = animation.value;
+
+	return {
+		opacity: current.progress,
+		transform: [{ translateY: current.gesture.y }],
+	};
+});
+```
+
+Target another transition scope with `depth`:
+
+```tsx
+const currentAnimation = useScreenAnimation({ depth: 0 });
+const parentAnimation = useScreenAnimation({ depth: -1 });
+const childAnimation = useScreenAnimation({ depth: 1 });
+```
+
+`depth: 0` resolves the current transition. Negative values resolve ancestors. Positive values resolve descendants.
+
+Non-current targets can return `null`, so check `animation.value` before reading it.
+
+Legacy string targets such as `"self"`, `"parent"`, and `"root"` still work, but new code should use `{ depth }`.

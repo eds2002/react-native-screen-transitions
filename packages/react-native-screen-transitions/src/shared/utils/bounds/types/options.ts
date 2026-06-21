@@ -199,6 +199,15 @@ export type BoundsOptions = {
 	offset?: { x?: number; y?: number };
 
 	/**
+	 * Progress value used to drive the bounds interpolation.
+	 *
+	 * Defaults to the interpolator frame's combined visual progress. Pass
+	 * `transitionProgress` when bounds geometry should ignore live gesture
+	 * progress and layer gesture movement separately.
+	 */
+	progress?: number;
+
+	/**
 	 * The x/y offsets to apply to the bounds.
 	 *
 	 * @deprecated Use `offset` instead.

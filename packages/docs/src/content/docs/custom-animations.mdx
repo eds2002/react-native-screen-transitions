@@ -47,7 +47,7 @@ const Stack = createBlankStackNavigator();
 
 ## Derived Helpers
 
-The top-level helper props are derived in `derivations.ts`:
+The top-level helper props are derived from the current screen relationship:
 
 ```tsx
 const progress = current.progress + (next?.progress ?? 0);
@@ -56,7 +56,9 @@ const active = focused ? current : (next ?? current);
 const inactive = focused ? previous : current;
 ```
 
-Use the top-level `progress` value when you want to choreograph the overall transition state. Use `current.progress`, `previous?.progress`, or `next?.progress` when you want the motion of one specific screen.
+Use the top-level `progress` value when the whole stack relationship should drive the animation. Use `current.progress`, `previous?.progress`, or `next?.progress` when one specific screen should drive it.
+
+`progress` includes live gesture movement. Use `current.transitionProgress` when you need the committed transition or snap progress without the active gesture.
 
 In practice:
 
@@ -86,18 +88,19 @@ Each screen state object contains the same fields:
 | Field | Meaning |
 | --- | --- |
 | `progress` | This screen's own progress value |
+| `transitionProgress` | This screen's transition or snap progress without live gesture movement |
 | `closing` | `1` while this screen is dismissing |
 | `entering` | `1` while this screen is opening |
 | `willAnimate` | One-frame pre-animation handoff signal |
 | `animating` | `1` while animation or gesture motion is active |
 | `settled` | `1` when the screen is idle and not dismissing |
-| `logicallySettled` | `1` when the screen is close enough to its target for choreography |
 | `gesture` | Live gesture values for this screen |
 | `meta` | The value from `options.meta` |
 | `options` | Runtime transition options after base screen options and interpolator overrides are resolved |
 | `route` | The route object for this screen |
 | `layouts.screen` | Screen container size |
 | `layouts.content` | Measured content size when available |
+| `layouts.scroll` | Metadata from transition-aware scrollables |
 | `animatedSnapIndex` | Live snap index during gestures and animations, including fractional values between detents |
 | `snapIndex` | Current target snap index, updated by mount, `snapTo()`, and gesture release |
 
@@ -105,9 +108,11 @@ Each screen state object contains the same fields:
   Use `current.animatedSnapIndex` when the visual state should follow the user's finger. Use `current.snapIndex` when the visual state should follow the selected target detent.
 </Note>
 
+`logicallySettled` still exists as a deprecated alias for `settled`. New code should read `settled`.
+
 ## Gesture Values
 
-Each screen state's `gesture` object now includes pan and pinch values:
+Each screen state's `gesture` object includes live pan, pinch, rotation, and handoff values:
 
 | Field | Meaning |
 | --- | --- |
@@ -115,11 +120,37 @@ Each screen state's `gesture` object now includes pan and pinch values:
 | `normX`, `normY` | Normalized pan translation after `gestureSensitivity` |
 | `scale`, `normScale` | Live pinch scale values after `gestureSensitivity` |
 | `focalX`, `focalY` | Pinch focal point in screen coordinates |
-| `raw` | Physical pan and pinch values before `gestureSensitivity` |
+| `rotation` | Two-finger rotation in radians |
+| `raw` | Physical pan, pinch, and rotation values before `gestureSensitivity` |
+| `handoff` | Release-time gesture snapshot for dismiss handoff animations |
 | `active` | The active gesture: a resolved pan direction, `pinch-in`, `pinch-out`, or `null` |
 | `dragging`, `dismissing` | Gesture state flags |
 
 Prefer `gesture.active` for new code. The older pan-only `gesture.direction` field still exists for compatibility.
+
+Live gesture values reset after release. If the dismiss animation needs the last drag, pinch, velocity, focal point, or rotation values, read from `gesture.handoff`.
+
+## Scroll Metadata
+
+Transition-aware scrollables publish scroll state on `current.layouts.scroll`:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  const y = current.layouts.scroll?.vertical?.offset ?? 0;
+
+  return {
+    content: {
+      style: {
+        transform: [{ translateY: -Math.min(y, 24) }],
+      },
+    },
+  };
+};
+```
+
+For nested same-axis scrollables, the outermost scrollable owns that axis. Cross-axis nested scrollables can each publish their own axis.
 
 ## Runtime Options From An Interpolator
 
@@ -160,13 +191,16 @@ Supported runtime option keys are:
 - `gestureVelocityImpact`
 - `gestureSnapVelocityImpact`
 - `gestureReleaseVelocityScale`
-- `gestureResponseDistance`
-- `gestureProgressMode`
-- `gestureDrivesProgress` as a deprecated compatibility alias
-- `gestureActivationArea`
 - `gestureSnapLocked`
 - `sheetScrollGestureBehavior`
 - `backdropBehavior`
+
+Deprecated compatibility keys are still accepted:
+
+- `gestureProgressMode`
+- `gestureDrivesProgress`
+- `gestureActivationArea`
+- `gestureResponseDistance`
 
 ## Returning Styles
 

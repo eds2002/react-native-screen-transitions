@@ -112,6 +112,12 @@ const RECIPE_OPTIONS = [
 			"Paged video feed: matched-screen teleport with group retargeting and a mask reveal",
 		route: "/reels" as const,
 	},
+	{
+		id: "gesture-velocity-recipe",
+		title: "Gesture Velocity Flap",
+		description: "Style-id box driven by live gesture translation and velocity",
+		route: "/gesture-velocity-recipe" as const,
+	},
 ];
 
 export default function HomeScreen() {

@@ -2,6 +2,7 @@ import { clamp } from "react-native-reanimated";
 import {
 	getPinchReleaseHandoffVelocity,
 	normalizePinchScale,
+	resolveGestureVelocityMagnitude,
 	shouldDismissFromPinch,
 } from "../../shared/physics";
 import {
@@ -66,7 +67,7 @@ const getPinchSnapReleaseProgress = ({
 	const snapDirections = runtime.policy.snapDirections;
 
 	if (!pinchDirection || !snapDirections) {
-		return runtime.stores.animations.progress.get();
+		return runtime.stores.animations.transitionProgress.get();
 	}
 
 	const progressDelta =
@@ -75,7 +76,7 @@ const getPinchSnapReleaseProgress = ({
 			: Math.abs(normalizedScale);
 
 	return clamp(
-		runtime.gestureProgressBaseline.get() + progressDelta,
+		runtime.stores.gestures.internal.progressBaseline.get() + progressDelta,
 		minSnapPoint,
 		maxSnapPoint,
 	);
@@ -94,11 +95,10 @@ export const resolvePinchRelease = (
 	const {
 		participation,
 		policy,
-		gestureProgressBaseline,
 		stores: { animations },
 	} = runtime;
 	const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
-	const currentProgress = animations.progress.get();
+	const currentProgress = animations.transitionProgress.get();
 	const shouldDismiss =
 		participation.canDismiss &&
 		shouldDismissFromPinch(
@@ -106,19 +106,26 @@ export const resolvePinchRelease = (
 			policy.pinchInEnabled,
 			policy.pinchOutEnabled,
 		);
-	const target = shouldDismiss ? 0 : gestureProgressBaseline.get();
+	const target = shouldDismiss
+		? 0
+		: runtime.stores.gestures.internal.progressBaseline.get();
+	const progressVelocity = getPinchReleaseHandoffVelocity(event.velocity);
+	const handoffVelocity = getPinchReleaseHandoffVelocity(
+		event.velocity,
+		policy.gestureReleaseVelocityScale,
+	);
 
 	return {
 		target,
 		shouldDismiss,
 		initialVelocity: getProgressVelocityTowardTarget({
-			handoffVelocity: getPinchReleaseHandoffVelocity(
-				event.velocity,
-				policy.gestureReleaseVelocityScale,
-			),
+			handoffVelocity: progressVelocity,
 			target,
 			currentProgress,
 		}),
+		handoffVelocity: shouldDismiss
+			? resolveGestureVelocityMagnitude(handoffVelocity)
+			: 0,
 		transitionSpec: policy.transitionSpec,
 		resetSpec: shouldDismiss
 			? policy.transitionSpec?.close
@@ -131,7 +138,7 @@ export const resolveSnapPinchRelease = (
 	runtime: PinchGestureRuntime,
 ): PinchReleaseResult => {
 	"worklet";
-	const { participation, policy, lockedSnapPoint } = runtime;
+	const { participation, policy } = runtime;
 	const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
 
 	const { resolvedSnapPoints, resolvedMinSnapPoint, resolvedMaxSnapPoint } =
@@ -146,7 +153,10 @@ export const resolveSnapPinchRelease = (
 	const result = determineSnapTarget({
 		currentProgress,
 		snapPoints: policy.gestureSnapLocked
-			? [lockedSnapPoint.get()]
+			? [
+					runtime.stores.gestures.internal.lockedSnapPoint.get() ??
+						resolvedMaxSnapPoint,
+				]
 			: resolvedSnapPoints,
 		velocity: getPinchSnapVelocity(event, runtime, normalizedScale),
 		dimension: 1,
@@ -156,20 +166,25 @@ export const resolveSnapPinchRelease = (
 
 	const shouldDismiss = participation.canDismiss && result.shouldDismiss;
 	const target = shouldDismiss ? 0 : result.targetProgress;
+	const progressVelocity = getPinchReleaseHandoffVelocity(event.velocity);
+	const handoffVelocity = getPinchReleaseHandoffVelocity(
+		event.velocity,
+		policy.gestureReleaseVelocityScale,
+	);
 
 	return {
 		target,
 		shouldDismiss,
 		initialVelocity: getProgressVelocityTowardTarget({
-			handoffVelocity: getPinchReleaseHandoffVelocity(
-				event.velocity,
-				policy.gestureReleaseVelocityScale,
-			),
+			handoffVelocity: progressVelocity,
 			target,
 			currentProgress,
 		}),
+		handoffVelocity: shouldDismiss
+			? resolveGestureVelocityMagnitude(handoffVelocity)
+			: 0,
 		commitProgress: currentProgress,
-		resetValuesImmediately: policy.gestureProgressMode === "progress-driven",
+		resetValuesImmediately: true,
 		transitionSpec: resolveGestureSnapTransitionSpec({
 			transitionSpec: policy.transitionSpec,
 			shouldDismiss,

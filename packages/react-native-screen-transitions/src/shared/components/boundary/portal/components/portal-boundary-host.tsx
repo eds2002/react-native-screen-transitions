@@ -29,7 +29,10 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 }: PortalBoundaryHostProps) {
 	const hostName = createPortalBoundaryHostName(host.hostKey, host.boundaryId);
 	const hostClosing = AnimationStore.getValue(host.screenKey, "closing");
-	const hostProgress = AnimationStore.getValue(host.screenKey, "progress");
+	const hostProgress = AnimationStore.getValue(
+		host.screenKey,
+		"transitionProgress",
+	);
 	const hostGestureDismissing = GestureStore.getValue(
 		host.screenKey,
 		"dismissing",

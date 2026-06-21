@@ -42,7 +42,10 @@ export const useRefreshBoundary = ({
 		refreshScreenKey,
 		"progressAnimating",
 	);
-	const refreshProgress = AnimationStore.getValue(refreshScreenKey, "progress");
+	const refreshProgress = AnimationStore.getValue(
+		refreshScreenKey,
+		"transitionProgress",
+	);
 
 	useAnimatedReaction(
 		() => {

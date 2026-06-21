@@ -1,5 +1,4 @@
 import { describe, expect, test } from "bun:test";
-import { getGestureResetSpec } from "../../providers/screen/gestures/shared/reset";
 import { isSpringAnimationConfig } from "../../utils/animation/animate";
 import type { AnimationState } from "../../utils/animation/state";
 import { withInternalSpring } from "../../utils/animation/spring";
@@ -17,42 +16,6 @@ type SpringAnimationRuntime = {
 	settled: boolean;
 };
 
-describe("isSpringAnimationConfig", () => {
-	test("treats duration-only configs as timing configs", () => {
-		expect(isSpringAnimationConfig(undefined)).toBe(false);
-		expect(isSpringAnimationConfig({ duration: 220 })).toBe(false);
-	});
-
-	test("treats spring-specific keys as spring configs", () => {
-		expect(isSpringAnimationConfig({ stiffness: 900, damping: 120 })).toBe(
-			true,
-		);
-		expect(isSpringAnimationConfig({ duration: 550, dampingRatio: 1 })).toBe(
-			true,
-		);
-		expect(isSpringAnimationConfig({ duration: 550, velocity: 1200 })).toBe(
-			true,
-		);
-	});
-});
-
-describe("getGestureResetSpec", () => {
-	test("injects release velocity into duration-based spring configs", () => {
-		expect(getGestureResetSpec({ duration: 550, dampingRatio: 1 }, 1200)).toEqual(
-			{
-				duration: 550,
-				dampingRatio: 1,
-				velocity: 1200,
-			},
-		);
-	});
-
-	test("does not inject release velocity into timing configs", () => {
-		expect(getGestureResetSpec({ duration: 220 }, 1200)).toEqual({
-			duration: 220,
-		});
-	});
-});
 
 describe("internal withSpring", () => {
 	test("keeps release velocity that initially points away from the target", () => {

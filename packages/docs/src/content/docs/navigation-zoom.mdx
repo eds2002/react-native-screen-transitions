@@ -88,7 +88,6 @@ const navigationZoomId = makeMutable<string | null>(null);
     navigationMaskEnabled: Platform.OS === "ios",
     gestureEnabled: true,
     gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
-    gestureProgressMode: "freeform",
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
       const id = navigationZoomId.value;
@@ -106,6 +105,8 @@ const navigationZoomId = makeMutable<string | null>(null);
 ```
 
 The id does not have to come from route params. You can resolve it from route params, a Reanimated shared value created with `makeMutable`, Zustand-backed state, or any other source, as long as the interpolator can read the active boundary id.
+
+Zoom uses transition progress internally for its bounds path. Live gesture values still drive drag and release effects, and `gesture.handoff` keeps release-time values available while live gesture fields reset.
 
 ## Destination Setup
 

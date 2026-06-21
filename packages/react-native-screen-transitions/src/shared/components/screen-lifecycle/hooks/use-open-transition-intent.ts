@@ -60,11 +60,11 @@ export function useOpenTransitionIntent(
 		if (isFirstKey && !experimental_animateOnInitialMount) {
 			if (initialProgress === "auto") {
 				system.targetProgress.set(0);
-				animations.progress.set(0);
+				animations.transitionProgress.set(0);
 			} else {
 				const target = initialProgress ?? 1;
 				system.targetProgress.set(target);
-				animations.progress.set(target);
+				animations.transitionProgress.set(target);
 			}
 			animations.progressAnimating.set(0);
 			animations.closing.set(0);

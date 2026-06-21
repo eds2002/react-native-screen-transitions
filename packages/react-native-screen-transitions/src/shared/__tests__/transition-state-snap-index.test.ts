@@ -19,6 +19,30 @@ const shared = <T>(initial: T): SharedValue<T> => {
 	} as SharedValue<T>;
 };
 
+const createGestureSnapshotStore = () => ({
+	x: shared(0),
+	y: shared(0),
+	normX: shared(0),
+	normY: shared(0),
+	velocity: shared(0),
+	scale: shared(1),
+	normScale: shared(0),
+	focalX: shared(0),
+	focalY: shared(0),
+	rotation: shared(0),
+	raw: {
+		x: shared(0),
+		y: shared(0),
+		normX: shared(0),
+		normY: shared(0),
+		scale: shared(1),
+		normScale: shared(0),
+		rotation: shared(0),
+	},
+	active: shared(null),
+	direction: shared(null),
+});
+
 const createGestureStore = (): GestureStoreMap => ({
 	x: shared(0),
 	y: shared(0),
@@ -38,6 +62,13 @@ const createGestureStore = (): GestureStoreMap => ({
 		scale: shared(1),
 		normScale: shared(0),
 		rotation: shared(0),
+	},
+	internal: {
+		progressBaseline: shared(0),
+		progressDeltaX: shared(0),
+		progressDeltaY: shared(0),
+		lockedSnapPoint: shared(null),
+		snapshot: createGestureSnapshotStore(),
 	},
 	dismissing: shared(0),
 	dragging: shared(0),
@@ -63,6 +94,7 @@ describe("hydrateTransitionState snap indices", () => {
 			gestureReleaseVelocityMax: 9,
 			gestureResponseDistance: 38,
 			gestureProgressMode: "freeform",
+			gestureDrivesProgress: false,
 			gestureActivationArea: { left: "edge", top: "screen" },
 			gestureSnapLocked: true,
 			sheetScrollGestureBehavior: "collapse-only",
@@ -79,8 +111,8 @@ describe("hydrateTransitionState snap indices", () => {
 
 		const hydrated = hydrateTransitionState(
 			{
-				progress: shared(1),
-				effectiveProgress: shared(1),
+				transitionProgress: shared(1),
+				visualProgress: shared(1),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -139,8 +171,8 @@ describe("hydrateTransitionState snap indices", () => {
 
 		const hydrated = hydrateTransitionState(
 			{
-				progress: shared(1),
-				effectiveProgress: shared(1),
+				transitionProgress: shared(1),
+				visualProgress: shared(1),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -197,8 +229,8 @@ describe("hydrateTransitionState snap indices", () => {
 
 		const hydrated = hydrateTransitionState(
 			{
-				progress: shared(0.5),
-				effectiveProgress: shared(0.5),
+				transitionProgress: shared(0.5),
+				visualProgress: shared(0.5),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -232,8 +264,8 @@ describe("hydrateTransitionState snap indices", () => {
 
 		const hydrated = hydrateTransitionState(
 			{
-				progress: shared(0.45),
-				effectiveProgress: shared(0.45),
+				transitionProgress: shared(0.45),
+				visualProgress: shared(0.45),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -266,8 +298,8 @@ describe("hydrateTransitionState snap indices", () => {
 		});
 		const measuredContentLayout = shared({ width: 320, height: 400 });
 		const builtState = {
-			progress: shared(0.45),
-			effectiveProgress: shared(0.45),
+			transitionProgress: shared(0.45),
+			visualProgress: shared(0.45),
 			willAnimate: shared(0),
 			closing: shared(0),
 			progressAnimating: shared(0),
@@ -322,8 +354,8 @@ describe("hydrateTransitionState snap indices", () => {
 			horizontal: null,
 		};
 		const builtState = {
-			progress: shared(1),
-			effectiveProgress: shared(1),
+			transitionProgress: shared(1),
+			visualProgress: shared(1),
 			willAnimate: shared(0),
 			closing: shared(0),
 			progressAnimating: shared(0),

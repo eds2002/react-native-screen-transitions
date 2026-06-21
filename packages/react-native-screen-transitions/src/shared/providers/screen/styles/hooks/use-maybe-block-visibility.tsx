@@ -14,7 +14,8 @@ import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { height } = useWindowDimensions();
 	const { currentScreenKey } = useDescriptorDerivations();
-	const { entering, progress } = AnimationStore.getBag(currentScreenKey);
+	const { entering, transitionProgress } =
+		AnimationStore.getBag(currentScreenKey);
 
 	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =
 		SystemStore.getBag(currentScreenKey);
@@ -40,7 +41,7 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 				hasVisibilityGateOpened: hasVisibilityGateOpened.get(),
 				pendingLifecycleStartBlockCount: pendingLifecycleStartBlockCount.get(),
 				pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
-				progress: progress.get(),
+				progress: transitionProgress.get(),
 				entering: entering.get(),
 			});
 		},

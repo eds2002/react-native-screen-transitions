@@ -3,11 +3,10 @@ import { useWindowDimensions } from "react-native";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsContext } from "../../options";
-import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
 	DirectionClaimMap,
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	PanGesture,
 	ScreenGestureConfig,
 	ScrollGestureState,
@@ -19,27 +18,22 @@ interface UseBuildPanGestureProps {
 	scrollState: SharedValue<ScrollGestureState | null>;
 	gestureConfig: ScreenGestureConfig;
 	childDirectionClaims: SharedValue<DirectionClaimMap>;
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const useBuildPanGesture = ({
 	scrollState,
 	gestureConfig,
 	childDirectionClaims,
-	gestureCompositionActivation,
+	gestureCompositionOwner,
 }: UseBuildPanGestureProps): PanGesture => {
 	const dimensions = useWindowDimensions();
 	const { participation, pan: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
 
-	const { gestureProgressBaseline, lockedSnapPoint } =
-		useGestureBuilderState(participation);
-
 	const runtime = useStableRuntimeConfig({
 		participation,
 		policy,
-		gestureProgressBaseline,
-		lockedSnapPoint,
 	});
 
 	const activation = usePanActivation({
@@ -48,14 +42,14 @@ export const useBuildPanGesture = ({
 		runtime,
 		screenOptions,
 		dimensions,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	});
 
 	const behavior = usePanBehavior(
 		runtime,
 		screenOptions,
 		dimensions,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	);
 
 	const panGesture = useMemo(() => {

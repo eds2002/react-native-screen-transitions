@@ -18,8 +18,6 @@ export type ScreenOptionsSnapshot = {
 	gestureSnapVelocityImpact: RequiredScreenOption<"gestureSnapVelocityImpact">;
 	gestureReleaseVelocityScale: RequiredScreenOption<"gestureReleaseVelocityScale">;
 	gestureResponseDistance: OptionalScreenOption<"gestureResponseDistance">;
-	gestureProgressMode: RequiredScreenOption<"gestureProgressMode">;
-	gestureDrivesProgress: RequiredScreenOption<"gestureDrivesProgress">;
 	gestureActivationArea: RequiredScreenOption<"gestureActivationArea">;
 	gestureSnapLocked: RequiredScreenOption<"gestureSnapLocked">;
 	sheetScrollGestureBehavior: RequiredScreenOption<"sheetScrollGestureBehavior">;

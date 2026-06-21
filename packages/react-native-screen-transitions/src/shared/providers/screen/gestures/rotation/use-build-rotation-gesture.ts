@@ -2,10 +2,9 @@ import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import { useScreenOptionsContext } from "../../options";
-import { useGestureBuilderState } from "../hooks/use-gesture-builder-state";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	RotationGesture,
 	ScreenGestureConfig,
 } from "../types";
@@ -14,29 +13,25 @@ import { useRotationBehavior } from "./behavior/use-rotation-behavior";
 
 interface UseBuildRotationGestureProps {
 	gestureConfig: ScreenGestureConfig;
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const useBuildRotationGesture = ({
 	gestureConfig,
-	gestureCompositionActivation,
+	gestureCompositionOwner,
 }: UseBuildRotationGestureProps): RotationGesture => {
 	const { participation, pinch: policy } = gestureConfig;
 	const screenOptions = useScreenOptionsContext();
-	const { gestureProgressBaseline, lockedSnapPoint } =
-		useGestureBuilderState(participation);
 
 	const runtime = useStableRuntimeConfig({
 		participation,
 		policy,
-		gestureProgressBaseline,
-		lockedSnapPoint,
 	});
 
 	const activation = useRotationActivation({
 		runtime,
 		screenOptions,
-		gestureCompositionActivation,
+		gestureCompositionOwner,
 	});
 
 	const behavior = useRotationBehavior(runtime, screenOptions);

@@ -6,21 +6,18 @@ import type {
 import type { SharedValue } from "react-native-reanimated";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePinchRuntime } from "../../shared/runtime";
-import type {
-	GestureCompositionActivation,
-	PinchGestureRuntime,
-} from "../../types";
+import type { GestureCompositionOwner, PinchGestureRuntime } from "../../types";
 
 interface UsePinchActivationProps {
 	runtime: SharedValue<PinchGestureRuntime>;
 	screenOptions: ScreenOptionsContextValue;
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const usePinchActivation = ({
 	runtime,
 	screenOptions,
-	gestureCompositionActivation,
+	gestureCompositionOwner,
 }: UsePinchActivationProps) => {
 	const onTouchesDown = useCallback(
 		(
@@ -33,18 +30,15 @@ export const usePinchActivation = ({
 				screenOptions.get(),
 			);
 
-			if (gestureCompositionActivation.get() === "pan") {
-				stateManager?.fail();
-				return;
-			}
-
 			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager?.fail();
 				return;
 			}
 
 			if (event.numberOfTouches === 2) {
-				gestureCompositionActivation.set("pinch");
+				if (gestureCompositionOwner.get() === null) {
+					gestureCompositionOwner.set("pinch");
+				}
 				stateManager?.activate();
 				return;
 			}
@@ -53,7 +47,7 @@ export const usePinchActivation = ({
 				stateManager?.fail();
 			}
 		},
-		[runtime, screenOptions, gestureCompositionActivation],
+		[runtime, screenOptions, gestureCompositionOwner],
 	);
 
 	const onTouchesMove = useCallback(
@@ -70,14 +64,18 @@ export const usePinchActivation = ({
 			}
 
 			if (event.numberOfTouches === 2) {
-				gestureCompositionActivation.set("pinch");
+				if (gestureCompositionOwner.get() === null) {
+					gestureCompositionOwner.set("pinch");
+				}
 				stateManager.activate();
 				return;
 			}
 
-			stateManager.fail();
+			if (event.numberOfTouches > 2) {
+				stateManager.fail();
+			}
 		},
-		[runtime, screenOptions, gestureCompositionActivation],
+		[runtime, screenOptions, gestureCompositionOwner],
 	);
 
 	return useMemo(

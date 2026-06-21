@@ -15,7 +15,9 @@ import type {
 	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
+	GestureHandoffValues,
 	NativeStackAdapterOptions,
+	RawGestureValues,
 	ScreenAnimationTarget,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
@@ -178,10 +180,12 @@ const deprecatedGesturesBoundsResult = scopedBounds.styles({
 const absoluteRawBoundsResult = scopedBounds.math({
 	method: "size",
 	space: "absolute",
+	progress: interpolationProps.current.transitionProgress,
 });
 const motionRawBoundsResult = scopedBounds.math({
 	method: "content",
 	motion: boundsMotion,
+	progress: interpolationProps.current.transitionProgress,
 });
 const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
 	.bounds({ id: 42 })
@@ -253,10 +257,20 @@ const scrollMetadataState: ScrollMetadataState = {
 };
 const maybeScrollOffset: number | undefined =
 	interpolationProps.current.layouts.scroll?.vertical?.offset;
+const currentTransitionProgress: number =
+	interpolationProps.current.transitionProgress;
 const currentActiveGesture = interpolationProps.current.gesture.active;
 const currentRawGestureNormX = interpolationProps.current.gesture.raw.normX;
 const currentGestureVelocity: number =
 	interpolationProps.current.gesture.velocity;
+const currentGestureHandoffNormX: number =
+	interpolationProps.current.gesture.handoff.normX;
+const currentGestureHandoffRawNormX: number =
+	interpolationProps.current.gesture.handoff.raw.normX;
+const currentGestureHandoff: GestureHandoffValues =
+	interpolationProps.current.gesture.handoff;
+const currentRawGesture: RawGestureValues =
+	interpolationProps.current.gesture.raw;
 const currentGestureRotation: number =
 	interpolationProps.current.gesture.rotation;
 const currentRawGestureRotation: number =
@@ -264,6 +278,11 @@ const currentRawGestureRotation: number =
 const currentAnimatedSnapIndex = interpolationProps.current.animatedSnapIndex;
 const currentSnapIndex = interpolationProps.current.snapIndex;
 void maybeScrollOffset;
+void currentTransitionProgress;
+void currentGestureHandoffNormX;
+void currentGestureHandoffRawNormX;
+void currentGestureHandoff;
+void currentRawGesture;
 const optionsInterpolatedStyle: TransitionInterpolatedStyle = {
 	options: {
 		gestureSensitivity: 0.5,

@@ -4,10 +4,7 @@ import {
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	VISIBLE_STYLE,
 } from "../../../../constants";
-import type {
-	ScreenTransitionOptions,
-	TransitionInterpolatedStyle,
-} from "../../../../types/animation.types";
+import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { getSourceBorderRadius, toNumber } from "../helpers";
 import {
@@ -45,11 +42,9 @@ const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
 function resolveZoomGestureOptions({
 	rawDrag,
 	maxSensitivity,
-	gestureProgressMode,
 }: {
 	rawDrag: number;
 	maxSensitivity: number;
-	gestureProgressMode: ScreenTransitionOptions["gestureProgressMode"];
 }) {
 	"worklet";
 
@@ -60,7 +55,6 @@ function resolveZoomGestureOptions({
 		});
 
 	return {
-		gestureProgressMode,
 		gestureSensitivity,
 		gestureReleaseVelocityScale,
 	};
@@ -86,9 +80,11 @@ export function buildZoomStyles({
 	const target = zoomOptions?.target;
 	const {
 		focused,
-		progress,
 		layouts: { screen: screenLayout },
 	} = props;
+	const transitionProgress =
+		props.current.transitionProgress + (props.next?.transitionProgress ?? 0);
+	const activeTransitionProgress = props.active.transitionProgress;
 
 	const zoomAnchor = target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor;
 
@@ -136,22 +132,22 @@ export function buildZoomStyles({
 	const maxSensitivity = zoomOptions?.maxSensitivity ?? 0.8;
 	const velocityDepth =
 		zoomOptions?.velocityDepth ?? ZOOM_DISMISS_SCALE_ORBIT_DEPTH;
-	const gestureProgressMode = zoomOptions?.gestureProgressMode ?? "freeform";
 
 	/* --------------------------- Gesture / Drag Values ------------------------- */
 
-	const normX = props.active.gesture.normX;
-	const normY = props.active.gesture.normY;
-	const initialGesture =
-		props.active.gesture.active ?? props.active.gesture.direction;
+	const liveGesture = props.active.gesture;
+	const gestureHandoff = liveGesture.handoff;
+	const normX = gestureHandoff.normX;
+	const normY = gestureHandoff.normY;
+	const initialGesture = gestureHandoff.active ?? gestureHandoff.direction;
 	const isHorizontalDismiss =
 		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
 	const isVerticalDismiss =
 		initialGesture === "vertical" || initialGesture === "vertical-inverted";
 	const rawDrag = isHorizontalDismiss
-		? Math.abs(props.active.gesture.raw.normX)
+		? Math.abs(gestureHandoff.raw.normX)
 		: isVerticalDismiss
-			? Math.abs(props.active.gesture.raw.normY)
+			? Math.abs(gestureHandoff.raw.normY)
 			: 0;
 
 	const horizontalDragTranslation = resolveDragTranslationTuple(
@@ -161,14 +157,14 @@ export function buildZoomStyles({
 		zoomOptions?.verticalDragTranslation,
 	);
 	const dragX = resolveDirectionalDragTranslation({
-		translation: props.active.gesture.x,
+		translation: liveGesture.x,
 		dimension: screenLayout.width,
 		negativeMax: horizontalDragTranslation.negativeMax,
 		positiveMax: horizontalDragTranslation.positiveMax,
 		exponent: horizontalDragTranslation.exponent,
 	});
 	const dragY = resolveDirectionalDragTranslation({
-		translation: props.active.gesture.y,
+		translation: liveGesture.y,
 		dimension: screenLayout.height,
 		negativeMax: verticalDragTranslation.negativeMax,
 		positiveMax: verticalDragTranslation.positiveMax,
@@ -205,17 +201,16 @@ export function buildZoomStyles({
 	const dragScale = combineScales(dragXScale, dragYScale);
 	const handoffDragScale = props.active.gesture.dismissing
 		? resolveDismissScaleHandoff({
-				progress: props.active.progress,
+				progress: activeTransitionProgress,
 				releaseScale: dragScale,
 				targetScale: 1,
-				velocity: props.active.gesture.velocity,
+				velocity: gestureHandoff.velocity,
 				velocityDepth,
 			})
 		: dragScale;
 	const zoomGestureOptions = resolveZoomGestureOptions({
 		rawDrag,
 		maxSensitivity,
-		gestureProgressMode,
 	});
 
 	/* ----------------------------- Focused Screen ----------------------------- */
@@ -233,6 +228,7 @@ export function buildZoomStyles({
 			anchor: zoomAnchor,
 			method: "content",
 			target: focusedContentTarget,
+			progress: transitionProgress,
 		});
 
 		const maskRaw = scopedBounds.math({
@@ -241,15 +237,16 @@ export function buildZoomStyles({
 			method: "size",
 			space: "absolute",
 			target: "fullscreen",
+			progress: transitionProgress,
 		});
 
 		const focusedFade = props.active?.closing
 			? interpolateOpacityRange({
-					progress,
+					progress: transitionProgress,
 					range: focusedElementOpacity.close,
 				})
 			: interpolateOpacityRange({
-					progress,
+					progress: transitionProgress,
 					range: focusedElementOpacity.open,
 				});
 
@@ -259,7 +256,7 @@ export function buildZoomStyles({
 		 */
 		const shouldRemoveClipping = !props.active.animating;
 		const focusedMaskBorderRadius = interpolate(
-			progress,
+			transitionProgress,
 			[0, 1],
 			[sourceBorderRadius, shouldRemoveClipping ? 0 : targetBorderRadius],
 			"clamp",
@@ -343,15 +340,15 @@ export function buildZoomStyles({
 
 	const unfocusedFade = props.active?.closing
 		? interpolateOpacityRange({
-				progress,
+				progress: transitionProgress,
 				range: unfocusedElementOpacity.close,
 			})
 		: interpolateOpacityRange({
-				progress,
+				progress: transitionProgress,
 				range: unfocusedElementOpacity.open,
 			});
 	const unfocusedScale = interpolate(
-		progress,
+		transitionProgress,
 		[1, 2],
 		[1, backgroundScale],
 		"clamp",
@@ -375,6 +372,7 @@ export function buildZoomStyles({
 		method: "transform",
 		space: "relative",
 		target: unfocusedElementTarget,
+		progress: transitionProgress,
 	});
 
 	const boundTargetCenterX =

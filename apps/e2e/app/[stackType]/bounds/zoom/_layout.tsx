@@ -15,7 +15,7 @@ const getRouteParam = (route: { params?: object } | undefined, key: string) => {
 };
 
 const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ active, bounds, current, next, progress }) => {
+	({ active, bounds, current, next }) => {
 		"worklet";
 		const id =
 			getRouteParam(active.route, "id") ||
@@ -35,7 +35,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 			...navigationStyles,
 			backdrop: {
 				backgroundColor: "black",
-				opacity: interpolate(progress, [0, 1, 2], [0, 0.5, 0]),
+				opacity: interpolate(active.transitionProgress, [0, 1, 2], [0, 0.5, 0]),
 			},
 		};
 	};

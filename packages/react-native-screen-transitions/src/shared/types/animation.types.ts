@@ -49,6 +49,15 @@ export type ScreenTransitionState = {
 	progress: number;
 
 	/**
+	 * Transition progress without live gesture contribution.
+	 *
+	 * `progress` is always the visual progress, including live pan or pinch
+	 * movement. Use `transitionProgress` when an interpolator needs the committed
+	 * transition progress as if the current gesture were not active.
+	 */
+	transitionProgress: number;
+
+	/**
 	 * Whether this screen is in the process of being dismissed.
 	 * - `0`: Screen is opening or active
 	 * - `1`: Screen is closing/being dismissed

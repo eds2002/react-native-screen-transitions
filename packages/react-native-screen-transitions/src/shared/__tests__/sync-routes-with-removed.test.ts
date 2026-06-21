@@ -20,7 +20,7 @@ const setRouteState = (
 	const animations = AnimationStore.getBag(routeKey);
 	const gestures = GestureStore.getBag(routeKey);
 
-	if (state.progress !== undefined) animations.progress.set(state.progress);
+	if (state.progress !== undefined) animations.transitionProgress.set(state.progress);
 	if (state.closing !== undefined) animations.closing.set(state.closing);
 	if (state.dragging !== undefined) gestures.dragging.set(state.dragging);
 	if (state.dismissing !== undefined)

@@ -15,6 +15,10 @@ Expo Router integration is just React Navigation integration through `withLayout
 
 There is no special Expo Router navigator for this package. Create the navigator, wrap its `Navigator`, then use that wrapper inside your route `_layout.tsx`.
 
+<Note>
+  Expo SDK 56 changes Expo Router's navigator internals. This package does not currently support SDK 56 without replacing the internal React Navigation imports with Expo Router imports. Treat SDK 56 as unsupported for now.
+</Note>
+
 Most work should use blank stack. Reach for native stack only when you specifically want `@react-navigation/native-stack`.
 
 ## Blank Stack Layout Wrapper
@@ -112,8 +116,6 @@ export const Stack = withLayoutContext<
   NativeStackNavigationEventMap
 >(Navigator);
 ```
-
-The older native-stack creator from `react-native-screen-transitions/native-stack` is deprecated. Use `@react-navigation/native-stack` plus `withScreenTransitions()` for new Expo Router native-stack wrappers.
 
 Enable the transition layer only where you want it:
 

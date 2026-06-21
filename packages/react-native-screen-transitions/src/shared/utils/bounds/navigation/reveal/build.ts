@@ -54,15 +54,16 @@ export function buildRevealStyles({
 
 	const {
 		focused,
-		progress,
 		layouts: { screen: screenLayout },
 	} = props;
+	const transitionProgress =
+		props.current.transitionProgress + (props.next?.transitionProgress ?? 0);
+	const activeTransitionProgress = props.active.transitionProgress;
 	const borderRadius = revealOptions?.borderRadius ?? REVEAL_BORDER_RADIUS;
 	const borderContinuous = revealOptions?.borderContinuous ?? true;
 	const maxSensitivity = revealOptions?.maxSensitivity ?? 0.8;
 	const velocityDepth =
 		revealOptions?.velocityDepth ?? DISMISS_SCALE_ORBIT_DEPTH;
-	const gestureProgressMode = revealOptions?.gestureProgressMode ?? "freeform";
 	const disablePointerEventsTillElementTransition =
 		revealOptions?.disablePointerEventsTillElementTransition ?? true;
 	const maskSizingMode = revealOptions?.maskSizingMode ?? "auto";
@@ -89,8 +90,9 @@ export function buildRevealStyles({
 
 	/* --------------------------- Gesture / Drag Values ------------------------- */
 
-	const initialGesture =
-		props.active.gesture.active ?? props.active.gesture.direction;
+	const liveGesture = props.active.gesture;
+	const gestureHandoff = liveGesture.handoff;
+	const initialGesture = gestureHandoff.active ?? gestureHandoff.direction;
 
 	const isHorizontalDismiss =
 		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
@@ -98,31 +100,25 @@ export function buildRevealStyles({
 		initialGesture === "vertical" || initialGesture === "vertical-inverted";
 
 	const rawDrag = isHorizontalDismiss
-		? Math.abs(props.active.gesture.raw.normX)
+		? Math.abs(gestureHandoff.raw.normX)
 		: isVerticalDismiss
-			? Math.abs(props.active.gesture.raw.normY)
+			? Math.abs(gestureHandoff.raw.normY)
 			: 0;
 
-	const dragX = resolveUnitDragTranslation(
-		props.active.gesture.x,
-		screenLayout.width,
-	);
+	const dragX = resolveUnitDragTranslation(liveGesture.x, screenLayout.width);
 
-	const dragY = resolveUnitDragTranslation(
-		props.active.gesture.y,
-		screenLayout.height,
-	);
+	const dragY = resolveUnitDragTranslation(liveGesture.y, screenLayout.height);
 
 	const dragXScale = isHorizontalDismiss
 		? resolveRevealDirectionalDragScale(
-				props.active.gesture.normX,
+				gestureHandoff.normX,
 				initialGesture === "horizontal-inverted",
 			)
 		: IDENTITY_DRAG_SCALE_OUTPUT[0];
 
 	const dragYScale = isVerticalDismiss
 		? resolveRevealDirectionalDragScale(
-				props.active.gesture.normY,
+				gestureHandoff.normY,
 				initialGesture === "vertical-inverted",
 			)
 		: IDENTITY_DRAG_SCALE_OUTPUT[1];
@@ -141,6 +137,7 @@ export function buildRevealStyles({
 			scaleMode: "uniform",
 			method: "content",
 			target: initialDestinationTarget,
+			progress: transitionProgress,
 		});
 
 		const maskRaw = scopedBounds.math({
@@ -148,19 +145,20 @@ export function buildRevealStyles({
 			method: "size",
 			space: "absolute",
 			target: "fullscreen",
+			progress: transitionProgress,
 		});
 
 		const maskBorderRadius = mixUnit(
 			sourceBorderRadius,
 			borderRadius,
-			progress,
+			activeTransitionProgress,
 		);
 		const maskBorderCurve = borderContinuous
 			? ("continuous" as const)
 			: undefined;
 
 		const maskSizeMultiplier = props.active.closing
-			? mixUnit(0.9, 1, props.active.progress)
+			? mixUnit(0.9, 1, activeTransitionProgress)
 			: 1;
 
 		const maskWidth = Math.max(1, maskRaw.width * maskSizeMultiplier);
@@ -182,10 +180,10 @@ export function buildRevealStyles({
 			});
 
 			contentScale = resolveDismissScaleHandoff({
-				progress: props.active.progress,
+				progress: activeTransitionProgress,
 				releaseScale: dragScale,
 				targetScale: sourceContentScale,
-				velocity: props.active.gesture.velocity,
+				velocity: gestureHandoff.velocity,
 				velocityDepth,
 			});
 		}
@@ -195,16 +193,16 @@ export function buildRevealStyles({
 
 		const liveHorizontalDismissDrag =
 			initialGesture === "horizontal-inverted"
-				? -props.active.gesture.normX
-				: props.active.gesture.normX;
+				? -gestureHandoff.normX
+				: gestureHandoff.normX;
 
 		const liveVerticalDismissDrag =
 			initialGesture === "vertical-inverted"
-				? -props.active.gesture.normY
-				: props.active.gesture.normY;
+				? -gestureHandoff.normY
+				: gestureHandoff.normY;
 
 		const dismissProgressDrag = props.active.gesture.dismissing
-			? 1 - props.active.progress
+			? 1 - activeTransitionProgress
 			: 0;
 
 		const maskHeightCollapseDrag =
@@ -309,7 +307,7 @@ export function buildRevealStyles({
 
 		const elementTX = props.active.closing
 			? interpolateClamped(
-					props.active.progress,
+					activeTransitionProgress,
 					CLOSE_SOURCE_HANDOFF_PROGRESS,
 					1,
 					elementOffsetX,
@@ -318,7 +316,7 @@ export function buildRevealStyles({
 			: 0;
 		const elementY = props.active.closing
 			? interpolateClamped(
-					props.active.progress,
+					activeTransitionProgress,
 					CLOSE_SOURCE_HANDOFF_PROGRESS,
 					1,
 					elementOffsetY,
@@ -334,7 +332,6 @@ export function buildRevealStyles({
 
 		return {
 			options: {
-				gestureProgressMode,
 				gestureSensitivity,
 				gestureReleaseVelocityScale,
 			},
@@ -348,7 +345,7 @@ export function buildRevealStyles({
 					shadowColor: "#000",
 					shadowOffset: REVEAL_SHADOW_OFFSET,
 					shadowOpacity: interpolate(
-						props.active.progress,
+						activeTransitionProgress,
 						ZERO_TO_ONE_RANGE,
 						CONTENT_SHADOW_OPACITY_OUTPUT,
 					),
@@ -356,12 +353,12 @@ export function buildRevealStyles({
 					elevation: 5,
 					opacity: props.active.entering
 						? interpolate(
-								props.active.progress,
+								activeTransitionProgress,
 								CONTENT_ENTERING_OPACITY_RANGE,
 								CONTENT_ENTERING_OPACITY_OUTPUT,
 							)
 						: interpolate(
-								props.active.progress,
+								activeTransitionProgress,
 								CONTENT_CLOSING_OPACITY_RANGE,
 								CONTENT_CLOSING_OPACITY_OUTPUT,
 							),
@@ -380,7 +377,7 @@ export function buildRevealStyles({
 
 	/* ---------------------------- Unfocused Screen ---------------------------- */
 
-	const unfocusedScale = mixUnit(1, backgroundScale, props.active.progress);
+	const unfocusedScale = mixUnit(1, backgroundScale, activeTransitionProgress);
 	const unfocusedContentScale =
 		props.active.settled && shouldBackgroundScaleResetOnSettled
 			? 1
@@ -390,7 +387,7 @@ export function buildRevealStyles({
 		initialDestinationTarget ?? link.destination.bounds;
 
 	const trackingContentBaseTransform = resolveRevealContentBaseTransform({
-		progress: props.active.progress,
+		progress: activeTransitionProgress,
 		sourceBounds: link.source.bounds,
 		destinationBounds: trackingContentTarget,
 		screenLayout,
@@ -404,10 +401,10 @@ export function buildRevealStyles({
 			destinationHeight: trackingContentTarget.height,
 		});
 		trackingContentScale = resolveDismissScaleHandoff({
-			progress: props.active.progress,
+			progress: activeTransitionProgress,
 			releaseScale: dragScale,
 			targetScale: trackingTargetScale,
-			velocity: props.active.gesture.velocity,
+			velocity: gestureHandoff.velocity,
 			velocityDepth,
 		});
 	}
@@ -427,9 +424,6 @@ export function buildRevealStyles({
 	});
 
 	return {
-		options: {
-			gestureProgressMode,
-		},
 		content: {
 			style: {
 				transform: [{ scale: unfocusedContentScale }],
@@ -437,7 +431,7 @@ export function buildRevealStyles({
 			props: disablePointerEventsTillElementTransition
 				? {
 						pointerEvents:
-							props.active.progress <= CLOSE_SOURCE_HANDOFF_PROGRESS
+							activeTransitionProgress <= CLOSE_SOURCE_HANDOFF_PROGRESS
 								? "auto"
 								: "none",
 					}
@@ -448,7 +442,7 @@ export function buildRevealStyles({
 				opacity: props.active.closing
 					? 1
 					: interpolate(
-							props.active.progress,
+							activeTransitionProgress,
 							ZERO_TO_ONE_RANGE,
 							UNFOCUSED_ELEMENT_OPACITY_OUTPUT,
 						),

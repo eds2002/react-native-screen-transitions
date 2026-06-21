@@ -19,6 +19,41 @@ const shared = <T>(initialValue: T): SharedValue<T> => {
 	} as SharedValue<T>;
 };
 
+const createGestureSnapshotStore = (
+	overrides: Partial<{
+		x: number;
+		y: number;
+		normX: number;
+		normY: number;
+		velocity: number;
+		rawNormX: number;
+		rawNormY: number;
+		active: string | null;
+	}> = {},
+) => ({
+	x: shared(overrides.x ?? 0),
+	y: shared(overrides.y ?? 0),
+	normX: shared(overrides.normX ?? 0),
+	normY: shared(overrides.normY ?? 0),
+	velocity: shared(overrides.velocity ?? 0),
+	scale: shared(1),
+	normScale: shared(0),
+	focalX: shared(0),
+	focalY: shared(0),
+	rotation: shared(0),
+	raw: {
+		x: shared(0),
+		y: shared(0),
+		normX: shared(overrides.rawNormX ?? 0),
+		normY: shared(overrides.rawNormY ?? 0),
+		scale: shared(1),
+		normScale: shared(0),
+		rotation: shared(0),
+	},
+	active: shared(overrides.active ?? null),
+	direction: shared(overrides.active ?? null),
+});
+
 const createGestureStore = (
 	overrides: Partial<{
 		dragging: number;
@@ -26,9 +61,19 @@ const createGestureStore = (
 		dismissing: number;
 		normX: number;
 		normY: number;
+		progressDeltaX: number;
+		progressDeltaY: number;
 		normScale: number;
 		rotation: number;
 		active: string | null;
+		snapshotX: number;
+		snapshotY: number;
+		snapshotNormX: number;
+		snapshotNormY: number;
+		snapshotVelocity: number;
+		snapshotRawNormX: number;
+		snapshotRawNormY: number;
+		snapshotActive: string | null;
 	}> = {},
 ) => {
 	const normX = shared(overrides.normX ?? 0);
@@ -55,6 +100,22 @@ const createGestureStore = (
 			scale: shared(1),
 			normScale: shared(0),
 			rotation: shared(0),
+		},
+		internal: {
+			progressBaseline: shared(0),
+			progressDeltaX: shared(overrides.progressDeltaX ?? 0),
+			progressDeltaY: shared(overrides.progressDeltaY ?? 0),
+			lockedSnapPoint: shared(null),
+			snapshot: createGestureSnapshotStore({
+				x: overrides.snapshotX,
+				y: overrides.snapshotY,
+				normX: overrides.snapshotNormX,
+				normY: overrides.snapshotNormY,
+				velocity: overrides.snapshotVelocity,
+				rawNormX: overrides.snapshotRawNormX,
+				rawNormY: overrides.snapshotRawNormY,
+				active: overrides.snapshotActive,
+			}),
 		},
 		dismissing,
 		dragging,
@@ -92,8 +153,8 @@ const createBuiltState = (
 	);
 
 	return {
-		progress: shared(overrides.progress ?? 1),
-		effectiveProgress: shared(overrides.progress ?? 1),
+		transitionProgress: shared(overrides.progress ?? 1),
+		visualProgress: shared(overrides.progress ?? 1),
 		willAnimate: shared(0),
 		closing: shared(overrides.closing ?? 0),
 		progressAnimating: shared(overrides.progressAnimating ?? 0),
@@ -169,11 +230,11 @@ describe("transition state rules", () => {
 				gesture: createGestureStore({ rotation: 0.25 }),
 				options: {
 					gestureDirection: "pinch-in",
-					gestureProgressMode: "progress-driven",
 				},
 			}),
 		);
 
+		expect(hydrated.transitionProgress).toBe(1);
 		expect(hydrated.progress).toBe(1);
 		expect(hydrated.animating).toBe(1);
 		expect(hydrated.settled).toBe(0);
@@ -286,43 +347,102 @@ describe("transition state rules", () => {
 		expect(hydrated.logicallySettled).toBe(1);
 	});
 
-	it("derives effective progress from gestures in progress-driven mode", () => {
+	it("derives progress from internal gesture delta", () => {
+		const state = createBuiltState({
+			progress: 1,
+			gesture: createGestureStore({
+				normY: 0.25,
+				progressDeltaY: 0.25,
+			}),
+			options: {
+				gestureDirection: "vertical",
+			},
+		});
+		const hydrated = hydrate(state);
+
+		expect(hydrated.transitionProgress).toBe(1);
+		expect(hydrated.progress).toBe(0.75);
+		expect(state.visualProgress.get()).toBe(0.75);
+	});
+
+	it("does not derive progress from public pan gesture values", () => {
 		const state = createBuiltState({
 			progress: 1,
 			gesture: createGestureStore({ normY: 0.25 }),
 			options: {
 				gestureDirection: "vertical",
-				gestureProgressMode: "progress-driven",
 			},
 		});
 		const hydrated = hydrate(state);
 
-		expect(hydrated.progress).toBe(0.75);
-		expect(state.effectiveProgress.get()).toBe(0.75);
+		expect(hydrated.gesture.normY).toBe(0.25);
+		expect(hydrated.transitionProgress).toBe(1);
+		expect(hydrated.progress).toBe(1);
+		expect(state.visualProgress.get()).toBe(1);
+	});
+
+	it("hydrates gesture handoff from live values while not dismissing", () => {
+		const hydrated = hydrate(
+			createBuiltState({
+				gesture: createGestureStore({
+					normY: 0.25,
+					active: "vertical",
+				}),
+			}),
+		);
+
+		expect(hydrated.gesture.handoff.normY).toBe(0.25);
+		expect(hydrated.gesture.handoff.active).toBe("vertical");
+	});
+
+	it("hydrates gesture handoff from the release snapshot while dismissing", () => {
+		const hydrated = hydrate(
+			createBuiltState({
+				gesture: createGestureStore({
+					dismissing: 1,
+					normY: 0,
+					snapshotNormY: 0.42,
+					snapshotVelocity: 0.7,
+					snapshotRawNormY: 0.55,
+					snapshotActive: "vertical",
+				}),
+			}),
+		);
+
+		expect(hydrated.gesture.normY).toBe(0);
+		expect(hydrated.gesture.handoff.normY).toBe(0.42);
+		expect(hydrated.gesture.handoff.velocity).toBe(0.7);
+		expect(hydrated.gesture.handoff.raw.normY).toBe(0.55);
+		expect(hydrated.gesture.handoff.active).toBe("vertical");
 	});
 
 	it("ignores pan gesture progress outside the configured direction", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				progress: 1,
-				gesture: createGestureStore({ normX: 0.25 }),
+				gesture: createGestureStore({
+					normX: 0.25,
+					progressDeltaX: 0.25,
+				}),
 				options: {
 					gestureDirection: "vertical",
-					gestureProgressMode: "progress-driven",
 				},
 			}),
 		);
 
+		expect(hydrated.transitionProgress).toBe(1);
 		expect(hydrated.progress).toBe(1);
 	});
 
-	it("keeps base progress when gestureProgressMode is freeform", () => {
+	it("keeps transitionProgress gesture-free when deprecated freeform mode is provided", () => {
 		const state = createBuiltState({
 			progress: 1,
-			gesture: createGestureStore({ normY: 0.25 }),
+			gesture: createGestureStore({
+				normY: 0.25,
+				progressDeltaY: 0.25,
+			}),
 			options: {
 				gestureDirection: "vertical",
-				gestureProgressMode: "progress-driven",
 			},
 		});
 		const hydrated = hydrate(state, {
@@ -330,49 +450,61 @@ describe("transition state rules", () => {
 			gestureProgressMode: "freeform",
 		});
 
-		expect(hydrated.progress).toBe(1);
-		expect(state.effectiveProgress.get()).toBe(1);
+		expect(hydrated.transitionProgress).toBe(1);
+		expect(hydrated.progress).toBe(0.75);
+		expect(state.visualProgress.get()).toBe(0.75);
 	});
 
 	it("clamps snap gesture progress to the minimum snap point when dismiss is disabled", () => {
 		const state = createBuiltState({
 			progress: 0.3,
-			gesture: createGestureStore({ active: "vertical", normY: 0.25 }),
+			gesture: createGestureStore({
+				active: "vertical",
+				normY: 0.25,
+				progressDeltaY: 0.25,
+			}),
 			options: {
 				gestureEnabled: false,
 				gestureDirection: "vertical",
-				gestureProgressMode: "progress-driven",
 			},
 			sortedNumericSnapPoints: [0.3, 0.6, 1],
 		});
 		const hydrated = hydrate(state);
 
+		expect(hydrated.transitionProgress).toBe(0.3);
 		expect(hydrated.progress).toBe(0.3);
-		expect(state.effectiveProgress.get()).toBe(0.3);
+		expect(state.visualProgress.get()).toBe(0.3);
 	});
 
 	it("allows snap gesture progress below the minimum snap point when dismiss is enabled", () => {
 		const state = createBuiltState({
 			progress: 0.3,
-			gesture: createGestureStore({ active: "vertical", normY: 0.25 }),
+			gesture: createGestureStore({
+				active: "vertical",
+				normY: 0.25,
+				progressDeltaY: 0.25,
+			}),
 			options: {
 				gestureEnabled: true,
 				gestureDirection: "vertical",
-				gestureProgressMode: "progress-driven",
 			},
 			sortedNumericSnapPoints: [0.3, 0.6, 1],
 		});
 		const hydrated = hydrate(state);
 
+		expect(hydrated.transitionProgress).toBe(0.3);
 		expect(hydrated.progress).toBeCloseTo(0.05);
-		expect(state.effectiveProgress.get()).toBeCloseTo(0.05);
+		expect(state.visualProgress.get()).toBeCloseTo(0.05);
 	});
 
-	it("keeps legacy gestureDrivesProgress as a compatibility alias", () => {
+	it("ignores legacy gestureDrivesProgress for derived progress", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				progress: 1,
-				gesture: createGestureStore({ normY: 0.25 }),
+				gesture: createGestureStore({
+					normY: 0.25,
+					progressDeltaY: 0.25,
+				}),
 				options: {
 					gestureDirection: "vertical",
 					gestureDrivesProgress: false,
@@ -380,6 +512,7 @@ describe("transition state rules", () => {
 			}),
 		);
 
-		expect(hydrated.progress).toBe(1);
+		expect(hydrated.transitionProgress).toBe(1);
+		expect(hydrated.progress).toBe(0.75);
 	});
 });

@@ -35,7 +35,7 @@ type GestureEventInit = {
 
 const createAnimations = (progress: number) =>
 	({
-		progress: { get: () => progress },
+		transitionProgress: { get: () => progress },
 		closing: { get: () => 0 },
 		progressAnimating: { get: () => 0 },
 	}) as const;
@@ -68,13 +68,17 @@ const createGestureRuntime = (
 		},
 	}) as any;
 
-const createPanReleaseRuntime = (canDismiss: boolean, progress: number = 0.3) =>
+const createPanReleaseRuntime = (
+	canDismiss: boolean,
+	progress: number = 0.3,
+	gestureReleaseVelocityScale: number = 1,
+) =>
 	({
 		participation: { canDismiss },
 		policy: {
 			panActivationDirections: createDirections({ horizontal: true }),
 			gestureVelocityImpact: 0,
-			gestureReleaseVelocityScale: 1,
+			gestureReleaseVelocityScale,
 			transitionSpec: undefined,
 		},
 		stores: { animations: createAnimations(progress) },
@@ -83,17 +87,49 @@ const createPanReleaseRuntime = (canDismiss: boolean, progress: number = 0.3) =>
 const createPinchReleaseRuntime = (
 	canDismiss: boolean,
 	progress: number = 0.3,
+	gestureReleaseVelocityScale: number = 1,
 ) =>
 	({
 		participation: { canDismiss },
 		policy: {
 			pinchInEnabled: true,
 			pinchOutEnabled: false,
-			gestureReleaseVelocityScale: 1,
+			gestureReleaseVelocityScale,
 			transitionSpec: undefined,
 		},
-		gestureProgressBaseline: { get: () => 1 },
-		stores: { animations: createAnimations(progress) },
+		stores: {
+			animations: createAnimations(progress),
+			gestures: {
+				internal: {
+					progressBaseline: { get: () => 1 },
+					progressDeltaX: { get: () => 0 },
+					progressDeltaY: { get: () => 0 },
+					snapshot: {
+						x: { get: () => 0 },
+						y: { get: () => 0 },
+						normX: { get: () => 0 },
+						normY: { get: () => 0 },
+						velocity: { get: () => 0 },
+						scale: { get: () => 1 },
+						normScale: { get: () => 0 },
+						focalX: { get: () => 0 },
+						focalY: { get: () => 0 },
+						rotation: { get: () => 0 },
+						raw: {
+							x: { get: () => 0 },
+							y: { get: () => 0 },
+							normX: { get: () => 0 },
+							normY: { get: () => 0 },
+							scale: { get: () => 1 },
+							normScale: { get: () => 0 },
+							rotation: { get: () => 0 },
+						},
+						active: { get: () => null },
+						direction: { get: () => null },
+					},
+				},
+			},
+		},
 	}) as any;
 
 const createSharedValue = <T>(initialValue: T) => {
@@ -107,6 +143,30 @@ const createSharedValue = <T>(initialValue: T) => {
 	};
 };
 
+const createGestureSnapshotStore = () => ({
+	x: createSharedValue(0),
+	y: createSharedValue(0),
+	normX: createSharedValue(0),
+	normY: createSharedValue(0),
+	velocity: createSharedValue(0),
+	scale: createSharedValue(1),
+	normScale: createSharedValue(0),
+	focalX: createSharedValue(0),
+	focalY: createSharedValue(0),
+	rotation: createSharedValue(0),
+	raw: {
+		x: createSharedValue(0),
+		y: createSharedValue(0),
+		normX: createSharedValue(0),
+		normY: createSharedValue(0),
+		scale: createSharedValue(1),
+		normScale: createSharedValue(0),
+		rotation: createSharedValue(0),
+	},
+	active: createSharedValue(null),
+	direction: createSharedValue(null),
+});
+
 const createScreenOptions = (
 	gestureSensitivity: number | null,
 ): ScreenOptionsContextValue =>
@@ -119,8 +179,6 @@ const createScreenOptions = (
 		gestureSnapVelocityImpact: 0.1,
 		gestureReleaseVelocityScale: 1,
 		gestureResponseDistance: undefined,
-		gestureProgressMode: "progress-driven",
-		gestureDrivesProgress: true,
 		gestureActivationArea: "screen",
 		gestureSnapLocked: false,
 		sheetScrollGestureBehavior: "expand-and-collapse",
@@ -134,8 +192,6 @@ const createScreenOptions = (
 			gestureSnapVelocityImpact: 0.1,
 			gestureReleaseVelocityScale: 1,
 			gestureResponseDistance: undefined,
-			gestureProgressMode: "progress-driven",
-			gestureDrivesProgress: true,
 			gestureActivationArea: "screen",
 			gestureSnapLocked: false,
 			sheetScrollGestureBehavior: "expand-and-collapse",
@@ -174,6 +230,13 @@ const createGestureStore = () =>
 			scale: createSharedValue(1),
 			normScale: createSharedValue(0),
 			rotation: createSharedValue(0),
+		},
+		internal: {
+			progressBaseline: createSharedValue(0),
+			progressDeltaX: createSharedValue(0),
+			progressDeltaY: createSharedValue(0),
+			lockedSnapPoint: createSharedValue(null),
+			snapshot: createGestureSnapshotStore(),
 		},
 		dismissing: createSharedValue(0),
 		dragging: createSharedValue(0),
@@ -316,7 +379,6 @@ describe("getPanReleaseProgressVelocity", () => {
 			event,
 			dimensions,
 			directions: createDirections({ horizontal: true }),
-			gestureReleaseVelocityScale: 1,
 		});
 
 		expect(result).toBeCloseTo(2.5, 5);
@@ -340,7 +402,6 @@ describe("getPanReleaseProgressVelocity", () => {
 				horizontal: true,
 				verticalInverted: true,
 			}),
-			gestureReleaseVelocityScale: 1,
 		});
 
 		expect(result).toBeLessThan(0);
@@ -360,7 +421,6 @@ describe("getPanReleaseProgressVelocity", () => {
 			event,
 			dimensions,
 			directions: createDirections({ horizontal: true }),
-			gestureReleaseVelocityScale: 1,
 		});
 
 		expect(result).toBeCloseTo(15.625, 5);
@@ -384,7 +444,6 @@ describe("getPanReleaseProgressVelocity", () => {
 				horizontal: true,
 				vertical: true,
 			}),
-			gestureReleaseVelocityScale: 1,
 		});
 
 		// Uses vertical candidate (96/640), not unsupported horizontal movement.
@@ -417,6 +476,25 @@ describe("resolvePanRelease", () => {
 
 		expect(release.shouldDismiss).toBe(true);
 		expect(release.target).toBe(0);
+	});
+
+	it("does not apply release velocity scale to progress velocity", () => {
+		const event = createEvent({ translationX: 200, velocityX: 800 });
+		const baseRelease = resolvePanRelease(
+			event,
+			createPanReleaseRuntime(true, 0.3, 1),
+			dimensions,
+		);
+		const scaledRelease = resolvePanRelease(
+			event,
+			createPanReleaseRuntime(true, 0.3, 100),
+			dimensions,
+		);
+
+		expect(scaledRelease.initialVelocity).toBeCloseTo(
+			baseRelease.initialVelocity,
+			5,
+		);
 	});
 });
 
@@ -592,6 +670,8 @@ describe("trackPanGesture", () => {
 		expect(gestures.y.get()).toBeCloseTo(-20, 5);
 		expect(gestures.normX.get()).toBeCloseTo(0.125, 5);
 		expect(gestures.normY.get()).toBeCloseTo(-0.1, 5);
+		expect(gestures.internal.progressDeltaX.get()).toBeCloseTo(0.125, 5);
+		expect(gestures.internal.progressDeltaY.get()).toBeCloseTo(-0.1, 5);
 		expect(gestures.velocity.get()).toBeCloseTo(1, 5);
 		expect(gestures.raw.x.get()).toBeCloseTo(200, 5);
 		expect(gestures.raw.y.get()).toBeCloseTo(-80, 5);
@@ -728,8 +808,8 @@ describe("trackPinchGesture", () => {
 		expect(gestures.normY.get()).toBeCloseTo(-0.02, 5);
 		expect(gestures.scale.get()).toBeCloseTo(1.25, 5);
 		expect(gestures.normScale.get()).toBeCloseTo(0.25, 5);
-		expect(gestures.focalX.get()).toBeCloseTo(30, 5);
-		expect(gestures.focalY.get()).toBeCloseTo(50, 5);
+		expect(gestures.focalX.get()).toBeCloseTo(44, 5);
+		expect(gestures.focalY.get()).toBeCloseTo(80, 5);
 		expect(gestures.raw.x.get()).toBeCloseTo(32, 5);
 		expect(gestures.raw.y.get()).toBeCloseTo(-48, 5);
 		expect(gestures.raw.normX.get()).toBeCloseTo(0.08, 5);
@@ -775,6 +855,23 @@ describe("resolvePinchRelease", () => {
 
 		expect(release.shouldDismiss).toBe(true);
 		expect(release.target).toBe(0);
+	});
+
+	it("applies release velocity scale only to handoff velocity", () => {
+		const baseRelease = resolvePinchRelease(
+			{ scale: 0.4, velocity: -1 } as any,
+			createPinchReleaseRuntime(true, 0.3, 1),
+		);
+		const scaledRelease = resolvePinchRelease(
+			{ scale: 0.4, velocity: -1 } as any,
+			createPinchReleaseRuntime(true, 0.3, 2),
+		);
+
+		expect(scaledRelease.initialVelocity).toBeCloseTo(
+			baseRelease.initialVelocity,
+			5,
+		);
+		expect(scaledRelease.handoffVelocity).toBeCloseTo(0.5, 5);
 	});
 });
 

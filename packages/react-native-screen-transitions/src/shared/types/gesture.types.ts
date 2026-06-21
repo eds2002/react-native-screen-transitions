@@ -134,6 +134,36 @@ export type RawGestureValues = {
 	rotation: number;
 };
 
+/**
+ * Gesture values used when a release hands off into a dismiss animation.
+ *
+ * These match live gesture values while a screen is not dismissing, then read
+ * from the release snapshot while dismissal is in flight.
+ */
+export type GestureHandoffValues = {
+	x: number;
+	y: number;
+	normX: number;
+	normY: number;
+	velocity: number;
+	scale: number;
+	normScale: number;
+	focalX: number;
+	focalY: number;
+	rotation: number;
+	raw: RawGestureValues;
+	/**
+	 * The gesture associated with the handoff values.
+	 */
+	active: ActiveGesture | null;
+	/**
+	 * The pan direction associated with the handoff values.
+	 *
+	 * @deprecated Use `active` instead.
+	 */
+	direction: ResolvedPanGestureDirection | null;
+};
+
 export type GestureValues = {
 	/**
 	 * The live horizontal translation of the gesture.
@@ -154,9 +184,6 @@ export type GestureValues = {
 	/**
 	 * A 0-1 scalar derived from the pan velocity magnitude, normalized against
 	 * a screen-relative full-flick threshold.
-	 *
-	 * This is live while dragging, frozen at release during dismiss animations,
-	 * and reset to 0 while idle or settling from a cancelled gesture.
 	 */
 	velocity: number;
 	/**
@@ -184,6 +211,24 @@ export type GestureValues = {
 	 */
 	raw: RawGestureValues;
 	/**
+	 * The gesture that is currently active.
+	 */
+	active: ActiveGesture | null;
+	/**
+	 * The initial pan direction that activated the gesture.
+	 *
+	 * @deprecated Use `active` instead.
+	 */
+	direction: ResolvedPanGestureDirection | null;
+	/**
+	 * Gesture values latched at the release boundary for animation handoff.
+	 *
+	 * While dragging, these values match the live gesture values. During a
+	 * dismissing release, they read from the release snapshot so live gesture
+	 * values can reset without breaking handoff animations.
+	 */
+	handoff: GestureHandoffValues;
+	/**
 	 * A flag indicating if the screen is in the process of dismissing (0 or 1).
 	 */
 	dismissing: number;
@@ -195,17 +240,6 @@ export type GestureValues = {
 	 * A flag indicating if released gesture values are animating back to neutral.
 	 */
 	settling: number;
-	/**
-	 * The gesture that is currently active.
-	 */
-	active: ActiveGesture | null;
-	/**
-	 * The initial pan direction that activated the gesture.
-	 *
-	 * @deprecated Use `active` instead.
-	 */
-	direction: ResolvedPanGestureDirection | null;
-
 	/** @deprecated Use `normX` instead. */
 	normalizedX: number;
 	/** @deprecated Use `normY` instead. */

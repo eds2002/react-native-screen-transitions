@@ -6,8 +6,14 @@ import {
 	normalizeGestureTranslation,
 	resolveGestureVelocity,
 } from "../../shared/physics";
+import { snapshotGestureHandoff } from "../../shared/snapshot";
+import {
+	clearFocalPoint,
+	clearPanTrackingValues,
+	clearTransformTrackingValues,
+} from "../../shared/values";
 import type {
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	GestureDimensions,
 	PanGestureEvent,
 	PanGestureRuntime,
@@ -21,7 +27,6 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	"worklet";
 	const {
 		stores: { gestures, animations },
-		gestureProgressBaseline,
 	} = runtime;
 
 	const wasSettling = gestures.settling.get();
@@ -38,24 +43,10 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
 	gestures.settling.set(0);
-	gestures.x.set(0);
-	gestures.y.set(0);
-	gestures.normX.set(0);
-	gestures.normY.set(0);
-	gestures.velocity.set(0);
-	gestures.scale.set(1);
-	gestures.normScale.set(0);
-	gestures.focalX.set(0);
-	gestures.focalY.set(0);
-	gestures.rotation.set(0);
-	gestures.raw.x.set(0);
-	gestures.raw.y.set(0);
-	gestures.raw.normX.set(0);
-	gestures.raw.normY.set(0);
-	gestures.raw.scale.set(1);
-	gestures.raw.normScale.set(0);
-	gestures.raw.rotation.set(0);
-	gestureProgressBaseline.set(animations.progress.get());
+	clearPanTrackingValues(gestures);
+	clearTransformTrackingValues(gestures);
+	clearFocalPoint(gestures);
+	gestures.internal.progressBaseline.set(animations.transitionProgress.get());
 };
 
 export const trackPanGesture = (
@@ -87,6 +78,8 @@ export const trackPanGesture = (
 	gestures.y.set(y);
 	gestures.normX.set(normX);
 	gestures.normY.set(normY);
+	gestures.internal.progressDeltaX.set(normX);
+	gestures.internal.progressDeltaY.set(normY);
 	gestures.velocity.set(velocity);
 	gestures.raw.x.set(rawX);
 	gestures.raw.y.set(rawY);
@@ -109,7 +102,7 @@ export const finalizePanRelease = (
 	dimensions: GestureDimensions,
 	rawEvent: PanGestureEvent,
 	requestDismiss?: () => void,
-	gestureCompositionActivation?: SharedValue<GestureCompositionActivation>,
+	gestureCompositionOwner?: SharedValue<GestureCompositionOwner>,
 ) => {
 	"worklet";
 	const {
@@ -118,18 +111,15 @@ export const finalizePanRelease = (
 	} = runtime;
 
 	const canDriveRelease =
-		!gestureCompositionActivation ||
-		gestureCompositionActivation.get() === "pan";
+		!gestureCompositionOwner || gestureCompositionOwner.get() === "pan";
 
 	const plan = buildPanReleasePlan(
 		canDriveRelease
 			? release
 			: {
-					target: animations.progress.get(),
+					target: animations.transitionProgress.get(),
 					shouldDismiss: false,
 					initialVelocity: 0,
-					resetNormalizedValuesImmediately:
-						policy.gestureProgressMode === "progress-driven",
 					transitionSpec: undefined,
 					resetSpec: policy.transitionSpec?.open,
 				},
@@ -139,22 +129,19 @@ export const finalizePanRelease = (
 	);
 
 	if (typeof plan.commitProgress === "number") {
-		animations.progress.set(plan.commitProgress);
+		animations.transitionProgress.set(plan.commitProgress);
 		system.targetProgress.set(plan.commitProgress);
 	}
 
+	if (canDriveRelease && plan.shouldDismiss) {
+		snapshotGestureHandoff(gestures, {
+			velocity: plan.handoffVelocity,
+		});
+	}
+
 	resetPanGestureValues({
-		spec: plan.resetSpec,
+		plan,
 		gestures,
-		shouldDismiss: plan.shouldDismiss,
-		velocityX: plan.resetVelocityX,
-		velocityY: plan.resetVelocityY,
-		velocityNormX: plan.resetVelocityNormX,
-		velocityNormY: plan.resetVelocityNormY,
-		releaseVelocity: plan.releaseVelocity,
-		resetNormalizedValues: plan.resetNormalizedValues,
-		resetNormalizedValuesImmediately: plan.resetNormalizedValuesImmediately,
-		preserveRawValues: plan.preserveRawValues,
 		updateLifecycle: canDriveRelease,
 	});
 
@@ -163,7 +150,7 @@ export const finalizePanRelease = (
 	}
 
 	const progressAlreadyAtTarget =
-		Math.abs(animations.progress.get() - plan.target) <= EPSILON;
+		Math.abs(animations.transitionProgress.get() - plan.target) <= EPSILON;
 
 	if (!plan.shouldDismiss && progressAlreadyAtTarget) {
 		system.targetProgress.set(plan.target);

@@ -197,19 +197,19 @@ export const useInterpolatedStylesMap = () => {
 		const interpolatorOptionsOwner =
 			isInGestureMode || !nextInterpolator ? "current" : "next";
 
-		let effectiveProgress = progress;
-		let effectiveNext = next;
+		let selectedProgress = progress;
+		let selectedNext = next;
 
 		if (isInGestureMode) {
-			effectiveProgress = current.progress;
-			effectiveNext = undefined;
+			selectedProgress = current.progress;
+			selectedNext = undefined;
 		}
 
 		const currentResult = runInterpolator({
 			interpolator: currentInterpolator,
 			props,
-			progress: effectiveProgress,
-			next: effectiveNext,
+			progress: selectedProgress,
+			next: selectedNext,
 			bounds: boundsAccessor,
 			transition,
 			shouldDeferStyleBuckets,
@@ -233,8 +233,8 @@ export const useInterpolatedStylesMap = () => {
 		const nextResult = runInterpolator({
 			interpolator: nextInterpolator,
 			props,
-			progress: effectiveProgress,
-			next: effectiveNext,
+			progress: selectedProgress,
+			next: selectedNext,
 			bounds: boundsAccessor,
 			transition,
 			shouldDeferStyleBuckets,

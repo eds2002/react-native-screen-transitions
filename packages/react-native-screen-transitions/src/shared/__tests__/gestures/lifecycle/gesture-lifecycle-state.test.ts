@@ -4,7 +4,7 @@ import {
 	finalizePanRelease,
 	startPanBase,
 } from "../../../providers/screen/gestures/pan/behavior/pan-lifecycle";
-import type { GestureCompositionActivation } from "../../../providers/screen/gestures/types";
+import type { GestureCompositionOwner } from "../../../providers/screen/gestures/types";
 import {
 	finalizePinchRelease,
 	startPinchBase,
@@ -25,6 +25,30 @@ const shared = <T>(initialValue: T): SharedValue<T> => {
 		value,
 	} as SharedValue<T>;
 };
+
+const createGestureSnapshotStore = () => ({
+	x: shared(0),
+	y: shared(0),
+	normX: shared(0),
+	normY: shared(0),
+	velocity: shared(0),
+	scale: shared(1),
+	normScale: shared(0),
+	focalX: shared(0),
+	focalY: shared(0),
+	rotation: shared(0),
+	raw: {
+		x: shared(0),
+		y: shared(0),
+		normX: shared(0),
+		normY: shared(0),
+		scale: shared(1),
+		normScale: shared(0),
+		rotation: shared(0),
+	},
+	active: shared(null),
+	direction: shared(null),
+});
 
 const createGestureStore = (): GestureStoreMap => {
 	const normX = shared(0);
@@ -52,6 +76,13 @@ const createGestureStore = (): GestureStoreMap => {
 			normScale: shared(0),
 			rotation: shared(0),
 		},
+		internal: {
+			progressBaseline: shared(0),
+			progressDeltaX: shared(0),
+			progressDeltaY: shared(0),
+			lockedSnapPoint: shared(null),
+			snapshot: createGestureSnapshotStore(),
+		},
 		dismissing,
 		dragging,
 		settling: shared(0),
@@ -65,8 +96,8 @@ const createGestureStore = (): GestureStoreMap => {
 };
 
 const createAnimations = (): AnimationStoreMap => ({
-	progress: shared(1),
-	effectiveProgress: shared(1),
+	transitionProgress: shared(1),
+	visualProgress: shared(1),
 	willAnimate: shared(0),
 	progressAnimating: shared(0),
 	progressSettled: shared(1),
@@ -76,7 +107,6 @@ const createAnimations = (): AnimationStoreMap => ({
 
 const createRuntime = (
 	policyOverrides: Partial<{
-		gestureProgressMode: "progress-driven" | "freeform";
 		gestureReleaseVelocityScale: number;
 	}> = {},
 ) => {
@@ -85,7 +115,6 @@ const createRuntime = (
 	const runtime = {
 		participation: { canDismiss: true, effectiveSnapPoints: {} },
 		policy: {
-			gestureProgressMode: "progress-driven",
 			gestureReleaseVelocityScale: 1,
 			...policyOverrides,
 		},
@@ -96,9 +125,7 @@ const createRuntime = (
 				targetProgress: shared(1),
 			},
 		},
-		gestureProgressBaseline: shared(1),
-		lockedSnapPoint: shared(1),
-	};
+		};
 
 	return { runtime: runtime as any, gestures, animations };
 };
@@ -143,7 +170,7 @@ describe("gesture lifecycle state", () => {
 	it("marks opening as entering before the willAnimate pulse is observed", () => {
 		const raf = installDeferredAnimationFrame();
 		const animations = createAnimations();
-		animations.progress.set(0);
+		animations.transitionProgress.set(0);
 
 		animateToProgress({
 			target: "open",
@@ -277,6 +304,7 @@ describe("gesture lifecycle state", () => {
 				target: 1,
 				shouldDismiss: false,
 				initialVelocity: 0,
+				handoffVelocity: 0,
 				transitionSpec: undefined,
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
@@ -339,7 +367,7 @@ describe("gesture lifecycle state", () => {
 
 	it("does not start a progress animation for a cancelled no-op pan release", () => {
 		const { runtime, gestures, animations } = createRuntime();
-		animations.progress.set(1);
+		animations.transitionProgress.set(1);
 		gestures.dragging.set(1);
 
 		finalizePanRelease(
@@ -366,9 +394,9 @@ describe("gesture lifecycle state", () => {
 
 	it("resets pan values without dismissing when pinch owns the composition", () => {
 		const { runtime, gestures, animations } = createRuntime();
-		const composition = shared<GestureCompositionActivation>("pinch");
+		const composition = shared<GestureCompositionOwner>("pinch");
 		let requestedDismiss = false;
-		animations.progress.set(0.64);
+		animations.transitionProgress.set(0.64);
 		animations.progressAnimating.set(0);
 		gestures.dragging.set(1);
 		gestures.dismissing.set(1);
@@ -377,6 +405,8 @@ describe("gesture lifecycle state", () => {
 		gestures.y.set(-36);
 		gestures.normX.set(0.12);
 		gestures.normY.set(-0.08);
+		gestures.internal.progressDeltaX.set(0.12);
+		gestures.internal.progressDeltaY.set(-0.08);
 		gestures.raw.x.set(52);
 		gestures.raw.y.set(-40);
 		gestures.raw.normX.set(0.13);
@@ -407,6 +437,8 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.y.get()).toBe(0);
 		expect(gestures.normX.get()).toBe(0);
 		expect(gestures.normY.get()).toBe(0);
+		expect(gestures.internal.progressDeltaX.get()).toBe(0);
+		expect(gestures.internal.progressDeltaY.get()).toBe(0);
 		expect(gestures.raw.x.get()).toBe(0);
 		expect(gestures.raw.y.get()).toBe(0);
 		expect(gestures.raw.normX.get()).toBe(0);
@@ -415,7 +447,7 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.dragging.get()).toBe(1);
 		expect(gestures.dismissing.get()).toBe(1);
 		expect(gestures.settling.get()).toBe(0);
-		expect(animations.progress.get()).toBe(0.64);
+		expect(animations.transitionProgress.get()).toBe(0.64);
 		expect(animations.progressAnimating.get()).toBe(0);
 	});
 
@@ -429,6 +461,7 @@ describe("gesture lifecycle state", () => {
 				target: 0,
 				shouldDismiss: true,
 				initialVelocity: 0,
+				handoffVelocity: 0.6,
 				transitionSpec: undefined,
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
@@ -441,10 +474,12 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.dragging.get()).toBe(0);
 		expect(gestures.dismissing.get()).toBe(1);
 		expect(gestures.settling.get()).toBe(0);
-		expect(gestures.velocity.get()).toBeCloseTo(0.5, 5);
+		expect(gestures.velocity.get()).toBe(0);
+		expect(gestures.internal.snapshot.velocity.get()).toBeCloseTo(0.5, 5);
+		expect(gestures.internal.snapshot.active.get()).toBe("vertical");
 	});
 
-	it("keeps raw pan displacement during a dismissing release", () => {
+	it("snapshots raw pan displacement during a dismissing release", () => {
 		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);
 		gestures.raw.y.set(320);
@@ -464,43 +499,18 @@ describe("gesture lifecycle state", () => {
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
 
-		expect(gestures.raw.y.get()).toBe(320);
-		expect(gestures.raw.normY.get()).toBe(0.4);
+		expect(gestures.raw.y.get()).toBe(0);
+		expect(gestures.raw.normY.get()).toBe(0);
+		expect(gestures.internal.snapshot.raw.y.get()).toBe(320);
+		expect(gestures.internal.snapshot.raw.normY.get()).toBe(0.4);
 	});
 
-	it("keeps live normalized pan displacement during a freeform dismissing release", () => {
-		const { runtime, gestures } = createRuntime({
-			gestureProgressMode: "freeform",
-		});
+	it("snapshots live normalized pan displacement during a dismissing release", () => {
+		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);
 		gestures.y.set(320);
 		gestures.normY.set(0.4);
-
-		finalizePanRelease(
-			{
-				target: 0,
-				shouldDismiss: true,
-				initialVelocity: 0,
-				transitionSpec: undefined,
-				resetSpec: { duration: 200, __finished: false } as any,
-			},
-			runtime,
-			() => {},
-			{ width: 390, height: 800 },
-			{ velocityX: 0, velocityY: 0 } as any,
-		);
-
-		expect(gestures.y.get()).toBe(0);
-		expect(gestures.normY.get()).toBe(0.4);
-	});
-
-	it("resets live normalized pan displacement during a progress-driven dismissing release", () => {
-		const { runtime, gestures } = createRuntime({
-			gestureProgressMode: "progress-driven",
-		});
-		gestures.dragging.set(1);
-		gestures.y.set(320);
-		gestures.normY.set(0.4);
+		gestures.internal.progressDeltaY.set(0.4);
 
 		finalizePanRelease(
 			{
@@ -518,15 +528,43 @@ describe("gesture lifecycle state", () => {
 
 		expect(gestures.y.get()).toBe(0);
 		expect(gestures.normY.get()).toBe(0);
+		expect(gestures.internal.progressDeltaY.get()).toBe(0);
+		expect(gestures.internal.snapshot.y.get()).toBe(320);
+		expect(gestures.internal.snapshot.normY.get()).toBe(0.4);
 	});
 
-	it("resets live normalized pan displacement during a cancelled freeform release", () => {
-		const { runtime, gestures } = createRuntime({
-			gestureProgressMode: "freeform",
-		});
+	it("resets live normalized pan displacement during a dismissing release", () => {
+		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);
 		gestures.y.set(320);
 		gestures.normY.set(0.4);
+		gestures.internal.progressDeltaY.set(0.4);
+
+		finalizePanRelease(
+			{
+				target: 0,
+				shouldDismiss: true,
+				initialVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: { duration: 200, __finished: false } as any,
+			},
+			runtime,
+			() => {},
+			{ width: 390, height: 800 },
+			{ velocityX: 0, velocityY: 0 } as any,
+		);
+
+		expect(gestures.y.get()).toBe(0);
+		expect(gestures.normY.get()).toBe(0);
+		expect(gestures.internal.progressDeltaY.get()).toBe(0);
+	});
+
+	it("resets live normalized pan displacement during a cancelled release", () => {
+		const { runtime, gestures } = createRuntime();
+		gestures.dragging.set(1);
+		gestures.y.set(320);
+		gestures.normY.set(0.4);
+		gestures.internal.progressDeltaY.set(0.4);
 
 		finalizePanRelease(
 			{
@@ -544,20 +582,50 @@ describe("gesture lifecycle state", () => {
 
 		expect(gestures.y.get()).toBe(0);
 		expect(gestures.normY.get()).toBe(0);
+		expect(gestures.internal.progressDeltaY.get()).toBe(0);
 	});
 
-	it("keeps raw pinch scale and rotation during a dismissing release", () => {
+	it("keeps pinch focal point during a cancelled animated reset", () => {
+		const { runtime, gestures } = createRuntime();
+		gestures.dragging.set(1);
+		gestures.scale.set(0.7);
+		gestures.normScale.set(-0.3);
+		gestures.focalX.set(120);
+		gestures.focalY.set(240);
+
+		finalizePinchRelease(
+			{
+				target: 1,
+				shouldDismiss: false,
+				initialVelocity: 0,
+				handoffVelocity: 0,
+				transitionSpec: undefined,
+				resetSpec: { duration: 200, __finished: false } as any,
+			},
+			runtime,
+			undefined,
+			() => {},
+		);
+
+		expect(gestures.focalX.get()).toBe(120);
+		expect(gestures.focalY.get()).toBe(240);
+	});
+
+	it("snapshots raw pinch scale and rotation during a dismissing release", () => {
 		const { runtime, gestures } = createRuntime();
 		gestures.dragging.set(1);
 		gestures.raw.scale.set(0.7);
 		gestures.raw.normScale.set(-0.3);
 		gestures.raw.rotation.set(0.2);
+		gestures.focalX.set(120);
+		gestures.focalY.set(240);
 
 		finalizePinchRelease(
 			{
 				target: 0,
 				shouldDismiss: true,
 				initialVelocity: 0,
+				handoffVelocity: 0.6,
 				transitionSpec: undefined,
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
@@ -565,9 +633,17 @@ describe("gesture lifecycle state", () => {
 			() => {},
 		);
 
-		expect(gestures.raw.scale.get()).toBe(0.7);
-		expect(gestures.raw.normScale.get()).toBe(-0.3);
-		expect(gestures.raw.rotation.get()).toBe(0.2);
+		expect(gestures.raw.scale.get()).toBe(1);
+		expect(gestures.raw.normScale.get()).toBe(0);
+		expect(gestures.raw.rotation.get()).toBe(0);
+		expect(gestures.internal.snapshot.raw.scale.get()).toBe(0.7);
+		expect(gestures.internal.snapshot.raw.normScale.get()).toBe(-0.3);
+		expect(gestures.internal.snapshot.raw.rotation.get()).toBe(0.2);
+		expect(gestures.internal.snapshot.velocity.get()).toBe(0.6);
+		expect(gestures.internal.snapshot.focalX.get()).toBe(120);
+		expect(gestures.internal.snapshot.focalY.get()).toBe(240);
+		expect(gestures.focalX.get()).toBe(0);
+		expect(gestures.focalY.get()).toBe(0);
 	});
 
 });

@@ -1,0 +1,31 @@
+---
+title: "useHistory"
+pageTitle: "useHistory"
+summary: "Subscribe to the stack history store."
+description: "Subscribe to the stack history store."
+eyebrow: "API"
+group: "API"
+order: 3
+to: /api/use-history
+---
+
+`useHistory()` subscribes to the stack history store.
+
+```tsx
+import { useHistory } from "react-native-screen-transitions";
+
+const history = useHistory();
+const latest = history.getMostRecent();
+const recent = history.getRecent(3);
+```
+
+It returns:
+
+| Field | Meaning |
+| --- | --- |
+| `history` | Read-only map of screen keys to history entries |
+| `getRecent(n)` | Most recent `n` entries, newest first |
+| `getByNavigator(key)` | Entries for one navigator, newest first |
+| `getPath(fromKey, toKey)` | Screen keys between two history entries |
+| `get(key)` | One history entry by screen key |
+| `getMostRecent()` | The latest history entry |

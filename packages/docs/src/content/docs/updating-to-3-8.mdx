@@ -1,0 +1,220 @@
+---
+title: "New in 3.8"
+pageTitle: "New in 3.8"
+summary: "A simplification release for gesture progress, default gesture reset, transitionProgress, bounds progress, and gesture handoff."
+description: "A simplification release for gesture progress, default gesture reset, transitionProgress, bounds progress, and gesture handoff."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "June 2026"
+order: 1
+to: /changelog/updating-to-3-8
+---
+
+v3.8 is a simplification release for both the public API and the internals that maintain it.
+
+Previous releases carried a few options that existed to work around an earlier, more experimental bounds system. Those options solved real problems, but they also made gesture progress harder to reason about: sometimes gestures affected `progress`, sometimes they did not, and several helpers had to account for both modes.
+
+The new rule is simpler: `progress` is always the visual progress of the screen, including live gesture movement. When animation logic needs progress without the active gesture, use `transitionProgress`.
+
+## Behavioral Changes
+
+### Gesture Values Reset After Release
+
+Gesture values now reset more predictably after release. Dismissal animations that need release-time gesture data should read from `gesture.handoff`.
+
+<Note>
+  Gesture values reset by default after release. If an animation needs more
+  freedom during dismissal, such as the last known gesture values before the
+  screen closes, read from `gesture.handoff` instead of the live gesture fields.
+</Note>
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  const gesture = current.gesture.handoff;
+
+  return {
+    content: {
+      style: {
+        transform: [
+          { translateX: gesture.x },
+          { translateY: gesture.y },
+          { scale: 1 - gesture.velocity * 0.06 },
+        ],
+      },
+    },
+  };
+};
+```
+
+While dragging, `gesture.handoff` matches the live gesture values. During a dismissing release, it reads from a release snapshot so the live gesture values can reset without breaking fling, orbit, or matched-element handoff animations.
+
+### Progress Is Always Visual
+
+`gestureProgressMode` and `gestureDrivesProgress` are deprecated compatibility options.
+
+They were introduced so advanced gestures could move freely while bounds-driven animations avoided feeling like they were being pulled along a fixed transition path. That was useful while bounds helpers were still maturing, especially for navigation zoom and reveal recipes.
+
+In v3.8, the same behavior is modeled with values instead of a screen-level mode:
+
+- `progress`: visual progress, including live gesture movement
+- `transitionProgress`: committed transition or snap progress without live gesture movement
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        opacity: current.transitionProgress,
+      },
+    },
+  };
+};
+```
+
+This removes a lot of configuration pressure. Helpers such as `bounds({ id }).navigation.zoom()` and `bounds({ id }).navigation.reveal()` can now make opinionated choices internally, while custom recipes can still combine stable transition progress with live gesture, velocity, and handoff values.
+
+### Bounds Can Choose Their Progress Driver
+
+`bounds()` computations can now receive an explicit `progress` value.
+
+```tsx
+screenStyleInterpolator: ({ bounds, current }) => {
+  "worklet";
+
+  return bounds({ id: "avatar" }).compute({
+    id: "avatar",
+    progress: current.transitionProgress,
+  });
+};
+```
+
+Bounds default to the visual frame progress. Pass `transitionProgress` when the geometry should ignore live gesture movement and layer custom gesture motion separately.
+
+This is the replacement for most previous `"freeform"` gesture-progress use cases. Instead of telling the whole screen that gestures should not affect progress, choose the stable driver only for the part of the animation that needs it.
+
+## Features
+
+### Simultaneous Pan, Pinch, And Rotation
+
+Pan, pinch, and rotation now run as a simultaneous gesture composition.
+
+```tsx
+options={{
+  gestureDirection: ["horizontal", "pinch-out"],
+}}
+```
+
+That configuration means horizontal pan and pinch-out can both track during the same interaction. The active gesture that owns the composition controls navigation release, while companion gestures can still update live values for animation.
+
+Rotation is now part of the public gesture state:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        transform: [{ rotateZ: `${current.gesture.rotation}rad` }],
+      },
+    },
+  };
+};
+```
+
+`current.gesture.raw.rotation` exposes the physical rotation before sensitivity is applied, matching the existing `raw` pattern for pan and pinch values.
+
+### Scoped Gesture Activation Areas
+
+`gestureActivationArea` is deprecated in favor of configuring activation directly on `gestureDirection` entries.
+
+```tsx
+options={{
+  gestureDirection: [
+    { gesture: "horizontal", area: "edge" },
+    { gesture: "vertical", area: "screen" },
+  ],
+}}
+```
+
+The `area` can be `"edge"`, `"screen"`, or a number of points from the edge. This keeps each direction's activation rule next to the gesture it belongs to.
+
+### Scroll Metadata
+
+Transition-aware scrollables now publish scroll metadata through `layouts.scroll`.
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  const y = current.layouts.scroll?.vertical?.offset ?? 0;
+
+  return {
+    content: {
+      style: {
+        transform: [{ translateY: -Math.min(y, 24) }],
+      },
+    },
+  };
+};
+```
+
+For nested same-axis scrollables, the outermost scrollable owns that axis. Cross-axis nested scrollables can each publish their own axis.
+
+## Fixes
+
+### Visual Settlement
+
+`settled` now means the transition is visually close enough to its target for choreography, even if the spring is still physically finishing.
+
+This replaces the older `logicallySettled` model. `logicallySettled` remains as a deprecated alias, but new animation logic should use `active.settled`, `current.settled`, or the relevant screen state's `settled` field.
+
+### Internal Spring Handoff
+
+Screen Transitions now uses an internal numeric spring fork for transition springs.
+
+Reanimated 4.4 changed `withSpring` so release velocity that initially points away from the target can be reset to zero. That is reasonable for the public Reanimated spring, but this library intentionally uses that velocity for gesture release handoff.
+
+The internal spring preserves the release impulse used by `gestureReleaseVelocityScale`, while also reporting visual settlement before final physical spring completion.
+
+### Gesture Release Velocity Scale
+
+`gestureReleaseVelocityScale` reliably affects post-release gesture handoff again.
+
+This option does not change dismiss thresholds or snap target selection. It changes the release energy used by gesture reset and handoff values, which is what recipes use for fling, flap, orbit, and similar release effects.
+
+### Gesture Reset Rules
+
+Pan and pinch reset logic now uses shared reset jobs instead of scattered settling checks.
+
+Internal progress deltas are separated from public `normX` and `normY`, so `progress` can be calculated consistently while public gesture values stay focused on animation use.
+
+### Hidden Inactive Screens
+
+The `hide` inactive behavior no longer relies on `display: "none"` for hidden screens.
+
+Hidden screens are moved offscreen instead, which avoids a native gesture-detector issue where a screen could become visible again but fail to recognize gestures after being hidden.
+
+## Migration Notes
+
+- Replace new `gestureProgressMode: "freeform"` usage with `current.transitionProgress` where you need gesture-free transition progress.
+- Keep using `current.progress` for visual progress that should follow live gestures.
+- Replace `gestureActivationArea` with structured `gestureDirection` entries.
+- Read `current.gesture.handoff` when a dismiss animation needs release-time gesture values after live values reset.
+- Prefer `current.gesture.active` over `current.gesture.direction`; `direction` remains as a deprecated pan-only alias.
+- Prefer `settled` over `logicallySettled`.
+- Use `bounds(...).compute({ progress })` when bounds geometry needs a custom driver.
+
+## Related Reading
+
+- [Gestures](/gestures)
+- [Custom Animations](/custom-animations)
+- [Shared Elements](/shared-elements)
+- [Zoom](/navigation-zoom)
+- [Reveal](/reveal)
+- [Inactive Behavior](/inactive-behavior)

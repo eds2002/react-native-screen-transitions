@@ -3,6 +3,8 @@ import { EPSILON, FALSE, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../../utils/animation/emit";
 import { normalizePinchScale } from "../../shared/physics";
+import { snapshotGestureHandoff } from "../../shared/snapshot";
+import { clearTransformTrackingValues } from "../../shared/values";
 import type {
 	PinchGestureEvent,
 	PinchGestureRuntime,
@@ -18,7 +20,6 @@ export const startPinchBase = (
 	"worklet";
 	const {
 		stores: { gestures, animations },
-		gestureProgressBaseline,
 	} = runtime;
 
 	const wasSettling = gestures.settling.get();
@@ -36,15 +37,10 @@ export const startPinchBase = (
 	gestures.active.set(null);
 	gestures.direction.set(null);
 	gestures.velocity.set(0);
-	gestures.scale.set(1);
-	gestures.normScale.set(0);
-	gestures.rotation.set(0);
-	gestures.raw.scale.set(1);
-	gestures.raw.normScale.set(0);
-	gestures.raw.rotation.set(0);
+	clearTransformTrackingValues(gestures);
 	gestures.focalX.set(event.focalX);
 	gestures.focalY.set(event.focalY);
-	gestureProgressBaseline.set(animations.progress.get());
+	gestures.internal.progressBaseline.set(animations.transitionProgress.get());
 };
 
 export const trackPinchGesture = (
@@ -60,6 +56,8 @@ export const trackPinchGesture = (
 
 	gestures.scale.set(scale);
 	gestures.normScale.set(normScale);
+	gestures.focalX.set(event.focalX);
+	gestures.focalY.set(event.focalY);
 	gestures.raw.scale.set(rawScale);
 	gestures.raw.normScale.set(rawNormScale);
 	gestures.active.set(
@@ -84,8 +82,14 @@ export const finalizePinchRelease = (
 	} = runtime;
 
 	if (typeof release.commitProgress === "number") {
-		animations.progress.set(release.commitProgress);
+		animations.transitionProgress.set(release.commitProgress);
 		system.targetProgress.set(release.commitProgress);
+	}
+
+	if (release.shouldDismiss) {
+		snapshotGestureHandoff(gestures, {
+			velocity: release.handoffVelocity,
+		});
 	}
 
 	resetPinchGestureValues({

@@ -45,7 +45,7 @@ export function useContentLayout() {
 
 				if (
 					!isFirstMeasurement ||
-					animations.progress.get() !== 0 ||
+					animations.transitionProgress.get() !== 0 ||
 					animations.progressAnimating.get() !== 0
 				) {
 					return;
@@ -53,7 +53,7 @@ export function useContentLayout() {
 
 				if (isFirstKey && !experimental_animateOnInitialMount) {
 					targetProgress.set(nextFraction);
-					animations.progress.set(nextFraction);
+					animations.transitionProgress.set(nextFraction);
 					return;
 				}
 

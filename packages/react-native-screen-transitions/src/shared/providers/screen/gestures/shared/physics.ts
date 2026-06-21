@@ -10,7 +10,6 @@ interface CalculateProgressProps {
 	event: PanGestureEvent;
 	dimensions: { width: number; height: number };
 	directions: GestureDirections;
-	gestureReleaseVelocityScale?: number;
 }
 
 type GestureAxisCandidate = {
@@ -32,25 +31,28 @@ export const toProgressVelocity = (
 };
 
 /**
- * Converts normalized pan velocity into a 0-1 scalar for interpolators.
+ * Converts normalized gesture velocity into a 0-1 scalar for interpolators.
  *
  * `1` means the velocity reached or exceeded the library's full-velocity
  * threshold, not a physical maximum for the device.
  */
+export const resolveGestureVelocityMagnitude = (velocity: number) => {
+	"worklet";
+
+	return Math.min(
+		1,
+		Math.abs(velocity) / FULL_GESTURE_VELOCITY_PROGRESS_PER_SECOND,
+	);
+};
+
 export const resolveGestureVelocity = (
 	velocityNormX: number,
 	velocityNormY: number,
 ) => {
 	"worklet";
 
-	const dominantVelocity = Math.max(
-		Math.abs(velocityNormX),
-		Math.abs(velocityNormY),
-	);
-
-	return Math.min(
-		1,
-		dominantVelocity / FULL_GESTURE_VELOCITY_PROGRESS_PER_SECOND,
+	return resolveGestureVelocityMagnitude(
+		Math.max(Math.abs(velocityNormX), Math.abs(velocityNormY)),
 	);
 };
 
@@ -85,7 +87,6 @@ const getPanAxisCandidate = (
 	translationTowardDismiss: number,
 	velocityTowardDismiss: number,
 	screenSize: number,
-	gestureReleaseVelocityScale?: number,
 ): GestureAxisCandidate | null => {
 	"worklet";
 	if (!isEnabled || translationTowardDismiss <= 0) {
@@ -97,7 +98,6 @@ const getPanAxisCandidate = (
 		velocityContribution: getPanReleaseHandoffVelocity(
 			velocityTowardDismiss,
 			screenSize,
-			gestureReleaseVelocityScale,
 		),
 	};
 };
@@ -116,11 +116,7 @@ const collectPanAxisCandidates = ({
 	event,
 	dimensions,
 	directions,
-	gestureReleaseVelocityScale,
-}: Pick<
-	CalculateProgressProps,
-	"event" | "dimensions" | "directions" | "gestureReleaseVelocityScale"
->) => {
+}: Pick<CalculateProgressProps, "event" | "dimensions" | "directions">) => {
 	"worklet";
 	const candidates: GestureAxisCandidate[] = [];
 
@@ -131,7 +127,6 @@ const collectPanAxisCandidates = ({
 			event.translationX,
 			event.velocityX,
 			dimensions.width,
-			gestureReleaseVelocityScale,
 		),
 	);
 	pushPanAxisCandidate(
@@ -141,7 +136,6 @@ const collectPanAxisCandidates = ({
 			-event.translationX,
 			-event.velocityX,
 			dimensions.width,
-			gestureReleaseVelocityScale,
 		),
 	);
 	pushPanAxisCandidate(
@@ -151,7 +145,6 @@ const collectPanAxisCandidates = ({
 			event.translationY,
 			event.velocityY,
 			dimensions.height,
-			gestureReleaseVelocityScale,
 		),
 	);
 	pushPanAxisCandidate(
@@ -161,7 +154,6 @@ const collectPanAxisCandidates = ({
 			-event.translationY,
 			-event.velocityY,
 			dimensions.height,
-			gestureReleaseVelocityScale,
 		),
 	);
 
@@ -190,21 +182,15 @@ const getDominantPanCandidateVelocity = (
 const getFallbackPanReleaseVelocityMagnitude = ({
 	event,
 	dimensions,
-	gestureReleaseVelocityScale,
-}: Pick<
-	CalculateProgressProps,
-	"event" | "dimensions" | "gestureReleaseVelocityScale"
->) => {
+}: Pick<CalculateProgressProps, "event" | "dimensions">) => {
 	"worklet";
 	const normalizedVelocityX = getPanReleaseHandoffVelocity(
 		event.velocityX,
 		dimensions.width,
-		gestureReleaseVelocityScale,
 	);
 	const normalizedVelocityY = getPanReleaseHandoffVelocity(
 		event.velocityY,
 		dimensions.height,
-		gestureReleaseVelocityScale,
 	);
 
 	return Math.max(Math.abs(normalizedVelocityX), Math.abs(normalizedVelocityY));
@@ -232,11 +218,10 @@ export const getPanReleaseProgressVelocity = ({
 	event,
 	dimensions,
 	directions,
-	gestureReleaseVelocityScale,
 }: CalculateProgressProps) => {
 	"worklet";
 
-	const currentProgress = animations.progress.get();
+	const currentProgress = animations.transitionProgress.get();
 	const targetProgress = shouldDismiss ? 0 : 1;
 	const progressDelta = targetProgress - currentProgress;
 
@@ -247,7 +232,6 @@ export const getPanReleaseProgressVelocity = ({
 			event,
 			dimensions,
 			directions,
-			gestureReleaseVelocityScale,
 		}),
 	);
 	const progressVelocityMagnitude =
@@ -255,7 +239,6 @@ export const getPanReleaseProgressVelocity = ({
 		getFallbackPanReleaseVelocityMagnitude({
 			event,
 			dimensions,
-			gestureReleaseVelocityScale,
 		});
 
 	return progressDirection * progressVelocityMagnitude;

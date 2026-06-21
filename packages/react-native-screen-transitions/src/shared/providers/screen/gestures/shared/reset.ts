@@ -1,6 +1,4 @@
 import type { SharedValue } from "react-native-reanimated";
-import { FALSE } from "../../../../constants";
-import type { GestureStoreMap } from "../../../../stores/gesture.store";
 import type { AnimationConfig } from "../../../../types/animation.types";
 import {
 	animate,
@@ -10,12 +8,18 @@ import {
 
 type ResetSpringSpec = SpringAnimationConfig & { velocity?: number };
 
+type AnimateManyJob = {
+	value: SharedValue<number>;
+	toValue: number;
+	velocity?: number;
+};
+
 const isResetSpringSpec = (spec?: AnimationConfig): spec is ResetSpringSpec => {
 	"worklet";
 	return isSpringAnimationConfig(spec);
 };
 
-export const getGestureResetSpec = (
+const getGestureResetSpec = (
 	spec?: AnimationConfig,
 	velocity?: number,
 ): AnimationConfig | undefined => {
@@ -34,7 +38,7 @@ export const getGestureResetSpec = (
 	return { ...resetSpec, velocity };
 };
 
-export const animateResetValue = (
+const animateResetValue = (
 	value: SharedValue<number>,
 	toValue: number,
 	config: AnimationConfig | undefined,
@@ -51,16 +55,34 @@ export const animateResetValue = (
 	);
 };
 
-export const clearGestureSettlingIfResting = (
-	gestures: GestureStoreMap,
-	isResting: boolean,
+export const animateMany = (
+	jobs: AnimateManyJob[],
+	spec: AnimationConfig | undefined,
+	onFinished: () => void,
 ) => {
 	"worklet";
-	if (!isResting) {
+	let pendingJobs = jobs.length;
+
+	if (pendingJobs === 0) {
+		onFinished();
 		return;
 	}
 
-	gestures.active.set(null);
-	gestures.direction.set(null);
-	gestures.settling.set(FALSE);
+	const finishJob = () => {
+		"worklet";
+		pendingJobs -= 1;
+
+		if (pendingJobs === 0) {
+			onFinished();
+		}
+	};
+
+	for (const job of jobs) {
+		animateResetValue(
+			job.value,
+			job.toValue,
+			getGestureResetSpec(spec, job.velocity),
+			finishJob,
+		);
+	}
 };

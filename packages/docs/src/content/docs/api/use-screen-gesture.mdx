@@ -1,0 +1,29 @@
+---
+title: "useScreenGesture"
+pageTitle: "useScreenGesture"
+summary: "Read the navigator pan gesture ref for Gesture Handler relations."
+description: "Read the navigator pan gesture ref for Gesture Handler relations."
+eyebrow: "API"
+group: "API"
+order: 2
+to: /api/use-screen-gesture
+---
+
+`useScreenGesture()` returns the screen navigation pan gesture ref. Use it when a custom Gesture Handler gesture needs a relationship with the navigator gesture.
+
+```tsx
+import { Gesture } from "react-native-gesture-handler";
+import { useScreenGesture } from "react-native-screen-transitions";
+
+const screenGesture = useScreenGesture();
+
+const pan = Gesture.Pan().requireExternalGestureToFail(screenGesture);
+```
+
+Target an ancestor navigator with negative depth:
+
+```tsx
+const parentGesture = useScreenGesture({ depth: -1 });
+```
+
+`useScreenGesture()` supports the current screen and ancestors. Positive depth is not valid here because gesture ownership only walks upward.

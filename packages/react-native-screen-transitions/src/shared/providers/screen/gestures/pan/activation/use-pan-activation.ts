@@ -11,7 +11,7 @@ import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePanRuntime } from "../../shared/runtime";
 import type {
 	DirectionClaimMap,
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	GestureDimensions,
 	PanGestureRuntime,
 	ScrollGestureState,
@@ -24,7 +24,7 @@ interface UsePanActivationProps {
 	runtime: SharedValue<PanGestureRuntime>;
 	screenOptions: ScreenOptionsContextValue;
 	dimensions: GestureDimensions;
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const usePanActivation = ({
@@ -33,7 +33,7 @@ export const usePanActivation = ({
 	runtime,
 	screenOptions,
 	dimensions,
-	gestureCompositionActivation,
+	gestureCompositionOwner,
 }: UsePanActivationProps) => {
 	const { currentScreenKey, parentScreenKey } = useDescriptorDerivations();
 
@@ -82,10 +82,12 @@ export const usePanActivation = ({
 				screenOptions.get(),
 			);
 
+			// If another gesture owns this composition, let pan join as a
+			// companion tracker instead of running normal pan activation gates.
 			if (
-				gestureCompositionActivation.get() === "pinch" &&
+				gestureCompositionOwner.get() !== null &&
 				resolvedRuntime.participation.canTrackGesture &&
-				event.numberOfTouches === 2
+				resolvedRuntime.policy.enabled
 			) {
 				stateManager.activate();
 				return;
@@ -122,7 +124,7 @@ export const usePanActivation = ({
 				gestures.direction.set(decision.direction);
 			}
 
-			gestureCompositionActivation.set("pan");
+			gestureCompositionOwner.set("pan");
 			stateManager.activate();
 		},
 		[
@@ -135,7 +137,7 @@ export const usePanActivation = ({
 			runtime,
 			screenOptions,
 			scrollState,
-			gestureCompositionActivation,
+			gestureCompositionOwner,
 		],
 	);
 

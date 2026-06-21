@@ -1,6 +1,14 @@
 # Changelog
 
-## [Unreleased](https://github.com/eds2002/react-native-screen-transitions/compare/v3.7.0...HEAD)
+## [3.8.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0-beta.1...v3.8.0) (2026-06-21)
+
+## [3.7.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.7.0...v3.7.1) (2026-06-10)
+
+### Bug Fixes
+
+* mount ScreenOptionsProvider in FloatOverlay ([#125](https://github.com/eds2002/react-native-screen-transitions/issues/125)) ([c2f0124](https://github.com/eds2002/react-native-screen-transitions/commit/c2f0124bd1e586d22f89230dbc137b29742461e1))
+
+## [Unreleased](https://github.com/eds2002/react-native-screen-transitions/compare/v3.7.1...HEAD)
 
 
 ### Features

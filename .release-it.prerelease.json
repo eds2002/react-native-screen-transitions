@@ -1,0 +1,33 @@
+{
+	"$schema": "https://unpkg.com/release-it@20/schema/release-it.json",
+	"git": {
+		"requireBranch": false,
+		"requireCleanWorkingDir": true,
+		"requireCommits": true,
+		"commitMessage": "chore(release): v${version}",
+		"tagName": "v${version}",
+		"tagAnnotation": "v${version}"
+	},
+	"npm": {
+		"publish": true,
+		"publishArgs": ["--access", "public"],
+		"skipChecks": true
+	},
+	"github": {
+		"release": true,
+		"releaseName": "v${version}",
+		"releaseNotes": "node ../../.github/scripts/release-notes.mjs ${version}"
+	},
+	"hooks": {
+		"before:init": [
+			"git fetch --prune --prune-tags origin",
+			"node ../../.github/scripts/prerelease-init.mjs"
+		],
+		"before:git:release": "node ../../.github/scripts/release-notes.mjs ${version} --check",
+		"after:bump": [
+			"node ../../.github/scripts/sync-bun-lock-version.mjs",
+			"bun run --cwd ../.. build",
+			"npm pack --dry-run"
+		]
+	}
+}

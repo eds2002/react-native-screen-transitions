@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
 
 export function PageLinks({
+	indicator = "arrow",
 	items,
 }: {
+	indicator?: "arrow" | "eyebrow";
 	items: ReadonlyArray<{
 		copy?: string;
 		direction: "next" | "previous";
@@ -30,7 +32,11 @@ export function PageLinks({
 								reverse ? "justify-end" : "justify-start"
 							}`}
 						>
-							{reverse ? (
+							{indicator === "eyebrow" && item.eyebrow ? (
+								<p className="text-sm text-neutral-500 dark:text-neutral-400">
+									{item.eyebrow}
+								</p>
+							) : reverse ? (
 								<ArrowIcon direction="right" />
 							) : (
 								<ArrowIcon direction="left" />

@@ -96,7 +96,7 @@ const getPanSnapReleaseProgress = ({
 	const axisDimension = isHorizontal ? dimensions.width : dimensions.height;
 	const axisProgress = axisTranslation / Math.max(1, axisDimension);
 	const progress =
-		runtime.gestureProgressBaseline.get() +
+		runtime.stores.gestures.internal.progressBaseline.get() +
 		activeAxis.config.progressSign * axisProgress;
 
 	return clamp(progress, minSnapPoint, maxSnapPoint);
@@ -109,7 +109,7 @@ const buildInactivePanSnapRelease = (
 	const { policy, stores } = runtime;
 
 	return {
-		target: stores.animations.progress.get(),
+		target: stores.animations.transitionProgress.get(),
 		shouldDismiss: false,
 		initialVelocity: 0,
 		transitionSpec: policy.transitionSpec,
@@ -152,7 +152,6 @@ export const resolvePanRelease = (
 			event,
 			dimensions,
 			directions: policy.panActivationDirections,
-			gestureReleaseVelocityScale: policy.gestureReleaseVelocityScale,
 		}),
 		transitionSpec: policy.transitionSpec,
 		resetSpec: shouldDismiss
@@ -167,7 +166,7 @@ export const resolveSnapPanRelease = (
 	dimensions: GestureDimensions,
 ): PanReleaseResult => {
 	"worklet";
-	const { participation, policy, lockedSnapPoint } = runtime;
+	const { participation, policy } = runtime;
 	const activeAxis = resolveActivePanSnapAxis(runtime);
 
 	if (!activeAxis) {
@@ -192,7 +191,10 @@ export const resolveSnapPanRelease = (
 	const result = determineSnapTarget({
 		currentProgress,
 		snapPoints: policy.gestureSnapLocked
-			? [lockedSnapPoint.get()]
+			? [
+					runtime.stores.gestures.internal.lockedSnapPoint.get() ??
+						resolvedMaxSnapPoint,
+				]
 			: resolvedSnapPoints,
 		velocity: snapVelocity,
 		dimension: axisDimension,
@@ -210,14 +212,11 @@ export const resolveSnapPanRelease = (
 			handoffVelocity: getPanReleaseHandoffVelocity(
 				axisVelocity,
 				axisDimension,
-				policy.gestureReleaseVelocityScale,
 			),
 			target,
 			currentProgress,
 		}),
 		commitProgress: currentProgress,
-		resetNormalizedValuesImmediately:
-			policy.gestureProgressMode === "progress-driven",
 		transitionSpec: resolveGestureSnapTransitionSpec({
 			transitionSpec: policy.transitionSpec,
 			shouldDismiss,
@@ -238,40 +237,39 @@ export const buildPanReleasePlan = (
 ): PanReleasePlan => {
 	"worklet";
 	const { policy } = runtime;
-	const progressDriven = policy.gestureProgressMode === "progress-driven";
 	const releaseVelocityScale = Math.max(0, policy.gestureReleaseVelocityScale);
-	const resetUsesReleaseVelocity = !release.shouldDismiss || !progressDriven;
-	const resetVelocityFactor = resetUsesReleaseVelocity ? 1 : 0;
-	const resetVelocityScale = releaseVelocityScale * resetVelocityFactor;
+	const resetVelocityScale = releaseVelocityScale;
 	const resetVelocityX =
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityX * resetVelocityScale;
 	const resetVelocityY =
 		resetVelocityScale === 0 ? 0 : rawEvent.velocityY * resetVelocityScale;
-	const releaseVelocityNormX =
-		rawEvent.velocityX / Math.max(1, dimensions.width);
-	const releaseVelocityNormY =
-		rawEvent.velocityY / Math.max(1, dimensions.height);
-	const releaseVelocity = release.shouldDismiss
+	const handoffVelocityNormX = getPanReleaseHandoffVelocity(
+		rawEvent.velocityX,
+		dimensions.width,
+		releaseVelocityScale,
+	);
+	const handoffVelocityNormY = getPanReleaseHandoffVelocity(
+		rawEvent.velocityY,
+		dimensions.height,
+		releaseVelocityScale,
+	);
+	const handoffVelocity = release.shouldDismiss
 		? resolvePanReleaseVelocity(
 				runtime,
-				releaseVelocityNormX,
-				releaseVelocityNormY,
+				handoffVelocityNormX,
+				handoffVelocityNormY,
 			)
 		: 0;
 
 	return {
 		target: release.target,
 		shouldDismiss: release.shouldDismiss,
-		progressVelocity: progressDriven ? release.initialVelocity : 0,
+		progressVelocity: release.initialVelocity,
 		resetVelocityX,
 		resetVelocityY,
 		resetVelocityNormX: resetVelocityX / Math.max(1, dimensions.width),
 		resetVelocityNormY: resetVelocityY / Math.max(1, dimensions.height),
-		releaseVelocity,
-		resetNormalizedValues: !release.shouldDismiss || progressDriven,
-		resetNormalizedValuesImmediately:
-			release.resetNormalizedValuesImmediately === true,
-		preserveRawValues: release.shouldDismiss,
+		handoffVelocity,
 		commitProgress: release.commitProgress,
 		transitionSpec: release.transitionSpec,
 		resetSpec: release.resetSpec,

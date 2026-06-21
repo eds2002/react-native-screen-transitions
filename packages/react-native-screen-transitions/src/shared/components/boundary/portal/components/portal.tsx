@@ -108,7 +108,10 @@ export const Portal = memo(function Portal({
 	const activeHostCapturesScroll = activeHostKey
 		? getHostCapturesScroll(activeHostKey)
 		: false;
-	const progress = AnimationStore.getValue(progressScreenKey ?? "", "progress");
+	const progress = AnimationStore.getValue(
+		progressScreenKey ?? "",
+		"transitionProgress",
+	);
 	const closing = AnimationStore.getValue(progressScreenKey ?? "", "closing");
 
 	const updatePortalAttachment = useCallback(

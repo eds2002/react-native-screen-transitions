@@ -232,19 +232,20 @@ export const primeRuntimeSnapPoint = (
 	"worklet";
 	const {
 		policy,
-		stores: { animations },
-		lockedSnapPoint,
+		stores: { animations, gestures },
 	} = runtime;
 
-	const { resolvedSnapPoints, resolvedMaxSnapPoint } =
-		resolveRuntimeGestureSnapPoints(runtime);
+	const { resolvedSnapPoints } = resolveRuntimeGestureSnapPoints(runtime);
 
 	if (policy.gestureSnapLocked) {
-		lockedSnapPoint.set(
-			findNearestSnapPoint(animations.progress.get(), resolvedSnapPoints),
+		gestures.internal.lockedSnapPoint.set(
+			findNearestSnapPoint(
+				animations.transitionProgress.get(),
+				resolvedSnapPoints,
+			),
 		);
 		return;
 	}
 
-	lockedSnapPoint.set(resolvedMaxSnapPoint);
+	gestures.internal.lockedSnapPoint.set(null);
 };

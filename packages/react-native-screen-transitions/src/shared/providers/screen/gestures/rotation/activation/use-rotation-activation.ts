@@ -7,20 +7,20 @@ import type { SharedValue } from "react-native-reanimated";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePinchRuntime } from "../../shared/runtime";
 import type {
-	GestureCompositionActivation,
+	GestureCompositionOwner,
 	RotationGestureRuntime,
 } from "../../types";
 
 interface UseRotationActivationProps {
 	runtime: SharedValue<RotationGestureRuntime>;
 	screenOptions: ScreenOptionsContextValue;
-	gestureCompositionActivation: SharedValue<GestureCompositionActivation>;
+	gestureCompositionOwner: SharedValue<GestureCompositionOwner>;
 }
 
 export const useRotationActivation = ({
 	runtime,
 	screenOptions,
-	gestureCompositionActivation,
+	gestureCompositionOwner,
 }: UseRotationActivationProps) => {
 	const onTouchesDown = useCallback(
 		(
@@ -33,18 +33,15 @@ export const useRotationActivation = ({
 				screenOptions.get(),
 			);
 
-			if (gestureCompositionActivation.get() === "pan") {
-				stateManager?.fail();
-				return;
-			}
-
 			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager?.fail();
 				return;
 			}
 
 			if (event.numberOfTouches === 2) {
-				gestureCompositionActivation.set("pinch");
+				if (gestureCompositionOwner.get() === null) {
+					gestureCompositionOwner.set("pinch");
+				}
 				stateManager?.activate();
 				return;
 			}
@@ -53,7 +50,7 @@ export const useRotationActivation = ({
 				stateManager?.fail();
 			}
 		},
-		[runtime, screenOptions, gestureCompositionActivation],
+		[runtime, screenOptions, gestureCompositionOwner],
 	);
 
 	const onTouchesMove = useCallback(
@@ -70,14 +67,18 @@ export const useRotationActivation = ({
 			}
 
 			if (event.numberOfTouches === 2) {
-				gestureCompositionActivation.set("pinch");
+				if (gestureCompositionOwner.get() === null) {
+					gestureCompositionOwner.set("pinch");
+				}
 				stateManager.activate();
 				return;
 			}
 
-			stateManager.fail();
+			if (event.numberOfTouches > 2) {
+				stateManager.fail();
+			}
 		},
-		[runtime, screenOptions, gestureCompositionActivation],
+		[runtime, screenOptions, gestureCompositionOwner],
 	);
 
 	return useMemo(

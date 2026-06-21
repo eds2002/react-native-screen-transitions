@@ -75,7 +75,6 @@ Enable `navigationMaskEnabled` on the destination screen, then call `navigation.
     navigationMaskEnabled: true,
     gestureEnabled: true,
     gestureDirection: ["vertical", "horizontal"],
-    gestureProgressMode: "freeform",
     screenStyleInterpolator: ({ active, bounds }) => {
       "worklet";
 
@@ -105,17 +104,16 @@ Reveal reads the active gesture state from the transition runtime:
 
 - pan directions can drag the revealed container away from the target
 - `active.gesture.velocity` affects the dismiss handoff scale
-- `gestureProgressMode: "freeform"` is usually the right choice when you want the reveal container to respond to drag without letting drag progress directly own the whole screen transition
+- `active.gesture.handoff` keeps release-time values available while live gesture values reset
 
 ```tsx
 options={{
   gestureEnabled: true,
   gestureDirection: ["vertical", "horizontal"],
-  gestureProgressMode: "freeform",
 }}
 ```
 
-Use `active.gesture.raw` if you derive dynamic runtime options such as `gestureSensitivity` from gesture movement.
+Reveal uses `transitionProgress` internally for the bounds path, so drag movement can affect the live gesture values without dragging the source-to-destination geometry off its transition path. Use `active.gesture.raw` if you derive dynamic runtime options such as `gestureSensitivity` from gesture movement.
 
 ## Options
 
@@ -200,27 +198,6 @@ Velocity-driven depth for the dismiss scale orbit. Set `0` to remove the velocit
     <tr>
       <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>number</code></td>
       <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>0.5</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
-    </tr>
-  </tbody>
-</table>
-
-### `gestureProgressMode`
-
-Controls whether gesture displacement drives transition progress. Reveal defaults to freeform so drag can move the masked container without owning the full screen progress. Valid values are `"progress-driven"` and `"freeform"`.
-
-<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
-  <thead>
-    <tr>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
-      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>GestureProgressMode</code></td>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"freeform"</code></td>
       <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
     </tr>
   </tbody>
@@ -326,7 +303,7 @@ Use reveal when the destination content itself should grow out of the source and
   handoff. This works well for normal `.map()` rendered content, but layout
   containers such as `ScrollView` and virtualized lists such as `FlatList` can
   still clip or recycle children around their own layout bounds. In those cases,
-  the reveal animation may look less seamless. In the next version, we plan to
+  the reveal animation can show clipping. In the next version, we plan to
   move this through `react-native-teleport` so the handoff can escape those
   layout constraints with less reliance on z-index behavior.
 </Note>

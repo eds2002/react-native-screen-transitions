@@ -18,12 +18,43 @@
 		"releaseName": "v${version}",
 		"releaseNotes": "node ../../.github/scripts/release-notes.mjs ${version}"
 	},
+	"plugins": {
+		"@release-it/conventional-changelog": {
+			"infile": "CHANGELOG.md",
+			"header": "# Changelog",
+			"preset": {
+				"name": "conventionalcommits",
+				"types": [
+					{
+						"type": "feat",
+						"section": "Features"
+					},
+					{
+						"type": "fix",
+						"section": "Bug Fixes"
+					},
+					{
+						"type": "perf",
+						"section": "Performance Improvements"
+					},
+					{
+						"type": "revert",
+						"section": "Reverts"
+					}
+				]
+			}
+		}
+	},
 	"hooks": {
 		"before:init": [
 			"git fetch --prune --prune-tags origin",
 			"node ../../.github/scripts/prerelease-init.mjs"
 		],
 		"before:git:release": "node ../../.github/scripts/release-notes.mjs ${version} --check",
-		"after:bump": ["bun run --cwd ../.. build", "npm pack --dry-run"]
+		"after:bump": [
+			"node ../../.github/scripts/sync-bun-lock-version.mjs",
+			"bun run --cwd ../.. build",
+			"npm pack --dry-run"
+		]
 	}
 }

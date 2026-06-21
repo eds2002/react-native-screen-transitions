@@ -5,7 +5,7 @@ import { NativeStackAdapter } from "@/layouts/native-stack-adapter";
 import { PROFILE_IMAGE_BOUNDARY_ID } from "./constants";
 
 const imageDetailInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ bounds, progress, focused }) => {
+	({ active, bounds, focused }) => {
 		"worklet";
 
 		return {
@@ -18,9 +18,9 @@ const imageDetailInterpolator: ScreenTransitionConfig["screenStyleInterpolator"]
 			backdrop: focused
 				? {
 						backgroundColor: "black",
-						opacity: interpolate(progress, [0, 1, 2], [0, 0.62, 0]),
+						opacity: interpolate(active.transitionProgress, [0, 1, 2], [0, 0.62, 0]),
 					}
-				: null,
+				: undefined,
 		};
 	};
 
@@ -49,7 +49,6 @@ export default function NativeStackAdapterRecipeLayout() {
 					enableTransitions: true,
 					gestureEnabled: true,
 					gestureDirection: "bidirectional",
-					gestureProgressMode: "freeform",
 					screenStyleInterpolator: imageDetailInterpolator,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,

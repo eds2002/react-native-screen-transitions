@@ -42,6 +42,10 @@ With `react-native-screens`, blank stack sets `activityState={0}`, `shouldFreeze
 
 Use `hide` when back navigation should stay warm, but inactive views do not need to remain visible or keep rendering. It can reduce inactive React render pressure and native presentation work. It does not release JS memory, because the component tree is still mounted.
 
+<Note>
+  `hide` moves the inactive screen off-screen instead of using `display: "none"`. React Native Gesture Handler can fail to reattach the gesture detector after a screen is removed from the native view hierarchy. The off-screen transform is the current trade-off for keeping hidden screens warm without breaking gestures when they become active again.
+</Note>
+
 ## `pause`
 
 `pause` keeps the inactive screen mounted, attached, and visible, but freezes inactive rendering where native screens support it after safe paint.
@@ -87,14 +91,6 @@ That delay prevents blank frames during transitions.
 `unmount` is the cleanup mode. It is the option that directly releases JS component state and objects held by the inactive subtree.
 
 `keep` is the escape hatch for live inactive content and should not be chosen for performance.
-
-## Native Screen Touch Handoff
-
-Before v3.7, Android native screens had a closing-transition edge case.
-
-On iOS, `react-native-screens` backs stack presentation with UIKit's `UINavigationController`, which handles closing states more gracefully. On Android, fragment presentation could keep the outgoing screen in front until the close fully finished, so the screen behind it could appear visible without receiving touch events yet.
-
-v3.7 fixes that for blank stack by driving scene activity from the JS-managed stack state. Closing routes are retained for their exit animation, but they are non-interactive, and the visible route below can regain touch handling without waiting for the Android fragment close to finish.
 
 ## Future Plans
 
