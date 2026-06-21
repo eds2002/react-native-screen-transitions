@@ -1,0 +1,269 @@
+---
+title: "New in 3.9"
+pageTitle: "New in 3.9"
+summary: "A bounds release with teleport integration, bounds motion, a stronger scoped bounds API, and more reliable matched-element measurement."
+description: "A bounds release with teleport integration, bounds motion, a stronger scoped bounds API, and more reliable matched-element measurement."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "June 2026"
+order: 1
+to: /changelog/updating-to-3-9
+---
+
+v3.9 is a bounds release. The main work is a new teleport path for shared elements, a scoped bounds API, and a `motion` hook that lets bounds follow custom paths without reimplementing measurement.
+
+This release is also a cleanup pass. Bounds links now tolerate destination-first measurement, scroll-hosted elements, grouped active ids, and matched-screen portal attachment much better than the old store shape.
+
+## Features
+
+### Teleport Boundaries
+
+Boundaries can now opt into portal rendering with the `portal` prop.
+
+```tsx
+<Transition.Boundary.Trigger
+  id="cover"
+  portal={{ attachTo: "matched-screen" }}
+  onPress={() => navigation.push("Player")}
+>
+  <Transition.Boundary.Target style={styles.cover} />
+</Transition.Boundary.Trigger>
+```
+
+Portal-enabled boundaries keep their original measured layout in place, then render the animated matched element through `react-native-teleport` while the transition is active. This lets shared elements escape clipping, list containers, headers, and other local stacking contexts without changing the source layout.
+
+The supported attachment targets are:
+
+- `current-screen`: attach the portal to the boundary's own active screen host.
+- `matched-screen`: attach the portal to the matched screen's active host for the whole handoff.
+
+Use `matched-screen` when the source should visually move into the destination screen before returning home on close. Use `current-screen` when the element should stay inside the current screen's coordinate space but still escape local clipping.
+
+### Boundary Hosts
+
+`Transition.Boundary.Host` marks the coordinate space where portal content should render.
+
+```tsx
+<Transition.ScrollView>
+  <Transition.Boundary.Host />
+
+  <Transition.Boundary.Trigger id="avatar" portal>
+    <Image source={avatar} />
+  </Transition.Boundary.Trigger>
+</Transition.ScrollView>
+```
+
+Each screen has a fallback host, so simple portals can work without adding a host manually. Add an explicit host when a boundary lives inside a scroll view or another coordinate space that should own the portal placement.
+
+Scroll hosts are tracked, measured, and compensated during the transition. That means a portal that starts inside a scrolled list can still land back on the live placeholder even if the scroll offset changes during the handoff.
+
+### Teleport Slot Control
+
+Portal-enabled boundaries can be enabled or disabled per interpolator frame through slot props.
+
+```tsx
+screenStyleInterpolator: ({ bounds, current }) => {
+  "worklet";
+
+  return {
+    cover: {
+      style: bounds("cover").styles(),
+      props: {
+        teleport: { enabled: current.progress > 0.1 },
+      },
+    },
+  };
+};
+```
+
+Omitting `teleport` keeps teleport enabled. Set it to `false`, or `{ enabled: false }`, when a recipe needs the boundary to detach for part of the transition.
+
+### Scoped Bounds API
+
+`bounds()` now resolves an identity first, then exposes methods for the things you can do with that bound.
+
+```tsx
+screenStyleInterpolator: ({ bounds }) => {
+  "worklet";
+
+  const avatar = bounds("avatar");
+
+  return {
+    avatar: avatar.styles({
+      offset: { y: -12 },
+    }),
+  };
+};
+```
+
+The scoped accessor has four surfaces:
+
+- `bounds(id).styles(options)` returns animated style props.
+- `bounds(id).math(options)` returns raw numeric geometry.
+- `bounds(id).link(id?)` returns the active source/destination link.
+- `bounds(id).navigation.zoom()` and `bounds(id).navigation.reveal()` return the built-in navigation recipes.
+
+Bound identities can be a string or number, or an object with `{ id, group }`.
+
+```tsx
+const card = bounds({ group: "feed", id: item.id });
+const style = card.styles({ method: "size" });
+const link = card.link();
+```
+
+This replaces the looser options-object style that mixed identity, raw output, link access, and style computation in one call.
+
+### Bounds Motion
+
+Bounds style and math calls now accept a `motion` resolver.
+
+```tsx
+const cardStyle = bounds("card").styles({
+  motion: ({ current, progress, start, props }) => {
+    "worklet";
+
+    const envelope = Math.sin(progress * Math.PI);
+    const screenCenter = props.layouts.screen.width / 2;
+    const side = start.pageX + start.width / 2 < screenCenter ? -1 : 1;
+
+    return {
+      x: current.x + side * envelope * 48,
+      y: current.y - envelope * 64,
+      scale: current.scale * (1 + envelope * 0.08),
+      rotate: side * envelope * 8,
+      rotateX: envelope * 12,
+      rotateY: side * envelope * -10,
+      perspective: 700,
+    };
+  },
+});
+```
+
+`motion` receives the generated bounds transform, normalized motion progress, resolved start and end rects, and the current interpolation props. Return a replacement transform to bend the path, add depth, overshoot, cancel parent motion, or keep a shared element visually independent from the moving screen.
+
+The returned transform supports:
+
+- `x` and `y`
+- `scale`
+- `rotate`
+- `rotateX`
+- `rotateY`
+- `perspective`
+- `transformOrigin`
+
+For `method: "size"`, the returned scale is applied to the generated width and height. For `math()`, rotation fields are returned alongside the raw bounds values so custom renderers can use the same motion output.
+
+### Stronger Matched Bounds
+
+The bounds store now models source and destination links as explicit screen pairs with status.
+
+Links can be:
+
+- `source-incomplete`
+- `destination-incomplete`
+- `complete`
+
+That allows destination-first measurement. A destination can attach before the source has been captured, and the source can later promote the pending link into a complete pair. This is important for nested stacks, grouped lists, and routes where the destination layout is ready before the press source is refreshed.
+
+Grouped bounds also track active members more carefully. Creating a scoped accessor for a grouped id syncs the active group member, so navigation recipes and custom styles resolve the intended member instead of falling back to stale group state.
+
+### Refresh And Scroll Reliability
+
+Bounds refreshes are now driven through central source and destination signals. This keeps refresh behavior consistent across open, close, settled, scroll-settled, grouped, and nested-screen cases.
+
+The measurement pipeline also normalizes bounds against the screen origin before it writes to the store, rejects out-of-viewport destination measurements, and clamps scroll deltas so rubber-band overscroll does not distort portal placement.
+
+For matched-screen portals, destination refreshes are skipped once the portal is attached. At that point the teleported source is the animated thing, so refreshing the destination during the same handoff can make the active target jump.
+
+### New Examples
+
+The e2e app now includes focused examples for the new bounds work:
+
+- `teleport`: current-screen and matched-screen boundary portals.
+- `bounds/matched-screen`: multiple video cards using matched-screen attachment and bounds motion.
+- `bounds/sync/opening-transform`: a bounds motion arc that cancels screen motion and adds depth.
+- `reels`: a larger shared-element flow using the new video assets and portal behavior.
+
+The existing zoom, sync, and style-id examples were also updated to use the scoped bounds API.
+
+## Breaking Changes
+
+### Install react-native-teleport
+
+`react-native-teleport` is now a peer dependency.
+
+```sh
+bun add react-native-teleport
+```
+
+The package range is `>=1.1.0 <2.0.0`.
+
+### Move Bounds Calls To The Scoped API
+
+The old bounds API mixed the target id and compute options in the same call. The new API scopes first, then computes.
+
+```tsx
+// Before
+bounds({ id: "avatar", offset: { y: -12 } });
+
+// After
+bounds("avatar").styles({
+  offset: { y: -12 },
+});
+```
+
+Raw geometry moved from `raw: true` to `math()`.
+
+```tsx
+// Before
+bounds({ id: "avatar", raw: true, method: "content" });
+
+// After
+bounds("avatar").math({
+  method: "content",
+});
+```
+
+Link access moved onto the scoped accessor.
+
+```tsx
+const link = bounds("avatar").link();
+const otherLink = bounds("group:avatar").link("group:other-avatar");
+```
+
+Navigation helpers also live on the scoped accessor.
+
+```tsx
+return bounds("avatar").navigation.zoom({
+  target: "bound",
+});
+```
+
+### Replace Legacy Helper Escapes
+
+Older experimental helpers such as direct measured snapshots, raw interpolation helpers, and link compute shortcuts should be replaced with the scoped API:
+
+- Use `bounds(id).math()` for raw geometry.
+- Use `bounds(id).styles()` for animated style output.
+- Use `bounds(id).link()` for source/destination link inspection.
+- Use `motion` when a recipe needs to reshape the generated bounds path.
+
+## Migration Notes
+
+- Add `react-native-teleport` to apps that use this package.
+- Replace `bounds({ id, ...options })` style output with `bounds(id).styles(options)`.
+- Replace `bounds({ id, raw: true, ...options })` with `bounds(id).math(options)`.
+- Replace bounds link helper calls with `bounds(id).link()`.
+- Keep using `offset`; `gestures` still exists as a deprecated alias for offset-style movement.
+- Use `portal` on a boundary only when the element needs to escape local clipping or attach to another screen.
+- Add `Transition.Boundary.Host` inside a scrollable coordinate space when portal placement should follow that scroll view.
+- Use `motion` instead of reimplementing bounds measurement when an element needs custom arc, depth, rotation, or overshoot behavior.
+
+## Related Reading
+
+- [Shared Elements](/shared-elements)
+- [Navigation Zoom](/navigation-zoom)
+- [Reveal](/reveal)
+- [Custom Animations](/custom-animations)
+- [Transition Components](/transition-components)
