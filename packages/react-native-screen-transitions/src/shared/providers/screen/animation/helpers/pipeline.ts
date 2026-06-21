@@ -78,9 +78,9 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 	const currentRouteKey = currDescriptor?.route?.key;
 	const currentIndex = routeKeys.indexOf(currentRouteKey);
-	const effectiveProgressValues = useMemo(() => {
+	const visualProgressValues = useMemo(() => {
 		return routeKeys.map((routeKey) =>
-			AnimationStore.getValue(routeKey, "effectiveProgress"),
+			AnimationStore.getValue(routeKey, "visualProgress"),
 		);
 	}, [routeKeys]);
 
@@ -143,7 +143,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 			frame.stackProgress = deriveStackProgress(
 				routeKeys,
-				effectiveProgressValues,
+				visualProgressValues,
 				currentIndex,
 				frame.progress,
 				currentRouteKey,
@@ -151,7 +151,7 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				nextRouteKey,
 				frame.next?.progress,
 			);
-			frame.logicallySettled = frame.active.logicallySettled;
+			frame.logicallySettled = frame.active.settled;
 
 			return frame;
 		}, false);

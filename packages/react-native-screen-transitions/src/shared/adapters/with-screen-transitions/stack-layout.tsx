@@ -10,11 +10,6 @@ import {
 	useStackCoreContext,
 	withStackCore,
 } from "../../providers/stack/core.provider";
-import { useStackDerived } from "../../providers/stack/helpers/use-stack-derived";
-import {
-	AnimationStore,
-	type AnimationStoreMap,
-} from "../../stores/animation.store";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
 import { StackType } from "../../types/stack.types";
 import { isOverlayVisible } from "../../utils/overlay/visibility";
@@ -44,7 +39,6 @@ type TransitionStackState = {
 	routes: BaseStackRoute[];
 	routeKeys: string[];
 	scenes: ScreenTransitionsAdapterScene[];
-	animationMaps: AnimationStoreMap[];
 	routeIndexByKey: Map<string, number>;
 	shouldShowFloatOverlay: boolean;
 };
@@ -81,7 +75,6 @@ function buildTransitionStackState({
 	const allRoutes = routes.concat(preloadedRoutes);
 	const routeKeys: string[] = [];
 	const scenes: ScreenTransitionsAdapterScene[] = [];
-	const animationMaps: AnimationStoreMap[] = [];
 	const routeIndexByKey = new Map<string, number>();
 	let shouldShowFloatOverlay = false;
 
@@ -114,7 +107,6 @@ function buildTransitionStackState({
 			previousDescriptor,
 		});
 		routeKeys.push(route.key);
-		animationMaps.push(AnimationStore.getBag(route.key));
 		routeIndexByKey.set(route.key, sceneIndex);
 
 		if (
@@ -131,7 +123,6 @@ function buildTransitionStackState({
 		routes: allRoutes,
 		routeKeys,
 		scenes,
-		animationMaps,
 		routeIndexByKey,
 		shouldShowFloatOverlay,
 	};
@@ -155,9 +146,6 @@ function ScreenTransitionsStackContent({
 			}),
 		[layoutArgs.state, layoutArgs.descriptors],
 	);
-	const { optimisticFocusedIndex } = useStackDerived(
-		transitionState.animationMaps,
-	);
 	const stackContextValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
@@ -165,7 +153,6 @@ function ScreenTransitionsStackContent({
 			routeKeys: transitionState.routeKeys,
 			routes: transitionState.routes as Route<string>[],
 			scenes: transitionState.scenes,
-			optimisticFocusedIndex,
 			focusedIndex: layoutArgs.state.index,
 		}),
 		[
@@ -175,7 +162,6 @@ function ScreenTransitionsStackContent({
 			transitionState.routeKeys,
 			transitionState.routes,
 			transitionState.scenes,
-			optimisticFocusedIndex,
 		],
 	);
 	const adapterContextValue = useMemo(

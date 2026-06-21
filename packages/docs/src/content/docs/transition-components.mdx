@@ -1,8 +1,8 @@
 ---
 title: "Transition Components"
 pageTitle: "Transition Components"
-summary: "Reference for the package surface: navigator creators, Transition primitives, boundary components, factories, presets, and named helpers."
-description: "Reference for the package surface: navigator creators, Transition primitives, boundary components, factories, presets, and named helpers."
+summary: "Transition primitives, boundary components, presets, and specs."
+description: "Transition primitives, boundary components, presets, and specs."
 eyebrow: "Components"
 group: "Components"
 order: 4
@@ -11,23 +11,17 @@ to: /transition-components
 
 ## Package Surface
 
-`react-native-screen-transitions` exposes three main API surfaces:
+`react-native-screen-transitions` exposes four main API surfaces:
 
 - navigator creators from subpaths
 - adapter helpers for existing navigators
 - the default `Transition` export from the main package
-- named helpers, hooks, constants, and types from the main package
+- named hooks, helpers, constants, and types from the main package
 
 ```tsx
 import Transition, {
   withScreenTransitions,
   snapTo,
-  useHistory,
-  useScreenAnimation,
-  useScreenGesture,
-  useScreenState,
-  NAVIGATION_MASK_CONTAINER_STYLE_ID,
-  NAVIGATION_MASK_ELEMENT_STYLE_ID,
   type ScreenStyleInterpolator,
   type ScreenTransitionConfig,
 } from "react-native-screen-transitions";
@@ -35,7 +29,9 @@ import Transition, {
 import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
 ```
 
-Use the blank-stack subpath export to build the recommended navigator. Use `withScreenTransitions()` to adapt existing native-stack navigators. Use `Transition` for transition-aware primitives, boundary components, factories, presets, and specs. Use the named exports for helpers like `snapTo()`, hooks like `useScreenAnimation()`, and public constants such as the navigation mask ids.
+Use the blank-stack subpath export to build the recommended navigator. Use `withScreenTransitions()` to adapt existing native-stack navigators. Use `Transition` for transition-aware primitives, boundary components, presets, and specs.
+
+For hooks and factories such as `useScreenAnimation()`, `useScreenGesture()`, `createTransitionAwareComponent()`, and `createBoundaryComponent()`, see [API](/api).
 
 ## Navigator Creators
 
@@ -57,8 +53,6 @@ const Stack = createBlankStackNavigator();
 ```
 
 All transition configuration still lives on screen `options`.
-
-The bundled native-stack creator from `react-native-screen-transitions/native-stack` remains available for compatibility, but is deprecated. For native-stack integration, use `@react-navigation/native-stack` with `withScreenTransitions()`.
 
 Related reading: [Stack Types](/stack-types) and [Adapters](/adapters).
 
@@ -88,7 +82,7 @@ Use this when the element is interactive.
 
 ### Transition.ScrollView
 
-This participates in the scroll registry and hands off gestures.
+This participates in the scroll registry, hands off gestures, and publishes scroll metadata to `current.layouts.scroll`.
 
 ```tsx
 <Transition.ScrollView showsVerticalScrollIndicator={false}>
@@ -98,7 +92,7 @@ This participates in the scroll registry and hands off gestures.
 
 ### Transition.FlatList
 
-This gives list content the same gesture-aware behavior.
+This gives list content the same gesture-aware scroll behavior.
 
 ```tsx
 <Transition.FlatList
@@ -108,7 +102,7 @@ This gives list content the same gesture-aware behavior.
 />
 ```
 
-Use transition-aware scrollables inside sheets and other gesture-driven screens whenever possible.
+Use transition-aware scrollables inside sheets and other gesture-driven screens whenever possible. Custom scrollables can opt into the same behavior with `Transition.createTransitionAwareComponent(Component, { isScrollable: true })`.
 
 ### Common Primitive Props
 
@@ -183,43 +177,6 @@ It does not take its own `id`. It inherits the surrounding boundary owner and ch
 
 They keep the wrapped component props as well. `Trigger` also accepts `onPress`.
 
-## Factories
-
-### Transition.createTransitionAwareComponent
-
-Wrap a custom component so it can receive transition-aware styles and props.
-
-```tsx
-const TransitionBlurView = Transition.createTransitionAwareComponent(BlurView, {
-  alreadyAnimated: false,
-});
-```
-
-Options:
-
-- `alreadyAnimated?: boolean`
-- `isScrollable?: boolean`
-
-Set `isScrollable: true` when the wrapped component is scrollable and should participate in gesture handoff.
-
-### Transition.createBoundaryComponent
-
-Wrap a custom component with the boundary system.
-
-```tsx
-const BoundaryImage = Transition.createBoundaryComponent(Image, {
-  alreadyAnimated: false,
-});
-
-<BoundaryImage id="avatar" source={avatar} style={styles.avatar} />
-```
-
-Option:
-
-- `alreadyAnimated?: boolean`
-
-The wrapped component receives boundary props like `id`, `group`, `anchor`, `scaleMode`, `target`, and `method`.
-
 ## Presets and Specs
 
 The default export also includes `Transition.Presets` and `Transition.Specs`.
@@ -255,62 +212,9 @@ Specs:
 />
 ```
 
-## Named Helpers and Hooks
+## Hooks, Factories, and Helpers
 
-These are named exports from the package, not members of the default `Transition` object.
-
-### snapTo
-
-Programmatically snap the currently focused sheet to a detent index.
-
-```tsx
-snapTo(0);
-snapTo(1);
-```
-
-For stack-scoped snapping, use `useScreenState().snapTo(index)`.
-
-### useScreenAnimation
-
-Read the current screen animation derived value, or target a relative transition scope.
-
-```tsx
-const animation = useScreenAnimation();
-const parentAnimation = useScreenAnimation({ depth: -1 });
-const childAnimation = useScreenAnimation({ depth: 1 });
-```
-
-Legacy string targets such as `"parent"` and `"root"` still work for `useScreenAnimation()`, but new code should use `{ depth }`.
-
-### useScreenGesture
-
-Read the screen navigation pan-gesture ref.
-
-```tsx
-const parentGesture = useScreenGesture({ depth: -1 });
-```
-
-`useScreenGesture()` supports the current screen with `depth: 0` and ancestors with negative depths.
-
-### useScreenState
-
-Read stack-aware state for the focused route, including a scoped `snapTo()`.
-
-```tsx
-const screenState = useScreenState();
-screenState.snapTo(1);
-```
-
-### useHistory
-
-Expose stack history information for advanced flows.
-
-### Reserved Mask IDs
-
-- `NAVIGATION_MASK_CONTAINER_STYLE_ID`
-- `NAVIGATION_MASK_ELEMENT_STYLE_ID`
-
-Use these from `screenStyleInterpolator` when you need to control the mask container or mask element directly.
+See [API](/api) for `useScreenAnimation()`, `useScreenGesture()`, `useHistory()`, `createTransitionAwareComponent()`, `createBoundaryComponent()`, `snapTo()`, and reserved mask ids.
 
 ## Legacy Compatibility
 

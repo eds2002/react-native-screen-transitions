@@ -149,6 +149,10 @@ export default function RootLayout() {
 					name="native-stack-adapter-recipe"
 					options={{ ...IOSSlide() }}
 				/>
+				<StackNavigator.Screen
+					name="gesture-velocity-recipe"
+					options={{ ...IOSSlide() }}
+				/>
 				<StackNavigator.Screen name="stack-benchmark" />
 				<StackNavigator.Screen name="gestures" />
 				<StackNavigator.Screen

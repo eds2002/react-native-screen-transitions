@@ -1,5 +1,6 @@
 import type { SharedValue } from "react-native-reanimated";
 import type { TransitionInterpolatorOptions } from "../../../../types/animation.types";
+import type { GestureDirectionEntry } from "../../../../types/gesture.types";
 
 export type SelectedInterpolatorOwner = "current" | "next";
 
@@ -8,17 +9,39 @@ export type SelectedInterpolatorOptions = {
 	options?: TransitionInterpolatorOptions;
 };
 
+const areGestureDirectionEntriesEqual = (
+	left: GestureDirectionEntry,
+	right: GestureDirectionEntry,
+) => {
+	"worklet";
+	if (left === right) return true;
+
+	if (typeof left === "string" || typeof right === "string") {
+		return false;
+	}
+
+	return left.gesture === right.gesture && left.area === right.area;
+};
+
 const areGestureDirectionsEqual = (
 	left: TransitionInterpolatorOptions["gestureDirection"],
 	right: TransitionInterpolatorOptions["gestureDirection"],
 ) => {
 	"worklet";
 	if (left === right) return true;
+	if (!left || !right) return false;
+	if (
+		!Array.isArray(left) &&
+		!Array.isArray(right) &&
+		areGestureDirectionEntriesEqual(left, right)
+	) {
+		return true;
+	}
 	if (!Array.isArray(left) || !Array.isArray(right)) return false;
 	if (left.length !== right.length) return false;
 
 	for (let i = 0; i < left.length; i++) {
-		if (left[i] !== right[i]) {
+		if (!areGestureDirectionEntriesEqual(left[i], right[i])) {
 			return false;
 		}
 	}

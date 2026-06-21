@@ -5,10 +5,7 @@ import type {
 	ScreenTransitionOptions,
 	ScreenTransitionState,
 } from "./types/animation.types";
-import type {
-	ActivationArea,
-	GestureProgressMode,
-} from "./types/gesture.types";
+import type { ActivationArea } from "./types/gesture.types";
 import type {
 	GestureTracking,
 	Layout,
@@ -48,6 +45,7 @@ const DEFAULT_RAW_GESTURE_VALUES = {
 	normY: 0,
 	scale: 1,
 	normScale: 0,
+	rotation: 0,
 } as const;
 
 const DEFAULT_GESTURE_VALUES = {
@@ -56,6 +54,15 @@ const DEFAULT_GESTURE_VALUES = {
 	focalX: 0,
 	focalY: 0,
 	raw: DEFAULT_RAW_GESTURE_VALUES,
+	handoff: {
+		...DEFAULT_RAW_GESTURE_VALUES,
+		velocity: 0,
+		focalX: 0,
+		focalY: 0,
+		raw: DEFAULT_RAW_GESTURE_VALUES,
+		active: null,
+		direction: null,
+	},
 	dismissing: 0,
 	dragging: 0,
 	settling: 0,
@@ -72,6 +79,10 @@ const DEFAULT_GESTURE_VALUES = {
 const createDefaultGestureValues = () => ({
 	...DEFAULT_GESTURE_VALUES,
 	raw: { ...DEFAULT_RAW_GESTURE_VALUES },
+	handoff: {
+		...DEFAULT_GESTURE_VALUES.handoff,
+		raw: { ...DEFAULT_RAW_GESTURE_VALUES },
+	},
 });
 
 export const DEFAULT_SCREEN_TRANSITION_OPTIONS: ScreenTransitionOptions =
@@ -86,6 +97,7 @@ export const createScreenTransitionState = (
 	options: ScreenTransitionOptions = DEFAULT_SCREEN_TRANSITION_OPTIONS,
 ): ScreenTransitionState => ({
 	progress: 0,
+	transitionProgress: 0,
 	closing: 0,
 	animating: 0,
 	willAnimate: 0,
@@ -112,6 +124,7 @@ export const createScreenTransitionState = (
 export const DEFAULT_SCREEN_TRANSITION_STATE: ScreenTransitionState =
 	Object.freeze({
 		progress: 0,
+		transitionProgress: 0,
 		closing: 0,
 		animating: 0,
 		willAnimate: 0,
@@ -166,8 +179,6 @@ export const DEFAULT_GESTURE_SENSITIVITY = 1;
 export const DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE = 1;
 export const DEFAULT_GESTURE_DIRECTION = "horizontal";
 export const DEFAULT_GESTURE_TRACKING: GestureTracking = "auto";
-export const DEFAULT_GESTURE_PROGRESS_MODE: GestureProgressMode =
-	"progress-driven";
 export const DEFAULT_GESTURE_SNAP_LOCKED = false;
 export const DEFAULT_GESTURE_ACTIVATION_AREA: ActivationArea = "screen";
 export const DEFAULT_SHEET_SCROLL_GESTURE_BEHAVIOR: SheetScrollGestureBehavior =
@@ -182,14 +193,3 @@ export const FALSE = 0;
  * Small value for floating-point comparisons to handle animation/interpolation imprecision
  */
 export const EPSILON = 1e-5;
-
-/**
- * Number of consecutive frames progress must remain near its target before it
- * is treated as logically settled.
- */
-export const LOGICAL_SETTLE_REQUIRED_FRAMES = 5;
-
-/**
- * Progress distance from target required for logical settle.
- */
-export const LOGICAL_SETTLE_PROGRESS_THRESHOLD = 0.001;

@@ -3,7 +3,7 @@ import { StyleSheet } from "react-native";
 import Animated, { type SharedValue } from "react-native-reanimated";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
-import { MaybeFloatingContainer } from "./components/maybe-floating-container";
+import { FloatingOverlayLayer } from "./components/floating-overlay-layer";
 import { useInterpolatedStylesMap } from "./hooks/use-interpolated-style-maps";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useResolvedStylesMap } from "./hooks/use-resolved-slot-style-map";
@@ -41,14 +41,14 @@ export const {
 			stylesMap,
 		},
 		children: (
-			<MaybeFloatingContainer isFloatingOverlay={isFloatingOverlay}>
+			<FloatingOverlayLayer enabled={isFloatingOverlay}>
 				<Animated.View
 					style={[styles.container, animatedStyle]}
 					animatedProps={animatedProps}
 				>
 					{children}
 				</Animated.View>
-			</MaybeFloatingContainer>
+			</FloatingOverlayLayer>
 		),
 	};
 });

@@ -2,7 +2,7 @@ import { runOnJS, type SharedValue } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../constants";
 import type { AnimationStoreMap } from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
-import { animate } from "./animate";
+import { animate, isSpringAnimationConfig } from "./animate";
 
 interface AnimateToProgressProps {
 	/**
@@ -60,15 +60,20 @@ export const animateToProgress = ({
 	// Select spec based on direction (closing uses close spec, otherwise open)
 	const config = isClosing ? spec?.close : spec?.open;
 
-	const isSpringConfig =
-		!!config && !("duration" in config) && !("easing" in config);
+	const isSpringConfig = isSpringAnimationConfig(config);
 
 	const effectiveConfig =
 		isSpringConfig && typeof initialVelocity === "number"
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const { progress, willAnimate, progressAnimating, entering } = animations;
+	const {
+		transitionProgress,
+		willAnimate,
+		progressAnimating,
+		progressSettled,
+		entering,
+	} = animations;
 
 	const startAnimation = () => {
 		"worklet";
@@ -81,7 +86,8 @@ export const animateToProgress = ({
 
 		if (!config) {
 			progressAnimating.set(FALSE);
-			progress.set(value);
+			progressSettled.set(TRUE);
+			transitionProgress.set(value);
 			if (shouldClearEnteringOnFinish) {
 				entering.set(FALSE);
 			}
@@ -93,17 +99,22 @@ export const animateToProgress = ({
 		}
 
 		progressAnimating.set(TRUE); //<-- Do not move this into the callback
-		progress.set(
-			animate(value, effectiveConfig, (finished) => {
+		progressSettled.set(FALSE);
+		transitionProgress.set(
+			animate(value, effectiveConfig, (state) => {
 				"worklet";
-				if (!finished) return;
+				if (state.settled) {
+					progressSettled.set(TRUE);
+				}
+
+				if (!state.finished) return;
 
 				if (shouldClearEnteringOnFinish) {
 					entering.set(FALSE);
 				}
 
 				if (onAnimationFinish) {
-					runOnJS(onAnimationFinish)(finished);
+					runOnJS(onAnimationFinish)(state.finished);
 				}
 
 				// Delay clearing progress animation by one frame to ensure final frame is painted

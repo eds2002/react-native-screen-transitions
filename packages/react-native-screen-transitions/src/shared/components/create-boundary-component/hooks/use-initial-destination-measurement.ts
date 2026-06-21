@@ -34,7 +34,10 @@ export const useInitialDestinationMeasurement = ({
 	ancestorScreenKeys,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
-	const progress = AnimationStore.getValue(currentScreenKey, "progress");
+	const transitionProgress = AnimationStore.getValue(
+		currentScreenKey,
+		"transitionProgress",
+	);
 	const system = SystemStore.getBag(currentScreenKey);
 	const { pendingLifecycleRequestKind } = system;
 	const { blockLifecycleStart, unblockLifecycleStart } = system.actions;
@@ -83,7 +86,7 @@ export const useInitialDestinationMeasurement = ({
 				pendingLifecycleRequestKind.get() ===
 				LifecycleTransitionRequestKind.Open;
 
-			const isWaitingForOpenToStart = progress.get() <= 0;
+			const isWaitingForOpenToStart = transitionProgress.get() <= 0;
 
 			if (!hasPendingOpenRequest || !isWaitingForOpenToStart) {
 				return [0, retryTick] as const;

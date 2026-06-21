@@ -1,7 +1,6 @@
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_PROGRESS_MODE,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	DEFAULT_GESTURE_SENSITIVITY,
 	DEFAULT_GESTURE_SNAP_LOCKED,
@@ -14,15 +13,12 @@ import type {
 	ActivationArea,
 	GestureActivationArea,
 	GestureDirection,
-	ScreenTransitionOptions,
+	GestureDirectionActivationArea,
+	GestureDirectionEntry,
+	ScreenTransitionConfig,
 	TransitionInterpolatedStyle,
 } from "../../../types";
 import type { BackdropBehavior } from "../../../types/screen.types";
-import {
-	gestureProgressModeDrivesProgress,
-	isGestureProgressMode,
-	resolveGestureProgressMode,
-} from "../../../utils/gesture-progress-mode";
 import { resolveSheetScrollGestureBehavior } from "../../../utils/resolve-screen-transition-options";
 import type {
 	RequiredScreenOption,
@@ -30,22 +26,6 @@ import type {
 	ScreenOptionsSnapshot,
 	ScreenOptionsState,
 } from "./types";
-
-const cloneGestureDirection = (
-	direction: RequiredScreenOption<"gestureDirection">,
-) => {
-	"worklet";
-	return Array.isArray(direction) ? [...direction] : direction;
-};
-
-const cloneGestureActivationArea = (
-	activationArea: RequiredScreenOption<"gestureActivationArea">,
-) => {
-	"worklet";
-	return typeof activationArea === "object" && activationArea !== null
-		? { ...activationArea }
-		: activationArea;
-};
 
 const resolveBooleanOption = <T extends boolean | undefined>(
 	value: unknown,
@@ -78,18 +58,68 @@ const isGestureDirection = (value: unknown): value is GestureDirection => {
 	);
 };
 
+const isGestureDirectionActivationArea = (
+	value: unknown,
+): value is GestureDirectionActivationArea => {
+	"worklet";
+	return (
+		value === "edge" ||
+		value === "screen" ||
+		(typeof value === "number" && Number.isFinite(value) && value >= 0)
+	);
+};
+
+const isGestureDirectionEntry = (
+	value: unknown,
+): value is GestureDirectionEntry => {
+	"worklet";
+	if (isGestureDirection(value)) {
+		return true;
+	}
+
+	if (typeof value !== "object" || value === null || Array.isArray(value)) {
+		return false;
+	}
+
+	const config = value as Record<string, unknown>;
+	return (
+		isGestureDirection(config.gesture) &&
+		(config.area === undefined || isGestureDirectionActivationArea(config.area))
+	);
+};
+
+const cloneGestureDirectionEntry = (
+	entry: GestureDirectionEntry,
+): GestureDirectionEntry => {
+	"worklet";
+	if (typeof entry === "string") {
+		return entry;
+	}
+
+	return entry.area === undefined
+		? { gesture: entry.gesture }
+		: { gesture: entry.gesture, area: entry.area };
+};
+
 const resolveGestureDirectionOption = (
 	value: unknown,
 	fallback: RequiredScreenOption<"gestureDirection">,
 ): RequiredScreenOption<"gestureDirection"> => {
 	"worklet";
-	if (isGestureDirection(value)) {
-		return value;
+	if (isGestureDirectionEntry(value)) {
+		return cloneGestureDirectionEntry(value);
 	}
-	if (Array.isArray(value) && value.every(isGestureDirection)) {
-		return [...value];
+	if (Array.isArray(value)) {
+		const entries: GestureDirectionEntry[] = [];
+		for (const entry of value) {
+			if (!isGestureDirectionEntry(entry)) {
+				return fallback;
+			}
+			entries.push(cloneGestureDirectionEntry(entry));
+		}
+		return entries;
 	}
-	return cloneGestureDirection(fallback);
+	return fallback;
 };
 
 const isActivationArea = (value: unknown): value is ActivationArea => {
@@ -114,7 +144,7 @@ const resolveGestureActivationAreaOption = (
 			(area.bottom === undefined || isActivationArea(area.bottom));
 		return isValid ? (area as GestureActivationArea) : fallback;
 	}
-	return cloneGestureActivationArea(fallback);
+	return fallback;
 };
 
 const resolveSheetScrollGestureBehaviorOption = (
@@ -150,25 +180,6 @@ const resolveBackdropBehaviorOption = (
 		: fallback;
 };
 
-const resolveGestureProgressModeOption = (
-	gestureProgressMode: unknown,
-	gestureDrivesProgress: unknown,
-	fallback: RequiredScreenOption<"gestureProgressMode">,
-): RequiredScreenOption<"gestureProgressMode"> => {
-	"worklet";
-	if (isGestureProgressMode(gestureProgressMode)) {
-		return gestureProgressMode;
-	}
-
-	return resolveGestureProgressMode({
-		gestureDrivesProgress:
-			typeof gestureDrivesProgress === "boolean"
-				? gestureDrivesProgress
-				: undefined,
-		fallback,
-	});
-};
-
 const areGestureActivationAreasEqual = (
 	left: RequiredScreenOption<"gestureActivationArea">,
 	right: RequiredScreenOption<"gestureActivationArea">,
@@ -193,17 +204,37 @@ const areGestureActivationAreasEqual = (
 	);
 };
 
+const areGestureDirectionEntriesEqual = (
+	left: GestureDirectionEntry,
+	right: GestureDirectionEntry,
+) => {
+	"worklet";
+	if (left === right) return true;
+
+	if (typeof left === "string" || typeof right === "string") {
+		return false;
+	}
+
+	return left.gesture === right.gesture && left.area === right.area;
+};
+
 const areGestureDirectionsEqual = (
 	left: RequiredScreenOption<"gestureDirection">,
 	right: RequiredScreenOption<"gestureDirection">,
 ) => {
 	"worklet";
-	if (left === right) return true;
+	if (
+		!Array.isArray(left) &&
+		!Array.isArray(right) &&
+		areGestureDirectionEntriesEqual(left, right)
+	) {
+		return true;
+	}
 	if (!Array.isArray(left) || !Array.isArray(right)) return false;
 	if (left.length !== right.length) return false;
 
 	for (let i = 0; i < left.length; i++) {
-		if (left[i] !== right[i]) {
+		if (!areGestureDirectionEntriesEqual(left[i], right[i])) {
 			return false;
 		}
 	}
@@ -226,8 +257,6 @@ const areScreenOptionsEqual = (
 		left.gestureSnapVelocityImpact === right.gestureSnapVelocityImpact &&
 		left.gestureReleaseVelocityScale === right.gestureReleaseVelocityScale &&
 		left.gestureResponseDistance === right.gestureResponseDistance &&
-		left.gestureProgressMode === right.gestureProgressMode &&
-		left.gestureDrivesProgress === right.gestureDrivesProgress &&
 		areGestureActivationAreasEqual(
 			left.gestureActivationArea,
 			right.gestureActivationArea,
@@ -235,19 +264,14 @@ const areScreenOptionsEqual = (
 		left.gestureSnapLocked === right.gestureSnapLocked &&
 		left.sheetScrollGestureBehavior === right.sheetScrollGestureBehavior &&
 		left.backdropBehavior === right.backdropBehavior &&
+		left.transitionSpec === right.transitionSpec &&
 		left.baseOptions === right.baseOptions
 	);
 };
 
 export const resolveBaseScreenOptions = (
-	options: ScreenTransitionOptions,
+	options: ScreenTransitionConfig,
 ): ScreenOptionsSnapshot => {
-	const gestureProgressMode = resolveGestureProgressModeOption(
-		options.gestureProgressMode,
-		options.gestureDrivesProgress,
-		DEFAULT_GESTURE_PROGRESS_MODE,
-	);
-
 	return {
 		navigationMaskEnabled: resolveBooleanOption(
 			options.navigationMaskEnabled,
@@ -282,9 +306,6 @@ export const resolveBaseScreenOptions = (
 			options.gestureResponseDistance,
 			undefined,
 		),
-		gestureProgressMode,
-		gestureDrivesProgress:
-			gestureProgressModeDrivesProgress(gestureProgressMode),
 		gestureActivationArea: resolveGestureActivationAreaOption(
 			options.gestureActivationArea,
 			DEFAULT_GESTURE_ACTIVATION_AREA,
@@ -301,6 +322,7 @@ export const resolveBaseScreenOptions = (
 			options.backdropBehavior,
 			undefined,
 		),
+		transitionSpec: options.transitionSpec,
 	};
 };
 
@@ -311,10 +333,6 @@ export const syncScreenOptionsBase = (
 	"worklet";
 	const next = {
 		...base,
-		gestureDirection: cloneGestureDirection(base.gestureDirection),
-		gestureActivationArea: cloneGestureActivationArea(
-			base.gestureActivationArea,
-		),
 		baseOptions: base,
 	};
 
@@ -330,11 +348,6 @@ export const syncScreenOptionsOverrides = (
 	"worklet";
 	const options = raw?.options;
 	const base = screenOptions.get().baseOptions;
-	const gestureProgressMode = resolveGestureProgressModeOption(
-		options?.gestureProgressMode,
-		options?.gestureDrivesProgress,
-		base.gestureProgressMode,
-	);
 
 	const next: ScreenOptionsState = {
 		navigationMaskEnabled: base.navigationMaskEnabled,
@@ -367,9 +380,6 @@ export const syncScreenOptionsOverrides = (
 			options?.gestureResponseDistance,
 			base.gestureResponseDistance,
 		),
-		gestureProgressMode,
-		gestureDrivesProgress:
-			gestureProgressModeDrivesProgress(gestureProgressMode),
 		gestureActivationArea: resolveGestureActivationAreaOption(
 			options?.gestureActivationArea,
 			base.gestureActivationArea,
@@ -386,6 +396,7 @@ export const syncScreenOptionsOverrides = (
 			options?.backdropBehavior,
 			base.backdropBehavior,
 		),
+		transitionSpec: base.transitionSpec,
 		baseOptions: base,
 	};
 

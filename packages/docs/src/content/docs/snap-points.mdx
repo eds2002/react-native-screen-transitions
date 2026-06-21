@@ -181,6 +181,8 @@ Snap sheets can be driven by one or more pan axes and by pinch:
 
 When you pass an array, the first direction on each pan axis controls that axis's collapse polarity. For pinch, the first pinch direction controls collapse and the opposite pinch direction expands.
 
+Configured pan and pinch gestures can track at the same time. The current active gesture owns release targeting, so pan can hand off to pinch or pinch can hand off to pan during the same interaction.
+
 ```tsx
 <Stack.Screen
   name="sheet"
@@ -194,6 +196,8 @@ When you pass an array, the first direction on each pan axis controls that axis'
 ```
 
 In this example, pinch-out, dragging right, or dragging up collapses the sheet. Pinch-in, dragging left, or dragging down expands it.
+
+Pan and pinch can track during the same interaction. The gesture that is active at release owns the snap or dismiss decision, while companion gesture values remain available for animation.
 
 ## Reading Live And Target Detents
 

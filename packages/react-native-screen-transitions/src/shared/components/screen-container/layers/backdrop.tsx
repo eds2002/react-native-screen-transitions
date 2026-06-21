@@ -76,7 +76,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 				}
 
 				const { target, shouldDismiss } = findCollapseTarget(
-					animations.progress.get(),
+					animations.transitionProgress.get(),
 					resolvedSnaps,
 					canDismiss,
 				);

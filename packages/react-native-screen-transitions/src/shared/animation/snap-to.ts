@@ -52,7 +52,7 @@ export function snapDescriptorToIndex(
 
 	runOnUI(() => {
 		"worklet";
-		const currentProgress = animations.progress.get();
+		const currentProgress = animations.transitionProgress.get();
 
 		animateToProgress({
 			target: targetProgress,

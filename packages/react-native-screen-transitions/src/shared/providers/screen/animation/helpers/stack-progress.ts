@@ -2,7 +2,7 @@ import type { SharedValue } from "react-native-reanimated";
 
 export const deriveStackProgress = (
 	routeKeys: string[],
-	effectiveProgressValues: SharedValue<number>[],
+	visualProgressValues: SharedValue<number>[],
 	currentIndex: number,
 	fallbackProgress: number,
 	currentRouteKey: string | undefined,
@@ -14,14 +14,14 @@ export const deriveStackProgress = (
 	if (currentIndex < 0) return fallbackProgress;
 
 	let total = 0;
-	for (let i = currentIndex; i < effectiveProgressValues.length; i++) {
+	for (let i = currentIndex; i < visualProgressValues.length; i++) {
 		const routeKey = routeKeys[i];
 		if (routeKey === currentRouteKey) {
 			total += currentProgress;
 		} else if (routeKey === nextRouteKey && nextProgress !== undefined) {
 			total += nextProgress;
 		} else {
-			total += effectiveProgressValues[i].get();
+			total += visualProgressValues[i].get();
 		}
 	}
 

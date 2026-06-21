@@ -35,8 +35,25 @@ to: /gestures
 - `"pinch-in"`
 - `"pinch-out"`
 - an array of pan and pinch directions
+- structured entries such as `{ gesture: "vertical", area: "edge" }`
 
 For non-snap screens, each direction in the array can activate dismissal. For screens with `snapPoints`, the array defines which pan axes and pinch direction can drive the same snap state. The first direction on a pan axis controls that axis's collapse polarity, and the first pinch direction controls whether pinch-in or pinch-out collapses.
+
+Pan entries can include an activation area:
+
+```tsx
+options={{
+  gestureDirection: [
+    { gesture: "horizontal", area: "edge" },
+    { gesture: "vertical", area: 32 },
+    "pinch-in",
+  ],
+}}
+```
+
+`area` accepts `"screen"`, `"edge"`, or a numeric edge distance in points. Pinch entries ignore `area`.
+
+Rotation is not a `gestureDirection` value. When a screen enables `pinch-in` or `pinch-out`, rotation runs alongside pinch and publishes `gesture.rotation`.
 
 ## Gesture Options
 
@@ -75,7 +92,7 @@ Dismiss direction, pan axis, pinch direction, or ordered direction list.
   </thead>
   <tbody>
     <tr>
-      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>GestureDirection | GestureDirection[]</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>GestureDirectionEntry | GestureDirectionEntry[]</code></td>
       <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>"horizontal"</code></td>
       <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
     </tr>
@@ -105,7 +122,7 @@ Controls whether the screen tracks live gesture values.
 
 ### `gestureActivationArea`
 
-Controls where the gesture may start.
+Deprecated. Use `gestureDirection` entries with per-direction `area` instead.
 
 <table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
   <thead>
@@ -126,7 +143,7 @@ Controls where the gesture may start.
 
 ### `gestureResponseDistance`
 
-Single numeric edge-distance override for edge activation.
+Deprecated. Use a numeric `area` on `gestureDirection` entries instead.
 
 <table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
   <thead>
@@ -189,7 +206,7 @@ Release velocity influence on dismiss decisions.
 
 ### `gestureProgressMode`
 
-Controls whether gesture displacement drives transition progress or stays available as freeform gesture values.
+Deprecated. Gesture movement now always contributes to `progress`. Use `transitionProgress` when an interpolator needs transition progress without live gesture movement.
 
 <table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
   <thead>
@@ -334,42 +351,46 @@ Custom backdrop component type. Pass a stable component such as `BlurView` or `M
   </tbody>
 </table>
 
-## Gesture Activation Area
+## Per-Direction Activation Area
 
 ```tsx
 options={{
   gestureEnabled: true,
-  gestureActivationArea: "edge",
+  gestureDirection: { gesture: "horizontal", area: "edge" },
 }}
 ```
 
-Or configure each side independently:
+Configure each active pan direction independently:
 
 ```tsx
 options={{
   gestureEnabled: true,
-  gestureActivationArea: {
-    left: "edge",
-    right: "screen",
-    top: "screen",
-    bottom: "edge",
-  },
+  gestureDirection: [
+    { gesture: "horizontal", area: "edge" },
+    { gesture: "horizontal-inverted", area: "screen" },
+    { gesture: "vertical", area: 32 },
+  ],
 }}
 ```
 
-The per-side object only accepts `"edge"` and `"screen"`. This API does not take numeric edge distances.
+`"edge"` uses the default edge hit area. A number uses that many points from the edge.
+
+<Note>
+  `gestureActivationArea` still works for compatibility, but new code should use `gestureDirection` entries with `area`.
+</Note>
 
 ## Gesture Response Distance
 
 ```tsx
 options={{
   gestureEnabled: true,
-  gestureActivationArea: "edge",
-  gestureResponseDistance: 24,
+  gestureDirection: { gesture: "horizontal", area: 24 },
 }}
 ```
 
-When you leave it undefined, the gesture system uses its internal edge defaults. In practice, this prop is mainly useful when a side uses `"edge"` activation and you want a wider or narrower hit area.
+`gestureResponseDistance` is deprecated. Use a numeric `area` on the pan direction that needs a custom edge-start distance.
+
+Despite the name, the old option controls how far from the edge a gesture may start when a direction uses `"edge"` activation. It does not change how far the pointer must move before pan activates; that movement threshold is internal.
 
 ## Release Tuning
 
@@ -386,7 +407,7 @@ options={{
 
 - use `gestureVelocityImpact` to change whether a fling dismisses
 - use `gestureSnapVelocityImpact` to change which snap point a sheet settles to
-- use `gestureReleaseVelocityScale` to make the post-release spring feel faster or slower
+- use `gestureReleaseVelocityScale` to change the release energy used by gesture reset and handoff values
 
 ## Pinch Gestures
 
@@ -416,19 +437,49 @@ Use `pinch-in` or `pinch-out` when two-finger scale should drive dismissal:
 
 `active.gesture.scale`, `active.gesture.normScale`, `active.gesture.focalX`, and `active.gesture.focalY` are available inside the interpolator. Use `active.gesture.raw.normScale` when computing dynamic `gestureSensitivity`, so the sensitivity calculation does not feed back into itself.
 
-## Gesture Progress Mode
+Pan, pinch, and rotation run as a simultaneous gesture composition when the screen config allows them. The gesture that is currently active owns navigation release, while the other gestures can still update live values for animation.
 
-v3.6 adds `gestureProgressMode` as the preferred way to describe whether gestures should drive screen progress.
+## Rotation Values
+
+Screens with `pinch-in` or `pinch-out` also track two-finger rotation.
 
 ```tsx
-options={{
-  gestureEnabled: true,
-  gestureDirection: ["vertical", "horizontal"],
-  gestureProgressMode: "freeform",
-}}
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        transform: [{ rotateZ: `${current.gesture.rotation}rad` }],
+      },
+    },
+  };
+};
 ```
 
-Use `"progress-driven"` when drag movement should directly move screen progress. Use `"freeform"` when gesture values should drive custom visuals while transition progress stays controlled by navigation or release.
+Use `current.gesture.raw.rotation` when you need the physical rotation before `gestureSensitivity` is applied.
+
+## Progress During Gestures
+
+`progress` always includes live gesture movement. This is the value you want when the screen should follow the user's finger.
+
+Use `current.transitionProgress` when animation logic needs transition or snap progress without the active gesture:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  return {
+    backdrop: {
+      style: {
+        opacity: current.transitionProgress,
+      },
+    },
+  };
+};
+```
+
+`gestureProgressMode` and `gestureDrivesProgress` remain as deprecated compatibility options. New code should choose between `progress` and `transitionProgress` inside the interpolator instead of configuring a screen-level progress mode.
 
 ## Dynamic Gesture Options
 
@@ -556,6 +607,28 @@ Expansion must start from dead space outside the scrollable content. This is the
 />
 ```
 
+## Scroll Metadata
+
+Transition-aware scrollables publish scroll state through `current.layouts.scroll`:
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  "worklet";
+
+  const y = current.layouts.scroll?.vertical?.offset ?? 0;
+
+  return {
+    content: {
+      style: {
+        transform: [{ translateY: -Math.min(y, 24) }],
+      },
+    },
+  };
+};
+```
+
+For nested same-axis scrollables, the outermost scrollable owns that axis. Cross-axis nested scrollables can each publish their own axis.
+
 ## Backdrop Interaction
 
 The supported values are:
@@ -625,13 +698,17 @@ Useful values include:
 - `normX`, `normY`
 - `scale`, `normScale`
 - `focalX`, `focalY`
+- `rotation`
 - `velocity`
 - `raw`
+- `handoff`
 - `dragging`
 - `dismissing`
 - `settling`
 - `active`
 - `direction` (deprecated pan-only alias)
+
+Live gesture values reset after release. If a dismiss animation needs the last release-time values while the live fields reset, read `current.gesture.handoff`.
 
 ## Hook Targeting
 

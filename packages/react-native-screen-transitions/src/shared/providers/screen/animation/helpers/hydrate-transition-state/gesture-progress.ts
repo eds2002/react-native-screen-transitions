@@ -1,15 +1,9 @@
 import { clamp } from "react-native-reanimated";
-import {
-	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_PROGRESS_MODE,
-	EPSILON,
-} from "../../../../../constants";
-import type { ScreenTransitionOptions } from "../../../../../types/animation.types";
+import { DEFAULT_GESTURE_DIRECTION, EPSILON } from "../../../../../constants";
 import type {
-	GestureDirection,
+	GestureDirectionOption,
 	GestureValues,
 } from "../../../../../types/gesture.types";
-import { resolveGestureProgressModeFromOptions } from "../../../../../utils/gesture-progress-mode";
 import {
 	getPanActivationDirections,
 	getPanSnapAxisConfigForDirection,
@@ -20,10 +14,16 @@ import {
 } from "../../../gestures/shared/directions";
 import type { SnapBounds } from "./types";
 
-const resolvePanGestureDrivenProgress = (
-	baseProgress: number,
+type PanProgressDelta = {
+	x: number;
+	y: number;
+};
+
+const resolvePanGestureAffectedProgress = (
+	transitionProgress: number,
 	gesture: GestureValues,
-	gestureDirection: GestureDirection | GestureDirection[],
+	progressDelta: PanProgressDelta,
+	gestureDirection: GestureDirectionOption,
 	hasSnapPoints: boolean,
 	snapBounds: SnapBounds | null,
 ) => {
@@ -39,14 +39,18 @@ const resolvePanGestureDrivenProgress = (
 			: null;
 
 		if (!activeAxis || !snapBounds) {
-			return baseProgress;
+			return transitionProgress;
 		}
 
 		const axisValue =
-			activeAxis.axis === "horizontal" ? gesture.normX : gesture.normY;
-		const progressDelta = activeAxis.config.progressSign * axisValue;
+			activeAxis.axis === "horizontal" ? progressDelta.x : progressDelta.y;
+		const signedProgressDelta = activeAxis.config.progressSign * axisValue;
 
-		return clamp(baseProgress + progressDelta, snapBounds.min, snapBounds.max);
+		return clamp(
+			transitionProgress + signedProgressDelta,
+			snapBounds.min,
+			snapBounds.max,
+		);
 	}
 
 	const directions = getPanActivationDirections({
@@ -55,29 +59,29 @@ const resolvePanGestureDrivenProgress = (
 	});
 	let progressOffset = 0;
 
-	if (directions.horizontal && gesture.normX > 0) {
-		progressOffset = Math.max(progressOffset, gesture.normX);
+	if (directions.horizontal && progressDelta.x > 0) {
+		progressOffset = Math.max(progressOffset, progressDelta.x);
 	}
 
-	if (directions.horizontalInverted && gesture.normX < 0) {
-		progressOffset = Math.max(progressOffset, -gesture.normX);
+	if (directions.horizontalInverted && progressDelta.x < 0) {
+		progressOffset = Math.max(progressOffset, -progressDelta.x);
 	}
 
-	if (directions.vertical && gesture.normY > 0) {
-		progressOffset = Math.max(progressOffset, gesture.normY);
+	if (directions.vertical && progressDelta.y > 0) {
+		progressOffset = Math.max(progressOffset, progressDelta.y);
 	}
 
-	if (directions.verticalInverted && gesture.normY < 0) {
-		progressOffset = Math.max(progressOffset, -gesture.normY);
+	if (directions.verticalInverted && progressDelta.y < 0) {
+		progressOffset = Math.max(progressOffset, -progressDelta.y);
 	}
 
-	return clamp(baseProgress - progressOffset, 0, baseProgress);
+	return clamp(transitionProgress - progressOffset, 0, transitionProgress);
 };
 
-const resolvePinchGestureDrivenProgress = (
-	baseProgress: number,
+const resolvePinchGestureAffectedProgress = (
+	transitionProgress: number,
 	gesture: GestureValues,
-	gestureDirection: GestureDirection | GestureDirection[],
+	gestureDirection: GestureDirectionOption,
 	hasSnapPoints: boolean,
 	snapBounds: SnapBounds | null,
 ) => {
@@ -90,13 +94,13 @@ const resolvePinchGestureDrivenProgress = (
 				: null;
 
 	if (!pinchDirection) {
-		return baseProgress;
+		return transitionProgress;
 	}
 
 	if (hasSnapPoints) {
 		const snapDirections = getSnapPinchDirectionConfig(gestureDirection);
 		if (!snapDirections || !snapBounds) {
-			return baseProgress;
+			return transitionProgress;
 		}
 
 		const progressDelta =
@@ -104,39 +108,35 @@ const resolvePinchGestureDrivenProgress = (
 				? -Math.abs(gesture.normScale)
 				: Math.abs(gesture.normScale);
 
-		return clamp(baseProgress + progressDelta, snapBounds.min, snapBounds.max);
+		return clamp(
+			transitionProgress + progressDelta,
+			snapBounds.min,
+			snapBounds.max,
+		);
 	}
 
 	const pinchDirections = getPinchGestureDirections(gestureDirection);
 	if (!pinchDirections.includes(pinchDirection)) {
-		return baseProgress;
+		return transitionProgress;
 	}
 
-	return clamp(baseProgress - Math.abs(gesture.normScale), 0, baseProgress);
+	return clamp(
+		transitionProgress - Math.abs(gesture.normScale),
+		0,
+		transitionProgress,
+	);
 };
 
-export const resolveGestureDrivenProgress = (
-	baseProgress: number,
+export const resolveGestureAffectedProgress = (
+	transitionProgress: number,
 	gesture: GestureValues,
-	options: ScreenTransitionOptions,
-	effectiveOptions: ScreenTransitionOptions | undefined,
+	panProgressDelta: PanProgressDelta,
+	gestureDirection: GestureDirectionOption | undefined,
 	snapBounds: SnapBounds | null,
 ) => {
 	"worklet";
-	const gestureProgressMode = resolveGestureProgressModeFromOptions(
-		effectiveOptions,
-		options,
-		DEFAULT_GESTURE_PROGRESS_MODE,
-	);
-
-	if (gestureProgressMode === "freeform") {
-		return baseProgress;
-	}
-
-	const gestureDirection =
-		effectiveOptions?.gestureDirection ??
-		options.gestureDirection ??
-		DEFAULT_GESTURE_DIRECTION;
+	const resolvedGestureDirection =
+		gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
 
 	const hasSnapPoints = snapBounds !== null;
 
@@ -145,19 +145,20 @@ export const resolveGestureDrivenProgress = (
 		gesture.active === "pinch-out" ||
 		Math.abs(gesture.normScale) > EPSILON
 	) {
-		return resolvePinchGestureDrivenProgress(
-			baseProgress,
+		return resolvePinchGestureAffectedProgress(
+			transitionProgress,
 			gesture,
-			gestureDirection,
+			resolvedGestureDirection,
 			hasSnapPoints,
 			snapBounds,
 		);
 	}
 
-	return resolvePanGestureDrivenProgress(
-		baseProgress,
+	return resolvePanGestureAffectedProgress(
+		transitionProgress,
 		gesture,
-		gestureDirection,
+		panProgressDelta,
+		resolvedGestureDirection,
 		hasSnapPoints,
 		snapBounds,
 	);

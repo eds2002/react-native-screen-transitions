@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { resolveSnapPinchRelease } from "../../../providers/screen/gestures/pinch/pinch-release";
+import { resolveSnapPinchRelease } from "../../../providers/screen/gestures/pinch/behavior/pinch-release";
 import type {
 	PinchGestureEvent,
 	PinchGestureRuntime,
@@ -16,9 +16,35 @@ const shared = <T>(initial: T) => {
 	};
 };
 
+const createGestureSnapshotStore = () => ({
+	x: shared(0),
+	y: shared(0),
+	normX: shared(0),
+	normY: shared(0),
+	velocity: shared(0),
+	scale: shared(1),
+	normScale: shared(0),
+	focalX: shared(0),
+	focalY: shared(0),
+	rotation: shared(0),
+	raw: {
+		x: shared(0),
+		y: shared(0),
+		normX: shared(0),
+		normY: shared(0),
+		scale: shared(1),
+		normScale: shared(0),
+		rotation: shared(0),
+	},
+	active: shared(null),
+	direction: shared(null),
+});
+
 const createSnapRuntime = ({
 	progress = 0.5,
 	baseline = 0.5,
+	gestureSnapLocked = false,
+	lockedSnapPoint = 1 as number | null,
 } = {}) =>
 	({
 		participation: {
@@ -32,10 +58,9 @@ const createSnapRuntime = ({
 			},
 		},
 		policy: {
-			gestureProgressMode: "progress-driven",
 			gestureReleaseVelocityScale: 1,
 			gestureSnapVelocityImpact: 0.1,
-			gestureSnapLocked: false,
+			gestureSnapLocked,
 			snapDirections: {
 				collapse: "pinch-in",
 				expand: "pinch-out",
@@ -44,14 +69,21 @@ const createSnapRuntime = ({
 		},
 		stores: {
 			animations: {
-				progress: shared(progress),
+				transitionProgress: shared(progress),
 			},
 			system: {
 				resolvedAutoSnapPoint: shared(0),
 			},
+			gestures: {
+				internal: {
+					progressBaseline: shared(baseline),
+					progressDeltaX: shared(0),
+					progressDeltaY: shared(0),
+					lockedSnapPoint: shared<number | null>(lockedSnapPoint),
+					snapshot: createGestureSnapshotStore(),
+				},
+			},
 		},
-		gestureProgressBaseline: shared(baseline),
-		lockedSnapPoint: shared(1),
 	}) as unknown as PinchGestureRuntime;
 
 describe("snap pinch release", () => {
@@ -67,5 +99,21 @@ describe("snap pinch release", () => {
 		expect(release.target).toBe(1);
 		expect(release.commitProgress).toBe(1);
 		expect(release.resetValuesImmediately).toBe(true);
+	});
+
+	it("uses the max snap point when a locked snap point has not been primed", () => {
+		const release = resolveSnapPinchRelease(
+			{
+				scale: 1.25,
+				velocity: 0,
+			} as PinchGestureEvent,
+			createSnapRuntime({
+				gestureSnapLocked: true,
+				lockedSnapPoint: null,
+			}),
+		);
+
+		expect(release.target).toBe(1);
+		expect(release.commitProgress).toBe(0.75);
 	});
 });

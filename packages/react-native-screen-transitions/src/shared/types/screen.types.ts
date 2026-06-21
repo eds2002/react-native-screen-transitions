@@ -5,8 +5,9 @@ import type {
 } from "./animation.types";
 import type {
 	GestureActivationArea,
-	GestureDirection,
+	GestureDirectionOption,
 	GestureProgressMode,
+	ScrollMetadataState,
 } from "./gesture.types";
 import type { OverlayProps } from "./overlay.types";
 
@@ -27,6 +28,13 @@ export type ScreenLayouts = {
 	 * auto snap-point sizing. It is undefined until a real measurement exists.
 	 */
 	content?: Layout;
+	/**
+	 * Scroll metadata from the primary transition-aware scrollable on this screen.
+	 *
+	 * For nested same-axis scrollables, the outermost scrollable owns that axis.
+	 * Cross-axis nested scrollables can each publish their own axis.
+	 */
+	scroll?: ScrollMetadataState;
 };
 
 export type ScreenKey = string;
@@ -174,8 +182,11 @@ export type ScreenTransitionConfig = {
 	 *
 	 * Supports pan directions (`horizontal`, `vertical`, etc.) and pinch
 	 * directions (`pinch-in`, `pinch-out`).
+	 *
+	 * Pan directions may be configured with an activation area:
+	 * `[{ gesture: "vertical", area: "edge" }]`.
 	 */
-	gestureDirection?: GestureDirection | GestureDirection[];
+	gestureDirection?: GestureDirectionOption;
 
 	/**
 	 * Controls how directly live gesture movement maps into transition progress
@@ -211,11 +222,11 @@ export type ScreenTransitionConfig = {
 	gestureSnapVelocityImpact?: number;
 
 	/**
-	 * Multiplies gesture release velocity used for spring animation energy.
+	 * Multiplies gesture release velocity used for gesture reset/handoff energy.
 	 *
 	 * This does NOT affect dismissal threshold decisions (`gestureVelocityImpact`)
-	 * or snap target selection (`snapVelocityImpact`). It only changes how fast
-	 * the post-release animation feels.
+	 * or snap target selection (`snapVelocityImpact`). It changes the release
+	 * impulse used by gesture values and interpolator handoff values.
 	 *
 	 * @default 1
 	 */
@@ -232,25 +243,44 @@ export type ScreenTransitionConfig = {
 	gestureReleaseVelocityMax?: number;
 
 	/**
-	 * Distance threshold for gesture recognition throughout the screen.
+	 * Deprecated compatibility option.
+	 *
+	 * Overrides the default edge-start distance when `gestureDirection` uses
+	 * `area: "edge"`. Prefer a numeric `area` on each `gestureDirection` entry.
+	 *
+	 * @example
+	 * gestureDirection: { gesture: "horizontal", area: 24 }
+	 *
+	 * @deprecated Use numeric `gestureDirection` entry `area` instead.
 	 */
 	gestureResponseDistance?: number;
 
 	/**
-	 * Controls whether live gesture displacement drives transition progress or
-	 * stays available as freeform gesture values for custom interpolators.
+	 * Deprecated compatibility option.
+	 *
+	 * Gesture movement now always contributes to `progress`. Use `transitionProgress`
+	 * in interpolators when you need transition progress without live gesture
+	 * contribution.
+	 *
+	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
 	gestureProgressMode?: GestureProgressMode;
 
 	/**
-	 * Whether the gesture drives the progress.
+	 * Deprecated compatibility alias for `gestureProgressMode`.
 	 *
-	 * @deprecated Use `gestureProgressMode` instead.
+	 * Gesture movement now always contributes to `progress`. Use `transitionProgress`
+	 * in interpolators when you need transition progress without live gesture
+	 * contribution.
+	 *
+	 * @deprecated Use `transitionProgress` from interpolation state instead.
 	 */
 	gestureDrivesProgress?: boolean;
 
 	/**
 	 * The area of the screen where the gesture is activated.
+	 *
+	 * @deprecated Use `gestureDirection` entries with per-direction `area`.
 	 */
 	gestureActivationArea?: GestureActivationArea;
 

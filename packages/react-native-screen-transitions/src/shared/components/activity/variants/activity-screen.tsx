@@ -59,7 +59,7 @@ export const ActivityScreen = memo(function ActivityScreen({
 			return false;
 		}
 
-		return paintDriverAnimations.progress.get() >= 1;
+		return paintDriverAnimations.transitionProgress.get() >= 1;
 	});
 
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
@@ -127,8 +127,14 @@ export const ActivityScreen = memo(function ActivityScreen({
 	);
 });
 
+const HIDDEN_SCREEN_OFFSET = 10_000;
 const styles = StyleSheet.create({
 	hidden: {
-		display: "none",
+		// NOTE:
+		// When setting a screen to display:"none", the gesture detector will not recognize anymore. Since I believe
+		// rngh is attaching itself to its nearest native view, this of course would kill the detector.
+		// To avoid this, we use a transform to move the screen off-screen instead of display: "none". This isn't my favorite approach,
+		// but i'm hoping react 19's activity could mitigate this better and avoid dependence on rns.
+		transform: [{ translateY: HIDDEN_SCREEN_OFFSET }],
 	},
 });

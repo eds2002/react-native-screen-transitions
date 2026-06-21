@@ -258,7 +258,7 @@ When `b` is focused, it disables dismissal on the parent modal route. Because th
 
 ## Closing Thoughts
 
-And just like that, you've replicated the iOS 26 modal look and behavior for iOS and Android.
+This recreates the iOS 26 modal look and behavior on iOS and Android.
 
 The parent modal owns the presentation, gesture tracking, and resistance tuning. The nested screens only decide whether the parent modal can dismiss while they are focused. That split keeps the recipe predictable: screen focus updates `gestureEnabled`, and the parent interpolator turns the resolved option into the enabled or disabled modal feel.
 

@@ -102,6 +102,7 @@ That is the low-level API: measure a matching boundary pair, ask `bounds()` for 
 | `anchor` | `"topLeading"` through `"bottomTrailing"` | Matching anchor point |
 | `scaleMode` | `"match" \| "none" \| "uniform"` | Aspect-ratio behavior |
 | `offset` | `{ x?: number; y?: number }` | Add live x/y offsets from gestures, scroll, or animation state |
+| `progress` | `number` | Custom progress driver for the bounds interpolation |
 | `gestures` | `{ x?: number; y?: number }` | Deprecated alias for `offset` |
 | `raw` | `boolean` | Return raw values instead of style props |
 | `space` | `"relative" \| "absolute"` | `absolute` is mainly for internal navigation helpers |
@@ -202,6 +203,31 @@ screenStyleInterpolator: ({ bounds, active }) => {
 The older `gestures` option still works as a deprecated alias. Use `offset` for new code because the values can come from gestures, scroll, animation state, or any other x/y source.
 
 This is the pattern used for the gesture-driven bounds example in the e2e app.
+
+## Bounds with a custom progress driver
+
+By default, `bounds()` uses the visual frame progress, which includes live gesture movement.
+
+Pass `transitionProgress` when the geometry should stay on the committed transition path while you layer gesture motion separately:
+
+```tsx
+screenStyleInterpolator: ({ bounds, current }) => {
+  "worklet";
+
+  return {
+    hero: bounds({
+      id: "hero",
+      progress: current.transitionProgress,
+      offset: {
+        x: current.gesture.x,
+        y: current.gesture.y,
+      },
+    }),
+  };
+};
+```
+
+This is the replacement for older `gestureProgressMode: "freeform"` patterns in custom bounds animations.
 
 ## Snapshots and Low-Level Helpers
 

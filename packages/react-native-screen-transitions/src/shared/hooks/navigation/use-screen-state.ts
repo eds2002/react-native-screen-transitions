@@ -7,7 +7,6 @@ import {
 } from "../../providers/screen/descriptors";
 import type { ScreenTransitionConfig } from "../../types/screen.types";
 import type { BaseStackNavigation } from "../../types/stack.types";
-import { useOptimisticFocusedIndex } from "./use-optimistic-focused-index";
 import { type StackContextValue, useStack } from "./use-stack";
 
 export interface ScreenState<
@@ -64,18 +63,13 @@ export interface ScreenState<
 export function useScreenState<
 	TNavigation extends BaseStackNavigation = BaseStackNavigation,
 >(): ScreenState<TNavigation> {
-	const { routes, scenes, routeKeys, optimisticFocusedIndex } =
+	const { routes, scenes, routeKeys, focusedIndex } =
 		useStack<StackContextValue>();
 	const { current } = useDescriptors<BaseDescriptor>();
 
 	const index = useMemo(
 		() => routeKeys.indexOf(current.route.key),
 		[routeKeys, current.route.key],
-	);
-
-	const focusedIndex = useOptimisticFocusedIndex(
-		optimisticFocusedIndex,
-		routeKeys.length,
 	);
 
 	const focusedScene = useMemo(() => {

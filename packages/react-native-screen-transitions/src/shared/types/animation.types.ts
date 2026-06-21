@@ -1,14 +1,11 @@
 import type { TextStyle, ViewStyle } from "react-native";
-import type {
-	StyleProps,
-	WithSpringConfig,
-	WithTimingConfig,
-} from "react-native-reanimated";
+import type { StyleProps } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
+import type { ScreenAnimationConfig } from "../utils/animation/animate";
 import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";
 import type { ScreenLayouts, ScreenTransitionConfig } from "./screen.types";
@@ -52,6 +49,15 @@ export type ScreenTransitionState = {
 	progress: number;
 
 	/**
+	 * Transition progress without live gesture contribution.
+	 *
+	 * `progress` is always the visual progress, including live pan or pinch
+	 * movement. Use `transitionProgress` when an interpolator needs the committed
+	 * transition progress as if the current gesture were not active.
+	 */
+	transitionProgress: number;
+
+	/**
 	 * Whether this screen is in the process of being dismissed.
 	 * - `0`: Screen is opening or active
 	 * - `1`: Screen is closing/being dismissed
@@ -90,18 +96,19 @@ export type ScreenTransitionState = {
 	animating: number;
 
 	/**
-	 * Whether this screen is fully settled (not transitioning and not dismissing).
-	 * - `0`: Transition/gesture is active or dismissing
-	 * - `1`: Screen is fully settled/idle
+	 * Whether this screen is visually settled for choreography purposes.
+	 * - `0`: The screen is still meaningfully away from its animation target
+	 * - `1`: The screen is close enough to its target to be treated as done
+	 *
+	 * This may become `1` while `animating` is still `1`, since the animation
+	 * driver can keep physically settling after the transition is visually done.
 	 */
 	settled: number;
 
 	/**
-	 * Whether this screen is logically complete for choreography purposes.
-	 * - `0`: The screen is still meaningfully away from its animation target
-	 * - `1`: The screen is visually close enough to its target to be treated as done
+	 * Deprecated alias for `settled`.
 	 *
-	 * Unlike `settled`, this may become `1` before the underlying spring fully stops.
+	 * @deprecated Use `settled` instead.
 	 */
 	logicallySettled: number;
 
@@ -233,7 +240,7 @@ export interface ScreenInterpolationProps {
 	 * Whether the active transition is visually close enough to its target to be
 	 * treated as complete, even if the animation is still physically settling.
 	 *
-	 * @deprecated Use `active.logicallySettled` instead. Screen settlement state
+	 * @deprecated Use `active.settled` instead. Screen settlement state
 	 * belongs on the screen state object.
 	 */
 	logicallySettled: number;
@@ -372,7 +379,7 @@ export type TransitionInterpolatedStyle = {
 /**
  * A Reanimated animation configuration object.
  */
-export type AnimationConfig = WithSpringConfig | WithTimingConfig;
+export type AnimationConfig = ScreenAnimationConfig;
 
 /**
  * Defines separate animation configurations for screen transitions and snap point changes.

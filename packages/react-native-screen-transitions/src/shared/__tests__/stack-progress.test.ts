@@ -10,14 +10,14 @@ const shared = (value: number) =>
 	}) as SharedValue<number>;
 
 describe("deriveStackProgress", () => {
-	it("sums effective progress from the current route to the top", () => {
+	it("sums visual progress from the current route to the top", () => {
 		const routeKeys = ["a", "b", "c"];
-		const effectiveProgressValues = [shared(1), shared(0.75), shared(0.5)];
+		const visualProgressValues = [shared(1), shared(0.75), shared(0.5)];
 
 		expect(
 			deriveStackProgress(
 				routeKeys,
-				effectiveProgressValues,
+				visualProgressValues,
 				1,
 				0,
 				"b",
@@ -30,12 +30,12 @@ describe("deriveStackProgress", () => {
 
 	it("uses freshly hydrated current and next progress before shared values", () => {
 		const routeKeys = ["a", "b", "c"];
-		const effectiveProgressValues = [shared(1), shared(1), shared(1)];
+		const visualProgressValues = [shared(1), shared(1), shared(1)];
 
 		expect(
 			deriveStackProgress(
 				routeKeys,
-				effectiveProgressValues,
+				visualProgressValues,
 				1,
 				0,
 				"b",

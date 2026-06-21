@@ -31,8 +31,16 @@ import { Route as GestureOwnershipRouteImport } from './routes/gesture-ownership
 import { Route as ExpoRouterRouteImport } from './routes/expo-router'
 import { Route as CustomAnimationsRouteImport } from './routes/custom-animations'
 import { Route as ComponentsRouteImport } from './routes/components'
+import { Route as ChangelogSlugRouteImport } from './routes/changelog.$slug'
+import { Route as ChangelogRouteImport } from './routes/changelog'
 import { Route as CaveatsRouteImport } from './routes/caveats'
 import { Route as AdaptersRouteImport } from './routes/adapters'
+import { Route as ApiRouteImport } from './routes/api'
+import { Route as ApiUseScreenGestureRouteImport } from './routes/api.use-screen-gesture'
+import { Route as ApiUseScreenAnimationRouteImport } from './routes/api.use-screen-animation'
+import { Route as ApiUseHistoryRouteImport } from './routes/api.use-history'
+import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/api.create-transition-aware-component'
+import { Route as ApiCreateBoundaryComponentRouteImport } from './routes/api.create-boundary-component'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
 import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
@@ -147,6 +155,16 @@ const ComponentsRoute = ComponentsRouteImport.update({
   path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChangelogSlugRoute = ChangelogSlugRouteImport.update({
+  id: '/changelog/$slug',
+  path: '/changelog/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CaveatsRoute = CaveatsRouteImport.update({
   id: '/caveats',
   path: '/caveats',
@@ -157,6 +175,38 @@ const AdaptersRoute = AdaptersRouteImport.update({
   path: '/adapters',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiRoute = ApiRouteImport.update({
+  id: '/api',
+  path: '/api',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUseScreenGestureRoute = ApiUseScreenGestureRouteImport.update({
+  id: '/api/use-screen-gesture',
+  path: '/api/use-screen-gesture',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUseScreenAnimationRoute = ApiUseScreenAnimationRouteImport.update({
+  id: '/api/use-screen-animation',
+  path: '/api/use-screen-animation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUseHistoryRoute = ApiUseHistoryRouteImport.update({
+  id: '/api/use-history',
+  path: '/api/use-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCreateTransitionAwareComponentRoute =
+  ApiCreateTransitionAwareComponentRouteImport.update({
+    id: '/api/create-transition-aware-component',
+    path: '/api/create-transition-aware-component',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiCreateBoundaryComponentRoute =
+  ApiCreateBoundaryComponentRouteImport.update({
+    id: '/api/create-boundary-component',
+    path: '/api/create-boundary-component',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -176,7 +226,15 @@ const RecipesModalRoute = RecipesModalRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
+  '/api': typeof ApiRoute
+  '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
+  '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api/use-history': typeof ApiUseHistoryRoute
+  '/api/use-screen-animation': typeof ApiUseScreenAnimationRoute
+  '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
   '/caveats': typeof CaveatsRoute
+  '/changelog': typeof ChangelogRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -205,7 +263,15 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
+  '/api': typeof ApiRoute
+  '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
+  '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api/use-history': typeof ApiUseHistoryRoute
+  '/api/use-screen-animation': typeof ApiUseScreenAnimationRoute
+  '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
   '/caveats': typeof CaveatsRoute
+  '/changelog': typeof ChangelogRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -235,7 +301,15 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
+  '/api': typeof ApiRoute
+  '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
+  '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api/use-history': typeof ApiUseHistoryRoute
+  '/api/use-screen-animation': typeof ApiUseScreenAnimationRoute
+  '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
   '/caveats': typeof CaveatsRoute
+  '/changelog': typeof ChangelogRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -266,7 +340,15 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/adapters'
+    | '/api'
+    | '/api/create-boundary-component'
+    | '/api/create-transition-aware-component'
+    | '/api/use-history'
+    | '/api/use-screen-animation'
+    | '/api/use-screen-gesture'
     | '/caveats'
+    | '/changelog'
+    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -295,7 +377,15 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/adapters'
+    | '/api'
+    | '/api/create-boundary-component'
+    | '/api/create-transition-aware-component'
+    | '/api/use-history'
+    | '/api/use-screen-animation'
+    | '/api/use-screen-gesture'
     | '/caveats'
+    | '/changelog'
+    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -324,7 +414,15 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/adapters'
+    | '/api'
+    | '/api/create-boundary-component'
+    | '/api/create-transition-aware-component'
+    | '/api/use-history'
+    | '/api/use-screen-animation'
+    | '/api/use-screen-gesture'
     | '/caveats'
+    | '/changelog'
+    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -354,7 +452,15 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdaptersRoute: typeof AdaptersRoute
+  ApiRoute: typeof ApiRoute
+  ApiCreateBoundaryComponentRoute: typeof ApiCreateBoundaryComponentRoute
+  ApiCreateTransitionAwareComponentRoute: typeof ApiCreateTransitionAwareComponentRoute
+  ApiUseHistoryRoute: typeof ApiUseHistoryRoute
+  ApiUseScreenAnimationRoute: typeof ApiUseScreenAnimationRoute
+  ApiUseScreenGestureRoute: typeof ApiUseScreenGestureRoute
   CaveatsRoute: typeof CaveatsRoute
+  ChangelogRoute: typeof ChangelogRoute
+  ChangelogSlugRoute: typeof ChangelogSlugRoute
   ComponentsRoute: typeof ComponentsRoute
   CustomAnimationsRoute: typeof CustomAnimationsRoute
   ExpoRouterRoute: typeof ExpoRouterRoute
@@ -544,11 +650,67 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CaveatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/changelog/$slug': {
+      id: '/changelog/$slug'
+      path: '/changelog/$slug'
+      fullPath: '/changelog/$slug'
+      preLoaderRoute: typeof ChangelogSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/adapters': {
       id: '/adapters'
       path: '/adapters'
       fullPath: '/adapters'
       preLoaderRoute: typeof AdaptersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api': {
+      id: '/api'
+      path: '/api'
+      fullPath: '/api'
+      preLoaderRoute: typeof ApiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/use-screen-gesture': {
+      id: '/api/use-screen-gesture'
+      path: '/api/use-screen-gesture'
+      fullPath: '/api/use-screen-gesture'
+      preLoaderRoute: typeof ApiUseScreenGestureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/use-screen-animation': {
+      id: '/api/use-screen-animation'
+      path: '/api/use-screen-animation'
+      fullPath: '/api/use-screen-animation'
+      preLoaderRoute: typeof ApiUseScreenAnimationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/use-history': {
+      id: '/api/use-history'
+      path: '/api/use-history'
+      fullPath: '/api/use-history'
+      preLoaderRoute: typeof ApiUseHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/create-transition-aware-component': {
+      id: '/api/create-transition-aware-component'
+      path: '/api/create-transition-aware-component'
+      fullPath: '/api/create-transition-aware-component'
+      preLoaderRoute: typeof ApiCreateTransitionAwareComponentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/create-boundary-component': {
+      id: '/api/create-boundary-component'
+      path: '/api/create-boundary-component'
+      fullPath: '/api/create-boundary-component'
+      preLoaderRoute: typeof ApiCreateBoundaryComponentRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/': {
@@ -578,7 +740,15 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdaptersRoute: AdaptersRoute,
+  ApiRoute: ApiRoute,
+  ApiCreateBoundaryComponentRoute: ApiCreateBoundaryComponentRoute,
+  ApiCreateTransitionAwareComponentRoute: ApiCreateTransitionAwareComponentRoute,
+  ApiUseHistoryRoute: ApiUseHistoryRoute,
+  ApiUseScreenAnimationRoute: ApiUseScreenAnimationRoute,
+  ApiUseScreenGestureRoute: ApiUseScreenGestureRoute,
   CaveatsRoute: CaveatsRoute,
+  ChangelogRoute: ChangelogRoute,
+  ChangelogSlugRoute: ChangelogSlugRoute,
   ComponentsRoute: ComponentsRoute,
   CustomAnimationsRoute: CustomAnimationsRoute,
   ExpoRouterRoute: ExpoRouterRoute,

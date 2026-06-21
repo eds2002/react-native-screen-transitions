@@ -2,8 +2,8 @@ import { Fragment } from "react";
 import { Overlay } from "../../shared/components/overlay";
 import { SceneView } from "../../shared/components/scene-view";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
+import { withBlankStack } from "../../shared/providers/stack/blank-stack.provider";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
-import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import { StackType } from "../../shared/types/stack.types";
 import type {
 	ComponentStackDescriptor,
@@ -13,7 +13,7 @@ import { ComponentScreen } from "./component-screen";
 
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, STACK_TYPE: StackType.COMPONENT },
-	withManagedStack<ComponentStackDescriptor, ComponentStackNavigationHelpers>(
+	withBlankStack<ComponentStackDescriptor, ComponentStackNavigationHelpers>(
 		({ scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>

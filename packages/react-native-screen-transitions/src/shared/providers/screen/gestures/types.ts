@@ -4,6 +4,7 @@ import type {
 	GestureUpdateEvent,
 	PanGestureHandlerEventPayload,
 	PinchGestureHandlerEventPayload,
+	RotationGestureHandlerEventPayload,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
@@ -14,12 +15,12 @@ import type {
 	TransitionSpec,
 } from "../../../types/animation.types";
 import type {
-	GestureActivationArea,
 	GestureDirections,
-	GestureProgressMode,
+	ResolvedGestureActivationArea,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
+	ScrollMetadataState,
 	SnapPanDirectionConfig,
 	SnapPinchDirectionConfig,
 } from "../../../types/gesture.types";
@@ -32,7 +33,8 @@ import type { EffectiveSnapPointsResult } from "./shared/snap-points";
 
 export type PanGesture = ReturnType<typeof Gesture.Pan>;
 export type PinchGesture = ReturnType<typeof Gesture.Pinch>;
-export type ComposedGesture = ReturnType<typeof Gesture.Race>;
+export type RotationGesture = ReturnType<typeof Gesture.Rotation>;
+export type ComposedGesture = ReturnType<typeof Gesture.Simultaneous>;
 
 export type PanGestureEvent =
 	| GestureUpdateEvent<PanGestureHandlerEventPayload>
@@ -42,11 +44,18 @@ export type PinchGestureEvent =
 	| GestureUpdateEvent<PinchGestureHandlerEventPayload>
 	| GestureStateChangeEvent<PinchGestureHandlerEventPayload>;
 
+export type RotationGestureEvent =
+	| GestureUpdateEvent<RotationGestureHandlerEventPayload>
+	| GestureStateChangeEvent<RotationGestureHandlerEventPayload>;
+
+/** Gesture that owns navigation release for the current simultaneous composition. */
+export type GestureCompositionOwner = "pan" | "pinch" | null;
+
 export type {
-	GestureProgressMode,
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
 	ScrollGestureState,
+	ScrollMetadataState,
 };
 
 export type DirectionClaim = {
@@ -73,6 +82,7 @@ export interface GestureContextType {
 	detectorGesture: ComposedGesture;
 	panGesture: PanGesture;
 	pinchGesture: PinchGesture;
+	rotationGesture: RotationGesture;
 	scrollState: SharedValue<ScrollGestureState | null>;
 	gestureContext: GestureContextType | null;
 	claimedDirections: ClaimedDirections;
@@ -102,12 +112,11 @@ export interface PanGesturePolicy {
 	gestureDirection: NonNullable<ScreenTransitionConfig["gestureDirection"]>;
 	panActivationDirections: GestureDirections;
 	snapAxisDirections: SnapPanDirectionConfig;
-	gestureProgressMode: GestureProgressMode;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureVelocityImpact: number;
 	gestureSnapVelocityImpact: number;
 	gestureReleaseVelocityScale: number;
-	gestureActivationArea: GestureActivationArea;
+	gestureActivationArea: ResolvedGestureActivationArea;
 	gestureSnapLocked: boolean;
 	sheetScrollGestureBehavior: NonNullable<
 		ScreenTransitionConfig["sheetScrollGestureBehavior"]
@@ -122,7 +131,6 @@ export interface PinchGesturePolicy {
 	snapDirections: SnapPinchDirectionConfig;
 	pinchInEnabled: boolean;
 	pinchOutEnabled: boolean;
-	gestureProgressMode: GestureProgressMode;
 	gestureSensitivity: NonNullable<ScreenTransitionConfig["gestureSensitivity"]>;
 	gestureSnapVelocityImpact: number;
 	gestureSnapLocked: boolean;
@@ -142,13 +150,13 @@ export interface GestureRuntime<TPolicy extends GesturePolicy> {
 	participation: ScreenGestureParticipation;
 	policy: TPolicy;
 	stores: GestureRuntimeStores;
-	gestureProgressBaseline: SharedValue<number>;
-	lockedSnapPoint: SharedValue<number>;
 }
 
 export type PanGestureRuntime = GestureRuntime<PanGesturePolicy>;
 
 export type PinchGestureRuntime = GestureRuntime<PinchGesturePolicy>;
+
+export type RotationGestureRuntime = GestureRuntime<PinchGesturePolicy>;
 
 export interface GestureDimensions {
 	width: number;
@@ -173,7 +181,6 @@ export interface PanReleaseResult {
 	shouldDismiss: boolean;
 	initialVelocity: number;
 	commitProgress?: number;
-	resetNormalizedValuesImmediately?: boolean;
 	transitionSpec: TransitionSpec | undefined;
 	resetSpec: AnimationConfig | undefined;
 }
@@ -186,10 +193,7 @@ export interface PanReleasePlan {
 	resetVelocityY: number;
 	resetVelocityNormX: number;
 	resetVelocityNormY: number;
-	releaseVelocity: number;
-	resetNormalizedValues: boolean;
-	resetNormalizedValuesImmediately: boolean;
-	preserveRawValues: boolean;
+	handoffVelocity: number;
 	commitProgress?: number;
 	transitionSpec: TransitionSpec | undefined;
 	resetSpec: AnimationConfig | undefined;
@@ -199,6 +203,7 @@ export interface PinchReleaseResult {
 	target: number;
 	shouldDismiss: boolean;
 	initialVelocity: number;
+	handoffVelocity: number;
 	commitProgress?: number;
 	resetValuesImmediately?: boolean;
 	transitionSpec: TransitionSpec | undefined;
@@ -215,4 +220,9 @@ export interface PinchBehavior {
 	onStart: (event: PinchGestureEvent) => void;
 	onUpdate: (event: PinchGestureEvent) => void;
 	onEnd: (event: PinchGestureEvent) => void;
+}
+
+export interface RotationBehavior {
+	onStart: () => void;
+	onUpdate: (event: RotationGestureEvent) => void;
 }

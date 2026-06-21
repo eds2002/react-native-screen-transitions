@@ -1,7 +1,6 @@
 import {
 	DEFAULT_GESTURE_ACTIVATION_AREA,
 	DEFAULT_GESTURE_DIRECTION,
-	DEFAULT_GESTURE_PROGRESS_MODE,
 	DEFAULT_GESTURE_RELEASE_VELOCITY_SCALE,
 	DEFAULT_GESTURE_SENSITIVITY,
 	DEFAULT_GESTURE_SNAP_LOCKED,
@@ -12,8 +11,10 @@ import {
 } from "../../../../constants";
 import type {
 	GestureActivationArea,
-	GestureDirection,
-	GestureProgressMode,
+	GestureDirectionActivationArea,
+	GestureDirectionEntry,
+	GestureDirectionOption,
+	ResolvedGestureActivationArea,
 } from "../../../../types/gesture.types";
 import type {
 	GestureTracking,
@@ -21,7 +22,6 @@ import type {
 	SheetScrollGestureBehavior,
 	SnapPoint,
 } from "../../../../types/screen.types";
-import { resolveGestureProgressMode } from "../../../../utils/gesture-progress-mode";
 import { computeClaimedDirections } from "../ownership/compute-claimed-directions";
 import { resolveOwnership } from "../ownership/resolve-ownership";
 import type {
@@ -32,6 +32,8 @@ import type {
 	ScreenGestureParticipation,
 } from "../types";
 import {
+	getGestureDirectionEntries,
+	getGestureDirectionEntryGesture,
 	getPanActivationDirections,
 	getPanGestureDirections,
 	getPanSnapAxisDirections,
@@ -43,10 +45,8 @@ import { validateSnapPoints } from "./snap-points";
 export type GesturePolicyOptions = {
 	expandViaScrollView?: boolean;
 	gestureActivationArea?: GestureActivationArea;
-	gestureDirection?: GestureDirection | GestureDirection[];
-	gestureDrivesProgress?: boolean;
+	gestureDirection?: GestureDirectionOption;
 	gestureEnabled?: boolean;
-	gestureProgressMode?: GestureProgressMode;
 	gestureTracking?: GestureTracking;
 	gestureReleaseVelocityScale?: number;
 	gestureResponseDistance?: number;
@@ -64,19 +64,95 @@ const resolveGestureDirection = (options: GesturePolicyOptions) => {
 	return options.gestureDirection ?? DEFAULT_GESTURE_DIRECTION;
 };
 
-function resolveGestureProgressModePolicy(options: GesturePolicyOptions) {
+const isStructuredGestureDirection = (entry: GestureDirectionEntry) => {
 	"worklet";
-	return resolveGestureProgressMode({
-		gestureProgressMode: options.gestureProgressMode,
-		gestureDrivesProgress: options.gestureDrivesProgress,
-		fallback: DEFAULT_GESTURE_PROGRESS_MODE,
-	});
-}
+	return typeof entry !== "string";
+};
+
+const getGestureDirectionActivationArea = (
+	entry: GestureDirectionEntry,
+): GestureDirectionActivationArea => {
+	"worklet";
+	return isStructuredGestureDirection(entry)
+		? (entry.area ?? DEFAULT_GESTURE_ACTIVATION_AREA)
+		: DEFAULT_GESTURE_ACTIVATION_AREA;
+};
+
+const resolveConfiguredGestureActivationArea = (
+	gestureDirection: GestureDirectionOption,
+	hasSnapPoints: boolean,
+): ResolvedGestureActivationArea | undefined => {
+	"worklet";
+	const entries = getGestureDirectionEntries(gestureDirection);
+	let hasStructuredEntry = false;
+
+	for (const entry of entries) {
+		if (isStructuredGestureDirection(entry)) {
+			hasStructuredEntry = true;
+			break;
+		}
+	}
+
+	if (!hasStructuredEntry) {
+		return undefined;
+	}
+
+	const sides = {
+		left: DEFAULT_GESTURE_ACTIVATION_AREA as GestureDirectionActivationArea,
+		right: DEFAULT_GESTURE_ACTIVATION_AREA as GestureDirectionActivationArea,
+		top: DEFAULT_GESTURE_ACTIVATION_AREA as GestureDirectionActivationArea,
+		bottom: DEFAULT_GESTURE_ACTIVATION_AREA as GestureDirectionActivationArea,
+	};
+
+	for (const entry of entries) {
+		const gesture = getGestureDirectionEntryGesture(entry);
+		const area = getGestureDirectionActivationArea(entry);
+
+		switch (gesture) {
+			case "horizontal":
+				sides.left = area;
+				if (hasSnapPoints) sides.right = area;
+				break;
+			case "horizontal-inverted":
+				sides.right = area;
+				if (hasSnapPoints) sides.left = area;
+				break;
+			case "vertical":
+				sides.top = area;
+				if (hasSnapPoints) sides.bottom = area;
+				break;
+			case "vertical-inverted":
+				sides.bottom = area;
+				if (hasSnapPoints) sides.top = area;
+				break;
+			case "bidirectional":
+				sides.left = area;
+				sides.right = area;
+				sides.top = area;
+				sides.bottom = area;
+				break;
+		}
+	}
+
+	return sides;
+};
+
+const resolveGestureActivationArea = (
+	options: GesturePolicyOptions,
+	gestureDirection: GestureDirectionOption,
+	hasSnapPoints: boolean,
+): ResolvedGestureActivationArea => {
+	"worklet";
+	return (
+		resolveConfiguredGestureActivationArea(gestureDirection, hasSnapPoints) ??
+		options.gestureActivationArea ??
+		DEFAULT_GESTURE_ACTIVATION_AREA
+	);
+};
 
 const resolveCommonGesturePolicy = (options: GesturePolicyOptions) => {
 	"worklet";
 	return {
-		gestureProgressMode: resolveGestureProgressModePolicy(options),
 		gestureSensitivity:
 			options.gestureSensitivity ?? DEFAULT_GESTURE_SENSITIVITY,
 		gestureSnapVelocityImpact:
@@ -196,8 +272,11 @@ export const resolvePanPolicy = (
 		...resolveCommonGesturePolicy(options),
 		gestureVelocityImpact:
 			options.gestureVelocityImpact ?? DEFAULT_GESTURE_VELOCITY_IMPACT,
-		gestureActivationArea:
-			options.gestureActivationArea ?? DEFAULT_GESTURE_ACTIVATION_AREA,
+		gestureActivationArea: resolveGestureActivationArea(
+			options,
+			gestureDirection,
+			hasSnapPoints,
+		),
 		sheetScrollGestureBehavior:
 			resolvePolicySheetScrollGestureBehavior(options),
 		gestureResponseDistance: options.gestureResponseDistance,
@@ -248,7 +327,7 @@ const resolveGestureParticipation = ({
 	});
 	const claimedDirections = computeClaimedDirections(
 		canTrackGesture,
-		options.gestureDirection,
+		resolveGestureDirection(options),
 		effectiveSnapPoints.hasSnapPoints,
 	);
 

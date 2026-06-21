@@ -9,8 +9,8 @@ import {
 } from "../../shared/components/activity";
 import { Overlay } from "../../shared/components/overlay";
 import { ScreenComposer } from "../../shared/providers/screen/screen-composer";
+import { withBlankStack } from "../../shared/providers/stack/blank-stack.provider";
 import { withStackCore } from "../../shared/providers/stack/core.provider";
-import { withManagedStack } from "../../shared/providers/stack/managed.provider";
 import type { BaseStackScene } from "../../shared/types/stack.types";
 import type {
 	BlankStackDescriptor,
@@ -53,7 +53,7 @@ const BlankSceneRow = memo(function BlankSceneRow({
 
 export const StackView = withStackCore(
 	{ TRANSITIONS_ALWAYS_ON: true, DISABLE_NATIVE_SCREENS: false },
-	withManagedStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
+	withBlankStack<BlankStackDescriptor, BlankStackNavigationHelpers>(
 		({ scenes, shouldShowFloatOverlay }) => {
 			return (
 				<Fragment>

@@ -15,8 +15,7 @@ export function useStableRuntimeConfig<TPolicy extends GesturePolicy>(
 	runtimeConfigInput: RuntimeConfigInput<TPolicy>,
 ): SharedValue<GestureRuntime<TPolicy>> {
 	const { currentScreenKey } = useDescriptorDerivations();
-	const { participation, policy, gestureProgressBaseline, lockedSnapPoint } =
-		runtimeConfigInput;
+	const { participation, policy } = runtimeConfigInput;
 
 	const stores = useMemo(() => {
 		return {
@@ -31,10 +30,8 @@ export function useStableRuntimeConfig<TPolicy extends GesturePolicy>(
 			participation,
 			policy,
 			stores,
-			gestureProgressBaseline,
-			lockedSnapPoint,
 		};
-	}, [participation, policy, stores, gestureProgressBaseline, lockedSnapPoint]);
+	}, [participation, policy, stores]);
 	const stableRuntimeConfig = useSharedValue(runtimeConfig);
 
 	useLayoutEffect(() => {

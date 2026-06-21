@@ -20,7 +20,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 	const animations = AnimationStore.getBag(current.route.key);
 	const system = SystemStore.getBag(current.route.key);
 
-	const { handleManagedCloseEnd, handleNativeCloseEnd } =
+	const { handleBlankStackCloseEnd, handleNativeCloseEnd } =
 		useCloseTransitionIntent(current, system);
 
 	useOpenTransitionIntent(current, animations, system);
@@ -29,7 +29,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 		current,
 		animations,
 		system,
-		onManagedCloseFinish: handleManagedCloseEnd,
+		onBlankStackCloseFinish: handleBlankStackCloseEnd,
 		onNativeCloseFinish: handleNativeCloseEnd,
 	});
 

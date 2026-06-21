@@ -6,11 +6,13 @@ import {
 	GestureStore,
 	type GestureStoreMap,
 } from "../../../../stores/gesture.store";
+import { ScrollStore } from "../../../../stores/scroll.store";
 import { SystemStore } from "../../../../stores/system.store";
 import type {
 	BaseStackRoute,
 	Layout,
 	ScreenTransitionState,
+	ScrollMetadataState,
 } from "../../../../types";
 import type { ScreenTransitionOptions } from "../../../../types/animation.types";
 import type { BaseDescriptor } from "../../descriptors";
@@ -18,11 +20,12 @@ import { buildScreenTransitionOptions } from "./build-screen-transition-options"
 import { toPlainRoute, toPlainValue } from "./worklet";
 
 type BuiltState = {
-	progress: SharedValue<number>;
-	effectiveProgress: SharedValue<number>;
+	transitionProgress: SharedValue<number>;
+	visualProgress: SharedValue<number>;
 	willAnimate: SharedValue<number>;
 	closing: SharedValue<number>;
 	progressAnimating: SharedValue<number>;
+	progressSettled: SharedValue<number>;
 	entering: SharedValue<number>;
 	gesture: GestureStoreMap;
 	route: BaseStackRoute;
@@ -30,9 +33,9 @@ type BuiltState = {
 	options: ScreenTransitionOptions;
 	optionsSlot: ScreenTransitionOptions;
 	targetProgress: SharedValue<number>;
-	logicalSettleFrameCount: SharedValue<number>;
 	resolvedAutoSnapPoint: SharedValue<number>;
 	measuredContentLayout: SharedValue<Layout | null>;
+	scrollMetadata: SharedValue<ScrollMetadataState | null>;
 	contentLayoutSlot: Layout;
 	hasAutoSnapPoint: boolean;
 	sortedNumericSnapPoints: number[];
@@ -62,19 +65,17 @@ export const useBuildTransitionState = (
 		const transitionOptions = buildScreenTransitionOptions(descriptor.options);
 
 		return {
-			progress: AnimationStore.getValue(key, "progress"),
-			effectiveProgress: AnimationStore.getValue(key, "effectiveProgress"),
+			transitionProgress: AnimationStore.getValue(key, "transitionProgress"),
+			visualProgress: AnimationStore.getValue(key, "visualProgress"),
 			willAnimate: AnimationStore.getValue(key, "willAnimate"),
 			closing: AnimationStore.getValue(key, "closing"),
 			entering: AnimationStore.getValue(key, "entering"),
 			progressAnimating: AnimationStore.getValue(key, "progressAnimating"),
+			progressSettled: AnimationStore.getValue(key, "progressSettled"),
 			targetProgress: SystemStore.getValue(key, "targetProgress"),
-			logicalSettleFrameCount: SystemStore.getValue(
-				key,
-				"logicalSettleFrameCount",
-			),
 			resolvedAutoSnapPoint: SystemStore.getValue(key, "resolvedAutoSnapPoint"),
 			measuredContentLayout: SystemStore.getValue(key, "measuredContentLayout"),
+			scrollMetadata: ScrollStore.getValue(key, "metadata"),
 			contentLayoutSlot: { width: 0, height: 0 },
 			hasAutoSnapPoint: snapPoints?.includes("auto") ?? false,
 			sortedNumericSnapPoints,

@@ -1,28 +1,16 @@
-import {
-	EPSILON,
-	LOGICAL_SETTLE_PROGRESS_THRESHOLD,
-	LOGICAL_SETTLE_REQUIRED_FRAMES,
-} from "../../../../../constants";
+import { EPSILON } from "../../../../../constants";
 import type {
 	ScreenTransitionOptions,
 	TransitionInterpolatorOptions,
 } from "../../../../../types/animation.types";
 import type { Layout } from "../../../../../types/screen.types";
-import { resolveGestureDrivenProgress } from "./gesture-progress";
-import {
-	computeLogicallySettled,
-	computeNextLogicalSettleFrameCount,
-	computeSettled,
-} from "./settle";
+import { resolveGestureAffectedProgress } from "./gesture-progress";
 import {
 	computeAnimatedSnapIndex,
 	computeTargetSnapIndex,
 	getResolvedSnapBounds,
 } from "./snap-points";
 import type { BuiltState } from "./types";
-
-const LOGICAL_SETTLE_STICKY_PROGRESS_THRESHOLD =
-	LOGICAL_SETTLE_PROGRESS_THRESHOLD * 10;
 
 const mergeTransitionOptions = (
 	base: ScreenTransitionOptions,
@@ -70,13 +58,14 @@ export const hydrateTransitionState = (
 ) => {
 	"worklet";
 	const out = s.unwrapped;
-	const baseProgress = s.progress.get();
+	const transitionProgress = s.transitionProgress.get();
 	const options = mergeTransitionOptions(
 		s.options,
 		effectiveOptions,
 		s.optionsSlot,
 	);
 	const canDismiss = options.gestureEnabled !== false;
+	out.transitionProgress = transitionProgress;
 	out.willAnimate = s.willAnimate.get();
 	out.closing = s.closing.get();
 	out.entering = s.entering.get();
@@ -89,22 +78,87 @@ export const hydrateTransitionState = (
 	out.gesture.normScale = s.gesture.normScale.get();
 	out.gesture.focalX = s.gesture.focalX.get();
 	out.gesture.focalY = s.gesture.focalY.get();
+	out.gesture.rotation = s.gesture.rotation.get();
 	out.gesture.raw.x = s.gesture.raw.x.get();
 	out.gesture.raw.y = s.gesture.raw.y.get();
 	out.gesture.raw.normX = s.gesture.raw.normX.get();
 	out.gesture.raw.normY = s.gesture.raw.normY.get();
 	out.gesture.raw.scale = s.gesture.raw.scale.get();
 	out.gesture.raw.normScale = s.gesture.raw.normScale.get();
+	out.gesture.raw.rotation = s.gesture.raw.rotation.get();
 	out.gesture.dismissing = s.gesture.dismissing.get();
 	out.gesture.dragging = s.gesture.dragging.get();
 	out.gesture.settling = s.gesture.settling.get();
 	out.gesture.active = s.gesture.active.get();
 	out.gesture.direction = s.gesture.direction.get();
-	out.progress = resolveGestureDrivenProgress(
-		baseProgress,
+	const handoff = out.gesture.handoff;
+	const useHandoffSnapshot = out.gesture.dismissing;
+
+	handoff.x = useHandoffSnapshot
+		? s.gesture.internal.snapshot.x.get()
+		: out.gesture.x;
+	handoff.y = useHandoffSnapshot
+		? s.gesture.internal.snapshot.y.get()
+		: out.gesture.y;
+	handoff.normX = useHandoffSnapshot
+		? s.gesture.internal.snapshot.normX.get()
+		: out.gesture.normX;
+	handoff.normY = useHandoffSnapshot
+		? s.gesture.internal.snapshot.normY.get()
+		: out.gesture.normY;
+	handoff.velocity = useHandoffSnapshot
+		? s.gesture.internal.snapshot.velocity.get()
+		: out.gesture.velocity;
+	handoff.scale = useHandoffSnapshot
+		? s.gesture.internal.snapshot.scale.get()
+		: out.gesture.scale;
+	handoff.normScale = useHandoffSnapshot
+		? s.gesture.internal.snapshot.normScale.get()
+		: out.gesture.normScale;
+	handoff.focalX = useHandoffSnapshot
+		? s.gesture.internal.snapshot.focalX.get()
+		: out.gesture.focalX;
+	handoff.focalY = useHandoffSnapshot
+		? s.gesture.internal.snapshot.focalY.get()
+		: out.gesture.focalY;
+	handoff.rotation = useHandoffSnapshot
+		? s.gesture.internal.snapshot.rotation.get()
+		: out.gesture.rotation;
+	handoff.raw.x = useHandoffSnapshot
+		? s.gesture.internal.snapshot.raw.x.get()
+		: out.gesture.raw.x;
+	handoff.raw.y = useHandoffSnapshot
+		? s.gesture.internal.snapshot.raw.y.get()
+		: out.gesture.raw.y;
+	handoff.raw.normX = useHandoffSnapshot
+		? s.gesture.internal.snapshot.raw.normX.get()
+		: out.gesture.raw.normX;
+	handoff.raw.normY = useHandoffSnapshot
+		? s.gesture.internal.snapshot.raw.normY.get()
+		: out.gesture.raw.normY;
+	handoff.raw.scale = useHandoffSnapshot
+		? s.gesture.internal.snapshot.raw.scale.get()
+		: out.gesture.raw.scale;
+	handoff.raw.normScale = useHandoffSnapshot
+		? s.gesture.internal.snapshot.raw.normScale.get()
+		: out.gesture.raw.normScale;
+	handoff.raw.rotation = useHandoffSnapshot
+		? s.gesture.internal.snapshot.raw.rotation.get()
+		: out.gesture.raw.rotation;
+	handoff.active = useHandoffSnapshot
+		? s.gesture.internal.snapshot.active.get()
+		: out.gesture.active;
+	handoff.direction = useHandoffSnapshot
+		? s.gesture.internal.snapshot.direction.get()
+		: out.gesture.direction;
+	out.progress = resolveGestureAffectedProgress(
+		transitionProgress,
 		out.gesture,
-		s.options,
-		effectiveOptions,
+		{
+			x: s.gesture.internal.progressDeltaX.get(),
+			y: s.gesture.internal.progressDeltaY.get(),
+		},
+		effectiveOptions?.gestureDirection ?? s.options.gestureDirection,
 		getResolvedSnapBounds(
 			s.sortedNumericSnapPoints,
 			s.hasAutoSnapPoint ? s.resolvedAutoSnapPoint.get() : null,
@@ -114,14 +168,15 @@ export const hydrateTransitionState = (
 
 	// Unsure where else to place this if im being honest.
 	// I think for here is fine
-	if (s.effectiveProgress.get() !== out.progress) {
-		s.effectiveProgress.set(out.progress);
+	if (s.visualProgress.get() !== out.progress) {
+		s.visualProgress.set(out.progress);
 	}
 
 	const hasResidualGestureValues =
 		Math.abs(out.gesture.normX) > EPSILON ||
 		Math.abs(out.gesture.normY) > EPSILON ||
-		Math.abs(out.gesture.normScale) > EPSILON;
+		Math.abs(out.gesture.normScale) > EPSILON ||
+		Math.abs(out.gesture.rotation) > EPSILON;
 
 	const isGestureActive =
 		out.gesture.dragging ||
@@ -139,43 +194,8 @@ export const hydrateTransitionState = (
 	out.gesture.isDismissing = out.gesture.dismissing;
 	out.gesture.isDragging = out.gesture.dragging;
 
-	out.settled = computeSettled(
-		out.animating,
-		out.gesture.dismissing,
-		out.closing,
-	);
-	const targetProgress = s.targetProgress.get();
-	const logicalSettleFrameCount = s.logicalSettleFrameCount.get();
-	const nextLogicalSettleFrameCount = computeNextLogicalSettleFrameCount({
-		progress: out.progress,
-		targetProgress,
-		frameCount: logicalSettleFrameCount,
-	});
-
-	if (nextLogicalSettleFrameCount !== logicalSettleFrameCount) {
-		s.logicalSettleFrameCount.set(nextLogicalSettleFrameCount);
-	}
-
-	const progressDistanceFromTarget = Math.abs(out.progress - targetProgress);
-	const computedLogicallySettled =
-		computeLogicallySettled({
-			progress: out.progress,
-			targetProgress,
-			frameCount: nextLogicalSettleFrameCount,
-		}) && !isGestureActive;
-
-	const wasLogicallySettled =
-		out.logicallySettled &&
-		logicalSettleFrameCount >= LOGICAL_SETTLE_REQUIRED_FRAMES;
-
-	const shouldPreserveLogicalSettle =
-		wasLogicallySettled &&
-		!isProgressAnimating &&
-		!isGestureActive &&
-		progressDistanceFromTarget <= LOGICAL_SETTLE_STICKY_PROGRESS_THRESHOLD;
-
-	out.logicallySettled =
-		computedLogicallySettled || shouldPreserveLogicalSettle ? 1 : 0;
+	out.settled = s.progressSettled.get() && !isGestureActive ? 1 : 0;
+	out.logicallySettled = out.settled;
 
 	out.meta = s.meta;
 	out.options = options;
@@ -193,6 +213,8 @@ export const hydrateTransitionState = (
 		out.layouts.content = undefined;
 	}
 
+	out.layouts.scroll = s.scrollMetadata.get() ?? undefined;
+
 	const autoSnapPoint = s.resolvedAutoSnapPoint.get();
 	const resolvedAutoSnap =
 		s.hasAutoSnapPoint && autoSnapPoint > 0 ? autoSnapPoint : null;
@@ -202,6 +224,8 @@ export const hydrateTransitionState = (
 		s.sortedNumericSnapPoints,
 		resolvedAutoSnap,
 	);
+
+	const targetProgress = s.targetProgress.get();
 
 	out.snapIndex = computeTargetSnapIndex(
 		targetProgress,
