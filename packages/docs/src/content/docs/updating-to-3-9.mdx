@@ -1,8 +1,8 @@
 ---
 title: "New in 3.9"
 pageTitle: "New in 3.9"
-summary: "A bounds release with teleport integration, bounds motion, a stronger scoped bounds API, and more reliable matched-element measurement."
-description: "A bounds release with teleport integration, bounds motion, a stronger scoped bounds API, and more reliable matched-element measurement."
+summary: "v3.9 adds boundary portals, the scoped bounds API, bounds motion, and rebuilt link measurement."
+description: "v3.9 adds boundary portals, the scoped bounds API, bounds motion, and rebuilt link measurement."
 eyebrow: "Changelogs"
 group: "Changelogs"
 hidden: true
@@ -11,15 +11,15 @@ order: 1
 to: /changelog/updating-to-3-9
 ---
 
-v3.9 is a bounds release. The main work is a new teleport path for shared elements, a scoped bounds API, and a `motion` hook that lets bounds follow custom paths without reimplementing measurement.
+v3.9 is about bounds. Boundary content can teleport through `react-native-teleport`, `bounds()` scopes to one id before it computes styles, and `motion` can bend a shared element's path without rewriting measurement.
 
-This release is also a cleanup pass. Bounds links now tolerate destination-first measurement, scroll-hosted elements, grouped active ids, and matched-screen portal attachment much better than the old store shape.
+There is also a lot of store work under that. Bounds links now handle destination-first measurement, scroll-hosted elements, grouped active ids, and matched-screen portal attachment.
 
 ## Features
 
-### Teleport Boundaries
+### Teleport boundaries
 
-Boundaries can now opt into portal rendering with the `portal` prop.
+Add `portal` to a boundary to render it through the portal path.
 
 ```tsx
 <Transition.Boundary.Trigger
@@ -31,16 +31,16 @@ Boundaries can now opt into portal rendering with the `portal` prop.
 </Transition.Boundary.Trigger>
 ```
 
-Portal-enabled boundaries keep their original measured layout in place, then render the animated matched element through `react-native-teleport` while the transition is active. This lets shared elements escape clipping, list containers, headers, and other local stacking contexts without changing the source layout.
+Portal-enabled boundaries keep their measured layout in the original tree. During the transition, the animated matched element renders through `react-native-teleport` instead, so it can escape clipping, list containers, headers, and local stacking contexts without changing the source layout.
 
 The supported attachment targets are:
 
 - `current-screen`: attach the portal to the boundary's own active screen host.
 - `matched-screen`: attach the portal to the matched screen's active host for the whole handoff.
 
-Use `matched-screen` when the source should visually move into the destination screen before returning home on close. Use `current-screen` when the element should stay inside the current screen's coordinate space but still escape local clipping.
+Use `matched-screen` when the source should move into the destination screen before returning home on close. Use `current-screen` when the element should stay in the current screen's coordinate space but still escape local clipping.
 
-### Boundary Hosts
+### Boundary hosts
 
 `Transition.Boundary.Host` marks the coordinate space where portal content should render.
 
@@ -54,13 +54,13 @@ Use `matched-screen` when the source should visually move into the destination s
 </Transition.ScrollView>
 ```
 
-Each screen has a fallback host, so simple portals can work without adding a host manually. Add an explicit host when a boundary lives inside a scroll view or another coordinate space that should own the portal placement.
+Each screen has a fallback host, so simple portals work without extra setup. Add an explicit host when a boundary lives inside a scroll view or another coordinate space that should own portal placement.
 
 Scroll hosts are tracked, measured, and compensated during the transition. That means a portal that starts inside a scrolled list can still land back on the live placeholder even if the scroll offset changes during the handoff.
 
-### Teleport Slot Control
+### Teleport slot control
 
-Portal-enabled boundaries can be enabled or disabled per interpolator frame through slot props.
+Portal-enabled boundaries can attach or detach per interpolator frame through slot props.
 
 ```tsx
 screenStyleInterpolator: ({ bounds, current }) => {
@@ -79,7 +79,7 @@ screenStyleInterpolator: ({ bounds, current }) => {
 
 Omitting `teleport` keeps teleport enabled. Set it to `false`, or `{ enabled: false }`, when a recipe needs the boundary to detach for part of the transition.
 
-### Scoped Bounds API
+### Scoped bounds API
 
 `bounds()` now resolves an identity first, then exposes methods for the things you can do with that bound.
 
@@ -112,11 +112,11 @@ const style = card.styles({ method: "size" });
 const link = card.link();
 ```
 
-This replaces the looser options-object style that mixed identity, raw output, link access, and style computation in one call.
+This replaces the old options-object call that mixed identity, raw output, link access, and style computation.
 
-### Bounds Motion
+### Bounds motion
 
-Bounds style and math calls now accept a `motion` resolver.
+Bounds style and math calls accept a `motion` resolver.
 
 ```tsx
 const cardStyle = bounds("card").styles({
@@ -140,7 +140,7 @@ const cardStyle = bounds("card").styles({
 });
 ```
 
-`motion` receives the generated bounds transform, normalized motion progress, resolved start and end rects, and the current interpolation props. Return a replacement transform to bend the path, add depth, overshoot, cancel parent motion, or keep a shared element visually independent from the moving screen.
+`motion` receives the generated bounds transform, normalized motion progress, resolved start and end rects, and the current interpolation props. Return a replacement transform when the element needs an arc, depth, overshoot, cancelled parent motion, or a path that stays visually independent from the moving screen.
 
 The returned transform supports:
 
@@ -154,7 +154,7 @@ The returned transform supports:
 
 For `method: "size"`, the returned scale is applied to the generated width and height. For `math()`, rotation fields are returned alongside the raw bounds values so custom renderers can use the same motion output.
 
-### Stronger Matched Bounds
+### Matched bounds link state
 
 The bounds store now models source and destination links as explicit screen pairs with status.
 
@@ -164,21 +164,21 @@ Links can be:
 - `destination-incomplete`
 - `complete`
 
-That allows destination-first measurement. A destination can attach before the source has been captured, and the source can later promote the pending link into a complete pair. This is important for nested stacks, grouped lists, and routes where the destination layout is ready before the press source is refreshed.
+That allows destination-first measurement. A destination can attach before the source has been captured, and the source can later promote the pending link into a complete pair. That matters for nested stacks, grouped lists, and routes where the destination layout is ready before the press source is refreshed.
 
-Grouped bounds also track active members more carefully. Creating a scoped accessor for a grouped id syncs the active group member, so navigation recipes and custom styles resolve the intended member instead of falling back to stale group state.
+Grouped bounds now sync the active member when you create a scoped accessor for a grouped id. Navigation recipes and custom styles resolve that member instead of falling back to stale group state.
 
-### Refresh And Scroll Reliability
+### Refresh and scroll handling
 
-Bounds refreshes are now driven through central source and destination signals. This keeps refresh behavior consistent across open, close, settled, scroll-settled, grouped, and nested-screen cases.
+Bounds refreshes now run through central source and destination signals. The same refresh path handles open, close, settled, scroll-settled, grouped, and nested-screen cases.
 
 The measurement pipeline also normalizes bounds against the screen origin before it writes to the store, rejects out-of-viewport destination measurements, and clamps scroll deltas so rubber-band overscroll does not distort portal placement.
 
-For matched-screen portals, destination refreshes are skipped once the portal is attached. At that point the teleported source is the animated thing, so refreshing the destination during the same handoff can make the active target jump.
+For matched-screen portals, destination refreshes are skipped once the portal is attached. At that point the teleported source is the animated element, so refreshing the destination during the same handoff can make the active target jump.
 
-### New Examples
+### New examples
 
-The e2e app now includes focused examples for the new bounds work:
+The e2e app has new examples for this bounds work:
 
 - `teleport`: current-screen and matched-screen boundary portals.
 - `bounds/matched-screen`: multiple video cards using matched-screen attachment and bounds motion.
@@ -187,7 +187,7 @@ The e2e app now includes focused examples for the new bounds work:
 
 The existing zoom, sync, and style-id examples were also updated to use the scoped bounds API.
 
-## Breaking Changes
+## Breaking changes
 
 ### Install react-native-teleport
 
@@ -199,7 +199,7 @@ bun add react-native-teleport
 
 The package range is `>=1.1.0 <2.0.0`.
 
-### Move Bounds Calls To The Scoped API
+### Move bounds calls to the scoped API
 
 The old bounds API mixed the target id and compute options in the same call. The new API scopes first, then computes.
 
@@ -240,7 +240,7 @@ return bounds("avatar").navigation.zoom({
 });
 ```
 
-### Replace Legacy Helper Escapes
+### Replace legacy helper escapes
 
 Older experimental helpers such as direct measured snapshots, raw interpolation helpers, and link compute shortcuts should be replaced with the scoped API:
 
@@ -249,7 +249,7 @@ Older experimental helpers such as direct measured snapshots, raw interpolation 
 - Use `bounds(id).link()` for source/destination link inspection.
 - Use `motion` when a recipe needs to reshape the generated bounds path.
 
-## Migration Notes
+## Migration notes
 
 - Add `react-native-teleport` to apps that use this package.
 - Replace `bounds({ id, ...options })` style output with `bounds(id).styles(options)`.
@@ -260,10 +260,10 @@ Older experimental helpers such as direct measured snapshots, raw interpolation 
 - Add `Transition.Boundary.Host` inside a scrollable coordinate space when portal placement should follow that scroll view.
 - Use `motion` instead of reimplementing bounds measurement when an element needs custom arc, depth, rotation, or overshoot behavior.
 
-## Related Reading
+## Related reading
 
 - [Shared Elements](/shared-elements)
-- [Navigation Zoom](/navigation-zoom)
+- [Navigation zoom](/navigation-zoom)
 - [Reveal](/reveal)
-- [Custom Animations](/custom-animations)
-- [Transition Components](/transition-components)
+- [Custom animations](/custom-animations)
+- [Transition components](/transition-components)
