@@ -452,7 +452,7 @@ function NativeStackAdapterProfileScreen() {
 const nativeStackAdapterScreen = TransitionNativeStack.Screen({
 	name: "Profile",
 	getComponent: () => NativeStackAdapterProfileScreen,
-	options: nativeStackAdapterOptions,
+	options: nativeStackAdapterOptions as never,
 });
 void TransitionNativeStack;
 void nativeStackAdapterOptions;

@@ -1,6 +1,6 @@
 {
 	"name": "react-native-screen-transitions",
-	"version": "3.9.0-beta.3",
+	"version": "3.9.0-alpha.0",
 	"description": "Easy screen transitions for React Native and Expo",
 	"author": "Ed",
 	"license": "MIT",
@@ -42,6 +42,18 @@
 			"require": "./lib/commonjs/blank-stack/index.js",
 			"types": "./lib/typescript/blank-stack/index.d.ts"
 		},
+		"./react-navigation": {
+			"react-native": "./src/shared/navigators/react-navigation/index.tsx",
+			"import": "./lib/module/shared/navigators/react-navigation/index.js",
+			"require": "./lib/commonjs/shared/navigators/react-navigation/index.js",
+			"types": "./lib/typescript/shared/navigators/react-navigation/index.d.ts"
+		},
+		"./expo-router": {
+			"react-native": "./src/shared/navigators/expo-router/index.tsx",
+			"import": "./lib/module/shared/navigators/expo-router/index.js",
+			"require": "./lib/commonjs/shared/navigators/expo-router/index.js",
+			"types": "./lib/typescript/shared/navigators/expo-router/index.d.ts"
+		},
 		"./component-stack": {
 			"react-native": "./src/component-stack/index.ts",
 			"import": "./lib/module/component-stack/index.js",
@@ -75,10 +87,11 @@
 	],
 	"peerDependencies": {
 		"@react-navigation/elements": ">=2.0.0",
-		"@react-navigation/native": ">=6.0.0",
+		"@react-navigation/native": ">=7.3.0",
 		"@react-navigation/native-stack": ">=7.0.0",
 		"@types/react": "*",
 		"@types/react-native": "*",
+		"expo-router": ">=56.2.10",
 		"react": "*",
 		"react-native": "*",
 		"react-native-gesture-handler": ">=2.16.1",
@@ -88,13 +101,18 @@
 		"react-native-teleport": ">=1.1.0 <2.0.0"
 	},
 	"peerDependenciesMeta": {
-		"react-native-teleport": {
+		"expo-router": {
 			"optional": true
 		}
 	},
+	"dependencies": {
+		"standard-navigation": "^0.0.7"
+	},
 	"devDependencies": {
+		"@react-navigation/native": "7.3.3",
 		"@testing-library/react-native": "13.3.3",
 		"@types/react": "~19.1.0",
+		"expo-router": "56.2.11",
 		"react-native-builder-bob": "0.41.0",
 		"react-test-renderer": "19.1.0",
 		"typescript": "catalog:"

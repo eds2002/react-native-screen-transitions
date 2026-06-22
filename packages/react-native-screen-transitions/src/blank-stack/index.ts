@@ -1,4 +1,3 @@
-export { createBlankStackNavigator } from "../blank-stack/navigators/create-blank-stack-navigator";
 export type {
 	BlankStackFactoryOptions,
 	BlankStackNavigationEventMap,
@@ -10,3 +9,4 @@ export type {
 	BlankStackScreenProps,
 	InactiveBehavior,
 } from "../blank-stack/types";
+export { createBlankStackNavigator } from "../shared/navigators/react-navigation";

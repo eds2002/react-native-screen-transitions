@@ -100,7 +100,7 @@ export function NativeStackView({ state, descriptors, describe }: Props) {
 						key={route.key}
 						focused={isFocused}
 						route={route}
-						navigation={navigation}
+						navigation={navigation as never}
 						headerShown={headerShown}
 						headerTransparent={headerTransparent}
 						header={

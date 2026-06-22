@@ -1,11 +1,8 @@
-import {
-	NavigationContext,
-	NavigationRouteContext,
-} from "@react-navigation/native";
 import { memo, useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
 import type { StackScene } from "../../../hooks/navigation/use-stack";
+import { NavigationScreenProvider } from "../../../providers/navigation/navigation-host.provider";
 import { useScreenAnimation } from "../../../providers/screen/animation";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import type {
@@ -47,16 +44,17 @@ export const OverlayHost = memo(function OverlayHost({
 			pointerEvents="box-none"
 			style={[styles.container, styles.floating, StyleSheet.absoluteFill]}
 		>
-			<NavigationContext.Provider value={scene.descriptor.navigation as any}>
-				<NavigationRouteContext.Provider value={scene.route}>
-					<View
-						pointerEvents="box-none"
-						style={[StyleSheet.absoluteFill, styles.overlay]}
-					>
-						<OverlayComponent {...overlayProps} />
-					</View>
-				</NavigationRouteContext.Provider>
-			</NavigationContext.Provider>
+			<NavigationScreenProvider
+				navigation={scene.descriptor.navigation}
+				route={scene.route}
+			>
+				<View
+					pointerEvents="box-none"
+					style={[StyleSheet.absoluteFill, styles.overlay]}
+				>
+					<OverlayComponent {...overlayProps} />
+				</View>
+			</NavigationScreenProvider>
 		</Animated.View>
 	);
 });

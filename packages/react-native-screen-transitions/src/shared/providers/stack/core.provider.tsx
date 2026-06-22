@@ -1,8 +1,12 @@
-import { SafeAreaProviderCompat } from "@react-navigation/elements";
-import type * as React from "react";
+import * as React from "react";
 import { useMemo } from "react";
-import { StyleSheet } from "react-native";
+import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+	initialWindowMetrics,
+	SafeAreaInsetsContext,
+	SafeAreaProvider,
+} from "react-native-safe-area-context";
 import { StackType } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
 
@@ -25,6 +29,33 @@ export interface StackCoreContextValue {
 		DISABLE_NATIVE_SCREENS: boolean;
 		DISABLE_NATIVE_SCREEN_CONTAINER: boolean;
 	};
+}
+
+const { width = 0, height = 0 } = Dimensions.get("window");
+
+const initialSafeAreaMetrics =
+	Platform.OS === "web" || initialWindowMetrics == null
+		? {
+				frame: { x: 0, y: 0, width, height },
+				insets: { top: 0, left: 0, right: 0, bottom: 0 },
+			}
+		: initialWindowMetrics;
+
+function StackSafeAreaProvider({ children }: { children: React.ReactNode }) {
+	const insets = React.useContext(SafeAreaInsetsContext);
+
+	if (insets) {
+		return <View style={styles.container}>{children}</View>;
+	}
+
+	return (
+		<SafeAreaProvider
+			initialMetrics={initialSafeAreaMetrics}
+			style={styles.container}
+		>
+			{children}
+		</SafeAreaProvider>
+	);
 }
 
 const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
@@ -63,7 +94,7 @@ const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
 						STACK_TYPE === StackType.COMPONENT ? "box-none" : undefined
 					}
 				>
-					<SafeAreaProviderCompat>{children}</SafeAreaProviderCompat>
+					<StackSafeAreaProvider>{children}</StackSafeAreaProvider>
 				</GestureHandlerRootView>
 			),
 		};

@@ -1,4 +1,3 @@
-import { CardStyleInterpolators } from "@react-navigation/stack";
 import { interpolate } from "react-native-reanimated";
 import { BENCHMARK_TRANSITION_DURATION_MS } from "@/components/benchmark/constants";
 import { useResolvedBenchmarkImpl } from "@/components/benchmark/impl-routing";
@@ -77,7 +76,6 @@ function getJsStackScreenOptions(scenario: BenchmarkScenario) {
 					cardStyle: { backgroundColor: "transparent" as const },
 				}
 			: {}),
-		cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
 		gestureDirection: "horizontal" as const,
 		presentation: "card" as const,
 	};

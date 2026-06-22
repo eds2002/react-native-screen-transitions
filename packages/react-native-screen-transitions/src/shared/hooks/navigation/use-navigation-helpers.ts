@@ -1,7 +1,11 @@
-import { StackActions } from "@react-navigation/native";
 import { useCallback } from "react";
 import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import { useStack } from "./use-stack";
+
+const createPopAction = () => ({
+	type: "POP",
+	payload: { count: 1 },
+});
 
 export function useNavigationHelpers() {
 	const current = useDescriptorsStore((store) => store.descriptors.current);
@@ -20,7 +24,7 @@ export function useNavigationHelpers() {
 		if (!routeStillPresent || routeIndex === 0) return false;
 
 		current.navigation.dispatch({
-			...StackActions.pop(),
+			...createPopAction(),
 			source: current.route.key,
 			target: state.key,
 		});
