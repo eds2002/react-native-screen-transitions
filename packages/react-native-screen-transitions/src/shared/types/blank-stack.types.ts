@@ -10,11 +10,11 @@ import type {
 	StackRouterOptions,
 	Theme,
 } from "@react-navigation/native";
-import type { InactiveBehavior, ScreenTransitionConfig } from "../shared";
-import type { OverlayProps } from "../shared/types/overlay.types";
-import type { StackSceneActivity } from "../shared/types/stack.types";
+import type { OverlayProps } from "./overlay.types";
+import type { InactiveBehavior, ScreenTransitionConfig } from "./screen.types";
+import type { StackSceneActivity } from "./stack.types";
 
-export type { InactiveBehavior } from "../shared";
+export type { InactiveBehavior } from "./screen.types";
 
 export type BlankStackNavigationEventMap = {};
 
@@ -59,8 +59,6 @@ export type BlankStackNavigationHelpers = NavigationHelpers<
  *
  * These can be passed to `<BlankStack.Navigator />` in the dynamic API, and
  * they are also supported as top-level keys in static navigator config.
- *
- * The exported name is kept for backward compatibility.
  */
 export interface BlankStackFactoryOptions {
 	/**

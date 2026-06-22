@@ -1,12 +1,12 @@
 import type * as React from "react";
 import { useMemo } from "react";
-import type { NativeStackDescriptorMap } from "../../../native-stack/types";
 import {
 	type StackContextValue,
 	StackProvider,
 } from "../../hooks/navigation/use-stack";
 import type {
 	DirectStackContextValue,
+	DirectStackDescriptorMap,
 	DirectStackProps,
 	DirectStackScene,
 } from "../../types/providers/direct-stack.types";
@@ -21,7 +21,7 @@ function useDirectStackValue(
 	const navigatorKey = state.key;
 
 	const preloadedDescriptors = useMemo(() => {
-		return state.preloadedRoutes.reduce<NativeStackDescriptorMap>(
+		return state.preloadedRoutes.reduce<DirectStackDescriptorMap>(
 			(acc, route) => {
 				acc[route.key] = acc[route.key] || describe(route, true);
 				return acc;
@@ -35,7 +35,7 @@ function useDirectStackValue(
 			const allRoutes = state.routes.concat(state.preloadedRoutes);
 			const scenes: DirectStackScene[] = [];
 			const routeKeys: string[] = [];
-			const allDescriptors: NativeStackDescriptorMap = {
+			const allDescriptors: DirectStackDescriptorMap = {
 				...preloadedDescriptors,
 				...descriptors,
 			};

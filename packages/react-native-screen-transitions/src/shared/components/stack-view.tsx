@@ -1,8 +1,4 @@
 import { memo } from "react";
-import type {
-	BlankStackDescriptor,
-	BlankStackNavigationHelpers,
-} from "../../blank-stack/types";
 import { ActivityContainer, ActivityScreen } from "../components/activity";
 import { PortalProvider } from "../components/boundary/portal";
 import { Overlay } from "../components/overlay";
@@ -10,6 +6,10 @@ import { NavigationScreenProvider } from "../providers/navigation/navigation-hos
 import { ScreenComposer } from "../providers/screen/screen-composer";
 import { withBlankStack } from "../providers/stack/blank-stack.provider";
 import { withStackCore } from "../providers/stack/core.provider";
+import type {
+	BlankStackDescriptor,
+	BlankStackNavigationHelpers,
+} from "../types/blank-stack.types";
 import type { BaseStackScene } from "../types/stack.types";
 
 interface BlankSceneRowProps {

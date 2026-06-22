@@ -30,18 +30,6 @@
 			"require": "./lib/commonjs/shared/index.js",
 			"types": "./lib/typescript/shared/index.d.ts"
 		},
-		"./native-stack": {
-			"react-native": "./src/native-stack/index.ts",
-			"import": "./lib/module/native-stack/index.js",
-			"require": "./lib/commonjs/native-stack/index.js",
-			"types": "./lib/typescript/native-stack/index.d.ts"
-		},
-		"./blank-stack": {
-			"react-native": "./src/blank-stack/index.ts",
-			"import": "./lib/module/blank-stack/index.js",
-			"require": "./lib/commonjs/blank-stack/index.js",
-			"types": "./lib/typescript/blank-stack/index.d.ts"
-		},
 		"./react-navigation": {
 			"react-native": "./src/shared/navigators/react-navigation/index.tsx",
 			"import": "./lib/module/shared/navigators/react-navigation/index.js",
@@ -53,12 +41,6 @@
 			"import": "./lib/module/shared/navigators/expo-router/index.js",
 			"require": "./lib/commonjs/shared/navigators/expo-router/index.js",
 			"types": "./lib/typescript/shared/navigators/expo-router/index.d.ts"
-		},
-		"./component-stack": {
-			"react-native": "./src/component-stack/index.ts",
-			"import": "./lib/module/component-stack/index.js",
-			"require": "./lib/commonjs/component-stack/index.js",
-			"types": "./lib/typescript/component-stack/index.d.ts"
 		}
 	},
 	"scripts": {
@@ -86,9 +68,7 @@
 		"LICENSE"
 	],
 	"peerDependencies": {
-		"@react-navigation/elements": ">=2.0.0",
 		"@react-navigation/native": ">=7.3.0",
-		"@react-navigation/native-stack": ">=7.0.0",
 		"@types/react": "*",
 		"@types/react-native": "*",
 		"expo-router": ">=56.2.10",

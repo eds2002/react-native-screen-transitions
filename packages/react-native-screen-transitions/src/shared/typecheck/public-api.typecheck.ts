@@ -1,16 +1,10 @@
-import {
-	createNativeStackNavigator,
-	type NativeStackNavigationOptions,
-} from "@react-navigation/native-stack";
+import type {
+	NavigationState,
+	NavigatorTypeBagBase,
+	TypedNavigator,
+} from "@react-navigation/native";
 import type { ComponentProps } from "react";
 import type { DerivedValue, SharedValue } from "react-native-reanimated";
-import {
-	type BlankStackFactoryOptions,
-	type BlankStackNavigationOptions,
-	type BlankStackScreenProps,
-	createBlankStackNavigator,
-} from "../../blank-stack";
-import type Transition from "..";
 import type {
 	BoundsMotion,
 	BoundsNavigationRevealStyle,
@@ -20,8 +14,6 @@ import type {
 	NativeStackAdapterOptions,
 	RawGestureValues,
 	ScreenAnimationTarget,
-	ScreenBackdropComponentProps,
-	ScreenContentComponentProps,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	ScreenTransitionConfig,
@@ -35,19 +27,18 @@ import type {
 	TransitionSlotStyle,
 } from "..";
 import {
-	blockTransition,
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-	unblockTransition,
 	useScreenAnimation,
 	useScreenGesture,
 	withScreenTransitions,
 } from "..";
-
-blockTransition();
-blockTransition("route-key");
-unblockTransition();
-unblockTransition("route-key");
+import {
+	type BlankStackFactoryOptions,
+	type BlankStackNavigationOptions,
+	type BlankStackScreenProps,
+	createBlankStackNavigator,
+} from "../navigators/react-navigation";
 
 const slotStyle: TransitionSlotStyle = {
 	style: {
@@ -80,49 +71,27 @@ const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]: slotStyle,
 };
 
-const passiveBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
-	id: "hero",
-	handoff: true,
+const zoomOptions: BoundsNavigationZoomOptions = {
+	target: "bound",
+	debug: true,
+	borderRadius: 36,
+	focusedElementOpacity: {
+		open: [0, 0.35, 0, 1],
+		close: [0.65, 1, 0, 1],
+	},
+	unfocusedElementOpacity: {
+		open: [1, 2, 1, 0],
+		close: [1.85, 2, 1, 0],
+	},
+	backgroundScale: 0.97,
+	maxSensitivity: 0.6,
+	velocityDepth: 0.35,
+	gestureProgressMode: "freeform",
+	horizontalDragScale: [0.9, 1.02, 2],
+	verticalDragScale: [0.96, 1.01, 2.25],
+	horizontalDragTranslation: [0.5, 1, 1.5],
+	verticalDragTranslation: [0, 0, 1],
 };
-const escapedBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
-	id: "hero",
-	escapeClipping: true,
-};
-const escapedHandoffBoundaryProps: ComponentProps<typeof Transition.Boundary> =
-	{
-		id: "hero",
-		handoff: true,
-		escapeClipping: true,
-	};
-const pressableBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
-	id: "hero",
-	onPress: () => {},
-};
-const removedBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
-	id: "hero",
-	// @ts-expect-error Boundary uses handoff and escapeClipping instead of the removed portal prop.
-	portal: "screen",
-};
-const deprecatedBoundaryViewProps: ComponentProps<
-	typeof Transition.Boundary.View
-> = {
-	id: "hero",
-};
-const deprecatedBoundaryTriggerProps: ComponentProps<
-	typeof Transition.Boundary.Trigger
-> = {
-	id: "hero",
-	onPress: () => {},
-};
-void passiveBoundaryProps;
-void escapedBoundaryProps;
-void escapedHandoffBoundaryProps;
-void pressableBoundaryProps;
-void removedBoundaryPortalProps;
-void deprecatedBoundaryViewProps;
-void deprecatedBoundaryTriggerProps;
-
-const zoomOptions: BoundsNavigationZoomOptions = {};
 
 declare const interpolationProps: ScreenInterpolationProps;
 
@@ -209,12 +178,12 @@ const motionBoundsResult = scopedBounds.styles({
 const deprecatedGesturesBoundsResult = scopedBounds.styles({
 	gestures: { x: 10, y: -10 },
 });
-const absoluteRawBoundsResult = scopedBounds.values({
+const absoluteRawBoundsResult = scopedBounds.math({
 	method: "size",
 	space: "absolute",
 	progress: interpolationProps.current.transitionProgress,
 });
-const motionRawBoundsResult = scopedBounds.values({
+const motionRawBoundsResult = scopedBounds.math({
 	method: "content",
 	motion: boundsMotion,
 	progress: interpolationProps.current.transitionProgress,
@@ -223,37 +192,7 @@ const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
 	.bounds({ id: 42 })
 	.navigation.zoom({
 		target: "bound",
-		keepFocusedVisible: true,
-		borderRadius: 36,
-		backgroundScale: 0.95,
-		backdropColor: "#000000",
-		backdropOpacity: 0.4,
-		drag: {
-			translation: { horizontal: 0.8, vertical: 0.9 },
-			scale: { horizontal: 0.7, vertical: 0.85 },
-		},
 	});
-const deprecatedZoomOptions: BoundsNavigationZoomOptions = {
-	debug: true,
-	focusedElementOpacity: { open: [0, 1, 0, 1] },
-	unfocusedElementOpacity: { close: [0, 1, 1, 0] },
-	maxSensitivity: 0.8,
-	velocityDepth: 0.5,
-	gestureProgressMode: "freeform",
-	horizontalDragScale: [0.5, 1.1, 2],
-	verticalDragScale: [0.5, 1.1, 2],
-	horizontalDragTranslation: [0.8, 0.8, 2],
-	verticalDragTranslation: [0.8, 0.8, 2],
-};
-void deprecatedZoomOptions;
-interpolationProps.bounds({ id: 42 }).navigation.zoom({
-	// @ts-expect-error Zoom targets must resolve to supported bounds geometry.
-	target: "viewport",
-});
-interpolationProps.bounds({ id: 42 }).navigation.zoom({
-	// @ts-expect-error Focused visibility is an opt-in boolean.
-	keepFocusedVisible: "yes",
-});
 const revealInterpolatedStyle: BoundsNavigationRevealStyle = interpolationProps
 	.bounds({ id: 42 })
 	.navigation.reveal();
@@ -401,46 +340,33 @@ const scopedGestureDirectionOptions: ScreenTransitionConfig = {
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
 };
-const renderBackdropOptions: ScreenTransitionConfig = {
-	backdropComponent: ({
-		styles,
-		props,
-		pointerEvents,
-	}: ScreenBackdropComponentProps) => {
-		void styles;
-		void props;
-		void pointerEvents;
-		return null;
-	},
-};
-const renderContentOptions: ScreenTransitionConfig = {
-	contentComponent: ({
-		styles,
-		props,
-		pointerEvents,
-		children,
-	}: ScreenContentComponentProps) => {
-		void styles;
-		void props;
-		void pointerEvents;
-		return children;
-	},
-};
-const deprecatedSurfaceComponentOptions: ScreenTransitionConfig = {
-	surfaceComponent: () => null,
-};
-void renderBackdropOptions;
-void renderContentOptions;
-void deprecatedSurfaceComponentOptions;
 
 type NativeStackAdapterParamList = {
 	Profile: undefined;
 	Avatar: { id: string };
 };
 
-const NativeStack = createNativeStackNavigator<NativeStackAdapterParamList>();
+type ExternalNativeStackOptions = {
+	gestureEnabled?: boolean;
+	gestureDirection?: "horizontal" | "vertical" | "bidirectional";
+	title?: string;
+};
+
+type ExternalNativeStackTypeBag = NavigatorTypeBagBase & {
+	ParamList: NativeStackAdapterParamList;
+	State: NavigationState<NativeStackAdapterParamList>;
+	ScreenOptions: ExternalNativeStackOptions;
+	NavigationList: {
+		[RouteName in keyof NativeStackAdapterParamList]: unknown;
+	};
+};
+
+declare const NativeStack: TypedNavigator<
+	ExternalNativeStackTypeBag,
+	undefined
+>;
 const TransitionNativeStack = withScreenTransitions(NativeStack);
-const nativeStackAdapterOptions: NativeStackAdapterOptions<NativeStackNavigationOptions> =
+const nativeStackAdapterOptions: NativeStackAdapterOptions<ExternalNativeStackOptions> =
 	{
 		enableTransitions: true,
 		gestureEnabled: true,

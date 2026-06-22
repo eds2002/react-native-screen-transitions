@@ -8,8 +8,8 @@ import {
 	NavigationContext,
 	NavigationRouteContext,
 } from "expo-router/react-navigation";
-import type { BlankStackNavigationOptions } from "../../../blank-stack/types";
 import type { NavigationScreenProviderComponent } from "../../providers/navigation/navigation-host.provider";
+import type { BlankStackNavigationOptions } from "../../types/blank-stack.types";
 import {
 	BlankStackNavigator,
 	type BlankStackStandardEventMap,
@@ -60,4 +60,4 @@ export type {
 	BlankStackOverlayProps,
 	BlankStackScreenProps,
 	InactiveBehavior,
-} from "../../../blank-stack/types";
+} from "../../types/blank-stack.types";

@@ -11,13 +11,13 @@ import {
 	type TypedNavigator,
 } from "@react-navigation/native";
 import type * as React from "react";
+import { reactNavigationHost } from "../../providers/navigation/react-navigation-host";
 import type {
 	BlankStackNavigationEventMap,
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp,
 	BlankStackNavigatorProps,
-} from "../../../blank-stack/types";
-import { reactNavigationHost } from "../../providers/navigation/react-navigation-host";
+} from "../../types/blank-stack.types";
 import {
 	BlankStackNavigator,
 	type BlankStackStandardNavigatorProps,
@@ -90,4 +90,4 @@ export type {
 	BlankStackOverlayProps,
 	BlankStackScreenProps,
 	InactiveBehavior,
-} from "../../../blank-stack/types";
+} from "../../types/blank-stack.types";

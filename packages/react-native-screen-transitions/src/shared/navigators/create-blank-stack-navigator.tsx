@@ -3,17 +3,17 @@ import {
 	createStandardNavigator,
 	type NavigatorDescriptor,
 } from "standard-navigation";
-import type {
-	BlankStackDescriptor,
-	BlankStackFactoryOptions,
-	BlankStackNavigationHelpers,
-	BlankStackNavigationOptions,
-} from "../../blank-stack/types";
 import { StackView } from "../components/stack-view";
 import {
 	type NavigationHostContextValue,
 	NavigationHostProvider,
 } from "../providers/navigation/navigation-host.provider";
+import type {
+	BlankStackDescriptor,
+	BlankStackFactoryOptions,
+	BlankStackNavigationHelpers,
+	BlankStackNavigationOptions,
+} from "../types/blank-stack.types";
 import type {
 	BaseStackNavigation,
 	BaseStackRoute,
