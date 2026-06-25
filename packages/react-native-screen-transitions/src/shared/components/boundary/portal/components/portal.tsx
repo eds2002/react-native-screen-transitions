@@ -16,7 +16,6 @@ import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
-import { Portal as NativePortal } from "react-native-teleport";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { useScreenStyles } from "../../../../providers/screen/styles";
 import { AnimationStore } from "../../../../stores/animation.store";
@@ -33,6 +32,7 @@ import {
 	mountPortalBoundaryHost,
 	unmountPortalBoundaryHost,
 } from "../stores/portal-boundary-host.store";
+import { isTeleportAvailable, NativePortal } from "../teleport";
 import {
 	type PortalAttachment,
 	resolvePortalAttachmentTargets,
@@ -44,15 +44,17 @@ import {
 import { isTeleportEnabled } from "../utils/teleport-control";
 
 type NullableHostNamePortalProps = Omit<
-	ComponentProps<typeof NativePortal>,
+	ComponentProps<NonNullable<typeof NativePortal>>,
 	"hostName"
 > & {
 	hostName?: string | null;
 };
 
-const TransitionAwareTeleport = createTransitionAwareComponent(
-	NativePortal as ComponentType<NullableHostNamePortalProps>,
-);
+const TransitionAwareTeleport = NativePortal
+	? createTransitionAwareComponent(
+			NativePortal as ComponentType<NullableHostNamePortalProps>,
+		)
+	: null;
 
 interface PortalProps {
 	id?: string;
@@ -73,7 +75,10 @@ export const Portal = memo(function Portal({
 	mode = false,
 	placeholderRef,
 }: PortalProps) {
-	const isPortalEnabled = !!mode;
+	// Teleporting requires the optional `react-native-teleport` peer. Without it,
+	// a portal-enabled boundary degrades to inline rendering (the `return
+	// children` path below).
+	const isPortalEnabled = !!mode && isTeleportAvailable;
 	const portalAttachTarget: BoundaryPortalAttachTarget =
 		!mode || mode === true
 			? "current-screen"
@@ -256,7 +261,7 @@ export const Portal = memo(function Portal({
 		return { width, height };
 	});
 
-	if (isPortalEnabled) {
+	if (isPortalEnabled && TransitionAwareTeleport) {
 		return (
 			<Animated.View
 				ref={placeholderRef}

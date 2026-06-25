@@ -87,6 +87,11 @@
 		"react-native-screens": ">=4.4.0",
 		"react-native-teleport": ">=1.1.0 <2.0.0"
 	},
+	"peerDependenciesMeta": {
+		"react-native-teleport": {
+			"optional": true
+		}
+	},
 	"devDependencies": {
 		"@testing-library/react-native": "13.3.3",
 		"@types/react": "~19.1.0",

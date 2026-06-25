@@ -209,6 +209,7 @@ export default function StyleIdBoundsIndex() {
 				]}
 				showsVerticalScrollIndicator={false}
 			>
+				<Transition.Boundary.Host />
 				<View style={styles.grid}>
 					{BOARDS.map((item) => {
 						const tag = `shared-image-${item.id}`;

@@ -1,7 +1,6 @@
 import { memo } from "react";
 import type { StyleProp, ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { PortalHost as NativePortalHost } from "react-native-teleport";
 import { NO_STYLES } from "../../../../constants";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
@@ -9,14 +8,16 @@ import { getLink } from "../../../../stores/bounds/internals/links";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { ScrollStore } from "../../../../stores/scroll.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
+import { NativePortalHost } from "../teleport";
 import { createPortalBoundaryHostName } from "../utils/naming";
 import {
 	type PortalOffsetPlacement,
 	resolvePortalOffsetStyle,
 } from "../utils/offset-style";
 
-const AnimatedPortalBoundaryHost =
-	Animated.createAnimatedComponent(NativePortalHost);
+const AnimatedPortalBoundaryHost = NativePortalHost
+	? Animated.createAnimatedComponent(NativePortalHost)
+	: null;
 
 type PortalBoundaryHostProps = {
 	host: ActivePortalBoundaryHost;
@@ -83,6 +84,12 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			trackSourceScroll,
 		});
 	});
+
+	// Without `react-native-teleport` no portal ever mounts a boundary host, so
+	// this never renders — the guard just narrows the nullable animated host.
+	if (!AnimatedPortalBoundaryHost) {
+		return null;
+	}
 
 	return (
 		<AnimatedPortalBoundaryHost name={hostName} style={[style, hostStyle]} />

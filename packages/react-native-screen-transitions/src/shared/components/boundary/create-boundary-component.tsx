@@ -5,6 +5,7 @@ import {
 	useCallback,
 	useImperativeHandle,
 	useMemo,
+	useRef,
 } from "react";
 import type { View } from "react-native";
 import Animated, {
@@ -17,11 +18,13 @@ import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import { useScreenStyles } from "../../providers/screen/styles";
 import { createPendingPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
+import { logger } from "../../utils/logger";
 import { useBoundaryPresence } from "./hooks/use-boundary-presence";
 import { useInitialDestinationMeasurement } from "./hooks/use-initial-destination-measurement";
 import { useInitialSourceMeasurement } from "./hooks/use-initial-source-measurement";
 import { useMeasurer } from "./hooks/use-measurer";
 import { useRefreshBoundary } from "./hooks/use-refresh-boundary";
+import { isTeleportAvailable } from "./portal/teleport";
 import {
 	BoundaryOwnerProvider,
 	useBoundaryOwner,
@@ -105,20 +108,30 @@ export function createBoundaryComponent<P extends object>(
 			return { zIndex, elevation };
 		});
 
+		const hasWarned = useRef(false);
+		const adjustedPortal = isTeleportAvailable ? portal : undefined;
+
+		if (!hasWarned.current && !isTeleportAvailable && portal) {
+			logger.warn(
+				"react-native-teleport is not installed and will fallback to default behavior.",
+			);
+			hasWarned.current = true;
+		}
+
 		const { contextValue, measuredRef, hasActiveTarget, targetPreparedStyles } =
 			useBoundaryOwner({
 				ownerRef,
 				associatedTargetStyles: runtimeEnabled ? associatedStyles : undefined,
 				entryTag,
-				portal,
+				portal: adjustedPortal,
 			});
 
 		const preparedStyles = targetPreparedStyles ?? ownerPreparedStyles;
 
 		const portalHost =
-			typeof portal === "object"
-				? (portal.attachTo ?? "current-screen")
-				: portal
+			typeof adjustedPortal === "object"
+				? (adjustedPortal.attachTo ?? "current-screen")
+				: adjustedPortal
 					? "current-screen"
 					: undefined;
 

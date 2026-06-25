@@ -1,10 +1,14 @@
 import { memo } from "react";
-import { PortalProvider as NativePortalProvider } from "react-native-teleport";
+import { NativePortalProvider } from "../teleport";
 
 export const PortalProvider = memo(function PortalProvider({
 	children,
 }: {
 	children: React.ReactNode;
 }) {
+	if (!NativePortalProvider) {
+		return children;
+	}
+
 	return <NativePortalProvider>{children}</NativePortalProvider>;
 });
