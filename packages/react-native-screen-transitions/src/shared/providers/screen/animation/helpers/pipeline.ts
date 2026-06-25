@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useWindowDimensions } from "react-native";
 import {
 	type DerivedValue,
@@ -9,7 +8,6 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { DEFAULT_SCREEN_TRANSITION_STATE } from "../../../../constants";
 import { useStack } from "../../../../hooks/navigation/use-stack";
-import { AnimationStore } from "../../../../stores/animation.store";
 import type {
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
@@ -20,7 +18,7 @@ import { updateDerivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
 import { hydrateTransitionState } from "./hydrate-transition-state";
 import type { SelectedInterpolatorOptions } from "./selected-interpolator-options";
-import { deriveStackProgress } from "./stack-progress";
+import { resolveStackProgress } from "./stack-progress";
 import { useBuildTransitionState } from "./use-build-transition-state";
 
 export type ScreenInterpolatorFrame = Omit<
@@ -61,10 +59,11 @@ const createInitialBaseInterpolatorProps = (
 };
 
 export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
-	const { flags, routeKeys } = useStack();
+	const transitionsAlwaysOn = useStack(
+		(stack) => stack.flags.TRANSITIONS_ALWAYS_ON,
+	);
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
-	const transitionsAlwaysOn = flags.TRANSITIONS_ALWAYS_ON;
 
 	const {
 		current: currDescriptor,
@@ -75,14 +74,6 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const currentAnimation = useBuildTransitionState(currDescriptor);
 	const nextAnimation = useBuildTransitionState(nextDescriptor);
 	const prevAnimation = useBuildTransitionState(prevDescriptor);
-
-	const currentRouteKey = currDescriptor?.route?.key;
-	const currentIndex = routeKeys.indexOf(currentRouteKey);
-	const visualProgressValues = useMemo(() => {
-		return routeKeys.map((routeKey) =>
-			AnimationStore.getValue(routeKey, "visualProgress"),
-		);
-	}, [routeKeys]);
 
 	const nextRouteKey = nextDescriptor?.route?.key;
 	const nextHasTransitions =
@@ -110,6 +101,11 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 				interpolatorOptions.owner === "next" &&
 				!!nextAnimation &&
 				nextHasTransitions;
+			const previousCurrentProgress = currentAnimation?.visualProgress.get();
+			const previousNextProgress =
+				nextAnimation && nextHasTransitions
+					? nextAnimation.visualProgress.get()
+					: undefined;
 
 			frame.previous = prevAnimation
 				? hydrateTransitionState(prevAnimation, dimensions)
@@ -141,15 +137,13 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 
 			updateDerivations(frame);
 
-			frame.stackProgress = deriveStackProgress(
-				routeKeys,
-				visualProgressValues,
-				currentIndex,
+			frame.stackProgress = resolveStackProgress(
+				currentAnimation?.stackProgress,
 				frame.progress,
-				currentRouteKey,
 				frame.current.progress,
-				nextRouteKey,
+				previousCurrentProgress,
 				frame.next?.progress,
+				previousNextProgress,
 			);
 			frame.logicallySettled = frame.active.settled;
 

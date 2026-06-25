@@ -155,6 +155,7 @@ const createBuiltState = (
 	return {
 		transitionProgress: shared(overrides.progress ?? 1),
 		visualProgress: shared(overrides.progress ?? 1),
+		stackProgress: shared(overrides.progress ?? 1),
 		willAnimate: shared(0),
 		closing: shared(overrides.closing ?? 0),
 		progressAnimating: shared(overrides.progressAnimating ?? 0),
