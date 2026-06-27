@@ -184,6 +184,7 @@ const createInitialInterpolatorProps = ({
 		current,
 		next,
 		progress: 0,
+		transitionProgress: 0,
 		stackProgress: 0,
 		logicallySettled: 1,
 		focused: true,

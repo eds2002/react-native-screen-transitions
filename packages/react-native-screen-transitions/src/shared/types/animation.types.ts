@@ -224,6 +224,12 @@ export interface ScreenInterpolationProps {
 	progress: number;
 
 	/**
+	 * Combined transition progress of current and next screens, without live
+	 * gesture contribution.
+	 */
+	transitionProgress: number;
+
+	/**
 	 * Accumulated progress from the current screen's position onwards in the stack.
 	 * Unlike `progress` (0-2), this ranges from 0-N where N is the number of screens
 	 * above the current screen. Each screen at index I sees stackProgress as the
