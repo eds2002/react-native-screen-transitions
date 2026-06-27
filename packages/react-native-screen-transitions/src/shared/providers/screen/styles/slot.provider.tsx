@@ -31,6 +31,7 @@ export type ScreenSlotName =
 	| typeof NAVIGATION_MASK_ELEMENT_STYLE_ID;
 
 type ScreenSlotContextValue = {
+	nextInterpolatorReady: SharedValue<number>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
 
@@ -43,10 +44,10 @@ export const {
 })<Props, ScreenSlotContextValue>(({ children, isFloatingOverlay }) => {
 	const parentContext = useContext(ScreenSlotContext);
 
-	const rawStylesMaps = useInterpolatedStylesMap();
+	const { localStylesMaps, nextInterpolatorReady } = useInterpolatedStylesMap();
 
 	const slotsMap = useResolvedStylesMap({
-		localStylesMaps: rawStylesMaps,
+		localStylesMaps,
 		ancestorStylesMap: parentContext?.slotsMap,
 	});
 	const { animatedStyle, animatedProps } =
@@ -54,6 +55,7 @@ export const {
 
 	return {
 		value: {
+			nextInterpolatorReady,
 			slotsMap,
 		},
 		children: (

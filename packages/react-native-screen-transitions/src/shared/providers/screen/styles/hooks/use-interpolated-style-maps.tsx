@@ -144,6 +144,7 @@ export const useInterpolatedStylesMap = () => {
 	} = useScreenAnimationContext();
 	const boundsAccessor = useBuildBoundsAccessor();
 	const transition = useBuildTransitionAccessor();
+	const nextInterpolatorReady = useSharedValue(0);
 
 	const activeScreenKey = nextScreenKey ?? currentScreenKey;
 	const {
@@ -155,7 +156,7 @@ export const useInterpolatedStylesMap = () => {
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
-	return useDerivedValue<LocalStyleLayers>(() => {
+	const localStylesMaps = useDerivedValue<LocalStyleLayers>(() => {
 		"worklet";
 		readScreenAnimationRevisions(
 			screenInterpolatorPropsRevision,
@@ -197,6 +198,7 @@ export const useInterpolatedStylesMap = () => {
 				activeOpening ? 1 : 0,
 				activeTransitionProgress.get(),
 			);
+		nextInterpolatorReady.set(currentOwnsInterpolator ? 0 : 1);
 
 		const interpolatorOptionsOwner = currentOwnsInterpolator
 			? "current"
@@ -261,4 +263,9 @@ export const useInterpolatedStylesMap = () => {
 
 		return layers;
 	});
+
+	return {
+		localStylesMaps,
+		nextInterpolatorReady,
+	};
 };

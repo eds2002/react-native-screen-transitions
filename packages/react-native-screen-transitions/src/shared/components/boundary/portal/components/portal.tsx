@@ -82,7 +82,7 @@ export const Portal = memo(function Portal({
 		!mode || mode === true
 			? "current-screen"
 			: (mode.attachTo ?? "current-screen");
-	const { slotsMap } = useScreenSlots();
+	const { nextInterpolatorReady, slotsMap } = useScreenSlots();
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
@@ -218,19 +218,21 @@ export const Portal = memo(function Portal({
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
 
-		// Opening waits for the destination transition to start so content is not
-		// re-parented before the host is visually ready. Closing stays attached
-		// through progress 0 so the final frame can land in the matched host.
 		const { teleport, ...slotProps } = slotsMap.get()[id]?.props ?? {};
 		const shouldTeleport = isTeleportEnabled(teleport);
+		const attachedHost = attachedHostName.get();
+		const isInterpolatorReady = nextInterpolatorReady.get();
 
 		return {
 			// Preserve portal slot props from the interpolator while keeping
-			// hostName owned by the attachment gate below.
+			// hostName owned by the attachment gate below. Matched-screen handoff
+			// waits until the destination interpolator owns styles for the same host;
+			// after that, it stays attached until teleport is disabled or retargeted.
 			...slotProps,
-			hostName: shouldTeleport
-				? attachedHostName.get()
-				: PORTAL_HOST_NAME_RESET_VALUE,
+			hostName:
+				shouldTeleport && isInterpolatorReady
+					? attachedHost
+					: PORTAL_HOST_NAME_RESET_VALUE,
 		};
 	});
 
