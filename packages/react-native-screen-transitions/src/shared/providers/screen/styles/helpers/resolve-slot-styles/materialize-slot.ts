@@ -139,7 +139,6 @@ export const materializeResolvedSlot = ({
 		hasAnyStyleKeys,
 		hasStyleResetPatch,
 	});
-
 	const resolvedProps = materializeResolvedProps({
 		baseProps,
 		previousState,

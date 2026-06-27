@@ -10,6 +10,20 @@ export type TagID = string;
 export type LinkKey = string;
 export type GroupKey = string;
 export type ScreenPairKey = string;
+
+/**
+ * A boundary's identity, carried as one value instead of the
+ * `{ tag, linkKey, group }` clump that used to thread through every hook.
+ *
+ * - `tag`: the combined entry tag (`group:linkKey` when grouped, else `linkKey`).
+ * - `linkKey`: the bare member key used to address links within a screen pair.
+ * - `group`: the optional collection name.
+ */
+export interface BoundTag {
+	tag: string;
+	linkKey: LinkKey;
+	group?: GroupKey;
+}
 export type BoundsPortalAttachTarget = "current-screen" | "matched-screen";
 export type { ScreenKey } from "../../types/screen.types";
 

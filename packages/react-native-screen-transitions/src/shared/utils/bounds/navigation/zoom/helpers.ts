@@ -1,5 +1,10 @@
 import { interpolate } from "react-native-reanimated";
+import { EPSILON } from "../../../../constants";
 import type { BoundsLink } from "../../../../types/bounds.types";
+import type {
+	ActiveGesture,
+	ResolvedPanGestureDirection,
+} from "../../../../types/gesture.types";
 import type { Layout } from "../../../../types/screen.types";
 import type { BoundsOptions } from "../../types/options";
 import {
@@ -92,6 +97,97 @@ export function resolveBackgroundScale(value: number | undefined) {
 	"worklet";
 
 	return value ?? ZOOM_BACKGROUND_SCALE;
+}
+
+const isResolvedPanDirection = (
+	direction: ActiveGesture | null | undefined,
+): direction is ResolvedPanGestureDirection => {
+	"worklet";
+	return (
+		direction === "horizontal" ||
+		direction === "horizontal-inverted" ||
+		direction === "vertical" ||
+		direction === "vertical-inverted"
+	);
+};
+
+const resolveMotionDirection = ({
+	normX,
+	normY,
+	rawNormX,
+	rawNormY,
+}: {
+	normX: number;
+	normY: number;
+	rawNormX: number;
+	rawNormY: number;
+}): ResolvedPanGestureDirection | null => {
+	"worklet";
+	const motionX = Math.max(Math.abs(normX), Math.abs(rawNormX));
+	const motionY = Math.max(Math.abs(normY), Math.abs(rawNormY));
+
+	if (motionX <= EPSILON && motionY <= EPSILON) {
+		return null;
+	}
+
+	if (motionY > motionX + EPSILON) {
+		return normY < 0 || rawNormY < 0 ? "vertical-inverted" : "vertical";
+	}
+
+	if (motionX > motionY + EPSILON) {
+		return normX < 0 || rawNormX < 0 ? "horizontal-inverted" : "horizontal";
+	}
+
+	return null;
+};
+
+export function resolveZoomPanGestureDirection({
+	active,
+	direction,
+	normX,
+	normY,
+	rawNormX,
+	rawNormY,
+}: {
+	active: ActiveGesture | null | undefined;
+	direction: ActiveGesture | null | undefined;
+	normX: number;
+	normY: number;
+	rawNormX: number;
+	rawNormY: number;
+}): ResolvedPanGestureDirection | null {
+	"worklet";
+	const storedDirection = active ?? direction;
+	const motionDirection = resolveMotionDirection({
+		normX,
+		normY,
+		rawNormX,
+		rawNormY,
+	});
+
+	if (!isResolvedPanDirection(storedDirection)) {
+		return motionDirection;
+	}
+
+	if (!motionDirection) {
+		return storedDirection;
+	}
+
+	const storedIsHorizontal =
+		storedDirection === "horizontal" ||
+		storedDirection === "horizontal-inverted";
+	const storedMotion = storedIsHorizontal
+		? Math.max(Math.abs(normX), Math.abs(rawNormX))
+		: Math.max(Math.abs(normY), Math.abs(rawNormY));
+	const oppositeMotion = storedIsHorizontal
+		? Math.max(Math.abs(normY), Math.abs(rawNormY))
+		: Math.max(Math.abs(normX), Math.abs(rawNormX));
+
+	if (oppositeMotion > storedMotion + EPSILON) {
+		return motionDirection;
+	}
+
+	return storedDirection;
 }
 
 export function interpolateOpacityRange(params: {

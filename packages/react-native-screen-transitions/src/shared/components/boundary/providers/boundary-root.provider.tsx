@@ -1,8 +1,10 @@
 import type React from "react";
-import { type ReactNode, useCallback, useMemo, useRef, useState } from "react";
+import { type ReactNode, useCallback, useMemo, useState } from "react";
 import type { View } from "react-native";
 import type Animated from "react-native-reanimated";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
+import { useAnimatedRef } from "react-native-reanimated";
+import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
 import type { BoundaryPortal } from "../types";
@@ -11,8 +13,7 @@ type BoundaryAssociatedStyle = React.ComponentProps<
 	typeof Animated.View
 >["style"];
 
-interface BoundaryOwnerContextValue {
-	ownerRef: AnimatedRef<View>;
+interface BoundaryRootContextValue {
 	registerTargetRef: (
 		targetRef: AnimatedRef<View>,
 		preparedStyles: StyleProps,
@@ -21,7 +22,7 @@ interface BoundaryOwnerContextValue {
 	unregisterTargetRef: (targetRef: AnimatedRef<View>) => void;
 	activeTargetRef: AnimatedRef<View> | null;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
-	entryTag: string;
+	boundTag: BoundTag;
 	portal?: BoundaryPortal;
 }
 
@@ -34,30 +35,28 @@ type BoundaryTargetEntry = {
 
 // logger.warn prepends the library prefix.
 const MULTIPLE_TARGETS_WARNING =
-	"Multiple Boundary.Target elements were rendered under the same boundary owner. The first registered target will be measured.";
+	"Multiple Boundary.Target elements were rendered under the same boundary root. The first registered target will be measured.";
 
-export const TARGET_OUTSIDE_OWNER_WARNING =
-	"Boundary.Target must be rendered inside a Boundary owner (Boundary.View, Boundary.Trigger, or a component created by createBoundaryComponent).";
+export const TARGET_OUTSIDE_ROOT_WARNING =
+	"Boundary.Target must be rendered inside a Boundary root (Boundary.View, Boundary.Trigger, or a component created by createBoundaryComponent).";
 
-interface BoundaryOwnerProps {
-	value: BoundaryOwnerContextValue;
+interface BoundaryRootProps {
+	value: BoundaryRootContextValue;
 	children: ReactNode;
 }
 
-export const { BoundaryOwnerProvider, useBoundaryOwnerContext } =
-	createProvider("BoundaryOwner", { guarded: false })<
-		BoundaryOwnerProps,
-		BoundaryOwnerContextValue
-	>((props) => props);
+export const { BoundaryRootProvider, useBoundaryRootContext } = createProvider(
+	"BoundaryRoot",
+	{ guarded: false },
+)<BoundaryRootProps, BoundaryRootContextValue>((props) => props);
 
-export const useBoundaryOwner = (params: {
-	ownerRef: AnimatedRef<View>;
+export const useBoundaryRootState = (params: {
 	associatedTargetStyles?: BoundaryAssociatedStyle;
-	entryTag: string;
+	boundTag: BoundTag;
 	portal?: BoundaryPortal;
 }) => {
-	const { ownerRef, associatedTargetStyles, entryTag, portal } = params;
-	const warnedAboutMultipleTargetsRef = useRef(false);
+	const { associatedTargetStyles, boundTag, portal } = params;
+	const rootRef = useAnimatedRef<View>();
 	const [targetEntry, setTargetEntry] = useState<BoundaryTargetEntry | null>(
 		null,
 	);
@@ -73,13 +72,11 @@ export const useBoundaryOwner = (params: {
 					return prev;
 				}
 
-				if (
-					__DEV__ &&
-					prev !== null &&
-					!warnedAboutMultipleTargetsRef.current
-				) {
-					warnedAboutMultipleTargetsRef.current = true;
-					logger.warn(MULTIPLE_TARGETS_WARNING);
+				if (__DEV__ && prev !== null) {
+					logger.warnOnce(
+						"boundary:multiple-targets",
+						MULTIPLE_TARGETS_WARNING,
+					);
 				}
 
 				return (
@@ -100,30 +97,28 @@ export const useBoundaryOwner = (params: {
 
 	const contextValue = useMemo(
 		() => ({
-			ownerRef,
 			registerTargetRef,
 			unregisterTargetRef,
 			activeTargetRef: targetEntry?.ref ?? null,
 			associatedTargetStyles,
-			entryTag,
+			boundTag,
 			portal,
 		}),
 		[
-			ownerRef,
 			registerTargetRef,
 			unregisterTargetRef,
 			targetEntry,
 			associatedTargetStyles,
-			entryTag,
+			boundTag,
 			portal,
 		],
 	);
 
 	return {
+		ref: rootRef,
 		contextValue,
 		hasActiveTarget: targetEntry !== null,
-		measuredRef: targetEntry?.measurementRef ?? ownerRef,
+		measuredRef: targetEntry?.measurementRef ?? rootRef,
 		targetPreparedStyles: targetEntry?.preparedStyles,
-		portal,
 	};
 };

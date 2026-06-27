@@ -114,6 +114,65 @@ describe("bounds client measurement contract", () => {
 		expect(getDestinationPairKey()).toBeNull();
 	});
 
+	it("limits destination-first measurement to the pressed pending source", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const pendingPairKey = createPendingPairKey("screen-a");
+
+		BoundStore.link.setSource(
+			pendingPairKey,
+			"lime",
+			"screen-a",
+			createBounds(),
+		);
+
+		const getDestinationPairKey = (linkId: string) =>
+			getInitialDestinationMeasurePairKey({
+				enabled: true,
+				destinationPairKey: pairKey,
+				linkId,
+				linkState: pairs.get(),
+			});
+
+		expect(getDestinationPairKey("lime")).toBe(pairKey);
+		expect(getDestinationPairKey("sky")).toBeNull();
+		expect(getDestinationPairKey("electric")).toBeNull();
+	});
+
+	it("keeps grouped destination measurement pinned after pending source promotion", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const pendingPairKey = createPendingPairKey("screen-a");
+
+		BoundStore.link.setSource(
+			pendingPairKey,
+			"lime",
+			"screen-a",
+			createBounds(),
+			{},
+			"colors",
+		);
+		BoundStore.link.setDestination(
+			pairKey,
+			"lime",
+			"screen-b",
+			createBounds(),
+			{},
+			"colors",
+		);
+
+		const getDestinationPairKey = (linkId: string) =>
+			getInitialDestinationMeasurePairKey({
+				enabled: true,
+				destinationPairKey: pairKey,
+				linkId,
+				group: "colors",
+				linkState: pairs.get(),
+			});
+
+		expect(BoundStore.link.getLink(pendingPairKey, "lime")).toBeNull();
+		expect(getDestinationPairKey("sky")).toBeNull();
+		expect(getDestinationPairKey("electric")).toBeNull();
+	});
+
 	it("attaches nested initial destinations to the nearest ancestor pair", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
 

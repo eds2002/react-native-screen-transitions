@@ -35,7 +35,7 @@ Host.displayName = "Transition.Boundary.Host";
  * Use:
  * - `Boundary.View` for passive/shared elements.
  * - `Boundary.Trigger` for tappable elements that start navigation.
- * - `Boundary.Target` to measure a nested descendant instead of the owner.
+ * - `Boundary.Target` to measure a nested descendant instead of the root.
  * - `Boundary.Host` to make nested portal placement explicit.
  */
 export const Boundary = {
@@ -48,7 +48,7 @@ export const Boundary = {
 	 */
 	Trigger: BoundaryTrigger,
 	/**
-	 * Optional nested measurement override inside a boundary owner.
+	 * Optional nested measurement override inside a boundary root.
 	 */
 	Target: BoundaryTarget,
 	/**

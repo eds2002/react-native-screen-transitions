@@ -6,9 +6,9 @@ import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styl
 import { logger } from "../../../utils/logger";
 import { Portal } from "../portal/components/portal";
 import {
-	TARGET_OUTSIDE_OWNER_WARNING,
-	useBoundaryOwnerContext,
-} from "../providers/boundary-owner.provider";
+	TARGET_OUTSIDE_ROOT_WARNING,
+	useBoundaryRootContext,
+} from "../providers/boundary-root.provider";
 
 type BoundaryTargetProps = React.ComponentProps<typeof Animated.View>;
 
@@ -18,23 +18,23 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const { style, ...rest } = props;
 	const targetAnimatedRef = useAnimatedRef<View>();
 	const placeholderAnimatedRef = useAnimatedRef<View>();
-	const ownerContext = useBoundaryOwnerContext();
-	const registerTargetRef = ownerContext?.registerTargetRef;
-	const unregisterTargetRef = ownerContext?.unregisterTargetRef;
-	const isActiveTarget = ownerContext?.activeTargetRef === targetAnimatedRef;
+	const rootContext = useBoundaryRootContext();
+	const registerTargetRef = rootContext?.registerTargetRef;
+	const unregisterTargetRef = rootContext?.unregisterTargetRef;
+	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 	// Portal'd content can be teleported into another screen's host; measuring
 	// it there would capture its CURRENT (destination) position as the source
 	// bounds. The portal placeholder keeps the layout slot at home, so it is
 	// the truthful measurement surface whenever a portal is configured.
-	const measurementRef = ownerContext?.portal
+	const measurementRef = rootContext?.portal
 		? placeholderAnimatedRef
 		: targetAnimatedRef;
 
 	useLayoutEffect(() => {
 		if (!registerTargetRef || !unregisterTargetRef) {
 			if (__DEV__) {
-				logger.warn(TARGET_OUTSIDE_OWNER_WARNING);
+				logger.warn(TARGET_OUTSIDE_ROOT_WARNING);
 			}
 			return;
 		}
@@ -53,8 +53,8 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 
 	return (
 		<Portal
-			id={ownerContext?.entryTag}
-			mode={ownerContext?.portal}
+			id={rootContext?.boundTag.tag}
+			mode={rootContext?.portal}
 			placeholderRef={placeholderAnimatedRef}
 		>
 			<Animated.View
@@ -62,7 +62,7 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 				ref={targetAnimatedRef}
 				style={[
 					style,
-					isActiveTarget ? ownerContext.associatedTargetStyles : undefined,
+					isActiveTarget ? rootContext.associatedTargetStyles : undefined,
 				]}
 				collapsable={false}
 			/>

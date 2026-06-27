@@ -90,7 +90,7 @@ const syncInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 const RETARGET_ID = "retarget";
 
 const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ progress, bounds, layouts }) => {
+	({ progress, bounds, layouts, focused }) => {
 		"worklet";
 
 		const screenTranslateY = interpolate(
@@ -99,6 +99,7 @@ const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpola
 			[layouts.screen.height, 0],
 			"clamp",
 		);
+		const screenScale = interpolate(progress, [0, 1], [0.1, 1], "clamp");
 
 		const boundStyles = bounds(OPENING_TRANSFORM_BOUNDARY_ID).styles({
 			motion: ({ current, progress: motionProgress, start, props }) => {
@@ -135,7 +136,10 @@ const openingTransformInterpolator: ScreenTransitionConfig["screenStyleInterpola
 		return {
 			content: {
 				style: {
-					transform: [{ translateY: screenTranslateY }],
+					transform: [
+						{ translateY: screenTranslateY },
+						{ scale: !focused ? 1 : screenScale },
+					],
 				},
 			},
 			[OPENING_TRANSFORM_BOUNDARY_ID]: boundStyles,

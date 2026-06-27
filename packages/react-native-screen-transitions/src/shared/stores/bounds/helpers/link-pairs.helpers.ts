@@ -1,4 +1,5 @@
 import type {
+	BoundTag,
 	GroupKey,
 	LinkGroupState,
 	LinkKey,
@@ -64,6 +65,22 @@ export const getGroupKeyFromTag = (tag: string): GroupKey | null => {
 export const createGroupTag = (group: GroupKey, linkKey: LinkKey): string => {
 	"worklet";
 	return `${group}:${linkKey}`;
+};
+
+/**
+ * Builds the {@link BoundTag} identity for a boundary. The combined `tag` is
+ * group-prefixed only when a group is present, matching how links are keyed.
+ */
+export const createBoundTag = (
+	linkKey: LinkKey,
+	group?: GroupKey,
+): BoundTag => {
+	"worklet";
+	return {
+		tag: group ? createGroupTag(group, linkKey) : linkKey,
+		linkKey,
+		group,
+	};
 };
 
 const ensurePairState = (

@@ -1,5 +1,9 @@
 export {
-	ScreenStylesContext,
-	ScreenStylesProvider,
-	useScreenStyles,
-} from "./styles.provider";
+	ScreenSlotContext,
+	type ScreenSlotName,
+	ScreenSlotProvider,
+	useScreenSlots,
+	useSlotProps,
+	useSlotStackingStyles,
+	useSlotStyles,
+} from "./slot.provider";

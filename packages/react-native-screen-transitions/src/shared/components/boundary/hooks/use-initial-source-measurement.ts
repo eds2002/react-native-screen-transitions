@@ -1,17 +1,17 @@
 import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { pairs } from "../../../stores/bounds/internals/state";
+import type { BoundTag } from "../../../stores/bounds/types";
 import type { MeasureBoundary } from "../types";
 import { getInitialSourceCaptureSignal } from "../utils/source-signals";
 
 export const useInitialSourceMeasurement = (params: {
 	enabled: boolean;
 	measureBoundary: MeasureBoundary;
-	linkId: string;
-	group?: string;
+	boundTag: BoundTag;
 	shouldAutoMeasure: boolean;
 }) => {
-	const { enabled, measureBoundary, linkId, group, shouldAutoMeasure } = params;
+	const { enabled, measureBoundary, boundTag, shouldAutoMeasure } = params;
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const lastSourceCaptureSignal = useSharedValue<string | null>(null);
 
@@ -21,8 +21,8 @@ export const useInitialSourceMeasurement = (params: {
 			return getInitialSourceCaptureSignal({
 				enabled,
 				sourcePairKey,
-				linkId,
-				group,
+				linkId: boundTag.linkKey,
+				group: boundTag.group,
 				shouldAutoMeasure,
 				linkState: shouldAutoMeasure && sourcePairKey ? pairs.get() : undefined,
 			});

@@ -8,7 +8,10 @@ import {
 } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
 import { useOriginContext } from "../../../providers/screen/origin.provider";
-import type { BoundsPortalAttachTarget } from "../../../stores/bounds/types";
+import type {
+	BoundsPortalAttachTarget,
+	BoundTag,
+} from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
 import { getActiveScrollHost } from "../portal/stores/host-registry.store";
@@ -22,9 +25,7 @@ import {
 
 interface UseMeasurerParams {
 	enabled: boolean;
-	entryTag: string;
-	linkId: string;
-	group?: string;
+	boundTag: BoundTag;
 	currentScreenKey: string;
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
@@ -33,9 +34,7 @@ interface UseMeasurerParams {
 
 export const useMeasurer = ({
 	enabled,
-	entryTag,
-	linkId,
-	group,
+	boundTag,
 	currentScreenKey,
 	preparedStyles,
 	measuredAnimatedRef,
@@ -78,7 +77,7 @@ export const useMeasurer = ({
 			 * lifecycle blocked until a valid retry lands.
 			 */
 			const shouldGuardDestinationViewport =
-				pendingLifecycleStartBlockCount.get() > 0 || !!group;
+				pendingLifecycleStartBlockCount.get() > 0 || !!boundTag.group;
 
 			const viewportAllowsDestinationWrite =
 				target.type !== "destination" ||
@@ -101,9 +100,9 @@ export const useMeasurer = ({
 					: undefined;
 
 			applyMeasuredBoundsWrites({
-				entryTag,
-				linkId,
-				group,
+				entryTag: boundTag.tag,
+				linkId: boundTag.linkKey,
+				group: boundTag.group,
 				currentScreenKey,
 				measured: measuredWithScroll,
 				preparedStyles,
@@ -114,9 +113,7 @@ export const useMeasurer = ({
 		},
 		[
 			enabled,
-			entryTag,
-			linkId,
-			group,
+			boundTag,
 			currentScreenKey,
 			preparedStyles,
 			measuredAnimatedRef,

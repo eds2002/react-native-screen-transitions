@@ -33,6 +33,7 @@ import {
 	resolveBackgroundScale,
 	resolveDragScaleTuple,
 	resolveDragTranslationTuple,
+	resolveZoomPanGestureDirection,
 } from "./helpers";
 import { resolveDirectionalDragTranslation } from "./math";
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
@@ -139,7 +140,14 @@ export function buildZoomStyles({
 	const gestureHandoff = liveGesture.handoff;
 	const normX = gestureHandoff.normX;
 	const normY = gestureHandoff.normY;
-	const initialGesture = gestureHandoff.active ?? gestureHandoff.direction;
+	const initialGesture = resolveZoomPanGestureDirection({
+		active: gestureHandoff.active,
+		direction: gestureHandoff.direction,
+		normX,
+		normY,
+		rawNormX: gestureHandoff.raw.normX,
+		rawNormY: gestureHandoff.raw.normY,
+	});
 	const isHorizontalDismiss =
 		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
 	const isVerticalDismiss =

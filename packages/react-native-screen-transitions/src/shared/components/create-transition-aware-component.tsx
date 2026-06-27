@@ -5,18 +5,15 @@ import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	runOnUI,
-	useAnimatedProps,
 	useAnimatedRef,
-	useAnimatedStyle,
 	useComposedEventHandler,
 } from "react-native-reanimated";
-import { NO_PROPS, NO_STYLES } from "../constants";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import {
 	ScrollMetadataOwnerProvider,
 	useScrollGestureCoordination,
 } from "../providers/screen/gestures/scroll-coordination";
-import { useScreenStyles } from "../providers/screen/styles";
+import { useSlotProps, useSlotStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
 
 interface CreateTransitionAwareComponentOptions {
@@ -128,28 +125,9 @@ export function createTransitionAwareComponent<P extends object>(
 		} = props as any;
 
 		const animatedRef = useAnimatedRef<View>();
-		const { stylesMap } = useScreenStyles();
 		const associatedId = sharedBoundTag || styleId;
-
-		const associatedStyles = useAnimatedStyle(() => {
-			"worklet";
-
-			if (!associatedId) {
-				return NO_STYLES;
-			}
-
-			return stylesMap.get()[associatedId]?.style ?? NO_STYLES;
-		});
-
-		const associatedProps = useAnimatedProps(() => {
-			"worklet";
-
-			if (!associatedId) {
-				return NO_PROPS;
-			}
-
-			return stylesMap.get()[associatedId]?.props ?? NO_PROPS;
-		});
+		const associatedStyles = useSlotStyles(associatedId);
+		const associatedProps = useSlotProps(associatedId);
 
 		return (
 			<RegisterBoundsProvider

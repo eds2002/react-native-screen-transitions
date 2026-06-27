@@ -2,15 +2,11 @@
 import { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Animated, {
-	useAnimatedProps,
-	useAnimatedStyle,
-} from "react-native-reanimated";
-import { NO_PROPS, NO_STYLES } from "../../../constants";
+import Animated from "react-native-reanimated";
 import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useGestureContext } from "../../../providers/screen/gestures";
 import { OriginProvider } from "../../../providers/screen/origin.provider";
-import { useScreenStyles } from "../../../providers/screen/styles";
+import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 import { ScreenFallbackHost } from "../../boundary/portal/components/host";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
@@ -24,7 +20,6 @@ type Props = {
 
 export const ContentLayer = memo(
 	({ children, pointerEvents, isBackdropActive }: Props) => {
-		const { stylesMap } = useScreenStyles();
 		const { current } = useDescriptors();
 
 		const gestureContext = useGestureContext();
@@ -36,15 +31,8 @@ export const ContentLayer = memo(
 
 		const handleContentLayout = useContentLayout();
 
-		const animatedContentStyle = useAnimatedStyle(() => {
-			"worklet";
-			return stylesMap.get().content?.style || NO_STYLES;
-		});
-
-		const animatedContentProps = useAnimatedProps(() => {
-			"worklet";
-			return stylesMap.get().content?.props ?? NO_PROPS;
-		});
+		const animatedContentStyle = useSlotStyles("content");
+		const animatedContentProps = useSlotProps("content");
 
 		return (
 			<GestureDetector gesture={gestureContext!.detectorGesture}>

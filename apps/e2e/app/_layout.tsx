@@ -154,6 +154,10 @@ export default function RootLayout() {
 					name="gesture-velocity-recipe"
 					options={{ ...IOSSlide() }}
 				/>
+				<StackNavigator.Screen
+					name="matched-screen-debug"
+					options={{ ...IOSSlide() }}
+				/>
 				<StackNavigator.Screen name="stack-benchmark" />
 				<StackNavigator.Screen name="gestures" />
 				<StackNavigator.Screen

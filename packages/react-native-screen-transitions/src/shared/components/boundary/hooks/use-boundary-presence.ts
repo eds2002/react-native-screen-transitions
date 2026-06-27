@@ -4,25 +4,27 @@ import {
 	removeEntry,
 	setEntry,
 } from "../../../stores/bounds/internals/entries";
+import type { BoundTag } from "../../../stores/bounds/types";
 import type { BoundaryConfigProps } from "../types";
 
 export const useBoundaryPresence = (params: {
 	enabled: boolean;
-	entryTag: string;
+	boundTag: BoundTag;
 	currentScreenKey: string;
 	boundaryConfig?: BoundaryConfigProps;
 }) => {
-	const { enabled, entryTag, currentScreenKey, boundaryConfig } = params;
+	const { enabled, boundTag, currentScreenKey, boundaryConfig } = params;
+	const { tag } = boundTag;
 
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUI(setEntry)(entryTag, currentScreenKey, {
+		runOnUI(setEntry)(tag, currentScreenKey, {
 			boundaryConfig,
 		});
 
 		return () => {
-			runOnUI(removeEntry)(entryTag, currentScreenKey);
+			runOnUI(removeEntry)(tag, currentScreenKey);
 		};
-	}, [enabled, entryTag, currentScreenKey, boundaryConfig]);
+	}, [enabled, tag, currentScreenKey, boundaryConfig]);
 };

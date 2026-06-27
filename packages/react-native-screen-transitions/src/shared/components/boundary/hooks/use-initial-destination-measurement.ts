@@ -9,6 +9,7 @@ import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
 import { getDestination } from "../../../stores/bounds/internals/links";
 import { pairs } from "../../../stores/bounds/internals/state";
+import type { BoundTag } from "../../../stores/bounds/types";
 import {
 	LifecycleTransitionRequestKind,
 	SystemStore,
@@ -17,7 +18,7 @@ import { logger } from "../../../utils/logger";
 import type { MeasureBoundary } from "../types";
 import { getInitialDestinationMeasurePairKey } from "../utils/destination-signals";
 
-const VIEWPORT_RETRY_DELAY_MS = 16;
+const VIEWPORT_RETRY_DELAY_MS = 100;
 /**
  * A destination that keeps failing its measurement guards must not hold the
  * transition gate forever — after this budget the block is released with a
@@ -26,16 +27,17 @@ const VIEWPORT_RETRY_DELAY_MS = 16;
 const MAX_VIEWPORT_RETRIES = 20;
 
 interface UseInitialDestinationMeasurementParams {
-	linkId: string;
+	boundTag: BoundTag;
 	enabled: boolean;
 	measureBoundary: MeasureBoundary;
 }
 
 export const useInitialDestinationMeasurement = ({
-	linkId,
+	boundTag,
 	enabled,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
+	const { linkKey, group } = boundTag;
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
@@ -51,9 +53,12 @@ export const useInitialDestinationMeasurement = ({
 		currentScreenKey,
 		"transitionProgress",
 	);
-	const system = SystemStore.getBag(currentScreenKey);
-	const { pendingLifecycleRequestKind } = system;
-	const { blockLifecycleStart, unblockLifecycleStart } = system.actions;
+
+	const {
+		pendingLifecycleRequestKind,
+		actions: { blockLifecycleStart, unblockLifecycleStart },
+	} = SystemStore.getBag(currentScreenKey);
+
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);
 	const viewportRetries = useSharedValue(0);
@@ -90,7 +95,8 @@ export const useInitialDestinationMeasurement = ({
 				enabled: destinationEnabled,
 				destinationPairKey,
 				ancestorDestinationPairKey,
-				linkId,
+				linkId: linkKey,
+				group,
 				linkState:
 					destinationEnabled &&
 					(destinationPairKey || ancestorDestinationPairKey)
@@ -100,12 +106,22 @@ export const useInitialDestinationMeasurement = ({
 
 			return [measurePairKey, retryTick] as const;
 		},
-		([measurePairKey]) => {
+		([measurePairKey, retryTick], previous) => {
 			"worklet";
 			if (!measurePairKey) {
 				releaseLifecycleStartBlock();
 				viewportRetries.set(0);
 				hasGivenUp.set(0);
+				return;
+			}
+
+			const previousMeasurePairKey = previous?.[0];
+			const previousRetryTick = previous?.[1];
+			const shouldAttemptMeasure =
+				measurePairKey !== previousMeasurePairKey ||
+				retryTick !== previousRetryTick;
+
+			if (!shouldAttemptMeasure) {
 				return;
 			}
 
@@ -124,7 +140,7 @@ export const useInitialDestinationMeasurement = ({
 			});
 
 			const destinationAttached =
-				getDestination(measurePairKey, linkId) !== null;
+				getDestination(measurePairKey, linkKey) !== null;
 
 			if (destinationAttached) {
 				releaseLifecycleStartBlock();
@@ -136,13 +152,13 @@ export const useInitialDestinationMeasurement = ({
 				hasGivenUp.set(1);
 				releaseLifecycleStartBlock();
 				logger.warn(
-					`Destination boundary "${linkId}" never produced a valid measurement after ${MAX_VIEWPORT_RETRIES} attempts; releasing the transition gate without it. The boundary is likely off-viewport (e.g. an inactive group member on a paged screen) or unmounted.`,
+					`Destination boundary "${linkKey}" never produced a valid measurement after ${MAX_VIEWPORT_RETRIES} attempts; releasing the transition gate without it. The boundary is likely off-viewport (e.g. an inactive group member on a paged screen) or unmounted.`,
 				);
 				return;
 			}
 
 			// Destination did not attach (malformed off-screen measurement); retry
-			// on the next tick while the lifecycle stays blocked.
+			// after the retry token advances while the lifecycle stays blocked.
 			viewportRetries.set(viewportRetries.get() + 1);
 			cancelAnimation(retryToken);
 			retryToken.set(

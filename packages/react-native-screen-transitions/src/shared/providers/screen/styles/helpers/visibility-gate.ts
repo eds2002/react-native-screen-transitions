@@ -34,12 +34,7 @@ export const resolveScreenVisibilityGate = ({
 	const isPendingOpen =
 		pendingLifecycleRequestKind === LifecycleTransitionRequestKind.Open;
 	const isOpening = isPendingOpen || !!entering;
-
-	// Keep the screen hidden until the first transformed opening frame exists.
-	// The lifecycle request is cleared before the RAF-scheduled progress
-	// animation starts, so `entering` carries the gate through that one-frame gap.
 	const isWaitingForOpenToStart = progress <= 0;
-
 	const shouldBlock =
 		(hasPendingLifecycleBlock || isWaitingForOpenToStart) && isOpening;
 
@@ -47,11 +42,4 @@ export const resolveScreenVisibilityGate = ({
 		shouldBlock,
 		shouldOpenGate: !shouldBlock && progress > 0,
 	};
-};
-
-export const shouldBlockScreenVisibility = (
-	state: ScreenVisibilityGateState,
-) => {
-	"worklet";
-	return resolveScreenVisibilityGate(state).shouldBlock;
 };

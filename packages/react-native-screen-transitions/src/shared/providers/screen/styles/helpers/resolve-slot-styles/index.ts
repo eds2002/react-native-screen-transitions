@@ -35,17 +35,17 @@ const getForwardedSlot = (
 	return slot;
 };
 
+const hasDefinedBucketValue = (value: unknown) => {
+	"worklet";
+	return value !== undefined && value !== null;
+};
+
 const hasEitherResetPatch = (
 	hasStyleResetPatch: boolean,
 	hasPropResetPatch: boolean,
 ) => {
 	"worklet";
 	return hasStyleResetPatch || hasPropResetPatch;
-};
-
-const hasDefinedBucketValue = (value: unknown) => {
-	"worklet";
-	return value !== undefined && value !== null;
 };
 
 const hasResettableDisappearedKeys = (
@@ -81,7 +81,6 @@ const getResolvedSlotOutput = ({
 }) => {
 	"worklet";
 	const state = getResolvedSlotState(slot);
-
 	const hasStyleResetPatch = hasResettableDisappearedKeys(
 		previousState?.styleKeys,
 		previousState?.styleResetValues,
@@ -459,10 +458,9 @@ const appendPreviousSlots = (context: ResolveSlotStylesContext) => {
 };
 
 /**
- * Resolves slot styles for the current screen pass and resets keys a slot
- * emitted previously but no longer returns. Reanimated does not reliably clear
- * animated values with undefined, so known keys and numeric values are reset to
- * concrete identity values.
+ * Resolves slot styles for the current screen pass and emits reset values for
+ * transition-owned keys that existed in the previous resolved map but no longer
+ * exist in the current one.
  */
 export const resolveSlotStyles = ({
 	localStylesMaps,

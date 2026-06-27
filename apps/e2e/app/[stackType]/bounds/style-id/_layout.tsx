@@ -54,7 +54,7 @@ export default function StyleIdBoundsLayout() {
 						},
 						close: {
 							stiffness: 500,
-							damping: 1000,
+							damping: 50,
 							mass: 3,
 							overshootClamping: false,
 						},

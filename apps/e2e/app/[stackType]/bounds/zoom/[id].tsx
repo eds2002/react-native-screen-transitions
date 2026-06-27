@@ -285,11 +285,11 @@ export default function NavigationZoomGroupTransitionsDetail() {
 				// scrollEnabled={false}
 				showsHorizontalScrollIndicator={false}
 				onMomentumScrollEnd={handleMomentumScrollEnd}
-				windowSize={1}
-				maxToRenderPerBatch={1}
-				initialNumToRender={1}
-				updateCellsBatchingPeriod={100}
-				scrollEventThrottle={16}
+				// windowSize={1}
+				// maxToRenderPerBatch={1}
+				// initialNumToRender={1}
+				// updateCellsBatchingPeriod={100}
+				// scrollEventThrottle={16}
 				decelerationRate="fast"
 				overScrollMode="never"
 				style={styles.flatList}

@@ -17,7 +17,7 @@ import Animated, {
 	useSharedValue,
 } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
-import { useScreenStyles } from "../../../../providers/screen/styles";
+import { useScreenSlots } from "../../../../providers/screen/styles";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { getLinkKeyFromTag } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getLink } from "../../../../stores/bounds/internals/links";
@@ -83,7 +83,7 @@ export const Portal = memo(function Portal({
 		!mode || mode === true
 			? "current-screen"
 			: (mode.attachTo ?? "current-screen");
-	const { stylesMap } = useScreenStyles();
+	const { slotsMap } = useScreenSlots();
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
@@ -229,7 +229,7 @@ export const Portal = memo(function Portal({
 		// re-parented before the host is visually ready. Closing stays attached
 		// through progress 0 so the final frame can land in the matched host.
 		const attachThreshold = closing.get() === 1 ? 0 : 0.001;
-		const { teleport, ...slotProps } = stylesMap.get()[id]?.props ?? {};
+		const { teleport, ...slotProps } = slotsMap.get()[id]?.props ?? {};
 		const shouldTeleport = isTeleportEnabled(teleport);
 
 		return {

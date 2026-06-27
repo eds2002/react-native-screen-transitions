@@ -1,6 +1,6 @@
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
-import { SystemStore } from "../../../../stores/system.store";
+import { AnimationStore } from "../../../../stores/animation.store";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	ScreenStyleInterpolator,
@@ -13,13 +13,13 @@ import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/us
 import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
 import { readScreenAnimationRevisions } from "../../animation/helpers/read-screen-animation-revisions";
 import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selected-interpolator-options";
-import { useDescriptorDerivations } from "../../descriptors";
+import { useDescriptorsStore } from "../../descriptors";
 import {
 	syncScreenOptionsOverrides,
 	useScreenOptionsContext,
 } from "../../options";
 import { normalizeSlots } from "../helpers/normalize-slots";
-import { preserveAnimatedPropsOnly } from "../helpers/preserve-animated-props-only";
+import { isOpeningBeforeStart } from "../helpers/opening-phase";
 import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
 
@@ -37,12 +37,10 @@ type RunInterpolatorParams = {
 	next: ScreenInterpolatorFrame["next"];
 	bounds: Parameters<ScreenStyleInterpolator>[0]["bounds"];
 	transition: Parameters<ScreenStyleInterpolator>[0]["transition"];
-	shouldDeferStyleBuckets: boolean;
 };
 
 const normalizeRawStyleMap = (
 	rawStyleMap: TransitionInterpolatedStyle | undefined,
-	shouldDeferStyleBuckets: boolean,
 ) => {
 	"worklet";
 
@@ -52,9 +50,7 @@ const normalizeRawStyleMap = (
 
 	const stylesMap = normalizeSlots(stripInterpolatorOptions(rawStyleMap));
 
-	return shouldDeferStyleBuckets
-		? preserveAnimatedPropsOnly(stylesMap)
-		: stylesMap;
+	return stylesMap;
 };
 
 const runInterpolator = ({
@@ -64,7 +60,6 @@ const runInterpolator = ({
 	next,
 	bounds,
 	transition,
-	shouldDeferStyleBuckets,
 }: RunInterpolatorParams): InterpolatorResult | undefined => {
 	"worklet";
 
@@ -86,7 +81,7 @@ const runInterpolator = ({
 
 		return {
 			rawStyleMap,
-			stylesMap: normalizeRawStyleMap(rawStyleMap, shouldDeferStyleBuckets),
+			stylesMap: normalizeRawStyleMap(rawStyleMap),
 		};
 	} catch (_) {
 		if (__DEV__) {
@@ -124,17 +119,15 @@ const appendLayer = (
  * normal interpolator selection once the gesture-driven close is no longer in
  * play.
  *
- * Visibility gating happens downstream while lifecycle start is blocked for
- * pending destination measurement. We still run the interpolator during that
- * hidden window so animated props and runtime options stay warm, but defer style
- * buckets so measurement sees the final untransformed layout.
- *
  * The result is ordered from lowest to highest priority. Resolution happens
  * downstream, where slot ids determine whether slots inherit from ancestors and
  * where higher owner layers override lower owner layers per key.
  */
 export const useInterpolatedStylesMap = () => {
-	const { currentScreenKey } = useDescriptorDerivations();
+	const currentScreenKey = useDescriptorsStore(
+		(s) => s.derivations.currentScreenKey,
+	);
+	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
 	const screenOptions = useScreenOptionsContext();
 	const {
 		screenInterpolatorProps,
@@ -147,10 +140,11 @@ export const useInterpolatedStylesMap = () => {
 	} = useScreenAnimationContext();
 	const boundsAccessor = useBuildBoundsAccessor();
 	const transition = useBuildTransitionAccessor();
-	const pendingLifecycleStartBlockCount = SystemStore.getValue(
-		currentScreenKey,
-		"pendingLifecycleStartBlockCount",
-	);
+
+	const {
+		entering: activeEntering,
+		transitionProgress: activeTransitionProgress,
+	} = AnimationStore.getBag(nextScreenKey ?? currentScreenKey);
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
@@ -162,19 +156,6 @@ export const useInterpolatedStylesMap = () => {
 			descendantScreenAnimationSources,
 		);
 		const props = screenInterpolatorProps.get();
-
-		/**
-		 * There is a niche case where bounds can be attached to a view that's styles are out of viewport.
-		 * Due to our blocking mechanism and ensuring accurate measurement, this boundary measurement
-		 * will be blocked and the screen will never be visible. To mitigate this, we:
-		 *
-		 * - Defer the style buckets (props are fine), to ensure we get the correct position of the boundary
-		 *
-		 * Again this is very niche, and since we're not marketing ourselves as a proper shared element transition
-		 * package, we won't spend time finding a better solution for this.
-		 *
-		 */
-		const shouldDeferStyleBuckets = pendingLifecycleStartBlockCount.get() > 0;
 
 		const { current, next, progress } = props;
 		const isDragging = current.gesture.dragging;
@@ -194,8 +175,21 @@ export const useInterpolatedStylesMap = () => {
 		const isInGestureMode =
 			!!isDragging || isGesturingDuringCloseAnimation.get();
 
-		const interpolatorOptionsOwner =
-			isInGestureMode || !nextInterpolator ? "current" : "next";
+		// The current screen keeps interpolator ownership until the next screen is
+		// genuinely live: never during a gesture-driven close, never before a next
+		// interpolator exists, and never in the next screen's pre-start window
+		// (entering, but no transformed frame yet). Only then does "next" take over.
+		const currentOwnsInterpolator =
+			isInGestureMode ||
+			!nextInterpolator ||
+			isOpeningBeforeStart(
+				activeEntering.get(),
+				activeTransitionProgress.get(),
+			);
+
+		const interpolatorOptionsOwner = currentOwnsInterpolator
+			? "current"
+			: "next";
 
 		let selectedProgress = progress;
 		let selectedNext = next;
@@ -212,7 +206,6 @@ export const useInterpolatedStylesMap = () => {
 			next: selectedNext,
 			bounds: boundsAccessor,
 			transition,
-			shouldDeferStyleBuckets,
 		});
 
 		if (interpolatorOptionsOwner === "current") {
@@ -237,7 +230,6 @@ export const useInterpolatedStylesMap = () => {
 			next: selectedNext,
 			bounds: boundsAccessor,
 			transition,
-			shouldDeferStyleBuckets,
 		});
 
 		syncSelectedInterpolatorOptions(

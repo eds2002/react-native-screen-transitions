@@ -118,6 +118,12 @@ const RECIPE_OPTIONS = [
 		description: "Style-id box driven by live gesture translation and velocity",
 		route: "/gesture-velocity-recipe" as const,
 	},
+	{
+		id: "matched-screen-debug",
+		title: "Matched Screen Debug",
+		description: "Minimal matched-screen portal timing repro",
+		route: "/matched-screen-debug" as const,
+	},
 ];
 
 export default function HomeScreen() {

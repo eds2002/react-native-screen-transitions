@@ -2,34 +2,23 @@ import {
 	type ComponentType,
 	forwardRef,
 	memo,
-	useCallback,
 	useImperativeHandle,
 	useMemo,
-	useRef,
 } from "react";
-import type { View } from "react-native";
-import Animated, {
-	runOnUI,
-	useAnimatedRef,
-	useAnimatedStyle,
-} from "react-native-reanimated";
-import { NO_STYLES } from "../../constants";
+import Animated from "react-native-reanimated";
 import { useDescriptorsStore } from "../../providers/screen/descriptors";
-import { useScreenStyles } from "../../providers/screen/styles";
-import { createPendingPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
-import { prepareStyleForBounds } from "../../utils/bounds/helpers/styles/styles";
-import { logger } from "../../utils/logger";
-import { useBoundaryPresence } from "./hooks/use-boundary-presence";
-import { useInitialDestinationMeasurement } from "./hooks/use-initial-destination-measurement";
-import { useInitialSourceMeasurement } from "./hooks/use-initial-source-measurement";
-import { useMeasurer } from "./hooks/use-measurer";
-import { useRefreshBoundary } from "./hooks/use-refresh-boundary";
-import { isTeleportAvailable } from "./portal/teleport";
 import {
-	BoundaryOwnerProvider,
-	useBoundaryOwner,
-} from "./providers/boundary-owner.provider";
-import type { BoundaryComponentProps, BoundaryConfigProps } from "./types";
+	useSlotStackingStyles,
+	useSlotStyles,
+} from "../../providers/screen/styles";
+import { createBoundTag } from "../../stores/bounds/helpers/link-pairs.helpers";
+import { useBoundaryMeasurement } from "./hooks/use-boundary-measurement";
+import { resolveBoundaryPortal } from "./portal/resolve-portal";
+import {
+	BoundaryRootProvider,
+	useBoundaryRootState,
+} from "./providers/boundary-root.provider";
+import type { BoundaryComponentProps } from "./types";
 
 interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;
@@ -49,7 +38,6 @@ export function createBoundaryComponent<P extends object>(
 		React.ComponentRef<typeof AnimatedComponent>,
 		BoundaryComponentProps<P>
 	>((props, forwardedRef) => {
-		const ownerRef = useAnimatedRef<View>();
 		const {
 			enabled = true,
 			group,
@@ -60,12 +48,15 @@ export function createBoundaryComponent<P extends object>(
 			method,
 			style,
 			onPress,
-			portal,
+			portal: portalProp,
 			...rest
 		} = props as any;
 
-		const linkId = String(id);
-		const entryTag = group ? `${group}:${linkId}` : linkId;
+		const boundTag = useMemo(
+			() => createBoundTag(String(id), group),
+			[id, group],
+		);
+		const portal = resolveBoundaryPortal(portalProp);
 
 		const currentScreenKey = useDescriptorsStore(
 			(s) => s.derivations.currentScreenKey,
@@ -73,154 +64,67 @@ export function createBoundaryComponent<P extends object>(
 		const hasConfiguredInterpolator = useDescriptorsStore(
 			(s) => s.derivations.hasConfiguredInterpolator,
 		);
-
 		const runtimeEnabled = enabled && hasConfiguredInterpolator;
-		const boundaryConfig = useMemo<BoundaryConfigProps>(() => {
-			return {
-				anchor,
-				scaleMode,
-				target,
-				method,
-			};
-		}, [anchor, scaleMode, target, method]);
+		// Associated slot styles attach whenever the boundary is enabled,
+		// independent of whether an interpolator is configured for this transition.
+		const shouldAttachAssociatedStyles = enabled;
 
-		const ownerPreparedStyles = useMemo(
-			() => prepareStyleForBounds(style),
-			[style],
-		);
-		const { stylesMap } = useScreenStyles();
+		const associatedStyles = useSlotStyles(boundTag.tag);
+		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
 
-		const associatedStyles = useAnimatedStyle(() => {
-			"worklet";
-			return stylesMap.get()[entryTag]?.style ?? NO_STYLES;
+		const {
+			ref,
+			contextValue,
+			measuredRef,
+			hasActiveTarget,
+			targetPreparedStyles,
+		} = useBoundaryRootState({
+			boundTag,
+			portal,
+			associatedTargetStyles: shouldAttachAssociatedStyles
+				? associatedStyles
+				: undefined,
 		});
 
-		const associatedStackingStyles = useAnimatedStyle(() => {
-			"worklet";
-			const baseStyle = stylesMap.get()[entryTag]?.style;
-			const zIndex = baseStyle?.zIndex ?? 0;
-			const elevation = baseStyle?.elevation ?? 0;
-
-			if (zIndex === 0 && elevation === 0) {
-				return NO_STYLES;
-			}
-
-			return { zIndex, elevation };
-		});
-
-		const hasWarned = useRef(false);
-		const adjustedPortal = isTeleportAvailable ? portal : undefined;
-
-		if (!hasWarned.current && !isTeleportAvailable && portal) {
-			logger.warn(
-				"react-native-teleport is not installed and will fallback to default behavior.",
-			);
-			hasWarned.current = true;
-		}
-
-		const { contextValue, measuredRef, hasActiveTarget, targetPreparedStyles } =
-			useBoundaryOwner({
-				ownerRef,
-				associatedTargetStyles: runtimeEnabled ? associatedStyles : undefined,
-				entryTag,
-				portal: adjustedPortal,
-			});
-
-		const preparedStyles = targetPreparedStyles ?? ownerPreparedStyles;
-
-		const portalHost =
-			typeof adjustedPortal === "object"
-				? (adjustedPortal.attachTo ?? "current-screen")
-				: adjustedPortal
-					? "current-screen"
-					: undefined;
-
-		const measureBoundary = useMeasurer({
+		const { onPress: resolvedOnPress } = useBoundaryMeasurement({
+			boundTag,
 			enabled,
-			entryTag,
-			linkId,
-			group,
+			runtimeEnabled,
 			currentScreenKey,
-			preparedStyles,
-			measuredAnimatedRef: measuredRef,
-			portalHost,
+			measuredRef,
+			style,
+			targetPreparedStyles,
+			portal,
+			shouldAutoMeasure,
+			config: { anchor, scaleMode, target, method },
+			onPress,
 		});
 
-		// Register/unregister this boundary in the presence map so source/destination
-		// matching can resolve across concrete screen keys.
-		useBoundaryPresence({
-			enabled: runtimeEnabled,
-			entryTag,
-			currentScreenKey,
-			boundaryConfig,
-		});
+		useImperativeHandle(forwardedRef, () => ref.current as any, [ref]);
 
-		const shouldPassivelyMeasureSource =
-			shouldAutoMeasure && typeof onPress !== "function";
-
-		useInitialSourceMeasurement({
-			enabled: runtimeEnabled,
-			measureBoundary,
-			linkId,
-			group,
-			shouldAutoMeasure: shouldPassivelyMeasureSource,
-		});
-
-		useInitialDestinationMeasurement({
-			linkId,
-			enabled: runtimeEnabled,
-			measureBoundary,
-		});
-
-		useRefreshBoundary({
-			enabled: runtimeEnabled,
-			linkId,
-			group,
-			measureBoundary,
-		});
-
-		const handlePress = useCallback(
-			(...args: unknown[]) => {
-				// Press path has priority: capture source before user onPress/navigation.
-				runOnUI(measureBoundary)({
-					type: "source",
-					pairKey: createPendingPairKey(currentScreenKey),
-				});
-
-				if (typeof onPress === "function") {
-					onPress(...args);
-				}
-			},
-			[measureBoundary, onPress, currentScreenKey],
-		);
-
-		const resolvedOnPress =
-			typeof onPress === "function" ? handlePress : undefined;
-
-		useImperativeHandle(forwardedRef, () => ownerRef.current as any, [
-			ownerRef,
-		]);
+		// A nested active target takes the full associated style, so the root keeps
+		// only its stacking context; otherwise the root wears the full style.
+		const attachedStyle = shouldAttachAssociatedStyles
+			? hasActiveTarget
+				? associatedStackingStyles
+				: associatedStyles
+			: undefined;
 
 		return (
-			<BoundaryOwnerProvider value={contextValue}>
+			<BoundaryRootProvider value={contextValue}>
 				<AnimatedComponent
 					{...rest}
-					ref={ownerRef}
-					style={[
-						style,
-						runtimeEnabled
-							? hasActiveTarget
-								? associatedStackingStyles
-								: associatedStyles
-							: undefined,
-					]}
+					ref={ref}
+					style={[style, attachedStyle]}
 					onPress={resolvedOnPress}
 					collapsable={false}
 				/>
-			</BoundaryOwnerProvider>
+			</BoundaryRootProvider>
 		);
 	});
 
+	// The HOC's runtime identity (animated + memoized forwardRef) is not
+	// expressible against the public boundary props, so assert it here.
 	return memo(
 		Animated.createAnimatedComponent(Inner),
 	) as unknown as React.MemoExoticComponent<
