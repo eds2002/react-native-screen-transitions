@@ -1,6 +1,10 @@
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import { AnimationStore } from "../../../../stores/animation.store";
+import {
+	LifecycleTransitionRequestKind,
+	SystemStore,
+} from "../../../../stores/system.store";
 import type {
 	NormalizedTransitionInterpolatedStyle,
 	ScreenStyleInterpolator,
@@ -141,10 +145,13 @@ export const useInterpolatedStylesMap = () => {
 	const boundsAccessor = useBuildBoundsAccessor();
 	const transition = useBuildTransitionAccessor();
 
+	const activeScreenKey = nextScreenKey ?? currentScreenKey;
 	const {
 		entering: activeEntering,
 		transitionProgress: activeTransitionProgress,
-	} = AnimationStore.getBag(nextScreenKey ?? currentScreenKey);
+	} = AnimationStore.getBag(activeScreenKey);
+	const { pendingLifecycleRequestKind: activePendingLifecycleRequestKind } =
+		SystemStore.getBag(activeScreenKey);
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
@@ -179,11 +186,15 @@ export const useInterpolatedStylesMap = () => {
 		// genuinely live: never during a gesture-driven close, never before a next
 		// interpolator exists, and never in the next screen's pre-start window
 		// (entering, but no transformed frame yet). Only then does "next" take over.
+		const isPendingOpen =
+			activePendingLifecycleRequestKind.get() ===
+			LifecycleTransitionRequestKind.Open;
+		const activeOpening = isPendingOpen || !!activeEntering.get();
 		const currentOwnsInterpolator =
 			isInGestureMode ||
 			!nextInterpolator ||
 			isOpeningBeforeStart(
-				activeEntering.get(),
+				activeOpening ? 1 : 0,
 				activeTransitionProgress.get(),
 			);
 
