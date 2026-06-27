@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useRef } from "react";
+import { memo, useCallback, useLayoutEffect, useRef } from "react";
 import {
 	type StyleProp,
 	StyleSheet,
@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import Animated from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
+import { SystemStore } from "../../../../stores/system.store";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
 import { useActivePortalBoundaryHosts } from "../stores/portal-boundary-host.store";
@@ -25,6 +26,10 @@ type HostImplProps = PublicHostProps & {
 
 function HostImpl({ fallback = false, style }: HostImplProps) {
 	const screenKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
+	const {
+		actions: { unblockLifecycleStart },
+		pendingLifecycleStartBlockCount,
+	} = SystemStore.getBag(screenKey);
 	const generatedHostKeyRef = useRef<string | null>(null);
 
 	if (generatedHostKeyRef.current === null) {
@@ -57,8 +62,20 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		};
 	}, [capturesScroll, fallback, hostKey, screenKey]);
 
+	const handleUnblocking = useCallback(() => {
+		"worklet";
+		// Matched-screen destination measurement keeps the open transition gated
+		// until the portal hosts have committed layout. A screen may render more
+		// than one portal boundary host for the same lifecycle request, so the
+		// final host layout drains the outstanding start blocks for this screen.
+		const blockCount = pendingLifecycleStartBlockCount.get();
+		for (let i = 0; i < blockCount; i++) {
+			unblockLifecycleStart();
+		}
+	}, [pendingLifecycleStartBlockCount, unblockLifecycleStart]);
+
 	const boundaryHosts = measurement.canRenderHosts
-		? activeBoundaryHosts.map((host) => (
+		? activeBoundaryHosts.map((host, idx, list) => (
 				<View
 					key={host.boundaryId}
 					pointerEvents="box-none"
@@ -66,6 +83,11 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 						styles.boundaryHostViewport,
 						{ width: viewportWidth, height: viewportHeight },
 					]}
+					onLayout={() => {
+						if (list.length - 1 === idx) {
+							handleUnblocking();
+						}
+					}}
 				>
 					<PortalBoundaryHost host={host} style={StyleSheet.absoluteFill} />
 				</View>

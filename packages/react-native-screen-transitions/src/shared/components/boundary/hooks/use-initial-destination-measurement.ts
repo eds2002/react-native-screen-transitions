@@ -7,7 +7,10 @@ import {
 } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
-import { getDestination } from "../../../stores/bounds/internals/links";
+import {
+	getDestination,
+	getLink,
+} from "../../../stores/bounds/internals/links";
 import { pairs } from "../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../stores/bounds/types";
 import {
@@ -109,9 +112,6 @@ export const useInitialDestinationMeasurement = ({
 		([measurePairKey, retryTick], previous) => {
 			"worklet";
 			if (!measurePairKey) {
-				releaseLifecycleStartBlock();
-				viewportRetries.set(0);
-				hasGivenUp.set(0);
 				return;
 			}
 
@@ -143,6 +143,16 @@ export const useInitialDestinationMeasurement = ({
 				getDestination(measurePairKey, linkKey) !== null;
 
 			if (destinationAttached) {
+				const link = getLink(measurePairKey, linkKey);
+				if (link?.source?.portalAttachTarget === "matched-screen") {
+					// Matched-screen portals have a second readiness phase after
+					// destination measurement. The destination boundary can measure
+					// before its portal host has rendered, but teleporting into that
+					// host early can draw the source in the wrong coordinate space for
+					// a frame. Keep the lifecycle gate blocked here; the portal host
+					// layout is the visual commit point that releases it.
+					return;
+				}
 				releaseLifecycleStartBlock();
 				viewportRetries.set(0);
 				return;

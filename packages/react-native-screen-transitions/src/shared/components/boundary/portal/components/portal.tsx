@@ -18,7 +18,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../providers/screen/styles";
-import { AnimationStore } from "../../../../stores/animation.store";
 import { getLinkKeyFromTag } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
@@ -100,24 +99,18 @@ export const Portal = memo(function Portal({
 	const placeholderWidth = useSharedValue(0);
 	const placeholderHeight = useSharedValue(0);
 
-	const { progressScreenKey, targetScreenKey } = resolvePortalAttachmentTargets(
-		{
-			attachment,
-			currentScreenKey,
-			nextScreenKey,
-			portalAttachTarget,
-			sourcePairKey,
-		},
-	);
+	const { targetScreenKey } = resolvePortalAttachmentTargets({
+		attachment,
+		currentScreenKey,
+		nextScreenKey,
+		portalAttachTarget,
+		sourcePairKey,
+	});
+
 	const activeHostKey = useActiveHostKey(targetScreenKey);
 	const activeHostCapturesScroll = activeHostKey
 		? getHostCapturesScroll(activeHostKey)
 		: false;
-	const progress = AnimationStore.getValue(
-		progressScreenKey ?? "",
-		"transitionProgress",
-	);
-	const closing = AnimationStore.getValue(progressScreenKey ?? "", "closing");
 
 	const updatePortalAttachment = useCallback(
 		(matchedScreenKey: string | null, pairKey?: string) => {
@@ -228,7 +221,6 @@ export const Portal = memo(function Portal({
 		// Opening waits for the destination transition to start so content is not
 		// re-parented before the host is visually ready. Closing stays attached
 		// through progress 0 so the final frame can land in the matched host.
-		const attachThreshold = closing.get() === 1 ? 0 : 0.001;
 		const { teleport, ...slotProps } = slotsMap.get()[id]?.props ?? {};
 		const shouldTeleport = isTeleportEnabled(teleport);
 
@@ -236,10 +228,9 @@ export const Portal = memo(function Portal({
 			// Preserve portal slot props from the interpolator while keeping
 			// hostName owned by the attachment gate below.
 			...slotProps,
-			hostName:
-				shouldTeleport && progress.get() >= attachThreshold
-					? attachedHostName.get()
-					: PORTAL_HOST_NAME_RESET_VALUE,
+			hostName: shouldTeleport
+				? attachedHostName.get()
+				: PORTAL_HOST_NAME_RESET_VALUE,
 		};
 	});
 
