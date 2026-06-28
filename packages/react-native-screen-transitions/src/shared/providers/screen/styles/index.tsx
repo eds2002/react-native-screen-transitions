@@ -1,9 +1,13 @@
 export {
+	useSlotLayoutStyles,
+	useSlotProps,
+	useSlotStackingStyles,
+	useSlotStyles,
+} from "./hooks/slot-resolvers";
+
+export {
 	ScreenSlotContext,
 	type ScreenSlotName,
 	ScreenSlotProvider,
 	useScreenSlots,
-	useSlotProps,
-	useSlotStackingStyles,
-	useSlotStyles,
 } from "./slot.provider";
