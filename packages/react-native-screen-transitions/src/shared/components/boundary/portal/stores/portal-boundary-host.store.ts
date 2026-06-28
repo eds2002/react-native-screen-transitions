@@ -20,6 +20,10 @@ const EMPTY_HOSTS: ActivePortalBoundaryHost[] = [];
 const listeners = new Set<() => void>();
 const activeBoundaryHosts = new Map<string, ActivePortalBoundaryHost>();
 
+const getHostEntryKey = (hostKey: string, boundaryId: string) => {
+	return `${hostKey}:${boundaryId}`;
+};
+
 let snapshot: PortalSnapshot = {
 	hostsByScope: {},
 };
@@ -61,17 +65,54 @@ const isSameHost = (
 };
 
 export const mountPortalBoundaryHost = (host: ActivePortalBoundaryHost) => {
-	const previous = activeBoundaryHosts.get(host.boundaryId);
+	const hostEntryKey = getHostEntryKey(host.hostKey, host.boundaryId);
+	const previous = activeBoundaryHosts.get(hostEntryKey);
 	if (previous && isSameHost(previous, host)) {
 		return;
 	}
 
-	activeBoundaryHosts.set(host.boundaryId, host);
+	activeBoundaryHosts.set(hostEntryKey, host);
 	emit();
 };
 
 export const unmountPortalBoundaryHost = (boundaryId: string) => {
-	if (!activeBoundaryHosts.delete(boundaryId)) {
+	let didDelete = false;
+
+	for (const [hostEntryKey, host] of activeBoundaryHosts) {
+		if (host.boundaryId !== boundaryId) {
+			continue;
+		}
+
+		activeBoundaryHosts.delete(hostEntryKey);
+		didDelete = true;
+	}
+
+	if (!didDelete) {
+		return;
+	}
+
+	emit();
+};
+
+export const retainPortalBoundaryHost = ({
+	boundaryId,
+	hostKey,
+}: {
+	boundaryId: string;
+	hostKey: string;
+}) => {
+	let didDelete = false;
+
+	for (const [hostEntryKey, host] of activeBoundaryHosts) {
+		if (host.boundaryId !== boundaryId || host.hostKey === hostKey) {
+			continue;
+		}
+
+		activeBoundaryHosts.delete(hostEntryKey);
+		didDelete = true;
+	}
+
+	if (!didDelete) {
 		return;
 	}
 

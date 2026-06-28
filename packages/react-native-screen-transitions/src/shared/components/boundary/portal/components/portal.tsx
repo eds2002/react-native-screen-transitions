@@ -29,6 +29,7 @@ import {
 } from "../stores/host-registry.store";
 import {
 	mountPortalBoundaryHost,
+	retainPortalBoundaryHost,
 	unmountPortalBoundaryHost,
 } from "../stores/portal-boundary-host.store";
 import { isTeleportAvailable, NativePortal } from "../teleport";
@@ -93,9 +94,8 @@ export const Portal = memo(function Portal({
 	const [attachment, setAttachment] = useState<PortalAttachment | null>(
 		PORTAL_HOST_NAME_RESET_VALUE,
 	);
-	const attachedHostName = useSharedValue<string | null>(
-		PORTAL_HOST_NAME_RESET_VALUE,
-	);
+	const requestedHostKey = useSharedValue<string | null>(null);
+	const visibleHostKey = useSharedValue<string | null>(null);
 	const placeholderWidth = useSharedValue(0);
 	const placeholderHeight = useSharedValue(0);
 
@@ -138,7 +138,9 @@ export const Portal = memo(function Portal({
 
 	useLayoutEffect(() => {
 		if (!isPortalEnabled || !attachment || !activeHostKey || !targetScreenKey) {
-			attachedHostName.set(PORTAL_HOST_NAME_RESET_VALUE);
+			requestedHostKey.set(null);
+			visibleHostKey.set(null);
+			unmountPortalBoundaryHost(id);
 			return;
 		}
 
@@ -151,34 +153,39 @@ export const Portal = memo(function Portal({
 			slotsMap,
 		});
 
-		// The native registry parks portals whose host has not registered yet and
-		// re-parents the moment it does, so the host name can be handed over
-		// immediately — ordering belongs to the registry, not to frame counting.
-		// hostName rides animated props, so the handover needs no React commit.
-		attachedHostName.set(createPortalBoundaryHostName(activeHostKey, id));
+		// Request the new receiver immediately, but keep the currently visible
+		// receiver until the new interpolator is ready. This avoids a no-host gap
+		// during A -> B(closing) -> C(opening) spam retargets.
+		requestedHostKey.set(activeHostKey);
 	}, [
 		activeHostKey,
 		activeHostCapturesScroll,
-		attachedHostName,
 		attachment,
 		id,
 		isPortalEnabled,
+		requestedHostKey,
 		slotsMap,
 		targetScreenKey,
+		visibleHostKey,
 	]);
 
 	useLayoutEffect(() => {
 		return () => {
-			attachedHostName.set(PORTAL_HOST_NAME_RESET_VALUE);
+			requestedHostKey.set(null);
+			visibleHostKey.set(null);
 			unmountPortalBoundaryHost(id);
 		};
-	}, [attachedHostName, id]);
+	}, [id, requestedHostKey, visibleHostKey]);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 			if (!isPortalEnabled || !sourcePairKey) {
-				return null;
+				return {
+					matchedScreenKey: null,
+					pairKey: sourcePairKey,
+					status: "clear",
+				};
 			}
 
 			pairs.get();
@@ -189,7 +196,11 @@ export const Portal = memo(function Portal({
 			const link = getLink(sourcePairKey, id);
 
 			if (link?.status !== "complete") {
-				return null;
+				return {
+					matchedScreenKey: null,
+					pairKey: sourcePairKey,
+					status: "pending",
+				};
 			}
 
 			// Grouped portals teleport only while their member is the group's
@@ -201,19 +212,96 @@ export const Portal = memo(function Portal({
 					pairs.get()[sourcePairKey]?.groups?.[link.group]?.activeId;
 
 				if (activeId && activeId !== getLinkKeyFromTag(id)) {
-					return null;
+					return {
+						matchedScreenKey: null,
+						pairKey: sourcePairKey,
+						status: "clear",
+					};
 				}
 			}
 
-			return link.destination.screenKey;
+			return {
+				matchedScreenKey: link.destination.screenKey,
+				pairKey: sourcePairKey,
+				status: "complete",
+			};
 		},
-		(matchedScreenKey, previousMatchedScreenKey) => {
+		(signal, previousSignal) => {
 			"worklet";
-			if (matchedScreenKey === previousMatchedScreenKey) {
+			if (
+				previousSignal &&
+				signal.status === previousSignal.status &&
+				signal.matchedScreenKey === previousSignal.matchedScreenKey &&
+				signal.pairKey === previousSignal.pairKey
+			) {
 				return;
 			}
 
-			runOnJS(updatePortalAttachment)(matchedScreenKey, sourcePairKey);
+			if (signal.status === "pending") {
+				return;
+			}
+
+			runOnJS(updatePortalAttachment)(
+				signal.matchedScreenKey,
+				signal.pairKey ?? undefined,
+			);
+		},
+	);
+
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			const slot = slotsMap.get()[id];
+			const teleport = slot?.props?.teleport;
+			const shouldTeleport = isTeleportEnabled(teleport);
+			const requestedKey = requestedHostKey.get();
+			const visibleKey = visibleHostKey.get();
+			const isInterpolatorReady = nextInterpolatorReady.get();
+			const nextVisibleKey =
+				shouldTeleport && isInterpolatorReady && requestedKey
+					? requestedKey
+					: shouldTeleport
+						? visibleKey
+						: null;
+
+			return {
+				isInterpolatorReady,
+				nextVisibleKey,
+				requestedKey,
+				shouldTeleport,
+				teleport,
+				visibleKey,
+			};
+		},
+		(state, previousState) => {
+			"worklet";
+			if (
+				previousState &&
+				state.isInterpolatorReady === previousState.isInterpolatorReady &&
+				state.nextVisibleKey === previousState.nextVisibleKey &&
+				state.requestedKey === previousState.requestedKey &&
+				state.shouldTeleport === previousState.shouldTeleport &&
+				state.teleport === previousState.teleport &&
+				state.visibleKey === previousState.visibleKey
+			) {
+				return;
+			}
+
+			if (state.nextVisibleKey !== state.visibleKey) {
+				visibleHostKey.set(state.nextVisibleKey);
+				return;
+			}
+
+			if (
+				state.visibleKey &&
+				state.visibleKey === state.requestedKey &&
+				state.requestedKey
+			) {
+				runOnJS(retainPortalBoundaryHost)({
+					boundaryId: id,
+					hostKey: state.requestedKey,
+				});
+			}
 		},
 	);
 
@@ -223,8 +311,7 @@ export const Portal = memo(function Portal({
 		const slot = slotsMap.get()[id];
 		const { teleport, ...slotProps } = slot?.props ?? {};
 		const shouldTeleport = isTeleportEnabled(teleport);
-		const attachedHost = attachedHostName.get();
-		const isInterpolatorReady = nextInterpolatorReady.get();
+		const visibleKey = visibleHostKey.get();
 
 		return {
 			// Preserve portal slot props from the interpolator while keeping
@@ -233,8 +320,8 @@ export const Portal = memo(function Portal({
 			// after that, it stays attached until teleport is disabled or retargeted.
 			...slotProps,
 			hostName:
-				shouldTeleport && isInterpolatorReady
-					? attachedHost
+				shouldTeleport && visibleKey
+					? createPortalBoundaryHostName(visibleKey, id)
 					: PORTAL_HOST_NAME_RESET_VALUE,
 		};
 	});
@@ -245,8 +332,7 @@ export const Portal = memo(function Portal({
 	// cannot collapse the slot.
 	const placeholderStyle = useAnimatedStyle(() => {
 		"worklet";
-		const hostName = attachedHostName.get();
-		const isAttached = hostName !== null;
+		const isAttached = visibleHostKey.get() !== null;
 		const width = placeholderWidth.get();
 		const height = placeholderHeight.get();
 

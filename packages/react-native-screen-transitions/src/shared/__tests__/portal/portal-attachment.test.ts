@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { resolvePortalAttachmentTargets } from "../../components/boundary/portal/utils/attachment";
 
 describe("resolvePortalAttachmentTargets", () => {
-	it("resets stale attachments whose pair no longer matches the owner source pair", () => {
+	it("keeps matched-screen attachments while the next source pair is pending", () => {
 		const targets = resolvePortalAttachmentTargets({
 			attachment: {
 				matchedScreenKey: "b",
@@ -11,6 +11,24 @@ describe("resolvePortalAttachmentTargets", () => {
 			currentScreenKey: "a",
 			nextScreenKey: "c",
 			portalAttachTarget: "matched-screen",
+			sourcePairKey: "a-c",
+		});
+
+		expect(targets).toEqual({
+			progressScreenKey: "b",
+			targetScreenKey: "b",
+		});
+	});
+
+	it("resets stale current-screen attachments whose pair no longer matches the owner source pair", () => {
+		const targets = resolvePortalAttachmentTargets({
+			attachment: {
+				matchedScreenKey: "b",
+				pairKey: "a-b",
+			},
+			currentScreenKey: "a",
+			nextScreenKey: "c",
+			portalAttachTarget: "current-screen",
 			sourcePairKey: "a-c",
 		});
 
