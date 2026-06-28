@@ -5,18 +5,15 @@ import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
 	runOnUI,
-	useAnimatedProps,
 	useAnimatedRef,
-	useAnimatedStyle,
 	useComposedEventHandler,
 } from "react-native-reanimated";
-import { NO_PROPS, NO_STYLES } from "../constants";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import {
 	ScrollMetadataOwnerProvider,
 	useScrollGestureCoordination,
 } from "../providers/screen/gestures/scroll-coordination";
-import { useScreenStyles } from "../providers/screen/styles";
+import { useSlotProps, useSlotStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
 
 interface CreateTransitionAwareComponentOptions {
@@ -43,6 +40,8 @@ export function createTransitionAwareComponent<P extends object>(
 			onScroll: userOnScroll,
 			onMomentumScrollEnd: userOnMomentumScrollEnd,
 			onScrollEndDrag: userOnScrollEndDrag,
+			children,
+			contentContainerStyle,
 			...scrollableProps
 		} = props;
 
@@ -69,11 +68,11 @@ export function createTransitionAwareComponent<P extends object>(
 			scrollHandler,
 			userOnScroll ?? null,
 		]);
-
 		const scrollableComponent = (
 			<AnimatedComponent
 				{...(scrollableProps as any)}
 				ref={ref}
+				contentContainerStyle={contentContainerStyle}
 				/**
 				 * Keep the scroll listener detached while the owning gesture screen is
 				 * closing. On iOS, a bounced ScrollView can keep sending native scroll
@@ -90,7 +89,9 @@ export function createTransitionAwareComponent<P extends object>(
 						? scrollableProps.scrollEventThrottle || 16
 						: undefined
 				}
-			/>
+			>
+				{children}
+			</AnimatedComponent>
 		);
 
 		const coordinatedScrollableComponent = nativeGesture ? (
@@ -119,32 +120,14 @@ export function createTransitionAwareComponent<P extends object>(
 			styleId,
 			onPress,
 			remeasureOnFocus,
+			animatedProps: userAnimatedProps,
 			...rest
 		} = props as any;
 
 		const animatedRef = useAnimatedRef<View>();
-		const { stylesMap } = useScreenStyles();
 		const associatedId = sharedBoundTag || styleId;
-
-		const associatedStyles = useAnimatedStyle(() => {
-			"worklet";
-
-			if (!associatedId) {
-				return NO_STYLES;
-			}
-
-			return stylesMap.get()[associatedId]?.style ?? NO_STYLES;
-		});
-
-		const associatedProps = useAnimatedProps(() => {
-			"worklet";
-
-			if (!associatedId) {
-				return NO_PROPS;
-			}
-
-			return stylesMap.get()[associatedId]?.props ?? NO_PROPS;
-		});
+		const associatedStyles = useSlotStyles(associatedId);
+		const associatedProps = useSlotProps(associatedId);
 
 		return (
 			<RegisterBoundsProvider
@@ -159,7 +142,7 @@ export function createTransitionAwareComponent<P extends object>(
 						{...(rest as any)}
 						ref={animatedRef}
 						style={[style, associatedStyles]}
-						animatedProps={associatedProps}
+						animatedProps={userAnimatedProps ?? associatedProps}
 						onPress={captureActiveOnPress}
 						onLayout={runOnUI(handleInitialLayout)}
 						collapsable={!sharedBoundTag}

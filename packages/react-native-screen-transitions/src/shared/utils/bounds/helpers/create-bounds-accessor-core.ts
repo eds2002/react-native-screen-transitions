@@ -1,35 +1,29 @@
 import type {
+	BoundsAccessor,
 	BoundsInterpolationProps,
-	BoundsScopedAccessors,
+	BoundsScopedAccessor,
 } from "../../../types/bounds.types";
-import type { BoundsOptions, BoundsOptionsResult } from "../types/options";
-import { createBoundTag } from "./create-bound-tag";
-import { createInterpolators } from "./create-interpolators";
+import type {
+	BoundsComputeOptions,
+	BoundsIdentity,
+	BoundsIdentityInput,
+	BoundsMathResult,
+	BoundsStyleResult,
+} from "../types/options";
+import { createBoundTag, normalizeBoundIdentity } from "./create-bound-tag";
 import { createLinkAccessor } from "./create-link-accessor";
-import { prepareBoundStyles } from "./prepare-bound-styles";
+import { prepareBoundStyles, syncActiveGroupId } from "./prepare-bound-styles";
 
-type BoundsComputeResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
-	BoundsScopedAccessors;
-
-type BoundsCompute = <T extends BoundsOptions>(
-	options: T,
-) => BoundsComputeResult<T>;
-
-type BoundsAccessorCore = BoundsCompute &
-	ReturnType<typeof createLinkAccessor> &
-	ReturnType<typeof createInterpolators>;
-
-type ExtendBoundsResultParams<T extends BoundsOptions> = {
-	target: BoundsComputeResult<T>;
+type ExtendBoundsResultParams = {
+	target: BoundsScopedAccessor;
+	identity: BoundsIdentity;
 	props: BoundsInterpolationProps;
 	tag: string | undefined;
 };
 
 type CreateBoundsAccessorCoreParams = {
 	getProps: () => BoundsInterpolationProps;
-	extendResult?: <T extends BoundsOptions>(
-		params: ExtendBoundsResultParams<T>,
-	) => void;
+	extendResult?: (params: ExtendBoundsResultParams) => void;
 };
 
 const createBoundsAccessorParts = ({
@@ -38,124 +32,79 @@ const createBoundsAccessorParts = ({
 }: CreateBoundsAccessorCoreParams) => {
 	"worklet";
 
-	const { getMeasured, getSnapshot, getLink } = createLinkAccessor(getProps);
-	const { interpolateStyle, interpolateBounds } = createInterpolators({
-		getProps,
-		getLink,
-	});
+	const { getLink } = createLinkAccessor(getProps);
 
-	const computeBounds = (<T extends BoundsOptions>(
-		params?: T,
-	): BoundsComputeResult<T> => {
+	const createScopedBounds = ((
+		identity: BoundsIdentityInput,
+	): BoundsScopedAccessor => {
 		"worklet";
 		const props = getProps();
-		const options = (params ?? { id: "" }) as T;
-		const tag = createBoundTag({
-			id: options.id,
-			group: options.group,
-		});
-
-		const computed = prepareBoundStyles({
+		const normalizedIdentity = normalizeBoundIdentity(identity);
+		const tag = createBoundTag(normalizedIdentity);
+		syncActiveGroupId({
 			props,
-			options,
-			syncGroupActiveId: true,
+			id: normalizedIdentity.id,
+			group: normalizedIdentity.group,
 		});
-		const scopedTag = tag ?? "";
-		const target = Object.isExtensible(computed) ? computed : { ...computed };
 
-		Object.defineProperties(target, {
-			getMeasured: {
-				value: (key?: string) => {
-					"worklet";
-					return getMeasured(scopedTag, key);
-				},
-				enumerable: false,
-				configurable: true,
+		const scoped: BoundsScopedAccessor = {
+			styles: (options?: BoundsComputeOptions): BoundsStyleResult => {
+				"worklet";
+				return prepareBoundStyles({
+					props,
+					options: {
+						...options,
+						id: normalizedIdentity.id,
+						group: normalizedIdentity.group,
+					},
+				}) as BoundsStyleResult;
 			},
-			getSnapshot: {
-				value: (key?: string) => {
-					"worklet";
-					return getSnapshot(scopedTag, key);
-				},
-				enumerable: false,
-				configurable: true,
+			math: <T extends BoundsComputeOptions = BoundsComputeOptions>(
+				options?: T,
+			): BoundsMathResult<T> => {
+				"worklet";
+				return prepareBoundStyles({
+					props,
+					options: {
+						...options,
+						id: normalizedIdentity.id,
+						group: normalizedIdentity.group,
+						raw: true,
+					},
+				}) as BoundsMathResult<T>;
 			},
-			getLink: {
-				value: () => {
-					"worklet";
-					return getLink(scopedTag);
-				},
-				enumerable: false,
-				configurable: true,
+			link: (id?: BoundsIdentityInput) => {
+				"worklet";
+				const linkIdentity =
+					id == null
+						? normalizedIdentity
+						: normalizeBoundIdentity(id, normalizedIdentity.group);
+				const linkTag = createBoundTag(linkIdentity);
+				return getLink(linkTag ?? "");
 			},
-			interpolateStyle: {
-				value: (
-					property: Parameters<typeof interpolateStyle>[1],
-					fallback?: number,
-				) => {
-					"worklet";
-					return interpolateStyle(scopedTag, property, fallback);
-				},
-				enumerable: false,
-				configurable: true,
-			},
-			interpolateBounds: {
-				value: (
-					property: Parameters<typeof interpolateBounds>[1],
-					fallbackOrTargetKey?: Parameters<typeof interpolateBounds>[2],
-					fallback?: number,
-				) => {
-					"worklet";
-					return interpolateBounds(
-						scopedTag,
-						property,
-						fallbackOrTargetKey,
-						fallback,
-					);
-				},
-				enumerable: false,
-				configurable: true,
-			},
-		});
+		} as BoundsScopedAccessor;
 
 		extendResult?.({
-			target: target as BoundsComputeResult<T>,
+			target: scoped,
+			identity: normalizedIdentity,
 			props,
 			tag,
 		});
 
-		return target as BoundsComputeResult<T>;
-	}) as BoundsCompute;
+		return scoped;
+	}) as BoundsAccessor;
 
 	return {
-		computeBounds,
-		getMeasured,
-		getSnapshot,
-		getLink,
-		interpolateStyle,
-		interpolateBounds,
+		createScopedBounds,
 	};
 };
 
 export const createBoundsAccessorCore = (
 	params: CreateBoundsAccessorCoreParams,
-): BoundsAccessorCore => {
+): BoundsAccessor => {
 	"worklet";
 
-	const {
-		computeBounds,
-		getMeasured,
-		getSnapshot,
-		getLink,
-		interpolateStyle,
-		interpolateBounds,
-	} = createBoundsAccessorParts(params);
+	const { createScopedBounds } = createBoundsAccessorParts(params);
 
-	return Object.assign(computeBounds, {
-		getMeasured,
-		getSnapshot,
-		getLink,
-		interpolateStyle,
-		interpolateBounds,
-	}) as BoundsAccessorCore;
+	return createScopedBounds;
 };

@@ -95,14 +95,34 @@ const RECIPE_OPTIONS = [
 	{
 		id: "native-stack-adapter-recipe",
 		title: "Native Stack Adapter Profile",
-		description: "Native push into a profile, custom bounds transition for avatar",
+		description:
+			"Native push into a profile, custom bounds transition for avatar",
 		route: "/native-stack-adapter-recipe" as const,
+	},
+	{
+		id: "teleport",
+		title: "Teleport",
+		description: "Two shared-element teleport recipes using bounds targets",
+		route: "/teleport" as const,
+	},
+	{
+		id: "reels",
+		title: "Reels",
+		description:
+			"Paged video feed: matched-screen teleport with group retargeting and a mask reveal",
+		route: "/reels" as const,
 	},
 	{
 		id: "gesture-velocity-recipe",
 		title: "Gesture Velocity Flap",
 		description: "Style-id box driven by live gesture translation and velocity",
 		route: "/gesture-velocity-recipe" as const,
+	},
+	{
+		id: "matched-screen-debug",
+		title: "Matched Screen Debug",
+		description: "Minimal matched-screen portal timing repro",
+		route: "/matched-screen-debug" as const,
 	},
 ];
 

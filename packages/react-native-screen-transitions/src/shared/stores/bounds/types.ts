@@ -10,9 +10,24 @@ export type TagID = string;
 export type LinkKey = string;
 export type GroupKey = string;
 export type ScreenPairKey = string;
+
+/**
+ * A boundary's identity, carried as one value instead of the
+ * `{ tag, linkKey, group }` clump that used to thread through every hook.
+ *
+ * - `tag`: the combined entry tag (`group:linkKey` when grouped, else `linkKey`).
+ * - `linkKey`: the bare member key used to address links within a screen pair.
+ * - `group`: the optional collection name.
+ */
+export interface BoundTag {
+	tag: string;
+	linkKey: LinkKey;
+	group?: GroupKey;
+}
+export type BoundsPortalAttachTarget = "current-screen" | "matched-screen";
 export type { ScreenKey } from "../../types/screen.types";
 
-export type BoundaryConfig = {
+type BoundaryConfig = {
 	anchor?: BoundsAnchor;
 	scaleMode?: BoundsScaleMode;
 	target?: "bound" | "fullscreen" | MeasuredDimensions;
@@ -39,15 +54,64 @@ export type ScreenIdentifier = {
 	screenKey: ScreenKey;
 };
 
-export type TagLink = {
+export type BoundsLinkStatus =
+	| "source-incomplete"
+	| "destination-incomplete"
+	| "complete";
+
+export type TagLinkSide = ScreenIdentifier & MeasuredEntry;
+
+/**
+ * The source screen's active portal host at measure time. Recorded only when
+ * that host captures scroll (a Transition.ScrollView scope) — matched-screen
+ * placement uses it as a coordinate space to express the source rect in the
+ * source ScrollView's live frame. The portal never attaches here.
+ */
+export type SourceHostRef = {
+	hostKey: string;
+	capturesScroll: boolean;
+};
+
+export type SourceTagLinkSide = TagLinkSide & {
+	/** Where this boundary's portal content renders during the transition. */
+	portalAttachTarget?: BoundsPortalAttachTarget;
+	/** Scroll-scoped host the source originated from, if any. */
+	sourceHost?: SourceHostRef;
+};
+
+type TagLinkBase = {
 	group?: GroupKey;
-	source: ScreenIdentifier & MeasuredEntry;
-	/** Destination side once attached; null while the source is still pending. */
-	destination: (ScreenIdentifier & MeasuredEntry) | null;
 	/** First captured source side exposed for public link inspection. */
-	initialSource?: ScreenIdentifier & MeasuredEntry;
+	initialSource?: TagLinkSide;
 	/** First attached destination side, used to compensate reveal closes after destination refreshes. */
-	initialDestination?: ScreenIdentifier & MeasuredEntry;
+	initialDestination?: TagLinkSide;
+};
+
+export type TagLink =
+	| (TagLinkBase & {
+			status: "source-incomplete";
+			/** Source side once attached; null while destination captured first. */
+			source: null;
+			/** Destination side once attached; null while the source is still pending. */
+			destination: TagLinkSide | null;
+	  })
+	| (TagLinkBase & {
+			status: "destination-incomplete";
+			/** Source side once attached; null while destination captured first. */
+			source: SourceTagLinkSide;
+			/** Destination side once attached; null while the source is still pending. */
+			destination: null;
+	  })
+	| (TagLinkBase & {
+			status: "complete";
+			/** Source side once attached; null while destination captured first. */
+			source: SourceTagLinkSide;
+			/** Destination side once attached; null while the source is still pending. */
+			destination: TagLinkSide;
+	  });
+
+export type BoundsLink = TagLink & {
+	id: TagID;
 };
 
 export type ResolveTransitionContext = {
@@ -64,12 +128,8 @@ export type ResolvedTransitionPair = {
 	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
-};
-
-export type ScreenEntry = Entry;
-
-export type BoundaryState = {
-	screens: Record<ScreenKey, ScreenEntry>;
+	sourcePortalAttachTarget?: BoundsPortalAttachTarget;
+	sourceHost?: SourceHostRef;
 };
 
 export type LinkGroupState = {
@@ -83,5 +143,3 @@ export type LinkPairState = {
 };
 
 export type LinkPairsState = Record<ScreenPairKey, LinkPairState>;
-
-export type TagState = BoundaryState;

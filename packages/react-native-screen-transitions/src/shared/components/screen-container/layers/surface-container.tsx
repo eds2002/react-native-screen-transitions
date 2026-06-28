@@ -1,12 +1,8 @@
 import { type ComponentType, memo, useMemo } from "react";
 import { StyleSheet, type ViewProps } from "react-native";
-import Animated, {
-	useAnimatedProps,
-	useAnimatedStyle,
-} from "react-native-reanimated";
-import { NO_PROPS, NO_STYLES } from "../../../constants";
+import Animated from "react-native-reanimated";
 import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useScreenStyles } from "../../../providers/screen/styles";
+import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 
 type Props = {
 	children: React.ReactNode;
@@ -44,17 +40,8 @@ type AnimatedSurfaceProps = {
 
 const AnimatedSurface = memo(
 	({ children, pointerEvents, SurfaceComponent }: AnimatedSurfaceProps) => {
-		const { stylesMap } = useScreenStyles();
-
-		const animatedSurfaceStyle = useAnimatedStyle(() => {
-			"worklet";
-			return stylesMap.get().surface?.style ?? NO_STYLES;
-		});
-
-		const animatedSurfaceProps = useAnimatedProps(() => {
-			"worklet";
-			return stylesMap.get().surface?.props ?? NO_PROPS;
-		});
+		const animatedSurfaceStyle = useSlotStyles("surface");
+		const animatedSurfaceProps = useSlotProps("surface");
 
 		return (
 			<SurfaceComponent

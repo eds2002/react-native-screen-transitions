@@ -2,11 +2,6 @@ import type { NormalizedTransitionSlotStyle } from "../../../../../types/animati
 import { getPropResetValue, getStyleResetValue } from "./reset-values";
 import type { ResettableStyleState } from "./types";
 
-const hasTrackedKey = (keys: Record<string, true> | undefined, key: string) => {
-	"worklet";
-	return keys !== undefined && keys[key] === true;
-};
-
 const isDefinedStyleValue = (value: unknown) => {
 	"worklet";
 	return value !== undefined && value !== null;
@@ -50,25 +45,6 @@ const collectDefinedKeys = ({
 		resetValues: hasResetValues ? resetValues : undefined,
 		hasKeys,
 	};
-};
-
-export const hasDisappearedKeys = (
-	previousKeys: Record<string, true> | undefined,
-	currentKeys: Record<string, true> | undefined,
-) => {
-	"worklet";
-
-	if (!previousKeys) {
-		return false;
-	}
-
-	for (const key in previousKeys) {
-		if (!hasTrackedKey(currentKeys, key)) {
-			return true;
-		}
-	}
-
-	return false;
 };
 
 const hasEitherKeySet = (

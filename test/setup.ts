@@ -24,8 +24,8 @@ const createTestMutable = <T>(initial: T) => {
 		get() {
 			return this.value;
 		},
-		set(v: T) {
-			this.value = v;
+		set(v: T | ((value: T) => T)) {
+			this.value = typeof v === "function" ? v(this.value) : v;
 		},
 	};
 

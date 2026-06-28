@@ -11,6 +11,7 @@ import {
 	createBlankStackNavigator,
 } from "../../blank-stack";
 import type {
+	BoundsMotion,
 	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
@@ -139,7 +140,8 @@ void transitionTarget;
 void transitionDepthTarget;
 
 const scopedBounds = interpolationProps.bounds({ id: 42 });
-const numericBoundsResult = scopedBounds;
+const tagScopedBounds = interpolationProps.bounds("group:hero");
+const numericBoundsResult = scopedBounds.styles();
 const parentTransition = interpolationProps.transition({ depth: -1 });
 const grandparentTransition = interpolationProps.transition({ depth: -2 });
 const selfTransition = interpolationProps.transition({ depth: 0 });
@@ -151,19 +153,38 @@ const rootTransitionBounds = interpolationProps
 const leafTransitionBounds = interpolationProps
 	.transition({ depth: 2 })
 	?.bounds({ id: 42 });
-const offsetBoundsResult = interpolationProps.bounds({
-	id: 42,
+const offsetBoundsResult = scopedBounds.styles({
 	offset: { x: 10, y: -10 },
 });
-const deprecatedGesturesBoundsResult = interpolationProps.bounds({
-	id: 42,
+const boundsMotion: BoundsMotion = ({ current, progress, props, start }) => {
+	"worklet";
+	const velocityDip = props.active.gesture.velocity * 0.1;
+	const screenBias =
+		((start.pageX + start.width / 2) / props.layouts.screen.width) * 2 - 1;
+	return {
+		x: current.x,
+		y: current.y - Math.sin(progress * Math.PI) * 24,
+		scale: current.scale * (1 - velocityDip),
+		rotate: screenBias * 4,
+		rotateY: screenBias * 30,
+		perspective: 800,
+		transformOrigin: "center",
+	};
+};
+const motionBoundsResult = scopedBounds.styles({
+	motion: boundsMotion,
+});
+const deprecatedGesturesBoundsResult = scopedBounds.styles({
 	gestures: { x: 10, y: -10 },
 });
-const absoluteRawBoundsResult = interpolationProps.bounds({
-	id: 42,
+const absoluteRawBoundsResult = scopedBounds.math({
 	method: "size",
 	space: "absolute",
-	raw: true,
+	progress: interpolationProps.current.transitionProgress,
+});
+const motionRawBoundsResult = scopedBounds.math({
+	method: "content",
+	motion: boundsMotion,
 	progress: interpolationProps.current.transitionProgress,
 });
 const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
@@ -188,20 +209,34 @@ const configuredRevealInterpolatedStyle: BoundsNavigationRevealStyle =
 		maskSizingMode: "size",
 	});
 void configuredRevealInterpolatedStyle;
-const currentLink = interpolationProps.bounds.getLink(42);
+const currentLink = scopedBounds.link();
+const tagCurrentLink = tagScopedBounds.link();
+const tagOverrideLink = tagScopedBounds.link("other-group:other-hero");
+const currentLinkStatus = currentLink?.status;
 const initialSourceBounds = currentLink?.initialSource?.bounds;
 const initialDestinationBounds = currentLink?.initialDestination?.bounds;
-const scopedCurrentLink = scopedBounds.getLink();
+const scopedCurrentLink = scopedBounds.link();
 void currentLink;
+void tagCurrentLink;
+void tagOverrideLink;
+void currentLinkStatus;
 void initialSourceBounds;
 void initialDestinationBounds;
 void scopedCurrentLink;
 void numericBoundsResult;
 void offsetBoundsResult;
+void motionBoundsResult;
 void deprecatedGesturesBoundsResult;
 void absoluteRawBoundsResult;
+void motionRawBoundsResult;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
+const motionRawBoundsScale: number = motionRawBoundsResult.scale;
+const motionRawBoundsRotate: number = motionRawBoundsResult.rotate;
+const motionRawBoundsRotateY: number = motionRawBoundsResult.rotateY;
+void motionRawBoundsScale;
+void motionRawBoundsRotate;
+void motionRawBoundsRotateY;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;

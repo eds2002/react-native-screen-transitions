@@ -1,7 +1,11 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import { setEntry } from "../../stores/bounds/internals/entries";
 import { setDestination, setSource } from "../../stores/bounds/internals/links";
-import type { ScreenPairKey } from "../../stores/bounds/types";
+import type {
+	BoundsPortalAttachTarget,
+	ScreenPairKey,
+	SourceHostRef,
+} from "../../stores/bounds/types";
 
 type LinkWrite =
 	| {
@@ -21,6 +25,8 @@ type ApplyMeasuredBoundsWritesParams = {
 	measured: MeasuredDimensions;
 	preparedStyles: StyleProps;
 	linkWrite?: LinkWrite;
+	portalHost?: BoundsPortalAttachTarget;
+	sourceHost?: SourceHostRef;
 };
 
 export const applyMeasuredBoundsWrites = (
@@ -35,6 +41,8 @@ export const applyMeasuredBoundsWrites = (
 		measured,
 		preparedStyles,
 		linkWrite,
+		portalHost,
+		sourceHost,
 	} = params;
 
 	// Set the bounds entry on every measure to avoid any stale measurements
@@ -51,6 +59,8 @@ export const applyMeasuredBoundsWrites = (
 			measured,
 			preparedStyles,
 			group,
+			portalHost,
+			sourceHost,
 		);
 	}
 

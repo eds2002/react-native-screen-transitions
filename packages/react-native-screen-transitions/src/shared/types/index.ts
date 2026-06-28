@@ -2,6 +2,7 @@ export { FALSE, TRUE } from "../constants";
 export type {
 	AnimatedViewStyle,
 	AnimationConfig,
+	BoundaryTeleportControl,
 	ScreenInterpolationProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionAccessor,
@@ -11,12 +12,16 @@ export type {
 	ScreenTransitionTarget,
 	TransitionInterpolatedStyle,
 	TransitionInterpolatorOptions,
+	TransitionSlotProps,
 	TransitionSlotStyle,
 	TransitionSpec,
 } from "./animation.types";
 export type {
 	BoundsAccessor,
 	BoundsMethod,
+	BoundsMotion,
+	BoundsMotionFrame,
+	BoundsMotionTransform,
 	BoundsNavigationAccessor,
 	BoundsNavigationRevealOptions,
 	BoundsNavigationRevealStyle,

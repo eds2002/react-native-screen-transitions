@@ -1,28 +1,43 @@
 import type { SharedValue } from "react-native-reanimated";
 
-export const deriveStackProgress = (
-	routeKeys: string[],
+export const syncStackProgressValues = (
 	visualProgressValues: SharedValue<number>[],
-	currentIndex: number,
-	fallbackProgress: number,
-	currentRouteKey: string | undefined,
-	currentProgress: number,
-	nextRouteKey: string | undefined,
-	nextProgress: number | undefined,
+	stackProgressValues: SharedValue<number>[],
 ) => {
 	"worklet";
-	if (currentIndex < 0) return fallbackProgress;
-
 	let total = 0;
-	for (let i = currentIndex; i < visualProgressValues.length; i++) {
-		const routeKey = routeKeys[i];
-		if (routeKey === currentRouteKey) {
-			total += currentProgress;
-		} else if (routeKey === nextRouteKey && nextProgress !== undefined) {
-			total += nextProgress;
-		} else {
-			total += visualProgressValues[i].get();
+
+	for (let i = visualProgressValues.length - 1; i >= 0; i--) {
+		total += visualProgressValues[i]?.get() ?? 0;
+		const stackProgress = stackProgressValues[i];
+
+		if (stackProgress && stackProgress.get() !== total) {
+			stackProgress.set(total);
 		}
+	}
+};
+
+export const resolveStackProgress = (
+	stackProgress: SharedValue<number> | undefined,
+	fallbackProgress: number,
+	currentProgress: number,
+	previousCurrentProgress: number | undefined,
+	nextProgress: number | undefined,
+	previousNextProgress: number | undefined,
+) => {
+	"worklet";
+	if (!stackProgress) {
+		return fallbackProgress;
+	}
+
+	let total = stackProgress.get();
+
+	if (previousCurrentProgress !== undefined) {
+		total += currentProgress - previousCurrentProgress;
+	}
+
+	if (nextProgress !== undefined && previousNextProgress !== undefined) {
+		total += nextProgress - previousNextProgress;
 	}
 
 	return total;

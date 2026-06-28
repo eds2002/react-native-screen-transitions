@@ -29,7 +29,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
-		}).navigation.zoom();
+		}).navigation.zoom({ target: "bound" });
 
 		return {
 			...navigationStyles,
@@ -52,12 +52,13 @@ export default function NavigationZoomGroupTransitionsLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					// navigationMaskEnabled: Platform.OS === "ios",
+					navigationMaskEnabled: false,
+					backdropBehavior: "dismiss",
 					gestureEnabled: true,
 					gestureDirection: ["bidirectional"],
 					gestureReleaseVelocityScale: 1.6,
+					gestureProgressMode: "freeform",
 					screenStyleInterpolator: navigationZoomInterpolator,
-					experimental_enableHighRefreshRate: true,
 					transitionSpec: {
 						open: Transition.Specs.DefaultSpec,
 						close: Transition.Specs.FlingSpec,

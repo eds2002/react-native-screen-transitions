@@ -5,6 +5,7 @@ import {
 } from "react-native-reanimated";
 import type {
 	ScrollGestureAxis,
+	ScrollGestureAxisState,
 	ScrollGestureState,
 	ScrollMetadataState,
 } from "../types/gesture.types";
@@ -67,6 +68,73 @@ const hasMetadataWriters = (routeKey: ScreenKey): boolean => {
 
 const clearMetadataWriters = (routeKey: ScreenKey) => {
 	delete metadataWriters[routeKey];
+};
+
+export const cloneScrollMetadataState = (
+	scroll: ScrollMetadataState | null | undefined,
+): ScrollMetadataState | null => {
+	"worklet";
+
+	if (!scroll) {
+		return null;
+	}
+
+	return {
+		vertical: scroll.vertical
+			? {
+					offset: scroll.vertical.offset,
+					contentSize: scroll.vertical.contentSize,
+					layoutSize: scroll.vertical.layoutSize,
+					isTouched: scroll.vertical.isTouched,
+				}
+			: null,
+		horizontal: scroll.horizontal
+			? {
+					offset: scroll.horizontal.offset,
+					contentSize: scroll.horizontal.contentSize,
+					layoutSize: scroll.horizontal.layoutSize,
+					isTouched: scroll.horizontal.isTouched,
+				}
+			: null,
+	};
+};
+
+/**
+ * Offset clamped to the axis layout range, so iOS rubber-band overscroll never
+ * leaks into coordinate-space deltas. Returns null when the axis is untracked.
+ */
+export const clampScrollAxisOffset = (
+	axisState: ScrollGestureAxisState | null | undefined,
+): number | null => {
+	"worklet";
+
+	if (!axisState) {
+		return null;
+	}
+
+	const maxOffset = Math.max(0, axisState.contentSize - axisState.layoutSize);
+	return Math.min(Math.max(axisState.offset, 0), maxOffset);
+};
+
+/**
+ * Clamped scroll travel between a captured snapshot and the current state on
+ * one axis. Returns 0 when either side does not track the axis.
+ */
+export const getClampedScrollAxisDelta = (
+	current: ScrollMetadataState | null | undefined,
+	captured: ScrollMetadataState | null | undefined,
+	axis: ScrollGestureAxis,
+): number => {
+	"worklet";
+
+	const currentOffset = clampScrollAxisOffset(current?.[axis]);
+	const capturedOffset = clampScrollAxisOffset(captured?.[axis]);
+
+	if (currentOffset === null || capturedOffset === null) {
+		return 0;
+	}
+
+	return currentOffset - capturedOffset;
 };
 
 /**

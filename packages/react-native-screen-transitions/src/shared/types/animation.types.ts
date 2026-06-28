@@ -224,6 +224,12 @@ export interface ScreenInterpolationProps {
 	progress: number;
 
 	/**
+	 * Combined transition progress of current and next screens, without live
+	 * gesture contribution.
+	 */
+	transitionProgress: number;
+
+	/**
 	 * Accumulated progress from the current screen's position onwards in the stack.
 	 * Unlike `progress` (0-2), this ranges from 0-N where N is the number of screens
 	 * above the current screen. Each screen at index I sees stackProgress as the
@@ -292,11 +298,26 @@ export type ScreenStyleInterpolator = (
  */
 export type AnimatedViewStyle = ViewStyle & TextStyle;
 
+export type BoundaryTeleportControl =
+	| boolean
+	| {
+			enabled?: boolean;
+	  };
+
+export type TransitionSlotProps = Record<string, unknown> & {
+	/**
+	 * Controls whether a portal-enabled boundary should attach for the current
+	 * interpolator frame. `false` detaches the portal while keeping hostName
+	 * ownership internal.
+	 */
+	teleport?: BoundaryTeleportControl;
+};
+
 type TransitionSlotDefinition = {
 	/** Animated styles applied via `useAnimatedStyle`. */
 	style?: AnimatedViewStyle;
 	/** Animated props applied via `useAnimatedProps`. */
-	props?: Record<string, unknown>;
+	props?: TransitionSlotProps;
 };
 
 /**
@@ -330,7 +351,7 @@ export type TransitionInterpolatorOptions = Omit<
  */
 export type NormalizedTransitionSlotStyle = {
 	style?: StyleProps;
-	props?: Record<string, unknown>;
+	props?: TransitionSlotProps;
 };
 
 /**

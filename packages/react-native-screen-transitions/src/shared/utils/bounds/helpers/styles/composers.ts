@@ -1,15 +1,21 @@
+import type { TransformsStyle } from "react-native";
 import {
 	Extrapolation,
 	interpolate,
 	type MeasuredDimensions,
 	type StyleProps,
 } from "react-native-reanimated";
-import { VISIBLE_STYLE } from "../../../../constants";
+import { EPSILON } from "../../../../constants";
+import type { BoundsInterpolationProps } from "../../../../types/bounds.types";
 import type {
 	ContentTransformGeometry,
 	RelativeGeometry,
 } from "../../types/geometry";
-import type { BoundsAnchor, BoundsOptions } from "../../types/options";
+import type {
+	BoundsAnchor,
+	BoundsMotionTransform,
+	BoundsOptions,
+} from "../../types/options";
 
 /**
  * Element-level (relative) params shared by size/transform composers.
@@ -24,6 +30,7 @@ export type ElementComposeParams = {
 	progress: number;
 	ranges: readonly [number, number];
 	computeOptions: BoundsOptions;
+	interpolationProps: BoundsInterpolationProps;
 };
 
 /**
@@ -40,6 +47,7 @@ type ContentComposeParams = {
 	progress: number;
 	ranges: readonly [number, number];
 	computeOptions: BoundsOptions;
+	interpolationProps: BoundsInterpolationProps;
 };
 
 const getAnchorPoint = (
@@ -105,6 +113,124 @@ const getAnchorOffset = ({
 	}
 };
 
+const clampUnit = (value: number) => {
+	"worklet";
+	return Math.min(1, Math.max(0, value));
+};
+
+const normalizeRangeProgress = (
+	progress: number,
+	ranges: readonly [number, number],
+) => {
+	"worklet";
+	const distance = ranges[1] - ranges[0];
+
+	if (Math.abs(distance) <= EPSILON) {
+		return 1;
+	}
+
+	return clampUnit((progress - ranges[0]) / distance);
+};
+
+const getUniformScale = (scaleX: number, scaleY: number) => {
+	"worklet";
+	if (Math.abs(scaleX - scaleY) <= EPSILON) {
+		return scaleX;
+	}
+
+	return Math.sqrt(Math.abs(scaleX * scaleY));
+};
+
+const getScaleRatio = (resolvedScale: number, currentScale: number) => {
+	"worklet";
+	const safeCurrentScale = Math.abs(currentScale) > EPSILON ? currentScale : 1;
+
+	return resolvedScale / safeCurrentScale;
+};
+
+const resolveMotionTransform = ({
+	computeOptions,
+	interpolationProps,
+	progress,
+	ranges,
+	start,
+	end,
+	current,
+}: {
+	computeOptions: BoundsOptions;
+	interpolationProps: BoundsInterpolationProps;
+	progress: number;
+	ranges: readonly [number, number];
+	start: MeasuredDimensions;
+	end: MeasuredDimensions;
+	current: BoundsMotionTransform;
+}) => {
+	"worklet";
+
+	if (!computeOptions.motion) {
+		return current;
+	}
+
+	return computeOptions.motion({
+		progress: normalizeRangeProgress(progress, ranges),
+		current,
+		start,
+		end,
+		props: interpolationProps,
+	});
+};
+
+type MotionTransformEntry = Exclude<
+	TransformsStyle["transform"],
+	string | undefined
+>[number];
+
+/**
+ * Builds the rendered transform stack for a resolved motion: optional
+ * perspective first (so rotations project in 3D), translates, optional
+ * rotations, then the composer's scale entries — rotation happens in
+ * unscaled space around the element center.
+ */
+const composeMotionTransform = (
+	motion: BoundsMotionTransform,
+	scaleTransforms?: MotionTransformEntry[],
+) => {
+	"worklet";
+	const transform: MotionTransformEntry[] = [];
+	const rotate = motion.rotate ?? 0;
+	const rotateX = motion.rotateX ?? 0;
+	const rotateY = motion.rotateY ?? 0;
+
+	if (
+		rotate !== 0 ||
+		rotateX !== 0 ||
+		rotateY !== 0 ||
+		motion.perspective !== undefined
+	) {
+		transform.push({ perspective: motion.perspective ?? 1000 });
+	}
+
+	transform.push({ translateX: motion.x }, { translateY: motion.y });
+
+	if (rotateX !== 0) {
+		transform.push({ rotateX: `${rotateX}deg` });
+	}
+	if (rotateY !== 0) {
+		transform.push({ rotateY: `${rotateY}deg` });
+	}
+	if (rotate !== 0) {
+		transform.push({ rotate: `${rotate}deg` });
+	}
+
+	if (scaleTransforms) {
+		for (const entry of scaleTransforms) {
+			transform.push(entry);
+		}
+	}
+
+	return transform;
+};
+
 export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 	"worklet";
 	const { start, end, progress, ranges, computeOptions } = params;
@@ -141,22 +267,40 @@ export function composeSizeAbsolute(params: ElementComposeParams): StyleProps {
 
 	const translateX = anchorX - anchorOffset.x;
 	const translateY = anchorY - anchorOffset.y;
+	const motion = resolveMotionTransform({
+		computeOptions,
+		interpolationProps: params.interpolationProps,
+		progress,
+		ranges,
+		start,
+		end,
+		current: {
+			x: translateX,
+			y: translateY,
+			scale: 1,
+		},
+	});
+	const resolvedWidth = width * motion.scale;
+	const resolvedHeight = height * motion.scale;
 
 	if (computeOptions.raw) {
 		return {
-			width,
-			height,
-			translateX,
-			translateY,
-			...VISIBLE_STYLE,
+			width: resolvedWidth,
+			height: resolvedHeight,
+			translateX: motion.x,
+			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
 		};
 	}
 
 	return {
-		width,
-		height,
-		transform: [{ translateX }, { translateY }],
-		...VISIBLE_STYLE,
+		width: resolvedWidth,
+		height: resolvedHeight,
+		transform: composeMotionTransform(motion),
+		transformOrigin: motion.transformOrigin,
 	};
 }
 
@@ -197,22 +341,40 @@ export function composeSizeRelative(params: ElementComposeParams): StyleProps {
 
 	const translateX = anchorX - (baseX + anchorOffset.x);
 	const translateY = anchorY - (baseY + anchorOffset.y);
+	const motion = resolveMotionTransform({
+		computeOptions,
+		interpolationProps: params.interpolationProps,
+		progress,
+		ranges,
+		start,
+		end,
+		current: {
+			x: translateX,
+			y: translateY,
+			scale: 1,
+		},
+	});
+	const resolvedWidth = width * motion.scale;
+	const resolvedHeight = height * motion.scale;
 
 	if (computeOptions.raw) {
 		return {
-			translateX,
-			translateY,
-			width,
-			height,
-			...VISIBLE_STYLE,
+			translateX: motion.x,
+			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
+			width: resolvedWidth,
+			height: resolvedHeight,
 		};
 	}
 
 	return {
-		transform: [{ translateX }, { translateY }],
-		width,
-		height,
-		...VISIBLE_STYLE,
+		transform: composeMotionTransform(motion),
+		transformOrigin: motion.transformOrigin,
+		width: resolvedWidth,
+		height: resolvedHeight,
 	};
 }
 
@@ -265,19 +427,43 @@ export function composeTransformAbsolute(
 				Extrapolation.CLAMP,
 			);
 
+	const currentScale = getUniformScale(scaleX, scaleY);
+	const motion = resolveMotionTransform({
+		computeOptions,
+		interpolationProps: params.interpolationProps,
+		progress,
+		ranges,
+		start,
+		end,
+		current: {
+			x: translateX,
+			y: translateY,
+			scale: currentScale,
+		},
+	});
+	const scaleRatio = getScaleRatio(motion.scale, currentScale);
+	const resolvedScaleX = scaleX * scaleRatio;
+	const resolvedScaleY = scaleY * scaleRatio;
+
 	if (computeOptions.raw) {
 		return {
-			translateX,
-			translateY,
-			scaleX,
-			scaleY,
-			...VISIBLE_STYLE,
+			translateX: motion.x,
+			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
+			scaleX: resolvedScaleX,
+			scaleY: resolvedScaleY,
 		};
 	}
 
 	return {
-		transform: [{ translateX }, { translateY }, { scaleX }, { scaleY }],
-		...VISIBLE_STYLE,
+		transform: composeMotionTransform(motion, [
+			{ scaleX: resolvedScaleX },
+			{ scaleY: resolvedScaleY },
+		]),
+		transformOrigin: motion.transformOrigin,
 	};
 }
 
@@ -310,29 +496,49 @@ export function composeTransformRelative(
 				Extrapolation.CLAMP,
 			);
 
-	if (computeOptions.raw) {
-		return {
-			translateX,
-			translateY,
-			scaleX,
-			scaleY,
-			...VISIBLE_STYLE,
-		};
-	}
-
 	const offsetX = computeOptions.offset?.x ?? computeOptions.gestures?.x ?? 0;
 	const offsetY = computeOptions.offset?.y ?? computeOptions.gestures?.y ?? 0;
+	const currentScale = getUniformScale(scaleX, scaleY);
+	const motion = resolveMotionTransform({
+		computeOptions,
+		interpolationProps: params.interpolationProps,
+		progress,
+		ranges,
+		start: params.start,
+		end: params.end,
+		current: {
+			x: translateX,
+			y: translateY,
+			scale: currentScale,
+		},
+	});
+	const scaleRatio = getScaleRatio(motion.scale, currentScale);
+	const resolvedScaleX = scaleX * scaleRatio;
+	const resolvedScaleY = scaleY * scaleRatio;
+
+	if (computeOptions.raw) {
+		return {
+			translateX: motion.x,
+			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
+			scaleX: resolvedScaleX,
+			scaleY: resolvedScaleY,
+		};
+	}
 
 	return {
 		transform: [
 			{ translateX: offsetX },
 			{ translateY: offsetY },
-			{ translateX },
-			{ translateY },
-			{ scaleX },
-			{ scaleY },
+			...composeMotionTransform(motion, [
+				{ scaleX: resolvedScaleX },
+				{ scaleY: resolvedScaleY },
+			]),
 		],
-		...VISIBLE_STYLE,
+		transformOrigin: motion.transformOrigin,
 	};
 }
 
@@ -356,17 +562,34 @@ export function composeContentStyle(params: ContentComposeParams): StyleProps {
 		? interpolate(progress, ranges, [s, 1], Extrapolation.CLAMP)
 		: interpolate(progress, ranges, [1, s], Extrapolation.CLAMP);
 
+	const motion = resolveMotionTransform({
+		computeOptions: params.computeOptions,
+		interpolationProps: params.interpolationProps,
+		progress,
+		ranges,
+		start: params.start,
+		end: params.end,
+		current: {
+			x: translateX,
+			y: translateY,
+			scale,
+		},
+	});
+
 	if (raw) {
 		return {
-			translateX,
-			translateY,
-			scale,
-			...VISIBLE_STYLE,
+			translateX: motion.x,
+			translateY: motion.y,
+			rotate: motion.rotate ?? 0,
+			rotateX: motion.rotateX ?? 0,
+			rotateY: motion.rotateY ?? 0,
+			transformOrigin: motion.transformOrigin,
+			scale: motion.scale,
 		};
 	}
 
 	return {
-		transform: [{ translateX }, { translateY }, { scale }],
-		...VISIBLE_STYLE,
+		transform: composeMotionTransform(motion, [{ scale: motion.scale }]),
+		transformOrigin: motion.transformOrigin,
 	};
 }

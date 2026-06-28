@@ -31,6 +31,12 @@ const BOUNDS_EXAMPLES = [
 			"Shared element cases for bounds, anchors, scale modes, and targets",
 	},
 	{
+		id: "matched-screen",
+		title: "Matched Screen Portal",
+		description:
+			"One video teleported to the matched screen while the destination slides",
+	},
+	{
 		id: "transition-scope",
 		title: "Nested Bounds",
 		description:

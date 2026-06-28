@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
-import { BoundStore, type BoundaryConfig, type Snapshot } from "../../stores/bounds";
+import { setPortalHostBounds } from "../../components/boundary/portal/stores/host-bounds.store";
+import { resolvePortalOffsetStyle } from "../../components/boundary/portal/utils/offset-style";
+import { BoundStore, type Snapshot } from "../../stores/bounds";
 import {
 	createPendingPairKey,
 	createScreenPairKey,
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
+import { createBoundsAccessor } from "../../utils/bounds";
+import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
+import type { EntryPatch } from "../../stores/bounds/types";
 
 const createBounds = (
 	x = 0,
@@ -19,6 +24,12 @@ const createBounds = (
 	pageY: y,
 	width,
 	height,
+});
+
+const createScrollLayout = (x = 0, y = 0) => ({
+	vertical: { offset: y, contentSize: 1000, layoutSize: 400 },
+	horizontal: { offset: x, contentSize: 1000, layoutSize: 400 },
+	isTouched: false,
 });
 
 const registerMeasuredEntry = (
@@ -36,7 +47,7 @@ const registerMeasuredEntry = (
 const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
-	boundaryConfig?: BoundaryConfig,
+	boundaryConfig?: NonNullable<EntryPatch["boundaryConfig"]>,
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		boundaryConfig,
@@ -144,17 +155,20 @@ describe("BoundStore.link pair writes", () => {
 		expect(BoundStore.link.getDestination(pairKey, "card")).toBeNull();
 	});
 
-	it("does not attach a destination without an existing pair link", () => {
+	it("sets a destination before the source exists", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const destination = createBounds(200, 200);
 
 		BoundStore.link.setDestination(
 			pairKey,
 			"card",
 			"screen-b",
-			createBounds(200, 200),
+			destination,
 		);
 
-		expect(BoundStore.link.getLink(pairKey, "card")).toBeNull();
+		const link = BoundStore.link.getLink(pairKey, "card");
+		expect(link?.source).toBeNull();
+		expect(link?.destination?.bounds).toEqual(destination);
 	});
 
 	it("promotes a temporary pending source when destination attaches", () => {
@@ -170,6 +184,55 @@ describe("BoundStore.link pair writes", () => {
 		expect(link?.source.bounds).toEqual(source);
 		expect(link?.destination?.bounds).toEqual(destination);
 		expect(BoundStore.link.getLink(pendingPairKey, "card")).toBeNull();
+	});
+
+	it("tracks link status in the stored tag link", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+		const destination = createBounds(200, 220);
+
+		expect(BoundStore.link.getLink(pairKey, "card")).toBeNull();
+
+		BoundStore.link.setDestination(pairKey, "card", "screen-b", destination);
+		expect(BoundStore.link.getLink(pairKey, "card")).toEqual({
+			status: "source-incomplete",
+			source: null,
+			destination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+			initialDestination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+		});
+
+		BoundStore.link.setSource(pairKey, "card", "screen-a", source);
+		expect(BoundStore.link.getLink(pairKey, "card")).toEqual({
+			status: "complete",
+			source: {
+				screenKey: "screen-a",
+				bounds: source,
+				styles: {},
+			},
+			destination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+			initialSource: {
+				screenKey: "screen-a",
+				bounds: source,
+				styles: {},
+			},
+			initialDestination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+		});
 	});
 
 	it("sets and updates destination while preserving the initial destination", () => {
@@ -365,6 +428,84 @@ describe("BoundStore.link.getPair", () => {
 		expect(resolved.destinationBounds).toEqual(destination);
 	});
 
+	it("falls back to initial group source while requested source is missing", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+
+		BoundStore.link.setSource(pairKey, "1", "screen-a", source, {}, "colors");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
+	it("falls back to pending initial group source while requested source is missing", () => {
+		const pendingPairKey = createPendingPairKey("screen-a");
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+
+		BoundStore.link.setSource(
+			pendingPairKey,
+			"1",
+			"screen-a",
+			source,
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
+	it("prefers requested group source over initial source when destination is absent", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const initialSource = createBounds(10, 20);
+		const requestedSource = createBounds(80, 120);
+
+		BoundStore.link.setSource(
+			pairKey,
+			"1",
+			"screen-a",
+			initialSource,
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+		BoundStore.link.setSource(
+			pairKey,
+			"2",
+			"screen-a",
+			requestedSource,
+			{},
+			"colors",
+		);
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(requestedSource);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
 	it("resolves entering from a pending source when destination is absent", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const source = createBounds(10, 20);
@@ -395,6 +536,145 @@ describe("BoundStore.link.getPair", () => {
 
 		expect(resolved.sourceBounds).toEqual(source);
 		expect(resolved.destinationBounds).toBeNull();
+	});
+});
+
+describe("BoundsAccessor", () => {
+	it("syncs grouped active id when creating a scoped accessor", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const bounds = createBoundsAccessor(
+			() =>
+				({
+					previous: { route: { key: "screen-a" } },
+					current: { route: { key: "screen-b" } },
+				}) as any,
+		);
+
+		bounds({ id: "2", group: "colors" });
+
+		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("2");
+	});
+
+	it("can resolve portal host offsets without scroll compensation", () => {
+		setPortalHostBounds("screen-a", {
+			...createBounds(4, -102, 370, 0),
+			scroll: createScrollLayout(5, 100),
+		});
+
+		expect(
+			resolvePortalOffsetStyle({
+				hostKey: "screen-a",
+				placement: "cross-screen-open",
+				bounds: {
+					...createBounds(40, 220, 100, 80),
+					scroll: createScrollLayout(20, 150),
+				} as any,
+			}),
+		).toEqual({
+			transform: [{ translateY: 322 }, { translateX: 36 }],
+		});
+	});
+
+	it("compensates portal host offsets from clamped live host scroll", () => {
+		setPortalHostBounds("screen-b-host", {
+			...createBounds(4, -102, 370, 0),
+			scroll: createScrollLayout(5, 100),
+		});
+
+		// Vertical offset 900 overshoots the 600 layout range (rubber-band) and
+		// clamps before the delta: deltaY = 600 - 100, deltaX = 20 - 5.
+		expect(
+			resolvePortalOffsetStyle({
+				hostKey: "screen-b-host",
+				placement: "cross-screen-close",
+				bounds: createBounds(40, 220, 100, 80),
+				hostCurrentScroll: createScrollLayout(20, 900),
+			}),
+		).toEqual({
+			transform: [{ translateY: 822 }, { translateX: 51 }],
+		});
+	});
+});
+
+describe("teleport portal host links", () => {
+	it("persists the source portal host across refreshes without portal context", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(0, 0),
+			{},
+			undefined,
+			"matched-screen",
+		);
+		// Refresh paths (e.g. provider-driven re-measures) omit portal context.
+		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(0, 4));
+
+		expect(BoundStore.link.getSource(pairKey, "card")?.portalAttachTarget).toBe(
+			"matched-screen",
+		);
+		expect(
+			BoundStore.link.getPair("card", {
+				entering: true,
+				previousScreenKey: "screen-a",
+				currentScreenKey: "screen-b",
+			}).sourcePortalAttachTarget,
+		).toBe("matched-screen");
+	});
+
+	it("shifts the teleported source path by the clamped destination scroll delta", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const destination = {
+			...createBounds(120, 300, 200, 150),
+			scroll: createScrollLayout(0, 100),
+		} as Snapshot["bounds"];
+
+		const registerLink = (
+			tag: string,
+			sourceY: number,
+			portalAttachTarget?: "matched-screen",
+		) => {
+			BoundStore.link.setSource(
+				pairKey,
+				tag,
+				"screen-a",
+				createBounds(0, sourceY, 100, 80),
+				{},
+				undefined,
+				portalAttachTarget,
+			);
+			BoundStore.link.setDestination(pairKey, tag, "screen-b", destination);
+		};
+
+		registerLink("classic", 40);
+		registerLink("teleported", 40, "matched-screen");
+		// Live offset 1000 clamps to the 600 layout range, captured offset is
+		// 100, so the teleported source must shift by exactly 500.
+		registerLink("classic-shifted", 540);
+
+		const computeFor = (tag: string) =>
+			computeBoundStyles(
+				{
+					id: tag,
+					current: { route: { key: "screen-a" } },
+					next: {
+						route: { key: "screen-b" },
+						layouts: { scroll: createScrollLayout(0, 1000) },
+					},
+					progress: 1.4,
+					dimensions: { width: 400, height: 800 },
+				} as any,
+				{ id: tag },
+			);
+
+		const classic = computeFor("classic");
+		const teleported = computeFor("teleported");
+		const classicShifted = computeFor("classic-shifted");
+
+		expect(teleported).not.toEqual(classic);
+		expect(teleported).toEqual(classicShifted);
 	});
 });
 

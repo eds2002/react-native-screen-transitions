@@ -113,6 +113,7 @@ describe("hydrateTransitionState snap indices", () => {
 			{
 				transitionProgress: shared(1),
 				visualProgress: shared(1),
+				stackProgress: shared(1),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -173,6 +174,7 @@ describe("hydrateTransitionState snap indices", () => {
 			{
 				transitionProgress: shared(1),
 				visualProgress: shared(1),
+				stackProgress: shared(1),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -228,9 +230,10 @@ describe("hydrateTransitionState snap indices", () => {
 		});
 
 		const hydrated = hydrateTransitionState(
-			{
-				transitionProgress: shared(0.5),
-				visualProgress: shared(0.5),
+				{
+					transitionProgress: shared(0.5),
+					visualProgress: shared(0.5),
+					stackProgress: shared(0.5),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -263,9 +266,10 @@ describe("hydrateTransitionState snap indices", () => {
 		});
 
 		const hydrated = hydrateTransitionState(
-			{
-				transitionProgress: shared(0.45),
-				visualProgress: shared(0.45),
+				{
+					transitionProgress: shared(0.45),
+					visualProgress: shared(0.45),
+					stackProgress: shared(0.45),
 				willAnimate: shared(0),
 				closing: shared(0),
 				progressAnimating: shared(0),
@@ -300,6 +304,7 @@ describe("hydrateTransitionState snap indices", () => {
 		const builtState = {
 			transitionProgress: shared(0.45),
 			visualProgress: shared(0.45),
+			stackProgress: shared(0.45),
 			willAnimate: shared(0),
 			closing: shared(0),
 			progressAnimating: shared(0),
@@ -353,9 +358,10 @@ describe("hydrateTransitionState snap indices", () => {
 			},
 			horizontal: null,
 		};
-		const builtState = {
-			transitionProgress: shared(1),
-			visualProgress: shared(1),
+			const builtState = {
+				transitionProgress: shared(1),
+				visualProgress: shared(1),
+				stackProgress: shared(1),
 			willAnimate: shared(0),
 			closing: shared(0),
 			progressAnimating: shared(0),

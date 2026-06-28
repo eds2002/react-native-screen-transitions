@@ -16,22 +16,12 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { currentScreenKey } = useDescriptorDerivations();
 	const { entering, transitionProgress } =
 		AnimationStore.getBag(currentScreenKey);
-
 	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =
 		SystemStore.getBag(currentScreenKey);
 
 	const hasVisibilityGateOpened = useSharedValue(false);
 	const shouldBlockVisibility = useSharedValue(!isFloatingOverlay);
 
-	/**
-	 * Visibility has to start blocked before the first animated style pass.
-	 *
-	 * `useDerivedValue` can publish its computed value after `useAnimatedStyle`
-	 * has already read the initial one, which briefly exposes an unhydrated
-	 * screen. Keep the visible state in an eagerly initialized shared value, then
-	 * let the reaction open it once the visibility gate allows the first
-	 * transformed frame to render.
-	 */
 	useAnimatedReaction(
 		() => {
 			"worklet";
@@ -58,13 +48,6 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
-		/**
-		 * Keep blocked screens physically offscreen. On physical devices,
-		 * opacity: 0 can break Liquid Glass sampling.
-		 *
-		 * See: https://github.com/expo/expo/issues/41024
-		 *
-		 */
 		const offset = getVisibilityBlockOffset(height);
 
 		return {
