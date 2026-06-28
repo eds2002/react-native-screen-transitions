@@ -2,10 +2,8 @@ import { memo } from "react";
 import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
-import { AnimationStore } from "../../../../stores/animation.store";
 import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getLink } from "../../../../stores/bounds/internals/links";
-import { GestureStore } from "../../../../stores/gesture.store";
 import { ScrollStore } from "../../../../stores/scroll.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
 import { NativePortalHost } from "../teleport";
@@ -30,16 +28,6 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	style,
 }: PortalBoundaryHostProps) {
 	const hostName = createPortalBoundaryHostName(host.hostKey, host.boundaryId);
-	const hostClosing = AnimationStore.getValue(host.screenKey, "closing");
-	const hostProgress = AnimationStore.getValue(
-		host.screenKey,
-		"transitionProgress",
-	);
-	const hostGestureDismissing = GestureStore.getValue(
-		host.screenKey,
-		"dismissing",
-	);
-	const hostScrollMetadata = ScrollStore.getValue(host.screenKey, "metadata");
 	const sourceScrollMetadata = ScrollStore.getValue(
 		getSourceScreenKeyFromPairKey(host.pairKey),
 		"metadata",
@@ -58,31 +46,29 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		// The resolver owns the math; this component decides which screen/scroll
 		// relationship the active portal is in.
 		const isCrossScreenPortal = link.source.screenKey !== host.screenKey;
-		const isHostClosing =
-			hostClosing.get() === 1 || hostGestureDismissing.get() === 1;
 		const placement: PortalOffsetPlacement = !isCrossScreenPortal
 			? "same-screen"
-			: isHostClosing
-				? "cross-screen-close"
-				: "cross-screen-open";
+			: "cross-screen";
 
 		// A source that originated inside its own scroll host moves with that
-		// ScrollView while this portal stays attached over here. Shifting the
-		// source rect by the clamped source scroll travel keeps the return
-		// landing point on the live placeholder, so the close detach is seamless.
+		// ScrollView while a matched-screen portal stays attached over here.
+		// Shifting the source rect by the clamped source scroll travel keeps the
+		// return landing point on the live placeholder, so the close detach is
+		// seamless. Destination scroll is represented by the chosen host itself.
+		const isMatchedScreenPortal =
+			link.source.portalAttachTarget === "matched-screen";
 		const trackSourceScroll =
-			isCrossScreenPortal && link.source.sourceHost?.capturesScroll === true;
+			isMatchedScreenPortal &&
+			isCrossScreenPortal &&
+			link.source.sourceHost?.capturesScroll === true;
 
 		return resolvePortalOffsetStyle({
 			bounds: link.source.bounds,
-			hostCurrentScroll:
-				placement === "cross-screen-close" ? hostScrollMetadata.get() : null,
 			hostKey: host.hostKey,
 			placement,
 			sourceCurrentScroll: trackSourceScroll
 				? sourceScrollMetadata.get()
 				: null,
-			hostProgress: hostProgress.get(),
 			trackSourceScroll,
 		});
 	});

@@ -133,78 +133,49 @@ const resolveStartEnd = (params: {
 	}
 
 	/**
-	 * Teleport continuity: this screen's source content physically renders
-	 * inside the matched screen's portal host, which travels with that screen's
-	 * ScrollView. Screen-fixed rects (the source, fullscreen/custom targets)
-	 * must be expressed in the host's frame by the clamped scroll travel since
-	 * the destination capture. The destination rect rides with the host, so it
-	 * stays untouched. Classic two-component links never set a portal host and
-	 * skip this entirely.
+	 * Matched-screen portal continuity: while source content physically renders
+	 * in the matched screen's host, the visual source endpoint still belongs to
+	 * the source screen. If that source originated in a scroll-scoped host, keep
+	 * the start rect tied to the live source placeholder. Destination movement is
+	 * represented by the chosen portal host itself: root hosts float, nested hosts
+	 * scroll naturally.
 	 */
-	const isTeleportedSourceElement =
+	const shouldTrackTeleportedSourceScroll =
 		resolvedPair.sourcePortalAttachTarget === "matched-screen" &&
 		!!currentScreenKey &&
 		currentScreenKey === resolvedPair.sourceScreenKey &&
 		!!resolvedPair.destinationScreenKey &&
 		currentScreenKey !== resolvedPair.destinationScreenKey &&
-		params.computeOptions.method !== "content";
+		params.computeOptions.method !== "content" &&
+		resolvedPair.sourceHost?.capturesScroll === true;
 
-	let teleportShiftX = 0;
-	let teleportShiftY = 0;
 	let sourceScrollShiftX = 0;
 	let sourceScrollShiftY = 0;
 
-	if (isTeleportedSourceElement) {
-		const capturedScroll = getBoundsScrollSnapshot(destinationBounds);
-		const liveScroll = getScreenScrollMetadata(
-			resolvedPair.destinationScreenKey,
+	if (shouldTrackTeleportedSourceScroll) {
+		const capturedSourceScroll = getBoundsScrollSnapshot(sourceBounds);
+		const liveSourceScroll = getScreenScrollMetadata(
+			resolvedPair.sourceScreenKey,
 			params.previous,
 			params.current,
 			params.next,
 		);
-		teleportShiftX = getClampedScrollAxisDelta(
-			liveScroll,
-			capturedScroll,
+		sourceScrollShiftX = getClampedScrollAxisDelta(
+			liveSourceScroll,
+			capturedSourceScroll,
 			"horizontal",
 		);
-		teleportShiftY = getClampedScrollAxisDelta(
-			liveScroll,
-			capturedScroll,
+		sourceScrollShiftY = getClampedScrollAxisDelta(
+			liveSourceScroll,
+			capturedSourceScroll,
 			"vertical",
 		);
-
-		// A source that lives inside its own scroll host travels with that
-		// ScrollView in page space. Shifting the start rect by the clamped source
-		// scroll travel keeps it aligned with the live placeholder; the host
-		// placement applies the identical shift, so the shifts cancel at full
-		// progress and the open frame is untouched. Screen-fixed rects (the
-		// fullscreen/custom end targets below) are not inside the scroll content
-		// and keep only the destination shift.
-		if (resolvedPair.sourceHost?.capturesScroll) {
-			const capturedSourceScroll = getBoundsScrollSnapshot(sourceBounds);
-			const liveSourceScroll = getScreenScrollMetadata(
-				resolvedPair.sourceScreenKey,
-				params.previous,
-				params.current,
-				params.next,
-			);
-			sourceScrollShiftX = getClampedScrollAxisDelta(
-				liveSourceScroll,
-				capturedSourceScroll,
-				"horizontal",
-			);
-			sourceScrollShiftY = getClampedScrollAxisDelta(
-				liveSourceScroll,
-				capturedSourceScroll,
-				"vertical",
-			);
-		}
 	}
 
 	const start = shiftBounds(
 		sourceBounds,
-		teleportShiftX - sourceScrollShiftX,
-		teleportShiftY - sourceScrollShiftY,
+		-sourceScrollShiftX,
+		-sourceScrollShiftY,
 	);
 	let end = destinationBounds ?? fullscreen;
 
@@ -215,10 +186,6 @@ const resolveStartEnd = (params: {
 	const customTarget = params.computeOptions.target;
 	if (typeof customTarget === "object") {
 		end = customTarget;
-	}
-
-	if (hasTargetOverride) {
-		end = shiftBounds(end, teleportShiftX, teleportShiftY);
 	}
 
 	return {

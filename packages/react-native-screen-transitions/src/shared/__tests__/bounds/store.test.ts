@@ -564,7 +564,7 @@ describe("BoundsAccessor", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "screen-a",
-				placement: "cross-screen-open",
+				placement: "cross-screen",
 				bounds: {
 					...createBounds(40, 220, 100, 80),
 					scroll: createScrollLayout(20, 150),
@@ -575,23 +575,20 @@ describe("BoundsAccessor", () => {
 		});
 	});
 
-	it("compensates portal host offsets from clamped live host scroll", () => {
+	it("does not compensate portal host offsets from destination live scroll", () => {
 		setPortalHostBounds("screen-b-host", {
 			...createBounds(4, -102, 370, 0),
 			scroll: createScrollLayout(5, 100),
 		});
 
-		// Vertical offset 900 overshoots the 600 layout range (rubber-band) and
-		// clamps before the delta: deltaY = 600 - 100, deltaX = 20 - 5.
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "screen-b-host",
-				placement: "cross-screen-close",
+				placement: "cross-screen",
 				bounds: createBounds(40, 220, 100, 80),
-				hostCurrentScroll: createScrollLayout(20, 900),
 			}),
 		).toEqual({
-			transform: [{ translateY: 822 }, { translateX: 51 }],
+			transform: [{ translateY: 322 }, { translateX: 36 }],
 		});
 	});
 });
@@ -624,7 +621,7 @@ describe("teleport portal host links", () => {
 		).toBe("matched-screen");
 	});
 
-	it("shifts the teleported source path by the clamped destination scroll delta", () => {
+	it("does not shift the teleported source path by destination scroll", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const destination = {
 			...createBounds(120, 300, 200, 150),
@@ -650,9 +647,6 @@ describe("teleport portal host links", () => {
 
 		registerLink("classic", 40);
 		registerLink("teleported", 40, "matched-screen");
-		// Live offset 1000 clamps to the 600 layout range, captured offset is
-		// 100, so the teleported source must shift by exactly 500.
-		registerLink("classic-shifted", 540);
 
 		const computeFor = (tag: string) =>
 			computeBoundStyles(
@@ -671,10 +665,8 @@ describe("teleport portal host links", () => {
 
 		const classic = computeFor("classic");
 		const teleported = computeFor("teleported");
-		const classicShifted = computeFor("classic-shifted");
 
-		expect(teleported).not.toEqual(classic);
-		expect(teleported).toEqual(classicShifted);
+		expect(teleported).toEqual(classic);
 	});
 });
 
