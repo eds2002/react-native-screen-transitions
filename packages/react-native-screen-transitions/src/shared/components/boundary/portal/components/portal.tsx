@@ -148,6 +148,7 @@ export const Portal = memo(function Portal({
 			hostKey: activeHostKey,
 			pairKey: attachment.pairKey,
 			screenKey: targetScreenKey,
+			slotsMap,
 		});
 
 		// The native registry parks portals whose host has not registered yet and
@@ -162,6 +163,7 @@ export const Portal = memo(function Portal({
 		attachment,
 		id,
 		isPortalEnabled,
+		slotsMap,
 		targetScreenKey,
 	]);
 
@@ -218,7 +220,8 @@ export const Portal = memo(function Portal({
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
 
-		const { teleport, ...slotProps } = slotsMap.get()[id]?.props ?? {};
+		const slot = slotsMap.get()[id];
+		const { teleport, ...slotProps } = slot?.props ?? {};
 		const shouldTeleport = isTeleportEnabled(teleport);
 		const attachedHost = attachedHostName.get();
 		const isInterpolatorReady = nextInterpolatorReady.get();

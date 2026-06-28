@@ -1,5 +1,5 @@
 import { memo } from "react";
-import type { StyleProp, ViewStyle } from "react-native";
+import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import { AnimationStore } from "../../../../stores/animation.store";
@@ -43,6 +43,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		getSourceScreenKeyFromPairKey(host.pairKey),
 		"metadata",
 	);
+
 	const hostStyle = useAnimatedStyle(() => {
 		"worklet";
 		// Strict per-member lookup — a fallback member's source rect would
@@ -84,6 +85,21 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			trackSourceScroll,
 		});
 	});
+	const contentFrameStyle = useAnimatedStyle(() => {
+		"worklet";
+		const link = getLink(host.pairKey, host.boundaryId);
+		if (!link?.source) {
+			return NO_STYLES;
+		}
+
+		return {
+			height: link.source.bounds.height,
+			width: link.source.bounds.width,
+		};
+	});
+	const slotStyle = useAnimatedStyle(() => {
+		return host.slotsMap.get()[host.boundaryId]?.style ?? NO_STYLES;
+	});
 
 	// Without `react-native-teleport` no portal ever mounts a boundary host, so
 	// this never renders — the guard just narrows the nullable animated host.
@@ -92,6 +108,23 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	}
 
 	return (
-		<AnimatedPortalBoundaryHost name={hostName} style={[style, hostStyle]} />
+		<Animated.View
+			pointerEvents="box-none"
+			style={[style, hostStyle]}
+			collapsable={false}
+		>
+			<AnimatedPortalBoundaryHost
+				name={hostName}
+				style={[styles.content, contentFrameStyle, slotStyle]}
+			/>
+		</Animated.View>
 	);
+});
+
+const styles = StyleSheet.create({
+	content: {
+		left: 0,
+		position: "absolute",
+		top: 0,
+	},
 });

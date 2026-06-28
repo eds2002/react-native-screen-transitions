@@ -22,6 +22,8 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const registerTargetRef = rootContext?.registerTargetRef;
 	const unregisterTargetRef = rootContext?.unregisterTargetRef;
 	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
+	const shouldApplyAssociatedStyleInline =
+		isActiveTarget && rootContext?.portal === undefined;
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 	// Portal'd content can be teleported into another screen's host; measuring
 	// it there would capture its CURRENT (destination) position as the source
@@ -62,7 +64,9 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 				ref={targetAnimatedRef}
 				style={[
 					style,
-					isActiveTarget ? rootContext.associatedTargetStyles : undefined,
+					shouldApplyAssociatedStyleInline
+						? rootContext.associatedTargetStyles
+						: undefined,
 				]}
 				collapsable={false}
 			/>

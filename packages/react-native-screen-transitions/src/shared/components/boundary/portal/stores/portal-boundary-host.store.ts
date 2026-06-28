@@ -1,4 +1,6 @@
 import { useSyncExternalStore } from "react";
+import type { SharedValue } from "react-native-reanimated";
+import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 
 export type ActivePortalBoundaryHost = {
 	boundaryId: string;
@@ -6,6 +8,7 @@ export type ActivePortalBoundaryHost = {
 	hostKey: string;
 	pairKey: string;
 	screenKey: string;
+	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
 
 type PortalSnapshot = {
@@ -52,7 +55,8 @@ const isSameHost = (
 		a.capturesScroll === b.capturesScroll &&
 		a.hostKey === b.hostKey &&
 		a.pairKey === b.pairKey &&
-		a.screenKey === b.screenKey
+		a.screenKey === b.screenKey &&
+		a.slotsMap === b.slotsMap
 	);
 };
 
