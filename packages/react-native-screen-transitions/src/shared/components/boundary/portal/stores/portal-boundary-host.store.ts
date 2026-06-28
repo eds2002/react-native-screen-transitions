@@ -1,11 +1,13 @@
 import { useSyncExternalStore } from "react";
 import type { SharedValue } from "react-native-reanimated";
+import type { LocalStyleLayers } from "../../../../providers/screen/styles/helpers/resolve-slot-styles";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 
 export type ActivePortalBoundaryHost = {
 	boundaryId: string;
 	capturesScroll: boolean;
 	hostKey: string;
+	localStylesMaps: SharedValue<LocalStyleLayers>;
 	pairKey: string;
 	screenKey: string;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
@@ -58,6 +60,7 @@ const isSameHost = (
 		a.boundaryId === b.boundaryId &&
 		a.capturesScroll === b.capturesScroll &&
 		a.hostKey === b.hostKey &&
+		a.localStylesMaps === b.localStylesMaps &&
 		a.pairKey === b.pairKey &&
 		a.screenKey === b.screenKey &&
 		a.slotsMap === b.slotsMap

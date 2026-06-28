@@ -32,7 +32,6 @@ import {
 	retainPortalBoundaryHost,
 	unmountPortalBoundaryHost,
 } from "../stores/portal-boundary-host.store";
-import { isTeleportAvailable, NativePortal } from "../teleport";
 import {
 	type PortalAttachment,
 	resolvePortalAttachmentTargets,
@@ -42,6 +41,7 @@ import {
 	PORTAL_HOST_NAME_RESET_VALUE,
 } from "../utils/naming";
 import { isTeleportEnabled } from "../utils/teleport-control";
+import { isTeleportAvailable, NativePortal } from "./teleport";
 
 type NullableHostNamePortalProps = Omit<
 	ComponentProps<NonNullable<typeof NativePortal>>,
@@ -83,7 +83,7 @@ export const Portal = memo(function Portal({
 		!mode || mode === true
 			? "current-screen"
 			: (mode.attachTo ?? "current-screen");
-	const { nextInterpolatorReady, slotsMap } = useScreenSlots();
+	const { localStylesMaps, nextInterpolatorReady, slotsMap } = useScreenSlots();
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
@@ -148,6 +148,7 @@ export const Portal = memo(function Portal({
 			boundaryId: id,
 			capturesScroll: activeHostCapturesScroll,
 			hostKey: activeHostKey,
+			localStylesMaps,
 			pairKey: attachment.pairKey,
 			screenKey: targetScreenKey,
 			slotsMap,
@@ -163,6 +164,7 @@ export const Portal = memo(function Portal({
 		attachment,
 		id,
 		isPortalEnabled,
+		localStylesMaps,
 		requestedHostKey,
 		slotsMap,
 		targetScreenKey,

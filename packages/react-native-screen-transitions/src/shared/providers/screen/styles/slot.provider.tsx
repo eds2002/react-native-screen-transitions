@@ -14,6 +14,7 @@ import {
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
 import { FloatingOverlayLayer } from "./components/floating-overlay-layer";
+import type { LocalStyleLayers } from "./helpers/resolve-slot-styles";
 import { useInterpolatedStylesMap } from "./hooks/use-interpolated-style-maps";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useResolvedStylesMap } from "./hooks/use-resolved-slot-style-map";
@@ -31,6 +32,7 @@ export type ScreenSlotName =
 	| typeof NAVIGATION_MASK_ELEMENT_STYLE_ID;
 
 type ScreenSlotContextValue = {
+	localStylesMaps: SharedValue<LocalStyleLayers>;
 	nextInterpolatorReady: SharedValue<number>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
@@ -55,6 +57,7 @@ export const {
 
 	return {
 		value: {
+			localStylesMaps,
 			nextInterpolatorReady,
 			slotsMap,
 		},

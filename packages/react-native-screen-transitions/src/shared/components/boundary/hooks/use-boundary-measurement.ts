@@ -5,7 +5,7 @@ import { runOnUI } from "react-native-reanimated";
 import { createPendingPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
-import { resolvePortalHost } from "../portal/resolve-portal";
+import { resolvePortalHost } from "../portal/utils/resolve-portal";
 import type { BoundaryConfigProps, BoundaryPortal } from "../types";
 import { useBoundaryPresence } from "./use-boundary-presence";
 import { useInitialDestinationMeasurement } from "./use-initial-destination-measurement";

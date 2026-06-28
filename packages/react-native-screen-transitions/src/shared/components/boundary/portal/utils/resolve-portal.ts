@@ -1,7 +1,7 @@
-import type { BoundsPortalAttachTarget } from "../../../stores/bounds/types";
-import { logger } from "../../../utils/logger";
-import type { BoundaryPortal } from "../types";
-import { isTeleportAvailable } from "./teleport";
+import type { BoundsPortalAttachTarget } from "../../../../stores/bounds/types";
+import { logger } from "../../../../utils/logger";
+import type { BoundaryPortal } from "../../types";
+import { isTeleportAvailable } from "../components/teleport";
 
 /**
  * Resolves the `portal` prop against teleport availability. When

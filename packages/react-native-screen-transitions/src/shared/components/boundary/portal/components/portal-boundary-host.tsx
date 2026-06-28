@@ -8,12 +8,13 @@ import { getLink } from "../../../../stores/bounds/internals/links";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { ScrollStore } from "../../../../stores/scroll.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
-import { NativePortalHost } from "../teleport";
+import { hasLocalSlot } from "../utils/has-local-slot";
 import { createPortalBoundaryHostName } from "../utils/naming";
 import {
 	type PortalOffsetPlacement,
 	resolvePortalOffsetStyle,
 } from "../utils/offset-style";
+import { NativePortalHost } from "./teleport";
 
 const AnimatedPortalBoundaryHost = NativePortalHost
 	? Animated.createAnimatedComponent(NativePortalHost)
@@ -98,6 +99,28 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		};
 	});
 	const slotStyle = useAnimatedStyle(() => {
+		"worklet";
+		const link = getLink(host.pairKey, host.boundaryId);
+		const isMatchedScreenPortal =
+			link?.source?.portalAttachTarget === "matched-screen";
+
+		// `slotsMap` is the resolved map: it may contain real interpolator output,
+		// inherited styles, or resolver-created reset patches for slots that just
+		// disappeared. Normal components need those reset patches so stale styles
+		// clear correctly.
+		//
+		// A matched-screen portal host is different. It is only the temporary visual
+		// receiver for teleported content, not the original component that needs a
+		// cleanup frame. If the current local interpolator layers did not emit this
+		// boundary id, any resolved style here is cleanup/stale residue and should
+		// not be drawn by the host.
+		if (
+			isMatchedScreenPortal &&
+			!hasLocalSlot(host.localStylesMaps.get(), host.boundaryId)
+		) {
+			return NO_STYLES;
+		}
+
 		return host.slotsMap.get()[host.boundaryId]?.style ?? NO_STYLES;
 	});
 

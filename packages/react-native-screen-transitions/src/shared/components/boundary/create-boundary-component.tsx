@@ -13,7 +13,7 @@ import {
 } from "../../providers/screen/styles";
 import { createBoundTag } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { useBoundaryMeasurement } from "./hooks/use-boundary-measurement";
-import { resolveBoundaryPortal } from "./portal/resolve-portal";
+import { resolveBoundaryPortal } from "./portal/utils/resolve-portal";
 import {
 	BoundaryRootProvider,
 	useBoundaryRootState,
