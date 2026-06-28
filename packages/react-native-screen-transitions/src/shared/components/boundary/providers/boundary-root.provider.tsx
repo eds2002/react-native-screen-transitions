@@ -54,8 +54,10 @@ export const useBoundaryRootState = (params: {
 	associatedTargetStyles?: BoundaryAssociatedStyle;
 	boundTag: BoundTag;
 	portal?: BoundaryPortal;
+	rootMeasurementRef?: AnimatedRef<View>;
 }) => {
-	const { associatedTargetStyles, boundTag, portal } = params;
+	const { associatedTargetStyles, boundTag, portal, rootMeasurementRef } =
+		params;
 	const rootRef = useAnimatedRef<View>();
 	const [targetEntry, setTargetEntry] = useState<BoundaryTargetEntry | null>(
 		null,
@@ -118,7 +120,7 @@ export const useBoundaryRootState = (params: {
 		ref: rootRef,
 		contextValue,
 		hasActiveTarget: targetEntry !== null,
-		measuredRef: targetEntry?.measurementRef ?? rootRef,
+		measuredRef: targetEntry?.measurementRef ?? rootMeasurementRef ?? rootRef,
 		targetPreparedStyles: targetEntry?.preparedStyles,
 	};
 };

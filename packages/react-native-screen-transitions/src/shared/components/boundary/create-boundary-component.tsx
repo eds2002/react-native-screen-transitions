@@ -5,7 +5,8 @@ import {
 	useImperativeHandle,
 	useMemo,
 } from "react";
-import Animated from "react-native-reanimated";
+import type { View } from "react-native";
+import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import {
 	useSlotStackingStyles,
@@ -13,6 +14,7 @@ import {
 } from "../../providers/screen/styles";
 import { createBoundTag } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { useBoundaryMeasurement } from "./hooks/use-boundary-measurement";
+import { Portal } from "./portal/components/portal";
 import { resolveBoundaryPortal } from "./portal/utils/resolve-portal";
 import {
 	BoundaryRootProvider,
@@ -71,6 +73,7 @@ export function createBoundaryComponent<P extends object>(
 
 		const associatedStyles = useSlotStyles(boundTag.tag);
 		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
+		const rootPlaceholderRef = useAnimatedRef<View>();
 
 		const {
 			ref,
@@ -81,6 +84,7 @@ export function createBoundaryComponent<P extends object>(
 		} = useBoundaryRootState({
 			boundTag,
 			portal,
+			rootMeasurementRef: portal ? rootPlaceholderRef : undefined,
 			associatedTargetStyles: shouldAttachAssociatedStyles
 				? associatedStyles
 				: undefined,
@@ -102,23 +106,42 @@ export function createBoundaryComponent<P extends object>(
 
 		useImperativeHandle(forwardedRef, () => ref.current as any, [ref]);
 
+		const shouldPortalRoot = !!portal && !hasActiveTarget;
 		// A nested active target takes the full associated style, so the root keeps
-		// only its stacking context; otherwise the root wears the full style.
+		// only its stacking context. Without a nested target, a portal'd root is the
+		// target, so its associated style is applied through the portal host instead
+		// of inline on the teleported element.
 		const attachedStyle = shouldAttachAssociatedStyles
 			? hasActiveTarget
 				? associatedStackingStyles
-				: associatedStyles
+				: shouldPortalRoot
+					? undefined
+					: associatedStyles
 			: undefined;
+
+		const boundaryRoot = (
+			<AnimatedComponent
+				{...rest}
+				ref={ref}
+				style={[style, attachedStyle]}
+				onPress={resolvedOnPress}
+				collapsable={false}
+			/>
+		);
 
 		return (
 			<BoundaryRootProvider value={contextValue}>
-				<AnimatedComponent
-					{...rest}
-					ref={ref}
-					style={[style, attachedStyle]}
-					onPress={resolvedOnPress}
-					collapsable={false}
-				/>
+				{shouldPortalRoot ? (
+					<Portal
+						id={boundTag.tag}
+						portal={portal}
+						placeholderRef={rootPlaceholderRef}
+					>
+						{boundaryRoot}
+					</Portal>
+				) : (
+					boundaryRoot
+				)}
 			</BoundaryRootProvider>
 		);
 	});
