@@ -8,13 +8,13 @@ import { getLink } from "../../../../stores/bounds/internals/links";
 import { GestureStore } from "../../../../stores/gesture.store";
 import { ScrollStore } from "../../../../stores/scroll.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
+import { NativePortalHost } from "../teleport";
 import { hasLocalSlot } from "../utils/has-local-slot";
 import { createPortalBoundaryHostName } from "../utils/naming";
 import {
 	type PortalOffsetPlacement,
 	resolvePortalOffsetStyle,
 } from "../utils/offset-style";
-import { NativePortalHost } from "./teleport";
 
 const AnimatedPortalBoundaryHost = NativePortalHost
 	? Animated.createAnimatedComponent(NativePortalHost)

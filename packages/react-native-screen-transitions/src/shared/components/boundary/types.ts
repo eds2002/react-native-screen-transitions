@@ -1,9 +1,13 @@
-import type { ScreenPairKey } from "../../stores/bounds/types";
+import type {
+	BoundsPortalAttachTarget,
+	ScreenPairKey,
+} from "../../stores/bounds/types";
 import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
 
-export type BoundaryPortalAttachTarget = "current-screen" | "matched-screen";
+/** Public alias for the internal {@link BoundsPortalAttachTarget} union. */
+export type BoundaryPortalAttachTarget = BoundsPortalAttachTarget;
 
 /**
  * Configures automatic portal attachment for a boundary target.

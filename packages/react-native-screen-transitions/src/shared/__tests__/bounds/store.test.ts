@@ -564,12 +564,11 @@ describe("BoundsAccessor", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "screen-a",
+				placement: "cross-screen-open",
 				bounds: {
 					...createBounds(40, 220, 100, 80),
 					scroll: createScrollLayout(20, 150),
 				} as any,
-				currentScroll: createScrollLayout(20, 900),
-				includeScrollOffsets: false,
 			}),
 		).toEqual({
 			transform: [{ translateY: 322 }, { translateX: 36 }],
@@ -587,6 +586,7 @@ describe("BoundsAccessor", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "screen-b-host",
+				placement: "cross-screen-close",
 				bounds: createBounds(40, 220, 100, 80),
 				hostCurrentScroll: createScrollLayout(20, 900),
 			}),

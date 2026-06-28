@@ -26,6 +26,12 @@ let snapshot: HostRegistrySnapshot = EMPTY_SNAPSHOT;
  */
 const activeScrollHosts = makeMutable<Record<string, SourceHostRef>>({});
 
+/**
+ * The active host for a screen. Stack ordering is the load-bearing invariant:
+ * `registerHost` unshifts fallback hosts to the front and pushes real hosts to
+ * the back, so the active host is the last real (non-fallback) host, falling
+ * back to the first entry and finally to the screen's own key.
+ */
 const getActiveHostFromStack = (
 	screenKey: string,
 	stack: HostRegistration[] | undefined,

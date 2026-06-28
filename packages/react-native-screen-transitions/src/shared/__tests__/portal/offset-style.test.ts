@@ -29,11 +29,12 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "host",
+				placement: "cross-screen-close",
 				bounds: {
 					...createBounds(40, 220, 100, 80),
 					scroll: createScrollLayout(5, 100),
 				} as any,
-				compensateSourceScroll: true,
+				trackSourceScroll: true,
 				sourceCurrentScroll: createScrollLayout(15, 250),
 			}),
 		).toEqual({
@@ -47,6 +48,7 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "host",
+				placement: "cross-screen-close",
 				bounds: {
 					...createBounds(40, 220, 100, 80),
 					scroll: createScrollLayout(5, 100),
@@ -65,11 +67,12 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "host",
+				placement: "cross-screen-close",
 				bounds: {
 					...createBounds(0, 700, 100, 80),
 					scroll: createScrollLayout(0, 100),
 				} as any,
-				compensateSourceScroll: true,
+				trackSourceScroll: true,
 				sourceCurrentScroll: createScrollLayout(0, 1000),
 			}),
 		).toEqual({
@@ -88,11 +91,12 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "scroll-host",
+				placement: "cross-screen-close",
 				bounds: {
 					...createBounds(40, 220, 100, 80),
 					scroll: createScrollLayout(0, 100),
 				} as any,
-				compensateSourceScroll: true,
+				trackSourceScroll: true,
 				hostCurrentScroll: createScrollLayout(0, 150),
 				sourceCurrentScroll: createScrollLayout(0, 250),
 			}),
@@ -109,9 +113,9 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 
 		const params = {
 			hostKey: "scroll-host",
+			placement: "cross-screen-close" as const,
 			bounds: createBounds(80, 200, 100, 80),
 			hostCurrentScroll: createScrollLayout(15, 40),
-			includeScrollOffsets: true,
 		};
 
 		expect(
@@ -146,12 +150,12 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "unregistered-host",
+				placement: "cross-screen-open",
 				bounds: {
 					...createBounds(40, 220, 100, 80),
 					scroll: createScrollLayout(0, 100),
 				} as any,
-				compensateSourceScroll: true,
-				includeScrollOffsets: false,
+				trackSourceScroll: true,
 				sourceCurrentScroll: createScrollLayout(0, 250),
 			}),
 		).toEqual({
@@ -165,8 +169,9 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "host",
+				placement: "cross-screen-close",
 				bounds: createBounds(40, 220, 100, 80),
-				compensateSourceScroll: true,
+				trackSourceScroll: true,
 				sourceCurrentScroll: null,
 			}),
 		).toEqual({
@@ -184,6 +189,7 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		// host's current scroll (pre-existing behavior, pinned). deltaB = 100 - 50.
 		const withoutSourceCompensation = resolvePortalOffsetStyle({
 			hostKey: "scroll-host",
+			placement: "cross-screen-close",
 			bounds: {
 				...createBounds(40, 220, 100, 80),
 				scroll: createScrollLayout(0, 100),
@@ -199,11 +205,12 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "scroll-host",
+				placement: "cross-screen-close",
 				bounds: {
 					...createBounds(40, 220, 100, 80),
 					scroll: createScrollLayout(0, 100),
 				} as any,
-				compensateSourceScroll: true,
+				trackSourceScroll: true,
 				sourceCurrentScroll: createScrollLayout(0, 250),
 			}),
 		).toEqual({

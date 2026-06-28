@@ -56,7 +56,7 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	return (
 		<Portal
 			id={rootContext?.boundTag.tag}
-			mode={rootContext?.portal}
+			portal={rootContext?.portal}
 			placeholderRef={placeholderAnimatedRef}
 		>
 			<Animated.View

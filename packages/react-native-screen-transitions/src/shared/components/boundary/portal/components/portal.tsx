@@ -21,6 +21,7 @@ import { useScreenSlots } from "../../../../providers/screen/styles";
 import { getLinkKeyFromTag } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
+import { logger } from "../../../../utils/logger";
 import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
 import type { BoundaryPortal, BoundaryPortalAttachTarget } from "../../types";
 import {
@@ -28,10 +29,11 @@ import {
 	useActiveHostKey,
 } from "../stores/host-registry.store";
 import {
+	dropStalePortalBoundaryHosts,
 	mountPortalBoundaryHost,
-	retainPortalBoundaryHost,
 	unmountPortalBoundaryHost,
 } from "../stores/portal-boundary-host.store";
+import { isTeleportAvailable, NativePortal } from "../teleport";
 import {
 	type PortalAttachment,
 	resolvePortalAttachmentTargets,
@@ -40,8 +42,9 @@ import {
 	createPortalBoundaryHostName,
 	PORTAL_HOST_NAME_RESET_VALUE,
 } from "../utils/naming";
+import { resolvePortalHost } from "../utils/resolve-portal";
+import { shallowEqual } from "../utils/shallow-equal";
 import { isTeleportEnabled } from "../utils/teleport-control";
-import { isTeleportAvailable, NativePortal } from "./teleport";
 
 type NullableHostNamePortalProps = Omit<
 	ComponentProps<NonNullable<typeof NativePortal>>,
@@ -59,7 +62,7 @@ const TransitionAwareTeleport = NativePortal
 interface PortalProps {
 	id?: string;
 	children: ReactNode;
-	mode?: BoundaryPortal;
+	portal?: BoundaryPortal;
 	/**
 	 * Ref to the layout-preserving placeholder wrapper. Boundaries measure
 	 * this instead of teleported content — the placeholder keeps the source
@@ -70,30 +73,31 @@ interface PortalProps {
 }
 
 export const Portal = memo(function Portal({
-	id = "my-id",
+	id,
 	children,
-	mode = false,
+	portal = false,
 	placeholderRef,
 }: PortalProps) {
-	// Teleporting requires the optional `react-native-teleport` peer. Without it,
-	// a portal-enabled boundary degrades to inline rendering (the `return
-	// children` path below).
-	const isPortalEnabled = !!mode && isTeleportAvailable;
+	// Teleporting requires the optional `react-native-teleport` peer and a stable
+	// `id` to name the boundary host. Missing either degrades to inline rendering
+	// (the `return children` path below).
+	const isPortalEnabled = !!portal && isTeleportAvailable && id !== undefined;
+	if (__DEV__ && portal && id === undefined) {
+		logger.warnOnce(
+			"portal:missing-id",
+			"A portal-enabled boundary was rendered without an id; rendering inline.",
+		);
+	}
+	const boundaryId = id ?? "";
 	const portalAttachTarget: BoundaryPortalAttachTarget =
-		!mode || mode === true
-			? "current-screen"
-			: (mode.attachTo ?? "current-screen");
+		resolvePortalHost(portal) ?? "current-screen";
 	const { localStylesMaps, nextInterpolatorReady, slotsMap } = useScreenSlots();
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
 
-	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
-
-	const [attachment, setAttachment] = useState<PortalAttachment | null>(
-		PORTAL_HOST_NAME_RESET_VALUE,
-	);
+	const [attachment, setAttachment] = useState<PortalAttachment | null>(null);
 	const requestedHostKey = useSharedValue<string | null>(null);
 	const visibleHostKey = useSharedValue<string | null>(null);
 	const placeholderWidth = useSharedValue(0);
@@ -102,7 +106,6 @@ export const Portal = memo(function Portal({
 	const { targetScreenKey } = resolvePortalAttachmentTargets({
 		attachment,
 		currentScreenKey,
-		nextScreenKey,
 		portalAttachTarget,
 		sourcePairKey,
 	});
@@ -140,12 +143,12 @@ export const Portal = memo(function Portal({
 		if (!isPortalEnabled || !attachment || !activeHostKey || !targetScreenKey) {
 			requestedHostKey.set(null);
 			visibleHostKey.set(null);
-			unmountPortalBoundaryHost(id);
+			unmountPortalBoundaryHost(boundaryId);
 			return;
 		}
 
 		mountPortalBoundaryHost({
-			boundaryId: id,
+			boundaryId,
 			capturesScroll: activeHostCapturesScroll,
 			hostKey: activeHostKey,
 			localStylesMaps,
@@ -162,7 +165,7 @@ export const Portal = memo(function Portal({
 		activeHostKey,
 		activeHostCapturesScroll,
 		attachment,
-		id,
+		boundaryId,
 		isPortalEnabled,
 		localStylesMaps,
 		requestedHostKey,
@@ -175,9 +178,9 @@ export const Portal = memo(function Portal({
 		return () => {
 			requestedHostKey.set(null);
 			visibleHostKey.set(null);
-			unmountPortalBoundaryHost(id);
+			unmountPortalBoundaryHost(boundaryId);
 		};
-	}, [id, requestedHostKey, visibleHostKey]);
+	}, [boundaryId, requestedHostKey, visibleHostKey]);
 
 	useAnimatedReaction(
 		() => {
@@ -195,7 +198,7 @@ export const Portal = memo(function Portal({
 			// the initial member's link for style resolution, which would make
 			// every inactive group member's portal see a "complete" link and
 			// attach. A portal may only teleport on its OWN member's link.
-			const link = getLink(sourcePairKey, id);
+			const link = getLink(sourcePairKey, boundaryId);
 
 			if (link?.status !== "complete") {
 				return {
@@ -213,7 +216,7 @@ export const Portal = memo(function Portal({
 				const activeId =
 					pairs.get()[sourcePairKey]?.groups?.[link.group]?.activeId;
 
-				if (activeId && activeId !== getLinkKeyFromTag(id)) {
+				if (activeId && activeId !== getLinkKeyFromTag(boundaryId)) {
 					return {
 						matchedScreenKey: null,
 						pairKey: sourcePairKey,
@@ -230,12 +233,7 @@ export const Portal = memo(function Portal({
 		},
 		(signal, previousSignal) => {
 			"worklet";
-			if (
-				previousSignal &&
-				signal.status === previousSignal.status &&
-				signal.matchedScreenKey === previousSignal.matchedScreenKey &&
-				signal.pairKey === previousSignal.pairKey
-			) {
+			if (shallowEqual(previousSignal, signal)) {
 				return;
 			}
 
@@ -253,18 +251,24 @@ export const Portal = memo(function Portal({
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			const slot = slotsMap.get()[id];
+			const slot = slotsMap.get()[boundaryId];
 			const teleport = slot?.props?.teleport;
 			const shouldTeleport = isTeleportEnabled(teleport);
 			const requestedKey = requestedHostKey.get();
 			const visibleKey = visibleHostKey.get();
 			const isInterpolatorReady = nextInterpolatorReady.get();
-			const nextVisibleKey =
-				shouldTeleport && isInterpolatorReady && requestedKey
-					? requestedKey
-					: shouldTeleport
-						? visibleKey
-						: null;
+
+			let nextVisibleKey: string | null;
+			if (!shouldTeleport) {
+				nextVisibleKey = null;
+			} else if (isInterpolatorReady && requestedKey) {
+				// Hand off to the requested receiver only once the next interpolator
+				// owns its styles — this is the gate that prevents a flash mid-handoff.
+				nextVisibleKey = requestedKey;
+			} else {
+				// Hold the currently visible receiver until the interpolator is ready.
+				nextVisibleKey = visibleKey;
+			}
 
 			return {
 				isInterpolatorReady,
@@ -277,15 +281,7 @@ export const Portal = memo(function Portal({
 		},
 		(state, previousState) => {
 			"worklet";
-			if (
-				previousState &&
-				state.isInterpolatorReady === previousState.isInterpolatorReady &&
-				state.nextVisibleKey === previousState.nextVisibleKey &&
-				state.requestedKey === previousState.requestedKey &&
-				state.shouldTeleport === previousState.shouldTeleport &&
-				state.teleport === previousState.teleport &&
-				state.visibleKey === previousState.visibleKey
-			) {
+			if (shallowEqual(previousState, state)) {
 				return;
 			}
 
@@ -294,14 +290,11 @@ export const Portal = memo(function Portal({
 				return;
 			}
 
-			if (
-				state.visibleKey &&
-				state.visibleKey === state.requestedKey &&
-				state.requestedKey
-			) {
-				runOnJS(retainPortalBoundaryHost)({
-					boundaryId: id,
-					hostKey: state.requestedKey,
+			// Visible receiver has caught up to the request: GC the superseded hosts.
+			if (state.visibleKey && state.visibleKey === state.requestedKey) {
+				runOnJS(dropStalePortalBoundaryHosts)({
+					boundaryId,
+					keepHostKey: state.visibleKey,
 				});
 			}
 		},
@@ -310,7 +303,7 @@ export const Portal = memo(function Portal({
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
 
-		const slot = slotsMap.get()[id];
+		const slot = slotsMap.get()[boundaryId];
 		const { teleport, ...slotProps } = slot?.props ?? {};
 		const shouldTeleport = isTeleportEnabled(teleport);
 		const visibleKey = visibleHostKey.get();
@@ -323,7 +316,7 @@ export const Portal = memo(function Portal({
 			...slotProps,
 			hostName:
 				shouldTeleport && visibleKey
-					? createPortalBoundaryHostName(visibleKey, id)
+					? createPortalBoundaryHostName(visibleKey, boundaryId)
 					: PORTAL_HOST_NAME_RESET_VALUE,
 		};
 	});
@@ -356,7 +349,10 @@ export const Portal = memo(function Portal({
 				style={placeholderStyle}
 				collapsable={false}
 			>
-				<TransitionAwareTeleport animatedProps={teleportProps} name={id}>
+				<TransitionAwareTeleport
+					animatedProps={teleportProps}
+					name={boundaryId}
+				>
 					<Animated.View style={placeholderStyle}>{children}</Animated.View>
 				</TransitionAwareTeleport>
 			</Animated.View>

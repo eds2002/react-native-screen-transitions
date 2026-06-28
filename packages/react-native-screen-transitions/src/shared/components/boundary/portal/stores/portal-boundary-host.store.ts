@@ -97,17 +97,22 @@ export const unmountPortalBoundaryHost = (boundaryId: string) => {
 	emit();
 };
 
-export const retainPortalBoundaryHost = ({
+/**
+ * Post-handoff GC: drop every receiver for this boundary except the one now
+ * visible (`keepHostKey`). Called once the new host is confirmed on screen so
+ * the superseded receivers stop rendering.
+ */
+export const dropStalePortalBoundaryHosts = ({
 	boundaryId,
-	hostKey,
+	keepHostKey,
 }: {
 	boundaryId: string;
-	hostKey: string;
+	keepHostKey: string;
 }) => {
 	let didDelete = false;
 
 	for (const [hostEntryKey, host] of activeBoundaryHosts) {
-		if (host.boundaryId !== boundaryId || host.hostKey === hostKey) {
+		if (host.boundaryId !== boundaryId || host.hostKey === keepHostKey) {
 			continue;
 		}
 

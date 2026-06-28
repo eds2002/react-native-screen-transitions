@@ -9,13 +9,11 @@ describe("resolvePortalAttachmentTargets", () => {
 				pairKey: "a-b",
 			},
 			currentScreenKey: "a",
-			nextScreenKey: "c",
 			portalAttachTarget: "matched-screen",
 			sourcePairKey: "a-c",
 		});
 
 		expect(targets).toEqual({
-			progressScreenKey: "b",
 			targetScreenKey: "b",
 		});
 	});
@@ -27,49 +25,43 @@ describe("resolvePortalAttachmentTargets", () => {
 				pairKey: "a-b",
 			},
 			currentScreenKey: "a",
-			nextScreenKey: "c",
 			portalAttachTarget: "current-screen",
 			sourcePairKey: "a-c",
 		});
 
 		expect(targets).toEqual({
-			progressScreenKey: null,
 			targetScreenKey: null,
 		});
 	});
 
-	it("keeps matched-screen progress tied to the attached destination when next skips a closing route", () => {
+	it("keeps the matched-screen target on the attached destination when next skips a closing route", () => {
 		const targets = resolvePortalAttachmentTargets({
 			attachment: {
 				matchedScreenKey: "b",
 				pairKey: "a-b",
 			},
 			currentScreenKey: "a",
-			nextScreenKey: "c",
 			portalAttachTarget: "matched-screen",
 			sourcePairKey: "a-b",
 		});
 
 		expect(targets).toEqual({
-			progressScreenKey: "b",
 			targetScreenKey: "b",
 		});
 	});
 
-	it("keeps current-screen host ownership while using next progress for the attach gate", () => {
+	it("keeps current-screen host ownership while the source pair matches", () => {
 		const targets = resolvePortalAttachmentTargets({
 			attachment: {
 				matchedScreenKey: "b",
 				pairKey: "a-b",
 			},
 			currentScreenKey: "a",
-			nextScreenKey: "b",
 			portalAttachTarget: "current-screen",
 			sourcePairKey: "a-b",
 		});
 
 		expect(targets).toEqual({
-			progressScreenKey: "b",
 			targetScreenKey: "a",
 		});
 	});
@@ -78,13 +70,11 @@ describe("resolvePortalAttachmentTargets", () => {
 		const targets = resolvePortalAttachmentTargets({
 			attachment: null,
 			currentScreenKey: "a",
-			nextScreenKey: "b",
 			portalAttachTarget: "matched-screen",
 			sourcePairKey: "a-b",
 		});
 
 		expect(targets).toEqual({
-			progressScreenKey: null,
 			targetScreenKey: null,
 		});
 	});
