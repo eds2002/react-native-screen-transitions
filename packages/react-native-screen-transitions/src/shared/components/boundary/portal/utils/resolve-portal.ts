@@ -11,6 +11,10 @@ import { isTeleportAvailable } from "../teleport";
 export const resolveBoundaryPortal = (
 	portal?: BoundaryPortal,
 ): BoundaryPortal | undefined => {
+	if (!portal) {
+		return undefined;
+	}
+
 	if (isTeleportAvailable) {
 		return portal;
 	}
@@ -28,5 +32,9 @@ export const resolveBoundaryPortal = (
 export const resolvePortalHost = (
 	portal?: BoundaryPortal,
 ): BoundsPortalAttachTarget | undefined => {
-	return portal ? "current-screen" : undefined;
+	if (portal === "matched-screen") {
+		return "matched-screen";
+	}
+
+	return undefined;
 };

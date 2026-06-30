@@ -73,15 +73,27 @@ const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
 
 const passiveBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
-	portal: true,
+	portal: "matched-screen",
 };
 const pressableBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
 	onPress: () => {},
 };
+const disabledBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> =
+	{
+		id: "hero",
+		portal: false,
+	};
+const invalidBooleanBoundaryPortalProps: ComponentProps<
+	typeof Transition.Boundary
+> = {
+	id: "hero",
+	// @ts-expect-error Boundary portal must name a supported mode.
+	portal: true,
+};
 const invalidBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
-	// @ts-expect-error Boundary portal is intentionally boolean-only.
+	// @ts-expect-error Boundary portal does not expose host attachment options.
 	portal: { attachTo: "matched-screen" },
 };
 const deprecatedBoundaryViewProps: ComponentProps<
@@ -97,6 +109,8 @@ const deprecatedBoundaryTriggerProps: ComponentProps<
 };
 void passiveBoundaryProps;
 void pressableBoundaryProps;
+void disabledBoundaryPortalProps;
+void invalidBooleanBoundaryPortalProps;
 void invalidBoundaryPortalProps;
 void deprecatedBoundaryViewProps;
 void deprecatedBoundaryTriggerProps;

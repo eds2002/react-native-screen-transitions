@@ -78,6 +78,7 @@ export const useBoundaryMeasurement = ({
 		boundTag,
 		currentScreenKey,
 		boundaryConfig,
+		portal,
 	});
 
 	useInitialSourceMeasurement({

@@ -38,6 +38,7 @@ export type Entry = {
 	bounds: MeasuredDimensions | null;
 	styles: StyleProps;
 	boundaryConfig?: BoundaryConfig;
+	portalAttachTarget?: BoundsPortalAttachTarget;
 };
 
 export type MeasuredEntry = Entry & {
@@ -48,6 +49,7 @@ export type EntryPatch = {
 	bounds?: MeasuredDimensions | null;
 	styles?: StyleProps | null;
 	boundaryConfig?: BoundaryConfig | null;
+	portalAttachTarget?: BoundsPortalAttachTarget | null;
 };
 
 export type ScreenIdentifier = {

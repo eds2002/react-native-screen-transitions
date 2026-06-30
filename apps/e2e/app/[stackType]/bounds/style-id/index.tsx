@@ -269,7 +269,7 @@ export default function StyleIdBoundsIndex() {
 										id={tag}
 										style={styles.pickBoundary}
 										onPress={() => openDetail(stackType, tag, item)}
-										portal
+										portal="matched-screen"
 									>
 										<Transition.Boundary.Target
 											style={[

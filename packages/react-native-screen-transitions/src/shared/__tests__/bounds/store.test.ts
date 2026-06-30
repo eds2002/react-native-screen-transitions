@@ -48,9 +48,11 @@ const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
 	boundaryConfig?: NonNullable<EntryPatch["boundaryConfig"]>,
+	portalAttachTarget?: EntryPatch["portalAttachTarget"],
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		boundaryConfig,
+		portalAttachTarget,
 	});
 };
 
@@ -86,6 +88,27 @@ describe("BoundStore.entry", () => {
 		BoundStore.entry.remove("card", "screen-a");
 
 		expect(hasBoundaryPresence("card", "screen-a")).toBe(false);
+	});
+
+	it("tracks and clears portal intent on boundary presence entries", () => {
+		registerBoundaryPresence(
+			"card",
+			"screen-a",
+			{ method: "size" },
+			"matched-screen",
+		);
+
+		expect(BoundStore.entry.get("card", "screen-a")?.portalAttachTarget).toBe(
+			"matched-screen",
+		);
+
+		BoundStore.entry.set("card", "screen-a", {
+			portalAttachTarget: null,
+		});
+
+		expect(
+			BoundStore.entry.get("card", "screen-a")?.portalAttachTarget,
+		).toBeUndefined();
 	});
 });
 

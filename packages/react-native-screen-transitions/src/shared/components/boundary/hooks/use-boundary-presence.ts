@@ -5,26 +5,31 @@ import {
 	setEntry,
 } from "../../../stores/bounds/internals/entries";
 import type { BoundTag } from "../../../stores/bounds/types";
-import type { BoundaryConfigProps } from "../types";
+import { resolvePortalHost } from "../portal/utils/resolve-portal";
+import type { BoundaryConfigProps, BoundaryPortal } from "../types";
 
 export const useBoundaryPresence = (params: {
 	enabled: boolean;
 	boundTag: BoundTag;
 	currentScreenKey: string;
 	boundaryConfig?: BoundaryConfigProps;
+	portal?: BoundaryPortal;
 }) => {
-	const { enabled, boundTag, currentScreenKey, boundaryConfig } = params;
+	const { enabled, boundTag, currentScreenKey, boundaryConfig, portal } =
+		params;
 	const { tag } = boundTag;
+	const portalAttachTarget = resolvePortalHost(portal);
 
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
 		runOnUI(setEntry)(tag, currentScreenKey, {
 			boundaryConfig,
+			portalAttachTarget: portalAttachTarget ?? null,
 		});
 
 		return () => {
 			runOnUI(removeEntry)(tag, currentScreenKey);
 		};
-	}, [enabled, tag, currentScreenKey, boundaryConfig]);
+	}, [enabled, tag, currentScreenKey, boundaryConfig, portalAttachTarget]);
 };

@@ -7,7 +7,7 @@ export default function MatchedScreenDebugPlayer() {
 
 	return (
 		<View style={styles.screen}>
-			<Transition.Boundary.View
+			<Transition.Boundary
 				id="video"
 				testID="matched-screen-debug-destination"
 				style={[styles.destinationVideo, { marginTop: insets.top }]}

@@ -38,14 +38,20 @@ const applyEntryPatch = (entry: Entry, patch: EntryPatch) => {
 		entry.styles = patch.styles ?? {};
 	}
 
-	if (patch.boundaryConfig === undefined) {
+	if (patch.boundaryConfig === null) {
+		delete entry.boundaryConfig;
+	} else if (patch.boundaryConfig !== undefined) {
+		entry.boundaryConfig = patch.boundaryConfig;
+	}
+
+	if (patch.portalAttachTarget === undefined) {
 		return;
 	}
 
-	if (patch.boundaryConfig === null) {
-		delete entry.boundaryConfig;
+	if (patch.portalAttachTarget === null) {
+		delete entry.portalAttachTarget;
 	} else {
-		entry.boundaryConfig = patch.boundaryConfig;
+		entry.portalAttachTarget = patch.portalAttachTarget;
 	}
 };
 

@@ -12,14 +12,14 @@ export default function MatchedScreenDebugIndex() {
 				Hello whats going on
 			</Text>
 			<View style={styles.sourceFrame}>
-				<Transition.Boundary.Trigger
+				<Transition.Boundary
 					id="video"
 					testID="matched-screen-debug-trigger"
-					portal
+					portal="matched-screen"
 					onPress={() => router.push("/matched-screen-debug/player")}
 				>
 					<Transition.Boundary.Target style={styles.sourceVideo} />
-				</Transition.Boundary.Trigger>
+				</Transition.Boundary>
 			</View>
 		</View>
 	);

@@ -7,6 +7,8 @@ import {
 } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
+import { getSourceScreenKeyFromPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
+import { getEntry } from "../../../stores/bounds/internals/entries";
 import {
 	getDestination,
 	getLink,
@@ -40,7 +42,7 @@ export const useInitialDestinationMeasurement = ({
 	enabled,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
-	const { linkKey, group } = boundTag;
+	const { tag, linkKey, group } = boundTag;
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
@@ -144,13 +146,18 @@ export const useInitialDestinationMeasurement = ({
 
 			if (destinationAttached) {
 				const link = getLink(measurePairKey, linkKey);
-				if (link?.source?.portalAttachTarget === "matched-screen") {
+				const sourceScreenKey = getSourceScreenKeyFromPairKey(measurePairKey);
+				const sourceEntry = getEntry(tag, sourceScreenKey);
+				const shouldWaitForMatchedScreenPortal =
+					link?.source?.portalAttachTarget === "matched-screen" ||
+					sourceEntry?.portalAttachTarget === "matched-screen";
+
+				if (shouldWaitForMatchedScreenPortal) {
 					// Matched-screen portals have a second readiness phase after
 					// destination measurement. The destination boundary can measure
-					// before its portal host has rendered, but teleporting into that
-					// host early can draw the source in the wrong coordinate space for
-					// a frame. Keep the lifecycle gate blocked here; the portal host
-					// layout is the visual commit point that releases it.
+					// before the destination-first source capture completes and before
+					// its portal host has rendered. Keep the lifecycle gate blocked here;
+					// the portal host layout is the visual commit point that releases it.
 					return;
 				}
 				releaseLifecycleStartBlock();
