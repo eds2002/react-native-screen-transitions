@@ -5,6 +5,8 @@ import {
 	FULLSCREEN_DIMENSIONS,
 	NO_STYLES,
 } from "../../../../constants";
+import { createScreenPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import { requestSourceMeasure } from "../../../../stores/bounds/internals/links";
 import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
 import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
 import { getClampedScrollAxisDelta } from "../../../../stores/scroll.store";
@@ -94,6 +96,12 @@ const resolveStartEnd = (params: {
 	const currentScreenKey = params.current?.route.key;
 	const previousScreenKey = params.previous?.route.key;
 	const nextScreenKey = params.next?.route.key;
+	const sourceMeasurePairKey =
+		entering && previousScreenKey && currentScreenKey
+			? createScreenPairKey(previousScreenKey, currentScreenKey)
+			: !entering && currentScreenKey && nextScreenKey
+				? createScreenPairKey(currentScreenKey, nextScreenKey)
+				: null;
 
 	const resolvedPair =
 		params.resolvedPair ??
@@ -108,6 +116,10 @@ const resolveStartEnd = (params: {
 	const destinationBounds = resolvedPair.destinationBounds;
 
 	if (!sourceBounds) {
+		if (hasTargetOverride && sourceMeasurePairKey) {
+			requestSourceMeasure(sourceMeasurePairKey, String(params.id));
+		}
+
 		return {
 			start: null,
 			end: null,

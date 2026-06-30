@@ -36,9 +36,11 @@ export const getInitialSourceCaptureSignal = (params: {
 		return null;
 	}
 
-	const link = linkState?.[sourcePairKey]?.links?.[linkId];
+	const pair = linkState?.[sourcePairKey];
+	const link = pair?.links?.[linkId];
+	const hasSourceRequest = pair?.sourceRequests?.[linkId];
 
-	if (!link?.destination || link.source) {
+	if ((!link?.destination && !hasSourceRequest) || link?.source) {
 		return null;
 	}
 

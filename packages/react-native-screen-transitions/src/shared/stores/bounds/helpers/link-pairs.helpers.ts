@@ -114,6 +114,16 @@ export const ensurePairGroups = (
 	return ensurePairState(state, pairKey).groups;
 };
 
+export const ensurePairSourceRequests = (
+	state: LinkPairsState,
+	pairKey: ScreenPairKey,
+): Record<LinkKey, true> => {
+	"worklet";
+	const pair = ensurePairState(state, pairKey);
+	pair.sourceRequests ??= {};
+	return pair.sourceRequests;
+};
+
 export const removePairLink = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,

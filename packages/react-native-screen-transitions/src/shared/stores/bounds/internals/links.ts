@@ -3,6 +3,7 @@ import {
 	createGroupTag,
 	ensurePairGroups,
 	ensurePairLinks,
+	ensurePairSourceRequests,
 	getGroupKeyFromTag,
 	getLinkKeyFromTag,
 	getActiveGroupId as getPairActiveGroupId,
@@ -150,6 +151,7 @@ function setSource(
 		syncLinkStatus(link);
 
 		pairLinks[linkKey] = link;
+		delete state[pairKey]?.sourceRequests?.[linkKey];
 
 		return state;
 	});
@@ -178,6 +180,23 @@ function setActiveGroupId(pairKey: ScreenPairKey, group: GroupKey, tag: TagID) {
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
 		writeGroup(state, pairKey, group, getLinkKeyFromTag(tag));
+		return state;
+	});
+}
+
+function requestSourceMeasure(pairKey: ScreenPairKey, tag: TagID) {
+	"worklet";
+	pairs.modify(<T extends LinkPairsState>(state: T): T => {
+		"worklet";
+		const linkKey = getLinkKeyFromTag(tag);
+		const link = getPairLink(state, pairKey, linkKey);
+
+		if (link?.source || state[pairKey]?.sourceRequests?.[linkKey]) {
+			return state;
+		}
+
+		ensurePairSourceRequests(state, pairKey)[linkKey] = true;
+
 		return state;
 	});
 }
@@ -262,6 +281,7 @@ export {
 	getLink,
 	getResolvedLink,
 	getSource,
+	requestSourceMeasure,
 	setActiveGroupId,
 	setDestination,
 	setSource,

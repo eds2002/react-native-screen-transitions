@@ -142,6 +142,7 @@ export type LinkGroupState = {
 export type LinkPairState = {
 	links: Record<LinkKey, TagLink>;
 	groups: Record<GroupKey, LinkGroupState>;
+	sourceRequests?: Record<LinkKey, true>;
 };
 
 export type LinkPairsState = Record<ScreenPairKey, LinkPairState>;

@@ -12,6 +12,8 @@ import {
 	createScreenPairKey,
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
+import type { ScreenTransitionState } from "../../types/animation.types";
+import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
 
 const createBounds = (): Snapshot["bounds"] => ({
 	x: 0,
@@ -21,6 +23,35 @@ const createBounds = (): Snapshot["bounds"] => ({
 	width: 100,
 	height: 100,
 });
+
+const createTransitionState = (screenKey: string) =>
+	({
+		route: {
+			key: screenKey,
+		},
+	}) as ScreenTransitionState;
+
+const requestBoundStyle = (
+	id: string,
+	target?: "fullscreen" | Snapshot["bounds"],
+) =>
+	computeBoundStyles(
+		{
+			id,
+			current: createTransitionState("screen-a"),
+			next: createTransitionState("screen-b"),
+			progress: 0,
+			dimensions: {
+				width: 400,
+				height: 800,
+			},
+			interpolationProps: {} as never,
+		},
+		{
+			id,
+			target,
+		},
+	);
 
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
@@ -68,6 +99,102 @@ describe("bounds client measurement contract", () => {
 		runAutoSourceReaction();
 
 		expect(measuredTargets).toEqual([{ type: "source", pairKey }]);
+	});
+
+	it("does not request source capture for normal bounds without destination", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		expect(requestBoundStyle("card")).toEqual({});
+		expect(
+			getInitialSourceCaptureSignal({
+				enabled: true,
+				sourcePairKey: pairKey,
+				linkId: "card",
+				shouldAutoMeasure: true,
+				linkState: pairs.get(),
+			}),
+		).toBeNull();
+	});
+
+	it("target-overridden bounds request source capture without destination", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		expect(requestBoundStyle("card", "fullscreen")).toEqual({});
+		expect(
+			getInitialSourceCaptureSignal({
+				enabled: true,
+				sourcePairKey: pairKey,
+				linkId: "card",
+				shouldAutoMeasure: true,
+				linkState: pairs.get(),
+			}),
+		).toEqual({
+			pairKey,
+			signal: "source|screen-a<>screen-b|card",
+		});
+
+		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds());
+
+		expect(pairs.get()[pairKey].sourceRequests?.card).toBeUndefined();
+		expect(
+			getInitialSourceCaptureSignal({
+				enabled: true,
+				sourcePairKey: pairKey,
+				linkId: "card",
+				shouldAutoMeasure: true,
+				linkState: pairs.get(),
+			}),
+		).toBeNull();
+	});
+
+	it("custom target bounds request source capture without destination", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		expect(requestBoundStyle("card", createBounds())).toEqual({});
+		expect(
+			getInitialSourceCaptureSignal({
+				enabled: true,
+				sourcePairKey: pairKey,
+				linkId: "card",
+				shouldAutoMeasure: true,
+				linkState: pairs.get(),
+			}),
+		).toEqual({
+			pairKey,
+			signal: "source|screen-a<>screen-b|card",
+		});
+	});
+
+	it("target-overridden grouped source requests still respect active group", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+
+		expect(requestBoundStyle("colors:1", "fullscreen")).toEqual({});
+		expect(
+			getInitialSourceCaptureSignal({
+				enabled: true,
+				sourcePairKey: pairKey,
+				linkId: "1",
+				group: "colors",
+				shouldAutoMeasure: true,
+				linkState: pairs.get(),
+			}),
+		).toBeNull();
+
+		expect(requestBoundStyle("colors:2", "fullscreen")).toEqual({});
+		expect(
+			getInitialSourceCaptureSignal({
+				enabled: true,
+				sourcePairKey: pairKey,
+				linkId: "2",
+				group: "colors",
+				shouldAutoMeasure: true,
+				linkState: pairs.get(),
+			}),
+		).toEqual({
+			pairKey,
+			signal: "source|screen-a<>screen-b|colors|2",
+		});
 	});
 
 	it("source capture rewrites the same pair-local link", () => {
