@@ -85,12 +85,10 @@ describe("source host link metadata", () => {
 		);
 	});
 
-	it("carries the source host through pending pair promotion", () => {
+	it("keeps source host metadata isolated on pending pairs", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
-		// Press-driven sources land in the pending pair before navigation; the
-		// first destination write promotes them into the concrete pair.
 		BoundStore.link.setSource(
 			pendingPairKey,
 			"card",
@@ -103,9 +101,10 @@ describe("source host link metadata", () => {
 		);
 		BoundStore.link.setDestination(pairKey, "card", "screen-b", createBounds());
 
-		expect(BoundStore.link.getSource(pairKey, "card")?.sourceHost).toEqual(
-			SCROLL_HOST,
-		);
+		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
+		expect(
+			BoundStore.link.getSource(pendingPairKey, "card")?.sourceHost,
+		).toEqual(SCROLL_HOST);
 	});
 
 	it("keeps source hosts independent per group member", () => {

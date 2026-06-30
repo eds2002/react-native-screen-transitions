@@ -1,7 +1,6 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import {
 	createGroupTag,
-	createPendingPairKey,
 	ensurePairGroups,
 	ensurePairLinks,
 	getGroupKeyFromTag,
@@ -10,8 +9,6 @@ import {
 	getDestination as getPairDestination,
 	getLink as getPairLink,
 	getSource as getPairSource,
-	getSourceScreenKeyFromPairKey,
-	removePairLink,
 } from "../helpers/link-pairs.helpers";
 import type {
 	BoundsPortalAttachTarget,
@@ -110,41 +107,6 @@ const writeDestination = (
 	}
 };
 
-const promotePendingSource = (
-	state: LinkPairsState,
-	pairKey: ScreenPairKey,
-	linkKey: LinkKey,
-) => {
-	"worklet";
-	if (getPairLink(state, pairKey, linkKey)) return;
-
-	const sourceScreenKey = getSourceScreenKeyFromPairKey(pairKey);
-	const pendingPairKey = createPendingPairKey(sourceScreenKey);
-	if (pendingPairKey === pairKey) return;
-
-	const pendingLink = getPairLink(state, pendingPairKey, linkKey);
-	if (!pendingLink) return;
-
-	writePairLink(state, pairKey, linkKey, pendingLink);
-
-	if (pendingLink.group) {
-		const pendingGroupState =
-			state[pendingPairKey]?.groups?.[pendingLink.group];
-
-		if (pendingGroupState) {
-			writeGroup(
-				state,
-				pairKey,
-				pendingLink.group,
-				pendingGroupState.activeId,
-				pendingGroupState.initialId,
-			);
-		}
-	}
-
-	removePairLink(state, pendingPairKey, linkKey);
-};
-
 function setSource(
 	pairKey: ScreenPairKey,
 	tag: TagID,
@@ -189,11 +151,6 @@ function setSource(
 
 		pairLinks[linkKey] = link;
 
-		const pendingPairKey = createPendingPairKey(screenKey);
-		if (pendingPairKey !== pairKey) {
-			removePairLink(state, pendingPairKey, linkKey);
-		}
-
 		return state;
 	});
 }
@@ -210,7 +167,6 @@ function setDestination(
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
 		const linkKey = getLinkKeyFromTag(tag);
-		promotePendingSource(state, pairKey, linkKey);
 		writeDestination(state, pairKey, linkKey, screenKey, bounds, styles, group);
 
 		return state;
@@ -246,20 +202,6 @@ const hasSourceLink = (
 	return !!link?.source;
 };
 
-const getPendingSourceLink = (
-	state: LinkPairsState,
-	pairKey: ScreenPairKey,
-	linkKey: LinkKey,
-): TagLink | null => {
-	"worklet";
-	const sourceScreenKey = getSourceScreenKeyFromPairKey(pairKey);
-	const pendingPairKey = createPendingPairKey(sourceScreenKey);
-
-	if (pendingPairKey === pairKey) return null;
-
-	return getPairLink(state, pendingPairKey, linkKey);
-};
-
 function getResolvedLink(
 	pairKey: ScreenPairKey,
 	tag: TagID,
@@ -268,17 +210,7 @@ function getResolvedLink(
 	const state = pairs.get();
 	const linkKey = getLinkKeyFromTag(tag);
 	const group = getGroupKeyFromTag(tag);
-	const requestedLink = getPairLink(state, pairKey, linkKey);
-
-	// Press-triggered zoom captures the source before navigation under a pending
-	// source<> pair. If the destination screen has no Boundary.View, nothing
-	// promotes that source into source<>destination, but zoom can still animate to
-	// its default top target from the pending source bounds.
-	const fallbackPendingLink = requestedLink
-		? null
-		: getPendingSourceLink(state, pairKey, linkKey);
-
-	const link = requestedLink ?? fallbackPendingLink;
+	const link = getPairLink(state, pairKey, linkKey);
 
 	// Group active ids can update before the new member has a full source/destination
 	// link. As soon as the requested member has source bounds, prefer it; only
@@ -292,9 +224,7 @@ function getResolvedLink(
 
 	const initialId = state[pairKey]?.groups?.[group]?.initialId;
 	if (initialId) {
-		const initialLink =
-			getPairLink(state, pairKey, initialId) ??
-			getPendingSourceLink(state, pairKey, initialId);
+		const initialLink = getPairLink(state, pairKey, initialId);
 
 		if (hasSourceLink(initialLink)) {
 			return {

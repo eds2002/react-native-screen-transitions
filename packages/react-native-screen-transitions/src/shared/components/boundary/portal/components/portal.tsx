@@ -21,9 +21,10 @@ import { useScreenSlots } from "../../../../providers/screen/styles";
 import { getLinkKeyFromTag } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
+import type { BoundsPortalAttachTarget } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
 import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
-import type { BoundaryPortal, BoundaryPortalAttachTarget } from "../../types";
+import type { BoundaryPortal } from "../../types";
 import {
 	getHostCapturesScroll,
 	useActiveHostKey,
@@ -89,7 +90,7 @@ export const Portal = memo(function Portal({
 		);
 	}
 	const boundaryId = id ?? "";
-	const portalAttachTarget: BoundaryPortalAttachTarget =
+	const portalAttachTarget: BoundsPortalAttachTarget =
 		resolvePortalHost(portal) ?? "current-screen";
 	const { localStylesMaps, nextInterpolatorReady, slotsMap } = useScreenSlots();
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);

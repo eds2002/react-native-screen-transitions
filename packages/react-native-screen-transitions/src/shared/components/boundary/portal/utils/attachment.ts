@@ -1,4 +1,4 @@
-import type { BoundaryPortalAttachTarget } from "../../types";
+import type { BoundsPortalAttachTarget } from "../../../../stores/bounds/types";
 
 export type PortalAttachment = {
 	matchedScreenKey: string;
@@ -8,7 +8,7 @@ export type PortalAttachment = {
 type ResolvePortalAttachmentTargetsParams = {
 	attachment: PortalAttachment | null;
 	currentScreenKey: string;
-	portalAttachTarget: BoundaryPortalAttachTarget;
+	portalAttachTarget: BoundsPortalAttachTarget;
 	sourcePairKey?: string;
 };
 

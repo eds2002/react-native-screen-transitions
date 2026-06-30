@@ -70,7 +70,7 @@ describe("bounds client measurement contract", () => {
 		expect(measuredTargets).toEqual([{ type: "source", pairKey }]);
 	});
 
-	it("press source capture rewrites the same pending link", () => {
+	it("source capture rewrites the same pair-local link", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const first = createBounds();
 		const second = {
@@ -114,7 +114,7 @@ describe("bounds client measurement contract", () => {
 		expect(getDestinationPairKey()).toBeNull();
 	});
 
-	it("limits destination-first measurement to the pressed pending source", () => {
+	it("does not use pending sources to limit destination-first measurement", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const pendingPairKey = createPendingPairKey("screen-a");
 
@@ -134,11 +134,11 @@ describe("bounds client measurement contract", () => {
 			});
 
 		expect(getDestinationPairKey("lime")).toBe(pairKey);
-		expect(getDestinationPairKey("sky")).toBeNull();
-		expect(getDestinationPairKey("electric")).toBeNull();
+		expect(getDestinationPairKey("sky")).toBe(pairKey);
+		expect(getDestinationPairKey("electric")).toBe(pairKey);
 	});
 
-	it("keeps grouped destination measurement pinned after pending source promotion", () => {
+	it("keeps grouped destination measurement pinned after destination establishes the active id", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const pendingPairKey = createPendingPairKey("screen-a");
 
@@ -168,7 +168,9 @@ describe("bounds client measurement contract", () => {
 				linkState: pairs.get(),
 			});
 
-		expect(BoundStore.link.getLink(pendingPairKey, "lime")).toBeNull();
+		expect(BoundStore.link.getSource(pendingPairKey, "lime")?.bounds).toEqual(
+			createBounds(),
+		);
 		expect(getDestinationPairKey("sky")).toBeNull();
 		expect(getDestinationPairKey("electric")).toBeNull();
 	});

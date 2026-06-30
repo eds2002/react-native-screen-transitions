@@ -171,7 +171,7 @@ describe("BoundStore.link pair writes", () => {
 		expect(link?.destination?.bounds).toEqual(destination);
 	});
 
-	it("promotes a temporary pending source when destination attaches", () => {
+	it("keeps pending source pairs isolated when destination attaches", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const source = createBounds(10, 20);
@@ -181,9 +181,11 @@ describe("BoundStore.link pair writes", () => {
 		BoundStore.link.setDestination(pairKey, "card", "screen-b", destination);
 
 		const link = BoundStore.link.getLink(pairKey, "card");
-		expect(link?.source.bounds).toEqual(source);
+		expect(link?.source).toBeNull();
 		expect(link?.destination?.bounds).toEqual(destination);
-		expect(BoundStore.link.getLink(pendingPairKey, "card")).toBeNull();
+		expect(BoundStore.link.getSource(pendingPairKey, "card")?.bounds).toEqual(
+			source,
+		);
 	});
 
 	it("tracks link status in the stored tag link", () => {
@@ -306,7 +308,7 @@ describe("BoundStore.link pair writes", () => {
 		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("3");
 	});
 
-	it("promotes pair-local group initial id from pending source", () => {
+	it("sets pair-local group initial id from destination writes", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
@@ -329,6 +331,9 @@ describe("BoundStore.link pair writes", () => {
 
 		expect(pairs.get()[pairKey].groups.colors.initialId).toBe("1");
 		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("1");
+		expect(BoundStore.link.getSource(pendingPairKey, "1")?.bounds).toEqual(
+			createBounds(10, 10),
+		);
 	});
 
 	it("parses concrete group tags to the member id for link access", () => {
@@ -348,7 +353,7 @@ describe("BoundStore.link pair writes", () => {
 		expect(Object.keys(pairs.get()[pairKey].links)).toEqual(["1"]);
 	});
 
-	it("removes the temporary pending source when the full pair source is written", () => {
+	it("keeps pending source pairs isolated when the full pair source is written", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
@@ -360,7 +365,9 @@ describe("BoundStore.link pair writes", () => {
 		);
 		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(2, 2));
 
-		expect(BoundStore.link.getLink(pendingPairKey, "card")).toBeNull();
+		expect(BoundStore.link.getSource(pendingPairKey, "card")?.bounds.pageX).toBe(
+			1,
+		);
 		expect(BoundStore.link.getSource(pairKey, "card")?.bounds.pageX).toBe(2);
 	});
 });
@@ -446,7 +453,7 @@ describe("BoundStore.link.getPair", () => {
 		expect(resolved.destinationBounds).toBeNull();
 	});
 
-	it("falls back to pending initial group source while requested source is missing", () => {
+	it("does not fall back to pending initial group source while requested source is missing", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const source = createBounds(10, 20);
@@ -468,7 +475,7 @@ describe("BoundStore.link.getPair", () => {
 			nextScreenKey: "screen-b",
 		});
 
-		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.sourceBounds).toBeNull();
 		expect(resolved.destinationBounds).toBeNull();
 	});
 
@@ -506,7 +513,7 @@ describe("BoundStore.link.getPair", () => {
 		expect(resolved.destinationBounds).toBeNull();
 	});
 
-	it("resolves entering from a pending source when destination is absent", () => {
+	it("does not resolve entering from a pending source when destination is absent", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const source = createBounds(10, 20);
 
@@ -518,11 +525,11 @@ describe("BoundStore.link.getPair", () => {
 			currentScreenKey: "screen-b",
 		});
 
-		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.sourceBounds).toBeNull();
 		expect(resolved.destinationBounds).toBeNull();
 	});
 
-	it("resolves exiting from a pending source when destination is absent", () => {
+	it("does not resolve exiting from a pending source when destination is absent", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const source = createBounds(10, 20);
 
@@ -534,7 +541,7 @@ describe("BoundStore.link.getPair", () => {
 			nextScreenKey: "screen-b",
 		});
 
-		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.sourceBounds).toBeNull();
 		expect(resolved.destinationBounds).toBeNull();
 	});
 });

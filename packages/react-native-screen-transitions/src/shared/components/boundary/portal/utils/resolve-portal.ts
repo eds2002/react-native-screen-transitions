@@ -25,16 +25,8 @@ export const resolveBoundaryPortal = (
 	return undefined;
 };
 
-/**
- * Resolves which screen host a portal'd boundary attaches to. Object form may
- * pin an explicit `attachTo`; bare `true` defaults to the current screen.
- */
 export const resolvePortalHost = (
 	portal?: BoundaryPortal,
 ): BoundsPortalAttachTarget | undefined => {
-	if (typeof portal === "object") {
-		return portal.attachTo ?? "current-screen";
-	}
-
 	return portal ? "current-screen" : undefined;
 };

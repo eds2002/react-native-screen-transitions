@@ -118,13 +118,17 @@ export function createBoundaryComponent<P extends object>(
 					? undefined
 					: associatedStyles
 			: undefined;
+		const pressProps =
+			typeof resolvedOnPress === "function"
+				? { onPress: resolvedOnPress }
+				: undefined;
 
 		const boundaryRoot = (
 			<AnimatedComponent
 				{...rest}
+				{...pressProps}
 				ref={ref}
 				style={[style, attachedStyle]}
-				onPress={resolvedOnPress}
 				collapsable={false}
 			/>
 		);

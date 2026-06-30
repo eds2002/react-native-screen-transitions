@@ -15,7 +15,7 @@ export default function MatchedScreenDebugIndex() {
 				<Transition.Boundary.Trigger
 					id="video"
 					testID="matched-screen-debug-trigger"
-					portal={{ attachTo: "matched-screen" }}
+					portal
 					onPress={() => router.push("/matched-screen-debug/player")}
 				>
 					<Transition.Boundary.Target style={styles.sourceVideo} />

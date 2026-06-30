@@ -10,6 +10,7 @@ import {
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
 } from "../../blank-stack";
+import type Transition from "..";
 import type {
 	BoundsMotion,
 	BoundsNavigationRevealStyle,
@@ -69,6 +70,36 @@ const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
 	[NAVIGATION_MASK_CONTAINER_STYLE_ID]: slotStyle,
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]: slotStyle,
 };
+
+const passiveBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	portal: true,
+};
+const pressableBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	onPress: () => {},
+};
+const invalidBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	// @ts-expect-error Boundary portal is intentionally boolean-only.
+	portal: { attachTo: "matched-screen" },
+};
+const deprecatedBoundaryViewProps: ComponentProps<
+	typeof Transition.Boundary.View
+> = {
+	id: "hero",
+};
+const deprecatedBoundaryTriggerProps: ComponentProps<
+	typeof Transition.Boundary.Trigger
+> = {
+	id: "hero",
+	onPress: () => {},
+};
+void passiveBoundaryProps;
+void pressableBoundaryProps;
+void invalidBoundaryPortalProps;
+void deprecatedBoundaryViewProps;
+void deprecatedBoundaryTriggerProps;
 
 const zoomOptions: BoundsNavigationZoomOptions = {
 	target: "bound",

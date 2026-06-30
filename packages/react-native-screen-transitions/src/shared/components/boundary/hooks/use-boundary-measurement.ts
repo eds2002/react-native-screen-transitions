@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
-import { runOnUI } from "react-native-reanimated";
-import { createPendingPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import { resolvePortalHost } from "../portal/utils/resolve-portal";
@@ -82,16 +80,11 @@ export const useBoundaryMeasurement = ({
 		boundaryConfig,
 	});
 
-	// Passive auto-measurement only applies to non-pressable boundaries; pressable
-	// ones capture their source on press (see handlePress below).
-	const shouldPassivelyMeasureSource =
-		shouldAutoMeasure && typeof onPress !== "function";
-
 	useInitialSourceMeasurement({
 		enabled: runtimeEnabled,
 		measureBoundary,
 		boundTag,
-		shouldAutoMeasure: shouldPassivelyMeasureSource,
+		shouldAutoMeasure,
 	});
 
 	useInitialDestinationMeasurement({
@@ -108,17 +101,11 @@ export const useBoundaryMeasurement = ({
 
 	const handlePress = useCallback(
 		(...args: unknown[]) => {
-			// Press path has priority: capture source before user onPress/navigation.
-			runOnUI(measureBoundary)({
-				type: "source",
-				pairKey: createPendingPairKey(currentScreenKey),
-			});
-
 			if (typeof onPress === "function") {
 				onPress(...args);
 			}
 		},
-		[measureBoundary, onPress, currentScreenKey],
+		[onPress],
 	);
 
 	return {

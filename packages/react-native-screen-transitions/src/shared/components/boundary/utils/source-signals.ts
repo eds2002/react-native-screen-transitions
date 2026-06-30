@@ -32,8 +32,6 @@ export const getInitialSourceCaptureSignal = (params: {
 		return null;
 	}
 
-	// Trigger components capture on press. Passive Boundary.View sources wait for
-	// their destination side to attach, then capture into the same assigned pair.
 	if (!shouldAutoMeasure) {
 		return null;
 	}

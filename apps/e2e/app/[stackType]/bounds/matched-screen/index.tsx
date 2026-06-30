@@ -40,7 +40,7 @@ function FeedVideoCard({ video, width }: FeedVideoCardProps) {
 		<Transition.Boundary.View
 			id={video.id}
 			testID={`${video.id}-source`}
-			portal={{ attachTo: "matched-screen" }}
+			portal
 			style={styles.boundary}
 		>
 			<Transition.Boundary.Target
