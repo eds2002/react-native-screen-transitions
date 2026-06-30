@@ -77,7 +77,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	const boundaryHosts = measurement.canRenderHosts
 		? activeBoundaryHosts.map((host, idx, list) => (
 				<View
-					key={host.boundaryId}
+					key={host.portalHostName}
 					pointerEvents="box-none"
 					style={[
 						styles.boundaryHostViewport,

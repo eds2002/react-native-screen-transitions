@@ -4,7 +4,8 @@ const PORTAL_HOST_NAME_SUFFIX = "-portal-host";
 export const createPortalBoundaryHostName = (
 	hostKey: string,
 	boundaryId: string,
+	pairKey?: string | null,
 ) => {
 	"worklet";
-	return `${hostKey}-${boundaryId}${PORTAL_HOST_NAME_SUFFIX}`;
+	return `${hostKey}-${pairKey ? `${pairKey}-` : ""}${boundaryId}${PORTAL_HOST_NAME_SUFFIX}`;
 };

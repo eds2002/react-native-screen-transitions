@@ -8,7 +8,6 @@ import { ScrollStore } from "../../../../stores/scroll.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
 import { NativePortalHost } from "../teleport";
 import { hasLocalSlot } from "../utils/has-local-slot";
-import { createPortalBoundaryHostName } from "../utils/naming";
 import {
 	type PortalOffsetPlacement,
 	resolvePortalOffsetStyle,
@@ -27,7 +26,6 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	host,
 	style,
 }: PortalBoundaryHostProps) {
-	const hostName = createPortalBoundaryHostName(host.hostKey, host.boundaryId);
 	const sourceScrollMetadata = ScrollStore.getValue(
 		getSourceScreenKeyFromPairKey(host.pairKey),
 		"metadata",
@@ -123,7 +121,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			collapsable={false}
 		>
 			<AnimatedPortalBoundaryHost
-				name={hostName}
+				name={host.portalHostName}
 				style={[styles.content, contentFrameStyle, slotStyle]}
 			/>
 		</Animated.View>

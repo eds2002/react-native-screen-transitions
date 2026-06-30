@@ -9,6 +9,7 @@ export type ActivePortalBoundaryHost = {
 	hostKey: string;
 	localStylesMaps: SharedValue<LocalStyleLayers>;
 	pairKey: string;
+	portalHostName: string;
 	screenKey: string;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
@@ -21,10 +22,6 @@ const EMPTY_HOSTS: ActivePortalBoundaryHost[] = [];
 
 const listeners = new Set<() => void>();
 const activeBoundaryHosts = new Map<string, ActivePortalBoundaryHost>();
-
-const getHostEntryKey = (hostKey: string, boundaryId: string) => {
-	return `${hostKey}:${boundaryId}`;
-};
 
 let snapshot: PortalSnapshot = {
 	hostsByScope: {},
@@ -62,19 +59,19 @@ const isSameHost = (
 		a.hostKey === b.hostKey &&
 		a.localStylesMaps === b.localStylesMaps &&
 		a.pairKey === b.pairKey &&
+		a.portalHostName === b.portalHostName &&
 		a.screenKey === b.screenKey &&
 		a.slotsMap === b.slotsMap
 	);
 };
 
 export const mountPortalBoundaryHost = (host: ActivePortalBoundaryHost) => {
-	const hostEntryKey = getHostEntryKey(host.hostKey, host.boundaryId);
-	const previous = activeBoundaryHosts.get(hostEntryKey);
+	const previous = activeBoundaryHosts.get(host.portalHostName);
 	if (previous && isSameHost(previous, host)) {
 		return;
 	}
 
-	activeBoundaryHosts.set(hostEntryKey, host);
+	activeBoundaryHosts.set(host.portalHostName, host);
 	emit();
 };
 
@@ -99,20 +96,23 @@ export const unmountPortalBoundaryHost = (boundaryId: string) => {
 
 /**
  * Post-handoff GC: drop every receiver for this boundary except the one now
- * visible (`keepHostKey`). Called once the new host is confirmed on screen so
- * the superseded receivers stop rendering.
+ * visible (`keepPortalHostName`). Called once the new host is confirmed on
+ * screen so the superseded receivers stop rendering.
  */
 export const dropStalePortalBoundaryHosts = ({
 	boundaryId,
-	keepHostKey,
+	keepPortalHostName,
 }: {
 	boundaryId: string;
-	keepHostKey: string;
+	keepPortalHostName: string;
 }) => {
 	let didDelete = false;
 
 	for (const [hostEntryKey, host] of activeBoundaryHosts) {
-		if (host.boundaryId !== boundaryId || host.hostKey === keepHostKey) {
+		if (
+			host.boundaryId !== boundaryId ||
+			host.portalHostName === keepPortalHostName
+		) {
 			continue;
 		}
 
