@@ -26,10 +26,7 @@ type HostImplProps = PublicHostProps & {
 
 function HostImpl({ fallback = false, style }: HostImplProps) {
 	const screenKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
-	const {
-		actions: { unblockLifecycleStart },
-		pendingLifecycleStartBlockCount,
-	} = SystemStore.getBag(screenKey);
+	const { pendingLifecycleStartBlockCount } = SystemStore.getBag(screenKey);
 	const generatedHostKeyRef = useRef<string | null>(null);
 
 	if (generatedHostKeyRef.current === null) {
@@ -63,22 +60,18 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	}, [capturesScroll, fallback, hostKey, screenKey]);
 
 	const handleUnblocking = useCallback(() => {
-		"worklet";
 		// Matched-screen destination measurement keeps the open transition gated
 		// until the portal hosts have committed layout. A screen may render more
 		// than one portal boundary host for the same lifecycle request, so the
 		// final host layout drains the outstanding start blocks for this screen.
-		const blockCount = pendingLifecycleStartBlockCount.get();
-		for (let i = 0; i < blockCount; i++) {
-			unblockLifecycleStart();
-		}
-	}, [pendingLifecycleStartBlockCount, unblockLifecycleStart]);
+		pendingLifecycleStartBlockCount.set(0);
+	}, [pendingLifecycleStartBlockCount]);
 
 	const boundaryHosts = measurement.canRenderHosts
 		? activeBoundaryHosts.map((host, idx, list) => (
 				<View
 					key={host.portalHostName}
-					pointerEvents="box-none"
+					pointerEvents="none"
 					style={[
 						styles.boundaryHostViewport,
 						{ width: viewportWidth, height: viewportHeight },
@@ -97,7 +90,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	return (
 		<Animated.View
 			ref={measurement.hostRef}
-			pointerEvents="box-none"
+			pointerEvents="none"
 			style={[
 				styles.host,
 				{ width: viewportWidth, height: viewportHeight },

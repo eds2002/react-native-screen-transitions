@@ -116,7 +116,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 
 	return (
 		<Animated.View
-			pointerEvents="box-none"
+			pointerEvents="none"
 			style={[style, hostStyle]}
 			collapsable={false}
 		>

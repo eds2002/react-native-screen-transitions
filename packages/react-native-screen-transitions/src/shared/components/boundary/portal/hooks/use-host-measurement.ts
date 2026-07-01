@@ -1,12 +1,15 @@
 import { useLayoutEffect, useState } from "react";
 import type { View } from "react-native";
 import {
+	cancelAnimation,
 	measure,
 	runOnJS,
 	runOnUI,
 	useAnimatedReaction,
 	useAnimatedRef,
 	useSharedValue,
+	withDelay,
+	withTiming,
 } from "react-native-reanimated";
 import { useOriginContext } from "../../../../providers/screen/origin.provider";
 import { ScrollStore } from "../../../../stores/scroll.store";
@@ -18,6 +21,8 @@ import {
 	clearPortalHostBounds,
 	setPortalHostBounds,
 } from "../stores/host-bounds.store";
+
+const HOST_MEASUREMENT_RETRY_DELAY_MS = 16;
 
 type UseHostMeasurementParams = {
 	capturesScroll: boolean;
@@ -37,6 +42,7 @@ export const useHostMeasurement = ({
 	const [canRenderHosts, setCanRenderHosts] = useState<boolean>(false);
 	const { originRef } = useOriginContext();
 	const hasMeasuredHost = useSharedValue(false);
+	const retryToken = useSharedValue(0);
 
 	useAnimatedReaction(
 		() => {
@@ -45,10 +51,17 @@ export const useHostMeasurement = ({
 				return null;
 			}
 
-			return hasMeasuredHost.get();
+			return [hasMeasuredHost.get(), retryToken.get()] as const;
 		},
-		(hasAlreadyMeasured) => {
+		(state) => {
 			"worklet";
+			if (!state) {
+				cancelAnimation(retryToken);
+				return;
+			}
+
+			const [hasAlreadyMeasured] = state;
+
 			if (!enabled || hasAlreadyMeasured) {
 				return;
 			}
@@ -57,9 +70,17 @@ export const useHostMeasurement = ({
 			const measuredOrigin = measure(originRef);
 
 			if (!measured || !measuredOrigin) {
+				cancelAnimation(retryToken);
+				retryToken.set(
+					withDelay(
+						HOST_MEASUREMENT_RETRY_DELAY_MS,
+						withTiming(retryToken.get() + 1, { duration: 0 }),
+					),
+				);
 				return;
 			}
 
+			cancelAnimation(retryToken);
 			hasMeasuredHost.set(true);
 
 			// A measurement taken mid rubber-band would bake the transient
