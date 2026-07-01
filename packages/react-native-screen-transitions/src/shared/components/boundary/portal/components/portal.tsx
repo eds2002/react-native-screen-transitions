@@ -19,19 +19,9 @@ import Animated, {
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../providers/screen/styles";
 import { useRegisteredScreenSlots } from "../../../../providers/screen/styles/stores/slot-references.store";
-import {
-	getLinkKeyFromTag,
-	getLink as getPairLink,
-	getSourceScreenKeyFromPairKey,
-} from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import { AnimationStore } from "../../../../stores/animation.store";
 import { pairs } from "../../../../stores/bounds/internals/state";
-import type {
-	BoundsPortalAttachTarget,
-	LinkKey,
-	LinkPairsState,
-	ScreenPairKey,
-	TagLink,
-} from "../../../../stores/bounds/types";
+import type { BoundsPortalAttachTarget } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
 import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
 import type { BoundaryPortal } from "../../types";
@@ -46,13 +36,14 @@ import {
 } from "../stores/portal-boundary-host.store";
 import { isTeleportAvailable, NativePortal } from "../teleport";
 import {
-	type PortalAttachment,
-	resolvePortalAttachmentTargets,
-} from "../utils/attachment";
-import {
+	createBoundaryLocalPortalHostName,
 	createPortalBoundaryHostName,
 	PORTAL_HOST_NAME_RESET_VALUE,
 } from "../utils/naming";
+import {
+	type PortalOwnershipSignal,
+	resolveMatchedScreenPortalOwnership,
+} from "../utils/ownership";
 import { resolvePortalHost } from "../utils/resolve-portal";
 import { shallowEqual } from "../utils/shallow-equal";
 import { isTeleportEnabled } from "../utils/teleport-control";
@@ -70,155 +61,11 @@ const TransitionAwareTeleport = NativePortal
 		)
 	: null;
 
-type PortalAttachmentSignal =
-	| {
-			matchedScreenKey: null;
-			pairKey?: ScreenPairKey;
-			status: "clear" | "pending";
-	  }
-	| {
-			matchedScreenKey: string;
-			pairKey: ScreenPairKey;
-			status: "complete";
-	  };
-
-const isActivePortalLink = ({
-	link,
-	linkKey,
-	pairKey,
-	pairsState,
-}: {
-	link: TagLink;
-	linkKey: LinkKey;
-	pairKey: ScreenPairKey;
-	pairsState: LinkPairsState;
-}) => {
-	"worklet";
-	if (!link.group) {
-		return true;
-	}
-
-	const activeId = pairsState[pairKey]?.groups?.[link.group]?.activeId;
-	return !activeId || activeId === linkKey;
-};
-
-const resolveMatchedScreenAttachmentSignal = ({
-	boundaryId,
-	pairsState,
-	portalAttachTarget,
-	sourcePairKey,
-}: {
-	boundaryId: string;
-	pairsState: LinkPairsState;
-	portalAttachTarget: BoundsPortalAttachTarget;
-	sourcePairKey: ScreenPairKey;
-}): PortalAttachmentSignal => {
-	"worklet";
-	const linkKey = getLinkKeyFromTag(boundaryId);
-	const link = getPairLink(pairsState, sourcePairKey, linkKey);
-
-	if (link?.status !== "complete") {
-		return {
-			matchedScreenKey: null,
-			pairKey: sourcePairKey,
-			status: "pending",
-		};
-	}
-
-	if (
-		!isActivePortalLink({
-			link,
-			linkKey,
-			pairKey: sourcePairKey,
-			pairsState,
-		})
-	) {
-		return {
-			matchedScreenKey: null,
-			pairKey: sourcePairKey,
-			status: "clear",
-		};
-	}
-
-	let matchedScreenKey = link.destination.screenKey;
-	let activePairKey = sourcePairKey;
-
-	if (portalAttachTarget !== "matched-screen") {
-		return {
-			matchedScreenKey,
-			pairKey: activePairKey,
-			status: "complete",
-		};
-	}
-
-	const pairKeys = Object.keys(pairsState);
-
-	for (let hop = 0; hop < pairKeys.length; hop++) {
-		let didAdvance = false;
-		let hasPendingNextHop = false;
-
-		for (let index = 0; index < pairKeys.length; index++) {
-			const candidatePairKey = pairKeys[index];
-			if (!candidatePairKey || candidatePairKey === activePairKey) {
-				continue;
-			}
-
-			const candidate = getPairLink(pairsState, candidatePairKey, linkKey);
-			if (
-				!candidate?.source ||
-				candidate.source.screenKey !== matchedScreenKey
-			) {
-				continue;
-			}
-
-			if (
-				!isActivePortalLink({
-					link: candidate,
-					linkKey,
-					pairKey: candidatePairKey,
-					pairsState,
-				})
-			) {
-				continue;
-			}
-
-			if (candidate.status !== "complete") {
-				hasPendingNextHop = true;
-				continue;
-			}
-
-			activePairKey = candidatePairKey;
-			matchedScreenKey = candidate.destination.screenKey;
-			didAdvance = true;
-			break;
-		}
-
-		if (didAdvance) {
-			continue;
-		}
-
-		if (hasPendingNextHop) {
-			return {
-				matchedScreenKey: null,
-				pairKey: activePairKey,
-				status: "pending",
-			};
-		}
-
-		break;
-	}
-
-	return {
-		matchedScreenKey,
-		pairKey: activePairKey,
-		status: "complete",
-	};
-};
-
 interface PortalProps {
 	id?: string;
 	children: ReactNode;
 	portal?: BoundaryPortal;
+	preferBoundaryLocalHost?: boolean;
 	/**
 	 * Ref to the layout-preserving placeholder wrapper. Boundaries measure
 	 * this instead of teleported content — the placeholder keeps the source
@@ -226,13 +73,16 @@ interface PortalProps {
 	 * host.
 	 */
 	placeholderRef?: AnimatedRef<View>;
+	placeholderChildren?: ReactNode;
 }
 
 export const Portal = memo(function Portal({
 	id,
 	children,
 	portal = false,
+	preferBoundaryLocalHost = false,
 	placeholderRef,
+	placeholderChildren,
 }: PortalProps) {
 	// Teleporting requires the optional `react-native-teleport` peer and a stable
 	// `id` to name the boundary host. Missing either degrades to inline rendering
@@ -253,10 +103,11 @@ export const Portal = memo(function Portal({
 		(s) => s.derivations.currentScreenKey,
 	);
 
-	const [attachment, setAttachment] = useState<PortalAttachment | null>(null);
-	const styleOwnerScreenKey = attachment
-		? getSourceScreenKeyFromPairKey(attachment.pairKey)
-		: currentScreenKey;
+	const [ownership, setOwnership] = useState<Extract<
+		PortalOwnershipSignal,
+		{ status: "complete" }
+	> | null>(null);
+	const styleOwnerScreenKey = ownership?.ownerScreenKey ?? currentScreenKey;
 	const ownerScreenSlots = useRegisteredScreenSlots(styleOwnerScreenKey);
 	const activeScreenSlots = ownerScreenSlots ?? ownScreenSlots;
 	const {
@@ -269,44 +120,79 @@ export const Portal = memo(function Portal({
 	const placeholderWidth = useSharedValue(0);
 	const placeholderHeight = useSharedValue(0);
 
-	const { targetScreenKey } = resolvePortalAttachmentTargets({
-		attachment,
-		currentScreenKey,
-		portalAttachTarget,
-		sourcePairKey,
-	});
+	const targetScreenKey =
+		ownership && portalAttachTarget === "matched-screen"
+			? ownership.hostScreenKey
+			: ownership?.ownerPairKey === sourcePairKey
+				? currentScreenKey
+				: null;
+	const settledHostScreenKey = ownership?.hostScreenKey ?? null;
+	const settledHostProgress = AnimationStore.getValue(
+		settledHostScreenKey ?? currentScreenKey,
+		"progressSettled",
+	);
+	const settledHostAnimating = AnimationStore.getValue(
+		settledHostScreenKey ?? currentScreenKey,
+		"progressAnimating",
+	);
 
 	const activeHostKey = useActiveHostKey(targetScreenKey);
 	const activeHostCapturesScroll = activeHostKey
 		? getHostCapturesScroll(activeHostKey)
 		: false;
+	const boundaryLocalHostName =
+		portalAttachTarget === "matched-screen" &&
+		targetScreenKey &&
+		preferBoundaryLocalHost
+			? createBoundaryLocalPortalHostName(targetScreenKey, boundaryId)
+			: null;
 
-	const updatePortalAttachment = useCallback(
-		(matchedScreenKey: string | null, pairKey?: string) => {
-			if (matchedScreenKey && pairKey) {
-				setAttachment((current) => {
+	const updatePortalOwnership = useCallback(
+		(
+			hostScreenKey: string | null,
+			ownerPairKey?: string,
+			ownerScreenKey?: string,
+		) => {
+			if (hostScreenKey && ownerPairKey && ownerScreenKey) {
+				setOwnership((current) => {
 					if (
-						current?.matchedScreenKey === matchedScreenKey &&
-						current.pairKey === pairKey
+						current?.hostScreenKey === hostScreenKey &&
+						current.ownerPairKey === ownerPairKey &&
+						current.ownerScreenKey === ownerScreenKey
 					) {
 						return current;
 					}
 
 					return {
-						matchedScreenKey,
-						pairKey,
+						hostScreenKey,
+						ownerPairKey,
+						ownerScreenKey,
+						status: "complete",
 					};
 				});
 				return;
 			}
 
-			setAttachment((current) => (current ? null : current));
+			setOwnership((current) => (current ? null : current));
 		},
 		[],
 	);
 
 	useLayoutEffect(() => {
-		if (!isPortalEnabled || !attachment || !activeHostKey || !targetScreenKey) {
+		if (!isPortalEnabled || !ownership || !targetScreenKey) {
+			requestedPortalHostName.set(null);
+			visiblePortalHostName.set(null);
+			unmountPortalBoundaryHost(boundaryId);
+			return;
+		}
+
+		if (boundaryLocalHostName) {
+			requestedPortalHostName.set(boundaryLocalHostName);
+			unmountPortalBoundaryHost(boundaryId);
+			return;
+		}
+
+		if (!activeHostKey) {
 			requestedPortalHostName.set(null);
 			visiblePortalHostName.set(null);
 			unmountPortalBoundaryHost(boundaryId);
@@ -316,7 +202,7 @@ export const Portal = memo(function Portal({
 		const portalHostName = createPortalBoundaryHostName(
 			activeHostKey,
 			boundaryId,
-			attachment.pairKey,
+			ownership.ownerPairKey,
 		);
 
 		mountPortalBoundaryHost({
@@ -324,7 +210,7 @@ export const Portal = memo(function Portal({
 			capturesScroll: activeHostCapturesScroll,
 			hostKey: activeHostKey,
 			localStylesMaps: activeLocalStylesMaps,
-			pairKey: attachment.pairKey,
+			pairKey: ownership.ownerPairKey,
 			portalHostName,
 			screenKey: targetScreenKey,
 			slotsMap: activeSlotsMap,
@@ -337,11 +223,12 @@ export const Portal = memo(function Portal({
 	}, [
 		activeHostKey,
 		activeHostCapturesScroll,
-		attachment,
 		boundaryId,
 		isPortalEnabled,
 		activeLocalStylesMaps,
 		activeSlotsMap,
+		ownership,
+		boundaryLocalHostName,
 		requestedPortalHostName,
 		targetScreenKey,
 		visiblePortalHostName,
@@ -360,16 +247,20 @@ export const Portal = memo(function Portal({
 			"worklet";
 			if (!isPortalEnabled || !sourcePairKey) {
 				return {
-					matchedScreenKey: null,
-					pairKey: sourcePairKey,
+					hostScreenKey: null,
+					ownerPairKey: sourcePairKey,
+					ownerScreenKey: null,
 					status: "clear",
 				};
 			}
 
-			return resolveMatchedScreenAttachmentSignal({
+			return resolveMatchedScreenPortalOwnership({
 				boundaryId,
+				isSettledHostReady:
+					settledHostProgress.get() === 1 && settledHostAnimating.get() === 0,
 				pairsState: pairs.get(),
 				portalAttachTarget,
+				settledHostScreenKey,
 				sourcePairKey,
 			});
 		},
@@ -383,9 +274,10 @@ export const Portal = memo(function Portal({
 				return;
 			}
 
-			runOnJS(updatePortalAttachment)(
-				signal.matchedScreenKey,
-				signal.pairKey ?? undefined,
+			runOnJS(updatePortalOwnership)(
+				signal.hostScreenKey,
+				signal.ownerPairKey,
+				signal.ownerScreenKey ?? undefined,
 			);
 		},
 	);
@@ -395,7 +287,8 @@ export const Portal = memo(function Portal({
 			"worklet";
 			const slot = activeSlotsMap.get()[boundaryId];
 			const teleport = slot?.props?.teleport;
-			const shouldTeleport = isTeleportEnabled(teleport);
+			const shouldTeleport =
+				portalAttachTarget === "matched-screen" || isTeleportEnabled(teleport);
 			const requestedName = requestedPortalHostName.get();
 			const visibleName = visiblePortalHostName.get();
 			const isInterpolatorReady = activeNextInterpolatorReady.get();
@@ -446,7 +339,8 @@ export const Portal = memo(function Portal({
 
 		const slot = activeSlotsMap.get()[boundaryId];
 		const { teleport, ...slotProps } = slot?.props ?? {};
-		const shouldTeleport = isTeleportEnabled(teleport);
+		const shouldTeleport =
+			portalAttachTarget === "matched-screen" || isTeleportEnabled(teleport);
 		const visibleName = visiblePortalHostName.get();
 
 		return {
@@ -490,6 +384,7 @@ export const Portal = memo(function Portal({
 				style={placeholderStyle}
 				collapsable={false}
 			>
+				{placeholderChildren}
 				<TransitionAwareTeleport
 					animatedProps={teleportProps}
 					name={boundaryId}

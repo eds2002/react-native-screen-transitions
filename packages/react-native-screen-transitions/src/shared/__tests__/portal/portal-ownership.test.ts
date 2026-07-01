@@ -1,0 +1,348 @@
+import { describe, expect, it } from "bun:test";
+import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
+import type {
+	BoundsPortalHostPreference,
+	LinkPairsState,
+	TagLink,
+} from "../../stores/bounds/types";
+import {
+	hasMatchedScreenPortalContinuation,
+	resolveMatchedScreenPortalOwnership,
+	usesScreenPortalHost,
+} from "../../components/boundary/portal/utils/ownership";
+
+const createBounds = (x = 0, y = 0, width = 100, height = 100) => ({
+	x,
+	y,
+	pageX: x,
+	pageY: y,
+	width,
+	height,
+});
+
+const completeLink = ({
+	destinationScreenKey,
+	portalAttachTarget,
+	portalHostPreference,
+	sourceScreenKey,
+}: {
+	destinationScreenKey: string;
+	portalAttachTarget?: "matched-screen";
+	portalHostPreference?: BoundsPortalHostPreference;
+	sourceScreenKey: string;
+}): TagLink => ({
+	status: "complete",
+	source: {
+		screenKey: sourceScreenKey,
+		bounds: createBounds(),
+		styles: {},
+		portalAttachTarget,
+		portalHostPreference,
+	},
+	destination: {
+		screenKey: destinationScreenKey,
+		bounds: createBounds(100, 100),
+		styles: {},
+	},
+});
+
+const sourceOnlyLink = ({
+	portalAttachTarget,
+	sourceScreenKey,
+}: {
+	portalAttachTarget?: "matched-screen";
+	sourceScreenKey: string;
+}): TagLink => ({
+	status: "destination-incomplete",
+	source: {
+		screenKey: sourceScreenKey,
+		bounds: createBounds(),
+		styles: {},
+		portalAttachTarget,
+	},
+	destination: null,
+});
+
+describe("matched-screen host readiness", () => {
+	it("waits for screen-level matched-screen portal hosts by default", () => {
+		const link = completeLink({
+			sourceScreenKey: "a",
+			destinationScreenKey: "b",
+			portalAttachTarget: "matched-screen",
+		});
+
+		expect(usesScreenPortalHost(link)).toBe(true);
+	});
+
+	it("does not wait for boundary-local matched-screen portal hosts", () => {
+		const link = completeLink({
+			sourceScreenKey: "a",
+			destinationScreenKey: "b",
+			portalAttachTarget: "matched-screen",
+			portalHostPreference: "boundary-local",
+		});
+
+		expect(usesScreenPortalHost(link)).toBe(false);
+	});
+
+	it("ignores boundary-local matched-screen continuations", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const linkState: LinkPairsState = {
+			[abPairKey]: {
+				groups: {},
+				links: {
+					video: completeLink({
+						sourceScreenKey: "a",
+						destinationScreenKey: "b",
+						portalAttachTarget: "matched-screen",
+						portalHostPreference: "boundary-local",
+					}),
+				},
+			},
+		};
+
+		expect(
+			hasMatchedScreenPortalContinuation({
+				linkKey: "video",
+				linkState,
+				sourceScreenKey: "b",
+			}),
+		).toBe(false);
+	});
+
+	it("keeps waiting for screen-level matched-screen continuations", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const linkState: LinkPairsState = {
+			[abPairKey]: {
+				groups: {},
+				links: {
+					video: completeLink({
+						sourceScreenKey: "a",
+						destinationScreenKey: "b",
+						portalAttachTarget: "matched-screen",
+						portalHostPreference: "screen",
+					}),
+				},
+			},
+		};
+
+		expect(
+			hasMatchedScreenPortalContinuation({
+				linkKey: "video",
+				linkState,
+				sourceScreenKey: "b",
+			}),
+		).toBe(true);
+	});
+});
+
+describe("resolveMatchedScreenPortalOwnership", () => {
+	it("keeps A as owner during A -> B flight", () => {
+		const pairKey = createScreenPairKey("a", "b");
+		const link = completeLink({
+			sourceScreenKey: "a",
+			destinationScreenKey: "b",
+			portalAttachTarget: "matched-screen",
+			portalHostPreference: "boundary-local",
+		});
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			isSettledHostReady: false,
+			pairsState: {
+				[pairKey]: {
+					groups: {},
+					links: { video: link },
+				},
+			},
+			portalAttachTarget: "matched-screen",
+			settledHostScreenKey: "b",
+			sourcePairKey: pairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "b",
+			ownerPairKey: pairKey,
+			ownerScreenKey: "a",
+			status: "complete",
+		});
+	});
+
+	it("rebases ownership to B after A -> B settles", () => {
+		const pairKey = createScreenPairKey("a", "b");
+		const link = completeLink({
+			sourceScreenKey: "a",
+			destinationScreenKey: "b",
+			portalAttachTarget: "matched-screen",
+			portalHostPreference: "boundary-local",
+		});
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			isSettledHostReady: true,
+			pairsState: {
+				[pairKey]: {
+					groups: {},
+					links: { video: link },
+				},
+			},
+			portalAttachTarget: "matched-screen",
+			settledHostScreenKey: "b",
+			sourcePairKey: pairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "b",
+			ownerPairKey: pairKey,
+			ownerScreenKey: "b",
+			status: "complete",
+		});
+	});
+
+	it("keeps screen-host portals source-owned after settle", () => {
+		const pairKey = createScreenPairKey("a", "b");
+		const link = completeLink({
+			sourceScreenKey: "a",
+			destinationScreenKey: "b",
+			portalAttachTarget: "matched-screen",
+			portalHostPreference: "screen",
+		});
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			isSettledHostReady: true,
+			pairsState: {
+				[pairKey]: {
+					groups: {},
+					links: { video: link },
+				},
+			},
+			portalAttachTarget: "matched-screen",
+			settledHostScreenKey: "b",
+			sourcePairKey: pairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "b",
+			ownerPairKey: pairKey,
+			ownerScreenKey: "a",
+			status: "complete",
+		});
+	});
+
+	it("uses B as owner during B -> C flight in an active chain", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const bcPairKey = createScreenPairKey("b", "c");
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			isSettledHostReady: true,
+			pairsState: {
+				[abPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "a",
+							destinationScreenKey: "b",
+							portalAttachTarget: "matched-screen",
+						}),
+					},
+				},
+				[bcPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "b",
+							destinationScreenKey: "c",
+						}),
+					},
+				},
+			},
+			portalAttachTarget: "matched-screen",
+			settledHostScreenKey: "b",
+			sourcePairKey: abPairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "c",
+			ownerPairKey: bcPairKey,
+			ownerScreenKey: "b",
+			status: "complete",
+		});
+	});
+
+	it("rebases ownership to C after B -> C settles", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const bcPairKey = createScreenPairKey("b", "c");
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			isSettledHostReady: true,
+			pairsState: {
+				[abPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "a",
+							destinationScreenKey: "b",
+							portalAttachTarget: "matched-screen",
+						}),
+					},
+				},
+				[bcPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "b",
+							destinationScreenKey: "c",
+						}),
+					},
+				},
+			},
+			portalAttachTarget: "matched-screen",
+			settledHostScreenKey: "c",
+			sourcePairKey: abPairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "c",
+			ownerPairKey: bcPairKey,
+			ownerScreenKey: "c",
+			status: "complete",
+		});
+	});
+
+	it("keeps the previous complete attachment while the next hop is pending", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const bcPairKey = createScreenPairKey("b", "c");
+		const pairsState: LinkPairsState = {
+			[abPairKey]: {
+				groups: {},
+				links: {
+					video: completeLink({
+						sourceScreenKey: "a",
+						destinationScreenKey: "b",
+						portalAttachTarget: "matched-screen",
+					}),
+				},
+			},
+			[bcPairKey]: {
+				groups: {},
+				links: {
+					video: sourceOnlyLink({
+						sourceScreenKey: "b",
+					}),
+				},
+			},
+		};
+
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			pairsState,
+			portalAttachTarget: "matched-screen",
+			sourcePairKey: abPairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: null,
+			ownerPairKey: abPairKey,
+			ownerScreenKey: null,
+			status: "pending",
+		});
+	});
+});

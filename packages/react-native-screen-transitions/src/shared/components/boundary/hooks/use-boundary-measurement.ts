@@ -1,7 +1,10 @@
 import { useCallback, useMemo } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
-import type { BoundTag } from "../../../stores/bounds/types";
+import type {
+	BoundsPortalHostPreference,
+	BoundTag,
+} from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import { resolvePortalHost } from "../portal/utils/resolve-portal";
 import type { BoundaryConfigProps, BoundaryPortal } from "../types";
@@ -24,7 +27,7 @@ interface UseBoundaryMeasurementParams {
 	style?: unknown;
 	targetPreparedStyles?: StyleProps;
 	portal?: BoundaryPortal;
-	shouldAutoMeasure: boolean;
+	portalHostPreference?: BoundsPortalHostPreference;
 	config: BoundaryConfigProps;
 	onPress?: (...args: unknown[]) => void;
 }
@@ -44,7 +47,7 @@ export const useBoundaryMeasurement = ({
 	style,
 	targetPreparedStyles,
 	portal,
-	shouldAutoMeasure,
+	portalHostPreference,
 	config,
 	onPress,
 }: UseBoundaryMeasurementParams) => {
@@ -69,6 +72,7 @@ export const useBoundaryMeasurement = ({
 		preparedStyles,
 		measuredAnimatedRef: measuredRef,
 		portalHost,
+		portalHostPreference,
 	});
 
 	// Register/unregister this boundary in the presence map so source/destination
@@ -79,13 +83,13 @@ export const useBoundaryMeasurement = ({
 		currentScreenKey,
 		boundaryConfig,
 		portal,
+		portalHostPreference,
 	});
 
 	useInitialSourceMeasurement({
 		enabled: runtimeEnabled,
 		measureBoundary,
 		boundTag,
-		shouldAutoMeasure,
 	});
 
 	useInitialDestinationMeasurement({

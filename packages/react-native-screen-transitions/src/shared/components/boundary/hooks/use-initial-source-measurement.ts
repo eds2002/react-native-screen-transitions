@@ -9,9 +9,8 @@ export const useInitialSourceMeasurement = (params: {
 	enabled: boolean;
 	measureBoundary: MeasureBoundary;
 	boundTag: BoundTag;
-	shouldAutoMeasure: boolean;
 }) => {
-	const { enabled, measureBoundary, boundTag, shouldAutoMeasure } = params;
+	const { enabled, measureBoundary, boundTag } = params;
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const lastSourceCaptureSignal = useSharedValue<string | null>(null);
 
@@ -23,8 +22,7 @@ export const useInitialSourceMeasurement = (params: {
 				sourcePairKey,
 				linkId: boundTag.linkKey,
 				group: boundTag.group,
-				shouldAutoMeasure,
-				linkState: shouldAutoMeasure && sourcePairKey ? pairs.get() : undefined,
+				linkState: sourcePairKey ? pairs.get() : undefined,
 			});
 		},
 		(captureSignal) => {

@@ -18,11 +18,12 @@ import { useTheme } from "@/theme";
 import { MATCHED_SCREEN_VIDEOS } from "./constants";
 
 type FeedVideoCardProps = {
+	onPress: () => void;
 	video: (typeof MATCHED_SCREEN_VIDEOS)[number];
 	width: number;
 };
 
-function FeedVideoCard({ video, width }: FeedVideoCardProps) {
+function FeedVideoCard({ onPress, video, width }: FeedVideoCardProps) {
 	const theme = useTheme();
 	const player = useVideoPlayer(video.source, (videoPlayer) => {
 		videoPlayer.loop = true;
@@ -36,33 +37,42 @@ function FeedVideoCard({ video, width }: FeedVideoCardProps) {
 		player.volume = video.playsAudio ? 1 : 0;
 	}, [player, video.playsAudio]);
 
+	const cardStyle = {
+		width,
+		height: width / video.aspectRatio,
+	};
+
 	return (
-		<Transition.Boundary.View
-			id={video.id}
-			testID={`${video.id}-source`}
-			portal="matched-screen"
-			style={styles.boundary}
-		>
-			<Transition.Boundary.Target
-				pointerEvents="none"
-				style={[
-					styles.videoCard,
-					{
-						width,
-						height: width / video.aspectRatio,
-						backgroundColor: theme.card,
-					},
-				]}
+		<View style={cardStyle}>
+			<Transition.Boundary
+				id={video.id}
+				testID={`${video.id}-source`}
+				portal="matched-screen"
 			>
-				<VideoView
-					player={player}
-					style={StyleSheet.absoluteFill}
-					contentFit="cover"
-					nativeControls={false}
+				<Transition.Boundary.Target
 					pointerEvents="none"
-				/>
-			</Transition.Boundary.Target>
-		</Transition.Boundary.View>
+					style={[
+						styles.videoCard,
+						cardStyle,
+						{ backgroundColor: theme.card },
+					]}
+				>
+					<VideoView
+						player={player}
+						style={StyleSheet.absoluteFill}
+						contentFit="cover"
+						nativeControls={false}
+						allowsVideoFrameAnalysis={false}
+						pointerEvents="none"
+					/>
+				</Transition.Boundary.Target>
+			</Transition.Boundary>
+			<Pressable
+				testID={`${video.id}-press`}
+				style={styles.videoPressTarget}
+				onPress={onPress}
+			/>
+		</View>
 	);
 }
 
@@ -97,15 +107,16 @@ export default function MatchedScreenIndex() {
 						Stacked on source, paired on destination
 					</Text>
 				</View>
-				<Pressable
-					testID="matched-screen-video-trigger"
-					style={styles.videoStack}
-					onPress={openPlayer}
-				>
+				<View testID="matched-screen-video-trigger" style={styles.videoStack}>
 					{MATCHED_SCREEN_VIDEOS.map((video) => (
-						<FeedVideoCard key={video.id} video={video} width={cardWidth} />
+						<FeedVideoCard
+							key={video.id}
+							onPress={openPlayer}
+							video={video}
+							width={cardWidth}
+						/>
 					))}
-				</Pressable>
+				</View>
 				<View style={styles.feedTail} />
 			</Transition.ScrollView>
 		</SafeAreaView>
@@ -138,11 +149,13 @@ const styles = StyleSheet.create({
 		alignItems: "center",
 		gap: 22,
 	},
-	boundary: {
-		gap: 10,
-	},
 	videoCard: {
 		overflow: "hidden",
+	},
+	videoPressTarget: {
+		...StyleSheet.absoluteFillObject,
+		elevation: 1,
+		zIndex: 1,
 	},
 	caption: {
 		gap: 2,

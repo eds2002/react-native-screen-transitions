@@ -14,16 +14,16 @@ import {
 	getLink,
 } from "../../../stores/bounds/internals/links";
 import { pairs } from "../../../stores/bounds/internals/state";
-import type {
-	BoundTag,
-	LinkPairsState,
-	ScreenKey,
-} from "../../../stores/bounds/types";
+import type { BoundTag } from "../../../stores/bounds/types";
 import {
 	LifecycleTransitionRequestKind,
 	SystemStore,
 } from "../../../stores/system.store";
 import { logger } from "../../../utils/logger";
+import {
+	hasMatchedScreenPortalContinuation,
+	usesScreenPortalHost,
+} from "../portal/utils/ownership";
 import type { MeasureBoundary } from "../types";
 import { getInitialDestinationMeasurePairKey } from "../utils/destination-signals";
 
@@ -34,69 +34,6 @@ const VIEWPORT_RETRY_DELAY_MS = 100;
  * warning so the open proceeds without that boundary.
  */
 const MAX_VIEWPORT_RETRIES = 20;
-
-const hasSeenScreenKey = (screenKeys: ScreenKey[], screenKey: ScreenKey) => {
-	"worklet";
-	for (let index = 0; index < screenKeys.length; index++) {
-		if (screenKeys[index] === screenKey) {
-			return true;
-		}
-	}
-	return false;
-};
-
-const hasMatchedScreenPortalContinuation = ({
-	linkKey,
-	linkState,
-	sourceScreenKey,
-}: {
-	linkKey: string;
-	linkState: LinkPairsState;
-	sourceScreenKey: ScreenKey;
-}) => {
-	"worklet";
-	const pairKeys = Object.keys(linkState);
-	const visitedScreenKeys: ScreenKey[] = [];
-	let cursorScreenKey = sourceScreenKey;
-
-	for (let hop = 0; hop < pairKeys.length; hop++) {
-		if (hasSeenScreenKey(visitedScreenKeys, cursorScreenKey)) {
-			return false;
-		}
-		visitedScreenKeys.push(cursorScreenKey);
-
-		let previousScreenKey: ScreenKey | null = null;
-		for (let index = 0; index < pairKeys.length; index++) {
-			const candidatePairKey = pairKeys[index];
-			const link = candidatePairKey
-				? linkState[candidatePairKey]?.links?.[linkKey]
-				: null;
-
-			if (
-				!link?.source ||
-				!link.destination ||
-				link.destination.screenKey !== cursorScreenKey
-			) {
-				continue;
-			}
-
-			if (link.source.portalAttachTarget === "matched-screen") {
-				return true;
-			}
-
-			previousScreenKey = link.source.screenKey;
-			break;
-		}
-
-		if (!previousScreenKey) {
-			return false;
-		}
-
-		cursorScreenKey = previousScreenKey;
-	}
-
-	return false;
-};
 
 interface UseInitialDestinationMeasurementParams {
 	boundTag: BoundTag;
@@ -216,9 +153,12 @@ export const useInitialDestinationMeasurement = ({
 				const link = getLink(measurePairKey, linkKey);
 				const sourceScreenKey = getSourceScreenKeyFromPairKey(measurePairKey);
 				const sourceEntry = getEntry(tag, sourceScreenKey);
+				const sourceEntryUsesScreenPortalHost =
+					sourceEntry?.portalAttachTarget === "matched-screen" &&
+					sourceEntry.portalHostPreference !== "boundary-local";
 				const shouldWaitForMatchedScreenPortal =
-					link?.source?.portalAttachTarget === "matched-screen" ||
-					sourceEntry?.portalAttachTarget === "matched-screen" ||
+					usesScreenPortalHost(link) ||
+					sourceEntryUsesScreenPortalHost ||
 					hasMatchedScreenPortalContinuation({
 						linkKey,
 						linkState,

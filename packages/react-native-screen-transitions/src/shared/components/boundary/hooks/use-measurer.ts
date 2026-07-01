@@ -10,6 +10,7 @@ import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-b
 import { useOriginContext } from "../../../providers/screen/origin.provider";
 import type {
 	BoundsPortalAttachTarget,
+	BoundsPortalHostPreference,
 	BoundTag,
 } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
@@ -30,6 +31,7 @@ interface UseMeasurerParams {
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
 	portalHost?: BoundsPortalAttachTarget;
+	portalHostPreference?: BoundsPortalHostPreference;
 }
 
 export const useMeasurer = ({
@@ -39,6 +41,7 @@ export const useMeasurer = ({
 	preparedStyles,
 	measuredAnimatedRef,
 	portalHost,
+	portalHostPreference,
 }: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -108,6 +111,7 @@ export const useMeasurer = ({
 				preparedStyles,
 				linkWrite: target,
 				portalHost,
+				portalHostPreference,
 				sourceHost,
 			});
 		},
@@ -118,6 +122,7 @@ export const useMeasurer = ({
 			preparedStyles,
 			measuredAnimatedRef,
 			portalHost,
+			portalHostPreference,
 			viewportWidth,
 			viewportHeight,
 			scrollState,

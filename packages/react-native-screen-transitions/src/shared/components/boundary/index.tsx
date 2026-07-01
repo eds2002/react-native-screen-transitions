@@ -28,15 +28,9 @@ const BoundaryPrimitive = forwardRef<View, BoundaryPrimitiveProps>(
 
 BoundaryPrimitive.displayName = "Transition.Boundary.Primitive";
 
-const BoundaryRoot = createBoundaryComponent(BoundaryPrimitive, {
-	shouldAutoMeasure: true,
-});
-const BoundaryView = createBoundaryComponent(View, {
-	shouldAutoMeasure: true,
-});
-const BoundaryTrigger = createBoundaryComponent(Pressable, {
-	shouldAutoMeasure: true,
-});
+const BoundaryRoot = createBoundaryComponent(BoundaryPrimitive);
+const BoundaryView = createBoundaryComponent(View);
+const BoundaryTrigger = createBoundaryComponent(Pressable);
 BoundaryRoot.displayName = "Transition.Boundary";
 BoundaryView.displayName = "Transition.Boundary.View";
 BoundaryTrigger.displayName = "Transition.Boundary.Trigger";

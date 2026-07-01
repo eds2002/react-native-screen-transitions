@@ -1,49 +1,47 @@
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import Transition from "react-native-screen-transitions";
-import { useTheme } from "@/theme";
+
+const BOUNDARY_ID = "video-nested";
 
 export default function MatchedScreenDebugIndex() {
-	const theme = useTheme();
-
 	return (
-		<View style={[styles.screen, { backgroundColor: theme.bg }]}>
-			<Text style={[styles.label, { color: theme.text }]}>
-				Hello whats going on
-			</Text>
-			<View style={styles.sourceFrame}>
+		<Pressable
+			testID="matched-screen-debug-a"
+			style={styles.screen}
+			onPress={() => router.push("/matched-screen-debug/player")}
+		>
+			<View style={styles.aPlacement}>
 				<Transition.Boundary
-					id="video"
-					testID="matched-screen-debug-trigger"
+					id={BOUNDARY_ID}
+					testID="matched-screen-debug-a-boundary"
 					portal="matched-screen"
-					onPress={() => router.push("/matched-screen-debug/player")}
-				>
-					<Transition.Boundary.Target style={styles.sourceVideo} />
-				</Transition.Boundary>
+					style={styles.box}
+				/>
 			</View>
-		</View>
+		</Pressable>
 	);
 }
 
 const styles = StyleSheet.create({
 	screen: {
 		flex: 1,
-		alignItems: "center",
-		justifyContent: "center",
+		backgroundColor: "white",
 	},
-	label: {
-		fontSize: 16,
-		fontWeight: "500",
-		marginBottom: 16,
+	box: {
+		width: 96,
+		height: 96,
+		minWidth: 96,
+		minHeight: 96,
+		maxWidth: 96,
+		maxHeight: 96,
+		aspectRatio: 1 / 1,
+		backgroundColor: "#8A8A8A",
 	},
-	sourceFrame: {
-		width: 300,
-		height: 100,
-		aspectRatio: 16 / 9,
-	},
-	sourceVideo: {
-		width: "100%",
-		height: "100%",
-		backgroundColor: "gray",
+	aPlacement: {
+		marginLeft: 64,
+		marginTop: 160,
+		width: 96,
+		height: 96,
 	},
 });

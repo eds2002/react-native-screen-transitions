@@ -2,6 +2,7 @@ import {
 	type ComponentType,
 	forwardRef,
 	memo,
+	type ReactNode,
 	useImperativeHandle,
 	useMemo,
 } from "react";
@@ -14,6 +15,7 @@ import {
 } from "../../providers/screen/styles";
 import { createBoundTag } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { useBoundaryMeasurement } from "./hooks/use-boundary-measurement";
+import { BoundaryLocalPortalHost } from "./portal/components/boundary-local-portal-host";
 import { Portal } from "./portal/components/portal";
 import { resolveBoundaryPortal } from "./portal/utils/resolve-portal";
 import {
@@ -24,14 +26,13 @@ import type { BoundaryComponentProps } from "./types";
 
 interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;
-	shouldAutoMeasure?: boolean;
 }
 
 export function createBoundaryComponent<P extends object>(
 	Wrapped: ComponentType<P>,
 	options: CreateBoundaryComponentOptions = {},
 ) {
-	const { alreadyAnimated = false, shouldAutoMeasure = false } = options;
+	const { alreadyAnimated = false } = options;
 	const AnimatedComponent = alreadyAnimated
 		? Wrapped
 		: Animated.createAnimatedComponent(Wrapped);
@@ -51,6 +52,7 @@ export function createBoundaryComponent<P extends object>(
 			style,
 			onPress,
 			portal: portalProp,
+			children,
 			...rest
 		} = props as any;
 
@@ -89,6 +91,12 @@ export function createBoundaryComponent<P extends object>(
 				? associatedStyles
 				: undefined,
 		});
+		const portalHostPreference =
+			portal === "matched-screen"
+				? hasActiveTarget
+					? "screen"
+					: "boundary-local"
+				: undefined;
 
 		const { onPress: resolvedOnPress } = useBoundaryMeasurement({
 			boundTag,
@@ -99,7 +107,7 @@ export function createBoundaryComponent<P extends object>(
 			style,
 			targetPreparedStyles,
 			portal,
-			shouldAutoMeasure,
+			portalHostPreference,
 			config: { anchor, scaleMode, target, method },
 			onPress,
 		});
@@ -123,14 +131,29 @@ export function createBoundaryComponent<P extends object>(
 				? { onPress: resolvedOnPress }
 				: undefined;
 
-		const boundaryRoot = (
+		const localPortalHost = (
+			<BoundaryLocalPortalHost
+				boundaryId={boundTag.tag}
+				enabled={enabled}
+				screenKey={currentScreenKey}
+			/>
+		);
+		const canInjectLocalPortalHost = typeof children !== "function";
+
+		const renderBoundaryRoot = (extraChildren?: ReactNode) => (
 			<AnimatedComponent
 				{...rest}
 				{...pressProps}
 				ref={ref}
 				style={[style, attachedStyle]}
 				collapsable={false}
-			/>
+			>
+				{children}
+				{canInjectLocalPortalHost ? extraChildren : null}
+			</AnimatedComponent>
+		);
+		const boundaryRoot = renderBoundaryRoot(
+			shouldPortalRoot ? undefined : localPortalHost,
 		);
 
 		return (
@@ -139,7 +162,9 @@ export function createBoundaryComponent<P extends object>(
 					<Portal
 						id={boundTag.tag}
 						portal={portal}
+						preferBoundaryLocalHost
 						placeholderRef={rootPlaceholderRef}
+						placeholderChildren={localPortalHost}
 					>
 						{boundaryRoot}
 					</Portal>

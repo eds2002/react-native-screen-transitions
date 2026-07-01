@@ -15,24 +15,12 @@ export const getInitialSourceCaptureSignal = (params: {
 	sourcePairKey?: ScreenPairKey;
 	linkId: string;
 	group?: string;
-	shouldAutoMeasure: boolean;
 	linkState?: LinkPairsState;
 }): SourceCaptureSignal | null => {
 	"worklet";
-	const {
-		enabled,
-		sourcePairKey,
-		linkId,
-		group,
-		shouldAutoMeasure,
-		linkState,
-	} = params;
+	const { enabled, sourcePairKey, linkId, group, linkState } = params;
 
 	if (!enabled || !sourcePairKey) {
-		return null;
-	}
-
-	if (!shouldAutoMeasure) {
 		return null;
 	}
 

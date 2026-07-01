@@ -5,13 +5,11 @@ import { NO_STYLES } from "../../../../constants";
 import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { ScrollStore } from "../../../../stores/scroll.store";
+import type { ScrollMeasuredDimensions } from "../../utils/measured-bounds";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
 import { NativePortalHost } from "../teleport";
 import { hasLocalSlot } from "../utils/has-local-slot";
-import {
-	type PortalOffsetPlacement,
-	resolvePortalOffsetStyle,
-} from "../utils/offset-style";
+import { resolvePortalOffsetStyle } from "../utils/offset-style";
 
 const AnimatedPortalBoundaryHost = NativePortalHost
 	? Animated.createAnimatedComponent(NativePortalHost)
@@ -40,30 +38,17 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			return NO_STYLES;
 		}
 
-		// Make the coordinate case explicit before resolving the host offset.
-		// The resolver owns the math; this component decides which screen/scroll
-		// relationship the active portal is in.
+		const sourceBounds = link.source.bounds as ScrollMeasuredDimensions;
 		const isCrossScreenPortal = link.source.screenKey !== host.screenKey;
-		const placement: PortalOffsetPlacement = !isCrossScreenPortal
-			? "same-screen"
-			: "cross-screen";
-
-		// A source that originated inside its own scroll host moves with that
-		// ScrollView while a matched-screen portal stays attached over here.
-		// Shifting the source rect by the clamped source scroll travel keeps the
-		// return landing point on the live placeholder, so the close detach is
-		// seamless. Destination scroll is represented by the chosen host itself.
-		const isMatchedScreenPortal =
-			link.source.portalAttachTarget === "matched-screen";
 		const trackSourceScroll =
-			isMatchedScreenPortal &&
+			link.source.portalAttachTarget === "matched-screen" &&
 			isCrossScreenPortal &&
 			link.source.sourceHost?.capturesScroll === true;
 
 		return resolvePortalOffsetStyle({
-			bounds: link.source.bounds,
+			bounds: sourceBounds,
 			hostKey: host.hostKey,
-			placement,
+			placement: isCrossScreenPortal ? "cross-screen" : "same-screen",
 			sourceCurrentScroll: trackSourceScroll
 				? sourceScrollMetadata.get()
 				: null,
@@ -73,13 +58,15 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	const contentFrameStyle = useAnimatedStyle(() => {
 		"worklet";
 		const link = getLink(host.pairKey, host.boundaryId);
-		if (!link?.source) {
+		if (!link?.source || !link.destination) {
 			return NO_STYLES;
 		}
 
+		const sourceBounds = link.source.bounds as ScrollMeasuredDimensions;
+
 		return {
-			height: link.source.bounds.height,
-			width: link.source.bounds.width,
+			height: sourceBounds.height,
+			width: sourceBounds.width,
 		};
 	});
 	const slotStyle = useAnimatedStyle(() => {

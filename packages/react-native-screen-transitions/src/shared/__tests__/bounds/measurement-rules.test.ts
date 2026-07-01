@@ -68,7 +68,6 @@ describe("bounds client measurement contract", () => {
 				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
-				shouldAutoMeasure: true,
 				linkState: pairs.get(),
 			});
 
@@ -110,7 +109,6 @@ describe("bounds client measurement contract", () => {
 				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
-				shouldAutoMeasure: true,
 				linkState: pairs.get(),
 			}),
 		).toBeNull();
@@ -125,7 +123,6 @@ describe("bounds client measurement contract", () => {
 				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
-				shouldAutoMeasure: true,
 				linkState: pairs.get(),
 			}),
 		).toEqual({
@@ -141,7 +138,6 @@ describe("bounds client measurement contract", () => {
 				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
-				shouldAutoMeasure: true,
 				linkState: pairs.get(),
 			}),
 		).toBeNull();
@@ -156,7 +152,6 @@ describe("bounds client measurement contract", () => {
 				enabled: true,
 				sourcePairKey: pairKey,
 				linkId: "card",
-				shouldAutoMeasure: true,
 				linkState: pairs.get(),
 			}),
 		).toEqual({
@@ -176,7 +171,6 @@ describe("bounds client measurement contract", () => {
 				sourcePairKey: pairKey,
 				linkId: "1",
 				group: "colors",
-				shouldAutoMeasure: true,
 				linkState: pairs.get(),
 			}),
 		).toBeNull();
@@ -188,7 +182,6 @@ describe("bounds client measurement contract", () => {
 				sourcePairKey: pairKey,
 				linkId: "2",
 				group: "colors",
-				shouldAutoMeasure: true,
 				linkState: pairs.get(),
 			}),
 		).toEqual({
@@ -344,7 +337,6 @@ describe("bounds client measurement contract", () => {
 				enabled: true,
 				sourcePairKey: ancestorPairKey,
 				linkId: "title",
-				shouldAutoMeasure: true,
 				linkState: pairs.get(),
 			}),
 		).toEqual({

@@ -13,6 +13,7 @@ import {
 } from "../helpers/link-pairs.helpers";
 import type {
 	BoundsPortalAttachTarget,
+	BoundsPortalHostPreference,
 	GroupKey,
 	LinkKey,
 	LinkPairsState,
@@ -117,6 +118,7 @@ function setSource(
 	group?: GroupKey,
 	portalAttachTarget?: BoundsPortalAttachTarget,
 	sourceHost?: SourceHostRef,
+	portalHostPreference?: BoundsPortalHostPreference,
 ) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
@@ -133,6 +135,8 @@ function setSource(
 			...createLinkSide(screenKey, bounds, styles),
 			portalAttachTarget:
 				portalAttachTarget ?? existingLink?.source?.portalAttachTarget,
+			portalHostPreference:
+				portalHostPreference ?? existingLink?.source?.portalHostPreference,
 			sourceHost: sourceHost ?? existingLink?.source?.sourceHost,
 		};
 		const link =

@@ -18,7 +18,7 @@ beforeEach(() => {
 });
 
 describe("refresh boundary signals", () => {
-	it("skips destination refreshes for matched-screen portals", () => {
+	it("keeps destination refreshes for matched-screen portals after ownership can settle on the destination", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
 		BoundStore.link.setSource(
@@ -44,7 +44,11 @@ describe("refresh boundary signals", () => {
 				progress: 1,
 				linkState: pairs.get(),
 			}),
-		).toBeNull();
+		).toEqual({
+			type: "destination",
+			pairKey,
+			signal: "destination|screen-a<>screen-b|screen-b|closing",
+		});
 	});
 
 	it("keeps destination refreshes for normal shared bounds", () => {
@@ -57,7 +61,7 @@ describe("refresh boundary signals", () => {
 			createBounds(),
 			{},
 			undefined,
-			"current-screen",
+			"screen",
 		);
 
 		expect(
