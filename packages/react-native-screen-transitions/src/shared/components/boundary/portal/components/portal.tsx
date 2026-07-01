@@ -20,6 +20,7 @@ import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../providers/screen/styles";
 import { useRegisteredScreenSlots } from "../../../../providers/screen/styles/stores/slot-references.store";
 import { AnimationStore } from "../../../../stores/animation.store";
+import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundsPortalHost } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
@@ -45,6 +46,7 @@ import {
 } from "../utils/ownership";
 import { shallowEqual } from "../utils/shallow-equal";
 import { isTeleportEnabled } from "../utils/teleport-control";
+import { resolveNextVisiblePortalHostName } from "../utils/visible-host";
 
 type NullableHostNamePortalProps = Omit<
 	ComponentProps<NonNullable<typeof NativePortal>>,
@@ -112,6 +114,7 @@ export const Portal = memo(function Portal({
 	} = activeScreenSlots;
 	const requestedPortalHostName = useSharedValue<string | null>(null);
 	const visiblePortalHostName = useSharedValue<string | null>(null);
+	const canSwitchPortalHostImmediately = useSharedValue(0);
 	const placeholderWidth = useSharedValue(0);
 	const placeholderHeight = useSharedValue(0);
 
@@ -258,8 +261,33 @@ export const Portal = memo(function Portal({
 				return;
 			}
 
-			if (signal.status === "pending") {
+			if (portalHost !== "boundary-local") {
+				canSwitchPortalHostImmediately.set(0);
+			} else if (signal.status === "pending") {
+				canSwitchPortalHostImmediately.set(0);
 				return;
+			} else {
+				const hostScreenKey =
+					signal.status === "complete" ? signal.hostScreenKey : null;
+				const previousOwnerPairKey =
+					previousSignal?.status === "complete"
+						? previousSignal.ownerPairKey
+						: undefined;
+				const canSwitchImmediately =
+					!!hostScreenKey &&
+					!!previousOwnerPairKey &&
+					hostScreenKey === getSourceScreenKeyFromPairKey(previousOwnerPairKey);
+
+				canSwitchPortalHostImmediately.set(canSwitchImmediately ? 1 : 0);
+
+				if (canSwitchImmediately && hostScreenKey) {
+					const hostName = createBoundaryLocalPortalHostName(
+						hostScreenKey,
+						boundaryId,
+					);
+					requestedPortalHostName.set(hostName);
+					visiblePortalHostName.set(hostName);
+				}
 			}
 
 			runOnJS(updatePortalOwnership)(
@@ -279,17 +307,13 @@ export const Portal = memo(function Portal({
 			const requestedName = requestedPortalHostName.get();
 			const visibleName = visiblePortalHostName.get();
 			const isInterpolatorReady = activeNextInterpolatorReady.get();
-
-			let nextVisibleName: string | null;
-			if (!shouldTeleport) {
-				nextVisibleName = null;
-			} else if (isInterpolatorReady && requestedName) {
-				// Hand off once the next interpolator owns its styles.
-				nextVisibleName = requestedName;
-			} else {
-				// Hold the currently visible receiver until the request is drawable.
-				nextVisibleName = visibleName;
-			}
+			const nextVisibleName = resolveNextVisiblePortalHostName({
+				canSwitchImmediately: canSwitchPortalHostImmediately.get() === 1,
+				isInterpolatorReady: isInterpolatorReady === 1,
+				requestedName,
+				shouldTeleport,
+				visibleName,
+			});
 
 			return {
 				isInterpolatorReady,

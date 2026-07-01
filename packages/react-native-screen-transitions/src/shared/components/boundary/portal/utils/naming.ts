@@ -14,4 +14,7 @@ export const createPortalBoundaryHostName = (
 export const createBoundaryLocalPortalHostName = (
 	screenKey: string,
 	boundaryId: string,
-) => `${screenKey}-${boundaryId}${BOUNDARY_LOCAL_PORTAL_HOST_NAME_SUFFIX}`;
+) => {
+	"worklet";
+	return `${screenKey}-${boundaryId}${BOUNDARY_LOCAL_PORTAL_HOST_NAME_SUFFIX}`;
+};
