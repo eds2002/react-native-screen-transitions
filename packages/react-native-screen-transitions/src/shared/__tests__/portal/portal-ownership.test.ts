@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import type {
-	BoundsPortalHostPreference,
+	BoundsPortalHost,
 	LinkPairsState,
 	TagLink,
 } from "../../stores/bounds/types";
@@ -22,13 +22,11 @@ const createBounds = (x = 0, y = 0, width = 100, height = 100) => ({
 
 const completeLink = ({
 	destinationScreenKey,
-	portalAttachTarget,
-	portalHostPreference,
+	portalHost,
 	sourceScreenKey,
 }: {
 	destinationScreenKey: string;
-	portalAttachTarget?: "matched-screen";
-	portalHostPreference?: BoundsPortalHostPreference;
+	portalHost?: BoundsPortalHost;
 	sourceScreenKey: string;
 }): TagLink => ({
 	status: "complete",
@@ -36,8 +34,7 @@ const completeLink = ({
 		screenKey: sourceScreenKey,
 		bounds: createBounds(),
 		styles: {},
-		portalAttachTarget,
-		portalHostPreference,
+		portalHost,
 	},
 	destination: {
 		screenKey: destinationScreenKey,
@@ -47,10 +44,10 @@ const completeLink = ({
 });
 
 const sourceOnlyLink = ({
-	portalAttachTarget,
+	portalHost,
 	sourceScreenKey,
 }: {
-	portalAttachTarget?: "matched-screen";
+	portalHost?: BoundsPortalHost;
 	sourceScreenKey: string;
 }): TagLink => ({
 	status: "destination-incomplete",
@@ -58,17 +55,17 @@ const sourceOnlyLink = ({
 		screenKey: sourceScreenKey,
 		bounds: createBounds(),
 		styles: {},
-		portalAttachTarget,
+		portalHost,
 	},
 	destination: null,
 });
 
 describe("matched-screen host readiness", () => {
-	it("waits for screen-level matched-screen portal hosts by default", () => {
+	it("waits for screen portal hosts", () => {
 		const link = completeLink({
 			sourceScreenKey: "a",
 			destinationScreenKey: "b",
-			portalAttachTarget: "matched-screen",
+			portalHost: "screen",
 		});
 
 		expect(usesScreenPortalHost(link)).toBe(true);
@@ -78,8 +75,7 @@ describe("matched-screen host readiness", () => {
 		const link = completeLink({
 			sourceScreenKey: "a",
 			destinationScreenKey: "b",
-			portalAttachTarget: "matched-screen",
-			portalHostPreference: "boundary-local",
+			portalHost: "boundary-local",
 		});
 
 		expect(usesScreenPortalHost(link)).toBe(false);
@@ -94,8 +90,7 @@ describe("matched-screen host readiness", () => {
 					video: completeLink({
 						sourceScreenKey: "a",
 						destinationScreenKey: "b",
-						portalAttachTarget: "matched-screen",
-						portalHostPreference: "boundary-local",
+						portalHost: "boundary-local",
 					}),
 				},
 			},
@@ -119,8 +114,7 @@ describe("matched-screen host readiness", () => {
 					video: completeLink({
 						sourceScreenKey: "a",
 						destinationScreenKey: "b",
-						portalAttachTarget: "matched-screen",
-						portalHostPreference: "screen",
+						portalHost: "screen",
 					}),
 				},
 			},
@@ -142,8 +136,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 		const link = completeLink({
 			sourceScreenKey: "a",
 			destinationScreenKey: "b",
-			portalAttachTarget: "matched-screen",
-			portalHostPreference: "boundary-local",
+			portalHost: "boundary-local",
 		});
 		const signal = resolveMatchedScreenPortalOwnership({
 			boundaryId: "video",
@@ -154,7 +147,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 					links: { video: link },
 				},
 			},
-			portalAttachTarget: "matched-screen",
+			portalHost: "boundary-local",
 			settledHostScreenKey: "b",
 			sourcePairKey: pairKey,
 		});
@@ -172,8 +165,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 		const link = completeLink({
 			sourceScreenKey: "a",
 			destinationScreenKey: "b",
-			portalAttachTarget: "matched-screen",
-			portalHostPreference: "boundary-local",
+			portalHost: "boundary-local",
 		});
 		const signal = resolveMatchedScreenPortalOwnership({
 			boundaryId: "video",
@@ -184,7 +176,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 					links: { video: link },
 				},
 			},
-			portalAttachTarget: "matched-screen",
+			portalHost: "boundary-local",
 			settledHostScreenKey: "b",
 			sourcePairKey: pairKey,
 		});
@@ -202,8 +194,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 		const link = completeLink({
 			sourceScreenKey: "a",
 			destinationScreenKey: "b",
-			portalAttachTarget: "matched-screen",
-			portalHostPreference: "screen",
+			portalHost: "screen",
 		});
 		const signal = resolveMatchedScreenPortalOwnership({
 			boundaryId: "video",
@@ -214,7 +205,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 					links: { video: link },
 				},
 			},
-			portalAttachTarget: "matched-screen",
+			portalHost: "screen",
 			settledHostScreenKey: "b",
 			sourcePairKey: pairKey,
 		});
@@ -240,7 +231,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 						video: completeLink({
 							sourceScreenKey: "a",
 							destinationScreenKey: "b",
-							portalAttachTarget: "matched-screen",
+							portalHost: "boundary-local",
 						}),
 					},
 				},
@@ -250,11 +241,12 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 						video: completeLink({
 							sourceScreenKey: "b",
 							destinationScreenKey: "c",
+							portalHost: "boundary-local",
 						}),
 					},
 				},
 			},
-			portalAttachTarget: "matched-screen",
+			portalHost: "boundary-local",
 			settledHostScreenKey: "b",
 			sourcePairKey: abPairKey,
 		});
@@ -280,7 +272,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 						video: completeLink({
 							sourceScreenKey: "a",
 							destinationScreenKey: "b",
-							portalAttachTarget: "matched-screen",
+							portalHost: "boundary-local",
 						}),
 					},
 				},
@@ -290,11 +282,12 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 						video: completeLink({
 							sourceScreenKey: "b",
 							destinationScreenKey: "c",
+							portalHost: "boundary-local",
 						}),
 					},
 				},
 			},
-			portalAttachTarget: "matched-screen",
+			portalHost: "boundary-local",
 			settledHostScreenKey: "c",
 			sourcePairKey: abPairKey,
 		});
@@ -317,7 +310,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 					video: completeLink({
 						sourceScreenKey: "a",
 						destinationScreenKey: "b",
-						portalAttachTarget: "matched-screen",
+						portalHost: "boundary-local",
 					}),
 				},
 			},
@@ -326,6 +319,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 				links: {
 					video: sourceOnlyLink({
 						sourceScreenKey: "b",
+						portalHost: "boundary-local",
 					}),
 				},
 			},
@@ -334,7 +328,7 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 		const signal = resolveMatchedScreenPortalOwnership({
 			boundaryId: "video",
 			pairsState,
-			portalAttachTarget: "matched-screen",
+			portalHost: "boundary-local",
 			sourcePairKey: abPairKey,
 		});
 

@@ -24,8 +24,7 @@ export interface BoundTag {
 	linkKey: LinkKey;
 	group?: GroupKey;
 }
-export type BoundsPortalAttachTarget = "current-screen" | "matched-screen";
-export type BoundsPortalHostPreference = "boundary-local" | "screen";
+export type BoundsPortalHost = "boundary-local" | "screen";
 export type { ScreenKey } from "../../types/screen.types";
 
 type BoundaryConfig = {
@@ -39,8 +38,7 @@ export type Entry = {
 	bounds: MeasuredDimensions | null;
 	styles: StyleProps;
 	boundaryConfig?: BoundaryConfig;
-	portalAttachTarget?: BoundsPortalAttachTarget;
-	portalHostPreference?: BoundsPortalHostPreference;
+	portalHost?: BoundsPortalHost;
 };
 
 export type MeasuredEntry = Entry & {
@@ -51,8 +49,7 @@ export type EntryPatch = {
 	bounds?: MeasuredDimensions | null;
 	styles?: StyleProps | null;
 	boundaryConfig?: BoundaryConfig | null;
-	portalAttachTarget?: BoundsPortalAttachTarget | null;
-	portalHostPreference?: BoundsPortalHostPreference | null;
+	portalHost?: BoundsPortalHost | null;
 };
 
 export type ScreenIdentifier = {
@@ -78,10 +75,8 @@ export type SourceHostRef = {
 };
 
 export type SourceTagLinkSide = TagLinkSide & {
-	/** Where this boundary's portal content renders during the transition. */
-	portalAttachTarget?: BoundsPortalAttachTarget;
-	/** Whether matched-screen host readiness is satisfied locally or by screen host layout. */
-	portalHostPreference?: BoundsPortalHostPreference;
+	/** Which host receives matched-screen portal content during the transition. */
+	portalHost?: BoundsPortalHost;
 	/** Scroll-scoped host the source originated from, if any. */
 	sourceHost?: SourceHostRef;
 };
@@ -135,7 +130,7 @@ export type ResolvedTransitionPair = {
 	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
-	sourcePortalAttachTarget?: BoundsPortalAttachTarget;
+	sourcePortalHost?: BoundsPortalHost;
 	sourceHost?: SourceHostRef;
 };
 

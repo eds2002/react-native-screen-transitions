@@ -24,16 +24,16 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const unregisterTargetRef = rootContext?.unregisterTargetRef;
 	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
 	const shouldApplyAssociatedStyleInline =
-		isActiveTarget && rootContext?.portal === undefined;
+		isActiveTarget && rootContext?.portalHost === undefined;
 	const shouldApplyPortalLayoutStyle =
-		isActiveTarget && rootContext?.portal !== undefined;
+		isActiveTarget && rootContext?.portalHost !== undefined;
 	const portalLayoutStyle = useSlotLayoutStyles(rootContext?.boundTag.tag);
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 	// Portal'd content can be teleported into another screen's host; measuring
 	// it there would capture its CURRENT (destination) position as the source
 	// bounds. The portal placeholder keeps the layout slot at home, so it is
 	// the truthful measurement surface whenever a portal is configured.
-	const measurementRef = rootContext?.portal
+	const measurementRef = rootContext?.portalHost
 		? placeholderAnimatedRef
 		: targetAnimatedRef;
 
@@ -60,7 +60,7 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	return (
 		<Portal
 			id={rootContext?.boundTag.tag}
-			portal={rootContext?.portal}
+			portalHost={rootContext?.portalHost}
 			placeholderRef={placeholderAnimatedRef}
 		>
 			<Animated.View

@@ -73,7 +73,15 @@ const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
 
 const passiveBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
-	portal: "matched-screen",
+	portal: "boundary-local",
+};
+const screenBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	portal: "screen",
+};
+const booleanBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	portal: true,
 };
 const pressableBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
@@ -84,12 +92,12 @@ const disabledBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> =
 		id: "hero",
 		portal: false,
 	};
-const invalidBooleanBoundaryPortalProps: ComponentProps<
+const invalidMatchedScreenBoundaryPortalProps: ComponentProps<
 	typeof Transition.Boundary
 > = {
 	id: "hero",
-	// @ts-expect-error Boundary portal must name a supported mode.
-	portal: true,
+	// @ts-expect-error Boundary portal exposes host choice, not the internal attach target.
+	portal: "matched-screen",
 };
 const invalidBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
@@ -108,9 +116,11 @@ const deprecatedBoundaryTriggerProps: ComponentProps<
 	onPress: () => {},
 };
 void passiveBoundaryProps;
+void screenBoundaryPortalProps;
+void booleanBoundaryPortalProps;
 void pressableBoundaryProps;
 void disabledBoundaryPortalProps;
-void invalidBooleanBoundaryPortalProps;
+void invalidMatchedScreenBoundaryPortalProps;
 void invalidBoundaryPortalProps;
 void deprecatedBoundaryViewProps;
 void deprecatedBoundaryTriggerProps;

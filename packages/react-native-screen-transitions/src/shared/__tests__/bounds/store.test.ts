@@ -48,11 +48,11 @@ const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
 	boundaryConfig?: NonNullable<EntryPatch["boundaryConfig"]>,
-	portalAttachTarget?: EntryPatch["portalAttachTarget"],
+	portalHost?: EntryPatch["portalHost"],
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		boundaryConfig,
-		portalAttachTarget,
+		portalHost,
 	});
 };
 
@@ -95,20 +95,18 @@ describe("BoundStore.entry", () => {
 			"card",
 			"screen-a",
 			{ method: "size" },
-			"matched-screen",
+			"screen",
 		);
 
-		expect(BoundStore.entry.get("card", "screen-a")?.portalAttachTarget).toBe(
-			"matched-screen",
+		expect(BoundStore.entry.get("card", "screen-a")?.portalHost).toBe(
+			"screen",
 		);
 
 		BoundStore.entry.set("card", "screen-a", {
-			portalAttachTarget: null,
+			portalHost: null,
 		});
 
-		expect(
-			BoundStore.entry.get("card", "screen-a")?.portalAttachTarget,
-		).toBeUndefined();
+		expect(BoundStore.entry.get("card", "screen-a")?.portalHost).toBeUndefined();
 	});
 });
 
@@ -634,21 +632,21 @@ describe("teleport portal host links", () => {
 			createBounds(0, 0),
 			{},
 			undefined,
-			"matched-screen",
+			"screen",
 		);
 		// Refresh paths (e.g. provider-driven re-measures) omit portal context.
 		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(0, 4));
 
-		expect(BoundStore.link.getSource(pairKey, "card")?.portalAttachTarget).toBe(
-			"matched-screen",
+		expect(BoundStore.link.getSource(pairKey, "card")?.portalHost).toBe(
+			"screen",
 		);
 		expect(
 			BoundStore.link.getPair("card", {
 				entering: true,
 				previousScreenKey: "screen-a",
 				currentScreenKey: "screen-b",
-			}).sourcePortalAttachTarget,
-		).toBe("matched-screen");
+			}).sourcePortalHost,
+		).toBe("screen");
 	});
 
 	it("does not shift the teleported source path by destination scroll", () => {
@@ -661,7 +659,7 @@ describe("teleport portal host links", () => {
 		const registerLink = (
 			tag: string,
 			sourceY: number,
-			portalAttachTarget?: "matched-screen",
+			portalHost?: "boundary-local" | "screen",
 		) => {
 			BoundStore.link.setSource(
 				pairKey,
@@ -670,13 +668,13 @@ describe("teleport portal host links", () => {
 				createBounds(0, sourceY, 100, 80),
 				{},
 				undefined,
-				portalAttachTarget,
+				portalHost,
 			);
 			BoundStore.link.setDestination(pairKey, tag, "screen-b", destination);
 		};
 
 		registerLink("classic", 40);
-		registerLink("teleported", 40, "matched-screen");
+		registerLink("teleported", 40, "screen");
 
 		const computeFor = (tag: string) =>
 			computeBoundStyles(

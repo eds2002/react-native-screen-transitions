@@ -60,7 +60,7 @@ export function createBoundaryComponent<P extends object>(
 			() => createBoundTag(String(id), group),
 			[id, group],
 		);
-		const portal = resolveBoundaryPortal(portalProp);
+		const portalHost = resolveBoundaryPortal(portalProp);
 
 		const currentScreenKey = useDescriptorsStore(
 			(s) => s.derivations.currentScreenKey,
@@ -85,18 +85,12 @@ export function createBoundaryComponent<P extends object>(
 			targetPreparedStyles,
 		} = useBoundaryRootState({
 			boundTag,
-			portal,
-			rootMeasurementRef: portal ? rootPlaceholderRef : undefined,
+			portalHost,
+			rootMeasurementRef: portalHost ? rootPlaceholderRef : undefined,
 			associatedTargetStyles: shouldAttachAssociatedStyles
 				? associatedStyles
 				: undefined,
 		});
-		const portalHostPreference =
-			portal === "matched-screen"
-				? hasActiveTarget
-					? "screen"
-					: "boundary-local"
-				: undefined;
 
 		const { onPress: resolvedOnPress } = useBoundaryMeasurement({
 			boundTag,
@@ -106,15 +100,14 @@ export function createBoundaryComponent<P extends object>(
 			measuredRef,
 			style,
 			targetPreparedStyles,
-			portal,
-			portalHostPreference,
+			portalHost,
 			config: { anchor, scaleMode, target, method },
 			onPress,
 		});
 
 		useImperativeHandle(forwardedRef, () => ref.current as any, [ref]);
 
-		const shouldPortalRoot = !!portal && !hasActiveTarget;
+		const shouldPortalRoot = !!portalHost && !hasActiveTarget;
 		// A nested active target takes the full associated style, so the root keeps
 		// only its stacking context. Without a nested target, a portal'd root is the
 		// target, so its associated style is applied through the portal host instead
@@ -161,8 +154,7 @@ export function createBoundaryComponent<P extends object>(
 				{shouldPortalRoot ? (
 					<Portal
 						id={boundTag.tag}
-						portal={portal}
-						preferBoundaryLocalHost
+						portalHost={portalHost}
 						placeholderRef={rootPlaceholderRef}
 						placeholderChildren={localPortalHost}
 					>

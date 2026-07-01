@@ -154,8 +154,7 @@ export const useInitialDestinationMeasurement = ({
 				const sourceScreenKey = getSourceScreenKeyFromPairKey(measurePairKey);
 				const sourceEntry = getEntry(tag, sourceScreenKey);
 				const sourceEntryUsesScreenPortalHost =
-					sourceEntry?.portalAttachTarget === "matched-screen" &&
-					sourceEntry.portalHostPreference !== "boundary-local";
+					sourceEntry?.portalHost === "screen";
 				const shouldWaitForMatchedScreenPortal =
 					usesScreenPortalHost(link) ||
 					sourceEntryUsesScreenPortalHost ||

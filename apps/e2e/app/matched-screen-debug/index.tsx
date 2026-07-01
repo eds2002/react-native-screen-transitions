@@ -15,7 +15,7 @@ export default function MatchedScreenDebugIndex() {
 				<Transition.Boundary
 					id={BOUNDARY_ID}
 					testID="matched-screen-debug-a-boundary"
-					portal="matched-screen"
+					portal="boundary-local"
 					style={styles.box}
 				/>
 			</View>

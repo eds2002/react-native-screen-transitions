@@ -47,7 +47,7 @@ function ReelCard({ reel, index, width, height }: ReelCardProps) {
 			testID={`reel-card-${index}`}
 			id={reelId(index)}
 			group={REELS_GROUP}
-			portal="matched-screen"
+			portal="screen"
 			onPress={() => openReel(index)}
 		>
 			<Transition.Boundary.Target

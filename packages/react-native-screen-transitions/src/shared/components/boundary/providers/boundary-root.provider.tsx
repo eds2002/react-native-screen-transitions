@@ -4,10 +4,9 @@ import type { View } from "react-native";
 import type Animated from "react-native-reanimated";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import { useAnimatedRef } from "react-native-reanimated";
-import type { BoundTag } from "../../../stores/bounds/types";
+import type { BoundsPortalHost, BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
-import type { BoundaryPortal } from "../types";
 
 type BoundaryAssociatedStyle = React.ComponentProps<
 	typeof Animated.View
@@ -23,7 +22,7 @@ interface BoundaryRootContextValue {
 	activeTargetRef: AnimatedRef<View> | null;
 	associatedTargetStyles?: BoundaryAssociatedStyle;
 	boundTag: BoundTag;
-	portal?: BoundaryPortal;
+	portalHost?: BoundsPortalHost;
 }
 
 type BoundaryTargetEntry = {
@@ -53,10 +52,10 @@ export const { BoundaryRootProvider, useBoundaryRootContext } = createProvider(
 export const useBoundaryRootState = (params: {
 	associatedTargetStyles?: BoundaryAssociatedStyle;
 	boundTag: BoundTag;
-	portal?: BoundaryPortal;
+	portalHost?: BoundsPortalHost;
 	rootMeasurementRef?: AnimatedRef<View>;
 }) => {
-	const { associatedTargetStyles, boundTag, portal, rootMeasurementRef } =
+	const { associatedTargetStyles, boundTag, portalHost, rootMeasurementRef } =
 		params;
 	const rootRef = useAnimatedRef<View>();
 	const [targetEntry, setTargetEntry] = useState<BoundaryTargetEntry | null>(
@@ -104,7 +103,7 @@ export const useBoundaryRootState = (params: {
 			activeTargetRef: targetEntry?.ref ?? null,
 			associatedTargetStyles,
 			boundTag,
-			portal,
+			portalHost,
 		}),
 		[
 			registerTargetRef,
@@ -112,7 +111,7 @@ export const useBoundaryRootState = (params: {
 			targetEntry,
 			associatedTargetStyles,
 			boundTag,
-			portal,
+			portalHost,
 		],
 	);
 

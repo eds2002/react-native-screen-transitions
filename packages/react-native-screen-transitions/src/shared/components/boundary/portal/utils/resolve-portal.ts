@@ -1,4 +1,4 @@
-import type { BoundsPortalAttachTarget } from "../../../../stores/bounds/types";
+import type { BoundsPortalHost } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
 import type { BoundaryPortal } from "../../types";
 import { isTeleportAvailable } from "../teleport";
@@ -10,13 +10,13 @@ import { isTeleportAvailable } from "../teleport";
  */
 export const resolveBoundaryPortal = (
 	portal?: BoundaryPortal,
-): BoundaryPortal | undefined => {
+): BoundsPortalHost | undefined => {
 	if (!portal) {
 		return undefined;
 	}
 
 	if (isTeleportAvailable) {
-		return portal;
+		return portal === true ? "boundary-local" : portal;
 	}
 
 	if (portal) {
@@ -24,16 +24,6 @@ export const resolveBoundaryPortal = (
 			"boundary:teleport-missing",
 			"react-native-teleport is not installed and will fallback to default behavior.",
 		);
-	}
-
-	return undefined;
-};
-
-export const resolvePortalHost = (
-	portal?: BoundaryPortal,
-): BoundsPortalAttachTarget | undefined => {
-	if (portal === "matched-screen") {
-		return "matched-screen";
 	}
 
 	return undefined;

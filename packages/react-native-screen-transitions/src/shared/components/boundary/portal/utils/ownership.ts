@@ -4,7 +4,7 @@ import {
 	getSourceScreenKeyFromPairKey,
 } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
-	BoundsPortalAttachTarget,
+	BoundsPortalHost,
 	LinkKey,
 	LinkPairsState,
 	ScreenKey,
@@ -40,10 +40,7 @@ export const usesScreenPortalHost = (
 	link: TagLink | null | undefined,
 ): boolean => {
 	"worklet";
-	return (
-		link?.source?.portalAttachTarget === "matched-screen" &&
-		link.source.portalHostPreference !== "boundary-local"
-	);
+	return link?.source?.portalHost === "screen";
 };
 
 const isActivePortalLink = ({
@@ -69,25 +66,23 @@ const isActivePortalLink = ({
 const resolvePortalOwnerScreenKey = ({
 	hostScreenKey,
 	isSettledHostReady,
-	portalHostPreference,
-	portalAttachTarget,
+	portalHost,
 	settledHostScreenKey,
 	sourceScreenKey,
 }: {
 	hostScreenKey: ScreenKey;
 	isSettledHostReady: boolean;
-	portalHostPreference?: "boundary-local" | "screen";
-	portalAttachTarget: BoundsPortalAttachTarget;
+	portalHost?: BoundsPortalHost;
 	settledHostScreenKey?: ScreenKey | null;
 	sourceScreenKey: ScreenKey;
 }): ScreenKey => {
 	"worklet";
-	if (portalHostPreference === "screen") {
+	if (portalHost === "screen") {
 		return sourceScreenKey;
 	}
 
 	if (
-		portalAttachTarget === "matched-screen" &&
+		portalHost === "boundary-local" &&
 		settledHostScreenKey === hostScreenKey &&
 		isSettledHostReady
 	) {
@@ -101,14 +96,14 @@ export const resolveMatchedScreenPortalOwnership = ({
 	boundaryId,
 	isSettledHostReady = false,
 	pairsState,
-	portalAttachTarget,
+	portalHost,
 	settledHostScreenKey = null,
 	sourcePairKey,
 }: {
 	boundaryId: string;
 	isSettledHostReady?: boolean;
 	pairsState: LinkPairsState;
-	portalAttachTarget: BoundsPortalAttachTarget;
+	portalHost: BoundsPortalHost;
 	settledHostScreenKey?: ScreenKey | null;
 	sourcePairKey: ScreenPairKey;
 }): PortalOwnershipSignal => {
@@ -144,72 +139,66 @@ export const resolveMatchedScreenPortalOwnership = ({
 	let hostScreenKey = link.destination.screenKey;
 	let ownerPairKey = sourcePairKey;
 
-	if (portalAttachTarget === "matched-screen") {
-		const pairKeys = Object.keys(pairsState);
+	const pairKeys = Object.keys(pairsState);
 
-		for (let hop = 0; hop < pairKeys.length; hop++) {
-			let didAdvance = false;
-			let hasPendingNextHop = false;
+	for (let hop = 0; hop < pairKeys.length; hop++) {
+		let didAdvance = false;
+		let hasPendingNextHop = false;
 
-			for (let index = 0; index < pairKeys.length; index++) {
-				const candidatePairKey = pairKeys[index];
-				if (!candidatePairKey || candidatePairKey === ownerPairKey) {
-					continue;
-				}
-
-				const candidate = getPairLink(pairsState, candidatePairKey, linkKey);
-				if (
-					!candidate?.source ||
-					candidate.source.screenKey !== hostScreenKey
-				) {
-					continue;
-				}
-
-				if (
-					!isActivePortalLink({
-						link: candidate,
-						linkKey,
-						pairKey: candidatePairKey,
-						pairsState,
-					})
-				) {
-					continue;
-				}
-
-				if (candidate.status !== "complete") {
-					hasPendingNextHop = true;
-					continue;
-				}
-
-				ownerPairKey = candidatePairKey;
-				hostScreenKey = candidate.destination.screenKey;
-				didAdvance = true;
-				break;
-			}
-
-			if (didAdvance) {
+		for (let index = 0; index < pairKeys.length; index++) {
+			const candidatePairKey = pairKeys[index];
+			if (!candidatePairKey || candidatePairKey === ownerPairKey) {
 				continue;
 			}
 
-			if (hasPendingNextHop) {
-				return {
-					hostScreenKey: null,
-					ownerPairKey,
-					ownerScreenKey: null,
-					status: "pending",
-				};
+			const candidate = getPairLink(pairsState, candidatePairKey, linkKey);
+			if (!candidate?.source || candidate.source.screenKey !== hostScreenKey) {
+				continue;
 			}
 
+			if (
+				!isActivePortalLink({
+					link: candidate,
+					linkKey,
+					pairKey: candidatePairKey,
+					pairsState,
+				})
+			) {
+				continue;
+			}
+
+			if (candidate.status !== "complete") {
+				hasPendingNextHop = true;
+				continue;
+			}
+
+			ownerPairKey = candidatePairKey;
+			hostScreenKey = candidate.destination.screenKey;
+			didAdvance = true;
 			break;
 		}
+
+		if (didAdvance) {
+			continue;
+		}
+
+		if (hasPendingNextHop) {
+			return {
+				hostScreenKey: null,
+				ownerPairKey,
+				ownerScreenKey: null,
+				status: "pending",
+			};
+		}
+
+		break;
 	}
 
 	const ownerLink = getPairLink(pairsState, ownerPairKey, linkKey);
 	const ownerScreenKey = resolvePortalOwnerScreenKey({
 		hostScreenKey,
 		isSettledHostReady,
-		portalHostPreference: ownerLink?.source?.portalHostPreference,
-		portalAttachTarget,
+		portalHost: ownerLink?.source?.portalHost ?? portalHost,
 		settledHostScreenKey,
 		sourceScreenKey: getSourceScreenKeyFromPairKey(ownerPairKey),
 	});

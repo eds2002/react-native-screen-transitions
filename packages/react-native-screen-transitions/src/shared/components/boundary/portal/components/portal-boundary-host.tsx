@@ -41,7 +41,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		const sourceBounds = link.source.bounds as ScrollMeasuredDimensions;
 		const isCrossScreenPortal = link.source.screenKey !== host.screenKey;
 		const trackSourceScroll =
-			link.source.portalAttachTarget === "matched-screen" &&
+			link.source.portalHost !== undefined &&
 			isCrossScreenPortal &&
 			link.source.sourceHost?.capturesScroll === true;
 
@@ -72,8 +72,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	const slotStyle = useAnimatedStyle(() => {
 		"worklet";
 		const link = getLink(host.pairKey, host.boundaryId);
-		const isMatchedScreenPortal =
-			link?.source?.portalAttachTarget === "matched-screen";
+		const isMatchedScreenPortal = link?.source?.portalHost !== undefined;
 
 		// `slotsMap` is the resolved map: it may contain real interpolator output,
 		// inherited styles, or resolver-created reset patches for slots that just

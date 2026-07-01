@@ -21,10 +21,9 @@ import { useScreenSlots } from "../../../../providers/screen/styles";
 import { useRegisteredScreenSlots } from "../../../../providers/screen/styles/stores/slot-references.store";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { pairs } from "../../../../stores/bounds/internals/state";
-import type { BoundsPortalAttachTarget } from "../../../../stores/bounds/types";
+import type { BoundsPortalHost } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
 import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
-import type { BoundaryPortal } from "../../types";
 import {
 	getHostCapturesScroll,
 	useActiveHostKey,
@@ -44,7 +43,6 @@ import {
 	type PortalOwnershipSignal,
 	resolveMatchedScreenPortalOwnership,
 } from "../utils/ownership";
-import { resolvePortalHost } from "../utils/resolve-portal";
 import { shallowEqual } from "../utils/shallow-equal";
 import { isTeleportEnabled } from "../utils/teleport-control";
 
@@ -64,8 +62,7 @@ const TransitionAwareTeleport = NativePortal
 interface PortalProps {
 	id?: string;
 	children: ReactNode;
-	portal?: BoundaryPortal;
-	preferBoundaryLocalHost?: boolean;
+	portalHost?: BoundsPortalHost;
 	/**
 	 * Ref to the layout-preserving placeholder wrapper. Boundaries measure
 	 * this instead of teleported content — the placeholder keeps the source
@@ -79,24 +76,22 @@ interface PortalProps {
 export const Portal = memo(function Portal({
 	id,
 	children,
-	portal = false,
-	preferBoundaryLocalHost = false,
+	portalHost,
 	placeholderRef,
 	placeholderChildren,
 }: PortalProps) {
 	// Teleporting requires the optional `react-native-teleport` peer and a stable
 	// `id` to name the boundary host. Missing either degrades to inline rendering
 	// (the `return children` path below).
-	const isPortalEnabled = !!portal && isTeleportAvailable && id !== undefined;
-	if (__DEV__ && portal && id === undefined) {
+	const isPortalEnabled =
+		!!portalHost && isTeleportAvailable && id !== undefined;
+	if (__DEV__ && portalHost && id === undefined) {
 		logger.warnOnce(
 			"portal:missing-id",
 			"A portal-enabled boundary was rendered without an id; rendering inline.",
 		);
 	}
 	const boundaryId = id ?? "";
-	const portalAttachTarget: BoundsPortalAttachTarget =
-		resolvePortalHost(portal) ?? "current-screen";
 	const ownScreenSlots = useScreenSlots();
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
@@ -120,12 +115,7 @@ export const Portal = memo(function Portal({
 	const placeholderWidth = useSharedValue(0);
 	const placeholderHeight = useSharedValue(0);
 
-	const targetScreenKey =
-		ownership && portalAttachTarget === "matched-screen"
-			? ownership.hostScreenKey
-			: ownership?.ownerPairKey === sourcePairKey
-				? currentScreenKey
-				: null;
+	const targetScreenKey = ownership ? ownership.hostScreenKey : null;
 	const settledHostScreenKey = ownership?.hostScreenKey ?? null;
 	const settledHostProgress = AnimationStore.getValue(
 		settledHostScreenKey ?? currentScreenKey,
@@ -141,9 +131,7 @@ export const Portal = memo(function Portal({
 		? getHostCapturesScroll(activeHostKey)
 		: false;
 	const boundaryLocalHostName =
-		portalAttachTarget === "matched-screen" &&
-		targetScreenKey &&
-		preferBoundaryLocalHost
+		portalHost === "boundary-local" && targetScreenKey
 			? createBoundaryLocalPortalHostName(targetScreenKey, boundaryId)
 			: null;
 
@@ -259,7 +247,7 @@ export const Portal = memo(function Portal({
 				isSettledHostReady:
 					settledHostProgress.get() === 1 && settledHostAnimating.get() === 0,
 				pairsState: pairs.get(),
-				portalAttachTarget,
+				portalHost,
 				settledHostScreenKey,
 				sourcePairKey,
 			});
@@ -287,8 +275,7 @@ export const Portal = memo(function Portal({
 			"worklet";
 			const slot = activeSlotsMap.get()[boundaryId];
 			const teleport = slot?.props?.teleport;
-			const shouldTeleport =
-				portalAttachTarget === "matched-screen" || isTeleportEnabled(teleport);
+			const shouldTeleport = !!portalHost || isTeleportEnabled(teleport);
 			const requestedName = requestedPortalHostName.get();
 			const visibleName = visiblePortalHostName.get();
 			const isInterpolatorReady = activeNextInterpolatorReady.get();
@@ -339,8 +326,7 @@ export const Portal = memo(function Portal({
 
 		const slot = activeSlotsMap.get()[boundaryId];
 		const { teleport, ...slotProps } = slot?.props ?? {};
-		const shouldTeleport =
-			portalAttachTarget === "matched-screen" || isTeleportEnabled(teleport);
+		const shouldTeleport = !!portalHost || isTeleportEnabled(teleport);
 		const visibleName = visiblePortalHostName.get();
 
 		return {

@@ -153,7 +153,7 @@ const resolveStartEnd = (params: {
 	 * scroll naturally.
 	 */
 	const shouldTrackTeleportedSourceScroll =
-		resolvedPair.sourcePortalAttachTarget === "matched-screen" &&
+		resolvedPair.sourcePortalHost !== undefined &&
 		!!currentScreenKey &&
 		currentScreenKey === resolvedPair.sourceScreenKey &&
 		!!resolvedPair.destinationScreenKey &&

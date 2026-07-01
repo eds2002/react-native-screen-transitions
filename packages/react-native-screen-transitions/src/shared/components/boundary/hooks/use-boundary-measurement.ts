@@ -1,13 +1,9 @@
 import { useCallback, useMemo } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
-import type {
-	BoundsPortalHostPreference,
-	BoundTag,
-} from "../../../stores/bounds/types";
+import type { BoundsPortalHost, BoundTag } from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
-import { resolvePortalHost } from "../portal/utils/resolve-portal";
-import type { BoundaryConfigProps, BoundaryPortal } from "../types";
+import type { BoundaryConfigProps } from "../types";
 import { useBoundaryPresence } from "./use-boundary-presence";
 import { useInitialDestinationMeasurement } from "./use-initial-destination-measurement";
 import { useInitialSourceMeasurement } from "./use-initial-source-measurement";
@@ -26,8 +22,7 @@ interface UseBoundaryMeasurementParams {
 	/** Root's own style; ignored when a nested target supplies its own. */
 	style?: unknown;
 	targetPreparedStyles?: StyleProps;
-	portal?: BoundaryPortal;
-	portalHostPreference?: BoundsPortalHostPreference;
+	portalHost?: BoundsPortalHost;
 	config: BoundaryConfigProps;
 	onPress?: (...args: unknown[]) => void;
 }
@@ -46,8 +41,7 @@ export const useBoundaryMeasurement = ({
 	measuredRef,
 	style,
 	targetPreparedStyles,
-	portal,
-	portalHostPreference,
+	portalHost,
 	config,
 	onPress,
 }: UseBoundaryMeasurementParams) => {
@@ -63,8 +57,6 @@ export const useBoundaryMeasurement = ({
 	);
 	const preparedStyles = targetPreparedStyles ?? rootPreparedStyles;
 
-	const portalHost = resolvePortalHost(portal);
-
 	const measureBoundary = useMeasurer({
 		enabled,
 		boundTag,
@@ -72,7 +64,6 @@ export const useBoundaryMeasurement = ({
 		preparedStyles,
 		measuredAnimatedRef: measuredRef,
 		portalHost,
-		portalHostPreference,
 	});
 
 	// Register/unregister this boundary in the presence map so source/destination
@@ -82,8 +73,7 @@ export const useBoundaryMeasurement = ({
 		boundTag,
 		currentScreenKey,
 		boundaryConfig,
-		portal,
-		portalHostPreference,
+		portalHost,
 	});
 
 	useInitialSourceMeasurement({

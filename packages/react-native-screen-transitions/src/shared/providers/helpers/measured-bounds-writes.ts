@@ -2,8 +2,7 @@ import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import { setEntry } from "../../stores/bounds/internals/entries";
 import { setDestination, setSource } from "../../stores/bounds/internals/links";
 import type {
-	BoundsPortalAttachTarget,
-	BoundsPortalHostPreference,
+	BoundsPortalHost,
 	ScreenPairKey,
 	SourceHostRef,
 } from "../../stores/bounds/types";
@@ -26,8 +25,7 @@ type ApplyMeasuredBoundsWritesParams = {
 	measured: MeasuredDimensions;
 	preparedStyles: StyleProps;
 	linkWrite?: LinkWrite;
-	portalHost?: BoundsPortalAttachTarget;
-	portalHostPreference?: BoundsPortalHostPreference;
+	portalHost?: BoundsPortalHost;
 	sourceHost?: SourceHostRef;
 };
 
@@ -44,7 +42,6 @@ export const applyMeasuredBoundsWrites = (
 		preparedStyles,
 		linkWrite,
 		portalHost,
-		portalHostPreference,
 		sourceHost,
 	} = params;
 
@@ -64,7 +61,6 @@ export const applyMeasuredBoundsWrites = (
 			group,
 			portalHost,
 			sourceHost,
-			portalHostPreference,
 		);
 	}
 

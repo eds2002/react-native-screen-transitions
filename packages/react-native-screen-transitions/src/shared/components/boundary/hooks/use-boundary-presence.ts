@@ -4,50 +4,30 @@ import {
 	removeEntry,
 	setEntry,
 } from "../../../stores/bounds/internals/entries";
-import type {
-	BoundsPortalHostPreference,
-	BoundTag,
-} from "../../../stores/bounds/types";
-import { resolvePortalHost } from "../portal/utils/resolve-portal";
-import type { BoundaryConfigProps, BoundaryPortal } from "../types";
+import type { BoundsPortalHost, BoundTag } from "../../../stores/bounds/types";
+import type { BoundaryConfigProps } from "../types";
 
 export const useBoundaryPresence = (params: {
 	enabled: boolean;
 	boundTag: BoundTag;
 	currentScreenKey: string;
 	boundaryConfig?: BoundaryConfigProps;
-	portal?: BoundaryPortal;
-	portalHostPreference?: BoundsPortalHostPreference;
+	portalHost?: BoundsPortalHost;
 }) => {
-	const {
-		enabled,
-		boundTag,
-		currentScreenKey,
-		boundaryConfig,
-		portal,
-		portalHostPreference,
-	} = params;
+	const { enabled, boundTag, currentScreenKey, boundaryConfig, portalHost } =
+		params;
 	const { tag } = boundTag;
-	const portalAttachTarget = resolvePortalHost(portal);
 
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
 		runOnUI(setEntry)(tag, currentScreenKey, {
 			boundaryConfig,
-			portalAttachTarget: portalAttachTarget ?? null,
-			portalHostPreference: portalHostPreference ?? null,
+			portalHost: portalHost ?? null,
 		});
 
 		return () => {
 			runOnUI(removeEntry)(tag, currentScreenKey);
 		};
-	}, [
-		enabled,
-		tag,
-		currentScreenKey,
-		boundaryConfig,
-		portalAttachTarget,
-		portalHostPreference,
-	]);
+	}, [enabled, tag, currentScreenKey, boundaryConfig, portalHost]);
 };

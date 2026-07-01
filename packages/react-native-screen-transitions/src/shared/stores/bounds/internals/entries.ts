@@ -44,16 +44,10 @@ const applyEntryPatch = (entry: Entry, patch: EntryPatch) => {
 		entry.boundaryConfig = patch.boundaryConfig;
 	}
 
-	if (patch.portalAttachTarget === null) {
-		delete entry.portalAttachTarget;
-	} else if (patch.portalAttachTarget !== undefined) {
-		entry.portalAttachTarget = patch.portalAttachTarget;
-	}
-
-	if (patch.portalHostPreference === null) {
-		delete entry.portalHostPreference;
-	} else if (patch.portalHostPreference !== undefined) {
-		entry.portalHostPreference = patch.portalHostPreference;
+	if (patch.portalHost === null) {
+		delete entry.portalHost;
+	} else if (patch.portalHost !== undefined) {
+		entry.portalHost = patch.portalHost;
 	}
 };
 

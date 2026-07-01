@@ -47,7 +47,7 @@ describe("source host link metadata", () => {
 			createBounds(0, 0),
 			{},
 			undefined,
-			"matched-screen",
+			"screen",
 			SCROLL_HOST,
 		);
 		BoundStore.link.setDestination(pairKey, "card", "screen-b", createBounds());
@@ -74,7 +74,7 @@ describe("source host link metadata", () => {
 			createBounds(0, 0),
 			{},
 			undefined,
-			"matched-screen",
+			"screen",
 			SCROLL_HOST,
 		);
 		// Refresh paths (e.g. provider-driven re-measures) omit portal context.
@@ -96,7 +96,7 @@ describe("source host link metadata", () => {
 			createBounds(0, 0),
 			{},
 			undefined,
-			"matched-screen",
+			"screen",
 			SCROLL_HOST,
 		);
 		BoundStore.link.setDestination(pairKey, "card", "screen-b", createBounds());
@@ -117,7 +117,7 @@ describe("source host link metadata", () => {
 			createBounds(0, 0),
 			{},
 			"items",
-			"matched-screen",
+			"screen",
 			SCROLL_HOST,
 		);
 		BoundStore.link.setSource(
@@ -127,7 +127,7 @@ describe("source host link metadata", () => {
 			createBounds(0, 100),
 			{},
 			"items",
-			"matched-screen",
+			"screen",
 		);
 
 		expect(BoundStore.link.getSource(pairKey, "items:1")?.sourceHost).toEqual(
@@ -146,7 +146,7 @@ describe("teleported source scroll shift", () => {
 		tag: string,
 		sourceY: number,
 		options: {
-			portalAttachTarget?: "matched-screen";
+			portalHost?: "boundary-local" | "screen";
 			sourceHost?: SourceHostRef;
 			sourceScroll?: ReturnType<typeof createScrollLayout>;
 		} = {},
@@ -165,7 +165,7 @@ describe("teleported source scroll shift", () => {
 			sourceBounds,
 			{},
 			undefined,
-			options.portalAttachTarget,
+			options.portalHost,
 			options.sourceHost,
 		);
 		BoundStore.link.setDestination(
@@ -202,7 +202,7 @@ describe("teleported source scroll shift", () => {
 
 	it("shifts the start rect by the clamped source scroll travel", () => {
 		registerLink("teleported", 200, {
-			portalAttachTarget: "matched-screen",
+			portalHost: "screen",
 			sourceHost: SCROLL_HOST,
 			sourceScroll: createScrollLayout(0, 100),
 		});
@@ -214,7 +214,7 @@ describe("teleported source scroll shift", () => {
 
 	it("does not shift without a scroll-scoped source host", () => {
 		registerLink("teleported-root-source", 200, {
-			portalAttachTarget: "matched-screen",
+			portalHost: "screen",
 			sourceScroll: createScrollLayout(0, 100),
 		});
 		registerLink("control", 200);

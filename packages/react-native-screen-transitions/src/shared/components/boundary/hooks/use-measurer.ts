@@ -8,11 +8,7 @@ import {
 } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
 import { useOriginContext } from "../../../providers/screen/origin.provider";
-import type {
-	BoundsPortalAttachTarget,
-	BoundsPortalHostPreference,
-	BoundTag,
-} from "../../../stores/bounds/types";
+import type { BoundsPortalHost, BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
 import { getActiveScrollHost } from "../portal/stores/host-registry.store";
@@ -30,8 +26,7 @@ interface UseMeasurerParams {
 	currentScreenKey: string;
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
-	portalHost?: BoundsPortalAttachTarget;
-	portalHostPreference?: BoundsPortalHostPreference;
+	portalHost?: BoundsPortalHost;
 }
 
 export const useMeasurer = ({
@@ -41,7 +36,6 @@ export const useMeasurer = ({
 	preparedStyles,
 	measuredAnimatedRef,
 	portalHost,
-	portalHostPreference,
 }: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -111,7 +105,6 @@ export const useMeasurer = ({
 				preparedStyles,
 				linkWrite: target,
 				portalHost,
-				portalHostPreference,
 				sourceHost,
 			});
 		},
@@ -122,7 +115,6 @@ export const useMeasurer = ({
 			preparedStyles,
 			measuredAnimatedRef,
 			portalHost,
-			portalHostPreference,
 			viewportWidth,
 			viewportHeight,
 			scrollState,

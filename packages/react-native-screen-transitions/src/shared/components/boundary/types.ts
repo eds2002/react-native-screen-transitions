@@ -3,7 +3,7 @@ import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
 
-export type BoundaryPortal = false | "matched-screen";
+export type BoundaryPortal = boolean | "boundary-local" | "screen";
 
 export type BoundaryConfigProps = Pick<
 	BoundsOptions,
