@@ -18,7 +18,9 @@ const BoundaryImage = Transition.createBoundaryComponent(Image, {
 	alreadyAnimated: false,
 });
 
-<BoundaryImage id="avatar" source={avatar} style={styles.avatar} />;
+<BoundaryImage id="avatar" source={avatar} style={styles.avatar} />
 ```
 
-The wrapped component keeps its original props and accepts boundary props such as `id`, `group`, `anchor`, `scaleMode`, `target`, `method`, and `enabled`.
+The wrapped component keeps its original props and accepts boundary props such as `id`, `group`, `anchor`, `scaleMode`, `target`, `method`, `enabled`, `handoff`, and `escapeClipping`.
+
+Use this when a custom component should behave like `Transition.Boundary` without adding an extra wrapper view around it.

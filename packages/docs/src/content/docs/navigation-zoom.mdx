@@ -1,8 +1,8 @@
 ---
 title: "Zoom"
 pageTitle: "Zoom"
-summary: "Use bounds({ id }).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
-description: "Use bounds({ id }).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
+summary: "Use bounds(id).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
+description: "Use bounds(id).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
 eyebrow: "Navigation Transitions"
 group: "Navigation Transitions"
 order: 1
@@ -17,18 +17,18 @@ to: /navigation-zoom
 
 It sits on top of the same boundary link system as `bounds()`, but instead of manually composing slot output yourself, it builds the main layer map for you.
 
-Use it when you want a source-to-destination handoff that feels like a navigation zoom without building the transition from raw bounds primitives.
+Use it when you want a source-to-destination zoom without building the transition from low-level bounds primitives.
 
 ## Recommended Setup
 
-### 1. Mark the source with Boundary.Trigger
+### 1. Mark the source with Boundary
 
-Always use `Transition.Boundary.Trigger` on the source side.
+Use `Transition.Boundary` on the source side.
 
-`Boundary.Trigger` is the recommended owner because it captures source bounds before your navigation callback runs.
+When `onPress` is present, `Boundary` behaves like a pressable boundary and captures source bounds before your navigation callback runs.
 
 ```tsx
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id={item.id}
   anchor="leading"
   scaleMode="uniform"
@@ -36,17 +36,17 @@ Always use `Transition.Boundary.Trigger` on the source side.
   onPress={() => navigation.navigate("Detail", { id: item.id })}
 >
   <Image source={item.image} style={styles.artwork} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
 ### 2. Narrow measurement with Boundary.Target when needed
 
-If the pressable owner is larger than the visual element you actually want to measure, keep the trigger as the owner and move measurement to a nested `Transition.Boundary.Target`.
+If the pressable owner is larger than the visual element you actually want to measure, keep the boundary as the owner and move measurement to a nested `Transition.Boundary.Target`.
 
 `Boundary.Target` does not define its own `id`. It inherits the surrounding boundary owner and only changes which descendant gets measured.
 
 ```tsx
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id={item.id}
   anchor="leading"
   scaleMode="uniform"
@@ -60,7 +60,7 @@ If the pressable owner is larger than the visual element you actually want to me
   <View style={styles.copy}>
     <Text>{item.title}</Text>
   </View>
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
 ### 3. Run navigation.zoom() in the destination screen options
@@ -72,7 +72,7 @@ import { makeMutable } from "react-native-reanimated";
 
 const navigationZoomId = makeMutable<string | null>(null);
 
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id={item.id}
   onPress={() => {
     navigationZoomId.value = item.id;
@@ -80,7 +80,7 @@ const navigationZoomId = makeMutable<string | null>(null);
   }}
 >
   <Image source={item.image} style={styles.artwork} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 
 <Stack.Screen
   name="[id]"
@@ -96,7 +96,7 @@ const navigationZoomId = makeMutable<string | null>(null);
         return null;
       }
 
-      return bounds({ id }).navigation.zoom({
+      return bounds(id).navigation.zoom({
         borderRadius: 48,
       });
     },
@@ -110,18 +110,20 @@ Zoom uses transition progress internally for its bounds path. Live gesture value
 
 ## Destination Setup
 
-The destination screen does not need a `Transition.Boundary.View` for `navigation.zoom()` to work.
+The destination screen does not need a passive `Transition.Boundary` for `navigation.zoom()` to work.
 
-If all you need is a source-driven navigation zoom into the detail screen, the source `Boundary.Trigger` plus the interpolator lookup is enough.
+If all you need is a source-driven navigation zoom into the detail screen, the source `Boundary` plus the interpolator lookup is enough.
 
 This is the simpler setup and is often all you need for id-based list-to-detail flows.
+
+Add a matching passive `Transition.Boundary` on the destination when the zoom should target a specific destination element instead of the screen.
 
 ## zoom() Options
 
 `navigation.zoom()` accepts an optional configuration object:
 
 ```tsx
-return bounds({ id }).navigation.zoom({
+return bounds(id).navigation.zoom({
   borderRadius: 48,
   target: "bound",
   backgroundScale: 0.96,
@@ -156,7 +158,7 @@ Enable it when you want masked reveal behavior during the navigation handoff:
     navigationMaskEnabled: Platform.OS === "ios",
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
-      return bounds({ id: "hero" }).navigation.zoom();
+      return bounds("hero").navigation.zoom();
     },
   }}
 />
@@ -170,25 +172,25 @@ Masked navigation transitions can cost more on Android. If you do not specifical
 
 Most navigation zoom flows do not need groups.
 
-If each source item navigates to its own destination route and the handoff is simply `id -> route`, plain `id` matching is enough.
+If each source item navigates to its own destination route and the match is simply `id -> route`, plain `id` matching is enough.
 
 Use `group` when the active matched member can change while the destination flow stays mounted, such as a paged gallery or a retargeted collection detail flow.
 
 ```tsx
-<Transition.Boundary.Trigger group="gallery" id={item.id} onPress={openItem}>
+<Transition.Boundary group="gallery" id={item.id} onPress={openItem}>
   <Image source={item.image} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 
-<Transition.Boundary.View group="gallery" id={item.id}>
+<Transition.Boundary group="gallery" id={item.id}>
   <Image source={item.image} />
-</Transition.Boundary.View>
+</Transition.Boundary>
 ```
 
 In that setup, some shared state usually tracks which id is currently active inside the group so `navigation.zoom()` knows which member to resolve against.
 
 ## Performance
 
-The bounds runtime now avoids several old sources of repeated measurement work. Destination measurement is stabilized before the transition resolves its link, close-time scroll listeners are detached, and overscrolled scroll containers are normalized before their bounds are written.
+Bounds retarget more reliably when the destination changes size or position while it is on screen. In most cases, a close transition can animate back from the latest measured destination instead of the layout that existed when the screen opened.
 
 If a layout can change while a screen is unfocused, set `remeasureOnFocus` on the transition-aware boundary owner so the source link refreshes when focus returns.
 

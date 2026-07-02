@@ -1,8 +1,8 @@
 ---
 title: "Bounds Transitions"
 pageTitle: "Bounds Transitions"
-summary: "Use Boundary components and the bounds accessor to sync geometry across screens, build navigation zoom, and manage grouped handoff."
-description: "Use Boundary components and the bounds accessor to sync geometry across screens, build navigation zoom, and manage grouped handoff."
+summary: "Use Transition.Boundary and the scoped bounds accessor to sync geometry across screens."
+description: "Use Transition.Boundary and the scoped bounds accessor to sync geometry across screens."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 10
@@ -18,37 +18,37 @@ Bounds Transitions animate matched geometry across screens by measuring a source
 
 > If you are specifically looking for true shared element transitions, wait for Reanimated Shared Element Transitions to become production-ready. This package's bounds system is a different approach.
 
-## Recommended Boundary Pattern
+## Boundary Pattern
 
-For most flows, the source should be a `Transition.Boundary.Trigger` and the destination should be a `Transition.Boundary.View`.
+Use `Transition.Boundary` for both interactive and passive boundaries.
+
+When `onPress` is present, the boundary behaves like a pressable source. When `onPress` is omitted, it behaves like a passive measured view.
 
 ```tsx
 // Source screen
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id="hero"
   onPress={() => navigation.navigate("Detail")}
 >
   <Image source={heroImage} style={{ width: 120, height: 160 }} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 
 // Destination screen
-<Transition.Boundary.View id="hero">
+<Transition.Boundary id="hero">
   <Image source={heroImage} style={{ width: "100%", height: 360 }} />
-</Transition.Boundary.View>
+</Transition.Boundary>
 ```
 
-`Boundary.Trigger` is the recommended source owner because it captures bounds before your `onPress` callback runs.
+`Transition.Boundary.View` and `Transition.Boundary.Trigger` still exist as deprecated aliases, but new code should use `Transition.Boundary`.
 
-`Boundary.View` can be used on both sides and the system can auto-measure, but that is a lower-level path and not the default recommendation for navigation-driven flows.
-
-For the high-level `bounds({ id }).navigation.zoom()` helper, the destination can also be source-only. See [Zoom](/navigation-zoom).
+For the high-level `bounds(id).navigation.zoom()` helper, the destination boundary is optional unless the zoom should target a specific destination element. See [Zoom](/navigation-zoom).
 
 ## Nested Measurement with Boundary.Target
 
-Use `Transition.Boundary.Target` when the tappable owner is larger than the visual element you want to measure.
+Use `Transition.Boundary.Target` when the pressable owner is larger than the visual element you want to measure.
 
 ```tsx
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id={item.id}
   anchor="leading"
   scaleMode="uniform"
@@ -62,14 +62,14 @@ Use `Transition.Boundary.Target` when the tappable owner is larger than the visu
   <View style={styles.copy}>
     <Text>{item.title}</Text>
   </View>
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
 This keeps the row as the interaction owner while limiting measurement to the nested artwork.
 
 ## The bounds() Accessor
 
-Inside `screenStyleInterpolator`, `bounds({ ... })` returns style props you can spread directly into a slot.
+Inside `screenStyleInterpolator`, call `bounds(id)` to scope the accessor to one boundary identity.
 
 ```tsx
 screenStyleInterpolator: ({ bounds, progress, focused }) => {
@@ -77,89 +77,110 @@ screenStyleInterpolator: ({ bounds, progress, focused }) => {
 
   return {
     hero: {
-      ...bounds({
-        id: "hero",
-        method: "transform",
-      }),
-      opacity: focused
-        ? interpolate(progress, [0, 1], [0, 1], "clamp")
-        : interpolate(progress, [1, 2], [1, 0], "clamp"),
+      style: {
+        ...bounds("hero").styles({
+          method: "transform",
+        }),
+        opacity: focused
+          ? interpolate(progress, [0, 1], [0, 1], "clamp")
+          : interpolate(progress, [1, 2], [1, 0], "clamp"),
+      },
     },
   };
 };
 ```
 
-That is the low-level API: measure a matching boundary pair, ask `bounds()` for the transform, then combine it with whatever extra styles you want.
+The scoped accessor exposes:
 
-## bounds() Options
+- `bounds(id).styles(options)` for render-ready animated styles
+- `bounds(id).math(options)` for numeric geometry
+- `bounds(id).link(id?)` for inspecting the active source/destination link
+- `bounds(id).navigation.zoom(options)` for the built-in zoom recipe
+- `bounds(id).navigation.reveal(options)` for the built-in reveal recipe
+
+Bound identities can be a string, a number, or an object with `{ id, group }`.
+
+```tsx
+const card = bounds({ group: "gallery", id: item.id });
+const style = card.styles({ method: "size" });
+const link = card.link();
+```
+
+## Bounds Options
+
+Pass identity to `bounds()`, then pass compute options to `styles()` or `math()`.
 
 | Option | Values | Notes |
 | --- | --- | --- |
-| `id` | `string \| number` | Boundary member id |
-| `group` | `string` | Tracks the active member inside a group |
 | `method` | `"transform" \| "size" \| "content"` | Matching strategy |
 | `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Destination target |
 | `anchor` | `"topLeading"` through `"bottomTrailing"` | Matching anchor point |
 | `scaleMode` | `"match" \| "none" \| "uniform"` | Aspect-ratio behavior |
 | `offset` | `{ x?: number; y?: number }` | Add live x/y offsets from gestures, scroll, or animation state |
 | `progress` | `number` | Custom progress driver for the bounds interpolation |
+| `motion` | `BoundsMotion` | Replace the generated transform path without reimplementing measurement |
 | `gestures` | `{ x?: number; y?: number }` | Deprecated alias for `offset` |
-| `raw` | `boolean` | Return raw values instead of style props |
-| `space` | `"relative" \| "absolute"` | `absolute` is mainly for internal navigation helpers |
+| `space` | `"relative" \| "absolute"` | `absolute` is mainly for navigation helpers and custom renderers |
 
-## Raw Bounds
+## Numeric Bounds with math()
+
+Use `styles()` when you want the library to return the final animated style object.
+
+Use `math()` when you want the same measured geometry but need to compose the final style yourself.
 
 ```tsx
-const raw = bounds({
-  id: "hero",
-  method: "transform",
-  raw: true,
-});
+screenStyleInterpolator: ({ bounds, current }) => {
+  "worklet";
+
+  const hero = bounds("hero").math({
+    method: "size",
+    space: "absolute",
+    progress: current.transitionProgress,
+  });
+
+  return {
+    hero: {
+      style: {
+        width: hero.width,
+        height: hero.height,
+        transform: [
+          { translateX: hero.translateX },
+          { translateY: hero.translateY },
+        ],
+      },
+    },
+  };
+};
 ```
 
-By default, `bounds()` returns style props.
+## Zoom and Reveal
 
-When you pass `raw: true`, it returns low-level geometry instead:
-
-- `"transform"` returns `translateX`, `translateY`, `scaleX`, and `scaleY`
-- `"size"` returns `translateX`, `translateY`, `width`, and `height`
-- `"content"` returns `translateX`, `translateY`, and `scale`
-
-## Zoom
-
-For navigation-style bounds transitions, use `navigation.zoom()`:
+For navigation-style bounds transitions, use the navigation helpers:
 
 ```tsx
 screenStyleInterpolator: ({ bounds }) => {
   "worklet";
 
-  return bounds({ id: "hero" }).navigation.zoom();
+  return bounds("hero").navigation.zoom();
 };
 ```
 
-`navigation.zoom()` builds an opinionated layer map for you. It can work with only a source `Transition.Boundary.Trigger`, or with a destination `Transition.Boundary.View` when you want tighter bound-to-bound matching.
-
-For the recommended setup, optional destination patterns, groups guidance, and current caveats, see [Zoom](/navigation-zoom).
-
-## Navigation Mask
-
-If the zoom needs masked reveal behavior, enable `navigationMaskEnabled` on the screen:
+For masked source-to-container transitions, use `navigation.reveal()`:
 
 ```tsx
-<Stack.Screen
-  name="Detail"
-  component={DetailScreen}
-  options={{
-    navigationMaskEnabled: true,
-    screenStyleInterpolator: ({ bounds }) => {
-      "worklet";
-      return bounds({ id: "hero" }).navigation.zoom();
-    },
-  }}
-/>
+screenStyleInterpolator: ({ bounds, active }) => {
+  "worklet";
+
+  const id = active.route.params?.revealId;
+  if (!id) return null;
+
+  return bounds(id).navigation.reveal({
+    borderRadius: 48,
+  });
+};
 ```
 
-Install `@react-native-masked-view/masked-view` when you use `navigationMaskEnabled`.
+See [Zoom](/navigation-zoom) and [Reveal](/reveal) for the full setup.
 
 ## Groups
 
@@ -167,46 +188,79 @@ Install `@react-native-masked-view/masked-view` when you use `navigationMaskEnab
 
 ```tsx
 // Source
-<Transition.Boundary.Trigger group="gallery" id={item.id} onPress={openItem}>
+<Transition.Boundary group="gallery" id={item.id} onPress={openItem}>
   <Image source={item.image} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 
 // Destination
-<Transition.Boundary.View group="gallery" id={item.id}>
+<Transition.Boundary group="gallery" id={item.id}>
   <Image source={item.image} />
-</Transition.Boundary.View>
+</Transition.Boundary>
 ```
 
-The group keeps track of the active member id so the handoff stays aligned as focus moves between items in the same collection.
+The group keeps track of the active member id so the transition stays aligned as focus moves between items in the same collection.
+
+## Live Payload Handoff
+
+Use `handoff` when the same live payload should move between matching boundaries instead of remounting on each screen.
+
+```tsx
+// Source
+<Transition.Boundary id="video" handoff onPress={openPlayer}>
+  <Transition.Boundary.Target style={styles.video}>
+    <VideoView player={player} style={StyleSheet.absoluteFill} />
+  </Transition.Boundary.Target>
+</Transition.Boundary>
+
+// Destination
+<Transition.Boundary id="video" handoff>
+  <Transition.Boundary.Target style={styles.heroVideo} />
+</Transition.Boundary>
+```
+
+Every matching boundary that should participate in the handoff should set `handoff`. The destination defines the receiving bounds; it does not need to render a second copy of the live child.
+
+Use `escapeClipping` when a boundary needs to render outside local clipping or layout constraints during the transition.
+
+```tsx
+<Transition.Boundary
+  id="card"
+  escapeClipping
+  onPress={() => navigation.navigate("Detail")}
+>
+  <Image source={image} style={styles.cardImage} />
+</Transition.Boundary>
+```
+
+`handoff` and `escapeClipping` use `react-native-teleport` under the hood, so apps that use either prop should install `react-native-teleport`.
 
 ## Bounds with Offsets
 
-Because `bounds()` accepts an `offset` option, you can feed any live x/y values into the matched transform.
+Because `styles()` and `math()` accept an `offset` option, you can feed any live x/y values into the matched transform.
 
 ```tsx
 screenStyleInterpolator: ({ bounds, active }) => {
   "worklet";
 
   return {
-    hero: bounds({
-      id: "hero",
-      offset: {
-        x: active.gesture.x,
-        y: active.gesture.y,
-      },
-      target: "fullscreen",
-    }),
+    hero: {
+      style: bounds("hero").styles({
+        offset: {
+          x: active.gesture.x,
+          y: active.gesture.y,
+        },
+        target: "fullscreen",
+      }),
+    },
   };
 };
 ```
 
 The older `gestures` option still works as a deprecated alias. Use `offset` for new code because the values can come from gestures, scroll, animation state, or any other x/y source.
 
-This is the pattern used for the gesture-driven bounds example in the e2e app.
+## Bounds with a Custom Progress Driver
 
-## Bounds with a custom progress driver
-
-By default, `bounds()` uses the visual frame progress, which includes live gesture movement.
+By default, bounds use the visual frame progress, which includes live gesture movement.
 
 Pass `transitionProgress` when the geometry should stay on the committed transition path while you layer gesture motion separately:
 
@@ -215,51 +269,33 @@ screenStyleInterpolator: ({ bounds, current }) => {
   "worklet";
 
   return {
-    hero: bounds({
-      id: "hero",
-      progress: current.transitionProgress,
-      offset: {
-        x: current.gesture.x,
-        y: current.gesture.y,
-      },
-    }),
+    hero: {
+      style: bounds("hero").styles({
+        progress: current.transitionProgress,
+        offset: {
+          x: current.gesture.x,
+          y: current.gesture.y,
+        },
+      }),
+    },
   };
 };
 ```
 
 This is the replacement for older `gestureProgressMode: "freeform"` patterns in custom bounds animations.
 
-## Snapshots and Low-Level Helpers
+## Link Inspection
 
-You can read a stored measurement snapshot directly:
+Use `link()` when you need to inspect the active source/destination pair.
 
 ```tsx
-const hero = bounds({ id: "hero" });
-const measured = hero.getMeasured(current.route.key);
-const link = hero.getLink();
+const hero = bounds("hero");
+const link = hero.link();
 const initialSource = link?.initialSource;
 const initialDestination = link?.initialDestination;
-const absoluteSize = link?.compute({
-  method: "size",
-  space: "absolute",
-  target: "fullscreen",
-  raw: true,
-});
 ```
 
-Scoped bounds results expose:
-
-- `getMeasured(key)` to inspect a measured entry for this bound
-- `getLink()` to inspect the current source and destination pair
-- `getLink()?.initialSource` and `getLink()?.initialDestination` to inspect the first truthy source and destination pair captured for that link
-- `getLink()?.compute(options)` to compute raw or style bounds from the current scoped pair without repeating the `id`
-- `getSnapshot(key)` as a deprecated alias for `getMeasured(key)`
-- `interpolateStyle(property, fallback?)`
-- `interpolateBounds(property, fallbackOrTargetKey?, fallback?)`
-
-The root accessor still exposes the same helpers with an explicit id, such as `bounds.getLink("hero")`, when that reads better.
-
-Use those helpers when you want to build custom bounds-driven choreography on top of the same source/destination link data.
+Most animations should use `styles()`, `math()`, or the navigation helpers instead of reading the link directly. `link()` is useful when you are building custom choreography on top of the same measured pair.
 
 ## Troubleshooting
 
@@ -269,13 +305,13 @@ Source, destination, and interpolator lookups must all resolve to the same bound
 
 ```tsx
 // Source
-<Transition.Boundary.Trigger id="hero">...</Transition.Boundary.Trigger>
+<Transition.Boundary id="hero">...</Transition.Boundary>
 
 // Destination
-<Transition.Boundary.View id="hero">...</Transition.Boundary.View>
+<Transition.Boundary id="hero">...</Transition.Boundary>
 
 // Interpolator
-bounds({ id: "hero" })
+bounds("hero")
 ```
 
 If you use groups, the same rule applies to the `group` + `id` pair.
