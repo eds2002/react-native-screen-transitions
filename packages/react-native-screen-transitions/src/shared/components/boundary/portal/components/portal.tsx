@@ -16,6 +16,7 @@ import Animated, {
 	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
+import { EPSILON } from "../../../../constants";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../providers/screen/styles";
 import { useRegisteredScreenSlots } from "../../../../providers/screen/styles/stores/slot-references.store";
@@ -127,6 +128,14 @@ export const Portal = memo(function Portal({
 	const settledHostAnimating = AnimationStore.getValue(
 		settledHostScreenKey ?? currentScreenKey,
 		"progressAnimating",
+	);
+	const settledHostClosing = AnimationStore.getValue(
+		settledHostScreenKey ?? currentScreenKey,
+		"closing",
+	);
+	const settledHostVisualProgress = AnimationStore.getValue(
+		settledHostScreenKey ?? currentScreenKey,
+		"visualProgress",
 	);
 
 	const activeHostKey = useActiveHostKey(targetScreenKey);
@@ -247,6 +256,9 @@ export const Portal = memo(function Portal({
 
 			return resolveMatchedScreenPortalOwnership({
 				boundaryId,
+				isSettledHostClosingComplete:
+					!!settledHostClosing.get() &&
+					settledHostVisualProgress.get() <= EPSILON,
 				isSettledHostReady:
 					settledHostProgress.get() === 1 && settledHostAnimating.get() === 0,
 				pairsState: pairs.get(),
@@ -269,10 +281,11 @@ export const Portal = memo(function Portal({
 			} else {
 				const hostScreenKey =
 					signal.status === "complete" ? signal.hostScreenKey : null;
-				const previousOwnerPairKey =
-					previousSignal?.status === "complete"
-						? previousSignal.ownerPairKey
-						: undefined;
+				let previousOwnerPairKey: string | undefined;
+
+				if (previousSignal?.status === "complete") {
+					previousOwnerPairKey = previousSignal.ownerPairKey ?? undefined;
+				}
 				const canSwitchImmediately =
 					canSwitchBoundaryLocalPortalHostImmediately({
 						hostScreenKey,

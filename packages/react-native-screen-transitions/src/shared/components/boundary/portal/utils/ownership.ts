@@ -1,4 +1,5 @@
 import {
+	getDestinationScreenKeyFromPairKey,
 	getLinkKeyFromTag,
 	getLink as getPairLink,
 	getSourceScreenKeyFromPairKey,
@@ -43,6 +44,32 @@ export const usesScreenPortalHost = (
 	return link?.source?.portalHost === "screen";
 };
 
+const isReturningToPreviousSourceHost = ({
+	hostScreenKey,
+	ownerPairKey,
+	previousOwnerPairKey,
+}: {
+	hostScreenKey: ScreenKey;
+	ownerPairKey: ScreenPairKey;
+	previousOwnerPairKey: ScreenPairKey;
+}) => {
+	"worklet";
+	const previousSourceScreenKey =
+		getSourceScreenKeyFromPairKey(previousOwnerPairKey);
+	const previousDestinationScreenKey =
+		getDestinationScreenKeyFromPairKey(previousOwnerPairKey);
+	const ownerDestinationScreenKey =
+		getDestinationScreenKeyFromPairKey(ownerPairKey);
+
+	return (
+		previousDestinationScreenKey !== "" &&
+		ownerDestinationScreenKey !== "" &&
+		previousDestinationScreenKey !== previousSourceScreenKey &&
+		ownerDestinationScreenKey === previousSourceScreenKey &&
+		hostScreenKey === previousSourceScreenKey
+	);
+};
+
 export const canSwitchBoundaryLocalPortalHostImmediately = ({
 	hostScreenKey,
 	ownerPairKey,
@@ -53,13 +80,23 @@ export const canSwitchBoundaryLocalPortalHostImmediately = ({
 	previousOwnerPairKey?: ScreenPairKey;
 }) => {
 	"worklet";
-	return (
-		!!hostScreenKey &&
-		!!ownerPairKey &&
-		!!previousOwnerPairKey &&
-		ownerPairKey === previousOwnerPairKey &&
-		hostScreenKey === getSourceScreenKeyFromPairKey(previousOwnerPairKey)
-	);
+	if (!hostScreenKey || !ownerPairKey) {
+		return false;
+	}
+
+	if (hostScreenKey === getSourceScreenKeyFromPairKey(ownerPairKey)) {
+		return true;
+	}
+
+	if (!previousOwnerPairKey) {
+		return false;
+	}
+
+	return isReturningToPreviousSourceHost({
+		hostScreenKey,
+		ownerPairKey,
+		previousOwnerPairKey,
+	});
 };
 
 const isActivePortalLink = ({
@@ -113,6 +150,7 @@ const resolvePortalOwnerScreenKey = ({
 
 export const resolveMatchedScreenPortalOwnership = ({
 	boundaryId,
+	isSettledHostClosingComplete = false,
 	isSettledHostReady = false,
 	pairsState,
 	portalHost,
@@ -120,6 +158,7 @@ export const resolveMatchedScreenPortalOwnership = ({
 	sourcePairKey,
 }: {
 	boundaryId: string;
+	isSettledHostClosingComplete?: boolean;
 	isSettledHostReady?: boolean;
 	pairsState: LinkPairsState;
 	portalHost: BoundsPortalHost;
@@ -157,6 +196,7 @@ export const resolveMatchedScreenPortalOwnership = ({
 
 	let hostScreenKey = link.destination.screenKey;
 	let ownerPairKey = sourcePairKey;
+	let previousOwnerPairKey: ScreenPairKey | null = null;
 	const seenScreenKeys: ScreenKey[] = [
 		getSourceScreenKeyFromPairKey(sourcePairKey),
 		hostScreenKey,
@@ -198,6 +238,7 @@ export const resolveMatchedScreenPortalOwnership = ({
 
 			const nextHostScreenKey = candidate.destination.screenKey;
 
+			previousOwnerPairKey = ownerPairKey;
 			ownerPairKey = candidatePairKey;
 			hostScreenKey = nextHostScreenKey;
 
@@ -229,6 +270,15 @@ export const resolveMatchedScreenPortalOwnership = ({
 		}
 
 		break;
+	}
+
+	if (
+		portalHost === "boundary-local" &&
+		isSettledHostClosingComplete &&
+		settledHostScreenKey === hostScreenKey &&
+		previousOwnerPairKey
+	) {
+		hostScreenKey = getSourceScreenKeyFromPairKey(ownerPairKey);
 	}
 
 	const ownerLink = getPairLink(pairsState, ownerPairKey, linkKey);
