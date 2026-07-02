@@ -220,7 +220,8 @@ export default function StyleIdBoundsIndex() {
 								style={[styles.gridCell, { width: gridCellWidth }]}
 								onPress={() => openDetail(stackType, tag, item)}
 								id={tag}
-								// escapeClipping
+								escapeClipping
+								// handoff
 							>
 								<Transition.Boundary.Target
 									style={[styles.cover, { backgroundColor: theme.card }]}
