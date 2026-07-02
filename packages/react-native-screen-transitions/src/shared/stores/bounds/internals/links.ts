@@ -12,13 +12,12 @@ import {
 	getSource as getPairSource,
 } from "../helpers/link-pairs.helpers";
 import type {
-	BoundsPortalHost,
+	BoundaryRuntimeFlags,
 	GroupKey,
 	LinkKey,
 	LinkPairsState,
 	ScreenKey,
 	ScreenPairKey,
-	SourceHostRef,
 	SourceTagLinkSide,
 	TagID,
 	TagLink,
@@ -170,12 +169,15 @@ const createLinkSide = (
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps,
+	runtimeFlags: BoundaryRuntimeFlags = {},
 ) => {
 	"worklet";
 	return {
 		screenKey,
 		bounds,
 		styles: snapshotStyles(styles),
+		handoff: runtimeFlags.handoff ? true : undefined,
+		escapeClipping: runtimeFlags.escapeClipping ? true : undefined,
 	};
 };
 
@@ -249,8 +251,7 @@ function setSource(
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
 	group?: GroupKey,
-	portalHost?: BoundsPortalHost,
-	sourceHost?: SourceHostRef,
+	runtimeFlags: BoundaryRuntimeFlags = {},
 ) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
@@ -261,12 +262,8 @@ function setSource(
 
 		const existingLink = pairLinks[linkKey];
 
-		// Refresh paths may re-measure the source without portal context;
-		// keep the previously recorded host in that case.
 		const source: SourceTagLinkSide = {
-			...createLinkSide(screenKey, bounds, styles),
-			portalHost: portalHost ?? existingLink?.source?.portalHost,
-			sourceHost: sourceHost ?? existingLink?.source?.sourceHost,
+			...createLinkSide(screenKey, bounds, styles, runtimeFlags),
 		};
 		const link =
 			existingLink ??

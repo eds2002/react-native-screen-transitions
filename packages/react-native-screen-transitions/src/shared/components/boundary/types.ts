@@ -28,8 +28,21 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 	 */
 	enabled?: boolean;
 	/**
-	 * Renders this boundary target through a layout-preserving portal when
-	 * `react-native-teleport` is installed.
+	 * Teleports this boundary's live payload to the next matching boundary while
+	 * a transition is active.
+	 *
+	 * @default false
+	 */
+	handoff?: boolean;
+	/**
+	 * Renders this boundary through the current screen's portal host while a
+	 * transition is active so the payload can escape clipping/layout constraints.
+	 *
+	 * @default false
+	 */
+	escapeClipping?: boolean;
+	/**
+	 * @deprecated Use `handoff` and `escapeClipping`.
 	 *
 	 * @default false
 	 */

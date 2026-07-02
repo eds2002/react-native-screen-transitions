@@ -23,22 +23,22 @@ describe("portal teleport control", () => {
 	it("attaches only portal-enabled boundaries", () => {
 		expect(
 			shouldAttachBoundaryPortal({
-				portalHost: "boundary-local",
+				enabled: true,
 			}),
 		).toBe(true);
-		expect(shouldAttachBoundaryPortal({})).toBe(false);
+		expect(shouldAttachBoundaryPortal({ enabled: false })).toBe(false);
 	});
 
 	it("lets slot props detach a portal-enabled boundary", () => {
 		expect(
 			shouldAttachBoundaryPortal({
-				portalHost: "screen",
+				enabled: true,
 				teleport: false,
 			}),
 		).toBe(false);
 		expect(
 			shouldAttachBoundaryPortal({
-				portalHost: "screen",
+				enabled: true,
 				teleport: { enabled: false },
 			}),
 		).toBe(false);

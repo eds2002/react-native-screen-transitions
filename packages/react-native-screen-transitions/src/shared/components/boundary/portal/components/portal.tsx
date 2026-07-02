@@ -22,12 +22,8 @@ import { useScreenSlots } from "../../../../providers/screen/styles";
 import { useRegisteredScreenSlots } from "../../../../providers/screen/styles/stores/slot-references.store";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { pairs } from "../../../../stores/bounds/internals/state";
-import type { BoundsPortalHost } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
-import {
-	getHostCapturesScroll,
-	useActiveHostKey,
-} from "../stores/host-registry.store";
+import { useActiveHostKey } from "../stores/host-registry.store";
 import {
 	dropStalePortalBoundaryHosts,
 	mountPortalBoundaryHost,
@@ -40,9 +36,9 @@ import {
 	PORTAL_HOST_NAME_RESET_VALUE,
 } from "../utils/naming";
 import {
-	canSwitchBoundaryLocalPortalHostImmediately,
+	canSwitchBoundaryLocalHandoffImmediately,
 	type PortalOwnershipSignal,
-	resolveMatchedScreenPortalOwnership,
+	resolveBoundaryPortalOwnership,
 } from "../utils/ownership";
 import { shallowEqual } from "../utils/shallow-equal";
 import { shouldAttachBoundaryPortal } from "../utils/teleport-control";
@@ -64,7 +60,8 @@ const AnimatedNativePortal = NativePortal
 interface PortalProps {
 	id?: string;
 	children: ReactNode;
-	portalHost?: BoundsPortalHost;
+	handoff?: boolean;
+	escapeClipping?: boolean;
 	/**
 	 * Ref to the layout-preserving placeholder wrapper. Boundaries measure
 	 * this instead of teleported content — the placeholder keeps the source
@@ -78,7 +75,8 @@ interface PortalProps {
 export const Portal = memo(function Portal({
 	id,
 	children,
-	portalHost,
+	handoff = false,
+	escapeClipping = false,
 	placeholderRef,
 	placeholderChildren,
 }: PortalProps) {
@@ -86,11 +84,11 @@ export const Portal = memo(function Portal({
 	// `id` to name the boundary host. Missing either degrades to inline rendering
 	// (the `return children` path below).
 	const isPortalEnabled =
-		!!portalHost && isTeleportAvailable && id !== undefined;
-	if (__DEV__ && portalHost && id === undefined) {
+		(handoff || escapeClipping) && isTeleportAvailable && id !== undefined;
+	if (__DEV__ && (handoff || escapeClipping) && id === undefined) {
 		logger.warnOnce(
 			"portal:missing-id",
-			"A portal-enabled boundary was rendered without an id; rendering inline.",
+			"A handoff or escapeClipping boundary was rendered without an id; rendering inline.",
 		);
 	}
 	const boundaryId = id ?? "";
@@ -137,12 +135,11 @@ export const Portal = memo(function Portal({
 		"visualProgress",
 	);
 
-	const activeHostKey = useActiveHostKey(targetScreenKey);
-	const activeHostCapturesScroll = activeHostKey
-		? getHostCapturesScroll(activeHostKey)
-		: false;
+	const activeHostKey = useActiveHostKey(
+		escapeClipping ? targetScreenKey : null,
+	);
 	const boundaryLocalHostName =
-		portalHost === "boundary-local" && targetScreenKey
+		handoff && !escapeClipping && targetScreenKey
 			? createBoundaryLocalPortalHostName(targetScreenKey, boundaryId)
 			: null;
 
@@ -191,7 +188,7 @@ export const Portal = memo(function Portal({
 			return;
 		}
 
-		if (!activeHostKey) {
+		if (!escapeClipping || !activeHostKey) {
 			requestedPortalHostName.set(null);
 			visiblePortalHostName.set(null);
 			unmountPortalBoundaryHost(boundaryId);
@@ -206,7 +203,7 @@ export const Portal = memo(function Portal({
 
 		mountPortalBoundaryHost({
 			boundaryId,
-			capturesScroll: activeHostCapturesScroll,
+			escapeClipping,
 			hostKey: activeHostKey,
 			localStylesMaps: activeLocalStylesMaps,
 			pairKey: ownership.ownerPairKey,
@@ -221,8 +218,8 @@ export const Portal = memo(function Portal({
 		requestedPortalHostName.set(portalHostName);
 	}, [
 		activeHostKey,
-		activeHostCapturesScroll,
 		boundaryId,
+		escapeClipping,
 		isPortalEnabled,
 		activeLocalStylesMaps,
 		activeSlotsMap,
@@ -253,15 +250,17 @@ export const Portal = memo(function Portal({
 				};
 			}
 
-			return resolveMatchedScreenPortalOwnership({
+			return resolveBoundaryPortalOwnership({
 				boundaryId,
+				currentScreenKey,
+				escapeClipping,
+				handoff,
 				isSettledHostClosingComplete:
 					!!settledHostClosing.get() &&
 					settledHostVisualProgress.get() <= EPSILON,
 				isSettledHostReady:
 					settledHostProgress.get() === 1 && settledHostAnimating.get() === 0,
 				pairsState: pairs.get(),
-				portalHost,
 				settledHostScreenKey,
 				sourcePairKey,
 			});
@@ -272,7 +271,7 @@ export const Portal = memo(function Portal({
 				return;
 			}
 
-			if (portalHost !== "boundary-local") {
+			if (!handoff || escapeClipping) {
 				canSwitchPortalHostImmediately.set(0);
 			} else if (signal.status === "pending") {
 				canSwitchPortalHostImmediately.set(0);
@@ -285,13 +284,12 @@ export const Portal = memo(function Portal({
 				if (previousSignal?.status === "complete") {
 					previousOwnerPairKey = previousSignal.ownerPairKey ?? undefined;
 				}
-				const canSwitchImmediately =
-					canSwitchBoundaryLocalPortalHostImmediately({
-						hostScreenKey,
-						ownerPairKey:
-							signal.status === "complete" ? signal.ownerPairKey : undefined,
-						previousOwnerPairKey,
-					});
+				const canSwitchImmediately = canSwitchBoundaryLocalHandoffImmediately({
+					hostScreenKey,
+					ownerPairKey:
+						signal.status === "complete" ? signal.ownerPairKey : undefined,
+					previousOwnerPairKey,
+				});
 
 				canSwitchPortalHostImmediately.set(canSwitchImmediately ? 1 : 0);
 
@@ -319,7 +317,7 @@ export const Portal = memo(function Portal({
 			const slot = activeSlotsMap.get()[boundaryId];
 			const teleport = slot?.props?.teleport;
 			const shouldTeleport = shouldAttachBoundaryPortal({
-				portalHost,
+				enabled: isPortalEnabled,
 				teleport,
 			});
 			const requestedName = requestedPortalHostName.get();
@@ -369,15 +367,15 @@ export const Portal = memo(function Portal({
 		const slot = activeSlotsMap.get()[boundaryId];
 		const { teleport, ...slotProps } = slot?.props ?? {};
 		const shouldTeleport = shouldAttachBoundaryPortal({
-			portalHost,
+			enabled: isPortalEnabled,
 			teleport,
 		});
 		const visibleName = visiblePortalHostName.get();
 
 		return {
 			// Preserve portal slot props from the interpolator while keeping
-			// hostName owned by the attachment gate below. Matched-screen handoff
-			// waits until the destination interpolator owns styles for the same host;
+			// hostName owned by the attachment gate below. Handoff
+			// waits until the receiving interpolator owns styles for the same host;
 			// after that, it stays attached until teleport is disabled or retargeted.
 			...slotProps,
 			hostName:

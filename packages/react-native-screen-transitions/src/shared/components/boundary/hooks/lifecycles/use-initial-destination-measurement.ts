@@ -5,27 +5,27 @@ import {
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
-import { AnimationStore } from "../../../stores/animation.store";
-import { getSourceScreenKeyFromPairKey } from "../../../stores/bounds/helpers/link-pairs.helpers";
-import { getEntry } from "../../../stores/bounds/internals/entries";
+import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
+import { AnimationStore } from "../../../../stores/animation.store";
+import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import { getEntry } from "../../../../stores/bounds/internals/entries";
 import {
 	getDestination,
 	getLink,
-} from "../../../stores/bounds/internals/links";
-import { pairs } from "../../../stores/bounds/internals/state";
-import type { BoundTag } from "../../../stores/bounds/types";
+} from "../../../../stores/bounds/internals/links";
+import { pairs } from "../../../../stores/bounds/internals/state";
+import type { BoundTag } from "../../../../stores/bounds/types";
 import {
 	LifecycleTransitionRequestKind,
 	SystemStore,
-} from "../../../stores/system.store";
-import { logger } from "../../../utils/logger";
+} from "../../../../stores/system.store";
+import { logger } from "../../../../utils/logger";
 import {
-	hasMatchedScreenPortalContinuation,
-	usesScreenPortalHost,
-} from "../portal/utils/ownership";
-import type { MeasureBoundary } from "../types";
-import { getInitialDestinationMeasurePairKey } from "../utils/destination-signals";
+	hasHandoffEscapeContinuation,
+	usesEscapeClippingHost,
+} from "../../portal/utils/ownership";
+import type { MeasureBoundary } from "../../types";
+import { getInitialDestinationMeasurePairKey } from "../../utils/destination-signals";
 
 const VIEWPORT_RETRY_DELAY_MS = 100;
 /**
@@ -153,23 +153,21 @@ export const useInitialDestinationMeasurement = ({
 				const link = getLink(measurePairKey, linkKey);
 				const sourceScreenKey = getSourceScreenKeyFromPairKey(measurePairKey);
 				const sourceEntry = getEntry(tag, sourceScreenKey);
-				const sourceEntryUsesScreenPortalHost =
-					sourceEntry?.portalHost === "screen";
-				const shouldWaitForMatchedScreenPortal =
-					usesScreenPortalHost(link) ||
-					sourceEntryUsesScreenPortalHost ||
-					hasMatchedScreenPortalContinuation({
+				const sourceEntryUsesDestinationEscapeHost =
+					sourceEntry?.handoff === true && sourceEntry.escapeClipping === true;
+				const shouldWaitForEscapeClippingHost =
+					usesEscapeClippingHost(link) ||
+					sourceEntryUsesDestinationEscapeHost ||
+					hasHandoffEscapeContinuation({
 						linkKey,
 						linkState,
 						sourceScreenKey,
 					});
 
-				if (shouldWaitForMatchedScreenPortal) {
-					// Matched-screen portals have a second readiness phase after
-					// destination measurement. The destination boundary can measure
-					// before the destination-first source capture completes and before
-					// its portal host has rendered. Keep the lifecycle gate blocked here;
-					// the portal host layout is the visual commit point that releases it.
+				if (shouldWaitForEscapeClippingHost) {
+					// Screen-level escape has a second readiness phase after destination
+					// measurement: the host must commit before the transition starts, or
+					// the payload can disappear for a frame.
 					return;
 				}
 				releaseLifecycleStartBlock();

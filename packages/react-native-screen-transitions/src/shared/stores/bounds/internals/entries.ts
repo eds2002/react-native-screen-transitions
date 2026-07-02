@@ -44,10 +44,16 @@ const applyEntryPatch = (entry: Entry, patch: EntryPatch) => {
 		entry.boundaryConfig = patch.boundaryConfig;
 	}
 
-	if (patch.portalHost === null) {
-		delete entry.portalHost;
-	} else if (patch.portalHost !== undefined) {
-		entry.portalHost = patch.portalHost;
+	if (patch.handoff === null) {
+		delete entry.handoff;
+	} else if (patch.handoff !== undefined) {
+		entry.handoff = patch.handoff;
+	}
+
+	if (patch.escapeClipping === null) {
+		delete entry.escapeClipping;
+	} else if (patch.escapeClipping !== undefined) {
+		entry.escapeClipping = patch.escapeClipping;
 	}
 };
 

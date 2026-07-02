@@ -28,6 +28,22 @@ interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;
 }
 
+const hasRenderableChildren = (children: ReactNode): boolean => {
+	if (
+		children === null ||
+		children === undefined ||
+		typeof children === "boolean"
+	) {
+		return false;
+	}
+
+	if (Array.isArray(children)) {
+		return children.some(hasRenderableChildren);
+	}
+
+	return true;
+};
+
 export function createBoundaryComponent<P extends object>(
 	Wrapped: ComponentType<P>,
 	options: CreateBoundaryComponentOptions = {},
@@ -51,6 +67,8 @@ export function createBoundaryComponent<P extends object>(
 			method,
 			style,
 			onPress,
+			handoff,
+			escapeClipping,
 			portal: portalProp,
 			children,
 			...rest
@@ -60,7 +78,11 @@ export function createBoundaryComponent<P extends object>(
 			() => createBoundTag(String(id), group),
 			[id, group],
 		);
-		const portalHost = resolveBoundaryPortal(portalProp);
+		const portalRuntime = resolveBoundaryPortal({
+			portal: portalProp,
+			handoff,
+			escapeClipping,
+		});
 
 		const currentScreenKey = useDescriptorsStore(
 			(s) => s.derivations.currentScreenKey,
@@ -72,6 +94,8 @@ export function createBoundaryComponent<P extends object>(
 		// Associated slot styles attach whenever the boundary is enabled,
 		// independent of whether an interpolator is configured for this transition.
 		const shouldAttachAssociatedStyles = enabled;
+		const canPortalRoot =
+			portalRuntime.enabled && hasRenderableChildren(children);
 
 		const associatedStyles = useComposedSlotStyles(boundTag.tag, style);
 		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
@@ -85,8 +109,8 @@ export function createBoundaryComponent<P extends object>(
 			targetPreparedStyles,
 		} = useBoundaryRootState({
 			boundTag,
-			portalHost,
-			rootMeasurementRef: portalHost ? rootPlaceholderRef : undefined,
+			portalRuntime,
+			rootMeasurementRef: canPortalRoot ? rootPlaceholderRef : undefined,
 		});
 
 		useBoundaryMeasurement({
@@ -97,17 +121,21 @@ export function createBoundaryComponent<P extends object>(
 			measuredRef,
 			style,
 			targetPreparedStyles,
-			portalHost,
+			handoff: portalRuntime.handoff,
+			escapeClipping: portalRuntime.escapeClipping,
 			config: { anchor, scaleMode, target, method },
 		});
 
 		useImperativeHandle(forwardedRef, () => ref.current as any, [ref]);
 
-		const shouldPortalRoot = !!portalHost && !hasActiveTarget;
+		const shouldPortalRoot = canPortalRoot && !hasActiveTarget;
 		// A nested active target takes the full associated style, so the root keeps
 		// only its stacking context. Without a nested target, a portal'd root is the
 		// target, so its associated style is applied through the portal host instead
 		// of inline on the teleported element.
+		// Host-only handoff receivers still need the associated style: their local
+		// portal host is absolute-filled inside this root, so the root is the visual
+		// frame that animates the received payload.
 		const attachedStyle = shouldAttachAssociatedStyles
 			? hasActiveTarget
 				? associatedStackingStyles
@@ -120,7 +148,7 @@ export function createBoundaryComponent<P extends object>(
 		const localPortalHost = (
 			<BoundaryLocalPortalHost
 				boundaryId={boundTag.tag}
-				enabled={enabled}
+				enabled={enabled && portalRuntime.handoff}
 				screenKey={currentScreenKey}
 			/>
 		);
@@ -147,9 +175,12 @@ export function createBoundaryComponent<P extends object>(
 				{shouldPortalRoot ? (
 					<Portal
 						id={boundTag.tag}
-						portalHost={portalHost}
+						handoff={portalRuntime.handoff}
+						escapeClipping={portalRuntime.escapeClipping}
 						placeholderRef={rootPlaceholderRef}
-						placeholderChildren={localPortalHost}
+						placeholderChildren={
+							portalRuntime.handoff ? localPortalHost : undefined
+						}
 					>
 						{boundaryRoot}
 					</Portal>

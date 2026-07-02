@@ -9,9 +9,7 @@ import { createScreenPairKey } from "../../../../stores/bounds/helpers/link-pair
 import { requestSourceMeasure } from "../../../../stores/bounds/internals/links";
 import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
 import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
-import { getClampedScrollAxisDelta } from "../../../../stores/scroll.store";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
-import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import type { Layout } from "../../../../types/screen.types";
 import type {
 	BoundId,
@@ -31,49 +29,6 @@ import {
 	type ElementComposeParams,
 } from "./composers";
 import { attachBoundsLocalTransform } from "./local-transform";
-
-const getBoundsScrollSnapshot = (
-	bounds: MeasuredDimensions | null,
-): ScrollMetadataState | null => {
-	"worklet";
-	return (
-		(bounds as { scroll?: ScrollMetadataState | null } | null)?.scroll ?? null
-	);
-};
-
-const getScreenScrollMetadata = (
-	screenKey: string | null,
-	previous: ScreenTransitionState | undefined,
-	current: ScreenTransitionState | undefined,
-	next: ScreenTransitionState | undefined,
-): ScrollMetadataState | null => {
-	"worklet";
-	if (!screenKey) return null;
-	if (previous?.route.key === screenKey)
-		return previous.layouts?.scroll ?? null;
-	if (current?.route.key === screenKey) return current.layouts?.scroll ?? null;
-	if (next?.route.key === screenKey) return next.layouts?.scroll ?? null;
-	return null;
-};
-
-const shiftBounds = (
-	bounds: MeasuredDimensions,
-	dx: number,
-	dy: number,
-): MeasuredDimensions => {
-	"worklet";
-	if (dx === 0 && dy === 0) {
-		return bounds;
-	}
-
-	return {
-		...bounds,
-		x: bounds.x + dx,
-		y: bounds.y + dy,
-		pageX: bounds.pageX + dx,
-		pageY: bounds.pageY + dy,
-	};
-};
 
 const resolveStartEnd = (params: {
 	id: BoundId;
@@ -145,51 +100,7 @@ const resolveStartEnd = (params: {
 		};
 	}
 
-	/**
-	 * Matched-screen portal continuity: while source content physically renders
-	 * in the matched screen's host, the visual source endpoint still belongs to
-	 * the source screen. If that source originated in a scroll-scoped host, keep
-	 * the start rect tied to the live source placeholder. Destination movement is
-	 * represented by the chosen portal host itself: root hosts float, nested hosts
-	 * scroll naturally.
-	 */
-	const shouldTrackTeleportedSourceScroll =
-		resolvedPair.sourcePortalHost !== undefined &&
-		!!currentScreenKey &&
-		currentScreenKey === resolvedPair.sourceScreenKey &&
-		!!resolvedPair.destinationScreenKey &&
-		currentScreenKey !== resolvedPair.destinationScreenKey &&
-		params.computeOptions.method !== "content" &&
-		resolvedPair.sourceHost?.capturesScroll === true;
-
-	let sourceScrollShiftX = 0;
-	let sourceScrollShiftY = 0;
-
-	if (shouldTrackTeleportedSourceScroll) {
-		const capturedSourceScroll = getBoundsScrollSnapshot(sourceBounds);
-		const liveSourceScroll = getScreenScrollMetadata(
-			resolvedPair.sourceScreenKey,
-			params.previous,
-			params.current,
-			params.next,
-		);
-		sourceScrollShiftX = getClampedScrollAxisDelta(
-			liveSourceScroll,
-			capturedSourceScroll,
-			"horizontal",
-		);
-		sourceScrollShiftY = getClampedScrollAxisDelta(
-			liveSourceScroll,
-			capturedSourceScroll,
-			"vertical",
-		);
-	}
-
-	const start = shiftBounds(
-		sourceBounds,
-		-sourceScrollShiftX,
-		-sourceScrollShiftY,
-	);
+	const start = sourceBounds;
 	let end = destinationBounds ?? fullscreen;
 
 	if (isFullscreenTarget) {

@@ -1,10 +1,10 @@
 import { useAnimatedReaction } from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../providers/screen/descriptors";
-import { AnimationStore } from "../../../stores/animation.store";
-import { pairs } from "../../../stores/bounds/internals/state";
-import type { BoundTag } from "../../../stores/bounds/types";
-import type { MeasureBoundary } from "../types";
-import { getRefreshBoundarySignal } from "../utils/refresh-signals";
+import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
+import { AnimationStore } from "../../../../stores/animation.store";
+import { pairs } from "../../../../stores/bounds/internals/state";
+import type { BoundTag } from "../../../../stores/bounds/types";
+import type { MeasureBoundary } from "../../types";
+import { getRefreshBoundarySignal } from "../../utils/refresh-signals";
 
 interface UseRefreshBoundaryParams {
 	enabled: boolean;

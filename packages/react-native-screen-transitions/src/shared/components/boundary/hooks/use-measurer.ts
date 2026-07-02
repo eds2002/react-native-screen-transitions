@@ -8,10 +8,9 @@ import {
 } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
 import { useOriginContext } from "../../../providers/screen/origin.provider";
-import type { BoundsPortalHost, BoundTag } from "../../../stores/bounds/types";
+import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
-import { getActiveScrollHost } from "../portal/stores/host-registry.store";
 import type { MeasureBoundary } from "../types";
 import {
 	attachScrollSnapshotToMeasuredBounds,
@@ -26,7 +25,8 @@ interface UseMeasurerParams {
 	currentScreenKey: string;
 	preparedStyles: StyleProps;
 	measuredAnimatedRef: AnimatedRef<View>;
-	portalHost?: BoundsPortalHost;
+	handoff: boolean;
+	escapeClipping: boolean;
 }
 
 export const useMeasurer = ({
@@ -35,7 +35,8 @@ export const useMeasurer = ({
 	currentScreenKey,
 	preparedStyles,
 	measuredAnimatedRef,
-	portalHost,
+	handoff,
+	escapeClipping,
 }: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -91,10 +92,6 @@ export const useMeasurer = ({
 				normalizedMeasured,
 				scrollMetadata.get(),
 			);
-			const sourceHost =
-				target.type === "source"
-					? (getActiveScrollHost(currentScreenKey) ?? undefined)
-					: undefined;
 
 			applyMeasuredBoundsWrites({
 				entryTag: boundTag.tag,
@@ -104,8 +101,8 @@ export const useMeasurer = ({
 				measured: measuredWithScroll,
 				preparedStyles,
 				linkWrite: target,
-				portalHost,
-				sourceHost,
+				handoff,
+				escapeClipping,
 			});
 		},
 		[
@@ -114,7 +111,8 @@ export const useMeasurer = ({
 			currentScreenKey,
 			preparedStyles,
 			measuredAnimatedRef,
-			portalHost,
+			handoff,
+			escapeClipping,
 			viewportWidth,
 			viewportHeight,
 			scrollState,

@@ -5,7 +5,6 @@ import {
 	getSourceScreenKeyFromPairKey,
 } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import type {
-	BoundsPortalHost,
 	LinkKey,
 	LinkPairsState,
 	ScreenKey,
@@ -37,11 +36,11 @@ const hasSeenScreenKey = (screenKeys: ScreenKey[], screenKey: ScreenKey) => {
 	return false;
 };
 
-export const usesScreenPortalHost = (
+export const usesEscapeClippingHost = (
 	link: TagLink | null | undefined,
 ): boolean => {
 	"worklet";
-	return link?.source?.portalHost === "screen";
+	return link?.source?.handoff === true && link.source.escapeClipping === true;
 };
 
 const isReturningToPreviousSourceHost = ({
@@ -70,7 +69,7 @@ const isReturningToPreviousSourceHost = ({
 	);
 };
 
-export const canSwitchBoundaryLocalPortalHostImmediately = ({
+export const canSwitchBoundaryLocalHandoffImmediately = ({
 	hostScreenKey,
 	ownerPairKey,
 	previousOwnerPairKey,
@@ -99,7 +98,7 @@ export const canSwitchBoundaryLocalPortalHostImmediately = ({
 	});
 };
 
-const isActivePortalLink = ({
+const isActiveHandoffLink = ({
 	link,
 	linkKey,
 	pairKey,
@@ -119,49 +118,63 @@ const isActivePortalLink = ({
 	return !activeId || activeId === linkKey;
 };
 
-const resolvePortalOwnerScreenKey = ({
+const resolveBoundaryLocalStyleOwnerScreenKey = ({
 	hostScreenKey,
 	isSettledHostReady,
-	portalHost,
 	settledHostScreenKey,
 	sourceScreenKey,
 }: {
 	hostScreenKey: ScreenKey;
 	isSettledHostReady: boolean;
-	portalHost?: BoundsPortalHost;
 	settledHostScreenKey?: ScreenKey | null;
 	sourceScreenKey: ScreenKey;
 }): ScreenKey => {
 	"worklet";
-	if (portalHost === "screen") {
-		return sourceScreenKey;
-	}
-
-	if (
-		portalHost === "boundary-local" &&
-		settledHostScreenKey === hostScreenKey &&
-		isSettledHostReady
-	) {
+	if (settledHostScreenKey === hostScreenKey && isSettledHostReady) {
 		return hostScreenKey;
 	}
 
 	return sourceScreenKey;
 };
 
-export const resolveMatchedScreenPortalOwnership = ({
+const pendingSignal = (sourcePairKey: ScreenPairKey): PortalOwnershipSignal => {
+	"worklet";
+	return {
+		hostScreenKey: null,
+		ownerPairKey: sourcePairKey,
+		ownerScreenKey: null,
+		status: "pending",
+	};
+};
+
+const clearSignal = (sourcePairKey: ScreenPairKey): PortalOwnershipSignal => {
+	"worklet";
+	return {
+		hostScreenKey: null,
+		ownerPairKey: sourcePairKey,
+		ownerScreenKey: null,
+		status: "clear",
+	};
+};
+
+export const resolveBoundaryPortalOwnership = ({
 	boundaryId,
+	currentScreenKey,
+	escapeClipping,
+	handoff,
 	isSettledHostClosingComplete = false,
 	isSettledHostReady = false,
 	pairsState,
-	portalHost,
 	settledHostScreenKey = null,
 	sourcePairKey,
 }: {
 	boundaryId: string;
+	currentScreenKey: ScreenKey;
+	escapeClipping: boolean;
+	handoff: boolean;
 	isSettledHostClosingComplete?: boolean;
 	isSettledHostReady?: boolean;
 	pairsState: LinkPairsState;
-	portalHost: BoundsPortalHost;
 	settledHostScreenKey?: ScreenKey | null;
 	sourcePairKey: ScreenPairKey;
 }): PortalOwnershipSignal => {
@@ -170,27 +183,26 @@ export const resolveMatchedScreenPortalOwnership = ({
 	const link = getPairLink(pairsState, sourcePairKey, linkKey);
 
 	if (link?.status !== "complete") {
-		return {
-			hostScreenKey: null,
-			ownerPairKey: sourcePairKey,
-			ownerScreenKey: null,
-			status: "pending",
-		};
+		return pendingSignal(sourcePairKey);
 	}
 
 	if (
-		!isActivePortalLink({
+		!isActiveHandoffLink({
 			link,
 			linkKey,
 			pairKey: sourcePairKey,
 			pairsState,
 		})
 	) {
+		return clearSignal(sourcePairKey);
+	}
+
+	if (!handoff) {
 		return {
-			hostScreenKey: null,
+			hostScreenKey: currentScreenKey,
 			ownerPairKey: sourcePairKey,
-			ownerScreenKey: null,
-			status: "clear",
+			ownerScreenKey: currentScreenKey,
+			status: "complete",
 		};
 	}
 
@@ -220,8 +232,12 @@ export const resolveMatchedScreenPortalOwnership = ({
 				continue;
 			}
 
+			if (!candidate.source.handoff) {
+				continue;
+			}
+
 			if (
-				!isActivePortalLink({
+				!isActiveHandoffLink({
 					link: candidate,
 					linkKey,
 					pairKey: candidatePairKey,
@@ -261,19 +277,18 @@ export const resolveMatchedScreenPortalOwnership = ({
 		}
 
 		if (hasPendingNextHop) {
-			return {
-				hostScreenKey: null,
-				ownerPairKey,
-				ownerScreenKey: null,
-				status: "pending",
-			};
+			return pendingSignal(ownerPairKey);
 		}
 
 		break;
 	}
 
+	const ownerLink = getPairLink(pairsState, ownerPairKey, linkKey);
+	const ownerUsesEscapeClipping =
+		ownerLink?.source?.escapeClipping ?? escapeClipping;
+
 	if (
-		portalHost === "boundary-local" &&
+		!ownerUsesEscapeClipping &&
 		isSettledHostClosingComplete &&
 		settledHostScreenKey === hostScreenKey &&
 		previousOwnerPairKey
@@ -281,14 +296,14 @@ export const resolveMatchedScreenPortalOwnership = ({
 		hostScreenKey = getSourceScreenKeyFromPairKey(ownerPairKey);
 	}
 
-	const ownerLink = getPairLink(pairsState, ownerPairKey, linkKey);
-	const ownerScreenKey = resolvePortalOwnerScreenKey({
-		hostScreenKey,
-		isSettledHostReady,
-		portalHost: ownerLink?.source?.portalHost ?? portalHost,
-		settledHostScreenKey,
-		sourceScreenKey: getSourceScreenKeyFromPairKey(ownerPairKey),
-	});
+	const ownerScreenKey = ownerUsesEscapeClipping
+		? getSourceScreenKeyFromPairKey(ownerPairKey)
+		: resolveBoundaryLocalStyleOwnerScreenKey({
+				hostScreenKey,
+				isSettledHostReady,
+				settledHostScreenKey,
+				sourceScreenKey: getSourceScreenKeyFromPairKey(ownerPairKey),
+			});
 
 	return {
 		hostScreenKey,
@@ -298,7 +313,7 @@ export const resolveMatchedScreenPortalOwnership = ({
 	};
 };
 
-export const hasMatchedScreenPortalContinuation = ({
+export const hasHandoffEscapeContinuation = ({
 	linkKey,
 	linkState,
 	sourceScreenKey,
@@ -333,8 +348,12 @@ export const hasMatchedScreenPortalContinuation = ({
 				continue;
 			}
 
-			if (usesScreenPortalHost(link)) {
+			if (usesEscapeClippingHost(link)) {
 				return true;
+			}
+
+			if (!link.source.handoff) {
+				return false;
 			}
 
 			previousScreenKey = link.source.screenKey;

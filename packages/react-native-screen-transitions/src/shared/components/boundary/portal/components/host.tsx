@@ -60,10 +60,10 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	}, [capturesScroll, fallback, hostKey, screenKey]);
 
 	const handleUnblocking = useCallback(() => {
-		// Matched-screen destination measurement keeps the open transition gated
-		// until the portal hosts have committed layout. A screen may render more
-		// than one portal boundary host for the same lifecycle request, so the
-		// final host layout drains the outstanding start blocks for this screen.
+		// Screen-level escape keeps the open transition gated until portal hosts
+		// have committed layout. A screen may render more than one portal boundary
+		// host for the same lifecycle request, so the final host layout drains the
+		// outstanding start blocks for this screen.
 		drainLifecycleStartBlocks();
 	}, [drainLifecycleStartBlocks]);
 

@@ -73,6 +73,20 @@ const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
 
 const passiveBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
+	handoff: true,
+};
+const escapedBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	escapeClipping: true,
+};
+const escapedHandoffBoundaryProps: ComponentProps<typeof Transition.Boundary> =
+	{
+		id: "hero",
+		handoff: true,
+		escapeClipping: true,
+	};
+const legacyBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
 	portal: "boundary-local",
 };
 const screenBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
@@ -92,17 +106,17 @@ const disabledBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> =
 		id: "hero",
 		portal: false,
 	};
-const invalidMatchedScreenBoundaryPortalProps: ComponentProps<
+const invalidStringBoundaryPortalProps: ComponentProps<
 	typeof Transition.Boundary
 > = {
 	id: "hero",
 	// @ts-expect-error Boundary portal exposes host choice, not the internal attach target.
-	portal: "matched-screen",
+	portal: "root",
 };
 const invalidBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
 	// @ts-expect-error Boundary portal does not expose host attachment options.
-	portal: { attachTo: "matched-screen" },
+	portal: { attachTo: "screen" },
 };
 const deprecatedBoundaryViewProps: ComponentProps<
 	typeof Transition.Boundary.View
@@ -116,11 +130,14 @@ const deprecatedBoundaryTriggerProps: ComponentProps<
 	onPress: () => {},
 };
 void passiveBoundaryProps;
+void escapedBoundaryProps;
+void escapedHandoffBoundaryProps;
+void legacyBoundaryPortalProps;
 void screenBoundaryPortalProps;
 void booleanBoundaryPortalProps;
 void pressableBoundaryProps;
 void disabledBoundaryPortalProps;
-void invalidMatchedScreenBoundaryPortalProps;
+void invalidStringBoundaryPortalProps;
 void invalidBoundaryPortalProps;
 void deprecatedBoundaryViewProps;
 void deprecatedBoundaryTriggerProps;

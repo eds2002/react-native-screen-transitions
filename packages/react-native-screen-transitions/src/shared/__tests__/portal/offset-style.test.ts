@@ -21,66 +21,8 @@ beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
 });
 
-describe("resolvePortalOffsetStyle source scroll compensation", () => {
-	it("shifts the source rect by the clamped source scroll travel", () => {
-		setPortalHostBounds("host", createBounds(0, 0, 400, 800));
-
-		// Source scrolled from 100 to 250 since measure: deltaY = 150, deltaX = 10.
-		expect(
-			resolvePortalOffsetStyle({
-				hostKey: "host",
-				placement: "cross-screen",
-				bounds: {
-					...createBounds(40, 220, 100, 80),
-					scroll: createScrollLayout(5, 100),
-				} as any,
-				trackSourceScroll: true,
-				sourceCurrentScroll: createScrollLayout(15, 250),
-			}),
-		).toEqual({
-			transform: [{ translateY: 70 }, { translateX: 30 }],
-		});
-	});
-
-	it("ignores source scroll inputs while compensation is off", () => {
-		setPortalHostBounds("host", createBounds(0, 0, 400, 800));
-
-		expect(
-			resolvePortalOffsetStyle({
-				hostKey: "host",
-				placement: "cross-screen",
-				bounds: {
-					...createBounds(40, 220, 100, 80),
-					scroll: createScrollLayout(5, 100),
-				} as any,
-				sourceCurrentScroll: createScrollLayout(15, 250),
-			}),
-		).toEqual({
-			transform: [{ translateY: 220 }, { translateX: 40 }],
-		});
-	});
-
-	it("clamps rubber-band source offsets to the layout range", () => {
-		setPortalHostBounds("host", createBounds(0, 0, 400, 800));
-
-		// Live offset 1000 overshoots the 600 scrollable range: deltaY = 600 - 100.
-		expect(
-			resolvePortalOffsetStyle({
-				hostKey: "host",
-				placement: "cross-screen",
-				bounds: {
-					...createBounds(0, 700, 100, 80),
-					scroll: createScrollLayout(0, 100),
-				} as any,
-				trackSourceScroll: true,
-				sourceCurrentScroll: createScrollLayout(0, 1000),
-			}),
-		).toEqual({
-			transform: [{ translateY: 200 }, { translateX: 0 }],
-		});
-	});
-
-	it("does not manually propagate destination host scroll", () => {
+describe("resolvePortalOffsetStyle", () => {
+	it("places cross-screen hosts relative to the chosen host frame", () => {
 		setPortalHostBounds("scroll-host", {
 			...createBounds(0, -50, 400, 800),
 			scroll: createScrollLayout(0, 50),
@@ -100,29 +42,7 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 		});
 	});
 
-	it("composes source tracking with the chosen host position", () => {
-		setPortalHostBounds("scroll-host", {
-			...createBounds(0, -50, 400, 800),
-			scroll: createScrollLayout(0, 50),
-		});
-
-		expect(
-			resolvePortalOffsetStyle({
-				hostKey: "scroll-host",
-				placement: "cross-screen",
-				bounds: {
-					...createBounds(40, 220, 100, 80),
-					scroll: createScrollLayout(0, 100),
-				} as any,
-				trackSourceScroll: true,
-				sourceCurrentScroll: createScrollLayout(0, 250),
-			}),
-		).toEqual({
-			transform: [{ translateY: 120 }, { translateX: 40 }],
-		});
-	});
-
-	it("applies the source delta without registered host bounds", () => {
+	it("uses source page coordinates without registered host bounds", () => {
 		expect(
 			resolvePortalOffsetStyle({
 				hostKey: "unregistered-host",
@@ -131,24 +51,6 @@ describe("resolvePortalOffsetStyle source scroll compensation", () => {
 					...createBounds(40, 220, 100, 80),
 					scroll: createScrollLayout(0, 100),
 				} as any,
-				trackSourceScroll: true,
-				sourceCurrentScroll: createScrollLayout(0, 250),
-			}),
-		).toEqual({
-			transform: [{ translateY: 70 }, { translateX: 40 }],
-		});
-	});
-
-	it("treats untracked source scroll as zero travel", () => {
-		setPortalHostBounds("host", createBounds(0, 0, 400, 800));
-
-		expect(
-			resolvePortalOffsetStyle({
-				hostKey: "host",
-				placement: "cross-screen",
-				bounds: createBounds(40, 220, 100, 80),
-				trackSourceScroll: true,
-				sourceCurrentScroll: null,
 			}),
 		).toEqual({
 			transform: [{ translateY: 220 }, { translateX: 40 }],

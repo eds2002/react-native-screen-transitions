@@ -220,6 +220,7 @@ export default function StyleIdBoundsIndex() {
 								style={[styles.gridCell, { width: gridCellWidth }]}
 								onPress={() => openDetail(stackType, tag, item)}
 								id={tag}
+								// escapeClipping
 							>
 								<Transition.Boundary.Target
 									style={[styles.cover, { backgroundColor: theme.card }]}
@@ -269,6 +270,8 @@ export default function StyleIdBoundsIndex() {
 										id={tag}
 										style={styles.pickBoundary}
 										onPress={() => openDetail(stackType, tag, item)}
+										// portal="boundary-local"
+										escapeClipping
 									>
 										<Transition.Boundary.Target
 											style={[

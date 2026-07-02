@@ -1,4 +1,3 @@
-import type { BoundsPortalHost } from "../../../../stores/bounds/types";
 import type { BoundaryTeleportControl } from "../../../../types/animation.types";
 
 export const isTeleportEnabled = (
@@ -14,13 +13,13 @@ export const isTeleportEnabled = (
 };
 
 export const shouldAttachBoundaryPortal = ({
-	portalHost,
+	enabled,
 	teleport,
 }: {
-	portalHost?: BoundsPortalHost;
+	enabled: boolean;
 	teleport?: BoundaryTeleportControl;
 }) => {
 	"worklet";
 
-	return !!portalHost && isTeleportEnabled(teleport);
+	return enabled && isTeleportEnabled(teleport);
 };

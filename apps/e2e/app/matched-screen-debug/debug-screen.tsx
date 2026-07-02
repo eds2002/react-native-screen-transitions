@@ -25,10 +25,6 @@ const RANDOM_Y_RANGE = 160;
 const SMALL_SCALE = 0.58;
 const LARGE_SCALE = 1.48;
 const SHOW_DEBUG_FRAME_BORDERS = false;
-const SPRING_CONFIG = {
-	damping: 26,
-	stiffness: 220,
-};
 
 type RouteLetter = "a" | "b" | "c" | "d" | "e";
 
@@ -78,9 +74,9 @@ export function DebugScreen({
 			const nextY = (Math.random() * 2 - 1) * RANDOM_Y_RANGE;
 
 			setDebugState({ scale, x: nextX, y: nextY });
-			randomOffsetX.value = withSpring(nextX, SPRING_CONFIG);
-			randomOffsetY.value = withSpring(nextY, SPRING_CONFIG);
-			randomScale.value = withSpring(scale, SPRING_CONFIG);
+			randomOffsetX.value = withSpring(nextX);
+			randomOffsetY.value = withSpring(nextY);
+			randomScale.value = withSpring(scale);
 		},
 		[randomOffsetX, randomOffsetY, randomScale],
 	);
@@ -100,7 +96,7 @@ export function DebugScreen({
 					<Transition.Boundary
 						id={BOUNDARY_ID}
 						testID={`matched-screen-debug-${letter}-boundary`}
-						portal={showVideo ? "boundary-local" : false}
+						handoff
 						style={[
 							styles.frame,
 							styles.boundaryFrame,

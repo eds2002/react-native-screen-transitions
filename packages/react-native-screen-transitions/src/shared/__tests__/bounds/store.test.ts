@@ -56,11 +56,11 @@ const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
 	boundaryConfig?: NonNullable<EntryPatch["boundaryConfig"]>,
-	portalHost?: EntryPatch["portalHost"],
+	runtimeFlags?: Pick<EntryPatch, "handoff" | "escapeClipping">,
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		boundaryConfig,
-		portalHost,
+		...runtimeFlags,
 	});
 };
 
@@ -98,23 +98,28 @@ describe("BoundStore.entry", () => {
 		expect(hasBoundaryPresence("card", "screen-a")).toBe(false);
 	});
 
-	it("tracks and clears portal intent on boundary presence entries", () => {
+	it("tracks and clears portal runtime flags on boundary presence entries", () => {
 		registerBoundaryPresence(
 			"card",
 			"screen-a",
 			{ method: "size" },
-			"screen",
+			{ handoff: true, escapeClipping: true },
 		);
 
-		expect(BoundStore.entry.get("card", "screen-a")?.portalHost).toBe(
-			"screen",
+		expect(BoundStore.entry.get("card", "screen-a")?.handoff).toBe(true);
+		expect(BoundStore.entry.get("card", "screen-a")?.escapeClipping).toBe(
+			true,
 		);
 
 		BoundStore.entry.set("card", "screen-a", {
-			portalHost: null,
+			handoff: null,
+			escapeClipping: null,
 		});
 
-		expect(BoundStore.entry.get("card", "screen-a")?.portalHost).toBeUndefined();
+		expect(BoundStore.entry.get("card", "screen-a")?.handoff).toBeUndefined();
+		expect(
+			BoundStore.entry.get("card", "screen-a")?.escapeClipping,
+		).toBeUndefined();
 	});
 });
 
@@ -676,8 +681,8 @@ describe("BoundsAccessor", () => {
 	});
 });
 
-describe("teleport portal host links", () => {
-	it("persists the source portal host across refreshes without portal context", () => {
+describe("boundary runtime source links", () => {
+	it("stores handoff and escape flags on source links", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
 		BoundStore.link.setSource(
@@ -687,49 +692,54 @@ describe("teleport portal host links", () => {
 			createBounds(0, 0),
 			{},
 			undefined,
-			"screen",
+			{ handoff: true, escapeClipping: true },
 		);
-		// Refresh paths (e.g. provider-driven re-measures) omit portal context.
-		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(0, 4));
 
-		expect(BoundStore.link.getSource(pairKey, "card")?.portalHost).toBe(
-			"screen",
+		expect(BoundStore.link.getSource(pairKey, "card")?.handoff).toBe(true);
+		expect(BoundStore.link.getSource(pairKey, "card")?.escapeClipping).toBe(
+			true,
 		);
-		expect(
-			BoundStore.link.getPair("card", {
-				entering: true,
-				previousScreenKey: "screen-a",
-				currentScreenKey: "screen-b",
-			}).sourcePortalHost,
-		).toBe("screen");
 	});
 
-	it("does not shift the teleported source path by destination scroll", () => {
+	it("does not preserve runtime flags when a source refresh omits them", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(0, 0),
+			{},
+			undefined,
+			{ handoff: true, escapeClipping: true },
+		);
+		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(0, 4));
+
+		expect(BoundStore.link.getSource(pairKey, "card")?.handoff).toBeUndefined();
+		expect(
+			BoundStore.link.getSource(pairKey, "card")?.escapeClipping,
+		).toBeUndefined();
+	});
+
+	it("does not shift source paths by destination scroll", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const destination = {
 			...createBounds(120, 300, 200, 150),
 			scroll: createScrollLayout(0, 100),
 		} as Snapshot["bounds"];
 
-		const registerLink = (
-			tag: string,
-			sourceY: number,
-			portalHost?: "boundary-local" | "screen",
-		) => {
+		const registerLink = (tag: string, sourceY: number) => {
 			BoundStore.link.setSource(
 				pairKey,
 				tag,
 				"screen-a",
 				createBounds(0, sourceY, 100, 80),
-				{},
-				undefined,
-				portalHost,
 			);
 			BoundStore.link.setDestination(pairKey, tag, "screen-b", destination);
 		};
 
 		registerLink("classic", 40);
-		registerLink("teleported", 40, "screen");
+		registerLink("escaped", 40);
 
 		const computeFor = (tag: string) =>
 			computeBoundStyles(
@@ -747,9 +757,9 @@ describe("teleport portal host links", () => {
 			);
 
 		const classic = computeFor("classic");
-		const teleported = computeFor("teleported");
+		const escaped = computeFor("escaped");
 
-		expect(teleported).toEqual(classic);
+		expect(escaped).toEqual(classic);
 	});
 });
 

@@ -1,14 +1,14 @@
 import { useMemo } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
-import type { BoundsPortalHost, BoundTag } from "../../../stores/bounds/types";
+import type { BoundTag } from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import type { BoundaryConfigProps } from "../types";
-import { useBoundaryPresence } from "./use-boundary-presence";
-import { useInitialDestinationMeasurement } from "./use-initial-destination-measurement";
-import { useInitialSourceMeasurement } from "./use-initial-source-measurement";
+import { useBoundaryPresence } from "./lifecycles/use-boundary-presence";
+import { useInitialDestinationMeasurement } from "./lifecycles/use-initial-destination-measurement";
+import { useInitialSourceMeasurement } from "./lifecycles/use-initial-source-measurement";
+import { useRefreshBoundary } from "./lifecycles/use-refresh-boundary";
 import { useMeasurer } from "./use-measurer";
-import { useRefreshBoundary } from "./use-refresh-boundary";
 
 interface UseBoundaryMeasurementParams {
 	boundTag: BoundTag;
@@ -22,7 +22,8 @@ interface UseBoundaryMeasurementParams {
 	/** Root's own style; ignored when a nested target supplies its own. */
 	style?: unknown;
 	targetPreparedStyles?: StyleProps;
-	portalHost?: BoundsPortalHost;
+	handoff: boolean;
+	escapeClipping: boolean;
 	config: BoundaryConfigProps;
 }
 
@@ -39,7 +40,8 @@ export const useBoundaryMeasurement = ({
 	measuredRef,
 	style,
 	targetPreparedStyles,
-	portalHost,
+	handoff,
+	escapeClipping,
 	config,
 }: UseBoundaryMeasurementParams) => {
 	const { anchor, scaleMode, target, method } = config;
@@ -60,7 +62,8 @@ export const useBoundaryMeasurement = ({
 		currentScreenKey,
 		preparedStyles,
 		measuredAnimatedRef: measuredRef,
-		portalHost,
+		handoff,
+		escapeClipping,
 	});
 
 	// Register/unregister this boundary in the presence map so source/destination
@@ -70,7 +73,8 @@ export const useBoundaryMeasurement = ({
 		boundTag,
 		currentScreenKey,
 		boundaryConfig,
-		portalHost,
+		handoff,
+		escapeClipping,
 	});
 
 	useInitialSourceMeasurement({

@@ -3,9 +3,7 @@ import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import { composeSlotStyleWithLocalTransform } from "../../../../providers/screen/styles/helpers/compose-slot-style";
-import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getLink } from "../../../../stores/bounds/internals/links";
-import { ScrollStore } from "../../../../stores/scroll.store";
 import type { ScrollMeasuredDimensions } from "../../utils/measured-bounds";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
 import { NativePortalHost } from "../teleport";
@@ -25,11 +23,6 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	host,
 	style,
 }: PortalBoundaryHostProps) {
-	const sourceScrollMetadata = ScrollStore.getValue(
-		getSourceScreenKeyFromPairKey(host.pairKey),
-		"metadata",
-	);
-
 	const hostStyle = useAnimatedStyle(() => {
 		"worklet";
 		// Strict per-member lookup — a fallback member's source rect would
@@ -41,19 +34,11 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 
 		const sourceBounds = link.source.bounds as ScrollMeasuredDimensions;
 		const isCrossScreenPortal = link.source.screenKey !== host.screenKey;
-		const trackSourceScroll =
-			link.source.portalHost !== undefined &&
-			isCrossScreenPortal &&
-			link.source.sourceHost?.capturesScroll === true;
 
 		return resolvePortalOffsetStyle({
 			bounds: sourceBounds,
 			hostKey: host.hostKey,
 			placement: isCrossScreenPortal ? "cross-screen" : "same-screen",
-			sourceCurrentScroll: trackSourceScroll
-				? sourceScrollMetadata.get()
-				: null,
-			trackSourceScroll,
 		});
 	});
 	const contentFrameStyle = useAnimatedStyle(() => {
@@ -72,9 +57,6 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	});
 	const slotStyle = useAnimatedStyle(() => {
 		"worklet";
-		const link = getLink(host.pairKey, host.boundaryId);
-		const isMatchedScreenPortal = link?.source?.portalHost !== undefined;
-
 		// `slotsMap` is the resolved map: it may contain real interpolator output,
 		// inherited styles, or resolver-created reset patches for slots that just
 		// disappeared. Normal components need those reset patches so stale styles
@@ -86,7 +68,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		// boundary id, any resolved style here is cleanup/stale residue and should
 		// not be drawn by the host.
 		if (
-			isMatchedScreenPortal &&
+			host.escapeClipping &&
 			!hasLocalSlot(host.localStylesMaps.get(), host.boundaryId)
 		) {
 			return NO_STYLES;

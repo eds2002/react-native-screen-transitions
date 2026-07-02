@@ -39,8 +39,6 @@ function resolveTransitionPair(
 		destinationStyles: matchedLink?.destination?.styles ?? null,
 		sourceScreenKey: matchedLink?.source?.screenKey ?? null,
 		destinationScreenKey: matchedLink?.destination?.screenKey ?? null,
-		sourcePortalHost: matchedLink?.source?.portalHost,
-		sourceHost: matchedLink?.source?.sourceHost,
 	};
 }
 

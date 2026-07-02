@@ -5,7 +5,7 @@ import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/an
 
 export type ActivePortalBoundaryHost = {
 	boundaryId: string;
-	capturesScroll: boolean;
+	escapeClipping: boolean;
 	hostKey: string;
 	localStylesMaps: SharedValue<LocalStyleLayers>;
 	pairKey: string;
@@ -55,7 +55,7 @@ const isSameHost = (
 ) => {
 	return (
 		a.boundaryId === b.boundaryId &&
-		a.capturesScroll === b.capturesScroll &&
+		a.escapeClipping === b.escapeClipping &&
 		a.hostKey === b.hostKey &&
 		a.localStylesMaps === b.localStylesMaps &&
 		a.pairKey === b.pairKey &&

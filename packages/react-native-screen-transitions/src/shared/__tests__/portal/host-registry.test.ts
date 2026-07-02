@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import {
 	getActiveHostKey,
-	getHostCapturesScroll,
 	registerHost,
 	resetHostRegistry,
 	unregisterHost,
@@ -75,25 +74,6 @@ describe("portal host registry", () => {
 		expect(getActiveHostKey("screen-a")).toBe("screen-a-user-host-2");
 	});
 
-	it("tracks whether a host captures scroll", () => {
-		registerHost({
-			capturesScroll: false,
-			fallback: true,
-			hostKey: "screen-a",
-			screenKey: "screen-a",
-		});
-		registerHost({
-			capturesScroll: true,
-			fallback: false,
-			hostKey: "screen-a-scroll-host",
-			screenKey: "screen-a",
-		});
-
-		expect(getHostCapturesScroll("screen-a")).toBe(false);
-		expect(getHostCapturesScroll("screen-a-scroll-host")).toBe(true);
-		expect(getHostCapturesScroll("missing-host")).toBe(false);
-	});
-
 	it("resolves each screen's active host independently of the other side", () => {
 		registerHost({
 			capturesScroll: false,
@@ -118,8 +98,6 @@ describe("portal host registry", () => {
 		// separately: a scroll-hosted source must not leak into the destination's
 		// resolution and vice versa.
 		expect(getActiveHostKey("screen-a")).toBe("screen-a-scroll-host");
-		expect(getHostCapturesScroll(getActiveHostKey("screen-a"))).toBe(true);
 		expect(getActiveHostKey("screen-b")).toBe("screen-b");
-		expect(getHostCapturesScroll(getActiveHostKey("screen-b"))).toBe(false);
 	});
 });

@@ -24,8 +24,12 @@ export interface BoundTag {
 	linkKey: LinkKey;
 	group?: GroupKey;
 }
-export type BoundsPortalHost = "boundary-local" | "screen";
 export type { ScreenKey } from "../../types/screen.types";
+
+export type BoundaryRuntimeFlags = {
+	handoff?: boolean;
+	escapeClipping?: boolean;
+};
 
 type BoundaryConfig = {
 	anchor?: BoundsAnchor;
@@ -38,8 +42,7 @@ export type Entry = {
 	bounds: MeasuredDimensions | null;
 	styles: StyleProps;
 	boundaryConfig?: BoundaryConfig;
-	portalHost?: BoundsPortalHost;
-};
+} & BoundaryRuntimeFlags;
 
 export type MeasuredEntry = Entry & {
 	bounds: MeasuredDimensions;
@@ -49,7 +52,8 @@ export type EntryPatch = {
 	bounds?: MeasuredDimensions | null;
 	styles?: StyleProps | null;
 	boundaryConfig?: BoundaryConfig | null;
-	portalHost?: BoundsPortalHost | null;
+	handoff?: boolean | null;
+	escapeClipping?: boolean | null;
 };
 
 export type ScreenIdentifier = {
@@ -62,24 +66,7 @@ export type BoundsLinkStatus =
 	| "complete";
 
 export type TagLinkSide = ScreenIdentifier & MeasuredEntry;
-
-/**
- * The source screen's active portal host at measure time. Recorded only when
- * that host captures scroll (a Transition.ScrollView scope) — screen-level
- * placement uses it as a coordinate space to express the source rect in the
- * source ScrollView's live frame. The portal never attaches here.
- */
-export type SourceHostRef = {
-	hostKey: string;
-	capturesScroll: boolean;
-};
-
-export type SourceTagLinkSide = TagLinkSide & {
-	/** Which host kind receives portal content during the transition. */
-	portalHost?: BoundsPortalHost;
-	/** Scroll-scoped host the source originated from, if any. */
-	sourceHost?: SourceHostRef;
-};
+export type SourceTagLinkSide = TagLinkSide;
 
 type TagLinkBase = {
 	group?: GroupKey;
@@ -130,8 +117,6 @@ export type ResolvedTransitionPair = {
 	destinationStyles: StyleProps | null;
 	sourceScreenKey: ScreenKey | null;
 	destinationScreenKey: ScreenKey | null;
-	sourcePortalHost?: BoundsPortalHost;
-	sourceHost?: SourceHostRef;
 };
 
 export type LinkGroupState = {

@@ -1,30 +1,69 @@
-import type { BoundsPortalHost } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
 import type { BoundaryPortal } from "../../types";
 import { isTeleportAvailable } from "../teleport";
 
-/**
- * Resolves the `portal` prop against teleport availability. When
- * `react-native-teleport` is missing, portal boundaries degrade to inline
- * rendering and we warn once for the whole app.
- */
-export const resolveBoundaryPortal = (
-	portal?: BoundaryPortal,
-): BoundsPortalHost | undefined => {
-	if (!portal) {
-		return undefined;
-	}
+export type BoundaryPortalRuntime = {
+	handoff: boolean;
+	escapeClipping: boolean;
+	enabled: boolean;
+};
 
-	if (isTeleportAvailable) {
-		return portal === true ? "boundary-local" : portal;
-	}
+type ResolveBoundaryPortalParams = {
+	portal?: BoundaryPortal;
+	handoff?: boolean;
+	escapeClipping?: boolean;
+};
+
+/**
+ * Resolves the new explicit runtime props plus the deprecated `portal` prop.
+ * Legacy mapping:
+ * - `true` / `"boundary-local"` => live handoff only
+ * - `"screen"` => live handoff + current-screen clipping escape
+ */
+export const resolveBoundaryPortal = ({
+	portal,
+	handoff,
+	escapeClipping,
+}: ResolveBoundaryPortalParams): BoundaryPortalRuntime => {
+	let resolvedHandoff = handoff ?? false;
+	let resolvedEscapeClipping = escapeClipping ?? false;
 
 	if (portal) {
-		logger.warnOnce(
-			"boundary:teleport-missing",
-			"react-native-teleport is not installed; portal-enabled boundaries will render inline.",
-		);
+		if (handoff === undefined) {
+			resolvedHandoff = true;
+		}
+
+		if (escapeClipping === undefined) {
+			resolvedEscapeClipping = portal === "screen";
+		}
 	}
 
-	return undefined;
+	const enabled = resolvedHandoff || resolvedEscapeClipping;
+
+	if (!enabled) {
+		return {
+			handoff: false,
+			escapeClipping: false,
+			enabled: false,
+		};
+	}
+
+	if (!isTeleportAvailable) {
+		logger.warnOnce(
+			"boundary:teleport-missing",
+			"react-native-teleport is not installed; handoff and escapeClipping boundaries will render inline.",
+		);
+
+		return {
+			handoff: false,
+			escapeClipping: false,
+			enabled: false,
+		};
+	}
+
+	return {
+		handoff: resolvedHandoff,
+		escapeClipping: resolvedEscapeClipping,
+		enabled,
+	};
 };
