@@ -16,19 +16,13 @@ const parentPushInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] 
 
 		const imageStyle = bounds({
 			id: TRANSITION_SCOPE_BOUNDARY_ID,
-			method: "transform",
-			anchor: "center",
-		}) as Record<string, any>;
+		}).styles() as Record<string, any>;
 		const titleStyle = bounds({
 			id: TRANSITION_SCOPE_TITLE_ID,
-			method: "transform",
-			anchor: "center",
-		}) as Record<string, any>;
+		}).styles() as Record<string, any>;
 		const metaStyle = bounds({
 			id: TRANSITION_SCOPE_META_ID,
-			method: "transform",
-			anchor: "center",
-		}) as Record<string, any>;
+		}).styles() as Record<string, any>;
 
 		return {
 			content: {
