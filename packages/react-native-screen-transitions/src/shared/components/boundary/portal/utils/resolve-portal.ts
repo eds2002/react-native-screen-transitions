@@ -1,5 +1,4 @@
 import { logger } from "../../../../utils/logger";
-import type { BoundaryPortal } from "../../types";
 import { isTeleportAvailable } from "../teleport";
 
 export type BoundaryPortalRuntime = {
@@ -9,34 +8,16 @@ export type BoundaryPortalRuntime = {
 };
 
 type ResolveBoundaryPortalParams = {
-	portal?: BoundaryPortal;
 	handoff?: boolean;
 	escapeClipping?: boolean;
 };
 
-/**
- * Resolves the new explicit runtime props plus the deprecated `portal` prop.
- * Legacy mapping:
- * - `true` / `"boundary-local"` => live handoff only
- * - `"screen"` => live handoff + current-screen clipping escape
- */
 export const resolveBoundaryPortal = ({
-	portal,
 	handoff,
 	escapeClipping,
 }: ResolveBoundaryPortalParams): BoundaryPortalRuntime => {
-	let resolvedHandoff = handoff ?? false;
-	let resolvedEscapeClipping = escapeClipping ?? false;
-
-	if (portal) {
-		if (handoff === undefined) {
-			resolvedHandoff = true;
-		}
-
-		if (escapeClipping === undefined) {
-			resolvedEscapeClipping = portal === "screen";
-		}
-	}
+	const resolvedHandoff = handoff ?? false;
+	const resolvedEscapeClipping = escapeClipping ?? false;
 
 	const enabled = resolvedHandoff || resolvedEscapeClipping;
 

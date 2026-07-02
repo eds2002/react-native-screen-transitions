@@ -85,38 +85,14 @@ const escapedHandoffBoundaryProps: ComponentProps<typeof Transition.Boundary> =
 		handoff: true,
 		escapeClipping: true,
 	};
-const legacyBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
-	id: "hero",
-	portal: "boundary-local",
-};
-const screenBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
-	id: "hero",
-	portal: "screen",
-};
-const booleanBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
-	id: "hero",
-	portal: true,
-};
 const pressableBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
 	onPress: () => {},
 };
-const disabledBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> =
-	{
-		id: "hero",
-		portal: false,
-	};
-const invalidStringBoundaryPortalProps: ComponentProps<
-	typeof Transition.Boundary
-> = {
+const removedBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
 	id: "hero",
-	// @ts-expect-error Boundary portal exposes host choice, not the internal attach target.
-	portal: "root",
-};
-const invalidBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
-	id: "hero",
-	// @ts-expect-error Boundary portal does not expose host attachment options.
-	portal: { attachTo: "screen" },
+	// @ts-expect-error Boundary uses handoff and escapeClipping instead of the removed portal prop.
+	portal: "screen",
 };
 const deprecatedBoundaryViewProps: ComponentProps<
 	typeof Transition.Boundary.View
@@ -132,13 +108,8 @@ const deprecatedBoundaryTriggerProps: ComponentProps<
 void passiveBoundaryProps;
 void escapedBoundaryProps;
 void escapedHandoffBoundaryProps;
-void legacyBoundaryPortalProps;
-void screenBoundaryPortalProps;
-void booleanBoundaryPortalProps;
 void pressableBoundaryProps;
-void disabledBoundaryPortalProps;
-void invalidStringBoundaryPortalProps;
-void invalidBoundaryPortalProps;
+void removedBoundaryPortalProps;
 void deprecatedBoundaryViewProps;
 void deprecatedBoundaryTriggerProps;
 

@@ -26,7 +26,6 @@ export default {
 export type { NativeStackAdapterOptions } from "./adapters/with-screen-transitions";
 export { withScreenTransitions } from "./adapters/with-screen-transitions";
 export { snapTo } from "./animation/snap-to";
-export type { BoundaryPortal } from "./components/boundary";
 export {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,

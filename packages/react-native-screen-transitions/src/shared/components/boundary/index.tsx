@@ -10,7 +10,6 @@ import { createBoundaryComponent } from "./create-boundary-component";
 import { Host } from "./portal";
 import type { BoundaryComponentProps } from "./types";
 
-export type { BoundaryPortal } from "./types";
 export { createBoundaryComponent };
 
 type BoundaryPrimitiveProps = Omit<ViewProps, "id" | "style"> &

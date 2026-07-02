@@ -3,8 +3,6 @@ import type { BoundsOptions } from "../../utils/bounds/types/options";
 
 export type BoundaryId = string | number;
 
-export type BoundaryPortal = boolean | "boundary-local" | "screen";
-
 export type BoundaryConfigProps = Pick<
 	BoundsOptions,
 	"anchor" | "scaleMode" | "target" | "method"
@@ -41,12 +39,6 @@ export interface BoundaryOwnProps extends BoundaryConfigProps {
 	 * @default false
 	 */
 	escapeClipping?: boolean;
-	/**
-	 * @deprecated Use `handoff` and `escapeClipping`.
-	 *
-	 * @default false
-	 */
-	portal?: BoundaryPortal;
 	id: BoundaryId;
 }
 

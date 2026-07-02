@@ -22,7 +22,8 @@ export default function TeleportIndex() {
 				<Transition.Boundary.Trigger
 					id={TELEPORT_PAIRED_ID}
 					testID="teleport-paired-trigger"
-					portal="screen"
+					handoff
+					escapeClipping
 					onPress={() => router.push("/teleport/paired")}
 				>
 					<Transition.Boundary.Target
@@ -33,7 +34,8 @@ export default function TeleportIndex() {
 				<Transition.Boundary.Trigger
 					id={TELEPORT_GHOST_ID}
 					testID="teleport-ghost-trigger"
-					portal="screen"
+					handoff
+					escapeClipping
 					onPress={() => {
 						// Alert.alert("On Screen A");
 						router.navigate("/teleport/ghost");

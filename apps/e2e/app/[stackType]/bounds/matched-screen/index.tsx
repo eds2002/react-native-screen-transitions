@@ -47,7 +47,8 @@ function FeedVideoCard({ onPress, video, width }: FeedVideoCardProps) {
 			<Transition.Boundary
 				id={video.id}
 				testID={`${video.id}-source`}
-				portal="screen"
+				handoff
+				escapeClipping
 			>
 				<Transition.Boundary.Target
 					pointerEvents="none"

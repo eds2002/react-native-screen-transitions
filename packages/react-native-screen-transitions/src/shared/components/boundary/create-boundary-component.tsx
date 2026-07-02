@@ -69,7 +69,6 @@ export function createBoundaryComponent<P extends object>(
 			onPress,
 			handoff,
 			escapeClipping,
-			portal: portalProp,
 			children,
 			...rest
 		} = props as any;
@@ -79,7 +78,6 @@ export function createBoundaryComponent<P extends object>(
 			[id, group],
 		);
 		const portalRuntime = resolveBoundaryPortal({
-			portal: portalProp,
 			handoff,
 			escapeClipping,
 		});
