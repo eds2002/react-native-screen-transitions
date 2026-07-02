@@ -7,10 +7,11 @@ import {
 	useLayoutEffect,
 	useState,
 } from "react";
-import type { View } from "react-native";
+import type { LayoutRectangle, View } from "react-native";
 import Animated, {
 	type AnimatedRef,
 	runOnJS,
+	runOnUI,
 	useAnimatedProps,
 	useAnimatedReaction,
 	useAnimatedStyle,
@@ -402,14 +403,32 @@ export const Portal = memo(function Portal({
 		return { width, height };
 	});
 
+	const handleOnLayout = useCallback(
+		(layout: LayoutRectangle) => {
+			"worklet";
+			const { width, height } = layout;
+			if (width === 0 || height === 0) {
+				return;
+			}
+
+			const hasValidDimensions =
+				placeholderHeight.get() !== 0 && placeholderWidth.get() !== 0;
+
+			if (!hasValidDimensions) {
+				placeholderWidth.set(width);
+				placeholderHeight.set(height);
+			}
+		},
+		[placeholderHeight, placeholderWidth],
+	);
+
 	if (isPortalEnabled && AnimatedNativePortal) {
 		return (
 			<Animated.View
 				ref={placeholderRef}
-				onLayout={(event) => {
-					placeholderWidth.set(event.nativeEvent.layout.width);
-					placeholderHeight.set(event.nativeEvent.layout.height);
-				}}
+				onLayout={({ nativeEvent: { layout } }) =>
+					runOnUI(handleOnLayout)(layout)
+				}
 				style={placeholderStyle}
 				collapsable={false}
 			>
