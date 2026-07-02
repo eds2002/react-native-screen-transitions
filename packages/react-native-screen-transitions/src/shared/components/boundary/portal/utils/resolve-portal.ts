@@ -22,7 +22,7 @@ export const resolveBoundaryPortal = (
 	if (portal) {
 		logger.warnOnce(
 			"boundary:teleport-missing",
-			"react-native-teleport is not installed and will fallback to default behavior.",
+			"react-native-teleport is not installed; portal-enabled boundaries will render inline.",
 		);
 	}
 

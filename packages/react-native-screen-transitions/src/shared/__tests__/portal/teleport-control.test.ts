@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { isTeleportEnabled } from "../../components/boundary/portal/utils/teleport-control";
+import {
+	isTeleportEnabled,
+	shouldAttachBoundaryPortal,
+} from "../../components/boundary/portal/utils/teleport-control";
 
 describe("portal teleport control", () => {
 	it("defaults to enabled when the slot prop is omitted", () => {
@@ -15,5 +18,29 @@ describe("portal teleport control", () => {
 		expect(isTeleportEnabled({})).toBe(true);
 		expect(isTeleportEnabled({ enabled: true })).toBe(true);
 		expect(isTeleportEnabled({ enabled: false })).toBe(false);
+	});
+
+	it("attaches only portal-enabled boundaries", () => {
+		expect(
+			shouldAttachBoundaryPortal({
+				portalHost: "boundary-local",
+			}),
+		).toBe(true);
+		expect(shouldAttachBoundaryPortal({})).toBe(false);
+	});
+
+	it("lets slot props detach a portal-enabled boundary", () => {
+		expect(
+			shouldAttachBoundaryPortal({
+				portalHost: "screen",
+				teleport: false,
+			}),
+		).toBe(false);
+		expect(
+			shouldAttachBoundaryPortal({
+				portalHost: "screen",
+				teleport: { enabled: false },
+			}),
+		).toBe(false);
 	});
 });

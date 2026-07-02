@@ -103,7 +103,9 @@ const ensurePairState = (
 			groups: {},
 		};
 	}
-	state[pairKey].groups ??= {};
+	if (!state[pairKey].groups) {
+		state[pairKey].groups = {};
+	}
 	return state[pairKey];
 };
 
@@ -129,7 +131,9 @@ export const ensurePairSourceRequests = (
 ): Record<LinkKey, true> => {
 	"worklet";
 	const pair = ensurePairState(state, pairKey);
-	pair.sourceRequests ??= {};
+	if (!pair.sourceRequests) {
+		pair.sourceRequests = {};
+	}
 	return pair.sourceRequests;
 };
 

@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useMemo } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import type { BoundsPortalHost, BoundTag } from "../../../stores/bounds/types";
@@ -24,14 +24,12 @@ interface UseBoundaryMeasurementParams {
 	targetPreparedStyles?: StyleProps;
 	portalHost?: BoundsPortalHost;
 	config: BoundaryConfigProps;
-	onPress?: (...args: unknown[]) => void;
 }
 
 /**
  * Owns the full measurement lifecycle for a boundary: builds the measurer,
  * registers presence, runs the initial source/destination + refresh reactions,
- * and returns the press-priority `onPress`. The component never touches the
- * measurer itself.
+ * and keeps the component itself away from the measurer.
  */
 export const useBoundaryMeasurement = ({
 	boundTag,
@@ -43,7 +41,6 @@ export const useBoundaryMeasurement = ({
 	targetPreparedStyles,
 	portalHost,
 	config,
-	onPress,
 }: UseBoundaryMeasurementParams) => {
 	const { anchor, scaleMode, target, method } = config;
 	const boundaryConfig = useMemo<BoundaryConfigProps>(
@@ -93,17 +90,4 @@ export const useBoundaryMeasurement = ({
 		boundTag,
 		measureBoundary,
 	});
-
-	const handlePress = useCallback(
-		(...args: unknown[]) => {
-			if (typeof onPress === "function") {
-				onPress(...args);
-			}
-		},
-		[onPress],
-	);
-
-	return {
-		onPress: typeof onPress === "function" ? handlePress : undefined,
-	};
 };

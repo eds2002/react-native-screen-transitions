@@ -230,7 +230,9 @@ const writeDestination = (
 
 	link.group = group ?? link.group;
 	link.destination = destination;
-	link.initialDestination ??= destination;
+	if (!link.initialDestination) {
+		link.initialDestination = destination;
+	}
 	syncLinkStatus(link);
 
 	writePairLink(state, pairKey, linkKey, link);
@@ -278,7 +280,9 @@ function setSource(
 
 		link.group = group ?? link.group;
 		link.source = source;
-		link.initialSource ??= source;
+		if (!link.initialSource) {
+			link.initialSource = source;
+		}
 		syncLinkStatus(link);
 
 		pairLinks[linkKey] = link;

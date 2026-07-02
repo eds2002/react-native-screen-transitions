@@ -20,18 +20,18 @@ export const BoundaryLocalPortalHost = memo(function BoundaryLocalPortalHost({
 	enabled,
 	screenKey,
 }: BoundaryLocalPortalHostProps) {
-	const { pendingLifecycleStartBlockCount } = SystemStore.getBag(screenKey);
+	const { drainLifecycleStartBlocks } = SystemStore.getBag(screenKey).actions;
 	const handleLayout = useCallback(() => {
-		pendingLifecycleStartBlockCount.set(0);
-	}, [pendingLifecycleStartBlockCount]);
+		drainLifecycleStartBlocks();
+	}, [drainLifecycleStartBlocks]);
 
 	useLayoutEffect(() => {
 		if (!enabled || !AnimatedPortalHost) {
 			return;
 		}
 
-		pendingLifecycleStartBlockCount.set(0);
-	}, [enabled, pendingLifecycleStartBlockCount]);
+		drainLifecycleStartBlocks();
+	}, [enabled, drainLifecycleStartBlocks]);
 
 	if (!enabled || !AnimatedPortalHost) {
 		return null;

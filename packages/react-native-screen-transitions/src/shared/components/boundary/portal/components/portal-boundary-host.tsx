@@ -80,7 +80,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		// disappeared. Normal components need those reset patches so stale styles
 		// clear correctly.
 		//
-		// A matched-screen portal host is different. It is only the temporary visual
+		// A screen-level portal host is different. It is only the temporary visual
 		// receiver for teleported content, not the original component that needs a
 		// cleanup frame. If the current local interpolator layers did not emit this
 		// boundary id, any resolved style here is cleanup/stale residue and should

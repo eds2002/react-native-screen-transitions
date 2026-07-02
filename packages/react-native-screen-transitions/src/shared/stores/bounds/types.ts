@@ -65,7 +65,7 @@ export type TagLinkSide = ScreenIdentifier & MeasuredEntry;
 
 /**
  * The source screen's active portal host at measure time. Recorded only when
- * that host captures scroll (a Transition.ScrollView scope) — matched-screen
+ * that host captures scroll (a Transition.ScrollView scope) — screen-level
  * placement uses it as a coordinate space to express the source rect in the
  * source ScrollView's live frame. The portal never attaches here.
  */
@@ -75,7 +75,7 @@ export type SourceHostRef = {
 };
 
 export type SourceTagLinkSide = TagLinkSide & {
-	/** Which host receives matched-screen portal content during the transition. */
+	/** Which host kind receives portal content during the transition. */
 	portalHost?: BoundsPortalHost;
 	/** Scroll-scoped host the source originated from, if any. */
 	sourceHost?: SourceHostRef;

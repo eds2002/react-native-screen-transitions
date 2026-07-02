@@ -51,6 +51,7 @@ export interface SystemStoreActions {
 	clearLifecycleTransitionRequest(): void;
 	blockLifecycleStart(): void;
 	unblockLifecycleStart(): void;
+	drainLifecycleStartBlocks(): void;
 }
 
 export type SystemStoreMap = SystemStoreState & {
@@ -107,6 +108,11 @@ export const SystemStore = createStore<SystemStoreState, SystemStoreActions>({
 			bag.pendingLifecycleStartBlockCount.set(
 				Math.max(0, bag.pendingLifecycleStartBlockCount.get() - 1),
 			);
+		},
+
+		drainLifecycleStartBlocks() {
+			"worklet";
+			bag.pendingLifecycleStartBlockCount.set(0);
 		},
 	}),
 });

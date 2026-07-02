@@ -26,7 +26,7 @@ type HostImplProps = PublicHostProps & {
 
 function HostImpl({ fallback = false, style }: HostImplProps) {
 	const screenKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
-	const { pendingLifecycleStartBlockCount } = SystemStore.getBag(screenKey);
+	const { drainLifecycleStartBlocks } = SystemStore.getBag(screenKey).actions;
 	const generatedHostKeyRef = useRef<string | null>(null);
 
 	if (generatedHostKeyRef.current === null) {
@@ -64,8 +64,8 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		// until the portal hosts have committed layout. A screen may render more
 		// than one portal boundary host for the same lifecycle request, so the
 		// final host layout drains the outstanding start blocks for this screen.
-		pendingLifecycleStartBlockCount.set(0);
-	}, [pendingLifecycleStartBlockCount]);
+		drainLifecycleStartBlocks();
+	}, [drainLifecycleStartBlocks]);
 
 	const boundaryHosts = measurement.canRenderHosts
 		? activeBoundaryHosts.map((host, idx, list) => (

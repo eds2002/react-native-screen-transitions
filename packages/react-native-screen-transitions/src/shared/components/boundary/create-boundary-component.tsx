@@ -89,7 +89,7 @@ export function createBoundaryComponent<P extends object>(
 			rootMeasurementRef: portalHost ? rootPlaceholderRef : undefined,
 		});
 
-		const { onPress: resolvedOnPress } = useBoundaryMeasurement({
+		useBoundaryMeasurement({
 			boundTag,
 			enabled,
 			runtimeEnabled,
@@ -99,7 +99,6 @@ export function createBoundaryComponent<P extends object>(
 			targetPreparedStyles,
 			portalHost,
 			config: { anchor, scaleMode, target, method },
-			onPress,
 		});
 
 		useImperativeHandle(forwardedRef, () => ref.current as any, [ref]);
@@ -116,10 +115,7 @@ export function createBoundaryComponent<P extends object>(
 					? undefined
 					: associatedStyles
 			: undefined;
-		const pressProps =
-			typeof resolvedOnPress === "function"
-				? { onPress: resolvedOnPress }
-				: undefined;
+		const pressProps = typeof onPress === "function" ? { onPress } : undefined;
 
 		const localPortalHost = (
 			<BoundaryLocalPortalHost

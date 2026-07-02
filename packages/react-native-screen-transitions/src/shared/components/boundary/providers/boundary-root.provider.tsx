@@ -30,7 +30,7 @@ const MULTIPLE_TARGETS_WARNING =
 	"Multiple Boundary.Target elements were rendered under the same boundary root. The first registered target will be measured.";
 
 export const TARGET_OUTSIDE_ROOT_WARNING =
-	"Boundary.Target must be rendered inside a Boundary root (Boundary.View, Boundary.Trigger, or a component created by createBoundaryComponent).";
+	"Boundary.Target must be rendered inside Transition.Boundary or a component created by createBoundaryComponent.";
 
 interface BoundaryRootProps {
 	value: BoundaryRootContextValue;

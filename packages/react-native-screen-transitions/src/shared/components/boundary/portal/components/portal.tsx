@@ -24,7 +24,6 @@ import { AnimationStore } from "../../../../stores/animation.store";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundsPortalHost } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
-import { createTransitionAwareComponent } from "../../../create-transition-aware-component";
 import {
 	getHostCapturesScroll,
 	useActiveHostKey,
@@ -46,7 +45,7 @@ import {
 	resolveMatchedScreenPortalOwnership,
 } from "../utils/ownership";
 import { shallowEqual } from "../utils/shallow-equal";
-import { isTeleportEnabled } from "../utils/teleport-control";
+import { shouldAttachBoundaryPortal } from "../utils/teleport-control";
 import { resolveNextVisiblePortalHostName } from "../utils/visible-host";
 
 type NullableHostNamePortalProps = Omit<
@@ -56,8 +55,8 @@ type NullableHostNamePortalProps = Omit<
 	hostName?: string | null;
 };
 
-const TransitionAwareTeleport = NativePortal
-	? createTransitionAwareComponent(
+const AnimatedNativePortal = NativePortal
+	? Animated.createAnimatedComponent(
 			NativePortal as ComponentType<NullableHostNamePortalProps>,
 		)
 	: null;
@@ -319,7 +318,10 @@ export const Portal = memo(function Portal({
 			"worklet";
 			const slot = activeSlotsMap.get()[boundaryId];
 			const teleport = slot?.props?.teleport;
-			const shouldTeleport = !!portalHost || isTeleportEnabled(teleport);
+			const shouldTeleport = shouldAttachBoundaryPortal({
+				portalHost,
+				teleport,
+			});
 			const requestedName = requestedPortalHostName.get();
 			const visibleName = visiblePortalHostName.get();
 			const isInterpolatorReady = activeNextInterpolatorReady.get();
@@ -366,7 +368,10 @@ export const Portal = memo(function Portal({
 
 		const slot = activeSlotsMap.get()[boundaryId];
 		const { teleport, ...slotProps } = slot?.props ?? {};
-		const shouldTeleport = !!portalHost || isTeleportEnabled(teleport);
+		const shouldTeleport = shouldAttachBoundaryPortal({
+			portalHost,
+			teleport,
+		});
 		const visibleName = visiblePortalHostName.get();
 
 		return {
@@ -399,7 +404,7 @@ export const Portal = memo(function Portal({
 		return { width, height };
 	});
 
-	if (isPortalEnabled && TransitionAwareTeleport) {
+	if (isPortalEnabled && AnimatedNativePortal) {
 		return (
 			<Animated.View
 				ref={placeholderRef}
@@ -411,12 +416,9 @@ export const Portal = memo(function Portal({
 				collapsable={false}
 			>
 				{placeholderChildren}
-				<TransitionAwareTeleport
-					animatedProps={teleportProps}
-					name={boundaryId}
-				>
+				<AnimatedNativePortal animatedProps={teleportProps} name={boundaryId}>
 					<Animated.View style={placeholderStyle}>{children}</Animated.View>
-				</TransitionAwareTeleport>
+				</AnimatedNativePortal>
 			</Animated.View>
 		);
 	}
