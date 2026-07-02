@@ -1,5 +1,5 @@
 import type { TextStyle, ViewStyle } from "react-native";
-import type { StyleProps } from "react-native-reanimated";
+import type { StyleProps, TransformArrayItem } from "react-native-reanimated";
 import type { EdgeInsets } from "react-native-safe-area-context";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
@@ -352,6 +352,7 @@ export type TransitionInterpolatorOptions = Omit<
 export type NormalizedTransitionSlotStyle = {
 	style?: StyleProps;
 	props?: TransitionSlotProps;
+	boundsLocalTransform?: TransformArrayItem[];
 };
 
 /**

@@ -6,6 +6,7 @@ import type {
 	TagLink,
 } from "../../stores/bounds/types";
 import {
+	canSwitchBoundaryLocalPortalHostImmediately,
 	hasMatchedScreenPortalContinuation,
 	resolveMatchedScreenPortalOwnership,
 	usesScreenPortalHost,
@@ -127,6 +128,33 @@ describe("matched-screen host readiness", () => {
 				sourceScreenKey: "b",
 			}),
 		).toBe(true);
+	});
+});
+
+describe("canSwitchBoundaryLocalPortalHostImmediately", () => {
+	it("allows immediate attachment only when ownership stays on the same pair", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+
+		expect(
+			canSwitchBoundaryLocalPortalHostImmediately({
+				hostScreenKey: "a",
+				ownerPairKey: abPairKey,
+				previousOwnerPairKey: abPairKey,
+			}),
+		).toBe(true);
+	});
+
+	it("does not immediately attach return hops that changed owner pairs", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const baPairKey = createScreenPairKey("b", "a");
+
+		expect(
+			canSwitchBoundaryLocalPortalHostImmediately({
+				hostScreenKey: "a",
+				ownerPairKey: baPairKey,
+				previousOwnerPairKey: abPairKey,
+			}),
+		).toBe(false);
 	});
 });
 
@@ -296,6 +324,140 @@ describe("resolveMatchedScreenPortalOwnership", () => {
 			hostScreenKey: "c",
 			ownerPairKey: bcPairKey,
 			ownerScreenKey: "c",
+			status: "complete",
+		});
+	});
+
+	it("stops a longer chain after rebasing ownership onto the returning pair", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const bcPairKey = createScreenPairKey("b", "c");
+		const caPairKey = createScreenPairKey("c", "a");
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			isSettledHostReady: false,
+			pairsState: {
+				[abPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "a",
+							destinationScreenKey: "b",
+							portalHost: "boundary-local",
+						}),
+					},
+				},
+				[bcPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "b",
+							destinationScreenKey: "c",
+							portalHost: "boundary-local",
+						}),
+					},
+				},
+				[caPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "c",
+							destinationScreenKey: "a",
+							portalHost: "boundary-local",
+						}),
+					},
+				},
+			},
+			portalHost: "boundary-local",
+			settledHostScreenKey: "c",
+			sourcePairKey: abPairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "a",
+			ownerPairKey: caPairKey,
+			ownerScreenKey: "c",
+			status: "complete",
+		});
+	});
+
+	it("uses A as host with B ownership during a B -> A boundary-local return flight", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const baPairKey = createScreenPairKey("b", "a");
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			isSettledHostReady: false,
+			pairsState: {
+				[abPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "a",
+							destinationScreenKey: "b",
+							portalHost: "boundary-local",
+						}),
+					},
+				},
+				[baPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "b",
+							destinationScreenKey: "a",
+							portalHost: "boundary-local",
+						}),
+					},
+				},
+			},
+			portalHost: "boundary-local",
+			settledHostScreenKey: "b",
+			sourcePairKey: abPairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "a",
+			ownerPairKey: baPairKey,
+			ownerScreenKey: "b",
+			status: "complete",
+		});
+	});
+
+	it("rebases boundary-local return ownership to A after B -> A settles", () => {
+		const abPairKey = createScreenPairKey("a", "b");
+		const baPairKey = createScreenPairKey("b", "a");
+		const signal = resolveMatchedScreenPortalOwnership({
+			boundaryId: "video",
+			isSettledHostReady: true,
+			pairsState: {
+				[abPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "a",
+							destinationScreenKey: "b",
+							portalHost: "boundary-local",
+						}),
+					},
+				},
+				[baPairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "b",
+							destinationScreenKey: "a",
+							portalHost: "boundary-local",
+						}),
+					},
+				},
+			},
+			portalHost: "boundary-local",
+			settledHostScreenKey: "a",
+			sourcePairKey: abPairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "a",
+			ownerPairKey: baPairKey,
+			ownerScreenKey: "a",
 			status: "complete",
 		});
 	});

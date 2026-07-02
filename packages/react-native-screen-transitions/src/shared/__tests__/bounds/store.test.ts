@@ -32,6 +32,14 @@ const createScrollLayout = (x = 0, y = 0) => ({
 	isTouched: false,
 });
 
+const createSharedValue = (initial: number) => ({
+	_isReanimatedSharedValue: true,
+	value: initial,
+	get() {
+		return this.value;
+	},
+});
+
 const registerMeasuredEntry = (
 	tag: string,
 	screenKey: string,
@@ -162,6 +170,53 @@ describe("applyMeasuredBoundsWrites", () => {
 		expect(link?.source.styles).toEqual({ borderRadius: 16 });
 		expect(link?.destination?.bounds).toEqual(destination);
 		expect(link?.destination?.styles).toEqual({ borderRadius: 20 });
+	});
+
+	it("snapshots shared style values when links are measured", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const scale = createSharedValue(0.58);
+
+		applyMeasuredBoundsWrites({
+			entryTag: "card",
+			linkId: "card",
+			currentScreenKey: "screen-a",
+			measured: createBounds(25, 35, 150, 160),
+			preparedStyles: { transform: [{ scale }] },
+			linkWrite: {
+				type: "source",
+				pairKey,
+			},
+		});
+
+		scale.value = 1.1;
+
+		const link = BoundStore.link.getLink(pairKey, "card");
+		expect(link?.source.styles).toEqual({ transform: [{ scale: 0.58 }] });
+	});
+
+	it("preserves transform arrays without snapshotting object-valued style metadata", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const matrix = [1, 0, 0, 1, 24, 32];
+
+		applyMeasuredBoundsWrites({
+			entryTag: "card",
+			linkId: "card",
+			currentScreenKey: "screen-a",
+			measured: createBounds(25, 35, 150, 160),
+			preparedStyles: {
+				shadowOffset: { width: 2, height: 3 },
+				transform: [{ matrix }],
+			},
+			linkWrite: {
+				type: "source",
+				pairKey,
+			},
+		});
+
+		const link = BoundStore.link.getLink(pairKey, "card");
+		expect(link?.source.styles).toEqual({
+			transform: [{ matrix }],
+		});
 	});
 });
 

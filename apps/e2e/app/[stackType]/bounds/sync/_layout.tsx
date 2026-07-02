@@ -202,9 +202,11 @@ export default function BoundsSyncLayout() {
 			/>
 			<StackNavigator.Screen
 				name="retarget/index"
-				options={{
-					...IOSSlide(),
-				}}
+				options={
+					{
+						// ...IOSSlide(),
+					}
+				}
 			/>
 			<StackNavigator.Screen
 				name="retarget/[id]"

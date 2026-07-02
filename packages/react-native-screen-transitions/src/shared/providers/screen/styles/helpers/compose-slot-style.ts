@@ -102,11 +102,15 @@ export const getLocalTransformForSlotComposition = (
 export const composeSlotStyleWithLocalTransform = (
 	slotStyle: StyleProps | undefined,
 	localTransform: TransformArrayItem[] | undefined,
+	boundsLocalTransform?: TransformArrayItem[],
 ): StyleProps => {
 	"worklet";
 	const resolvedSlotStyle = (slotStyle ?? NO_STYLES) as StyleProps;
+	// The measured bounds snapshot supersedes the live local transform so bounds
+	// geometry and payload scale are composed from the same measurement frame.
+	const transformToCompose = boundsLocalTransform ?? localTransform;
 
-	if (!localTransform?.length) {
+	if (!transformToCompose?.length) {
 		return resolvedSlotStyle;
 	}
 
@@ -119,7 +123,7 @@ export const composeSlotStyleWithLocalTransform = (
 		...resolvedSlotStyle,
 		transform: [
 			...(slotTransform as TransformArrayItem[]),
-			...resolveLocalTransform(localTransform),
+			...resolveLocalTransform(transformToCompose),
 		],
 	};
 };

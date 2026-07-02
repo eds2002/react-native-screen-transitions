@@ -34,6 +34,138 @@ const syncLinkStatus = (link: TagLink) => {
 		: "source-incomplete";
 };
 
+type SharedValueLike = {
+	_isReanimatedSharedValue: true;
+	get?: () => unknown;
+	value?: unknown;
+};
+
+const isSharedValueLike = (value: unknown): value is SharedValueLike => {
+	"worklet";
+	return (
+		(value as Partial<SharedValueLike> | null)?._isReanimatedSharedValue ===
+		true
+	);
+};
+
+const snapshotSharedValue = (value: SharedValueLike): unknown => {
+	"worklet";
+	return value.value;
+};
+
+const snapshotTransformArrayValue = (
+	value: unknown[],
+): unknown[] | undefined => {
+	"worklet";
+	const snapshot: unknown[] = [];
+
+	for (let index = 0; index < value.length; index++) {
+		const snapshotValue = snapshotTransformEntryValue(value[index]);
+		if (snapshotValue !== undefined) {
+			snapshot.push(snapshotValue);
+		}
+	}
+
+	return snapshot;
+};
+
+const snapshotTransformEntryValue = (value: unknown): unknown => {
+	"worklet";
+	if (isSharedValueLike(value)) {
+		return snapshotSharedValue(value);
+	}
+
+	if (Array.isArray(value)) {
+		return snapshotTransformArrayValue(value);
+	}
+
+	if (typeof value === "function") {
+		return undefined;
+	}
+
+	return value === null || typeof value !== "object" ? value : undefined;
+};
+
+const snapshotTransformItem = (value: unknown): unknown => {
+	"worklet";
+	if (!value || typeof value !== "object" || Array.isArray(value)) {
+		return snapshotTransformEntryValue(value);
+	}
+
+	const snapshot: Record<string, unknown> = {};
+	const source = value as Record<string, unknown>;
+	let hasValue = false;
+
+	for (const key in source) {
+		const snapshotValue = snapshotTransformEntryValue(source[key]);
+		if (snapshotValue !== undefined) {
+			snapshot[key] = snapshotValue;
+			hasValue = true;
+		}
+	}
+
+	return hasValue ? snapshot : undefined;
+};
+
+const snapshotTransform = (value: unknown): unknown => {
+	"worklet";
+	if (!Array.isArray(value)) {
+		return undefined;
+	}
+
+	const snapshot: unknown[] = [];
+
+	for (let index = 0; index < value.length; index++) {
+		const snapshotValue = snapshotTransformItem(value[index]);
+		if (snapshotValue !== undefined) {
+			snapshot.push(snapshotValue);
+		}
+	}
+
+	return snapshot;
+};
+
+/**
+ * Link styles are measurement metadata, not a general style serializer.
+ * Snapshot only the fields bounds currently consume: primitives, top-level
+ * shared values, and transform entries. Object-valued non-transform styles are
+ * intentionally omitted to avoid retaining opaque/native style objects.
+ */
+const snapshotStyles = (styles: StyleProps): StyleProps => {
+	"worklet";
+	if (!styles || typeof styles !== "object" || Array.isArray(styles)) {
+		return {};
+	}
+
+	const snapshot: Record<string, unknown> = {};
+	const source = styles as Record<string, unknown>;
+
+	for (const key in source) {
+		const value = source[key];
+
+		if (key === "transform") {
+			const transform = snapshotTransform(value);
+
+			if (transform !== undefined) {
+				snapshot.transform = transform;
+			}
+
+			continue;
+		}
+
+		if (isSharedValueLike(value)) {
+			snapshot[key] = snapshotSharedValue(value);
+			continue;
+		}
+
+		if (value === null || typeof value !== "object") {
+			snapshot[key] = value;
+		}
+	}
+
+	return snapshot as StyleProps;
+};
+
 const createLinkSide = (
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
@@ -43,7 +175,7 @@ const createLinkSide = (
 	return {
 		screenKey,
 		bounds,
-		styles,
+		styles: snapshotStyles(styles),
 	};
 };
 

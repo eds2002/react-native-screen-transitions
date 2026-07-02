@@ -29,8 +29,11 @@ export default function MatchedScreenDebugLayout() {
 	return (
 		<BlankStack>
 			<BlankStack.Screen name="index" options={singleInstanceOptions} />
-			<BlankStack.Screen name="player" options={singleInstanceOptions} />
-			<BlankStack.Screen name="final" options={singleInstanceOptions} />
+			<BlankStack.Screen name="a" options={singleInstanceOptions} />
+			<BlankStack.Screen name="b" options={singleInstanceOptions} />
+			<BlankStack.Screen name="c" options={singleInstanceOptions} />
+			<BlankStack.Screen name="d" options={singleInstanceOptions} />
+			<BlankStack.Screen name="e" options={singleInstanceOptions} />
 		</BlankStack>
 	);
 }

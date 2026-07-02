@@ -30,6 +30,7 @@ import {
 	composeTransformRelative,
 	type ElementComposeParams,
 } from "./composers";
+import { attachBoundsLocalTransform } from "./local-transform";
 
 const getBoundsScrollSnapshot = (
 	bounds: MeasuredDimensions | null,
@@ -301,11 +302,18 @@ export const computeBoundStyles = (
 	const isSize = computeOptions.method === "size";
 	const isAbsolute = computeOptions.space === "absolute";
 
-	return isSize
+	const style = isSize
 		? isAbsolute
 			? composeSizeAbsolute(common)
 			: composeSizeRelative(common)
 		: isAbsolute
 			? composeTransformAbsolute(common)
 			: composeTransformRelative(common);
+
+	return attachBoundsLocalTransform(
+		style,
+		entering
+			? (resolvedPair?.destinationStyles ?? null)
+			: (resolvedPair?.sourceStyles ?? null),
+	);
 };

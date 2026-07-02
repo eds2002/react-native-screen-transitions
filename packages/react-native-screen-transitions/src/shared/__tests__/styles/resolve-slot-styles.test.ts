@@ -49,6 +49,30 @@ describe("resolveSlotStyles", () => {
 		});
 	});
 
+	it("carries measured bounds local transforms through slot resolution", () => {
+		const result = resolveSlotStyles({
+			localStylesMaps: [
+				{
+					card: {
+						style: {
+							transform: [{ translateX: 24 }],
+						},
+						boundsLocalTransform: [{ scale: 0.58 }],
+					},
+				},
+			],
+			ancestorStylesMap: NO_ANCESTOR_STYLES,
+			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
+		});
+
+		expect(result.resolvedStylesMap.card).toEqual({
+			style: {
+				transform: [{ translateX: 24 }],
+			},
+			boundsLocalTransform: [{ scale: 0.58 }],
+		});
+	});
+
 	it("prefers local slots over inherited slots", () => {
 		const result = resolveSlotStyles({
 			localStylesMaps: [

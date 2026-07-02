@@ -43,6 +43,25 @@ export const usesScreenPortalHost = (
 	return link?.source?.portalHost === "screen";
 };
 
+export const canSwitchBoundaryLocalPortalHostImmediately = ({
+	hostScreenKey,
+	ownerPairKey,
+	previousOwnerPairKey,
+}: {
+	hostScreenKey: ScreenKey | null;
+	ownerPairKey?: ScreenPairKey;
+	previousOwnerPairKey?: ScreenPairKey;
+}) => {
+	"worklet";
+	return (
+		!!hostScreenKey &&
+		!!ownerPairKey &&
+		!!previousOwnerPairKey &&
+		ownerPairKey === previousOwnerPairKey &&
+		hostScreenKey === getSourceScreenKeyFromPairKey(previousOwnerPairKey)
+	);
+};
+
 const isActivePortalLink = ({
 	link,
 	linkKey,
@@ -138,12 +157,17 @@ export const resolveMatchedScreenPortalOwnership = ({
 
 	let hostScreenKey = link.destination.screenKey;
 	let ownerPairKey = sourcePairKey;
+	const seenScreenKeys: ScreenKey[] = [
+		getSourceScreenKeyFromPairKey(sourcePairKey),
+		hostScreenKey,
+	];
 
 	const pairKeys = Object.keys(pairsState);
 
 	for (let hop = 0; hop < pairKeys.length; hop++) {
 		let didAdvance = false;
 		let hasPendingNextHop = false;
+		let didHitVisitedScreen = false;
 
 		for (let index = 0; index < pairKeys.length; index++) {
 			const candidatePairKey = pairKeys[index];
@@ -172,9 +196,22 @@ export const resolveMatchedScreenPortalOwnership = ({
 				continue;
 			}
 
+			const nextHostScreenKey = candidate.destination.screenKey;
+
 			ownerPairKey = candidatePairKey;
-			hostScreenKey = candidate.destination.screenKey;
+			hostScreenKey = nextHostScreenKey;
+
+			if (hasSeenScreenKey(seenScreenKeys, nextHostScreenKey)) {
+				didHitVisitedScreen = true;
+				break;
+			}
+
+			seenScreenKeys.push(nextHostScreenKey);
 			didAdvance = true;
+			break;
+		}
+
+		if (didHitVisitedScreen) {
 			break;
 		}
 

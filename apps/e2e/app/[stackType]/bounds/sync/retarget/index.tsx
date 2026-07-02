@@ -37,8 +37,8 @@ export default function SyncRetargetIndex() {
 					style={[
 						styles.activeBox,
 						{
-							width: 100,
-							height: 100,
+							width: 112,
+							height: 112,
 							backgroundColor: theme.actionButton,
 							margin: 24,
 						},
@@ -54,6 +54,11 @@ export default function SyncRetargetIndex() {
 				>
 					<Text style={[styles.activeLabel, { color: theme.actionButtonText }]}>
 						SRC
+					</Text>
+					<Text
+						style={[styles.sourceCaption, { color: theme.actionButtonText }]}
+					>
+						return target
 					</Text>
 				</Transition.Boundary.Trigger>
 			</View>
@@ -91,9 +96,16 @@ const styles = StyleSheet.create({
 		borderRadius: 14,
 		alignItems: "center",
 		justifyContent: "center",
+		gap: 6,
 	},
 	activeLabel: {
 		fontWeight: "700",
 		fontSize: 14,
+	},
+	sourceCaption: {
+		fontSize: 10,
+		fontWeight: "600",
+		opacity: 0.7,
+		textTransform: "uppercase",
 	},
 });

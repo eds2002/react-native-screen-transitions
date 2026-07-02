@@ -11,7 +11,14 @@ export const useSlotStyles = (slotId: string | undefined) => {
 	const { slotsMap } = useScreenSlots();
 
 	return useAnimatedStyle(() => {
-		return (slotId ? slotsMap.get()[slotId]?.style : undefined) ?? NO_STYLES;
+		const slot = slotId ? slotsMap.get()[slotId] : undefined;
+		const slotStyle = slot?.style ?? NO_STYLES;
+
+		return composeSlotStyleWithLocalTransform(
+			slotStyle,
+			undefined,
+			slot?.boundsLocalTransform,
+		);
 	});
 };
 
@@ -26,10 +33,14 @@ export const useComposedSlotStyles = (
 	);
 
 	return useAnimatedStyle(() => {
-		const slotStyle =
-			(slotId ? slotsMap.get()[slotId]?.style : undefined) ?? NO_STYLES;
+		const slot = slotId ? slotsMap.get()[slotId] : undefined;
+		const slotStyle = slot?.style ?? NO_STYLES;
 
-		return composeSlotStyleWithLocalTransform(slotStyle, localTransform);
+		return composeSlotStyleWithLocalTransform(
+			slotStyle,
+			localTransform,
+			slot?.boundsLocalTransform,
+		);
 	});
 };
 

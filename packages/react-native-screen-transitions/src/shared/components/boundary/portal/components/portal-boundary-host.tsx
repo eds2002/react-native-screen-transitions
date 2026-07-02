@@ -2,6 +2,7 @@ import { memo } from "react";
 import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
+import { composeSlotStyleWithLocalTransform } from "../../../../providers/screen/styles/helpers/compose-slot-style";
 import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { ScrollStore } from "../../../../stores/scroll.store";
@@ -91,7 +92,13 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			return NO_STYLES;
 		}
 
-		return host.slotsMap.get()[host.boundaryId]?.style ?? NO_STYLES;
+		const slot = host.slotsMap.get()[host.boundaryId];
+
+		return composeSlotStyleWithLocalTransform(
+			slot?.style ?? NO_STYLES,
+			undefined,
+			slot?.boundsLocalTransform,
+		);
 	});
 
 	// Without `react-native-teleport` no portal ever mounts a boundary host, so

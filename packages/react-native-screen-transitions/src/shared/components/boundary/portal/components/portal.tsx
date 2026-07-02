@@ -20,7 +20,6 @@ import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../providers/screen/styles";
 import { useRegisteredScreenSlots } from "../../../../providers/screen/styles/stores/slot-references.store";
 import { AnimationStore } from "../../../../stores/animation.store";
-import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundsPortalHost } from "../../../../stores/bounds/types";
 import { logger } from "../../../../utils/logger";
@@ -41,6 +40,7 @@ import {
 	PORTAL_HOST_NAME_RESET_VALUE,
 } from "../utils/naming";
 import {
+	canSwitchBoundaryLocalPortalHostImmediately,
 	type PortalOwnershipSignal,
 	resolveMatchedScreenPortalOwnership,
 } from "../utils/ownership";
@@ -274,9 +274,12 @@ export const Portal = memo(function Portal({
 						? previousSignal.ownerPairKey
 						: undefined;
 				const canSwitchImmediately =
-					!!hostScreenKey &&
-					!!previousOwnerPairKey &&
-					hostScreenKey === getSourceScreenKeyFromPairKey(previousOwnerPairKey);
+					canSwitchBoundaryLocalPortalHostImmediately({
+						hostScreenKey,
+						ownerPairKey:
+							signal.status === "complete" ? signal.ownerPairKey : undefined,
+						previousOwnerPairKey,
+					});
 
 				canSwitchPortalHostImmediately.set(canSwitchImmediately ? 1 : 0);
 
