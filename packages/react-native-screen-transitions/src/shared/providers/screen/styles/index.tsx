@@ -1,4 +1,5 @@
 export {
+	useComposedSlotStyles,
 	useSlotLayoutStyles,
 	useSlotProps,
 	useSlotStackingStyles,

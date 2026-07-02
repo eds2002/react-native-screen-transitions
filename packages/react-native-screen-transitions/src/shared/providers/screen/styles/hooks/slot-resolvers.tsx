@@ -1,5 +1,10 @@
+import { useMemo } from "react";
 import { useAnimatedProps, useAnimatedStyle } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../../constants";
+import {
+	composeSlotStyleWithLocalTransform,
+	getLocalTransformForSlotComposition,
+} from "../helpers/compose-slot-style";
 import { useScreenSlots } from "../slot.provider";
 
 export const useSlotStyles = (slotId: string | undefined) => {
@@ -7,6 +12,24 @@ export const useSlotStyles = (slotId: string | undefined) => {
 
 	return useAnimatedStyle(() => {
 		return (slotId ? slotsMap.get()[slotId]?.style : undefined) ?? NO_STYLES;
+	});
+};
+
+export const useComposedSlotStyles = (
+	slotId: string | undefined,
+	style: unknown,
+) => {
+	const { slotsMap } = useScreenSlots();
+	const localTransform = useMemo(
+		() => getLocalTransformForSlotComposition(style),
+		[style],
+	);
+
+	return useAnimatedStyle(() => {
+		const slotStyle =
+			(slotId ? slotsMap.get()[slotId]?.style : undefined) ?? NO_STYLES;
+
+		return composeSlotStyleWithLocalTransform(slotStyle, localTransform);
 	});
 };
 

@@ -10,8 +10,8 @@ import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import {
+	useComposedSlotStyles,
 	useSlotStackingStyles,
-	useSlotStyles,
 } from "../../providers/screen/styles";
 import { createBoundTag } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { useBoundaryMeasurement } from "./hooks/use-boundary-measurement";
@@ -73,7 +73,7 @@ export function createBoundaryComponent<P extends object>(
 		// independent of whether an interpolator is configured for this transition.
 		const shouldAttachAssociatedStyles = enabled;
 
-		const associatedStyles = useSlotStyles(boundTag.tag);
+		const associatedStyles = useComposedSlotStyles(boundTag.tag, style);
 		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
 		const rootPlaceholderRef = useAnimatedRef<View>();
 
@@ -87,9 +87,6 @@ export function createBoundaryComponent<P extends object>(
 			boundTag,
 			portalHost,
 			rootMeasurementRef: portalHost ? rootPlaceholderRef : undefined,
-			associatedTargetStyles: shouldAttachAssociatedStyles
-				? associatedStyles
-				: undefined,
 		});
 
 		const { onPress: resolvedOnPress } = useBoundaryMeasurement({
@@ -169,9 +166,7 @@ export function createBoundaryComponent<P extends object>(
 
 	// The HOC's runtime identity (animated + memoized forwardRef) is not
 	// expressible against the public boundary props, so assert it here.
-	return memo(
-		Animated.createAnimatedComponent(Inner),
-	) as unknown as React.MemoExoticComponent<
+	return memo(Inner) as unknown as React.MemoExoticComponent<
 		React.ForwardRefExoticComponent<
 			BoundaryComponentProps<P> &
 				React.RefAttributes<React.ComponentRef<typeof Wrapped>>

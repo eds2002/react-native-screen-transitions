@@ -1,16 +1,10 @@
-import type React from "react";
 import { type ReactNode, useCallback, useMemo, useState } from "react";
 import type { View } from "react-native";
-import type Animated from "react-native-reanimated";
 import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import { useAnimatedRef } from "react-native-reanimated";
 import type { BoundsPortalHost, BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
-
-type BoundaryAssociatedStyle = React.ComponentProps<
-	typeof Animated.View
->["style"];
 
 interface BoundaryRootContextValue {
 	registerTargetRef: (
@@ -20,7 +14,6 @@ interface BoundaryRootContextValue {
 	) => void;
 	unregisterTargetRef: (targetRef: AnimatedRef<View>) => void;
 	activeTargetRef: AnimatedRef<View> | null;
-	associatedTargetStyles?: BoundaryAssociatedStyle;
 	boundTag: BoundTag;
 	portalHost?: BoundsPortalHost;
 }
@@ -50,13 +43,11 @@ export const { BoundaryRootProvider, useBoundaryRootContext } = createProvider(
 )<BoundaryRootProps, BoundaryRootContextValue>((props) => props);
 
 export const useBoundaryRootState = (params: {
-	associatedTargetStyles?: BoundaryAssociatedStyle;
 	boundTag: BoundTag;
 	portalHost?: BoundsPortalHost;
 	rootMeasurementRef?: AnimatedRef<View>;
 }) => {
-	const { associatedTargetStyles, boundTag, portalHost, rootMeasurementRef } =
-		params;
+	const { boundTag, portalHost, rootMeasurementRef } = params;
 	const rootRef = useAnimatedRef<View>();
 	const [targetEntry, setTargetEntry] = useState<BoundaryTargetEntry | null>(
 		null,
@@ -101,18 +92,10 @@ export const useBoundaryRootState = (params: {
 			registerTargetRef,
 			unregisterTargetRef,
 			activeTargetRef: targetEntry?.ref ?? null,
-			associatedTargetStyles,
 			boundTag,
 			portalHost,
 		}),
-		[
-			registerTargetRef,
-			unregisterTargetRef,
-			targetEntry,
-			associatedTargetStyles,
-			boundTag,
-			portalHost,
-		],
+		[registerTargetRef, unregisterTargetRef, targetEntry, boundTag, portalHost],
 	);
 
 	return {

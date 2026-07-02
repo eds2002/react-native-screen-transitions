@@ -2,7 +2,10 @@ import type React from "react";
 import { memo, useLayoutEffect, useMemo } from "react";
 import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
-import { useSlotLayoutStyles } from "../../../providers/screen/styles";
+import {
+	useComposedSlotStyles,
+	useSlotLayoutStyles,
+} from "../../../providers/screen/styles";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import { logger } from "../../../utils/logger";
 import { Portal } from "../portal/components/portal";
@@ -27,6 +30,10 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 		isActiveTarget && rootContext?.portalHost === undefined;
 	const shouldApplyPortalLayoutStyle =
 		isActiveTarget && rootContext?.portalHost !== undefined;
+	const associatedTargetStyles = useComposedSlotStyles(
+		rootContext?.boundTag.tag,
+		style,
+	);
 	const portalLayoutStyle = useSlotLayoutStyles(rootContext?.boundTag.tag);
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 	// Portal'd content can be teleported into another screen's host; measuring
@@ -68,9 +75,7 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 				ref={targetAnimatedRef}
 				style={[
 					style,
-					shouldApplyAssociatedStyleInline
-						? rootContext.associatedTargetStyles
-						: undefined,
+					shouldApplyAssociatedStyleInline ? associatedTargetStyles : undefined,
 					shouldApplyPortalLayoutStyle ? portalLayoutStyle : undefined,
 				]}
 				collapsable={false}
