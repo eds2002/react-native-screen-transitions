@@ -7,14 +7,13 @@ import {
 	useLayoutEffect,
 	useState,
 } from "react";
-import type { LayoutRectangle, View } from "react-native";
+import type { View } from "react-native";
 import Animated, {
 	type AnimatedRef,
 	runOnJS,
 	runOnUI,
 	useAnimatedProps,
 	useAnimatedReaction,
-	useAnimatedStyle,
 	useSharedValue,
 } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
@@ -24,6 +23,7 @@ import { useRegisteredScreenSlots } from "../../../../providers/screen/styles/st
 import { AnimationStore } from "../../../../stores/animation.store";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import { logger } from "../../../../utils/logger";
+import { usePlaceholderStyles } from "../hooks/use-placeholder-styles";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import {
 	dropStalePortalBoundaryHosts,
@@ -86,6 +86,7 @@ export const Portal = memo(function Portal({
 	// (the `return children` path below).
 	const isPortalEnabled =
 		(handoff || escapeClipping) && isTeleportAvailable && id !== undefined;
+
 	if (__DEV__ && (handoff || escapeClipping) && id === undefined) {
 		logger.warnOnce(
 			"portal:missing-id",
@@ -103,6 +104,7 @@ export const Portal = memo(function Portal({
 		PortalOwnershipSignal,
 		{ status: "complete" }
 	> | null>(null);
+
 	const styleOwnerScreenKey = ownership?.ownerScreenKey ?? currentScreenKey;
 	const ownerScreenSlots = useRegisteredScreenSlots(styleOwnerScreenKey);
 	const activeScreenSlots = ownerScreenSlots ?? ownScreenSlots;
@@ -114,8 +116,6 @@ export const Portal = memo(function Portal({
 	const requestedPortalHostName = useSharedValue<string | null>(null);
 	const visiblePortalHostName = useSharedValue<string | null>(null);
 	const canSwitchPortalHostImmediately = useSharedValue(0);
-	const placeholderWidth = useSharedValue(0);
-	const placeholderHeight = useSharedValue(0);
 
 	const targetScreenKey = ownership ? ownership.hostScreenKey : null;
 	const settledHostScreenKey = ownership?.hostScreenKey ?? null;
@@ -386,41 +386,9 @@ export const Portal = memo(function Portal({
 		};
 	});
 
-	// Pin the placeholder to its measured size while content lives in the host,
-	// in the same UI frame the host name flips — no commit in between. Until the
-	// first layout lands (dims 0) sizing stays natural so an instant attach
-	// cannot collapse the slot.
-	const placeholderStyle = useAnimatedStyle(() => {
-		"worklet";
-		const isAttached = visiblePortalHostName.get() !== null;
-		const width = placeholderWidth.get();
-		const height = placeholderHeight.get();
-
-		if (!isAttached || width === 0) {
-			return { width: "auto", height: "auto" } as const;
-		}
-
-		return { width, height };
+	const { handleOnLayout, placeholderStyle } = usePlaceholderStyles({
+		visiblePortalHostName,
 	});
-
-	const handleOnLayout = useCallback(
-		(layout: LayoutRectangle) => {
-			"worklet";
-			const { width, height } = layout;
-			if (width === 0 || height === 0) {
-				return;
-			}
-
-			const hasValidDimensions =
-				placeholderHeight.get() !== 0 && placeholderWidth.get() !== 0;
-
-			if (!hasValidDimensions) {
-				placeholderWidth.set(width);
-				placeholderHeight.set(height);
-			}
-		},
-		[placeholderHeight, placeholderWidth],
-	);
 
 	if (isPortalEnabled && AnimatedNativePortal) {
 		return (
@@ -434,7 +402,7 @@ export const Portal = memo(function Portal({
 			>
 				{placeholderChildren}
 				<AnimatedNativePortal animatedProps={teleportProps} name={boundaryId}>
-					<Animated.View style={placeholderStyle}>{children}</Animated.View>
+					{children}
 				</AnimatedNativePortal>
 			</Animated.View>
 		);
