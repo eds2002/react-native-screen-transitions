@@ -237,6 +237,8 @@ export type BoundsOptions = {
 
 	/**
 	 * If true, the raw values will be returned instead of the computed values.
+	 *
+	 * @deprecated Use `bounds(id).math(options)` instead of passing `raw`.
 	 * @default false
 	 */
 	raw?: boolean;

@@ -117,6 +117,8 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * <Transition.View sharedBoundTag="profile-avatar">
 	 *   <Avatar size="large" />
 	 * </Transition.View>
+	 *
+	 * @deprecated Use `Transition.Boundary` with `id` instead.
 	 */
 	sharedBoundTag?: string;
 
@@ -127,6 +129,8 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * Useful when layout can change while unfocused (for example, programmatic
 	 * ScrollView/FlatList scrolling triggered from another screen).
 	 *
+	 * @deprecated Legacy `sharedBoundTag` refresh option. The boundary
+	 * measurement pipeline refreshes layout through `Transition.Boundary`.
 	 * @default false
 	 */
 	remeasureOnFocus?: boolean;
@@ -209,6 +213,8 @@ export type ScreenTransitionConfig = {
 	/**
 	 * How much velocity affects snap point targeting. Lower values make snapping
 	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
+	 *
+	 * @deprecated Use `gestureSnapVelocityImpact` instead.
 	 * @default 0.1
 	 */
 	snapVelocityImpact?: number;

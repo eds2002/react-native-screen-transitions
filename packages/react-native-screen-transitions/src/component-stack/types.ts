@@ -13,8 +13,14 @@ import type {
 import type { ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
 
+/**
+ * @deprecated Component stack is deprecated. Use blank stack instead.
+ */
 export type ComponentStackNavigationEventMap = {};
 
+/**
+ * @deprecated Component stack is deprecated. Use blank stack instead.
+ */
 export type ComponentStackNavigationProp<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
@@ -29,6 +35,9 @@ export type ComponentStackNavigationProp<
 > &
 	StackActionHelpers<ParamList>;
 
+/**
+ * @deprecated Component stack is deprecated. Use blank stack instead.
+ */
 export type ComponentStackScreenProps<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
@@ -38,6 +47,9 @@ export type ComponentStackScreenProps<
 	route: RouteProp<ParamList, RouteName>;
 };
 
+/**
+ * @deprecated Component stack is deprecated. Use blank stack instead.
+ */
 export type ComponentStackOptionsArgs<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = keyof ParamList,
@@ -46,6 +58,9 @@ export type ComponentStackOptionsArgs<
 	theme: Theme;
 };
 
+/**
+ * @deprecated Component stack is deprecated. Use blank stack instead.
+ */
 export type ComponentStackNavigationHelpers = NavigationHelpers<
 	ParamListBase,
 	ComponentStackNavigationEventMap
@@ -56,6 +71,8 @@ type ComponentStackNavigationConfig = {};
 /**
  * Props passed to overlay components in component-stack.
  * Uses the shared OverlayProps type with component-stack's navigation type.
+ *
+ * @deprecated Component stack is deprecated. Use blank stack instead.
  */
 export type ComponentStackOverlayProps = OverlayProps<
 	ComponentStackNavigationProp<ParamListBase>
@@ -70,9 +87,15 @@ type ComponentStackScreenTransitionConfig = ScreenTransitionConfig & {
 	detachPreviousScreen?: boolean;
 };
 
+/**
+ * @deprecated Component stack is deprecated. Use blank stack instead.
+ */
 export type ComponentStackNavigationOptions =
 	ComponentStackScreenTransitionConfig & {};
 
+/**
+ * @deprecated Component stack is deprecated. Use blank stack instead.
+ */
 export type ComponentStackNavigatorProps = DefaultNavigatorOptions<
 	ParamListBase,
 	string | undefined,
@@ -84,6 +107,9 @@ export type ComponentStackNavigatorProps = DefaultNavigatorOptions<
 	StackRouterOptions &
 	ComponentStackNavigationConfig;
 
+/**
+ * @deprecated Component stack is deprecated. Use blank stack instead.
+ */
 export type ComponentStackDescriptor = Descriptor<
 	ComponentStackNavigationOptions,
 	ComponentStackNavigationProp<ParamListBase>,

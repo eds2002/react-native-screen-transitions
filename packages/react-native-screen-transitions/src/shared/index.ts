@@ -18,6 +18,10 @@ export default {
 	FlatList: createTransitionAwareComponent(FlatList, {
 		isScrollable: true,
 	}),
+	/**
+	 * @deprecated Use `navigationMaskEnabled` with the navigation mask style IDs
+	 * instead.
+	 */
 	MaskedView: MaskedView,
 	Presets,
 	Specs,

@@ -12,6 +12,10 @@ try {
 	// noop
 }
 
+/**
+ * @deprecated Use `navigationMaskEnabled` with the navigation mask style IDs
+ * instead.
+ */
 export default function MaskedView({
 	children,
 	style: userStyles = {},
