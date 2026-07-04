@@ -52,11 +52,7 @@ function FeedVideoCard({ onPress, video, width }: FeedVideoCardProps) {
 			>
 				<Transition.Boundary.Target
 					pointerEvents="none"
-					style={[
-						styles.videoCard,
-						cardStyle,
-						{ backgroundColor: theme.card },
-					]}
+					style={[styles.videoCard, cardStyle, { backgroundColor: theme.card }]}
 				>
 					<VideoView
 						player={player}

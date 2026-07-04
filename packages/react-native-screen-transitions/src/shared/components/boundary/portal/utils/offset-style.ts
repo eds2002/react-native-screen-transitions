@@ -19,12 +19,19 @@ type ResolvePortalOffsetStyleParams = {
 	bounds: ScrollMeasuredDimensions;
 	hostKey: string;
 	placement: PortalOffsetPlacement;
+	/**
+	 * Live correction applied on top of the stored source placement. Used by
+	 * cross-screen hosts to keep the landing rect tracking the source screen's
+	 * scroll while the source is interactive mid-flight.
+	 */
+	landingShift?: { x: number; y: number };
 };
 
 export const resolvePortalOffsetStyle = ({
 	bounds,
 	hostKey,
 	placement,
+	landingShift,
 }: ResolvePortalOffsetStyleParams): StyleProps => {
 	"worklet";
 	const hostBounds = getPortalHostBounds(hostKey);
@@ -62,8 +69,8 @@ export const resolvePortalOffsetStyle = ({
 
 	return {
 		transform: [
-			{ translateY: bounds.pageY - adjustedHostPageY },
-			{ translateX: bounds.pageX - adjustedHostPageX },
+			{ translateY: bounds.pageY - adjustedHostPageY + (landingShift?.y ?? 0) },
+			{ translateX: bounds.pageX - adjustedHostPageX + (landingShift?.x ?? 0) },
 		],
 	};
 };

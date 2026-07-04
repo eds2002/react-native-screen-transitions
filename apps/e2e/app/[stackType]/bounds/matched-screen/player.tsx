@@ -38,6 +38,8 @@ function PlayerSlot({ video, width }: PlayerSlotProps) {
 					id={video.id}
 					testID={`${video.id}-destination`}
 					style={StyleSheet.absoluteFill}
+					handoff
+					// escapeClipping
 				/>
 			</View>
 			<Text style={[styles.slotLabel, { color: theme.textSecondary }]}>
