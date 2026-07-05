@@ -1,8 +1,8 @@
 ---
 title: "New in 3.9"
 pageTitle: "New in 3.9"
-summary: "v3.9 makes bounds measurement more deterministic, improves retargeting, and introduces the simplified Boundary API."
-description: "v3.9 makes bounds measurement more deterministic, improves retargeting, and introduces the simplified Boundary API."
+summary: "v3.9 makes bounds measurement more deterministic, improves retargeting, introduces the simplified Boundary API, and adds contentComponent."
+description: "v3.9 makes bounds measurement more deterministic, improves retargeting, introduces the simplified Boundary API, and adds contentComponent."
 eyebrow: "Changelogs"
 group: "Changelogs"
 hidden: true
@@ -22,6 +22,47 @@ The main API changes are:
 - `bounds(id).math()` returns numeric values for custom renderers and interpolation logic.
 - `handoff` moves a live boundary payload between matching boundaries.
 - `escapeClipping` lets a boundary render outside local clipping constraints while it transitions.
+- `contentComponent` adds a custom renderer for the screen content layer.
+- `backdropComponent` can now receive render props: `{ styles, props, pointerEvents }`.
+- `surfaceComponent` is deprecated in favor of `contentComponent`.
+
+## Layer Components
+
+v3.9 adds `contentComponent` for custom screen shells.
+
+Use it when the screen content layer needs to be rendered by your own component, while still receiving the library-owned animated styles, animated props, pointer events, and children.
+
+```tsx
+options={{
+  contentComponent: ({ styles, props, pointerEvents, children }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    >
+      {children}
+    </Animated.View>
+  ),
+}}
+```
+
+`backdropComponent` keeps accepting a component type, but function components can now render the layer manually:
+
+```tsx
+options={{
+  backdropComponent: ({ styles, props, pointerEvents }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    />
+  ),
+}}
+```
+
+This replaces the older backdrop shape that split animated props and visual styles across multiple view layers.
+
+`surfaceComponent` still works for compatibility, but it is deprecated. New code should move custom screen shells to `contentComponent`.
 
 ## Boundary API
 
