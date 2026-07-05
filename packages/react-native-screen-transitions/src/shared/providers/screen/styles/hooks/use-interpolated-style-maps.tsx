@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useDerivedValue, useSharedValue } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import { AnimationStore } from "../../../../stores/animation.store";
@@ -22,6 +23,7 @@ import {
 	syncScreenOptionsOverrides,
 	useScreenOptionsContext,
 } from "../../options";
+import { collectInterpolatorSharedValues } from "../helpers/collect-interpolator-shared-values";
 import { normalizeSlots } from "../helpers/normalize-slots";
 import { isOpeningBeforeStart } from "../helpers/opening-phase";
 import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
@@ -146,6 +148,14 @@ export const useInterpolatedStylesMap = () => {
 	const transition = useBuildTransitionAccessor();
 	const nextInterpolatorReady = useSharedValue(0);
 
+	// In some cases, a user may want to use external shared values to drive animations in the interpoaltor.
+	// We can now support this by collecting those shared values and reading them here to trigger an update.
+	const interpolatorSharedValues = useMemo(
+		() =>
+			collectInterpolatorSharedValues([currentInterpolator, nextInterpolator]),
+		[currentInterpolator, nextInterpolator],
+	);
+
 	const activeScreenKey = nextScreenKey ?? currentScreenKey;
 	const {
 		entering: activeEntering,
@@ -162,6 +172,7 @@ export const useInterpolatedStylesMap = () => {
 			screenInterpolatorPropsRevision,
 			ancestorScreenAnimationSources,
 			descendantScreenAnimationSources,
+			interpolatorSharedValues,
 		);
 		const props = screenInterpolatorProps.get();
 
