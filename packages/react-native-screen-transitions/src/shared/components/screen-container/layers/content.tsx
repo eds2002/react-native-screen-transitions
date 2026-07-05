@@ -1,5 +1,5 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <Screen gesture is under the gesture context, so this will always exist.> */
-import { memo } from "react";
+import { type ComponentType, memo, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
@@ -7,9 +7,11 @@ import { useDescriptors } from "../../../providers/screen/descriptors";
 import { useGestureContext } from "../../../providers/screen/gestures";
 import { OriginProvider } from "../../../providers/screen/origin.provider";
 import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
+import type { ScreenContentComponentProps } from "../../../types";
 import { ScreenFallbackHost } from "../../boundary/portal/components/host";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
+import { usesLayerRenderProps } from "./render-component";
 import { SurfaceContainer } from "./surface-container";
 
 type Props = {
@@ -23,8 +25,17 @@ export const ContentLayer = memo(
 		const { current } = useDescriptors();
 
 		const gestureContext = useGestureContext();
+		const ContentComponent = current.options.contentComponent;
 		const isNavigationMaskEnabled = !!current.options.navigationMaskEnabled;
 		const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
+
+		const AnimatedContentComponent = useMemo(() => {
+			return ContentComponent && !usesLayerRenderProps(ContentComponent)
+				? Animated.createAnimatedComponent(
+						ContentComponent as ComponentType<any>,
+					)
+				: null;
+		}, [ContentComponent]);
 
 		const hasAutoSnapPoint =
 			current.options.snapPoints?.includes("auto") ?? false;
@@ -33,32 +44,60 @@ export const ContentLayer = memo(
 
 		const animatedContentStyle = useSlotStyles("content");
 		const animatedContentProps = useSlotProps("content");
+		const contentStyles = [
+			styles.content,
+			animatedContentStyle,
+		] as ScreenContentComponentProps["styles"];
+		const contentProps =
+			animatedContentProps as ScreenContentComponentProps["props"];
+
+		const contentChildren = (
+			<MaybeMaskedNavigationContainer
+				pointerEvents={contentPointerEvents}
+				enabled={isNavigationMaskEnabled}
+			>
+				<SurfaceContainer pointerEvents={contentPointerEvents}>
+					<OriginProvider>
+						{hasAutoSnapPoint ? (
+							<View collapsable={false} onLayout={handleContentLayout}>
+								{children}
+							</View>
+						) : (
+							children
+						)}
+						<ScreenFallbackHost />
+					</OriginProvider>
+				</SurfaceContainer>
+			</MaybeMaskedNavigationContainer>
+		);
 
 		return (
 			<GestureDetector gesture={gestureContext!.detectorGesture}>
-				<Animated.View
-					style={[styles.content, animatedContentStyle]}
-					animatedProps={animatedContentProps}
-					pointerEvents={contentPointerEvents}
-				>
-					<MaybeMaskedNavigationContainer
+				{AnimatedContentComponent ? (
+					<AnimatedContentComponent
+						style={contentStyles}
+						animatedProps={animatedContentProps}
 						pointerEvents={contentPointerEvents}
-						enabled={isNavigationMaskEnabled}
 					>
-						<SurfaceContainer pointerEvents={contentPointerEvents}>
-							<OriginProvider>
-								{hasAutoSnapPoint ? (
-									<View collapsable={false} onLayout={handleContentLayout}>
-										{children}
-									</View>
-								) : (
-									children
-								)}
-								<ScreenFallbackHost />
-							</OriginProvider>
-						</SurfaceContainer>
-					</MaybeMaskedNavigationContainer>
-				</Animated.View>
+						{contentChildren}
+					</AnimatedContentComponent>
+				) : ContentComponent ? (
+					<ContentComponent
+						styles={contentStyles}
+						props={contentProps}
+						pointerEvents={contentPointerEvents}
+					>
+						{contentChildren}
+					</ContentComponent>
+				) : (
+					<Animated.View
+						style={contentStyles}
+						animatedProps={animatedContentProps}
+						pointerEvents={contentPointerEvents}
+					>
+						{contentChildren}
+					</Animated.View>
+				)}
 			</GestureDetector>
 		);
 	},

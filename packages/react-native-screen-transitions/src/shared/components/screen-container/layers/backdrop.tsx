@@ -1,4 +1,4 @@
-import { memo, useCallback, useMemo } from "react";
+import { type ComponentType, memo, useCallback, useMemo } from "react";
 import { Pressable, StyleSheet } from "react-native";
 import Animated, { runOnUI } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../configs/specs";
@@ -8,9 +8,13 @@ import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
 import { SystemStore } from "../../../stores/system.store";
-import type { BackdropBehavior } from "../../../types/screen.types";
+import type {
+	BackdropBehavior,
+	ScreenBackdropComponentProps,
+} from "../../../types/screen.types";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
 import { findCollapseTarget } from "../helpers/find-collapse-target";
+import { usesLayerRenderProps } from "./render-component";
 
 export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior,
@@ -30,8 +34,10 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 	const AnimatedBackdropComponent = useMemo(
 		() =>
-			BackdropComponent
-				? Animated.createAnimatedComponent(BackdropComponent)
+			BackdropComponent && !usesLayerRenderProps(BackdropComponent)
+				? Animated.createAnimatedComponent(
+						BackdropComponent as ComponentType<any>,
+					)
 				: null,
 		[BackdropComponent],
 	);
@@ -108,6 +114,13 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 	const animatedBackdropStyle = useSlotStyles("backdrop");
 	const animatedBackdropProps = useSlotProps("backdrop");
+	const backdropPointerEvents = isBackdropActive ? "auto" : "none";
+	const backdropStyles = [
+		StyleSheet.absoluteFill,
+		animatedBackdropStyle,
+	] as ScreenBackdropComponentProps["styles"];
+	const backdropProps =
+		animatedBackdropProps as ScreenBackdropComponentProps["props"];
 
 	return (
 		<Pressable
@@ -115,16 +128,24 @@ export const BackdropLayer = memo(function BackdropLayer({
 			pointerEvents={isBackdropActive ? "auto" : "none"}
 			onPress={isBackdropActive ? handleBackdropPress : undefined}
 		>
-			{/* Keep blur props and visual style separated.
-			 * BlurView's animatable ref points at the inner native blur view, and mixing
-			 * animated style with animatedProps can break intensity updates. */}
-			{AnimatedBackdropComponent && (
+			{AnimatedBackdropComponent ? (
 				<AnimatedBackdropComponent
-					style={[StyleSheet.absoluteFill]}
+					style={backdropStyles}
 					animatedProps={animatedBackdropProps}
+					pointerEvents={backdropPointerEvents}
+				/>
+			) : BackdropComponent ? (
+				<BackdropComponent
+					styles={backdropStyles}
+					props={backdropProps}
+					pointerEvents={backdropPointerEvents}
+				/>
+			) : (
+				<Animated.View
+					style={backdropStyles}
+					pointerEvents={backdropPointerEvents}
 				/>
 			)}
-			<Animated.View style={[StyleSheet.absoluteFill, animatedBackdropStyle]} />
 		</Pressable>
 	);
 });

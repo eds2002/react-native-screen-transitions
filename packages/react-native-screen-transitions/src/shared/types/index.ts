@@ -54,7 +54,12 @@ export type {
 	GestureTracking,
 	InactiveBehavior,
 	Layout,
+	ScreenBackdropComponent,
+	ScreenBackdropComponentProps,
+	ScreenContentComponent,
+	ScreenContentComponentProps,
 	ScreenKey,
+	ScreenLayerComponentProps,
 	ScreenTransitionConfig,
 	TransitionAwareProps,
 } from "./screen.types";

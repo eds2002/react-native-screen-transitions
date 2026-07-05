@@ -20,6 +20,8 @@ import type {
 	NativeStackAdapterOptions,
 	RawGestureValues,
 	ScreenAnimationTarget,
+	ScreenBackdropComponentProps,
+	ScreenContentComponentProps,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	ScreenTransitionConfig,
@@ -382,6 +384,37 @@ const scopedGestureDirectionOptions: ScreenTransitionConfig = {
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
 };
+const renderBackdropOptions: ScreenTransitionConfig = {
+	backdropComponent: ({
+		styles,
+		props,
+		pointerEvents,
+	}: ScreenBackdropComponentProps) => {
+		void styles;
+		void props;
+		void pointerEvents;
+		return null;
+	},
+};
+const renderContentOptions: ScreenTransitionConfig = {
+	contentComponent: ({
+		styles,
+		props,
+		pointerEvents,
+		children,
+	}: ScreenContentComponentProps) => {
+		void styles;
+		void props;
+		void pointerEvents;
+		return children;
+	},
+};
+const deprecatedSurfaceComponentOptions: ScreenTransitionConfig = {
+	surfaceComponent: () => null,
+};
+void renderBackdropOptions;
+void renderContentOptions;
+void deprecatedSurfaceComponentOptions;
 
 type NativeStackAdapterParamList = {
 	Profile: undefined;

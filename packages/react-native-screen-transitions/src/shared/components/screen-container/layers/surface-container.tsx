@@ -12,13 +12,14 @@ type Props = {
 export const SurfaceContainer = memo(({ children, pointerEvents }: Props) => {
 	const { current } = useDescriptors();
 
-	const SurfaceComponent = current.options.surfaceComponent;
+	/** @deprecated Use `contentComponent` instead. */
+	const DeprecatedSurfaceComponent = current.options.surfaceComponent;
 
 	const AnimatedSurfaceComponent = useMemo<ComponentType<any> | null>(() => {
-		return SurfaceComponent
-			? Animated.createAnimatedComponent(SurfaceComponent)
+		return DeprecatedSurfaceComponent
+			? Animated.createAnimatedComponent(DeprecatedSurfaceComponent)
 			: null;
-	}, [SurfaceComponent]);
+	}, [DeprecatedSurfaceComponent]);
 
 	if (!AnimatedSurfaceComponent) return children;
 
