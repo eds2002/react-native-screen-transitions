@@ -434,7 +434,7 @@ export const SharedAppleMusic = ({
 			const dragXScale = interpolate(normX, [0, 1], xScaleOuput);
 			const dragYScale = interpolate(normY, [0, 1], yScaleOuput);
 
-			const boundValues = bounds({ id: sharedBoundTag }).math({
+			const boundValues = bounds({ id: sharedBoundTag }).values({
 				method: focused ? "content" : "transform",
 				anchor: "top",
 				scaleMode: "uniform",
@@ -453,7 +453,7 @@ export const SharedAppleMusic = ({
 			 * ===============================
 			 */
 			if (focused) {
-				const maskedValues = bounds({ id: sharedBoundTag }).math({
+				const maskedValues = bounds({ id: sharedBoundTag }).values({
 					space: "absolute",
 					method: "size",
 					target: "fullscreen",

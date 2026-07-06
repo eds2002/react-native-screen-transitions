@@ -375,7 +375,7 @@ const reelsInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] = ({
 	const options = resolveReelsGestureOptions(rawDrag);
 
 	if (focused) {
-		const mask = scoped.math({
+		const mask = scoped.values({
 			method: "size",
 			space: "absolute",
 			target: "fullscreen",

@@ -7,8 +7,8 @@ import type {
 	BoundsComputeOptions,
 	BoundsIdentity,
 	BoundsIdentityInput,
-	BoundsMathResult,
 	BoundsStyleResult,
+	BoundsValuesResult,
 } from "../types/options";
 import { createBoundTag, normalizeBoundIdentity } from "./create-bound-tag";
 import { createLinkAccessor } from "./create-link-accessor";
@@ -46,6 +46,20 @@ const createBoundsAccessorParts = ({
 			id: normalizedIdentity.id,
 			group: normalizedIdentity.group,
 		});
+		const getValues = <T extends BoundsComputeOptions = BoundsComputeOptions>(
+			options?: T,
+		): BoundsValuesResult<T> => {
+			"worklet";
+			return prepareBoundStyles({
+				props,
+				options: {
+					...options,
+					id: normalizedIdentity.id,
+					group: normalizedIdentity.group,
+					raw: true,
+				},
+			}) as BoundsValuesResult<T>;
+		};
 
 		const scoped: BoundsScopedAccessor = {
 			styles: (options?: BoundsComputeOptions): BoundsStyleResult => {
@@ -59,19 +73,12 @@ const createBoundsAccessorParts = ({
 					},
 				}) as BoundsStyleResult;
 			},
+			values: getValues,
 			math: <T extends BoundsComputeOptions = BoundsComputeOptions>(
 				options?: T,
-			): BoundsMathResult<T> => {
+			) => {
 				"worklet";
-				return prepareBoundStyles({
-					props,
-					options: {
-						...options,
-						id: normalizedIdentity.id,
-						group: normalizedIdentity.group,
-						raw: true,
-					},
-				}) as BoundsMathResult<T>;
+				return getValues(options);
 			},
 			link: (id?: BoundsIdentityInput) => {
 				"worklet";

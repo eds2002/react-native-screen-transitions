@@ -238,7 +238,7 @@ export type BoundsOptions = {
 	/**
 	 * If true, the raw values will be returned instead of the computed values.
 	 *
-	 * @deprecated Use `bounds(id).math(options)` instead of passing `raw`.
+	 * @deprecated Use `bounds(id).values(options)` instead of passing `raw`.
 	 * @default false
 	 */
 	raw?: boolean;
@@ -255,6 +255,13 @@ export type BoundsComputeOptions = Omit<BoundsOptions, "group" | "id" | "raw">;
 
 export type BoundsStyleResult = StyleProps;
 
-export type BoundsMathResult<
+export type BoundsValuesResult<
 	T extends BoundsComputeOptions = BoundsComputeOptions,
 > = BoundsOptionsResult<T & { id: BoundId; raw: true }>;
+
+/**
+ * @deprecated Use {@linkcode BoundsValuesResult}.
+ */
+export type BoundsMathResult<
+	T extends BoundsComputeOptions = BoundsComputeOptions,
+> = BoundsValuesResult<T>;

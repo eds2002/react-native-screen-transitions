@@ -231,7 +231,7 @@ export function buildZoomStyles({
 			link,
 		});
 
-		const contentRaw = scopedBounds.math({
+		const contentRaw = scopedBounds.values({
 			...baseRawOptions,
 			anchor: zoomAnchor,
 			method: "content",
@@ -239,7 +239,7 @@ export function buildZoomStyles({
 			progress: transitionProgress,
 		});
 
-		const maskRaw = scopedBounds.math({
+		const maskRaw = scopedBounds.values({
 			...baseRawOptions,
 			anchor: ZOOM_SHARED_OPTIONS.anchor,
 			method: "size",
@@ -374,7 +374,7 @@ export function buildZoomStyles({
 		link,
 	});
 
-	const elementRaw = scopedBounds.math({
+	const elementRaw = scopedBounds.values({
 		...baseRawOptions,
 		anchor: zoomAnchor,
 		method: "transform",

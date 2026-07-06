@@ -93,7 +93,7 @@ screenStyleInterpolator: ({ bounds, progress, focused }) => {
 The scoped accessor exposes:
 
 - `bounds(id).styles(options)` for render-ready animated styles
-- `bounds(id).math(options)` for numeric geometry
+- `bounds(id).values(options)` for numeric geometry
 - `bounds(id).link(id?)` for inspecting the active source/destination link
 - `bounds(id).navigation.zoom(options)` for the built-in zoom recipe
 - `bounds(id).navigation.reveal(options)` for the built-in reveal recipe
@@ -108,7 +108,7 @@ const link = card.link();
 
 ## Bounds Options
 
-Pass identity to `bounds()`, then pass compute options to `styles()` or `math()`.
+Pass identity to `bounds()`, then pass compute options to `styles()` or `values()`.
 
 | Option | Values | Notes |
 | --- | --- | --- |
@@ -122,17 +122,17 @@ Pass identity to `bounds()`, then pass compute options to `styles()` or `math()`
 | `gestures` | `{ x?: number; y?: number }` | Deprecated alias for `offset` |
 | `space` | `"relative" \| "absolute"` | `absolute` is mainly for navigation helpers and custom renderers |
 
-## Numeric Bounds with math()
+## Numeric Bounds with values()
 
 Use `styles()` when you want the library to return the final animated style object.
 
-Use `math()` when you want the same measured geometry but need to compose the final style yourself.
+Use `values()` when you want the same measured geometry but need to compose the final style yourself.
 
 ```tsx
 screenStyleInterpolator: ({ bounds, current }) => {
   "worklet";
 
-  const hero = bounds("hero").math({
+  const hero = bounds("hero").values({
     method: "size",
     space: "absolute",
     progress: current.transitionProgress,
@@ -236,7 +236,7 @@ Use `escapeClipping` when a boundary needs to render outside local clipping or l
 
 ## Bounds with Offsets
 
-Because `styles()` and `math()` accept an `offset` option, you can feed any live x/y values into the matched transform.
+Because `styles()` and `values()` accept an `offset` option, you can feed any live x/y values into the matched transform.
 
 ```tsx
 screenStyleInterpolator: ({ bounds, active }) => {
@@ -295,7 +295,7 @@ const initialSource = link?.initialSource;
 const initialDestination = link?.initialDestination;
 ```
 
-Most animations should use `styles()`, `math()`, or the navigation helpers instead of reading the link directly. `link()` is useful when you are building custom choreography on top of the same measured pair.
+Most animations should use `styles()`, `values()`, or the navigation helpers instead of reading the link directly. `link()` is useful when you are building custom choreography on top of the same measured pair.
 
 ## Troubleshooting
 

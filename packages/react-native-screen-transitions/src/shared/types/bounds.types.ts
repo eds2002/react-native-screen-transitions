@@ -7,11 +7,11 @@ import type { BoundsLink } from "../stores/bounds/types";
 import type {
 	BoundsComputeOptions,
 	BoundsIdentityInput,
-	BoundsMathResult,
 	BoundsMotion,
 	BoundsMotionFrame,
 	BoundsMotionTransform,
 	BoundsStyleResult,
+	BoundsValuesResult,
 } from "../utils/bounds/types/options";
 import type {
 	ScreenInterpolationProps,
@@ -283,9 +283,16 @@ type BoundsBoundNavigationAccessor = {
 
 export type BoundsScopedAccessor = BoundsBoundNavigationAccessor & {
 	styles: (options?: BoundsComputeOptions) => BoundsStyleResult;
+	/** Returns numeric bounds values for custom style composition. */
+	values: <T extends BoundsComputeOptions = BoundsComputeOptions>(
+		options?: T,
+	) => BoundsValuesResult<T>;
+	/**
+	 * @deprecated Use {@linkcode values}.
+	 */
 	math: <T extends BoundsComputeOptions = BoundsComputeOptions>(
 		options?: T,
-	) => BoundsMathResult<T>;
+	) => BoundsValuesResult<T>;
 	link: (id?: BoundsIdentityInput) => BoundsLink | null;
 };
 

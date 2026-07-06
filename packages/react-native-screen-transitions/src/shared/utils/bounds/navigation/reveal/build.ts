@@ -133,14 +133,14 @@ export function buildRevealStyles({
 	/* ----------------------------- Focused Screen ----------------------------- */
 
 	if (focused) {
-		const contentRaw = scopedBounds.math({
+		const contentRaw = scopedBounds.values({
 			scaleMode: "uniform",
 			method: "content",
 			target: initialDestinationTarget,
 			progress: transitionProgress,
 		});
 
-		const maskRaw = scopedBounds.math({
+		const maskRaw = scopedBounds.values({
 			scaleMode: "uniform",
 			method: "size",
 			space: "absolute",

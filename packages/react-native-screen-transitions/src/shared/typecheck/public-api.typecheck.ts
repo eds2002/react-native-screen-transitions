@@ -222,12 +222,12 @@ const motionBoundsResult = scopedBounds.styles({
 const deprecatedGesturesBoundsResult = scopedBounds.styles({
 	gestures: { x: 10, y: -10 },
 });
-const absoluteRawBoundsResult = scopedBounds.math({
+const absoluteRawBoundsResult = scopedBounds.values({
 	method: "size",
 	space: "absolute",
 	progress: interpolationProps.current.transitionProgress,
 });
-const motionRawBoundsResult = scopedBounds.math({
+const motionRawBoundsResult = scopedBounds.values({
 	method: "content",
 	motion: boundsMotion,
 	progress: interpolationProps.current.transitionProgress,
