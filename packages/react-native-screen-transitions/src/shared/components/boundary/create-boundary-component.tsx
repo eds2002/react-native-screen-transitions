@@ -1,4 +1,5 @@
 import {
+	type ComponentProps,
 	type ComponentType,
 	forwardRef,
 	memo,
@@ -42,6 +43,22 @@ const hasRenderableChildren = (children: ReactNode): boolean => {
 	}
 
 	return true;
+};
+
+type BoundaryRootPortalProps = ComponentProps<typeof Portal> & {
+	enabled: boolean;
+};
+
+const BoundaryRootPortal = ({
+	children,
+	enabled,
+	...portalProps
+}: BoundaryRootPortalProps) => {
+	if (!enabled) {
+		return <>{children}</>;
+	}
+
+	return <Portal {...portalProps}>{children}</Portal>;
 };
 
 export function createBoundaryComponent<P extends object>(
@@ -92,11 +109,14 @@ export function createBoundaryComponent<P extends object>(
 		// independent of whether an interpolator is configured for this transition.
 		const shouldAttachAssociatedStyles = enabled;
 		const hasBoundaryChildren = hasRenderableChildren(children);
-		const shouldEscapeBoundaryRoot = portalRuntime.escapeClipping;
-		const canPortalBoundaryRootAsPayload =
-			portalRuntime.handoff && !shouldEscapeBoundaryRoot && hasBoundaryChildren;
-		const canTeleportBoundaryRoot =
-			shouldEscapeBoundaryRoot || canPortalBoundaryRootAsPayload;
+		const shouldEscapeBoundaryRootToScreenHost = portalRuntime.escapeClipping;
+		const canUseBoundaryRootAsHandoffPayload =
+			portalRuntime.handoff &&
+			!shouldEscapeBoundaryRootToScreenHost &&
+			hasBoundaryChildren;
+		const canBoundaryRootLeaveItsLayoutSlot =
+			shouldEscapeBoundaryRootToScreenHost ||
+			canUseBoundaryRootAsHandoffPayload;
 
 		const associatedStyles = useComposedSlotStyles(boundTag.tag, style);
 		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
@@ -111,7 +131,7 @@ export function createBoundaryComponent<P extends object>(
 		} = useBoundaryRootState({
 			boundTag,
 			portalRuntime,
-			rootMeasurementRef: canTeleportBoundaryRoot
+			rootMeasurementRef: canBoundaryRootLeaveItsLayoutSlot
 				? rootPlaceholderRef
 				: undefined,
 		});
@@ -129,11 +149,13 @@ export function createBoundaryComponent<P extends object>(
 			config: { anchor, scaleMode, target, method },
 		});
 
-		const shouldPortalRootAsHandoffPayload =
-			canPortalBoundaryRootAsPayload && !hasActiveTarget;
-		const shouldPortalRoot =
-			shouldEscapeBoundaryRoot || shouldPortalRootAsHandoffPayload;
-		const shouldRenderHandoffHost = !shouldPortalRootAsHandoffPayload;
+		const shouldTeleportBoundaryRootAsHandoffPayload =
+			canUseBoundaryRootAsHandoffPayload && !hasActiveTarget;
+		const shouldRenderBoundaryRootThroughPortal =
+			shouldEscapeBoundaryRootToScreenHost ||
+			shouldTeleportBoundaryRootAsHandoffPayload;
+		const shouldRenderHandoffHostInsideBoundary =
+			!shouldTeleportBoundaryRootAsHandoffPayload;
 		// A nested active target takes the full associated style, so the root keeps
 		// only its stacking context. Without a nested target, a teleported root is
 		// the target, so its associated style is applied through the host instead of
@@ -144,7 +166,7 @@ export function createBoundaryComponent<P extends object>(
 		const attachedStyle = shouldAttachAssociatedStyles
 			? hasActiveTarget
 				? associatedStackingStyles
-				: shouldPortalRoot
+				: shouldRenderBoundaryRootThroughPortal
 					? undefined
 					: associatedStyles
 			: undefined;
@@ -157,7 +179,7 @@ export function createBoundaryComponent<P extends object>(
 				collapsable={false}
 			>
 				{children}
-				{shouldRenderHandoffHost ? (
+				{shouldRenderHandoffHostInsideBoundary ? (
 					<BoundaryHandoffPortalHost
 						boundaryId={boundTag.tag}
 						enabled={enabled && portalRuntime.handoff}
@@ -171,19 +193,16 @@ export function createBoundaryComponent<P extends object>(
 
 		return (
 			<BoundaryRootProvider value={contextValue}>
-				{shouldPortalRoot ? (
-					<Portal
-						id={boundTag.tag}
-						handoff={shouldPortalRootAsHandoffPayload}
-						escapeClipping={portalRuntime.escapeClipping}
-						placeholderRef={rootPlaceholderRef}
-						placeholderStyle={style as any}
-					>
-						{boundaryRoot}
-					</Portal>
-				) : (
-					boundaryRoot
-				)}
+				<BoundaryRootPortal
+					enabled={shouldRenderBoundaryRootThroughPortal}
+					id={boundTag.tag}
+					handoff={shouldTeleportBoundaryRootAsHandoffPayload}
+					escapeClipping={portalRuntime.escapeClipping}
+					placeholderRef={rootPlaceholderRef}
+					placeholderStyle={style as any}
+				>
+					{boundaryRoot}
+				</BoundaryRootPortal>
 			</BoundaryRootProvider>
 		);
 	});
