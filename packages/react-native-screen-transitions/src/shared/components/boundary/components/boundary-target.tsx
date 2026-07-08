@@ -1,5 +1,5 @@
 import type React from "react";
-import { memo, useLayoutEffect, useMemo } from "react";
+import { memo, useMemo } from "react";
 import type { View } from "react-native";
 import Animated, { useAnimatedRef } from "react-native-reanimated";
 import {
@@ -7,12 +7,9 @@ import {
 	useSlotLayoutStyles,
 } from "../../../providers/screen/styles";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
-import { logger } from "../../../utils/logger";
+import { useRegisterTarget } from "../hooks/use-register-target";
 import { Portal } from "../portal/components/portal";
-import {
-	TARGET_OUTSIDE_ROOT_WARNING,
-	useBoundaryRootContext,
-} from "../providers/boundary-root.provider";
+import { useBoundaryRootContext } from "../providers/boundary-root.provider";
 
 type BoundaryTargetProps = React.ComponentProps<typeof Animated.View>;
 
@@ -23,47 +20,31 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const targetAnimatedRef = useAnimatedRef<View>();
 	const placeholderAnimatedRef = useAnimatedRef<View>();
 	const rootContext = useBoundaryRootContext();
-	const registerTargetRef = rootContext?.registerTargetRef;
-	const unregisterTargetRef = rootContext?.unregisterTargetRef;
 	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
 	const portalRuntime = rootContext?.portalRuntime;
 	const portalPointerEvents =
 		typeof pointerEvents === "string" ? pointerEvents : undefined;
+
 	const shouldApplyAssociatedStyleInline =
 		isActiveTarget && portalRuntime?.enabled !== true;
 	const shouldApplyPortalLayoutStyle =
 		isActiveTarget && portalRuntime?.enabled === true;
+
 	const associatedTargetStyles = useComposedSlotStyles(
 		rootContext?.boundTag.tag,
 		style,
 	);
 	const portalLayoutStyle = useSlotLayoutStyles(rootContext?.boundTag.tag);
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
-	// Teleported content can render outside its layout slot. The placeholder is
-	// the truthful measurement surface whenever runtime portal behavior is active.
-	const measurementRef = portalRuntime?.enabled
+
+	// Handoff moves the target payload out of this layout slot; measure the
+	// placeholder in that case. Escape-clipping moves the root boundary instead,
+	// so this target still has a real local measurement surface.
+	const measurementRef = portalRuntime?.handoff
 		? placeholderAnimatedRef
 		: targetAnimatedRef;
 
-	useLayoutEffect(() => {
-		if (!registerTargetRef || !unregisterTargetRef) {
-			if (__DEV__) {
-				logger.warn(TARGET_OUTSIDE_ROOT_WARNING);
-			}
-			return;
-		}
-
-		registerTargetRef(targetAnimatedRef, preparedStyles, measurementRef);
-		return () => {
-			unregisterTargetRef(targetAnimatedRef);
-		};
-	}, [
-		registerTargetRef,
-		unregisterTargetRef,
-		targetAnimatedRef,
-		preparedStyles,
-		measurementRef,
-	]);
+	useRegisterTarget({ preparedStyles, measurementRef, targetAnimatedRef });
 
 	return (
 		<Portal

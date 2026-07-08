@@ -1,7 +1,6 @@
-import { memo, useCallback, useLayoutEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { memo } from "react";
+import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
-import { SystemStore } from "../../../../stores/system.store";
 import { NativePortalHost } from "../teleport";
 import { createBoundaryHandoffPortalHostName } from "../utils/naming";
 
@@ -21,19 +20,6 @@ export const BoundaryHandoffPortalHost = memo(
 		enabled,
 		screenKey,
 	}: BoundaryHandoffPortalHostProps) {
-		const { drainLifecycleStartBlocks } = SystemStore.getBag(screenKey).actions;
-		const handleLayout = useCallback(() => {
-			drainLifecycleStartBlocks();
-		}, [drainLifecycleStartBlocks]);
-
-		useLayoutEffect(() => {
-			if (!enabled || !AnimatedPortalHost) {
-				return;
-			}
-
-			drainLifecycleStartBlocks();
-		}, [enabled, drainLifecycleStartBlocks]);
-
 		if (!enabled || !AnimatedPortalHost) {
 			return null;
 		}
@@ -43,25 +29,12 @@ export const BoundaryHandoffPortalHost = memo(
 			boundaryId,
 		);
 
-		return (
-			<View
-				pointerEvents="none"
-				style={styles.hostWrapper}
-				onLayout={handleLayout}
-				collapsable={false}
-			>
-				<AnimatedPortalHost name={portalHostName} style={styles.host} />
-			</View>
-		);
+		return <AnimatedPortalHost name={portalHostName} style={styles.host} />;
 	},
 );
 
 const styles = StyleSheet.create({
 	host: {
-		...StyleSheet.absoluteFillObject,
-		overflow: "visible",
-	},
-	hostWrapper: {
 		...StyleSheet.absoluteFillObject,
 		overflow: "visible",
 	},
