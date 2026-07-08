@@ -75,19 +75,10 @@ export const mountPortalBoundaryHost = (host: ActivePortalBoundaryHost) => {
 	emit();
 };
 
-export const unmountPortalBoundaryHost = (boundaryId: string) => {
-	let didDelete = false;
-
-	for (const [hostEntryKey, host] of activeBoundaryHosts) {
-		if (host.boundaryId !== boundaryId) {
-			continue;
-		}
-
-		activeBoundaryHosts.delete(hostEntryKey);
-		didDelete = true;
-	}
-
-	if (!didDelete) {
+export const unmountPortalBoundaryHostByName = (
+	portalHostName: string | null | undefined,
+) => {
+	if (!portalHostName || !activeBoundaryHosts.delete(portalHostName)) {
 		return;
 	}
 
@@ -106,6 +97,10 @@ export const dropStalePortalBoundaryHosts = ({
 	boundaryId: string;
 	keepPortalHostName: string;
 }) => {
+	if (!activeBoundaryHosts.has(keepPortalHostName)) {
+		return;
+	}
+
 	let didDelete = false;
 
 	for (const [hostEntryKey, host] of activeBoundaryHosts) {

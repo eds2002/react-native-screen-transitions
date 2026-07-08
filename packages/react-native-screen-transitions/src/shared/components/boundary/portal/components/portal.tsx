@@ -5,9 +5,10 @@ import {
 	type ReactNode,
 	useCallback,
 	useLayoutEffect,
+	useRef,
 	useState,
 } from "react";
-import type { View } from "react-native";
+import type { StyleProp, View, ViewProps, ViewStyle } from "react-native";
 import Animated, {
 	type AnimatedRef,
 	runOnJS,
@@ -28,16 +29,16 @@ import { useActiveHostKey } from "../stores/host-registry.store";
 import {
 	dropStalePortalBoundaryHosts,
 	mountPortalBoundaryHost,
-	unmountPortalBoundaryHost,
+	unmountPortalBoundaryHostByName,
 } from "../stores/portal-boundary-host.store";
 import { isTeleportAvailable, NativePortal } from "../teleport";
 import {
-	createBoundaryLocalPortalHostName,
+	createBoundaryHandoffPortalHostName,
 	createPortalBoundaryHostName,
 	PORTAL_HOST_NAME_RESET_VALUE,
 } from "../utils/naming";
 import {
-	canSwitchBoundaryLocalHandoffImmediately,
+	canSwitchHandoffHostImmediately,
 	type PortalOwnershipSignal,
 	resolveBoundaryPortalOwnership,
 } from "../utils/ownership";
@@ -63,6 +64,7 @@ interface PortalProps {
 	children: ReactNode;
 	handoff?: boolean;
 	escapeClipping?: boolean;
+	pointerEvents?: ViewProps["pointerEvents"];
 	/**
 	 * Ref to the layout-preserving placeholder wrapper. Boundaries measure
 	 * this instead of teleported content — the placeholder keeps the source
@@ -70,7 +72,7 @@ interface PortalProps {
 	 * host.
 	 */
 	placeholderRef?: AnimatedRef<View>;
-	placeholderChildren?: ReactNode;
+	placeholderStyle?: StyleProp<ViewStyle>;
 }
 
 export const Portal = memo(function Portal({
@@ -78,8 +80,9 @@ export const Portal = memo(function Portal({
 	children,
 	handoff = false,
 	escapeClipping = false,
+	pointerEvents,
 	placeholderRef,
-	placeholderChildren,
+	placeholderStyle: providedPlaceholderStyle,
 }: PortalProps) {
 	// Teleporting requires the optional `react-native-teleport` peer and a stable
 	// `id` to name the boundary host. Missing either degrades to inline rendering
@@ -116,6 +119,7 @@ export const Portal = memo(function Portal({
 	const requestedPortalHostName = useSharedValue<string | null>(null);
 	const visiblePortalHostName = useSharedValue<string | null>(null);
 	const canSwitchPortalHostImmediately = useSharedValue(0);
+	const mountedPortalBoundaryHostNamesRef = useRef(new Set<string>());
 
 	const targetScreenKey = ownership ? ownership.hostScreenKey : null;
 	const settledHostScreenKey = ownership?.hostScreenKey ?? null;
@@ -136,12 +140,12 @@ export const Portal = memo(function Portal({
 		"visualProgress",
 	);
 
-	const activeHostKey = useActiveHostKey(
-		escapeClipping ? targetScreenKey : null,
+	const escapeHostKey = useActiveHostKey(
+		escapeClipping ? currentScreenKey : null,
 	);
-	const boundaryLocalHostName =
-		handoff && !escapeClipping && targetScreenKey
-			? createBoundaryLocalPortalHostName(targetScreenKey, boundaryId)
+	const handoffHostName =
+		handoff && targetScreenKey
+			? createBoundaryHandoffPortalHostName(targetScreenKey, boundaryId)
 			: null;
 
 	const updatePortalOwnership = useCallback(
@@ -175,29 +179,37 @@ export const Portal = memo(function Portal({
 		[],
 	);
 
+	const unmountOwnedPortalBoundaryHosts = useCallback(() => {
+		for (const portalHostName of mountedPortalBoundaryHostNamesRef.current) {
+			unmountPortalBoundaryHostByName(portalHostName);
+		}
+
+		mountedPortalBoundaryHostNamesRef.current.clear();
+	}, []);
+
 	useLayoutEffect(() => {
-		if (!isPortalEnabled || !ownership || !targetScreenKey) {
+		if (!isPortalEnabled || !ownership) {
 			requestedPortalHostName.set(null);
 			visiblePortalHostName.set(null);
-			unmountPortalBoundaryHost(boundaryId);
+			unmountOwnedPortalBoundaryHosts();
 			return;
 		}
 
-		if (boundaryLocalHostName) {
-			requestedPortalHostName.set(boundaryLocalHostName);
-			unmountPortalBoundaryHost(boundaryId);
+		if (handoffHostName) {
+			requestedPortalHostName.set(handoffHostName);
+			unmountOwnedPortalBoundaryHosts();
 			return;
 		}
 
-		if (!escapeClipping || !activeHostKey) {
+		if (!escapeClipping || !escapeHostKey) {
 			requestedPortalHostName.set(null);
 			visiblePortalHostName.set(null);
-			unmountPortalBoundaryHost(boundaryId);
+			unmountOwnedPortalBoundaryHosts();
 			return;
 		}
 
 		const portalHostName = createPortalBoundaryHostName(
-			activeHostKey,
+			escapeHostKey,
 			boundaryId,
 			ownership.ownerPairKey,
 		);
@@ -205,29 +217,31 @@ export const Portal = memo(function Portal({
 		mountPortalBoundaryHost({
 			boundaryId,
 			escapeClipping,
-			hostKey: activeHostKey,
+			hostKey: escapeHostKey,
 			localStylesMaps: activeLocalStylesMaps,
 			pairKey: ownership.ownerPairKey,
 			portalHostName,
-			screenKey: targetScreenKey,
+			screenKey: currentScreenKey,
 			slotsMap: activeSlotsMap,
 		});
+		mountedPortalBoundaryHostNamesRef.current.add(portalHostName);
 
 		// Request the new receiver immediately, but keep the currently visible
 		// receiver until the new interpolator is ready. This avoids a no-host gap
 		// during A -> B(closing) -> C(opening) spam retargets.
 		requestedPortalHostName.set(portalHostName);
 	}, [
-		activeHostKey,
+		escapeHostKey,
 		boundaryId,
+		currentScreenKey,
 		escapeClipping,
 		isPortalEnabled,
 		activeLocalStylesMaps,
 		activeSlotsMap,
 		ownership,
-		boundaryLocalHostName,
+		handoffHostName,
 		requestedPortalHostName,
-		targetScreenKey,
+		unmountOwnedPortalBoundaryHosts,
 		visiblePortalHostName,
 	]);
 
@@ -235,9 +249,13 @@ export const Portal = memo(function Portal({
 		return () => {
 			requestedPortalHostName.set(null);
 			visiblePortalHostName.set(null);
-			unmountPortalBoundaryHost(boundaryId);
+			unmountOwnedPortalBoundaryHosts();
 		};
-	}, [boundaryId, requestedPortalHostName, visiblePortalHostName]);
+	}, [
+		requestedPortalHostName,
+		unmountOwnedPortalBoundaryHosts,
+		visiblePortalHostName,
+	]);
 
 	useAnimatedReaction(
 		() => {
@@ -254,7 +272,6 @@ export const Portal = memo(function Portal({
 			return resolveBoundaryPortalOwnership({
 				boundaryId,
 				currentScreenKey,
-				escapeClipping,
 				handoff,
 				isSettledHostClosingComplete:
 					!!settledHostClosing.get() &&
@@ -272,7 +289,7 @@ export const Portal = memo(function Portal({
 				return;
 			}
 
-			if (!handoff || escapeClipping) {
+			if (!handoff) {
 				canSwitchPortalHostImmediately.set(0);
 			} else if (signal.status === "pending") {
 				canSwitchPortalHostImmediately.set(0);
@@ -285,7 +302,7 @@ export const Portal = memo(function Portal({
 				if (previousSignal?.status === "complete") {
 					previousOwnerPairKey = previousSignal.ownerPairKey ?? undefined;
 				}
-				const canSwitchImmediately = canSwitchBoundaryLocalHandoffImmediately({
+				const canSwitchImmediately = canSwitchHandoffHostImmediately({
 					hostScreenKey,
 					ownerPairKey:
 						signal.status === "complete" ? signal.ownerPairKey : undefined,
@@ -295,7 +312,7 @@ export const Portal = memo(function Portal({
 				canSwitchPortalHostImmediately.set(canSwitchImmediately ? 1 : 0);
 
 				if (canSwitchImmediately && hostScreenKey) {
-					const hostName = createBoundaryLocalPortalHostName(
+					const hostName = createBoundaryHandoffPortalHostName(
 						hostScreenKey,
 						boundaryId,
 					);
@@ -397,11 +414,16 @@ export const Portal = memo(function Portal({
 				onLayout={({ nativeEvent: { layout } }) =>
 					runOnUI(handleOnLayout)(layout)
 				}
-				style={placeholderStyle}
+				style={[providedPlaceholderStyle, placeholderStyle]}
+				pointerEvents={pointerEvents}
 				collapsable={false}
 			>
-				{placeholderChildren}
-				<AnimatedNativePortal animatedProps={teleportProps} name={boundaryId}>
+				<AnimatedNativePortal
+					animatedProps={teleportProps}
+					name={boundaryId}
+					pointerEvents={pointerEvents}
+					style={providedPlaceholderStyle}
+				>
 					{children}
 				</AnimatedNativePortal>
 			</Animated.View>

@@ -5,8 +5,8 @@ import { type ComponentType, createElement, type ReactNode } from "react";
  * try/catch so Metro treats it as an optional dependency — an absent module no
  * longer fails the bundle, it throws at runtime and the catch swallows it.
  *
- * When teleport is missing, `portal`-enabled boundaries degrade to inline
- * rendering; everything else keeps working.
+ * When teleport is missing, handoff and escapeClipping boundaries degrade to
+ * inline rendering; everything else keeps working.
  */
 let mod: any = null;
 let managerMod: any = null;

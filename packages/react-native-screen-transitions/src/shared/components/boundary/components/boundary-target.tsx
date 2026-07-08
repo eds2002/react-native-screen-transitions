@@ -19,7 +19,7 @@ type BoundaryTargetProps = React.ComponentProps<typeof Animated.View>;
 export const BoundaryTarget = memo(function BoundaryTarget(
 	props: BoundaryTargetProps,
 ) {
-	const { style, ...rest } = props;
+	const { pointerEvents, style, ...rest } = props;
 	const targetAnimatedRef = useAnimatedRef<View>();
 	const placeholderAnimatedRef = useAnimatedRef<View>();
 	const rootContext = useBoundaryRootContext();
@@ -27,6 +27,8 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const unregisterTargetRef = rootContext?.unregisterTargetRef;
 	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
 	const portalRuntime = rootContext?.portalRuntime;
+	const portalPointerEvents =
+		typeof pointerEvents === "string" ? pointerEvents : undefined;
 	const shouldApplyAssociatedStyleInline =
 		isActiveTarget && portalRuntime?.enabled !== true;
 	const shouldApplyPortalLayoutStyle =
@@ -67,11 +69,13 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 		<Portal
 			id={rootContext?.boundTag.tag}
 			handoff={portalRuntime?.handoff}
-			escapeClipping={portalRuntime?.escapeClipping}
 			placeholderRef={placeholderAnimatedRef}
+			placeholderStyle={style as any}
+			pointerEvents={portalPointerEvents}
 		>
 			<Animated.View
 				{...rest}
+				pointerEvents={pointerEvents}
 				ref={targetAnimatedRef}
 				style={[
 					style,

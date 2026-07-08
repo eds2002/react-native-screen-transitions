@@ -7,11 +7,11 @@ describe("resolveNextVisiblePortalHostName", () => {
 			resolveNextVisiblePortalHostName({
 				canSwitchImmediately: true,
 				isInterpolatorReady: false,
-				requestedName: "screen-b-video-boundary-local-portal-host",
+				requestedName: "screen-b-video-handoff-portal-host",
 				shouldTeleport: true,
-				visibleName: "screen-c-video-boundary-local-portal-host",
+				visibleName: "screen-c-video-handoff-portal-host",
 			}),
-		).toBe("screen-b-video-boundary-local-portal-host");
+		).toBe("screen-b-video-handoff-portal-host");
 	});
 
 	it("holds screen hosts until the interpolator is ready", () => {
@@ -29,22 +29,22 @@ describe("resolveNextVisiblePortalHostName", () => {
 		expect(
 			resolveNextVisiblePortalHostName({
 				isInterpolatorReady: true,
-				requestedName: "screen-b-video-boundary-local-portal-host",
+				requestedName: "screen-b-video-handoff-portal-host",
 				shouldTeleport: false,
-				visibleName: "screen-c-video-boundary-local-portal-host",
+				visibleName: "screen-c-video-handoff-portal-host",
 			}),
 		).toBeNull();
 	});
 
-	it("holds boundary-local pushes until the destination is ready", () => {
+	it("holds handoff pushes until the destination is ready", () => {
 		expect(
 			resolveNextVisiblePortalHostName({
 				canSwitchImmediately: false,
 				isInterpolatorReady: false,
-				requestedName: "screen-c-video-boundary-local-portal-host",
+				requestedName: "screen-c-video-handoff-portal-host",
 				shouldTeleport: true,
-				visibleName: "screen-b-video-boundary-local-portal-host",
+				visibleName: "screen-b-video-handoff-portal-host",
 			}),
-		).toBe("screen-b-video-boundary-local-portal-host");
+		).toBe("screen-b-video-handoff-portal-host");
 	});
 });

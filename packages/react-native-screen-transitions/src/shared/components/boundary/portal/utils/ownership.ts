@@ -36,13 +36,6 @@ const hasSeenScreenKey = (screenKeys: ScreenKey[], screenKey: ScreenKey) => {
 	return false;
 };
 
-export const usesEscapeClippingHost = (
-	link: TagLink | null | undefined,
-): boolean => {
-	"worklet";
-	return link?.source?.handoff === true && link.source.escapeClipping === true;
-};
-
 const isReturningToPreviousSourceHost = ({
 	hostScreenKey,
 	ownerPairKey,
@@ -69,7 +62,7 @@ const isReturningToPreviousSourceHost = ({
 	);
 };
 
-export const canSwitchBoundaryLocalHandoffImmediately = ({
+export const canSwitchHandoffHostImmediately = ({
 	hostScreenKey,
 	ownerPairKey,
 	previousOwnerPairKey,
@@ -118,7 +111,7 @@ const isActiveHandoffLink = ({
 	return !activeId || activeId === linkKey;
 };
 
-const resolveBoundaryLocalStyleOwnerScreenKey = ({
+const resolveHandoffStyleOwnerScreenKey = ({
 	hostScreenKey,
 	isSettledHostReady,
 	settledHostScreenKey,
@@ -160,7 +153,6 @@ const clearSignal = (sourcePairKey: ScreenPairKey): PortalOwnershipSignal => {
 export const resolveBoundaryPortalOwnership = ({
 	boundaryId,
 	currentScreenKey,
-	escapeClipping,
 	handoff,
 	isSettledHostClosingComplete = false,
 	isSettledHostReady = false,
@@ -170,7 +162,6 @@ export const resolveBoundaryPortalOwnership = ({
 }: {
 	boundaryId: string;
 	currentScreenKey: ScreenKey;
-	escapeClipping: boolean;
 	handoff: boolean;
 	isSettledHostClosingComplete?: boolean;
 	isSettledHostReady?: boolean;
@@ -283,12 +274,7 @@ export const resolveBoundaryPortalOwnership = ({
 		break;
 	}
 
-	const ownerLink = getPairLink(pairsState, ownerPairKey, linkKey);
-	const ownerUsesEscapeClipping =
-		ownerLink?.source?.escapeClipping ?? escapeClipping;
-
 	if (
-		!ownerUsesEscapeClipping &&
 		isSettledHostClosingComplete &&
 		settledHostScreenKey === hostScreenKey &&
 		previousOwnerPairKey
@@ -296,14 +282,12 @@ export const resolveBoundaryPortalOwnership = ({
 		hostScreenKey = getSourceScreenKeyFromPairKey(ownerPairKey);
 	}
 
-	const ownerScreenKey = ownerUsesEscapeClipping
-		? getSourceScreenKeyFromPairKey(ownerPairKey)
-		: resolveBoundaryLocalStyleOwnerScreenKey({
-				hostScreenKey,
-				isSettledHostReady,
-				settledHostScreenKey,
-				sourceScreenKey: getSourceScreenKeyFromPairKey(ownerPairKey),
-			});
+	const ownerScreenKey = resolveHandoffStyleOwnerScreenKey({
+		hostScreenKey,
+		isSettledHostReady,
+		settledHostScreenKey,
+		sourceScreenKey: getSourceScreenKeyFromPairKey(ownerPairKey),
+	});
 
 	return {
 		hostScreenKey,
@@ -311,61 +295,4 @@ export const resolveBoundaryPortalOwnership = ({
 		ownerScreenKey,
 		status: "complete",
 	};
-};
-
-export const hasHandoffEscapeContinuation = ({
-	linkKey,
-	linkState,
-	sourceScreenKey,
-}: {
-	linkKey: string;
-	linkState: LinkPairsState;
-	sourceScreenKey: ScreenKey;
-}) => {
-	"worklet";
-	const pairKeys = Object.keys(linkState);
-	const visitedScreenKeys: ScreenKey[] = [];
-	let cursorScreenKey = sourceScreenKey;
-
-	for (let hop = 0; hop < pairKeys.length; hop++) {
-		if (hasSeenScreenKey(visitedScreenKeys, cursorScreenKey)) {
-			return false;
-		}
-		visitedScreenKeys.push(cursorScreenKey);
-
-		let previousScreenKey: ScreenKey | null = null;
-		for (let index = 0; index < pairKeys.length; index++) {
-			const candidatePairKey = pairKeys[index];
-			const link = candidatePairKey
-				? linkState[candidatePairKey]?.links?.[linkKey]
-				: null;
-
-			if (
-				!link?.source ||
-				!link.destination ||
-				link.destination.screenKey !== cursorScreenKey
-			) {
-				continue;
-			}
-
-			if (usesEscapeClippingHost(link)) {
-				return true;
-			}
-
-			if (!link.source.handoff) {
-				return false;
-			}
-
-			previousScreenKey = link.source.screenKey;
-			break;
-		}
-
-		if (!previousScreenKey) {
-			return false;
-		}
-
-		cursorScreenKey = previousScreenKey;
-	}
-
-	return false;
 };

@@ -86,6 +86,7 @@ export const useBoundaryMeasurement = ({
 	useInitialDestinationMeasurement({
 		boundTag,
 		enabled: runtimeEnabled,
+		escapeClipping,
 		measureBoundary,
 	});
 

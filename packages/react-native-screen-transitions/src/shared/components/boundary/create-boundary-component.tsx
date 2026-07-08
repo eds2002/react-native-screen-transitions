@@ -15,7 +15,7 @@ import {
 } from "../../providers/screen/styles";
 import { createBoundTag } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { useBoundaryMeasurement } from "./hooks/use-boundary-measurement";
-import { BoundaryLocalPortalHost } from "./portal/components/boundary-local-portal-host";
+import { BoundaryHandoffPortalHost } from "./portal/components/boundary-handoff-portal-host";
 import { Portal } from "./portal/components/portal";
 import { resolveBoundaryPortal } from "./portal/utils/resolve-portal";
 import {
@@ -66,7 +66,6 @@ export function createBoundaryComponent<P extends object>(
 			target,
 			method,
 			style,
-			onPress,
 			handoff,
 			escapeClipping,
 			children,
@@ -92,8 +91,12 @@ export function createBoundaryComponent<P extends object>(
 		// Associated slot styles attach whenever the boundary is enabled,
 		// independent of whether an interpolator is configured for this transition.
 		const shouldAttachAssociatedStyles = enabled;
-		const canPortalRoot =
-			portalRuntime.enabled && hasRenderableChildren(children);
+		const hasBoundaryChildren = hasRenderableChildren(children);
+		const shouldEscapeBoundaryRoot = portalRuntime.escapeClipping;
+		const canPortalBoundaryRootAsPayload =
+			portalRuntime.handoff && !shouldEscapeBoundaryRoot && hasBoundaryChildren;
+		const canTeleportBoundaryRoot =
+			shouldEscapeBoundaryRoot || canPortalBoundaryRootAsPayload;
 
 		const associatedStyles = useComposedSlotStyles(boundTag.tag, style);
 		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
@@ -108,7 +111,9 @@ export function createBoundaryComponent<P extends object>(
 		} = useBoundaryRootState({
 			boundTag,
 			portalRuntime,
-			rootMeasurementRef: canPortalRoot ? rootPlaceholderRef : undefined,
+			rootMeasurementRef: canTeleportBoundaryRoot
+				? rootPlaceholderRef
+				: undefined,
 		});
 
 		useBoundaryMeasurement({
@@ -124,16 +129,18 @@ export function createBoundaryComponent<P extends object>(
 			config: { anchor, scaleMode, target, method },
 		});
 
-		useImperativeHandle(forwardedRef, () => ref.current as any, [ref]);
-
-		const shouldPortalRoot = canPortalRoot && !hasActiveTarget;
+		const shouldPortalRootAsHandoffPayload =
+			canPortalBoundaryRootAsPayload && !hasActiveTarget;
+		const shouldPortalRoot =
+			shouldEscapeBoundaryRoot || shouldPortalRootAsHandoffPayload;
+		const shouldRenderHandoffHost = !shouldPortalRootAsHandoffPayload;
 		// A nested active target takes the full associated style, so the root keeps
-		// only its stacking context. Without a nested target, a portal'd root is the
-		// target, so its associated style is applied through the portal host instead
-		// of inline on the teleported element.
-		// Host-only handoff receivers still need the associated style: their local
-		// portal host is absolute-filled inside this root, so the root is the visual
-		// frame that animates the received payload.
+		// only its stacking context. Without a nested target, a teleported root is
+		// the target, so its associated style is applied through the host instead of
+		// inline on the teleported element.
+		// Host-only handoff receivers still need the associated style: their
+		// handoff host is absolute-filled inside this root, so the root is the
+		// visual frame that animates the received payload.
 		const attachedStyle = shouldAttachAssociatedStyles
 			? hasActiveTarget
 				? associatedStackingStyles
@@ -141,44 +148,36 @@ export function createBoundaryComponent<P extends object>(
 					? undefined
 					: associatedStyles
 			: undefined;
-		const pressProps = typeof onPress === "function" ? { onPress } : undefined;
 
-		const localPortalHost = (
-			<BoundaryLocalPortalHost
-				boundaryId={boundTag.tag}
-				enabled={enabled && portalRuntime.handoff}
-				screenKey={currentScreenKey}
-			/>
-		);
-		const canInjectLocalPortalHost = typeof children !== "function";
-
-		const renderBoundaryRoot = (extraChildren?: ReactNode) => (
+		const boundaryRoot = (
 			<AnimatedComponent
 				{...rest}
-				{...pressProps}
 				ref={ref}
 				style={[style, attachedStyle]}
 				collapsable={false}
 			>
 				{children}
-				{canInjectLocalPortalHost ? extraChildren : null}
+				{shouldRenderHandoffHost ? (
+					<BoundaryHandoffPortalHost
+						boundaryId={boundTag.tag}
+						enabled={enabled && portalRuntime.handoff}
+						screenKey={currentScreenKey}
+					/>
+				) : null}
 			</AnimatedComponent>
 		);
-		const boundaryRoot = renderBoundaryRoot(
-			shouldPortalRoot ? undefined : localPortalHost,
-		);
+
+		useImperativeHandle(forwardedRef, () => ref.current as any, [ref]);
 
 		return (
 			<BoundaryRootProvider value={contextValue}>
 				{shouldPortalRoot ? (
 					<Portal
 						id={boundTag.tag}
-						handoff={portalRuntime.handoff}
+						handoff={shouldPortalRootAsHandoffPayload}
 						escapeClipping={portalRuntime.escapeClipping}
 						placeholderRef={rootPlaceholderRef}
-						placeholderChildren={
-							portalRuntime.handoff ? localPortalHost : undefined
-						}
+						placeholderStyle={style as any}
 					>
 						{boundaryRoot}
 					</Portal>

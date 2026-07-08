@@ -2,10 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import type { LinkPairsState, TagLink } from "../../stores/bounds/types";
 import {
-	canSwitchBoundaryLocalHandoffImmediately,
-	hasHandoffEscapeContinuation,
+	canSwitchHandoffHostImmediately,
 	resolveBoundaryPortalOwnership,
-	usesEscapeClippingHost,
 } from "../../components/boundary/portal/utils/ownership";
 
 const createBounds = (x = 0, y = 0, width = 100, height = 100) => ({
@@ -63,70 +61,12 @@ const sourceOnlyLink = ({
 	destination: null,
 });
 
-describe("portal host readiness", () => {
-	it("waits for screen escape hosts only when handoff receives the payload", () => {
-		const link = completeLink({
-			sourceScreenKey: "a",
-			destinationScreenKey: "b",
-			handoff: true,
-			escapeClipping: true,
-		});
-
-		expect(usesEscapeClippingHost(link)).toBe(true);
-	});
-
-	it("does not make the destination wait for source-local clipping escape", () => {
-		const link = completeLink({
-			sourceScreenKey: "a",
-			destinationScreenKey: "b",
-			escapeClipping: true,
-		});
-
-		expect(usesEscapeClippingHost(link)).toBe(false);
-	});
-
-	it("does not wait for boundary-local handoff hosts", () => {
-		const link = completeLink({
-			sourceScreenKey: "a",
-			destinationScreenKey: "b",
-			handoff: true,
-		});
-
-		expect(usesEscapeClippingHost(link)).toBe(false);
-	});
-
-	it("keeps waiting for escape continuations", () => {
-		const abPairKey = createScreenPairKey("a", "b");
-		const linkState: LinkPairsState = {
-			[abPairKey]: {
-				groups: {},
-				links: {
-					video: completeLink({
-						sourceScreenKey: "a",
-						destinationScreenKey: "b",
-						handoff: true,
-						escapeClipping: true,
-					}),
-				},
-			},
-		};
-
-		expect(
-			hasHandoffEscapeContinuation({
-				linkKey: "video",
-				linkState,
-				sourceScreenKey: "b",
-			}),
-		).toBe(true);
-	});
-});
-
-describe("canSwitchBoundaryLocalHandoffImmediately", () => {
+describe("canSwitchHandoffHostImmediately", () => {
 	it("immediately attaches retreated same-pair source hosts", () => {
 		const abPairKey = createScreenPairKey("a", "b");
 
 		expect(
-			canSwitchBoundaryLocalHandoffImmediately({
+			canSwitchHandoffHostImmediately({
 				hostScreenKey: "a",
 				ownerPairKey: abPairKey,
 				previousOwnerPairKey: abPairKey,
@@ -139,7 +79,7 @@ describe("canSwitchBoundaryLocalHandoffImmediately", () => {
 		const bcPairKey = createScreenPairKey("b", "c");
 
 		expect(
-			canSwitchBoundaryLocalHandoffImmediately({
+			canSwitchHandoffHostImmediately({
 				hostScreenKey: "b",
 				ownerPairKey: abPairKey,
 				previousOwnerPairKey: bcPairKey,
@@ -154,7 +94,6 @@ describe("resolveBoundaryPortalOwnership", () => {
 		const signal = resolveBoundaryPortalOwnership({
 			boundaryId: "video",
 			currentScreenKey: "a",
-			escapeClipping: true,
 			handoff: false,
 			pairsState: {
 				[pairKey]: {
@@ -179,12 +118,11 @@ describe("resolveBoundaryPortalOwnership", () => {
 		});
 	});
 
-	it("keeps A as owner during A -> B boundary-local handoff", () => {
+	it("keeps A as owner during A -> B handoff", () => {
 		const pairKey = createScreenPairKey("a", "b");
 		const signal = resolveBoundaryPortalOwnership({
 			boundaryId: "video",
 			currentScreenKey: "a",
-			escapeClipping: false,
 			handoff: true,
 			isSettledHostReady: false,
 			pairsState: {
@@ -211,12 +149,11 @@ describe("resolveBoundaryPortalOwnership", () => {
 		});
 	});
 
-	it("rebases boundary-local handoff ownership after settle", () => {
+	it("rebases handoff ownership after settle", () => {
 		const pairKey = createScreenPairKey("a", "b");
 		const signal = resolveBoundaryPortalOwnership({
 			boundaryId: "video",
 			currentScreenKey: "a",
-			escapeClipping: false,
 			handoff: true,
 			isSettledHostReady: true,
 			pairsState: {
@@ -243,12 +180,11 @@ describe("resolveBoundaryPortalOwnership", () => {
 		});
 	});
 
-	it("keeps screen-escaped handoff source-owned after settle", () => {
+	it("keeps handoff ownership independent from escapeClipping after settle", () => {
 		const pairKey = createScreenPairKey("a", "b");
 		const signal = resolveBoundaryPortalOwnership({
 			boundaryId: "video",
 			currentScreenKey: "a",
-			escapeClipping: true,
 			handoff: true,
 			isSettledHostReady: true,
 			pairsState: {
@@ -271,7 +207,7 @@ describe("resolveBoundaryPortalOwnership", () => {
 		expect(signal).toEqual({
 			hostScreenKey: "b",
 			ownerPairKey: pairKey,
-			ownerScreenKey: "a",
+			ownerScreenKey: "b",
 			status: "complete",
 		});
 	});
@@ -282,7 +218,6 @@ describe("resolveBoundaryPortalOwnership", () => {
 		const signal = resolveBoundaryPortalOwnership({
 			boundaryId: "video",
 			currentScreenKey: "a",
-			escapeClipping: false,
 			handoff: true,
 			isSettledHostReady: true,
 			pairsState: {
@@ -348,7 +283,6 @@ describe("resolveBoundaryPortalOwnership", () => {
 		const signal = resolveBoundaryPortalOwnership({
 			boundaryId: "video",
 			currentScreenKey: "a",
-			escapeClipping: false,
 			handoff: true,
 			isSettledHostClosingComplete: true,
 			isSettledHostReady: false,
@@ -371,7 +305,6 @@ describe("resolveBoundaryPortalOwnership", () => {
 		const signal = resolveBoundaryPortalOwnership({
 			boundaryId: "video",
 			currentScreenKey: "a",
-			escapeClipping: false,
 			handoff: true,
 			pairsState: {
 				[abPairKey]: {

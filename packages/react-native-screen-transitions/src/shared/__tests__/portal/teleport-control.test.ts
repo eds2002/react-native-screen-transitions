@@ -20,7 +20,7 @@ describe("portal teleport control", () => {
 		expect(isTeleportEnabled({ enabled: false })).toBe(false);
 	});
 
-	it("attaches only portal-enabled boundaries", () => {
+	it("attaches only enabled teleporting boundaries", () => {
 		expect(
 			shouldAttachBoundaryPortal({
 				enabled: true,
@@ -29,7 +29,7 @@ describe("portal teleport control", () => {
 		expect(shouldAttachBoundaryPortal({ enabled: false })).toBe(false);
 	});
 
-	it("lets slot props detach a portal-enabled boundary", () => {
+	it("lets slot props detach an enabled teleporting boundary", () => {
 		expect(
 			shouldAttachBoundaryPortal({
 				enabled: true,

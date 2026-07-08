@@ -7,12 +7,7 @@ import {
 } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../../stores/animation.store";
-import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
-import { getEntry } from "../../../../stores/bounds/internals/entries";
-import {
-	getDestination,
-	getLink,
-} from "../../../../stores/bounds/internals/links";
+import { getDestination } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
 import {
@@ -20,10 +15,6 @@ import {
 	SystemStore,
 } from "../../../../stores/system.store";
 import { logger } from "../../../../utils/logger";
-import {
-	hasHandoffEscapeContinuation,
-	usesEscapeClippingHost,
-} from "../../portal/utils/ownership";
 import type { MeasureBoundary } from "../../types";
 import { getInitialDestinationMeasurePairKey } from "../../utils/destination-signals";
 
@@ -38,15 +29,17 @@ const MAX_VIEWPORT_RETRIES = 20;
 interface UseInitialDestinationMeasurementParams {
 	boundTag: BoundTag;
 	enabled: boolean;
+	escapeClipping: boolean;
 	measureBoundary: MeasureBoundary;
 }
 
 export const useInitialDestinationMeasurement = ({
 	boundTag,
 	enabled,
+	escapeClipping,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
-	const { tag, linkKey, group } = boundTag;
+	const { linkKey, group } = boundTag;
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
@@ -149,22 +142,7 @@ export const useInitialDestinationMeasurement = ({
 				getDestination(measurePairKey, linkKey) !== null;
 
 			if (destinationAttached) {
-				const linkState = pairs.get();
-				const link = getLink(measurePairKey, linkKey);
-				const sourceScreenKey = getSourceScreenKeyFromPairKey(measurePairKey);
-				const sourceEntry = getEntry(tag, sourceScreenKey);
-				const sourceEntryUsesDestinationEscapeHost =
-					sourceEntry?.handoff === true && sourceEntry.escapeClipping === true;
-				const shouldWaitForEscapeClippingHost =
-					usesEscapeClippingHost(link) ||
-					sourceEntryUsesDestinationEscapeHost ||
-					hasHandoffEscapeContinuation({
-						linkKey,
-						linkState,
-						sourceScreenKey,
-					});
-
-				if (shouldWaitForEscapeClippingHost) {
+				if (escapeClipping) {
 					// Screen-level escape has a second readiness phase after destination
 					// measurement: the host must commit before the transition starts, or
 					// the payload can disappear for a frame.

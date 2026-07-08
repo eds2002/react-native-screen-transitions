@@ -53,7 +53,7 @@ type BoundaryRootComponent = typeof BoundaryRoot;
  * Use:
  * - `Boundary` for passive and pressable shared elements.
  * - `Boundary.Target` to measure a nested descendant instead of the root.
- * - `Boundary.Host` to make nested portal placement explicit.
+ * - `Boundary.Host` to make clipping-escape host placement explicit.
  */
 export interface BoundaryComponent extends BoundaryRootComponent {
 	/**
@@ -61,7 +61,7 @@ export interface BoundaryComponent extends BoundaryRootComponent {
 	 */
 	Target: typeof BoundaryTarget;
 	/**
-	 * Explicit portal host for scrollable or otherwise clipped coordinate spaces.
+	 * Explicit host for clipping-escape placement.
 	 */
 	Host: typeof Host;
 	/**

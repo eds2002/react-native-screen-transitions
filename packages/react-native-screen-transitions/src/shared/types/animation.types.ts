@@ -306,9 +306,9 @@ export type BoundaryTeleportControl =
 
 export type TransitionSlotProps = Record<string, unknown> & {
 	/**
-	 * Controls whether a portal-enabled boundary should attach for the current
-	 * interpolator frame. `false` detaches the portal while keeping hostName
-	 * ownership internal.
+	 * Controls whether a handoff or clipping-escape boundary should attach for
+	 * the current interpolator frame. `false` detaches the portal while keeping
+	 * hostName ownership internal.
 	 */
 	teleport?: BoundaryTeleportControl;
 };
