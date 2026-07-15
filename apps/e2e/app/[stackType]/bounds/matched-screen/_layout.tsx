@@ -36,6 +36,7 @@ const matchedScreenInterpolator: ScreenTransitionConfig["screenStyleInterpolator
 			},
 		}) as Record<string, any>;
 		const subwayStyle = bounds(MATCHED_SCREEN_SUBWAY_ID).styles({
+			method: "size",
 			motion: ({ current, progress: motionProgress }) => {
 				"worklet";
 				const envelope = Math.sin(motionProgress * Math.PI);
@@ -53,6 +54,7 @@ const matchedScreenInterpolator: ScreenTransitionConfig["screenStyleInterpolator
 			},
 		}) as Record<string, any>;
 		const legStyle = bounds(MATCHED_SCREEN_LEG_ID).styles({
+			method: "size",
 			motion: ({ current, progress: motionProgress }) => {
 				"worklet";
 				const envelope = Math.sin(motionProgress * Math.PI);
@@ -70,6 +72,7 @@ const matchedScreenInterpolator: ScreenTransitionConfig["screenStyleInterpolator
 			},
 		}) as Record<string, any>;
 		const sickStyle = bounds(MATCHED_SCREEN_SICK_ID).styles({
+			method: "size",
 			motion: ({ current, progress: motionProgress, props }) => {
 				"worklet";
 				const envelope = Math.sin(motionProgress * Math.PI);
@@ -90,15 +93,6 @@ const matchedScreenInterpolator: ScreenTransitionConfig["screenStyleInterpolator
 			},
 		}) as Record<string, any>;
 
-		if (focused) {
-			return {
-				backdrop: {
-					backgroundColor: "#000000",
-					opacity: progress,
-				},
-			};
-		}
-
 		const borderRadius = interpolate(active.progress, [0, 1], [24, 0], "clamp");
 
 		return {
@@ -118,6 +112,12 @@ const matchedScreenInterpolator: ScreenTransitionConfig["screenStyleInterpolator
 				...sickStyle,
 				borderRadius,
 			},
+			backdrop: focused
+				? {
+						backgroundColor: "#000000",
+						opacity: progress,
+					}
+				: null,
 		};
 	};
 

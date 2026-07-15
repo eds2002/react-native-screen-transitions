@@ -3,6 +3,7 @@ import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.help
 import type { LinkPairsState, TagLink } from "../../stores/bounds/types";
 import {
 	canSwitchHandoffHostImmediately,
+	isHandoffHostClosingComplete,
 	resolveBoundaryPortalOwnership,
 } from "../../components/boundary/portal/utils/ownership";
 
@@ -59,6 +60,39 @@ const sourceOnlyLink = ({
 		escapeClipping,
 	},
 	destination: null,
+});
+
+describe("isHandoffHostClosingComplete", () => {
+	it("does not treat a pending close as completed", () => {
+		expect(
+			isHandoffHostClosingComplete({
+				closing: 1,
+				progressAnimating: 0,
+				progressSettled: 1,
+				willAnimate: 1,
+			}),
+		).toBe(false);
+	});
+
+	it("waits for a settled spring to finish animating", () => {
+		expect(
+			isHandoffHostClosingComplete({
+				closing: 1,
+				progressAnimating: 1,
+				progressSettled: 1,
+				willAnimate: 0,
+			}),
+		).toBe(false);
+
+		expect(
+			isHandoffHostClosingComplete({
+				closing: 1,
+				progressAnimating: 0,
+				progressSettled: 1,
+				willAnimate: 0,
+			}),
+		).toBe(true);
+	});
 });
 
 describe("canSwitchHandoffHostImmediately", () => {
@@ -143,6 +177,38 @@ describe("resolveBoundaryPortalOwnership", () => {
 
 		expect(signal).toEqual({
 			hostScreenKey: "b",
+			ownerPairKey: pairKey,
+			ownerScreenKey: "a",
+			status: "complete",
+		});
+	});
+
+	it("returns a settled closing A -> B handoff to A", () => {
+		const pairKey = createScreenPairKey("a", "b");
+		const signal = resolveBoundaryPortalOwnership({
+			boundaryId: "video",
+			currentScreenKey: "a",
+			handoff: true,
+			isSettledHostClosingComplete: true,
+			isSettledHostReady: false,
+			pairsState: {
+				[pairKey]: {
+					groups: {},
+					links: {
+						video: completeLink({
+							sourceScreenKey: "a",
+							destinationScreenKey: "b",
+							handoff: true,
+						}),
+					},
+				},
+			},
+			settledHostScreenKey: "b",
+			sourcePairKey: pairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "a",
 			ownerPairKey: pairKey,
 			ownerScreenKey: "a",
 			status: "complete",

@@ -31,6 +31,10 @@ export type { NativeStackAdapterOptions } from "./adapters/with-screen-transitio
 export { withScreenTransitions } from "./adapters/with-screen-transitions";
 export { snapTo } from "./animation/snap-to";
 export {
+	blockTransition,
+	unblockTransition,
+} from "./animation/transition-blocking";
+export {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 	TRANSFORM_RESET,

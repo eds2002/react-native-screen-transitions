@@ -8,7 +8,8 @@ import {
 } from "../../../providers/screen/styles";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import { useRegisterTarget } from "../hooks/use-register-target";
-import { Portal } from "../portal/components/portal";
+import { BoundaryContentPortal } from "../portal/components/boundary-content-portal";
+import { BoundaryPortal } from "../portal/components/boundary-portal";
 import { useBoundaryRootContext } from "../providers/boundary-root.provider";
 
 type BoundaryTargetProps = React.ComponentProps<typeof Animated.View>;
@@ -18,12 +19,15 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 ) {
 	const { pointerEvents, style, ...rest } = props;
 	const targetAnimatedRef = useAnimatedRef<View>();
-	const placeholderAnimatedRef = useAnimatedRef<View>();
+	const targetEscapePlaceholderRef = useAnimatedRef<View>();
 	const rootContext = useBoundaryRootContext();
+	const boundaryId = rootContext?.boundTag.tag;
 	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
 	const portalRuntime = rootContext?.portalRuntime;
 	const portalPointerEvents =
 		typeof pointerEvents === "string" ? pointerEvents : undefined;
+	const shouldEscapeTargetToScreenHost =
+		portalRuntime?.escapeClipping === true && boundaryId !== undefined;
 
 	const shouldApplyAssociatedStyleInline =
 		isActiveTarget && portalRuntime?.enabled !== true;
@@ -37,34 +41,38 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 	const portalLayoutStyle = useSlotLayoutStyles(rootContext?.boundTag.tag);
 	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
-	// Handoff moves the target payload out of this layout slot; measure the
-	// placeholder in that case. Escape-clipping moves the root boundary instead,
-	// so this target still has a real local measurement surface.
-	const measurementRef = portalRuntime?.handoff
-		? placeholderAnimatedRef
+	const measurementRef = shouldEscapeTargetToScreenHost
+		? targetEscapePlaceholderRef
 		: targetAnimatedRef;
 
 	useRegisterTarget({ preparedStyles, measurementRef, targetAnimatedRef });
 
 	return (
-		<Portal
-			id={rootContext?.boundTag.tag}
-			handoff={portalRuntime?.handoff}
-			placeholderRef={placeholderAnimatedRef}
-			placeholderStyle={style as any}
+		<BoundaryPortal
+			boundaryId={boundaryId ?? ""}
+			enabled={shouldEscapeTargetToScreenHost}
+			placeholderRef={targetEscapePlaceholderRef}
 			pointerEvents={portalPointerEvents}
 		>
-			<Animated.View
-				{...rest}
-				pointerEvents={pointerEvents}
-				ref={targetAnimatedRef}
-				style={[
-					style,
-					shouldApplyAssociatedStyleInline ? associatedTargetStyles : undefined,
-					shouldApplyPortalLayoutStyle ? portalLayoutStyle : undefined,
-				]}
-				collapsable={false}
-			/>
-		</Portal>
+			<BoundaryContentPortal
+				boundaryId={boundaryId}
+				enabled={portalRuntime?.handoff === true}
+				pointerEvents={portalPointerEvents}
+			>
+				<Animated.View
+					{...rest}
+					pointerEvents={pointerEvents}
+					ref={targetAnimatedRef}
+					style={[
+						style,
+						shouldApplyAssociatedStyleInline
+							? associatedTargetStyles
+							: undefined,
+						shouldApplyPortalLayoutStyle ? portalLayoutStyle : undefined,
+					]}
+					collapsable={false}
+				/>
+			</BoundaryContentPortal>
+		</BoundaryPortal>
 	);
 });

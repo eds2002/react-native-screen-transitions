@@ -5,18 +5,21 @@ import {
 	measure,
 	runOnJS,
 	runOnUI,
+	type SharedValue,
 	useAnimatedReaction,
 	useAnimatedRef,
 	useSharedValue,
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
-import { useOriginContext } from "../../../../providers/screen/origin.provider";
-import { ScrollStore } from "../../../../stores/scroll.store";
+import { useOriginContext } from "../../../../../../providers/screen/origin.provider";
+import { ScrollStore } from "../../../../../../stores/scroll.store";
+import { getVisibilityBlockOffset } from "../../../../../../utils/visibility-block-offset";
 import {
 	adjustedMeasuredBoundsForOverscrollDeltas,
-	normalizeMeasuredBoundsToOrigin,
-} from "../../utils/measured-bounds";
+	isMeasurementInViewport,
+	normalizeMeasuredBoundsWithVisibilityGate,
+} from "../../../../utils/measured-bounds";
 import {
 	clearPortalHostBounds,
 	setPortalHostBounds,
@@ -29,6 +32,9 @@ type UseHostMeasurementParams = {
 	enabled: boolean;
 	hostKey: string;
 	screenKey: string;
+	visibilityBlocked: SharedValue<boolean>;
+	viewportHeight: number;
+	viewportWidth: number;
 };
 
 export const useHostMeasurement = ({
@@ -36,6 +42,9 @@ export const useHostMeasurement = ({
 	enabled,
 	hostKey,
 	screenKey,
+	visibilityBlocked,
+	viewportHeight,
+	viewportWidth,
 }: UseHostMeasurementParams) => {
 	const hostRef = useAnimatedRef<View>();
 	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
@@ -91,10 +100,31 @@ export const useHostMeasurement = ({
 				? adjustedMeasuredBoundsForOverscrollDeltas(measured, currentScroll)
 				: measured;
 
-			const normalizedMeasured = normalizeMeasuredBoundsToOrigin(
-				overscrollNormalized,
-				measuredOrigin,
-			);
+			const normalizedMeasured = normalizeMeasuredBoundsWithVisibilityGate({
+				measured: overscrollNormalized,
+				origin: measuredOrigin,
+				visibilityBlocked: visibilityBlocked.get(),
+				visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
+				viewportWidth,
+				viewportHeight,
+			});
+
+			if (
+				!isMeasurementInViewport(
+					normalizedMeasured,
+					viewportWidth,
+					viewportHeight,
+				)
+			) {
+				cancelAnimation(retryToken);
+				retryToken.set(
+					withDelay(
+						HOST_MEASUREMENT_RETRY_DELAY_MS,
+						withTiming(retryToken.get() + 1, { duration: 0 }),
+					),
+				);
+				return;
+			}
 
 			setPortalHostBounds(hostKey, {
 				x: normalizedMeasured.x,

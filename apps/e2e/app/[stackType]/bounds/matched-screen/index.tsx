@@ -27,7 +27,7 @@ function FeedVideoCard({ onPress, video, width }: FeedVideoCardProps) {
 	const theme = useTheme();
 	const player = useVideoPlayer(video.source, (videoPlayer) => {
 		videoPlayer.loop = true;
-		videoPlayer.muted = !video.playsAudio;
+		videoPlayer.muted = true;
 		videoPlayer.volume = video.playsAudio ? 1 : 0;
 		videoPlayer.play();
 	});
@@ -48,7 +48,7 @@ function FeedVideoCard({ onPress, video, width }: FeedVideoCardProps) {
 				id={video.id}
 				testID={`${video.id}-source`}
 				handoff
-				escapeClipping
+				// escapeClipping
 			>
 				<Transition.Boundary.Target
 					pointerEvents="none"

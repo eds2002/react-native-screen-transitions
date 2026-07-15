@@ -37,6 +37,24 @@ const BOUNDS_EXAMPLES = [
 			"One video teleported to the matched screen while the destination slides",
 	},
 	{
+		id: "commerce-card",
+		title: "Commerce Card",
+		description:
+			"Product imagery escaping a clipped catalog card into a detail hero",
+	},
+	{
+		id: "live-player",
+		title: "Live Player",
+		description:
+			"A native video payload handed from a compact player into full screen",
+	},
+	{
+		id: "article-detail",
+		title: "Article Detail",
+		description:
+			"Image, headline, and author boundaries moving together across layouts",
+	},
+	{
 		id: "transition-scope",
 		title: "Nested Bounds",
 		description:

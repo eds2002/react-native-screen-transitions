@@ -27,7 +27,6 @@ function PlayerSlot({ video, width }: PlayerSlotProps) {
 		<View style={styles.slotWrap}>
 			<View
 				style={[
-					styles.videoSlot,
 					{
 						width,
 						height: width / PLAYER_SLOT_ASPECT_RATIO,
@@ -42,9 +41,6 @@ function PlayerSlot({ video, width }: PlayerSlotProps) {
 					// escapeClipping
 				/>
 			</View>
-			<Text style={[styles.slotLabel, { color: theme.textSecondary }]}>
-				{video.title}
-			</Text>
 		</View>
 	);
 }

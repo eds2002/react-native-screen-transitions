@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { setPortalHostBounds } from "../../components/boundary/portal/stores/host-bounds.store";
-import { resolvePortalOffsetStyle } from "../../components/boundary/portal/utils/offset-style";
+import { resolvePortalOffsetStyle } from "../../components/boundary/portal/components/boundary-portal/helpers/offset-style";
+import { setPortalHostBounds } from "../../components/boundary/portal/components/boundary-portal/stores/host-bounds.store";
 
 const createBounds = (x = 0, y = 0, width = 100, height = 100) => ({
 	x,

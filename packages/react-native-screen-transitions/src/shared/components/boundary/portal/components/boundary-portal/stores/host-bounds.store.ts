@@ -1,6 +1,6 @@
 import { type MeasuredDimensions, makeMutable } from "react-native-reanimated";
-import { cloneScrollMetadataState } from "../../../../stores/scroll.store";
-import type { ScrollMetadataState } from "../../../../types/gesture.types";
+import { cloneScrollMetadataState } from "../../../../../../stores/scroll.store";
+import type { ScrollMetadataState } from "../../../../../../types/gesture.types";
 
 export type PortalHostBounds = MeasuredDimensions & {
 	scroll?: ScrollMetadataState | null;

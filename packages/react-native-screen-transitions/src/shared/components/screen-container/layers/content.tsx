@@ -8,7 +8,7 @@ import { useGestureContext } from "../../../providers/screen/gestures";
 import { OriginProvider } from "../../../providers/screen/origin.provider";
 import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 import type { ScreenContentComponentProps } from "../../../types";
-import { ScreenFallbackHost } from "../../boundary/portal/components/host";
+import { ScreenFallbackHost } from "../../boundary/portal/components/boundary-portal/components/host";
 import { useContentLayout } from "../hooks/use-content-layout";
 import { MaybeMaskedNavigationContainer } from "./maybe-masked-navigation-container";
 import { usesLayerRenderProps } from "./render-component";

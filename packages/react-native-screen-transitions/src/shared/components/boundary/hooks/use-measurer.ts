@@ -8,15 +8,17 @@ import {
 } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
 import { useOriginContext } from "../../../providers/screen/origin.provider";
+import { useScreenSlots } from "../../../providers/screen/styles";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
+import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
 import type { MeasureBoundary } from "../types";
 import {
 	attachScrollSnapshotToMeasuredBounds,
 	isMeasurementInViewport,
 	measureWithOverscrollAwareness,
-	normalizeMeasuredBoundsToOrigin,
+	normalizeMeasuredBoundsWithVisibilityGate,
 } from "../utils/measured-bounds";
 
 interface UseMeasurerParams {
@@ -48,6 +50,7 @@ export const useMeasurer = ({
 		"pendingLifecycleStartBlockCount",
 	);
 	const { originRef } = useOriginContext();
+	const { visibilityBlocked } = useScreenSlots();
 
 	return useCallback(
 		(target) => {
@@ -62,10 +65,14 @@ export const useMeasurer = ({
 
 			if (!measured || !measuredOrigin) return;
 
-			const normalizedMeasured = normalizeMeasuredBoundsToOrigin(
+			const normalizedMeasured = normalizeMeasuredBoundsWithVisibilityGate({
 				measured,
-				measuredOrigin,
-			);
+				origin: measuredOrigin,
+				visibilityBlocked: escapeClipping && visibilityBlocked.get(),
+				visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
+				viewportWidth,
+				viewportHeight,
+			});
 
 			/**
 			 * - Destination Pass -
@@ -119,6 +126,7 @@ export const useMeasurer = ({
 			scrollMetadata,
 			pendingLifecycleStartBlockCount,
 			originRef,
+			visibilityBlocked,
 		],
 	);
 };

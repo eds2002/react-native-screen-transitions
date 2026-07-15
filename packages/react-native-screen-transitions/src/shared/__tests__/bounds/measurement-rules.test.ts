@@ -1,8 +1,9 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { getInitialDestinationMeasurePairKey } from "../../components/boundary/utils/destination-signals";
+import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
 import {
 	isMeasurementInViewport,
 	normalizeMeasuredBoundsToOrigin,
+	normalizeMeasuredBoundsWithVisibilityGate,
 } from "../../components/boundary/utils/measured-bounds";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
@@ -58,6 +59,59 @@ beforeEach(() => {
 });
 
 describe("bounds client measurement contract", () => {
+	it("keeps destination startup gated until a registered pair is complete", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const getSignal = ({
+			destinationPresent = true,
+			sourcePresent = true,
+		}: {
+			destinationPresent?: boolean;
+			sourcePresent?: boolean;
+		} = {}) =>
+			getInitialDestinationMeasurementSignal({
+				enabled: true,
+				destinationPairKey: pairKey,
+				linkId: "card",
+				destinationPresent,
+				sourcePresent,
+				linkState: pairs.get(),
+			});
+
+		expect(getSignal({ destinationPresent: false })).toEqual({
+			pairKey,
+			action: "wait",
+		});
+		expect(getSignal({ sourcePresent: false })).toEqual({
+			pairKey,
+			action: "release",
+		});
+		expect(getSignal()).toEqual({
+			pairKey,
+			action: "measure",
+		});
+
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			createBounds(),
+		);
+
+		expect(getSignal()).toEqual({
+			pairKey,
+			action: "wait",
+		});
+
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(),
+		);
+
+		expect(getSignal()).toEqual({ pairKey, action: "complete" });
+	});
+
 	it("auto source capture waits for destination then emits once", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const measuredTargets: Array<{ type: "source"; pairKey: string }> = [];
@@ -211,65 +265,8 @@ describe("bounds client measurement contract", () => {
 		).toEqual(first);
 	});
 
-	it("destination attach stops after the destination has measured once", () => {
+	it("releases inactive grouped destinations after the active id is established", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
-
-		const getDestinationPairKey = () =>
-			getInitialDestinationMeasurePairKey({
-				enabled: true,
-				destinationPairKey: pairKey,
-				linkId: "card",
-				linkState: pairs.get(),
-			});
-
-		expect(getDestinationPairKey()).toBe(pairKey);
-
-		BoundStore.link.setDestination(
-			pairKey,
-			"card",
-			"screen-b",
-			createBounds(),
-		);
-
-		expect(getDestinationPairKey()).toBeNull();
-	});
-
-	it("does not use pending sources to limit destination-first measurement", () => {
-		const pairKey = createScreenPairKey("screen-a", "screen-b");
-		const pendingPairKey = createPendingPairKey("screen-a");
-
-		BoundStore.link.setSource(
-			pendingPairKey,
-			"lime",
-			"screen-a",
-			createBounds(),
-		);
-
-		const getDestinationPairKey = (linkId: string) =>
-			getInitialDestinationMeasurePairKey({
-				enabled: true,
-				destinationPairKey: pairKey,
-				linkId,
-				linkState: pairs.get(),
-			});
-
-		expect(getDestinationPairKey("lime")).toBe(pairKey);
-		expect(getDestinationPairKey("sky")).toBe(pairKey);
-		expect(getDestinationPairKey("electric")).toBe(pairKey);
-	});
-
-	it("keeps grouped destination measurement pinned after destination establishes the active id", () => {
-		const pairKey = createScreenPairKey("screen-a", "screen-b");
-		const pendingPairKey = createPendingPairKey("screen-a");
-
-		BoundStore.link.setSource(
-			pendingPairKey,
-			"lime",
-			"screen-a",
-			createBounds(),
-			{},
-			"colors",
-		);
 		BoundStore.link.setDestination(
 			pairKey,
 			"lime",
@@ -279,34 +276,39 @@ describe("bounds client measurement contract", () => {
 			"colors",
 		);
 
-		const getDestinationPairKey = (linkId: string) =>
-			getInitialDestinationMeasurePairKey({
+		const getSignal = (linkId: string) =>
+			getInitialDestinationMeasurementSignal({
 				enabled: true,
 				destinationPairKey: pairKey,
 				linkId,
 				group: "colors",
+				destinationPresent: true,
+				sourcePresent: true,
 				linkState: pairs.get(),
 			});
 
-		expect(BoundStore.link.getSource(pendingPairKey, "lime")?.bounds).toEqual(
-			createBounds(),
-		);
-		expect(getDestinationPairKey("sky")).toBeNull();
-		expect(getDestinationPairKey("electric")).toBeNull();
+		expect(getSignal("lime")).toEqual({ pairKey, action: "wait" });
+		expect(getSignal("sky")).toEqual({ pairKey, action: "release" });
+		expect(getSignal("electric")).toEqual({ pairKey, action: "release" });
 	});
 
 	it("attaches nested initial destinations to the nearest ancestor pair", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
 
-		const getDestinationPairKey = () =>
-			getInitialDestinationMeasurePairKey({
+		const getSignal = () =>
+			getInitialDestinationMeasurementSignal({
 				enabled: true,
 				ancestorDestinationPairKey: ancestorPairKey,
 				linkId: "card",
+				destinationPresent: true,
+				sourcePresent: true,
 				linkState: pairs.get(),
 			});
 
-		expect(getDestinationPairKey()).toBe(ancestorPairKey);
+		expect(getSignal()).toEqual({
+			pairKey: ancestorPairKey,
+			action: "measure",
+		});
 
 		BoundStore.link.setDestination(
 			ancestorPairKey,
@@ -315,7 +317,10 @@ describe("bounds client measurement contract", () => {
 			createBounds(),
 		);
 
-		expect(getDestinationPairKey()).toBeNull();
+		expect(getSignal()).toEqual({
+			pairKey: ancestorPairKey,
+			action: "wait",
+		});
 		expect(
 			BoundStore.link.getLink(ancestorPairKey, "card")?.destination
 				?.screenKey,
@@ -391,6 +396,68 @@ describe("bounds client measurement contract", () => {
 		expect(normalized.x).toBe(blockedMeasurement.x);
 		expect(normalized.y).toBe(blockedMeasurement.y);
 		expect(isMeasurementInViewport(normalized, 400, 800)).toBe(true);
+	});
+
+	it("corrects visibility-gate frame skew while the screen is offset", () => {
+		const visibilityBlockOffset = 1601;
+		const destination = {
+			...createBounds(),
+			pageX: 18,
+			pageY: 1749,
+		};
+		const staleOrigin = {
+			...createBounds(),
+			pageY: 0,
+		};
+		const normalize = (
+			measured: Snapshot["bounds"],
+			origin: Snapshot["bounds"],
+		) =>
+			normalizeMeasuredBoundsWithVisibilityGate({
+				measured,
+				origin,
+				visibilityBlocked: true,
+				visibilityBlockOffset,
+				viewportWidth: 400,
+				viewportHeight: 800,
+			});
+
+		expect(
+			normalize(destination, {
+				...staleOrigin,
+				pageY: visibilityBlockOffset,
+			}),
+		).toMatchObject({ pageX: 18, pageY: 148 });
+
+		expect(normalize(destination, staleOrigin)).toMatchObject({
+			pageX: 18,
+			pageY: 148,
+		});
+
+		expect(
+			normalize(
+				{ ...destination, pageY: 148 },
+				{ ...staleOrigin, pageY: visibilityBlockOffset },
+			),
+		).toMatchObject({ pageX: 18, pageY: 148 });
+	});
+
+	it("does not reinterpret offscreen measurements after visibility opens", () => {
+		const measured = {
+			...createBounds(),
+			pageY: 1749,
+		};
+
+		expect(
+			normalizeMeasuredBoundsWithVisibilityGate({
+				measured,
+				origin: createBounds(),
+				visibilityBlocked: false,
+				visibilityBlockOffset: 1601,
+				viewportWidth: 400,
+				viewportHeight: 800,
+			}),
+		).toMatchObject({ pageY: 1749 });
 	});
 
 	it("refreshes the current active grouped source at settled points", () => {

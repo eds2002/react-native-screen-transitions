@@ -1,5 +1,7 @@
+import { useCallback, useLayoutEffect } from "react";
 import {
 	cancelAnimation,
+	runOnUI,
 	useAnimatedReaction,
 	useSharedValue,
 	withDelay,
@@ -7,24 +9,23 @@ import {
 } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../../stores/animation.store";
-import { getDestination } from "../../../../stores/bounds/internals/links";
+import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import { getEntry } from "../../../../stores/bounds/internals/entries";
+import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
-import {
-	LifecycleTransitionRequestKind,
-	SystemStore,
-} from "../../../../stores/system.store";
+import { SystemStore } from "../../../../stores/system.store";
 import { logger } from "../../../../utils/logger";
 import type { MeasureBoundary } from "../../types";
-import { getInitialDestinationMeasurePairKey } from "../../utils/destination-signals";
+import { getInitialDestinationMeasurementSignal } from "../../utils/destination-signals";
 
-const VIEWPORT_RETRY_DELAY_MS = 100;
+const HANDSHAKE_RETRY_DELAY_MS = 100;
 /**
- * A destination that keeps failing its measurement guards must not hold the
- * transition gate forever — after this budget the block is released with a
- * warning so the open proceeds without that boundary.
+ * A destination whose initial handshake never completes must not hold the
+ * transition gate forever. After this budget, release the block with a warning
+ * so the open proceeds without that boundary.
  */
-const MAX_VIEWPORT_RETRIES = 20;
+const MAX_HANDSHAKE_RETRIES = 20;
 
 interface UseInitialDestinationMeasurementParams {
 	boundTag: BoundTag;
@@ -39,7 +40,7 @@ export const useInitialDestinationMeasurement = ({
 	escapeClipping,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
-	const { linkKey, group } = boundTag;
+	const { tag, linkKey, group } = boundTag;
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
@@ -51,22 +52,23 @@ export const useInitialDestinationMeasurement = ({
 		(s) => s.derivations.ancestorDestinationPairKey,
 	);
 	const destinationEnabled = enabled && !nextScreenKey;
+	const initialDestinationPairKey =
+		destinationPairKey ?? ancestorDestinationPairKey;
 	const progress = AnimationStore.getValue(
 		currentScreenKey,
 		"transitionProgress",
 	);
 
 	const {
-		pendingLifecycleRequestKind,
 		actions: { blockLifecycleStart, unblockLifecycleStart },
 	} = SystemStore.getBag(currentScreenKey);
 
 	const isBlockingLifecycleStart = useSharedValue(0);
 	const retryToken = useSharedValue(0);
-	const viewportRetries = useSharedValue(0);
+	const handshakeRetries = useSharedValue(0);
 	const hasGivenUp = useSharedValue(0);
 
-	const releaseLifecycleStartBlock = () => {
+	const releaseLifecycleStartBlock = useCallback(() => {
 		"worklet";
 		cancelAnimation(retryToken);
 
@@ -74,53 +76,91 @@ export const useInitialDestinationMeasurement = ({
 			return;
 		}
 
-		unblockLifecycleStart();
 		isBlockingLifecycleStart.set(0);
-	};
+		unblockLifecycleStart();
+	}, [isBlockingLifecycleStart, retryToken, unblockLifecycleStart]);
+
+	useLayoutEffect(() => {
+		if (
+			!destinationEnabled ||
+			!initialDestinationPairKey ||
+			progress.get() > 0 ||
+			isBlockingLifecycleStart.get()
+		) {
+			return;
+		}
+
+		// Boundary layout effects run before the parent screen's open intent. Claim
+		// this boundary's startup block before the transition controller can consume
+		// the request; the UI-thread handshake below releases it once matching is done.
+		blockLifecycleStart();
+		isBlockingLifecycleStart.set(1);
+
+		return () => {
+			if (escapeClipping) {
+				// The portal host owns the release after this boundary hands off.
+				return;
+			}
+
+			// This is an abandonment fallback, not a second release. Run it on the UI
+			// runtime so it serializes with the handshake's guarded release.
+			runOnUI(releaseLifecycleStartBlock)();
+		};
+	}, [
+		blockLifecycleStart,
+		destinationEnabled,
+		escapeClipping,
+		initialDestinationPairKey,
+		isBlockingLifecycleStart,
+		progress,
+		releaseLifecycleStartBlock,
+	]);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 			const retryTick = retryToken.get();
-
-			const hasPendingOpenRequest =
-				pendingLifecycleRequestKind.get() ===
-				LifecycleTransitionRequestKind.Open;
-
 			const isWaitingForOpenToStart = progress.get() <= 0;
-
-			if (!hasPendingOpenRequest || !isWaitingForOpenToStart) {
-				return [0, retryTick] as const;
-			}
-
-			const measurePairKey = getInitialDestinationMeasurePairKey({
-				enabled: destinationEnabled,
+			const sourceScreenKey = initialDestinationPairKey
+				? getSourceScreenKeyFromPairKey(initialDestinationPairKey)
+				: undefined;
+			const signal = getInitialDestinationMeasurementSignal({
+				enabled:
+					destinationEnabled &&
+					isWaitingForOpenToStart &&
+					isBlockingLifecycleStart.get() > 0,
 				destinationPairKey,
 				ancestorDestinationPairKey,
 				linkId: linkKey,
 				group,
-				linkState:
-					destinationEnabled &&
-					(destinationPairKey || ancestorDestinationPairKey)
-						? pairs.get()
-						: undefined,
+				destinationPresent: getEntry(tag, currentScreenKey) !== null,
+				sourcePresent:
+					sourceScreenKey !== undefined &&
+					getEntry(tag, sourceScreenKey) !== null,
+				linkState: initialDestinationPairKey ? pairs.get() : undefined,
 			});
 
-			return [measurePairKey, retryTick] as const;
+			return [
+				signal?.pairKey ?? null,
+				signal?.action ?? null,
+				retryTick,
+			] as const;
 		},
-		([measurePairKey, retryTick], previous) => {
+		([measurePairKey, action, retryTick], previous) => {
 			"worklet";
-			if (!measurePairKey) {
+			if (!measurePairKey || !action) {
 				return;
 			}
 
 			const previousMeasurePairKey = previous?.[0];
-			const previousRetryTick = previous?.[1];
-			const shouldAttemptMeasure =
+			const previousAction = previous?.[1];
+			const previousRetryTick = previous?.[2];
+			const shouldHandleSignal =
 				measurePairKey !== previousMeasurePairKey ||
+				action !== previousAction ||
 				retryTick !== previousRetryTick;
 
-			if (!shouldAttemptMeasure) {
+			if (!shouldHandleSignal) {
 				return;
 			}
 
@@ -128,47 +168,51 @@ export const useInitialDestinationMeasurement = ({
 				return;
 			}
 
-			if (!isBlockingLifecycleStart.get()) {
-				blockLifecycleStart();
-				isBlockingLifecycleStart.set(1);
+			if (action === "release") {
+				releaseLifecycleStartBlock();
+				handshakeRetries.set(0);
+				return;
 			}
 
-			measureBoundary({
-				type: "destination",
-				pairKey: measurePairKey,
-			});
+			if (action === "measure") {
+				measureBoundary({
+					type: "destination",
+					pairKey: measurePairKey,
+				});
+			}
 
-			const destinationAttached =
-				getDestination(measurePairKey, linkKey) !== null;
+			const link = getLink(measurePairKey, linkKey);
+			const linkComplete = !!link?.source && !!link.destination;
 
-			if (destinationAttached) {
+			if (linkComplete || action === "complete") {
+				cancelAnimation(retryToken);
+				handshakeRetries.set(0);
 				if (escapeClipping) {
 					// Screen-level escape has a second readiness phase after destination
-					// measurement: the host must commit before the transition starts, or
+					// matching: the host must commit before the transition starts, or
 					// the payload can disappear for a frame.
 					return;
 				}
 				releaseLifecycleStartBlock();
-				viewportRetries.set(0);
 				return;
 			}
 
-			if (viewportRetries.get() >= MAX_VIEWPORT_RETRIES) {
+			if (handshakeRetries.get() >= MAX_HANDSHAKE_RETRIES) {
 				hasGivenUp.set(1);
 				releaseLifecycleStartBlock();
 				logger.warn(
-					`Destination boundary "${linkKey}" never produced a valid measurement after ${MAX_VIEWPORT_RETRIES} attempts; releasing the transition gate without it. The boundary is likely off-viewport (e.g. an inactive group member on a paged screen) or unmounted.`,
+					`Boundary "${linkKey}" never formed a complete source/destination link after ${MAX_HANDSHAKE_RETRIES} attempts; releasing the transition gate without it. One side is likely off-viewport or unmounted.`,
 				);
 				return;
 			}
 
-			// Destination did not attach (malformed off-screen measurement); retry
-			// after the retry token advances while the lifecycle stays blocked.
-			viewportRetries.set(viewportRetries.get() + 1);
+			// Keep the lifecycle blocked while registration, measurement, or source
+			// attachment settles. The retry token also retries rejected destination bounds.
+			handshakeRetries.set(handshakeRetries.get() + 1);
 			cancelAnimation(retryToken);
 			retryToken.set(
 				withDelay(
-					VIEWPORT_RETRY_DELAY_MS,
+					HANDSHAKE_RETRY_DELAY_MS,
 					withTiming(retryToken.get() + 1, { duration: 0 }),
 				),
 			);

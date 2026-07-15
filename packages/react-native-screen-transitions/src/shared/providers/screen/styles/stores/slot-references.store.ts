@@ -33,7 +33,8 @@ export const registerScreenSlots = (
 	if (
 		previous?.localStylesMaps === slots.localStylesMaps &&
 		previous.nextInterpolatorReady === slots.nextInterpolatorReady &&
-		previous.slotsMap === slots.slotsMap
+		previous.slotsMap === slots.slotsMap &&
+		previous.visibilityBlocked === slots.visibilityBlocked
 	) {
 		return;
 	}

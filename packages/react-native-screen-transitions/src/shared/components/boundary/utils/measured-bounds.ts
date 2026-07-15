@@ -96,6 +96,54 @@ export const isMeasurementInViewport = (
 	);
 };
 
+export const normalizeMeasuredBoundsWithVisibilityGate = ({
+	measured,
+	origin,
+	visibilityBlocked,
+	visibilityBlockOffset,
+	viewportWidth,
+	viewportHeight,
+}: {
+	measured: MeasuredDimensions;
+	origin: MeasuredDimensions;
+	visibilityBlocked: boolean;
+	visibilityBlockOffset: number;
+	viewportWidth: number;
+	viewportHeight: number;
+}): MeasuredDimensions => {
+	"worklet";
+	const normalized = normalizeMeasuredBoundsToOrigin(measured, origin);
+
+	if (
+		!visibilityBlocked ||
+		visibilityBlockOffset <= 0 ||
+		isMeasurementInViewport(normalized, viewportWidth, viewportHeight)
+	) {
+		return normalized;
+	}
+
+	// Fabric can expose the visibility transform to one native measurement one
+	// frame before the other. Prefer normal origin-relative coordinates, then
+	// test either side of that known frame skew while the gate is active.
+	const measuredAhead = {
+		...normalized,
+		pageY: normalized.pageY - visibilityBlockOffset,
+	};
+	if (isMeasurementInViewport(measuredAhead, viewportWidth, viewportHeight)) {
+		return measuredAhead;
+	}
+
+	const originAhead = {
+		...normalized,
+		pageY: normalized.pageY + visibilityBlockOffset,
+	};
+	if (isMeasurementInViewport(originAhead, viewportWidth, viewportHeight)) {
+		return originAhead;
+	}
+
+	return normalized;
+};
+
 export const measureWithOverscrollAwareness = (
 	ref: AnimatedRef<View>,
 	scrollState: ScrollGestureState | null,

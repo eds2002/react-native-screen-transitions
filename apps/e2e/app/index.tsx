@@ -100,6 +100,12 @@ const RECIPE_OPTIONS = [
 		route: "/native-stack-adapter-recipe" as const,
 	},
 	{
+		id: "native-stack-adapter-layout-recipe",
+		title: "Native Stack Adapter Layouts",
+		description: "Screen and group layout overrides retain transition providers",
+		route: "/native-stack-adapter-layout-recipe" as const,
+	},
+	{
 		id: "teleport",
 		title: "Teleport",
 		description: "Two shared-element teleport recipes using bounds targets",

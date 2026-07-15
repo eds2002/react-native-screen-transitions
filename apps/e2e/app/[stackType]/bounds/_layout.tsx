@@ -20,6 +20,12 @@ export default function BoundsLayout() {
 				name="matched-screen"
 				options={{ ...IOSSlide() }}
 			/>
+			<StackNavigator.Screen name="commerce-card" options={{ ...IOSSlide() }} />
+			<StackNavigator.Screen name="live-player" options={{ ...IOSSlide() }} />
+			<StackNavigator.Screen
+				name="article-detail"
+				options={{ ...IOSSlide() }}
+			/>
 			<StackNavigator.Screen
 				name="transition-scope"
 				options={{ ...IOSSlide() }}

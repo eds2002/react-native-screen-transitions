@@ -34,6 +34,7 @@ export type ScreenSlotContextValue = {
 	localStylesMaps: SharedValue<LocalStyleLayers>;
 	nextInterpolatorReady: SharedValue<number>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
+	visibilityBlocked: SharedValue<boolean>;
 };
 
 export const {
@@ -54,15 +55,16 @@ export const {
 		localStylesMaps,
 		ancestorStylesMap: parentContext?.slotsMap,
 	});
-	const { animatedStyle, animatedProps } =
+	const { animatedStyle, animatedProps, shouldBlockVisibility } =
 		useMaybeBlockVisibility(isFloatingOverlay);
 	const value = useMemo(
 		() => ({
 			localStylesMaps,
 			nextInterpolatorReady,
 			slotsMap,
+			visibilityBlocked: shouldBlockVisibility,
 		}),
-		[localStylesMaps, nextInterpolatorReady, slotsMap],
+		[localStylesMaps, nextInterpolatorReady, shouldBlockVisibility, slotsMap],
 	);
 
 	useLayoutEffect(() => {

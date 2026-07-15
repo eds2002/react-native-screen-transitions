@@ -1,6 +1,6 @@
 import type { StyleProps } from "react-native-reanimated";
-import { getClampedScrollAxisDelta } from "../../../../stores/scroll.store";
-import type { ScrollMeasuredDimensions } from "../../utils/measured-bounds";
+import { getClampedScrollAxisDelta } from "../../../../../../stores/scroll.store";
+import type { ScrollMeasuredDimensions } from "../../../../utils/measured-bounds";
 import { getPortalHostBounds } from "../stores/host-bounds.store";
 
 /**

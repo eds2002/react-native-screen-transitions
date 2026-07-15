@@ -35,12 +35,19 @@ import type {
 	TransitionSlotStyle,
 } from "..";
 import {
+	blockTransition,
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+	unblockTransition,
 	useScreenAnimation,
 	useScreenGesture,
 	withScreenTransitions,
 } from "..";
+
+blockTransition();
+blockTransition("route-key");
+unblockTransition();
+unblockTransition("route-key");
 
 const slotStyle: TransitionSlotStyle = {
 	style: {

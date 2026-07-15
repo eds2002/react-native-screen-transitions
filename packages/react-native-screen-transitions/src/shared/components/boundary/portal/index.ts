@@ -1,3 +1,2 @@
-export { Host } from "./components/host";
-export { Portal } from "./components/portal";
+export { Host } from "./components/boundary-portal/components/host";
 export { PortalProvider } from "./components/portal-provider";

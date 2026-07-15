@@ -7,8 +7,9 @@ import {
 	type ViewStyle,
 } from "react-native";
 import Animated from "react-native-reanimated";
-import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
-import { SystemStore } from "../../../../stores/system.store";
+import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
+import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import { SystemStore } from "../../../../../../stores/system.store";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
 import { useActivePortalBoundaryHosts } from "../stores/portal-boundary-host.store";
@@ -26,7 +27,7 @@ type HostImplProps = PublicHostProps & {
 
 function HostImpl({ fallback = false, style }: HostImplProps) {
 	const screenKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
-	const { drainLifecycleStartBlocks } = SystemStore.getBag(screenKey).actions;
+	const { unblockLifecycleStart } = SystemStore.getBag(screenKey).actions;
 	const generatedHostKeyRef = useRef<string | null>(null);
 
 	if (generatedHostKeyRef.current === null) {
@@ -36,6 +37,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	const hostKey = fallback ? screenKey : generatedHostKeyRef.current;
 	const capturesScroll = !fallback;
 	const activeBoundaryHosts = useActivePortalBoundaryHosts(hostKey);
+	const { visibilityBlocked } = useScreenSlots();
 	const { height: viewportHeight, width: viewportWidth } =
 		useWindowDimensions();
 
@@ -44,6 +46,9 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		enabled: activeBoundaryHosts.length > 0,
 		hostKey,
 		screenKey,
+		visibilityBlocked,
+		viewportHeight,
+		viewportWidth,
 	});
 
 	useLayoutEffect(() => {
@@ -60,15 +65,13 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	}, [capturesScroll, fallback, hostKey, screenKey]);
 
 	const handleUnblocking = useCallback(() => {
-		// Screen-level escape keeps the open transition gated until portal hosts
-		// have committed layout. A screen may render more than one portal boundary
-		// host for the same lifecycle request, so the final host layout drains the
-		// outstanding start blocks for this screen.
-		drainLifecycleStartBlocks();
-	}, [drainLifecycleStartBlocks]);
+		// Each destination boundary contributes one lifecycle start block. Release
+		// only this host's block so unrelated boundary and user blocks stay intact.
+		unblockLifecycleStart();
+	}, [unblockLifecycleStart]);
 
 	const boundaryHosts = measurement.canRenderHosts
-		? activeBoundaryHosts.map((host, idx, list) => (
+		? activeBoundaryHosts.map((host) => (
 				<View
 					key={host.portalHostName}
 					pointerEvents="none"
@@ -76,11 +79,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 						styles.boundaryHostViewport,
 						{ width: viewportWidth, height: viewportHeight },
 					]}
-					onLayout={() => {
-						if (list.length - 1 === idx) {
-							handleUnblocking();
-						}
-					}}
+					onLayout={handleUnblocking}
 				>
 					<PortalBoundaryHost host={host} style={StyleSheet.absoluteFill} />
 				</View>

@@ -1,20 +1,20 @@
 import { memo } from "react";
 import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
-import { NO_STYLES } from "../../../../constants";
-import { composeSlotStyleWithLocalTransform } from "../../../../providers/screen/styles/helpers/compose-slot-style";
-import { AnimationStore } from "../../../../stores/animation.store";
-import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
-import { getLink } from "../../../../stores/bounds/internals/links";
+import { NO_STYLES } from "../../../../../../constants";
+import { composeSlotStyleWithLocalTransform } from "../../../../../../providers/screen/styles/helpers/compose-slot-style";
+import { AnimationStore } from "../../../../../../stores/animation.store";
+import { getSourceScreenKeyFromPairKey } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
+import { getLink } from "../../../../../../stores/bounds/internals/links";
 import {
 	getClampedScrollAxisDelta,
 	ScrollStore,
-} from "../../../../stores/scroll.store";
-import type { ScrollMeasuredDimensions } from "../../utils/measured-bounds";
+} from "../../../../../../stores/scroll.store";
+import type { ScrollMeasuredDimensions } from "../../../../utils/measured-bounds";
+import { NativePortalHost } from "../../../teleport";
+import { hasLocalSlot } from "../helpers/has-local-slot";
+import { resolvePortalOffsetStyle } from "../helpers/offset-style";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
-import { NativePortalHost } from "../teleport";
-import { hasLocalSlot } from "../utils/has-local-slot";
-import { resolvePortalOffsetStyle } from "../utils/offset-style";
 
 const AnimatedPortalBoundaryHost = NativePortalHost
 	? Animated.createAnimatedComponent(NativePortalHost)
@@ -45,7 +45,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 
 	const hostStyle = useAnimatedStyle(() => {
 		"worklet";
-		// Strict per-member lookup — a fallback member's source rect would
+		// Strict per-member lookup - a fallback member's source rect would
 		// misplace this host's teleported content.
 		const link = getLink(host.pairKey, host.boundaryId);
 		if (!link?.source || !link.destination) {
@@ -135,7 +135,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	});
 
 	// Without `react-native-teleport` no portal ever mounts a boundary host, so
-	// this never renders — the guard just narrows the nullable animated host.
+	// this never renders - the guard just narrows the nullable animated host.
 	if (!AnimatedPortalBoundaryHost) {
 		return null;
 	}

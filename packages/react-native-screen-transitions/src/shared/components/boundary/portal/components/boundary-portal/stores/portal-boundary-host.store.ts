@@ -1,7 +1,7 @@
 import { useSyncExternalStore } from "react";
 import type { SharedValue } from "react-native-reanimated";
-import type { LocalStyleLayers } from "../../../../providers/screen/styles/helpers/resolve-slot-styles";
-import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
+import type { LocalStyleLayers } from "../../../../../../providers/screen/styles/helpers/resolve-slot-styles";
+import type { NormalizedTransitionInterpolatedStyle } from "../../../../../../types/animation.types";
 
 export type ActivePortalBoundaryHost = {
 	boundaryId: string;

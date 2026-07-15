@@ -1,4 +1,4 @@
-import type { LocalStyleLayers } from "../../../../providers/screen/styles/helpers/resolve-slot-styles";
+import type { LocalStyleLayers } from "../../../../../../providers/screen/styles/helpers/resolve-slot-styles";
 
 export const hasLocalSlot = (
 	localStylesMaps: LocalStyleLayers,

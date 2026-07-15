@@ -26,6 +26,29 @@ export type PortalOwnershipSignal =
 			status: "complete";
 	  };
 
+export const isHandoffHostClosingComplete = ({
+	closing,
+	progressAnimating,
+	progressSettled,
+	willAnimate,
+}: {
+	closing: number;
+	progressAnimating: number;
+	progressSettled: number;
+	willAnimate: number;
+}) => {
+	"worklet";
+
+	// A close request marks `closing` before its animation starts. Springs can
+	// also enter their settle-distance threshold before their final frame.
+	return (
+		!!closing &&
+		willAnimate === 0 &&
+		progressSettled === 1 &&
+		progressAnimating === 0
+	);
+};
+
 const hasSeenScreenKey = (screenKeys: ScreenKey[], screenKey: ScreenKey) => {
 	"worklet";
 	for (let index = 0; index < screenKeys.length; index++) {
@@ -199,7 +222,6 @@ export const resolveBoundaryPortalOwnership = ({
 
 	let hostScreenKey = link.destination.screenKey;
 	let ownerPairKey = sourcePairKey;
-	let previousOwnerPairKey: ScreenPairKey | null = null;
 	const seenScreenKeys: ScreenKey[] = [
 		getSourceScreenKeyFromPairKey(sourcePairKey),
 		hostScreenKey,
@@ -245,7 +267,6 @@ export const resolveBoundaryPortalOwnership = ({
 
 			const nextHostScreenKey = candidate.destination.screenKey;
 
-			previousOwnerPairKey = ownerPairKey;
 			ownerPairKey = candidatePairKey;
 			hostScreenKey = nextHostScreenKey;
 
@@ -274,11 +295,7 @@ export const resolveBoundaryPortalOwnership = ({
 		break;
 	}
 
-	if (
-		isSettledHostClosingComplete &&
-		settledHostScreenKey === hostScreenKey &&
-		previousOwnerPairKey
-	) {
+	if (isSettledHostClosingComplete && settledHostScreenKey === hostScreenKey) {
 		hostScreenKey = getSourceScreenKeyFromPairKey(ownerPairKey);
 	}
 
