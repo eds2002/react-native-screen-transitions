@@ -28,6 +28,8 @@ const createGestureSnapshotStore = (
 		velocity: number;
 		rawNormX: number;
 		rawNormY: number;
+		pinchOriginX: number;
+		pinchOriginY: number;
 		active: string | null;
 	}> = {},
 ) => ({
@@ -40,6 +42,8 @@ const createGestureSnapshotStore = (
 	normScale: shared(0),
 	focalX: shared(0),
 	focalY: shared(0),
+	pinchOriginX: shared(overrides.pinchOriginX ?? 0),
+	pinchOriginY: shared(overrides.pinchOriginY ?? 0),
 	rotation: shared(0),
 	raw: {
 		x: shared(0),
@@ -66,6 +70,8 @@ const createGestureStore = (
 		normScale: number;
 		rotation: number;
 		active: string | null;
+		pinchOriginX: number;
+		pinchOriginY: number;
 		snapshotX: number;
 		snapshotY: number;
 		snapshotNormX: number;
@@ -73,6 +79,8 @@ const createGestureStore = (
 		snapshotVelocity: number;
 		snapshotRawNormX: number;
 		snapshotRawNormY: number;
+		snapshotPinchOriginX: number;
+		snapshotPinchOriginY: number;
 		snapshotActive: string | null;
 	}> = {},
 ) => {
@@ -91,6 +99,8 @@ const createGestureStore = (
 		normScale: shared(overrides.normScale ?? 0),
 		focalX: shared(0),
 		focalY: shared(0),
+		pinchOriginX: shared(overrides.pinchOriginX ?? 0),
+		pinchOriginY: shared(overrides.pinchOriginY ?? 0),
 		rotation: shared(overrides.rotation ?? 0),
 		raw: {
 			x: shared(0),
@@ -114,6 +124,8 @@ const createGestureStore = (
 				velocity: overrides.snapshotVelocity,
 				rawNormX: overrides.snapshotRawNormX,
 				rawNormY: overrides.snapshotRawNormY,
+				pinchOriginX: overrides.snapshotPinchOriginX,
+				pinchOriginY: overrides.snapshotPinchOriginY,
 				active: overrides.snapshotActive,
 			}),
 		},
@@ -387,12 +399,16 @@ describe("transition state rules", () => {
 			createBuiltState({
 				gesture: createGestureStore({
 					normY: 0.25,
+					pinchOriginX: 120,
+					pinchOriginY: 240,
 					active: "vertical",
 				}),
 			}),
 		);
 
 		expect(hydrated.gesture.handoff.normY).toBe(0.25);
+		expect(hydrated.gesture.handoff.pinchOriginX).toBe(120);
+		expect(hydrated.gesture.handoff.pinchOriginY).toBe(240);
 		expect(hydrated.gesture.handoff.active).toBe("vertical");
 	});
 
@@ -405,6 +421,8 @@ describe("transition state rules", () => {
 					snapshotNormY: 0.42,
 					snapshotVelocity: 0.7,
 					snapshotRawNormY: 0.55,
+					snapshotPinchOriginX: 140,
+					snapshotPinchOriginY: 260,
 					snapshotActive: "vertical",
 				}),
 			}),
@@ -414,6 +432,8 @@ describe("transition state rules", () => {
 		expect(hydrated.gesture.handoff.normY).toBe(0.42);
 		expect(hydrated.gesture.handoff.velocity).toBe(0.7);
 		expect(hydrated.gesture.handoff.raw.normY).toBe(0.55);
+		expect(hydrated.gesture.handoff.pinchOriginX).toBe(140);
+		expect(hydrated.gesture.handoff.pinchOriginY).toBe(260);
 		expect(hydrated.gesture.handoff.active).toBe("vertical");
 	});
 

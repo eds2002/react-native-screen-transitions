@@ -20,6 +20,8 @@ export const snapshotGestureHandoff = (
 	snapshot.normScale.set(gestures.normScale.get());
 	snapshot.focalX.set(gestures.focalX.get());
 	snapshot.focalY.set(gestures.focalY.get());
+	snapshot.pinchOriginX.set(gestures.pinchOriginX.get());
+	snapshot.pinchOriginY.set(gestures.pinchOriginY.get());
 	snapshot.rotation.set(gestures.rotation.get());
 	snapshot.raw.x.set(gestures.raw.x.get());
 	snapshot.raw.y.set(gestures.raw.y.get());

@@ -79,7 +79,28 @@ describe("visual transform bounds", () => {
 		});
 	});
 
-	it("carries the resolved endpoint transform through the public accessor", () => {
+	it("carries the measured endpoint transform for explicit pair composition", () => {
+		const style = computeBoundStyles(
+			{
+				id: "card",
+				current: { route: { key: "screen-b" } },
+				next: { route: { key: "screen-a" } },
+				progress: 1.5,
+				dimensions: { width: 400, height: 800 },
+				interpolationProps: {} as never,
+			},
+			{ id: "card" },
+			createPair(createBounds(250, 250, 100, 100), {
+				sourceStyles: {
+					transform: [{ scale: 0.5 }],
+				},
+			}),
+		);
+
+		expect(getBoundsLocalTransform(style)).toEqual([{ scale: 0.5 }]);
+	});
+
+	it("does not freeze internally resolved endpoint transforms in public styles", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		BoundStore.link.setSource(
 			pairKey,
@@ -103,9 +124,8 @@ describe("visual transform bounds", () => {
 					layouts: { screen: { width: 400, height: 800 } },
 				}) as any,
 		);
-		const style = bounds("card").styles();
 
-		expect(getBoundsLocalTransform(style)).toEqual([{ scale: 0.5 }]);
+		expect(getBoundsLocalTransform(bounds("card").styles())).toBeUndefined();
 		expect(getBoundsLocalTransform(bounds("card").values() as any)).toBeUndefined();
 	});
 });

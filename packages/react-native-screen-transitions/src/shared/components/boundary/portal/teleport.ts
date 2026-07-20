@@ -39,6 +39,7 @@ const SafeNativePortalProvider: ComponentType<{ children: ReactNode }> | null =
 
 export const isTeleportAvailable =
 	mod !== null && SafeNativePortalProvider !== null;
+export const PORTAL_POINTER_EVENTS = "box-none" as const;
 export const NativePortal: ComponentType<any> | null = mod?.Portal ?? null;
 export const NativePortalProvider: ComponentType<any> | null =
 	SafeNativePortalProvider;

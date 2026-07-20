@@ -52,10 +52,10 @@ export default function NavigationZoomGroupTransitionsLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					navigationMaskEnabled: false,
+					navigationMaskEnabled: true,
 					backdropBehavior: "dismiss",
 					gestureEnabled: true,
-					gestureDirection: ["bidirectional"],
+					gestureDirection: ["bidirectional", "pinch-in"],
 					gestureReleaseVelocityScale: 1.6,
 					gestureProgressMode: "freeform",
 					screenStyleInterpolator: navigationZoomInterpolator,

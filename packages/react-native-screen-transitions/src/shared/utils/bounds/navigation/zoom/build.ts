@@ -2,73 +2,40 @@ import { interpolate } from "react-native-reanimated";
 import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-	VISIBLE_STYLE,
 } from "../../../../constants";
-import type { TransitionInterpolatedStyle } from "../../../../types/animation.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
-import { getSourceBorderRadius, toNumber } from "../helpers";
+import { getSourceBorderRadius } from "../helpers";
+import { resolveRevealContentBaseTransform } from "../reveal/math";
 import {
-	combineScales,
-	composeCompensatedTranslation,
-	computeCenterScaleShift,
-	resolveDirectionalDragScale,
-	resolveOpacityRangeTuple,
-} from "../math";
-import {
-	resolveDismissScaleHandoff,
-	resolveRevealGestureHandoff,
-} from "../reveal/math";
-import {
-	ZOOM_DISMISS_SCALE_ORBIT_DEPTH,
+	ZOOM_BACKDROP_MAX_OPACITY,
+	ZOOM_BACKGROUND_SCALE,
 	ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
 	ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
-	ZOOM_MASK_OUTSET,
+	ZOOM_SCREEN_A_FADE_END,
 	ZOOM_SHARED_OPTIONS,
 	ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
 	ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 } from "./config";
+import { resolveZoomDragState, resolveZoomTrackedGestureScale } from "./drag";
+import {
+	resolveZoomBackdropOpacity,
+	resolveZoomPinchFocalOffset,
+	resolveZoomTrackedSourceTransform,
+} from "./helpers";
+import {
+	resolveZoomNavigationMaskStyle,
+	ZOOM_NAVIGATION_MASK_BORDER_RADIUS,
+} from "./mask";
 import {
 	getZoomContentTarget,
-	interpolateOpacityRange,
-	resolveBackgroundScale,
-	resolveDragScaleTuple,
-	resolveDragTranslationTuple,
-	resolveZoomPanGestureDirection,
-} from "./helpers";
-import { resolveDirectionalDragTranslation } from "./math";
+	resolveZoomTrackingContentTarget,
+} from "./targets";
 import type { BuildZoomStylesParams, ZoomInterpolatedStyle } from "./types";
-
-const IDENTITY_DRAG_SCALE_OUTPUT = [1, 1] as const;
-
-function resolveZoomGestureOptions({
-	rawDrag,
-	maxSensitivity,
-}: {
-	rawDrag: number;
-	maxSensitivity: number;
-}) {
-	"worklet";
-
-	const { gestureSensitivity, gestureReleaseVelocityScale } =
-		resolveRevealGestureHandoff({
-			rawDrag,
-			maxSensitivity,
-		});
-
-	return {
-		gestureSensitivity,
-		gestureReleaseVelocityScale,
-	};
-}
-
-/* -------------------------------------------------------------------------- */
-/*                             BUILD ZOOM STYLES                              */
-/* -------------------------------------------------------------------------- */
 
 export function buildZoomStyles({
 	tag,
-	zoomOptions,
 	props,
+	zoomOptions,
 }: BuildZoomStylesParams): ZoomInterpolatedStyle {
 	"worklet";
 
@@ -76,424 +43,269 @@ export function buildZoomStyles({
 		return {};
 	}
 
-	/* ------------------------------ Shared Setup ------------------------------ */
-
 	const target = zoomOptions?.target;
+	const keepFocusedVisible = zoomOptions?.keepFocusedVisible === true;
+	const expandedBorderRadius = Math.max(
+		0,
+		zoomOptions?.borderRadius ?? ZOOM_NAVIGATION_MASK_BORDER_RADIUS,
+	);
+	const backgroundScale = zoomOptions?.backgroundScale ?? ZOOM_BACKGROUND_SCALE;
+	const backdropColor = zoomOptions?.backdropColor ?? "black";
+	const maxBackdropOpacity =
+		zoomOptions?.backdropOpacity ?? ZOOM_BACKDROP_MAX_OPACITY;
+
 	const {
+		active,
+		current,
 		focused,
+		transitionProgress,
 		layouts: { screen: screenLayout },
 	} = props;
-	const transitionProgress =
-		props.current.transitionProgress + (props.next?.transitionProgress ?? 0);
-	const activeTransitionProgress = props.active.transitionProgress;
 
-	const zoomAnchor = target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor;
+	const activeTransitionProgress = active.transitionProgress;
 
 	const bounds = createBoundsAccessorCore({
 		getProps: () => props,
 	});
+
 	const scopedBounds = bounds(tag);
 	const link = scopedBounds.link();
+	const sourceBounds = link?.source?.bounds;
 
-	if (!link) return {};
+	if (!link || !sourceBounds) {
+		if (target !== "bound") {
+			scopedBounds.values({
+				scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
+				anchor: ZOOM_SHARED_OPTIONS.anchor,
+				method: "content",
+				target: target ?? "fullscreen",
+				progress: transitionProgress,
+			});
+		}
 
-	const baseRawOptions = {
-		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
-	} as const;
+		return {};
+	}
 
-	const buildEffectiveTag = link.id;
-	const sourceBorderRadius = getSourceBorderRadius(link);
-	const targetBorderRadius = zoomOptions?.borderRadius ?? sourceBorderRadius;
-	const focusedElementOpacity = {
-		open: resolveOpacityRangeTuple({
-			value: zoomOptions?.focusedElementOpacity?.open,
-			fallback: ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
-		}),
-		close: resolveOpacityRangeTuple({
-			value: zoomOptions?.focusedElementOpacity?.close,
-			fallback: ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
-		}),
-	};
-	const unfocusedElementOpacity = {
-		open: resolveOpacityRangeTuple({
-			value: zoomOptions?.unfocusedElementOpacity?.open,
-			fallback: ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
-		}),
-		close: resolveOpacityRangeTuple({
-			value: zoomOptions?.unfocusedElementOpacity?.close,
-			fallback: ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
-		}),
-	};
-	const sourceVisibilityStyle = {
-		[buildEffectiveTag]: {
-			style: VISIBLE_STYLE,
-		},
-	} satisfies TransitionInterpolatedStyle;
-	const navigationMaskEnabled = props.current.options.navigationMaskEnabled;
-	const maxSensitivity = zoomOptions?.maxSensitivity ?? 0.8;
-	const velocityDepth =
-		zoomOptions?.velocityDepth ?? ZOOM_DISMISS_SCALE_ORBIT_DEPTH;
-
-	/* --------------------------- Gesture / Drag Values ------------------------- */
-
-	const liveGesture = props.active.gesture;
-	const gestureHandoff = liveGesture.handoff;
-	const normX = gestureHandoff.normX;
-	const normY = gestureHandoff.normY;
-	const initialGesture = resolveZoomPanGestureDirection({
-		active: gestureHandoff.active,
-		direction: gestureHandoff.direction,
-		normX,
-		normY,
-		rawNormX: gestureHandoff.raw.normX,
-		rawNormY: gestureHandoff.raw.normY,
+	const zoomContentTarget = getZoomContentTarget({
+		explicitTarget: target,
+		screenLayout,
+		link,
 	});
-	const isHorizontalDismiss =
-		initialGesture === "horizontal" || initialGesture === "horizontal-inverted";
-	const isVerticalDismiss =
-		initialGesture === "vertical" || initialGesture === "vertical-inverted";
-	const rawDrag = isHorizontalDismiss
-		? Math.abs(gestureHandoff.raw.normX)
-		: isVerticalDismiss
-			? Math.abs(gestureHandoff.raw.normY)
-			: 0;
-
-	const horizontalDragTranslation = resolveDragTranslationTuple(
-		zoomOptions?.horizontalDragTranslation,
-	);
-	const verticalDragTranslation = resolveDragTranslationTuple(
-		zoomOptions?.verticalDragTranslation,
-	);
-	const dragX = resolveDirectionalDragTranslation({
-		translation: liveGesture.x,
-		dimension: screenLayout.width,
-		negativeMax: horizontalDragTranslation.negativeMax,
-		positiveMax: horizontalDragTranslation.positiveMax,
-		exponent: horizontalDragTranslation.exponent,
-	});
-	const dragY = resolveDirectionalDragTranslation({
-		translation: liveGesture.y,
-		dimension: screenLayout.height,
-		negativeMax: verticalDragTranslation.negativeMax,
-		positiveMax: verticalDragTranslation.positiveMax,
-		exponent: verticalDragTranslation.exponent,
-	});
-	const horizontalDragScale = resolveDragScaleTuple(
-		zoomOptions?.horizontalDragScale,
-	);
-	const verticalDragScale = resolveDragScaleTuple(
-		zoomOptions?.verticalDragScale,
-	);
-	const backgroundScale = resolveBackgroundScale(zoomOptions?.backgroundScale);
-
-	const dragXScale = isHorizontalDismiss
-		? resolveDirectionalDragScale({
-				normalized: normX,
-				dismissDirection:
-					initialGesture === "horizontal-inverted" ? "negative" : "positive",
-				shrinkMin: horizontalDragScale.shrinkMin,
-				growMax: horizontalDragScale.growMax,
-				exponent: horizontalDragScale.exponent,
-			})
-		: IDENTITY_DRAG_SCALE_OUTPUT[0];
-	const dragYScale = isVerticalDismiss
-		? resolveDirectionalDragScale({
-				normalized: normY,
-				dismissDirection:
-					initialGesture === "vertical-inverted" ? "negative" : "positive",
-				shrinkMin: verticalDragScale.shrinkMin,
-				growMax: verticalDragScale.growMax,
-				exponent: verticalDragScale.exponent,
-			})
-		: IDENTITY_DRAG_SCALE_OUTPUT[1];
-	const dragScale = combineScales(dragXScale, dragYScale);
-	const handoffDragScale = props.active.gesture.dismissing
-		? resolveDismissScaleHandoff({
-				progress: activeTransitionProgress,
-				releaseScale: dragScale,
-				targetScale: 1,
-				velocity: gestureHandoff.velocity,
-				velocityDepth,
-			})
-		: dragScale;
-	const zoomGestureOptions = resolveZoomGestureOptions({
-		rawDrag,
-		maxSensitivity,
+	const trackingContentTarget = resolveZoomTrackingContentTarget({
+		contentTarget: zoomContentTarget,
+		link,
+		screenLayout,
 	});
 
-	/* ----------------------------- Focused Screen ----------------------------- */
+	if (!trackingContentTarget) {
+		return {};
+	}
+
+	const drag = resolveZoomDragState({
+		gesture: active.gesture,
+		activeTransitionProgress,
+		screenLayout,
+		sourceBounds,
+		trackingContentTarget,
+		dragOptions: zoomOptions?.drag,
+	});
+
+	const trackedGestureScale = resolveZoomTrackedGestureScale({
+		drag,
+		activeTransitionProgress,
+		screenLayout,
+		sourceBounds,
+		trackingContentTarget,
+	});
+
+	const focalGesture = drag.isDismissing
+		? active.gesture.handoff
+		: active.gesture;
+
+	const focalProgress = drag.isDismissing ? activeTransitionProgress : 1;
+	const pinchFocalOffset =
+		active.gesture.handoff.active === "pinch-in"
+			? resolveZoomPinchFocalOffset({
+					gestureScale: drag.isDismissing
+						? focalGesture.scale
+						: trackedGestureScale,
+					pinchOriginX: focalGesture.pinchOriginX,
+					pinchOriginY: focalGesture.pinchOriginY,
+					progress: focalProgress,
+					rotation: drag.isDismissing ? focalGesture.rotation : drag.rotation,
+					screenLayout,
+				})
+			: { x: 0, y: 0 };
 
 	if (focused) {
-		const focusedContentTarget = getZoomContentTarget({
-			explicitTarget: target,
-			screenLayout,
-			anchor: ZOOM_SHARED_OPTIONS.anchor,
-			link,
+		const sourceBorderRadius = getSourceBorderRadius(link);
+		const navigationMaskEnabled = current.options.navigationMaskEnabled;
+		const backdropOpacity = resolveZoomBackdropOpacity({
+			transitionProgress,
+			dismissalDrag: drag.dismissNorm,
+			fadeEnd: ZOOM_SCREEN_A_FADE_END,
+			maxOpacity: maxBackdropOpacity,
 		});
 
 		const contentRaw = scopedBounds.values({
-			...baseRawOptions,
-			anchor: zoomAnchor,
+			scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
+			anchor: target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor,
 			method: "content",
-			target: focusedContentTarget,
+			target: zoomContentTarget,
 			progress: transitionProgress,
 		});
 
-		const maskRaw = scopedBounds.values({
-			...baseRawOptions,
-			anchor: ZOOM_SHARED_OPTIONS.anchor,
-			method: "size",
-			space: "absolute",
-			target: "fullscreen",
-			progress: transitionProgress,
-		});
+		const focusedOpacityRange = active.closing
+			? ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE
+			: ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE;
 
-		const focusedFade = props.active?.closing
-			? interpolateOpacityRange({
-					progress: transitionProgress,
-					range: focusedElementOpacity.close,
-				})
-			: interpolateOpacityRange({
-					progress: transitionProgress,
-					range: focusedElementOpacity.open,
-				});
-
-		/**
-		 * This is also how swiftui handles their navigation zoom.
-		 * They remove clipping as soon as the screen stops animating
-		 */
-		const shouldRemoveClipping = !props.active.animating;
-		const focusedMaskBorderRadius = interpolate(
+		const focusedFade = interpolate(
 			transitionProgress,
-			[0, 1],
-			[sourceBorderRadius, shouldRemoveClipping ? 0 : targetBorderRadius],
+			[focusedOpacityRange[0], focusedOpacityRange[1]],
+			[focusedOpacityRange[2], focusedOpacityRange[3]],
 			"clamp",
 		);
 
-		const { top, right, bottom, left } = ZOOM_MASK_OUTSET;
-		const maskWidth = Math.max(1, toNumber(maskRaw.width) + left + right);
-		const maskHeight = Math.max(1, toNumber(maskRaw.height) + top + bottom);
+		const contentBaseTranslateX = contentRaw.translateX;
+		const contentBaseTranslateY = contentRaw.translateY;
+		const contentBaseScale = contentRaw.scale;
 
-		const contentBaseTranslateX = toNumber(contentRaw.translateX);
-		const contentBaseTranslateY = toNumber(contentRaw.translateY);
-		const contentBaseScale = toNumber(contentRaw.scale, 1);
-		const safeContentBaseScale =
-			Math.abs(contentBaseScale) > EPSILON ? contentBaseScale : 1;
-		const contentTranslateX = contentBaseTranslateX + dragX;
-		const contentTranslateY = contentBaseTranslateY + dragY;
-		const contentScale = contentBaseScale * handoffDragScale;
-
-		const maskBaseTranslateX = toNumber(maskRaw.translateX) - left;
-		const maskBaseTranslateY = toNumber(maskRaw.translateY) - top;
-		const maskCenterX = maskWidth / 2;
-		const maskCenterY = maskHeight / 2;
-		const contentCenterX = screenLayout.width / 2;
-		const contentCenterY = screenLayout.height / 2;
-		const compensatedMaskTranslateX =
-			(maskBaseTranslateX -
-				contentBaseTranslateX +
-				(1 - contentBaseScale) * (maskCenterX - contentCenterX)) /
-			safeContentBaseScale;
-		const compensatedMaskTranslateY =
-			(maskBaseTranslateY -
-				contentBaseTranslateY +
-				(1 - contentBaseScale) * (maskCenterY - contentCenterY)) /
-			safeContentBaseScale;
-		const compensatedMaskScale = 1 / safeContentBaseScale;
-
-		const focusedContentStyle = {
-			opacity: zoomOptions?.debug ? 0.5 : focusedFade,
-			transform: [
-				{ translateX: contentTranslateX },
-				{ translateY: contentTranslateY },
-				{ scale: contentScale },
-			],
-			...(navigationMaskEnabled
-				? {}
-				: {
-						borderRadius: focusedMaskBorderRadius,
-						overflow: "hidden" as const,
-					}),
-		};
-
-		const focusedStyles: ZoomInterpolatedStyle = {
-			content: {
-				style: focusedContentStyle,
-			},
-			...sourceVisibilityStyle,
-		};
-
-		if (navigationMaskEnabled) {
-			focusedStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] = {
-				style: {
-					width: maskWidth,
-					height: maskHeight,
-					borderRadius: focusedMaskBorderRadius,
-					transform: [
-						{ translateX: compensatedMaskTranslateX },
-						{ translateY: compensatedMaskTranslateY },
-						{ scale: compensatedMaskScale },
-					],
-				},
-			};
-		}
+		const contentTranslateX =
+			contentBaseTranslateX +
+			drag.dragX +
+			pinchFocalOffset.x * contentBaseScale;
+		const contentTranslateY =
+			contentBaseTranslateY +
+			drag.dragY +
+			pinchFocalOffset.y * contentBaseScale;
+		const contentScale = drag.isDismissing
+			? drag.dismissContentScale
+			: contentBaseScale * drag.gestureScale;
 
 		return {
-			options: zoomGestureOptions,
-			...focusedStyles,
+			options: {
+				gestureReleaseVelocityScale: 0.5,
+			},
+			backdrop: {
+				style: {
+					backgroundColor: backdropColor,
+					opacity: backdropOpacity,
+				},
+			},
+			content: {
+				style: {
+					...(keepFocusedVisible ? {} : { opacity: focusedFade }),
+					transform: [
+						{ translateX: contentTranslateX },
+						{ translateY: contentTranslateY },
+						{ scale: contentScale },
+						{ rotateZ: `${drag.rotation}rad` },
+					],
+					borderRadius: interpolate(
+						transitionProgress,
+						[0, 1],
+						[sourceBorderRadius, active.animating ? expandedBorderRadius : 0],
+						"clamp",
+					),
+					overflow: "hidden" as const,
+				},
+			},
+			[NAVIGATION_MASK_ELEMENT_STYLE_ID]: navigationMaskEnabled
+				? resolveZoomNavigationMaskStyle({
+						scopedBounds,
+						link,
+						sourceBounds,
+						screenLayout,
+						transitionProgress,
+						drag,
+						contentTransform: contentRaw,
+						sourceBorderRadius,
+						expandedBorderRadius,
+						active,
+					})
+				: {},
 		};
 	}
 
-	/* ---------------------------- Unfocused Screen ---------------------------- */
-
-	const unfocusedFade = props.active?.closing
-		? interpolateOpacityRange({
-				progress: transitionProgress,
-				range: unfocusedElementOpacity.close,
-			})
-		: interpolateOpacityRange({
-				progress: transitionProgress,
-				range: unfocusedElementOpacity.open,
-			});
+	const unfocusedOpacityRange = active.closing
+		? ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE
+		: ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE;
+	const unfocusedFade = interpolate(
+		transitionProgress,
+		[unfocusedOpacityRange[0], unfocusedOpacityRange[1]],
+		[unfocusedOpacityRange[2], unfocusedOpacityRange[3]],
+		"clamp",
+	);
 	const unfocusedScale = interpolate(
 		transitionProgress,
 		[1, 2],
 		[1, backgroundScale],
 		"clamp",
 	);
-	const didSourceComponentVisiblyHide =
-		!props.active.closing && unfocusedFade <= EPSILON;
 
-	const shouldHideUnfocusedElement =
-		!props.active.closing && didSourceComponentVisiblyHide;
+	const shouldHideSource = !active.closing && unfocusedFade <= EPSILON;
+	const unfocusedContentScale = active.settled ? 1 : unfocusedScale;
+	const unfocusedContent = {
+		style: {
+			transform: [{ scale: unfocusedContentScale }],
+		},
+	};
 
-	const unfocusedElementTarget = getZoomContentTarget({
-		explicitTarget: target,
+	// To avoid measuring a component from a bad position,
+	// we'll want to hide + reset this component when the animation has reached a visual settling point
+	if (shouldHideSource || active.settled) {
+		return {
+			content: unfocusedContent,
+			[link.id]: {
+				style: {
+					transform: [
+						{ translateX: 0 },
+						{ translateY: 0 },
+						{ scaleX: 1 },
+						{ scaleY: 1 },
+					],
+					opacity: shouldHideSource ? 0 : unfocusedFade,
+				},
+			},
+		};
+	}
+
+	const trackedContentBaseScale = resolveRevealContentBaseTransform({
+		progress: activeTransitionProgress,
+		sourceBounds,
+		destinationBounds: trackingContentTarget,
 		screenLayout,
-		anchor: ZOOM_SHARED_OPTIONS.anchor,
-		link,
-	});
+	}).scale;
+	const trackedDragX =
+		drag.dragX + pinchFocalOffset.x * trackedContentBaseScale;
+	const trackedDragY =
+		drag.dragY + pinchFocalOffset.y * trackedContentBaseScale;
 
-	const elementRaw = scopedBounds.values({
-		...baseRawOptions,
-		anchor: zoomAnchor,
-		method: "transform",
-		space: "relative",
-		target: unfocusedElementTarget,
-		progress: transitionProgress,
-	});
-
-	const boundTargetCenterX =
-		target === "bound" && link.destination?.bounds
-			? link.destination.bounds.pageX + link.destination.bounds.width / 2
-			: undefined;
-	const boundTargetCenterY =
-		target === "bound" && link.destination?.bounds
-			? link.destination.bounds.pageY + link.destination.bounds.height / 2
-			: undefined;
-
-	const elementCenterX =
-		boundTargetCenterX ??
-		(typeof unfocusedElementTarget === "object"
-			? unfocusedElementTarget.pageX + unfocusedElementTarget.width / 2
-			: screenLayout.width / 2);
-	const elementCenterY =
-		boundTargetCenterY ??
-		(typeof unfocusedElementTarget === "object"
-			? unfocusedElementTarget.pageY + unfocusedElementTarget.height / 2
-			: screenLayout.height / 2);
-
-	const unfocusedContentScale = props.active.settled ? 1 : unfocusedScale;
-	const shouldTrackGestureTranslation = !props.active.settled;
-	const shouldTrackGestureScale = !props.active.settled;
-	const elementGestureScale = shouldTrackGestureScale ? handoffDragScale : 1;
-	const elementGestureX = shouldTrackGestureTranslation ? dragX : 0;
-	const elementGestureY = shouldTrackGestureTranslation ? dragY : 0;
-	const safeUnfocusedContentScale = Math.max(
-		Math.abs(unfocusedContentScale),
-		EPSILON,
-	);
-	// A naturally settled close can leave this as the last emitted style frame,
-	// so drop temporary stacking here instead of waiting for a later reset pass.
-	const shouldElevateUnfocusedElement =
-		!props.active.closing || !props.active.settled;
-
-	const scaleShiftX = computeCenterScaleShift({
-		center: elementCenterX,
-		containerCenter: screenLayout.width / 2,
-		scale: elementGestureScale,
-	});
-	const scaleShiftY = computeCenterScaleShift({
-		center: elementCenterY,
-		containerCenter: screenLayout.height / 2,
-		scale: elementGestureScale,
-	});
-
-	const compensatedGestureX = composeCompensatedTranslation({
-		gesture: elementGestureX,
+	const trackedSourceElement = resolveZoomTrackedSourceTransform({
+		progress: activeTransitionProgress,
+		sourceBounds,
+		destinationBounds: trackingContentTarget,
+		screenLayout,
+		dragX: trackedDragX,
+		dragY: trackedDragY,
+		gestureScale: trackedGestureScale,
 		parentScale: unfocusedContentScale,
-		centerShift: scaleShiftX,
-		epsilon: EPSILON,
+		rotation: drag.rotation,
 	});
-	const compensatedGestureY = composeCompensatedTranslation({
-		gesture: elementGestureY,
-		parentScale: unfocusedContentScale,
-		centerShift: scaleShiftY,
-		epsilon: EPSILON,
-	});
-
-	const elementTranslateX =
-		toNumber(elementRaw.translateX) + compensatedGestureX;
-	const elementTranslateY =
-		toNumber(elementRaw.translateY) + compensatedGestureY;
-	const elementScaleX =
-		(toNumber(elementRaw.scaleX, 1) * elementGestureScale) /
-		safeUnfocusedContentScale;
-	const elementScaleY =
-		(toNumber(elementRaw.scaleY, 1) * elementGestureScale) /
-		safeUnfocusedContentScale;
-
-	const resolvedElementStyle = shouldHideUnfocusedElement
-		? {
-				transform: [
-					{ translateX: 0 },
-					{ translateY: 0 },
-					{ scaleX: 1 },
-					{ scaleY: 1 },
-				],
-				opacity: zoomOptions?.debug ? 1 : 0,
-				zIndex: 0,
-				elevation: 0,
-			}
-		: {
-				transform: [
-					{
-						translateX: elementTranslateX,
-					},
-					{
-						translateY: elementTranslateY,
-					},
-					{
-						scaleX: elementScaleX,
-					},
-					{
-						scaleY: elementScaleY,
-					},
-				],
-				opacity: zoomOptions?.debug ? 1 : unfocusedFade,
-				zIndex: shouldElevateUnfocusedElement ? 9999 : 0,
-				elevation: shouldElevateUnfocusedElement ? 9999 : 0,
-			};
 
 	return {
-		options: zoomGestureOptions,
-		content: {
+		content: unfocusedContent,
+		[link.id]: {
 			style: {
-				transform: [{ scale: unfocusedContentScale }],
+				transform: [
+					{ translateX: trackedSourceElement.translateX },
+					{ translateY: trackedSourceElement.translateY },
+					{ rotateZ: `${drag.rotation}rad` },
+					{ scaleX: trackedSourceElement.scaleX },
+					{ scaleY: trackedSourceElement.scaleY },
+				],
+				opacity: unfocusedFade,
 			},
-		},
-		[buildEffectiveTag]: {
-			style: resolvedElementStyle,
 		},
 	};
 }

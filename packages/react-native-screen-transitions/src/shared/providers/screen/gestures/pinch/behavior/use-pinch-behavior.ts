@@ -30,21 +30,18 @@ export const usePinchBehavior = (
 	const { withSensitivity, resetSensitivity } =
 		usePinchGestureSensitivity(screenOptions);
 
-	const onStart = useCallback(
-		(event: PinchGestureEvent) => {
-			"worklet";
-			const latestRuntime = resolvePinchRuntime(
-				runtime.get(),
-				screenOptions.get(),
-			);
-			if (latestRuntime.participation.effectiveSnapPoints.hasSnapPoints) {
-				primeSnapPinchRelease(latestRuntime);
-			}
-			startPinchBase(latestRuntime, event);
-			resetSensitivity();
-		},
-		[runtime, screenOptions, resetSensitivity],
-	);
+	const onStart = useCallback(() => {
+		"worklet";
+		const latestRuntime = resolvePinchRuntime(
+			runtime.get(),
+			screenOptions.get(),
+		);
+		if (latestRuntime.participation.effectiveSnapPoints.hasSnapPoints) {
+			primeSnapPinchRelease(latestRuntime);
+		}
+		startPinchBase(latestRuntime);
+		resetSensitivity();
+	}, [runtime, screenOptions, resetSensitivity]);
 
 	const onUpdate = useCallback(
 		(rawEvent: PinchGestureEvent) => {

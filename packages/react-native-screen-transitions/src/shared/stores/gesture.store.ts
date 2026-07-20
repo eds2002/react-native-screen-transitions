@@ -29,6 +29,8 @@ type GestureSnapshotStoreMap = {
 	normScale: SharedValue<number>;
 	focalX: SharedValue<number>;
 	focalY: SharedValue<number>;
+	pinchOriginX: SharedValue<number>;
+	pinchOriginY: SharedValue<number>;
 	rotation: SharedValue<number>;
 	raw: GestureRawStoreMap;
 	active: SharedValue<ActiveGesture | null>;
@@ -53,6 +55,8 @@ export type GestureStoreMap = {
 	normScale: SharedValue<number>;
 	focalX: SharedValue<number>;
 	focalY: SharedValue<number>;
+	pinchOriginX: SharedValue<number>;
+	pinchOriginY: SharedValue<number>;
 	rotation: SharedValue<number>;
 	raw: GestureRawStoreMap;
 	internal: GestureInternalStoreMap;
@@ -105,6 +109,8 @@ function createGestureBag(): GestureStoreMap {
 		normScale,
 		focalX: makeMutable(0),
 		focalY: makeMutable(0),
+		pinchOriginX: makeMutable(0),
+		pinchOriginY: makeMutable(0),
 		rotation: makeMutable(0),
 		raw: {
 			x: makeMutable(0),
@@ -130,6 +136,8 @@ function createGestureBag(): GestureStoreMap {
 				normScale: makeMutable(0),
 				focalX: makeMutable(0),
 				focalY: makeMutable(0),
+				pinchOriginX: makeMutable(0),
+				pinchOriginY: makeMutable(0),
 				rotation: makeMutable(0),
 				raw: {
 					x: makeMutable(0),
@@ -177,6 +185,8 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.normScale);
 		cancelAnimation(bag.focalX);
 		cancelAnimation(bag.focalY);
+		cancelAnimation(bag.pinchOriginX);
+		cancelAnimation(bag.pinchOriginY);
 		cancelAnimation(bag.rotation);
 		cancelAnimation(bag.raw.x);
 		cancelAnimation(bag.raw.y);
@@ -198,6 +208,8 @@ export const GestureStore = createStore<GestureStoreMap>({
 		cancelAnimation(bag.internal.snapshot.normScale);
 		cancelAnimation(bag.internal.snapshot.focalX);
 		cancelAnimation(bag.internal.snapshot.focalY);
+		cancelAnimation(bag.internal.snapshot.pinchOriginX);
+		cancelAnimation(bag.internal.snapshot.pinchOriginY);
 		cancelAnimation(bag.internal.snapshot.rotation);
 		cancelAnimation(bag.internal.snapshot.raw.x);
 		cancelAnimation(bag.internal.snapshot.raw.y);

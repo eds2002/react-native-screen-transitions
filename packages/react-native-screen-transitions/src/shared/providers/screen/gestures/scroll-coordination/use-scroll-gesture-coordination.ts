@@ -214,7 +214,12 @@ export const useScrollGestureCoordination = (
 		}
 
 		for (const pinchGesture of pinchGestures) {
-			gesture = gesture.requireExternalGestureToFail({
+			// A pinch must remain possible after the first finger lands. Making
+			// native scrolling wait for it to fail therefore stalls ordinary
+			// one-finger scrolling until touch-up. Let both recognizers run:
+			// the ScrollView can begin immediately, while a second finger can
+			// still promote the screen gesture to a pinch.
+			gesture = gesture.simultaneousWithExternalGesture({
 				current: pinchGesture as unknown as GestureType,
 			});
 		}

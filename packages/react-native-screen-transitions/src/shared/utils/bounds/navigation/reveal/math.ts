@@ -141,7 +141,8 @@ export function resolveDismissScaleHandoff({
 	"worklet";
 
 	const closeProgress = 1 - progress;
-	const scaleProgress = Math.sin((Math.PI / 2) * closeProgress);
+	const easeIn = 1 - Math.cos((Math.PI / 2) * closeProgress);
+	const scaleProgress = easeIn ** 2;
 	const baseScale = releaseScale + (targetScale - releaseScale) * scaleProgress;
 
 	const orbitDepth = velocityDepth * velocity;

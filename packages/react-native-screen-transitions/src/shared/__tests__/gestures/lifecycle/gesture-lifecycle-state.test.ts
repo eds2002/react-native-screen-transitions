@@ -9,6 +9,7 @@ import {
 	finalizePinchRelease,
 	startPinchBase,
 } from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
+import { updateAbsolutePinchFocalPoint } from "../../../providers/screen/gestures/pinch/activation/use-pinch-activation";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import type { GestureStoreMap } from "../../../stores/gesture.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
@@ -36,6 +37,8 @@ const createGestureSnapshotStore = () => ({
 	normScale: shared(0),
 	focalX: shared(0),
 	focalY: shared(0),
+	pinchOriginX: shared(0),
+	pinchOriginY: shared(0),
 	rotation: shared(0),
 	raw: {
 		x: shared(0),
@@ -66,6 +69,8 @@ const createGestureStore = (): GestureStoreMap => {
 		normScale: shared(0),
 		focalX: shared(0),
 		focalY: shared(0),
+		pinchOriginX: shared(0),
+		pinchOriginY: shared(0),
 		rotation: shared(0),
 		raw: {
 			x: shared(0),
@@ -263,6 +268,8 @@ describe("gesture lifecycle state", () => {
 		gestures.normScale.set(-0.28);
 		gestures.focalX.set(240);
 		gestures.focalY.set(520);
+		gestures.pinchOriginX.set(210);
+		gestures.pinchOriginY.set(480);
 		gestures.rotation.set(0.35);
 		gestures.raw.scale.set(0.68);
 		gestures.raw.normScale.set(-0.32);
@@ -274,6 +281,8 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.normScale.get()).toBe(0);
 		expect(gestures.focalX.get()).toBe(0);
 		expect(gestures.focalY.get()).toBe(0);
+		expect(gestures.pinchOriginX.get()).toBe(0);
+		expect(gestures.pinchOriginY.get()).toBe(0);
 		expect(gestures.rotation.get()).toBe(0);
 		expect(gestures.raw.scale.get()).toBe(1);
 		expect(gestures.raw.normScale.get()).toBe(0);
@@ -286,7 +295,7 @@ describe("gesture lifecycle state", () => {
 		gestures.settling.set(1);
 		gestures.normScale.set(0.25);
 
-		startPinchBase(runtime, { focalX: 12, focalY: 24 } as any);
+		startPinchBase(runtime);
 
 		expect(gestures.dragging.get()).toBe(1);
 		expect(gestures.settling.get()).toBe(0);
@@ -294,6 +303,36 @@ describe("gesture lifecycle state", () => {
 
 		raf.flush();
 		raf.restore();
+	});
+
+	it("keeps the absolute pinch origin stable while the focal point moves", () => {
+		const gestures = createGestureStore();
+
+		updateAbsolutePinchFocalPoint(
+			{
+				allTouches: [
+					{ absoluteX: 100, absoluteY: 220 },
+					{ absoluteX: 220, absoluteY: 340 },
+				],
+			} as any,
+			gestures,
+			true,
+		);
+		updateAbsolutePinchFocalPoint(
+			{
+				allTouches: [
+					{ absoluteX: 130, absoluteY: 250 },
+					{ absoluteX: 250, absoluteY: 370 },
+				],
+			} as any,
+			gestures,
+			false,
+		);
+
+		expect(gestures.focalX.get()).toBe(190);
+		expect(gestures.focalY.get()).toBe(310);
+		expect(gestures.pinchOriginX.get()).toBe(160);
+		expect(gestures.pinchOriginY.get()).toBe(280);
 	});
 
 	it("marks a cancelled pan release as settling until gesture reset finishes", () => {
@@ -593,6 +632,8 @@ describe("gesture lifecycle state", () => {
 		gestures.normScale.set(-0.3);
 		gestures.focalX.set(120);
 		gestures.focalY.set(240);
+		gestures.pinchOriginX.set(100);
+		gestures.pinchOriginY.set(220);
 
 		finalizePinchRelease(
 			{
@@ -610,6 +651,8 @@ describe("gesture lifecycle state", () => {
 
 		expect(gestures.focalX.get()).toBe(120);
 		expect(gestures.focalY.get()).toBe(240);
+		expect(gestures.pinchOriginX.get()).toBe(100);
+		expect(gestures.pinchOriginY.get()).toBe(220);
 	});
 
 	it("snapshots raw pinch scale and rotation during a dismissing release", () => {
@@ -620,6 +663,8 @@ describe("gesture lifecycle state", () => {
 		gestures.raw.rotation.set(0.2);
 		gestures.focalX.set(120);
 		gestures.focalY.set(240);
+		gestures.pinchOriginX.set(100);
+		gestures.pinchOriginY.set(220);
 
 		finalizePinchRelease(
 			{
@@ -643,8 +688,12 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.internal.snapshot.velocity.get()).toBe(0.6);
 		expect(gestures.internal.snapshot.focalX.get()).toBe(120);
 		expect(gestures.internal.snapshot.focalY.get()).toBe(240);
+		expect(gestures.internal.snapshot.pinchOriginX.get()).toBe(100);
+		expect(gestures.internal.snapshot.pinchOriginY.get()).toBe(220);
 		expect(gestures.focalX.get()).toBe(0);
 		expect(gestures.focalY.get()).toBe(0);
+		expect(gestures.pinchOriginX.get()).toBe(0);
+		expect(gestures.pinchOriginY.get()).toBe(0);
 	});
 
 });

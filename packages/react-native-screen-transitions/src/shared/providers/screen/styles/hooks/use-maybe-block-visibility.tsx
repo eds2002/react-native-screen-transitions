@@ -14,7 +14,7 @@ import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { height } = useWindowDimensions();
 	const { currentScreenKey } = useDescriptorDerivations();
-	const { entering, transitionProgress } =
+	const { closing, entering, progressAnimating, transitionProgress } =
 		AnimationStore.getBag(currentScreenKey);
 	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =
 		SystemStore.getBag(currentScreenKey);
@@ -49,6 +49,19 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
 		const offset = getVisibilityBlockOffset(height);
+		// Keep opacity out of normal rendering so effects such as Liquid Glass
+		// retain native compositing. Once closing has fully finished, hiding the
+		// outgoing screen lets the handoff settle before React removes its host.
+		const shouldHideClosedScreen =
+			closing.get() === 1 &&
+			transitionProgress.get() <= 0 &&
+			progressAnimating.get() === 0;
+
+		if (shouldHideClosedScreen) {
+			return {
+				opacity: 0,
+			};
+		}
 
 		return {
 			transform: [

@@ -10,6 +10,7 @@ import Animated from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
 import { SystemStore } from "../../../../../../stores/system.store";
+import { PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
 import { useActivePortalBoundaryHosts } from "../stores/portal-boundary-host.store";
@@ -74,7 +75,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		? activeBoundaryHosts.map((host) => (
 				<View
 					key={host.portalHostName}
-					pointerEvents="none"
+					pointerEvents={PORTAL_POINTER_EVENTS}
 					style={[
 						styles.boundaryHostViewport,
 						{ width: viewportWidth, height: viewportHeight },
@@ -89,7 +90,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	return (
 		<Animated.View
 			ref={measurement.hostRef}
-			pointerEvents="none"
+			pointerEvents={PORTAL_POINTER_EVENTS}
 			style={[
 				styles.host,
 				{ width: viewportWidth, height: viewportHeight },

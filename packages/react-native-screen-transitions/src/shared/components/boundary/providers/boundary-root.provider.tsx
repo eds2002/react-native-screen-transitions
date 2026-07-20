@@ -4,6 +4,7 @@ import {
 	useCallback,
 	useImperativeHandle,
 	useMemo,
+	useRef,
 	useState,
 } from "react";
 import type { View } from "react-native";
@@ -59,6 +60,7 @@ export type BoundaryRootRenderState = {
 	attachedStyle: unknown;
 	boundTag: BoundTag;
 	currentScreenKey: string;
+	handoffEnabled: boolean;
 	portalRuntime: BoundaryPortalRuntime;
 	ref: AnimatedRef<View>;
 	rootEscapePlaceholderRef: AnimatedRef<View>;
@@ -96,7 +98,7 @@ export const {
 		id,
 		style,
 	}) => {
-		const boundTag = useMemo(
+		const requestedBoundTag = useMemo(
 			() => createBoundTag(String(id), group),
 			[id, group],
 		);
@@ -108,6 +110,21 @@ export const {
 		const currentScreenKey = useDescriptorsStore(
 			(s) => s.derivations.currentScreenKey,
 		);
+		const currentActivity = useDescriptorsStore(
+			(s) => s.descriptors.current.activity,
+		);
+		const retainedBoundTagRef = useRef(requestedBoundTag);
+		const shouldRetainClosingBoundTag =
+			portalRuntime.handoff && currentActivity === "closing";
+
+		// Navigation can update a retained closing route's params before that
+		// route leaves the stack. Keep its handoff identity stable so the payload
+		// remains attached to the closing destination instead of being orphaned.
+		if (!shouldRetainClosingBoundTag) {
+			retainedBoundTagRef.current = requestedBoundTag;
+		}
+
+		const boundTag = retainedBoundTagRef.current;
 		const hasConfiguredInterpolator = useDescriptorsStore(
 			(s) => s.derivations.hasConfiguredInterpolator,
 		);
@@ -183,6 +200,7 @@ export const {
 
 		const shouldRenderBoundaryRootThroughPortal =
 			shouldEscapeBoundaryRootToScreenHost && !hasActiveTarget;
+		const handoffEnabled = enabled && portalRuntime.handoff;
 		// A nested active target takes the full associated style, so the root keeps
 		// only its stacking context. Root-owned escape-clipping moves the root
 		// through a screen host, so its associated style is applied through the
@@ -204,19 +222,21 @@ export const {
 				activeTargetRef: targetEntry?.ref ?? null,
 				boundTag,
 				currentScreenKey,
+				handoffEnabled,
 				portalRuntime,
 				registerTargetRef,
 				ref: rootRef,
 				rootEscapePlaceholderRef,
 				shouldRenderBoundaryRootThroughPortal,
-				shouldRenderHandoffHost: enabled && portalRuntime.handoff,
+				shouldRenderHandoffHost: handoffEnabled && !hasActiveTarget,
 				unregisterTargetRef,
 			}),
 			[
 				attachedStyle,
 				boundTag,
 				currentScreenKey,
-				enabled,
+				handoffEnabled,
+				hasActiveTarget,
 				portalRuntime,
 				registerTargetRef,
 				rootRef,

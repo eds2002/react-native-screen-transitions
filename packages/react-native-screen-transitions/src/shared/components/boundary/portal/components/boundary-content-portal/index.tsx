@@ -4,9 +4,13 @@ import {
 	memo,
 	type ReactNode,
 } from "react";
-import type { ViewProps } from "react-native";
+import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
-import { isTeleportAvailable, NativePortal } from "../../teleport";
+import {
+	isTeleportAvailable,
+	NativePortal,
+	PORTAL_POINTER_EVENTS,
+} from "../../teleport";
 import { useBoundaryContentPortalAttachment } from "./hooks/use-boundary-content-portal-attachment";
 
 export { BoundaryContentPortalHost } from "./components/host";
@@ -15,7 +19,6 @@ type BoundaryContentPortalProps = {
 	boundaryId?: string;
 	children: ReactNode;
 	enabled: boolean;
-	pointerEvents?: ViewProps["pointerEvents"];
 };
 
 type NullableHostNamePortalProps = Omit<
@@ -35,7 +38,6 @@ export const BoundaryContentPortal = memo(function BoundaryContentPortal({
 	boundaryId,
 	children,
 	enabled,
-	pointerEvents,
 }: BoundaryContentPortalProps) {
 	const shouldEnablePortal = enabled && boundaryId !== undefined;
 	const { teleportProps } = useBoundaryContentPortalAttachment({
@@ -48,7 +50,8 @@ export const BoundaryContentPortal = memo(function BoundaryContentPortal({
 			<AnimatedNativePortal
 				animatedProps={teleportProps}
 				name={boundaryId}
-				pointerEvents={pointerEvents}
+				pointerEvents={PORTAL_POINTER_EVENTS}
+				style={StyleSheet.absoluteFill}
 			>
 				{children}
 			</AnimatedNativePortal>

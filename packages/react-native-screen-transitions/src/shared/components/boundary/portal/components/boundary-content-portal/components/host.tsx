@@ -1,7 +1,7 @@
 import { memo, type ReactNode } from "react";
 import { StyleSheet } from "react-native";
 import Animated from "react-native-reanimated";
-import { NativePortalHost } from "../../../teleport";
+import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { createBoundaryContentPortalHostName } from "../helpers/host-name";
 
 const AnimatedPortalHost = NativePortalHost
@@ -34,7 +34,11 @@ export const BoundaryContentPortalHost = memo(
 		return (
 			<>
 				{children}
-				<AnimatedPortalHost name={portalHostName} style={styles.host} />
+				<AnimatedPortalHost
+					name={portalHostName}
+					pointerEvents={PORTAL_POINTER_EVENTS}
+					style={styles.host}
+				/>
 			</>
 		);
 	},

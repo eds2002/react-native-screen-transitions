@@ -70,9 +70,6 @@ const resolveStartEnd = (params: {
 
 	const sourceBounds = resolvedPair.sourceBounds;
 	const destinationBounds = resolvedPair.destinationBounds;
-	const endpointStyles = entering
-		? resolvedPair.destinationStyles
-		: resolvedPair.sourceStyles;
 
 	if (!sourceBounds) {
 		if (hasTargetOverride && sourceMeasurePairKey) {
@@ -86,7 +83,6 @@ const resolveStartEnd = (params: {
 			currentScreenKey,
 			sourceScreenKey: resolvedPair.sourceScreenKey,
 			destinationScreenKey: resolvedPair.destinationScreenKey,
-			endpointStyles,
 			hasTargetOverride,
 		};
 	}
@@ -100,7 +96,6 @@ const resolveStartEnd = (params: {
 			currentScreenKey,
 			sourceScreenKey: resolvedPair.sourceScreenKey,
 			destinationScreenKey: resolvedPair.destinationScreenKey,
-			endpointStyles,
 			hasTargetOverride,
 		};
 	}
@@ -124,7 +119,6 @@ const resolveStartEnd = (params: {
 		currentScreenKey,
 		sourceScreenKey: resolvedPair.sourceScreenKey,
 		destinationScreenKey: resolvedPair.destinationScreenKey,
-		endpointStyles,
 		hasTargetOverride,
 	};
 };
@@ -155,7 +149,6 @@ export const computeBoundStyles = (
 		currentScreenKey,
 		sourceScreenKey,
 		destinationScreenKey,
-		endpointStyles,
 	} = resolveStartEnd({
 		id,
 		previous,
@@ -228,9 +221,10 @@ export const computeBoundStyles = (
 			? composeTransformAbsolute(common)
 			: composeTransformRelative(common);
 
-	if (computeOptions.raw) {
-		return style;
-	}
-
-	return attachBoundsLocalTransform(style, endpointStyles);
+	return attachBoundsLocalTransform(
+		style,
+		entering
+			? (resolvedPair?.destinationStyles ?? null)
+			: (resolvedPair?.sourceStyles ?? null),
+	);
 };

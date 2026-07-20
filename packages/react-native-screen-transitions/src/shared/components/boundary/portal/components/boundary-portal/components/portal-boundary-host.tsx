@@ -11,7 +11,7 @@ import {
 	ScrollStore,
 } from "../../../../../../stores/scroll.store";
 import type { ScrollMeasuredDimensions } from "../../../../utils/measured-bounds";
-import { NativePortalHost } from "../../../teleport";
+import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { hasLocalSlot } from "../helpers/has-local-slot";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
@@ -142,12 +142,13 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 
 	return (
 		<Animated.View
-			pointerEvents="none"
+			pointerEvents={PORTAL_POINTER_EVENTS}
 			style={[style, hostStyle]}
 			collapsable={false}
 		>
 			<AnimatedPortalBoundaryHost
 				name={host.portalHostName}
+				pointerEvents={PORTAL_POINTER_EVENTS}
 				style={[styles.content, contentFrameStyle, slotStyle]}
 			/>
 		</Animated.View>

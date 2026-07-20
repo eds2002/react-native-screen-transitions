@@ -39,6 +39,7 @@ function ZoomSourceCard({
 					height: item.height,
 				},
 			]}
+			escapeClipping
 			onPress={() => {
 				router.push(
 					buildStackPath(stackType, `bounds/zoom/${item.id}`) as never,

@@ -80,21 +80,26 @@ export const useInitialDestinationMeasurement = ({
 		unblockLifecycleStart();
 	}, [isBlockingLifecycleStart, retryToken, unblockLifecycleStart]);
 
-	useLayoutEffect(() => {
-		if (
-			!destinationEnabled ||
-			!initialDestinationPairKey ||
-			progress.get() > 0 ||
-			isBlockingLifecycleStart.get()
-		) {
+	const claimLifecycleStartBlock = useCallback(() => {
+		"worklet";
+
+		// The progress check and block claim must share one UI-thread operation.
+		// Otherwise a JS-thread layout effect can observe zero, enqueue the block,
+		// and let the opening animation start before that block reaches the UI thread.
+		if (progress.get() > 0 || isBlockingLifecycleStart.get()) {
 			return;
 		}
 
-		// Boundary layout effects run before the parent screen's open intent. Claim
-		// this boundary's startup block before the transition controller can consume
-		// the request; the UI-thread handshake below releases it once matching is done.
 		blockLifecycleStart();
 		isBlockingLifecycleStart.set(1);
+	}, [blockLifecycleStart, isBlockingLifecycleStart, progress]);
+
+	useLayoutEffect(() => {
+		if (!destinationEnabled || !initialDestinationPairKey) {
+			return;
+		}
+
+		runOnUI(claimLifecycleStartBlock)();
 
 		return () => {
 			if (escapeClipping) {
@@ -107,12 +112,10 @@ export const useInitialDestinationMeasurement = ({
 			runOnUI(releaseLifecycleStartBlock)();
 		};
 	}, [
-		blockLifecycleStart,
+		claimLifecycleStartBlock,
 		destinationEnabled,
 		escapeClipping,
 		initialDestinationPairKey,
-		isBlockingLifecycleStart,
-		progress,
 		releaseLifecycleStartBlock,
 	]);
 

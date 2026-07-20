@@ -122,27 +122,7 @@ void removedBoundaryPortalProps;
 void deprecatedBoundaryViewProps;
 void deprecatedBoundaryTriggerProps;
 
-const zoomOptions: BoundsNavigationZoomOptions = {
-	target: "bound",
-	debug: true,
-	borderRadius: 36,
-	focusedElementOpacity: {
-		open: [0, 0.35, 0, 1],
-		close: [0.65, 1, 0, 1],
-	},
-	unfocusedElementOpacity: {
-		open: [1, 2, 1, 0],
-		close: [1.85, 2, 1, 0],
-	},
-	backgroundScale: 0.97,
-	maxSensitivity: 0.6,
-	velocityDepth: 0.35,
-	gestureProgressMode: "freeform",
-	horizontalDragScale: [0.9, 1.02, 2],
-	verticalDragScale: [0.96, 1.01, 2.25],
-	horizontalDragTranslation: [0.5, 1, 1.5],
-	verticalDragTranslation: [0, 0, 1],
-};
+const zoomOptions: BoundsNavigationZoomOptions = {};
 
 declare const interpolationProps: ScreenInterpolationProps;
 
@@ -243,7 +223,37 @@ const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
 	.bounds({ id: 42 })
 	.navigation.zoom({
 		target: "bound",
+		keepFocusedVisible: true,
+		borderRadius: 36,
+		backgroundScale: 0.95,
+		backdropColor: "#000000",
+		backdropOpacity: 0.4,
+		drag: {
+			translation: { horizontal: 0.8, vertical: 0.9 },
+			scale: { horizontal: 0.7, vertical: 0.85 },
+		},
 	});
+const deprecatedZoomOptions: BoundsNavigationZoomOptions = {
+	debug: true,
+	focusedElementOpacity: { open: [0, 1, 0, 1] },
+	unfocusedElementOpacity: { close: [0, 1, 1, 0] },
+	maxSensitivity: 0.8,
+	velocityDepth: 0.5,
+	gestureProgressMode: "freeform",
+	horizontalDragScale: [0.5, 1.1, 2],
+	verticalDragScale: [0.5, 1.1, 2],
+	horizontalDragTranslation: [0.8, 0.8, 2],
+	verticalDragTranslation: [0.8, 0.8, 2],
+};
+void deprecatedZoomOptions;
+interpolationProps.bounds({ id: 42 }).navigation.zoom({
+	// @ts-expect-error Zoom targets must resolve to supported bounds geometry.
+	target: "viewport",
+});
+interpolationProps.bounds({ id: 42 }).navigation.zoom({
+	// @ts-expect-error Focused visibility is an opt-in boolean.
+	keepFocusedVisible: "yes",
+});
 const revealInterpolatedStyle: BoundsNavigationRevealStyle = interpolationProps
 	.bounds({ id: 42 })
 	.navigation.reveal();

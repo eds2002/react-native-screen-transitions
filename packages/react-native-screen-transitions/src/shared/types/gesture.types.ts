@@ -150,6 +150,8 @@ export type GestureHandoffValues = {
 	normScale: number;
 	focalX: number;
 	focalY: number;
+	pinchOriginX: number;
+	pinchOriginY: number;
 	rotation: number;
 	raw: RawGestureValues;
 	/**
@@ -202,6 +204,14 @@ export type GestureValues = {
 	 * The live pinch focal point y-position in screen coordinates.
 	 */
 	focalY: number;
+	/**
+	 * The pinch focal point x-position captured when the gesture activated.
+	 */
+	pinchOriginX: number;
+	/**
+	 * The pinch focal point y-position captured when the gesture activated.
+	 */
+	pinchOriginY: number;
 	/**
 	 * The live two-finger rotation in radians.
 	 */

@@ -227,7 +227,11 @@ export const useBoundaryPortalAttachment = ({
 		"worklet";
 
 		const slot = slotsMap.get()[boundaryId];
-		const { teleport, ...slotProps } = slot?.props ?? {};
+		const {
+			pointerEvents: _pointerEvents,
+			teleport,
+			...slotProps
+		} = slot?.props ?? {};
 		const shouldTeleport = shouldAttachBoundaryPortal({
 			enabled,
 			teleport,

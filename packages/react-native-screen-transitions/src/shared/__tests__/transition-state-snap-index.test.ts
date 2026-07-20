@@ -29,6 +29,8 @@ const createGestureSnapshotStore = () => ({
 	normScale: shared(0),
 	focalX: shared(0),
 	focalY: shared(0),
+	pinchOriginX: shared(0),
+	pinchOriginY: shared(0),
 	rotation: shared(0),
 	raw: {
 		x: shared(0),
@@ -53,6 +55,8 @@ const createGestureStore = (): GestureStoreMap => ({
 	normScale: shared(0),
 	focalX: shared(0),
 	focalY: shared(0),
+	pinchOriginX: shared(0),
+	pinchOriginY: shared(0),
 	rotation: shared(0),
 	raw: {
 		x: shared(0),

@@ -4,9 +4,35 @@ import type {
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
+import type { GestureStoreMap } from "../../../../../stores/gesture.store";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePinchRuntime } from "../../shared/runtime";
 import type { GestureCompositionOwner, PinchGestureRuntime } from "../../types";
+
+export const updateAbsolutePinchFocalPoint = (
+	event: GestureTouchEvent,
+	gestures: GestureStoreMap,
+	captureOrigin: boolean,
+) => {
+	"worklet";
+	const firstTouch = event.allTouches[0];
+	const secondTouch = event.allTouches[1];
+
+	if (!firstTouch || !secondTouch) {
+		return;
+	}
+
+	const focalX = (firstTouch.absoluteX + secondTouch.absoluteX) / 2;
+	const focalY = (firstTouch.absoluteY + secondTouch.absoluteY) / 2;
+
+	gestures.focalX.set(focalX);
+	gestures.focalY.set(focalY);
+
+	if (captureOrigin) {
+		gestures.pinchOriginX.set(focalX);
+		gestures.pinchOriginY.set(focalY);
+	}
+};
 
 interface UsePinchActivationProps {
 	runtime: SharedValue<PinchGestureRuntime>;
@@ -25,10 +51,11 @@ export const usePinchActivation = ({
 			stateManager: GestureStateManager | undefined,
 		) => {
 			"worklet";
-			const { participation, policy } = resolvePinchRuntime(
+			const latestRuntime = resolvePinchRuntime(
 				runtime.get(),
 				screenOptions.get(),
 			);
+			const { participation, policy } = latestRuntime;
 
 			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager?.fail();
@@ -36,6 +63,11 @@ export const usePinchActivation = ({
 			}
 
 			if (event.numberOfTouches === 2) {
+				updateAbsolutePinchFocalPoint(
+					event,
+					latestRuntime.stores.gestures,
+					true,
+				);
 				if (gestureCompositionOwner.get() === null) {
 					gestureCompositionOwner.set("pinch");
 				}
@@ -53,10 +85,11 @@ export const usePinchActivation = ({
 	const onTouchesMove = useCallback(
 		(event: GestureTouchEvent, stateManager: GestureStateManager) => {
 			"worklet";
-			const { participation, policy } = resolvePinchRuntime(
+			const latestRuntime = resolvePinchRuntime(
 				runtime.get(),
 				screenOptions.get(),
 			);
+			const { participation, policy } = latestRuntime;
 
 			if (!participation.canTrackGesture || !policy.enabled) {
 				stateManager.fail();
@@ -64,6 +97,11 @@ export const usePinchActivation = ({
 			}
 
 			if (event.numberOfTouches === 2) {
+				updateAbsolutePinchFocalPoint(
+					event,
+					latestRuntime.stores.gestures,
+					false,
+				);
 				if (gestureCompositionOwner.get() === null) {
 					gestureCompositionOwner.set("pinch");
 				}

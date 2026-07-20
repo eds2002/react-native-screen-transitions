@@ -9,6 +9,7 @@ import { useDescriptorsStore } from "../../../../../../providers/screen/descript
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
 import { useRegisteredScreenSlots } from "../../../../../../providers/screen/styles/stores/slot-references.store";
 import { AnimationStore } from "../../../../../../stores/animation.store";
+import { getSourceScreenKeyFromPairKey } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import {
@@ -132,7 +133,7 @@ export const useBoundaryContentPortalAttachment = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			if (!enabled || !sourcePairKey) {
+			if (!enabled) {
 				return {
 					hostScreenKey: null,
 					ownerPairKey: sourcePairKey,
@@ -144,13 +145,51 @@ export const useBoundaryContentPortalAttachment = ({
 			const progressAnimating = settledHostAnimating.get();
 			const progressSettled = settledHostProgress.get();
 			const willAnimate = settledHostWillAnimate.get();
+			const closing = settledHostClosing.get();
+			const isOwnedHostClosing =
+				!!closing &&
+				!!ownership &&
+				settledHostScreenKey === ownership.hostScreenKey;
+
+			if (isOwnedHostClosing && ownership) {
+				const isClosingComplete = isHandoffHostClosingComplete({
+					closing,
+					progressAnimating,
+					progressSettled,
+					willAnimate,
+				});
+
+				if (!isClosingComplete) {
+					return ownership;
+				}
+
+				const sourceScreenKey = getSourceScreenKeyFromPairKey(
+					ownership.ownerPairKey,
+				);
+
+				return {
+					hostScreenKey: sourceScreenKey,
+					ownerPairKey: ownership.ownerPairKey,
+					ownerScreenKey: sourceScreenKey,
+					status: "complete",
+				};
+			}
+
+			if (!sourcePairKey) {
+				return {
+					hostScreenKey: null,
+					ownerPairKey: sourcePairKey,
+					ownerScreenKey: null,
+					status: "clear",
+				};
+			}
 
 			return resolveBoundaryPortalOwnership({
 				boundaryId,
 				currentScreenKey,
 				handoff: true,
 				isSettledHostClosingComplete: isHandoffHostClosingComplete({
-					closing: settledHostClosing.get(),
+					closing,
 					progressAnimating,
 					progressSettled,
 					willAnimate,
@@ -251,7 +290,11 @@ export const useBoundaryContentPortalAttachment = ({
 		"worklet";
 
 		const slot = activeSlotsMap.get()[boundaryId];
-		const { teleport, ...slotProps } = slot?.props ?? {};
+		const {
+			pointerEvents: _pointerEvents,
+			teleport,
+			...slotProps
+		} = slot?.props ?? {};
 		const shouldTeleport = shouldAttachBoundaryPortal({
 			enabled,
 			teleport,

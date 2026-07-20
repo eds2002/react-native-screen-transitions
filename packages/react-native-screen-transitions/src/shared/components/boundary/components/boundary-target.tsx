@@ -8,31 +8,38 @@ import {
 } from "../../../providers/screen/styles";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import { useRegisterTarget } from "../hooks/use-register-target";
-import { BoundaryContentPortal } from "../portal/components/boundary-content-portal";
+import {
+	BoundaryContentPortal,
+	BoundaryContentPortalHost,
+} from "../portal/components/boundary-content-portal";
 import { BoundaryPortal } from "../portal/components/boundary-portal";
 import { useBoundaryRootContext } from "../providers/boundary-root.provider";
 
-type BoundaryTargetProps = React.ComponentProps<typeof Animated.View>;
+type BoundaryTargetProps = Omit<
+	React.ComponentProps<typeof Animated.View>,
+	"children"
+> & {
+	children?: React.ReactNode;
+};
 
 export const BoundaryTarget = memo(function BoundaryTarget(
 	props: BoundaryTargetProps,
 ) {
-	const { pointerEvents, style, ...rest } = props;
+	const { children, pointerEvents, style, ...rest } = props;
 	const targetAnimatedRef = useAnimatedRef<View>();
 	const targetEscapePlaceholderRef = useAnimatedRef<View>();
 	const rootContext = useBoundaryRootContext();
 	const boundaryId = rootContext?.boundTag.tag;
 	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
 	const portalRuntime = rootContext?.portalRuntime;
-	const portalPointerEvents =
-		typeof pointerEvents === "string" ? pointerEvents : undefined;
+	const handoffEnabled = isActiveTarget && rootContext?.handoffEnabled === true;
 	const shouldEscapeTargetToScreenHost =
 		portalRuntime?.escapeClipping === true && boundaryId !== undefined;
 
 	const shouldApplyAssociatedStyleInline =
-		isActiveTarget && portalRuntime?.enabled !== true;
+		isActiveTarget && portalRuntime?.escapeClipping !== true;
 	const shouldApplyPortalLayoutStyle =
-		isActiveTarget && portalRuntime?.enabled === true;
+		isActiveTarget && portalRuntime?.escapeClipping === true;
 
 	const associatedTargetStyles = useComposedSlotStyles(
 		rootContext?.boundTag.tag,
@@ -52,27 +59,31 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 			boundaryId={boundaryId ?? ""}
 			enabled={shouldEscapeTargetToScreenHost}
 			placeholderRef={targetEscapePlaceholderRef}
-			pointerEvents={portalPointerEvents}
 		>
-			<BoundaryContentPortal
-				boundaryId={boundaryId}
-				enabled={portalRuntime?.handoff === true}
-				pointerEvents={portalPointerEvents}
+			<Animated.View
+				{...rest}
+				pointerEvents={pointerEvents}
+				ref={targetAnimatedRef}
+				style={[
+					style,
+					shouldApplyAssociatedStyleInline ? associatedTargetStyles : undefined,
+					shouldApplyPortalLayoutStyle ? portalLayoutStyle : undefined,
+				]}
+				collapsable={false}
 			>
-				<Animated.View
-					{...rest}
-					pointerEvents={pointerEvents}
-					ref={targetAnimatedRef}
-					style={[
-						style,
-						shouldApplyAssociatedStyleInline
-							? associatedTargetStyles
-							: undefined,
-						shouldApplyPortalLayoutStyle ? portalLayoutStyle : undefined,
-					]}
-					collapsable={false}
-				/>
-			</BoundaryContentPortal>
+				<BoundaryContentPortalHost
+					boundaryId={boundaryId ?? ""}
+					enabled={handoffEnabled}
+					screenKey={rootContext?.currentScreenKey ?? ""}
+				>
+					<BoundaryContentPortal
+						boundaryId={boundaryId}
+						enabled={handoffEnabled}
+					>
+						{children}
+					</BoundaryContentPortal>
+				</BoundaryContentPortalHost>
+			</Animated.View>
 		</BoundaryPortal>
 	);
 });

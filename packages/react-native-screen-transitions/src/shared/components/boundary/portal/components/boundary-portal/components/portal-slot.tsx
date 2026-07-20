@@ -4,11 +4,12 @@ import {
 	memo,
 	type ReactNode,
 } from "react";
-import type { View, ViewProps } from "react-native";
+import type { View } from "react-native";
 import Animated, { type AnimatedRef, runOnUI } from "react-native-reanimated";
 import { logger } from "../../../../../../utils/logger";
 import {
 	isTeleportAvailable,
+	PORTAL_POINTER_EVENTS,
 	NativePortal as TeleportPortal,
 } from "../../../teleport";
 import { usePlaceholderStyles } from "../hooks/use-placeholder-styles";
@@ -31,7 +32,6 @@ type BoundaryPortalSlotProps = {
 	children: ReactNode;
 	enabled: boolean;
 	animatedProps: any;
-	pointerEvents?: ViewProps["pointerEvents"];
 	placeholderRef?: AnimatedRef<View>;
 };
 
@@ -40,7 +40,6 @@ export const BoundaryPortalSlot = memo(function BoundaryPortalSlot({
 	children,
 	enabled,
 	animatedProps,
-	pointerEvents,
 	placeholderRef,
 }: BoundaryPortalSlotProps) {
 	const isPortalEnabled = enabled && isTeleportAvailable;
@@ -62,13 +61,13 @@ export const BoundaryPortalSlot = memo(function BoundaryPortalSlot({
 					runOnUI(handleOnLayout)(layout)
 				}
 				style={placeholderStyle}
-				pointerEvents={pointerEvents}
+				pointerEvents={PORTAL_POINTER_EVENTS}
 				collapsable={false}
 			>
 				<AnimatedNativePortal
 					animatedProps={animatedProps}
 					name={id}
-					pointerEvents={pointerEvents}
+					pointerEvents={PORTAL_POINTER_EVENTS}
 				>
 					{children}
 				</AnimatedNativePortal>

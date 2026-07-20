@@ -63,6 +63,8 @@ export type {
 	BoundsNavigationAccessor,
 	BoundsNavigationRevealOptions,
 	BoundsNavigationRevealStyle,
+	BoundsNavigationZoomAxisResponse,
+	BoundsNavigationZoomDragOptions,
 	BoundsNavigationZoomOpacityRange,
 	BoundsNavigationZoomOpacityRanges,
 	BoundsNavigationZoomOptions,
