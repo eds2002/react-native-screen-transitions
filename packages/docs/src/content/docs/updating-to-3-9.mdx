@@ -22,6 +22,8 @@ The main API changes are:
 - `bounds(id).values()` returns numeric values for custom renderers and interpolation logic.
 - `handoff` moves a live boundary payload between matching boundaries.
 - `escapeClipping` lets a boundary render outside local clipping constraints while it transitions.
+- `navigation.zoom()` now owns its native-style opacity, drag, mask, pinch, and release behavior while exposing a smaller set of intensity controls.
+- Pinch gestures now expose their fixed activation point as `pinchOriginX` and `pinchOriginY`.
 - `contentComponent` adds a custom renderer for the screen content layer.
 - `backdropComponent` can now receive render props: `{ styles, props, pointerEvents }`.
 - `surfaceComponent` is deprecated in favor of `contentComponent`.
@@ -108,6 +110,8 @@ The new component is intentionally plain: it is a boundary with an id. Add `onPr
 
 Use `handoff` when the same live payload should move between matching boundaries during a transition.
 
+`handoff` remains experimental in v3.9. Native-backed content can expose platform compositor and lifecycle edge cases, especially Android video surfaces. `escapeClipping` does not move a live payload and is not covered by that warning.
+
 Every matching boundary that should participate in that handoff should set `handoff`. Treat it as a contract between the source and destination, not as a source-only flag. In a multi-screen chain, put it on each screen's matching boundary so the payload can keep moving from A to B, then B to C, and back again.
 
 ```tsx
@@ -185,6 +189,44 @@ This makes common flows feel more accurate:
 - a live payload moves through several matching boundaries
 
 v3.9 also handles transformed boundaries more predictably. When an element is scaled or transformed in its own layout, generated bounds styles can preserve that visual shape while still moving between screens.
+
+## Navigation Zoom
+
+`navigation.zoom()` now exposes appearance and drag-response controls without exposing the preset's internal curves:
+
+```tsx
+return bounds(id).navigation.zoom({
+  target: "bound",
+  keepFocusedVisible: true,
+  borderRadius: 48,
+  backgroundScale: 0.95,
+  backdropColor: "#000",
+  backdropOpacity: 0.4,
+  drag: {
+    translation: { horizontal: 0.9, vertical: 0.85 },
+    scale: { horizontal: 1, vertical: 0.8 },
+  },
+});
+```
+
+`drag.translation` and `drag.scale` accept horizontal and vertical response multipliers. `0` disables a response on that axis, `1` preserves the preset, and values above `1` exaggerate it.
+
+When no target is provided, zoom expands into a full-width rectangle that preserves the source aspect ratio. `target: "bound"` stays opt-in and waits for the matching destination measurement instead of temporarily falling back to fullscreen.
+
+Zoom now also tracks the initial pinch focal point while scale and rotation change. Custom interpolators can read the same fixed screen-coordinate pivot from `gesture.pinchOriginX` and `gesture.pinchOriginY`, including through `gesture.handoff`.
+
+The following previous zoom options remain accepted by TypeScript for compatibility, but they are ignored:
+
+- `debug`
+- `focusedElementOpacity`
+- `unfocusedElementOpacity`
+- `maxSensitivity`
+- `velocityDepth`
+- `gestureProgressMode`
+- `horizontalDragScale`
+- `verticalDragScale`
+- `horizontalDragTranslation`
+- `verticalDragTranslation`
 
 ## Behavior Changes
 
@@ -329,6 +371,9 @@ For `method: "size"`, the returned scale is applied to the generated width and h
 - Replace bounds link helper calls with `bounds(id).link()`.
 - Keep using `offset`; `gestures` still exists as a deprecated alias for offset-style movement.
 - Use `motion` instead of reimplementing bounds measurement when an element needs custom arc, depth, rotation, or overshoot behavior.
+- Replace zoom's directional drag tuples with `drag.translation` and `drag.scale` response multipliers.
+- Remove deprecated zoom opacity, sensitivity, velocity-depth, and debug options. They remain type-compatible in v3.9 but are ignored.
+- Use `gesture.pinchOriginX` and `gesture.pinchOriginY` when pinch-and-rotate motion needs a stable activation pivot.
 
 ## Related Reading
 

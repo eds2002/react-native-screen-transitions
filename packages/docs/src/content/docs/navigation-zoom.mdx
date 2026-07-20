@@ -127,23 +127,61 @@ return bounds(id).navigation.zoom({
   borderRadius: 48,
   target: "bound",
   backgroundScale: 0.96,
+  backdropColor: "#000",
+  backdropOpacity: 0.45,
+  drag: {
+    translation: { horizontal: 0.9, vertical: 0.85 },
+    scale: { horizontal: 1, vertical: 0.8 },
+  },
 });
 ```
 
 | Option | Type | Notes |
 | --- | --- | --- |
-| `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Controls the destination target for the matched element. |
-| `debug` | `boolean` | Shows the helper's internal layers more explicitly while you tune the transition. |
-| `borderRadius` | `number` | Overrides the destination corner radius used by the helper. |
-| `focusedElementOpacity` | `object` | Controls the focused-screen matched element opacity curves. |
-| `unfocusedElementOpacity` | `object` | Controls the unfocused-screen matched element opacity curves. |
-| `backgroundScale` | `number` | Scales the unfocused background content while the focused bound animates above it. |
-| `horizontalDragScale` | `[number, number, number?]` | Horizontal gesture drag scaling tuple in the form `[shrinkMin, growMax, exponent?]`. |
-| `verticalDragScale` | `[number, number, number?]` | Vertical gesture drag scaling tuple in the form `[shrinkMin, growMax, exponent?]`. |
-| `horizontalDragTranslation` | `[number, number, number?]` | Horizontal gesture drag translation tuple in the form `[negativeMax, positiveMax, exponent?]`. |
-| `verticalDragTranslation` | `[number, number, number?]` | Vertical gesture drag translation tuple in the form `[negativeMax, positiveMax, exponent?]`. |
+| `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Uses the paired destination boundary, the full screen, or an explicit rectangle. When omitted, zoom expands to a full-width rectangle that preserves the source aspect ratio. |
+| `keepFocusedVisible` | `boolean` | Keeps focused content visible instead of applying zoom's built-in focused-content fade. Defaults to `false`. Useful for handed-off or other live content. |
+| `borderRadius` | `number` | Expanded clipping radius. Zoom interpolates from the measured source radius to this value. Defaults to `64`. |
+| `backgroundScale` | `number` | Scale applied to the unfocused screen. Defaults to `0.9375`. |
+| `backdropColor` | `ColorValue` | Color behind the focused zoom content. Defaults to `"black"`. |
+| `backdropOpacity` | `number` | Maximum backdrop opacity, clamped to `0...1`. Defaults to `0.45`. |
+| `drag.translation.horizontal` | `number` | Horizontal rendered-translation response. Defaults to `1`. |
+| `drag.translation.vertical` | `number` | Vertical rendered-translation response. Defaults to `1`. |
+| `drag.scale.horizontal` | `number` | Horizontal drag-scale response. Defaults to `1`. |
+| `drag.scale.vertical` | `number` | Vertical drag-scale response. Defaults to `1`. |
 
-Opacity tuples use `[inputStart, inputEnd, outputStart?, outputEnd?]`. Drag scale tuples use `[shrinkMin, growMax, exponent?]`. Drag translation tuples use `[negativeMax, positiveMax, exponent?]`.
+The nested `drag` values adjust intensity without replacing zoom's built-in curves. `0` disables that response on the axis, `1` keeps the default response, and values above `1` exaggerate it.
+
+The following earlier beta options still compile for migration safety, but zoom ignores them:
+
+- `debug`
+- `focusedElementOpacity`
+- `unfocusedElementOpacity`
+- `maxSensitivity`
+- `velocityDepth`
+- `gestureProgressMode`
+- `horizontalDragScale`
+- `verticalDragScale`
+- `horizontalDragTranslation`
+- `verticalDragTranslation`
+
+Move axis response tuning to `drag`. Zoom now owns opacity timing, gesture sensitivity, and velocity-depth behavior as part of its native preset.
+
+## Interactive Dismissal
+
+Zoom responds to every enabled pan direction and to `pinch-in`.
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureDirection: ["bidirectional", "pinch-in"],
+  screenStyleInterpolator: ({ bounds }) => {
+    "worklet";
+    return bounds("hero").navigation.zoom();
+  },
+}}
+```
+
+Rotation runs alongside an active pinch. Zoom keeps the pinch's activation point anchored while scale and rotation change, then carries the same origin through the release handoff.
 
 ## Navigation Mask
 

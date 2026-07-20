@@ -204,6 +204,10 @@ The group keeps track of the active member id so the transition stays aligned as
 
 Use `handoff` when the same live payload should move between matching boundaries instead of remounting on each screen.
 
+<Note>
+  Live payload handoff is experimental in v3.9. It works well for focused flows, but native-backed content and rapid navigation can still expose platform-specific lifecycle or compositing edge cases.
+</Note>
+
 ```tsx
 // Source
 <Transition.Boundary id="video" handoff onPress={openPlayer}>
@@ -233,6 +237,10 @@ Use `escapeClipping` when a boundary needs to render outside local clipping or l
 ```
 
 `handoff` and `escapeClipping` use `react-native-teleport` under the hood, so apps that use either prop should install `react-native-teleport`.
+
+Test handed-off video on physical Android devices. A `SurfaceView` may not obey portal clipping or transforms, while a `TextureView` participates in normal view composition but can briefly flicker while its native surface moves between hosts. For Expo Video, `surfaceType="textureView"` is usually the correct choice when clipping and transforms matter.
+
+See [Caveats & Trade-offs](/caveats) for the current handoff support boundary.
 
 ## Bounds with Offsets
 

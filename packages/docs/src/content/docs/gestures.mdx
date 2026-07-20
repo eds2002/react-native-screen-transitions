@@ -740,6 +740,7 @@ Useful values include:
 - `normX`, `normY`
 - `scale`, `normScale`
 - `focalX`, `focalY`
+- `pinchOriginX`, `pinchOriginY`
 - `rotation`
 - `velocity`
 - `raw`
@@ -751,6 +752,8 @@ Useful values include:
 - `direction` (deprecated pan-only alias)
 
 Live gesture values reset after release. If a dismiss animation needs the last release-time values while the live fields reset, read `current.gesture.handoff`.
+
+`focalX` and `focalY` are live screen coordinates and can move with the fingers. `pinchOriginX` and `pinchOriginY` capture the screen-coordinate focal point at activation, which is usually the correct pivot for stable pinch-and-rotate transforms.
 
 ## Hook Targeting
 
