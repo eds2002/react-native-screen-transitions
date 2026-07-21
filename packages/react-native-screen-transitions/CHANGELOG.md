@@ -1,5 +1,11 @@
 # Changelog
 
+## [3.9.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.9.0-beta.3...v3.9.0) (2026-07-21)
+
+### Features
+
+* finalize v3.9 release changes ([1b60cd5](https://github.com/eds2002/react-native-screen-transitions/commit/1b60cd54b67163389aa8a7a428c3de350d029b84))
+
 ## [3.8.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0-beta.1...v3.8.0) (2026-06-21)
 
 ## [3.7.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.7.0...v3.7.1) (2026-06-10)
