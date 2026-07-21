@@ -1,4 +1,5 @@
-import { clamp, runOnJS } from "react-native-reanimated";
+import { clamp } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { EPSILON, FALSE, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../../utils/animation/emit";
@@ -96,7 +97,7 @@ export const finalizePinchRelease = (
 	});
 
 	if (release.shouldDismiss && requestDismiss) {
-		runOnJS(requestDismiss)();
+		scheduleOnRN(requestDismiss);
 	}
 
 	animateToProgress({

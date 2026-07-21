@@ -4,13 +4,12 @@ import type { View } from "react-native";
 import {
 	type AnimatedRef,
 	measure,
-	runOnJS,
-	runOnUI,
 	type StyleProps,
 	useAnimatedReaction,
 	useSharedValue,
 } from "react-native-reanimated";
 import type { SharedValue } from "react-native-reanimated/lib/typescript/commonTypes";
+import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import useStableCallback from "../hooks/use-stable-callback";
 import useStableCallbackValue from "../hooks/use-stable-callback-value";
 import { AnimationStore } from "../stores/animation.store";
@@ -181,7 +180,7 @@ const useBlurMeasurement = (params: {
 
 			return () => {
 				if (!sharedBoundTag || hasCapturedSource.current) return;
-				runOnUI(maybeMeasureOnBlur)();
+				scheduleOnUI(maybeMeasureOnBlur);
 			};
 		}, [enabled, sharedBoundTag, maybeMeasureOnBlur]),
 	);
@@ -250,7 +249,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 			}: MaybeMeasureAndStoreParams = {}) => {
 				"worklet";
 				if (!sharedBoundTag) {
-					if (onPress) runOnJS(onPress)();
+					if (onPress) scheduleOnRN(onPress);
 					return;
 				}
 
@@ -278,7 +277,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 						});
 					}
 
-					if (onPress) runOnJS(onPress)();
+					if (onPress) scheduleOnRN(onPress);
 					return;
 				}
 
@@ -306,13 +305,13 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					(hasPendingSource || hasSource || hasDestination);
 
 				if (!canSetSource && !canSetDestination && !canSnapshotOnly) {
-					if (onPress) runOnJS(onPress)();
+					if (onPress) scheduleOnRN(onPress);
 					return;
 				}
 
 				const measured = measure(animatedRef);
 				if (!measured) {
-					if (onPress) runOnJS(onPress)();
+					if (onPress) scheduleOnRN(onPress);
 					return;
 				}
 
@@ -351,7 +350,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 					});
 				}
 
-				if (onPress) runOnJS(onPress)();
+				if (onPress) scheduleOnRN(onPress);
 			},
 		);
 
@@ -378,7 +377,7 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
 				onPress?.();
 				return;
 			}
-			runOnUI(maybeMeasureAndStore)({ onPress, shouldSetSource: true });
+			scheduleOnUI(maybeMeasureAndStore, { onPress, shouldSetSource: true });
 			markSourceCaptured();
 		});
 

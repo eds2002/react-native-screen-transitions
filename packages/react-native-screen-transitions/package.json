@@ -72,13 +72,14 @@
 		"@types/react": "*",
 		"@types/react-native": "*",
 		"expo-router": ">=56.2.10",
-		"react": "*",
+		"react": ">=19.2.0",
 		"react-native": "*",
 		"react-native-gesture-handler": ">=2.16.1",
-		"react-native-reanimated": ">=3.16.0 || >=4.0.0-",
+		"react-native-reanimated": ">=4.0.0",
 		"react-native-safe-area-context": "*",
 		"react-native-screens": ">=4.4.0",
-		"react-native-teleport": ">=1.1.0 <2.0.0"
+		"react-native-teleport": ">=1.1.0 <2.0.0",
+		"react-native-worklets": "0.8.x"
 	},
 	"peerDependenciesMeta": {
 		"expo-router": {
@@ -91,10 +92,10 @@
 	"devDependencies": {
 		"@react-navigation/native": "7.3.3",
 		"@testing-library/react-native": "13.3.3",
-		"@types/react": "~19.1.0",
+		"@types/react": "~19.2.17",
 		"expo-router": "56.2.11",
 		"react-native-builder-bob": "0.41.0",
-		"react-test-renderer": "19.1.0",
+		"react-test-renderer": "19.2.3",
 		"typescript": "catalog:"
 	},
 	"react-native-builder-bob": {

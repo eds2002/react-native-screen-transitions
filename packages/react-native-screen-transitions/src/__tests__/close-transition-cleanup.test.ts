@@ -26,12 +26,17 @@ const createMeasured = (
 	height,
 });
 
+const flushScheduledUI = async () => {
+	await Promise.resolve();
+	await new Promise<void>((resolve) => setTimeout(resolve, 0));
+};
+
 beforeEach(() => {
 	(globalThis as any).resetMutableRegistry();
 });
 
 describe("close transition cleanup", () => {
-	it("resets animation, gesture, system, and bounds stores for a screen", () => {
+	it("resets animation, gesture, system, and bounds stores for a screen", async () => {
 		const routeKey = "cleanup-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
@@ -50,6 +55,7 @@ describe("close transition cleanup", () => {
 
 		resetStoresForScreen(routeKey);
 		resetStoresForScreen(routeKey);
+		await flushScheduledUI();
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
 		expect(BoundStore.link.getSource(pairKey, "card")).toBeNull();
@@ -64,7 +70,7 @@ describe("close transition cleanup", () => {
 		expect(systemAfter).not.toBe(systemBefore);
 	});
 
-	it("clears bounds for leaf screens", () => {
+	it("clears bounds for leaf screens", async () => {
 		const routeKey = "leaf-screen";
 		const bounds = createMeasured(10, 20, 120, 140);
 
@@ -78,6 +84,7 @@ describe("close transition cleanup", () => {
 		const systemBefore = SystemStore.getBag(routeKey);
 
 		resetStoresForScreen(routeKey);
+		await flushScheduledUI();
 
 		// Animation and gesture stores are still cleared
 		const animationAfter = AnimationStore.getBag(routeKey);
@@ -108,7 +115,7 @@ describe("close transition cleanup", () => {
 		expect(hasBoundaryPresence("card", routeKey)).toBe(false);
 	});
 
-	it("screen cleanup does not clear sibling or nested route keys", () => {
+	it("screen cleanup does not clear sibling or nested route keys", async () => {
 		const routeKey = "cleanup-route";
 		const nestedRoute = "cleanup-route-nested";
 		const unrelatedRoute = "unrelated-route";
@@ -140,6 +147,7 @@ describe("close transition cleanup", () => {
 		registerBoundaryPresence("card", unrelatedRoute);
 
 		resetStoresForScreen(routeKey);
+		await flushScheduledUI();
 
 		expect(BoundStore.entry.get("card", routeKey)).toBeNull();
 		expect(BoundStore.link.getSource(routePairKey, "card")).toBeNull();

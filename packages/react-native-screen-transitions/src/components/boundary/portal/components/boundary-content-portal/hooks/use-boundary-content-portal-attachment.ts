@@ -1,10 +1,10 @@
 import { useCallback, useLayoutEffect, useState } from "react";
 import {
-	runOnJS,
 	useAnimatedProps,
 	useAnimatedReaction,
 	useSharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
 import { useRegisteredScreenSlots } from "../../../../../../providers/screen/styles/stores/slot-references.store";
@@ -237,7 +237,8 @@ export const useBoundaryContentPortalAttachment = ({
 				visiblePortalHostName.set(hostName);
 			}
 
-			runOnJS(updatePortalOwnership)(
+			scheduleOnRN(
+				updatePortalOwnership,
 				signal.hostScreenKey,
 				signal.ownerPairKey,
 				signal.ownerScreenKey ?? undefined,

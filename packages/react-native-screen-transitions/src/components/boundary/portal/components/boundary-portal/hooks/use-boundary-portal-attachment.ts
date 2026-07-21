@@ -1,10 +1,10 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
 import {
-	runOnJS,
 	useAnimatedProps,
 	useAnimatedReaction,
 	useSharedValue,
 } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
@@ -167,7 +167,8 @@ export const useBoundaryPortalAttachment = ({
 				return;
 			}
 
-			runOnJS(updatePortalOwnership)(
+			scheduleOnRN(
+				updatePortalOwnership,
 				signal.hostScreenKey,
 				signal.ownerPairKey,
 				signal.ownerScreenKey ?? undefined,
@@ -215,7 +216,7 @@ export const useBoundaryPortalAttachment = ({
 			}
 
 			if (state.visibleName && state.visibleName === state.requestedName) {
-				runOnJS(dropStalePortalBoundaryHosts)({
+				scheduleOnRN(dropStalePortalBoundaryHosts, {
 					boundaryId,
 					keepPortalHostName: state.visibleName,
 				});

@@ -1,4 +1,5 @@
-import { clamp, runOnJS, type SharedValue } from "react-native-reanimated";
+import { clamp, type SharedValue } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { EPSILON, FALSE, TRUE } from "../../../../../constants";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
 import { emit } from "../../../../../utils/animation/emit";
@@ -159,7 +160,7 @@ export const finalizePanRelease = (
 	}
 
 	if (plan.shouldDismiss && requestDismiss) {
-		runOnJS(requestDismiss)();
+		scheduleOnRN(requestDismiss);
 	}
 
 	animateToProgress({

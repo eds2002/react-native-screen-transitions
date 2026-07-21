@@ -3,8 +3,6 @@ import type { View } from "react-native";
 import {
 	cancelAnimation,
 	measure,
-	runOnJS,
-	runOnUI,
 	type SharedValue,
 	useAnimatedReaction,
 	useAnimatedRef,
@@ -12,6 +10,7 @@ import {
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
+import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 import { useOriginContext } from "../../../../../../providers/screen/origin.provider";
 import { ScrollStore } from "../../../../../../stores/scroll.store";
 import { getVisibilityBlockOffset } from "../../../../../../utils/visibility-block-offset";
@@ -136,13 +135,13 @@ export const useHostMeasurement = ({
 				scroll: capturesScroll ? currentScroll : null,
 			});
 
-			runOnJS(setCanRenderHosts)(true);
+			scheduleOnRN(setCanRenderHosts, true);
 		},
 	);
 
 	useLayoutEffect(() => {
 		return () => {
-			runOnUI(clearPortalHostBounds)(hostKey);
+			scheduleOnUI(clearPortalHostBounds, hostKey);
 		};
 	}, [hostKey]);
 

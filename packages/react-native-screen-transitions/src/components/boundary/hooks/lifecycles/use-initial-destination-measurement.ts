@@ -1,12 +1,12 @@
 import { useCallback, useLayoutEffect } from "react";
 import {
 	cancelAnimation,
-	runOnUI,
 	useAnimatedReaction,
 	useSharedValue,
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
@@ -99,7 +99,7 @@ export const useInitialDestinationMeasurement = ({
 			return;
 		}
 
-		runOnUI(claimLifecycleStartBlock)();
+		scheduleOnUI(claimLifecycleStartBlock);
 
 		return () => {
 			if (escapeClipping) {
@@ -109,7 +109,7 @@ export const useInitialDestinationMeasurement = ({
 
 			// This is an abandonment fallback, not a second release. Run it on the UI
 			// runtime so it serializes with the handshake's guarded release.
-			runOnUI(releaseLifecycleStartBlock)();
+			scheduleOnUI(releaseLifecycleStartBlock);
 		};
 	}, [
 		claimLifecycleStartBlock,

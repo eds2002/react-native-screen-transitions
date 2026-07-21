@@ -1,10 +1,6 @@
 import { useCallback, useRef } from "react";
-import {
-	executeOnUIRuntimeSync,
-	runOnJS,
-	type SharedValue,
-	useAnimatedReaction,
-} from "react-native-reanimated";
+import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
+import { executeOnUIRuntimeSync, scheduleOnRN } from "react-native-worklets";
 import { IS_WEB } from "../../constants";
 
 export function readInitialValue<T>(sharedValue: SharedValue<T>): T {
@@ -35,7 +31,7 @@ export function useSharedValueRef<T>(
 		() => sharedValue.get(),
 		(value, previousValue) => {
 			if (Object.is(value, previousValue)) return;
-			runOnJS(updateRef)(value);
+			scheduleOnRN(updateRef, value);
 		},
 	);
 

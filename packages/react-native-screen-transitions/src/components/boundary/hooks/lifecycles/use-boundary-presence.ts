@@ -1,5 +1,5 @@
 import { useLayoutEffect } from "react";
-import { runOnUI } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import {
 	removeEntry,
 	setEntry,
@@ -28,14 +28,14 @@ export const useBoundaryPresence = (params: {
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUI(setEntry)(tag, currentScreenKey, {
+		scheduleOnUI(setEntry, tag, currentScreenKey, {
 			boundaryConfig,
 			handoff: handoff ? true : null,
 			escapeClipping: escapeClipping ? true : null,
 		});
 
 		return () => {
-			runOnUI(removeEntry)(tag, currentScreenKey);
+			scheduleOnUI(removeEntry, tag, currentScreenKey);
 		};
 	}, [enabled, tag, currentScreenKey, boundaryConfig, handoff, escapeClipping]);
 };

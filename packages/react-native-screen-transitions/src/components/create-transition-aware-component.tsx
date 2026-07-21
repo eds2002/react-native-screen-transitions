@@ -4,10 +4,10 @@ import { type ComponentType, forwardRef, memo } from "react";
 import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-	runOnUI,
 	useAnimatedRef,
 	useComposedEventHandler,
 } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import {
 	ScrollMetadataOwnerProvider,
@@ -144,7 +144,7 @@ export function createTransitionAwareComponent<P extends object>(
 						style={[style, associatedStyles]}
 						animatedProps={userAnimatedProps ?? associatedProps}
 						onPress={captureActiveOnPress}
-						onLayout={runOnUI(handleInitialLayout)}
+						onLayout={() => scheduleOnUI(handleInitialLayout)}
 						collapsable={!sharedBoundTag}
 					>
 						{children}
