@@ -126,6 +126,7 @@ export function RootNavigator() {
   component={DetailScreen}
   options={{
     navigationMaskEnabled: true,
+    transitionSpec: Transition.Specs.Zoom,
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
       return bounds("hero").navigation.zoom();

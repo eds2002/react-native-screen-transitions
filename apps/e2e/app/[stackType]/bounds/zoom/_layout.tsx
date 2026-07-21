@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
@@ -59,10 +58,7 @@ export default function NavigationZoomGroupTransitionsLayout() {
 					gestureReleaseVelocityScale: 1.6,
 					gestureProgressMode: "freeform",
 					screenStyleInterpolator: navigationZoomInterpolator,
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.FlingSpec,
-					},
+					transitionSpec: Transition.Specs.Zoom,
 				}}
 			/>
 		</StackNavigator>

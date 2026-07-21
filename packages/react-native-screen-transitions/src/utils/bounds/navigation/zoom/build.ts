@@ -27,6 +27,7 @@ import {
 	ZOOM_NAVIGATION_MASK_BORDER_RADIUS,
 } from "./mask";
 import {
+	getZoomContentAnchor,
 	getZoomContentTarget,
 	resolveZoomTrackingContentTarget,
 } from "./targets";
@@ -91,6 +92,11 @@ export function buildZoomStyles({
 		screenLayout,
 		link,
 	});
+	const zoomContentAnchor = getZoomContentAnchor({
+		explicitTarget: target,
+		screenLayout,
+		link,
+	});
 	const trackingContentTarget = resolveZoomTrackingContentTarget({
 		contentTarget: zoomContentTarget,
 		link,
@@ -149,7 +155,7 @@ export function buildZoomStyles({
 
 		const contentRaw = scopedBounds.values({
 			scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
-			anchor: target === "bound" ? "center" : ZOOM_SHARED_OPTIONS.anchor,
+			anchor: zoomContentAnchor,
 			method: "content",
 			target: zoomContentTarget,
 			progress: transitionProgress,
@@ -222,6 +228,7 @@ export function buildZoomStyles({
 						sourceBorderRadius,
 						expandedBorderRadius,
 						active,
+						anchor: zoomContentAnchor,
 					})
 				: {},
 		};
@@ -291,6 +298,7 @@ export function buildZoomStyles({
 		gestureScale: trackedGestureScale,
 		parentScale: unfocusedContentScale,
 		rotation: drag.rotation,
+		anchor: zoomContentAnchor,
 	});
 
 	return {

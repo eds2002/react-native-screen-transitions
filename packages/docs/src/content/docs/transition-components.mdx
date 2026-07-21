@@ -108,7 +108,6 @@ Use transition-aware scrollables inside sheets and other gesture-driven screens 
 
 - `styleId` for element targeting from `screenStyleInterpolator`
 - `sharedBoundTag` for legacy shared-bound flows
-- `remeasureOnFocus` when the element may need fresh bounds after returning to focus
 
 ## Boundary Components
 
@@ -223,20 +222,46 @@ Specs:
 - `Transition.Specs.DefaultSpec`
 - `Transition.Specs.DefaultSnapSpec`
 - `Transition.Specs.FlingSpec`
+- `Transition.Specs.Zoom` (paired open and close springs for `navigation.zoom()`)
 
 ```tsx
 <Stack.Screen
   name="Detail"
   component={DetailScreen}
   options={{
-    ...Transition.Presets.SlideFromBottom(),
-    transitionSpec: {
-      open: Transition.Specs.DefaultSpec,
-      close: Transition.Specs.FlingSpec,
+    transitionSpec: Transition.Specs.Zoom,
+    screenStyleInterpolator: ({ bounds }) => {
+      "worklet";
+      return bounds("hero").navigation.zoom();
     },
   }}
 />
 ```
+
+## Transition Start Blocking
+
+`blockTransition()` and `unblockTransition()` are named exports that hold a screen's pending lifecycle transition at its initial frame while the destination prepares work.
+
+```tsx
+import {
+  blockTransition,
+  unblockTransition,
+} from "react-native-screen-transitions";
+
+async function prepareForTransition(routeKey: string) {
+  blockTransition(routeKey);
+
+  try {
+    await prepareDestination();
+  } finally {
+    unblockTransition(routeKey);
+  }
+}
+```
+
+Blocking is reference-counted per route. Pair every call with one unblock for the same route. Passing a route key is the clearest option; when it is omitted, the most recently focused screen in navigation history is used.
+
+These functions affect when the animation starts. They do not reduce JavaScript work, move rendering to another thread, or improve actual runtime performance. Use them when delaying the visual transition produces a cleaner result than animating while the destination is still preparing.
 
 ## Hooks, Factories, and Helpers
 

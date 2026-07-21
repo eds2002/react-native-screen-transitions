@@ -101,7 +101,7 @@ export default function BoundsSyncIndex() {
 			edges={["top"]}
 		>
 			<ScreenHeader
-				title="Shared Element Sync"
+				title="Bounds API examples"
 				subtitle="Shared element transitions powered by bounds synchronization"
 			/>
 			<ScrollView contentContainerStyle={styles.content}>

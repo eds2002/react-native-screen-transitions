@@ -48,7 +48,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		// Strict per-member lookup - a fallback member's source rect would
 		// misplace this host's teleported content.
 		const link = getLink(host.pairKey, host.boundaryId);
-		if (!link?.source || !link.destination) {
+		if (!link?.source) {
 			return NO_STYLES;
 		}
 
@@ -95,7 +95,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	const contentFrameStyle = useAnimatedStyle(() => {
 		"worklet";
 		const link = getLink(host.pairKey, host.boundaryId);
-		if (!link?.source || !link.destination) {
+		if (!link?.source) {
 			return NO_STYLES;
 		}
 

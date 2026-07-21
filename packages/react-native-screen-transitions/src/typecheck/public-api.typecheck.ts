@@ -5,6 +5,7 @@ import type {
 } from "@react-navigation/native";
 import type { ComponentProps } from "react";
 import type { DerivedValue, SharedValue } from "react-native-reanimated";
+import type Transition from "..";
 import type {
 	BoundsMotion,
 	BoundsNavigationRevealStyle,
@@ -25,6 +26,7 @@ import type {
 	ScrollMetadataState,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
+	TransitionSpec,
 } from "..";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
@@ -92,6 +94,8 @@ const zoomOptions: BoundsNavigationZoomOptions = {
 	horizontalDragTranslation: [0.5, 1, 1.5],
 	verticalDragTranslation: [0, 0, 1],
 };
+declare const zoomTransitionSpec: typeof Transition.Specs.Zoom;
+const typedZoomTransitionSpec: TransitionSpec = zoomTransitionSpec;
 
 declare const interpolationProps: ScreenInterpolationProps;
 
@@ -456,6 +460,8 @@ const publicApiTypecheck = {
 	currentActiveGesture,
 	currentSnapIndex,
 	zoomOptions,
+	zoomTransitionSpec,
+	typedZoomTransitionSpec,
 	navigationMaskInterpolatedStyle,
 	nextNameOptions,
 	sharedGestureSensitivityOptions,

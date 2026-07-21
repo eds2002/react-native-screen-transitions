@@ -152,6 +152,34 @@ describe("resolveBoundaryPortalOwnership", () => {
 		});
 	});
 
+	it("keeps source-only escape portals on the current screen", () => {
+		const pairKey = createScreenPairKey("a", "b");
+		const signal = resolveBoundaryPortalOwnership({
+			boundaryId: "video",
+			currentScreenKey: "a",
+			handoff: false,
+			pairsState: {
+				[pairKey]: {
+					groups: {},
+					links: {
+						video: sourceOnlyLink({
+							sourceScreenKey: "a",
+							escapeClipping: true,
+						}),
+					},
+				},
+			},
+			sourcePairKey: pairKey,
+		});
+
+		expect(signal).toEqual({
+			hostScreenKey: "a",
+			ownerPairKey: pairKey,
+			ownerScreenKey: "a",
+			status: "complete",
+		});
+	});
+
 	it("keeps A as owner during A -> B handoff", () => {
 		const pairKey = createScreenPairKey("a", "b");
 		const signal = resolveBoundaryPortalOwnership({

@@ -63,7 +63,7 @@ export default function NavigationZoomGroupTransitionsIndex() {
 			edges={["top"]}
 		>
 			<ScreenHeader
-				title="Navigation Zoom Group Transitions"
+				title=".zoom()"
 				subtitle="bounds({ id, group }).navigation.zoom()"
 			/>
 

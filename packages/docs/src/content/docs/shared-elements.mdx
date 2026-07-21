@@ -71,6 +71,10 @@ This keeps the row as the interaction owner while limiting measurement to the ne
 
 Inside `screenStyleInterpolator`, call `bounds(id)` to scope the accessor to one boundary identity.
 
+<Note>
+  This accessor replaces the store-shaped bounds helpers from v3.8. The removal is source-breaking for callers of `getMeasured`, `getSnapshot`, `getLink`, `interpolateStyle`, `interpolateBounds`, or `BoundsLink.compute`. See [New in 3.9](/changelog/updating-to-3-9) for the full migration table.
+</Note>
+
 ```tsx
 screenStyleInterpolator: ({ bounds, progress, focused }) => {
   "worklet";
@@ -236,7 +240,13 @@ Use `escapeClipping` when a boundary needs to render outside local clipping or l
 </Transition.Boundary>
 ```
 
-`handoff` and `escapeClipping` use `react-native-teleport` under the hood, so apps that use either prop should install `react-native-teleport`.
+`handoff` and `escapeClipping` use `react-native-teleport` under the hood. Install the supported version when using either prop:
+
+```sh
+bun add react-native-teleport@1.1.10
+```
+
+The supported range is `>=1.1.0 <1.1.11`. Version `1.1.11` is not compatible with continuously animated boundary hosts.
 
 Test handed-off video on physical Android devices. A `SurfaceView` may not obey portal clipping or transforms, while a `TextureView` participates in normal view composition but can briefly flicker while its native surface moves between hosts. For Expo Video, `surfaceType="textureView"` is usually the correct choice when clipping and transforms matter.
 

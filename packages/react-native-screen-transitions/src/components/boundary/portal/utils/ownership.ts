@@ -196,7 +196,7 @@ export const resolveBoundaryPortalOwnership = ({
 	const linkKey = getLinkKeyFromTag(boundaryId);
 	const link = getPairLink(pairsState, sourcePairKey, linkKey);
 
-	if (link?.status !== "complete") {
+	if (!link?.source) {
 		return pendingSignal(sourcePairKey);
 	}
 
@@ -218,6 +218,10 @@ export const resolveBoundaryPortalOwnership = ({
 			ownerScreenKey: currentScreenKey,
 			status: "complete",
 		};
+	}
+
+	if (link.status !== "complete") {
+		return pendingSignal(sourcePairKey);
 	}
 
 	let hostScreenKey = link.destination.screenKey;

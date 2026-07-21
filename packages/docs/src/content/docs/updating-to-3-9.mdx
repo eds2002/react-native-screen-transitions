@@ -23,10 +23,12 @@ The main API changes are:
 - `handoff` moves a live boundary payload between matching boundaries.
 - `escapeClipping` lets a boundary render outside local clipping constraints while it transitions.
 - `navigation.zoom()` now owns its native-style opacity, drag, mask, pinch, and release behavior while exposing a smaller set of intensity controls.
+- `Transition.Specs.Zoom` provides the tuned open and close springs for navigation zoom transitions.
 - Pinch gestures now expose their fixed activation point as `pinchOriginX` and `pinchOriginY`.
 - `contentComponent` adds a custom renderer for the screen content layer.
 - `backdropComponent` can now receive render props: `{ styles, props, pointerEvents }`.
 - `surfaceComponent` is deprecated in favor of `contentComponent`.
+- `blockTransition()` and `unblockTransition()` can hold a pending transition until the destination is ready to animate.
 
 ## Layer Components
 
@@ -65,6 +67,29 @@ options={{
 This replaces the older backdrop shape that split animated props and visual styles across multiple view layers.
 
 `surfaceComponent` still works for compatibility, but it is deprecated. New code should move custom screen shells to `contentComponent`.
+
+## Delaying transition start
+
+`blockTransition()` and `unblockTransition()` are named exports for coordinating a transition with destination-screen work.
+
+```tsx
+import {
+  blockTransition,
+  unblockTransition,
+} from "react-native-screen-transitions";
+
+blockTransition(route.key);
+
+try {
+  await prepareDestination();
+} finally {
+  unblockTransition(route.key);
+}
+```
+
+Calls are reference-counted. Every `blockTransition()` call must be paired with one `unblockTransition()` call for the same route, so release the block in `finally` when the work can fail. When the route key is omitted, both functions use the most recently focused screen in navigation history.
+
+This is visual coordination, not a performance optimization. It does not reduce rendering work or move that work off the JavaScript thread. It keeps a pending transition at its initial frame until the app is ready to show it.
 
 ## Boundary API
 
@@ -170,10 +195,10 @@ Use `handoff` and `escapeClipping` together when both behaviors are needed:
 `handoff` and `escapeClipping` use `react-native-teleport` under the hood. If you use either prop, install the optional peer dependency:
 
 ```sh
-bun add react-native-teleport
+bun add react-native-teleport@1.1.10
 ```
 
-The supported range is `>=1.1.0 <2.0.0`.
+The supported range is `>=1.1.0 <1.1.11`. Version `1.1.11` is excluded because its host-size synchronization can trail continuously animated boundary hosts. Pin `1.1.10` when using either feature.
 
 ## Better Retargeting
 
@@ -211,6 +236,18 @@ return bounds(id).navigation.zoom({
 
 `drag.translation` and `drag.scale` accept horizontal and vertical response multipliers. `0` disables a response on that axis, `1` preserves the preset, and values above `1` exaggerate it.
 
+Use the new paired spec alongside the zoom helper so both opening and closing use the tuned timing:
+
+```tsx
+options={{
+  transitionSpec: Transition.Specs.Zoom,
+  screenStyleInterpolator: ({ bounds }) => {
+    "worklet";
+    return bounds(id).navigation.zoom();
+  },
+}}
+```
+
 When no target is provided, zoom expands into a full-width rectangle that preserves the source aspect ratio. `target: "bound"` stays opt-in and waits for the matching destination measurement instead of temporarily falling back to fullscreen.
 
 Zoom now also tracks the initial pinch focal point while scale and rotation change. Custom interpolators can read the same fixed screen-coordinate pivot from `gesture.pinchOriginX` and `gesture.pinchOriginY`, including through `gesture.handoff`.
@@ -239,6 +276,25 @@ If you added guards, delays, manual refreshes, or other workarounds to avoid unw
 ## Scoped Bounds API
 
 `bounds()` now scopes to one identity first. From there, choose the output you need.
+
+### Breaking change from v3.8
+
+The scoped accessor is a source-breaking change for code that uses the v3.8 bounds helpers.
+
+The old accessor mixed three jobs: reading arbitrary entries from the bounds registry, interpolating the active source and destination, and producing render styles. That made it possible to read measurements from one screen key while rendering a different transition pair. v3.9 resolves one boundary identity against the active navigation pair instead, so the store-shaped helpers were removed rather than kept as aliases with different semantics.
+
+| v3.8 API | v3.9 replacement |
+| --- | --- |
+| `bounds({ id, group, ...options })` | `bounds({ id, group }).styles(options)` |
+| `bounds.getLink(id)` or `bounds({ id, group }).getLink()` | `bounds({ id, group }).link()` |
+| `BoundsLink.compute(options)` | Scope the identity again, then call `bounds({ id, group }).styles(options)` for render styles or `.values(options)` for generated numeric geometry |
+| `interpolateBounds(...)` | For generated geometry, use `.values(options)`. To preserve scalar-property behavior, read `link().source` and `link().destination`, then interpolate their `bounds` values manually. |
+| `interpolateStyle(...)` | For generated render styles, use `.styles(options)`. To preserve scalar-property behavior, read the active link and interpolate its numeric `styles` values manually. |
+| `getMeasured(...)` or `getSnapshot(...)` | Use `bounds({ id, group }).link()` and inspect the active link's `source` or `destination` entry |
+
+For an ungrouped boundary, the shorter `bounds(id)` form is equivalent. Keep `{ id, group }` together when migrating grouped boundaries. `styles()` and `values()` generate transition geometry; they are not direct scalar replacements for every property accepted by the old interpolation helpers.
+
+The old screen-key overloads—`getMeasured(..., key)`, `getSnapshot(..., key)`, and `interpolateBounds(..., targetKey)`—have no direct replacement. Use matching boundary `id` and `group` values so the accessor resolves against the active screen pair.
 
 ```tsx
 screenStyleInterpolator: ({ bounds }) => {
@@ -364,7 +420,7 @@ For `method: "size"`, the returned scale is applied to the generated width and h
 - Prefer `Transition.Boundary` over `Transition.Boundary.View` and `Transition.Boundary.Trigger`.
 - Use `handoff` on every matching boundary that should send or receive a live payload.
 - Use `escapeClipping` when a boundary needs to render outside local clipping constraints during a transition.
-- Install `react-native-teleport` if you use `handoff` or `escapeClipping`.
+- Install `react-native-teleport@1.1.10` if you use `handoff` or `escapeClipping`.
 - Replace `bounds({ id, ...options })` style output with `bounds(id).styles(options)`.
 - Replace raw numeric bounds usage with `bounds(id).values(options)`.
 - Replace earlier beta `bounds(id).math(options)` usage with `bounds(id).values(options)`. `math()` remains as a deprecated alias.

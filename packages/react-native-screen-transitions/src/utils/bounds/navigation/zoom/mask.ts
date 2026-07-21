@@ -9,6 +9,7 @@ import type {
 	BoundsScopedAccessor,
 } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
+import type { BoundsAnchor } from "../../types/options";
 import { toNumber } from "../helpers";
 import { DRAG_MASK_HEIGHT_COLLAPSE_END } from "../reveal/config";
 import {
@@ -36,6 +37,7 @@ interface ZoomNavigationMaskStyleProps {
 	sourceBorderRadius: number;
 	expandedBorderRadius: number;
 	active: ScreenTransitionState;
+	anchor: BoundsAnchor;
 }
 
 export function resolveZoomNavigationMaskStyle({
@@ -49,12 +51,13 @@ export function resolveZoomNavigationMaskStyle({
 	sourceBorderRadius,
 	expandedBorderRadius,
 	active,
+	anchor,
 }: ZoomNavigationMaskStyleProps): TransitionSlotStyle {
 	"worklet";
 
 	const maskRaw = scopedBounds.values({
 		scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
-		anchor: ZOOM_SHARED_OPTIONS.anchor,
+		anchor,
 		method: "size",
 		space: "absolute",
 		target: "fullscreen",

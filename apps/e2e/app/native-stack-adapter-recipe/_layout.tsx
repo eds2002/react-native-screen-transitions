@@ -18,7 +18,11 @@ const imageDetailInterpolator: ScreenTransitionConfig["screenStyleInterpolator"]
 			backdrop: focused
 				? {
 						backgroundColor: "black",
-						opacity: interpolate(active.transitionProgress, [0, 1, 2], [0, 0.62, 0]),
+						opacity: interpolate(
+							active.transitionProgress,
+							[0, 1, 2],
+							[0, 0.62, 0],
+						),
 					}
 				: undefined,
 		};
@@ -50,10 +54,7 @@ export default function NativeStackAdapterRecipeLayout() {
 					gestureEnabled: true,
 					gestureDirection: "bidirectional",
 					screenStyleInterpolator: imageDetailInterpolator,
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.FlingSpec,
-					},
+					transitionSpec: Transition.Specs.Zoom,
 				}}
 			/>
 		</NativeStackAdapter>
