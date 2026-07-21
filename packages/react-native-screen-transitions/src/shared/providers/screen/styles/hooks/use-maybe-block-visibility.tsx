@@ -14,24 +14,14 @@ import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { height } = useWindowDimensions();
 	const { currentScreenKey } = useDescriptorDerivations();
-	const { entering, transitionProgress } =
+	const { closing, entering, progressAnimating, transitionProgress } =
 		AnimationStore.getBag(currentScreenKey);
-
 	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =
 		SystemStore.getBag(currentScreenKey);
 
 	const hasVisibilityGateOpened = useSharedValue(false);
 	const shouldBlockVisibility = useSharedValue(!isFloatingOverlay);
 
-	/**
-	 * Visibility has to start blocked before the first animated style pass.
-	 *
-	 * `useDerivedValue` can publish its computed value after `useAnimatedStyle`
-	 * has already read the initial one, which briefly exposes an unhydrated
-	 * screen. Keep the visible state in an eagerly initialized shared value, then
-	 * let the reaction open it once the visibility gate allows the first
-	 * transformed frame to render.
-	 */
 	useAnimatedReaction(
 		() => {
 			"worklet";
@@ -58,14 +48,20 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
-		/**
-		 * Keep blocked screens physically offscreen. On physical devices,
-		 * opacity: 0 can break Liquid Glass sampling.
-		 *
-		 * See: https://github.com/expo/expo/issues/41024
-		 *
-		 */
 		const offset = getVisibilityBlockOffset(height);
+		// Keep opacity out of normal rendering so effects such as Liquid Glass
+		// retain native compositing. Once closing has fully finished, hiding the
+		// outgoing screen lets the handoff settle before React removes its host.
+		const shouldHideClosedScreen =
+			closing.get() === 1 &&
+			transitionProgress.get() <= 0 &&
+			progressAnimating.get() === 0;
+
+		if (shouldHideClosedScreen) {
+			return {
+				opacity: 0,
+			};
+		}
 
 		return {
 			transform: [
@@ -88,5 +84,6 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	return {
 		animatedStyle,
 		animatedProps,
+		shouldBlockVisibility,
 	};
 };

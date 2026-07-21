@@ -126,7 +126,10 @@ export default function StyleIdBoundsDetail() {
 							color={theme.actionButtonText}
 						/>
 						<Text
-							style={[styles.actionPrimaryText, { color: theme.actionButtonText }]}
+							style={[
+								styles.actionPrimaryText,
+								{ color: theme.actionButtonText },
+							]}
 						>
 							Add pin
 						</Text>
@@ -157,9 +160,7 @@ export default function StyleIdBoundsDetail() {
 					</Pressable>
 				</View>
 
-				<View
-					style={[styles.divider, { backgroundColor: theme.separator }]}
-				/>
+				<View style={[styles.divider, { backgroundColor: theme.separator }]} />
 
 				<View style={styles.block}>
 					<Text style={[styles.kicker, { color: theme.textTertiary }]}>

@@ -1,12 +1,11 @@
 import { memo, useCallback } from "react";
 import { StyleSheet, View, type ViewProps } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated from "react-native-reanimated";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
-	NO_STYLES,
 } from "../../../constants";
-import { useScreenStyles } from "../../../providers/screen/styles";
+import { useSlotStyles } from "../../../providers/screen/styles";
 import { logger } from "../../../utils/logger";
 
 type Props = {
@@ -47,8 +46,6 @@ const MaskedNavigationContainer = memo(
 		children: React.ReactNode;
 		pointerEvents: ViewProps["pointerEvents"];
 	}) => {
-		const { stylesMap } = useScreenStyles();
-
 		const maybeLogWarning = useCallback(() => {
 			if (LazyMaskedView !== View) return;
 			if (hasWarnedMissingMaskedView) return;
@@ -59,19 +56,12 @@ const MaskedNavigationContainer = memo(
 			);
 		}, []);
 
-		const animatedNavigationMaskStyle = useAnimatedStyle(() => {
-			"worklet";
-			return (
-				stylesMap.get()[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style || NO_STYLES
-			);
-		});
-
-		const animatedNavigationMaskContainerStyle = useAnimatedStyle(() => {
-			"worklet";
-			return (
-				stylesMap.get()[NAVIGATION_MASK_CONTAINER_STYLE_ID]?.style || NO_STYLES
-			);
-		});
+		const animatedNavigationMaskStyle = useSlotStyles(
+			NAVIGATION_MASK_ELEMENT_STYLE_ID,
+		);
+		const animatedNavigationMaskContainerStyle = useSlotStyles(
+			NAVIGATION_MASK_CONTAINER_STYLE_ID,
+		);
 
 		return (
 			<LazyMaskedView

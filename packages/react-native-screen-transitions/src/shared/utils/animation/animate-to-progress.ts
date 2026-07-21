@@ -113,14 +113,30 @@ export const animateToProgress = ({
 					entering.set(FALSE);
 				}
 
-				if (onAnimationFinish) {
-					runOnJS(onAnimationFinish)(state.finished);
-				}
-
-				// Delay clearing progress animation by one frame to ensure final frame is painted
-				requestAnimationFrame(() => {
+				if (isClosing) {
 					progressAnimating.set(FALSE);
-				});
+
+					if (onAnimationFinish) {
+						// Paint the terminal UI-thread host/style state before React
+						// removes the closing route and its native portal host.
+						requestAnimationFrame(() => {
+							"worklet";
+							requestAnimationFrame(() => {
+								"worklet";
+								runOnJS(onAnimationFinish)(state.finished);
+							});
+						});
+					}
+				} else {
+					if (onAnimationFinish) {
+						runOnJS(onAnimationFinish)(state.finished);
+					}
+
+					// Delay clearing progress animation by one frame to ensure final frame is painted
+					requestAnimationFrame(() => {
+						progressAnimating.set(FALSE);
+					});
+				}
 			}),
 		);
 	};

@@ -11,6 +11,7 @@ import type { BaseStackRoute } from "../../../../../types/stack.types";
 export type BuiltState = {
 	transitionProgress: SharedValue<number>;
 	visualProgress: SharedValue<number>;
+	stackProgress: SharedValue<number>;
 	willAnimate: SharedValue<number>;
 	closing: SharedValue<number>;
 	progressAnimating: SharedValue<number>;

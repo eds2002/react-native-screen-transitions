@@ -11,6 +11,7 @@ import type {
 	ResettableStyleStatesBySlot,
 } from "./types";
 
+export { areResettableStatesBySlotEqual } from "./are-resettable-states-equal";
 export type { LocalStyleLayers, ResettableStyleStatesBySlot } from "./types";
 
 type ResolveSlotStylesContext = {
@@ -34,17 +35,17 @@ const getForwardedSlot = (
 	return slot;
 };
 
+const hasDefinedBucketValue = (value: unknown) => {
+	"worklet";
+	return value !== undefined && value !== null;
+};
+
 const hasEitherResetPatch = (
 	hasStyleResetPatch: boolean,
 	hasPropResetPatch: boolean,
 ) => {
 	"worklet";
 	return hasStyleResetPatch || hasPropResetPatch;
-};
-
-const hasDefinedBucketValue = (value: unknown) => {
-	"worklet";
-	return value !== undefined && value !== null;
 };
 
 const hasResettableDisappearedKeys = (
@@ -80,7 +81,6 @@ const getResolvedSlotOutput = ({
 }) => {
 	"worklet";
 	const state = getResolvedSlotState(slot);
-
 	const hasStyleResetPatch = hasResettableDisappearedKeys(
 		previousState?.styleKeys,
 		previousState?.styleResetValues,
@@ -107,6 +107,7 @@ const getResolvedSlotOutput = ({
 		resolvedSlot: materializeResolvedSlot({
 			baseStyle: state.baseStyle,
 			baseProps: state.baseProps,
+			boundsLocalTransform: slot?.boundsLocalTransform,
 			previousState,
 			styleKeys: state.styleKeys,
 			propKeys: state.propKeys,
@@ -164,6 +165,9 @@ const getMergedLocalSlot = (
 	"worklet";
 	let mergedStyle: Record<string, unknown> | undefined;
 	let mergedProps: Record<string, unknown> | undefined;
+	let boundsLocalTransform:
+		| NormalizedTransitionSlotStyle["boundsLocalTransform"]
+		| undefined;
 
 	for (let index = 0; index < context.localStylesMaps.length; index++) {
 		const slot = context.localStylesMaps[index]?.[slotId];
@@ -177,15 +181,19 @@ const getMergedLocalSlot = (
 			slot.style as Record<string, unknown> | undefined,
 		);
 		mergedProps = mergeBucket(mergedProps, slot.props);
+		if (slot.boundsLocalTransform?.length) {
+			boundsLocalTransform = slot.boundsLocalTransform;
+		}
 	}
 
-	if (!mergedStyle && !mergedProps) {
+	if (!mergedStyle && !mergedProps && !boundsLocalTransform) {
 		return undefined;
 	}
 
 	return {
 		style: mergedStyle,
 		props: mergedProps,
+		boundsLocalTransform,
 	};
 };
 
@@ -343,7 +351,11 @@ const areSlotsEqual = (
 
 	return (
 		areFlatObjectsEqual(left.style, right.style) &&
-		areFlatObjectsEqual(left.props, right.props)
+		areFlatObjectsEqual(left.props, right.props) &&
+		areTransformArraysEqual(
+			left.boundsLocalTransform,
+			right.boundsLocalTransform,
+		)
 	);
 };
 
@@ -458,10 +470,9 @@ const appendPreviousSlots = (context: ResolveSlotStylesContext) => {
 };
 
 /**
- * Resolves slot styles for the current screen pass and resets keys a slot
- * emitted previously but no longer returns. Reanimated does not reliably clear
- * animated values with undefined, so known keys and numeric values are reset to
- * concrete identity values.
+ * Resolves slot styles for the current screen pass and emits reset values for
+ * transition-owned keys that existed in the previous resolved map but no longer
+ * exist in the current one.
  */
 export const resolveSlotStyles = ({
 	localStylesMaps,

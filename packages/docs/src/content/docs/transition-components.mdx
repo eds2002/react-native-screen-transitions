@@ -108,49 +108,44 @@ Use transition-aware scrollables inside sheets and other gesture-driven screens 
 
 - `styleId` for element targeting from `screenStyleInterpolator`
 - `sharedBoundTag` for legacy shared-bound flows
-- `remeasureOnFocus` when the element may need fresh bounds after returning to focus
 
 ## Boundary Components
 
 `Transition.Boundary` is the compound API for bounds-driven transitions.
 
-- `Transition.Boundary.View`
-- `Transition.Boundary.Trigger`
+- `Transition.Boundary`
 - `Transition.Boundary.Target`
+- `Transition.Boundary.Host`
 
-### Transition.Boundary.View
+### Transition.Boundary
 
-This is the passive boundary wrapper for geometry registration.
+Use this for both pressable and passive boundary registration.
+
+When `onPress` is present, it renders as a pressable boundary. When `onPress` is omitted, it renders as a passive view boundary.
 
 ```tsx
-<Transition.Boundary.View id="hero">
+// Passive boundary
+<Transition.Boundary id="hero">
   <Image source={heroImage} style={styles.hero} />
-</Transition.Boundary.View>
-```
+</Transition.Boundary>
 
-Use this most often on the destination side, or on the lower-level source side when you need registration without capturing from a press.
-
-### Transition.Boundary.Trigger
-
-This pressable boundary wrapper captures source geometry before `onPress`.
-
-```tsx
-<Transition.Boundary.Trigger
+// Pressable boundary
+<Transition.Boundary
   id="hero"
   onPress={() => navigation.navigate("Detail")}
 >
   <Image source={heroImage} style={styles.hero} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
-This is the default recommendation for navigation-driven source boundaries.
+This is the default recommendation for new code.
 
 ### Transition.Boundary.Target
 
 Use this when the measured element is nested inside the owner.
 
 ```tsx
-<Transition.Boundary.Trigger id={item.id} onPress={openItem} style={styles.row}>
+<Transition.Boundary id={item.id} onPress={openItem} style={styles.row}>
   <Transition.Boundary.Target style={styles.artTarget}>
     <Image source={item.image} style={styles.artwork} />
   </Transition.Boundary.Target>
@@ -158,14 +153,42 @@ Use this when the measured element is nested inside the owner.
   <View style={styles.copy}>
     <Text>{item.title}</Text>
   </View>
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
 It does not take its own `id`. It inherits the surrounding boundary owner and changes which descendant gets measured.
 
+### Transition.Boundary.Host
+
+Use this to make handoff or clipping-escape placement explicit inside a scrollable or otherwise constrained coordinate space.
+
+```tsx
+<Transition.ScrollView>
+  <Transition.Boundary.Host />
+
+  <Transition.Boundary id="card" escapeClipping onPress={openCard}>
+    <Image source={image} style={styles.card} />
+  </Transition.Boundary>
+</Transition.ScrollView>
+```
+
+Most flows do not need an explicit host. Add one when `escapeClipping` or `handoff` content should be placed inside a specific local coordinate space.
+
+### Deprecated Aliases
+
+`Transition.Boundary.View` and `Transition.Boundary.Trigger` are still exported for compatibility.
+
+```tsx
+// Deprecated. Use Transition.Boundary without onPress.
+<Transition.Boundary.View id="hero" />
+
+// Deprecated. Use Transition.Boundary with onPress.
+<Transition.Boundary.Trigger id="hero" onPress={openDetail} />
+```
+
 ### Boundary Config Props
 
-`Transition.Boundary.View` and `Transition.Boundary.Trigger` share the same core config:
+`Transition.Boundary`, deprecated boundary aliases, and components created with `createBoundaryComponent()` share the same boundary config:
 
 - `id`
 - `group`
@@ -174,8 +197,10 @@ It does not take its own `id`. It inherits the surrounding boundary owner and ch
 - `target`
 - `method`
 - `enabled`
+- `handoff`
+- `escapeClipping`
 
-They keep the wrapped component props as well. `Trigger` also accepts `onPress`.
+They keep the wrapped component props as well. The root `Transition.Boundary` accepts `onPress` for pressable usage.
 
 ## Presets and Specs
 
@@ -197,20 +222,46 @@ Specs:
 - `Transition.Specs.DefaultSpec`
 - `Transition.Specs.DefaultSnapSpec`
 - `Transition.Specs.FlingSpec`
+- `Transition.Specs.Zoom` (paired open and close springs for `navigation.zoom()`)
 
 ```tsx
 <Stack.Screen
   name="Detail"
   component={DetailScreen}
   options={{
-    ...Transition.Presets.SlideFromBottom(),
-    transitionSpec: {
-      open: Transition.Specs.DefaultSpec,
-      close: Transition.Specs.FlingSpec,
+    transitionSpec: Transition.Specs.Zoom,
+    screenStyleInterpolator: ({ bounds }) => {
+      "worklet";
+      return bounds("hero").navigation.zoom();
     },
   }}
 />
 ```
+
+## Transition Start Blocking
+
+`blockTransition()` and `unblockTransition()` are named exports that hold a screen's pending lifecycle transition at its initial frame while the destination prepares work.
+
+```tsx
+import {
+  blockTransition,
+  unblockTransition,
+} from "react-native-screen-transitions";
+
+async function prepareForTransition(routeKey: string) {
+  blockTransition(routeKey);
+
+  try {
+    await prepareDestination();
+  } finally {
+    unblockTransition(routeKey);
+  }
+}
+```
+
+Blocking is reference-counted per route. Pair every call with one unblock for the same route. Passing a route key is the clearest option; when it is omitted, the most recently focused screen in navigation history is used.
+
+These functions affect when the animation starts. They do not reduce JavaScript work, move rendering to another thread, or improve actual runtime performance. Use them when delaying the visual transition produces a cleaner result than animating while the destination is still preparing.
 
 ## Hooks, Factories, and Helpers
 
@@ -225,7 +276,7 @@ See [API](/api) for `useScreenAnimation()`, `useScreenGesture()`, `useHistory()`
 New work should prefer:
 
 - screen options on one of the stack creators
-- `Transition.Boundary.*`
+- `Transition.Boundary`
 - `navigationMaskEnabled`
 - `styleId` targets and layer slots
 

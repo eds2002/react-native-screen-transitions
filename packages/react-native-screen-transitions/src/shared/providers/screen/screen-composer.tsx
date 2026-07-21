@@ -5,7 +5,7 @@ import { ScreenAnimationProvider } from "./animation";
 import { type BaseDescriptor, DescriptorsProvider } from "./descriptors";
 import { ScreenGestureProvider } from "./gestures";
 import { ScreenOptionsProvider } from "./options";
-import { ScreenStylesProvider } from "./styles";
+import { ScreenSlotProvider } from "./styles";
 
 type Props<TDescriptor extends BaseDescriptor> = {
 	previous?: TDescriptor;
@@ -26,9 +26,9 @@ export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 				<ScreenOptionsProvider>
 					<ScreenGestureProvider>
 						<ScreenAnimationProvider>
-							<ScreenStylesProvider>
+							<ScreenSlotProvider>
 								<ScreenContainer>{children}</ScreenContainer>
-							</ScreenStylesProvider>
+							</ScreenSlotProvider>
 						</ScreenAnimationProvider>
 					</ScreenGestureProvider>
 				</ScreenOptionsProvider>

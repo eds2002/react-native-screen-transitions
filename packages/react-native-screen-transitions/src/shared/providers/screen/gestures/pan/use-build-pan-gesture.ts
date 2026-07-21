@@ -50,6 +50,7 @@ export const useBuildPanGesture = ({
 		screenOptions,
 		dimensions,
 		gestureCompositionOwner,
+		activation.pendingDirection,
 	);
 
 	const panGesture = useMemo(() => {

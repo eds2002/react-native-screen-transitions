@@ -5,6 +5,8 @@ import {
 	FULLSCREEN_DIMENSIONS,
 	NO_STYLES,
 } from "../../../../constants";
+import { createScreenPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import { requestSourceMeasure } from "../../../../stores/bounds/internals/links";
 import { resolveTransitionPair } from "../../../../stores/bounds/internals/resolver";
 import type { ResolvedTransitionPair } from "../../../../stores/bounds/types";
 import type { ScreenTransitionState } from "../../../../types/animation.types";
@@ -26,6 +28,7 @@ import {
 	composeTransformRelative,
 	type ElementComposeParams,
 } from "./composers";
+import { attachBoundsLocalTransform } from "./local-transform";
 
 const resolveStartEnd = (params: {
 	id: BoundId;
@@ -49,6 +52,12 @@ const resolveStartEnd = (params: {
 	const currentScreenKey = params.current?.route.key;
 	const previousScreenKey = params.previous?.route.key;
 	const nextScreenKey = params.next?.route.key;
+	const sourceMeasurePairKey =
+		entering && previousScreenKey && currentScreenKey
+			? createScreenPairKey(previousScreenKey, currentScreenKey)
+			: !entering && currentScreenKey && nextScreenKey
+				? createScreenPairKey(currentScreenKey, nextScreenKey)
+				: null;
 
 	const resolvedPair =
 		params.resolvedPair ??
@@ -63,6 +72,10 @@ const resolveStartEnd = (params: {
 	const destinationBounds = resolvedPair.destinationBounds;
 
 	if (!sourceBounds) {
+		if (hasTargetOverride && sourceMeasurePairKey) {
+			requestSourceMeasure(sourceMeasurePairKey, String(params.id));
+		}
+
 		return {
 			start: null,
 			end: null,
@@ -111,7 +124,15 @@ const resolveStartEnd = (params: {
 };
 
 export const computeBoundStyles = (
-	{ id, previous, current, next, progress, dimensions }: BoundsComputeParams,
+	{
+		id,
+		previous,
+		current,
+		next,
+		progress,
+		dimensions,
+		interpolationProps,
+	}: BoundsComputeParams,
 	computeOptions: BoundsOptions = { id: "bound-id" },
 	resolvedPair?: ResolvedTransitionPair,
 ) => {
@@ -167,6 +188,7 @@ export const computeBoundStyles = (
 			end: contentEnd,
 			geometry,
 			computeOptions,
+			interpolationProps,
 		});
 	}
 
@@ -185,16 +207,24 @@ export const computeBoundStyles = (
 		ranges,
 		geometry,
 		computeOptions,
+		interpolationProps,
 	};
 
 	const isSize = computeOptions.method === "size";
 	const isAbsolute = computeOptions.space === "absolute";
 
-	return isSize
+	const style = isSize
 		? isAbsolute
 			? composeSizeAbsolute(common)
 			: composeSizeRelative(common)
 		: isAbsolute
 			? composeTransformAbsolute(common)
 			: composeTransformRelative(common);
+
+	return attachBoundsLocalTransform(
+		style,
+		entering
+			? (resolvedPair?.destinationStyles ?? null)
+			: (resolvedPair?.sourceStyles ?? null),
+	);
 };

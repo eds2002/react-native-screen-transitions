@@ -6,6 +6,7 @@ import type {
 import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { GestureStore } from "../../../../../stores/gesture.store";
 import { GestureActivationState } from "../../../../../types/gesture.types";
+import type { Direction } from "../../../../../types/ownership.types";
 import { useDescriptorDerivations } from "../../../descriptors";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePanRuntime } from "../../shared/runtime";
@@ -47,6 +48,7 @@ export const usePanActivation = ({
 	const gestureActivationState = useSharedValue<GestureActivationState>(
 		GestureActivationState.PENDING,
 	);
+	const pendingDirection = useSharedValue<Direction | null>(null);
 
 	const onTouchesDown = useCallback(
 		(
@@ -61,6 +63,7 @@ export const usePanActivation = ({
 
 			if (!participation.canTrackGesture) {
 				gestureActivationState.set(GestureActivationState.FAILED);
+				pendingDirection.set(null);
 				stateManager?.fail();
 				return;
 			}
@@ -68,8 +71,15 @@ export const usePanActivation = ({
 			const firstTouch = event.changedTouches[0];
 			initialTouch.set({ x: firstTouch.x, y: firstTouch.y });
 			gestureActivationState.set(GestureActivationState.PENDING);
+			pendingDirection.set(null);
 		},
-		[gestureActivationState, initialTouch, runtime, screenOptions],
+		[
+			gestureActivationState,
+			initialTouch,
+			pendingDirection,
+			runtime,
+			screenOptions,
+		],
 	);
 
 	const onTouchesMove = useCallback(
@@ -110,6 +120,7 @@ export const usePanActivation = ({
 			}
 
 			if (decision.action === "fail") {
+				pendingDirection.set(null);
 				stateManager.fail();
 				return;
 			}
@@ -119,12 +130,9 @@ export const usePanActivation = ({
 			}
 
 			if (decision.direction) {
-				const { gestures } = resolvedRuntime.stores;
-				gestures.active.set(decision.direction);
-				gestures.direction.set(decision.direction);
+				pendingDirection.set(decision.direction);
 			}
 
-			gestureCompositionOwner.set("pan");
 			stateManager.activate();
 		},
 		[
@@ -134,6 +142,7 @@ export const usePanActivation = ({
 			dimensions,
 			gestureActivationState,
 			initialTouch,
+			pendingDirection,
 			runtime,
 			screenOptions,
 			scrollState,
@@ -142,7 +151,7 @@ export const usePanActivation = ({
 	);
 
 	return useMemo(
-		() => ({ onTouchesDown, onTouchesMove }),
-		[onTouchesDown, onTouchesMove],
+		() => ({ onTouchesDown, onTouchesMove, pendingDirection }),
+		[onTouchesDown, onTouchesMove, pendingDirection],
 	);
 };

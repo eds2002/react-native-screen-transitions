@@ -332,7 +332,49 @@ Controls how taps on the backdrop are handled.
 
 ### `backdropComponent`
 
-Custom backdrop component type. Pass a stable component such as `BlurView` or `MyBackdrop`.
+Custom backdrop component type. Pass a stable component such as `BlurView`, or pass a function component that renders `{ styles, props, pointerEvents }`.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>React.ComponentType&lt;any&gt; | ScreenBackdropComponent</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `contentComponent`
+
+Custom renderer for the screen content layer. Use it when a screen needs a custom shell that receives the `content` slot's animated styles, animated props, pointer events, and children.
+
+<table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
+  <thead>
+    <tr>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">type</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">default</th>
+      <th className="border-b border-black/10 px-4 py-3 font-medium text-[#111a16] dark:border-white/14 dark:text-[#eef4f1]">required</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>React.ComponentType&lt;any&gt; | ScreenContentComponent</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400"><code>undefined</code></td>
+      <td className="px-4 py-3 text-neutral-600 dark:text-neutral-400">No</td>
+    </tr>
+  </tbody>
+</table>
+
+### `surfaceComponent`
+
+Deprecated custom surface wrapper. It still works for compatibility, but new custom shells should use `contentComponent`.
 
 <table className="mt-4 w-full max-w-[46rem] table-fixed border-separate border-spacing-0 overflow-hidden rounded-3xl border border-black/10 text-left text-sm dark:border-white/14">
   <thead>
@@ -698,6 +740,7 @@ Useful values include:
 - `normX`, `normY`
 - `scale`, `normScale`
 - `focalX`, `focalY`
+- `pinchOriginX`, `pinchOriginY`
 - `rotation`
 - `velocity`
 - `raw`
@@ -709,6 +752,8 @@ Useful values include:
 - `direction` (deprecated pan-only alias)
 
 Live gesture values reset after release. If a dismiss animation needs the last release-time values while the live fields reset, read `current.gesture.handoff`.
+
+`focalX` and `focalY` are live screen coordinates and can move with the fingers. `pinchOriginX` and `pinchOriginY` capture the screen-coordinate focal point at activation, which is usually the correct pivot for stable pinch-and-rotate transforms.
 
 ## Hook Targeting
 

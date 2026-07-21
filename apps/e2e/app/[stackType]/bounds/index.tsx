@@ -8,33 +8,27 @@ import { ListScreen } from "@/components/ui";
 const BOUNDS_EXAMPLES = [
 	{
 		id: "style-id",
-		title: "Custom Bounds Mask",
+		title: ".reveal()",
 		description:
 			"Custom bounds styles for the navigation mask and content container",
 	},
 	{
 		id: "zoom",
-		title: "Navigation Zoom Group Transitions",
+		title: ".zoom()",
 		description:
 			"bounds({ id, group }).navigation.zoom() with grouped source/destination",
 	},
 	{
-		id: "zoom-id",
-		title: "Navigation Zoom ID Transition",
-		description:
-			"bounds({ id }).navigation.zoom() with simple id-only matching",
-	},
-	{
 		id: "sync",
-		title: "Shared Element Sync",
+		title: "Bounds API examples",
 		description:
 			"Shared element cases for bounds, anchors, scale modes, and targets",
 	},
 	{
-		id: "transition-scope",
-		title: "Nested Bounds",
+		id: "matched-screen",
+		title: "Handoff portals",
 		description:
-			"Nested parent and child stacks computing their own bounds handoff",
+			"One video teleported to the matched screen while the destination slides",
 	},
 ];
 

@@ -1,5 +1,8 @@
 import { getEntry } from "../../../stores/bounds/internals/entries";
-import { setActiveGroupId } from "../../../stores/bounds/internals/links";
+import {
+	getActiveGroupId,
+	setActiveGroupId,
+} from "../../../stores/bounds/internals/links";
 import type { ResolvedTransitionPair } from "../../../stores/bounds/types";
 import type { BoundsInterpolationProps } from "../../../types/bounds.types";
 import { DEFAULT_BOUNDS_OPTIONS } from "../constants";
@@ -18,7 +21,6 @@ type ComputeResolvedBoundsStylesParams<T extends BoundsOptions> = {
 	props: BaseInterpolatorProps;
 	options: T;
 	resolvedPair?: ResolvedTransitionPair;
-	syncGroupActiveId?: boolean;
 };
 
 type BuildBoundsOptionsParams = {
@@ -55,7 +57,7 @@ const buildBoundsOptions = ({
 	return resolved;
 };
 
-const syncActiveGroupId = (params: {
+export const syncActiveGroupId = (params: {
 	props: BoundsInterpolationProps;
 	id?: BoundId;
 	group?: string;
@@ -67,24 +69,18 @@ const syncActiveGroupId = (params: {
 	const pairKey = resolveBoundsPairKey(props);
 	if (!pairKey) return;
 
-	setActiveGroupId(pairKey, group, String(id));
+	const activeId = String(id);
+	if (getActiveGroupId(pairKey, group) === activeId) return;
+
+	setActiveGroupId(pairKey, group, activeId);
 };
 
 export const prepareBoundStyles = <T extends BoundsOptions>({
 	props,
 	options,
 	resolvedPair,
-	syncGroupActiveId = false,
 }: ComputeResolvedBoundsStylesParams<T>): BoundsOptionsResult<T> => {
 	"worklet";
-
-	if (syncGroupActiveId) {
-		syncActiveGroupId({
-			props,
-			id: options.id,
-			group: options.group,
-		});
-	}
 
 	const resolved = buildBoundsOptions({
 		props,
@@ -101,6 +97,7 @@ export const prepareBoundStyles = <T extends BoundsOptions>({
 			next: props.next,
 			progress: resolved.progress ?? props.progress,
 			dimensions: props.layouts.screen,
+			interpolationProps: props,
 		},
 		resolved,
 		resolvedPair,

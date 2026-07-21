@@ -10,7 +10,9 @@ import {
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
 } from "../../blank-stack";
+import type Transition from "..";
 import type {
+	BoundsMotion,
 	BoundsNavigationRevealStyle,
 	BoundsNavigationZoomOptions,
 	BoundsNavigationZoomStyle,
@@ -18,6 +20,8 @@ import type {
 	NativeStackAdapterOptions,
 	RawGestureValues,
 	ScreenAnimationTarget,
+	ScreenBackdropComponentProps,
+	ScreenContentComponentProps,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
 	ScreenTransitionConfig,
@@ -29,14 +33,22 @@ import type {
 	ScrollMetadataState,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
+	TransitionSpec,
 } from "..";
 import {
+	blockTransition,
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+	unblockTransition,
 	useScreenAnimation,
 	useScreenGesture,
 	withScreenTransitions,
 } from "..";
+
+blockTransition();
+blockTransition("route-key");
+unblockTransition();
+unblockTransition("route-key");
 
 const slotStyle: TransitionSlotStyle = {
 	style: {
@@ -69,27 +81,51 @@ const navigationMaskInterpolatedStyle: TransitionInterpolatedStyle = {
 	[NAVIGATION_MASK_ELEMENT_STYLE_ID]: slotStyle,
 };
 
-const zoomOptions: BoundsNavigationZoomOptions = {
-	target: "bound",
-	debug: true,
-	borderRadius: 36,
-	focusedElementOpacity: {
-		open: [0, 0.35, 0, 1],
-		close: [0.65, 1, 0, 1],
-	},
-	unfocusedElementOpacity: {
-		open: [1, 2, 1, 0],
-		close: [1.85, 2, 1, 0],
-	},
-	backgroundScale: 0.97,
-	maxSensitivity: 0.6,
-	velocityDepth: 0.35,
-	gestureProgressMode: "freeform",
-	horizontalDragScale: [0.9, 1.02, 2],
-	verticalDragScale: [0.96, 1.01, 2.25],
-	horizontalDragTranslation: [0.5, 1, 1.5],
-	verticalDragTranslation: [0, 0, 1],
+const passiveBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	handoff: true,
 };
+const escapedBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	escapeClipping: true,
+};
+const escapedHandoffBoundaryProps: ComponentProps<typeof Transition.Boundary> =
+	{
+		id: "hero",
+		handoff: true,
+		escapeClipping: true,
+	};
+const pressableBoundaryProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	onPress: () => {},
+};
+const removedBoundaryPortalProps: ComponentProps<typeof Transition.Boundary> = {
+	id: "hero",
+	// @ts-expect-error Boundary uses handoff and escapeClipping instead of the removed portal prop.
+	portal: "screen",
+};
+const deprecatedBoundaryViewProps: ComponentProps<
+	typeof Transition.Boundary.View
+> = {
+	id: "hero",
+};
+const deprecatedBoundaryTriggerProps: ComponentProps<
+	typeof Transition.Boundary.Trigger
+> = {
+	id: "hero",
+	onPress: () => {},
+};
+void passiveBoundaryProps;
+void escapedBoundaryProps;
+void escapedHandoffBoundaryProps;
+void pressableBoundaryProps;
+void removedBoundaryPortalProps;
+void deprecatedBoundaryViewProps;
+void deprecatedBoundaryTriggerProps;
+
+const zoomOptions: BoundsNavigationZoomOptions = {};
+declare const zoomTransitionSpec: typeof Transition.Specs.Zoom;
+const typedZoomTransitionSpec: TransitionSpec = zoomTransitionSpec;
 
 declare const interpolationProps: ScreenInterpolationProps;
 
@@ -139,7 +175,8 @@ void transitionTarget;
 void transitionDepthTarget;
 
 const scopedBounds = interpolationProps.bounds({ id: 42 });
-const numericBoundsResult = scopedBounds;
+const tagScopedBounds = interpolationProps.bounds("group:hero");
+const numericBoundsResult = scopedBounds.styles();
 const parentTransition = interpolationProps.transition({ depth: -1 });
 const grandparentTransition = interpolationProps.transition({ depth: -2 });
 const selfTransition = interpolationProps.transition({ depth: 0 });
@@ -151,26 +188,75 @@ const rootTransitionBounds = interpolationProps
 const leafTransitionBounds = interpolationProps
 	.transition({ depth: 2 })
 	?.bounds({ id: 42 });
-const offsetBoundsResult = interpolationProps.bounds({
-	id: 42,
+const offsetBoundsResult = scopedBounds.styles({
 	offset: { x: 10, y: -10 },
 });
-const deprecatedGesturesBoundsResult = interpolationProps.bounds({
-	id: 42,
+const boundsMotion: BoundsMotion = ({ current, progress, props, start }) => {
+	"worklet";
+	const velocityDip = props.active.gesture.velocity * 0.1;
+	const screenBias =
+		((start.pageX + start.width / 2) / props.layouts.screen.width) * 2 - 1;
+	return {
+		x: current.x,
+		y: current.y - Math.sin(progress * Math.PI) * 24,
+		scale: current.scale * (1 - velocityDip),
+		rotate: screenBias * 4,
+		rotateY: screenBias * 30,
+		perspective: 800,
+		transformOrigin: "center",
+	};
+};
+const motionBoundsResult = scopedBounds.styles({
+	motion: boundsMotion,
+});
+const deprecatedGesturesBoundsResult = scopedBounds.styles({
 	gestures: { x: 10, y: -10 },
 });
-const absoluteRawBoundsResult = interpolationProps.bounds({
-	id: 42,
+const absoluteRawBoundsResult = scopedBounds.values({
 	method: "size",
 	space: "absolute",
-	raw: true,
+	progress: interpolationProps.current.transitionProgress,
+});
+const motionRawBoundsResult = scopedBounds.values({
+	method: "content",
+	motion: boundsMotion,
 	progress: interpolationProps.current.transitionProgress,
 });
 const zoomInterpolatedStyle: BoundsNavigationZoomStyle = interpolationProps
 	.bounds({ id: 42 })
 	.navigation.zoom({
 		target: "bound",
+		keepFocusedVisible: true,
+		borderRadius: 36,
+		backgroundScale: 0.95,
+		backdropColor: "#000000",
+		backdropOpacity: 0.4,
+		drag: {
+			translation: { horizontal: 0.8, vertical: 0.9 },
+			scale: { horizontal: 0.7, vertical: 0.85 },
+		},
 	});
+const deprecatedZoomOptions: BoundsNavigationZoomOptions = {
+	debug: true,
+	focusedElementOpacity: { open: [0, 1, 0, 1] },
+	unfocusedElementOpacity: { close: [0, 1, 1, 0] },
+	maxSensitivity: 0.8,
+	velocityDepth: 0.5,
+	gestureProgressMode: "freeform",
+	horizontalDragScale: [0.5, 1.1, 2],
+	verticalDragScale: [0.5, 1.1, 2],
+	horizontalDragTranslation: [0.8, 0.8, 2],
+	verticalDragTranslation: [0.8, 0.8, 2],
+};
+void deprecatedZoomOptions;
+interpolationProps.bounds({ id: 42 }).navigation.zoom({
+	// @ts-expect-error Zoom targets must resolve to supported bounds geometry.
+	target: "viewport",
+});
+interpolationProps.bounds({ id: 42 }).navigation.zoom({
+	// @ts-expect-error Focused visibility is an opt-in boolean.
+	keepFocusedVisible: "yes",
+});
 const revealInterpolatedStyle: BoundsNavigationRevealStyle = interpolationProps
 	.bounds({ id: 42 })
 	.navigation.reveal();
@@ -188,20 +274,34 @@ const configuredRevealInterpolatedStyle: BoundsNavigationRevealStyle =
 		maskSizingMode: "size",
 	});
 void configuredRevealInterpolatedStyle;
-const currentLink = interpolationProps.bounds.getLink(42);
+const currentLink = scopedBounds.link();
+const tagCurrentLink = tagScopedBounds.link();
+const tagOverrideLink = tagScopedBounds.link("other-group:other-hero");
+const currentLinkStatus = currentLink?.status;
 const initialSourceBounds = currentLink?.initialSource?.bounds;
 const initialDestinationBounds = currentLink?.initialDestination?.bounds;
-const scopedCurrentLink = scopedBounds.getLink();
+const scopedCurrentLink = scopedBounds.link();
 void currentLink;
+void tagCurrentLink;
+void tagOverrideLink;
+void currentLinkStatus;
 void initialSourceBounds;
 void initialDestinationBounds;
 void scopedCurrentLink;
 void numericBoundsResult;
 void offsetBoundsResult;
+void motionBoundsResult;
 void deprecatedGesturesBoundsResult;
 void absoluteRawBoundsResult;
+void motionRawBoundsResult;
 const absoluteRawBoundsWidth: number = absoluteRawBoundsResult.width;
 const absoluteRawBoundsTranslateX: number = absoluteRawBoundsResult.translateX;
+const motionRawBoundsScale: number = motionRawBoundsResult.scale;
+const motionRawBoundsRotate: number = motionRawBoundsResult.rotate;
+const motionRawBoundsRotateY: number = motionRawBoundsResult.rotateY;
+void motionRawBoundsScale;
+void motionRawBoundsRotate;
+void motionRawBoundsRotateY;
 const maybeContentHeight = interpolationProps.layouts.content?.height;
 const maybeCurrentContentHeight =
 	interpolationProps.current.layouts.content?.height;
@@ -304,6 +404,37 @@ const scopedGestureDirectionOptions: ScreenTransitionConfig = {
 const emptyInterpolatorOptions: ScreenTransitionConfig = {
 	screenStyleInterpolator: () => null,
 };
+const renderBackdropOptions: ScreenTransitionConfig = {
+	backdropComponent: ({
+		styles,
+		props,
+		pointerEvents,
+	}: ScreenBackdropComponentProps) => {
+		void styles;
+		void props;
+		void pointerEvents;
+		return null;
+	},
+};
+const renderContentOptions: ScreenTransitionConfig = {
+	contentComponent: ({
+		styles,
+		props,
+		pointerEvents,
+		children,
+	}: ScreenContentComponentProps) => {
+		void styles;
+		void props;
+		void pointerEvents;
+		return children;
+	},
+};
+const deprecatedSurfaceComponentOptions: ScreenTransitionConfig = {
+	surfaceComponent: () => null,
+};
+void renderBackdropOptions;
+void renderContentOptions;
+void deprecatedSurfaceComponentOptions;
 
 type NativeStackAdapterParamList = {
 	Profile: undefined;
@@ -402,6 +533,8 @@ const publicApiTypecheck = {
 	currentActiveGesture,
 	currentSnapIndex,
 	zoomOptions,
+	zoomTransitionSpec,
+	typedZoomTransitionSpec,
 	navigationMaskInterpolatedStyle,
 	nextNameOptions,
 	sharedGestureSensitivityOptions,

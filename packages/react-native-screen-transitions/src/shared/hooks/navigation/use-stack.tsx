@@ -5,10 +5,14 @@ import {
 	useCallback,
 	useContext,
 	useLayoutEffect,
+	useMemo,
 	useRef,
 	useSyncExternalStore,
 } from "react";
+import { useDerivedValue } from "react-native-reanimated";
+import { syncStackProgressValues } from "../../providers/screen/animation/helpers/stack-progress";
 import type { StackCoreContextValue } from "../../providers/stack/core.provider";
+import { AnimationStore } from "../../stores/animation.store";
 import type { OverlayProps } from "../../types/overlay.types";
 import type {
 	BaseStackDescriptor,
@@ -87,6 +91,30 @@ const createStackStore = (
 const StackContext = createContext<StackStoreApi | null>(null);
 StackContext.displayName = "Stack";
 
+function StackProgressOwner({ routeKeys }: { routeKeys: string[] }) {
+	const visualProgressValues = useMemo(
+		() =>
+			routeKeys.map((routeKey) =>
+				AnimationStore.getValue(routeKey, "visualProgress"),
+			),
+		[routeKeys],
+	);
+
+	const stackProgressValues = useMemo(
+		() =>
+			routeKeys.map((routeKey) =>
+				AnimationStore.getValue(routeKey, "stackProgress"),
+			),
+		[routeKeys],
+	);
+
+	useDerivedValue(() => {
+		syncStackProgressValues(visualProgressValues, stackProgressValues);
+	});
+
+	return null;
+}
+
 export function StackProvider({
 	children,
 	value,
@@ -116,7 +144,10 @@ export function StackProvider({
 	});
 
 	return (
-		<StackContext.Provider value={store}>{children}</StackContext.Provider>
+		<StackContext.Provider value={store}>
+			<StackProgressOwner routeKeys={value.routeKeys} />
+			{children}
+		</StackContext.Provider>
 	);
 }
 

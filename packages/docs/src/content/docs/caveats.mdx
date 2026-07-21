@@ -107,6 +107,29 @@ If you do want that behavior, there is an experimental escape hatch:
 
 Without that dependency, the app still runs, but navigation masking does not activate.
 
+## Live Boundary Handoff
+
+`Transition.Boundary` handoff is experimental in v3.9.
+
+The feature moves one live payload between matching boundary hosts. It's useful for video players, maps, and other stateful native content, but it also makes platform view lifecycle and compositor behavior observable.
+
+In particular, Android video surfaces have a trade-off:
+
+- `SurfaceView` is efficient, but it may render outside normal React Native clipping, transforms, border radii, or portal stacking.
+- `TextureView` participates in the regular view hierarchy, but it can briefly flicker when native content moves between handoff hosts.
+
+For Expo Video content that must clip or animate with a boundary, prefer:
+
+```tsx
+<VideoView
+  player={player}
+  surfaceType="textureView"
+  style={StyleSheet.absoluteFill}
+/>
+```
+
+Test live handoff on physical devices for every platform you support. Ordinary bounds transitions and `escapeClipping` do not reparent a live payload and are not covered by this experimental warning.
+
 ## Expo SDK 56
 
 Expo SDK 56 changes Expo Router's navigator internals. This package currently expects the React Navigation imports used by earlier Expo Router integrations.

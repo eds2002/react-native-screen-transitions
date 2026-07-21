@@ -114,6 +114,8 @@ const createPinchReleaseRuntime = (
 						normScale: { get: () => 0 },
 						focalX: { get: () => 0 },
 						focalY: { get: () => 0 },
+						pinchOriginX: { get: () => 0 },
+						pinchOriginY: { get: () => 0 },
 						rotation: { get: () => 0 },
 						raw: {
 							x: { get: () => 0 },
@@ -153,6 +155,8 @@ const createGestureSnapshotStore = () => ({
 	normScale: createSharedValue(0),
 	focalX: createSharedValue(0),
 	focalY: createSharedValue(0),
+	pinchOriginX: createSharedValue(0),
+	pinchOriginY: createSharedValue(0),
 	rotation: createSharedValue(0),
 	raw: {
 		x: createSharedValue(0),
@@ -221,6 +225,8 @@ const createGestureStore = () =>
 		normScale: createSharedValue(0),
 		focalX: createSharedValue(0),
 		focalY: createSharedValue(0),
+		pinchOriginX: createSharedValue(0),
+		pinchOriginY: createSharedValue(0),
 		rotation: createSharedValue(0),
 		raw: {
 			x: createSharedValue(0),
@@ -777,7 +783,26 @@ describe("pinch gesture sensitivity", () => {
 });
 
 describe("trackPinchGesture", () => {
-	it("stores sensitivity-adjusted and raw pinch values separately", () => {
+	it("keeps the initial pinch direction when scale crosses neutral", () => {
+		const gestures = createGestureStore();
+
+		trackPinchGesture(
+			{ scale: 0.99 } as any,
+			{ scale: 0.99 } as any,
+			gestures,
+		);
+		trackPinchGesture(
+			{ scale: 1.01 } as any,
+			{ scale: 1.01 } as any,
+			gestures,
+		);
+
+		expect(gestures.active.get()).toBe("pinch-in");
+		expect(gestures.scale.get()).toBeCloseTo(1.01, 5);
+		expect(gestures.normScale.get()).toBeCloseTo(0.01, 5);
+	});
+
+	it("stores pinch scale without replacing the absolute focal point", () => {
 		const gestures = createGestureStore();
 		gestures.x.set(12);
 		gestures.y.set(-16);
@@ -808,8 +833,8 @@ describe("trackPinchGesture", () => {
 		expect(gestures.normY.get()).toBeCloseTo(-0.02, 5);
 		expect(gestures.scale.get()).toBeCloseTo(1.25, 5);
 		expect(gestures.normScale.get()).toBeCloseTo(0.25, 5);
-		expect(gestures.focalX.get()).toBeCloseTo(44, 5);
-		expect(gestures.focalY.get()).toBeCloseTo(80, 5);
+		expect(gestures.focalX.get()).toBeCloseTo(30, 5);
+		expect(gestures.focalY.get()).toBeCloseTo(50, 5);
 		expect(gestures.raw.x.get()).toBeCloseTo(32, 5);
 		expect(gestures.raw.y.get()).toBeCloseTo(-48, 5);
 		expect(gestures.raw.normX.get()).toBeCloseTo(0.08, 5);

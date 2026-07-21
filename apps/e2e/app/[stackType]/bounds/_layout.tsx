@@ -14,10 +14,9 @@ export default function BoundsLayout() {
 			<StackNavigator.Screen name="index" />
 			<StackNavigator.Screen name="style-id" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen name="zoom" options={{ ...IOSSlide() }} />
-			<StackNavigator.Screen name="zoom-id" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen name="sync" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen
-				name="transition-scope"
+				name="matched-screen"
 				options={{ ...IOSSlide() }}
 			/>
 		</StackNavigator>

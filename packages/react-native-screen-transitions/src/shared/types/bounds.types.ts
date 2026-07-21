@@ -1,13 +1,17 @@
-import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import type { ColorValue } from "react-native";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../constants";
-import type { MeasuredEntry } from "../stores/bounds";
+import type { BoundsLink } from "../stores/bounds/types";
 import type {
-	BoundId,
-	BoundsOptions,
-	BoundsOptionsResult,
+	BoundsComputeOptions,
+	BoundsIdentityInput,
+	BoundsMotion,
+	BoundsMotionFrame,
+	BoundsMotionTransform,
+	BoundsStyleResult,
+	BoundsValuesResult,
 } from "../utils/bounds/types/options";
 import type {
 	ScreenInterpolationProps,
@@ -15,6 +19,8 @@ import type {
 	TransitionSlotStyle,
 } from "./animation.types";
 import type { GestureProgressMode } from "./gesture.types";
+
+export type { BoundsLink, BoundsLinkStatus } from "../stores/bounds/types";
 
 /**
  * Target style computation.
@@ -25,154 +31,45 @@ import type { GestureProgressMode } from "./gesture.types";
  */
 export type BoundsMethod = "transform" | "size" | "content";
 
-export type BoundEntry = {
-	bounds: MeasuredDimensions;
-	styles: StyleProps;
+/**
+ * Axis-specific response intensity used by {@linkcode BoundsNavigationZoomDragOptions}.
+ *
+ * `0` disables the response on an axis, `1` preserves the native zoom preset,
+ * and values above `1` exaggerate it.
+ */
+export type BoundsNavigationZoomAxisResponse = {
+	/** Horizontal gesture response multiplier. @default 1 */
+	horizontal?: number;
+	/** Vertical gesture response multiplier. @default 1 */
+	vertical?: number;
 };
 
-export type BoundsLink = {
-	id: string;
-	source: BoundEntry | null;
-	destination: BoundEntry | null;
-	initialSource: BoundEntry | null;
-	initialDestination: BoundEntry | null;
-	compute: <T extends BoundsLinkComputeOptions>(
-		options: T,
-	) => BoundsOptionsResult<T & { id: string }>;
+/**
+ * Adjusts the intensity of zoom's native drag behavior without replacing its
+ * built-in curves.
+ *
+ * @see {@linkcode BoundsNavigationZoomOptions.drag}
+ */
+export type BoundsNavigationZoomDragOptions = {
+	/**
+	 * Multiplies the native rendered translation.
+	 *
+	 * @default { horizontal: 1, vertical: 1 }
+	 */
+	translation?: BoundsNavigationZoomAxisResponse;
+	/**
+	 * Multiplies the native scale displacement from `1`.
+	 *
+	 * @default { horizontal: 1, vertical: 1 }
+	 */
+	scale?: BoundsNavigationZoomAxisResponse;
 };
 
-export type BoundsLinkComputeOptions = Omit<BoundsOptions, "id" | "group">;
-
-export type BoundsNavigationZoomOptions = {
-	target?: "bound" | "fullscreen" | MeasuredDimensions;
-	debug?: boolean;
-	borderRadius?: number;
-	/**
-	 * Focused-screen element opacity curve.
-	 *
-	 * `open` is used while presenting the destination screen.
-	 * `close` is used while returning to the source screen.
-	 *
-	 * Tuple order:
-	 * - `inputStart`: transition progress start
-	 * - `inputEnd`: transition progress end
-	 * - `outputStart`: opacity at `inputStart` (defaults to built-in preset)
-	 * - `outputEnd`: opacity at `inputEnd` (defaults to built-in preset)
-	 */
-	focusedElementOpacity?: BoundsNavigationZoomOpacityRanges;
-	/**
-	 * Unfocused-screen matched element opacity curve.
-	 *
-	 * `open` is used while the previous screen animates out during present.
-	 * `close` is used while the previous screen animates back in during dismiss.
-	 *
-	 * Tuple order:
-	 * - `inputStart`: transition progress start
-	 * - `inputEnd`: transition progress end
-	 * - `outputStart`: opacity at `inputStart` (defaults to built-in preset)
-	 * - `outputEnd`: opacity at `inputEnd` (defaults to built-in preset)
-	 */
-	unfocusedElementOpacity?: BoundsNavigationZoomOpacityRanges;
-	/**
-	 * Scale applied to the unfocused background content while the focused bound
-	 * animates above it.
-	 */
-	backgroundScale?: number;
-	/**
-	 * Maximum dynamic gesture sensitivity applied by zoom.
-	 *
-	 * Zoom lowers gesture sensitivity as the drag gets deeper so the content
-	 * handoff stays stable. This value controls the starting/highest sensitivity
-	 * in that curve.
-	 *
-	 * @default 0.8
-	 */
-	maxSensitivity?: number;
-	/**
-	 * Velocity-driven depth applied to the dismiss scale handoff.
-	 *
-	 * Higher values make fast releases orbit farther around the final scale. Set
-	 * to `0` to remove the velocity depth effect.
-	 *
-	 * @default 0.5
-	 */
-	velocityDepth?: number;
-	/**
-	 * Deprecated compatibility option.
-	 *
-	 * Gesture movement now always contributes to `progress`; use `transitionProgress`
-	 * when a recipe needs transition progress without live gesture contribution.
-	 * The zoom helper no longer reads this option.
-	 *
-	 * @deprecated Use `transitionProgress` from interpolation state instead.
-	 */
-	gestureProgressMode?: GestureProgressMode;
-	/**
-	 * Horizontal gesture drag scaling curve, applied when the active dismiss
-	 * direction is horizontal.
-	 *
-	 * Tuple order:
-	 * - `shrinkMin`: minimum scale when dragging toward dismissal
-	 * - `growMax`: maximum scale when dragging opposite dismissal
-	 * - `exponent`: curve exponent controlling how quickly scaling ramps
-	 */
-	horizontalDragScale?: readonly [
-		shrinkMin: number,
-		growMax: number,
-		exponent?: number,
-	];
-	/**
-	 * Vertical gesture drag scaling curve, applied when the active dismiss
-	 * direction is vertical.
-	 *
-	 * Tuple order:
-	 * - `shrinkMin`: minimum scale when dragging toward dismissal
-	 * - `growMax`: maximum scale when dragging opposite dismissal
-	 * - `exponent`: curve exponent controlling how quickly scaling ramps
-	 */
-	verticalDragScale?: readonly [
-		shrinkMin: number,
-		growMax: number,
-		exponent?: number,
-	];
-	/**
-	 * Horizontal gesture drag translation curve.
-	 *
-	 * Tuple order:
-	 * - `negativeMax`: multiplier when dragging left / negative
-	 * - `positiveMax`: multiplier when dragging right / positive
-	 * - `exponent`: curve exponent controlling how quickly translation ramps
-	 *
-	 * Examples:
-	 * - `[0, 0]` disables horizontal drag translation
-	 * - `[0.5, 0.5]` halves horizontal drag travel
-	 * - `[1.2, 1.2]` amplifies horizontal drag travel
-	 */
-	horizontalDragTranslation?: readonly [
-		negativeMax: number,
-		positiveMax: number,
-		exponent?: number,
-	];
-	/**
-	 * Vertical gesture drag translation curve.
-	 *
-	 * Tuple order:
-	 * - `negativeMax`: multiplier when dragging up / negative
-	 * - `positiveMax`: multiplier when dragging down / positive
-	 * - `exponent`: curve exponent controlling how quickly translation ramps
-	 *
-	 * Examples:
-	 * - `[0, 0]` disables vertical drag translation
-	 * - `[0.5, 0.5]` halves vertical drag travel
-	 * - `[1.2, 1.2]` amplifies vertical drag travel
-	 */
-	verticalDragTranslation?: readonly [
-		negativeMax: number,
-		positiveMax: number,
-		exponent?: number,
-	];
-};
-
+/**
+ * Legacy zoom opacity interpolation tuple.
+ *
+ * @deprecated Zoom opacity ownership now follows the native preset.
+ */
 export type BoundsNavigationZoomOpacityRange = readonly [
 	inputStart: number,
 	inputEnd: number,
@@ -180,9 +77,129 @@ export type BoundsNavigationZoomOpacityRange = readonly [
 	outputEnd?: number,
 ];
 
+/**
+ * Legacy opening and closing zoom opacity ranges.
+ *
+ * @deprecated Zoom opacity ownership now follows the native preset.
+ */
 export type BoundsNavigationZoomOpacityRanges = {
 	open?: BoundsNavigationZoomOpacityRange;
 	close?: BoundsNavigationZoomOpacityRange;
+};
+
+export type BoundsNavigationZoomOptions = {
+	/**
+	 * Geometry that the zoomed content should resolve against.
+	 *
+	 * `"bound"` uses the paired destination boundary. `"fullscreen"` uses the
+	 * screen, and measured dimensions provide an explicit target rectangle.
+	 * When omitted, zoom keeps its native full-width aspect-ratio target.
+	 */
+	target?: BoundsComputeOptions["target"];
+	/**
+	 * Keeps the focused screen content visible throughout the zoom.
+	 *
+	 * Enable this for handed-off or live content that should not use zoom's
+	 * built-in focused-content opacity fade.
+	 *
+	 * @default false
+	 */
+	keepFocusedVisible?: boolean;
+	/**
+	 * Expanded transition clipping radius.
+	 *
+	 * Zoom interpolates from the measured source radius to this value while the
+	 * screen is animating. This controls the visible clipping result regardless
+	 * of whether a navigation mask is enabled.
+	 *
+	 * @default 64
+	 */
+	borderRadius?: number;
+	/**
+	 * Scale applied to the unfocused screen while the zoom runs above it.
+	 *
+	 * @default 0.9375
+	 */
+	backgroundScale?: number;
+	/**
+	 * Color rendered behind the focused zoom content.
+	 *
+	 * @default "black"
+	 */
+	backdropColor?: ColorValue;
+	/**
+	 * Maximum opacity reached by the zoom backdrop.
+	 *
+	 * Values are clamped between `0` and `1`.
+	 *
+	 * @default 0.45
+	 */
+	backdropOpacity?: number;
+	/**
+	 * Native drag-response intensity controls.
+	 */
+	drag?: BoundsNavigationZoomDragOptions;
+	/**
+	 * @deprecated Ignored. Zoom no longer exposes a transition-specific debug
+	 * overlay.
+	 */
+	debug?: boolean;
+	/**
+	 * @deprecated Ignored. Zoom opacity ownership now follows the native preset.
+	 */
+	focusedElementOpacity?: BoundsNavigationZoomOpacityRanges;
+	/**
+	 * @deprecated Ignored. Zoom opacity ownership now follows the native preset.
+	 */
+	unfocusedElementOpacity?: BoundsNavigationZoomOpacityRanges;
+	/**
+	 * @deprecated Ignored. Zoom now owns its gesture sensitivity curve.
+	 */
+	maxSensitivity?: number;
+	/**
+	 * @deprecated Ignored. Zoom now owns its velocity-depth behavior.
+	 */
+	velocityDepth?: number;
+	/**
+	 * @deprecated Ignored. Gesture movement always contributes to `progress`.
+	 */
+	gestureProgressMode?: GestureProgressMode;
+	/**
+	 * @deprecated Ignored. Use `drag.scale.horizontal` to adjust response
+	 * intensity without replacing the native curve.
+	 */
+	horizontalDragScale?: readonly [
+		shrinkMin: number,
+		growMax: number,
+		exponent?: number,
+	];
+	/**
+	 * @deprecated Ignored. Use `drag.scale.vertical` to adjust response intensity
+	 * without replacing the native curve.
+	 */
+	verticalDragScale?: readonly [
+		shrinkMin: number,
+		growMax: number,
+		exponent?: number,
+	];
+	/**
+	 * @deprecated Ignored. Use `drag.translation.horizontal` to adjust response
+	 * intensity without replacing the native curve.
+	 */
+	horizontalDragTranslation?: readonly [
+		negativeMax: number,
+		positiveMax: number,
+		exponent?: number,
+	];
+	/**
+	 * @deprecated Ignored. Use `drag.translation.vertical` to adjust response
+	 * intensity without replacing the native curve.
+	 */
+	verticalDragTranslation?: readonly [
+		negativeMax: number,
+		positiveMax: number,
+		exponent?: number,
+	];
 };
 
 export type BoundsNavigationZoomStyle = TransitionInterpolatedStyle & {
@@ -293,47 +310,28 @@ type BoundsBoundNavigationAccessor = {
 	navigation: BoundsNavigationAccessor;
 };
 
-export type BoundsScopedAccessors = {
-	getMeasured: (key?: string) => MeasuredEntry | null;
+export type BoundsScopedAccessor = BoundsBoundNavigationAccessor & {
+	styles: (options?: BoundsComputeOptions) => BoundsStyleResult;
+	/** Returns numeric bounds values for custom style composition. */
+	values: <T extends BoundsComputeOptions = BoundsComputeOptions>(
+		options?: T,
+	) => BoundsValuesResult<T>;
 	/**
-	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
+	 * @deprecated Use {@linkcode values}.
 	 */
-	getSnapshot: (key?: string) => MeasuredEntry | null;
-	getLink: () => BoundsLink | null;
-	interpolateStyle: (property: keyof StyleProps, fallback?: number) => number;
-	interpolateBounds: (
-		property: keyof MeasuredDimensions,
-		fallbackOrTargetKey?: number | string,
-		fallback?: number,
-	) => number;
+	math: <T extends BoundsComputeOptions = BoundsComputeOptions>(
+		options?: T,
+	) => BoundsValuesResult<T>;
+	link: (id?: BoundsIdentityInput) => BoundsLink | null;
 };
 
-type BoundsCallResult<T extends BoundsOptions> = BoundsOptionsResult<T> &
-	BoundsBoundNavigationAccessor &
-	BoundsScopedAccessors;
-
-export type BoundsAccessor = {
-	<T extends BoundsOptions>(options: T): BoundsCallResult<T>;
-	getMeasured: (id: BoundId, key?: string) => MeasuredEntry | null;
-	/**
-	 * @deprecated Use `getMeasured` instead. `getSnapshot` will be removed in the next major version.
-	 */
-	getSnapshot: (id: BoundId, key?: string) => MeasuredEntry | null;
-	getLink: (id: BoundId) => BoundsLink | null;
-	interpolateStyle: (
-		id: BoundId,
-		property: keyof StyleProps,
-		fallback?: number,
-	) => number;
-	interpolateBounds: (
-		id: BoundId,
-		property: keyof MeasuredDimensions,
-		fallbackOrTargetKey?: number | string,
-		fallback?: number,
-	) => number;
-};
+export type BoundsAccessor = (
+	options: BoundsIdentityInput,
+) => BoundsScopedAccessor;
 
 export type BoundsInterpolationProps = Omit<
 	ScreenInterpolationProps,
 	"bounds" | "transition"
 >;
+
+export type { BoundsMotion, BoundsMotionFrame, BoundsMotionTransform };

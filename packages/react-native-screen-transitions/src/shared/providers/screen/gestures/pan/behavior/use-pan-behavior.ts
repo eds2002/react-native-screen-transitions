@@ -1,6 +1,7 @@
 import { useCallback, useMemo } from "react";
 import type { SharedValue } from "react-native-reanimated";
 import { useNavigationHelpers } from "../../../../../hooks/navigation/use-navigation-helpers";
+import type { Direction } from "../../../../../types/ownership.types";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { usePanGestureSensitivity } from "../../hooks/use-gesture-sensitivity";
 import { resolvePanRuntime } from "../../shared/runtime";
@@ -28,6 +29,7 @@ export const usePanBehavior = (
 	screenOptions: ScreenOptionsContextValue,
 	dimensions: GestureDimensions,
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
+	pendingDirection: SharedValue<Direction | null>,
 ): PanBehavior => {
 	const { dismissScreen, requestDismiss } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
@@ -38,16 +40,31 @@ export const usePanBehavior = (
 		const latestRuntime = resolvePanRuntime(runtime.get(), screenOptions.get());
 		if (gestureCompositionOwner.get() === "pinch") {
 			clearPanTrackingValues(latestRuntime.stores.gestures);
+			pendingDirection.set(null);
 			resetSensitivity();
 			return;
 		}
+
+		const direction = pendingDirection.get();
+		if (direction) {
+			latestRuntime.stores.gestures.active.set(direction);
+			latestRuntime.stores.gestures.direction.set(direction);
+		}
+		pendingDirection.set(null);
+		gestureCompositionOwner.set("pan");
 
 		if (latestRuntime.participation.effectiveSnapPoints.hasSnapPoints) {
 			primeSnapPanRelease(latestRuntime);
 		}
 		startPanBase(latestRuntime);
 		resetSensitivity();
-	}, [runtime, screenOptions, resetSensitivity, gestureCompositionOwner]);
+	}, [
+		runtime,
+		screenOptions,
+		resetSensitivity,
+		gestureCompositionOwner,
+		pendingDirection,
+	]);
 
 	const onUpdate = useCallback(
 		(rawEvent: PanGestureEvent) => {

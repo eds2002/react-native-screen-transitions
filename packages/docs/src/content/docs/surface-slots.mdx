@@ -1,8 +1,8 @@
 ---
 title: "Layers"
 pageTitle: "Layers"
-summary: "Understand the screen-container layering system: backdrop, content, surface, element targets, and navigation masks."
-description: "Understand the screen-container layering system: backdrop, content, surface, element targets, and navigation masks."
+summary: "Understand the screen-container layering system: backdrop, content, deprecated surface wrappers, element targets, and navigation masks."
+description: "Understand the screen-container layering system: backdrop, content, deprecated surface wrappers, element targets, and navigation masks."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 9
@@ -58,7 +58,7 @@ Inside `screen-container`, layers are resolved in this order:
 1. `backdrop`
 2. `content`
 3. optional navigation mask wrapper when `navigationMaskEnabled` is enabled
-4. optional surface wrapper when `surfaceComponent` is provided
+4. deprecated optional surface wrapper when `surfaceComponent` is provided
 5. screen children and any matching `styleId` or `sharedBoundTag` targets
 
 That gives you two levels of control:
@@ -78,7 +78,7 @@ backdrop: {
 }
 ```
 
-If you provide `backdropComponent`, the library wraps it with `Animated.createAnimatedComponent` and feeds it the `backdrop` slot's animated props.
+If you provide `backdropComponent`, pass either a component type or a render-style function component.
 
 ```tsx
 options={{
@@ -86,6 +86,27 @@ options={{
   backdropComponent: BlurView,
 }}
 ```
+
+Function components receive the layer values directly:
+
+```tsx
+options={{
+  backdropBehavior: "dismiss",
+  backdropComponent: ({ styles, props, pointerEvents }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    />
+  ),
+}}
+```
+
+The render props are:
+
+- `styles`: the base backdrop style plus animated styles from the `backdrop` slot
+- `props`: animated props from the `backdrop` slot
+- `pointerEvents`: the backdrop pointer-event state
 
 Use backdrop for dimming, blur intensity, tint, or any visual treatment outside the screen itself. `backdropBehavior` still controls how taps are handled.
 
@@ -103,9 +124,36 @@ content: {
 
 This is the slot that usually carries the main screen motion: translate, scale, opacity, rotation, and overall clipping styles.
 
+Use `contentComponent` when the content layer itself needs a custom shell component.
+
+```tsx
+options={{
+  contentComponent: ({ styles, props, pointerEvents, children }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    >
+      {children}
+    </Animated.View>
+  ),
+}}
+```
+
+The render props are:
+
+- `styles`: the base content style plus animated styles from the `content` slot
+- `props`: animated props from the `content` slot
+- `pointerEvents`: the content pointer-event state
+- `children`: the screen subtree
+
+Use `contentComponent` for custom tray shells, rounded containers, glass panels, or other screen-level wrappers that should own the screen subtree.
+
 ## surface
 
 `surface` targets the optional wrapper created by `surfaceComponent`.
+
+`surfaceComponent` is deprecated. It still works for compatibility, but new custom shells should use `contentComponent` instead.
 
 ```tsx
 options={{
@@ -122,7 +170,7 @@ surface: {
 }
 ```
 
-Use this when the screen needs a custom shell layer such as a squircle, glass panel, or other container component that moves with the screen.
+Use `surface` only for older code that still relies on `surfaceComponent`. For new code, put the custom shell in `contentComponent` and drive it with the `content` slot.
 
 ## Element Targets
 
@@ -209,13 +257,16 @@ return {
     style: { opacity: 1 },
     props: { intensity: 80 },
   },
+  content: {
+    style: { borderRadius: 24 },
+  },
   surface: {
     props: { cornerRadius: 24 },
   },
 };
 ```
 
-Use style for visual layout and transforms. Use props when the wrapped layer or target component exposes animatable props such as blur intensity or a custom surface API.
+Use style for visual layout and transforms. Use props only when the wrapped layer or target component exposes animatable props such as blur intensity.
 
 ## Related Reading
 

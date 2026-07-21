@@ -13,10 +13,7 @@ import type {
 } from "../../types";
 import { resetPinchGestureValues } from "./pinch-reset";
 
-export const startPinchBase = (
-	runtime: PinchGestureRuntime,
-	event: PinchGestureEvent,
-) => {
+export const startPinchBase = (runtime: PinchGestureRuntime) => {
 	"worklet";
 	const {
 		stores: { gestures, animations },
@@ -38,8 +35,6 @@ export const startPinchBase = (
 	gestures.direction.set(null);
 	gestures.velocity.set(0);
 	clearTransformTrackingValues(gestures);
-	gestures.focalX.set(event.focalX);
-	gestures.focalY.set(event.focalY);
 	gestures.internal.progressBaseline.set(animations.transitionProgress.get());
 };
 
@@ -56,13 +51,14 @@ export const trackPinchGesture = (
 
 	gestures.scale.set(scale);
 	gestures.normScale.set(normScale);
-	gestures.focalX.set(event.focalX);
-	gestures.focalY.set(event.focalY);
 	gestures.raw.scale.set(rawScale);
 	gestures.raw.normScale.set(rawNormScale);
-	gestures.active.set(
-		normScale < 0 ? "pinch-in" : normScale > 0 ? "pinch-out" : null,
-	);
+
+	if (gestures.active.get() === null) {
+		gestures.active.set(
+			normScale < 0 ? "pinch-in" : normScale > 0 ? "pinch-out" : null,
+		);
+	}
 
 	return {
 		scale,

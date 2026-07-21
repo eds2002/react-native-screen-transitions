@@ -5,7 +5,7 @@ import { ScreenAnimationProvider } from "../../../providers/screen/animation";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import { DescriptorsProvider } from "../../../providers/screen/descriptors";
 import { ScreenOptionsProvider } from "../../../providers/screen/options";
-import { ScreenStylesProvider } from "../../../providers/screen/styles";
+import { ScreenSlotProvider } from "../../../providers/screen/styles";
 import type { OverlayScreenState } from "../../../types/overlay.types";
 
 import { getActiveFloatOverlay } from "../helpers/get-active-overlay";
@@ -67,12 +67,12 @@ export function FloatOverlay() {
 		<DescriptorsProvider current={current} previous={previous} next={next}>
 			<ScreenOptionsProvider>
 				<ScreenAnimationProvider>
-					<ScreenStylesProvider isFloatingOverlay>
+					<ScreenSlotProvider isFloatingOverlay>
 						<OverlayHost
 							scene={scene}
 							overlayScreenState={overlayScreenState}
 						/>
-					</ScreenStylesProvider>
+					</ScreenSlotProvider>
 				</ScreenAnimationProvider>
 			</ScreenOptionsProvider>
 		</DescriptorsProvider>

@@ -78,6 +78,8 @@ export const hydrateTransitionState = (
 	out.gesture.normScale = s.gesture.normScale.get();
 	out.gesture.focalX = s.gesture.focalX.get();
 	out.gesture.focalY = s.gesture.focalY.get();
+	out.gesture.pinchOriginX = s.gesture.pinchOriginX.get();
+	out.gesture.pinchOriginY = s.gesture.pinchOriginY.get();
 	out.gesture.rotation = s.gesture.rotation.get();
 	out.gesture.raw.x = s.gesture.raw.x.get();
 	out.gesture.raw.y = s.gesture.raw.y.get();
@@ -121,6 +123,12 @@ export const hydrateTransitionState = (
 	handoff.focalY = useHandoffSnapshot
 		? s.gesture.internal.snapshot.focalY.get()
 		: out.gesture.focalY;
+	handoff.pinchOriginX = useHandoffSnapshot
+		? s.gesture.internal.snapshot.pinchOriginX.get()
+		: out.gesture.pinchOriginX;
+	handoff.pinchOriginY = useHandoffSnapshot
+		? s.gesture.internal.snapshot.pinchOriginY.get()
+		: out.gesture.pinchOriginY;
 	handoff.rotation = useHandoffSnapshot
 		? s.gesture.internal.snapshot.rotation.get()
 		: out.gesture.rotation;

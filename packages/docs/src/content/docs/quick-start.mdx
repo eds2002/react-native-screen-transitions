@@ -103,17 +103,17 @@ export function RootNavigator() {
   >
     <CodeBlock
       code={`// Home screen
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id="hero"
   onPress={() => navigation.navigate("Detail")}
 >
   <Image source={heroImage} style={{ width: 120, height: 160 }} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 
 // Detail screen
-<Transition.Boundary.View id="hero">
+<Transition.Boundary id="hero">
   <Image source={heroImage} style={{ width: "100%", height: 360 }} />
-</Transition.Boundary.View>`}
+</Transition.Boundary>`}
       language="tsx"
       title="bounds-link.tsx"
     />
@@ -126,9 +126,10 @@ export function RootNavigator() {
   component={DetailScreen}
   options={{
     navigationMaskEnabled: true,
+    transitionSpec: Transition.Specs.Zoom,
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
-      return bounds({ id: "hero" }).navigation.zoom();
+      return bounds("hero").navigation.zoom();
     },
   }}
 />`}

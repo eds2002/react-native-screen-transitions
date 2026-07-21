@@ -20,8 +20,8 @@ export default function OpeningTransformBoundsIndex() {
 			edges={["top"]}
 		>
 			<ScreenHeader
-				title="Screen Transform Sync"
-				subtitle="The screen moves on Y while the shared element stays connected."
+				title="Bounds Motion Arc"
+				subtitle="Motion bends the shared element path and adds depth."
 			/>
 
 			<View style={styles.content}>
@@ -30,9 +30,10 @@ export default function OpeningTransformBoundsIndex() {
 						What this shows
 					</Text>
 					<Text style={[styles.noteBody, { color: theme.textSecondary }]}>
-						The destination screen slides in from below. The bounds helper gets
-						the same Y movement, so the card follows the screen transform
-						instead of drifting away from the shared element path.
+						The destination screen slides in from below. The bound uses a custom
+						motion resolver to cancel that Y movement and add a small sideways
+						arc. It also scales down at mid-flight, then returns to its measured
+						base scale as it lands.
 					</Text>
 				</View>
 

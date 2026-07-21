@@ -1,0 +1,440 @@
+---
+title: "New in 3.9"
+pageTitle: "New in 3.9"
+summary: "v3.9 makes bounds measurement more deterministic, improves retargeting, introduces the simplified Boundary API, and adds contentComponent."
+description: "v3.9 makes bounds measurement more deterministic, improves retargeting, introduces the simplified Boundary API, and adds contentComponent."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "July 2026"
+order: 1
+to: /changelog/updating-to-3-9
+---
+
+v3.9 focuses on making shared bounds more predictable.
+
+The bounds system now stays closer to the latest measured source and destination. This improves retargeting when a destination moves, resizes, or changes scale, and it gives boundary handoff a simpler public model.
+
+The main API changes are:
+
+- `Transition.Boundary` is now the primary boundary component.
+- `bounds(id).styles()` returns render-ready animated styles.
+- `bounds(id).values()` returns numeric values for custom renderers and interpolation logic.
+- `handoff` moves a live boundary payload between matching boundaries.
+- `escapeClipping` lets a boundary render outside local clipping constraints while it transitions.
+- `navigation.zoom()` now owns its native-style opacity, drag, mask, pinch, and release behavior while exposing a smaller set of intensity controls.
+- `Transition.Specs.Zoom` provides the tuned open and close springs for navigation zoom transitions.
+- Pinch gestures now expose their fixed activation point as `pinchOriginX` and `pinchOriginY`.
+- `contentComponent` adds a custom renderer for the screen content layer.
+- `backdropComponent` can now receive render props: `{ styles, props, pointerEvents }`.
+- `surfaceComponent` is deprecated in favor of `contentComponent`.
+- `blockTransition()` and `unblockTransition()` can hold a pending transition until the destination is ready to animate.
+
+## Layer Components
+
+v3.9 adds `contentComponent` for custom screen shells.
+
+Use it when the screen content layer needs to be rendered by your own component, while still receiving the library-owned animated styles, animated props, pointer events, and children.
+
+```tsx
+options={{
+  contentComponent: ({ styles, props, pointerEvents, children }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    >
+      {children}
+    </Animated.View>
+  ),
+}}
+```
+
+`backdropComponent` keeps accepting a component type, but function components can now render the layer manually:
+
+```tsx
+options={{
+  backdropComponent: ({ styles, props, pointerEvents }) => (
+    <Animated.View
+      style={styles}
+      animatedProps={props}
+      pointerEvents={pointerEvents}
+    />
+  ),
+}}
+```
+
+This replaces the older backdrop shape that split animated props and visual styles across multiple view layers.
+
+`surfaceComponent` still works for compatibility, but it is deprecated. New code should move custom screen shells to `contentComponent`.
+
+## Delaying transition start
+
+`blockTransition()` and `unblockTransition()` are named exports for coordinating a transition with destination-screen work.
+
+```tsx
+import {
+  blockTransition,
+  unblockTransition,
+} from "react-native-screen-transitions";
+
+blockTransition(route.key);
+
+try {
+  await prepareDestination();
+} finally {
+  unblockTransition(route.key);
+}
+```
+
+Calls are reference-counted. Every `blockTransition()` call must be paired with one `unblockTransition()` call for the same route, so release the block in `finally` when the work can fail. When the route key is omitted, both functions use the most recently focused screen in navigation history.
+
+This is visual coordination, not a performance optimization. It does not reduce rendering work or move that work off the JavaScript thread. It keeps a pending transition at its initial frame until the app is ready to show it.
+
+## Boundary API
+
+`Transition.Boundary` is now the component to reach for first.
+
+When `onPress` is present, it behaves like a pressable boundary. When `onPress` is omitted, it behaves like a passive view boundary.
+
+The old split made sense in a simple A to B example: the source was a `Trigger`, and the destination was a `View`.
+
+That model got harder to explain once bounds started working across more than two screens. A boundary can be the thing you press, a placeholder that keeps layout stable, the destination that receives a handoff, or a matched element several screens away. Calling some of those `View` and some of those `Trigger` made the API feel more specific than the system actually is.
+
+The new component is intentionally plain: it is a boundary with an id. Add `onPress` when that boundary should handle a press. Leave `onPress` off when it should only measure and participate in the transition.
+
+```tsx
+<Transition.Boundary
+  id="cover"
+  onPress={() => navigation.push("Details")}
+>
+  <Transition.Boundary.Target style={styles.cover}>
+    <Image source={cover} style={styles.image} />
+  </Transition.Boundary.Target>
+</Transition.Boundary>
+```
+
+`Transition.Boundary.View` and `Transition.Boundary.Trigger` still work, but they are deprecated aliases. New code should use `Transition.Boundary`.
+
+```tsx
+// Passive boundary
+<Transition.Boundary id="avatar">
+  <Image source={avatar} style={styles.avatar} />
+</Transition.Boundary>
+
+// Pressable boundary
+<Transition.Boundary
+  id="avatar"
+  onPress={() => navigation.push("Profile")}
+>
+  <Image source={avatar} style={styles.avatar} />
+</Transition.Boundary>
+```
+
+### Handoff
+
+Use `handoff` when the same live payload should move between matching boundaries during a transition.
+
+`handoff` remains experimental in v3.9. Native-backed content can expose platform compositor and lifecycle edge cases, especially Android video surfaces. `escapeClipping` does not move a live payload and is not covered by that warning.
+
+Every matching boundary that should participate in that handoff should set `handoff`. Treat it as a contract between the source and destination, not as a source-only flag. In a multi-screen chain, put it on each screen's matching boundary so the payload can keep moving from A to B, then B to C, and back again.
+
+```tsx
+<Transition.Boundary
+  id="video"
+  handoff
+  onPress={() => navigation.push("Player")}
+>
+  <Transition.Boundary.Target style={styles.video}>
+    <VideoView player={player} style={StyleSheet.absoluteFill} />
+  </Transition.Boundary.Target>
+</Transition.Boundary>
+```
+
+The destination uses the same boundary id and also opts into handoff, but it does not render another copy of the live child. Its target defines the receiving bounds:
+
+```tsx
+<Transition.Boundary id="video" handoff>
+  <Transition.Boundary.Target style={styles.heroVideo} />
+</Transition.Boundary>
+```
+
+This is useful for native views such as video players, maps, or other content where remounting would be visible. The boundary keeps its measured layout slot in place while the single live payload can move to the matching boundary.
+
+### Escaping Clipping
+
+Use `escapeClipping` when a boundary needs to render outside local clipping or layout constraints during the transition.
+
+```tsx
+<Transition.Boundary
+  id="card"
+  escapeClipping
+  onPress={() => navigation.push("Details")}
+>
+  <Transition.Boundary.Target style={styles.cardImage}>
+    <Image source={image} style={styles.image} />
+  </Transition.Boundary.Target>
+</Transition.Boundary>
+```
+
+Use `handoff` and `escapeClipping` together when both behaviors are needed:
+
+```tsx
+<Transition.Boundary
+  id="video"
+  handoff
+  escapeClipping
+  onPress={() => navigation.push("Player")}
+>
+  <Transition.Boundary.Target style={styles.video}>
+    <VideoView player={player} style={StyleSheet.absoluteFill} />
+  </Transition.Boundary.Target>
+</Transition.Boundary>
+```
+
+`handoff` and `escapeClipping` use `react-native-teleport` under the hood. If you use either prop, install the optional peer dependency:
+
+```sh
+bun add react-native-teleport@1.1.10
+```
+
+The supported range is `>=1.1.0 <1.1.11`. Version `1.1.11` is excluded because its host-size synchronization can trail continuously animated boundary hosts. Pin `1.1.10` when using either feature.
+
+## Better Retargeting
+
+Shared bounds now stay closer to the element you are actually animating to.
+
+If a destination changes while it is on screen, the closing transition can animate back from that updated position instead of using stale layout from when the screen first opened.
+
+This makes common flows feel more accurate:
+
+- a detail screen resizes media before dismissing
+- a selected item changes while another screen is open
+- a matched element lives inside a nested screen
+- a live payload moves through several matching boundaries
+
+v3.9 also handles transformed boundaries more predictably. When an element is scaled or transformed in its own layout, generated bounds styles can preserve that visual shape while still moving between screens.
+
+## Navigation Zoom
+
+`navigation.zoom()` now exposes appearance and drag-response controls without exposing the preset's internal curves:
+
+```tsx
+return bounds(id).navigation.zoom({
+  target: "bound",
+  keepFocusedVisible: true,
+  borderRadius: 48,
+  backgroundScale: 0.95,
+  backdropColor: "#000",
+  backdropOpacity: 0.4,
+  drag: {
+    translation: { horizontal: 0.9, vertical: 0.85 },
+    scale: { horizontal: 1, vertical: 0.8 },
+  },
+});
+```
+
+`drag.translation` and `drag.scale` accept horizontal and vertical response multipliers. `0` disables a response on that axis, `1` preserves the preset, and values above `1` exaggerate it.
+
+Use the new paired spec alongside the zoom helper so both opening and closing use the tuned timing:
+
+```tsx
+options={{
+  transitionSpec: Transition.Specs.Zoom,
+  screenStyleInterpolator: ({ bounds }) => {
+    "worklet";
+    return bounds(id).navigation.zoom();
+  },
+}}
+```
+
+When no target is provided, zoom creates an aspect-ratio-preserving virtual destination. Narrow sources fill the screen height and attach to its leading edge; other sources fill the screen width and attach to its top edge. `target: "bound"` stays opt-in and waits for the matching destination measurement instead of temporarily falling back to fullscreen.
+
+Zoom now also tracks the initial pinch focal point while scale and rotation change. Custom interpolators can read the same fixed screen-coordinate pivot from `gesture.pinchOriginX` and `gesture.pinchOriginY`, including through `gesture.handoff`.
+
+The following previous zoom options remain accepted by TypeScript for compatibility, but they are ignored:
+
+- `debug`
+- `focusedElementOpacity`
+- `unfocusedElementOpacity`
+- `maxSensitivity`
+- `velocityDepth`
+- `gestureProgressMode`
+- `horizontalDragScale`
+- `verticalDragScale`
+- `horizontalDragTranslation`
+- `verticalDragTranslation`
+
+## Behavior Changes
+
+Screens now wait for the next screen to resolve before applying that screen's defined styles.
+
+In practice, if screen A opens screen B, A will not receive B's defined styles until B has resolved. This avoids a class of early-frame jumps where the current screen could briefly react to styles from a destination that was not ready yet.
+
+If you added guards, delays, manual refreshes, or other workarounds to avoid unwanted first-frame behavior, those workarounds should be less necessary in v3.9.
+
+## Scoped Bounds API
+
+`bounds()` now scopes to one identity first. From there, choose the output you need.
+
+### Breaking change from v3.8
+
+The scoped accessor is a source-breaking change for code that uses the v3.8 bounds helpers.
+
+The old accessor mixed three jobs: reading arbitrary entries from the bounds registry, interpolating the active source and destination, and producing render styles. That made it possible to read measurements from one screen key while rendering a different transition pair. v3.9 resolves one boundary identity against the active navigation pair instead, so the store-shaped helpers were removed rather than kept as aliases with different semantics.
+
+| v3.8 API | v3.9 replacement |
+| --- | --- |
+| `bounds({ id, group, ...options })` | `bounds({ id, group }).styles(options)` |
+| `bounds.getLink(id)` or `bounds({ id, group }).getLink()` | `bounds({ id, group }).link()` |
+| `BoundsLink.compute(options)` | Scope the identity again, then call `bounds({ id, group }).styles(options)` for render styles or `.values(options)` for generated numeric geometry |
+| `interpolateBounds(...)` | For generated geometry, use `.values(options)`. To preserve scalar-property behavior, read `link().source` and `link().destination`, then interpolate their `bounds` values manually. |
+| `interpolateStyle(...)` | For generated render styles, use `.styles(options)`. To preserve scalar-property behavior, read the active link and interpolate its numeric `styles` values manually. |
+| `getMeasured(...)` or `getSnapshot(...)` | Use `bounds({ id, group }).link()` and inspect the active link's `source` or `destination` entry |
+
+For an ungrouped boundary, the shorter `bounds(id)` form is equivalent. Keep `{ id, group }` together when migrating grouped boundaries. `styles()` and `values()` generate transition geometry; they are not direct scalar replacements for every property accepted by the old interpolation helpers.
+
+The old screen-key overloads—`getMeasured(..., key)`, `getSnapshot(..., key)`, and `interpolateBounds(..., targetKey)`—have no direct replacement. Use matching boundary `id` and `group` values so the accessor resolves against the active screen pair.
+
+```tsx
+screenStyleInterpolator: ({ bounds }) => {
+  "worklet";
+
+  return {
+    cover: {
+      style: bounds("cover").styles({
+        offset: { y: -12 },
+      }),
+    },
+  };
+};
+```
+
+The scoped accessor exposes:
+
+- `bounds(id).styles(options)` for animated style output
+- `bounds(id).values(options)` for numeric output
+- `bounds(id).link(id?)` for inspecting the active source/destination link
+- `bounds(id).navigation.zoom(options)` for the built-in zoom recipe
+- `bounds(id).navigation.reveal(options)` for the built-in reveal recipe
+
+Bound identities can be a string, a number, or an object with `{ id, group }`.
+
+```tsx
+const card = bounds({ group: "feed", id: item.id });
+const style = card.styles({ method: "size" });
+const link = card.link();
+```
+
+### Numeric Bounds With values()
+
+Use `values()` when you want the generated bounds values but need to compose the final style yourself.
+
+```tsx
+screenStyleInterpolator: ({ bounds, current }) => {
+  "worklet";
+
+  const card = bounds("card").values({
+    method: "size",
+    space: "absolute",
+    progress: current.transitionProgress,
+  });
+
+  return {
+    card: {
+      style: {
+        width: card.width,
+        height: card.height,
+        transform: [
+          { translateX: card.translateX },
+          { translateY: card.translateY },
+        ],
+      },
+    },
+  };
+};
+```
+
+Use `styles()` when you want the library to return the render-ready style object.
+
+```tsx
+const style = bounds("card").styles({
+  method: "size",
+  space: "absolute",
+});
+```
+
+## Bounds Motion
+
+`styles()` and `values()` accept a `motion` resolver.
+
+Use it when the measured start and end bounds are correct, but the path between them needs customization.
+
+```tsx
+const cardStyle = bounds("card").styles({
+  motion: ({ current, progress, start, props }) => {
+    "worklet";
+
+    const envelope = Math.sin(progress * Math.PI);
+    const screenCenter = props.layouts.screen.width / 2;
+    const side = start.pageX + start.width / 2 < screenCenter ? -1 : 1;
+
+    return {
+      x: current.x + side * envelope * 48,
+      y: current.y - envelope * 64,
+      scale: current.scale * (1 + envelope * 0.08),
+      rotate: side * envelope * 8,
+      rotateX: envelope * 12,
+      rotateY: side * envelope * -10,
+      perspective: 700,
+    };
+  },
+});
+```
+
+`motion` receives:
+
+- `current`: the generated bounds transform for this frame
+- `progress`: normalized bounds progress from `0` to `1`
+- `start`: the resolved source rect
+- `end`: the resolved destination rect
+- `props`: the active interpolation props
+
+Return a replacement transform when an element needs an arc, depth, rotation, overshoot, or a path that should differ from the default source-to-destination line.
+
+The returned transform supports:
+
+- `x`
+- `y`
+- `scale`
+- `rotate`
+- `rotateX`
+- `rotateY`
+- `perspective`
+- `transformOrigin`
+
+For `method: "size"`, the returned scale is applied to the generated width and height. For `values()`, rotation fields are returned alongside the numeric bounds values.
+
+## Migration Notes
+
+- Prefer `Transition.Boundary` over `Transition.Boundary.View` and `Transition.Boundary.Trigger`.
+- Use `handoff` on every matching boundary that should send or receive a live payload.
+- Use `escapeClipping` when a boundary needs to render outside local clipping constraints during a transition.
+- Install `react-native-teleport@1.1.10` if you use `handoff` or `escapeClipping`.
+- Replace `bounds({ id, ...options })` style output with `bounds(id).styles(options)`.
+- Replace raw numeric bounds usage with `bounds(id).values(options)`.
+- Replace earlier beta `bounds(id).math(options)` usage with `bounds(id).values(options)`. `math()` remains as a deprecated alias.
+- Replace bounds link helper calls with `bounds(id).link()`.
+- Keep using `offset`; `gestures` still exists as a deprecated alias for offset-style movement.
+- Use `motion` instead of reimplementing bounds measurement when an element needs custom arc, depth, rotation, or overshoot behavior.
+- Replace zoom's directional drag tuples with `drag.translation` and `drag.scale` response multipliers.
+- Remove deprecated zoom opacity, sensitivity, velocity-depth, and debug options. They remain type-compatible in v3.9 but are ignored.
+- Use `gesture.pinchOriginX` and `gesture.pinchOriginY` when pinch-and-rotate motion needs a stable activation pivot.
+
+## Related Reading
+
+- [Shared Elements](/shared-elements)
+- [Navigation zoom](/navigation-zoom)
+- [Reveal](/reveal)
+- [Custom animations](/custom-animations)
+- [Transition components](/transition-components)

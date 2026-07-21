@@ -1,5 +1,14 @@
 export {
-	ScreenStylesContext,
-	ScreenStylesProvider,
-	useScreenStyles,
-} from "./styles.provider";
+	useComposedSlotStyles,
+	useSlotLayoutStyles,
+	useSlotProps,
+	useSlotStackingStyles,
+	useSlotStyles,
+} from "./hooks/slot-resolvers";
+
+export {
+	ScreenSlotContext,
+	type ScreenSlotName,
+	ScreenSlotProvider,
+	useScreenSlots,
+} from "./slot.provider";

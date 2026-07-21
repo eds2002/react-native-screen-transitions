@@ -1,11 +1,8 @@
 import { FlatList, Pressable, ScrollView, View } from "react-native";
 import { withScreenTransitions } from "./adapters/with-screen-transitions";
-import {
-	Boundary,
-	createBoundaryComponent,
-} from "./components/create-boundary-component";
+import { Boundary, createBoundaryComponent } from "./components/boundary";
 import { createTransitionAwareComponent } from "./components/create-transition-aware-component";
-import MaskedView from "./components/integrations/masked-view";
+import MaskedView from "./components/masked-view";
 import { Presets, Specs } from "./configs";
 
 export default {
@@ -21,6 +18,10 @@ export default {
 	FlatList: createTransitionAwareComponent(FlatList, {
 		isScrollable: true,
 	}),
+	/**
+	 * @deprecated Use `navigationMaskEnabled` with the navigation mask style IDs
+	 * instead.
+	 */
 	MaskedView: MaskedView,
 	Presets,
 	Specs,
@@ -29,6 +30,10 @@ export default {
 export type { NativeStackAdapterOptions } from "./adapters/with-screen-transitions";
 export { withScreenTransitions } from "./adapters/with-screen-transitions";
 export { snapTo } from "./animation/snap-to";
+export {
+	blockTransition,
+	unblockTransition,
+} from "./animation/transition-blocking";
 export {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
@@ -51,8 +56,15 @@ export {
 export type {
 	AnimatedViewStyle,
 	AnimationConfig,
+	BoundaryTeleportControl,
+	BoundsMotion,
+	BoundsMotionFrame,
+	BoundsMotionTransform,
 	BoundsNavigationAccessor,
+	BoundsNavigationRevealOptions,
 	BoundsNavigationRevealStyle,
+	BoundsNavigationZoomAxisResponse,
+	BoundsNavigationZoomDragOptions,
 	BoundsNavigationZoomOpacityRange,
 	BoundsNavigationZoomOpacityRanges,
 	BoundsNavigationZoomOptions,
@@ -61,7 +73,12 @@ export type {
 	InactiveBehavior,
 	OverlayProps,
 	RawGestureValues,
+	ScreenBackdropComponent,
+	ScreenBackdropComponentProps,
+	ScreenContentComponent,
+	ScreenContentComponentProps,
 	ScreenInterpolationProps,
+	ScreenLayerComponentProps,
 	ScreenStyleInterpolator,
 	ScreenTransitionAccessor,
 	ScreenTransitionConfig,
@@ -72,6 +89,7 @@ export type {
 	ScrollGestureState,
 	ScrollMetadataState,
 	TransitionInterpolatedStyle,
+	TransitionSlotProps,
 	TransitionSlotStyle,
 	TransitionSpec,
 } from "./types";

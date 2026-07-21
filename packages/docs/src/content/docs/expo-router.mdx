@@ -142,15 +142,15 @@ Blank stack runs the transition system by default. Native stack only participate
 import { router } from "expo-router";
 import Transition from "react-native-screen-transitions";
 
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id="hero"
   onPress={() => router.push("/detail")}
 >
   <Card />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
-The destination still uses `Transition.Boundary.View`, `Transition.Boundary.Target`, `navigationMaskEnabled`, and `screenStyleInterpolator`.
+The destination can use a matching passive `Transition.Boundary`, `Transition.Boundary.Target`, `navigationMaskEnabled`, and `screenStyleInterpolator` the same way it would outside Expo Router.
 
 ## Embedded Flows
 

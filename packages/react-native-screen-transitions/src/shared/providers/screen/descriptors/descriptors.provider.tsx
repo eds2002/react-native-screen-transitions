@@ -4,7 +4,7 @@ import type { BaseStackDescriptor } from "../../../types/stack.types";
 import createProvider from "../../../utils/create-provider";
 import type { DescriptorDerivations } from "./helpers/derive-descriptor-derivations";
 import { deriveDescriptorDerivations } from "./helpers/derive-descriptor-derivations";
-import { getAncestorKeys } from "./helpers/get-ancestor-keys";
+import { getAncestorKeyState } from "./helpers/get-ancestor-keys";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
@@ -49,7 +49,10 @@ const {
 		[previous, current, next],
 	);
 
-	const ancestorKeys = useMemo(() => getAncestorKeys(current), [current]);
+	const { ancestorKeys, ancestorDestinationPairKey } = useMemo(
+		() => getAncestorKeyState(current),
+		[current],
+	);
 
 	const derivations = useMemo(
 		() =>
@@ -58,8 +61,9 @@ const {
 				current,
 				next,
 				ancestorKeys,
+				ancestorDestinationPairKey,
 			}),
-		[previous, current, next, ancestorKeys],
+		[previous, current, next, ancestorKeys, ancestorDestinationPairKey],
 	);
 
 	const value = useMemo(

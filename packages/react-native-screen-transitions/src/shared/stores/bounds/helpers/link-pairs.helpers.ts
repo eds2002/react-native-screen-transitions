@@ -1,4 +1,5 @@
 import type {
+	BoundTag,
 	GroupKey,
 	LinkGroupState,
 	LinkKey,
@@ -75,7 +76,23 @@ export const createGroupTag = (group: GroupKey, linkKey: LinkKey): string => {
 	return `${group}:${linkKey}`;
 };
 
-export const ensurePairState = (
+/**
+ * Builds the {@link BoundTag} identity for a boundary. The combined `tag` is
+ * group-prefixed only when a group is present, matching how links are keyed.
+ */
+export const createBoundTag = (
+	linkKey: LinkKey,
+	group?: GroupKey,
+): BoundTag => {
+	"worklet";
+	return {
+		tag: group ? createGroupTag(group, linkKey) : linkKey,
+		linkKey,
+		group,
+	};
+};
+
+const ensurePairState = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,
 ): LinkPairState => {
@@ -86,7 +103,9 @@ export const ensurePairState = (
 			groups: {},
 		};
 	}
-	state[pairKey].groups ??= {};
+	if (!state[pairKey].groups) {
+		state[pairKey].groups = {};
+	}
 	return state[pairKey];
 };
 
@@ -104,6 +123,18 @@ export const ensurePairGroups = (
 ): Record<GroupKey, LinkGroupState> => {
 	"worklet";
 	return ensurePairState(state, pairKey).groups;
+};
+
+export const ensurePairSourceRequests = (
+	state: LinkPairsState,
+	pairKey: ScreenPairKey,
+): Record<LinkKey, true> => {
+	"worklet";
+	const pair = ensurePairState(state, pairKey);
+	if (!pair.sourceRequests) {
+		pair.sourceRequests = {};
+	}
+	return pair.sourceRequests;
 };
 
 export const removePairLink = (

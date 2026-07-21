@@ -1,12 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router } from "expo-router";
-import {
-	StyleSheet,
-	Text,
-	useWindowDimensions,
-	View,
-} from "react-native";
+import { StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Transition from "react-native-screen-transitions";
 import { ScreenHeader } from "@/components/screen-header";
@@ -205,10 +200,7 @@ export default function StyleIdBoundsIndex() {
 				},
 			]}
 		>
-			<ScreenHeader
-				title="My Boards"
-				subtitle="Visual notes, kept loose"
-			/>
+			<ScreenHeader title="My Boards" subtitle="Visual notes, kept loose" />
 			<Transition.ScrollView
 				style={styles.content}
 				contentContainerStyle={[
@@ -217,6 +209,7 @@ export default function StyleIdBoundsIndex() {
 				]}
 				showsVerticalScrollIndicator={false}
 			>
+				<Transition.Boundary.Host />
 				<View style={styles.grid}>
 					{BOARDS.map((item) => {
 						const tag = `shared-image-${item.id}`;
@@ -227,6 +220,8 @@ export default function StyleIdBoundsIndex() {
 								style={[styles.gridCell, { width: gridCellWidth }]}
 								onPress={() => openDetail(stackType, tag, item)}
 								id={tag}
+								escapeClipping
+								// handoff
 							>
 								<Transition.Boundary.Target
 									style={[styles.cover, { backgroundColor: theme.card }]}
@@ -276,9 +271,14 @@ export default function StyleIdBoundsIndex() {
 										id={tag}
 										style={styles.pickBoundary}
 										onPress={() => openDetail(stackType, tag, item)}
+										// portal="boundary-local"
+										escapeClipping
 									>
 										<Transition.Boundary.Target
-											style={[styles.pickCover, { backgroundColor: theme.card }]}
+											style={[
+												styles.pickCover,
+												{ backgroundColor: theme.card },
+											]}
 										>
 											<Image
 												source={item.source}

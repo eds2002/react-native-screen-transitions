@@ -1,44 +1,183 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
 import {
 	createGroupTag,
-	createPendingPairKey,
 	ensurePairGroups,
 	ensurePairLinks,
+	ensurePairSourceRequests,
 	getGroupKeyFromTag,
 	getLinkKeyFromTag,
 	getActiveGroupId as getPairActiveGroupId,
 	getDestination as getPairDestination,
 	getLink as getPairLink,
 	getSource as getPairSource,
-	getSourceScreenKeyFromPairKey,
-	removePairLink,
 } from "../helpers/link-pairs.helpers";
 import type {
+	BoundaryRuntimeFlags,
 	GroupKey,
 	LinkKey,
 	LinkPairsState,
 	ScreenKey,
 	ScreenPairKey,
+	SourceTagLinkSide,
 	TagID,
 	TagLink,
 } from "../types";
 import { pairs } from "./state";
 
-const toLinkKey = (tag: TagID): LinkKey => {
+const syncLinkStatus = (link: TagLink) => {
 	"worklet";
-	return getLinkKeyFromTag(tag);
+	link.status = link.source
+		? link.destination
+			? "complete"
+			: "destination-incomplete"
+		: "source-incomplete";
+};
+
+type SharedValueLike = {
+	_isReanimatedSharedValue: true;
+	get?: () => unknown;
+	value?: unknown;
+};
+
+const isSharedValueLike = (value: unknown): value is SharedValueLike => {
+	"worklet";
+	return (
+		(value as Partial<SharedValueLike> | null)?._isReanimatedSharedValue ===
+		true
+	);
+};
+
+const snapshotSharedValue = (value: SharedValueLike): unknown => {
+	"worklet";
+	return value.value;
+};
+
+const snapshotTransformArrayValue = (
+	value: unknown[],
+): unknown[] | undefined => {
+	"worklet";
+	const snapshot: unknown[] = [];
+
+	for (let index = 0; index < value.length; index++) {
+		const snapshotValue = snapshotTransformEntryValue(value[index]);
+		if (snapshotValue !== undefined) {
+			snapshot.push(snapshotValue);
+		}
+	}
+
+	return snapshot;
+};
+
+const snapshotTransformEntryValue = (value: unknown): unknown => {
+	"worklet";
+	if (isSharedValueLike(value)) {
+		return snapshotSharedValue(value);
+	}
+
+	if (Array.isArray(value)) {
+		return snapshotTransformArrayValue(value);
+	}
+
+	if (typeof value === "function") {
+		return undefined;
+	}
+
+	return value === null || typeof value !== "object" ? value : undefined;
+};
+
+const snapshotTransformItem = (value: unknown): unknown => {
+	"worklet";
+	if (!value || typeof value !== "object" || Array.isArray(value)) {
+		return snapshotTransformEntryValue(value);
+	}
+
+	const snapshot: Record<string, unknown> = {};
+	const source = value as Record<string, unknown>;
+	let hasValue = false;
+
+	for (const key in source) {
+		const snapshotValue = snapshotTransformEntryValue(source[key]);
+		if (snapshotValue !== undefined) {
+			snapshot[key] = snapshotValue;
+			hasValue = true;
+		}
+	}
+
+	return hasValue ? snapshot : undefined;
+};
+
+const snapshotTransform = (value: unknown): unknown => {
+	"worklet";
+	if (!Array.isArray(value)) {
+		return undefined;
+	}
+
+	const snapshot: unknown[] = [];
+
+	for (let index = 0; index < value.length; index++) {
+		const snapshotValue = snapshotTransformItem(value[index]);
+		if (snapshotValue !== undefined) {
+			snapshot.push(snapshotValue);
+		}
+	}
+
+	return snapshot;
+};
+
+/**
+ * Link styles are measurement metadata, not a general style serializer.
+ * Snapshot only the fields bounds currently consume: primitives, top-level
+ * shared values, and transform entries. Object-valued non-transform styles are
+ * intentionally omitted to avoid retaining opaque/native style objects.
+ */
+const snapshotStyles = (styles: StyleProps): StyleProps => {
+	"worklet";
+	if (!styles || typeof styles !== "object" || Array.isArray(styles)) {
+		return {};
+	}
+
+	const snapshot: Record<string, unknown> = {};
+	const source = styles as Record<string, unknown>;
+
+	for (const key in source) {
+		const value = source[key];
+
+		if (key === "transform") {
+			const transform = snapshotTransform(value);
+
+			if (transform !== undefined) {
+				snapshot.transform = transform;
+			}
+
+			continue;
+		}
+
+		if (isSharedValueLike(value)) {
+			snapshot[key] = snapshotSharedValue(value);
+			continue;
+		}
+
+		if (value === null || typeof value !== "object") {
+			snapshot[key] = value;
+		}
+	}
+
+	return snapshot as StyleProps;
 };
 
 const createLinkSide = (
 	screenKey: ScreenKey,
 	bounds: MeasuredDimensions,
 	styles: StyleProps,
+	runtimeFlags: BoundaryRuntimeFlags = {},
 ) => {
 	"worklet";
 	return {
 		screenKey,
 		bounds,
-		styles,
+		styles: snapshotStyles(styles),
+		handoff: runtimeFlags.handoff ? true : undefined,
+		escapeClipping: runtimeFlags.escapeClipping ? true : undefined,
 	};
 };
 
@@ -78,55 +217,31 @@ const writeDestination = (
 	group?: GroupKey,
 ) => {
 	"worklet";
-	const link = getPairLink(state, pairKey, linkKey);
-	if (!link) return;
+	const existingLink = getPairLink(state, pairKey, linkKey);
 
 	const destination = createLinkSide(screenKey, bounds, styles);
+	const link =
+		existingLink ??
+		({
+			group,
+			status: "source-incomplete",
+			source: null,
+			destination,
+			initialDestination: destination,
+		} satisfies TagLink);
 
 	link.group = group ?? link.group;
 	link.destination = destination;
-	link.initialDestination ??= destination;
+	if (!link.initialDestination) {
+		link.initialDestination = destination;
+	}
+	syncLinkStatus(link);
 
 	writePairLink(state, pairKey, linkKey, link);
 
 	if (link.group) {
 		writeGroup(state, pairKey, link.group, linkKey);
 	}
-};
-
-const promotePendingSource = (
-	state: LinkPairsState,
-	pairKey: ScreenPairKey,
-	linkKey: LinkKey,
-) => {
-	"worklet";
-	if (getPairLink(state, pairKey, linkKey)) return;
-
-	const sourceScreenKey = getSourceScreenKeyFromPairKey(pairKey);
-	const pendingPairKey = createPendingPairKey(sourceScreenKey);
-	if (pendingPairKey === pairKey) return;
-
-	const pendingLink = getPairLink(state, pendingPairKey, linkKey);
-	if (!pendingLink) return;
-
-	writePairLink(state, pairKey, linkKey, pendingLink);
-
-	if (pendingLink.group) {
-		const pendingGroupState =
-			state[pendingPairKey]?.groups?.[pendingLink.group];
-
-		if (pendingGroupState) {
-			writeGroup(
-				state,
-				pairKey,
-				pendingLink.group,
-				pendingGroupState.activeId,
-				pendingGroupState.initialId,
-			);
-		}
-	}
-
-	removePairLink(state, pendingPairKey, linkKey);
 };
 
 function setSource(
@@ -136,20 +251,25 @@ function setSource(
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
 	group?: GroupKey,
+	runtimeFlags: BoundaryRuntimeFlags = {},
 ) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		const linkKey = toLinkKey(tag);
-		const source = createLinkSide(screenKey, bounds, styles);
+		const linkKey = getLinkKeyFromTag(tag);
 
 		const pairLinks = ensurePairLinks(state, pairKey);
 
 		const existingLink = pairLinks[linkKey];
+
+		const source: SourceTagLinkSide = {
+			...createLinkSide(screenKey, bounds, styles, runtimeFlags),
+		};
 		const link =
 			existingLink ??
 			({
 				group,
+				status: "destination-incomplete",
 				source,
 				destination: null,
 				initialSource: source,
@@ -157,14 +277,13 @@ function setSource(
 
 		link.group = group ?? link.group;
 		link.source = source;
-		link.initialSource ??= source;
+		if (!link.initialSource) {
+			link.initialSource = source;
+		}
+		syncLinkStatus(link);
 
 		pairLinks[linkKey] = link;
-
-		const pendingPairKey = createPendingPairKey(screenKey);
-		if (pendingPairKey !== pairKey) {
-			removePairLink(state, pendingPairKey, linkKey);
-		}
+		delete state[pairKey]?.sourceRequests?.[linkKey];
 
 		return state;
 	});
@@ -181,8 +300,7 @@ function setDestination(
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		const linkKey = toLinkKey(tag);
-		promotePendingSource(state, pairKey, linkKey);
+		const linkKey = getLinkKeyFromTag(tag);
 		writeDestination(state, pairKey, linkKey, screenKey, bounds, styles, group);
 
 		return state;
@@ -193,7 +311,24 @@ function setActiveGroupId(pairKey: ScreenPairKey, group: GroupKey, tag: TagID) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		writeGroup(state, pairKey, group, toLinkKey(tag));
+		writeGroup(state, pairKey, group, getLinkKeyFromTag(tag));
+		return state;
+	});
+}
+
+function requestSourceMeasure(pairKey: ScreenPairKey, tag: TagID) {
+	"worklet";
+	pairs.modify(<T extends LinkPairsState>(state: T): T => {
+		"worklet";
+		const linkKey = getLinkKeyFromTag(tag);
+		const link = getPairLink(state, pairKey, linkKey);
+
+		if (link?.source || state[pairKey]?.sourceRequests?.[linkKey]) {
+			return state;
+		}
+
+		ensurePairSourceRequests(state, pairKey)[linkKey] = true;
+
 		return state;
 	});
 }
@@ -208,26 +343,14 @@ function getActiveGroupId(
 
 function getLink(pairKey: ScreenPairKey, tag: TagID): TagLink | null {
 	"worklet";
-	return getPairLink(pairs.get(), pairKey, toLinkKey(tag));
+	return getPairLink(pairs.get(), pairKey, getLinkKeyFromTag(tag));
 }
 
-const isCompletedLink = (link: TagLink | null): link is TagLink => {
+const hasSourceLink = (
+	link: TagLink | null,
+): link is TagLink & { source: NonNullable<TagLink["source"]> } => {
 	"worklet";
-	return !!link?.destination;
-};
-
-const getPendingSourceLink = (
-	state: LinkPairsState,
-	pairKey: ScreenPairKey,
-	linkKey: LinkKey,
-): TagLink | null => {
-	"worklet";
-	const sourceScreenKey = getSourceScreenKeyFromPairKey(pairKey);
-	const pendingPairKey = createPendingPairKey(sourceScreenKey);
-
-	if (pendingPairKey === pairKey) return null;
-
-	return getPairLink(state, pendingPairKey, linkKey);
+	return !!link?.source;
 };
 
 function getResolvedLink(
@@ -236,23 +359,14 @@ function getResolvedLink(
 ): { tag: TagID; link: TagLink | null } {
 	"worklet";
 	const state = pairs.get();
-	const linkKey = toLinkKey(tag);
+	const linkKey = getLinkKeyFromTag(tag);
 	const group = getGroupKeyFromTag(tag);
-	const requestedLink = getPairLink(state, pairKey, linkKey);
-
-	// Press-triggered zoom captures the source before navigation under a pending
-	// source<> pair. If the destination screen has no Boundary.View, nothing
-	// promotes that source into source<>destination, but zoom can still animate to
-	// its default top target from the pending source bounds.
-	const fallbackPendingLink = requestedLink
-		? null
-		: getPendingSourceLink(state, pairKey, linkKey);
-
-	const link = requestedLink ?? fallbackPendingLink;
+	const link = getPairLink(state, pairKey, linkKey);
 
 	// Group active ids can update before the new member has a full source/destination
-	// link, so unresolved grouped links fall back to the initial id's measurements.
-	if (!group || isCompletedLink(link)) {
+	// link. As soon as the requested member has source bounds, prefer it; only
+	// fall back while the requested member has no source yet.
+	if (!group || hasSourceLink(link)) {
 		return {
 			tag,
 			link,
@@ -262,7 +376,8 @@ function getResolvedLink(
 	const initialId = state[pairKey]?.groups?.[group]?.initialId;
 	if (initialId) {
 		const initialLink = getPairLink(state, pairKey, initialId);
-		if (isCompletedLink(initialLink)) {
+
+		if (hasSourceLink(initialLink)) {
 			return {
 				tag: createGroupTag(group, initialId),
 				link: initialLink,
@@ -281,7 +396,7 @@ function getSource(
 	tag: TagID,
 ): TagLink["source"] | null {
 	"worklet";
-	return getPairSource(pairs.get(), pairKey, toLinkKey(tag));
+	return getPairSource(pairs.get(), pairKey, getLinkKeyFromTag(tag));
 }
 
 function getDestination(
@@ -289,7 +404,7 @@ function getDestination(
 	tag: TagID,
 ): TagLink["destination"] | null {
 	"worklet";
-	return getPairDestination(pairs.get(), pairKey, toLinkKey(tag));
+	return getPairDestination(pairs.get(), pairKey, getLinkKeyFromTag(tag));
 }
 
 export {
@@ -298,6 +413,7 @@ export {
 	getLink,
 	getResolvedLink,
 	getSource,
+	requestSourceMeasure,
 	setActiveGroupId,
 	setDestination,
 	setSource,

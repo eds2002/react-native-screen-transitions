@@ -2,6 +2,10 @@ import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
 } from "../../../../types/animation.types";
+import {
+	getBoundsLocalTransform,
+	stripBoundsLocalTransform,
+} from "../../../../utils/bounds/helpers/styles/local-transform";
 
 const isExplicitTransitionSlot = (value: unknown) => {
 	"worklet";
@@ -12,7 +16,14 @@ const isExplicitTransitionSlot = (value: unknown) => {
 	);
 };
 
-const isAlreadyNormalizedStyleMap = (raw: Record<string, any>) => {
+const hasBoundsLocalTransformMarker = (style: unknown) => {
+	"worklet";
+	return !!getBoundsLocalTransform(style as any)?.length;
+};
+
+const isAlreadyNormalizedStyleMapWithoutBoundsMetadata = (
+	raw: Record<string, any>,
+) => {
 	"worklet";
 
 	for (const key in raw) {
@@ -23,6 +34,14 @@ const isAlreadyNormalizedStyleMap = (raw: Record<string, any>) => {
 		}
 
 		if (!isExplicitTransitionSlot(value)) {
+			return false;
+		}
+
+		if (
+			hasBoundsLocalTransformMarker(
+				(value as NormalizedTransitionSlotStyle).style,
+			)
+		) {
 			return false;
 		}
 	}
@@ -42,10 +61,7 @@ export function normalizeSlots(
 ): NormalizedTransitionInterpolatedStyle {
 	"worklet";
 
-	// Most modern interpolators already return the canonical `{ style, props }`
-	// slot shape. In that common case, we can forward the raw object directly and
-	// avoid building a second map just to copy the same slot references over.
-	if (isAlreadyNormalizedStyleMap(raw)) {
+	if (isAlreadyNormalizedStyleMapWithoutBoundsMetadata(raw)) {
 		return raw as NormalizedTransitionInterpolatedStyle;
 	}
 
@@ -62,11 +78,32 @@ export function normalizeSlots(
 		}
 
 		if (isExplicitTransitionSlot(value)) {
-			// Proper TransitionSlotStyle — pass through
-			normalized[key] = value as NormalizedTransitionSlotStyle;
+			const explicitSlot = value as NormalizedTransitionSlotStyle;
+			const boundsLocalTransform = getBoundsLocalTransform(explicitSlot.style);
+
+			if (!boundsLocalTransform?.length) {
+				normalized[key] = explicitSlot;
+				continue;
+			}
+
+			normalized[key] = {
+				style: explicitSlot.style
+					? stripBoundsLocalTransform(explicitSlot.style)
+					: undefined,
+				props: explicitSlot.props,
+				boundsLocalTransform,
+			};
 		} else {
+			const boundsLocalTransform = getBoundsLocalTransform(value);
+			const style =
+				boundsLocalTransform?.length && value
+					? stripBoundsLocalTransform(value)
+					: value;
+
 			// Shorthand: plain StyleProps — wrap it
-			normalized[key] = { style: value };
+			normalized[key] = boundsLocalTransform?.length
+				? { style, boundsLocalTransform }
+				: { style };
 		}
 	}
 

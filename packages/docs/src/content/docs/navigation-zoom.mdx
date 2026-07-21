@@ -1,8 +1,8 @@
 ---
 title: "Zoom"
 pageTitle: "Zoom"
-summary: "Use bounds({ id }).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
-description: "Use bounds({ id }).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
+summary: "Use bounds(id).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
+description: "Use bounds(id).navigation.zoom() for opinionated bounds-driven source-to-destination navigation transitions."
 eyebrow: "Navigation Transitions"
 group: "Navigation Transitions"
 order: 1
@@ -17,18 +17,18 @@ to: /navigation-zoom
 
 It sits on top of the same boundary link system as `bounds()`, but instead of manually composing slot output yourself, it builds the main layer map for you.
 
-Use it when you want a source-to-destination handoff that feels like a navigation zoom without building the transition from raw bounds primitives.
+Use it when you want a source-to-destination zoom without building the transition from low-level bounds primitives.
 
 ## Recommended Setup
 
-### 1. Mark the source with Boundary.Trigger
+### 1. Mark the source with Boundary
 
-Always use `Transition.Boundary.Trigger` on the source side.
+Use `Transition.Boundary` on the source side.
 
-`Boundary.Trigger` is the recommended owner because it captures source bounds before your navigation callback runs.
+When `onPress` is present, `Boundary` behaves like a pressable boundary and captures source bounds before your navigation callback runs.
 
 ```tsx
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id={item.id}
   anchor="leading"
   scaleMode="uniform"
@@ -36,17 +36,17 @@ Always use `Transition.Boundary.Trigger` on the source side.
   onPress={() => navigation.navigate("Detail", { id: item.id })}
 >
   <Image source={item.image} style={styles.artwork} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
 ### 2. Narrow measurement with Boundary.Target when needed
 
-If the pressable owner is larger than the visual element you actually want to measure, keep the trigger as the owner and move measurement to a nested `Transition.Boundary.Target`.
+If the pressable owner is larger than the visual element you actually want to measure, keep the boundary as the owner and move measurement to a nested `Transition.Boundary.Target`.
 
 `Boundary.Target` does not define its own `id`. It inherits the surrounding boundary owner and only changes which descendant gets measured.
 
 ```tsx
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id={item.id}
   anchor="leading"
   scaleMode="uniform"
@@ -60,7 +60,7 @@ If the pressable owner is larger than the visual element you actually want to me
   <View style={styles.copy}>
     <Text>{item.title}</Text>
   </View>
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
 ### 3. Run navigation.zoom() in the destination screen options
@@ -72,7 +72,7 @@ import { makeMutable } from "react-native-reanimated";
 
 const navigationZoomId = makeMutable<string | null>(null);
 
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id={item.id}
   onPress={() => {
     navigationZoomId.value = item.id;
@@ -80,7 +80,7 @@ const navigationZoomId = makeMutable<string | null>(null);
   }}
 >
   <Image source={item.image} style={styles.artwork} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 
 <Stack.Screen
   name="[id]"
@@ -88,6 +88,7 @@ const navigationZoomId = makeMutable<string | null>(null);
     navigationMaskEnabled: Platform.OS === "ios",
     gestureEnabled: true,
     gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
+    transitionSpec: Transition.Specs.Zoom,
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
       const id = navigationZoomId.value;
@@ -96,7 +97,7 @@ const navigationZoomId = makeMutable<string | null>(null);
         return null;
       }
 
-      return bounds({ id }).navigation.zoom({
+      return bounds(id).navigation.zoom({
         borderRadius: 48,
       });
     },
@@ -106,42 +107,85 @@ const navigationZoomId = makeMutable<string | null>(null);
 
 The id does not have to come from route params. You can resolve it from route params, a Reanimated shared value created with `makeMutable`, Zustand-backed state, or any other source, as long as the interpolator can read the active boundary id.
 
+`Transition.Specs.Zoom` provides the paired open and close springs tuned for this helper. `navigation.zoom()` builds the visual path, while `transitionSpec` controls how that path settles in each direction.
+
 Zoom uses transition progress internally for its bounds path. Live gesture values still drive drag and release effects, and `gesture.handoff` keeps release-time values available while live gesture fields reset.
 
 ## Destination Setup
 
-The destination screen does not need a `Transition.Boundary.View` for `navigation.zoom()` to work.
+The destination screen does not need a passive `Transition.Boundary` for `navigation.zoom()` to work.
 
-If all you need is a source-driven navigation zoom into the detail screen, the source `Boundary.Trigger` plus the interpolator lookup is enough.
+If all you need is a source-driven navigation zoom into the detail screen, the source `Boundary` plus the interpolator lookup is enough.
 
 This is the simpler setup and is often all you need for id-based list-to-detail flows.
+
+Add a matching passive `Transition.Boundary` on the destination when the zoom should target a specific destination element instead of the screen.
 
 ## zoom() Options
 
 `navigation.zoom()` accepts an optional configuration object:
 
 ```tsx
-return bounds({ id }).navigation.zoom({
+return bounds(id).navigation.zoom({
   borderRadius: 48,
   target: "bound",
   backgroundScale: 0.96,
+  backdropColor: "#000",
+  backdropOpacity: 0.45,
+  drag: {
+    translation: { horizontal: 0.9, vertical: 0.85 },
+    scale: { horizontal: 1, vertical: 0.8 },
+  },
 });
 ```
 
 | Option | Type | Notes |
 | --- | --- | --- |
-| `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Controls the destination target for the matched element. |
-| `debug` | `boolean` | Shows the helper's internal layers more explicitly while you tune the transition. |
-| `borderRadius` | `number` | Overrides the destination corner radius used by the helper. |
-| `focusedElementOpacity` | `object` | Controls the focused-screen matched element opacity curves. |
-| `unfocusedElementOpacity` | `object` | Controls the unfocused-screen matched element opacity curves. |
-| `backgroundScale` | `number` | Scales the unfocused background content while the focused bound animates above it. |
-| `horizontalDragScale` | `[number, number, number?]` | Horizontal gesture drag scaling tuple in the form `[shrinkMin, growMax, exponent?]`. |
-| `verticalDragScale` | `[number, number, number?]` | Vertical gesture drag scaling tuple in the form `[shrinkMin, growMax, exponent?]`. |
-| `horizontalDragTranslation` | `[number, number, number?]` | Horizontal gesture drag translation tuple in the form `[negativeMax, positiveMax, exponent?]`. |
-| `verticalDragTranslation` | `[number, number, number?]` | Vertical gesture drag translation tuple in the form `[negativeMax, positiveMax, exponent?]`. |
+| `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Uses the paired destination boundary, the full screen, or an explicit rectangle. When omitted, zoom preserves the source aspect ratio, filling the screen height for narrow sources and its width for other sources. |
+| `keepFocusedVisible` | `boolean` | Keeps focused content visible instead of applying zoom's built-in focused-content fade. Defaults to `false`. Useful for handed-off or other live content. |
+| `borderRadius` | `number` | Expanded clipping radius. Zoom interpolates from the measured source radius to this value. Defaults to `64`. |
+| `backgroundScale` | `number` | Scale applied to the unfocused screen. Defaults to `0.9375`. |
+| `backdropColor` | `ColorValue` | Color behind the focused zoom content. Defaults to `"black"`. |
+| `backdropOpacity` | `number` | Maximum backdrop opacity, clamped to `0...1`. Defaults to `0.45`. |
+| `drag.translation.horizontal` | `number` | Horizontal rendered-translation response. Defaults to `1`. |
+| `drag.translation.vertical` | `number` | Vertical rendered-translation response. Defaults to `1`. |
+| `drag.scale.horizontal` | `number` | Horizontal drag-scale response. Defaults to `1`. |
+| `drag.scale.vertical` | `number` | Vertical drag-scale response. Defaults to `1`. |
 
-Opacity tuples use `[inputStart, inputEnd, outputStart?, outputEnd?]`. Drag scale tuples use `[shrinkMin, growMax, exponent?]`. Drag translation tuples use `[negativeMax, positiveMax, exponent?]`.
+The nested `drag` values adjust intensity without replacing zoom's built-in curves. `0` disables that response on the axis, `1` keeps the default response, and values above `1` exaggerate it.
+
+The following earlier beta options still compile for migration safety, but zoom ignores them:
+
+- `debug`
+- `focusedElementOpacity`
+- `unfocusedElementOpacity`
+- `maxSensitivity`
+- `velocityDepth`
+- `gestureProgressMode`
+- `horizontalDragScale`
+- `verticalDragScale`
+- `horizontalDragTranslation`
+- `verticalDragTranslation`
+
+Move axis response tuning to `drag`. Zoom now owns opacity timing, gesture sensitivity, and velocity-depth behavior as part of its native preset.
+
+## Interactive Dismissal
+
+Zoom responds to every enabled pan direction and to `pinch-in`.
+
+```tsx
+options={{
+  gestureEnabled: true,
+  gestureDirection: ["bidirectional", "pinch-in"],
+  transitionSpec: Transition.Specs.Zoom,
+  screenStyleInterpolator: ({ bounds }) => {
+    "worklet";
+    return bounds("hero").navigation.zoom();
+  },
+}}
+```
+
+Rotation runs alongside an active pinch. Zoom keeps the pinch's activation point anchored while scale and rotation change, then carries the same origin through the release handoff.
 
 ## Navigation Mask
 
@@ -154,9 +198,10 @@ Enable it when you want masked reveal behavior during the navigation handoff:
   name="[id]"
   options={{
     navigationMaskEnabled: Platform.OS === "ios",
+    transitionSpec: Transition.Specs.Zoom,
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
-      return bounds({ id: "hero" }).navigation.zoom();
+      return bounds("hero").navigation.zoom();
     },
   }}
 />
@@ -170,27 +215,21 @@ Masked navigation transitions can cost more on Android. If you do not specifical
 
 Most navigation zoom flows do not need groups.
 
-If each source item navigates to its own destination route and the handoff is simply `id -> route`, plain `id` matching is enough.
+If each source item navigates to its own destination route and the match is simply `id -> route`, plain `id` matching is enough.
 
 Use `group` when the active matched member can change while the destination flow stays mounted, such as a paged gallery or a retargeted collection detail flow.
 
 ```tsx
-<Transition.Boundary.Trigger group="gallery" id={item.id} onPress={openItem}>
+<Transition.Boundary group="gallery" id={item.id} onPress={openItem}>
   <Image source={item.image} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 
-<Transition.Boundary.View group="gallery" id={item.id}>
+<Transition.Boundary group="gallery" id={item.id}>
   <Image source={item.image} />
-</Transition.Boundary.View>
+</Transition.Boundary>
 ```
 
 In that setup, some shared state usually tracks which id is currently active inside the group so `navigation.zoom()` knows which member to resolve against.
-
-## Performance
-
-The bounds runtime now avoids several old sources of repeated measurement work. Destination measurement is stabilized before the transition resolves its link, close-time scroll listeners are detached, and overscrolled scroll containers are normalized before their bounds are written.
-
-If a layout can change while a screen is unfocused, set `remeasureOnFocus` on the transition-aware boundary owner so the source link refreshes when focus returns.
 
 ## Related Reading
 

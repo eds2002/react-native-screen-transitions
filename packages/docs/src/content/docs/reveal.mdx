@@ -1,8 +1,8 @@
 ---
 title: "Reveal"
 pageTitle: "Reveal"
-summary: "Use bounds({ id }).navigation.reveal() for masked, source-to-container navigation reveal transitions."
-description: "Use bounds({ id }).navigation.reveal() for masked, source-to-container navigation reveal transitions."
+summary: "Use bounds(id).navigation.reveal() for masked, source-to-container navigation reveal transitions."
+description: "Use bounds(id).navigation.reveal() for masked, source-to-container navigation reveal transitions."
 eyebrow: "Navigation Transitions"
 group: "Navigation Transitions"
 order: 2
@@ -32,19 +32,19 @@ Reveal requires three pieces: a source boundary, a matching destination boundary
 
 ### Source Setup
 
-Mark the source with `Transition.Boundary.Trigger` and pass the reveal id through your navigation params.
+Mark the source with `Transition.Boundary` and pass the reveal id through your navigation params.
 
 ```tsx
 import Transition from "react-native-screen-transitions";
 
-<Transition.Boundary.Trigger
+<Transition.Boundary
   id={item.id}
   onPress={() => {
     navigation.navigate("Detail", { revealId: item.id });
   }}
 >
   <Image source={item.image} style={styles.thumbnail} />
-</Transition.Boundary.Trigger>
+</Transition.Boundary>
 ```
 
 ### Destination Setup
@@ -54,9 +54,9 @@ The destination screen must render a matching boundary for the same id. That des
 ```tsx
 function DetailScreen() {
   return (
-    <Transition.Boundary.View id={item.id}>
+    <Transition.Boundary id={item.id}>
       <Image source={item.image} style={styles.hero} />
-    </Transition.Boundary.View>
+    </Transition.Boundary>
   );
 }
 ```
@@ -81,7 +81,7 @@ Enable `navigationMaskEnabled` on the destination screen, then call `navigation.
       const id = active.route.params?.revealId;
       if (!id) return null;
 
-      return bounds({ id }).navigation.reveal({
+      return bounds(id).navigation.reveal({
         borderRadius: 58,
         borderContinuous: true,
         maxSensitivity: 0.8,
@@ -298,14 +298,11 @@ Use [Zoom](/navigation-zoom) when the matched element should float above the tra
 Use reveal when the destination content itself should grow out of the source and remain clipped by a navigation mask during the handoff.
 
 <Note>
-  <span className="font-semibold">Layout clipping caveat.</span> Reveal
-  currently uses z-index layering to lift the source boundary during the
-  handoff. This works well for normal `.map()` rendered content, but layout
-  containers such as `ScrollView` and virtualized lists such as `FlatList` can
-  still clip or recycle children around their own layout bounds. In those cases,
-  the reveal animation can show clipping. In the next version, we plan to
-  move this through `react-native-teleport` so the handoff can escape those
-  layout constraints with less reliance on z-index behavior.
+  <span className="font-semibold">Layout clipping caveat.</span> If the source
+  boundary lives inside a clipping layout such as a `ScrollView`, `FlatList`, or
+  another constrained container, add `escapeClipping` to the boundary. That lets
+  the animated payload render through the screen host during the transition
+  while the boundary keeps its measured layout slot in place.
 </Note>
 
 ## Related Reading

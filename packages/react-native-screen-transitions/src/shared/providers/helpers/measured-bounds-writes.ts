@@ -21,6 +21,8 @@ type ApplyMeasuredBoundsWritesParams = {
 	measured: MeasuredDimensions;
 	preparedStyles: StyleProps;
 	linkWrite?: LinkWrite;
+	handoff?: boolean;
+	escapeClipping?: boolean;
 };
 
 export const applyMeasuredBoundsWrites = (
@@ -35,6 +37,8 @@ export const applyMeasuredBoundsWrites = (
 		measured,
 		preparedStyles,
 		linkWrite,
+		handoff,
+		escapeClipping,
 	} = params;
 
 	// Set the bounds entry on every measure to avoid any stale measurements
@@ -51,6 +55,7 @@ export const applyMeasuredBoundsWrites = (
 			measured,
 			preparedStyles,
 			group,
+			{ handoff, escapeClipping },
 		);
 	}
 

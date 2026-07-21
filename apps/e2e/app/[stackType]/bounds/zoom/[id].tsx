@@ -115,9 +115,13 @@ function DetailPage({
 				</Text>
 
 				<View style={styles.swatchSection}>
-					<View style={[styles.swatch, { backgroundColor: item.color }]}>
+					<Transition.Boundary.View
+						group={ZOOM_GROUP}
+						id={item.id}
+						style={[styles.swatch, { backgroundColor: item.color }]}
+					>
 						<Text style={[styles.swatchHex]}>{item.color.toUpperCase()}</Text>
-					</View>
+					</Transition.Boundary.View>
 				</View>
 
 				<View style={styles.propertiesGrid}>
@@ -242,11 +246,6 @@ export default function NavigationZoomGroupTransitionsDetail() {
 		0,
 		BOUNDS_SYNC_ZOOM_ITEMS.findIndex((item) => item.id === id),
 	);
-
-	const selectedItem =
-		BOUNDS_SYNC_ZOOM_ITEMS[initialIndex] ??
-		BOUNDS_SYNC_ZOOM_ITEMS.find((item) => item.id === id) ??
-		BOUNDS_SYNC_ZOOM_ITEMS[0];
 
 	const handleMomentumScrollEnd = (
 		event: NativeSyntheticEvent<NativeScrollEvent>,

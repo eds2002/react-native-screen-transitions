@@ -34,6 +34,8 @@ export const clearFocalPoint = (gestures: GestureStoreMap) => {
 	"worklet";
 	gestures.focalX.set(0);
 	gestures.focalY.set(0);
+	gestures.pinchOriginX.set(0);
+	gestures.pinchOriginY.set(0);
 };
 
 export const clearRawTransformValues = (gestures: GestureStoreMap) => {

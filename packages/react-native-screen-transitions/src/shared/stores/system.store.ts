@@ -51,6 +51,7 @@ export interface SystemStoreActions {
 	clearLifecycleTransitionRequest(): void;
 	blockLifecycleStart(): void;
 	unblockLifecycleStart(): void;
+	drainLifecycleStartBlocks(): void;
 }
 
 export type SystemStoreMap = SystemStoreState & {
@@ -97,16 +98,27 @@ export const SystemStore = createStore<SystemStoreState, SystemStoreActions>({
 
 		blockLifecycleStart() {
 			"worklet";
-			bag.pendingLifecycleStartBlockCount.set(
-				bag.pendingLifecycleStartBlockCount.get() + 1,
+			bag.pendingLifecycleStartBlockCount.modify(
+				<T extends number>(count: T): T => {
+					"worklet";
+					return (count + 1) as T;
+				},
 			);
 		},
 
 		unblockLifecycleStart() {
 			"worklet";
-			bag.pendingLifecycleStartBlockCount.set(
-				Math.max(0, bag.pendingLifecycleStartBlockCount.get() - 1),
+			bag.pendingLifecycleStartBlockCount.modify(
+				<T extends number>(count: T): T => {
+					"worklet";
+					return Math.max(0, count - 1) as T;
+				},
 			);
+		},
+
+		drainLifecycleStartBlocks() {
+			"worklet";
+			bag.pendingLifecycleStartBlockCount.set(0);
 		},
 	}),
 });

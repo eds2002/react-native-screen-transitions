@@ -1,4 +1,5 @@
 import { router } from "expo-router";
+import { useMemo, useState } from "react";
 import {
 	Button,
 	Pressable,
@@ -20,13 +21,19 @@ import { useTheme } from "@/theme";
 const BOX_SIZE = 200;
 const HEADER_ESTIMATE = 120;
 const FOOTER_ESTIMATE = 120;
-const SCALE_MIN = 0.4;
-const SCALE_MAX = 1.2;
+const SCALE_MIN = 0.45;
+const SCALE_MAX = 1.65;
+const SHOW_DEBUG_FRAME_BORDERS = false;
 
 export default function SyncRetargetDetail() {
 	const insets = useSafeAreaInsets();
 	const theme = useTheme();
 	const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+	const [debugState, setDebugState] = useState({
+		scale: 1,
+		x: 0,
+		y: 0,
+	});
 
 	const translateX = useSharedValue(0);
 	const translateY = useSharedValue(0);
@@ -42,9 +49,16 @@ export default function SyncRetargetDetail() {
 
 		const maxX = Math.max(0, screenWidth - scaledSize);
 		const maxY = Math.max(0, arenaHeight - scaledSize);
+		const nextX = Math.random() * maxX;
+		const nextY = Math.random() * maxY;
 
-		translateX.value = withSpring(Math.random() * maxX);
-		translateY.value = withSpring(Math.random() * maxY);
+		setDebugState({
+			scale: newScale,
+			x: nextX,
+			y: nextY,
+		});
+		translateX.value = withSpring(nextX);
+		translateY.value = withSpring(nextY);
 		scale.value = withSpring(newScale);
 	};
 
@@ -55,9 +69,13 @@ export default function SyncRetargetDetail() {
 		],
 	}));
 
-	const animatedScaleStyle = useAnimatedStyle(() => ({
-		transform: [{ scale: scale.value }],
-	}));
+	const boundaryScaleStyle = useMemo(
+		() =>
+			({
+				transform: [{ scale }],
+			}) as any,
+		[scale],
+	);
 
 	return (
 		<View
@@ -75,12 +93,18 @@ export default function SyncRetargetDetail() {
 
 			<Animated.View style={styles.arena}>
 				<Animated.View style={[styles.positionWrapper, animatedWrapperStyle]}>
+					{SHOW_DEBUG_FRAME_BORDERS ? (
+						<View pointerEvents="none" style={styles.layoutGuide}>
+							<Text style={styles.layoutGuideLabel}>layout frame</Text>
+						</View>
+					) : null}
 					<Transition.Boundary.View
 						id="retarget"
 						anchor="center"
 						scaleMode="match"
 						style={[
 							styles.boundaryBox,
+							boundaryScaleStyle,
 							{
 								width: BOX_SIZE,
 								height: BOX_SIZE,
@@ -90,11 +114,11 @@ export default function SyncRetargetDetail() {
 						<Animated.View
 							style={[
 								styles.activeBox,
-								animatedScaleStyle,
+								SHOW_DEBUG_FRAME_BORDERS
+									? styles.activeBoxDebugBorder
+									: undefined,
 								{
 									backgroundColor: "#7B6FD0" + "25",
-									borderColor: "#7B6FD0",
-									borderWidth: 4,
 								},
 							]}
 						>
@@ -126,6 +150,10 @@ export default function SyncRetargetDetail() {
 				<Text style={[styles.footerNote, { color: theme.textTertiary }]}>
 					Close should return from whichever destination slot is currently
 					active.
+				</Text>
+				<Text style={[styles.footerNote, { color: theme.textTertiary }]}>
+					x {Math.round(debugState.x)} · y {Math.round(debugState.y)} · scale{" "}
+					{debugState.scale.toFixed(2)}
 				</Text>
 			</View>
 		</View>
@@ -165,6 +193,28 @@ const styles = StyleSheet.create({
 		borderRadius: 24,
 		alignItems: "center",
 		justifyContent: "center",
+	},
+	activeBoxDebugBorder: {
+		borderColor: "#7B6FD0",
+		borderWidth: 4,
+	},
+	layoutGuide: {
+		alignItems: "center",
+		borderColor: "#FF453A",
+		borderStyle: "dashed",
+		borderWidth: 2,
+		height: BOX_SIZE,
+		justifyContent: "flex-start",
+		position: "absolute",
+		width: BOX_SIZE,
+	},
+	layoutGuideLabel: {
+		backgroundColor: "white",
+		color: "#FF453A",
+		fontSize: 11,
+		fontWeight: "700",
+		paddingHorizontal: 6,
+		paddingVertical: 3,
 	},
 	activeLabel: {
 		fontWeight: "700",

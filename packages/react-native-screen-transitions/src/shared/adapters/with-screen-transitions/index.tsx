@@ -25,7 +25,6 @@ import type {
 	NavigatorLayoutArgs,
 	NavigatorWithScreenTransitions,
 	ScreenLayout,
-	ScreenLayoutArgs,
 } from "./types";
 
 export type { NativeStackAdapterOptions } from "./options";
@@ -41,7 +40,18 @@ type ScreenTransitionsNavigatorTypeBag<TBag extends NavigatorTypeBagBase> =
 		ScreenOptions: NativeStackAdapterOptions<TBag["ScreenOptions"]>;
 	};
 
-function adaptNavigatorChildren(children: ReactNode): ReactNode {
+export function createTransitionScreenLayout(
+	screenLayout?: ScreenLayout,
+): ScreenLayout {
+	return (screenLayoutArgs) => (
+		<ScreenTransitionsScreenLayout
+			screenLayout={screenLayout}
+			screenLayoutArgs={screenLayoutArgs}
+		/>
+	);
+}
+
+export function adaptNavigatorChildren(children: ReactNode): ReactNode {
 	return Children.map(children, (child) => {
 		if (!isValidElement(child)) {
 			return child;
@@ -61,6 +71,22 @@ function adaptNavigatorChildren(children: ReactNode): ReactNode {
 		if ("screenOptions" in props) {
 			nextProps.screenOptions = adaptNativeStackTransitionOptions(
 				props.screenOptions as NativeStackAdapterOptionInput | undefined,
+			);
+			changed = true;
+		}
+
+		// Screen and group layouts replace the navigator default, so each override
+		// must carry the transition screen layout with it.
+		if (typeof props.layout === "function") {
+			nextProps.layout = createTransitionScreenLayout(
+				props.layout as ScreenLayout,
+			);
+			changed = true;
+		}
+
+		if (typeof props.screenLayout === "function") {
+			nextProps.screenLayout = createTransitionScreenLayout(
+				props.screenLayout as ScreenLayout,
 			);
 			changed = true;
 		}
@@ -107,13 +133,8 @@ export function withScreenTransitions(
 				[layout],
 			);
 
-			const transitionScreenLayout = useCallback(
-				(screenLayoutArgs: ScreenLayoutArgs) => (
-					<ScreenTransitionsScreenLayout
-						screenLayout={screenLayout}
-						screenLayoutArgs={screenLayoutArgs}
-					/>
-				),
+			const transitionScreenLayout = useMemo(
+				() => createTransitionScreenLayout(screenLayout),
 				[screenLayout],
 			);
 			const screenOptions = useMemo(

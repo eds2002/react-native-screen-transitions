@@ -6,6 +6,7 @@ import {
 import { NO_PROPS, NO_STYLES } from "../../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../types/animation.types";
 import {
+	areResettableStatesBySlotEqual,
 	type LocalStyleLayers,
 	type ResettableStyleStatesBySlot,
 	resolveSlotStyles,
@@ -26,7 +27,7 @@ export const useResolvedStylesMap = ({
 	const previousResolvedStylesMap =
 		useSharedValue<NormalizedTransitionInterpolatedStyle>(NO_STYLES);
 
-	return useDerivedValue(() => {
+	return useDerivedValue<NormalizedTransitionInterpolatedStyle>(() => {
 		"worklet";
 		const { resolvedStylesMap, nextPreviousStyleStatesBySlot } =
 			resolveSlotStyles({
@@ -35,12 +36,24 @@ export const useResolvedStylesMap = ({
 				previousStyleStatesBySlot: previousStyleStatesBySlot.get(),
 			});
 
-		previousStyleStatesBySlot.set(nextPreviousStyleStatesBySlot);
+		if (
+			!areResettableStatesBySlotEqual(
+				previousStyleStatesBySlot.get(),
+				nextPreviousStyleStatesBySlot,
+			)
+		) {
+			previousStyleStatesBySlot.set(nextPreviousStyleStatesBySlot);
+		}
+
+		const previousResolvedStyles = previousResolvedStylesMap.get();
 		const stableResolvedStylesMap = reuseEqualResolvedSlots({
 			resolvedStylesMap,
-			previousResolvedStylesMap: previousResolvedStylesMap.get(),
+			previousResolvedStylesMap: previousResolvedStyles,
 		});
-		previousResolvedStylesMap.set(stableResolvedStylesMap);
+
+		if (stableResolvedStylesMap !== previousResolvedStyles) {
+			previousResolvedStylesMap.set(stableResolvedStylesMap);
+		}
 
 		return stableResolvedStylesMap;
 	});

@@ -1,11 +1,16 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
-import { BoundStore, type BoundaryConfig, type Snapshot } from "../../stores/bounds";
+import { resolvePortalOffsetStyle } from "../../components/boundary/portal/components/boundary-portal/helpers/offset-style";
+import { setPortalHostBounds } from "../../components/boundary/portal/components/boundary-portal/stores/host-bounds.store";
+import { BoundStore, type Snapshot } from "../../stores/bounds";
 import {
 	createPendingPairKey,
 	createScreenPairKey,
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
+import { createBoundsAccessor } from "../../utils/bounds";
+import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
+import type { EntryPatch } from "../../stores/bounds/types";
 
 const createBounds = (
 	x = 0,
@@ -19,6 +24,20 @@ const createBounds = (
 	pageY: y,
 	width,
 	height,
+});
+
+const createScrollLayout = (x = 0, y = 0) => ({
+	vertical: { offset: y, contentSize: 1000, layoutSize: 400 },
+	horizontal: { offset: x, contentSize: 1000, layoutSize: 400 },
+	isTouched: false,
+});
+
+const createSharedValue = (initial: number) => ({
+	_isReanimatedSharedValue: true,
+	value: initial,
+	get() {
+		return this.value;
+	},
 });
 
 const registerMeasuredEntry = (
@@ -36,10 +55,12 @@ const registerMeasuredEntry = (
 const registerBoundaryPresence = (
 	tag: string,
 	screenKey: string,
-	boundaryConfig?: BoundaryConfig,
+	boundaryConfig?: NonNullable<EntryPatch["boundaryConfig"]>,
+	runtimeFlags?: Pick<EntryPatch, "handoff" | "escapeClipping">,
 ) => {
 	BoundStore.entry.set(tag, screenKey, {
 		boundaryConfig,
+		...runtimeFlags,
 	});
 };
 
@@ -75,6 +96,30 @@ describe("BoundStore.entry", () => {
 		BoundStore.entry.remove("card", "screen-a");
 
 		expect(hasBoundaryPresence("card", "screen-a")).toBe(false);
+	});
+
+	it("tracks and clears portal runtime flags on boundary presence entries", () => {
+		registerBoundaryPresence(
+			"card",
+			"screen-a",
+			{ method: "size" },
+			{ handoff: true, escapeClipping: true },
+		);
+
+		expect(BoundStore.entry.get("card", "screen-a")?.handoff).toBe(true);
+		expect(BoundStore.entry.get("card", "screen-a")?.escapeClipping).toBe(
+			true,
+		);
+
+		BoundStore.entry.set("card", "screen-a", {
+			handoff: null,
+			escapeClipping: null,
+		});
+
+		expect(BoundStore.entry.get("card", "screen-a")?.handoff).toBeUndefined();
+		expect(
+			BoundStore.entry.get("card", "screen-a")?.escapeClipping,
+		).toBeUndefined();
 	});
 });
 
@@ -131,6 +176,53 @@ describe("applyMeasuredBoundsWrites", () => {
 		expect(link?.destination?.bounds).toEqual(destination);
 		expect(link?.destination?.styles).toEqual({ borderRadius: 20 });
 	});
+
+	it("snapshots shared style values when links are measured", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const scale = createSharedValue(0.58);
+
+		applyMeasuredBoundsWrites({
+			entryTag: "card",
+			linkId: "card",
+			currentScreenKey: "screen-a",
+			measured: createBounds(25, 35, 150, 160),
+			preparedStyles: { transform: [{ scale }] },
+			linkWrite: {
+				type: "source",
+				pairKey,
+			},
+		});
+
+		scale.value = 1.1;
+
+		const link = BoundStore.link.getLink(pairKey, "card");
+		expect(link?.source.styles).toEqual({ transform: [{ scale: 0.58 }] });
+	});
+
+	it("preserves transform arrays without snapshotting object-valued style metadata", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const matrix = [1, 0, 0, 1, 24, 32];
+
+		applyMeasuredBoundsWrites({
+			entryTag: "card",
+			linkId: "card",
+			currentScreenKey: "screen-a",
+			measured: createBounds(25, 35, 150, 160),
+			preparedStyles: {
+				shadowOffset: { width: 2, height: 3 },
+				transform: [{ matrix }],
+			},
+			linkWrite: {
+				type: "source",
+				pairKey,
+			},
+		});
+
+		const link = BoundStore.link.getLink(pairKey, "card");
+		expect(link?.source.styles).toEqual({
+			transform: [{ matrix }],
+		});
+	});
 });
 
 describe("BoundStore.link pair writes", () => {
@@ -144,20 +236,23 @@ describe("BoundStore.link pair writes", () => {
 		expect(BoundStore.link.getDestination(pairKey, "card")).toBeNull();
 	});
 
-	it("does not attach a destination without an existing pair link", () => {
+	it("sets a destination before the source exists", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const destination = createBounds(200, 200);
 
 		BoundStore.link.setDestination(
 			pairKey,
 			"card",
 			"screen-b",
-			createBounds(200, 200),
+			destination,
 		);
 
-		expect(BoundStore.link.getLink(pairKey, "card")).toBeNull();
+		const link = BoundStore.link.getLink(pairKey, "card");
+		expect(link?.source).toBeNull();
+		expect(link?.destination?.bounds).toEqual(destination);
 	});
 
-	it("promotes a temporary pending source when destination attaches", () => {
+	it("keeps pending source pairs isolated when destination attaches", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const source = createBounds(10, 20);
@@ -167,9 +262,60 @@ describe("BoundStore.link pair writes", () => {
 		BoundStore.link.setDestination(pairKey, "card", "screen-b", destination);
 
 		const link = BoundStore.link.getLink(pairKey, "card");
-		expect(link?.source.bounds).toEqual(source);
+		expect(link?.source).toBeNull();
 		expect(link?.destination?.bounds).toEqual(destination);
-		expect(BoundStore.link.getLink(pendingPairKey, "card")).toBeNull();
+		expect(BoundStore.link.getSource(pendingPairKey, "card")?.bounds).toEqual(
+			source,
+		);
+	});
+
+	it("tracks link status in the stored tag link", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+		const destination = createBounds(200, 220);
+
+		expect(BoundStore.link.getLink(pairKey, "card")).toBeNull();
+
+		BoundStore.link.setDestination(pairKey, "card", "screen-b", destination);
+		expect(BoundStore.link.getLink(pairKey, "card")).toEqual({
+			status: "source-incomplete",
+			source: null,
+			destination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+			initialDestination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+		});
+
+		BoundStore.link.setSource(pairKey, "card", "screen-a", source);
+		expect(BoundStore.link.getLink(pairKey, "card")).toEqual({
+			status: "complete",
+			source: {
+				screenKey: "screen-a",
+				bounds: source,
+				styles: {},
+			},
+			destination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+			initialSource: {
+				screenKey: "screen-a",
+				bounds: source,
+				styles: {},
+			},
+			initialDestination: {
+				screenKey: "screen-b",
+				bounds: destination,
+				styles: {},
+			},
+		});
 	});
 
 	it("sets and updates destination while preserving the initial destination", () => {
@@ -243,7 +389,7 @@ describe("BoundStore.link pair writes", () => {
 		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("3");
 	});
 
-	it("promotes pair-local group initial id from pending source", () => {
+	it("sets pair-local group initial id from destination writes", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
@@ -266,6 +412,9 @@ describe("BoundStore.link pair writes", () => {
 
 		expect(pairs.get()[pairKey].groups.colors.initialId).toBe("1");
 		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("1");
+		expect(BoundStore.link.getSource(pendingPairKey, "1")?.bounds).toEqual(
+			createBounds(10, 10),
+		);
 	});
 
 	it("parses concrete group tags to the member id for link access", () => {
@@ -285,7 +434,7 @@ describe("BoundStore.link pair writes", () => {
 		expect(Object.keys(pairs.get()[pairKey].links)).toEqual(["1"]);
 	});
 
-	it("removes the temporary pending source when the full pair source is written", () => {
+	it("keeps pending source pairs isolated when the full pair source is written", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
@@ -297,7 +446,9 @@ describe("BoundStore.link pair writes", () => {
 		);
 		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(2, 2));
 
-		expect(BoundStore.link.getLink(pendingPairKey, "card")).toBeNull();
+		expect(BoundStore.link.getSource(pendingPairKey, "card")?.bounds.pageX).toBe(
+			1,
+		);
 		expect(BoundStore.link.getSource(pairKey, "card")?.bounds.pageX).toBe(2);
 	});
 });
@@ -365,7 +516,85 @@ describe("BoundStore.link.getPair", () => {
 		expect(resolved.destinationBounds).toEqual(destination);
 	});
 
-	it("resolves entering from a pending source when destination is absent", () => {
+	it("falls back to initial group source while requested source is missing", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+
+		BoundStore.link.setSource(pairKey, "1", "screen-a", source, {}, "colors");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
+	it("does not fall back to pending initial group source while requested source is missing", () => {
+		const pendingPairKey = createPendingPairKey("screen-a");
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const source = createBounds(10, 20);
+
+		BoundStore.link.setSource(
+			pendingPairKey,
+			"1",
+			"screen-a",
+			source,
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toBeNull();
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
+	it("prefers requested group source over initial source when destination is absent", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const initialSource = createBounds(10, 20);
+		const requestedSource = createBounds(80, 120);
+
+		BoundStore.link.setSource(
+			pairKey,
+			"1",
+			"screen-a",
+			initialSource,
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "1");
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+		BoundStore.link.setSource(
+			pairKey,
+			"2",
+			"screen-a",
+			requestedSource,
+			{},
+			"colors",
+		);
+
+		const resolved = BoundStore.link.getPair("colors:2", {
+			entering: false,
+			currentScreenKey: "screen-a",
+			nextScreenKey: "screen-b",
+		});
+
+		expect(resolved.sourceBounds).toEqual(requestedSource);
+		expect(resolved.destinationBounds).toBeNull();
+	});
+
+	it("does not resolve entering from a pending source when destination is absent", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const source = createBounds(10, 20);
 
@@ -377,11 +606,11 @@ describe("BoundStore.link.getPair", () => {
 			currentScreenKey: "screen-b",
 		});
 
-		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.sourceBounds).toBeNull();
 		expect(resolved.destinationBounds).toBeNull();
 	});
 
-	it("resolves exiting from a pending source when destination is absent", () => {
+	it("does not resolve exiting from a pending source when destination is absent", () => {
 		const pendingPairKey = createPendingPairKey("screen-a");
 		const source = createBounds(10, 20);
 
@@ -393,8 +622,144 @@ describe("BoundStore.link.getPair", () => {
 			nextScreenKey: "screen-b",
 		});
 
-		expect(resolved.sourceBounds).toEqual(source);
+		expect(resolved.sourceBounds).toBeNull();
 		expect(resolved.destinationBounds).toBeNull();
+	});
+});
+
+describe("BoundsAccessor", () => {
+	it("syncs grouped active id when creating a scoped accessor", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const bounds = createBoundsAccessor(
+			() =>
+				({
+					previous: { route: { key: "screen-a" } },
+					current: { route: { key: "screen-b" } },
+				}) as any,
+		);
+
+		bounds({ id: "2", group: "colors" });
+
+		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("2");
+	});
+
+	it("can resolve portal host offsets without scroll compensation", () => {
+		setPortalHostBounds("screen-a", {
+			...createBounds(4, -102, 370, 0),
+			scroll: createScrollLayout(5, 100),
+		});
+
+		expect(
+			resolvePortalOffsetStyle({
+				hostKey: "screen-a",
+				placement: "cross-screen",
+				bounds: {
+					...createBounds(40, 220, 100, 80),
+					scroll: createScrollLayout(20, 150),
+				} as any,
+			}),
+		).toEqual({
+			transform: [{ translateY: 322 }, { translateX: 36 }],
+		});
+	});
+
+	it("does not compensate portal host offsets from destination live scroll", () => {
+		setPortalHostBounds("screen-b-host", {
+			...createBounds(4, -102, 370, 0),
+			scroll: createScrollLayout(5, 100),
+		});
+
+		expect(
+			resolvePortalOffsetStyle({
+				hostKey: "screen-b-host",
+				placement: "cross-screen",
+				bounds: createBounds(40, 220, 100, 80),
+			}),
+		).toEqual({
+			transform: [{ translateY: 322 }, { translateX: 36 }],
+		});
+	});
+});
+
+describe("boundary runtime source links", () => {
+	it("stores handoff and escape flags on source links", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(0, 0),
+			{},
+			undefined,
+			{ handoff: true, escapeClipping: true },
+		);
+
+		expect(BoundStore.link.getSource(pairKey, "card")?.handoff).toBe(true);
+		expect(BoundStore.link.getSource(pairKey, "card")?.escapeClipping).toBe(
+			true,
+		);
+	});
+
+	it("does not preserve runtime flags when a source refresh omits them", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(0, 0),
+			{},
+			undefined,
+			{ handoff: true, escapeClipping: true },
+		);
+		BoundStore.link.setSource(pairKey, "card", "screen-a", createBounds(0, 4));
+
+		expect(BoundStore.link.getSource(pairKey, "card")?.handoff).toBeUndefined();
+		expect(
+			BoundStore.link.getSource(pairKey, "card")?.escapeClipping,
+		).toBeUndefined();
+	});
+
+	it("does not shift source paths by destination scroll", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		const destination = {
+			...createBounds(120, 300, 200, 150),
+			scroll: createScrollLayout(0, 100),
+		} as Snapshot["bounds"];
+
+		const registerLink = (tag: string, sourceY: number) => {
+			BoundStore.link.setSource(
+				pairKey,
+				tag,
+				"screen-a",
+				createBounds(0, sourceY, 100, 80),
+			);
+			BoundStore.link.setDestination(pairKey, tag, "screen-b", destination);
+		};
+
+		registerLink("classic", 40);
+		registerLink("escaped", 40);
+
+		const computeFor = (tag: string) =>
+			computeBoundStyles(
+				{
+					id: tag,
+					current: { route: { key: "screen-a" } },
+					next: {
+						route: { key: "screen-b" },
+						layouts: { scroll: createScrollLayout(0, 1000) },
+					},
+					progress: 1.4,
+					dimensions: { width: 400, height: 800 },
+				} as any,
+				{ id: tag },
+			);
+
+		const classic = computeFor("classic");
+		const escaped = computeFor("escaped");
+
+		expect(escaped).toEqual(classic);
 	});
 });
 

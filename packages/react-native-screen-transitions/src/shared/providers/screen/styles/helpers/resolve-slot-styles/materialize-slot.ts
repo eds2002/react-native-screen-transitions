@@ -111,6 +111,7 @@ const materializeResolvedProps = ({
 export const materializeResolvedSlot = ({
 	baseStyle,
 	baseProps,
+	boundsLocalTransform,
 	previousState,
 	styleKeys,
 	propKeys,
@@ -121,6 +122,7 @@ export const materializeResolvedSlot = ({
 }: {
 	baseStyle: Record<string, unknown> | undefined;
 	baseProps: Record<string, unknown> | undefined;
+	boundsLocalTransform: NormalizedTransitionSlotStyle["boundsLocalTransform"];
 	previousState: ResettableStyleState | undefined;
 	styleKeys: Record<string, true> | undefined;
 	propKeys: Record<string, true> | undefined;
@@ -139,7 +141,6 @@ export const materializeResolvedSlot = ({
 		hasAnyStyleKeys,
 		hasStyleResetPatch,
 	});
-
 	const resolvedProps = materializeResolvedProps({
 		baseProps,
 		previousState,
@@ -150,6 +151,7 @@ export const materializeResolvedSlot = ({
 
 	resolvedSlot.style = resolvedStyle;
 	resolvedSlot.props = resolvedProps;
+	resolvedSlot.boundsLocalTransform = boundsLocalTransform;
 
 	if (!resolvedSlot.style && !resolvedSlot.props) {
 		return undefined;

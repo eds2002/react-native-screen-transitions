@@ -120,6 +120,7 @@ Each screen state's `gesture` object includes live pan, pinch, rotation, and han
 | `normX`, `normY` | Normalized pan translation after `gestureSensitivity` |
 | `scale`, `normScale` | Live pinch scale values after `gestureSensitivity` |
 | `focalX`, `focalY` | Pinch focal point in screen coordinates |
+| `pinchOriginX`, `pinchOriginY` | Screen-coordinate focal point captured when the pinch activates |
 | `rotation` | Two-finger rotation in radians |
 | `raw` | Physical pan, pinch, and rotation values before `gestureSensitivity` |
 | `handoff` | Release-time gesture snapshot for dismiss handoff animations |
@@ -128,7 +129,9 @@ Each screen state's `gesture` object includes live pan, pinch, rotation, and han
 
 Prefer `gesture.active` for new code. The older pan-only `gesture.direction` field still exists for compatibility.
 
-Live gesture values reset after release. If the dismiss animation needs the last drag, pinch, velocity, focal point, or rotation values, read from `gesture.handoff`.
+`focalX` and `focalY` can move with the fingers. Use `pinchOriginX` and `pinchOriginY` when a transform should stay anchored to the point where the pinch began.
+
+Live gesture values reset after release. If the dismiss animation needs the last drag, pinch, velocity, focal point, pinch origin, or rotation values, read from `gesture.handoff`.
 
 ## Scroll Metadata
 

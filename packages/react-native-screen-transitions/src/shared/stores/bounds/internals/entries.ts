@@ -1,5 +1,5 @@
 import { hasAnyKeys } from "../helpers/keys";
-import type { EntryPatch, ScreenEntry, ScreenKey, TagID } from "../types";
+import type { Entry, EntryPatch, ScreenKey, TagID } from "../types";
 import { type BoundaryEntriesState, boundaryRegistry } from "./state";
 
 const ensureBoundaryState = (state: BoundaryEntriesState, tag: TagID) => {
@@ -16,7 +16,7 @@ const ensureScreenEntry = (
 	state: BoundaryEntriesState,
 	tag: TagID,
 	screenKey: ScreenKey,
-): ScreenEntry => {
+): Entry => {
 	"worklet";
 	const tagState = ensureBoundaryState(state, tag);
 	if (!tagState.screens[screenKey]) {
@@ -28,7 +28,7 @@ const ensureScreenEntry = (
 	return tagState.screens[screenKey];
 };
 
-const applyEntryPatch = (entry: ScreenEntry, patch: EntryPatch) => {
+const applyEntryPatch = (entry: Entry, patch: EntryPatch) => {
 	"worklet";
 	if (patch.bounds !== undefined) {
 		entry.bounds = patch.bounds;
@@ -38,18 +38,26 @@ const applyEntryPatch = (entry: ScreenEntry, patch: EntryPatch) => {
 		entry.styles = patch.styles ?? {};
 	}
 
-	if (patch.boundaryConfig === undefined) {
-		return;
-	}
-
 	if (patch.boundaryConfig === null) {
 		delete entry.boundaryConfig;
-	} else {
+	} else if (patch.boundaryConfig !== undefined) {
 		entry.boundaryConfig = patch.boundaryConfig;
+	}
+
+	if (patch.handoff === null) {
+		delete entry.handoff;
+	} else if (patch.handoff !== undefined) {
+		entry.handoff = patch.handoff;
+	}
+
+	if (patch.escapeClipping === null) {
+		delete entry.escapeClipping;
+	} else if (patch.escapeClipping !== undefined) {
+		entry.escapeClipping = patch.escapeClipping;
 	}
 };
 
-function getEntry(tag: TagID, key: ScreenKey): ScreenEntry | null {
+function getEntry(tag: TagID, key: ScreenKey): Entry | null {
 	"worklet";
 	return boundaryRegistry.get()[tag]?.screens[key] ?? null;
 }

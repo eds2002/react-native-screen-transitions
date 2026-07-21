@@ -1,4 +1,3 @@
-import { Platform } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
@@ -29,7 +28,7 @@ const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolato
 		const navigationStyles = bounds({
 			id,
 			group: ZOOM_GROUP,
-		}).navigation.zoom();
+		}).navigation.zoom({ target: "bound" });
 
 		return {
 			...navigationStyles,
@@ -52,16 +51,14 @@ export default function NavigationZoomGroupTransitionsLayout() {
 			<StackNavigator.Screen
 				name="[id]"
 				options={{
-					// navigationMaskEnabled: Platform.OS === "ios",
+					navigationMaskEnabled: true,
+					backdropBehavior: "dismiss",
 					gestureEnabled: true,
-					gestureDirection: ["bidirectional"],
+					gestureDirection: ["bidirectional", "pinch-in"],
 					gestureReleaseVelocityScale: 1.6,
+					gestureProgressMode: "freeform",
 					screenStyleInterpolator: navigationZoomInterpolator,
-					experimental_enableHighRefreshRate: true,
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.FlingSpec,
-					},
+					transitionSpec: Transition.Specs.Zoom,
 				}}
 			/>
 		</StackNavigator>

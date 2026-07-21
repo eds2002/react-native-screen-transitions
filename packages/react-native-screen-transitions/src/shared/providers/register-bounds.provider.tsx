@@ -25,6 +25,11 @@ import createProvider from "../utils/create-provider";
 import { applyMeasuredBoundsWrites } from "./helpers/measured-bounds-writes";
 import { useDescriptorDerivations, useDescriptors } from "./screen/descriptors";
 
+/**
+ * @deprecated Internal legacy provider for the old shared-bound-tag registration
+ * path. Do not build new boundary behavior here; use the Transition.Boundary
+ * measurement pipeline instead.
+ */
 interface MaybeMeasureAndStoreParams {
 	onPress?: ((...args: unknown[]) => void) | undefined;
 	shouldSetSource?: boolean;

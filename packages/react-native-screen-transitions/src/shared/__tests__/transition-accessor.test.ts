@@ -180,6 +180,7 @@ describe("createTransitionAccessor", () => {
 		const self = createTrackedRevision();
 		const ancestor = createTrackedRevision();
 		const descendant = createTrackedRevision();
+		const external = createTrackedRevision();
 		const descendants = {
 			get: () => [
 				{
@@ -196,10 +197,12 @@ describe("createTransitionAccessor", () => {
 			self.revision,
 			[createRevisionSource(ancestor.revision)],
 			descendants,
+			[external.revision],
 		);
 
 		expect(self.getReads()).toBe(1);
 		expect(ancestor.getReads()).toBe(1);
 		expect(descendant.getReads()).toBe(1);
+		expect(external.getReads()).toBe(1);
 	});
 });
