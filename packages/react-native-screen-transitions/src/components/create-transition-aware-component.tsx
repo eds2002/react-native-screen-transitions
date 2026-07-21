@@ -1,18 +1,19 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: <This helper is usually being used inside a transitionable stack> */
 import type React from "react";
 import { type ComponentType, forwardRef, memo } from "react";
+import type { View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated, {
-	useAnimatedProps,
-	useAnimatedStyle,
+	runOnUI,
+	useAnimatedRef,
 	useComposedEventHandler,
 } from "react-native-reanimated";
-import { NO_PROPS, NO_STYLES } from "../constants";
+import { RegisterBoundsProvider } from "../providers/register-bounds.provider";
 import {
 	ScrollMetadataOwnerProvider,
 	useScrollGestureCoordination,
 } from "../providers/screen/gestures/scroll-coordination";
-import { useScreenStyles } from "../providers/screen/styles";
+import { useSlotProps, useSlotStyles } from "../providers/screen/styles";
 import type { TransitionAwareProps } from "../types/screen.types";
 
 interface CreateTransitionAwareComponentOptions {
@@ -35,6 +36,7 @@ export function createTransitionAwareComponent<P extends object>(
 		TransitionAwareProps<P>
 	>((props: any, ref) => {
 		const {
+			remeasureOnFocus: _remeasureOnFocus,
 			onScroll: userOnScroll,
 			onMomentumScrollEnd: userOnMomentumScrollEnd,
 			onScrollEndDrag: userOnScrollEndDrag,
@@ -110,46 +112,45 @@ export function createTransitionAwareComponent<P extends object>(
 	const Inner = forwardRef<
 		React.ComponentRef<typeof AnimatedComponent>,
 		TransitionAwareProps<P>
-	>((props, ref) => {
+	>((props, _) => {
 		const {
 			children,
 			style,
+			sharedBoundTag,
 			styleId,
+			onPress,
+			remeasureOnFocus,
 			animatedProps: userAnimatedProps,
 			...rest
 		} = props as any;
 
-		const { stylesMap } = useScreenStyles();
-
-		const associatedStyles = useAnimatedStyle(() => {
-			"worklet";
-
-			if (!styleId) {
-				return NO_STYLES;
-			}
-
-			return stylesMap.get()[styleId]?.style ?? NO_STYLES;
-		});
-
-		const associatedProps = useAnimatedProps(() => {
-			"worklet";
-
-			if (!styleId) {
-				return NO_PROPS;
-			}
-
-			return stylesMap.get()[styleId]?.props ?? NO_PROPS;
-		});
+		const animatedRef = useAnimatedRef<View>();
+		const associatedId = sharedBoundTag || styleId;
+		const associatedStyles = useSlotStyles(associatedId);
+		const associatedProps = useSlotProps(associatedId);
 
 		return (
-			<AnimatedComponent
-				{...(rest as any)}
-				ref={ref}
-				style={[style, associatedStyles]}
-				animatedProps={userAnimatedProps ?? associatedProps}
+			<RegisterBoundsProvider
+				animatedRef={animatedRef}
+				style={style}
+				onPress={onPress}
+				sharedBoundTag={sharedBoundTag}
+				remeasureOnFocus={remeasureOnFocus}
 			>
-				{children}
-			</AnimatedComponent>
+				{({ captureActiveOnPress, handleInitialLayout }) => (
+					<AnimatedComponent
+						{...(rest as any)}
+						ref={animatedRef}
+						style={[style, associatedStyles]}
+						animatedProps={userAnimatedProps ?? associatedProps}
+						onPress={captureActiveOnPress}
+						onLayout={runOnUI(handleInitialLayout)}
+						collapsable={!sharedBoundTag}
+					>
+						{children}
+					</AnimatedComponent>
+				)}
+			</RegisterBoundsProvider>
 		);
 	});
 

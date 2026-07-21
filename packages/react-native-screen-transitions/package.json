@@ -19,28 +19,28 @@
 			"url": "https://buymeacoffee.com/trpfsu"
 		}
 	],
-	"main": "lib/commonjs/shared/index.js",
-	"module": "lib/module/shared/index.js",
-	"types": "lib/typescript/shared/index.d.ts",
-	"react-native": "src/shared/index",
+	"main": "lib/commonjs/index.js",
+	"module": "lib/module/index.js",
+	"types": "lib/typescript/index.d.ts",
+	"react-native": "src/index",
 	"exports": {
 		".": {
-			"react-native": "./src/shared/index.ts",
-			"import": "./lib/module/shared/index.js",
-			"require": "./lib/commonjs/shared/index.js",
-			"types": "./lib/typescript/shared/index.d.ts"
+			"react-native": "./src/index.ts",
+			"import": "./lib/module/index.js",
+			"require": "./lib/commonjs/index.js",
+			"types": "./lib/typescript/index.d.ts"
 		},
 		"./react-navigation": {
-			"react-native": "./src/shared/navigators/react-navigation/index.tsx",
-			"import": "./lib/module/shared/navigators/react-navigation/index.js",
-			"require": "./lib/commonjs/shared/navigators/react-navigation/index.js",
-			"types": "./lib/typescript/shared/navigators/react-navigation/index.d.ts"
+			"react-native": "./src/navigators/react-navigation/index.tsx",
+			"import": "./lib/module/navigators/react-navigation/index.js",
+			"require": "./lib/commonjs/navigators/react-navigation/index.js",
+			"types": "./lib/typescript/navigators/react-navigation/index.d.ts"
 		},
 		"./expo-router": {
-			"react-native": "./src/shared/navigators/expo-router/index.tsx",
-			"import": "./lib/module/shared/navigators/expo-router/index.js",
-			"require": "./lib/commonjs/shared/navigators/expo-router/index.js",
-			"types": "./lib/typescript/shared/navigators/expo-router/index.d.ts"
+			"react-native": "./src/navigators/expo-router/index.tsx",
+			"import": "./lib/module/navigators/expo-router/index.js",
+			"require": "./lib/commonjs/navigators/expo-router/index.js",
+			"types": "./lib/typescript/navigators/expo-router/index.d.ts"
 		}
 	},
 	"scripts": {

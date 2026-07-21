@@ -14,7 +14,7 @@ import { useTheme } from "@/theme";
 import {
 	BoundStore,
 	type MeasuredEntry,
-} from "../../../../../../../packages/react-native-screen-transitions/src/shared/stores/bounds";
+} from "../../../../../../../packages/react-native-screen-transitions/src/stores/bounds";
 import { OPENING_TRANSFORM_BOUNDARY_ID } from "./constants";
 
 type WindowMeasurement = {

@@ -1,3 +1,5 @@
+import type { ComponentType, ReactNode } from "react";
+import type { ViewProps } from "react-native";
 import type { AnimatedProps } from "react-native-reanimated";
 import type {
 	ScreenStyleInterpolator,
@@ -52,6 +54,71 @@ export type SnapPoint = number | "auto";
 export type BackdropBehavior = "block" | "passthrough" | "dismiss" | "collapse";
 
 /**
+ * Props passed to custom screen layer component renderers such as
+ * {@linkcode ScreenTransitionConfig.backdropComponent}.
+ */
+export type ScreenLayerComponentProps = {
+	/**
+	 * Animated styles for the target layer, including the library-owned base
+	 * layout style for that layer.
+	 */
+	styles: AnimatedProps<ViewProps>["style"];
+
+	/**
+	 * Animated props resolved from the matching `screenStyleInterpolator` slot.
+	 */
+	props: AnimatedProps<Record<string, unknown>>["animatedProps"];
+
+	/**
+	 * Pointer-event behavior resolved for the current layer state.
+	 */
+	pointerEvents: ViewProps["pointerEvents"];
+};
+
+/**
+ * Props passed to {@linkcode ScreenTransitionConfig.backdropComponent} when it
+ * is provided as a render-style component.
+ */
+export type ScreenBackdropComponentProps = ScreenLayerComponentProps;
+
+/**
+ * Props passed to {@linkcode ScreenTransitionConfig.contentComponent} when it
+ * is provided as a render-style component.
+ */
+export type ScreenContentComponentProps = ScreenLayerComponentProps & {
+	/**
+	 * The screen subtree rendered inside the content layer.
+	 */
+	children: ReactNode;
+};
+
+/**
+ * Custom renderer for the backdrop layer.
+ *
+ * Component types such as `BlurView` are still accepted for compatibility.
+ * Function components can also receive {@linkcode ScreenBackdropComponentProps}
+ * to render the animated styles and props manually.
+ *
+ * @see {@linkcode ScreenTransitionConfig.backdropComponent}
+ */
+export type ScreenBackdropComponent =
+	| ComponentType<any>
+	| ComponentType<ScreenBackdropComponentProps>;
+
+/**
+ * Custom renderer for the screen content layer.
+ *
+ * Component types such as a custom native view are accepted directly. Function
+ * components can also receive {@linkcode ScreenContentComponentProps} to render
+ * the animated styles, props, pointer-events, and children manually.
+ *
+ * @see {@linkcode ScreenTransitionConfig.contentComponent}
+ */
+export type ScreenContentComponent =
+	| ComponentType<any>
+	| ComponentType<ScreenContentComponentProps>;
+
+/**
  * Controls how an inactive screen is retained after it is no longer active.
  *
  * - `hide`
@@ -102,6 +169,38 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * }
 	 */
 	styleId?: string;
+
+	/**
+	 * Marks this component for measurement to enable shared element transitions.
+	 * Components with the same tag across different screens will animate between each other.
+	 *
+	 * @example
+	 * // Screen A:
+	 * <Transition.View sharedBoundTag="profile-avatar">
+	 *   <Avatar size="small" />
+	 * </Transition.View>
+	 *
+	 * // Screen B:
+	 * <Transition.View sharedBoundTag="profile-avatar">
+	 *   <Avatar size="large" />
+	 * </Transition.View>
+	 *
+	 * @deprecated Use `Transition.Boundary` with `id` instead.
+	 */
+	sharedBoundTag?: string;
+
+	/**
+	 * Re-measures this component when the screen regains focus and updates
+	 * any matching shared-bound source link in place.
+	 *
+	 * Useful when layout can change while unfocused (for example, programmatic
+	 * ScrollView/FlatList scrolling triggered from another screen).
+	 *
+	 * @deprecated Legacy `sharedBoundTag` refresh option. The boundary
+	 * measurement pipeline refreshes layout through `Transition.Boundary`.
+	 * @default false
+	 */
+	remeasureOnFocus?: boolean;
 };
 
 export type ScreenTransitionConfig = {
@@ -181,6 +280,8 @@ export type ScreenTransitionConfig = {
 	/**
 	 * How much velocity affects snap point targeting. Lower values make snapping
 	 * feel more deliberate (iOS-like), higher values make it more responsive to flicks.
+	 *
+	 * @deprecated Use `gestureSnapVelocityImpact` instead.
 	 * @default 0.1
 	 */
 	snapVelocityImpact?: number;
@@ -372,13 +473,21 @@ export type ScreenTransitionConfig = {
 	/**
 	 * Custom component to render as the backdrop layer (between screens).
 	 *
-	 * The library wraps this component with `Animated.createAnimatedComponent` internally.
-	 * Animated styles and props are driven by the `backdrop` slot in the interpolator return value.
+	 * Direct component types are wrapped with `Animated.createAnimatedComponent`
+	 * internally. Function components can receive `{ styles, props, pointerEvents }`
+	 * and decide how to render the layer. Animated styles and props are driven by
+	 * the `backdrop` slot in the interpolator return value.
 	 *
 	 * `backdropBehavior` still controls the wrapping Pressable for dismiss/collapse handling.
 	 *
 	 * @example
-	 * backdropComponent: BlurView,
+	 * backdropComponent: ({ styles, props, pointerEvents }) => (
+	 *   <AnimatedBlurView
+	 *     style={styles}
+	 *     animatedProps={props}
+	 *     pointerEvents={pointerEvents}
+	 *   />
+	 * ),
 	 * screenStyleInterpolator: ({ progress }) => {
 	 *   "worklet";
 	 *   return {
@@ -391,7 +500,32 @@ export type ScreenTransitionConfig = {
 	 *
 	 * @default undefined
 	 */
-	backdropComponent?: React.ComponentType<any>;
+	backdropComponent?: ScreenBackdropComponent;
+
+	/**
+	 * Custom component to render as the screen's content layer.
+	 *
+	 * The component receives the `content` slot's animated styles and props. A
+	 * direct component type is wrapped with `Animated.createAnimatedComponent`;
+	 * a function component can receive `{ styles, props, pointerEvents, children }`
+	 * and decide how to render the layer.
+	 *
+	 * `contentComponent` replaces `surfaceComponent` for custom screen shells.
+	 *
+	 * @example
+	 * contentComponent: ({ styles, props, pointerEvents, children }) => (
+	 *   <AnimatedSquircleView
+	 *     style={styles}
+	 *     animatedProps={props}
+	 *     pointerEvents={pointerEvents}
+	 *   >
+	 *     {children}
+	 *   </AnimatedSquircleView>
+	 * )
+	 *
+	 * @default undefined
+	 */
+	contentComponent?: ScreenContentComponent;
 
 	/**
 	 * Custom component to render as the screen's surface layer.
@@ -415,6 +549,7 @@ export type ScreenTransitionConfig = {
 	 * }
 	 *
 	 * @default undefined
+	 * @deprecated Use `contentComponent` instead.
 	 */
 	surfaceComponent?: React.ComponentType<any>;
 };
