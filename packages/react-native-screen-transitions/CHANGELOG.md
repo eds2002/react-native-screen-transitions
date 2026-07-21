@@ -1,10 +1,50 @@
 # Changelog
 
-## [3.9.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.9.0-beta.3...v3.9.0) (2026-07-21)
+## [3.9.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0...v3.9.0) (2026-07-21)
+
+v3.9 focuses on more predictable bounds transitions, a native-style navigation zoom, and experimental live-content handoff.
 
 ### Features
 
-* finalize v3.9 release changes ([1b60cd5](https://github.com/eds2002/react-native-screen-transitions/commit/1b60cd54b67163389aa8a7a428c3de350d029b84))
+* **Navigation zoom:** rebuilt `bounds(id).navigation.zoom()` with aspect-ratio-preserving implicit targets and explicit matched-bound targets, native-style opacity and masking, directional drag response, pinch and rotation handling, and source aspect-ratio tracking. Added `Transition.Specs.Zoom` as the tuned open-and-close spring preset.
+* **Boundary API:** unified passive and pressable boundaries under `Transition.Boundary`, retained `Transition.Boundary.Target` for nested measurement, added `Transition.Boundary.Host` for explicit portal placement, and kept `Transition.Boundary.View` and `Transition.Boundary.Trigger` as deprecated aliases.
+* **Live-content handoff:** added experimental `handoff` support for moving one live payload, including video and other native-backed content, between matching boundaries without remounting it.
+* **Clipping:** added `escapeClipping` so boundary content can animate outside local clipping constraints without requiring a matching destination boundary.
+* **Transition readiness:** added reference-counted `blockTransition()` and `unblockTransition()` helpers that hold a pending transition at its initial frame until destination work is ready. These helpers coordinate visual timing; they do not optimize or move rendering work.
+* **Scoped bounds:** added `bounds(id).styles()`, `.values()`, `.link()`, `.navigation.zoom()`, and `.navigation.reveal()`, plus a `motion` resolver for custom arcs, depth, rotation, and overshoot paths.
+* **Layer components:** added `contentComponent` for custom screen-content renderers and render props for `backdropComponent`. `surfaceComponent` remains available but is deprecated in favor of `contentComponent`.
+* **Gestures:** exposed the fixed pinch activation point through `gesture.pinchOriginX` and `gesture.pinchOriginY` for custom pinch-and-rotate interpolation.
+* **Interpolator progress:** exposed combined `transitionProgress` alongside `progress`, without live gesture contribution.
+
+### Bug Fixes
+
+* Fixed `withScreenTransitions` adapter crashes when a per-screen `layout` or group `screenLayout` replaced the adapter's `ScreenAnimationProvider`; custom layouts are now composed inside the transition layout ([#131](https://github.com/eds2002/react-native-screen-transitions/issues/131)).
+* Improved bounds measurement and retargeting when destinations move, resize, transform, or change across nested screens.
+* Stabilized portal ownership, placeholder sizing, scroll offsets, and destination readiness to reduce handoff flicker, blank frames, and layout pops.
+* Preserved resolved endpoint transforms and local boundary transforms throughout generated bounds styles.
+* Waited for destination layout and interpolator readiness before applying next-screen styles, preventing early-frame jumps and stale animated styles.
+
+### Performance Improvements
+
+* Moved stack progress derivation to the stack root to avoid redundant per-screen work.
+
+### Breaking Changes
+
+The bounds interpolator now scopes to one boundary identity before producing output. Code using the v3.8 store-shaped helpers must migrate to the scoped accessor:
+
+* Replace `bounds({ id, group, ...options })` with `bounds({ id, group }).styles(options)`.
+* Replace raw numeric geometry with `.values(options)`, and replace `BoundsLink.compute()` with `.styles(options)` or `.values(options)` as appropriate.
+* Replace `bounds.getLink(id)`, `getMeasured()`, and `getSnapshot()` with `bounds(id).link()` and inspect the active source or destination entry.
+* Replace `interpolateBounds()` and `interpolateStyle()` with `.values()` or `.styles()`. For scalar-property interpolation, read the active link and interpolate its numeric values directly.
+* The old screen-key overloads have no direct replacement. Matching `id` and `group` values now resolve against the active navigation pair.
+
+Legacy zoom opacity, sensitivity, velocity-depth, gesture-progress, debug, and directional drag-tuple options remain type-compatible but are ignored. Use `drag.translation` and `drag.scale` for directional response tuning.
+
+See [New in 3.9](https://screen-transitions.esjr.org/changelog/updating-to-3-9) for the full migration table and examples.
+
+### Optional Teleport Dependency
+
+`handoff` and `escapeClipping` use `react-native-teleport`. Install `react-native-teleport@1.1.10` when using either feature. The supported range is `>=1.1.0 <1.1.11`; the dependency remains optional for apps that do not use these features. `handoff` remains experimental in v3.9, particularly for native-backed views such as Android video surfaces.
 
 ## [3.8.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0-beta.1...v3.8.0) (2026-06-21)
 

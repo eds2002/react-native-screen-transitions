@@ -141,7 +141,7 @@ return bounds(id).navigation.zoom({
 
 | Option | Type | Notes |
 | --- | --- | --- |
-| `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Uses the paired destination boundary, the full screen, or an explicit rectangle. When omitted, zoom expands to a full-width rectangle that preserves the source aspect ratio. |
+| `target` | `"bound" \| "fullscreen" \| MeasuredDimensions` | Uses the paired destination boundary, the full screen, or an explicit rectangle. When omitted, zoom preserves the source aspect ratio, filling the screen height for narrow sources and its width for other sources. |
 | `keepFocusedVisible` | `boolean` | Keeps focused content visible instead of applying zoom's built-in focused-content fade. Defaults to `false`. Useful for handed-off or other live content. |
 | `borderRadius` | `number` | Expanded clipping radius. Zoom interpolates from the measured source radius to this value. Defaults to `64`. |
 | `backgroundScale` | `number` | Scale applied to the unfocused screen. Defaults to `0.9375`. |
