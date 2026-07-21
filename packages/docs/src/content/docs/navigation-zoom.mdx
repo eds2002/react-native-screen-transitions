@@ -88,6 +88,7 @@ const navigationZoomId = makeMutable<string | null>(null);
     navigationMaskEnabled: Platform.OS === "ios",
     gestureEnabled: true,
     gestureDirection: ["vertical", "vertical-inverted", "horizontal"],
+    transitionSpec: Transition.Specs.Zoom,
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
       const id = navigationZoomId.value;
@@ -105,6 +106,8 @@ const navigationZoomId = makeMutable<string | null>(null);
 ```
 
 The id does not have to come from route params. You can resolve it from route params, a Reanimated shared value created with `makeMutable`, Zustand-backed state, or any other source, as long as the interpolator can read the active boundary id.
+
+`Transition.Specs.Zoom` provides the paired open and close springs tuned for this helper. `navigation.zoom()` builds the visual path, while `transitionSpec` controls how that path settles in each direction.
 
 Zoom uses transition progress internally for its bounds path. Live gesture values still drive drag and release effects, and `gesture.handoff` keeps release-time values available while live gesture fields reset.
 
@@ -174,6 +177,7 @@ Zoom responds to every enabled pan direction and to `pinch-in`.
 options={{
   gestureEnabled: true,
   gestureDirection: ["bidirectional", "pinch-in"],
+  transitionSpec: Transition.Specs.Zoom,
   screenStyleInterpolator: ({ bounds }) => {
     "worklet";
     return bounds("hero").navigation.zoom();
@@ -194,6 +198,7 @@ Enable it when you want masked reveal behavior during the navigation handoff:
   name="[id]"
   options={{
     navigationMaskEnabled: Platform.OS === "ios",
+    transitionSpec: Transition.Specs.Zoom,
     screenStyleInterpolator: ({ bounds }) => {
       "worklet";
       return bounds("hero").navigation.zoom();
@@ -225,12 +230,6 @@ Use `group` when the active matched member can change while the destination flow
 ```
 
 In that setup, some shared state usually tracks which id is currently active inside the group so `navigation.zoom()` knows which member to resolve against.
-
-## Performance
-
-Bounds retarget more reliably when the destination changes size or position while it is on screen. In most cases, a close transition can animate back from the latest measured destination instead of the layout that existed when the screen opened.
-
-If a layout can change while a screen is unfocused, set `remeasureOnFocus` on the transition-aware boundary owner so the source link refreshes when focus returns.
 
 ## Related Reading
 

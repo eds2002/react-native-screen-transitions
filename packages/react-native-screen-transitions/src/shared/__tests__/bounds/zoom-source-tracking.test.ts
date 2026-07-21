@@ -29,9 +29,9 @@ import { buildZoomStyles } from "../../utils/bounds/navigation/zoom/build";
 
 describe("zoom native opacity ownership", () => {
 	it("hands focused content in over the configured opening interval", () => {
-		expect(ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE).toEqual([0, 0.4, 0, 1]);
+		expect(ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE).toEqual([0, 0.28, 0, 1]);
 		expect(ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE).toEqual([
-			1.27, 1.4, 1, 0,
+			1.08, 1.32, 1, 0,
 		]);
 	});
 

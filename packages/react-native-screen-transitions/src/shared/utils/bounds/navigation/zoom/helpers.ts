@@ -1,6 +1,7 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
 import type { Layout } from "../../../../types/screen.types";
+import type { BoundsAnchor } from "../../types/options";
 import {
 	resolveRevealContentBaseTransform,
 	resolveTrackedSourceElementTransform,
@@ -73,6 +74,7 @@ export function resolveZoomTrackedSourceTransform({
 	gestureScale,
 	parentScale,
 	rotation = 0,
+	anchor,
 }: {
 	progress: number;
 	sourceBounds: MeasuredDimensions;
@@ -83,6 +85,7 @@ export function resolveZoomTrackedSourceTransform({
 	gestureScale: number;
 	parentScale: number;
 	rotation?: number;
+	anchor?: BoundsAnchor;
 }) {
 	"worklet";
 
@@ -91,12 +94,14 @@ export function resolveZoomTrackedSourceTransform({
 		sourceBounds,
 		destinationBounds,
 		screenLayout,
+		anchor,
 	});
 	const collapsedContentScale = resolveRevealContentBaseTransform({
 		progress: 0,
 		sourceBounds,
 		destinationBounds,
 		screenLayout,
+		anchor,
 	}).scale;
 	const contentScale = contentBaseTransform.scale * gestureScale;
 	const safeCollapsedContentScale = Math.max(

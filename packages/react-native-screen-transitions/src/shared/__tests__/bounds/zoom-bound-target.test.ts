@@ -5,7 +5,10 @@ import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
 import { buildZoomStyles } from "../../utils/bounds/navigation/zoom/build";
-import { getZoomContentTarget } from "../../utils/bounds/navigation/zoom/targets";
+import {
+	getZoomContentAnchor,
+	getZoomContentTarget,
+} from "../../utils/bounds/navigation/zoom/targets";
 
 const SCREEN_LAYOUT = { width: 390, height: 844 };
 const PAIR_KEY = createScreenPairKey("screen-a", "screen-b");
@@ -166,6 +169,55 @@ describe("zoom bound target", () => {
 			width: 390,
 			height: 390,
 		});
+	});
+
+	it("anchors tall default targets to the destination leading edge", () => {
+		registerSource();
+		const link = BoundStore.link.getLink(PAIR_KEY, "card");
+		if (!link) {
+			throw new Error("Expected the registered zoom link");
+		}
+		const tallSource = {
+			...SOURCE_BOUNDS,
+			width: 84,
+			height: 354,
+		};
+		BoundStore.link.setSource(PAIR_KEY, "card", "screen-a", tallSource, {
+			borderRadius: 14,
+		});
+		const tallLink = BoundStore.link.getLink(PAIR_KEY, "card");
+		if (!tallLink) {
+			throw new Error("Expected the tall zoom link");
+		}
+
+		expect(
+			getZoomContentTarget({
+				explicitTarget: undefined,
+				screenLayout: SCREEN_LAYOUT,
+				link: tallLink,
+			}),
+		).toEqual({
+			x: 0,
+			y: 0,
+			pageX: 0,
+			pageY: 0,
+			width: (84 / 354) * SCREEN_LAYOUT.height,
+			height: SCREEN_LAYOUT.height,
+		});
+		expect(
+			getZoomContentAnchor({
+				explicitTarget: undefined,
+				screenLayout: SCREEN_LAYOUT,
+				link: tallLink,
+			}),
+		).toBe("leading");
+		expect(
+			getZoomContentAnchor({
+				explicitTarget: "fullscreen",
+				screenLayout: SCREEN_LAYOUT,
+				link: tallLink,
+			}),
+		).toBe("top");
 	});
 
 	it("applies the public zoom appearance controls", () => {

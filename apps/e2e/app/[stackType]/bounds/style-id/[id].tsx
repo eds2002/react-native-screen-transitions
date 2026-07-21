@@ -56,10 +56,9 @@ function SharedImage({
 					marginTop: insets.top + 16,
 				},
 			]}
-			handoff
-		/>
-		// 	<Image source={image} style={styles.imageContent} contentFit="cover" />
-		// </Transition.Boundary.View>
+		>
+			<Image source={image} style={styles.imageContent} contentFit="cover" />
+		</Transition.Boundary.View>
 	);
 }
 

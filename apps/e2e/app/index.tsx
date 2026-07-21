@@ -1,10 +1,6 @@
 import { router } from "expo-router";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import {
-	buildBenchmarkDashboardPath,
-	PUBLIC_BENCHMARKS,
-} from "@/components/benchmark/scenarios";
-import {
 	buildStackPath,
 	type StackType,
 } from "@/components/stack-examples/stack-routing";
@@ -28,13 +24,6 @@ const STACK_OPTIONS = [
 	title: string;
 	description: string;
 }[];
-
-const BENCHMARK_OPTIONS = PUBLIC_BENCHMARKS.map((benchmark) => ({
-	id: benchmark.id,
-	title: benchmark.title,
-	description: benchmark.description,
-	route: buildBenchmarkDashboardPath(benchmark.id),
-}));
 
 const GESTURE_OPTIONS = [
 	{
@@ -87,12 +76,6 @@ const RECIPE_OPTIONS = [
 		route: "/example" as const,
 	},
 	{
-		id: "native-stack-adapter",
-		title: "Native Stack Adapter",
-		description: "Official native-stack wrapped with withScreenTransitions",
-		route: "/native-stack-adapter" as const,
-	},
-	{
 		id: "native-stack-adapter-recipe",
 		title: "Native Stack Adapter Profile",
 		description:
@@ -100,35 +83,10 @@ const RECIPE_OPTIONS = [
 		route: "/native-stack-adapter-recipe" as const,
 	},
 	{
-		id: "native-stack-adapter-layout-recipe",
-		title: "Native Stack Adapter Layouts",
-		description: "Screen and group layout overrides retain transition providers",
-		route: "/native-stack-adapter-layout-recipe" as const,
-	},
-	{
-		id: "teleport",
-		title: "Teleport",
-		description: "Two shared-element teleport recipes using bounds targets",
-		route: "/teleport" as const,
-	},
-	{
-		id: "reels",
-		title: "Reels",
-		description:
-			"Paged video feed: matched-screen teleport with group retargeting and a mask reveal",
-		route: "/reels" as const,
-	},
-	{
 		id: "gesture-velocity-recipe",
 		title: "Gesture Velocity Flap",
 		description: "Style-id box driven by live gesture translation and velocity",
 		route: "/gesture-velocity-recipe" as const,
-	},
-	{
-		id: "matched-screen-debug",
-		title: "Matched Screen Debug",
-		description: "Minimal matched-screen portal timing repro",
-		route: "/matched-screen-debug" as const,
 	},
 ];
 
@@ -355,39 +313,6 @@ export default function HomeScreen() {
 				</Text>
 				<View style={styles.buttonContainer}>
 					{MAESTRO_OPTIONS.map((option) => (
-						<Pressable
-							key={option.id}
-							testID={`${option.id}-button`}
-							style={({ pressed }) => [
-								styles.button,
-								{
-									backgroundColor: pressed ? theme.cardPressed : theme.card,
-								},
-							]}
-							onPress={() => router.push(option.route)}
-						>
-							<Text style={[styles.buttonTitle, { color: theme.text }]}>
-								{option.title}
-							</Text>
-							<Text
-								style={[
-									styles.buttonDescription,
-									{ color: theme.textSecondary },
-								]}
-							>
-								{option.description}
-							</Text>
-						</Pressable>
-					))}
-				</View>
-			</View>
-
-			<View style={styles.section}>
-				<Text style={[styles.sectionTitle, { color: theme.textTertiary }]}>
-					Benchmarks
-				</Text>
-				<View style={styles.buttonContainer}>
-					{BENCHMARK_OPTIONS.map((option) => (
 						<Pressable
 							key={option.id}
 							testID={`${option.id}-button`}

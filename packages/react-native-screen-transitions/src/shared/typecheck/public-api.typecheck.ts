@@ -33,6 +33,7 @@ import type {
 	ScrollMetadataState,
 	TransitionInterpolatedStyle,
 	TransitionSlotStyle,
+	TransitionSpec,
 } from "..";
 import {
 	blockTransition,
@@ -123,6 +124,8 @@ void deprecatedBoundaryViewProps;
 void deprecatedBoundaryTriggerProps;
 
 const zoomOptions: BoundsNavigationZoomOptions = {};
+declare const zoomTransitionSpec: typeof Transition.Specs.Zoom;
+const typedZoomTransitionSpec: TransitionSpec = zoomTransitionSpec;
 
 declare const interpolationProps: ScreenInterpolationProps;
 
@@ -530,6 +533,8 @@ const publicApiTypecheck = {
 	currentActiveGesture,
 	currentSnapIndex,
 	zoomOptions,
+	zoomTransitionSpec,
+	typedZoomTransitionSpec,
 	navigationMaskInterpolatedStyle,
 	nextNameOptions,
 	sharedGestureSensitivityOptions,

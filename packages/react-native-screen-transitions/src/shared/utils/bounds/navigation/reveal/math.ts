@@ -2,6 +2,7 @@ import type { MeasuredDimensions } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
 import type { Layout } from "../../../../types/screen.types";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
+import type { BoundsAnchor } from "../../types/options";
 import {
 	DRAG_DIRECTIONAL_SCALE_EXPONENT,
 	DRAG_DIRECTIONAL_SCALE_MAX,
@@ -189,11 +190,13 @@ export function resolveRevealContentBaseTransform({
 	sourceBounds,
 	destinationBounds,
 	screenLayout,
+	anchor,
 }: {
 	progress: number;
 	sourceBounds: MeasuredDimensions;
 	destinationBounds: MeasuredDimensions;
 	screenLayout: Layout;
+	anchor?: BoundsAnchor;
 }) {
 	"worklet";
 
@@ -202,6 +205,7 @@ export function resolveRevealContentBaseTransform({
 		end: destinationBounds,
 		entering: true,
 		dimensions: screenLayout,
+		anchor,
 		scaleMode: "uniform",
 	});
 

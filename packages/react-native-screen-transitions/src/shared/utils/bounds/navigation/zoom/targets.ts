@@ -4,6 +4,7 @@ import type {
 	BoundsNavigationZoomOptions,
 } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
+import type { BoundsAnchor } from "../../types/options";
 
 type ZoomContentTarget = Exclude<
 	BoundsNavigationZoomOptions["target"],
@@ -27,9 +28,34 @@ export function getZoomContentTarget({
 
 	const sourceBounds = link.source?.bounds;
 	const screenWidth = screenLayout.width;
+	const screenHeight = screenLayout.height;
 
-	if (!sourceBounds || sourceBounds.width <= 0 || screenWidth <= 0) {
+	if (
+		!sourceBounds ||
+		sourceBounds.width <= 0 ||
+		sourceBounds.height <= 0 ||
+		screenWidth <= 0 ||
+		screenHeight <= 0
+	) {
 		return "fullscreen";
+	}
+
+	const sourceAspectRatio = sourceBounds.width / sourceBounds.height;
+	const screenAspectRatio = screenWidth / screenHeight;
+
+	// Zoom keeps one edge of the virtual destination attached to the source.
+	// A wide source fills the destination width and follows its top edge. A
+	// narrow source fills the destination height instead, so it follows the
+	// destination's leading edge rather than taking a long vertical path.
+	if (sourceAspectRatio < screenAspectRatio) {
+		return {
+			x: 0,
+			y: 0,
+			pageX: 0,
+			pageY: 0,
+			width: (sourceBounds.width / sourceBounds.height) * screenHeight,
+			height: screenHeight,
+		};
 	}
 
 	const height = (sourceBounds.height / sourceBounds.width) * screenWidth;
@@ -42,6 +68,38 @@ export function getZoomContentTarget({
 		width: screenWidth,
 		height,
 	};
+}
+
+export function getZoomContentAnchor({
+	explicitTarget,
+	screenLayout,
+	link,
+}: {
+	explicitTarget: BoundsNavigationZoomOptions["target"];
+	screenLayout: Layout;
+	link: BoundsLink;
+}): BoundsAnchor {
+	"worklet";
+
+	if (explicitTarget !== undefined) {
+		return explicitTarget === "bound" ? "center" : "top";
+	}
+
+	const sourceBounds = link.source?.bounds;
+	if (
+		!sourceBounds ||
+		sourceBounds.width <= 0 ||
+		sourceBounds.height <= 0 ||
+		screenLayout.width <= 0 ||
+		screenLayout.height <= 0
+	) {
+		return "top";
+	}
+
+	return sourceBounds.width / sourceBounds.height <
+		screenLayout.width / screenLayout.height
+		? "leading"
+		: "top";
 }
 
 export function resolveZoomTrackingContentTarget({
