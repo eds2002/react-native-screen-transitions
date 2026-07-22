@@ -22,11 +22,13 @@ const AnimatedPortalBoundaryHost = NativePortalHost
 
 type PortalBoundaryHostProps = {
 	host: ActivePortalBoundaryHost;
+	onLayout: () => void;
 	style?: StyleProp<ViewStyle>;
 };
 
 export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	host,
+	onLayout,
 	style,
 }: PortalBoundaryHostProps) {
 	// Cross-screen landing-rect scroll tracking: the flight interpolates toward
@@ -92,6 +94,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 			landingShift,
 		});
 	});
+
 	const contentFrameStyle = useAnimatedStyle(() => {
 		"worklet";
 		const link = getLink(host.pairKey, host.boundaryId);
@@ -148,6 +151,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		>
 			<AnimatedPortalBoundaryHost
 				name={host.portalHostName}
+				onLayout={onLayout}
 				pointerEvents={PORTAL_POINTER_EVENTS}
 				style={[styles.content, contentFrameStyle, slotStyle]}
 			/>

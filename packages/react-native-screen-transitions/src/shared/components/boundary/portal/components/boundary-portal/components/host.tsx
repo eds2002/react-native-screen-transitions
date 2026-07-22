@@ -65,11 +65,17 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		};
 	}, [capturesScroll, fallback, hostKey, screenKey]);
 
-	const handleUnblocking = useCallback(() => {
-		// Each destination boundary contributes one lifecycle start block. Release
-		// only this host's block so unrelated boundary and user blocks stay intact.
-		unblockLifecycleStart();
-	}, [unblockLifecycleStart]);
+	const handleBoundaryHostLayout = useCallback(
+		(host: (typeof activeBoundaryHosts)[number]) => {
+			if (host.portalHostReady.get()) {
+				return;
+			}
+
+			host.portalHostReady.set(true);
+			unblockLifecycleStart();
+		},
+		[unblockLifecycleStart],
+	);
 
 	const boundaryHosts = measurement.canRenderHosts
 		? activeBoundaryHosts.map((host) => (
@@ -80,9 +86,12 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 						styles.boundaryHostViewport,
 						{ width: viewportWidth, height: viewportHeight },
 					]}
-					onLayout={handleUnblocking}
 				>
-					<PortalBoundaryHost host={host} style={StyleSheet.absoluteFill} />
+					<PortalBoundaryHost
+						host={host}
+						onLayout={() => handleBoundaryHostLayout(host)}
+						style={StyleSheet.absoluteFill}
+					/>
 				</View>
 			))
 		: null;

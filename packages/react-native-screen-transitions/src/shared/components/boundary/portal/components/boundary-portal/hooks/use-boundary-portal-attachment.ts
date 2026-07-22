@@ -1,25 +1,14 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import {
-	runOnJS,
-	useAnimatedProps,
-	useAnimatedReaction,
-	useSharedValue,
-} from "react-native-reanimated";
+import { useLayoutEffect } from "react";
+import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
-import {
-	type PortalOwnershipSignal,
-	resolveBoundaryPortalOwnership,
-} from "../../../utils/ownership";
-import { shallowEqual } from "../../../utils/shallow-equal";
 import { shouldAttachBoundaryPortal } from "../../../utils/teleport-control";
-import { resolveNextVisiblePortalHostName } from "../../../utils/visible-host";
 import { createBoundaryPortalHostName } from "../helpers/host-name";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import {
-	dropStalePortalBoundaryHosts,
 	mountPortalBoundaryHost,
 	unmountPortalBoundaryHostByName,
 } from "../stores/portal-boundary-host.store";
@@ -37,67 +26,22 @@ export const useBoundaryPortalAttachment = ({
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const { localStylesMaps, nextInterpolatorReady, slotsMap } = useScreenSlots();
-	const [ownership, setOwnership] = useState<Extract<
-		PortalOwnershipSignal,
-		{ status: "complete" }
-	> | null>(null);
-	const requestedPortalHostName = useSharedValue<string | null>(null);
-	const visiblePortalHostName = useSharedValue<string | null>(null);
-	const mountedPortalBoundaryHostNamesRef = useRef(new Set<string>());
+	const { localStylesMaps, slotsMap } = useScreenSlots();
+	const portalHostName = useSharedValue<string | null>(null);
+	const portalHostReady = useSharedValue(false);
 	const escapeHostKey = useActiveHostKey(enabled ? currentScreenKey : null);
 
-	const updatePortalOwnership = useCallback(
-		(
-			hostScreenKey: string | null,
-			ownerPairKey?: string,
-			ownerScreenKey?: string,
-		) => {
-			if (hostScreenKey && ownerPairKey && ownerScreenKey) {
-				setOwnership((current) => {
-					if (
-						current?.hostScreenKey === hostScreenKey &&
-						current.ownerPairKey === ownerPairKey &&
-						current.ownerScreenKey === ownerScreenKey
-					) {
-						return current;
-					}
-
-					return {
-						hostScreenKey,
-						ownerPairKey,
-						ownerScreenKey,
-						status: "complete",
-					};
-				});
-				return;
-			}
-
-			setOwnership((current) => (current ? null : current));
-		},
-		[],
-	);
-
-	const unmountOwnedPortalBoundaryHosts = useCallback(() => {
-		for (const portalHostName of mountedPortalBoundaryHostNamesRef.current) {
-			unmountPortalBoundaryHostByName(portalHostName);
-		}
-
-		mountedPortalBoundaryHostNamesRef.current.clear();
-	}, []);
-
 	useLayoutEffect(() => {
-		if (!enabled || !ownership || !escapeHostKey) {
-			requestedPortalHostName.set(null);
-			visiblePortalHostName.set(null);
-			unmountOwnedPortalBoundaryHosts();
+		if (!enabled || !sourcePairKey || !escapeHostKey) {
+			portalHostName.set(null);
+			portalHostReady.set(false);
 			return;
 		}
 
-		const portalHostName = createBoundaryPortalHostName(
+		const nextPortalHostName = createBoundaryPortalHostName(
 			escapeHostKey,
 			boundaryId,
-			ownership.ownerPairKey,
+			sourcePairKey,
 		);
 
 		mountPortalBoundaryHost({
@@ -105,123 +49,30 @@ export const useBoundaryPortalAttachment = ({
 			escapeClipping: true,
 			hostKey: escapeHostKey,
 			localStylesMaps,
-			pairKey: ownership.ownerPairKey,
-			portalHostName,
+			pairKey: sourcePairKey,
+			portalHostName: nextPortalHostName,
+			portalHostReady,
 			screenKey: currentScreenKey,
 			slotsMap,
 		});
-		mountedPortalBoundaryHostNamesRef.current.add(portalHostName);
+		portalHostName.set(nextPortalHostName);
 
-		// Request the new receiver immediately, but keep the currently visible
-		// receiver until the new interpolator is ready. This avoids a no-host gap
-		// during rapid close/open retargets.
-		requestedPortalHostName.set(portalHostName);
+		return () => {
+			portalHostName.set(null);
+			portalHostReady.set(false);
+			unmountPortalBoundaryHostByName(nextPortalHostName);
+		};
 	}, [
 		boundaryId,
 		currentScreenKey,
 		enabled,
 		escapeHostKey,
 		localStylesMaps,
-		ownership,
-		requestedPortalHostName,
+		portalHostName,
+		portalHostReady,
+		sourcePairKey,
 		slotsMap,
-		unmountOwnedPortalBoundaryHosts,
-		visiblePortalHostName,
 	]);
-
-	useLayoutEffect(() => {
-		return () => {
-			requestedPortalHostName.set(null);
-			visiblePortalHostName.set(null);
-			unmountOwnedPortalBoundaryHosts();
-		};
-	}, [
-		requestedPortalHostName,
-		unmountOwnedPortalBoundaryHosts,
-		visiblePortalHostName,
-	]);
-
-	useAnimatedReaction(
-		() => {
-			"worklet";
-			if (!enabled || !sourcePairKey) {
-				return {
-					hostScreenKey: null,
-					ownerPairKey: sourcePairKey,
-					ownerScreenKey: null,
-					status: "clear",
-				};
-			}
-
-			return resolveBoundaryPortalOwnership({
-				boundaryId,
-				currentScreenKey,
-				handoff: false,
-				pairsState: pairs.get(),
-				sourcePairKey,
-			});
-		},
-		(signal, previousSignal) => {
-			"worklet";
-			if (shallowEqual(previousSignal, signal)) {
-				return;
-			}
-
-			runOnJS(updatePortalOwnership)(
-				signal.hostScreenKey,
-				signal.ownerPairKey,
-				signal.ownerScreenKey ?? undefined,
-			);
-		},
-	);
-
-	useAnimatedReaction(
-		() => {
-			"worklet";
-			const slot = slotsMap.get()[boundaryId];
-			const teleport = slot?.props?.teleport;
-			const shouldTeleport = shouldAttachBoundaryPortal({
-				enabled,
-				teleport,
-			});
-			const requestedName = requestedPortalHostName.get();
-			const visibleName = visiblePortalHostName.get();
-			const isInterpolatorReady = nextInterpolatorReady.get();
-			const nextVisibleName = resolveNextVisiblePortalHostName({
-				isInterpolatorReady: isInterpolatorReady === 1,
-				requestedName,
-				shouldTeleport,
-				visibleName,
-			});
-
-			return {
-				isInterpolatorReady,
-				nextVisibleName,
-				requestedName,
-				shouldTeleport,
-				teleport,
-				visibleName,
-			};
-		},
-		(state, previousState) => {
-			"worklet";
-			if (shallowEqual(previousState, state)) {
-				return;
-			}
-
-			if (state.nextVisibleName !== state.visibleName) {
-				visiblePortalHostName.set(state.nextVisibleName);
-				return;
-			}
-
-			if (state.visibleName && state.visibleName === state.requestedName) {
-				runOnJS(dropStalePortalBoundaryHosts)({
-					boundaryId,
-					keepPortalHostName: state.visibleName,
-				});
-			}
-		},
-	);
 
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
@@ -236,19 +87,22 @@ export const useBoundaryPortalAttachment = ({
 			enabled,
 			teleport,
 		});
-		const visibleName = visiblePortalHostName.get();
+		const hostName = portalHostName.get();
+		const pair = sourcePairKey ? pairs.get()[sourcePairKey] : undefined;
+		const linkKey = getLinkKeyFromTag(boundaryId);
+		const link = pair?.links[linkKey];
+		const hasActiveLink =
+			link?.source !== null &&
+			link !== undefined &&
+			(!link.group || pair?.groups[link.group]?.activeId === linkKey);
+		const canAttach =
+			shouldTeleport && hasActiveLink && portalHostReady.get() && hostName;
 
 		return {
 			...slotProps,
-			hostName:
-				shouldTeleport && visibleName
-					? visibleName
-					: PORTAL_HOST_NAME_RESET_VALUE,
+			hostName: canAttach ? hostName : PORTAL_HOST_NAME_RESET_VALUE,
 		};
 	});
 
-	return {
-		teleportProps,
-		visiblePortalHostName,
-	};
+	return { teleportProps };
 };

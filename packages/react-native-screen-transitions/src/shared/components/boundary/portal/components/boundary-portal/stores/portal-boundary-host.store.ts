@@ -10,6 +10,7 @@ export type ActivePortalBoundaryHost = {
 	localStylesMaps: SharedValue<LocalStyleLayers>;
 	pairKey: string;
 	portalHostName: string;
+	portalHostReady: SharedValue<boolean>;
 	screenKey: string;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
@@ -60,6 +61,7 @@ const isSameHost = (
 		a.localStylesMaps === b.localStylesMaps &&
 		a.pairKey === b.pairKey &&
 		a.portalHostName === b.portalHostName &&
+		a.portalHostReady === b.portalHostReady &&
 		a.screenKey === b.screenKey &&
 		a.slotsMap === b.slotsMap
 	);
@@ -79,43 +81,6 @@ export const unmountPortalBoundaryHostByName = (
 	portalHostName: string | null | undefined,
 ) => {
 	if (!portalHostName || !activeBoundaryHosts.delete(portalHostName)) {
-		return;
-	}
-
-	emit();
-};
-
-/**
- * Post-handoff GC: drop every receiver for this boundary except the one now
- * visible (`keepPortalHostName`). Called once the new host is confirmed on
- * screen so the superseded receivers stop rendering.
- */
-export const dropStalePortalBoundaryHosts = ({
-	boundaryId,
-	keepPortalHostName,
-}: {
-	boundaryId: string;
-	keepPortalHostName: string;
-}) => {
-	if (!activeBoundaryHosts.has(keepPortalHostName)) {
-		return;
-	}
-
-	let didDelete = false;
-
-	for (const [hostEntryKey, host] of activeBoundaryHosts) {
-		if (
-			host.boundaryId !== boundaryId ||
-			host.portalHostName === keepPortalHostName
-		) {
-			continue;
-		}
-
-		activeBoundaryHosts.delete(hostEntryKey);
-		didDelete = true;
-	}
-
-	if (!didDelete) {
 		return;
 	}
 
