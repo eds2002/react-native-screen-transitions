@@ -46,7 +46,7 @@ export const BoundaryContentPortalHost = memo(
 
 const styles = StyleSheet.create({
 	host: {
-		...StyleSheet.absoluteFill,
+		...StyleSheet.absoluteFillObject,
 		overflow: "visible",
 	},
 });

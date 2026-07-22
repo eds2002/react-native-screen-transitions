@@ -42,6 +42,8 @@ import { Route as ApiUseHistoryRouteImport } from './routes/api.use-history'
 import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/api.create-transition-aware-component'
 import { Route as ApiCreateBoundaryComponentRouteImport } from './routes/api.create-boundary-component'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as V4ExperimentalInstallationRouteImport } from './routes/v4-experimental.installation'
+import { Route as V4ExperimentalGettingStartedRouteImport } from './routes/v4-experimental.getting-started'
 import { Route as V4ExperimentalIndexRouteImport } from './routes/v4-experimental.index'
 import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
 
@@ -217,6 +219,18 @@ const V4ExperimentalIndexRoute = V4ExperimentalIndexRouteImport.update({
   path: '/v4-experimental/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const V4ExperimentalInstallationRoute =
+  V4ExperimentalInstallationRouteImport.update({
+    id: '/v4-experimental/installation',
+    path: '/v4-experimental/installation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const V4ExperimentalGettingStartedRoute =
+  V4ExperimentalGettingStartedRouteImport.update({
+    id: '/v4-experimental/getting-started',
+    path: '/v4-experimental/getting-started',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RecipesModalRoute = RecipesModalRouteImport.update({
   id: '/recipes/modal',
   path: '/recipes/modal',
@@ -259,6 +273,8 @@ export interface FileRoutesByFullPath {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-experimental/': typeof V4ExperimentalIndexRoute
+  '/v4-experimental/getting-started': typeof V4ExperimentalGettingStartedRoute
+  '/v4-experimental/installation': typeof V4ExperimentalInstallationRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -296,6 +312,8 @@ export interface FileRoutesByTo {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-experimental': typeof V4ExperimentalIndexRoute
+  '/v4-experimental/getting-started': typeof V4ExperimentalGettingStartedRoute
+  '/v4-experimental/installation': typeof V4ExperimentalInstallationRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -334,6 +352,8 @@ export interface FileRoutesById {
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-experimental/': typeof V4ExperimentalIndexRoute
+  '/v4-experimental/getting-started': typeof V4ExperimentalGettingStartedRoute
+  '/v4-experimental/installation': typeof V4ExperimentalInstallationRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -373,6 +393,8 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/recipes/modal'
     | '/v4-experimental/'
+    | '/v4-experimental/getting-started'
+    | '/v4-experimental/installation'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -410,6 +432,8 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/recipes/modal'
     | '/v4-experimental'
+    | '/v4-experimental/getting-started'
+    | '/v4-experimental/installation'
   id:
     | '__root__'
     | '/'
@@ -447,6 +471,8 @@ export interface FileRouteTypes {
     | '/updating-to-3-7'
     | '/recipes/modal'
     | '/v4-experimental/'
+    | '/v4-experimental/getting-started'
+    | '/v4-experimental/installation'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -485,6 +511,8 @@ export interface RootRouteChildren {
   UpdatingTo37Route: typeof UpdatingTo37Route
   RecipesModalRoute: typeof RecipesModalRoute
   V4ExperimentalIndexRoute: typeof V4ExperimentalIndexRoute
+  V4ExperimentalGettingStartedRoute: typeof V4ExperimentalGettingStartedRoute
+  V4ExperimentalInstallationRoute: typeof V4ExperimentalInstallationRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -727,6 +755,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof V4ExperimentalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/v4-experimental/getting-started': {
+      id: '/v4-experimental/getting-started'
+      path: '/v4-experimental/getting-started'
+      fullPath: '/v4-experimental/getting-started'
+      preLoaderRoute: typeof V4ExperimentalGettingStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/v4-experimental/installation': {
+      id: '/v4-experimental/installation'
+      path: '/v4-experimental/installation'
+      fullPath: '/v4-experimental/installation'
+      preLoaderRoute: typeof V4ExperimentalInstallationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recipes/modal': {
       id: '/recipes/modal'
       path: '/recipes/modal'
@@ -773,6 +815,8 @@ const rootRouteChildren: RootRouteChildren = {
   UpdatingTo37Route: UpdatingTo37Route,
   RecipesModalRoute: RecipesModalRoute,
   V4ExperimentalIndexRoute: V4ExperimentalIndexRoute,
+  V4ExperimentalGettingStartedRoute: V4ExperimentalGettingStartedRoute,
+  V4ExperimentalInstallationRoute: V4ExperimentalInstallationRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

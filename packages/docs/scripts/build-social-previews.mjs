@@ -96,8 +96,10 @@ function normalizePathname(pathname) {
 }
 
 function resolveRoutePath(relativeFilePath, to) {
-	if (relativeFilePath.startsWith("v4-next/")) {
-		return to === "/" ? "/v4-next/" : `/v4-next${normalizePathname(to)}`;
+	if (relativeFilePath.startsWith("v4-experimental/")) {
+		return to === "/"
+			? "/v4-experimental/"
+			: `/v4-experimental${normalizePathname(to)}`;
 	}
 
 	return to === "/" ? "/" : normalizePathname(to);

@@ -1,29 +1,15 @@
 ---
-title: "Introduction"
-pageTitle: "Introduction"
-summary: "Build custom navigation motion with the experimental v4 Standard Navigator."
-description: "Meet the experimental v4 Screen Transitions architecture for React Navigation and Expo Router."
+title: "Getting Started"
+pageTitle: "Getting Started"
+summary: "Connect the experimental v4 navigator to Expo Router or React Navigation."
+description: "Set up the experimental v4 Screen Transitions navigator with Expo Router or React Navigation."
 eyebrow: "Get Started"
 group: "Get Started"
-order: 1
-to: /
+order: 3
+to: /getting-started
 ---
 
-`react-native-screen-transitions` is a transition toolkit for apps that need more control over navigation motion than the platform defaults.
-
-Use it to build custom push and dismiss animations, gesture-driven screens, snap sheets, overlays, and bounds-driven transitions.
-
-## One navigator, two hosts
-
-v4's Blank Stack is a [Standard Navigator](https://reactnavigation.org/docs/standard-navigator/). The same transition navigator integrates with both React Navigation and Expo Router through host-specific package entry points.
-
-Blank Stack is the default choice when Screen Transitions should drive the stack. `withScreenTransitions` remains available as an adapter for one-off animations inside an existing native stack.
-
-<Note>
-  v4 is experimental. Its navigation and bounds APIs may change before the stable release.
-</Note>
-
-Continue to [Installation](/v4-experimental/installation), then connect your navigator in [Getting Started](/v4-experimental/getting-started).
+This page covers only the Screen Transitions navigator setup. It assumes your app already has Expo Router or React Navigation configured.
 
 ## Expo Router
 
@@ -56,7 +42,7 @@ Expo Router remains responsible for routing. Continue to navigate with `router.p
 
 ## React Navigation
 
-Screen Transitions exports the same Blank Stack for React Navigation through its React Navigation entry point. Create it like any other React Navigation navigator:
+Screen Transitions exports the same Blank Stack for React Navigation through its React Navigation entry point:
 
 ```tsx
 import { NavigationContainer } from "@react-navigation/native";
@@ -84,11 +70,11 @@ export default function App() {
 }
 ```
 
-Blank Stack is implemented as a [Standard Navigator](https://reactnavigation.org/docs/standard-navigator/), which lets the same navigator work with React Navigation and Expo Router. Your screens continue to navigate with `navigation.navigate()`, `navigation.goBack()`, and the rest of the standard React Navigation API.
+Your screens continue to use `navigation.navigate()`, `navigation.goBack()`, and the rest of the standard React Navigation API.
 
 ## Adapting a native stack
 
-`withScreenTransitions` serves a different purpose. It wraps an existing native stack so you can opt individual screens into Screen Transitions animations while retaining native-stack behavior elsewhere:
+`withScreenTransitions` wraps an existing native stack so individual screens can use Screen Transitions animations while the rest retain native-stack behavior:
 
 ```tsx
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
