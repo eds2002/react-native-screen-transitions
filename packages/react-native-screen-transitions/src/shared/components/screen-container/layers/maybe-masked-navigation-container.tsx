@@ -1,5 +1,5 @@
 import { memo, useCallback } from "react";
-import { StyleSheet, View, type ViewProps } from "react-native";
+import { I18nManager, StyleSheet, View, type ViewProps } from "react-native";
 import Animated from "react-native-reanimated";
 import {
 	NAVIGATION_MASK_CONTAINER_STYLE_ID,
@@ -97,7 +97,17 @@ const styles = StyleSheet.create({
 	navigationContainer: {
 		flex: 1,
 	},
-	navigationMaskElement: {
-		backgroundColor: "white",
-	},
+	// The mask rect's translate math assumes a physical top-left base. Under
+	// native RTL a fixed-width flex child anchors to the right edge, so pin it
+	// to the physical left (`end` = left edge in RTL).
+	navigationMaskElement: I18nManager.isRTL
+		? {
+				backgroundColor: "white",
+				end: 0,
+				position: "absolute",
+				top: 0,
+			}
+		: {
+				backgroundColor: "white",
+			},
 });

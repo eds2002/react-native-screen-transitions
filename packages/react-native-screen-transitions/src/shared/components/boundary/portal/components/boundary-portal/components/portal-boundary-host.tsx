@@ -1,5 +1,10 @@
 import { memo, useCallback } from "react";
-import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
+import {
+	I18nManager,
+	type StyleProp,
+	StyleSheet,
+	type ViewStyle,
+} from "react-native";
 import Animated, {
 	useAnimatedStyle,
 	useFrameCallback,
@@ -142,10 +147,20 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	);
 });
 
+// The teleport offset is a physical page delta measured from the screen's
+// left edge, so the content box must anchor there too. Under native RTL,
+// `left: 0` swaps to a right-edge anchor; `end: 0` is the physical left edge
+// in RTL regardless of the swap setting.
 const styles = StyleSheet.create({
-	content: {
-		left: 0,
-		position: "absolute",
-		top: 0,
-	},
+	content: I18nManager.isRTL
+		? {
+				end: 0,
+				position: "absolute",
+				top: 0,
+			}
+		: {
+				left: 0,
+				position: "absolute",
+				top: 0,
+			},
 });
