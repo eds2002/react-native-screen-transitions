@@ -1,6 +1,6 @@
 import type { ComponentType } from "react";
 
-export type DocVersionId = "v3-4" | "v4-next";
+export type DocVersionId = "v3-4" | "v4-experimental";
 export type DocSlug = string;
 
 type DocFrontmatter = {
@@ -70,9 +70,9 @@ export const docVersions = [
 		label: "v3",
 	},
 	{
-		basePath: "/v4-next",
-		id: "v4-next",
-		label: "v4 Preview",
+		basePath: "/v4-experimental",
+		id: "v4-experimental",
+		label: "v4 (next)",
 	},
 ] as const satisfies ReadonlyArray<DocVersion>;
 
@@ -115,10 +115,10 @@ function resolveVersionAndSlug(modulePath: string) {
 		.replace("../content/docs/", "")
 		.replace(/\.mdx$/, "");
 
-	if (relativePath.startsWith("v4-next/")) {
+	if (relativePath.startsWith("v4-experimental/")) {
 		return {
-			slug: relativePath.slice("v4-next/".length),
-			versionId: "v4-next" as const,
+			slug: relativePath.slice("v4-experimental/".length),
+			versionId: "v4-experimental" as const,
 		};
 	}
 

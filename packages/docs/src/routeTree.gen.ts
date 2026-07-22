@@ -42,7 +42,7 @@ import { Route as ApiUseHistoryRouteImport } from './routes/api.use-history'
 import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/api.create-transition-aware-component'
 import { Route as ApiCreateBoundaryComponentRouteImport } from './routes/api.create-boundary-component'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
+import { Route as V4ExperimentalIndexRouteImport } from './routes/v4-experimental.index'
 import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
 
 const UpdatingTo37Route = UpdatingTo37RouteImport.update({
@@ -212,9 +212,9 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const V4NextIndexRoute = V4NextIndexRouteImport.update({
-  id: '/v4-next/',
-  path: '/v4-next/',
+const V4ExperimentalIndexRoute = V4ExperimentalIndexRouteImport.update({
+  id: '/v4-experimental/',
+  path: '/v4-experimental/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesModalRoute = RecipesModalRouteImport.update({
@@ -258,7 +258,7 @@ export interface FileRoutesByFullPath {
   '/updating-to-3-6': typeof UpdatingTo36Route
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
-  '/v4-next/': typeof V4NextIndexRoute
+  '/v4-experimental/': typeof V4ExperimentalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -295,7 +295,7 @@ export interface FileRoutesByTo {
   '/updating-to-3-6': typeof UpdatingTo36Route
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
-  '/v4-next': typeof V4NextIndexRoute
+  '/v4-experimental': typeof V4ExperimentalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -333,7 +333,7 @@ export interface FileRoutesById {
   '/updating-to-3-6': typeof UpdatingTo36Route
   '/updating-to-3-7': typeof UpdatingTo37Route
   '/recipes/modal': typeof RecipesModalRoute
-  '/v4-next/': typeof V4NextIndexRoute
+  '/v4-experimental/': typeof V4ExperimentalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -372,7 +372,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-6'
     | '/updating-to-3-7'
     | '/recipes/modal'
-    | '/v4-next/'
+    | '/v4-experimental/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -409,7 +409,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-6'
     | '/updating-to-3-7'
     | '/recipes/modal'
-    | '/v4-next'
+    | '/v4-experimental'
   id:
     | '__root__'
     | '/'
@@ -446,7 +446,7 @@ export interface FileRouteTypes {
     | '/updating-to-3-6'
     | '/updating-to-3-7'
     | '/recipes/modal'
-    | '/v4-next/'
+    | '/v4-experimental/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -484,7 +484,7 @@ export interface RootRouteChildren {
   UpdatingTo36Route: typeof UpdatingTo36Route
   UpdatingTo37Route: typeof UpdatingTo37Route
   RecipesModalRoute: typeof RecipesModalRoute
-  V4NextIndexRoute: typeof V4NextIndexRoute
+  V4ExperimentalIndexRoute: typeof V4ExperimentalIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -720,11 +720,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/v4-next/': {
-      id: '/v4-next/'
-      path: '/v4-next'
-      fullPath: '/v4-next/'
-      preLoaderRoute: typeof V4NextIndexRouteImport
+    '/v4-experimental/': {
+      id: '/v4-experimental/'
+      path: '/v4-experimental'
+      fullPath: '/v4-experimental/'
+      preLoaderRoute: typeof V4ExperimentalIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/recipes/modal': {
@@ -772,7 +772,7 @@ const rootRouteChildren: RootRouteChildren = {
   UpdatingTo36Route: UpdatingTo36Route,
   UpdatingTo37Route: UpdatingTo37Route,
   RecipesModalRoute: RecipesModalRoute,
-  V4NextIndexRoute: V4NextIndexRoute,
+  V4ExperimentalIndexRoute: V4ExperimentalIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
