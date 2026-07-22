@@ -1,10 +1,6 @@
 import { forwardRef } from "react";
-import {
-	Pressable,
-	type PressableProps,
-	View,
-	type ViewProps,
-} from "react-native";
+import { View, type ViewProps } from "react-native";
+import { Pressable, type PressableProps } from "react-native-gesture-handler";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
 import { Host } from "./portal";

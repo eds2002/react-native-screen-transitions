@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import {
 	MATCHED_SCREEN_BOUNDARY_GROUP,
@@ -24,25 +24,25 @@ export default function MatchedScreenPlayer() {
 	};
 
 	return (
-		<Pressable
+		<View
 			accessibilityLabel="Close video"
 			accessibilityRole="button"
-			onPress={() => router.back()}
 			style={styles.detail}
 			testID="matched-screen-close"
 		>
 			<StatusBar style="dark" />
 			<View style={styles.detailContent}>
-				<Transition.Boundary.View
+				<Transition.Boundary
 					group={MATCHED_SCREEN_BOUNDARY_GROUP}
 					handoff
+					onPress={() => router.back()}
 					id={example.id}
 					style={[styles.detailVideo, receiverStyle]}
 					testID={`matched-screen-destination-${example.id}`}
 				/>
 				<Text style={styles.detailCaption}>{example.title}</Text>
 			</View>
-		</Pressable>
+		</View>
 	);
 }
 
