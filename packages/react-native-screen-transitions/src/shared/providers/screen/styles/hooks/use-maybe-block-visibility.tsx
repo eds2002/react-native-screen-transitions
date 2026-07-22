@@ -9,15 +9,19 @@ import { AnimationStore } from "../../../../stores/animation.store";
 import { SystemStore } from "../../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
 import { useDescriptorDerivations } from "../../descriptors";
+import { isTransitionVisuallyClosed } from "../helpers/transition-visual-state";
 import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { height } = useWindowDimensions();
 	const { currentScreenKey } = useDescriptorDerivations();
-	const { closing, entering, progressAnimating, transitionProgress } =
-		AnimationStore.getBag(currentScreenKey);
-	const { pendingLifecycleStartBlockCount, pendingLifecycleRequestKind } =
-		SystemStore.getBag(currentScreenKey);
+	const { closing, entering } = AnimationStore.getBag(currentScreenKey);
+	const {
+		animationProgress,
+		targetProgress,
+		pendingLifecycleStartBlockCount,
+		pendingLifecycleRequestKind,
+	} = SystemStore.getBag(currentScreenKey);
 
 	const hasVisibilityGateOpened = useSharedValue(false);
 	const shouldBlockVisibility = useSharedValue(!isFloatingOverlay);
@@ -31,7 +35,7 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 				hasVisibilityGateOpened: hasVisibilityGateOpened.get(),
 				pendingLifecycleStartBlockCount: pendingLifecycleStartBlockCount.get(),
 				pendingLifecycleRequestKind: pendingLifecycleRequestKind.get(),
-				progress: transitionProgress.get(),
+				animationProgress: animationProgress.get(),
 				entering: entering.get(),
 			});
 		},
@@ -49,13 +53,13 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const animatedStyle = useAnimatedStyle(() => {
 		"worklet";
 		const offset = getVisibilityBlockOffset(height);
-		// Keep opacity out of normal rendering so effects such as Liquid Glass
-		// retain native compositing. Once closing has fully finished, hiding the
-		// outgoing screen lets the handoff settle before React removes its host.
-		const shouldHideClosedScreen =
-			closing.get() === 1 &&
-			transitionProgress.get() <= 0 &&
-			progressAnimating.get() === 0;
+		// Hide the outgoing screen after its visual close while React removes its
+		// host asynchronously.
+		const shouldHideClosedScreen = isTransitionVisuallyClosed({
+			closing: closing.get(),
+			animationProgress: animationProgress.get(),
+			targetProgress: targetProgress.get(),
+		});
 
 		if (shouldHideClosedScreen) {
 			return {

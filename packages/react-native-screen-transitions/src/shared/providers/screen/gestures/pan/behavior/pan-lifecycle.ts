@@ -169,6 +169,7 @@ export const finalizePanRelease = (
 		emitWillAnimate: false,
 		markEntering: false,
 		targetProgress: system.targetProgress,
+		animationProgress: system.animationProgress,
 		animations,
 		initialVelocity: plan.progressVelocity,
 	});

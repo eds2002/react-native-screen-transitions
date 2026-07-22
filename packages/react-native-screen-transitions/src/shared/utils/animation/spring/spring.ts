@@ -3,7 +3,7 @@ import type {
 	AnimationCallback,
 	ReduceMotion,
 } from "react-native-reanimated";
-import type { AnimationStateCallback } from "../state";
+import type { AnimationProgressDriver, AnimationStateCallback } from "../state";
 import type { SpringConfig } from "./springConfigs";
 import type {
 	DefaultSpringConfig,
@@ -13,6 +13,7 @@ import type {
 } from "./springUtils";
 import {
 	calculateNewStiffnessToMatchDuration,
+	calculateSpringAnimationDuration,
 	checkIfConfigIsValid,
 	criticallyDampedSpringCalculations,
 	getEnergy,
@@ -30,6 +31,7 @@ const REACT_NATIVE_RUNTIME_KIND = 1;
 const REDUCE_MOTION_SYSTEM = "system";
 const REDUCE_MOTION_ALWAYS = "always";
 const DEFAULT_SPRING_SETTLE_DISTANCE = 0.001;
+const MAX_UNFINISHED_ANIMATION_PROGRESS = 1 - 1e-6;
 
 const DEFAULT_SPRING_CONFIG = {
 	damping: 120,
@@ -61,6 +63,7 @@ const getReduceMotionForAnimation = (config?: ReduceMotion) => {
 const defineSpringAnimation = <TAnimation extends Animation<TAnimation>>(
 	_starting: number,
 	factory: () => TAnimation,
+	onReducedMotion?: () => void,
 ): TAnimation => {
 	"worklet";
 	const create = (() => {
@@ -76,6 +79,7 @@ const defineSpringAnimation = <TAnimation extends Animation<TAnimation>>(
 		) => {
 			"worklet";
 			if (animation.reduceMotion) {
+				onReducedMotion?.();
 				animation.current = animation.toValue;
 				animation.onFrame = () => true;
 				return;
@@ -99,6 +103,7 @@ type withSpringType = (
 	toValue: number,
 	userConfig?: SpringConfig,
 	callback?: AnimationStateCallback,
+	animationProgress?: AnimationProgressDriver,
 ) => number;
 
 /**
@@ -123,9 +128,11 @@ export const withInternalSpring = ((
 	toValue: number,
 	userConfig?: SpringConfig,
 	callback?: AnimationStateCallback,
+	animationProgress?: AnimationProgressDriver,
 ): Animation<SpringAnimation> => {
 	"worklet";
 
+	// biome-ignore format: Keep this Reanimated fork aligned with its upstream layout.
 	return defineSpringAnimation<SpringAnimation>(toValue, () => {
 		"worklet";
 		const config: DefaultSpringConfig & SpringConfigInner = safeMergeConfigs<
@@ -175,6 +182,7 @@ export const withInternalSpring = ((
 
 			if (config.skipAnimation) {
 				animation.current = toValue;
+				animationProgress?.value.set(animationProgress.to);
 				animation.lastTimestamp = 0;
 				return true;
 			}
@@ -182,6 +190,7 @@ export const withInternalSpring = ((
 
 			const deltaTime = Math.min(Math.max(now - lastTimestamp, 0), 64);
 			animation.lastTimestamp = now;
+			animation.animationProgressElapsed += deltaTime;
 
 			const t = deltaTime / 1000;
 			const v0 = velocity as number;
@@ -212,6 +221,7 @@ export const withInternalSpring = ((
 			if (isAnimationTerminatingCalculation(animation, config)) {
 				animation.velocity = 0;
 				animation.current = toValue;
+				animationProgress?.value.set(animationProgress.to);
 				settled = true;
 				animation.settled = true;
 				// clear lastTimestamp to avoid using stale value by the next spring animation that starts after this one
@@ -220,6 +230,22 @@ export const withInternalSpring = ((
 			}
 
 			notifySettled(animation);
+
+			if (animationProgress) {
+				const elapsedFraction =
+					animation.animationProgressDuration <= 0
+						? MAX_UNFINISHED_ANIMATION_PROGRESS
+						: Math.min(
+								animation.animationProgressElapsed /
+									animation.animationProgressDuration,
+								MAX_UNFINISHED_ANIMATION_PROGRESS,
+							);
+				const nextAnimationProgress =
+					animationProgress.from +
+					(animationProgress.to - animationProgress.from) * elapsedFraction;
+				console.log("[animationProgress:spring]", nextAnimationProgress);
+				animationProgress.value.set(nextAnimationProgress);
+			}
 
 			return false;
 		}
@@ -307,6 +333,11 @@ export const withInternalSpring = ((
 				config.mass,
 			);
 			animation.initialEnergy = initialEnergy;
+			animation.animationProgressElapsed = 0;
+			animation.animationProgressDuration = config.skipAnimation
+				? 0
+				: calculateSpringAnimationDuration(animation, config);
+			animationProgress?.value.set(animationProgress.from);
 
 			animation.lastTimestamp = previousAnimation?.lastTimestamp || now;
 
@@ -339,9 +370,14 @@ export const withInternalSpring = ((
 			omega0: 0,
 			omega1: 0,
 			initialEnergy: 0,
+			animationProgressElapsed: 0,
+			animationProgressDuration: 0,
 			reduceMotion: getReduceMotionForAnimation(config.reduceMotion),
 		} as SpringAnimation;
 
 		return animation;
+	}, () => {
+		"worklet";
+		animationProgress?.value.set(animationProgress.to);
 	});
 }) as unknown as withSpringType;

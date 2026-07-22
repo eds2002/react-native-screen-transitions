@@ -16,6 +16,7 @@ interface AnimateToProgressProps {
 	onAnimationFinish?: (finished: boolean) => void;
 	animations: AnimationStoreMap;
 	targetProgress: SharedValue<number>;
+	animationProgress: SharedValue<number>;
 	emitWillAnimate?: boolean;
 	markEntering?: boolean;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
@@ -35,6 +36,8 @@ const setTransitionLifecycleFlags = (
 		return;
 	}
 
+	animations.closing.set(FALSE);
+
 	if (markEntering) {
 		animations.entering.set(TRUE);
 	}
@@ -46,6 +49,7 @@ export const animateToProgress = ({
 	onAnimationFinish,
 	animations,
 	targetProgress,
+	animationProgress,
 	emitWillAnimate = true,
 	markEntering = true,
 	initialVelocity,
@@ -77,7 +81,12 @@ export const animateToProgress = ({
 
 	const startAnimation = () => {
 		"worklet";
+		const isDecreasing = isClosing || value < transitionProgress.get();
+		const animationProgressFrom = isDecreasing ? 1 : 0;
+		const animationProgressTo = isDecreasing ? 0 : 1;
+
 		targetProgress.set(value);
+		animationProgress.set(animationProgressFrom);
 
 		const shouldClearEnteringOnFinish =
 			!isClosing && (markEntering || entering.get());
@@ -88,6 +97,7 @@ export const animateToProgress = ({
 			progressAnimating.set(FALSE);
 			progressSettled.set(TRUE);
 			transitionProgress.set(value);
+			animationProgress.set(animationProgressTo);
 			if (shouldClearEnteringOnFinish) {
 				entering.set(FALSE);
 			}
@@ -101,43 +111,55 @@ export const animateToProgress = ({
 		progressAnimating.set(TRUE); //<-- Do not move this into the callback
 		progressSettled.set(FALSE);
 		transitionProgress.set(
-			animate(value, effectiveConfig, (state) => {
-				"worklet";
-				if (state.settled) {
-					progressSettled.set(TRUE);
-				}
+			animate(
+				value,
+				effectiveConfig,
+				(state) => {
+					"worklet";
+					if (state.settled) {
+						progressSettled.set(TRUE);
+					}
 
-				if (!state.finished) return;
+					if (!state.finished) return;
 
-				if (shouldClearEnteringOnFinish) {
-					entering.set(FALSE);
-				}
+					animationProgress.set(animationProgressTo);
+					console.log("[animationProgress:finished]", animationProgressTo);
 
-				if (isClosing) {
-					progressAnimating.set(FALSE);
+					if (shouldClearEnteringOnFinish) {
+						entering.set(FALSE);
+					}
 
-					if (onAnimationFinish) {
-						// Paint the terminal UI-thread host/style state before React
-						// removes the closing route and its native portal host.
-						requestAnimationFrame(() => {
-							"worklet";
+					if (isClosing) {
+						progressAnimating.set(FALSE);
+
+						if (onAnimationFinish) {
+							// Paint the terminal UI-thread host/style state before React
+							// removes the closing route and its native portal host.
 							requestAnimationFrame(() => {
 								"worklet";
-								runOnJS(onAnimationFinish)(state.finished);
+								requestAnimationFrame(() => {
+									"worklet";
+									runOnJS(onAnimationFinish)(state.finished);
+								});
 							});
+						}
+					} else {
+						if (onAnimationFinish) {
+							runOnJS(onAnimationFinish)(state.finished);
+						}
+
+						// Delay clearing progress animation by one frame to ensure final frame is painted
+						requestAnimationFrame(() => {
+							progressAnimating.set(FALSE);
 						});
 					}
-				} else {
-					if (onAnimationFinish) {
-						runOnJS(onAnimationFinish)(state.finished);
-					}
-
-					// Delay clearing progress animation by one frame to ensure final frame is painted
-					requestAnimationFrame(() => {
-						progressAnimating.set(FALSE);
-					});
-				}
-			}),
+				},
+				{
+					value: animationProgress,
+					from: animationProgressFrom,
+					to: animationProgressTo,
+				},
+			),
 		);
 	};
 

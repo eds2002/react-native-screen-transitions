@@ -129,6 +129,7 @@ const createRuntime = (
 			animations,
 			system: {
 				targetProgress: shared(1),
+				animationProgress: shared(0),
 			},
 		},
 		};
@@ -176,36 +177,66 @@ describe("gesture lifecycle state", () => {
 	it("marks opening as entering before the willAnimate pulse is observed", () => {
 		const raf = installDeferredAnimationFrame();
 		const animations = createAnimations();
+		const animationProgress = shared(0);
 		animations.transitionProgress.set(0);
 
 		animateToProgress({
 			target: "open",
 			animations,
 			targetProgress: shared(0),
+			animationProgress,
 		});
 
 		expect(animations.willAnimate.get()).toBe(1);
 		expect(animations.entering.get()).toBe(1);
 		expect(animations.closing.get()).toBe(0);
+		expect(animationProgress.get()).toBe(0);
 
 		raf.flush();
 		raf.restore();
+
+		expect(animationProgress.get()).toBe(1);
 	});
 
 	it("marks closing before the willAnimate pulse is observed", () => {
 		const raf = installDeferredAnimationFrame();
 		const animations = createAnimations();
+		const animationProgress = shared(1);
 		animations.entering.set(1);
 
 		animateToProgress({
 			target: "close",
 			animations,
 			targetProgress: shared(1),
+			animationProgress,
 		});
 
 		expect(animations.willAnimate.get()).toBe(1);
 		expect(animations.closing.get()).toBe(1);
 		expect(animations.entering.get()).toBe(0);
+		expect(animationProgress.get()).toBe(1);
+
+		raf.flush();
+		raf.restore();
+
+		expect(animationProgress.get()).toBe(0);
+	});
+
+	it("clears a stale closing flag when a retained screen reopens", () => {
+		const raf = installDeferredAnimationFrame();
+		const animations = createAnimations();
+
+		animations.closing.set(1);
+
+		animateToProgress({
+			target: "open",
+			animations,
+			targetProgress: shared(0),
+			animationProgress: shared(0),
+		});
+
+		expect(animations.closing.get()).toBe(0);
+		expect(animations.entering.get()).toBe(1);
 
 		raf.flush();
 		raf.restore();
