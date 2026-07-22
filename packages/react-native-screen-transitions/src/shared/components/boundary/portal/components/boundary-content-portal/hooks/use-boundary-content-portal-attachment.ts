@@ -1,6 +1,12 @@
-import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
+import {
+	type SharedValue,
+	useAnimatedProps,
+	useSharedValue,
+} from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import { isTransitionVisuallyClosed } from "../../../../../../providers/screen/styles/helpers/transition-visual-state";
+import { AnimationStore } from "../../../../../../stores/animation.store";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { SystemStore } from "../../../../../../stores/system.store";
 import { resolveEnteringHandoffTarget } from "../../../utils/handoff-target";
@@ -12,6 +18,13 @@ interface UseBoundaryContentPortalAttachmentParams {
 	boundaryId: string;
 	enabled: boolean;
 }
+
+type AttachedDestination = {
+	animationProgress: SharedValue<number>;
+	closing: SharedValue<number>;
+	screenKey: string;
+	targetProgress: SharedValue<number>;
+};
 
 export const useBoundaryContentPortalAttachment = ({
 	boundaryId,
@@ -28,7 +41,19 @@ export const useBoundaryContentPortalAttachment = ({
 		destinationScreenKey,
 		"animationProgress",
 	);
-	const attachedScreenKey = useSharedValue<string | null>(null);
+	const destinationTargetProgress = SystemStore.getValue(
+		destinationScreenKey,
+		"targetProgress",
+	);
+	const destinationClosing = AnimationStore.getValue(
+		destinationScreenKey,
+		"closing",
+	);
+
+	// `nextScreenKey` can change while the previously attached destination is
+	// still closing. Retain that destination's lifecycle shared values so this
+	// payload follows the screen that actually hosts it, not the newest route.
+	const attachedDestination = useSharedValue<AttachedDestination | null>(null);
 
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
@@ -54,20 +79,43 @@ export const useBoundaryContentPortalAttachment = ({
 				})
 			: null;
 
+		if (enteringTargetScreenKey) {
+			// A valid entering pair is the only event that replaces the current
+			// attachment and its lifecycle owner.
+			attachedDestination.set({
+				animationProgress: destinationAnimationProgress,
+				closing: destinationClosing,
+				screenKey: enteringTargetScreenKey,
+				targetProgress: destinationTargetProgress,
+			});
+		}
+
+		const attached = attachedDestination.get();
+		const isAttachedScreenVisuallyClosed =
+			attached !== null &&
+			isTransitionVisuallyClosed({
+				animationProgress: attached.animationProgress.get(),
+				closing: attached.closing.get(),
+				targetProgress: attached.targetProgress.get(),
+			});
+
+		// Missing or changing pairs do not imply a return: keep the current host
+		// until its own screen visually closes. At that point, target the source
+		// host explicitly instead of `null` so Teleport restores source dimensions.
 		const targetScreenKey = enteringTargetScreenKey
 			? enteringTargetScreenKey
 			: shouldTeleport
-				? attachedScreenKey.get()
+				? isAttachedScreenVisuallyClosed
+					? currentScreenKey
+					: (attached?.screenKey ?? null)
 				: null;
+
 		const targetHostName = targetScreenKey
 			? createBoundaryContentPortalHostName(targetScreenKey, boundaryId)
 			: PORTAL_HOST_NAME_RESET_VALUE;
-		const hostName = targetHostName;
-		attachedScreenKey.set(targetScreenKey);
-
 		return {
 			...slotProps,
-			hostName,
+			hostName: targetHostName,
 		};
 	});
 
