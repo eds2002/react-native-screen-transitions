@@ -43,6 +43,17 @@ const setTransitionLifecycleFlags = (
 	}
 };
 
+export const resolveAnimationProgressRange = (
+	currentProgress: number,
+	targetProgress: number,
+) => {
+	"worklet";
+	return {
+		from: Math.min(1, Math.max(0, currentProgress)),
+		to: targetProgress,
+	};
+};
+
 export const animateToProgress = ({
 	target,
 	spec,
@@ -81,9 +92,8 @@ export const animateToProgress = ({
 
 	const startAnimation = () => {
 		"worklet";
-		const isDecreasing = isClosing || value < transitionProgress.get();
-		const animationProgressFrom = isDecreasing ? 1 : 0;
-		const animationProgressTo = isDecreasing ? 0 : 1;
+		const { from: animationProgressFrom, to: animationProgressTo } =
+			resolveAnimationProgressRange(transitionProgress.get(), value);
 
 		targetProgress.set(value);
 		animationProgress.set(animationProgressFrom);
@@ -123,7 +133,6 @@ export const animateToProgress = ({
 					if (!state.finished) return;
 
 					animationProgress.set(animationProgressTo);
-					console.log("[animationProgress:finished]", animationProgressTo);
 
 					if (shouldClearEnteringOnFinish) {
 						entering.set(FALSE);

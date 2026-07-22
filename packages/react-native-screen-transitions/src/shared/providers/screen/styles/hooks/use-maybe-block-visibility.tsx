@@ -60,7 +60,6 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 			animationProgress: animationProgress.get(),
 			targetProgress: targetProgress.get(),
 		});
-
 		if (shouldHideClosedScreen) {
 			return {
 				opacity: 0,

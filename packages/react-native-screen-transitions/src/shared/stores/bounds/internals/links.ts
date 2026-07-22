@@ -215,11 +215,12 @@ const writeDestination = (
 	bounds: MeasuredDimensions,
 	styles: StyleProps,
 	group?: GroupKey,
+	runtimeFlags: BoundaryRuntimeFlags = {},
 ) => {
 	"worklet";
 	const existingLink = getPairLink(state, pairKey, linkKey);
 
-	const destination = createLinkSide(screenKey, bounds, styles);
+	const destination = createLinkSide(screenKey, bounds, styles, runtimeFlags);
 	const link =
 		existingLink ??
 		({
@@ -296,12 +297,22 @@ function setDestination(
 	bounds: MeasuredDimensions,
 	styles: StyleProps = {},
 	group?: GroupKey,
+	runtimeFlags: BoundaryRuntimeFlags = {},
 ) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
 		const linkKey = getLinkKeyFromTag(tag);
-		writeDestination(state, pairKey, linkKey, screenKey, bounds, styles, group);
+		writeDestination(
+			state,
+			pairKey,
+			linkKey,
+			screenKey,
+			bounds,
+			styles,
+			group,
+			runtimeFlags,
+		);
 
 		return state;
 	});

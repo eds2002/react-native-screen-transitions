@@ -153,6 +153,7 @@ describe("applyMeasuredBoundsWrites", () => {
 			currentScreenKey: "screen-a",
 			measured: source,
 			preparedStyles: { borderRadius: 16 },
+			handoff: true,
 			linkWrite: {
 				type: "source",
 				pairKey,
@@ -164,6 +165,7 @@ describe("applyMeasuredBoundsWrites", () => {
 			currentScreenKey: "screen-b",
 			measured: destination,
 			preparedStyles: { borderRadius: 20 },
+			handoff: true,
 			linkWrite: {
 				type: "destination",
 				pairKey,
@@ -173,8 +175,10 @@ describe("applyMeasuredBoundsWrites", () => {
 		const link = BoundStore.link.getLink(pairKey, "card");
 		expect(link?.source.bounds).toEqual(source);
 		expect(link?.source.styles).toEqual({ borderRadius: 16 });
+		expect(link?.source.handoff).toBe(true);
 		expect(link?.destination?.bounds).toEqual(destination);
 		expect(link?.destination?.styles).toEqual({ borderRadius: 20 });
+		expect(link?.destination?.handoff).toBe(true);
 	});
 
 	it("snapshots shared style values when links are measured", () => {

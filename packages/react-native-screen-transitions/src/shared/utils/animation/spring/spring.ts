@@ -243,7 +243,6 @@ export const withInternalSpring = ((
 				const nextAnimationProgress =
 					animationProgress.from +
 					(animationProgress.to - animationProgress.from) * elapsedFraction;
-				console.log("[animationProgress:spring]", nextAnimationProgress);
 				animationProgress.value.set(nextAnimationProgress);
 			}
 

@@ -11,7 +11,6 @@ export type ScreenAnimationConfig =
 
 const linearEasing = (progress: number) => {
 	"worklet";
-	console.log("[animationProgress:timing]", progress);
 	return progress;
 };
 
