@@ -9,7 +9,10 @@ import {
 	finalizePinchRelease,
 	startPinchBase,
 } from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
-import { updateAbsolutePinchFocalPoint } from "../../../providers/screen/gestures/pinch/activation/use-pinch-activation";
+import {
+	updateAbsolutePinchFocalPoint,
+	updatePinchRotation,
+} from "../../../providers/screen/gestures/pinch/activation/use-pinch-activation";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import type { GestureStoreMap } from "../../../stores/gesture.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
@@ -364,6 +367,40 @@ describe("gesture lifecycle state", () => {
 		expect(gestures.focalY.get()).toBe(310);
 		expect(gestures.pinchOriginX.get()).toBe(160);
 		expect(gestures.pinchOriginY.get()).toBe(280);
+	});
+
+	it("derives continuous rotation from the pinch touch pair", () => {
+		const gestures = createGestureStore();
+		const lastAngle = shared(0);
+		const accumulatedRotation = shared(0);
+
+		updatePinchRotation(
+			{
+				allTouches: [
+					{ absoluteX: 100, absoluteY: 200 },
+					{ absoluteX: 200, absoluteY: 200 },
+				],
+			} as any,
+			gestures,
+			lastAngle,
+			accumulatedRotation,
+			true,
+		);
+		updatePinchRotation(
+			{
+				allTouches: [
+					{ absoluteX: 150, absoluteY: 150 },
+					{ absoluteX: 150, absoluteY: 250 },
+				],
+			} as any,
+			gestures,
+			lastAngle,
+			accumulatedRotation,
+			false,
+		);
+
+		expect(gestures.rotation.get()).toBeCloseTo(Math.PI / 2);
+		expect(gestures.raw.rotation.get()).toBeCloseTo(Math.PI / 2);
 	});
 
 	it("marks a cancelled pan release as settling until gesture reset finishes", () => {

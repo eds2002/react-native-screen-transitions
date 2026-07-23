@@ -15,7 +15,6 @@ import { trackPanGesture } from "../../../providers/screen/gestures/pan/behavior
 import { resolvePanRelease } from "../../../providers/screen/gestures/pan/behavior/pan-release";
 import { trackPinchGesture } from "../../../providers/screen/gestures/pinch/behavior/pinch-lifecycle";
 import { resolvePinchRelease } from "../../../providers/screen/gestures/pinch/behavior/pinch-release";
-import { trackRotationGesture } from "../../../providers/screen/gestures/rotation/behavior/rotation-lifecycle";
 import { applyGestureSensitivityToRawChange } from "../../../providers/screen/gestures/hooks/use-gesture-sensitivity";
 import type { ScreenOptionsContextValue } from "../../../providers/screen/options";
 
@@ -841,23 +840,6 @@ describe("trackPinchGesture", () => {
 		expect(gestures.raw.normY.get()).toBeCloseTo(-0.06, 5);
 		expect(gestures.raw.scale.get()).toBeCloseTo(2, 5);
 		expect(gestures.raw.normScale.get()).toBeCloseTo(1, 5);
-	});
-});
-
-describe("trackRotationGesture", () => {
-	it("stores rotation independently from pinch progress values", () => {
-		const gestures = createGestureStore();
-
-		trackRotationGesture(
-			{ rotation: 0.35 } as any,
-			{ rotation: 0.5 } as any,
-			gestures,
-		);
-
-		expect(gestures.rotation.get()).toBeCloseTo(0.35, 5);
-		expect(gestures.raw.rotation.get()).toBeCloseTo(0.5, 5);
-		expect(gestures.normScale.get()).toBe(0);
-		expect(gestures.active.get()).toBe(null);
 	});
 });
 

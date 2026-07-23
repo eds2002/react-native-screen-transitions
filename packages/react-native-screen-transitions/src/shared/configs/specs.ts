@@ -37,8 +37,8 @@ export const Zoom = {
 		restSpeedThreshold: 0.02,
 	},
 	close: {
-		stiffness: 1100,
-		damping: 98,
+		stiffness: 1000,
+		damping: 90,
 		mass: 3,
 		overshootClamping: false,
 		// @ts-expect-error Reanimated v3 spring config support.
