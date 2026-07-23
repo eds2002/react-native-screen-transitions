@@ -1,11 +1,7 @@
 import type { MeasuredDimensions } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
 import type { Layout } from "../../../../types/screen.types";
-import type { BoundsAnchor } from "../../types/options";
-import {
-	resolveRevealContentBaseTransform,
-	resolveTrackedSourceElementTransform,
-} from "../reveal/math";
+import { resolveTrackedSourceElementTransform } from "../reveal/math";
 
 export function resolveZoomBackdropOpacity({
 	transitionProgress,
@@ -65,44 +61,34 @@ export function resolveZoomPinchFocalOffset({
 }
 
 export function resolveZoomTrackedSourceTransform({
-	progress,
 	sourceBounds,
 	destinationBounds,
 	screenLayout,
+	contentBaseTransform,
+	collapsedContentScale,
 	dragX,
 	dragY,
 	gestureScale,
 	parentScale,
 	rotation = 0,
-	anchor,
 }: {
-	progress: number;
 	sourceBounds: MeasuredDimensions;
 	destinationBounds: MeasuredDimensions;
 	screenLayout: Layout;
+	contentBaseTransform: {
+		translateX: number;
+		translateY: number;
+		scale: number;
+	};
+	collapsedContentScale: number;
 	dragX: number;
 	dragY: number;
 	gestureScale: number;
 	parentScale: number;
 	rotation?: number;
-	anchor?: BoundsAnchor;
 }) {
 	"worklet";
 
-	const contentBaseTransform = resolveRevealContentBaseTransform({
-		progress,
-		sourceBounds,
-		destinationBounds,
-		screenLayout,
-		anchor,
-	});
-	const collapsedContentScale = resolveRevealContentBaseTransform({
-		progress: 0,
-		sourceBounds,
-		destinationBounds,
-		screenLayout,
-		anchor,
-	}).scale;
 	const contentScale = contentBaseTransform.scale * gestureScale;
 	const safeCollapsedContentScale = Math.max(
 		Math.abs(collapsedContentScale),
