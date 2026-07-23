@@ -12,22 +12,28 @@ function getBoundaryId(route: { params?: object } | undefined) {
 }
 
 const navigationZoomInterpolator: ScreenTransitionConfig["screenStyleInterpolator"] =
-	({ active, bounds, current, next }) => {
+	({ active, bounds, current, focused, next }) => {
 		"worklet";
 		const id =
 			getBoundaryId(active.route) ||
 			getBoundaryId(next?.route) ||
 			getBoundaryId(current.route);
 
-		return id
-			? bounds({
-					group: MATCHED_SCREEN_BOUNDARY_GROUP,
-					id,
-				}).navigation.zoom({
-					keepFocusedVisible: true,
-					target: "bound",
-				})
-			: {};
+		if (!id) {
+			return {};
+		}
+
+		if (focused) {
+			return bounds({
+				group: MATCHED_SCREEN_BOUNDARY_GROUP,
+				id,
+			}).navigation.zoom({
+				keepFocusedVisible: true,
+				target: "bound",
+			});
+		}
+
+		return null;
 	};
 
 export default function MatchedScreenLayout() {

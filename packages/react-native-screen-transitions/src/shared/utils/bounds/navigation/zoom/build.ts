@@ -3,6 +3,8 @@ import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../../../../constants";
+import { getVisualScrollAxisDelta } from "../../../../stores/scroll.store";
+import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { getSourceBorderRadius } from "../helpers";
 import { resolveRevealContentBaseTransform } from "../reveal/math";
@@ -144,6 +146,28 @@ export function buildZoomStyles({
 			: { x: 0, y: 0 };
 
 	if (focused) {
+		const capturedSourceScroll = (
+			sourceBounds as typeof sourceBounds & {
+				scroll?: ScrollMetadataState | null;
+			}
+		).scroll;
+		const liveSourceScroll = props.inactive?.layouts.scroll;
+		const sourceScrollWeight =
+			keepFocusedVisible && (active.entering || active.closing)
+				? 1 - Math.min(Math.max(activeTransitionProgress, 0), 1)
+				: 0;
+		const sourceScrollDeltaX =
+			getVisualScrollAxisDelta(
+				liveSourceScroll,
+				capturedSourceScroll,
+				"horizontal",
+			) * sourceScrollWeight;
+		const sourceScrollDeltaY =
+			getVisualScrollAxisDelta(
+				liveSourceScroll,
+				capturedSourceScroll,
+				"vertical",
+			) * sourceScrollWeight;
 		const sourceBorderRadius = getSourceBorderRadius(link);
 		const navigationMaskEnabled = current.options.navigationMaskEnabled;
 		const backdropOpacity = resolveZoomBackdropOpacity({
@@ -179,11 +203,13 @@ export function buildZoomStyles({
 		const contentTranslateX =
 			contentBaseTranslateX +
 			drag.dragX +
-			pinchFocalOffset.x * contentBaseScale;
+			pinchFocalOffset.x * contentBaseScale -
+			sourceScrollDeltaX;
 		const contentTranslateY =
 			contentBaseTranslateY +
 			drag.dragY +
-			pinchFocalOffset.y * contentBaseScale;
+			pinchFocalOffset.y * contentBaseScale -
+			sourceScrollDeltaY;
 		const contentScale = drag.isDismissing
 			? drag.dismissContentScale
 			: contentBaseScale * drag.gestureScale;

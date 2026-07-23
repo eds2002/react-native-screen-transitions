@@ -138,6 +138,29 @@ export const getClampedScrollAxisDelta = (
 };
 
 /**
+ * Visual scroll travel from a bounds snapshot normalized to its at-rest
+ * position. The captured side is clamped because measurement removes transient
+ * rubber-band displacement; the current side stays raw so consumers can follow
+ * the position that is actually visible on iOS.
+ */
+export const getVisualScrollAxisDelta = (
+	current: ScrollMetadataState | null | undefined,
+	captured: ScrollMetadataState | null | undefined,
+	axis: ScrollGestureAxis,
+): number => {
+	"worklet";
+
+	const currentAxisState = current?.[axis];
+	const capturedOffset = clampScrollAxisOffset(captured?.[axis]);
+
+	if (!currentAxisState || capturedOffset === null) {
+		return 0;
+	}
+
+	return currentAxisState.offset - capturedOffset;
+};
+
+/**
  * Route-keyed scroll geometry used by gesture activation and bounds measurement.
  * Coordination tracks gesture-owner scoped ScrollView offsets and dimensions;
  * metadata tracks screen-scoped scroll values exposed to animation consumers.
