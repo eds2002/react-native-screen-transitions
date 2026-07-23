@@ -12,7 +12,7 @@ import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { SystemStore } from "../../../../../../stores/system.store";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
-import { shouldAttachBoundaryPortal } from "../../../utils/teleport-control";
+import { isTeleportEnabled } from "../../../utils/teleport-control";
 import { createBoundaryPortalHostName } from "../helpers/host-name";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import {
@@ -22,7 +22,6 @@ import {
 
 interface UseBoundaryPortalAttachmentParams {
 	boundaryId: string;
-	enabled: boolean;
 }
 
 type AttachedDestination = {
@@ -32,7 +31,6 @@ type AttachedDestination = {
 
 export const useBoundaryPortalAttachment = ({
 	boundaryId,
-	enabled,
 }: UseBoundaryPortalAttachmentParams) => {
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
 	const currentScreenKey = useDescriptorsStore(
@@ -52,10 +50,10 @@ export const useBoundaryPortalAttachment = ({
 	const portalHostName = useSharedValue<string | null>(null);
 	const portalHostReady = useSharedValue(false);
 	const attachedDestination = useSharedValue<AttachedDestination | null>(null);
-	const escapeHostKey = useActiveHostKey(enabled ? currentScreenKey : null);
+	const escapeHostKey = useActiveHostKey(currentScreenKey);
 
 	useLayoutEffect(() => {
-		if (!enabled || !sourcePairKey || !escapeHostKey) {
+		if (!sourcePairKey || !escapeHostKey) {
 			portalHostName.set(null);
 			portalHostReady.set(false);
 			return;
@@ -87,7 +85,6 @@ export const useBoundaryPortalAttachment = ({
 	}, [
 		boundaryId,
 		currentScreenKey,
-		enabled,
 		escapeHostKey,
 		localStylesMaps,
 		portalHostName,
@@ -105,10 +102,7 @@ export const useBoundaryPortalAttachment = ({
 			teleport,
 			...slotProps
 		} = slot?.props ?? {};
-		const shouldTeleport = shouldAttachBoundaryPortal({
-			enabled,
-			teleport,
-		});
+		const shouldTeleport = isTeleportEnabled(teleport);
 		const hostName = portalHostName.get();
 		const pair = sourcePairKey ? pairs.get()[sourcePairKey] : undefined;
 		const linkKey = getLinkKeyFromTag(boundaryId);

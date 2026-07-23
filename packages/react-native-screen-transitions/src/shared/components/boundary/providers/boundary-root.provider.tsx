@@ -1,14 +1,13 @@
 import {
 	type ForwardedRef,
 	type ReactNode,
-	useCallback,
 	useImperativeHandle,
+	useLayoutEffect,
 	useMemo,
 	useRef,
-	useState,
 } from "react";
 import type { View } from "react-native";
-import type { AnimatedRef, StyleProps } from "react-native-reanimated";
+import type { AnimatedRef } from "react-native-reanimated";
 import { useAnimatedRef } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import {
@@ -30,28 +29,11 @@ import type {
 	BoundaryOwnProps,
 } from "../types";
 
-interface BoundaryRootContextValue extends BoundaryRootRenderState {
-	registerTargetRef: (
-		targetRef: AnimatedRef<View>,
-		preparedStyles: StyleProps,
-		measurementRef?: AnimatedRef<View>,
-	) => void;
-	unregisterTargetRef: (targetRef: AnimatedRef<View>) => void;
-	activeTargetRef: AnimatedRef<View> | null;
-	boundTag: BoundTag;
-	portalRuntime: BoundaryPortalRuntime;
-}
-
-type BoundaryTargetEntry = {
-	ref: AnimatedRef<View>;
-	/** Surface to measure — the portal placeholder when content can teleport. */
-	measurementRef: AnimatedRef<View>;
-	preparedStyles: StyleProps;
-};
+type BoundaryRootContextValue = BoundaryRootRenderState;
 
 // logger.warn prepends the library prefix.
 const MULTIPLE_TARGETS_WARNING =
-	"Multiple Boundary.Target elements were rendered under the same boundary root. The first registered target will be measured.";
+	"Multiple Boundary.Target elements were rendered under the same boundary root. The first target in render order will be measured.";
 
 export const TARGET_OUTSIDE_ROOT_WARNING =
 	"Boundary.Target must be rendered inside Transition.Boundary or a component created by createBoundaryComponent.";
@@ -61,9 +43,9 @@ export type BoundaryRootRenderState = {
 	boundTag: BoundTag;
 	currentScreenKey: string;
 	handoffEnabled: boolean;
+	measurementRef: AnimatedRef<View>;
 	portalRuntime: BoundaryPortalRuntime;
 	ref: AnimatedRef<View>;
-	rootEscapePlaceholderRef: AnimatedRef<View>;
 	shouldRenderBoundaryRootThroughPortal: boolean;
 	shouldRenderHandoffHost: boolean;
 };
@@ -75,8 +57,11 @@ type BoundaryRootProviderProps = Pick<
 	children: (state: BoundaryRootRenderState) => ReactNode;
 	config: BoundaryConfigProps;
 	forwardedRef?: ForwardedRef<any>;
+	hasTarget: boolean;
 	id: BoundaryId;
 	style?: unknown;
+	targetCount: number;
+	targetStyle?: unknown;
 };
 
 export const {
@@ -95,8 +80,11 @@ export const {
 		forwardedRef,
 		group,
 		handoff,
+		hasTarget,
 		id,
 		style,
+		targetCount,
+		targetStyle,
 	}) => {
 		const requestedBoundTag = useMemo(
 			() => createBoundTag(String(id), group),
@@ -137,51 +125,18 @@ export const {
 		const associatedStyles = useComposedSlotStyles(boundTag.tag, style);
 		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
 		const rootRef = useAnimatedRef<View>();
-		const rootEscapePlaceholderRef = useAnimatedRef<View>();
-		const [targetEntry, setTargetEntry] = useState<BoundaryTargetEntry | null>(
-			null,
-		);
+		const measurementRef = useAnimatedRef<View>();
 
-		const registerTargetRef = useCallback(
-			(
-				targetRef: AnimatedRef<View>,
-				preparedStyles: StyleProps,
-				measurementRef?: AnimatedRef<View>,
-			) => {
-				setTargetEntry((prev) => {
-					if (prev?.ref === targetRef) {
-						return prev;
-					}
+		useLayoutEffect(() => {
+			if (__DEV__ && targetCount > 1) {
+				logger.warnOnce("boundary:multiple-targets", MULTIPLE_TARGETS_WARNING);
+			}
+		}, [targetCount]);
 
-					if (__DEV__ && prev !== null) {
-						logger.warnOnce(
-							"boundary:multiple-targets",
-							MULTIPLE_TARGETS_WARNING,
-						);
-					}
-
-					return (
-						prev ?? {
-							ref: targetRef,
-							measurementRef: measurementRef ?? targetRef,
-							preparedStyles,
-						}
-					);
-				});
-			},
-			[],
-		);
-
-		const unregisterTargetRef = useCallback((targetRef: AnimatedRef<View>) => {
-			setTargetEntry((prev) => (prev?.ref === targetRef ? null : prev));
-		}, []);
-
-		const rootMeasurementRef = shouldEscapeBoundaryRootToScreenHost
-			? rootEscapePlaceholderRef
-			: rootRef;
-		const measuredRef = targetEntry?.measurementRef ?? rootMeasurementRef;
-		const hasActiveTarget = targetEntry !== null;
-		const targetPreparedStyles = targetEntry?.preparedStyles;
+		const measuredRef =
+			hasTarget || shouldEscapeBoundaryRootToScreenHost
+				? measurementRef
+				: rootRef;
 
 		useImperativeHandle(forwardedRef, () => rootRef.current as any, [rootRef]);
 
@@ -191,15 +146,14 @@ export const {
 			runtimeEnabled,
 			currentScreenKey,
 			measuredRef,
-			style,
-			targetPreparedStyles,
+			style: hasTarget ? targetStyle : style,
 			handoff: portalRuntime.handoff,
 			escapeClipping: portalRuntime.escapeClipping,
 			config,
 		});
 
 		const shouldRenderBoundaryRootThroughPortal =
-			shouldEscapeBoundaryRootToScreenHost && !hasActiveTarget;
+			shouldEscapeBoundaryRootToScreenHost && !hasTarget;
 		const handoffEnabled = enabled && portalRuntime.handoff;
 		// A nested active target takes the full associated style, so the root keeps
 		// only its stacking context. Root-owned escape-clipping moves the root
@@ -209,7 +163,7 @@ export const {
 		// handoff host is absolute-filled inside this root, so the root is the
 		// visual frame that animates the received payload.
 		const attachedStyle = shouldAttachAssociatedStyles
-			? hasActiveTarget
+			? hasTarget
 				? associatedStackingStyles
 				: shouldRenderBoundaryRootThroughPortal
 					? undefined
@@ -219,31 +173,25 @@ export const {
 		const value = useMemo<BoundaryRootContextValue>(
 			() => ({
 				attachedStyle,
-				activeTargetRef: targetEntry?.ref ?? null,
 				boundTag,
 				currentScreenKey,
 				handoffEnabled,
+				measurementRef,
 				portalRuntime,
-				registerTargetRef,
 				ref: rootRef,
-				rootEscapePlaceholderRef,
 				shouldRenderBoundaryRootThroughPortal,
-				shouldRenderHandoffHost: handoffEnabled && !hasActiveTarget,
-				unregisterTargetRef,
+				shouldRenderHandoffHost: handoffEnabled && !hasTarget,
 			}),
 			[
 				attachedStyle,
 				boundTag,
 				currentScreenKey,
 				handoffEnabled,
-				hasActiveTarget,
+				hasTarget,
+				measurementRef,
 				portalRuntime,
-				registerTargetRef,
 				rootRef,
-				rootEscapePlaceholderRef,
 				shouldRenderBoundaryRootThroughPortal,
-				targetEntry,
-				unregisterTargetRef,
 			],
 		);
 

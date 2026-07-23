@@ -1,9 +1,20 @@
-import { type ComponentType, forwardRef, memo } from "react";
+import {
+	type ComponentType,
+	cloneElement,
+	forwardRef,
+	memo,
+	useMemo,
+} from "react";
 import Animated from "react-native-reanimated";
+import {
+	BOUNDARY_TARGET_ACTIVE_PROP,
+	BoundaryTarget,
+} from "./components/boundary-target";
 import { BoundaryContentPortalHost } from "./portal/components/boundary-content-portal";
 import { BoundaryPortal } from "./portal/components/boundary-portal";
 import { BoundaryRootProvider } from "./providers/boundary-root.provider";
 import type { BoundaryComponentProps } from "./types";
+import { resolveBoundaryTarget } from "./utils/resolve-boundary-target";
 
 interface CreateBoundaryComponentOptions {
 	alreadyAnimated?: boolean;
@@ -36,6 +47,18 @@ export function createBoundaryComponent<P extends object>(
 			children,
 			...rest
 		} = props as any;
+		const targetResolution = useMemo(() => {
+			return resolveBoundaryTarget(children, {
+				isTarget: (element) => element.type === BoundaryTarget,
+				mapTarget: (element, selected) =>
+					cloneElement(element, {
+						[BOUNDARY_TARGET_ACTIVE_PROP]: selected,
+					} as any),
+			});
+		}, [children]);
+		const targetStyle = (
+			targetResolution.target?.props as { style?: unknown } | undefined
+		)?.style;
 
 		return (
 			<BoundaryRootProvider
@@ -45,14 +68,17 @@ export function createBoundaryComponent<P extends object>(
 				forwardedRef={forwardedRef}
 				group={group}
 				handoff={handoff}
+				hasTarget={targetResolution.target !== null}
 				id={id}
 				style={style}
+				targetCount={targetResolution.targetCount}
+				targetStyle={targetStyle}
 			>
 				{(root) => (
 					<BoundaryPortal
 						boundaryId={root.boundTag.tag}
 						enabled={root.shouldRenderBoundaryRootThroughPortal}
-						placeholderRef={root.rootEscapePlaceholderRef}
+						placeholderRef={root.measurementRef}
 					>
 						<AnimatedComponent
 							{...rest}
@@ -65,7 +91,7 @@ export function createBoundaryComponent<P extends object>(
 								enabled={root.shouldRenderHandoffHost}
 								screenKey={root.currentScreenKey}
 							>
-								{children}
+								{targetResolution.children}
 							</BoundaryContentPortalHost>
 						</AnimatedComponent>
 					</BoundaryPortal>

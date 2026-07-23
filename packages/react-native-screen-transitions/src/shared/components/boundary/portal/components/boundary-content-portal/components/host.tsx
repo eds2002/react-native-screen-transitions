@@ -22,13 +22,14 @@ export const BoundaryContentPortalHost = memo(
 		enabled,
 		screenKey,
 	}: BoundaryContentPortalHostProps) {
+		if (!enabled || !AnimatedPortalHost) {
+			return <>{children}</>;
+		}
+
 		const portalHostName = createBoundaryContentPortalHostName(
 			screenKey,
 			boundaryId,
 		);
-		if (!enabled || !AnimatedPortalHost) {
-			return <>{children}</>;
-		}
 
 		return (
 			<>

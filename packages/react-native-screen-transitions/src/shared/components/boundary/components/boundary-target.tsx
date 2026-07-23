@@ -1,19 +1,20 @@
 import type React from "react";
-import { memo, useMemo } from "react";
-import type { View } from "react-native";
-import Animated, { useAnimatedRef } from "react-native-reanimated";
+import { memo, useLayoutEffect } from "react";
+import Animated from "react-native-reanimated";
 import {
 	useComposedSlotStyles,
 	useSlotLayoutStyles,
 } from "../../../providers/screen/styles";
-import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
-import { useRegisterTarget } from "../hooks/use-register-target";
+import { logger } from "../../../utils/logger";
 import {
 	BoundaryContentPortal,
 	BoundaryContentPortalHost,
 } from "../portal/components/boundary-content-portal";
 import { BoundaryPortal } from "../portal/components/boundary-portal";
-import { useBoundaryRootContext } from "../providers/boundary-root.provider";
+import {
+	TARGET_OUTSIDE_ROOT_WARNING,
+	useBoundaryRootContext,
+} from "../providers/boundary-root.provider";
 
 type BoundaryTargetProps = Omit<
 	React.ComponentProps<typeof Animated.View>,
@@ -22,19 +23,26 @@ type BoundaryTargetProps = Omit<
 	children?: React.ReactNode;
 };
 
-export const BoundaryTarget = memo(function BoundaryTarget(
-	props: BoundaryTargetProps,
-) {
-	const { children, pointerEvents, style, ...rest } = props;
-	const targetAnimatedRef = useAnimatedRef<View>();
-	const targetEscapePlaceholderRef = useAnimatedRef<View>();
+export const BOUNDARY_TARGET_ACTIVE_PROP = "__boundaryTargetActive" as const;
+type InternalBoundaryTargetProps = BoundaryTargetProps & {
+	[BOUNDARY_TARGET_ACTIVE_PROP]?: boolean;
+};
+
+const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
+	const {
+		[BOUNDARY_TARGET_ACTIVE_PROP]: active,
+		children,
+		pointerEvents,
+		style,
+		...rest
+	} = props;
 	const rootContext = useBoundaryRootContext();
 	const boundaryId = rootContext?.boundTag.tag;
-	const isActiveTarget = rootContext?.activeTargetRef === targetAnimatedRef;
+	const isActiveTarget = active === true && rootContext !== null;
 	const portalRuntime = rootContext?.portalRuntime;
 	const handoffEnabled = isActiveTarget && rootContext?.handoffEnabled === true;
 	const shouldEscapeTargetToScreenHost =
-		portalRuntime?.escapeClipping === true && boundaryId !== undefined;
+		isActiveTarget && portalRuntime?.escapeClipping === true;
 
 	const shouldApplyAssociatedStyleInline =
 		isActiveTarget && portalRuntime?.escapeClipping !== true;
@@ -46,24 +54,26 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 		style,
 	);
 	const portalLayoutStyle = useSlotLayoutStyles(rootContext?.boundTag.tag);
-	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
+	const measurementRef = isActiveTarget
+		? rootContext.measurementRef
+		: undefined;
 
-	const measurementRef = shouldEscapeTargetToScreenHost
-		? targetEscapePlaceholderRef
-		: targetAnimatedRef;
-
-	useRegisterTarget({ preparedStyles, measurementRef, targetAnimatedRef });
+	useLayoutEffect(() => {
+		if (__DEV__ && rootContext === null) {
+			logger.warn(TARGET_OUTSIDE_ROOT_WARNING);
+		}
+	}, [rootContext]);
 
 	return (
 		<BoundaryPortal
 			boundaryId={boundaryId ?? ""}
 			enabled={shouldEscapeTargetToScreenHost}
-			placeholderRef={targetEscapePlaceholderRef}
+			placeholderRef={measurementRef}
 		>
 			<Animated.View
 				{...rest}
 				pointerEvents={pointerEvents}
-				ref={targetAnimatedRef}
+				ref={shouldEscapeTargetToScreenHost ? undefined : measurementRef}
 				style={[
 					style,
 					shouldApplyAssociatedStyleInline ? associatedTargetStyles : undefined,
@@ -86,4 +96,8 @@ export const BoundaryTarget = memo(function BoundaryTarget(
 			</Animated.View>
 		</BoundaryPortal>
 	);
-});
+};
+
+export const BoundaryTarget = memo(
+	BoundaryTargetInner,
+) as React.NamedExoticComponent<BoundaryTargetProps>;

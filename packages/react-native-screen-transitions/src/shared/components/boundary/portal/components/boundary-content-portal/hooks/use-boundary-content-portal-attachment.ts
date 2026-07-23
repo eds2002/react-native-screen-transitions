@@ -11,12 +11,11 @@ import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { SystemStore } from "../../../../../../stores/system.store";
 import { resolveEnteringHandoffTarget } from "../../../utils/handoff-target";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
-import { shouldAttachBoundaryPortal } from "../../../utils/teleport-control";
+import { isTeleportEnabled } from "../../../utils/teleport-control";
 import { createBoundaryContentPortalHostName } from "../helpers/host-name";
 
 interface UseBoundaryContentPortalAttachmentParams {
 	boundaryId: string;
-	enabled: boolean;
 }
 
 type AttachedDestination = {
@@ -27,7 +26,6 @@ type AttachedDestination = {
 
 export const useBoundaryContentPortalAttachment = ({
 	boundaryId,
-	enabled,
 }: UseBoundaryContentPortalAttachmentParams) => {
 	const { slotsMap } = useScreenSlots();
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
@@ -61,7 +59,7 @@ export const useBoundaryContentPortalAttachment = ({
 		} = slot?.props ?? {};
 
 		const animationProgress = destinationAnimationProgress.get();
-		const shouldTeleport = shouldAttachBoundaryPortal({ enabled, teleport });
+		const shouldTeleport = isTeleportEnabled(teleport);
 		const pairsState = pairs.get();
 
 		const enteringTargetScreenKey = shouldTeleport
