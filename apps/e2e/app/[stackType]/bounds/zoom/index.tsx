@@ -68,6 +68,7 @@ export default function NavigationZoomGroupTransitionsIndex() {
 			/>
 
 			<Transition.ScrollView contentContainerStyle={styles.scrollContent}>
+				<Transition.Boundary.Host />
 				<View style={styles.grid}>
 					{BOUNDS_SYNC_ZOOM_ITEMS.map((item) => (
 						<ZoomSourceCard key={item.id} item={item} colWidth={colWidth} />
