@@ -52,7 +52,6 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 
 	useLayoutEffect(() => {
 		registerHost({
-			capturesScroll,
 			fallback,
 			hostKey,
 			screenKey,
@@ -61,7 +60,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		return () => {
 			unregisterHost(screenKey, hostKey);
 		};
-	}, [capturesScroll, fallback, hostKey, screenKey]);
+	}, [fallback, hostKey, screenKey]);
 
 	const boundaryHosts = measurement.canRenderHosts
 		? activeBoundaryHosts.map((host) => (

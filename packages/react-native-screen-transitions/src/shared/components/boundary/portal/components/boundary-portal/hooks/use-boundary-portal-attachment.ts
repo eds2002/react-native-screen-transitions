@@ -46,7 +46,6 @@ export const useBoundaryPortalAttachment = ({
 
 		mountPortalBoundaryHost({
 			boundaryId,
-			escapeClipping: true,
 			hostKey: escapeHostKey,
 			localStylesMaps,
 			pairKey: sourcePairKey,

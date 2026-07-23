@@ -158,10 +158,7 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		// cleanup frame. If the current local interpolator layers did not emit this
 		// boundary id, any resolved style here is cleanup/stale residue and should
 		// not be drawn by the host.
-		if (
-			host.escapeClipping &&
-			!hasLocalSlot(host.localStylesMaps.get(), host.boundaryId)
-		) {
+		if (!hasLocalSlot(host.localStylesMaps.get(), host.boundaryId)) {
 			return NO_STYLES;
 		}
 
