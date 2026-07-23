@@ -28,7 +28,6 @@ interface UseBoundaryPortalAttachmentParams {
 type AttachedDestination = {
 	animationProgress: SharedValue<number>;
 	closing: SharedValue<number>;
-	screenKey: string;
 };
 
 export const useBoundaryPortalAttachment = ({
@@ -125,7 +124,6 @@ export const useBoundaryPortalAttachment = ({
 			attachedDestination.set({
 				animationProgress: destinationAnimationProgress,
 				closing: destinationClosing,
-				screenKey: destinationScreenKey,
 			});
 		}
 

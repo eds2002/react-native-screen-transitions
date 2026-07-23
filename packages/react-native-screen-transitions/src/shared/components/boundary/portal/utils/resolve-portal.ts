@@ -4,7 +4,6 @@ import { isTeleportAvailable } from "../teleport";
 export type BoundaryPortalRuntime = {
 	handoff: boolean;
 	escapeClipping: boolean;
-	enabled: boolean;
 };
 
 type ResolveBoundaryPortalParams = {
@@ -25,7 +24,6 @@ export const resolveBoundaryPortal = ({
 		return {
 			handoff: false,
 			escapeClipping: false,
-			enabled: false,
 		};
 	}
 
@@ -38,13 +36,11 @@ export const resolveBoundaryPortal = ({
 		return {
 			handoff: false,
 			escapeClipping: false,
-			enabled: false,
 		};
 	}
 
 	return {
 		handoff: resolvedHandoff,
 		escapeClipping: resolvedEscapeClipping,
-		enabled,
 	};
 };
