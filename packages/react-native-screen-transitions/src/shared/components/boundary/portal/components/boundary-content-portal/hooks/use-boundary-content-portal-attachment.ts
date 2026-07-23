@@ -5,7 +5,7 @@ import {
 } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
-import { isTransitionVisuallyClosed } from "../../../../../../providers/screen/styles/helpers/transition-visual-state";
+import { hasCloseTransitionFinished } from "../../../../../../providers/screen/styles/helpers/transition-visual-state";
 import { AnimationStore } from "../../../../../../stores/animation.store";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { SystemStore } from "../../../../../../stores/system.store";
@@ -23,7 +23,6 @@ type AttachedDestination = {
 	animationProgress: SharedValue<number>;
 	closing: SharedValue<number>;
 	screenKey: string;
-	targetProgress: SharedValue<number>;
 };
 
 export const useBoundaryContentPortalAttachment = ({
@@ -40,10 +39,6 @@ export const useBoundaryContentPortalAttachment = ({
 	const destinationAnimationProgress = SystemStore.getValue(
 		destinationScreenKey,
 		"animationProgress",
-	);
-	const destinationTargetProgress = SystemStore.getValue(
-		destinationScreenKey,
-		"targetProgress",
 	);
 	const destinationClosing = AnimationStore.getValue(
 		destinationScreenKey,
@@ -86,17 +81,15 @@ export const useBoundaryContentPortalAttachment = ({
 				animationProgress: destinationAnimationProgress,
 				closing: destinationClosing,
 				screenKey: enteringTargetScreenKey,
-				targetProgress: destinationTargetProgress,
 			});
 		}
 
 		const attached = attachedDestination.get();
-		const isAttachedScreenVisuallyClosed =
+		const hasAttachedCloseFinished =
 			attached !== null &&
-			isTransitionVisuallyClosed({
+			hasCloseTransitionFinished({
 				animationProgress: attached.animationProgress.get(),
 				closing: attached.closing.get(),
-				targetProgress: attached.targetProgress.get(),
 			});
 
 		// Missing or changing pairs do not imply a return: keep the current host
@@ -105,7 +98,7 @@ export const useBoundaryContentPortalAttachment = ({
 		const targetScreenKey = enteringTargetScreenKey
 			? enteringTargetScreenKey
 			: shouldTeleport
-				? isAttachedScreenVisuallyClosed
+				? hasAttachedCloseFinished
 					? currentScreenKey
 					: (attached?.screenKey ?? null)
 				: null;
@@ -113,6 +106,7 @@ export const useBoundaryContentPortalAttachment = ({
 		const targetHostName = targetScreenKey
 			? createBoundaryContentPortalHostName(targetScreenKey, boundaryId)
 			: PORTAL_HOST_NAME_RESET_VALUE;
+
 		return {
 			...slotProps,
 			hostName: targetHostName,

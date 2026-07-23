@@ -2,9 +2,15 @@
  * Visual lifecycle boundaries use the internal directional clock rather than
  * physical transition progress, which may overshoot or revisit an endpoint.
  */
-export const hasOpenTransitionStarted = (animationProgress: number) => {
+export const hasOpenTransitionStarted = ({
+	pendingLifecycleStartBlockCount,
+	animationProgress,
+}: {
+	pendingLifecycleStartBlockCount: number;
+	animationProgress: number;
+}) => {
 	"worklet";
-	return animationProgress > 0;
+	return pendingLifecycleStartBlockCount === 0 && animationProgress > 0;
 };
 
 export const isOpenTransitionBlocked = ({
@@ -19,20 +25,20 @@ export const isOpenTransitionBlocked = ({
 	"worklet";
 	return (
 		opening &&
-		(pendingLifecycleStartBlockCount > 0 ||
-			!hasOpenTransitionStarted(animationProgress))
+		!hasOpenTransitionStarted({
+			pendingLifecycleStartBlockCount,
+			animationProgress,
+		})
 	);
 };
 
-export const isTransitionVisuallyClosed = ({
+export const hasCloseTransitionFinished = ({
 	closing,
 	animationProgress,
-	targetProgress,
 }: {
 	closing: number;
 	animationProgress: number;
-	targetProgress: number;
 }) => {
 	"worklet";
-	return !!closing && targetProgress <= 0 && animationProgress <= 0;
+	return !!closing && animationProgress === 0;
 };

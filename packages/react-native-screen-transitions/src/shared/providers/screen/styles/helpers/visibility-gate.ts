@@ -45,6 +45,11 @@ export const resolveScreenVisibilityGate = ({
 
 	return {
 		shouldBlock,
-		shouldOpenGate: !shouldBlock && hasOpenTransitionStarted(animationProgress),
+		shouldOpenGate:
+			!shouldBlock &&
+			hasOpenTransitionStarted({
+				pendingLifecycleStartBlockCount,
+				animationProgress,
+			}),
 	};
 };

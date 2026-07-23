@@ -28,8 +28,8 @@ import { normalizeSlots } from "../helpers/normalize-slots";
 import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
 import {
+	hasCloseTransitionFinished,
 	isOpenTransitionBlocked,
-	isTransitionVisuallyClosed,
 } from "../helpers/transition-visual-state";
 
 const NO_STYLE_LAYERS: LocalStyleLayers = [];
@@ -164,7 +164,6 @@ export const useInterpolatedStylesMap = () => {
 		AnimationStore.getBag(activeScreenKey);
 	const {
 		animationProgress: activeAnimationProgress,
-		targetProgress: activeTargetProgress,
 		pendingLifecycleRequestKind: activePendingLifecycleRequestKind,
 		pendingLifecycleStartBlockCount: activePendingLifecycleStartBlockCount,
 	} = SystemStore.getBag(activeScreenKey);
@@ -214,17 +213,18 @@ export const useInterpolatedStylesMap = () => {
 				activePendingLifecycleStartBlockCount.get(),
 			animationProgress: activeAnimationProgress.get(),
 		});
-		const isVisuallyClosed = isTransitionVisuallyClosed({
+		const hasCloseFinished = hasCloseTransitionFinished({
 			closing: activeClosing.get(),
 			animationProgress: activeAnimationProgress.get(),
-			targetProgress: activeTargetProgress.get(),
 		});
 		const currentOwnsInterpolator =
 			isInGestureMode ||
 			!nextInterpolator ||
 			isOpeningBlocked ||
-			isVisuallyClosed;
-		nextInterpolatorReady.set(currentOwnsInterpolator ? 0 : 1);
+			hasCloseFinished;
+		const nextReady = currentOwnsInterpolator ? 0 : 1;
+
+		nextInterpolatorReady.set(nextReady);
 
 		const interpolatorOptionsOwner = currentOwnsInterpolator
 			? "current"

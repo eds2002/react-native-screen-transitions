@@ -9,7 +9,7 @@ import { AnimationStore } from "../../../../stores/animation.store";
 import { SystemStore } from "../../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
 import { useDescriptorDerivations } from "../../descriptors";
-import { isTransitionVisuallyClosed } from "../helpers/transition-visual-state";
+import { hasCloseTransitionFinished } from "../helpers/transition-visual-state";
 import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
@@ -18,7 +18,6 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { closing, entering } = AnimationStore.getBag(currentScreenKey);
 	const {
 		animationProgress,
-		targetProgress,
 		pendingLifecycleStartBlockCount,
 		pendingLifecycleRequestKind,
 	} = SystemStore.getBag(currentScreenKey);
@@ -55,10 +54,9 @@ export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 		const offset = getVisibilityBlockOffset(height);
 		// Hide the outgoing screen after its visual close while React removes its
 		// host asynchronously.
-		const shouldHideClosedScreen = isTransitionVisuallyClosed({
+		const shouldHideClosedScreen = hasCloseTransitionFinished({
 			closing: closing.get(),
 			animationProgress: animationProgress.get(),
-			targetProgress: targetProgress.get(),
 		});
 		if (shouldHideClosedScreen) {
 			return {
