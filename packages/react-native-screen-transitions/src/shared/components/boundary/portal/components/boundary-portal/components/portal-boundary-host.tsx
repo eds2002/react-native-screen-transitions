@@ -1,6 +1,10 @@
-import { memo } from "react";
+import { memo, useCallback } from "react";
 import { type StyleProp, StyleSheet, type ViewStyle } from "react-native";
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+	useAnimatedStyle,
+	useFrameCallback,
+	useSharedValue,
+} from "react-native-reanimated";
 import { NO_STYLES } from "../../../../../../constants";
 import { composeSlotStyleWithLocalTransform } from "../../../../../../providers/screen/styles/helpers/compose-slot-style";
 import { AnimationStore } from "../../../../../../stores/animation.store";
@@ -10,10 +14,12 @@ import {
 	getClampedScrollAxisDelta,
 	ScrollStore,
 } from "../../../../../../stores/scroll.store";
+import { SystemStore } from "../../../../../../stores/system.store";
 import type { ScrollMeasuredDimensions } from "../../../../utils/measured-bounds";
 import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { hasLocalSlot } from "../helpers/has-local-slot";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
+import { getPortalHostBounds } from "../stores/host-bounds.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
 
 const AnimatedPortalBoundaryHost = NativePortalHost
@@ -22,13 +28,11 @@ const AnimatedPortalBoundaryHost = NativePortalHost
 
 type PortalBoundaryHostProps = {
 	host: ActivePortalBoundaryHost;
-	onLayout: () => void;
 	style?: StyleProp<ViewStyle>;
 };
 
 export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	host,
-	onLayout,
 	style,
 }: PortalBoundaryHostProps) {
 	// Cross-screen landing-rect scroll tracking: the flight interpolates toward
@@ -44,6 +48,39 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		host.screenKey,
 		"visualProgress",
 	);
+	const geometryReadyFrames = useSharedValue(0);
+	const { unblockLifecycleStart } = SystemStore.getBag(host.screenKey).actions;
+
+	const handleFrame = useCallback(() => {
+		"worklet";
+		if (host.portalHostReady.get()) {
+			return;
+		}
+
+		const link = getLink(host.pairKey, host.boundaryId);
+		const hasGeometry =
+			link?.source !== null &&
+			link !== undefined &&
+			getPortalHostBounds(host.hostKey) !== null &&
+			hasLocalSlot(host.localStylesMaps.get(), host.boundaryId);
+
+		if (!hasGeometry) {
+			geometryReadyFrames.set(0);
+			return;
+		}
+
+		if (geometryReadyFrames.get() === 0) {
+			// Give the source frame, host offset, and slot style one UI frame to
+			// reach native before Teleport targets this receiver.
+			geometryReadyFrames.set(1);
+			return;
+		}
+
+		host.portalHostReady.set(true);
+		unblockLifecycleStart();
+	}, [geometryReadyFrames, host, unblockLifecycleStart]);
+
+	useFrameCallback(handleFrame, true);
 
 	const hostStyle = useAnimatedStyle(() => {
 		"worklet";
@@ -151,7 +188,6 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		>
 			<AnimatedPortalBoundaryHost
 				name={host.portalHostName}
-				onLayout={onLayout}
 				pointerEvents={PORTAL_POINTER_EVENTS}
 				style={[styles.content, contentFrameStyle, slotStyle]}
 			/>

@@ -1,4 +1,4 @@
-import { memo, useCallback, useLayoutEffect, useRef } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
 import {
 	type StyleProp,
 	StyleSheet,
@@ -9,7 +9,6 @@ import {
 import Animated from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
-import { SystemStore } from "../../../../../../stores/system.store";
 import { PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
@@ -28,7 +27,6 @@ type HostImplProps = PublicHostProps & {
 
 function HostImpl({ fallback = false, style }: HostImplProps) {
 	const screenKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
-	const { unblockLifecycleStart } = SystemStore.getBag(screenKey).actions;
 	const generatedHostKeyRef = useRef<string | null>(null);
 
 	if (generatedHostKeyRef.current === null) {
@@ -65,18 +63,6 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		};
 	}, [capturesScroll, fallback, hostKey, screenKey]);
 
-	const handleBoundaryHostLayout = useCallback(
-		(host: (typeof activeBoundaryHosts)[number]) => {
-			if (host.portalHostReady.get()) {
-				return;
-			}
-
-			host.portalHostReady.set(true);
-			unblockLifecycleStart();
-		},
-		[unblockLifecycleStart],
-	);
-
 	const boundaryHosts = measurement.canRenderHosts
 		? activeBoundaryHosts.map((host) => (
 				<View
@@ -87,11 +73,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 						{ width: viewportWidth, height: viewportHeight },
 					]}
 				>
-					<PortalBoundaryHost
-						host={host}
-						onLayout={() => handleBoundaryHostLayout(host)}
-						style={StyleSheet.absoluteFill}
-					/>
+					<PortalBoundaryHost host={host} style={StyleSheet.absoluteFill} />
 				</View>
 			))
 		: null;
