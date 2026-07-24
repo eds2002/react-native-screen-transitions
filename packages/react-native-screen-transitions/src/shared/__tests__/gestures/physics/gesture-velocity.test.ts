@@ -98,6 +98,9 @@ const createPinchReleaseRuntime = (
 		},
 		stores: {
 			animations: createAnimations(progress),
+			system: {
+				targetProgress: { get: () => 1 },
+			},
 			gestures: {
 				internal: {
 					progressBaseline: { get: () => 1 },
