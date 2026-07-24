@@ -21,7 +21,7 @@ The layer keys are:
 - `NAVIGATION_MASK_CONTAINER_STYLE_ID`
 - `NAVIGATION_MASK_ELEMENT_STYLE_ID`
 
-Any other key is treated as an element target and matched against a `styleId` or `sharedBoundTag` on a transition-aware component such as `Transition.View` or `Transition.Pressable`.
+Any other key is treated as an element target and matched against a `styleId` on a transition-aware component such as `Transition.View` or `Transition.Pressable`.
 
 ## Layer Map
 
@@ -59,7 +59,7 @@ Inside `screen-container`, layers are resolved in this order:
 2. `content`
 3. optional navigation mask wrapper when `navigationMaskEnabled` is enabled
 4. deprecated optional surface wrapper when `surfaceComponent` is provided
-5. screen children and any matching `styleId` or `sharedBoundTag` targets
+5. screen children and any matching `styleId` targets
 
 That gives you two levels of control:
 
@@ -192,8 +192,6 @@ return {
 ```
 
 These keys apply only to transition-aware components created by the library such as `Transition.View`, `Transition.Pressable`, `Transition.ScrollView`, and `Transition.FlatList`.
-
-The same lookup path also works for `sharedBoundTag`, because the screen style system routes element styles by the component's associated id.
 
 ## Navigation Mask Layers
 

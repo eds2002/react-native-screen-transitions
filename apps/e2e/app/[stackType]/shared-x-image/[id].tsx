@@ -21,9 +21,11 @@ export default function SharedXImageDetail() {
 
 	return (
 		<View style={styles.container}>
-			<Transition.View sharedBoundTag={boundId} style={styles.imageFrame}>
-				<Image source={imageUrl} style={styles.image} contentFit="cover" />
-			</Transition.View>
+			<Transition.Boundary id={boundId}>
+				<Transition.Boundary.Target style={styles.imageFrame}>
+					<Image source={imageUrl} style={styles.image} contentFit="cover" />
+				</Transition.Boundary.Target>
+			</Transition.Boundary>
 		</View>
 	);
 }

@@ -26,9 +26,7 @@ If you are already on v3.4 or v3.5 and want the current release changes, read [U
 
 ## Move New Bounds Flows To Transition.Boundary.*
 
-`sharedBoundTag` on transition-aware components still exists, but it is the legacy path.
-
-For new work, use explicit boundary ownership:
+Use explicit boundary ownership:
 
 ```tsx
 <Transition.Boundary.Trigger id="hero" onPress={openDetail}>
