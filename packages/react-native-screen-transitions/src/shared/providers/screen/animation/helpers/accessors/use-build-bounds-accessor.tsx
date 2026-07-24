@@ -1,9 +1,11 @@
 import { useMemo } from "react";
 import { createBoundsAccessor } from "../../../../../utils/bounds";
-import { useScreenAnimationContext } from "../../animation.provider";
+import { useScreenAnimationStore } from "../../animation.provider";
 
 export const useBuildBoundsAccessor = () => {
-	const { screenInterpolatorProps } = useScreenAnimationContext();
+	const screenInterpolatorProps = useScreenAnimationStore(
+		(store) => store.screenInterpolatorProps,
+	);
 	return useMemo(() => {
 		return createBoundsAccessor(() => {
 			"worklet";

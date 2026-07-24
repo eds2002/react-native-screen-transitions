@@ -1,6 +1,6 @@
 export {
 	ScreenAnimationProvider,
-	useScreenAnimationContext,
+	useScreenAnimationStore,
 } from "./animation.provider";
 export {
 	type ScreenAnimationTarget,

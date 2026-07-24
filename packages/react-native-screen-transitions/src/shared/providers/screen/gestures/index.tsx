@@ -1,6 +1,6 @@
 export {
 	ScreenGestureProvider,
-	useGestureContext,
+	useGestureStore,
 } from "./gestures.provider";
 export type {
 	DirectionClaim,

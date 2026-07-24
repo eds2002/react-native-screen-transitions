@@ -47,7 +47,6 @@ const createDescriptor = (
 	route,
 	navigation,
 	options,
-	activity: "inactive",
 });
 
 const createProps = (
@@ -98,8 +97,7 @@ describe("createBlankStackController", () => {
 			"c",
 		]);
 		expect(snapshot.state.descriptors.c?.route).toBe(descriptorC.route);
-		expect(snapshot.state.descriptors.c?.activity).toBe("closing");
-		expect(descriptorC.activity).toBe("inactive");
+		expect(snapshot.state.descriptors.c).toBe(descriptorC);
 		expect(snapshot.state.closingRouteKeys.has("c")).toBe(true);
 		expect(snapshot.state.scenes[0]?.previousDescriptor).toBeUndefined();
 		expect(snapshot.state.scenes[0]?.nextDescriptor?.route).toBe(
@@ -111,9 +109,11 @@ describe("createBlankStackController", () => {
 		expect(snapshot.state.scenes[1]?.nextDescriptor?.route).toBe(
 			descriptorC.route,
 		);
-		expect(snapshot.state.scenes.map((scene) => scene.descriptor.activity)).toEqual(
-			["inactive", "inert", "closing"],
-		);
+		expect(snapshot.state.scenes.map((scene) => scene.activity)).toEqual([
+			"inactive",
+			"inert",
+			"closing",
+		]);
 	});
 
 	it("soft-dismisses a focused route before React Navigation removes it", () => {
@@ -135,9 +135,10 @@ describe("createBlankStackController", () => {
 		const snapshot = controller.getSnapshot();
 		expect(snapshot.state.routes.map((route) => route.key)).toEqual(["a", "b"]);
 		expect(snapshot.state.closingRouteKeys.has("b")).toBe(true);
-		expect(snapshot.state.scenes.map((scene) => scene.descriptor.activity)).toEqual(
-			["inert", "closing"],
-		);
+		expect(snapshot.state.scenes.map((scene) => scene.activity)).toEqual([
+			"inert",
+			"closing",
+		]);
 		expect(navigation.actions).toEqual([]);
 	});
 
@@ -180,9 +181,11 @@ describe("createBlankStackController", () => {
 			"dynamic-a",
 			"dynamic-b",
 		]);
-		expect(snapshot.state.scenes.map((scene) => scene.descriptor.activity)).toEqual(
-			["inert", "closing", "active"],
-		);
+		expect(snapshot.state.scenes.map((scene) => scene.activity)).toEqual([
+			"inert",
+			"closing",
+			"active",
+		]);
 		expect(snapshot.state.scenes[0]?.nextDescriptor?.route).toBe(
 			descriptorB.route,
 		);

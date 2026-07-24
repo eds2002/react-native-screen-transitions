@@ -23,7 +23,7 @@ import { getDestination, getSource } from "../stores/bounds/internals/links";
 import { prepareStyleForBounds } from "../utils/bounds/helpers/styles/styles";
 import createProvider from "../utils/create-provider";
 import { applyMeasuredBoundsWrites } from "./helpers/measured-bounds-writes";
-import { useDescriptorDerivations, useDescriptors } from "./screen/descriptors";
+import { useDescriptorsStore } from "./screen/descriptors";
 
 /**
  * @deprecated Internal legacy provider for the old shared-bound-tag registration
@@ -144,7 +144,9 @@ const useBlurMeasurement = (params: {
 	ancestorKeys: string[];
 	maybeMeasureAndStore: (options: MaybeMeasureAndStoreParams) => void;
 }) => {
-	const { current } = useDescriptors();
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
 	const {
 		enabled,
 		sharedBoundTag,
@@ -154,7 +156,7 @@ const useBlurMeasurement = (params: {
 	} = params;
 	const hasCapturedSource = useRef(false);
 
-	const ancestorClosing = [current.route.key, ...ancestorKeys].map((key) =>
+	const ancestorClosing = [currentScreenKey, ...ancestorKeys].map((key) =>
 		AnimationStore.getValue(key, "closing"),
 	);
 
@@ -212,19 +214,27 @@ const useParentSyncReaction = (params: {
 	);
 };
 
-let useRegisterBoundsContext: () => RegisterBoundsContextValue | null;
-
 const registerBoundsBundle = createProvider("RegisterBounds", {
 	guarded: false,
 })<RegisterBoundsProviderProps, RegisterBoundsContextValue>(
-	({ style, onPress, sharedBoundTag, animatedRef, children }) => {
-		const { current, next } = useDescriptors();
-		const { ancestorKeys, previousScreenKey } = useDescriptorDerivations();
-		const currentScreenKey = current.route.key;
-		const selectedNextRouteId = getRouteParamId(next?.route);
-
+	(
+		{ style, onPress, sharedBoundTag, animatedRef, children },
+		{ useParentStore },
+	) => {
+		const currentScreenKey = useDescriptorsStore(
+			(store) => store.derivations.currentScreenKey,
+		);
+		const selectedNextRouteId = useDescriptorsStore((store) =>
+			getRouteParamId(store.next?.route),
+		);
+		const ancestorKeys = useDescriptorsStore(
+			(store) => store.derivations.ancestorKeys,
+		);
+		const previousScreenKey = useDescriptorsStore(
+			(store) => store.derivations.previousScreenKey,
+		);
 		// Context & signals
-		const parentContext = useRegisterBoundsContext();
+		const parentContext = useParentStore();
 
 		const ownSignal = useSharedValue(0);
 		const updateSignal: SharedValue<number> =
@@ -397,6 +407,5 @@ const registerBoundsBundle = createProvider("RegisterBounds", {
  * for backwards compatibility with the older shared-bound-tag registration path.
  */
 const RegisterBoundsProvider = registerBoundsBundle.RegisterBoundsProvider;
-useRegisterBoundsContext = registerBoundsBundle.useRegisterBoundsContext;
 
 export { RegisterBoundsProvider };

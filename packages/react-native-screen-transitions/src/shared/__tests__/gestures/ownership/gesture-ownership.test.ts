@@ -105,7 +105,7 @@ describe("gesture ownership activation", () => {
 
 		expect(
 			resolveShadowingClaimDirections({
-				currentActivity: "closing",
+				isCurrentScreenClosing: true,
 				currentClaimedDirections,
 				previousClaimedDirections,
 			}),
@@ -121,7 +121,7 @@ describe("gesture ownership activation", () => {
 
 		expect(
 			resolveShadowingClaimDirections({
-				currentActivity: "closing",
+				isCurrentScreenClosing: true,
 				currentClaimedDirections,
 				previousClaimedDirections,
 			}),

@@ -1,51 +1,70 @@
 import type { Route } from "@react-navigation/native";
-import * as React from "react";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import {
 	type StackContextValue,
 	StackProvider,
 } from "../../hooks/navigation/use-stack";
 import type {
-	BlankStackProviderContextValue,
 	BlankStackProviderProps,
-	BlankStackProviderRenderProps,
-	BlankStackProviderResult,
+	BlankStackStoreValue,
 } from "../../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
 	BaseStackScene,
 } from "../../types/stack.types";
+import createProvider from "../../utils/create-provider";
 import { useBlankStackState } from "./blank-stack-state";
-import { useStackCoreContext } from "./core.provider";
+import { useStackCoreStore } from "./core.provider";
 
-const BlankStackProviderContext =
-	React.createContext<BlankStackProviderContextValue | null>(null);
-BlankStackProviderContext.displayName = "BlankStackProvider";
+type InternalBlankStackProviderProps = BlankStackProviderProps<
+	BaseStackDescriptor,
+	BaseStackNavigation
+> & {
+	children: ReactNode;
+};
 
-function useBlankStackContext(): BlankStackProviderContextValue {
-	const context = React.useContext(BlankStackProviderContext);
-	if (!context) {
-		throw new Error(
-			"useBlankStackContext must be used within BlankStackProvider",
-		);
+const createScenesByKey = <TDescriptor extends BaseStackDescriptor>(
+	scenes: BaseStackScene<TDescriptor>[],
+) => {
+	const scenesByKey: Record<string, BaseStackScene<TDescriptor>> = {};
+
+	for (const scene of scenes) {
+		scenesByKey[scene.route.key] = scene;
 	}
-	return context;
-}
 
-function useBlankStackProviderValue<
-	TDescriptor extends BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation,
->(
-	props: BlankStackProviderProps<TDescriptor, TNavigation>,
-): BlankStackProviderResult<TDescriptor> {
-	const { flags } = useStackCoreContext();
-	const { state, handleCloseRoute, requestDismiss } = useBlankStackState(props);
-	const navigatorKey = props.state.key;
+	return scenesByKey;
+};
 
-	const focusedIndex = props.state.index;
+type BlankStackStoreProviderProps = {
+	children: ReactNode;
+	value: BlankStackStoreValue<BaseStackDescriptor>;
+};
 
-	const stackContextValue = useMemo<StackContextValue>(
+const { BlankStackProvider: BlankStackStoreProvider, useBlankStackStore } =
+	createProvider("BlankStack", { guarded: false })<
+		BlankStackStoreProviderProps,
+		BlankStackStoreValue<BaseStackDescriptor>
+	>(({ children, value }) => ({ children, value }));
+
+function BlankStackProvider({
+	state: stackState,
+	children,
+	...props
+}: InternalBlankStackProviderProps) {
+	const flags = useStackCoreStore((store) => store.flags);
+	const { state, handleCloseRoute, requestDismiss } = useBlankStackState({
+		...props,
+		state: stackState,
+	});
+	const navigatorKey = stackState.key;
+	const focusedIndex = stackState.index;
+	const scenesByKey = useMemo(
+		() => createScenesByKey(state.scenes),
+		[state.scenes],
+	);
+
+	const stackValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
 			navigatorKey,
@@ -65,54 +84,26 @@ function useBlankStackProviderValue<
 			requestDismiss,
 		],
 	);
-
-	const blankStackProviderContextValue =
-		useMemo<BlankStackProviderContextValue>(
-			() => ({
-				handleCloseRoute,
-			}),
-			[handleCloseRoute],
-		);
-
-	const renderProps = useMemo<BlankStackProviderRenderProps<TDescriptor>>(
-		() => ({
-			scenes: state.scenes,
-			focusedIndex,
-			shouldShowFloatOverlay: state.shouldShowFloatOverlay,
-		}),
-		[state.scenes, focusedIndex, state.shouldShowFloatOverlay],
-	);
-
-	return { stackContextValue, blankStackProviderContextValue, renderProps };
-}
-
-function withBlankStack<
-	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-	TNavigation extends BaseStackNavigation = BaseStackNavigation,
->(
-	Component: React.ComponentType<BlankStackProviderRenderProps<TDescriptor>>,
-): React.FC<BlankStackProviderProps<TDescriptor, TNavigation>> {
-	return function BlankStackProvider(
-		props: BlankStackProviderProps<TDescriptor, TNavigation>,
-	) {
-		const { stackContextValue, blankStackProviderContextValue, renderProps } =
-			useBlankStackProviderValue<TDescriptor, TNavigation>(props);
-
-		return (
-			<StackProvider value={stackContextValue}>
-				<BlankStackProviderContext.Provider
-					value={blankStackProviderContextValue}
-				>
-					<Component {...renderProps} />
-				</BlankStackProviderContext.Provider>
-			</StackProvider>
-		);
+	const blankStackValue = {
+		navigatorKey,
+		routeKeys: state.routeKeys,
+		routes: state.routes,
+		scenes: state.scenes,
+		scenesByKey,
+		focusedIndex,
+		requestDismiss,
+		shouldShowFloatOverlay: state.shouldShowFloatOverlay,
+		handleCloseRoute,
 	};
+
+	return (
+		<StackProvider value={stackValue}>
+			<BlankStackStoreProvider value={blankStackValue}>
+				{children}
+			</BlankStackStoreProvider>
+		</StackProvider>
+	);
 }
 
-export type {
-	BlankStackProviderContextValue,
-	BlankStackProviderProps,
-	BlankStackProviderRenderProps,
-};
-export { useBlankStackContext, withBlankStack };
+export type { BlankStackProviderProps, BlankStackStoreValue };
+export { BlankStackProvider, useBlankStackStore };

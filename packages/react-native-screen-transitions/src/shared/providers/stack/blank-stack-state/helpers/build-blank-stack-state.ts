@@ -138,20 +138,6 @@ const getSceneActivityWindow = <
 	};
 };
 
-const withDescriptorActivityState = <TDescriptor extends BaseStackDescriptor>(
-	descriptor: StackDescriptorSource<TDescriptor>,
-	activity: StackSceneActivity,
-): TDescriptor => {
-	if (descriptor.activity === activity) {
-		return descriptor as TDescriptor;
-	}
-
-	return {
-		...descriptor,
-		activity,
-	} as TDescriptor;
-};
-
 const buildBaseScenes = <
 	TDescriptor extends BaseStackDescriptor,
 	TNavigation extends BaseStackNavigation,
@@ -207,10 +193,9 @@ const buildBaseScenes = <
 			childStateUnchanged &&
 			previousDescriptor.route === sourceDescriptor.route &&
 			previousDescriptor.navigation === sourceDescriptor.navigation &&
-			previousDescriptor.options === sourceDescriptor.options &&
-			previousDescriptor.activity === activity
+			previousDescriptor.options === sourceDescriptor.options
 				? previousDescriptor
-				: withDescriptorActivityState(sourceDescriptor, activity);
+				: (sourceDescriptor as TDescriptor);
 
 		routeKeys.push(route.key);
 		routeChildStates[route.key] = routeChildState;
@@ -222,6 +207,7 @@ const buildBaseScenes = <
 		}
 
 		scenes.push({
+			activity,
 			route: descriptor.route,
 			descriptor,
 		});
@@ -289,6 +275,7 @@ const withSceneRelationships = <TDescriptor extends BaseStackDescriptor>({
 
 		if (
 			previousScene &&
+			previousScene.activity === nextScene.activity &&
 			previousScene.route === nextScene.route &&
 			previousScene.descriptor === nextScene.descriptor &&
 			previousScene.previousDescriptor === nextScene.previousDescriptor &&

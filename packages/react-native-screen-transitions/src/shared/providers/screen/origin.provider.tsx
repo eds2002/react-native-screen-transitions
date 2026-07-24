@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { StyleSheet, type View } from "react-native";
 import Animated, {
 	type AnimatedRef,
@@ -12,16 +13,13 @@ interface ContextValue {
 	originRef: AnimatedRef<View>;
 }
 
-export const { OriginProvider, useOriginContext } = createProvider("Origin", {
+export const { OriginProvider, useOriginStore } = createProvider("Origin", {
 	guarded: true,
 })<Props, ContextValue>(({ children }) => {
 	const originRef = useAnimatedRef<View>();
 
-	return {
-		value: {
-			originRef,
-		},
-		children: (
+	const content = useMemo(
+		() => (
 			<Animated.View
 				style={styles.container}
 				collapsable={false}
@@ -30,6 +28,13 @@ export const { OriginProvider, useOriginContext } = createProvider("Origin", {
 				{children}
 			</Animated.View>
 		),
+		[originRef, children],
+	);
+	return {
+		value: {
+			originRef,
+		},
+		children: content,
 	};
 });
 

@@ -2,6 +2,18 @@
  * THANK YOU @MatiPl01
  * https://github.com/MatiPl01/react-native-sortables/blob/main/packages/react-native-sortables/src/providers/utils/createProvider.tsx
  * SUPER COOL AMAZING UTILITY
+ *
+ * Store-only provider: values propagate exclusively through a subscription
+ * store read with `use${Name}Store(selector)`. There is intentionally no raw
+ * context channel, so consumers subscribe only to the values they render.
+ *
+ * Factories do not memoize what they return:
+ * - `value`: the store shallow-compares snapshots and keeps the previous
+ *   object when the contents are unchanged. Derived object and array fields
+ *   must still have stable identities.
+ * - `children`: passed-through children keep their identity across
+ *   provider-local renders. Factories that wrap children should use a
+ *   module-level memoized component for the wrapper.
  */
 import {
 	createContext,
@@ -9,12 +21,9 @@ import {
 	useCallback,
 	useContext,
 	useLayoutEffect,
-	useMemo,
 	useRef,
 	useSyncExternalStore,
 } from "react";
-
-type InnerProviderComponent = React.FC<{ children: ReactNode }>;
 
 type ProviderSnapshot<
 	ContextValue,
@@ -32,9 +41,8 @@ type ProviderStoreHook<ContextValue, Guarded extends boolean> = {
 	): Selected;
 };
 
-type ProviderOptionalStoreHook<ContextValue> = {
-	(): ContextValue | null;
-	<Selected>(selector: (value: ContextValue | null) => Selected): Selected;
+export type ProviderFactoryInternals<ContextValue> = {
+	useParentStore: ProviderStoreHook<ContextValue, false>;
 };
 
 export interface ProviderStoreApi<ContextValue> {
@@ -53,6 +61,42 @@ const NullProviderStore: ProviderStoreApi<never> = {
 	subscribe: () => () => {},
 };
 
+const shallowEqual = (a: unknown, b: unknown): boolean => {
+	if (Object.is(a, b)) {
+		return true;
+	}
+
+	if (
+		typeof a !== "object" ||
+		a === null ||
+		typeof b !== "object" ||
+		b === null
+	) {
+		return false;
+	}
+
+	const aKeys = Object.keys(a);
+	const bKeys = Object.keys(b);
+
+	if (aKeys.length !== bKeys.length) {
+		return false;
+	}
+
+	for (const key of aKeys) {
+		if (
+			!(key in b) ||
+			!Object.is(
+				(a as Record<string, unknown>)[key],
+				(b as Record<string, unknown>)[key],
+			)
+		) {
+			return false;
+		}
+	}
+
+	return true;
+};
+
 const createProviderStore = <ContextValue,>(
 	initialSnapshot: ContextValue | null,
 ): MutableProviderStoreApi<ContextValue> => {
@@ -67,7 +111,7 @@ const createProviderStore = <ContextValue,>(
 			}
 		},
 		setSnapshot: (nextSnapshot) => {
-			if (Object.is(snapshot, nextSnapshot)) {
+			if (shallowEqual(snapshot, nextSnapshot)) {
 				return false;
 			}
 
@@ -88,36 +132,73 @@ export default function createProvider<
 	Guarded extends boolean = true,
 >(name: ProviderName, options?: { guarded?: Guarded }) {
 	return <ProviderProps extends object, ContextValue>(
-		factory: (props: ProviderProps) => {
+		factory: (
+			props: ProviderProps,
+			internals: ProviderFactoryInternals<ContextValue>,
+		) => {
 			value?: ContextValue;
 			enabled?: boolean;
-			children?:
-				| ReactNode
-				| ((
-						innerProvider: {
-							[K in ProviderName as `${K}Provider`]: InnerProviderComponent;
-						},
-				  ) => ReactNode);
+			children?: ReactNode;
 		},
 	) => {
 		const { guarded = true } = options ?? {};
 		const providerDisplayName = `${name}Provider`;
-		const innerProviderDisplayName = `${name}InnerProvider`;
-
-		const Context = createContext<ContextValue | null>(null);
-		Context.displayName = name;
 
 		const StoreContext = createContext<ProviderStoreApi<ContextValue> | null>(
 			null,
 		);
 		StoreContext.displayName = `${name}Store`;
 
+		const createStoreHook = (strict: boolean) => {
+			return <Selected,>(
+				selector?: (value: ContextValue | null) => Selected,
+			): Selected | ContextValue | null => {
+				const store = useContext(StoreContext);
+				const resolvedStore =
+					store ?? (NullProviderStore as ProviderStoreApi<ContextValue>);
+				const selectorRef = useRef<typeof selector>(selector);
+				selectorRef.current = selector;
+
+				const getSelectedSnapshot = useCallback(() => {
+					if (strict && store === null) {
+						throw new Error(
+							`${name} store must be used within a ${name}Provider`,
+						);
+					}
+
+					const snapshot = resolvedStore.getSnapshot();
+
+					if (strict && snapshot === null) {
+						throw new Error(
+							`${name} store must be used within an enabled ${name}Provider`,
+						);
+					}
+
+					return selectorRef.current ? selectorRef.current(snapshot) : snapshot;
+				}, [resolvedStore, store]);
+
+				return useSyncExternalStore(
+					resolvedStore.subscribe,
+					getSelectedSnapshot,
+					getSelectedSnapshot,
+				);
+			};
+		};
+
+		const useStoreSelector = createStoreHook(guarded);
+		const factoryInternals: ProviderFactoryInternals<ContextValue> = {
+			useParentStore: createStoreHook(false) as ProviderStoreHook<
+				ContextValue,
+				false
+			>,
+		};
+
 		const Provider: React.FC<ProviderProps> = (props) => {
 			const {
 				children = (props as { children?: ReactNode }).children,
 				enabled = true,
 				value,
-			} = factory(props);
+			} = factory(props, factoryInternals);
 
 			if (!value) {
 				throw new Error(
@@ -125,23 +206,19 @@ export default function createProvider<
 				);
 			}
 
-			const memoValue = useMemo(
-				() => (enabled ? value : null),
-				[enabled, value],
-			);
-
+			const snapshotValue = enabled ? value : null;
 			const storeRef = useRef<MutableProviderStoreApi<ContextValue> | null>(
 				null,
 			);
 			const pendingNotifyRef = useRef(false);
 
 			if (storeRef.current === null) {
-				storeRef.current = createProviderStore<ContextValue>(memoValue);
+				storeRef.current = createProviderStore<ContextValue>(snapshotValue);
 			}
 			const store = storeRef.current;
 
 			pendingNotifyRef.current =
-				store.setSnapshot(memoValue) || pendingNotifyRef.current;
+				store.setSnapshot(snapshotValue) || pendingNotifyRef.current;
 
 			useLayoutEffect(() => {
 				if (!pendingNotifyRef.current) {
@@ -152,130 +229,22 @@ export default function createProvider<
 				store.notify();
 			});
 
-			// Per-instance ref ensures InnerProvider reads latest value while keeping
-			// a stable component reference.
-			const valueRef = useRef<ContextValue | null>(memoValue);
-			valueRef.current = memoValue;
-
-			const InnerProvider = useMemo((): InnerProviderComponent => {
-				const NamedInnerProvider: InnerProviderComponent = ({ children }) => (
-					<StoreContext.Provider value={store}>
-						<Context.Provider value={valueRef.current}>
-							{children}
-						</Context.Provider>
-					</StoreContext.Provider>
-				);
-
-				NamedInnerProvider.displayName = innerProviderDisplayName;
-
-				return NamedInnerProvider;
-			}, [store]);
-
-			if (typeof children === "function") {
-				return children({
-					[`${name}Provider`]: InnerProvider,
-				} as { [K in ProviderName as `${K}Provider`]: InnerProviderComponent });
-			}
-
 			return (
-				<StoreContext.Provider value={store}>
-					<Context.Provider value={memoValue}>{children}</Context.Provider>
-				</StoreContext.Provider>
+				<StoreContext.Provider value={store}>{children}</StoreContext.Provider>
 			);
 		};
 		Provider.displayName = providerDisplayName;
 
-		const useEnhancedContext = (): ContextValue | null => {
-			const context = useContext(Context);
-
-			if (guarded && context === null) {
-				throw new Error(
-					`${name} context must be used within a ${name}Provider`,
-				);
-			}
-
-			return context;
-		};
-
-		const useStoreSelector = <Selected,>(
-			selector?: (value: ContextValue | null) => Selected,
-		): Selected | ContextValue | null => {
-			const store = useContext(StoreContext);
-			const resolvedStore =
-				store ?? (NullProviderStore as ProviderStoreApi<ContextValue>);
-			const selectorRef = useRef<typeof selector>(selector);
-			selectorRef.current = selector;
-
-			const getSelectedSnapshot = useCallback(() => {
-				if (guarded && store === null) {
-					throw new Error(
-						`${name} store must be used within a ${name}Provider`,
-					);
-				}
-
-				const snapshot = resolvedStore.getSnapshot();
-
-				if (guarded && snapshot === null) {
-					throw new Error(
-						`${name} store must be used within an enabled ${name}Provider`,
-					);
-				}
-
-				return selectorRef.current ? selectorRef.current(snapshot) : snapshot;
-			}, [resolvedStore, store]);
-
-			return useSyncExternalStore(
-				resolvedStore.subscribe,
-				getSelectedSnapshot,
-				getSelectedSnapshot,
-			);
-		};
-
-		const useOptionalStoreSelector = <Selected,>(
-			selector?: (value: ContextValue | null) => Selected,
-		): Selected | ContextValue | null => {
-			const store = useContext(StoreContext);
-			const resolvedStore =
-				store ?? (NullProviderStore as ProviderStoreApi<ContextValue>);
-			const selectorRef = useRef<typeof selector>(selector);
-			selectorRef.current = selector;
-
-			const getSelectedSnapshot = useCallback(() => {
-				const snapshot = resolvedStore.getSnapshot();
-				return selectorRef.current ? selectorRef.current(snapshot) : snapshot;
-			}, [resolvedStore]);
-
-			return useSyncExternalStore(
-				resolvedStore.subscribe,
-				getSelectedSnapshot,
-				getSelectedSnapshot,
-			);
-		};
-
 		return {
-			[`${name}Context`]: Context,
-			[`${name}StoreContext`]: StoreContext,
 			[`${name}Provider`]: Provider,
-			[`use${name}Context`]: useEnhancedContext,
 			[`use${name}Store`]: useStoreSelector,
-			[`use${name}OptionalStore`]: useOptionalStoreSelector,
 		} as {
-			[P in ProviderName as `${P}Context`]: React.Context<ContextValue>;
-		} & {
-			[P in ProviderName as `${P}StoreContext`]: React.Context<ProviderStoreApi<ContextValue> | null>;
-		} & {
 			[P in ProviderName as `${P}Provider`]: React.FC<ProviderProps>;
-		} & {
-			[P in ProviderName as `use${P}Context`]: () => Guarded extends true
-				? ContextValue
-				: ContextValue | null;
 		} & {
 			[P in ProviderName as `use${P}Store`]: ProviderStoreHook<
 				ContextValue,
 				Guarded
 			>;
-		} & {
-			[P in ProviderName as `use${P}OptionalStore`]: ProviderOptionalStoreHook<ContextValue>;
 		};
 	};
 }

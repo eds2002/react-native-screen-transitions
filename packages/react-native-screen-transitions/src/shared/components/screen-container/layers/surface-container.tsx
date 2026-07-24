@@ -1,7 +1,7 @@
 import { type ComponentType, memo, useMemo } from "react";
 import { StyleSheet, type ViewProps } from "react-native";
 import Animated from "react-native-reanimated";
-import { useDescriptors } from "../../../providers/screen/descriptors";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 
 type Props = {
@@ -10,10 +10,10 @@ type Props = {
 };
 
 export const SurfaceContainer = memo(({ children, pointerEvents }: Props) => {
-	const { current } = useDescriptors();
-
 	/** @deprecated Use `contentComponent` instead. */
-	const DeprecatedSurfaceComponent = current.options.surfaceComponent;
+	const DeprecatedSurfaceComponent = useDescriptorsStore(
+		(store) => store.options.surfaceComponent,
+	);
 
 	const AnimatedSurfaceComponent = useMemo<ComponentType<any> | null>(() => {
 		return DeprecatedSurfaceComponent

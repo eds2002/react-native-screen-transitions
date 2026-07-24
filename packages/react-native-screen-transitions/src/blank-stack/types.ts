@@ -12,7 +12,6 @@ import type {
 } from "@react-navigation/native";
 import type { InactiveBehavior, ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
-import type { StackSceneActivity } from "../shared/types/stack.types";
 
 export type { InactiveBehavior } from "../shared";
 
@@ -143,6 +142,4 @@ export type BlankStackDescriptor = Descriptor<
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp<ParamListBase>,
 	RouteProp<ParamListBase>
-> & {
-	activity: StackSceneActivity;
-};
+>;

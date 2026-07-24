@@ -1,7 +1,7 @@
 import { useLayoutEffect } from "react";
 import {
 	type BaseDescriptor,
-	useDescriptorDerivations,
+	useDescriptorsStore,
 } from "../../../providers/screen/descriptors";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
 import {
@@ -41,7 +41,9 @@ export function useOpenTransitionIntent(
 	animations: AnimationStoreMap,
 	system: SystemStoreMap,
 ) {
-	const { isFirstKey } = useDescriptorDerivations();
+	const isFirstKey = useDescriptorsStore(
+		(store) => store.derivations.isFirstKey,
+	);
 	const { requestLifecycleTransition } = system.actions;
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: Must only run once on mount
