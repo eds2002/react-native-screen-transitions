@@ -16,19 +16,19 @@ const DEFAULT_SCROLL_METADATA_OWNER_CONTEXT: ScrollMetadataOwnerContextValue = {
 
 const {
 	ScrollMetadataOwnerProvider,
-	useScrollMetadataOwnerContext: useMaybeScrollMetadataOwnerContext,
+	useScrollMetadataOwnerStore: useMaybeScrollMetadataOwnerStore,
 } = createProvider("ScrollMetadataOwner", { guarded: false })<
 	ScrollMetadataOwnerProviderProps,
 	ScrollMetadataOwnerContextValue
 >(({ children, value }) => ({ children, value }));
 
-export const useScrollMetadataOwnerContext = () =>
-	useMaybeScrollMetadataOwnerContext() ?? DEFAULT_SCROLL_METADATA_OWNER_CONTEXT;
+export const useScrollMetadataOwnerStore = () =>
+	useMaybeScrollMetadataOwnerStore() ?? DEFAULT_SCROLL_METADATA_OWNER_CONTEXT;
 
 export const useScrollMetadataOwnerProviderValue = (
 	axis: ScrollGestureAxis,
 ) => {
-	const parent = useScrollMetadataOwnerContext();
+	const parent = useScrollMetadataOwnerStore();
 
 	return useMemo(() => {
 		if (parent[axis]) return parent;

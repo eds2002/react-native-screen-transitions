@@ -7,7 +7,7 @@ import {
 	type StyleProps,
 } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
-import { useOriginContext } from "../../../providers/screen/origin.provider";
+import { useOriginStore } from "../../../providers/screen/origin.provider";
 import { useScreenSlots } from "../../../providers/screen/styles";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
@@ -49,7 +49,7 @@ export const useMeasurer = ({
 		currentScreenKey,
 		"pendingLifecycleStartBlockCount",
 	);
-	const { originRef } = useOriginContext();
+	const originRef = useOriginStore((store) => store.originRef);
 	const { visibilityBlocked } = useScreenSlots();
 
 	return useCallback(

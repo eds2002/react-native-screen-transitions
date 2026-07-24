@@ -10,6 +10,7 @@ export type ScreenTransitionsAdapterScene =
 export interface ScreenTransitionsAdapterContextValue {
 	routeIndexByKey: ReadonlyMap<string, number>;
 	scenes: ScreenTransitionsAdapterScene[];
+	scenesByKey?: Readonly<Record<string, ScreenTransitionsAdapterScene>>;
 }
 
 const ScreenTransitionsAdapterContext =
@@ -39,4 +40,8 @@ export function useScreenTransitionsAdapterContext() {
 		);
 	}
 	return context;
+}
+
+export function useScreenTransitionsAdapterOptionalContext() {
+	return useContext(ScreenTransitionsAdapterContext);
 }

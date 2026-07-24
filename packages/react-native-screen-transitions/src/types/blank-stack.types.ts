@@ -141,6 +141,4 @@ export type BlankStackDescriptor = Descriptor<
 	BlankStackNavigationOptions,
 	BlankStackNavigationProp<ParamListBase>,
 	RouteProp<ParamListBase>
-> & {
-	activity: StackSceneActivity;
-};
+>;

@@ -8,7 +8,7 @@ import type {
 	StackNavigationState,
 } from "@react-navigation/native";
 import type { ScreenTransitionConfig } from "../screen.types";
-import type { DescriptorMap } from "../stack.types";
+import type { DescriptorMap, StackSceneActivity } from "../stack.types";
 
 export type DirectStackNavigationEventMap = {};
 
@@ -44,6 +44,7 @@ export type DirectStackDescriptor = Descriptor<
 export type DirectStackDescriptorMap = DescriptorMap<DirectStackDescriptor>;
 
 export interface DirectStackScene {
+	activity: StackSceneActivity;
 	route: StackNavigationState<ParamListBase>["routes"][number];
 	descriptor: DirectStackDescriptor;
 	isPreloaded: boolean;

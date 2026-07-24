@@ -11,7 +11,7 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
-import { useOriginContext } from "../../../../../../providers/screen/origin.provider";
+import { useOriginStore } from "../../../../../../providers/screen/origin.provider";
 import { ScrollStore } from "../../../../../../stores/scroll.store";
 import { getVisibilityBlockOffset } from "../../../../../../utils/visibility-block-offset";
 import {
@@ -48,7 +48,7 @@ export const useHostMeasurement = ({
 	const hostRef = useAnimatedRef<View>();
 	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
 	const [canRenderHosts, setCanRenderHosts] = useState<boolean>(false);
-	const { originRef } = useOriginContext();
+	const originRef = useOriginStore((store) => store.originRef);
 	const hasMeasuredHost = useSharedValue(false);
 	const retryToken = useSharedValue(0);
 

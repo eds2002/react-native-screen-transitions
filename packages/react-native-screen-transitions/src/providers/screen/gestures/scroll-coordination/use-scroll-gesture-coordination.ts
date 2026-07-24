@@ -10,7 +10,7 @@ import { useSharedValueState } from "../../../../hooks/reanimated/use-shared-val
 import useStableCallback from "../../../../hooks/use-stable-callback";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { ScrollStore } from "../../../../stores/scroll.store";
-import { useGestureContext } from "../gestures.provider";
+import { useGestureStore } from "../gestures.provider";
 import type {
 	ScrollGestureAxis,
 	ScrollGestureAxisState,
@@ -18,8 +18,8 @@ import type {
 	ScrollMetadataState,
 } from "../types";
 import {
-	useScrollMetadataOwnerContext,
 	useScrollMetadataOwnerProviderValue,
+	useScrollMetadataOwnerStore,
 } from "./scroll-metadata-owner";
 import {
 	clearScrollMetadataAxisState,
@@ -88,10 +88,10 @@ const clearScrollMetadataAxis = (
 export const useScrollGestureCoordination = (
 	props: ScrollGestureCoordinationProps,
 ) => {
-	const context = useGestureContext();
+	const context = useGestureStore();
 	const scrollDirection = props.direction ?? "vertical";
 
-	const metadataOwnerContext = useScrollMetadataOwnerContext();
+	const metadataOwnerContext = useScrollMetadataOwnerStore();
 	const metadataOwnerProviderValue =
 		useScrollMetadataOwnerProviderValue(scrollDirection);
 	const isFirstMetadataWriterInTree = !metadataOwnerContext[scrollDirection];

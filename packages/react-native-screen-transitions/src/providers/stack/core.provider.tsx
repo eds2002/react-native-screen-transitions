@@ -1,5 +1,11 @@
-import * as React from "react";
-import { useMemo } from "react";
+import {
+	type ComponentType,
+	type FC,
+	memo,
+	type ReactNode,
+	useContext,
+	useMemo,
+} from "react";
 import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
@@ -19,7 +25,7 @@ export interface StackCoreConfig {
 
 interface StackCoreProviderProps {
 	config: StackCoreConfig;
-	children: React.ReactNode;
+	children: ReactNode;
 }
 
 export interface StackCoreContextValue {
@@ -41,8 +47,12 @@ const initialSafeAreaMetrics =
 			}
 		: initialWindowMetrics;
 
-function StackSafeAreaProvider({ children }: { children: React.ReactNode }) {
-	const insets = React.useContext(SafeAreaInsetsContext);
+const StackSafeAreaProvider = memo(function StackSafeAreaProvider({
+	children,
+}: {
+	children: ReactNode;
+}) {
+	const insets = useContext(SafeAreaInsetsContext);
 
 	if (insets) {
 		return <View style={styles.container}>{children}</View>;
@@ -56,58 +66,61 @@ function StackSafeAreaProvider({ children }: { children: React.ReactNode }) {
 			{children}
 		</SafeAreaProvider>
 	);
-}
+});
 
-const { StackCoreProvider: InternalStackCoreProvider, useStackCoreContext } =
-	createProvider("StackCore", { guarded: true })<
-		StackCoreProviderProps,
-		StackCoreContextValue
-	>(({ config, children }) => {
-		const {
-			TRANSITIONS_ALWAYS_ON = false,
-			DISABLE_NATIVE_SCREENS = false,
-			DISABLE_NATIVE_SCREEN_CONTAINER = false,
-			STACK_TYPE = StackType.BLANK,
-		} = config;
+const StackCoreRoot = memo(function StackCoreRoot({
+	children,
+	stackType,
+}: {
+	children: ReactNode;
+	stackType: StackType;
+}) {
+	return (
+		<GestureHandlerRootView
+			style={styles.container}
+			pointerEvents={stackType === StackType.COMPONENT ? "box-none" : undefined}
+		>
+			<StackSafeAreaProvider>{children}</StackSafeAreaProvider>
+		</GestureHandlerRootView>
+	);
+});
 
-		const flags = useMemo(
-			() => ({
-				TRANSITIONS_ALWAYS_ON,
-				STACK_TYPE,
-				DISABLE_NATIVE_SCREENS,
-				DISABLE_NATIVE_SCREEN_CONTAINER,
-			}),
-			[
-				TRANSITIONS_ALWAYS_ON,
-				STACK_TYPE,
-				DISABLE_NATIVE_SCREENS,
-				DISABLE_NATIVE_SCREEN_CONTAINER,
-			],
-		);
+export const { StackCoreProvider, useStackCoreStore } = createProvider(
+	"StackCore",
+	{ guarded: true },
+)<StackCoreProviderProps, StackCoreContextValue>(({ config, children }) => {
+	const {
+		TRANSITIONS_ALWAYS_ON = false,
+		DISABLE_NATIVE_SCREENS = false,
+		DISABLE_NATIVE_SCREEN_CONTAINER = false,
+		STACK_TYPE = StackType.BLANK,
+	} = config;
 
-		return {
-			value: { flags },
-			children: (
-				<GestureHandlerRootView
-					style={styles.container}
-					pointerEvents={
-						STACK_TYPE === StackType.COMPONENT ? "box-none" : undefined
-					}
-				>
-					<StackSafeAreaProvider>{children}</StackSafeAreaProvider>
-				</GestureHandlerRootView>
-			),
-		};
-	});
+	const flags = useMemo(
+		() => ({
+			TRANSITIONS_ALWAYS_ON,
+			STACK_TYPE,
+			DISABLE_NATIVE_SCREENS,
+			DISABLE_NATIVE_SCREEN_CONTAINER,
+		}),
+		[
+			TRANSITIONS_ALWAYS_ON,
+			STACK_TYPE,
+			DISABLE_NATIVE_SCREENS,
+			DISABLE_NATIVE_SCREEN_CONTAINER,
+		],
+	);
 
-/**
- * HOC that wraps a component with the StackCore provider.
- * Just a simple open gate
- */
+	return {
+		value: { flags },
+		children: <StackCoreRoot stackType={STACK_TYPE}>{children}</StackCoreRoot>,
+	};
+});
+
 export function withStackCore<TProps extends object>(
 	defaultConfig: StackCoreConfig,
-	Component: React.ComponentType<TProps>,
-): React.FC<TProps & StackCoreConfig> {
+	Component: ComponentType<TProps>,
+): FC<TProps & StackCoreConfig> {
 	return function StackCoreWrapper({
 		DISABLE_NATIVE_SCREENS,
 		DISABLE_NATIVE_SCREEN_CONTAINER,
@@ -115,7 +128,6 @@ export function withStackCore<TProps extends object>(
 		STACK_TYPE,
 		...props
 	}: TProps & StackCoreConfig) {
-		// Start from defaults, then apply explicit overrides from the caller.
 		const config: StackCoreConfig = {
 			TRANSITIONS_ALWAYS_ON:
 				TRANSITIONS_ALWAYS_ON ?? defaultConfig.TRANSITIONS_ALWAYS_ON,
@@ -126,10 +138,11 @@ export function withStackCore<TProps extends object>(
 				DISABLE_NATIVE_SCREEN_CONTAINER ??
 				defaultConfig.DISABLE_NATIVE_SCREEN_CONTAINER,
 		};
+
 		return (
-			<InternalStackCoreProvider config={config}>
+			<StackCoreProvider config={config}>
 				<Component {...(props as TProps)} />
-			</InternalStackCoreProvider>
+			</StackCoreProvider>
 		);
 	};
 }
@@ -137,5 +150,3 @@ export function withStackCore<TProps extends object>(
 const styles = StyleSheet.create({
 	container: { flex: 1 },
 });
-
-export { useStackCoreContext };

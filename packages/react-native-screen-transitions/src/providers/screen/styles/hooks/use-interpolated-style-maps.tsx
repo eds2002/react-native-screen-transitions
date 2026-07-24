@@ -12,7 +12,7 @@ import type {
 	TransitionInterpolatedStyle,
 } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
-import { useScreenAnimationContext } from "../../animation";
+import { useScreenAnimationStore } from "../../animation";
 import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
 import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/use-build-transition-accessor";
 import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
@@ -21,7 +21,7 @@ import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selecte
 import { useDescriptorsStore } from "../../descriptors";
 import {
 	syncScreenOptionsOverrides,
-	useScreenOptionsContext,
+	useScreenOptionsStore,
 } from "../../options";
 import { collectInterpolatorSharedValues } from "../helpers/collect-interpolator-shared-values";
 import { normalizeSlots } from "../helpers/normalize-slots";
@@ -137,7 +137,7 @@ export const useInterpolatedStylesMap = () => {
 		(s) => s.derivations.currentScreenKey,
 	);
 	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
-	const screenOptions = useScreenOptionsContext();
+	const screenOptions = useScreenOptionsStore();
 	const {
 		screenInterpolatorProps,
 		screenInterpolatorPropsRevision,
@@ -146,7 +146,7 @@ export const useInterpolatedStylesMap = () => {
 		currentInterpolator,
 		ancestorScreenAnimationSources,
 		descendantScreenAnimationSources,
-	} = useScreenAnimationContext();
+	} = useScreenAnimationStore();
 	const boundsAccessor = useBuildBoundsAccessor();
 	const transition = useBuildTransitionAccessor();
 	const nextInterpolatorReady = useSharedValue(0);

@@ -7,7 +7,6 @@ export {
 } from "./hooks/slot-resolvers";
 
 export {
-	ScreenSlotContext,
 	type ScreenSlotName,
 	ScreenSlotProvider,
 	useScreenSlots,

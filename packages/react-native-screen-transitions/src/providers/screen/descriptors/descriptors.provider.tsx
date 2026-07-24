@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 import { useMemo } from "react";
+import { useScreenTransitionsAdapterOptionalContext } from "../../../adapters/with-screen-transitions/context";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import type { BaseStackDescriptor } from "../../../types/stack.types";
 import createProvider from "../../../utils/create-provider";
 import type { DescriptorDerivations } from "./helpers/derive-descriptor-derivations";
@@ -25,87 +27,96 @@ export type DescriptorDerivationsContextValue = DescriptorDerivations;
 
 interface DescriptorStoreValue<
 	TDescriptor extends BaseDescriptor = BaseDescriptor,
-> {
+> extends DescriptorsContextValue<TDescriptor> {
 	descriptors: DescriptorsContextValue<TDescriptor>;
 	derivations: DescriptorDerivationsContextValue;
+	options: TDescriptor["options"];
 }
 
-interface DescriptorsProviderProps<TDescriptor extends BaseDescriptor> {
+type DescriptorsProviderProps = {
 	children: ReactNode;
-	previous?: TDescriptor;
-	current: TDescriptor;
-	next?: TDescriptor;
-}
+	previous?: BaseDescriptor;
+	current?: BaseDescriptor;
+	next?: BaseDescriptor;
+	routeKey?: string;
+};
 
-const {
-	DescriptorsProvider: InternalDescriptorsProvider,
-	useDescriptorsStore,
-} = createProvider("Descriptors", { guarded: true })<
-	DescriptorsProviderProps<BaseDescriptor>,
-	DescriptorStoreValue<BaseDescriptor>
->(({ previous, current, next, children }) => {
-	const descriptors = useMemo(
-		() => ({ previous, current, next }),
-		[previous, current, next],
-	);
+export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
+	"Descriptors",
+	{ guarded: true },
+)<DescriptorsProviderProps, DescriptorStoreValue<BaseDescriptor>>(
+	({ previous, current, next, routeKey, children }) => {
+		const blankStackCurrent = useBlankStackStore((store) =>
+			routeKey ? store?.scenesByKey[routeKey]?.descriptor : undefined,
+		);
+		const blankStackPrevious = useBlankStackStore((store) =>
+			routeKey ? store?.scenesByKey[routeKey]?.previousDescriptor : undefined,
+		);
+		const blankStackNext = useBlankStackStore((store) =>
+			routeKey ? store?.scenesByKey[routeKey]?.nextDescriptor : undefined,
+		);
+		const adapterContext = useScreenTransitionsAdapterOptionalContext();
+		const adapterScene = routeKey
+			? (adapterContext?.scenesByKey?.[routeKey] ??
+				adapterContext?.scenes[
+					adapterContext.routeIndexByKey.get(routeKey) ?? -1
+				])
+			: undefined;
 
-	const { ancestorKeys, ancestorDestinationPairKey } = useMemo(
-		() => getAncestorKeyState(current),
-		[current],
-	);
+		const resolvedCurrent =
+			current ?? blankStackCurrent ?? adapterScene?.descriptor;
+		const resolvedPrevious =
+			previous ?? blankStackPrevious ?? adapterScene?.previousDescriptor;
+		const resolvedNext = next ?? blankStackNext ?? adapterScene?.nextDescriptor;
 
-	const derivations = useMemo(
-		() =>
-			deriveDescriptorDerivations({
-				previous,
-				current,
-				next,
+		if (!resolvedCurrent) {
+			throw new Error(
+				`Descriptors scene "${routeKey ?? "unknown"}" was not found.`,
+			);
+		}
+
+		const descriptors = useMemo(
+			() => ({
+				previous: resolvedPrevious,
+				current: resolvedCurrent,
+				next: resolvedNext,
+			}),
+			[resolvedPrevious, resolvedCurrent, resolvedNext],
+		);
+
+		const { ancestorKeys, ancestorDestinationPairKey } = useMemo(
+			() => getAncestorKeyState(resolvedCurrent),
+			[resolvedCurrent],
+		);
+
+		const derivations = useMemo(
+			() =>
+				deriveDescriptorDerivations({
+					previous: resolvedPrevious,
+					current: resolvedCurrent,
+					next: resolvedNext,
+					ancestorKeys,
+					ancestorDestinationPairKey,
+				}),
+			[
+				resolvedPrevious,
+				resolvedCurrent,
+				resolvedNext,
 				ancestorKeys,
 				ancestorDestinationPairKey,
-			}),
-		[previous, current, next, ancestorKeys, ancestorDestinationPairKey],
-	);
+			],
+		);
 
-	const value = useMemo(
-		() => ({
-			descriptors,
-			derivations,
-		}),
-		[descriptors, derivations],
-	);
-
-	return {
-		value,
-		children,
-	};
-});
-
-export function DescriptorsProvider<TDescriptor extends BaseDescriptor>({
-	children,
-	previous,
-	current,
-	next,
-}: DescriptorsProviderProps<TDescriptor>) {
-	const providerProps = {
-		previous,
-		current,
-		next,
-		children,
-	};
-
-	return <InternalDescriptorsProvider {...providerProps} />;
-}
-
-export function useDescriptors<
-	TDescriptor extends BaseDescriptor = BaseDescriptor,
->() {
-	return useDescriptorsStore(
-		(store) => store.descriptors,
-	) as DescriptorsContextValue<TDescriptor>;
-}
-
-export function useDescriptorDerivations(): DescriptorDerivationsContextValue {
-	return useDescriptorsStore((store) => store.derivations);
-}
-
-export { useDescriptorsStore };
+		return {
+			value: {
+				previous: resolvedPrevious,
+				current: resolvedCurrent,
+				next: resolvedNext,
+				descriptors,
+				derivations,
+				options: resolvedCurrent.options,
+			},
+			children,
+		};
+	},
+);

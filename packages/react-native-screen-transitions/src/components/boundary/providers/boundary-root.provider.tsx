@@ -14,6 +14,7 @@ import {
 	useComposedSlotStyles,
 	useSlotStackingStyles,
 } from "../../../providers/screen/styles";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helpers";
 import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
@@ -64,14 +65,10 @@ type BoundaryRootProviderProps = Pick<
 	targetStyle?: unknown;
 };
 
-export const {
-	BoundaryRootProvider,
-	useBoundaryRootContext,
-	useBoundaryRootStore,
-} = createProvider("BoundaryRoot", { guarded: false })<
-	BoundaryRootProviderProps,
-	BoundaryRootContextValue
->(
+export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
+	"BoundaryRoot",
+	{ guarded: false },
+)<BoundaryRootProviderProps, BoundaryRootContextValue>(
 	({
 		children,
 		config,
@@ -98,12 +95,12 @@ export const {
 		const currentScreenKey = useDescriptorsStore(
 			(s) => s.derivations.currentScreenKey,
 		);
-		const currentActivity = useDescriptorsStore(
-			(s) => s.descriptors.current.activity,
+		const isCurrentScreenClosing = useBlankStackStore(
+			(store) => store?.scenesByKey[currentScreenKey]?.activity === "closing",
 		);
 		const retainedBoundTagRef = useRef(requestedBoundTag);
 		const shouldRetainClosingBoundTag =
-			portalRuntime.handoff && currentActivity === "closing";
+			portalRuntime.handoff && isCurrentScreenClosing;
 
 		// Navigation can update a retained closing route's params before that
 		// route leaves the stack. Keep its handoff identity stable so the payload

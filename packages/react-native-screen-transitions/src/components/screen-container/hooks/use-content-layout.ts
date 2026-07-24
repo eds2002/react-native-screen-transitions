@@ -1,10 +1,7 @@
 import { useCallback } from "react";
 import { type LayoutChangeEvent, useWindowDimensions } from "react-native";
 import { scheduleOnUI } from "react-native-worklets";
-import {
-	useDescriptorDerivations,
-	useDescriptors,
-} from "../../../providers/screen/descriptors";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../stores/animation.store";
 import {
 	LifecycleTransitionRequestKind,
@@ -12,19 +9,22 @@ import {
 } from "../../../stores/system.store";
 
 export function useContentLayout() {
-	const { current } = useDescriptors();
-	const { isFirstKey } = useDescriptorDerivations();
+	const routeKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const isFirstKey = useDescriptorsStore(
+		(store) => store.derivations.isFirstKey,
+	);
+	const experimental_animateOnInitialMount = useDescriptorsStore(
+		(store) => store.options.experimental_animateOnInitialMount,
+	);
 	const { height: screenHeight } = useWindowDimensions();
-	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
 	const system = SystemStore.getBag(routeKey);
 
 	const { targetProgress, resolvedAutoSnapPoint, measuredContentLayout } =
 		system;
 	const { requestLifecycleTransition } = system.actions;
-
-	const experimental_animateOnInitialMount =
-		current.options.experimental_animateOnInitialMount;
 
 	return useCallback(
 		(event: LayoutChangeEvent) => {

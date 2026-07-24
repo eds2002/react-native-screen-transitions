@@ -8,28 +8,29 @@ const createPopAction = () => ({
 });
 
 export function useNavigationHelpers() {
-	const current = useDescriptorsStore((store) => store.descriptors.current);
+	const route = useDescriptorsStore((store) => store.current.route);
+	const navigation = useDescriptorsStore((store) => store.current.navigation);
 	const requestStackDismiss = useStack((stack) => stack.requestDismiss);
 
 	const requestDismiss = useCallback((): boolean => {
-		return requestStackDismiss?.({ route: current.route }) ?? false;
-	}, [current.route, requestStackDismiss]);
+		return requestStackDismiss?.({ route }) ?? false;
+	}, [route, requestStackDismiss]);
 
 	const dismissScreen = useCallback((): boolean => {
-		const state = current.navigation.getState();
+		const state = navigation.getState();
 		const routeIndex = state.routes.findIndex(
-			(route) => route.key === current.route.key,
+			(stateRoute) => stateRoute.key === route.key,
 		);
 		const routeStillPresent = routeIndex !== -1;
 		if (!routeStillPresent || routeIndex === 0) return false;
 
-		current.navigation.dispatch({
+		navigation.dispatch({
 			...createPopAction(),
-			source: current.route.key,
+			source: route.key,
 			target: state.key,
 		});
 		return true;
-	}, [current]);
+	}, [navigation, route.key]);
 
 	return { dismissScreen, requestDismiss };
 }

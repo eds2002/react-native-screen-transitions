@@ -18,7 +18,7 @@ import type {
 	ScreenTransitionState,
 } from "../../../../types/animation.types";
 
-import { type BaseDescriptor, useDescriptors } from "../../descriptors";
+import { type BaseDescriptor, useDescriptorsStore } from "../../descriptors";
 import { buildScreenTransitionOptions } from "./build-screen-transition-options";
 import { updateDerivations } from "./derivations";
 import { hasTransitionsEnabled } from "./has-transitions-enabled";
@@ -280,11 +280,9 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 	const dimensions = useWindowDimensions();
 	const insets = useSafeAreaInsets();
 
-	const {
-		current: currDescriptor,
-		next: nextDescriptor,
-		previous: prevDescriptor,
-	} = useDescriptors();
+	const currDescriptor = useDescriptorsStore((store) => store.current);
+	const nextDescriptor = useDescriptorsStore((store) => store.next);
+	const prevDescriptor = useDescriptorsStore((store) => store.previous);
 
 	const currentAnimation = useBuildTransitionState(currDescriptor);
 	const nextAnimation = useBuildTransitionState(nextDescriptor);
