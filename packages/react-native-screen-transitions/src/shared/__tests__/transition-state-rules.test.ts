@@ -224,7 +224,7 @@ describe("transition state rules", () => {
 		expect(hydrated.settled).toBe(0);
 	});
 
-	it("derives public animating from active gesture reset", () => {
+	it("does not derive public animating from gesture reset state", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				progressAnimating: 0,
@@ -232,11 +232,11 @@ describe("transition state rules", () => {
 			}),
 		);
 
-		expect(hydrated.animating).toBe(1);
-		expect(hydrated.settled).toBe(0);
+		expect(hydrated.animating).toBe(0);
+		expect(hydrated.settled).toBe(1);
 	});
 
-	it("derives public animating from residual rotation without changing progress", () => {
+	it("does not derive public animating from residual gesture values", () => {
 		const hydrated = hydrate(
 			createBuiltState({
 				progress: 1,
@@ -249,8 +249,8 @@ describe("transition state rules", () => {
 
 		expect(hydrated.transitionProgress).toBe(1);
 		expect(hydrated.progress).toBe(1);
-		expect(hydrated.animating).toBe(1);
-		expect(hydrated.settled).toBe(0);
+		expect(hydrated.animating).toBe(0);
+		expect(hydrated.settled).toBe(1);
 	});
 
 	it("derives settled when progress and gestures are at rest", () => {
@@ -326,7 +326,7 @@ describe("transition state rules", () => {
 		expect(hydrate(state).logicallySettled).toBe(0);
 	});
 
-	it("keeps settled false while dragging", () => {
+	it("does not let dragging override canonical animation state", () => {
 		const state = createBuiltState({
 			progress: 1,
 			targetProgress: 1,
@@ -336,9 +336,9 @@ describe("transition state rules", () => {
 
 		const hydrated = hydrate(state);
 
-		expect(hydrated.animating).toBe(1);
-		expect(hydrated.settled).toBe(0);
-		expect(hydrated.logicallySettled).toBe(0);
+		expect(hydrated.animating).toBe(0);
+		expect(hydrated.settled).toBe(1);
+		expect(hydrated.logicallySettled).toBe(1);
 	});
 
 	it("allows visual settlement while a dismissing gesture holds residual values", () => {
@@ -536,4 +536,5 @@ describe("transition state rules", () => {
 		expect(hydrated.transitionProgress).toBe(1);
 		expect(hydrated.progress).toBe(0.75);
 	});
+
 });

@@ -1,7 +1,7 @@
 import { clamp, runOnJS } from "react-native-reanimated";
-import { EPSILON, FALSE, TRUE } from "../../../../../constants";
+import { EPSILON, TRUE } from "../../../../../constants";
+import { emitMotionStart } from "../../../../../stores/animation.store";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
-import { emit } from "../../../../../utils/animation/emit";
 import { normalizePinchScale } from "../../shared/physics";
 import { snapshotGestureHandoff } from "../../shared/snapshot";
 import { clearTransformTrackingValues } from "../../shared/values";
@@ -19,15 +19,7 @@ export const startPinchBase = (runtime: PinchGestureRuntime) => {
 		stores: { gestures, animations },
 	} = runtime;
 
-	const wasSettling = gestures.settling.get();
-	const hasResidualGesture =
-		Math.abs(gestures.normScale.get()) > EPSILON ||
-		Math.abs(gestures.rotation.get()) > EPSILON;
-
-	if (!wasSettling || !hasResidualGesture) {
-		emit(animations.willAnimate, TRUE, FALSE);
-	}
-
+	emitMotionStart(animations);
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
 	gestures.settling.set(0);
@@ -82,6 +74,9 @@ export const finalizePinchRelease = (
 		system.targetProgress.set(release.commitProgress);
 	}
 
+	const progressAlreadyAtTarget =
+		Math.abs(animations.transitionProgress.get() - release.target) <= EPSILON;
+
 	if (release.shouldDismiss) {
 		snapshotGestureHandoff(gestures, {
 			velocity: release.handoffVelocity,
@@ -91,12 +86,18 @@ export const finalizePinchRelease = (
 	resetPinchGestureValues({
 		spec: release.resetSpec,
 		gestures,
+		animations,
 		shouldDismiss: release.shouldDismiss,
 		resetValuesImmediately: release.resetValuesImmediately,
 	});
 
 	if (release.shouldDismiss && requestDismiss) {
 		runOnJS(requestDismiss)();
+	}
+
+	if (!release.shouldDismiss && progressAlreadyAtTarget) {
+		system.targetProgress.set(release.target);
+		return;
 	}
 
 	animateToProgress({

@@ -222,8 +222,14 @@ export type GestureValues = {
 	raw: RawGestureValues;
 	/**
 	 * The gesture that is currently active.
+	 *
+	 * @deprecated Use `initiator` for the accepted activation identity.
 	 */
 	active: ActiveGesture | null;
+	/**
+	 * The accepted activation identity for the current gesture attempt.
+	 */
+	initiator: ActiveGesture | "none";
 	/**
 	 * The initial pan direction that activated the gesture.
 	 *
@@ -240,6 +246,9 @@ export type GestureValues = {
 	handoff: GestureHandoffValues;
 	/**
 	 * A flag indicating if the screen is in the process of dismissing (0 or 1).
+	 *
+	 * @deprecated Use `closing` for public screen lifecycle state. Release handoff
+	 * details do not have a public replacement.
 	 */
 	dismissing: number;
 	/**
@@ -248,6 +257,8 @@ export type GestureValues = {
 	dragging: number;
 	/**
 	 * A flag indicating if released gesture values are animating back to neutral.
+	 *
+	 * @deprecated Use `animating` or `settled` for public motion state.
 	 */
 	settling: number;
 	/** @deprecated Use `normX` instead. */

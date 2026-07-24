@@ -60,6 +60,7 @@ export function snapDescriptorToIndex(
 
 		animateToProgress({
 			target: targetProgress,
+			markEntering: false,
 			animations,
 			targetProgress: targetProgressValue,
 			animationProgress: animationProgressValue,

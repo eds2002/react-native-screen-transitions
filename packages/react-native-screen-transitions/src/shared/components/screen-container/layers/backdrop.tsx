@@ -103,6 +103,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 				animateToProgress({
 					target,
+					markEntering: false,
 					spec,
 					animations,
 					targetProgress,

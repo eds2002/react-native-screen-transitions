@@ -80,6 +80,7 @@ export function useOpenTransitionIntent(
 			return;
 		}
 
+		animations.entering.set(1);
 		requestLifecycleTransition(
 			LifecycleTransitionRequestKind.Open,
 			initialProgress ?? 1,

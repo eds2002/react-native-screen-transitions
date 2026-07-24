@@ -1,4 +1,5 @@
 import { FALSE, TRUE } from "../../../../../constants";
+import type { AnimationStoreMap } from "../../../../../stores/animation.store";
 import type { GestureStoreMap } from "../../../../../stores/gesture.store";
 import type { AnimationConfig } from "../../../../../types/animation.types";
 import { animateMany } from "../../shared/reset";
@@ -11,6 +12,7 @@ import {
 interface ResetPinchGestureValuesProps {
 	spec?: AnimationConfig;
 	gestures: GestureStoreMap;
+	animations?: AnimationStoreMap;
 	shouldDismiss: boolean;
 	resetValuesImmediately?: boolean;
 }
@@ -18,6 +20,7 @@ interface ResetPinchGestureValuesProps {
 export const resetPinchGestureValues = ({
 	spec,
 	gestures,
+	animations,
 	shouldDismiss,
 	resetValuesImmediately = false,
 }: ResetPinchGestureValuesProps) => {
@@ -32,7 +35,14 @@ export const resetPinchGestureValues = ({
 		gestures.active.set(null);
 		gestures.direction.set(null);
 		gestures.settling.set(FALSE);
+		animations?.progressAnimating.set(FALSE);
+		animations?.progressSettled.set(TRUE);
 	};
+
+	if (animations && !shouldDismiss) {
+		animations.progressAnimating.set(TRUE);
+		animations.progressSettled.set(FALSE);
+	}
 
 	clearRawTransformValues(gestures);
 

@@ -157,7 +157,7 @@ const createInitialInterpolatorProps = ({
 		progress: currentProgress,
 		entering: currentEntering,
 		animating: currentEntering,
-		willAnimate: currentEntering,
+		willAnimate: 0,
 	});
 	const previous = prevDescriptor
 		? createInitialTransitionState({
@@ -173,7 +173,7 @@ const createInitialInterpolatorProps = ({
 				progress: 0,
 				entering: 1,
 				animating: 1,
-				willAnimate: 1,
+				willAnimate: 0,
 				settled: 0,
 			})
 		: undefined;
@@ -312,10 +312,8 @@ export function useScreenAnimationPipeline(): ScreenAnimationPipeline {
 		});
 
 	const propsRevisionState = useSharedValue({ value: 0 });
-
 	const screenInterpolatorPropsRevision = useDerivedValue<number>(() => {
 		"worklet";
-
 		screenInterpolatorProps.modify((frame) => {
 			"worklet";
 			const interpolatorOptions = selectedInterpolatorOptions.get();
