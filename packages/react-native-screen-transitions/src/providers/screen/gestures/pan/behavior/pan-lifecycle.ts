@@ -1,8 +1,8 @@
 import { clamp, type SharedValue } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
-import { EPSILON, FALSE, TRUE } from "../../../../../constants";
+import { EPSILON, TRUE } from "../../../../../constants";
+import { emitMotionStart } from "../../../../../stores/animation.store";
 import { animateToProgress } from "../../../../../utils/animation/animate-to-progress";
-import { emit } from "../../../../../utils/animation/emit";
 import {
 	normalizeGestureTranslation,
 	resolveGestureVelocity,
@@ -30,16 +30,7 @@ export const startPanBase = (runtime: PanGestureRuntime) => {
 		stores: { gestures, animations },
 	} = runtime;
 
-	const wasSettling = gestures.settling.get();
-	const hasResidualGesture =
-		Math.abs(gestures.normX.get()) > EPSILON ||
-		Math.abs(gestures.normY.get()) > EPSILON ||
-		Math.abs(gestures.normScale.get()) > EPSILON ||
-		Math.abs(gestures.rotation.get()) > EPSILON;
-
-	if (!wasSettling || !hasResidualGesture) {
-		emit(animations.willAnimate, TRUE, FALSE);
-	}
+	emitMotionStart(animations);
 
 	gestures.dragging.set(TRUE);
 	gestures.dismissing.set(0);
@@ -134,6 +125,9 @@ export const finalizePanRelease = (
 		system.targetProgress.set(plan.commitProgress);
 	}
 
+	const progressAlreadyAtTarget =
+		Math.abs(animations.transitionProgress.get() - plan.target) <= EPSILON;
+
 	if (canDriveRelease && plan.shouldDismiss) {
 		snapshotGestureHandoff(gestures, {
 			velocity: plan.handoffVelocity,
@@ -143,6 +137,8 @@ export const finalizePanRelease = (
 	resetPanGestureValues({
 		plan,
 		gestures,
+		animations,
+		completeMotion: !plan.shouldDismiss && progressAlreadyAtTarget,
 		updateLifecycle: canDriveRelease,
 	});
 
@@ -150,12 +146,8 @@ export const finalizePanRelease = (
 		return;
 	}
 
-	const progressAlreadyAtTarget =
-		Math.abs(animations.transitionProgress.get() - plan.target) <= EPSILON;
-
 	if (!plan.shouldDismiss && progressAlreadyAtTarget) {
 		system.targetProgress.set(plan.target);
-		animations.progressAnimating.set(FALSE);
 		return;
 	}
 

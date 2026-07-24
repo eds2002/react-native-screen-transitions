@@ -3,6 +3,8 @@ import {
 	makeMutable,
 	type SharedValue,
 } from "react-native-reanimated";
+import { FALSE, TRUE } from "../constants";
+import { emit } from "../utils/animation/emit";
 import { createStore } from "../utils/create-store";
 
 export type AnimationStoreMap = {
@@ -14,6 +16,23 @@ export type AnimationStoreMap = {
 	progressSettled: SharedValue<number>;
 	closing: SharedValue<number>;
 	entering: SharedValue<number>;
+};
+
+export const emitMotionStart = (animations: AnimationStoreMap) => {
+	"worklet";
+
+	animations.progressSettled.set(FALSE);
+
+	if (animations.progressAnimating.get()) {
+		return false;
+	}
+
+	emit(animations.willAnimate, TRUE, FALSE);
+	requestAnimationFrame(() => {
+		"worklet";
+		animations.progressAnimating.set(TRUE);
+	});
+	return true;
 };
 
 function createAnimationBag(): AnimationStoreMap {
