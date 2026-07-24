@@ -1,4 +1,4 @@
-import { memo, useCallback, useLayoutEffect, useRef } from "react";
+import { memo, useLayoutEffect, useRef } from "react";
 import {
 	type StyleProp,
 	StyleSheet,
@@ -9,7 +9,6 @@ import {
 import Animated from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
-import { SystemStore } from "../../../../../../stores/system.store";
 import { PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
@@ -28,7 +27,6 @@ type HostImplProps = PublicHostProps & {
 
 function HostImpl({ fallback = false, style }: HostImplProps) {
 	const screenKey = useDescriptorsStore((s) => s.derivations.currentScreenKey);
-	const { unblockLifecycleStart } = SystemStore.getBag(screenKey).actions;
 	const generatedHostKeyRef = useRef<string | null>(null);
 
 	if (generatedHostKeyRef.current === null) {
@@ -54,7 +52,6 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 
 	useLayoutEffect(() => {
 		registerHost({
-			capturesScroll,
 			fallback,
 			hostKey,
 			screenKey,
@@ -63,13 +60,7 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		return () => {
 			unregisterHost(screenKey, hostKey);
 		};
-	}, [capturesScroll, fallback, hostKey, screenKey]);
-
-	const handleUnblocking = useCallback(() => {
-		// Each destination boundary contributes one lifecycle start block. Release
-		// only this host's block so unrelated boundary and user blocks stay intact.
-		unblockLifecycleStart();
-	}, [unblockLifecycleStart]);
+	}, [fallback, hostKey, screenKey]);
 
 	const boundaryHosts = measurement.canRenderHosts
 		? activeBoundaryHosts.map((host) => (
@@ -80,7 +71,6 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 						styles.boundaryHostViewport,
 						{ width: viewportWidth, height: viewportHeight },
 					]}
-					onLayout={handleUnblocking}
 				>
 					<PortalBoundaryHost host={host} style={StyleSheet.absoluteFill} />
 				</View>

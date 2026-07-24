@@ -2,6 +2,7 @@ import type { MeasuredDimensions } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
 import type { Layout } from "../../../../types/screen.types";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
+import type { ContentTransformGeometry } from "../../types/geometry";
 import type { BoundsAnchor } from "../../types/options";
 import {
 	DRAG_DIRECTIONAL_SCALE_EXPONENT,
@@ -185,6 +186,22 @@ function getBoundsCenterY(bounds: MeasuredDimensions) {
 	return bounds.pageY + bounds.height / 2;
 }
 
+export function resolveRevealContentBaseTransformFromGeometry({
+	progress,
+	geometry,
+}: {
+	progress: number;
+	geometry: ContentTransformGeometry;
+}) {
+	"worklet";
+
+	return {
+		translateX: mixUnit(geometry.tx, 0, progress),
+		translateY: mixUnit(geometry.ty, 0, progress),
+		scale: mixUnit(geometry.s, 1, progress),
+	};
+}
+
 export function resolveRevealContentBaseTransform({
 	progress,
 	sourceBounds,
@@ -209,11 +226,10 @@ export function resolveRevealContentBaseTransform({
 		scaleMode: "uniform",
 	});
 
-	return {
-		translateX: mixUnit(geometry.tx, 0, progress),
-		translateY: mixUnit(geometry.ty, 0, progress),
-		scale: mixUnit(geometry.s, 1, progress),
-	};
+	return resolveRevealContentBaseTransformFromGeometry({
+		geometry,
+		progress,
+	});
 }
 
 export function resolveTrackedSourceElementTransform({

@@ -11,6 +11,8 @@
 	},
 	"scripts": {
 		"clean": "find . -name node_modules -type d -prune -exec rm -rf {} + && rm -f bun.lock bun.lockb && bun install --force",
+		"example:dev": "bun run --cwd apps/e2e bunx expo prebuild --clean && bun run --cwd apps/e2e bunx expo run ios -d",
+
 		"build": "bun run --cwd packages/react-native-screen-transitions build",
 		"docs:dev": "bun run --cwd packages/docs dev",
 		"docs:build": "bun run --cwd packages/docs build",

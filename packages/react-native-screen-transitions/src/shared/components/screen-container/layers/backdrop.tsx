@@ -29,7 +29,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	const BackdropComponent = current.options.backdropComponent;
 	const routeKey = current.route.key;
 	const animations = AnimationStore.getBag(routeKey);
-	const { targetProgress, resolvedAutoSnapPoint } =
+	const { targetProgress, animationProgress, resolvedAutoSnapPoint } =
 		SystemStore.getBag(routeKey);
 
 	const AnimatedBackdropComponent = useMemo(
@@ -98,6 +98,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 					spec,
 					animations,
 					targetProgress,
+					animationProgress,
 					onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				});
 			})();
@@ -105,6 +106,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	}, [
 		animations,
 		targetProgress,
+		animationProgress,
 		resolvedAutoSnapPoint,
 		backdropBehavior,
 		current,

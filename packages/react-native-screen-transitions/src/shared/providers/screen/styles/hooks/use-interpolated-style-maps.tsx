@@ -25,9 +25,12 @@ import {
 } from "../../options";
 import { collectInterpolatorSharedValues } from "../helpers/collect-interpolator-shared-values";
 import { normalizeSlots } from "../helpers/normalize-slots";
-import { isOpeningBeforeStart } from "../helpers/opening-phase";
 import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
+import {
+	hasCloseTransitionFinished,
+	isOpenTransitionBlocked,
+} from "../helpers/transition-visual-state";
 
 const NO_STYLE_LAYERS: LocalStyleLayers = [];
 
@@ -157,12 +160,13 @@ export const useInterpolatedStylesMap = () => {
 	);
 
 	const activeScreenKey = nextScreenKey ?? currentScreenKey;
+	const { closing: activeClosing, entering: activeEntering } =
+		AnimationStore.getBag(activeScreenKey);
 	const {
-		entering: activeEntering,
-		transitionProgress: activeTransitionProgress,
-	} = AnimationStore.getBag(activeScreenKey);
-	const { pendingLifecycleRequestKind: activePendingLifecycleRequestKind } =
-		SystemStore.getBag(activeScreenKey);
+		animationProgress: activeAnimationProgress,
+		pendingLifecycleRequestKind: activePendingLifecycleRequestKind,
+		pendingLifecycleStartBlockCount: activePendingLifecycleStartBlockCount,
+	} = SystemStore.getBag(activeScreenKey);
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 
@@ -194,22 +198,33 @@ export const useInterpolatedStylesMap = () => {
 		const isInGestureMode =
 			!!isDragging || isGesturingDuringCloseAnimation.get();
 
-		// The current screen keeps interpolator ownership until the next screen is
-		// genuinely live: never during a gesture-driven close, never before a next
-		// interpolator exists, and never in the next screen's pre-start window
-		// (entering, but no transformed frame yet). Only then does "next" take over.
+		// Interpolator ownership changes only at visual boundaries on the UI thread:
+		// the next screen attaches after its blockers clear and progress starts, then
+		// detaches once its closing progress has committed at zero. The downstream
+		// resolver sees the owner disappear in this same graph and resets its styles
+		// without waiting for React to remove the screen.
 		const isPendingOpen =
 			activePendingLifecycleRequestKind.get() ===
 			LifecycleTransitionRequestKind.Open;
 		const activeOpening = isPendingOpen || !!activeEntering.get();
+		const isOpeningBlocked = isOpenTransitionBlocked({
+			opening: activeOpening,
+			pendingLifecycleStartBlockCount:
+				activePendingLifecycleStartBlockCount.get(),
+			animationProgress: activeAnimationProgress.get(),
+		});
+		const hasCloseFinished = hasCloseTransitionFinished({
+			closing: activeClosing.get(),
+			animationProgress: activeAnimationProgress.get(),
+		});
 		const currentOwnsInterpolator =
 			isInGestureMode ||
 			!nextInterpolator ||
-			isOpeningBeforeStart(
-				activeOpening ? 1 : 0,
-				activeTransitionProgress.get(),
-			);
-		nextInterpolatorReady.set(currentOwnsInterpolator ? 0 : 1);
+			isOpeningBlocked ||
+			hasCloseFinished;
+		const nextReady = currentOwnsInterpolator ? 0 : 1;
+
+		nextInterpolatorReady.set(nextReady);
 
 		const interpolatorOptionsOwner = currentOwnsInterpolator
 			? "current"

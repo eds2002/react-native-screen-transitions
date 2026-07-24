@@ -13,13 +13,11 @@ beforeEach(() => {
 describe("portal host registry", () => {
 	it("keeps fallback pinned under a user host regardless of mount order", () => {
 		registerHost({
-			capturesScroll: true,
 			fallback: false,
 			hostKey: "screen-a-user-host",
 			screenKey: "screen-a",
 		});
 		registerHost({
-			capturesScroll: false,
 			fallback: true,
 			hostKey: "screen-a",
 			screenKey: "screen-a",
@@ -30,13 +28,11 @@ describe("portal host registry", () => {
 
 	it("resumes the fallback host when the user host unmounts", () => {
 		registerHost({
-			capturesScroll: false,
 			fallback: true,
 			hostKey: "screen-a",
 			screenKey: "screen-a",
 		});
 		registerHost({
-			capturesScroll: true,
 			fallback: false,
 			hostKey: "screen-a-user-host",
 			screenKey: "screen-a",
@@ -53,19 +49,16 @@ describe("portal host registry", () => {
 
 	it("uses the latest non-fallback host", () => {
 		registerHost({
-			capturesScroll: false,
 			fallback: true,
 			hostKey: "screen-a",
 			screenKey: "screen-a",
 		});
 		registerHost({
-			capturesScroll: true,
 			fallback: false,
 			hostKey: "screen-a-user-host-1",
 			screenKey: "screen-a",
 		});
 		registerHost({
-			capturesScroll: true,
 			fallback: false,
 			hostKey: "screen-a-user-host-2",
 			screenKey: "screen-a",
@@ -76,19 +69,16 @@ describe("portal host registry", () => {
 
 	it("resolves each screen's active host independently of the other side", () => {
 		registerHost({
-			capturesScroll: false,
 			fallback: true,
 			hostKey: "screen-a",
 			screenKey: "screen-a",
 		});
 		registerHost({
-			capturesScroll: true,
 			fallback: false,
 			hostKey: "screen-a-scroll-host",
 			screenKey: "screen-a",
 		});
 		registerHost({
-			capturesScroll: false,
 			fallback: true,
 			hostKey: "screen-b",
 			screenKey: "screen-b",

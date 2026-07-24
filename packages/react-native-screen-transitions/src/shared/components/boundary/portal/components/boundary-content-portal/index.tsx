@@ -33,30 +33,49 @@ const AnimatedNativePortal = NativePortal
 			NativePortal as ComponentType<NullableHostNamePortalProps>,
 		)
 	: null;
+const EnabledNativePortal = AnimatedNativePortal as NonNullable<
+	typeof AnimatedNativePortal
+>;
 
 export const BoundaryContentPortal = memo(function BoundaryContentPortal({
 	boundaryId,
 	children,
 	enabled,
 }: BoundaryContentPortalProps) {
-	const shouldEnablePortal = enabled && boundaryId !== undefined;
-	const { teleportProps } = useBoundaryContentPortalAttachment({
-		boundaryId: boundaryId ?? "",
-		enabled: shouldEnablePortal,
-	});
+	if (
+		!enabled ||
+		boundaryId === undefined ||
+		!isTeleportAvailable ||
+		!AnimatedNativePortal
+	) {
+		return children;
+	}
 
-	if (shouldEnablePortal && isTeleportAvailable && AnimatedNativePortal) {
+	return (
+		<EnabledBoundaryContentPortal boundaryId={boundaryId}>
+			{children}
+		</EnabledBoundaryContentPortal>
+	);
+});
+
+const EnabledBoundaryContentPortal = memo(
+	function EnabledBoundaryContentPortal({
+		boundaryId,
+		children,
+	}: Omit<BoundaryContentPortalProps, "enabled"> & { boundaryId: string }) {
+		const { teleportProps } = useBoundaryContentPortalAttachment({
+			boundaryId,
+		});
+
 		return (
-			<AnimatedNativePortal
+			<EnabledNativePortal
 				animatedProps={teleportProps}
 				name={boundaryId}
 				pointerEvents={PORTAL_POINTER_EVENTS}
 				style={StyleSheet.absoluteFill}
 			>
 				{children}
-			</AnimatedNativePortal>
+			</EnabledNativePortal>
 		);
-	}
-
-	return children;
-});
+	},
+);

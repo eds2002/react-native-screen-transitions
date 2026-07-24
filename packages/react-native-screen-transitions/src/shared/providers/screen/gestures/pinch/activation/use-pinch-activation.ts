@@ -3,7 +3,7 @@ import type {
 	GestureStateManager,
 	GestureTouchEvent,
 } from "react-native-gesture-handler";
-import type { SharedValue } from "react-native-reanimated";
+import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import type { GestureStoreMap } from "../../../../../stores/gesture.store";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePinchRuntime } from "../../shared/runtime";
@@ -34,6 +34,48 @@ export const updateAbsolutePinchFocalPoint = (
 	}
 };
 
+export const updatePinchRotation = (
+	event: GestureTouchEvent,
+	gestures: GestureStoreMap,
+	lastAngle: SharedValue<number>,
+	accumulatedRotation: SharedValue<number>,
+	captureOrigin: boolean,
+) => {
+	"worklet";
+	const firstTouch = event.allTouches[0];
+	const secondTouch = event.allTouches[1];
+
+	if (!firstTouch || !secondTouch) {
+		return;
+	}
+
+	const angle = Math.atan2(
+		secondTouch.absoluteY - firstTouch.absoluteY,
+		secondTouch.absoluteX - firstTouch.absoluteX,
+	);
+
+	if (captureOrigin) {
+		lastAngle.set(angle);
+		accumulatedRotation.set(0);
+		gestures.rotation.set(0);
+		gestures.raw.rotation.set(0);
+		return;
+	}
+
+	let angleDelta = angle - lastAngle.get();
+	if (angleDelta > Math.PI) {
+		angleDelta -= 2 * Math.PI;
+	} else if (angleDelta < -Math.PI) {
+		angleDelta += 2 * Math.PI;
+	}
+
+	const rotation = accumulatedRotation.get() + angleDelta;
+	lastAngle.set(angle);
+	accumulatedRotation.set(rotation);
+	gestures.rotation.set(rotation);
+	gestures.raw.rotation.set(rotation);
+};
+
 interface UsePinchActivationProps {
 	runtime: SharedValue<PinchGestureRuntime>;
 	screenOptions: ScreenOptionsContextValue;
@@ -45,6 +87,9 @@ export const usePinchActivation = ({
 	screenOptions,
 	gestureCompositionOwner,
 }: UsePinchActivationProps) => {
+	const lastAngle = useSharedValue(0);
+	const accumulatedRotation = useSharedValue(0);
+
 	const onTouchesDown = useCallback(
 		(
 			event: GestureTouchEvent,
@@ -68,6 +113,13 @@ export const usePinchActivation = ({
 					latestRuntime.stores.gestures,
 					true,
 				);
+				updatePinchRotation(
+					event,
+					latestRuntime.stores.gestures,
+					lastAngle,
+					accumulatedRotation,
+					true,
+				);
 				if (gestureCompositionOwner.get() === null) {
 					gestureCompositionOwner.set("pinch");
 				}
@@ -79,7 +131,13 @@ export const usePinchActivation = ({
 				stateManager?.fail();
 			}
 		},
-		[runtime, screenOptions, gestureCompositionOwner],
+		[
+			runtime,
+			screenOptions,
+			gestureCompositionOwner,
+			lastAngle,
+			accumulatedRotation,
+		],
 	);
 
 	const onTouchesMove = useCallback(
@@ -102,6 +160,13 @@ export const usePinchActivation = ({
 					latestRuntime.stores.gestures,
 					false,
 				);
+				updatePinchRotation(
+					event,
+					latestRuntime.stores.gestures,
+					lastAngle,
+					accumulatedRotation,
+					false,
+				);
 				if (gestureCompositionOwner.get() === null) {
 					gestureCompositionOwner.set("pinch");
 				}
@@ -113,7 +178,13 @@ export const usePinchActivation = ({
 				stateManager.fail();
 			}
 		},
-		[runtime, screenOptions, gestureCompositionOwner],
+		[
+			runtime,
+			screenOptions,
+			gestureCompositionOwner,
+			lastAngle,
+			accumulatedRotation,
+		],
 	);
 
 	return useMemo(

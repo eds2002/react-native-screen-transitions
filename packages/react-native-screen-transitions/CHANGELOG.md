@@ -1,5 +1,29 @@
 # Changelog
 
+## [3.10.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.9.0...v3.10.0) (2026-07-24)
+
+### Features
+
+* internal system progress ([a254539](https://github.com/eds2002/react-native-screen-transitions/commit/a25453981d4f2eec389a9bfc04a608a565057c68))
+
+### Bug Fixes
+
+* anchor portal clone and masks to the physical left edge in RTL ([e0a090a](https://github.com/eds2002/react-native-screen-transitions/commit/e0a090a36d16217b225cd30b3fb90635f5723f74))
+* **bounds:** avoid refreshes during gestures ([fbf5bb4](https://github.com/eds2002/react-native-screen-transitions/commit/fbf5bb4ce6581eada9c8f8f43a8fa2e9426f040c))
+* **gestures:** resume interrupted pinch transitions ([c25efa6](https://github.com/eds2002/react-native-screen-transitions/commit/c25efa618e6255e2f064403322078e78b2b598f3))
+* preserve destination press ownership ([ebb9b40](https://github.com/eds2002/react-native-screen-transitions/commit/ebb9b40307274c80d40ee3767269fb0297d4e83e))
+* preserve source layout after handoff ([e52f382](https://github.com/eds2002/react-native-screen-transitions/commit/e52f3820f7c857cb32b0c5662e596f9f970824ff))
+* src not teleporting to portal host when escapeClipping is true ([b6cdb91](https://github.com/eds2002/react-native-screen-transitions/commit/b6cdb91eb5cb23b0baee52c321b573aae0a99ef6))
+* synchronize boundary handoff lifecycle ([30e98fe](https://github.com/eds2002/react-native-screen-transitions/commit/30e98fe593705ff575b2cb8a2e987ba3bac1606b))
+* synchronize boundary portal geometry ([297291a](https://github.com/eds2002/react-native-screen-transitions/commit/297291ab79d049f27919c483208f698c7dcd4110))
+* synchronize boundary visual completion ([1fee214](https://github.com/eds2002/react-native-screen-transitions/commit/1fee21463a7498fe25fe312324305f5bf6989ba4))
+* track source scroll during zoom transitions ([647c8ce](https://github.com/eds2002/react-native-screen-transitions/commit/647c8ce7ed4eea76a9344858f6db8d402011d307))
+
+### Performance Improvements
+
+* **boundary:** reduce portal mount work ([333096d](https://github.com/eds2002/react-native-screen-transitions/commit/333096db73b984739e9211e65cd7d78e84ceadfe))
+* **zoom:** improve navigation performance ([2c4a60a](https://github.com/eds2002/react-native-screen-transitions/commit/2c4a60af404aa6f0c9697cb700b719ad66084202))
+
 ## [3.9.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.8.0...v3.9.0) (2026-07-21)
 
 v3.9 focuses on more predictable bounds transitions, a native-style navigation zoom, and experimental live-content handoff.

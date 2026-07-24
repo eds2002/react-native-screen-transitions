@@ -49,6 +49,10 @@ export function snapDescriptorToIndex(
 		descriptor.route.key,
 		"targetProgress",
 	);
+	const animationProgressValue = SystemStore.getValue(
+		descriptor.route.key,
+		"animationProgress",
+	);
 
 	runOnUI(() => {
 		"worklet";
@@ -58,6 +62,7 @@ export function snapDescriptorToIndex(
 			target: targetProgress,
 			animations,
 			targetProgress: targetProgressValue,
+			animationProgress: animationProgressValue,
 			spec: resolveSnapTransitionSpec(
 				descriptor.options.transitionSpec,
 				targetProgress < currentProgress ? "collapse" : "expand",

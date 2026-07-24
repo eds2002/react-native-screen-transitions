@@ -2,7 +2,10 @@ import { describe, expect, it } from "bun:test";
 import type { BoundsInterpolationProps } from "../../types/bounds.types";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
-import { resolveRevealContentBaseTransform } from "../../utils/bounds/navigation/reveal/math";
+import {
+	resolveRevealContentBaseTransform,
+	resolveRevealContentBaseTransformFromGeometry,
+} from "../../utils/bounds/navigation/reveal/math";
 import {
 	ZOOM_FOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
 	ZOOM_FOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
@@ -90,6 +93,38 @@ describe("zoom native opacity ownership", () => {
 				maxOpacity: ZOOM_BACKDROP_MAX_OPACITY,
 			}),
 		).toBe(0);
+	});
+});
+
+describe("zoom tracking geometry", () => {
+	it("reuses one geometry snapshot across transition phases", () => {
+		const geometry = {
+			tx: 60,
+			ty: -20,
+			s: 0.4,
+			entering: true,
+		};
+
+		expect(
+			resolveRevealContentBaseTransformFromGeometry({
+				geometry,
+				progress: 0.25,
+			}),
+		).toEqual({
+			translateX: 45,
+			translateY: -15,
+			scale: 0.55,
+		});
+		expect(
+			resolveRevealContentBaseTransformFromGeometry({
+				geometry,
+				progress: 1,
+			}),
+		).toEqual({
+			translateX: 0,
+			translateY: 0,
+			scale: 1,
+		});
 	});
 });
 
@@ -220,13 +255,18 @@ describe("zoom pan drag tuning", () => {
 			width: 390,
 			height: 844,
 		};
+		const collapsedContentScale = resolveRevealContentBaseTransform({
+			progress: 0,
+			sourceBounds,
+			destinationBounds: trackingContentTarget,
+			screenLayout,
+		}).scale;
 
 		const drag = resolveZoomDragState({
 			gesture,
 			activeTransitionProgress: 1,
 			screenLayout,
-			sourceBounds,
-			trackingContentTarget,
+			collapsedContentScale,
 		});
 
 		expect(drag.dragX).toBe(
@@ -255,8 +295,7 @@ describe("zoom pan drag tuning", () => {
 			gesture,
 			activeTransitionProgress: 1,
 			screenLayout,
-			sourceBounds,
-			trackingContentTarget,
+			collapsedContentScale,
 			dragOptions: {
 				translation: { horizontal: 0.5 },
 				scale: { horizontal: 0 },
@@ -289,8 +328,7 @@ describe("zoom pan drag tuning", () => {
 			gesture: inverseGesture,
 			activeTransitionProgress: 1,
 			screenLayout,
-			sourceBounds,
-			trackingContentTarget,
+			collapsedContentScale,
 		});
 
 		expect(inverseDrag.dragX).toBeLessThan(0);
@@ -353,12 +391,17 @@ describe("zoom pan drag tuning", () => {
 			width: 390,
 			height: 844,
 		};
+		const collapsedContentScale = resolveRevealContentBaseTransform({
+			progress: 0,
+			sourceBounds,
+			destinationBounds: trackingContentTarget,
+			screenLayout,
+		}).scale;
 		const pinch = resolveZoomDragState({
 			gesture,
 			activeTransitionProgress: 1,
 			screenLayout,
-			sourceBounds,
-			trackingContentTarget,
+			collapsedContentScale,
 		});
 
 		expect(pinch.dragX).toBe(gesture.x);
@@ -388,8 +431,7 @@ describe("zoom pan drag tuning", () => {
 			gesture: outwardGesture,
 			activeTransitionProgress: 1,
 			screenLayout,
-			sourceBounds,
-			trackingContentTarget,
+			collapsedContentScale,
 		});
 
 		expect(outwardPinch.gestureScale).toBeGreaterThan(1);
@@ -415,15 +457,13 @@ describe("zoom pan drag tuning", () => {
 			gesture: restingReleaseGesture,
 			activeTransitionProgress: 0.5,
 			screenLayout,
-			sourceBounds,
-			trackingContentTarget,
+			collapsedContentScale,
 		});
 		const fastRelease = resolveZoomDragState({
 			gesture: fastReleaseGesture,
 			activeTransitionProgress: 0.5,
 			screenLayout,
-			sourceBounds,
-			trackingContentTarget,
+			collapsedContentScale,
 		});
 
 		expect(fastRelease.dismissContentScale).toBeLessThan(
@@ -826,9 +866,21 @@ describe("zoom source tracking", () => {
 		const dragY = 118;
 		const gestureScale = 0.76;
 		const parentScale = 0.96;
-
-		const transform = resolveZoomTrackedSourceTransform({
+		const contentBase = resolveRevealContentBaseTransform({
 			progress,
+			sourceBounds,
+			destinationBounds,
+			screenLayout,
+		});
+		const collapsedContentScale = resolveRevealContentBaseTransform({
+			progress: 0,
+			sourceBounds,
+			destinationBounds,
+			screenLayout,
+		}).scale;
+		const transform = resolveZoomTrackedSourceTransform({
+			contentBaseTransform: contentBase,
+			collapsedContentScale,
 			sourceBounds,
 			destinationBounds,
 			screenLayout,
@@ -836,12 +888,6 @@ describe("zoom source tracking", () => {
 			dragY,
 			gestureScale,
 			parentScale,
-		});
-		const contentBase = resolveRevealContentBaseTransform({
-			progress,
-			sourceBounds,
-			destinationBounds,
-			screenLayout,
 		});
 		const contentScale = contentBase.scale * gestureScale;
 		const expectedLeft =
@@ -889,9 +935,22 @@ describe("zoom source tracking", () => {
 			width: 310,
 			height: 140,
 		};
+		const halfwayContentBase = resolveRevealContentBaseTransform({
+			progress: 0.5,
+			sourceBounds,
+			destinationBounds,
+			screenLayout,
+		});
+		const collapsedContentBase = resolveRevealContentBaseTransform({
+			progress: 0,
+			sourceBounds,
+			destinationBounds,
+			screenLayout,
+		});
 
 		const halfwayTransform = resolveZoomTrackedSourceTransform({
-			progress: 0.5,
+			contentBaseTransform: halfwayContentBase,
+			collapsedContentScale: collapsedContentBase.scale,
 			sourceBounds,
 			destinationBounds,
 			screenLayout,
@@ -901,7 +960,8 @@ describe("zoom source tracking", () => {
 			parentScale: 1,
 		});
 		const collapsedTransform = resolveZoomTrackedSourceTransform({
-			progress: 0,
+			contentBaseTransform: collapsedContentBase,
+			collapsedContentScale: collapsedContentBase.scale,
 			sourceBounds,
 			destinationBounds,
 			screenLayout,

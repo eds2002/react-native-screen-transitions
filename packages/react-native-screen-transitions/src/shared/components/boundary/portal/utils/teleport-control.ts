@@ -11,15 +11,3 @@ export const isTeleportEnabled = (
 
 	return teleport?.enabled !== false;
 };
-
-export const shouldAttachBoundaryPortal = ({
-	enabled,
-	teleport,
-}: {
-	enabled: boolean;
-	teleport?: BoundaryTeleportControl;
-}) => {
-	"worklet";
-
-	return enabled && isTeleportEnabled(teleport);
-};

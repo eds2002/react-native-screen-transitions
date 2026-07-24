@@ -17,6 +17,12 @@ type SystemStoreState = {
 	targetProgress: SharedValue<number>;
 
 	/**
+	 * Directional linear clock for the active progress animation. Increasing
+	 * animations run 0 -> 1; decreasing animations run 1 -> 0.
+	 */
+	animationProgress: SharedValue<number>;
+
+	/**
 	 * Resolved fraction (contentHeight / screenHeight) for the 'auto' snap point. -1 = not yet measured.
 	 */
 	resolvedAutoSnapPoint: SharedValue<number>;
@@ -67,6 +73,7 @@ export type SystemStoreMap = SystemStoreState & {
 export const SystemStore = createStore<SystemStoreState, SystemStoreActions>({
 	createBag: () => ({
 		targetProgress: makeMutable(1),
+		animationProgress: makeMutable(0),
 		resolvedAutoSnapPoint: makeMutable(-1),
 		measuredContentLayout: makeMutable<Layout | null>(null),
 		pendingLifecycleRequestKind: makeMutable<LifecycleTransitionRequestKind>(
@@ -77,6 +84,7 @@ export const SystemStore = createStore<SystemStoreState, SystemStoreActions>({
 	}),
 	disposeBag: (bag) => {
 		cancelAnimation(bag.targetProgress);
+		cancelAnimation(bag.animationProgress);
 		cancelAnimation(bag.resolvedAutoSnapPoint);
 		cancelAnimation(bag.measuredContentLayout);
 		cancelAnimation(bag.pendingLifecycleRequestKind);

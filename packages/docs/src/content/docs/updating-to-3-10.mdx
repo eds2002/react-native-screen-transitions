@@ -1,0 +1,89 @@
+---
+title: "New in 3.10"
+pageTitle: "New in 3.10"
+summary: "v3.10 makes Boundary handoff, escape clipping, navigation zoom, and gesture-driven transitions more reliable and much lighter to mount."
+description: "v3.10 makes Boundary handoff, escape clipping, navigation zoom, and gesture-driven transitions more reliable and much lighter to mount."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "July 2026"
+order: 1
+to: /changelog/updating-to-3-10
+---
+
+v3.10 is a reliability and performance release for bounds transitions.
+
+There are no new public APIs to migrate to. The work in this release makes the existing boundary, handoff, `escapeClipping`, and `navigation.zoom()` APIs behave more predictably when transitions are interrupted, retargeted, scrolled, or driven by gestures.
+
+## More reliable Boundary handoff
+
+Live-content handoff now follows the screen that is visually animating instead of waiting for React to remove a route. This makes a handoff chain behave more consistently when screens are opened, dismissed, or retargeted in quick succession.
+
+The public setup is unchanged: every matching boundary in a handoff chain still opts in with `handoff`.
+
+```tsx
+<Transition.Boundary id="video" handoff>
+  <Transition.Boundary.Target style={styles.video} />
+</Transition.Boundary>
+```
+
+When a boundary moves from A to B, B becomes the active receiving location for the live payload. If B closes, the payload returns to its measured source location at the end of B's visual close rather than at an arbitrary React lifecycle point.
+
+This improves rapid A → B → A → B flows, preserves source placeholder sizing, and avoids a class of blank frames and premature returns.
+
+`handoff` remains experimental, particularly for native-backed Android views. The existing [live handoff caveats](/caveats#live-boundary-handoff) still apply to video surfaces and other platform-composited content.
+
+## Smoother escape clipping
+
+`escapeClipping` now attaches a linked source to its closest valid screen host as soon as that host has committed layout. This fixes source elements that previously stayed inside their clipped container instead of participating in an `escapeClipping` transition.
+
+The host still waits for real layout before teleporting. That prevents the first-frame `x: 0, y: 0` placement flash without delaying a valid source transition.
+
+```tsx
+<Transition.Boundary
+  id="cover"
+  escapeClipping
+  onPress={() => navigation.navigate("Detail")}
+>
+  <Transition.Boundary.Target style={styles.cover}>
+    <Image source={cover} style={styles.image} />
+  </Transition.Boundary.Target>
+</Transition.Boundary>
+```
+
+## Navigation zoom follows moved sources
+
+`navigation.zoom()` now keeps track of the source scroll position for `keepFocusedVisible` flows. If a source list moves while its destination is open, dismissing the destination returns the focused content to its current source position instead of an old snapshot.
+
+```tsx
+return bounds(id).navigation.zoom({
+  target: "bound",
+  keepFocusedVisible: true,
+});
+```
+
+This is built into the zoom recipe. For custom handoff scrolling outside `navigation.zoom()`, keep scroll compensation in your own content/interpolator layer. A handoff payload remains normal content inside its receiving screen, so the app is the right owner of custom scrolling behavior.
+
+Zoom also has less repeated geometry work on the UI thread. The result is noticeably smoother source-to-destination and gesture-driven zoom motion, especially on Android.
+
+## More predictable gestures
+
+Rotation is now derived directly from the active pinch gesture instead of using a separate rotation recognizer. Pan, pinch, and rotation still compose together, but the system has fewer independent gesture lifecycles to reconcile.
+
+Interrupted pinch transitions now resume toward the active transition target when cancelled. A pinch that begins during an entering animation no longer leaves the screen stranded between its source and destination visual states.
+
+Boundary measurement also avoids refreshing while a gesture is actively dragging, dismissing, or settling. This prevents a scaled unfocused source from being captured as a new source measurement during a pinch dismissal.
+
+## Faster Boundary mounting
+
+Boundary targets are now resolved from the rendered child tree before the portal runtime mounts. Disabled portals render inline without mounting portal hooks, and the selected target no longer has to register through an additional React state update.
+
+In practice, screens that mount many boundaries—such as a grid or feed of matched elements—do less initial React and portal work.
+
+## Upgrade notes
+
+v3.10 does not require a migration. Existing Boundary, handoff, `escapeClipping`, pinch, and zoom code keeps the same public shape.
+
+If you worked around previous flicker, premature handoff, source-size, or stale-scroll issues with manual delays or custom lifecycle guards, try removing those workarounds after upgrading. The transition runtime now owns those visual sequencing rules directly.
+
+For the complete API setup, see [Shared Elements](/shared-elements) and [Navigation Zoom](/navigation-zoom).

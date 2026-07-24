@@ -1,10 +1,6 @@
 import { forwardRef } from "react";
-import {
-	Pressable,
-	type PressableProps,
-	View,
-	type ViewProps,
-} from "react-native";
+import { View, type ViewProps } from "react-native";
+import { Pressable, type PressableProps } from "react-native-gesture-handler";
 import { BoundaryTarget } from "./components/boundary-target";
 import { createBoundaryComponent } from "./create-boundary-component";
 import { Host } from "./portal";
@@ -52,12 +48,12 @@ type BoundaryRootComponent = typeof BoundaryRoot;
  *
  * Use:
  * - `Boundary` for passive and pressable shared elements.
- * - `Boundary.Target` to measure a nested descendant instead of the root.
+ * - `Boundary.Target` as a direct child to measure it instead of the root.
  * - `Boundary.Host` to make clipping-escape host placement explicit.
  */
 export interface BoundaryComponent extends BoundaryRootComponent {
 	/**
-	 * Optional nested measurement override inside a boundary root.
+	 * Optional direct-child measurement override inside a boundary root.
 	 */
 	Target: typeof BoundaryTarget;
 	/**

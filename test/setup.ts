@@ -37,6 +37,8 @@ const createTestMutable = <T>(initial: T) => {
 	return mutable;
 };
 
+const createAnimatedComponent = <T>(component: T) => component;
+
 // Expose reset function globally for tests that need isolated mutable state
 declare global {
 	var resetMutableRegistry: () => void;
@@ -56,11 +58,20 @@ mock.module("react-native", () => ({
 		select: <T>(obj: { ios?: T; android?: T; default?: T }) =>
 			obj.ios ?? obj.default,
 	},
+	StyleSheet: {
+		absoluteFill: {},
+		absoluteFillObject: {},
+		create: <T>(styles: T) => styles,
+	},
 }));
 mock.module("react-native-gesture-handler", () => ({}));
 mock.module("react-native-reanimated", () => ({
 	makeMutable: createTestMutable,
-	createAnimatedComponent: <T>(component: T) => component,
+	createAnimatedComponent,
+	default: {
+		View: "AnimatedView",
+		createAnimatedComponent,
+	},
 	Extrapolation: { CLAMP: "clamp", EXTEND: "extend", IDENTITY: "identity" },
 	interpolate: (
 		value: number,

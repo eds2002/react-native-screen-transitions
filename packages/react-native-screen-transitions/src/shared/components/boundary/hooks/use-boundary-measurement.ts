@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import type { View } from "react-native";
-import type { AnimatedRef, StyleProps } from "react-native-reanimated";
+import type { AnimatedRef } from "react-native-reanimated";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
 import type { BoundaryConfigProps } from "../types";
@@ -19,9 +19,8 @@ interface UseBoundaryMeasurementParams {
 	currentScreenKey: string;
 	/** Surface to measure: a nested target's placeholder, else the root. */
 	measuredRef: AnimatedRef<View>;
-	/** Root's own style; ignored when a nested target supplies its own. */
+	/** Style belonging to the selected measurement surface. */
 	style?: unknown;
-	targetPreparedStyles?: StyleProps;
 	handoff: boolean;
 	escapeClipping: boolean;
 	config: BoundaryConfigProps;
@@ -39,7 +38,6 @@ export const useBoundaryMeasurement = ({
 	currentScreenKey,
 	measuredRef,
 	style,
-	targetPreparedStyles,
 	handoff,
 	escapeClipping,
 	config,
@@ -50,11 +48,7 @@ export const useBoundaryMeasurement = ({
 		[anchor, scaleMode, target, method],
 	);
 
-	const rootPreparedStyles = useMemo(
-		() => prepareStyleForBounds(style),
-		[style],
-	);
-	const preparedStyles = targetPreparedStyles ?? rootPreparedStyles;
+	const preparedStyles = useMemo(() => prepareStyleForBounds(style), [style]);
 
 	const measureBoundary = useMeasurer({
 		enabled,

@@ -22,6 +22,7 @@ export const useTransitionStartController = ({
 }) => {
 	const {
 		targetProgress,
+		animationProgress,
 		pendingLifecycleRequestKind,
 		pendingLifecycleRequestTarget,
 		pendingLifecycleStartBlockCount,
@@ -62,6 +63,7 @@ export const useTransitionStartController = ({
 				spec: transitionSpec,
 				animations,
 				targetProgress,
+				animationProgress,
 				onAnimationFinish,
 			});
 

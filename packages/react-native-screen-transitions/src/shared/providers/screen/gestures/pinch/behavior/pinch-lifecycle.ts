@@ -107,6 +107,7 @@ export const finalizePinchRelease = (
 		markEntering: false,
 		animations,
 		targetProgress: system.targetProgress,
+		animationProgress: system.animationProgress,
 		initialVelocity: release.initialVelocity,
 	});
 };

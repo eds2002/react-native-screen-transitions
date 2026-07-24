@@ -29,6 +29,8 @@ export interface SpringAnimation extends Animation<SpringAnimation> {
 	omega0: number;
 	omega1: number;
 	initialEnergy: number;
+	animationProgressElapsed: number;
+	animationProgressDuration: number;
 }
 
 export type InnerSpringAnimation = SpringAnimation;
@@ -360,6 +362,134 @@ export function underDampedSpringCalculations(
 			(cos1 * (v0 + zeta * omega0 * x0) - omega1 * x0 * sin1);
 
 	return { position: underDampedPosition, velocity: underDampedVelocity };
+}
+
+const MAX_SPRING_DURATION_SECONDS = 60;
+const SPRING_DURATION_PRECISION_SECONDS = 0.0001;
+const MAX_OVERSHOOT_DURATION_SAMPLES = 4096;
+
+export function calculateSpringAnimationDuration(
+	animation: InnerSpringAnimation,
+	config: DefaultSpringConfig & SpringConfigInner,
+): number {
+	"worklet";
+	const startPosition = animation.current;
+	const startVelocity = animation.velocity;
+	const x0 = startPosition - animation.toValue;
+
+	const stateAt = (time: number) => {
+		"worklet";
+		return animation.zeta < 1
+			? underDampedSpringCalculations(animation, {
+					zeta: animation.zeta,
+					v0: startVelocity,
+					x0,
+					omega0: animation.omega0,
+					omega1: animation.omega1,
+					t: time,
+				})
+			: criticallyDampedSpringCalculations(animation, {
+					v0: startVelocity,
+					x0,
+					omega0: animation.omega0,
+					t: time,
+				});
+	};
+
+	const terminatesByEnergyAt = (time: number) => {
+		"worklet";
+		if (animation.initialEnergy === 0) {
+			return true;
+		}
+
+		const state = stateAt(time);
+		const energy = getEnergy(
+			animation.toValue - state.position,
+			state.velocity,
+			config.stiffness,
+			config.mass,
+		);
+
+		return energy / animation.initialEnergy <= config.energyThreshold;
+	};
+
+	if (terminatesByEnergyAt(0)) {
+		return 0;
+	}
+
+	let lowerBound = 0;
+	let upperBound = 1 / 60;
+	while (
+		upperBound < MAX_SPRING_DURATION_SECONDS &&
+		!terminatesByEnergyAt(upperBound)
+	) {
+		lowerBound = upperBound;
+		upperBound *= 2;
+	}
+	upperBound = Math.min(upperBound, MAX_SPRING_DURATION_SECONDS);
+
+	if (terminatesByEnergyAt(upperBound)) {
+		while (upperBound - lowerBound > SPRING_DURATION_PRECISION_SECONDS) {
+			const midpoint = (lowerBound + upperBound) / 2;
+			if (terminatesByEnergyAt(midpoint)) {
+				upperBound = midpoint;
+			} else {
+				lowerBound = midpoint;
+			}
+		}
+	}
+
+	const energyDuration = upperBound;
+	if (!config.overshootClamping || energyDuration === 0) {
+		return energyDuration * 1000;
+	}
+
+	const leftBound =
+		animation.startValue >= 0
+			? animation.toValue
+			: animation.toValue + animation.startValue;
+	const rightBound = leftBound + Math.abs(animation.startValue);
+	const isOutsideBoundsAt = (time: number) => {
+		"worklet";
+		const { position } = stateAt(time);
+		return position < leftBound || position > rightBound;
+	};
+
+	const frequency = animation.zeta < 1 ? animation.omega1 : animation.omega0;
+	const sampleStep =
+		frequency > 0 ? Math.min(1 / 240, Math.PI / (frequency * 8)) : 1 / 240;
+	const sampleCount = Math.min(
+		MAX_OVERSHOOT_DURATION_SAMPLES,
+		Math.max(1, Math.ceil(energyDuration / sampleStep)),
+	);
+	const effectiveStep = energyDuration / sampleCount;
+	let previousTime = 0;
+
+	for (let index = 1; index <= sampleCount; index += 1) {
+		const time = effectiveStep * index;
+		if (!isOutsideBoundsAt(time)) {
+			previousTime = time;
+			continue;
+		}
+
+		let crossingLowerBound = previousTime;
+		let crossingUpperBound = time;
+		while (
+			crossingUpperBound - crossingLowerBound >
+			SPRING_DURATION_PRECISION_SECONDS
+		) {
+			const midpoint = (crossingLowerBound + crossingUpperBound) / 2;
+			if (isOutsideBoundsAt(midpoint)) {
+				crossingUpperBound = midpoint;
+			} else {
+				crossingLowerBound = midpoint;
+			}
+		}
+
+		return crossingUpperBound * 1000;
+	}
+
+	return energyDuration * 1000;
 }
 
 export function isAnimationTerminatingCalculation(

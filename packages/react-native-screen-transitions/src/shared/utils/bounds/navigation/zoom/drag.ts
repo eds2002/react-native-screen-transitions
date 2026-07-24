@@ -1,11 +1,9 @@
-import type { MeasuredDimensions } from "react-native-reanimated";
 import { EPSILON } from "../../../../constants";
 import type {
 	BoundsInterpolationProps,
 	BoundsNavigationZoomDragOptions,
 } from "../../../../types/bounds.types";
 import type { Layout } from "../../../../types/screen.types";
-import { resolveRevealContentBaseTransform } from "../reveal/math";
 import { ZOOM_DISMISS_VELOCITY_DEPTH } from "./config";
 
 const ZOOM_DRAG_SCALE_EXPONENT = 2;
@@ -169,15 +167,13 @@ export function resolveZoomDragState({
 	gesture,
 	activeTransitionProgress,
 	screenLayout,
-	sourceBounds,
-	trackingContentTarget,
+	collapsedContentScale,
 	dragOptions,
 }: {
 	gesture: ZoomGesture;
 	activeTransitionProgress: number;
 	screenLayout: Layout;
-	sourceBounds: MeasuredDimensions;
-	trackingContentTarget: MeasuredDimensions;
+	collapsedContentScale: number;
 	dragOptions?: BoundsNavigationZoomDragOptions;
 }): ZoomDragState {
 	"worklet";
@@ -266,16 +262,10 @@ export function resolveZoomDragState({
 	let dismissContentScale = gestureScale;
 
 	if (isDismissing) {
-		const targetContentScale = resolveRevealContentBaseTransform({
-			progress: 0,
-			sourceBounds,
-			destinationBounds: trackingContentTarget,
-			screenLayout,
-		}).scale;
 		dismissContentScale = resolveZoomDismissContentScale({
 			transitionRemaining: activeTransitionProgress,
 			releaseScale: gestureScale,
-			targetScale: targetContentScale,
+			targetScale: collapsedContentScale,
 			velocity: gestureHandoff.velocity,
 			velocityDepth:
 				ZOOM_DISMISS_VELOCITY_DEPTH *
@@ -295,33 +285,4 @@ export function resolveZoomDragState({
 		isVerticalInverted,
 		rotation,
 	};
-}
-
-export function resolveZoomTrackedGestureScale({
-	drag,
-	activeTransitionProgress,
-	screenLayout,
-	sourceBounds,
-	trackingContentTarget,
-}: {
-	drag: ZoomDragState;
-	activeTransitionProgress: number;
-	screenLayout: Layout;
-	sourceBounds: MeasuredDimensions;
-	trackingContentTarget: MeasuredDimensions;
-}) {
-	"worklet";
-
-	if (!drag.isDismissing) {
-		return drag.gestureScale;
-	}
-
-	const trackedContentBaseScale = resolveRevealContentBaseTransform({
-		progress: activeTransitionProgress,
-		sourceBounds,
-		destinationBounds: trackingContentTarget,
-		screenLayout,
-	}).scale;
-
-	return drag.dismissContentScale / trackedContentBaseScale;
 }

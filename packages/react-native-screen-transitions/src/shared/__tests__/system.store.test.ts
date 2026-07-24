@@ -15,6 +15,10 @@ describe("SystemStore", () => {
 
 	it("returns typed values for internal runtime fields", () => {
 		const targetProgress = SystemStore.getValue("route-a", "targetProgress");
+		const animationProgress = SystemStore.getValue(
+			"route-a",
+			"animationProgress",
+		);
 		const resolvedAutoSnapPoint = SystemStore.getValue(
 			"route-a",
 			"resolvedAutoSnapPoint",
@@ -25,6 +29,7 @@ describe("SystemStore", () => {
 		);
 
 		expect(targetProgress.get()).toBe(1);
+		expect(animationProgress.get()).toBe(0);
 		expect(resolvedAutoSnapPoint.get()).toBe(-1);
 		expect(measuredContentLayout.get()).toBeNull();
 	});

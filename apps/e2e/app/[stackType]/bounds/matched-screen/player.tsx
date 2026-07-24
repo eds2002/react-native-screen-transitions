@@ -1,8 +1,9 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import Transition from "react-native-screen-transitions";
 import {
+	MATCHED_SCREEN_ASPECT_RATIO,
 	MATCHED_SCREEN_BOUNDARY_GROUP,
 	MATCHED_SCREEN_DETAIL_WIDTH,
 	MATCHED_SCREEN_VIDEOS,
@@ -19,21 +20,20 @@ export default function MatchedScreenPlayer() {
 
 	const receiverStyle = {
 		width: MATCHED_SCREEN_DETAIL_WIDTH,
-		height: MATCHED_SCREEN_DETAIL_WIDTH / example.aspectRatio,
-		borderRadius: example.aspectRatio === 1 ? 44 : 34,
+		height: MATCHED_SCREEN_DETAIL_WIDTH / MATCHED_SCREEN_ASPECT_RATIO,
+		borderRadius: 34,
 	};
 
 	return (
-		<Pressable
+		<View
 			accessibilityLabel="Close video"
 			accessibilityRole="button"
-			onPress={() => router.back()}
 			style={styles.detail}
 			testID="matched-screen-close"
 		>
 			<StatusBar style="dark" />
 			<View style={styles.detailContent}>
-				<Transition.Boundary.View
+				<Transition.Boundary
 					group={MATCHED_SCREEN_BOUNDARY_GROUP}
 					handoff
 					id={example.id}
@@ -42,7 +42,7 @@ export default function MatchedScreenPlayer() {
 				/>
 				<Text style={styles.detailCaption}>{example.title}</Text>
 			</View>
-		</Pressable>
+		</View>
 	);
 }
 
