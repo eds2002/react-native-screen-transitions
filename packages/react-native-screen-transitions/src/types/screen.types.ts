@@ -169,38 +169,6 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	 * }
 	 */
 	styleId?: string;
-
-	/**
-	 * Marks this component for measurement to enable shared element transitions.
-	 * Components with the same tag across different screens will animate between each other.
-	 *
-	 * @example
-	 * // Screen A:
-	 * <Transition.View sharedBoundTag="profile-avatar">
-	 *   <Avatar size="small" />
-	 * </Transition.View>
-	 *
-	 * // Screen B:
-	 * <Transition.View sharedBoundTag="profile-avatar">
-	 *   <Avatar size="large" />
-	 * </Transition.View>
-	 *
-	 * @deprecated Use `Transition.Boundary` with `id` instead.
-	 */
-	sharedBoundTag?: string;
-
-	/**
-	 * Re-measures this component when the screen regains focus and updates
-	 * any matching shared-bound source link in place.
-	 *
-	 * Useful when layout can change while unfocused (for example, programmatic
-	 * ScrollView/FlatList scrolling triggered from another screen).
-	 *
-	 * @deprecated Legacy `sharedBoundTag` refresh option. The boundary
-	 * measurement pipeline refreshes layout through `Transition.Boundary`.
-	 * @default false
-	 */
-	remeasureOnFocus?: boolean;
 };
 
 export type ScreenTransitionConfig = {

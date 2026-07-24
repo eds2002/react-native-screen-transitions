@@ -107,7 +107,6 @@ Use transition-aware scrollables inside sheets and other gesture-driven screens 
 ### Common Primitive Props
 
 - `styleId` for element targeting from `screenStyleInterpolator`
-- `sharedBoundTag` for legacy shared-bound flows
 
 ## Boundary Components
 
@@ -271,9 +270,7 @@ See [API](/api) for `useScreenAnimation()`, `useScreenGesture()`, `useHistory()`
 
 `Transition.MaskedView` is still exported for legacy masked-view flows.
 
-`sharedBoundTag` still exists for older shared-bound presets.
-
-New work should prefer:
+Prefer:
 
 - screen options on one of the stack creators
 - `Transition.Boundary`
