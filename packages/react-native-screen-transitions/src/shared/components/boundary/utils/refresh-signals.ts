@@ -40,6 +40,7 @@ export const getRefreshBoundarySignal = (params: {
 	entering: boolean;
 	animating: boolean;
 	progress: number;
+	gestureInProgress: boolean;
 	linkState?: LinkPairsState;
 }): RefreshBoundarySignal | null => {
 	"worklet";
@@ -57,10 +58,17 @@ export const getRefreshBoundarySignal = (params: {
 		entering,
 		animating,
 		progress,
+		gestureInProgress,
 		linkState,
 	} = params;
 
 	if (!enabled) return null;
+
+	// This is temporary for a patch fix. However, this architecture should
+	// change: our signals aren't currently doing their intended job, so right
+	// now we'll add one more guard until the shape is much more tested and
+	// bulletproof.
+	if (gestureInProgress) return null;
 
 	const canRefreshPreCloseDestination =
 		shouldRefresh && closing && !entering && !animating && progress >= 1;

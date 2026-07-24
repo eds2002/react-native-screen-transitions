@@ -472,7 +472,7 @@ describe("bounds client measurement contract", () => {
 			"colors",
 		);
 
-		const getSignal = (linkId: string) =>
+		const getSignal = (linkId: string, gestureInProgress = false) =>
 			getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "screen-a",
@@ -484,10 +484,12 @@ describe("bounds client measurement contract", () => {
 				entering: false,
 				animating: false,
 				progress: 1,
+				gestureInProgress,
 				linkState: pairs.get(),
 			});
 
 		expect(getSignal("1")).toBeNull();
+		expect(getSignal("2", true)).toBeNull();
 		expect(getSignal("2")).toEqual({
 			type: "source",
 			pairKey,
@@ -519,6 +521,7 @@ describe("bounds client measurement contract", () => {
 				entering: false,
 				animating: false,
 				progress: 1,
+				gestureInProgress: false,
 				linkState: pairs.get(),
 			});
 
@@ -546,6 +549,7 @@ describe("bounds client measurement contract", () => {
 				entering: false,
 				animating: false,
 				progress: 1,
+				gestureInProgress: false,
 			});
 
 			if (!refreshSignal || refreshSignal.signal === previousSignal) {
@@ -579,6 +583,7 @@ describe("bounds client measurement contract", () => {
 				entering: false,
 				animating: false,
 				progress: 1,
+				gestureInProgress: false,
 			}),
 		).toEqual({
 			type: "destination",
@@ -604,6 +609,7 @@ describe("bounds client measurement contract", () => {
 				entering: false,
 				animating: false,
 				progress: 1,
+				gestureInProgress: false,
 			}),
 		).toBeNull();
 	});
