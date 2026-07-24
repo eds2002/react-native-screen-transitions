@@ -4,7 +4,6 @@ export type HostRegistration = {
 	hostKey: string;
 	screenKey: string;
 	fallback: boolean;
-	capturesScroll: boolean;
 };
 
 type HostRegistrySnapshot = Record<string, string>;

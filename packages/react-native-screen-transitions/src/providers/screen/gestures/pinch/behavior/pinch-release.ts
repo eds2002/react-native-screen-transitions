@@ -95,7 +95,7 @@ export const resolvePinchRelease = (
 	const {
 		participation,
 		policy,
-		stores: { animations },
+		stores: { animations, system },
 	} = runtime;
 	const normalizedScale = clamp(normalizePinchScale(event.scale), -1, 1);
 	const currentProgress = animations.transitionProgress.get();
@@ -106,9 +106,7 @@ export const resolvePinchRelease = (
 			policy.pinchInEnabled,
 			policy.pinchOutEnabled,
 		);
-	const target = shouldDismiss
-		? 0
-		: runtime.stores.gestures.internal.progressBaseline.get();
+	const target = shouldDismiss ? 0 : system.targetProgress.get();
 	const progressVelocity = getPinchReleaseHandoffVelocity(event.velocity);
 	const handoffVelocity = getPinchReleaseHandoffVelocity(
 		event.velocity,

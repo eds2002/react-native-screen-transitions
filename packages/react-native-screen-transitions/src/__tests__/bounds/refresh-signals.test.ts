@@ -17,6 +17,7 @@ describe("refresh boundary signals", () => {
 				entering: false,
 				animating: false,
 				progress: 1,
+				gestureInProgress: false,
 			}),
 		).toEqual({
 			type: "destination",

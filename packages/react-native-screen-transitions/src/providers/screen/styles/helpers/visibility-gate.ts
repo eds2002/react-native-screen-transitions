@@ -1,11 +1,15 @@
 import { LifecycleTransitionRequestKind } from "../../../../stores/system.store";
+import {
+	hasOpenTransitionStarted,
+	isOpenTransitionBlocked,
+} from "./transition-visual-state";
 
 type ScreenVisibilityGateState = {
 	isFloatingOverlay?: boolean;
 	hasVisibilityGateOpened: boolean;
 	pendingLifecycleStartBlockCount: number;
 	pendingLifecycleRequestKind: LifecycleTransitionRequestKind;
-	progress: number;
+	animationProgress: number;
 	entering: number;
 };
 
@@ -19,7 +23,7 @@ export const resolveScreenVisibilityGate = ({
 	hasVisibilityGateOpened,
 	pendingLifecycleStartBlockCount,
 	pendingLifecycleRequestKind,
-	progress,
+	animationProgress,
 	entering,
 }: ScreenVisibilityGateState): ScreenVisibilityGateDecision => {
 	"worklet";
@@ -30,16 +34,22 @@ export const resolveScreenVisibilityGate = ({
 		};
 	}
 
-	const hasPendingLifecycleBlock = pendingLifecycleStartBlockCount > 0;
 	const isPendingOpen =
 		pendingLifecycleRequestKind === LifecycleTransitionRequestKind.Open;
 	const isOpening = isPendingOpen || !!entering;
-	const isWaitingForOpenToStart = progress <= 0;
-	const shouldBlock =
-		(hasPendingLifecycleBlock || isWaitingForOpenToStart) && isOpening;
+	const shouldBlock = isOpenTransitionBlocked({
+		opening: isOpening,
+		pendingLifecycleStartBlockCount,
+		animationProgress,
+	});
 
 	return {
 		shouldBlock,
-		shouldOpenGate: !shouldBlock && progress > 0,
+		shouldOpenGate:
+			!shouldBlock &&
+			hasOpenTransitionStarted({
+				pendingLifecycleStartBlockCount,
+				animationProgress,
+			}),
 	};
 };

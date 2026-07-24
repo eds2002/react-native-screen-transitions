@@ -1,5 +1,8 @@
 import { describe, expect, it } from "bun:test";
-import { resolveSnapPinchRelease } from "../../../providers/screen/gestures/pinch/behavior/pinch-release";
+import {
+	resolvePinchRelease,
+	resolveSnapPinchRelease,
+} from "../../../providers/screen/gestures/pinch/behavior/pinch-release";
 import type {
 	PinchGestureEvent,
 	PinchGestureRuntime,
@@ -75,6 +78,7 @@ const createSnapRuntime = ({
 			},
 			system: {
 				resolvedAutoSnapPoint: shared(0),
+				targetProgress: shared(1),
 			},
 			gestures: {
 				internal: {
@@ -117,5 +121,28 @@ describe("snap pinch release", () => {
 
 		expect(release.target).toBe(1);
 		expect(release.commitProgress).toBe(0.75);
+	});
+});
+
+describe("pinch release", () => {
+	it("resumes the navigation target when activated during entry", () => {
+		const runtime = createSnapRuntime({
+			progress: 0.6,
+			baseline: 0.6,
+		}) as PinchGestureRuntime;
+		runtime.participation.canDismiss = true;
+		runtime.policy.pinchInEnabled = true;
+		runtime.policy.pinchOutEnabled = true;
+
+		const release = resolvePinchRelease(
+			{
+				scale: 0.95,
+				velocity: 0,
+			} as PinchGestureEvent,
+			runtime,
+		);
+
+		expect(release.shouldDismiss).toBe(false);
+		expect(release.target).toBe(1);
 	});
 });

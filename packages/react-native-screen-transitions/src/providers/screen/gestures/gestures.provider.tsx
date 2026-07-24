@@ -8,7 +8,6 @@ import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
 import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and-register-shadowing-claims";
 import { useBuildPanGesture } from "./pan/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./pinch/use-build-pinch-gesture";
-import { useBuildRotationGesture } from "./rotation/use-build-rotation-gesture";
 import {
 	type DirectionClaimMap,
 	type GestureCompositionOwner,
@@ -54,14 +53,9 @@ export const {
 		gestureCompositionOwner,
 	});
 
-	const rotationGesture = useBuildRotationGesture({
-		gestureConfig,
-		gestureCompositionOwner,
-	});
-
 	const detectorGesture = useMemo(
-		() => Gesture.Simultaneous(panGesture, pinchGesture, rotationGesture),
-		[panGesture, pinchGesture, rotationGesture],
+		() => Gesture.Simultaneous(panGesture, pinchGesture),
+		[panGesture, pinchGesture],
 	);
 
 	const value = useMemo<GestureContextType>(
@@ -70,7 +64,6 @@ export const {
 			detectorGesture,
 			panGesture,
 			pinchGesture,
-			rotationGesture,
 			scrollState,
 			gestureContext,
 			claimedDirections: gestureConfig.participation.claimedDirections,
@@ -81,7 +74,6 @@ export const {
 			detectorGesture,
 			panGesture,
 			pinchGesture,
-			rotationGesture,
 			scrollState,
 			gestureContext,
 			gestureConfig.participation.claimedDirections,

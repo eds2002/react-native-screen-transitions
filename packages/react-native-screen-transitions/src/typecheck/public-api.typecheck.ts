@@ -3,7 +3,6 @@ import type {
 	NavigatorTypeBagBase,
 	TypedNavigator,
 } from "@react-navigation/native";
-import type { ComponentProps } from "react";
 import type { DerivedValue, SharedValue } from "react-native-reanimated";
 import type Transition from "..";
 import type {
@@ -36,7 +35,6 @@ import {
 	withScreenTransitions,
 } from "..";
 import {
-	type BlankStackFactoryOptions,
 	type BlankStackNavigationOptions,
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
@@ -388,9 +386,6 @@ void TransitionNativeStack;
 void nativeStackAdapterOptions;
 void nativeStackAdapterScreen;
 
-const blankStackFactoryOptions: BlankStackFactoryOptions = {
-	independent: true,
-};
 const blankStackNavigationOptions: BlankStackNavigationOptions = {};
 
 type StaticBlankStackParamList = {
@@ -411,16 +406,7 @@ function StaticBlankDetailsScreen(
 }
 
 const defaultBlankStack = createBlankStackNavigator();
-type DefaultBlankStackNavigatorProps = ComponentProps<
-	typeof defaultBlankStack.Navigator
->;
-const independentBlankStackProps: Pick<
-	DefaultBlankStackNavigatorProps,
-	"independent"
-> = {
-	independent: true,
-};
-const staticBlankStack = createBlankStackNavigator<StaticBlankStackParamList>({
+const staticBlankStack = createBlankStackNavigator({
 	initialRouteName: "Home",
 	screens: {
 		Home: StaticBlankHomeScreen,
@@ -469,9 +455,8 @@ const publicApiTypecheck = {
 	disabledGestureTrackingOptions,
 	scopedGestureDirectionOptions,
 	emptyInterpolatorOptions,
-	blankStackFactoryOptions,
 	blankStackNavigationOptions,
-	independentBlankStackProps,
+	defaultBlankStack,
 	staticBlankStack,
 };
 

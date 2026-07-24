@@ -3,9 +3,12 @@ import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../../../../constants";
+import { getVisualScrollAxisDelta } from "../../../../stores/scroll.store";
+import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
+import { computeContentTransformGeometry } from "../../helpers/geometry";
 import { getSourceBorderRadius } from "../helpers";
-import { resolveRevealContentBaseTransform } from "../reveal/math";
+import { resolveRevealContentBaseTransformFromGeometry } from "../reveal/math";
 import {
 	ZOOM_BACKDROP_MAX_OPACITY,
 	ZOOM_BACKGROUND_SCALE,
@@ -16,7 +19,7 @@ import {
 	ZOOM_UNFOCUSED_ELEMENT_CLOSE_OPACITY_RANGE,
 	ZOOM_UNFOCUSED_ELEMENT_OPEN_OPACITY_RANGE,
 } from "./config";
-import { resolveZoomDragState, resolveZoomTrackedGestureScale } from "./drag";
+import { resolveZoomDragState } from "./drag";
 import {
 	resolveZoomBackdropOpacity,
 	resolveZoomPinchFocalOffset,
@@ -107,21 +110,29 @@ export function buildZoomStyles({
 		return {};
 	}
 
+	const isDismissing = active.gesture.dismissing === 1;
+	const dismissalTrackingGeometry = isDismissing
+		? computeContentTransformGeometry({
+				start: sourceBounds,
+				end: trackingContentTarget,
+				entering: true,
+				dimensions: screenLayout,
+				anchor: zoomContentAnchor,
+				scaleMode: "uniform",
+			})
+		: null;
+	const dismissalCollapsedContentScale = dismissalTrackingGeometry
+		? resolveRevealContentBaseTransformFromGeometry({
+				geometry: dismissalTrackingGeometry,
+				progress: 0,
+			}).scale
+		: 1;
 	const drag = resolveZoomDragState({
 		gesture: active.gesture,
 		activeTransitionProgress,
 		screenLayout,
-		sourceBounds,
-		trackingContentTarget,
+		collapsedContentScale: dismissalCollapsedContentScale,
 		dragOptions: zoomOptions?.drag,
-	});
-
-	const trackedGestureScale = resolveZoomTrackedGestureScale({
-		drag,
-		activeTransitionProgress,
-		screenLayout,
-		sourceBounds,
-		trackingContentTarget,
 	});
 
 	const focalGesture = drag.isDismissing
@@ -134,7 +145,7 @@ export function buildZoomStyles({
 			? resolveZoomPinchFocalOffset({
 					gestureScale: drag.isDismissing
 						? focalGesture.scale
-						: trackedGestureScale,
+						: drag.gestureScale,
 					pinchOriginX: focalGesture.pinchOriginX,
 					pinchOriginY: focalGesture.pinchOriginY,
 					progress: focalProgress,
@@ -144,6 +155,28 @@ export function buildZoomStyles({
 			: { x: 0, y: 0 };
 
 	if (focused) {
+		const capturedSourceScroll = (
+			sourceBounds as typeof sourceBounds & {
+				scroll?: ScrollMetadataState | null;
+			}
+		).scroll;
+		const liveSourceScroll = props.inactive?.layouts.scroll;
+		const sourceScrollWeight =
+			keepFocusedVisible && (active.entering || active.closing)
+				? 1 - Math.min(Math.max(activeTransitionProgress, 0), 1)
+				: 0;
+		const sourceScrollDeltaX =
+			getVisualScrollAxisDelta(
+				liveSourceScroll,
+				capturedSourceScroll,
+				"horizontal",
+			) * sourceScrollWeight;
+		const sourceScrollDeltaY =
+			getVisualScrollAxisDelta(
+				liveSourceScroll,
+				capturedSourceScroll,
+				"vertical",
+			) * sourceScrollWeight;
 		const sourceBorderRadius = getSourceBorderRadius(link);
 		const navigationMaskEnabled = current.options.navigationMaskEnabled;
 		const backdropOpacity = resolveZoomBackdropOpacity({
@@ -179,11 +212,13 @@ export function buildZoomStyles({
 		const contentTranslateX =
 			contentBaseTranslateX +
 			drag.dragX +
-			pinchFocalOffset.x * contentBaseScale;
+			pinchFocalOffset.x * contentBaseScale -
+			sourceScrollDeltaX;
 		const contentTranslateY =
 			contentBaseTranslateY +
 			drag.dragY +
-			pinchFocalOffset.y * contentBaseScale;
+			pinchFocalOffset.y * contentBaseScale -
+			sourceScrollDeltaY;
 		const contentScale = drag.isDismissing
 			? drag.dismissContentScale
 			: contentBaseScale * drag.gestureScale;
@@ -277,19 +312,39 @@ export function buildZoomStyles({
 		};
 	}
 
-	const trackedContentBaseScale = resolveRevealContentBaseTransform({
-		progress: activeTransitionProgress,
-		sourceBounds,
-		destinationBounds: trackingContentTarget,
-		screenLayout,
-	}).scale;
+	const trackingGeometry =
+		dismissalTrackingGeometry ??
+		computeContentTransformGeometry({
+			start: sourceBounds,
+			end: trackingContentTarget,
+			entering: true,
+			dimensions: screenLayout,
+			anchor: zoomContentAnchor,
+			scaleMode: "uniform",
+		});
+	const trackedContentBaseTransform =
+		resolveRevealContentBaseTransformFromGeometry({
+			geometry: trackingGeometry,
+			progress: activeTransitionProgress,
+		});
+	const collapsedContentScale = drag.isDismissing
+		? dismissalCollapsedContentScale
+		: resolveRevealContentBaseTransformFromGeometry({
+				geometry: trackingGeometry,
+				progress: 0,
+			}).scale;
+	const trackedGestureScale = drag.isDismissing
+		? drag.dismissContentScale / trackedContentBaseTransform.scale
+		: drag.gestureScale;
+	const trackedContentBaseScale = trackedContentBaseTransform.scale;
 	const trackedDragX =
 		drag.dragX + pinchFocalOffset.x * trackedContentBaseScale;
 	const trackedDragY =
 		drag.dragY + pinchFocalOffset.y * trackedContentBaseScale;
 
 	const trackedSourceElement = resolveZoomTrackedSourceTransform({
-		progress: activeTransitionProgress,
+		contentBaseTransform: trackedContentBaseTransform,
+		collapsedContentScale,
 		sourceBounds,
 		destinationBounds: trackingContentTarget,
 		screenLayout,
@@ -298,7 +353,6 @@ export function buildZoomStyles({
 		gestureScale: trackedGestureScale,
 		parentScale: unfocusedContentScale,
 		rotation: drag.rotation,
-		anchor: zoomContentAnchor,
 	});
 
 	return {

@@ -7,7 +7,7 @@ describe("resolveScreenVisibilityGate", () => {
 		hasVisibilityGateOpened: false,
 		pendingLifecycleStartBlockCount: 0,
 		pendingLifecycleRequestKind: LifecycleTransitionRequestKind.None,
-		progress: 1,
+		animationProgress: 1,
 		entering: 0,
 	};
 
@@ -17,7 +17,7 @@ describe("resolveScreenVisibilityGate", () => {
 				...baseState,
 				pendingLifecycleStartBlockCount: 1,
 				pendingLifecycleRequestKind: LifecycleTransitionRequestKind.Open,
-				progress: 0,
+				animationProgress: 0,
 			}),
 		).toEqual({
 			shouldBlock: true,
@@ -29,7 +29,7 @@ describe("resolveScreenVisibilityGate", () => {
 		expect(
 			resolveScreenVisibilityGate({
 				...baseState,
-				progress: 0,
+				animationProgress: 0,
 				entering: 1,
 			}),
 		).toEqual({
@@ -42,7 +42,7 @@ describe("resolveScreenVisibilityGate", () => {
 		expect(
 			resolveScreenVisibilityGate({
 				...baseState,
-				progress: 0.01,
+				animationProgress: 0.01,
 				entering: 1,
 			}),
 		).toEqual({
@@ -58,7 +58,7 @@ describe("resolveScreenVisibilityGate", () => {
 				isFloatingOverlay: true,
 				pendingLifecycleStartBlockCount: 1,
 				pendingLifecycleRequestKind: LifecycleTransitionRequestKind.Open,
-				progress: 0,
+				animationProgress: 0,
 			}),
 		).toEqual({
 			shouldBlock: false,
