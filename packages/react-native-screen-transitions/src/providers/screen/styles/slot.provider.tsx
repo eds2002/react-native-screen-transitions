@@ -47,15 +47,19 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 				(s) => s.derivations.currentScreenKey,
 			);
 
+			const { animatedStyle, animatedProps, shouldBlockVisibility } =
+				useMaybeBlockVisibility(isFloatingOverlay);
+
 			const { localStylesMaps, nextInterpolatorReady } =
-				useInterpolatedStylesMap();
+				useInterpolatedStylesMap({
+					enabled: !isFloatingOverlay,
+					visibilityBlocked: shouldBlockVisibility,
+				});
 
 			const slotsMap = useResolvedStylesMap({
 				localStylesMaps,
 				ancestorStylesMap: parentContext?.slotsMap,
 			});
-			const { animatedStyle, animatedProps, shouldBlockVisibility } =
-				useMaybeBlockVisibility(isFloatingOverlay);
 			const value = useMemo(
 				() => ({
 					localStylesMaps,

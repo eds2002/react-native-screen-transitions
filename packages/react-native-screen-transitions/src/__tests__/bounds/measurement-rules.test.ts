@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
 import {
+	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
-	normalizeMeasuredBoundsToOrigin,
-	normalizeMeasuredBoundsWithVisibilityGate,
 } from "../../components/boundary/utils/measured-bounds";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
@@ -414,30 +413,6 @@ describe("bounds client measurement contract", () => {
 		).toBe(false);
 	});
 
-	it("normalizes measured bounds against the screen origin", () => {
-		const blockedMeasurement = {
-			...createBounds(),
-			pageX: 420,
-			pageY: 1749,
-		};
-		const origin = {
-			...createBounds(),
-			pageX: 402,
-			pageY: 1749,
-		};
-
-		const normalized = normalizeMeasuredBoundsToOrigin(
-			blockedMeasurement,
-			origin,
-		);
-
-		expect(normalized.pageX).toBe(18);
-		expect(normalized.pageY).toBe(0);
-		expect(normalized.x).toBe(blockedMeasurement.x);
-		expect(normalized.y).toBe(blockedMeasurement.y);
-		expect(isMeasurementInViewport(normalized, 400, 800)).toBe(true);
-	});
-
 	it("corrects visibility-gate frame skew while the screen is offset", () => {
 		const visibilityBlockOffset = 1601;
 		const destination = {
@@ -445,41 +420,42 @@ describe("bounds client measurement contract", () => {
 			pageX: 18,
 			pageY: 1749,
 		};
-		const staleOrigin = {
-			...createBounds(),
-			pageY: 0,
-		};
-		const normalize = (
-			measured: Snapshot["bounds"],
-			origin: Snapshot["bounds"],
-		) =>
-			normalizeMeasuredBoundsWithVisibilityGate({
+		const correct = (measured: Snapshot["bounds"]) =>
+			correctMeasuredBoundsForVisibilityGate({
 				measured,
-				origin,
 				visibilityBlocked: true,
 				visibilityBlockOffset,
 				viewportWidth: 400,
 				viewportHeight: 800,
 			});
 
-		expect(
-			normalize(destination, {
-				...staleOrigin,
-				pageY: visibilityBlockOffset,
-			}),
-		).toMatchObject({ pageX: 18, pageY: 148 });
-
-		expect(normalize(destination, staleOrigin)).toMatchObject({
+		expect(correct(destination)).toMatchObject({
 			pageX: 18,
 			pageY: 148,
 		});
 
+		expect(correct({ ...destination, pageY: 148 })).toMatchObject({
+			pageX: 18,
+			pageY: 148,
+		});
+	});
+
+	it("preserves user-visible presentation offsets", () => {
+		const measured = {
+			...createBounds(),
+			pageX: 24,
+			pageY: 587,
+		};
+
 		expect(
-			normalize(
-				{ ...destination, pageY: 148 },
-				{ ...staleOrigin, pageY: visibilityBlockOffset },
-			),
-		).toMatchObject({ pageX: 18, pageY: 148 });
+			correctMeasuredBoundsForVisibilityGate({
+				measured,
+				visibilityBlocked: false,
+				visibilityBlockOffset: 1601,
+				viewportWidth: 400,
+				viewportHeight: 800,
+			}),
+		).toBe(measured);
 	});
 
 	it("does not reinterpret offscreen measurements after visibility opens", () => {
@@ -489,9 +465,8 @@ describe("bounds client measurement contract", () => {
 		};
 
 		expect(
-			normalizeMeasuredBoundsWithVisibilityGate({
+			correctMeasuredBoundsForVisibilityGate({
 				measured,
-				origin: createBounds(),
 				visibilityBlocked: false,
 				visibilityBlockOffset: 1601,
 				viewportWidth: 400,

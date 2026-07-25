@@ -11,13 +11,12 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
-import { useOriginStore } from "../../../../../../providers/screen/origin.provider";
 import { ScrollStore } from "../../../../../../stores/scroll.store";
 import { getVisibilityBlockOffset } from "../../../../../../utils/visibility-block-offset";
 import {
 	adjustedMeasuredBoundsForOverscrollDeltas,
+	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
-	normalizeMeasuredBoundsWithVisibilityGate,
 } from "../../../../utils/measured-bounds";
 import {
 	clearPortalHostBounds,
@@ -48,7 +47,6 @@ export const useHostMeasurement = ({
 	const hostRef = useAnimatedRef<View>();
 	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
 	const [canRenderHosts, setCanRenderHosts] = useState<boolean>(false);
-	const originRef = useOriginStore((store) => store.originRef);
 	const hasMeasuredHost = useSharedValue(false);
 	const retryToken = useSharedValue(0);
 
@@ -75,9 +73,8 @@ export const useHostMeasurement = ({
 			}
 
 			const measured = measure(hostRef);
-			const measuredOrigin = measure(originRef);
 
-			if (!measured || !measuredOrigin) {
+			if (!measured) {
 				cancelAnimation(retryToken);
 				retryToken.set(
 					withDelay(
@@ -99,9 +96,8 @@ export const useHostMeasurement = ({
 				? adjustedMeasuredBoundsForOverscrollDeltas(measured, currentScroll)
 				: measured;
 
-			const normalizedMeasured = normalizeMeasuredBoundsWithVisibilityGate({
+			const correctedMeasured = correctMeasuredBoundsForVisibilityGate({
 				measured: overscrollNormalized,
-				origin: measuredOrigin,
 				visibilityBlocked: visibilityBlocked.get(),
 				visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
 				viewportWidth,
@@ -110,7 +106,7 @@ export const useHostMeasurement = ({
 
 			if (
 				!isMeasurementInViewport(
-					normalizedMeasured,
+					correctedMeasured,
 					viewportWidth,
 					viewportHeight,
 				)
@@ -126,12 +122,12 @@ export const useHostMeasurement = ({
 			}
 
 			setPortalHostBounds(hostKey, {
-				x: normalizedMeasured.x,
-				y: normalizedMeasured.y,
-				width: normalizedMeasured.width,
-				height: normalizedMeasured.height,
-				pageX: normalizedMeasured.pageX,
-				pageY: normalizedMeasured.pageY,
+				x: correctedMeasured.x,
+				y: correctedMeasured.y,
+				width: correctedMeasured.width,
+				height: correctedMeasured.height,
+				pageX: correctedMeasured.pageX,
+				pageY: correctedMeasured.pageY,
 				scroll: capturesScroll ? currentScroll : null,
 			});
 

@@ -13,6 +13,12 @@ const BOUNDS_EXAMPLES = [
 			"Custom bounds styles for the navigation mask and content container",
 	},
 	{
+		id: "reveal-transformed-source",
+		title: "Reveal transformed source",
+		description:
+			"Debug a Reveal boundary measured below an animated sheet-like ancestor transform",
+	},
+	{
 		id: "zoom",
 		title: ".zoom()",
 		description:
