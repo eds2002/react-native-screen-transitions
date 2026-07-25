@@ -38,7 +38,7 @@ interface ActivityScreenProps {
 export const ActivityScreen = memo(function ActivityScreen({
 	activity,
 	children,
-	inactiveBehavior = DEFAULT_INACTIVE_BEHAVIOR,
+	inactiveBehavior,
 	paintDriverRouteKey,
 	hasNestedState,
 	routeKey,

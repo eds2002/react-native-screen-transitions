@@ -67,7 +67,7 @@ const zoomOptions: ScreenTransitionConfig = {
 export default function ExampleLayout() {
 	return (
 		<BlankStack>
-			<BlankStack.Screen name="index" options={{ inactiveBehavior: "pause" }} />
+			<BlankStack.Screen name="index" options={{ inactiveBehavior: "keep" }} />
 			<BlankStack.Screen name="sheet" options={sheetOptions} />
 			<BlankStack.Screen name="zoom" options={zoomOptions} />
 		</BlankStack>
