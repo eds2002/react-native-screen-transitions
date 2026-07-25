@@ -26,6 +26,28 @@ afterEach(() => {
 });
 
 describe("refresh boundary signals", () => {
+	it("refreshes a non-group source when its destination emits a lifecycle pulse", () => {
+		const sourcePairKey = createScreenPairKey("screen-a", "screen-b");
+		const previousPairKey = createScreenPairKey("screen-root", "screen-a");
+
+		expect(
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "screen-a",
+				nextScreenKey: "screen-b",
+				sourcePairKey,
+				destinationPairKey: previousPairKey,
+				linkId: "card",
+				shouldRefresh: true,
+				closing: true,
+			}),
+		).toEqual({
+			type: "source",
+			pairKey: sourcePairKey,
+			signal: "source|screen-a<>screen-b|screen-a|closing",
+		});
+	});
+
 	it("keeps destination refreshes for close retargeting", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 
