@@ -60,10 +60,17 @@ export const getRefreshBoundarySignal = (params: {
 		return null;
 	}
 
-	// Non group:
-	// Since in typical group flows we would need to know the src, we don't need to do that for
-	// single a->b flows. So we just trigger the destination refresh.
+	// A source may move while its destination is active, so refresh whichever
+	// side of the pair this boundary currently represents.
 	if (!group) {
+		if (sourcePairKey) {
+			return buildRefreshSignal(
+				"source",
+				sourcePairKey,
+				[currentScreenKey, closing ? "closing" : "settled"].join("|"),
+			);
+		}
+
 		const refreshDestinationPairKey =
 			destinationPairKey ??
 			(nextScreenKey ? undefined : ancestorDestinationPairKey);

@@ -607,7 +607,7 @@ describe("bounds client measurement contract", () => {
 		});
 	});
 
-	it("does not refresh an ancestor destination while the nested screen is a source", () => {
+	it("refreshes a nested non-group source instead of its ancestor destination", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
 		const nestedPairKey = createScreenPairKey("nested-index", "deep-route");
 
@@ -626,6 +626,11 @@ describe("bounds client measurement contract", () => {
 				progress: 1,
 				gestureInProgress: false,
 			}),
-		).toBeNull();
+		).toEqual({
+			type: "source",
+			pairKey: nestedPairKey,
+			signal:
+				"source|nested-index<>deep-route|nested-index|settled",
+		});
 	});
 });
