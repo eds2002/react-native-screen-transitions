@@ -552,6 +552,12 @@ describe("bounds client measurement contract", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const measuredTargets: Array<{ type: "destination"; pairKey: string }> = [];
 		let previousSignal: string | null = null;
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			createBounds(),
+		);
 
 		const runRefreshReaction = () => {
 			const refreshSignal = getRefreshBoundarySignal({
@@ -565,6 +571,7 @@ describe("bounds client measurement contract", () => {
 				animating: false,
 				progress: 1,
 				gestureInProgress: false,
+				linkState: pairs.get(),
 			});
 
 			if (!refreshSignal || refreshSignal.signal === previousSignal) {
@@ -586,6 +593,12 @@ describe("bounds client measurement contract", () => {
 
 	it("refreshes a nested destination through its ancestor pair", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
+		BoundStore.link.setDestination(
+			ancestorPairKey,
+			"card",
+			"nested-index",
+			createBounds(),
+		);
 
 		expect(
 			getRefreshBoundarySignal({
@@ -599,6 +612,7 @@ describe("bounds client measurement contract", () => {
 				animating: false,
 				progress: 1,
 				gestureInProgress: false,
+				linkState: pairs.get(),
 			}),
 		).toEqual({
 			type: "destination",
@@ -610,6 +624,12 @@ describe("bounds client measurement contract", () => {
 	it("refreshes a nested non-group source instead of its ancestor destination", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
 		const nestedPairKey = createScreenPairKey("nested-index", "deep-route");
+		BoundStore.link.setSource(
+			nestedPairKey,
+			"card",
+			"nested-index",
+			createBounds(),
+		);
 
 		expect(
 			getRefreshBoundarySignal({
@@ -625,6 +645,7 @@ describe("bounds client measurement contract", () => {
 				animating: false,
 				progress: 1,
 				gestureInProgress: false,
+				linkState: pairs.get(),
 			}),
 		).toEqual({
 			type: "source",
