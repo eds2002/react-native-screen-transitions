@@ -1,19 +1,47 @@
 import { describe, expect, it } from "bun:test";
+import {
+	NAVIGATION_MASK_CONTAINER_STYLE_ID,
+	NAVIGATION_MASK_ELEMENT_STYLE_ID,
+} from "../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../types/animation.types";
-import { resolveSlotStyles } from "../../providers/screen/styles/helpers/resolve-slot-styles";
+import {
+	type LocalStyleLayers,
+	type ResettableStyleStatesBySlot,
+	resolveSlotStyles,
+} from "../../providers/screen/styles/helpers/resolve-slot-styles";
 
-const NO_ANCESTOR_STYLES: NormalizedTransitionInterpolatedStyle = {};
-const NO_PREVIOUS_STYLE_STATES = {};
+const IDENTITY_TRANSFORM = [
+	{ translateX: 0 },
+	{ translateY: 0 },
+	{ scale: 1 },
+	{ scaleX: 1 },
+	{ scaleY: 1 },
+];
+
+const resolve = ({
+	localStylesMaps,
+	ancestorStylesMap = {},
+	previousStyleStatesBySlot = {},
+}: {
+	localStylesMaps: LocalStyleLayers;
+	ancestorStylesMap?: NormalizedTransitionInterpolatedStyle;
+	previousStyleStatesBySlot?: ResettableStyleStatesBySlot;
+}) =>
+	resolveSlotStyles({
+		localStylesMaps,
+		ancestorStylesMap,
+		previousStyleStatesBySlot,
+	});
 
 describe("resolveSlotStyles", () => {
-	it("merges local layers for the same slot in priority order", () => {
-		const result = resolveSlotStyles({
+	it("merges local slot layers in priority order and replaces transforms", () => {
+		const result = resolve({
 			localStylesMaps: [
 				{
 					card: {
 						style: {
 							opacity: 0.4,
-							transform: [{ scale: 0.8 }],
+							transform: [{ translateY: 320 }],
 						},
 						props: {
 							pointerEvents: "none",
@@ -25,15 +53,15 @@ describe("resolveSlotStyles", () => {
 						style: {
 							opacity: 0.9,
 							borderRadius: 18,
+							transform: [{ scale: 0.8 }],
 						},
 						props: {
 							testID: "merged-card",
 						},
+						boundsLocalTransform: [{ scale: 0.58 }],
 					},
 				},
 			],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
 		});
 
 		expect(result.resolvedStylesMap.card).toEqual({
@@ -46,35 +74,50 @@ describe("resolveSlotStyles", () => {
 				pointerEvents: "none",
 				testID: "merged-card",
 			},
-		});
-	});
-
-	it("carries measured bounds local transforms through slot resolution", () => {
-		const result = resolveSlotStyles({
-			localStylesMaps: [
-				{
-					card: {
-						style: {
-							transform: [{ translateX: 24 }],
-						},
-						boundsLocalTransform: [{ scale: 0.58 }],
-					},
-				},
-			],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
-		});
-
-		expect(result.resolvedStylesMap.card).toEqual({
-			style: {
-				transform: [{ translateX: 24 }],
-			},
 			boundsLocalTransform: [{ scale: 0.58 }],
 		});
 	});
 
-	it("prefers local slots over inherited slots", () => {
-		const result = resolveSlotStyles({
+	it("keeps the surviving transform layer without injecting an identity reset", () => {
+		const initial = resolve({
+			localStylesMaps: [
+				{
+					content: {
+						style: {
+							transform: [{ translateY: 320 }],
+						},
+					},
+				},
+				{
+					content: {
+						style: {
+							transform: [{ scale: 0.9 }],
+						},
+					},
+				},
+			],
+		});
+
+		const next = resolve({
+			localStylesMaps: [
+				{
+					content: {
+						style: {
+							transform: [{ translateY: 320 }],
+						},
+					},
+				},
+			],
+			previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
+		});
+
+		expect(next.resolvedStylesMap.content?.style).toEqual({
+			transform: [{ translateY: 320 }],
+		});
+	});
+
+	it("prefers local slots, inherits custom slots, and does not inherit reserved slots", () => {
+		const result = resolve({
 			localStylesMaps: [
 				{
 					card: {
@@ -88,201 +131,211 @@ describe("resolveSlotStyles", () => {
 				card: {
 					style: {
 						opacity: 0.2,
-						borderRadius: 12,
 					},
 				},
-			},
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
-		});
-
-		expect(result.resolvedStylesMap.card?.style).toEqual({
-			opacity: 0.8,
-		});
-	});
-
-	it("inherits custom slots when no local slot exists", () => {
-		const result = resolveSlotStyles({
-			localStylesMaps: [],
-			ancestorStylesMap: {
-				card: {
+				inherited: {
 					style: {
 						opacity: 0.7,
 					},
-					props: {
-						pointerEvents: "box-none",
-					},
 				},
-			},
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
-		});
-
-		expect(result.resolvedStylesMap.card).toEqual({
-			style: {
-				opacity: 0.7,
-			},
-			props: {
-				pointerEvents: "box-none",
-			},
-		});
-	});
-
-	it("does not inherit local-only screen slots", () => {
-		const result = resolveSlotStyles({
-			localStylesMaps: [],
-			ancestorStylesMap: {
 				content: {
 					style: {
 						opacity: 0.4,
 					},
 				},
-				backdrop: {
-					style: {
-						opacity: 0.2,
-					},
-				},
 			},
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
 		});
 
+		expect(result.resolvedStylesMap.card?.style).toEqual({
+			opacity: 0.8,
+		});
+		expect(result.resolvedStylesMap.inherited?.style).toEqual({
+			opacity: 0.7,
+		});
 		expect(result.resolvedStylesMap.content).toBeUndefined();
-		expect(result.resolvedStylesMap.backdrop).toBeUndefined();
 	});
 
-	it("resets previous slot keys when a slot disappears", () => {
-		const initial = resolveSlotStyles({
-			localStylesMaps: [
-				{
-					card: {
-						style: {
-							borderRadius: 24,
-							opacity: 0.45,
+	describe("reserved slots", () => {
+		const reservedSlotIds = [
+			"content",
+			"backdrop",
+			"surface",
+			NAVIGATION_MASK_CONTAINER_STYLE_ID,
+			NAVIGATION_MASK_ELEMENT_STYLE_ID,
+		];
+
+		it("retains omitted styles without using animation progress as a reset boundary", () => {
+			for (const slotId of reservedSlotIds) {
+				const initial = resolve({
+					localStylesMaps: [
+						{
+							[slotId]: {
+								style: {
+									backgroundColor: "black",
+									opacity: 0.4,
+								},
+							},
+						},
+					],
+				});
+
+				const omitted = resolve({
+					localStylesMaps: [],
+					previousStyleStatesBySlot:
+						initial.nextPreviousStyleStatesBySlot,
+				});
+
+				expect(omitted.resolvedStylesMap[slotId]).toBeUndefined();
+				expect(omitted.nextPreviousStyleStatesBySlot[slotId]).toEqual(
+					initial.nextPreviousStyleStatesBySlot[slotId],
+				);
+			}
+		});
+
+		it("retains omitted keys while continuing to forward keys that remain", () => {
+			const initial = resolve({
+				localStylesMaps: [
+					{
+						backdrop: {
+							style: {
+								backgroundColor: "black",
+								opacity: 0.4,
+							},
 						},
 					},
-				},
-			],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
+				],
+			});
+
+			const next = resolve({
+				localStylesMaps: [
+					{
+						backdrop: {
+							style: {
+								opacity: 0.2,
+							},
+						},
+					},
+				],
+				previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
+			});
+
+			expect(next.resolvedStylesMap.backdrop?.style).toEqual({
+				opacity: 0.2,
+			});
+			expect(
+				next.nextPreviousStyleStatesBySlot.backdrop?.styleKeys,
+			).toEqual({
+				backgroundColor: true,
+				opacity: true,
+			});
 		});
 
-		const next = resolveSlotStyles({
-			localStylesMaps: [],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
-		});
-
-		expect(next.resolvedStylesMap.card?.style).toEqual({
-			borderRadius: 0,
-			opacity: 1,
-		});
-		expect(next.nextPreviousStyleStatesBySlot).toEqual({});
 	});
 
-	it("keeps current slot values and resets only keys missing from them", () => {
-		const initial = resolveSlotStyles({
-			localStylesMaps: [
-				{
-					card: {
-						style: {
-							borderRadius: 24,
-							opacity: 0.45,
-							transform: [{ scale: 0.8 }],
+	describe("custom slots", () => {
+		it("resets a slot as soon as it disappears", () => {
+			const initial = resolve({
+				localStylesMaps: [
+					{
+						card: {
+							style: {
+								borderRadius: 24,
+								opacity: 0.45,
+							},
+							props: {
+								pointerEvents: "none",
+							},
 						},
 					},
+				],
+			});
+
+			const omitted = resolve({
+				localStylesMaps: [],
+				previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
+			});
+
+			expect(omitted.resolvedStylesMap.card).toEqual({
+				style: {
+					borderRadius: 0,
+					opacity: 1,
 				},
-			],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
+				props: {
+					pointerEvents: "auto",
+				},
+			});
+			expect(omitted.nextPreviousStyleStatesBySlot).toEqual({});
 		});
 
-		const next = resolveSlotStyles({
-			localStylesMaps: [
-				{
-					card: {
-						style: {
-							opacity: 0.9,
+		it("resets only omitted keys while forwarding keys that remain", () => {
+			const initial = resolve({
+				localStylesMaps: [
+					{
+						card: {
+							style: {
+								borderRadius: 24,
+								opacity: 0.45,
+								transform: [{ scale: 0.8 }],
+							},
 						},
 					},
-				},
-			],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
-		});
+				],
+			});
 
-		expect(next.resolvedStylesMap.card?.style).toEqual({
-			borderRadius: 0,
-			transform: [
-				{ translateX: 0 },
-				{ translateY: 0 },
-				{ scale: 1 },
-				{ scaleX: 1 },
-				{ scaleY: 1 },
-			],
-			opacity: 0.9,
-		});
-	});
-
-	it("resets the previous group member when a new group member becomes active", () => {
-		const initial = resolveSlotStyles({
-			localStylesMaps: [
-				{
-					"cards:lime": {
-						style: {
-							scale: 0.75,
-							zIndex: 9,
+			const next = resolve({
+				localStylesMaps: [
+					{
+						card: {
+							style: {
+								opacity: 0.9,
+							},
 						},
 					},
-				},
-			],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
+				],
+				previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
+			});
+
+			expect(next.resolvedStylesMap.card?.style).toEqual({
+				borderRadius: 0,
+				transform: IDENTITY_TRANSFORM,
+				opacity: 0.9,
+			});
 		});
 
-		const next = resolveSlotStyles({
-			localStylesMaps: [
-				{
-					"cards:sky": {
-						style: {
-							scale: 0.5,
+		it("resets an omitted group member while forwarding the next member", () => {
+			const initial = resolve({
+				localStylesMaps: [
+					{
+						"cards:lime": {
+							style: {
+								scale: 0.75,
+								zIndex: 9,
+							},
 						},
 					},
-				},
-			],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
-		});
+				],
+			});
 
-		expect(next.resolvedStylesMap["cards:lime"]?.style).toEqual({
-			scale: 1,
-			zIndex: 0,
-		});
-		expect(next.resolvedStylesMap["cards:sky"]?.style).toEqual({
-			scale: 0.5,
-		});
-	});
-
-	it("resets prop keys independently from style keys", () => {
-		const initial = resolveSlotStyles({
-			localStylesMaps: [
-				{
-					card: {
-						props: {
-							pointerEvents: "none",
+			const next = resolve({
+				localStylesMaps: [
+					{
+						"cards:sky": {
+							style: {
+								scale: 0.5,
+							},
 						},
 					},
-				},
-			],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: NO_PREVIOUS_STYLE_STATES,
-		});
+				],
+				previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
+			});
 
-		const next = resolveSlotStyles({
-			localStylesMaps: [],
-			ancestorStylesMap: NO_ANCESTOR_STYLES,
-			previousStyleStatesBySlot: initial.nextPreviousStyleStatesBySlot,
-		});
-
-		expect(next.resolvedStylesMap.card?.props).toEqual({
-			pointerEvents: "auto",
+			expect(next.resolvedStylesMap["cards:lime"]?.style).toEqual({
+				scale: 1,
+				zIndex: 0,
+			});
+			expect(next.resolvedStylesMap["cards:sky"]?.style).toEqual({
+				scale: 0.5,
+			});
 		});
 	});
 });

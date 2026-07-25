@@ -1,9 +1,10 @@
+import Transition from "react-native-screen-transitions";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
+import { REVEAL_TRANSFORMED_SOURCE_ID } from "./constants";
 
-export default function BoundsLayout() {
+export default function RevealTransformedSourceLayout() {
 	const stackType = useResolvedStackType();
 	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
 	const navigatorScreenOptions =
@@ -12,16 +13,20 @@ export default function BoundsLayout() {
 	return (
 		<StackNavigator screenOptions={navigatorScreenOptions}>
 			<StackNavigator.Screen name="index" />
-			<StackNavigator.Screen name="style-id" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen
-				name="reveal-transformed-source"
-				options={{ ...IOSSlide() }}
-			/>
-			<StackNavigator.Screen name="zoom" options={{ ...IOSSlide() }} />
-			<StackNavigator.Screen name="sync" options={{ ...IOSSlide() }} />
-			<StackNavigator.Screen
-				name="matched-screen"
-				options={{ ...IOSSlide() }}
+				name="destination"
+				options={{
+					gestureEnabled: true,
+					gestureDirection: "vertical",
+					navigationMaskEnabled: true,
+					screenStyleInterpolator: ({ bounds }) => {
+						"worklet";
+						return bounds({
+							id: REVEAL_TRANSFORMED_SOURCE_ID,
+						}).navigation.zoom();
+					},
+					transitionSpec: Transition.Specs.Zoom,
+				}}
 			/>
 		</StackNavigator>
 	);

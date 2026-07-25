@@ -2,7 +2,7 @@ import type {
 	NormalizedTransitionInterpolatedStyle,
 	NormalizedTransitionSlotStyle,
 } from "../../../../../types/animation.types";
-import { shouldSlotInherit } from "../../constants";
+import { isReservedStyleSlot, shouldSlotInherit } from "../../constants";
 import { materializeResolvedSlot } from "./materialize-slot";
 import { getResolvedSlotState } from "./slot-state";
 import type {
@@ -72,15 +72,79 @@ const hasResettableDisappearedKeys = (
 	return false;
 };
 
+const mergeStateRecord = <Value>(
+	previous: Record<string, Value> | undefined,
+	current: Record<string, Value> | undefined,
+): Record<string, Value> | undefined => {
+	"worklet";
+
+	if (!previous) {
+		return current;
+	}
+
+	if (!current) {
+		return previous;
+	}
+
+	return {
+		...previous,
+		...current,
+	};
+};
+
+const mergeResettableStyleStates = (
+	previousState: ResettableStyleState | undefined,
+	currentState: ResettableStyleState | undefined,
+): ResettableStyleState | undefined => {
+	"worklet";
+
+	if (!previousState) {
+		return currentState;
+	}
+
+	if (!currentState) {
+		return previousState;
+	}
+
+	return {
+		styleKeys: mergeStateRecord(
+			previousState.styleKeys,
+			currentState.styleKeys,
+		),
+		styleResetValues: mergeStateRecord(
+			previousState.styleResetValues,
+			currentState.styleResetValues,
+		),
+		propKeys: mergeStateRecord(previousState.propKeys, currentState.propKeys),
+		propResetValues: mergeStateRecord(
+			previousState.propResetValues,
+			currentState.propResetValues,
+		),
+	};
+};
+
 const getResolvedSlotOutput = ({
 	slot,
 	previousState,
+	deferMissingKeyResets,
 }: {
 	slot: NormalizedTransitionSlotStyle | undefined;
 	previousState: ResettableStyleState | undefined;
+	deferMissingKeyResets: boolean;
 }) => {
 	"worklet";
 	const state = getResolvedSlotState(slot);
+
+	if (deferMissingKeyResets) {
+		// This used to force a reset when animationProgress reached zero during
+		// close. Zero is still drawable while ownership and native visibility
+		// settle, so it is not a safe cleanup boundary for reserved slots.
+		return {
+			resolvedSlot: getForwardedSlot(slot, state.hasAnyKeys),
+			nextState: mergeResettableStyleStates(previousState, state.nextState),
+		};
+	}
+
 	const hasStyleResetPatch = hasResettableDisappearedKeys(
 		previousState?.styleKeys,
 		previousState?.styleResetValues,
@@ -401,6 +465,7 @@ const appendResolvedSlot = (
 	const { resolvedSlot, nextState } = getResolvedSlotOutput({
 		slot: getSlotForId(context, slotId),
 		previousState: context.previousStyleStatesBySlot[slotId],
+		deferMissingKeyResets: isReservedStyleSlot(slotId),
 	});
 
 	writeResolvedSlotOutput({
@@ -470,9 +535,11 @@ const appendPreviousSlots = (context: ResolveSlotStylesContext) => {
 };
 
 /**
- * Resolves slot styles for the current screen pass and emits reset values for
- * transition-owned keys that existed in the previous resolved map but no longer
- * exist in the current one.
+ * Resolves slot styles for the current screen pass.
+ *
+ * Custom slots reset omitted keys immediately. Reserved screen slots retain
+ * omitted keys because lifecycle progress does not define a safe visual reset
+ * boundary.
  */
 export const resolveSlotStyles = ({
 	localStylesMaps,

@@ -1,6 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import { LifecycleTransitionRequestKind } from "../../stores/system.store";
-import { resolveScreenVisibilityGate } from "../../providers/screen/styles/helpers/visibility-gate";
+import {
+	resolveInitialDestinationStyleGate,
+	resolveScreenVisibilityGate,
+} from "../../providers/screen/styles/helpers/visibility-gate";
 
 describe("resolveScreenVisibilityGate", () => {
 	const baseState = {
@@ -63,6 +66,43 @@ describe("resolveScreenVisibilityGate", () => {
 		).toEqual({
 			shouldBlock: false,
 			shouldOpenGate: false,
+		});
+	});
+});
+
+describe("resolveInitialDestinationStyleGate", () => {
+	it("withholds progress-zero styles until the destination is confirmed hidden", () => {
+		const beforeVisibilityBlock = resolveInitialDestinationStyleGate({
+			shouldPrepareStyles: true,
+			isVisibilityBlocked: false,
+			stylesReady: false,
+		});
+
+		expect(beforeVisibilityBlock).toEqual({
+			shouldMarkStylesReady: false,
+			shouldWithholdStyles: true,
+		});
+
+		const visibilityBlockObserved = resolveInitialDestinationStyleGate({
+			shouldPrepareStyles: true,
+			isVisibilityBlocked: true,
+			stylesReady: false,
+		});
+
+		expect(visibilityBlockObserved).toEqual({
+			shouldMarkStylesReady: true,
+			shouldWithholdStyles: true,
+		});
+
+		const destinationReady = resolveInitialDestinationStyleGate({
+			shouldPrepareStyles: true,
+			isVisibilityBlocked: true,
+			stylesReady: visibilityBlockObserved.shouldMarkStylesReady,
+		});
+
+		expect(destinationReady).toEqual({
+			shouldMarkStylesReady: false,
+			shouldWithholdStyles: false,
 		});
 	});
 });

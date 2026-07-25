@@ -64,7 +64,7 @@ export const PROP_RESET_VALUES: Record<string, unknown> = {
 	pointerEvents: "auto",
 };
 
-const LOCAL_ONLY_STYLE_SLOT_IDS = {
+const RESERVED_STYLE_SLOT_IDS = {
 	content: true,
 	backdrop: true,
 	surface: true,
@@ -72,11 +72,13 @@ const LOCAL_ONLY_STYLE_SLOT_IDS = {
 	[NAVIGATION_MASK_CONTAINER_STYLE_ID]: true,
 } as const;
 
-export const shouldSlotInherit = (slotId: string) => {
+export const isReservedStyleSlot = (slotId: string) => {
 	"worklet";
 	// biome-ignore lint/suspicious/noPrototypeBuiltins: <proj issue>
-	return !Object.prototype.hasOwnProperty.call(
-		LOCAL_ONLY_STYLE_SLOT_IDS,
-		slotId,
-	);
+	return Object.prototype.hasOwnProperty.call(RESERVED_STYLE_SLOT_IDS, slotId);
+};
+
+export const shouldSlotInherit = (slotId: string) => {
+	"worklet";
+	return !isReservedStyleSlot(slotId);
 };

@@ -60,18 +60,6 @@ export const adjustedMeasuredBoundsForOverscrollDeltas = (
 	};
 };
 
-export const normalizeMeasuredBoundsToOrigin = (
-	measured: MeasuredDimensions,
-	origin: MeasuredDimensions,
-): MeasuredDimensions => {
-	"worklet";
-	return {
-		...measured,
-		pageX: measured.pageX - origin.pageX,
-		pageY: measured.pageY - origin.pageY,
-	};
-};
-
 export const isMeasurementInViewport = (
 	measured: MeasuredDimensions,
 	viewportWidth: number,
@@ -96,52 +84,61 @@ export const isMeasurementInViewport = (
 	);
 };
 
-export const normalizeMeasuredBoundsWithVisibilityGate = ({
+export const correctMeasuredBoundsForVisibilityGate = ({
 	measured,
-	origin,
 	visibilityBlocked,
 	visibilityBlockOffset,
 	viewportWidth,
 	viewportHeight,
 }: {
 	measured: MeasuredDimensions;
-	origin: MeasuredDimensions;
 	visibilityBlocked: boolean;
 	visibilityBlockOffset: number;
 	viewportWidth: number;
 	viewportHeight: number;
 }): MeasuredDimensions => {
 	"worklet";
-	const normalized = normalizeMeasuredBoundsToOrigin(measured, origin);
 
 	if (
 		!visibilityBlocked ||
 		visibilityBlockOffset <= 0 ||
-		isMeasurementInViewport(normalized, viewportWidth, viewportHeight)
+		isMeasurementInViewport(measured, viewportWidth, viewportHeight)
 	) {
-		return normalized;
+		return measured;
 	}
 
-	// Fabric can expose the visibility transform to one native measurement one
-	// frame before the other. Prefer normal origin-relative coordinates, then
-	// test either side of that known frame skew while the gate is active.
-	const measuredAhead = {
-		...normalized,
-		pageY: normalized.pageY - visibilityBlockOffset,
+	// A destination can still carry the internal visibility transform for one
+	// native frame. Correct only that known offset and preserve all other
+	// presentation transforms in the measured coordinates.
+	const visibilityOffsetApplied = {
+		...measured,
+		pageY: measured.pageY - visibilityBlockOffset,
 	};
-	if (isMeasurementInViewport(measuredAhead, viewportWidth, viewportHeight)) {
-		return measuredAhead;
+	if (
+		isMeasurementInViewport(
+			visibilityOffsetApplied,
+			viewportWidth,
+			viewportHeight,
+		)
+	) {
+		return visibilityOffsetApplied;
 	}
 
-	const originAhead = {
-		...normalized,
-		pageY: normalized.pageY + visibilityBlockOffset,
+	const inverseVisibilityOffsetApplied = {
+		...measured,
+		pageY: measured.pageY + visibilityBlockOffset,
 	};
-	if (isMeasurementInViewport(originAhead, viewportWidth, viewportHeight)) {
-		return originAhead;
+	if (
+		isMeasurementInViewport(
+			inverseVisibilityOffsetApplied,
+			viewportWidth,
+			viewportHeight,
+		)
+	) {
+		return inverseVisibilityOffsetApplied;
 	}
 
-	return normalized;
+	return measured;
 };
 
 export const measureWithOverscrollAwareness = (

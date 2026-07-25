@@ -18,6 +18,31 @@ type ScreenVisibilityGateDecision = {
 	shouldOpenGate: boolean;
 };
 
+type InitialDestinationStyleGateState = {
+	shouldPrepareStyles: boolean;
+	isVisibilityBlocked: boolean;
+	stylesReady: boolean;
+};
+
+type InitialDestinationStyleGateDecision = {
+	shouldMarkStylesReady: boolean;
+	shouldWithholdStyles: boolean;
+};
+
+export const resolveInitialDestinationStyleGate = ({
+	shouldPrepareStyles,
+	isVisibilityBlocked,
+	stylesReady,
+}: InitialDestinationStyleGateState): InitialDestinationStyleGateDecision => {
+	"worklet";
+
+	return {
+		shouldMarkStylesReady:
+			shouldPrepareStyles && isVisibilityBlocked && !stylesReady,
+		shouldWithholdStyles: shouldPrepareStyles && !stylesReady,
+	};
+};
+
 export const resolveScreenVisibilityGate = ({
 	isFloatingOverlay,
 	hasVisibilityGateOpened,

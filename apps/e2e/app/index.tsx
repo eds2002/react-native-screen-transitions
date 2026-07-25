@@ -71,8 +71,9 @@ const STACK_GROUP_OPTIONS = [
 const RECIPE_OPTIONS = [
 	{
 		id: "example",
-		title: "Nested Disabled Modal",
-		description: "Basic gesture-tracking modal recipe",
+		title: "Sheet to Zoom Style Reset",
+		description:
+			"Push a full-screen navigation.zoom() route from a half-height sheet",
 		route: "/example" as const,
 	},
 	{

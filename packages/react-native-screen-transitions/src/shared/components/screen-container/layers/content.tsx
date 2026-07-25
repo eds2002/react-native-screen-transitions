@@ -5,7 +5,6 @@ import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { useGestureStore } from "../../../providers/screen/gestures";
-import { OriginProvider } from "../../../providers/screen/origin.provider";
 import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 import type { ScreenContentComponentProps } from "../../../types";
 import { ScreenFallbackHost } from "../../boundary/portal/components/boundary-portal/components/host";
@@ -59,16 +58,14 @@ export const ContentLayer = memo(
 				enabled={isNavigationMaskEnabled}
 			>
 				<SurfaceContainer pointerEvents={contentPointerEvents}>
-					<OriginProvider>
-						{hasAutoSnapPoint ? (
-							<View collapsable={false} onLayout={handleContentLayout}>
-								{children}
-							</View>
-						) : (
-							children
-						)}
-						<ScreenFallbackHost />
-					</OriginProvider>
+					{hasAutoSnapPoint ? (
+						<View collapsable={false} onLayout={handleContentLayout}>
+							{children}
+						</View>
+					) : (
+						children
+					)}
+					<ScreenFallbackHost />
 				</SurfaceContainer>
 			</MaybeMaskedNavigationContainer>
 		);
