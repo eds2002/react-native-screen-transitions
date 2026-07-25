@@ -64,6 +64,14 @@ export const getRefreshBoundarySignal = (params: {
 	// side of the pair this boundary currently represents.
 	if (!group) {
 		if (sourcePairKey) {
+			const sourcePair = linkState?.[sourcePairKey];
+			const participates =
+				!!sourcePair?.links?.[linkId] || !!sourcePair?.sourceRequests?.[linkId];
+
+			if (!participates) {
+				return null;
+			}
+
 			return buildRefreshSignal(
 				"source",
 				sourcePairKey,
@@ -76,6 +84,10 @@ export const getRefreshBoundarySignal = (params: {
 			(nextScreenKey ? undefined : ancestorDestinationPairKey);
 
 		if (!refreshDestinationPairKey) {
+			return null;
+		}
+
+		if (!linkState?.[refreshDestinationPairKey]?.links?.[linkId]) {
 			return null;
 		}
 

@@ -26,45 +26,65 @@ afterEach(() => {
 });
 
 describe("refresh boundary signals", () => {
-	it("refreshes a non-group source when its destination emits a lifecycle pulse", () => {
+	it("refreshes only a participating non-group source", () => {
 		const sourcePairKey = createScreenPairKey("screen-a", "screen-b");
 		const previousPairKey = createScreenPairKey("screen-root", "screen-a");
+		BoundStore.link.setSource(
+			sourcePairKey,
+			"card",
+			"screen-a",
+			{ x: 0, y: 0, pageX: 0, pageY: 0, width: 100, height: 100 },
+			{},
+		);
 
-		expect(
+		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "screen-a",
 				nextScreenKey: "screen-b",
 				sourcePairKey,
 				destinationPairKey: previousPairKey,
-				linkId: "card",
+				linkId,
 				shouldRefresh: true,
 				closing: true,
-			}),
-		).toEqual({
+				linkState: pairs.get(),
+			});
+
+		expect(getSignal("card")).toEqual({
 			type: "source",
 			pairKey: sourcePairKey,
 			signal: "source|screen-a<>screen-b|screen-a|closing",
 		});
+		expect(getSignal("unrelated-card")).toBeNull();
 	});
 
 	it("keeps destination refreshes for close retargeting", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			{ x: 0, y: 0, pageX: 0, pageY: 0, width: 100, height: 100 },
+			{},
+		);
 
-		expect(
+		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "screen-b",
 				destinationPairKey: pairKey,
-				linkId: "card",
+				linkId,
 				shouldRefresh: true,
 				closing: true,
-			}),
-		).toEqual({
+				linkState: pairs.get(),
+			});
+
+		expect(getSignal("card")).toEqual({
 			type: "destination",
 			pairKey,
 			signal: "destination|screen-a<>screen-b|screen-b|closing",
 		});
+		expect(getSignal("unrelated-card")).toBeNull();
 	});
 
 	it("refreshes the active grouped source before an interactive close", () => {
