@@ -37,8 +37,8 @@ function LogoMark({ className = "text-white" }: { className?: string }) {
 		<span
 			className={`relative flex h-6 w-6 items-center justify-center ${className}`}
 		>
-			<span className="left-1 relative scale-[0.9] h-[1.45rem] w-[0.8rem] rounded-md bg-neutral-300 dark:bg-neutral-500" />
-			<span className="h-[1.45rem] z-10 w-[0.8rem] rounded-md bg-neutral-600 dark:bg-neutral-50" />
+			<span className="left-1 relative scale-[0.9] h-[1.45rem] w-[0.8rem] rounded-md bg-[#3730a3]" />
+			<span className="h-[1.45rem] z-10 w-[0.8rem] rounded-md bg-[#6366f1]" />
 		</span>
 	);
 }
@@ -211,14 +211,19 @@ function normalizeSearchValue(value: string) {
 	return value.trim().toLowerCase();
 }
 
-function getSearchScore(doc: (typeof flatDocs)[number], terms: string[]) {
+function getSearchScore(
+	doc: (typeof flatDocs)[number],
+	terms: string[],
+	searchTextByModulePath: Readonly<Record<string, string>>,
+) {
 	const title = doc.title.toLowerCase();
 	const pageTitle = doc.pageTitle.toLowerCase();
 	const summary = doc.summary.toLowerCase();
 	const description = doc.description.toLowerCase();
 	const group = doc.group.toLowerCase();
 	const path = doc.to.toLowerCase();
-	const combined = `${title} ${pageTitle} ${summary} ${description} ${group} ${path}`;
+	const content = (searchTextByModulePath[doc.sourcePath] ?? "").toLowerCase();
+	const combined = `${title} ${pageTitle} ${summary} ${description} ${group} ${path} ${content}`;
 
 	if (!terms.every((term) => combined.includes(term))) {
 		return -1;
@@ -249,6 +254,10 @@ function getSearchScore(doc: (typeof flatDocs)[number], terms: string[]) {
 
 		if (path.includes(term)) {
 			score += 8;
+		}
+
+		if (content.includes(term)) {
+			score += 6;
 		}
 	}
 
@@ -377,6 +386,9 @@ export function DocsShell({ children }: { children: ReactNode }) {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [searchOpen, setSearchOpen] = useState(false);
 	const [searchQuery, setSearchQuery] = useState("");
+	const [searchTextByModulePath, setSearchTextByModulePath] = useState<
+		Readonly<Record<string, string>>
+	>({});
 
 	const searchResults = useMemo(() => {
 		const normalizedQuery = normalizeSearchValue(searchQuery);
@@ -390,7 +402,7 @@ export function DocsShell({ children }: { children: ReactNode }) {
 			.filter((doc) => doc.versionId === currentVersion.id && !doc.hidden)
 			.map((doc) => ({
 				doc,
-				score: getSearchScore(doc, terms),
+				score: getSearchScore(doc, terms, searchTextByModulePath),
 			}))
 			.filter((entry) => entry.score >= 0)
 			.sort((left, right) => {
@@ -402,7 +414,27 @@ export function DocsShell({ children }: { children: ReactNode }) {
 			})
 			.slice(0, 8)
 			.map((entry) => entry.doc);
-	}, [currentVersion.id, searchQuery]);
+	}, [currentVersion.id, searchQuery, searchTextByModulePath]);
+
+	useEffect(() => {
+		if (!searchOpen || Object.keys(searchTextByModulePath).length > 0) {
+			return;
+		}
+
+		let cancelled = false;
+
+		void import("../../lib/search-index").then(
+			({ docSearchTextByModulePath }) => {
+				if (!cancelled) {
+					setSearchTextByModulePath(docSearchTextByModulePath);
+				}
+			},
+		);
+
+		return () => {
+			cancelled = true;
+		};
+	}, [searchOpen, searchTextByModulePath]);
 
 	useEffect(() => {
 		void pathname;

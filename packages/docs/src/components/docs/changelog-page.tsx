@@ -1,3 +1,5 @@
+import { Link } from "@tanstack/react-router";
+
 import {
 	createDocHead,
 	type DocVersionId,
@@ -34,7 +36,7 @@ function ChangelogPage({ versionId }: { versionId: DocVersionId }) {
 							id={latest.slug}
 							className="scroll-mt-28 text-2xl font-medium text-neutral-950 dark:text-neutral-50"
 						>
-							{latest.pageTitle}
+							<Link to={latest.to}>{latest.pageTitle}</Link>
 						</DocHeading>
 						<LatestContent components={mdxComponents} />
 					</>
