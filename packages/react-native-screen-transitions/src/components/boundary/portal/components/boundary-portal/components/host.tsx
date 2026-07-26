@@ -62,20 +62,18 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 		};
 	}, [fallback, hostKey, screenKey]);
 
-	const boundaryHosts = measurement.canRenderHosts
-		? activeBoundaryHosts.map((host) => (
-				<View
-					key={host.portalHostName}
-					pointerEvents={PORTAL_POINTER_EVENTS}
-					style={[
-						styles.boundaryHostViewport,
-						{ width: viewportWidth, height: viewportHeight },
-					]}
-				>
-					<PortalBoundaryHost host={host} style={StyleSheet.absoluteFill} />
-				</View>
-			))
-		: null;
+	const boundaryHosts = activeBoundaryHosts.map((host) => (
+		<View
+			key={host.portalHostName}
+			pointerEvents={PORTAL_POINTER_EVENTS}
+			style={[
+				styles.boundaryHostViewport,
+				{ width: viewportWidth, height: viewportHeight },
+			]}
+		>
+			<PortalBoundaryHost host={host} style={StyleSheet.absoluteFill} />
+		</View>
+	));
 
 	return (
 		<Animated.View

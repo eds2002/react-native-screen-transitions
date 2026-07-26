@@ -41,6 +41,12 @@ export const useRefreshBoundary = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
+
+			const shouldRefresh = enabled && !!refreshWillAnimate.get();
+			if (!shouldRefresh) {
+				return null;
+			}
+
 			return getRefreshBoundarySignal({
 				enabled,
 				currentScreenKey,
@@ -50,7 +56,7 @@ export const useRefreshBoundary = ({
 				nextScreenKey,
 				linkId: linkKey,
 				group,
-				shouldRefresh: !!refreshWillAnimate.get(),
+				shouldRefresh,
 				closing: !!refreshClosing.get(),
 				linkState: pairs.get(),
 			});
