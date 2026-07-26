@@ -482,63 +482,69 @@ export function CodeBlock({
 					</p>
 					<CopyButton copied={copied} onClick={() => void handleCopy()} />
 				</div>
-			) : (
-				<div className="flex justify-end px-3 pt-3">
-					<CopyButton copied={copied} onClick={() => void handleCopy()} />
-				</div>
-			)}
-			<div className="scrollbar-none max-w-full overflow-x-auto overscroll-x-contain">
-				<pre
-					className={
-						hasHeader
-							? "min-w-full py-3 leading-7 text-neutral-950 dark:text-neutral-50"
-							: "min-w-full pb-4 leading-7 text-neutral-950 dark:text-neutral-50"
-					}
-				>
-					<code className="block min-w-full w-fit font-mono px-4 gap-12">
-						{lines.map((line, index) => {
-							const lineNumber = index + 1;
-							const highlighted = highlightedSet.has(lineNumber);
+			) : null}
+			<div className={hasHeader ? undefined : "flex min-w-0 items-start"}>
+				<div className="scrollbar-none min-w-0 max-w-full flex-1 overflow-x-auto overscroll-x-contain">
+					<pre
+						className={
+							hasHeader
+								? "min-w-full py-3 leading-7 text-neutral-950 dark:text-neutral-50"
+								: "min-w-full py-3 leading-7 text-neutral-950 dark:text-neutral-50"
+						}
+					>
+						<code className="block min-w-full w-fit font-mono px-4 gap-12">
+							{lines.map((line, index) => {
+								const lineNumber = index + 1;
+								const highlighted = highlightedSet.has(lineNumber);
 
-							return (
-								<div key={`${lineNumber}-${line}`} className={"relative pt-2"}>
-									{highlighted ? (
-										<span className="absolute inset-y-0 -inset-x-4 min-w-screen  bg-neutral-950/5 dark:bg-neutral-50/5" />
-									) : null}
+								return (
 									<div
-										className={
-											withLineNumbers
-												? "grid min-w-full grid-cols-[2rem_minmax(0,1fr)]"
-												: "min-w-full"
-										}
+										key={`${lineNumber}-${line}`}
+										className={hasHeader ? "relative pt-2" : "relative"}
 									>
-										{withLineNumbers ? (
-											<span className="select-none pt-0 text-left text-neutral-500 dark:text-neutral-400 text-sm">
-												{lineNumber}
-											</span>
+										{highlighted ? (
+											<span className="absolute inset-y-0 -inset-x-4 min-w-screen  bg-neutral-950/5 dark:bg-neutral-50/5" />
 										) : null}
-										<span className="min-w-0 whitespace-pre text-sm">
-											{tokenizeLine(line, emphasisTokens).map(
-												(segment, segmentIndex) => (
-													<span
-														key={`${lineNumber}-${segmentIndex.toString()}-${segment.value}`}
-														className={
-															segment.emphasized
-																? `${toneClass(segment.tone)} rounded-[3px] bg-black/[0.08] px-1 text-neutral-950 dark:bg-white/[0.10] dark:text-neutral-50 text-sm`
-																: `${toneClass(segment.tone)} text-sm`
-														}
-													>
-														{segment.value}
-													</span>
-												),
-											)}
-										</span>
+										<div
+											className={
+												withLineNumbers
+													? "grid min-w-full grid-cols-[2rem_minmax(0,1fr)]"
+													: "min-w-full"
+											}
+										>
+											{withLineNumbers ? (
+												<span className="select-none pt-0 text-left text-neutral-500 dark:text-neutral-400 text-sm">
+													{lineNumber}
+												</span>
+											) : null}
+											<span className="min-w-0 whitespace-pre text-sm">
+												{tokenizeLine(line, emphasisTokens).map(
+													(segment, segmentIndex) => (
+														<span
+															key={`${lineNumber}-${segmentIndex.toString()}-${segment.value}`}
+															className={
+																segment.emphasized
+																	? `${toneClass(segment.tone)} rounded-[3px] bg-black/[0.08] px-1 text-neutral-950 dark:bg-white/[0.10] dark:text-neutral-50 text-sm`
+																	: `${toneClass(segment.tone)} text-sm`
+															}
+														>
+															{segment.value}
+														</span>
+													),
+												)}
+											</span>
+										</div>
 									</div>
-								</div>
-							);
-						})}
-					</code>
-				</pre>
+								);
+							})}
+						</code>
+					</pre>
+				</div>
+				{hasHeader ? null : (
+					<div className="shrink-0 py-2 pr-3">
+						<CopyButton copied={copied} onClick={() => void handleCopy()} />
+					</div>
+				)}
 			</div>
 		</div>
 	);

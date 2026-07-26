@@ -1,0 +1,87 @@
+---
+title: "Getting Started"
+pageTitle: "Getting Started"
+summary: "Connect the experimental v4 navigator to Expo Router or React Navigation."
+description: "Set up the experimental v4 Screen Transitions navigator with Expo Router or React Navigation."
+eyebrow: "Get Started"
+group: "Get Started"
+order: 3
+to: /getting-started
+---
+
+This page covers only the Screen Transitions navigator setup. It assumes your app already has Expo Router or React Navigation configured.
+
+## Expo Router
+
+Screen Transitions exports a `BlankStack` that is ready to use in an Expo Router layout. Replace the stack in the layout where you want Screen Transitions:
+
+```tsx
+// app/_layout.tsx
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Transition from "react-native-screen-transitions";
+import { BlankStack } from "react-native-screen-transitions/expo-router";
+
+export default function RootLayout() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <BlankStack>
+        <BlankStack.Screen name="index" />
+        <BlankStack.Screen
+          name="detail"
+          options={Transition.Presets.SlideFromBottom()}
+        />
+      </BlankStack>
+    </GestureHandlerRootView>
+  );
+}
+```
+
+You can use `BlankStack` in the root layout or a nested `_layout.tsx`. Only the routes inside that layout participate in its transition stack.
+
+Expo Router remains responsible for routing. Continue to navigate with `router.push()`, `router.replace()`, `router.back()`, or `Link` as usual.
+
+## React Navigation
+
+Screen Transitions exports the same Blank Stack for React Navigation through its React Navigation entry point:
+
+```tsx
+import { NavigationContainer } from "@react-navigation/native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import Transition from "react-native-screen-transitions";
+import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
+
+const Stack = createBlankStackNavigator();
+
+export default function App() {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <NavigationContainer>
+        <Stack.Navigator>
+          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen
+            name="Detail"
+            component={DetailScreen}
+            options={Transition.Presets.SlideFromBottom()}
+          />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </GestureHandlerRootView>
+  );
+}
+```
+
+Your screens continue to use `navigation.navigate()`, `navigation.goBack()`, and the rest of the standard React Navigation API.
+
+## Adapting a native stack
+
+`withScreenTransitions` wraps an existing native stack so individual screens can use Screen Transitions animations while the rest retain native-stack behavior:
+
+```tsx
+import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { withScreenTransitions } from "react-native-screen-transitions";
+
+const NativeStack = createNativeStackNavigator();
+const Stack = withScreenTransitions(NativeStack);
+```
+
+Use the adapter when you specifically need a native stack. For a stack driven entirely by Screen Transitions, use Blank Stack.

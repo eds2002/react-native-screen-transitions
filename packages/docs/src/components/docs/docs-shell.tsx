@@ -133,6 +133,7 @@ function DocsNavigation({
 							<li key={item.to}>
 								<Link
 									to={item.to}
+									activeOptions={{ exact: true }}
 									onClick={onNavigate}
 									activeProps={{
 										className:
@@ -170,6 +171,7 @@ function MobileDocsNavigation({
 							<li key={item.to}>
 								<Link
 									to={item.to}
+									activeOptions={{ exact: true }}
 									onClick={onNavigate}
 									activeProps={{
 										className: "text-neutral-950 dark:text-neutral-50",

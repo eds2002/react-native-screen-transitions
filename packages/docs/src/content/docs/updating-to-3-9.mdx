@@ -248,7 +248,7 @@ options={{
 }}
 ```
 
-When no target is provided, zoom creates an aspect-ratio-preserving virtual destination. Narrow sources fill the screen height and attach to its leading edge; other sources fill the screen width and attach to its top edge. `target: "bound"` stays opt-in and waits for the matching destination measurement instead of temporarily falling back to fullscreen.
+When no target is provided, zoom expands into a full-width rectangle that preserves the source aspect ratio. `target: "bound"` stays opt-in and waits for the matching destination measurement instead of temporarily falling back to fullscreen.
 
 Zoom now also tracks the initial pinch focal point while scale and rotation change. Custom interpolators can read the same fixed screen-coordinate pivot from `gesture.pinchOriginX` and `gesture.pinchOriginY`, including through `gesture.handoff`.
 
