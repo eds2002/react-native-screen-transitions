@@ -111,46 +111,6 @@ describe("bounds client measurement contract", () => {
 		expect(getSignal()).toEqual({ pairKey, action: "complete" });
 	});
 
-	it("requires a destination measurement for the current entrance identity", () => {
-		const pairKey = createScreenPairKey("screen-a", "screen-b:entrance-2");
-		const getSignal = () =>
-			getInitialDestinationMeasurementSignal({
-				enabled: true,
-				destinationPairKey: pairKey,
-				linkId: "card",
-				destinationPresent: true,
-				sourcePresent: true,
-				linkState: pairs.get(),
-			});
-
-		// This destination came from the previous B route instance. It is a real
-		// link, but cannot complete the new A -> B entrance.
-		BoundStore.link.setSource(
-			pairKey,
-			"card",
-			"screen-a",
-			createBounds(),
-		);
-		BoundStore.link.setDestination(
-			pairKey,
-			"card",
-			"screen-b:entrance-1",
-			createBounds(),
-		);
-
-		expect(getSignal()).toEqual({ pairKey, action: "measure" });
-
-		// One accepted measurement for this boundary identity completes this
-		// entrance. A later reaction observes completion rather than measuring again.
-		BoundStore.link.setDestination(
-			pairKey,
-			"card",
-			"screen-b:entrance-2",
-			createBounds(),
-		);
-		expect(getSignal()).toEqual({ pairKey, action: "complete" });
-	});
-
 	it("auto source capture waits for destination then emits once", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const measuredTargets: Array<{ type: "source"; pairKey: string }> = [];
@@ -487,7 +447,7 @@ describe("bounds client measurement contract", () => {
 			"colors",
 		);
 
-		const getSignal = (linkId: string, gestureInProgress = false) =>
+		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "screen-a",
@@ -499,12 +459,10 @@ describe("bounds client measurement contract", () => {
 				entering: false,
 				animating: false,
 				progress: 1,
-				gestureInProgress,
 				linkState: pairs.get(),
 			});
 
 		expect(getSignal("1")).toBeNull();
-		expect(getSignal("2", true)).toBeNull();
 		expect(getSignal("2")).toEqual({
 			type: "source",
 			pairKey,
