@@ -120,6 +120,7 @@ describe("visual transform bounds", () => {
 				({
 					previous: { route: { key: "screen-a" } },
 					current: { route: { key: "screen-b" } },
+					active: { animating: 1 },
 					progress: 0.5,
 					layouts: { screen: { width: 400, height: 800 } },
 				}) as any,
@@ -127,5 +128,37 @@ describe("visual transform bounds", () => {
 
 		expect(getBoundsLocalTransform(bounds("card").styles())).toBeUndefined();
 		expect(getBoundsLocalTransform(bounds("card").values() as any)).toBeUndefined();
+	});
+
+	it("resets styles while settled without changing raw values", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+		BoundStore.link.setSource(
+			pairKey,
+			"card",
+			"screen-a",
+			createBounds(20, 20, 100, 100),
+		);
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			createBounds(200, 200, 200, 200),
+		);
+		const bounds = createBoundsAccessor(
+			() =>
+				({
+					previous: { route: { key: "screen-a" } },
+					current: { route: { key: "screen-b" } },
+					active: { animating: 0 },
+					progress: 1,
+					layouts: { screen: { width: 400, height: 800 } },
+				}) as any,
+		);
+
+		expect(bounds("card").styles()).toEqual({});
+		expect(bounds("card").values()).toMatchObject({
+			scaleX: 1,
+			scaleY: 1,
+		});
 	});
 });

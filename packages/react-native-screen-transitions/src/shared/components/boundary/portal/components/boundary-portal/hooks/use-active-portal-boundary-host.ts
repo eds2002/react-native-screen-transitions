@@ -8,8 +8,8 @@ import type { LocalStyleLayers } from "../../../../../../providers/screen/styles
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../../../types/animation.types";
+import { createBoundaryPortalHostName } from "../../../utils/naming";
 import { hasActiveBoundaryPortalLink } from "../helpers/active-pair";
-import { createBoundaryPortalHostName } from "../helpers/host-name";
 import {
 	mountPortalBoundaryHost,
 	unmountPortalBoundaryHostByName,

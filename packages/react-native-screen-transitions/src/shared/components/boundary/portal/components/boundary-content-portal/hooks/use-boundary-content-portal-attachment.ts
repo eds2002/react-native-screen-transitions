@@ -1,52 +1,51 @@
-import {
-	type SharedValue,
-	useAnimatedProps,
-	useSharedValue,
-} from "react-native-reanimated";
+import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
+import { useStack } from "../../../../../../hooks/navigation/use-stack";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
 import { hasCloseTransitionFinished } from "../../../../../../providers/screen/styles/helpers/transition-visual-state";
 import { AnimationStore } from "../../../../../../stores/animation.store";
+import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
+import { getEntry } from "../../../../../../stores/bounds/internals/entries";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { SystemStore } from "../../../../../../stores/system.store";
-import { resolveEnteringHandoffTarget } from "../../../utils/handoff-target";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import { isTeleportEnabled } from "../../../utils/teleport-control";
+import {
+	resolveActiveHandoffReceiver,
+	resolveHandoffAttachmentCandidate,
+	resolvePreviousHandoffReceiver,
+} from "../helpers/active-handoff-receiver";
 import { createBoundaryContentPortalHostName } from "../helpers/host-name";
 
 interface UseBoundaryContentPortalAttachmentParams {
 	boundaryId: string;
 }
 
-type AttachedDestination = {
-	animationProgress: SharedValue<number>;
-	closing: SharedValue<number>;
-	screenKey: string;
-};
-
 export const useBoundaryContentPortalAttachment = ({
 	boundaryId,
 }: UseBoundaryContentPortalAttachmentParams) => {
-	const { slotsMap } = useScreenSlots();
-	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
+	const { nextInterpolatorReady, slotsMap } = useScreenSlots();
+
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
-	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
-	const destinationScreenKey = nextScreenKey ?? currentScreenKey;
-	const destinationAnimationProgress = SystemStore.getValue(
-		destinationScreenKey,
+	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
+
+	const activeReceiverScreenKey = useStack(resolveActiveHandoffReceiver);
+	const previousReceiverScreenKey = useStack(resolvePreviousHandoffReceiver);
+
+	const activeReceiverAnimationProgress = SystemStore.getValue(
+		activeReceiverScreenKey ?? currentScreenKey,
 		"animationProgress",
 	);
-	const destinationClosing = AnimationStore.getValue(
-		destinationScreenKey,
+
+	const activeReceiverClosing = AnimationStore.getValue(
+		activeReceiverScreenKey ?? currentScreenKey,
 		"closing",
 	);
 
-	// `nextScreenKey` can change while the previously attached destination is
-	// still closing. Retain that destination's lifecycle shared values so this
-	// payload follows the screen that actually hosts it, not the newest route.
-	const attachedDestination = useSharedValue<AttachedDestination | null>(null);
+	const attachedReceiverScreenKey = useSharedValue(currentScreenKey);
+	const sourcePairBeforeClose = useSharedValue<string | null>(null);
 
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
@@ -58,48 +57,74 @@ export const useBoundaryContentPortalAttachment = ({
 			...slotProps
 		} = slot?.props ?? {};
 
-		const animationProgress = destinationAnimationProgress.get();
 		const shouldTeleport = isTeleportEnabled(teleport);
-		const pairsState = pairs.get();
+		const closing = activeReceiverClosing.get();
+		const animationProgress = activeReceiverAnimationProgress.get();
 
-		const enteringTargetScreenKey = shouldTeleport
-			? resolveEnteringHandoffTarget({
-					animationProgress,
-					boundaryId,
-					currentScreenKey,
-					pairsState,
-					sourcePairKey,
-				})
-			: null;
-
-		if (enteringTargetScreenKey) {
-			// A valid entering pair is the only event that replaces the current
-			// attachment and its lifecycle owner.
-			attachedDestination.set({
-				animationProgress: destinationAnimationProgress,
-				closing: destinationClosing,
-				screenKey: enteringTargetScreenKey,
-			});
+		if (!closing) {
+			sourcePairBeforeClose.set(sourcePairKey ?? null);
 		}
 
-		const attached = attachedDestination.get();
-		const hasAttachedCloseFinished =
-			attached !== null &&
-			hasCloseTransitionFinished({
-				animationProgress: attached.animationProgress.get(),
-				closing: attached.closing.get(),
-			});
+		const pairChangedDuringClose =
+			!!closing &&
+			!!sourcePairKey &&
+			sourcePairKey !== sourcePairBeforeClose.get();
 
-		// Missing or changing pairs do not imply a return: keep the current host
-		// until its own screen visually closes. At that point, target the source
-		// host explicitly instead of `null` so Teleport restores source dimensions.
-		const targetScreenKey = enteringTargetScreenKey
-			? enteringTargetScreenKey
-			: shouldTeleport
-				? hasAttachedCloseFinished
-					? currentScreenKey
-					: (attached?.screenKey ?? null)
+		const hasActiveCloseFinished = hasCloseTransitionFinished({
+			closing,
+			animationProgress,
+		});
+
+		const pair = sourcePairKey ? pairs.get()[sourcePairKey] : null;
+		const link = pair?.links[getLinkKeyFromTag(boundaryId)];
+
+		const pairDestination =
+			link?.status === "complete" &&
+			(!link.group ||
+				pair?.groups[link.group]?.activeId === getLinkKeyFromTag(boundaryId))
+				? link.destination.screenKey
 				: null;
+
+		const interpolatorReady = nextInterpolatorReady.get();
+		const attachedScreenKey = attachedReceiverScreenKey.get();
+
+		const nextReceiverScreenKey = resolveHandoffAttachmentCandidate({
+			activeReceiverClosing: !!closing,
+			activeReceiverScreenKey,
+			attachedReceiverScreenKey: attachedScreenKey,
+			hasActiveCloseFinished,
+			interpolatorReady: !!interpolatorReady,
+			pairChangedDuringClose,
+			pairDestinationScreenKey: pairDestination,
+			previousReceiverScreenKey,
+		});
+
+		const receiverEntry = nextReceiverScreenKey
+			? getEntry(boundaryId, nextReceiverScreenKey)
+			: null;
+
+		const receiverReady = receiverEntry?.handoff === true;
+
+		const returningFromActiveClose =
+			hasActiveCloseFinished && attachedScreenKey === activeReceiverScreenKey;
+
+		const activatingPairDestination =
+			!!pairDestination &&
+			!!interpolatorReady &&
+			nextReceiverScreenKey === pairDestination;
+
+		const canActivateReceiver =
+			returningFromActiveClose ||
+			activatingPairDestination ||
+			animationProgress > 0;
+
+		if (nextReceiverScreenKey && receiverReady && canActivateReceiver) {
+			attachedReceiverScreenKey.set(nextReceiverScreenKey);
+		}
+
+		const targetScreenKey = shouldTeleport
+			? attachedReceiverScreenKey.get()
+			: null;
 
 		const targetHostName = targetScreenKey
 			? createBoundaryContentPortalHostName(targetScreenKey, boundaryId)
