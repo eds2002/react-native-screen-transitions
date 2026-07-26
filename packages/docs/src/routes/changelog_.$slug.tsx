@@ -3,7 +3,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MarkdownBody } from "../components/docs/markdown-doc-page";
 import { createDocHead, getChangelogDocBySlug } from "../lib/docs";
 
-export const Route = createFileRoute("/changelog/$slug")({
+export const Route = createFileRoute("/changelog_/$slug")({
 	head: ({ params }) =>
 		createDocHead(getChangelogDocBySlug("v3-4", params.slug)),
 	component: function ChangelogEntryRouteComponent() {
