@@ -1,5 +1,33 @@
 # Changelog
 
+## [3.11.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.10.0...v3.11.0) (2026-07-26)
+
+### ⚠ BREAKING CHANGES
+
+* remove legacy bounds registration
+
+### refactor
+
+* remove legacy bounds registration ([e124c60](https://github.com/eds2002/react-native-screen-transitions/commit/e124c6051107b4c991610ae84f31c21892a06b3f))
+
+### Features
+
+* **docs:** migrate docs site to tanstack start ([c1c3c07](https://github.com/eds2002/react-native-screen-transitions/commit/c1c3c0732b5a4cb313a35c682ad172125371eab5))
+
+### Bug Fixes
+
+* **boundary:** lazily materialize escape clipping hosts ([36be9ac](https://github.com/eds2002/react-native-screen-transitions/commit/36be9ac6d12721db6f0c44a73d27135482bbca2d))
+* **boundary:** stabilize handoff receiver lifecycle ([f1a8107](https://github.com/eds2002/react-native-screen-transitions/commit/f1a81073d1b7920693bf65d3855602614ffc33a9))
+* limit boundary refreshes to participants ([cbd3f6d](https://github.com/eds2002/react-native-screen-transitions/commit/cbd3f6d4b13ab772632cda81d0114cb44656e1f9))
+* refresh non-group boundary sources ([c98ab8f](https://github.com/eds2002/react-native-screen-transitions/commit/c98ab8fa9bfc7d76240f3ff348498e5f6eaee0d2))
+* respect inactive behavior screen options ([049120a](https://github.com/eds2002/react-native-screen-transitions/commit/049120ae0d92233242d94ff883c3e3009882787d))
+* stabilize transition styles and measurements ([fc07f5e](https://github.com/eds2002/react-native-screen-transitions/commit/fc07f5e46cbb498e674f240a0e74d65582d2b4de))
+* synchronize transition lifecycle state ([c7bbfc1](https://github.com/eds2002/react-native-screen-transitions/commit/c7bbfc199a5e2cfab88b326bc845dd9910fcf4d2))
+
+### Performance Improvements
+
+* stabilize screen render subscriptions ([5493446](https://github.com/eds2002/react-native-screen-transitions/commit/54934467faf5d42f6704b720780d454f426033df))
+
 ## [3.10.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.9.0...v3.10.0) (2026-07-24)
 
 ### Features
