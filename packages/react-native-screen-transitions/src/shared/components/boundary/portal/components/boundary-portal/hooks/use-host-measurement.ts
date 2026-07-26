@@ -1,9 +1,8 @@
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect } from "react";
 import type { View } from "react-native";
 import {
 	cancelAnimation,
 	measure,
-	runOnJS,
 	runOnUI,
 	type SharedValue,
 	useAnimatedReaction,
@@ -47,7 +46,6 @@ export const useHostMeasurement = ({
 }: UseHostMeasurementParams) => {
 	const hostRef = useAnimatedRef<View>();
 	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
-	const [canRenderHosts, setCanRenderHosts] = useState<boolean>(false);
 	const hasMeasuredHost = useSharedValue(false);
 	const retryToken = useSharedValue(0);
 
@@ -87,7 +85,6 @@ export const useHostMeasurement = ({
 			}
 
 			cancelAnimation(retryToken);
-			hasMeasuredHost.set(true);
 
 			// A measurement taken mid rubber-band would bake the transient
 			// overscroll displacement into the host frame. Store the at-rest
@@ -132,7 +129,7 @@ export const useHostMeasurement = ({
 				scroll: capturesScroll ? currentScroll : null,
 			});
 
-			runOnJS(setCanRenderHosts)(true);
+			hasMeasuredHost.set(true);
 		},
 	);
 
@@ -143,7 +140,6 @@ export const useHostMeasurement = ({
 	}, [hostKey]);
 
 	return {
-		canRenderHosts,
 		hostRef,
 	};
 };

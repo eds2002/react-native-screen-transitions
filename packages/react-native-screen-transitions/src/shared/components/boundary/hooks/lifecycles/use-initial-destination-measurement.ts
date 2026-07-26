@@ -19,7 +19,9 @@ import { logger } from "../../../../utils/logger";
 import type { MeasureBoundary } from "../../types";
 import { getInitialDestinationMeasurementSignal } from "../../utils/destination-signals";
 
-const HANDSHAKE_RETRY_DELAY_MS = 100;
+// A missed layout should be retried on the next frame. The previous 100 ms
+// interval made each ordinary Android layout miss visibly delay navigation.
+const HANDSHAKE_RETRY_DELAY_MS = 16;
 /**
  * A destination whose initial handshake never completes must not hold the
  * transition gate forever. After this budget, release the block with a warning
@@ -122,25 +124,32 @@ export const useInitialDestinationMeasurement = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
+
+			if (
+				!destinationEnabled ||
+				!initialDestinationPairKey ||
+				isBlockingLifecycleStart.get() <= 0
+			) {
+				return null;
+			}
+
+			if (progress.get() > 0) {
+				return null;
+			}
+
 			const retryTick = retryToken.get();
-			const isWaitingForOpenToStart = progress.get() <= 0;
-			const sourceScreenKey = initialDestinationPairKey
-				? getSourceScreenKeyFromPairKey(initialDestinationPairKey)
-				: undefined;
+			const sourceScreenKey = getSourceScreenKeyFromPairKey(
+				initialDestinationPairKey,
+			);
 			const signal = getInitialDestinationMeasurementSignal({
-				enabled:
-					destinationEnabled &&
-					isWaitingForOpenToStart &&
-					isBlockingLifecycleStart.get() > 0,
+				enabled: destinationEnabled,
 				destinationPairKey,
 				ancestorDestinationPairKey,
 				linkId: linkKey,
 				group,
 				destinationPresent: getEntry(tag, currentScreenKey) !== null,
-				sourcePresent:
-					sourceScreenKey !== undefined &&
-					getEntry(tag, sourceScreenKey) !== null,
-				linkState: initialDestinationPairKey ? pairs.get() : undefined,
+				sourcePresent: getEntry(tag, sourceScreenKey) !== null,
+				linkState: pairs.get(),
 			});
 
 			return [
@@ -149,8 +158,13 @@ export const useInitialDestinationMeasurement = ({
 				retryTick,
 			] as const;
 		},
-		([measurePairKey, action, retryTick], previous) => {
+		(next, previous) => {
 			"worklet";
+			if (!next) {
+				return;
+			}
+
+			const [measurePairKey, action, retryTick] = next;
 			if (!measurePairKey || !action) {
 				return;
 			}
