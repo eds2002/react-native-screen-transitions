@@ -13,12 +13,6 @@ const BOUNDS_EXAMPLES = [
 			"Custom bounds styles for the navigation mask and content container",
 	},
 	{
-		id: "reveal-transformed-source",
-		title: "Reveal transformed source",
-		description:
-			"Debug a Reveal boundary measured below an animated sheet-like ancestor transform",
-	},
-	{
 		id: "zoom",
 		title: ".zoom()",
 		description:
@@ -35,6 +29,11 @@ const BOUNDS_EXAMPLES = [
 		title: "Handoff portals",
 		description:
 			"One video teleported to the matched screen while the destination slides",
+	},
+	{
+		id: "handoff-multiflow",
+		title: "Handoff multiflow",
+		description: "One payload handed across a multi-screen push and pop flow",
 	},
 ];
 

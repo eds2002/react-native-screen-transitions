@@ -13,14 +13,14 @@ export default function BoundsLayout() {
 		<StackNavigator screenOptions={navigatorScreenOptions}>
 			<StackNavigator.Screen name="index" />
 			<StackNavigator.Screen name="style-id" options={{ ...IOSSlide() }} />
-			<StackNavigator.Screen
-				name="reveal-transformed-source"
-				options={{ ...IOSSlide() }}
-			/>
 			<StackNavigator.Screen name="zoom" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen name="sync" options={{ ...IOSSlide() }} />
 			<StackNavigator.Screen
 				name="matched-screen"
+				options={{ ...IOSSlide() }}
+			/>
+			<StackNavigator.Screen
+				name="handoff-multiflow"
 				options={{ ...IOSSlide() }}
 			/>
 		</StackNavigator>
