@@ -5,3 +5,4 @@
 
 [functions]
 	directory = ".netlify/v1/functions"
+	included_files = ["dist/server/assets/Geist-Variable-*.ttf"]
