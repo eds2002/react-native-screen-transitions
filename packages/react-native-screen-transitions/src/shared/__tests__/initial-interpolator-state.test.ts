@@ -1,4 +1,6 @@
 import { beforeAll, describe, expect, it, mock } from "bun:test";
+import React from "react";
+import { act, create } from "react-test-renderer";
 import type { ScreenInterpolationProps } from "../types/animation.types";
 
 const descriptors: {
@@ -10,26 +12,6 @@ const descriptors: {
 	next: undefined,
 	previous: undefined,
 };
-
-mock.module("react", () => ({
-	useMemo: <T>(factory: () => T) => factory(),
-}));
-
-mock.module("react-native", () => ({
-	Platform: { OS: "ios" },
-	useWindowDimensions: () => ({ width: 390, height: 844 }),
-}));
-
-mock.module("react-native-reanimated", () => ({
-	clamp: (value: number, lower: number, upper: number) =>
-		Math.min(Math.max(value, lower), upper),
-	useDerivedValue: <T>() => ({ get: () => undefined as T }),
-	useSharedValue: <T>(value: T) => ({
-		get: () => value,
-		set: () => {},
-		modify: () => {},
-	}),
-}));
 
 mock.module("react-native-safe-area-context", () => ({
 	useSafeAreaInsets: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
@@ -62,6 +44,7 @@ describe("initial interpolator state", () => {
 
 	it("exposes an entering pushed screen to the public interpolator", () => {
 		let observedNext: ScreenInterpolationProps["next"];
+		let pipeline: ReturnType<typeof useScreenAnimationPipeline> | undefined;
 
 		descriptors.current = {
 			route: { key: "home", name: "Home" },
@@ -78,7 +61,19 @@ describe("initial interpolator state", () => {
 		};
 		descriptors.previous = undefined;
 
-		const pipeline = useScreenAnimationPipeline();
+		const TestComponent = () => {
+			pipeline = useScreenAnimationPipeline();
+			return null;
+		};
+
+		act(() => {
+			create(React.createElement(TestComponent));
+		});
+
+		if (!pipeline) {
+			throw new Error("Expected the animation pipeline to be initialized");
+		}
+
 		const props = pipeline.screenInterpolatorProps.get();
 
 		pipeline.nextInterpolator?.({

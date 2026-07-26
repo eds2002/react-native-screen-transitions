@@ -61,6 +61,7 @@ mock.module("react-native", () => ({
 		select: <T>(obj: { ios?: T; android?: T; default?: T }) =>
 			obj.ios ?? obj.default,
 	},
+	useWindowDimensions: () => ({ width: 390, height: 844 }),
 	StyleSheet: {
 		absoluteFill: {},
 		absoluteFillObject: {},
@@ -112,6 +113,9 @@ mock.module("react-native-reanimated", () => ({
 	},
 	runOnJS: <T extends (...args: any[]) => any>(callback: T) => callback,
 	runOnUI: <T extends (...args: any[]) => any>(callback: T) => callback,
+	useDerivedValue: <T>(factory: () => T) => ({
+		get: factory,
+	}),
 	useAnimatedReaction: (
 		prepare: () => unknown,
 		react: (value: unknown, previousValue: unknown) => void,
