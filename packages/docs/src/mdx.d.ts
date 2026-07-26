@@ -5,3 +5,7 @@ declare module "*.mdx" {
 	export const frontmatter: Record<string, unknown>;
 	export default MDXContent;
 }
+
+declare module "virtual:docs-search-index" {
+	export const docSearchTextByModulePath: Readonly<Record<string, string>>;
+}

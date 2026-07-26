@@ -38,12 +38,15 @@ export type Doc = {
 	hidden: boolean;
 	order: number;
 	pageTitle: string;
+	sourcePath: string;
 	slug: DocSlug;
 	summary: string;
 	title: string;
 	to: string;
 	versionId: DocVersionId;
 };
+
+const siteUrl = new URL("https://screen-transitions.esjr.org");
 
 const docModules = import.meta.glob<DocModule>("../content/docs/**/*.mdx", {
 	eager: true,
@@ -179,6 +182,7 @@ function createDoc(modulePath: string, module: DocModule): Doc {
 		hidden: asBoolean(frontmatter.hidden),
 		order: asNumber(frontmatter.order),
 		pageTitle: asString(frontmatter.pageTitle, asString(frontmatter.title)),
+		sourcePath: modulePath,
 		slug,
 		summary: asString(frontmatter.summary),
 		title: asString(frontmatter.title, asString(frontmatter.pageTitle)),
@@ -198,6 +202,14 @@ function getVisibleDocsForVersion(versionId: DocVersionId) {
 export const flatDocs = Object.entries(docModules)
 	.map(([modulePath, module]) => createDoc(modulePath, module))
 	.sort(compareDocs);
+
+export function getDocByPath(pathname: string) {
+	const normalizedPathname = normalizePathname(pathname);
+
+	return flatDocs.find(
+		(doc) => normalizePathname(doc.to) === normalizedPathname,
+	);
+}
 
 export function getDocVersion(versionId: DocVersionId) {
 	const version = docVersions.find((entry) => entry.id === versionId);
@@ -317,22 +329,27 @@ export function getVersionSwitchTarget(
 	return getVisibleDocsForVersion(versionId)[0]?.to ?? "/";
 }
 
-function getDocSocialImagePath(doc: Doc) {
-	if (doc.to === "/") {
-		return "/og/index.png";
-	}
+export function createSocialImageUrl(pathname: string) {
+	const url = new URL("/og.png", siteUrl);
+	url.searchParams.set("path", normalizePathname(pathname));
 
-	return `/og/${doc.to.replace(/^\//, "").replace(/\/$/, "").replaceAll("/", "-")}.png`;
+	return url.toString();
+}
+
+export function createDocUrl(pathname: string) {
+	return new URL(normalizePathname(pathname), siteUrl).toString();
 }
 
 export function createDocHead(doc: Doc) {
 	const title =
 		doc.to === "/" ? "Screen Transitions" : `${doc.pageTitle} | Screen Transitions`;
-	const socialImage = getDocSocialImagePath(doc);
+	const socialImage = createSocialImageUrl(doc.to);
+	const canonicalUrl = createDocUrl(doc.to);
 	const imageAlt =
 		doc.to === "/" ? "Screen Transitions" : doc.pageTitle;
 
 	return {
+		links: [{ rel: "canonical", href: canonicalUrl }],
 		meta: [
 			{
 				title,
@@ -343,9 +360,11 @@ export function createDocHead(doc: Doc) {
 			},
 			{ property: "og:type", content: "article" },
 			{ property: "og:site_name", content: "Screen Transitions" },
+			{ property: "og:url", content: canonicalUrl },
 			{ property: "og:title", content: title },
 			{ property: "og:description", content: doc.description },
 			{ property: "og:image", content: socialImage },
+			{ property: "og:image:type", content: "image/png" },
 			{
 				property: "og:image:alt",
 				content: `${imageAlt} documentation preview`,

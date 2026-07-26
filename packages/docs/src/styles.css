@@ -70,8 +70,3 @@ img {
 .scrollbar-none::-webkit-scrollbar {
 	display: none;
 }
-
-::selection {
-	background: rgba(125, 240, 215, 0.28);
-	color: #111a16;
-}

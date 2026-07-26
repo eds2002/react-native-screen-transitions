@@ -1,3 +1,6 @@
 [build]
 	command = "bun run build"
-	publish = "dist"
+	publish = "dist/client"
+
+[functions]
+	included_files = ["node_modules/geist/dist/fonts/geist-sans/Geist-Variable.ttf"]

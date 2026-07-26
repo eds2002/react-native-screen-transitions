@@ -2,6 +2,6 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { createDocRouteConfig } from "../components/docs/markdown-doc-page";
 
-export const Route = createFileRoute("/api/create-boundary-component")(
-	createDocRouteConfig("v3-4", "api/create-boundary-component"),
+export const Route = createFileRoute("/api_/use-screen-animation")(
+	createDocRouteConfig("v3-4", "api/use-screen-animation"),
 );
