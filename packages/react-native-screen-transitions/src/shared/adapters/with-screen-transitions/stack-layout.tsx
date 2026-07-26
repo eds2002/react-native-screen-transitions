@@ -7,8 +7,8 @@ import {
 } from "../../hooks/navigation/use-stack";
 import { ScreenComposer } from "../../providers/screen/screen-composer";
 import {
-	useStackCoreContext,
-	withStackCore,
+	StackCoreProvider,
+	useStackCoreStore,
 } from "../../providers/stack/core.provider";
 import type { BaseStackDescriptor, BaseStackRoute } from "../../types";
 import { StackType } from "../../types/stack.types";
@@ -102,6 +102,12 @@ function buildTransitionStackState({
 		}
 
 		scenes.push({
+			activity:
+				sceneIndex === state.index
+					? "active"
+					: sceneIndex === state.index - 1
+						? "inert"
+						: "inactive",
 			route,
 			descriptor: normalizedDescriptor,
 			previousDescriptor,
@@ -137,7 +143,7 @@ function ScreenTransitionsStackContent({
 	layout,
 	layoutArgs,
 }: ScreenTransitionsStackContentProps) {
-	const { flags } = useStackCoreContext();
+	const flags = useStackCoreStore((store) => store.flags);
 	const transitionState = useMemo(
 		() =>
 			buildTransitionStackState({
@@ -183,10 +189,17 @@ function ScreenTransitionsStackContent({
 	);
 }
 
-export const ScreenTransitionsStackLayout = withStackCore(
-	{ TRANSITIONS_ALWAYS_ON: false, STACK_TYPE: StackType.NATIVE },
-	ScreenTransitionsStackContent,
-);
+export function ScreenTransitionsStackLayout(
+	props: ScreenTransitionsStackContentProps,
+) {
+	return (
+		<StackCoreProvider
+			config={{ TRANSITIONS_ALWAYS_ON: false, STACK_TYPE: StackType.NATIVE }}
+		>
+			<ScreenTransitionsStackContent {...props} />
+		</StackCoreProvider>
+	);
+}
 
 export function ScreenTransitionsScreenLayout({
 	screenLayout,

@@ -1,4 +1,5 @@
 import { FALSE, TRUE } from "../../../../../constants";
+import type { AnimationStoreMap } from "../../../../../stores/animation.store";
 import type { GestureStoreMap } from "../../../../../stores/gesture.store";
 import { animateMany } from "../../shared/reset";
 import {
@@ -10,12 +11,16 @@ import type { PanReleasePlan } from "../../types";
 interface ResetPanGestureValuesProps {
 	plan: PanReleasePlan;
 	gestures: GestureStoreMap;
+	animations?: AnimationStoreMap;
+	completeMotion?: boolean;
 	updateLifecycle?: boolean;
 }
 
 export const resetPanGestureValues = ({
 	plan,
 	gestures,
+	animations,
+	completeMotion = false,
 	updateLifecycle = true,
 }: ResetPanGestureValuesProps) => {
 	"worklet";
@@ -28,7 +33,16 @@ export const resetPanGestureValues = ({
 		gestures.active.set(null);
 		gestures.direction.set(null);
 		gestures.settling.set(FALSE);
+		if (completeMotion) {
+			animations?.progressAnimating.set(FALSE);
+			animations?.progressSettled.set(TRUE);
+		}
 	};
+
+	if (animations && updateLifecycle && !plan.shouldDismiss) {
+		animations.progressAnimating.set(TRUE);
+		animations.progressSettled.set(FALSE);
+	}
 
 	clearRawPanValues(gestures);
 

@@ -37,10 +37,6 @@ export const getRefreshBoundarySignal = (params: {
 	group?: string;
 	shouldRefresh: boolean;
 	closing: boolean;
-	entering: boolean;
-	animating: boolean;
-	progress: number;
-	gestureInProgress: boolean;
 	linkState?: LinkPairsState;
 }): RefreshBoundarySignal | null => {
 	"worklet";
@@ -55,42 +51,43 @@ export const getRefreshBoundarySignal = (params: {
 		group,
 		shouldRefresh,
 		closing,
-		entering,
-		animating,
-		progress,
-		gestureInProgress,
 		linkState,
 	} = params;
 
 	if (!enabled) return null;
 
-	// This is temporary for a patch fix. However, this architecture should
-	// change: our signals aren't currently doing their intended job, so right
-	// now we'll add one more guard until the shape is much more tested and
-	// bulletproof.
-	if (gestureInProgress) return null;
-
-	const canRefreshPreCloseDestination =
-		shouldRefresh && closing && !entering && !animating && progress >= 1;
-
-	const canRefreshSettledDestination = shouldRefresh && !closing && !entering;
-
-	// Guards:
-	// 1) A user may dismiss via back button, in this case, we should remeasure.
-	// 2) If a user drags during entering/closing animations we should NOT remeasure.
-	if (!canRefreshPreCloseDestination && !canRefreshSettledDestination) {
+	if (!shouldRefresh) {
 		return null;
 	}
 
-	// Non group:
-	// Since in typical group flows we would need to know the src, we don't need to do that for
-	// single a->b flows. So we just trigger the destination refresh.
+	// A source may move while its destination is active, so refresh whichever
+	// side of the pair this boundary currently represents.
 	if (!group) {
+		if (sourcePairKey) {
+			const sourcePair = linkState?.[sourcePairKey];
+			const participates =
+				!!sourcePair?.links?.[linkId] || !!sourcePair?.sourceRequests?.[linkId];
+
+			if (!participates) {
+				return null;
+			}
+
+			return buildRefreshSignal(
+				"source",
+				sourcePairKey,
+				[currentScreenKey, closing ? "closing" : "settled"].join("|"),
+			);
+		}
+
 		const refreshDestinationPairKey =
 			destinationPairKey ??
 			(nextScreenKey ? undefined : ancestorDestinationPairKey);
 
 		if (!refreshDestinationPairKey) {
+			return null;
+		}
+
+		if (!linkState?.[refreshDestinationPairKey]?.links?.[linkId]) {
 			return null;
 		}
 

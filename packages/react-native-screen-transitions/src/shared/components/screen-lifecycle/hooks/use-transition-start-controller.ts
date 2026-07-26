@@ -1,6 +1,7 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import type { BaseDescriptor } from "../../../providers/screen/descriptors";
 import type { AnimationStoreMap } from "../../../stores/animation.store";
+import { GestureStore } from "../../../stores/gesture.store";
 import {
 	LifecycleTransitionRequestKind,
 	type SystemStoreMap,
@@ -29,6 +30,7 @@ export const useTransitionStartController = ({
 	} = system;
 	const { clearLifecycleTransitionRequest } = system.actions;
 	const transitionSpec = current.options.transitionSpec;
+	const isDragging = GestureStore.getValue(current.route.key, "dragging");
 
 	useAnimatedReaction(
 		() => {
@@ -61,10 +63,14 @@ export const useTransitionStartController = ({
 			animateToProgress({
 				target,
 				spec: transitionSpec,
+				emitWillAnimate:
+					kind !== LifecycleTransitionRequestKind.Open ||
+					!animations.entering.get(),
 				animations,
 				targetProgress,
 				animationProgress,
 				onAnimationFinish,
+				isDragging,
 			});
 
 			clearLifecycleTransitionRequest();

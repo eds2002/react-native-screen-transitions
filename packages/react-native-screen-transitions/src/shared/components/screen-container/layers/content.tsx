@@ -3,9 +3,8 @@ import { type ComponentType, memo, useMemo } from "react";
 import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Animated from "react-native-reanimated";
-import { useDescriptors } from "../../../providers/screen/descriptors";
-import { useGestureContext } from "../../../providers/screen/gestures";
-import { OriginProvider } from "../../../providers/screen/origin.provider";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
+import { useGestureStore } from "../../../providers/screen/gestures";
 import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 import type { ScreenContentComponentProps } from "../../../types";
 import { ScreenFallbackHost } from "../../boundary/portal/components/boundary-portal/components/host";
@@ -22,11 +21,16 @@ type Props = {
 
 export const ContentLayer = memo(
 	({ children, pointerEvents, isBackdropActive }: Props) => {
-		const { current } = useDescriptors();
-
-		const gestureContext = useGestureContext();
-		const ContentComponent = current.options.contentComponent;
-		const isNavigationMaskEnabled = !!current.options.navigationMaskEnabled;
+		const gestureContext = useGestureStore();
+		const ContentComponent = useDescriptorsStore(
+			(store) => store.options.contentComponent,
+		);
+		const isNavigationMaskEnabled = useDescriptorsStore(
+			(store) => !!store.options.navigationMaskEnabled,
+		);
+		const hasAutoSnapPoint = useDescriptorsStore(
+			(store) => store.options.snapPoints?.includes("auto") ?? false,
+		);
 		const contentPointerEvents = isBackdropActive ? "box-none" : pointerEvents;
 
 		const AnimatedContentComponent = useMemo(() => {
@@ -36,9 +40,6 @@ export const ContentLayer = memo(
 					)
 				: null;
 		}, [ContentComponent]);
-
-		const hasAutoSnapPoint =
-			current.options.snapPoints?.includes("auto") ?? false;
 
 		const handleContentLayout = useContentLayout();
 
@@ -57,16 +58,14 @@ export const ContentLayer = memo(
 				enabled={isNavigationMaskEnabled}
 			>
 				<SurfaceContainer pointerEvents={contentPointerEvents}>
-					<OriginProvider>
-						{hasAutoSnapPoint ? (
-							<View collapsable={false} onLayout={handleContentLayout}>
-								{children}
-							</View>
-						) : (
-							children
-						)}
-						<ScreenFallbackHost />
-					</OriginProvider>
+					{hasAutoSnapPoint ? (
+						<View collapsable={false} onLayout={handleContentLayout}>
+							{children}
+						</View>
+					) : (
+						children
+					)}
+					<ScreenFallbackHost />
 				</SurfaceContainer>
 			</MaybeMaskedNavigationContainer>
 		);

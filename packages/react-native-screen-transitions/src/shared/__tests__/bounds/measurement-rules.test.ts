@@ -1,9 +1,8 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
 import {
+	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
-	normalizeMeasuredBoundsToOrigin,
-	normalizeMeasuredBoundsWithVisibilityGate,
 } from "../../components/boundary/utils/measured-bounds";
 import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
@@ -374,30 +373,6 @@ describe("bounds client measurement contract", () => {
 		).toBe(false);
 	});
 
-	it("normalizes measured bounds against the screen origin", () => {
-		const blockedMeasurement = {
-			...createBounds(),
-			pageX: 420,
-			pageY: 1749,
-		};
-		const origin = {
-			...createBounds(),
-			pageX: 402,
-			pageY: 1749,
-		};
-
-		const normalized = normalizeMeasuredBoundsToOrigin(
-			blockedMeasurement,
-			origin,
-		);
-
-		expect(normalized.pageX).toBe(18);
-		expect(normalized.pageY).toBe(0);
-		expect(normalized.x).toBe(blockedMeasurement.x);
-		expect(normalized.y).toBe(blockedMeasurement.y);
-		expect(isMeasurementInViewport(normalized, 400, 800)).toBe(true);
-	});
-
 	it("corrects visibility-gate frame skew while the screen is offset", () => {
 		const visibilityBlockOffset = 1601;
 		const destination = {
@@ -405,41 +380,42 @@ describe("bounds client measurement contract", () => {
 			pageX: 18,
 			pageY: 1749,
 		};
-		const staleOrigin = {
-			...createBounds(),
-			pageY: 0,
-		};
-		const normalize = (
-			measured: Snapshot["bounds"],
-			origin: Snapshot["bounds"],
-		) =>
-			normalizeMeasuredBoundsWithVisibilityGate({
+		const correct = (measured: Snapshot["bounds"]) =>
+			correctMeasuredBoundsForVisibilityGate({
 				measured,
-				origin,
 				visibilityBlocked: true,
 				visibilityBlockOffset,
 				viewportWidth: 400,
 				viewportHeight: 800,
 			});
 
-		expect(
-			normalize(destination, {
-				...staleOrigin,
-				pageY: visibilityBlockOffset,
-			}),
-		).toMatchObject({ pageX: 18, pageY: 148 });
-
-		expect(normalize(destination, staleOrigin)).toMatchObject({
+		expect(correct(destination)).toMatchObject({
 			pageX: 18,
 			pageY: 148,
 		});
 
+		expect(correct({ ...destination, pageY: 148 })).toMatchObject({
+			pageX: 18,
+			pageY: 148,
+		});
+	});
+
+	it("preserves user-visible presentation offsets", () => {
+		const measured = {
+			...createBounds(),
+			pageX: 24,
+			pageY: 587,
+		};
+
 		expect(
-			normalize(
-				{ ...destination, pageY: 148 },
-				{ ...staleOrigin, pageY: visibilityBlockOffset },
-			),
-		).toMatchObject({ pageX: 18, pageY: 148 });
+			correctMeasuredBoundsForVisibilityGate({
+				measured,
+				visibilityBlocked: false,
+				visibilityBlockOffset: 1601,
+				viewportWidth: 400,
+				viewportHeight: 800,
+			}),
+		).toBe(measured);
 	});
 
 	it("does not reinterpret offscreen measurements after visibility opens", () => {
@@ -449,9 +425,8 @@ describe("bounds client measurement contract", () => {
 		};
 
 		expect(
-			normalizeMeasuredBoundsWithVisibilityGate({
+			correctMeasuredBoundsForVisibilityGate({
 				measured,
-				origin: createBounds(),
 				visibilityBlocked: false,
 				visibilityBlockOffset: 1601,
 				viewportWidth: 400,
@@ -472,7 +447,7 @@ describe("bounds client measurement contract", () => {
 			"colors",
 		);
 
-		const getSignal = (linkId: string, gestureInProgress = false) =>
+		const getSignal = (linkId: string) =>
 			getRefreshBoundarySignal({
 				enabled: true,
 				currentScreenKey: "screen-a",
@@ -484,12 +459,10 @@ describe("bounds client measurement contract", () => {
 				entering: false,
 				animating: false,
 				progress: 1,
-				gestureInProgress,
 				linkState: pairs.get(),
 			});
 
 		expect(getSignal("1")).toBeNull();
-		expect(getSignal("2", true)).toBeNull();
 		expect(getSignal("2")).toEqual({
 			type: "source",
 			pairKey,
@@ -537,6 +510,12 @@ describe("bounds client measurement contract", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const measuredTargets: Array<{ type: "destination"; pairKey: string }> = [];
 		let previousSignal: string | null = null;
+		BoundStore.link.setDestination(
+			pairKey,
+			"card",
+			"screen-b",
+			createBounds(),
+		);
 
 		const runRefreshReaction = () => {
 			const refreshSignal = getRefreshBoundarySignal({
@@ -550,6 +529,7 @@ describe("bounds client measurement contract", () => {
 				animating: false,
 				progress: 1,
 				gestureInProgress: false,
+				linkState: pairs.get(),
 			});
 
 			if (!refreshSignal || refreshSignal.signal === previousSignal) {
@@ -571,6 +551,12 @@ describe("bounds client measurement contract", () => {
 
 	it("refreshes a nested destination through its ancestor pair", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
+		BoundStore.link.setDestination(
+			ancestorPairKey,
+			"card",
+			"nested-index",
+			createBounds(),
+		);
 
 		expect(
 			getRefreshBoundarySignal({
@@ -584,6 +570,7 @@ describe("bounds client measurement contract", () => {
 				animating: false,
 				progress: 1,
 				gestureInProgress: false,
+				linkState: pairs.get(),
 			}),
 		).toEqual({
 			type: "destination",
@@ -592,9 +579,15 @@ describe("bounds client measurement contract", () => {
 		});
 	});
 
-	it("does not refresh an ancestor destination while the nested screen is a source", () => {
+	it("refreshes a nested non-group source instead of its ancestor destination", () => {
 		const ancestorPairKey = createScreenPairKey("screen-a", "nested-route");
 		const nestedPairKey = createScreenPairKey("nested-index", "deep-route");
+		BoundStore.link.setSource(
+			nestedPairKey,
+			"card",
+			"nested-index",
+			createBounds(),
+		);
 
 		expect(
 			getRefreshBoundarySignal({
@@ -610,7 +603,13 @@ describe("bounds client measurement contract", () => {
 				animating: false,
 				progress: 1,
 				gestureInProgress: false,
+				linkState: pairs.get(),
 			}),
-		).toBeNull();
+		).toEqual({
+			type: "source",
+			pairKey: nestedPairKey,
+			signal:
+				"source|nested-index<>deep-route|nested-index|settled",
+		});
 	});
 });

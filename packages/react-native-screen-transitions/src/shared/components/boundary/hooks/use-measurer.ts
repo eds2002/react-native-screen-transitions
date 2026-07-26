@@ -1,13 +1,8 @@
 import { useCallback } from "react";
 import type { View } from "react-native";
 import { useWindowDimensions } from "react-native";
-import {
-	type AnimatedRef,
-	measure,
-	type StyleProps,
-} from "react-native-reanimated";
+import type { AnimatedRef, StyleProps } from "react-native-reanimated";
 import { applyMeasuredBoundsWrites } from "../../../providers/helpers/measured-bounds-writes";
-import { useOriginContext } from "../../../providers/screen/origin.provider";
 import { useScreenSlots } from "../../../providers/screen/styles";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
@@ -16,9 +11,9 @@ import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset
 import type { MeasureBoundary } from "../types";
 import {
 	attachScrollSnapshotToMeasuredBounds,
+	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
 	measureWithOverscrollAwareness,
-	normalizeMeasuredBoundsWithVisibilityGate,
 } from "../utils/measured-bounds";
 
 interface UseMeasurerParams {
@@ -49,7 +44,6 @@ export const useMeasurer = ({
 		currentScreenKey,
 		"pendingLifecycleStartBlockCount",
 	);
-	const { originRef } = useOriginContext();
 	const { visibilityBlocked } = useScreenSlots();
 
 	return useCallback(
@@ -61,14 +55,12 @@ export const useMeasurer = ({
 				measuredAnimatedRef,
 				scrollState.get(),
 			);
-			const measuredOrigin = measure(originRef);
 
-			if (!measured || !measuredOrigin) return;
+			if (!measured) return;
 
-			const normalizedMeasured = normalizeMeasuredBoundsWithVisibilityGate({
+			const correctedMeasured = correctMeasuredBoundsForVisibilityGate({
 				measured,
-				origin: measuredOrigin,
-				visibilityBlocked: escapeClipping && visibilityBlocked.get(),
+				visibilityBlocked: visibilityBlocked.get(),
 				visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
 				viewportWidth,
 				viewportHeight,
@@ -88,7 +80,7 @@ export const useMeasurer = ({
 				target.type !== "destination" ||
 				!shouldGuardDestinationViewport ||
 				isMeasurementInViewport(
-					normalizedMeasured,
+					correctedMeasured,
 					viewportWidth,
 					viewportHeight,
 				);
@@ -96,7 +88,7 @@ export const useMeasurer = ({
 			if (!viewportAllowsDestinationWrite) return;
 
 			const measuredWithScroll = attachScrollSnapshotToMeasuredBounds(
-				normalizedMeasured,
+				correctedMeasured,
 				scrollMetadata.get(),
 			);
 
@@ -125,7 +117,6 @@ export const useMeasurer = ({
 			scrollState,
 			scrollMetadata,
 			pendingLifecycleStartBlockCount,
-			originRef,
 			visibilityBlocked,
 		],
 	);

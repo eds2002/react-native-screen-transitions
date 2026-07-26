@@ -9,8 +9,9 @@ import { ScreenSlotProvider } from "./styles";
 
 type Props<TDescriptor extends BaseDescriptor> = {
 	previous?: TDescriptor;
-	current: TDescriptor;
+	current?: TDescriptor;
 	next?: TDescriptor;
+	routeKey?: string;
 	children: React.ReactNode;
 };
 
@@ -18,10 +19,16 @@ export function ScreenComposer<TDescriptor extends BaseDescriptor>({
 	previous,
 	current,
 	next,
+	routeKey,
 	children,
 }: Props<TDescriptor>) {
 	return (
-		<DescriptorsProvider previous={previous} current={current} next={next}>
+		<DescriptorsProvider
+			previous={previous}
+			current={current}
+			next={next}
+			routeKey={routeKey}
+		>
 			<ScreenLifecycle>
 				<ScreenOptionsProvider>
 					<ScreenGestureProvider>

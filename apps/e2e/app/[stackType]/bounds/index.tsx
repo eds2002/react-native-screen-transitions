@@ -30,6 +30,11 @@ const BOUNDS_EXAMPLES = [
 		description:
 			"One video teleported to the matched screen while the destination slides",
 	},
+	{
+		id: "handoff-multiflow",
+		title: "Handoff multiflow",
+		description: "One payload handed across a multi-screen push and pop flow",
+	},
 ];
 
 export default function BoundsHubIndex() {

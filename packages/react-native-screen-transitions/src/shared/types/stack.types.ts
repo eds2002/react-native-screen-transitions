@@ -47,15 +47,12 @@ export interface BaseStackDescriptor<
 	route: TRoute;
 	navigation: TNavigation;
 	options: TOptions;
-	activity?: StackSceneActivity;
 	render?: () => React.JSX.Element | null;
 }
 
 export type StackDescriptorSource<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-> = Omit<TDescriptor, "activity"> & {
-	activity?: StackSceneActivity;
-};
+> = TDescriptor;
 
 /**
  * Base scene interface - route + descriptor pair.
@@ -64,6 +61,7 @@ export type StackDescriptorSource<
 export interface BaseStackScene<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
 > {
+	activity: StackSceneActivity;
 	route: TDescriptor["route"];
 	descriptor: TDescriptor;
 	previousDescriptor?: TDescriptor;

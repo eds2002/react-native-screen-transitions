@@ -8,8 +8,10 @@ import type {
 	NativeStackDescriptorMap,
 	NativeStackNavigationHelpers,
 } from "../../../native-stack/types";
+import type { StackSceneActivity } from "../stack.types";
 
 export interface DirectStackScene {
+	activity: StackSceneActivity;
 	route: StackNavigationState<ParamListBase>["routes"][number];
 	descriptor: NativeStackDescriptor;
 	isPreloaded: boolean;

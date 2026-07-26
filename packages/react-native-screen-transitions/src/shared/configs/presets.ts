@@ -237,10 +237,10 @@ export const ElasticCard = (
 };
 
 export const SharedIGImage = ({
-	sharedBoundTag,
+	id,
 	...config
 }: Partial<ScreenTransitionConfig> & {
-	sharedBoundTag: string;
+	id: string;
 }): ScreenTransitionConfig => {
 	return {
 		gestureEnabled: true,
@@ -278,11 +278,11 @@ export const SharedIGImage = ({
 
 			const navigationStyles =
 				bounds({
-					id: sharedBoundTag,
+					id,
 				}).navigation.zoom() ?? {};
 
 			// Extract raw style values from bounds result (legacy format)
-			const sourceStyle = navigationStyles[sharedBoundTag] as
+			const sourceStyle = navigationStyles[id] as
 				| Record<string, unknown>
 				| undefined;
 			const containerStyle = navigationStyles[
@@ -347,7 +347,7 @@ export const SharedIGImage = ({
 						pointerEvents: current.gesture.dismissing ? "none" : "auto",
 					},
 				},
-				[sharedBoundTag]: {
+				[id]: {
 					style: {
 						...(sourceStyle ?? {}),
 						transform: [
@@ -384,10 +384,10 @@ export const SharedIGImage = ({
 };
 
 export const SharedAppleMusic = ({
-	sharedBoundTag,
+	id,
 	...config
 }: Partial<ScreenTransitionConfig> & {
-	sharedBoundTag: string;
+	id: string;
 }): ScreenTransitionConfig => {
 	return {
 		enableTransitions: true,
@@ -434,7 +434,7 @@ export const SharedAppleMusic = ({
 			const dragXScale = interpolate(normX, [0, 1], xScaleOuput);
 			const dragYScale = interpolate(normY, [0, 1], yScaleOuput);
 
-			const boundValues = bounds({ id: sharedBoundTag }).values({
+			const boundValues = bounds({ id }).values({
 				method: focused ? "content" : "transform",
 				anchor: "top",
 				scaleMode: "uniform",
@@ -453,7 +453,7 @@ export const SharedAppleMusic = ({
 			 * ===============================
 			 */
 			if (focused) {
-				const maskedValues = bounds({ id: sharedBoundTag }).values({
+				const maskedValues = bounds({ id }).values({
 					space: "absolute",
 					method: "size",
 					target: "fullscreen",
@@ -545,7 +545,7 @@ export const SharedAppleMusic = ({
 			const contentScale = interpolate(progress, [1, 2], [1, 0.9], "clamp");
 
 			return {
-				[sharedBoundTag]: {
+				[id]: {
 					style: {
 						transform: [
 							{ translateX: dragX || 0 },
@@ -593,10 +593,10 @@ export const SharedAppleMusic = ({
 };
 
 export const SharedXImage = ({
-	sharedBoundTag,
+	id,
 	...config
 }: Partial<ScreenTransitionConfig> & {
-	sharedBoundTag: string;
+	id: string;
 }): ScreenTransitionConfig => {
 	return {
 		//@ts-expect-error - Should not lead to any issues
@@ -616,7 +616,7 @@ export const SharedXImage = ({
 
 			const navigationStyles =
 				bounds({
-					id: sharedBoundTag,
+					id,
 				}).navigation.zoom() ?? {};
 			const maskStyle = navigationStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID] as
 				| Record<string, unknown>

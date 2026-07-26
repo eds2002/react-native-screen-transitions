@@ -70,9 +70,8 @@ function Post({
 						<Text style={styles.handle}>12h</Text>
 					</View>
 
-					<Transition.Pressable
-						sharedBoundTag={boundId}
-						style={styles.imageFrame}
+					<Transition.Boundary
+						id={boundId}
 						onPress={() => {
 							router.push({
 								pathname: buildStackPath(
@@ -86,13 +85,15 @@ function Post({
 							});
 						}}
 					>
-						<Image
-							source={imageUrl}
-							style={styles.image}
-							contentFit="cover"
-							transition={200}
-						/>
-					</Transition.Pressable>
+						<Transition.Boundary.Target style={styles.imageFrame}>
+							<Image
+								source={imageUrl}
+								style={styles.image}
+								contentFit="cover"
+								transition={200}
+							/>
+						</Transition.Boundary.Target>
+					</Transition.Boundary>
 
 					<View style={styles.actionsRow}>
 						<Action icon="comment" label="0" />

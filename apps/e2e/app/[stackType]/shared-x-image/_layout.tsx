@@ -25,7 +25,7 @@ export default function SharedXImageLayout() {
 				options={{
 					headerShown: false,
 					...Transition.Presets.SharedXImage({
-						sharedBoundTag: boundId,
+						id: boundId,
 					}),
 				}}
 			/>

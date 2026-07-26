@@ -1,16 +1,15 @@
 import type { ClaimedDirections } from "../../../../types/ownership.types";
-import type { StackSceneActivity } from "../../../../types/stack.types";
 
 export const resolveShadowingClaimDirections = ({
-	currentActivity,
+	isCurrentScreenClosing,
 	currentClaimedDirections,
 	previousClaimedDirections,
 }: {
-	currentActivity: StackSceneActivity | undefined;
+	isCurrentScreenClosing: boolean;
 	currentClaimedDirections: ClaimedDirections;
 	previousClaimedDirections: ClaimedDirections;
 }): ClaimedDirections => {
-	if (currentActivity === "closing") {
+	if (isCurrentScreenClosing) {
 		return previousClaimedDirections;
 	}
 

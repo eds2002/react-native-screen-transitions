@@ -9,165 +9,46 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as UpdatingTo37RouteImport } from './routes/updating-to-3-7'
-import { Route as UpdatingTo36RouteImport } from './routes/updating-to-3-6'
-import { Route as TransitionComponentsRouteImport } from './routes/transition-components'
-import { Route as SurfaceSlotsRouteImport } from './routes/surface-slots'
-import { Route as StackTypesRouteImport } from './routes/stack-types'
-import { Route as SnapPointsRouteImport } from './routes/snap-points'
-import { Route as SharedElementsRouteImport } from './routes/shared-elements'
-import { Route as RevealRouteImport } from './routes/reveal'
-import { Route as ReferenceRouteImport } from './routes/reference'
-import { Route as QuickStartRouteImport } from './routes/quick-start'
-import { Route as PresetsRouteImport } from './routes/presets'
-import { Route as OverlaysRouteImport } from './routes/overlays'
-import { Route as NavigationZoomRouteImport } from './routes/navigation-zoom'
-import { Route as MigratingTo34RouteImport } from './routes/migrating-to-3-4'
-import { Route as InstallationRouteImport } from './routes/installation'
-import { Route as IndependentStacksRouteImport } from './routes/independent-stacks'
-import { Route as InactiveBehaviorRouteImport } from './routes/inactive-behavior'
-import { Route as GesturesRouteImport } from './routes/gestures'
-import { Route as GestureOwnershipRouteImport } from './routes/gesture-ownership'
-import { Route as ExpoRouterRouteImport } from './routes/expo-router'
-import { Route as CustomAnimationsRouteImport } from './routes/custom-animations'
-import { Route as ComponentsRouteImport } from './routes/components'
-import { Route as ChangelogSlugRouteImport } from './routes/changelog.$slug'
-import { Route as ChangelogRouteImport } from './routes/changelog'
-import { Route as CaveatsRouteImport } from './routes/caveats'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdaptersRouteImport } from './routes/adapters'
 import { Route as ApiRouteImport } from './routes/api'
-import { Route as ApiUseScreenGestureRouteImport } from './routes/api.use-screen-gesture'
-import { Route as ApiUseScreenAnimationRouteImport } from './routes/api.use-screen-animation'
-import { Route as ApiUseHistoryRouteImport } from './routes/api.use-history'
-import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/api.create-transition-aware-component'
-import { Route as ApiCreateBoundaryComponentRouteImport } from './routes/api.create-boundary-component'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
+import { Route as CaveatsRouteImport } from './routes/caveats'
+import { Route as ChangelogRouteImport } from './routes/changelog'
+import { Route as ComponentsRouteImport } from './routes/components'
+import { Route as CustomAnimationsRouteImport } from './routes/custom-animations'
+import { Route as ExpoRouterRouteImport } from './routes/expo-router'
+import { Route as GestureOwnershipRouteImport } from './routes/gesture-ownership'
+import { Route as GesturesRouteImport } from './routes/gestures'
+import { Route as InactiveBehaviorRouteImport } from './routes/inactive-behavior'
+import { Route as IndependentStacksRouteImport } from './routes/independent-stacks'
+import { Route as InstallationRouteImport } from './routes/installation'
+import { Route as MigratingTo34RouteImport } from './routes/migrating-to-3-4'
+import { Route as NavigationZoomRouteImport } from './routes/navigation-zoom'
+import { Route as OgDotpngRouteImport } from './routes/og[.]png'
+import { Route as OverlaysRouteImport } from './routes/overlays'
+import { Route as PresetsRouteImport } from './routes/presets'
+import { Route as QuickStartRouteImport } from './routes/quick-start'
+import { Route as ReferenceRouteImport } from './routes/reference'
+import { Route as RevealRouteImport } from './routes/reveal'
+import { Route as SharedElementsRouteImport } from './routes/shared-elements'
+import { Route as SnapPointsRouteImport } from './routes/snap-points'
+import { Route as StackTypesRouteImport } from './routes/stack-types'
+import { Route as SurfaceSlotsRouteImport } from './routes/surface-slots'
+import { Route as TransitionComponentsRouteImport } from './routes/transition-components'
+import { Route as UpdatingTo36RouteImport } from './routes/updating-to-3-6'
+import { Route as UpdatingTo37RouteImport } from './routes/updating-to-3-7'
+import { Route as ApiCreateBoundaryComponentRouteImport } from './routes/api_.create-boundary-component'
+import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/api_.create-transition-aware-component'
+import { Route as ApiUseHistoryRouteImport } from './routes/api_.use-history'
+import { Route as ApiUseScreenAnimationRouteImport } from './routes/api_.use-screen-animation'
+import { Route as ApiUseScreenGestureRouteImport } from './routes/api_.use-screen-gesture'
+import { Route as ChangelogSlugRouteImport } from './routes/changelog.$slug'
 import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
+import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
 
-const UpdatingTo37Route = UpdatingTo37RouteImport.update({
-  id: '/updating-to-3-7',
-  path: '/updating-to-3-7',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const UpdatingTo36Route = UpdatingTo36RouteImport.update({
-  id: '/updating-to-3-6',
-  path: '/updating-to-3-6',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const TransitionComponentsRoute = TransitionComponentsRouteImport.update({
-  id: '/transition-components',
-  path: '/transition-components',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SurfaceSlotsRoute = SurfaceSlotsRouteImport.update({
-  id: '/surface-slots',
-  path: '/surface-slots',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const StackTypesRoute = StackTypesRouteImport.update({
-  id: '/stack-types',
-  path: '/stack-types',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SnapPointsRoute = SnapPointsRouteImport.update({
-  id: '/snap-points',
-  path: '/snap-points',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SharedElementsRoute = SharedElementsRouteImport.update({
-  id: '/shared-elements',
-  path: '/shared-elements',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RevealRoute = RevealRouteImport.update({
-  id: '/reveal',
-  path: '/reveal',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ReferenceRoute = ReferenceRouteImport.update({
-  id: '/reference',
-  path: '/reference',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const QuickStartRoute = QuickStartRouteImport.update({
-  id: '/quick-start',
-  path: '/quick-start',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PresetsRoute = PresetsRouteImport.update({
-  id: '/presets',
-  path: '/presets',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OverlaysRoute = OverlaysRouteImport.update({
-  id: '/overlays',
-  path: '/overlays',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const NavigationZoomRoute = NavigationZoomRouteImport.update({
-  id: '/navigation-zoom',
-  path: '/navigation-zoom',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const MigratingTo34Route = MigratingTo34RouteImport.update({
-  id: '/migrating-to-3-4',
-  path: '/migrating-to-3-4',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InstallationRoute = InstallationRouteImport.update({
-  id: '/installation',
-  path: '/installation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const IndependentStacksRoute = IndependentStacksRouteImport.update({
-  id: '/independent-stacks',
-  path: '/independent-stacks',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const InactiveBehaviorRoute = InactiveBehaviorRouteImport.update({
-  id: '/inactive-behavior',
-  path: '/inactive-behavior',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GesturesRoute = GesturesRouteImport.update({
-  id: '/gestures',
-  path: '/gestures',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const GestureOwnershipRoute = GestureOwnershipRouteImport.update({
-  id: '/gesture-ownership',
-  path: '/gesture-ownership',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExpoRouterRoute = ExpoRouterRouteImport.update({
-  id: '/expo-router',
-  path: '/expo-router',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CustomAnimationsRoute = CustomAnimationsRouteImport.update({
-  id: '/custom-animations',
-  path: '/custom-animations',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ComponentsRoute = ComponentsRouteImport.update({
-  id: '/components',
-  path: '/components',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangelogSlugRoute = ChangelogSlugRouteImport.update({
-  id: '/changelog/$slug',
-  path: '/changelog/$slug',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ChangelogRoute = ChangelogRouteImport.update({
-  id: '/changelog',
-  path: '/changelog',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const CaveatsRoute = CaveatsRouteImport.update({
-  id: '/caveats',
-  path: '/caveats',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AdaptersRoute = AdaptersRouteImport.update({
@@ -180,36 +61,166 @@ const ApiRoute = ApiRouteImport.update({
   path: '/api',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUseScreenGestureRoute = ApiUseScreenGestureRouteImport.update({
-  id: '/api/use-screen-gesture',
-  path: '/api/use-screen-gesture',
+const CaveatsRoute = CaveatsRouteImport.update({
+  id: '/caveats',
+  path: '/caveats',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUseScreenAnimationRoute = ApiUseScreenAnimationRouteImport.update({
-  id: '/api/use-screen-animation',
-  path: '/api/use-screen-animation',
+const ChangelogRoute = ChangelogRouteImport.update({
+  id: '/changelog',
+  path: '/changelog',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiUseHistoryRoute = ApiUseHistoryRouteImport.update({
-  id: '/api/use-history',
-  path: '/api/use-history',
+const ComponentsRoute = ComponentsRouteImport.update({
+  id: '/components',
+  path: '/components',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCreateTransitionAwareComponentRoute =
-  ApiCreateTransitionAwareComponentRouteImport.update({
-    id: '/api/create-transition-aware-component',
-    path: '/api/create-transition-aware-component',
-    getParentRoute: () => rootRouteImport,
-  } as any)
+const CustomAnimationsRoute = CustomAnimationsRouteImport.update({
+  id: '/custom-animations',
+  path: '/custom-animations',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExpoRouterRoute = ExpoRouterRouteImport.update({
+  id: '/expo-router',
+  path: '/expo-router',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GestureOwnershipRoute = GestureOwnershipRouteImport.update({
+  id: '/gesture-ownership',
+  path: '/gesture-ownership',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const GesturesRoute = GesturesRouteImport.update({
+  id: '/gestures',
+  path: '/gestures',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InactiveBehaviorRoute = InactiveBehaviorRouteImport.update({
+  id: '/inactive-behavior',
+  path: '/inactive-behavior',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndependentStacksRoute = IndependentStacksRouteImport.update({
+  id: '/independent-stacks',
+  path: '/independent-stacks',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InstallationRoute = InstallationRouteImport.update({
+  id: '/installation',
+  path: '/installation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MigratingTo34Route = MigratingTo34RouteImport.update({
+  id: '/migrating-to-3-4',
+  path: '/migrating-to-3-4',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const NavigationZoomRoute = NavigationZoomRouteImport.update({
+  id: '/navigation-zoom',
+  path: '/navigation-zoom',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OgDotpngRoute = OgDotpngRouteImport.update({
+  id: '/og.png',
+  path: '/og.png',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OverlaysRoute = OverlaysRouteImport.update({
+  id: '/overlays',
+  path: '/overlays',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PresetsRoute = PresetsRouteImport.update({
+  id: '/presets',
+  path: '/presets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const QuickStartRoute = QuickStartRouteImport.update({
+  id: '/quick-start',
+  path: '/quick-start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReferenceRoute = ReferenceRouteImport.update({
+  id: '/reference',
+  path: '/reference',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RevealRoute = RevealRouteImport.update({
+  id: '/reveal',
+  path: '/reveal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SharedElementsRoute = SharedElementsRouteImport.update({
+  id: '/shared-elements',
+  path: '/shared-elements',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SnapPointsRoute = SnapPointsRouteImport.update({
+  id: '/snap-points',
+  path: '/snap-points',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const StackTypesRoute = StackTypesRouteImport.update({
+  id: '/stack-types',
+  path: '/stack-types',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SurfaceSlotsRoute = SurfaceSlotsRouteImport.update({
+  id: '/surface-slots',
+  path: '/surface-slots',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TransitionComponentsRoute = TransitionComponentsRouteImport.update({
+  id: '/transition-components',
+  path: '/transition-components',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UpdatingTo36Route = UpdatingTo36RouteImport.update({
+  id: '/updating-to-3-6',
+  path: '/updating-to-3-6',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const UpdatingTo37Route = UpdatingTo37RouteImport.update({
+  id: '/updating-to-3-7',
+  path: '/updating-to-3-7',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiCreateBoundaryComponentRoute =
   ApiCreateBoundaryComponentRouteImport.update({
-    id: '/api/create-boundary-component',
+    id: '/api_/create-boundary-component',
     path: '/api/create-boundary-component',
     getParentRoute: () => rootRouteImport,
   } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const ApiCreateTransitionAwareComponentRoute =
+  ApiCreateTransitionAwareComponentRouteImport.update({
+    id: '/api_/create-transition-aware-component',
+    path: '/api/create-transition-aware-component',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiUseHistoryRoute = ApiUseHistoryRouteImport.update({
+  id: '/api_/use-history',
+  path: '/api/use-history',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUseScreenAnimationRoute = ApiUseScreenAnimationRouteImport.update({
+  id: '/api_/use-screen-animation',
+  path: '/api/use-screen-animation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUseScreenGestureRoute = ApiUseScreenGestureRouteImport.update({
+  id: '/api_/use-screen-gesture',
+  path: '/api/use-screen-gesture',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ChangelogSlugRoute = ChangelogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => ChangelogRoute,
+} as any)
+const RecipesModalRoute = RecipesModalRouteImport.update({
+  id: '/recipes/modal',
+  path: '/recipes/modal',
   getParentRoute: () => rootRouteImport,
 } as any)
 const V4NextIndexRoute = V4NextIndexRouteImport.update({
@@ -217,24 +228,13 @@ const V4NextIndexRoute = V4NextIndexRouteImport.update({
   path: '/v4-next/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const RecipesModalRoute = RecipesModalRouteImport.update({
-  id: '/recipes/modal',
-  path: '/recipes/modal',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
   '/api': typeof ApiRoute
-  '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
-  '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
-  '/api/use-history': typeof ApiUseHistoryRoute
-  '/api/use-screen-animation': typeof ApiUseScreenAnimationRoute
-  '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
   '/caveats': typeof CaveatsRoute
-  '/changelog': typeof ChangelogRoute
-  '/changelog/$slug': typeof ChangelogSlugRoute
+  '/changelog': typeof ChangelogRouteWithChildren
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -245,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/installation': typeof InstallationRoute
   '/migrating-to-3-4': typeof MigratingTo34Route
   '/navigation-zoom': typeof NavigationZoomRoute
+  '/og.png': typeof OgDotpngRoute
   '/overlays': typeof OverlaysRoute
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
@@ -257,6 +258,12 @@ export interface FileRoutesByFullPath {
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
   '/updating-to-3-7': typeof UpdatingTo37Route
+  '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
+  '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api/use-history': typeof ApiUseHistoryRoute
+  '/api/use-screen-animation': typeof ApiUseScreenAnimationRoute
+  '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-next/': typeof V4NextIndexRoute
 }
@@ -264,14 +271,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
   '/api': typeof ApiRoute
-  '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
-  '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
-  '/api/use-history': typeof ApiUseHistoryRoute
-  '/api/use-screen-animation': typeof ApiUseScreenAnimationRoute
-  '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
   '/caveats': typeof CaveatsRoute
-  '/changelog': typeof ChangelogRoute
-  '/changelog/$slug': typeof ChangelogSlugRoute
+  '/changelog': typeof ChangelogRouteWithChildren
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -282,6 +283,7 @@ export interface FileRoutesByTo {
   '/installation': typeof InstallationRoute
   '/migrating-to-3-4': typeof MigratingTo34Route
   '/navigation-zoom': typeof NavigationZoomRoute
+  '/og.png': typeof OgDotpngRoute
   '/overlays': typeof OverlaysRoute
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
@@ -294,6 +296,12 @@ export interface FileRoutesByTo {
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
   '/updating-to-3-7': typeof UpdatingTo37Route
+  '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
+  '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api/use-history': typeof ApiUseHistoryRoute
+  '/api/use-screen-animation': typeof ApiUseScreenAnimationRoute
+  '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-next': typeof V4NextIndexRoute
 }
@@ -302,14 +310,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
   '/api': typeof ApiRoute
-  '/api/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
-  '/api/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
-  '/api/use-history': typeof ApiUseHistoryRoute
-  '/api/use-screen-animation': typeof ApiUseScreenAnimationRoute
-  '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
   '/caveats': typeof CaveatsRoute
-  '/changelog': typeof ChangelogRoute
-  '/changelog/$slug': typeof ChangelogSlugRoute
+  '/changelog': typeof ChangelogRouteWithChildren
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -320,6 +322,7 @@ export interface FileRoutesById {
   '/installation': typeof InstallationRoute
   '/migrating-to-3-4': typeof MigratingTo34Route
   '/navigation-zoom': typeof NavigationZoomRoute
+  '/og.png': typeof OgDotpngRoute
   '/overlays': typeof OverlaysRoute
   '/presets': typeof PresetsRoute
   '/quick-start': typeof QuickStartRoute
@@ -332,6 +335,12 @@ export interface FileRoutesById {
   '/transition-components': typeof TransitionComponentsRoute
   '/updating-to-3-6': typeof UpdatingTo36Route
   '/updating-to-3-7': typeof UpdatingTo37Route
+  '/api_/create-boundary-component': typeof ApiCreateBoundaryComponentRoute
+  '/api_/create-transition-aware-component': typeof ApiCreateTransitionAwareComponentRoute
+  '/api_/use-history': typeof ApiUseHistoryRoute
+  '/api_/use-screen-animation': typeof ApiUseScreenAnimationRoute
+  '/api_/use-screen-gesture': typeof ApiUseScreenGestureRoute
+  '/changelog/$slug': typeof ChangelogSlugRoute
   '/recipes/modal': typeof RecipesModalRoute
   '/v4-next/': typeof V4NextIndexRoute
 }
@@ -341,14 +350,8 @@ export interface FileRouteTypes {
     | '/'
     | '/adapters'
     | '/api'
-    | '/api/create-boundary-component'
-    | '/api/create-transition-aware-component'
-    | '/api/use-history'
-    | '/api/use-screen-animation'
-    | '/api/use-screen-gesture'
     | '/caveats'
     | '/changelog'
-    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -359,6 +362,7 @@ export interface FileRouteTypes {
     | '/installation'
     | '/migrating-to-3-4'
     | '/navigation-zoom'
+    | '/og.png'
     | '/overlays'
     | '/presets'
     | '/quick-start'
@@ -371,6 +375,12 @@ export interface FileRouteTypes {
     | '/transition-components'
     | '/updating-to-3-6'
     | '/updating-to-3-7'
+    | '/api/create-boundary-component'
+    | '/api/create-transition-aware-component'
+    | '/api/use-history'
+    | '/api/use-screen-animation'
+    | '/api/use-screen-gesture'
+    | '/changelog/$slug'
     | '/recipes/modal'
     | '/v4-next/'
   fileRoutesByTo: FileRoutesByTo
@@ -378,14 +388,8 @@ export interface FileRouteTypes {
     | '/'
     | '/adapters'
     | '/api'
-    | '/api/create-boundary-component'
-    | '/api/create-transition-aware-component'
-    | '/api/use-history'
-    | '/api/use-screen-animation'
-    | '/api/use-screen-gesture'
     | '/caveats'
     | '/changelog'
-    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -396,6 +400,7 @@ export interface FileRouteTypes {
     | '/installation'
     | '/migrating-to-3-4'
     | '/navigation-zoom'
+    | '/og.png'
     | '/overlays'
     | '/presets'
     | '/quick-start'
@@ -408,6 +413,12 @@ export interface FileRouteTypes {
     | '/transition-components'
     | '/updating-to-3-6'
     | '/updating-to-3-7'
+    | '/api/create-boundary-component'
+    | '/api/create-transition-aware-component'
+    | '/api/use-history'
+    | '/api/use-screen-animation'
+    | '/api/use-screen-gesture'
+    | '/changelog/$slug'
     | '/recipes/modal'
     | '/v4-next'
   id:
@@ -415,14 +426,8 @@ export interface FileRouteTypes {
     | '/'
     | '/adapters'
     | '/api'
-    | '/api/create-boundary-component'
-    | '/api/create-transition-aware-component'
-    | '/api/use-history'
-    | '/api/use-screen-animation'
-    | '/api/use-screen-gesture'
     | '/caveats'
     | '/changelog'
-    | '/changelog/$slug'
     | '/components'
     | '/custom-animations'
     | '/expo-router'
@@ -433,6 +438,7 @@ export interface FileRouteTypes {
     | '/installation'
     | '/migrating-to-3-4'
     | '/navigation-zoom'
+    | '/og.png'
     | '/overlays'
     | '/presets'
     | '/quick-start'
@@ -445,6 +451,12 @@ export interface FileRouteTypes {
     | '/transition-components'
     | '/updating-to-3-6'
     | '/updating-to-3-7'
+    | '/api_/create-boundary-component'
+    | '/api_/create-transition-aware-component'
+    | '/api_/use-history'
+    | '/api_/use-screen-animation'
+    | '/api_/use-screen-gesture'
+    | '/changelog/$slug'
     | '/recipes/modal'
     | '/v4-next/'
   fileRoutesById: FileRoutesById
@@ -453,14 +465,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdaptersRoute: typeof AdaptersRoute
   ApiRoute: typeof ApiRoute
-  ApiCreateBoundaryComponentRoute: typeof ApiCreateBoundaryComponentRoute
-  ApiCreateTransitionAwareComponentRoute: typeof ApiCreateTransitionAwareComponentRoute
-  ApiUseHistoryRoute: typeof ApiUseHistoryRoute
-  ApiUseScreenAnimationRoute: typeof ApiUseScreenAnimationRoute
-  ApiUseScreenGestureRoute: typeof ApiUseScreenGestureRoute
   CaveatsRoute: typeof CaveatsRoute
-  ChangelogRoute: typeof ChangelogRoute
-  ChangelogSlugRoute: typeof ChangelogSlugRoute
+  ChangelogRoute: typeof ChangelogRouteWithChildren
   ComponentsRoute: typeof ComponentsRoute
   CustomAnimationsRoute: typeof CustomAnimationsRoute
   ExpoRouterRoute: typeof ExpoRouterRoute
@@ -471,6 +477,7 @@ export interface RootRouteChildren {
   InstallationRoute: typeof InstallationRoute
   MigratingTo34Route: typeof MigratingTo34Route
   NavigationZoomRoute: typeof NavigationZoomRoute
+  OgDotpngRoute: typeof OgDotpngRoute
   OverlaysRoute: typeof OverlaysRoute
   PresetsRoute: typeof PresetsRoute
   QuickStartRoute: typeof QuickStartRoute
@@ -483,185 +490,22 @@ export interface RootRouteChildren {
   TransitionComponentsRoute: typeof TransitionComponentsRoute
   UpdatingTo36Route: typeof UpdatingTo36Route
   UpdatingTo37Route: typeof UpdatingTo37Route
+  ApiCreateBoundaryComponentRoute: typeof ApiCreateBoundaryComponentRoute
+  ApiCreateTransitionAwareComponentRoute: typeof ApiCreateTransitionAwareComponentRoute
+  ApiUseHistoryRoute: typeof ApiUseHistoryRoute
+  ApiUseScreenAnimationRoute: typeof ApiUseScreenAnimationRoute
+  ApiUseScreenGestureRoute: typeof ApiUseScreenGestureRoute
   RecipesModalRoute: typeof RecipesModalRoute
   V4NextIndexRoute: typeof V4NextIndexRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/updating-to-3-7': {
-      id: '/updating-to-3-7'
-      path: '/updating-to-3-7'
-      fullPath: '/updating-to-3-7'
-      preLoaderRoute: typeof UpdatingTo37RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/updating-to-3-6': {
-      id: '/updating-to-3-6'
-      path: '/updating-to-3-6'
-      fullPath: '/updating-to-3-6'
-      preLoaderRoute: typeof UpdatingTo36RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/transition-components': {
-      id: '/transition-components'
-      path: '/transition-components'
-      fullPath: '/transition-components'
-      preLoaderRoute: typeof TransitionComponentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/surface-slots': {
-      id: '/surface-slots'
-      path: '/surface-slots'
-      fullPath: '/surface-slots'
-      preLoaderRoute: typeof SurfaceSlotsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/stack-types': {
-      id: '/stack-types'
-      path: '/stack-types'
-      fullPath: '/stack-types'
-      preLoaderRoute: typeof StackTypesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/snap-points': {
-      id: '/snap-points'
-      path: '/snap-points'
-      fullPath: '/snap-points'
-      preLoaderRoute: typeof SnapPointsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/shared-elements': {
-      id: '/shared-elements'
-      path: '/shared-elements'
-      fullPath: '/shared-elements'
-      preLoaderRoute: typeof SharedElementsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reveal': {
-      id: '/reveal'
-      path: '/reveal'
-      fullPath: '/reveal'
-      preLoaderRoute: typeof RevealRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/reference': {
-      id: '/reference'
-      path: '/reference'
-      fullPath: '/reference'
-      preLoaderRoute: typeof ReferenceRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/quick-start': {
-      id: '/quick-start'
-      path: '/quick-start'
-      fullPath: '/quick-start'
-      preLoaderRoute: typeof QuickStartRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/presets': {
-      id: '/presets'
-      path: '/presets'
-      fullPath: '/presets'
-      preLoaderRoute: typeof PresetsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/overlays': {
-      id: '/overlays'
-      path: '/overlays'
-      fullPath: '/overlays'
-      preLoaderRoute: typeof OverlaysRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/navigation-zoom': {
-      id: '/navigation-zoom'
-      path: '/navigation-zoom'
-      fullPath: '/navigation-zoom'
-      preLoaderRoute: typeof NavigationZoomRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/migrating-to-3-4': {
-      id: '/migrating-to-3-4'
-      path: '/migrating-to-3-4'
-      fullPath: '/migrating-to-3-4'
-      preLoaderRoute: typeof MigratingTo34RouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/installation': {
-      id: '/installation'
-      path: '/installation'
-      fullPath: '/installation'
-      preLoaderRoute: typeof InstallationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/independent-stacks': {
-      id: '/independent-stacks'
-      path: '/independent-stacks'
-      fullPath: '/independent-stacks'
-      preLoaderRoute: typeof IndependentStacksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/inactive-behavior': {
-      id: '/inactive-behavior'
-      path: '/inactive-behavior'
-      fullPath: '/inactive-behavior'
-      preLoaderRoute: typeof InactiveBehaviorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gestures': {
-      id: '/gestures'
-      path: '/gestures'
-      fullPath: '/gestures'
-      preLoaderRoute: typeof GesturesRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/gesture-ownership': {
-      id: '/gesture-ownership'
-      path: '/gesture-ownership'
-      fullPath: '/gesture-ownership'
-      preLoaderRoute: typeof GestureOwnershipRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/expo-router': {
-      id: '/expo-router'
-      path: '/expo-router'
-      fullPath: '/expo-router'
-      preLoaderRoute: typeof ExpoRouterRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/custom-animations': {
-      id: '/custom-animations'
-      path: '/custom-animations'
-      fullPath: '/custom-animations'
-      preLoaderRoute: typeof CustomAnimationsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/components': {
-      id: '/components'
-      path: '/components'
-      fullPath: '/components'
-      preLoaderRoute: typeof ComponentsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/caveats': {
-      id: '/caveats'
-      path: '/caveats'
-      fullPath: '/caveats'
-      preLoaderRoute: typeof CaveatsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/changelog/$slug': {
-      id: '/changelog/$slug'
-      path: '/changelog/$slug'
-      fullPath: '/changelog/$slug'
-      preLoaderRoute: typeof ChangelogSlugRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/changelog': {
-      id: '/changelog'
-      path: '/changelog'
-      fullPath: '/changelog'
-      preLoaderRoute: typeof ChangelogRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/adapters': {
@@ -678,46 +522,228 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/use-screen-gesture': {
-      id: '/api/use-screen-gesture'
-      path: '/api/use-screen-gesture'
-      fullPath: '/api/use-screen-gesture'
-      preLoaderRoute: typeof ApiUseScreenGestureRouteImport
+    '/caveats': {
+      id: '/caveats'
+      path: '/caveats'
+      fullPath: '/caveats'
+      preLoaderRoute: typeof CaveatsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/use-screen-animation': {
-      id: '/api/use-screen-animation'
-      path: '/api/use-screen-animation'
-      fullPath: '/api/use-screen-animation'
-      preLoaderRoute: typeof ApiUseScreenAnimationRouteImport
+    '/changelog': {
+      id: '/changelog'
+      path: '/changelog'
+      fullPath: '/changelog'
+      preLoaderRoute: typeof ChangelogRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/use-history': {
-      id: '/api/use-history'
-      path: '/api/use-history'
-      fullPath: '/api/use-history'
-      preLoaderRoute: typeof ApiUseHistoryRouteImport
+    '/components': {
+      id: '/components'
+      path: '/components'
+      fullPath: '/components'
+      preLoaderRoute: typeof ComponentsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/create-transition-aware-component': {
-      id: '/api/create-transition-aware-component'
-      path: '/api/create-transition-aware-component'
-      fullPath: '/api/create-transition-aware-component'
-      preLoaderRoute: typeof ApiCreateTransitionAwareComponentRouteImport
+    '/custom-animations': {
+      id: '/custom-animations'
+      path: '/custom-animations'
+      fullPath: '/custom-animations'
+      preLoaderRoute: typeof CustomAnimationsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/create-boundary-component': {
-      id: '/api/create-boundary-component'
+    '/expo-router': {
+      id: '/expo-router'
+      path: '/expo-router'
+      fullPath: '/expo-router'
+      preLoaderRoute: typeof ExpoRouterRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gesture-ownership': {
+      id: '/gesture-ownership'
+      path: '/gesture-ownership'
+      fullPath: '/gesture-ownership'
+      preLoaderRoute: typeof GestureOwnershipRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/gestures': {
+      id: '/gestures'
+      path: '/gestures'
+      fullPath: '/gestures'
+      preLoaderRoute: typeof GesturesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/inactive-behavior': {
+      id: '/inactive-behavior'
+      path: '/inactive-behavior'
+      fullPath: '/inactive-behavior'
+      preLoaderRoute: typeof InactiveBehaviorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/independent-stacks': {
+      id: '/independent-stacks'
+      path: '/independent-stacks'
+      fullPath: '/independent-stacks'
+      preLoaderRoute: typeof IndependentStacksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/installation': {
+      id: '/installation'
+      path: '/installation'
+      fullPath: '/installation'
+      preLoaderRoute: typeof InstallationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/migrating-to-3-4': {
+      id: '/migrating-to-3-4'
+      path: '/migrating-to-3-4'
+      fullPath: '/migrating-to-3-4'
+      preLoaderRoute: typeof MigratingTo34RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/navigation-zoom': {
+      id: '/navigation-zoom'
+      path: '/navigation-zoom'
+      fullPath: '/navigation-zoom'
+      preLoaderRoute: typeof NavigationZoomRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/og.png': {
+      id: '/og.png'
+      path: '/og.png'
+      fullPath: '/og.png'
+      preLoaderRoute: typeof OgDotpngRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/overlays': {
+      id: '/overlays'
+      path: '/overlays'
+      fullPath: '/overlays'
+      preLoaderRoute: typeof OverlaysRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/presets': {
+      id: '/presets'
+      path: '/presets'
+      fullPath: '/presets'
+      preLoaderRoute: typeof PresetsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/quick-start': {
+      id: '/quick-start'
+      path: '/quick-start'
+      fullPath: '/quick-start'
+      preLoaderRoute: typeof QuickStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reference': {
+      id: '/reference'
+      path: '/reference'
+      fullPath: '/reference'
+      preLoaderRoute: typeof ReferenceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reveal': {
+      id: '/reveal'
+      path: '/reveal'
+      fullPath: '/reveal'
+      preLoaderRoute: typeof RevealRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/shared-elements': {
+      id: '/shared-elements'
+      path: '/shared-elements'
+      fullPath: '/shared-elements'
+      preLoaderRoute: typeof SharedElementsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/snap-points': {
+      id: '/snap-points'
+      path: '/snap-points'
+      fullPath: '/snap-points'
+      preLoaderRoute: typeof SnapPointsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/stack-types': {
+      id: '/stack-types'
+      path: '/stack-types'
+      fullPath: '/stack-types'
+      preLoaderRoute: typeof StackTypesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/surface-slots': {
+      id: '/surface-slots'
+      path: '/surface-slots'
+      fullPath: '/surface-slots'
+      preLoaderRoute: typeof SurfaceSlotsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/transition-components': {
+      id: '/transition-components'
+      path: '/transition-components'
+      fullPath: '/transition-components'
+      preLoaderRoute: typeof TransitionComponentsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/updating-to-3-6': {
+      id: '/updating-to-3-6'
+      path: '/updating-to-3-6'
+      fullPath: '/updating-to-3-6'
+      preLoaderRoute: typeof UpdatingTo36RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/updating-to-3-7': {
+      id: '/updating-to-3-7'
+      path: '/updating-to-3-7'
+      fullPath: '/updating-to-3-7'
+      preLoaderRoute: typeof UpdatingTo37RouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api_/create-boundary-component': {
+      id: '/api_/create-boundary-component'
       path: '/api/create-boundary-component'
       fullPath: '/api/create-boundary-component'
       preLoaderRoute: typeof ApiCreateBoundaryComponentRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/api_/create-transition-aware-component': {
+      id: '/api_/create-transition-aware-component'
+      path: '/api/create-transition-aware-component'
+      fullPath: '/api/create-transition-aware-component'
+      preLoaderRoute: typeof ApiCreateTransitionAwareComponentRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api_/use-history': {
+      id: '/api_/use-history'
+      path: '/api/use-history'
+      fullPath: '/api/use-history'
+      preLoaderRoute: typeof ApiUseHistoryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api_/use-screen-animation': {
+      id: '/api_/use-screen-animation'
+      path: '/api/use-screen-animation'
+      fullPath: '/api/use-screen-animation'
+      preLoaderRoute: typeof ApiUseScreenAnimationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api_/use-screen-gesture': {
+      id: '/api_/use-screen-gesture'
+      path: '/api/use-screen-gesture'
+      fullPath: '/api/use-screen-gesture'
+      preLoaderRoute: typeof ApiUseScreenGestureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/changelog/$slug': {
+      id: '/changelog/$slug'
+      path: '/$slug'
+      fullPath: '/changelog/$slug'
+      preLoaderRoute: typeof ChangelogSlugRouteImport
+      parentRoute: typeof ChangelogRoute
+    }
+    '/recipes/modal': {
+      id: '/recipes/modal'
+      path: '/recipes/modal'
+      fullPath: '/recipes/modal'
+      preLoaderRoute: typeof RecipesModalRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/v4-next/': {
@@ -727,28 +753,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof V4NextIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/recipes/modal': {
-      id: '/recipes/modal'
-      path: '/recipes/modal'
-      fullPath: '/recipes/modal'
-      preLoaderRoute: typeof RecipesModalRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
+
+interface ChangelogRouteChildren {
+  ChangelogSlugRoute: typeof ChangelogSlugRoute
+}
+
+const ChangelogRouteChildren: ChangelogRouteChildren = {
+  ChangelogSlugRoute: ChangelogSlugRoute,
+}
+
+const ChangelogRouteWithChildren = ChangelogRoute._addFileChildren(
+  ChangelogRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdaptersRoute: AdaptersRoute,
   ApiRoute: ApiRoute,
-  ApiCreateBoundaryComponentRoute: ApiCreateBoundaryComponentRoute,
-  ApiCreateTransitionAwareComponentRoute: ApiCreateTransitionAwareComponentRoute,
-  ApiUseHistoryRoute: ApiUseHistoryRoute,
-  ApiUseScreenAnimationRoute: ApiUseScreenAnimationRoute,
-  ApiUseScreenGestureRoute: ApiUseScreenGestureRoute,
   CaveatsRoute: CaveatsRoute,
-  ChangelogRoute: ChangelogRoute,
-  ChangelogSlugRoute: ChangelogSlugRoute,
+  ChangelogRoute: ChangelogRouteWithChildren,
   ComponentsRoute: ComponentsRoute,
   CustomAnimationsRoute: CustomAnimationsRoute,
   ExpoRouterRoute: ExpoRouterRoute,
@@ -759,6 +784,7 @@ const rootRouteChildren: RootRouteChildren = {
   InstallationRoute: InstallationRoute,
   MigratingTo34Route: MigratingTo34Route,
   NavigationZoomRoute: NavigationZoomRoute,
+  OgDotpngRoute: OgDotpngRoute,
   OverlaysRoute: OverlaysRoute,
   PresetsRoute: PresetsRoute,
   QuickStartRoute: QuickStartRoute,
@@ -771,9 +797,24 @@ const rootRouteChildren: RootRouteChildren = {
   TransitionComponentsRoute: TransitionComponentsRoute,
   UpdatingTo36Route: UpdatingTo36Route,
   UpdatingTo37Route: UpdatingTo37Route,
+  ApiCreateBoundaryComponentRoute: ApiCreateBoundaryComponentRoute,
+  ApiCreateTransitionAwareComponentRoute:
+    ApiCreateTransitionAwareComponentRoute,
+  ApiUseHistoryRoute: ApiUseHistoryRoute,
+  ApiUseScreenAnimationRoute: ApiUseScreenAnimationRoute,
+  ApiUseScreenGestureRoute: ApiUseScreenGestureRoute,
   RecipesModalRoute: RecipesModalRoute,
   V4NextIndexRoute: V4NextIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

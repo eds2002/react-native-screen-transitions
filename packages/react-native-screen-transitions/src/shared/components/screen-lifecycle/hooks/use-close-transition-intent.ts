@@ -3,10 +3,10 @@ import { useLayoutEffect, useMemo, useRef } from "react";
 import useStableCallback from "../../../hooks/use-stable-callback";
 import {
 	type BaseDescriptor,
-	useDescriptorDerivations,
+	useDescriptorsStore,
 } from "../../../providers/screen/descriptors";
-import { useBlankStackContext } from "../../../providers/stack/blank-stack.provider";
-import { useStackCoreContext } from "../../../providers/stack/core.provider";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import { useStackCoreStore } from "../../../providers/stack/core.provider";
 import { GestureStore } from "../../../stores/gesture.store";
 import {
 	LifecycleTransitionRequestKind,
@@ -27,10 +27,15 @@ const useBlankStackClose = ({
 	requestLifecycleTransition,
 	resetStores,
 }: CloseHookParams) => {
-	const { handleCloseRoute } = useBlankStackContext();
+	const handleCloseRoute = useBlankStackStore(
+		(store) => store?.handleCloseRoute,
+	);
+	const isClosing = useBlankStackStore(
+		(store) => store?.scenesByKey[current.route.key]?.activity === "closing",
+	);
 
 	useLayoutEffect(() => {
-		if (current.activity !== "closing") {
+		if (!isClosing) {
 			return;
 		}
 
@@ -38,10 +43,13 @@ const useBlankStackClose = ({
 			LifecycleTransitionRequestKind.BlankStackClose,
 			0,
 		);
-	}, [current.activity, requestLifecycleTransition]);
+	}, [isClosing, requestLifecycleTransition]);
 
 	const handleBlankStackCloseEnd = useStableCallback((finished: boolean) => {
 		if (!finished) return;
+		if (!handleCloseRoute) {
+			throw new Error("Blank stack close handler was not found.");
+		}
 		handleCloseRoute({ route: current.route });
 		requestAnimationFrame(() => {
 			resetStores();
@@ -59,7 +67,9 @@ const useNativeStackClose = ({
 	requestLifecycleTransition,
 	resetStores,
 }: CloseHookParams) => {
-	const { parentScreenKey } = useDescriptorDerivations();
+	const parentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.parentScreenKey,
+	);
 	const pendingActionRef = useRef<any>(null);
 
 	const nearestAncestorDismissing = useMemo(() => {
@@ -121,8 +131,8 @@ export function useCloseTransitionIntent(
 	handleNativeCloseEnd?: (finished: boolean) => void;
 } {
 	const routeKey = current.route.key;
-	const { flags } = useStackCoreContext();
-	const isNativeStack = flags.STACK_TYPE === StackType.NATIVE;
+	const stackType = useStackCoreStore((store) => store.flags.STACK_TYPE);
+	const isNativeStack = stackType === StackType.NATIVE;
 	const { requestLifecycleTransition } = system.actions;
 
 	const resetStores = useStableCallback(() => {

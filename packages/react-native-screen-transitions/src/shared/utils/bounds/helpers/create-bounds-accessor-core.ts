@@ -1,3 +1,4 @@
+import { NO_STYLES } from "../../../constants";
 import type {
 	BoundsAccessor,
 	BoundsInterpolationProps,
@@ -64,6 +65,12 @@ const createBoundsAccessorParts = ({
 		const scoped: BoundsScopedAccessor = {
 			styles: (options?: BoundsComputeOptions): BoundsStyleResult => {
 				"worklet";
+				// Keep the component at its base layout for pre-animation refresh
+				// measurement, then remove generated styles again after settlement.
+				if (!props.active.animating) {
+					return NO_STYLES;
+				}
+
 				return prepareBoundStyles({
 					props,
 					options: {

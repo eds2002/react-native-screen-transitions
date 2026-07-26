@@ -1,0 +1,91 @@
+---
+title: "New in 3.11"
+pageTitle: "New in 3.11"
+summary: "v3.11 tightens transition lifecycle timing, improves transformed Boundary measurement, and makes live handoff more reliable."
+description: "v3.11 tightens transition lifecycle timing, improves transformed Boundary measurement, and makes live handoff more reliable."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "July 2026"
+order: 0
+to: /changelog/updating-to-3-11
+---
+
+v3.11 focuses on transition timing and runtime efficiency.
+
+Screen lifecycle state now stays synchronized with the motion that is actually visible, transformed parent layouts no longer distort destination measurements, and live handoff behaves more reliably across longer navigation flows.
+
+## Synchronized transition lifecycle
+
+`entering`, `closing`, `animating`, `settled`, and `willAnimate` now describe one coherent transition lifecycle across programmatic navigation and gestures.
+
+`willAnimate` is a one-frame signal emitted before a new idle gesture or programmatic transition begins. It is intended for work that must be ready before the first animated frame, such as refreshing a Boundary source measurement.
+
+```tsx
+screenStyleInterpolator: ({ current }) => {
+  if (current.willAnimate) {
+    // Prepare transition-owned state before motion starts.
+  }
+
+  return {
+    content: {
+      style: {
+        opacity: current.progress,
+      },
+    },
+  };
+}
+```
+
+Re-grabbing a gesture while its values are still settling does not create another lifecycle start. Closing state is committed before its animation-start pulse, and interrupted entrances continue toward the correct active target.
+
+`gesture.initiator` exposes the accepted gesture identity for the current attempt. Prefer it over `gesture.active`, which is now deprecated.
+
+## More accurate Boundary measurement
+
+Boundary measurement no longer relies on the screen origin provider. The origin provider could over-correct a Boundary inside a parent layout with a transform such as `translateY`, causing the destination to be measured from an offset position.
+
+Destinations now initially render without transition styles so Bounds can measure their actual layout. Once the required source and destination measurements are ready, the library applies the transition styles and starts the animation.
+
+This keeps transformed parent layouts from shifting the measured destination and does not require any configuration changes.
+
+## Receiver-driven live handoff
+
+Live handoff now treats every matching Boundary as a potential receiver rather than assigning permanent ownership of the payload to the first screen.
+
+The active visual route selects the receiver during pushes, pops, interrupted navigation, and longer A → B → C chains. Closing transitions keep the payload attached to the closing receiver until the visual close completes, then return it directly to the previous valid receiver.
+
+```tsx
+<Transition.Boundary id="video" handoff>
+  <Transition.Boundary.Target style={styles.video} />
+</Transition.Boundary>
+```
+
+The public `handoff` contract is unchanged: every receiving Boundary uses the same id and opts into `handoff`.
+
+On Android, native-backed payloads still depend on their surface implementation. For `expo-video`, `surfaceType="surfaceView"` avoids texture-composition flashes that can otherwise resemble a handoff timing failure.
+
+## Upgrade notes
+
+The deprecated `sharedBoundTag` and `remeasureOnFocus` props have been removed. Use `Transition.Boundary` and its `id` instead:
+
+```tsx
+<Transition.Boundary id="profile-avatar">
+  <Transition.Boundary.Target>
+    <Avatar />
+  </Transition.Boundary.Target>
+</Transition.Boundary>
+```
+
+The deprecated shared-image preset argument has likewise been renamed from `sharedBoundTag` to `id`.
+
+For lifecycle-driven custom code:
+
+- use `willAnimate` for one-frame pre-animation work
+- use `closing` for committed dismissal state
+- use `animating` or `settled` for public motion state
+- replace `gesture.active` with `gesture.initiator` when you need to know which gesture triggered the recognizer
+- replace `gesture.dismissing` with `closing`
+- replace `gesture.settling` with `animating` or `settled`
+
+For the full APIs, see [Custom Animations](/custom-animations), [Shared Elements](/shared-elements), and [Inactive Screen Behavior](/inactive-behavior).

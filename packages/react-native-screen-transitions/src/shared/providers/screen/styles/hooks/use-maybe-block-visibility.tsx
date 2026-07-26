@@ -8,13 +8,15 @@ import {
 import { AnimationStore } from "../../../../stores/animation.store";
 import { SystemStore } from "../../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../../utils/visibility-block-offset";
-import { useDescriptorDerivations } from "../../descriptors";
+import { useDescriptorsStore } from "../../descriptors";
 import { hasCloseTransitionFinished } from "../helpers/transition-visual-state";
 import { resolveScreenVisibilityGate } from "../helpers/visibility-gate";
 
 export const useMaybeBlockVisibility = (isFloatingOverlay?: boolean) => {
 	const { height } = useWindowDimensions();
-	const { currentScreenKey } = useDescriptorDerivations();
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
 	const { closing, entering } = AnimationStore.getBag(currentScreenKey);
 	const {
 		animationProgress,

@@ -45,6 +45,9 @@ declare global {
 	var __reanimatedMeasureSpy:
 		| ((ref: { current?: { tag?: string } }) => void)
 		| undefined;
+	var __reanimatedDeferredTimingCallbacks:
+		| Array<() => void>
+		| undefined;
 }
 globalThis.resetMutableRegistry = () => {
 	for (const { obj, initial } of mutableObjects) {
@@ -58,6 +61,7 @@ mock.module("react-native", () => ({
 		select: <T>(obj: { ios?: T; android?: T; default?: T }) =>
 			obj.ios ?? obj.default,
 	},
+	useWindowDimensions: () => ({ width: 390, height: 844 }),
 	StyleSheet: {
 		absoluteFill: {},
 		absoluteFillObject: {},
@@ -109,6 +113,9 @@ mock.module("react-native-reanimated", () => ({
 	},
 	runOnJS: <T extends (...args: any[]) => any>(callback: T) => callback,
 	runOnUI: <T extends (...args: any[]) => any>(callback: T) => callback,
+	useDerivedValue: <T>(factory: () => T) => ({
+		get: factory,
+	}),
 	useAnimatedReaction: (
 		prepare: () => unknown,
 		react: (value: unknown, previousValue: unknown) => void,
@@ -125,9 +132,15 @@ mock.module("react-native-reanimated", () => ({
 		React.useRef(createTestMutable(initial)).current,
 	withTiming: (
 		toValue: number,
-		config?: { __finished?: boolean },
+		config?: { __defer?: boolean; __finished?: boolean },
 		callback?: (finished?: boolean) => void,
 	) => {
+		if (config?.__defer && callback) {
+			globalThis.__reanimatedDeferredTimingCallbacks?.push(() => {
+				callback(true);
+			});
+			return toValue;
+		}
 		callback?.(config?.__finished ?? true);
 		return toValue;
 	},

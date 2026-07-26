@@ -10,7 +10,7 @@ import type {
 } from "../providers/screen/animation/types";
 
 mock.module("../providers/screen/animation/animation.provider", () => ({
-	useScreenAnimationContext: () => ({
+	useScreenAnimationStore: () => ({
 		screenInterpolatorProps: { get: () => ({}) },
 		screenInterpolatorPropsRevision: { get: () => 0 },
 		ancestorScreenAnimationSources: [],

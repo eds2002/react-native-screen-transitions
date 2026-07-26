@@ -3,7 +3,7 @@ import { Pressable, StyleSheet } from "react-native";
 import Animated, { runOnUI } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
-import { useDescriptors } from "../../../providers/screen/descriptors";
+import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import { useSlotProps, useSlotStyles } from "../../../providers/screen/styles";
 import { AnimationStore } from "../../../stores/animation.store";
 import { GestureStore } from "../../../stores/gesture.store";
@@ -23,11 +23,23 @@ export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior: BackdropBehavior;
 	isBackdropActive: boolean;
 }) {
-	const { current } = useDescriptors();
 	const { dismissScreen } = useNavigationHelpers();
 
-	const BackdropComponent = current.options.backdropComponent;
-	const routeKey = current.route.key;
+	const routeKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const BackdropComponent = useDescriptorsStore(
+		(store) => store.options.backdropComponent,
+	);
+	const rawSnapPoints = useDescriptorsStore(
+		(store) => store.options.snapPoints,
+	);
+	const canDismiss = useDescriptorsStore(
+		(store) => store.options.gestureEnabled !== false,
+	);
+	const transitionSpec = useDescriptorsStore(
+		(store) => store.options.transitionSpec,
+	);
 	const animations = AnimationStore.getBag(routeKey);
 	const { targetProgress, animationProgress, resolvedAutoSnapPoint } =
 		SystemStore.getBag(routeKey);
@@ -49,9 +61,6 @@ export const BackdropLayer = memo(function BackdropLayer({
 		}
 
 		if (backdropBehavior === "collapse") {
-			const rawSnapPoints = current.options.snapPoints;
-			const canDismiss = current.options.gestureEnabled !== false;
-
 			// No snap points → fallback to dismiss
 			if (!rawSnapPoints || rawSnapPoints.length === 0) {
 				dismissScreen();
@@ -59,7 +68,6 @@ export const BackdropLayer = memo(function BackdropLayer({
 			}
 
 			const gestures = GestureStore.getBag(routeKey);
-			const transitionSpec = current.options.transitionSpec;
 
 			runOnUI(() => {
 				"worklet";
@@ -95,6 +103,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 				animateToProgress({
 					target,
+					markEntering: false,
 					spec,
 					animations,
 					targetProgress,
@@ -109,7 +118,9 @@ export const BackdropLayer = memo(function BackdropLayer({
 		animationProgress,
 		resolvedAutoSnapPoint,
 		backdropBehavior,
-		current,
+		rawSnapPoints,
+		canDismiss,
+		transitionSpec,
 		dismissScreen,
 		routeKey,
 	]);

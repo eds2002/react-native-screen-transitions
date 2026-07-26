@@ -1,9 +1,8 @@
-import { useLayoutEffect, useState } from "react";
+import { useLayoutEffect } from "react";
 import type { View } from "react-native";
 import {
 	cancelAnimation,
 	measure,
-	runOnJS,
 	runOnUI,
 	type SharedValue,
 	useAnimatedReaction,
@@ -12,13 +11,12 @@ import {
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
-import { useOriginContext } from "../../../../../../providers/screen/origin.provider";
 import { ScrollStore } from "../../../../../../stores/scroll.store";
 import { getVisibilityBlockOffset } from "../../../../../../utils/visibility-block-offset";
 import {
 	adjustedMeasuredBoundsForOverscrollDeltas,
+	correctMeasuredBoundsForVisibilityGate,
 	isMeasurementInViewport,
-	normalizeMeasuredBoundsWithVisibilityGate,
 } from "../../../../utils/measured-bounds";
 import {
 	clearPortalHostBounds,
@@ -48,8 +46,6 @@ export const useHostMeasurement = ({
 }: UseHostMeasurementParams) => {
 	const hostRef = useAnimatedRef<View>();
 	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
-	const [canRenderHosts, setCanRenderHosts] = useState<boolean>(false);
-	const { originRef } = useOriginContext();
 	const hasMeasuredHost = useSharedValue(false);
 	const retryToken = useSharedValue(0);
 
@@ -76,9 +72,8 @@ export const useHostMeasurement = ({
 			}
 
 			const measured = measure(hostRef);
-			const measuredOrigin = measure(originRef);
 
-			if (!measured || !measuredOrigin) {
+			if (!measured) {
 				cancelAnimation(retryToken);
 				retryToken.set(
 					withDelay(
@@ -90,7 +85,6 @@ export const useHostMeasurement = ({
 			}
 
 			cancelAnimation(retryToken);
-			hasMeasuredHost.set(true);
 
 			// A measurement taken mid rubber-band would bake the transient
 			// overscroll displacement into the host frame. Store the at-rest
@@ -100,9 +94,8 @@ export const useHostMeasurement = ({
 				? adjustedMeasuredBoundsForOverscrollDeltas(measured, currentScroll)
 				: measured;
 
-			const normalizedMeasured = normalizeMeasuredBoundsWithVisibilityGate({
+			const correctedMeasured = correctMeasuredBoundsForVisibilityGate({
 				measured: overscrollNormalized,
-				origin: measuredOrigin,
 				visibilityBlocked: visibilityBlocked.get(),
 				visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
 				viewportWidth,
@@ -111,7 +104,7 @@ export const useHostMeasurement = ({
 
 			if (
 				!isMeasurementInViewport(
-					normalizedMeasured,
+					correctedMeasured,
 					viewportWidth,
 					viewportHeight,
 				)
@@ -127,16 +120,16 @@ export const useHostMeasurement = ({
 			}
 
 			setPortalHostBounds(hostKey, {
-				x: normalizedMeasured.x,
-				y: normalizedMeasured.y,
-				width: normalizedMeasured.width,
-				height: normalizedMeasured.height,
-				pageX: normalizedMeasured.pageX,
-				pageY: normalizedMeasured.pageY,
+				x: correctedMeasured.x,
+				y: correctedMeasured.y,
+				width: correctedMeasured.width,
+				height: correctedMeasured.height,
+				pageX: correctedMeasured.pageX,
+				pageY: correctedMeasured.pageY,
 				scroll: capturesScroll ? currentScroll : null,
 			});
 
-			runOnJS(setCanRenderHosts)(true);
+			hasMeasuredHost.set(true);
 		},
 	);
 
@@ -147,7 +140,6 @@ export const useHostMeasurement = ({
 	}, [hostKey]);
 
 	return {
-		canRenderHosts,
 		hostRef,
 	};
 };

@@ -1,5 +1,10 @@
 import { useMemo } from "react";
-import { useDerivedValue, useSharedValue } from "react-native-reanimated";
+import {
+	type SharedValue,
+	useAnimatedReaction,
+	useDerivedValue,
+	useSharedValue,
+} from "react-native-reanimated";
 import { NO_STYLES } from "../../../../constants";
 import { AnimationStore } from "../../../../stores/animation.store";
 import {
@@ -12,7 +17,7 @@ import type {
 	TransitionInterpolatedStyle,
 } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
-import { useScreenAnimationContext } from "../../animation";
+import { useScreenAnimationStore } from "../../animation";
 import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
 import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/use-build-transition-accessor";
 import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
@@ -21,16 +26,22 @@ import { syncSelectedInterpolatorOptions } from "../../animation/helpers/selecte
 import { useDescriptorsStore } from "../../descriptors";
 import {
 	syncScreenOptionsOverrides,
-	useScreenOptionsContext,
+	useScreenOptionsStore,
 } from "../../options";
 import { collectInterpolatorSharedValues } from "../helpers/collect-interpolator-shared-values";
 import { normalizeSlots } from "../helpers/normalize-slots";
+import { resolveInterpolatorStyleHandoff } from "../helpers/resolve-interpolator-style-handoff";
 import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
+import {
+	type SelectedInterpolatorFrame,
+	selectInterpolatorFrame,
+} from "../helpers/select-interpolator-frame";
 import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options";
 import {
 	hasCloseTransitionFinished,
 	isOpenTransitionBlocked,
 } from "../helpers/transition-visual-state";
+import { resolveInitialDestinationStyleGate } from "../helpers/visibility-gate";
 
 const NO_STYLE_LAYERS: LocalStyleLayers = [];
 
@@ -42,8 +53,7 @@ type InterpolatorResult = {
 type RunInterpolatorParams = {
 	interpolator: ScreenStyleInterpolator | undefined;
 	props: ScreenInterpolatorFrame;
-	progress: ScreenInterpolatorFrame["progress"];
-	next: ScreenInterpolatorFrame["next"];
+	selectedFrame: SelectedInterpolatorFrame;
 	bounds: Parameters<ScreenStyleInterpolator>[0]["bounds"];
 	transition: Parameters<ScreenStyleInterpolator>[0]["transition"];
 };
@@ -65,8 +75,7 @@ const normalizeRawStyleMap = (
 const runInterpolator = ({
 	interpolator,
 	props,
-	progress,
-	next,
+	selectedFrame,
 	bounds,
 	transition,
 }: RunInterpolatorParams): InterpolatorResult | undefined => {
@@ -79,8 +88,7 @@ const runInterpolator = ({
 	try {
 		const raw = interpolator({
 			...props,
-			progress,
-			next,
+			...selectedFrame,
 			bounds,
 			transition,
 		});
@@ -101,17 +109,6 @@ const runInterpolator = ({
 	}
 };
 
-const appendLayer = (
-	layers: LocalStyleLayers,
-	result: InterpolatorResult | undefined,
-) => {
-	"worklet";
-
-	if (result) {
-		layers.push(result.stylesMap);
-	}
-};
-
 /**
  * Builds the raw interpolated style layers for the current screen pass.
  *
@@ -128,16 +125,26 @@ const appendLayer = (
  * normal interpolator selection once the gesture-driven close is no longer in
  * play.
  *
- * The result is ordered from lowest to highest priority. Resolution happens
- * downstream, where slot ids determine whether slots inherit from ancestors and
- * where higher owner layers override lower owner layers per key.
+ * At an ownership handoff, the last current-owner styles are frozen. The next
+ * owner replaces matching scalar keys and composes its live transforms after
+ * the frozen transforms. The previous interpolator is not evaluated again until
+ * it regains ownership.
  */
-export const useInterpolatedStylesMap = () => {
+export const useInterpolatedStylesMap = ({
+	enabled,
+	visibilityBlocked,
+}: {
+	enabled: boolean;
+	visibilityBlocked: SharedValue<boolean>;
+}) => {
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
 	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
-	const screenOptions = useScreenOptionsContext();
+	const destinationPairKey = useDescriptorsStore(
+		(s) => s.derivations.destinationPairKey,
+	);
+	const screenOptions = useScreenOptionsStore();
 	const {
 		screenInterpolatorProps,
 		screenInterpolatorPropsRevision,
@@ -146,7 +153,7 @@ export const useInterpolatedStylesMap = () => {
 		currentInterpolator,
 		ancestorScreenAnimationSources,
 		descendantScreenAnimationSources,
-	} = useScreenAnimationContext();
+	} = useScreenAnimationStore();
 	const boundsAccessor = useBuildBoundsAccessor();
 	const transition = useBuildTransitionAccessor();
 	const nextInterpolatorReady = useSharedValue(0);
@@ -169,6 +176,30 @@ export const useInterpolatedStylesMap = () => {
 	} = SystemStore.getBag(activeScreenKey);
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
+	const initialDestinationStylesReady = useSharedValue(0);
+	const frozenCurrentStylesMap =
+		useSharedValue<NormalizedTransitionInterpolatedStyle>(NO_STYLES);
+	const shouldPrepareInitialDestinationStyles =
+		enabled && !!destinationPairKey && !nextScreenKey && !!currentInterpolator;
+
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			return visibilityBlocked.get();
+		},
+		(isVisibilityBlocked) => {
+			"worklet";
+			const styleGate = resolveInitialDestinationStyleGate({
+				shouldPrepareStyles: shouldPrepareInitialDestinationStyles,
+				isVisibilityBlocked,
+				stylesReady: !!initialDestinationStylesReady.get(),
+			});
+
+			if (styleGate.shouldMarkStylesReady) {
+				initialDestinationStylesReady.set(1);
+			}
+		},
+	);
 
 	const localStylesMaps = useDerivedValue<LocalStyleLayers>(() => {
 		"worklet";
@@ -180,7 +211,7 @@ export const useInterpolatedStylesMap = () => {
 		);
 		const props = screenInterpolatorProps.get();
 
-		const { current, next, progress } = props;
+		const { current, next } = props;
 		const isDragging = current.gesture.dragging;
 		const isNextClosing = !!next?.closing;
 
@@ -230,22 +261,27 @@ export const useInterpolatedStylesMap = () => {
 			? "current"
 			: "next";
 
-		let selectedProgress = progress;
-		let selectedNext = next;
+		const selectedFrame = selectInterpolatorFrame(props, isInGestureMode);
 
-		if (isInGestureMode) {
-			selectedProgress = current.progress;
-			selectedNext = undefined;
-		}
+		const currentResult = currentOwnsInterpolator
+			? runInterpolator({
+					interpolator: currentInterpolator,
+					props,
+					selectedFrame,
+					bounds: boundsAccessor,
+					transition,
+				})
+			: undefined;
 
-		const currentResult = runInterpolator({
-			interpolator: currentInterpolator,
-			props,
-			progress: selectedProgress,
-			next: selectedNext,
-			bounds: boundsAccessor,
-			transition,
+		const initialDestinationStyleGate = resolveInitialDestinationStyleGate({
+			shouldPrepareStyles: shouldPrepareInitialDestinationStyles,
+			isVisibilityBlocked: visibilityBlocked.get(),
+			stylesReady: !!initialDestinationStylesReady.get(),
 		});
+
+		if (initialDestinationStyleGate.shouldWithholdStyles) {
+			return NO_STYLE_LAYERS;
+		}
 
 		if (interpolatorOptionsOwner === "current") {
 			syncSelectedInterpolatorOptions(
@@ -255,18 +291,26 @@ export const useInterpolatedStylesMap = () => {
 			);
 			syncScreenOptionsOverrides(currentResult?.rawStyleMap, screenOptions);
 
-			if (!currentResult) {
-				return NO_STYLE_LAYERS;
+			const handoff = resolveInterpolatorStyleHandoff({
+				currentOwnsInterpolator: true,
+				currentStylesMap: currentResult?.stylesMap,
+				nextStylesMap: undefined,
+				frozenCurrentStylesMap: frozenCurrentStylesMap.get(),
+			});
+
+			if (handoff.nextFrozenCurrentStylesMap !== frozenCurrentStylesMap.get()) {
+				frozenCurrentStylesMap.set(handoff.nextFrozenCurrentStylesMap);
 			}
 
-			return [currentResult.stylesMap];
+			return handoff.localStylesMaps.length
+				? handoff.localStylesMaps
+				: NO_STYLE_LAYERS;
 		}
 
 		const nextResult = runInterpolator({
 			interpolator: nextInterpolator,
 			props,
-			progress: selectedProgress,
-			next: selectedNext,
+			selectedFrame,
 			bounds: boundsAccessor,
 			transition,
 		});
@@ -278,16 +322,16 @@ export const useInterpolatedStylesMap = () => {
 		);
 		syncScreenOptionsOverrides(undefined, screenOptions);
 
-		const layers: LocalStyleLayers = [];
+		const handoff = resolveInterpolatorStyleHandoff({
+			currentOwnsInterpolator: false,
+			currentStylesMap: currentResult?.stylesMap,
+			nextStylesMap: nextResult?.stylesMap,
+			frozenCurrentStylesMap: frozenCurrentStylesMap.get(),
+		});
 
-		appendLayer(layers, currentResult);
-		appendLayer(layers, nextResult);
-
-		if (layers.length === 0) {
-			return NO_STYLE_LAYERS;
-		}
-
-		return layers;
+		return handoff.localStylesMaps.length
+			? handoff.localStylesMaps
+			: NO_STYLE_LAYERS;
 	});
 
 	return {

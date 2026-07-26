@@ -1,6 +1,9 @@
 import { runOnJS, type SharedValue } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../constants";
-import type { AnimationStoreMap } from "../../stores/animation.store";
+import {
+	type AnimationStoreMap,
+	emitMotionStart,
+} from "../../stores/animation.store";
 import type { TransitionSpec } from "../../types/animation.types";
 import { animate, isSpringAnimationConfig } from "./animate";
 
@@ -21,6 +24,7 @@ interface AnimateToProgressProps {
 	markEntering?: boolean;
 	/** Optional initial velocity for spring-based progress (units: progress/sec). */
 	initialVelocity?: number;
+	isDragging?: SharedValue<number>;
 }
 
 const setTransitionLifecycleFlags = (
@@ -64,6 +68,7 @@ export const animateToProgress = ({
 	emitWillAnimate = true,
 	markEntering = true,
 	initialVelocity,
+	isDragging,
 }: AnimateToProgressProps) => {
 	"worklet";
 
@@ -82,15 +87,10 @@ export const animateToProgress = ({
 			? { ...config, velocity: initialVelocity }
 			: config;
 
-	const {
-		transitionProgress,
-		willAnimate,
-		progressAnimating,
-		progressSettled,
-		entering,
-	} = animations;
+	const { transitionProgress, progressAnimating, progressSettled, entering } =
+		animations;
 
-	const startAnimation = () => {
+	const startAnimation = (activateMotion: boolean) => {
 		"worklet";
 		const { from: animationProgressFrom, to: animationProgressTo } =
 			resolveAnimationProgressRange(transitionProgress.get(), value);
@@ -118,7 +118,9 @@ export const animateToProgress = ({
 			return;
 		}
 
-		progressAnimating.set(TRUE); //<-- Do not move this into the callback
+		if (activateMotion) {
+			progressAnimating.set(TRUE);
+		}
 		progressSettled.set(FALSE);
 		transitionProgress.set(
 			animate(
@@ -126,11 +128,10 @@ export const animateToProgress = ({
 				effectiveConfig,
 				(state) => {
 					"worklet";
-					if (state.settled) {
-						progressSettled.set(TRUE);
-					}
-
 					if (!state.finished) return;
+					if (isDragging?.get()) return;
+
+					progressSettled.set(TRUE);
 
 					animationProgress.set(animationProgressTo);
 
@@ -175,14 +176,13 @@ export const animateToProgress = ({
 	if (emitWillAnimate) {
 		setTransitionLifecycleFlags(animations, isClosing, markEntering);
 
-		willAnimate.set(TRUE);
+		emitMotionStart(animations);
 		requestAnimationFrame(() => {
 			"worklet";
-			willAnimate.set(FALSE);
-			startAnimation();
+			startAnimation(false);
 		});
 		return;
 	}
 
-	startAnimation();
+	startAnimation(true);
 };

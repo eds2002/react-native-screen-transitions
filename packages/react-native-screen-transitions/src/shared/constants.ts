@@ -71,6 +71,7 @@ const DEFAULT_GESTURE_VALUES = {
 	dragging: 0,
 	settling: 0,
 	active: null,
+	initiator: "none",
 	direction: null,
 
 	// Deprecated aliases

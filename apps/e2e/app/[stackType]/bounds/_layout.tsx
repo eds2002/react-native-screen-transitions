@@ -19,6 +19,10 @@ export default function BoundsLayout() {
 				name="matched-screen"
 				options={{ ...IOSSlide() }}
 			/>
+			<StackNavigator.Screen
+				name="handoff-multiflow"
+				options={{ ...IOSSlide() }}
+			/>
 		</StackNavigator>
 	);
 }

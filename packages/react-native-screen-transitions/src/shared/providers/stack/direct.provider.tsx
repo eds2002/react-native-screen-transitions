@@ -1,5 +1,4 @@
-import type * as React from "react";
-import { useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import type { NativeStackDescriptorMap } from "../../../native-stack/types";
 import {
 	type StackContextValue,
@@ -10,16 +9,34 @@ import type {
 	DirectStackProps,
 	DirectStackScene,
 } from "../../types/providers/direct-stack.types";
+import createProvider from "../../utils/create-provider";
 import { isOverlayVisible } from "../../utils/overlay/visibility";
-import { useStackCoreContext } from "./core.provider";
+import { useStackCoreStore } from "./core.provider";
 
-function useDirectStackValue(
-	props: DirectStackProps,
-): DirectStackContextValue & { stackContextValue: StackContextValue } {
-	const { state, navigation, descriptors, describe } = props;
-	const { flags } = useStackCoreContext();
+type DirectStackProviderProps = DirectStackProps & {
+	children: ReactNode;
+};
+
+type DirectStackStoreProviderProps = {
+	children: ReactNode;
+	value: DirectStackContextValue;
+};
+
+const { DirectStackProvider: DirectStackStoreProvider, useDirectStackStore } =
+	createProvider("DirectStack", { guarded: true })<
+		DirectStackStoreProviderProps,
+		DirectStackContextValue
+	>(({ children, value }) => ({ children, value }));
+
+function DirectStackProvider({
+	state,
+	navigation,
+	descriptors,
+	describe,
+	children,
+}: DirectStackProviderProps) {
+	const flags = useStackCoreStore((store) => store.flags);
 	const navigatorKey = state.key;
-
 	const preloadedDescriptors = useMemo(() => {
 		return state.preloadedRoutes.reduce<NativeStackDescriptorMap>(
 			(acc, route) => {
@@ -41,23 +58,41 @@ function useDirectStackValue(
 			};
 			let shouldShowFloatOverlay = false;
 
-			for (const route of allRoutes) {
+			for (let index = 0; index < allRoutes.length; index++) {
+				const route = allRoutes[index];
+				if (!route) {
+					throw new Error(`Missing native stack route at index ${index}.`);
+				}
 				const descriptor = allDescriptors[route.key];
 				const isPreloaded =
 					preloadedDescriptors[route.key] !== undefined &&
 					descriptors[route.key] === undefined;
 
-				scenes.push({ route, descriptor, isPreloaded });
+				if (!descriptor) {
+					throw new Error(
+						`Missing native descriptor for route "${route.key}".`,
+					);
+				}
+
+				scenes.push({
+					activity:
+						index === state.index
+							? "active"
+							: index === state.index - 1
+								? "inert"
+								: "inactive",
+					route,
+					descriptor,
+					isPreloaded,
+				});
 				routeKeys.push(route.key);
 
-				if (!shouldShowFloatOverlay && descriptor) {
-					const options = descriptor.options;
-					if (
-						options?.enableTransitions === true &&
-						isOverlayVisible(options)
-					) {
-						shouldShowFloatOverlay = true;
-					}
+				if (
+					!shouldShowFloatOverlay &&
+					descriptor.options?.enableTransitions === true &&
+					isOverlayVisible(descriptor.options)
+				) {
+					shouldShowFloatOverlay = true;
 				}
 			}
 
@@ -70,13 +105,13 @@ function useDirectStackValue(
 		}, [
 			state.routes,
 			state.preloadedRoutes,
+			state.index,
 			preloadedDescriptors,
 			descriptors,
 		]);
 
 	const focusedIndex = state.index;
-
-	const stackContextValue = useMemo<StackContextValue>(
+	const stackValue = useMemo<StackContextValue>(
 		() => ({
 			flags,
 			navigatorKey,
@@ -87,43 +122,28 @@ function useDirectStackValue(
 		}),
 		[flags, navigatorKey, routeKeys, allRoutes, scenes, focusedIndex],
 	);
-
-	// DirectStack context value
-	const lifecycleValue = useMemo<DirectStackContextValue>(
-		() => ({
-			state,
-			navigation,
-			descriptors,
-			scenes,
-			focusedIndex,
-			shouldShowFloatOverlay,
-		}),
-		[
-			state,
-			navigation,
-			descriptors,
-			scenes,
-			focusedIndex,
-			shouldShowFloatOverlay,
-		],
-	);
-
-	return { ...lifecycleValue, stackContextValue };
-}
-
-function withDirectStack<TProps extends DirectStackProps>(
-	Component: React.ComponentType<DirectStackContextValue>,
-): React.FC<TProps> {
-	return function DirectStackProvider(props: TProps) {
-		const { stackContextValue, ...lifecycleValue } = useDirectStackValue(props);
-
-		return (
-			<StackProvider value={stackContextValue}>
-				<Component {...lifecycleValue} />
-			</StackProvider>
-		);
+	const directStackValue = {
+		state,
+		navigation,
+		descriptors,
+		scenes,
+		focusedIndex,
+		shouldShowFloatOverlay,
 	};
+
+	return (
+		<StackProvider value={stackValue}>
+			<DirectStackStoreProvider value={directStackValue}>
+				{children}
+			</DirectStackStoreProvider>
+		</StackProvider>
+	);
 }
 
-export type { DirectStackContextValue, DirectStackProps, DirectStackScene };
-export { withDirectStack };
+export type {
+	DirectStackContextValue,
+	DirectStackProps,
+	DirectStackProviderProps,
+	DirectStackScene,
+};
+export { DirectStackProvider, useDirectStackStore };

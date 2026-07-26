@@ -1,4 +1,3 @@
-import { EPSILON } from "../../../../../constants";
 import type {
 	ScreenTransitionOptions,
 	TransitionInterpolatorOptions,
@@ -92,6 +91,7 @@ export const hydrateTransitionState = (
 	out.gesture.dragging = s.gesture.dragging.get();
 	out.gesture.settling = s.gesture.settling.get();
 	out.gesture.active = s.gesture.active.get();
+	out.gesture.initiator = out.gesture.active ?? "none";
 	out.gesture.direction = s.gesture.direction.get();
 	const handoff = out.gesture.handoff;
 	const useHandoffSnapshot = out.gesture.dismissing;
@@ -166,7 +166,7 @@ export const hydrateTransitionState = (
 			x: s.gesture.internal.progressDeltaX.get(),
 			y: s.gesture.internal.progressDeltaY.get(),
 		},
-		effectiveOptions?.gestureDirection ?? s.options.gestureDirection,
+		options.gestureDirection,
 		getResolvedSnapBounds(
 			s.sortedNumericSnapPoints,
 			s.hasAutoSnapPoint ? s.resolvedAutoSnapPoint.get() : null,
@@ -174,35 +174,18 @@ export const hydrateTransitionState = (
 		),
 	);
 
-	// Unsure where else to place this if im being honest.
-	// I think for here is fine
 	if (s.visualProgress.get() !== out.progress) {
 		s.visualProgress.set(out.progress);
 	}
 
-	const hasResidualGestureValues =
-		Math.abs(out.gesture.normX) > EPSILON ||
-		Math.abs(out.gesture.normY) > EPSILON ||
-		Math.abs(out.gesture.normScale) > EPSILON ||
-		Math.abs(out.gesture.rotation) > EPSILON;
-
-	const isGestureActive =
-		out.gesture.dragging ||
-		out.gesture.settling ||
-		(!out.gesture.dismissing && hasResidualGestureValues)
-			? 1
-			: 0;
-
-	const isProgressAnimating = s.progressAnimating.get();
-
-	out.animating = isProgressAnimating || isGestureActive ? 1 : 0;
+	out.animating = s.progressAnimating.get();
 
 	out.gesture.normalizedX = out.gesture.normX;
 	out.gesture.normalizedY = out.gesture.normY;
 	out.gesture.isDismissing = out.gesture.dismissing;
 	out.gesture.isDragging = out.gesture.dragging;
 
-	out.settled = s.progressSettled.get() && !isGestureActive ? 1 : 0;
+	out.settled = s.progressSettled.get();
 	out.logicallySettled = out.settled;
 
 	out.meta = s.meta;

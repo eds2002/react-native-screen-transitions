@@ -1,4 +1,3 @@
-import type { StackContextValue } from "../../hooks/navigation/use-stack";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
@@ -10,7 +9,7 @@ import type {
 
 /**
  * Props for blank stack - generic over descriptor and navigation types.
- * Defaults to base types for backward compatibility.
+ * Defaults to the shared base types.
  */
 export interface BlankStackProviderProps<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
@@ -29,29 +28,16 @@ export interface BlankStackProviderProps<
  * Context value for blank stack — only fields unique to blank stack lifecycle.
  * Shared fields (routes, scenes, etc.) live in StackContext.
  */
-export interface BlankStackProviderContextValue {
-	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
-}
-
-/**
- * Props passed to the render child of `withBlankStack`.
- * Only the fields that stack-view components actually consume.
- */
-export interface BlankStackProviderRenderProps<
+export interface BlankStackStoreValue<
 	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
 > {
+	navigatorKey: string;
+	routeKeys: string[];
+	routes: TDescriptor["route"][];
 	scenes: BaseStackScene<TDescriptor>[];
+	scenesByKey: Record<string, BaseStackScene<TDescriptor>>;
 	focusedIndex: number;
+	requestDismiss: (payload: { route: BaseStackRoute }) => boolean;
 	shouldShowFloatOverlay: boolean;
-}
-
-/**
- * Internal result shape returned by useBlankStackProviderValue.
- */
-export interface BlankStackProviderResult<
-	TDescriptor extends BaseStackDescriptor = BaseStackDescriptor,
-> {
-	stackContextValue: StackContextValue;
-	blankStackProviderContextValue: BlankStackProviderContextValue;
-	renderProps: BlankStackProviderRenderProps<TDescriptor>;
+	handleCloseRoute: (payload: { route: BaseStackRoute }) => void;
 }

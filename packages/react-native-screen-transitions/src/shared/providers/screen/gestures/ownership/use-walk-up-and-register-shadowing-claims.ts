@@ -8,10 +8,10 @@ import {
 } from "../../../../types/ownership.types";
 import {
 	type BaseDescriptor,
-	useDescriptorDerivations,
-	useDescriptors,
+	useDescriptorsStore,
 } from "../../../screen/descriptors";
-import { useGestureContext } from "../gestures.provider";
+import { useBlankStackStore } from "../../../stack/blank-stack.provider";
+import { useGestureStore } from "../gestures.provider";
 import { walkGestureAncestors } from "../shared/ancestors";
 import { resolveScreenGestureConfig } from "../shared/policy";
 import type { GestureContextType } from "../types";
@@ -135,9 +135,17 @@ const getDescriptorClaimedDirections = (
 export function useWalkUpAndRegisterShadowingClaims(
 	claimedDirections: ClaimedDirections,
 ): void {
-	const parentContext = useGestureContext();
-	const { current, previous } = useDescriptors();
-	const { isTopMostScreen, currentScreenKey } = useDescriptorDerivations();
+	const parentContext = useGestureStore();
+	const previous = useDescriptorsStore((store) => store.previous);
+	const isTopMostScreen = useDescriptorsStore(
+		(store) => store.derivations.isTopMostScreen,
+	);
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const isCurrentScreenClosing = useBlankStackStore(
+		(store) => store?.scenesByKey[currentScreenKey]?.activity === "closing",
+	);
 
 	/*
 	 * We want to calculate effective claimed directions as claimedDirections is not enough for us.
@@ -161,14 +169,14 @@ export function useWalkUpAndRegisterShadowingClaims(
 	const effectiveClaimedDirections = useMemo(
 		() =>
 			resolveShadowingClaimDirections({
-				currentActivity: current.activity,
+				isCurrentScreenClosing,
 				currentClaimedDirections: claimedDirections,
 				previousClaimedDirections: getDescriptorClaimedDirections(
 					previous,
 					parentContext,
 				),
 			}),
-		[current.activity, claimedDirections, previous, parentContext],
+		[isCurrentScreenClosing, claimedDirections, previous, parentContext],
 	);
 
 	const shadowedAncestors = useMemo(

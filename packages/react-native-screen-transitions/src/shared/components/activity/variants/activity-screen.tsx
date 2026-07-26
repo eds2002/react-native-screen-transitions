@@ -6,6 +6,7 @@ import { Screen } from "react-native-screens";
 import { IS_WEB } from "../../../constants";
 import { useStack } from "../../../hooks/navigation/use-stack";
 import { useSharedValueState } from "../../../hooks/reanimated/use-shared-value-state";
+import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { AnimationStore } from "../../../stores/animation.store";
 import type { StackSceneActivity } from "../../../types/stack.types";
 import { DEFAULT_INACTIVE_BEHAVIOR, type InactiveBehavior } from "../helpers";
@@ -26,23 +27,55 @@ const PointerEventsByActivity = {
 } satisfies Record<StackSceneActivity, ViewProps["pointerEvents"]>;
 
 interface ActivityScreenProps {
-	activity: StackSceneActivity;
+	activity?: StackSceneActivity;
 	children: React.ReactNode;
 	inactiveBehavior?: InactiveBehavior;
 	paintDriverRouteKey?: string;
 	hasNestedState?: boolean;
+	routeKey?: string;
 }
 
 export const ActivityScreen = memo(function ActivityScreen({
 	activity,
 	children,
-	inactiveBehavior = DEFAULT_INACTIVE_BEHAVIOR,
+	inactiveBehavior,
 	paintDriverRouteKey,
 	hasNestedState,
+	routeKey,
 }: ActivityScreenProps) {
+	const stackActivity = useBlankStackStore((store) =>
+		routeKey ? store?.scenesByKey[routeKey]?.activity : undefined,
+	);
+	const stackInactiveBehavior = useBlankStackStore((store) =>
+		routeKey
+			? (
+					store?.scenesByKey[routeKey]?.descriptor.options as
+						| { inactiveBehavior?: InactiveBehavior }
+						| undefined
+				)?.inactiveBehavior
+			: undefined,
+	);
+	const stackRoute = useBlankStackStore((store) =>
+		routeKey ? store?.scenesByKey[routeKey]?.route : undefined,
+	);
+	const stackPaintDriverRouteKey = useBlankStackStore((store) => {
+		if (!routeKey || !store) {
+			return undefined;
+		}
+
+		const routeIndex = store.routeKeys.indexOf(routeKey);
+		return store.routeKeys[routeIndex + 2];
+	});
+	const resolvedActivity = activity ?? stackActivity ?? "active";
+	const resolvedInactiveBehavior =
+		inactiveBehavior ?? stackInactiveBehavior ?? DEFAULT_INACTIVE_BEHAVIOR;
+	const resolvedPaintDriverRouteKey =
+		paintDriverRouteKey ?? stackPaintDriverRouteKey;
+	const resolvedHasNestedState =
+		hasNestedState ?? (stackRoute ? "state" in stackRoute : false);
 	const nativeScreenDisabled = useStack((s) => s.flags.DISABLE_NATIVE_SCREENS);
-	const paintDriverAnimations = paintDriverRouteKey
-		? AnimationStore.getBag(paintDriverRouteKey)
+	const paintDriverAnimations = resolvedPaintDriverRouteKey
+		? AnimationStore.getBag(resolvedPaintDriverRouteKey)
 		: undefined;
 
 	/**
@@ -64,14 +97,14 @@ export const ActivityScreen = memo(function ActivityScreen({
 
 	const isPaintDriverSettledOnJS = useSharedValueState(isPaintDriverSettled);
 
-	let activityState: ActivityState = ActivityStateByActivity[activity];
+	let activityState: ActivityState = ActivityStateByActivity[resolvedActivity];
 	let shouldFreeze = false;
-	let visible = activity !== "inactive";
+	let visible = resolvedActivity !== "inactive";
 
 	const shouldWaitForPaintDriver = !isPaintDriverSettledOnJS;
 
-	if (activity === "inactive") {
-		if (inactiveBehavior === "keep") {
+	if (resolvedActivity === "inactive") {
+		if (resolvedInactiveBehavior === "keep") {
 			activityState = 1;
 			visible = true;
 		} else if (shouldWaitForPaintDriver) {
@@ -79,7 +112,7 @@ export const ActivityScreen = memo(function ActivityScreen({
 			// a blank frame during the transition.
 			activityState = 1;
 			visible = true;
-		} else if (inactiveBehavior === "pause") {
+		} else if (resolvedInactiveBehavior === "pause") {
 			activityState = 1;
 			shouldFreeze = true;
 			visible = true;
@@ -93,12 +126,12 @@ export const ActivityScreen = memo(function ActivityScreen({
 	}
 
 	const shouldUnmount =
-		inactiveBehavior === "unmount" &&
-		activity === "inactive" &&
-		!hasNestedState &&
+		resolvedInactiveBehavior === "unmount" &&
+		resolvedActivity === "inactive" &&
+		!resolvedHasNestedState &&
 		isPaintDriverSettledOnJS;
 
-	const pointerEvents = PointerEventsByActivity[activity];
+	const pointerEvents = PointerEventsByActivity[resolvedActivity];
 
 	if (shouldUnmount) {
 		return null;

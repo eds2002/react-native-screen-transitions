@@ -7,7 +7,7 @@ import { type SharedValue, useSharedValue } from "react-native-reanimated";
 import { GestureStore } from "../../../../../stores/gesture.store";
 import { GestureActivationState } from "../../../../../types/gesture.types";
 import type { Direction } from "../../../../../types/ownership.types";
-import { useDescriptorDerivations } from "../../../descriptors";
+import { useDescriptorsStore } from "../../../descriptors";
 import type { ScreenOptionsContextValue } from "../../../options";
 import { resolvePanRuntime } from "../../shared/runtime";
 import type {
@@ -36,7 +36,12 @@ export const usePanActivation = ({
 	dimensions,
 	gestureCompositionOwner,
 }: UsePanActivationProps) => {
-	const { currentScreenKey, parentScreenKey } = useDescriptorDerivations();
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const parentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.parentScreenKey,
+	);
 
 	const ancestorDismissing = useMemo(() => {
 		if (!parentScreenKey) return null;

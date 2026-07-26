@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import type { SharedValue } from "react-native-reanimated";
-import { useScreenOptionsContext } from "../../options";
+import { useScreenOptionsStore } from "../../options";
 import { useStableRuntimeConfig } from "../hooks/use-stable-runtime-config";
 import type {
 	GestureCompositionOwner,
@@ -21,7 +21,7 @@ export const useBuildPinchGesture = ({
 	gestureCompositionOwner,
 }: UseBuildPinchGestureProps): PinchGesture => {
 	const { participation, pinch: policy } = gestureConfig;
-	const screenOptions = useScreenOptionsContext();
+	const screenOptions = useScreenOptionsStore();
 
 	const runtime = useStableRuntimeConfig({
 		participation,

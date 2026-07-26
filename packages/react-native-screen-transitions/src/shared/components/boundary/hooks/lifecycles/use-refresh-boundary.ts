@@ -3,7 +3,6 @@ import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../../stores/animation.store";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
-import { GestureStore } from "../../../../stores/gesture.store";
 import type { MeasureBoundary } from "../../types";
 import { getRefreshBoundarySignal } from "../../utils/refresh-signals";
 
@@ -38,25 +37,16 @@ export const useRefreshBoundary = ({
 		"willAnimate",
 	);
 	const refreshClosing = AnimationStore.getValue(refreshScreenKey, "closing");
-	const refreshEntering = AnimationStore.getValue(refreshScreenKey, "entering");
-	const refreshAnimating = AnimationStore.getValue(
-		refreshScreenKey,
-		"progressAnimating",
-	);
-	const refreshProgress = AnimationStore.getValue(
-		refreshScreenKey,
-		"transitionProgress",
-	);
-	const refreshDragging = GestureStore.getValue(refreshScreenKey, "dragging");
-	const refreshDismissing = GestureStore.getValue(
-		refreshScreenKey,
-		"dismissing",
-	);
-	const refreshSettling = GestureStore.getValue(refreshScreenKey, "settling");
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
+
+			const shouldRefresh = enabled && !!refreshWillAnimate.get();
+			if (!shouldRefresh) {
+				return null;
+			}
+
 			return getRefreshBoundarySignal({
 				enabled,
 				currentScreenKey,
@@ -66,15 +56,8 @@ export const useRefreshBoundary = ({
 				nextScreenKey,
 				linkId: linkKey,
 				group,
-				shouldRefresh: !!refreshWillAnimate.get(),
+				shouldRefresh,
 				closing: !!refreshClosing.get(),
-				entering: !!refreshEntering.get(),
-				animating: !!refreshAnimating.get(),
-				progress: refreshProgress.get(),
-				gestureInProgress:
-					!!refreshDragging.get() ||
-					!!refreshDismissing.get() ||
-					!!refreshSettling.get(),
 				linkState: pairs.get(),
 			});
 		},

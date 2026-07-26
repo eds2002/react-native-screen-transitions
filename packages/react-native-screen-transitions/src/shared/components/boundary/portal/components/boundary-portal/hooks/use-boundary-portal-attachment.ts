@@ -1,4 +1,3 @@
-import { useLayoutEffect } from "react";
 import {
 	type SharedValue,
 	useAnimatedProps,
@@ -8,17 +7,13 @@ import { useDescriptorsStore } from "../../../../../../providers/screen/descript
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
 import { hasCloseTransitionFinished } from "../../../../../../providers/screen/styles/helpers/transition-visual-state";
 import { AnimationStore } from "../../../../../../stores/animation.store";
-import { getLinkKeyFromTag } from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { SystemStore } from "../../../../../../stores/system.store";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import { isTeleportEnabled } from "../../../utils/teleport-control";
-import { createBoundaryPortalHostName } from "../helpers/host-name";
+import { hasActiveBoundaryPortalLink } from "../helpers/active-pair";
 import { useActiveHostKey } from "../stores/host-registry.store";
-import {
-	mountPortalBoundaryHost,
-	unmountPortalBoundaryHostByName,
-} from "../stores/portal-boundary-host.store";
+import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 
 interface UseBoundaryPortalAttachmentParams {
 	boundaryId: string;
@@ -52,37 +47,7 @@ export const useBoundaryPortalAttachment = ({
 	const attachedDestination = useSharedValue<AttachedDestination | null>(null);
 	const escapeHostKey = useActiveHostKey(currentScreenKey);
 
-	useLayoutEffect(() => {
-		if (!sourcePairKey || !escapeHostKey) {
-			portalHostName.set(null);
-			portalHostReady.set(false);
-			return;
-		}
-
-		const nextPortalHostName = createBoundaryPortalHostName(
-			escapeHostKey,
-			boundaryId,
-			sourcePairKey,
-		);
-
-		mountPortalBoundaryHost({
-			boundaryId,
-			hostKey: escapeHostKey,
-			localStylesMaps,
-			pairKey: sourcePairKey,
-			portalHostName: nextPortalHostName,
-			portalHostReady,
-			screenKey: currentScreenKey,
-			slotsMap,
-		});
-		portalHostName.set(nextPortalHostName);
-
-		return () => {
-			portalHostName.set(null);
-			portalHostReady.set(false);
-			unmountPortalBoundaryHostByName(nextPortalHostName);
-		};
-	}, [
+	useActivePortalBoundaryHost({
 		boundaryId,
 		currentScreenKey,
 		escapeHostKey,
@@ -91,7 +56,7 @@ export const useBoundaryPortalAttachment = ({
 		portalHostReady,
 		sourcePairKey,
 		slotsMap,
-	]);
+	});
 
 	const teleportProps = useAnimatedProps(() => {
 		"worklet";
@@ -104,13 +69,11 @@ export const useBoundaryPortalAttachment = ({
 		} = slot?.props ?? {};
 		const shouldTeleport = isTeleportEnabled(teleport);
 		const hostName = portalHostName.get();
-		const pair = sourcePairKey ? pairs.get()[sourcePairKey] : undefined;
-		const linkKey = getLinkKeyFromTag(boundaryId);
-		const link = pair?.links[linkKey];
-		const hasActiveLink =
-			link?.source !== null &&
-			link !== undefined &&
-			(!link.group || pair?.groups[link.group]?.activeId === linkKey);
+		const hasActiveLink = hasActiveBoundaryPortalLink({
+			boundaryId,
+			pairsState: pairs.get(),
+			sourcePairKey,
+		});
 		const hasAttachableHost =
 			shouldTeleport && hasActiveLink && portalHostReady.get() && hostName;
 

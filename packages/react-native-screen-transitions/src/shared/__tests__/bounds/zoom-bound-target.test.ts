@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it } from "bun:test";
+import { makeMutable } from "react-native-reanimated";
+import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
+import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
 import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
 import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../constants";
+import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
+import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
@@ -9,6 +14,7 @@ import {
 	getZoomContentAnchor,
 	getZoomContentTarget,
 } from "../../utils/bounds/navigation/zoom/targets";
+import { animateToProgress } from "../../utils/animation/animate-to-progress";
 
 const SCREEN_LAYOUT = { width: 390, height: 844 };
 const PAIR_KEY = createScreenPairKey("screen-a", "screen-b");
@@ -140,6 +146,35 @@ beforeEach(() => {
 });
 
 describe("zoom bound target", () => {
+	it("does not refresh completed target bounds during an initial entrance", () => {
+		registerSource();
+		registerDestination();
+		const animations = AnimationStore.getBag("screen-b");
+
+		animateToProgress({
+			target: "open",
+			emitWillAnimate: false,
+			animations,
+			targetProgress: makeMutable(0),
+			animationProgress: makeMutable(0),
+		});
+
+		const refresh = getRefreshBoundarySignal({
+			enabled: true,
+			currentScreenKey: "screen-b",
+			destinationPairKey: PAIR_KEY,
+			linkId: "card",
+			shouldRefresh: animations.willAnimate.get() === 1,
+			closing: false,
+			linkState: pairs.get(),
+		});
+
+		expect(refresh).toBeNull();
+		expect(BoundStore.link.getDestination(PAIR_KEY, "card")?.bounds).toEqual(
+			DESTINATION_BOUNDS,
+		);
+	});
+
 	it("keeps bound targeting opt-in", () => {
 		registerSource();
 		registerDestination();
@@ -251,6 +286,108 @@ describe("zoom bound target", () => {
 		expect(focusedContent.borderRadius).toBe(36);
 		expect(focusedMask.borderRadius).toBe(36);
 		expect(unfocusedContent.transform[0]?.scale).toBeCloseTo(0.9, 10);
+	});
+
+	it("places the destination bound over the source while the navigation mask enters", () => {
+		registerSource();
+		registerDestination();
+
+		const styles = buildZoomStyles({
+			tag: "card",
+			props: createZoomProps({ focused: true, progress: 0 }),
+			zoomOptions: { target: "bound" },
+		});
+		const contentTransform = styles.content?.style?.transform as any[];
+		const contentTranslateX = contentTransform[0]?.translateX as number;
+		const contentTranslateY = contentTransform[1]?.translateY as number;
+		const contentScale = contentTransform[2]?.scale as number;
+		const mask = styles[NAVIGATION_MASK_ELEMENT_STYLE_ID]?.style as any;
+		const screenCenterX = SCREEN_LAYOUT.width / 2;
+		const screenCenterY = SCREEN_LAYOUT.height / 2;
+		const destinationCenterX =
+			DESTINATION_BOUNDS.pageX + DESTINATION_BOUNDS.width / 2;
+		const destinationCenterY =
+			DESTINATION_BOUNDS.pageY + DESTINATION_BOUNDS.height / 2;
+		const placedDestinationCenterX =
+			screenCenterX +
+			(destinationCenterX - screenCenterX) * contentScale +
+			contentTranslateX;
+		const placedDestinationCenterY =
+			screenCenterY +
+			(destinationCenterY - screenCenterY) * contentScale +
+			contentTranslateY;
+		const sourceCenterX = SOURCE_BOUNDS.pageX + SOURCE_BOUNDS.width / 2;
+		const sourceCenterY = SOURCE_BOUNDS.pageY + SOURCE_BOUNDS.height / 2;
+
+		expect(placedDestinationCenterX).toBeCloseTo(sourceCenterX, 8);
+		expect(placedDestinationCenterY).toBeCloseTo(sourceCenterY, 8);
+		expect(contentScale).toBeCloseTo(
+			SOURCE_BOUNDS.width / DESTINATION_BOUNDS.width,
+			8,
+		);
+		expect(mask.width).toBeCloseTo(SOURCE_BOUNDS.width, 8);
+		expect(mask.height).toBeCloseTo(SOURCE_BOUNDS.height, 8);
+	});
+
+	it("keeps a source-correct mask while a stale destination write misplaces bound content", () => {
+		registerSource();
+		const staleDestination = {
+			...DESTINATION_BOUNDS,
+			pageY: DESTINATION_BOUNDS.pageY + 180,
+			y: DESTINATION_BOUNDS.y + 180,
+		};
+		const signal = getInitialDestinationMeasurementSignal({
+			enabled: true,
+			destinationPairKey: PAIR_KEY,
+			linkId: "card",
+			destinationPresent: true,
+			sourcePresent: true,
+			linkState: pairs.get(),
+		});
+
+		expect(signal).toEqual({ pairKey: PAIR_KEY, action: "measure" });
+		applyMeasuredBoundsWrites({
+			entryTag: "card",
+			linkId: "card",
+			currentScreenKey: "screen-b",
+			measured: staleDestination,
+			preparedStyles: {},
+			linkWrite: { type: "destination", pairKey: PAIR_KEY },
+		});
+
+		const staleStyles = buildZoomStyles({
+			tag: "card",
+			props: createZoomProps({ focused: true, progress: 0 }),
+			zoomOptions: { target: "bound" },
+		});
+		const staleTransform = staleStyles.content?.style?.transform as any[];
+		const staleMask = staleStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
+			?.style as any;
+
+		applyMeasuredBoundsWrites({
+			entryTag: "card",
+			linkId: "card",
+			currentScreenKey: "screen-b",
+			measured: DESTINATION_BOUNDS,
+			preparedStyles: {},
+			linkWrite: { type: "destination", pairKey: PAIR_KEY },
+		});
+
+		const measuredStyles = buildZoomStyles({
+			tag: "card",
+			props: createZoomProps({ focused: true, progress: 0 }),
+			zoomOptions: { target: "bound" },
+		});
+		const measuredTransform = measuredStyles.content?.style?.transform as any[];
+		const measuredMask = measuredStyles[NAVIGATION_MASK_ELEMENT_STYLE_ID]
+			?.style as any;
+
+		expect(staleMask.width).toBeCloseTo(measuredMask.width, 8);
+		expect(staleMask.height).toBeCloseTo(measuredMask.height, 8);
+		expect(staleTransform[1]?.translateY).not.toBeCloseTo(
+			measuredTransform[1]?.translateY,
+			8,
+		);
 	});
 
 	it("keeps the tracked source attached to the bound-target content", () => {

@@ -2,54 +2,49 @@ import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
 import Transition from "react-native-screen-transitions";
 import { BlankStack } from "@/layouts/blank-stack";
+import { SHEET_ZOOM_BOUNDARY_ID } from "./constants";
 
-const modalOptions: ScreenTransitionConfig = {
+const sheetOptions: ScreenTransitionConfig = {
 	gestureEnabled: true,
-	gestureTracking: "always",
 	gestureDirection: "vertical",
+	snapPoints: [0.5],
+	initialSnapIndex: 0,
+
 	screenStyleInterpolator: ({
 		layouts: {
 			screen: { height },
 		},
-		progress,
-		focused,
-		active,
 		current,
+		focused,
 	}) => {
 		"worklet";
 
-		const isGestureDisabled = !current.options.gestureEnabled;
-
-		const translateY = focused
-			? interpolate(progress, [0, 1], [height, 0], "clamp")
-			: 0;
-
-		const gestureSensitivity = isGestureDisabled
-			? interpolate(progress, [0, 0.25], [1, 0.1], "clamp")
-			: 1;
-
-		const gestureReleaseVelocityScale = isGestureDisabled ? 0 : 1;
-
-		const contentStyle = {
-			transform: [{ translateY }],
-			maxHeight: focused ? height * 0.9 : undefined,
-			marginTop: focused ? "auto" : undefined,
-		} as const;
-
-		const backdropStyle = focused
-			? {
-					backgroundColor: "#00000050",
-					opacity: active.progress,
-				}
-			: undefined;
+		const translateY = interpolate(
+			current.progress,
+			[0, 1],
+			[height, 0],
+			"clamp",
+		);
 
 		return {
-			options: {
-				gestureSensitivity,
-				gestureReleaseVelocityScale,
+			content: {
+				style: {
+					transform: [{ translateY }],
+				},
 			},
-			content: { style: contentStyle },
-			backdrop: { style: backdropStyle },
+			backdrop: focused
+				? {
+						style: {
+							backgroundColor: "black",
+							opacity: interpolate(
+								current.progress,
+								[0, 0.5],
+								[0, 0.4],
+								"clamp",
+							),
+						},
+					}
+				: undefined,
 		};
 	},
 	transitionSpec: {
@@ -58,11 +53,23 @@ const modalOptions: ScreenTransitionConfig = {
 	},
 };
 
+const zoomOptions: ScreenTransitionConfig = {
+	gestureEnabled: true,
+	gestureDirection: ["bidirectional", "pinch-in"],
+	navigationMaskEnabled: true,
+	screenStyleInterpolator: ({ bounds }) => {
+		"worklet";
+		return bounds(SHEET_ZOOM_BOUNDARY_ID).navigation.zoom();
+	},
+	transitionSpec: Transition.Specs.Zoom,
+};
+
 export default function ExampleLayout() {
 	return (
 		<BlankStack>
-			<BlankStack.Screen name="index" />
-			<BlankStack.Screen name="modal" options={modalOptions} />
+			<BlankStack.Screen name="index" options={{ inactiveBehavior: "keep" }} />
+			<BlankStack.Screen name="sheet" options={sheetOptions} />
+			<BlankStack.Screen name="zoom" options={zoomOptions} />
 		</BlankStack>
 	);
 }
