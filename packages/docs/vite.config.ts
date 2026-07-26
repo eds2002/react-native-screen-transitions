@@ -66,9 +66,6 @@ function docsSearchIndex(): Plugin {
 }
 
 export default defineConfig({
-	build: {
-		ssrEmitAssets: true,
-	},
 	resolve: {
 		dedupe: ["react", "react-dom"],
 	},

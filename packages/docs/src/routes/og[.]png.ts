@@ -1,17 +1,23 @@
 import "@tanstack/react-start/server-only";
-import { basename } from "node:path";
-import { fileURLToPath } from "node:url";
 import { Resvg } from "@resvg/resvg-js";
 import { createFileRoute } from "@tanstack/react-router";
 
-import geistFontUrl from "../assets/Geist-Variable.ttf?url";
+import geistFontDataUrl from "../assets/Geist-Variable.ttf?inline";
 import { getDocByPath } from "../lib/docs";
 
 const IMAGE_WIDTH = 1200;
 const IMAGE_HEIGHT = 630;
-const geistFontFile = fileURLToPath(
-	new URL(basename(geistFontUrl), import.meta.url),
+const geistFontBuffer = Uint8Array.from(
+	Buffer.from(
+		geistFontDataUrl.slice(geistFontDataUrl.indexOf(",") + 1),
+		"base64",
+	),
 );
+const fontOptions = {
+	defaultFontFamily: "Geist",
+	fontBuffers: [geistFontBuffer],
+	loadSystemFonts: false,
+};
 
 const escapeXml = (value: string) =>
 	value
@@ -114,11 +120,7 @@ export const Route = createFileRoute("/og.png")({
 				const title = doc.to === "/" ? "Screen Transitions" : doc.pageTitle;
 				const png = new Resvg(createSocialImage({ title }), {
 					fitTo: { mode: "width", value: IMAGE_WIDTH },
-					font: {
-						defaultFontFamily: "Geist",
-						fontFiles: [geistFontFile],
-						loadSystemFonts: false,
-					},
+					font: fontOptions,
 				})
 					.render()
 					.asPng();
