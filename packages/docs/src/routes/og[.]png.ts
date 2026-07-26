@@ -1,15 +1,16 @@
 import "@tanstack/react-start/server-only";
-import { resolve } from "node:path";
+import { basename } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Resvg } from "@resvg/resvg-js";
 import { createFileRoute } from "@tanstack/react-router";
 
+import geistFontUrl from "../assets/Geist-Variable.ttf?url";
 import { getDocByPath } from "../lib/docs";
 
 const IMAGE_WIDTH = 1200;
 const IMAGE_HEIGHT = 630;
-const geistFontFile = resolve(
-	process.cwd(),
-	"server-assets/Geist-Variable.ttf",
+const geistFontFile = fileURLToPath(
+	new URL(basename(geistFontUrl), import.meta.url),
 );
 
 const escapeXml = (value: string) =>
@@ -116,7 +117,7 @@ export const Route = createFileRoute("/og.png")({
 					font: {
 						defaultFontFamily: "Geist",
 						fontFiles: [geistFontFile],
-						loadSystemFonts: true,
+						loadSystemFonts: false,
 					},
 				})
 					.render()
