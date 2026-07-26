@@ -42,9 +42,11 @@ import { Route as ApiCreateTransitionAwareComponentRouteImport } from './routes/
 import { Route as ApiUseHistoryRouteImport } from './routes/api_.use-history'
 import { Route as ApiUseScreenAnimationRouteImport } from './routes/api_.use-screen-animation'
 import { Route as ApiUseScreenGestureRouteImport } from './routes/api_.use-screen-gesture'
-import { Route as ChangelogSlugRouteImport } from './routes/changelog.$slug'
+import { Route as ChangelogSlugRouteImport } from './routes/changelog_.$slug'
 import { Route as RecipesModalRouteImport } from './routes/recipes.modal'
-import { Route as V4NextIndexRouteImport } from './routes/v4-next.index'
+import { Route as V4ExperimentalIndexRouteImport } from './routes/v4-experimental.index'
+import { Route as V4ExperimentalGettingStartedRouteImport } from './routes/v4-experimental.getting-started'
+import { Route as V4ExperimentalInstallationRouteImport } from './routes/v4-experimental.installation'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -214,27 +216,39 @@ const ApiUseScreenGestureRoute = ApiUseScreenGestureRouteImport.update({
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChangelogSlugRoute = ChangelogSlugRouteImport.update({
-  id: '/$slug',
-  path: '/$slug',
-  getParentRoute: () => ChangelogRoute,
+  id: '/changelog_/$slug',
+  path: '/changelog/$slug',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const RecipesModalRoute = RecipesModalRouteImport.update({
   id: '/recipes/modal',
   path: '/recipes/modal',
   getParentRoute: () => rootRouteImport,
 } as any)
-const V4NextIndexRoute = V4NextIndexRouteImport.update({
-  id: '/v4-next/',
-  path: '/v4-next/',
+const V4ExperimentalIndexRoute = V4ExperimentalIndexRouteImport.update({
+  id: '/v4-experimental/',
+  path: '/v4-experimental/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const V4ExperimentalGettingStartedRoute =
+  V4ExperimentalGettingStartedRouteImport.update({
+    id: '/v4-experimental/getting-started',
+    path: '/v4-experimental/getting-started',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const V4ExperimentalInstallationRoute =
+  V4ExperimentalInstallationRouteImport.update({
+    id: '/v4-experimental/installation',
+    path: '/v4-experimental/installation',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
   '/api': typeof ApiRoute
   '/caveats': typeof CaveatsRoute
-  '/changelog': typeof ChangelogRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -265,14 +279,16 @@ export interface FileRoutesByFullPath {
   '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
   '/changelog/$slug': typeof ChangelogSlugRoute
   '/recipes/modal': typeof RecipesModalRoute
-  '/v4-next/': typeof V4NextIndexRoute
+  '/v4-experimental/getting-started': typeof V4ExperimentalGettingStartedRoute
+  '/v4-experimental/installation': typeof V4ExperimentalInstallationRoute
+  '/v4-experimental/': typeof V4ExperimentalIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/adapters': typeof AdaptersRoute
   '/api': typeof ApiRoute
   '/caveats': typeof CaveatsRoute
-  '/changelog': typeof ChangelogRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -303,7 +319,9 @@ export interface FileRoutesByTo {
   '/api/use-screen-gesture': typeof ApiUseScreenGestureRoute
   '/changelog/$slug': typeof ChangelogSlugRoute
   '/recipes/modal': typeof RecipesModalRoute
-  '/v4-next': typeof V4NextIndexRoute
+  '/v4-experimental/getting-started': typeof V4ExperimentalGettingStartedRoute
+  '/v4-experimental/installation': typeof V4ExperimentalInstallationRoute
+  '/v4-experimental': typeof V4ExperimentalIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -311,7 +329,7 @@ export interface FileRoutesById {
   '/adapters': typeof AdaptersRoute
   '/api': typeof ApiRoute
   '/caveats': typeof CaveatsRoute
-  '/changelog': typeof ChangelogRouteWithChildren
+  '/changelog': typeof ChangelogRoute
   '/components': typeof ComponentsRoute
   '/custom-animations': typeof CustomAnimationsRoute
   '/expo-router': typeof ExpoRouterRoute
@@ -340,9 +358,11 @@ export interface FileRoutesById {
   '/api_/use-history': typeof ApiUseHistoryRoute
   '/api_/use-screen-animation': typeof ApiUseScreenAnimationRoute
   '/api_/use-screen-gesture': typeof ApiUseScreenGestureRoute
-  '/changelog/$slug': typeof ChangelogSlugRoute
+  '/changelog_/$slug': typeof ChangelogSlugRoute
   '/recipes/modal': typeof RecipesModalRoute
-  '/v4-next/': typeof V4NextIndexRoute
+  '/v4-experimental/getting-started': typeof V4ExperimentalGettingStartedRoute
+  '/v4-experimental/installation': typeof V4ExperimentalInstallationRoute
+  '/v4-experimental/': typeof V4ExperimentalIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -382,7 +402,9 @@ export interface FileRouteTypes {
     | '/api/use-screen-gesture'
     | '/changelog/$slug'
     | '/recipes/modal'
-    | '/v4-next/'
+    | '/v4-experimental/getting-started'
+    | '/v4-experimental/installation'
+    | '/v4-experimental/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -420,7 +442,9 @@ export interface FileRouteTypes {
     | '/api/use-screen-gesture'
     | '/changelog/$slug'
     | '/recipes/modal'
-    | '/v4-next'
+    | '/v4-experimental/getting-started'
+    | '/v4-experimental/installation'
+    | '/v4-experimental'
   id:
     | '__root__'
     | '/'
@@ -456,9 +480,11 @@ export interface FileRouteTypes {
     | '/api_/use-history'
     | '/api_/use-screen-animation'
     | '/api_/use-screen-gesture'
-    | '/changelog/$slug'
+    | '/changelog_/$slug'
     | '/recipes/modal'
-    | '/v4-next/'
+    | '/v4-experimental/getting-started'
+    | '/v4-experimental/installation'
+    | '/v4-experimental/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -466,7 +492,7 @@ export interface RootRouteChildren {
   AdaptersRoute: typeof AdaptersRoute
   ApiRoute: typeof ApiRoute
   CaveatsRoute: typeof CaveatsRoute
-  ChangelogRoute: typeof ChangelogRouteWithChildren
+  ChangelogRoute: typeof ChangelogRoute
   ComponentsRoute: typeof ComponentsRoute
   CustomAnimationsRoute: typeof CustomAnimationsRoute
   ExpoRouterRoute: typeof ExpoRouterRoute
@@ -495,8 +521,11 @@ export interface RootRouteChildren {
   ApiUseHistoryRoute: typeof ApiUseHistoryRoute
   ApiUseScreenAnimationRoute: typeof ApiUseScreenAnimationRoute
   ApiUseScreenGestureRoute: typeof ApiUseScreenGestureRoute
+  ChangelogSlugRoute: typeof ChangelogSlugRoute
   RecipesModalRoute: typeof RecipesModalRoute
-  V4NextIndexRoute: typeof V4NextIndexRoute
+  V4ExperimentalGettingStartedRoute: typeof V4ExperimentalGettingStartedRoute
+  V4ExperimentalInstallationRoute: typeof V4ExperimentalInstallationRoute
+  V4ExperimentalIndexRoute: typeof V4ExperimentalIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -732,12 +761,12 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUseScreenGestureRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/changelog/$slug': {
-      id: '/changelog/$slug'
-      path: '/$slug'
+    '/changelog_/$slug': {
+      id: '/changelog_/$slug'
+      path: '/changelog/$slug'
       fullPath: '/changelog/$slug'
       preLoaderRoute: typeof ChangelogSlugRouteImport
-      parentRoute: typeof ChangelogRoute
+      parentRoute: typeof rootRouteImport
     }
     '/recipes/modal': {
       id: '/recipes/modal'
@@ -746,34 +775,36 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof RecipesModalRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/v4-next/': {
-      id: '/v4-next/'
-      path: '/v4-next'
-      fullPath: '/v4-next/'
-      preLoaderRoute: typeof V4NextIndexRouteImport
+    '/v4-experimental/': {
+      id: '/v4-experimental/'
+      path: '/v4-experimental'
+      fullPath: '/v4-experimental/'
+      preLoaderRoute: typeof V4ExperimentalIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/v4-experimental/getting-started': {
+      id: '/v4-experimental/getting-started'
+      path: '/v4-experimental/getting-started'
+      fullPath: '/v4-experimental/getting-started'
+      preLoaderRoute: typeof V4ExperimentalGettingStartedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/v4-experimental/installation': {
+      id: '/v4-experimental/installation'
+      path: '/v4-experimental/installation'
+      fullPath: '/v4-experimental/installation'
+      preLoaderRoute: typeof V4ExperimentalInstallationRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
 }
-
-interface ChangelogRouteChildren {
-  ChangelogSlugRoute: typeof ChangelogSlugRoute
-}
-
-const ChangelogRouteChildren: ChangelogRouteChildren = {
-  ChangelogSlugRoute: ChangelogSlugRoute,
-}
-
-const ChangelogRouteWithChildren = ChangelogRoute._addFileChildren(
-  ChangelogRouteChildren,
-)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdaptersRoute: AdaptersRoute,
   ApiRoute: ApiRoute,
   CaveatsRoute: CaveatsRoute,
-  ChangelogRoute: ChangelogRouteWithChildren,
+  ChangelogRoute: ChangelogRoute,
   ComponentsRoute: ComponentsRoute,
   CustomAnimationsRoute: CustomAnimationsRoute,
   ExpoRouterRoute: ExpoRouterRoute,
@@ -803,8 +834,11 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUseHistoryRoute: ApiUseHistoryRoute,
   ApiUseScreenAnimationRoute: ApiUseScreenAnimationRoute,
   ApiUseScreenGestureRoute: ApiUseScreenGestureRoute,
+  ChangelogSlugRoute: ChangelogSlugRoute,
   RecipesModalRoute: RecipesModalRoute,
-  V4NextIndexRoute: V4NextIndexRoute,
+  V4ExperimentalGettingStartedRoute: V4ExperimentalGettingStartedRoute,
+  V4ExperimentalInstallationRoute: V4ExperimentalInstallationRoute,
+  V4ExperimentalIndexRoute: V4ExperimentalIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

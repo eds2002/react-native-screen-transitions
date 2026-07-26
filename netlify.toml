@@ -1,0 +1,7 @@
+[build]
+	base = "packages/docs"
+	command = "bun run build"
+	publish = "dist/client"
+
+[functions]
+	directory = ".netlify/v1/functions"

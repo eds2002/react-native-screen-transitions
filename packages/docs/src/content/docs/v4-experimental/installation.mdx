@@ -1,0 +1,147 @@
+---
+title: "Installation"
+pageTitle: "Installation"
+summary: "Install v4 with Reanimated 4, Worklets, and its navigation peers."
+description: "Install the experimental v4 package with its Reanimated 4-only peer dependency set."
+eyebrow: "Get Started"
+group: "Get Started"
+order: 2
+to: /installation
+---
+
+## Install the package
+
+<CodeBlock
+  variant="terminal"
+  defaultTab="npm"
+  syncKey="package-manager"
+  tabs={[
+    { label: "npm", value: "npm", code: `npm install react-native-screen-transitions@alpha` },
+    { label: "yarn", value: "yarn", code: `yarn add react-native-screen-transitions@alpha` },
+    { label: "pnpm", value: "pnpm", code: `pnpm add react-native-screen-transitions@alpha` },
+    { label: "bun", value: "bun", code: `bun add react-native-screen-transitions@alpha` },
+  ]}
+/>
+
+Use the matching prerelease tag while v4 is experimental.
+
+## Install the animation runtime
+
+v4 supports **Reanimated 4 only**. It does not support Reanimated 3.
+
+For Expo projects, let Expo select compatible native versions:
+
+```bash
+npx expo install react-native-reanimated react-native-worklets \
+  react-native-gesture-handler
+```
+
+For bare React Native projects:
+
+<CodeBlock
+  variant="terminal"
+  defaultTab="npm"
+  syncKey="package-manager"
+  tabs={[
+    {
+      label: "npm",
+      value: "npm",
+      code: `npm install react-native-reanimated@^4 react-native-worklets@~0.8 \
+  react-native-gesture-handler react-native-screens react-native-safe-area-context`,
+    },
+    {
+      label: "yarn",
+      value: "yarn",
+      code: `yarn add react-native-reanimated@^4 react-native-worklets@~0.8 \
+  react-native-gesture-handler react-native-screens react-native-safe-area-context`,
+    },
+    {
+      label: "pnpm",
+      value: "pnpm",
+      code: `pnpm add react-native-reanimated@^4 react-native-worklets@~0.8 \
+  react-native-gesture-handler react-native-screens react-native-safe-area-context`,
+    },
+    {
+      label: "bun",
+      value: "bun",
+      code: `bun add react-native-reanimated@^4 react-native-worklets@~0.8 \
+  react-native-gesture-handler react-native-screens react-native-safe-area-context`,
+    },
+  ]}
+/>
+
+The important version requirements are:
+
+- `react >= 19.2.0`
+- `react-native-reanimated >= 4.0.0`
+- `react-native-worklets 0.8.x`
+- `react-native-gesture-handler >= 2.16.1`
+- `react-native-screens >= 4.4.0`
+
+Follow the official Reanimated 4 and Gesture Handler installation instructions for any app-level Babel, native, or root-view setup required by your project.
+
+## Expo Router
+
+If you use Expo Router, install `expo-router`:
+
+```bash
+npx expo install expo-router
+```
+
+## React Navigation
+
+If you use React Navigation, install `@react-navigation/native`:
+
+<CodeBlock
+  variant="terminal"
+  defaultTab="npm"
+  syncKey="package-manager"
+  tabs={[
+    { label: "npm", value: "npm", code: `npm install @react-navigation/native` },
+    { label: "yarn", value: "yarn", code: `yarn add @react-navigation/native` },
+    { label: "pnpm", value: "pnpm", code: `pnpm add @react-navigation/native` },
+    { label: "bun", value: "bun", code: `bun add @react-navigation/native` },
+  ]}
+/>
+
+v4 requires `@react-navigation/native >= 7.3.0`.
+
+## Native Stack Adapter
+
+If you use `withScreenTransitions`, install native stack:
+
+<CodeBlock
+  variant="terminal"
+  defaultTab="npm"
+  syncKey="package-manager"
+  tabs={[
+    { label: "npm", value: "npm", code: `npm install @react-navigation/native-stack` },
+    { label: "yarn", value: "yarn", code: `yarn add @react-navigation/native-stack` },
+    { label: "pnpm", value: "pnpm", code: `pnpm add @react-navigation/native-stack` },
+    { label: "bun", value: "bun", code: `bun add @react-navigation/native-stack` },
+  ]}
+/>
+
+## Optional bounds teleportation
+
+Install the compatible teleport package when using boundary teleportation:
+
+<CodeBlock
+  variant="terminal"
+  defaultTab="npm"
+  syncKey="package-manager"
+  tabs={[
+    { label: "npm", value: "npm", code: `npm install "react-native-teleport@>=1.1.0 <1.1.11"` },
+    { label: "yarn", value: "yarn", code: `yarn add "react-native-teleport@>=1.1.0 <1.1.11"` },
+    { label: "pnpm", value: "pnpm", code: `pnpm add "react-native-teleport@>=1.1.0 <1.1.11"` },
+    { label: "bun", value: "bun", code: `bun add "react-native-teleport@>=1.1.0 <1.1.11"` },
+  ]}
+/>
+
+For bare React Native projects, install iOS pods after changing native dependencies:
+
+```bash
+cd ios && pod install
+```
+
+Continue to [Getting Started](/v4-experimental/getting-started).

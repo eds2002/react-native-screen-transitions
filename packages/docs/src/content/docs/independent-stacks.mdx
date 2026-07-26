@@ -27,7 +27,7 @@ They solve different problems.
 Use it when the stack lives inside another screen, sheet, host app surface, or any embedded flow that should not join the parent React Navigation tree.
 
 ```tsx
-import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
 
 const Stack = createBlankStackNavigator();
 
@@ -121,7 +121,7 @@ This is usually the most predictable setup for nested flows, custom containers, 
 The same options are available in the static factory form:
 
 ```tsx
-import { createBlankStackNavigator } from "react-native-screen-transitions/blank-stack";
+import { createBlankStackNavigator } from "react-native-screen-transitions/react-navigation";
 
 const Stack = createBlankStackNavigator({
   independent: true,
