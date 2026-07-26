@@ -1,5 +1,5 @@
 import "@tanstack/react-start/server-only";
-import { resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Resvg } from "@resvg/resvg-js";
 import { createFileRoute } from "@tanstack/react-router";
 
@@ -7,9 +7,11 @@ import { getDocByPath } from "../lib/docs";
 
 const IMAGE_WIDTH = 1200;
 const IMAGE_HEIGHT = 630;
-const geistFontFile = resolve(
-	import.meta.dirname,
-	"../../../../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.ttf",
+const geistFontFile = fileURLToPath(
+	new URL(
+		"./fonts/geist-sans/Geist-Variable.ttf",
+		import.meta.resolve("geist/font"),
+	),
 );
 
 const escapeXml = (value: string) =>
