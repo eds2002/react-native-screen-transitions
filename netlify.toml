@@ -4,4 +4,5 @@
 	publish = "dist/client"
 
 [functions]
+	directory = ".netlify/v1/functions"
 	included_files = ["../../node_modules/geist/dist/fonts/geist-sans/Geist-Variable.ttf"]
