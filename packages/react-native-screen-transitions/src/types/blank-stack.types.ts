@@ -12,7 +12,6 @@ import type {
 } from "@react-navigation/native";
 import type { OverlayProps } from "./overlay.types";
 import type { InactiveBehavior, ScreenTransitionConfig } from "./screen.types";
-import type { StackSceneActivity } from "./stack.types";
 
 export type { InactiveBehavior } from "./screen.types";
 

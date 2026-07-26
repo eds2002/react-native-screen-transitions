@@ -1,11 +1,4 @@
-import {
-	type ComponentType,
-	type FC,
-	memo,
-	type ReactNode,
-	useContext,
-	useMemo,
-} from "react";
+import { memo, type ReactNode, useContext, useMemo } from "react";
 import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import {
@@ -116,36 +109,6 @@ export const { StackCoreProvider, useStackCoreStore } = createProvider(
 		children: <StackCoreRoot stackType={STACK_TYPE}>{children}</StackCoreRoot>,
 	};
 });
-
-export function withStackCore<TProps extends object>(
-	defaultConfig: StackCoreConfig,
-	Component: ComponentType<TProps>,
-): FC<TProps & StackCoreConfig> {
-	return function StackCoreWrapper({
-		DISABLE_NATIVE_SCREENS,
-		DISABLE_NATIVE_SCREEN_CONTAINER,
-		TRANSITIONS_ALWAYS_ON,
-		STACK_TYPE,
-		...props
-	}: TProps & StackCoreConfig) {
-		const config: StackCoreConfig = {
-			TRANSITIONS_ALWAYS_ON:
-				TRANSITIONS_ALWAYS_ON ?? defaultConfig.TRANSITIONS_ALWAYS_ON,
-			STACK_TYPE: STACK_TYPE ?? defaultConfig.STACK_TYPE,
-			DISABLE_NATIVE_SCREENS:
-				DISABLE_NATIVE_SCREENS ?? defaultConfig.DISABLE_NATIVE_SCREENS,
-			DISABLE_NATIVE_SCREEN_CONTAINER:
-				DISABLE_NATIVE_SCREEN_CONTAINER ??
-				defaultConfig.DISABLE_NATIVE_SCREEN_CONTAINER,
-		};
-
-		return (
-			<StackCoreProvider config={config}>
-				<Component {...(props as TProps)} />
-			</StackCoreProvider>
-		);
-	};
-}
 
 const styles = StyleSheet.create({
 	container: { flex: 1 },

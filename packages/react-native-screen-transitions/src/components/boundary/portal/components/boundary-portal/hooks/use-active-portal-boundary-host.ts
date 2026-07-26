@@ -1,9 +1,6 @@
 import { useCallback, useLayoutEffect, useRef, useState } from "react";
-import {
-	runOnJS,
-	type SharedValue,
-	useAnimatedReaction,
-} from "react-native-reanimated";
+import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import type { LocalStyleLayers } from "../../../../../../providers/screen/styles/helpers/resolve-slot-styles";
 import { pairs } from "../../../../../../stores/bounds/internals/state";
 import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
@@ -69,7 +66,7 @@ export const useActivePortalBoundaryHost = ({
 				return;
 			}
 
-			runOnJS(updateActiveLink)(sourcePairKey, nextHasActiveLink);
+			scheduleOnRN(updateActiveLink, sourcePairKey, nextHasActiveLink);
 		},
 	);
 
