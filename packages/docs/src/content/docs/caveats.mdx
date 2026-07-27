@@ -51,6 +51,24 @@ That does not mean every benchmark will show blank stack as faster. More callbac
 
 Choose blank stack because you want the richer transition model, gesture control, and motion flexibility. Do not choose it because you expect every timing benchmark to come out lower.
 
+### Reanimated synchronous UI-prop updates on iOS
+
+Reanimated's experimental `IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS` static feature flag can make Blank Stack navigation transitions noticeably slower on iOS. In a reported reproduction, enabling the flag added roughly 300 ms to each navigation transition.
+
+If Blank Stack navigation is unexpectedly slow, look for and remove this Reanimated configuration, then rebuild the native iOS app:
+
+```json
+{
+  "reanimated": {
+    "staticFeatureFlags": {
+      "IOS_SYNCHRONOUSLY_UPDATE_UI_PROPS": true
+    }
+  }
+}
+```
+
+Static Reanimated flags are resolved at build time, so changing this configuration requires a native rebuild. This is an experimental Reanimated configuration interaction, not currently treated as a Blank Stack bug. Android has not shown the same behavior in the reported reproduction.
+
 ## Deep Linking
 
 Deep linking is supported.
