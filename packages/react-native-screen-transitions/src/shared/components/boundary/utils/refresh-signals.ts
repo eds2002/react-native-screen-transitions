@@ -31,8 +31,6 @@ export const getRefreshBoundarySignal = (params: {
 	currentScreenKey: string;
 	sourcePairKey?: ScreenPairKey;
 	destinationPairKey?: ScreenPairKey;
-	ancestorDestinationPairKey?: ScreenPairKey;
-	nextScreenKey?: string;
 	linkId: string;
 	group?: string;
 	shouldRefresh: boolean;
@@ -45,8 +43,6 @@ export const getRefreshBoundarySignal = (params: {
 		currentScreenKey,
 		sourcePairKey,
 		destinationPairKey,
-		ancestorDestinationPairKey,
-		nextScreenKey,
 		linkId,
 		group,
 		shouldRefresh,
@@ -79,9 +75,7 @@ export const getRefreshBoundarySignal = (params: {
 			);
 		}
 
-		const refreshDestinationPairKey =
-			destinationPairKey ??
-			(nextScreenKey ? undefined : ancestorDestinationPairKey);
+		const refreshDestinationPairKey = destinationPairKey;
 
 		if (!refreshDestinationPairKey) {
 			return null;
@@ -114,9 +108,7 @@ export const getRefreshBoundarySignal = (params: {
 		);
 	}
 
-	const refreshDestinationPairKey =
-		destinationPairKey ??
-		(nextScreenKey ? undefined : ancestorDestinationPairKey);
+	const refreshDestinationPairKey = destinationPairKey;
 
 	if (!refreshDestinationPairKey) return null;
 

@@ -6,7 +6,7 @@ import type { BaseStackDescriptor } from "../../../types/stack.types";
 import createProvider from "../../../utils/create-provider";
 import type { DescriptorDerivations } from "./helpers/derive-descriptor-derivations";
 import { deriveDescriptorDerivations } from "./helpers/derive-descriptor-derivations";
-import { getAncestorKeyState } from "./helpers/get-ancestor-keys";
+import { getAncestorKeys } from "./helpers/get-ancestor-keys";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
@@ -84,8 +84,8 @@ export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
 			[resolvedPrevious, resolvedCurrent, resolvedNext],
 		);
 
-		const { ancestorKeys, ancestorDestinationPairKey } = useMemo(
-			() => getAncestorKeyState(resolvedCurrent),
+		const ancestorKeys = useMemo(
+			() => getAncestorKeys(resolvedCurrent),
 			[resolvedCurrent],
 		);
 
@@ -96,15 +96,8 @@ export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
 					current: resolvedCurrent,
 					next: resolvedNext,
 					ancestorKeys,
-					ancestorDestinationPairKey,
 				}),
-			[
-				resolvedPrevious,
-				resolvedCurrent,
-				resolvedNext,
-				ancestorKeys,
-				ancestorDestinationPairKey,
-			],
+			[resolvedPrevious, resolvedCurrent, resolvedNext, ancestorKeys],
 		);
 
 		return {

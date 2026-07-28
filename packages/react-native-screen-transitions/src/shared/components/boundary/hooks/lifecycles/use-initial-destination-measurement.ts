@@ -9,8 +9,14 @@ import {
 } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../../stores/animation.store";
-import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
-import { getEntry } from "../../../../stores/bounds/internals/entries";
+import {
+	createScreenPairKey,
+	getSourceScreenKeyFromPairKey,
+} from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import {
+	getEntry,
+	getMatchingSourceScreenKey,
+} from "../../../../stores/bounds/internals/entries";
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
@@ -50,12 +56,11 @@ export const useInitialDestinationMeasurement = ({
 	const destinationPairKey = useDescriptorsStore(
 		(s) => s.derivations.destinationPairKey,
 	);
-	const ancestorDestinationPairKey = useDescriptorsStore(
-		(s) => s.derivations.ancestorDestinationPairKey,
-	);
 	const destinationEnabled = enabled && !nextScreenKey;
-	const initialDestinationPairKey =
-		destinationPairKey ?? ancestorDestinationPairKey;
+	const canReceiveDestination = destinationEnabled && !!destinationPairKey;
+	const preferredSourceScreenKey = destinationPairKey
+		? getSourceScreenKeyFromPairKey(destinationPairKey)
+		: undefined;
 	const progress = AnimationStore.getValue(
 		currentScreenKey,
 		"transitionProgress",
@@ -84,6 +89,16 @@ export const useInitialDestinationMeasurement = ({
 
 	const claimLifecycleStartBlock = useCallback(() => {
 		"worklet";
+		if (
+			!canReceiveDestination ||
+			!getMatchingSourceScreenKey(
+				tag,
+				currentScreenKey,
+				preferredSourceScreenKey,
+			)
+		) {
+			return;
+		}
 
 		// The progress check and block claim must share one UI-thread operation.
 		// Otherwise a JS-thread layout effect can observe zero, enqueue the block,
@@ -94,10 +109,18 @@ export const useInitialDestinationMeasurement = ({
 
 		blockLifecycleStart();
 		isBlockingLifecycleStart.set(1);
-	}, [blockLifecycleStart, isBlockingLifecycleStart, progress]);
+	}, [
+		blockLifecycleStart,
+		canReceiveDestination,
+		currentScreenKey,
+		isBlockingLifecycleStart,
+		progress,
+		preferredSourceScreenKey,
+		tag,
+	]);
 
 	useLayoutEffect(() => {
-		if (!destinationEnabled || !initialDestinationPairKey) {
+		if (!canReceiveDestination) {
 			return;
 		}
 
@@ -115,9 +138,8 @@ export const useInitialDestinationMeasurement = ({
 		};
 	}, [
 		claimLifecycleStartBlock,
-		destinationEnabled,
 		escapeClipping,
-		initialDestinationPairKey,
+		canReceiveDestination,
 		releaseLifecycleStartBlock,
 	]);
 
@@ -125,11 +147,7 @@ export const useInitialDestinationMeasurement = ({
 		() => {
 			"worklet";
 
-			if (
-				!destinationEnabled ||
-				!initialDestinationPairKey ||
-				isBlockingLifecycleStart.get() <= 0
-			) {
+			if (!canReceiveDestination || isBlockingLifecycleStart.get() <= 0) {
 				return null;
 			}
 
@@ -138,17 +156,21 @@ export const useInitialDestinationMeasurement = ({
 			}
 
 			const retryTick = retryToken.get();
-			const sourceScreenKey = getSourceScreenKeyFromPairKey(
-				initialDestinationPairKey,
+			const sourceScreenKey = getMatchingSourceScreenKey(
+				tag,
+				currentScreenKey,
+				preferredSourceScreenKey,
 			);
+			const pairKey = sourceScreenKey
+				? createScreenPairKey(sourceScreenKey, currentScreenKey)
+				: undefined;
 			const signal = getInitialDestinationMeasurementSignal({
 				enabled: destinationEnabled,
-				destinationPairKey,
-				ancestorDestinationPairKey,
+				pairKey,
 				linkId: linkKey,
 				group,
 				destinationPresent: getEntry(tag, currentScreenKey) !== null,
-				sourcePresent: getEntry(tag, sourceScreenKey) !== null,
+				sourcePresent: sourceScreenKey !== null,
 				linkState: pairs.get(),
 			});
 

@@ -162,7 +162,7 @@ describe("zoom bound target", () => {
 		const refresh = getRefreshBoundarySignal({
 			enabled: true,
 			currentScreenKey: "screen-b",
-			destinationPairKey: PAIR_KEY,
+			pairKey: PAIR_KEY,
 			linkId: "card",
 			shouldRefresh: animations.willAnimate.get() === 1,
 			closing: false,
@@ -338,7 +338,7 @@ describe("zoom bound target", () => {
 		};
 		const signal = getInitialDestinationMeasurementSignal({
 			enabled: true,
-			destinationPairKey: PAIR_KEY,
+			pairKey: PAIR_KEY,
 			linkId: "card",
 			destinationPresent: true,
 			sourcePresent: true,

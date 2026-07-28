@@ -4,12 +4,14 @@ import {
 	ensurePairGroups,
 	ensurePairLinks,
 	ensurePairSourceRequests,
+	getDestinationScreenKeyFromPairKey,
 	getGroupKeyFromTag,
 	getLinkKeyFromTag,
 	getActiveGroupId as getPairActiveGroupId,
 	getDestination as getPairDestination,
 	getLink as getPairLink,
 	getSource as getPairSource,
+	getSourceScreenKeyFromPairKey,
 } from "../helpers/link-pairs.helpers";
 import type {
 	BoundaryRuntimeFlags,
@@ -402,6 +404,32 @@ function getResolvedLink(
 	};
 }
 
+function getPairKeyForSource(
+	tag: TagID,
+	screenKey: ScreenKey,
+): ScreenPairKey | null {
+	"worklet";
+	const state = pairs.get();
+	for (const pairKey in state) {
+		if (getSourceScreenKeyFromPairKey(pairKey) !== screenKey) continue;
+		if (getResolvedLink(pairKey, tag).link?.destination) return pairKey;
+	}
+	return null;
+}
+
+function getPairKeyForDestination(
+	tag: TagID,
+	screenKey: ScreenKey,
+): ScreenPairKey | null {
+	"worklet";
+	const state = pairs.get();
+	for (const pairKey in state) {
+		if (getDestinationScreenKeyFromPairKey(pairKey) !== screenKey) continue;
+		if (getResolvedLink(pairKey, tag).link) return pairKey;
+	}
+	return null;
+}
+
 function getSource(
 	pairKey: ScreenPairKey,
 	tag: TagID,
@@ -422,6 +450,8 @@ export {
 	getActiveGroupId,
 	getDestination,
 	getLink,
+	getPairKeyForDestination,
+	getPairKeyForSource,
 	getResolvedLink,
 	getSource,
 	requestSourceMeasure,

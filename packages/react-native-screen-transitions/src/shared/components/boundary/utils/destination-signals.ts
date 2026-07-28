@@ -20,8 +20,7 @@ export type InitialDestinationMeasurementSignal = {
 
 export const getInitialDestinationMeasurementSignal = (params: {
 	enabled: boolean;
-	destinationPairKey?: ScreenPairKey;
-	ancestorDestinationPairKey?: ScreenPairKey;
+	pairKey?: ScreenPairKey;
 	linkId: string;
 	group?: string;
 	destinationPresent: boolean;
@@ -31,16 +30,13 @@ export const getInitialDestinationMeasurementSignal = (params: {
 	"worklet";
 	const {
 		enabled,
-		destinationPairKey,
-		ancestorDestinationPairKey,
+		pairKey,
 		linkId,
 		group,
 		destinationPresent,
 		sourcePresent,
 		linkState,
 	} = params;
-	const pairKey = destinationPairKey ?? ancestorDestinationPairKey;
-
 	if (!enabled || !pairKey) {
 		return null;
 	}
