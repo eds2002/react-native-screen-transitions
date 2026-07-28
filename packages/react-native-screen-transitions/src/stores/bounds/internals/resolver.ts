@@ -1,35 +1,21 @@
-import { createScreenPairKey } from "../helpers/link-pairs.helpers";
 import type {
 	ResolvedTransitionPair,
 	ResolveTransitionContext,
-	ScreenPairKey,
 	TagID,
 } from "../types";
-import { getResolvedLink } from "./links";
-
-function resolvePairKey(
-	context: ResolveTransitionContext,
-): ScreenPairKey | null {
-	"worklet";
-
-	if (context.entering) {
-		if (!context.previousScreenKey || !context.currentScreenKey) return null;
-		return createScreenPairKey(
-			context.previousScreenKey,
-			context.currentScreenKey,
-		);
-	}
-
-	if (!context.currentScreenKey || !context.nextScreenKey) return null;
-	return createScreenPairKey(context.currentScreenKey, context.nextScreenKey);
-}
+import { getPairKeyForDestination, getResolvedLink } from "./links";
 
 function resolveTransitionPair(
 	tag: TagID,
 	context: ResolveTransitionContext,
 ): ResolvedTransitionPair {
 	"worklet";
-	const pairKey = resolvePairKey(context);
+	const destinationScreenKey = context.entering
+		? context.currentScreenKey
+		: context.nextScreenKey;
+	const pairKey = destinationScreenKey
+		? getPairKeyForDestination(tag, destinationScreenKey)
+		: null;
 	const matchedLink = pairKey ? getResolvedLink(pairKey, tag).link : null;
 
 	return {

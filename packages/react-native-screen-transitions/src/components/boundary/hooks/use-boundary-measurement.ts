@@ -60,10 +60,11 @@ export const useBoundaryMeasurement = ({
 		escapeClipping,
 	});
 
-	// Register/unregister this boundary in the presence map so source/destination
-	// matching can resolve across concrete screen keys.
+	// Presence and source capture must not depend on this screen owning an
+	// interpolator: a nested source can participate in a transition owned by a
+	// different navigator.
 	useBoundaryPresence({
-		enabled: runtimeEnabled,
+		enabled,
 		boundTag,
 		currentScreenKey,
 		boundaryConfig,
@@ -72,7 +73,7 @@ export const useBoundaryMeasurement = ({
 	});
 
 	useInitialSourceMeasurement({
-		enabled: runtimeEnabled,
+		enabled,
 		measureBoundary,
 		boundTag,
 	});

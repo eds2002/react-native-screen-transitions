@@ -8,6 +8,7 @@ import {
 	createScreenPairKey,
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
+import { getMatchingSourceScreenKey } from "../../stores/bounds/internals/entries";
 import { createBoundsAccessor } from "../../utils/bounds";
 import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
 import type { EntryPatch } from "../../stores/bounds/types";
@@ -73,6 +74,16 @@ beforeEach(() => {
 });
 
 describe("BoundStore.entry", () => {
+	it("prefers the direct outgoing screen over retained matching boundaries", () => {
+		registerBoundaryPresence("card", "screen-a");
+		registerBoundaryPresence("card", "screen-b");
+		registerBoundaryPresence("card", "screen-c");
+
+		expect(
+			getMatchingSourceScreenKey("card", "screen-c", "screen-b"),
+		).toBe("screen-b");
+	});
+
 	it("writes and updates measured entries by direct screen key", () => {
 		const first = createBounds(10, 20, 200, 300);
 		const second = createBounds(15, 25, 220, 320);
@@ -458,6 +469,44 @@ describe("BoundStore.link pair writes", () => {
 });
 
 describe("BoundStore.link.getPair", () => {
+	it("resolves a nested source for a root destination", () => {
+		const pairKey = createScreenPairKey("tray-a", "palette");
+		const source = createBounds(10, 20);
+		const destination = createBounds(100, 120);
+
+		BoundStore.entry.set("colors:ember", "tray-a", {});
+		BoundStore.entry.set("colors:ember", "palette", {});
+		BoundStore.link.setSource(
+			pairKey,
+			"ember",
+			"tray-a",
+			source,
+			{},
+			"colors",
+		);
+		BoundStore.link.setDestination(
+			pairKey,
+			"ember",
+			"palette",
+			destination,
+			{},
+			"colors",
+		);
+
+		expect(
+			BoundStore.link.getPair("colors:ember", {
+				entering: true,
+				previousScreenKey: "tray",
+				currentScreenKey: "palette",
+			}),
+		).toMatchObject({
+			sourceBounds: source,
+			destinationBounds: destination,
+			sourceScreenKey: "tray-a",
+			destinationScreenKey: "palette",
+		});
+	});
+
 	it("resolves entering from previous/current screen pair", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const source = createBounds(10, 20);

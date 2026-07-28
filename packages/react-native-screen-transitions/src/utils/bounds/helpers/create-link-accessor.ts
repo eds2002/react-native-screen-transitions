@@ -1,10 +1,12 @@
-import { getResolvedLink } from "../../../stores/bounds/internals/links";
+import {
+	getPairKeyForDestination,
+	getResolvedLink,
+} from "../../../stores/bounds/internals/links";
 import type {
 	BoundsInterpolationProps,
 	BoundsLink,
 } from "../../../types/bounds.types";
 import type { BoundId } from "../types/options";
-import { resolveBoundsPairKey } from "./resolve-bounds-pair-key";
 
 type GetProps = () => BoundsInterpolationProps;
 
@@ -19,7 +21,11 @@ export const createLinkAccessor = (getProps: GetProps): LinkAccessor => {
 		"worklet";
 		const props = getProps();
 		const stringTag = String(tag);
-		const pairKey = resolveBoundsPairKey(props);
+		const destinationScreenKey =
+			props.next?.route.key ?? props.current?.route.key;
+		const pairKey = destinationScreenKey
+			? getPairKeyForDestination(stringTag, destinationScreenKey)
+			: null;
 		if (!pairKey) return null;
 
 		const resolved = getResolvedLink(pairKey, stringTag);

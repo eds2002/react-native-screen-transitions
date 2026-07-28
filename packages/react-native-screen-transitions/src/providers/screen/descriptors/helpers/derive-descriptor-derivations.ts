@@ -8,7 +8,6 @@ export interface DescriptorDerivations {
 	nextScreenKey?: string;
 	sourcePairKey?: ScreenPairKey;
 	destinationPairKey?: ScreenPairKey;
-	ancestorDestinationPairKey?: ScreenPairKey;
 	parentScreenKey?: string;
 	isFirstKey: boolean;
 	isTopMostScreen: boolean;
@@ -21,7 +20,6 @@ interface Params {
 	current: BaseStackDescriptor;
 	next?: BaseStackDescriptor;
 	ancestorKeys: string[];
-	ancestorDestinationPairKey?: ScreenPairKey;
 }
 
 export function deriveDescriptorDerivations({
@@ -29,7 +27,6 @@ export function deriveDescriptorDerivations({
 	current,
 	next,
 	ancestorKeys,
-	ancestorDestinationPairKey,
 }: Params): DescriptorDerivations {
 	const previousScreenKey = previous?.route.key;
 	const currentScreenKey = current.route.key;
@@ -56,7 +53,6 @@ export function deriveDescriptorDerivations({
 		nextScreenKey,
 		sourcePairKey,
 		destinationPairKey,
-		ancestorDestinationPairKey,
 		parentScreenKey: ancestorKeys[0],
 		isFirstKey,
 		isTopMostScreen,
