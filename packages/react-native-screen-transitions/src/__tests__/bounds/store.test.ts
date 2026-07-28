@@ -9,6 +9,10 @@ import {
 } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
 import { getMatchingSourceScreenKey } from "../../stores/bounds/internals/entries";
+import {
+	getPairKeyForSource,
+	requestSourceMeasure,
+} from "../../stores/bounds/internals/links";
 import { createBoundsAccessor } from "../../utils/bounds";
 import { computeBoundStyles } from "../../utils/bounds/helpers/styles/compute";
 import type { EntryPatch } from "../../stores/bounds/types";
@@ -241,6 +245,14 @@ describe("applyMeasuredBoundsWrites", () => {
 });
 
 describe("BoundStore.link pair writes", () => {
+	it("finds a source pair requested before its destination measures", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		requestSourceMeasure(pairKey, "card");
+
+		expect(getPairKeyForSource("card", "screen-a")).toBe(pairKey);
+	});
+
 	it("sets a source by pair key and id", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const bounds = createBounds();
