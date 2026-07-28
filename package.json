@@ -36,6 +36,8 @@
 		"@types/bun": "^1.3.14",
 		"commitlint": "^21.0.1",
 		"lefthook": "^2.1.6",
+		"react": "19.2.3",
+		"react-test-renderer": "19.2.3",
 		"release-it": "^20.2.0"
 	},
 	"commitlint": {
