@@ -410,9 +410,15 @@ function getPairKeyForSource(
 ): ScreenPairKey | null {
 	"worklet";
 	const state = pairs.get();
+	const linkKey = getLinkKeyFromTag(tag);
 	for (const pairKey in state) {
 		if (getSourceScreenKeyFromPairKey(pairKey) !== screenKey) continue;
-		if (getResolvedLink(pairKey, tag).link?.destination) return pairKey;
+		if (
+			getResolvedLink(pairKey, tag).link?.destination ||
+			state[pairKey]?.sourceRequests?.[linkKey]
+		) {
+			return pairKey;
+		}
 	}
 	return null;
 }
