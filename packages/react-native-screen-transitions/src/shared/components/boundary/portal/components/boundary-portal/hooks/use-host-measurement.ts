@@ -16,7 +16,6 @@ import { getVisibilityBlockOffset } from "../../../../../../utils/visibility-blo
 import {
 	adjustedMeasuredBoundsForOverscrollDeltas,
 	correctMeasuredBoundsForVisibilityGate,
-	isMeasurementInViewport,
 } from "../../../../utils/measured-bounds";
 import {
 	clearPortalHostBounds,
@@ -102,13 +101,7 @@ export const useHostMeasurement = ({
 				viewportHeight,
 			});
 
-			if (
-				!isMeasurementInViewport(
-					correctedMeasured,
-					viewportWidth,
-					viewportHeight,
-				)
-			) {
+			if (correctedMeasured.width <= 0 || correctedMeasured.height <= 0) {
 				cancelAnimation(retryToken);
 				retryToken.set(
 					withDelay(

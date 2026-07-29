@@ -16,7 +16,6 @@ import { getLink } from "../../../../../../stores/bounds/internals/links";
 import { SystemStore } from "../../../../../../stores/system.store";
 import type { ScrollMeasuredDimensions } from "../../../../utils/measured-bounds";
 import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../../../teleport";
-import { hasLocalSlot } from "../helpers/has-local-slot";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
 import { getPortalHostBounds } from "../stores/host-bounds.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
@@ -44,11 +43,10 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 		}
 
 		const link = getLink(host.pairKey, host.boundaryId);
-		const hasGeometry =
-			link?.source !== null &&
-			link !== undefined &&
-			getPortalHostBounds(host.hostKey) !== null &&
-			hasLocalSlot(host.localStylesMaps.get(), host.boundaryId);
+		const hasSource = !!link?.source;
+		const hasHostBounds = getPortalHostBounds(host.hostKey) !== null;
+		const hasSlot = host.slotsMap.get()[host.boundaryId] !== undefined;
+		const hasGeometry = hasSource && hasHostBounds && hasSlot;
 
 		if (!hasGeometry) {
 			geometryReadyFrames.set(0);
@@ -103,20 +101,6 @@ export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	});
 	const slotStyle = useAnimatedStyle(() => {
 		"worklet";
-		// `slotsMap` is the resolved map: it may contain real interpolator output,
-		// inherited styles, or resolver-created reset patches for slots that just
-		// disappeared. Normal components need those reset patches so stale styles
-		// clear correctly.
-		//
-		// A screen-level portal host is different. It is only the temporary visual
-		// receiver for teleported content, not the original component that needs a
-		// cleanup frame. If the current local interpolator layers did not emit this
-		// boundary id, any resolved style here is cleanup/stale residue and should
-		// not be drawn by the host.
-		if (!hasLocalSlot(host.localStylesMaps.get(), host.boundaryId)) {
-			return NO_STYLES;
-		}
-
 		const slot = host.slotsMap.get()[host.boundaryId];
 
 		return composeSlotStyleWithLocalTransform(
