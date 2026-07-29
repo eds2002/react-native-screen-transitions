@@ -111,6 +111,21 @@ describe("bounds client measurement contract", () => {
 		expect(getSignal()).toEqual({ pairKey, action: "complete" });
 	});
 
+	it("keeps an unresolved destination source in the retry loop", () => {
+		expect(
+			getInitialDestinationMeasurementSignal({
+				enabled: true,
+				linkId: "card",
+				destinationPresent: true,
+				sourcePresent: false,
+				linkState: pairs.get(),
+			}),
+		).toEqual({
+			pairKey: null,
+			action: "wait",
+		});
+	});
+
 	it("auto source capture waits for destination then emits once", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const measuredTargets: Array<{ type: "source"; pairKey: string }> = [];

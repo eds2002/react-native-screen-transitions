@@ -14,7 +14,7 @@ export type InitialDestinationMeasurementAction =
 	| "complete";
 
 export type InitialDestinationMeasurementSignal = {
-	pairKey: ScreenPairKey;
+	pairKey: ScreenPairKey | null;
 	action: InitialDestinationMeasurementAction;
 };
 
@@ -37,8 +37,12 @@ export const getInitialDestinationMeasurementSignal = (params: {
 		sourcePresent,
 		linkState,
 	} = params;
-	if (!enabled || !pairKey) {
+	if (!enabled) {
 		return null;
+	}
+
+	if (!pairKey) {
+		return { pairKey: null, action: "wait" };
 	}
 
 	if (!destinationPresent) {
