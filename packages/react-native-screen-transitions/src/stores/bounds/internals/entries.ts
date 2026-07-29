@@ -66,13 +66,24 @@ function getMatchingSourceScreenKey(
 	tag: TagID,
 	destinationScreenKey: ScreenKey,
 	preferredScreenKey?: ScreenKey,
+	excludedScreenKeys?: readonly ScreenKey[],
 ): ScreenKey | null {
 	"worklet";
 	const screens = boundaryRegistry.get()[tag]?.screens;
 	if (!screens) return null;
+	const isExcluded = (screenKey: ScreenKey) => {
+		"worklet";
+		for (let index = 0; index < (excludedScreenKeys?.length ?? 0); index++) {
+			if (excludedScreenKeys?.[index] === screenKey) {
+				return true;
+			}
+		}
+		return false;
+	};
 	if (
 		preferredScreenKey &&
 		preferredScreenKey !== destinationScreenKey &&
+		!isExcluded(preferredScreenKey) &&
 		screens[preferredScreenKey]
 	) {
 		return preferredScreenKey;
@@ -80,7 +91,7 @@ function getMatchingSourceScreenKey(
 
 	let latestScreenKey: ScreenKey | null = null;
 	for (const screenKey in screens) {
-		if (screenKey !== destinationScreenKey) {
+		if (screenKey !== destinationScreenKey && !isExcluded(screenKey)) {
 			latestScreenKey = screenKey;
 		}
 	}

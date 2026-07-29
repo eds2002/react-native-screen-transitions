@@ -88,6 +88,18 @@ describe("BoundStore.entry", () => {
 		).toBe("screen-b");
 	});
 
+	it("excludes closing screens when matching a new source", () => {
+		registerBoundaryPresence("card", "screen-a");
+		registerBoundaryPresence("card", "screen-b-1");
+		registerBoundaryPresence("card", "screen-b-2");
+
+		expect(
+			getMatchingSourceScreenKey("card", "screen-b-2", "screen-b-1", [
+				"screen-b-1",
+			]),
+		).toBe("screen-a");
+	});
+
 	it("writes and updates measured entries by direct screen key", () => {
 		const first = createBounds(10, 20, 200, 300);
 		const second = createBounds(15, 25, 220, 320);

@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect } from "react";
+import { useCallback, useLayoutEffect, useMemo } from "react";
 import {
 	cancelAnimation,
 	useAnimatedReaction,
@@ -7,6 +7,7 @@ import {
 	withTiming,
 } from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
+import { useStack } from "../../../../hooks/navigation/use-stack";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../../stores/animation.store";
 import {
@@ -61,6 +62,16 @@ export const useInitialDestinationMeasurement = ({
 	const preferredSourceScreenKey = destinationPairKey
 		? getSourceScreenKeyFromPairKey(destinationPairKey)
 		: undefined;
+	const stackScenes = useStack((store) => store.scenes);
+	// A retained closing screen can still have registered boundaries, but it
+	// cannot own a new transition link.
+	const closingSourceScreenKeys = useMemo(
+		() =>
+			stackScenes
+				.filter((scene) => scene.activity === "closing")
+				.map((scene) => scene.route.key),
+		[stackScenes],
+	);
 	const progress = AnimationStore.getValue(
 		currentScreenKey,
 		"transitionProgress",
@@ -74,6 +85,7 @@ export const useInitialDestinationMeasurement = ({
 	const retryToken = useSharedValue(0);
 	const handshakeRetries = useSharedValue(0);
 	const hasGivenUp = useSharedValue(0);
+	const hasFinishedInitialMeasurement = useSharedValue(0);
 
 	const releaseLifecycleStartBlock = useCallback(() => {
 		"worklet";
@@ -83,19 +95,22 @@ export const useInitialDestinationMeasurement = ({
 			return;
 		}
 
+		hasFinishedInitialMeasurement.set(1);
 		isBlockingLifecycleStart.set(0);
 		unblockLifecycleStart();
-	}, [isBlockingLifecycleStart, retryToken, unblockLifecycleStart]);
+	}, [
+		hasFinishedInitialMeasurement,
+		isBlockingLifecycleStart,
+		retryToken,
+		unblockLifecycleStart,
+	]);
 
 	const claimLifecycleStartBlock = useCallback(() => {
 		"worklet";
 		if (
 			!canReceiveDestination ||
-			!getMatchingSourceScreenKey(
-				tag,
-				currentScreenKey,
-				preferredSourceScreenKey,
-			)
+			hasFinishedInitialMeasurement.get() ||
+			!getMatchingSourceScreenKey(tag, currentScreenKey)
 		) {
 			return;
 		}
@@ -113,9 +128,9 @@ export const useInitialDestinationMeasurement = ({
 		blockLifecycleStart,
 		canReceiveDestination,
 		currentScreenKey,
+		hasFinishedInitialMeasurement,
 		isBlockingLifecycleStart,
 		progress,
-		preferredSourceScreenKey,
 		tag,
 	]);
 
@@ -147,7 +162,11 @@ export const useInitialDestinationMeasurement = ({
 		() => {
 			"worklet";
 
-			if (!canReceiveDestination || isBlockingLifecycleStart.get() <= 0) {
+			if (
+				!canReceiveDestination ||
+				hasFinishedInitialMeasurement.get() ||
+				isBlockingLifecycleStart.get() <= 0
+			) {
 				return null;
 			}
 
@@ -160,6 +179,7 @@ export const useInitialDestinationMeasurement = ({
 				tag,
 				currentScreenKey,
 				preferredSourceScreenKey,
+				closingSourceScreenKeys,
 			);
 			const pairKey = sourceScreenKey
 				? createScreenPairKey(sourceScreenKey, currentScreenKey)
@@ -182,12 +202,12 @@ export const useInitialDestinationMeasurement = ({
 		},
 		(next, previous) => {
 			"worklet";
-			if (!next) {
+			if (!next || hasFinishedInitialMeasurement.get()) {
 				return;
 			}
 
 			const [measurePairKey, action, retryTick] = next;
-			if (!measurePairKey || !action) {
+			if (!action) {
 				return;
 			}
 
@@ -213,19 +233,20 @@ export const useInitialDestinationMeasurement = ({
 				return;
 			}
 
-			if (action === "measure") {
+			if (action === "measure" && measurePairKey) {
 				measureBoundary({
 					type: "destination",
 					pairKey: measurePairKey,
 				});
 			}
 
-			const link = getLink(measurePairKey, linkKey);
+			const link = measurePairKey ? getLink(measurePairKey, linkKey) : null;
 			const linkComplete = !!link?.source && !!link.destination;
 
 			if (linkComplete || action === "complete") {
 				cancelAnimation(retryToken);
 				handshakeRetries.set(0);
+				hasFinishedInitialMeasurement.set(1);
 				if (escapeClipping) {
 					// Screen-level escape has a second readiness phase after destination
 					// matching: the host must commit before the transition starts, or
