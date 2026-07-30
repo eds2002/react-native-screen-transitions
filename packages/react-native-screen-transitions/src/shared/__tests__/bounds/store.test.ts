@@ -88,16 +88,54 @@ describe("BoundStore.entry", () => {
 		).toBe("screen-b");
 	});
 
-	it("excludes closing screens when matching a new source", () => {
+	it("completes A to C without linking through retained closing B", () => {
 		registerBoundaryPresence("card", "screen-a");
-		registerBoundaryPresence("card", "screen-b-1");
-		registerBoundaryPresence("card", "screen-b-2");
+		registerBoundaryPresence("card", "screen-b");
+		const closingPairKey = createScreenPairKey("screen-a", "screen-b");
+		BoundStore.link.setSource(
+			closingPairKey,
+			"card",
+			"screen-a",
+			createBounds(10, 20),
+		);
+		BoundStore.link.setDestination(
+			closingPairKey,
+			"card",
+			"screen-b",
+			createBounds(30, 40),
+		);
 
-		expect(
-			getMatchingSourceScreenKey("card", "screen-b-2", "screen-b-1", [
-				"screen-b-1",
-			]),
-		).toBe("screen-a");
+		registerBoundaryPresence("card", "screen-c");
+		const sourceScreenKey = getMatchingSourceScreenKey(
+			"card",
+			"screen-c",
+			"screen-b",
+			["screen-b"],
+		);
+		expect(sourceScreenKey).toBe("screen-a");
+
+		const nextPairKey = createScreenPairKey(sourceScreenKey!, "screen-c");
+		BoundStore.link.setDestination(
+			nextPairKey,
+			"card",
+			"screen-c",
+			createBounds(50, 60),
+		);
+		BoundStore.link.setSource(
+			nextPairKey,
+			"card",
+			sourceScreenKey!,
+			createBounds(10, 20),
+		);
+
+		expect(BoundStore.link.getLink(nextPairKey, "card")).toMatchObject({
+			source: { screenKey: "screen-a" },
+			destination: { screenKey: "screen-c" },
+		});
+		expect(BoundStore.link.getLink(closingPairKey, "card")).toMatchObject({
+			source: { screenKey: "screen-a" },
+			destination: { screenKey: "screen-b" },
+		});
 	});
 
 	it("writes and updates measured entries by direct screen key", () => {
