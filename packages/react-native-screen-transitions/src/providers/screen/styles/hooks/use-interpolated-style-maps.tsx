@@ -125,10 +125,10 @@ const runInterpolator = ({
  * normal interpolator selection once the gesture-driven close is no longer in
  * play.
  *
- * At an ownership handoff, the last current-owner styles are frozen. The next
- * owner replaces matching scalar keys and composes its live transforms after
- * the frozen transforms. The previous interpolator is not evaluated again until
- * it regains ownership.
+ * At an ownership handoff, the current interpolator remains live but is
+ * evaluated without the next-screen relationship. The next owner replaces
+ * matching scalar keys and composes its live transforms after the current
+ * screen's self-owned transforms.
  */
 export const useInterpolatedStylesMap = ({
 	enabled,
@@ -177,8 +177,6 @@ export const useInterpolatedStylesMap = ({
 
 	const isGesturingDuringCloseAnimation = useSharedValue(false);
 	const initialDestinationStylesReady = useSharedValue(0);
-	const frozenCurrentStylesMap =
-		useSharedValue<NormalizedTransitionInterpolatedStyle>(NO_STYLES);
 	const shouldPrepareInitialDestinationStyles =
 		enabled && !!destinationPairKey && !nextScreenKey && !!currentInterpolator;
 
@@ -261,17 +259,21 @@ export const useInterpolatedStylesMap = ({
 			? "current"
 			: "next";
 
-		const selectedFrame = selectInterpolatorFrame(props, isInGestureMode);
-
-		const currentResult = currentOwnsInterpolator
-			? runInterpolator({
-					interpolator: currentInterpolator,
-					props,
-					selectedFrame,
-					bounds: boundsAccessor,
-					transition,
-				})
-			: undefined;
+		// Once the next interpolator owns the relationship, the current
+		// interpolator remains responsible only for its own live presentation.
+		// This preserves snap-point transforms without letting current-screen
+		// unfocus rules compete with the next screen's outgoing transition.
+		const currentSelectedFrame = selectInterpolatorFrame(
+			props,
+			isInGestureMode || !!nextInterpolator,
+		);
+		const currentResult = runInterpolator({
+			interpolator: currentInterpolator,
+			props,
+			selectedFrame: currentSelectedFrame,
+			bounds: boundsAccessor,
+			transition,
+		});
 
 		const initialDestinationStyleGate = resolveInitialDestinationStyleGate({
 			shouldPrepareStyles: shouldPrepareInitialDestinationStyles,
@@ -295,22 +297,18 @@ export const useInterpolatedStylesMap = ({
 				currentOwnsInterpolator: true,
 				currentStylesMap: currentResult?.stylesMap,
 				nextStylesMap: undefined,
-				frozenCurrentStylesMap: frozenCurrentStylesMap.get(),
 			});
-
-			if (handoff.nextFrozenCurrentStylesMap !== frozenCurrentStylesMap.get()) {
-				frozenCurrentStylesMap.set(handoff.nextFrozenCurrentStylesMap);
-			}
 
 			return handoff.localStylesMaps.length
 				? handoff.localStylesMaps
 				: NO_STYLE_LAYERS;
 		}
 
+		const nextSelectedFrame = selectInterpolatorFrame(props, false);
 		const nextResult = runInterpolator({
 			interpolator: nextInterpolator,
 			props,
-			selectedFrame,
+			selectedFrame: nextSelectedFrame,
 			bounds: boundsAccessor,
 			transition,
 		});
@@ -326,7 +324,6 @@ export const useInterpolatedStylesMap = ({
 			currentOwnsInterpolator: false,
 			currentStylesMap: currentResult?.stylesMap,
 			nextStylesMap: nextResult?.stylesMap,
-			frozenCurrentStylesMap: frozenCurrentStylesMap.get(),
 		});
 
 		return handoff.localStylesMaps.length

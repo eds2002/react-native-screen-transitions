@@ -81,18 +81,18 @@ const mergeSlots = (
 	return merged;
 };
 
-const composeFrozenAndLiveStyles = (
-	frozen: NormalizedTransitionInterpolatedStyle,
-	live: NormalizedTransitionInterpolatedStyle,
+const composeCurrentAndNextStyles = (
+	current: NormalizedTransitionInterpolatedStyle,
+	next: NormalizedTransitionInterpolatedStyle,
 ) => {
 	"worklet";
-	const composed: NormalizedTransitionInterpolatedStyle = { ...frozen };
+	const composed: NormalizedTransitionInterpolatedStyle = { ...current };
 
-	for (const slotId in live) {
-		const liveSlot = live[slotId];
+	for (const slotId in next) {
+		const nextSlot = next[slotId];
 
-		if (liveSlot) {
-			composed[slotId] = mergeSlots(frozen[slotId], liveSlot);
+		if (nextSlot) {
+			composed[slotId] = mergeSlots(current[slotId], nextSlot);
 		}
 	}
 
@@ -103,36 +103,36 @@ export const resolveInterpolatorStyleHandoff = ({
 	currentOwnsInterpolator,
 	currentStylesMap,
 	nextStylesMap,
-	frozenCurrentStylesMap,
 }: {
 	currentOwnsInterpolator: boolean;
 	currentStylesMap: NormalizedTransitionInterpolatedStyle | undefined;
 	nextStylesMap: NormalizedTransitionInterpolatedStyle | undefined;
-	frozenCurrentStylesMap: NormalizedTransitionInterpolatedStyle;
 }): {
 	localStylesMaps: LocalStyleLayers;
-	nextFrozenCurrentStylesMap: NormalizedTransitionInterpolatedStyle;
 } => {
 	"worklet";
 
 	if (currentOwnsInterpolator) {
 		return {
 			localStylesMaps: currentStylesMap ? [currentStylesMap] : [],
-			nextFrozenCurrentStylesMap: currentStylesMap ?? frozenCurrentStylesMap,
 		};
 	}
 
 	if (!nextStylesMap) {
 		return {
-			localStylesMaps: frozenCurrentStylesMap ? [frozenCurrentStylesMap] : [],
-			nextFrozenCurrentStylesMap: frozenCurrentStylesMap,
+			localStylesMaps: currentStylesMap ? [currentStylesMap] : [],
+		};
+	}
+
+	if (!currentStylesMap) {
+		return {
+			localStylesMaps: [nextStylesMap],
 		};
 	}
 
 	return {
 		localStylesMaps: [
-			composeFrozenAndLiveStyles(frozenCurrentStylesMap, nextStylesMap),
+			composeCurrentAndNextStyles(currentStylesMap, nextStylesMap),
 		],
-		nextFrozenCurrentStylesMap: frozenCurrentStylesMap,
 	};
 };
