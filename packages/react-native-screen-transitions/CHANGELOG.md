@@ -1,5 +1,17 @@
 # Changelog
 
+## [3.11.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.0...v3.11.1) (2026-07-30)
+
+### Bug Fixes
+
+* **bounds:** correct escape clipping portals ([fc6e547](https://github.com/eds2002/react-native-screen-transitions/commit/fc6e5471aa745bf933a888b29544124dfd397f38))
+* **bounds:** pair nested boundaries by screen key ([6b80018](https://github.com/eds2002/react-native-screen-transitions/commit/6b80018da34770f5f9fc5283b0b9fd16ecf186ee))
+* **bounds:** retain requested source pair ([6379d10](https://github.com/eds2002/react-native-screen-transitions/commit/6379d1026653858f70a22e6505059e722f704f41))
+* **bounds:** stabilize initial destination linking ([4a91778](https://github.com/eds2002/react-native-screen-transitions/commit/4a917789f62f807207cea46a0a378392833b67bc))
+* **docs:** resolve Netlify workspace paths ([27b8be9](https://github.com/eds2002/react-native-screen-transitions/commit/27b8be90f288beda37aa1bfb70e81f5aa4d6b413))
+* keep outgoing screen styles live ([528a618](https://github.com/eds2002/react-native-screen-transitions/commit/528a618cb1f9587395a409f9fface6a4086c4703))
+* support React Native 0.85 absolute fill ([7d5c23d](https://github.com/eds2002/react-native-screen-transitions/commit/7d5c23dc21fd7c0988162ed6f6dfc72697be201c))
+
 ## [3.11.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.10.0...v3.11.0) (2026-07-26)
 
 ### ⚠ BREAKING CHANGES
