@@ -1,8 +1,8 @@
 ---
 title: "Expo Router"
 pageTitle: "Expo Router"
-summary: "Use the blank stack Expo Router adapter inside Expo Router layouts."
-description: "Use the blank stack Expo Router adapter inside Expo Router layouts."
+summary: "Create a v3 blank stack layout for Expo Router with createBlankStackNavigator and withLayoutContext."
+description: "Create a v3 blank stack layout for Expo Router with createBlankStackNavigator and withLayoutContext."
 eyebrow: "Guides"
 group: "Guides"
 order: 2
@@ -11,9 +11,11 @@ to: /expo-router
 
 ## Overview
 
-Expo Router integration uses the package's Expo Router adapter. It is built on Expo Router's standard navigator APIs, so route layouts can import `BlankStack` directly.
+In v3, Expo Router integration wraps `createBlankStackNavigator()` with Expo Router's `withLayoutContext()`.
 
-Most work should use blank stack. Reach for native stack only when you specifically need `@react-navigation/native-stack`.
+<Note>
+  Looking for Expo SDK 55+ support? See the [v4 documentation](/v4-experimental/getting-started).
+</Note>
 
 ## Blank Stack Layout
 
@@ -22,13 +24,35 @@ This is the pattern from the e2e app:
 ```tsx
 // layouts/blank-stack.tsx
 import "react-native-reanimated";
+import type {
+  ParamListBase,
+  StackNavigationState,
+} from "@react-navigation/native";
+import { withLayoutContext } from "expo-router";
+import type { ComponentProps } from "react";
+import {
+  type BlankStackNavigationEventMap,
+  type BlankStackNavigationOptions,
+  createBlankStackNavigator,
+} from "react-native-screen-transitions/blank-stack";
 
-export { BlankStack } from "react-native-screen-transitions/expo-router";
+const { Navigator } = createBlankStackNavigator();
+
+function BlankStackNavigator(props: ComponentProps<typeof Navigator>) {
+  return <Navigator {...props} nativeScreens={false} />;
+}
+
+export const BlankStack = withLayoutContext<
+  BlankStackNavigationOptions,
+  typeof BlankStackNavigator,
+  StackNavigationState<ParamListBase>,
+  BlankStackNavigationEventMap
+>(BlankStackNavigator);
 ```
 
-This adapter lets your screens use screen options like `screenStyleInterpolator`, `gestureEnabled`, `snapPoints`, and `overlay`.
+The local wrapper lets your screens use screen options like `screenStyleInterpolator`, `gestureEnabled`, `snapPoints`, and `overlay`.
 
-The blank-stack navigator itself also accepts navigator props like `independent` and `enableNativeScreens`.
+The blank-stack navigator itself also accepts navigator props like `independent` and `nativeScreens`. The e2e wrapper above pins `nativeScreens={false}`; remove that fixed prop if route layouts should choose the value themselves.
 
 ## Using It In Route Layouts
 

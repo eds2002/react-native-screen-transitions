@@ -1,0 +1,42 @@
+---
+title: "New in 3.11.1"
+pageTitle: "New in 3.11.1"
+summary: "v3.11.1 fixes bounds pairing and escape-clipping reliability in complex route layouts."
+description: "v3.11.1 fixes bounds pairing and escape-clipping reliability in complex route layouts."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "July 2026"
+order: -1
+to: /changelog/updating-to-3-11-1
+---
+
+v3.11.1 is a bug-fix release for bounds-driven transitions. It does not add or change any public APIs.
+
+## Reliable pairing across complex routes
+
+Matching boundaries now pair through their concrete screen and route identities instead of relying only on neighboring screens in one navigator.
+
+Bounds transitions pair a source screen with a destination screen; they should not be limited by the provider, ancestor, or navigator that happens to render either boundary. A source boundary inside a nested navigator can now transition to a matching destination boundary in the root navigator.
+
+This fixes bounds transitions whose source and destination live in nested or otherwise non-adjacent route layouts. During rapid or repeated navigation, a screen that is already closing can finish its existing transition, but it is not selected as the source of a newly opening bounds pair. This prevents incorrect links when navigation actions overlap.
+
+Existing `Transition.Boundary`, `bounds()`, and navigation setup remains unchanged.
+
+## Stable initial destination measurement
+
+Initial destination measurement now completes once after a usable source and destination handshake succeeds. Later React or provider updates do not restart the completed measurement or reclaim the transition gate.
+
+Provider rerenders can occur while a route remains mounted; without a terminal completion state, those updates can restart measurement that already finished.
+
+Destinations whose source or layout is not ready still use the existing retry path and bounded fallback, so temporarily unresolved measurements can settle normally without leaving the screen blocked.
+
+## Reliable escape clipping
+
+`escapeClipping` now treats escaping as behavior local to the source screen. When the source boundary animates, it can leave that screen's clipped layout without needing to know about or depend on the destination layout.
+
+This matters because clipping belongs to the layout that currently contains the source, not the layout the transition is moving toward. Clipped, scrollable, and nested source layouts can also place a valid host outside the viewport even though it is still the correct coordinate space for the transition.
+
+Valid nonzero host layouts can participate even when the host itself is outside the viewport. This fixes sources that stayed clipped or expanded incorrectly in nested trays, scrollable layouts, and other constrained route structures.
+
+No migration is required. Existing bounds and `escapeClipping` usage keeps the same public shape.

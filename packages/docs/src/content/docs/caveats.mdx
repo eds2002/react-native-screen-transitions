@@ -9,10 +9,6 @@ order: 1
 to: /caveats
 ---
 
-## Blank Stack vs Native Stack
-
-The main trade-off in this library is not features versus no features. It is blank stack versus native stack.
-
 ## Native Stack Trade-offs
 
 Native stack transition support is a compatibility layer.
@@ -77,28 +73,6 @@ These navigators still sit on top of React Navigation, so normal deep-linking fl
 
 If you hit a deep-link-specific bug with a complex animation flow, open an issue on GitHub with a reproduction.
 
-## Android Native Screens
-
-Blank stack supports `nativeScreens={false}` because native screen primitives are not always the best fit for every flow.
-
-Before v3.7, Android native screens had a practical dismissal limitation. Fragment presentation could keep the outgoing screen in front until the close fully finished, so content behind it could look interactive while still missing touch events.
-
-v3.7 moves blank-stack presentation through a JS-managed activity layer. Closing scenes stay mounted long enough to finish their exit animation, but they are marked non-interactive while the visible scene below can receive touches as soon as it owns the interaction again.
-
-That old Android fragment touch caveat is no longer a reason to opt out of native screens.
-
-You can still opt out when your layout deliberately needs regular React Native view layering:
-
-```tsx
-const Stack = createBlankStackNavigator();
-
-<Stack.Navigator nativeScreens={false}>
-  {/* screens */}
-</Stack.Navigator>
-```
-
-That renders blank stack with regular views instead of `react-native-screens`.
-
 ## First Screen Does Not Animate by Default
 
 By default, the first screen in a stack does not animate from its closed state on initial mount. It starts already settled.
@@ -147,12 +121,6 @@ For Expo Video content that must clip or animate with a boundary, prefer:
 ```
 
 Test live handoff on physical devices for every platform you support. Ordinary bounds transitions and `escapeClipping` do not reparent a live payload and are not covered by this experimental warning.
-
-## Expo SDK 56
-
-Expo SDK 56 changes Expo Router's navigator internals. This package currently expects the React Navigation imports used by earlier Expo Router integrations.
-
-Because of that, SDK 56 is not supported without changing this package's internals to use Expo Router imports in the adapter layer. If you are on SDK 56, treat Expo Router support as unavailable for now.
 
 ## Compatibility
 
