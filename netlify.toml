@@ -1,6 +1,6 @@
 [build]
-	command = "bun run docs:build"
-	publish = "packages/docs/dist/client"
+	command = "bun run build"
+	publish = "dist/client"
 
 [functions]
-	directory = "packages/docs/.netlify/v1/functions"
+	directory = ".netlify/v1/functions"
