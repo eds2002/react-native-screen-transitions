@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { resolveInterpolatorStyleHandoff } from "../../providers/screen/styles/helpers/resolve-interpolator-style-handoff";
 
 describe("resolveInterpolatorStyleHandoff", () => {
-	it("freezes a settled snap transform while the next interpolator animates", () => {
+	it("composes a settled current transform while the next interpolator animates", () => {
 		const settledSheet = {
 			content: {
 				style: {
@@ -10,22 +10,9 @@ describe("resolveInterpolatorStyleHandoff", () => {
 				},
 			},
 		};
-		const committed = resolveInterpolatorStyleHandoff({
-			currentOwnsInterpolator: true,
-			currentStylesMap: settledSheet,
-			nextStylesMap: undefined,
-			frozenCurrentStylesMap: {},
-		});
-
 		const handoff = resolveInterpolatorStyleHandoff({
 			currentOwnsInterpolator: false,
-			currentStylesMap: {
-				content: {
-					style: {
-						transform: [{ translateY: 0 }],
-					},
-				},
-			},
+			currentStylesMap: settledSheet,
 			nextStylesMap: {
 				content: {
 					style: {
@@ -33,7 +20,6 @@ describe("resolveInterpolatorStyleHandoff", () => {
 					},
 				},
 			},
-			frozenCurrentStylesMap: committed.nextFrozenCurrentStylesMap,
 		});
 
 		expect(handoff.localStylesMaps).toEqual([
@@ -45,29 +31,20 @@ describe("resolveInterpolatorStyleHandoff", () => {
 				},
 			},
 		]);
-		expect(handoff.nextFrozenCurrentStylesMap).toBe(settledSheet);
 	});
 
-	it("freezes current values while live values override matching scalar keys", () => {
-		const frozen = {
-			content: {
-				style: {
-					opacity: 0.4,
-					borderRadius: 24,
-					transform: [{ translateY: 420 }],
-				},
-				props: {
-					pointerEvents: "none" as const,
-				},
-			},
-		};
+	it("keeps current values while next values override matching scalar keys", () => {
 		const handoff = resolveInterpolatorStyleHandoff({
 			currentOwnsInterpolator: false,
 			currentStylesMap: {
 				content: {
 					style: {
-						opacity: 0,
-						transform: [{ translateY: -420 }],
+						opacity: 0.4,
+						borderRadius: 24,
+						transform: [{ translateY: 420 }],
+					},
+					props: {
+						pointerEvents: "none" as const,
 					},
 				},
 			},
@@ -82,7 +59,6 @@ describe("resolveInterpolatorStyleHandoff", () => {
 					},
 				},
 			},
-			frozenCurrentStylesMap: frozen,
 		});
 
 		expect(handoff.localStylesMaps[0]?.content).toEqual({
@@ -97,8 +73,38 @@ describe("resolveInterpolatorStyleHandoff", () => {
 		});
 	});
 
-	it("resumes the current interpolator and replaces the frozen snapshot", () => {
-		const resumed = {
+	it("keeps the current screen progressing during an overlapping push", () => {
+		const handoff = resolveInterpolatorStyleHandoff({
+			currentOwnsInterpolator: false,
+			currentStylesMap: {
+				content: {
+					style: {
+						transform: [{ translateY: 200 }],
+					},
+				},
+			},
+			nextStylesMap: {
+				content: {
+					style: {
+						transform: [{ translateX: -120 }],
+					},
+				},
+			},
+		});
+
+		expect(handoff.localStylesMaps).toEqual([
+			{
+				content: {
+					style: {
+						transform: [{ translateY: 200 }, { translateX: -120 }],
+					},
+				},
+			},
+		]);
+	});
+
+	it("uses only current styles while the current interpolator owns the screen", () => {
+		const current = {
 			content: {
 				style: {
 					transform: [{ translateY: 360 }],
@@ -107,7 +113,7 @@ describe("resolveInterpolatorStyleHandoff", () => {
 		};
 		const handoff = resolveInterpolatorStyleHandoff({
 			currentOwnsInterpolator: true,
-			currentStylesMap: resumed,
+			currentStylesMap: current,
 			nextStylesMap: {
 				content: {
 					style: {
@@ -115,52 +121,28 @@ describe("resolveInterpolatorStyleHandoff", () => {
 					},
 				},
 			},
-			frozenCurrentStylesMap: {
-				content: {
-					style: {
-						transform: [{ translateY: 420 }],
-					},
-				},
-			},
 		});
 
-		expect(handoff.localStylesMaps).toEqual([resumed]);
-		expect(handoff.nextFrozenCurrentStylesMap).toBe(resumed);
+		expect(handoff.localStylesMaps).toEqual([current]);
 	});
 
-	it("keeps frozen values when the live interpolator returns undefined", () => {
+	it("uses next styles when the current interpolator returns undefined", () => {
+		const next = {
+			content: {
+				style: {
+					opacity: 0.9,
+				},
+				props: {
+					pointerEvents: "box-none" as const,
+				},
+			},
+		};
 		const handoff = resolveInterpolatorStyleHandoff({
 			currentOwnsInterpolator: false,
 			currentStylesMap: undefined,
-			nextStylesMap: {
-				content: {
-					style: {
-						opacity: undefined,
-					},
-					props: {
-						pointerEvents: undefined,
-					},
-				},
-			},
-			frozenCurrentStylesMap: {
-				content: {
-					style: {
-						opacity: 0.4,
-					},
-					props: {
-						pointerEvents: "none",
-					},
-				},
-			},
+			nextStylesMap: next,
 		});
 
-		expect(handoff.localStylesMaps[0]?.content).toEqual({
-			style: {
-				opacity: 0.4,
-			},
-			props: {
-				pointerEvents: "none",
-			},
-		});
+		expect(handoff.localStylesMaps).toEqual([next]);
 	});
 });
