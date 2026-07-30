@@ -64,6 +64,7 @@ mock.module("react-native", () => ({
 		absoluteFill: {},
 		absoluteFillObject: {},
 		create: <T>(styles: T) => styles,
+		flatten: <T>(style: T) => style,
 	},
 }));
 mock.module("react-native-gesture-handler", () => ({}));
