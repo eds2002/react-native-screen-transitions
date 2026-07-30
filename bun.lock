@@ -89,7 +89,7 @@
     },
     "packages/react-native-screen-transitions": {
       "name": "react-native-screen-transitions",
-      "version": "4.0.0-alpha.2",
+      "version": "4.0.0-alpha.5",
       "dependencies": {
         "standard-navigation": "^0.0.7",
       },
