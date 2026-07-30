@@ -1,4 +1,4 @@
-import { useCallback, useLayoutEffect } from "react";
+import { useCallback, useLayoutEffect, useMemo } from "react";
 import {
 	cancelAnimation,
 	runOnUI,
@@ -7,10 +7,17 @@ import {
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
+import { useStack } from "../../../../hooks/navigation/use-stack";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../../stores/animation.store";
-import { getSourceScreenKeyFromPairKey } from "../../../../stores/bounds/helpers/link-pairs.helpers";
-import { getEntry } from "../../../../stores/bounds/internals/entries";
+import {
+	createScreenPairKey,
+	getSourceScreenKeyFromPairKey,
+} from "../../../../stores/bounds/helpers/link-pairs.helpers";
+import {
+	getEntry,
+	getMatchingSourceScreenKey,
+} from "../../../../stores/bounds/internals/entries";
 import { getLink } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
@@ -50,12 +57,21 @@ export const useInitialDestinationMeasurement = ({
 	const destinationPairKey = useDescriptorsStore(
 		(s) => s.derivations.destinationPairKey,
 	);
-	const ancestorDestinationPairKey = useDescriptorsStore(
-		(s) => s.derivations.ancestorDestinationPairKey,
-	);
 	const destinationEnabled = enabled && !nextScreenKey;
-	const initialDestinationPairKey =
-		destinationPairKey ?? ancestorDestinationPairKey;
+	const canReceiveDestination = destinationEnabled && !!destinationPairKey;
+	const preferredSourceScreenKey = destinationPairKey
+		? getSourceScreenKeyFromPairKey(destinationPairKey)
+		: undefined;
+	const stackScenes = useStack((store) => store.scenes);
+	// A retained closing screen can still have registered boundaries, but it
+	// cannot own a new transition link.
+	const closingSourceScreenKeys = useMemo(
+		() =>
+			stackScenes
+				.filter((scene) => scene.activity === "closing")
+				.map((scene) => scene.route.key),
+		[stackScenes],
+	);
 	const progress = AnimationStore.getValue(
 		currentScreenKey,
 		"transitionProgress",
@@ -69,6 +85,7 @@ export const useInitialDestinationMeasurement = ({
 	const retryToken = useSharedValue(0);
 	const handshakeRetries = useSharedValue(0);
 	const hasGivenUp = useSharedValue(0);
+	const hasFinishedInitialMeasurement = useSharedValue(0);
 
 	const releaseLifecycleStartBlock = useCallback(() => {
 		"worklet";
@@ -78,12 +95,25 @@ export const useInitialDestinationMeasurement = ({
 			return;
 		}
 
+		hasFinishedInitialMeasurement.set(1);
 		isBlockingLifecycleStart.set(0);
 		unblockLifecycleStart();
-	}, [isBlockingLifecycleStart, retryToken, unblockLifecycleStart]);
+	}, [
+		hasFinishedInitialMeasurement,
+		isBlockingLifecycleStart,
+		retryToken,
+		unblockLifecycleStart,
+	]);
 
 	const claimLifecycleStartBlock = useCallback(() => {
 		"worklet";
+		if (
+			!canReceiveDestination ||
+			hasFinishedInitialMeasurement.get() ||
+			!getMatchingSourceScreenKey(tag, currentScreenKey)
+		) {
+			return;
+		}
 
 		// The progress check and block claim must share one UI-thread operation.
 		// Otherwise a JS-thread layout effect can observe zero, enqueue the block,
@@ -94,10 +124,18 @@ export const useInitialDestinationMeasurement = ({
 
 		blockLifecycleStart();
 		isBlockingLifecycleStart.set(1);
-	}, [blockLifecycleStart, isBlockingLifecycleStart, progress]);
+	}, [
+		blockLifecycleStart,
+		canReceiveDestination,
+		currentScreenKey,
+		hasFinishedInitialMeasurement,
+		isBlockingLifecycleStart,
+		progress,
+		tag,
+	]);
 
 	useLayoutEffect(() => {
-		if (!destinationEnabled || !initialDestinationPairKey) {
+		if (!canReceiveDestination) {
 			return;
 		}
 
@@ -115,9 +153,8 @@ export const useInitialDestinationMeasurement = ({
 		};
 	}, [
 		claimLifecycleStartBlock,
-		destinationEnabled,
 		escapeClipping,
-		initialDestinationPairKey,
+		canReceiveDestination,
 		releaseLifecycleStartBlock,
 	]);
 
@@ -126,8 +163,8 @@ export const useInitialDestinationMeasurement = ({
 			"worklet";
 
 			if (
-				!destinationEnabled ||
-				!initialDestinationPairKey ||
+				!canReceiveDestination ||
+				hasFinishedInitialMeasurement.get() ||
 				isBlockingLifecycleStart.get() <= 0
 			) {
 				return null;
@@ -138,17 +175,22 @@ export const useInitialDestinationMeasurement = ({
 			}
 
 			const retryTick = retryToken.get();
-			const sourceScreenKey = getSourceScreenKeyFromPairKey(
-				initialDestinationPairKey,
+			const sourceScreenKey = getMatchingSourceScreenKey(
+				tag,
+				currentScreenKey,
+				preferredSourceScreenKey,
+				closingSourceScreenKeys,
 			);
+			const pairKey = sourceScreenKey
+				? createScreenPairKey(sourceScreenKey, currentScreenKey)
+				: undefined;
 			const signal = getInitialDestinationMeasurementSignal({
 				enabled: destinationEnabled,
-				destinationPairKey,
-				ancestorDestinationPairKey,
+				pairKey,
 				linkId: linkKey,
 				group,
 				destinationPresent: getEntry(tag, currentScreenKey) !== null,
-				sourcePresent: getEntry(tag, sourceScreenKey) !== null,
+				sourcePresent: sourceScreenKey !== null,
 				linkState: pairs.get(),
 			});
 
@@ -160,12 +202,12 @@ export const useInitialDestinationMeasurement = ({
 		},
 		(next, previous) => {
 			"worklet";
-			if (!next) {
+			if (!next || hasFinishedInitialMeasurement.get()) {
 				return;
 			}
 
 			const [measurePairKey, action, retryTick] = next;
-			if (!measurePairKey || !action) {
+			if (!action) {
 				return;
 			}
 
@@ -191,19 +233,20 @@ export const useInitialDestinationMeasurement = ({
 				return;
 			}
 
-			if (action === "measure") {
+			if (action === "measure" && measurePairKey) {
 				measureBoundary({
 					type: "destination",
 					pairKey: measurePairKey,
 				});
 			}
 
-			const link = getLink(measurePairKey, linkKey);
+			const link = measurePairKey ? getLink(measurePairKey, linkKey) : null;
 			const linkComplete = !!link?.source && !!link.destination;
 
 			if (linkComplete || action === "complete") {
 				cancelAnimation(retryToken);
 				handshakeRetries.set(0);
+				hasFinishedInitialMeasurement.set(1);
 				if (escapeClipping) {
 					// Screen-level escape has a second readiness phase after destination
 					// matching: the host must commit before the transition starts, or

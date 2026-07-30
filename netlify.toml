@@ -1,5 +1,4 @@
 [build]
-	base = "packages/docs"
 	command = "bun run build"
 	publish = "dist/client"
 

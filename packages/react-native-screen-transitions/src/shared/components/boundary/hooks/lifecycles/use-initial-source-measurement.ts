@@ -1,5 +1,6 @@
 import { useAnimatedReaction, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
+import { getPairKeyForSource } from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
 import type { MeasureBoundary } from "../../types";
@@ -11,12 +12,16 @@ export const useInitialSourceMeasurement = (params: {
 	boundTag: BoundTag;
 }) => {
 	const { enabled, measureBoundary, boundTag } = params;
-	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
+	const currentScreenKey = useDescriptorsStore(
+		(s) => s.derivations.currentScreenKey,
+	);
 	const lastSourceCaptureSignal = useSharedValue<string | null>(null);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
+			const sourcePairKey =
+				getPairKeyForSource(boundTag.tag, currentScreenKey) ?? undefined;
 			return getInitialSourceCaptureSignal({
 				enabled,
 				sourcePairKey,

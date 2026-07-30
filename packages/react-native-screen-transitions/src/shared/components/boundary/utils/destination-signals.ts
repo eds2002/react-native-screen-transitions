@@ -14,14 +14,13 @@ export type InitialDestinationMeasurementAction =
 	| "complete";
 
 export type InitialDestinationMeasurementSignal = {
-	pairKey: ScreenPairKey;
+	pairKey: ScreenPairKey | null;
 	action: InitialDestinationMeasurementAction;
 };
 
 export const getInitialDestinationMeasurementSignal = (params: {
 	enabled: boolean;
-	destinationPairKey?: ScreenPairKey;
-	ancestorDestinationPairKey?: ScreenPairKey;
+	pairKey?: ScreenPairKey;
 	linkId: string;
 	group?: string;
 	destinationPresent: boolean;
@@ -31,18 +30,19 @@ export const getInitialDestinationMeasurementSignal = (params: {
 	"worklet";
 	const {
 		enabled,
-		destinationPairKey,
-		ancestorDestinationPairKey,
+		pairKey,
 		linkId,
 		group,
 		destinationPresent,
 		sourcePresent,
 		linkState,
 	} = params;
-	const pairKey = destinationPairKey ?? ancestorDestinationPairKey;
-
-	if (!enabled || !pairKey) {
+	if (!enabled) {
 		return null;
+	}
+
+	if (!pairKey) {
+		return { pairKey: null, action: "wait" };
 	}
 
 	if (!destinationPresent) {

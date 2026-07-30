@@ -1,6 +1,10 @@
 import { useAnimatedReaction } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../providers/screen/descriptors";
 import { AnimationStore } from "../../../../stores/animation.store";
+import {
+	getPairKeyForDestination,
+	getPairKeyForSource,
+} from "../../../../stores/bounds/internals/links";
 import { pairs } from "../../../../stores/bounds/internals/state";
 import type { BoundTag } from "../../../../stores/bounds/types";
 import type { MeasureBoundary } from "../../types";
@@ -22,13 +26,6 @@ export const useRefreshBoundary = ({
 		(s) => s.derivations.currentScreenKey,
 	);
 	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
-	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
-	const destinationPairKey = useDescriptorsStore(
-		(s) => s.derivations.destinationPairKey,
-	);
-	const ancestorDestinationPairKey = useDescriptorsStore(
-		(s) => s.derivations.ancestorDestinationPairKey,
-	);
 	// Source-side boundaries refresh from the next screen's lifecycle pulse.
 	// Destination-side boundaries have no next screen, so they refresh from self.
 	const refreshScreenKey = nextScreenKey ?? currentScreenKey;
@@ -46,14 +43,16 @@ export const useRefreshBoundary = ({
 			if (!shouldRefresh) {
 				return null;
 			}
+			const sourcePairKey =
+				getPairKeyForSource(boundTag.tag, currentScreenKey) ?? undefined;
+			const destinationPairKey =
+				getPairKeyForDestination(boundTag.tag, currentScreenKey) ?? undefined;
 
 			return getRefreshBoundarySignal({
 				enabled,
 				currentScreenKey,
 				sourcePairKey,
 				destinationPairKey,
-				ancestorDestinationPairKey,
-				nextScreenKey,
 				linkId: linkKey,
 				group,
 				shouldRefresh,

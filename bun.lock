@@ -87,7 +87,7 @@
     },
     "packages/react-native-screen-transitions": {
       "name": "react-native-screen-transitions",
-      "version": "3.10.0",
+      "version": "3.11.1",
       "devDependencies": {
         "@testing-library/react-native": "13.3.3",
         "@types/react": "~19.1.0",

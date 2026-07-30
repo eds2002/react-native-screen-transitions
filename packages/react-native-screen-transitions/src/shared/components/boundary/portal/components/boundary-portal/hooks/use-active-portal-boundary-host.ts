@@ -4,12 +4,10 @@ import {
 	type SharedValue,
 	useAnimatedReaction,
 } from "react-native-reanimated";
-import type { LocalStyleLayers } from "../../../../../../providers/screen/styles/helpers/resolve-slot-styles";
-import { pairs } from "../../../../../../stores/bounds/internals/state";
+import { getPairKeyForSource } from "../../../../../../stores/bounds/internals/links";
 import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../../../types/animation.types";
 import { createBoundaryPortalHostName } from "../../../utils/naming";
-import { hasActiveBoundaryPortalLink } from "../helpers/active-pair";
 import {
 	mountPortalBoundaryHost,
 	unmountPortalBoundaryHostByName,
@@ -19,62 +17,57 @@ type UseActivePortalBoundaryHostParams = {
 	boundaryId: string;
 	currentScreenKey: string;
 	escapeHostKey?: string;
-	localStylesMaps: SharedValue<LocalStyleLayers>;
 	portalHostName: SharedValue<string | null>;
 	portalHostReady: SharedValue<boolean>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
-	sourcePairKey?: ScreenPairKey;
+};
+
+type ActivePortal = {
+	pairKey: ScreenPairKey;
 };
 
 export const useActivePortalBoundaryHost = ({
 	boundaryId,
 	currentScreenKey,
 	escapeHostKey,
-	localStylesMaps,
 	portalHostName,
 	portalHostReady,
 	slotsMap,
-	sourcePairKey,
 }: UseActivePortalBoundaryHostParams) => {
-	const [hasActiveLink, setHasActiveLink] = useState(false);
-	const sourcePairKeyRef = useRef(sourcePairKey);
-	sourcePairKeyRef.current = sourcePairKey;
+	const [activePortal, setActivePortal] = useState<ActivePortal | null>(null);
+	const activePairKeyRef = useRef<ScreenPairKey | null>(null);
 
-	const updateActiveLink = useCallback(
-		(
-			observedSourcePairKey: ScreenPairKey | undefined,
-			nextHasActiveLink: boolean,
-		) => {
-			if (sourcePairKeyRef.current !== observedSourcePairKey) {
-				return;
-			}
+	const updateActivePortal = useCallback((pairKey: ScreenPairKey | null) => {
+		if (activePairKeyRef.current === pairKey) {
+			return;
+		}
 
-			setHasActiveLink(nextHasActiveLink);
-		},
-		[],
-	);
+		activePairKeyRef.current = pairKey;
+		setActivePortal(pairKey ? { pairKey } : null);
+	}, []);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			return hasActiveBoundaryPortalLink({
-				boundaryId,
-				pairsState: pairs.get(),
-				sourcePairKey,
-			});
+			const isBoundaryAnimating = slotsMap.get()[boundaryId] !== undefined;
+			if (!isBoundaryAnimating) {
+				return null;
+			}
+
+			return getPairKeyForSource(boundaryId, currentScreenKey);
 		},
-		(nextHasActiveLink, previousHasActiveLink) => {
+		(pairKey, previousPairKey) => {
 			"worklet";
-			if (nextHasActiveLink === previousHasActiveLink) {
+			if (pairKey === previousPairKey) {
 				return;
 			}
 
-			runOnJS(updateActiveLink)(sourcePairKey, nextHasActiveLink);
+			runOnJS(updateActivePortal)(pairKey);
 		},
 	);
 
 	useLayoutEffect(() => {
-		if (!hasActiveLink || !sourcePairKey || !escapeHostKey) {
+		if (!activePortal || !escapeHostKey) {
 			portalHostName.set(null);
 			portalHostReady.set(false);
 			return;
@@ -83,14 +76,13 @@ export const useActivePortalBoundaryHost = ({
 		const nextPortalHostName = createBoundaryPortalHostName(
 			escapeHostKey,
 			boundaryId,
-			sourcePairKey,
+			activePortal.pairKey,
 		);
 
 		mountPortalBoundaryHost({
 			boundaryId,
 			hostKey: escapeHostKey,
-			localStylesMaps,
-			pairKey: sourcePairKey,
+			pairKey: activePortal.pairKey,
 			portalHostName: nextPortalHostName,
 			portalHostReady,
 			screenKey: currentScreenKey,
@@ -104,14 +96,12 @@ export const useActivePortalBoundaryHost = ({
 			unmountPortalBoundaryHostByName(nextPortalHostName);
 		};
 	}, [
+		activePortal,
 		boundaryId,
 		currentScreenKey,
 		escapeHostKey,
-		localStylesMaps,
 		portalHostName,
 		portalHostReady,
-		sourcePairKey,
 		slotsMap,
-		hasActiveLink,
 	]);
 };
