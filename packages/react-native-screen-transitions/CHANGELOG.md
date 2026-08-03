@@ -1,5 +1,7 @@
 # Changelog
 
+## [3.11.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.1...v3.11.2) (2026-08-03)
+
 ## [3.11.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.0...v3.11.1) (2026-07-30)
 
 ### Bug Fixes
