@@ -18,7 +18,6 @@ import type {
 } from "../../../../types/animation.types";
 import { logger } from "../../../../utils/logger";
 import { useScreenAnimationStore } from "../../animation";
-import { useBuildBoundsAccessor } from "../../animation/helpers/accessors/use-build-bounds-accessor";
 import { useBuildTransitionAccessor } from "../../animation/helpers/accessors/use-build-transition-accessor";
 import type { ScreenInterpolatorFrame } from "../../animation/helpers/pipeline";
 import { readScreenAnimationRevisions } from "../../animation/helpers/read-screen-animation-revisions";
@@ -29,6 +28,7 @@ import {
 	useScreenOptionsStore,
 } from "../../options";
 import { collectInterpolatorSharedValues } from "../helpers/collect-interpolator-shared-values";
+import { createInterpolatorScope } from "../helpers/create-interpolator-scope";
 import { normalizeSlots } from "../helpers/normalize-slots";
 import { resolveInterpolatorStyleHandoff } from "../helpers/resolve-interpolator-style-handoff";
 import type { LocalStyleLayers } from "../helpers/resolve-slot-styles";
@@ -54,7 +54,6 @@ type RunInterpolatorParams = {
 	interpolator: ScreenStyleInterpolator | undefined;
 	props: ScreenInterpolatorFrame;
 	selectedFrame: SelectedInterpolatorFrame;
-	bounds: Parameters<ScreenStyleInterpolator>[0]["bounds"];
 	transition: Parameters<ScreenStyleInterpolator>[0]["transition"];
 };
 
@@ -76,7 +75,6 @@ const runInterpolator = ({
 	interpolator,
 	props,
 	selectedFrame,
-	bounds,
 	transition,
 }: RunInterpolatorParams): InterpolatorResult | undefined => {
 	"worklet";
@@ -86,12 +84,13 @@ const runInterpolator = ({
 	}
 
 	try {
-		const raw = interpolator({
-			...props,
-			...selectedFrame,
-			bounds,
-			transition,
-		});
+		const raw = interpolator(
+			createInterpolatorScope({
+				frame: props,
+				selectedFrame,
+				transition,
+			}),
+		);
 
 		const rawStyleMap: TransitionInterpolatedStyle | undefined =
 			typeof raw === "object" && raw != null ? raw : undefined;
@@ -154,7 +153,6 @@ export const useInterpolatedStylesMap = ({
 		ancestorScreenAnimationSources,
 		descendantScreenAnimationSources,
 	} = useScreenAnimationStore();
-	const boundsAccessor = useBuildBoundsAccessor();
 	const transition = useBuildTransitionAccessor();
 	const nextInterpolatorReady = useSharedValue(0);
 
@@ -271,7 +269,6 @@ export const useInterpolatedStylesMap = ({
 			interpolator: currentInterpolator,
 			props,
 			selectedFrame: currentSelectedFrame,
-			bounds: boundsAccessor,
 			transition,
 		});
 
@@ -309,7 +306,6 @@ export const useInterpolatedStylesMap = ({
 			interpolator: nextInterpolator,
 			props,
 			selectedFrame: nextSelectedFrame,
-			bounds: boundsAccessor,
 			transition,
 		});
 
