@@ -34,6 +34,7 @@ export const getRefreshBoundarySignal = (params: {
 	linkId: string;
 	group?: string;
 	shouldRefresh: boolean;
+	settled?: boolean;
 	closing: boolean;
 	linkState?: LinkPairsState;
 }): RefreshBoundarySignal | null => {
@@ -46,13 +47,14 @@ export const getRefreshBoundarySignal = (params: {
 		linkId,
 		group,
 		shouldRefresh,
+		settled = false,
 		closing,
 		linkState,
 	} = params;
 
 	if (!enabled) return null;
 
-	if (!shouldRefresh) {
+	if (!shouldRefresh && (!group || !settled)) {
 		return null;
 	}
 
@@ -95,16 +97,33 @@ export const getRefreshBoundarySignal = (params: {
 	// Source side:
 	// When the activeId changes, trigger a refresh to ensure the source bounds are captured.
 	if (sourcePairKey) {
-		const activeId = linkState?.[sourcePairKey]?.groups?.[group]?.activeId;
+		const pair = linkState?.[sourcePairKey];
+		const groupState = pair?.groups?.[group];
+		const activeId = groupState?.activeId;
 
 		if (activeId !== linkId) {
+			return null;
+		}
+
+		// The opening member is captured by the initial handshake. A settled
+		// refresh is only needed after selection moves to another member.
+		if (
+			!shouldRefresh &&
+			(groupState?.initialId === undefined ||
+				activeId === groupState.initialId ||
+				!!pair?.links?.[linkId]?.source)
+		) {
 			return null;
 		}
 
 		return buildRefreshSignal(
 			"source",
 			sourcePairKey,
-			[group, linkId, closing ? "closing" : "settled"].join("|"),
+			[
+				group,
+				linkId,
+				shouldRefresh ? (closing ? "closing" : "settled") : "retarget",
+			].join("|"),
 		);
 	}
 
@@ -114,8 +133,9 @@ export const getRefreshBoundarySignal = (params: {
 
 	// Destination side:
 	// When the activeId changes, trigger a refresh to ensure the destination bounds are captured.
-	const activeId =
-		linkState?.[refreshDestinationPairKey]?.groups?.[group]?.activeId;
+	const pair = linkState?.[refreshDestinationPairKey];
+	const groupState = pair?.groups?.[group];
+	const activeId = groupState?.activeId;
 
 	// Destination retargeting should only measure a concrete member that already
 	// participates in the pair. Missing members fall back to initialId at resolve.
@@ -123,9 +143,22 @@ export const getRefreshBoundarySignal = (params: {
 		return null;
 	}
 
+	if (
+		!shouldRefresh &&
+		(groupState?.initialId === undefined ||
+			activeId === groupState.initialId ||
+			!!pair?.links?.[linkId]?.destination)
+	) {
+		return null;
+	}
+
 	return buildRefreshSignal(
 		"destination",
 		refreshDestinationPairKey,
-		[group, linkId, closing ? "closing" : "settled"].join("|"),
+		[
+			group,
+			linkId,
+			shouldRefresh ? (closing ? "closing" : "settled") : "retarget",
+		].join("|"),
 	);
 };

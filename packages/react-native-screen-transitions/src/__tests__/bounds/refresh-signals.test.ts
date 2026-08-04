@@ -118,6 +118,160 @@ describe("refresh boundary signals", () => {
 		});
 	});
 
+	it("does not treat the opening group member as a settled retarget", () => {
+		const pairKey = createScreenPairKey("palette", "detail");
+		const linkState = {
+			[pairKey]: {
+				links: {},
+				groups: {
+					colors: {
+						activeId: "electric-violet",
+						initialId: "electric-violet",
+					},
+				},
+			},
+		};
+
+		expect(
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "palette",
+				sourcePairKey: pairKey,
+				linkId: "electric-violet",
+				group: "colors",
+				shouldRefresh: false,
+				settled: true,
+				closing: false,
+				linkState,
+			}),
+		).toBeNull();
+	});
+
+	it("refreshes both sides of a settled non-initial group retarget", () => {
+		const pairKey = createScreenPairKey("palette", "detail");
+		const linkState = {
+			[pairKey]: {
+				links: {},
+				groups: {
+					colors: {
+						activeId: "hot-coral",
+						initialId: "electric-violet",
+					},
+				},
+			},
+		};
+
+		expect(
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "palette",
+				sourcePairKey: pairKey,
+				linkId: "hot-coral",
+				group: "colors",
+				shouldRefresh: false,
+				settled: true,
+				closing: false,
+				linkState,
+			}),
+		).toEqual({
+			type: "source",
+			pairKey,
+			signal: `source|${pairKey}|colors|hot-coral|retarget`,
+		});
+
+		expect(
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "detail",
+				destinationPairKey: pairKey,
+				linkId: "hot-coral",
+				group: "colors",
+				shouldRefresh: false,
+				settled: true,
+				closing: false,
+				linkState,
+			}),
+		).toEqual({
+			type: "destination",
+			pairKey,
+			signal: `destination|${pairKey}|colors|hot-coral|retarget`,
+		});
+	});
+
+	it("eagerly fills only a missing side and preserves the lifecycle retry", () => {
+		const pairKey = createScreenPairKey("palette", "detail");
+		const bounds = {
+			x: 0,
+			y: 0,
+			pageX: 0,
+			pageY: 0,
+			width: 100,
+			height: 100,
+		};
+		const getSourceSignal = (shouldRefresh: boolean, settled: boolean) =>
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "palette",
+				sourcePairKey: pairKey,
+				linkId: "hot-coral",
+				group: "colors",
+				shouldRefresh,
+				settled,
+				closing: false,
+				linkState: pairs.get(),
+			});
+		const getDestinationSignal = () =>
+			getRefreshBoundarySignal({
+				enabled: true,
+				currentScreenKey: "detail",
+				destinationPairKey: pairKey,
+				linkId: "hot-coral",
+				group: "colors",
+				shouldRefresh: false,
+				settled: true,
+				closing: false,
+				linkState: pairs.get(),
+			});
+
+		BoundStore.link.setDestination(
+			pairKey,
+			"electric-violet",
+			"detail",
+			bounds,
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "hot-coral");
+
+		expect(getSourceSignal(false, false)).toBeNull();
+		expect(getSourceSignal(false, true)?.signal).toEndWith("|retarget");
+		expect(getDestinationSignal()?.signal).toEndWith("|retarget");
+
+		BoundStore.link.setSource(
+			pairKey,
+			"hot-coral",
+			"palette",
+			bounds,
+			{},
+			"colors",
+		);
+
+		expect(getSourceSignal(false, true)).toBeNull();
+		expect(getDestinationSignal()?.signal).toEndWith("|retarget");
+
+		BoundStore.link.setDestination(
+			pairKey,
+			"hot-coral",
+			"detail",
+			bounds,
+			{},
+			"colors",
+		);
+
+		expect(getDestinationSignal()).toBeNull();
+		expect(getSourceSignal(true, false)?.signal).toEndWith("|settled");
+	});
+
 	it("refreshes and resolves the active group member at the interactive-dismiss pulse", () => {
 		const pairKey = createScreenPairKey("palette", "detail");
 		const routeKey = "detail-boundary-refresh";
