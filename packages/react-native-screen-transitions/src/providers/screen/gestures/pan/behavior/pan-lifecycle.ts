@@ -90,7 +90,6 @@ export const trackPanGesture = (
 export const finalizePanRelease = (
 	release: PanReleaseResult,
 	runtime: PanGestureRuntime,
-	dismissScreen: ((finished: boolean) => void) | undefined,
 	dimensions: GestureDimensions,
 	rawEvent: PanGestureEvent,
 	requestDismiss?: () => void,
@@ -151,13 +150,8 @@ export const finalizePanRelease = (
 		return;
 	}
 
-	if (plan.shouldDismiss && requestDismiss) {
-		scheduleOnRN(requestDismiss);
-	}
-
 	animateToProgress({
 		target: plan.target,
-		onAnimationFinish: plan.shouldDismiss ? dismissScreen : undefined,
 		spec: plan.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,
@@ -166,4 +160,8 @@ export const finalizePanRelease = (
 		animations,
 		initialVelocity: plan.progressVelocity,
 	});
+
+	if (plan.shouldDismiss && requestDismiss) {
+		scheduleOnRN(requestDismiss);
+	}
 };

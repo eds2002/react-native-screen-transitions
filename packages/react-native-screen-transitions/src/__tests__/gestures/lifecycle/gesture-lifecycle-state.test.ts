@@ -32,6 +32,7 @@ import {
 	SystemStore,
 } from "../../../stores/system.store";
 import { animateToProgress } from "../../../utils/animation/animate-to-progress";
+import { useCloseCompletion } from "../../../components/screen-lifecycle/hooks/use-close-completion";
 
 const originalRequestAnimationFrame = globalThis.requestAnimationFrame;
 
@@ -170,6 +171,7 @@ const createStoredRuntime = () => {
 	};
 
 	return {
+		routeKey,
 		runtime: runtime as any,
 		gestures,
 		animations,
@@ -290,6 +292,42 @@ describe("gesture lifecycle state", () => {
 
 		expect(animations.willAnimate.get()).toBe(0);
 		raf.restore();
+	});
+
+	it("completes once when a closing screen reaches terminal progress", () => {
+		const animations = createAnimations();
+		const animationProgress = shared(0.2);
+		let completionCount = 0;
+		let renderer: ReturnType<typeof create> | undefined;
+
+		animations.closing.set(1);
+
+		const Harness = () => {
+			useCloseCompletion({
+				closing: animations.closing,
+				animationProgress,
+				onComplete: () => {
+					completionCount += 1;
+				},
+			});
+			return null;
+		};
+
+		act(() => {
+			renderer = create(React.createElement(Harness));
+		});
+		expect(completionCount).toBe(0);
+
+		animationProgress.set(0);
+		act(() => {
+			renderer?.update(React.createElement(Harness));
+		});
+		expect(completionCount).toBe(1);
+
+		act(() => {
+			renderer?.update(React.createElement(Harness));
+		});
+		expect(completionCount).toBe(1);
 	});
 
 	it("marks opening as entering before the willAnimate pulse is observed", () => {
@@ -681,7 +719,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			undefined,
 			{ width: 390, height: 844 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -704,7 +741,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: undefined,
 			},
 			state.runtime,
-			undefined,
 			{ width: 390, height: 844 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -736,7 +772,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			state.runtime,
-			undefined,
 			{ width: 390, height: 844 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -779,7 +814,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			state.runtime,
-			undefined,
 			{ width: 390, height: 844 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -805,7 +839,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			undefined,
 			{ width: 390, height: 844 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -826,7 +859,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200 } as any,
 			},
 			runtime,
-			undefined,
 			{ width: 390, height: 844 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -853,7 +885,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: undefined,
 			},
 			runtime,
-			undefined,
 			{ width: 390, height: 844 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -886,7 +917,6 @@ describe("gesture lifecycle state", () => {
 					resetSpec: { duration: 200, __finished: false } as any,
 				},
 				state.runtime,
-				undefined,
 				{ width: 390, height: 844 },
 				{ velocityX: 0, velocityY: 0 } as any,
 			);
@@ -918,7 +948,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			state.runtime,
-			undefined,
 		);
 
 		expect(exposeToInterpolator(state)).toMatchObject({
@@ -1014,7 +1043,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: undefined,
 			},
 			runtime,
-			() => {},
 			{ width: 400, height: 800 },
 			{ velocityX: 120, velocityY: -80 } as any,
 			() => {
@@ -1058,7 +1086,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			() => {},
 			{ width: 390, height: 844 },
 			{ velocityX: 2400, velocityY: -1688 } as any,
 		);
@@ -1092,7 +1119,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: undefined,
 			},
 			state.runtime,
-			() => {},
 			{ width: 390, height: 844 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -1121,7 +1147,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			() => {},
 			{ width: 390, height: 800 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -1148,7 +1173,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			() => {},
 			{ width: 390, height: 800 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -1176,7 +1200,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			() => {},
 			{ width: 390, height: 800 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -1202,7 +1225,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			undefined,
 			{ width: 390, height: 800 },
 			{ velocityX: 0, velocityY: 0 } as any,
 		);
@@ -1232,7 +1254,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			undefined,
 			() => {},
 		);
 
@@ -1263,7 +1284,6 @@ describe("gesture lifecycle state", () => {
 				resetSpec: { duration: 200, __finished: false } as any,
 			},
 			runtime,
-			() => {},
 		);
 
 		expect(gestures.raw.scale.get()).toBe(1);

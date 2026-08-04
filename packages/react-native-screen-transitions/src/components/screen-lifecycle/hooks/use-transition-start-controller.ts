@@ -12,14 +12,10 @@ export const useTransitionStartController = ({
 	current,
 	animations,
 	system,
-	onBlankStackCloseFinish,
-	onNativeCloseFinish,
 }: {
 	current: BaseDescriptor;
 	animations: AnimationStoreMap;
 	system: SystemStoreMap;
-	onBlankStackCloseFinish?: (finished: boolean) => void;
-	onNativeCloseFinish?: (finished: boolean) => void;
 }) => {
 	const {
 		targetProgress,
@@ -53,13 +49,6 @@ export const useTransitionStartController = ({
 				return;
 			}
 
-			const onAnimationFinish =
-				kind === LifecycleTransitionRequestKind.BlankStackClose
-					? onBlankStackCloseFinish
-					: kind === LifecycleTransitionRequestKind.NativeClose
-						? onNativeCloseFinish
-						: undefined;
-
 			animateToProgress({
 				target,
 				spec: transitionSpec,
@@ -69,7 +58,6 @@ export const useTransitionStartController = ({
 				animations,
 				targetProgress,
 				animationProgress,
-				onAnimationFinish,
 				isDragging,
 			});
 

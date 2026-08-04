@@ -306,15 +306,19 @@ const resolveGestureParticipation = ({
 	options,
 	isFirstKey,
 	gestureContext,
+	isRemovePrevented,
 }: {
 	options: GesturePolicyOptions;
 	isFirstKey: boolean;
 	gestureContext: GestureContextType | null;
+	isRemovePrevented: boolean;
 }): ScreenGestureParticipation => {
-	const canDismiss = resolveGestureCanDismiss({
-		isFirstKey,
-		gestureEnabled: options.gestureEnabled,
-	});
+	const canDismiss =
+		!isRemovePrevented &&
+		resolveGestureCanDismiss({
+			isFirstKey,
+			gestureEnabled: options.gestureEnabled,
+		});
 	const effectiveSnapPoints = validateSnapPoints({
 		snapPoints: options.snapPoints,
 		canDismiss,
@@ -333,6 +337,7 @@ const resolveGestureParticipation = ({
 
 	return {
 		isFirstKey,
+		isRemovePrevented,
 		canDismiss,
 		canTrackGesture,
 		effectiveSnapPoints,
@@ -345,15 +350,18 @@ export const resolveScreenGestureConfig = ({
 	options,
 	isFirstKey,
 	gestureContext,
+	isRemovePrevented = false,
 }: {
 	options: ScreenTransitionConfig;
 	isFirstKey: boolean;
 	gestureContext: GestureContextType | null;
+	isRemovePrevented?: boolean;
 }): ScreenGestureConfig => {
 	const participation = resolveGestureParticipation({
 		options,
 		isFirstKey,
 		gestureContext,
+		isRemovePrevented,
 	});
 	const hasSnapPoints = participation.effectiveSnapPoints.hasSnapPoints;
 
@@ -365,11 +373,14 @@ export const resolveScreenGestureConfig = ({
 };
 
 function resolveRuntimeCanDismiss(
-	participation: Pick<ScreenGestureParticipation, "isFirstKey" | "canDismiss">,
+	participation: Pick<
+		ScreenGestureParticipation,
+		"isFirstKey" | "isRemovePrevented" | "canDismiss"
+	>,
 	options: GesturePolicyOptions,
 ) {
 	"worklet";
-	if (participation.isFirstKey) {
+	if (participation.isFirstKey || participation.isRemovePrevented) {
 		return false;
 	}
 

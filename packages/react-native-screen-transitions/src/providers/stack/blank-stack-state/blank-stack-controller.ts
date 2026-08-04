@@ -1,9 +1,11 @@
+import { StackActions } from "@react-navigation/native";
 import type { BlankStackProviderProps } from "../../../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackDescriptor,
 	BaseStackNavigation,
 	BaseStackRoute,
 } from "../../../types/stack.types";
+import { dispatchCloseAction } from "../../../utils/navigation/close-action-replay";
 import { buildBlankStackState } from "./helpers/build-blank-stack-state";
 import { deriveBlankStackState } from "./helpers/derive-blank-stack-state";
 import type {
@@ -13,11 +15,6 @@ import type {
 } from "./helpers/types";
 
 export type { BlankStackController } from "./helpers/types";
-
-const createPopAction = () => ({
-	type: "POP",
-	payload: { count: 1 },
-});
 
 /**
  * Maintains the stack-local route snapshot used while blank stack transitions run.
@@ -90,10 +87,13 @@ export const createBlankStackController = <
 		const { state, navigation } = props;
 
 		if (state.routes.some((candidate) => candidate.key === route.key)) {
-			navigation.dispatch({
-				...createPopAction(),
+			const action = {
+				...StackActions.pop(),
 				source: route.key,
 				target: state.key,
+			};
+			dispatchCloseAction(action, (closeAction) => {
+				navigation.dispatch(closeAction);
 			});
 			return;
 		}

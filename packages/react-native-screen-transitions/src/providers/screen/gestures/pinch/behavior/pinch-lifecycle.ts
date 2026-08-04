@@ -62,7 +62,6 @@ export const trackPinchGesture = (
 export const finalizePinchRelease = (
 	release: PinchReleaseResult,
 	runtime: PinchGestureRuntime,
-	dismissScreen: ((finished: boolean) => void) | undefined,
 	requestDismiss?: () => void,
 ) => {
 	"worklet";
@@ -92,10 +91,6 @@ export const finalizePinchRelease = (
 		resetValuesImmediately: release.resetValuesImmediately,
 	});
 
-	if (release.shouldDismiss && requestDismiss) {
-		scheduleOnRN(requestDismiss);
-	}
-
 	if (!release.shouldDismiss && progressAlreadyAtTarget) {
 		system.targetProgress.set(release.target);
 		return;
@@ -103,7 +98,6 @@ export const finalizePinchRelease = (
 
 	animateToProgress({
 		target: release.target,
-		onAnimationFinish: release.shouldDismiss ? dismissScreen : undefined,
 		spec: release.transitionSpec,
 		emitWillAnimate: false,
 		markEntering: false,
@@ -112,4 +106,8 @@ export const finalizePinchRelease = (
 		animationProgress: system.animationProgress,
 		initialVelocity: release.initialVelocity,
 	});
+
+	if (release.shouldDismiss && requestDismiss) {
+		scheduleOnRN(requestDismiss);
+	}
 };

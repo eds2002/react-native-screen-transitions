@@ -31,7 +31,7 @@ export const usePanBehavior = (
 	gestureCompositionOwner: SharedValue<GestureCompositionOwner>,
 	pendingDirection: SharedValue<Direction | null>,
 ): PanBehavior => {
-	const { dismissScreen, requestDismiss } = useNavigationHelpers();
+	const { requestDismiss } = useNavigationHelpers();
 	const { withSensitivity, resetSensitivity } =
 		usePanGestureSensitivity(screenOptions);
 
@@ -109,7 +109,6 @@ export const usePanBehavior = (
 			finalizePanRelease(
 				release,
 				latestRuntime,
-				dismissScreen,
 				dimensions,
 				rawEvent,
 				requestDismiss,
@@ -124,7 +123,6 @@ export const usePanBehavior = (
 			runtime,
 			screenOptions,
 			dimensions,
-			dismissScreen,
 			requestDismiss,
 			withSensitivity,
 			gestureCompositionOwner,
