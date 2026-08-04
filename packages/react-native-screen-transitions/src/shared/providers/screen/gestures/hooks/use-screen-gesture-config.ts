@@ -1,3 +1,4 @@
+import { usePreventRemoveContext } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useDescriptorsStore } from "../../descriptors";
 import { useGestureStore } from "../gestures.provider";
@@ -10,6 +11,12 @@ export function useScreenGestureConfig(): ScreenGestureConfig {
 	const isFirstKey = useDescriptorsStore(
 		(store) => store.derivations.isFirstKey,
 	);
+	const currentScreenKey = useDescriptorsStore(
+		(store) => store.derivations.currentScreenKey,
+	);
+	const { preventedRoutes } = usePreventRemoveContext();
+	const isRemovePrevented =
+		preventedRoutes[currentScreenKey]?.preventRemove === true;
 
 	return useMemo(
 		() =>
@@ -17,7 +24,8 @@ export function useScreenGestureConfig(): ScreenGestureConfig {
 				options,
 				isFirstKey,
 				gestureContext,
+				isRemovePrevented,
 			}),
-		[isFirstKey, options, gestureContext],
+		[isFirstKey, options, gestureContext, isRemovePrevented],
 	);
 }

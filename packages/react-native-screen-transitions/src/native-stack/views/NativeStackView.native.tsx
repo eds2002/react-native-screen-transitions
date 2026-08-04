@@ -309,7 +309,9 @@ const SceneView = ({
 							? // This prop enables handling of system back gestures on Android
 								// Since we handle them in JS side, we disable this
 								false
-							: nativeGestureEnabled
+							: enableTransitions
+								? false
+								: nativeGestureEnabled
 					}
 					homeIndicatorHidden={autoHideHomeIndicator}
 					hideKeyboardOnSwipe={keyboardHandlingEnabled}

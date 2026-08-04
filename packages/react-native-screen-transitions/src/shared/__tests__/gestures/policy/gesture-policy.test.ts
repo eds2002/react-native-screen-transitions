@@ -3,6 +3,8 @@ import {
 	resolveGestureCanTrack,
 	resolvePanPolicy,
 	resolvePinchPolicy,
+	resolveRuntimeGestureParticipation,
+	resolveScreenGestureConfig,
 } from "../../../providers/screen/gestures/shared/policy";
 
 describe("resolveGestureCanTrack", () => {
@@ -57,6 +59,26 @@ describe("resolveGestureCanTrack", () => {
 				gestureTracking: "never",
 			}),
 		).toBe(false);
+	});
+});
+
+describe("prevented removal", () => {
+	it("never lets live options turn a prevented gesture into a dismiss", () => {
+		const config = resolveScreenGestureConfig({
+			options: { gestureEnabled: true },
+			isFirstKey: false,
+			gestureContext: null,
+			isRemovePrevented: true,
+		});
+
+		expect(config.participation.canDismiss).toBe(false);
+
+		const participation = resolveRuntimeGestureParticipation({
+			participation: config.participation,
+			options: { gestureEnabled: true },
+		});
+
+		expect(participation.canDismiss).toBe(false);
 	});
 });
 

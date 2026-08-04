@@ -2,6 +2,7 @@ import { useDescriptorsStore } from "../../providers/screen/descriptors";
 import { AnimationStore } from "../../stores/animation.store";
 import { SystemStore } from "../../stores/system.store";
 import { useScreenHistory } from "./hooks/history/use-screen-history";
+import { useCloseCompletion } from "./hooks/use-close-completion";
 import { useCloseTransitionIntent } from "./hooks/use-close-transition-intent";
 import { useOpenTransitionIntent } from "./hooks/use-open-transition-intent";
 import { useTransitionStartController } from "./hooks/use-transition-start-controller";
@@ -21,8 +22,7 @@ export const ScreenLifecycle = ({ children }: Props) => {
 	const animations = AnimationStore.getBag(current.route.key);
 	const system = SystemStore.getBag(current.route.key);
 
-	const { handleBlankStackCloseEnd, handleNativeCloseEnd } =
-		useCloseTransitionIntent(current, system);
+	const { completeClose } = useCloseTransitionIntent(current);
 
 	useOpenTransitionIntent(current, animations, system);
 
@@ -30,8 +30,12 @@ export const ScreenLifecycle = ({ children }: Props) => {
 		current,
 		animations,
 		system,
-		onBlankStackCloseFinish: handleBlankStackCloseEnd,
-		onNativeCloseFinish: handleNativeCloseEnd,
+	});
+
+	useCloseCompletion({
+		closing: animations.closing,
+		animationProgress: system.animationProgress,
+		onComplete: completeClose,
 	});
 
 	useScreenHistory(current, previous, animations);

@@ -5,6 +5,7 @@ import type {
 	BaseStackNavigation,
 	BaseStackRoute,
 } from "../../../types/stack.types";
+import { dispatchCloseAction } from "../../../utils/navigation/close-action-replay";
 import { buildBlankStackState } from "./helpers/build-blank-stack-state";
 import { deriveBlankStackState } from "./helpers/derive-blank-stack-state";
 import type {
@@ -86,10 +87,13 @@ export const createBlankStackController = <
 		const { state, navigation } = props;
 
 		if (state.routes.some((candidate) => candidate.key === route.key)) {
-			navigation.dispatch({
+			const action = {
 				...StackActions.pop(),
 				source: route.key,
 				target: state.key,
+			};
+			dispatchCloseAction(action, (closeAction) => {
+				navigation.dispatch(closeAction);
 			});
 			return;
 		}
