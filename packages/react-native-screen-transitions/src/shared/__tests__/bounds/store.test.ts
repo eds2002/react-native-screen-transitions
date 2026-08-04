@@ -494,6 +494,31 @@ describe("BoundStore.link pair writes", () => {
 		);
 	});
 
+	it("does not let destination measurement replace the active group member", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		BoundStore.link.setDestination(
+			pairKey,
+			"1",
+			"screen-b",
+			createBounds(20, 20),
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+		BoundStore.link.setDestination(
+			pairKey,
+			"1",
+			"screen-b",
+			createBounds(30, 30),
+			{},
+			"colors",
+		);
+
+		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("2");
+		expect(pairs.get()[pairKey].groups.colors.initialId).toBe("1");
+	});
+
 	it("parses concrete group tags to the member id for link access", () => {
 		const pairKey = createScreenPairKey("screen-a", "screen-b");
 		const source = createBounds(10, 10);
