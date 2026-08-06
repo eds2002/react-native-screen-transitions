@@ -19,7 +19,7 @@ import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helper
 import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
-import { useBoundaryMeasurement } from "../hooks/use-boundary-measurement";
+import { BoundaryLifecycle } from "../components/boundary-lifecycle";
 import {
 	type BoundaryPortalRuntime,
 	resolveBoundaryPortal,
@@ -96,7 +96,9 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 			(s) => s.derivations.currentScreenKey,
 		);
 		const isCurrentScreenClosing = useBlankStackStore(
-			(store) => store?.scenesByKey[currentScreenKey]?.activity === "closing",
+			(store) =>
+				portalRuntime.handoff &&
+				store?.scenesByKey[currentScreenKey]?.activity === "closing",
 		);
 		const retainedBoundTagRef = useRef(requestedBoundTag);
 		const shouldRetainClosingBoundTag =
@@ -110,10 +112,6 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 		}
 
 		const boundTag = retainedBoundTagRef.current;
-		const hasConfiguredInterpolator = useDescriptorsStore(
-			(s) => s.derivations.hasConfiguredInterpolator,
-		);
-		const runtimeEnabled = enabled && hasConfiguredInterpolator;
 		// Associated slot styles attach whenever the boundary is enabled,
 		// independent of whether an interpolator is configured for this transition.
 		const shouldAttachAssociatedStyles = enabled;
@@ -136,18 +134,6 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 				: rootRef;
 
 		useImperativeHandle(forwardedRef, () => rootRef.current as any, [rootRef]);
-
-		useBoundaryMeasurement({
-			boundTag,
-			enabled,
-			runtimeEnabled,
-			currentScreenKey,
-			measuredRef,
-			style: hasTarget ? targetStyle : style,
-			handoff: portalRuntime.handoff,
-			escapeClipping: portalRuntime.escapeClipping,
-			config,
-		});
 
 		const shouldRenderBoundaryRootThroughPortal =
 			shouldEscapeBoundaryRootToScreenHost && !hasTarget;
@@ -194,7 +180,21 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 
 		return {
 			value,
-			children: children(value),
+			children: (
+				<>
+					{children(value)}
+					<BoundaryLifecycle
+						boundTag={boundTag}
+						config={config}
+						currentScreenKey={currentScreenKey}
+						enabled={enabled}
+						escapeClipping={portalRuntime.escapeClipping}
+						handoff={portalRuntime.handoff}
+						measuredRef={measuredRef}
+						style={hasTarget ? targetStyle : style}
+					/>
+				</>
+			),
 		};
 	},
 );
