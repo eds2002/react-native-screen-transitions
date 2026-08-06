@@ -1,6 +1,9 @@
 import { useStack } from "../../../hooks/navigation/use-stack";
 
-import { getFloatOverlayStack } from "../helpers/get-active-overlay";
+import {
+	getFloatOverlayStack,
+	getFloatOverlayTransitions,
+} from "../helpers/get-active-overlay";
 import { OverlayHost } from "./overlay-host";
 
 /**
@@ -18,12 +21,18 @@ export function FloatOverlay() {
 		return null;
 	}
 
-	return overlayStack.map(({ scene, activity }, layerIndex) => (
-		<OverlayHost
-			key={scene.route.key}
-			scene={scene}
-			activity={activity}
-			layerIndex={layerIndex}
-		/>
-	));
+	const overlayTransitions = getFloatOverlayTransitions(overlayStack, scenes);
+
+	return overlayTransitions.map(
+		({ scene, activity, driverScene }, layerIndex) => (
+			<OverlayHost
+				key={scene.route.key}
+				scene={scene}
+				driverScene={driverScene}
+				previousOverlayScene={overlayTransitions[layerIndex - 1]?.scene}
+				activity={activity}
+				layerIndex={layerIndex}
+			/>
+		),
+	);
 }

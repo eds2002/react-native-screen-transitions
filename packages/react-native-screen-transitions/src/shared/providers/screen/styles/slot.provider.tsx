@@ -17,6 +17,7 @@ type Props = {
 };
 
 export type ScreenSlotName =
+	| "overlay"
 	| "content"
 	| "backdrop"
 	| "surface"

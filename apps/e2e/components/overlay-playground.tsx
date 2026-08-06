@@ -19,12 +19,17 @@ const nextRoute: Partial<Record<OverlayScreenName, string>> = {
 	D: "overlay/fifth",
 };
 
-const overlayTints: Record<"A" | "C", string> = {
+const overlayTints: Record<"A" | "C" | "E", string> = {
 	A: "#3b82f6",
 	C: "#22c55e",
+	E: "#f59e0b",
 };
 
-const createIOSSlideOptions = (): ScreenTransitionConfig => ({
+const createIOSSlideOptions = ({
+	includeOverlaySlot,
+}: {
+	includeOverlaySlot: boolean;
+}): ScreenTransitionConfig => ({
 	enableTransitions: true,
 	gestureEnabled: true,
 	gestureDirection: "horizontal",
@@ -46,8 +51,24 @@ const createIOSSlideOptions = (): ScreenTransitionConfig => ({
 				transform: [{ translateX: contentTranslateX }],
 			},
 		};
+		const overlay = includeOverlaySlot
+			? {
+					style: {
+						transform: [
+							{
+								translateX: interpolate(
+									progress,
+									[0, 1, 2],
+									[width, 0, -width],
+									"clamp",
+								),
+							},
+						],
+					},
+				}
+			: undefined;
 
-		return { content };
+		return { content, overlay };
 	},
 	transitionSpec: {
 		open: Transition.Specs.DefaultSpec,
@@ -55,9 +76,14 @@ const createIOSSlideOptions = (): ScreenTransitionConfig => ({
 	},
 });
 
-export const screenIOSSlideOptions = createIOSSlideOptions();
+export const screenIOSSlideOptions = createIOSSlideOptions({
+	includeOverlaySlot: false,
+});
+export const overlayIOSSlideOptions = createIOSSlideOptions({
+	includeOverlaySlot: true,
+});
 
-function FullScreenOverlay({ screen }: { screen: "A" | "C" }) {
+function FullScreenOverlay({ screen }: { screen: "A" | "C" | "E" }) {
 	useScreenAnimation();
 	return (
 		<View
@@ -76,6 +102,7 @@ function FullScreenOverlay({ screen }: { screen: "A" | "C" }) {
 
 export const OverlayA = () => <FullScreenOverlay screen="A" />;
 export const OverlayC = () => <FullScreenOverlay screen="C" />;
+export const OverlayE = () => <FullScreenOverlay screen="E" />;
 
 export function OverlayPlaygroundScreen({
 	screen,
@@ -90,7 +117,7 @@ export function OverlayPlaygroundScreen({
 			<View style={styles.content}>
 				<Text style={styles.title}>Screen {screen}</Text>
 				<Text style={styles.description}>
-					Overlay checkpoints begin on Screen A and Screen C.
+					Overlay checkpoints are Screen A, Screen C, and Screen E.
 				</Text>
 				{next ? (
 					<Pressable
