@@ -71,6 +71,7 @@ export type {
 	BoundsNavigationZoomStyle,
 	GestureHandoffValues,
 	InactiveBehavior,
+	OverlayComponent,
 	OverlayProps,
 	RawGestureValues,
 	ScreenBackdropComponent,
@@ -92,4 +93,5 @@ export type {
 	TransitionSlotProps,
 	TransitionSlotStyle,
 	TransitionSpec,
+	UntypedScreenMeta,
 } from "./types";

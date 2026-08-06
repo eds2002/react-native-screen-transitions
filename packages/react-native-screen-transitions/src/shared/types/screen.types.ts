@@ -11,7 +11,8 @@ import type {
 	GestureProgressMode,
 	ScrollMetadataState,
 } from "./gesture.types";
-import type { OverlayProps } from "./overlay.types";
+import type { UntypedScreenMeta } from "./meta.types";
+import type { OverlayComponent } from "./overlay.types";
 
 export type Layout = {
 	width: number;
@@ -171,14 +172,14 @@ export type TransitionAwareProps<T extends object> = AnimatedProps<T> & {
 	styleId?: string;
 };
 
-export type ScreenTransitionConfig = {
+export type ScreenTransitionConfig<TMeta extends object = UntypedScreenMeta> = {
 	/**
 	 * The user-provided function to calculate styles based on animation progress.
 	 *
 	 * Return `null`, `undefined`, or `{}` to apply no transition styles for the
 	 * current frame.
 	 */
-	screenStyleInterpolator?: ScreenStyleInterpolator;
+	screenStyleInterpolator?: ScreenStyleInterpolator<TMeta>;
 
 	/**
 	 * The Reanimated animation config for opening and closing transitions.
@@ -331,12 +332,12 @@ export type ScreenTransitionConfig = {
 	 * @example
 	 * options={{ meta: { scalesOthers: true } }}
 	 */
-	meta?: Record<string, unknown>;
+	meta?: TMeta;
 
 	/**
 	 * Function that returns a React Element to display as an overlay.
 	 */
-	overlay?: (props: OverlayProps) => React.ReactNode;
+	overlay?: OverlayComponent<TMeta>;
 
 	/**
 	 * Whether to show the overlay. The overlay is shown by default when `overlay` is provided.

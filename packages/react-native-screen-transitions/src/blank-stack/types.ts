@@ -10,7 +10,11 @@ import type {
 	StackRouterOptions,
 	Theme,
 } from "@react-navigation/native";
-import type { InactiveBehavior, ScreenTransitionConfig } from "../shared";
+import type {
+	InactiveBehavior,
+	ScreenTransitionConfig,
+	UntypedScreenMeta,
+} from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
 
 export type { InactiveBehavior } from "../shared";
@@ -21,12 +25,13 @@ export type BlankStackNavigationProp<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
 	NavigatorID extends string | undefined = undefined,
+	TMeta extends object = UntypedScreenMeta,
 > = NavigationProp<
 	ParamList,
 	RouteName,
 	NavigatorID,
 	StackNavigationState<ParamList>,
-	BlankStackNavigationOptions,
+	BlankStackNavigationOptions<TMeta>,
 	BlankStackNavigationEventMap
 > &
 	StackActionHelpers<ParamList>;
@@ -35,8 +40,14 @@ export type BlankStackScreenProps<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
 	NavigatorID extends string | undefined = undefined,
+	TMeta extends object = UntypedScreenMeta,
 > = {
-	navigation: BlankStackNavigationProp<ParamList, RouteName, NavigatorID>;
+	navigation: BlankStackNavigationProp<
+		ParamList,
+		RouteName,
+		NavigatorID,
+		TMeta
+	>;
 	route: RouteProp<ParamList, RouteName>;
 };
 
@@ -44,7 +55,8 @@ export type BlankStackOptionsArgs<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = keyof ParamList,
 	NavigatorID extends string | undefined = undefined,
-> = BlankStackScreenProps<ParamList, RouteName, NavigatorID> & {
+	TMeta extends object = UntypedScreenMeta,
+> = BlankStackScreenProps<ParamList, RouteName, NavigatorID, TMeta> & {
 	theme: Theme;
 };
 
@@ -98,11 +110,21 @@ export interface BlankStackFactoryOptions {
  * Props passed to overlay components in blank-stack.
  * Uses the shared OverlayProps type with blank-stack's navigation type.
  */
-export type BlankStackOverlayProps = OverlayProps<
-	BlankStackNavigationProp<ParamListBase>
+export type BlankStackOverlayProps<
+	ParamList extends ParamListBase = ParamListBase,
+	RouteName extends keyof ParamList = keyof ParamList,
+	TMeta extends object = UntypedScreenMeta,
+	NavigatorID extends string | undefined = undefined,
+> = OverlayProps<
+	BlankStackNavigationProp<ParamList, RouteName, NavigatorID, TMeta>,
+	TMeta,
+	ParamList,
+	RouteName
 >;
 
-export type BlankStackNavigationOptions = ScreenTransitionConfig & {
+export type BlankStackNavigationOptions<
+	TMeta extends object = UntypedScreenMeta,
+> = ScreenTransitionConfig<TMeta> & {
 	/**
 	 * Controls how inactive blank-stack screens are retained after they are no
 	 * longer active.

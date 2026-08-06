@@ -7,9 +7,12 @@ import type { DerivedValue, SharedValue } from "react-native-reanimated";
 import {
 	type BlankStackFactoryOptions,
 	type BlankStackNavigationOptions,
+	type BlankStackOverlayProps,
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
 } from "../../blank-stack";
+import type { ComponentStackOverlayProps } from "../../component-stack";
+import type { NativeStackOverlayProps as LegacyNativeStackOverlayProps } from "../../native-stack";
 import type Transition from "..";
 import type {
 	BoundsMotion,
@@ -24,6 +27,7 @@ import type {
 	ScreenContentComponentProps,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
+	ScreenStyleInterpolator,
 	ScreenTransitionConfig,
 	ScreenTransitionDepthTarget,
 	ScreenTransitionTarget,
@@ -465,6 +469,116 @@ const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
 };
 const blankStackNavigationOptions: BlankStackNavigationOptions = {};
+
+type OnboardingMeta = {
+	title: string;
+	cta?: {
+		label: string;
+		disabled?: boolean;
+	};
+};
+
+type OnboardingParamList = {
+	Welcome: undefined;
+	Profile: { referralCode?: string };
+};
+
+declare const welcomeOverlayProps: BlankStackOverlayProps<
+	OnboardingParamList,
+	"Welcome",
+	OnboardingMeta
+>;
+declare const welcomeScreenProps: BlankStackScreenProps<
+	OnboardingParamList,
+	"Welcome",
+	undefined,
+	OnboardingMeta
+>;
+
+function WelcomeOverlay(
+	_props: BlankStackOverlayProps<
+		OnboardingParamList,
+		"Welcome",
+		OnboardingMeta
+	>,
+) {
+	return null;
+}
+
+const welcomeOverlayTitle: string = welcomeOverlayProps.meta?.title ?? "";
+const welcomeOwnerRouteName: "Welcome" = welcomeOverlayProps.route.name;
+const focusedOnboardingRouteName: "Welcome" | "Profile" =
+	welcomeOverlayProps.focusedRoute.name;
+if (welcomeOverlayProps.focusedRoute.name === "Profile") {
+	const referralCode: string | undefined =
+		welcomeOverlayProps.focusedRoute.params.referralCode;
+	void referralCode;
+}
+welcomeOverlayProps.navigation.navigate("Profile", { referralCode: "dorsia" });
+// @ts-expect-error Unknown routes are rejected by the navigator param list.
+welcomeOverlayProps.navigation.navigate("Missing");
+welcomeScreenProps.navigation.setOptions({
+	meta: { title: "Welcome to Dorsia" },
+});
+welcomeScreenProps.navigation.setOptions({
+	// @ts-expect-error setOptions uses the annotated metadata schema.
+	meta: { title: 42 },
+});
+
+const onboardingOptions: BlankStackNavigationOptions<OnboardingMeta> = {
+	meta: {
+		title: "Welcome to Dorsia",
+		cta: { label: "Continue" },
+	},
+	overlay: WelcomeOverlay,
+};
+const invalidOnboardingOptions: BlankStackNavigationOptions<OnboardingMeta> = {
+	meta: {
+		// @ts-expect-error Metadata follows the annotated onboarding schema.
+		title: 42,
+	},
+};
+
+const onboardingInterpolator: ScreenStyleInterpolator<OnboardingMeta> = ({
+	current,
+}) => {
+	"worklet";
+	const title: string | undefined = current.meta?.title;
+	void title;
+	return {};
+};
+
+declare const legacyNativeOverlayProps: LegacyNativeStackOverlayProps<
+	OnboardingParamList,
+	"Profile",
+	OnboardingMeta
+>;
+declare const componentOverlayProps: ComponentStackOverlayProps<
+	OnboardingParamList,
+	"Profile",
+	OnboardingMeta
+>;
+const legacyNativeReferralCode: string | undefined =
+	legacyNativeOverlayProps.route.params.referralCode;
+const componentOverlayTitle: string = componentOverlayProps.meta?.title ?? "";
+
+const typedNativeStackAdapterOptions: NativeStackAdapterOptions<
+	NativeStackNavigationOptions,
+	OnboardingMeta
+> = {
+	meta: { title: "Welcome to Dorsia" },
+};
+
+void welcomeOverlayTitle;
+void welcomeOwnerRouteName;
+void focusedOnboardingRouteName;
+void onboardingOptions;
+void invalidOnboardingOptions;
+void onboardingInterpolator;
+void WelcomeOverlay;
+void legacyNativeReferralCode;
+void componentOverlayTitle;
+void typedNativeStackAdapterOptions;
 
 type StaticBlankStackParamList = {
 	Home: undefined;

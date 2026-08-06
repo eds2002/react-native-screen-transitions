@@ -1,4 +1,5 @@
 import type { ScreenTransitionConfig } from "../../types";
+import type { UntypedScreenMeta } from "../../types/meta.types";
 
 type NativeStackTransitionResetOptions = {
 	presentation: "containedTransparentModal";
@@ -7,14 +8,16 @@ type NativeStackTransitionResetOptions = {
 	gestureEnabled: false;
 };
 
-export type AdapterDescriptorOptions = ScreenTransitionConfig & {
-	enableTransitions?: boolean;
-};
+export type AdapterDescriptorOptions<TMeta extends object = UntypedScreenMeta> =
+	ScreenTransitionConfig<TMeta> & {
+		enableTransitions?: boolean;
+	};
 
 export type NativeStackAdapterOptions<
 	TNativeOptions extends object = Record<string, unknown>,
+	TMeta extends object = UntypedScreenMeta,
 > = Omit<TNativeOptions, keyof AdapterDescriptorOptions> &
-	AdapterDescriptorOptions;
+	AdapterDescriptorOptions<TMeta>;
 
 const NATIVE_STACK_TRANSITION_RESET_OPTIONS: NativeStackTransitionResetOptions =
 	{

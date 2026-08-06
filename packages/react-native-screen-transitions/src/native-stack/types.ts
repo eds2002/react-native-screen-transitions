@@ -22,6 +22,7 @@ import type {
 	ScreenStackHeaderConfigProps,
 	SearchBarProps,
 } from "react-native-screens";
+import type { UntypedScreenMeta } from "../shared/types/meta.types";
 import type { OverlayProps } from "../shared/types/overlay.types";
 import type { ScreenTransitionConfig } from "../shared/types/screen.types";
 import type { DescriptorMap } from "../shared/types/stack.types";
@@ -59,12 +60,13 @@ export type NativeStackNavigationProp<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
 	NavigatorID extends string | undefined = undefined,
+	TMeta extends object = UntypedScreenMeta,
 > = NavigationProp<
 	ParamList,
 	RouteName,
 	NavigatorID,
 	StackNavigationState<ParamList>,
-	NativeStackNavigationOptions,
+	NativeStackNavigationOptions<TMeta>,
 	NativeStackNavigationEventMap
 > &
 	StackActionHelpers<ParamList>;
@@ -78,8 +80,14 @@ export type NativeStackScreenProps<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
 	NavigatorID extends string | undefined = undefined,
+	TMeta extends object = UntypedScreenMeta,
 > = {
-	navigation: NativeStackNavigationProp<ParamList, RouteName, NavigatorID>;
+	navigation: NativeStackNavigationProp<
+		ParamList,
+		RouteName,
+		NavigatorID,
+		TMeta
+	>;
 	route: RouteProp<ParamList, RouteName>;
 };
 
@@ -87,7 +95,8 @@ export type NativeStackOptionsArgs<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = keyof ParamList,
 	NavigatorID extends string | undefined = undefined,
-> = NativeStackScreenProps<ParamList, RouteName, NavigatorID> & {
+	TMeta extends object = UntypedScreenMeta,
+> = NativeStackScreenProps<ParamList, RouteName, NavigatorID, TMeta> & {
 	theme: Theme;
 };
 
@@ -154,8 +163,16 @@ export type NativeStackHeaderLeftProps = NativeStackHeaderRightProps & {
  * Props passed to overlay components in native-stack.
  * Uses the shared OverlayProps type with native-stack's navigation type.
  */
-export type NativeStackOverlayProps = OverlayProps<
-	NativeStackNavigationProp<ParamListBase>
+export type NativeStackOverlayProps<
+	ParamList extends ParamListBase = ParamListBase,
+	RouteName extends keyof ParamList = keyof ParamList,
+	TMeta extends object = UntypedScreenMeta,
+	NavigatorID extends string | undefined = undefined,
+> = OverlayProps<
+	NativeStackNavigationProp<ParamList, RouteName, NavigatorID, TMeta>,
+	TMeta,
+	ParamList,
+	RouteName
 >;
 
 /**
@@ -163,7 +180,9 @@ export type NativeStackOverlayProps = OverlayProps<
  * Use `NativeStackAdapterOptions` with `withScreenTransitions` from
  * `react-native-screen-transitions` instead.
  */
-export type NativeStackScreenTransitionConfig = ScreenTransitionConfig & {
+export type NativeStackScreenTransitionConfig<
+	TMeta extends object = UntypedScreenMeta,
+> = ScreenTransitionConfig<TMeta> & {
 	/**
 	 * Whether to enable transitions. It sets the presentation to containedTransparentModal, animation none, and headerShown to false.
 	 */
@@ -175,7 +194,9 @@ export type NativeStackScreenTransitionConfig = ScreenTransitionConfig & {
  * Use `NativeStackAdapterOptions<NativeStackNavigationOptions>` with
  * `@react-navigation/native-stack` and `withScreenTransitions` instead.
  */
-export type NativeStackNavigationOptions = NativeStackScreenTransitionConfig & {
+export type NativeStackNavigationOptions<
+	TMeta extends object = UntypedScreenMeta,
+> = NativeStackScreenTransitionConfig<TMeta> & {
 	/**
 	 * String that can be displayed in the header as a fallback for `headerTitle`.
 	 */
