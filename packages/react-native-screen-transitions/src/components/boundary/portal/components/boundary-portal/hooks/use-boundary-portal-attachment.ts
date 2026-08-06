@@ -1,7 +1,7 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
-import type { BoundaryLocalMeasurementValue } from "../../../../types";
+import { useBoundaryRootStore } from "../../../../providers/boundary-root.provider";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import { isTeleportEnabled } from "../../../utils/teleport-control";
 import { useActiveHostKey } from "../stores/host-registry.store";
@@ -9,13 +9,18 @@ import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 
 interface UseBoundaryPortalAttachmentParams {
 	boundaryId: string;
-	localMeasurement: BoundaryLocalMeasurementValue;
 }
 
 export const useBoundaryPortalAttachment = ({
 	boundaryId,
-	localMeasurement,
 }: UseBoundaryPortalAttachmentParams) => {
+	const localMeasurement = useBoundaryRootStore((root) => {
+		if (!root) {
+			throw new Error("Boundary portal attachment requires a boundary root.");
+		}
+
+		return root.localMeasurement;
+	});
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
