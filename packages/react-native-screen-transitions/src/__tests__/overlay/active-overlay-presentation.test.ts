@@ -1,6 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import type { StackScene } from "../../hooks/navigation/use-stack";
-import { getFloatOverlayStack } from "../../components/overlay/helpers/get-active-overlay";
+import {
+	getFloatOverlayStack,
+	getFloatOverlayTransitions,
+} from "../../components/overlay/helpers/get-active-overlay";
 
 const OverlayA = () => null;
 const OverlayB = () => null;
@@ -22,6 +25,42 @@ const createScene = (
 	}) as StackScene;
 
 describe("floating overlay presentation", () => {
+	it("pairs sparse overlays with the next overlay's style driver", () => {
+		const scenes = [
+			createScene("A", OverlayA),
+			createScene("B"),
+			createScene("C", OverlayC),
+			createScene("D"),
+			createScene("E", OverlayE),
+		];
+
+		const transitions = getFloatOverlayTransitions(
+			getFloatOverlayStack(scenes, true),
+			scenes,
+		);
+
+		expect(
+			transitions.map(({ scene, driverScene }) => [
+				scene.route.key,
+				driverScene.route.key,
+			]),
+		).toEqual([
+			["A", "C"],
+			["C", "E"],
+			["E", "E"],
+		]);
+	});
+
+	it("lets a plain top screen drive the last overlay", () => {
+		const scenes = [createScene("A", OverlayA), createScene("B")];
+		const transitions = getFloatOverlayTransitions(
+			getFloatOverlayStack(scenes, true),
+			scenes,
+		);
+
+		expect(transitions[0]?.driverScene.route.key).toBe("B");
+	});
+
 	it("when B has no overlay, keeps A as the active overlay", () => {
 		const scenes = [createScene("A", OverlayA), createScene("B")];
 

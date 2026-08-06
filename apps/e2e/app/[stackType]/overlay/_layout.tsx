@@ -1,6 +1,8 @@
 import {
 	OverlayA,
 	OverlayC,
+	OverlayE,
+	overlayIOSSlideOptions,
 	screenIOSSlideOptions,
 } from "@/components/overlay-playground";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
@@ -18,7 +20,7 @@ export default function OverlayPlaygroundLayout() {
 			<StackNavigator.Screen
 				name="index"
 				options={{
-					...screenIOSSlideOptions,
+					...overlayIOSSlideOptions,
 					gestureEnabled: false,
 					overlay: OverlayA,
 					overlayMode: "float",
@@ -34,7 +36,7 @@ export default function OverlayPlaygroundLayout() {
 			<StackNavigator.Screen
 				name="third"
 				options={{
-					...screenIOSSlideOptions,
+					...overlayIOSSlideOptions,
 					overlay: OverlayC,
 					overlayMode: "float",
 					overlayShown: true,
@@ -49,7 +51,10 @@ export default function OverlayPlaygroundLayout() {
 			<StackNavigator.Screen
 				name="fifth"
 				options={{
-					...screenIOSSlideOptions,
+					...overlayIOSSlideOptions,
+					overlay: OverlayE,
+					overlayMode: "float",
+					overlayShown: true,
 				}}
 			/>
 		</StackNavigator>

@@ -9,6 +9,10 @@ export type FloatOverlayEntry = {
 	activity: FloatOverlayActivity;
 };
 
+export type FloatOverlayTransitionEntry = FloatOverlayEntry & {
+	driverScene: StackScene;
+};
+
 type OverlayCandidate = Omit<FloatOverlayEntry, "activity">;
 
 const resolveOverlayActivity = (
@@ -61,5 +65,17 @@ export function getFloatOverlayStack(
 	return candidates.map((candidate, index) => ({
 		...candidate,
 		activity: resolveOverlayActivity(candidate.scene, topIndex - index),
+	}));
+}
+
+export function getFloatOverlayTransitions(
+	overlayStack: FloatOverlayEntry[],
+	scenes: StackScene[],
+): FloatOverlayTransitionEntry[] {
+	const topScene = scenes[scenes.length - 1];
+
+	return overlayStack.map((entry, index) => ({
+		...entry,
+		driverScene: overlayStack[index + 1]?.scene ?? topScene ?? entry.scene,
 	}));
 }
