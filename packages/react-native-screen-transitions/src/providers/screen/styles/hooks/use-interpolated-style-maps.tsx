@@ -40,6 +40,7 @@ import { stripInterpolatorOptions } from "../helpers/strip-interpolator-options"
 import {
 	hasCloseTransitionFinished,
 	isOpenTransitionBlocked,
+	isScreenInterpolatorReady,
 } from "../helpers/transition-visual-state";
 import { resolveInitialDestinationStyleGate } from "../helpers/visibility-gate";
 
@@ -155,7 +156,32 @@ export const useInterpolatedStylesMap = ({
 		descendantScreenAnimationSources,
 	} = screenAnimationStore;
 	const transition = useBuildTransitionAccessor(screenAnimationStore);
-	const nextInterpolatorReady = useSharedValue(0);
+	const hasCurrentInterpolator = !!currentInterpolator;
+	const { closing: currentClosing, entering: currentEntering } =
+		AnimationStore.getBag(currentScreenKey);
+	const {
+		animationProgress: currentAnimationProgress,
+		pendingLifecycleRequestKind: currentPendingLifecycleRequestKind,
+		pendingLifecycleStartBlockCount: currentPendingLifecycleStartBlockCount,
+	} = SystemStore.getBag(currentScreenKey);
+	const interpolatorReady = useDerivedValue<number>(() => {
+		"worklet";
+		const isPendingOpen =
+			currentPendingLifecycleRequestKind.get() ===
+			LifecycleTransitionRequestKind.Open;
+		const opening = isPendingOpen || !!currentEntering.get();
+
+		return isScreenInterpolatorReady({
+			hasInterpolator: hasCurrentInterpolator,
+			opening,
+			closing: currentClosing.get(),
+			pendingLifecycleStartBlockCount:
+				currentPendingLifecycleStartBlockCount.get(),
+			animationProgress: currentAnimationProgress.get(),
+		})
+			? 1
+			: 0;
+	});
 
 	// In some cases, a user may want to use external shared values to drive animations in the interpoaltor.
 	// We can now support this by collecting those shared values and reading them here to trigger an update.
@@ -250,10 +276,6 @@ export const useInterpolatedStylesMap = ({
 			!nextInterpolator ||
 			isOpeningBlocked ||
 			hasCloseFinished;
-		const nextReady = currentOwnsInterpolator ? 0 : 1;
-
-		nextInterpolatorReady.set(nextReady);
-
 		const interpolatorOptionsOwner = currentOwnsInterpolator
 			? "current"
 			: "next";
@@ -329,7 +351,7 @@ export const useInterpolatedStylesMap = ({
 	});
 
 	return {
+		interpolatorReady,
 		localStylesMaps,
-		nextInterpolatorReady,
 	};
 };

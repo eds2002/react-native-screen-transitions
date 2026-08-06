@@ -24,12 +24,17 @@ interface UseBoundaryContentPortalAttachmentParams {
 export const useBoundaryContentPortalAttachment = ({
 	boundaryId,
 }: UseBoundaryContentPortalAttachmentParams) => {
-	const { nextInterpolatorReady, slotsMap } = useScreenSlots();
+	const { slotsMap } = useScreenSlots();
 
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
+	const nextScreenKey = useDescriptorsStore((s) => s.derivations.nextScreenKey);
 	const sourcePairKey = useDescriptorsStore((s) => s.derivations.sourcePairKey);
+	const destinationSlots = useScreenSlots(nextScreenKey ?? currentScreenKey);
+	const unavailableInterpolatorReady = useSharedValue(0);
+	const interpolatorReady =
+		destinationSlots?.interpolatorReady ?? unavailableInterpolatorReady;
 
 	const activeReceiverScreenKey = useStack(resolveActiveHandoffReceiver);
 	const previousReceiverScreenKey = useStack(resolvePreviousHandoffReceiver);
@@ -85,7 +90,7 @@ export const useBoundaryContentPortalAttachment = ({
 				? link.destination.screenKey
 				: null;
 
-		const interpolatorReady = nextInterpolatorReady.get();
+		const isInterpolatorReady = interpolatorReady.get();
 		const attachedScreenKey = attachedReceiverScreenKey.get();
 
 		const nextReceiverScreenKey = resolveHandoffAttachmentCandidate({
@@ -93,7 +98,7 @@ export const useBoundaryContentPortalAttachment = ({
 			activeReceiverScreenKey,
 			attachedReceiverScreenKey: attachedScreenKey,
 			hasActiveCloseFinished,
-			interpolatorReady: !!interpolatorReady,
+			interpolatorReady: !!isInterpolatorReady,
 			pairChangedDuringClose,
 			pairDestinationScreenKey: pairDestination,
 			previousReceiverScreenKey,
@@ -110,7 +115,7 @@ export const useBoundaryContentPortalAttachment = ({
 
 		const activatingPairDestination =
 			!!pairDestination &&
-			!!interpolatorReady &&
+			!!isInterpolatorReady &&
 			nextReceiverScreenKey === pairDestination;
 
 		const canActivateReceiver =
