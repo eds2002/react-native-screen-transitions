@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { Animated, StyleSheet, View } from "react-native";
-import { useDerivedValue } from "react-native-reanimated";
+import { StyleSheet, View } from "react-native";
+import Animated, { useDerivedValue } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
 import { useStack } from "../../../hooks/navigation/use-stack";
 import { NavigationScreenProvider } from "../../../providers/navigation/navigation-host.provider";
