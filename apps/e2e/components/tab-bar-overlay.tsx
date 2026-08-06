@@ -4,10 +4,7 @@ import Animated, {
 	useAnimatedStyle,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-	type OverlayProps,
-	useScreenAnimation,
-} from "react-native-screen-transitions";
+import type { OverlayProps } from "react-native-screen-transitions";
 import { useTheme } from "@/theme";
 
 /**
@@ -21,13 +18,13 @@ export function TabBarOverlay({
 	focusedIndex,
 	routes,
 	navigation,
+	progress,
 }: OverlayProps) {
 	const insets = useSafeAreaInsets();
-	const screenAnimation = useScreenAnimation();
 	const theme = useTheme();
 
 	const containerStyle = useAnimatedStyle(() => {
-		const { stackProgress } = screenAnimation.value;
+		const stackProgress = progress.get();
 
 		// Fade out when stack progress increases (more screens on top)
 		// stackProgress = 1 means just this screen, > 1 means screens above

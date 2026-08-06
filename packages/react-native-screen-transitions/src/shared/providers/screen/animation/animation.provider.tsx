@@ -2,6 +2,7 @@ import { type ReactNode, useCallback, useLayoutEffect, useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import { createBoundsAccessor } from "../../../utils/bounds";
 import createProvider from "../../../utils/create-provider";
+import { useDescriptorsStore } from "../descriptors";
 import { useScreenAnimationPipeline } from "./helpers/pipeline";
 import type {
 	RegisterScreenAnimationDescendant,
@@ -25,14 +26,19 @@ export type ScreenAnimationContextValue = ReturnType<
 };
 
 export type ScreenAnimationContextResult = {
+	key: string;
 	value: ScreenAnimationContextValue;
 };
 
 export const { ScreenAnimationProvider, useScreenAnimationStore } =
 	createProvider("ScreenAnimation", {
 		guarded: true,
+		global: true,
 	})<Props, ScreenAnimationContextValue>(
 		(_props, { useParentStore }): ScreenAnimationContextResult => {
+			const currentScreenKey = useDescriptorsStore(
+				(store) => store.derivations.currentScreenKey,
+			);
 			const parentContext = useParentStore();
 			const parentScreenInterpolatorProps =
 				parentContext?.screenInterpolatorProps;
@@ -192,6 +198,7 @@ export const { ScreenAnimationProvider, useScreenAnimationStore } =
 			]);
 
 			return {
+				key: currentScreenKey,
 				value: {
 					screenInterpolatorProps,
 					screenInterpolatorPropsRevision,

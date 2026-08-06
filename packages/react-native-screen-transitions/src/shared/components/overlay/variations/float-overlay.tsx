@@ -1,14 +1,6 @@
-import { useMemo } from "react";
-import { snapDescriptorToIndex } from "../../../animation/snap-to";
 import { useStack } from "../../../hooks/navigation/use-stack";
-import { ScreenAnimationProvider } from "../../../providers/screen/animation";
-import type { BaseDescriptor } from "../../../providers/screen/descriptors";
-import { DescriptorsProvider } from "../../../providers/screen/descriptors";
-import { ScreenOptionsProvider } from "../../../providers/screen/options";
-import { ScreenSlotProvider } from "../../../providers/screen/styles";
-import type { OverlayScreenState } from "../../../types/overlay.types";
 
-import { getActiveFloatOverlay } from "../helpers/get-active-overlay";
+import { getFloatOverlayStack } from "../helpers/get-active-overlay";
 import { OverlayHost } from "./overlay-host";
 
 /**
@@ -16,65 +8,22 @@ import { OverlayHost } from "./overlay-host";
  * Gets routes and descriptors from stack context.
  */
 export function FloatOverlay() {
-	const { scenes, focusedIndex, flags, routes, routeKeys } = useStack();
+	const { scenes, flags } = useStack();
 
-	const activeOverlay = useMemo(
-		() =>
-			getActiveFloatOverlay(scenes, focusedIndex, flags.TRANSITIONS_ALWAYS_ON),
-		[scenes, focusedIndex, flags.TRANSITIONS_ALWAYS_ON],
+	const overlayStack = getFloatOverlayStack(
+		scenes,
+		flags.TRANSITIONS_ALWAYS_ON,
 	);
-
-	const overlayData = useMemo(() => {
-		if (!activeOverlay) return null;
-
-		const { scene, overlayIndex } = activeOverlay;
-		const previous = scenes[overlayIndex - 1]?.descriptor;
-		const current = scene.descriptor;
-		const next = scenes[overlayIndex + 1]?.descriptor;
-		const focusedScene = scenes[focusedIndex] ?? scenes[scenes.length - 1];
-		const focusedDescriptor = focusedScene?.descriptor;
-
-		const overlayScreenState: OverlayScreenState<BaseDescriptor["navigation"]> =
-			{
-				index: routeKeys.indexOf(current.route.key),
-				options: focusedDescriptor?.options ?? {},
-				routes,
-				focusedRoute: focusedScene?.route ?? current.route,
-				focusedIndex,
-				meta: focusedDescriptor?.options?.meta,
-				navigation: current.navigation,
-				snapTo: (index: number) => {
-					snapDescriptorToIndex(current, index);
-				},
-			};
-
-		return {
-			scene,
-			previous,
-			current,
-			next,
-			overlayScreenState,
-		};
-	}, [activeOverlay, scenes, focusedIndex, routeKeys, routes]);
-
-	if (!overlayData) {
+	if (overlayStack.length === 0) {
 		return null;
 	}
 
-	const { scene, previous, current, next, overlayScreenState } = overlayData;
-
-	return (
-		<DescriptorsProvider current={current} previous={previous} next={next}>
-			<ScreenOptionsProvider>
-				<ScreenAnimationProvider>
-					<ScreenSlotProvider isFloatingOverlay>
-						<OverlayHost
-							scene={scene}
-							overlayScreenState={overlayScreenState}
-						/>
-					</ScreenSlotProvider>
-				</ScreenAnimationProvider>
-			</ScreenOptionsProvider>
-		</DescriptorsProvider>
-	);
+	return overlayStack.map(({ scene, activity }, layerIndex) => (
+		<OverlayHost
+			key={scene.route.key}
+			scene={scene}
+			activity={activity}
+			layerIndex={layerIndex}
+		/>
+	));
 }

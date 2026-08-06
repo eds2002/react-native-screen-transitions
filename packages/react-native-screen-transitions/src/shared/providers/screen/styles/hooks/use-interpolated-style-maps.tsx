@@ -144,6 +144,7 @@ export const useInterpolatedStylesMap = ({
 		(s) => s.derivations.destinationPairKey,
 	);
 	const screenOptions = useScreenOptionsStore();
+	const screenAnimationStore = useScreenAnimationStore();
 	const {
 		screenInterpolatorProps,
 		screenInterpolatorPropsRevision,
@@ -152,8 +153,8 @@ export const useInterpolatedStylesMap = ({
 		currentInterpolator,
 		ancestorScreenAnimationSources,
 		descendantScreenAnimationSources,
-	} = useScreenAnimationStore();
-	const transition = useBuildTransitionAccessor();
+	} = screenAnimationStore;
+	const transition = useBuildTransitionAccessor(screenAnimationStore);
 	const nextInterpolatorReady = useSharedValue(0);
 
 	// In some cases, a user may want to use external shared values to drive animations in the interpoaltor.
