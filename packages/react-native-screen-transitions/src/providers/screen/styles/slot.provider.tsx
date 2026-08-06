@@ -1,4 +1,4 @@
-import { type ReactNode, useLayoutEffect, useMemo } from "react";
+import { type ReactNode, useMemo } from "react";
 import { StyleSheet } from "react-native";
 import Animated, { type SharedValue } from "react-native-reanimated";
 import type {
@@ -7,20 +7,13 @@ import type {
 } from "../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
-import { useDescriptorsStore } from "../descriptors";
-import { FloatingOverlayLayer } from "./components/floating-overlay-layer";
 import type { LocalStyleLayers } from "./helpers/resolve-slot-styles";
 import { useInterpolatedStylesMap } from "./hooks/use-interpolated-style-maps";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useResolvedStylesMap } from "./hooks/use-resolved-slot-style-map";
-import {
-	registerScreenSlots,
-	unregisterScreenSlots,
-} from "./stores/slot-references.store";
 
 type Props = {
 	children: ReactNode;
-	isFloatingOverlay?: boolean;
 };
 
 export type ScreenSlotName =
@@ -40,69 +33,48 @@ export type ScreenSlotContextValue = {
 export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 	createProvider("ScreenSlot", {
 		guarded: true,
-	})<Props, ScreenSlotContextValue>(
-		({ children, isFloatingOverlay }, { useParentStore }) => {
-			const parentContext = useParentStore();
-			const currentScreenKey = useDescriptorsStore(
-				(s) => s.derivations.currentScreenKey,
-			);
+	})<Props, ScreenSlotContextValue>(({ children }, { useParentStore }) => {
+		const parentContext = useParentStore();
+		const { animatedStyle, animatedProps, shouldBlockVisibility } =
+			useMaybeBlockVisibility();
 
-			const { animatedStyle, animatedProps, shouldBlockVisibility } =
-				useMaybeBlockVisibility(isFloatingOverlay);
+		const { localStylesMaps, nextInterpolatorReady } = useInterpolatedStylesMap(
+			{
+				enabled: true,
+				visibilityBlocked: shouldBlockVisibility,
+			},
+		);
 
-			const { localStylesMaps, nextInterpolatorReady } =
-				useInterpolatedStylesMap({
-					enabled: !isFloatingOverlay,
-					visibilityBlocked: shouldBlockVisibility,
-				});
-
-			const slotsMap = useResolvedStylesMap({
+		const slotsMap = useResolvedStylesMap({
+			localStylesMaps,
+			ancestorStylesMap: parentContext?.slotsMap,
+		});
+		const value = useMemo(
+			() => ({
 				localStylesMaps,
-				ancestorStylesMap: parentContext?.slotsMap,
-			});
-			const value = useMemo(
-				() => ({
-					localStylesMaps,
-					nextInterpolatorReady,
-					slotsMap,
-					visibilityBlocked: shouldBlockVisibility,
-				}),
-				[
-					localStylesMaps,
-					nextInterpolatorReady,
-					shouldBlockVisibility,
-					slotsMap,
-				],
-			);
+				nextInterpolatorReady,
+				slotsMap,
+				visibilityBlocked: shouldBlockVisibility,
+			}),
+			[localStylesMaps, nextInterpolatorReady, shouldBlockVisibility, slotsMap],
+		);
+		const content = useMemo(
+			() => (
+				<Animated.View
+					style={[styles.container, animatedStyle]}
+					animatedProps={animatedProps}
+				>
+					{children}
+				</Animated.View>
+			),
+			[children, animatedStyle, animatedProps],
+		);
 
-			useLayoutEffect(() => {
-				registerScreenSlots(currentScreenKey, value);
-
-				return () => {
-					unregisterScreenSlots(currentScreenKey, value);
-				};
-			}, [currentScreenKey, value]);
-
-			const content = useMemo(
-				() => (
-					<FloatingOverlayLayer enabled={isFloatingOverlay}>
-						<Animated.View
-							style={[styles.container, animatedStyle]}
-							animatedProps={animatedProps}
-						>
-							{children}
-						</Animated.View>
-					</FloatingOverlayLayer>
-				),
-				[children, animatedStyle, isFloatingOverlay, animatedProps],
-			);
-
-			return {
-				value,
-				children: content,
-			};
-		},
-	);
+		return {
+			value,
+			children: content,
+		};
+	});
 
 const styles = StyleSheet.create({
 	container: { flex: 1 },

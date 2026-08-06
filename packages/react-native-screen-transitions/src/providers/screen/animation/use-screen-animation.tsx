@@ -1,3 +1,4 @@
+import { useRoute } from "@react-navigation/native";
 import { type DerivedValue, useDerivedValue } from "react-native-reanimated";
 import type {
 	ScreenInterpolationProps,
@@ -33,12 +34,21 @@ export function useScreenAnimation(
 ):
 	| DerivedValue<ScreenInterpolationProps>
 	| DerivedValue<ScreenInterpolationProps | null> {
+	const route = useRoute();
+	const screenAnimationStore = useScreenAnimationStore(route.key);
+
+	if (!screenAnimationStore) {
+		throw new Error(
+			`ScreenAnimation store for route "${route.key}" was not found`,
+		);
+	}
+
 	const {
 		screenInterpolatorPropsRevision,
 		ancestorScreenAnimationSources,
 		descendantScreenAnimationSources,
-	} = useScreenAnimationStore();
-	const transition = useBuildTransitionAccessor();
+	} = screenAnimationStore;
+	const transition = useBuildTransitionAccessor(screenAnimationStore);
 	const transitionTarget = normalizeScreenAnimationTarget(
 		target,
 		ancestorScreenAnimationSources.length,

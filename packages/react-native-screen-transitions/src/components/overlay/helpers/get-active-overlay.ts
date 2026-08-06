@@ -1,39 +1,65 @@
 import type { StackScene } from "../../../hooks/navigation/use-stack";
 import { isOverlayVisible } from "../../../utils/overlay/visibility";
 
-/**
- * Find the active float overlay from scenes.
- * Scans from the top of the stack downward to find the first screen
- * with a visible overlay.
- */
-export function getActiveFloatOverlay(
-	scenes: StackScene[],
-	index: number,
-	transitionsAlwaysOn: boolean,
-): { scene: StackScene; overlayIndex: number } | null {
-	if (scenes.length === 0) {
-		return null;
+export type FloatOverlayActivity = "active" | "inert" | "inactive" | "closing";
+
+export type FloatOverlayEntry = {
+	scene: StackScene;
+	overlayIndex: number;
+	activity: FloatOverlayActivity;
+};
+
+type OverlayCandidate = Omit<FloatOverlayEntry, "activity">;
+
+const resolveOverlayActivity = (
+	scene: StackScene,
+	distanceFromTop: number,
+): FloatOverlayActivity => {
+	if (distanceFromTop === 0 && scene.activity === "closing") {
+		return "closing";
 	}
 
-	// When navigating back, closing scenes are kept at the top of the local stack
-	// while the focused index already points to the destination screen. We need to
-	// start scanning from the actual top of the stack so the overlay can animate
-	// out together with its closing screen instead of disappearing immediately.
-	const startIndex = Math.max(index, scenes.length - 1);
+	if (distanceFromTop === 0) {
+		return "active";
+	}
 
-	for (let i = startIndex; i >= 0; i--) {
-		const scene = scenes[i];
+	if (distanceFromTop === 1) {
+		return "inert";
+	}
+
+	return "inactive";
+};
+
+/**
+ * Finds every visible floating-overlay checkpoint in stack order.
+ *
+ * The newest checkpoint owns the active overlay. Its immediate predecessor
+ * remains visible and inert; all older checkpoints are retained but inactive.
+ * This mirrors the screen activity window without making plain screens create
+ * a new overlay checkpoint.
+ */
+export function getFloatOverlayStack(
+	scenes: StackScene[],
+	transitionsAlwaysOn: boolean,
+): FloatOverlayEntry[] {
+	const candidates: OverlayCandidate[] = [];
+
+	for (let index = 0; index < scenes.length; index += 1) {
+		const scene = scenes[index];
 		const options = scene?.descriptor?.options;
 
-		// Skip screens without enableTransitions (native-stack only)
 		if (!transitionsAlwaysOn && !options?.enableTransitions) {
 			continue;
 		}
 
 		if (isOverlayVisible(options)) {
-			return { scene, overlayIndex: i };
+			candidates.push({ scene, overlayIndex: index });
 		}
 	}
 
-	return null;
+	const topIndex = candidates.length - 1;
+	return candidates.map((candidate, index) => ({
+		...candidate,
+		activity: resolveOverlayActivity(candidate.scene, topIndex - index),
+	}));
 }

@@ -1,51 +1,82 @@
-import { memo, useMemo } from "react";
+import { useMemo } from "react";
 import { Animated, StyleSheet, View } from "react-native";
 import { useDerivedValue } from "react-native-reanimated";
-import type { StackScene } from "../../../hooks/navigation/use-stack";
+import { snapDescriptorToIndex } from "../../../animation/snap-to";
+import { useStack } from "../../../hooks/navigation/use-stack";
 import { NavigationScreenProvider } from "../../../providers/navigation/navigation-host.provider";
-import { useScreenAnimation } from "../../../providers/screen/animation";
-import type { BaseDescriptor } from "../../../providers/screen/descriptors";
+import { useScreenAnimationStore } from "../../../providers/screen/animation";
+import type { OverlayProps } from "../../../types/overlay.types";
 import type {
-	OverlayProps,
-	OverlayScreenState,
-} from "../../../types/overlay.types";
+	FloatOverlayActivity,
+	FloatOverlayEntry,
+} from "../helpers/get-active-overlay";
 
 type OverlayHostProps = {
-	scene: StackScene;
-	overlayScreenState: OverlayScreenState<BaseDescriptor["navigation"]>;
+	scene: FloatOverlayEntry["scene"];
+	activity: FloatOverlayActivity;
+	layerIndex: number;
 };
 
-export const OverlayHost = memo(function OverlayHost({
-	scene,
-	overlayScreenState,
-}: OverlayHostProps) {
-	const OverlayComponent = scene.descriptor.options.overlay;
-
-	const screenAnimation = useScreenAnimation();
+export function OverlayHost({ scene, activity, layerIndex }: OverlayHostProps) {
+	const screenAnimationStore = useScreenAnimationStore(scene.route.key);
+	const { scenes, focusedIndex, routeKeys, routes } = useStack();
+	const descriptor = scene.descriptor;
+	const focusedScene = scenes[focusedIndex] ?? scenes[scenes.length - 1];
+	const focusedDescriptor = focusedScene?.descriptor;
 	const relativeProgress = useDerivedValue(() => {
 		"worklet";
-		return screenAnimation.get().stackProgress;
+		if (!screenAnimationStore) {
+			return 0;
+		}
+
+		screenAnimationStore.screenInterpolatorPropsRevision.get();
+		return screenAnimationStore.screenInterpolatorProps.get().stackProgress;
 	});
 
-	const overlayProps: OverlayProps<BaseDescriptor["navigation"]> = useMemo(
+	const overlayProps: OverlayProps = useMemo(
 		() => ({
-			...overlayScreenState,
+			index: routeKeys.indexOf(scene.route.key),
+			options: focusedDescriptor?.options ?? {},
+			routes,
+			focusedRoute: focusedScene?.route ?? scene.route,
+			focusedIndex,
+			meta: focusedDescriptor?.options?.meta,
+			navigation: descriptor.navigation,
+			snapTo: (index: number) => {
+				snapDescriptorToIndex(descriptor, index);
+			},
 			progress: relativeProgress,
 		}),
-		[relativeProgress, overlayScreenState],
+		[
+			descriptor,
+			focusedDescriptor?.options,
+			focusedIndex,
+			focusedScene?.route,
+			relativeProgress,
+			routeKeys,
+			routes,
+			scene.route.key,
+			scene.route,
+		],
 	);
+	const OverlayComponent = descriptor.options.overlay;
 
-	if (!OverlayComponent) {
+	if (!OverlayComponent || !screenAnimationStore) {
 		return null;
 	}
 
 	return (
 		<Animated.View
-			pointerEvents="box-none"
-			style={[styles.container, styles.floating, StyleSheet.absoluteFill]}
+			pointerEvents={activity === "active" ? "box-none" : "none"}
+			style={[
+				styles.container,
+				styles.floating,
+				StyleSheet.absoluteFill,
+				{ zIndex: 1000 + layerIndex },
+			]}
 		>
 			<NavigationScreenProvider
-				navigation={scene.descriptor.navigation}
+				navigation={descriptor.navigation}
 				route={scene.route}
 			>
 				<View
@@ -57,7 +88,7 @@ export const OverlayHost = memo(function OverlayHost({
 			</NavigationScreenProvider>
 		</Animated.View>
 	);
-});
+}
 
 const styles = StyleSheet.create({
 	overlay: {

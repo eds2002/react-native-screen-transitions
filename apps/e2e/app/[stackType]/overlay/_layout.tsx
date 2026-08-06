@@ -1,23 +1,26 @@
-// @ts-nocheck
-import { interpolate } from "react-native-reanimated";
-import Transition from "react-native-screen-transitions";
+import {
+	OverlayA,
+	OverlayC,
+	screenIOSSlideOptions,
+} from "@/components/overlay-playground";
 import { useResolvedStackType } from "@/components/stack-examples/stack-routing";
-import { TabBarOverlay } from "@/components/tab-bar-overlay";
 import { BlankStack } from "@/layouts/blank-stack";
 import { Stack } from "@/layouts/stack";
-import { IOSSlide } from "@/lib/screen-transitions/ios-slide";
 
-export default function BlankStackOverlayLayout() {
+export default function OverlayPlaygroundLayout() {
 	const stackType = useResolvedStackType();
 	const StackNavigator = stackType === "native-stack" ? Stack : BlankStack;
 	const navigatorScreenOptions =
 		stackType === "native-stack" ? { enableTransitions: true } : undefined;
+
 	return (
 		<StackNavigator screenOptions={navigatorScreenOptions}>
 			<StackNavigator.Screen
 				name="index"
 				options={{
-					overlay: TabBarOverlay,
+					...screenIOSSlideOptions,
+					gestureEnabled: false,
+					overlay: OverlayA,
 					overlayMode: "float",
 					overlayShown: true,
 				}}
@@ -25,79 +28,28 @@ export default function BlankStackOverlayLayout() {
 			<StackNavigator.Screen
 				name="second"
 				options={{
-					gestureEnabled: true,
-					gestureDirection: "horizontal",
-					screenStyleInterpolator: ({
-						progress,
-						layouts: {
-							screen: { width },
-						},
-					}) => {
-						"worklet";
-						const translateX = interpolate(
-							progress,
-							[0, 1, 2],
-							[width, 0, -width * 0.3],
-						);
-						return {
-							content: {
-								style: {
-									transform: [{ translateX }],
-								},
-							},
-						};
-					},
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
-					// Inherit overlay from previous screen
-					overlay: TabBarOverlay,
-					overlayMode: "float",
-					overlayShown: true,
+					...screenIOSSlideOptions,
 				}}
 			/>
 			<StackNavigator.Screen
 				name="third"
 				options={{
-					...IOSSlide(),
-					// Overlay still visible on this screen
-					overlay: TabBarOverlay,
+					...screenIOSSlideOptions,
+					overlay: OverlayC,
 					overlayMode: "float",
 					overlayShown: true,
 				}}
 			/>
 			<StackNavigator.Screen
-				name="no-overlay"
+				name="fourth"
 				options={{
-					gestureEnabled: true,
-					gestureDirection: "horizontal",
-					screenStyleInterpolator: ({
-						progress,
-						layouts: {
-							screen: { width },
-						},
-					}) => {
-						"worklet";
-						const translateX = interpolate(
-							progress,
-							[0, 1, 2],
-							[width, 0, -width * 0.3],
-						);
-						return {
-							content: {
-								style: {
-									transform: [{ translateX }],
-								},
-							},
-						};
-					},
-					transitionSpec: {
-						open: Transition.Specs.DefaultSpec,
-						close: Transition.Specs.DefaultSpec,
-					},
-					// No overlay on this screen
-					overlayShown: false,
+					...screenIOSSlideOptions,
+				}}
+			/>
+			<StackNavigator.Screen
+				name="fifth"
+				options={{
+					...screenIOSSlideOptions,
 				}}
 			/>
 		</StackNavigator>
