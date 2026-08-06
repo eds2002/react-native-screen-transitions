@@ -71,6 +71,7 @@ const EnabledBoundaryPortal = memo(function EnabledBoundaryPortal({
 	}
 
 	const { teleportProps } = useBoundaryPortalAttachment({ boundaryId });
+
 	const { handleOnLayout, placeholderStyle } = usePlaceholderStyles();
 
 	return (

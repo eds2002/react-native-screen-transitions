@@ -33,14 +33,24 @@ export const useRefreshBoundary = ({
 		refreshScreenKey,
 		"willAnimate",
 	);
+	const refreshSettled = AnimationStore.getValue(
+		refreshScreenKey,
+		"progressSettled",
+	);
 	const refreshClosing = AnimationStore.getValue(refreshScreenKey, "closing");
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
 
-			const shouldRefresh = enabled && !!refreshWillAnimate.get();
-			if (!shouldRefresh) {
+			if (!enabled) return null;
+
+			const shouldRefresh = !!refreshWillAnimate.get();
+			const settled = !!refreshSettled.get();
+			// A group's active member can change while the transition is settled
+			// (for example, paging a destination gallery). Let that member publish
+			// fresh bounds even though there is no willAnimate lifecycle pulse yet.
+			if (!shouldRefresh && (!group || !settled)) {
 				return null;
 			}
 			const sourcePairKey =
@@ -56,6 +66,7 @@ export const useRefreshBoundary = ({
 				linkId: linkKey,
 				group,
 				shouldRefresh,
+				settled,
 				closing: !!refreshClosing.get(),
 				linkState: pairs.get(),
 			});

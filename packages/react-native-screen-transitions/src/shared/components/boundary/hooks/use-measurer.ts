@@ -8,7 +8,7 @@ import type { BoundTag } from "../../../stores/bounds/types";
 import { ScrollStore } from "../../../stores/scroll.store";
 import { SystemStore } from "../../../stores/system.store";
 import { getVisibilityBlockOffset } from "../../../utils/visibility-block-offset";
-import type { MeasureBoundary } from "../types";
+import type { BoundaryLocalMeasurementValue, MeasureBoundary } from "../types";
 import {
 	attachScrollSnapshotToMeasuredBounds,
 	correctMeasuredBoundsForVisibilityGate,
@@ -24,6 +24,7 @@ interface UseMeasurerParams {
 	measuredAnimatedRef: AnimatedRef<View>;
 	handoff: boolean;
 	escapeClipping: boolean;
+	localMeasurement: BoundaryLocalMeasurementValue;
 }
 
 export const useMeasurer = ({
@@ -34,6 +35,7 @@ export const useMeasurer = ({
 	measuredAnimatedRef,
 	handoff,
 	escapeClipping,
+	localMeasurement,
 }: UseMeasurerParams): MeasureBoundary => {
 	const { width: viewportWidth, height: viewportHeight } =
 		useWindowDimensions();
@@ -65,6 +67,13 @@ export const useMeasurer = ({
 				viewportWidth,
 				viewportHeight,
 			});
+
+			if (escapeClipping && target.type === "source") {
+				localMeasurement.set({
+					bounds: measured,
+					pairKey: target.pairKey,
+				});
+			}
 
 			/**
 			 * - Destination Pass -
@@ -112,6 +121,7 @@ export const useMeasurer = ({
 			measuredAnimatedRef,
 			handoff,
 			escapeClipping,
+			localMeasurement,
 			viewportWidth,
 			viewportHeight,
 			scrollState,

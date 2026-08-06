@@ -9,8 +9,7 @@ import { createStore } from "../utils/create-store";
 export enum LifecycleTransitionRequestKind {
 	None = 0,
 	Open = 1,
-	BlankStackClose = 2,
-	NativeClose = 3,
+	Close = 2,
 }
 
 type SystemStoreState = {

@@ -1,4 +1,4 @@
-import { runOnJS, type SharedValue } from "react-native-reanimated";
+import type { SharedValue } from "react-native-reanimated";
 import { FALSE, TRUE } from "../../constants";
 import {
 	type AnimationStoreMap,
@@ -16,7 +16,6 @@ interface AnimateToProgressProps {
 	 */
 	target: "open" | "close" | number;
 	spec?: TransitionSpec;
-	onAnimationFinish?: (finished: boolean) => void;
 	animations: AnimationStoreMap;
 	targetProgress: SharedValue<number>;
 	animationProgress: SharedValue<number>;
@@ -61,7 +60,6 @@ export const resolveAnimationProgressRange = (
 export const animateToProgress = ({
 	target,
 	spec,
-	onAnimationFinish,
 	animations,
 	targetProgress,
 	animationProgress,
@@ -112,9 +110,6 @@ export const animateToProgress = ({
 				entering.set(FALSE);
 			}
 
-			if (onAnimationFinish) {
-				runOnJS(onAnimationFinish)(true);
-			}
 			return;
 		}
 
@@ -141,23 +136,7 @@ export const animateToProgress = ({
 
 					if (isClosing) {
 						progressAnimating.set(FALSE);
-
-						if (onAnimationFinish) {
-							// Paint the terminal UI-thread host/style state before React
-							// removes the closing route and its native portal host.
-							requestAnimationFrame(() => {
-								"worklet";
-								requestAnimationFrame(() => {
-									"worklet";
-									runOnJS(onAnimationFinish)(state.finished);
-								});
-							});
-						}
 					} else {
-						if (onAnimationFinish) {
-							runOnJS(onAnimationFinish)(state.finished);
-						}
-
 						// Delay clearing progress animation by one frame to ensure final frame is painted
 						requestAnimationFrame(() => {
 							progressAnimating.set(FALSE);

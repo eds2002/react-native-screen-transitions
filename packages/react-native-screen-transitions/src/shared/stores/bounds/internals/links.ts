@@ -242,7 +242,7 @@ const writeDestination = (
 
 	writePairLink(state, pairKey, linkKey, link);
 
-	if (link.group) {
+	if (link.group && !state[pairKey]?.groups?.[link.group]) {
 		writeGroup(state, pairKey, link.group, linkKey);
 	}
 };

@@ -39,14 +39,12 @@ const MAX_HANDSHAKE_RETRIES = 20;
 interface UseInitialDestinationMeasurementParams {
 	boundTag: BoundTag;
 	enabled: boolean;
-	escapeClipping: boolean;
 	measureBoundary: MeasureBoundary;
 }
 
 export const useInitialDestinationMeasurement = ({
 	boundTag,
 	enabled,
-	escapeClipping,
 	measureBoundary,
 }: UseInitialDestinationMeasurementParams) => {
 	const { tag, linkKey, group } = boundTag;
@@ -142,18 +140,12 @@ export const useInitialDestinationMeasurement = ({
 		runOnUI(claimLifecycleStartBlock)();
 
 		return () => {
-			if (escapeClipping) {
-				// The portal host owns the release after this boundary hands off.
-				return;
-			}
-
 			// This is an abandonment fallback, not a second release. Run it on the UI
 			// runtime so it serializes with the handshake's guarded release.
 			runOnUI(releaseLifecycleStartBlock)();
 		};
 	}, [
 		claimLifecycleStartBlock,
-		escapeClipping,
 		canReceiveDestination,
 		releaseLifecycleStartBlock,
 	]);
@@ -247,12 +239,6 @@ export const useInitialDestinationMeasurement = ({
 				cancelAnimation(retryToken);
 				handshakeRetries.set(0);
 				hasFinishedInitialMeasurement.set(1);
-				if (escapeClipping) {
-					// Screen-level escape has a second readiness phase after destination
-					// matching: the host must commit before the transition starts, or
-					// the payload can disappear for a frame.
-					return;
-				}
 				releaseLifecycleStartBlock();
 				return;
 			}

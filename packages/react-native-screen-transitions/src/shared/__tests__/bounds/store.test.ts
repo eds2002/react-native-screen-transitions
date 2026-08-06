@@ -1,7 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
 import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
 import { resolvePortalOffsetStyle } from "../../components/boundary/portal/components/boundary-portal/helpers/offset-style";
-import { setPortalHostBounds } from "../../components/boundary/portal/components/boundary-portal/stores/host-bounds.store";
 import { BoundStore, type Snapshot } from "../../stores/bounds";
 import {
 	createPendingPairKey,
@@ -219,6 +218,7 @@ describe("applyMeasuredBoundsWrites", () => {
 			measured: source,
 			preparedStyles: { borderRadius: 16 },
 			handoff: true,
+			escapeClipping: true,
 			linkWrite: {
 				type: "source",
 				pairKey,
@@ -231,6 +231,7 @@ describe("applyMeasuredBoundsWrites", () => {
 			measured: destination,
 			preparedStyles: { borderRadius: 20 },
 			handoff: true,
+			escapeClipping: true,
 			linkWrite: {
 				type: "destination",
 				pairKey,
@@ -241,9 +242,11 @@ describe("applyMeasuredBoundsWrites", () => {
 		expect(link?.source.bounds).toEqual(source);
 		expect(link?.source.styles).toEqual({ borderRadius: 16 });
 		expect(link?.source.handoff).toBe(true);
+		expect(link?.source.escapeClipping).toBe(true);
 		expect(link?.destination?.bounds).toEqual(destination);
 		expect(link?.destination?.styles).toEqual({ borderRadius: 20 });
 		expect(link?.destination?.handoff).toBe(true);
+		expect(link?.destination?.escapeClipping).toBeUndefined();
 	});
 
 	it("snapshots shared style values when links are measured", () => {
@@ -492,6 +495,31 @@ describe("BoundStore.link pair writes", () => {
 		expect(BoundStore.link.getSource(pendingPairKey, "1")?.bounds).toEqual(
 			createBounds(10, 10),
 		);
+	});
+
+	it("does not let destination measurement replace the active group member", () => {
+		const pairKey = createScreenPairKey("screen-a", "screen-b");
+
+		BoundStore.link.setDestination(
+			pairKey,
+			"1",
+			"screen-b",
+			createBounds(20, 20),
+			{},
+			"colors",
+		);
+		BoundStore.link.setActiveGroupId(pairKey, "colors", "2");
+		BoundStore.link.setDestination(
+			pairKey,
+			"1",
+			"screen-b",
+			createBounds(30, 30),
+			{},
+			"colors",
+		);
+
+		expect(BoundStore.link.getActiveGroupId(pairKey, "colors")).toBe("2");
+		expect(pairs.get()[pairKey].groups.colors.initialId).toBe("1");
 	});
 
 	it("parses concrete group tags to the member id for link access", () => {
@@ -759,19 +787,10 @@ describe("BoundsAccessor", () => {
 	});
 
 	it("can resolve portal host offsets without scroll compensation", () => {
-		setPortalHostBounds("screen-a", {
-			...createBounds(4, -102, 370, 0),
-			scroll: createScrollLayout(5, 100),
-		});
-
 		expect(
 			resolvePortalOffsetStyle({
-				hostKey: "screen-a",
-				placement: "cross-screen",
-				bounds: {
-					...createBounds(40, 220, 100, 80),
-					scroll: createScrollLayout(20, 150),
-				} as any,
+				bounds: createBounds(40, 220, 100, 80),
+				hostBounds: createBounds(4, -102, 370, 0),
 			}),
 		).toEqual({
 			transform: [{ translateY: 322 }, { translateX: 36 }],
@@ -779,16 +798,10 @@ describe("BoundsAccessor", () => {
 	});
 
 	it("does not compensate portal host offsets from destination live scroll", () => {
-		setPortalHostBounds("screen-b-host", {
-			...createBounds(4, -102, 370, 0),
-			scroll: createScrollLayout(5, 100),
-		});
-
 		expect(
 			resolvePortalOffsetStyle({
-				hostKey: "screen-b-host",
-				placement: "cross-screen",
 				bounds: createBounds(40, 220, 100, 80),
+				hostBounds: createBounds(4, -102, 370, 0),
 			}),
 		).toEqual({
 			transform: [{ translateY: 322 }, { translateX: 36 }],

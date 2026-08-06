@@ -85,6 +85,8 @@ export interface GestureContextType {
 export interface ScreenGestureParticipation {
 	/** Whether this route is the first route in its stack. First routes never track gestures. */
 	isFirstKey: boolean;
+	/** Whether React Navigation currently blocks removal of this route. */
+	isRemovePrevented: boolean;
 	/** Whether this route can dismiss to progress 0 from a gesture release. */
 	canDismiss: boolean;
 	/** Whether recognizers can activate to expose gesture values to interpolators. */

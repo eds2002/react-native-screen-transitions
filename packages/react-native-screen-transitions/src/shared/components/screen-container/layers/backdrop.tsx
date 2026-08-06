@@ -1,6 +1,6 @@
 import { type ComponentType, memo, useCallback, useMemo } from "react";
 import { Pressable, StyleSheet } from "react-native";
-import Animated, { runOnUI } from "react-native-reanimated";
+import Animated, { runOnJS, runOnUI } from "react-native-reanimated";
 import { DefaultSnapSpec } from "../../../configs/specs";
 import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
@@ -23,7 +23,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 	backdropBehavior: BackdropBehavior;
 	isBackdropActive: boolean;
 }) {
-	const { dismissScreen } = useNavigationHelpers();
+	const { isRemovePrevented, requestDismiss } = useNavigationHelpers();
 
 	const routeKey = useDescriptorsStore(
 		(store) => store.derivations.currentScreenKey,
@@ -34,9 +34,10 @@ export const BackdropLayer = memo(function BackdropLayer({
 	const rawSnapPoints = useDescriptorsStore(
 		(store) => store.options.snapPoints,
 	);
-	const canDismiss = useDescriptorsStore(
+	const isGestureDismissEnabled = useDescriptorsStore(
 		(store) => store.options.gestureEnabled !== false,
 	);
+	const canDismiss = isGestureDismissEnabled && !isRemovePrevented;
 	const transitionSpec = useDescriptorsStore(
 		(store) => store.options.transitionSpec,
 	);
@@ -56,14 +57,14 @@ export const BackdropLayer = memo(function BackdropLayer({
 
 	const handleBackdropPress = useCallback(() => {
 		if (backdropBehavior === "dismiss") {
-			dismissScreen();
+			requestDismiss();
 			return;
 		}
 
 		if (backdropBehavior === "collapse") {
 			// No snap points → fallback to dismiss
 			if (!rawSnapPoints || rawSnapPoints.length === 0) {
-				dismissScreen();
+				requestDismiss();
 				return;
 			}
 
@@ -108,8 +109,11 @@ export const BackdropLayer = memo(function BackdropLayer({
 					animations,
 					targetProgress,
 					animationProgress,
-					onAnimationFinish: shouldDismiss ? dismissScreen : undefined,
 				});
+
+				if (shouldDismiss) {
+					runOnJS(requestDismiss)();
+				}
 			})();
 		}
 	}, [
@@ -121,7 +125,7 @@ export const BackdropLayer = memo(function BackdropLayer({
 		rawSnapPoints,
 		canDismiss,
 		transitionSpec,
-		dismissScreen,
+		requestDismiss,
 		routeKey,
 	]);
 

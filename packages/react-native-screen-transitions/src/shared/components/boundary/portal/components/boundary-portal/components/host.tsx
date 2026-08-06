@@ -8,7 +8,6 @@ import {
 } from "react-native";
 import Animated from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
-import { useScreenSlots } from "../../../../../../providers/screen/styles";
 import { PORTAL_POINTER_EVENTS } from "../../../teleport";
 import { useHostMeasurement } from "../hooks/use-host-measurement";
 import { registerHost, unregisterHost } from "../stores/host-registry.store";
@@ -34,20 +33,17 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 	}
 
 	const hostKey = fallback ? screenKey : generatedHostKeyRef.current;
-	const capturesScroll = !fallback;
 	const activeBoundaryHosts = useActivePortalBoundaryHosts(hostKey);
-	const { visibilityBlocked } = useScreenSlots();
+
 	const { height: viewportHeight, width: viewportWidth } =
 		useWindowDimensions();
 
+	const measurementKey = activeBoundaryHosts.length
+		? activeBoundaryHosts.map((host) => host.portalHostName).join("|")
+		: null;
+
 	const measurement = useHostMeasurement({
-		capturesScroll,
-		enabled: activeBoundaryHosts.length > 0,
-		hostKey,
-		screenKey,
-		visibilityBlocked,
-		viewportHeight,
-		viewportWidth,
+		measurementKey,
 	});
 
 	useLayoutEffect(() => {
@@ -71,7 +67,13 @@ function HostImpl({ fallback = false, style }: HostImplProps) {
 				{ width: viewportWidth, height: viewportHeight },
 			]}
 		>
-			<PortalBoundaryHost host={host} style={StyleSheet.absoluteFill} />
+			<PortalBoundaryHost
+				host={host}
+				hostBounds={measurement.hostBounds}
+				hostMeasurementKey={measurementKey}
+				measuredHostKey={measurement.measuredKey}
+				style={StyleSheet.absoluteFill}
+			/>
 		</View>
 	));
 

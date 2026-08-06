@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
-import { useAnimatedRef } from "react-native-reanimated";
+import { useAnimatedRef, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import {
 	useComposedSlotStyles,
@@ -19,7 +19,7 @@ import { createBoundTag } from "../../../stores/bounds/helpers/link-pairs.helper
 import type { BoundTag } from "../../../stores/bounds/types";
 import createProvider from "../../../utils/create-provider";
 import { logger } from "../../../utils/logger";
-import { useBoundaryMeasurement } from "../hooks/use-boundary-measurement";
+import { BoundaryLifecycle } from "../components/boundary-lifecycle";
 import {
 	type BoundaryPortalRuntime,
 	resolveBoundaryPortal,
@@ -27,6 +27,8 @@ import {
 import type {
 	BoundaryConfigProps,
 	BoundaryId,
+	BoundaryLocalMeasurement,
+	BoundaryLocalMeasurementValue,
 	BoundaryOwnProps,
 } from "../types";
 
@@ -44,6 +46,7 @@ export type BoundaryRootRenderState = {
 	boundTag: BoundTag;
 	currentScreenKey: string;
 	handoffEnabled: boolean;
+	localMeasurement: BoundaryLocalMeasurementValue;
 	measurementRef: AnimatedRef<View>;
 	portalRuntime: BoundaryPortalRuntime;
 	ref: AnimatedRef<View>;
@@ -96,7 +99,9 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 			(s) => s.derivations.currentScreenKey,
 		);
 		const isCurrentScreenClosing = useBlankStackStore(
-			(store) => store?.scenesByKey[currentScreenKey]?.activity === "closing",
+			(store) =>
+				portalRuntime.handoff &&
+				store?.scenesByKey[currentScreenKey]?.activity === "closing",
 		);
 		const retainedBoundTagRef = useRef(requestedBoundTag);
 		const shouldRetainClosingBoundTag =
@@ -110,10 +115,6 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 		}
 
 		const boundTag = retainedBoundTagRef.current;
-		const hasConfiguredInterpolator = useDescriptorsStore(
-			(s) => s.derivations.hasConfiguredInterpolator,
-		);
-		const runtimeEnabled = enabled && hasConfiguredInterpolator;
 		// Associated slot styles attach whenever the boundary is enabled,
 		// independent of whether an interpolator is configured for this transition.
 		const shouldAttachAssociatedStyles = enabled;
@@ -123,6 +124,9 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
 		const rootRef = useAnimatedRef<View>();
 		const measurementRef = useAnimatedRef<View>();
+		const localMeasurement = useSharedValue<BoundaryLocalMeasurement | null>(
+			null,
+		);
 
 		useLayoutEffect(() => {
 			if (__DEV__ && targetCount > 1) {
@@ -136,18 +140,6 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 				: rootRef;
 
 		useImperativeHandle(forwardedRef, () => rootRef.current as any, [rootRef]);
-
-		useBoundaryMeasurement({
-			boundTag,
-			enabled,
-			runtimeEnabled,
-			currentScreenKey,
-			measuredRef,
-			style: hasTarget ? targetStyle : style,
-			handoff: portalRuntime.handoff,
-			escapeClipping: portalRuntime.escapeClipping,
-			config,
-		});
 
 		const shouldRenderBoundaryRootThroughPortal =
 			shouldEscapeBoundaryRootToScreenHost && !hasTarget;
@@ -173,6 +165,7 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 				boundTag,
 				currentScreenKey,
 				handoffEnabled,
+				localMeasurement,
 				measurementRef,
 				portalRuntime,
 				ref: rootRef,
@@ -185,6 +178,7 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 				currentScreenKey,
 				handoffEnabled,
 				hasTarget,
+				localMeasurement,
 				measurementRef,
 				portalRuntime,
 				rootRef,
@@ -194,7 +188,22 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 
 		return {
 			value,
-			children: children(value),
+			children: (
+				<>
+					{children(value)}
+					<BoundaryLifecycle
+						boundTag={boundTag}
+						config={config}
+						currentScreenKey={currentScreenKey}
+						enabled={enabled}
+						escapeClipping={portalRuntime.escapeClipping}
+						handoff={portalRuntime.handoff}
+						localMeasurement={localMeasurement}
+						measuredRef={measuredRef}
+						style={hasTarget ? targetStyle : style}
+					/>
+				</>
+			),
 		};
 	},
 );

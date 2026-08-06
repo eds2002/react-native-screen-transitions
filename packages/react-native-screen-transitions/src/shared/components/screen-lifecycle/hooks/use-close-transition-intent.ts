@@ -1,6 +1,7 @@
-/** biome-ignore-all lint/correctness/useHookAtTopLevel: STACK_TYPE is stable per navigator */
 import { useLayoutEffect, useMemo, useRef } from "react";
+import { useNavigationHelpers } from "../../../hooks/navigation/use-navigation-helpers";
 import useStableCallback from "../../../hooks/use-stable-callback";
+import { hasTransitionsEnabled } from "../../../providers/screen/animation/helpers/has-transitions-enabled";
 import {
 	type BaseDescriptor,
 	useDescriptorsStore,
@@ -8,68 +9,34 @@ import {
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
 import { useStackCoreStore } from "../../../providers/stack/core.provider";
 import { GestureStore } from "../../../stores/gesture.store";
-import {
-	LifecycleTransitionRequestKind,
-	type SystemStoreActions,
-	type SystemStoreMap,
-} from "../../../stores/system.store";
 import { StackType } from "../../../types/stack.types";
+import {
+	dispatchCloseAction,
+	isCloseActionReplay,
+} from "../../../utils/navigation/close-action-replay";
+import {
+	doesNavigatorOwnCloseAction,
+	shouldInterceptClose,
+} from "./helpers/close-interception-rules";
 import { resetStoresForScreen } from "./helpers/reset-stores-for-screen";
 
-interface CloseHookParams {
-	current: BaseDescriptor;
-	requestLifecycleTransition: SystemStoreActions["requestLifecycleTransition"];
-	resetStores: () => void;
-}
-
-const useBlankStackClose = ({
-	current,
-	requestLifecycleTransition,
-	resetStores,
-}: CloseHookParams) => {
+export function useCloseTransitionIntent(current: BaseDescriptor): {
+	completeClose: () => void;
+} {
+	const routeKey = current.route.key;
+	const { STACK_TYPE: stackType, TRANSITIONS_ALWAYS_ON: transitionsAlwaysOn } =
+		useStackCoreStore((store) => store.flags);
 	const handleCloseRoute = useBlankStackStore(
 		(store) => store?.handleCloseRoute,
 	);
-	const isClosing = useBlankStackStore(
-		(store) => store?.scenesByKey[current.route.key]?.activity === "closing",
+	const isBlankStackClosing = useBlankStackStore(
+		(store) => store?.scenesByKey[routeKey]?.activity === "closing",
 	);
-
-	useLayoutEffect(() => {
-		if (!isClosing) {
-			return;
-		}
-
-		requestLifecycleTransition(
-			LifecycleTransitionRequestKind.BlankStackClose,
-			0,
-		);
-	}, [isClosing, requestLifecycleTransition]);
-
-	const handleBlankStackCloseEnd = useStableCallback((finished: boolean) => {
-		if (!finished) return;
-		if (!handleCloseRoute) {
-			throw new Error("Blank stack close handler was not found.");
-		}
-		handleCloseRoute({ route: current.route });
-		requestAnimationFrame(() => {
-			resetStores();
-		});
-	});
-
-	return { handleBlankStackCloseEnd };
-};
-
-/**
- * Native stack close - listens to beforeRemove navigation event.
- */
-const useNativeStackClose = ({
-	current,
-	requestLifecycleTransition,
-	resetStores,
-}: CloseHookParams) => {
-	const parentScreenKey = useDescriptorsStore(
-		(store) => store.derivations.parentScreenKey,
+	const ancestorKeys = useDescriptorsStore(
+		(store) => store.derivations.ancestorKeys,
 	);
+	const parentScreenKey = ancestorKeys[0];
+	const { dismissScreen, requestDismiss } = useNavigationHelpers();
 	const pendingActionRef = useRef<any>(null);
 
 	const nearestAncestorDismissing = useMemo(() => {
@@ -78,38 +45,62 @@ const useNativeStackClose = ({
 		return GestureStore.peekBag(parentScreenKey)?.dismissing ?? null;
 	}, [parentScreenKey]);
 
-	const handleNativeCloseEnd = useStableCallback((finished: boolean) => {
-		if (!finished || !pendingActionRef.current) {
+	useLayoutEffect(() => {
+		if (isBlankStackClosing) {
+			requestDismiss();
+		}
+	}, [isBlankStackClosing, requestDismiss]);
+
+	const completeClose = useStableCallback(() => {
+		const pendingAction = pendingActionRef.current;
+		pendingActionRef.current = null;
+
+		if (pendingAction) {
+			dispatchCloseAction(pendingAction, (action) => {
+				current.navigation.dispatch(action);
+			});
+		} else if (stackType !== StackType.NATIVE && handleCloseRoute) {
+			handleCloseRoute({ route: current.route });
+		} else {
+			dismissScreen();
+		}
+
+		resetStoresForScreen(routeKey);
+	});
+
+	const handleBeforeRemove = useStableCallback((event: any) => {
+		if (isCloseActionReplay(event.data.action)) {
+			return;
+		}
+
+		const state = current.navigation.getState();
+		const routeIndex = state.routes.findIndex(
+			(route) => route.key === routeKey,
+		);
+		const action = event.data.action;
+		const ownsAction = doesNavigatorOwnCloseAction({
+			state,
+			action,
+		});
+		const shouldIntercept = shouldInterceptClose({
+			enabled: hasTransitionsEnabled(current.options, transitionsAlwaysOn),
+			ownsAction,
+			ancestorDismissing: !!nearestAncestorDismissing?.get(),
+			routeIndex,
+			focusedIndex: state.index,
+		});
+
+		if (!shouldIntercept) {
+			return;
+		}
+
+		pendingActionRef.current ??= event.data.action;
+		if (!requestDismiss()) {
 			pendingActionRef.current = null;
 			return;
 		}
 
-		current.navigation.dispatch(pendingActionRef.current);
-		pendingActionRef.current = null;
-		requestAnimationFrame(() => {
-			resetStores();
-		});
-	});
-
-	const handleBeforeRemove = useStableCallback((e: any) => {
-		const options = current.options as { enableTransitions?: boolean };
-		const isEnabled = options.enableTransitions;
-		const navigation = current.navigation;
-		const routeKey = current.route.key;
-		const state = navigation.getState();
-		const routeIndex = state.routes.findIndex(
-			(route) => route.key === routeKey,
-		);
-		const isFirstScreen = routeIndex <= 0;
-
-		if (!isEnabled || nearestAncestorDismissing?.get() || isFirstScreen) {
-			resetStores();
-			return;
-		}
-
-		e.preventDefault();
-		pendingActionRef.current = e.data.action;
-		requestLifecycleTransition(LifecycleTransitionRequestKind.NativeClose, 0);
+		event.preventDefault();
 	});
 
 	// biome-ignore lint/correctness/useExhaustiveDependencies: navigation listener should only rebind when the navigator instance changes
@@ -117,37 +108,5 @@ const useNativeStackClose = ({
 		return current.navigation.addListener?.("beforeRemove", handleBeforeRemove);
 	}, [current.navigation]);
 
-	return { handleNativeCloseEnd };
-};
-
-/**
- * Handles close transition intent and returns finish callbacks for cleanup.
- */
-export function useCloseTransitionIntent(
-	current: BaseDescriptor,
-	system: SystemStoreMap,
-): {
-	handleBlankStackCloseEnd?: (finished: boolean) => void;
-	handleNativeCloseEnd?: (finished: boolean) => void;
-} {
-	const routeKey = current.route.key;
-	const stackType = useStackCoreStore((store) => store.flags.STACK_TYPE);
-	const isNativeStack = stackType === StackType.NATIVE;
-	const { requestLifecycleTransition } = system.actions;
-
-	const resetStores = useStableCallback(() => {
-		resetStoresForScreen(routeKey);
-	});
-
-	const closeParams: CloseHookParams = {
-		current,
-		requestLifecycleTransition,
-		resetStores,
-	};
-
-	if (isNativeStack) {
-		return useNativeStackClose(closeParams);
-	}
-
-	return useBlankStackClose(closeParams);
+	return { completeClose };
 }
