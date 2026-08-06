@@ -1,0 +1,42 @@
+---
+title: "New in 3.11.3"
+pageTitle: "New in 3.11.3"
+summary: "v3.11.3 fixes grouped Boundary retargeting, escaped sources in long lists, and dismissal lifecycle conflicts."
+description: "v3.11.3 fixes grouped Boundary retargeting, escaped sources in long lists, and dismissal lifecycle conflicts."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "August 2026"
+order: -2
+to: /changelog/updating-to-3-11-3
+---
+
+## Grouped boundaries follow the active ID
+
+Changing the active ID in a Boundary group now refreshes the matching measurements before the next transition.
+
+This fixes flows where a destination can move between related items, such as swiping from one photo to the next before dismissing. The close transition now returns to the source for the current item instead of using measurements left over from the item that opened the screen.
+
+Existing `id` and `group` usage stays the same.
+
+## Escaped sources use local measurements
+
+`escapeClipping` now positions its source portal from measurements owned by the Boundary itself. It no longer depends on shared host bounds or a transition-aware scroll container to reconstruct the source position.
+
+The old path could become stale in long or virtualized lists after scrolling. A source might animate from an earlier host position, remain clipped, or disappear while closing. Local measurements keep the escaped source attached to the visible Boundary and let it move with its host.
+
+<Note>
+  `escapeClipping` is now intended primarily for source boundaries. If you need it on a destination boundary, please [open a GitHub discussion](https://github.com/eds2002/react-native-screen-transitions/discussions) with details about your use case.
+</Note>
+
+Boundary measurement now runs in a separate lifecycle component, so refreshing a measurement does not also update the Boundary's children.
+
+## One dismissal lifecycle
+
+Gesture and programmatic dismissal now use the same soft-dismiss path. Navigation removal happens after the screen has entered its closing state and animation progress reaches zero.
+
+Previously, gesture completion and programmatic navigation could finish through separate callbacks. In some flows that produced a visible stutter, removed a route before its animation had finished, or left lifecycle state behind for the next transition.
+
+The unified path also preserves navigation actions that need to be replayed after the visual close. Regular back actions, blank-stack dismissal, and gesture dismissal now finish through the same lifecycle listener.
+
+No migration is required.

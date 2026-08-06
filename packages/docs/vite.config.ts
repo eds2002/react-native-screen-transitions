@@ -89,6 +89,12 @@ export default defineConfig({
 			include: /\.(mdx|js|jsx|ts|tsx)$/,
 		}),
 		tailwindcss(),
-		netlify(),
+		netlify({
+			dev: {
+				// The production SSR handler is generated in this directory during a
+				// build. Do not let a previous build intercept Vite's dev server.
+				functions: { enabled: false },
+			},
+		}),
 	],
 });
