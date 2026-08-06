@@ -34,11 +34,9 @@ const containsRouteKey = (
 export const doesNavigatorOwnCloseAction = ({
 	state,
 	action,
-	isNested,
 }: {
 	state: NavigationStateLike;
 	action: NavigationActionLike;
-	isNested: boolean;
 }): boolean => {
 	if (typeof action.target === "string") {
 		return action.target === state.key;
@@ -48,7 +46,7 @@ export const doesNavigatorOwnCloseAction = ({
 		return containsRouteKey(state.routes, action.source);
 	}
 
-	return !isNested;
+	return true;
 };
 
 /** Only the focused removable route owns a stack close transition. */

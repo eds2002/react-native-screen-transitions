@@ -7,7 +7,6 @@ import {
 import type { View } from "react-native";
 import Animated, { type AnimatedRef, runOnUI } from "react-native-reanimated";
 import { logger } from "../../../../../utils/logger";
-import type { BoundaryLocalMeasurementValue } from "../../../types";
 import {
 	isTeleportAvailable,
 	PORTAL_POINTER_EVENTS,
@@ -36,7 +35,6 @@ type BoundaryPortalProps = {
 	boundaryId: string;
 	children: ReactNode;
 	enabled: boolean;
-	localMeasurement?: BoundaryLocalMeasurementValue;
 	placeholderRef?: AnimatedRef<View>;
 };
 
@@ -44,22 +42,15 @@ export const BoundaryPortal = memo(function BoundaryPortal({
 	boundaryId,
 	children,
 	enabled,
-	localMeasurement,
 	placeholderRef,
 }: BoundaryPortalProps) {
-	if (
-		!enabled ||
-		!localMeasurement ||
-		!isTeleportAvailable ||
-		!AnimatedNativePortal
-	) {
+	if (!enabled || !isTeleportAvailable || !AnimatedNativePortal) {
 		return children;
 	}
 
 	return (
 		<EnabledBoundaryPortal
 			boundaryId={boundaryId}
-			localMeasurement={localMeasurement}
 			placeholderRef={placeholderRef}
 		>
 			{children}
@@ -70,11 +61,8 @@ export const BoundaryPortal = memo(function BoundaryPortal({
 const EnabledBoundaryPortal = memo(function EnabledBoundaryPortal({
 	boundaryId,
 	children,
-	localMeasurement,
 	placeholderRef,
-}: Omit<BoundaryPortalProps, "enabled" | "localMeasurement"> & {
-	localMeasurement: BoundaryLocalMeasurementValue;
-}) {
+}: Omit<BoundaryPortalProps, "enabled">) {
 	if (__DEV__ && !boundaryId) {
 		logger.warnOnce(
 			"portal:missing-id",
@@ -82,10 +70,7 @@ const EnabledBoundaryPortal = memo(function EnabledBoundaryPortal({
 		);
 	}
 
-	const { teleportProps } = useBoundaryPortalAttachment({
-		boundaryId,
-		localMeasurement,
-	});
+	const { teleportProps } = useBoundaryPortalAttachment({ boundaryId });
 
 	const { handleOnLayout, placeholderStyle } = usePlaceholderStyles();
 

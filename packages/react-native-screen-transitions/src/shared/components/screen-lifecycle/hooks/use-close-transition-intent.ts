@@ -81,7 +81,6 @@ export function useCloseTransitionIntent(current: BaseDescriptor): {
 		const ownsAction = doesNavigatorOwnCloseAction({
 			state,
 			action,
-			isNested: ancestorKeys.length > 0,
 		});
 		const shouldIntercept = shouldInterceptClose({
 			enabled: hasTransitionsEnabled(current.options, transitionsAlwaysOn),

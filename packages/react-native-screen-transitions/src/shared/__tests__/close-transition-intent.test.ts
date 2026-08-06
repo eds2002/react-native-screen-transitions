@@ -87,27 +87,20 @@ describe("close transition intent", () => {
 			doesNavigatorOwnCloseAction({
 				state: childState,
 				action: { source: "parent-b" },
-				isNested: true,
 			}),
 		).toBe(false);
 		expect(
 			doesNavigatorOwnCloseAction({
 				state: parentState,
 				action: { source: "child-a" },
-				isNested: false,
 			}),
 		).toBe(true);
 	});
 
-	it("leaves untargeted navigation-ref actions to the root navigator", () => {
+	it("claims an untargeted action delivered to the route", () => {
 		const state = { key: "stack", routes: [{ key: "a" }, { key: "b" }] };
 
-		expect(
-			doesNavigatorOwnCloseAction({ state, action: {}, isNested: true }),
-		).toBe(false);
-		expect(
-			doesNavigatorOwnCloseAction({ state, action: {}, isNested: false }),
-		).toBe(true);
+		expect(doesNavigatorOwnCloseAction({ state, action: {} })).toBe(true);
 	});
 
 	it("treats an explicit navigator target as authoritative", () => {
@@ -117,14 +110,12 @@ describe("close transition intent", () => {
 			doesNavigatorOwnCloseAction({
 				state,
 				action: { source: "outside", target: "stack" },
-				isNested: true,
 			}),
 		).toBe(true);
 		expect(
 			doesNavigatorOwnCloseAction({
 				state,
 				action: { source: "b", target: "other-stack" },
-				isNested: false,
 			}),
 		).toBe(false);
 	});
