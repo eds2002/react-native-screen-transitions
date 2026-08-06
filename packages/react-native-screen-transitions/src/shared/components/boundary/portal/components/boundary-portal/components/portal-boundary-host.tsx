@@ -1,4 +1,4 @@
-import { memo, useCallback } from "react";
+import { memo } from "react";
 import {
 	I18nManager,
 	type StyleProp,
@@ -6,97 +6,86 @@ import {
 	type ViewStyle,
 } from "react-native";
 import Animated, {
+	type MeasuredDimensions,
+	type SharedValue,
+	useAnimatedReaction,
 	useAnimatedStyle,
-	useFrameCallback,
-	useSharedValue,
 } from "react-native-reanimated";
 import { NO_STYLES } from "../../../../../../constants";
 import { composeSlotStyleWithLocalTransform } from "../../../../../../providers/screen/styles/helpers/compose-slot-style";
-import { getLink } from "../../../../../../stores/bounds/internals/links";
-import { SystemStore } from "../../../../../../stores/system.store";
-import type { ScrollMeasuredDimensions } from "../../../../utils/measured-bounds";
 import { NativePortalHost, PORTAL_POINTER_EVENTS } from "../../../teleport";
+import { resolveBoundaryLocalMeasurement } from "../helpers/local-measurement";
 import { resolvePortalOffsetStyle } from "../helpers/offset-style";
-import { getPortalHostBounds } from "../stores/host-bounds.store";
 import type { ActivePortalBoundaryHost } from "../stores/portal-boundary-host.store";
 
 const AnimatedPortalBoundaryHost = NativePortalHost
 	? Animated.createAnimatedComponent(NativePortalHost)
 	: null;
 
+const getCurrentBoundaryBounds = (host: ActivePortalBoundaryHost) => {
+	"worklet";
+	return resolveBoundaryLocalMeasurement(
+		host.localMeasurement.get(),
+		host.pairKey,
+	);
+};
+
 type PortalBoundaryHostProps = {
 	host: ActivePortalBoundaryHost;
+	hostBounds: SharedValue<MeasuredDimensions | null>;
+	hostMeasurementKey: string | null;
+	measuredHostKey: SharedValue<string | null>;
 	style?: StyleProp<ViewStyle>;
 };
 
 export const PortalBoundaryHost = memo(function PortalBoundaryHost({
 	host,
+	hostBounds,
+	hostMeasurementKey,
+	measuredHostKey,
 	style,
 }: PortalBoundaryHostProps) {
-	const geometryReadyFrames = useSharedValue(0);
-	const { unblockLifecycleStart } = SystemStore.getBag(host.screenKey).actions;
-
-	const handleFrame = useCallback(() => {
-		"worklet";
-		if (host.portalHostReady.get()) {
-			return;
-		}
-
-		const link = getLink(host.pairKey, host.boundaryId);
-		const hasSource = !!link?.source;
-		const hasHostBounds = getPortalHostBounds(host.hostKey) !== null;
-		const hasSlot = host.slotsMap.get()[host.boundaryId] !== undefined;
-		const hasGeometry = hasSource && hasHostBounds && hasSlot;
-
-		if (!hasGeometry) {
-			geometryReadyFrames.set(0);
-			return;
-		}
-
-		if (geometryReadyFrames.get() === 0) {
-			// Give the source frame, host offset, and slot style one UI frame to
-			// reach native before Teleport targets this receiver.
-			geometryReadyFrames.set(1);
-			return;
-		}
-
-		host.portalHostReady.set(true);
-		unblockLifecycleStart();
-	}, [geometryReadyFrames, host, unblockLifecycleStart]);
-
-	useFrameCallback(handleFrame, true);
+	useAnimatedReaction(
+		() => {
+			"worklet";
+			return (
+				getCurrentBoundaryBounds(host) !== null &&
+				hostBounds.get() !== null &&
+				!!hostMeasurementKey &&
+				measuredHostKey.get() === hostMeasurementKey
+			);
+		},
+		(ready) => {
+			"worklet";
+			if (ready) {
+				host.portalHostReady.set(true);
+			}
+		},
+	);
 
 	const hostStyle = useAnimatedStyle(() => {
 		"worklet";
-		// Strict per-member lookup - a fallback member's source rect would
-		// misplace this host's teleported content.
-		const link = getLink(host.pairKey, host.boundaryId);
-		if (!link?.source) {
+		const boundaryBounds = getCurrentBoundaryBounds(host);
+		if (!boundaryBounds) {
 			return NO_STYLES;
 		}
 
-		const sourceBounds = link.source.bounds as ScrollMeasuredDimensions;
-		const isCrossScreenPortal = link.source.screenKey !== host.screenKey;
-
 		return resolvePortalOffsetStyle({
-			bounds: sourceBounds,
-			hostKey: host.hostKey,
-			placement: isCrossScreenPortal ? "cross-screen" : "same-screen",
+			bounds: boundaryBounds,
+			hostBounds: hostBounds.get(),
 		});
 	});
 
 	const contentFrameStyle = useAnimatedStyle(() => {
 		"worklet";
-		const link = getLink(host.pairKey, host.boundaryId);
-		if (!link?.source) {
+		const boundaryBounds = getCurrentBoundaryBounds(host);
+		if (!boundaryBounds) {
 			return NO_STYLES;
 		}
 
-		const sourceBounds = link.source.bounds as ScrollMeasuredDimensions;
-
 		return {
-			height: sourceBounds.height,
-			width: sourceBounds.width,
+			height: boundaryBounds.height,
+			width: boundaryBounds.width,
 		};
 	});
 	const slotStyle = useAnimatedStyle(() => {

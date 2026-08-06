@@ -67,7 +67,7 @@ export const applyMeasuredBoundsWrites = (
 			measured,
 			preparedStyles,
 			group,
-			{ handoff, escapeClipping },
+			{ handoff },
 		);
 	}
 };

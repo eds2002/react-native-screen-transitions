@@ -3,7 +3,10 @@ import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { prepareStyleForBounds } from "../../../utils/bounds/helpers/styles/styles";
-import type { BoundaryConfigProps } from "../types";
+import type {
+	BoundaryConfigProps,
+	BoundaryLocalMeasurementValue,
+} from "../types";
 import { useBoundaryPresence } from "./lifecycles/use-boundary-presence";
 import { useInitialDestinationMeasurement } from "./lifecycles/use-initial-destination-measurement";
 import { useInitialSourceMeasurement } from "./lifecycles/use-initial-source-measurement";
@@ -23,6 +26,7 @@ interface UseBoundaryMeasurementParams {
 	style?: unknown;
 	handoff: boolean;
 	escapeClipping: boolean;
+	localMeasurement: BoundaryLocalMeasurementValue;
 	config: BoundaryConfigProps;
 }
 
@@ -40,6 +44,7 @@ export const useBoundaryMeasurement = ({
 	style,
 	handoff,
 	escapeClipping,
+	localMeasurement,
 	config,
 }: UseBoundaryMeasurementParams) => {
 	const { anchor, scaleMode, target, method } = config;
@@ -58,6 +63,7 @@ export const useBoundaryMeasurement = ({
 		measuredAnimatedRef: measuredRef,
 		handoff,
 		escapeClipping,
+		localMeasurement,
 	});
 
 	// Presence and source capture must not depend on this screen owning an
@@ -81,7 +87,6 @@ export const useBoundaryMeasurement = ({
 	useInitialDestinationMeasurement({
 		boundTag,
 		enabled: runtimeEnabled,
-		escapeClipping,
 		measureBoundary,
 	});
 

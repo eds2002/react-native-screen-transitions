@@ -1,61 +1,37 @@
-import { useLayoutEffect } from "react";
 import type { View } from "react-native";
 import {
 	cancelAnimation,
+	type MeasuredDimensions,
 	measure,
-	runOnUI,
-	type SharedValue,
 	useAnimatedReaction,
 	useAnimatedRef,
 	useSharedValue,
 	withDelay,
 	withTiming,
 } from "react-native-reanimated";
-import { ScrollStore } from "../../../../../../stores/scroll.store";
-import { getVisibilityBlockOffset } from "../../../../../../utils/visibility-block-offset";
-import {
-	adjustedMeasuredBoundsForOverscrollDeltas,
-	correctMeasuredBoundsForVisibilityGate,
-} from "../../../../utils/measured-bounds";
-import {
-	clearPortalHostBounds,
-	setPortalHostBounds,
-} from "../stores/host-bounds.store";
 
 const HOST_MEASUREMENT_RETRY_DELAY_MS = 16;
 
 type UseHostMeasurementParams = {
-	capturesScroll: boolean;
-	enabled: boolean;
-	hostKey: string;
-	screenKey: string;
-	visibilityBlocked: SharedValue<boolean>;
-	viewportHeight: number;
-	viewportWidth: number;
+	measurementKey: string | null;
 };
 
 export const useHostMeasurement = ({
-	capturesScroll,
-	enabled,
-	hostKey,
-	screenKey,
-	visibilityBlocked,
-	viewportHeight,
-	viewportWidth,
+	measurementKey,
 }: UseHostMeasurementParams) => {
 	const hostRef = useAnimatedRef<View>();
-	const scrollMetadata = ScrollStore.getValue(screenKey, "metadata");
-	const hasMeasuredHost = useSharedValue(false);
+	const hostBounds = useSharedValue<MeasuredDimensions | null>(null);
+	const measuredKey = useSharedValue<string | null>(null);
 	const retryToken = useSharedValue(0);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			if (!enabled) {
+			if (!measurementKey) {
 				return null;
 			}
 
-			return [hasMeasuredHost.get(), retryToken.get()] as const;
+			return [measurementKey, measuredKey.get(), retryToken.get()] as const;
 		},
 		(state) => {
 			"worklet";
@@ -64,9 +40,8 @@ export const useHostMeasurement = ({
 				return;
 			}
 
-			const [hasAlreadyMeasured] = state;
-
-			if (!enabled || hasAlreadyMeasured) {
+			const [requestedKey, completedKey] = state;
+			if (requestedKey === completedKey) {
 				return;
 			}
 
@@ -85,23 +60,7 @@ export const useHostMeasurement = ({
 
 			cancelAnimation(retryToken);
 
-			// A measurement taken mid rubber-band would bake the transient
-			// overscroll displacement into the host frame. Store the at-rest
-			// position instead; clamped scroll deltas share that basis.
-			const currentScroll = scrollMetadata.get();
-			const overscrollNormalized = capturesScroll
-				? adjustedMeasuredBoundsForOverscrollDeltas(measured, currentScroll)
-				: measured;
-
-			const correctedMeasured = correctMeasuredBoundsForVisibilityGate({
-				measured: overscrollNormalized,
-				visibilityBlocked: visibilityBlocked.get(),
-				visibilityBlockOffset: getVisibilityBlockOffset(viewportHeight),
-				viewportWidth,
-				viewportHeight,
-			});
-
-			if (correctedMeasured.width <= 0 || correctedMeasured.height <= 0) {
+			if (measured.width <= 0 || measured.height <= 0) {
 				cancelAnimation(retryToken);
 				retryToken.set(
 					withDelay(
@@ -112,27 +71,21 @@ export const useHostMeasurement = ({
 				return;
 			}
 
-			setPortalHostBounds(hostKey, {
-				x: correctedMeasured.x,
-				y: correctedMeasured.y,
-				width: correctedMeasured.width,
-				height: correctedMeasured.height,
-				pageX: correctedMeasured.pageX,
-				pageY: correctedMeasured.pageY,
-				scroll: capturesScroll ? currentScroll : null,
+			hostBounds.set({
+				x: measured.x,
+				y: measured.y,
+				width: measured.width,
+				height: measured.height,
+				pageX: measured.pageX,
+				pageY: measured.pageY,
 			});
-
-			hasMeasuredHost.set(true);
+			measuredKey.set(requestedKey);
 		},
 	);
 
-	useLayoutEffect(() => {
-		return () => {
-			runOnUI(clearPortalHostBounds)(hostKey);
-		};
-	}, [hostKey]);
-
 	return {
+		hostBounds,
 		hostRef,
+		measuredKey,
 	};
 };

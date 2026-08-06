@@ -68,6 +68,7 @@ const BoundaryTargetInner = (props: InternalBoundaryTargetProps) => {
 		<BoundaryPortal
 			boundaryId={boundaryId ?? ""}
 			enabled={shouldEscapeTargetToScreenHost}
+			localMeasurement={rootContext?.localMeasurement}
 			placeholderRef={measurementRef}
 		>
 			<Animated.View
