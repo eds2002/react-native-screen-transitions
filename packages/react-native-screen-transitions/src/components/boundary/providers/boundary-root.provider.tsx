@@ -8,7 +8,7 @@ import {
 } from "react";
 import type { View } from "react-native";
 import type { AnimatedRef } from "react-native-reanimated";
-import { useAnimatedRef } from "react-native-reanimated";
+import { useAnimatedRef, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import {
 	useComposedSlotStyles,
@@ -27,6 +27,8 @@ import {
 import type {
 	BoundaryConfigProps,
 	BoundaryId,
+	BoundaryLocalMeasurement,
+	BoundaryLocalMeasurementValue,
 	BoundaryOwnProps,
 } from "../types";
 
@@ -44,6 +46,7 @@ export type BoundaryRootRenderState = {
 	boundTag: BoundTag;
 	currentScreenKey: string;
 	handoffEnabled: boolean;
+	localMeasurement: BoundaryLocalMeasurementValue;
 	measurementRef: AnimatedRef<View>;
 	portalRuntime: BoundaryPortalRuntime;
 	ref: AnimatedRef<View>;
@@ -121,6 +124,9 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 		const associatedStackingStyles = useSlotStackingStyles(boundTag.tag);
 		const rootRef = useAnimatedRef<View>();
 		const measurementRef = useAnimatedRef<View>();
+		const localMeasurement = useSharedValue<BoundaryLocalMeasurement | null>(
+			null,
+		);
 
 		useLayoutEffect(() => {
 			if (__DEV__ && targetCount > 1) {
@@ -159,6 +165,7 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 				boundTag,
 				currentScreenKey,
 				handoffEnabled,
+				localMeasurement,
 				measurementRef,
 				portalRuntime,
 				ref: rootRef,
@@ -171,6 +178,7 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 				currentScreenKey,
 				handoffEnabled,
 				hasTarget,
+				localMeasurement,
 				measurementRef,
 				portalRuntime,
 				rootRef,
@@ -190,6 +198,7 @@ export const { BoundaryRootProvider, useBoundaryRootStore } = createProvider(
 						enabled={enabled}
 						escapeClipping={portalRuntime.escapeClipping}
 						handoff={portalRuntime.handoff}
+						localMeasurement={localMeasurement}
 						measuredRef={measuredRef}
 						style={hasTarget ? targetStyle : style}
 					/>

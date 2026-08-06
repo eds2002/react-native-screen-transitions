@@ -73,7 +73,6 @@ describe("initial destination measurement lifecycle", () => {
 			useInitialDestinationMeasurement({
 				boundTag,
 				enabled: true,
-				escapeClipping: false,
 				measureBoundary: ({ pairKey: measuredPairKey }) => {
 					measurements.push(`${revision}:${measuredPairKey}`);
 					BoundStore.link.setDestination(

@@ -1,9 +1,10 @@
-import { useCallback, useLayoutEffect, useRef, useState } from "react";
+import { useCallback, useLayoutEffect, useState } from "react";
 import { type SharedValue, useAnimatedReaction } from "react-native-reanimated";
 import { scheduleOnRN } from "react-native-worklets";
 import { getPairKeyForSource } from "../../../../../../stores/bounds/internals/links";
 import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../../../types/animation.types";
+import type { BoundaryLocalMeasurementValue } from "../../../../types";
 import { createBoundaryPortalHostName } from "../../../utils/naming";
 import {
 	mountPortalBoundaryHost,
@@ -14,44 +15,39 @@ type UseActivePortalBoundaryHostParams = {
 	boundaryId: string;
 	currentScreenKey: string;
 	escapeHostKey?: string;
+	localMeasurement: BoundaryLocalMeasurementValue;
 	portalHostName: SharedValue<string | null>;
 	portalHostReady: SharedValue<boolean>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
-};
-
-type ActivePortal = {
-	pairKey: ScreenPairKey;
 };
 
 export const useActivePortalBoundaryHost = ({
 	boundaryId,
 	currentScreenKey,
 	escapeHostKey,
+	localMeasurement,
 	portalHostName,
 	portalHostReady,
 	slotsMap,
 }: UseActivePortalBoundaryHostParams) => {
-	const [activePortal, setActivePortal] = useState<ActivePortal | null>(null);
-	const activePairKeyRef = useRef<ScreenPairKey | null>(null);
+	const [activePairKey, setActivePairKey] = useState<ScreenPairKey | null>(
+		null,
+	);
 
-	const updateActivePortal = useCallback((pairKey: ScreenPairKey | null) => {
-		if (activePairKeyRef.current === pairKey) {
-			return;
-		}
-
-		activePairKeyRef.current = pairKey;
-		setActivePortal(pairKey ? { pairKey } : null);
+	const updateActivePairKey = useCallback((pairKey: ScreenPairKey | null) => {
+		setActivePairKey(pairKey);
 	}, []);
 
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			const isBoundaryAnimating = slotsMap.get()[boundaryId] !== undefined;
-			if (!isBoundaryAnimating) {
+			const pairKey = getPairKeyForSource(boundaryId, currentScreenKey);
+			const measurement = localMeasurement.get();
+			if (!pairKey || measurement?.pairKey !== pairKey) {
 				return null;
 			}
 
-			return getPairKeyForSource(boundaryId, currentScreenKey);
+			return pairKey;
 		},
 		(pairKey, previousPairKey) => {
 			"worklet";
@@ -59,12 +55,12 @@ export const useActivePortalBoundaryHost = ({
 				return;
 			}
 
-			scheduleOnRN(updateActivePortal, pairKey);
+			scheduleOnRN(updateActivePairKey, pairKey);
 		},
 	);
 
 	useLayoutEffect(() => {
-		if (!activePortal || !escapeHostKey) {
+		if (!activePairKey || !escapeHostKey) {
 			portalHostName.set(null);
 			portalHostReady.set(false);
 			return;
@@ -73,16 +69,16 @@ export const useActivePortalBoundaryHost = ({
 		const nextPortalHostName = createBoundaryPortalHostName(
 			escapeHostKey,
 			boundaryId,
-			activePortal.pairKey,
+			activePairKey,
 		);
 
 		mountPortalBoundaryHost({
 			boundaryId,
 			hostKey: escapeHostKey,
-			pairKey: activePortal.pairKey,
+			localMeasurement,
+			pairKey: activePairKey,
 			portalHostName: nextPortalHostName,
 			portalHostReady,
-			screenKey: currentScreenKey,
 			slotsMap,
 		});
 		portalHostName.set(nextPortalHostName);
@@ -93,10 +89,10 @@ export const useActivePortalBoundaryHost = ({
 			unmountPortalBoundaryHostByName(nextPortalHostName);
 		};
 	}, [
-		activePortal,
+		activePairKey,
 		boundaryId,
-		currentScreenKey,
 		escapeHostKey,
+		localMeasurement,
 		portalHostName,
 		portalHostReady,
 		slotsMap,

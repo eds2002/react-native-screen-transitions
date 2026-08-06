@@ -78,6 +78,7 @@ export function createBoundaryComponent<P extends object>(
 					<BoundaryPortal
 						boundaryId={root.boundTag.tag}
 						enabled={root.shouldRenderBoundaryRootThroughPortal}
+						localMeasurement={root.localMeasurement}
 						placeholderRef={root.measurementRef}
 					>
 						<AnimatedComponent

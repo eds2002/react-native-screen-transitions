@@ -1,3 +1,4 @@
+import type { MeasuredDimensions, SharedValue } from "react-native-reanimated";
 import type { ScreenPairKey } from "../../stores/bounds/types";
 import type { BoundsOptions } from "../../utils/bounds/types/options";
 
@@ -60,3 +61,11 @@ export type MeasureTarget =
 	  };
 
 export type MeasureBoundary = (target: MeasureTarget) => void;
+
+export type BoundaryLocalMeasurement = {
+	bounds: MeasuredDimensions;
+	pairKey: ScreenPairKey;
+};
+
+export type BoundaryLocalMeasurementValue =
+	SharedValue<BoundaryLocalMeasurement | null>;

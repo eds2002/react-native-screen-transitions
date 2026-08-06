@@ -4,7 +4,10 @@ import type { AnimatedRef } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../providers/screen/descriptors";
 import type { BoundTag } from "../../../stores/bounds/types";
 import { useBoundaryMeasurement } from "../hooks/use-boundary-measurement";
-import type { BoundaryConfigProps } from "../types";
+import type {
+	BoundaryConfigProps,
+	BoundaryLocalMeasurementValue,
+} from "../types";
 
 interface BoundaryLifecycleProps {
 	boundTag: BoundTag;
@@ -13,6 +16,7 @@ interface BoundaryLifecycleProps {
 	enabled: boolean;
 	escapeClipping: boolean;
 	handoff: boolean;
+	localMeasurement: BoundaryLocalMeasurementValue;
 	measuredRef: AnimatedRef<View>;
 	style?: unknown;
 }
@@ -24,6 +28,7 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 	enabled,
 	escapeClipping,
 	handoff,
+	localMeasurement,
 	measuredRef,
 	style,
 }: BoundaryLifecycleProps) {
@@ -40,6 +45,7 @@ export const BoundaryLifecycle = memo(function BoundaryLifecycle({
 		style,
 		handoff,
 		escapeClipping,
+		localMeasurement,
 		config,
 	});
 

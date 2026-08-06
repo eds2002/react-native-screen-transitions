@@ -1,6 +1,7 @@
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import type { BoundaryLocalMeasurementValue } from "../../../../types";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import { isTeleportEnabled } from "../../../utils/teleport-control";
 import { useActiveHostKey } from "../stores/host-registry.store";
@@ -8,10 +9,12 @@ import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 
 interface UseBoundaryPortalAttachmentParams {
 	boundaryId: string;
+	localMeasurement: BoundaryLocalMeasurementValue;
 }
 
 export const useBoundaryPortalAttachment = ({
 	boundaryId,
+	localMeasurement,
 }: UseBoundaryPortalAttachmentParams) => {
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
@@ -25,6 +28,7 @@ export const useBoundaryPortalAttachment = ({
 		boundaryId,
 		currentScreenKey,
 		escapeHostKey,
+		localMeasurement,
 		portalHostName,
 		portalHostReady,
 		slotsMap,
@@ -39,10 +43,12 @@ export const useBoundaryPortalAttachment = ({
 			teleport,
 			...slotProps
 		} = slot?.props ?? {};
+
 		const shouldAttach =
 			slot !== undefined &&
 			isTeleportEnabled(teleport) &&
 			portalHostReady.get();
+
 		const hostName = shouldAttach
 			? portalHostName.get()
 			: PORTAL_HOST_NAME_RESET_VALUE;
