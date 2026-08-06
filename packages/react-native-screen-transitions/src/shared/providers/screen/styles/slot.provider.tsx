@@ -7,7 +7,7 @@ import type {
 } from "../../../constants";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../types/animation.types";
 import createProvider from "../../../utils/create-provider";
-import type { LocalStyleLayers } from "./helpers/resolve-slot-styles";
+import { useDescriptorsStore } from "../descriptors";
 import { useInterpolatedStylesMap } from "./hooks/use-interpolated-style-maps";
 import { useMaybeBlockVisibility } from "./hooks/use-maybe-block-visibility";
 import { useResolvedStylesMap } from "./hooks/use-resolved-slot-style-map";
@@ -24,8 +24,7 @@ export type ScreenSlotName =
 	| typeof NAVIGATION_MASK_ELEMENT_STYLE_ID;
 
 export type ScreenSlotContextValue = {
-	localStylesMaps: SharedValue<LocalStyleLayers>;
-	nextInterpolatorReady: SharedValue<number>;
+	interpolatorReady: SharedValue<number>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 	visibilityBlocked: SharedValue<boolean>;
 };
@@ -33,17 +32,19 @@ export type ScreenSlotContextValue = {
 export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 	createProvider("ScreenSlot", {
 		guarded: true,
+		global: true,
 	})<Props, ScreenSlotContextValue>(({ children }, { useParentStore }) => {
 		const parentContext = useParentStore();
+		const currentScreenKey = useDescriptorsStore(
+			(store) => store.derivations.currentScreenKey,
+		);
 		const { animatedStyle, animatedProps, shouldBlockVisibility } =
 			useMaybeBlockVisibility();
 
-		const { localStylesMaps, nextInterpolatorReady } = useInterpolatedStylesMap(
-			{
-				enabled: true,
-				visibilityBlocked: shouldBlockVisibility,
-			},
-		);
+		const { interpolatorReady, localStylesMaps } = useInterpolatedStylesMap({
+			enabled: true,
+			visibilityBlocked: shouldBlockVisibility,
+		});
 
 		const slotsMap = useResolvedStylesMap({
 			localStylesMaps,
@@ -51,12 +52,11 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 		});
 		const value = useMemo(
 			() => ({
-				localStylesMaps,
-				nextInterpolatorReady,
+				interpolatorReady,
 				slotsMap,
 				visibilityBlocked: shouldBlockVisibility,
 			}),
-			[localStylesMaps, nextInterpolatorReady, shouldBlockVisibility, slotsMap],
+			[interpolatorReady, shouldBlockVisibility, slotsMap],
 		);
 		const content = useMemo(
 			() => (
@@ -71,6 +71,7 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 		);
 
 		return {
+			key: currentScreenKey,
 			value,
 			children: content,
 		};

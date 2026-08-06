@@ -91,6 +91,20 @@ describe("active handoff receiver", () => {
 		).toBe("player-b");
 	});
 
+	it("keeps a queued receiver detached until its interpolator is ready", () => {
+		expect(
+			resolveHandoffAttachmentCandidate({
+				activeReceiverClosing: true,
+				activeReceiverScreenKey: "player-a",
+				attachedReceiverScreenKey: "index",
+				hasActiveCloseFinished: false,
+				interpolatorReady: false,
+				pairDestinationScreenKey: "player-b",
+				previousReceiverScreenKey: "index",
+			}),
+		).toBe("player-a");
+	});
+
 	it("moves directly to a newly queued receiver while the current receiver closes", () => {
 		const params = {
 			activeReceiverClosing: true,

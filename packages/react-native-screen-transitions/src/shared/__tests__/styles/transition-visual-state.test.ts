@@ -3,6 +3,7 @@ import {
 	hasCloseTransitionFinished,
 	hasOpenTransitionStarted,
 	isOpenTransitionBlocked,
+	isScreenInterpolatorReady,
 } from "../../providers/screen/styles/helpers/transition-visual-state";
 
 describe("transition visual state", () => {
@@ -85,6 +86,35 @@ describe("transition visual state", () => {
 			hasCloseTransitionFinished({
 				closing: 1,
 				animationProgress: -0.001,
+			}),
+		).toBe(false);
+	});
+
+	it("reports readiness for the current screen's interpolator", () => {
+		const settled = {
+			hasInterpolator: true,
+			opening: false,
+			closing: 0,
+			pendingLifecycleStartBlockCount: 0,
+			animationProgress: 1,
+		};
+
+		expect(isScreenInterpolatorReady(settled)).toBe(true);
+		expect(
+			isScreenInterpolatorReady({ ...settled, hasInterpolator: false }),
+		).toBe(false);
+		expect(
+			isScreenInterpolatorReady({
+				...settled,
+				opening: true,
+				animationProgress: 0,
+			}),
+		).toBe(false);
+		expect(
+			isScreenInterpolatorReady({
+				...settled,
+				closing: 1,
+				animationProgress: 0,
 			}),
 		).toBe(false);
 	});
