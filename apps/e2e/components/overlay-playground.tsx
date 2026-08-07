@@ -2,9 +2,7 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { interpolate } from "react-native-reanimated";
 import type { ScreenTransitionConfig } from "react-native-screen-transitions";
-import Transition, {
-	useScreenAnimation,
-} from "react-native-screen-transitions";
+import Transition from "react-native-screen-transitions";
 import {
 	buildStackPath,
 	useResolvedStackType,
@@ -84,7 +82,6 @@ export const overlayIOSSlideOptions = createIOSSlideOptions({
 });
 
 function FullScreenOverlay({ screen }: { screen: "A" | "C" | "E" }) {
-	useScreenAnimation();
 	return (
 		<View
 			pointerEvents="box-none"
