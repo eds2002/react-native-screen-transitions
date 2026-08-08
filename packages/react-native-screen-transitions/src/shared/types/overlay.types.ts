@@ -5,7 +5,6 @@ import type {
 } from "@react-navigation/native";
 import type { ReactNode } from "react";
 import type { DerivedValue } from "react-native-reanimated";
-import type { UntypedScreenMeta } from "./meta.types";
 import type { ScreenTransitionConfig } from "./screen.types";
 
 /**
@@ -13,13 +12,9 @@ import type { ScreenTransitionConfig } from "./screen.types";
  */
 export type OverlayScreenState<
 	TNavigation = unknown,
-	TMeta extends object = UntypedScreenMeta,
 	TParamList extends ParamListBase = ParamListBase,
 	TOwnerRouteName extends keyof TParamList = keyof TParamList,
-> = Omit<
-	OverlayProps<TNavigation, TMeta, TParamList, TOwnerRouteName>,
-	"progress"
-> & {
+> = Omit<OverlayProps<TNavigation, TParamList, TOwnerRouteName>, "progress"> & {
 	snapTo: (index: number) => void;
 };
 
@@ -31,7 +26,6 @@ export type OverlayScreenState<
  */
 export type OverlayProps<
 	TNavigation = unknown,
-	TMeta extends object = UntypedScreenMeta,
 	TParamList extends ParamListBase = ParamListBase,
 	TOwnerRouteName extends keyof TParamList = keyof TParamList,
 > = {
@@ -59,7 +53,7 @@ export type OverlayProps<
 	/**
 	 * Custom metadata from the focused screen's options.
 	 */
-	meta?: TMeta;
+	meta?: Record<string, unknown>;
 
 	/**
 	 * Navigation prop for the overlay.
@@ -69,7 +63,7 @@ export type OverlayProps<
 	/**
 	 * Screen options for the currently focused screen.
 	 */
-	options: ScreenTransitionConfig<TMeta>;
+	options: ScreenTransitionConfig;
 
 	/**
 	 * Stack progress relative to the overlay's position.
@@ -85,6 +79,6 @@ export type OverlayProps<
  * in navigator-wide screen options while applications annotate them for one
  * specific route.
  */
-export type OverlayComponent<TMeta extends object = UntypedScreenMeta> = {
-	bivarianceHack(props: OverlayProps<unknown, TMeta>): ReactNode;
+export type OverlayComponent = {
+	bivarianceHack(props: OverlayProps): ReactNode;
 }["bivarianceHack"];

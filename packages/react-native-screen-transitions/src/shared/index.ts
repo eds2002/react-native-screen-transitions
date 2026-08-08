@@ -93,5 +93,4 @@ export type {
 	TransitionSlotProps,
 	TransitionSlotStyle,
 	TransitionSpec,
-	UntypedScreenMeta,
 } from "./types";

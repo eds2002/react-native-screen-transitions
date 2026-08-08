@@ -8,7 +8,6 @@ import {
 import type { ScreenAnimationConfig } from "../utils/animation/animate";
 import type { BoundsAccessor } from "./bounds.types";
 import type { GestureValues } from "./gesture.types";
-import type { UntypedScreenMeta } from "./meta.types";
 import type { ScreenLayouts, ScreenTransitionConfig } from "./screen.types";
 import type { BaseStackRoute } from "./stack.types";
 
@@ -38,7 +37,7 @@ export type ScreenTransitionOptions = Pick<
 	| "backdropBehavior"
 >;
 
-export type ScreenTransitionState<TMeta extends object = UntypedScreenMeta> = {
+export type ScreenTransitionState = {
 	/**
 	 * Animation progress for this screen.
 	 * - `0`: Screen is fully off-screen (entering)
@@ -131,7 +130,7 @@ export type ScreenTransitionState<TMeta extends object = UntypedScreenMeta> = {
 	 * // In animation logic:
 	 * if (props.next?.meta?.scalesOthers) { ... }
 	 */
-	meta?: TMeta;
+	meta?: Record<string, unknown>;
 
 	/**
 	 * Public screen option values exposed to `screenStyleInterpolator`.
@@ -184,26 +183,25 @@ export type ScreenTransitionDepthTarget = {
 
 export type ScreenTransitionTarget = ScreenTransitionDepthTarget;
 
-export type ScreenTransitionAccessor<TMeta extends object = UntypedScreenMeta> =
-	(target?: ScreenTransitionTarget) => ScreenInterpolationProps<TMeta> | null;
+export type ScreenTransitionAccessor = (
+	target?: ScreenTransitionTarget,
+) => ScreenInterpolationProps | null;
 
-export interface ScreenInterpolationProps<
-	TMeta extends object = UntypedScreenMeta,
-> {
+export interface ScreenInterpolationProps {
 	/**
 	 * Values for the screen that came before the current one in the navigation stack.
 	 */
-	previous: ScreenTransitionState<TMeta> | undefined;
+	previous: ScreenTransitionState | undefined;
 
 	/**
 	 * Values for the current screen being interpolated.
 	 */
-	current: ScreenTransitionState<TMeta>;
+	current: ScreenTransitionState;
 
 	/**
 	 * Values for the screen that comes after the current one in the navigation stack.
 	 */
-	next: ScreenTransitionState<TMeta> | undefined;
+	next: ScreenTransitionState | undefined;
 
 	/**
 	 * Layout measurements for the screen.
@@ -270,28 +268,27 @@ export interface ScreenInterpolationProps<
 	 * When called from a returned transition scope, targets are resolved relative
 	 * to that scope.
 	 */
-	transition: ScreenTransitionAccessor<TMeta>;
+	transition: ScreenTransitionAccessor;
 
 	/**
 	 * The screen state that is currently driving the transition (either current or next, whichever is focused).
 	 */
-	active: ScreenTransitionState<TMeta>;
+	active: ScreenTransitionState;
 
 	/**
 	 * The screen state that is NOT driving the transition.
 	 * When focused, this is the previous screen. When not focused, this is the current screen.
 	 */
-	inactive: ScreenTransitionState<TMeta> | undefined;
+	inactive: ScreenTransitionState | undefined;
 }
 
 /**
  * Returning `null`, `undefined`, or `{}` applies no transition styles for the
  * current frame.
  */
-export type ScreenStyleInterpolator<TMeta extends object = UntypedScreenMeta> =
-	(
-		props: ScreenInterpolationProps<TMeta>,
-	) => TransitionInterpolatedStyle | null | undefined;
+export type ScreenStyleInterpolator = (
+	props: ScreenInterpolationProps,
+) => TransitionInterpolatedStyle | null | undefined;
 
 /**
  * Animated style properties with full autocomplete.

@@ -10,7 +10,7 @@ import type {
 	StackRouterOptions,
 	Theme,
 } from "@react-navigation/native";
-import type { ScreenTransitionConfig, UntypedScreenMeta } from "../shared";
+import type { ScreenTransitionConfig } from "../shared";
 import type { OverlayProps } from "../shared/types/overlay.types";
 
 /**
@@ -25,13 +25,12 @@ export type ComponentStackNavigationProp<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
 	NavigatorID extends string | undefined = undefined,
-	TMeta extends object = UntypedScreenMeta,
 > = NavigationProp<
 	ParamList,
 	RouteName,
 	NavigatorID,
 	StackNavigationState<ParamList>,
-	ComponentStackNavigationOptions<TMeta>,
+	ComponentStackNavigationOptions,
 	ComponentStackNavigationEventMap
 > &
 	StackActionHelpers<ParamList>;
@@ -43,14 +42,8 @@ export type ComponentStackScreenProps<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = string,
 	NavigatorID extends string | undefined = undefined,
-	TMeta extends object = UntypedScreenMeta,
 > = {
-	navigation: ComponentStackNavigationProp<
-		ParamList,
-		RouteName,
-		NavigatorID,
-		TMeta
-	>;
+	navigation: ComponentStackNavigationProp<ParamList, RouteName, NavigatorID>;
 	route: RouteProp<ParamList, RouteName>;
 };
 
@@ -61,8 +54,7 @@ export type ComponentStackOptionsArgs<
 	ParamList extends ParamListBase,
 	RouteName extends keyof ParamList = keyof ParamList,
 	NavigatorID extends string | undefined = undefined,
-	TMeta extends object = UntypedScreenMeta,
-> = ComponentStackScreenProps<ParamList, RouteName, NavigatorID, TMeta> & {
+> = ComponentStackScreenProps<ParamList, RouteName, NavigatorID> & {
 	theme: Theme;
 };
 
@@ -85,18 +77,14 @@ type ComponentStackNavigationConfig = {};
 export type ComponentStackOverlayProps<
 	ParamList extends ParamListBase = ParamListBase,
 	RouteName extends keyof ParamList = keyof ParamList,
-	TMeta extends object = UntypedScreenMeta,
 	NavigatorID extends string | undefined = undefined,
 > = OverlayProps<
-	ComponentStackNavigationProp<ParamList, RouteName, NavigatorID, TMeta>,
-	TMeta,
+	ComponentStackNavigationProp<ParamList, RouteName, NavigatorID>,
 	ParamList,
 	RouteName
 >;
 
-type ComponentStackScreenTransitionConfig<
-	TMeta extends object = UntypedScreenMeta,
-> = ScreenTransitionConfig<TMeta> & {
+type ComponentStackScreenTransitionConfig = ScreenTransitionConfig & {
 	/**
 	 * Whether to detach the previous screen from the view hierarchy to save memory.
 	 * Set it to `false` if you need the previous screen to be seen through the active screen.
@@ -108,9 +96,8 @@ type ComponentStackScreenTransitionConfig<
 /**
  * @deprecated Component stack is deprecated. Use blank stack instead.
  */
-export type ComponentStackNavigationOptions<
-	TMeta extends object = UntypedScreenMeta,
-> = ComponentStackScreenTransitionConfig<TMeta> & {};
+export type ComponentStackNavigationOptions =
+	ComponentStackScreenTransitionConfig & {};
 
 /**
  * @deprecated Component stack is deprecated. Use blank stack instead.

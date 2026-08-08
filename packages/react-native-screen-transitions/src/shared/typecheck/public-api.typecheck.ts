@@ -470,14 +470,6 @@ const blankStackFactoryOptions: BlankStackFactoryOptions = {
 };
 const blankStackNavigationOptions: BlankStackNavigationOptions = {};
 
-type OnboardingMeta = {
-	title: string;
-	cta?: {
-		label: string;
-		disabled?: boolean;
-	};
-};
-
 type OnboardingParamList = {
 	Welcome: undefined;
 	Profile: { referralCode?: string };
@@ -485,27 +477,15 @@ type OnboardingParamList = {
 
 declare const welcomeOverlayProps: BlankStackOverlayProps<
 	OnboardingParamList,
-	"Welcome",
-	OnboardingMeta
->;
-declare const welcomeScreenProps: BlankStackScreenProps<
-	OnboardingParamList,
-	"Welcome",
-	undefined,
-	OnboardingMeta
+	"Welcome"
 >;
 
 function WelcomeOverlay(
-	_props: BlankStackOverlayProps<
-		OnboardingParamList,
-		"Welcome",
-		OnboardingMeta
-	>,
+	_props: BlankStackOverlayProps<OnboardingParamList, "Welcome">,
 ) {
 	return null;
 }
 
-const welcomeOverlayTitle: string = welcomeOverlayProps.meta?.title ?? "";
 const welcomeOwnerRouteName: "Welcome" = welcomeOverlayProps.route.name;
 const focusedOnboardingRouteName: "Welcome" | "Profile" =
 	welcomeOverlayProps.focusedRoute.name;
@@ -517,68 +497,53 @@ if (welcomeOverlayProps.focusedRoute.name === "Profile") {
 welcomeOverlayProps.navigation.navigate("Profile", { referralCode: "dorsia" });
 // @ts-expect-error Unknown routes are rejected by the navigator param list.
 welcomeOverlayProps.navigation.navigate("Missing");
-welcomeScreenProps.navigation.setOptions({
-	meta: { title: "Welcome to Dorsia" },
-});
-welcomeScreenProps.navigation.setOptions({
-	// @ts-expect-error setOptions uses the annotated metadata schema.
-	meta: { title: 42 },
-});
 
-const onboardingOptions: BlankStackNavigationOptions<OnboardingMeta> = {
+const onboardingOptions: BlankStackNavigationOptions = {
 	meta: {
 		title: "Welcome to Dorsia",
 		cta: { label: "Continue" },
 	},
 	overlay: WelcomeOverlay,
 };
-const invalidOnboardingOptions: BlankStackNavigationOptions<OnboardingMeta> = {
-	meta: {
-		// @ts-expect-error Metadata follows the annotated onboarding schema.
-		title: 42,
-	},
-};
 
-const onboardingInterpolator: ScreenStyleInterpolator<OnboardingMeta> = ({
-	current,
-}) => {
+const onboardingInterpolator: ScreenStyleInterpolator = ({ current }) => {
 	"worklet";
-	const title: string | undefined = current.meta?.title;
+	const title: unknown = current.meta?.title;
 	void title;
 	return {};
 };
 
 declare const legacyNativeOverlayProps: LegacyNativeStackOverlayProps<
 	OnboardingParamList,
-	"Profile",
-	OnboardingMeta
+	"Profile"
 >;
 declare const componentOverlayProps: ComponentStackOverlayProps<
 	OnboardingParamList,
-	"Profile",
-	OnboardingMeta
+	"Profile"
 >;
 const legacyNativeReferralCode: string | undefined =
 	legacyNativeOverlayProps.route.params.referralCode;
-const componentOverlayTitle: string = componentOverlayProps.meta?.title ?? "";
+const componentOverlayMeta: Record<string, unknown> | undefined =
+	componentOverlayProps.meta;
 
-const typedNativeStackAdapterOptions: NativeStackAdapterOptions<
-	NativeStackNavigationOptions,
-	OnboardingMeta
-> = {
-	meta: { title: "Welcome to Dorsia" },
-};
+// @ts-expect-error Navigator options do not carry an application metadata schema.
+declare const invalidTypedBlankStackOptions: BlankStackNavigationOptions<{
+	title: string;
+}>;
+// @ts-expect-error Interpolator metadata is intentionally accessed as runtime data.
+declare const invalidTypedInterpolator: ScreenStyleInterpolator<{
+	title: string;
+}>;
 
-void welcomeOverlayTitle;
 void welcomeOwnerRouteName;
 void focusedOnboardingRouteName;
 void onboardingOptions;
-void invalidOnboardingOptions;
 void onboardingInterpolator;
 void WelcomeOverlay;
 void legacyNativeReferralCode;
-void componentOverlayTitle;
-void typedNativeStackAdapterOptions;
+void componentOverlayMeta;
+void invalidTypedBlankStackOptions;
+void invalidTypedInterpolator;
 
 type StaticBlankStackParamList = {
 	Home: undefined;

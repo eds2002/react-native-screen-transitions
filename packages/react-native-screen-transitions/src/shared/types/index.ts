@@ -51,7 +51,6 @@ export type {
 	ScrollMetadataState,
 	SideActivation,
 } from "./gesture.types";
-export type { UntypedScreenMeta } from "./meta.types";
 export type { OverlayComponent, OverlayProps } from "./overlay.types";
 export type {
 	GestureTracking,
