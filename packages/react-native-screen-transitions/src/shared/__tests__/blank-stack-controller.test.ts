@@ -116,6 +116,41 @@ describe("createBlankStackController", () => {
 		]);
 	});
 
+	it("replaces the retained programmatic close when navigation pops again", () => {
+		const navigation = createNavigation();
+		const routeA = createRoute("a");
+		const routeB = createRoute("b");
+		const routeC = createRoute("c");
+		const descriptorA = createDescriptor(routeA, navigation);
+		const descriptorB = createDescriptor(routeB, navigation);
+		const descriptorC = createDescriptor(routeC, navigation);
+		const controller = createBlankStackController(
+			createProps(
+				[routeA, routeB, routeC],
+				{ a: descriptorA, b: descriptorB, c: descriptorC },
+				navigation,
+			),
+		);
+
+		controller.update(
+			createProps([routeA, routeB], { a: descriptorA, b: descriptorB }, navigation),
+		);
+		expect(controller.getSnapshot().state.closingRouteKeys).toEqual(
+			new Set(["c"]),
+		);
+
+		controller.update(createProps([routeA], { a: descriptorA }, navigation));
+
+		const snapshot = controller.getSnapshot();
+		expect(snapshot.state.routes.map((route) => route.key)).toEqual(["a", "b"]);
+		expect(snapshot.state.closingRouteKeys).toEqual(new Set(["b"]));
+		expect(snapshot.state.descriptors.c).toBeUndefined();
+		expect(snapshot.state.scenes.map((scene) => scene.activity)).toEqual([
+			"inert",
+			"closing",
+		]);
+	});
+
 	it("soft-dismisses a focused route before React Navigation removes it", () => {
 		const navigation = createNavigation();
 		const routeA = createRoute("a");
