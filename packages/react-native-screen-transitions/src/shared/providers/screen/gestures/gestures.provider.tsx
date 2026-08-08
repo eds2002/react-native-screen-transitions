@@ -1,11 +1,11 @@
-import { useMemo } from "react";
+import { Fragment, useMemo } from "react";
 import { Gesture } from "react-native-gesture-handler";
 import { useSharedValue } from "react-native-reanimated";
 import { ScrollStore } from "../../../stores/scroll.store";
 import createProvider from "../../../utils/create-provider";
 import { useDescriptorsStore } from "../descriptors";
 import { useScreenGestureConfig } from "./hooks/use-screen-gesture-config";
-import { useWalkUpAndRegisterShadowingClaims } from "./ownership/use-walk-up-and-register-shadowing-claims";
+import { GestureOwnershipBridge } from "./ownership/gesture-ownership-bridge";
 import { useBuildPanGesture } from "./pan/use-build-pan-gesture";
 import { useBuildPinchGesture } from "./pinch/use-build-pinch-gesture";
 import {
@@ -28,11 +28,16 @@ export const { ScreenGestureProvider, useScreenGestureStore: useGestureStore } =
 			{ children },
 			{ useParentStore },
 		): { value: GestureContextType; children: React.ReactNode } => {
-			const gestureContext = useParentStore();
-			const gestureConfig = useScreenGestureConfig();
 			const currentScreenKey = useDescriptorsStore(
 				(store) => store.derivations.currentScreenKey,
 			);
+			const isTopMostScreen = useDescriptorsStore(
+				(store) => store.derivations.isTopMostScreen,
+			);
+			const gestureContext = useParentStore((parentContext) =>
+				isTopMostScreen ? parentContext : null,
+			);
+			const gestureConfig = useScreenGestureConfig(gestureContext);
 
 			const scrollState = ScrollStore.getValue(
 				currentScreenKey,
@@ -89,13 +94,19 @@ export const { ScreenGestureProvider, useScreenGestureStore: useGestureStore } =
 				],
 			);
 
-			useWalkUpAndRegisterShadowingClaims(
-				gestureConfig.participation.claimedDirections,
+			const content = useMemo(
+				() => (
+					<Fragment>
+						<GestureOwnershipBridge />
+						{children}
+					</Fragment>
+				),
+				[children],
 			);
 
 			return {
 				value,
-				children,
+				children: content,
 			};
 		},
 	);

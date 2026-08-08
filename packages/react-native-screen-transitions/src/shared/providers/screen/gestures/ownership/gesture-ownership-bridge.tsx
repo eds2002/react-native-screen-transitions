@@ -30,9 +30,9 @@ const findShadowedDirections = (
 ) => {
 	const shadowedDirections: Direction[] = [];
 
-	for (const dir of DIRECTIONS) {
-		if (claimedDirections[dir] && ancestorDirections[dir]) {
-			shadowedDirections.push(dir);
+	for (const direction of DIRECTIONS) {
+		if (claimedDirections[direction] && ancestorDirections[direction]) {
+			shadowedDirections.push(direction);
 		}
 	}
 
@@ -70,8 +70,8 @@ const registerShadowingClaims = (
 
 	for (const { ancestor, directions } of shadowedAncestors) {
 		const newClaims = { ...ancestor.childDirectionClaims.get() };
-		for (const dir of directions) {
-			newClaims[dir] = { routeKey: currentScreenKey, isDismissing };
+		for (const direction of directions) {
+			newClaims[direction] = { routeKey: currentScreenKey, isDismissing };
 		}
 		ancestor.childDirectionClaims.set(newClaims);
 	}
@@ -86,10 +86,9 @@ const clearShadowingClaims = (
 		const newClaims = { ...currentClaims };
 		let needsUpdate = false;
 
-		for (const dir of directions) {
-			// Only remove claims written by this screen; a newer descendant may own it now.
-			if (currentClaims[dir]?.routeKey === currentScreenKey) {
-				newClaims[dir] = null;
+		for (const direction of directions) {
+			if (currentClaims[direction]?.routeKey === currentScreenKey) {
+				newClaims[direction] = null;
 				needsUpdate = true;
 			}
 		}
@@ -121,51 +120,32 @@ const getDescriptorClaimedDirections = (
 	}).participation.claimedDirections;
 };
 
-/**
- * Registers this screen with ancestors that claim the same direction.
- *
- * Example, when C is top-most:
- * A claims vertical
- * └─ B claims horizontal
- *    └─ C claims vertical
- *
- * C walks up the tree and writes itself into A.childDirectionClaims.vertical.
- * B is skipped because it does not claim vertical.
- */
-export function useWalkUpAndRegisterShadowingClaims(
-	claimedDirections: ClaimedDirections,
-): void {
-	const parentContext = useGestureStore();
-	const previous = useDescriptorsStore((store) => store.previous);
-	const isTopMostScreen = useDescriptorsStore(
-		(store) => store.derivations.isTopMostScreen,
-	);
-	const currentScreenKey = useDescriptorsStore(
-		(store) => store.derivations.currentScreenKey,
-	);
-	const isCurrentScreenClosing = useBlankStackStore(
-		(store) => store?.scenesByKey[currentScreenKey]?.activity === "closing",
-	);
+const requireGestureContext = (
+	gestureContext: GestureContextType | null,
+): GestureContextType => {
+	if (!gestureContext) {
+		throw new Error(
+			"GestureOwnershipBridge must be rendered within a ScreenGestureProvider",
+		);
+	}
 
-	/*
-	 * We want to calculate effective claimed directions as claimedDirections is not enough for us.
-	 * What this solves is lingering claimed directions when a screen is closing.
-	 *
-	 * Overlay claims horizontal
-	 *   └─ A has no local horizontal claim
-	 *   └─ B claims horizontal (closing)
-	 *   └─ C claims horizontal (closing)
-	 *
-	 * Closing screens are still mounted, so they can still block parent gestures.
-	 * But they cannot receive touches anymore.
-	 *
-	 * So when B/C are closing and the user is really touching A, B/C should not
-	 * keep blocking the parent with their own gesture config.
-	 *
-	 * A closing screen should act like the visible screen underneath it:
-	 * - if the screen underneath claims the gesture, keep blocking the parent
-	 * - if the screen underneath does not claim it, let the parent handle it
-	 */
+	return gestureContext;
+};
+
+function ActiveGestureOwnershipBridge() {
+	const gestureContext = requireGestureContext(useGestureStore());
+	const previous = useDescriptorsStore((store) => store.previous);
+	const isCurrentScreenClosing = useBlankStackStore(
+		(store) =>
+			store?.scenesByKey[gestureContext.routeKey]?.activity === "closing",
+	);
+	const {
+		claimedDirections,
+		gestureContext: parentContext,
+		routeKey: currentScreenKey,
+	} = gestureContext;
+	// A retained closing screen cannot receive touches, so its ownership must
+	// mirror the visible screen underneath instead of blocking an ancestor.
 	const effectiveClaimedDirections = useMemo(
 		() =>
 			resolveShadowingClaimDirections({
@@ -178,14 +158,13 @@ export function useWalkUpAndRegisterShadowingClaims(
 			}),
 		[isCurrentScreenClosing, claimedDirections, previous, parentContext],
 	);
-
 	const shadowedAncestors = useMemo(
 		() => findShadowedAncestors(parentContext, effectiveClaimedDirections),
 		[parentContext, effectiveClaimedDirections],
 	);
 
 	useLayoutEffect(() => {
-		if (!isTopMostScreen || !shadowedAncestors.length) {
+		if (!shadowedAncestors.length) {
 			return;
 		}
 
@@ -194,5 +173,16 @@ export function useWalkUpAndRegisterShadowingClaims(
 		return () => {
 			clearShadowingClaims(shadowedAncestors, currentScreenKey);
 		};
-	}, [shadowedAncestors, currentScreenKey, isTopMostScreen]);
+	}, [shadowedAncestors, currentScreenKey]);
+
+	return null;
+}
+
+/** Keeps gesture ownership subscriptions attached only to participating screens. */
+export function GestureOwnershipBridge() {
+	const isTopMostScreen = useDescriptorsStore(
+		(store) => store.derivations.isTopMostScreen,
+	);
+
+	return isTopMostScreen ? <ActiveGestureOwnershipBridge /> : null;
 }
