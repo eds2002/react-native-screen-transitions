@@ -182,7 +182,7 @@ function ScreenTransitionsStackContent({
 	return (
 		<ScreenTransitionsAdapterProvider value={adapterContextValue}>
 			<StackProvider value={stackContextValue}>
-				{transitionState.shouldShowFloatOverlay ? <Overlay.Float /> : null}
+				<Overlay.Float />
 				{children}
 			</StackProvider>
 		</ScreenTransitionsAdapterProvider>

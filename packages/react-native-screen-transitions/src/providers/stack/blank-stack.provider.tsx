@@ -15,6 +15,7 @@ import type {
 } from "../../types/stack.types";
 import createProvider from "../../utils/create-provider";
 import { useBlankStackState } from "./blank-stack-state";
+import { resolvePresentedIndex } from "./blank-stack-state/helpers/resolve-presented-index";
 import { useStackCoreStore } from "./core.provider";
 
 type InternalBlankStackProviderProps = BlankStackProviderProps<
@@ -58,7 +59,11 @@ function BlankStackProvider({
 		state: stackState,
 	});
 	const navigatorKey = stackState.key;
-	const focusedIndex = stackState.index;
+	const focusedIndex = resolvePresentedIndex(
+		state.routes,
+		state.focusedRouteKey,
+		state.closingRouteKeys,
+	);
 	const scenesByKey = useMemo(
 		() => createScenesByKey(state.scenes),
 		[state.scenes],
