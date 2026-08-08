@@ -482,14 +482,8 @@ const SceneView = ({
 };
 
 function NativeStackViewContent() {
-	const {
-		state,
-		navigation,
-		descriptors,
-		scenes,
-		focusedIndex,
-		shouldShowFloatOverlay,
-	} = useDirectStackStore();
+	const { state, navigation, descriptors, scenes, focusedIndex } =
+		useDirectStackStore();
 	const { setNextDismissedKey } = useDismissedRouteError(state);
 
 	useInvalidPreventRemoveError(descriptors);
@@ -498,7 +492,7 @@ function NativeStackViewContent() {
 
 	return (
 		<>
-			{shouldShowFloatOverlay ? <Overlay.Float /> : null}
+			<Overlay.Float />
 			<ScreenStack style={styles.container}>
 				{scenes.map((scene, index) => {
 					const { route, descriptor, isPreloaded } = scene;

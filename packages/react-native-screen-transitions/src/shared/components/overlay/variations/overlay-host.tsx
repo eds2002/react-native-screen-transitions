@@ -2,7 +2,7 @@ import {
 	NavigationContext,
 	NavigationRouteContext,
 } from "@react-navigation/native";
-import { useMemo } from "react";
+import { memo, useMemo, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useDerivedValue } from "react-native-reanimated";
 import { snapDescriptorToIndex } from "../../../animation/snap-to";
@@ -18,6 +18,10 @@ import type {
 	FloatOverlayActivity,
 	FloatOverlayEntry,
 } from "../helpers/get-active-overlay";
+import {
+	type ReadyOverlayResources,
+	retainReadyOverlayResources,
+} from "../helpers/retain-ready-overlay-resources";
 import { useOverlaySlot } from "../hooks/use-overlay-slot";
 
 type OverlayHostProps = {
@@ -28,7 +32,7 @@ type OverlayHostProps = {
 	layerIndex: number;
 };
 
-export function OverlayHost({
+export const OverlayHost = memo(function OverlayHost({
 	scene,
 	driverScene,
 	previousOverlayScene,
@@ -41,33 +45,38 @@ export function OverlayHost({
 		previousOverlayScene?.route.key ?? scene.route.key,
 	);
 	const driverSlots = useScreenSlots(driverScene.route.key);
-	const OverlayComponent = scene.descriptor.options.overlay;
+	const overlayComponentRef = useRef(scene.descriptor.options.overlay);
+	const OverlayComponent = overlayComponentRef.current;
+	const readyResourcesRef = useRef<ReadyOverlayResources | null>(null);
+	readyResourcesRef.current = retainReadyOverlayResources(
+		readyResourcesRef.current,
+		overlayAnimationStore,
+		driverScene,
+		driverAnimationStore,
+		driverSlots,
+	);
+	const readyResources = readyResourcesRef.current;
 
-	if (
-		!OverlayComponent ||
-		!overlayAnimationStore ||
-		!driverAnimationStore ||
-		!driverSlots
-	) {
+	if (!OverlayComponent || !readyResources) {
 		return null;
 	}
 
 	return (
 		<ReadyOverlayHost
 			scene={scene}
-			driverScene={driverScene}
+			driverScene={readyResources.driverScene}
 			activity={activity}
 			layerIndex={layerIndex}
-			overlayAnimationStore={overlayAnimationStore}
-			driverAnimationStore={driverAnimationStore}
+			overlayAnimationStore={readyResources.overlayAnimationStore}
+			driverAnimationStore={readyResources.driverAnimationStore}
 			previousOverlayAnimationStore={
 				previousOverlayScene ? previousOverlayAnimationStore : undefined
 			}
-			driverSlots={driverSlots}
+			driverSlots={readyResources.driverSlots}
 			OverlayComponent={OverlayComponent}
 		/>
 	);
-}
+});
 
 type ReadyOverlayHostProps = OverlayHostProps & {
 	overlayAnimationStore: ScreenAnimationContextValue;
