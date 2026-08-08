@@ -35,7 +35,9 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 		guarded: true,
 		global: true,
 	})<Props, ScreenSlotContextValue>(({ children }, { useParentStore }) => {
-		const parentContext = useParentStore();
+		const ancestorStylesMap = useParentStore(
+			(parentContext) => parentContext?.slotsMap,
+		);
 		const currentScreenKey = useDescriptorsStore(
 			(store) => store.derivations.currentScreenKey,
 		);
@@ -49,7 +51,7 @@ export const { ScreenSlotProvider, useScreenSlotStore: useScreenSlots } =
 
 		const slotsMap = useResolvedStylesMap({
 			localStylesMaps,
-			ancestorStylesMap: parentContext?.slotsMap,
+			ancestorStylesMap,
 		});
 		const value = useMemo(
 			() => ({

@@ -39,17 +39,23 @@ export const { ScreenAnimationProvider, useScreenAnimationStore } =
 			const currentScreenKey = useDescriptorsStore(
 				(store) => store.derivations.currentScreenKey,
 			);
-			const parentContext = useParentStore();
-			const parentScreenInterpolatorProps =
-				parentContext?.screenInterpolatorProps;
-			const parentScreenInterpolatorPropsRevision =
-				parentContext?.screenInterpolatorPropsRevision;
-			const parentAncestorScreenAnimationSources =
-				parentContext?.ancestorScreenAnimationSources;
-			const parentRegisterDescendantScreenAnimationSource =
-				parentContext?.registerDescendantScreenAnimationSource;
-			const parentAncestorDescendantScreenAnimationRegistrars =
-				parentContext?.ancestorDescendantScreenAnimationRegistrars;
+			const parentScreenInterpolatorProps = useParentStore(
+				(parentContext) => parentContext?.screenInterpolatorProps,
+			);
+			const parentScreenInterpolatorPropsRevision = useParentStore(
+				(parentContext) => parentContext?.screenInterpolatorPropsRevision,
+			);
+			const parentAncestorScreenAnimationSources = useParentStore(
+				(parentContext) => parentContext?.ancestorScreenAnimationSources,
+			);
+			const parentRegisterDescendantScreenAnimationSource = useParentStore(
+				(parentContext) =>
+					parentContext?.registerDescendantScreenAnimationSource,
+			);
+			const parentAncestorDescendantScreenAnimationRegistrars = useParentStore(
+				(parentContext) =>
+					parentContext?.ancestorDescendantScreenAnimationRegistrars,
+			);
 
 			const {
 				screenInterpolatorProps,

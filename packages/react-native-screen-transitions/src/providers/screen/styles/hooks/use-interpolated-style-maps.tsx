@@ -145,17 +145,33 @@ export const useInterpolatedStylesMap = ({
 		(s) => s.derivations.destinationPairKey,
 	);
 	const screenOptions = useScreenOptionsStore();
-	const screenAnimationStore = useScreenAnimationStore();
-	const {
+	const screenInterpolatorProps = useScreenAnimationStore(
+		(store) => store.screenInterpolatorProps,
+	);
+	const screenInterpolatorPropsRevision = useScreenAnimationStore(
+		(store) => store.screenInterpolatorPropsRevision,
+	);
+	const selectedInterpolatorOptions = useScreenAnimationStore(
+		(store) => store.selectedInterpolatorOptions,
+	);
+	const nextInterpolator = useScreenAnimationStore(
+		(store) => store.nextInterpolator,
+	);
+	const currentInterpolator = useScreenAnimationStore(
+		(store) => store.currentInterpolator,
+	);
+	const ancestorScreenAnimationSources = useScreenAnimationStore(
+		(store) => store.ancestorScreenAnimationSources,
+	);
+	const descendantScreenAnimationSources = useScreenAnimationStore(
+		(store) => store.descendantScreenAnimationSources,
+	);
+	const transition = useBuildTransitionAccessor({
 		screenInterpolatorProps,
 		screenInterpolatorPropsRevision,
-		selectedInterpolatorOptions,
-		nextInterpolator,
-		currentInterpolator,
 		ancestorScreenAnimationSources,
 		descendantScreenAnimationSources,
-	} = screenAnimationStore;
-	const transition = useBuildTransitionAccessor(screenAnimationStore);
+	});
 	const hasCurrentInterpolator = !!currentInterpolator;
 	const { closing: currentClosing, entering: currentEntering } =
 		AnimationStore.getBag(currentScreenKey);
