@@ -1,8 +1,8 @@
 ---
 title: "Overlays"
 pageTitle: "Overlays"
-summary: "Use screen overlays as floating stack-relative UI that persists from the owning screen upward through the rest of that stack."
-description: "Use screen overlays as floating stack-relative UI that persists from the owning screen upward through the rest of that stack."
+summary: "Use screen overlays as persistent, stack-relative UI with their own sparse transition order."
+description: "Use screen overlays as persistent, stack-relative UI with their own sparse transition order."
 eyebrow: "Components"
 group: "Components"
 order: 1
@@ -11,122 +11,147 @@ to: /overlays
 
 ## Mental Model
 
-An overlay is a floating screen layer owned by a screen in a stack.
+An overlay is a floating layer owned by one screen in a navigator. It renders above that navigator's screens and stays mounted while its owner remains in the stack.
 
-Configure it on screen options with `overlay` and `overlayShown`.
+Configure it with the `overlay` and `overlayShown` screen options:
 
 ```tsx
 <Stack.Screen
-  name="index"
+  name="Home"
   component={HomeScreen}
   options={{
-    overlay: TabBarOverlay,
+    overlay: HomeOverlay,
     overlayShown: true,
   }}
 />
 ```
 
-The overlay belongs to the screen that defines it, not the whole app.
+Overlays are scoped to their own navigator. They do not float into a parent, child, or sibling navigator.
 
-## How Overlay Ownership Works
+## The Overlay Stack
 
-An overlay starts floating when its owner screen becomes active and stays active while you push screens above that owner.
+Screens and overlays have separate adjacency. If `[]` means that a screen owns an overlay, this screen stack:
 
-- if `index` defines an overlay, it can float from `index` through the rest of the stack
-- if screen 3 defines an overlay, it does not appear on screens 1 or 2
-- once you reach screen 3, that overlay can float from screen 3 through any screens above it
-- if a higher screen defines a visible overlay, that higher screen becomes the new overlay owner
+```text
+A[] -> B -> C[] -> D -> E[]
+```
 
-This is stack-relative, not a global portal.
+produces this overlay stack:
+
+```text
+A[] -> C[] -> E[]
+```
+
+Pushing `B` leaves `A` floating in place. Pushing `C` mounts `C` above `A`, and pushing `E` mounts `E` above `C`. Screens without overlays do not create gaps in the overlay transition order.
+
+An overlay mounts once and keeps its component state until its owner leaves the navigation stack or `overlayShown` becomes `false`. The top overlay accepts touches. The overlay directly below it can remain visible for the transition, but it is inert; older overlays stay mounted and inactive.
 
 ## Basic Example
 
 ```tsx
 <Stack.Navigator>
   <Stack.Screen
-    name="index"
-    component={IndexScreen}
-    options={{
-      overlay: TabBarOverlay,
-      overlayShown: true,
-    }}
+    name="A"
+    component={ScreenA}
+    options={{ overlay: OverlayA }}
   />
-
+  <Stack.Screen name="B" component={ScreenB} />
   <Stack.Screen
-    name="second"
-    component={SecondScreen}
-    options={{
-      overlay: TabBarOverlay,
-      overlayShown: true,
-    }}
-  />
-
-  <Stack.Screen
-    name="third"
-    component={ThirdScreen}
-    options={{
-      overlay: TabBarOverlay,
-      overlayShown: true,
-    }}
+    name="C"
+    component={ScreenC}
+    options={{ overlay: OverlayC }}
   />
 </Stack.Navigator>
 ```
 
-The same overlay can keep floating deeper through the stack.
+Here, `OverlayA` remains above `B`. When `C` is pushed, `OverlayC` becomes active above `OverlayA`.
 
-If you push a screen with `overlayShown: false`, the system skips that screen and keeps scanning downward for the highest visible overlay owner.
+## Animate the Overlay Stack
 
-## Overlay Component Example
+`overlay` is a reserved `screenStyleInterpolator` slot. The destination screen's interpolator drives the current adjacent overlay pair.
 
 ```tsx
-import Animated, {
-  interpolate,
-  useAnimatedStyle,
-} from "react-native-reanimated";
-import {
-  type OverlayProps,
-  useScreenAnimation,
-} from "react-native-screen-transitions";
+screenStyleInterpolator: ({
+  progress,
+  layouts: {
+    screen: { width },
+  },
+}) => {
+  "worklet";
 
-function TabBarOverlay({
-  focusedRoute,
-  focusedIndex,
-  routes,
-  navigation,
-}: OverlayProps) {
+  return {
+    content: {
+      style: {
+        transform: [
+          {
+            translateX: interpolate(
+              progress,
+              [0, 1, 2],
+              [width, 0, -width * 0.3],
+              "clamp",
+            ),
+          },
+        ],
+      },
+    },
+    overlay: {
+      style: {
+        transform: [
+          {
+            translateX: interpolate(
+              progress,
+              [0, 1, 2],
+              [width, 0, -width],
+              "clamp",
+            ),
+          },
+        ],
+      },
+    },
+  };
+}
+```
+
+In `A[] -> B -> C[]`, the `overlay` slot from `C` animates `A` out and `C` in. `B` is part of the screen stack, but not the overlay stack.
+
+A screen does not need to own an overlay to drive the latest one. In `A[] -> B`, an `overlay` slot returned by `B` styles `A`. If `B` does not return the slot, `A` is left alone.
+
+Do not use `overlay` as a custom `styleId`. It is a non-inheriting layer slot, like `content` and `backdrop`.
+
+## Owner State and Focused State
+
+An overlay can outlive the moment when its owner was focused, so its props separate stable owner information from changing navigator information.
+
+| Prop | Purpose |
+| --- | --- |
+| `route` | Route that owns the overlay |
+| `index` | Owner route index |
+| `focusedRoute` | Currently presented route in this navigator |
+| `focusedIndex` | Currently presented route index |
+| `routes` | All routes in this navigator's stack |
+| `meta` | Metadata from the focused screen options |
+| `options` | Transition options from the focused screen |
+| `navigation` | Navigation object for the overlay owner's navigator |
+| `progress` | Stack progress relative to the overlay owner |
+
+An undecided interactive dismissal keeps the current route focused. Once the dismissal commits, `focusedRoute`, `focusedIndex`, `meta`, and `options` switch to the screen underneath while the closing screen finishes animating. A cancelled gesture leaves them unchanged.
+
+## Animation and Style IDs Inside an Overlay
+
+The floating host reuses the stores created by the owner screen. It does not build a second descriptor, options, gesture, or animation provider tree.
+
+That keeps these APIs scoped to the route that owns the overlay:
+
+```tsx
+function HomeOverlay() {
   const animation = useScreenAnimation();
 
-  const style = useAnimatedStyle(() => {
-    const { stackProgress } = animation.value;
-
-    return {
-      opacity: interpolate(stackProgress, [1, 2], [1, 0.3], "clamp"),
-    };
-  });
-
   return (
-    <Animated.View style={style}>
-      <Text>{focusedRoute.name}</Text>
-      <Text>
-        {focusedIndex + 1} / {routes.length}
-      </Text>
-    </Animated.View>
+    <Transition.View styleId="floating-actions">
+      <Actions progress={animation} />
+    </Transition.View>
   );
 }
 ```
 
-`stackProgress` is relative to the overlay owner's position in the stack.
-
-## Overlay Props
-
-| Prop | Purpose |
-| --- | --- |
-| `focusedRoute` | Focused route in the current stack |
-| `focusedIndex` | Focused route index |
-| `routes` | All routes in the current stack |
-| `meta` | `meta` from the focused screen options |
-| `navigation` | Navigation object for the overlay's owning stack |
-| `options` | Focused screen transition options |
-| `progress` | Overlay-relative stack progress |
-
-Many overlay components read animation state through `useScreenAnimation()` instead of consuming `progress` directly.
+Use the reserved interpolator `overlay` slot when the screen transition should move the overlay layer itself. Use `useScreenAnimation()` or a custom `styleId` when elements inside the overlay need their own motion.

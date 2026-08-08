@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { createContext, useContext } from "react";
 import type { BlankStackProviderProps } from "../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackDescriptor,
@@ -6,9 +7,23 @@ import type {
 	BaseStackRoute,
 } from "../types/stack.types";
 
+const NavigationContext = createContext<unknown>(undefined);
+const NavigationRouteContext = createContext<
+	{ key: string; name: string } | undefined
+>(undefined);
+
 mock.module("@react-navigation/native", () => ({
+	NavigationContext,
+	NavigationRouteContext,
 	StackActions: {
 		pop: () => ({ type: "POP" }),
+	},
+	useRoute: () => {
+		const route = useContext(NavigationRouteContext);
+		if (!route) {
+			throw new Error("Navigation route was not provided");
+		}
+		return route;
 	},
 }));
 

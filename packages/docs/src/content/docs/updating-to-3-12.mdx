@@ -1,0 +1,114 @@
+---
+title: "New in 3.12"
+pageTitle: "New in 3.12"
+summary: "v3.12 gives floating overlays their own stack and lets screen interpolators animate them without rebuilding the transition provider tree."
+description: "v3.12 gives floating overlays their own stack and lets screen interpolators animate them without rebuilding the transition provider tree."
+eyebrow: "Changelogs"
+group: "Changelogs"
+hidden: true
+changelogDate: "August 2026"
+order: -3
+to: /changelog/updating-to-3-12
+---
+
+Overlays were one of the more rushed parts of screen-transitions. They could float above a stack, but animating them meant reaching for `useScreenAnimation()`, and the floating layer rebuilt much of the same provider tree that already existed for the screen.
+
+v3.12 replaces that setup. Overlays now have a small transition system of their own while still borrowing the animation and style state from their original screen.
+
+## Overlays now form their own stack
+
+If `[]` means that a screen owns an overlay, consider this stack:
+
+```text
+A[] -> B -> C[] -> D -> E[]
+```
+
+The overlay stack is:
+
+```text
+A[] -> C[] -> E[]
+```
+
+`A` keeps floating when `B` is pushed because `B` does not replace it. When `C` is pushed, its overlay appears above `A`. The same thing happens when `E` is pushed above `C`.
+
+Once shown, an overlay stays mounted while its owning route remains in the navigation stack and `overlayShown` is not disabled. This means state inside an overlay, such as a carousel position or an in-progress interaction, does not reset when another screen is pushed. Only the top overlay accepts touches; the overlays below it remain mounted as part of the visual transition.
+
+## Animate overlays from the interpolator
+
+`screenStyleInterpolator` can now return an `overlay` slot alongside `content`, `backdrop`, and other style slots.
+
+```tsx
+screenStyleInterpolator: ({
+  progress,
+  layouts: {
+    screen: { width },
+  },
+}) => {
+  "worklet";
+
+  return {
+    content: {
+      style: {
+        transform: [
+          {
+            translateX: interpolate(
+              progress,
+              [0, 1, 2],
+              [width, 0, -width * 0.3],
+              "clamp",
+            ),
+          },
+        ],
+      },
+    },
+    overlay: {
+      style: {
+        transform: [
+          {
+            translateX: interpolate(
+              progress,
+              [0, 1, 2],
+              [width, 0, -width],
+              "clamp",
+            ),
+          },
+        ],
+      },
+    },
+  };
+}
+```
+
+The destination screen drives the transition. In `A[] -> B -> C[]`, the `overlay` slot returned by `C` animates `A` out and `C` in as one adjacent overlay pair. `B` is still part of the normal screen stack, but it does not sit between those overlays.
+
+A screen does not need to own an overlay to animate the current one. If `B` returns an `overlay` slot in `A[] -> B`, those styles are applied to `A`. If the interpolator does not return an `overlay` slot, the existing overlay is left alone.
+
+## Less work at the floating layer
+
+The previous overlay host rebuilt the descriptor, options, and animation providers around every floating overlay. The screen had already created that state, so doing it again was wasteful and made the overlay path harder to reason about.
+
+Animation and slot providers can now register their store by route key. The floating overlay reads the original store instead of constructing another transition pipeline. The registry only carries stable store references; animation values continue to update on the UI thread.
+
+This also means `useScreenAnimation()` and transition components with a `styleId` work inside an overlay without adding another scope component. Both resolve against the route that owns the overlay.
+
+## Owner state and focused state
+
+Overlay props now make the difference between ownership and focus explicit.
+
+- `route` and `index` belong to the screen that created the overlay.
+- `focusedRoute`, `focusedIndex`, `options`, and `meta` follow the screen currently presented by that navigator.
+- `navigation` remains scoped to the overlay owner's navigator.
+
+During an interactive dismissal, focused values switch after the dismissal commits. A cancelled drag keeps the current screen focused; a committed drag exposes the screen underneath while the closing screen finishes its animation.
+
+`OverlayProps` also accepts a navigator param list and owner route name, so an overlay can type its owner route and navigation object without adding metadata generics to the navigator itself.
+
+## Programmatic back actions
+
+Blank Stack no longer waits for one closing route to leave React state before accepting another programmatic back action. Repeated back actions can advance through the stack while earlier screens finish their closing animations, matching the behavior of repeated gesture dismissals.
+
+## Upgrade notes
+
+No migration is required for existing overlays. The `overlay` and `overlayShown` screen options keep the same shape, and overlays that use `useScreenAnimation()` continue to work.
+
+The new interpolator slot is optional. Add it only when the screen transition should move or style the floating overlay. Existing interpolators that return only `content`, `backdrop`, custom style IDs, or other slots keep their previous behavior.

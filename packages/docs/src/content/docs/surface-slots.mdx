@@ -1,8 +1,8 @@
 ---
 title: "Layers"
 pageTitle: "Layers"
-summary: "Understand the screen-container layering system: backdrop, content, deprecated surface wrappers, element targets, and navigation masks."
-description: "Understand the screen-container layering system: backdrop, content, deprecated surface wrappers, element targets, and navigation masks."
+summary: "Understand reserved transition layers, including overlays, screen content, backdrops, surfaces, and navigation masks."
+description: "Understand reserved transition layers, including overlays, screen content, backdrops, surfaces, and navigation masks."
 eyebrow: "Core Concepts"
 group: "Core Concepts"
 order: 9
@@ -15,6 +15,7 @@ to: /surface-slots
 
 The layer keys are:
 
+- `overlay`
 - `backdrop`
 - `content`
 - `surface`
@@ -32,6 +33,7 @@ import {
 } from "react-native-screen-transitions";
 
 return {
+  overlay: { style: { ... }, props: { ... } },
   backdrop: { style: { ... }, props: { ... } },
   content: { style: { ... }, props: { ... } },
   surface: { style: { ... }, props: { ... } },
@@ -45,6 +47,7 @@ Each slot also supports shorthand style-only output:
 
 ```tsx
 return {
+  overlay: { transform: [{ translateY: 12 }] },
   backdrop: { opacity: 0.4 },
   content: { transform: [{ translateY: 12 }] },
   "hero-card": { scale: 0.98 },
@@ -53,7 +56,7 @@ return {
 
 ## Render Order
 
-Inside `screen-container`, layers are resolved in this order:
+Most layers render inside `screen-container` in this order:
 
 1. `backdrop`
 2. `content`
@@ -61,10 +64,33 @@ Inside `screen-container`, layers are resolved in this order:
 4. deprecated optional surface wrapper when `surfaceComponent` is provided
 5. screen children and any matching `styleId` targets
 
+`overlay` is resolved separately by the floating overlay host above the navigator's screen containers. It drives the adjacent pair in the overlay stack rather than the normal screen stack.
+
 That gives you two levels of control:
 
 - screen-level layers for the overall container structure
+- the floating overlay layer for persistent stack-relative UI
 - element-level targets for individual transition-aware components inside the screen
+
+## overlay
+
+`overlay` controls the floating overlay transition for the destination screen.
+
+```tsx
+overlay: {
+  style: {
+    transform: [
+      {
+        translateX: interpolate(progress, [0, 1, 2], [width, 0, -width]),
+      },
+    ],
+  },
+}
+```
+
+Overlay adjacency is sparse. Given `A[] -> B -> C[]`, the `overlay` slot returned by `C` animates `A` and `C` as the adjacent pair. A plain screen may also return this slot to animate the latest overlay without owning one itself.
+
+`overlay` does not inherit into nested transition scopes and must not be reused as a custom `styleId`. See [Overlays](/overlays) for the complete ownership and lifecycle contract.
 
 ## backdrop
 

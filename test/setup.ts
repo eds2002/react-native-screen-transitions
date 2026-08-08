@@ -54,6 +54,7 @@ globalThis.resetMutableRegistry = () => {
 };
 
 mock.module("react-native", () => ({
+	View: "View",
 	Platform: {
 		OS: "ios",
 		select: <T>(obj: { ios?: T; android?: T; default?: T }) =>
@@ -124,6 +125,8 @@ mock.module("react-native-reanimated", () => ({
 	useDerivedValue: <T>(factory: () => T) => ({
 		get: factory,
 	}),
+	useAnimatedStyle: <T>(factory: () => T) => factory(),
+	useAnimatedProps: <T>(factory: () => T) => factory(),
 	useAnimatedReaction: (
 		prepare: () => unknown,
 		react: (value: unknown, previousValue: unknown) => void,

@@ -65,6 +65,7 @@ export const PROP_RESET_VALUES: Record<string, unknown> = {
 };
 
 const RESERVED_STYLE_SLOT_IDS = {
+	overlay: true,
 	content: true,
 	backdrop: true,
 	surface: true,
