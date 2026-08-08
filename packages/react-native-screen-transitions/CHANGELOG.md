@@ -2,6 +2,15 @@
 
 ## [3.11.3](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.2...v3.11.3) (2026-08-06)
 
+### Bug Fixes
+
+* **bounds:** refresh grouped boundary retargets and stabilize escaped source portals
+* **lifecycle:** unify gesture and programmatic dismissal completion
+
+### Performance Improvements
+
+* **bounds:** isolate boundary measurement lifecycle updates
+
 ## [3.11.2](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.1...v3.11.2) (2026-08-03)
 
 ## [3.11.1](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.0...v3.11.1) (2026-07-30)
