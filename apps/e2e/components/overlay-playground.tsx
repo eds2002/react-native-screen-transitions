@@ -185,10 +185,12 @@ const styles = StyleSheet.create({
 	},
 	overlay: {
 		alignItems: "center",
-		borderColor: "red",
-		borderWidth: 2,
-		flex: 1,
+		bottom: 0,
+		height: 300,
 		justifyContent: "center",
+		left: 0,
+		position: "absolute",
+		right: 0,
 	},
 	overlayTint: {
 		...StyleSheet.absoluteFillObject,
