@@ -10,6 +10,10 @@ import { StackType } from "../types/stack.types";
 import { isCloseActionReplay } from "../utils/navigation/close-action-replay";
 
 const route = { key: "soft-dismiss-route", name: "details" };
+const NavigationContext = React.createContext<unknown>(undefined);
+const NavigationRouteContext = React.createContext<
+	{ key: string; name: string } | undefined
+>(undefined);
 const current = {
 	route,
 	options: {},
@@ -53,10 +57,19 @@ let stackType: StackType;
 let preventedRoutes: Record<string, { preventRemove: boolean }>;
 
 mock.module("@react-navigation/native", () => ({
+	NavigationContext,
+	NavigationRouteContext,
 	StackActions: {
 		pop: () => ({ type: "POP" }),
 	},
 	usePreventRemoveContext: () => ({ preventedRoutes }),
+	useRoute: () => {
+		const route = React.useContext(NavigationRouteContext);
+		if (!route) {
+			throw new Error("Navigation route was not provided");
+		}
+		return route;
+	},
 }));
 
 mock.module("../providers/screen/descriptors", () => ({

@@ -128,6 +128,11 @@ describe("resolveSlotStyles", () => {
 				},
 			],
 			ancestorStylesMap: {
+				overlay: {
+					style: {
+						opacity: 0.1,
+					},
+				},
 				card: {
 					style: {
 						opacity: 0.2,
@@ -153,10 +158,12 @@ describe("resolveSlotStyles", () => {
 			opacity: 0.7,
 		});
 		expect(result.resolvedStylesMap.content).toBeUndefined();
+		expect(result.resolvedStylesMap.overlay).toBeUndefined();
 	});
 
 	describe("reserved slots", () => {
 		const reservedSlotIds = [
+			"overlay",
 			"content",
 			"backdrop",
 			"surface",
