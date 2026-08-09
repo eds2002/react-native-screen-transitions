@@ -116,6 +116,7 @@ function ReadyOverlayHost({
 
 	const overlayProps: OverlayProps = useMemo(
 		() => ({
+			route: scene.route,
 			index: routeKeys.indexOf(scene.route.key),
 			options: focusedDescriptor?.options ?? {},
 			routes,

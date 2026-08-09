@@ -28,7 +28,6 @@ const createIOSSlideOptions = ({
 }: {
 	includeOverlaySlot: boolean;
 }): ScreenTransitionConfig => ({
-	enableTransitions: true,
 	gestureEnabled: true,
 	gestureDirection: "horizontal",
 	screenStyleInterpolator: ({
@@ -90,7 +89,11 @@ function FullScreenOverlay({ screen }: { screen: "A" | "C" | "E" }) {
 		>
 			<View
 				pointerEvents="none"
-				style={[styles.overlayTint, { backgroundColor: overlayTints[screen] }]}
+				style={[
+					StyleSheet.absoluteFill,
+					styles.overlayTint,
+					{ backgroundColor: overlayTints[screen] },
+				]}
 			/>
 			<Text style={styles.overlayLabel}>Overlay {screen}</Text>
 		</View>
@@ -191,7 +194,6 @@ const styles = StyleSheet.create({
 		justifyContent: "center",
 	},
 	overlayTint: {
-		...StyleSheet.absoluteFillObject,
 		opacity: 0.25,
 	},
 	overlayLabel: {

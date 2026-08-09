@@ -36,6 +36,7 @@ import {
 } from "..";
 import {
 	type BlankStackNavigationOptions,
+	type BlankStackOverlayProps,
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
 } from "../navigators/react-navigation";
@@ -387,6 +388,47 @@ void nativeStackAdapterOptions;
 void nativeStackAdapterScreen;
 
 const blankStackNavigationOptions: BlankStackNavigationOptions = {};
+
+type OnboardingParamList = {
+	Welcome: undefined;
+	Profile: { referralCode?: string };
+};
+
+declare const welcomeOverlayProps: BlankStackOverlayProps<
+	OnboardingParamList,
+	"Welcome"
+>;
+
+function WelcomeOverlay(
+	_props: BlankStackOverlayProps<OnboardingParamList, "Welcome">,
+) {
+	return null;
+}
+
+const welcomeOwnerRouteName: "Welcome" = welcomeOverlayProps.route.name;
+const focusedOnboardingRouteName: "Welcome" | "Profile" =
+	welcomeOverlayProps.focusedRoute.name;
+if (welcomeOverlayProps.focusedRoute.name === "Profile") {
+	const referralCode: string | undefined =
+		welcomeOverlayProps.focusedRoute.params.referralCode;
+	void referralCode;
+}
+welcomeOverlayProps.navigation.navigate("Profile", { referralCode: "dorsia" });
+// @ts-expect-error Unknown routes are rejected by the navigator param list.
+welcomeOverlayProps.navigation.navigate("Missing");
+
+const onboardingOptions: BlankStackNavigationOptions = {
+	meta: {
+		title: "Welcome to Dorsia",
+		cta: { label: "Continue" },
+	},
+	overlay: WelcomeOverlay,
+};
+
+void welcomeOwnerRouteName;
+void focusedOnboardingRouteName;
+void onboardingOptions;
+void WelcomeOverlay;
 
 type StaticBlankStackParamList = {
 	Home: undefined;

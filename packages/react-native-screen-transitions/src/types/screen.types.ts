@@ -11,7 +11,7 @@ import type {
 	GestureProgressMode,
 	ScrollMetadataState,
 } from "./gesture.types";
-import type { OverlayProps } from "./overlay.types";
+import type { OverlayComponent } from "./overlay.types";
 
 export type Layout = {
 	width: number;
@@ -336,7 +336,7 @@ export type ScreenTransitionConfig = {
 	/**
 	 * Function that returns a React Element to display as an overlay.
 	 */
-	overlay?: (props: OverlayProps) => React.ReactNode;
+	overlay?: OverlayComponent;
 
 	/**
 	 * Whether to show the overlay. The overlay is shown by default when `overlay` is provided.
