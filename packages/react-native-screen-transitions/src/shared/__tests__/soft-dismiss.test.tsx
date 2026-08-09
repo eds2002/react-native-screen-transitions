@@ -10,6 +10,10 @@ import { StackType } from "../types/stack.types";
 import { isCloseActionReplay } from "../utils/navigation/close-action-replay";
 
 const route = { key: "soft-dismiss-route", name: "details" };
+const NavigationContext = React.createContext<unknown>(undefined);
+const NavigationRouteContext = React.createContext<
+	{ key: string; name: string } | undefined
+>(undefined);
 const current = {
 	route,
 	options: {},
@@ -53,10 +57,19 @@ let stackType: StackType;
 let preventedRoutes: Record<string, { preventRemove: boolean }>;
 
 mock.module("@react-navigation/native", () => ({
+	NavigationContext,
+	NavigationRouteContext,
 	StackActions: {
 		pop: () => ({ type: "POP" }),
 	},
 	usePreventRemoveContext: () => ({ preventedRoutes }),
+	useRoute: () => {
+		const route = React.useContext(NavigationRouteContext);
+		if (!route) {
+			throw new Error("Navigation route was not provided");
+		}
+		return route;
+	},
 }));
 
 mock.module("../providers/screen/descriptors", () => ({
@@ -233,6 +246,33 @@ describe("soft dismissal", () => {
 		).toBe(LifecycleTransitionRequestKind.None);
 	});
 
+	it("lets blank stack commit a programmatic removal immediately", () => {
+		let prevented = false;
+
+		const Harness = () => {
+			useCloseTransitionIntent(current as any);
+			return null;
+		};
+
+		act(() => {
+			create(React.createElement(Harness));
+		});
+		act(() => {
+			beforeRemoveListener?.({
+				data: { action: { type: "POP" } },
+				preventDefault: () => {
+					prevented = true;
+				},
+			});
+		});
+
+		expect(prevented).toBe(false);
+		expect(softDismissCount).toBe(0);
+		expect(
+			SystemStore.getBag(route.key).pendingLifecycleRequestKind.get(),
+		).toBe(LifecycleTransitionRequestKind.None);
+	});
+
 	it("uses the current native stack for terminal gesture removal", () => {
 		let completeClose: (() => void) | undefined;
 		stackType = StackType.NATIVE;
@@ -273,7 +313,9 @@ describe("soft dismissal", () => {
 		]);
 	});
 
-	it("converts a programmatic removal into a soft dismiss", () => {
+	it("converts a native programmatic removal into a soft dismiss", () => {
+		stackType = StackType.NATIVE;
+		requestStackDismiss = null;
 		const action = { type: "POP", payload: { count: 1 } };
 		let prevented = false;
 		let completeClose: (() => void) | undefined;
@@ -296,7 +338,7 @@ describe("soft dismissal", () => {
 		});
 
 		expect(prevented).toBe(true);
-		expect(softDismissCount).toBe(1);
+		expect(softDismissCount).toBe(0);
 		expect(dispatchedActions).toEqual([]);
 		expect(
 			SystemStore.getBag(route.key).pendingLifecycleRequestKind.get(),

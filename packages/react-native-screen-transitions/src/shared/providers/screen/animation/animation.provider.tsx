@@ -2,6 +2,7 @@ import { type ReactNode, useCallback, useLayoutEffect, useMemo } from "react";
 import { useSharedValue } from "react-native-reanimated";
 import { createBoundsAccessor } from "../../../utils/bounds";
 import createProvider from "../../../utils/create-provider";
+import { useDescriptorsStore } from "../descriptors";
 import { useScreenAnimationPipeline } from "./helpers/pipeline";
 import type {
 	RegisterScreenAnimationDescendant,
@@ -25,25 +26,36 @@ export type ScreenAnimationContextValue = ReturnType<
 };
 
 export type ScreenAnimationContextResult = {
+	key: string;
 	value: ScreenAnimationContextValue;
 };
 
 export const { ScreenAnimationProvider, useScreenAnimationStore } =
 	createProvider("ScreenAnimation", {
 		guarded: true,
+		global: true,
 	})<Props, ScreenAnimationContextValue>(
 		(_props, { useParentStore }): ScreenAnimationContextResult => {
-			const parentContext = useParentStore();
-			const parentScreenInterpolatorProps =
-				parentContext?.screenInterpolatorProps;
-			const parentScreenInterpolatorPropsRevision =
-				parentContext?.screenInterpolatorPropsRevision;
-			const parentAncestorScreenAnimationSources =
-				parentContext?.ancestorScreenAnimationSources;
-			const parentRegisterDescendantScreenAnimationSource =
-				parentContext?.registerDescendantScreenAnimationSource;
-			const parentAncestorDescendantScreenAnimationRegistrars =
-				parentContext?.ancestorDescendantScreenAnimationRegistrars;
+			const currentScreenKey = useDescriptorsStore(
+				(store) => store.derivations.currentScreenKey,
+			);
+			const parentScreenInterpolatorProps = useParentStore(
+				(parentContext) => parentContext?.screenInterpolatorProps,
+			);
+			const parentScreenInterpolatorPropsRevision = useParentStore(
+				(parentContext) => parentContext?.screenInterpolatorPropsRevision,
+			);
+			const parentAncestorScreenAnimationSources = useParentStore(
+				(parentContext) => parentContext?.ancestorScreenAnimationSources,
+			);
+			const parentRegisterDescendantScreenAnimationSource = useParentStore(
+				(parentContext) =>
+					parentContext?.registerDescendantScreenAnimationSource,
+			);
+			const parentAncestorDescendantScreenAnimationRegistrars = useParentStore(
+				(parentContext) =>
+					parentContext?.ancestorDescendantScreenAnimationRegistrars,
+			);
 
 			const {
 				screenInterpolatorProps,
@@ -192,6 +204,7 @@ export const { ScreenAnimationProvider, useScreenAnimationStore } =
 			]);
 
 			return {
+				key: currentScreenKey,
 				value: {
 					screenInterpolatorProps,
 					screenInterpolatorPropsRevision,

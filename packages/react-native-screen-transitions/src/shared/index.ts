@@ -71,6 +71,7 @@ export type {
 	BoundsNavigationZoomStyle,
 	GestureHandoffValues,
 	InactiveBehavior,
+	OverlayComponent,
 	OverlayProps,
 	RawGestureValues,
 	ScreenBackdropComponent,

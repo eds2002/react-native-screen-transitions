@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { createContext, useContext } from "react";
 import type { BlankStackProviderProps } from "../types/providers/blank-stack-provider.types";
 import type {
 	BaseStackDescriptor,
@@ -6,9 +7,23 @@ import type {
 	BaseStackRoute,
 } from "../types/stack.types";
 
+const NavigationContext = createContext<unknown>(undefined);
+const NavigationRouteContext = createContext<
+	{ key: string; name: string } | undefined
+>(undefined);
+
 mock.module("@react-navigation/native", () => ({
+	NavigationContext,
+	NavigationRouteContext,
 	StackActions: {
 		pop: () => ({ type: "POP" }),
+	},
+	useRoute: () => {
+		const route = useContext(NavigationRouteContext);
+		if (!route) {
+			throw new Error("Navigation route was not provided");
+		}
+		return route;
 	},
 }));
 
@@ -111,6 +126,41 @@ describe("createBlankStackController", () => {
 		);
 		expect(snapshot.state.scenes.map((scene) => scene.activity)).toEqual([
 			"inactive",
+			"inert",
+			"closing",
+		]);
+	});
+
+	it("replaces the retained programmatic close when navigation pops again", () => {
+		const navigation = createNavigation();
+		const routeA = createRoute("a");
+		const routeB = createRoute("b");
+		const routeC = createRoute("c");
+		const descriptorA = createDescriptor(routeA, navigation);
+		const descriptorB = createDescriptor(routeB, navigation);
+		const descriptorC = createDescriptor(routeC, navigation);
+		const controller = createBlankStackController(
+			createProps(
+				[routeA, routeB, routeC],
+				{ a: descriptorA, b: descriptorB, c: descriptorC },
+				navigation,
+			),
+		);
+
+		controller.update(
+			createProps([routeA, routeB], { a: descriptorA, b: descriptorB }, navigation),
+		);
+		expect(controller.getSnapshot().state.closingRouteKeys).toEqual(
+			new Set(["c"]),
+		);
+
+		controller.update(createProps([routeA], { a: descriptorA }, navigation));
+
+		const snapshot = controller.getSnapshot();
+		expect(snapshot.state.routes.map((route) => route.key)).toEqual(["a", "b"]);
+		expect(snapshot.state.closingRouteKeys).toEqual(new Set(["b"]));
+		expect(snapshot.state.descriptors.c).toBeUndefined();
+		expect(snapshot.state.scenes.map((scene) => scene.activity)).toEqual([
 			"inert",
 			"closing",
 		]);

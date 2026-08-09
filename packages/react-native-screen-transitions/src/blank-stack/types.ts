@@ -98,8 +98,14 @@ export interface BlankStackFactoryOptions {
  * Props passed to overlay components in blank-stack.
  * Uses the shared OverlayProps type with blank-stack's navigation type.
  */
-export type BlankStackOverlayProps = OverlayProps<
-	BlankStackNavigationProp<ParamListBase>
+export type BlankStackOverlayProps<
+	ParamList extends ParamListBase = ParamListBase,
+	RouteName extends keyof ParamList = keyof ParamList,
+	NavigatorID extends string | undefined = undefined,
+> = OverlayProps<
+	BlankStackNavigationProp<ParamList, RouteName, NavigatorID>,
+	ParamList,
+	RouteName
 >;
 
 export type BlankStackNavigationOptions = ScreenTransitionConfig & {

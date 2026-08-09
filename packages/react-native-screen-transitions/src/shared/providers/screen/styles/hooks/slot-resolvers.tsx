@@ -1,3 +1,4 @@
+import { useRoute } from "@react-navigation/native";
 import { useMemo } from "react";
 import { useAnimatedProps, useAnimatedStyle } from "react-native-reanimated";
 import { NO_PROPS, NO_STYLES } from "../../../../constants";
@@ -7,8 +8,19 @@ import {
 } from "../helpers/compose-slot-style";
 import { useScreenSlots } from "../slot.provider";
 
+const useCurrentScreenSlotsMap = () => {
+	const route = useRoute();
+	const slotsMap = useScreenSlots(route.key, (store) => store.slotsMap);
+
+	if (!slotsMap) {
+		throw new Error(`ScreenSlot store for route "${route.key}" was not found`);
+	}
+
+	return slotsMap;
+};
+
 export const useSlotStyles = (slotId: string | undefined) => {
-	const { slotsMap } = useScreenSlots();
+	const slotsMap = useCurrentScreenSlotsMap();
 
 	return useAnimatedStyle(() => {
 		const slot = slotId ? slotsMap.get()[slotId] : undefined;
@@ -26,7 +38,7 @@ export const useComposedSlotStyles = (
 	slotId: string | undefined,
 	style: unknown,
 ) => {
-	const { slotsMap } = useScreenSlots();
+	const slotsMap = useCurrentScreenSlotsMap();
 	const localTransform = useMemo(
 		() => getLocalTransformForSlotComposition(style),
 		[style],
@@ -50,7 +62,7 @@ export const useComposedSlotStyles = (
  * target takes the full associated style. Yields `NO_STYLES` when neither is set.
  */
 export const useSlotStackingStyles = (slotId: string | undefined) => {
-	const { slotsMap } = useScreenSlots();
+	const slotsMap = useCurrentScreenSlotsMap();
 
 	return useAnimatedStyle(() => {
 		const baseStyle = slotId ? slotsMap.get()[slotId]?.style : undefined;
@@ -66,7 +78,7 @@ export const useSlotStackingStyles = (slotId: string | undefined) => {
 };
 
 export const useSlotLayoutStyles = (slotId: string | undefined) => {
-	const { slotsMap } = useScreenSlots();
+	const slotsMap = useCurrentScreenSlotsMap();
 
 	return useAnimatedStyle(() => {
 		const baseStyle = slotId ? slotsMap.get()[slotId]?.style : undefined;
@@ -103,7 +115,7 @@ export const useSlotLayoutStyles = (slotId: string | undefined) => {
 };
 
 export const useSlotProps = (slotId: string | undefined) => {
-	const { slotsMap } = useScreenSlots();
+	const slotsMap = useCurrentScreenSlotsMap();
 
 	return useAnimatedProps(() => {
 		return (slotId ? slotsMap.get()[slotId]?.props : undefined) ?? NO_PROPS;

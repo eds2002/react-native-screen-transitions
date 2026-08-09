@@ -80,13 +80,10 @@ const StackViewContent = memo(function StackViewContent() {
 	const routeKeys = useBlankStackStore(
 		(store) => store?.routeKeys ?? EMPTY_ROUTE_KEYS,
 	);
-	const shouldShowFloatOverlay = useBlankStackStore(
-		(store) => store?.shouldShowFloatOverlay ?? false,
-	);
 
 	return (
 		<PortalProvider>
-			{shouldShowFloatOverlay ? <Overlay.Float /> : null}
+			<Overlay.Float />
 
 			<ActivityContainer>
 				{routeKeys.map((routeKey) => (

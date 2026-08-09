@@ -1,5 +1,24 @@
 # Changelog
 
+## [3.12.0](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.2...v3.12.0) (2026-08-09)
+
+### Features
+
+* add stacked floating overlays ([3e12de0](https://github.com/eds2002/react-native-screen-transitions/commit/3e12de0b6d58324c5aaa0561b2c04d7403d121bc))
+* coordinate sparse overlay transitions ([b5be642](https://github.com/eds2002/react-native-screen-transitions/commit/b5be642b494ad3ec3a233c299d9c5ad02fc99917))
+* **types:** annotate overlay metadata ([9b940f8](https://github.com/eds2002/react-native-screen-transitions/commit/9b940f8669ec2107aa0a4a5874a635c2912e0f24))
+
+### Bug Fixes
+
+* allow consecutive programmatic dismissals ([eb5b5d2](https://github.com/eds2002/react-native-screen-transitions/commit/eb5b5d2a9d6b205c9ecc4c6dc0661590f63c1b79))
+* **overlays:** finalize slot contracts ([c0e649a](https://github.com/eds2002/react-native-screen-transitions/commit/c0e649a12b3671684668c84b89c8a20b79708cc0))
+* **overlays:** preserve route-scoped host state ([9c52a59](https://github.com/eds2002/react-native-screen-transitions/commit/9c52a59717c133fcd405b291fc2b78a8a6139cf7))
+
+### Performance Improvements
+
+* **gestures:** isolate active ownership subscriptions ([a9c4881](https://github.com/eds2002/react-native-screen-transitions/commit/a9c4881d3b69c393c6056adeafeb8f65d7811066))
+* **providers:** narrow store subscriptions ([ba67cf6](https://github.com/eds2002/react-native-screen-transitions/commit/ba67cf69e93ce7b32c438fd6fb9d275de6ae345c))
+
 ## [3.11.3](https://github.com/eds2002/react-native-screen-transitions/compare/v3.11.2...v3.11.3) (2026-08-06)
 
 ### Bug Fixes

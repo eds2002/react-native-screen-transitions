@@ -42,3 +42,29 @@ export const hasCloseTransitionFinished = ({
 	"worklet";
 	return !!closing && animationProgress === 0;
 };
+
+export const isScreenInterpolatorReady = ({
+	hasInterpolator,
+	opening,
+	closing,
+	pendingLifecycleStartBlockCount,
+	animationProgress,
+}: {
+	hasInterpolator: boolean;
+	opening: boolean;
+	closing: number;
+	pendingLifecycleStartBlockCount: number;
+	animationProgress: number;
+}) => {
+	"worklet";
+
+	return (
+		hasInterpolator &&
+		!isOpenTransitionBlocked({
+			opening,
+			pendingLifecycleStartBlockCount,
+			animationProgress,
+		}) &&
+		!hasCloseTransitionFinished({ closing, animationProgress })
+	);
+};

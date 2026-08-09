@@ -154,8 +154,14 @@ export type NativeStackHeaderLeftProps = NativeStackHeaderRightProps & {
  * Props passed to overlay components in native-stack.
  * Uses the shared OverlayProps type with native-stack's navigation type.
  */
-export type NativeStackOverlayProps = OverlayProps<
-	NativeStackNavigationProp<ParamListBase>
+export type NativeStackOverlayProps<
+	ParamList extends ParamListBase = ParamListBase,
+	RouteName extends keyof ParamList = keyof ParamList,
+	NavigatorID extends string | undefined = undefined,
+> = OverlayProps<
+	NativeStackNavigationProp<ParamList, RouteName, NavigatorID>,
+	ParamList,
+	RouteName
 >;
 
 /**

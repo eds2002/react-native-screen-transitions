@@ -7,9 +7,12 @@ import type { DerivedValue, SharedValue } from "react-native-reanimated";
 import {
 	type BlankStackFactoryOptions,
 	type BlankStackNavigationOptions,
+	type BlankStackOverlayProps,
 	type BlankStackScreenProps,
 	createBlankStackNavigator,
 } from "../../blank-stack";
+import type { ComponentStackOverlayProps } from "../../component-stack";
+import type { NativeStackOverlayProps as LegacyNativeStackOverlayProps } from "../../native-stack";
 import type Transition from "..";
 import type {
 	BoundsMotion,
@@ -24,6 +27,7 @@ import type {
 	ScreenContentComponentProps,
 	ScreenGestureTarget,
 	ScreenInterpolationProps,
+	ScreenStyleInterpolator,
 	ScreenTransitionConfig,
 	ScreenTransitionDepthTarget,
 	ScreenTransitionTarget,
@@ -465,6 +469,81 @@ const blankStackFactoryOptions: BlankStackFactoryOptions = {
 	independent: true,
 };
 const blankStackNavigationOptions: BlankStackNavigationOptions = {};
+
+type OnboardingParamList = {
+	Welcome: undefined;
+	Profile: { referralCode?: string };
+};
+
+declare const welcomeOverlayProps: BlankStackOverlayProps<
+	OnboardingParamList,
+	"Welcome"
+>;
+
+function WelcomeOverlay(
+	_props: BlankStackOverlayProps<OnboardingParamList, "Welcome">,
+) {
+	return null;
+}
+
+const welcomeOwnerRouteName: "Welcome" = welcomeOverlayProps.route.name;
+const focusedOnboardingRouteName: "Welcome" | "Profile" =
+	welcomeOverlayProps.focusedRoute.name;
+if (welcomeOverlayProps.focusedRoute.name === "Profile") {
+	const referralCode: string | undefined =
+		welcomeOverlayProps.focusedRoute.params.referralCode;
+	void referralCode;
+}
+welcomeOverlayProps.navigation.navigate("Profile", { referralCode: "dorsia" });
+// @ts-expect-error Unknown routes are rejected by the navigator param list.
+welcomeOverlayProps.navigation.navigate("Missing");
+
+const onboardingOptions: BlankStackNavigationOptions = {
+	meta: {
+		title: "Welcome to Dorsia",
+		cta: { label: "Continue" },
+	},
+	overlay: WelcomeOverlay,
+};
+
+const onboardingInterpolator: ScreenStyleInterpolator = ({ current }) => {
+	"worklet";
+	const title: unknown = current.meta?.title;
+	void title;
+	return {};
+};
+
+declare const legacyNativeOverlayProps: LegacyNativeStackOverlayProps<
+	OnboardingParamList,
+	"Profile"
+>;
+declare const componentOverlayProps: ComponentStackOverlayProps<
+	OnboardingParamList,
+	"Profile"
+>;
+const legacyNativeReferralCode: string | undefined =
+	legacyNativeOverlayProps.route.params.referralCode;
+const componentOverlayMeta: Record<string, unknown> | undefined =
+	componentOverlayProps.meta;
+
+// @ts-expect-error Navigator options do not carry an application metadata schema.
+declare const invalidTypedBlankStackOptions: BlankStackNavigationOptions<{
+	title: string;
+}>;
+// @ts-expect-error Interpolator metadata is intentionally accessed as runtime data.
+declare const invalidTypedInterpolator: ScreenStyleInterpolator<{
+	title: string;
+}>;
+
+void welcomeOwnerRouteName;
+void focusedOnboardingRouteName;
+void onboardingOptions;
+void onboardingInterpolator;
+void WelcomeOverlay;
+void legacyNativeReferralCode;
+void componentOverlayMeta;
+void invalidTypedBlankStackOptions;
+void invalidTypedInterpolator;
 
 type StaticBlankStackParamList = {
 	Home: undefined;

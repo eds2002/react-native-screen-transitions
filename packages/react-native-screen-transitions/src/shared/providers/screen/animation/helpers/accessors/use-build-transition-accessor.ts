@@ -4,7 +4,7 @@ import type {
 	ScreenTransitionTarget,
 } from "../../../../../types/animation.types";
 import { createBoundsAccessor } from "../../../../../utils/bounds";
-import { useScreenAnimationStore } from "../../animation.provider";
+import type { ScreenAnimationContextValue } from "../../animation.provider";
 import type {
 	ScreenAnimationDescendantSources,
 	ScreenAnimationSource,
@@ -14,6 +14,14 @@ import type {
 type TransitionSourceIndex = number;
 
 export type TransitionAccessorSource = ScreenAnimationTransitionSource;
+
+type TransitionAccessorStore = Pick<
+	ScreenAnimationContextValue,
+	| "screenInterpolatorProps"
+	| "screenInterpolatorPropsRevision"
+	| "ancestorScreenAnimationSources"
+	| "descendantScreenAnimationSources"
+>;
 
 const resolveTargetIndex = (
 	target: ScreenTransitionTarget | undefined,
@@ -118,14 +126,12 @@ const buildSourceBoundsAccessor = (source: ScreenAnimationSource) => {
 	});
 };
 
-export const useBuildTransitionAccessor = () => {
-	const {
-		screenInterpolatorProps,
-		screenInterpolatorPropsRevision,
-		ancestorScreenAnimationSources,
-		descendantScreenAnimationSources,
-	} = useScreenAnimationStore();
-
+export const useBuildTransitionAccessor = ({
+	screenInterpolatorProps,
+	screenInterpolatorPropsRevision,
+	ancestorScreenAnimationSources,
+	descendantScreenAnimationSources,
+}: TransitionAccessorStore) => {
 	return useMemo(() => {
 		const selfSource = {
 			screenInterpolatorProps,

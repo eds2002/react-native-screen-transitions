@@ -384,6 +384,14 @@ export type TransitionInterpolatedStyle = {
 	 * This reserved key is stripped before style slot normalization.
 	 */
 	options?: TransitionInterpolatorOptions;
+	/**
+	 * Animated style and props for the route-owned floating overlay.
+	 *
+	 * Visible overlays form their own adjacency chain. A route that returns this
+	 * slot controls the previous visible overlay and, when it owns an overlay,
+	 * its entering overlay.
+	 */
+	overlay?: TransitionSlotStyle;
 	/** Animated style and props for the main screen content view. */
 	content?: TransitionSlotStyle;
 	/** Animated style and props for the backdrop layer between screens. */

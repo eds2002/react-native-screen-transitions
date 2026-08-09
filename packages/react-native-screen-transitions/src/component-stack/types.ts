@@ -74,8 +74,14 @@ type ComponentStackNavigationConfig = {};
  *
  * @deprecated Component stack is deprecated. Use blank stack instead.
  */
-export type ComponentStackOverlayProps = OverlayProps<
-	ComponentStackNavigationProp<ParamListBase>
+export type ComponentStackOverlayProps<
+	ParamList extends ParamListBase = ParamListBase,
+	RouteName extends keyof ParamList = keyof ParamList,
+	NavigatorID extends string | undefined = undefined,
+> = OverlayProps<
+	ComponentStackNavigationProp<ParamList, RouteName, NavigatorID>,
+	ParamList,
+	RouteName
 >;
 
 type ComponentStackScreenTransitionConfig = ScreenTransitionConfig & {
