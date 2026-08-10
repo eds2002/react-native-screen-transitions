@@ -1,11 +1,6 @@
 import { beforeEach, describe, expect, it } from "bun:test";
-import { makeMutable } from "react-native-reanimated";
-import { getInitialDestinationMeasurementSignal } from "../../components/boundary/utils/destination-signals";
-import { getRefreshBoundarySignal } from "../../components/boundary/utils/refresh-signals";
-import { getInitialSourceCaptureSignal } from "../../components/boundary/utils/source-signals";
 import { NAVIGATION_MASK_ELEMENT_STYLE_ID } from "../../constants";
 import { applyMeasuredBoundsWrites } from "../../providers/helpers/measured-bounds-writes";
-import { AnimationStore } from "../../stores/animation.store";
 import { BoundStore } from "../../stores/bounds";
 import { createScreenPairKey } from "../../stores/bounds/helpers/link-pairs.helpers";
 import { pairs } from "../../stores/bounds/internals/state";
@@ -14,7 +9,6 @@ import {
 	getZoomContentAnchor,
 	getZoomContentTarget,
 } from "../../utils/bounds/navigation/zoom/targets";
-import { animateToProgress } from "../../utils/animation/animate-to-progress";
 
 const SCREEN_LAYOUT = { width: 390, height: 844 };
 const PAIR_KEY = createScreenPairKey("screen-a", "screen-b");
@@ -146,35 +140,6 @@ beforeEach(() => {
 });
 
 describe("zoom bound target", () => {
-	it("does not refresh completed target bounds during an initial entrance", () => {
-		registerSource();
-		registerDestination();
-		const animations = AnimationStore.getBag("screen-b");
-
-		animateToProgress({
-			target: "open",
-			emitWillAnimate: false,
-			animations,
-			targetProgress: makeMutable(0),
-			animationProgress: makeMutable(0),
-		});
-
-		const refresh = getRefreshBoundarySignal({
-			enabled: true,
-			currentScreenKey: "screen-b",
-			pairKey: PAIR_KEY,
-			linkId: "card",
-			shouldRefresh: animations.willAnimate.get() === 1,
-			closing: false,
-			linkState: pairs.get(),
-		});
-
-		expect(refresh).toBeNull();
-		expect(BoundStore.link.getDestination(PAIR_KEY, "card")?.bounds).toEqual(
-			DESTINATION_BOUNDS,
-		);
-	});
-
 	it("keeps bound targeting opt-in", () => {
 		registerSource();
 		registerDestination();
@@ -336,16 +301,6 @@ describe("zoom bound target", () => {
 			pageY: DESTINATION_BOUNDS.pageY + 180,
 			y: DESTINATION_BOUNDS.y + 180,
 		};
-		const signal = getInitialDestinationMeasurementSignal({
-			enabled: true,
-			pairKey: PAIR_KEY,
-			linkId: "card",
-			destinationPresent: true,
-			sourcePresent: true,
-			linkState: pairs.get(),
-		});
-
-		expect(signal).toEqual({ pairKey: PAIR_KEY, action: "measure" });
 		applyMeasuredBoundsWrites({
 			entryTag: "card",
 			linkId: "card",
@@ -468,6 +423,18 @@ describe("zoom bound target", () => {
 				zoomOptions: { target: "bound" },
 			}),
 		).toEqual({});
+		expect(pairs.get()[PAIR_KEY]?.destinationRequests?.card).toBe(true);
+	});
+
+	it("requests the source when a bound-target pair has neither side", () => {
+		expect(
+			buildZoomStyles({
+				tag: "card",
+				props: createZoomProps({ focused: true, progress: 0 }),
+				zoomOptions: { target: "bound" },
+			}),
+		).toEqual({});
+		expect(pairs.get()[PAIR_KEY]?.sourceRequests?.card).toBe(true);
 	});
 });
 
@@ -478,17 +445,7 @@ describe("zoom source-only target", () => {
 			props: createZoomProps({ focused: true, progress: 0 }),
 		});
 
-		expect(
-			getInitialSourceCaptureSignal({
-				enabled: true,
-				sourcePairKey: PAIR_KEY,
-				linkId: "card",
-				linkState: pairs.get(),
-			}),
-		).toEqual({
-			pairKey: PAIR_KEY,
-			signal: "source|screen-a<>screen-b|card",
-		});
+		expect(pairs.get()[PAIR_KEY]?.sourceRequests?.card).toBe(true);
 	});
 
 	it("builds opening styles from the source and implicit target alone", () => {

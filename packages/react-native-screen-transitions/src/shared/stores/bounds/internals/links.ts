@@ -11,7 +11,6 @@ import {
 	getDestination as getPairDestination,
 	getLink as getPairLink,
 	getSource as getPairSource,
-	getSourceScreenKeyFromPairKey,
 } from "../helpers/link-pairs.helpers";
 import type {
 	BoundaryRuntimeFlags,
@@ -24,6 +23,7 @@ import type {
 	TagID,
 	TagLink,
 } from "../types";
+import { screenBelongsToScope } from "./screen-graph";
 import { pairs } from "./state";
 
 const syncLinkStatus = (link: TagLink) => {
@@ -315,6 +315,7 @@ function setDestination(
 			group,
 			runtimeFlags,
 		);
+		delete state[pairKey]?.destinationRequests?.[linkKey];
 
 		return state;
 	});
@@ -324,24 +325,11 @@ function setActiveGroupId(pairKey: ScreenPairKey, group: GroupKey, tag: TagID) {
 	"worklet";
 	pairs.modify(<T extends LinkPairsState>(state: T): T => {
 		"worklet";
-		writeGroup(state, pairKey, group, getLinkKeyFromTag(tag));
-		return state;
-	});
-}
-
-function requestSourceMeasure(pairKey: ScreenPairKey, tag: TagID) {
-	"worklet";
-	pairs.modify(<T extends LinkPairsState>(state: T): T => {
-		"worklet";
 		const linkKey = getLinkKeyFromTag(tag);
-		const link = getPairLink(state, pairKey, linkKey);
-
-		if (link?.source || state[pairKey]?.sourceRequests?.[linkKey]) {
-			return state;
+		writeGroup(state, pairKey, group, linkKey);
+		if (!getPairLink(state, pairKey, linkKey)?.source) {
+			ensurePairSourceRequests(state, pairKey)[linkKey] = true;
 		}
-
-		ensurePairSourceRequests(state, pairKey)[linkKey] = true;
-
 		return state;
 	});
 }
@@ -374,14 +362,18 @@ function getResolvedLink(
 	const state = pairs.get();
 	const linkKey = getLinkKeyFromTag(tag);
 	const group = getGroupKeyFromTag(tag);
-	const link = getPairLink(state, pairKey, linkKey);
+	const activeId = group
+		? state[pairKey]?.groups?.[group]?.activeId
+		: undefined;
+	const resolvedLinkKey = activeId ?? linkKey;
+	const link = getPairLink(state, pairKey, resolvedLinkKey);
 
 	// Group active ids can update before the new member has a full source/destination
 	// link. As soon as the requested member has source bounds, prefer it; only
 	// fall back while the requested member has no source yet.
 	if (!group || hasSourceLink(link)) {
 		return {
-			tag,
+			tag: group ? createGroupTag(group, resolvedLinkKey) : tag,
 			link,
 		};
 	}
@@ -404,34 +396,34 @@ function getResolvedLink(
 	};
 }
 
-function getPairKeyForSource(
-	tag: TagID,
-	screenKey: ScreenKey,
-): ScreenPairKey | null {
-	"worklet";
-	const state = pairs.get();
-	const linkKey = getLinkKeyFromTag(tag);
-	for (const pairKey in state) {
-		if (getSourceScreenKeyFromPairKey(pairKey) !== screenKey) continue;
-		if (
-			getResolvedLink(pairKey, tag).link?.destination ||
-			state[pairKey]?.sourceRequests?.[linkKey]
-		) {
-			return pairKey;
-		}
-	}
-	return null;
-}
-
 function getPairKeyForDestination(
 	tag: TagID,
 	screenKey: ScreenKey,
 ): ScreenPairKey | null {
 	"worklet";
 	const state = pairs.get();
+	const group = getGroupKeyFromTag(tag);
 	for (const pairKey in state) {
-		if (getDestinationScreenKeyFromPairKey(pairKey) !== screenKey) continue;
-		if (getResolvedLink(pairKey, tag).link) return pairKey;
+		const resolvedLink = getResolvedLink(pairKey, tag).link;
+		if (!resolvedLink) continue;
+		if (
+			screenBelongsToScope(
+				screenKey,
+				getDestinationScreenKeyFromPairKey(pairKey),
+			) ||
+			resolvedLink.destination?.screenKey === screenKey
+		) {
+			return pairKey;
+		}
+
+		if (!group) continue;
+		const links = state[pairKey]?.links;
+		for (const linkKey in links) {
+			const link = links[linkKey];
+			if (link?.group === group && link.destination?.screenKey === screenKey) {
+				return pairKey;
+			}
+		}
 	}
 	return null;
 }
@@ -457,10 +449,8 @@ export {
 	getDestination,
 	getLink,
 	getPairKeyForDestination,
-	getPairKeyForSource,
 	getResolvedLink,
 	getSource,
-	requestSourceMeasure,
 	setActiveGroupId,
 	setDestination,
 	setSource,

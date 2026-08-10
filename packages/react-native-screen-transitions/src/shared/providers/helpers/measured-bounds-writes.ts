@@ -1,4 +1,5 @@
 import type { MeasuredDimensions, StyleProps } from "react-native-reanimated";
+import { completeBoundaryMeasurement } from "../../stores/bounds/internals/coordinator";
 import { setEntry } from "../../stores/bounds/internals/entries";
 import { setDestination, setSource } from "../../stores/bounds/internals/links";
 import type { ScreenPairKey } from "../../stores/bounds/types";
@@ -69,5 +70,9 @@ export const applyMeasuredBoundsWrites = (
 			group,
 			{ handoff },
 		);
+	}
+
+	if (linkWrite) {
+		completeBoundaryMeasurement(linkWrite, entryTag);
 	}
 };

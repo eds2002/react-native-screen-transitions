@@ -1,5 +1,11 @@
 import { makeMutable } from "react-native-reanimated";
-import type { Entry, LinkPairsState, ScreenKey, TagID } from "../types";
+import type {
+	BoundsScreenState,
+	Entry,
+	LinkPairsState,
+	ScreenKey,
+	TagID,
+} from "../types";
 
 export type BoundaryEntriesState = Record<
 	TagID,
@@ -31,3 +37,6 @@ export const boundaryRegistry = makeMutable<BoundaryEntriesState>({});
  * }
  */
 export const pairs = makeMutable<LinkPairsState>({});
+
+/** Stable ownership graph used to match leaf boundaries to transition roots. */
+export const boundsScreens = makeMutable<BoundsScreenState>({});

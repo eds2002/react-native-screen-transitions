@@ -1,9 +1,10 @@
+import { useIsFocused } from "@react-navigation/native";
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
 import { useBoundaryRootStore } from "../../../../providers/boundary-root.provider";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
-import { isTeleportEnabled } from "../../../utils/teleport-control";
+import { shouldAttachBoundaryPortal } from "../helpers/attachment";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 
@@ -24,6 +25,10 @@ export const useBoundaryPortalAttachment = ({
 	const currentScreenKey = useDescriptorsStore(
 		(s) => s.derivations.currentScreenKey,
 	);
+	// React Navigation resolves focus through the entire parent navigator chain.
+	// A leaf that is still selected in its own one-screen stack becomes unfocused
+	// when any ancestor route is covered.
+	const focused = useIsFocused();
 	const { slotsMap } = useScreenSlots();
 	const portalHostName = useSharedValue<string | null>(null);
 	const portalHostReady = useSharedValue(false);
@@ -31,7 +36,6 @@ export const useBoundaryPortalAttachment = ({
 
 	useActivePortalBoundaryHost({
 		boundaryId,
-		currentScreenKey,
 		escapeHostKey,
 		localMeasurement,
 		portalHostName,
@@ -49,10 +53,11 @@ export const useBoundaryPortalAttachment = ({
 			...slotProps
 		} = slot?.props ?? {};
 
-		const shouldAttach =
-			slot !== undefined &&
-			isTeleportEnabled(teleport) &&
-			portalHostReady.get();
+		const shouldAttach = shouldAttachBoundaryPortal({
+			focused,
+			portalHostReady: portalHostReady.get(),
+			teleport,
+		});
 
 		const hostName = shouldAttach
 			? portalHostName.get()
@@ -62,7 +67,7 @@ export const useBoundaryPortalAttachment = ({
 			...slotProps,
 			hostName,
 		};
-	});
+	}, [focused]);
 
 	return { teleportProps };
 };

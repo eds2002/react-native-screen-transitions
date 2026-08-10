@@ -1,9 +1,9 @@
 import { useLayoutEffect } from "react";
 import { runOnUI } from "react-native-reanimated";
 import {
-	removeEntry,
-	setEntry,
-} from "../../../../stores/bounds/internals/entries";
+	registerBoundary,
+	unregisterBoundary,
+} from "../../../../stores/bounds/internals/coordinator";
 import type { BoundTag } from "../../../../stores/bounds/types";
 import type { BoundaryConfigProps } from "../../types";
 
@@ -23,19 +23,28 @@ export const useBoundaryPresence = (params: {
 		handoff,
 		escapeClipping,
 	} = params;
-	const { tag } = boundTag;
-
 	useLayoutEffect(() => {
 		if (!enabled) return;
 
-		runOnUI(setEntry)(tag, currentScreenKey, {
-			boundaryConfig,
-			handoff: handoff ? true : null,
-			escapeClipping: escapeClipping ? true : null,
+		runOnUI(registerBoundary)({
+			boundTag,
+			screenKey: currentScreenKey,
+			entry: {
+				boundaryConfig,
+				handoff: handoff ? true : null,
+				escapeClipping: escapeClipping ? true : null,
+			},
 		});
 
 		return () => {
-			runOnUI(removeEntry)(tag, currentScreenKey);
+			runOnUI(unregisterBoundary)(boundTag, currentScreenKey);
 		};
-	}, [enabled, tag, currentScreenKey, boundaryConfig, handoff, escapeClipping]);
+	}, [
+		enabled,
+		boundTag,
+		currentScreenKey,
+		boundaryConfig,
+		handoff,
+		escapeClipping,
+	]);
 };

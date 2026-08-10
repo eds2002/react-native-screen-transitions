@@ -1,12 +1,18 @@
 import type { ReactNode } from "react";
-import { useMemo } from "react";
+import { useLayoutEffect, useMemo } from "react";
+import { runOnUI } from "react-native-reanimated";
 import { useScreenTransitionsAdapterOptionalContext } from "../../../adapters/with-screen-transitions/context";
 import { useBlankStackStore } from "../../../providers/stack/blank-stack.provider";
+import {
+	registerScreen,
+	unregisterScreen,
+} from "../../../stores/bounds/internals/coordinator";
+import { SystemStore } from "../../../stores/system.store";
 import type { BaseStackDescriptor } from "../../../types/stack.types";
 import createProvider from "../../../utils/create-provider";
 import type { DescriptorDerivations } from "./helpers/derive-descriptor-derivations";
 import { deriveDescriptorDerivations } from "./helpers/derive-descriptor-derivations";
-import { getAncestorKeys } from "./helpers/get-ancestor-keys";
+import { deriveStructuralAncestorKeys } from "./helpers/derive-structural-ancestor-keys";
 
 /**
  * Base descriptor interface - minimal contract for all stack types.
@@ -45,7 +51,13 @@ export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
 	"Descriptors",
 	{ guarded: true },
 )<DescriptorsProviderProps, DescriptorStoreValue<BaseDescriptor>>(
-	({ previous, current, next, routeKey, children }) => {
+	({ previous, current, next, routeKey, children }, { useParentStore }) => {
+		const parentScreenKey = useParentStore(
+			(store) => store?.derivations.currentScreenKey,
+		);
+		const parentAncestorKeys = useParentStore(
+			(store) => store?.derivations.ancestorKeys,
+		);
 		const blankStackCurrent = useBlankStackStore((store) =>
 			routeKey ? store?.scenesByKey[routeKey]?.descriptor : undefined,
 		);
@@ -85,8 +97,16 @@ export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
 		);
 
 		const ancestorKeys = useMemo(
-			() => getAncestorKeys(resolvedCurrent),
-			[resolvedCurrent],
+			() =>
+				deriveStructuralAncestorKeys(
+					parentScreenKey
+						? {
+								currentScreenKey: parentScreenKey,
+								ancestorKeys: parentAncestorKeys ?? [],
+							}
+						: null,
+				),
+			[parentAncestorKeys, parentScreenKey],
 		);
 
 		const derivations = useMemo(
@@ -99,6 +119,32 @@ export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
 				}),
 			[resolvedPrevious, resolvedCurrent, resolvedNext, ancestorKeys],
 		);
+		const animationProgress = SystemStore.getValue(
+			derivations.currentScreenKey,
+			"animationProgress",
+		);
+		const pendingLifecycleStartBlockCount = SystemStore.getValue(
+			derivations.currentScreenKey,
+			"pendingLifecycleStartBlockCount",
+		);
+
+		useLayoutEffect(() => {
+			runOnUI(registerScreen)({
+				screenKey: derivations.currentScreenKey,
+				parentScreenKey: derivations.parentScreenKey,
+				animationProgress,
+				pendingLifecycleStartBlockCount,
+			});
+
+			return () => {
+				runOnUI(unregisterScreen)(derivations.currentScreenKey);
+			};
+		}, [
+			animationProgress,
+			derivations.currentScreenKey,
+			derivations.parentScreenKey,
+			pendingLifecycleStartBlockCount,
+		]);
 
 		return {
 			value: {

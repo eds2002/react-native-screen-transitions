@@ -137,6 +137,18 @@ export const ensurePairSourceRequests = (
 	return pair.sourceRequests;
 };
 
+export const ensurePairDestinationRequests = (
+	state: LinkPairsState,
+	pairKey: ScreenPairKey,
+): Record<LinkKey, true> => {
+	"worklet";
+	const pair = ensurePairState(state, pairKey);
+	if (!pair.destinationRequests) {
+		pair.destinationRequests = {};
+	}
+	return pair.destinationRequests;
+};
+
 export const removePairLink = (
 	state: LinkPairsState,
 	pairKey: ScreenPairKey,

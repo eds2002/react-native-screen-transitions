@@ -3,10 +3,12 @@ import {
 	EPSILON,
 	NAVIGATION_MASK_ELEMENT_STYLE_ID,
 } from "../../../../constants";
+import { requestBoundaryMeasurements } from "../../../../stores/bounds/internals/coordinator";
 import { getVisualScrollAxisDelta } from "../../../../stores/scroll.store";
 import type { ScrollMetadataState } from "../../../../types/gesture.types";
 import { createBoundsAccessorCore } from "../../helpers/create-bounds-accessor-core";
 import { computeContentTransformGeometry } from "../../helpers/geometry";
+import { resolveBoundsPairKey } from "../../helpers/resolve-bounds-pair-key";
 import { getSourceBorderRadius } from "../helpers";
 import { resolveRevealContentBaseTransformFromGeometry } from "../reveal/math";
 import {
@@ -75,18 +77,17 @@ export function buildZoomStyles({
 	const scopedBounds = bounds(tag);
 	const link = scopedBounds.link();
 	const sourceBounds = link?.source?.bounds;
+	const pairKey = resolveBoundsPairKey(props);
+	if (pairKey) {
+		requestBoundaryMeasurements({
+			pairKey,
+			tag,
+			destination: target === "bound",
+			refresh: !!props.active.willAnimate,
+		});
+	}
 
 	if (!link || !sourceBounds) {
-		if (target !== "bound") {
-			scopedBounds.values({
-				scaleMode: ZOOM_SHARED_OPTIONS.scaleMode,
-				anchor: ZOOM_SHARED_OPTIONS.anchor,
-				method: "content",
-				target: target ?? "fullscreen",
-				progress: transitionProgress,
-			});
-		}
-
 		return {};
 	}
 

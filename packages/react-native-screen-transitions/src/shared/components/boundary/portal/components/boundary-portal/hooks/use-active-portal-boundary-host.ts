@@ -4,11 +4,11 @@ import {
 	type SharedValue,
 	useAnimatedReaction,
 } from "react-native-reanimated";
-import { getPairKeyForSource } from "../../../../../../stores/bounds/internals/links";
 import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../../../types/animation.types";
 import type { BoundaryLocalMeasurementValue } from "../../../../types";
 import { createBoundaryPortalHostName } from "../../../utils/naming";
+import { resolveBoundaryPortalPairKey } from "../helpers/local-measurement";
 import {
 	mountPortalBoundaryHost,
 	unmountPortalBoundaryHostByName,
@@ -16,7 +16,6 @@ import {
 
 type UseActivePortalBoundaryHostParams = {
 	boundaryId: string;
-	currentScreenKey: string;
 	escapeHostKey?: string;
 	localMeasurement: BoundaryLocalMeasurementValue;
 	portalHostName: SharedValue<string | null>;
@@ -26,7 +25,6 @@ type UseActivePortalBoundaryHostParams = {
 
 export const useActivePortalBoundaryHost = ({
 	boundaryId,
-	currentScreenKey,
 	escapeHostKey,
 	localMeasurement,
 	portalHostName,
@@ -44,13 +42,7 @@ export const useActivePortalBoundaryHost = ({
 	useAnimatedReaction(
 		() => {
 			"worklet";
-			const pairKey = getPairKeyForSource(boundaryId, currentScreenKey);
-			const measurement = localMeasurement.get();
-			if (!pairKey || measurement?.pairKey !== pairKey) {
-				return null;
-			}
-
-			return pairKey;
+			return resolveBoundaryPortalPairKey(localMeasurement.get());
 		},
 		(pairKey, previousPairKey) => {
 			"worklet";

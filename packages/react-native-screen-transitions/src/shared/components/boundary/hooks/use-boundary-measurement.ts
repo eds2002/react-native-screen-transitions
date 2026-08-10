@@ -7,18 +7,14 @@ import type {
 	BoundaryConfigProps,
 	BoundaryLocalMeasurementValue,
 } from "../types";
+import { useBoundaryMeasurementRequest } from "./lifecycles/use-boundary-measurement-request";
 import { useBoundaryPresence } from "./lifecycles/use-boundary-presence";
-import { useInitialDestinationMeasurement } from "./lifecycles/use-initial-destination-measurement";
-import { useInitialSourceMeasurement } from "./lifecycles/use-initial-source-measurement";
-import { useRefreshBoundary } from "./lifecycles/use-refresh-boundary";
 import { useMeasurer } from "./use-measurer";
 
 interface UseBoundaryMeasurementParams {
 	boundTag: BoundTag;
 	/** Raw `enabled` prop — drives the measurer and the passive-source gate. */
 	enabled: boolean;
-	/** `enabled && hasConfiguredInterpolator` — gates presence + lifecycle. */
-	runtimeEnabled: boolean;
 	currentScreenKey: string;
 	/** Surface to measure: a nested target's placeholder, else the root. */
 	measuredRef: AnimatedRef<View>;
@@ -38,7 +34,6 @@ interface UseBoundaryMeasurementParams {
 export const useBoundaryMeasurement = ({
 	boundTag,
 	enabled,
-	runtimeEnabled,
 	currentScreenKey,
 	measuredRef,
 	style,
@@ -66,9 +61,6 @@ export const useBoundaryMeasurement = ({
 		localMeasurement,
 	});
 
-	// Presence and source capture must not depend on this screen owning an
-	// interpolator: a nested source can participate in a transition owned by a
-	// different navigator.
 	useBoundaryPresence({
 		enabled,
 		boundTag,
@@ -78,21 +70,10 @@ export const useBoundaryMeasurement = ({
 		escapeClipping,
 	});
 
-	useInitialSourceMeasurement({
+	useBoundaryMeasurementRequest({
 		enabled,
-		measureBoundary,
 		boundTag,
-	});
-
-	useInitialDestinationMeasurement({
-		boundTag,
-		enabled: runtimeEnabled,
-		measureBoundary,
-	});
-
-	useRefreshBoundary({
-		enabled: runtimeEnabled,
-		boundTag,
+		currentScreenKey,
 		measureBoundary,
 	});
 };

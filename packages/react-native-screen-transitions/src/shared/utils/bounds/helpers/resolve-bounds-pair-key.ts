@@ -9,7 +9,6 @@ export const resolveBoundsPairKey = (
 	const currentScreenKey = props.current?.route.key;
 	const previousScreenKey = props.previous?.route.key;
 	const nextScreenKey = props.next?.route.key;
-
 	if (nextScreenKey && currentScreenKey) {
 		return createScreenPairKey(currentScreenKey, nextScreenKey);
 	}
