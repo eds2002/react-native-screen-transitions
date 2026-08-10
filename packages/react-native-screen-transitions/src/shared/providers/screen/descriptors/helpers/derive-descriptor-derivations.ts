@@ -7,6 +7,10 @@ export interface DescriptorDerivations {
 	currentScreenKey: string;
 	nextScreenKey?: string;
 	sourcePairKey?: ScreenPairKey;
+	/** Nearest source pair owned by this screen or one of its ancestors. */
+	transitionSourcePairKey?: ScreenPairKey;
+	/** Destination root for the nearest source pair. */
+	transitionDestinationScreenKey?: string;
 	destinationPairKey?: ScreenPairKey;
 	parentScreenKey?: string;
 	isFirstKey: boolean;
@@ -52,6 +56,8 @@ export function deriveDescriptorDerivations({
 		currentScreenKey,
 		nextScreenKey,
 		sourcePairKey,
+		transitionSourcePairKey: sourcePairKey,
+		transitionDestinationScreenKey: nextScreenKey,
 		destinationPairKey,
 		parentScreenKey: ancestorKeys[0],
 		isFirstKey,

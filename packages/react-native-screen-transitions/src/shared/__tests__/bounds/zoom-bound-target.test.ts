@@ -460,29 +460,6 @@ describe("zoom source-only target", () => {
 	});
 });
 
-describe("zoom clipping escape", () => {
-	it("turns portal teleportation off after the source settles", () => {
-		registerSource();
-		registerDestination();
-		const activeProps = createZoomProps({ focused: false, progress: 0.5 });
-		const settledProps = createZoomProps({ focused: false, progress: 0 });
-		settledProps.active.settled = true;
-
-		expect(
-			buildZoomStyles({
-				tag: "card",
-				props: activeProps,
-			}).card?.props?.teleport,
-		).toBe(true);
-		expect(
-			buildZoomStyles({
-				tag: "card",
-				props: settledProps,
-			}).card?.props?.teleport,
-		).toBe(false);
-	});
-});
-
 describe("zoom focused visibility", () => {
 	const buildFocusedContentStyle = (
 		keepFocusedVisible?: boolean,

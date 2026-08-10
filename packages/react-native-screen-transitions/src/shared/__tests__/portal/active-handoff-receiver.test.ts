@@ -2,6 +2,7 @@ import { describe, expect, it } from "bun:test";
 import {
 	resolveActiveHandoffReceiver,
 	resolveHandoffAttachmentCandidate,
+	resolveNestedHandoffAttachmentCandidate,
 	resolvePreviousHandoffReceiver,
 } from "../../components/boundary/portal/components/boundary-content-portal/helpers/active-handoff-receiver";
 
@@ -11,6 +12,41 @@ const scene = (key: string, activity = "active") => ({
 });
 
 describe("active handoff receiver", () => {
+	it("keeps a nested source attached until its ancestor destination is ready", () => {
+		const base = {
+			attachedReceiverScreenKey: "source-leaf",
+			currentScreenKey: "source-leaf",
+			hasActiveCloseFinished: false,
+			interpolatorReady: false,
+			pairDestinationScreenKey: "destination-leaf",
+			sourceBoundaryEscaped: false,
+		};
+
+		expect(resolveNestedHandoffAttachmentCandidate(base)).toBe("source-leaf");
+		expect(
+			resolveNestedHandoffAttachmentCandidate({
+				...base,
+				interpolatorReady: true,
+			}),
+		).toBe("destination-leaf");
+		expect(
+			resolveNestedHandoffAttachmentCandidate({
+				...base,
+				attachedReceiverScreenKey: "destination-leaf",
+				hasActiveCloseFinished: true,
+				sourceBoundaryEscaped: true,
+			}),
+		).toBe("destination-leaf");
+		expect(
+			resolveNestedHandoffAttachmentCandidate({
+				...base,
+				attachedReceiverScreenKey: "destination-leaf",
+				hasActiveCloseFinished: true,
+				sourceBoundaryEscaped: false,
+			}),
+		).toBe("source-leaf");
+	});
+
 	it("follows the focused route through A to B to C", () => {
 		expect(
 			resolveActiveHandoffReceiver({
@@ -241,4 +277,5 @@ describe("active handoff receiver", () => {
 			}),
 		).toBe("player-b");
 	});
+
 });

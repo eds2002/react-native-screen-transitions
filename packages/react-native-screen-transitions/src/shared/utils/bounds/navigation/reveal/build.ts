@@ -438,7 +438,6 @@ export function buildRevealStyles({
 				: undefined,
 		},
 		[link.id]: {
-			props: { teleport: !props.active.settled },
 			style: {
 				opacity: props.active.closing
 					? 1

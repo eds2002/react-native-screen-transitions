@@ -2,9 +2,11 @@ import { useIsFocused } from "@react-navigation/native";
 import { useAnimatedProps, useSharedValue } from "react-native-reanimated";
 import { useDescriptorsStore } from "../../../../../../providers/screen/descriptors";
 import { useScreenSlots } from "../../../../../../providers/screen/styles";
+import { pairs } from "../../../../../../stores/bounds/internals/state";
 import { useBoundaryRootStore } from "../../../../providers/boundary-root.provider";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import { shouldAttachBoundaryPortal } from "../helpers/attachment";
+import { resolveActiveBoundaryPortalPairKey } from "../helpers/local-measurement";
 import { useActiveHostKey } from "../stores/host-registry.store";
 import { useActivePortalBoundaryHost } from "./use-active-portal-boundary-host";
 
@@ -31,7 +33,7 @@ export const useBoundaryPortalAttachment = ({
 	const focused = useIsFocused();
 	const { slotsMap } = useScreenSlots();
 	const portalHostName = useSharedValue<string | null>(null);
-	const portalHostReady = useSharedValue(false);
+	const portalHostReady = useSharedValue<string | null>(null);
 	const escapeHostKey = useActiveHostKey(currentScreenKey);
 
 	useActivePortalBoundaryHost({
@@ -53,14 +55,24 @@ export const useBoundaryPortalAttachment = ({
 			...slotProps
 		} = slot?.props ?? {};
 
+		const activePortalHostName = portalHostName.get();
 		const shouldAttach = shouldAttachBoundaryPortal({
 			focused,
-			portalHostReady: portalHostReady.get(),
+			portalHostReady:
+				activePortalHostName !== null &&
+				portalHostReady.get() === activePortalHostName,
+			slotActive:
+				resolveActiveBoundaryPortalPairKey(
+					localMeasurement.get(),
+					slot,
+					boundaryId,
+					pairs.get(),
+				) !== null && slot !== undefined,
 			teleport,
 		});
 
 		const hostName = shouldAttach
-			? portalHostName.get()
+			? activePortalHostName
 			: PORTAL_HOST_NAME_RESET_VALUE;
 
 		return {

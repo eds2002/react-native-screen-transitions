@@ -58,6 +58,12 @@ export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
 		const parentAncestorKeys = useParentStore(
 			(store) => store?.derivations.ancestorKeys,
 		);
+		const parentTransitionSourcePairKey = useParentStore(
+			(store) => store?.derivations.transitionSourcePairKey,
+		);
+		const parentTransitionDestinationScreenKey = useParentStore(
+			(store) => store?.derivations.transitionDestinationScreenKey,
+		);
 		const blankStackCurrent = useBlankStackStore((store) =>
 			routeKey ? store?.scenesByKey[routeKey]?.descriptor : undefined,
 		);
@@ -109,16 +115,30 @@ export const { DescriptorsProvider, useDescriptorsStore } = createProvider(
 			[parentAncestorKeys, parentScreenKey],
 		);
 
-		const derivations = useMemo(
-			() =>
-				deriveDescriptorDerivations({
-					previous: resolvedPrevious,
-					current: resolvedCurrent,
-					next: resolvedNext,
-					ancestorKeys,
-				}),
-			[resolvedPrevious, resolvedCurrent, resolvedNext, ancestorKeys],
-		);
+		const derivations = useMemo(() => {
+			const localDerivations = deriveDescriptorDerivations({
+				previous: resolvedPrevious,
+				current: resolvedCurrent,
+				next: resolvedNext,
+				ancestorKeys,
+			});
+
+			return {
+				...localDerivations,
+				transitionSourcePairKey:
+					localDerivations.sourcePairKey ?? parentTransitionSourcePairKey,
+				transitionDestinationScreenKey:
+					localDerivations.nextScreenKey ??
+					parentTransitionDestinationScreenKey,
+			};
+		}, [
+			resolvedPrevious,
+			resolvedCurrent,
+			resolvedNext,
+			ancestorKeys,
+			parentTransitionSourcePairKey,
+			parentTransitionDestinationScreenKey,
+		]);
 		const animationProgress = SystemStore.getValue(
 			derivations.currentScreenKey,
 			"animationProgress",

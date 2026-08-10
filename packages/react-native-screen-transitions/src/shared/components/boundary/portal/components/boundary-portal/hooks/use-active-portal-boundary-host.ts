@@ -4,6 +4,7 @@ import {
 	type SharedValue,
 	useAnimatedReaction,
 } from "react-native-reanimated";
+import { pairs } from "../../../../../../stores/bounds/internals/state";
 import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
 import type { NormalizedTransitionInterpolatedStyle } from "../../../../../../types/animation.types";
 import type { BoundaryLocalMeasurementValue } from "../../../../types";
@@ -20,7 +21,7 @@ type UseActivePortalBoundaryHostParams = {
 	escapeHostKey?: string;
 	localMeasurement: BoundaryLocalMeasurementValue;
 	portalHostName: SharedValue<string | null>;
-	portalHostReady: SharedValue<boolean>;
+	portalHostReady: SharedValue<string | null>;
 	slotsMap: SharedValue<NormalizedTransitionInterpolatedStyle>;
 };
 
@@ -46,6 +47,8 @@ export const useActivePortalBoundaryHost = ({
 			return resolveActiveBoundaryPortalPairKey(
 				localMeasurement.get(),
 				slotsMap.get()[boundaryId],
+				boundaryId,
+				pairs.get(),
 			);
 		},
 		(pairKey, previousPairKey) => {
@@ -71,7 +74,7 @@ export const useActivePortalBoundaryHost = ({
 	useLayoutEffect(() => {
 		if (!activePairKey || !escapeHostKey) {
 			portalHostName.set(null);
-			portalHostReady.set(false);
+			portalHostReady.set(null);
 			return;
 		}
 
@@ -94,7 +97,7 @@ export const useActivePortalBoundaryHost = ({
 
 		return () => {
 			portalHostName.set(null);
-			portalHostReady.set(false);
+			portalHostReady.set(null);
 			unmountPortalBoundaryHostByName(nextPortalHostName);
 		};
 	}, [

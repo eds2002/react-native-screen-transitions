@@ -35,26 +35,51 @@ describe("resolveBoundaryLocalMeasurement", () => {
 
 describe("resolveActiveBoundaryPortalPairKey", () => {
 	const measurement = { bounds, pairKey: "source<>destination" };
+	const pairs = {
+		"source<>destination": {
+			groups: { cards: { activeId: "A", initialId: "A" } },
+			links: {},
+		},
+	} as any;
 
 	it("keeps the host mounted while the boundary slot is teleporting", () => {
 		expect(
-			resolveActiveBoundaryPortalPairKey(measurement, {
-				props: { teleport: true },
-			}),
+			resolveActiveBoundaryPortalPairKey(
+				measurement,
+				{ props: { teleport: true } },
+				"cards:A",
+				pairs,
+			),
 		).toBe(measurement.pairKey);
 	});
 
-	it("prepares the host before the animated slot is published", () => {
-		expect(resolveActiveBoundaryPortalPairKey(measurement, undefined)).toBe(
-			measurement.pairKey,
-		);
+	it("prepares only the active group member before its slot is published", () => {
+		expect(
+			resolveActiveBoundaryPortalPairKey(
+				measurement,
+				undefined,
+				"cards:A",
+				pairs,
+			),
+		).toBe(measurement.pairKey);
+		expect(
+			resolveActiveBoundaryPortalPairKey(
+				measurement,
+				undefined,
+				"cards:B",
+				pairs,
+			),
+		).toBeNull();
 	});
 
 	it("unmounts the host when teleportation settles", () => {
 		expect(
-			resolveActiveBoundaryPortalPairKey(measurement, {
-				props: { teleport: false },
-			}),
+			resolveActiveBoundaryPortalPairKey(
+				measurement,
+				{ props: { teleport: false } },
+				"cards:A",
+				pairs,
+			),
 		).toBeNull();
 	});
 });

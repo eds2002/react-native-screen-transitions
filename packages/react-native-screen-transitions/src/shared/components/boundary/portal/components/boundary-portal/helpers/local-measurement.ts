@@ -1,4 +1,11 @@
-import type { ScreenPairKey } from "../../../../../../stores/bounds/types";
+import {
+	getGroupKeyFromTag,
+	getLinkKeyFromTag,
+} from "../../../../../../stores/bounds/helpers/link-pairs.helpers";
+import type {
+	LinkPairsState,
+	ScreenPairKey,
+} from "../../../../../../stores/bounds/types";
 import type { NormalizedTransitionSlotStyle } from "../../../../../../types/animation.types";
 import type { BoundaryLocalMeasurement } from "../../../../types";
 import { isTeleportEnabled } from "../../../utils/teleport-control";
@@ -13,10 +20,20 @@ export const resolveBoundaryPortalPairKey = (
 export const resolveActiveBoundaryPortalPairKey = (
 	measurement: BoundaryLocalMeasurement | null,
 	slot: NormalizedTransitionSlotStyle | undefined,
+	boundaryId: string,
+	pairsState: LinkPairsState,
 ): ScreenPairKey | null => {
 	"worklet";
+	if (!measurement) return null;
+
+	const group = getGroupKeyFromTag(boundaryId);
+	if (group) {
+		const activeId = pairsState[measurement.pairKey]?.groups[group]?.activeId;
+		if (activeId !== getLinkKeyFromTag(boundaryId)) return null;
+	}
+
 	if (slot && !isTeleportEnabled(slot.props?.teleport)) return null;
-	return resolveBoundaryPortalPairKey(measurement);
+	return measurement.pairKey;
 };
 
 export const resolveBoundaryLocalMeasurement = (

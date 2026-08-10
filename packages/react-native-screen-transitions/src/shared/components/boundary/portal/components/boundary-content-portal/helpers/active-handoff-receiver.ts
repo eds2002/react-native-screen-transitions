@@ -101,3 +101,28 @@ export const resolveHandoffAttachmentCandidate = ({
 
 	return activeReceiverScreenKey;
 };
+
+export const resolveNestedHandoffAttachmentCandidate = ({
+	attachedReceiverScreenKey,
+	currentScreenKey,
+	hasActiveCloseFinished,
+	interpolatorReady,
+	pairDestinationScreenKey,
+	sourceBoundaryEscaped,
+}: {
+	attachedReceiverScreenKey: string;
+	currentScreenKey: string;
+	hasActiveCloseFinished: boolean;
+	interpolatorReady: boolean;
+	pairDestinationScreenKey: string | null;
+	sourceBoundaryEscaped: boolean;
+}) => {
+	"worklet";
+
+	if (hasActiveCloseFinished && !sourceBoundaryEscaped) return currentScreenKey;
+	if (interpolatorReady && pairDestinationScreenKey) {
+		return pairDestinationScreenKey;
+	}
+
+	return attachedReceiverScreenKey;
+};
