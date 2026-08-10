@@ -13,6 +13,23 @@ type ResolveActiveHandoffReceiverParams = {
 	scenes: ReceiverScene[];
 };
 
+export const hasNestedHandoffTopology = ({
+	inheritedSourcePair,
+	pairDestinationScreenKey,
+	transitionDestinationScreenKey,
+}: {
+	inheritedSourcePair: boolean;
+	pairDestinationScreenKey: string | null;
+	transitionDestinationScreenKey?: string;
+}) => {
+	"worklet";
+	return (
+		inheritedSourcePair ||
+		(!!pairDestinationScreenKey &&
+			pairDestinationScreenKey !== transitionDestinationScreenKey)
+	);
+};
+
 export const resolveActiveHandoffReceiver = ({
 	focusedIndex,
 	routes,
@@ -108,18 +125,16 @@ export const resolveNestedHandoffAttachmentCandidate = ({
 	hasActiveCloseFinished,
 	interpolatorReady,
 	pairDestinationScreenKey,
-	sourceBoundaryEscaped,
 }: {
 	attachedReceiverScreenKey: string;
 	currentScreenKey: string;
 	hasActiveCloseFinished: boolean;
 	interpolatorReady: boolean;
 	pairDestinationScreenKey: string | null;
-	sourceBoundaryEscaped: boolean;
 }) => {
 	"worklet";
 
-	if (hasActiveCloseFinished && !sourceBoundaryEscaped) return currentScreenKey;
+	if (hasActiveCloseFinished) return currentScreenKey;
 	if (interpolatorReady && pairDestinationScreenKey) {
 		return pairDestinationScreenKey;
 	}

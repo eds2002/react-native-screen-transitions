@@ -1,5 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
+	hasNestedHandoffTopology,
 	resolveActiveHandoffReceiver,
 	resolveHandoffAttachmentCandidate,
 	resolveNestedHandoffAttachmentCandidate,
@@ -12,6 +13,30 @@ const scene = (key: string, activity = "active") => ({
 });
 
 describe("active handoff receiver", () => {
+	it("classifies nesting from route structure rather than active receiver churn", () => {
+		expect(
+			hasNestedHandoffTopology({
+				inheritedSourcePair: false,
+				pairDestinationScreenKey: "player",
+				transitionDestinationScreenKey: "player",
+			}),
+		).toBe(false);
+		expect(
+			hasNestedHandoffTopology({
+				inheritedSourcePair: false,
+				pairDestinationScreenKey: "destination-leaf",
+				transitionDestinationScreenKey: "destination-root",
+			}),
+		).toBe(true);
+		expect(
+			hasNestedHandoffTopology({
+				inheritedSourcePair: true,
+				pairDestinationScreenKey: "destination",
+				transitionDestinationScreenKey: "destination",
+			}),
+		).toBe(true);
+	});
+
 	it("keeps a nested source attached until its ancestor destination is ready", () => {
 		const base = {
 			attachedReceiverScreenKey: "source-leaf",
@@ -19,7 +44,6 @@ describe("active handoff receiver", () => {
 			hasActiveCloseFinished: false,
 			interpolatorReady: false,
 			pairDestinationScreenKey: "destination-leaf",
-			sourceBoundaryEscaped: false,
 		};
 
 		expect(resolveNestedHandoffAttachmentCandidate(base)).toBe("source-leaf");
@@ -34,15 +58,6 @@ describe("active handoff receiver", () => {
 				...base,
 				attachedReceiverScreenKey: "destination-leaf",
 				hasActiveCloseFinished: true,
-				sourceBoundaryEscaped: true,
-			}),
-		).toBe("destination-leaf");
-		expect(
-			resolveNestedHandoffAttachmentCandidate({
-				...base,
-				attachedReceiverScreenKey: "destination-leaf",
-				hasActiveCloseFinished: true,
-				sourceBoundaryEscaped: false,
 			}),
 		).toBe("source-leaf");
 	});

@@ -11,6 +11,7 @@ import { SystemStore } from "../../../../../../stores/system.store";
 import { PORTAL_HOST_NAME_RESET_VALUE } from "../../../utils/naming";
 import { isTeleportEnabled } from "../../../utils/teleport-control";
 import {
+	hasNestedHandoffTopology,
 	resolveActiveHandoffReceiver,
 	resolveHandoffAttachmentCandidate,
 	resolveNestedHandoffAttachmentCandidate,
@@ -123,9 +124,11 @@ export const useBoundaryContentPortalAttachment = ({
 
 		const isInterpolatorReady = interpolatorReady.get();
 		const attachedScreenKey = attachedReceiverScreenKey.get();
-		const usesNestedReceiver =
-			isNestedSource ||
-			(!!pairDestination && pairDestination !== activeReceiverScreenKey);
+		const usesNestedReceiver = hasNestedHandoffTopology({
+			inheritedSourcePair: isNestedSource,
+			pairDestinationScreenKey: pairDestination,
+			transitionDestinationScreenKey: resolvedDestinationScreenKey,
+		});
 
 		const nextReceiverScreenKey = usesNestedReceiver
 			? resolveNestedHandoffAttachmentCandidate({
@@ -134,7 +137,6 @@ export const useBoundaryContentPortalAttachment = ({
 					hasActiveCloseFinished,
 					interpolatorReady: !!isInterpolatorReady,
 					pairDestinationScreenKey: pairDestination,
-					sourceBoundaryEscaped: shouldTeleport,
 				})
 			: resolveHandoffAttachmentCandidate({
 					activeReceiverClosing: !!closing,
